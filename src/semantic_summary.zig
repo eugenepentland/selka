@@ -18,9 +18,10 @@ const origins = @import("origins.zig");
 const effect_set = @import("effect_set.zig");
 const source = @import("source.zig");
 const codec = @import("persist_codec.zig");
+const semantic_key = @import("semantic_key.zig");
 
 /// Payload version; bump for any layout or meaning change so old payloads miss.
-pub const format_version = "check-summaries-v1";
+pub const format_version = "check-summaries-v2";
 
 /// One stored diagnostic without related notes, its span relative to the start
 /// of its function's declaration region.
@@ -36,8 +37,9 @@ pub const Note = struct {
 /// checked, and the warnings the whole-program passes reported inside it.
 pub const Notes = struct { body: []const Note = &.{}, pass: []const Note = &.{} };
 
-/// Length and BLAKE3 digest of one declaration region's bytes.
-pub const Region = struct { len: u32, digest: [32]u8 };
+/// Length and BLAKE3 digest of one declaration region's bytes, and the names
+/// its syntax references (which those bytes determine).
+pub const Region = struct { len: u32, digest: [32]u8, names: []const semantic_key.Name = &.{} };
 
 /// The persisted shape of `origins.Fact`: the propagated effect mask and the
 /// mutation summary without its witness spans, which only locate diagnostics.
@@ -89,6 +91,10 @@ pub const Request = struct {
     retry: bool = false,
     /// Bodies a summary stood in for in the check that produced the result.
     stood_in: usize = 0,
+    /// A command that lowers the checked program needs every body's checked
+    /// tree: its bodies are all checked, and summaries stand in only for the
+    /// cross-function facts (and the pass diagnostics) of unchanged ones.
+    facts_only: bool = false,
 };
 
 /// Convert the passes' in-memory facts to the persisted shape.
@@ -120,11 +126,18 @@ pub fn sameFact(a: Fact, b: Fact) bool {
     return std.meta.eql(a, b);
 }
 
-/// Length and digest of one region's bytes.
-pub fn regionOf(bytes: []const u8) Region {
-    var digest: [32]u8 = undefined;
-    std.crypto.hash.Blake3.hash(bytes, &digest, .{});
-    return .{ .len = @intCast(@min(bytes.len, std.math.maxInt(u32))), .digest = digest };
+/// The names a table recorded for one function, offered to dependency-key
+/// preparation while the function's region digest is unchanged.
+pub fn recall(index: *const Index) semantic_key.Recall {
+    return .{ .context = index, .names = recalledNames };
+}
+
+fn recalledNames(context: *const anyopaque, key: []const u8, digest: [32]u8) ?[]const semantic_key.Name {
+    const index: *const Index = @ptrCast(@alignCast(context));
+    const position = index.find(key) orelse return null;
+    const stored = index.summaries[position].region;
+    if (!std.mem.eql(u8, &stored.digest, &digest)) return null;
+    return stored.names;
 }
 
 /// Whether a diagnostic can be stored against the region `[start, end)`: its

@@ -29,7 +29,6 @@ pub const Checked = struct {
 
 /// Everything `produce` reads besides the plan and the program's facts.
 pub const Outputs = struct {
-    src: source.Source,
     /// Diagnostics the whole-program passes appended, before any replay.
     pass: []const diagnostic.Diagnostic,
     /// Catalog records that existed before any body was checked.
@@ -50,7 +49,7 @@ pub const Plan = struct {
     main: usize,
 
     /// Plan stand-ins for one request. `main` is the entry point's instance.
-    pub fn init(allocator: std.mem.Allocator, request: *summary.Request, prepared: *const semantic_key.Prepared, src: source.Source, main: usize) error{OutOfMemory}!Plan {
+    pub fn init(allocator: std.mem.Allocator, request: *summary.Request, prepared: *const semantic_key.Prepared, main: usize) error{OutOfMemory}!Plan {
         const count = prepared.ordinary_ast.len;
         const stand_ins = try allocator.alloc(?u32, count);
         @memset(stand_ins, null);
@@ -64,8 +63,7 @@ pub const Plan = struct {
                 if (!std.mem.eql(u8, &stored.context, &prepared.contexts[ast_index])) continue;
                 const region = prepared.regions[ast_index];
                 if (region.end - region.start != stored.region.len) continue;
-                const fresh = summary.regionOf(src.bytes[region.start..region.end]);
-                if (!std.mem.eql(u8, &fresh.digest, &stored.region.digest)) continue;
+                if (!std.mem.eql(u8, &prepared.recalled.digests[ast_index], &stored.region.digest)) continue;
                 stand_ins[instance] = position;
                 request.stood_in += 1;
             }
@@ -73,11 +71,20 @@ pub const Plan = struct {
         return .{ .request = request, .prepared = prepared, .stand_ins = stand_ins, .main = main };
     }
 
-    /// The previous summary standing in for ordinary instance `i`, or null.
+    /// The previous summary standing in for ordinary instance `i`'s
+    /// cross-function facts, or null when the passes compute them.
     pub fn standIn(self: *const Plan, i: usize) ?*const summary.Summary {
         if (i >= self.stand_ins.len) return null;
         const position = self.stand_ins[i] orelse return null;
         return &self.request.previous.?.summaries[position];
+    }
+
+    /// The previous summary standing in for ordinary instance `i`'s whole
+    /// body, or null when the body must be checked (always, for a command that
+    /// lowers the checked program).
+    pub fn bodyStandIn(self: *const Plan, i: usize) ?*const summary.Summary {
+        if (self.request.facts_only) return null;
+        return self.standIn(i);
     }
 
     /// Whether any body is stood in by a summary in this request.
@@ -87,7 +94,7 @@ pub const Plan = struct {
 
     /// Replay the diagnostics a stood-in body produced while it was checked.
     pub fn replayBody(self: *const Plan, i: usize, sink: *diagnostic.Sink) error{OutOfMemory}!void {
-        const stored = self.standIn(i) orelse return;
+        const stored = self.bodyStandIn(i) orelse return;
         const start = self.regionOf(i).start;
         for (stored.notes.body) |note| try sink.items.append(sink.allocator, summary.diagnosticOf(note, start));
     }
@@ -128,10 +135,10 @@ pub const Plan = struct {
     pub fn consistent(self: *const Plan, allocator: std.mem.Allocator, program: typed.Program, facts: []const origins.Fact) error{OutOfMemory}!bool {
         if (!self.active()) return true;
         const previous = self.request.previous.?;
-        for (self.checked.items) |record| {
-            if (record.instance >= self.prepared.ordinary_ast.len) continue;
-            const position = previous.find(self.prepared.keys[self.prepared.ordinary_ast[record.instance]]) orelse continue;
-            if (!summary.sameFact(summary.fromFact(facts[record.instance]), previous.summaries[position].fact)) return false;
+        for (self.prepared.ordinary_ast, 0..) |ast_index, instance| {
+            if (self.standIn(instance) != null or instance >= facts.len) continue;
+            const position = previous.find(self.prepared.keys[ast_index]) orelse continue;
+            if (!summary.sameFact(summary.fromFact(facts[instance]), previous.summaries[position].fact)) return false;
         }
         return !try self.mixedCycle(allocator, program);
     }
@@ -140,9 +147,12 @@ pub const Plan = struct {
     /// facts are fixed, so a cycle through one could keep a stale fixed point.
     fn mixedCycle(self: *const Plan, allocator: std.mem.Allocator, program: typed.Program) error{OutOfMemory}!bool {
         const current = try self.currentPositions(allocator);
+        // Only bodies whose facts the passes computed walk their own edges; a
+        // stood-in body's facts rest on its stored callees.
         const checked_edges = try allocator.alloc(?[]const u32, program.functions.len);
         @memset(checked_edges, null);
         for (self.checked.items) |record| {
+            if (self.standIn(record.instance) != null) continue;
             if (record.instance < checked_edges.len) checked_edges[record.instance] = try callTargets(allocator, program, record);
         }
         const visited = try allocator.alloc(bool, program.functions.len);
@@ -175,6 +185,13 @@ pub const Plan = struct {
             if (previous.find(self.prepared.keys[ast_index])) |position| current[position] = @intCast(instance);
         }
         return current;
+    }
+
+    /// Whether this request should publish a summary table. A command that
+    /// lowers publishes one only when it had none to stand in (or repeated in
+    /// full), so the next such command does not repeat the passes again.
+    pub fn publishes(self: *const Plan) bool {
+        return !self.request.facts_only or self.request.previous == null;
     }
 
     /// This request's summary table, one entry per ordinary instance in order.
@@ -216,7 +233,11 @@ pub const Plan = struct {
         return .{
             .key = self.prepared.keys[ast_index],
             .context = self.prepared.contexts[ast_index],
-            .region = summary.regionOf(outputs.src.bytes[region.start..region.end]),
+            .region = .{
+                .len = @intCast(region.end - region.start),
+                .digest = self.prepared.recalled.digests[ast_index],
+                .names = self.prepared.recalled.names[ast_index],
+            },
             .fact = summary.fromFact(checked.fact),
             .notes = .{ .body = body_notes, .pass = pass_notes },
             .callees = if (checked.record) |record| try callTargets(allocator, program, record) else &.{},

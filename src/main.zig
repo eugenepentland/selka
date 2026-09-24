@@ -1968,10 +1968,8 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         // `check` needs no checked trees: unchanged bodies are stood in by the
         // summaries the entry's last successful check left.
         var summaries: language.semantic_summary.Request = .{};
-        const summarized = try openSummaries(init, parsed, &project, functions, &summaries);
-        defer if (summarized) {
-            functions.?.context.summaries = null;
-        };
+        try openSummaries(init, parsed, &project, functions, &summaries);
+        defer closeSummaries(functions);
         // `context` answers about a project that does not check: it publishes the
         // declarations and diagnostics it did recover and names the reason the
         // resolved relationships are missing, rather than failing like a gate.
@@ -1985,6 +1983,7 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
             else => return err,
         };
         recordCheckWork(init, functions, semantic_before, compilation.program);
+        try rememberSummaries(init, frontend, &project, &summaries);
         if (parsed.command == .context) return contextCommand(init, parsed, &compilation, unchecked_reason, &files);
         init.timings.counts.ast_nodes = compilation.syntax.nodes.items.len + compilation.syntax.statements.items.len;
         init.timings.counts.typed_nodes = compilation.program.?.nodes.len + compilation.program.?.statements.len;
@@ -2027,10 +2026,7 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         if (requested_output) |output| break :result output;
         try reportProject(init, &compilation);
         if (parsed.command == .@"project-dependencies") break :result try init.gpa.dupe(u8, dependency_receipt.?);
-        if (parsed.command == .@"check-project") {
-            try rememberSummaries(init, frontend, &project, &summaries);
-            return finishCheckProject(init, &project, &compilation, verdict, frontend, &configured);
-        }
+        if (parsed.command == .@"check-project") return finishCheckProject(init, &project, &compilation, verdict, frontend, &configured);
         if (parsed.command == .@"discover-project-duplicates") return discoverProject(init, parsed, &project, &compilation, frontend_start);
         if (parsed.command == .@"check-policy") return checkProjectPolicy(init, parsed, &project);
         return runProjectProgram(init, &compilation, parsed, &configured);
@@ -2040,13 +2036,22 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
     return 0;
 }
 
-/// Attach the entry's stored check summaries to a `check-project` request.
-/// Only a plain one-shot check qualifies: an invalidation explanation compares
-/// complete checked trees, and every other command lowers or inspects them.
-fn openSummaries(init: Context, parsed: Parsed, project: *const language.project.Project, functions: ?*language.semantic_cache.Cache, request: *language.semantic_summary.Request) !bool {
-    if (parsed.command != .@"check-project" or parsed.reporting.explain_invalidation) return false;
-    const cache = parsed.frontend orelse return false;
-    const semantic = functions orelse return false;
+/// Attach the entry's stored check summaries to a `check-project` request, or
+/// to a command that lowers the whole checked program. An invalidation
+/// explanation compares complete receipts and uses none, and so does every
+/// command that inspects the checked program some other way.
+fn openSummaries(init: Context, parsed: Parsed, project: *const language.project.Project, functions: ?*language.semantic_cache.Cache, request: *language.semantic_summary.Request) !void {
+    if (parsed.reporting.explain_invalidation) return;
+    // `check` stands summaries in for whole bodies; a command that lowers the
+    // program checks every body and stands them in only for pass facts.
+    switch (parsed.command) {
+        .@"check-project" => {},
+        .@"emit-project-qbe", .run, .@"run-project" => request.facts_only = true,
+        else => return,
+    }
+    if (parsed.select_file != null) return;
+    const cache = parsed.frontend orelse return;
+    const semantic = functions orelse return;
     init.timings.begin("summary_load", false);
     defer init.timings.end();
     if (try cache.lookupSummaries(project)) |payload| {
@@ -2059,7 +2064,11 @@ fn openSummaries(init: Context, parsed: Parsed, project: *const language.project
         }
     }
     semantic.context.summaries = request;
-    return true;
+}
+
+/// Detach a request's summaries from the semantic cache that outlives it.
+fn closeSummaries(functions: ?*language.semantic_cache.Cache) void {
+    if (functions) |semantic| semantic.context.summaries = null;
 }
 
 /// Persist the summaries a successful `check-project` produced for its entry.

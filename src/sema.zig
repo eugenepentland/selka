@@ -1379,14 +1379,14 @@ fn reuseBody(
     return function;
 }
 /// Open the stand-in plan for a request whose cache carries a summary request.
-fn openPlan(cache: ?*semantic_cache.Cache, session: *?semantic_cache.Session, allocator: std.mem.Allocator, src: source.Source, main: usize) Error!?sema_summaries.Plan {
+fn openPlan(cache: ?*semantic_cache.Cache, session: *?semantic_cache.Session, allocator: std.mem.Allocator, main: usize) Error!?sema_summaries.Plan {
     const c = cache orelse return null;
     const request = c.context.summaries orelse return null;
     const queries = if (session.*) |*opened| opened else return null;
     const timing = activeTiming(cache);
     const start = timingStart(timing);
     defer timingAdd(timing, "stand_in_planning", start);
-    const plan = try sema_summaries.Plan.init(allocator, request, &queries.prepared, src, main);
+    const plan = try sema_summaries.Plan.init(allocator, request, &queries.prepared, main);
     return plan;
 }
 /// Mark a failed stand-in attempt for a full retry and pass the error on. A
@@ -1416,7 +1416,7 @@ fn checkInstance(step: InstanceStep) Error!?typed.Function {
     const start_nodes = checker.nodes.items.len;
     const start_statements = checker.statements.items.len;
     const start_diagnostics = checker.sink.items.items.len;
-    if (step.plan.*) |*plan| if (plan.standIn(i) != null) {
+    if (step.plan.*) |*plan| if (plan.bodyStandIn(i) != null) {
         const function = try checker.standInFunction(i);
         // Binding the parameters may repeat a diagnostic the stored body
         // notes already carry; the notes are the complete record.
@@ -1621,7 +1621,7 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
     // `err: Stream` may both appear; any other Stream name is rejected.
     try validateEntryParameters(src, &checker, sink, entry);
     if (!entry_adapter.supported(try checker.ty(entry.signature.return_type), checker.catalog.records)) return sink.fail("E_TYPE", entry.signature.return_type, "main must return int, None, Result<None/int,int>, or Result[int,str]");
-    var plan = try openPlan(cache, &session, allocator, src, @backingInt(main));
+    var plan = try openPlan(cache, &session, allocator, @backingInt(main));
     var checked_functions: std.ArrayList(typed.Function) = .empty;
     var i: usize = 0;
     while (i < checker.instance_keys.items.len and (!contracts_failed or i < checker.ordinary_count)) : (i += 1) {
@@ -1682,7 +1682,7 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
         const summary_start = timingStart(timing);
         defer timingAdd(timing, "check_summaries", summary_start);
         if (!try active.consistent(allocator, checked, facts.?)) return retryOr(&plan, error.SourceError);
-        active.request.produced = try active.produce(allocator, checked, facts.?, .{ .src = src, .pass = pass_items, .initial_record_count = checker.initial_record_count, .syntax = program });
+        if (active.publishes()) active.request.produced = try active.produce(allocator, checked, facts.?, .{ .pass = pass_items, .initial_record_count = checker.initial_record_count, .syntax = program });
         try active.replayPasses(sink);
     }
     const retain_start = timingStart(timing);

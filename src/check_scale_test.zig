@@ -8,6 +8,7 @@ const lexer = language.lexer;
 const diagnostic = language.diagnostic;
 const summary = language.semantic_summary;
 const File = language.embedded_project.File;
+const semantic_key = @import("semantic_key.zig");
 
 const Files = struct {
     entries: []const File,
@@ -21,22 +22,31 @@ const Files = struct {
 const Outcome = struct {
     /// Bodies actually checked.
     checked: usize,
-    /// Bodies a summary stood in for in the final check (zero after a retry).
+    /// Bodies (or, for a lowering command, body facts) a summary stood in for
+    /// in the final check; zero after a repeat in full.
     stood_in: usize,
     /// Every diagnostic rendered in order; owned by `t.allocator`.
     diagnostics: []u8,
-    /// The encoded summaries the check produced, or null when it failed.
+    /// Every checked function's published effect and mutation facts, one line
+    /// each; owned by `t.allocator` and empty when the check failed.
+    facts: []u8,
+    /// The encoded summaries the check produced, or null when it published none.
     summaries: ?[]u8,
 
     fn deinit(self: Outcome) void {
         t.allocator.free(self.diagnostics);
+        t.allocator.free(self.facts);
         if (self.summaries) |payload| t.allocator.free(payload);
     }
 };
 
+/// How a check runs: as `check` (summaries stand in for bodies) or as a command
+/// that lowers the program (every body checked, summaries stand in for facts).
+const Mode = enum { check, lowering };
+
 /// Check the project `files` (entry module `main`) with the given previous
-/// summaries, exactly as `check` does through a semantic cache.
-fn checkProject(files: []const File, previous: ?[]const u8) !Outcome {
+/// summaries, exactly as `check` or a lowering command does through a cache.
+fn checkProject(files: []const File, previous: ?[]const u8, mode: Mode) !Outcome {
     var provider: Files = .{ .entries = files };
     var project = language.project.Project.init(t.allocator);
     defer project.deinit();
@@ -47,7 +57,7 @@ fn checkProject(files: []const File, previous: ?[]const u8) !Outcome {
     defer cache.deinit();
     var arena_state = std.heap.ArenaAllocator.init(t.allocator);
     defer arena_state.deinit();
-    var request: summary.Request = .{};
+    var request: summary.Request = .{ .facts_only = mode == .lowering };
     var decoded: summary.Index = .{};
     if (previous) |payload| {
         decoded = summary.decode(arena_state.allocator(), payload).?;
@@ -64,23 +74,42 @@ fn checkProject(files: []const File, previous: ?[]const u8) !Outcome {
         const text = try item.render(arena_state.allocator(), compilation.src);
         try rendered.writer.writeAll(text);
     }
+    var facts: std.Io.Writer.Allocating = .init(t.allocator);
+    defer facts.deinit();
+    if (compilation.program) |program| for (program.functions) |function| {
+        try facts.writer.print("{s} effects={d} mutates={any} writes={} external={} origin={s}\n", .{
+            function.name,
+            function.policy.effects,
+            function.signature.mutates,
+            function.signature.mutation_facts.writes,
+            function.signature.mutation_facts.external,
+            @tagName(function.signature.return_origin),
+        });
+    };
     return .{
         .checked = cache.statistics.checked,
         .stood_in = request.stood_in,
         .diagnostics = try rendered.toOwnedSlice(),
+        .facts = try facts.toOwnedSlice(),
         .summaries = if (request.produced) |produced| try summary.encode(t.allocator, produced) else null,
     };
 }
 
-/// Check `changed` with the summaries of a successful check of `original`, and
-/// check it again with none. Both outcomes are returned for comparison.
-fn checkAfterEdit(original: []const File, changed: []const File) !struct { warm: Outcome, cold: Outcome } {
-    const seed = try checkProject(original, null);
+/// Check `changed` in `mode` with the summaries of a successful `check` of
+/// `original`, and again with none. Both outcomes are returned for comparison.
+fn checkAfterEditAs(original: []const File, changed: []const File, mode: Mode) !struct { warm: Outcome, cold: Outcome } {
+    const seed = try checkProject(original, null, .check);
     defer seed.deinit();
-    const warm = try checkProject(changed, seed.summaries.?);
+    const warm = try checkProject(changed, seed.summaries.?, mode);
     errdefer warm.deinit();
-    const cold = try checkProject(changed, null);
+    const cold = try checkProject(changed, null, mode);
     return .{ .warm = warm, .cold = cold };
+}
+
+/// `checkAfterEditAs` for `check` itself.
+fn checkAfterEdit(original: []const File, changed: []const File) !struct { warm: Outcome, cold: Outcome } {
+    const outcome = try checkAfterEditAs(original, changed, .check);
+    return .{ .warm = outcome.warm, .cold = outcome.cold };
 }
 
 const lib_source =
@@ -168,6 +197,7 @@ test "a body edit checks only that body and reports what a check without summari
     // The stood-in `spread` still reports its unused binding.
     try t.expect(std.mem.indexOf(u8, outcome.warm.diagnostics, "W_UNUSED_BINDING") != null);
     try t.expectEqualStrings(outcome.cold.diagnostics, outcome.warm.diagnostics);
+    try t.expectEqualStrings(outcome.cold.facts, outcome.warm.facts);
 }
 
 // spec-case: CHECK-SUMMARY-1
@@ -270,10 +300,101 @@ test "deprecating a callee in another module warns at its stood-in callers" {
     try t.expectEqualStrings(outcome.cold.diagnostics, outcome.warm.diagnostics);
 }
 
+// spec: CHECK-SUMMARY-2
+test "a lowering command checks every body and stands summaries in only for their facts" {
+    const original = projectFiles(lib_source);
+    const changed = projectFiles(libEdited("xs.append(k * 2)", "xs.append(k * 3)"));
+    const outcome = try checkAfterEditAs(&original, &changed, .lowering);
+    defer outcome.warm.deinit();
+    defer outcome.cold.deinit();
+    // Every body is checked, because lowering needs its tree; the five
+    // unchanged bodies' effect and mutation facts come from their summaries.
+    try t.expectEqual(@as(usize, 7), outcome.warm.checked);
+    try t.expectEqual(@as(usize, 5), outcome.warm.stood_in);
+    try t.expectEqualStrings(outcome.cold.facts, outcome.warm.facts);
+    try t.expectEqualStrings(outcome.cold.diagnostics, outcome.warm.diagnostics);
+    // It had summaries to stand in, so it publishes none; without any it does.
+    try t.expect(outcome.warm.summaries == null);
+    try t.expect(outcome.cold.summaries != null);
+}
+
+// spec-case: CHECK-SUMMARY-2
+test "a lowering command whose edit changes a callee's facts publishes the facts it computed in full" {
+    const original = projectFiles(lib_source);
+    const allocating = projectFiles(libEdited("    return n + 1\n", "    ws: list[int] = [n]\n    return ws[0] + 1\n"));
+    const outcome = try checkAfterEditAs(&original, &allocating, .lowering);
+    defer outcome.warm.deinit();
+    defer outcome.cold.deinit();
+    try t.expectEqual(@as(usize, 0), outcome.warm.stood_in);
+    try t.expectEqualStrings(outcome.cold.facts, outcome.warm.facts);
+    try t.expectEqualStrings(outcome.cold.diagnostics, outcome.warm.diagnostics);
+    // The edit breaks `bounded`'s `noalloc`, so nothing is published.
+    try t.expect(outcome.warm.summaries == null);
+    // `spread` stops allocating: a changed fact in a still-valid program. The
+    // command repeats in full and publishes, so the next one stands in again.
+    const pure = projectFiles(libEdited("    ys: list[int] = [n, n + 1]\n    unused = 3\n    return ys[0] + ys[1]\n", "    unused = 3\n    return n + n + 1\n"));
+    const repeated = try checkAfterEditAs(&original, &pure, .lowering);
+    defer repeated.warm.deinit();
+    defer repeated.cold.deinit();
+    try t.expectEqual(@as(usize, 0), repeated.warm.stood_in);
+    try t.expect(repeated.warm.summaries != null);
+    try t.expectEqualStrings(repeated.cold.facts, repeated.warm.facts);
+    try t.expectEqualStrings(repeated.cold.diagnostics, repeated.warm.diagnostics);
+}
+
+/// A recall over one earlier preparation's own names, or over wrong digests.
+const TestRecall = struct {
+    prepared: *const semantic_key.Prepared,
+    corrupt: bool,
+
+    fn names(context: *const anyopaque, key: []const u8, digest: [32]u8) ?[]const semantic_key.Name {
+        const self: *const TestRecall = @ptrCast(@alignCast(context));
+        for (self.prepared.keys, 0..) |candidate, index| {
+            if (!std.mem.eql(u8, candidate, key)) continue;
+            var stored = self.prepared.recalled.digests[index];
+            if (self.corrupt) stored[0] ^= 1;
+            if (!std.mem.eql(u8, &stored, &digest)) return null;
+            return self.prepared.recalled.names[index];
+        }
+        return null;
+    }
+};
+
+/// Prepare the dependency keys of the lib project with `recall`.
+fn prepareKeys(arena: std.mem.Allocator, recall: ?semantic_key.Recall) !semantic_key.Prepared {
+    const files = projectFiles(lib_source);
+    var provider: Files = .{ .entries = &files };
+    const project = try arena.create(language.project.Project);
+    project.* = language.project.Project.init(arena);
+    try project.load(.{ .context = &provider, .read = Files.read }, "main", .{});
+    const index = try arena.create(language.interfaces.Index);
+    index.* = try language.interfaces.build(project);
+    const compilation = try language.project_compile.Compilation.init(index);
+    return semantic_key.prepare(arena, compilation.src, compilation.syntax, .{ .build = "test", .mutation = "mutation-v1" }, index, recall);
+}
+
+// spec: CHECK-SCALE-KEYS-1
+test "dependency keys resolved from recalled names equal those from walking the syntax" {
+    var arena_state = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena_state.deinit();
+    const arena = arena_state.allocator();
+    const walked = try prepareKeys(arena, null);
+    try t.expect(walked.recalled.names.len == walked.keys.len);
+    var matching: TestRecall = .{ .prepared = &walked, .corrupt = false };
+    const recalled = try prepareKeys(arena, .{ .context = &matching, .names = TestRecall.names });
+    try t.expectEqual(walked.contexts.len, recalled.contexts.len);
+    try t.expectEqualSlices(u8, std.mem.sliceAsBytes(walked.contexts), std.mem.sliceAsBytes(recalled.contexts));
+    // A recall whose digest no longer matches the region is ignored.
+    var stale: TestRecall = .{ .prepared = &walked, .corrupt = true };
+    const fallback = try prepareKeys(arena, .{ .context = &stale, .names = TestRecall.names });
+    try t.expectEqualSlices(u8, std.mem.sliceAsBytes(walked.contexts), std.mem.sliceAsBytes(fallback.contexts));
+    try t.expectEqualSlices(u8, std.mem.sliceAsBytes(walked.recalled.digests), std.mem.sliceAsBytes(fallback.recalled.digests));
+}
+
 // spec-case: CHECK-SUMMARY-1
 test "stored summaries round-trip and a foreign payload is refused" {
     const original = projectFiles(lib_source);
-    const seed = try checkProject(&original, null);
+    const seed = try checkProject(&original, null, .check);
     defer seed.deinit();
     var arena_state = std.heap.ArenaAllocator.init(t.allocator);
     defer arena_state.deinit();

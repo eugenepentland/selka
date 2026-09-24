@@ -45,7 +45,32 @@ pub const Prepared = struct {
     /// compatibility observation keeps its owning module reachable. Per-function
     /// dependencies no longer use it to disable unrelated ordinary bodies.
     nominal_syntax: bool,
+    /// Per AST function: its region digest and the names its syntax references.
+    recalled: Recalled = .{},
 };
+
+/// One identifier-like reference a declaration's syntax makes: a bare or
+/// dotted name, or a `member` called through `owner` (`Domain.member`).
+pub const Name = struct { text: []const u8, owner: ?[]const u8 = null };
+
+/// Names an earlier request collected, found by stable key and the BLAKE3
+/// digest of the declaration region they were collected from. The names are
+/// a function of the region's bytes, so a matching digest lets a request
+/// resolve them again without walking the unchanged syntax.
+pub const Recall = struct {
+    context: *const anyopaque,
+    names: *const fn (context: *const anyopaque, key: []const u8, digest: [32]u8) ?[]const Name,
+};
+
+/// Per AST function: the BLAKE3 digest of its declaration region and the
+/// names its signature and body reference.
+pub const Recalled = struct {
+    digests: [][32]u8 = &.{},
+    names: [][]const Name = &.{},
+};
+
+/// The contract strings every dependency digest is taken under.
+pub const Contracts = struct { build: []const u8, mutation: []const u8 };
 
 /// Build per-function dependency facts after declaration/type collection but
 /// before checking any body. `resolution` supplies the project's module and
@@ -56,14 +81,14 @@ pub fn prepare(
     allocator: std.mem.Allocator,
     src: source.Source,
     program: ast.Program,
-    contract: []const u8,
-    mutation_contract: []const u8,
+    contracts: Contracts,
     resolution: ?*interfaces.Index,
+    recall: ?Recall,
 ) error{ OutOfMemory, InternalError }!Prepared {
     var contract_hash = Hash.init(.{});
     frame(&contract_hash, "semantic-context-v1");
-    frame(&contract_hash, contract);
-    frame(&contract_hash, mutation_contract);
+    frame(&contract_hash, contracts.build);
+    frame(&contract_hash, contracts.mutation);
     var contract_sha256: [32]u8 = undefined;
     contract_hash.final(&contract_sha256);
 
@@ -75,6 +100,10 @@ pub fn prepare(
     const regions = try allocator.alloc(source.Span, program.functions.len);
     const keys = try allocator.alloc([]const u8, program.functions.len);
     const contexts = try allocator.alloc([32]u8, program.functions.len);
+    const recalled: Recalled = .{
+        .digests = try allocator.alloc([32]u8, program.functions.len),
+        .names = try allocator.alloc([]const Name, program.functions.len),
+    };
     var ordinary: std.ArrayList(usize) = .empty;
     defer ordinary.deinit(allocator);
 
@@ -87,7 +116,9 @@ pub fn prepare(
         if (start > body.start) return error.InternalError;
         regions[i] = .{ .start = start, .end = body.end };
         keys[i] = try builder.functionKey(function);
-        contexts[i] = try builder.context(function, keys[i], contract_sha256);
+        std.crypto.hash.Blake3.hash(src.bytes[start..body.end], &recalled.digests[i], .{});
+        const known = if (recall) |memory| memory.names(memory.context, keys[i], recalled.digests[i]) else null;
+        contexts[i] = try builder.context(function, keys[i], contract_sha256, .{ .known = known, .names = &recalled.names[i] });
         if (function.signature.type_parameters.len == 0) try ordinary.append(allocator, i);
     }
     return .{
@@ -97,8 +128,14 @@ pub fn prepare(
         .contexts = contexts,
         .ordinary_ast = try ordinary.toOwnedSlice(allocator),
         .nominal_syntax = nominal_syntax,
+        .recalled = recalled,
     };
 }
+
+/// The names one declaration's context resolves: `known` when an earlier
+/// request recorded them for identical region bytes, otherwise collected from
+/// its syntax. `names` receives the list either way.
+const ContextNames = struct { known: ?[]const Name, names: *[]const Name };
 
 /// Checked contract facts of one function that a persisted C2 entry must carry:
 /// the inferred effect mask, normalized `mutates` positions, `return_origin`
@@ -482,7 +519,7 @@ const Builder = struct {
     /// Dependency digest for one declaration: its own contract plus the
     /// fingerprints of declarations its signature (and, for constants, body)
     /// references.
-    fn context(self: *Builder, function: ast.Function, key: []const u8, contract: [32]u8) error{ OutOfMemory, InternalError }![32]u8 {
+    fn context(self: *Builder, function: ast.Function, key: []const u8, contract: [32]u8, names: ContextNames) error{ OutOfMemory, InternalError }![32]u8 {
         const body = self.program.statements.items[@backingInt(function.body)].span;
         const start = lineStart(self.src.bytes, function.name.start);
         if (start > body.start) return error.InternalError;
@@ -493,7 +530,16 @@ const Builder = struct {
         frame(&hash, self.src.bytes[start..body.start]);
         var collector = Collector.init(self, moduleOf(self.src, function.name));
         defer collector.deinit();
-        try collector.collectValue(ast.Function, function);
+        if (names.known) |known| {
+            // Resolution is set-valued, so resolving the recorded names binds
+            // exactly what walking the identical syntax would.
+            for (known) |name| try self.resolve(collector.module, name.text, name.owner, &collector.refs, &collector.negatives);
+            names.names.* = known;
+        } else {
+            collector.recording = true;
+            try collector.collectValue(ast.Function, function);
+            names.names.* = try self.allocator.dupe(Name, collector.names.items);
+        }
         try self.mixRefs(&hash, &collector, null);
         return hash.finalResult();
     }
@@ -648,6 +694,10 @@ const Collector = struct {
     negatives: Negatives = .empty,
     visited_nodes: std.AutoHashMapUnmanaged(usize, void) = .empty,
     visited_statements: std.AutoHashMapUnmanaged(usize, void) = .empty,
+    /// When set, every distinct name resolved is also kept in `names`.
+    recording: bool = false,
+    names: std.ArrayList(Name) = .empty,
+    seen: std.StringHashMapUnmanaged(void) = .empty,
 
     fn init(builder: *Builder, module: usize) Collector {
         return .{ .builder = builder, .module = module };
@@ -658,13 +708,28 @@ const Collector = struct {
         self.negatives.deinit(self.builder.allocator);
         self.visited_nodes.deinit(self.builder.allocator);
         self.visited_statements.deinit(self.builder.allocator);
+        self.names.deinit(self.builder.allocator);
+        self.seen.deinit(self.builder.allocator);
+    }
+
+    /// Resolve one name, keeping it once when recording.
+    fn add(self: *Collector, text: []const u8, owner: ?[]const u8) error{OutOfMemory}!void {
+        if (self.recording) {
+            // A member name joins its owner in the dedupe key; `.` never
+            // starts an identifier, so the joined key cannot collide with a bare one.
+            const seen_key = if (owner) |spelled| try std.fmt.allocPrint(self.builder.allocator, ".{s}\x1f{s}", .{ spelled, text }) else text;
+            const entry = try self.seen.getOrPut(self.builder.allocator, seen_key);
+            if (entry.found_existing) return;
+            try self.names.append(self.builder.allocator, .{ .text = text, .owner = owner });
+        }
+        try self.builder.resolve(self.module, text, owner, &self.refs, &self.negatives);
     }
 
     fn addSpan(self: *Collector, span: source.Span) error{OutOfMemory}!void {
         if (span.end <= span.start or span.end > self.builder.src.bytes.len) return;
         const text = self.builder.src.bytes[span.start..span.end];
         if (!identifierLike(text)) return;
-        try self.builder.resolve(self.module, text, null, &self.refs, &self.negatives);
+        try self.add(text, null);
     }
 
     fn addMember(self: *Collector, owner: source.Span, name: source.Span) error{OutOfMemory}!void {
@@ -673,7 +738,7 @@ const Collector = struct {
         const owner_text = self.builder.src.bytes[owner.start..owner.end];
         const name_text = self.builder.src.bytes[name.start..name.end];
         if (owner_text.len == 0 or name_text.len == 0) return;
-        try self.builder.resolve(self.module, name_text, owner_text, &self.refs, &self.negatives);
+        try self.add(name_text, owner_text);
     }
 
     fn collectValue(self: *Collector, comptime T: type, value: T) error{OutOfMemory}!void {
