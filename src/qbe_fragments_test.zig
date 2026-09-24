@@ -252,10 +252,13 @@ test "an edit computes metadata only for units of the sources it changed" {
     const cold = try emitLean(a, root, &original);
     try t.expectEqual(@as(usize, 0), cold.statistics.meta.hits);
     try t.expectEqual(cold.statistics.misses, cold.statistics.meta.misses);
-    // Nothing changed: every unit's metadata is read, none computed.
+    // A record just computed also travels inline, so the build need not read it back.
+    try t.expectEqual(cold.statistics.meta.misses, std.mem.count(u8, cold.manifest, "\"meta\":{"));
+    // Nothing changed: every unit's metadata is read, none computed, none inline.
     const warm = try emitLean(a, root, &original);
     try t.expectEqual(@as(usize, 0), warm.statistics.meta.misses);
-    try t.expectEqualStrings(cold.manifest, warm.manifest);
+    try t.expectEqual(@as(usize, 0), std.mem.count(u8, warm.manifest, "\"meta\":{"));
+    try t.expectEqualStrings(try metaDigest(a, cold.manifest, "helper::total"), try metaDigest(a, warm.manifest, "helper::total"));
     // A body edit in `helper` recomputes the metadata of helper's units only,
     // and a unit whose positions did not move keeps its digest.
     const body = try emitLean(a, root, &body_edit);

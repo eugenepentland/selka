@@ -91,11 +91,20 @@ fn verified(context: fs.Context, path: []const u8, expected: []const u8) ?[]cons
 pub fn tables(context: fs.Context, store: []const u8, unit: std.json.Value) Error!std.json.Value {
     const named = v.get(unit, meta_key);
     if (named != .string) return unit;
-    const path = try std.fs.path.join(context.allocator, &.{ store, named.string });
-    const bytes = verified(context, path, named.string) orelse return missing(context, unit, path);
-    var record = std.json.parseFromSliceLeaky(std.json.Value, context.allocator, bytes, .{}) catch return missing(context, unit, path);
-    if (record != .object) return missing(context, unit, path);
+    var record = try storedRecord(context, store, unit, named.string);
     for ([_][]const u8{ "symbol", facts_key, digest_key }) |member| try record.object.put(context.allocator, member, v.get(unit, member));
+    return record;
+}
+
+/// A lean unit's metadata record: the copy the emission that computed it
+/// carries inline (`meta`), or the stored one its digest names.
+fn storedRecord(context: fs.Context, store: []const u8, unit: std.json.Value, digest_text: []const u8) Error!std.json.Value {
+    const carried = v.get(unit, "meta");
+    if (carried == .object) return .{ .object = try carried.object.clone(context.allocator) };
+    const path = try std.fs.path.join(context.allocator, &.{ store, digest_text });
+    const bytes = verified(context, path, digest_text) orelse return missing(context, unit, path);
+    const record = std.json.parseFromSliceLeaky(std.json.Value, context.allocator, bytes, .{}) catch return missing(context, unit, path);
+    if (record != .object) return missing(context, unit, path);
     return record;
 }
 /// One instruction's source position.

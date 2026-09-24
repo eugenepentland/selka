@@ -92,6 +92,12 @@ const Unit = struct {
             try jw.write(stored.facts);
             try jw.objectField("meta_digest");
             try jw.write(stored.meta);
+            if (stored.record) |record| {
+                try jw.objectField("meta");
+                try jw.beginWriteRaw();
+                try jw.writer.writeAll(record);
+                jw.endWriteRaw();
+            }
         } else {
             try jw.objectField("il");
             try jw.write(self.il);
@@ -110,8 +116,9 @@ const Unit = struct {
     }
 };
 /// A unit text kept in the fragment store: its hex digest and build facts,
-/// and the hex digest of its stored metadata once `metaPass` has named it.
-const Stored = struct { digest: []const u8, facts: []const u8, meta: []const u8 = "" };
+/// the hex digest of its stored metadata once `metaPass` has named it, and
+/// that record itself when this emission computed it.
+const Stored = struct { digest: []const u8, facts: []const u8, meta: []const u8 = "", record: ?[]const u8 = null };
 
 /// One unit's stored metadata (`EMIT-META-1`): its name, its positions and
 /// assertion messages in the compact spelling (`BUILD-POSITIONS-1`) and its
@@ -781,13 +788,18 @@ fn metaPass(pass: EmitPass, reuse: *Reuse, src: Source) GenerateError!void {
         var key: fragments.MetaKey = .init(reuse.finals[index]);
         sources.fold(&key, pass.program.functions[index].scope.instructions);
         const identity = key.finish();
-        const digest = try store.meta(identity) orelse stored: {
-            var positioned = unit.*;
-            try fillPositions(scratch.allocator(), pass.program, src, index, &positioned);
-            const text = try std.json.Stringify.valueAlloc(scratch.allocator(), MetaRecord{ .unit = positioned }, .{});
-            break :stored try store.rememberMeta(identity, text);
-        };
+        if (try store.meta(identity)) |digest| {
+            unit.stored.?.meta = try pass.allocator.dupe(u8, &std.fmt.bytesToHex(digest, .lower));
+            continue;
+        }
+        var positioned = unit.*;
+        try fillPositions(scratch.allocator(), pass.program, src, index, &positioned);
+        const text = try std.json.Stringify.valueAlloc(scratch.allocator(), MetaRecord{ .unit = positioned }, .{});
+        const digest = try store.rememberMeta(identity, text);
         unit.stored.?.meta = try pass.allocator.dupe(u8, &std.fmt.bytesToHex(digest, .lower));
+        // The build needs a fresh record in any case, since the metadata
+        // it belongs to changed; handing it over inline saves reading it back.
+        unit.stored.?.record = try pass.allocator.dupe(u8, text);
     }
 }
 
