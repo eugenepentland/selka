@@ -7,6 +7,7 @@
 //! over the concrete checker type; `Checks` exposes the ones the rest of the
 //! checker calls as `self.name(...)`.
 const sema_shared = @import("sema_shared.zig");
+const sema_contracts = @import("sema_contracts.zig");
 const buffer_operations = @import("buffer_operations.zig");
 const BufferKind = buffer_operations.Kind;
 const collections = @import("collection_lower.zig");
@@ -505,7 +506,25 @@ fn queueExpression(comptime Checker: type, self: *Checker, work: *std.ArrayList(
     }
     return false;
 }
+/// CONTRACT-PURE-1: a contract condition may not pass a `mut` argument,
+/// assign, call a method that changes its receiver, or leave its function
+/// early with `?`.
+fn rejectInContract(comptime Checker: type, self: *Checker, node: ast.Node) Error!void {
+    if (self.contract.checking == null) return;
+    const changes = "a contract condition must not change anything, so it cannot call a method that changes its receiver";
+    const message = switch (node.data) {
+        .mut_argument => "a contract condition must not change anything, so it cannot pass a `mut` argument",
+        .propagate => "a contract condition cannot return early with `?`; test the value with `match` instead",
+        .field_assignment, .index_assignment => "a contract condition must not change anything, so it cannot assign",
+        .list_operation => |operation| if (operation.kind.writesReceiver()) changes else return,
+        .buffer_operation => |operation| if (operation.kind.writesReceiver()) changes else return,
+        .method_call => |call| if (buffer_operations.method(self.src.text(call.name))) |kind| (if (kind.writesReceiver()) changes else return) else return,
+        else => return,
+    };
+    return self.sink.fail(sema_contracts.effect_code, node.span, message);
+}
 fn checkedExpression(comptime Checker: type, self: *Checker, node: ast.Node, minimum_literal: ?Literal, temporaries: []const typed.Type) Error!typed.Node {
+    try rejectInContract(Checker, self, node);
     var out: typed.Node = .{ .span = node.span, .ty = .i64, .data = undefined };
     if (lambdaIndex(Checker, self, node.span)) |lambda_index| {
         try checkLambdaValue(Checker, self, lambda_index, node, &out);
@@ -860,7 +879,9 @@ fn expressionWithTemporaries(comptime Checker: type, self: *Checker, root: ast.N
         }
         const index = @backingInt(task.id);
         if (self.resolved[index]) |value| {
-            if (task.default_value) try temporaries.append(self.allocator, self.nodes.items[@backingInt(value)].ty);
+            // An `old(...)` an `@ensures` check bound in advance stands for a
+            // freshly checked operand, so it leaves its temporary like one.
+            if (task.default_value or self.contractSeeded(index)) try temporaries.append(self.allocator, self.nodes.items[@backingInt(value)].ty);
             continue;
         }
         const node = try self.collectionSyntax(task.id);

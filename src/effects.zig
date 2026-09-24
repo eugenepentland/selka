@@ -6,6 +6,8 @@ pub const ValidateError = error{
 };
 /// Diagnostic code for a body that exceeds the ceiling its signature implies.
 const bound_code = "E_EFFECT_BOUND";
+/// Diagnostic code for a contract condition with an effect beyond allocation.
+const contract_effect_code = "E_CONTRACT_EFFECT";
 /// Diagnostic code for a clause that names an effect no parameter supplies.
 const unsupplied_clause_code = "E_DERIVED_EFFECTS";
 /// Diagnostic code for a clause that restates the ceiling its parameters imply.
@@ -23,6 +25,7 @@ const mutation = @import("mutation.zig");
 const origin_pass = @import("origins.zig");
 const bytecode_model = @import("bytecode_model.zig");
 const callables = @import("callables.zig");
+const typed_walk = @import("typed_walk.zig");
 const entry_adapter = @import("entry_adapter.zig");
 const Witness = struct { span: Span, via: ?usize = null };
 const Edge = struct { caller: usize, span: Span };
@@ -185,7 +188,7 @@ fn inferFacts(allocator: std.mem.Allocator, program: typed.Program, function: ty
     const origins = try allocator.alloc(?u16, function.scope.locals.len);
     defer allocator.free(origins);
     @memset(origins, null);
-    var walker = try @import("typed_walk.zig").Walker.init(allocator, program, function.scope.body);
+    var walker = try typed_walk.Walker.init(allocator, program, function.scope.body);
     defer walker.deinit();
     while (try walker.next()) |item| switch (item) {
         .expression => |id| {
@@ -566,11 +569,6 @@ fn appendBoundViolation(allocator: std.mem.Allocator, ctx: BoundContext, index: 
     }) catch return error.OutOfMemory;
 }
 
-/// Record a node's `output` effect, except a `debug` line which is effect-free.
-fn directPrint(graph: *Graph, index: usize, output: typed.Print, span: Span) void {
-    if (!output.debug) graph.direct(index, .output, span);
-}
-
 /// Infer transitive effects and reject function bodies that exceed declared effect bounds.
 /// Everything the effect and mutation passes need besides the checked program:
 /// the exporting verdicts and the source the declaration-side messages quote.
@@ -634,6 +632,7 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, request: Requ
     for (program.functions, 0..) |_, index| {
         if (origin_pass.standIn(request.stubs, index) != null) continue;
         if (try checkSignatureCeiling(context, index)) violated = true;
+        if (try checkContractPurity(context, index)) violated = true;
     }
     if (violated) return error.SourceError;
 }
@@ -652,43 +651,11 @@ fn seedFunction(allocator: std.mem.Allocator, program: typed.Program, graph: *Gr
     mutable.signature.mutates = facts.mutates;
     mutable.signature.return_origin = facts.return_origin;
     mutable.signature.mutation_facts = facts.mutation_facts;
-    var walker = try @import("typed_walk.zig").Walker.init(allocator, program, function.scope.body);
+    var walker = try typed_walk.Walker.init(allocator, program, function.scope.body);
     defer walker.deinit();
     while (try walker.next()) |item| if (item == .expression) {
         const node = program.nodes[@backingInt(item.expression)];
         switch (node.data) {
-            .acquire_resource => graph.direct(index, typed.resourceKind(typed.resultShape(node.ty, program.records).?.ok_type, program.records).?.effect(), node.span),
-            .complete_resource => graph.direct(index, typed.resourceKind(typed.completionShape(node.ty, program.records).?.resource_type, program.records).?.effect(), node.span),
-            .resource_io => |io| graph.direct(index, typed.resourceKind(function.scope.locals[@backingInt(io.owner)].ty, program.records).?.effect(), node.span),
-            .environment_get, .environment_names => graph.direct(index, .environment, node.span),
-            .print => |output| directPrint(graph, index, output, node.span),
-            .stream_write => graph.direct(index, .output, node.span),
-            .file_access, .file_method => graph.direct(index, .filesystem, node.span),
-            .external_read => |read| graph.direct(index, read.kind.effect(), node.span),
-            .cast => if (allocatingSequence(program.records, node.ty)) {
-                graph.direct(index, .managed_allocation, node.span);
-            },
-            .array => if (literalAllocates(program.records, node.ty)) {
-                graph.direct(index, .managed_allocation, node.span);
-            },
-            .record => if (node.ty.isAggregate() and program.records[node.ty.recordIndex()].managed) {
-                graph.direct(index, .managed_allocation, node.span);
-            },
-            .binary => |binary| if (binary.op == .add and allocatingSequence(program.records, node.ty)) {
-                graph.direct(index, .managed_allocation, node.span);
-            },
-            // Charged by the receiver, as `validate` charges `get_index`: only a
-            // `str` read builds a fresh string. A static-array or dictionary
-            // read of a `str` element hands back the stored reference.
-            .index => |access| if (allocatingElement(program.records, program.nodes[@backingInt(access.base)].ty)) {
-                graph.direct(index, .managed_allocation, node.span);
-            },
-            .acquire_buffer => graph.direct(index, .managed_allocation, node.span),
-            .buffer_operation => |op| {
-                const managed = program.records[function.scope.locals[@backingInt(op.owner)].ty.recordIndex()].managed;
-                const dictionary = program.records[function.scope.locals[@backingInt(op.owner)].ty.recordIndex()].collection.kind == .dictionary;
-                if (managed and @import("buffer_operations.zig").managedAllocation(op.kind, dictionary)) graph.direct(index, .managed_allocation, node.span);
-            },
             .invoke => |call| {
                 const contract = callables.signature(program.nodes[@backingInt(call.callee)].ty, program.records).?;
                 inline for (std.meta.tags(sets.Effect)) |effect| if (effect != .mutation and callbackContribution(contract) & sets.bit(effect) != 0) graph.direct(index, effect, node.span);
@@ -697,31 +664,125 @@ fn seedFunction(allocator: std.mem.Allocator, program: typed.Program, graph: *Gr
                 error.OutOfMemory => return error.OutOfMemory,
                 error.InternalError => unreachable, // Resolved typed function identity.
             },
-            .arena_escape => graph.direct(index, .managed_allocation, node.span),
-            .restrict_resource,
-            .dir_resource,
-            .host_resource,
-            .environment_only,
-            .function_value,
-            .integer,
-            .boolean,
-            .unit,
-            .local,
-            .propagate,
-            .wrap,
-            .variant,
-            .block_value,
-            .unwrap,
-            .replace,
-            .length,
-            .update,
-            .field,
-            .unary,
-            => {},
+            else => if (directEffect(program, function, node)) |effect| graph.direct(index, effect, node.span),
         }
     };
     // Ownership-bearing signatures and locals conservatively include their
     // fallback cleanup effect, including on traps and propagated errors.
+}
+
+/// The effect one checked node has by itself, apart from the calls it makes:
+/// a capability operation, an output, or a managed allocation. Null when the
+/// node has none of its own.
+fn directEffect(program: typed.Program, function: typed.Function, node: typed.Node) ?sets.Effect {
+    return switch (node.data) {
+        .acquire_resource => typed.resourceKind(typed.resultShape(node.ty, program.records).?.ok_type, program.records).?.effect(),
+        .complete_resource => typed.resourceKind(typed.completionShape(node.ty, program.records).?.resource_type, program.records).?.effect(),
+        .resource_io => |io| typed.resourceKind(function.scope.locals[@backingInt(io.owner)].ty, program.records).?.effect(),
+        .environment_get, .environment_names => .environment,
+        // A `debug` line is effect-free.
+        .print => |output| if (output.debug) null else .output,
+        .stream_write => .output,
+        .file_access, .file_method => .filesystem,
+        .external_read => |read| read.kind.effect(),
+        .cast => if (allocatingSequence(program.records, node.ty)) .managed_allocation else null,
+        .array => if (literalAllocates(program.records, node.ty)) .managed_allocation else null,
+        .record => if (node.ty.isAggregate() and program.records[node.ty.recordIndex()].managed) .managed_allocation else null,
+        .binary => |binary| if (binary.op == .add and allocatingSequence(program.records, node.ty)) .managed_allocation else null,
+        // Charged by the receiver, as `validate` charges `get_index`: only a
+        // `str` read builds a fresh string. A static-array or dictionary
+        // read of a `str` element hands back the stored reference.
+        .index => |access| if (allocatingElement(program.records, program.nodes[@backingInt(access.base)].ty)) .managed_allocation else null,
+        .acquire_buffer, .arena_escape => .managed_allocation,
+        .buffer_operation => |op| operation: {
+            const owner = program.records[function.scope.locals[@backingInt(op.owner)].ty.recordIndex()];
+            const dictionary = owner.collection.kind == .dictionary;
+            break :operation if (owner.managed and @import("buffer_operations.zig").managedAllocation(op.kind, dictionary)) .managed_allocation else null;
+        },
+        .invoke, .call => null,
+        .restrict_resource,
+        .dir_resource,
+        .host_resource,
+        .environment_only,
+        .function_value,
+        .integer,
+        .boolean,
+        .unit,
+        .local,
+        .propagate,
+        .wrap,
+        .variant,
+        .block_value,
+        .unwrap,
+        .replace,
+        .length,
+        .update,
+        .field,
+        .unary,
+        => null,
+    };
+}
+
+/// Whether a local names storage a contract condition did not build itself.
+fn existingStorage(function: typed.Function, slot: typed.LocalId) bool {
+    if (@backingInt(slot) < function.signature.parameter_count) return true;
+    const origin = function.scope.locals[@backingInt(slot)].origin;
+    return origin == .contract_old or origin == .contract_value;
+}
+
+/// One effect a contract condition has, and the operation it comes from.
+const ContractEffect = struct { effect: sets.Effect, span: Span };
+
+/// The first effect other than `managed_allocation` that evaluating the
+/// expression `root` of `function` has, including every effect its callees
+/// were inferred to have, or null when it is effect-free.
+fn contractEffect(allocator: std.mem.Allocator, program: typed.Program, graph: *const Graph, function: typed.Function, root: typed.NodeId) diagnostic.Error!?ContractEffect {
+    var walker = try typed_walk.Walker.initExpression(allocator, program, root);
+    defer walker.deinit();
+    const allowed = sets.bit(.managed_allocation);
+    while (try walker.next()) |item| if (item == .expression) {
+        const node = program.nodes[@backingInt(item.expression)];
+        const mask: sets.Mask = switch (node.data) {
+            .call => |call| graph.states[@backingInt(call.function)].mask | (program.functions[@backingInt(call.function)].policy.effects & sets.bit(.mutation)),
+            .invoke => |call| callbackContribution(callables.signature(program.nodes[@backingInt(call.callee)].ty, program.records).?),
+            // Only storage that existed before the condition ran can be
+            // changed by it: a parameter or a value the clause is checked
+            // against. A list a comprehension or literal builds is its own.
+            .buffer_operation => |op| if (op.kind.writesReceiver() and existingStorage(function, op.owner)) sets.bit(.mutation) else 0,
+            else => if (directEffect(program, function, node)) |effect| sets.bit(effect) else 0,
+        };
+        inline for (std.meta.tags(sets.Effect)) |effect| if (mask & ~allowed & sets.bit(effect) != 0) return .{ .effect = effect, .span = node.span };
+    };
+    return null;
+}
+
+/// CONTRACT-PURE-1: every contract condition the checker placed in a body —
+/// a `@requires`, `@ensures` or `@invariant` assertion, and each `old(...)`
+/// capture — may allocate but has no other effect, judged by the same
+/// inference that computes every function's effects. Reports each violation
+/// and returns whether any.
+fn checkContractPurity(ctx: CeilingContext, index: usize) diagnostic.Error!bool {
+    const function = ctx.program.functions[index];
+    var walker = try typed_walk.Walker.init(ctx.allocator, ctx.program, function.scope.body);
+    defer walker.deinit();
+    while (try walker.next()) |item| if (item == .statement) {
+        const statement = ctx.program.statements[@backingInt(item.statement)];
+        const root: typed.NodeId, const clause: []const u8 = switch (statement.data) {
+            .assertion => |claim| if (claim.kind != .statement) .{ claim.condition, @tagName(claim.kind) } else continue,
+            .initialize => |store| if (function.scope.locals[@backingInt(store.slot)].origin == .contract_old) .{ store.value, "old" } else continue,
+            else => continue,
+        };
+        const found = try contractEffect(ctx.allocator, ctx.program, ctx.graph, function, root) orelse continue;
+        const message = try std.fmt.allocPrint(ctx.allocator, "a contract condition may allocate but have no other effect; this `{s}` clause has the `{s}` effect", .{ clause, @tagName(found.effect) });
+        try ctx.sink.items.append(ctx.allocator, .{
+            .code = contract_effect_code,
+            .span = ctx.program.nodes[@backingInt(root)].span,
+            .message = message,
+            .related = .{ .span = found.span, .message = "the effect comes from this operation" },
+        });
+        return true;
+    };
+    return false;
 }
 
 /// Run the M2 mutation pass over `program` and, when the request asks for them,
