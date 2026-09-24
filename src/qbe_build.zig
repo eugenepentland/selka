@@ -10,6 +10,8 @@ const outputs = @import("qbe_build_outputs.zig");
 const v = @import("qbe_build_value.zig");
 const frame_map = @import("qbe_frame_map.zig");
 const native_link = @import("native_link.zig");
+const batch = @import("qbe_build_batch.zig");
+const tool_spawn = @import("qbe_build_spawn.zig");
 /// The linker flag that drops every section a program never references.
 const gc_sections = "-Wl,--gc-sections";
 /// The manifest array that lists every emitted unit.
@@ -180,7 +182,7 @@ fn environmentJson(allocator: std.mem.Allocator, per_build: Environment) Error![
 }
 /// Validate one emitted manifest and link it into `output`, reporting whether the file changed.
 pub fn assemble(cache: cache_api.Cache, parsed: options.Options, manifest: std.json.Value, output: []const u8) Error!bool {
-    try validate(manifest);
+    try validate(cache.context.allocator, manifest);
     var state = State{ .context = cache.context, .cache = cache, .manifest = manifest };
     try state.compile(parsed);
     return state.link(parsed, output);
@@ -256,7 +258,7 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
         break :frontend generated.stdout;
     };
     const manifest = (try std.json.parseFromSlice(std.json.Value, a, manifest_bytes, .{ .allocate = .alloc_always })).value;
-    try validate(manifest);
+    try validate(a, manifest);
     // A consumed manifest reports no frontend time because no frontend ran.
     const frontend = if (checked_manifest != null) 0 else seconds(context, start);
     const native_start = std.Io.Timestamp.now(context.io, .awake);
@@ -269,12 +271,15 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
     const changed = try state.link(parsed, output);
     const link = seconds(context, link_start);
     if (parsed.report) {
+        const objects = try functionObjects(a, state.records.items);
         const report = try std.json.Stringify.valueAlloc(a, .{
             .version = "qbe-build-v1",
             .output = output,
             .output_changed = changed,
             .compiled_functions = state.records.items.len - state.reused,
             .reused_functions = state.reused,
+            .function_objects = objects.total,
+            .compiled_function_objects = objects.compiled,
             .runtime_reused = state.runtime.reused,
             .runtime_installed = state.runtime_installed,
             .metadata_reused = state.metadata_reused,
@@ -305,6 +310,19 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
     }
     if (parsed.run) return spawnParts(context, output, controls, parsed);
     return 0;
+}
+/// How many distinct objects hold the guest functions, and how many of them
+/// this build compiled: one per function on the LLVM arm, one per batch on QBE.
+const ObjectCounts = struct { total: usize, compiled: usize };
+fn functionObjects(allocator: std.mem.Allocator, records: []const Record) !ObjectCounts {
+    var seen: std.StringHashMapUnmanaged(void) = .empty;
+    var counts: ObjectCounts = .{ .total = 0, .compiled = 0 };
+    for (records) |record| {
+        if ((try seen.getOrPut(allocator, record.object)).found_existing) continue;
+        counts.total += 1;
+        counts.compiled += @intFromBool(!record.reused);
+    }
+    return counts;
 }
 /// Find an internal `--select-file=PATH` in the original build arguments. The
 /// selective frontend input is intentionally not stored in `Options`, whose
@@ -625,7 +643,10 @@ fn publishInstalled(context: fs.Context, source: []const u8, out: []const u8, ha
 fn seconds(context: fs.Context, start: std.Io.Timestamp) f64 {
     return @as(f64, @floatFromInt(start.durationTo(std.Io.Timestamp.now(context.io, .awake)).nanoseconds)) / 1e9;
 }
-fn validate(manifest: std.json.Value) !void {
+/// Refuse a manifest with the wrong version or ABI, a malformed or repeated
+/// unit symbol, or an executable entry no unit defines. Repeats are found with
+/// a set, so a manifest of thousands of units costs one pass, not a quadratic scan.
+fn validate(allocator: std.mem.Allocator, manifest: std.json.Value) !void {
     if (!std.mem.eql(u8, v.text(v.get(manifest, "version")), "qbe-units-v1")) return error.InvalidNativeManifest;
     if (!std.mem.eql(u8, v.text(v.get(manifest, "abi")), native_abi)) return error.InvalidNativeManifest;
     const units = v.array(v.get(manifest, manifest_functions));
@@ -633,12 +654,14 @@ fn validate(manifest: std.json.Value) !void {
     // A selective library manifest has no executable entry; `build --library`
     // emits a stub entry_run instead. Executable manifests still require one.
     var entry_found = entry.len == 0;
-    for (units, 0..) |unit, index| {
+    var seen: std.StringHashMapUnmanaged(void) = .empty;
+    defer seen.deinit(allocator);
+    for (units) |unit| {
         const symbol = v.text(v.get(unit, "symbol"));
         if (symbol.len == 0 or v.get(unit, "il") != .string) return error.InvalidNativeManifest;
         if (!std.ascii.isAlphabetic(symbol[0]) and symbol[0] != '_') return error.InvalidNativeManifest;
         for (symbol) |character| if (!std.ascii.isAlphanumeric(character) and character != '_') return error.InvalidNativeManifest;
-        for (units[0..index]) |other| if (std.mem.eql(u8, symbol, v.text(v.get(other, "symbol")))) return error.InvalidNativeManifest;
+        if ((try seen.getOrPut(allocator, symbol)).found_existing) return error.InvalidNativeManifest;
         if (std.mem.eql(u8, symbol, entry)) entry_found = true;
     }
     if (!entry_found) return error.InvalidNativeManifest;
@@ -729,6 +752,22 @@ const State = struct {
         const a = self.context.allocator;
         const functions = try a.dupe(std.json.Value, v.array(v.get(self.manifest, manifest_functions)));
         std.mem.sort(std.json.Value, functions, {}, less);
+        const wrapper = if (parsed.library) try @import("qbe_build_embed.zig").libraryWrapper(a, self.manifest) else try outputs.entry(a, self.manifest, parsed.provider != null, std.mem.eql(u8, parsed.mode, release_fast));
+        const units: [2]cache_api.Object = if (self.cache.codegen.llvm) llvm: {
+            try self.compileUnits(functions);
+            break :llvm .{ try self.cache.object("metadata", try outputs.metadata(a, self.manifest), .c_text), try self.cache.object("entry", wrapper, .c_text) };
+        } else try self.compileBatches(functions, wrapper);
+        self.metadata_reused = units[0].reused;
+        try self.add(units[0]);
+        try self.add(units[1]);
+        if (v.boolean(v.get(self.manifest, "text_format"))) try self.add(try self.resolveFormat());
+        // Linked last, so every object above can still pull the members it needs.
+        self.runtime = try self.resolveRuntime();
+    }
+    /// The LLVM arm: one content-addressed object per unit, the adapter's
+    /// signature sidecar completed first, and the misses translated in waves.
+    fn compileUnits(self: *State, functions: []const std.json.Value) !void {
+        const a = self.context.allocator;
         const environment = try self.cache.adapterEnvironment();
         const units = try a.alloc(Unit, functions.len);
         const il = try a.alloc([]const u8, functions.len);
@@ -757,45 +796,102 @@ const State = struct {
             self.reused += @intFromBool(object.reused);
             try self.records.append(a, .{ .name = v.text(v.get(unit.value, "name")), .symbol = v.text(v.get(unit.value, "symbol")), .key = object.key, .object = object.path, .reused = object.reused });
         }
-        const metadata = try self.cache.object("metadata", try outputs.metadata(a, self.manifest), .c_text);
-        self.metadata_reused = metadata.reused;
-        try self.add(metadata);
-        const wrapper = if (parsed.library) try @import("qbe_build_embed.zig").libraryWrapper(a, self.manifest) else try outputs.entry(a, self.manifest, parsed.provider != null, std.mem.eql(u8, parsed.mode, release_fast));
-        try self.add(try self.cache.object("entry", wrapper, .c_text));
-        if (v.boolean(v.get(self.manifest, "text_format"))) try self.add(try self.resolveFormat());
-        // Linked last, so every object above can still pull the members it needs.
-        self.runtime = try self.resolveRuntime();
     }
-    /// Build every staged miss. The LLVM adapter is one Python process per unit
-    /// and dominates a cold build, so its units start in concurrent waves; the
-    /// native QBE arm keeps its sequential loop.
-    fn buildMisses(self: *State, units: []Unit, misses: []const usize) !void {
-        if (self.cache.codegen.llvm) {
-            const width = concurrency();
-            var start: usize = 0;
-            while (start < misses.len) : (start += width) {
-                try self.spawnWave(units, misses[start..@min(start + width, misses.len)]);
-            }
-            for (misses) |index| units[index].object = try self.cache.publish(units[index].staged.miss);
-        } else {
-            for (misses) |index| try self.fitsQbe(units[index]);
-            for (misses) |index| units[index].object = try self.cache.finish(units[index].staged.miss);
+    /// QBE-BATCH-1: the QBE arm plans its units into module batches, reuses
+    /// every batch whose object is cached, and builds the rest concurrently,
+    /// one QBE run and one assembler run per batch (`qbe_build_batch.zig`).
+    /// Each function's report record names its own key and its batch's object.
+    /// QBE-BATCH-3: each batch's function metadata is its own assembled object
+    /// keyed by its text, and the program-wide metadata and entry C units
+    /// compile in the same pool, so none of them waits for the others. Returns
+    /// the shared metadata and entry objects, which link after every batch.
+    fn compileBatches(self: *State, functions: []const std.json.Value, wrapper: []const u8) ![2]cache_api.Object {
+        const a = self.context.allocator;
+        const order = try a.alloc(usize, functions.len);
+        for (order, 0..) |*slot, index| slot.* = index;
+        std.mem.sort(usize, order, functions, planLess);
+        const units = try a.alloc(batch.Unit, functions.len);
+        const keys = try a.alloc([]const u8, functions.len);
+        for (order, units, keys) |index, *unit, *key| {
+            const il = v.text(v.get(functions[index], "il"));
+            unit.* = .{ .module = batch.moduleOf(v.text(v.get(functions[index], "name"))), .symbol = v.text(v.get(functions[index], "symbol")), .alone = batch.definesData(il) };
+            key.* = try self.cache.unitKey(il);
         }
+        const batches = try batch.plan(a, units, batch.policy(self.context.environ));
+        // Objects: each batch's code then its metadata, then the shared metadata and the entry.
+        const objects = try a.alloc(cache_api.Object, batches.len * 2 + 2);
+        var misses: std.ArrayList(batch.Miss) = .empty;
+        const owner = try a.alloc(usize, functions.len);
+        for (batches, 0..) |group, index| {
+            const positions = order[group.first .. group.first + group.count];
+            const members = try a.alloc(std.json.Value, group.count);
+            for (positions, members) |position, *member| {
+                owner[position] = index;
+                member.* = functions[position];
+            }
+            const code = try batch.key(self.cache, keys[group.first .. group.first + group.count]);
+            if (try self.cache.cached(code)) |hit| objects[index * 2] = hit else {
+                const il = try a.alloc([]const u8, group.count);
+                for (members, il) |member, *text| {
+                    try self.fitsQbe(member);
+                    text.* = v.text(v.get(member, "il"));
+                }
+                try misses.append(a, .{ .key = code, .object = &objects[index * 2], .input = .{ .il = il } });
+            }
+            const assembly = try outputs.metadataAssembly(a, members);
+            const tables = try self.cache.derived(batch.metadata_version, assembly);
+            if (try self.cache.cached(tables)) |hit| objects[index * 2 + 1] = hit else {
+                try misses.append(a, .{ .key = tables, .object = &objects[index * 2 + 1], .input = .{ .assembly = assembly } });
+            }
+        }
+        // The C units start first: the shared metadata is the largest single compile.
+        var work: std.ArrayList(batch.Miss) = .empty;
+        try self.stageC(&work, "metadata", try outputs.sharedMetadata(a, self.manifest), &objects[batches.len * 2]);
+        try self.stageC(&work, "entry", wrapper, &objects[batches.len * 2 + 1]);
+        try work.appendSlice(a, misses.items);
+        try batch.build(self.cache, work.items, batch.width(self.context.io, work.items.len));
+        for (objects[0 .. batches.len * 2]) |object| try self.add(object);
+        const unit_keys = try a.alloc([]const u8, functions.len);
+        for (order, keys) |position, key| unit_keys[position] = key;
+        for (functions, owner, unit_keys) |function, index, key| {
+            const object = objects[index * 2];
+            self.reused += @intFromBool(object.reused);
+            try self.records.append(a, .{ .name = v.text(v.get(function, "name")), .symbol = v.text(v.get(function, "symbol")), .key = key, .object = object.path, .reused = object.reused });
+        }
+        return .{ objects[batches.len * 2], objects[batches.len * 2 + 1] };
+    }
+    /// Record one generated C unit's object, or stage its compile as a miss
+    /// for the batch pool.
+    fn stageC(self: *State, misses: *std.ArrayList(batch.Miss), kind: []const u8, text: []const u8, object: *cache_api.Object) !void {
+        switch (try self.cache.stage(kind, text, .c_text, null)) {
+            .hit => |hit| object.* = hit,
+            .miss => |job| try misses.append(self.context.allocator, .{ .key = job.key, .object = object, .input = .{ .staged = job } }),
+        }
+    }
+    /// Build every staged LLVM miss. The adapter is one Python process per
+    /// unit and dominates a cold build, so its units start in concurrent waves.
+    fn buildMisses(self: *State, units: []Unit, misses: []const usize) !void {
+        const width = concurrency();
+        var start: usize = 0;
+        while (start < misses.len) : (start += width) {
+            try self.spawnWave(units, misses[start..@min(start + width, misses.len)]);
+        }
+        for (misses) |index| units[index].object = try self.cache.publish(units[index].staged.miss);
     }
     /// QBE-SIZE-LIMIT-1: refuse, before QBE starts, a function whose QBE memory
     /// estimate (`qbeRefusal`) exceeds the address-space ceiling QBE inherits
     /// from this process, naming the function and the two ways out, instead of
     /// letting QBE die in `emalloc` minutes later. No ceiling, no refusal.
-    fn fitsQbe(self: *State, unit: Unit) fs.Error!void {
+    fn fitsQbe(self: *State, unit: std.json.Value) fs.Error!void {
         const address_space = std.posix.getrlimit(.AS) catch return;
         if (address_space.cur == std.math.maxInt(u64)) return;
-        const refusal = qbeRefusal(v.text(v.get(unit.value, "il")), address_space.cur) orelse return;
+        const refusal = qbeRefusal(v.text(v.get(unit, "il")), address_space.cur) orelse return;
         const gib: f64 = 1024.0 * 1024.0 * 1024.0;
         const message = try std.fmt.allocPrint(
             self.context.allocator,
             "mylang: function `{s}` is too large for the QBE backend: {d} blocks x {d} temporaries need about {d:.1} GiB in QBE, " ++
                 "over the {d:.1} GiB address-space ceiling it inherits (MYLANG_HOST_MEMORY_LIMIT); split the function, or build with `--backend llvm`\n",
-            .{ v.text(v.get(unit.value, "name")), refusal.blocks, refusal.temporaries, @as(f64, @floatFromInt(refusal.bytes)) / gib, @as(f64, @floatFromInt(address_space.cur)) / gib },
+            .{ v.text(v.get(unit, "name")), refusal.blocks, refusal.temporaries, @as(f64, @floatFromInt(refusal.bytes)) / gib, @as(f64, @floatFromInt(address_space.cur)) / gib },
         );
         std.Io.File.stderr().writeStreamingAll(self.context.io, message) catch return error.NativeToolFailed;
         return error.NativeToolFailed;
@@ -804,23 +900,26 @@ const State = struct {
     /// this process's stderr; the first failure is reported only after every
     /// started child has been waited on, so no zombie outlives the wave.
     fn spawnWave(self: *State, units: []Unit, wave: []const usize) fs.Error!void {
-        const children = try self.context.allocator.alloc(std.process.Child, wave.len);
+        const a = self.context.allocator;
+        const children = try a.alloc(tool_spawn.Started, wave.len);
         var started: usize = 0;
         var failure: ?fs.Error = null;
         for (wave) |index| {
             const job = units[index].staged.miss;
-            children[started] = std.process.spawn(self.context.io, .{ .argv = job.argv, .environ_map = job.environment }) catch |err| {
+            // QBE-SPAWN-1: started without copying this process; diagnostics
+            // stream straight to this process's standard error.
+            children[started] = tool_spawn.start(a, .{ .argv = job.argv, .environment = job.environment, .capture = false }) catch |err| {
                 failure = err;
                 break;
             };
             started += 1;
         }
-        for (children[0..started]) |*child| {
-            const term = child.wait(self.context.io) catch |err| {
+        for (children[0..started]) |child| {
+            const finished = tool_spawn.finish(a, child) catch |err| {
                 if (failure == null) failure = err;
                 continue;
             };
-            if (fs.exitCode(term) != 0 and failure == null) failure = error.NativeToolFailed;
+            if (fs.exitCode(finished.term) != 0 and failure == null) failure = error.NativeToolFailed;
         }
         if (failure) |err| return err;
     }
@@ -1030,6 +1129,14 @@ const release_fast = "ReleaseFast";
 fn less(_: void, left: std.json.Value, right: std.json.Value) bool {
     return std.mem.lessThan(u8, v.text(v.get(left, "symbol")), v.text(v.get(right, "symbol")));
 }
+/// A manifest unit as the batch planner orders it.
+fn planUnit(value: std.json.Value) batch.Unit {
+    return .{ .module = batch.moduleOf(v.text(v.get(value, "name"))), .symbol = v.text(v.get(value, "symbol")) };
+}
+/// Batch plan order over manifest units, by index: module, then symbol.
+fn planLess(functions: []const std.json.Value, left: usize, right: usize) bool {
+    return batch.less({}, planUnit(functions[left]), planUnit(functions[right]));
+}
 
 fn checkHost(os: std.Target.Os.Tag, arch: std.Target.Cpu.Arch) error{UnsupportedNativeHost}!void {
     if (os != .linux or arch != .x86_64) return error.UnsupportedNativeHost;
@@ -1048,12 +1155,12 @@ test "build --run forwards a wall-clock timeout and stops at the guest delimiter
 test "native build rejects incompatible tools targets and malformed manifests" {
     try std.testing.expectError(error.UnsupportedNativeHost, checkHost(.linux, .aarch64));
     try std.testing.expectError(error.ZigVersionMismatch, checkVersion("unrelated-version"));
-    try std.testing.expectError(error.InvalidNativeManifest, validate(.null));
+    try std.testing.expectError(error.InvalidNativeManifest, validate(std.testing.allocator, .null));
     var buffer: [512]u8 = undefined;
     const encoded = try std.fmt.bufPrint(&buffer, "{{\"version\":\"qbe-units-v1\",\"abi\":\"{s}\",\"entry\":\"1bad\",\"functions\":[{{\"symbol\":\"1bad\",\"il\":\"\"}}]}}", .{native_abi});
     const value = try std.json.parseFromSlice(std.json.Value, std.testing.allocator, encoded, .{});
     defer value.deinit();
-    try std.testing.expectError(error.InvalidNativeManifest, validate(value.value));
+    try std.testing.expectError(error.InvalidNativeManifest, validate(std.testing.allocator, value.value));
 }
 
 // spec: QBE-AGGREF-6
@@ -1066,10 +1173,10 @@ test "a pre-v7 manifest whose IL already crossed by address is refused, not re-r
         \\{"version":"qbe-units-v1","abi":"mylang-qbe-native-v6","entry":"e","functions":[{"symbol":"e","il":""}]}
     , .{});
     defer value.deinit();
-    try std.testing.expectError(error.InvalidNativeManifest, validate(value.value));
+    try std.testing.expectError(error.InvalidNativeManifest, validate(std.testing.allocator, value.value));
     const accepted = try std.json.parseFromSlice(std.json.Value, std.testing.allocator, "{\"version\":\"qbe-units-v1\",\"abi\":\"" ++ native_abi ++ "\",\"entry\":\"e\",\"functions\":[{\"symbol\":\"e\",\"il\":\"\"}]}", .{});
     defer accepted.deinit();
-    try validate(accepted.value);
+    try validate(std.testing.allocator, accepted.value);
 }
 
 // spec: QBE-AGGREF-8

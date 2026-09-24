@@ -22,6 +22,11 @@ typedef struct MylQbeInlineFrameTag {
     const MylQbeFunction *callee;
     uint64_t start, end, callee_start, call_position;
 } MylQbeInlineFrame;
+/* A batched QBE build writes these three records as assembly data, eight bytes
+ * per field in declaration order (`metadataAssembly` in qbe_build_outputs.zig). */
+_Static_assert(sizeof(MylQbeLocation) == 24, "MylQbeLocation layout is spelled in qbe_build_outputs.zig");
+_Static_assert(sizeof(MylQbeFunction) == 48, "MylQbeFunction layout is spelled in qbe_build_outputs.zig");
+_Static_assert(sizeof(MylQbeInlineFrame) == 40, "MylQbeInlineFrame layout is spelled in qbe_build_outputs.zig");
 /* One guest activation. Generated code allocates the record in its own native
  * stack frame and links it through `prev` into `ctx->active_frame`; the runtime
  * walks that chain for trap traces, so no frame array is involved. Generated

@@ -187,9 +187,10 @@ branch-free and LLVM vectorizes it. `MYLANG_QBE_LLVM_STICKY=0` turns it off.
 
 ## `mylang build`
 
-`mylang build <file.my> -o <output>` checks the program, lowers it, compiles one
-independently cached object per guest function and links those objects with the
-bundled runtime. `--run` replaces `-o`: it executes a temporary binary with
+`mylang build <file.my> -o <output>` checks the program, lowers it, compiles its
+guest functions into independently cached objects — one per module batch on
+QBE, one per function on LLVM (see *Concurrent code generation*) — and links
+those objects with the bundled runtime. `--run` replaces `-o`: it executes a temporary binary with
 inherited stdin, stdout, stderr and working directory, returns that program's
 exit status, and removes the binary afterwards while keeping the cached objects;
 runtime options go before `--` — the same `--restrict` and `--allow-*`
@@ -206,9 +207,11 @@ never from the working directory. `amd64_sysv` is the only supported target, a
 module entry needs `--project`, `--library` produces a shared library, and a
 program using a construct the native backend does not implement fails with
 `E_QBE_UNSUPPORTED` before any output is written. `--report` adds one
-`qbe-build-v1` JSON line naming every compiled function, its cached object,
-whether that object was reused, and the resolved `backend`, `optimization` and
-`lto`; `zig build test-qbe-build` repeats the **QBE** builds through a relocated
+`qbe-build-v1` JSON line naming every compiled function, its own cache key, the
+cached object that holds it, whether that object was reused, how many distinct
+objects hold the guest functions (`function_objects`) and how many of them this
+build compiled (`compiled_function_objects`), and the resolved `backend`,
+`optimization` and `lto`; `zig build test-qbe-build` repeats the **QBE** builds through a relocated
 compiler with no Python on `PATH` using the Zig-native build driver tests (the
 driver in those tests passes `--qbe` explicitly, so the release-path adapter is
 neither resolved nor needed).
@@ -360,16 +363,19 @@ An explicit `--explain-invalidation` still lowers to construct its detailed
 fragment receipt; that diagnostic work is reported rather than hidden.
 
 Everything a build compiles is content addressed under `--cache-dir`
-(`.mylang-cache/qbe` by default): one object per guest function, one for the
-generated typed-metadata unit, and one for the generated entry adapter. Their
+(`.mylang-cache/qbe` by default): on QBE one object per batch of guest
+functions and one for that batch's function metadata, on LLVM one object per
+guest function, and on both one for the generated typed-metadata unit and one
+for the generated entry adapter. Their
 keys cover the *native driver* identity, the runtime content hash, the codegen
 tool stamp (QBE's stamp, or a content hash of the LLVM adapter package), the
 optimization level, whether LTO is on, and the target, so a changed tool, mode,
 optimization or backend never reuses an object built by another one. The native driver identity is a
 build-time digest over only the sources that decide how already-emitted QBE IL
-becomes an object or an executable — the build driver (`src/qbe_build*.zig`) and
-the link-argument policy (`src/native_link*.zig`) — plus the Zig version and the
-optimize mode. Everything else is keyed separately: the IL text names the object,
+becomes an object or an executable — the build driver (`src/qbe_build*.zig`),
+the link-argument policy (`src/native_link*.zig`) and the frame-map annotator
+that rewrites every unit's assembly (`src/qbe_frame_map.zig`) — plus the Zig
+version and the optimize mode. Everything else is keyed separately: the IL text names the object,
 the bundled runtime sources are covered by the runtime content hash, and the
 tools by their stamps. An edit to the parser, the checker or the lowering
 therefore changes the IL of the functions it affects and nothing else; guest
@@ -501,10 +507,57 @@ each object as its wave finishes. Before the waves it makes one
 `--signatures-only` adapter pass over the whole closure, which fills the
 per-build call-site signature sidecar: a unit translated concurrently cannot
 rely on its callees having run first, so the table is made complete up front and
-every unit declares its callees exactly as a sequential build would. The native
-QBE arm keeps its sequential loop. A wave reports the first tool failure only
-after reaping every child it started, so a failed build leaves no process
-behind.
+every unit declares its callees exactly as a sequential build would. A wave
+reports the first tool failure only after reaping every child it started, so a
+failed build leaves no process behind.
+
+### QBE batches
+
+The QBE arm used to start QBE and then the assembler once per guest function,
+which was most of a cold build: 36 s for a 10,000-line project and 510 s for a
+50,000-line one, about 110 ms per function. Two things made each start that
+expensive, and both are gone.
+
+- **Starting a tool no longer copies the build.** The driver holds the whole
+  emitted program — close to a gigabyte at 50,000 lines — and `fork` copied its
+  page tables for every tool it started. Every tool (QBE, the assembler, the C
+  compiler, the linker, an LLVM adapter) now starts with
+  `clone(CLONE_VM | CLONE_VFORK)`, the way `posix_spawn` does, so a start costs
+  the same whatever the driver holds (`src/qbe_build_spawn.zig`).
+- **Functions compile in batches.** Units are ordered by module, then symbol. A
+  batch never spans two modules; a new one starts at every symbol whose hash
+  marks a boundary (one in 32 on average) and after 128 functions. A unit that
+  defines data compiles alone. One QBE run takes each member's IL as its own
+  input file (QBE forgets aggregate types between files, so members' types never
+  collide) with every function in its own `.text.<symbol>` section, so
+  `--gc-sections` still drops a function nothing calls. The assembly is
+  frame-map annotated and assembled once, by Zig's LLVM assembler called
+  directly (`zig clang -cc1as`), skipping the host C library probe and the
+  relocatable relink `zig cc` adds to every assembly.
+
+A batch's object is keyed by the ordered cache keys of its members, each still
+the function's IL under the build environment, so a changed function, driver,
+runtime, tool, mode or target misses exactly as a per-function object did. The
+boundaries depend on symbols, never on bodies: a body edit rebuilds one batch,
+and adding a function disturbs only the batch it lands in. Each batch's function
+metadata — the location, message and inline tables a trap trace reads — is a
+second small object assembled from generated assembly, so an edit that moves one
+module's lines recompiles that module's tables and not the whole program's; the
+program-wide metadata and entry C units compile in the same pool. Missing
+objects build concurrently, as many at once as the cores this process may use
+and the free memory (256 MiB per tool) allow. After the first failure nothing new
+starts, every running tool is reaped and every scratch directory removed.
+
+`MYLANG_QBE_BATCH=N` caps a batch at `N` functions; `MYLANG_QBE_BATCH=1`
+compiles every function alone, which `zig build test-qbe-build` uses to check
+that a batched and an unbatched build of one program print the same output,
+exit the same way and report the same trap trace.
+
+```console
+$ mylang build main.my --project -o app --report
+{"version":"qbe-build-v1",...,"compiled_functions":4681,"function_objects":279,"compiled_function_objects":279,...}
+$ MYLANG_QBE_BATCH=1 mylang build main.my --project -o app-unbatched --cache-dir /tmp/unbatched
+```
 
 Measured on the [S-expression parser](../../experiments/sexpr-port/main.my)
 (101 functions, 1 MiB input), cold wall clock before this work was 12.7 s for

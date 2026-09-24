@@ -151,7 +151,7 @@ pub const Cache = struct {
     }
     /// Give a unit's assembly its frame-map table before it is assembled
     /// (QBE-FRAMEMAP-1). Assembly with no call-site positions is left untouched.
-    fn annotateAssembly(self: Cache, path: []const u8) Error!void {
+    pub fn annotateAssembly(self: Cache, path: []const u8) Error!void {
         const text = try self.context.read(path);
         const annotated = try annotateText(self.context, text);
         if (!std.mem.eql(u8, text, annotated)) try self.context.write(path, annotated);
@@ -313,10 +313,41 @@ pub const Cache = struct {
         try argv.append(a, try std.fmt.allocPrint(a, "-femit-bin={s}", .{output}));
         return argv.items;
     }
+    /// The key a guest unit's own IL has under this build's environment and
+    /// cache contract: the identity a per-function object was published under.
+    pub fn unitKey(self: Cache, il: []const u8) Error![]const u8 {
+        return self.identity("function", il);
+    }
+    /// A key derived from other keys of this cache, under its own `kind`.
+    pub fn derived(self: Cache, kind: []const u8, input: []const u8) Error![]const u8 {
+        return self.identity(kind, input);
+    }
+    /// The object published under `key`, when it is on disk and its fingerprint matches.
+    pub fn cached(self: Cache, key: []const u8) Error!?Object {
+        const path = try self.entry(key, ".o");
+        if (!self.valid(path, try self.entry(key, ".digest"))) return null;
+        return .{ .key = key, .path = path, .reused = true };
+    }
+    /// Publish an object a caller built itself under `key`, with its fingerprint.
+    pub fn keep(self: Cache, key: []const u8, candidate: []const u8) Error!Object {
+        return self.store(key, try self.entry(key, ".o"), candidate);
+    }
+    /// SHA-256 over the build environment, the cache contract, the kind and the
+    /// input, each length-framed so no two different tuples share a byte
+    /// stream. The input is hashed where it lies: JSON-encoding every unit's IL
+    /// first cost a warm 50,000-line build a quarter of its driver time.
     fn identity(self: Cache, kind: []const u8, input: []const u8) Error![]const u8 {
-        const contract = try self.contract.fingerprint(self.context.allocator);
-        const encoded = try std.json.Stringify.valueAlloc(self.context.allocator, .{ self.environment, contract, kind, input }, .{});
-        return fs.hash(self.context.allocator, encoded);
+        var contract: [64]u8 = undefined;
+        self.contract.fingerprintHex(&contract);
+        var hash = std.crypto.hash.sha2.Sha256.init(.{});
+        hash.update("mylang-object-key-v2");
+        frame(&hash, self.environment);
+        frame(&hash, &contract);
+        frame(&hash, kind);
+        frame(&hash, input);
+        var digest: [32]u8 = undefined;
+        hash.final(&digest);
+        return self.context.allocator.dupe(u8, &std.fmt.bytesToHex(digest, .lower));
     }
     fn entry(self: Cache, key: []const u8, extension: []const u8) Error![]const u8 {
         return std.fmt.allocPrint(self.context.allocator, "{s}/{s}{s}", .{ self.directory, key, extension });
@@ -483,6 +514,26 @@ test "qbe object cache identity folds the wave 3 contract dimensions" {
     const other = try changed.identity("qbe", "unit");
     defer context.allocator.free(other);
     try std.testing.expect(!std.mem.eql(u8, base, other));
+}
+
+// spec-case: INCREMENTAL-KEYS-1
+test "object keys frame their parts, so moving bytes between kind, input and environment moves the key" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var environment: std.process.Environ.Map = .init(arena.allocator());
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    const cache: Cache = .{ .context = context, .directory = "objects", .temporary = "work", .assets = "/assets", .environment = "env", .zig = "/zig", .mode = "Debug", .codegen = .{ .tool = "/qbe" } };
+    const whole = try cache.identity("function", "il");
+    try std.testing.expectEqual(@as(usize, 64), whole.len);
+    try std.testing.expect(!std.mem.eql(u8, whole, try cache.identity("functioni", "l")));
+    try std.testing.expect(!std.mem.eql(u8, whole, try cache.identity("function", "il ")));
+    var moved = cache;
+    moved.environment = "envfunction";
+    try std.testing.expect(!std.mem.eql(u8, whole, try moved.identity("", "il")));
+    // A unit's key is exactly the key a staged per-function object carries.
+    try std.testing.expectEqualStrings(whole, try cache.unitKey("il"));
+    try std.testing.expectEqualStrings(try cache.identity("qbe-batch-v1", "a\nb"), try cache.derived("qbe-batch-v1", "a\nb"));
 }
 
 test "LLVM full LTO carries O3 and flto through generated C and final link flags" {
