@@ -3,38 +3,77 @@
 Two applications can share one library checkout without copying its source into
 either tree, and without a network registry. A small manifest names each package
 and its local root, a lock file pins every file's content hash, and builds resolve
-entirely offline from that lock. The design record is
+entirely offline from that lock. `mylang packages` does both halves; it needs
+nothing but the compiler. The design record is
 [offline local packages](../experiments/local-packages.md).
-
-Status: the tool, `scripts/packages.py`, is a Python prototype that drives the
-compiler from outside it and needs Python 3 and a checkout of this repository.
-The compiler itself has no package command; nothing else in building or using
-mylang needs Python.
 
 ## Local locked packages
 
-`packages.json` lists `{"name": ..., "root": ...}` entries; the library root holds
-`<name>.my` declaring `module <name>` and optionally `<name>/*.my` declaring
+`packages.json` lists `{"name": ..., "root": ...}` entries, each root relative to
+the manifest's directory or absolute. The library root holds `<name>.my`
+declaring `module <name>` and optionally `<name>/*.my` declaring
 `module <name>.submodule`, and every library source must stay inside that
-namespace. `scripts/packages.py lock` records each package's explicit absolute
-root and the SHA-256 of every module into a `package-lock-v1` file.
-`scripts/packages.py build` then verifies all of those hashes, copies the bytes
-into an isolated temporary snapshot and runs one compiler command over it, so the
-shared checkout is never compiled in place and the application tree stays
-unchanged. Source drift, application and dependency collisions, duplicate
-namespaces — including two versions of one package — reserved standard module
-names and symbolic-link sources all reject before anything executes. Two versions
-therefore need two distinct source namespaces: the tool never rewrites a module
-declaration, there is no version solving, and moving a checkout means
-regenerating the lock. A successful `--receipt` records the lock and compiler
-identities together with the compiler's own source and dependency report; a
-failed build leaves the previous receipt alone.
+namespace. A name is an ASCII identifier that does not start with `std_`, which
+the standard modules own.
+
+`mylang packages lock packages.json --output packages.lock.json` resolves each
+root to an absolute path and records it with the SHA-256 of every module in a
+`package-lock-v1` file. `mylang packages build app/main.my --lock
+packages.lock.json` then inventories the entry's directory and every locked
+root again, verifies all of those hashes, copies the verified bytes (and the
+nearest `mylang.json`, with its import policy when it sits beside the entry)
+into a private directory under `TMPDIR`, and runs `project-dependencies` and one
+project command over that snapshot: `check-project` by default, or the one
+`--command` names (`run-project`, `index-project`, `emit-project-qbe`). The
+shared checkout is never compiled in place, the application tree stays
+unchanged, and the snapshot is deleted afterwards.
+
+These refuse with exit status 2 and a `packages:` line, before anything
+compiles: a package whose files changed since locking, an application module
+and a package module with the same path, a namespace locked twice (two versions
+of one package need two distinct namespaces: nothing rewrites a module
+declaration and there is no version solving), a module named like a standard
+one, a symbolic-link source or directory, and more than 16 MiB of source or
+50,000 walked entries. Moving a checkout means regenerating the lock.
+
+The command's exit status is forwarded: for `run-project`, which runs with
+`--print-result`, that is the program's own status, the value `main` returned.
+`--receipt FILE` writes a `package-build-v1` record of the lock's SHA-256, the
+compiler's identity and the snapshot's dependency report as soon as the snapshot
+checks, before the command runs; a refused build leaves an earlier receipt
+alone.
 
 ```console
 $ cat packages.json
 {"packages":[{"name":"numbers","root":"shared-numbers"}]}
-$ python3 scripts/packages.py lock packages.json --output packages.lock.json
-$ python3 scripts/packages.py build app/main.my --lock packages.lock.json \
-    --compiler zig-out/bin/mylang --command run-project --receipt build.json
+$ cat shared-numbers/numbers.my
+module numbers
+
+
+public def answer() -> int:
+    return 42
+$ cat app/main.my
+module main
+import numbers
+
+def main() -> int:
+    return numbers.answer()
+$ mylang packages lock packages.json --output packages.lock.json
+$ mylang packages build app/main.my --lock packages.lock.json \
+    --command run-project --receipt build.json
 42
+$ echo $?
+42
+$ echo 'module numbers' > app/numbers.my
+$ mylang packages build app/main.my --lock packages.lock.json
+packages: duplicate or invalid module path: numbers.my
+$ echo $?
+2
 ```
+
+The command replaced `scripts/packages.py`, a Python prototype, with the same
+lock and receipt formats. Two things changed: `build` no longer takes
+`--compiler`, because the compiler that runs it is the one it uses (the receipt
+records its identity, and the snapshot's dependency report must carry the same
+one), and the receipt is written once the snapshot checks rather than only when
+the command exits 0, since `run-project` now exits with the program's value.

@@ -86,6 +86,7 @@ const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--j
     "doctest [<repo-root>] [--filter GLOB] [--report PATH] [--jobs N] [--verbose] (run every fenced documentation example)\n       mylang " ++
     "reference --query TERM [--format=text|json] (compiler-derived facts from this executable)\n       mylang " ++
     "docs [TOPIC] (list the user guides built into this executable, or print one)\n       mylang " ++
+    "packages lock CONFIG.json --output LOCK.json | build ENTRY.my --lock LOCK.json [--command C] [--receipt FILE] (offline locked local packages)\n       mylang " ++
     "invoke <entry.my> --function='module::name' (--describe | --input=FILE) (call one exported function natively)\n       mylang " ++
     "dump-tokens <file.my> (stage-0 `tokens-v1` JSON on stdout; lexical failures exit 1)\n       mylang " ++
     "<schema-project|input-module|check|run|dump-bytecode|di" ++
@@ -280,6 +281,10 @@ fn dispatch(process: std.process.Init) !u8 {
     if (args.len >= 2 and std.mem.eql(u8, args[1], "doctest")) return @import("doctest_command.zig").run(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "reference")) return @import("reference_command.zig").run(@import("mylang"), process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "docs")) return @import("docs_command.zig").run(process, args[2..]);
+    if (args.len >= 2 and std.mem.eql(u8, args[1], "packages")) {
+        const identity = std.fmt.bytesToHex(build_identity, .lower);
+        return @import("packages_command.zig").run(process, args[2..], &identity);
+    }
     if (args.len >= 2 and std.mem.eql(u8, args[1], "invoke")) return @import("invoke_command.zig").run(process, args[2..]);
     // The `&` marker experiment is gone: `mut` is the spelling on both sides of a
     // call and the rule is always on, so the flag names no mode left to select.

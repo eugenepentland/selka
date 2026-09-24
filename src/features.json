@@ -559,7 +559,7 @@
     },
     "local-locked-packages": {
       "kind": "tooling",
-      "summary": "Imports resolve through a locked local package root with pinned content hashes.",
+      "summary": "`mylang packages lock` pins every local package's sources by SHA-256, and `mylang packages build` compiles a verified private snapshot of the application and its locked packages.",
       "doc": "docs/tooling/packages.md#local-locked-packages"
     },
     "nested-runtime-byte-budgets": {

@@ -1216,9 +1216,9 @@ LIMITS = [
     },
     {
         "subsystem": "package materialization",
-        "source": "scripts/packages.py",
+        "source": "src/packages_command.zig",
         "budgets": {"max_bytes": 16 * MIB, "max_bytes_human": "16 MiB"},
-        "patterns": ["MAX_BYTES = 16 * 1024 * 1024"],
+        "patterns": ["package_byte_budget: usize = 16 * 1024 * 1024"],
     },
     {
         "subsystem": "agent store materialization",
@@ -1237,10 +1237,10 @@ def limit_findings():
             "finding": "module/import counts are bounded only by the loader",
             "detail": "src/project.zig defaults to 4096 modules and 65536 import edges (overridable through a "
                       "mylang.json budgets object) and rejects the next module with E_MODULE_LIMIT, "
-                      "but src/native_test_snapshot.zig, scripts/navigate.py and scripts/packages.py enforce only "
+                      "but src/native_test_snapshot.zig, scripts/navigate.py and src/packages_command.zig enforce only "
                       "byte/entry budgets, so a project that large can be snapshotted or materialized and then "
                       "fail ordinary checking.",
-            "sources": ["src/project.zig", "src/native_test_snapshot.zig", "scripts/navigate.py", "scripts/packages.py"],
+            "sources": ["src/project.zig", "src/native_test_snapshot.zig", "scripts/navigate.py", "src/packages_command.zig"],
             "action": "reported, not changed: a consistent fix must add the shared module/import budget to the "
                       "snapshot, inventory and package paths, not only to project.zig.",
         },
