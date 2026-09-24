@@ -157,7 +157,9 @@ fails. The effect pass judges each condition with the same inference it uses
 for function bodies (see [effects](effects.md)): output, file, network, clock,
 random, environment or host access, and `mutation`, anywhere in the condition
 or in a function it calls, is `E_CONTRACT_EFFECT`. So are a `mut` call-site
-marker, an assignment, a method that changes its receiver, and `?`.
+marker, an assignment, a method that changes its receiver, `?`, and passing
+away a value the body still owns, such as a `Result` parameter: a condition
+only observes.
 `debug(...)` has no effect and is allowed.
 
 ```mylang

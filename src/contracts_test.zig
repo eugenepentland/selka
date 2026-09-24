@@ -259,6 +259,23 @@ test "contracts: a contract condition may allocate but have no other effect" {
         \\def main() -> int:
         \\    return len(Bag([1]).items)
     , sema_contracts.effect_code);
+    // A condition only observes: it cannot take a result-bearing value away
+    // from the body that still owns it.
+    try rejects(
+        \\def value_or(outcome: Result[int, str]) -> int:
+        \\    match outcome:
+        \\        case Ok(value):
+        \\            return value
+        \\        case Err(_):
+        \\            return 0
+        \\
+        \\@requires(value_or(outcome) > 0)
+        \\def f(outcome: Result[int, str]) -> int:
+        \\    return value_or(outcome)
+        \\
+        \\def main() -> int:
+        \\    return f(Ok(1))
+    , sema_contracts.effect_code);
     // Allocation, a helper that only allocates, a comprehension's own list
     // and `debug` are all effect-free for a contract.
     try accepts(

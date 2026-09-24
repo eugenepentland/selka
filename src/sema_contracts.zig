@@ -290,7 +290,8 @@ fn hiddenLocal(comptime Checker: type, self: *Checker, name: []const u8, ty: typ
         .ty = ty,
         .mutable = false,
         .origin = .contract_value,
-        .ownership = .{ .initialized = true },
+        // A clause may read `result` or `self`; the `<return>` holder is never read by one.
+        .ownership = .{ .initialized = true, .transfer_available = name[0] != '<' and self.transfers(ty) },
         .usage = .{ .reads = 1, .temporary = true },
     });
     return slot;
@@ -315,8 +316,15 @@ fn clauseStatement(comptime Checker: type, self: *Checker, clause: Clause) Error
     const saved_checking = self.contract.checking;
     self.contract.checking = clause.kind;
     defer self.contract.checking = saved_checking;
+    const ownership = try self.pendingState(self.locals.items.len);
     const condition = try self.expressionExpected(condition_id, .bool);
     try self.require(self.nodes.items[@backingInt(condition)].ty, .bool, self.syntax.nodes.items[@backingInt(condition_id)].span);
+    // A condition only observes: it may not take a move-only or result-bearing
+    // value away from the body or the caller that still owns it.
+    for (self.locals.items[0..ownership.len], ownership) |local, before| if (before.available and !local.ownership.transfer_available) {
+        const message = try std.fmt.allocPrint(self.allocator, "a contract condition only observes, so it cannot take ownership of `{s}`", .{local.name});
+        return self.sink.fail(effect_code, self.syntax.nodes.items[@backingInt(condition_id)].span, message);
+    };
     for (self.resolved_nodes.items[saved_resolved..]) |index| self.resolved[index] = null;
     self.resolved_nodes.shrinkRetainingCapacity(saved_resolved);
     const note = if (clause.attribute.argument) |literal| try byte_literal.decode(self.allocator, self.src, literal, self.sink) else null;
