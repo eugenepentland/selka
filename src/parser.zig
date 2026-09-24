@@ -149,6 +149,11 @@ pub const Parser = struct {
         lambdas: std.ArrayList(ast.Lambda) = .empty,
         import_aliases: std.StringHashMapUnmanaged(void) = .empty,
         docstrings: std.ArrayList(ast.DeclarationDoc) = .empty,
+        /// PARSE-EXACT-1: where the node and statement lists grow while a module
+        /// is parsed, when not in `storage`. `parse` copies them into `storage`
+        /// at their exact length and frees these, so an arena `storage` keeps no
+        /// abandoned growth buffers (three times the final lists, before).
+        growth: ?std.mem.Allocator = null,
     } = .{},
     fn current(self: *Parser) lex.Token {
         return self.tokens[self.cursor.pos];
@@ -875,8 +880,8 @@ pub const Parser = struct {
                 .public_declarations = try public_names.toOwnedSlice(self.storage),
             },
 
-            .nodes = self.syntax.nodes,
-            .statements = self.syntax.statements,
+            .nodes = try self.settle(ast.Node, &self.syntax.nodes),
+            .statements = try self.settle(ast.Statement, &self.syntax.statements),
             .functions = try functions.toOwnedSlice(self.storage),
             .lambdas = try self.syntax.lambdas.toOwnedSlice(self.storage),
             .attributes = try attribute_table.toOwnedSlice(self.storage),
@@ -1212,8 +1217,26 @@ pub const Parser = struct {
     }
     fn addStatement(self: *Parser, stmt: ast.Statement) diagnostic.Error!ast.StatementId {
         const id: ast.StatementId = @fromBackingInt(self.syntax.statements.items.len);
-        try self.syntax.statements.append(self.storage, stmt);
+        try self.syntax.statements.append(self.syntax.growth orelse self.storage, stmt);
         return id;
+    }
+    /// A finished node or statement list as `storage` keeps it: unchanged when
+    /// it grew there, else copied at its exact length and its growth buffer freed.
+    fn settle(self: *Parser, comptime T: type, list: *std.ArrayList(T)) diagnostic.Error!std.ArrayList(T) {
+        const growth = self.syntax.growth orelse return list.*;
+        const owned = try self.storage.dupe(T, list.items);
+        list.deinit(growth);
+        list.* = .empty;
+        return .fromOwnedSlice(owned);
+    }
+    /// Free the growth buffers a parse that failed before `settle` still holds;
+    /// a parser without a separate growth allocator holds none.
+    pub fn release(self: *Parser) void {
+        const growth = self.syntax.growth orelse return;
+        self.syntax.nodes.deinit(growth);
+        self.syntax.statements.deinit(growth);
+        self.syntax.nodes = .empty;
+        self.syntax.statements = .empty;
     }
     /// A string literal's source text with its single or triple quotes removed.
     fn docstringText(self: *Parser, span: Span) []const u8 {
@@ -1529,7 +1552,7 @@ pub const Parser = struct {
 
     fn append(self: *Parser, node: ast.Node) diagnostic.Error!ast.NodeId {
         const id: ast.NodeId = @fromBackingInt(self.syntax.nodes.items.len);
-        try self.syntax.nodes.append(self.storage, node);
+        try self.syntax.nodes.append(self.syntax.growth orelse self.storage, node);
         return id;
     }
     /// Whether the cursor stands at the start of a new logical line: the boundary

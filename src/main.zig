@@ -2150,6 +2150,7 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         if (parsed.command == .context) return contextCommand(init, parsed, &compilation, unchecked_reason, &files);
         init.timings.counts.ast_nodes = compilation.syntax.nodes.items.len + compilation.syntax.statements.items.len;
         recordTypedNodes(init, &compilation);
+        releaseCheckedSyntax(parsed, &compilation, unchecked_reason == null);
         // The internal native-test compile session keeps this one checked
         // compilation alive and serves facts plus selective lowering from it, so
         // a provider graph is never checked again just to emit its closure.
@@ -2201,6 +2202,15 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
     defer init.gpa.free(output);
     try std.Io.File.stdout().writeStreamingAll(init.io, output);
     return 0;
+}
+
+/// SYNTAX-RELEASE-1: release the merged syntax of a checked program when this
+/// command's remaining work is lowering and emission alone: a whole-program
+/// `emit-project-qbe`, the build frontend. An invalidation explanation and a
+/// selective (test) emission read more of the checked compilation.
+fn releaseCheckedSyntax(parsed: Parsed, compilation: *language.project_compile.Compilation, checked: bool) void {
+    const releases = parsed.command == .@"emit-project-qbe" and parsed.select_file == null and !parsed.reporting.explain_invalidation;
+    if (checked and releases) compilation.releaseSyntax();
 }
 
 /// Attach the entry's stored check summaries to a `check-project` request, or

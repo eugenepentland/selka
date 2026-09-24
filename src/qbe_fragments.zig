@@ -1074,21 +1074,27 @@ pub const Replay = struct {
         rememberAt(allocator, io, place, ticket, answer, units) catch return;
     }
     fn rememberAt(allocator: std.mem.Allocator, io: std.Io, place: Place, ticket: Ticket, answer: Replay, units: []const Digest) !void {
-        var out: std.ArrayList(u8) = .empty;
-        defer out.deinit(allocator);
-        try out.appendSlice(allocator, magic);
-        try out.appendSlice(allocator, &ticket.key);
-        try appendInt(allocator, &out, u64, answer.warnings.len);
-        try out.appendSlice(allocator, answer.warnings);
-        try appendInt(allocator, &out, u64, answer.manifest.len);
-        try out.appendSlice(allocator, answer.manifest);
-        try appendInt(allocator, &out, u32, @intCast(units.len));
-        for (units) |unit_digest| try out.appendSlice(allocator, &unit_digest);
+        // MANIFEST-STREAM-1: the record is written piece by piece around the
+        // manifest instead of being assembled in one buffer, so remembering a
+        // million-line build's ~100 MB manifest copies none of it.
+        var head: std.ArrayList(u8) = .empty;
+        defer head.deinit(allocator);
+        try head.appendSlice(allocator, magic);
+        try head.appendSlice(allocator, &ticket.key);
+        try appendInt(allocator, &head, u64, answer.warnings.len);
+        var middle: [8]u8 = undefined;
+        std.mem.writeInt(u64, &middle, answer.manifest.len, .little);
+        var tail: std.ArrayList(u8) = .empty;
+        defer tail.deinit(allocator);
+        try appendInt(allocator, &tail, u32, @intCast(units.len));
+        for (units) |unit_digest| try tail.appendSlice(allocator, &unit_digest);
+        const body = [_][]const u8{ head.items, answer.warnings, &middle, answer.manifest, tail.items };
+        var hash = Sha.init(.{});
+        for (body) |part| hash.update(part);
         var checksum: Digest = undefined;
-        Sha.hash(out.items, &checksum, .{});
-        try out.appendSlice(allocator, &checksum);
+        hash.final(&checksum);
         const directory = try namespace(allocator, place.root, place.identity);
-        try atomicWrite(io, try replayPath(allocator, directory, ticket.slot), out.items);
+        try atomicWriteParts(io, try replayPath(allocator, directory, ticket.slot), &(body ++ [_][]const u8{&checksum}));
     }
     fn replayPath(allocator: std.mem.Allocator, directory: []const u8, slot: Digest) error{OutOfMemory}![]const u8 {
         return std.fs.path.join(allocator, &.{ directory, "replay", &std.fmt.bytesToHex(slot, .lower) });
@@ -1194,13 +1200,17 @@ const PackReader = struct {
 /// Write `bytes` to `file` through a uniquely named sibling and a rename, so a
 /// concurrent reader sees either the old file or the whole new one.
 fn atomicWrite(io: std.Io, file: []const u8, bytes: []const u8) !void {
+    return atomicWriteParts(io, file, &.{bytes});
+}
+/// Stage `parts`, in order, as one file beside `file` and rename it into place.
+fn atomicWriteParts(io: std.Io, file: []const u8, parts: []const []const u8) !void {
     const directory = std.fs.path.dirname(file) orelse ".";
     try std.Io.Dir.cwd().createDirPath(io, directory);
     var nonce: [8]u8 = undefined;
     std.Io.random(io, &nonce);
     var buffer: [std.fs.max_path_bytes + 32]u8 = undefined;
     const staging = try std.fmt.bufPrint(&buffer, "{s}.{s}.tmp", .{ file, std.fmt.bytesToHex(nonce, .lower) });
-    try std.Io.Dir.cwd().writeFile(io, .{ .sub_path = staging, .data = bytes });
+    try writeParts(io, staging, parts);
     std.Io.Dir.rename(.cwd(), staging, .cwd(), file, io) catch |err| {
         // The rename failure is what the caller hears about; a staging file
         // that cannot be removed is only litter.
@@ -1210,6 +1220,36 @@ fn atomicWrite(io: std.Io, file: []const u8, bytes: []const u8) !void {
         };
         return err;
     };
+}
+
+/// Write `parts` in order as the whole of `path`, removing it when a write fails.
+fn writeParts(io: std.Io, path: []const u8, parts: []const []const u8) !void {
+    const file = try std.Io.Dir.cwd().createFile(io, path, .{ .truncate = true });
+    defer file.close(io);
+    for (parts) |part| file.writeStreamingAll(io, part) catch |err| {
+        std.Io.Dir.cwd().deleteFile(io, path) catch |cleanup| switch (cleanup) {
+            error.FileNotFound => {},
+            else => {},
+        };
+        return err;
+    };
+}
+
+// spec-case: MANIFEST-STREAM-1
+test "writeParts writes its parts in order and reports a place it cannot create" {
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", std.testing.allocator);
+    defer std.testing.allocator.free(root);
+    const path = try std.fs.path.join(std.testing.allocator, &.{ root, "parts" });
+    defer std.testing.allocator.free(path);
+    try writeParts(std.testing.io, path, &.{ "head,", "", "body,", "tail" });
+    const written = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, path, std.testing.allocator, .unlimited);
+    defer std.testing.allocator.free(written);
+    try std.testing.expectEqualStrings("head,body,tail", written);
+    const missing = try std.fs.path.join(std.testing.allocator, &.{ root, "no-such-directory", "parts" });
+    defer std.testing.allocator.free(missing);
+    try std.testing.expectError(error.FileNotFound, writeParts(std.testing.io, missing, &.{"x"}));
 }
 
 // spec-case: QBE-FRAGMENT-REUSE-1

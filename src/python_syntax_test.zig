@@ -280,6 +280,44 @@ test "Python match cases retain contextual pattern names square types and discar
     try t.expect(arms[1].bindings.len == 1 and arms[1].bindings[0] == null);
 }
 
+/// A module of `count` small functions, each a loop over a list.
+fn manyFunctions(allocator: std.mem.Allocator, count: usize) ![]u8 {
+    var text: std.Io.Writer.Allocating = .init(allocator);
+    defer text.deinit();
+    try text.writer.writeAll("module many\n\n\n");
+    for (0..count) |index| try text.writer.print("def f{d}(n: int) -> int:\n    xs: list[int] = []\n    for k in range(n):\n        xs.append(k * {d})\n    return len(xs)\n\n\n", .{ index, index });
+    return text.toOwnedSlice();
+}
+/// Bytes the parse of `text` reserved in its storage, and whether its node and
+/// statement lists came back at their exact length.
+fn parseStorage(text: []const u8, growth: ?std.mem.Allocator) !struct { bytes: usize, exact: bool } {
+    var counting = t.FailingAllocator.init(t.allocator, .{});
+    var storage = std.heap.ArenaAllocator.init(counting.allocator());
+    defer storage.deinit();
+    var inputs = std.heap.ArenaAllocator.init(t.allocator);
+    defer inputs.deinit();
+    const src = try source.Source.init(inputs.allocator(), "many.my", text);
+    var sink: diagnostic.Sink = .{ .allocator = inputs.allocator() };
+    const tokens = try lexer.lex(inputs.allocator(), text, &sink);
+    var p: parser.Parser = .{ .src = src, .storage = storage.allocator(), .tokens = tokens, .sink = &sink, .syntax = .{ .growth = growth } };
+    defer p.release();
+    const syntax = try p.parseModule();
+    const exact = syntax.nodes.capacity == syntax.nodes.items.len and syntax.statements.capacity == syntax.statements.items.len;
+    return .{ .bytes = counting.allocated_bytes, .exact = exact };
+}
+// spec: PARSE-EXACT-1
+test "a module's node and statement lists grow outside its storage and settle there at their exact length" {
+    const text = try manyFunctions(t.allocator, 400);
+    defer t.allocator.free(text);
+    const grown = try parseStorage(text, null);
+    const settled = try parseStorage(text, t.allocator);
+    try t.expect(settled.exact);
+    // The abandoned growth buffers were a third of what an arena storage held
+    // here (2.7 MB against 4.0 MB); a whole project's parse was 2.4 times
+    // smaller (1.08 GB to 0.44 GB at 500k lines).
+    try t.expect(settled.bytes * 4 < grown.bytes * 3);
+}
+
 // spec-case: PYTHON-1
 test "Python layout lower frees partial token allocations on every allocator failure" {
     try t.checkAllAllocationFailures(t.allocator, lowerAllocations, .{});
