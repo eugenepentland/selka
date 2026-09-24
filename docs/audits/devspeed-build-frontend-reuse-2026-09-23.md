@@ -213,6 +213,12 @@ The 50k row comes from `strace -f -tt` on one edit build. The 200k row comes fro
   (compiler from `MYLANG_BIN`), `ladder.sh`, `steps.sh`, `phase.sh`, `edit.sh`,
   `trace_build.sh`, and the raw `ladder-*.out` results.
 
-## Gate
+## Gate (at `7e3723ca`, merged over `bacb4667`)
 
-See the reply that accompanies this report for the gate results at the final head.
+| Step | Result |
+| --- | --- |
+| `zig build test --summary all --maxrss 8000000000` | 90/90 steps, 1,849 tests run, 0 failed |
+| `zig build test-qbe --summary all` | 51/51 steps, 361/361 tests |
+| `zig build test-qbe-build --summary all` | 33/33 steps |
+| `zig build fmt-check` | clean |
+| `zig-out/bin/mylang test tests/lang` | 569 passed across 106 programs |
