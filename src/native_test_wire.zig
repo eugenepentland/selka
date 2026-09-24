@@ -19,6 +19,32 @@ pub fn isText(name: []const u8) bool {
 }
 /// Failures in typed fixture validation or native result reconstruction.
 pub const Error = error{ OutOfMemory, InvalidTestArguments, InvalidTestValue, UnsupportedTestType, TestValueLimit, InvalidNativeTestResponse };
+/// The instant, in Unix nanoseconds, the `Clock` a test declares reads until it
+/// is advanced: 2000-01-01T00:00:00Z (TEST-CAPS-3).
+pub const clock_start: i64 = 946_684_800_000_000_000;
+/// The seed of the `Entropy` a test declares: `explicit` when `mylang test
+/// --seed N` gave one, otherwise the first eight bytes, little-endian, of the
+/// SHA-256 of the test's qualified name, so each test has its own reproducible
+/// stream and renaming a test changes it (TEST-CAPS-3).
+pub fn entropySeed(explicit: ?u64, qualified_name: []const u8) u64 {
+    if (explicit) |seed| return seed;
+    var digest: [32]u8 = undefined;
+    std.crypto.hash.sha2.Sha256.hash(qualified_name, &digest, .{});
+    return std.mem.readInt(u64, digest[0..8], .little);
+}
+/// How the codec adapter supplies one parameter instead of reading a JSON
+/// argument: a standard stream, or a deterministic stand-in capability.
+const Injected = enum { stream, clock, entropy, other };
+/// The injection of one declared parameter, or null for an ordinary argument.
+/// `Host` is not injected: no test is handed real authority.
+fn injected(parameter: Value) ?Injected {
+    const name = v.text(v.get(parameter, "type"));
+    if (std.mem.eql(u8, name, "stream_cap")) return .stream;
+    if (std.mem.eql(u8, name, "clock_cap")) return .clock;
+    if (std.mem.eql(u8, name, "random_cap")) return .entropy;
+    for ([_][]const u8{ "filesystem_cap", "network_cap", "environment_cap" }) |candidate| if (std.mem.eql(u8, name, candidate)) return .other;
+    return null;
+}
 /// One preorder copied value node; no guest pointer enters the parent process.
 pub const Node = struct { type: []const u8, bits: u64 = 0, children: usize = 0 };
 /// Bounded schema-guided conversion state allocated in the test command arena.
@@ -27,24 +53,38 @@ pub const Codec = struct {
     types: []const Value,
     nodes: std.ArrayList(Node) = .empty,
     cursor: usize = 0,
+    /// `mylang test --seed N`; null derives each test's seed from its name.
+    seed: ?u64 = null,
     /// Release the copied node vector; converted JSON uses the caller's arena.
     pub fn deinit(self: *Codec) void {
         self.nodes.deinit(self.allocator);
         self.nodes = .empty;
     }
     /// Flatten named typed arguments in declaration order, rejecting extras.
-    /// A `Stream` parameter is injected by the adapter, so it takes no JSON value.
+    /// A `Stream` parameter is injected by the adapter, so it takes no JSON
+    /// value, and so is a `Clock`, `Entropy`, `Filesystem`, `Network` or
+    /// `Environment`: the adapter builds its deterministic stand-in from one
+    /// node carrying the clock's start or the entropy seed (TEST-CAPS-3).
     pub fn arguments(self: *Codec, function: Value, values: Value) Error!void {
         const parameters = v.array(v.get(function, "parameters"));
         if (v.get(function, "return_reference") != .null) return error.UnsupportedTestType;
         var expected: usize = 0;
-        for (parameters) |parameter| if (!streamParameter(parameter)) {
+        for (parameters) |parameter| if (injected(parameter) == null) {
             expected += 1;
         };
-        if (values == .null and expected == 0) return;
-        if (values != .object or values.object.count() != expected) return error.InvalidTestArguments;
+        const supplied = !(values == .null and expected == 0);
+        if (supplied and (values != .object or values.object.count() != expected)) return error.InvalidTestArguments;
         for (parameters) |parameter| {
-            if (streamParameter(parameter)) continue;
+            if (injected(parameter)) |kind| {
+                const bits: u64 = switch (kind) {
+                    .stream => continue,
+                    .clock => @bitCast(clock_start),
+                    .entropy => entropySeed(self.seed, v.text(v.get(function, "name"))),
+                    .other => 0,
+                };
+                try self.nodes.append(self.allocator, .{ .type = v.text(v.get(parameter, "type")), .bits = bits });
+                continue;
+            }
             if (!std.mem.eql(u8, v.text(v.get(parameter, "mode")), "value")) return error.UnsupportedTestType;
             const value = values.object.get(v.text(v.get(parameter, "name"))) orelse return error.InvalidTestArguments;
             try self.encode(v.text(v.get(parameter, "type")), value, 0);
@@ -247,10 +287,6 @@ pub const Codec = struct {
         return .{ .object = object };
     }
 };
-/// One declared parameter is an injected `Stream` rather than a JSON argument.
-fn streamParameter(parameter: Value) bool {
-    return std.mem.eql(u8, v.text(v.get(parameter, "type")), "stream_cap");
-}
 fn decimal(name: []const u8, text: []const u8) Error!u64 {
     if (name.len < 2) return error.UnsupportedTestType;
     if (name[0] != 'i' and name[0] != 'u') return error.UnsupportedTestType;
@@ -300,6 +336,31 @@ test "typed fixture integers and nominal trees roundtrip without guest execution
     try std.testing.expectError(error.InvalidTestValue, codec.encode("u64", .{ .string = "-1" }, 0));
     try std.testing.expectError(error.UnsupportedTestType, codec.encode("capability", .null, 0));
     try std.testing.expectError(error.InvalidTestArguments, codec.arguments(.null, .{ .integer = 1 }));
+}
+
+// spec-case: TEST-CAPS-3
+test "an injected capability takes no JSON argument and crosses as its stand-in operand" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const parsed = try std.json.parseFromSlice(Value, a,
+        \\{"name":"main::test_caps","parameters":[{"name":"clock","type":"clock_cap","mode":"value"},{"name":"entropy","type":"random_cap","mode":"value"},{"name":"out","type":"stream_cap","mode":"value"},{"name":"fs","type":"filesystem_cap","mode":"value"}],"return_reference":null}
+    , .{});
+    var codec: Codec = .{ .allocator = a, .types = &.{} };
+    defer codec.deinit();
+    try codec.arguments(parsed.value, .null);
+    try std.testing.expectEqual(@as(usize, 3), codec.nodes.items.len);
+    try std.testing.expectEqualStrings("clock_cap", codec.nodes.items[0].type);
+    try std.testing.expectEqual(@as(u64, @bitCast(clock_start)), codec.nodes.items[0].bits);
+    try std.testing.expectEqual(entropySeed(null, "main::test_caps"), codec.nodes.items[1].bits);
+    try std.testing.expectEqual(@as(u64, 0), codec.nodes.items[2].bits);
+    var seeded: Codec = .{ .allocator = a, .types = &.{}, .seed = 42 };
+    defer seeded.deinit();
+    try seeded.arguments(parsed.value, .{ .object = .empty });
+    try std.testing.expectEqual(@as(u64, 42), seeded.nodes.items[1].bits);
+    // The name-derived seed is the SHA-256 prefix, so it is stable and per test.
+    try std.testing.expect(entropySeed(null, "main::test_caps") != entropySeed(null, "main::test_other"));
+    try std.testing.expectEqual(@as(i64, 946_684_800_000_000_000), clock_start);
 }
 
 // spec: QBE-TEXT-2

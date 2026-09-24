@@ -17,6 +17,8 @@ pub const Function = model.Function;
 pub const FunctionScope = model.FunctionScope;
 pub const Program = model.Program;
 pub const valueParameterCount = model.valueParameterCount;
+/// The value a stand-in operation pushes; see `bytecode_model.standInOutput`.
+pub const standInOutput = model.standInOutput;
 const Error = std.mem.Allocator.Error || error{InternalError};
 
 /// Validate generated IDs, instruction operands, and stack heights at control-flow joins.
@@ -220,6 +222,7 @@ fn validateInstruction(allocator: std.mem.Allocator, program: Program, function:
         },
         .acquire_resource => |acquire| try validateOpAcquireResource(program, acquire),
         .external_read => |read| try validateOpExternalRead(program, read),
+        .stand_in => {},
         .acquire_buffer => |ty| try validateOpAcquireBuffer(program, ty),
         .print => |output| for (output.types) |ty| {
             if (!validType(ty, program) or !@import("io_render.zig").printable(ty, program.records)) return error.InternalError;
@@ -468,6 +471,12 @@ fn validateOpAcquireResource(program: Program, acquire: @FieldType(@FieldType(In
     if (typed.resourceKind(shape.ok_type, program.records) == null or shape.error_type != .i64 or !typed.acquisitionBytes(acquire.request, program.records)) return error.InternalError;
 }
 
+/// The stack height after an operation that pops `operands` words and pushes one.
+fn replaceOperands(height: usize, operands: usize) Error!usize {
+    if (height < operands) return error.InternalError;
+    return height - operands + 1;
+}
+
 fn validateOpExternalRead(program: Program, read: @FieldType(@FieldType(Instruction, "op"), "external_read")) Error!void {
     const shape = typed.resultShape(read.output, program.records) orelse return error.InternalError;
     if (shape.ok_type != (if (read.kind == .clock) typed.Type.i64 else typed.Type.u64) or shape.error_type != .i64) return error.InternalError;
@@ -622,6 +631,7 @@ fn validateFlow(allocator: std.mem.Allocator, program: Program, function: Functi
                 if (height < 2) return error.InternalError;
                 height -= 1;
             },
+            .stand_in => |kind| height = try replaceOperands(height, kind.operands()),
             .print => |output| {
                 const operands = output.types.len + @intFromBool(output.separator) + @intFromBool(output.terminator) + @intFromBool(output.stream);
                 if (height < operands) return error.InternalError;

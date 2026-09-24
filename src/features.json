@@ -182,6 +182,16 @@
       "summary": "`divtrunc` and `remtrunc` round toward zero where `//` and `%` round down.",
       "doc": "docs/integer-operations.md#truncating-division"
     },
+    "contracts": {
+      "kind": "language",
+      "summary": "`@requires(cond[, \"message\"])` and `@ensures(cond[, \"message\"])` on a `def` are checked at entry and at every normal return in every build mode and backend, with `result`, entry-time `old(expr)` and `Ok`-only postconditions for `Result`; a violation traps `R_REQUIRES` (naming the caller) or `R_ENSURES`, and conditions must be effect-free apart from allocation.",
+      "doc": "docs/contracts.md#preconditions-and-postconditions"
+    },
+    "type-invariants": {
+      "kind": "language",
+      "summary": "`@invariant(cond[, \"message\"])` on a `record` or `domain` is checked against `self` at every construction, `replace`, field write and `wrap`, trapping `R_INVARIANT` where the bad value was produced.",
+      "doc": "docs/contracts.md#invariants"
+    },
     "assert-statements": {
       "kind": "language",
       "summary": "`assert condition` and `assert condition, \"message\"` trap `R_ASSERT` under every effect bound.",
@@ -702,6 +712,11 @@
       "summary": "A guest test runs with no ambient authority, and a case may replace a dependency's source to make a reading deterministic.",
       "doc": "docs/tooling/guest-tests.md#deterministic-provider-fixtures"
     },
+    "test-capability-parameters": {
+      "kind": "tooling",
+      "summary": "A `test_` function may declare `Clock`, `Entropy`, `Filesystem`, `Environment` and `Network` parameters; `mylang test` hands each a deterministic stand-in (a clock at a fixed instant, entropy seeded from the test name or `--seed N`, an empty in-memory filesystem, an empty environment, a denied network), never real authority, and binds the seed and instant into receipt identity.",
+      "doc": "docs/tooling/guest-tests.md#capability-parameters"
+    },
     "typed-noncapturing-function-values": {
       "kind": "language",
       "summary": "A function value has a declared signature and captures nothing.",
@@ -786,6 +801,21 @@
       "kind": "language",
       "summary": "`time` provides durations, instants and Unix wall-clock readings behind a clock capability.",
       "doc": "docs/standard-library.md#time"
+    },
+    "deterministic-stand-in-capabilities": {
+      "kind": "language",
+      "summary": "`time.simulated_clock`, `random.seeded_entropy`, `filesystem.memory`, `environment.fixed` and `network.denied` build a Clock, Entropy, Filesystem, Environment or Network that never reaches a host resource; building one needs no capability, narrowing one keeps it a stand-in, and using one where no parameter supplies the effect is not an effect of the function.",
+      "doc": "docs/effects.md#deterministic-stand-ins"
+    },
+    "standard-filesystem": {
+      "kind": "language",
+      "summary": "`filesystem.memory()` builds an empty in-memory `Filesystem` that serves the whole-path helpers, `open`, `fs.dir` and `read_only` without touching the disk.",
+      "doc": "docs/standard-library.md#filesystem"
+    },
+    "standard-environment": {
+      "kind": "language",
+      "summary": "`environment.fixed(values)` builds an `Environment` holding exactly the given pairs, with `get`, `names` and `only`, that never reads the process environment.",
+      "doc": "docs/standard-library.md#environment"
     },
     "doc-examples": {
       "kind": "tooling",

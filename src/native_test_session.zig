@@ -3,6 +3,7 @@ const std = @import("std");
 const bundled = @import("qbe_build_assets");
 const fs = @import("qbe_build_io.zig");
 const v = @import("qbe_build_value.zig");
+const wire = @import("native_test_wire.zig");
 const snapshot = @import("native_test_snapshot.zig");
 const options = @import("native_test_options.zig");
 const build_options = @import("qbe_build_options.zig");
@@ -381,6 +382,7 @@ pub const Session = struct {
         if (runner.compiled) self.trace(&.{ "native-test-runner", runner.path });
         project.executor = try execute.Executor.init(self.context, project.manifest, library, project.directory, runner.path);
         project.executor.?.stress = self.options.flags.gc_stress;
+        project.executor.?.seed = self.options.seed;
         project.select_file = try a.dupe(u8, select_file);
         return project.executor.?;
     }
@@ -402,6 +404,12 @@ pub const Session = struct {
             .release = build_options.release(self.options.link_arguments),
             .limits = self.options.limits,
             .gc_stress = self.options.flags.gc_stress,
+            // The deterministic capabilities a test may declare (TEST-CAPS-3):
+            // a different seed or start instant is a different execution.
+            .stand_ins = .{
+                .seed = wire.entropySeed(self.options.seed, v.text(v.get(function, "name"))),
+                .clock_start = wire.clock_start,
+            },
             .policy = self.source.support.policy_identity,
         }, .{});
         return fs.hash(self.context.allocator, bytes);

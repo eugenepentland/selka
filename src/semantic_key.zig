@@ -112,7 +112,9 @@ pub fn prepare(
         const body = program.statements.items[@backingInt(function.body)].span;
         if (body.start > body.end or body.end > src.bytes.len) return error.InternalError;
         bodies[i] = body;
-        const start = lineStart(src.bytes, function.name.start);
+        // The region begins at the declaration's first attribute line, so an
+        // edit to a contract clause above the `def` changes its bytes.
+        const start = lineStart(src.bytes, ast.declarationStart(program, function.name));
         if (start > body.start) return error.InternalError;
         regions[i] = .{ .start = start, .end = body.end };
         keys[i] = try builder.functionKey(function);
@@ -624,7 +626,7 @@ const Builder = struct {
     /// references.
     fn context(self: *Builder, function: ast.Function, key: []const u8, contract: [32]u8, names: ContextNames) error{ OutOfMemory, InternalError }![32]u8 {
         const body = self.program.statements.items[@backingInt(function.body)].span;
-        const start = lineStart(self.src.bytes, function.name.start);
+        const start = lineStart(self.src.bytes, ast.declarationStart(self.program, function.name));
         if (start > body.start) return error.InternalError;
         var hash = Hash.init(.{});
         hash.update(functions_domain);
@@ -641,6 +643,9 @@ const Builder = struct {
         } else {
             collector.recording = true;
             try collector.collectValue(ast.Function, function);
+            // A contract clause may call a helper: its conditions are part of
+            // what the checked body depends on.
+            try collector.collectValue([]const ast.Attribute, ast.attributesOf(self.program, function.name));
             names.names.* = try self.allocator.dupe(Name, collector.names.items);
         }
         try self.mixRefs(&hash, &collector);
@@ -703,7 +708,7 @@ const Builder = struct {
             .function => {
                 const function = self.program.functions[index];
                 const body = self.program.statements.items[@backingInt(function.body)].span;
-                const start = lineStart(self.src.bytes, function.name.start);
+                const start = lineStart(self.src.bytes, ast.declarationStart(self.program, function.name));
                 const end = if (function.policy.constant) body.end else body.start;
                 if (start > end or end > self.src.bytes.len) return error.OutOfMemory;
                 frame(&hash, self.src.bytes[start..end]);
@@ -721,16 +726,19 @@ const Builder = struct {
                     try collector.collectValue(ast.FunctionSignature, function.signature);
                     try collector.collectValue(ast.FunctionPolicy, function.policy);
                     try collector.addSpan(function.name);
+                    try collector.collectValue([]const ast.Attribute, ast.attributesOf(self.program, function.name));
                 }
             },
             .record => {
                 self.mixExport(&hash, self.program.types.records[index].name);
                 try collector.collectValue(ast.Record, self.program.types.records[index]);
+                try collector.collectValue([]const ast.Attribute, ast.attributesOf(self.program, self.program.types.records[index].name));
                 self.mixDeclarationBytes(&hash, self.program.types.records[index].name, collector.extent);
             },
             .domain => {
                 self.mixExport(&hash, self.program.types.domains[index].name);
                 try collector.collectValue(ast.Domain, self.program.types.domains[index]);
+                try collector.collectValue([]const ast.Attribute, ast.attributesOf(self.program, self.program.types.domains[index].name));
                 self.mixDeclarationBytes(&hash, self.program.types.domains[index].name, collector.extent);
             },
             .resource => {
@@ -770,7 +778,9 @@ const Builder = struct {
     /// value, a `record`/`class` spelling or a field order change is part of
     /// what every user of the type depends on.
     fn mixDeclarationBytes(self: *Builder, hash: *Hash, name: source.Span, extent: usize) void {
-        const start = lineStart(self.src.bytes, name.start);
+        // An `@invariant` above the declaration is part of every user's
+        // dependency, so the framed text starts at its first attribute line.
+        const start = lineStart(self.src.bytes, ast.declarationStart(self.program, name));
         const end = @min(@max(extent, name.end), self.src.bytes.len);
         frame(hash, self.src.bytes[start..end]);
     }

@@ -28,6 +28,7 @@ uint64_t myl_qbe_grant_external_checked(void *context,unsigned kind,const char *
     return UINT64_MAX-kind;
 }
 int myl_qbe_external_read(void *context,uint64_t authority,unsigned kind,uint64_t *output) {
+    if (kind<=1 && MYL_QBE_IS_STAND_IN(authority)) return myl_qbe_stand_in_read(context,authority,kind,output);
     if (kind>1 || authority!=UINT64_MAX-kind) { myl_qbe_fail_capability(context);return -1; }
     const MylangNativeProviders *p=providers(context);
     MylangProviderStatus status=MYLANG_PROVIDER_UNAVAILABLE;
@@ -73,6 +74,7 @@ static int scope_allows(const unsigned char *blob,size_t length,const unsigned c
 /* Register or dedup one `env.only(...)` name blob and return its scope authority. */
 uint64_t myl_qbe_environment_only(void *context,uint64_t authority,const unsigned char *names,size_t length) {
     MylQbeContext *ctx=context;
+    if (MYL_QBE_IS_STAND_IN(authority)) return myl_qbe_stand_in_environment_only(context,authority,names,length);
     if (authority!=MYL_QBE_ENVIRONMENT_ROOT) { myl_qbe_fail_capability(context);return 0; }
     if (!length || names[length-1]!=0) { myl_qbe_fail(context,"InvalidCapability");return 0; }
     unsigned count=0;
@@ -98,6 +100,16 @@ uint64_t myl_qbe_environment_only(void *context,uint64_t authority,const unsigne
 /* The scanner above rejects an empty name, so `scope_allows` never sees one. */
 int myl_qbe_environment_get(void *context,uint64_t authority,const unsigned char *key,size_t length,unsigned char *output,size_t capacity,size_t *written,int *present) {
     const unsigned char *scope;size_t scope_length;
+    if (MYL_QBE_IS_STAND_IN(authority)) {
+        const unsigned char *value=NULL;size_t width=0;
+        *written=0;*present=0;
+        int found=myl_qbe_stand_in_environment(context,authority,key,length,&value,&width);
+        if (found<0) return -1;
+        if (found && width>capacity) return 4;
+        if (found) { if (width) memcpy(output,value,width);*written=width;*present=1; }
+        if (capacity>*written) memset(output+*written,0,capacity-*written);
+        return 0;
+    }
     if (!environment_scope(context,authority,&scope,&scope_length)) { myl_qbe_fail_capability(context);return -1; }
     if (scope && !scope_allows(scope,scope_length,key,length)) { myl_qbe_fail_capability(context);return -1; }
     const MylangNativeProviders *p=providers(context);
@@ -123,6 +135,16 @@ int myl_qbe_environment_get(void *context,uint64_t authority,const unsigned char
    capability path, the same error path the raw provider status maps onto. */
 void *myl_qbe_environment_text(void *context,uint64_t authority,const unsigned char *key,size_t length,int *present) {
     const unsigned char *scope;size_t scope_length;
+    if (MYL_QBE_IS_STAND_IN(authority)) {
+        const unsigned char *value=NULL;size_t width=0;
+        *present=0;
+        int found=myl_qbe_stand_in_environment(context,authority,key,length,&value,&width);
+        if (found<=0) return NULL;
+        myl_native_text *text=myl_native_text_from_utf8(myl_qbe_heap(context),value,width);
+        if (!text) { myl_qbe_fail_allocation(context);return NULL; }
+        *present=1;
+        return text;
+    }
     if (!environment_scope(context,authority,&scope,&scope_length)) { myl_qbe_fail_capability(context);return NULL; }
     if (scope && !scope_allows(scope,scope_length,key,length)) { myl_qbe_fail_capability(context);return NULL; }
     const MylangNativeProviders *p=providers(context);
@@ -177,6 +199,7 @@ static int allow_has(const char *allow,const unsigned char *bytes,size_t length)
    when no allowlist is set; a narrowed authority lists its scope names. */
 void *myl_qbe_environment_names(void *context,uint64_t authority) {
     MylQbeContext *ctx=context;
+    if (MYL_QBE_IS_STAND_IN(authority)) return myl_qbe_stand_in_environment_names(context,authority);
     const unsigned char *scope;size_t scope_length;
     if (!environment_scope(context,authority,&scope,&scope_length)) { myl_qbe_fail_capability(context);return NULL; }
     const MylangNativeProviders *p=providers(context);

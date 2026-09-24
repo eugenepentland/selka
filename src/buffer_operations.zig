@@ -168,6 +168,16 @@ pub const Kind = enum {
     pub fn allocates(self: Kind) bool {
         return self == .reserve;
     }
+    /// Identify operations that change the collection they are called on, as
+    /// a caller sees it: its elements, its length or its reserved capacity.
+    pub fn writesReceiver(self: Kind) bool {
+        return switch (self) {
+            .write, .append, .resize, .reserve, .take, .truncate, .extend, .insert, .pop, .pop_at, .remove, .reverse, .sort, .sort_keyed, .clear => true,
+            .update, .setdefault, .pop_key, .pop_default => true,
+            .buffer_reserve, .buffer_append_byte, .buffer_append_range, .buffer_append_utf8, .buffer_append_int, .buffer_append_float => true,
+            else => false,
+        };
+    }
     /// Identify operations that modify buffer contents or initialized length.
     pub fn mutates(self: Kind) bool {
         return switch (self) {

@@ -239,7 +239,6 @@ const FunctionFacts = struct {
         defer deps.deinit();
         var reasons: ReasonSet = .{ .allocator = self.allocator };
         defer reasons.deinit();
-        var external = false;
         var facts: TypeFacts = .{
             .hash = &hash,
             .allocator = self.allocator,
@@ -259,7 +258,15 @@ const FunctionFacts = struct {
             const current = item orelse break;
             const node = switch (current) {
                 .expression => |id| self.program.nodes[@backingInt(id)],
-                .statement => continue,
+                .statement => |id| {
+                    // CONTRACT-INTERFACE-1: a contract clause checked in this
+                    // body may be written outside its source region (an
+                    // `@invariant` on a record it builds), so its text is
+                    // part of the implementation identity.
+                    const statement = self.program.statements[@backingInt(id)];
+                    if (statement.data == .assertion and statement.data.assertion.kind != .statement) part(&hash, statement.data.assertion.message);
+                    continue;
+                },
             };
             try facts.add(node.ty);
             switch (node.data) {
@@ -273,10 +280,6 @@ const FunctionFacts = struct {
                         break :targets collected;
                     };
                     for (targets) |id| try deps.add(self.program, id, .indirect);
-                },
-                .external_read, .environment_get, .environment_names, .acquire_resource, .complete_resource, .resource_io, .restrict_resource, .dir_resource => {
-                    external = true;
-                    try reasons.add("external-capability-operation");
                 },
                 else => {},
             }
@@ -294,7 +297,7 @@ const FunctionFacts = struct {
         return .{
             .implementation_hash = std.fmt.allocPrint(self.allocator, "{s}", .{std.fmt.bytesToHex(hash.finalResult(), .lower)}) catch return error.OutOfMemory,
             .dependencies = deps.items.toOwnedSlice(self.allocator) catch return error.OutOfMemory,
-            .cacheable = function.policy.host == null and external_effects == 0 and !external,
+            .cacheable = function.policy.host == null and external_effects == 0,
             .pure = dependencies.signaturePure(function.signature, function.scope.locals),
             .reasons = reasons.items.toOwnedSlice(self.allocator) catch return error.OutOfMemory,
         };

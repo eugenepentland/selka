@@ -102,6 +102,24 @@ public def now(clock: Clock) -> Result[Instant, str]:
             return Err("clock capability failed")
 
 
+# A simulated clock that reads `start` until it is advanced. It grants no real
+# authority, so building one needs no capability and is not an effect, and code
+# that reads it through `now` cannot tell it from a host clock.
+public def simulated_clock(start: Instant) -> Clock:
+    return __stand_in[Clock](start.unix_nanoseconds)
+
+
+# Move a simulated clock by `duration`, backward for a negative one, the way a
+# wall clock may step. A host-granted clock cannot be moved.
+public def advance(clock: Clock, duration: Duration) -> Result[None, str]:
+    status = __clock_advance(clock, duration.nanoseconds)
+    if status == 1:
+        return Err("only a simulated clock can be advanced")
+    if status == 2:
+        return Err("the simulated clock would leave the 64-bit nanosecond range")
+    return Ok(None)
+
+
 # An instant rebuilt from a stored Unix nanosecond count.
 public def from_unix_nanoseconds(count: int) -> Instant effects():
     return Instant(unix_nanoseconds=count)

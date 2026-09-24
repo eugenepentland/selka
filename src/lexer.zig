@@ -58,6 +58,8 @@ pub const Tag = enum {
     kw_random_cap,
     kw_clock_now,
     kw_random_u64,
+    kw_stand_in,
+    kw_clock_advance,
 
     kw_bit_and,
     kw_bit_or,
@@ -267,6 +269,11 @@ const keyword_aliases = .{
     // declares `sqrt`, which shadows the prelude helper, so it reaches the
     // intrinsic under a spelling ordinary programs are not taught.
     .{ "__float_sqrt", Tag.kw_f64_sqrt },
+    // Deterministic stand-in capabilities for `src/stdlib/{time,random,
+    // filesystem,environment,network}.my`, under spellings ordinary programs
+    // are not taught; the parser also rejects them outside the standard library.
+    .{ "__stand_in", Tag.kw_stand_in },
+    .{ "__clock_advance", Tag.kw_clock_advance },
 };
 const keyword_map = std.StaticStringMap(Tag).initComptime(keywordPairs());
 fn keywordPairs() [keyword_words.len + keyword_aliases.len]struct { []const u8, Tag } {

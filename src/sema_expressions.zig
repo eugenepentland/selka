@@ -7,6 +7,7 @@
 //! over the concrete checker type; `Checks` exposes the ones the rest of the
 //! checker calls as `self.name(...)`.
 const sema_shared = @import("sema_shared.zig");
+const sema_contracts = @import("sema_contracts.zig");
 const buffer_operations = @import("buffer_operations.zig");
 const BufferKind = buffer_operations.Kind;
 const collections = @import("collection_lower.zig");
@@ -23,6 +24,7 @@ const dictionary_views = @import("dictionary_views.zig");
 const bufferOperation = sema_shared.bufferOperation;
 const ast = @import("ast.zig");
 const typed = @import("typed.zig");
+const StandIn = @import("external_capabilities.zig").StandIn;
 const source = @import("source.zig");
 const diagnostic = @import("diagnostic.zig");
 const record_layouts = @import("record_layouts.zig");
@@ -415,6 +417,12 @@ fn queueExpression(comptime Checker: type, self: *Checker, work: *std.ArrayList(
             try work.append(self.allocator, .{ .id = read.capability });
             return true;
         },
+        .stand_in => |stand| {
+            try work.append(self.allocator, .{ .id = id, .emit = true });
+            if (stand.second) |second| try work.append(self.allocator, .{ .id = second });
+            try work.append(self.allocator, .{ .id = stand.first });
+            return true;
+        },
         .cast, .wrap => |cast| {
             try work.append(self.allocator, .{ .id = id, .emit = true });
             try work.append(self.allocator, .{ .id = cast.value });
@@ -510,7 +518,25 @@ fn queueExpression(comptime Checker: type, self: *Checker, work: *std.ArrayList(
     }
     return false;
 }
+/// CONTRACT-PURE-1: a contract condition may not pass a `mut` argument,
+/// assign, call a method that changes its receiver, or leave its function
+/// early with `?`.
+fn rejectInContract(comptime Checker: type, self: *Checker, node: ast.Node) Error!void {
+    if (self.contract.checking == null) return;
+    const changes = "a contract condition must not change anything, so it cannot call a method that changes its receiver";
+    const message = switch (node.data) {
+        .mut_argument => "a contract condition must not change anything, so it cannot pass a `mut` argument",
+        .propagate => "a contract condition cannot return early with `?`; test the value with `match` instead",
+        .field_assignment, .index_assignment => "a contract condition must not change anything, so it cannot assign",
+        .list_operation => |operation| if (operation.kind.writesReceiver()) changes else return,
+        .buffer_operation => |operation| if (operation.kind.writesReceiver()) changes else return,
+        .method_call => |call| if (buffer_operations.method(self.src.text(call.name))) |kind| (if (kind.writesReceiver()) changes else return) else return,
+        else => return,
+    };
+    return self.sink.fail(sema_contracts.effect_code, node.span, message);
+}
 fn checkedExpression(comptime Checker: type, self: *Checker, node: ast.Node, minimum_literal: ?Literal, temporaries: []const typed.Type) Error!typed.Node {
+    try rejectInContract(Checker, self, node);
     var out: typed.Node = .{ .span = node.span, .ty = .i64, .data = undefined };
     if (lambdaIndex(Checker, self, node.span)) |lambda_index| {
         try checkLambdaValue(Checker, self, lambda_index, node, &out);
@@ -574,6 +600,7 @@ fn checkedExpression(comptime Checker: type, self: *Checker, node: ast.Node, min
             try self.require(self.nodes.items[@backingInt(capability)].ty, if (read.kind == .clock) .clock_cap else .random_cap, self.syntax.nodes.items[@backingInt(read.capability)].span);
             out.data = .{ .external_read = .{ .kind = read.kind, .capability = capability } };
         },
+        .stand_in => |stand| try checkStandIn(Checker, self, stand, &out),
         .propagate => |operand| {
             const value = self.resolved[@backingInt(operand)].?;
             const input_ty = self.nodes.items[@backingInt(value)].ty;
@@ -717,6 +744,29 @@ fn checkedExpression(comptime Checker: type, self: *Checker, node: ast.Node, min
 }
 /// Check `len(value)`, projecting a dictionary view back to its retained
 /// mapping so the operation stays nonallocating and observes the live size.
+/// Type one deterministic stand-in operation. `__stand_in[T](operand)` builds
+/// the stand-in for capability type `T` from an `int` (a clock's start, an
+/// entropy seed, ignored otherwise) or, for `Environment`, a `str` of
+/// `NAME\0VALUE\0` pairs; `__clock_advance(clock, count)` returns an `int` status.
+fn checkStandIn(comptime Checker: type, self: *Checker, stand: @FieldType(@FieldType(ast.Node, "data"), "stand_in"), out: *typed.Node) Error!void {
+    const first = self.resolved[@backingInt(stand.first)].?;
+    const first_span = self.syntax.nodes.items[@backingInt(stand.first)].span;
+    const span = stand.ty orelse {
+        const second = self.resolved[@backingInt(stand.second.?)].?;
+        try self.require(self.nodes.items[@backingInt(first)].ty, .clock_cap, first_span);
+        try self.require(self.nodes.items[@backingInt(second)].ty, .i64, self.syntax.nodes.items[@backingInt(stand.second.?)].span);
+        out.ty = .i64;
+        out.data = .{ .stand_in = .{ .kind = .advance, .first = first, .second = second } };
+        return;
+    };
+    out.ty = try self.ty(span);
+    const index = out.ty.capabilityIndex() orelse return self.sink.fail("E_STAND_IN", span, "a stand-in is a Clock, Entropy, Filesystem, Network or Environment");
+    const kind = StandIn.building(index) orelse return self.sink.fail("E_STAND_IN", span, "a stand-in is a Clock, Entropy, Filesystem, Network or Environment");
+    const operand: typed.Type = if (kind == .environment) try collections.preludeType(&self.catalog, "str", span) else .i64;
+    try self.require(self.nodes.items[@backingInt(first)].ty, operand, first_span);
+    out.data = .{ .stand_in = .{ .kind = kind, .first = first, .second = null } };
+}
+
 fn checkLength(comptime Checker: type, self: *Checker, node: ast.Node, input: ast.NodeId) Error!typed.Node {
     const base = self.resolved[@backingInt(input)].?;
     const receiver_type = self.nodes.items[@backingInt(base)].ty;
@@ -806,6 +856,7 @@ fn consumedTemporaries(comptime Checker: type, self: *Checker, node: ast.Node, o
     return switch (out.data) {
         .function_value, .unit, .integer, .boolean, .local, .block_value, .dir_resource, .host_resource => 0,
         .arena_escape, .cast, .wrap, .unwrap, .length, .field, .unary, .propagate, .external_read, .complete_resource, .restrict_resource, .environment_names => 1,
+        .stand_in => |stand| stand.kind.operands(),
         .acquire_buffer => 1,
         .acquire_resource, .environment_get, .environment_only => 2,
         .index, .binary => 2,
@@ -866,7 +917,9 @@ fn expressionWithTemporaries(comptime Checker: type, self: *Checker, root: ast.N
         }
         const index = @backingInt(task.id);
         if (self.resolved[index]) |value| {
-            if (task.default_value) try temporaries.append(self.allocator, self.nodes.items[@backingInt(value)].ty);
+            // An `old(...)` an `@ensures` check bound in advance stands for a
+            // freshly checked operand, so it leaves its temporary like one.
+            if (task.default_value or self.contractSeeded(index)) try temporaries.append(self.allocator, self.nodes.items[@backingInt(value)].ty);
             continue;
         }
         const node = try self.collectionSyntax(task.id);

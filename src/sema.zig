@@ -1,5 +1,6 @@
 //! Scope and type checking use resolved binding identities, including advisory use counts.
 const sema_shared = @import("sema_shared.zig");
+const sema_contracts = @import("sema_contracts.zig");
 const buffer_operations = @import("buffer_operations.zig");
 const ManagedKind = @import("runtime_values.zig").ManagedKind;
 const BufferKind = buffer_operations.Kind;
@@ -199,6 +200,8 @@ const Checker = struct {
     owner: ?typed.Type = null,
     /// The `with open(...)` head whose failure traps instead of yielding a result.
     trapping_open: ?source.Span = null,
+    /// Contract clauses of the function being checked and the invariant index.
+    contract: sema_contracts.State = .{},
 
     /// Reset the per-function state and bind one ordinary instance's signature:
     /// its owner, return type and parameter locals.
@@ -215,6 +218,8 @@ const Checker = struct {
         self.active.clearRetainingCapacity();
         self.owner = if (function.policy.owner) |owner| try self.ty(owner) else null;
         self.return_type = try self.ty(function.signature.return_type);
+        self.contract.ensures = &.{};
+        self.contract.olds = &.{};
         try self.bindParameters(function);
     }
     /// The checked function record of ordinary instance `i` with body `body`.
@@ -269,6 +274,7 @@ const Checker = struct {
         self.current_function = @fromBackingInt(i);
         self.current_lambda = null;
         const function = self.syntaxFunction(@fromBackingInt(i));
+        const first_node = self.nodes.items.len;
         const constant_context: @import("constant_values.zig").Context = .{ .src = self.src, .program = self.syntax, .names = self.catalog.module_names, .sink = self.sink, .catalog = self.catalog };
         const declaration = @backingInt(self.instance_keys.items[i].declaration);
         const constant = if (function.policy.constant and try constant_context.literalType(declaration) == null) try constant_context.evaluate(declaration) else null;
@@ -297,6 +303,9 @@ const Checker = struct {
             self.conversion_fields = try allocator.alloc(bool, source_record.fields.len);
             @memset(self.conversion_fields.?, false);
         }
+        // Preconditions and `old(...)` captures run after the parameters are
+        // bound and before the body; postconditions wrap every return.
+        const prologue = try self.contractPrologue(function);
         // Type-check even unevaluated short-circuit operands before replacing the
         // scalar initializer with its checked literal value. Managed constants keep
         // their ordinary checked literal node and its allocation effect.
@@ -324,6 +333,12 @@ const Checker = struct {
             function.name,
             "function may fall through without returning its declared type; loops are conservatively treated as falling through, even while true",
         );
+        if (prologue.len != 0) {
+            const children = try std.mem.concat(allocator, typed.StatementId, &.{ prologue, &.{body.id} });
+            body.id = @fromBackingInt(self.statements.items.len);
+            try self.statements.append(allocator, .{ .span = self.syntax.statements.items[@backingInt(function.body)].span, .terminates = true, .data = .{ .block = children } });
+        }
+        try self.enforceInvariants(first_node);
         return self.finishFunction(i, function, body.id);
     }
     /// Whether `span` lies inside the body of a generic function declaration,
@@ -346,6 +361,9 @@ const Checker = struct {
         const contract = callables.signature(lambda_type, self.catalog.records) orelse return error.InternalError;
         self.current_function = null;
         self.current_lambda = index;
+        self.contract.ensures = &.{};
+        self.contract.olds = &.{};
+        const first_node = self.nodes.items.len;
         for (self.resolved_nodes.items) |node| self.resolved[node] = null;
         self.resolved_nodes.clearRetainingCapacity();
         self.expected_types.clearRetainingCapacity();
@@ -373,6 +391,7 @@ const Checker = struct {
         try self.requireHandled(0, lambda.span);
         const body: typed.StatementId = @fromBackingInt(self.statements.items.len);
         try self.statements.append(self.allocator, .{ .span = lambda.span, .terminates = true, .data = .{ .ret = value } });
+        try self.enforceInvariants(first_node);
         const name = try std.fmt.allocPrint(self.allocator, "lambda@{d}", .{lambda.span.start});
         return .{
             .policy = .{ .effect_bound = .{ .span = lambda.span, .allowed = contract.effects } },
@@ -600,6 +619,10 @@ const Checker = struct {
             _ = try self.ty(input.type_arguments[0]);
             return self.recordHole(input.name, input.type_arguments[0], span);
         }
+        // `old(...)` is contract syntax, bound before the call is ever resolved
+        // inside `@ensures`; reaching it here means it is misplaced or nested.
+        if (input.owner == null and std.mem.eql(u8, self.src.text(input.name), "old") and !try self.topLevel(input.name))
+            return self.sink.fail(sema_contracts.old_code, span, if (self.contract.checking == .ensures) "`old(...)` cannot nest inside another `old(...)`" else "`old(...)` is only legal inside `@ensures`");
         const call = try @import("source_codec.zig").resolve(self.src, self.syntax, self.catalog, input, self.sink);
         const owner = if (call.owner) |name| try self.ty(name) else null;
         if (owner) |domain_type| _ = try self.catalog.domain(domain_type, call.owner.?, self.sink);
@@ -1171,6 +1194,12 @@ const Checker = struct {
         );
         return self.failArenaEscape(span, message, null);
     }
+    const contract_checks = sema_contracts.Checks(Checker);
+    pub const indexInvariants = contract_checks.indexInvariants;
+    pub const contractSeeded = contract_checks.contractSeeded;
+    pub const contractPrologue = contract_checks.contractPrologue;
+    pub const contractReturn = contract_checks.contractReturn;
+    pub const enforceInvariants = contract_checks.enforceInvariants;
     const statement_checks = @import("sema_statements.zig").Checks(Checker);
     pub const statement = statement_checks.statement;
     pub const unitFallthrough = statement_checks.unitFallthrough;
@@ -1592,6 +1621,7 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
         .lambda_captures = lambda_captures,
     };
     defer allocator.free(checker.managed_types);
+    try checker.indexInvariants();
     // Checked trees run about one and a half times the syntax they come from.
     // Reserving that up front keeps the append path from regrowing (and, in the
     // project arena, recopying) a large program's checked tables; a small one

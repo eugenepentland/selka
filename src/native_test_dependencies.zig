@@ -42,7 +42,12 @@ pub const Metadata = struct {
 /// discards them when the test passes, while a receipt records only a pass. A
 /// reused pass therefore shows exactly what an executed pass shows — nothing —
 /// and a failure, whose captured output is reported, is never reused.
-pub const deterministic_effects = effects.bit(.managed_allocation) | effects.bit(.mutation) | effects.bit(.output);
+/// The clock, entropy, filesystem, network and environment are too: a test
+/// process holds no host-granted capability and registers no host provider, so
+/// every capability it can use is a deterministic stand-in built from keyed
+/// inputs (the seed and start instant are part of the receipt identity,
+/// TEST-CAPS-3). Only `host`, a call into host-provided code, stays external.
+pub const deterministic_effects = effects.all & ~effects.bit(.host);
 /// Record checked call edges and the canonical type inputs actually used by a unit.
 /// All returned allocations belong to the caller's compilation arena.
 pub fn describe(allocator: std.mem.Allocator, program: bytecode.Program, index: usize, il: []const u8, catalog: *layouts.Catalog, states: []const ?[]const typed.Type) layouts.Error!Metadata {
@@ -53,7 +58,7 @@ pub fn describe(allocator: std.mem.Allocator, program: bytecode.Program, index: 
     if (function.policy.host != null) try builder.reason("host-call");
     const external_effects = function.policy.effects & ~deterministic_effects;
     if (external_effects != 0) try builder.reason("external-effects");
-    const cacheable = function.policy.host == null and external_effects == 0 and !builder.external;
+    const cacheable = function.policy.host == null and external_effects == 0;
     try builder.typeInput(function.signature.return_type);
     for (function.scope.locals) |local| try builder.typeInput(local.ty);
     for (states) |state| if (state) |stack| for (stack) |ty| try builder.typeInput(ty);
@@ -104,7 +109,6 @@ const Facts = struct {
     reasons: std.ArrayList([]const u8) = .empty,
     types: std.AutoHashMapUnmanaged(typed.Type, void) = .empty,
     type_facts: std.ArrayList(TypeFact) = .empty,
-    external: bool = false,
     fn reason(self: *Facts, value: []const u8) layouts.Error!void {
         for (self.reasons.items) |existing| if (std.mem.eql(u8, existing, value)) return;
         try self.reasons.append(self.allocator, value);
@@ -127,10 +131,6 @@ const Facts = struct {
                 for (self.program.functions) |function| for (function.scope.instructions) |instruction| {
                     if (instruction.op == .function_value) try self.edge(instruction.op.function_value.function, .indirect);
                 };
-            },
-            .external_read, .environment_get, .environment_names, .acquire_resource, .complete_resource, .resource_io, .restrict_resource, .dir_resource => {
-                self.external = true;
-                try self.reason("external-capability-operation");
             },
             else => {},
         }
@@ -199,7 +199,7 @@ fn part(hash: *Fact, bytes: []const u8) void {
 }
 
 // spec: NATIVE-TEST-13
-test "checked metadata allows process-local mutation but rejects external effects" {
+test "checked metadata allows process-local effects but rejects host calls" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();
@@ -218,7 +218,11 @@ test "checked metadata allows process-local mutation but rejects external effect
     try std.testing.expect(first.cacheable);
     try std.testing.expect(!first.pure);
     try std.testing.expectEqual(@as(usize, 2), first.dependencies.len);
+    // A clock a test process can reach is a deterministic stand-in.
     functions[0].policy.effects = effects.bit(.clock);
+    const simulated = try describe(a, .{ .functions = &functions }, 0, "stable IL", &catalog, &.{});
+    try std.testing.expect(simulated.cacheable);
+    functions[0].policy.effects = effects.bit(.host);
     const external = try describe(a, .{ .functions = &functions }, 0, "stable IL", &catalog, &.{});
     try std.testing.expect(!external.cacheable);
     try std.testing.expectEqualStrings(first.implementation_hash, external.implementation_hash);
@@ -239,7 +243,10 @@ test "checked metadata keeps a test whose only external effect is output cacheab
     try std.testing.expectEqual(@as(usize, 0), printing.reasons.len);
     functions[0].policy.effects = effects.bit(.output) | effects.bit(.environment);
     const environmental = try describe(a, .{ .functions = &functions }, 0, "stable IL", &catalog, &.{});
-    try std.testing.expect(!environmental.cacheable);
+    try std.testing.expect(environmental.cacheable);
+    functions[0].policy.effects = effects.bit(.output) | effects.bit(.host);
+    const hosted = try describe(a, .{ .functions = &functions }, 0, "stable IL", &catalog, &.{});
+    try std.testing.expect(!hosted.cacheable);
 }
 
 test "semantic type fingerprints follow managed elements and ignore unused declarations" {
