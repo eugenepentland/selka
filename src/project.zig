@@ -127,10 +127,11 @@ pub const Project = struct {
         const limit = @min(options.max_file_bytes, options.max_total_bytes - self.counts.bytes);
         const bytes = if (standard_library.source(path)) |library| try allocator.dupe(u8, library) else provider.read(provider.context, allocator, path, limit) catch |err| {
             if (err == error.OutOfMemory) return error.OutOfMemory;
-            return self.fail(if (err == error.TooLarge) "E_PROJECT_BYTES" else "E_MODULE_READ", try std.fmt.allocPrint(allocator, "cannot load {s}: {s}", .{ path, @errorName(err) }), site, null);
+            if (err == error.TooLarge) return self.fail("E_PROJECT_BYTES", try budgetMessage(allocator, path, options, self.counts.bytes), site, null);
+            return self.fail("E_MODULE_READ", try std.fmt.allocPrint(allocator, "cannot load {s}: {s}", .{ path, @errorName(err) }), site, null);
         };
         defer allocator.free(bytes);
-        if (bytes.len > limit) return self.fail("E_PROJECT_BYTES", "provider exceeded the source byte budget", site, null);
+        if (bytes.len > limit) return self.fail("E_PROJECT_BYTES", try budgetMessage(allocator, path, options, self.counts.bytes), site, null);
         self.counts.bytes += bytes.len;
         const source_path = if (standard_library.source(path) != null) try std.fmt.allocPrint(allocator, "@stdlib/{s}", .{path}) else path;
         self.modules.items[id].src = try source.Source.init(allocator, source_path, bytes);
@@ -432,6 +433,15 @@ const Scanner = struct {
         return .{ .text = try output.toOwnedSlice(), .last = src.text(last.span), .span = .join(first.span, last.span) };
     }
 };
+/// The `E_PROJECT_BYTES` message for a module the byte budget refused: which
+/// budget ran out — the project total or the single file — its size, and the
+/// `mylang.json` field that raises it.
+fn budgetMessage(allocator: std.mem.Allocator, path: []const u8, options: Options, loaded: usize) error{OutOfMemory}![]const u8 {
+    if (options.max_total_bytes - loaded < options.max_file_bytes) {
+        return std.fmt.allocPrint(allocator, "cannot load {s}: the project's sources exceed the {d}-byte max_total_bytes budget; raise budgets.max_total_bytes in mylang.json", .{ path, options.max_total_bytes });
+    }
+    return std.fmt.allocPrint(allocator, "cannot load {s}: the file exceeds the {d}-byte max_file_bytes budget; raise budgets.max_file_bytes in mylang.json", .{ path, options.max_file_bytes });
+}
 /// Check dotted module names while excluding filesystem traversal syntax.
 pub fn validName(name: []const u8) bool {
     var parts = std.mem.splitScalar(u8, name, '.');
