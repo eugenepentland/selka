@@ -26,6 +26,7 @@ pub const ModulePathError = error{
 };
 
 const std = @import("std");
+const ChunkedArena = @import("chunked_arena.zig").ChunkedArena;
 const source = @import("source.zig");
 const lex = @import("lexer.zig");
 const diagnostic = @import("diagnostic.zig");
@@ -94,7 +95,9 @@ pub const Module = struct {
 };
 /// Owns loaded modules, diagnostics, and dependency order in a project arena.
 pub const Project = struct {
-    arena: std.heap.ArenaAllocator,
+    /// Every module's source, syntax and checked program: an arena whose
+    /// untouched reservation stays within one chunk (ARENA-BOUNDED-1).
+    arena: ChunkedArena,
     modules: std.ArrayList(Module) = .empty,
     order: std.ArrayList(usize) = .empty,
     names: std.StringHashMapUnmanaged(usize) = .empty,

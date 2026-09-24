@@ -230,7 +230,7 @@ test "named constraints parse module aliases clone relocate and format round tri
     var sink: language.diagnostic.Sink = .{ .allocator = arena.allocator() };
     const src = try source.Source.init(arena.allocator(), "checkout.my", named_module_fixture);
     const tokens = try lexer.lex(arena.allocator(), named_module_fixture, &sink);
-    var p: parser.Parser = .{ .src = src, .arena = &arena, .tokens = tokens, .sink = &sink };
+    var p: parser.Parser = .{ .src = src, .storage = arena.allocator(), .tokens = tokens, .sink = &sink };
     const syntax = try p.parseModule();
     try t.expectEqual(@as(usize, 1), syntax.types.constraints.len);
     try t.expectEqual(@as(usize, 1), syntax.functions.len);

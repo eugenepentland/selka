@@ -123,7 +123,8 @@ const shift_message = "`<<` and `>>` are not operators";
 /// Token cursor and allocator-backed syntax builder with bounded recursive nesting.
 pub const Parser = struct {
     src: @import("source.zig").Source,
-    arena: *std.heap.ArenaAllocator,
+    /// Where the syntax this parser builds lives: the owning project's or compilation's arena.
+    storage: std.mem.Allocator,
     tokens: []const lex.Token,
     sink: *diagnostic.Sink,
     cursor: struct {
@@ -460,7 +461,7 @@ pub const Parser = struct {
             _ = try self.expect(.rbracket);
             const element = try self.typeName();
             const span: Span = .join(token.span, element);
-            try self.syntax.types.arrays.append(self.arena.allocator(), .{ .span = span, .index = index, .element = element });
+            try self.syntax.types.arrays.append(self.storage, .{ .span = span, .index = index, .element = element });
             return span;
         }
         for ([_]lex.Tag{
@@ -496,7 +497,7 @@ pub const Parser = struct {
     fn tupleType(self: *Parser, token: lex.Token) diagnostic.Error!Span {
         self.cursor.pos += 1;
         _ = try self.expect(.lbracket);
-        const allocator = self.arena.allocator();
+        const allocator = self.storage;
         var elements: std.ArrayList(Span) = .empty;
         while (true) {
             try elements.append(allocator, try self.typeName());
@@ -509,7 +510,7 @@ pub const Parser = struct {
     }
     fn callbackType(self: *Parser, first: Span) diagnostic.Error!Span {
         _ = try self.expect(.lparen);
-        const allocator = self.arena.allocator();
+        const allocator = self.storage;
         var parameters: std.ArrayList(Span) = .empty;
         var names: std.ArrayList(?Span) = .empty;
         var mut_parameters: std.ArrayList(bool) = .empty;
@@ -555,12 +556,12 @@ pub const Parser = struct {
         while (true) {
             const argument = try self.genericArgument();
             if (arguments.items.len == 16) return self.sink.fail(eGenericLimit, argument, "at most 16 type arguments are permitted");
-            try arguments.append(self.arena.allocator(), argument);
+            try arguments.append(self.storage, argument);
             if (!self.take(.comma)) break;
         }
         const close = try self.expect(.rbracket);
         const span: Span = .join(name, close.span);
-        try self.syntax.types.applications.append(self.arena.allocator(), .{ .span = span, .name = name, .arguments = try arguments.toOwnedSlice(self.arena.allocator()) });
+        try self.syntax.types.applications.append(self.storage, .{ .span = span, .name = name, .arguments = try arguments.toOwnedSlice(self.storage) });
         return span;
     }
     /// Parse module headers and bodies without loading imports or checking names.
@@ -589,7 +590,7 @@ pub const Parser = struct {
             const path = Span.join(path_start, self.tokens[self.cursor.pos - 1].span);
             const explicit = self.take(.kw_as);
             const alias = if (explicit) (try self.expect(.ident)).span else self.tokens[self.cursor.pos - 1].span;
-            const allocator = self.arena.allocator();
+            const allocator = self.storage;
             // The local alias (explicit, or the trailing segment) and the full
             // dotted module path both qualify the module; no bare prefix of the
             // path is reserved, so a local may reuse `shared` in `shared.geometry`.
@@ -602,7 +603,7 @@ pub const Parser = struct {
     /// the script shape that needs no `module` declaration. The one policy lives
     /// in `project.zig` so the parser and the project loader cannot disagree.
     fn standardImportScript(self: *Parser) diagnostic.Error!bool {
-        return @import("project.zig").standardImportOpening(self.arena.allocator(), self.src, self.tokens, self.cursor.pos);
+        return @import("project.zig").standardImportOpening(self.storage, self.src, self.tokens, self.cursor.pos);
     }
     fn parseCodec(self: *Parser) diagnostic.Error!ast.Codec {
         const wire = try self.typeName();
@@ -650,7 +651,7 @@ pub const Parser = struct {
     /// Parse the `@name(...)` clauses that precede one declaration, rejecting an
     /// unknown name and a repeated kind.
     fn attributes(self: *Parser) diagnostic.Error![]const ast.Attribute {
-        const allocator = self.arena.allocator();
+        const allocator = self.storage;
         var list: std.ArrayList(ast.Attribute) = .empty;
         while (self.current().tag == .at) {
             const at_token = self.current();
@@ -688,7 +689,7 @@ pub const Parser = struct {
     /// Record the name of a declaration carrying the `public` modifier. Keeping
     /// the recording here holds the top-level dispatch below the complexity cap.
     fn markPublic(self: *Parser, names: *std.ArrayList(Span), declared: bool, name: Span) std.mem.Allocator.Error!void {
-        if (declared) try names.append(self.arena.allocator(), name);
+        if (declared) try names.append(self.storage, name);
     }
     /// Consume an optional leading `public` modifier and reject it directly
     /// before an `export` directive, the one spelling it cannot publish.
@@ -746,7 +747,7 @@ pub const Parser = struct {
                 self.cursor.pos += 1;
                 const constraint = try self.constraintDeclaration(head);
                 try self.markPublic(&public_names, declare_public, constraint.name);
-                try constraints.append(self.arena.allocator(), constraint);
+                try constraints.append(self.storage, constraint);
                 continue;
             }
             if (self.take(.kw_type)) {
@@ -755,7 +756,7 @@ pub const Parser = struct {
                 const target = try self.typeName();
                 _ = try self.expect(.semicolon);
                 try self.markPublic(&public_names, declare_public, name);
-                try self.syntax.types.aliases.append(self.arena.allocator(), .{ .name = name, .target = target });
+                try self.syntax.types.aliases.append(self.storage, .{ .name = name, .target = target });
                 continue;
             }
             if (self.take(.kw_const)) {
@@ -766,14 +767,14 @@ pub const Parser = struct {
                 const value = try self.expression(0);
                 const end = (try self.expect(.semicolon)).span;
                 const ret = try self.addStatement(.{ .span = .join(name, end), .data = .{ .ret = value } });
-                const statements = try self.arena.allocator().alloc(ast.StatementId, 1);
+                const statements = try self.storage.alloc(ast.StatementId, 1);
                 statements[0] = ret;
                 const body = try self.addStatement(.{ .span = .join(name, end), .data = .{ .block = statements } });
                 const literal = self.syntax.nodes.items[@backingInt(value)].data;
                 // Managed literal getters allocate on read; scalar getters remain pure.
                 const allowed = if (literal == .text or literal == .bytes) effects.bit(.managed_allocation) else 0;
                 try self.markPublic(&public_names, declare_public, name);
-                try functions.append(self.arena.allocator(), .{ .policy = .{ .constant = true, .effect_bound = .{ .allowed = allowed, .span = name } }, .signature = .{ .parameters = &.{}, .return_type = ty }, .name = name, .body = body });
+                try functions.append(self.storage, .{ .policy = .{ .constant = true, .effect_bound = .{ .allowed = allowed, .span = name } }, .signature = .{ .parameters = &.{}, .return_type = ty }, .name = name, .body = body });
                 continue;
             }
             if (self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "resource")) {
@@ -783,7 +784,7 @@ pub const Parser = struct {
                 const kind = try self.expect(.ident);
                 _ = try self.expect(.semicolon);
                 try self.markPublic(&public_names, declare_public, name.span);
-                try resources.append(self.arena.allocator(), .{ .name = name.span, .backing = kind.span });
+                try resources.append(self.storage, .{ .name = name.span, .backing = kind.span });
                 continue;
             }
             const fallible = self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "result");
@@ -805,7 +806,7 @@ pub const Parser = struct {
                     } else if (is_union and self.take(.colon)) {
                         payload = try self.typeName();
                     }
-                    try cases.append(self.arena.allocator(), .{ .name = tag.span, .payload = payload, .fields = fields });
+                    try cases.append(self.storage, .{ .name = tag.span, .payload = payload, .fields = fields });
                     if (!self.take(.comma)) {
                         // A next case on its own line is the shape an agent writes
                         // first, so name the rule instead of "expected a dedent".
@@ -815,7 +816,7 @@ pub const Parser = struct {
                 };
                 _ = try self.expect(.dedent);
                 try self.markPublic(&public_names, declare_public, name.span);
-                try variants.append(self.arena.allocator(), .{ .type_parameters = type_parameters, .name = name.span, .fallible = fallible, .is_union = is_union, .cases = try cases.toOwnedSlice(self.arena.allocator()) });
+                try variants.append(self.storage, .{ .type_parameters = type_parameters, .name = name.span, .fallible = fallible, .is_union = is_union, .cases = try cases.toOwnedSlice(self.storage) });
                 continue;
             }
             if (self.take(.kw_domain)) {
@@ -832,11 +833,11 @@ pub const Parser = struct {
                         if (codec != null) return self.sink.fail("E_DUPLICATE_CODEC", self.current().span, "a domain declares at most one codec");
                         self.cursor.pos += 1;
                         codec = try self.parseCodec();
-                    } else try functions.append(self.arena.allocator(), try self.function(name.span));
+                    } else try functions.append(self.storage, try self.function(name.span));
                 }
                 _ = try self.expect(.dedent);
                 try self.markPublic(&public_names, declare_public, name.span);
-                try domains.append(self.arena.allocator(), .{ .name = name.span, .backing = backing, .codec = codec });
+                try domains.append(self.storage, .{ .name = name.span, .backing = backing, .codec = codec });
                 continue;
             }
             const managed_record = self.take(.kw_class);
@@ -848,38 +849,38 @@ pub const Parser = struct {
                 const fields = try self.recordFields();
                 _ = try self.expect(.dedent);
                 try self.markPublic(&public_names, declare_public, name.span);
-                try records.append(self.arena.allocator(), .{ .managed = managed_record, .type_parameters = type_parameters, .name = name.span, .fields = fields });
+                try records.append(self.storage, .{ .managed = managed_record, .type_parameters = type_parameters, .name = name.span, .fields = fields });
                 continue;
             }
             if (self.pythonDeclarationHead()) |form| return self.hintHere(form);
             const declared_function = try self.function(null);
             try self.markPublic(&public_names, declare_public, declared_function.name);
-            try functions.append(self.arena.allocator(), declared_function);
-            if (pending.len != 0) try attribute_table.append(self.arena.allocator(), .{ .declaration = declared_function.name, .attributes = pending });
+            try functions.append(self.storage, declared_function);
+            if (pending.len != 0) try attribute_table.append(self.storage, .{ .declaration = declared_function.name, .attributes = pending });
         }
         return .{
             .types = .{
-                .resources = try resources.toOwnedSlice(self.arena.allocator()),
-                .variants = try variants.toOwnedSlice(self.arena.allocator()),
-                .domains = try domains.toOwnedSlice(self.arena.allocator()),
+                .resources = try resources.toOwnedSlice(self.storage),
+                .variants = try variants.toOwnedSlice(self.storage),
+                .domains = try domains.toOwnedSlice(self.storage),
                 .expressions = .{
-                    .callbacks = try self.syntax.types.callbacks.toOwnedSlice(self.arena.allocator()),
-                    .arrays = try self.syntax.types.arrays.toOwnedSlice(self.arena.allocator()),
-                    .applications = try self.syntax.types.applications.toOwnedSlice(self.arena.allocator()),
-                    .aliases = try self.syntax.types.aliases.toOwnedSlice(self.arena.allocator()),
-                    .tuples = try self.syntax.types.tuples.toOwnedSlice(self.arena.allocator()),
+                    .callbacks = try self.syntax.types.callbacks.toOwnedSlice(self.storage),
+                    .arrays = try self.syntax.types.arrays.toOwnedSlice(self.storage),
+                    .applications = try self.syntax.types.applications.toOwnedSlice(self.storage),
+                    .aliases = try self.syntax.types.aliases.toOwnedSlice(self.storage),
+                    .tuples = try self.syntax.types.tuples.toOwnedSlice(self.storage),
                 },
-                .records = try records.toOwnedSlice(self.arena.allocator()),
-                .constraints = try constraints.toOwnedSlice(self.arena.allocator()),
-                .public_declarations = try public_names.toOwnedSlice(self.arena.allocator()),
+                .records = try records.toOwnedSlice(self.storage),
+                .constraints = try constraints.toOwnedSlice(self.storage),
+                .public_declarations = try public_names.toOwnedSlice(self.storage),
             },
 
             .nodes = self.syntax.nodes,
             .statements = self.syntax.statements,
-            .functions = try functions.toOwnedSlice(self.arena.allocator()),
-            .lambdas = try self.syntax.lambdas.toOwnedSlice(self.arena.allocator()),
-            .attributes = try attribute_table.toOwnedSlice(self.arena.allocator()),
-            .docstrings = try self.syntax.docstrings.toOwnedSlice(self.arena.allocator()),
+            .functions = try functions.toOwnedSlice(self.storage),
+            .lambdas = try self.syntax.lambdas.toOwnedSlice(self.storage),
+            .attributes = try attribute_table.toOwnedSlice(self.storage),
+            .docstrings = try self.syntax.docstrings.toOwnedSlice(self.storage),
         };
     }
     fn function(self: *Parser, owner: ?Span) diagnostic.Error!ast.Function {
@@ -918,7 +919,7 @@ pub const Parser = struct {
         const body = if (host != null) try self.addStatement(.{ .span = (try self.expect(.semicolon)).span, .data = .{ .block = &.{} } }) else try self.block(name.span);
         // The `mut` positions are read from the parameter list before it is
         // handed over, because `toOwnedSlice` empties the list it returns.
-        const mut_positions = try ast.mutPositions(self.arena.allocator(), try self.declaredMutFlags(parameters.parameters.items));
+        const mut_positions = try ast.mutPositions(self.storage, try self.declaredMutFlags(parameters.parameters.items));
         return .{
             .policy = .{
                 .host = host,
@@ -930,7 +931,7 @@ pub const Parser = struct {
             },
             .signature = .{
                 .type_parameters = type_parameters,
-                .parameters = try parameters.parameters.toOwnedSlice(self.arena.allocator()),
+                .parameters = try parameters.parameters.toOwnedSlice(self.storage),
                 .return_type = return_type,
                 .mut_positions = mut_positions,
                 .keyword_only_from = parameters.keyword_only_from,
@@ -970,7 +971,7 @@ pub const Parser = struct {
                 if (default_seen and default_value == null) return self.sink.fail(eDefaultArgument, parameter, "required parameters must precede parameters with defaults");
                 default_seen = default_seen or default_value != null;
             }
-            try list.parameters.append(self.arena.allocator(), .{ .name = parameter, .ty = ty, .default_value = default_value, .mut = mutable });
+            try list.parameters.append(self.storage, .{ .name = parameter, .ty = ty, .default_value = default_value, .mut = mutable });
             if (!self.take(.comma) or self.current().tag == .rparen) break;
         };
         return list;
@@ -1004,11 +1005,11 @@ pub const Parser = struct {
             const default_value = if (self.take(.equal)) try self.defaultArgument() else null;
             if (default_field and default_value == null) return self.sink.fail(eDefaultArgument, field, "required fields must precede fields with defaults");
             default_field = default_field or default_value != null;
-            try fields.append(self.arena.allocator(), .{ .default_value = default_value, .name = field, .ty = ty });
+            try fields.append(self.storage, .{ .default_value = default_value, .name = field, .ty = ty });
             const next_field = self.current().tag != .dedent and lex.implicitTerminator(self.src.bytes, self.tokens, self.cursor.pos);
             if (!self.take(.comma) and !next_field) break;
         };
-        return fields.toOwnedSlice(self.arena.allocator());
+        return fields.toOwnedSlice(self.storage);
     }
     /// One parenthesized case's ordered named fields, with the same default rule
     /// as a record body: at least one field, a required field may not follow a
@@ -1024,11 +1025,11 @@ pub const Parser = struct {
             const default_value = if (self.take(.equal)) try self.defaultArgument() else null;
             if (default_field and default_value == null) return self.sink.fail(eDefaultArgument, field, "required fields must precede fields with defaults");
             default_field = default_field or default_value != null;
-            try fields.append(self.arena.allocator(), .{ .default_value = default_value, .name = field, .ty = ty });
+            try fields.append(self.storage, .{ .default_value = default_value, .name = field, .ty = ty });
             if (!self.take(.comma) or self.current().tag == .rparen) break;
         }
         _ = try self.expect(.rparen);
-        return fields.toOwnedSlice(self.arena.allocator());
+        return fields.toOwnedSlice(self.storage);
     }
     fn typeParameters(self: *Parser) diagnostic.Error![]const ast.TypeParameter {
         if (!self.take(.lbracket)) return &.{};
@@ -1039,7 +1040,7 @@ pub const Parser = struct {
             if (parameters.items.len == 16) return self.sink.fail(eGenericLimit, name, "at most 16 type parameters are permitted");
             for (parameters.items) |previous| if (std.mem.eql(u8, self.src.text(previous.name), self.src.text(name))) return self.sink.fail("E_GENERIC_PARAMETER", name, "duplicate type parameter");
             if (!constant_length and self.current().tag != .colon) {
-                try parameters.append(self.arena.allocator(), .{ .name = name, .requirements = &.{}, .default_copy = true });
+                try parameters.append(self.storage, .{ .name = name, .requirements = &.{}, .default_copy = true });
                 if (!self.take(.comma)) break;
                 continue;
             }
@@ -1047,29 +1048,29 @@ pub const Parser = struct {
             if (constant_length) {
                 if (self.current().tag != .kw_u64) return self.sink.fail(eRequirement, self.current().span, "named constraint bounds are not permitted on constant-length parameters");
                 _ = self.take(.kw_u64);
-                try parameters.append(self.arena.allocator(), .{ .name = name, .requirements = &.{}, .constant_length = true });
+                try parameters.append(self.storage, .{ .name = name, .requirements = &.{}, .constant_length = true });
                 if (!self.take(.comma)) break;
                 continue;
             }
             var collected = try self.requirementList(true, null);
-            try parameters.append(self.arena.allocator(), .{
+            try parameters.append(self.storage, .{
                 .name = name,
-                .requirements = try collected.builtins.toOwnedSlice(self.arena.allocator()),
-                .field_requirements = try collected.fields.toOwnedSlice(self.arena.allocator()),
-                .operation_requirements = try collected.operations.toOwnedSlice(self.arena.allocator()),
-                .named_requirements = try collected.names.toOwnedSlice(self.arena.allocator()),
+                .requirements = try collected.builtins.toOwnedSlice(self.storage),
+                .field_requirements = try collected.fields.toOwnedSlice(self.storage),
+                .operation_requirements = try collected.operations.toOwnedSlice(self.storage),
+                .named_requirements = try collected.names.toOwnedSlice(self.storage),
             });
             if (!self.take(.comma)) break;
         }
         _ = try self.expect(.rbracket);
-        return parameters.toOwnedSlice(self.arena.allocator());
+        return parameters.toOwnedSlice(self.storage);
     }
     /// Parse one `+`-separated requirement list, rejecting named references when
     /// `allow_named` is false and reporting them against `owner` when it is the
     /// declaration's own subject.
     fn requirementList(self: *Parser, allow_named: bool, owner: ?Span) diagnostic.Error!RequirementCollections {
         var result: RequirementCollections = .{};
-        const allocator = self.arena.allocator();
+        const allocator = self.storage;
         while (true) {
             const requirement = (try self.expect(.ident)).span;
             const text = self.src.text(requirement);
@@ -1129,7 +1130,7 @@ pub const Parser = struct {
         _ = try self.expect(.equal);
         var collected = try self.requirementList(false, name);
         const end = try self.expect(.semicolon);
-        const allocator = self.arena.allocator();
+        const allocator = self.storage;
         return .{
             .name = name,
             .span = .join(head, end.span),
@@ -1154,7 +1155,7 @@ pub const Parser = struct {
         var parameters: std.ArrayList(ast.Parameter) = .empty;
         if (self.current().tag != .rparen) while (true) {
             if (parameters.items.len == 16) return self.sink.fail(eGenericLimit, self.current().span, "at most 16 structural operation parameters are permitted");
-            try parameters.append(self.arena.allocator(), try self.constraintParameter());
+            try parameters.append(self.storage, try self.constraintParameter());
             if (!self.take(.comma) or self.current().tag == .rparen) break;
         };
         _ = try self.expect(.rparen);
@@ -1162,7 +1163,7 @@ pub const Parser = struct {
         const result = try self.typeName();
         const bound = try self.effectBound() orelse return self.sink.fail(eRequirement, name, "structural operations require an explicit effects bound");
         _ = try self.expect(.rparen);
-        return .{ .name = name, .parameters = try parameters.toOwnedSlice(self.arena.allocator()), .return_type = result, .effect_bound = bound };
+        return .{ .name = name, .parameters = try parameters.toOwnedSlice(self.storage), .return_type = result, .effect_bound = bound };
     }
     /// Reject the retired `mutates(name, ...)` clause where a signature could
     /// still spell it. The clause was how a write was declared before
@@ -1177,7 +1178,7 @@ pub const Parser = struct {
     /// Positions come from `ast.mutPositions` so the declaration side and the
     /// callback-type side cannot drift apart.
     fn declaredMutFlags(self: *Parser, parameters: []const ast.Parameter) std.mem.Allocator.Error![]const bool {
-        const flags = try self.arena.allocator().alloc(bool, parameters.len);
+        const flags = try self.storage.alloc(bool, parameters.len);
         for (parameters, flags) |parameter, *flag| flag.* = parameter.mut;
         return flags;
     }
@@ -1211,7 +1212,7 @@ pub const Parser = struct {
     }
     fn addStatement(self: *Parser, stmt: ast.Statement) diagnostic.Error!ast.StatementId {
         const id: ast.StatementId = @fromBackingInt(self.syntax.statements.items.len);
-        try self.syntax.statements.append(self.arena.allocator(), stmt);
+        try self.syntax.statements.append(self.storage, stmt);
         return id;
     }
     /// A string literal's source text with its single or triple quotes removed.
@@ -1227,7 +1228,7 @@ pub const Parser = struct {
         const token = self.current();
         if (token.tag != .bytes) return;
         self.cursor.pos += 1;
-        try self.syntax.docstrings.append(self.arena.allocator(), .{
+        try self.syntax.docstrings.append(self.storage, .{
             .declaration = declaration,
             .text = self.docstringText(token.span),
             .span = token.span,
@@ -1243,7 +1244,7 @@ pub const Parser = struct {
         var statements: std.ArrayList(ast.StatementId) = .empty;
         while (self.current().tag != .dedent) {
             if (self.current().tag == .eof) return self.sink.fail(syntax_code, self.current().span, "block is not closed before the end of the file");
-            try statements.append(self.arena.allocator(), try self.statement());
+            try statements.append(self.storage, try self.statement());
         }
         _ = try self.expect(.dedent);
         // A dedent stands at the next declaration, so the blank lines and comments
@@ -1251,7 +1252,7 @@ pub const Parser = struct {
         var written = self.cursor.pos;
         while (written > 1 and self.tokens[written - 1].span.start == self.tokens[written - 1].span.end) written -= 1;
         const close = self.tokens[written - 1].span;
-        return self.addStatement(.{ .span = .join(open.span, close), .data = .{ .block = try statements.toOwnedSlice(self.arena.allocator()) } });
+        return self.addStatement(.{ .span = .join(open.span, close), .data = .{ .block = try statements.toOwnedSlice(self.storage) } });
     }
     /// One `with` form covers both resource kinds: `with arena()` opens a managed
     /// region, and any other expression must produce an open file handle.
@@ -1286,11 +1287,11 @@ pub const Parser = struct {
                 _ = try self.expect(.kw_case);
                 const pattern = try self.matchPattern();
                 const body = try self.block(null);
-                try arms.append(self.arena.allocator(), .{ .ty = pattern.ty, .name = pattern.name, .bindings = pattern.bindings, .body = body });
+                try arms.append(self.storage, .{ .ty = pattern.ty, .name = pattern.name, .bindings = pattern.bindings, .body = body });
                 if (self.current().tag != .kw_case) break;
             };
             const close = try self.expect(.dedent);
-            return self.addStatement(.{ .span = .join(first.span, close.span), .data = .{ .match = .{ .value = value, .arms = try arms.toOwnedSlice(self.arena.allocator()) } } });
+            return self.addStatement(.{ .span = .join(first.span, close.span), .data = .{ .match = .{ .value = value, .arms = try arms.toOwnedSlice(self.storage) } } });
         }
         if (self.take(.kw_if) or self.take(.kw_elif)) {
             const condition = try self.conditionExpression();
@@ -1331,7 +1332,7 @@ pub const Parser = struct {
                     if (self.current().tag == .bytes) {
                         const quoted = try self.expect(.bytes);
                         literal = quoted.span;
-                        message = try byte_literal.decode(self.arena.allocator(), self.src, quoted.span, self.sink);
+                        message = try byte_literal.decode(self.storage, self.src, quoted.span, self.sink);
                     } else {
                         value = try self.expression(0);
                         message = "";
@@ -1464,7 +1465,7 @@ pub const Parser = struct {
     /// (`PY-DESTRUCTURE-PLACE-1`). One target is never a tuple, so `x, = pair`
     /// is rejected.
     fn destructuringTargets(self: *Parser, first: ast.NodeId) diagnostic.Error!ast.NodeId {
-        const allocator = self.arena.allocator();
+        const allocator = self.storage;
         var elements: std.ArrayList(ast.NodeId) = .empty;
         try elements.append(allocator, first);
         const first_span = self.syntax.nodes.items[@backingInt(first)].span;
@@ -1506,7 +1507,7 @@ pub const Parser = struct {
             const assigned = try self.expression(0);
             return self.append(.{ .span = .join(target.span, self.syntax.nodes.items[@backingInt(assigned)].span), .data = .{ .index_assignment = .{ .target = value, .op = op, .value = assigned } } });
         }
-        const arguments = try self.arena.allocator().alloc(ast.NodeId, 2);
+        const arguments = try self.storage.alloc(ast.NodeId, 2);
         arguments[0] = target.data.index.index;
         arguments[1] = try self.expression(0);
         return self.append(.{ .span = .join(target.span, self.syntax.nodes.items[@backingInt(arguments[1])].span), .data = .{ .list_operation = .{ .kind = .write, .base = target.data.index.base, .arguments = arguments } } });
@@ -1528,7 +1529,7 @@ pub const Parser = struct {
 
     fn append(self: *Parser, node: ast.Node) diagnostic.Error!ast.NodeId {
         const id: ast.NodeId = @fromBackingInt(self.syntax.nodes.items.len);
-        try self.syntax.nodes.append(self.arena.allocator(), node);
+        try self.syntax.nodes.append(self.storage, node);
         return id;
     }
     /// Whether the cursor stands at the start of a new logical line: the boundary
@@ -1581,12 +1582,12 @@ pub const Parser = struct {
                 _ = self.take(.lbracket);
                 var values: std.ArrayList(ast.NodeId) = .empty;
                 if (self.current().tag != .rbracket) while (true) {
-                    try values.append(self.arena.allocator(), try self.expression(0));
+                    try values.append(self.storage, try self.expression(0));
                     if (values.items.len == 1 and self.current().tag == .kw_for) break :list try self.parseComprehension(token, values.items[0]);
                     if (!self.take(.comma) or self.current().tag == .rbracket) break;
                 };
                 const close = try self.expect(.rbracket);
-                break :list try self.append(.{ .span = .join(token.span, close.span), .data = .{ .list_literal = try values.toOwnedSlice(self.arena.allocator()) } });
+                break :list try self.append(.{ .span = .join(token.span, close.span), .data = .{ .list_literal = try values.toOwnedSlice(self.storage) } });
             },
             .kw_len, .kw_replace => if (self.declaresFunction(token.span) or (token.tag == .kw_replace and self.recordUpdateAhead())) try self.parseLeaf(token) else try self.parseBuiltin(token),
             .kw_unwrap => try self.parseBuiltin(token),
@@ -1694,7 +1695,7 @@ pub const Parser = struct {
     /// trailing comma is accepted after two or more elements; `(a,)` is a
     /// one-element tuple, which this language has no value for.
     fn parenthesizedTuple(self: *Parser, open: lex.Token, first: ast.NodeId) diagnostic.Error!ast.NodeId {
-        const allocator = self.arena.allocator();
+        const allocator = self.storage;
         var elements: std.ArrayList(ast.NodeId) = .empty;
         try elements.append(allocator, first);
         var comma_span: ?Span = null;
@@ -1714,7 +1715,7 @@ pub const Parser = struct {
     /// and stays rejected.
     fn bareTuple(self: *Parser, first: ast.NodeId) diagnostic.Error!ast.NodeId {
         if (self.current().tag != .comma) return first;
-        const allocator = self.arena.allocator();
+        const allocator = self.storage;
         var elements: std.ArrayList(ast.NodeId) = .empty;
         try elements.append(allocator, first);
         var comma_span: ?Span = null;
@@ -1735,15 +1736,15 @@ pub const Parser = struct {
             const parameter = try self.expect(.ident);
             if (std.mem.eql(u8, self.src.text(parameter.span), "_"))
                 return self.sink.fail("E_LAMBDA_PARAMETER", parameter.span, "lambda parameters must have a usable name");
-            try parameters.append(self.arena.allocator(), parameter.span);
+            try parameters.append(self.storage, parameter.span);
             if (!self.take(.comma)) break;
         };
         _ = try self.expect(.colon);
         const body = try self.expression(0);
         const span = Span.join(token.span, self.syntax.nodes.items[@backingInt(body)].span);
-        try self.syntax.lambdas.append(self.arena.allocator(), .{
+        try self.syntax.lambdas.append(self.storage, .{
             .span = span,
-            .parameters = try parameters.toOwnedSlice(self.arena.allocator()),
+            .parameters = try parameters.toOwnedSlice(self.storage),
             .body = body,
         });
         return self.append(.{ .span = span, .data = .{ .name = token.span } });
@@ -1834,7 +1835,7 @@ pub const Parser = struct {
     /// Each hole is tokenized from the original bytes, so its spans stay absolute.
     fn parseFormat(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
         self.cursor.pos += 1;
-        const allocator = self.arena.allocator();
+        const allocator = self.storage;
         const pieces = try format_strings.split(allocator, self.src, token.span, self.sink);
         var parts: std.ArrayList(ast.NodeId) = .empty;
         for (pieces) |piece| switch (piece) {
@@ -1848,13 +1849,13 @@ pub const Parser = struct {
     /// Decode one literal chunk with the ordinary escapes by lending it surrounding quotes.
     fn formatLiteral(self: *Parser, span: Span) diagnostic.Error!ast.NodeId {
         const quoted: Span = .{ .start = span.start - 1, .end = span.end + 1 };
-        const decoded = try byte_literal.decode(self.arena.allocator(), self.src, quoted, self.sink);
+        const decoded = try byte_literal.decode(self.storage, self.src, quoted, self.sink);
         return self.append(.{ .span = span, .data = .{ .text = decoded } });
     }
 
     /// Parse one interpolation as an ordinary expression over its own token range.
     fn formatHole(self: *Parser, span: Span) diagnostic.Error!ast.NodeId {
-        const tokens = try lex.lexRange(self.arena.allocator(), self.src.bytes, span, self.sink);
+        const tokens = try lex.lexRange(self.storage, self.src.bytes, span, self.sink);
         const outer = self.tokens;
         const position = self.cursor.pos;
         const delimiters = self.cursor.delimiters;
@@ -1882,17 +1883,17 @@ pub const Parser = struct {
         self.cursor.pos += 1;
         var entries: std.ArrayList(ast.NodeId) = .empty;
         while (self.current().tag != .rbrace) {
-            try entries.append(self.arena.allocator(), try self.expression(0));
+            try entries.append(self.storage, try self.expression(0));
             // A comma where the `:` belongs is a set literal, and a `for` after
             // the value is a dict comprehension; neither shape parses today.
             if (self.current().tag == .comma) return self.hintHere(.set_literal);
             _ = try self.expect(.colon);
-            try entries.append(self.arena.allocator(), try self.expression(0));
+            try entries.append(self.storage, try self.expression(0));
             if (self.current().tag == .kw_for) return self.hintHere(.dict_comprehension);
             if (!self.take(.comma)) break;
         }
         const close = try self.expect(.rbrace);
-        return self.append(.{ .span = .join(token.span, close.span), .data = .{ .dictionary_literal = try entries.toOwnedSlice(self.arena.allocator()) } });
+        return self.append(.{ .span = .join(token.span, close.span), .data = .{ .dictionary_literal = try entries.toOwnedSlice(self.storage) } });
     }
     fn parseRestrict(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
         return self.sink.fail("E_REMOVED_SPELLING", token.span, "`restrict_resource[...]` was removed; use `fs.read_only()`");
@@ -2051,7 +2052,7 @@ pub const Parser = struct {
     fn parseHole(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
         self.cursor.pos += 1;
         _ = try self.expect(.lbracket);
-        const types = try self.arena.allocator().alloc(Span, 1);
+        const types = try self.storage.alloc(Span, 1);
         types[0] = try self.typeName();
         _ = try self.expect(.rbracket);
         _ = try self.expect(.lparen);
@@ -2065,20 +2066,20 @@ pub const Parser = struct {
     fn parseCodecOperation(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
         self.cursor.pos += 1;
         if (!self.take(.lbracket)) return self.sink.fail("E_CODEC_ARITY", token.span, "codec operation requires one explicit domain type");
-        const types = try self.arena.allocator().alloc(Span, 1);
+        const types = try self.storage.alloc(Span, 1);
         types[0] = try self.typeName();
         _ = try self.expect(.rbracket);
         _ = try self.expect(.lparen);
         var arguments: std.ArrayList(ast.NodeId) = .empty;
         if (self.current().tag != .rparen) while (true) {
-            try arguments.append(self.arena.allocator(), try self.expression(0));
+            try arguments.append(self.storage, try self.expression(0));
             if (!self.take(.comma) or self.current().tag == .rparen) break;
         };
         const close = try self.expect(.rparen);
         return self.append(.{ .span = .join(token.span, close.span), .data = .{ .call = .{
             .name = token.span,
             .type_arguments = types,
-            .arguments = try arguments.toOwnedSlice(self.arena.allocator()),
+            .arguments = try arguments.toOwnedSlice(self.storage),
         } } });
     }
     const Pattern = struct { ty: Span, name: Span, bindings: []const ?Span = &.{} };
@@ -2102,11 +2103,11 @@ pub const Parser = struct {
             var bindings: std.ArrayList(?Span) = .empty;
             if (self.current().tag != .rparen) while (true) {
                 const binding = (try self.expect(.ident)).span;
-                try bindings.append(self.arena.allocator(), if (std.mem.eql(u8, self.src.text(binding), "_")) null else binding);
+                try bindings.append(self.storage, if (std.mem.eql(u8, self.src.text(binding), "_")) null else binding);
                 if (!self.take(.comma) or self.current().tag == .rparen) break;
             };
             _ = try self.expect(.rparen);
-            pattern.bindings = try bindings.toOwnedSlice(self.arena.allocator());
+            pattern.bindings = try bindings.toOwnedSlice(self.storage);
         }
         return pattern;
     }
@@ -2148,13 +2149,13 @@ pub const Parser = struct {
             if (keyword) self.cursor.pos += 2;
             if (keyword_seen and !keyword) return self.sink.fail("E_CALL_ARGUMENT", self.current().span, "positional arguments must precede keyword arguments");
             keyword_seen = keyword_seen or keyword;
-            try names.append(self.arena.allocator(), name);
-            try values.append(self.arena.allocator(), try self.argumentValue());
+            try names.append(self.storage, name);
+            try values.append(self.storage, try self.argumentValue());
             if (!self.take(.comma) or self.current().tag == .rparen) break;
         };
         return .{
-            .values = try values.toOwnedSlice(self.arena.allocator()),
-            .names = if (keyword_seen) try names.toOwnedSlice(self.arena.allocator()) else &.{},
+            .values = try values.toOwnedSlice(self.storage),
+            .names = if (keyword_seen) try names.toOwnedSlice(self.storage) else &.{},
         };
     }
     /// Recognize `Owner.name[T](…)`, a member call carrying explicit type arguments.
@@ -2201,18 +2202,18 @@ pub const Parser = struct {
         while (true) {
             const argument = try self.genericArgument();
             if (arguments.items.len == 16) return self.sink.fail(eGenericLimit, argument, "at most 16 type arguments are permitted");
-            try arguments.append(self.arena.allocator(), argument);
+            try arguments.append(self.storage, argument);
             if (!self.take(.comma)) break;
         }
         _ = try self.expect(.rbracket);
-        return arguments.toOwnedSlice(self.arena.allocator());
+        return arguments.toOwnedSlice(self.storage);
     }
 
     fn parseLeaf(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
         if (token.tag == .ident and self.memberApplicationAhead()) {
             var segments: std.ArrayList(Span) = .empty;
-            try segments.append(self.arena.allocator(), (try self.expect(.ident)).span);
-            while (self.take(.dot)) try segments.append(self.arena.allocator(), try self.declaredName());
+            try segments.append(self.storage, (try self.expect(.ident)).span);
+            while (self.take(.dot)) try segments.append(self.storage, try self.declaredName());
             const member = segments.items[segments.items.len - 1];
             const owner = Span.join(segments.items[0], segments.items[segments.items.len - 2]);
             const type_arguments = try self.squareTypeArguments();
@@ -2251,7 +2252,7 @@ pub const Parser = struct {
         return self.append(.{ .span = name, .data = switch (token.tag) {
             .integer => .{ .integer = token.span },
             .bytes => literal: {
-                const decoded = try byte_literal.decode(self.arena.allocator(), self.src, token.span, self.sink);
+                const decoded = try byte_literal.decode(self.storage, self.src, token.span, self.sink);
                 break :literal if (self.src.text(token.span)[0] != 'b') .{ .text = decoded } else .{ .bytes = decoded };
             },
             .ident, .kw_len, .kw_replace => .{ .name = name },
