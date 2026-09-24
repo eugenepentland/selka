@@ -57,11 +57,6 @@
       "summary": "`mylang build` drives QBE, the assembler and the linker itself, with no Python installer in the loop.",
       "doc": "docs/tooling/native-build.md#mylang-build"
     },
-    "unchecked-release-builds": {
-      "kind": "tooling",
-      "summary": "`mylang build --unchecked` omits the integer-overflow, narrowing-cast and index-bounds guards and, when the build carries no step or frame ceiling, the per-call frame record and its position stores; allocation failure, the memory budget, the collector and host-call validation are kept, and the policy is refused for `mylang test`, `--mode Debug` and `--library`.",
-      "doc": "docs/tooling/native-build.md#unchecked-release-builds"
-    },
     "python-free-native-guest-tests": {
       "kind": "tooling",
       "summary": "`mylang test` discovers exported `test_` functions and runs them as fresh native processes.",
@@ -1010,6 +1005,10 @@
     "mandatory-mutation-footprint-warning": {
       "date": "2026-09-21",
       "note": "`W_MUTATES_MISSING` and the reference-typed `class` exemption, with the `mutates(...)` clause and the opt-in `&` / `--mutation-markers` marker beside them. A parameter a function writes through is declared `name: mut T` and every argument bound to one is written `mut argument`; see the implemented `mut-parameters` entry."
+    },
+    "unchecked-release-builds": {
+      "date": "2026-09-24",
+      "note": "`mylang build --unchecked` (and `run`/`run-project`/`build --run --unchecked`, and the emitters' internal `--drop-safety-checks`) omitted the overflow, narrowing-cast and index-bounds guards and, with no ceiling, the frame record, so a would-be trap was undefined behaviour and optimization could change a program's result. Every build now keeps them (RELEASE-CHECKED-1), and `--unchecked` is refused as removed."
     }
   }
 }
