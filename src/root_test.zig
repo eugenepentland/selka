@@ -136,6 +136,7 @@ test {
     _ = @import("source_map_test.zig");
     _ = @import("project_test.zig");
     _ = @import("interfaces_test.zig");
+    _ = @import("interface_files_test.zig");
     _ = @import("compiler_test.zig");
     _ = @import("bytecode_inline_test.zig");
     _ = @import("duplicates_test.zig");

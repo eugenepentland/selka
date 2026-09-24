@@ -81,6 +81,7 @@ $ mylang reference --query E_MODULE_NAME   # one feature or error code, from the
   (`index-project`, `tests-for`), [focused declaration context](tooling/agent-context.md)
   (`context --symbol` / `--at`), [agent-facing inspection](tooling/agent-tools.md)
   (`list-interfaces` and friends), [interface diffs](tooling/api-diff.md),
+  [interface files](tooling/interface-files.md) (`mylang api`),
   [linting](tooling/lint.md), [import policy](tooling/import-policy.md).
 - Compiler behaviour: [caches](tooling/caches.md), [phase timings](tooling/timings.md),
   [work and reuse reports](tooling/work-report.md).

@@ -1,0 +1,29 @@
+module shop.billing
+import shop.money
+
+"""Invoices and their totals.
+
+Everything below the first paragraph stays out of the interface file.
+"""
+
+
+public const TAX_PERCENT: int = 8
+
+
+public record Line:
+    quantity: int
+    unit_cents: int
+
+
+@ensures(result >= 0)
+public def total(lines: list[Line], *, taxed: bool = True) -> int:
+    subtotal = 0
+    for line in lines:
+        subtotal = subtotal + line.quantity * line.unit_cents
+    if taxed:
+        return subtotal + subtotal * TAX_PERCENT // 100
+    return subtotal
+
+
+public def charge(lines: list[Line]) -> money.Cents:
+    return money.Cents.of(total(lines))

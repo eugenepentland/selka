@@ -2487,3 +2487,24 @@ test "the shared fact-status vocabulary spells the statuses the reference publis
     try t.expectEqualStrings("declared", fact_status.name(.declared));
     try t.expectEqualStrings("lexical-only", fact_status.name(.lexical_only));
 }
+
+// spec-case: DERIVED-EFFECTS-4
+test "a Filesystem, Clock or Environment parameter reaches the published ceiling" {
+    var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes =
+        \\module main
+        \\
+        \\public def stamp(fs: Filesystem, clock: Clock, env: Environment, net: Network, random: Entropy) -> int:
+        \\    return 0
+        \\
+        \\def main() -> int:
+        \\    return 0
+        \\
+    }} };
+    var project = graph.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    var index = try interfaces.build(&project);
+    const listing = try index.render(t.allocator);
+    defer t.allocator.free(listing);
+    try t.expect(std.mem.indexOf(u8, listing, "ceiling(filesystem,network,clock,random,environment,managed_allocation)") != null);
+}

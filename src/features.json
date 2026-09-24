@@ -42,6 +42,11 @@
       "summary": "`mylang api-diff` records declaration identity/fingerprint baselines and classifies later changes as additive, compatible or breaking.",
       "doc": "docs/tooling/api-diff.md#mylang-api-diff"
     },
+    "interface-files": {
+      "kind": "tooling",
+      "summary": "`mylang api --write|--check [--json]` keeps a generated, body-free `.api` interface file beside every project module, and `\"interface_files\": true` in `mylang.json` makes a stale one `E_INTERFACE_FILE_STALE`.",
+      "doc": "docs/tooling/interface-files.md#mylang-api"
+    },
     "direct-c-scalar-imports-qbe": {
       "kind": "tooling",
       "summary": "`extern def` declarations call fixed-arity C scalar functions directly from QBE native builds.",
