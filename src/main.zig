@@ -953,8 +953,9 @@ fn parseArgs(allocator: std.mem.Allocator, args: []const []const u8) ArgError!Pa
         if (try parser.grantOption(arg)) continue;
         if (try parser.executionOption(arg)) continue;
         if (try parser.leanManifestOption(arg)) continue;
-        // `context` also accepts its `--flag value` spelling, which consumes the
-        // next argument; every other flag keeps the `--flag=value` form.
+        // `context` and `index-project` also accept their `--flag value`
+        // spelling, which consumes the next argument; every other flag keeps
+        // the `--flag=value` form.
         if (try parser.separateValue(args, &index)) continue;
         if (try parser.discoveryOption(arg)) continue;
         if (std.mem.startsWith(u8, arg, policy_prefix)) {
