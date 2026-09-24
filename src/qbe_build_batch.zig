@@ -102,9 +102,16 @@ pub fn plan(allocator: std.mem.Allocator, units: []const Unit, rule: Policy) err
 
 /// Whether a unit's IL defines data. Two units' private data may share a name,
 /// which one assembly file cannot hold, so such a unit is compiled alone.
+/// Only lines that contain the word are examined: every unit is scanned on
+/// every build, and splitting all of a large program's IL into lines cost more
+/// than the rest of planning.
 pub fn definesData(il: []const u8) bool {
-    var lines = std.mem.splitScalar(u8, il, '\n');
-    while (lines.next()) |line| {
+    var at: usize = 0;
+    while (std.mem.indexOfPos(u8, il, at, "data")) |found| {
+        const start = if (std.mem.lastIndexOfScalar(u8, il[0..found], '\n')) |newline| newline + 1 else 0;
+        const end = std.mem.indexOfScalarPos(u8, il, found, '\n') orelse il.len;
+        at = end;
+        const line = il[start..end];
         if (line.len == 0 or !std.ascii.isAlphabetic(line[0])) continue;
         var tokens = std.mem.tokenizeScalar(u8, line, ' ');
         while (tokens.next()) |token| {
@@ -118,27 +125,29 @@ pub fn definesData(il: []const u8) bool {
 /// A unit's IL with every function it defines placed in its own
 /// `.text.<symbol>` section, so a batch object still lets the final link
 /// collect a function nothing references, exactly as a per-function object did.
+/// Only the header lines are rewritten, found by searching for the keyword:
+/// the bodies are copied as they are, since this runs on the build's critical
+/// path for every batch it compiles.
 pub fn sectioned(allocator: std.mem.Allocator, il: []const u8) error{OutOfMemory}![]const u8 {
     var out: std.Io.Writer.Allocating = .init(allocator);
     errdefer out.deinit();
     const w = &out.writer;
-    var lines = std.mem.splitScalar(u8, il, '\n');
-    var first = true;
-    while (lines.next()) |line| {
-        if (!first) w.writeByte('\n') catch return error.OutOfMemory;
-        first = false;
+    var copied: usize = 0;
+    var at: usize = 0;
+    while (std.mem.indexOfPos(u8, il, at, "function ")) |found| {
+        const start = if (std.mem.lastIndexOfScalar(u8, il[0..found], '\n')) |newline| newline + 1 else 0;
+        const end = std.mem.indexOfScalarPos(u8, il, found, '\n') orelse il.len;
+        at = end;
+        const line = il[start..end];
         const exported = std.mem.startsWith(u8, line, "export function ");
-        if (!exported and !std.mem.startsWith(u8, line, "function ")) {
-            w.writeAll(line) catch return error.OutOfMemory;
-            continue;
-        }
-        const symbol = functionSymbol(line) orelse {
-            w.writeAll(line) catch return error.OutOfMemory;
-            continue;
-        };
+        if (!exported and !std.mem.startsWith(u8, line, "function ")) continue;
+        const symbol = functionSymbol(line) orelse continue;
         const rest = if (exported) line["export ".len..] else line;
+        w.writeAll(il[copied..start]) catch return error.OutOfMemory;
         w.print("{s}section \".text.{s}\" \"ax\" {s}", .{ if (exported) "export " else "", symbol, rest }) catch return error.OutOfMemory;
+        copied = end;
     }
+    w.writeAll(il[copied..]) catch return error.OutOfMemory;
     return out.toOwnedSlice() catch error.OutOfMemory;
 }
 
@@ -172,34 +181,34 @@ pub const Input = union(enum) { il: []const []const u8, assembly: []const u8, st
 /// built object is recorded, and what it is built from.
 pub const Miss = struct { key: []const u8, object: *cache_api.Object, input: Input };
 
-/// One running tool of a missed object.
-const Running = struct { miss: usize, work: []const u8, stage: enum { qbe, assemble, compile }, started: spawn.Started };
+/// One running tool of a missed object, and what it has written to standard
+/// error so far.
+const Running = struct { miss: usize, work: []const u8, stage: enum { qbe, assemble, compile }, started: spawn.Started, stderr: std.ArrayList(u8) = .empty };
 
 /// Build every missed object, `limit` tools at a time. A code batch runs QBE
 /// over its members' IL files, then frame-map annotation, then the assembler;
 /// a metadata batch runs the assembler; a staged C unit runs its compiler.
-/// Each publishes its object, and the next object starts as soon as a tool
-/// slot frees. Tools are reaped in the order they started. After the first
-/// failure nothing new starts, every running tool is still reaped and every
-/// scratch directory removed, and then that failure is returned.
+/// Each publishes its object, and a freed tool slot goes to the next step of
+/// whichever job finished first, then to the next object. Every object lands
+/// in its own slot, so the order tools finish in never changes the link. After
+/// the first failure nothing new starts, every running tool is still reaped
+/// and every scratch directory removed, and then that failure is returned.
 pub fn build(cache: cache_api.Cache, misses: []const Miss, limit: usize) cache_api.Error!void {
     const context = cache.context;
     const a = context.allocator;
     var running: std.ArrayList(Running) = .empty;
-    var head: usize = 0;
     var next: usize = 0;
     var failure: ?cache_api.Error = null;
     while (true) {
-        while (failure == null and next < misses.len and running.items.len - head < @max(1, limit)) : (next += 1) {
+        while (failure == null and next < misses.len and running.items.len < @max(1, limit)) : (next += 1) {
             const started = startJob(cache, misses[next], next) catch |err| {
                 failure = err;
                 break;
             };
             try running.append(a, started);
         }
-        if (head == running.items.len) break;
-        const current = running.items[head];
-        head += 1;
+        if (running.items.len == 0) break;
+        const current = running.swapRemove(try finished(a, running.items));
         const advanced = advance(cache, misses[current.miss], current, failure != null) catch |err| {
             if (failure == null) failure = err;
             context.remove(current.work);
@@ -210,6 +219,18 @@ pub fn build(cache: cache_api.Cache, misses: []const Miss, limit: usize) cache_a
     // A staged C unit whose compiler never started still owns its scratch.
     for (misses[next..]) |miss| if (miss.input == .staged) cache.discard(miss.input.staged);
     if (failure) |err| return err;
+}
+
+/// Collect standard error from whichever running tools are ready until one
+/// of them closes it, and return that tool's index. A tool is reaped only after
+/// its stream ends, so one that writes more than a pipe holds never stalls.
+fn finished(allocator: std.mem.Allocator, running: []Running) cache_api.Error!usize {
+    const started = try allocator.alloc(spawn.Started, running.len);
+    for (running, started) |one, *slot| slot.* = one.started;
+    while (true) {
+        const index = try spawn.ready(allocator, started);
+        if (try spawn.pump(allocator, running[index].started, &running[index].stderr)) return index;
+    }
 }
 
 /// Stage one missed object in a private directory and start its first tool.
@@ -258,16 +279,17 @@ fn assembler(cache: cache_api.Cache, work: []const u8) cache_api.Error![]const [
     });
 }
 
-/// Reap one tool and take its object a step further: after QBE, annotate the
-/// assembly and start the assembler; after the assembler or a C compiler,
-/// publish the object. Returns the tool it started, or null when the object
-/// is finished. Once `stopping`, a reaped job goes no further.
+/// Reap a tool whose standard error has ended, replay what it wrote, and take
+/// its object a step further: after QBE, annotate the assembly and start the
+/// assembler; after the assembler or a C compiler, publish the object. Returns
+/// the tool it started, or null when the object is finished. Once `stopping`,
+/// a reaped job goes no further.
 fn advance(cache: cache_api.Cache, miss: Miss, current: Running, stopping: bool) cache_api.Error!?Running {
     const context = cache.context;
     const a = context.allocator;
-    const finished = try spawn.finish(a, current.started);
-    try std.Io.File.stderr().writeStreamingAll(context.io, finished.stderr);
-    if (fs.exitCode(finished.term) != 0) return error.NativeToolFailed;
+    const term = spawn.reap(current.started);
+    try std.Io.File.stderr().writeStreamingAll(context.io, current.stderr.items);
+    if (fs.exitCode(term) != 0) return error.NativeToolFailed;
     if (stopping) return null;
     switch (current.stage) {
         .qbe => {
@@ -378,9 +400,18 @@ test "each function of a unit gets its own text section and data-defining units 
     try std.testing.expect(std.mem.indexOf(u8, rewritten, "export section \".text.myl_f_a\" \"ax\" function l $myl_f_a(l %ctx) {") != null);
     try std.testing.expect(std.mem.indexOf(u8, rewritten, "\nsection \".text.helper\" \"ax\" function w $helper() {") != null);
     try std.testing.expect(std.mem.startsWith(u8, rewritten, "type :t = { l }\ndbgfile \"myl_f_a\"\n"));
+    try std.testing.expect(std.mem.endsWith(u8, rewritten, "() {\n@s\n ret 1\n}"));
+    // Only header lines move; a body line that mentions the word is copied as it is.
+    const body = "export function l $f() {\n@s\n # a function call follows\n ret 0\n}\n";
+    const kept = try sectioned(a, body);
+    defer a.free(kept);
+    try std.testing.expectEqualStrings("export section \".text.f\" \"ax\" function l $f() {\n@s\n # a function call follows\n ret 0\n}\n", kept);
     try std.testing.expect(!definesData(il));
     try std.testing.expect(definesData("export data $d = { l 1 }\nexport function l $f() {\n@s\n ret 0\n}"));
     try std.testing.expect(definesData("data $d = { b 0 }"));
+    // The word inside a name, a parameter or a body line is not a definition.
+    try std.testing.expect(!definesData("export function l $metadata(l %data) {\n@s\n %data2 =l copy 1\n ret 0\n}\n"));
+    try std.testing.expect(definesData("type :t = { l }\nexport function l $f() {\n@s\n ret 0\n}\nexport data $late = { l 1 }"));
 }
 
 // spec-case: QBE-BATCH-1

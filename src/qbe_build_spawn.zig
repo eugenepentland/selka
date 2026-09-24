@@ -117,23 +117,56 @@ pub fn start(allocator: std.mem.Allocator, request: Request) Error!Started {
 pub fn finish(allocator: std.mem.Allocator, started: Started) Error!Finished {
     var captured: std.ArrayList(u8) = .empty;
     if (started.stderr >= 0) {
-        defer _ = linux.close(started.stderr);
-        var buffer: [16 * 1024]u8 = undefined;
-        while (true) {
-            const rc = linux.read(started.stderr, &buffer, buffer.len);
-            switch (linux.errno(rc)) {
-                .SUCCESS => {
-                    if (rc == 0) break;
-                    try captured.appendSlice(allocator, buffer[0..rc]);
-                },
-                .INTR => continue,
-                else => break,
-            }
+        while (!try pump(allocator, started, &captured)) {}
+    }
+    return .{ .term = reap(started), .stderr = try captured.toOwnedSlice(allocator) };
+}
+
+/// Block until at least one of `running` has written to its captured standard
+/// error or closed it, and return the index of one that has. Every entry must
+/// capture. A pool that waits this way advances whichever tool is ready first
+/// instead of the one it happened to start first.
+pub fn ready(allocator: std.mem.Allocator, running: []const Started) Error!usize {
+    const fds = try allocator.alloc(linux.pollfd, running.len);
+    defer allocator.free(fds);
+    for (running, fds) |one, *fd| fd.* = .{ .fd = one.stderr, .events = linux.POLL.IN, .revents = 0 };
+    while (true) {
+        const rc = linux.poll(fds.ptr, fds.len, -1);
+        switch (linux.errno(rc)) {
+            .SUCCESS => for (fds, 0..) |fd, index| {
+                if (fd.revents != 0) return index;
+            },
+            .INTR, .AGAIN => {},
+            else => return error.Unexpected,
         }
     }
+}
+
+/// Read what a tool has written to its captured standard error since the last
+/// call, appending it to `into`, and report whether the stream has ended. One
+/// call reads at most once, so it never blocks after `ready` named the tool.
+pub fn pump(allocator: std.mem.Allocator, started: Started, into: *std.ArrayList(u8)) Error!bool {
+    var buffer: [16 * 1024]u8 = undefined;
+    while (true) {
+        const rc = linux.read(started.stderr, &buffer, buffer.len);
+        switch (linux.errno(rc)) {
+            .SUCCESS => {
+                if (rc == 0) return true;
+                try into.appendSlice(allocator, buffer[0..rc]);
+                return false;
+            },
+            .INTR => continue,
+            else => return true,
+        }
+    }
+}
+
+/// Close a tool's captured standard error, if any, and wait for it to exit.
+pub fn reap(started: Started) std.process.Child.Term {
+    if (started.stderr >= 0) _ = linux.close(started.stderr);
     var status: u32 = 0;
     waitFor(started.pid, &status);
-    return .{ .term = std.Io.Threaded.statusToTerm(status), .stderr = try captured.toOwnedSlice(allocator) };
+    return std.Io.Threaded.statusToTerm(status);
 }
 
 /// Start a tool and wait for it: `start` then `finish`.
@@ -286,4 +319,33 @@ test "many started tools run at once and each is reaped with its own output" {
     const results = try startMany(arena.allocator(), &environment, 8);
     try std.testing.expectEqualSlices(u8, &.{ 0, 1, 2, 3, 4, 5, 6, 7 }, results[0]);
     try std.testing.expectEqualStrings("01234567", results[1]);
+}
+
+/// Wait for the first of `started` to close its standard error, collecting
+/// what it wrote, and return its index.
+fn firstDone(a: std.mem.Allocator, started: []const Started, outputs: []std.ArrayList(u8)) !usize {
+    while (true) {
+        const index = try ready(a, started);
+        if (try pump(a, started[index], &outputs[index])) return index;
+    }
+}
+
+// spec-case: QBE-SPAWN-1
+test "a pool hears first from the tool that finishes first, whatever order they started in" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var environment: std.process.Environ.Map = .init(a);
+    const started = [_]Started{
+        try start(a, .{ .argv = &.{ "/bin/sh", "-c", "sleep 1; printf slow >&2" }, .environment = &environment }),
+        try start(a, .{ .argv = &.{ "/bin/sh", "-c", "printf fast >&2; exit 4" }, .environment = &environment }),
+    };
+    var outputs = [_]std.ArrayList(u8){ .empty, .empty };
+    const first = try firstDone(a, &started, &outputs);
+    try std.testing.expectEqual(@as(usize, 1), first);
+    try std.testing.expectEqualStrings("fast", outputs[1].items);
+    try std.testing.expectEqual(std.process.Child.Term{ .exited = 4 }, reap(started[1]));
+    const rest = try finish(a, started[0]);
+    try std.testing.expectEqualStrings("slow", rest.stderr);
+    try std.testing.expectEqual(std.process.Child.Term{ .exited = 0 }, rest.term);
 }

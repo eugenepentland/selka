@@ -188,6 +188,23 @@ const Literal = struct {
 /// Emit one C definition for every frozen `str`/`bytes` literal the emitted IL
 /// names. The marker carries the exact payload, so equal literals share one data
 /// object even across units.
+/// Every line of one unit's IL that starts with the literal marker. It
+/// searches for the marker instead of splitting every line: a program's IL is
+/// hundreds of megabytes and a warm build reads all of it to find a few
+/// literals.
+const MarkerLines = struct {
+    il: []const u8,
+    at: usize = 0,
+    fn next(self: *MarkerLines) ?[]const u8 {
+        while (std.mem.indexOfPos(u8, self.il, self.at, "# " ++ literal_word)) |found| {
+            const end = std.mem.indexOfScalarPos(u8, self.il, found, '\n') orelse self.il.len;
+            self.at = end;
+            if (found == 0 or self.il[found - 1] == '\n') return self.il[found..end];
+        }
+        self.at = self.il.len;
+        return null;
+    }
+};
 fn literalDefinitions(w: *std.Io.Writer, allocator: std.mem.Allocator, units: []const std.json.Value) Error!void {
     var seen: std.StringHashMapUnmanaged(void) = .empty;
     defer seen.deinit(allocator);
@@ -195,9 +212,8 @@ fn literalDefinitions(w: *std.Io.Writer, allocator: std.mem.Allocator, units: []
     for (units) |unit| {
         const il = v.get(unit, "il");
         if (il != .string) continue;
-        var lines = std.mem.splitScalar(u8, v.text(il), '\n');
+        var lines: MarkerLines = .{ .il = v.text(il) };
         while (lines.next()) |line| {
-            if (!std.mem.startsWith(u8, line, "# ") or !std.mem.startsWith(u8, line[2..], literal_word)) continue;
             var tokens = std.mem.tokenizeScalar(u8, line[2 + literal_word.len ..], ' ');
             const symbol = tokens.next() orelse continue;
             const element = tokens.next() orelse continue;
@@ -416,7 +432,19 @@ test "a batch's function metadata is assembly holding the C unit's records, and 
     try std.testing.expect(std.mem.indexOf(u8, shared, "extern const MylQbeFunction main_native_meta;") != null);
     try std.testing.expect(std.mem.indexOf(u8, shared, "main_native_meta_locations") == null);
     var failing = std.testing.FailingAllocator.init(std.testing.allocator, .{ .fail_index = 0 });
-    try std.testing.expectError(error.OutOfMemory, metadataAssembly(failing.allocator(), functions));
+    // The allocating writer reports a failed allocation as a failed write.
+    try std.testing.expectError(error.WriteFailed, metadataAssembly(failing.allocator(), functions));
+}
+
+// spec-case: QBE-BATCH-3
+test "literal markers are found only where a line starts with one" {
+    const il = "# myl-lit a t 1 1 00\nexport function l $f() {\n@s\n %x =l copy 1 # myl-lit b t 1 1 00\n ret 0\n}\n# myl-lit c t 1 1 01";
+    var lines: MarkerLines = .{ .il = il };
+    try std.testing.expectEqualStrings("# myl-lit a t 1 1 00", lines.next().?);
+    try std.testing.expectEqualStrings("# myl-lit c t 1 1 01", lines.next().?);
+    try std.testing.expectEqual(@as(?[]const u8, null), lines.next());
+    var none: MarkerLines = .{ .il = "export function l $f() {\n@s\n ret 0\n}" };
+    try std.testing.expectEqual(@as(?[]const u8, null), none.next());
 }
 
 // spec: QBE-TEARDOWN-1

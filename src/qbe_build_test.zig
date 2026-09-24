@@ -14,6 +14,8 @@ test {
     _ = @import("qbe_build_host.zig");
     _ = @import("qbe_build_embed.zig");
     _ = @import("qbe_build_shapes.zig");
+    _ = @import("qbe_build_batch.zig");
+    _ = @import("qbe_build_spawn.zig");
 }
 
 // The two scenarios below spawn the installed compiler end to end, the way the
@@ -538,6 +540,9 @@ test "the native driver identity names the build driver and link policy only" {
     try std.testing.expect(driverNames("qbe_build_io.zig"));
     try std.testing.expect(driverNames("qbe_build_outputs.zig"));
     try std.testing.expect(driverNames("native_link.zig"));
+    // The frame-map annotator rewrites every unit's assembly, so it decides object bytes too.
+    try std.testing.expect(driverNames("qbe_frame_map.zig"));
+    try std.testing.expect(!driverNames("qbe_frame_map_test.zig"));
     try std.testing.expect(!driverNames("qbe_build_test.zig"));
     try std.testing.expect(!driverNames("sema.zig"));
     try std.testing.expect(!driverNames("parser.zig"));

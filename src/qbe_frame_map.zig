@@ -308,9 +308,12 @@ pub fn annotate(allocator: std.mem.Allocator, text: []const u8) Error![]u8 {
 
 /// Whether an IL unit was lowered for the frame map, which is what decides
 /// whether its assembly needs `annotate` and whether a full-LTO link must go
-/// through assembly first.
+/// through assembly first. The lowering writes `dbgfile` ahead of the unit's
+/// function, so only the text before the first function body is searched: a
+/// build asks this of every unit, and the bodies are almost all of the IL.
 pub fn usesFrameMap(il: []const u8) bool {
-    return std.mem.startsWith(u8, il, "dbgfile ") or std.mem.indexOf(u8, il, "\ndbgfile ") != null;
+    const header = il[0 .. std.mem.indexOf(u8, il, "{\n") orelse il.len];
+    return std.mem.startsWith(u8, header, "dbgfile ") or std.mem.indexOf(u8, header, "\ndbgfile ") != null;
 }
 
 // spec: QBE-FRAMEMAP-ASM-1
@@ -370,6 +373,8 @@ test "assembly without positions is left exactly as it was" {
     try std.testing.expectEqualStrings(input, output);
     try std.testing.expect(!usesFrameMap(input));
     try std.testing.expect(usesFrameMap("dbgfile \"myl_f_ab\"\nexport function"));
+    try std.testing.expect(usesFrameMap("type :t = { l }\ndbgfile \"myl_f_ab\"\nexport function l $f() {\n@s\n ret 0\n}\n"));
+    try std.testing.expect(!usesFrameMap("type :t = { l }\nexport function l $f() {\n@s\n ret 0\n}\n"));
 }
 
 // spec-case: QBE-FRAMEMAP-ASM-1

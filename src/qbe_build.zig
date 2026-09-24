@@ -11,6 +11,7 @@ const v = @import("qbe_build_value.zig");
 const frame_map = @import("qbe_frame_map.zig");
 const native_link = @import("native_link.zig");
 const batch = @import("qbe_build_batch.zig");
+const tool_spawn = @import("qbe_build_spawn.zig");
 /// The linker flag that drops every section a program never references.
 const gc_sections = "-Wl,--gc-sections";
 /// The manifest array that lists every emitted unit.
@@ -899,23 +900,26 @@ const State = struct {
     /// this process's stderr; the first failure is reported only after every
     /// started child has been waited on, so no zombie outlives the wave.
     fn spawnWave(self: *State, units: []Unit, wave: []const usize) fs.Error!void {
-        const children = try self.context.allocator.alloc(std.process.Child, wave.len);
+        const a = self.context.allocator;
+        const children = try a.alloc(tool_spawn.Started, wave.len);
         var started: usize = 0;
         var failure: ?fs.Error = null;
         for (wave) |index| {
             const job = units[index].staged.miss;
-            children[started] = std.process.spawn(self.context.io, .{ .argv = job.argv, .environ_map = job.environment }) catch |err| {
+            // QBE-SPAWN-1: started without copying this process; diagnostics
+            // stream straight to this process's standard error.
+            children[started] = tool_spawn.start(a, .{ .argv = job.argv, .environment = job.environment orelse self.context.environ, .capture = false }) catch |err| {
                 failure = err;
                 break;
             };
             started += 1;
         }
-        for (children[0..started]) |*child| {
-            const term = child.wait(self.context.io) catch |err| {
+        for (children[0..started]) |child| {
+            const finished = tool_spawn.finish(a, child) catch |err| {
                 if (failure == null) failure = err;
                 continue;
             };
-            if (fs.exitCode(term) != 0 and failure == null) failure = error.NativeToolFailed;
+            if (fs.exitCode(finished.term) != 0 and failure == null) failure = error.NativeToolFailed;
         }
         if (failure) |err| return err;
     }
