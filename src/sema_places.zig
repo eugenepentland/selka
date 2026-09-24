@@ -10,6 +10,7 @@ const eResultOperation = diagnostic.result_operation;
 const eShadowing = diagnostic.shadowing;
 const eImmutable = diagnostic.immutable;
 const std = @import("std");
+const set_lower = @import("set_lower.zig");
 const eCollectionMethod = sema_shared.eCollectionMethod;
 const eTupleArity = diagnostic.tuple_arity;
 const ast = @import("ast.zig");
@@ -417,6 +418,8 @@ fn augmented(comptime Checker: type, self: *Checker, op: ast.AssignmentOp, left:
     }
     if (left_type.isAggregate() and self.catalog.records[left_type.recordIndex()].isCollection()) {
         const sequence = self.catalog.records[left_type.recordIndex()].collection.kind;
+        if (typed.isSet(self.catalog.records[left_type.recordIndex()]))
+            return self.sink.fail(set_lower.bitwise_code, span, "a set has no augmented assignment; write `s = s - t`, `s = s | t`, or call `s.update(t)`");
         if (op != .add or sequence == .dictionary) return self.sink.fail(eTextOperator, span, "a managed collection augments with `+=` only, and str, bytes and list are the types that support it");
     } else {
         try self.requireInteger(left_type, span);
@@ -480,6 +483,7 @@ fn fieldDestination(comptime Checker: type, self: *Checker, root: ast.Node, stat
     if (!self.collectionType(ty_value)) return self.sink.fail(eCollectionMethod, root.span, "indexed field assignment requires a list, dictionary or fixed array reached from a variable");
     const schema = self.catalog.records[ty_value.recordIndex()];
     if (schema.collection.kind == .string or schema.collection.kind == .bytes) return self.sink.fail(eCollectionMethod, root.span, "str and bytes are immutable");
+    if (typed.isSet(schema)) return self.sink.fail(set_lower.index_code, root.span, "a set is not indexable; add an element with `s.add(x)`");
     const element = schema.shape.buffer.?;
     const owner = try b.local(ty_value);
     try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = owner, .value = base } }));
@@ -570,6 +574,7 @@ fn arrayPlace(comptime Checker: type, self: *Checker, target: ast.NodeId, traili
         }
         if (!record.isCollection()) return null;
         if (record.collection.kind != .list and record.collection.kind != .dictionary) return null;
+        if (record.collection.set) return null;
         root = id orelse return null;
         first = position + 1;
         element_below = false;

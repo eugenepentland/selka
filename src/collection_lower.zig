@@ -115,6 +115,8 @@ pub fn operationType(catalog: *Catalog, owner: typed.Type, kind: Kind, span: Spa
         .iteration_check => .unit,
         .read => if (dictionary) element else owner,
         .get, .pop_key, .pop_default, .setdefault => if (dictionary) element else error.InternalError,
+        // A set's `pop` removes and answers its most recently added element.
+        .pop => if (schema.collection.set) schema.collection.key.? else error.InternalError,
         .write, .update, .clear => if (dictionary) .unit else error.InternalError,
         .copy => if (dictionary) owner else error.InternalError,
         .items => if (dictionary) listType(catalog, element, span) else error.InternalError,

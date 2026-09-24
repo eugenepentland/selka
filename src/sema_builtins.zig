@@ -319,20 +319,49 @@ fn checkPreludeCall(comptime Checker: type, self: *Checker, node: ast.Node, call
     }
     try call_arguments.positional(call, self.sink);
     const builtins: prelude_builtins.Prelude(Checker) = .{ .checker = self };
+    const building_set = std.mem.eql(u8, name, "set");
+    if (building_set and call.arguments.len == 0) {
+        out.* = try self.checkEmptySet(node.span);
+        return true;
+    }
+    if (building_set and call.arguments.len != 1)
+        return self.sink.fail("E_ARITY", node.span, "set takes at most one argument: `set()` or `set(iterable)`");
     if (prelude_builtins.materializes(name) and call.arguments.len == 1) {
         if (try rangeSource(Checker, self, call.arguments[0])) |range| {
             const bounds = try self.allocator.alloc(typed.NodeId, range.arguments.len);
             for (range.arguments, bounds) |id, *slot| slot.* = self.resolved[@backingInt(id)].?;
             out.* = try builtins.rangeList(node.span, bounds);
+            if (building_set) out.* = try self.checkSetFromIterable(node.span, try retainNode(Checker, self, out.*));
             return true;
         }
-        out.* = try builtins.copyList(node.span, self.resolved[@backingInt(call.arguments[0])].?);
+        const input = self.resolved[@backingInt(call.arguments[0])].?;
+        // `set(iterable)` (SET-1); `list(s)` of a set is its snapshot in
+        // insertion order.
+        if (building_set) {
+            out.* = try self.checkSetFromIterable(node.span, input);
+        } else if (typed.setRecord(self.catalog.records, self.nodes.items[@backingInt(input)].ty) != null) {
+            out.* = try setElements(Checker, self, node.span, input);
+        } else out.* = try builtins.copyList(node.span, input);
         return true;
     }
     const values = try self.allocator.alloc(typed.NodeId, call.arguments.len);
     for (call.arguments, values) |id, *slot| slot.* = self.resolved[@backingInt(id)].?;
+    // A set folds and orders as the list of its elements in insertion order.
+    if (values.len == 1 and typed.setRecord(self.catalog.records, self.nodes.items[@backingInt(values[0])].ty) != null)
+        values[0] = try retainNode(Checker, self, try setElements(Checker, self, node.span, values[0]));
     out.* = (try builtins.build(node.span, name, values)) orelse return false;
     return true;
+}
+/// The fresh list of a set's elements in insertion order: the key snapshot of
+/// its dictionary representation.
+fn setElements(comptime Checker: type, self: *Checker, span: source.Span, input: typed.NodeId) Error!typed.Node {
+    return (collections.Builder(Checker){ .checker = self, .span = span }).access(input, .keys, &.{}, false);
+}
+/// Add a built checked expression to the node table.
+fn retainNode(comptime Checker: type, self: *Checker, value: typed.Node) Error!typed.NodeId {
+    const id: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+    try self.nodes.append(self.allocator, value);
+    return id;
 }
 /// Bind the operands of one sort call by name. `site.positional` leading
 /// operands are the list (one for `sorted`, none for `values.sort`); every
@@ -513,6 +542,7 @@ fn hintSortedArguments(comptime Checker: type, self: *Checker, call: @FieldType(
 fn sortedElement(comptime Checker: type, self: *Checker, input_type: typed.Type, span: source.Span) Error!typed.Type {
     if (!input_type.isAggregate()) return self.sink.fail("E_PRELUDE_TYPE", span, "sorted key requires a list input");
     const input_schema = self.catalog.records[input_type.recordIndex()];
+    if (typed.isSet(input_schema)) return input_schema.collection.key.?;
     if (!input_schema.isCollection() or input_schema.collection.kind != .list)
         return self.sink.fail("E_PRELUDE_TYPE", span, "sorted key requires a list input");
     return input_schema.shape.buffer.?;
@@ -539,7 +569,10 @@ fn checkedSort(comptime Checker: type, self: *Checker, span: source.Span, elemen
 fn checkSortedCall(comptime Checker: type, self: *Checker, span: source.Span, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!typed.Node {
     const keywords = try sortedKeywords(Checker, self, call);
     const builtins: prelude_builtins.Prelude(Checker) = .{ .checker = self };
-    const input = self.resolved[@backingInt(call.arguments[0])].?;
+    var input = self.resolved[@backingInt(call.arguments[0])].?;
+    // `sorted(s)` of a set orders the list of its elements (SET-1).
+    if (typed.setRecord(self.catalog.records, self.nodes.items[@backingInt(input)].ty) != null)
+        input = try retainNode(Checker, self, try setElements(Checker, self, span, input));
     if (keywords.key == null and keywords.reverse == null) return builtins.sorted(.{ .input = input, .sort = .{ .span = span, .owner = undefined } });
     const element = try sortedElement(Checker, self, self.nodes.items[@backingInt(input)].ty, self.syntax.nodes.items[@backingInt(call.arguments[0])].span);
     return builtins.sorted(.{ .input = input, .sort = try checkedSort(Checker, self, span, element, keywords, undefined) });

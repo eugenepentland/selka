@@ -80,7 +80,12 @@ fn hintBufferArguments(comptime Checker: type, self: *Checker, operation: @Field
         }
         if (owner_type.isAggregate() and self.catalog.records[owner_type.recordIndex()].collection.kind != .list) {
             const schema = self.catalog.records[owner_type.recordIndex()];
-            if (schema.collection.kind == .dictionary) {
+            if (typed.isSet(schema)) {
+                // A set method takes its element (`add`, `remove`, `discard`)
+                // or another set of the same type (SET-1).
+                const element_operand = operation.kind == .set_add or operation.kind == .set_discard or operation.kind == .remove;
+                for (operation.arguments) |argument| try self.hint(argument, if (element_operand) schema.collection.key.? else owner_type);
+            } else if (schema.collection.kind == .dictionary) {
                 if (operation.kind == .update and operation.arguments.len == 1) {
                     try self.hint(operation.arguments[0], owner_type);
                 } else {
@@ -516,6 +521,7 @@ fn checkedExpression(comptime Checker: type, self: *Checker, node: ast.Node, min
         .field_assignment => return self.checkFieldAssignment(node, temporaries),
         .index_assignment => return self.checkIndexAugmented(node, temporaries),
         .list_literal => |inputs| return self.checkListLiteral(node, inputs, temporaries),
+        .set_literal => |inputs| return self.checkSetLiteral(node, inputs, temporaries),
         .format => |parts| return self.checkFormat(node, parts, temporaries),
         .comprehension => |each| return self.checkComprehension(node, each, temporaries),
         .list_operation => |op| {
@@ -778,7 +784,7 @@ fn consumedTemporaries(comptime Checker: type, self: *Checker, node: ast.Node, o
     if (node.data == .bytes or node.data == .text or node.data == .integer) return 0;
     // A list literal checks its own elements, so none of them reach the caller's stack;
     // a dict literal queues every key and value, whether it builds a dict or a table.
-    if (node.data == .list_literal or node.data == .format or node.data == .comprehension) return 0;
+    if (node.data == .list_literal or node.data == .set_literal or node.data == .format or node.data == .comprehension) return 0;
     if (node.data == .dictionary_literal) return node.data.dictionary_literal.len;
     if (node.data == .binary) return 2;
     // `fs.read_only()` is a narrowing method whose receiver is a local, not a

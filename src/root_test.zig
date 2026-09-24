@@ -248,4 +248,5 @@ test {
 test {
     _ = @import("prelude_scalar_test.zig");
     _ = @import("dictionary_views_test.zig");
+    _ = @import("sets_test.zig");
 }

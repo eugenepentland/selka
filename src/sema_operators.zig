@@ -11,6 +11,10 @@ const eResultPath = diagnostic.result_path;
 const eCellEquality = sema_shared.eCellEquality;
 const eOptionTest = sema_shared.eOptionTest;
 const std = @import("std");
+const hashable_keys = @import("hashable_keys.zig");
+const set_lower = @import("set_lower.zig");
+const eSetIndex = set_lower.index_code;
+const set_index_message = "a set is not indexable; test membership with `x in s` or iterate it with `for x in s`";
 const ast = @import("ast.zig");
 const nominal_catalog = @import("nominal_catalog.zig");
 const typed = @import("typed.zig");
@@ -150,10 +154,10 @@ fn checkDictionaryLiteral(comptime Checker: type, self: *Checker, node: ast.Node
         out.ty = try nominal_catalog.instantiateLengths(&self.catalog, state.index.names.get("dict").?, &.{ key, value }, &.{}, node.span);
     }
     if (!out.ty.isAggregate() or self.catalog.records[out.ty.recordIndex()].collection.kind != .dictionary) return self.sink.fail("E_DICT_TYPE", node.span, "dictionary literal requires dict key/value types");
+    if (typed.isSet(self.catalog.records[out.ty.recordIndex()])) return self.sink.fail("E_DICT_TYPE", node.span, "`{}` is an empty dict; write `set()` for an empty set, as Python does");
     const schema = self.catalog.records[out.ty.recordIndex()];
     const key = schema.collection.key.?;
-    const text_key = key.isAggregate() and self.catalog.records[key.recordIndex()].collection.kind == .string;
-    if (!key.isInteger() and !text_key) return self.sink.fail("E_DICT_KEY", node.span, "dictionary keys must be integers or str");
+    try hashable_keys.require(self.allocator, self.catalog.records, self.sink, key, node.span, typed.isSet(schema));
     const items = try self.allocator.alloc(typed.NodeId, entries.len);
     for (entries, items, 0..) |entry, *item, index| {
         item.* = self.resolved[@backingInt(entry)].?;
@@ -210,7 +214,18 @@ fn checkValueBinary(comptime Checker: type, self: *Checker, b: @FieldType(@Field
     // so a byte string and an octet buffer compare without a conversion;
     // every other operator still requires one type on both sides.
     const mixed_bytes = (b.op == .eq or b.op == .ne) and isByteKind(self.catalog.records, lt) and isByteKind(self.catalog.records, rt);
+    // `|`, `&` and `^` are the set operators (SET-OPERATORS-1); an integer
+    // keeps its bitwise builtins, so the operator spelling names them.
+    const set_left = typed.setRecord(self.catalog.records, lt) != null;
+    if (!set_left) if (set_lower.bitwiseSpelling(self.src.text(b.op_span))) |builtin| {
+        const message = try std.fmt.allocPrint(self.allocator, "`{s}` combines two sets; an integer bitwise operation is spelled `{s}(a, b)`", .{ self.src.text(b.op_span), builtin });
+        return self.sink.fail(set_lower.bitwise_code, b.op_span, message);
+    };
     if (!mixed_bytes) try self.require(rt, lt, b.op_span);
+    if (set_left) if (try self.checkSetBinary(b.op, left, right, b.op_span)) |combined| {
+        out.* = combined;
+        return;
+    };
     if ((b.op == .eq or b.op == .ne) and self.requiresCellEquality(lt))
         return self.sink.fail(eCellEquality, b.op_span, "Cell equality is not defined, including inside collections");
     if (numeric_surface.isFloat(lt, self.catalog.records)) {
@@ -399,6 +414,8 @@ fn checkValueIndex(comptime Checker: type, self: *Checker, node: ast.Node, acces
     const base = self.resolved[@backingInt(access.base)].?;
     const index_value = self.resolved[@backingInt(access.index)].?;
     const receiver_type = self.nodes.items[@backingInt(base)].ty;
+    if (typed.setRecord(self.catalog.records, receiver_type) != null)
+        return self.sink.fail(eSetIndex, node.span, set_index_message);
     if (receiver_type.isAggregate() and self.catalog.records[receiver_type.recordIndex()].collection.kind != .list) {
         const receiver = self.catalog.records[receiver_type.recordIndex()];
         if (receiver.collection.kind == .dictionary) {

@@ -5,6 +5,7 @@ const std = @import("std");
 const option_flow = @import("option_flow.zig");
 const dictionary_views = @import("dictionary_views.zig");
 const numeric_surface = @import("numeric_surface.zig");
+const set_lower = @import("set_lower.zig");
 const float_syntax = @import("float_syntax.zig");
 const integer_literal = @import("integer_literal.zig");
 const buffer_operations = @import("buffer_operations.zig");
@@ -27,6 +28,10 @@ const eShadowing = diagnostic.shadowing;
 const eResultOperation = diagnostic.result_operation;
 const eResultPath = diagnostic.result_path;
 const eTryReturn = "E_TRY_RETURN";
+const eListMethod = "E_LIST_METHOD";
+/// The rejection of a method a set does not answer inside a template body.
+const unknown_set_method = "unknown set method; sets answer add, remove, discard, pop, clear, copy, update, union, intersection, difference, " ++
+    "symmetric_difference, issubset, issuperset and isdisjoint";
 const eArgument = diagnostic.generic_argument;
 const eListType = @import("collection_lower.zig").list_type_error;
 const eUnsupported = "E_GENERIC_BODY_UNSUPPORTED";
@@ -679,9 +684,10 @@ const Checker = struct {
         if (expected == null and entries.len == 0) return self.sink.fail("E_DICT_INFERENCE", node.span, "empty dictionary requires an expected dictionary type");
         if (expected == null) expected = try self.shapes().nominal(self.catalog.templates.store.?.index.names.get("dict").?, &.{ try self.expression(entries[0]), try self.expression(entries[1]) });
         if (self.shapes().collectionKind(expected.?) != .dictionary) return self.sink.fail("E_DICT_TYPE", node.span, "dictionary literal requires a dictionary type");
+        if (self.shapes().isSet(expected.?)) return self.sink.fail("E_DICT_TYPE", node.span, "`{}` is an empty dict; write `set()` for an empty set");
         const key = try self.shapes().collectionKey(expected.?, node.span);
         const element = try self.collectionElement(expected.?, node.span);
-        if (self.shapes().collectionKind(key) != .string) try self.supports(key, .integer, node.span);
+        try self.hashableKey(key, node.span, false);
         try self.supports(element, .copy, node.span);
         try self.supports(element, .storable, node.span);
         if (try self.requiresHandling(element)) return self.sink.fail(eResultOperation, node.span, "dictionary values cannot contain pending results");
@@ -691,6 +697,37 @@ const Checker = struct {
         }
         self.seedEffect(.managed_allocation);
         return expected.?;
+    }
+    /// Require a dictionary key or set element a template can hash
+    /// (HASH-KEYS-1): a concrete type by the ordinary hashability rule, a `str`,
+    /// or a type parameter that promises integer support.
+    fn hashableKey(self: *Checker, key: Symbolic, span: source.Span, set: bool) Error!void {
+        if (key == .concrete) return @import("hashable_keys.zig").require(self.allocator, self.catalog.records, self.sink, key.concrete, span, set);
+        if (self.shapes().collectionKind(key) == .string) return;
+        try self.supports(key, .integer, span);
+    }
+    /// `{a, b, ...}` in a template body: one element type from the context or
+    /// the first element, which the set must be able to hash (SET-1).
+    fn setLiteral(self: *Checker, node: ast.Node, inputs: []const ast.NodeId) Error!Symbolic {
+        var expected = self.expected_types.get(node.span);
+        if (expected) |value| if (!self.shapes().isSet(value)) {
+            expected = null;
+        };
+        var element: ?Symbolic = if (expected) |value| try self.shapes().collectionKey(value, node.span) else null;
+        for (inputs) |input| {
+            const value = if (element) |ty_value| try self.expressionExpected(input, ty_value) else try self.expression(input);
+            if (element) |ty_value| try self.compatible(value, ty_value, node.span) else element = value;
+        }
+        try self.setElement(element.?, node.span);
+        return expected orelse try self.shapes().nominal(self.catalog.templates.store.?.index.names.get("set").?, &.{element.?});
+    }
+    /// The rules one set element type follows in a template body.
+    fn setElement(self: *Checker, element: Symbolic, span: source.Span) Error!void {
+        try self.hashableKey(element, span, true);
+        try self.supports(element, .copy, span);
+        try self.supports(element, .storable, span);
+        if (try self.requiresHandling(element)) return self.sink.fail(eResultOperation, span, "set elements cannot contain pending results");
+        self.seedEffect(.managed_allocation);
     }
     /// Build a fixed array from a list literal whose context already demands `[N]T`.
     fn fixedArrayLiteral(self: *Checker, node: ast.Node, inputs: []const ast.NodeId, expected: Symbolic) Error!Symbolic {
@@ -716,6 +753,10 @@ const Checker = struct {
         try self.supports(produced, .copy, span);
         try self.supports(produced, .storable, span);
         self.seedEffect(.managed_allocation);
+        if (each.set) {
+            try self.setElement(produced, span);
+            return self.shapes().nominal(self.catalog.templates.store.?.index.names.get("set").?, &.{produced});
+        }
         return self.shapes().nominal(self.catalog.templates.store.?.index.names.get("List").?, &.{produced});
     }
     /// The element a comprehension over a collection or fixed array binds.
@@ -771,6 +812,10 @@ const Checker = struct {
         return expected.?;
     }
     fn collectionOperation(self: *Checker, owner: Symbolic, operation: struct { kind: BufferKind, inputs: []const ast.NodeId, span: source.Span, owner_node: ?ast.NodeId = null }) Error!Symbolic {
+        if (self.shapes().isSet(owner)) {
+            const input = if (operation.owner_node) |node_id| self.parameterIndex(node_id, 0) else null;
+            return self.setOperation(owner, .{ .kind = operation.kind, .inputs = operation.inputs, .span = operation.span, .input = input });
+        }
         const family = self.shapes().collectionKind(owner) orelse return self.sink.fail(eListType, operation.span, "operation requires a managed collection");
         const element = try self.collectionElement(owner, operation.span);
         const key = if (family == .dictionary) try self.shapes().collectionKey(owner, operation.span) else element;
@@ -816,6 +861,28 @@ const Checker = struct {
         self.seedCollectionWrite(kind, family == .dictionary, if (operation.owner_node) |node_id| self.parameterIndex(node_id, 0) else null);
         return output;
     }
+    /// One set method in a template body (SET-1): its operands take the
+    /// element (`add`, `remove`, `discard`) or the set type, and its writes and
+    /// allocations are the ones the concrete desugaring performs.
+    fn setOperation(self: *Checker, owner: Symbolic, operation: struct { kind: BufferKind, inputs: []const ast.NodeId, span: source.Span, input: ?u16 }) Error!Symbolic {
+        const kind = operation.kind;
+        if (!buffer_operations.setMethod(kind)) return self.sink.fail(eListMethod, operation.span, unknown_set_method);
+        if (operation.inputs.len != kind.arity()) return self.sink.fail("E_ARITY", operation.span, "collection argument count differs from its signature");
+        const element = try self.shapes().collectionKey(owner, operation.span);
+        const takes_element = kind == .set_add or kind == .set_discard or kind == .remove;
+        for (operation.inputs) |input| {
+            const expected = if (takes_element) element else owner;
+            try self.compatible(try self.expressionExpected(input, expected), expected, operation.span);
+        }
+        if (buffer_operations.managedAllocation(kind, true) or kind == .copy or kind == .update) self.seedEffect(.managed_allocation);
+        self.seedCollectionWrite(kind, true, operation.input);
+        return switch (kind) {
+            .pop => element,
+            .copy, .set_union, .set_intersection, .set_difference, .set_symmetric_difference => owner,
+            .set_subset, .set_superset, .set_disjoint => .{ .concrete = .bool },
+            else => .{ .concrete = .unit },
+        };
+    }
     fn listOperation(self: *Checker, node: ast.Node, operation: @FieldType(@FieldType(ast.Node, "data"), "list_operation")) Error!Symbolic {
         const owner = try self.expression(operation.base);
         if (operation.kind == .write and operation.arguments.len == 2 and symbolic.array(owner, self.catalog.records) != null)
@@ -856,7 +923,7 @@ const Checker = struct {
         if (std.mem.eql(u8, name, "sort") and method.arguments.len != 0)
             return self.keyedSort(try self.expression(method.base), .{ .arguments = method.arguments, .names = method.argument_names, .span = node.span, .owner_node = method.base });
         if (method.argument_names.len != 0) return self.sink.fail(eCallArgument, method.name, "collection methods take their arguments by position; only a list's sort takes key= and reverse=");
-        const kind = buffer_operations.method(name) orelse return self.sink.fail("E_LIST_METHOD", method.name, "unknown collection method");
+        const kind = buffer_operations.method(name) orelse return self.sink.fail(eListMethod, method.name, "unknown collection method");
         if (method.arguments.len == 0 and (kind == .parse_int or kind == .parse_float))
             if (try self.immediateNumericRange(method.base, kind, node.span)) |output| return output;
         return self.listOperation(node, .{ .base = method.base, .kind = kind, .arguments = method.arguments });
@@ -982,8 +1049,12 @@ const Checker = struct {
                     const sorted = try self.keyedSort(receiver, .{ .arguments = input_call.arguments, .names = input_call.argument_names, .span = span });
                     return sorted;
                 }
-                const kind = buffer_operations.method(self.src.text(input_call.name)) orelse return self.sink.fail("E_LIST_METHOD", input_call.name, "unknown collection method");
+                const kind = buffer_operations.method(self.src.text(input_call.name)) orelse return self.sink.fail(eListMethod, input_call.name, "unknown collection method");
                 if (input_call.type_arguments.len != 0) return self.sink.fail("E_ARITY", span, "collection methods do not take explicit type arguments");
+                if (self.shapes().isSet(receiver)) {
+                    const answer = try self.setOperation(receiver, .{ .kind = kind, .inputs = input_call.arguments, .span = span, .input = self.parameterIndexAt(owner) });
+                    return answer;
+                }
                 const result = try self.collectionOperation(receiver, .{ .kind = kind, .inputs = input_call.arguments, .span = span });
                 return result;
             }
@@ -1629,6 +1700,7 @@ const Checker = struct {
             .field_assignment => try self.fieldAssignment(node),
             .index_assignment => try self.indexAssignment(node),
             .list_literal => |inputs| try self.listLiteral(node, inputs),
+            .set_literal => |inputs| try self.setLiteral(node, inputs),
             .format => |parts| try self.formatValue(parts, node.span),
             .comprehension => |each| try self.comprehensionValue(each, node.span),
             .list_operation => |operation| try self.listOperation(node, operation),
@@ -2053,7 +2125,21 @@ const Checker = struct {
                 else => self.sink.fail("E_FLOAT_OPERATION", operation.op_span, "float supports arithmetic and numeric comparison"),
             };
         }
+        const set_left = self.shapes().isSet(left);
+        if (!set_left) if (set_lower.bitwiseSpelling(self.src.text(operation.op_span))) |builtin| {
+            const message = try std.fmt.allocPrint(self.sink.allocator, "`{s}` combines two sets; an integer bitwise operation is spelled `{s}(a, b)`", .{ self.src.text(operation.op_span), builtin });
+            return self.sink.fail(set_lower.bitwise_code, operation.op_span, message);
+        };
         try self.compatible(right, left, operation.op_span);
+        // The set operators build a fresh set or compare two (SET-OPERATORS-1).
+        if (set_left) switch (operation.op) {
+            .bit_or, .bit_and, .sub, .bit_xor => {
+                self.seedEffect(.managed_allocation);
+                return left;
+            },
+            .lt, .le, .gt, .ge => return .{ .concrete = .bool },
+            else => {},
+        };
         if (self.shapes().managed(left)) {
             if (operation.op == .eq or operation.op == .ne) return .{ .concrete = .bool };
             if (operation.op == .add and self.shapes().collectionKind(left) == .string) {

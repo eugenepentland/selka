@@ -76,6 +76,17 @@ fn collection(writer: *std.Io.Writer, records: []const typed.Record, object: *ru
             try writer.writeByte(']');
         },
         .dictionary => {
+            // A set renders its keys alone, and `set()` when it is empty (SET-1).
+            if (object.collection.set) {
+                if (object.items.items.len < 2) return writer.writeAll("set()");
+                try writer.writeByte('{');
+                var at: usize = 0;
+                while (at + 1 < object.items.items.len) : (at += 2) {
+                    if (at != 0) try writer.writeAll(", ");
+                    try render(writer, records, object.items.items[at], depth + 1);
+                }
+                return writer.writeByte('}');
+            }
             try writer.writeByte('{');
             var index: usize = 0;
             while (index + 1 < object.items.items.len) : (index += 2) {

@@ -209,8 +209,6 @@ test "a Python statement shape names its accepted spelling where the terminator 
 test "a collection form Python spells differently names the loop it accepts" {
     var fixture = Fixture.init(t.allocator);
     defer fixture.deinit();
-    const literal = try fixture.failure("def main() -> int:\n    seen = {1, 2, 2}\n    return 0\n");
-    try expectHint(&fixture, literal, "a set literal is not a collection this language has", "use a dict literal keyed by the value: `{1: True, 2: True}`", 2, 14);
     const dict_comp = try fixture.failure("def main() -> int:\n    d = {x: x * x for x in range(4)}\n    return d[3]\n");
     try expectHint(&fixture, dict_comp, "a dict comprehension is not provided", "build the dictionary with a loop: `for x in range(4): d[x] = x * x`", 2, 19);
     const nested = try fixture.failure("def main() -> int:\n    grid = [[1]]\n    flat = [x for row in grid for x in row]\n    return 0\n");

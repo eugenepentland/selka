@@ -355,6 +355,13 @@ const Builder = struct {
                             schema.collection = .{ .kind = .dictionary, .key = schema.shape.buffer };
                             schema.shape.buffer = try self.runtimeType(node.edges[1].target);
                         }
+                        // A set is a dictionary from its elements to unit
+                        // (SET-1), marked so the checker gives it the set
+                        // vocabulary and the renderer the set spelling.
+                        if (std.mem.eql(u8, name, "set")) {
+                            schema.collection = .{ .kind = .dictionary, .key = schema.shape.buffer, .set = true };
+                            schema.shape.buffer = .unit;
+                        }
                     }
                 },
                 .domain, .resource => try self.special(declaration, schema),

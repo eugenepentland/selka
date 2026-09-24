@@ -1040,6 +1040,14 @@ fn dictionaryOperation(comptime E: type, self: *E, op: BufferOperation, stack: [
                 try self.store(base, try self.readValue(pointer, op.output));
             } else try foundOrDefault(E, self, result, pointer, base, op.output);
         },
+        // A set's `pop` (SET-1): the last entry leaves, and an empty set traps
+        // exactly as a missing dictionary key does.
+        .pop => {
+            const pointer = try self.aggregatePointer();
+            try self.print(" %v{d} =w call $myl_native_dictionary_pop_last(l %v{d}, l %agg{d})\n", .{ result, input, self.pc });
+            try self.require(result, missing_key_failure);
+            try self.store(base, try self.readValue(pointer, op.output));
+        },
         .update => {
             const other = try self.load("s", base);
             try self.print(" %v{d} =w call $myl_native_dictionary_update(l %heap, l %v{d}, l %v{d})\n", .{ result, input, other });

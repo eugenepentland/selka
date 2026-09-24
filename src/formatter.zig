@@ -561,6 +561,7 @@ fn isPrefixKeyword(tag: Tag) bool {
 fn isBinary(tag: Tag) bool {
     return switch (tag) {
         .plus, .minus, .star, .slash, .slash_slash, .percent, .eq_eq, .bang_eq, .lt, .le, .gt, .ge, .and_and, .or_or => true,
+        .pipe, .caret, .ampersand => true,
         else => false,
     };
 }

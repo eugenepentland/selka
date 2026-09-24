@@ -118,6 +118,10 @@ pub const Tag = enum {
     slash_slash,
     percent,
     ampersand,
+    /// `|`, the set union operator (SET-OPERATORS-1).
+    pipe,
+    /// `^`, the set symmetric difference operator (SET-OPERATORS-1).
+    caret,
     and_and,
     or_or,
     plus_equal,
@@ -278,7 +282,6 @@ fn rejectRemovedWord(sink: *diagnostic.Sink, bytes: []const u8, start: usize, en
     _ = try removed_names.rejectLexical(sink, .{ .start = start, .end = end }, bytes[start..end]);
 }
 fn rejectRemovedPunctuation(sink: *diagnostic.Sink, ch: u8, next: u8, start: usize, end: usize) diagnostic.Error!void {
-    if (ch == '&') _ = try removed_names.reject(sink, .{ .start = start, .end = end }, "&");
     if (ch == '=' and next == '>') _ = try removed_names.reject(sink, .{ .start = start, .end = end + 1 }, "=>");
 }
 /// How a token is written in source, for diagnostics that name what was expected.
@@ -318,6 +321,8 @@ pub fn spelling(comptime tag: Tag) []const u8 {
         .slash_slash => "//",
         .percent => "%",
         .ampersand => "&",
+        .pipe => "|",
+        .caret => "^",
         .and_and => "and",
         .or_or => "or",
         .plus_equal => "+=",
@@ -451,6 +456,8 @@ fn tokenize(allocator: std.mem.Allocator, bytes: []const u8, span: Span, sink: *
                 '%' => .percent,
                 '-' => .minus,
                 '&' => .ampersand,
+                '|' => .pipe,
+                '^' => .caret,
                 '=' => .equal,
                 '?' => .question,
                 '<' => .lt,
