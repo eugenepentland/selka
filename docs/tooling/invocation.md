@@ -249,9 +249,12 @@ lengths, a domain resolved to its codec's wire shape under `x-mylang-domain` —
 it carries no effects, mutation footprint or return origin, so it cannot be
 mistaken for the `language-schema-v1` contract graph.
 
+The request schema sits at `description.wire_schema.request`; laid out for
+reading, it is:
+
 ```console
-$ mylang invoke tests/invoke/tool.my --function 'tool::scale' --describe --format=json \
-    | python3 -c 'import json,sys; print(json.dumps(json.load(sys.stdin)["description"]["wire_schema"]["request"], indent=2))'
+$ mylang invoke tests/invoke/tool.my --function 'tool::scale' --describe --format=json
+{"version":"native-invocation-v1","status":"described", ... "wire_schema":{"request":
 {
   "$id": "native-invocation-v1/request",
   "title": "mylang invoke request for tool::scale",
@@ -265,7 +268,7 @@ $ mylang invoke tests/invoke/tool.my --function 'tool::scale' --describe --forma
   },
   "required": ["value", "factor"],
   "additionalProperties": false
-}
+},"result":{...}}, ...}
 ```
 
 ## Worked examples
@@ -280,9 +283,8 @@ form:
 
 ```console
 $ mylang invoke examples/invoke/reading_validator.my \
-    --function 'reading_validator::validate' --describe --format=json \
-    | python3 -c 'import json,sys; d=json.load(sys.stdin)["description"]; print(d["eligible"], [a["type"] for a in d["contract"]["arguments"]], d["contract"]["result"]["type"])'
-True ['reading_validator::Reading'] reading_validator::Verdict
+    --function 'reading_validator::validate' --describe --format=json
+{"version":"native-invocation-v1","status":"described", ... "description":{"eligible":true,"wire_supported":true,"contract":{"arguments":[{"name":"reading","type":"reading_validator::Reading","wire":"record","injected":false}],"result":{"type":"reading_validator::Verdict","wire":"result"}, ...}, ...}}
 ```
 
 `reading_validator` is a structured-record validator. A `Reading` goes in as a
@@ -293,9 +295,8 @@ without parsing prose:
 ```console
 $ mylang invoke examples/invoke/reading_validator.my \
     --function 'reading_validator::validate' \
-    --input=examples/invoke/requests/reading-cold.json --format=json \
-    | python3 -c 'import json,sys; print(json.load(sys.stdin)["invocation"]["value"])'
-{'case': 'err', 'value': {'site': '3', 'rule': 'too_cold', 'observed': '-40'}}
+    --input=examples/invoke/requests/reading-cold.json --format=json
+{"version":"native-invocation-v1","status":"completed", ... "invocation":{"kind":"returned-error","value":{"case":"err","value":{"site":"3","rule":"too_cold","observed":"-40"}},"steps":27, ...}, ...}
 ```
 
 `text_report` is a text/list transformation. `summarize` takes Unicode text
@@ -305,9 +306,8 @@ plus a `list[str]` and returns a record of counts; `join`, `widths` and
 ```console
 $ mylang invoke examples/invoke/text_report.my \
     --function 'text_report::summarize' \
-    --input=examples/invoke/requests/text-report.json --format=json \
-    | python3 -c 'import json,sys; print(json.load(sys.stdin)["invocation"]["value"])'
-{'scalars': '5', 'pieces': '3', 'longest': '2', 'empty': '1'}
+    --input=examples/invoke/requests/text-report.json --format=json
+{"version":"native-invocation-v1","status":"completed", ... "invocation":{"kind":"value","value":{"scalars":"5","pieces":"3","longest":"2","empty":"1"},"steps":120, ...}, ...}
 ```
 
 `scalars` counts Unicode scalars and not bytes, so `héllo` is five. The request

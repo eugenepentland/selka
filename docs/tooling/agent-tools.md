@@ -23,7 +23,10 @@ repeated campaign on the same snapshot draws the same inputs. Passing samples ar
 evidence, not a proof; reductions are counterexample candidates, not guaranteed
 minimal ones. This generator covers bounded integer inputs only, and a source or
 compiler change invalidates a campaign rather than mixing evidence across
-versions.
+versions. `scripts/laws.py` is a Python prototype that drives `mylang test
+--cases` from outside the compiler and needs Python 3 and a checkout of this
+repository; a single law case needs neither, since `mylang test --cases FILE`
+runs it natively ([guest tests](guest-tests.md)).
 
 ```console
 $ cat laws.json

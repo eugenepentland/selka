@@ -6,6 +6,11 @@ and its local root, a lock file pins every file's content hash, and builds resol
 entirely offline from that lock. The design record is
 [offline local packages](../experiments/local-packages.md).
 
+Status: the tool, `scripts/packages.py`, is a Python prototype that drives the
+compiler from outside it and needs Python 3 and a checkout of this repository.
+The compiler itself has no package command; nothing else in building or using
+mylang needs Python.
+
 ## Local locked packages
 
 `packages.json` lists `{"name": ..., "root": ...}` entries; the library root holds

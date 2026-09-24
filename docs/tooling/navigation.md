@@ -20,10 +20,11 @@ that a change is safe. A project that fails body checking still produces a
 partial index with `checked: false` and no checked edges, which is useful for
 repairing source and is never a successful type-check verdict. Defaults cap
 symbols and relationship rows at 20 each and combined snippets at 8 KiB, and
-omitted counts are reported explicitly. `scripts/navigate.py` asks one focused
-question over the same index — `definition`, `references`, `callers`, `callees`,
-`impact` or `context` — and `tests/navigation_client.py --compiler BINARY`
-exercises the whole surface.
+omitted counts are reported explicitly. To ask one focused question instead of
+reading the whole index, `mylang context` returns one declaration's contract,
+the types it names, its callers and callees and the tests that reach it
+([focused context](agent-context.md)), and `mylang tests-for` lists the reaching
+tests alone ([below](#which-tests-reach-a-declaration)).
 
 Every symbol also carries the analysis behind its facts, so an unavailable
 inference is never an empty fact: see [Fact status](#fact-status-in-interface-and-navigation-output).
@@ -35,12 +36,10 @@ not checked publishes `analysis` and `null` for those four fields instead, and a
 consumer must read `null` as "not known here" rather than as "none".
 
 ```console
-$ mylang index-project examples/modules/main.my > /tmp/index.json
-$ python3 -c "import json; d=json.load(open('/tmp/index.json')); print(d['version'], d['checked'], len(d['symbols']), len(d['references']))"
-navigation-v1 True 11 25
-$ python3 scripts/navigate.py --compiler zig-out/bin/mylang --entry examples/modules/main.my \
-    --symbol 'shared.units::Distance.make' --relation callers --limit 5
-{"version": "navigation-query-v1", "checked": true, ... "references": [{"from": "main::main", "to": "shared.units::Distance.make", "kind": "call", "location": {"path": "main.my", "start": 263, "end": 287, "line": 10, "column": 19}}], ...}
+$ mylang index-project examples/modules/main.my
+{"version":"navigation-v1","checked":true,"reference_scope":"resolved concrete bodies and specializations; ...","snapshot_sha256":"65f6f8db...","snapshot":{...},"symbols":[...],"references":[...], ...}
+$ mylang context examples/modules/main.my --symbol=shared.units::Distance.make
+{"version":"agent-context-v1","status":"ok", ... {"name":"dependencies","records":[{"direction":"outgoing","edge":"call","id":"shared.units::Distance.raw", ...},{"direction":"incoming","edge":"call","id":"main::main","kind":"function","signature":"main() -> int", ...}]}, ...}
 ```
 
 ## Reading an interface
@@ -103,13 +102,10 @@ its per-declaration `permissions` value stays the directional bound its frozen
 set-subset consumer compares.
 
 ```console
-$ mylang index-project hole.my > /tmp/index.json
-$ python3 -c "import json; d=json.load(open('/tmp/index.json')); print(d['checked']); print([(s['name'], s.get('analysis'), s['effects']) for s in d['symbols'] if s['kind'] == 'function'])"
-False
-[('double', 'declaration-only', None), ('unfinished', 'declaration-only', None), ('main', 'declaration-only', None)]
-$ mylang index-project main.my > /tmp/index.json
-$ python3 -c "import json; d=json.load(open('/tmp/index.json')); print([(s['name'], s.get('analysis'), s['effects']) for s in d['symbols'] if s['name'] == 'parse'])"
-[('parse', None, [])]
+$ mylang index-project hole.my
+{"version":"navigation-v1","checked":false, ... "symbols":[{"id":"hole::double","name":"double","kind":"function", ... "analysis":"declaration-only","effects":null,"mutates":null,"return_origin":null,"mutation_writes":null, ...}, ...
+$ mylang index-project main.my
+{"version":"navigation-v1","checked":true, ... {"id":"main::parse","name":"parse","kind":"function", ... "signature":"parse(value: int) -> int","type_name":"i64","effects":["managed_allocation"],"mutates":[],"return_origin":"fresh","mutation_writes":false, ...}, ...
 ```
 
 ## Which tests reach a declaration
