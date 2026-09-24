@@ -701,6 +701,8 @@ pub fn build(b: *std.Build) void {
             "tests/native_heap_test.c",
             "src/native_heap.c",
             "src/native_arena.c",
+            // Structural equality looks dictionary keys up through the table.
+            "src/native_dictionary.c",
             "src/native_equal.c",
             "src/native_text.c",
             "src/native_collections.c",
