@@ -1645,6 +1645,7 @@ pub const Parser = struct {
             .kw_environment_get => try self.parseEnvironmentGated(token),
             .kw_acquire_resource, .kw_complete_resource => try self.parseResource(token),
             .kw_clock_now, .kw_random_u64 => try self.parseExternalGated(token),
+            .kw_stand_in, .kw_clock_advance => try self.parseStandIn(token),
             .kw_f64_add,
             .kw_f64_sub,
             .kw_f64_mul,
@@ -2019,6 +2020,33 @@ pub const Parser = struct {
     fn parseExternalGated(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
         if (!self.trustedStdlib()) return self.sink.fail(eInternalName, token.span, "`clock_now[...]` and `random_u64[...]` are reserved for compiler-internal standard-library sources; use the `time` or `random` standard module");
         return self.parseExternalRead(token);
+    }
+
+    /// Parse `__stand_in[T](operand)` or `__clock_advance(clock, count)`, which
+    /// only compiler-owned standard-library bytes may spell.
+    fn parseStandIn(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
+        if (!self.trustedStdlib()) return self.sink.fail(
+            eInternalName,
+            token.span,
+            "`__stand_in[...]` and `__clock_advance(...)` are reserved for compiler-internal standard-library sources; " ++
+                "use `time.simulated_clock`, `random.seeded_entropy`, `filesystem.memory`, `environment.fixed` or `network.denied`",
+        );
+        self.cursor.pos += 1;
+        var ty: ?Span = null;
+        if (token.tag == .kw_stand_in) {
+            _ = try self.expect(.lbracket);
+            ty = try self.typeName();
+            _ = try self.expect(.rbracket);
+        }
+        _ = try self.expect(.lparen);
+        const first = try self.expression(0);
+        var second: ?ast.NodeId = null;
+        if (token.tag == .kw_clock_advance) {
+            _ = try self.expect(.comma);
+            second = try self.expression(0);
+        }
+        const close = try self.expect(.rparen);
+        return self.append(.{ .span = .join(token.span, close.span), .data = .{ .stand_in = .{ .ty = ty, .first = first, .second = second } } });
     }
 
     fn parseExternalRead(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {

@@ -1094,7 +1094,10 @@ pub const Index = struct {
             if (resource.name.start != symbol.span.start) continue;
             var out: ContractDeclaration = .{ .name = symbol.name, .kind = "resource" };
             out.generics = try self.contractGenericsText(module, resource.type_parameters);
-            out.shape = try std.fmt.allocPrint(self.project.arena.allocator(), "backing:{s}", .{try self.contractTypeText(module, resource.backing, resource.type_parameters)});
+            // `resource NAME: family` names an external resource family
+            // (`filesystem`, `network`), not a type, so it is rendered as written
+            // rather than resolved as a declaration.
+            out.shape = try std.fmt.allocPrint(self.project.arena.allocator(), "backing:{s}", .{self.project.modules.items[module].src.text(resource.backing)});
             return out;
         }
         for (unit.syntax.types.expressions.aliases) |alias| {

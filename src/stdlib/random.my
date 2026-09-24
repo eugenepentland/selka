@@ -45,6 +45,13 @@ public def from_entropy(capability: Entropy) -> Result[Random, str]:
             return Err("entropy capability failed")
 
 
+# An Entropy stand-in whose words are the SplitMix64 stream for `seed`, so
+# `from_entropy` on it is reproducible. It grants no real authority, so building
+# one needs no capability and is not an effect.
+public def seeded_entropy(seed: int) -> Entropy:
+    return __stand_in[Entropy](seed)
+
+
 # The next SplitMix64 word, advancing the shared state exactly once.
 public def next_word(generator: mut Random) -> u64 effects(mutation):
     state = wrapping_add(generator.state[0], 11400714819323198485u64)

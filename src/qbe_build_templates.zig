@@ -120,7 +120,10 @@ pub const codec_execute =
     \\ for(size_t i=0;i<co_argument_count;++i){
     \\  size_t size=co_types[co_parameter_types[i]].size;co_arguments[i]=calloc(size ? size:1,1);
     \\  if(!co_arguments[i]){co_bad("OutOfMemory");return 0;}
-    \\  if(co_injected && co_injected[i]){uint64_t sentinel=co_injected[i];memcpy(co_arguments[i],&sentinel,size<8?size:8);continue;}
+    \\  if(co_injected && co_injected[i]){uint64_t sentinel=co_injected[i];
+    \\   if(sentinel>2){if(co_cursor>=co_count){co_bad("InvalidArgument");return 0;}
+    \\    sentinel=myl_qbe_stand_in(ctx,sentinel-3,co_input[co_cursor++].bits);if(myl_qbe_failed(ctx))return 0;}
+    \\   memcpy(co_arguments[i],&sentinel,size<8?size:8);continue;}
     \\  if(!co_read(co_parameter_types[i],co_arguments[i],0))return 0;
     \\ }
     \\ if(co_cursor!=co_count){co_bad("InvalidArgument");return 0;}

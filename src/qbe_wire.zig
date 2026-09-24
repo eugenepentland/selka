@@ -216,7 +216,10 @@ pub fn describeWithDomains(allocator: std.mem.Allocator, catalog: *native.Catalo
     for (0..typed.Type.record_base + catalog.records.len) |index| {
         const ty: typed.Type = @fromBackingInt(index);
         const ordinary = ty.isInteger() or ty == .bool;
-        const injected_stream = codecs and ty == .stream_cap;
+        // A `Stream` is injected by the codec adapter, and so is every other
+        // capability a test may declare except `Host`: `mylang test` hands it
+        // a deterministic stand-in (TEST-CAPS-3).
+        const injected_stream = codecs and ty != .host_cap and ty.capabilityIndex() != null;
         const ready = !ty.isAggregate() or included[ty.recordIndex()];
         const layout = try catalog.layout(ty);
         // Text and lists are the managed values the copied-value codec carries,

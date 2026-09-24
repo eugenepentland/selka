@@ -77,6 +77,7 @@ pub const Node = struct {
         environment_only: struct { capability: NodeId, names: NodeId },
         environment_names: NodeId,
         external_read: struct { kind: @import("external_capabilities.zig").Kind, capability: NodeId },
+        stand_in: struct { kind: @import("external_capabilities.zig").StandIn, first: NodeId, second: ?NodeId },
         acquire_buffer: struct { capacity: NodeId },
         print: Print,
         stream_write: StreamWrite,

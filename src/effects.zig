@@ -72,7 +72,7 @@ fn returnContribution(program: typed.Program, function: typed.Function, value: t
         return;
     }
     switch (node.data) {
-        .integer, .boolean, .unit, .function_value, .environment_get, .environment_only, .environment_names, .external_read, .host_resource => {},
+        .integer, .boolean, .unit, .function_value, .environment_get, .environment_only, .environment_names, .external_read, .host_resource, .stand_in => {},
         .local, .call, .invoke, .complete_resource, .acquire_resource, .acquire_buffer, .array, .record, .variant, .update => {
             if (node.ty.isAggregate()) ctx.unknown.* = true;
         },
@@ -239,7 +239,14 @@ fn inferFacts(allocator: std.mem.Allocator, program: typed.Program, function: ty
     return .{ .mutates = mutates, .return_origin = return_origin, .mutation_facts = .{ .writes = saw_write, .external = saw_external } };
 }
 
-const State = struct { mask: sets.Mask = 0, witnesses: [std.meta.tags(sets.Effect).len]?Witness = @splat(null), callers: std.ArrayList(Edge) = .empty, queued: bool = false };
+const State = struct {
+    mask: sets.Mask = 0,
+    /// Effects that never leave this function: see `containedEffects`.
+    contained: sets.Mask = 0,
+    witnesses: [std.meta.tags(sets.Effect).len]?Witness = @splat(null),
+    callers: std.ArrayList(Edge) = .empty,
+    queued: bool = false,
+};
 const Graph = struct {
     allocator: std.mem.Allocator,
     states: []State,
@@ -254,6 +261,7 @@ const Graph = struct {
     }
     fn direct(self: *Graph, function: usize, effect: sets.Effect, span: Span) void {
         const state = &self.states[function];
+        if (state.contained & sets.bit(effect) != 0) return;
         state.mask |= sets.bit(effect);
         if (state.witnesses[@backingInt(effect)] == null) state.witnesses[@backingInt(effect)] = .{ .span = span };
     }
@@ -273,7 +281,7 @@ const Graph = struct {
             const effects = self.states[callee].mask;
             for (self.states[callee].callers.items) |edge| {
                 const caller = &self.states[edge.caller];
-                const added = effects & ~caller.mask;
+                const added = effects & ~caller.mask & ~caller.contained;
                 if (added == 0) continue;
                 caller.mask |= added;
                 inline for (std.meta.tags(sets.Effect)) |effect| {
@@ -420,6 +428,24 @@ pub fn derivedCeiling(records: []const typed.Record, function: typed.Function) s
         if (position < signature.parameter_count) mask |= sets.bit(.mutation);
     }
     return mask;
+}
+
+/// The capability effects a deterministic stand-in can exercise.
+const stand_in_effects = sets.bit(.clock) | sets.bit(.random) | sets.bit(.filesystem) | sets.bit(.network) | sets.bit(.environment);
+
+/// Effects that stay inside one function (TEST-CAPS-4). Real authority reaches a
+/// body only through its parameters, so a clock, entropy, filesystem, network
+/// or environment capability the body holds without a parameter that supplies
+/// that effect can only be a deterministic stand-in built by `time.simulated_clock`
+/// and its siblings; using one reaches nothing outside the process, so it is not
+/// an effect of the function. A `Host` parameter, a `host def` or an `extern def`
+/// can reach the host by other means, so they contain nothing.
+pub fn containedEffects(records: []const typed.Record, signature: typed.FunctionSignature, locals: []const typed.Local, policy: typed.FunctionPolicy) sets.Mask {
+    if (policy.host != null or policy.c_abi or signature.parameter_count > locals.len) return 0;
+    var supplied: sets.Mask = 0;
+    for (locals[0..signature.parameter_count]) |parameter| supplied |= authorityMask(records, parameter.ty);
+    if (supplied & sets.bit(.host) != 0) return 0;
+    return stand_in_effects & ~supplied;
 }
 
 /// Ceiling a checked function is actually held to. A `host def` or `extern def`
@@ -601,6 +627,7 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, request: Requ
         error.InternalError => unreachable,
     };
     defer allocator.free(cleanup_masks);
+    for (program.functions, graph.states) |function, *state| state.contained = containedEffects(program.records, function.signature, function.scope.locals, function.policy);
     for (program.functions, 0..) |function, index| {
         if (origin_pass.standIn(request.stubs, index)) |fact| {
             seedStandIn(&graph, index, fact.graph_mask, function.declaration);
@@ -704,6 +731,9 @@ fn directEffect(program: typed.Program, function: typed.Function, node: typed.No
         .dir_resource,
         .host_resource,
         .environment_only,
+        // A stand-in grants no real authority, so building or moving one
+        // is not an effect; using it is charged where the use happens.
+        .stand_in,
         .function_value,
         .integer,
         .boolean,
@@ -1042,6 +1072,7 @@ fn seedInstructionEffects(
         .dir_resource,
         .host_resource,
         .environment_only,
+        .stand_in,
         .function_value,
         .push_i64,
         .add_i64_checked,
@@ -1090,6 +1121,7 @@ pub fn validate(allocator: std.mem.Allocator, program: bytecode_model.Program) V
     defer graph.deinit();
     const cleanup_masks = try cleanupMasks(allocator, program.records);
     defer allocator.free(cleanup_masks);
+    for (program.functions, graph.states) |function, *state| state.contained = containedEffects(program.records, function.signature, function.scope.locals, function.policy);
     for (program.functions, 0..) |function, index| {
         if (function.policy.host) |span| try seedHost(&graph, index, function.policy.effect_bound, span);
         try seedOwnership(&graph, index, function.signature.return_type, function.scope.locals, .{ .start = 0, .end = 0 }, cleanup_masks);

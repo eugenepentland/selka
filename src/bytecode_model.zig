@@ -3,6 +3,7 @@ const external_resources = @import("external_resources.zig");
 const std = @import("std");
 const Span = @import("source.zig").Span;
 const typed = @import("typed.zig");
+const external_capabilities = @import("external_capabilities.zig");
 /// Signed scalar ordering and equality predicates.
 pub const Predicate = enum { eq, ne, lt, le, gt, ge };
 /// Equality predicates for boolean and nominal identity values.
@@ -56,7 +57,9 @@ pub const Instruction = struct {
         environment_get: struct { output: typed.Type, name: typed.Type },
         environment_only: struct { output: typed.Type, names: typed.Type },
         environment_names: struct { output: typed.Type },
-        external_read: struct { kind: @import("external_capabilities.zig").Kind, output: typed.Type },
+        external_read: struct { kind: external_capabilities.Kind, output: typed.Type },
+        /// Pops `kind.operands()` words and pushes a stand-in capability or a status.
+        stand_in: external_capabilities.StandIn,
         acquire_buffer: typed.Type,
         print: Print,
         stream_write: StreamWrite,
@@ -118,6 +121,18 @@ pub const FunctionScope = struct {
 };
 /// Complete instruction program and its nominal type metadata.
 pub const Program = struct { functions: []const Function, main: typed.FunctionId = @fromBackingInt(0), records: []const typed.Record = &.{} };
+/// The value a stand-in operation pushes: the capability it builds, or the
+/// `int` status of moving a simulated clock.
+pub fn standInOutput(kind: external_capabilities.StandIn) typed.Type {
+    return switch (kind) {
+        .clock => .clock_cap,
+        .entropy => .random_cap,
+        .filesystem => .filesystem_cap,
+        .network => .network_cap,
+        .environment => .environment_cap,
+        .advance => .i64,
+    };
+}
 /// Count stack-passed value arguments.
 pub fn valueParameterCount(function: Function) usize {
     return function.signature.parameter_count;

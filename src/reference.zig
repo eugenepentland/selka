@@ -49,12 +49,12 @@ pub const entry_path = "reference.my";
 ///
 /// `src/standard_library.zig` exposes only `source(path)`, so the path list is
 /// repeated here; `reference_test.zig` asserts this list equals the checkout's
-/// `src/stdlib/*.my` set, which turns a thirteenth standard module into a
+/// `src/stdlib/*.my` set, which turns a fifteenth standard module into a
 /// failing test rather than a silent omission.
 pub const standard_modules = [_][]const u8{
-    "base64.my", "byte_builder.my", "hex.my",     "json.my",
-    "math.my",   "network.my",      "path.my",    "pool.my",
-    "random.my", "sort.my",         "strings.my", "time.my",
+    "base64.my", "byte_builder.my", "environment.my", "filesystem.my", "hex.my",
+    "json.my",   "math.my",         "network.my",     "path.my",       "pool.my",
+    "random.my", "sort.my",         "strings.my",     "time.my",
 };
 
 /// Read the synthesized entry module and refuse every other path.

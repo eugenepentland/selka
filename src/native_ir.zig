@@ -95,6 +95,10 @@ const Analyzer = struct {
                     pops = 1;
                     result = read.output;
                 },
+                .stand_in => |kind| {
+                    pops = kind.operands();
+                    result = bytecode.standInOutput(kind);
+                },
                 .environment_get => |get| {
                     pops = 2;
                     result = get.output;

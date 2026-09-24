@@ -81,6 +81,9 @@ pub const Node = struct {
         restrict_resource: struct { permissions: @import("external_resources.zig").Permissions, value: NodeId },
         environment_get: struct { ty: Span, capability: NodeId, name: NodeId },
         external_read: struct { kind: @import("external_capabilities.zig").Kind, ty: Span, capability: NodeId },
+        /// `__stand_in[T](operand)` (a type span) or `__clock_advance(clock, count)`
+        /// (no type span, two operands); standard-library sources only.
+        stand_in: struct { ty: ?Span, first: NodeId, second: ?NodeId },
         arena_escape: struct { arena: Span, value: NodeId },
         cast: TypedValue,
         wrap: TypedValue,

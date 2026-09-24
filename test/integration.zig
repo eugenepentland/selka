@@ -3625,6 +3625,98 @@ test "CLI test reports an exported ill-shaped test as a failed case" {
     try testing.expect(std.mem.indexOf(u8, result.stderr, "host failure") == null);
 }
 
+/// One `mylang test` run of `path` with a private cache and extra arguments.
+fn capabilityTestRun(path: []const u8, cache: []const u8, extra: []const []const u8) !std.process.RunResult {
+    const argv = try std.mem.concat(testing.allocator, []const u8, &.{ &.{ compiler_path, "test", path, "--cache-dir", cache }, extra });
+    defer testing.allocator.free(argv);
+    return std.process.run(testing.allocator, testing.io, .{ .argv = argv });
+}
+
+/// The `word N` line a failing entropy test printed, which the runner appends
+/// to its failure text.
+fn printedWord(stdout: []const u8) ![]const u8 {
+    const start = std.mem.indexOf(u8, stdout, "word ") orelse return error.TestUnexpectedResult;
+    const end = std.mem.indexOfScalarPos(u8, stdout, start, '\n') orelse stdout.len;
+    return stdout[start..end];
+}
+
+const capability_tests =
+    \\module main
+    \\import network
+    \\import random
+    \\import time
+    \\
+    \\public def test_clock(clock: Clock) -> bool:
+    \\    match time.now(clock):
+    \\        case Ok(instant):
+    \\            return instant.unix_nanoseconds == 946684800000000000
+    \\        case Err(_):
+    \\            return False
+    \\
+    \\public def test_files(fs: Filesystem, env: Environment, net: Network) -> bool:
+    \\    _ = fs.write_text("a.txt", "x")
+    \\    match network.connect(net.host("127.0.0.1:1")):
+    \\        case network.Connected.ok(_):
+    \\            return False
+    \\        case network.Connected.err(code):
+    \\            return code == network.denied_here() and fs.exists("a.txt") and len(env.names()) == 0
+    \\
+    \\public def test_entropy(entropy: Entropy, out: Stream) -> bool:
+    \\    match random.from_entropy(entropy):
+    \\        case Ok(generator):
+    \\            out.print("word", random.next_word(mut generator))
+    \\        case Err(_):
+    \\            out.print("no entropy")
+    \\    return False
+    \\
+    \\public def test_host(host: Host) -> bool:
+    \\    _ = host
+    \\    return True
+    \\
+    \\def main() -> int:
+    \\    return 0
+;
+
+// spec: TEST-CAPS-3
+test "CLI test hands declared capabilities deterministic stand-ins and reuses their passes" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = capability_tests });
+    const path = try temporary.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(root);
+    const cache = try std.fs.path.join(testing.allocator, &.{ root, ".mylang-test-cache" });
+    defer testing.allocator.free(cache);
+    const first = try capabilityTestRun(path, cache, &.{});
+    defer testing.allocator.free(first.stdout);
+    defer testing.allocator.free(first.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, first.term);
+    try testing.expect(std.mem.indexOf(u8, first.stdout, "passed main::test_clock") != null);
+    try testing.expect(std.mem.indexOf(u8, first.stdout, "passed main::test_files") != null);
+    // No test is ever handed real authority: a Host parameter is not supplied.
+    try testing.expect(std.mem.indexOf(u8, first.stdout, "failed main::test_host") != null);
+    // Nothing the in-memory filesystem wrote reached the project directory.
+    try testing.expectError(error.FileNotFound, temporary.dir.access(testing.io, "a.txt", .{}));
+    const second = try capabilityTestRun(path, cache, &.{});
+    defer testing.allocator.free(second.stdout);
+    defer testing.allocator.free(second.stderr);
+    try testing.expect(std.mem.indexOf(u8, second.stdout, "cached main::test_clock") != null);
+    try testing.expect(std.mem.indexOf(u8, second.stdout, "cached main::test_files") != null);
+    // The entropy seed comes from the test's name, so a rerun draws the same word.
+    try testing.expectEqualStrings(try printedWord(first.stdout), try printedWord(second.stdout));
+    const reseeded = try capabilityTestRun(path, cache, &.{ "--seed", "7" });
+    defer testing.allocator.free(reseeded.stdout);
+    defer testing.allocator.free(reseeded.stderr);
+    // A different seed is a different execution, so no receipt answers for it.
+    try testing.expect(std.mem.indexOf(u8, reseeded.stdout, "passed main::test_clock") != null);
+    try testing.expect(!std.mem.eql(u8, try printedWord(first.stdout), try printedWord(reseeded.stdout)));
+    const invalid = try capabilityTestRun(path, cache, &.{ "--seed", "seven" });
+    defer testing.allocator.free(invalid.stdout);
+    defer testing.allocator.free(invalid.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, invalid.term);
+}
+
 // spec-case: CHECK-PROJECT-ENTRY-1
 test "CLI check keeps plain single-file programs on the one-unit path" {
     try invoke("check",

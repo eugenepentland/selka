@@ -489,6 +489,65 @@ def main(net: Network) -> int:
             return code
 ```
 
+## Deterministic stand-ins
+
+`time.simulated_clock`, `random.seeded_entropy`, `filesystem.memory`,
+`environment.fixed` and `network.denied` build a `Clock`, `Entropy`,
+`Filesystem`, `Environment` or `Network` that grants no real authority: a
+simulated clock reads the instant it was given until `time.advance` moves it, a
+seeded entropy stream is reproducible, the filesystem lives in memory, the
+environment holds fixed pairs and the network refuses every connection. Building
+one needs no capability and contributes no effect, and the runtime keeps every
+stand-in apart from host-granted authority, so it can never reach a real
+resource; `fs.dir(...)`, `read_only()`, `env.only(...)` and `net.host(...)` on
+a stand-in derive stand-ins.
+
+Real authority reaches a body only through its parameters. A function whose
+parameters supply no `clock` can therefore hold only a simulated clock, and
+reading it is not an effect of that function: it neither widens the function's
+inferred effects nor breaks the ceiling its signature implies. The same holds for
+`random`, `filesystem`, `network` and `environment`. A function with a `Host`
+parameter, a `host def` and an `extern def` can reach the host by other means,
+so for them nothing is contained. That is what lets a caller with no capability
+at all test code that takes one:
+
+```mylang
+# doc: expect 1 True
+import filesystem
+import time
+
+def uptime(clock: Clock, boot: time.Instant) -> int:
+    match time.now(clock):
+        case Ok(current):
+            match time.elapsed(boot, current):
+                case Ok(span):
+                    return time.to_milliseconds(span) // 1000
+                case Err(_):
+                    return -1
+        case Err(_):
+            return -1
+
+def remember(fs: Filesystem, note: str) -> bool:
+    _ = fs.write_text("note.txt", note)
+    return fs.exists("note.txt")
+
+def check() -> int:
+    boot = time.from_unix_nanoseconds(0)
+    clock = time.simulated_clock(boot)
+    _ = time.advance(clock, time.nanoseconds(1000000000))
+    return uptime(clock, boot)
+
+def main(out: Stream) -> int:
+    out.print(check(), remember(filesystem.memory(), "hi"))
+    return 0
+```
+
+`check` and `main` declare no `Clock` or `Filesystem`, yet they read a clock
+and write a file: both are stand-ins, and neither function's effects include
+`clock` or `filesystem`. `mylang test` hands the same stand-ins to a test that
+declares a capability parameter; see
+[capability parameters](tooling/guest-tests.md#capability-parameters).
+
 ## Related pages
 
 - [Contracts](contracts.md) — why a `@requires`, `@ensures` or `@invariant` condition must be effect-free

@@ -1576,6 +1576,7 @@ const Checker = struct {
             .file_operation => return self.sink.fail(eUnsupported, node.span, "file operations are not supported inside generic function bodies"),
             .buffer_operation => |operation| try self.bufferValue(operation),
             .external_read => |read| try self.externalValue(read),
+            .stand_in => return self.sink.fail(eUnsupported, node.span, "deterministic stand-in capabilities are not supported inside generic function bodies"),
             .environment_get => |get| try self.environmentValue(get),
             .acquire_resource => |acquire| try self.acquireResource(acquire),
             .complete_resource => |complete| try self.completeResource(complete),

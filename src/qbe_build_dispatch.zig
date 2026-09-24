@@ -82,9 +82,8 @@ pub fn lookup(w: *std.Io.Writer, units: []const Value, shapes: shape.Shapes) sha
                 try w.writeAll("static const unsigned char injected[]={");
                 for (parameters, 0..) |parameter, i| {
                     if (i != 0) try w.writeByte(',');
-                    const stream = std.mem.eql(u8, v.text(parameter), "stream_cap");
                     const name = if (i < names.len) v.text(names[i]) else "";
-                    const sentinel: u8 = if (!stream) 0 else if (std.mem.eql(u8, name, "err")) 2 else 1;
+                    const sentinel = injectedSentinel(v.text(parameter), name);
                     try w.print("{d}", .{sentinel});
                 }
                 try w.writeAll("};\n");
@@ -97,6 +96,17 @@ pub fn lookup(w: *std.Io.Writer, units: []const Value, shapes: shape.Shapes) sha
         });
     }
     return supported;
+}
+/// The capability types, in capability-index order, the adapter replaces with a
+/// deterministic stand-in built from one argument node (TEST-CAPS-3).
+const stand_in_types = [_][]const u8{ "clock_cap", "random_cap", "filesystem_cap", "network_cap", "environment_cap" };
+/// The adapter's injection code for one parameter: 0 reads a copied value, 1
+/// and 2 are standard output and error, and 3 plus a capability index builds
+/// that capability's stand-in from the argument node's bits.
+fn injectedSentinel(type_name: []const u8, parameter_name: []const u8) u8 {
+    if (std.mem.eql(u8, type_name, "stream_cap")) return if (std.mem.eql(u8, parameter_name, "err")) 2 else 1;
+    for (stand_in_types, 0..) |candidate, index| if (std.mem.eql(u8, type_name, candidate)) return @intCast(3 + index);
+    return 0;
 }
 /// Insert a reachable invocation label after the unknown-function failure path.
 pub fn ending(w: *std.Io.Writer, template: []const u8, supported: bool) shape.Error!void {

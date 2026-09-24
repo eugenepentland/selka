@@ -75,6 +75,10 @@ pub const Walker = struct {
                     try self.expr(acquire.capability);
                 },
                 .external_read => |read| try self.expr(read.capability),
+                .stand_in => |stand| {
+                    if (stand.second) |second| try self.expr(second);
+                    try self.expr(stand.first);
+                },
                 .acquire_buffer => |acquire| try self.expr(acquire.capacity),
                 .file_access => |call| try self.arguments(call.arguments),
                 .file_method => |call| if (call.argument) |value| try self.expr(value),

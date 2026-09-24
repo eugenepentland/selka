@@ -123,6 +123,8 @@ pub const Executor = struct {
     types: []const Value,
     /// `--gc-stress` for every child call; set from the invocation's flags.
     stress: bool = false,
+    /// `--seed N` for every injected `Entropy`; null derives it from the test name.
+    seed: ?u64 = null,
     /// Bind a compiled harness (`runner`) to one library and its schema; test
     /// calls load the library in new processes.
     pub fn init(context: fs.Context, manifest: Value, library: []const u8, temporary: []const u8, executable: []const u8) Error!Executor {
@@ -142,7 +144,7 @@ pub const Executor = struct {
     /// reads `timed_out`.
     pub fn attempt(self: Executor, function: Value, arguments: Value, limits: Limits) Error!Attempt {
         if (!limitsValid(limits)) return error.InvalidTestLimits;
-        var codec: wire.Codec = .{ .allocator = self.context.allocator, .types = self.types };
+        var codec: wire.Codec = .{ .allocator = self.context.allocator, .types = self.types, .seed = self.seed };
         defer codec.deinit();
         try codec.arguments(function, arguments);
         const path = try self.request(try testRequest(self.context.allocator, v.text(v.get(function, "name")), codec.nodes.items, limits));
@@ -166,7 +168,7 @@ pub const Executor = struct {
     /// its child answers into; the child itself is started by `executeAll`.
     fn prepare(self: *const Executor, call: Call, limits: Limits) Error!Prepared {
         const a = self.context.allocator;
-        var codec: wire.Codec = .{ .allocator = a, .types = self.types };
+        var codec: wire.Codec = .{ .allocator = a, .types = self.types, .seed = self.seed };
         defer codec.deinit();
         try codec.arguments(call.function, call.arguments);
         const path = try self.request(try testRequest(a, v.text(v.get(call.function, "name")), codec.nodes.items, limits));
@@ -182,7 +184,7 @@ pub const Executor = struct {
     pub fn benchmark(self: Executor, function: Value, arguments: Value, config: BenchConfig) Error!BenchOutcome {
         if (!limitsValid(config.limits)) return error.InvalidTestLimits;
         if (!samplingValid(config.sampling) or config.timeout_ms == 0) return error.InvalidTestLimits;
-        var codec: wire.Codec = .{ .allocator = self.context.allocator, .types = self.types };
+        var codec: wire.Codec = .{ .allocator = self.context.allocator, .types = self.types, .seed = self.seed };
         defer codec.deinit();
         try codec.arguments(function, arguments);
         const bytes = try benchRequest(self.context.allocator, v.text(v.get(function, "name")), codec.nodes.items, config);
@@ -277,7 +279,7 @@ pub const Executor = struct {
             try diagnostics.writer.print("  in {s} at {s}:{d}:{d}\n", .{ function, path, line, column });
         }
         if (omitted != 0) try diagnostics.writer.print("  {d} frames omitted\n", .{omitted});
-        var codec: wire.Codec = .{ .allocator = self.context.allocator, .types = self.types };
+        var codec: wire.Codec = .{ .allocator = self.context.allocator, .types = self.types, .seed = self.seed };
         defer codec.deinit();
         for (0..@intCast(count)) |_| try codec.nodes.append(self.context.allocator, .{ .type = try reader.text(), .bits = try reader.number(), .children = @intCast(try reader.number()) });
         var parsed: Parsed = .{ .status = if (status == 0) "value" else if (status == 1) "trap" else infrastructure_failure, .steps = steps };

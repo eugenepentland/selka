@@ -111,6 +111,7 @@ fn writeInstruction(writer: *std.Io.Writer, program: bc.Program, src: Source, in
         .complete_resource => |output| try writer.print("COMPLETE_RESOURCE -> {s}", .{typed.typeName(output, program.records)}),
         .acquire_resource => |acquire| try writer.print("ACQUIRE_RESOURCE -> {s}", .{typed.typeName(acquire.output, program.records)}),
         .external_read => |read| try writer.print("EXTERNAL_{s} -> {s}", .{ @tagName(read.kind), typed.typeName(read.output, program.records) }),
+        .stand_in => |kind| try writer.print("STAND_IN_{s}", .{@tagName(kind)}),
         .acquire_buffer => |ty| try writer.print("ACQUIRE_BUFFER {f}", .{ty}),
         .print => |output| try writer.print("PRINT {d} sep={} end={} stream={} debug={}", .{ output.types.len, output.separator, output.terminator, output.stream, output.debug }),
         .stream_write => try writer.writeAll("STREAM_WRITE"),
