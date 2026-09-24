@@ -141,15 +141,90 @@ fn addInputManifests(b: *std.Build) void {
         run.addArgs(&@field(test_inputs, name));
     }
 }
-/// Let a test step's verdict be cached: it re-runs only when its command, its
-/// environment, an artifact it names, the tools the environment names, or one of
-/// the repository files the `list` in `build_test_inputs.zig` declares changes
-/// (or under `-Dtest-rerun`). An empty `list` declares no repository files.
+/// The make-time environment manifest `addEnvironmentManifest` writes on every
+/// build that runs a cached test step.
+var environment_manifest: ?std.Build.LazyPath = null;
+/// The environment variables a cached verdict depends on, printed sorted, one
+/// `NAME=value` per line, from the environment `zig build` itself runs in.
+const environment_script =
+    \\env | grep -E '^(PATH|HOME|TMPDIR|XDG_CACHE_HOME|ZIG_GLOBAL_CACHE_DIR|ZIG_LOCAL_CACHE_DIR|MYLANG_[A-Za-z0-9_]*)=' | LC_ALL=C sort > "$1"
+;
+/// Add the step that records the make-time environment a cached test verdict
+/// depends on, once per build. A step's own environment cannot key its verdict:
+/// every Run step now inherits `zig build`'s live environment (see
+/// `withTools`), which the build runner leaves out of a step's cache key. This
+/// file carries it in instead, so a changed `PATH`, `TMPDIR` or `MYLANG_*`
+/// re-runs the cached verdicts and an unchanged one keeps them.
+fn addEnvironmentManifest(b: *std.Build) void {
+    const run = b.addSystemCommand(&.{ "sh", "-c", environment_script, "record-environment" });
+    run.setName("record the test environment");
+    run.has_side_effects = true;
+    run.step.max_rss = rss.script;
+    environment_manifest = run.addOutputFileArg("environment.txt");
+}
+/// Let a test step's verdict be cached: it re-runs only when its command, the
+/// environment variables `environment_script` records, an artifact it names,
+/// the tools the environment names, or one of the repository files the `list`
+/// in `build_test_inputs.zig` declares changes (or under `-Dtest-rerun`). An
+/// empty `list` declares no repository files.
 fn cached(run: *std.Build.Step.Run, list: []const u8) void {
     run.has_side_effects = test_rerun;
     const b = run.step.owner;
     if (list.len != 0) run.addFileInput(input_manifests.?.path(b, b.fmt("{s}.txt", .{list})));
+    run.addFileInput(environment_manifest.?);
     for (tool_inputs) |tool| if (tool) |path| run.addFileInput(path);
+}
+/// Prefix a command so that it runs in `zig build`'s live environment plus the
+/// native tools a guest build needs. `Step.Run.setEnvironmentVariable` would
+/// instead copy the whole configure-time environment into the step, and a
+/// cached configuration keeps that copy: after one `zig build` under another
+/// `PATH`, `TMPDIR` or `MYLANG_*`, every later build with the same `-D` options
+/// ran its tests in that stale environment. The shell resolves Zig's global
+/// cache the way `std.zig.resolveGlobalCacheDir` does, at make time, and names
+/// it explicitly: a test that redirects `HOME` for a child compiler would
+/// otherwise send its `zig cc` invocations to an empty cache. `env` then adds
+/// the tool paths, which depend only on this build's configuration.
+fn withTools(step: *std.Build.Step.Run, qbe: []const u8) void {
+    const b = step.step.owner;
+    var prefix: std.ArrayList([]const u8) = .empty;
+    prefix.appendSlice(b.allocator, &.{ "sh", "-c", tools_script, "with-tools" }) catch @panic("out of memory");
+    if (qbe.len != 0) {
+        prefix.append(b.allocator, b.fmt("MYLANG_QBE={s}", .{qbe})) catch @panic("out of memory");
+        prefix.append(b.allocator, b.fmt("MYLANG_ZIG={s}", .{tool_zig})) catch @panic("out of memory");
+        if (tool_llvm_adapter.len != 0) prefix.append(b.allocator, b.fmt("MYLANG_LLVM_ADAPTER={s}", .{tool_llvm_adapter})) catch @panic("out of memory");
+    }
+    const arena = b.graph.arena;
+    const args = arena.alloc(std.Build.Step.Run.Arg, prefix.items.len) catch @panic("out of memory");
+    for (args, prefix.items) |*arg, word| arg.* = .{ .bytes = b.graph.dupeString(word) };
+    step.argv.insertSlice(arena, 0, args) catch @panic("out of memory");
+}
+/// The shell half of `withTools`: export Zig's global cache directory as the
+/// Zig toolchain would resolve it here and now, then run `env TOOL=PATH… CMD…`.
+const tools_script =
+    \\if [ -z "${ZIG_GLOBAL_CACHE_DIR+set}" ]; then
+    \\  if [ -n "${XDG_CACHE_HOME:-}" ]; then ZIG_GLOBAL_CACHE_DIR="$XDG_CACHE_HOME/zig"
+    \\  elif [ -n "${HOME:-}" ]; then ZIG_GLOBAL_CACHE_DIR="$HOME/.cache/zig"; fi
+    \\fi
+    \\if [ -n "${ZIG_GLOBAL_CACHE_DIR+set}" ]; then export ZIG_GLOBAL_CACHE_DIR; fi
+    \\exec env "$@"
+;
+/// Refuse a configuration in which any Run step carries its own environment
+/// map. The build runner stores that map, a copy of the configure-time
+/// environment, in the cached configuration and never refreshes it, so such a
+/// step would test whatever environment first configured this cache (see
+/// `withTools`). Walks every step reachable from a top-level step.
+fn requireLiveEnvironment(b: *std.Build) void {
+    var seen: std.AutoHashMapUnmanaged(*std.Build.Step, void) = .empty;
+    var pending: std.ArrayList(*std.Build.Step) = .empty;
+    for (b.top_level_steps.values()) |top| pending.append(b.allocator, &top.step) catch @panic("out of memory");
+    while (pending.pop()) |step| {
+        if ((seen.getOrPut(b.allocator, step) catch @panic("out of memory")).found_existing) continue;
+        if (step.cast(std.Build.Step.Run)) |run| if (run.environ_map != null) {
+            std.debug.print("error: build step '{s}' sets its own environment, which a cached configuration freezes; pass variables through withTools instead\n", .{step.name});
+            std.process.exit(2);
+        };
+        pending.appendSlice(b.allocator, step.dependencies.items) catch @panic("out of memory");
+    }
 }
 /// A test driver outside Zig (Python, or the compiler on a whole tree) whose
 /// verdict is a pure function of `entries`, its command and the tools: cached,
@@ -169,15 +244,8 @@ fn driver(b: *std.Build, name: []const u8, bytes: u64, list: []const u8) *std.Bu
 /// build needs; harmless on steps that build no guest.
 fn bounded(step: *std.Build.Step.Run, bytes: u64) *std.Build.Step.Run {
     step.step.max_rss = bytes;
-    // Name Zig's global cache explicitly: a test that redirects `HOME` for a child
-    // compiler would otherwise send its `zig cc` invocations to an empty cache.
-    if (std.zig.resolveGlobalCacheDir(step.step.owner.allocator, &step.step.owner.graph.environ_map)) |zig_cache| {
-        step.setEnvironmentVariable("ZIG_GLOBAL_CACHE_DIR", zig_cache);
-    } else |_| {}
+    withTools(step, tool_qbe);
     if (tool_qbe.len != 0) {
-        step.setEnvironmentVariable("MYLANG_QBE", tool_qbe);
-        step.setEnvironmentVariable("MYLANG_ZIG", tool_zig);
-        if (tool_llvm_adapter.len != 0) step.setEnvironmentVariable("MYLANG_LLVM_ADAPTER", tool_llvm_adapter);
         if (install_all) |install| step.step.dependOn(install);
     }
     return step;
@@ -189,18 +257,11 @@ fn bounded(step: *std.Build.Step.Run, bytes: u64) *std.Build.Step.Run {
 /// Guardian.
 fn focused(step: *std.Build.Step.Run, bytes: u64) *std.Build.Step.Run {
     step.step.max_rss = bytes;
-    // Name Zig's global cache explicitly: a test that redirects `HOME` for a child
-    // compiler would otherwise send its `zig cc` invocations to an empty cache.
-    if (std.zig.resolveGlobalCacheDir(step.step.owner.allocator, &step.step.owner.graph.environ_map)) |zig_cache| {
-        step.setEnvironmentVariable("ZIG_GLOBAL_CACHE_DIR", zig_cache);
-    } else |_| {}
+    withTools(step, tool_qbe_focus);
     // A test command must execute and report its selection; otherwise a warm
     // cache reuses the previous verdict and hides the selected-test count.
     step.has_side_effects = true;
     if (tool_qbe_focus.len != 0) {
-        step.setEnvironmentVariable("MYLANG_QBE", tool_qbe_focus);
-        step.setEnvironmentVariable("MYLANG_ZIG", tool_zig);
-        if (tool_llvm_adapter.len != 0) step.setEnvironmentVariable("MYLANG_LLVM_ADAPTER", tool_llvm_adapter);
         if (install_qbe_focus) |qbe| step.step.dependOn(qbe);
         if (install_exe_focus) |compiler| step.step.dependOn(compiler);
     }
@@ -381,6 +442,7 @@ pub fn build(b: *std.Build) void {
     const qbe_exe = vendoredQbe(b, target);
     tool_inputs = .{ qbe_exe.getEmittedBin(), exe.getEmittedBin() };
     addInputManifests(b);
+    addEnvironmentManifest(b);
     const install_qbe_step = b.addInstallArtifact(qbe_exe, .{});
     b.getInstallStep().dependOn(&install_qbe_step.step);
     // LLVM's adapter is optional at run time; keep its imported modules beside
@@ -855,6 +917,7 @@ pub fn build(b: *std.Build) void {
     identity_run.addFileArg(b.path("tests/runtime_identity_cache.py"));
     identity_run.addArgs(&.{ "--zig", b.graph.zig_exe });
     identity_run.addFileInput(b.path("build_qbe_assets.zig"));
+    identity_run.addFileInput(environment_manifest.?);
     identity_run.expectExitCode(0);
     identity_step.dependOn(&identity_run.step);
     test_step.dependOn(identity_step);
@@ -944,4 +1007,5 @@ pub fn build(b: *std.Build) void {
     addParityBench(b);
     const fmt = b.addFmt(.{ .paths = &.{ b.path("build.zig"), b.path("src"), b.path("tests"), b.path("test") }, .check = true });
     b.step("fmt-check", "Check canonical Zig formatting").dependOn(&fmt.step);
+    requireLiveEnvironment(b);
 }

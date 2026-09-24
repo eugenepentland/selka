@@ -222,8 +222,9 @@ larger number is not a safer one.
 A `zig build` Run step is re-executed only when its cache key changes, and the
 gate's test steps now use that: the root shards, the host-application roots,
 the Python drivers and `mylang doctest` are keyed on the test binary, the
-emitted compiler and `qbe` they run, their command and environment, and the
-repository files listed for them in `build_test_inputs.zig`. Those lists are
+emitted compiler and `qbe` they run, their command, the environment variables
+they depend on, and the repository files listed for them in
+`build_test_inputs.zig`. Those lists are
 expanded on every build by `tests/input_manifest.py`, which writes one content
 manifest per list (a SHA-256 per file); each step declares its manifest, so an
 edited, added, removed or renamed file re-runs exactly the steps whose lists
@@ -235,6 +236,21 @@ receipts make that near-free) and the SPEC merge replay, which reads git
 history. `test-inputs-coverage` fails the gate when a test source names an
 existing repository path that its step does not declare, and
 `-Dtest-rerun=true` re-runs every cached test step when a verdict is in doubt.
+
+Every test step runs in the environment of the `zig build` that runs it. The
+build names the native tools (`MYLANG_QBE`, `MYLANG_ZIG`, `MYLANG_LLVM_ADAPTER`)
+and Zig's global cache through a `sh … env NAME=value` prefix on the command,
+never through `Step.Run.setEnvironmentVariable`: that call copies the whole
+configure-time environment into the step, the build runner stores the copy in
+the cached configuration, and every later build with the same `-D` options ran
+its tests with the `PATH`, `HOME`, `TMPDIR` and `MYLANG_*` of whichever build
+first configured that cache. `build.zig` now refuses to configure when any step
+carries its own environment. Because a live environment is not part of a step's
+cache key, one small step records the variables a verdict depends on (`PATH`,
+`HOME`, `TMPDIR`, `XDG_CACHE_HOME`, `ZIG_GLOBAL_CACHE_DIR`,
+`ZIG_LOCAL_CACHE_DIR` and every `MYLANG_*`) on each build, and every cached test
+step declares that record as an input: a changed variable re-runs the cached
+verdicts, an unchanged one keeps them.
 
 A driver's standard output is sent to standard error, because the build runner
 discards a checked step's standard output and would otherwise hide the report
