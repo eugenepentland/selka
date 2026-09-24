@@ -174,6 +174,28 @@ def main() -> int:
     return first(mut items)
 ```
 
+## Tests
+
+A test's arguments come from the test runner rather than from guest code, so no
+constructor checked them. Every `test_` (or `@test`) function therefore checks,
+on entry and before its own `@requires`, the `@invariant` of every record or
+domain its parameters hold — in fields, collection elements and keys, arrays,
+tuples and union cases — as a precondition of the test naming the parameter.
+A value guest code built already holds its invariants, so a direct call always
+passes these checks. A [property test](tooling/guest-tests.md#property-tests)
+discards a generated input that breaks one, as it discards one that breaks the
+test's own `@requires`; a cases-file argument that breaks one fails the test:
+
+```console
+$ cat cases.json
+{"ranges::test_span": {"arguments": {"span": {"low": "5", "high": "1"}}}}
+$ mylang test ranges.my --cases cases.json
+failed ranges::test_span: R_REQUIRES: test_span requires `self.low <= self.high`: parameter span holds a Span that breaks this invariant: a span never runs backwards
+  in ranges::test_span at ranges.my:8:22
+
+0 passed, 0 cached, 1 failed, 0 skipped
+```
+
 ## Reports, interfaces and caches
 
 A violated contract exits with status 1 like any other trap. `mylang test`

@@ -112,8 +112,10 @@ fn mentionValue(comptime T: type, program: ast.Program, src: source.Source, valu
     return null;
 }
 
-/// The Boolean, message and span of one clause, ready to check.
-const Clause = struct { attribute: ast.Attribute, kind: typed.AssertionKind, subject: []const u8 };
+/// The Boolean, message and span of one clause, ready to check. `context`
+/// explains a clause checked away from its own declaration: an invariant a
+/// test checks on a parameter the harness supplied.
+const Clause = struct { attribute: ast.Attribute, kind: typed.AssertionKind, subject: []const u8, context: ?[]const u8 = null };
 
 /// Bind contract checking to the concrete checker without an import cycle.
 pub fn Checks(comptime Checker: type) type {
@@ -177,14 +179,16 @@ fn contractPrologue(comptime Checker: type, self: *Checker, function: ast.Functi
     const attributes = ast.attributesOf(self.syntax, function.name);
     var any = false;
     for (attributes) |attribute| any = any or attribute.kind == .requires or attribute.kind == .ensures;
-    if (!any) return &.{};
     const subject = if (function.policy.owner) |owner|
         try std.fmt.allocPrint(self.allocator, "{s}.{s}", .{ self.src.text(owner), self.src.text(function.name) })
     else
         self.src.text(function.name);
+    const harness = try harnessPrologue(Checker, self, function, subject, attributes);
+    if (!any) return harness;
     self.contract.subject = subject;
     self.contract.parameters = function.signature.parameters.len;
     var statements: std.ArrayList(typed.StatementId) = .empty;
+    try statements.appendSlice(self.allocator, harness);
     var ensures: std.ArrayList(ast.Attribute) = .empty;
     for (attributes) |attribute| switch (attribute.kind) {
         .requires => try statements.append(self.allocator, try clauseStatement(Checker, self, .{ .attribute = attribute, .kind = .requires, .subject = subject })),
@@ -327,7 +331,11 @@ fn clauseStatement(comptime Checker: type, self: *Checker, clause: Clause) Error
     };
     for (self.resolved_nodes.items[saved_resolved..]) |index| self.resolved[index] = null;
     self.resolved_nodes.shrinkRetainingCapacity(saved_resolved);
-    const note = if (clause.attribute.argument) |literal| try byte_literal.decode(self.allocator, self.src, literal, self.sink) else null;
+    const literal = if (clause.attribute.argument) |argument| try byte_literal.decode(self.allocator, self.src, argument, self.sink) else null;
+    const note = if (clause.context) |context|
+        (if (literal) |text| try std.fmt.allocPrint(self.allocator, "{s}: {s}", .{ context, text }) else context)
+    else
+        literal;
     const clause_text = self.src.text(self.syntax.nodes.items[@backingInt(condition_id)].span);
     const message = try trapMessage(self.allocator, clause.kind, clause.subject, clause_text, note);
     const id: typed.StatementId = @fromBackingInt(self.statements.items.len);
@@ -384,6 +392,168 @@ fn invariantStatement(comptime Checker: type, self: *Checker, attribute: ast.Att
     self.option_facts.clear();
     defer self.option_facts.restore(facts);
     return clauseStatement(Checker, self, .{ .attribute = attribute, .kind = .invariant, .subject = invariant.name });
+}
+
+/// PROPERTY-TEST-2: the invariants a test's parameters must hold, checked on
+/// entry before its own preconditions. A value `mylang test` copies into a
+/// test was never built by a constructor, so no construction checked it; each
+/// clause of every invariant-carrying record, domain, element, entry, case or
+/// field the parameter holds is checked here as a precondition of the test
+/// (`R_REQUIRES`, with the test as the innermost frame), which is how the
+/// runner tells a generated input to discard from a failure. A value built
+/// by guest code already holds its invariants, so a direct call passes them.
+fn harnessPrologue(comptime Checker: type, self: *Checker, function: ast.Function, subject: []const u8, attributes: []const ast.Attribute) Error![]const typed.StatementId {
+    if (self.contract.invariants.count() == 0 or function.signature.parameters.len == 0) return &.{};
+    var marked = false;
+    for (attributes) |attribute| marked = marked or attribute.kind == .@"test";
+    if (!marked and !std.mem.startsWith(u8, self.src.text(function.name), "test_")) return &.{};
+    var statements: std.ArrayList(typed.StatementId) = .empty;
+    for (function.signature.parameters, 0..) |parameter, index| {
+        const walk: Walk = .{ .subject = subject, .parameter = self.src.text(parameter.name), .span = parameter.name };
+        try harnessValue(Checker, self, walk, @fromBackingInt(index), 0, &statements);
+    }
+    return statements.toOwnedSlice(self.allocator);
+}
+
+/// Where a harness check runs and what its trap names: the test, the
+/// parameter whose value is checked, and that parameter's span, which every
+/// check's nodes carry so a trap points into the test's own declaration.
+const Walk = struct { subject: []const u8, parameter: []const u8, span: Span };
+/// How deep into nested values the harness checks reach; generated inputs
+/// nest far less than this.
+const harness_depth = 16;
+
+/// Check every invariant the value held in `slot` carries, then descend into
+/// the values it holds.
+fn harnessValue(comptime Checker: type, self: *Checker, walk: Walk, slot: typed.LocalId, depth: usize, out: *std.ArrayList(typed.StatementId)) Error!void {
+    const ty = self.locals.items[@backingInt(slot)].ty;
+    if (depth > harness_depth or !try carries(Checker, self, ty)) return;
+    if (self.contract.invariants.get(ty)) |invariant| for (invariant.clauses) |attribute| {
+        try out.append(self.allocator, try harnessClause(Checker, self, walk, attribute, invariant, slot));
+    };
+    const record = self.catalog.records[ty.recordIndex()];
+    const b: collections.Builder(Checker) = .{ .checker = self, .span = walk.span };
+    if (record.isCollection()) return harnessCollection(Checker, self, walk, slot, depth, out);
+    if (record.shape.variants) |variants| return out.append(self.allocator, try harnessCases(Checker, self, walk, slot, variants.cases, depth));
+    if (record.shape.array) |array| {
+        const cursor = try b.local(.i64);
+        const element = try hiddenLocal(Checker, self, "self", array.element, walk.span);
+        const read = try b.node(array.element, .{ .index = .{ .base = try b.read(slot), .index = try b.read(cursor) } });
+        return harnessLoop(Checker, self, walk, .{ .cursor = cursor, .count = try b.integer(@intCast(array.length)), .binds = &.{.{ .slot = element, .value = read }} }, depth, out);
+    }
+    if (record.shape.domain != null) return;
+    for (record.fields, 0..) |field, index| {
+        if (!try carries(Checker, self, field.ty)) continue;
+        const held = try hiddenLocal(Checker, self, "self", field.ty, walk.span);
+        const value = try b.node(field.ty, .{ .field = .{ .base = try b.read(slot), .index = index } });
+        try out.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = held, .value = value } }));
+        try harnessValue(Checker, self, walk, held, depth + 1, out);
+    }
+}
+/// One iteration of a harness loop: the index local, the bound it runs
+/// below, and the locals each iteration binds before checking them.
+const Iteration = struct { cursor: typed.LocalId, count: typed.NodeId, binds: []const typed.Store };
+/// A list's elements, or a dictionary's keys and values, or a set's elements,
+/// each checked in turn by position without copying the collection.
+fn harnessCollection(comptime Checker: type, self: *Checker, walk: Walk, slot: typed.LocalId, depth: usize, out: *std.ArrayList(typed.StatementId)) Error!void {
+    const b: collections.Builder(Checker) = .{ .checker = self, .span = walk.span };
+    const record = self.catalog.records[self.locals.items[@backingInt(slot)].ty.recordIndex()];
+    const cursor = try b.local(.i64);
+    const position = try b.read(cursor);
+    var binds: std.ArrayList(typed.Store) = .empty;
+    const element = record.shape.buffer.?;
+    if (record.collection.key) |key| {
+        if (try carries(Checker, self, key)) try binds.append(self.allocator, .{ .slot = try hiddenLocal(Checker, self, "self", key, walk.span), .value = try b.operation(slot, .key_at, &.{position}) });
+        if (try carries(Checker, self, element)) try binds.append(self.allocator, .{ .slot = try hiddenLocal(Checker, self, "self", element, walk.span), .value = try b.operation(slot, .value_at, &.{position}) });
+    } else try binds.append(self.allocator, .{ .slot = try hiddenLocal(Checker, self, "self", element, walk.span), .value = try b.operation(slot, .read, &.{position}) });
+    try harnessLoop(Checker, self, walk, .{ .cursor = cursor, .count = try b.length(slot), .binds = binds.items }, depth, out);
+}
+/// `for cursor in range(count)`: bind each iteration's locals and check them.
+fn harnessLoop(comptime Checker: type, self: *Checker, walk: Walk, iteration: Iteration, depth: usize, out: *std.ArrayList(typed.StatementId)) Error!void {
+    const b: collections.Builder(Checker) = .{ .checker = self, .span = walk.span };
+    const limit = try b.local(.i64);
+    try out.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = limit, .value = iteration.count } }));
+    try out.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = iteration.cursor, .value = try b.integer(0) } }));
+    var body: std.ArrayList(typed.StatementId) = .empty;
+    for (iteration.binds) |bind| {
+        try body.append(self.allocator, try b.stmt(.{ .initialize = bind }));
+        try harnessValue(Checker, self, walk, bind.slot, depth + 1, &body);
+    }
+    const i = try b.read(iteration.cursor);
+    const loop_id = self.loops.next;
+    self.loops.next += 1;
+    try out.append(self.allocator, try b.stmt(.{ .loop = .{
+        .id = loop_id,
+        .condition = try b.binary(.lt, i, try b.read(limit), .bool),
+        .body = try b.stmt(.{ .block = try body.toOwnedSlice(self.allocator) }),
+        .step = try b.stmt(.{ .assign = .{ .slot = iteration.cursor, .value = try b.binary(.add, i, try b.integer(1), .i64) } }),
+    } }));
+}
+/// A union, `Option` or `Result`: one arm per case, checking the payload of
+/// the cases whose payload carries an invariant.
+fn harnessCases(comptime Checker: type, self: *Checker, walk: Walk, slot: typed.LocalId, cases: []const typed.Variant, depth: usize) Error!typed.StatementId {
+    const b: collections.Builder(Checker) = .{ .checker = self, .span = walk.span };
+    const arms = try self.allocator.alloc(typed.MatchArm, cases.len);
+    for (cases, arms, 0..) |case, *arm, tag| {
+        var body: std.ArrayList(typed.StatementId) = .empty;
+        var payload: ?typed.LocalId = null;
+        if (case.payload) |payload_type| if (try carries(Checker, self, payload_type)) {
+            payload = try hiddenLocal(Checker, self, "self", payload_type, walk.span);
+            try harnessValue(Checker, self, walk, payload.?, depth + 1, &body);
+        };
+        arm.* = .{ .tag = tag, .slot = payload, .body = try b.stmt(.{ .block = try body.toOwnedSlice(self.allocator) }) };
+    }
+    return b.stmt(.{ .match = .{ .value = try b.read(slot), .arms = arms } });
+}
+/// One invariant clause checked on a harness-supplied value, as a
+/// precondition of the test that names the parameter holding it.
+fn harnessClause(comptime Checker: type, self: *Checker, walk: Walk, attribute: ast.Attribute, invariant: Invariant, held: typed.LocalId) Error!typed.StatementId {
+    var scope: std.StringHashMapUnmanaged(typed.LocalId) = .empty;
+    try scope.put(self.allocator, "self", held);
+    const saved_active = self.active;
+    self.active = scope;
+    defer self.active = saved_active;
+    const saved_owner = self.owner;
+    if (invariant.domain) self.owner = self.locals.items[@backingInt(held)].ty;
+    defer self.owner = saved_owner;
+    const facts = try self.option_facts.snapshot(self.allocator);
+    self.option_facts.clear();
+    defer self.option_facts.restore(facts);
+    const checked_nodes = self.nodes.items.len;
+    const checked_statements = self.statements.items.len;
+    const context = try std.fmt.allocPrint(self.allocator, "parameter {s} holds a {s} that breaks this invariant", .{ walk.parameter, invariant.name });
+    const statement = try clauseStatement(Checker, self, .{ .attribute = attribute, .kind = .requires, .subject = walk.subject, .context = context });
+    // The clause is declared on the type, possibly in another module; its
+    // check runs in the test, so it reports the parameter's own location.
+    for (self.nodes.items[checked_nodes..]) |*checked| checked.span = walk.span;
+    for (self.statements.items[checked_statements..]) |*checked| checked.span = walk.span;
+    return statement;
+}
+/// Whether a value of this type holds, at any depth a generator reaches, a
+/// record or domain that carries `@invariant`. A `class` is never generated
+/// and never descended into.
+fn carries(comptime Checker: type, self: *Checker, ty: typed.Type) Error!bool {
+    var seen: std.AutoHashMapUnmanaged(typed.Type, void) = .empty;
+    defer seen.deinit(self.allocator);
+    return reach(Checker, self, ty, &seen);
+}
+fn reach(comptime Checker: type, self: *Checker, ty: typed.Type, seen: *std.AutoHashMapUnmanaged(typed.Type, void)) Error!bool {
+    if (!ty.isAggregate()) return false;
+    if (self.contract.invariants.contains(ty)) return true;
+    if ((try seen.getOrPut(self.allocator, ty)).found_existing) return false;
+    const record = self.catalog.records[ty.recordIndex()];
+    if (record.isManagedRecord()) return false;
+    if (record.isCollection()) {
+        if (record.collection.key) |key| if (try reach(Checker, self, key, seen)) return true;
+        return reach(Checker, self, record.shape.buffer.?, seen);
+    }
+    if (record.shape.variants) |variants| {
+        for (variants.cases) |case| if (case.payload) |payload| if (try reach(Checker, self, payload, seen)) return true;
+        return false;
+    }
+    if (record.shape.array) |array| return reach(Checker, self, array.element, seen);
+    for (record.fields) |field| if (try reach(Checker, self, field.ty, seen)) return true;
+    return false;
 }
 
 /// Check the argument of one `old(...)` call in the entry scope and capture it

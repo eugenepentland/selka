@@ -385,3 +385,29 @@ test "contracts: a contract trap message folds its clause and the record reads b
     try t.expect(trap_detail.contract(arena.allocator(), "R_ASSERT", record) == null);
     try t.expect(trap_detail.messageTrap("R_INVARIANT"));
 }
+
+// spec: PROPERTY-TEST-2
+test "contracts: a test checks its parameters' invariants on entry and passes every value guest code built" {
+    try returns(
+        \\@invariant(self.low <= self.high)
+        \\record Span:
+        \\    low: int
+        \\    high: int
+        \\
+        \\record Holder:
+        \\    spans: list[Span]
+        \\    best: Option[Span]
+        \\
+        \\def test_holder(holder: Holder, keyed: dict[str, Span], pair: tuple[Span, int]) -> bool:
+        \\    first, _ = pair
+        \\    return len(holder.spans) + len(keyed) == 3 and first.low == 1
+        \\
+        \\def plain(holder: Holder) -> int:
+        \\    return len(holder.spans)
+        \\
+        \\def main() -> int:
+        \\    holder = Holder(spans=[Span(1, 2), Span(3, 3)], best=Some(Span(0, 9)))
+        \\    passed = test_holder(holder, {"a": Span(-1, 1)}, (Span(1, 4), 0))
+        \\    return plain(holder) + (40 if passed else 0)
+    , 42);
+}
