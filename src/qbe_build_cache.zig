@@ -187,8 +187,9 @@ pub const Cache = struct {
         self.context.remove(job.work);
     }
     /// Build the tool invocation for one staged object. The QBE flavor names a
-    /// per-unit `.ssa` and, unless full LTO emits the object directly, a second
-    /// assembler call; the C and Zig flavors write their source and run one tool.
+    /// per-unit `.ssa` and a second assembler call; the C and Zig flavors write
+    /// their source and run one tool. (The LLVM arm translates in process and
+    /// never stages a tool here: `qbe_build_llvm_compile.zig`.)
     fn prepare(self: Cache, scratch: Scratch, input: []const u8, flavor: Flavor, environment: ?*const std.process.Environ.Map) Error!Job {
         const a = self.context.allocator;
         const key = scratch.key;
@@ -200,14 +201,9 @@ pub const Cache = struct {
                 const source = try std.fs.path.join(a, &.{ work, "unit.ssa" });
                 const assembly = try std.fs.path.join(a, &.{ work, "unit.s" });
                 try self.context.write(source, input);
-                const env = environment orelse try self.adapterEnvironment();
-                const adapter_output = if (self.codegen.lto and self.codegen.llvm) candidate else assembly;
-                const argv = try a.dupe([]const u8, &.{ self.codegen.tool, "-t", "amd64_sysv", "-o", adapter_output, source });
-                const assemble: ?[]const []const u8 = if (!self.codegen.lto or !self.codegen.llvm)
-                    try a.dupe([]const u8, &.{ self.zig, "cc", "-g0", "-c", assembly, "-o", candidate })
-                else
-                    null;
-                return .{ .key = key, .path = path, .candidate = candidate, .work = work, .argv = argv, .environment = env, .assemble = assemble };
+                const argv = try a.dupe([]const u8, &.{ self.codegen.tool, "-t", "amd64_sysv", "-o", assembly, source });
+                const assemble = try a.dupe([]const u8, &.{ self.zig, "cc", "-g0", "-c", assembly, "-o", candidate });
+                return .{ .key = key, .path = path, .candidate = candidate, .work = work, .argv = argv, .environment = environment, .assemble = assemble };
             },
             .c_text => {
                 const source = try std.fs.path.join(a, &.{ work, "unit.c" });
@@ -224,46 +220,6 @@ pub const Cache = struct {
                 return .{ .key = key, .path = path, .candidate = candidate, .work = work, .argv = argv, .environment = null, .assemble = null };
             },
         }
-    }
-    /// The environment every LLVM adapter invocation of one build shares: the
-    /// optimization level, Zig driver, runtime sources, signature sidecar and the
-    /// exact target CPU policy the final link will use.
-    pub fn adapterEnvironment(self: Cache) Error!*const std.process.Environ.Map {
-        const a = self.context.allocator;
-        const environment = try a.create(std.process.Environ.Map);
-        environment.* = try self.context.environ.clone(a);
-        if (!self.codegen.llvm) return environment;
-        try environment.put("MYLANG_QBE_LLVM_OPT", try std.fmt.allocPrint(a, "-O{s}", .{self.codegen.optimization}));
-        try environment.put("MYLANG_QBE_LLVM_ZIG", self.zig);
-        try environment.put("MYLANG_QBE_LLVM_RUNTIME_SOURCES", self.assets);
-        try environment.put("MYLANG_QBE_LLVM_SIGNATURES", try self.signatureSidecar());
-        try environment.put("MYLANG_QBE_LLVM_TARGET_CPU", self.codegen.target_cpu);
-        try environment.put("MYLANG_QBE_LLVM_TARGET_FEATURES", self.codegen.target_features);
-        if (self.codegen.lto) try environment.put("MYLANG_QBE_LLVM_EMIT_LTO_OBJECT", "1");
-        return environment;
-    }
-    /// The per-build JSON sidecar the adapter reads and writes for call-site
-    /// signatures; it lives in this build's private temporary directory.
-    pub fn signatureSidecar(self: Cache) Error![]const u8 {
-        return std.fs.path.join(self.context.allocator, &.{ self.temporary, "llvm-signatures.json" });
-    }
-    /// Publish every unit's signature into the adapter's sidecar before any unit
-    /// is translated. A concurrent build cannot rely on unit order, so this makes
-    /// the table complete first and every call site declares its callee exactly
-    /// as a sequential build would have. It is a no-op outside the LLVM arm.
-    pub fn declareSignatures(self: Cache, units: []const []const u8, environment: *const std.process.Environ.Map) Error!void {
-        if (!self.codegen.llvm) return;
-        const a = self.context.allocator;
-        const work = try self.context.temporary(self.temporary);
-        defer self.context.remove(work);
-        var argv: std.ArrayList([]const u8) = .empty;
-        try argv.appendSlice(a, &.{ self.codegen.tool, "-t", "amd64_sysv", "--signatures-only", "-o", try self.signatureSidecar() });
-        for (units, 0..) |input, index| {
-            const path = try std.fs.path.join(a, &.{ work, try std.fmt.allocPrint(a, "{d}.ssa", .{index}) });
-            try self.context.write(path, input);
-            try argv.append(a, path);
-        }
-        try self.context.command(argv.items, environment);
     }
     /// Publish the fixed runtime translation units as one archive whose single
     /// member merges every unit. `zig build-obj` compiles all C sources in one
@@ -656,7 +612,7 @@ test "LLVM full LTO carries O3 and flto through generated C and final link flags
         .environment = "env",
         .zig = "/zig",
         .mode = "ReleaseFast",
-        .codegen = .{ .tool = "/adapter.py", .llvm = true, .optimization = "3", .lto = true },
+        .codegen = .{ .tool = "/zig", .llvm = true, .optimization = "3", .lto = true },
     };
     const joined = try std.mem.join(context.allocator, " ", try cache.flags());
     try std.testing.expect(std.mem.indexOf(u8, joined, "-O3") != null);

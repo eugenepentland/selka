@@ -109,11 +109,6 @@ var install_qbe_focus: ?*std.Build.Step = null;
 /// The focused prefix pairs the compiler with `qbe`, because tests in the unit
 /// root resolve `mylang` from the directory `MYLANG_QBE` names.
 var install_exe_focus: ?*std.Build.Step = null;
-/// The qualified LLVM adapter source a test driver names through
-/// `MYLANG_LLVM_ADAPTER`: a test binary runs the compiler from a cache directory
-/// that has no `lib/mylang-llvm` beside it, and a `--release` build uses the
-/// LLVM arm, so the adapter must be found the way `qbe` is.
-var tool_llvm_adapter: []const u8 = "";
 /// The emitted `qbe` and compiler binaries. The environment names the tools by
 /// an installed path whose bytes the cache key cannot see, so every cached
 /// step that runs them declares their contents as inputs.
@@ -177,7 +172,6 @@ fn bounded(step: *std.Build.Step.Run, bytes: u64) *std.Build.Step.Run {
     if (tool_qbe.len != 0) {
         step.setEnvironmentVariable("MYLANG_QBE", tool_qbe);
         step.setEnvironmentVariable("MYLANG_ZIG", tool_zig);
-        if (tool_llvm_adapter.len != 0) step.setEnvironmentVariable("MYLANG_LLVM_ADAPTER", tool_llvm_adapter);
         if (install_all) |install| step.step.dependOn(install);
     }
     return step;
@@ -200,7 +194,6 @@ fn focused(step: *std.Build.Step.Run, bytes: u64) *std.Build.Step.Run {
     if (tool_qbe_focus.len != 0) {
         step.setEnvironmentVariable("MYLANG_QBE", tool_qbe_focus);
         step.setEnvironmentVariable("MYLANG_ZIG", tool_zig);
-        if (tool_llvm_adapter.len != 0) step.setEnvironmentVariable("MYLANG_LLVM_ADAPTER", tool_llvm_adapter);
         if (install_qbe_focus) |qbe| step.step.dependOn(qbe);
         if (install_exe_focus) |compiler| step.step.dependOn(compiler);
     }
@@ -383,13 +376,6 @@ pub fn build(b: *std.Build) void {
     addInputManifests(b);
     const install_qbe_step = b.addInstallArtifact(qbe_exe, .{});
     b.getInstallStep().dependOn(&install_qbe_step.step);
-    // LLVM's adapter is optional at run time; keep its imported modules beside
-    // its entry point so an installed compiler needs no source checkout.
-    for ([_][]const u8{ "qbe_llvm.py", "llvm_emit.py", "runtime_signatures.py", "amd64_sysv.py", "sticky_loops.py" }) |file| {
-        const source = b.path(b.pathJoin(&.{ "experiments", "llvm-backend", file }));
-        const install = b.addInstallFileWithDir(source, .lib, b.pathJoin(&.{ "mylang-llvm", file }));
-        b.getInstallStep().dependOn(&install.step);
-    }
     // Guest-running drivers invoke an uninstalled compiler with no tools beside it
     // and none on `PATH`; name the vendored tools for them through the environment.
     // The build runs with the project root as its working directory, and the
@@ -397,10 +383,6 @@ pub fn build(b: *std.Build) void {
     const root = std.Io.Dir.cwd().realPathFileAlloc(b.graph.io, ".", b.allocator) catch @panic("build root");
     tool_qbe = b.pathJoin(&.{ root, "zig-out", "bin", "qbe" });
     tool_zig = b.graph.zig_exe;
-    // A test binary runs the compiler from a cache directory with no
-    // `lib/mylang-llvm` beside it, and a `--release` build uses the LLVM arm,
-    // so name the adapter source the same way `qbe` is named.
-    tool_llvm_adapter = b.pathJoin(&.{ root, "experiments", "llvm-backend", "qbe_llvm.py" });
     // Focused tests need `qbe` on disk but must stay off the gated install graph.
     // A separate, unattached copy of the same binaries gives them a stable path
     // without pulling in Guardian or the other installed artifacts. It is a file
@@ -430,10 +412,6 @@ pub fn build(b: *std.Build) void {
     prebuild.step.max_rss = rss.parity;
     prebuild.addArgs(&.{ "emit-runtime", "--zig", b.graph.zig_exe, "--qbe" });
     prebuild.addFileArg(qbe_exe.getEmittedBin());
-    // The release path links an LLVM/bitcode runtime archive, so the prebuild
-    // needs the qualified adapter; it lives in the source tree until installed.
-    prebuild.addArg("--llvm-adapter");
-    prebuild.addArg(b.pathJoin(&.{ root, "experiments", "llvm-backend", "qbe_llvm.py" }));
     prebuild.addArg("--out");
     const runtime_out = prebuild.addOutputDirectoryArg("mylang-runtime");
     prebuild.addArg("--work");
@@ -451,7 +429,6 @@ pub fn build(b: *std.Build) void {
     const host_tools = b.addOptions();
     host_tools.addOptionPath("qbe", qbe_exe.getEmittedBin());
     host_tools.addOption([]const u8, "zig", b.graph.zig_exe);
-    host_tools.addOption([]const u8, "llvm_adapter", b.pathJoin(&.{ root, "experiments", "llvm-backend", "qbe_llvm.py" }));
     const host_native = b.createModule(.{ .root_source_file = b.path("src/host_native.zig"), .target = target, .optimize = optimize });
     host_native.addImport("qbe_build", native_build);
     host_native.addImport("host_tools", host_tools.createModule());

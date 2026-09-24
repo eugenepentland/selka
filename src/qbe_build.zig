@@ -15,6 +15,7 @@ const receipts = @import("qbe_build_receipt.zig");
 const batch = @import("qbe_build_batch.zig");
 const tool_spawn = @import("qbe_build_spawn.zig");
 const direct_link = @import("qbe_build_link.zig");
+const llvm_compile = @import("qbe_build_llvm_compile.zig");
 /// The linker flag that drops every section a program never references.
 const gc_sections = "-Wl,--gc-sections";
 /// The manifest array that lists every emitted unit.
@@ -614,16 +615,14 @@ const runtime_flavors = [_]RuntimeFlavor{
 /// backend flavor and publish them, hashed by their portable identity, into `--out`
 /// so `zig build` can install them beside the compiler. `--work` names a scratch
 /// cache the step discards. A later `mylang build` links a matching install directly
-/// instead of compiling it. `--llvm-adapter` names the adapter the LLVM flavors are
-/// built with; without it only the QBE flavors are published, so a Python-less
-/// prebuild still works.
+/// instead of compiling it. Every flavor is published: the LLVM ones need nothing
+/// beyond Zig, because the translator is part of this compiler (LLVM-ZIG-1).
 pub fn emitRuntime(process: std.process.Init, args: []const []const u8) Error!u8 {
     var context = try fs.Context.init(process.gpa, process.io, process.environ_map);
     defer context.deinit();
     const a = context.allocator;
     var zig_path: []const u8 = "zig";
     var qbe_path: []const u8 = "qbe";
-    var llvm_adapter: []const u8 = "";
     var out: []const u8 = "";
     var work: []const u8 = "";
     var index: usize = 0;
@@ -634,8 +633,6 @@ pub fn emitRuntime(process: std.process.Init, args: []const []const u8) Error!u8
             zig_path = value;
         } else if (std.mem.eql(u8, flag, "--qbe")) {
             qbe_path = value;
-        } else if (std.mem.eql(u8, flag, "--llvm-adapter")) {
-            llvm_adapter = value;
         } else if (std.mem.eql(u8, flag, "--out")) {
             out = value;
         } else if (std.mem.eql(u8, flag, "--work")) {
@@ -646,12 +643,11 @@ pub fn emitRuntime(process: std.process.Init, args: []const []const u8) Error!u8
     out = try context.absolute(out);
     try checkHost(builtin.os.tag, builtin.cpu.arch);
     for (runtime_flavors) |flavor| {
-        if (flavor.llvm and llvm_adapter.len == 0) continue;
         const parsed: options.Options = .{
             .source = "runtime",
             .output = "runtime",
             .zig = zig_path,
-            .codegen = if (flavor.llvm) .{ .llvm = .{ .adapter = llvm_adapter, .optimization = "3", .lto = flavor.lto } } else .{ .qbe = qbe_path },
+            .codegen = if (flavor.llvm) .{ .llvm = .{ .optimization = "3", .lto = flavor.lto } } else .{ .qbe = qbe_path },
             .cache = try std.fs.path.join(a, &.{ work, flavor.mode, flavor.flavor }),
             .mode = flavor.mode,
         };
@@ -702,10 +698,6 @@ fn validate(allocator: std.mem.Allocator, manifest: std.json.Value) !void {
     }
     if (!entry_found) return error.InvalidNativeManifest;
 }
-/// One sorted manifest unit and the object-cache state it reached, kept together
-/// so a failed wave can reclaim the scratch of every job it started. `text` is
-/// the unit's QBE text once a miss needed it (a lean unit's is read then).
-const Unit = struct { value: std.json.Value, staged: cache_api.Staged = undefined, object: cache_api.Object = undefined, text: []const u8 = "" };
 /// One function's QBE footprint: its blocks, its temporaries, and the bytes
 /// QBE is estimated to need for them.
 const QbeFootprint = struct { blocks: u64, temporaries: u64, bytes: u64 };
@@ -766,12 +758,6 @@ fn syntheticIl(allocator: std.mem.Allocator, blocks: usize, highest: u64) ![]u8 
     try text.print(allocator, "%v{d}\n", .{highest});
     return text.toOwnedSlice(allocator);
 }
-/// How many LLVM units one wave translates at once: the core count, capped so a
-/// hundred-unit build does not start a hundred Python processes and compilers.
-fn concurrency() usize {
-    const cores = std.Thread.getCpuCount() catch 4;
-    return @max(1, @min(cores, 8));
-}
 const State = struct {
     context: fs.Context,
     cache: cache_api.Cache,
@@ -828,43 +814,27 @@ const State = struct {
         // Linked last, so every object above can still pull the members it needs.
         self.runtime = try self.resolveRuntime();
     }
-    /// The LLVM arm: one content-addressed object per unit, the adapter's
-    /// signature sidecar completed first, and the misses translated in waves.
+    /// The LLVM arm (LLVM-ZIG-1): one content-addressed object per unit. An
+    /// object is named by its unit text's digest, so a hit never reads the
+    /// text; the misses are translated in process and compiled concurrently
+    /// (`qbe_build_llvm_compile.zig`), reading a lean unit's text from the
+    /// fragment store only then (`QBE-FRAGMENT-REUSE-1`).
     fn compileUnits(self: *State, functions: []const std.json.Value) !void {
         const a = self.context.allocator;
-        const environment = try self.cache.adapterEnvironment();
-        const units = try a.alloc(Unit, functions.len);
-        for (functions, 0..) |function, index| units[index] = .{ .value = function };
-        var misses: std.ArrayList(usize) = .empty;
-        // An object is named by its unit text's digest, so a hit never reads the
-        // text; a lean unit's text is read from the fragment store only here, for
-        // the objects that must be built (`QBE-FRAGMENT-REUSE-1`).
-        for (units, 0..) |*unit, index| {
-            const key = try self.cache.digestKey(try lean.digest(a, unit.value));
-            if (try self.cache.cached(key)) |object| {
-                unit.staged = .{ .hit = object };
-                unit.object = object;
-                continue;
-            }
-            unit.text = try lean.text(self.context, self.textStore(), unit.value);
-            unit.staged = .{ .miss = try self.cache.stageAt(key, unit.text, .qbe, environment) };
-            try misses.append(a, index);
+        const objects = try a.alloc(cache_api.Object, functions.len);
+        var misses: std.ArrayList(llvm_compile.Miss) = .empty;
+        for (functions, objects, 0..) |function, *object, index| {
+            const key = try self.cache.digestKey(try lean.digest(a, function));
+            if (try self.cache.cached(key)) |hit| object.* = hit else try misses.append(a, .{ .unit = index, .key = key });
         }
-        // A concurrent LLVM build cannot rely on unit order to fill the adapter's
-        // call-site signature sidecar, so it is made complete before any unit
-        // translates. A build that compiles nothing needs no sidecar at all.
-        if (misses.items.len != 0 and self.cache.codegen.llvm) {
-            const il = try a.alloc([]const u8, units.len);
-            for (units, il) |unit, *text| text.* = if (unit.text.len != 0) unit.text else try lean.text(self.context, self.textStore(), unit.value);
-            try self.cache.declareSignatures(il, environment);
+        if (misses.items.len != 0) {
+            const built = try llvm_compile.build(.{ .cache = self.cache, .units = functions, .store = self.textStore(), .misses = misses.items });
+            for (misses.items, built) |miss, object| objects[miss.unit] = object;
         }
-        errdefer for (misses.items) |index| self.cache.discard(units[index].staged.miss);
-        try self.buildMisses(units, misses.items);
-        for (units) |unit| {
-            const object = unit.object;
+        for (functions, objects) |function, object| {
             try self.add(object);
             self.reused += @intFromBool(object.reused);
-            try self.records.append(a, .{ .name = v.text(v.get(unit.value, "name")), .symbol = v.text(v.get(unit.value, "symbol")), .key = object.key, .object = object.path, .reused = object.reused });
+            try self.records.append(a, .{ .name = v.text(v.get(function, "name")), .symbol = v.text(v.get(function, "symbol")), .key = object.key, .object = object.path, .reused = object.reused });
         }
     }
     /// QBE-BATCH-1: the QBE arm plans its units into module batches, reuses
@@ -968,16 +938,6 @@ const State = struct {
             .miss => |job| try misses.append(self.context.allocator, .{ .key = job.key, .object = object, .input = .{ .staged = job } }),
         }
     }
-    /// Build every staged LLVM miss. The adapter is one Python process per
-    /// unit and dominates a cold build, so its units start in concurrent waves.
-    fn buildMisses(self: *State, units: []Unit, misses: []const usize) !void {
-        const width = concurrency();
-        var start: usize = 0;
-        while (start < misses.len) : (start += width) {
-            try self.spawnWave(units, misses[start..@min(start + width, misses.len)]);
-        }
-        for (misses) |index| units[index].object = try self.cache.publish(units[index].staged.miss);
-    }
     /// QBE-SIZE-LIMIT-1: refuse, before QBE starts, a function whose QBE memory
     /// estimate (`qbeRefusal`) exceeds the address-space ceiling QBE inherits
     /// from this process, naming the function and the two ways out, instead of
@@ -995,33 +955,6 @@ const State = struct {
         );
         std.Io.File.stderr().writeStreamingAll(self.context.io, message) catch return error.NativeToolFailed;
         return error.NativeToolFailed;
-    }
-    /// Start one wave's tools at once and reap them all. Diagnostics stream to
-    /// this process's stderr; the first failure is reported only after every
-    /// started child has been waited on, so no zombie outlives the wave.
-    fn spawnWave(self: *State, units: []Unit, wave: []const usize) fs.Error!void {
-        const a = self.context.allocator;
-        const children = try a.alloc(tool_spawn.Started, wave.len);
-        var started: usize = 0;
-        var failure: ?fs.Error = null;
-        for (wave) |index| {
-            const job = units[index].staged.miss;
-            // QBE-SPAWN-1: started without copying this process; diagnostics
-            // stream straight to this process's standard error.
-            children[started] = tool_spawn.start(a, .{ .argv = job.argv, .environment = job.environment, .capture = false }) catch |err| {
-                failure = err;
-                break;
-            };
-            started += 1;
-        }
-        for (children[0..started]) |child| {
-            const finished = tool_spawn.finish(a, child) catch |err| {
-                if (failure == null) failure = err;
-                continue;
-            };
-            if (fs.exitCode(finished.term) != 0 and failure == null) failure = error.NativeToolFailed;
-        }
-        if (failure) |err| return err;
     }
     /// Link the prebuilt runtime archive installed beside the compiler when its
     /// hash matches this build's runtime, backend flavor, mode and target; otherwise
@@ -1459,7 +1392,7 @@ test "the object environment names the native driver, never the whole compiler" 
 
 test "LLVM optimization LTO and target policy change native object identity" {
     const a = std.testing.allocator;
-    const base: Environment = .{ .zig = "zig-stamp", .backend = "llvm", .backend_tool = "adapter-hash", .optimization = "3", .lto = false, .zig_version = bundled.zig_version, .mode = "ReleaseFast", .target = "amd64_sysv" };
+    const base: Environment = .{ .zig = "zig-stamp", .backend = "llvm", .backend_tool = "mylang-llvm-translator-v1", .optimization = "3", .lto = false, .zig_version = bundled.zig_version, .mode = "ReleaseFast", .target = "amd64_sysv" };
     const o3 = try environmentJson(a, base);
     defer a.free(o3);
     var changed = base;
@@ -1554,23 +1487,6 @@ test "shared library links bind their own data descriptor symbols" {
     try std.testing.expectEqualStrings("-shared", library_link_arguments[0]);
     try std.testing.expectEqualStrings("-Wl,-Bsymbolic", library_link_arguments[1]);
 }
-// spec: BUILD-BACKEND-3
-test "a concurrent wave reports a tool that will not start and one that fails" {
-    var environment: std.process.Environ.Map = .init(std.testing.allocator);
-    defer environment.deinit();
-    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
-    defer context.deinit();
-    const cache: cache_api.Cache = .{ .context = context, .directory = "objects", .temporary = "work", .assets = "/assets", .environment = "env", .zig = "/bin/true", .mode = "Debug", .codegen = .{ .tool = "/bin/true" } };
-    var state = State{ .context = context, .cache = cache, .manifest = .null };
-    // A tool that is not on disk fails when the wave starts it.
-    const missing: Unit = .{ .value = .null, .staged = .{ .miss = .{ .key = "k", .path = "p", .candidate = "c", .work = "w", .argv = &.{ "/no/such/mylang-tool", "--x" }, .environment = null } } };
-    var missing_wave = [_]Unit{missing};
-    try std.testing.expectError(error.FileNotFound, state.spawnWave(&missing_wave, &.{0}));
-    // A tool that starts and exits nonzero is reported after it is reaped.
-    const failing: Unit = .{ .value = .null, .staged = .{ .miss = .{ .key = "k", .path = "p", .candidate = "c", .work = "w", .argv = &.{ "/bin/sh", "-c", "exit 3" }, .environment = null } } };
-    var failing_wave = [_]Unit{failing};
-    try std.testing.expectError(error.NativeToolFailed, state.spawnWave(&failing_wave, &.{0}));
-}
 // spec: BUILD-BACKEND-4
 test "an unchanged executable is reused only while its link identity holds" {
     try std.testing.expect(native_link.hasInputs(&.{ "main.my", "--link", "a.c" }));
@@ -1591,7 +1507,7 @@ test "an unchanged executable is reused only while its link identity holds" {
         .environment = "env",
         .zig = "/bin/true",
         .mode = "ReleaseFast",
-        .codegen = .{ .tool = "/adapter.py", .llvm = true, .optimization = "3", .lto = true },
+        .codegen = .{ .tool = "/zig", .llvm = true, .optimization = "3", .lto = true },
     };
     var state = State{ .context = context, .cache = cache, .manifest = .null };
     state.runtime = .{ .key = "runtime", .path = "/installed/runtime.a", .reused = true };

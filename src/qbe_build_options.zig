@@ -94,12 +94,12 @@ pub const Codegen = union(enum) {
     qbe: []const u8,
     llvm: Llvm,
 };
-/// Explicit inputs to the qualified LLVM adapter.
-pub const Llvm = struct { adapter: []const u8 = "", optimization: ?[]const u8 = null, lto: bool = false };
+/// Explicit controls of the built-in LLVM backend (LLVM-ZIG-1).
+pub const Llvm = struct { optimization: ?[]const u8 = null, lto: bool = false };
 /// The bare switch that selects the release build, like `cargo build --release`.
 pub const release_flag = "--release";
 /// The build `--release` stands for: `--mode ReleaseFast --backend llvm
-/// --llvm-opt 3 --lto`. An `--llvm-adapter` written after it still applies.
+/// --llvm-opt 3 --lto`.
 pub const release_codegen: Codegen = .{ .llvm = .{ .optimization = "3", .lto = true } };
 /// Whether the arguments ask for the release build. Guest arguments after `--`
 /// belong to a `--run` guest, so they are never read.
@@ -127,7 +127,7 @@ pub fn restatesRelease(args: []const []const u8) bool {
 pub const usage = "usage: mylang build <file.my> (-o <output> | --run) [--project] [--library]\n" ++
     "  --link FILE --link-library NAME --library-path DIR (repeatable)\n" ++
     "  --provider FILE  trusted native provider (executables only)\n" ++
-    "  --backend qbe|llvm  --llvm-adapter PATH  --llvm-opt 0|1|2|3|s|z  --lto\n" ++
+    "  --backend qbe|llvm  --llvm-opt 0|1|2|3|s|z  --lto\n" ++
     "  a build that names no backend uses QBE in either mode (the fast compile)\n" ++
     "  --release  the optimized build: --mode ReleaseFast --backend llvm --llvm-opt 3 --lto\n" ++
     "  --qbe PATH --zig PATH --mode Debug|ReleaseFast (default ReleaseFast) --target amd64_sysv\n" ++
@@ -258,7 +258,6 @@ const Flag = enum {
     @"--qbe",
     @"--zig",
     @"--backend",
-    @"--llvm-adapter",
     @"--llvm-opt",
     @"--mode",
     @"--target",
@@ -291,10 +290,6 @@ fn assign(result: *Options, flag: Flag, value: []const u8) Error!void {
         .@"--backend" => {
             if (std.mem.eql(u8, value, "qbe")) result.codegen = .{ .qbe = "qbe" } else if (std.mem.eql(u8, value, "llvm")) result.codegen = .{ .llvm = .{} } else return error.InvalidBuildArguments;
         },
-        .@"--llvm-adapter" => switch (result.codegen) {
-            .llvm => |*llvm| llvm.adapter = value,
-            .auto, .qbe => return error.InvalidBuildArguments,
-        },
         .@"--llvm-opt" => switch (result.codegen) {
             .llvm => |*llvm| llvm.optimization = value,
             .auto, .qbe => return error.InvalidBuildArguments,
@@ -326,8 +321,7 @@ test "build options accept equals syntax and later tool overrides" {
 }
 
 test "LLVM backend has explicit optimization and full LTO controls" {
-    const parsed = try parse(&.{ "main.my", "-o", "out", "--backend", "llvm", "--llvm-adapter", "/adapter.py", "--llvm-opt", "3", "--lto" });
-    try std.testing.expectEqualStrings("/adapter.py", parsed.codegen.llvm.adapter);
+    const parsed = try parse(&.{ "main.my", "-o", "out", "--backend", "llvm", "--llvm-opt", "3", "--lto" });
     try std.testing.expectEqualStrings("3", parsed.codegen.llvm.optimization.?);
     try std.testing.expect(parsed.codegen.llvm.lto);
 }
@@ -353,21 +347,18 @@ test "--release names ReleaseFast LLVM O3 with LTO and refuses a control it alre
     try std.testing.expectEqualStrings("ReleaseFast", asked.mode);
     try std.testing.expectEqualStrings("3", asked.codegen.llvm.optimization.?);
     try std.testing.expect(asked.codegen.llvm.lto);
-    try std.testing.expectEqualStrings("", asked.codegen.llvm.adapter);
     try std.testing.expect(release(asked.link_arguments));
     try std.testing.expect(!release((try parse(&.{ "main.my", "-o", "out" })).link_arguments));
-    // The adapter stays the caller's to name, and `--unchecked` is a ReleaseFast
-    // policy the shorthand keeps.
-    try std.testing.expectEqualStrings("/a.py", (try parse(&.{ "main.my", "-o", "out", "--release", "--llvm-adapter", "/a.py" })).codegen.llvm.adapter);
+    // `--unchecked` is a ReleaseFast policy the shorthand keeps.
     try std.testing.expect(unchecked((try parse(&.{ "main.my", "--run", "--release", "--unchecked" })).link_arguments));
     // A guest argument that spells the switch after `--` belongs to the guest.
     try std.testing.expectEqual(std.meta.activeTag((try parse(&.{ "main.my", "--run", "--", "--release" })).codegen), .auto);
     try std.testing.expect(std.mem.indexOf(u8, usage, "--release  the optimized build: --mode ReleaseFast --backend llvm --llvm-opt 3 --lto") != null);
     const restated = [_][]const []const u8{
-        &.{ "a.my", "-o", "out", "--release", "--mode", "Debug" },         &.{ "a.my", "-o", "out", "--mode=ReleaseFast", "--release" },
-        &.{ "a.my", "-o", "out", "--release", "--backend", "qbe" },        &.{ "a.my", "-o", "out", "--qbe=/opt/qbe", "--release" },
-        &.{ "a.my", "-o", "out", "--release", "--llvm-opt", "2" },         &.{ "a.my", "-o", "out", "--release", "--lto" },
-        &.{ "a.my", "-o", "out", "--llvm-adapter", "/a.py", "--release" }, &.{ "a.my", "-o", "out", "--release=yes" },
+        &.{ "a.my", "-o", "out", "--release", "--mode", "Debug" },  &.{ "a.my", "-o", "out", "--mode=ReleaseFast", "--release" },
+        &.{ "a.my", "-o", "out", "--release", "--backend", "qbe" }, &.{ "a.my", "-o", "out", "--qbe=/opt/qbe", "--release" },
+        &.{ "a.my", "-o", "out", "--release", "--llvm-opt", "2" },  &.{ "a.my", "-o", "out", "--release", "--lto" },
+        &.{ "a.my", "-o", "out", "--lto", "--release" },            &.{ "a.my", "-o", "out", "--release=yes" },
     };
     for (restated) |args| try std.testing.expectError(error.InvalidBuildArguments, parse(args));
 }

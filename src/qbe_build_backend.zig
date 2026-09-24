@@ -2,6 +2,7 @@
 const std = @import("std");
 const fs = @import("qbe_build_io.zig");
 const options = @import("qbe_build_options.zig");
+const llvm = @import("qbe_build_llvm.zig");
 
 /// Fully resolved native code generator and its cache dimensions.
 pub const Resolved = struct {
@@ -22,68 +23,62 @@ pub fn resolve(context: fs.Context, parsed: options.Options, zig: []const u8) fs
         // link that takes many; `--release` names the LLVM path explicitly.
         .auto => return resolveQbe(context, parsed, zig, "qbe"),
         .qbe => |path| return resolveQbe(context, parsed, zig, path),
-        .llvm => |llvm| return resolveLlvm(context, parsed, zig, llvm),
+        .llvm => |controls| return resolveLlvm(context, parsed, zig, controls),
     }
 }
 
-/// Resolve the QBE tool, honouring the legacy `--qbe qbe_llvm.py` spelling that
-/// names the Python adapter as the assembler-stage replacement.
+/// The basename of the retired Python adapter. `--qbe PATH` naming a file of
+/// this name is the legacy spelling of the LLVM backend at its legacy `-O2`
+/// without LTO; it selects the built-in translator and never reads, resolves
+/// or executes the file (LLVM-ZIG-1).
+pub const legacy_adapter = "qbe_llvm.py";
+
+/// Whether a `--qbe` path is the legacy spelling of the LLVM backend.
+pub fn legacyLlvm(path: []const u8) bool {
+    return std.mem.eql(u8, std.fs.path.basename(path), legacy_adapter);
+}
+
+/// The optimization level the legacy spelling builds at: `MYLANG_QBE_LLVM_OPT`
+/// (default `-O2`), without its `-O`.
+pub fn legacyOptimization(environ: *const std.process.Environ.Map) ?[]const u8 {
+    const legacy = environ.get("MYLANG_QBE_LLVM_OPT") orelse "-O2";
+    const optimization = if (std.mem.startsWith(u8, legacy, "-O")) legacy[2..] else legacy;
+    return if (validOptimization(optimization)) optimization else null;
+}
+
+/// The identity the LLVM arm's objects are keyed by: the translator's version
+/// and whichever of its switches the environment turns off. The translator is
+/// part of this compiler, so its code is also in the driver identity.
+pub fn translatorIdentity(environ: *const std.process.Environ.Map) []const u8 {
+    return llvm.Toggles.read(environ).identity();
+}
+
+/// Resolve the QBE tool; the legacy `--qbe qbe_llvm.py` spelling resolves the
+/// built-in LLVM translator instead of any file.
 fn resolveQbe(context: fs.Context, parsed: options.Options, zig: []const u8, path: []const u8) fs.Error!Resolved {
-    const qbe = try context.executable(path);
-    if (std.mem.eql(u8, std.fs.path.basename(qbe), "qbe_llvm.py")) {
+    if (legacyLlvm(path)) {
         const target = try llvmTarget(context, zig, parsed.target);
-        const legacy = context.environ.get("MYLANG_QBE_LLVM_OPT") orelse "-O2";
-        const optimization = if (std.mem.startsWith(u8, legacy, "-O")) legacy[2..] else legacy;
-        if (!validOptimization(optimization)) return error.NativeToolFailed;
-        return .{ .name = "llvm", .tool = qbe, .tool_identity = try adapterIdentity(context, qbe, zig), .optimization = optimization, .lto = false, .target_cpu = target.cpu, .target_features = target.features };
+        const optimization = legacyOptimization(context.environ) orelse return error.NativeToolFailed;
+        return .{ .name = "llvm", .tool = zig, .tool_identity = translatorIdentity(context.environ), .optimization = optimization, .lto = false, .target_cpu = target.cpu, .target_features = target.features };
     }
+    const qbe = try context.executable(path);
     return .{ .name = "qbe", .tool = qbe, .tool_identity = try context.stamp(qbe), .optimization = "default", .lto = false, .target_cpu = "", .target_features = "" };
 }
 
-/// Resolve the qualified LLVM adapter, defaulting to the copy installed beside
-/// this compiler. A missing adapter is a loud `ToolNotFound`, never a fallback to
-/// another backend.
-fn resolveLlvm(context: fs.Context, parsed: options.Options, zig: []const u8, llvm: options.Llvm) fs.Error!Resolved {
-    const adapter = if (llvm.adapter.len != 0)
-        try context.executable(llvm.adapter)
-    else installed: {
-        const found = (try defaultAdapter(context)) orelse return error.ToolNotFound;
-        break :installed found;
-    };
+/// Resolve the built-in LLVM backend (LLVM-ZIG-1): the translator runs in this
+/// process and its IR is compiled by the bundled clang, so nothing but Zig
+/// itself has to be found.
+fn resolveLlvm(context: fs.Context, parsed: options.Options, zig: []const u8, controls: options.Llvm) fs.Error!Resolved {
     const target = try llvmTarget(context, zig, parsed.target);
     return .{
         .name = "llvm",
-        .tool = adapter,
-        .tool_identity = try adapterIdentity(context, adapter, zig),
-        .optimization = llvm.optimization orelse defaultOpt(parsed.mode),
-        .lto = llvm.lto,
+        .tool = zig,
+        .tool_identity = translatorIdentity(context.environ),
+        .optimization = controls.optimization orelse defaultOpt(parsed.mode),
+        .lto = controls.lto,
         .target_cpu = target.cpu,
         .target_features = target.features,
     };
-}
-
-/// The adapter a build uses when none is named explicitly: `MYLANG_LLVM_ADAPTER`
-/// when a test driver sets it, else the copy installed beside the compiler under
-/// `lib/mylang-llvm/`. Null when neither names a runnable file.
-fn defaultAdapter(context: fs.Context) fs.Error!?[]const u8 {
-    if (context.environ.get("MYLANG_LLVM_ADAPTER")) |path| {
-        const chosen = try context.executable(path);
-        return chosen;
-    }
-    if (context.self_directory.len == 0) return null;
-    const candidate = try std.fs.path.resolve(context.allocator, &.{ context.self_directory, "../lib/mylang-llvm/qbe_llvm.py" });
-    if (!context.exists(candidate)) return null;
-    const chosen = try context.executable(candidate);
-    return chosen;
-}
-
-/// The content identity of the adapter this build would use, or null when none
-/// resolves. It hashes the small Python package and never runs a tool, so callers
-/// that cache by identity can afford it on a warm path.
-pub fn installedAdapterIdentity(context: fs.Context, zig: []const u8) fs.Error!?[]const u8 {
-    const adapter = (try defaultAdapter(context)) orelse return null;
-    const identity = try adapterIdentity(context, adapter, zig);
-    return identity;
 }
 
 const LlvmTarget = struct { cpu: []const u8, features: []const u8 };
@@ -148,48 +143,22 @@ fn validOptimization(value: []const u8) bool {
     return value.len == 1 and std.mem.indexOfScalar(u8, "0123sz", value[0]) != null;
 }
 
-/// Hash every Python source beside the adapter. Installed adapter packages keep
-/// their local imports in this directory; conservatively including all siblings
-/// also invalidates the cache when a newly imported helper replaces an old one.
-/// The Zig stamp is included without running the cold build's target probe.
-pub fn adapterIdentity(context: fs.Context, adapter: []const u8, zig: []const u8) fs.Error![]const u8 {
-    const directory_name = std.fs.path.dirname(adapter) orelse ".";
-    var directory = try std.Io.Dir.cwd().openDir(context.io, directory_name, .{ .iterate = true, .follow_symlinks = false });
-    defer directory.close(context.io);
-    var names: std.ArrayList([]const u8) = .empty;
-    var iterator = directory.iterate();
-    while (try iterator.next(context.io)) |entry| {
-        if (entry.kind != .file or !std.mem.endsWith(u8, entry.name, ".py")) continue;
-        try names.append(context.allocator, try context.allocator.dupe(u8, entry.name));
-    }
-    std.mem.sort([]const u8, names.items, {}, struct {
-        fn less(_: void, left: []const u8, right: []const u8) bool {
-            return std.mem.lessThan(u8, left, right);
-        }
-    }.less);
-    var hash = std.crypto.hash.sha2.Sha256.init(.{});
-    hash.update("mylang-llvm-adapter-v1\x00");
-    hash.update(try context.stamp(zig));
-    for (names.items) |name| {
-        const path = try std.fs.path.join(context.allocator, &.{ directory_name, name });
-        hash.update(name);
-        hash.update("\x00");
-        hash.update(try context.read(path));
-        hash.update("\x00");
-    }
-    var digest: [32]u8 = undefined;
-    hash.final(&digest);
-    return context.allocator.dupe(u8, &std.fmt.bytesToHex(digest, .lower));
+test "LLVM defaults to O3 for ReleaseFast and O0 for Debug" {
+    try std.testing.expectEqualStrings("3", effectiveOpt(.{ .codegen = .{ .llvm = .{} }, .mode = "ReleaseFast" }));
+    try std.testing.expectEqualStrings("0", effectiveOpt(.{ .codegen = .{ .llvm = .{} }, .mode = "Debug" }));
+    try std.testing.expectEqualStrings("2", effectiveOpt(.{ .codegen = .{ .llvm = .{ .optimization = "2" } } }));
 }
 
-test "LLVM defaults to O3 for ReleaseFast and O0 for Debug" {
-    try std.testing.expectEqualStrings("3", effectiveOpt(.{ .codegen = .{ .llvm = .{ .adapter = "adapter" } }, .mode = "ReleaseFast" }));
-    try std.testing.expectEqualStrings("0", effectiveOpt(.{ .codegen = .{ .llvm = .{ .adapter = "adapter" } }, .mode = "Debug" }));
-    try std.testing.expectEqualStrings("2", effectiveOpt(.{ .codegen = .{ .llvm = .{ .adapter = "adapter", .optimization = "2" } } }));
+/// A stand-in for `zig` whose `cc -###` reports a baseline x86-64 target.
+fn fakeZig(context: fs.Context, directory: []const u8) ![]const u8 {
+    const zig = try std.fs.path.join(context.allocator, &.{ directory, "zig" });
+    try context.write(zig, "#!/bin/sh\necho ' \"clang\" \"-cc1\" \"-triple\" \"x86_64-unknown-linux-gnu\" \"-target-cpu\" \"x86-64\"' >&2\n");
+    try std.Io.Dir.cwd().setFilePermissions(std.testing.io, zig, .executable_file, .{});
+    return zig;
 }
 
 // spec: BUILD-BACKEND-2
-test "an unnamed backend resolves QBE in either mode and an LLVM build with no adapter fails loudly" {
+test "an unnamed backend resolves QBE in either mode and an LLVM build resolves no tool beyond Zig" {
     var environment: std.process.Environ.Map = .init(std.testing.allocator);
     defer environment.deinit();
     var temporary = std.testing.tmpDir(.{});
@@ -202,78 +171,64 @@ test "an unnamed backend resolves QBE in either mode and an LLVM build with no a
     try std.Io.Dir.cwd().setFilePermissions(std.testing.io, qbe, .executable_file, .{});
     try environment.put("PATH", directory);
     context.self_directory = "";
-    // An unnamed backend is QBE whatever the mode, so neither build needs the
-    // LLVM adapter that is missing here.
-    try std.testing.expectEqualStrings("qbe", (try resolve(context, .{ .mode = "Debug" }, "/bin/sh")).name);
-    try std.testing.expectEqualStrings("qbe", (try resolve(context, .{ .mode = "ReleaseFast" }, "/bin/sh")).name);
-    // The release build wants the installed LLVM adapter; with none beside the
-    // compiler it refuses loudly rather than silently falling back to QBE.
-    try std.testing.expectError(error.ToolNotFound, resolve(context, .{ .mode = "ReleaseFast", .codegen = options.release_codegen }, "/bin/sh"));
+    const zig = try fakeZig(context, directory);
+    // An unnamed backend is QBE whatever the mode.
+    try std.testing.expectEqualStrings("qbe", (try resolve(context, .{ .mode = "Debug" }, zig)).name);
+    try std.testing.expectEqualStrings("qbe", (try resolve(context, .{ .mode = "ReleaseFast" }, zig)).name);
+    // The release build is the translator inside this compiler: with nothing
+    // installed beside it, it resolves Zig's target policy and names no other tool.
+    const release = try resolve(context, .{ .mode = "ReleaseFast", .codegen = options.release_codegen }, zig);
+    try std.testing.expectEqualStrings("llvm", release.name);
+    try std.testing.expectEqualStrings(zig, release.tool);
+    try std.testing.expectEqualStrings(llvm.version, release.tool_identity);
+    try std.testing.expectEqualStrings("x86-64", release.target_cpu);
+    try std.testing.expect(release.lto);
 }
 
 // spec: BUILD-BACKEND-5
-test "the LLVM adapter resolves from MYLANG_LLVM_ADAPTER before the installed copy" {
-    var named: std.process.Environ.Map = .init(std.testing.allocator);
-    defer named.deinit();
-    var bare: std.process.Environ.Map = .init(std.testing.allocator);
-    defer bare.deinit();
-    var temporary = std.testing.tmpDir(.{});
-    defer temporary.cleanup();
-    const directory = try temporary.dir.realPathFileAlloc(std.testing.io, ".", std.testing.allocator);
-    defer std.testing.allocator.free(directory);
-    const adapter = try std.fs.path.join(std.testing.allocator, &.{ directory, "qbe_llvm.py" });
-    defer std.testing.allocator.free(adapter);
-    // A test driver runs the compiler from a cache directory with no install
-    // beside it, so the environment names the adapter exactly as it names `qbe`.
-    var with_environment = try fs.Context.init(std.testing.allocator, std.testing.io, &named);
-    defer with_environment.deinit();
-    try with_environment.write(adapter, "#!/usr/bin/env python3\n");
-    try std.Io.Dir.cwd().setFilePermissions(std.testing.io, adapter, .executable_file, .{});
-    with_environment.self_directory = "";
-    try named.put("MYLANG_LLVM_ADAPTER", adapter);
-    try std.testing.expectEqualStrings(adapter, (try defaultAdapter(with_environment)).?);
-    // With neither the variable nor an install, nothing resolves.
-    var without_environment = try fs.Context.init(std.testing.allocator, std.testing.io, &bare);
-    defer without_environment.deinit();
-    without_environment.self_directory = "";
-    try std.testing.expectEqual(@as(?[]const u8, null), try defaultAdapter(without_environment));
-}
-
-test "LLVM target probe retains CPU and positive and negative features" {
-    const parsed = try parseTarget(std.testing.allocator, "clang \"-triple\" \"x86_64-unknown-linux-gnu\" \"-target-cpu\" \"x86-64-v3\" \"-target-feature\" \"+avx2\" \"-target-feature\" \"-avx512f\"\n");
-    defer std.testing.allocator.free(parsed.cpu);
-    defer std.testing.allocator.free(parsed.features);
-    try std.testing.expectEqualStrings("x86-64-v3", parsed.cpu);
-    try std.testing.expectEqualStrings("+avx2,-avx512f", parsed.features);
-    const baseline = try parseTarget(std.testing.allocator, "clang \"-triple\" \"x86_64-unknown-linux-gnu\" \"-target-cpu\" \"x86-64\"\n");
-    defer std.testing.allocator.free(baseline.cpu);
-    defer std.testing.allocator.free(baseline.features);
-    try std.testing.expectEqualStrings("x86-64", baseline.cpu);
-    try std.testing.expectEqualStrings("", baseline.features);
-    try std.testing.expectError(error.InvalidTargetProbe, parseTarget(std.testing.allocator, "clang \"-triple\" \"aarch64-unknown-linux-gnu\" \"-target-cpu\" \"generic\"\n"));
-}
-
-test "LLVM adapter identity changes when an imported sibling changes" {
+test "no LLVM build resolves an adapter, and the legacy qbe_llvm.py spelling names the built-in translator" {
     var environment: std.process.Environ.Map = .init(std.testing.allocator);
     defer environment.deinit();
     var temporary = std.testing.tmpDir(.{});
     defer temporary.cleanup();
     var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
     defer context.deinit();
+    context.self_directory = "";
     const directory = try temporary.dir.realPathFileAlloc(std.testing.io, ".", context.allocator);
-    const adapter = try std.fs.path.join(context.allocator, &.{ directory, "adapter.py" });
-    const helper = try std.fs.path.join(context.allocator, &.{ directory, "helper.py" });
-    try context.write(adapter, "import helper\n");
-    try context.write(helper, "VALUE = 1\n");
-    const first = try context.allocator.dupe(u8, try adapterIdentity(context, adapter, "/bin/sh"));
-    try context.write(helper, "VALUE = 2\n");
-    const second = try adapterIdentity(context, adapter, "/bin/sh");
-    try std.testing.expect(!std.mem.eql(u8, first, second));
+    const zig = try fakeZig(context, directory);
+    // The retired variable names nothing that is read.
+    try environment.put("MYLANG_LLVM_ADAPTER", "/no/such/adapter.py");
+    try std.testing.expectEqualStrings(llvm.version, (try resolve(context, .{ .codegen = options.release_codegen }, zig)).tool_identity);
+    // A `--qbe` path named like the old adapter is the LLVM backend at `-O2`
+    // without LTO; the file does not exist and is never looked at.
+    const legacy = try resolve(context, .{ .codegen = .{ .qbe = "/no/such/dir/qbe_llvm.py" } }, zig);
+    try std.testing.expectEqualStrings("llvm", legacy.name);
+    try std.testing.expectEqualStrings("2", legacy.optimization);
+    try std.testing.expect(!legacy.lto);
+    try environment.put("MYLANG_QBE_LLVM_OPT", "-O3");
+    try std.testing.expectEqualStrings("3", (try resolve(context, .{ .codegen = .{ .qbe = "qbe_llvm.py" } }, zig)).optimization);
+    try environment.put("MYLANG_QBE_LLVM_OPT", "-O9");
+    try std.testing.expectError(error.NativeToolFailed, resolve(context, .{ .codegen = .{ .qbe = "qbe_llvm.py" } }, zig));
 }
+
+// spec-case: LLVM-ZIG-1
+test "the translator identity names every switch that is off" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    try std.testing.expectEqualStrings("mylang-llvm-translator-v1", translatorIdentity(&environment));
+    try environment.put("MYLANG_QBE_LLVM_STICKY", "0");
+    try std.testing.expectEqualStrings("mylang-llvm-translator-v1;sticky=0", translatorIdentity(&environment));
+    try environment.put("MYLANG_QBE_LLVM_ALIAS", "0");
+    try environment.put("MYLANG_QBE_LLVM_ELEMENT_GEP", "0");
+    try std.testing.expectEqualStrings("mylang-llvm-translator-v1;alias=0;gep=0;sticky=0", translatorIdentity(&environment));
+    try environment.put("MYLANG_QBE_LLVM_ALIAS", "1");
+    try std.testing.expectEqualStrings("mylang-llvm-translator-v1;gep=0;sticky=0", translatorIdentity(&environment));
+}
+
 /// Return the explicit or mode-derived LLVM optimization level.
 pub fn effectiveOpt(parsed: options.Options) []const u8 {
     return switch (parsed.codegen) {
-        .llvm => |llvm| llvm.optimization orelse defaultOpt(parsed.mode),
+        .llvm => |controls| controls.optimization orelse defaultOpt(parsed.mode),
         .auto, .qbe => defaultOpt(parsed.mode),
     };
 }
