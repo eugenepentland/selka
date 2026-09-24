@@ -650,6 +650,11 @@ fn onCall(e: *Emitter, lines: *Lines, instruction: *const Instruction) Error!voi
     const result_pointer = if (reserved) |buffer| buffer.pointer else null;
     const call: emit.Call = .{ .target = instruction.extra.target, .args = instruction.args, .wanted = wanted, .annotated = instruction.qbe_type, .result_pointer = result_pointer };
     const rendered = try e.renderCall(lines, call);
+    // ERROR-TRACE-5: a trace recorder call costs its caller nothing to inline.
+    if (instruction.directTarget()) |target| if (runtime.traceRecorder(target)) {
+        const last = &lines.items[lines.items.len - 1];
+        last.* = try e.print("{s} {s}", .{ last.*, runtime.free_call });
+    };
     if (instruction.dest == null) return;
     const abi = rendered.aggregate orelse return define(e, lines, instruction, rendered.value);
     var storage: []const u8 = undefined;

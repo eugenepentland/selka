@@ -983,14 +983,15 @@ int mylang_qbe_run(uint64_t (*entry)(void *)) {
     return mylang_qbe_run_options(entry, 0, NULL);
 }
 /* ERROR-TRACE-1: the process-wide error return trace, written only on error
-   paths. A new `Err` value overwrites `origin` and clears `count` with three
-   stores at the offsets `src/qbe_error_trace.zig` spells; every later return
-   or `?` that passes an `Err` on calls the cold recorder below, which keeps the
-   error branch one call wherever an optimizer weighs the code around it. */
+   paths, through the two recorders below: a new `Err` value restarts it and
+   every later return or `?` that passes an `Err` on appends one site. Both are
+   cold and never inlined, so an error branch stays one call wherever an
+   optimizer weighs the code around it. */
 MylQbeErrorTrace myl_qbe_error_trace;
-_Static_assert(offsetof(MylQbeErrorTrace, origin) == 0, "error trace origin ABI");
-_Static_assert(offsetof(MylQbeErrorSite, site) == 8, "error trace site word ABI");
-_Static_assert(offsetof(MylQbeErrorTrace, count) == 16, "error trace count ABI");
+__attribute__((cold, noinline)) void myl_qbe_error_trace_origin(const MylQbeFunction *function, uint64_t site) {
+    myl_qbe_error_trace.origin = (MylQbeErrorSite){ function, site };
+    myl_qbe_error_trace.count = 0;
+}
 __attribute__((cold, noinline)) void myl_qbe_error_trace_append(const MylQbeFunction *function, uint64_t site) {
     uint64_t index = myl_qbe_error_trace.count++;
     myl_qbe_error_trace.ring[index % MYL_QBE_ERROR_TRACE_RING] = (MylQbeErrorSite){ function, site };

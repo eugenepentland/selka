@@ -172,10 +172,14 @@ test "the success paths execute no trace store: a returned Ok checks nothing and
 }
 
 // spec-case: ERROR-TRACE-1
-test "an append is one call to a cold recorder that collects nothing" {
+test "each trace record is one call to a cold recorder that collects nothing" {
     const error_trace = @import("qbe_error_trace.zig");
-    try t.expect(@import("qbe_roots.zig").pureCallee(error_trace.append_symbol));
-    try t.expectEqualStrings("cold nounwind", @import("qbe_build_llvm_runtime.zig").attributes(error_trace.append_symbol));
+    const roots = @import("qbe_roots.zig");
+    const llvm_runtime = @import("qbe_build_llvm_runtime.zig");
+    try t.expect(roots.pureCallee(error_trace.origin_symbol));
+    try t.expect(roots.pureCallee(error_trace.append_symbol));
+    try t.expectEqualStrings("cold nounwind", llvm_runtime.attributes(error_trace.origin_symbol));
+    try t.expectEqualStrings("cold nounwind", llvm_runtime.attributes(error_trace.append_symbol));
 }
 
 // spec: ERROR-TRACE-2

@@ -1,4 +1,4 @@
-//! Error return traces (`ERROR-TRACE-1`): the stores generated code makes on
+//! Error return traces (`ERROR-TRACE-1`): the recorder calls generated code makes on
 //! the error path so that an `Err` reaching `main` or failing a test can say
 //! where it came from.
 //!
@@ -8,14 +8,14 @@
 //! function's `_meta` table and `pc | kind << 32`; the runtime reads the path,
 //! line, column, function name and — for a converting `?` — the case name out of
 //! that table, so no source location enters the unit's text and no string is
-//! built at run time. Every record sits on a path only an `Err` takes:
+//! built at run time. Every recorder call sits on a path only an `Err` takes:
 //! the `Err(...)` construction itself, the error branch a runtime result or a
 //! `?` already has, and — for a `return` whose value is not a literal `Ok(...)`
 //! or `Err(...)` — a branch on the returned tag.
 const std = @import("std");
 const typed = @import("typed.zig");
 const bytecode = @import("bytecode.zig");
-/// Failures reported while emitting the trace stores.
+/// Failures reported while emitting the trace recorder calls.
 pub const Error = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
 /// What one recorded site did; the ordinals are the runtime's
 /// `MYL_QBE_ERROR_*` kinds.
@@ -32,12 +32,8 @@ pub const Kind = enum(u64) {
     /// A `?` wrapped the error in a case of the caller's error union.
     converted = 4,
 };
-/// The runtime's trace, whose origin a new `Err` overwrites in place.
-const trace_symbol = "myl_qbe_error_trace";
-/// Byte offsets of the origin's site word and of the append count in
-/// `MylQbeErrorTrace`; `src/qbe_runtime.c` asserts both.
-const origin_site_offset = 8;
-const count_offset = 16;
+/// The cold runtime recorder that restarts the trace at a new `Err`.
+pub const origin_symbol = "myl_qbe_error_trace_origin";
 /// The cold runtime recorder that appends one site to the trace's ring.
 pub const append_symbol = "myl_qbe_error_trace_append";
 
@@ -60,27 +56,16 @@ pub fn conversionCase(allocator: std.mem.Allocator, records: []const typed.Recor
     return label;
 }
 
-/// Bind the trace stores to the concrete emitter without an import cycle.
+/// Bind the trace recorder calls to the concrete emitter without an import cycle.
 pub fn Lower(comptime E: type) type {
     return struct {
-        /// Record the site of the current instruction. `created` and `produced`
-        /// restart the trace at it with three stores; every other kind appends
-        /// to the ring through one call to a cold runtime recorder, which keeps
-        /// the error branch of a `?` as small as the backends can weigh it.
+        /// Record the site of the current instruction: `created` and `produced`
+        /// restart the trace at it, every other kind appends to the ring. Each
+        /// is one call to a cold runtime recorder that allocates nothing.
         pub fn record(self: *E, kind: Kind) Error!void {
             const meta = self.units[@backingInt(self.function.id)].symbol;
-            const site = siteWord(kind, self.pc);
-            if (kind != .created and kind != .produced) {
-                try self.print(" call ${s}(l extern ${s}_meta, l {d})\n", .{ append_symbol, meta, site });
-                return;
-            }
-            const trace = self.temp();
-            const word = self.temp();
-            const count = self.temp();
-            try self.print(
-                " %v{d} =l copy extern ${s}\n storel extern ${s}_meta, %v{d}\n %v{d} =l add %v{d}, {d}\n storel {d}, %v{d}\n %v{d} =l add %v{d}, {d}\n storel 0, %v{d}\n",
-                .{ trace, trace_symbol, meta, trace, word, trace, origin_site_offset, site, word, count, trace, count_offset, count },
-            );
+            const recorder = if (kind == .created or kind == .produced) origin_symbol else append_symbol;
+            try self.print(" call ${s}(l extern ${s}_meta, l {d})\n", .{ recorder, meta, siteWord(kind, self.pc) });
         }
         /// A new value of variant type `ty` with case `tag`: an `Err` restarts
         /// the trace at this construction, any other value records nothing.

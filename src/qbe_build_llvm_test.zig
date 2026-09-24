@@ -121,6 +121,24 @@ test "a construct the translator does not know is refused with a diagnostic nami
     try std.testing.expect(std.mem.indexOf(u8, diagnostic.message, "has no checked C signature") != null);
 }
 
+// spec: ERROR-TRACE-5
+test "an error trace recorder call is free to inline and no other call is" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const signatures: llvm.Signatures = .empty;
+    const table = try bundledTable(a);
+    const options: llvm.Options = .{ .signatures = &signatures, .runtime = &table };
+    var diagnostic: llvm.Diagnostic = .{ .unit = "traced" };
+    const unit = "export function l $f(l %ctx, l %a0) {\n@start\n jnz %a0, @fail, @ok\n@fail\n" ++
+        " call $myl_qbe_error_trace_origin(l %ctx, l 5)\n call $myl_qbe_error_trace_append(l %ctx, l 6)\n ret 1\n@ok\n ret 0\n}\n";
+    const traced = try llvm.translate(a, unit, options, &diagnostic);
+    try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, traced, "\"call-inline-cost\"=\"0\""));
+    try std.testing.expect(std.mem.indexOf(u8, traced, "declare void @myl_qbe_error_trace_origin(ptr, i64) cold nounwind") != null);
+    const plain = try llvm.translate(a, "export function l $g(l %ctx) {\n@start\n %v =l call $myl_qbe_heap(l %ctx)\n ret %v\n}\n", options, &diagnostic);
+    try std.testing.expect(std.mem.indexOf(u8, plain, "call-inline-cost") == null);
+}
+
 // spec-case: LLVM-ZIG-1
 test "the runtime registry reads helpers from headers and Zig exports and refuses unknown types" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
