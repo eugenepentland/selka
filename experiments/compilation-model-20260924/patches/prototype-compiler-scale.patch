@@ -1,0 +1,102 @@
+diff --git a/src/frontend_cache.zig b/src/frontend_cache.zig
+index 370ea3e6..8ee73cd2 100644
+--- a/src/frontend_cache.zig
++++ b/src/frontend_cache.zig
+@@ -24,7 +24,7 @@ const cache_key = @import("cache_key.zig");
+ pub const format_version = "mylang-frontend-cache-v4";
+ /// Default retention: entries above this are bypassed, and the directory is
+ /// trimmed back to it after a successful store.
+-pub const default_max_bytes: usize = 128 * 1024 * 1024;
++pub const default_max_bytes: usize = 1024 * 1024 * 1024;
+ /// Default per-project cache directory for one-shot commands.
+ pub const default_directory = ".mylang-cache/frontend";
+ 
+diff --git a/src/native_test_snapshot.zig b/src/native_test_snapshot.zig
+index 3ec55f88..de8d92b1 100644
+--- a/src/native_test_snapshot.zig
++++ b/src/native_test_snapshot.zig
+@@ -8,7 +8,7 @@ const project = @import("native_test_root").snapshot_project;
+ pub const Error = fs.Error || std.Io.Dir.OpenError || std.Io.Dir.SelectiveWalker.Error ||
+     std.Io.File.StatError || std.Io.File.ReadPositionalError ||
+     error{ InvalidTestSnapshot, SourceChanged, InvalidTestProviders, ProviderSignatureChanged };
+-const byte_limit = 16 * 1024 * 1024;
++const byte_limit = 256 * 1024 * 1024;
+ /// Entry-point body appended to a library entry so it can be checked as a project.
+ const main_stub = "def main() -> int:\n    return 0\n";
+ /// Captured bytes are independent of subsequent source edits.
+diff --git a/src/nominal_layouts.zig b/src/nominal_layouts.zig
+index b1daec14..5c097898 100644
+--- a/src/nominal_layouts.zig
++++ b/src/nominal_layouts.zig
+@@ -126,7 +126,7 @@ pub const Graph = struct {
+         self.* = .{ .allocator = self.allocator, .sink = self.sink, .templates = self.templates };
+     }
+     fn charge(self: *Graph, span: Span) Error!void {
+-        if (self.budget.work == 100000) return self.sink.fail(eGenericLimit, span, "nominal layout expansion exceeds 100000 checking operations");
++        if (self.budget.work == 100000000) return self.sink.fail(eGenericLimit, span, "nominal layout expansion exceeds 100000 checking operations");
+         self.budget.work += 1;
+     }
+     fn intern(self: *Graph, key: Key, span: Span) Error!Id {
+diff --git a/src/nominal_templates.zig b/src/nominal_templates.zig
+index c2ff6581..8deb854a 100644
+--- a/src/nominal_templates.zig
++++ b/src/nominal_templates.zig
+@@ -321,7 +321,7 @@ pub const Index = struct {
+     /// Resolve syntax to declaration identities without substituting representative concrete types.
+     pub fn expression(self: *Index, span: Span, parameters: []const requirements.Parameter) Error!Expression {
+         const ctx = self.context;
+-        if (self.budget.depth == 256 or self.budget.work == 100000) return ctx.sink.fail("E_GENERIC_LIMIT", span, "nominal type expressions exceed checking depth/work budget");
++        if (self.budget.depth == 256 or self.budget.work == 100000000) return ctx.sink.fail("E_GENERIC_LIMIT", span, "nominal type expressions exceed checking depth/work budget");
+         self.budget.depth += 1;
+         self.budget.work += 1;
+         defer self.budget.depth -= 1;
+diff --git a/src/qbe_build.zig b/src/qbe_build.zig
+index c0563ebc..4600b81d 100644
+--- a/src/qbe_build.zig
++++ b/src/qbe_build.zig
+@@ -922,7 +922,7 @@ const State = struct {
+         const shared = batches.len + groups.len;
+         // The C units start first: the shared metadata is the largest single compile.
+         var work: std.ArrayList(batch.Miss) = .empty;
+-        try self.stageC(&work, "metadata", try outputs.sharedMetadata(a, self.manifest), &objects[shared]);
++        try self.stageC(&work, "metadata", try outputs.sharedMetadata(a, self.manifest, self.cache.codegen.lto), &objects[shared]);
+         try self.stageC(&work, "entry", wrapper, &objects[shared + 1]);
+         try work.appendSlice(a, misses.items);
+         try batch.build(self.cache, work.items, batch.width(self.context.io, work.items.len));
+diff --git a/src/qbe_build_outputs.zig b/src/qbe_build_outputs.zig
+index b1ff55a6..c055d036 100644
+--- a/src/qbe_build_outputs.zig
++++ b/src/qbe_build_outputs.zig
+@@ -20,7 +20,7 @@ const call_position_key = "call_position";
+ pub const Error = host.Error || error{UnsupportedNativeEntry};
+ /// Emit typed runtime descriptors, host bridges, and source-location tables.
+ pub fn metadata(allocator: std.mem.Allocator, manifest: std.json.Value) Error![]const u8 {
+-    return metadataUnit(allocator, manifest, true);
++    return metadataUnit(allocator, manifest, true, true);
+ }
+ /// QBE-BATCH-3: the part of `metadata` a batched build still compiles as one
+ /// C unit — typed runtime descriptors, host bridges, literals and, for a
+@@ -28,11 +28,11 @@ pub fn metadata(allocator: std.mem.Allocator, manifest: std.json.Value) Error![]
+ /// its own functions' location, message and inline tables instead
+ /// (`metadataAssembly`), so an edit that moves one module's lines recompiles
+ /// that module's tables, not the whole program's.
+-pub fn sharedMetadata(allocator: std.mem.Allocator, manifest: std.json.Value) Error![]const u8 {
+-    return metadataUnit(allocator, manifest, false);
++pub fn sharedMetadata(allocator: std.mem.Allocator, manifest: std.json.Value, frame_roots: bool) Error![]const u8 {
++    return metadataUnit(allocator, manifest, false, frame_roots);
+ }
+ /// The metadata C unit, with every function's tables or with none of them.
+-fn metadataUnit(allocator: std.mem.Allocator, manifest: std.json.Value, tables: bool) Error![]const u8 {
++fn metadataUnit(allocator: std.mem.Allocator, manifest: std.json.Value, tables: bool, frame_roots: bool) Error![]const u8 {
+     var buffer: std.Io.Writer.Allocating = .init(allocator);
+     errdefer buffer.deinit();
+     const w = &buffer.writer;
+@@ -46,7 +46,7 @@ fn metadataUnit(allocator: std.mem.Allocator, manifest: std.json.Value, tables:
+     // QBE-BATCH-4: without the tables only the frame-map roots name any, so a
+     // batched program that keeps no frame map declares none, and adding or
+     // removing a function leaves this, the largest single compile, unchanged.
+-    const roots = usesFrameMap(functions);
++    const roots = frame_roots and usesFrameMap(functions);
+     if (tables or roots) for (functions) |unit| {
+         try w.print("extern const MylQbeFunction {s}_meta;\n", .{v.text(v.get(unit, "symbol"))});
+     };

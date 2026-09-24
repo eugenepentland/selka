@@ -1,0 +1,80 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 8K of event 'cpu_core/cycles/P'
+# Event count (approx.): 48365013774
+#
+# Overhead  Symbol                                                                                                                                 IPC   [IPC Coverage]
+# ........  .....................................................................................................................................  ....................
+#
+    24.02%  [.] qbe.Emitter.lower
+    12.27%  [.] mem.findScalarPos__anon_13245
+     5.61%  [.] compiler_rt.memcpy.memcpyFast
+     4.25%  [.] qbe.Emitter.loweredAllocates
+     2.48%  [.] hash.wyhash.Wyhash.hash
+     2.27%  [.] heap.ArenaAllocator.alloc
+     2.11%  [.] crypto.blake3.compressPre
+     1.80%  [.] crypto.blake3.hashMany
+     1.78%  [.] qbe_il_passes.slotDefinition
+     1.75%  [.] qbe.firstPass
+     1.60%  [.] typed_walk.Walker.next
+     1.51%  [.] qbe.Emitter.emitAt
+     1.43%  [.] qbe_aggregate.reachableRead__anon_93085
+     1.23%  [.] qbe.runPasses
+     1.17%  [.] mem.eqlBytes
+     0.66%  [.] qbe_roots.Lower(qbe.Emitter).rootLiveness
+     0.64%  [.] qbe.Emitter.emit
+     0.60%  [.] qbe_liveness.liveAfter
+     0.58%  [.] qbe_il_passes.positionStore
+     0.55%  [.] array_list.Aligned(duplicates.Work,null).append
+     0.48%  [.] qbe.Emitter.headerLabel
+     0.46%  [k] 0xffffffffbc534943
+     0.46%  [k] 0xffffffffbc51da3e
+     0.45%  [.] qbe_scalar.Lower(qbe.Emitter).binary
+     0.43%  [k] 0xffffffffbb830a87
+     0.43%  [.] hash.wyhash.Wyhash.final
+     0.43%  [.] effects.check
+     0.42%  [.] heap.ArenaAllocator.remap
+     0.42%  [.] qbe_fragments.Canon.put__anon_81374
+     0.41%  [.] lower.Emitter.finish
+     0.35%  [.] lexer.tokenize
+     0.34%  [.] sema_expressions.expressionWithTemporaries__anon_154756
+     0.34%  [.] qbe_loop_facts.plan
+     0.31%  [.] qbe_loop_version.Lower(qbe.Emitter).guardStep
+     0.31%  [.] native_types.Catalog.layout
+     0.31%  [.] crypto.sha2.Sha2x32(.{ 1779033703, 3144134277, 1013904242, 2773480762, 1359893119, 2600822924, 528734635, 1541459225 },256).round
+     0.30%  [.] qbe.Emitter.load__anon_85720
+     0.30%  [.] qbe_frame.allocateTemporaries__anon_114264
+     0.28%  [.] native_ir.analyze
+     0.27%  [.] lexer.lex
+     0.25%  [.] lower.Emitter.push
+     0.25%  [.] qbe.Emitter.store
+     0.23%  [k] 0xffffffffbae01268
+     0.23%  [.] qbe_frame.usesTemporary__anon_114339
+     0.22%  [.] Io.Writer.Allocating.drain
+     0.22%  [.] hash_map.Custom(runtime_values.Type,void,hash_map.AutoContext(runtime_values.Type),80).getOrPutContext
+     0.22%  [.] qbe.Emitter.emitOp
+     0.21%  [.] compiler_rt.fastMemset
+     0.21%  [.] sema_collections.Checks(sema.Checker).collectionSyntax
+     0.21%  [.] semantic_key.Collector.addSpan
+     0.20%  [.] ast_copy.Mapper.value__anon_67587
+     0.20%  [.] qbe_frame.allocateSlot__anon_114372
+     0.19%  [.] hash_map.Custom([]const u8,usize,hash_map.StringContext,80).getOrPutAssumeCapacityAdapted__anon_84379
+     0.19%  [.] hash_map.Custom([]const u8,*doctest_command.Unit,hash_map.StringContext,80).grow
+     0.18%  [.] source.Source.locate
+     0.18%  [.] hash_map.Custom(qbe_loop_facts.Node,u32,hash_map.AutoContext(qbe_loop_facts.Node),80).getIndex__anon_117847
+     0.18%  [k] 0xffffffffbb62c90a
+     0.18%  [.] hash_map.getAutoHashFn__struct_117872.hash
+     0.18%  [.] qbe_loop_facts.Analyzer.node
+     0.17%  [.] array_hash_map.Custom([32]u8,qbe_fragments.Entry,array_hash_map.AutoContext([32]u8),true).getIndexAdapted__anon_79836
+     0.17%  [k] 0xffffffffbb70ee67
+     0.17%  [.] json.Stringify.encodeJsonString
+     0.15%  [.] qbe.Emitter.typeDefinitions
+     0.15%  [.] crypto.blake3.ChunkState.update
+     0.15%  [.] qbe_frame.argumentVectorBytes__anon_84144
+     0.15%  [k] 0xffffffffbb64d019
+     0.14%  [.] qbe.Emitter.address
+     0.14%  [.] hash_map.Custom(runtime_values.Type,void,hash_map.AutoContext(runtime_values.Type),80).grow
+     0.13%  [.] lexer.quickQualifiedName

@@ -1,0 +1,29 @@
+{"note": "linkbench.py on the 200k default-mode link after an m240 body edit; baseline compiler integration-183251a9; expected output 69899"}
+{"objects": 3838, "shared_or_entry": 2, "module_objects": 5, "rest": 3831, "mixed": 0}
+{"label": "base", "s": 0.2541, "rc": 0, "load": 1.75, "output_bytes": 90358616}
+{"label": "base:run", "s": 0.0089, "rc": 0, "load": 1.75, "ok": true}
+{"label": "nogc", "s": 0.202, "rc": 0, "load": 1.75, "output_bytes": 90897728}
+{"label": "t1", "s": 0.4042, "rc": 0, "load": 1.75, "output_bytes": 90358616}
+{"label": "nometa", "s": 0.1928, "rc": 0, "load": 1.75, "output_bytes": 40379256}
+{"label": "prelink:ld-r-rest (once)", "s": 0.3132, "rc": 0, "load": 1.75, "output_bytes": 216020280}
+{"label": "prelink:final", "s": 0.3611, "rc": 0, "load": 2.73, "output_bytes": 90358616}
+{"label": "prelink:run", "s": 0.0093, "rc": 0, "load": 2.73, "ok": true}
+{"note": "first dynamic attempt without -Bsymbolic failed: R_X86_64_PC32 cannot be used against symbol <sym>_meta; recompile with -fPIC"}
+{"label": "dynamic:librest.so (once)", "s": 0.5935, "rc": 0, "load": 3.31, "output_bytes": 175465288}
+{"label": "dynamic:libmod.so (per edit)", "s": 0.0051, "rc": 0, "load": 3.31, "output_bytes": 386736}
+{"label": "dynamic:exe (once)", "s": 0.025, "rc": 0, "load": 3.31, "output_bytes": 5182096}
+{"label": "dynamic:run", "s": 0.0382, "rc": 0, "load": 3.31, "ok": true}
+{"label": "dynamic-startup-0:run", "s": 0.039, "rc": 0, "load": 3.31, "ok": true}
+{"label": "dynamic-startup-1:run", "s": 0.0412, "rc": 0, "load": 3.31, "ok": true}
+{"label": "dynamic-startup-2:run", "s": 0.038, "rc": 0, "load": 3.31, "ok": true}
+{"label": "permodule:all libs (once, serial)", "s": 2.542, "libs": 481}
+{"label": "permodule:one module relink (per edit)", "s": 0.0051, "rc": 0, "load": 3.03}
+{"label": "permodule:exe (once)", "s": 0.0336, "rc": 0, "load": 3.03, "output_bytes": 5240064}
+{"label": "permodule-startup-0:run", "s": 0.1149, "rc": 0, "load": 3.03, "ok": true}
+{"label": "permodule-startup-1:run", "s": 0.11, "rc": 0, "load": 3.03, "ok": true}
+{"label": "permodule-startup-2:run", "s": 0.1086, "rc": 0, "load": 3.03, "ok": true}
+{"note": "LD_DEBUG=statistics, per-module layout: 27811055 cycles in the loader, 24423227 in relocation, 42920 symbol relocations, 3235776 relative relocations"}
+{"note": "lldtrace.py 200k at load 2.2: wall 256 ms; ExecuteLinker 222, Link 189, scan relocations 67, markLive 51, load input files 33, write output 25, write sections 23, parse input files 22"}
+{"note": "lldtrace.py 200k at load 8.5: wall 530-765 ms; scan relocations 189-295 ms"}
+{"note": "lldtrace.py 1M (rebuild_link.py, 19007 objects, 452 MB output) at load 8: wall 2814 and 3177 ms; ExecuteLinker 2588, scan relocations 1268, markLive 506, write output 264, write sections 248, load input files 215, parse input files 147; first run through the response file 5.56 s; program prints 338699"}
+{"note": "meta_size.py on the cold 200k manifest: functions 18721, pcs 1589768 (84.9 per function), today 51771184 bytes and 3235699 relocations, compact 5085160 bytes (10.2x)"}

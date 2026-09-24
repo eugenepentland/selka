@@ -1,0 +1,190 @@
+{
+ "files": 3867,
+ "file_bytes": 245377240,
+ "sections": {
+  ".rela.data.rel.ro.*": {
+   "bytes": 82669200,
+   "relocs": 3444550,
+   "count": 26750
+  },
+  ".data.rel.ro.*": {
+   "bytes": 54285696,
+   "relocs": 0,
+   "count": 26750
+  },
+  ".text.*": {
+   "bytes": 33251866,
+   "relocs": 0,
+   "count": 18993
+  },
+  ".relamylang_frame_map": {
+   "bytes": 21319248,
+   "relocs": 888302,
+   "count": 2815
+  },
+  ".strtab": {
+   "bytes": 19358947,
+   "relocs": 0,
+   "count": 3867
+  },
+  ".rela.text.*": {
+   "bytes": 11547816,
+   "relocs": 481159,
+   "count": 18993
+  },
+  ".symtab": {
+   "bytes": 7634760,
+   "relocs": 0,
+   "count": 3867
+  },
+  "mylang_frame_map": {
+   "bytes": 5329812,
+   "relocs": 0,
+   "count": 2815
+  },
+  ".shstrtab": {
+   "bytes": 1405024,
+   "relocs": 0,
+   "count": 9
+  },
+  ".llvm_addrsig": {
+   "bytes": 336997,
+   "relocs": 0,
+   "count": 9
+  },
+  ".rodata.*": {
+   "bytes": 292382,
+   "relocs": 0,
+   "count": 1211
+  },
+  ".eh_frame": {
+   "bytes": 872,
+   "relocs": 0,
+   "count": 9
+  },
+  ".rela.eh_frame": {
+   "bytes": 432,
+   "relocs": 18,
+   "count": 9
+  },
+  ".text": {
+   "bytes": 0,
+   "relocs": 0,
+   "count": 3867
+  },
+  ".note.GNU-stack": {
+   "bytes": 0,
+   "relocs": 0,
+   "count": 3867
+  }
+ },
+ "kinds": {
+  "meta": {
+   "objects": 1043,
+   "file_bytes": 137320856,
+   "sections": {
+    ".rela.data.rel.ro.*": {
+     "bytes": 78796656,
+     "relocs": 3283194,
+     "count": 19022
+    },
+    ".data.rel.ro.*": {
+     "bytes": 52531104,
+     "relocs": 0,
+     "count": 19022
+    },
+    ".strtab": {
+     "bytes": 1844390,
+     "relocs": 0,
+     "count": 1043
+    },
+    ".symtab": {
+     "bytes": 963120,
+     "relocs": 0,
+     "count": 1043
+    },
+    ".rodata.*": {
+     "bytes": 276750,
+     "relocs": 0,
+     "count": 1043
+    },
+    ".text": {
+     "bytes": 0,
+     "relocs": 0,
+     "count": 1043
+    },
+    ".note.GNU-stack": {
+     "bytes": 0,
+     "relocs": 0,
+     "count": 1043
+    }
+   }
+  },
+  "code": {
+   "objects": 2824,
+   "file_bytes": 108056384,
+   "sections": {
+    ".text.*": {
+     "bytes": 33251866,
+     "relocs": 0,
+     "count": 18993
+    },
+    ".relamylang_frame_map": {
+     "bytes": 21319248,
+     "relocs": 888302,
+     "count": 2815
+    },
+    ".strtab": {
+     "bytes": 17514557,
+     "relocs": 0,
+     "count": 2824
+    },
+    ".rela.text.*": {
+     "bytes": 11547816,
+     "relocs": 481159,
+     "count": 18993
+    },
+    ".symtab": {
+     "bytes": 6671640,
+     "relocs": 0,
+     "count": 2824
+    },
+    "mylang_frame_map": {
+     "bytes": 5329812,
+     "relocs": 0,
+     "count": 2815
+    },
+    ".rela.data.rel.ro.*": {
+     "bytes": 3872544,
+     "relocs": 161356,
+     "count": 7728
+    },
+    ".data.rel.ro.*": {
+     "bytes": 1754592,
+     "relocs": 0,
+     "count": 7728
+    },
+    ".shstrtab": {
+     "bytes": 1405024,
+     "relocs": 0,
+     "count": 9
+    },
+    ".llvm_addrsig": {
+     "bytes": 336997,
+     "relocs": 0,
+     "count": 9
+    },
+    ".rodata.*": {
+     "bytes": 15632,
+     "relocs": 0,
+     "count": 168
+    },
+    ".eh_frame": {
+     "bytes": 872,
+     "relocs": 0,
+     "count": 9
+    }
+   }
+  }
+ }
+}
