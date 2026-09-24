@@ -88,7 +88,7 @@ pub const Session = struct {
         const source = if (opts.flags.no_cache)
             try snapshot.captureExcluding(context, opts.source, directory)
         else
-            try snapshot.captureMemoized(context, opts.source, directory, try importsMemoPath(context, directory));
+            try snapshot.captureMemoized(context, opts.source, directory, try importsMemoPath(context, directory, try context.absolute(opts.source)));
         try context.mkdir(directory);
         // Owned scratch: a killed or crashed run cannot remove its snapshot, so
         // the next run's `owned` reclaims it once its owner marker is unlocked.
@@ -198,19 +198,27 @@ pub const Session = struct {
     pub fn interfaceCheckCached(self: Session, source: []const u8, identity: []const u8) Error!std.json.Value {
         const flags = self.options.flags;
         if (flags.no_cache or !self.environment.cacheable) return self.interfaceCheck(source);
-        const path = try self.interfacesPath(identity);
+        const path = try self.interfacesPath();
         if (!flags.force) if (readSealed(self.context, path)) |bytes| {
-            return (try std.json.parseFromSlice(std.json.Value, self.context.allocator, bytes, .{ .allocate = .alloc_always })).value;
+            const line = std.mem.indexOfScalar(u8, bytes, '\n') orelse bytes.len;
+            if (line < bytes.len and std.mem.eql(u8, bytes[0..line], identity)) {
+                return (try std.json.parseFromSlice(std.json.Value, self.context.allocator, bytes[line + 1 ..], .{ .allocate = .alloc_always })).value;
+            }
         };
         const output = try self.interfaceOutput(source);
         const parsed = (try std.json.parseFromSlice(std.json.Value, self.context.allocator, output.stdout, .{ .allocate = .alloc_always })).value;
-        if (onlyReports(output.stderr)) writeSealed(self.context, path, output.stdout) catch |err| ignoreSessionFailure(err);
+        if (onlyReports(output.stderr)) {
+            const payload = try std.mem.concat(self.context.allocator, u8, &.{ identity, "\n", output.stdout });
+            writeSealed(self.context, path, payload) catch |err| ignoreSessionFailure(err);
+        }
         return parsed;
     }
-    /// Where the contracts of one resolved source identity are kept.
-    fn interfacesPath(self: Session, identity: []const u8) Error![]const u8 {
+    /// The one slot that keeps an entry's latest clean contracts, behind the
+    /// resolved source identity they answer for, so the store never grows by
+    /// an entry per edit.
+    fn interfacesPath(self: Session) Error![]const u8 {
         var hash = std.crypto.hash.Blake3.init(.{});
-        for ([_][]const u8{ "native-test-interfaces-v1", self.hashes[0], self.environment.hash, identity }) |part| {
+        for ([_][]const u8{ "native-test-interfaces-v1", self.hashes[0], self.environment.hash, self.source.entry_path }) |part| {
             var length: [8]u8 = undefined;
             std.mem.writeInt(u64, &length, part.len, .little);
             hash.update(&length);
@@ -614,12 +622,17 @@ pub const Compile = struct {
     };
 };
 
-/// The import memo (`snapshot.Imports`) of this compiler under a cache
-/// directory. Standard-module entries are this compiler's, so the file is
-/// named by its build identity.
-fn importsMemoPath(context: fs.Context, directory: []const u8) Error![]const u8 {
+/// The import memo (`snapshot.Imports`) of one entry and this compiler under
+/// a cache directory. Standard-module entries are this compiler's, and every
+/// test entry keeps its own file, so the programs of a directory run sharing
+/// one cache never overwrite each other's memo.
+fn importsMemoPath(context: fs.Context, directory: []const u8, entry: []const u8) Error![]const u8 {
+    var hash = std.crypto.hash.Blake3.init(.{});
+    hash.update(bundled.compiler_identity);
+    hash.update("\x00");
+    hash.update(entry);
     var digest: [16]u8 = undefined;
-    std.crypto.hash.Blake3.hash(bundled.compiler_identity, &digest, .{});
+    hash.final(&digest);
     const name = try std.fmt.allocPrint(context.allocator, "{s}.memo", .{std.fmt.bytesToHex(digest, .lower)});
     return std.fs.path.join(context.allocator, &.{ directory, "imports", name });
 }
@@ -827,19 +840,23 @@ test "declaration contracts are reused for an unchanged resolved identity and ne
     try std.testing.expectEqual(@as(usize, 1), try interfaceCalls(context, root));
     _ = try session.interfaceCheckCached(entry, "identity-b");
     try std.testing.expectEqual(@as(usize, 2), try interfaceCalls(context, root));
+    _ = try session.interfaceCheckCached(entry, "identity-b");
+    // The entry keeps one slot: the newer identity replaced the older answer.
+    _ = try session.interfaceCheckCached(entry, "identity-a");
+    try std.testing.expectEqual(@as(usize, 3), try interfaceCalls(context, root));
     // A warning must be shown again, so an answer with one is never kept.
     try context.write(try std.fs.path.join(context.allocator, &.{ root, "warn" }), "");
     _ = try session.interfaceCheckCached(entry, "identity-w");
     _ = try session.interfaceCheckCached(entry, "identity-w");
-    try std.testing.expectEqual(@as(usize, 4), try interfaceCalls(context, root));
+    try std.testing.expectEqual(@as(usize, 5), try interfaceCalls(context, root));
     try context.write(try std.fs.path.join(context.allocator, &.{ root, "refuse" }), "");
     try std.testing.expectError(error.ProjectPolicyRejected, session.interfaceCheckCached(entry, "identity-r"));
     try std.testing.expectError(error.ProjectPolicyRejected, session.interfaceCheckCached(entry, "identity-r"));
-    try std.testing.expectEqual(@as(usize, 6), try interfaceCalls(context, root));
+    try std.testing.expectEqual(@as(usize, 7), try interfaceCalls(context, root));
     // A forced run checks again; a `--no-cache` run neither reads nor keeps.
     session.options.flags.force = true;
     try std.testing.expectError(error.ProjectPolicyRejected, session.interfaceCheckCached(entry, "identity-a"));
     session.options.flags = .{ .no_cache = true };
     try std.testing.expectError(error.ProjectPolicyRejected, session.interfaceCheckCached(entry, "identity-a"));
-    try std.testing.expectEqual(@as(usize, 8), try interfaceCalls(context, root));
+    try std.testing.expectEqual(@as(usize, 9), try interfaceCalls(context, root));
 }
