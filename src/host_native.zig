@@ -76,10 +76,9 @@ pub const Request = struct {
 /// tool; `.llvm` asks the driver for the release code generator and pins no
 /// assembler, so the driver's own backend policy decides the rest.
 pub const Backend = enum { qbe, llvm };
-/// Controls for the qualified LLVM adapter. A null value leaves the driver's
+/// Controls for the built-in LLVM backend. A null value leaves the driver's
 /// own default in place rather than restating it here.
 pub const Llvm = struct {
-    adapter: ?[]const u8 = null,
     optimization: ?[]const u8 = null,
     lto: bool = false,
 };
@@ -198,26 +197,12 @@ fn policyArguments(allocator: std.mem.Allocator, io: std.Io, build: BuildOptions
         return args.toOwnedSlice(allocator);
     }
     try args.appendSlice(allocator, &.{ "--backend", "llvm" });
-    if (build.llvm.adapter) |path| {
-        try args.appendSlice(allocator, &.{ "--llvm-adapter", path });
-    } else if (!installedAdapter(allocator, io)) {
-        try args.appendSlice(allocator, &.{ "--llvm-adapter", tools.llvm_adapter });
-    }
     if (build.llvm.optimization) |opt| try args.appendSlice(allocator, &.{ "--llvm-opt", opt });
     if (build.llvm.lto) try args.append(allocator, "--lto");
     return args.toOwnedSlice(allocator);
 }
 fn validateBuild(build: BuildOptions) error{InvalidBuildConfiguration}!void {
-    if (build.backend == .qbe and (build.llvm.adapter != null or build.llvm.optimization != null or build.llvm.lto)) return error.InvalidBuildConfiguration;
-}
-fn installedAdapter(allocator: std.mem.Allocator, io: std.Io) bool {
-    const executable = std.Io.Dir.cwd().realPathFileAlloc(io, "/proc/self/exe", allocator) catch return false;
-    defer allocator.free(executable);
-    const directory = std.fs.path.dirname(executable) orelse return false;
-    const candidate = std.fs.path.resolve(allocator, &.{ directory, "../lib/mylang-llvm/qbe_llvm.py" }) catch return false;
-    defer allocator.free(candidate);
-    std.Io.Dir.cwd().access(io, candidate, .{ .execute = true }) catch return false;
-    return true;
+    if (build.backend == .qbe and (build.llvm.optimization != null or build.llvm.lto)) return error.InvalidBuildConfiguration;
 }
 /// A host application runs from an arbitrary working directory, so its shared
 /// object cache lives with the user's other caches rather than beside the guest.
@@ -271,20 +256,20 @@ test "a host names its guest's accounting and pins an assembler only for QBE" {
     const bounded_qbe = try joinedPolicy(allocator, .{ .qbe = "/tools/qbe" });
     defer allocator.free(bounded_qbe);
     try std.testing.expectEqualStrings("--step-accounting --qbe /tools/qbe", bounded_qbe);
-    const release = try joinedPolicy(allocator, .{ .backend = .llvm, .accounting = .frames, .llvm = .{ .adapter = "/adapter.py", .optimization = "3" } });
+    const release = try joinedPolicy(allocator, .{ .backend = .llvm, .accounting = .frames, .llvm = .{ .optimization = "3" } });
     defer allocator.free(release);
-    try std.testing.expectEqualStrings("--max-frames=1024 --backend llvm --llvm-adapter /adapter.py --llvm-opt 3", release);
+    try std.testing.expectEqualStrings("--max-frames=1024 --backend llvm --llvm-opt 3", release);
     try std.testing.expectEqualDeep(@as([]const []const u8, &.{step_budget}), Accounting.steps.bounds());
     try std.testing.expectEqualDeep(@as([]const []const u8, &.{ frame_budget, wall_clock_budget }), Accounting.frames.bounds());
 }
 
 // spec-case: HOST-GUEST-POLICY-1
-test "an explicit host LLVM adapter carries optimization and LTO to the driver" {
+test "a host LLVM policy carries optimization and LTO to the driver and names no adapter" {
     const allocator = std.testing.allocator;
     const joined = try joinedPolicy(allocator, .{
         .backend = .llvm,
-        .llvm = .{ .adapter = "/adapter.py", .optimization = "3", .lto = true },
+        .llvm = .{ .optimization = "3", .lto = true },
     });
     defer allocator.free(joined);
-    try std.testing.expectEqualStrings("--step-accounting --backend llvm --llvm-adapter /adapter.py --llvm-opt 3 --lto", joined);
+    try std.testing.expectEqualStrings("--step-accounting --backend llvm --llvm-opt 3 --lto", joined);
 }

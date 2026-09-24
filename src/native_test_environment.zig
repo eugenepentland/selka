@@ -1,4 +1,4 @@
-//! Pin inherited frontend, C-driver and Python-adapter build inputs without
+//! Pin inherited frontend, C-driver and LLVM-translator build inputs without
 //! exposing their values in cache paths or receipts.
 const std = @import("std");
 const fs = @import("qbe_build_io.zig");
@@ -15,15 +15,12 @@ const compiler_inputs = [_][]const u8{
     "GCC_EXEC_PREFIX",
     "LIBRARY_PATH",
     "MYLANG_HOST_COMPILER",
-    "MYLANG_LLVM_ADAPTER",
+    "MYLANG_QBE_LLVM_ALIAS",
+    "MYLANG_QBE_LLVM_ELEMENT_GEP",
     "MYLANG_QBE_LLVM_OPT",
-    "MYLANG_QBE_LLVM_UNIT",
+    "MYLANG_QBE_LLVM_STICKY",
     "MYLANG_SEMANTIC_BUDGET",
     "OBJC_INCLUDE_PATH",
-    "PYTHONHASHSEED",
-    "PYTHONHOME",
-    "PYTHONOPTIMIZE",
-    "PYTHONPATH",
     "SOURCE_DATE_EPOCH",
     "ZIG_LIBC",
     "ZIG_LIB_DIR",
@@ -75,7 +72,7 @@ test "environment fingerprints ignore unrelated variables but retain compiler in
     try environment.put("C_INCLUDE_PATH", "/headers");
     try std.testing.expect(!std.mem.eql(u8, compiler_changed.hash, (try capture(context)).hash));
     const c_changed = try capture(context);
-    try environment.put("PYTHONPATH", "/adapter-modules");
+    try environment.put("MYLANG_QBE_LLVM_STICKY", "0");
     try std.testing.expect(!std.mem.eql(u8, c_changed.hash, (try capture(context)).hash));
     try environment.put("LD_LIBRARY_PATH", "/mutable");
     try std.testing.expect(!(try capture(context)).cacheable);

@@ -19,7 +19,10 @@ runs only those:
   guest areas that exercise that part of the runtime;
 * ``tests/lang/*.my`` / ``tests/guest/*.my``: ``mylang test`` on that file;
 * ``test/integration.zig``: the CLI tests whose bodies the diff touches;
-* ``experiments/llvm-backend/*``: ``test-llvm-adapter`` plus an LLVM guest smoke;
+* ``experiments/llvm-backend/*`` (the retired adapter, the translator's
+  equivalence oracle): ``test-llvm-adapter`` plus an LLVM guest smoke;
+* the native build driver (``src/qbe_build*``): ``test-qbe-build``, plus an
+  LLVM guest smoke for the LLVM translator (``src/qbe_build_llvm*.zig``);
 * Markdown pages: ``mylang doctest`` on each changed page and ``doc-coverage``;
 * a Python driver under ``tests/``: the build step that runs it.
 
@@ -406,7 +409,7 @@ def select(files: list[str], lines_by_file: dict[str, list[str]], corpus: Corpus
         host = next((step for prefix, step in HOST_STEPS if path.startswith(prefix)), None)
         if host:
             sel.add(sel.steps, host, path)
-            if host == "test-llvm-adapter":
+            if host == "test-llvm-adapter" or path.startswith("src/qbe_build_llvm"):
                 for entry in LLVM_SMOKE:
                     sel.add(sel.llvm, entry, "LLVM backend {} (LLVM guest smoke)".format(path))
             continue
@@ -495,14 +498,13 @@ def plan(sel: Selection, zig: str, shards: int = 8) -> tuple[list[Command], list
     compiler = str(ROOT / "zig-out" / "focus" / "mylang")
     env = dict(os.environ)
     env["MYLANG_QBE"] = str(ROOT / "zig-out" / "focus" / "qbe")
-    env["MYLANG_LLVM_ADAPTER"] = str(ROOT / "experiments" / "llvm-backend" / "qbe_llvm.py")
     guests: list[Command] = []
     for entry in sorted(sel.guest):
         cache = GUEST_CACHE if entry.startswith("tests/guest") else LANG_CACHE
         extra = [] if entry.startswith("tests/guest") else ["--gc-stress"]
         guests.append(Command("mylang test " + entry, [compiler, "test", entry, "--cache-dir", cache, *extra], env))
     for entry in sorted(sel.llvm):
-        guests.append(Command("mylang test {} (LLVM)".format(entry), [compiler, "test", entry, "--mode", "ReleaseFast", "--cache-dir", LLVM_CACHE], env))
+        guests.append(Command("mylang test {} (LLVM)".format(entry), [compiler, "test", entry, "--release", "--cache-dir", LLVM_CACHE], env))
     for page in sorted(sel.doctest):
         guests.append(Command("mylang doctest " + page, [compiler, "doctest", ".", "--filter", page], env))
     if sel.doc_coverage:

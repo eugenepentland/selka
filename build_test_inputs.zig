@@ -25,9 +25,9 @@
 //! reading a new file, declare it here; `-Dtest-rerun=true` re-runs every cached
 //! test step regardless.
 
-/// The LLVM adapter's sources. A compiler that builds a guest reads them
-/// through `MYLANG_LLVM_ADAPTER` whenever the release path is selected.
-const llvm_adapter = "experiments/llvm-backend/*.py";
+/// The retired Python adapter, which the boundary matrix still names as the
+/// legacy `--qbe` spelling of the LLVM backend (the compiler never reads it).
+const llvm_adapter = "experiments/llvm-backend/qbe_llvm.py";
 
 /// `src/root_test.zig`, the unit root. Its guest programs also read the
 /// runtime sources the compiler embeds, which `src/` covers.
@@ -39,7 +39,6 @@ pub const unit = [_][]const u8{
     "docs/reference.md",
     "docs/standard-library.md",
     "velocity/friction/",
-    llvm_adapter,
 };
 
 /// `test/integration.zig`, the CLI root: project examples, the guest suite
@@ -49,7 +48,6 @@ pub const cli = [_][]const u8{
     "examples/",
     "tests/guest/",
     "test/fixtures/",
-    llvm_adapter,
 };
 
 /// `src/schematic/tests.zig`: the schematic guest and its Netlisp fixtures.
@@ -57,25 +55,24 @@ pub const schematic = [_][]const u8{
     "src/",
     "experiments/schematic/fixtures/",
     "experiments/schematic/straps-synth-lmx2595.svg",
-    llvm_adapter,
 };
 
 /// `src/board_trial/tests.zig`: the board guest project.
-pub const board = [_][]const u8{ "src/", llvm_adapter };
+pub const board = [_][]const u8{"src/"};
 
 /// `src/byte_io/tests.zig`.
-pub const byte_io = [_][]const u8{ "src/", llvm_adapter };
+pub const byte_io = [_][]const u8{"src/"};
 
 /// `test/golden_parity.zig` (`test-golden`): the golden corpora and the
 /// repository fixtures their entries name.
-pub const golden = [_][]const u8{ "src/", "tests/goldens/", "examples/", "test/fixtures/", llvm_adapter };
+pub const golden = [_][]const u8{ "src/", "tests/goldens/", "examples/", "test/fixtures/" };
 
 /// The native-test, C FFI and native-build roots under `test-qbe` and
 /// `test-qbe-build`: their guests are written by the tests themselves.
-pub const native_roots = [_][]const u8{ "src/", "tests/", llvm_adapter };
+pub const native_roots = [_][]const u8{ "src/", "tests/" };
 
 /// `tests/idiom_probes.py --compiler`: the probe corpus and its manifest.
-pub const idioms = [_][]const u8{ "tests/idiom_probes.py", "tests/fixtures/idioms/", llvm_adapter };
+pub const idioms = [_][]const u8{ "tests/idiom_probes.py", "tests/fixtures/idioms/" };
 
 /// `tests/incremental_diff.py`: the mutation walk and its fixture project.
 pub const incremental = [_][]const u8{ "tests/incremental_diff.py", "tests/fixtures/incremental/" };
@@ -89,7 +86,6 @@ pub const parser_hints = [_][]const u8{
     "src/parser.zig",
     "velocity/friction/",
     "velocity/suites/idioms/",
-    llvm_adapter,
 };
 
 /// `tests/test_friction_harvest.py`: the harvester and its replay fixture.
@@ -126,9 +122,8 @@ pub const native_memory = [_][]const u8{
     "tests/*.h",
 };
 
-/// `mylang doctest .`: every page it walks, plus the adapter a release-path
-/// example reads.
-pub const doctest = [_][]const u8{ "README.md", "SPEC.md", "docs/**/*.md", llvm_adapter };
+/// `mylang doctest .`: every page it walks.
+pub const doctest = [_][]const u8{ "README.md", "SPEC.md", "docs/**/*.md" };
 
 /// `tests/test_affected_tests.py`: `scripts/affected_tests.py`'s mapping,
 /// pinned on a synthetic repository it writes itself.

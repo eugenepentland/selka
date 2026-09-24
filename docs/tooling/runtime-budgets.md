@@ -244,7 +244,7 @@ existing repository path that its step does not declare, and
 `-Dtest-rerun=true` re-runs every cached test step when a verdict is in doubt.
 
 Every test step runs in the environment of the `zig build` that runs it. The
-build names the native tools (`MYLANG_QBE`, `MYLANG_ZIG`, `MYLANG_LLVM_ADAPTER`)
+build names the native tools (`MYLANG_QBE`, `MYLANG_ZIG`)
 and Zig's global cache through a `sh … env NAME=value` prefix on the command,
 never through `Step.Run.setEnvironmentVariable`: that call copies the whole
 configure-time environment into the step, the build runner stores the copy in

@@ -60,12 +60,10 @@ fn buildOptions(args: []const []const u8, start: *usize) !native.BuildOptions {
             start.* += 1;
             continue;
         }
-        const field: enum { backend, llvm_opt, llvm_adapter } = if (std.mem.eql(u8, argument, "--backend"))
+        const field: enum { backend, llvm_opt } = if (std.mem.eql(u8, argument, "--backend"))
             .backend
         else if (std.mem.eql(u8, argument, "--llvm-opt"))
             .llvm_opt
-        else if (std.mem.eql(u8, argument, "--llvm-adapter"))
-            .llvm_adapter
         else
             break;
         if (start.* + 1 >= args.len) return error.InvalidSchematic;
@@ -78,7 +76,6 @@ fn buildOptions(args: []const []const u8, start: *usize) !native.BuildOptions {
                 if (result.backend == .qbe) result.llvm = .{};
             },
             .llvm_opt => result.llvm.optimization = value,
-            .llvm_adapter => result.llvm.adapter = value,
         }
         start.* += 2;
     }

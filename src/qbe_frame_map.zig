@@ -45,6 +45,19 @@ pub const unwind_flag: u32 = 0x2000_0000;
 /// Failures while annotating assembly.
 pub const Error = error{ OutOfMemory, FrameMapMismatch };
 
+/// Unit names by the GUID their pseudo probes carry, for one module of a
+/// ThinLTO link (LLVM-THINLTO-1): a callee imported from another module and
+/// inlined names its GUID, but only its own module emits its descriptor.
+pub const Names = std.AutoHashMapUnmanaged(u64, []const u8);
+
+/// The GUID LLVM gives the function named `name` (`Function::getGUID`): the
+/// first eight bytes of its MD5 digest, little-endian.
+pub fn probeGuid(name: []const u8) u64 {
+    var digest: [16]u8 = undefined;
+    std.crypto.hash.Md5.hash(name, &digest, .{});
+    return std.mem.readInt(u64, digest[0..8], .little);
+}
+
 /// One logical frame of a call site: the unit it belongs to and its word.
 const Frame = struct { unit: []const u8, word: u32 };
 /// One positioned call: its return label and its frames, innermost first.
@@ -156,10 +169,12 @@ fn operand(line: []const u8) []const u8 {
 const Scan = struct {
     allocator: std.mem.Allocator,
     files: std.AutoHashMapUnmanaged(u32, []const u8) = .empty,
-    names: std.AutoHashMapUnmanaged(u64, []const u8) = .empty,
+    names: Names = .empty,
     kept: std.ArrayList([]const u8) = .empty,
     /// Per positioned call, its index in `kept` and what named its position.
     calls: std.ArrayList(Call) = .empty,
+    /// Names for probe GUIDs this file carries no descriptor for.
+    known: ?*const Names = null,
 
     const Call = struct { line: usize, function: []const u8, loc: ?Loc, probe: ?Probe };
 
@@ -237,10 +252,18 @@ const Scan = struct {
         }
     }
 
+    /// The unit a probe GUID names: this file's own descriptor, else the
+    /// names the caller knows from the other modules.
+    fn unitOf(self: *const Scan, probe_guid: u64) ?[]const u8 {
+        if (self.names.get(probe_guid)) |own| return own;
+        const known = self.known orelse return null;
+        return known.get(probe_guid);
+    }
+
     /// The frames of one positioned call, innermost first.
     fn frames(self: *Scan, call: Call, out: *std.ArrayList(Frame)) Error!void {
         if (call.probe) |probe| {
-            const unit = self.names.get(probe.guid) orelse return error.FrameMapMismatch;
+            const unit = self.unitOf(probe.guid) orelse return error.FrameMapMismatch;
             const word: u32 = if (probe.index == 0) guard_flag else probe.index - 1;
             try out.append(self.allocator, .{ .unit = unit, .word = word });
             var index = probe.callers.len;
@@ -248,8 +271,8 @@ const Scan = struct {
                 index -= 1;
                 const caller = probe.callers[index];
                 if (caller.index == 0) return error.FrameMapMismatch;
-                const name = self.names.get(caller.guid) orelse return error.FrameMapMismatch;
-                try out.append(self.allocator, .{ .unit = name, .word = (caller.index - 1) | caller_flag });
+                const caller_unit = self.unitOf(caller.guid) orelse return error.FrameMapMismatch;
+                try out.append(self.allocator, .{ .unit = caller_unit, .word = (caller.index - 1) | caller_flag });
             }
             return;
         }
@@ -270,7 +293,13 @@ const Scan = struct {
 /// resolved to a unit, or a call positioned in another unit's function without
 /// an inlining record, fails the build rather than lose a frame from a trace.
 pub fn annotate(allocator: std.mem.Allocator, text: []const u8) Error![]u8 {
-    var scan: Scan = .{ .allocator = allocator };
+    return annotateKnowing(allocator, text, null);
+}
+
+/// `annotate` for one module of a ThinLTO link (LLVM-THINLTO-1), where a
+/// probe GUID this file has no descriptor for is looked up in `known`.
+pub fn annotateKnowing(allocator: std.mem.Allocator, text: []const u8, known: ?*const Names) Error![]u8 {
+    var scan: Scan = .{ .allocator = allocator, .known = known };
     defer scan.deinit();
     try scan.read(text);
     if (scan.kept.items.len == std.mem.count(u8, text, "\n") + 1 and scan.calls.items.len == 0) return allocator.dupe(u8, text);
@@ -352,6 +381,24 @@ test "an inlined call names every frame it was inlined through, innermost first"
     try std.testing.expect(std.mem.indexOf(u8, output, "\t.long\t.Lmyl_fm_1-.\n\t.long\t2147483648\n\t.long\tmyl_f_b_meta-.\n\t.long\t.Lmyl_fm_1-.\n\t.long\t1073741832\n") != null);
     // A descriptor GUID printed signed names the same function as its unsigned probe.
     try std.testing.expect(std.mem.indexOf(u8, output, "\t.long\t.Lmyl_fm_2-.\n\t.long\t4\n\t.long\tmyl_f_c_meta-.\n") != null);
+}
+
+// spec-case: LLVM-THINLTO-1
+test "a ThinLTO module names a callee inlined from another module through the known units" {
+    const a = std.testing.allocator;
+    // The GUID LLD's ThinLTO printed for this unit in a real module.
+    const caller = "myl_f_a4888af4e46c129c695ee32775a8c233f113c82e7cd4e6fd3cbb1fda5659f36a";
+    try std.testing.expectEqual(@as(u64, 508641321444557350), probeGuid(caller));
+    // The callee's probe names GUID 300; only its own module has a descriptor for it.
+    const input = "\t.text\nmain:\n\t.pseudoprobe\t300 3 2 0 @ 100:7 main\n\tcallq\tfail\n" ++
+        "\t.section\t.pseudo_probe_desc,\"G\",@progbits,.pseudo_probe_desc_f,comdat\n\t.quad\t100\n\t.quad\t0\n\t.byte\t7\n\t.ascii\t\"myl_f_a\"\n";
+    try std.testing.expectError(error.FrameMapMismatch, annotate(a, input));
+    var known: Names = .empty;
+    defer known.deinit(a);
+    try known.put(a, 300, "myl_f_imported");
+    const output = try annotateKnowing(a, input, &known);
+    defer a.free(output);
+    try std.testing.expect(std.mem.indexOf(u8, output, "\t.long\t.Lmyl_fm_0-.\n\t.long\t2\n\t.long\tmyl_f_imported_meta-.\n\t.long\t.Lmyl_fm_0-.\n\t.long\t1073741830\n\t.long\tmyl_f_a_meta-.\n") != null);
 }
 
 // spec-case: QBE-FRAMEMAP-ASM-1

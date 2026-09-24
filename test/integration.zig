@@ -1332,7 +1332,7 @@ fn expectEmptyPathRun(argv: []const []const u8, environment: *const std.process.
 }
 
 // spec: USE-WITHOUT-PYTHON-1
-test "CLI user commands need no interpreter: check, build, run, test, fmt, docs and navigation under an empty PATH" {
+test "CLI user commands need no interpreter: check, build, run, test, fmt, docs, navigation and the release build under an empty PATH" {
     var temporary = testing.tmpDir(.{});
     defer temporary.cleanup();
     try writeProjectFile(&temporary, "main.my", empty_path_main);
@@ -1358,6 +1358,12 @@ test "CLI user commands need no interpreter: check, build, run, test, fmt, docs 
     try expectEmptyPathRun(&.{ compiler_path, "docs", "primer" }, &environment, "mylang");
     try expectEmptyPathRun(&.{ compiler_path, "index-project", entry }, &environment, "\"version\":\"navigation-summary-v1\"");
     try expectEmptyPathRun(&.{ compiler_path, "context", entry, "--symbol=text.words::count_words" }, &environment, "\"status\":\"ok\"");
+    // The LLVM release path is built into the compiler (LLVM-ZIG-1): it runs no adapter.
+    const release = try std.fs.path.join(testing.allocator, &.{ root, "program-release" });
+    defer testing.allocator.free(release);
+    try expectEmptyPathRun(&.{ compiler_path, "build", entry, "-o", release, "--release", "--cache-dir", cache, tools[1] }, &environment, "");
+    try expectEmptyPathRun(&.{release}, &environment, "words: 4\n");
+    try expectEmptyPathRun(&.{ compiler_path, "run", entry, "--release", cache_argument, tools[1] }, &environment, "words: 4\n");
 }
 
 /// The shared library every packages fixture locks.
@@ -1891,10 +1897,11 @@ fn expectHaltedTrapIdentical(temporary: *testing.TmpDir, name: []const u8, sourc
     try testing.expectEqualStrings(run_fast.stderr, run_framed.stderr);
 }
 /// Build `name` with `--release` — LLVM with full LTO, which
-/// is free to inline guest functions into one another — and with QBE, both
-/// with no ceiling so neither links a frame record, run each, and require exit
-/// status 1 and exactly `expected` on stderr from both, `{path}` standing for
-/// the entry's absolute path.
+/// is free to inline guest functions into one another — with LLVM ThinLTO,
+/// which inlines them across modules (LLVM-THINLTO-1), and with QBE, all
+/// with no ceiling so none links a frame record, run each, and require exit
+/// status 1 and exactly `expected` on stderr from every one, `{path}` standing
+/// for the entry's absolute path.
 fn expectFrameMapTrap(temporary: *testing.TmpDir, name: []const u8, source: []const u8, expected: []const u8) !void {
     const a = testing.allocator;
     const file = try std.fmt.allocPrint(a, "{s}.my", .{name});
@@ -1911,9 +1918,12 @@ fn expectFrameMapTrap(temporary: *testing.TmpDir, name: []const u8, source: []co
     defer a.free(llvm);
     const qbe = try std.fmt.allocPrint(a, "{s}/{s}-qbe", .{ directory, name });
     defer a.free(qbe);
+    const thin = try std.fmt.allocPrint(a, "{s}/{s}-thin", .{ directory, name });
+    defer a.free(thin);
     try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", llvm, "--release", cache_argument, tools[1] }, "");
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", thin, "--mode", "ReleaseFast", "--backend", "llvm", "--llvm-opt", "3", "--lto=thin", cache_argument, tools[1] }, "");
     try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", qbe, cache_argument, tools[0], tools[1] }, "");
-    for ([_][]const u8{ llvm, qbe }) |binary| {
+    for ([_][]const u8{ llvm, thin, qbe }) |binary| {
         const trapped = try std.process.run(a, testing.io, .{ .argv = &.{binary} });
         defer a.free(trapped.stdout);
         defer a.free(trapped.stderr);
@@ -1923,6 +1933,7 @@ fn expectFrameMapTrap(temporary: *testing.TmpDir, name: []const u8, source: []co
     }
 }
 // spec-case: QBE-FRAMEMAP-1
+// spec-case: LLVM-THINLTO-1
 test "a frame-map trap names every logical frame an inlined callee, a callback, a runtime helper or recursion passes through" {
     var temporary = testing.tmpDir(.{});
     defer temporary.cleanup();

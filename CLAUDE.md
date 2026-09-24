@@ -18,9 +18,10 @@ any other toolchain.
   every command of the installed compiler run none; `USE-WITHOUT-PYTHON-1` in
   `test/integration.zig` runs the user commands under an empty `PATH`. Python is
   fine in `zig build test` drivers, developer scripts, `bench/`, `velocity/` and
-  `experiments/`; the LLVM adapter behind `--release` is the one exception until
-  it is ported. Never wire a Python step into the install graph or spawn one from
-  `src/`.
+  `experiments/`. `--release` is no exception: the LLVM backend is built into the
+  compiler (`src/qbe_build_llvm*.zig`), and the retired Python adapter under
+  `experiments/llvm-backend/` is only an equivalence oracle. Never wire a Python
+  step into the install graph or spawn one from `src/`.
 - Use `zig build -Doptimize=ReleaseFast --prefix /path/to/install` for a compiler
   installation used by application agents, or to time the compiler itself. Default
   `zig build` produces a Debug compiler; cached guest tests still pay its parsing,
@@ -63,8 +64,8 @@ only to time the compiler itself or to hand a compiler to other agents.
   files importing it), tests carrying a `spec:` tag, diagnostic code or function the
   diff touches, plus a guest smoke; `src/*.c` → `test-native-memory`, `test-native-heap`
   and the guest areas using that runtime part; `tests/lang/x.my` → `mylang test` on it;
-  a doc page → its doctest and `doc-coverage`; the LLVM adapter → `test-llvm-adapter`
-  plus an LLVM guest smoke; a driver under `tests/` → its build step. It prints what it
+  a doc page → its doctest and `doc-coverage`; the retired LLVM adapter (the
+  translator's equivalence oracle) → `test-llvm-adapter` plus an LLVM guest smoke; a driver under `tests/` → its build step. It prints what it
   selected and why (`--dry-run` stops there), runs Zig selections as sharded
   processes, and says on every run that it is **not the gate**. Measured 2026-09-23
   on a loaded machine: 1–2 s for a `.my` or doc edit, 14 s for `src/sema.zig`, 25 s
