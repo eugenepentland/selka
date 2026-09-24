@@ -109,7 +109,7 @@ pub const Project = struct {
         self.problem = .{ .code = code, .message = message, .site = site, .related = related };
         return error.SourceError;
     }
-    fn intern(self: *Project, provider: Provider, name: []const u8, origin: ?Site, options: Options) diagnostic.Error!usize {
+    fn intern(self: *Project, provider: Provider, name: []const u8, origin: ?Site, options: Options, scratch: *std.heap.ArenaAllocator) diagnostic.Error!usize {
         if (self.names.get(name)) |id| return id;
         const allocator = self.arena.allocator();
         if (self.modules.items.len >= options.max_modules) return self.fail("E_MODULE_LIMIT", "module count exceeds the project budget", origin orelse .{ .module = 0, .span = .{ .start = 0, .end = 0 } }, null);
@@ -133,7 +133,7 @@ pub const Project = struct {
         const source_path = if (standard_library.source(path) != null) try std.fmt.allocPrint(allocator, "@stdlib/{s}", .{path}) else path;
         self.modules.items[id].src = try source.Source.init(allocator, source_path, bytes);
         std.crypto.hash.sha2.Sha256.hash(bytes, &self.modules.items[id].digest, .{});
-        try self.header(id, options, origin == null);
+        try self.header(id, options, origin == null, scratch);
         return id;
     }
     /// Load the reachable import graph iteratively while enforcing source and graph limits.
@@ -145,7 +145,12 @@ pub const Project = struct {
         // location needs to be manufactured for the diagnostic renderer.
         if (options.max_modules == 0) return error.InvalidModuleBudget;
         const allocator = self.arena.allocator();
-        const root = try self.intern(provider, entry, null, options);
+        // Header discovery lexes each module into this scratch arena, which is
+        // reset after every module, so the token arrays of a whole project are
+        // never live (or faulted in) at once.
+        var scratch = std.heap.ArenaAllocator.init(self.arena.child_allocator);
+        defer scratch.deinit();
+        const root = try self.intern(provider, entry, null, options, &scratch);
         const Visit = struct { id: usize, next: usize = 0 };
         var work: std.ArrayList(Visit) = .empty;
         defer work.deinit(allocator);
@@ -163,7 +168,7 @@ pub const Project = struct {
             work.items[index].next += 1;
             const imported = self.modules.items[visit.id].imports[visit.next];
             const site: Site = .{ .module = visit.id, .span = imported.span };
-            const target = try self.intern(provider, imported.name, site, options);
+            const target = try self.intern(provider, imported.name, site, options, &scratch);
             self.modules.items[visit.id].imports[visit.next].target = target;
             switch (self.modules.items[target].state) {
                 .complete => {},
@@ -185,11 +190,14 @@ pub const Project = struct {
         }
         self.progress.complete = true;
     }
-    fn header(self: *Project, id: usize, options: Options, is_entry: bool) diagnostic.Error!void {
+    fn header(self: *Project, id: usize, options: Options, is_entry: bool, scratch: *std.heap.ArenaAllocator) diagnostic.Error!void {
         const allocator = self.arena.allocator();
         const src = self.modules.items[id].src;
+        // Diagnostics outlive the header in the project arena; only the tokens
+        // are scratch.
         var sink: diagnostic.Sink = .{ .allocator = allocator };
-        const tokens = lex.lex(allocator, src.bytes, &sink) catch |err| {
+        defer _ = scratch.reset(.retain_capacity);
+        const tokens = lex.lex(scratch.allocator(), src.bytes, &sink) catch |err| {
             if (err == error.OutOfMemory) return err;
             const problem = sink.items.items[0];
             return self.fail(problem.code, problem.message, .{ .module = id, .span = problem.span }, null);

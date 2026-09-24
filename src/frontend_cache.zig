@@ -124,7 +124,9 @@ pub const Cache = struct {
     /// The returned program owns all of its storage through `allocator`.
     pub fn lookupSyntax(self: *Cache, allocator: std.mem.Allocator, src: source.Source, body_start: usize) error{OutOfMemory}!?ast.Program {
         const key = syntaxKey(self, src, body_start);
-        const payload = self.read(key) catch |err| switch (err) {
+        // Decoding copies everything it keeps, so the payload is decoded in
+        // place in the file buffer rather than copied out of it first.
+        const entry = self.readEntry(key) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             error.Damaged => {
                 self.statistics.syntax.misses += 1;
@@ -136,8 +138,8 @@ pub const Cache = struct {
                 return null;
             },
         };
-        defer self.runtime.allocator.free(payload);
-        const program = decodeSyntax(allocator, payload) catch |err| switch (err) {
+        defer self.runtime.allocator.free(entry.bytes);
+        const program = decodeSyntax(allocator, entry.payload) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             else => {
                 self.statistics.syntax.misses += 1;
@@ -327,6 +329,16 @@ pub const Cache = struct {
     /// Read `key`, rejecting anything whose stored key or payload checksum
     /// disagrees. The payload belongs to the cache allocator; the caller frees it.
     pub fn read(self: *Cache, key: [32]u8) error{ OutOfMemory, NotFound, Damaged, ReadFailed }![]u8 {
+        const entry = try self.readEntry(key);
+        defer self.runtime.allocator.free(entry.bytes);
+        return self.runtime.allocator.dupe(u8, entry.payload) catch return error.OutOfMemory;
+    }
+
+    /// One validated entry file: its whole buffer, which the caller frees with
+    /// the cache allocator, and the payload inside it.
+    const ReadEntry = struct { bytes: []u8, payload: []const u8 };
+
+    fn readEntry(self: *Cache, key: [32]u8) error{ OutOfMemory, NotFound, Damaged, ReadFailed }!ReadEntry {
         const directory = self.namespace() catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
         };
@@ -339,7 +351,8 @@ pub const Cache = struct {
             error.OutOfMemory => return error.OutOfMemory,
             else => return error.ReadFailed,
         };
-        defer self.runtime.allocator.free(bytes);
+        var kept = false;
+        defer if (!kept) self.runtime.allocator.free(bytes);
         if (bytes.len < headerSize) return error.Damaged;
         var reader = codec.Reader.init(self.runtime.allocator, bytes);
         const magic = reader.integer(u32) catch return error.Damaged;
@@ -351,7 +364,8 @@ pub const Cache = struct {
         const checksum = reader.integer(u64) catch return error.Damaged;
         if (!reader.done()) return error.Damaged;
         if (codec.checksum(payload) != checksum) return error.Damaged;
-        return self.runtime.allocator.dupe(u8, payload) catch return error.OutOfMemory;
+        kept = true;
+        return .{ .bytes = bytes, .payload = payload };
     }
 
     /// Stage `payload` under `key`; returns false when the entry is too large to

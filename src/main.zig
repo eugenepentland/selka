@@ -1423,7 +1423,7 @@ fn listModules(init: Context, parsed: Parsed) !u8 {
     var functions = try openSemanticCache(init, parsed);
     functions.context.timing = init.timings;
     defer functions.deinit();
-    const status = try listModulesWithCache(init, parsed, null, null, &functions);
+    const status = try listModulesWithCache(init, parsed, null, null, &functions, .process);
     recordSemanticBypass(init, &functions, null);
     return status;
 }
@@ -1924,7 +1924,16 @@ fn receiptStages(parsed: Parsed, executed: [std.meta.tags(invalidation.Stage).le
     return stages;
 }
 
-fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_cache.Cache, verdict: ?*language.check_cache.Cache, functions: ?*language.semantic_cache.Cache) !u8 {
+/// How long a project request's loaded graph must outlive the request itself.
+const Lifetime = enum {
+    /// A one-shot command: the process exits right after, so an optimized
+    /// build skips tearing the project arena down page by page.
+    process,
+    /// A request inside a long-lived session, which must release everything.
+    session,
+};
+
+fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_cache.Cache, verdict: ?*language.check_cache.Cache, functions: ?*language.semantic_cache.Cache, lifetime: Lifetime) !u8 {
     const frontend = parsed.frontend;
     const frontend_start = if (parsed.reporting.timings) std.Io.Timestamp.now(init.io, .awake) else std.Io.Timestamp.zero;
     const path = parsed.path;
@@ -1939,7 +1948,7 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
     var files: ModuleFiles = .{ .io = init.io, .root = location.root };
     files.inputs = (try prepareInputs(init, parsed, location.name)) orelse return 2;
     var project = language.project.Project.init(init.gpa);
-    defer project.deinit();
+    defer if (lifetime == .session or std.debug.runtime_safety) project.deinit();
     if (try loadModules(init, &project, &files, location.name, try projectLimits(init, parsed))) |status| return status;
     init.timings.counts.modules = project.modules.items.len;
     init.timings.counts.source_bytes = project.counts.bytes;
@@ -3150,7 +3159,7 @@ fn sessionCheck(init: Context, parsed: Parsed, cache: *SessionCache) !void {
     observation.work.command = @tagName(request.command);
     request_init.observation = &observation;
     const before = cache.syntax.statistics;
-    const status = listModulesWithCache(request_init, request, &cache.syntax, &cache.semantic, &cache.functions) catch |err| {
+    const status = listModulesWithCache(request_init, request, &cache.syntax, &cache.semantic, &cache.functions, .session) catch |err| {
         cache.verdict_reuses += observation.work.results.request;
         cache.specializations += observation.work.stages[@backingInt(invalidation.WorkStage.instantiated_specializations)].performed;
         const reported: u8 = switch (err) {

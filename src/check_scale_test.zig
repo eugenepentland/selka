@@ -391,6 +391,67 @@ test "dependency keys resolved from recalled names equal those from walking the 
     try t.expectEqualSlices(u8, std.mem.sliceAsBytes(walked.recalled.digests), std.mem.sliceAsBytes(fallback.recalled.digests));
 }
 
+// spec-case: CHECK-SCALE-LEX-1
+test "header discovery keeps its diagnostics and import facts after its scratch tokens are reset" {
+    // Every module's tokens are released before the next module is read, so
+    // what discovery keeps must live in the project arena.
+    const files = [_]File{
+        .{ .path = "main.my", .bytes = "module main\nimport lib\nimport unused\n\n\ndef main() -> int:\n    return lib.value()\n" },
+        .{ .path = "lib.my", .bytes = "module lib\n\n\npublic def value() -> int:\n    return 1\n" },
+        .{ .path = "unused.my", .bytes = "module unused\n\n\npublic def other() -> int:\n    return 2\n" },
+    };
+    var provider: Files = .{ .entries = &files };
+    var project = language.project.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(.{ .context = &provider, .read = Files.read }, "main", .{});
+    const imports = project.modules.items[0].imports;
+    try t.expectEqual(@as(usize, 2), imports.len);
+    try t.expectEqualStrings("lib", imports[0].name);
+    try t.expect(imports[0].seen);
+    try t.expect(!imports[1].seen);
+    // A lexical failure in an imported module reports its located message.
+    const broken = [_]File{
+        .{ .path = "main.my", .bytes = "module main\nimport lib\n\n\ndef main() -> int:\n    return lib.value()\n" },
+        .{ .path = "lib.my", .bytes = "module lib\n\n\npublic def value() -> int:\n    return 1 $ 2\n" },
+    };
+    var broken_provider: Files = .{ .entries = &broken };
+    var failed = language.project.Project.init(t.allocator);
+    defer failed.deinit();
+    try t.expectError(error.SourceError, failed.load(.{ .context = &broken_provider, .read = Files.read }, "main", .{}));
+    try t.expectEqualStrings("E_TOKEN", failed.problem.?.code);
+    try t.expectEqualStrings("unexpected character in source", failed.problem.?.message);
+}
+
+// spec-case: CACHE-CHECKSUM-1
+test "cached syntax decodes in place and a damaged entry is still a counted miss" {
+    var temp = t.tmpDir(.{});
+    defer temp.cleanup();
+    const root = try temp.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    var caller = std.heap.ArenaAllocator.init(t.allocator);
+    defer caller.deinit();
+    var cache = language.frontend_cache.Cache.init(t.allocator, t.io, root, "check-scale-identity");
+    const files = projectFiles(lib_source);
+    var provider: Files = .{ .entries = &files };
+    var project = language.project.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(.{ .context = &provider, .read = Files.read }, "main", .{});
+    const index = try language.interfaces.buildWithCache(&project, null, null);
+    const module = project.modules.items[0];
+    try cache.rememberSyntax(module.src, module.header.body_start, index.units[0].syntax);
+    const hit = (try cache.lookupSyntax(caller.allocator(), module.src, module.header.body_start)).?;
+    try t.expectEqual(index.units[0].syntax.nodes.items.len, hit.nodes.items.len);
+    try t.expectEqual(@as(usize, 1), cache.statistics.syntax.hits);
+    const path = try cache.entryPath(cache.syntaxKey(module.src, module.header.body_start));
+    defer t.allocator.free(path);
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(t.io, path, t.allocator, .limited(1 << 24));
+    defer t.allocator.free(bytes);
+    bytes[bytes.len - 9] ^= 0x40;
+    try std.Io.Dir.cwd().writeFile(t.io, .{ .sub_path = path, .data = bytes });
+    try t.expect((try cache.lookupSyntax(caller.allocator(), module.src, module.header.body_start)) == null);
+    try t.expectEqual(@as(usize, 1), cache.statistics.damaged);
+}
+
 // spec-case: CHECK-SUMMARY-1
 test "stored summaries round-trip and a foreign payload is refused" {
     const original = projectFiles(lib_source);
