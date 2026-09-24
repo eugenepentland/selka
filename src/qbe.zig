@@ -676,12 +676,12 @@ fn secondPass(pass: EmitPass, reuse: *Reuse) GenerateError!void {
                     error.FragmentMissing => return error.InternalError,
                 };
             }
-            if (rendersText(function)) stacks.* = try analyzedStates(pass, index, scratch.allocator());
+            if (rendersText(function, program.records)) stacks.* = try analyzedStates(pass, index, scratch.allocator());
             continue;
         };
         const emitted = try emitOne(pass, index, scratch.allocator());
         unit.test_dependencies = test_dependencies.describe(a, program, index, emitted.text, pass.layouts, emitted.states) catch |err| return layoutError(err);
-        if (rendersText(function)) stacks.* = try copyStates(a, emitted.states);
+        if (rendersText(function, program.records)) stacks.* = try copyStates(a, emitted.states);
         if (reuse.configured) |configured| {
             const answer = try configured.store.remember(key, emitted.text, unit.test_dependencies.?);
             if (configured.lean) {
@@ -710,9 +710,18 @@ fn storedUnit(a: std.mem.Allocator, store: *fragments.Store, answer: fragments.U
 }
 
 /// Whether `native_render` reads this function's operand stacks: only a
-/// conversion to text names a type it cannot see otherwise.
-fn rendersText(function: bytecode.Function) bool {
-    for (function.scope.instructions) |instruction| if (instruction.op == .cast_integer) return true;
+/// conversion to a managed text record names a type it cannot see otherwise
+/// (`rendersConversion` needs the operand's type only for those), so an integer
+/// narrowing never costs a reused unit its operand analysis.
+fn rendersText(function: bytecode.Function, records: []const typed.Record) bool {
+    for (function.scope.instructions) |instruction| switch (instruction.op) {
+        .cast_integer => |target| {
+            if (!target.isAggregate() or target.recordIndex() >= records.len) continue;
+            const record = records[target.recordIndex()];
+            if (record.managed and record.collection.kind == .string) return true;
+        },
+        else => {},
+    };
     return false;
 }
 

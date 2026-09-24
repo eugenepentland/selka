@@ -28,6 +28,7 @@ const main_source =
     \\    xs = helper.scale([1, 2, 3], helper.total(p))
     \\    out.print(helper.first(xs))
     \\    out.print(str(p.left))
+    \\    out.print(helper.describe(xs))
     \\    return 0
     \\
 ;
@@ -54,6 +55,12 @@ const helper_source =
     \\
     \\public def first(xs: list[int]) -> int:
     \\    return xs[0]
+    \\
+    \\
+    \\# Converting a list to text needs its renderer, which the build finds
+    \\# through this unit's operand stacks even when the unit itself is reused.
+    \\public def describe(xs: list[int]) -> str:
+    \\    return f"{xs}"
     \\
 ;
 
