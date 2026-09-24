@@ -21,7 +21,8 @@ binary64 and `to_milliseconds` truncates toward zero.
 `now` reads the host wall clock and keeps the provider's unavailable, denied and
 failed categories apart in its message. These are wall-clock instants: a clock may
 move backward. The capability surface exposes no monotonic counter, so this module
-has no monotonic clock, no sleeping, no calendar conversion and no time zones.
+has no monotonic clock, no sleeping, no calendar conversion and no time zones;
+only a [simulated clock](#deterministic-stand-ins) can be moved.
 Host allocation failure aborts execution as usual.
 
 ```mylang
@@ -116,6 +117,45 @@ returns `Result[Random, str]`; `time.now` does the same through `clock_cap`. Bot
 declare `effects(clock, managed_allocation)` or `effects(random, managed_allocation)`,
 so a caller with a tighter ceiling is rejected at check time rather than at run
 time. Neither deterministic nor provider functions silently acquire authority.
+
+## Deterministic stand-ins
+
+`time.simulated_clock(start)` builds a `Clock` that reads `start` until
+`time.advance(clock, duration)` moves it, and `random.seeded_entropy(seed)` an
+`Entropy` whose words are the SplitMix64 stream of `seed` — the same stream the
+host's `--allow-random=SEED` grant produces. Neither needs a capability or
+contributes an effect, and neither reads a host provider, so code written
+against `now` and `from_entropy` can be exercised deterministically. A test that
+declares `clock: Clock` or `entropy: Entropy` receives exactly these stand-ins
+from `mylang test` ([capability parameters](tooling/guest-tests.md#capability-parameters)).
+
+```mylang
+# doc: expect True
+module main
+import random
+import time
+
+def first(entropy: Entropy) -> u64:
+    match random.from_entropy(entropy):
+        case Ok(generator):
+            return random.next_word(mut generator)
+        case Err(_):
+            return 0u64
+
+def reading(clock: Clock) -> int:
+    match time.now(clock):
+        case Ok(instant):
+            return instant.unix_nanoseconds
+        case Err(_):
+            return -1
+
+def main(out: Stream) -> int:
+    clock = time.simulated_clock(time.from_unix_nanoseconds(5))
+    _ = time.advance(clock, time.nanoseconds(10))
+    same = first(random.seeded_entropy(9)) == first(random.seeded_entropy(9))
+    out.print(same and reading(clock) == 15)
+    return 0
+```
 
 The [example](../examples/standard-time-random/main.my) exercises arithmetic
 limits, reproducible sequences and rejected bounds without any ambient authority.

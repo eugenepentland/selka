@@ -14,6 +14,14 @@ pub const Walker = struct {
         try walker.pending.append(allocator, .{ .statement = body });
         return walker;
     }
+    /// Seed an iterative traversal at one expression, visiting it and every
+    /// node and statement it contains; release pending storage with deinit.
+    pub fn initExpression(allocator: std.mem.Allocator, program: typed.Program, root: typed.NodeId) std.mem.Allocator.Error!Walker {
+        var walker: Walker = .{ .allocator = allocator, .program = program };
+        try walker.pending.append(allocator, .{ .expression = root });
+        return walker;
+    }
+    /// Release the pending traversal stack.
     pub fn deinit(self: *Walker) void {
         self.pending.deinit(self.allocator);
     }
@@ -67,6 +75,10 @@ pub const Walker = struct {
                     try self.expr(acquire.capability);
                 },
                 .external_read => |read| try self.expr(read.capability),
+                .stand_in => |stand| {
+                    if (stand.second) |second| try self.expr(second);
+                    try self.expr(stand.first);
+                },
                 .acquire_buffer => |acquire| try self.expr(acquire.capacity),
                 .file_access => |call| try self.arguments(call.arguments),
                 .file_method => |call| if (call.argument) |value| try self.expr(value),

@@ -1,6 +1,6 @@
 # Standard library
 
-Twelve modules ship inside the compiler. They are ordinary Python-style guest source
+Fourteen modules ship inside the compiler. They are ordinary Python-style guest source
 built on the managed types described in the [Python-style guide](python-syntax.md),
 [managed memory](managed-memory.md) and [managed byte strings](bytes.md): `list`,
 `dict`, `str`, `bytes`, value `record` records, `Option` and `Result`. There is no
@@ -19,9 +19,19 @@ Import a module by name; projects do not copy these files.
 | [`byte_builder`](#byte_builder) | incremental binary and UTF-8 output assembly |
 | [`json`](#json) | strict RFC 8259 parsing, rendering and typed access |
 | [`pool`](#pool) | generational handles into a reusable slot store |
-| [`network`](#network) | capability-based connections and byte I/O |
-| [`random`](#random) | seeded SplitMix64 streams and entropy-seeded generators |
-| [`time`](#time) | wall-clock instants and checked durations |
+| [`network`](#network) | capability-based connections and byte I/O, and a denied stand-in `Network` |
+| [`random`](#random) | seeded SplitMix64 streams, entropy-seeded generators and a seeded stand-in `Entropy` |
+| [`time`](#time) | wall-clock instants, checked durations and a simulated `Clock` |
+| [`filesystem`](#filesystem) | an empty in-memory stand-in `Filesystem` |
+| [`environment`](#environment) | a stand-in `Environment` holding fixed pairs |
+
+`time.simulated_clock`, `random.seeded_entropy`, `filesystem.memory`,
+`environment.fixed` and `network.denied` build deterministic stand-ins for the
+capabilities a program is otherwise handed by its entry point. Building one needs
+no capability and is not an effect, and a stand-in never reaches a host resource,
+so code that takes a `Clock` or a `Filesystem` can be tested by passing one; see
+[deterministic stand-ins](effects.md#deterministic-stand-ins) and
+[capability parameters in tests](tooling/guest-tests.md#capability-parameters).
 
 Managed-value modules report conversion failures using `Result` or `Option`.
 The byte builder's checked append operations return a success flag. The network
@@ -577,6 +587,8 @@ connect(net: Network) -> Connected effects(network)
 read[const N: u64](connection: Connection) -> Read[N] effects(network)
 write[const N: u64](connection: Connection, data: [N]u8) -> Written effects(network)
 close(connection: Connection) -> Closed effects(network)
+denied() -> Network                  denied_here() -> int
+describe(code: int) -> str
 ```
 
 `connect` acquires a `Connection` through a `Network` that has already been
@@ -588,12 +600,24 @@ of `read`, `write` and `close` consumes the `Connection` it receives, so use the
 raw `read_resource`/`write_resource`/`complete_resource` builtins when one
 connection needs several operations.
 
+`denied` builds a stand-in `Network` that reaches nothing: every acquisition
+through it, or through a `net.host(...)` narrowing of it, fails with the
+`Connected.err` code `denied_here()`. `describe` spells any `Connected.err` code
+as a reason; for that one it reads `network access is denied in this context:
+this Network is a deterministic stand-in`.
+
 ```mylang
-# doc: expect 0
+# doc: expect 6 network access is denied in this context: this Network is a deterministic stand-in
 module main
 import network
 
-def main() -> int:
+def main(out: Stream) -> int:
+    net = network.denied()
+    match network.connect(net.host("127.0.0.1:8000")):
+        case network.Connected.ok(_):
+            out.print("connected")
+        case network.Connected.err(code):
+            out.print(code, network.describe(code))
     return 0
 ```
 
@@ -605,6 +629,7 @@ record Random: ...
 
 seeded(seed: int) -> Random          from_word(word: u64) -> Random
 from_entropy(capability: random_cap) -> Result[Random, str] effects(random, managed_allocation)
+seeded_entropy(seed: int) -> Entropy
 next_word(generator: Random) -> u64  random(generator: Random) -> float
 randint(generator: Random, low: int, high: int) -> Result[int, str]
 choice[T: copy + storable](generator: Random, items: list[T]) -> Option[T]
@@ -620,7 +645,9 @@ copies of the value advance one shared stream rather than forking it.
 inclusive at both ends, covers the entire signed range without overflowing, and
 removes modulo bias by rejecting the unusable tail of the word space. `shuffle`
 is an in-place Fisher-Yates pass. Reading entropy requires the explicit
-`random_cap`; importing the module grants nothing.
+`random_cap`; importing the module grants nothing. `seeded_entropy` builds a
+stand-in `Entropy` whose words are the SplitMix64 stream of its seed, so
+`from_entropy` on it is reproducible, and each read advances it.
 
 ```mylang
 # doc: expect 42
@@ -645,7 +672,14 @@ def main() -> int:
         total += value
     if random.random(mut generator) >= 1.0:
         return 2
-    return total + 27
+    return total + 27 - drawn(random.seeded_entropy(3)) + drawn(random.seeded_entropy(3))
+
+def drawn(entropy: Entropy) -> int:
+    match random.from_entropy(entropy):
+        case Ok(generator):
+            return int(random.next_word(mut generator) % 1000u64)
+        case Err(_):
+            return 500
 ```
 
 ## time
@@ -668,6 +702,8 @@ from_unix_nanoseconds(count: int) -> Instant
 after(start: Instant, duration: Duration) -> Result[Instant, str]
 elapsed(start: Instant, end: Instant) -> Result[Duration, str]
 expired(deadline: Instant, current: Instant) -> bool
+simulated_clock(start: Instant) -> Clock
+advance(clock: Clock, duration: Duration) -> Result[None, str]
 ```
 
 Both records count signed nanoseconds, which spans roughly 292 years either side
@@ -680,6 +716,38 @@ These are wall-clock instants: a host clock may move backward, so `elapsed`
 rejects a reversed pair rather than inventing a negative span. The capability
 surface exposes no monotonic counter, so this module offers no monotonic clock,
 no sleep, and no calendar or time-zone conversion.
+
+`simulated_clock` builds a stand-in `Clock` that reads `start` until `advance`
+moves it (backward for a negative duration, the way a wall clock may step).
+Copies of it share one reading. A host-granted clock cannot be moved, and
+`advance` answers it with `Err("only a simulated clock can be advanced")`.
+
+```mylang
+# doc: expect 90
+module main
+import time
+
+def since(clock: Clock, start: time.Instant) -> int:
+    match time.now(clock):
+        case Ok(current):
+            match time.elapsed(start, current):
+                case Ok(span):
+                    return time.to_milliseconds(span) // 1000
+                case Err(_):
+                    return -1
+        case Err(_):
+            return -1
+
+def main() -> int:
+    start = time.from_unix_nanoseconds(0)
+    clock = time.simulated_clock(start)
+    match time.seconds(90):
+        case Ok(step):
+            _ = time.advance(clock, step)
+        case Err(_):
+            return -1
+    return since(clock, start)
+```
 
 ```mylang
 # doc: expect 42
@@ -711,6 +779,72 @@ def measured(start: time.Instant, deadline: time.Instant) -> int:
             return int(time.to_seconds(span) * 28.0)
         case Err(message):
             return 0 - len(message)
+```
+
+## filesystem
+
+```text
+# doc: not-mylang
+memory() -> Filesystem
+```
+
+`memory` builds an empty in-memory stand-in `Filesystem`. It serves every
+whole-path helper (`read_file`, `read_text`, `write_file`, `write_text`,
+`exists`, `listdir`, `mkdir`, `remove`), `fs.open(path, mode)` in the `r`, `w`
+and `a` modes with every handle method, and the narrowings `fs.dir(path)` and
+`fs.read_only()`, which stay in memory. It follows the rules of a `--restrict`
+root: paths are relative, a path with an empty, `.` or `..` component is denied,
+a file's parent directory must exist, `remove` takes a file or an empty
+directory, and error texts match the host surface. `listdir` sorts by name, and
+the surface exposes no timestamps, so nothing it reports depends on when or in
+which order it was written. It never touches the disk.
+
+```mylang
+# doc: expect Ok(['data', 'notes.txt']) Ok('hello')
+module main
+import filesystem
+
+def save(fs: Filesystem, text: str) -> Result[None, str]:
+    return fs.write_text("notes.txt", text)
+
+def main(out: Stream) -> int:
+    fs = filesystem.memory()
+    _ = save(fs, "hello")
+    _ = fs.mkdir("data")
+    out.print(fs.listdir(""), fs.read_text("notes.txt"))
+    return 0
+```
+
+## environment
+
+```text
+# doc: not-mylang
+fixed(values: dict[str, str]) -> Environment
+```
+
+`fixed` builds a stand-in `Environment` holding exactly `values`: `env.get`
+answers from them, `env.names()` lists them sorted, and `env.only(...)` narrows
+them, trapping `R_CAPABILITY` on a name outside the narrowed set as a host
+`Environment` does. It never reads the process environment. A name must be
+nonempty, at most 128 bytes and free of `=`, and a value at most 16384 bytes
+(`R_ENVIRONMENT` otherwise); neither may contain NUL.
+
+```mylang
+# doc: expect /home/test ['HOME', 'LANG']
+module main
+import environment
+
+def home(env: Environment) -> str:
+    match env.get("HOME"):
+        case Some(value):
+            return value
+        case None:
+            return "/"
+
+def main(out: Stream) -> int:
+    env = environment.fixed({"HOME": "/home/test", "LANG": "C"})
+    out.print(home(env), env.names())
+    return 0
 ```
 
 ## Focused references

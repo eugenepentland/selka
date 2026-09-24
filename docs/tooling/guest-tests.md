@@ -26,7 +26,9 @@ arguments, expectations and skip reasons keyed by qualified test name, and
 is a shell-style glob. Each selected case runs
 as a fresh native process bounded by `--max-steps`, `--max-frames`, `--max-calls`
 and `--timeout-ms`, with no implicit clock, entropy, filesystem, network or
-environment grants. The cases run concurrently: `--jobs N` (then `MYLANG_JOBS`,
+environment grants; a test that declares one of those capabilities as a
+parameter receives a deterministic stand-in instead
+([capability parameters](#capability-parameters)). The cases run concurrently: `--jobs N` (then `MYLANG_JOBS`,
 then the cores the run may use, capped by how many per-test memory ceilings the
 machine's free memory holds) worker threads each start one test process at a
 time without copying the runner, and every result is reported in the same order
@@ -91,6 +93,97 @@ failed main::test_reading: R_ASSERT: x should be two
 reading 41 rows
 0 passed, 0 cached, 1 failed, 0 skipped
 ```
+
+## Capability parameters
+
+A test may declare `clock: Clock`, `entropy: Entropy`, `fs: Filesystem`,
+`env: Environment` and `net: Network` parameters, beside `out: Stream` and
+`err: Stream`, and pass them to the code under test. None of them needs a
+cases-file argument: the runner hands each one a deterministic stand-in, the same
+ones [`time.simulated_clock`, `random.seeded_entropy`, `filesystem.memory`,
+`environment.fixed` and `network.denied`](../effects.md#deterministic-stand-ins)
+build.
+
+| Parameter | What the test receives |
+| --- | --- |
+| `Clock` | a simulated clock reading 2000-01-01T00:00:00Z (`946684800000000000` Unix nanoseconds) until `time.advance` moves it |
+| `Entropy` | a SplitMix64 stream seeded with the first eight bytes, little-endian, of the SHA-256 of the test's qualified name, or with `N` under `mylang test --seed N` |
+| `Filesystem` | an empty in-memory filesystem |
+| `Environment` | an environment with no names |
+| `Network` | a network that refuses every connection with `network.denied_here()` |
+
+No test is ever handed real authority: a `Host` parameter is not supplied, and
+such a test fails as one that needs arguments. Every test gets its own
+stand-ins, so nothing one test writes is visible to another, and each test's
+entropy stream is its own and stays the same from run to run; renaming the test
+changes it, and `--seed N` pins every test's (a directory run forwards it). The
+seed and the start instant are part of a result receipt's identity, so an
+unchanged test that takes capabilities is reused like any other, and a
+different seed executes it again.
+
+```mylang
+# doc: expect True True
+import random
+import time
+
+# Whole seconds since `start`, as a caller of the clock sees them.
+def uptime(clock: Clock, start: time.Instant) -> int:
+    match time.now(clock):
+        case Ok(current):
+            match time.elapsed(start, current):
+                case Ok(span):
+                    return time.to_milliseconds(span) // 1000
+                case Err(_):
+                    return -1
+        case Err(_):
+            return -1
+
+# A die roll drawn from the entropy a caller supplies.
+def roll(entropy: Entropy) -> int:
+    match random.from_entropy(entropy):
+        case Ok(generator):
+            match random.randint(mut generator, 1, 6):
+                case Ok(value):
+                    return value
+                case Err(_):
+                    return 0
+        case Err(_):
+            return 0
+
+public def test_uptime_counts_whole_seconds(clock: Clock) -> bool:
+    start = time.from_unix_nanoseconds(946684800000000000)
+    _ = time.advance(clock, time.nanoseconds(90500000000))
+    return uptime(clock, start) == 90
+
+public def test_roll_stays_on_the_die(entropy: Entropy) -> bool:
+    value = roll(entropy)
+    return value >= 1 and value <= 6
+
+def main(out: Stream) -> int:
+    clock = time.simulated_clock(time.from_unix_nanoseconds(946684800000000000))
+    out.print(test_uptime_counts_whole_seconds(clock), test_roll_stays_on_the_die(random.seeded_entropy(1)))
+    return 0
+```
+
+```console
+$ mylang test app/main.my
+passed main::test_roll_stays_on_the_die
+passed main::test_uptime_counts_whole_seconds
+2 passed, 0 cached, 0 failed, 0 skipped
+$ mylang test app/main.my
+cached main::test_roll_stays_on_the_die
+cached main::test_uptime_counts_whole_seconds
+0 passed, 2 cached, 0 failed, 0 skipped
+$ mylang test app/main.my --seed 7
+passed main::test_roll_stays_on_the_die
+passed main::test_uptime_counts_whole_seconds
+2 passed, 0 cached, 0 failed, 0 skipped
+```
+
+`main` above builds the same stand-ins itself, which is how any code — a
+helper, an example, a benchmark — gets them: the constructors need no
+capability, and using a stand-in is not an effect of a function whose own
+parameters supply none ([deterministic stand-ins](../effects.md#deterministic-stand-ins)).
 
 ## Directory runs
 
@@ -163,8 +256,12 @@ inputs, so they do not prevent successful-result reuse. A test that takes
 test process's standard output and standard error and discards both when the
 test passes, and a receipt records only a pass, so a cached pass shows exactly
 what an executed pass shows. A failure's captured output is part of its report,
-and a failure is never reused. Actual external effects — clock, randomness,
-environment, filesystem and network access — still prevent reuse. The stricter
+and a failure is never reused. The clock, entropy, the environment, the
+filesystem and the network do not prevent reuse either: a test process holds no
+host-granted capability and registers no host provider, so every one it can use
+is a [deterministic stand-in](#capability-parameters) whose seed and start
+instant the receipt binds. Only a call into host-provided code prevents reuse.
+The stricter
 `--pure-skip` signature rule still excludes declared mutation and any capability
 parameter, `Stream` included.
 
@@ -176,8 +273,8 @@ The environment fingerprint includes compiler/build controls rather than every
 inherited variable, so shell/session metadata does not discard warm caches.
 This includes native C search/link paths, Python adapter controls, Zig installation
 overrides and reproducible-build settings as well as Mylang compiler controls.
-Dynamic-loader overrides disable durable result reuse, and tests with environmental
-effects remain non-cacheable. Resolved native tool stamps remain part of identity.
+Dynamic-loader overrides disable durable result reuse, and tests that call
+host-provided code remain non-cacheable. Resolved native tool stamps remain part of identity.
 
 A warm unchanged deterministic run still checks project validity through the shared
 query cache, but admits valid result receipts without lowering, emitting or linking
@@ -302,6 +399,12 @@ $ echo $?
 
 ## Isolated source provider fixtures
 
+To fake a capability, prefer [capability parameters](#capability-parameters) and
+the deterministic stand-ins: a function that takes a `Clock` is tested by
+passing it a simulated one, with no fixture file. Provider fixtures remain for
+replacing a dependency's source wholesale — a `host def` module, or a
+collaborator whose behaviour the test must pin.
+
 A case may carry a `providers` object mapping existing dependency `.my` paths to
 replacement source text. The runner parses every reachable module and validates
 its exported declarations and interfaces first, then copies a bounded inventory
@@ -344,6 +447,9 @@ passed main::test_reading
 
 ## Deterministic provider fixtures
 
+A test that needs a deterministic clock, entropy stream, filesystem, environment
+or network should declare it as a [capability parameter](#capability-parameters)
+or build a stand-in; this section covers dependencies that bypass capabilities.
 The native runner registers no host callbacks and grants no ambient authority, so
 a test that reaches a clock, an entropy source or the environment through a
 `host def` declaration fails with `HostMissingRegistration` rather than reading

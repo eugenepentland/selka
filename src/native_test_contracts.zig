@@ -164,7 +164,8 @@ pub fn testSchema(allocator: std.mem.Allocator, contracts: std.json.Value) Error
 
 /// Count the top-level parameters in a canonical `def(...)->T` signature, so a
 /// case that passes no `arguments` can be rejected before execution. A declared
-/// `Stream` is injected by the runner, so it needs no cases-file argument.
+/// `Stream`, and a `Clock`, `Entropy`, `Filesystem`, `Network` or `Environment`
+/// the runner replaces with a deterministic stand-in, needs no cases-file argument.
 fn declaredParameterCount(signature: []const u8) usize {
     const open = std.mem.indexOfScalar(u8, signature, '(') orelse return 0;
     var depth: usize = 0;
@@ -196,7 +197,12 @@ fn declaredParameterCount(signature: []const u8) usize {
 fn countsAsArgument(part: []const u8) bool {
     const trimmed = std.mem.trim(u8, part, " \t\r\n");
     if (trimmed.len == 0) return false;
-    return !std.mem.endsWith(u8, trimmed, ":stream_cap");
+    // Declaration-level signatures spell the Python names of the injected
+    // capabilities; checked ones spell the builtin names.
+    for ([_][]const u8{ ":stream_cap", ":clock_cap", ":random_cap", ":filesystem_cap", ":network_cap", ":environment_cap", ":Stream", ":Clock", ":Entropy", ":Filesystem", ":Network", ":Environment" }) |injected| {
+        if (std.mem.endsWith(u8, trimmed, injected)) return false;
+    }
+    return true;
 }
 
 /// Recover the declared result spelling from a canonical `def(...)->T` string by

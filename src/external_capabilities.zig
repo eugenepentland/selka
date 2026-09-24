@@ -12,6 +12,27 @@ pub const Kind = enum {
         };
     }
 };
+/// One deterministic stand-in operation, reserved to the standard library:
+/// building a stand-in of one capability kind (declared in capability-index
+/// order, which the native runtime's `myl_qbe_stand_in` kind shares), or
+/// moving a simulated clock. None reads a host provider or contributes an effect.
+pub const StandIn = enum(u3) {
+    clock,
+    entropy,
+    filesystem,
+    network,
+    environment,
+    advance,
+    /// The building operation for one capability index (the order of
+    /// `Type.capabilityIndex`), or null for a stream or host capability.
+    pub fn building(capability_index: u3) ?StandIn {
+        return if (capability_index <= @backingInt(StandIn.environment)) @fromBackingInt(@intCast(capability_index)) else null;
+    }
+    /// Operands the operation pops: the building operand, or a clock and a count.
+    pub fn operands(self: StandIn) usize {
+        return if (self == .advance) 2 else 1;
+    }
+};
 /// Provider authority bound to a single execution identity.
 pub const Capability = struct { execution: u64, kind: Kind };
 pub const CallError = std.mem.Allocator.Error || error{ Unavailable, Denied, Failed };

@@ -358,7 +358,10 @@ fn astDeclarationInterface(scratch: std.mem.Allocator, unit: interface.Unit, sym
         },
         .type => {
             const declaration = findAstType(unit, symbol.span) orelse return null;
-            const value = try normalizedDeclarationHash(scratch, src, astTypeCategory(declaration), astTypeSpan(declaration));
+            const normalized = try normalizeSpan(scratch, src, astTypeSpan(declaration));
+            const invariants = try contractText(scratch, src, unit.syntax, symbol.span);
+            const fields: []const []const u8 = &.{ astTypeCategory(declaration), normalized, invariants };
+            const value = try hashFields(scratch, declaration_interface_domain, if (invariants.len == 0) fields[0..2] else fields);
             return value;
         },
         .constraint => {
@@ -444,15 +447,21 @@ fn declarationInterface(scratch: std.mem.Allocator, module_name: []const u8, uni
                     return hash;
                 },
                 else => {
+                    // CONTRACT-INTERFACE-1: a type's `@invariant` clauses are
+                    // part of its published interface.
+                    const invariants = try contractText(scratch, src, unit.syntax, symbol.span);
                     if (!astTypeIsTemplate(declaration)) if (findTypedRecord(program, full_name)) |record| {
                         var out: std.Io.Writer.Allocating = .init(scratch);
                         defer out.deinit();
                         try writeTypedRecord(&out.writer, record, program.records);
                         const bytes = out.toOwnedSlice() catch return error.OutOfMemory;
-                        const hash = try hashFields(scratch, declaration_interface_domain, &.{ astTypeCategory(declaration), bytes });
+                        const fields: []const []const u8 = &.{ astTypeCategory(declaration), bytes, invariants };
+                        const hash = try hashFields(scratch, declaration_interface_domain, if (invariants.len == 0) fields[0..2] else fields);
                         return hash;
                     };
-                    const hash = try normalizedDeclarationHash(scratch, src, astTypeCategory(declaration), astTypeSpan(declaration));
+                    const normalized = try normalizeSpan(scratch, src, astTypeSpan(declaration));
+                    const fields: []const []const u8 = &.{ astTypeCategory(declaration), normalized, invariants };
+                    const hash = try hashFields(scratch, declaration_interface_domain, if (invariants.len == 0) fields[0..2] else fields);
                     return hash;
                 },
             }
@@ -463,6 +472,18 @@ fn declarationInterface(scratch: std.mem.Allocator, module_name: []const u8, uni
             return hash;
         },
     }
+}
+
+/// The normalized spelling of every contract clause above one declaration,
+/// in source order, or the empty string when it carries none.
+fn contractText(scratch: std.mem.Allocator, src: source.Source, syntax: ast.Program, name: source.Span) Error![]const u8 {
+    var out: std.ArrayList(u8) = .empty;
+    for (ast.attributesOf(syntax, name)) |attribute| {
+        if (!attribute.kind.contract()) continue;
+        try out.appendSlice(scratch, try normalizeSpan(scratch, src, attribute.span));
+        try out.append(scratch, '\n');
+    }
+    return out.toOwnedSlice(scratch);
 }
 
 fn normalizedDeclarationHash(scratch: std.mem.Allocator, src: source.Source, kind: []const u8, span: source.Span) Error![]const u8 {

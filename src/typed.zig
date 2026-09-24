@@ -77,6 +77,7 @@ pub const Node = struct {
         environment_only: struct { capability: NodeId, names: NodeId },
         environment_names: NodeId,
         external_read: struct { kind: @import("external_capabilities.zig").Kind, capability: NodeId },
+        stand_in: struct { kind: @import("external_capabilities.zig").StandIn, first: NodeId, second: ?NodeId },
         acquire_buffer: struct { capacity: NodeId },
         print: Print,
         stream_write: StreamWrite,
@@ -553,8 +554,12 @@ pub const Statement = struct {
     },
 };
 /// Checked condition with its static message and optional rendered message
-/// expression, which is evaluated only when the condition is false.
-pub const Assertion = struct { condition: NodeId, message: []const u8, message_value: ?NodeId = null };
+/// expression, which is evaluated only when the condition is false. `kind`
+/// names the clause the checker placed it for: an `assert` statement, or one
+/// `@requires`, `@ensures` or `@invariant` contract clause.
+pub const Assertion = struct { condition: NodeId, message: []const u8, message_value: ?NodeId = null, kind: AssertionKind = .statement };
+/// The clause one checked assertion enforces.
+pub const AssertionKind = enum { statement, requires, ensures, invariant };
 /// Resolved case tag, optional payload local, and checked arm body.
 pub const MatchArm = struct { tag: usize, slot: ?LocalId, body: StatementId };
 /// Local type, declaration, usage counts, and tracked ownership/borrow state.
@@ -581,7 +586,11 @@ pub const LocalUsage = struct {
     dead_write_span: ?Span = null,
 };
 /// Source of a local's value when differing copy semantics matter.
-pub const LocalOrigin = enum { local, parameter, iteration, collection_copy };
+/// `contract_old` is the hidden local an `@ensures` clause's `old(...)`
+/// value is captured in at entry, whose initializer must be effect-free;
+/// `contract_value` holds the value a contract clause is checked against
+/// (`result`, or an invariant's `self`).
+pub const LocalOrigin = enum { local, parameter, iteration, collection_copy, contract_old, contract_value };
 
 /// Checked function signature, local/reference metadata, effects, and body identity.
 pub const Function = struct {

@@ -57,6 +57,9 @@ static const char *describe(const char *code) {
     if (!strcmp(code, "R_NO_STEP_ACCOUNTING")) return "this build omits instruction-budget accounting";
     if (!strcmp(code, "R_NO_FRAME_ACCOUNTING")) return "this build omits call-depth accounting";
     if (!strcmp(code, "R_FRAME_LIMIT")) return "call-depth budget exhausted; raise it with --max-frames=N";
+    if (!strcmp(code, "R_REQUIRES")) return "precondition violated";
+    if (!strcmp(code, "R_ENSURES")) return "postcondition violated";
+    if (!strcmp(code, "R_INVARIANT")) return "invariant violated";
     return strncmp(code, "R_", 2) ? "QBE runtime failure" : "native execution failed";
 }
 /* Wall-clock guard for otherwise unbounded execution. The timer is monotonic,
@@ -486,6 +489,20 @@ static int innermost_visit(Context *ctx, const MylQbeFunction *function, uint64_
     *(InnermostFrame *)state = (InnermostFrame){function, position};
     return 0;
 }
+/* A contract clause is checked like an assertion whose message begins with its
+   own trap code and ": " (CONTRACT-TRAP-1): report that code, and the rest of
+   the message as the detail, instead of `R_ASSERT`. */
+static const char *const contract_codes[] = {"R_REQUIRES", "R_ENSURES", "R_INVARIANT"};
+static const char *contract_code(const char **message) {
+    for (size_t i = 0; i < sizeof contract_codes / sizeof contract_codes[0]; ++i) {
+        size_t length = strlen(contract_codes[i]);
+        if (!strncmp(*message, contract_codes[i], length) && (*message)[length] == ':' && (*message)[length + 1] == ' ') {
+            *message += length + 2;
+            return contract_codes[i];
+        }
+    }
+    return "R_ASSERT";
+}
 void myl_qbe_fail_assert(void *context) {
     Context *ctx = context;
     InnermostFrame frame = {0};
@@ -494,7 +511,8 @@ void myl_qbe_fail_assert(void *context) {
     if (frame.function && frame.function->messages && frame.position < frame.function->count) {
         const char *message = frame.function->messages[frame.position];
         if (message && *message) {
-            fail_detail(context, "R_ASSERT", message, 0, 0, 0, 0, 0, 0);
+            const char *code = contract_code(&message);
+            fail_detail(context, code, message, 0, 0, 0, 0, 0, 0);
             return;
         }
     }
@@ -867,8 +885,15 @@ int mylang_qbe_run_process(uint64_t (*entry)(void *), const MylQbeControls *cont
     MylQbeResult result;
     if (execute_config_args(entry, steps, frames, controls->stress, providers, NULL, argc, argv, &result)) {
         if (result.reported) return 2;
-        char suffix[192] = "";
+        char suffix[1024] = "";
         (void)detail_text(&result.trap_detail, suffix, sizeof suffix);
+        /* A broken precondition is the caller's fault: name the call site,
+           which is the next frame out, beside the clause. */
+        if (!strcmp(result.code, "R_REQUIRES") && result.trace_count > 1) {
+            size_t used = strlen(suffix);
+            const MylQbeTrace *caller = &result.trace[1];
+            (void)append(suffix, sizeof suffix, &used, "; broken by the caller %s at %s:%" PRIu64 ":%" PRIu64, caller->function, caller->path, caller->line, caller->column);
+        }
         if (result.trace_count) {
             const MylQbeTrace *at=&result.trace[0];
             fprintf(stderr,"%s:%" PRIu64 ":%" PRIu64 ": error[%s]: %s%s\n",at->path,at->line,at->column,result.code,describe(result.code),suffix);
@@ -877,7 +902,7 @@ int mylang_qbe_run_process(uint64_t (*entry)(void *), const MylQbeControls *cont
             MylQbeTrace frame = result.trace[i];
             fprintf(stderr, "  in %s at %s:%" PRIu64 ":%" PRIu64 "\n", frame.function, frame.path, frame.line, frame.column);
         }
-        char record[256];
+        char record[1536];
         if (detail_json(&result.trap_detail, record, sizeof record) != 0)
             fprintf(stderr, "%s%s\n", MYL_QBE_TRAP_RECORD_MARKER, record);
         return strncmp(result.code,"R_",2) ? 2:1;
@@ -941,6 +966,8 @@ static int execute_config_args(uint64_t (*entry)(void *), uint64_t steps, uint64
     result->trap_detail = context->trap_detail;
     memcpy(result->trace, context->trace, sizeof result->trace);
     if (context->cleanup) context->cleanup(context);
+    /* Stand-ins go after the resources, whose handles they may still own. */
+    if (context->stand_in_cleanup) context->stand_in_cleanup(context);
     while (context->frame_allocations) myl_qbe_frame_release(context,(NativeFrameAllocation *)context->frame_allocations+1);
     free(context->host_state);
     free(context->frame_data);

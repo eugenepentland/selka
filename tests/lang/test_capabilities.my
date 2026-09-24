@@ -1,0 +1,248 @@
+module test_capabilities
+
+# Deterministic stand-in capabilities (SPEC.md TEST-CAPS-1, TEST-CAPS-3,
+# TEST-CAPS-4). The helpers below take a capability the way application code
+# does; the tests hand them stand-ins built in place, or the ones `mylang test`
+# supplies to a test that declares a capability parameter.
+
+import environment
+import filesystem
+import network
+import random
+import time
+
+
+# Unix nanoseconds the clock reads, or -1 when it cannot be read.
+def stamp(clock: Clock) -> int:
+    match time.now(clock):
+        case Ok(instant):
+            return instant.unix_nanoseconds
+        case Err(_):
+            return -1
+
+
+# The first word of a generator seeded from `entropy`, or 0 when it fails.
+def first_word(entropy: Entropy) -> u64:
+    match random.from_entropy(entropy):
+        case Ok(generator):
+            return random.next_word(mut generator)
+        case Err(_):
+            return 0u64
+
+
+# Seconds from `start` to the clock's reading, as a caller of `now` sees them.
+def seconds_since(clock: Clock, start: time.Instant) -> int:
+    match time.now(clock):
+        case Ok(current):
+            match time.elapsed(start, current):
+                case Ok(span):
+                    return time.to_milliseconds(span) // 1000
+                case Err(_):
+                    return -1
+        case Err(_):
+            return -1
+
+
+# Append one line to a log file through whatever filesystem it is given.
+def log(fs: Filesystem, line: str) -> bool:
+    with fs.open("log.txt", "a") as f:
+        _ = f.write(line + "\n")
+    return fs.exists("log.txt")
+
+
+# A text result's value, or its message behind an `error: ` prefix.
+def text(result: Result[str, str]) -> str:
+    match result:
+        case Ok(value):
+            return value
+        case Err(message):
+            return "error: " + message
+
+
+# Whether a unit result succeeded.
+def done(result: Result[None, str]) -> bool:
+    match result:
+        case Ok(_):
+            return True
+        case Err(_):
+            return False
+
+
+# A byte result's value, or no bytes.
+def data(result: Result[bytes, str]) -> bytes:
+    match result:
+        case Ok(value):
+            return value
+        case Err(_):
+            return b""
+
+
+# A listing's names, or one `error` entry.
+def names(result: Result[list[str], str]) -> list[str]:
+    match result:
+        case Ok(value):
+            return value
+        case Err(_):
+            return ["error"]
+
+
+# The `HOME` an application would read, with a fallback.
+def home(env: Environment) -> str:
+    match env.get("HOME"):
+        case Some(value):
+            return value
+        case None:
+            return "/"
+
+
+# spec: TEST-CAPS-1
+public def test_simulated_clock_reads_its_start_until_advanced() -> bool:
+    clock = time.simulated_clock(time.from_unix_nanoseconds(1000))
+    before = stamp(clock)
+    again = stamp(clock)
+    match time.seconds(90):
+        case Ok(step):
+            match time.advance(clock, step):
+                case Ok(_):
+                    return before == 1000 and again == 1000 and stamp(clock) == 90000001000
+                case Err(_):
+                    return False
+        case Err(_):
+            return False
+
+
+# spec-case: TEST-CAPS-1
+public def test_copies_of_a_simulated_clock_share_one_reading() -> bool:
+    clock = time.simulated_clock(time.from_unix_nanoseconds(0))
+    alias = clock
+    start = time.from_unix_nanoseconds(0)
+    match time.seconds(3):
+        case Ok(step):
+            _ = time.advance(alias, step)
+        case Err(_):
+            return False
+    return seconds_since(clock, start) == 3
+
+
+# spec-case: TEST-CAPS-1
+public def test_a_simulated_clock_rejects_leaving_the_nanosecond_range() -> bool:
+    clock = time.simulated_clock(time.from_unix_nanoseconds(9223372036854775807))
+    match time.advance(clock, time.nanoseconds(1)):
+        case Ok(_):
+            return False
+        case Err(message):
+            return message == "the simulated clock would leave the 64-bit nanosecond range" and stamp(clock) == 9223372036854775807
+
+
+# spec-case: TEST-CAPS-1
+public def test_seeded_entropy_is_a_reproducible_stream() -> bool:
+    first = first_word(random.seeded_entropy(7))
+    again = first_word(random.seeded_entropy(7))
+    other = first_word(random.seeded_entropy(8))
+    entropy = random.seeded_entropy(7)
+    advanced = first_word(entropy)
+    moved = first_word(entropy)
+    return first == again and first != other and advanced == first and moved != first
+
+
+# spec-case: TEST-CAPS-1
+public def test_memory_filesystem_supports_the_whole_path_helpers() -> bool:
+    fs = filesystem.memory()
+    written = done(fs.write_text("notes.txt", "hello"))
+    read = text(fs.read_text("notes.txt"))
+    made = done(fs.mkdir("data"))
+    nested = done(fs.write_file("data/raw.bin", b"\x00\x01"))
+    raw = data(fs.read_file("data/raw.bin"))
+    listing = names(fs.listdir(""))
+    removed = done(fs.remove("notes.txt"))
+    gone = not fs.exists("notes.txt")
+    return written and read == "hello" and made and nested and raw == b"\x00\x01" and listing == ["data", "notes.txt"] and removed and gone
+
+
+# spec-case: TEST-CAPS-1
+public def test_memory_filesystem_reports_errors_like_a_restricted_root() -> bool:
+    fs = filesystem.memory()
+    missing = text(fs.read_text("absent.txt"))
+    escape = text(fs.read_text("../escape"))
+    absolute = text(fs.read_text("/etc/hostname"))
+    orphan = done(fs.write_text("no/such/dir.txt", "x"))
+    _ = fs.mkdir("full")
+    _ = fs.write_text("full/child", "x")
+    busy = done(fs.remove("full"))
+    denied = "denied: outside the granted directories, or the mode needs a write grant"
+    return missing == "error: read 'absent.txt': failed: the path does not exist or could not be used" and escape == "error: read '../escape': " + denied and absolute == "error: read '/etc/hostname': " + denied and not orphan and not busy
+
+
+# spec-case: TEST-CAPS-1
+public def test_memory_filesystem_opens_files_with_python_modes() -> bool:
+    fs = filesystem.memory()
+    with fs.open("lines.txt", "w") as f:
+        _ = f.write("one\n")
+        _ = f.write("two\n")
+    first = log(fs, "a")
+    second = log(fs, "b")
+    lines: list[str] = []
+    with fs.open("lines.txt", "r") as g:
+        lines = g.readlines()
+    with fs.open("lines.txt", "w") as h:
+        _ = h.write("over")
+    return first and second and lines == ["one\n", "two\n"] and text(fs.read_text("log.txt")) == "a\nb\n" and text(fs.read_text("lines.txt")) == "over"
+
+
+# spec-case: TEST-CAPS-1
+public def test_memory_filesystem_narrowing_stays_in_memory() -> bool:
+    fs = filesystem.memory()
+    _ = fs.mkdir("data")
+    scoped = fs.dir("data")
+    inside = done(scoped.write_text("x.txt", "1"))
+    outside = text(fs.read_text("data/x.txt"))
+    frozen = fs.read_only()
+    refused = done(frozen.write_text("y.txt", "2"))
+    readable = text(frozen.read_text("data/x.txt"))
+    escape = text(scoped.read_text("../notes.txt"))
+    return inside and outside == "1" and not refused and readable == "1" and not fs.exists("y.txt") and escape.startswith("error: ")
+
+
+# spec-case: TEST-CAPS-1
+public def test_fixed_environment_answers_only_its_pairs() -> bool:
+    env = environment.fixed({"LANG": "C", "HOME": "/home/test"})
+    narrowed = env.only("HOME")
+    return home(env) == "/home/test" and env.get("PATH") is None and env.names() == ["HOME", "LANG"] and home(narrowed) == "/home/test" and narrowed.names() == ["HOME"]
+
+
+# spec-case: TEST-CAPS-1
+public def test_empty_fixed_environment_has_no_names() -> bool:
+    env = environment.fixed({})
+    return home(env) == "/" and len(env.names()) == 0
+
+
+# spec-case: TEST-CAPS-1
+public def test_denied_network_refuses_every_connection() -> bool:
+    net = network.denied()
+    match network.connect(net.host("127.0.0.1:8000")):
+        case network.Connected.ok(_):
+            return False
+        case network.Connected.err(code):
+            return code == network.denied_here() and network.describe(code) == "network access is denied in this context: this Network is a deterministic stand-in"
+
+
+# spec-case: TEST-CAPS-3
+public def test_runner_clock_starts_at_the_documented_instant(clock: Clock) -> bool:
+    start = time.from_unix_nanoseconds(946684800000000000)
+    match time.seconds(60):
+        case Ok(step):
+            _ = time.advance(clock, step)
+        case Err(_):
+            return False
+    return seconds_since(clock, start) == 60
+
+
+# spec-case: TEST-CAPS-3
+public def test_runner_capabilities_are_empty_and_deterministic(fs: Filesystem, env: Environment, net: Network, entropy: Entropy) -> bool:
+    empty = len(names(fs.listdir(""))) == 0 and len(env.names()) == 0
+    logged = log(fs, "first")
+    match network.connect(net.host("127.0.0.1:80")):
+        case network.Connected.ok(_):
+            return False
+        case network.Connected.err(code):
+            return empty and logged and code == network.denied_here() and first_word(entropy) != first_word(entropy)

@@ -31,6 +31,7 @@ $ mylang reference --query E_MODULE_NAME   # one feature or error code, from the
 | `bytes` | [managed byte strings](bytes.md) |
 | `io` | [printing, files and command-line authority](io.md) |
 | `effects` | [capabilities and effects](effects.md) |
+| `contracts` | [contracts: requires, ensures and invariants](contracts.md) |
 | `modules` | [modules, imports and exports](modules.md) |
 | `memory` | [managed collections](managed-memory.md) |
 | `arenas` | [managed arenas](arenas.md) |
@@ -51,6 +52,7 @@ $ mylang reference --query E_MODULE_NAME   # one feature or error code, from the
   [generic call inference](generic-inference.md),
   [constant length parameters](const-length-generics.md),
   [type aliases](type-aliases.md), [scalar domains](domains.md),
+  [contracts](contracts.md),
   [module constants](module-constants.md) and
   [constant evaluation](source-evaluation.md).
 - Values: [results and options](results-and-options.md), [text](text.md),

@@ -139,7 +139,7 @@ test "a headerless script importing a non-standard module is told which module a
     try t.expectError(error.SourceError, loaded.load(files.provider(), "main", .{}));
     const problem = loaded.problem.?;
     try t.expectEqualStrings("E_MODULE_HEADER", problem.code);
-    try t.expect(std.mem.startsWith(u8, problem.message, "`heapq` is not a standard module (base64, byte_builder, hex, json, math,"));
+    try t.expect(std.mem.startsWith(u8, problem.message, "`heapq` is not a standard module (base64, byte_builder, environment, filesystem, hex, json, math,"));
     try t.expect(std.mem.endsWith(u8, problem.message, "start this file with `module main`"));
     try t.expectEqual(@as(usize, 0), problem.site.span.start);
 }

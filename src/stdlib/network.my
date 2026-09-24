@@ -42,6 +42,31 @@ public result Closed:
     err: Failure
 
 
+# A Network stand-in that reaches nothing: every acquisition through it, or
+# through a `net.host(...)` narrowing of it, fails with `denied_here`. It grants
+# no real authority, so building one needs no capability and is not an effect.
+public def denied() -> Network:
+    return __stand_in[Network](0)
+
+
+# The `Connected.err` code a stand-in Network answers every request with.
+public def denied_here() -> int:
+    return 6
+
+
+# A readable reason for a `Connected.err` code.
+public def describe(code: int) -> str:
+    if code == 1:
+        return "no network authority is available"
+    if code == 2:
+        return "denied: outside the granted endpoints"
+    if code == 4:
+        return "too many connections are open"
+    if code == denied_here():
+        return "network access is denied in this context: this Network is a deterministic stand-in"
+    return "failed: the endpoint could not be reached"
+
+
 # Connect through a Network already narrowed to a single endpoint. The narrowed
 # capability pins the request, so no endpoint string is passed here.
 public def connect(net: Network) -> Connected effects(network):

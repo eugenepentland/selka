@@ -59,6 +59,7 @@ test {
     _ = @import("python_generics_test.zig");
     _ = @import("python_arrays_test.zig");
     _ = @import("python_assert_test.zig");
+    _ = @import("contracts_test.zig");
     _ = @import("python_strings_test.zig");
     _ = @import("python_format_test.zig");
     _ = @import("python_comprehension_test.zig");
@@ -189,6 +190,7 @@ test {
     _ = @import("builtin_context_test.zig");
     _ = @import("json_document_test.zig");
     _ = @import("standard_library_test.zig");
+    _ = @import("stand_ins_test.zig");
     _ = @import("byte_builder_test.zig");
     _ = @import("loop_exit_test.zig");
     _ = @import("constants_test.zig");

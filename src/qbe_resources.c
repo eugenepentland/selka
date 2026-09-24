@@ -8,6 +8,8 @@ typedef struct Resource {
     struct Resource *previous,*next;
     uint64_t handle;
     unsigned kind,permissions;
+    /* The provider that acquired this handle: the host's, or a stand-in's. */
+    const MylangResourceProvider *provider;
 } Resource;
 /* One derived-capability scope. A `fs.dir(path)` entry is the joined prefix a
    derived filesystem resolves under; a `net.host(name)` entry is the single
@@ -16,8 +18,17 @@ typedef struct Resource {
    so scope 0 keeps the historical grant/restrict encoding. */
 typedef struct { char *prefix; size_t length; } DirScope;
 #define MYL_QBE_RESOURCE_SCOPES 64
-/* Highest encoded value `scope*16 + kind*8 + permissions`; scope runs 0..64. */
-#define MYL_QBE_RESOURCE_SCOPE_MAX (MYL_QBE_RESOURCE_SCOPES*16 + 15)
+/* An authority encodes `stand_in*2048 + scope*16 + kind*8 + permissions`,
+   negated below -16. `scope` runs 0..64; `stand_in` is 0 for a host-granted
+   capability and a 1-based stand-in registry index otherwise, so a derived
+   capability (`fs.dir`, `read_only`, `net.host`) keeps its stand-in index and
+   a stand-in can never be turned into a host-granted authority. */
+#define MYL_QBE_RESOURCE_STAND_IN_UNIT 2048
+#define MYL_QBE_RESOURCE_SCOPE_MAX ((int64_t)MYL_QBE_STAND_IN_LIMIT*MYL_QBE_RESOURCE_STAND_IN_UNIT + MYL_QBE_RESOURCE_SCOPES*16 + 15)
+static uint64_t encode(unsigned stand_in,uint64_t scope,unsigned kind,unsigned permissions) {
+    int64_t encoded=(int64_t)stand_in*MYL_QBE_RESOURCE_STAND_IN_UNIT+(int64_t)scope*16+kind*8+permissions;
+    return (uint64_t)(INT64_C(-16)-encoded);
+}
 static const MylangResourceProvider empty={0};
 static const MylangResourceProvider *provider(MylQbeContext *ctx,unsigned kind) {
     (void)mylang_host_charge;
@@ -38,7 +49,7 @@ static void unlink_resource(Resource *resource) {
 }
 static void drop(myl_native_resource *value) {
     Resource *resource=(Resource *)value;
-    const MylangResourceProvider *p=provider(resource->context,resource->kind);
+    const MylangResourceProvider *p=resource->provider;
     p->release(p->context,resource->handle);
     unlink_resource(resource);
     free(resource);
@@ -67,11 +78,13 @@ uint64_t myl_qbe_grant_resource_checked(void *context,unsigned kind,const char *
     if (!p->acquire || !p->complete || !p->release) { myl_qbe_fail_missing_capability(ctx,flag);return 0; }
     return (uint64_t)(INT64_C(-16)-(int64_t)(kind*8+p->permissions));
 }
-static int authority(MylQbeContext *ctx,uint64_t bits,unsigned *kind,unsigned *permissions,unsigned *scope) {
+static int authority(MylQbeContext *ctx,uint64_t bits,unsigned *kind,unsigned *permissions,unsigned *scope,unsigned *stand_in) {
     int64_t value;memcpy(&value,&bits,8);
-    if (value > -16 || value < -16 - (int64_t)MYL_QBE_RESOURCE_SCOPE_MAX) { myl_qbe_fail(ctx,"InvalidCapability");return 0; }
-    unsigned encoded=(unsigned)(-16-value);
-    *permissions=encoded&7;*kind=(encoded>>3)&1;*scope=encoded>>4;
+    if (value > -16 || value < -16 - MYL_QBE_RESOURCE_SCOPE_MAX) { myl_qbe_fail(ctx,"InvalidCapability");return 0; }
+    uint64_t encoded=(uint64_t)(-16-value);
+    *permissions=encoded&7;*kind=(encoded>>3)&1;*scope=(unsigned)((encoded%MYL_QBE_RESOURCE_STAND_IN_UNIT)>>4);
+    *stand_in=(unsigned)(encoded/MYL_QBE_RESOURCE_STAND_IN_UNIT);
+    if (*scope>MYL_QBE_RESOURCE_SCOPES) { myl_qbe_fail(ctx,"InvalidCapability");return 0; }
     return 1;
 }
 /* Whether a relative path stays inside a scoped root, mirroring scopedPath. An
@@ -108,8 +121,8 @@ static DirScope *scope_append(MylQbeContext *ctx) {
    performs no I/O; the prefix is joined when a resource is acquired. */
 uint64_t myl_qbe_dir_resource(void *context,uint64_t bits,const unsigned char *path,size_t length) {
     MylQbeContext *ctx=context;
-    unsigned kind,permissions,parent;
-    if (!authority(ctx,bits,&kind,&permissions,&parent)) return 0;
+    unsigned kind,permissions,parent,stand_in;
+    if (!authority(ctx,bits,&kind,&permissions,&parent,&stand_in)) return 0;
     if (kind!=0) { myl_qbe_fail(ctx,"InvalidCapability");return 0; }
     if (length>4096 || !dir_segment(path,length)) { myl_qbe_fail(ctx,"InvalidCapability");return 0; }
     if (parent>ctx->resource_scope_count || ctx->resource_scope_count>=MYL_QBE_RESOURCE_SCOPES) { myl_qbe_fail(ctx,"InvalidCapability");return 0; }
@@ -127,7 +140,7 @@ uint64_t myl_qbe_dir_resource(void *context,uint64_t bits,const unsigned char *p
     entry->prefix=prefix;entry->length=total;
     ctx->resource_scope_count++;
     ctx->cleanup=cleanup;
-    return (uint64_t)(INT64_C(-16)-(int64_t)((int64_t)ctx->resource_scope_count*16+kind*8+permissions));
+    return encode(stand_in,ctx->resource_scope_count,kind,permissions);
 }
 /* Record `name` as the only endpoint a narrowed Network may acquire and return
    the indexed sentinel. It performs no I/O. Re-narrowing a scope is idempotent
@@ -135,8 +148,8 @@ uint64_t myl_qbe_dir_resource(void *context,uint64_t bits,const unsigned char *p
    widen. */
 uint64_t myl_qbe_host_resource(void *context,uint64_t bits,const unsigned char *name,size_t length) {
     MylQbeContext *ctx=context;
-    unsigned kind,permissions,parent;
-    if (!authority(ctx,bits,&kind,&permissions,&parent)) return 0;
+    unsigned kind,permissions,parent,stand_in;
+    if (!authority(ctx,bits,&kind,&permissions,&parent,&stand_in)) return 0;
     if (kind!=1) { myl_qbe_fail(ctx,"InvalidCapability");return 0; }
     if (!length || length>4096 || memchr(name,0,length)) { myl_qbe_fail(ctx,"InvalidCapability");return 0; }
     if (parent>ctx->resource_scope_count || ctx->resource_scope_count>=MYL_QBE_RESOURCE_SCOPES) { myl_qbe_fail(ctx,"InvalidCapability");return 0; }
@@ -152,24 +165,31 @@ uint64_t myl_qbe_host_resource(void *context,uint64_t bits,const unsigned char *
     entry->prefix=endpoint;entry->length=length;
     ctx->resource_scope_count++;
     ctx->cleanup=cleanup;
-    return (uint64_t)(INT64_C(-16)-(int64_t)((int64_t)ctx->resource_scope_count*16+kind*8+permissions));
+    return encode(stand_in,ctx->resource_scope_count,kind,permissions);
 }
 uint64_t myl_qbe_restrict_resource(void *context,uint64_t bits,unsigned mask) {
-    unsigned kind,permissions,scope;
-    if (!authority(context,bits,&kind,&permissions,&scope)) return 0;
-    return (uint64_t)(INT64_C(-16)-(int64_t)(scope*16+kind*8+(permissions&mask)));
+    unsigned kind,permissions,scope,stand_in;
+    if (!authority(context,bits,&kind,&permissions,&scope,&stand_in)) return 0;
+    return encode(stand_in,scope,kind,permissions&mask);
 }
 int myl_qbe_resource_new(void *context,uint64_t bits,unsigned kind,const unsigned char *request,size_t length,myl_native_resource **output) {
     MylQbeContext *ctx=context;
-    unsigned selected,permissions,scope;
+    unsigned selected,permissions,scope,stand_in;
     *output=NULL;
-    if (!authority(ctx,bits,&selected,&permissions,&scope)) return -1;
+    if (!authority(ctx,bits,&selected,&permissions,&scope,&stand_in)) return -1;
     if (selected!=kind) { myl_qbe_fail(ctx,"InvalidCapability");return -1; }
     if (scope>ctx->resource_scope_count) { myl_qbe_fail(ctx,"InvalidCapability");return -1; }
+    /* A stand-in answers from its own registry entry and never from the host
+       providers; a stand-in Network refuses every request. */
+    const MylangResourceProvider *p=provider(ctx,kind);
+    if (stand_in) {
+        p=myl_qbe_stand_in_provider(ctx,stand_in-1,kind);
+        if (!p) { myl_qbe_fail(ctx,"InvalidCapability");return -1; }
+        if (kind==1) return MYL_QBE_STAND_IN_DENIED;
+    }
     /* A scoped filesystem serves only relative requests inside its root; reject
        escapes before opening, even when a direct provider root would follow them. */
     if (scope && kind==0 && (length<2 || request[1]!=':' || !scoped_relative(request+2,length-2,request[0]))) return 2;
-    const MylangResourceProvider *p=provider(ctx,kind);
     if (ctx->resource_live[kind]>=1024) return 4;
     if (!p->acquire || !p->release || !p->complete) return 1;
     const unsigned char *effective=request;size_t effective_length=length;
@@ -207,7 +227,7 @@ int myl_qbe_resource_new(void *context,uint64_t bits,unsigned kind,const unsigne
     free(bytes);
     int code=status(ctx,result.status);
     if (code) { free(resource);return code; }
-    resource->base.drop=drop;resource->context=ctx;resource->kind=kind;
+    resource->base.drop=drop;resource->context=ctx;resource->kind=kind;resource->provider=p;
     resource->permissions=permissions;resource->handle=result.handle;
     resource->previous=ctx->resource_tails[kind];
     if (resource->previous) resource->previous->next=resource;
@@ -220,7 +240,7 @@ int myl_qbe_resource_complete(void *context,myl_native_resource *value) {
     Resource *resource=(Resource *)value;
     if (!resource || resource->context!=context) { myl_qbe_fail(context,"InvalidOwner");return -1; }
     if (!(resource->permissions&4)) return 2;
-    const MylangResourceProvider *p=provider(context,resource->kind);
+    const MylangResourceProvider *p=resource->provider;
     int code=status(context,p->complete(p->context,resource->handle));
     if (!code) { unlink_resource(resource);free(resource); }
     return code;
@@ -230,7 +250,7 @@ int myl_qbe_resource_read(void *context,myl_native_resource *value,unsigned char
     *length=0;*eof=0;
     if (!resource || resource->context!=context) { myl_qbe_fail(context,"InvalidOwner");return -1; }
     if (!(resource->permissions&1)) return 2;
-    const MylangResourceProvider *p=provider(context,resource->kind);
+    const MylangResourceProvider *p=resource->provider;
     if (!p->read) return 1;
     unsigned char *bytes=malloc(capacity?capacity:1);
     if (!bytes) { myl_qbe_fail_allocation(context);return -1; }
@@ -248,7 +268,7 @@ int myl_qbe_resource_write(void *context,myl_native_resource *value,const unsign
     *written=0;
     if (!resource || resource->context!=context) { myl_qbe_fail(context,"InvalidOwner");return -1; }
     if (!(resource->permissions&2)) return 2;
-    const MylangResourceProvider *p=provider(context,resource->kind);
+    const MylangResourceProvider *p=resource->provider;
     if (!p->write) return 1;
     unsigned char *bytes=malloc(length?length:1);
     if (!bytes) { myl_qbe_fail_allocation(context);return -1; }

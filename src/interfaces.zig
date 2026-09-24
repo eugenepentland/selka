@@ -41,6 +41,9 @@ pub const ContractDeclaration = struct {
     /// Present only for a declaration carrying `@test`, so test discovery can
     /// admit a name that does not use the `test_` prefix.
     @"test": ?bool = null,
+    /// The declaration's contract clauses (`@requires`, `@ensures`,
+    /// `@invariant`) in source order, whitespace folded; absent when it has none.
+    contracts: ?[]const u8 = null,
 };
 /// One module's exported declared-contract table.
 pub const ContractModule = struct { name: []const u8, declarations: []const ContractDeclaration };
@@ -612,6 +615,8 @@ pub const Index = struct {
                     continue;
                 }
                 output.writer.print("  export {s} {s}", .{ @tagName(symbol.kind), symbol.name }) catch return error.OutOfMemory;
+                const origin = self.declarationSource(module, symbol);
+                try self.appendContractClauses(&output.writer, origin.module, origin.symbol);
                 try self.appendDocstringLine(&output.writer, module, symbol);
                 output.writer.writeAll("\n") catch return error.OutOfMemory;
             }
@@ -738,6 +743,7 @@ pub const Index = struct {
         } else {
             writer.writeAll(" tests(unavailable)") catch return error.OutOfMemory;
         }
+        try self.appendContractClauses(writer, origin.module, origin.symbol);
         try self.appendDocstringLine(writer, origin.module, origin.symbol);
         writer.writeAll("\n") catch return error.OutOfMemory;
     }
@@ -788,6 +794,32 @@ pub const Index = struct {
             };
         }
         return modules;
+    }
+    /// The contract clauses above one declaration, each spelled as written with
+    /// its whitespace folded and joined by one space, or null when it has none.
+    fn contractClauses(self: *Index, module: usize, declaration: source.Span) ContractError!?[]const u8 {
+        const allocator = self.project.arena.allocator();
+        const src = self.project.modules.items[module].src;
+        var out: std.ArrayList(u8) = .empty;
+        for (ast.attributesOf(self.units[module].syntax, declaration)) |attribute| {
+            if (!attribute.kind.contract()) continue;
+            if (out.items.len != 0) try out.append(allocator, ' ');
+            var blank = false;
+            for (src.text(attribute.span)) |byte| {
+                const space = byte == ' ' or byte == '\t' or byte == '\r' or byte == '\n';
+                if (space and blank) continue;
+                blank = space;
+                try out.append(allocator, if (space) ' ' else byte);
+            }
+        }
+        if (out.items.len == 0) return null;
+        const clauses = try out.toOwnedSlice(allocator);
+        return clauses;
+    }
+    /// Append ` <clauses>` for a declaration that carries contract clauses.
+    fn appendContractClauses(self: *Index, writer: *std.Io.Writer, module: usize, symbol: Symbol) ContractError!void {
+        const clauses = try self.contractClauses(module, symbol.span) orelse return;
+        writer.print(" {s}", .{clauses}) catch return error.OutOfMemory;
     }
     /// Append ` # <first docstring line>` for one declaration, or nothing when it
     /// has no docstring. The line is what a reader sees in the listing.
@@ -895,6 +927,7 @@ pub const Index = struct {
         out.signature = try self.contractSignatureText(module, function.signature);
         out.permissions = try permissionsText(self.project.arena.allocator(), mask, function.signature.mut_positions, "unknown");
         if (ast.hasAttribute(self.units[module].syntax, function.name, .@"test")) out.@"test" = true;
+        out.contracts = try self.contractClauses(module, function.name);
         return out;
     }
     /// Ceiling the interface publishes for one exported function. An explicit
@@ -1012,6 +1045,7 @@ pub const Index = struct {
             var out: ContractDeclaration = .{ .name = symbol.name, .kind = "record" };
             out.generics = try self.contractGenericsText(module, record.type_parameters);
             out.shape = try self.contractFieldsText(module, record.fields, record.type_parameters);
+            out.contracts = try self.contractClauses(module, record.name);
             return out;
         }
         for (unit.syntax.types.variants) |variant| {
@@ -1050,13 +1084,17 @@ pub const Index = struct {
             var out: ContractDeclaration = .{ .name = symbol.name, .kind = if (domain.managed) "resource" else "domain" };
             out.generics = try self.contractGenericsText(module, domain.type_parameters);
             out.shape = try std.fmt.allocPrint(self.project.arena.allocator(), "backing:{s}", .{try self.contractTypeText(module, domain.backing, domain.type_parameters)});
+            out.contracts = try self.contractClauses(module, domain.name);
             return out;
         }
         for (unit.syntax.types.resources) |resource| {
             if (resource.name.start != symbol.span.start) continue;
             var out: ContractDeclaration = .{ .name = symbol.name, .kind = "resource" };
             out.generics = try self.contractGenericsText(module, resource.type_parameters);
-            out.shape = try std.fmt.allocPrint(self.project.arena.allocator(), "backing:{s}", .{try self.contractTypeText(module, resource.backing, resource.type_parameters)});
+            // `resource NAME: family` names an external resource family
+            // (`filesystem`, `network`), not a type, so it is rendered as written
+            // rather than resolved as a declaration.
+            out.shape = try std.fmt.allocPrint(self.project.arena.allocator(), "backing:{s}", .{self.project.modules.items[module].src.text(resource.backing)});
             return out;
         }
         for (unit.syntax.types.expressions.aliases) |alias| {

@@ -54,6 +54,19 @@ pub fn emit(self: anytype, op: @FieldType(bytecode.Instruction, "op"), stack: []
             try self.checkFailure("failure");
             try self.store(h - 2, result);
         },
+        .stand_in => |kind| {
+            const result = self.temp();
+            if (kind == .advance) {
+                const authority = try self.load("s", h - 2);
+                const count = try self.load("s", h - 1);
+                try self.print(" %v{d} =l call $myl_qbe_clock_advance(l %ctx, l %v{d}, l %v{d})\n", .{ result, authority, count });
+            } else {
+                const operand = try self.load("s", h - 1);
+                try self.print(" %v{d} =l call $myl_qbe_stand_in(l %ctx, l {d}, l %v{d})\n", .{ result, @backingInt(kind), operand });
+            }
+            try self.checkFailure("failure");
+            try self.store(h - kind.operands(), result);
+        },
         .environment_names => {
             const authority = try self.load("s", h - 1);
             const result = self.temp();

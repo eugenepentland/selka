@@ -374,6 +374,11 @@ const Emitter = struct {
                 try self.instruction(node.span, .{ .external_read = .{ .kind = read.kind, .output = node.ty } });
                 try self.push(.{ .expression = read.capability });
             },
+            .stand_in => |stand| {
+                try self.instruction(node.span, .{ .stand_in = stand.kind });
+                if (stand.second) |second| try self.push(.{ .expression = second });
+                try self.push(.{ .expression = stand.first });
+            },
             .acquire_buffer => |acquire| {
                 try self.instruction(node.span, .{ .acquire_buffer = node.ty });
                 try self.push(.{ .expression = acquire.capacity });
