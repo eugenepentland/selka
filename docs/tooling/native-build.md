@@ -36,18 +36,20 @@ optimized build is asked for by name, the way `cargo build --release` is:
 
 An explicit choice is never changed. `--backend qbe` and `--qbe PATH` select
 QBE whatever the mode, and the LLVM-only controls (`--llvm-opt`, `--lto`) are
-rejected until `--backend llvm` or `--release` names that backend. `--report` states the resolved `backend`, `optimization` and
-`lto` for every build. `mylang test` follows the same policy through the child
+rejected until `--backend llvm` or `--release` names that backend. `--report`
+states the resolved `backend`, `optimization`, `lto` and `thin_lto` for every
+build. `mylang test` follows the same policy through the child
 build it spawns: its builds are QBE in either mode (`Debug` by default), and
 `mylang test --release` builds the LLVM release path.
 
 The price of each, on the 4,200-line Lox interpreter port with a ReleaseFast
 compiler and a warm object cache: after a one-function edit the QBE build takes
-0.7–0.9 s and the `--release` build 4.1–5.1 s, about 3 s of which is the LTO
-link it pays on every rebuild that changes anything, a comment included (0.4–0.9 s
-against 3.0–3.9 s). Build with QBE while editing and testing, and with
-`--release` for the executable you ship or time. The measurements are in
-[the lane report](../audits/devspeed-defaults-and-docs-2026-09-23.md).
+0.7–0.9 s and the `--release` build 2.4–3.5 s, almost all of it the LTO link it
+pays on every rebuild that changes anything, a comment included (2.6–3.0 s). A
+cold `--release` build takes 4 s. Build with QBE while editing and testing, and
+with `--release` for the executable you ship or time. The measurements are in
+[the defaults report](../audits/devspeed-defaults-and-docs-2026-09-23.md) and
+[the LLVM port report](../audits/devspeed-llvm-zig-2026-09-24.md).
 
 The LLVM backend is built into the compiler (`LLVM-ZIG-1`). It translates each
 guest unit's QBE IL into a textual LLVM module in process
@@ -76,9 +78,9 @@ retired adapter and requires identical IR.
 
 ```console
 $ mylang build examples/factorial.my -o /tmp/factorial --cache-dir /tmp/cache --report
-{"version":"qbe-build-v1",...,"mode":"ReleaseFast",...,"backend":"qbe","optimization":"default","lto":false}
+{"version":"qbe-build-v1",...,"mode":"ReleaseFast",...,"backend":"qbe","optimization":"default","lto":false,"thin_lto":false}
 $ mylang build examples/factorial.my --release -o /tmp/factorial-release --cache-dir /tmp/cache --report
-{"version":"qbe-build-v1",...,"mode":"ReleaseFast",...,"backend":"llvm","optimization":"3","lto":true}
+{"version":"qbe-build-v1",...,"mode":"ReleaseFast",...,"backend":"llvm","optimization":"3","lto":true,"thin_lto":false}
 $ mylang build examples/factorial.my --mode Debug -o /tmp/factorial-debug --cache-dir /tmp/cache
 $ mylang run examples/factorial.my --release
 ```
@@ -96,7 +98,9 @@ the compiler (`MYLANG_HOST_MEMORY_LIMIT`, 8 GiB by default) is refused with a
 message that names it and the two ways out — split the function, or build it
 with `--backend llvm` — instead of failing minutes later inside QBE's `emalloc`.
 The LLVM backend's dominator analysis is linear, so it builds a
-120 000-instruction function (20 000 statements) in about 2.6 GB.
+120 000-instruction function (20 000 statements): with a Debug compiler in
+about 4.5 minutes, nearly all of it clang optimizing the one function, with
+3.0 GB in the largest process.
 
 ### What the LLVM backend is allowed to assume
 
@@ -695,6 +699,50 @@ per-function object cache makes codegen a hit, and an unchanged build whose
 published executable still matches every input **reuses it without relinking**
 (see *Object cache and link*). Relinking after a one-function edit costs the
 LTO link, about a second on the LLVM arm and milliseconds on QBE.
+
+## ThinLTO
+
+Full LTO, the `--release` link, merges every bitcode module into one and
+optimizes it on a single thread, so its link grows with the whole program and
+uses no more than one core: about 60 s of a 50,000-line build and 250 s of a
+200,000-line one, and it pays that again after any edit. `--lto=thin` (with
+`--backend llvm`) is the parallel alternative (`LLVM-THINLTO-1`). Every guest
+unit and the runtime become ThinLTO bitcode, LLD reads their summaries, decides
+what each module imports from the others, and optimizes and compiles the
+modules on as many threads as the cores and free memory allow, each to its own
+assembly file. Each file gets its frame-map table and is assembled on worker
+threads, and the objects are linked natively as under full LTO.
+
+```console
+$ mylang build main.my --project -o app --mode ReleaseFast --backend llvm --llvm-opt 3 --lto=thin
+```
+
+Traces, trap records and exit statuses are those of the full-LTO build: a
+callee inlined from another module is named through every unit's probe GUID,
+the generated entry and metadata C stay machine code so no module without
+probe descriptors imports guest code, and the link keeps LLVM from folding
+copies of a callee inlined at different call sites into one block whose call
+site is lost (sinking common instructions and merging block tails are off).
+
+The trade, measured with a ReleaseFast compiler on a shared 20-thread machine
+(load 4 to 22, `taskset -c 0-11`):
+
+| program | full LTO cold / edit → build | ThinLTO cold / edit → build |
+| --- | ---: | ---: |
+| Lox port, 4,200 lines | 4.0 s / 2.5 s | 2.5 s / 1.7 s |
+| 50,000-line ladder | 91 s / 61 s, 1.9 GB | 68 s / 38 s, 1.1 GB |
+| 200,000-line ladder | 398 s / 256 s, 7.1 GB | 207 s / 132 s, 3.5 GB |
+
+ThinLTO sees less of the program at once, and the code is slower where full
+LTO inlines runtime helpers across the whole program: on bench-parity it is
+1.7% (checked) to 3.1% (unchecked) slower in the geometric mean and up to 26%
+slower on single programs (`knucleotide`, `dict_count`, `fannkuch_redux`). So `--release` keeps full
+LTO, and ThinLTO is the choice for a large program whose release build full
+LTO makes too slow, or too big: the 200,000-line full-LTO link peaks at 6.5 GB,
+close to the compiler's 8 GiB ceiling that its tools inherit. LLD's ThinLTO
+cache cannot be used here, because a cache hit writes an empty assembly file
+under `--lto-emit-asm`; an edit therefore recompiles every module. The numbers
+are in [the LLVM port report](../audits/devspeed-llvm-zig-2026-09-24.md).
 
 ## Runtime source tree and shared caches
 
