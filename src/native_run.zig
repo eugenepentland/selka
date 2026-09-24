@@ -139,20 +139,39 @@ fn renderJson(context: fs.Context, text: []const u8) Error!?[]u8 {
         .right = if (value.has(trap_detail.present_right)) value.operand(value.values.right) else null,
         .width = if (value.has(trap_detail.present_width)) value.values.width else null,
     } else null;
+    const code = rest[0..close];
     const record = try std.json.Stringify.valueAlloc(context.allocator, .{
         .version = "diagnostic-v1",
         .kind = "diagnostic",
         .diagnostic = .{
-            .code = rest[0..close],
+            .code = code,
             .severity = "error",
             .message = body,
             .location = located(at),
             .notes = &[_]u32{},
             .stack = .{ .frames = frames.items, .omitted = 0 },
             .trap_detail = structured,
+            .contract = contractJson(context, code, text, if (frames.items.len > 1) frames.items[1].location else null),
         },
     }, .{ .emit_null_optional_fields = false });
     return record;
+}
+
+/// A violated contract's fields in a `diagnostic-v1` record; a broken
+/// precondition also names its caller, the next frame out.
+const ContractJson = struct {
+    kind: []const u8,
+    subject: []const u8,
+    clause: []const u8,
+    message: ?[]const u8 = null,
+    caller: ?Located = null,
+};
+
+/// The `contract` object of one trap record, or null for any other trap.
+fn contractJson(context: fs.Context, code: []const u8, text: []const u8, caller: ?Located) ?ContractJson {
+    const found = trap_detail.contract(context.allocator, code, text) orelse return null;
+    const requires = std.mem.eql(u8, found.kind, "requires");
+    return .{ .kind = found.kind, .subject = found.subject, .clause = found.clause, .message = found.message, .caller = if (requires) caller else null };
 }
 
 /// The JSON location shape shared with source diagnostics; byte spans are the

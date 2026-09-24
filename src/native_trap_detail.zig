@@ -104,6 +104,50 @@ pub const Detail = struct {
     }
 };
 
+/// Whether a trap code carries its message as the detail `operation` text:
+/// a failed `assert` and a violated contract clause (`R_REQUIRES`,
+/// `R_ENSURES`, `R_INVARIANT`), whose runtime line reads `CODE: message`.
+pub fn messageTrap(code: []const u8) bool {
+    inline for (.{ "R_ASSERT", "R_REQUIRES", "R_ENSURES", "R_INVARIANT" }) |known| {
+        if (std.mem.eql(u8, code, known)) return true;
+    }
+    return false;
+}
+
+/// The fields of a violated contract clause, read back from the trap record
+/// whose `operation` text reads ``subject kind `clause`[: message]``.
+pub const Contract = struct {
+    /// `requires`, `ensures` or `invariant`.
+    kind: []const u8,
+    /// The function (or `Domain.member`) whose clause, or the type whose invariant, failed.
+    subject: []const u8,
+    /// The clause's condition as written, whitespace folded.
+    clause: []const u8,
+    /// The clause's optional message literal.
+    message: ?[]const u8 = null,
+};
+
+/// CONTRACT-TRAP-1: the contract fields a trap record carries, or null when
+/// `code` is not a contract trap or the record has no readable operation.
+pub fn contract(allocator: std.mem.Allocator, code: []const u8, text: []const u8) ?Contract {
+    if (!messageTrap(code) or std.mem.eql(u8, code, "R_ASSERT")) return null;
+    const body = recordBody(text) orelse return null;
+    const parsed = std.json.parseFromSliceLeaky(Transport, allocator, body, .{ .ignore_unknown_fields = true, .allocate = .alloc_always }) catch return null;
+    const operation = parsed.operation orelse return null;
+    const subject_end = std.mem.indexOfScalar(u8, operation, ' ') orelse return null;
+    const kind_end = std.mem.indexOfScalarPos(u8, operation, subject_end + 1, ' ') orelse return null;
+    const open = std.mem.indexOfScalarPos(u8, operation, kind_end, '`') orelse return null;
+    const close = std.mem.lastIndexOfScalar(u8, operation, '`') orelse return null;
+    if (close <= open) return null;
+    const tail = operation[close + 1 ..];
+    return .{
+        .subject = operation[0..subject_end],
+        .kind = operation[subject_end + 1 .. kind_end],
+        .clause = operation[open + 1 .. close],
+        .message = if (std.mem.startsWith(u8, tail, ": ")) tail[2..] else null,
+    };
+}
+
 /// JSON shape emitted by `qbe_runtime.c`; only present numeric fields appear.
 const Transport = struct {
     version: ?u32 = null,
