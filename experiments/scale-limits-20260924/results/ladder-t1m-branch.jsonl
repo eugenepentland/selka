@@ -1,0 +1,18 @@
+{"step": "cold_build", "env": ["MYLANG_HOST_MEMORY_LIMIT=12G"], "s": 131.424, "rss_mb": 8985, "ok": true, "code": 0, "load": 3.47, "tail": "", "tier": "t1m", "label": "v4"}
+{"step": "noop_build", "s": 1.452, "rss_mb": 280, "ok": true, "code": 0, "load": 8.26, "tail": "", "tier": "t1m", "label": "v4"}
+{"step": "cold_test_untimed", "env": ["MYLANG_HOST_MEMORY_LIMIT=12G"], "s": 0.442, "rss_mb": 453, "ok": false, "code": 2, "load": 8.26, "tail": "mylang: host failure: OutOfMemory\nCommand exited with non-zero status 2\n__RSS__ 464196\n", "tier": "t1m", "label": "v4"}
+{"step": "warm_check_untimed", "s": 9.142, "rss_mb": 5592, "ok": true, "code": 0, "load": 8.26, "tail": "", "tier": "t1m", "label": "v4"}
+{"step": "edit_check", "sample": 0, "s": 2.647, "rss_mb": 2081, "ok": true, "code": 0, "load": 7.45, "tail": "", "tier": "t1m", "label": "v4"}
+{"step": "edit_build", "sample": 0, "s": 10.574, "rss_mb": 4590, "ok": true, "code": 0, "load": 7.45, "tail": "", "tier": "t1m", "label": "v4"}
+{"step": "edit_test", "sample": 0, "s": 0.428, "rss_mb": 453, "ok": false, "code": 2, "load": 6.92, "tail": "mylang: host failure: OutOfMemory\nCommand exited with non-zero status 2\n__RSS__ 464356\n", "tier": "t1m", "label": "v4"}
+{"step": "iface_build", "sample": 0, "s": 10.451, "rss_mb": 4513, "ok": true, "code": 0, "load": 6.61, "tail": "", "tier": "t1m", "label": "v4"}
+{"step": "edit_check", "sample": 1, "s": 3.071, "rss_mb": 2081, "ok": true, "code": 0, "load": 6.21, "tail": "", "tier": "t1m", "label": "v4"}
+{"step": "edit_build", "sample": 1, "s": 12.014, "rss_mb": 4513, "ok": true, "code": 0, "load": 6.21, "tail": "", "tier": "t1m", "label": "v4"}
+{"step": "edit_test", "sample": 1, "s": 0.445, "rss_mb": 453, "ok": false, "code": 2, "load": 6.67, "tail": "mylang: host failure: OutOfMemory\nCommand exited with non-zero status 2\n__RSS__ 464356\n", "tier": "t1m", "label": "v4"}
+{"step": "iface_build", "sample": 1, "s": 11.543, "rss_mb": 4513, "ok": true, "code": 0, "load": 6.67, "tail": "", "tier": "t1m", "label": "v4"}
+{"step": "edit_check", "sample": 2, "s": 3.058, "rss_mb": 2081, "ok": true, "code": 0, "load": 6.26, "tail": "", "tier": "t1m", "label": "v4"}
+{"step": "edit_build", "sample": 2, "s": 11.419, "rss_mb": 4513, "ok": true, "code": 0, "load": 6.08, "tail": "", "tier": "t1m", "label": "v4"}
+{"step": "edit_test", "sample": 2, "s": 0.47, "rss_mb": 453, "ok": false, "code": 2, "load": 5.92, "tail": "mylang: host failure: OutOfMemory\nCommand exited with non-zero status 2\n__RSS__ 464356\n", "tier": "t1m", "label": "v4"}
+{"step": "iface_build", "sample": 2, "s": 12.485, "rss_mb": 4513, "ok": true, "code": 0, "load": 5.92, "tail": "", "tier": "t1m", "label": "v4"}
+{"step": "check_receipt", "first": {"s": 3.379, "rss_mb": 2081, "ok": true}, "s": 0.451, "rss_mb": 83, "ok": true, "tail": "", "receipt": "{\"version\":\"frontend-cache-v1\",\"syntax_hits\":0,\"syntax_misses\":0,\"syntax_stored\":0,\"verdict_hits\":1,\"verdict_misses\":0,\"verdict_stored\":0,\"damaged\":0,\"bypassed\":0,\"evicted\":0,\"retained_bytes\":0,\"stages\":{\"load_source\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lex_parse\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"collect_declarations\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"resolve_interface\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"check_body\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"instantiate_specialization\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"lower_function\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"emit_fragment\":{\"hits\":0,\"mis", "tier": "t1m", "label": "v4"}
+{"step": "iface_build_receipt", "s": 12.458, "rss_mb": 4512, "ok": true, "tail": "", "metadata_reused": "true", "compiled_functions": 14, "codegen_seconds": 2.072739509, "tier": "t1m", "label": "v4"}
