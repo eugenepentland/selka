@@ -78,10 +78,17 @@ list owns exactly its items and never advertises capacity it did not allocate.
   bit-flipped entry is rejected (`damaged` in the receipt) and the caller parses
   or checks fresh; no partial result is ever used. Stores stage to a unique
   `.tmp` file and rename atomically, and concurrent trims can only cost a miss.
-- **Bounded retention.** One identity namespace holds at most 128 MiB of entry
-  files; an entry larger than that is bypassed rather than stored, and the
-  directory is trimmed oldest-mtime-first after a successful store. `retained_bytes`
-  is the size observed during the last trim, so a pure cache hit reports `0`.
+- **Bounded retention that scales with the project.** A run that stored an
+  entry trims the directory once, after the command, to the larger of 128 MiB
+  and twice the entry bytes the run itself read back or stored (its working
+  set), least recently used first: a read renews an entry's modification time.
+  So a project whose working set outgrows 128 MiB (about 8 bytes of cache per
+  byte of source; a generated 440k-line project) keeps every entry it uses and
+  an unchanged rerun evicts nothing, while old versions of edited modules age
+  out. The directory costs at most twice the working set on disk, about 16
+  bytes per byte of source: 560 MB for a million-line project. An entry larger
+  than 128 MiB is bypassed rather than stored. `retained_bytes` is the size
+  observed during the last trim, so a run that stored nothing reports `0`.
 - **Invalidation is exact-content.** Any change to the compiler sources, Zig
   toolchain, optimize mode, diagnostic format, source path or source bytes
   changes a key. There is no time-based expiry and no notion of a "changed but

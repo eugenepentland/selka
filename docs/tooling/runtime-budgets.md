@@ -126,6 +126,12 @@ re-executes rather than reusing.
 The compiler bounds itself too, at 8 GiB unless `MYLANG_HOST_MEMORY_LIMIT` says
 otherwise, so a compiler defect fails loudly instead of swapping; the `zig cc`
 and QBE children a native build spawns complete under that inherited ceiling.
+The ceiling is on address space, and the project arena reserves at most one
+64 MiB chunk beyond what it has touched (ARENA-BOUNDED-1), so it bounds what the
+frontend really uses. A cold `check` of a generated million-line project peaks
+at 6.2 GB and fits; the cold frontend of a million-line `build` peaks at about
+9 GB and needs `MYLANG_HOST_MEMORY_LIMIT=12G` once, after which edit builds
+reuse its caches and fit the default.
 
 ```console
 $ cat grow.my
