@@ -41,8 +41,16 @@ typedef struct {
     size_t value_offset;
     int string_keys;
     /* How keys hash and compare, fixed from the key type at creation: a text,
-     * one eight-byte word, a narrower scalar, or wider bytes (only from C). */
+     * one eight-byte word, a narrower scalar, wider plain bytes, or a
+     * structured value (a record, tuple, union, domain, fixed array, `bytes` or
+     * a value holding a `str`) walked through its descriptor (HASH-KEYS-1). */
     unsigned key_kind;
+    /* Entries removed from the middle of the entry list whose bytes still sit
+     * there (DICT-REMOVE-1). The index names only live entries, so a removal is
+     * one table deletion; `myl_native_dictionary_settle` squeezes the dead
+     * entries out before anything reads the entry list by position. Nonzero only
+     * while the dictionary carries an index, and the last entry is always live. */
+    size_t dead;
     myl_native_type entry_type;
     myl_native_field entry_fields[2];
     myl_native_dictionary_index index;
@@ -83,9 +91,9 @@ int myl_native_dictionary_key_at(const myl_native_dictionary *, size_t index, vo
 int myl_native_dictionary_value_at(const myl_native_dictionary *, size_t index, void *output);
 /* Python-shaped dictionary methods. `pop` removes a matching entry and answers 1
  * found or 0 absent; `update`/`setdefault` may allocate and answer 0 on refusal.
- * `pop` shifts every later entry down, so it also renumbers the index in place,
- * without allocating or rehashing, and is the one operation that stays linear
- * in the dictionary's size. */
+ * `pop` takes its key's slot out of the table and leaves the entry's bytes for
+ * `settle` (DICT-REMOVE-1), so it is expected constant time and allocates
+ * nothing; a dictionary without a table shifts later entries down instead. */
 int myl_native_dictionary_pop(myl_native_dictionary *, const void *key, void *output);
 int myl_native_dictionary_update(myl_native_heap *, myl_native_dictionary *, const myl_native_dictionary *source);
 int myl_native_dictionary_setdefault(myl_native_heap *, myl_native_dictionary *, const void *key, const void *fallback, void *output);
@@ -96,4 +104,16 @@ void myl_native_dictionary_clear(myl_native_dictionary *);
  * dictionary answering lookups by scanning, which is slower and just as correct. */
 void myl_native_dictionary_reindex(myl_native_heap *, myl_native_dictionary *);
 myl_native_dictionary *myl_native_dictionary_copy(myl_native_heap *, const myl_native_dictionary *input);
+/* Squeeze removed entries out of the entry list, keeping the live ones in
+ * insertion order and renumbering their index slots in place. It allocates
+ * nothing and is a no-op when nothing was removed. Every reader of `entries`
+ * by position — iteration, snapshots, printing, equality, copying, the arena
+ * escape copier — settles first. */
+void myl_native_dictionary_settle(const myl_native_dictionary *);
+/* The stored value for a key, or NULL when the key is absent: the lookup the
+ * structural equality of two dictionaries asks for each entry. */
+const void *myl_native_dictionary_find(const myl_native_dictionary *, const void *key);
+/* Remove the most recently inserted live entry, copying its key to `output`;
+ * zero when the dictionary is empty. A set's `pop` (SET-1). */
+int myl_native_dictionary_pop_last(myl_native_dictionary *, void *output);
 #endif

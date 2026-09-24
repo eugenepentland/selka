@@ -11,8 +11,10 @@ static const myl_native_field dict_fields[]={
 static const myl_native_type dict_type={.size=sizeof(myl_native_dictionary),.alignment=_Alignof(myl_native_dictionary),.kind=MYL_NATIVE_RECORD,.fields=dict_fields,.field_count=2};
 /* How a dictionary's keys hash and compare: a `str` key by its text's octets, an
  * eight-byte integer as one word, a narrower integer as its zero-extended bytes,
- * and a key wider than a word (only reachable from C) as a byte string. */
-enum { KEY_TEXT, KEY_WORD, KEY_NARROW, KEY_WIDE };
+ * a plain key wider than a word as a byte string, and any other key — a record,
+ * tuple, union, domain, fixed array, `bytes`, or a value holding a `str` — by
+ * walking its descriptor (HASH-KEYS-1). */
+enum { KEY_TEXT, KEY_WORD, KEY_NARROW, KEY_WIDE, KEY_STRUCT };
 /* What the last probe learned: nothing, the key's entry, the key's absence, or
  * the absence of a described slice (DICT-RANGE-KEY-1). The two absences are
  * kept apart because a slice's record names the text it ranges over, which a
@@ -34,7 +36,8 @@ myl_native_dictionary *myl_native_dictionary_new(myl_native_heap *heap, const my
     myl_native_dictionary *dict=myl_native_heap_alloc(heap,&dict_type,1);
     if (!dict) return NULL;
     dict->key=key; dict->value=value; dict->value_offset=offset; dict->string_keys=string_keys;
-    dict->key_kind=string_keys?KEY_TEXT:key->size==8?KEY_WORD:key->size<8?KEY_NARROW:KEY_WIDE;
+    dict->key_kind=string_keys?KEY_TEXT:key->kind!=MYL_NATIVE_PLAIN?KEY_STRUCT:key->size==8?KEY_WORD:key->size<8?KEY_NARROW:KEY_WIDE;
+    dict->dead=0;
     dict->entry_fields[0]=(myl_native_field){.offset=0,.type=key};
     dict->entry_fields[1]=(myl_native_field){.offset=offset,.type=value};
     dict->entry_type=(myl_native_type){.size=size,.alignment=alignment,.kind=MYL_NATIVE_RECORD,.fields=dict->entry_fields,.field_count=2};
@@ -103,9 +106,49 @@ static inline int same_octets(const unsigned char *a, const unsigned char *b, si
 static inline int same_text(const myl_native_text *stored, const myl_native_text *query, const unsigned char *octets) {
     return stored==query || (stored->bytes==query->bytes && same_octets((const unsigned char *)(stored+1),octets,stored->bytes));
 }
+/* Structural equality of two hashable values of one descriptor, exactly the
+ * answer `==` gives them: integers and enums by their bytes, a `str` by its
+ * octets, `bytes` by its octets, records, tuples and domains field by field,
+ * a union or Option by its case and that case's payload, and a fixed array
+ * element by element. A hashable key holds no cycle, so the walk recurses on
+ * the descriptor's depth and allocates nothing. */
+static int same_value(const myl_native_type *type, const unsigned char *a, const unsigned char *b) {
+    switch (type->kind) {
+    case MYL_NATIVE_POINTER: {
+        const void *left, *right;
+        memcpy(&left,a,sizeof left); memcpy(&right,b,sizeof right);
+        if (left==right) return 1;
+        if (!left || !right) return 0;
+        if (type->collection_kind==2) return myl_native_text_equal(left,right);
+        if (type->collection_kind==4) {
+            const myl_native_list *x=left, *y=right;
+            return x->length==y->length && (!x->length || !memcmp(x->storage,y->storage,x->length));
+        }
+        return 0;
+    }
+    case MYL_NATIVE_RECORD:
+        for (size_t i=0;i<type->field_count;i++)
+            if (!same_value(type->fields[i].type,a+type->fields[i].offset,b+type->fields[i].offset)) return 0;
+        return 1;
+    case MYL_NATIVE_VARIANT: {
+        uint32_t tag, other;
+        memcpy(&tag,a,4); memcpy(&other,b,4);
+        if (tag!=other) return 0;
+        for (size_t i=0;i<type->field_count;i++)
+            if (type->fields[i].tag==tag && !same_value(type->fields[i].type,a+type->fields[i].offset,b+type->fields[i].offset)) return 0;
+        return 1;
+    }
+    case MYL_NATIVE_ARRAY:
+        for (size_t i=0;i<type->count;i++)
+            if (!same_value(type->fields[0].type,a+i*type->stride,b+i*type->stride)) return 0;
+        return 1;
+    default: return !memcmp(a,b,type->size);
+    }
+}
 static inline int same_key(const myl_native_dictionary *dict, const void *entry, const void *key) {
     switch (dict->key_kind) {
     case KEY_TEXT: return same_text(text_of(entry),text_of(key),myl_native_text_storage(text_of(key)));
+    case KEY_STRUCT: return same_value(dict->key,entry,key);
     case KEY_WIDE: return same_octets(entry,key,dict->key->size);
     default: return scalar_bits(entry,dict->key->size)==scalar_bits(key,dict->key->size);
     }
@@ -133,10 +176,61 @@ static inline uint32_t scalar_hash(uint64_t bits) {
 static inline uint32_t text_hash(const myl_native_text *text) {
     return text->flags&MYL_TEXT_HASHED?text->hash:myl_native_text_hash(text);
 }
+/* Fold one word into a running structural hash with the same multiply. */
+static inline uint64_t mix_word(uint64_t state, uint64_t word) {
+    return fold_multiply(state^word^KEY_MIX,KEY_SPREAD);
+}
+/* The structural hash of one hashable value, reading exactly what `same_value`
+ * compares: a scalar's bytes a word at a time, a `str` through its cached text
+ * hash, `bytes` through the octet hash a text of the same octets gets, each
+ * field of a record in declaration order, a union's case tag and then only
+ * that case's payload, and each element of a fixed array. Padding and an
+ * inactive case's bytes are never read, so equal values hash equally however
+ * they were built, and no seed is involved. */
+static uint64_t hash_value(const myl_native_type *type, const unsigned char *value, uint64_t state) {
+    switch (type->kind) {
+    case MYL_NATIVE_POINTER: {
+        const void *pointer;
+        memcpy(&pointer,value,sizeof pointer);
+        if (!pointer) return mix_word(state,0);
+        if (type->collection_kind==2) return mix_word(state,(uint64_t)text_hash(pointer)+1);
+        if (type->collection_kind==4) {
+            const myl_native_list *octets=pointer;
+            return mix_word(state,(uint64_t)myl_native_octets_hash(octets->storage,octets->length)+1);
+        }
+        return mix_word(state,(uint64_t)(uintptr_t)pointer);
+    }
+    case MYL_NATIVE_RECORD:
+        for (size_t i=0;i<type->field_count;i++) state=hash_value(type->fields[i].type,value+type->fields[i].offset,state);
+        return state;
+    case MYL_NATIVE_VARIANT: {
+        uint32_t tag;
+        memcpy(&tag,value,4);
+        state=mix_word(state,tag);
+        for (size_t i=0;i<type->field_count;i++)
+            if (type->fields[i].tag==tag) state=hash_value(type->fields[i].type,value+type->fields[i].offset,state);
+        return state;
+    }
+    case MYL_NATIVE_ARRAY:
+        for (size_t i=0;i<type->count;i++) state=hash_value(type->fields[0].type,value+i*type->stride,state);
+        return state;
+    default:
+        for (size_t at=0;at<type->size;at+=8) {
+            uint64_t word=0;
+            memcpy(&word,value+at,type->size-at<8?type->size-at:8);
+            state=mix_word(state,word);
+        }
+        return state;
+    }
+}
 /* The table hash of one key. Equal keys have equal bytes and so equal hashes. */
 static uint32_t hash_key(const myl_native_dictionary *dict, const void *key) {
     switch (dict->key_kind) {
     case KEY_TEXT: return text_hash(text_of(key));
+    case KEY_STRUCT: {
+        uint64_t hash=hash_value(dict->key,key,dict->key->size);
+        return (uint32_t)(hash^(hash>>32));
+    }
     case KEY_WIDE: {
         /* The same multiply chained over the key's words. */
         const unsigned char *bytes=key;
@@ -168,6 +262,47 @@ static void index_fill(myl_native_dictionary *dict) {
     for (size_t i=0;i<dict->entries->length;i++)
         index_place(&dict->index,pack_slot(hash_key(dict,entry_at(dict,i)),i));
 }
+/* Whether the table already holds `needed` entries at a load factor of at most 5/8. */
+static inline int table_fits(const myl_native_dictionary *dict, size_t needed) {
+    return dict->index.capacity && needed<=MAX_CAPACITY/8*5 && needed*8<=dict->index.capacity*5;
+}
+/* The slot that names entry `index`, or SIZE_MAX when none does: the entry was
+ * removed and its bytes wait in the entry list for `settle` (DICT-REMOVE-1).
+ * The entry's own key is hashed once, and a slot is matched by the stored hash
+ * and the entry number it carries, so no key is compared. */
+static size_t slot_of(const myl_native_dictionary *dict, size_t index) {
+    uint32_t hash=hash_key(dict,entry_at(dict,index));
+    size_t mask=dict->index.capacity-1;
+    for (size_t at=hash&mask;dict->index.slots[at];at=(at+1)&mask) {
+        uint64_t slot=dict->index.slots[at];
+        if ((uint32_t)(slot>>32)==hash && MYL_NATIVE_DICTIONARY_SLOT_ENTRY(slot)==index+1) return at;
+    }
+    return SIZE_MAX;
+}
+void myl_native_dictionary_settle(const myl_native_dictionary *input) {
+    myl_native_dictionary *dict=(myl_native_dictionary *)input;
+    if (!dict->dead) return;
+    unsigned char *storage=dict->entries->storage;
+    size_t size=dict->entry_type.size, kept=0;
+    /* Every entry before `kept` is settled and every slot naming one was
+     * renumbered to at most `kept`, so a slot still carrying `i + 1` can only
+     * name entry `i` itself: the walk never mistakes a moved entry for a live
+     * one it has not reached. */
+    for (size_t i=0;i<dict->entries->length;i++) {
+        size_t at=slot_of(dict,i);
+        if (at==SIZE_MAX) continue;
+        if (kept!=i) {
+            memmove(storage+kept*size,storage+i*size,size);
+            dict->index.slots[at]=pack_slot((uint32_t)(dict->index.slots[at]>>32),kept);
+        }
+        kept++;
+    }
+    memset(storage+kept*size,0,(dict->entries->length-kept)*size);
+    dict->entries->length=kept;
+    dict->entries->generation++;
+    dict->dead=0;
+    dict->last.state=PROBE_NONE;
+}
 /* Size the table for `needed` entries at a load factor of at most 5/8. A grown
  * table is refilled from the old one's stored hashes, so growth reads no key.
  * A refused allocation drops the index rather than failing the write: lookups
@@ -175,7 +310,15 @@ static void index_fill(myl_native_dictionary *dict) {
  * caller's budget flag is left as it was so a later trap still names the real
  * cause. Any change to the table forgets the last probe. */
 static void index_reserve(myl_native_heap *heap, myl_native_dictionary *dict, size_t needed) {
-    if (dict->index.capacity && needed<=MAX_CAPACITY/8*5 && needed*8<=dict->index.capacity*5) return;
+    if (table_fits(dict,needed)) return;
+    /* Removed entries are squeezed out before the table grows or is dropped:
+     * they may be all the growth needed, and only a table can tell them apart. */
+    if (dict->dead) {
+        size_t before=dict->entries->length;
+        myl_native_dictionary_settle(dict);
+        needed-=before-dict->entries->length;
+        if (table_fits(dict,needed)) return;
+    }
     dict->last.state=PROBE_NONE;
     size_t capacity=dict->index.capacity?dict->index.capacity:8;
     if (needed>MAX_CAPACITY/8*5) { dict->index.slots=NULL; dict->index.capacity=0; return; }
@@ -306,7 +449,7 @@ static inline __attribute__((always_inline)) located locate(const myl_native_dic
     int recorded=record_key(dict,key,&bits);
     if (last->state==PROBE_ABSENT && recorded && bits==last->key) return (located){NO_ENTRY,last->slot,last->hash};
     located found;
-    if (!dict->index.capacity || dict->key_kind==KEY_WIDE) found=probe_any(dict,key);
+    if (!dict->index.capacity || dict->key_kind>=KEY_WIDE) found=probe_any(dict,key);
     else if (dict->key_kind==KEY_TEXT) found=probe_text(dict,text_of(key));
     else if (dict->key_kind==KEY_WORD) found=probe_word(dict,bits);
     else found=probe_scalar(dict,bits);
@@ -335,7 +478,7 @@ static __attribute__((noinline)) int read_walk(const myl_native_dictionary *dict
     copy_value(dict,output,entry_at(dict,index)+dict->value_offset);
     return 1;
 }
-size_t myl_native_dictionary_length(const myl_native_dictionary *dict) { return dict->entries->length; }
+size_t myl_native_dictionary_length(const myl_native_dictionary *dict) { return dict->entries->length-dict->dead; }
 int myl_native_dictionary_contains(const myl_native_dictionary *dict, const void *key) {
     return recall(dict,key)!=NO_ENTRY || contains_walk(dict,key);
 }
@@ -376,6 +519,9 @@ static __attribute__((noinline)) int insert(myl_native_heap *heap, myl_native_di
         }
         memcpy(entry,&owned,sizeof owned);
     }
+    /* Removed entries never outnumber live ones for long: once they do, the
+     * entry list is squeezed before it grows again (DICT-REMOVE-1). */
+    if (dict->dead && dict->dead*2>=dict->entries->length) myl_native_dictionary_settle(dict);
     const uint64_t *slots=dict->index.slots;
     index_reserve(heap,dict,dict->entries->length+1);
     int unchanged=dict->index.slots==slots && at.slot!=NO_SLOT;
@@ -543,6 +689,7 @@ int myl_native_dictionary_write_range(myl_native_heap *heap, myl_native_dictiona
     return 1;
 }
 myl_native_list *myl_native_dictionary_snapshot(myl_native_heap *heap, myl_native_dictionary *dict, int keys) {
+    myl_native_dictionary_settle(dict);
     myl_native_root root;
     myl_native_root_push(heap,&root,&dict,&pointer_type);
     const myl_native_type *element=keys?dict->key:dict->value;
@@ -558,11 +705,13 @@ myl_native_list *myl_native_dictionary_snapshot(myl_native_heap *heap, myl_nativ
     return result;
 }
 int myl_native_dictionary_key_at(const myl_native_dictionary *dict, size_t index, void *output) {
+    myl_native_dictionary_settle(dict);
     if (index>=dict->entries->length) return 0;
     memmove(output,entry_at(dict,index),dict->key->size);
     return 1;
 }
 int myl_native_dictionary_value_at(const myl_native_dictionary *dict, size_t index, void *output) {
+    myl_native_dictionary_settle(dict);
     if (index>=dict->entries->length) return 0;
     memmove(output,entry_at(dict,index)+dict->value_offset,dict->value->size);
     return 1;
@@ -581,36 +730,66 @@ static void index_remove(const myl_native_dictionary_index *index, size_t hole) 
     }
     index->slots[hole]=0;
 }
-int myl_native_dictionary_pop(myl_native_dictionary *dict, const void *key, void *output) {
-    located at=find(dict,key);
-    if (at.entry==NO_ENTRY) return 0;
-    size_t index=at.entry;
+/* Forget entry `index`, whose slot is already out of the table. An entry in the
+ * middle of the list is only counted dead: its bytes stay, still traced, until
+ * `settle` squeezes them out, so the removal moves nothing (DICT-REMOVE-1). The
+ * last entry is cut off instead, together with every dead entry before it, so
+ * the last entry of the list is always a live one. */
+static void drop_entry(myl_native_dictionary *dict, size_t index) {
+    unsigned char *storage=dict->entries->storage;
+    size_t size=dict->entry_type.size;
+    dict->entries->generation++;
+    if (index+1<dict->entries->length) { dict->dead++; return; }
+    dict->entries->length--;
+    memset(storage+dict->entries->length*size,0,size);
+    while (dict->dead && dict->entries->length && slot_of(dict,dict->entries->length-1)==SIZE_MAX) {
+        dict->entries->length--;
+        memset(storage+dict->entries->length*size,0,size);
+        dict->dead--;
+    }
+}
+/* Remove entry `index` of a dictionary without a table: every later entry moves
+ * down one place, as the scan that answers its lookups expects. */
+static void shift_out(myl_native_dictionary *dict, size_t index) {
     unsigned char *entries=dict->entries->storage;
     size_t size=dict->entry_type.size;
-    memcpy(output,entries+index*size+dict->value_offset,dict->value->size);
-    dict->last.state=PROBE_NONE;
-    /* Every entry after the removed one moves down, so every slot that names one
-     * is renumbered in place: no key is rehashed and nothing is allocated, which
-     * is what lets `pop` keep its heap-free signature, and the walk over the
-     * table keeps `pop` linear. */
-    if (dict->index.capacity) {
-        size_t slot=at.slot;
-        if (slot==NO_SLOT) {
-            size_t mask=dict->index.capacity-1;
-            for (slot=hash_key(dict,key)&mask;MYL_NATIVE_DICTIONARY_SLOT_ENTRY(dict->index.slots[slot])!=index+1;slot=(slot+1)&mask) {}
-        }
-        index_remove(&dict->index,slot);
-        for (size_t i=0;i<dict->index.capacity;i++)
-            if (MYL_NATIVE_DICTIONARY_SLOT_ENTRY(dict->index.slots[i])>index+1) dict->index.slots[i]--;
-    }
     size_t moved=dict->entries->length-index-1;
     if (moved) memmove(entries+index*size,entries+(index+1)*size,moved*size);
     dict->entries->length--;
     memset(entries+dict->entries->length*size,0,size);
     dict->entries->generation++;
+}
+int myl_native_dictionary_pop(myl_native_dictionary *dict, const void *key, void *output) {
+    located at=find(dict,key);
+    if (at.entry==NO_ENTRY) return 0;
+    size_t index=at.entry;
+    memcpy(output,entry_at(dict,index)+dict->value_offset,dict->value->size);
+    dict->last.state=PROBE_NONE;
+    if (!dict->index.capacity) { shift_out(dict,index); return 1; }
+    /* One slot leaves the table, closing its collision run behind it, and no
+     * other entry moves: removal is expected constant time and allocates
+     * nothing. */
+    index_remove(&dict->index,at.slot!=NO_SLOT?at.slot:slot_of(dict,index));
+    drop_entry(dict,index);
     return 1;
 }
+int myl_native_dictionary_pop_last(myl_native_dictionary *dict, void *output) {
+    if (!dict->entries->length) return 0;
+    size_t index=dict->entries->length-1;
+    memcpy(output,entry_at(dict,index),dict->key->size);
+    dict->last.state=PROBE_NONE;
+    if (!dict->index.capacity) { shift_out(dict,index); return 1; }
+    size_t at=slot_of(dict,index);
+    if (at!=SIZE_MAX) index_remove(&dict->index,at);
+    drop_entry(dict,index);
+    return 1;
+}
+const void *myl_native_dictionary_find(const myl_native_dictionary *dict, const void *key) {
+    size_t index=find(dict,key).entry;
+    return index==NO_ENTRY?NULL:entry_at(dict,index)+dict->value_offset;
+}
 int myl_native_dictionary_update(myl_native_heap *heap, myl_native_dictionary *dict, const myl_native_dictionary *source) {
+    myl_native_dictionary_settle(source);
     for (size_t i=0;i<source->entries->length;i++) {
         const unsigned char *entry=(const unsigned char *)source->entries->storage+i*source->entry_type.size;
         if (!myl_native_dictionary_write(heap,dict,entry,entry+source->value_offset)) return 0;
@@ -629,6 +808,7 @@ int myl_native_dictionary_setdefault(myl_native_heap *heap, myl_native_dictionar
 }
 void myl_native_dictionary_clear(myl_native_dictionary *dict) {
     dict->last.state=PROBE_NONE;
+    dict->dead=0;
     if (dict->entries->length) {
         memset(dict->entries->storage,0,dict->entries->length*dict->entry_type.size);
         dict->entries->length=0;
@@ -640,6 +820,7 @@ void myl_native_dictionary_reindex(myl_native_heap *heap, myl_native_dictionary 
     /* Whatever table the dictionary carried described keys that were not yet
      * filled, so it is dropped and a fresh one hashes every key. */
     dict->last.state=PROBE_NONE;
+    dict->dead=0;
     dict->index=(myl_native_dictionary_index){.slots=NULL,.capacity=0};
     index_reserve(heap,dict,dict->entries->length);
 }
