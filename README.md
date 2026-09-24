@@ -213,8 +213,9 @@ acceptance. CI uses this default suite in Debug and ReleaseFast.
 
 Building and using mylang needs only the pinned Zig: `zig build` (with or
 without `-Dcompiler-only`) runs no Python, and the installed compiler's
-`check`, `build`, `run`, `test`, `fmt`, `docs`, `index-project` and `context`
-run none either (`USE-WITHOUT-PYTHON-1` checks them under an empty `PATH`).
+`check`, `build`, `run`, `test`, `fmt`, `docs`, `index-project`, `context` and
+`packages` run none either (`USE-WITHOUT-PYTHON-1` and the `PACKAGES-*` tests
+check them under an empty `PATH`).
 Python 3 is used only by some `zig build test` drivers and developer scripts,
 and by the LLVM adapter behind `--release` until that adapter is ported.
 
