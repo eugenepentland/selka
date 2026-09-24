@@ -381,6 +381,8 @@ test "the embedded project reads exactly one in-memory path and no checkout file
     defer t.allocator.free(served);
     try t.expectEqualStrings("module reference\n", served);
     try t.expect(try standardModulesMatchCheckout(&reference.standard_modules));
+    // The stand-in modules are part of the reference project too (TEST-CAPS-1).
+    try t.expectEqual(@as(usize, 14), reference.standard_modules.len);
 }
 
 // spec: REFERENCE-10
