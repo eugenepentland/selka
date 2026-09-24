@@ -891,47 +891,56 @@ const State = struct {
             key.* = try self.cache.digestKey(try lean.digest(a, function));
         }
         const batches = try batch.plan(a, units, batch.policy(self.context.environ));
-        // Objects: each batch's code then its metadata, then the shared metadata and the entry.
-        const objects = try a.alloc(cache_api.Object, batches.len * 2 + 2);
+        // QBE-BATCH-6: function metadata is assembled in coarser groups than
+        // code, since assembling it is little work next to starting a tool.
+        const groups = try batch.plan(a, units, batch.metadata_policy);
+        // Objects: each batch's code, each group's metadata, then the shared metadata and the entry.
+        const objects = try a.alloc(cache_api.Object, batches.len + groups.len + 2);
         var misses: std.ArrayList(batch.Miss) = .empty;
         const owner = try a.alloc(usize, functions.len);
         for (batches, 0..) |group, index| {
             const positions = order[group.first .. group.first + group.count];
-            const members = try a.alloc(std.json.Value, group.count);
-            for (positions, members) |position, *member| {
-                owner[position] = index;
-                member.* = functions[position];
-            }
+            for (positions) |position| owner[position] = index;
             const code = try batch.key(self.cache, keys[group.first .. group.first + group.count]);
-            if (try self.cache.cached(code)) |hit| objects[index * 2] = hit else {
+            if (try self.cache.cached(code)) |hit| objects[index] = hit else {
                 // BUILD-MEMORY-1: each member's text is read, checked and written
                 // out one at a time, so no miss holds its text until QBE runs.
-                var texts: MemberTexts = .{ .state = self, .members = members };
-                const files = try batch.stage(self.cache, members.len, &texts);
-                try misses.append(a, .{ .key = code, .object = &objects[index * 2], .input = .{ .files = files } });
-            }
-            // BUILD-METADATA-KEY-1: the tables are keyed by what they are
-            // rendered from, and rendered only for a batch that must build them.
-            const tables = try self.cache.derived(batch.metadata_version, &std.fmt.bytesToHex(outputs.metadataDigest(members), .lower));
-            if (try self.cache.cached(tables)) |hit| objects[index * 2 + 1] = hit else {
-                try misses.append(a, .{ .key = tables, .object = &objects[index * 2 + 1], .input = .{ .assembly = try outputs.metadataAssembly(a, try self.metaTables(members)) } });
+                var texts: MemberTexts = .{ .state = self, .members = try planned(a, functions, positions) };
+                const files = try batch.stage(self.cache, group.count, &texts);
+                try misses.append(a, .{ .key = code, .object = &objects[index], .input = .{ .files = files } });
             }
         }
+        for (groups, batches.len..) |group, slot| {
+            const members = try planned(a, functions, order[group.first .. group.first + group.count]);
+            // BUILD-METADATA-KEY-1: the tables are keyed by what they are
+            // rendered from, and rendered only for a group that must build them.
+            const tables = try self.cache.derived(batch.metadata_version, &std.fmt.bytesToHex(outputs.metadataDigest(members), .lower));
+            if (try self.cache.cached(tables)) |hit| objects[slot] = hit else {
+                try misses.append(a, .{ .key = tables, .object = &objects[slot], .input = .{ .assembly = try outputs.metadataAssembly(a, try self.metaTables(members)) } });
+            }
+        }
+        const shared = batches.len + groups.len;
         // The C units start first: the shared metadata is the largest single compile.
         var work: std.ArrayList(batch.Miss) = .empty;
-        try self.stageC(&work, "metadata", try outputs.sharedMetadata(a, self.manifest), &objects[batches.len * 2]);
-        try self.stageC(&work, "entry", wrapper, &objects[batches.len * 2 + 1]);
+        try self.stageC(&work, "metadata", try outputs.sharedMetadata(a, self.manifest), &objects[shared]);
+        try self.stageC(&work, "entry", wrapper, &objects[shared + 1]);
         try work.appendSlice(a, misses.items);
         try batch.build(self.cache, work.items, batch.width(self.context.io, work.items.len));
-        for (objects[0 .. batches.len * 2]) |object| try self.add(object);
+        for (objects[0..shared]) |object| try self.add(object);
         const unit_keys = try a.alloc([]const u8, functions.len);
         for (order, keys) |position, key| unit_keys[position] = key;
         for (functions, owner, unit_keys) |function, index, key| {
-            const object = objects[index * 2];
+            const object = objects[index];
             self.reused += @intFromBool(object.reused);
             try self.records.append(a, .{ .name = v.text(v.get(function, "name")), .symbol = v.text(v.get(function, "symbol")), .key = key, .object = object.path, .reused = object.reused });
         }
-        return .{ objects[batches.len * 2], objects[batches.len * 2 + 1] };
+        return .{ objects[shared], objects[shared + 1] };
+    }
+    /// The manifest units at `positions`, in that (plan) order.
+    fn planned(allocator: std.mem.Allocator, functions: []const std.json.Value, positions: []const usize) ![]const std.json.Value {
+        const members = try allocator.alloc(std.json.Value, positions.len);
+        for (positions, members) |position, *member| member.* = functions[position];
+        return members;
     }
     /// One missed batch's member texts, read in plan order into the scratch
     /// arena `batch.stage` hands each one, and each checked against the QBE

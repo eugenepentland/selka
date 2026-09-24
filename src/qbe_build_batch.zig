@@ -46,9 +46,16 @@ pub const default_spacing: u64 = 8;
 /// The version every batch key carries, so a change to how members combine
 /// never reuses an object built the old way under an unchanged driver identity.
 const key_version = "qbe-batch-v1";
-/// The kind a batch's assembled function metadata is keyed under, beside the
+/// The kind a group's assembled function metadata is keyed under, beside the
 /// digest of what it is rendered from (`outputs.metadataDigest`).
-pub const metadata_version = "qbe-batch-metadata-v2";
+pub const metadata_version = "qbe-batch-metadata-v3";
+/// QBE-BATCH-6: how function metadata is grouped into assembled objects —
+/// the same planner as code, with boundaries four times sparser. Assembling
+/// one group's tables is little work next to starting the assembler, so a
+/// cold build starts about a quarter as many metadata tools as code tools,
+/// while an edit that moves one module's lines still reassembles only the
+/// groups of that module.
+pub const metadata_policy: Policy = .{ .max_units = default_max_units, .spacing = default_spacing * 4 };
 
 /// One guest unit as the planner orders it: the module it belongs to, its
 /// stable symbol, and whether it must be compiled alone.
@@ -460,6 +467,19 @@ test "a module's batches hold about eight functions, so an edit recompiles a han
     // 1,000 functions of one module form about 125 batches.
     try std.testing.expect(batches.len >= 100 and batches.len <= 160);
     try std.testing.expect(largestBatch(batches) <= 64);
+}
+
+// spec: QBE-BATCH-6
+test "function metadata is grouped more coarsely than code, still within modules" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const units = try syntheticUnits(a, 1000, 500);
+    const groups = try plan(a, units, metadata_policy);
+    const batches = try plan(a, units, .{});
+    try std.testing.expect(batchesRespect(units, groups, default_max_units));
+    try std.testing.expect(groups.len * 2 < batches.len);
+    try std.testing.expect(groups.len >= 1000 / default_max_units);
 }
 
 /// The member count of the largest batch.
