@@ -14,6 +14,8 @@ test {
     _ = @import("qbe_build_host.zig");
     _ = @import("qbe_build_embed.zig");
     _ = @import("qbe_build_shapes.zig");
+    _ = @import("qbe_build_units.zig");
+    _ = @import("qbe_build_receipt.zig");
 }
 
 // The two scenarios below spawn the installed compiler end to end, the way the

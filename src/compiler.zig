@@ -30,6 +30,8 @@ pub const project_files = @import("project_files.zig");
 pub const project_compile = @import("project_compile.zig");
 /// Export snapshot and the safety/accounting policy one native emission runs under.
 pub const native_interface = @import("native_interface.zig");
+/// Per-function reuse of emitted QBE units across builds.
+pub const qbe_fragments = @import("qbe_fragments.zig");
 const project_syntax = @import("project_syntax.zig");
 pub const interfaces = @import("interfaces.zig");
 pub const check_cache = @import("check_cache.zig");

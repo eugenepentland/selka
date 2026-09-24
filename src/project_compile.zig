@@ -54,6 +54,9 @@ pub const Compilation = struct {
     diagnostics: diagnostic.Sink,
     program: ?typed.Program = null,
     code: ?@import("bytecode.zig").Program = null,
+    /// Persistent per-function unit reuse for native emission, when the
+    /// command has a fragment store (`QBE-FRAGMENT-REUSE-1`).
+    reuse: ?@import("qbe_fragments.zig").Reuse = null,
     /// Merge indexed modules into a compilation whose storage belongs to the project arena.
     pub fn init(index: *interfaces.Index) InitError!Compilation {
         const merged = try syntax.build(index);
@@ -85,7 +88,7 @@ pub const Compilation = struct {
         defer allocator.free(roots);
         const schema = try self.renderSchema(allocator, roots);
         defer allocator.free(schema);
-        return @import("qbe.zig").generateWithInterface(allocator, self.code.?, self.src, &self.diagnostics, .{ .roots = roots, .schema = schema, .policy = policy });
+        return @import("qbe.zig").generateWithInterface(allocator, self.code.?, self.src, &self.diagnostics, .{ .roots = roots, .schema = schema, .policy = policy, .reuse = self.reuse });
     }
 
     /// Emit checked native-test dependency facts without lowering or QBE emission.
@@ -131,7 +134,7 @@ pub const Compilation = struct {
             else => return error.InternalError,
         };
         stats.* = .{ .lowered_functions = count, .emitted_fragments = count };
-        return @import("qbe.zig").generateSelectedWithInterface(allocator, inlined, self.src, &self.diagnostics, .{ .roots = roots, .schema = schema }, selected) catch |err| switch (err) {
+        return @import("qbe.zig").generateSelectedWithInterface(allocator, inlined, self.src, &self.diagnostics, .{ .roots = roots, .schema = schema, .reuse = self.reuse }, selected) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             error.SourceError => return error.SourceError,
             error.WriteFailed => return error.WriteFailed,

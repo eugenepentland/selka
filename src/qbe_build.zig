@@ -10,6 +10,8 @@ const outputs = @import("qbe_build_outputs.zig");
 const v = @import("qbe_build_value.zig");
 const frame_map = @import("qbe_frame_map.zig");
 const native_link = @import("native_link.zig");
+const lean = @import("qbe_build_units.zig");
+const receipts = @import("qbe_build_receipt.zig");
 /// The linker flag that drops every section a program never references.
 const gc_sections = "-Wl,--gc-sections";
 /// The manifest array that lists every emitted unit.
@@ -180,7 +182,7 @@ fn environmentJson(allocator: std.mem.Allocator, per_build: Environment) Error![
 }
 /// Validate one emitted manifest and link it into `output`, reporting whether the file changed.
 pub fn assemble(cache: cache_api.Cache, parsed: options.Options, manifest: std.json.Value, output: []const u8) Error!bool {
-    try validate(manifest);
+    try validate(cache.context.allocator, manifest);
     var state = State{ .context = cache.context, .cache = cache, .manifest = manifest };
     try state.compile(parsed);
     return state.link(parsed, output);
@@ -218,6 +220,9 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
         const compiler = try frontendCompiler(context);
         var arguments: std.ArrayList([]const u8) = .empty;
         try arguments.appendSlice(a, &.{ compiler, if (project) "emit-project-qbe" else "emit-qbe", try context.absolute(parsed.source) });
+        // A project's units stay in the compiler's fragment store; the manifest
+        // names each by digest and path (`QBE-FRAGMENT-REUSE-1`).
+        if (project) try arguments.append(a, "--lean-manifest");
         if (std.mem.eql(u8, parsed.cache, options.no_cache)) {
             try arguments.append(a, "--no-cache");
         } else if (!std.mem.eql(u8, parsed.cache, options.default_cache)) {
@@ -255,18 +260,23 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
         }
         break :frontend generated.stdout;
     };
-    const manifest = (try std.json.parseFromSlice(std.json.Value, a, manifest_bytes, .{ .allocate = .alloc_always })).value;
-    try validate(manifest);
     // A consumed manifest reports no frontend time because no frontend ran.
     const frontend = if (checked_manifest != null) 0 else seconds(context, start);
     const native_start = std.Io.Timestamp.now(context.io, .awake);
+    const output = if (parsed.run) try std.fs.path.join(a, &.{ temporary, "program" }) else try context.absolute(parsed.output);
+    // BUILD-NOOP-1: the same manifest under the same environment, flags and
+    // untouched output is already built; nothing below would change a byte.
+    const receipt = receipts.Receipt.init(context, parsed, try receiptIdentity(a, cache), manifest_bytes, output);
+    if (unchanged(receipt, phases, frontend)) return 0;
+    const manifest = (try std.json.parseFromSlice(std.json.Value, a, manifest_bytes, .{ .allocate = .alloc_always })).value;
+    try validate(a, manifest);
     var state = State{ .context = context, .cache = cache, .manifest = manifest };
     const codegen_start = std.Io.Timestamp.now(context.io, .awake);
     try state.compile(parsed);
     const codegen = seconds(context, codegen_start);
     const link_start = std.Io.Timestamp.now(context.io, .awake);
-    const output = if (parsed.run) try std.fs.path.join(a, &.{ temporary, "program" }) else try context.absolute(parsed.output);
     const changed = try state.link(parsed, output);
+    if (receipt) |built| built.record();
     const link = seconds(context, link_start);
     if (parsed.report) {
         const report = try std.json.Stringify.valueAlloc(a, .{
@@ -305,6 +315,29 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
     }
     if (parsed.run) return spawnParts(context, output, controls, parsed);
     return 0;
+}
+/// Whether this build's receipt says its output is already exactly what it
+/// would produce (`BUILD-NOOP-1`). A skipped build still reports its frontend
+/// phase, and codegen, link and native phases that did no work.
+fn unchanged(receipt: ?receipts.Receipt, phases: ?*PhaseTimings, frontend: f64) bool {
+    const recorded = receipt orelse return false;
+    switch (recorded.state()) {
+        .fresh => {
+            if (phases) |measured| measured.* = .{ .frontend = frontend, .codegen = 0, .link = 0, .native = 0, .complete = true };
+            return true;
+        },
+        // Something replaced the output this manifest built: the link's own
+        // reuse check trusts the sidecar, so the stranger must go first.
+        .replaced => recorded.discard(),
+        .unknown => {},
+    }
+    return false;
+}
+/// Everything besides the manifest and the build flags that decides a build's
+/// output: this driver's generation (driver, runtime and native ABI) and the
+/// resolved tool, mode, target and backend environment of every object.
+fn receiptIdentity(a: std.mem.Allocator, cache: cache_api.Cache) Error![]const u8 {
+    return std.mem.concat(a, u8, &.{ generation_identity, "\x00", cache.environment });
 }
 /// Find an internal `--select-file=PATH` in the original build arguments. The
 /// selective frontend input is intentionally not stored in `Options`, whose
@@ -625,7 +658,7 @@ fn publishInstalled(context: fs.Context, source: []const u8, out: []const u8, ha
 fn seconds(context: fs.Context, start: std.Io.Timestamp) f64 {
     return @as(f64, @floatFromInt(start.durationTo(std.Io.Timestamp.now(context.io, .awake)).nanoseconds)) / 1e9;
 }
-fn validate(manifest: std.json.Value) !void {
+fn validate(allocator: std.mem.Allocator, manifest: std.json.Value) !void {
     if (!std.mem.eql(u8, v.text(v.get(manifest, "version")), "qbe-units-v1")) return error.InvalidNativeManifest;
     if (!std.mem.eql(u8, v.text(v.get(manifest, "abi")), native_abi)) return error.InvalidNativeManifest;
     const units = v.array(v.get(manifest, manifest_functions));
@@ -633,19 +666,25 @@ fn validate(manifest: std.json.Value) !void {
     // A selective library manifest has no executable entry; `build --library`
     // emits a stub entry_run instead. Executable manifests still require one.
     var entry_found = entry.len == 0;
-    for (units, 0..) |unit, index| {
+    // One set of the symbols seen so far: a duplicate check that rescanned every
+    // earlier unit made a large manifest's validation quadratic.
+    var seen: std.StringHashMapUnmanaged(void) = .empty;
+    defer seen.deinit(allocator);
+    try seen.ensureTotalCapacity(allocator, @intCast(units.len));
+    for (units) |unit| {
         const symbol = v.text(v.get(unit, "symbol"));
-        if (symbol.len == 0 or v.get(unit, "il") != .string) return error.InvalidNativeManifest;
+        if (symbol.len == 0 or !lean.wellFormed(unit)) return error.InvalidNativeManifest;
         if (!std.ascii.isAlphabetic(symbol[0]) and symbol[0] != '_') return error.InvalidNativeManifest;
         for (symbol) |character| if (!std.ascii.isAlphanumeric(character) and character != '_') return error.InvalidNativeManifest;
-        for (units[0..index]) |other| if (std.mem.eql(u8, symbol, v.text(v.get(other, "symbol")))) return error.InvalidNativeManifest;
+        if (seen.getOrPutAssumeCapacity(symbol).found_existing) return error.InvalidNativeManifest;
         if (std.mem.eql(u8, symbol, entry)) entry_found = true;
     }
     if (!entry_found) return error.InvalidNativeManifest;
 }
 /// One sorted manifest unit and the object-cache state it reached, kept together
-/// so a failed wave can reclaim the scratch of every job it started.
-const Unit = struct { value: std.json.Value, staged: cache_api.Staged = undefined, object: cache_api.Object = undefined };
+/// so a failed wave can reclaim the scratch of every job it started. `text` is
+/// the unit's QBE text once a miss needed it (a lean unit's is read then).
+const Unit = struct { value: std.json.Value, staged: cache_api.Staged = undefined, object: cache_api.Object = undefined, text: []const u8 = "" };
 /// One function's QBE footprint: its blocks, its temporaries, and the bytes
 /// QBE is estimated to need for them.
 const QbeFootprint = struct { blocks: u64, temporaries: u64, bytes: u64 };
@@ -731,24 +770,30 @@ const State = struct {
         std.mem.sort(std.json.Value, functions, {}, less);
         const environment = try self.cache.adapterEnvironment();
         const units = try a.alloc(Unit, functions.len);
-        const il = try a.alloc([]const u8, functions.len);
-        for (functions, 0..) |function, index| {
-            units[index] = .{ .value = function };
-            il[index] = v.text(v.get(function, "il"));
-        }
+        for (functions, 0..) |function, index| units[index] = .{ .value = function };
         var misses: std.ArrayList(usize) = .empty;
-        for (functions, 0..) |function, index| {
-            const staged = try self.cache.stage("function", v.text(v.get(function, "il")), .qbe, environment);
-            units[index].staged = staged;
-            switch (staged) {
-                .hit => |object| units[index].object = object,
-                .miss => try misses.append(a, index),
+        // An object is named by its unit text's digest, so a hit never reads the
+        // text; a lean unit's text is read from the fragment store only here, for
+        // the objects that must be built (`QBE-FRAGMENT-REUSE-1`).
+        for (units, 0..) |*unit, index| {
+            const key = try self.cache.unitKey(try lean.digest(a, unit.value));
+            if (self.cache.cached(key)) |object| {
+                unit.staged = .{ .hit = object };
+                unit.object = object;
+                continue;
             }
+            unit.text = try lean.text(self.context, unit.value);
+            unit.staged = .{ .miss = try self.cache.stageAt(key, unit.text, .qbe, environment) };
+            try misses.append(a, index);
         }
         // A concurrent LLVM build cannot rely on unit order to fill the adapter's
         // call-site signature sidecar, so it is made complete before any unit
         // translates. A build that compiles nothing needs no sidecar at all.
-        if (misses.items.len != 0) try self.cache.declareSignatures(il, environment);
+        if (misses.items.len != 0 and self.cache.codegen.llvm) {
+            const il = try a.alloc([]const u8, units.len);
+            for (units, il) |unit, *text| text.* = if (unit.text.len != 0) unit.text else try lean.text(self.context, unit.value);
+            try self.cache.declareSignatures(il, environment);
+        }
         errdefer for (misses.items) |index| self.cache.discard(units[index].staged.miss);
         try self.buildMisses(units, misses.items);
         for (units) |unit| {
@@ -789,7 +834,7 @@ const State = struct {
     fn fitsQbe(self: *State, unit: Unit) fs.Error!void {
         const address_space = std.posix.getrlimit(.AS) catch return;
         if (address_space.cur == std.math.maxInt(u64)) return;
-        const refusal = qbeRefusal(v.text(v.get(unit.value, "il")), address_space.cur) orelse return;
+        const refusal = qbeRefusal(unit.text, address_space.cur) orelse return;
         const gib: f64 = 1024.0 * 1024.0 * 1024.0;
         const message = try std.fmt.allocPrint(
             self.context.allocator,
@@ -905,7 +950,7 @@ const State = struct {
     /// Whether any unit was lowered for the frame map (QBE-FRAMEMAP-1).
     fn usesFrameMap(self: *State) bool {
         for (v.array(v.get(self.manifest, manifest_functions))) |unit| {
-            if (frame_map.usesFrameMap(v.text(v.get(unit, "il")))) return true;
+            if (frame_map.usesFrameMap(lean.facts(unit))) return true;
         }
         return false;
     }
@@ -1048,12 +1093,12 @@ test "build --run forwards a wall-clock timeout and stops at the guest delimiter
 test "native build rejects incompatible tools targets and malformed manifests" {
     try std.testing.expectError(error.UnsupportedNativeHost, checkHost(.linux, .aarch64));
     try std.testing.expectError(error.ZigVersionMismatch, checkVersion("unrelated-version"));
-    try std.testing.expectError(error.InvalidNativeManifest, validate(.null));
+    try std.testing.expectError(error.InvalidNativeManifest, validate(std.testing.allocator, .null));
     var buffer: [512]u8 = undefined;
     const encoded = try std.fmt.bufPrint(&buffer, "{{\"version\":\"qbe-units-v1\",\"abi\":\"{s}\",\"entry\":\"1bad\",\"functions\":[{{\"symbol\":\"1bad\",\"il\":\"\"}}]}}", .{native_abi});
     const value = try std.json.parseFromSlice(std.json.Value, std.testing.allocator, encoded, .{});
     defer value.deinit();
-    try std.testing.expectError(error.InvalidNativeManifest, validate(value.value));
+    try std.testing.expectError(error.InvalidNativeManifest, validate(std.testing.allocator, value.value));
 }
 
 // spec: QBE-AGGREF-6
@@ -1066,10 +1111,10 @@ test "a pre-v7 manifest whose IL already crossed by address is refused, not re-r
         \\{"version":"qbe-units-v1","abi":"mylang-qbe-native-v6","entry":"e","functions":[{"symbol":"e","il":""}]}
     , .{});
     defer value.deinit();
-    try std.testing.expectError(error.InvalidNativeManifest, validate(value.value));
+    try std.testing.expectError(error.InvalidNativeManifest, validate(std.testing.allocator, value.value));
     const accepted = try std.json.parseFromSlice(std.json.Value, std.testing.allocator, "{\"version\":\"qbe-units-v1\",\"abi\":\"" ++ native_abi ++ "\",\"entry\":\"e\",\"functions\":[{\"symbol\":\"e\",\"il\":\"\"}]}", .{});
     defer accepted.deinit();
-    try validate(accepted.value);
+    try validate(std.testing.allocator, accepted.value);
 }
 
 // spec: QBE-AGGREF-8

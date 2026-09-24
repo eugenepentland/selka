@@ -8844,3 +8844,165 @@ test "the unchecked policy is refused where its traps are still needed" {
     try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, debug.term);
     try testing.expect(std.mem.indexOf(u8, debug.stderr, "--unchecked") != null);
 }
+
+/// One version of the two-module project the incremental-build fixture edits.
+const IncrementalVersion = struct { main: []const u8, helper: []const u8 };
+
+const incremental_main =
+    \\module main
+    \\import helper
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    p = helper.Pair(left=3, right=4)
+    \\    xs = helper.scale([1, 2, 3], helper.total(p))
+    \\    out.print(helper.first(xs))
+    \\    out.print(str(p.left) + ":" + str(len(xs)))
+    \\    return 0
+    \\
+;
+
+const incremental_helper =
+    \\module helper
+    \\
+    \\
+    \\public record Pair:
+    \\    left: int
+    \\    right: int
+    \\
+    \\
+    \\public def total(p: Pair) -> int:
+    \\    return p.left + p.right
+    \\
+    \\
+    \\public def scale(xs: list[int], k: int) -> list[int]:
+    \\    out: list[int] = []
+    \\    for x in xs:
+    \\        out.append(x * k)
+    \\    return out
+    \\
+    \\
+    \\public def first(xs: list[int]) -> int:
+    \\    return xs[0]
+    \\
+;
+
+fn incrementalEdit(comptime text: []const u8, comptime needle: []const u8, comptime replacement: []const u8) []const u8 {
+    const at = std.mem.indexOf(u8, text, needle) orelse @compileError("missing edit site");
+    return text[0..at] ++ replacement ++ text[at + needle.len ..];
+}
+
+const body_edited_helper = incrementalEdit(incremental_helper, "    return p.left + p.right\n", "    return p.left + p.right + 10\n");
+const signature_edited_helper = incrementalEdit(body_edited_helper, "public def first(xs: list[int]) -> int:\n    return xs[0]\n", "public def first(xs: list[int], at: int) -> int:\n    return xs[at]\n");
+
+/// The project after a body edit, then a signature edit, then an interface
+/// edit that puts a new function ahead of every other declaration.
+const incremental_versions = [_]IncrementalVersion{
+    .{ .main = incremental_main, .helper = body_edited_helper },
+    .{ .main = incrementalEdit(incremental_main, "helper.first(xs)", "helper.first(xs, 2)"), .helper = signature_edited_helper },
+    .{
+        .main = incrementalEdit(incremental_main, "helper.first(xs)", "helper.first(xs, 2) + helper.zero()"),
+        .helper = incrementalEdit(signature_edited_helper, "module helper\n", "module helper\n\n\npublic def zero() -> int:\n    return 0\n"),
+    },
+};
+
+/// One `--report` build's guest objects as sorted `symbol key` lines, plus how
+/// many it compiled. Object keys name the unit text's digest under the build
+/// environment, so equal lines mean byte-identical guest objects.
+const BuiltObjects = struct { lines: []u8, compiled: i64 };
+
+fn buildObjects(allocator: std.mem.Allocator, entry: []const u8, output: []const u8, cache: []const u8) !BuiltObjects {
+    const result = try std.process.run(allocator, testing.io, .{ .argv = &.{ compiler_path, "build", entry, "--project", "-o", output, "--cache-dir", cache, "--mode", "Debug", "--report", tools[0], tools[1] } });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+    const report = try std.json.parseFromSliceLeaky(std.json.Value, allocator, result.stdout, .{});
+    var lines: std.ArrayList([]const u8) = .empty;
+    for (report.object.get("functions").?.array.items) |function| {
+        try lines.append(allocator, try std.fmt.allocPrint(allocator, "{s} {s}\n", .{ function.object.get("symbol").?.string, function.object.get("key").?.string }));
+    }
+    std.mem.sort([]const u8, lines.items, {}, incrementalLess);
+    return .{ .lines = try std.mem.concat(allocator, u8, lines.items), .compiled = report.object.get("compiled_functions").?.integer };
+}
+
+fn incrementalLess(_: void, left: []const u8, right: []const u8) bool {
+    return std.mem.lessThan(u8, left, right);
+}
+
+fn writeIncrementalVersion(directory: std.Io.Dir, version: IncrementalVersion) !void {
+    try directory.writeFile(testing.io, .{ .sub_path = "main.my", .data = version.main });
+    try directory.writeFile(testing.io, .{ .sub_path = "helper.my", .data = version.helper });
+}
+
+fn programOutput(allocator: std.mem.Allocator, program: []const u8) ![]const u8 {
+    const result = try std.process.run(allocator, testing.io, .{ .argv = &.{program} });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+    return result.stdout;
+}
+
+/// Build `version` incrementally over the previous version's caches and from
+/// clean caches, and require the same guest objects and the same behaviour.
+fn expectIncrementalEqualsClean(allocator: std.mem.Allocator, directory: std.Io.Dir, root: []const u8, version: IncrementalVersion, round: usize) !void {
+    try writeIncrementalVersion(directory, version);
+    const entry = try std.fs.path.join(allocator, &.{ root, "main.my" });
+    const incremental_program = try std.fs.path.join(allocator, &.{ root, "incremental" });
+    const clean_program = try std.fs.path.join(allocator, &.{ root, "clean" });
+    const incremental = try buildObjects(allocator, entry, incremental_program, try std.fs.path.join(allocator, &.{ root, "cache" }));
+    const clean = try buildObjects(allocator, entry, clean_program, try std.fmt.allocPrint(allocator, "{s}/clean-{d}", .{ root, round }));
+    try testing.expectEqualStrings(clean.lines, incremental.lines);
+    // The edit compiled only what it changed; the clean build compiled everything.
+    try testing.expect(incremental.compiled < clean.compiled);
+    try testing.expectEqualStrings(try programOutput(allocator, clean_program), try programOutput(allocator, incremental_program));
+}
+
+// spec-case: QBE-FRAGMENT-REUSE-1
+test "an incremental build after body, signature and interface edits builds the program a clean build builds" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    const program = try std.fs.path.join(a, &.{ root, "incremental" });
+    try writeIncrementalVersion(temporary.dir, .{ .main = incremental_main, .helper = incremental_helper });
+    const first = try buildObjects(a, try std.fs.path.join(a, &.{ root, "main.my" }), program, try std.fs.path.join(a, &.{ root, "cache" }));
+    try testing.expect(first.compiled > 0);
+    try testing.expectEqualStrings("7\n3:3\n", try programOutput(a, program));
+    try expectIncrementalEqualsClean(a, temporary.dir, root, incremental_versions[0], 0);
+    try testing.expectEqualStrings("17\n3:3\n", try programOutput(a, program));
+    try expectIncrementalEqualsClean(a, temporary.dir, root, incremental_versions[1], 1);
+    try testing.expectEqualStrings("51\n3:3\n", try programOutput(a, program));
+    try expectIncrementalEqualsClean(a, temporary.dir, root, incremental_versions[2], 2);
+    try testing.expectEqualStrings("51\n3:3\n", try programOutput(a, program));
+}
+
+// spec-case: BUILD-NOOP-1
+test "an unchanged build keeps its executable without rebuilding and a replaced one is rebuilt" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    try writeIncrementalVersion(temporary.dir, .{ .main = incremental_main, .helper = incremental_helper });
+    const entry = try std.fs.path.join(a, &.{ root, "main.my" });
+    const output = try std.fs.path.join(a, &.{ root, "program" });
+    const cache = try std.fs.path.join(a, &.{ root, "cache" });
+    const argv = [_][]const u8{ compiler_path, "build", entry, "--project", "-o", output, "--cache-dir", cache, "--mode", "Debug", "--timings=json", tools[0], tools[1] };
+    const cold = try std.process.run(a, testing.io, .{ .argv = &argv });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, cold.term);
+    const built = try std.Io.Dir.cwd().statFile(testing.io, output, .{});
+    // Nothing changed: no codegen or link ran, and the executable is untouched.
+    const noop = try std.process.run(a, testing.io, .{ .argv = &argv });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, noop.term);
+    try testing.expect(std.mem.indexOf(u8, noop.stderr, "\"name\":\"codegen\",\"duration_ns\":0,") != null);
+    try testing.expect(std.mem.indexOf(u8, noop.stderr, "\"name\":\"link\",\"duration_ns\":0,") != null);
+    const kept = try std.Io.Dir.cwd().statFile(testing.io, output, .{});
+    try testing.expectEqual(built.inode, kept.inode);
+    try testing.expectEqual(built.mtime.nanoseconds, kept.mtime.nanoseconds);
+    try testing.expectEqualStrings("7\n3:3\n", try programOutput(a, output));
+    // A replaced executable is not the recorded one: the build puts it back.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "program", .data = "stale" });
+    const repaired = try std.process.run(a, testing.io, .{ .argv = &argv });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, repaired.term);
+    try testing.expect(std.mem.indexOf(u8, repaired.stderr, "\"name\":\"link\",\"duration_ns\":0,") == null);
+    try testing.expectEqualStrings("7\n3:3\n", try programOutput(a, output));
+}

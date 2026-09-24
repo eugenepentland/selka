@@ -121,12 +121,31 @@ pub const Cache = struct {
     /// can then start their tools together and finish each one.
     pub fn stage(self: Cache, kind: []const u8, input: []const u8, flavor: Flavor, environment: ?*const std.process.Environ.Map) Error!Staged {
         const key = try self.identity(kind, input);
+        if (self.cached(key)) |hit| return .{ .hit = hit };
+        return .{ .miss = try self.stageAt(key, input, flavor, environment) };
+    }
+    /// The key of one guest function object. It names the object by the SHA-256
+    /// of the unit text (hex), so a lean manifest that carries only that digest
+    /// finds the object without the text (`QBE-FRAGMENT-REUSE-1`), and an inline
+    /// unit with the same text finds the same object.
+    pub fn unitKey(self: Cache, digest: []const u8) Error![]const u8 {
+        return self.identity("function-digest", digest);
+    }
+    /// The published object for `key`, when it is present and its checksum holds.
+    pub fn cached(self: Cache, key: []const u8) ?Object {
+        const path = self.entry(key, ".o") catch return null;
+        const checksum = self.entry(key, ".digest") catch return null;
+        if (self.valid(path, checksum)) return .{ .key = key, .path = path, .reused = true };
+        return null;
+    }
+    /// Prepare the tool invocation that builds `input` into the object `key`
+    /// names, without running it.
+    pub fn stageAt(self: Cache, key: []const u8, input: []const u8, flavor: Flavor, environment: ?*const std.process.Environ.Map) Error!Job {
         const path = try self.entry(key, ".o");
-        if (self.valid(path, try self.entry(key, ".digest"))) return .{ .hit = .{ .key = key, .path = path, .reused = true } };
         const work = try self.context.temporary(self.temporary);
         const candidate = try std.fs.path.join(self.context.allocator, &.{ work, "object.o" });
         const scratch: Scratch = .{ .key = key, .path = path, .candidate = candidate, .work = work };
-        return .{ .miss = try self.prepare(scratch, input, flavor, environment) };
+        return self.prepare(scratch, input, flavor, environment);
     }
     /// Run a staged job's primary tool and its optional assembler, then publish
     /// its object. This is the sequential path a single `object` takes.

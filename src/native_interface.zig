@@ -29,4 +29,6 @@ pub const Interface = struct {
     schema: ?[]const u8 = null,
     /// The safety and accounting code the backend generates for this program.
     policy: Policy = .{},
+    /// Persistent per-function unit reuse, or null to emit every unit fresh.
+    reuse: ?@import("qbe_fragments.zig").Reuse = null,
 };

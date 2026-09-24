@@ -3,6 +3,7 @@ const std = @import("std");
 const v = @import("qbe_build_value.zig");
 const host = @import("qbe_build_host.zig");
 const frame_map = @import("qbe_frame_map.zig");
+const lean = @import("qbe_build_units.zig");
 /// One packed-argument cleanup shared by every early grant exit.
 const free_arguments = "free(arguments);";
 /// Marker the managed lowering writes into a unit's IL for each frozen
@@ -84,8 +85,7 @@ pub fn metadata(allocator: std.mem.Allocator, manifest: std.json.Value) Error![]
 fn frameMapRoots(w: *std.Io.Writer, functions: []const std.json.Value) Error!void {
     var any = false;
     for (functions) |unit| {
-        const il = v.get(unit, "il");
-        if (il == .string and frame_map.usesFrameMap(v.text(il))) any = true;
+        if (frame_map.usesFrameMap(lean.facts(unit))) any = true;
     }
     if (!any) return;
     try w.writeAll("__attribute__((used)) static const MylQbeFunction *const mylang_frame_map_functions[] = {\n");
@@ -114,9 +114,8 @@ fn literalDefinitions(w: *std.Io.Writer, allocator: std.mem.Allocator, units: []
     defer seen.deinit(allocator);
     var header = false;
     for (units) |unit| {
-        const il = v.get(unit, "il");
-        if (il != .string) continue;
-        var lines = std.mem.splitScalar(u8, v.text(il), '\n');
+        // A stored unit's facts hold exactly its marker lines.
+        var lines = std.mem.splitScalar(u8, lean.facts(unit), '\n');
         while (lines.next()) |line| {
             if (!std.mem.startsWith(u8, line, "# ") or !std.mem.startsWith(u8, line[2..], literal_word)) continue;
             var tokens = std.mem.tokenizeScalar(u8, line[2 + literal_word.len ..], ' ');
