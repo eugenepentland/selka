@@ -186,11 +186,13 @@ exit 0
 
 A runtime trap outranks the return and exits 1, because the program never
 reached its `return`. `run-project` and a native executable from `mylang build`
-follow the same rule. An entry point may also return `Result[int, str]`:
-`Ok(code)` carries the same status rule, while `Err(message)` writes exactly one
-`message` line to standard error and exits 1. Exit codes are truncated to the
-low eight bits, so `Ok(300)` exits 44. `--print-result` still prints the carried
-integer status, independent of the diagnostic on stderr.
+follow the same rule. An entry point may also return `Result[int, E]`:
+`Ok(code)` carries the same status rule, while `Err(message)` writes an
+`error: message` line to standard error, followed by the error's
+[return trace](results-and-options.md#error-return-traces), and exits 1 (an `int`
+error is the status instead). Exit codes are truncated to the low eight bits, so
+`Ok(300)` exits 44. `--print-result` still prints the carried integer status,
+independent of the diagnostic on stderr.
 
 ## Runtime diagnostics
 
