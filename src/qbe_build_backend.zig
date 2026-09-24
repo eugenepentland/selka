@@ -17,13 +17,10 @@ pub const Resolved = struct {
 /// Resolve tools and effective optimization before opening an object cache.
 pub fn resolve(context: fs.Context, parsed: options.Options, zig: []const u8) fs.Error!Resolved {
     switch (parsed.codegen) {
-        .auto => {
-            // No backend was named, so the optimize mode decides: the release
-            // path is LLVM O3 with full LTO, while Debug keeps QBE because
-            // unoptimized LLVM buys nothing over it.
-            if (std.mem.eql(u8, parsed.mode, "Debug")) return resolveQbe(context, parsed, zig, "qbe");
-            return resolveLlvm(context, parsed, zig, .{ .optimization = defaultOpt(parsed.mode), .lto = true });
-        },
+        // No backend was named: build with QBE in either optimize mode. An
+        // edit-build loop wants the compile that takes a second, not the LTO
+        // link that takes many; `--release` names the LLVM path explicitly.
+        .auto => return resolveQbe(context, parsed, zig, "qbe"),
         .qbe => |path| return resolveQbe(context, parsed, zig, path),
         .llvm => |llvm| return resolveLlvm(context, parsed, zig, llvm),
     }
@@ -192,7 +189,7 @@ test "LLVM defaults to O3 for ReleaseFast and O0 for Debug" {
 }
 
 // spec: BUILD-BACKEND-2
-test "an unnamed backend takes the release path from ReleaseFast and keeps QBE for Debug" {
+test "an unnamed backend resolves QBE in either mode and an LLVM build with no adapter fails loudly" {
     var environment: std.process.Environ.Map = .init(std.testing.allocator);
     defer environment.deinit();
     var temporary = std.testing.tmpDir(.{});
@@ -205,11 +202,13 @@ test "an unnamed backend takes the release path from ReleaseFast and keeps QBE f
     try std.Io.Dir.cwd().setFilePermissions(std.testing.io, qbe, .executable_file, .{});
     try environment.put("PATH", directory);
     context.self_directory = "";
-    // Debug uses the QBE arm, and QBE is never upgraded.
+    // An unnamed backend is QBE whatever the mode, so neither build needs the
+    // LLVM adapter that is missing here.
     try std.testing.expectEqualStrings("qbe", (try resolve(context, .{ .mode = "Debug" }, "/bin/sh")).name);
-    // ReleaseFast wants the installed LLVM adapter; with none beside the compiler
-    // the build refuses loudly rather than silently falling back to QBE.
-    try std.testing.expectError(error.ToolNotFound, resolve(context, .{ .mode = "ReleaseFast" }, "/bin/sh"));
+    try std.testing.expectEqualStrings("qbe", (try resolve(context, .{ .mode = "ReleaseFast" }, "/bin/sh")).name);
+    // The release build wants the installed LLVM adapter; with none beside the
+    // compiler it refuses loudly rather than silently falling back to QBE.
+    try std.testing.expectError(error.ToolNotFound, resolve(context, .{ .mode = "ReleaseFast", .codegen = options.release_codegen }, "/bin/sh"));
 }
 
 // spec: BUILD-BACKEND-5

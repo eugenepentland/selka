@@ -23,6 +23,9 @@ Subcommands:
   run          build, qualify, time, check (what `zig build bench-parity` runs)
   rebaseline   rewrite thresholds.json from result JSONs, pooled (a deliberate update)
   table        print a result JSON as the ratio table
+  same-binaries  build every mylang arm with two compilers and require identical
+               binaries (a Debug and a ReleaseFast compiler must agree, which is
+               why guest programs are timed with the Debug `zig-out/bin/mylang`)
 """
 
 from __future__ import annotations
@@ -52,6 +55,11 @@ DEFAULT_TOLERANCE = 0.15
 MAX_TOLERANCE = 0.50
 RUST_FLAGS = ["--edition", "2021", "-C", "opt-level=3", "-C", "codegen-units=1",
               "-C", "target-cpu=native", "-C", "panic=abort"]
+# The build every mylang arm but `my-qbe` times: ReleaseFast, LLVM O3 with full
+# LTO. `mylang build` defaulted to it until 2026-09-23 and now defaults to QBE;
+# it is spelled out rather than written `--release` so a compiler named by
+# `-Dbench-mylang` from before the shorthand builds exactly the same arm.
+RELEASE_FLAGS = ["--backend", "llvm", "--llvm-opt", "3", "--lto"]
 # The plan's parity targets (docs/audits/performance-parity-plan-2026-09-22.md §1),
 # reported beside the suite's geometric means; they are goals, not gates.
 TARGETS = {"my": 1.2, "my-unchecked": 1.1, "worst my": 1.5}
@@ -95,10 +103,10 @@ def arms_for(ports: list[tuple[str, Path, str]], qbe: bool) -> list[dict]:
     for lang, path, variant in ports:
         if lang == "my":
             if variant:
-                arms.append(arm(f"my-{variant}", lang, path, []))
+                arms.append(arm(f"my-{variant}", lang, path, RELEASE_FLAGS))
                 continue
-            arms.append(arm("my", lang, path, []))
-            arms.append(arm("my-unchecked", lang, path, ["--unchecked"]))
+            arms.append(arm("my", lang, path, RELEASE_FLAGS))
+            arms.append(arm("my-unchecked", lang, path, [*RELEASE_FLAGS, "--unchecked"]))
             if qbe:
                 arms.append(arm("my-qbe", lang, path, ["--backend", "qbe"]))
         elif lang == "zig":
@@ -211,6 +219,55 @@ def busy_fraction(before: dict, after: dict) -> float | None:
     busy = sum(after[c][0] - before[c][0] for c in after if c in before)
     total = sum(after[c][1] - before[c][1] for c in after if c in before)
     return round(busy / total, 3) if total > 0 else None
+
+
+# `scripts/build-slot.sh` keeps these CPUs free of builds and gates (two P-core
+# SMT pairs on the i7-12700H development box; docs/tooling/many-agents.md).
+DEFAULT_TIMING_CPUS = "2,3,10,11"
+BUSY_SIBLING = 0.25
+
+
+def timing_cpus() -> list[int]:
+    """The reserved timing CPUs from MYLANG_TIMING_CPUS (default 2,3,10,11), expanded."""
+    text = os.environ.get("MYLANG_TIMING_CPUS", DEFAULT_TIMING_CPUS)
+    cpus: list[int] = []
+    for part in text.split(","):
+        part = part.strip()
+        if not part:
+            continue
+        low, _, high = part.partition("-")
+        try:
+            cpus.extend(range(int(low), int(high or low) + 1))
+        except ValueError:
+            return []
+    return cpus
+
+
+def default_timing_cpu() -> int:
+    """The first reserved timing CPU, so a benchmark lands where builds are kept away."""
+    cpus = timing_cpus()
+    return cpus[0] if cpus else 2
+
+
+def shared_core_warning(cpu: int, seconds: float = 1.0) -> str | None:
+    """Sample `cpu` and its SMT siblings for `seconds` before timing starts; name
+    them when another job is already running there. A busy sibling moves ratios
+    by tens of percent, and a busy timing CPU means something else is pinned to it."""
+    watched = [cpu, *siblings(cpu)]
+    before = cpu_times(watched)
+    time.sleep(seconds)
+    after = cpu_times(watched)
+    busy = []
+    for index in watched:
+        load = busy_fraction({index: before[index]}, {index: after[index]}) if index in before and index in after else None
+        if load is not None and load > BUSY_SIBLING:
+            busy.append(f"CPU {index} {load:.0%}")
+    if not busy:
+        return None
+    reserved = "" if cpu in timing_cpus() else (f"; CPU {cpu} is not one of the reserved timing CPUs "
+                                                 f"(MYLANG_TIMING_CPUS={os.environ.get('MYLANG_TIMING_CPUS', DEFAULT_TIMING_CPUS)})")
+    return (f"the timing core is shared before timing starts ({', '.join(busy)} busy){reserved}; "
+            "run builds through scripts/build-slot.sh, or pick an idle core with --cpu")
 
 
 def sha(data: bytes) -> str:
@@ -532,7 +589,8 @@ def command_run(opts: argparse.Namespace) -> int:
         print(f"bench-parity: no compiler at {mylang}", file=sys.stderr)
         return 2
     if opts.cpu not in os.sched_getaffinity(0):
-        print(f"bench-parity: CPU {opts.cpu} is not available to this process", file=sys.stderr)
+        print(f"bench-parity: CPU {opts.cpu} is not available to this process (run benchmarks directly, not "
+              "through scripts/build-slot.sh, which keeps the timing CPUs away from its jobs)", file=sys.stderr)
         return 2
     notices: list[str] = []
     rustc = find_rustc(opts.rustc)
@@ -568,7 +626,7 @@ def command_run(opts: argparse.Namespace) -> int:
     tools_for_build = {"mylang": str(mylang), "zig": opts.zig, "rustc": rustc}
     print(f"bench-parity: building {len(jobs)} arms of {len(benches)} benchmark(s) with {opts.jobs} job(s)",
           file=sys.stderr)
-    with concurrent.futures.ThreadPoolExecutor(max_workers=opts.jobs) as pool:
+    with OffTimingCpus(), concurrent.futures.ThreadPoolExecutor(max_workers=opts.jobs) as pool:
         builds = list(pool.map(lambda job: build(job, tools_for_build, work), jobs))
     failures: list[str] = []
     timed: dict[str, list[dict]] = {}
@@ -598,6 +656,10 @@ def command_run(opts: argparse.Namespace) -> int:
         else:
             notices.append(f"{job['bench']} {job['arm']}: {data['failure']}; arm skipped")
     rng = random.Random(opts.seed)
+    crowded = shared_core_warning(opts.cpu)
+    if crowded:
+        print(f"bench-parity: warning: {crowded}", file=sys.stderr)
+        notices.append(crowded)
     with Pinned(opts.cpu):
         for name, arms in timed.items():
             if not any(a["arm"] == REFERENCE for a in arms):
@@ -628,7 +690,8 @@ def command_run(opts: argparse.Namespace) -> int:
         notices.append(f"the SMT sibling of CPU {opts.cpu} (CPU {', '.join(map(str, result['siblings']))}) was over "
                        f"25% busy while {len(shared)} program(s) were timed ({', '.join(shared[:6])}"
                        f"{' ...' if len(shared) > 6 else ''}); a busy sibling moves some ratios by tens of "
-                       "percent — prefer a core whose sibling is idle")
+                       "percent — prefer a core whose sibling is idle (run builds through "
+                       "scripts/build-slot.sh, which keeps MYLANG_TIMING_CPUS free)")
     unthresholded = [f"{name} {arm_name}" for name, bench in result["benchmarks"].items()
                      for arm_name, data in bench["arms"].items()
                      if data.get("lang") == "my" and data.get("ratio_wall")
@@ -733,6 +796,20 @@ class Pinned:
         os.sched_setaffinity(0, self.saved)
 
 
+class OffTimingCpus(Pinned):
+    """Keep this process and its children off the reserved timing CPUs for a
+    block (the build phase), so builds never land where anyone is timing.
+    Leaves the affinity alone when that would leave no CPU at all."""
+
+    def __init__(self):
+        super().__init__(-1)
+
+    def __enter__(self):
+        allowed = self.saved - set(timing_cpus())
+        if allowed:
+            os.sched_setaffinity(0, allowed)
+
+
 def write_json(path: str, result: dict) -> None:
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -786,6 +863,52 @@ def command_rebaseline(opts: argparse.Namespace) -> int:
     return 0
 
 
+def command_same_binaries(opts: argparse.Namespace) -> int:
+    """Build every selected mylang arm with `--mylang` and with `--other` and
+    compare the binaries byte for byte. The compiler's own optimization mode
+    must never change what it emits; this is the check behind timing guest
+    programs with a Debug compiler."""
+    filters = [f.strip() for f in (opts.filter or "").split(",") if f.strip()]
+    benches = discover(filters)
+    compilers = {"a": Path(opts.mylang).resolve(), "b": Path(opts.other).resolve()}
+    for compiler in compilers.values():
+        if not compiler.exists():
+            print(f"bench-parity: no compiler at {compiler}", file=sys.stderr)
+            return 2
+    if not benches:
+        print(f"bench-parity: --filter {opts.filter!r} names no benchmark", file=sys.stderr)
+        return 2
+    work = Path(opts.work).resolve()
+    jobs = []
+    for bench in benches:
+        for job in arms_for(bench["ports"], opts.qbe):
+            if job["lang"] != "my":
+                continue
+            for side, compiler in compilers.items():
+                # One cache per compiler, so neither build reuses the other's objects.
+                side_work = work / f"same-{side}"
+                (side_work / "bin").mkdir(parents=True, exist_ok=True)
+                binary = side_work / "bin" / f"{bench['name']}.{job['arm']}"
+                jobs.append({"name": bench["name"], "side": side, "tools": {"mylang": str(compiler)},
+                             "work": side_work, "job": dict(job, bin=binary)})
+    print(f"bench-parity: building {len(jobs) // 2} mylang arm(s) with each of two compilers", file=sys.stderr)
+    with OffTimingCpus(), concurrent.futures.ThreadPoolExecutor(max_workers=opts.jobs) as pool:
+        outcomes = list(pool.map(lambda j: build(j["job"], j["tools"], j["work"]), jobs))
+    digests: dict[tuple[str, str], dict[str, str | None]] = {}
+    for item, outcome in zip(jobs, outcomes):
+        key = (item["name"], item["job"]["arm"])
+        digests.setdefault(key, {})[item["side"]] = sha(item["job"]["bin"].read_bytes()) if outcome["ok"] else None
+        if not outcome["ok"]:
+            print(f"BUILD FAIL {key[0]} {key[1]} with {compilers[item['side']]}", file=sys.stderr)
+            print(outcome["stderr"], file=sys.stderr)
+    differ = sorted(key for key, pair in digests.items() if pair.get("a") is None or pair.get("a") != pair.get("b"))
+    for name, arm_name in differ:
+        print(f"DIFFER {name} {arm_name}")
+    print(f"bench-parity: {len(digests) - len(differ)} of {len(digests)} mylang binaries identical "
+          f"({compilers['a']} vs {compilers['b']})")
+    return 1 if differ else 0
+
+
 def command_table(opts: argparse.Namespace) -> int:
     result = json.loads(Path(opts.result).read_text())
     print(table(result, result.get("checks", [])))
@@ -805,7 +928,9 @@ def main() -> int:
     run.add_argument("--mylang", default=str(ROOT / "zig-out/bin/mylang"), help="compiler under test")
     run.add_argument("--zig", default="zig", help="Zig used for the reference arms")
     run.add_argument("--rustc", help="rustc for the Rust arms (default: RUSTC, PATH, ~/.cargo/bin)")
-    run.add_argument("--cpu", type=int, default=2, help="the one CPU every timed process is pinned to")
+    run.add_argument("--cpu", type=int, default=default_timing_cpu(),
+                     help="the one CPU every timed process is pinned to (default: the first of "
+                          f"MYLANG_TIMING_CPUS, {DEFAULT_TIMING_CPUS} unset, which scripts/build-slot.sh keeps free)")
     run.add_argument("--rounds", type=int, default=7)
     run.add_argument("--warmups", type=int, default=2)
     run.add_argument("--filter", help="comma-separated substrings of GROUP/NAME")
@@ -830,6 +955,13 @@ def main() -> int:
     again.add_argument("--note", help="a sentence stored in the file about this baseline (replaces the old one)")
     show = commands.add_parser("table", help="print a result JSON as the ratio table")
     show.add_argument("result")
+    same = commands.add_parser("same-binaries", help="require two compilers to emit identical mylang binaries")
+    same.add_argument("--mylang", default=str(ROOT / "zig-out/bin/mylang"), help="first compiler (default: the Debug build)")
+    same.add_argument("--other", required=True, help="second compiler, e.g. a ReleaseFast install's bin/mylang")
+    same.add_argument("--filter", help="comma-separated substrings of GROUP/NAME")
+    same.add_argument("--qbe", action="store_true", help="also compare the my-qbe arm")
+    same.add_argument("--jobs", type=int, default=4, help="concurrent builds")
+    same.add_argument("--work", default=str(ROOT / ".mylang-cache/bench-parity"))
     opts = parser.parse_args()
     if opts.command == "run":
         if opts.rounds < 3 or opts.warmups < 0 or opts.jobs < 1:
@@ -838,6 +970,8 @@ def main() -> int:
         return command_run(opts)
     if opts.command == "rebaseline":
         return command_rebaseline(opts)
+    if opts.command == "same-binaries":
+        return command_same_binaries(opts)
     return command_table(opts)
 
 

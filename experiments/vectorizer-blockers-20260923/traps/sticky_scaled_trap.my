@@ -1,0 +1,17 @@
+# a sticky multiply feeding a reduction overflows in the middle of the loop
+
+
+def scaled(values: list[int]) -> int:
+    total = 0
+    for v in values:
+        total += v * 3
+    return total
+
+
+def main(out: Stream) -> int:
+    values = [7 for i in range(50)]
+    values.append(4611686018427387904)
+    values.append(1)
+    out.print(scaled([1, 2, 3]))
+    out.print(scaled(values))
+    return 0

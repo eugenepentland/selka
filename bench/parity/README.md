@@ -2,7 +2,7 @@
 
 The standing performance benchmark of the parity plan
 ([`docs/audits/performance-parity-plan-2026-09-22.md`](../../docs/audits/performance-parity-plan-2026-09-22.md),
-wave 5). It times mylang's default build against Zig ReleaseFast on matched
+wave 5). It times mylang's release build against Zig ReleaseFast on matched
 programs and fails when a program's **ratio** to Zig grows past its threshold.
 It is opt-in: `zig build test` never builds or times it.
 
@@ -17,8 +17,12 @@ zig build bench-parity -- --json /tmp/parity.json --arms my zig-safe
 Without `-Dbench-mylang` the step first installs this checkout's compiler (the
 ordinary `zig build`, so a Debug compiler unless `-Doptimize` says otherwise).
 The compiler's own optimization changes only how long the builds take: the
-programs are built with `mylang build`'s default (ReleaseFast, LLVM O3 + LTO),
-and a Debug and a ReleaseFast compiler emit byte-identical binaries. Add
+programs are built as `mylang build --release` builds them (ReleaseFast, LLVM O3
++ LTO; the harness spells out `--backend llvm --llvm-opt 3 --lto` so an older
+compiler named by `-Dbench-mylang` builds the same arm), and a Debug and a
+ReleaseFast compiler emit byte-identical binaries
+(`python3 bench/parity/bench_parity.py same-binaries --other PATH/bin/mylang`
+checks every mylang arm; 88 of 88 matched on 2026-09-23). Add
 `-Dcompiler-only=true` so that install skips the three application runners,
 which it would otherwise build without using them.
 
@@ -43,10 +47,10 @@ and counterfactual tooling; this directory is the maintained copy.
 
 | arm | build |
 |---|---|
-| `my` | `mylang build` default |
+| `my` | `mylang build --backend llvm --llvm-opt 3 --lto` (what `--release` means) |
 | `my-unchecked` | `+ --unchecked` |
-| `my-<variant>` | a variant file with the default flags (`_tuned`, `_arena`, `_class`, `_flat`, ...) |
-| `my-qbe` | `--backend qbe`, only with `-- --qbe` |
+| `my-<variant>` | a variant file with the `my` flags (`_tuned`, `_arena`, `_class`, `_flat`, ...) |
+| `my-qbe` | `--backend qbe` (the plain `mylang build` since 2026-09-23), only with `-- --qbe` |
 | `zig-fast` | `zig build-exe -O ReleaseFast`: **the reference of every ratio** |
 | `zig-safe`, `zig-<variant>` | `-O ReleaseSafe`; a Zig variant with ReleaseFast |
 | `rust`, `rust-checked`, `rust-<variant>` | `rustc --edition 2021 -C opt-level=3 -C codegen-units=1 -C target-cpu=native -C panic=abort`, `+ -C overflow-checks=on` |
@@ -76,7 +80,12 @@ qualify is skipped with a notice. A mylang arm that fails either way, or a
    An excess the second pass does not repeat is printed as `noise`, not a
    failure. `-- --no-confirm` fails on the first pass.
 
-Pick a performance core (`lscpu -e`: on a hybrid Intel part the E-cores are
+Without `-Dbench-cpu` the timing CPU is the first of `MYLANG_TIMING_CPUS`
+(default `2,3,10,11`). `scripts/build-slot.sh` keeps builds and gates off those
+CPUs, and the harness builds its own arms with them masked off. Before timing, it
+warns when the timing CPU or its sibling is already busy
+([many agents on one machine](../../docs/tooling/many-agents.md)). Otherwise,
+pick a performance core (`lscpu -e`: on a hybrid Intel part the E-cores are
 the high-numbered CPUs) that nothing else is pinned to **and whose SMT sibling
 is idle** (the `CORE` column pairs them; CPU 10's sibling on the i7-12700H is
 CPU 11). Interleaving makes a ratio fair to both arms against load that slows

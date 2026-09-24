@@ -114,7 +114,7 @@ fn eligible(program: bytecode.Program, index: usize, code: []const bytecode.Inst
 
 /// The no-allocation allow-list. Every opcode here lowers to straight-line IL, a
 /// pure runtime helper (`myl_qbe_int_binary`, `myl_qbe_int_cast`,
-/// `myl_qbe_int_neg`, `myl_native_owned_drop`) or a cold `myl_qbe_fail_*` trap
+/// `myl_qbe_int_neg`, `myl_qbe_float_unary`, `myl_native_owned_drop`) or a cold `myl_qbe_fail_*` trap
 /// path, so no splice can run a collection and none needs a root. Explicitly
 /// refused because their lowering can allocate or reach a host: `call` and
 /// `invoke`, `make_record`/`make_variant` of a managed type, `buffer_operation`,
@@ -159,6 +159,9 @@ fn allowed(program: bytecode.Program, op: @FieldType(bytecode.Instruction, "op")
         // pure `myl_qbe_int_binary`; a trapping add or division only fails, it
         // never allocates. Aggregate integer forms are string/list operations.
         .binary_integer => |binary| binary.ty.isInteger(),
+        // `sqrt`, `float(i)` and the other float conversions call the pure
+        // `myl_qbe_float_unary`, which allocates nothing (INLINE-FLOAT-UNARY-1).
+        .unary_float => true,
         .cast_integer => |ty| ty.isInteger(),
         .neg_integer => |ty| ty.isInteger(),
         .get_index => |access| indexIsAllocationFree(program, access.ty),

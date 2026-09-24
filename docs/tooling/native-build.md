@@ -11,29 +11,42 @@ when to reach for a native build, what the optimize mode costs, and how to
 measure the result, see the [performance page](../performance.md).
 
 Bytecode is still part of the compiler, but only as that internal IR. Nothing
-executes it: there is no interpreter. QBE is the inner-loop backend and the
-`Debug` default; the `ReleaseFast` default is the qualified LLVM backend at
-`-O3` with full LTO. `mylang run` is this same pipeline followed by running the
-result, and `dump-bytecode` disassembles the IR for inspection rather than for
-execution.
+executes it: there is no interpreter. QBE is the default backend in every mode,
+because an edit-build loop wants the compile that takes a second; `--release`
+asks for the qualified LLVM backend at `-O3` with full LTO. `mylang run` is this
+same pipeline followed by running the result, and `dump-bytecode` disassembles
+the IR for inspection rather than for execution.
 
 ## Backends
 
-A native build names no backend by default, and the optimize mode decides:
+A native build that names no backend uses QBE, in `--mode ReleaseFast` (the
+default for `mylang build` and `mylang run`) and in `--mode Debug` alike. The
+optimized build is asked for by name, the way `cargo build --release` is:
 
-- **`--mode ReleaseFast`** (the default for `mylang build` and `mylang run`)
-  uses the qualified LLVM backend at `-O3` with full LTO — exactly
-  `--backend llvm --llvm-opt 3 --lto`.
-- **`--mode Debug`** keeps QBE, because unoptimized LLVM buys nothing over it,
-  and `mylang test` keeps its own `Debug` default for the same reason.
+- **`--release`** is the shorthand for `--mode ReleaseFast --backend llvm
+  --llvm-opt 3 --lto`: the qualified LLVM backend at `-O3` with full LTO. It
+  works on `build`, `build --run`, `run`, `run-project` and `test`. An
+  `--llvm-adapter PATH` written after it still applies and `--unchecked` is
+  accepted with it; written beside `--mode`, `--backend`, `--qbe`,
+  `--llvm-opt` or `--lto` it is a usage error, because it already names them.
+- **`--backend llvm [--llvm-opt 0|1|2|3|s|z] [--lto]`** picks the LLVM
+  backend with any other optimization level, with or without LTO.
 
-An explicit choice is never upgraded. `--backend qbe` and `--qbe PATH` select
+An explicit choice is never changed. `--backend qbe` and `--qbe PATH` select
 QBE whatever the mode, and the LLVM-only controls (`--llvm-adapter`,
-`--llvm-opt 0|1|2|3|s|z`, `--lto`) are rejected until `--backend llvm` names
+`--llvm-opt`, `--lto`) are rejected until `--backend llvm` or `--release` names
 that backend. `--report` states the resolved `backend`, `optimization` and
 `lto` for every build. `mylang test` follows the same policy through the child
-build it spawns: a `ReleaseFast` test run uses the LLVM release path, a `Debug`
-run uses QBE, and `--qbe PATH` forces QBE.
+build it spawns: its builds are QBE in either mode (`Debug` by default), and
+`mylang test --release` builds the LLVM release path.
+
+The price of each, on the 4,200-line Lox interpreter port with a ReleaseFast
+compiler and a warm object cache: after a one-function edit the QBE build takes
+0.7–0.9 s and the `--release` build 4.1–5.1 s, about 3 s of which is the LTO
+link it pays on every rebuild that changes anything, a comment included (0.4–0.9 s
+against 3.0–3.9 s). Build with QBE while editing and testing, and with
+`--release` for the executable you ship or time. The measurements are in
+[the lane report](../audits/devspeed-defaults-and-docs-2026-09-23.md).
 
 The LLVM backend is the Python adapter installed beside the compiler at
 `lib/mylang-llvm/qbe_llvm.py` (its helpers `llvm_emit.py`,
@@ -41,18 +54,20 @@ The LLVM backend is the Python adapter installed beside the compiler at
 `--llvm-adapter PATH` overrides it, `MYLANG_LLVM_ADAPTER` names it for a
 compiler that runs from a directory with no install beside it (the build's own
 test drivers set it), and `MYLANG_QBE_LLVM_*` variables select the
-optimization, Zig driver, runtime sources and target CPU policy. A ReleaseFast
-build that names the LLVM backend and cannot resolve the adapter **fails with a
-tool error**; it never silently falls back to QBE. The adapter needs a
+optimization, Zig driver, runtime sources and target CPU policy. A build that
+names the LLVM backend and cannot resolve the adapter **fails with a tool
+error**; it never silently falls back to QBE. The adapter needs a
 `python3` interpreter at build time. Guest units are content-addressed and
 cached per function, so a Python process runs only for a unit whose IL actually
 changed (see *Concurrent code generation* below).
 
 ```console
 $ mylang build examples/factorial.my -o /tmp/factorial --cache-dir /tmp/cache --report
-{"version":"qbe-build-v1",...,"backend":"llvm","optimization":"3","lto":true,...}
+{"version":"qbe-build-v1",...,"mode":"ReleaseFast",...,"backend":"qbe","optimization":"default","lto":false}
+$ mylang build examples/factorial.my --release -o /tmp/factorial-release --cache-dir /tmp/cache --report
+{"version":"qbe-build-v1",...,"mode":"ReleaseFast",...,"backend":"llvm","optimization":"3","lto":true}
 $ mylang build examples/factorial.my --mode Debug -o /tmp/factorial-debug --cache-dir /tmp/cache
-$ mylang build examples/factorial.my --backend qbe -o /tmp/factorial-qbe --cache-dir /tmp/cache
+$ mylang run examples/factorial.my --release
 ```
 
 ### Very large functions
@@ -99,18 +114,40 @@ activation made after it was entered: no value that existed before the call can
 point into it, no managed object is allocated inside it, and it is released
 before the activation returns. So the adapter gives each placed access
 `!alias.scope`/`!noalias` saying the two classes never meet. It carries a class
-through `copy` and offsetting `add`, and
-through a stack slot whose address never leaves the unit — either because every
-store to it agrees on one class and one of those stores dominates every load, or,
-inside one block, from the last value stored above the load. Everything else is
-left unplaced and carries no metadata, which keeps it aliasing both classes the
-way every access behaved before. This is what lets a loop keep a container's
-length and storage pointer in registers instead of reloading the header on every
+through `copy` and offsetting `add`, and through a stack slot whose address
+never leaves the unit by a forward must-analysis: a load answers the class the
+last store put in the slot on every path that reaches it, and nothing when two
+paths disagree or a path reaches it before any store. Everything else is left
+unplaced and carries no metadata, which keeps it aliasing both classes the way
+every access behaved before. This is what lets a loop keep a container's length
+and storage pointer in registers instead of reloading the header on every
 element; `MYLANG_QBE_LLVM_ALIAS=0` turns the metadata off for an A/B run.
 
-The `# myl-obj` markers are comment lines of their own. QBE's lexer drops a `#`
-comment to end of line, so the QBE backend's assembly is byte-identical with and
-without them.
+Foreign memory is placed more finely where the emitter says what it is
+(`LLVM-ELEMENT-CLASS-1`). The storage word of a managed container — the start of
+its element storage block — is marked `# myl-elem %temp KIND`, where KIND is the
+element size and `r` for GC references or `v` for plain values, and every other
+marked address is an **object** (a header or an allocation's payload). An
+object access and an element access never alias, and neither do element
+accesses of two kinds: each storage block is an allocation of its own that no
+object overlaps and that only ever holds elements of its kind. A plain foreign
+access still aliases all of them, and a copy between two classes carries both
+classes' scopes and only the scopes neither end can alias. This is what keeps a
+list's length and storage word, and a list of lists' row pointers, in registers
+across a loop that stores into element storage (`matmul`, `nbody`).
+
+A load or store whose address is an element address computed earlier in the
+same block — the marked storage word or object plus at least one variable term
+— is given that address as a plain `getelementptr i8` from the marked base
+instead of an `inttoptr` of the integer sum (`LLVM-ELEMENT-GEP-1`). The bits
+are the same; LLVM's scalar evolution does not look through `inttoptr`, so only
+this form lets it see `data[i]` advance by one element per iteration, load a
+whole vector instead of gathering one element at a time, and compute
+dependence distances.
+
+The `# myl-obj` and `# myl-elem` markers are comment lines of their own. QBE's
+lexer drops a `#` comment to end of line, so the QBE backend's assembly is
+byte-identical with and without them.
 
 The adapter does lower one kind of check differently, without assuming anything
 about it: a checked 64-bit `+`, `-` or `*` becomes
@@ -127,6 +164,26 @@ narrower width's range test and the single compare against a literal operand
 are already one compare and stay as they are. `LLVM-OVERFLOW-INTRINSIC-1` in
 `SPEC.md` states the rule; `experiments/llvm-backend/llvm_emit.OverflowChecks`
 implements it.
+
+It also versions a loop whose overflow checks decide nothing but the trap
+(`LLVM-STICKY-REDUCTION-1`, `experiments/llvm-backend/sticky_loops.py`). The
+loop's entry goes to a fast copy in which the check of a *reduction* — a frame
+cell the loop changes only by adding or subtracting a 64-bit signed value to a
+value it held — is dropped while the copy sums the magnitudes of what it adds,
+and any other overflow check is *sticky*: its flag is OR-ed into one word and the
+copy continues with the wrapped value. Bounds, cast, division and iteration
+checks stay branches, to a fallback. Each exit of the fast copy verifies that the
+sticky word is zero and that `|entry value| + sum |added| <= 2^63 - 1` for every
+reduction, which bounds every intermediate value; then the fast copy computed
+exactly what the checked loop would have. Otherwise, and on every would-be trap,
+the fallback restores each frame cell the loop wrote and runs the original loop
+from the same state, so a trap reports the same code, operands, position and
+trace as before. The rewrite requires a loop with no call, `blit` or phi, whose
+stores all land in this activation's own cells, and in which no value that may
+have wrapped reaches a non-check branch, an address, a shift amount, a divisor, a
+float-to-integer conversion or a cell whose address escapes; a check whose value
+would is kept as a branch. The fast copy of `count += 1` or `total += x` is
+branch-free and LLVM vectorizes it. `MYLANG_QBE_LLVM_STICKY=0` turns it off.
 
 ## `mylang build`
 
@@ -380,7 +437,7 @@ the published file without running the linker. The check is deliberately
 conservative: a `--provider` or any explicit native link input (`--link`,
 `--link-library`, `--library-path`) disables reuse, because such an input can
 change without changing a guest object. This is what keeps an unchanged
-ReleaseFast rebuild from paying the LTO link again.
+`--release` rebuild from paying the LTO link again.
 
 A cached object or archive is accepted only when a fingerprint over its length
 and contents matches the one stored beside it in a `.digest` file. Damaged bytes
@@ -424,8 +481,8 @@ only the QBE flavors, which keeps a Python-less prebuild working.
 A cold `mylang build` computes the hash its runtime needs and, if a matching
 archive is installed, links it directly and skips compiling the runtime from
 source — `--report` shows `"runtime_installed": true`. This is what makes a
-plain `ReleaseFast` build affordable: it links the `llvm-lto` bitcode archive
-instead of compiling twenty runtime translation units with LTO itself. The
+`--release` build affordable: it links the `llvm-lto` bitcode archive instead of
+compiling twenty runtime translation units with LTO itself. The
 prebuilt hash excludes the Zig and QBE tool file stamps that object-cache keys
 carry, so an installed archive still matches a build that resolved those tools
 from a different path. A missing archive (a cross-target build, or a relocated

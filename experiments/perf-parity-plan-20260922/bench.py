@@ -10,13 +10,19 @@ and nothing is built while anything is timed. Wall time and the child's own CPU
 time (user + system, from wait4) are both recorded.
 
 Arms per source file:
-  .my   my (mylang build default: ReleaseFast, LLVM O3 + LTO)
+  .my   my (ReleaseFast, LLVM O3 + LTO: what `mylang build --release` builds)
         my-unchecked (+ --unchecked), my-qbe (--backend qbe, opt-in)
   .zig  zig-fast (ReleaseFast), zig-safe (ReleaseSafe)
   .rs   rust (-C opt-level=3 codegen-units=1 target-cpu=native panic=abort)
         rust-checked (+ -C overflow-checks=on)
 A variant file `<name>_<v>.<ext>` gets `<lang>-<v>` built with that language's
 main flags (and `my-<v>-unchecked` when --variants-unchecked is given).
+
+The compiler defaults to this checkout's Debug `zig-out/bin/mylang`: a Debug
+and a ReleaseFast compiler emit byte-identical guest binaries, so timing guest
+programs never needs a ReleaseFast compiler build (CLAUDE.md, "Measuring guest
+programs"). The timing CPU defaults to the first of MYLANG_TIMING_CPUS, which
+`scripts/build-slot.sh` keeps free of builds.
 """
 
 from __future__ import annotations
@@ -34,7 +40,10 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
-DEFAULT_MYLANG = ROOT.parents[1] / "perf-audit-20260922/install-a3/bin/mylang"
+DEFAULT_MYLANG = ROOT / "zig-out/bin/mylang"
+sys.path.insert(0, str(ROOT / "bench" / "parity"))
+from bench_parity import (OffTimingCpus, busy_fraction, cpu_times,  # noqa: E402
+                          default_timing_cpu, shared_core_warning, siblings)
 RUSTC = Path.home() / ".cargo/bin/rustc"
 ZIG = "zig"
 REFERENCE = "zig-fast"
@@ -64,14 +73,20 @@ def discover(name: str, dirs: list[Path]) -> list[tuple[str, Path, str]]:
     return found
 
 
+# `mylang build` built this (ReleaseFast, LLVM O3 + LTO) by default until 2026-09-23;
+# it now defaults to QBE, so the release path is named. Spelled out rather than
+# `--release` so a compiler from before the shorthand builds the same arm.
+RELEASE_FLAGS = ["--backend", "llvm", "--llvm-opt", "3", "--lto"]
+
+
 def arms_for(ports, opts) -> list[dict]:
     arms = []
     for lang, path, variant in ports:
         tag = f"-{variant}" if variant else ""
         if lang == "my":
-            arms.append({"arm": f"my{tag}", "lang": lang, "src": path, "flags": []})
+            arms.append({"arm": f"my{tag}", "lang": lang, "src": path, "flags": RELEASE_FLAGS})
             if not variant or opts.variants_unchecked:
-                arms.append({"arm": f"my{tag}-unchecked", "lang": lang, "src": path, "flags": ["--unchecked"]})
+                arms.append({"arm": f"my{tag}-unchecked", "lang": lang, "src": path, "flags": [*RELEASE_FLAGS, "--unchecked"]})
             if opts.qbe and not variant:
                 arms.append({"arm": "my-qbe", "lang": lang, "src": path, "flags": ["--backend", "qbe"]})
         elif lang == "zig":
@@ -147,9 +162,11 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("names", nargs="+", help="benchmark names")
     ap.add_argument("--src", action="append", type=Path, default=[], help="source directory (repeatable)")
-    ap.add_argument("--work", type=Path, default=ROOT.parents[1] / "perf-plan-20260922/work/bench")
-    ap.add_argument("--mylang", type=Path, default=DEFAULT_MYLANG)
-    ap.add_argument("--cpu", type=int, default=6)
+    ap.add_argument("--work", type=Path, default=ROOT / ".mylang-cache/perf-parity-bench")
+    ap.add_argument("--mylang", type=Path, default=DEFAULT_MYLANG,
+                    help="compiler (default: this checkout's Debug zig-out/bin/mylang; run `zig build` first)")
+    ap.add_argument("--cpu", type=int, default=default_timing_cpu(),
+                    help="timing CPU (default: the first of MYLANG_TIMING_CPUS, else 2)")
     ap.add_argument("--rounds", type=int, default=11)
     ap.add_argument("--warmups", type=int, default=2)
     ap.add_argument("--arms", nargs="*", help="restrict to these arms (the reference is always kept)")
@@ -160,6 +177,14 @@ def main() -> int:
     ap.add_argument("--json", type=Path, required=True)
     ap.add_argument("--seed", type=int, default=20260922)
     opts = ap.parse_args()
+    if not opts.skip_build and not opts.mylang.exists():
+        print(f"bench.py: no compiler at {opts.mylang}; run `zig build` in {ROOT} "
+              "(a Debug compiler is enough) or pass --mylang PATH", file=sys.stderr)
+        return 2
+    if opts.cpu not in os.sched_getaffinity(0):
+        print(f"bench.py: CPU {opts.cpu} is not available to this process (run benchmarks directly, not through "
+              "scripts/build-slot.sh, which keeps the timing CPUs away from its jobs)", file=sys.stderr)
+        return 2
     dirs = [d.resolve() for d in (opts.src or [HERE / "suite"])]
     opts.work = opts.work.resolve()
     opts.work.mkdir(parents=True, exist_ok=True)
@@ -168,63 +193,72 @@ def main() -> int:
               "started": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "load_start": os.getloadavg(),
               "benchmarks": {}}
     plan = {}
-    for name in opts.names:
-        ports = discover(name, dirs)
-        arms = arms_for(ports, opts)
-        if not any(a["arm"] == REFERENCE for a in arms):
-            print(f"{name}: no {REFERENCE} arm, skipped", file=sys.stderr)
-            continue
-        entry = {"arms": {}}
-        my_src = next((a["src"] for a in arms if a["arm"] == "my"), None)
-        variants = [(v, p) for lang, p, v in ports if lang == "my" and v]
-        for cf in opts.cf:
-            if (opts.work / f"{name}.{cf}").exists():
-                arms.append({"arm": cf, "lang": "my", "src": my_src, "flags": [], "prebuilt": True})
-            for v, p in variants:
-                if (opts.work / f"{name}_{v}.{cf}").exists():
-                    arms.append({"arm": f"{v}:{cf}", "lang": "my", "src": p, "flags": [], "prebuilt": True,
-                                 "bin": opts.work / f"{name}_{v}.{cf}"})
-        for arm in arms:
-            out = arm.get("bin") or opts.work / f"{name}.{arm['arm']}"
-            arm["bin"] = out
-            if arm.get("prebuilt"):
-                entry["arms"][arm["arm"]] = {"src": str(arm["src"]), "build": {"ok": True, "prebuilt": True}}
-            elif not opts.skip_build:
-                b = build(arm, out, opts.work, opts.mylang)
-                entry["arms"][arm["arm"]] = {"src": str(arm["src"]), "build": b}
-                if not b["ok"]:
-                    print(f"BUILD FAIL {name} {arm['arm']}\n{b['stderr']}", file=sys.stderr)
-            else:
-                entry["arms"][arm["arm"]] = {"src": str(arm["src"]), "build": {"ok": out.exists()}}
-        # qualify: identical stdout across arms
-        outputs = {}
-        for arm in arms:
-            if not entry["arms"][arm["arm"]]["build"]["ok"]:
+    # build and qualify off the reserved timing CPUs; timing pins itself below
+    with OffTimingCpus():
+        for name in opts.names:
+            ports = discover(name, dirs)
+            arms = arms_for(ports, opts)
+            if not any(a["arm"] == REFERENCE for a in arms):
+                print(f"{name}: no {REFERENCE} arm, skipped", file=sys.stderr)
                 continue
-            _, _, stdout, status = run_once(arm["bin"], opts.cpu, capture=True)
-            outputs[arm["arm"]] = (sha(stdout), status, stdout)
-        ref = outputs.get(REFERENCE)
-        good = []
-        for arm in arms:
-            o = outputs.get(arm["arm"])
-            if o is None:
-                continue
-            same = ref is not None and o[0] == ref[0] and o[1] == 0
-            entry["arms"][arm["arm"]].update({"stdout_sha256": o[0], "status": o[1], "matches_reference": same})
-            if same:
-                good.append(arm)
-                entry["arms"][arm["arm"]]["binary_sha256"] = sha(arm["bin"].read_bytes())
-                entry["arms"][arm["arm"]]["peak_rss_kb"] = peak_rss_kb(arm["bin"], opts.cpu)
-            else:
-                print(f"MISMATCH {name} {arm['arm']} status={o[1]}", file=sys.stderr)
-        entry["reference_stdout"] = ref[2].decode(errors="replace") if ref else None
-        report["benchmarks"][name] = entry
-        plan[name] = good
-        print(f"{name}: {len(good)} qualified arms: {' '.join(a['arm'] for a in good)}", file=sys.stderr)
+            entry = {"arms": {}}
+            my_src = next((a["src"] for a in arms if a["arm"] == "my"), None)
+            variants = [(v, p) for lang, p, v in ports if lang == "my" and v]
+            for cf in opts.cf:
+                if (opts.work / f"{name}.{cf}").exists():
+                    arms.append({"arm": cf, "lang": "my", "src": my_src, "flags": [], "prebuilt": True})
+                for v, p in variants:
+                    if (opts.work / f"{name}_{v}.{cf}").exists():
+                        arms.append({"arm": f"{v}:{cf}", "lang": "my", "src": p, "flags": [], "prebuilt": True,
+                                     "bin": opts.work / f"{name}_{v}.{cf}"})
+            for arm in arms:
+                out = arm.get("bin") or opts.work / f"{name}.{arm['arm']}"
+                arm["bin"] = out
+                if arm.get("prebuilt"):
+                    entry["arms"][arm["arm"]] = {"src": str(arm["src"]), "build": {"ok": True, "prebuilt": True}}
+                elif not opts.skip_build:
+                    b = build(arm, out, opts.work, opts.mylang)
+                    entry["arms"][arm["arm"]] = {"src": str(arm["src"]), "build": b}
+                    if not b["ok"]:
+                        print(f"BUILD FAIL {name} {arm['arm']}\n{b['stderr']}", file=sys.stderr)
+                else:
+                    entry["arms"][arm["arm"]] = {"src": str(arm["src"]), "build": {"ok": out.exists()}}
+            # qualify: identical stdout across arms
+            outputs = {}
+            for arm in arms:
+                if not entry["arms"][arm["arm"]]["build"]["ok"]:
+                    continue
+                _, _, stdout, status = run_once(arm["bin"], opts.cpu, capture=True)
+                outputs[arm["arm"]] = (sha(stdout), status, stdout)
+            ref = outputs.get(REFERENCE)
+            good = []
+            for arm in arms:
+                o = outputs.get(arm["arm"])
+                if o is None:
+                    continue
+                same = ref is not None and o[0] == ref[0] and o[1] == 0
+                entry["arms"][arm["arm"]].update({"stdout_sha256": o[0], "status": o[1], "matches_reference": same})
+                if same:
+                    good.append(arm)
+                    entry["arms"][arm["arm"]]["binary_sha256"] = sha(arm["bin"].read_bytes())
+                    entry["arms"][arm["arm"]]["peak_rss_kb"] = peak_rss_kb(arm["bin"], opts.cpu)
+                else:
+                    print(f"MISMATCH {name} {arm['arm']} status={o[1]}", file=sys.stderr)
+            entry["reference_stdout"] = ref[2].decode(errors="replace") if ref else None
+            report["benchmarks"][name] = entry
+            plan[name] = good
+            print(f"{name}: {len(good)} qualified arms: {' '.join(a['arm'] for a in good)}", file=sys.stderr)
     # time: benchmarks in sequence, arms shuffled inside each round
+    crowded = shared_core_warning(opts.cpu)
+    if crowded:
+        print(f"bench.py: warning: {crowded}", file=sys.stderr)
+        report["notices"] = [crowded]
+    sibling_cpus = siblings(opts.cpu)
+    report["siblings"] = sibling_cpus
     for name, good in plan.items():
         entry = report["benchmarks"][name]
         samples = {a["arm"]: {"wall": [], "cpu": []} for a in good}
+        before = cpu_times(sibling_cpus)
         for _ in range(opts.warmups):
             for a in good:
                 run_once(a["bin"], opts.cpu)
@@ -237,6 +271,11 @@ def main() -> int:
                     print(f"RUN FAIL {name} {a['arm']} status={status}", file=sys.stderr)
                 samples[a["arm"]]["wall"].append(wall)
                 samples[a["arm"]]["cpu"].append(cpu)
+        entry["sibling_busy"] = busy_fraction(before, cpu_times(sibling_cpus))
+        if (entry["sibling_busy"] or 0) > 0.25:
+            print(f"bench.py: warning: {name}: SMT sibling CPU {', '.join(map(str, sibling_cpus))} of timing CPU "
+                  f"{opts.cpu} was {entry['sibling_busy']:.0%} busy; its ratios may be off by tens of percent",
+                  file=sys.stderr)
         refw = samples[REFERENCE]["wall"]
         refc = samples[REFERENCE]["cpu"]
         for arm, s in samples.items():

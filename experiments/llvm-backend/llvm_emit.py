@@ -28,6 +28,7 @@ Two properties matter for correctness:
 from __future__ import annotations
 
 import hashlib
+import heapq
 import os
 import re
 import sys
@@ -215,9 +216,36 @@ ALIAS_METADATA = """
 !4 = !{!2}
 """
 
+#: LLVM-ELEMENT-CLASS-1: a foreign access is placed more finely when the
+#: frontend said what it touches.  An access through an *object* (a container
+#: header, an allocation's payload: `# myl-obj`) and one through a container's
+#: *element storage* (`# myl-elem %v KIND`) never meet: every storage block is
+#: an allocation of its own, apart from every object.  Storage blocks of
+#: different element kinds never meet either, because a block only ever holds
+#: elements of its one kind (a block of GC references is never read as plain
+#: values or the reverse, and no two element sizes share a block).  A plain
+#: foreign access (a parameter, a global, the context) names none of these
+#: scopes in its `!noalias` and so still aliases all of them, and the frame
+#: scope list is unchanged: an object or element access names the frame scope
+#: in its own `!noalias`.  All scopes are `distinct` members of the unit's one
+#: domain, so the IR linker never unifies two units' classes.
+OBJECT = "object"
+ELEMENT = "element"
+OBJECT_SCOPE = 5
+#: Element kind number j uses !(ELEMENT_BASE + 3j) as its scope, the next
+#: number as its scope list and the one after as its `!noalias` list.
+ELEMENT_BASE = 11
+#: Kinds beyond this many stay plainly foreign: the numbers stop short of the
+#: frame-map debug nodes (`FRAME_MAP_METADATA_BASE`).
+MAX_ELEMENT_KINDS = 29
+#: Scope lists a copy between two classes names are numbered from here, clear
+#: of every number the frame-map debug nodes can reach.
+SCOPE_LIST_BASE = 10000000
+
 #: What one class names as its own scope list and as the list it cannot alias.
 ALIAS_SUFFIX = {FRAME: ", !alias.scope !3, !noalias !4",
-                FOREIGN: ", !alias.scope !4, !noalias !3"}
+                FOREIGN: ", !alias.scope !4, !noalias !3",
+                OBJECT: ", !alias.scope !6, !noalias !7"}
 
 
 class Dominators:
@@ -311,16 +339,100 @@ class MemoryClasses:
         self.sizes = sizes
         self.classes = {}
         self.conflict = False
-        self.dominator_sets = None
         self.counts = self._definition_counts()
         self.slots = self._simple_slots()
         self._classify()
         if self.conflict:
             self.classes = {}
+        self.refined = self._refine()
 
     def of(self, name):
         """The class of one temporary, or None when the unit does not place it."""
         return self.classes.get(name)
+
+    def access_class(self, argument):
+        """The class one access through `argument` is tagged with.
+
+        A foreign address the frontend placed in a container's element storage
+        or in an object is `ELEMENT` or `OBJECT` (LLVM-ELEMENT-CLASS-1);
+        everything else answers its plain class.
+        """
+        klass = self.operand_class(argument)
+        if klass == FOREIGN and is_temporary(argument) and argument.kind == "temp":
+            return self.refined.get(argument.name, klass)
+        return klass
+
+    def _refine(self):
+        """Split the foreign addresses into objects and element storage.
+
+        Seeds: a temporary the frontend marked `# myl-elem %v KIND` is the
+        start of an element storage block holding elements of that kind, and
+        every other `# myl-obj` temporary is an object — a container header or
+        an allocation's payload.  A class then travels through `copy` and
+        offsetting `add` exactly as `_derive` carries the coarse class.  An
+        `add` that combines two different refined classes is a contradiction,
+        and a contradiction drops the whole refinement, leaving every foreign
+        access plainly foreign, as it was before this refinement existed.
+        """
+        elements = dict(getattr(self.function, "element_hints", {}) or {})
+        refined = {}
+        for name in set(self.function.object_hints) | set(elements):
+            if self.counts.get(name) != 1 or self.classes.get(name) != FOREIGN:
+                continue
+            refined[name] = (ELEMENT, elements[name]) if name in elements else OBJECT
+        for _round in range(8):
+            changed = False
+            for block in self.function.blocks:
+                for instruction in block.instructions:
+                    if instruction.dest is None or instruction.opcode not in ("copy", "add"):
+                        continue
+                    name = instruction.dest.name
+                    if self.counts.get(name) != 1 or self.classes.get(name) != FOREIGN:
+                        continue
+                    seen = {refined.get(argument.name) for argument in instruction.args
+                            if is_temporary(argument) and argument.kind == "temp"}
+                    seen.discard(None)
+                    if len(seen) > 1:
+                        return {}
+                    if len(seen) == 1:
+                        result = self._refine_one(refined, name, seen.pop())
+                        if result is None:
+                            return {}
+                        changed = changed or result
+            through = self._refine_through_slots(refined)
+            if through is None:
+                return {}
+            if not changed and not through:
+                break
+        return refined
+
+    @staticmethod
+    def _refine_one(refined, name, klass):
+        """Refine one temporary; None on a contradiction, else whether it is new."""
+        previous = refined.get(name)
+        if previous is not None and previous != klass:
+            return None
+        refined[name] = klass
+        return previous is None
+
+    def _refine_through_slots(self, refined):
+        """Carry a refined class through a simple slot by the same must-analysis
+        that carries the coarse one (`_slot_flow`).  None on a contradiction,
+        else whether anything new was refined."""
+        def value_class(value):
+            if is_temporary(value) and value.kind == "temp":
+                return refined.get(value.name)
+            return None
+
+        changed = False
+        for name, klass in self._slot_flow(value_class).items():
+            if self.counts.get(name) != 1 or self.classes.get(name) != FOREIGN:
+                continue
+            result = self._refine_one(refined, name, klass)
+            if result is None:
+                return None
+            changed = changed or result
+        return changed
 
     def _definition_counts(self):
         """How many times each temporary of this unit is defined."""
@@ -419,67 +531,70 @@ class MemoryClasses:
         return changed
 
     def _through_slots(self):
-        """Carry a class through a simple slot, two ways.
+        """Carry a class through a simple slot (`_slot_flow`).
 
-        A slot every store of which agrees on one class, and which the entry
-        block stores before any other block can read it, answers that class from
-        every load.  Within one block a load also answers the class of the last
-        value stored to the slot above it, which is what carries a class across
-        the push and pop the frontend's operand stack writes around every value.
+        This is what carries a class across the push and pop the frontend's
+        operand stack writes around every value, within a block and across
+        the branches a checked operation or a guard opens between them.
         """
-        uniform = self._uniform_slots()
         changed = False
-        for block in self.function.blocks:
-            held = {}
-            for instruction in block.instructions:
-                target = self._slot_store_target(instruction)
-                if target is not None:
-                    held[target] = self.operand_class(instruction.args[0])
-                    continue
-                source = self._slot_load_source(instruction)
-                if source is None:
-                    continue
-                klass = held[source] if source in held else uniform.get(source)
-                changed = self._note(instruction.dest.name, klass) or changed
+        for name, klass in self._slot_flow(self.operand_class).items():
+            changed = self._note(name, klass) or changed
         return changed
 
-    def _uniform_slots(self):
-        """Slots whose every store agrees on a class, established before every read.
+    def _slot_flow(self, value_class):
+        """The class of every load of a simple slot into a singly-defined temporary.
 
-        Agreement alone would say nothing about a load that no store reaches: the
-        slot is fresh stack storage and its contents before the first store are
-        whatever the frame held.  So one of the stores must also dominate every
-        load, which is what makes the answer a value this unit put there.
+        A forward must-analysis: at each point a simple slot holds the class of
+        the value the last store put there, on every path that reaches the
+        point, or nothing when two paths disagree, a path stored an unplaced
+        value, or a path reaches it before any store (the slot then holds
+        whatever the frame held).  A simple slot is written and read only by
+        `storel`/`loadl` through its own `alloc` temporary, so no other
+        instruction — not a call, not a store through another address — can
+        change it.  `value_class` answers the class of one stored operand.
+        Returns {load destination: class}.
         """
-        stored, writes, reads = {}, {}, {}
-        for block in self.function.blocks:
-            for index, instruction in enumerate(block.instructions):
+        blocks = self.function.blocks
+        index = {block.label: position for position, block in enumerate(blocks)}
+        successors = {}
+        for position, block in enumerate(blocks):
+            following = blocks[position + 1].label if position + 1 < len(blocks) else None
+            successors[block.label] = [label for label in self._successors(block, following)
+                                       if label in index]
+        state_in = {blocks[0].label: {}}
+        pending = [(0, blocks[0].label)]
+        queued = {blocks[0].label}
+        loads = {}
+        while pending:
+            _position, label = heapq.heappop(pending)
+            queued.discard(label)
+            state = dict(state_in[label])
+            for instruction in blocks[index[label]].instructions:
                 target = self._slot_store_target(instruction)
                 if target is not None:
-                    stored.setdefault(target, set()).add(self.operand_class(instruction.args[0]))
-                    writes.setdefault(target, []).append((block.label, index))
+                    klass = value_class(instruction.args[0])
+                    if klass is None:
+                        state.pop(target, None)
+                    else:
+                        state[target] = klass
                     continue
                 source = self._slot_load_source(instruction)
                 if source is not None:
-                    reads.setdefault(source, []).append((block.label, index))
-        dominators = self._dominators()
-        uniform = {}
-        for name, seen in stored.items():
-            if len(seen) != 1 or None in seen:
-                continue
-            if self._established(writes.get(name, ()), reads.get(name, ()), dominators):
-                uniform[name] = next(iter(seen))
-        return uniform
-
-    @staticmethod
-    def _established(writes, reads, dominators):
-        """Whether one of `writes` runs before every one of `reads`, on every path."""
-        for label, index in writes:
-            if all(dominators.dominates(label, read_label) and
-                   (label != read_label or index < read_index)
-                   for read_label, read_index in reads):
-                return True
-        return not reads
+                    loads[instruction.dest.name] = state.get(source)
+            for successor in successors[label]:
+                previous = state_in.get(successor)
+                if previous is None:
+                    merged = state
+                else:
+                    merged = {slot: klass for slot, klass in previous.items()
+                              if state.get(slot) == klass}
+                if previous is None or merged != previous:
+                    state_in[successor] = dict(merged)
+                    if successor not in queued:
+                        queued.add(successor)
+                        heapq.heappush(pending, (index[successor], successor))
+        return {name: klass for name, klass in loads.items() if klass is not None}
 
     def _successors(self, block, following):
         """The labels control can reach from one block, fall-through included."""
@@ -493,32 +608,6 @@ class MemoryClasses:
         if terminator.opcode in ("ret", "hlt"):
             return []
         return [following] if following else []
-
-    def _dominators(self):
-        """The dominance relation of the function's reachable blocks.
-
-        A QBE block is entered only at its label and runs straight through, so a
-        block that dominates a load's block has run its own instructions before
-        that load.  Unreachable blocks are left out and dominate nothing.
-
-        Linear in the number of blocks and edges (the immediate-dominator tree of
-        Cooper, Harvey and Kennedy, then one tree walk), where the per-block
-        dominator sets it replaces were quadratic in space: a function past about
-        20 000 blocks — every checked operation adds two — ran the adapter out of
-        memory.
-        """
-        if self.dominator_sets is not None:
-            return self.dominator_sets
-        blocks = self.function.blocks
-        order = [block.label for block in blocks]
-        known = set(order)
-        edges = {}
-        for index, block in enumerate(blocks):
-            following = blocks[index + 1].label if index + 1 < len(blocks) else None
-            edges[block.label] = [label for label in self._successors(block, following)
-                                  if label in known]
-        self.dominator_sets = Dominators(order[0], edges)
-        return self.dominator_sets
 
     def _slot_store_target(self, instruction):
         """The simple slot one `storel` writes, or None."""
@@ -863,7 +952,17 @@ class Emitter:
         self.memory = (MemoryClasses(self.function, self.sizes)
                        if os.environ.get("MYLANG_QBE_LLVM_ALIAS", "1") != "0" else None)
         self.alias_metadata = False
+        #: LLVM-ELEMENT-CLASS-1: element kinds in first-use order.
+        self.element_kinds = []
+        #: Scope lists a copy between two classes names, by members.
+        self.scope_lists = {}
         self.frame_map = FrameMapDebug(unit)
+        #: LLVM-ELEMENT-GEP-1: singly-defined temporaries, and the position of
+        #: each one defined so far in the block being emitted.
+        self.single = {name for name, count in self.definition_counts().items() if count == 1}
+        self.element_gep = os.environ.get("MYLANG_QBE_LLVM_ELEMENT_GEP", "1") != "0"
+        self.block_positions, self.block_definitions = {}, {}
+        self.position = 0
 
     def alias_of(self, argument):
         """The alias metadata one access through this address operand carries.
@@ -874,20 +973,95 @@ class Emitter:
         """
         if self.memory is None:
             return ""
-        suffix = ALIAS_SUFFIX.get(self.memory.operand_class(argument), "")
+        suffix = self.class_suffix(self.memory.access_class(argument))
         if suffix:
             self.alias_metadata = True
         return suffix
 
+    def class_suffix(self, klass):
+        """The `!alias.scope`/`!noalias` suffix of one memory class."""
+        if isinstance(klass, tuple):
+            kind = klass[1]
+            if kind not in self.element_kinds:
+                if len(self.element_kinds) >= MAX_ELEMENT_KINDS:
+                    return ALIAS_SUFFIX[FOREIGN]
+                self.element_kinds.append(kind)
+            scope = ELEMENT_BASE + 3 * self.element_kinds.index(kind)
+            return f", !alias.scope !{scope + 1}, !noalias !{scope + 2}"
+        return ALIAS_SUFFIX.get(klass, "")
+
+    def element_metadata(self):
+        """The object and element scopes (LLVM-ELEMENT-CLASS-1), always emitted
+        with the frame/foreign ones because the object suffix names them, and
+        the scope lists a copy between two classes names."""
+        scopes = [ELEMENT_BASE + 3 * index for index in range(len(self.element_kinds))]
+        base = OBJECT_SCOPE
+        out = [f'!{base} = distinct !{{!{base}, !0, !"object"}}',
+               f"!{base + 1} = !{{!{base}}}",
+               "!{} = !{{{}}}".format(base + 2, ", ".join(["!1"] + [f"!{scope}" for scope in scopes]))]
+        for kind, scope in zip(self.element_kinds, scopes):
+            others = [f"!{other}" for other in scopes if other != scope]
+            out.append(f'!{scope} = distinct !{{!{scope}, !0, !"element {kind}"}}')
+            out.append(f"!{scope + 1} = !{{!{scope}}}")
+            out.append("!{} = !{{{}}}".format(scope + 2, ", ".join(["!1", f"!{base}"] + others)))
+        for members, number in sorted(self.scope_lists.items(), key=lambda item: item[1]):
+            out.append("!{} = !{{{}}}".format(number, ", ".join(f"!{member}" for member in members)))
+        return out
+
+    def class_scopes(self, klass):
+        """(own scopes, scopes it cannot alias) of one memory class, as numbers.
+
+        An element or object class's second set names only the element kinds
+        this unit has used so far; a set that later grows only ever gains
+        facts, so an answer taken early is a subset of the final one."""
+        if klass == FRAME:
+            return {1}, {2}
+        if klass == FOREIGN:
+            return {2}, {1}
+        kinds = [ELEMENT_BASE + 3 * index for index in range(len(self.element_kinds))]
+        if klass == OBJECT:
+            return {OBJECT_SCOPE}, {1, *kinds}
+        self.class_suffix(klass)
+        if klass[1] not in self.element_kinds:
+            return {2}, {1}
+        own = ELEMENT_BASE + 3 * self.element_kinds.index(klass[1])
+        return {own}, {1, OBJECT_SCOPE, *(scope for scope in kinds if scope != own)}
+
+    def scope_list(self, members):
+        """The metadata number of one scope list a copy names."""
+        key = tuple(sorted(members))
+        number = self.scope_lists.get(key)
+        if number is None:
+            number = SCOPE_LIST_BASE + len(self.scope_lists)
+            self.scope_lists[key] = number
+        return number
+
     def alias_of_both(self, first, second):
-        """The metadata a two-address copy carries, when both ends agree."""
+        """The metadata a two-address copy carries.
+
+        The copy reads one end and writes the other, and LLVM applies one pair
+        of lists to both, so its scopes are both ends' scopes and the scopes it
+        cannot alias are the ones neither end can alias (LLVM-ELEMENT-CLASS-1).
+        A copy with an end the unit does not place carries none."""
         if self.memory is None:
             return ""
-        klass = self.memory.operand_class(first)
-        if klass is None or klass != self.memory.operand_class(second):
+        left = self.memory.access_class(first)
+        right = self.memory.access_class(second)
+        if left is None or right is None:
             return ""
+        if left == right:
+            suffix = self.class_suffix(left)
+            if suffix:
+                self.alias_metadata = True
+            return suffix
+        own_left, apart_left = self.class_scopes(left)
+        own_right, apart_right = self.class_scopes(right)
         self.alias_metadata = True
-        return ALIAS_SUFFIX[klass]
+        suffix = f", !alias.scope !{self.scope_list(own_left | own_right)}"
+        apart = apart_left & apart_right
+        if apart:
+            suffix += f", !noalias !{self.scope_list(apart)}"
+        return suffix
 
     def aggregate_abi(self, letter, force_memory=False):
         size = aggregate_bytes(letter, self.sizes)
@@ -980,6 +1154,97 @@ class Emitter:
                 raise ParseError(f"{self.unit.name}: stack-floor branch does not match "
                                  "the checked allocation/load/compare shape")
         return None
+
+    def definition_counts(self):
+        """How many times each temporary of this unit is defined."""
+        counts = {temp.name: 1 for _letter, temp in self.function.parameters}
+        for block in self.function.blocks:
+            for ins in block.instructions:
+                if ins.dest is not None:
+                    counts[ins.dest.name] = counts.get(ins.dest.name, 0) + 1
+        return counts
+
+    # -- element addresses (LLVM-ELEMENT-GEP-1) ----------------------------
+    #
+    # The frontend computes an element's address as integer arithmetic on the
+    # storage word it loaded from a container header (`# myl-obj %storage`,
+    # then `add %storage, %offset`), and every access turns that integer into a
+    # pointer with `inttoptr`.  Scalar evolution does not look through
+    # `inttoptr`, so to LLVM's loop analyses `data[i]` in a loop is an unknown
+    # pointer per iteration: the vectorizer gathers it byte by byte instead of
+    # loading a vector, and cannot compute a dependence distance at all.
+    #
+    # So a load or store whose address is such a sum, computed earlier in the
+    # same block, is given the address as `getelementptr i8` from the marked
+    # object: the same bits, with the variable part visible as an offset.  The
+    # integer `add` is still emitted for every other reader.  Only a sum with a
+    # non-constant term is rewritten, which is an element access; a header
+    # field keeps its integer form, and so does every `blit`, so the two forms
+    # never meet on a copy LLVM needs to see as a self-copy.  A plain (not
+    # `inbounds`) `getelementptr` is wrapping address arithmetic: it states
+    # nothing the integer sum did not.
+
+    def element_chain(self, argument):
+        """(base, offsets) when a load/store address is an element sum, else None.
+
+        The address must be a singly-defined `add` emitted earlier in this
+        block, its operands followed through further such `add`s down to a
+        singly-defined temporary the frontend marked as a managed address.
+        Every temporary on the way is singly defined and none is defined in
+        this block after the sum that reads it, so reloading them at the access
+        reproduces exactly the operands the sum used.
+        """
+        if not self.element_gep or not is_temporary(argument) or argument.kind != "temp":
+            return None
+        offsets = []
+        name = argument.name
+        use_position = self.position
+        for _depth in range(8):
+            if name in self.function.object_hints and name in self.single:
+                variable = any(is_temporary(offset) for offset in offsets)
+                return (name, list(reversed(offsets))) if variable else None
+            position = self.block_positions.get(name)
+            if name not in self.single or position is None or position >= use_position:
+                return None
+            definition = self.block_definitions[name]
+            if definition.opcode != "add" or definition.qbe_type != "l" or len(definition.args) != 2:
+                return None
+            for operand in definition.args:
+                if not is_temporary(operand):
+                    continue
+                if operand.kind != "temp" or operand.name not in self.single:
+                    return None
+                later = self.block_positions.get(operand.name)
+                if later is not None and later >= position:
+                    return None
+            left, right = definition.args
+            follow = None
+            for rank in (0, 1):
+                for candidate, other in ((left, right), (right, left)):
+                    if follow is None and is_temporary(candidate) and (
+                            candidate.name in self.function.object_hints if rank == 0 else
+                            getattr(self.block_definitions.get(candidate.name), "opcode", None) == "add"):
+                        follow, offset = candidate, other
+            if follow is None:
+                return None
+            offsets.append(offset)
+            name = follow.name
+            use_position = position
+        return None
+
+    def access_pointer(self, lines, argument):
+        """The pointer a load or store uses for one address operand."""
+        chain = self.element_chain(argument)
+        if chain is None:
+            return self.address(lines, self.render(lines, argument, "int", 64, "i64"))
+        base, offsets = chain
+        pointer = self.address(lines, self.load_slot(lines, base))
+        for offset in offsets:
+            value = self.render(lines, offset, "int", 64, "i64")
+            gep = self.fresh("egep")
+            lines.append(f"  %{gep} = getelementptr i8, ptr {pointer}, i64 {value}")
+            pointer = f"%{gep}"
+        return pointer
 
     def find_pointer_values(self):
         """Find values whose bits retain an actual object-address origin.
@@ -1482,8 +1747,14 @@ class Emitter:
         explicit = (terminator is not None
                     and terminator.opcode in self.TERMINATORS)
         body = block.instructions[:-1] if explicit else block.instructions
-        for instruction in body:
+        self.block_positions, self.block_definitions = {}, {}
+        for position, instruction in enumerate(body):
+            self.position = position
             lines.extend(self.emit_instruction(instruction, block))
+            if instruction.dest is not None:
+                self.block_positions[instruction.dest.name] = position
+                self.block_definitions[instruction.dest.name] = instruction
+        self.position = len(body)
         # A phi input belongs on the edge out of the block that supplies it, so
         # the stores go after the block's own instructions and before its branch.
         lines.extend(self.emit_phi_stores(block))
@@ -1567,8 +1838,7 @@ class Emitter:
         bits, signed = LOADS[instruction.opcode]
         llvm = self.llvm_of(instruction.dest.name)
         lines = []
-        address = self.render(lines, instruction.args[0], "int", 64, "i64")
-        pointer = self.address(lines, address)
+        pointer = self.access_pointer(lines, instruction.args[0])
         loaded = self.fresh("ld")
         loaded_type = ("double" if instruction.opcode == "loadd"
                        else "float" if instruction.opcode == "loads" else f"i{bits}")
@@ -1603,8 +1873,7 @@ class Emitter:
                             else "int", bits, source_llvm)
         if source_llvm != stored_type:
             value = self.widen(lines, value, source_llvm, stored_type)
-        address = self.render(lines, instruction.args[1], "int", 64, "i64")
-        pointer = self.address(lines, address)
+        pointer = self.access_pointer(lines, instruction.args[1])
         lines.append(f"  store {stored_type} {value}, ptr {pointer}, "
                      f"align {max(1, bits // 8)}{self.alias_of(instruction.args[1])}")
         return lines
@@ -1979,6 +2248,7 @@ class Emitter:
             out.append("attributes #0 = { " + " ".join(sorted(self.attributes)) + " }")
         if self.alias_metadata:
             out.append(ALIAS_METADATA.rstrip("\n"))
+            out.extend(self.element_metadata())
         out.extend(self.frame_map.metadata())
         return "\n".join(out) + "\n"
 
@@ -2093,7 +2363,13 @@ class Emitter:
 
 
 def translate(unit, signatures=None):
-    """Translate one parsed QBE unit into LLVM IR text."""
+    """Translate one parsed QBE unit into LLVM IR text.
+
+    LLVM-STICKY-REDUCTION-1: qualifying loops are versioned first
+    (`sticky_loops`), so the Emitter sees ordinary IL either way.
+    """
+    import sticky_loops
+    sticky_loops.version_loops(unit)
     return Emitter(unit, signatures).emit()
 
 

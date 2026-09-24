@@ -52,7 +52,7 @@ so `xs[i] = v` is a bounds test and one store instead of a runtime call behind
 the frame's GC roots. On the same thirteen programs it takes the geometric mean
 from 5.8× to 3.0× Zig: `nbody` 72× → 4.9×, `matmul` 41× → 7.1×,
 `fannkuch_redux` 16× → 1.3×, `sieve` 7.1× → 1.8×. The schematic render goes
-from 1.98× to 1.73×. Its [results](audits/performance-parity-results-2026-09-23.md): the suite went from 5.81× to 1.20× Zig on the default LLVM build and from 8.40× to 2.41× on QBE.
+from 1.98× to 1.73×. Its [results](audits/performance-parity-results-2026-09-23.md): the suite went from 5.81× to 1.20× Zig on the LLVM release build (`--release`; the default build until 2026-09-23) and from 8.40× to 2.41× on QBE.
 
 ## What is fast without trying
 
@@ -187,6 +187,20 @@ guest test run keeps its own `Debug` default, which `mylang test --mode ReleaseF
 overrides. The mode is part of the object-cache key and of the run identity, so
 switching modes never reuses another mode's objects.
 
+The backend is a separate choice, and every mode builds with QBE unless asked
+otherwise, because a build that finishes in a second is what an edit-test loop
+needs. The fastest executable is `--release` — ReleaseFast through the LLVM
+backend at `-O3` with full LTO, the build the parity benchmark times — on
+`mylang build`, `mylang run` and `mylang test` alike:
+
+```bash
+mylang build loop10.my -o loop10-release --release       # LLVM -O3 + LTO
+mylang run loop10.my --release
+```
+
+It costs an LTO link on every rebuild that changed a function, so keep it for the
+executable you ship or measure ([native builds](tooling/native-build.md#backends)).
+
 ## Budgets are opt-in
 
 A run is bounded only when you ask for it. `mylang run`, `mylang build --run` and
@@ -260,6 +274,68 @@ already pass, not a debugging tool: under it an overflow, an out-of-range cast
 or an out-of-bounds index is undefined behaviour instead of a named trap.
 Allocation failure, the memory ceiling, the collector and capability validation
 are unaffected, so a program that runs out of memory still exits cleanly.
+
+## Loops that prove their own checks
+
+A counted loop pays for its checks once, not once per element, when the compiler
+can see that nothing inside it can resize a list. The native emitter plans every
+innermost `for i in range(...)`, `for x in xs`, `enumerate(...)` and
+`while i < n: ...; i = i + step` loop whose body makes no call, allocates
+nothing and never pops, inserts or slices, and appends at most once, to a list
+of numbers it does not otherwise read (`QBE-LOOP-FACTS-1`). For
+such a loop it proves, from values it can compute before the first iteration:
+
+- an index `i`, `i + c`, `k - i` or `i * w + j` is inside the list for every
+  iteration when its smallest and its largest value are;
+- a checked `+`, `-` or `*` over counters, loop-invariant locals and lengths
+  cannot overflow once each of those is within `2^b` for a bound `b` the
+  expression's degree allows (`(i + j) * (i + j + 1)` allows `2^29`);
+- `count += 1`, or any accumulator adding a bounded amount once per
+  iteration, cannot overflow when its starting value is within the same bound;
+- the length checks of `for x in xs` hold on every iteration;
+- a row `c[i]` read inside `for j in range(n)` is the same row every time;
+- the list a comprehension such as `[True for _ in range(n)]` fills was
+  created with room for every element, so each append is a plain store.
+
+The loop is then compiled twice (`QBE-LOOP-VERSION-1`). A guard in front of it
+checks those conditions once; when they hold and the loop has at least 16
+iterations ahead of it (a shorter loop saves less than the guard costs), a copy
+without the proven checks
+runs — and because nothing is left in it that can exit early, LLVM vectorizes
+it — and when any fails, the original loop runs with every check in place, so a
+bad index still traps at the same iteration with the same message. Nothing
+about the language changes: the result, every trap and its trace are exactly
+what the unversioned program produces.
+
+```mylang
+# doc: expect 42
+def scale(row: mut list[float], factor: float) -> None:
+    for j in range(len(row)):
+        row[j] = row[j] * factor
+
+
+def count(data: list[int], wanted: int) -> int:
+    found = 0
+    for value in data:
+        if value == wanted:
+            found += 1
+    return found
+
+
+def main() -> int:
+    row = [1.0, 2.0, 3.0]
+    scale(mut row, 2.0)
+    if row[2] != 6.0:
+        return 1
+    return 40 + count([7, 1, 7], 7)
+```
+
+A loop keeps one copy, and every check, when its body calls a function that is
+not inlined, prints, builds a string or grows a list: put that work before or
+after the hot loop. A step-accounted build (`--max-steps`) and an `--unchecked`
+build never version a loop. The
+[loop range facts audit](audits/loop-range-facts-2026-09-23.md) has the
+measurements.
 
 ## Fixed arrays are values you can write in place
 
@@ -472,6 +548,16 @@ CPU in interleaved rounds, and fails when a program's ratio to Zig ReleaseFast
 grows past its threshold in `bench/parity/thresholds.json`. Ratios, not
 milliseconds, are checked, because both sides of a ratio ran in the same round.
 The step is opt-in; `zig build test` never runs it.
+
+A plain `zig build bench-parity` times the guest binaries of the Debug compiler it
+installs. That is deliberate. The compiler's own optimization mode does not change
+what it emits: `python3 bench/parity/bench_parity.py same-binaries --other
+PATH/bin/mylang` builds every mylang arm with both compilers and requires
+identical bytes. So a ReleaseFast compiler build buys nothing here. Timed processes run
+on the first of `MYLANG_TIMING_CPUS` (default CPU 2) unless `-Dbench-cpu` says
+otherwise. That is a core `scripts/build-slot.sh` keeps free of builds
+([many agents on one machine](tooling/many-agents.md)). The harness warns before
+timing when that core or its SMT sibling is already busy.
 
 ```bash
 zig build bench-parity -Dbench-filter=sieve -Dbench-cpu=10 -Dbench-rounds=7

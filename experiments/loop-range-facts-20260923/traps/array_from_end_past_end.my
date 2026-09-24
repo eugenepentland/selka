@@ -1,0 +1,11 @@
+def reverse(values: mut [32]int, k: int) -> int:
+    for i in range(20):
+        values[k - i] = i
+    return values[0]
+
+
+def main(out: Stream) -> int:
+    values: [32]int = [9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9]
+    out.print(reverse(mut values, 31))
+    out.print(reverse(mut values, 10))
+    return reverse(mut values, 40)

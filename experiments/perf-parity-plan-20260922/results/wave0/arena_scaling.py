@@ -39,7 +39,9 @@ def main() -> int:
         source.write_text(text.replace("keep(2000000)", f"keep({count})"))
         for arm, compiler in (("before", opts.before), ("after", opts.after)):
             out = opts.work / f"arena_store_{size}.{arm}"
-            subprocess.run([str(compiler), "build", str(source), "-o", str(out), "--cache-dir", str(opts.work / f"cache-{arm}")], check=True)
+            # ReleaseFast, LLVM O3 + LTO: the default build when this ran (2026-09-22).
+            subprocess.run([str(compiler), "build", str(source), "-o", str(out), "--cache-dir", str(opts.work / f"cache-{arm}"),
+                            "--backend", "llvm", "--llvm-opt", "3", "--lto"], check=True)
             printed = subprocess.run([str(out)], capture_output=True, text=True, check=True).stdout.strip()
             if printed != str(count):
                 raise SystemExit(f"{out} printed {printed!r}, expected {count}")

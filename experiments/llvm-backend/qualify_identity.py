@@ -32,4 +32,4 @@ def identity(mylang):
             "native_types_zig_sha256": digest(REPO / "src" / "native_types.zig"),
             "translator": {name: digest(here / name) for name in
                            ("qbe_llvm.py", "llvm_emit.py", "runtime_signatures.py",
-                            "amd64_sysv.py")}}
+                            "amd64_sysv.py", "sticky_loops.py")}}
