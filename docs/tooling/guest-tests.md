@@ -14,7 +14,10 @@ design record is
 ## `mylang test`
 
 The command discovers `test_` functions in the project's reachable public
-schema. A parameter-free test returning `bool` asserts `true`; any other result
+schema. A parameter-free test returning `bool` asserts `true`, and one returning
+`Result[bool, E]` asserts `Ok(True)`, so it may use `?` and a failure it
+propagates is reported with its
+[error return trace](../results-and-options.md#error-return-traces); any other result
 type needs an explicit expected typed JSON value, so an undeclared expectation is
 a configuration error rather than a silent pass. A test with data parameters and
 no cases-file `arguments` is a [property test](#property-tests): the runner

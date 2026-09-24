@@ -243,6 +243,76 @@ def main() -> int:
     return left_value(root).unwrap_or(0) + left_value(leaf).unwrap_or(0)
 ```
 
+## Error return traces
+
+An `Err` that reaches the end of `main`, or fails a test, says where it came from.
+Every program keeps one error return trace, in every build mode and on both
+backends: constructing an `Err(...)` value starts a fresh trace at that construction,
+and a runtime operation that answers `Err` — reading a missing file, say — starts one
+at its call. After that, each `?` that passes the error on adds its site, and says
+which union case it converted the error into when it wrapped it; a `return` of an
+`Err` the statement did not construct itself — a variable, a call's result, a
+conditional expression — adds the `return`. Handling an error with `match` or `_ =`
+adds nothing, so the trace always describes the most recent `Err` the program made.
+
+```mylang
+# doc: expect reading the configuration
+union AppError:
+    Config: str,
+    Usage: int
+
+
+def parse_port(text: str) -> Result[int, str]:
+    if len(text) == 0:
+        return Err("empty port")
+    return Ok(len(text))
+
+
+def read_config(text: str) -> Result[int, str]:
+    port = parse_port(text)?
+    return Ok(port + 1)
+
+
+def load(text: str) -> Result[int, AppError]:
+    return Ok(read_config(text)?)
+
+
+def main(out: Stream) -> Result[int, AppError]:
+    out.print("reading the configuration")
+    port = load("")?
+    return Ok(port)
+```
+
+When `main` returns the `Err`, the program writes `error:` and the error, rendered as
+`print` renders it, then one line per site, the origin first:
+
+```console
+$ mylang run app.my
+reading the configuration
+error: AppError.Config('empty port')
+  app.my:9:16   parse_port   Err(...) created
+  app.my:14:12  read_config  ? propagated
+  app.my:19:15  load         ? converted to AppError.Config
+  app.my:24:12  main         ? propagated
+$ echo $?
+1
+```
+
+`main` may fail with any error type `print` can render. An `int` error is still the
+exit status; any other error exits 1. `mylang test` prints the same trace under a
+test whose value is an `Err`, and a test declared `-> Result[bool, E]` expects
+`Ok(True)`, so it can use `?` and fail with the trace of the error it propagated.
+A trap is reported as before, with its call stack instead.
+
+The trace keeps the origin and the last 32 sites after it. A deeper chain, such as
+a recursive descent, reports how many sites in between were dropped:
+`... 9 more entries dropped ...`. Each site is a function's position table and an
+instruction index the compiler already emits, so no text is built while the
+program runs. Recording a site is one call to a small runtime recorder, on the
+error path only: an `Ok` passing through `?`, and a
+`return Ok(...)`, execute nothing extra. A `return` whose value could be either
+case tests the returned case once.
+
 ## Option constructors
 
 `Option[T]` represents a value that may be absent. `Some(value)` builds the present case

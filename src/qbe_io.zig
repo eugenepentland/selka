@@ -24,12 +24,14 @@ pub fn Lower(comptime E: type) type {
             const value_base = base + @intFromBool(has_stream);
             const separator = value_base + output.types.len;
             const terminator = separator + @intFromBool(output.separator);
-            const stderr = output.debug or output.sink == .stderr;
+            const stderr = output.debug or output.sink != .stdout;
+            // ERROR-TRACE-2: `main`'s `Err` line carries the error return trace.
+            const report = output.sink == .error_report;
             const receiver: ?usize = if (has_stream) try self.load("s", base) else null;
             const sink = if (receiver) |stream|
                 try beginStream(E, self, stream)
             else
-                try begin(E, self, if (stderr) "myl_qbe_eprint_begin" else "myl_qbe_print_begin");
+                try begin(E, self, if (report) "myl_qbe_error_report_begin" else if (stderr) "myl_qbe_eprint_begin" else "myl_qbe_print_begin");
             for (output.types, 0..) |ty, index| {
                 if (index != 0) try gap(E, self, sink, output.separator, separator);
                 try operand(E, self, sink, ty, value_base + index);
@@ -39,7 +41,7 @@ pub fn Lower(comptime E: type) type {
             } else try self.print(" call $myl_qbe_print_byte(l %v{d}, w 10)\n", .{sink});
             if (receiver) |stream| {
                 try self.print(" call $myl_qbe_stream_finish(l %ctx, l %v{d}, l %v{d})\n", .{ sink, stream });
-            } else try self.print(" call ${s}(l %ctx, l %v{d})\n", .{ if (stderr) "myl_qbe_eprint_finish" else "myl_qbe_print_finish", sink });
+            } else try self.print(" call ${s}(l %ctx, l %v{d})\n", .{ if (report) "myl_qbe_error_report_finish" else if (stderr) "myl_qbe_eprint_finish" else "myl_qbe_print_finish", sink });
             try self.checkFailure("failure");
             try self.print(" storel 0, %s{d}\n", .{base});
         }

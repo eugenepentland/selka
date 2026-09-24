@@ -110,7 +110,9 @@ pub const FileMethod = struct { kind: @import("file_operations.zig").Method, own
 /// Nominal payload schemas a file operation needs to build its result.
 pub const FileShapes = struct { text: Type, bytes: Type, list: Type };
 /// Which standard stream an ambient `print` writes to when no receiver is given.
-pub const Sink = enum { stdout, stderr };
+/// `error_report` is standard error as the entry wrapper reports `main`'s `Err`:
+/// the line opens with `error: ` and the error return trace follows it.
+pub const Sink = enum { stdout, stderr, error_report };
 /// Rendered arguments and the optional `sep=`/`end=` text of one output call.
 /// A `stream` receiver selects the fd at runtime; a `debug` call writes to stderr
 /// and contributes no effect.

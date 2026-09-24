@@ -103,6 +103,9 @@ fn eligible(program: bytecode.Program, index: usize, code: []const bytecode.Inst
     // `constant` is an AST-only policy: constant declarations are evaluated at
     // check time, so no lowered bytecode function carries it.
     if (policy.host != null or policy.c_abi or policy.conversion) return false;
+    // ERROR-TRACE-1: a `return` of a result records its `Err` in the error
+    // return trace from the callee's own frame, which a splice would not have.
+    if (typed.resultShape(function.signature.return_type, program.records) != null) return false;
     if (code.len == 0 or code.len > max_loop_instructions) return false;
     if (locals.len > max_locals) return false;
     if (function.signature.parameter_count > locals.len) return false;

@@ -164,6 +164,12 @@ fn spawn(executable: []const u8, options: Options) Error!Run {
         // The machine record is transport, not a diagnostic: keep `stderr` as the
         // human text the caller saw before structured traps existed.
         const cleaned = trap_detail.strip(allocator, outcome.stderr) catch outcome.stderr;
+        // ERROR-TRACE-2: a `main` that returned an `Err` reported it on stderr
+        // and still returned, so its result line follows its output.
+        const returned_err = std.mem.startsWith(u8, outcome.stderr, "error: ") and std.mem.indexOf(u8, outcome.stderr, diagnostic_marker) == null;
+        if (outcome.term == .exited and returned_err) {
+            if (divide(outcome.stdout)) |reported| return .{ .value = reported.value, .stdout = reported.output, .stderr = cleaned, .status = status } else |_| {}
+        }
         return .{ .trap = trap, .stdout = outcome.stdout, .stderr = cleaned, .status = status, .failed = true };
     }
     const reported = try divide(outcome.stdout);
@@ -206,11 +212,11 @@ fn parse(allocator: std.mem.Allocator, text: []const u8) Error!Trap {
         }
         // A failure-path assert message may precede the located diagnostic on
         // stderr, so find the diagnostic line instead of taking the first one.
-        if (diagnostic.len == 0 and (std.mem.indexOf(u8, line, ": error[") != null or std.mem.startsWith(u8, line, "mylang: --restrict is active"))) diagnostic = line;
+        if (diagnostic.len == 0 and (std.mem.indexOf(u8, line, diagnostic_marker) != null or std.mem.startsWith(u8, line, "mylang: --restrict is active"))) diagnostic = line;
     }
     const first = if (diagnostic.len == 0) std.mem.sliceTo(text, '\n') else diagnostic;
     if (std.mem.startsWith(u8, first, "mylang: --restrict is active")) return .{ .code = "CapabilityUnavailable", .frames = frames.items, .detail = detail };
-    if (std.mem.indexOf(u8, first, ": error[")) |marker| {
+    if (std.mem.indexOf(u8, first, diagnostic_marker)) |marker| {
         const rest = first[marker + 8 ..];
         const close = std.mem.indexOfScalar(u8, rest, ']') orelse return error.UnreadableNativeResult;
         const place = position(first[0..marker]) orelse return error.UnreadableNativeResult;
@@ -219,6 +225,9 @@ fn parse(allocator: std.mem.Allocator, text: []const u8) Error!Trap {
     const colon = std.mem.indexOfScalar(u8, first, ':') orelse return error.UnreadableNativeResult;
     return .{ .code = first[0..colon], .frames = frames.items, .detail = detail };
 }
+
+/// What separates a located diagnostic's position from its bracketed code.
+const diagnostic_marker = ": error[";
 
 /// Split a trailing `path:line:column` locator, which paths may themselves contain colons.
 fn position(text: []const u8) ?struct { path: []const u8, line: u64, column: u64 } {

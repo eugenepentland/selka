@@ -83,6 +83,10 @@ const pure_callees = [_][]const u8{
     "myl_native_bytes_ends_with",
     "myl_native_bytes_has_byte",
     "myl_native_bytes_copy_octets",
+    // ERROR-TRACE-1: the error return trace recorders write two words of a
+    // static ring and a count, and touch nothing else.
+    "myl_qbe_error_trace_append",
+    "myl_qbe_error_trace_origin",
 };
 /// A call names a callee that allocates nothing and can collect nothing: one
 /// of the pure runtime helpers or a `myl_qbe_fail_*` cold trap helper.

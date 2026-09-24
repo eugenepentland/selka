@@ -9,6 +9,7 @@ const range_keys = @import("qbe_range_keys.zig");
 const loop_facts = @import("qbe_loop_facts.zig");
 const loop_version = @import("qbe_loop_version.zig");
 const managed_lower = @import("qbe_managed.zig");
+const error_trace = @import("qbe_error_trace.zig");
 const std = @import("std");
 const bytecode = @import("bytecode.zig");
 const typed = @import("typed.zig");
@@ -1106,7 +1107,9 @@ fn fillPositions(a: std.mem.Allocator, program: bytecode.Program, src: Source, i
     for (code, locations, messages) |instruction, *location, *message| {
         const value = src.locate(instruction.span.start);
         location.* = .{ .path = value.path, .line = value.line, .column = value.column };
-        message.* = if (instruction.op == .assert_true) instruction.op.assert_true else "";
+        // ERROR-TRACE-1: a converting `?` never traps, so its slot names the
+        // union case the error trace reports it wrapped the error in.
+        message.* = if (instruction.op == .assert_true) instruction.op.assert_true else try error_trace.conversionCase(a, program.records, instruction.op) orelse "";
     }
     unit.locations = locations;
     unit.messages = messages;
@@ -2430,6 +2433,8 @@ const Emitter = struct {
                     const success = self.temp();
                     try self.print(" %v{d} =l ceql %v{d}, {d}\n", .{ success, tag, input.ok_tag });
                     try self.print(" jnz %v{d}, @tryok{d}, @tryerror{d}\n@tryerror{d}\n", .{ success, tag, tag, tag });
+                    // ERROR-TRACE-1: a failing `?` appends its site to the trace.
+                    try error_trace.Lower(Emitter).propagation(self, input, output);
                     const pointer = try self.aggregatePointer();
                     try self.writeTag(propagate.output, output.error_tag, pointer);
                     const slot = try self.address(pointer, (try self.layout(propagate.output)).payload_offset);
@@ -2529,6 +2534,8 @@ const Emitter = struct {
             .jump_if_false => |target| try self.conditionalJump(target, h),
             .ret => {
                 const v = try self.load("s", h - 1);
+                // ERROR-TRACE-1: a returned `Err` the code did not just build appends its site.
+                try error_trace.Lower(Emitter).returning(self, v, self.isBranchTarget(self.pc));
                 try self.returnValue(v);
             },
             .call => try self.emitCall(op, stack),

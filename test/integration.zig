@@ -1015,7 +1015,9 @@ test "CLI maps Result main ok and err to status codes and one diagnostic" {
     defer testing.allocator.free(rejected.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, rejected.term);
     try testing.expectEqualStrings("1\n", rejected.stdout);
-    try testing.expectEqualStrings("missing name\n", rejected.stderr);
+    // ERROR-TRACE-2: the message line is followed by the error return trace.
+    try testing.expect(std.mem.startsWith(u8, rejected.stderr, "error: missing name\n  "));
+    try testing.expect(std.mem.endsWith(u8, rejected.stderr, "input.my:3:16  main  Err(...) created\n"));
 
     const wrapped =
         \\def main() -> Result[int, str]:
@@ -1027,6 +1029,130 @@ test "CLI maps Result main ok and err to status codes and one diagnostic" {
     try testing.expectEqual(std.process.Child.Term{ .exited = 44 }, status.term);
     try testing.expectEqualStrings("300\n", status.stdout);
     try testing.expectEqualStrings("", status.stderr);
+}
+
+/// A program whose `Err` is created two calls deep, converted into the entry's
+/// error union on the way out and reported by `main`.
+const error_trace_program =
+    \\union AppError:
+    \\    Config: str,
+    \\    Usage: int
+    \\
+    \\def parse_port(text: str) -> Result[int, str]:
+    \\    if len(text) == 0:
+    \\        return Err("empty port")
+    \\    return Ok(len(text))
+    \\
+    \\def read_config(text: str) -> Result[int, str]:
+    \\    port = parse_port(text)?
+    \\    return Ok(port + 1)
+    \\
+    \\def load(text: str) -> Result[int, AppError]:
+    \\    return Ok(read_config(text)?)
+    \\
+    \\def main() -> Result[int, AppError]:
+    \\    port = load("")?
+    \\    return Ok(port)
+;
+/// The report `error_trace_program` writes, `{path}` standing for its entry.
+const error_trace_report =
+    \\error: AppError.Config('empty port')
+    \\  {path}:7:16   parse_port   Err(...) created
+    \\  {path}:11:12  read_config  ? propagated
+    \\  {path}:15:15  load         ? converted to AppError.Config
+    \\  {path}:18:12  main         ? propagated
+    \\
+;
+
+// spec-case: ERROR-TRACE-2
+// spec-case: ERROR-TRACE-1
+test "CLI reports main's Err and its error return trace the same from run, Debug, ReleaseFast and --release builds" {
+    const a = testing.allocator;
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "traced.my", .data = error_trace_program });
+    const entry = try temporary.dir.realPathFileAlloc(testing.io, "traced.my", a);
+    defer a.free(entry);
+    const directory = std.fs.path.dirname(entry).?;
+    const cache_argument = try std.fmt.allocPrint(a, "--cache-dir={s}/cache", .{directory});
+    defer a.free(cache_argument);
+    const wanted = try std.mem.replaceOwned(u8, a, error_trace_report, "{path}", entry);
+    defer a.free(wanted);
+    const debug = try std.fmt.allocPrint(a, "{s}/traced-debug", .{directory});
+    defer a.free(debug);
+    const fast = try std.fmt.allocPrint(a, "{s}/traced-fast", .{directory});
+    defer a.free(fast);
+    const release = try std.fmt.allocPrint(a, "{s}/traced-release", .{directory});
+    defer a.free(release);
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", debug, cache_argument, tools[0], tools[1] }, "");
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", fast, "--mode", "ReleaseFast", cache_argument, tools[0], tools[1] }, "");
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", release, "--release", cache_argument, tools[1] }, "");
+    const ran = try std.process.run(a, testing.io, .{ .argv = &.{ compiler_path, "run", entry, cache_argument, tools[0], tools[1] } });
+    defer a.free(ran.stdout);
+    defer a.free(ran.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, ran.term);
+    try testing.expectEqualStrings(wanted, ran.stderr);
+    try expectErrorReport(debug, wanted);
+    try expectErrorReport(fast, wanted);
+    try expectErrorReport(release, wanted);
+}
+/// Run a built program whose `main` fails with a non-`int` error: it exits 1,
+/// prints nothing on stdout and writes exactly `wanted` on stderr.
+fn expectErrorReport(binary: []const u8, wanted: []const u8) !void {
+    const reported = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{binary} });
+    defer testing.allocator.free(reported.stdout);
+    defer testing.allocator.free(reported.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, reported.term);
+    try testing.expectEqualStrings("", reported.stdout);
+    try testing.expectEqualStrings(wanted, reported.stderr);
+}
+/// The `reason` a `native-tests-v1` report gives for the test called `name`.
+fn testReason(report: std.json.Value, name: []const u8) []const u8 {
+    for (report.object.get("tests").?.array.items) |case| {
+        if (std.mem.eql(u8, case.object.get("name").?.string, name)) return case.object.get("reason").?.string;
+    }
+    return "";
+}
+
+// spec-case: ERROR-TRACE-3
+test "CLI test reports a Result test's Err with its error return trace in text and JSON" {
+    const a = testing.allocator;
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "config_test.my", .data =
+        \\def parse_port(text: str) -> Result[int, str]:
+        \\    if len(text) == 0:
+        \\        return Err("empty")
+        \\    return Ok(len(text))
+        \\
+        \\public def test_port() -> Result[bool, str]:
+        \\    port = parse_port("")?
+        \\    return Ok(port == 2)
+        \\
+        \\public def test_fine() -> Result[bool, str]:
+        \\    return Ok(parse_port("ab")? == 2)
+    });
+    const entry = try temporary.dir.realPathFileAlloc(testing.io, "config_test.my", a);
+    defer a.free(entry);
+    const cache = try std.fmt.allocPrint(a, "{s}/cache", .{std.fs.path.dirname(entry).?});
+    defer a.free(cache);
+    const text = try std.process.run(a, testing.io, .{ .argv = &.{ compiler_path, "test", entry, "--cache-dir", cache, tools[0], tools[1] } });
+    defer a.free(text.stdout);
+    defer a.free(text.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, text.term);
+    try testing.expect(std.mem.indexOf(u8, text.stdout, "passed config_test::test_fine\n") != null);
+    try testing.expect(std.mem.indexOf(u8, text.stdout,
+        \\failed config_test::test_port: expected {"case":"ok","value":true}, got {"case":"err","value":"empty"}
+        \\  config_test.my:3:16  config_test::parse_port  Err(...) created
+        \\  config_test.my:7:12  config_test::test_port   ? propagated
+        \\
+    ) != null);
+    const json = try std.process.run(a, testing.io, .{ .argv = &.{ compiler_path, "test", entry, "--json", "--cache-dir", cache, tools[0], tools[1] } });
+    defer a.free(json.stdout);
+    defer a.free(json.stderr);
+    const parsed = try std.json.parseFromSlice(std.json.Value, a, json.stdout, .{});
+    defer parsed.deinit();
+    try testing.expect(std.mem.endsWith(u8, testReason(parsed.value, "config_test::test_port"), "\n  config_test.my:7:12  config_test::test_port   ? propagated"));
 }
 
 // spec: EPRINT-1

@@ -88,11 +88,24 @@ const curated = [_]Entry{
     entry("myl_qbe_stream_write_bytes", &.{ P, i64_type, P }, i64_type),
 };
 
-/// The declaration attributes a helper's C definition proves: only
-/// `myl_qbe_heap`, which computes an address and touches no memory.
+/// The declaration attributes a helper's C definition proves: `myl_qbe_heap`
+/// computes an address and touches no memory, and the error return trace
+/// recorders are cold.
 pub fn attributes(name: []const u8) []const u8 {
     if (std.mem.eql(u8, name, "myl_qbe_heap")) return "memory(none) nounwind willreturn";
+    // ERROR-TRACE-1: an error return trace recorder runs only on an error path.
+    if (traceRecorder(name)) return "cold nounwind";
     return "";
+}
+
+/// ERROR-TRACE-5: the call-site attribute that makes LLVM's inliner count a
+/// call as free. Every error return trace recorder call carries it, so
+/// recording never tips a function over the inliner's threshold.
+pub const free_call = "\"call-inline-cost\"=\"0\"";
+
+/// Whether `name` is one of the runtime's error return trace recorders.
+pub fn traceRecorder(name: []const u8) bool {
+    return std.mem.eql(u8, name, "myl_qbe_error_trace_origin") or std.mem.eql(u8, name, "myl_qbe_error_trace_append");
 }
 
 /// One file of the bundled runtime tree's top level.

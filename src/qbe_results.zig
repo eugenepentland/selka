@@ -6,6 +6,9 @@ pub const Error = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
 /// Bind result lowering to the concrete backend emitter.
 pub fn Lower(comptime E: type) type {
     return struct {
+        /// ERROR-TRACE-1: a runtime operation that answers `Err` starts a fresh
+        /// error return trace at its own site.
+        const trace = @import("qbe_error_trace.zig").Lower(E);
         /// Typed result payload and destination slot.
         pub const Result = struct { ty: typed.Type, status: usize, value: usize, slot: usize };
         /// Typed optional payload, its runtime status word and destination slot.
@@ -35,6 +38,7 @@ pub fn Lower(comptime E: type) type {
             const slot = try self.address(pointer, (try self.layout(args.ty)).payload_offset);
             const label = self.temp();
             try self.print(" jnz %v{d}, @payloaderr{d}, @payloadok{d}\n@payloaderr{d}\n", .{ args.status, label, label, label });
+            try trace.record(self, .produced);
             try self.writeTag(args.ty, shape.error_tag, pointer);
             try self.writeValue(slot, args.value, shape.error_type);
             try self.print(" jmp @payloaddone{d}\n@payloadok{d}\n", .{ label, label });
@@ -50,6 +54,7 @@ pub fn Lower(comptime E: type) type {
             const slot = try self.address(pointer, (try self.layout(args.ty)).payload_offset);
             const label = self.temp();
             try self.print(" jnz %v{d}, @providererror{d}, @providerok{d}\n@providererror{d}\n", .{ args.status, label, label, label });
+            try trace.record(self, .produced);
             try self.writeTag(args.ty, shape.error_tag, pointer);
             const status = self.temp();
             try self.print(" %v{d} =l extsw %v{d}\n", .{ status, args.status });

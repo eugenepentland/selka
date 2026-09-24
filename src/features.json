@@ -942,6 +942,11 @@
       "summary": "`?` wraps a propagated result's error into the case of the enclosing function's error union whose payload is that error type.",
       "doc": "docs/results-and-options.md#postfix-error-propagation"
     },
+    "error-return-traces": {
+      "kind": "language",
+      "summary": "An `Err` reaching the end of `main` or failing a test is reported with its error return trace: the `Err(...)` construction or runtime call that made it, then every `?` (and the union case it converted to) and `return` that passed it on, kept in a 32-entry ring recorded only on the error path in every build.",
+      "doc": "docs/results-and-options.md#error-return-traces"
+    },
     "standard-error-unions": {
       "kind": "language",
       "summary": "A standard module whose operations can fail exports an error union with one `str` payload per case and a `message(error)` helper instead of returning `Result[_, str]`.",

@@ -118,14 +118,16 @@ needs a return annotation to say so. Both write through `values`, so both declar
 
 ## Entry point signatures
 
-`main` is the entry point and may be written four ways: `-> int`, `-> None`,
-`-> Result[int, int]` or `-> Result[None, int]`. All four adapt to one status
-convention. An `int` result, or the `int` carried by `Ok` or by `Err`, becomes
-the process exit status (truncated to the low 8 bits) and is also what `mylang
-run --print-result` prints after the program's own output; the two `None` forms
-have no value of their own and report `0`. The
-`Result` forms exist so the entry point can end a failure with `?` instead of
-matching it at the top level. `main` may also declare capability parameters,
+`main` is the entry point and may be written `-> int`, `-> None`,
+`-> Result[int, E]` or `-> Result[None, E]`, where the error type `E` is anything
+`print` can render. All of them adapt to one status convention. An `int` result,
+or the `int` carried by `Ok` or by an `int` `Err`, becomes the process exit status
+(truncated to the low 8 bits) and is also what `mylang run --print-result` prints
+after the program's own output; the `None` forms have no value of their own and
+report `0`. An `Err` is also written to standard error as `error:` and the value,
+followed by its [error return trace](results-and-options.md#error-return-traces),
+and an error of any type but `int` exits 1. The `Result` forms exist so the entry
+point can end a failure with `?` instead of matching it at the top level. `main` may also declare capability parameters,
 which is how a program asks for the filesystem, the clock, entropy or the
 environment — see [printing, files and command-line
 authority](io.md) — and it may not be generic.

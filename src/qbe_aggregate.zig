@@ -93,6 +93,8 @@ pub fn emit(self: anytype, op: @FieldType(bytecode.Instruction, "op"), stack: []
                 try self.writeValue(try self.address(pointer, layout_value.payload_offset), try self.load("s", h - 1), ty);
                 try self.store(h - 1, pointer);
             } else try self.store(h, pointer);
+            // ERROR-TRACE-1: a new `Err` value starts a fresh error return trace here.
+            try @import("qbe_error_trace.zig").Lower(@TypeOf(self.*)).construction(self, variant.ty, variant.tag);
         },
         .switch_variant => |dispatch| {
             const pointer = try self.load("s", h - 1);

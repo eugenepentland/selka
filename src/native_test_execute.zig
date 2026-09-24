@@ -56,8 +56,9 @@ pub const BenchConfig = struct {
 pub const Batch = struct { iterations: u64, duration_ns: u64 };
 /// One execution result; expected-value comparison never executes guest code.
 /// `output` carries the guest stdout captured during the call, if any, and
+/// `trace` the error return trace the call left behind (`ERROR-TRACE-3`), and
 /// `trap` the structured first-trap fields a caller classifies by.
-pub const Outcome = struct { status: []const u8, actual: Value = .null, diagnostics: []const u8 = "", output: []const u8 = "", steps: u64 = 0, trap: Trap = .{} };
+pub const Outcome = struct { status: []const u8, actual: Value = .null, diagnostics: []const u8 = "", output: []const u8 = "", trace: []const u8 = "", steps: u64 = 0, trap: Trap = .{} };
 /// The first trap of one call, read apart from its rendered diagnostics: the
 /// trap code, the message an `assert` or a contract clause carries, and the
 /// qualified function of the innermost frame, which tells a test's own
@@ -285,6 +286,8 @@ pub const Executor = struct {
         // A response may end with the guest stdout the child captured. Older
         // responses without the trailer keep parsing because it is optional.
         if (reader.offset < bytes.len) parsed.output = try reader.output();
+        // ERROR-TRACE-3: then, optionally, the error return trace it rendered.
+        if (reader.offset < bytes.len) parsed.trace = try reader.output();
         if (reader.offset != bytes.len) return error.InvalidNativeTestResponse;
         return parsed;
     }
@@ -374,7 +377,12 @@ pub const Executor = struct {
             // A record the child did not finish writing is where it died.
             const parsed = self.record(&reader, result_type) catch |err| if (reader.exhausted) break else return err;
             const output = reader.output() catch |err| if (reader.exhausted) break else return err;
-            try outcomes.append(self.context.allocator, .{ .status = parsed.status, .actual = parsed.actual, .diagnostics = parsed.diagnostics, .output = output, .steps = parsed.steps, .trap = parsed.trap });
+            // ERROR-TRACE-3: each input's error return trace follows its output.
+            const trace = reader.output() catch |err| if (reader.exhausted) break else return err;
+            var answered = parsed.outcome();
+            answered.output = output;
+            answered.trace = trace;
+            try outcomes.append(self.context.allocator, answered);
         }
         return .{ .outcomes = outcomes.items, .complete = false };
     }
@@ -554,13 +562,14 @@ const Parsed = struct {
     actual: Value = .null,
     diagnostics: []const u8 = "",
     output: []const u8 = "",
+    trace: []const u8 = "",
     steps: u64 = 0,
     trap: Trap = .{},
     /// A benchmark's sampling answer; zero for a test or a batch input.
     sampled: Sampled = .{},
 
     fn outcome(self: Parsed) Outcome {
-        return .{ .status = self.status, .actual = self.actual, .diagnostics = self.diagnostics, .output = self.output, .steps = self.steps, .trap = self.trap };
+        return .{ .status = self.status, .actual = self.actual, .diagnostics = self.diagnostics, .output = self.output, .trace = self.trace, .steps = self.steps, .trap = self.trap };
     }
 };
 /// The sampling half of a benchmark response.
@@ -966,6 +975,7 @@ fn batchRecord(a: std.mem.Allocator, w: *std.Io.Writer, slot: usize) Error!void 
     try string(w, "bool");
     try writeNumbers(w, &.{ 1, 0 });
     try string(w, try std.fmt.allocPrint(a, "input-{d}", .{slot}));
+    try string(w, try std.fmt.allocPrint(a, "trace-{d}", .{slot}));
 }
 fn boolExecutor(context: fs.Context, types: []const Value, library: []const u8, directory: []const u8) Executor {
     return .{ .context = context, .library = library, .temporary = directory, .executable = "/bin/sh", .types = types };
@@ -987,6 +997,8 @@ test "property a batch response answers every input in one process and a cut-off
     try std.testing.expectEqual(@as(usize, 3), whole.outcomes.len);
     try std.testing.expect(whole.outcomes[2].actual.bool);
     try std.testing.expectEqualStrings("input-2", whole.outcomes[2].output);
+    // Each input carries its own error return trace (ERROR-TRACE-3).
+    try std.testing.expectEqualStrings("trace-2", whole.outcomes[2].trace);
     // A child that died while writing its third record leaves two answers.
     const cut = try batchResponse(a, 3, 4);
     const partial = try executor.parseBatch("bool", cut[0 .. cut.len - 5], 4);

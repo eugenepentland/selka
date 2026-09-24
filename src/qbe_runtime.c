@@ -982,3 +982,128 @@ int mylang_qbe_execute_config(uint64_t (*entry)(void *), uint64_t steps, uint64_
 int mylang_qbe_run(uint64_t (*entry)(void *)) {
     return mylang_qbe_run_options(entry, 0, NULL);
 }
+/* ERROR-TRACE-1: the process-wide error return trace, written only on error
+   paths, through the two recorders below: a new `Err` value restarts it and
+   every later return or `?` that passes an `Err` on appends one site. Both are
+   cold and never inlined, so an error branch stays one call wherever an
+   optimizer weighs the code around it. */
+MylQbeErrorTrace myl_qbe_error_trace;
+__attribute__((cold, noinline)) void myl_qbe_error_trace_origin(const MylQbeFunction *function, uint64_t site) {
+    myl_qbe_error_trace.origin = (MylQbeErrorSite){ function, site };
+    myl_qbe_error_trace.count = 0;
+}
+__attribute__((cold, noinline)) void myl_qbe_error_trace_append(const MylQbeFunction *function, uint64_t site) {
+    uint64_t index = myl_qbe_error_trace.count++;
+    myl_qbe_error_trace.ring[index % MYL_QBE_ERROR_TRACE_RING] = (MylQbeErrorSite){ function, site };
+}
+/* What one trace line says happened at its site; indexed by the site's kind. */
+static const char *const error_trace_actions[] = {
+    "Err(...) created", "Err produced by the runtime", "returned", "? propagated", "? converted to ",
+};
+/* One site resolved to the innermost function whose code it is: a site inside
+   a splice the inliner made reports the callee at its own pc. */
+typedef struct { const MylQbeFunction *function; uint64_t position; } ErrorTraceAt;
+static ErrorTraceAt error_trace_at(MylQbeErrorSite site) {
+    ErrorTraceAt at = { site.function, site.site & UINT64_C(0xffffffff) };
+    for (unsigned depth = 0; at.function && depth < MYL_QBE_INLINE_DEPTH; ++depth) {
+        const MylQbeInlineFrame *record = inline_at(at.function, at.position);
+        if (!record || !record->callee) break;
+        at = (ErrorTraceAt){ record->callee, record->callee_start + (at.position - record->start) };
+    }
+    return at;
+}
+/* The `path:line:column` of one site into `out`, or "?" when the tables lack it. */
+static void error_trace_where(MylQbeErrorSite site, char *out, size_t size) {
+    ErrorTraceAt at = error_trace_at(site);
+    if (!at.function || at.position >= at.function->count) { snprintf(out, size, "?"); return; }
+    MylQbeLocation where = at.function->locations[at.position];
+    snprintf(out, size, "%s:%" PRIu64 ":%" PRIu64, where.path, where.line, where.column);
+}
+static const char *error_trace_function(MylQbeErrorSite site) {
+    ErrorTraceAt at = error_trace_at(site);
+    return at.function && at.function->name ? at.function->name : "?";
+}
+/* The union case a converting `?` wrapped its error in, which the compiler
+   keeps in the site's message slot; "" for every other kind. */
+static const char *error_trace_case(MylQbeErrorSite site) {
+    if ((site.site >> 32) != MYL_QBE_ERROR_CONVERTED || !site.function) return "";
+    uint64_t position = site.site & UINT64_C(0xffffffff);
+    if (!site.function->messages || position >= site.function->count) return "";
+    return site.function->messages[position];
+}
+/* ERROR-TRACE-2: a `returned` site on the line of the site before it, in the
+   same function, says nothing new (`return Err(...)` in a function whose
+   `@ensures` holds the value first, or `return Ok(v) if c else Err(e)`), so
+   the report folds it into that line. */
+static int error_trace_folds(MylQbeErrorSite previous, MylQbeErrorSite site) {
+    if ((site.site >> 32) != MYL_QBE_ERROR_RETURNED) return 0;
+    ErrorTraceAt before = error_trace_at(previous), at = error_trace_at(site);
+    if (!at.function || at.function != before.function) return 0;
+    if (at.position >= at.function->count || before.position >= before.function->count) return 0;
+    return at.function->locations[at.position].line == before.function->locations[before.position].line;
+}
+/* The sites a report lists, oldest first: the origin when one was recorded,
+   then the ring's surviving appends. `dropped` counts the appends the ring
+   overwrote. */
+typedef struct { MylQbeErrorSite sites[1 + MYL_QBE_ERROR_TRACE_RING]; size_t count, gap; uint64_t dropped; } ErrorTraceSites;
+static ErrorTraceSites error_trace_sites(void) {
+    ErrorTraceSites out = { .count = 0, .gap = 0, .dropped = 0 };
+    const MylQbeErrorTrace *trace = &myl_qbe_error_trace;
+    if (trace->origin.function) out.sites[out.count++] = trace->origin;
+    out.gap = out.count;
+    uint64_t kept = trace->count < MYL_QBE_ERROR_TRACE_RING ? trace->count : MYL_QBE_ERROR_TRACE_RING;
+    out.dropped = trace->count - kept;
+    for (uint64_t index = trace->count - kept; index < trace->count; ++index) {
+        MylQbeErrorSite site = trace->ring[index % MYL_QBE_ERROR_TRACE_RING];
+        if (out.count && error_trace_folds(out.sites[out.count - 1], site)) continue;
+        out.sites[out.count++] = site;
+    }
+    return out;
+}
+/* Append one rendered line to `out` when it fits; `used` counts every byte, so
+   a measuring call with no buffer learns the size it needs. */
+static void error_trace_append(char *out, size_t size, size_t *used, const char *line, int length) {
+    if (length <= 0) return;
+    if (*used + (size_t)length < size) memcpy(out + *used, line, (size_t)length);
+    *used += (size_t)length;
+}
+size_t myl_qbe_error_trace_render(char *out, size_t size) {
+    ErrorTraceSites listed = error_trace_sites();
+    char where[4096];
+    int width = 0, name_width = 0;
+    for (size_t i = 0; i < listed.count; ++i) {
+        error_trace_where(listed.sites[i], where, sizeof where);
+        int length = (int)strlen(where), name = (int)strlen(error_trace_function(listed.sites[i]));
+        if (length > width) width = length;
+        if (name > name_width) name_width = name;
+    }
+    size_t used = 0;
+    char line[8192];
+    for (size_t i = 0; i <= listed.count; ++i) {
+        /* The overwritten appends sat between the origin and the ring's oldest survivor. */
+        if (i == listed.gap && listed.dropped) {
+            int length = snprintf(line, sizeof line, "  ... %" PRIu64 " more %s dropped ...\n", listed.dropped, listed.dropped == 1 ? "entry" : "entries");
+            error_trace_append(out, size, &used, line, length);
+        }
+        if (i == listed.count) break;
+        MylQbeErrorSite site = listed.sites[i];
+        uint64_t kind = site.site >> 32;
+        if (kind > MYL_QBE_ERROR_CONVERTED) kind = MYL_QBE_ERROR_RETURNED;
+        error_trace_where(site, where, sizeof where);
+        int length = snprintf(line, sizeof line, "  %-*s  %-*s  %s%s\n", width, where, name_width, error_trace_function(site), error_trace_actions[kind], error_trace_case(site));
+        if (length >= (int)sizeof line) length = (int)sizeof line - 1;
+        error_trace_append(out, size, &used, line, length);
+    }
+    if (size) out[used < size ? used : size - 1] = 0;
+    return used;
+}
+void myl_qbe_error_trace_write(FILE *stream) {
+    size_t needed = myl_qbe_error_trace_render(NULL, 0);
+    if (!needed) return;
+    char *text = malloc(needed + 1);
+    if (!text) return;
+    myl_qbe_error_trace_render(text, needed + 1);
+    fwrite(text, 1, needed, stream);
+    fflush(stream);
+    free(text);
+}
