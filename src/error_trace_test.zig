@@ -203,6 +203,34 @@ test "main's Err is reported as error: VALUE and its trace, and keeps its exit s
     try t.expectEqualStrings("", fine.stderr);
 }
 
+// spec-case: ERROR-TRACE-2
+test "a return on the Err's own line folds into it, and a broken contract is still a trap" {
+    const folded = try run(
+        \\@ensures(result < 1000)
+        \\def parse(value: int) -> Result[int, str]:
+        \\    if value > 100:
+        \\        return Err("too big")
+        \\    return Ok(value)
+        \\
+        \\def main() -> Result[int, str]:
+        \\    return Ok(parse(200)?)
+    );
+    try t.expect(!folded.trapped());
+    try t.expectEqualStrings("error: too big\n  trace.my:4:16  parse  Err(...) created\n  trace.my:8:15  main   ? propagated\n", folded.stderr);
+    const broken = try run(
+        \\@ensures(result < 1000)
+        \\def huge(value: int) -> Result[int, str]:
+        \\    return Ok(value * 1000)
+        \\
+        \\def main() -> Result[int, str]:
+        \\    _ = huge(1)
+        \\    return Ok(huge(5)?)
+    );
+    try t.expect(broken.trapped());
+    try t.expectEqualStrings("R_ENSURES", broken.trap.code);
+    try t.expect(std.mem.indexOf(u8, broken.stderr, "error: ") == null);
+}
+
 // spec: RESULT-MAIN-2
 test "main may fail with any printable error, which exits 1" {
     const outcome = try run(

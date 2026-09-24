@@ -79,3 +79,9 @@ public def test_propagation_deeper_than_the_ring_keeps_the_error() -> bool:
 public def test_a_result_test_passes_on_ok_true() -> Result[bool, str]:
     port = read_config("ab")?
     return Ok(port == 3)
+
+
+# spec-case: ERROR-TRACE-3
+public def test_a_result_test_takes_a_stand_in_capability(fs: Filesystem) -> Result[bool, str]:
+    _ = fs.write_text("port.txt", "8080")?
+    return Ok(fs.read_text("port.txt")? == "8080")

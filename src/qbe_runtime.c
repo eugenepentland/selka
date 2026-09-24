@@ -1030,6 +1030,17 @@ static const char *error_trace_case(MylQbeErrorSite site) {
     if (!site.function->messages || position >= site.function->count) return "";
     return site.function->messages[position];
 }
+/* ERROR-TRACE-2: a `returned` site on the line of the site before it, in the
+   same function, says nothing new (`return Err(...)` in a function whose
+   `@ensures` holds the value first, or `return Ok(v) if c else Err(e)`), so
+   the report folds it into that line. */
+static int error_trace_folds(MylQbeErrorSite previous, MylQbeErrorSite site) {
+    if ((site.site >> 32) != MYL_QBE_ERROR_RETURNED) return 0;
+    ErrorTraceAt before = error_trace_at(previous), at = error_trace_at(site);
+    if (!at.function || at.function != before.function) return 0;
+    if (at.position >= at.function->count || before.position >= before.function->count) return 0;
+    return at.function->locations[at.position].line == before.function->locations[before.position].line;
+}
 /* The sites a report lists, oldest first: the origin when one was recorded,
    then the ring's surviving appends. `dropped` counts the appends the ring
    overwrote. */
@@ -1041,8 +1052,11 @@ static ErrorTraceSites error_trace_sites(void) {
     out.gap = out.count;
     uint64_t kept = trace->count < MYL_QBE_ERROR_TRACE_RING ? trace->count : MYL_QBE_ERROR_TRACE_RING;
     out.dropped = trace->count - kept;
-    for (uint64_t index = trace->count - kept; index < trace->count; ++index)
-        out.sites[out.count++] = trace->ring[index % MYL_QBE_ERROR_TRACE_RING];
+    for (uint64_t index = trace->count - kept; index < trace->count; ++index) {
+        MylQbeErrorSite site = trace->ring[index % MYL_QBE_ERROR_TRACE_RING];
+        if (out.count && error_trace_folds(out.sites[out.count - 1], site)) continue;
+        out.sites[out.count++] = site;
+    }
     return out;
 }
 /* Append one rendered line to `out` when it fits; `used` counts every byte, so
