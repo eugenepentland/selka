@@ -1998,7 +1998,7 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         // A command that lowers must do so before the receipt is built: emitted
         // fragments are real inputs to the lower/emit/link explanation, not an
         // empty table that can only compare equal.
-        if (!try lowerForReceipt(init, &compilation, receipt_stages)) {
+        if (!try lowerForReceipt(init, &compilation, receipt_stages, parsed.drop_debug)) {
             try reportProject(init, &compilation);
             if (parsed.reporting.explain_invalidation) {
                 try reportFailedInvalidation(init, parsed, &compilation, files.inputs);
@@ -2635,11 +2635,14 @@ fn dependencyReport(init: Context, compilation: *language.project_compile.Compil
 /// Lower a project before its receipt is built when the command will emit, so
 /// the receipt's fragment table is populated with real inputs. Returns false
 /// when lowering reported a source error; the caller reports diagnostics.
-fn lowerForReceipt(init: Context, compilation: *language.project_compile.Compilation, executed: [std.meta.tags(invalidation.Stage).len]bool) !bool {
+/// The lowering is the one the emission then uses, so it honours the
+/// emitter's `--drop-debug` (a ReleaseFast project build drops its `debug`
+/// lines, DEBUG-LINE-1); `run` and `run-project` never set it.
+fn lowerForReceipt(init: Context, compilation: *language.project_compile.Compilation, executed: [std.meta.tags(invalidation.Stage).len]bool, drop_debug: bool) !bool {
     if (!executed[@backingInt(invalidation.Stage.lower_function)]) return true;
     init.timings.begin(lowering_phase, false);
     defer init.timings.end();
-    compilation.emit() catch |err| switch (err) {
+    compilation.emitWithOptions(drop_debug) catch |err| switch (err) {
         error.SourceError => return false,
         else => return err,
     };

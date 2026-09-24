@@ -9491,6 +9491,35 @@ test "a relink of reused objects keeps an identical executable, and a link over 
     try testing.expectEqualStrings("7\n3:3\n", try programOutput(a, output));
 }
 
+/// The standard error of `program` run with no arguments.
+fn programStderr(allocator: std.mem.Allocator, program: []const u8) ![]const u8 {
+    const result = try std.process.run(allocator, testing.io, .{ .argv = &.{program} });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+    return result.stderr;
+}
+
+// spec-case: DEBUG-LINE-1
+test "a ReleaseFast project build drops debug lines and a Debug one keeps them" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport helper\n\n\ndef main() -> int:\n    debug(\"trace\")\n    return helper.zero()\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper\n\n\npublic def zero() -> int:\n    debug(\"inner\")\n    return 0\n" });
+    const entry = try std.fs.path.join(a, &.{ root, "main.my" });
+    const cache = try std.fs.path.join(a, &.{ root, "cache" });
+    const debug_program = try std.fs.path.join(a, &.{ root, "debug" });
+    const fast_program = try std.fs.path.join(a, &.{ root, "fast" });
+    const debug_build = try std.process.run(a, testing.io, .{ .argv = &.{ compiler_path, "build", entry, "--project", "-o", debug_program, "--cache-dir", cache, "--mode", "Debug", tools[0], tools[1] } });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, debug_build.term);
+    const fast_build = try std.process.run(a, testing.io, .{ .argv = &.{ compiler_path, "build", entry, "--project", "-o", fast_program, "--cache-dir", cache, "--mode", "ReleaseFast", "--backend", "qbe", tools[0], tools[1] } });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, fast_build.term);
+    try testing.expectEqualStrings("trace\ninner\n", try programStderr(a, debug_program));
+    try testing.expectEqualStrings("", try programStderr(a, fast_program));
+}
+
 /// How one `--report` build of `entry` into `output` over `cache` ran its
 /// link, followed by whether the output changed.
 fn reportedLinkRoute(allocator: std.mem.Allocator, entry: []const u8, output: []const u8, cache: []const u8) ![]const u8 {
