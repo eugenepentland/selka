@@ -10,7 +10,7 @@ pub const Resolved = struct {
     tool: []const u8,
     tool_identity: []const u8,
     optimization: []const u8,
-    lto: bool,
+    lto: options.Lto,
     target_cpu: []const u8,
     target_features: []const u8,
 };
@@ -59,10 +59,10 @@ fn resolveQbe(context: fs.Context, parsed: options.Options, zig: []const u8, pat
     if (legacyLlvm(path)) {
         const target = try llvmTarget(context, zig, parsed.target);
         const optimization = legacyOptimization(context.environ) orelse return error.NativeToolFailed;
-        return .{ .name = "llvm", .tool = zig, .tool_identity = translatorIdentity(context.environ), .optimization = optimization, .lto = false, .target_cpu = target.cpu, .target_features = target.features };
+        return .{ .name = "llvm", .tool = zig, .tool_identity = translatorIdentity(context.environ), .optimization = optimization, .lto = .off, .target_cpu = target.cpu, .target_features = target.features };
     }
     const qbe = try context.executable(path);
-    return .{ .name = "qbe", .tool = qbe, .tool_identity = try context.stamp(qbe), .optimization = "default", .lto = false, .target_cpu = "", .target_features = "" };
+    return .{ .name = "qbe", .tool = qbe, .tool_identity = try context.stamp(qbe), .optimization = "default", .lto = .off, .target_cpu = "", .target_features = "" };
 }
 
 /// Resolve the built-in LLVM backend (LLVM-ZIG-1): the translator runs in this
@@ -182,7 +182,7 @@ test "an unnamed backend resolves QBE in either mode and an LLVM build resolves 
     try std.testing.expectEqualStrings(zig, release.tool);
     try std.testing.expectEqualStrings(llvm.version, release.tool_identity);
     try std.testing.expectEqualStrings("x86-64", release.target_cpu);
-    try std.testing.expect(release.lto);
+    try std.testing.expectEqual(options.Lto.full, release.lto);
 }
 
 // spec: BUILD-BACKEND-5
@@ -204,7 +204,7 @@ test "no LLVM build resolves an adapter, and the legacy qbe_llvm.py spelling nam
     const legacy = try resolve(context, .{ .codegen = .{ .qbe = "/no/such/dir/qbe_llvm.py" } }, zig);
     try std.testing.expectEqualStrings("llvm", legacy.name);
     try std.testing.expectEqualStrings("2", legacy.optimization);
-    try std.testing.expect(!legacy.lto);
+    try std.testing.expectEqual(options.Lto.off, legacy.lto);
     try environment.put("MYLANG_QBE_LLVM_OPT", "-O3");
     try std.testing.expectEqualStrings("3", (try resolve(context, .{ .codegen = .{ .qbe = "qbe_llvm.py" } }, zig)).optimization);
     try environment.put("MYLANG_QBE_LLVM_OPT", "-O9");

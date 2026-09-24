@@ -155,48 +155,76 @@ fn record(allocator: Allocator, table: *llvm.Signatures, found: llvm.Header) Err
     try table.put(allocator, try allocator.dupe(u8, found.symbol), .{ .parameters = parameters, .result = result });
 }
 
-/// How one translated unit becomes an object: clang's `-cc1` command for the
-/// build's flags, with the probe's input and output positions to substitute.
-const Compiler = struct {
+/// What to ask `zig cc -###` about: the driver flags placed before the input,
+/// the input and output file names in a fresh work directory, and the front
+/// end whose line is taken (`-cc1` for IR, `-cc1as` for assembly).
+pub const Probe = struct {
+    flags: []const []const u8,
+    names: [2][]const u8,
+    front: []const u8,
+};
+
+/// A clang front-end command as `zig cc` would run it, with the positions of
+/// its input and output file to substitute for each file it is used on.
+pub const Tool = struct {
     argv: []const []const u8,
     input: usize,
     output: usize,
+
+    /// Ask `zig cc -###` which front-end command it would run for one file,
+    /// so each later file costs one clang start and no driver.
+    pub fn probe(cache: cache_api.Cache, asked: Probe) Error!Tool {
+        const context = cache.context;
+        const a = context.allocator;
+        const work = try context.temporary(cache.temporary);
+        defer context.remove(work);
+        const input = try std.fs.path.join(a, &.{ work, asked.names[0] });
+        const output = try std.fs.path.join(a, &.{ work, asked.names[1] });
+        try context.write(input, "");
+        var driver: std.ArrayList([]const u8) = .empty;
+        try driver.appendSlice(a, &.{ cache.zig, "cc", "-###" });
+        try driver.appendSlice(a, asked.flags);
+        try driver.appendSlice(a, &.{ input, "-o", output });
+        const result = try context.captureQuiet(driver.items);
+        if (fs.exitCode(result.term) != 0) return probeFailed(context);
+        const argv = (try commandLine(a, .{ .zig = cache.zig, .front = asked.front }, result.stderr)) orelse return probeFailed(context);
+        const input_at = position(argv, input) orelse return probeFailed(context);
+        const output_at = position(argv, output) orelse return probeFailed(context);
+        return .{ .argv = argv, .input = input_at, .output = output_at };
+    }
+
+    /// The command for one file at `input`, writing `output`.
+    pub fn command(self: *const Tool, allocator: Allocator, input: []const u8, output: []const u8) Error![]const []const u8 {
+        const argv = try allocator.dupe([]const u8, self.argv);
+        argv[self.input] = input;
+        argv[self.output] = output;
+        return argv;
+    }
+};
+
+/// How one translated unit becomes an object: clang's `-cc1` command for the
+/// build's flags, and whether its output is assembly to annotate and assemble.
+const Compiler = struct {
+    tool: Tool,
     /// Whether the command prints assembly the build annotates and assembles
     /// (no LTO), rather than emitting the bitcode object itself.
     assemble: bool,
     /// The file the unit's IR is written to, and the file clang writes.
     names: [2][]const u8,
 
-    /// Ask `zig cc -###` which `-cc1` command it would run for one unit.
+    /// Ask `zig cc -###` which `-cc1` command it would run for one unit: full
+    /// or thin bitcode under LTO, assembly without it.
     fn probe(cache: cache_api.Cache) Error!Compiler {
-        const context = cache.context;
-        const a = context.allocator;
-        const assemble = !cache.codegen.lto;
-        const names: [2][]const u8 = if (assemble) .{ "unit.s.ll", "unit.s" } else .{ "object.o.ll", "object.o" };
-        const work = try context.temporary(cache.temporary);
-        defer context.remove(work);
-        const input = try std.fs.path.join(a, &.{ work, names[0] });
-        const output = try std.fs.path.join(a, &.{ work, names[1] });
-        try context.write(input, "");
+        const a = cache.context.allocator;
         const optimization = try std.fmt.allocPrint(a, "-O{s}", .{cache.codegen.optimization});
-        const driver: []const []const u8 = if (assemble)
-            &.{ cache.zig, "cc", "-###", "-S", optimization, "-fPIC", "-g0", input, "-o", output }
-        else
-            &.{ cache.zig, "cc", "-###", "-c", "-flto", optimization, "-fPIC", "-g0", input, "-o", output };
-        const result = try context.captureQuiet(driver);
-        if (fs.exitCode(result.term) != 0) return probeFailed(context);
-        const argv = (try commandLine(a, cache.zig, result.stderr)) orelse return probeFailed(context);
-        const input_at = position(argv, input) orelse return probeFailed(context);
-        const output_at = position(argv, output) orelse return probeFailed(context);
-        return .{ .argv = argv, .input = input_at, .output = output_at, .assemble = assemble, .names = names };
-    }
-
-    /// The command for one unit whose IR is at `input`, writing `output`.
-    fn command(self: *const Compiler, allocator: Allocator, input: []const u8, output: []const u8) Error![]const []const u8 {
-        const argv = try allocator.dupe([]const u8, self.argv);
-        argv[self.input] = input;
-        argv[self.output] = output;
-        return argv;
+        if (cache.codegen.lto.flag()) |lto| {
+            const names: [2][]const u8 = .{ "object.o.ll", "object.o" };
+            const flags: []const []const u8 = &.{ "-c", lto, optimization, "-fPIC", "-g0" };
+            return .{ .tool = try Tool.probe(cache, .{ .flags = flags, .names = names, .front = "-cc1" }), .assemble = false, .names = names };
+        }
+        const names: [2][]const u8 = .{ "unit.s.ll", "unit.s" };
+        const flags: []const []const u8 = &.{ "-S", optimization, "-fPIC", "-g0" };
+        return .{ .tool = try Tool.probe(cache, .{ .flags = flags, .names = names, .front = "-cc1" }), .assemble = true, .names = names };
     }
 };
 
@@ -210,15 +238,20 @@ fn position(argv: []const []const u8, wanted: []const u8) ?usize {
     return null;
 }
 
-/// The `-cc1` line of a `-###` listing as `zig clang -cc1 ...`, or null.
-pub fn commandLine(allocator: Allocator, zig: []const u8, listing: []const u8) Error!?[]const []const u8 {
+/// Which line of a `-###` listing to take, and the Zig that runs it.
+pub const Front = struct { zig: []const u8, front: []const u8 };
+
+/// The line of a `-###` listing that runs the front end `wanted.front` (`-cc1`
+/// or `-cc1as`), as `zig clang <front> ...`, or null.
+pub fn commandLine(allocator: Allocator, wanted: Front, listing: []const u8) Error!?[]const []const u8 {
+    const quoted = try std.fmt.allocPrint(allocator, "\"{s}\"", .{wanted.front});
     var lines = std.mem.splitScalar(u8, listing, '\n');
     while (lines.next()) |line| {
-        if (std.mem.indexOf(u8, line, "\"-cc1\"") == null) continue;
+        if (std.mem.indexOf(u8, line, quoted) == null) continue;
         const words = (try quotedWords(allocator, line)) orelse return null;
-        if (words.len < 2 or !std.mem.eql(u8, words[1], "-cc1")) return null;
+        if (words.len < 2 or !std.mem.eql(u8, words[1], wanted.front)) return null;
         const argv = try allocator.alloc([]const u8, words.len + 1);
-        argv[0] = zig;
+        argv[0] = wanted.zig;
         argv[1] = "clang";
         @memcpy(argv[2..], words[1..]);
         return argv;
@@ -327,7 +360,7 @@ const Pool = struct {
         const input = try std.fs.path.join(allocator, &.{ staging, self.compiler.names[0] });
         const output = try std.fs.path.join(allocator, &.{ staging, self.compiler.names[1] });
         try context.write(input, translated);
-        const finished = try spawn.run(allocator, .{ .argv = try self.compiler.command(allocator, input, output) });
+        const finished = try spawn.run(allocator, .{ .argv = try self.compiler.tool.command(allocator, input, output) });
         if (fs.exitCode(finished.term) != 0) {
             self.failures.add(context.io, miss.unit, try std.fmt.allocPrint(allocator, "mylang: LLVM rejected the translated unit {s}:\n{s}\n", .{ diagnostic.unit, finished.stderr }));
             return;

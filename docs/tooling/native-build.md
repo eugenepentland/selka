@@ -25,17 +25,18 @@ optimized build is asked for by name, the way `cargo build --release` is:
 
 - **`--release`** is the shorthand for `--mode ReleaseFast --backend llvm
   --llvm-opt 3 --lto`: the qualified LLVM backend at `-O3` with full LTO. It
-  works on `build`, `build --run`, `run`, `run-project` and `test`. An
-  `--llvm-adapter PATH` written after it still applies and `--unchecked` is
-  accepted with it; written beside `--mode`, `--backend`, `--qbe`,
-  `--llvm-opt` or `--lto` it is a usage error, because it already names them.
-- **`--backend llvm [--llvm-opt 0|1|2|3|s|z] [--lto]`** picks the LLVM
-  backend with any other optimization level, with or without LTO.
+  works on `build`, `build --run`, `run`, `run-project` and `test`.
+  `--unchecked` is accepted with it; written beside `--mode`, `--backend`,
+  `--qbe`, `--llvm-opt` or `--lto` it is a usage error, because it already
+  names them.
+- **`--backend llvm [--llvm-opt 0|1|2|3|s|z] [--lto[=full|thin]]`** picks the
+  LLVM backend with any other optimization level, with full LTO (`--lto`,
+  `--lto=full`), with ThinLTO (`--lto=thin`, see
+  [ThinLTO](#thinlto)) or without LTO.
 
 An explicit choice is never changed. `--backend qbe` and `--qbe PATH` select
-QBE whatever the mode, and the LLVM-only controls (`--llvm-adapter`,
-`--llvm-opt`, `--lto`) are rejected until `--backend llvm` or `--release` names
-that backend. `--report` states the resolved `backend`, `optimization` and
+QBE whatever the mode, and the LLVM-only controls (`--llvm-opt`, `--lto`) are
+rejected until `--backend llvm` or `--release` names that backend. `--report` states the resolved `backend`, `optimization` and
 `lto` for every build. `mylang test` follows the same policy through the child
 build it spawns: its builds are QBE in either mode (`Debug` by default), and
 `mylang test --release` builds the LLVM release path.
@@ -48,18 +49,30 @@ against 3.0–3.9 s). Build with QBE while editing and testing, and with
 `--release` for the executable you ship or time. The measurements are in
 [the lane report](../audits/devspeed-defaults-and-docs-2026-09-23.md).
 
-The LLVM backend is the Python adapter installed beside the compiler at
-`lib/mylang-llvm/qbe_llvm.py` (its helpers `llvm_emit.py`,
-`runtime_signatures.py` and `amd64_sysv.py` sit in the same directory).
-`--llvm-adapter PATH` overrides it, `MYLANG_LLVM_ADAPTER` names it for a
-compiler that runs from a directory with no install beside it (the build's own
-test drivers set it), and `MYLANG_QBE_LLVM_*` variables select the
-optimization, Zig driver, runtime sources and target CPU policy. A build that
-names the LLVM backend and cannot resolve the adapter **fails with a tool
-error**; it never silently falls back to QBE. The adapter needs a
-`python3` interpreter at build time. Guest units are content-addressed and
-cached per function, so a Python process runs only for a unit whose IL actually
-changed (see *Concurrent code generation* below).
+The LLVM backend is built into the compiler (`LLVM-ZIG-1`). It translates each
+guest unit's QBE IL into a textual LLVM module in process
+(`src/qbe_build_llvm*.zig`) and compiles it with the clang that Zig bundles, so
+it needs nothing beside the compiler but Zig: no Python, no adapter and no
+per-unit translator process. Guest units are content-addressed and cached per
+function, so only a unit whose IL actually changed is translated and compiled
+again (see *Concurrent code generation* below). The translator used to be a
+Python program, `experiments/llvm-backend/qbe_llvm.py`; it is kept there as the
+equivalence oracle the Zig translator was checked against byte for byte, and
+nothing in the build, the install or the compiler reaches it. `--llvm-adapter`
+and `MYLANG_LLVM_ADAPTER` are gone. The old `--qbe PATH/qbe_llvm.py` spelling
+still selects the built-in backend, at `-O2` without LTO (`MYLANG_QBE_LLVM_OPT`
+changes the level); the file is never read.
+
+Three switches turn one of the translator's rewrites off for an A/B run, and
+each one keys the objects apart from a build that keeps it:
+`MYLANG_QBE_LLVM_ALIAS=0` (the scoped alias metadata),
+`MYLANG_QBE_LLVM_ELEMENT_GEP=0` (element GEPs) and `MYLANG_QBE_LLVM_STICKY=0`
+(loop versioning). `MYLANG_LLVM_DUMP=DIR` writes every unit the build
+translates as `DIR/SYMBOL.ssa` (its IL), `DIR/SYMBOL.ll` (its LLVM IR) and
+`DIR/SYMBOL.sigs.json` (the call-site signatures it read); a warm cache
+translates nothing, so pair it with a fresh `--cache-dir`.
+`experiments/llvm-zig-20260924/equivalence.py` replays such a dump through the
+retired adapter and requires identical IR.
 
 ```console
 $ mylang build examples/factorial.my -o /tmp/factorial --cache-dir /tmp/cache --report
@@ -87,7 +100,7 @@ The LLVM backend's dominator analysis is linear, so it builds a
 
 ### What the LLVM backend is allowed to assume
 
-The adapter states no fact that a check the frontend emitted is about to
+The translator states no fact that a check the frontend emitted is about to
 establish. It emits no `nsw`/`nuw`/`exact`/fast-math flag, no `inbounds`, no
 TBAA and no `noalias` pointer attribute, because every overflow, bounds, cast
 and allocation check is explicit code in the IL: the emitted sequence computes
@@ -95,8 +108,8 @@ the wrapped result and *then* tests it, so an arithmetic flag would make the
 test that follows dead.
 
 It does state one aliasing fact, and that fact never depends on a check having
-run. Memory an emitted unit touches falls into two classes the adapter can place
-without looking at a guard:
+run. Memory an emitted unit touches falls into two classes the translator can
+place without looking at a guard:
 
 - **frame** — storage this activation itself obtained: every `alloc4/8/16` of
   the unit (the local slots, the operand scratch, the aggregate scratch, the root
@@ -112,7 +125,7 @@ without looking at a guard:
 The two are disjoint because everything in **frame** is an allocation this
 activation made after it was entered: no value that existed before the call can
 point into it, no managed object is allocated inside it, and it is released
-before the activation returns. So the adapter gives each placed access
+before the activation returns. So the translator gives each placed access
 `!alias.scope`/`!noalias` saying the two classes never meet. It carries a class
 through `copy` and offsetting `add`, and through a stack slot whose address
 never leaves the unit by a forward must-analysis: a load answers the class the
@@ -149,11 +162,11 @@ The `# myl-obj` and `# myl-elem` markers are comment lines of their own. QBE's
 lexer drops a `#` comment to end of line, so the QBE backend's assembly is
 byte-identical with and without them.
 
-The adapter does lower one kind of check differently, without assuming anything
+The translator does lower one kind of check differently, without assuming anything
 about it: a checked 64-bit `+`, `-` or `*` becomes
 `llvm.{s,u}{add,sub,mul}.with.overflow.i64`, so it reaches the machine as the
 operation and one flag branch (`add; jo`, `sub; jb`, `imul; jo`) rather than the
-frontend's xor/and sign test or its four-limb high product. The adapter evaluates
+frontend's xor/and sign test or its four-limb high product. The translator evaluates
 each block symbolically and replaces a flag only when its value is *exactly* one
 of the frontend's overflow formulas over an `add`, `sub` or `mul` earlier in the
 block. Each formula equals the intrinsic's overflow bit for every pair of 64-bit
@@ -162,11 +175,11 @@ block and its `myl_qbe_fail_overflow_op` call (same operands, width and
 position) are untouched, and a trap reports exactly what it did before. A
 narrower width's range test and the single compare against a literal operand
 are already one compare and stay as they are. `LLVM-OVERFLOW-INTRINSIC-1` in
-`SPEC.md` states the rule; `experiments/llvm-backend/llvm_emit.OverflowChecks`
-implements it.
+`SPEC.md` states the rule; `OverflowChecks` in
+`src/qbe_build_llvm_classes.zig` implements it.
 
 It also versions a loop whose overflow checks decide nothing but the trap
-(`LLVM-STICKY-REDUCTION-1`, `experiments/llvm-backend/sticky_loops.py`). The
+(`LLVM-STICKY-REDUCTION-1`, `src/qbe_build_llvm_sticky.zig`). The
 loop's entry goes to a fast copy in which the check of a *reduction* — a frame
 cell the loop changes only by adding or subtracting a 64-bit signed value to a
 value it held — is dropped while the copy sums the magnitudes of what it adds,
@@ -211,10 +224,10 @@ program using a construct the native backend does not implement fails with
 cached object that holds it, whether that object was reused, how many distinct
 objects hold the guest functions (`function_objects`) and how many of them this
 build compiled (`compiled_function_objects`), and the resolved `backend`,
-`optimization` and `lto`; `zig build test-qbe-build` repeats the **QBE** builds through a relocated
-compiler with no Python on `PATH` using the Zig-native build driver tests (the
-driver in those tests passes `--qbe` explicitly, so the release-path adapter is
-neither resolved nor needed).
+`optimization` and `lto` (and `thin_lto` for a ThinLTO build); `zig build
+test-qbe-build` repeats the builds through a relocated compiler with no Python
+on `PATH` using the Zig-native build driver tests, and neither backend needs
+one.
 
 ```console
 $ mylang build examples/factorial.my -o /tmp/factorial --cache-dir /tmp/qbe-cache
@@ -254,7 +267,7 @@ fires.
   call is `dbgloc 1, 1`, the entry-guard mark.
 - **QBE** prints each `dbgloc` as a `.loc` line. QBE never inlines, so a call's
   `.loc` is its whole position.
-- **LLVM.** The adapter gives each call a debug location whose line is the
+- **LLVM.** The translator gives each call a debug location whose line is the
   position and whose discriminator is a pseudo-probe call index equal to it,
   and names every unit in `llvm.pseudo_probe_desc`. LLVM prints
   `.pseudoprobe GUID INDEX … @ CALLER_GUID:INDEX …` right before each call, the
@@ -269,8 +282,9 @@ fires.
   frame pointer. A position past the 16-bit probe index is `noinline` at its
   call and on its function.
 - **The table.** Before an object is assembled — per unit for QBE and LLVM
-  without LTO, and for full LTO on the assembly LLD produces for the whole
-  program (`--lto-emit-asm`, then an ordinary native link) —
+  without LTO, for full LTO on the assembly LLD produces for the whole
+  program (`--lto-emit-asm`, then an ordinary native link), and for ThinLTO on
+  the assembly LLD produces for each module —
   `src/qbe_frame_map.zig` puts a label after every positioned call, removes the
   `.file`/`.loc`/`.pseudoprobe` directives and probe descriptors (no DWARF
   reaches the object), and appends a retained `mylang_frame_map` section with
@@ -443,8 +457,8 @@ functions and one for that batch's function metadata, on LLVM one object per
 guest function, and on both one for the generated typed-metadata unit and one
 for the generated entry adapter. Their
 keys cover the *native driver* identity, the runtime content hash, the codegen
-tool stamp (QBE's stamp, or a content hash of the LLVM adapter package), the
-optimization level, whether LTO is on, and the target, so a changed tool, mode,
+tool stamp (QBE's stamp, or the LLVM translator identity), the
+optimization level, which LTO (none, full or thin), and the target, so a changed tool, mode,
 optimization or backend never reuses an object built by another one. The native driver identity is a
 build-time digest over only the sources that decide how already-emitted QBE IL
 becomes an object or an executable — the build driver (`src/qbe_build*.zig`),
@@ -562,7 +576,7 @@ work once, when it builds the compiler: it prebuilds the runtime archive and the
 text-formatter object and installs them beside the compiler under
 `zig-out/lib/mylang-runtime/`, each named by a portable hash of the runtime
 content hash, the pinned Zig version, the optimize mode, the target and the
-**backend flavor**. There are four flavors:
+**backend flavor**. There are five flavors:
 
 | mode | flavor | codegen |
 |---|---|---|
@@ -570,13 +584,13 @@ content hash, the pinned Zig version, the optimize mode, the target and the
 | `ReleaseFast` | `qbe` | QBE, `-O2` |
 | `ReleaseFast` | `llvm` | LLVM `-O3` |
 | `ReleaseFast` | `llvm-lto` | LLVM `-O3` with `-flto`, so the link sees bitcode |
+| `ReleaseFast` | `llvm-thinlto` | LLVM `-O3` with `-flto=thin`, ThinLTO bitcode |
 
 The flavor is part of the hash, so a QBE archive can never be linked into an
-LLVM build and an `-O3` archive can never be linked into an LTO one. `mylang`
-finds the directory relative to its own executable, the same way it finds the
-sibling `qbe`. The LLVM flavors need the adapter, so `zig build` passes
-`--llvm-adapter` to `emit-runtime`; without that flag `emit-runtime` publishes
-only the QBE flavors, which keeps a Python-less prebuild working.
+LLVM build, an `-O3` archive can never be linked into an LTO one, and full and
+thin bitcode never stand in for each other. `mylang` finds the directory
+relative to its own executable, the same way it finds the sibling `qbe`. Every
+flavor needs only Zig, so `emit-runtime` always publishes all five.
 
 A cold `mylang build` computes the hash its runtime needs and, if a matching
 archive is installed, links it directly and skips compiling the runtime from
@@ -592,18 +606,27 @@ beside it all fall back cleanly to compiling the runtime from source.
 
 ## Concurrent code generation
 
-The LLVM adapter is one Python process per guest unit, and on a closure of a
-hundred functions that process start-up and translation dominated a cold build.
-Each unit is still its own content-addressed object and a cache hit still runs
-no tool, but the driver now stages every missing unit first, starts them in
-**concurrent waves** (up to eight, or the machine's core count), and publishes
-each object as its wave finishes. Before the waves it makes one
-`--signatures-only` adapter pass over the whole closure, which fills the
-per-build call-site signature sidecar: a unit translated concurrently cannot
-rely on its callees having run first, so the table is made complete up front and
-every unit declares its callees exactly as a sequential build would. A wave
-reports the first tool failure only after reaping every child it started, so a
-failed build leaves no process behind.
+On LLVM each guest unit is its own content-addressed object, and a cache hit
+translates and compiles nothing. The units that missed are built on worker
+threads, as many as the cores this process may use and the free memory allow
+(`src/qbe_build_llvm_compile.zig`). A worker translates its unit in process,
+writes the module to a private scratch directory and starts one clang for it:
+the `-cc1` command `zig cc -###` reports once per build for the same flags, so
+a unit pays one clang start and not a `zig cc` driver with its host probes.
+Under LTO clang writes the unit's bitcode object; without LTO it writes
+assembly, which is frame-map annotated and assembled.
+
+A call site declares its callee from the callee's own IL header. Before the
+workers start, the build reads the header of every unit that missed and of
+every unit a miss names by `$symbol`, so the table is complete whatever order
+the workers finish in, and every unit declares its callees exactly as a
+sequential build would. After the first failure no worker takes a new unit;
+every failure is reported, in unit order, once all workers have stopped.
+
+Before this, the translator was a Python process per unit, and a 50,000-line
+`--release` build took 369 s cold; a 200,000-line one did not finish in 30
+minutes. The numbers after the change are in
+[the lane report](../audits/devspeed-llvm-zig-2026-09-24.md).
 
 ### QBE batches
 
@@ -615,7 +638,7 @@ expensive, and both are gone.
 - **Starting a tool no longer copies the build.** The driver holds the whole
   emitted program — close to a gigabyte at 50,000 lines — and `fork` copied its
   page tables for every tool it started. Every tool (QBE, the assembler, the C
-  compiler, the linker, an LLVM adapter) now starts with
+  compiler, the linker, clang for an LLVM unit) now starts with
   `clone(CLONE_VM | CLONE_VFORK)`, the way `posix_spawn` does, so a start costs
   the same whatever the driver holds (`src/qbe_build_spawn.zig`).
 - **Functions compile in batches.** Units are ordered by module, then symbol. A
@@ -715,8 +738,8 @@ of its own later edits invalidated that, because the recorded inputs were the
 first tree's files. Benchmarks then measured the first tree's runtime from the
 shared `~/.cache/mylang/runtime`.
 
-The configure phase still holds absolute paths, for example the LLVM adapter and
-`qbe` locations handed to tests and to `emit-runtime`. So a reused configuration
+The configure phase still holds absolute paths, for example the `qbe` location
+handed to tests and to `emit-runtime`. So a reused configuration
 is still wrong, even though the hash no longer comes from it. The asset tool
 compares the configured build root with the tree it is building, and fails when
 they differ:

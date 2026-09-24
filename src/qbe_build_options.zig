@@ -95,12 +95,40 @@ pub const Codegen = union(enum) {
     llvm: Llvm,
 };
 /// Explicit controls of the built-in LLVM backend (LLVM-ZIG-1).
-pub const Llvm = struct { optimization: ?[]const u8 = null, lto: bool = false };
+pub const Llvm = struct { optimization: ?[]const u8 = null, lto: Lto = .off };
+/// Link-time optimization of an LLVM build: none, one merged module (`--lto`,
+/// `--lto=full`), or per-module summaries optimized in parallel
+/// (`--lto=thin`, LLVM-THINLTO-1).
+pub const Lto = enum {
+    off,
+    full,
+    thin,
+
+    /// Whether the link sees bitcode at all.
+    pub fn on(self: Lto) bool {
+        return self != .off;
+    }
+    /// The compiler flag that emits this kind of bitcode, or null for none.
+    pub fn flag(self: Lto) ?[]const u8 {
+        return switch (self) {
+            .off => null,
+            .full => "-flto",
+            .thin => "-flto=thin",
+        };
+    }
+};
 /// The bare switch that selects the release build, like `cargo build --release`.
 pub const release_flag = "--release";
 /// The build `--release` stands for: `--mode ReleaseFast --backend llvm
 /// --llvm-opt 3 --lto`.
-pub const release_codegen: Codegen = .{ .llvm = .{ .optimization = "3", .lto = true } };
+pub const release_codegen: Codegen = .{ .llvm = .{ .optimization = "3", .lto = .full } };
+/// The LTO a bare `--lto`, `--lto=full` or `--lto=thin` switch asks for, or
+/// null for any other argument.
+pub fn ltoSwitch(argument: []const u8) ?Lto {
+    if (std.mem.eql(u8, argument, "--lto") or std.mem.eql(u8, argument, "--lto=full")) return .full;
+    if (std.mem.eql(u8, argument, "--lto=thin")) return .thin;
+    return null;
+}
 /// Whether the arguments ask for the release build. Guest arguments after `--`
 /// belong to a `--run` guest, so they are never read.
 pub fn release(args: []const []const u8) bool {
@@ -127,7 +155,7 @@ pub fn restatesRelease(args: []const []const u8) bool {
 pub const usage = "usage: mylang build <file.my> (-o <output> | --run) [--project] [--library]\n" ++
     "  --link FILE --link-library NAME --library-path DIR (repeatable)\n" ++
     "  --provider FILE  trusted native provider (executables only)\n" ++
-    "  --backend qbe|llvm  --llvm-opt 0|1|2|3|s|z  --lto\n" ++
+    "  --backend qbe|llvm  --llvm-opt 0|1|2|3|s|z  --lto[=full|thin]\n" ++
     "  a build that names no backend uses QBE in either mode (the fast compile)\n" ++
     "  --release  the optimized build: --mode ReleaseFast --backend llvm --llvm-opt 3 --lto\n" ++
     "  --qbe PATH --zig PATH --mode Debug|ReleaseFast (default ReleaseFast) --target amd64_sysv\n" ++
@@ -194,9 +222,9 @@ pub fn parse(args: []const []const u8) Error!Options {
             result.codegen = release_codegen;
             continue;
         }
-        if (std.mem.eql(u8, argument, "--lto")) {
+        if (ltoSwitch(argument)) |lto| {
             switch (result.codegen) {
-                .llvm => |*llvm| llvm.lto = true,
+                .llvm => |*llvm| llvm.lto = lto,
                 .auto, .qbe => return error.InvalidBuildArguments,
             }
             continue;
@@ -323,7 +351,21 @@ test "build options accept equals syntax and later tool overrides" {
 test "LLVM backend has explicit optimization and full LTO controls" {
     const parsed = try parse(&.{ "main.my", "-o", "out", "--backend", "llvm", "--llvm-opt", "3", "--lto" });
     try std.testing.expectEqualStrings("3", parsed.codegen.llvm.optimization.?);
-    try std.testing.expect(parsed.codegen.llvm.lto);
+    try std.testing.expectEqual(Lto.full, parsed.codegen.llvm.lto);
+}
+// spec: LLVM-THINLTO-1
+test "--lto=thin asks for per-module ThinLTO and --lto=full for the merged module" {
+    const thin = try parse(&.{ "main.my", "-o", "out", "--backend", "llvm", "--llvm-opt", "3", "--lto=thin" });
+    try std.testing.expectEqual(Lto.thin, thin.codegen.llvm.lto);
+    try std.testing.expectEqualStrings("-flto=thin", Lto.thin.flag().?);
+    const full = try parse(&.{ "main.my", "-o", "out", "--backend", "llvm", "--lto=full" });
+    try std.testing.expectEqual(Lto.full, full.codegen.llvm.lto);
+    try std.testing.expectEqualStrings("-flto", Lto.full.flag().?);
+    try std.testing.expectEqual(@as(?[]const u8, null), Lto.off.flag());
+    try std.testing.expect(!Lto.off.on());
+    try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "-o", "out", "--backend", "llvm", "--lto=partial" }));
+    try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "-o", "out", "--lto=thin" }));
+    try std.testing.expect(std.mem.indexOf(u8, usage, "--lto[=full|thin]") != null);
 }
 // spec: BUILD-BACKEND-1
 test "a build that names no backend leaves it unnamed in either mode and the usage says QBE" {
@@ -346,7 +388,7 @@ test "--release names ReleaseFast LLVM O3 with LTO and refuses a control it alre
     const asked = try parse(&.{ "main.my", "-o", "out", "--release" });
     try std.testing.expectEqualStrings("ReleaseFast", asked.mode);
     try std.testing.expectEqualStrings("3", asked.codegen.llvm.optimization.?);
-    try std.testing.expect(asked.codegen.llvm.lto);
+    try std.testing.expectEqual(Lto.full, asked.codegen.llvm.lto);
     try std.testing.expect(release(asked.link_arguments));
     try std.testing.expect(!release((try parse(&.{ "main.my", "-o", "out" })).link_arguments));
     // `--unchecked` is a ReleaseFast policy the shorthand keeps.

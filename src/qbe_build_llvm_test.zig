@@ -173,11 +173,11 @@ test "the clang command of an LLVM unit is the cc1 line of zig cc's own listing"
         \\ "/opt/zig/zig" "-cc1" "-triple" "x86_64-unknown-linux-gnu" "-O2" "-emit-llvm-bc" "-flto=full" "-main-file-name" "object.o.ll" "-D" "A=\"b\\c\"" "-o" "/w/object.o" "-x" "ir" "/w/object.o.ll"
         \\
     ;
-    const argv = (try compile.commandLine(arena.allocator(), "/tools/zig", listing)).?;
+    const argv = (try compile.commandLine(arena.allocator(), .{ .zig = "/tools/zig", .front = "-cc1" }, listing)).?;
     try std.testing.expectEqualStrings("/tools/zig", argv[0]);
     try std.testing.expectEqualStrings("clang", argv[1]);
     try std.testing.expectEqualStrings("-cc1", argv[2]);
     try std.testing.expectEqualStrings("A=\"b\\c\"", argv[11]);
     try std.testing.expectEqualStrings("/w/object.o.ll", argv[argv.len - 1]);
-    try std.testing.expectEqual(@as(?[]const []const u8, null), try compile.commandLine(arena.allocator(), "/tools/zig", "no command here\n"));
+    try std.testing.expectEqual(@as(?[]const []const u8, null), try compile.commandLine(arena.allocator(), .{ .zig = "/tools/zig", .front = "-cc1" }, "no command here\n"));
 }

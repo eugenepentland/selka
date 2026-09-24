@@ -317,7 +317,7 @@ test "run identity follows resolved QBE tools and effective LLVM settings" {
     const after = try codegenIdentity(context, debug);
     const llvm: options.Options = .{ .source = "", .run = true, .zig = zig, .codegen = .{ .llvm = .{ .optimization = "2" } } };
     var lto = llvm;
-    lto.codegen.llvm.lto = true;
+    lto.codegen.llvm.lto = .full;
     var optimize = llvm;
     optimize.codegen.llvm.optimization = "3";
     try std.testing.expect(!std.mem.eql(u8, before, after));

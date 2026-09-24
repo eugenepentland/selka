@@ -2,6 +2,7 @@
 const std = @import("std");
 const fs = @import("qbe_build_io.zig");
 const frame_map = @import("qbe_frame_map.zig");
+const options = @import("qbe_build_options.zig");
 /// Cache and native tool failures.
 pub const Error = fs.Error || error{EmptyNativeObject};
 /// Wave-3 contract mirrored for the native-build module.
@@ -105,9 +106,10 @@ pub fn keepsFramePointers(name: []const u8) bool {
 }
 /// Annotate assembly for the frame map, reporting a call positioned in another
 /// unit's function — a guest body inlined into another guest body, whose
-/// caller frame a trace would then miss — as a failed native tool.
-pub fn annotateText(context: fs.Context, text: []const u8) Error![]u8 {
-    return frame_map.annotate(context.allocator, text) catch |err| switch (err) {
+/// caller frame a trace would then miss — as a failed native tool. `known`
+/// names the units whose probe descriptors another module holds (ThinLTO).
+pub fn annotateText(context: fs.Context, text: []const u8, known: ?*const frame_map.Names) Error![]u8 {
+    return frame_map.annotateKnowing(context.allocator, text, known) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         error.FrameMapMismatch => {
             if (context.environ.get("MYLANG_FRAME_MAP_KEEP")) |keep| try context.write(keep, text);
@@ -179,7 +181,7 @@ pub const Cache = struct {
     /// (QBE-FRAMEMAP-1). Assembly with no call-site positions is left untouched.
     pub fn annotateAssembly(self: Cache, path: []const u8) Error!void {
         const text = try self.context.read(path);
-        const annotated = try annotateText(self.context, text);
+        const annotated = try annotateText(self.context, text, null);
         if (!std.mem.eql(u8, text, annotated)) try self.context.write(path, annotated);
     }
     /// Reclaim a staged job that a failed wave will not finish.
@@ -209,7 +211,7 @@ pub const Cache = struct {
                 const source = try std.fs.path.join(a, &.{ work, "unit.c" });
                 try self.context.write(source, input);
                 var argv: std.ArrayList([]const u8) = .empty;
-                try argv.appendSlice(a, try self.flags());
+                try argv.appendSlice(a, try self.generatedFlags());
                 try argv.appendSlice(a, &.{ "-c", source, "-o", candidate });
                 return .{ .key = key, .path = path, .candidate = candidate, .work = work, .argv = argv.items, .environment = null, .assemble = null };
             },
@@ -235,7 +237,7 @@ pub const Cache = struct {
         const work = try self.context.temporary(self.temporary);
         defer self.context.remove(work);
         const candidate = try std.fs.path.join(a, &.{ work, "runtime.a" });
-        if (self.codegen.lto) {
+        if (self.codegen.lto.on()) {
             var archive: std.ArrayList([]const u8) = .empty;
             try archive.appendSlice(a, &.{ self.zig, "ar", "rcs", candidate });
             for (sources) |name| {
@@ -291,7 +293,7 @@ pub const Cache = struct {
             try argv.append(a, "--");
             for (sources) |source| if (keepsFramePointers(source) == pointers) try argv.append(a, try std.fs.path.join(a, &.{ self.assets, source }));
         }
-        if (self.codegen.lto) try argv.append(a, "-flto");
+        if (self.codegen.lto.flag()) |flag| try argv.append(a, flag);
         try argv.append(a, try std.fmt.allocPrint(a, "-femit-bin={s}", .{output}));
         return argv.items;
     }
@@ -387,6 +389,20 @@ pub const Cache = struct {
     pub fn flags(self: Cache) Error![]const []const u8 {
         return self.cFlags(true);
     }
+    /// The flags a generated C unit — the entry and the metadata tables — is
+    /// compiled with. Under ThinLTO it stays machine code (LLVM-THINLTO-1): as
+    /// bitcode the entry would import guest functions and inline them into a
+    /// module with no pseudo-probe descriptors, where LLVM drops their call
+    /// positions, and the frame-map tables of every module name the metadata
+    /// records, which a native object keeps global.
+    pub fn generatedFlags(self: Cache) Error![]const []const u8 {
+        const all = try self.flags();
+        if (self.codegen.lto != .thin) return all;
+        const thin = options.Lto.thin.flag() orelse "";
+        var kept: std.ArrayList([]const u8) = .empty;
+        for (all) |flag| if (!std.mem.eql(u8, flag, thin)) try kept.append(self.context.allocator, flag);
+        return kept.items;
+    }
     /// `flags`, with the frame-pointer flags only when `pointers` is set: a
     /// runtime unit that cannot reach `fail` keeps every register.
     fn cFlags(self: Cache, pointers: bool) Error![]const []const u8 {
@@ -407,7 +423,7 @@ pub const Cache = struct {
             self.assets,
         });
         if (pointers) try result.appendSlice(a, &frame_pointer_flags);
-        if (self.codegen.lto) try result.append(a, "-flto");
+        if (self.codegen.lto.flag()) |flag| try result.append(a, flag);
         return result.toOwnedSlice(a);
     }
 };
@@ -416,7 +432,7 @@ pub const Codegen = struct {
     tool: []const u8,
     llvm: bool = false,
     optimization: []const u8 = "default",
-    lto: bool = false,
+    lto: options.Lto = .off,
     target_cpu: []const u8 = "",
     target_features: []const u8 = "",
 };
@@ -612,11 +628,29 @@ test "LLVM full LTO carries O3 and flto through generated C and final link flags
         .environment = "env",
         .zig = "/zig",
         .mode = "ReleaseFast",
-        .codegen = .{ .tool = "/zig", .llvm = true, .optimization = "3", .lto = true },
+        .codegen = .{ .tool = "/zig", .llvm = true, .optimization = "3", .lto = .full },
     };
     const joined = try std.mem.join(context.allocator, " ", try cache.flags());
     try std.testing.expect(std.mem.indexOf(u8, joined, "-O3") != null);
     try std.testing.expect(std.mem.indexOf(u8, joined, "-flto") != null);
+    try std.testing.expectEqualStrings(joined, try std.mem.join(context.allocator, " ", try cache.generatedFlags()));
+}
+
+// spec-case: LLVM-THINLTO-1
+test "under ThinLTO the runtime is thin bitcode and the generated C units stay machine code" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    var cache: Cache = .{ .context = context, .directory = "objects", .temporary = "work", .assets = "/assets", .environment = "env", .zig = "/zig", .mode = "ReleaseFast", .codegen = .{ .tool = "/zig", .llvm = true, .optimization = "3" } };
+    cache.codegen.lto = .thin;
+    const runtime = try std.mem.join(context.allocator, " ", try cache.flags());
+    try std.testing.expect(std.mem.indexOf(u8, runtime, "-flto=thin") != null);
+    const merged = try std.mem.join(context.allocator, " ", try cache.mergeCommand(&.{"qbe_runtime.c"}, "/tmp/out.o"));
+    try std.testing.expect(std.mem.indexOf(u8, merged, "-flto=thin") != null);
+    const generated = try std.mem.join(context.allocator, " ", try cache.generatedFlags());
+    try std.testing.expect(std.mem.indexOf(u8, generated, "-flto") == null);
+    try std.testing.expect(std.mem.indexOf(u8, generated, "-O3") != null);
 }
 
 test "native object cache mirror uses the effects-v4 contract" {

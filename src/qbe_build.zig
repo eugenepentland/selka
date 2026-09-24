@@ -16,6 +16,7 @@ const batch = @import("qbe_build_batch.zig");
 const tool_spawn = @import("qbe_build_spawn.zig");
 const direct_link = @import("qbe_build_link.zig");
 const llvm_compile = @import("qbe_build_llvm_compile.zig");
+const llvm_thin = @import("qbe_build_llvm_thin.zig");
 /// The linker flag that drops every section a program never references.
 const gc_sections = "-Wl,--gc-sections";
 /// The manifest array that lists every emitted unit.
@@ -153,7 +154,7 @@ const Environment = struct {
     backend: []const u8,
     backend_tool: []const u8,
     optimization: []const u8,
-    lto: bool,
+    lto: options.Lto,
     zig_version: []const u8,
     mode: []const u8,
     target: []const u8,
@@ -308,7 +309,8 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
             .artifact_kind = if (parsed.library) "shared-library" else "executable",
             .backend = if (cache.codegen.llvm) "llvm" else "qbe",
             .optimization = cache.codegen.optimization,
-            .lto = cache.codegen.lto,
+            .lto = cache.codegen.lto.on(),
+            .thin_lto = cache.codegen.lto == .thin,
         }, .{});
         const stream = if (parsed.run) std.Io.File.stderr() else std.Io.File.stdout();
         try stream.writeStreamingAll(context.io, try std.fmt.allocPrint(a, "{s}\n", .{report}));
@@ -572,10 +574,14 @@ fn ltoLevel(optimization: []const u8) []const []const u8 {
     return &.{ "--lto-O3", "-O3" };
 }
 /// The backend/flavor tag an archive is keyed by: QBE, LLVM without LTO, or LLVM
-/// with full LTO. The text-formatter object is backend-independent and uses none.
-fn runtimeFlavor(lo: bool, lto: bool) []const u8 {
+/// with full or thin LTO. The text-formatter object is backend-independent and uses none.
+fn runtimeFlavor(lo: bool, lto: options.Lto) []const u8 {
     if (!lo) return "qbe";
-    return if (lto) "llvm-lto" else "llvm";
+    return switch (lto) {
+        .off => "llvm",
+        .full => "llvm-lto",
+        .thin => "llvm-thinlto",
+    };
 }
 /// Resolve a prebuilt runtime artifact installed under `<compiler>/../lib/mylang-runtime`.
 /// Returns it only when the file exists and its stored fingerprint still matches, so a
@@ -601,15 +607,16 @@ fn validInstalled(context: fs.Context, path: []const u8) bool {
 }
 /// One prebuilt runtime archive flavor: the optimize mode, the cache-key tag that
 /// keeps QBE, LLVM and LLVM+LTO archives apart, and the codegen that builds it.
-const RuntimeFlavor = struct { mode: []const u8, flavor: []const u8, llvm: bool, lto: bool };
+const RuntimeFlavor = struct { mode: []const u8, flavor: []const u8, llvm: bool, lto: options.Lto };
 /// Every runtime archive `zig build` publishes: QBE for the Debug and explicit-QBE
 /// arms, and both LLVM arms for ReleaseFast, so the release path links a bitcode
 /// runtime archive instead of compiling one on its first build.
 const runtime_flavors = [_]RuntimeFlavor{
-    .{ .mode = "Debug", .flavor = "qbe", .llvm = false, .lto = false },
-    .{ .mode = release_fast, .flavor = "qbe", .llvm = false, .lto = false },
-    .{ .mode = release_fast, .flavor = "llvm", .llvm = true, .lto = false },
-    .{ .mode = release_fast, .flavor = "llvm-lto", .llvm = true, .lto = true },
+    .{ .mode = "Debug", .flavor = "qbe", .llvm = false, .lto = .off },
+    .{ .mode = release_fast, .flavor = "qbe", .llvm = false, .lto = .off },
+    .{ .mode = release_fast, .flavor = "llvm", .llvm = true, .lto = .off },
+    .{ .mode = release_fast, .flavor = "llvm-lto", .llvm = true, .lto = .full },
+    .{ .mode = release_fast, .flavor = "llvm-thinlto", .llvm = true, .lto = .thin },
 };
 /// Build the runtime archive and text-formatter object for each optimize mode and
 /// backend flavor and publish them, hashed by their portable identity, into `--out`
@@ -1022,10 +1029,10 @@ const State = struct {
             try self.linkAttempt(parsed, candidate);
         };
     }
-    /// One link: the ordinary single command, or, for a full-LTO executable
-    /// whose units carry frame-map positions, LTO to assembly first.
+    /// One link: the ordinary single command, or, for an LTO executable whose
+    /// units carry frame-map positions, LTO to assembly first.
     fn linkAttempt(self: *State, parsed: options.Options, candidate: []const u8) !void {
-        if (self.cache.codegen.lto and !parsed.library and self.usesFrameMap()) return self.linkAssembled(parsed, candidate);
+        if (self.cache.codegen.lto.on() and !parsed.library and self.usesFrameMap()) return self.linkAssembled(parsed, candidate);
         // BUILD-LINK-1: the command `zig cc` would run, without its host probe.
         const place: direct_link.Place = .{ .directory = self.cache.directory, .environment = self.cache.environment };
         self.link_route = try direct_link.run(self.context, place, .{ .argv = try self.linkCommand(parsed, candidate), .objects = self.objects.items, .output = candidate, .scratch = self.cache.temporary });
@@ -1043,39 +1050,68 @@ const State = struct {
         }
         return false;
     }
-    /// QBE-FRAMEMAP-1 under full LTO. The frame-map table is keyed by each
-    /// call's return address, which only the final code has, and LTO produces
-    /// that code inside the link. So the bitcode is optimized and compiled to
-    /// one assembly file by LLD itself, with the same optimization level and
-    /// entry root the ordinary link gives it; the table is added to that
-    /// assembly, which is assembled and linked natively with the objects that
-    /// were never bitcode. The bitcode inputs are not linked again: everything
-    /// they contribute is in the assembly.
+    /// QBE-FRAMEMAP-1 under LTO. The frame-map table is keyed by each call's
+    /// return address, which only the final code has, and LTO produces that
+    /// code inside the link. So the bitcode is optimized and compiled to
+    /// assembly by LLD itself, with the same optimization level and entry root
+    /// the ordinary link gives it: one file under full LTO, one per module
+    /// under ThinLTO (LLVM-THINLTO-1). The table is added to each file, which
+    /// is assembled and linked natively with the objects that were never
+    /// bitcode. The bitcode inputs are not linked again: everything they
+    /// contribute is in the assembly.
     fn linkAssembled(self: *State, parsed: options.Options, candidate: []const u8) !void {
         const a = self.context.allocator;
         const directory = std.fs.path.dirname(candidate) orelse ".";
-        const base = try std.fs.path.join(a, &.{ directory, "program-lto" });
-        var lto: std.ArrayList([]const u8) = .empty;
-        try lto.appendSlice(a, &.{ self.cache.zig, "ld.lld", "--error-limit=0", "-mllvm", "-float-abi=hard" });
-        try lto.appendSlice(a, ltoLevel(self.cache.codegen.optimization));
-        try lto.appendSlice(a, &.{ "--lto-emit-asm", "--lto-partitions=1", "-m", "elf_x86_64", "--entry", "main", "-o", base });
-        try lto.appendSlice(a, self.objects.items);
-        try lto.append(a, self.runtime.path);
-        try self.context.command(lto.items, null);
-        const assembly = try std.fs.path.join(a, &.{ directory, "program.s" });
-        try self.context.write(assembly, try cache_api.annotateText(self.context, try self.context.read(try std.fmt.allocPrint(a, "{s}.lto.s", .{base}))));
-        const object = try std.fs.path.join(a, &.{ directory, "program.o" });
-        try self.context.command(&.{ self.cache.zig, "cc", "-g0", "-c", assembly, "-o", object }, null);
+        // The LTO link reads the native objects too: what they reference is
+        // what keeps a bitcode definition alive.
+        var inputs: std.ArrayList([]const u8) = .empty;
+        try inputs.appendSlice(a, self.objects.items);
+        try inputs.append(a, self.runtime.path);
+        // LLVM-THINLTO-1: every module optimized and compiled on its own thread.
+        const compiled = if (self.cache.codegen.lto == .thin)
+            try llvm_thin.link(.{ .cache = self.cache, .level = ltoLevel(self.cache.codegen.optimization), .inputs = inputs.items, .directory = directory, .known = try self.probeNames() })
+        else
+            try self.fullLto(inputs.items, directory);
         var args: std.ArrayList([]const u8) = .empty;
-        for (try self.cache.flags()) |flag| if (!std.mem.eql(u8, flag, "-flto")) try args.append(a, flag);
+        const bitcode_flag = self.cache.codegen.lto.flag() orelse "";
+        for (try self.cache.flags()) |flag| if (!std.mem.eql(u8, flag, bitcode_flag)) try args.append(a, flag);
         for (self.objects.items) |path| if (try self.nativeObject(path)) try args.append(a, path);
-        try args.append(a, object);
+        try args.appendSlice(a, compiled);
         try native_link.append(self.context, parsed.link_arguments, &args, false);
         try args.appendSlice(a, &unwind_link);
         try args.appendSlice(a, &.{ "-lm", gc_sections });
         if (!options.keepSymbols(parsed.link_arguments)) try args.append(a, "-s");
         try args.appendSlice(a, &.{ "-o", candidate });
         try self.context.command(args.items, null);
+    }
+    /// Every guest unit's symbol by the GUID its pseudo probes carry, for the
+    /// ThinLTO modules a callee was inlined into from another module.
+    fn probeNames(self: *State) !*const frame_map.Names {
+        const a = self.context.allocator;
+        const names = try a.create(frame_map.Names);
+        names.* = .empty;
+        for (v.array(v.get(self.manifest, manifest_functions))) |unit| {
+            const symbol = v.text(v.get(unit, "symbol"));
+            try names.put(a, frame_map.probeGuid(symbol), symbol);
+        }
+        return names;
+    }
+    /// Full LTO to one assembly file, annotated and assembled into the one
+    /// object that stands for every bitcode input.
+    fn fullLto(self: *State, inputs: []const []const u8, directory: []const u8) ![]const []const u8 {
+        const a = self.context.allocator;
+        const base = try std.fs.path.join(a, &.{ directory, "program-lto" });
+        var lto: std.ArrayList([]const u8) = .empty;
+        try lto.appendSlice(a, &.{ self.cache.zig, "ld.lld", "--error-limit=0", "-mllvm", "-float-abi=hard" });
+        try lto.appendSlice(a, ltoLevel(self.cache.codegen.optimization));
+        try lto.appendSlice(a, &.{ "--lto-emit-asm", "--lto-partitions=1", "-m", "elf_x86_64", "--entry", "main", "-o", base });
+        try lto.appendSlice(a, inputs);
+        try self.context.command(lto.items, null);
+        const assembly = try std.fs.path.join(a, &.{ directory, "program.s" });
+        try self.context.write(assembly, try cache_api.annotateText(self.context, try self.context.read(try std.fmt.allocPrint(a, "{s}.lto.s", .{base})), null));
+        const object = try std.fs.path.join(a, &.{ directory, "program.o" });
+        try self.context.command(&.{ self.cache.zig, "cc", "-g0", "-c", assembly, "-o", object }, null);
+        return a.dupe([]const u8, &.{object});
     }
     /// Whether an input is already machine code rather than LTO bitcode.
     fn nativeObject(self: *State, path: []const u8) !bool {
@@ -1105,7 +1141,8 @@ const State = struct {
             .entry = v.text(v.get(self.manifest, "entry")),
             .backend = if (self.cache.codegen.llvm) "llvm" else "qbe",
             .optimization = self.cache.codegen.optimization,
-            .lto = self.cache.codegen.lto,
+            .lto = self.cache.codegen.lto.on(),
+            .thin_lto = self.cache.codegen.lto == .thin,
             .functions = self.records.items,
             .runtime_object = self.runtime.path,
         }, .{});
@@ -1376,7 +1413,7 @@ test "a link failure with every input still present is reported, never retried" 
 // spec: QBE-DRIVER-IDENTITY-1
 test "the object environment names the native driver, never the whole compiler" {
     const a = std.testing.allocator;
-    const text = try environmentJson(a, .{ .zig = "zig-stamp", .backend = "qbe", .backend_tool = "qbe-stamp", .optimization = "default", .lto = false, .zig_version = bundled.zig_version, .mode = "Debug", .target = "native" });
+    const text = try environmentJson(a, .{ .zig = "zig-stamp", .backend = "qbe", .backend_tool = "qbe-stamp", .optimization = "default", .lto = .off, .zig_version = bundled.zig_version, .mode = "Debug", .target = "native" });
     defer a.free(text);
     try std.testing.expect(!std.mem.eql(u8, bundled.driver_identity, bundled.compiler_identity));
     try std.testing.expect(std.mem.indexOf(u8, text, bundled.driver_identity) != null);
@@ -1385,14 +1422,14 @@ test "the object environment names the native driver, never the whole compiler" 
     // `compiler_identity`, which this environment does not name, so every cached
     // object and executable whose IL is unchanged still keys the same.
     try std.testing.expect(std.mem.indexOf(u8, text, bundled.compiler_identity) == null);
-    const same = try environmentJson(a, .{ .zig = "zig-stamp", .backend = "qbe", .backend_tool = "qbe-stamp", .optimization = "default", .lto = false, .zig_version = bundled.zig_version, .mode = "Debug", .target = "native" });
+    const same = try environmentJson(a, .{ .zig = "zig-stamp", .backend = "qbe", .backend_tool = "qbe-stamp", .optimization = "default", .lto = .off, .zig_version = bundled.zig_version, .mode = "Debug", .target = "native" });
     defer a.free(same);
     try std.testing.expectEqualStrings(text, same);
 }
 
 test "LLVM optimization LTO and target policy change native object identity" {
     const a = std.testing.allocator;
-    const base: Environment = .{ .zig = "zig-stamp", .backend = "llvm", .backend_tool = "mylang-llvm-translator-v1", .optimization = "3", .lto = false, .zig_version = bundled.zig_version, .mode = "ReleaseFast", .target = "amd64_sysv" };
+    const base: Environment = .{ .zig = "zig-stamp", .backend = "llvm", .backend_tool = "mylang-llvm-translator-v1", .optimization = "3", .lto = .off, .zig_version = bundled.zig_version, .mode = "ReleaseFast", .target = "amd64_sysv" };
     const o3 = try environmentJson(a, base);
     defer a.free(o3);
     var changed = base;
@@ -1400,9 +1437,13 @@ test "LLVM optimization LTO and target policy change native object identity" {
     const o2 = try environmentJson(a, changed);
     defer a.free(o2);
     changed = base;
-    changed.lto = true;
+    changed.lto = .full;
     const lto = try environmentJson(a, changed);
     defer a.free(lto);
+    changed = base;
+    changed.lto = .thin;
+    const thin = try environmentJson(a, changed);
+    defer a.free(thin);
     changed = base;
     changed.target_cpu = "x86-64-v3";
     const cpu = try environmentJson(a, changed);
@@ -1413,6 +1454,8 @@ test "LLVM optimization LTO and target policy change native object identity" {
     defer a.free(features);
     try std.testing.expect(!std.mem.eql(u8, o3, o2));
     try std.testing.expect(!std.mem.eql(u8, o3, lto));
+    // Thin bitcode never answers for full bitcode (LLVM-THINLTO-1).
+    try std.testing.expect(!std.mem.eql(u8, lto, thin));
     try std.testing.expect(!std.mem.eql(u8, o3, cpu));
     try std.testing.expect(!std.mem.eql(u8, o3, features));
 }
@@ -1476,10 +1519,11 @@ test "prebuilt runtime hashes separate kind, mode and backend flavor, and misses
     try std.testing.expectEqual(@as(?cache_api.Object, null), try installedRuntime(context, "Debug", "archive", "qbe", ".a"));
     try std.testing.expect(!validInstalled(context, "/no/such/installed/runtime.a"));
     // The archive flavor names the selected backend and LTO policy.
-    try std.testing.expectEqualStrings("qbe", runtimeFlavor(false, false));
-    try std.testing.expectEqualStrings("qbe", runtimeFlavor(false, true));
-    try std.testing.expectEqualStrings("llvm", runtimeFlavor(true, false));
-    try std.testing.expectEqualStrings("llvm-lto", runtimeFlavor(true, true));
+    try std.testing.expectEqualStrings("qbe", runtimeFlavor(false, .off));
+    try std.testing.expectEqualStrings("qbe", runtimeFlavor(false, .full));
+    try std.testing.expectEqualStrings("llvm", runtimeFlavor(true, .off));
+    try std.testing.expectEqualStrings("llvm-lto", runtimeFlavor(true, .full));
+    try std.testing.expectEqualStrings("llvm-thinlto", runtimeFlavor(true, .thin));
 }
 // spec-case: QBE-2
 test "shared library links bind their own data descriptor symbols" {
@@ -1507,7 +1551,7 @@ test "an unchanged executable is reused only while its link identity holds" {
         .environment = "env",
         .zig = "/bin/true",
         .mode = "ReleaseFast",
-        .codegen = .{ .tool = "/zig", .llvm = true, .optimization = "3", .lto = true },
+        .codegen = .{ .tool = "/zig", .llvm = true, .optimization = "3", .lto = .full },
     };
     var state = State{ .context = context, .cache = cache, .manifest = .null };
     state.runtime = .{ .key = "runtime", .path = "/installed/runtime.a", .reused = true };
