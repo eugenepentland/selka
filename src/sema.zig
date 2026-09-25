@@ -1739,7 +1739,7 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
     @import("domain_codecs.zig").check(allocator, src, program.types.domains, checker.catalog, .{ .items = functions, .names = executable_names }, sink) catch |err| return retryOr(&plan, err);
     timingAdd(timing, "domain_codec_validation", codecs_start);
     const warnings_start = timingStart(timing);
-    try warnBindings(allocator, functions, stubs, sink);
+    try warnBindings(allocator, checker.catalog.records, functions, stubs, sink);
     try warnImports(module_names, sink);
     const pass_items: []const diagnostic.Diagnostic = if (plan != null) try allocator.dupe(diagnostic.Diagnostic, sink.items.items[pass_start..]) else &.{};
     std.mem.sort(diagnostic.Diagnostic, sink.items.items, {}, warningLess);
@@ -1805,13 +1805,21 @@ fn checkHostType(allocator: std.mem.Allocator, catalog: []const typed.Record, ty
     };
 }
 
-fn warnBindings(allocator: std.mem.Allocator, functions: []const typed.Function, stubs: []const ?origins.Fact, sink: *diagnostic.Sink) Error!void {
+/// Whether local `slot` of `function` is a `mut` record parameter, which
+/// under value semantics is the caller's own variable (`VALUE-SEMANTICS-3`).
+fn inoutRecord(catalog: []const typed.Record, function: typed.Function, slot: usize) bool {
+    if (slot >= function.signature.parameter_count) return false;
+    for (function.signature.declared_mutates) |position| if (position == slot) return typed.referenceRecord(catalog, function.scope.locals[slot].ty);
+    return false;
+}
+
+fn warnBindings(allocator: std.mem.Allocator, catalog: []const typed.Record, functions: []const typed.Function, stubs: []const ?origins.Fact, sink: *diagnostic.Sink) Error!void {
     for (functions, 0..) |function, index| {
         if (function.policy.host != null) continue;
         // A stood-in body has only its parameters here; its summary replays
         // the binding warnings its checked body reported.
         if (origins.standIn(stubs, index) != null) continue;
-        for (function.scope.locals) |local| {
+        for (function.scope.locals, 0..) |local, slot| {
             if (local.usage.dead_write_span) |span| {
                 // Each field write reads its destination once; a read beyond that
                 // means the copied binding is observed after the write. A copy
@@ -1829,6 +1837,9 @@ fn warnBindings(allocator: std.mem.Allocator, functions: []const typed.Function,
                 });
             }
             if (local.usage.temporary or local.usage.reads != 0) continue;
+            // VALUE-SEMANTICS-3: rebinding a `mut` record parameter reaches
+            // the caller, so the binding is used even if the body never reads it.
+            if (inoutRecord(catalog, function, slot)) continue;
             // A capability parameter is the signature's whole claim to an
             // effect: a body that never reads it promises authority it does not
             // use, so the over-claim is rejected rather than warned about.

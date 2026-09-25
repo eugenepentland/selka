@@ -329,3 +329,27 @@ test "the switch changes the fragment record key and nothing without it" {
     try t.expect(!values.environmentEnables("0"));
     try t.expect(!values.environmentEnables(null));
 }
+
+/// How many diagnostics with `code` checking `body` reports with the switch at `on`.
+fn countCode(body: []const u8, code: []const u8, on: bool) !usize {
+    const saved = Saved.set(on);
+    defer saved.restore();
+    const text = try std.mem.concat(t.allocator, u8, &.{ body, entry });
+    defer t.allocator.free(text);
+    var compilation = try compiler.Compilation.init(t.allocator, "warnings.my", text);
+    defer compilation.deinit();
+    compilation.check() catch |err| switch (err) {
+        error.SourceError => {},
+        else => return err,
+    };
+    var count: usize = 0;
+    for (compilation.diagnostics.items) |item| count += @intFromBool(std.mem.eql(u8, item.code, code));
+    return count;
+}
+
+// spec-case: VALUE-SEMANTICS-3
+test "rebinding a mut record parameter is a use that reaches the caller" {
+    const reset = "record Counter:\n    n: int\n    items: list[int]\n\ndef reset(c: mut Counter) -> None:\n    c = Counter(n=0, items=[])\n";
+    try t.expectEqual(@as(usize, 0), try countCode(reset, "W_UNUSED_BINDING", true));
+    try t.expectEqual(@as(usize, 0), try countCode(reset, "E_MUTATION_MARKER", true));
+}
