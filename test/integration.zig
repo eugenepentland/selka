@@ -11253,3 +11253,39 @@ test "CLI property test that fails with an Err reports the minimal input's error
     try testing.expect(std.mem.indexOf(u8, reason, ".pending") == null);
     try testing.expectEqualStrings("\"aaaa\"", failure.object.get("minimal").?.object.get("literals").?.object.get("text").?.string);
 }
+
+/// Run `check` on `text` with `--explain-ownership` pointed into the same
+/// temporary directory, and return the report it wrote.
+fn explainOwnership(text: []const u8) ![]u8 {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = text });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const report = try std.fmt.allocPrint(testing.allocator, "--explain-ownership={s}.jsonl", .{path});
+    defer testing.allocator.free(report);
+    const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check", path, report } });
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+    return temp.dir.readFileAlloc(testing.io, "input.my.jsonl", testing.allocator, .limited(1 << 20));
+}
+
+// spec: OWNERSHIP-EXPLAIN-1
+test "CLI check --explain-ownership writes one JSON line per function" {
+    const report = try explainOwnership(
+        \\def total(xs: list[int]) -> int:
+        \\    ys = xs
+        \\    return len(ys) + len(xs)
+        \\
+        \\
+        \\def main() -> int:
+        \\    values = [1, 2, 3]
+        \\    return total(values)
+    );
+    defer testing.allocator.free(report);
+    try testing.expectEqual(@as(usize, 2), std.mem.count(u8, report, "\n"));
+    try testing.expect(std.mem.indexOf(u8, report, "{\"function\":\"total\",\"locals\":[{\"index\":0,\"name\":\"xs\",\"role\":\"param\"},{\"index\":1,\"name\":\"ys\",\"role\":\"borrowed\",\"parent\":0}") != null);
+    try testing.expect(std.mem.indexOf(u8, report, "\"kind\":\"argument\",\"source\":{\"origin\":\"local\",\"local\":1,\"part\":\"whole\"},\"class\":\"move\"") != null);
+    try invokeOptions("run", "def main() -> int:\n    return 0\n", &.{"--explain-ownership=unused.jsonl"}, 2, "", "usage");
+}

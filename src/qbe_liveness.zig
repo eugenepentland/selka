@@ -61,13 +61,49 @@ pub const Input = struct {
     pinned: []const bool,
 };
 
-/// Answer, for every instruction, which locals a safepoint there publishes.
-/// The rows are allocated from `a` and owned by the caller.
-pub fn analyze(a: std.mem.Allocator, input: Input) error{OutOfMemory}!Roots {
+/// The solved liveness of one function: per instruction, the locals live on
+/// entry to it and the locals live when it has run (`OWNERSHIP-ANALYSIS-1`).
+/// Root planning and the ownership analysis (`ownership.zig`) both read this
+/// one solution, so a move the ownership analysis claims and a root the
+/// safepoint drops rest on the same answer.
+pub const Solution = struct {
+    /// Machine words per instruction's row.
+    words: usize,
+    /// Per instruction, the locals live on entry (local `i` at bit `i`).
+    live_in: []const usize,
+    /// Per instruction, the locals live on entry to some successor, minus a
+    /// match arm's binding on the edge that binds it.
+    live_out: []const usize,
+
+    /// Whether local `index` is read again after instruction `pc` runs, before
+    /// being written. An unreachable instruction answers false.
+    pub fn after(self: Solution, pc: usize, index: usize) bool {
+        return bit(self.live_out, self.words, pc, index);
+    }
+    /// Whether local `index` is live on entry to instruction `pc`.
+    pub fn before(self: Solution, pc: usize, index: usize) bool {
+        return bit(self.live_in, self.words, pc, index);
+    }
+    /// Release both row tables.
+    pub fn deinit(self: Solution, a: std.mem.Allocator) void {
+        a.free(self.live_in);
+        a.free(self.live_out);
+    }
+};
+
+fn bit(rows: []const usize, words: usize, pc: usize, index: usize) bool {
+    const at = pc * words + index / 64;
+    if (index / 64 >= words or at >= rows.len) return false;
+    return rows[at] >> @intCast(index % 64) & 1 != 0;
+}
+
+/// Solve liveness for every local of `input.function` over the bytecode's own
+/// successor relation. The rows are allocated from `a` and owned by the caller.
+pub fn solve(a: std.mem.Allocator, input: Input) error{OutOfMemory}!Solution {
     const code = input.function.scope.instructions;
     const words = (input.function.scope.locals.len + 63) / 64;
     const live = try a.alloc(usize, code.len * words);
-    defer a.free(live);
+    errdefer a.free(live);
     @memset(live, 0);
     const scratch = try a.alloc(usize, words);
     defer a.free(scratch);
@@ -86,12 +122,34 @@ pub fn analyze(a: std.mem.Allocator, input: Input) error{OutOfMemory}!Roots {
             changed = true;
         }
     }
+    const out = try a.alloc(usize, code.len * words);
+    @memset(out, 0);
+    for (0..code.len) |pc| {
+        if (pc >= input.states.len or input.states[pc] == null) continue;
+        liveAfter(input, live, pc, out[pc * words ..][0..words]);
+    }
+    return .{ .words = words, .live_in = live, .live_out = out };
+}
+
+/// Answer, for every instruction, which locals a safepoint there publishes.
+/// The rows are allocated from `a` and owned by the caller.
+pub fn analyze(a: std.mem.Allocator, input: Input) error{OutOfMemory}!Roots {
+    const solution = try solve(a, input);
+    defer solution.deinit(a);
+    return roots(a, input, solution);
+}
+
+/// The root rows of a solved function: per instruction, the locals it reads
+/// itself, the locals live after it, and every pinned local.
+pub fn roots(a: std.mem.Allocator, input: Input, solution: Solution) error{OutOfMemory}!Roots {
+    const code = input.function.scope.instructions;
+    const words = solution.words;
     const bits = try a.alloc(usize, code.len * words);
     @memset(bits, 0);
     for (0..code.len) |pc| {
         if (pc >= input.states.len or input.states[pc] == null) continue;
         const row = bits[pc * words ..][0..words];
-        liveAfter(input, live, pc, row);
+        @memcpy(row, solution.live_out[pc * words ..][0..words]);
         uses(input, pc, row);
         for (input.pinned, 0..) |pinned, index| if (pinned) include(row, index);
     }

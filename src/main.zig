@@ -609,7 +609,7 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
             try report(init, &compilation);
             try std.Io.File.stdout().writeStreamingAll(init.io, generated);
         },
-        .check => return 0,
+        .check => return explainOwnership(init, &compilation, parsed.explain_ownership),
         .@"report-quality" => {
             var analysis = try language.quality.analyze(allocator, compilation.program.?, compilation.src, parsed.quality);
             defer analysis.deinit();
@@ -653,6 +653,22 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
         },
         .run => return executeRun(init, &compilation, parsed),
     }
+    return 0;
+}
+
+/// Write the ownership analysis of a checked program to `path` as JSON Lines
+/// (`OWNERSHIP-EXPLAIN-1`); without a path, `check` has nothing more to do.
+fn explainOwnership(init: Context, compilation: *language.Compilation, path: ?[]const u8) !u8 {
+    const destination = path orelse return 0;
+    const text = compilation.explainOwnership(init.gpa) catch |err| switch (err) {
+        error.SourceError => {
+            try report(init, compilation);
+            return 1;
+        },
+        else => return err,
+    };
+    defer init.gpa.free(text);
+    std.Io.Dir.cwd().writeFile(init.io, .{ .sub_path = destination, .data = text }) catch return 2;
     return 0;
 }
 
@@ -892,6 +908,9 @@ const Parsed = struct {
     /// `--friction-log=PATH` as typed, or null when the flag was not passed.
     /// `MYLANG_FRICTION_LOG` names the same destination when the flag is absent.
     friction_path: ?[]const u8 = null,
+    /// Hidden `check --explain-ownership=PATH`: the JSON Lines report of the
+    /// ownership analysis (`OWNERSHIP-EXPLAIN-1`).
+    explain_ownership: ?[]const u8 = null,
 
     /// The policy the `emit-qbe`/`emit-project-qbe` switches spell out. Each
     /// `--drop-…` names one thing the emitted units stop carrying, so a command
@@ -945,7 +964,7 @@ fn parseArgs(allocator: std.mem.Allocator, args: []const []const u8) ArgError!Pa
             continue;
         }
         if (try parseSwitchFlag(arg, &parser)) continue;
-        if (try parseFrictionFlag(arg, &parser)) continue;
+        if (try parseDestinationFlag(arg, &parser)) continue;
         if (std.mem.eql(u8, arg, "--report")) {
             if (parser.reporting.report) return error.Usage;
             parser.reporting.report = true;
@@ -1019,6 +1038,9 @@ const ArgumentParser = struct {
     api_json: bool = false,
     no_cache: bool = false,
     friction_path: ?[]const u8 = null,
+    /// Hidden `check --explain-ownership=PATH`: the JSON Lines report of the
+    /// ownership analysis (`OWNERSHIP-EXPLAIN-1`).
+    explain_ownership: ?[]const u8 = null,
     cache_dir: ?[]const u8 = null,
     select_file: ?[]const u8 = null,
     drop_debug: bool = false,
@@ -1459,6 +1481,7 @@ const ArgumentParser = struct {
             .saw_steps = self.saw_steps,
             .saw_frames = self.saw_frames,
             .friction_path = self.friction_path,
+            .explain_ownership = self.explain_ownership,
         };
     }
 };
@@ -1484,6 +1507,26 @@ fn parseFrictionFlag(arg: []const u8, parser: *ArgumentParser) ArgError!bool {
     parser.friction_path = destination_path;
     return true;
 }
+
+/// Consume a flag that names a file this command writes beside its ordinary
+/// output: `--friction-log=PATH`, or `check`'s `--explain-ownership=PATH`.
+fn parseDestinationFlag(arg: []const u8, parser: *ArgumentParser) ArgError!bool {
+    if (try parseFrictionFlag(arg, parser)) return true;
+    return parseExplainFlag(arg, parser);
+}
+
+/// Consume the hidden `--explain-ownership=PATH` of `check`
+/// (`OWNERSHIP-EXPLAIN-1`). A repeat, an empty path or another command is a
+/// usage error; an argument that is not this flag is left for the caller.
+fn parseExplainFlag(arg: []const u8, parser: *ArgumentParser) ArgError!bool {
+    if (!std.mem.startsWith(u8, arg, explain_ownership_prefix)) return false;
+    const destination_path = arg[explain_ownership_prefix.len..];
+    if (parser.explain_ownership != null or destination_path.len == 0 or parser.command != .check) return error.Usage;
+    parser.explain_ownership = destination_path;
+    return true;
+}
+
+const explain_ownership_prefix = "--explain-ownership=";
 
 fn positive(digits: []const u8) error{Usage}!u64 {
     if (digits.len == 0) return error.Usage;

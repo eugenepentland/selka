@@ -292,6 +292,11 @@
       "summary": "`bytes` is an immutable garbage-collected byte string with Python indexing, slicing and search.",
       "doc": "docs/bytes.md#managed-byte-strings"
     },
+    "ownership-explain": {
+      "kind": "tooling",
+      "summary": "`mylang check FILE.my --explain-ownership=OUT.jsonl` writes the ownership analysis of every lowered function as JSON Lines: each local's role, every transfer classed move, borrow or copy, every copy-on-write check site with the loop header it is hoisted to, and the loads that move.",
+      "doc": "docs/tooling/ownership.md#explain-ownership"
+    },
     "aggregate-copy-elision": {
       "kind": "language",
       "summary": "A read-only aggregate parameter, a short-lived local and a match binding that owns nothing are read where they live, so field reads, tag tests and payload projections are loads rather than aggregate copies while record values keep snapshot semantics.",

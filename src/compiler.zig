@@ -219,6 +219,13 @@ pub const Compilation = struct {
         return @import("qbe.zig").generateWithInterface(allocator, self.code.?, self.src, &sink, .{ .policy = policy });
     }
 
+    /// Allocate the ownership analysis of every lowered function as JSON Lines
+    /// (`OWNERSHIP-EXPLAIN-1`): roles, transfers, copy-on-write sites, moves.
+    pub fn explainOwnership(self: *Compilation, allocator: std.mem.Allocator) EmitNativeError![]u8 {
+        try self.emit();
+        return @import("ownership_explain.zig").render(allocator, self.code.?);
+    }
+
     /// Allocate a source-annotated disassembly of the lowered program.
     pub fn dump(self: *Compilation, allocator: std.mem.Allocator) EmitError![]u8 {
         try self.emit();
