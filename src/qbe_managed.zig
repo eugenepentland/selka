@@ -793,6 +793,9 @@ fn inlineIndexWrite(comptime E: type, self: *E, write: IndexRead, failure: []con
         try self.print(unsigned_below, .{ valid, write.at, write.length });
         try requireIndexBounds(E, self, valid, write.raw_index, write.length, failure);
     }
+    // QBE-MOVE-ELIDE-1: the update before this write already wrote the value
+    // into this element where it lives.
+    if (self.moves.placed(self.pc)) return;
     const address = try elementAddress(E, self, write.input, write.at, write.element);
     try self.writeValue(address, try self.load("s", write.slot), write.element);
 }

@@ -2841,3 +2841,72 @@ test "QBE-INLINE-ALLOC-1 a program with arenas bumps the arena window before cal
     try std.testing.expect(std.mem.indexOf(u8, body, "@cell_slow").? < arena and arena < call);
     try std.testing.expect(std.mem.indexOf(u8, body, "@cell_arena") != null);
 }
+
+const move_elision_program =
+    \\record P:
+    \\    x: int
+    \\    y: int
+    \\    z: int
+    \\    w: int
+    \\
+    \\
+    \\def bump(p: P) -> P:
+    \\    q = p
+    \\    q.x = q.x + 1
+    \\    return q
+    \\
+    \\
+    \\def walk(n: int) -> int:
+    \\    p = P(x=0, y=1, z=2, w=3)
+    \\    for i in range(n):
+    \\        p.x = p.x + i
+    \\        p.y = p.y + 1
+    \\    return p.x + p.y
+    \\
+    \\
+    \\def shift(ps: mut list[P]) -> None:
+    \\    for i in range(len(ps)):
+    \\        ps[i].x = ps[i].x + 1
+    \\
+    \\
+    \\def keep(p: P) -> int:
+    \\    q = p
+    \\    r = q
+    \\    r.x = 5
+    \\    return q.x + r.x
+    \\
+    \\
+    \\def main() -> int:
+    \\    ps = [P(x=1, y=2, z=3, w=4)]
+    \\    shift(mut ps)
+    \\    return walk(3) + bump(ps[0]).x + keep(ps[0])
+;
+
+/// How many aggregate copies (`blit`s) function `name`'s unit performs.
+fn blits(manifest: Manifest, name: []const u8) !usize {
+    const unit = named(manifest, name) orelse return error.TestUnexpectedResult;
+    return std.mem.count(u8, unit.il, " blit ");
+}
+
+// spec: QBE-MOVE-ELIDE-1
+test "QBE-MOVE-ELIDE-1 a field write through a moved record or a list element copies nothing" {
+    const a = std.testing.allocator;
+    var parsed = try emitted(a, move_elision_program);
+    defer parsed.deinit();
+    // `q = p` still copies the caller's record; `q.x = ...` updates `q` in place.
+    try std.testing.expectEqual(@as(usize, 1), try blits(parsed.value, "bump"));
+    // Two field writes per iteration, each formerly three copies, now none.
+    try std.testing.expectEqual(@as(usize, 0), try blits(parsed.value, "walk"));
+    // `ps[i].x = ...` writes the element where it lives.
+    try std.testing.expectEqual(@as(usize, 0), try blits(parsed.value, "shift"));
+}
+
+// spec-case: QBE-MOVE-ELIDE-1
+test "QBE-MOVE-ELIDE-1 a record read again after the copy keeps its own copy" {
+    const a = std.testing.allocator;
+    var parsed = try emitted(a, move_elision_program);
+    defer parsed.deinit();
+    // `r = q` is a real copy: `q` is read after `r` is written. `q = p` copies
+    // the caller's record. The write into `r` itself is in place.
+    try std.testing.expectEqual(@as(usize, 2), try blits(parsed.value, "keep"));
+}

@@ -43,8 +43,13 @@ pub fn emit(self: anytype, op: @FieldType(bytecode.Instruction, "op"), stack: []
             if (try fieldWriteUpdating(@TypeOf(self), self, self.pc)) |write| return self.store(base, try fieldWriteRecord(@TypeOf(self), self, write, base));
             const source = try self.load("s", base);
             const cell = self.program.records[record.ty.recordIndex()].isManagedRecord();
-            const pointer = if (cell) source else try self.aggregatePointer();
-            if (!cell) try self.print(" blit %v{d}, %v{d}, {d}\n", .{ source, pointer, (try self.layout(record.ty)).size });
+            // QBE-MOVE-ELIDE-1: a base whose value moves here — out of a local
+            // no one reads again, or out of a list element the next
+            // instruction writes the result back over — is updated where it
+            // lives instead of in a scratch copy.
+            const in_place = self.moves.update(self.pc) != .copy;
+            const pointer = if (cell or in_place) source else try self.aggregatePointer();
+            if (!cell and !in_place) try self.print(" blit %v{d}, %v{d}, {d}\n", .{ source, pointer, (try self.layout(record.ty)).size });
             if (cell and try storesReference(@TypeOf(self), self, record.ty, record.indices)) try @import("qbe_alloc.zig").barrier(@TypeOf(self), self, pointer);
             for (record.indices, 0..) |index, i| {
                 const member = try self.field(record.ty, index);
@@ -575,6 +580,11 @@ fn reachableRead(comptime E: type, self: E, at: usize, slot: usize) Error!bool {
         }
     }
     for (code, 0..) |instruction, pc| if (reached[pc] and readsLocal(instruction.op, slot)) return true;
+    // QBE-MOVE-ELIDE-1: a read of an alias reads this local's slot.
+    for (code, 0..) |instruction, pc| if (reached[pc]) switch (instruction.op) {
+        .load_local => |target| if (self.moves.resolve(@backingInt(target)) == slot) return true,
+        else => {},
+    };
     return false;
 }
 

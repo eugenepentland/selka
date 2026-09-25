@@ -5,6 +5,8 @@ const zero_local = @import("qbe_format.zig").zero_local;
 const arena_lower = @import("qbe_arena.zig");
 const borrow_lower = @import("qbe_borrow.zig");
 const liveness = @import("qbe_liveness.zig");
+const ownership = @import("ownership.zig");
+const moves_module = @import("qbe_moves.zig");
 const range_keys = @import("qbe_range_keys.zig");
 const loop_facts = @import("qbe_loop_facts.zig");
 const loop_version = @import("qbe_loop_version.zig");
@@ -1334,6 +1336,10 @@ fn frameCallee(name: []const u8) bool {
     return false;
 }
 
+/// One read of a local into an operand slot: the local, the slot and the pc of
+/// the reading instruction.
+const LocalRead = struct { index: usize, slot: usize, pc: usize };
+
 const Emitter = struct {
     allocator: std.mem.Allocator,
     program: bytecode.Program,
@@ -1405,6 +1411,14 @@ const Emitter = struct {
     /// Per instruction, the locals a safepoint there publishes as roots
     /// (`QBE-ROOTLIVE-1`); null publishes every traced local.
     live_roots: ?liveness.Roots = null,
+    /// The liveness of every local, solved once and read by root planning,
+    /// the ownership analysis and the move planner alike
+    /// (`OWNERSHIP-ANALYSIS-1`).
+    live: ?liveness.Solution = null,
+    /// The ownership analysis of this function (`OWNERSHIP-ANALYSIS-1`).
+    ownership: ?ownership.Analysis = null,
+    /// The aggregate copies this function skips (`QBE-MOVE-ELIDE-1`).
+    moves: moves_module.Plan = .{},
     /// The slices lowered as described dictionary keys and where their spans
     /// live (`DICT-RANGE-KEY-1`).
     range_keys: range_keys.Plan = .{},
@@ -1445,7 +1459,7 @@ const Emitter = struct {
     /// control reaches `pc` without executing its linear predecessor. The answer
     /// comes from one pass over the unit, so a question asked once per local read
     /// costs a lookup rather than a walk of the whole function.
-    fn isBranchTarget(self: *Emitter, pc: usize) bool {
+    pub fn isBranchTarget(self: *Emitter, pc: usize) bool {
         return pc < self.branch_targets.len and self.branch_targets[pc];
     }
     /// Mark every instruction a branch can reach directly.
@@ -1551,6 +1565,7 @@ const Emitter = struct {
         self.states = ir.states;
         self.branch_targets = try self.collectBranchTargets();
         self.by_reference = try self.addressLocals();
+        try self.planOwnership();
         self.range_keys = try self.planRangeKeys();
         // QBE-LOOP-VERSION-1: only a build whose value guards are on has
         // anything to prove, and step accounting counts every instruction the
@@ -1572,6 +1587,21 @@ const Emitter = struct {
         if (try self.frameBytes(capacity, try declaredTemporaryBytes(text)) <= native_frame_limit) return text;
         self.restart(serial);
         return self.lower(name, capacity, .{ .heap = possible });
+    }
+    /// Solve liveness once, run the ownership analysis over it and plan the
+    /// aggregate copies it proves unnecessary (`OWNERSHIP-ANALYSIS-1`,
+    /// `QBE-MOVE-ELIDE-1`). Root planning reads the same solution.
+    fn planOwnership(self: *Emitter) GenerateError!void {
+        const locals = self.function.scope.locals;
+        const pinned = try self.allocator.alloc(bool, locals.len);
+        for (locals, pinned) |local, *pin| pin.* = (try self.layout(local.ty)).drop;
+        const input: liveness.Input = .{ .function = self.function, .states = self.states, .pinned = pinned };
+        self.live = try liveness.solve(self.allocator, input);
+        self.ownership = ownership.analyze(self.allocator, .{ .program = self.program, .function = self.function, .states = self.states, .live = self.live.? }) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            error.InternalError => return error.InternalError,
+        };
+        self.moves = try moves_module.Lower(Emitter).plan(self);
     }
     /// Lower the analysed function with its frame placed as `frame` says.
     fn lower(self: *Emitter, name: []const u8, capacity: usize, frame: Frame) GenerateError![]const u8 {
@@ -1749,9 +1779,17 @@ const Emitter = struct {
     /// frame suspended, so the slot's address is a valid stand-in for the copy
     /// for exactly as long as the operand lives.
     fn borrowableLocal(self: *Emitter, index: usize, slot: usize) GenerateError!bool {
+        return self.borrowableAt(.{ .index = index, .slot = slot, .pc = self.pc });
+    }
+    /// `borrowableLocal` for a read of local `read.index` into operand slot
+    /// `read.slot` by the instruction at `read.pc`, which the move planner
+    /// (`qbe_moves.zig`) asks before any instruction is lowered.
+    pub fn borrowableAt(self: *Emitter, read: LocalRead) GenerateError!bool {
+        const index = read.index;
+        const slot = read.slot;
         const value = try self.layout(self.function.scope.locals[index].ty);
         if (value.drop) return false;
-        if (self.pendingReference(index)) return false;
+        if (self.pendingReference(index, read.pc)) return false;
         // A zero-length aggregate copies nothing; it keeps the scratch the
         // frame protocol places after the entry block, because that scratch is
         // what stops QBE folding a null-like address into the load.
@@ -1764,7 +1802,7 @@ const Emitter = struct {
         // through this read. A call in the window runs with this frame suspended
         // and reads the operand during its own execution, so the address it was
         // handed stays valid.
-        var consumer = self.pc + 1;
+        var consumer = read.pc + 1;
         while (true) {
             if (consumer >= self.function.scope.instructions.len or consumer >= self.states.len) return false;
             if (self.states[consumer] == null) return false;
@@ -1797,10 +1835,10 @@ const Emitter = struct {
     /// through that address, so this read cannot name the same storage. The
     /// operands below were all pushed at or after the last instruction that ran
     /// with an empty stack, so the scan stops there.
-    fn pendingReference(self: *Emitter, index: usize) bool {
-        const below = self.states[self.pc] orelse return true;
+    fn pendingReference(self: *Emitter, index: usize, at: usize) bool {
+        const below = self.states[at] orelse return true;
         if (below.len == 0) return false;
-        var pc = self.pc;
+        var pc = at;
         while (pc > 0) {
             pc -= 1;
             switch (self.function.scope.instructions[pc].op) {
@@ -2414,6 +2452,40 @@ const Emitter = struct {
         try self.print(")\n", .{});
         if (indirect) try self.print(" storel %aux{d}, %s{d}\n", .{ self.pc, h - count }) else try self.store(h - count, v);
     }
+    /// Lower `store_local` of operand slot `h - 1` into local `slot`.
+    fn storeLocal(self: *Emitter, slot: typed.LocalId, h: usize) GenerateError!void {
+        const index = @backingInt(slot);
+        // QBE-MOVE-ELIDE-1: an alias's value already sits in the slot
+        // it names, and an update written in place into this local's
+        // own slot left nothing to copy.
+        if (self.moves.aliased(index)) return;
+        const ty = self.function.scope.locals[index].ty;
+        // QBE-CTORFWD-1 and QBE-ARRAYWRITE-1: the instruction before
+        // this store may already have written this local where it
+        // lives — a constructor field by field, a `replace` one
+        // element — leaving nothing to copy.
+        const forwarded = self.moves.placed(self.pc) or try @import("qbe_aggregate.zig").storeForwarded(@TypeOf(self), self, self.pc, index);
+        // QBE-ELEMENT-ADDRESS-1: an iteration local that names its
+        // element in place holds the checked address the read produced,
+        // so the store keeps that word instead of copying the element
+        // into the frame and reading it back out of there.
+        if (self.callerStorage(index)) {
+            // A `mut` array parameter stores into the caller's array.
+            if (!forwarded) {
+                const caller = try self.load("l", index);
+                try self.print(" blit %v{d}, %v{d}, {d}\n", .{ try self.load("s", h - 1), caller, (try self.layout(ty)).size });
+            }
+        } else if (self.byReference(index)) {
+            try self.print(" storel %v{d}, %l{d}\n", .{ try self.load("s", h - 1), index });
+        } else if (!forwarded) {
+            const v = try self.load("s", h - 1);
+            if ((try self.layout(ty)).drop) {
+                try self.print(drop_local, .{ try self.descriptor(ty), index });
+            }
+            if (scalar(ty, self.program.records)) try self.print(" storel %v{d}, %l{d}\n", .{ v, index }) else try self.print(" blit %v{d}, %l{d}, {d}\n", .{ v, index, (try self.layout(ty)).size });
+        }
+        if (self.range_keys.role(self.pc) == .store) try range_keys.Lower(Emitter).store(self, index, h - 1);
+    }
     fn emitOp(self: *Emitter, op: @FieldType(bytecode.Instruction, "op"), stack: []const typed.Type) GenerateError!void {
         const h = stack.len;
         switch (op) {
@@ -2483,41 +2555,15 @@ const Emitter = struct {
                 if (self.byReference(index)) try self.store(h, try self.load("l", index)) else try self.print(" storel %l{d}, %s{d}\n", .{ index, h });
             },
             .load_local, .move_local => |slot| {
-                const index = @backingInt(slot);
+                // QBE-MOVE-ELIDE-1: an alias reads the slot that holds its value
+                // (an alias is never moved from, so a move resolves to itself).
+                const index = self.moves.resolve(@backingInt(slot));
                 const ty = self.function.scope.locals[index].ty;
                 try self.readLocal(index, h);
                 if (self.range_keys.role(self.pc) == .load) try range_keys.Lower(Emitter).load(self, index, h);
                 if (op == .move_local and (try self.layout(ty)).drop) try self.zeroTracedLocal(index, ty);
             },
-            .store_local => |slot| {
-                const index = @backingInt(slot);
-                const ty = self.function.scope.locals[index].ty;
-                // QBE-CTORFWD-1 and QBE-ARRAYWRITE-1: the instruction before
-                // this store may already have written this local where it
-                // lives — a constructor field by field, a `replace` one
-                // element — leaving nothing to copy.
-                const forwarded = try @import("qbe_aggregate.zig").storeForwarded(@TypeOf(self), self, self.pc, index);
-                // QBE-ELEMENT-ADDRESS-1: an iteration local that names its
-                // element in place holds the checked address the read produced,
-                // so the store keeps that word instead of copying the element
-                // into the frame and reading it back out of there.
-                if (self.callerStorage(index)) {
-                    // A `mut` array parameter stores into the caller's array.
-                    if (!forwarded) {
-                        const caller = try self.load("l", index);
-                        try self.print(" blit %v{d}, %v{d}, {d}\n", .{ try self.load("s", h - 1), caller, (try self.layout(ty)).size });
-                    }
-                } else if (self.byReference(index)) {
-                    try self.print(" storel %v{d}, %l{d}\n", .{ try self.load("s", h - 1), index });
-                } else if (!forwarded) {
-                    const v = try self.load("s", h - 1);
-                    if ((try self.layout(ty)).drop) {
-                        try self.print(drop_local, .{ try self.descriptor(ty), index });
-                    }
-                    if (scalar(ty, self.program.records)) try self.print(" storel %v{d}, %l{d}\n", .{ v, index }) else try self.print(" blit %v{d}, %l{d}, {d}\n", .{ v, index, (try self.layout(ty)).size });
-                }
-                if (self.range_keys.role(self.pc) == .store) try range_keys.Lower(Emitter).store(self, index, h - 1);
-            },
+            .store_local => |slot| try self.storeLocal(slot, h),
             .drop_local => |slot| {
                 const ty = self.function.scope.locals[@backingInt(slot)].ty;
                 if ((try self.layout(ty)).drop) {

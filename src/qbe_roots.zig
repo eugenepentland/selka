@@ -218,7 +218,10 @@ fn rootLiveness(comptime Emitter: type, self: *Emitter) GenerateError!liveness.R
     const pinned = try self.allocator.alloc(bool, locals.len);
     defer self.allocator.free(pinned);
     for (locals, pinned) |local, *pin| pin.* = (try self.layout(local.ty)).drop;
-    return liveness.analyze(self.allocator, .{ .function = self.function, .states = self.states, .pinned = pinned });
+    const input: liveness.Input = .{ .function = self.function, .states = self.states, .pinned = pinned };
+    // OWNERSHIP-ANALYSIS-1: the solution the ownership analysis read.
+    if (self.live) |solution| return liveness.roots(self.allocator, input, solution);
+    return liveness.analyze(self.allocator, input);
 }
 /// Whether this function keeps the root protocol at all: it has a live
 /// traced local or operand and at least one instruction that can collect.
@@ -244,10 +247,12 @@ fn roots(comptime Emitter: type, self: *Emitter, stack: []const typed.Type) Gene
     for (self.function.scope.locals, 0..) |local, i| if (try publishedRoot(Emitter, self, i, local.ty)) {
         // A parameter read through the caller's address is traced where it
         // lives; every other aggregate local is traced at its own slot.
-        const traced = if (self.byReference(i))
-            try std.fmt.allocPrint(self.allocator, "%v{d}", .{try self.load("l", i)})
+        // QBE-MOVE-ELIDE-1: an alias's value lives in the slot it names.
+        const storage = self.moves.resolve(i);
+        const traced = if (self.byReference(storage))
+            try std.fmt.allocPrint(self.allocator, "%v{d}", .{try self.load("l", storage)})
         else
-            try std.fmt.allocPrint(self.allocator, "%l{d}", .{i});
+            try std.fmt.allocPrint(self.allocator, "%l{d}", .{storage});
         try pushRoot(Emitter, self, .{ .index = count, .source = traced, .copy = scalar(local.ty, self.program.records), .descriptor = try self.descriptor(local.ty) }, previous, base);
         previous = try std.fmt.allocPrint(self.allocator, "%root{d}", .{count});
         count += 1;
