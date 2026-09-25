@@ -31,6 +31,9 @@ Strict JSON; unknown fields, duplicate keys and unsupported versions reject:
 `"interface_files": true` is also accepted: it makes every module's generated
 interface file part of checking the project
 ([interface files](interface-files.md#enforcing-current-files-with-mylangjson)).
+`"value_semantics": true` turns on [value semantics](../value-semantics.md#turning-it-on)
+for every command whose entry the configuration covers, as `--value-semantics`
+does; it must be `true` or `false`.
 
 `import_policy` is optional. When present it must be a nonempty relative or
 absolute path; the file must exist and parse under the
