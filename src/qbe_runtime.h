@@ -327,6 +327,20 @@ extern MylQbeErrorTrace myl_qbe_error_trace;
 void myl_qbe_error_trace_origin(const MylQbeFunction *function, uint64_t site);
 /* Append `site` of `function`: a `return` or `?` passed an `Err` on there. */
 void myl_qbe_error_trace_append(const MylQbeFunction *function, uint64_t site);
+/* ERROR-TRACE-6: the same two recorders under clang's `preserve_most`
+ * convention, which the LLVM translation calls instead (`preserve_mostcc`):
+ * the arguments travel as in the C convention, and the recorder keeps every
+ * general-purpose register but r11, so an optimized caller keeps its live
+ * values in registers across a recording rather than spilling and rebuilding
+ * them on the error path. QBE cannot call a custom convention and keeps the
+ * C-convention pair above, whose bodies need no register saves. Only clang
+ * builds them, which every runtime build is; a runtime built otherwise lacks
+ * them, so an LLVM-translated caller fails to link instead of trusting
+ * registers a C-convention body would clobber. */
+#if defined(__clang__) && defined(__x86_64__)
+__attribute__((preserve_most)) void myl_qbe_error_trace_origin_preserve_most(const MylQbeFunction *function, uint64_t site);
+__attribute__((preserve_most)) void myl_qbe_error_trace_append_preserve_most(const MylQbeFunction *function, uint64_t site);
+#endif
 /* Render the trace, one `  path:line:column  function  action` line per site,
  * innermost origin first, into `out` (NUL-terminated when `size` allows).
  * Returns the full length, so a call with no buffer measures it. */

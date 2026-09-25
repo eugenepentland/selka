@@ -986,16 +986,31 @@ int mylang_qbe_run(uint64_t (*entry)(void *)) {
    paths, through the two recorders below: a new `Err` value restarts it and
    every later return or `?` that passes an `Err` on appends one site. Both are
    cold and never inlined, so an error branch stays one call wherever an
-   optimizer weighs the code around it. */
+   optimizer weighs the code around it. Each has a `preserve_most` twin for
+   LLVM-translated callers (ERROR-TRACE-6) that runs the same body. */
 MylQbeErrorTrace myl_qbe_error_trace;
-__attribute__((cold, noinline)) void myl_qbe_error_trace_origin(const MylQbeFunction *function, uint64_t site) {
+static inline __attribute__((always_inline)) void error_trace_record_origin(const MylQbeFunction *function, uint64_t site) {
     myl_qbe_error_trace.origin = (MylQbeErrorSite){ function, site };
     myl_qbe_error_trace.count = 0;
 }
-__attribute__((cold, noinline)) void myl_qbe_error_trace_append(const MylQbeFunction *function, uint64_t site) {
+static inline __attribute__((always_inline)) void error_trace_record_append(const MylQbeFunction *function, uint64_t site) {
     uint64_t index = myl_qbe_error_trace.count++;
     myl_qbe_error_trace.ring[index % MYL_QBE_ERROR_TRACE_RING] = (MylQbeErrorSite){ function, site };
 }
+__attribute__((cold, noinline)) void myl_qbe_error_trace_origin(const MylQbeFunction *function, uint64_t site) {
+    error_trace_record_origin(function, site);
+}
+__attribute__((cold, noinline)) void myl_qbe_error_trace_append(const MylQbeFunction *function, uint64_t site) {
+    error_trace_record_append(function, site);
+}
+#if defined(__clang__) && defined(__x86_64__)
+__attribute__((cold, noinline, preserve_most)) void myl_qbe_error_trace_origin_preserve_most(const MylQbeFunction *function, uint64_t site) {
+    error_trace_record_origin(function, site);
+}
+__attribute__((cold, noinline, preserve_most)) void myl_qbe_error_trace_append_preserve_most(const MylQbeFunction *function, uint64_t site) {
+    error_trace_record_append(function, site);
+}
+#endif
 /* What one trace line says happened at its site; indexed by the site's kind. */
 static const char *const error_trace_actions[] = {
     "Err(...) created", "Err produced by the runtime", "returned", "? propagated", "? converted to ",

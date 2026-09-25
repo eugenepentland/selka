@@ -94,7 +94,7 @@ const curated = [_]Entry{
 pub fn attributes(name: []const u8) []const u8 {
     if (std.mem.eql(u8, name, "myl_qbe_heap")) return "memory(none) nounwind willreturn";
     // ERROR-TRACE-1: an error return trace recorder runs only on an error path.
-    if (traceRecorder(name)) return "cold nounwind";
+    if (traceRecorder(name) or preservingRecorder(name)) return "cold nounwind";
     return "";
 }
 
@@ -106,6 +106,30 @@ pub const free_call = "\"call-inline-cost\"=\"0\"";
 /// Whether `name` is one of the runtime's error return trace recorders.
 pub fn traceRecorder(name: []const u8) bool {
     return std.mem.eql(u8, name, "myl_qbe_error_trace_origin") or std.mem.eql(u8, name, "myl_qbe_error_trace_append");
+}
+
+/// ERROR-TRACE-6: the runtime symbol a call to `name` in the IL is
+/// translated into. A trace recorder call goes to its `preserve_most` twin
+/// (`qbe_runtime.h`), which keeps every general-purpose register but r11, so
+/// the caller keeps its live values in registers across the recording; every
+/// other call keeps its symbol.
+pub fn translatedCallee(name: []const u8) []const u8 {
+    if (std.mem.eql(u8, name, "myl_qbe_error_trace_origin")) return "myl_qbe_error_trace_origin_preserve_most";
+    if (std.mem.eql(u8, name, "myl_qbe_error_trace_append")) return "myl_qbe_error_trace_append_preserve_most";
+    return name;
+}
+
+/// ERROR-TRACE-6: the calling convention a runtime symbol's C definition
+/// declares, spelled as LLVM writes it before a declaration's or a call's
+/// result type (with its trailing space), or "" for the C convention.
+pub fn callingConvention(name: []const u8) []const u8 {
+    if (preservingRecorder(name)) return "preserve_mostcc ";
+    return "";
+}
+
+/// Whether `name` is the `preserve_most` twin of a trace recorder.
+fn preservingRecorder(name: []const u8) bool {
+    return std.mem.eql(u8, name, "myl_qbe_error_trace_origin_preserve_most") or std.mem.eql(u8, name, "myl_qbe_error_trace_append_preserve_most");
 }
 
 /// One file of the bundled runtime tree's top level.

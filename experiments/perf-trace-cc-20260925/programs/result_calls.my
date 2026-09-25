@@ -1,0 +1,28 @@
+# result_calls: a hot loop through two small Result-returning functions and `?`.
+# About one call in seven takes the Err path. Written for the base/new check of
+# 2026-09-25: N3 stops the bytecode inliner splicing Result-returning functions.
+
+
+def checked_step(a: int, b: int) -> Result[int, int]:
+    if b % 7 == 3:
+        return Err(b % 5)
+    return Ok((a + b) % 1000003)
+
+
+def stepped(a: int, b: int) -> Result[int, int]:
+    value = checked_step(a, b)?
+    return Ok(value + 1)
+
+
+def main(out: Stream) -> int:
+    total = 0
+    errors = 0
+    for i in range(20000000):
+        match stepped(total, i):
+            case Ok(value):
+                total = value
+            case Err(code):
+                errors = errors + code
+    out.print(total)
+    out.print(errors)
+    return 0

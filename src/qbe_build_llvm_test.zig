@@ -134,9 +134,52 @@ test "an error trace recorder call is free to inline and no other call is" {
         " call $myl_qbe_error_trace_origin(l %ctx, l 5)\n call $myl_qbe_error_trace_append(l %ctx, l 6)\n ret 1\n@ok\n ret 0\n}\n";
     const traced = try llvm.translate(a, unit, options, &diagnostic);
     try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, traced, "\"call-inline-cost\"=\"0\""));
-    try std.testing.expect(std.mem.indexOf(u8, traced, "declare void @myl_qbe_error_trace_origin(ptr, i64) cold nounwind") != null);
+    try std.testing.expect(std.mem.indexOf(u8, traced, " @myl_qbe_error_trace_origin_preserve_most(ptr, i64) cold nounwind\n") != null);
     const plain = try llvm.translate(a, "export function l $g(l %ctx) {\n@start\n %v =l call $myl_qbe_heap(l %ctx)\n ret %v\n}\n", options, &diagnostic);
     try std.testing.expect(std.mem.indexOf(u8, plain, "call-inline-cost") == null);
+}
+
+/// The bundled runtime file called `name`.
+fn bundledFile(name: []const u8) []const u8 {
+    for (bundled.files) |file| if (std.mem.eql(u8, file.path, name)) return file.bytes;
+    return "";
+}
+
+// spec: ERROR-TRACE-6
+test "a trace recorder call goes to its preserve_most twin under preserve_mostcc and no other call changes convention" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const signatures: llvm.Signatures = .empty;
+    const table = try bundledTable(a);
+    const options: llvm.Options = .{ .signatures = &signatures, .runtime = &table };
+    var diagnostic: llvm.Diagnostic = .{ .unit = "traced" };
+    const unit = "export function l $f(l %ctx, l %a0) {\n@start\n %h =l call $myl_qbe_heap(l %ctx)\n jnz %a0, @fail, @ok\n@fail\n" ++
+        " call $myl_qbe_error_trace_origin(l %ctx, l 5)\n call $myl_qbe_error_trace_append(l %ctx, l 6)\n ret %h\n@ok\n ret 0\n}\n";
+    const traced = try llvm.translate(a, unit, options, &diagnostic);
+    try std.testing.expect(std.mem.indexOf(u8, traced, "\ndeclare preserve_mostcc void @myl_qbe_error_trace_origin_preserve_most(ptr, i64) cold nounwind\n") != null);
+    try std.testing.expect(std.mem.indexOf(u8, traced, "\ndeclare preserve_mostcc void @myl_qbe_error_trace_append_preserve_most(ptr, i64) cold nounwind\n") != null);
+    try std.testing.expect(std.mem.indexOf(u8, traced, "  call preserve_mostcc void @myl_qbe_error_trace_origin_preserve_most(ptr ") != null);
+    try std.testing.expect(std.mem.indexOf(u8, traced, "  call preserve_mostcc void @myl_qbe_error_trace_append_preserve_most(ptr ") != null);
+    // Two declarations and two calls name a twin; the C-convention recorders are
+    // never named, and the heap helper keeps the C convention.
+    try std.testing.expectEqual(@as(usize, 4), std.mem.count(u8, traced, "preserve_mostcc"));
+    try std.testing.expectEqual(@as(usize, 4), std.mem.count(u8, traced, "_preserve_most("));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, traced, "@myl_qbe_error_trace_origin("));
+    try std.testing.expect(std.mem.indexOf(u8, traced, "\ndeclare ptr @myl_qbe_heap(ptr) memory(none) nounwind willreturn\n") != null);
+    // The runtime defines each twin with the convention the translation calls it
+    // with, running the body its C-convention recorder runs.
+    const header = bundledFile("qbe_runtime.h");
+    try std.testing.expect(std.mem.indexOf(u8, header, "\n__attribute__((preserve_most)) void myl_qbe_error_trace_origin_preserve_most(const MylQbeFunction *function, uint64_t site);\n") != null);
+    try std.testing.expect(std.mem.indexOf(u8, header, "\n__attribute__((preserve_most)) void myl_qbe_error_trace_append_preserve_most(const MylQbeFunction *function, uint64_t site);\n") != null);
+    const source = bundledFile("qbe_runtime.c");
+    const twin = "__attribute__((cold, noinline, preserve_most)) void myl_qbe_error_trace_{s}_preserve_most(const MylQbeFunction *function, uint64_t site) {{\n";
+    const origin = try std.fmt.allocPrint(a, twin ++ "    error_trace_record_origin(function, site);\n}}\n", .{"origin"});
+    const append = try std.fmt.allocPrint(a, twin ++ "    error_trace_record_append(function, site);\n}}\n", .{"append"});
+    try std.testing.expect(std.mem.indexOf(u8, source, origin) != null);
+    try std.testing.expect(std.mem.indexOf(u8, source, append) != null);
+    try std.testing.expect(std.mem.indexOf(u8, source, "__attribute__((cold, noinline)) void myl_qbe_error_trace_append(const MylQbeFunction *function, uint64_t site) {\n    error_trace_record_append(function, site);\n}\n") != null);
+    try std.testing.expectEqualStrings("ptr", table.signature("myl_qbe_error_trace_append_preserve_most").?.parameters[0]);
 }
 
 // spec-case: LLVM-ZIG-1

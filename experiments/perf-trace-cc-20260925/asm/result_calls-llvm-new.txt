@@ -1,0 +1,107 @@
+# result_calls, --backend llvm --llvm-opt 3 --lto, entry_run hot loop (objdump -M intel)
+ 100772a:	movabs rsi,0x7fffffffffffffff
+ 1007734:	xor    r12d,r12d
+ 1007737:	movabs r8,0xcccccccccccccccd
+ 1007741:	movabs r9,0x2492492492492493
+ 100774b:	lea    r10,[rbp-0x50]
+ 100774f:	lea    r15,[rbp-0x58]
+ 1007753:	movabs r13,0x8637a2a24e5ace35
+ 100775d:	xor    ecx,ecx
+ 100775f:	xor    r14d,r14d
+ 1007762:	jmp    100778c <entry_run+0x22c>
+ 1007764:	data16 data16 cs nop WORD PTR [rax+rax*1+0x0]
+ 1007770:	test   edx,edx
+ 1007772:	jne    1007e33 <entry_run+0x8d3>
+ 1007778:	mov    r12,QWORD PTR [rbp-0x68]
+ 100777c:	inc    rcx
+ 100777f:	cmp    rcx,0x1312d00
+ 1007786:	je     100789b <entry_run+0x33b>
+ 100778c:	mov    rdx,rcx
+ 100778f:	mulx   rax,rax,r8
+ 1007794:	mulx   rdx,rdx,r9
+ 1007799:	cmp    QWORD PTR [rbx+0x40],rsp
+ 100779d:	ja     1007e57 <entry_run+0x8f7>
+ 10077a3:	mov    rdi,rcx
+ 10077a6:	sub    rdi,rdx
+ 10077a9:	shr    rdi,1
+ 10077ac:	add    rdi,rdx
+ 10077af:	shr    rdi,0x2
+ 10077b3:	lea    rdx,[rdi*8+0x0]
+ 10077bb:	sub    rdx,rdi
+ 10077be:	add    rdx,0x3
+ 10077c2:	cmp    rdx,rcx
+ 10077c5:	je     100786d <entry_run+0x30d>
+ 10077cb:	mov    rdi,r12
+ 10077ce:	add    rdi,rcx
+ 10077d1:	jo     1007e6c <entry_run+0x90c>
+ 10077d7:	mov    rax,rdi
+ 10077da:	imul   r13
+ 10077dd:	add    rdx,rdi
+ 10077e0:	mov    rax,rdx
+ 10077e3:	shr    rax,0x3f
+ 10077e7:	sar    rdx,0x13
+ 10077eb:	add    rdx,rax
+ 10077ee:	imul   rax,rdx,0xf4243
+ 10077f5:	sub    rdi,rax
+ 10077f8:	mov    rax,rdi
+ 10077fb:	sar    rax,0x3f
+ 10077ff:	and    eax,0xf4243
+ 1007804:	add    rax,rdi
+ 1007807:	mov    DWORD PTR [rbp-0x50],0x0
+ 100780e:	mov    rdx,QWORD PTR [r10]
+ 1007811:	mov    QWORD PTR [rbp-0x50],rdx
+ 1007815:	mov    QWORD PTR [rbp-0x48],rax
+ 1007819:	test   edx,edx
+ 100781b:	jne    1007889 <entry_run+0x329>
+ 100781d:	mov    rax,QWORD PTR [rbp-0x48]
+ 1007821:	cmp    rax,rsi
+ 1007824:	je     1007e5f <entry_run+0x8ff>
+ 100782a:	inc    rax
+ 100782d:	mov    DWORD PTR [rbp-0x58],0x0
+ 1007834:	mov    rdx,QWORD PTR [r15]
+ 1007837:	mov    QWORD PTR [rbp-0x70],rdx
+ 100783b:	mov    QWORD PTR [rbp-0x68],rax
+ 100783f:	cmp    edx,0x1
+ 1007842:	jne    1007770 <entry_run+0x210>
+ 1007848:	mov    rdx,QWORD PTR [rbp-0x68]
+ 100784c:	mov    rax,r14
+ 100784f:	add    rax,rdx
+ 1007852:	jo     1007e7a <entry_run+0x91a>
+ 1007858:	mov    r14,rax
+ 100785b:	inc    rcx
+ 100785e:	cmp    rcx,0x1312d00
+ 1007865:	jne    100778c <entry_run+0x22c>
+ 100786b:	jmp    100789b <entry_run+0x33b>
+ 100786d:	shr    rax,0x2
+ 1007871:	lea    rax,[rax+rax*4]
+ 1007875:	neg    rax
+ 1007878:	add    rax,rcx
+ 100787b:	mov    DWORD PTR [rbp-0x50],0x1
+ 1007882:	call   10087b0 <myl_qbe_error_trace_origin_preserve_most>
+ 1007887:	jmp    100780e <entry_run+0x2ae>
+ 1007889:	call   10087d2 <myl_qbe_error_trace_append_preserve_most>
+ 100788e:	mov    DWORD PTR [rbp-0x58],0x1
+ 1007895:	mov    rax,QWORD PTR [rbp-0x48]
+ 1007899:	jmp    1007834 <entry_run+0x2d4>
+ 100789b:	mov    edi,0x1
+ 10078a0:	mov    esi,0x20
+ 10078a5:	call   100d620 <calloc@plt>
+
+# recorders
+00000000010087b0 <myl_qbe_error_trace_origin_preserve_most>:
+ 10087b0:	mov    QWORD PTR [rip+0x7935],0x1002ab0        # 10100f0 <myl_qbe_error_trace>
+ 10087bb:	mov    QWORD PTR [rip+0x7932],0x9        # 10100f8 <myl_qbe_error_trace+0x8>
+ 10087c6:	mov    QWORD PTR [rip+0x792f],0x0        # 1010100 <myl_qbe_error_trace+0x10>
+ 10087d1:	ret
+00000000010087d2 <myl_qbe_error_trace_append_preserve_most>:
+ 10087d2:	push   rax
+ 10087d3:	mov    r11,QWORD PTR [rip+0x7926]        # 1010100 <myl_qbe_error_trace+0x10>
+ 10087da:	lea    rax,[r11+0x1]
+ 10087de:	mov    QWORD PTR [rip+0x791b],rax        # 1010100 <myl_qbe_error_trace+0x10>
+ 10087e5:	and    r11d,0x1f
+ 10087e9:	shl    r11d,0x4
+ 10087ed:	mov    QWORD PTR [r11+0x1010108],0x1002c00
+ 10087f8:	movabs rax,0x300000003
+ 1008802:	mov    QWORD PTR [r11+0x1010110],rax
+ 1008809:	pop    rax
+ 100880a:	ret

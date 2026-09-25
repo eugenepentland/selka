@@ -1,0 +1,120 @@
+# result_calls, --backend llvm --llvm-opt 3 --lto, entry_run hot loop (objdump -M intel)
+ 100774d:	movabs r8,0x7fffffffffffffff
+ 1007757:	xor    r12d,r12d
+ 100775a:	movabs r9,0xcccccccccccccccd
+ 1007764:	movabs r10,0x2492492492492493
+ 100776e:	lea    r15,[rbp-0x60]
+ 1007772:	lea    rbx,[rbp-0x68]
+ 1007776:	movabs r11,0x8637a2a24e5ace35
+ 1007780:	xor    r13d,r13d
+ 1007783:	xor    esi,esi
+ 1007785:	jmp    10077ac <entry_run+0x24c>
+ 1007787:	nop    WORD PTR [rax+rax*1+0x0]
+ 1007790:	test   ecx,ecx
+ 1007792:	jne    1007eba <entry_run+0x95a>
+ 1007798:	mov    r12,QWORD PTR [rbp-0x78]
+ 100779c:	inc    r13
+ 100779f:	cmp    r13,0x1312d00
+ 10077a6:	je     1007930 <entry_run+0x3d0>
+ 10077ac:	mov    rdx,r13
+ 10077af:	mulx   rax,rax,r9
+ 10077b4:	mulx   rcx,rcx,r10
+ 10077b9:	cmp    QWORD PTR [rdi+0x40],rsp
+ 10077bd:	ja     1007ede <entry_run+0x97e>
+ 10077c3:	mov    rdx,r13
+ 10077c6:	sub    rdx,rcx
+ 10077c9:	shr    rdx,1
+ 10077cc:	add    rdx,rcx
+ 10077cf:	shr    rdx,0x2
+ 10077d3:	lea    rcx,[rdx*8+0x0]
+ 10077db:	sub    rcx,rdx
+ 10077de:	add    rcx,0x3
+ 10077e2:	cmp    rcx,r13
+ 10077e5:	je     1007896 <entry_run+0x336>
+ 10077eb:	mov    rcx,r12
+ 10077ee:	add    rcx,r13
+ 10077f1:	jo     1007ef0 <entry_run+0x990>
+ 10077f7:	mov    rax,rcx
+ 10077fa:	imul   r11
+ 10077fd:	add    rdx,rcx
+ 1007800:	mov    rax,rdx
+ 1007803:	shr    rax,0x3f
+ 1007807:	sar    rdx,0x13
+ 100780b:	add    rdx,rax
+ 100780e:	imul   rax,rdx,0xf4243
+ 1007815:	sub    rcx,rax
+ 1007818:	mov    r14,rcx
+ 100781b:	sar    r14,0x3f
+ 100781f:	and    r14d,0xf4243
+ 1007826:	add    r14,rcx
+ 1007829:	mov    DWORD PTR [rbp-0x60],0x0
+ 1007830:	mov    rax,QWORD PTR [r15]
+ 1007833:	mov    QWORD PTR [rbp-0x60],rax
+ 1007837:	mov    QWORD PTR [rbp-0x58],r14
+ 100783b:	test   eax,eax
+ 100783d:	jne    10078e9 <entry_run+0x389>
+ 1007843:	mov    rax,QWORD PTR [rbp-0x58]
+ 1007847:	cmp    rax,r8
+ 100784a:	je     1007ee3 <entry_run+0x983>
+ 1007850:	inc    rax
+ 1007853:	mov    DWORD PTR [rbp-0x68],0x0
+ 100785a:	mov    rcx,QWORD PTR [rbx]
+ 100785d:	mov    QWORD PTR [rbp-0x80],rcx
+ 1007861:	mov    QWORD PTR [rbp-0x78],rax
+ 1007865:	cmp    ecx,0x1
+ 1007868:	jne    1007790 <entry_run+0x230>
+ 100786e:	mov    rdx,QWORD PTR [rbp-0x78]
+ 1007872:	mov    rax,rsi
+ 1007875:	add    rax,rdx
+ 1007878:	jo     1007efb <entry_run+0x99b>
+ 100787e:	mov    rsi,rax
+ 1007881:	inc    r13
+ 1007884:	cmp    r13,0x1312d00
+ 100788b:	jne    10077ac <entry_run+0x24c>
+ 1007891:	jmp    1007930 <entry_run+0x3d0>
+ 1007896:	shr    rax,0x2
+ 100789a:	lea    r14,[rax+rax*4]
+ 100789e:	neg    r14
+ 10078a1:	add    r14,r13
+ 10078a4:	mov    DWORD PTR [rbp-0x60],0x1
+ 10078ab:	mov    QWORD PTR [rbp-0x40],rsi
+ 10078af:	call   1008830 <myl_qbe_error_trace_origin>
+ 10078b4:	movabs r11,0x8637a2a24e5ace35
+ 10078be:	movabs r10,0x2492492492492493
+ 10078c8:	movabs r9,0xcccccccccccccccd
+ 10078d2:	movabs r8,0x7fffffffffffffff
+ 10078dc:	mov    rsi,QWORD PTR [rbp-0x40]
+ 10078e0:	mov    rdi,QWORD PTR [rbp-0x30]
+ 10078e4:	jmp    1007830 <entry_run+0x2d0>
+ 10078e9:	mov    r14,rsi
+ 10078ec:	call   1008852 <myl_qbe_error_trace_append>
+ 10078f1:	movabs r11,0x8637a2a24e5ace35
+ 10078fb:	movabs r10,0x2492492492492493
+ 1007905:	movabs r9,0xcccccccccccccccd
+ 100790f:	movabs r8,0x7fffffffffffffff
+ 1007919:	mov    rsi,r14
+ 100791c:	mov    rdi,QWORD PTR [rbp-0x30]
+ 1007920:	mov    DWORD PTR [rbp-0x68],0x1
+ 1007927:	mov    rax,QWORD PTR [rbp-0x58]
+ 100792b:	jmp    100785a <entry_run+0x2fa>
+ 1007930:	mov    QWORD PTR [rbp-0x40],rsi
+ 1007934:	mov    edi,0x1
+ 1007939:	mov    esi,0x20
+ 100793e:	call   100d6a0 <calloc@plt>
+
+# recorders
+0000000001008830 <myl_qbe_error_trace_origin>:
+ 1008830:	mov    QWORD PTR [rip+0x7935],0x1002ab0        # 1010170 <myl_qbe_error_trace>
+ 100883b:	mov    QWORD PTR [rip+0x7932],0x9        # 1010178 <myl_qbe_error_trace+0x8>
+ 1008846:	mov    QWORD PTR [rip+0x792f],0x0        # 1010180 <myl_qbe_error_trace+0x10>
+ 1008851:	ret
+0000000001008852 <myl_qbe_error_trace_append>:
+ 1008852:	mov    rax,QWORD PTR [rip+0x7927]        # 1010180 <myl_qbe_error_trace+0x10>
+ 1008859:	lea    rcx,[rax+0x1]
+ 100885d:	mov    QWORD PTR [rip+0x791c],rcx        # 1010180 <myl_qbe_error_trace+0x10>
+ 1008864:	and    eax,0x1f
+ 1008867:	shl    eax,0x4
+ 100886a:	mov    QWORD PTR [rax+0x1010188],0x1002c00
+ 1008875:	movabs rcx,0x300000003
+ 100887f:	mov    QWORD PTR [rax+0x1010190],rcx
+ 1008886:	ret

@@ -90,7 +90,7 @@ fn declarations(e: *Emitter, out: *Lines) Error!void {
         }
         const attributes = try declarationAttributes(e, name);
         const separator: []const u8 = if (attributes.len != 0) " " else "";
-        try e.line(out, "declare {s} @{s}({s}){s}{s}", .{ result, name, try std.mem.join(e.arena, ", ", rendered.items), separator, attributes });
+        try e.line(out, "declare {s}{s} @{s}({s}){s}{s}", .{ runtime.callingConvention(name), result, name, try std.mem.join(e.arena, ", ", rendered.items), separator, attributes });
     }
 }
 

@@ -1,0 +1,34 @@
+# result_parse: parse small decimal fields with a Result per digit and per field,
+# propagating errors with `?`; one field in five is malformed. Written for the
+# base/new check of 2026-09-25 (N3 error return traces).
+
+
+def digit(c: int) -> Result[int, str]:
+    if c < 48 or c > 57:
+        return Err("not a digit")
+    return Ok(c - 48)
+
+
+def field(text: str) -> Result[int, str]:
+    if len(text) == 0:
+        return Err("empty field")
+    value = 0
+    for c in text.encode():
+        value = value * 10 + digit(c)?
+    return Ok(value)
+
+
+def main(out: Stream) -> int:
+    fields: list[str] = ["12345", "678", "9x1", "4242", "", "31337", "0", "7a", "99999", "1"]
+    total = 0
+    failures = 0
+    for round in range(2000000):
+        for text in fields:
+            match field(text):
+                case Ok(value):
+                    total = (total + value + round) % 1000000007
+                case Err(message):
+                    failures = failures + len(message)
+    out.print(total)
+    out.print(failures)
+    return 0

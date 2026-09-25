@@ -622,7 +622,7 @@ pub const Emitter = struct {
     pub fn renderCall(self: *Emitter, lines: *Lines, call: Call) Error!Rendered {
         const name = switch (call.target) {
             .indirect => return self.renderIndirectCall(lines, call),
-            .direct => |symbol| symbol,
+            .direct => |symbol| runtime.translatedCallee(symbol),
         };
         if (std.mem.eql(u8, name, "memset")) return self.renderMemset(lines, call.args);
         if (std.mem.eql(u8, name, self.unit.function.name)) try self.declare(name, .{ .parameters = &.{}, .result = .{ .scalar = "" }, .origin = .undefined });
@@ -635,7 +635,7 @@ pub const Emitter = struct {
             return self.fail(try self.print("{s}: call to ${s} passes {d} arguments but ${s} takes {d}", .{ self.unit.function.name, name, call.args.len, name, signature.parameters.len }));
         }
         const callee = try self.print("@{s}", .{name});
-        return self.finishCall(lines, call, signature, callee);
+        return self.finishCall(lines, call, signature, callee, runtime.callingConvention(name));
     }
 
     /// `memset` lowers to the LLVM intrinsic, typed exactly.
@@ -658,11 +658,12 @@ pub const Emitter = struct {
         const callee = try self.widen(lines, loaded, self.llvmOf(target), "i64");
         const pointer = try self.address(lines, callee);
         const signature = try self.callSiteSignature(call);
-        return self.finishCall(lines, call, signature, pointer);
+        return self.finishCall(lines, call, signature, pointer, "");
     }
 
-    /// Render the arguments and the call itself for a known signature.
-    fn finishCall(self: *Emitter, lines: *Lines, call: Call, signature: Declaration, callee: []const u8) Error!Rendered {
+    /// Render the arguments and the call itself for a known signature, under
+    /// the callee's calling convention (`runtime.callingConvention`).
+    fn finishCall(self: *Emitter, lines: *Lines, call: Call, signature: Declaration, callee: []const u8, convention: []const u8) Error!Rendered {
         var rendered = try self.renderArguments(lines, call.args, signature.parameters);
         const joined = try std.mem.join(self.arena, ", ", rendered.items);
         switch (signature.result) {
@@ -670,18 +671,18 @@ pub const Emitter = struct {
                 const destination = call.result_pointer orelse try self.fresh("aggret");
                 if (call.result_pointer == null) try self.line(lines, alloca_line, .{ destination, abi.storage, abi.alignment });
                 try rendered.insert(self.arena, 0, try self.print("ptr sret({s}) align {d} %{s}", .{ abi.storage, abi.alignment, destination }));
-                try self.line(lines, "  call void {s}({s})", .{ callee, try std.mem.join(self.arena, ", ", rendered.items) });
+                try self.line(lines, "  call {s}void {s}({s})", .{ convention, callee, try std.mem.join(self.arena, ", ", rendered.items) });
                 return .{ .value = try self.print("%{s}", .{destination}), .aggregate = abi };
             },
             .scalar => |result| if (std.mem.eql(u8, result, "void")) {
-                try self.line(lines, "  call void {s}({s})", .{ callee, joined });
+                try self.line(lines, "  call {s}void {s}({s})", .{ convention, callee, joined });
                 return .{ .value = "0", .aggregate = null };
             },
         }
         const aggregate: ?Abi = if (signature.result == .aggregate) signature.result.aggregate else null;
         const result_type = if (aggregate) |abi| abi.value.? else signature.result.scalar;
         const value = try self.fresh("call");
-        try self.line(lines, "  %{s} = call {s} {s}({s})", .{ value, result_type, callee, joined });
+        try self.line(lines, "  %{s} = call {s}{s} {s}({s})", .{ value, convention, result_type, callee, joined });
         if (std.mem.eql(u8, result_type, "ptr")) {
             const integer = try self.fresh("calladdr");
             try self.line(lines, address_line, .{ integer, value });
