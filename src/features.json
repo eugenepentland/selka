@@ -299,7 +299,7 @@
     },
     "aggregate-copy-elision": {
       "kind": "language",
-      "summary": "A read-only aggregate parameter, a short-lived local and a match binding that owns nothing are read where they live, so field reads, tag tests and payload projections are loads rather than aggregate copies while record values keep snapshot semantics; a field write to a record whose old value is never read again, or to a list element written straight back, updates it in place.",
+      "summary": "A read-only aggregate parameter, a short-lived local and a match binding that owns nothing are read where they live, so field reads, tag tests and payload projections are loads rather than aggregate copies while record values keep snapshot semantics; a field write to a record whose old value is never read again updates it in place.",
       "doc": "docs/performance.md#records-are-values-not-copies"
     },
     "byte-views": {

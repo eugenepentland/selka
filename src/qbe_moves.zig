@@ -2,7 +2,7 @@
 //! (`QBE-MOVE-ELIDE-1`), on today's collector.
 //!
 //! A record is a value, so the backend copies one wherever two names could
-//! otherwise see each other's writes. Three of those copies are never observed,
+//! otherwise see each other's writes. Two of those copies are never observed,
 //! and the ownership analysis (`ownership.zig`) proves it from the liveness the
 //! root planner already solves:
 //!
@@ -16,11 +16,6 @@
 //!    can write `x`'s slot before the result is consumed, the fields are written
 //!    into `x`'s own slot, and a store of that result back into `x` copies
 //!    nothing.
-//!  * *Element write-back.* `xs[i].f = v` reads the element's address, updates
-//!    a copy and writes the copy back over the element. When the write names
-//!    the same list and index as the read, with nothing in between that can
-//!    call, allocate or write either, the fields are written into the element
-//!    where it lives and the write-back copies nothing.
 //!
 //! Every produced value, trap, trace and exit status is the one the copies
 //! produced.
@@ -41,9 +36,13 @@ pub const Update = union(enum) {
     copy,
     /// Into the named local's own slot, the base's storage.
     slot: u32,
-    /// Into the list element whose address the named local holds.
-    element: u32,
 };
+// An update whose base is a borrowed list element written straight back
+// (`xs[i].f = v`) keeps its copies. Writing the field into the element in
+// place cut nbody's instructions to 0.68x on the QBE backend, but under the
+// LLVM backend with full LTO it raised them to 1.06x (thin LTO 1.00x, no LTO
+// 0.99x), an effect of the translator's memory classes on LLVM's optimizer
+// rather than of the stores themselves, so it waits for that to be understood.
 
 /// The copies one function skips.
 pub const Plan = struct {
@@ -51,8 +50,8 @@ pub const Plan = struct {
     aliases: []const u32 = &.{},
     /// Per instruction, how an update there writes its result.
     updates: []const Update = &.{},
-    /// Per instruction, whether a store or element write there finds its
-    /// value already in place.
+    /// Per instruction, whether a store there finds its value already in
+    /// place.
     in_place: []const bool = &.{},
 
     /// The local whose slot holds local `index`'s value, or `index` itself.
@@ -68,7 +67,7 @@ pub const Plan = struct {
     pub fn update(self: Plan, pc: usize) Update {
         return if (pc < self.updates.len) self.updates[pc] else .copy;
     }
-    /// Whether the store or element write at `pc` has nothing left to copy.
+    /// Whether the store at `pc` has nothing left to copy.
     pub fn placed(self: Plan, pc: usize) bool {
         return pc < self.in_place.len and self.in_place[pc];
     }
@@ -180,7 +179,9 @@ fn placeUpdate(comptime E: type, self: *E, candidate: Candidate) Error!Update {
     if (base.origin != .local or base.part != .whole or base.read == none) return .copy;
     if (f.scope.instructions[base.read].op != .load_local) return .copy;
     const loaded: usize = base.local;
-    if (self.borrowsElement(loaded)) return writeBack(E, self, candidate, .{ .local = loaded, .load = base.read, .slot = at_base });
+    // A borrowed list element is not updated in place: see the note on
+    // `Update` for why its write-back keeps the copy.
+    if (self.borrowsElement(loaded)) return .copy;
     const storage = self.moves.resolve(loaded);
     if (!ownSlot(E, self, storage) or f.scope.locals[storage].ty != ty) return .copy;
     if (!try self.borrowableAt(.{ .index = storage, .slot = at_base, .pc = base.read })) return .copy;
@@ -243,104 +244,6 @@ fn resultConsumer(comptime E: type, self: *E, pc: usize, storage: usize) Error!?
     };
     if (!stores and writesLocal(self.function, consumer, storage)) return null;
     return .{ .pc = consumer, .stores = stores };
-}
-
-/// The base of an update that names a list element: the local holding the
-/// element's address, the load that read it, and its operand slot.
-const Borrowed = struct { local: usize, load: usize, slot: usize };
-
-/// Place an update whose base is a borrowed list element in that element, when
-/// the next instruction writes the result back over the same element.
-fn writeBack(comptime E: type, self: *E, candidate: Candidate, base: Borrowed) Error!Update {
-    const f = self.function;
-    const code = f.scope.instructions;
-    const write_pc = candidate.pc + 1;
-    const live = self.live orelse return .copy;
-    if (live.after(base.load, base.local)) return .copy;
-    if ((try self.layout(candidate.ty)).trace) return .copy;
-    if (write_pc >= code.len or self.states[write_pc] == null or self.isBranchTarget(write_pc)) return .copy;
-    const write = switch (code[write_pc].op) {
-        .buffer_operation => |operation| operation,
-        else => return .copy,
-    };
-    if (write.kind != .write) return .copy;
-    const owner: usize = @backingInt(write.owner);
-    const list = f.scope.locals[owner].ty;
-    if (!list.isAggregate()) return .copy;
-    const schema = self.program.records[list.recordIndex()];
-    if (!schema.managed or schema.collection.kind != .list or schema.shape.buffer.? != candidate.ty) return .copy;
-    const read = try elementRead(E, self, .{ .local = base.local, .before = base.load }) orelse return .copy;
-    if (read.owner != owner) return .copy;
-    const write_stack = candidate.analysis.operands[write_pc] orelse return .copy;
-    // A whole statement: nothing but the index and the value is on the stack,
-    // so no other operand can still name the element.
-    if (write_stack.len != 2) return .copy;
-    const index = write_stack[0];
-    if (index.origin != .local or index.part != .whole or index.local != read.index) return .copy;
-    if (!try straightLine(E, self, .{ .from = read.pc, .to = write_pc, .owner = owner, .index = read.index, .element = base.local, .store = read.pc + 1 })) return .copy;
-    candidate.in_place[write_pc] = true;
-    return .{ .element = @intCast(base.local) };
-}
-
-/// The element read that last filled a borrowed element local before `before`:
-/// its pc, its receiver and the local its index was loaded from.
-const Read = struct { pc: usize, owner: usize, index: u32 };
-/// Where to look for the element read: the borrowed local and the pc it is
-/// read at.
-const Lookup = struct { local: usize, before: usize };
-
-fn elementRead(comptime E: type, self: *E, lookup: Lookup) Error!?Read {
-    const code = self.function.scope.instructions;
-    var at = lookup.before;
-    while (at > 1) {
-        at -= 1;
-        if (!writesLocal(self.function, at, lookup.local)) continue;
-        if (code[at].op != .store_local) return null;
-        const read = switch (code[at - 1].op) {
-            .buffer_operation => |operation| operation,
-            else => return null,
-        };
-        if (read.kind != .read) return null;
-        const stack = (self.ownership orelse return null).operands[at - 1] orelse return null;
-        if (stack.len == 0) return null;
-        const index = stack[stack.len - 1];
-        if (index.origin != .local or index.part != .whole) return null;
-        return .{ .pc = at - 1, .owner = @backingInt(read.owner), .index = index.local };
-    }
-    return null;
-}
-
-/// The window from an element read to the write that puts the element back.
-const Window = struct { from: usize, to: usize, owner: usize, index: u32, element: usize, store: usize };
-
-/// Whether the window runs straight through: no branch enters it, nothing in it
-/// writes the list, the index or (but for the one store) the element local, and
-/// every instruction between the read and the write only pushes, loads, reads
-/// fields or computes scalars — nothing that can call, allocate, release or
-/// write memory.
-fn straightLine(comptime E: type, self: *E, window: Window) Error!bool {
-    const code = self.function.scope.instructions;
-    for (window.from + 1..window.to + 1) |pc| {
-        if (self.states[pc] == null or self.isBranchTarget(pc)) return false;
-        if (writesLocal(self.function, pc, window.owner) or writesLocal(self.function, pc, window.index)) return false;
-        if (pc != window.store and writesLocal(self.function, pc, window.element)) return false;
-        if (pc == window.to or pc == window.to - 1) continue;
-        if (!inert(code[pc].op)) return false;
-    }
-    return true;
-}
-
-/// Instructions that neither call, allocate, release nor write memory, and
-/// the element store itself.
-fn inert(op: @FieldType(bytecode.Instruction, "op")) bool {
-    return switch (op) {
-        .load_local, .push_i64, .push_integer, .push_bool, .push_unit, .get_field, .wrap_domain, .unwrap_domain => true,
-        .add_i64_checked, .sub_i64_checked, .mul_i64_checked, .neg_i64_checked, .cmp_i64, .cmp_bool, .not_bool => true,
-        .binary_integer => |operation| !operation.ty.isAggregate(),
-        .store_local => true,
-        .buffer_operation => |operation| operation.kind == .read or operation.kind == .length,
-        else => false,
-    };
 }
 
 /// Whether the instruction at `pc` writes local `index`: a whole-value store, a

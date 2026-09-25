@@ -2889,7 +2889,7 @@ fn blits(manifest: Manifest, name: []const u8) !usize {
 }
 
 // spec: QBE-MOVE-ELIDE-1
-test "QBE-MOVE-ELIDE-1 a field write through a moved record or a list element copies nothing" {
+test "QBE-MOVE-ELIDE-1 a field write through a moved record copies nothing" {
     const a = std.testing.allocator;
     var parsed = try emitted(a, move_elision_program);
     defer parsed.deinit();
@@ -2897,8 +2897,8 @@ test "QBE-MOVE-ELIDE-1 a field write through a moved record or a list element co
     try std.testing.expectEqual(@as(usize, 1), try blits(parsed.value, "bump"));
     // Two field writes per iteration, each formerly three copies, now none.
     try std.testing.expectEqual(@as(usize, 0), try blits(parsed.value, "walk"));
-    // `ps[i].x = ...` writes the element where it lives.
-    try std.testing.expectEqual(@as(usize, 0), try blits(parsed.value, "shift"));
+    // `ps[i].x = ...` keeps its copy into scratch and back into the element.
+    try std.testing.expectEqual(@as(usize, 2), try blits(parsed.value, "shift"));
 }
 
 // spec-case: QBE-MOVE-ELIDE-1

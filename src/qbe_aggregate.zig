@@ -43,10 +43,9 @@ pub fn emit(self: anytype, op: @FieldType(bytecode.Instruction, "op"), stack: []
             if (try fieldWriteUpdating(@TypeOf(self), self, self.pc)) |write| return self.store(base, try fieldWriteRecord(@TypeOf(self), self, write, base));
             const source = try self.load("s", base);
             const cell = self.program.records[record.ty.recordIndex()].isManagedRecord();
-            // QBE-MOVE-ELIDE-1: a base whose value moves here — out of a local
-            // no one reads again, or out of a list element the next
-            // instruction writes the result back over — is updated where it
-            // lives instead of in a scratch copy.
+            // QBE-MOVE-ELIDE-1: a base whose value moves here, out of a local
+            // no one reads again, is updated where it lives instead of in a
+            // scratch copy.
             const in_place = self.moves.update(self.pc) != .copy;
             const pointer = if (cell or in_place) source else try self.aggregatePointer();
             if (!cell and !in_place) try self.print(" blit %v{d}, %v{d}, {d}\n", .{ source, pointer, (try self.layout(record.ty)).size });

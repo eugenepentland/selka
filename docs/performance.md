@@ -133,9 +133,8 @@ and a write to a copied value stays a copy's write.
 Field writes are in place too when nothing can see the difference. The
 compiler's ownership analysis ([Ownership analysis](tooling/ownership.md))
 proves when a record's old value is never read again: `p.x = v` then writes the
-field into `p` itself rather than into a fresh copy that is copied back, a
-temporary that only renames `p` shares `p`'s storage, and `xs[i].x = v` writes
-the field into the list element where it lives. A record that is read again
+field into `p` itself rather than into a fresh copy that is copied back, and a
+temporary that only renames `p` shares `p`'s storage. A record that is read again
 after another name was written keeps its own copy, exactly as before. The same
 analysis lets the collector skip a root record for a value a live collection,
 dictionary or object already holds (`row` in `for row in rows`), since the
