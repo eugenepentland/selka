@@ -208,7 +208,81 @@ fn tracedRoot(comptime Emitter: type, self: *Emitter, index: usize, ty: typed.Ty
 fn publishedRoot(comptime Emitter: type, self: *Emitter, index: usize, ty: typed.Type) GenerateError!bool {
     if (!try tracedRoot(Emitter, self, index, ty)) return false;
     const live = self.live_roots orelse return true;
-    return live.has(self.pc, index);
+    if (!live.has(self.pc, index)) return false;
+    // QBE-BORROW-ROOT-1: a borrowed local whose owner reaches its value here
+    // needs no record of its own.
+    if (self.coverage.owners.len == 0) return true;
+    const flags = try publishedFlags(Emitter, self);
+    return flags[index];
+}
+/// How many owners a chain of covered locals may pass through before the
+/// cover is refused; a chain that long is published instead.
+const cover_depth = 8;
+/// What the safepoint decided for one local: nothing (not a live traced
+/// local), a published anchor, a covered local whose value an anchor reaches,
+/// or not yet decided.
+const Decision = enum(u8) { none, anchor, covered, pending };
+/// Whether a covered local's owner chain reaches a published anchor.
+const Reach = enum(u8) { yes, no, wait };
+/// Per local, whether the safepoint at the current pc publishes it
+/// (`QBE-BORROW-ROOT-1`). Live traced locals no owner covers are anchors and
+/// always published. A covered local is dropped when its owner chain — through
+/// dead locals that are covered themselves, or live ones already dropped —
+/// reaches an anchor; when it cannot, it becomes an anchor itself. Each
+/// dropped value is therefore reachable from a published root through a
+/// finite chain, and no two locals are dropped on each other's account.
+fn publishedFlags(comptime Emitter: type, self: *Emitter) GenerateError![]const bool {
+    if (self.published_pc == self.pc) return self.published_flags;
+    const locals = self.function.scope.locals;
+    const decisions = try self.allocator.alloc(Decision, locals.len);
+    defer self.allocator.free(decisions);
+    const live = self.live_roots.?;
+    for (locals, decisions, 0..) |local, *decision, index| {
+        const published = try tracedRoot(Emitter, self, index, local.ty) and live.has(self.pc, index);
+        decision.* = if (!published) .none else if (self.coverage.owner(self.pc, index) != null) .pending else .anchor;
+    }
+    while (true) {
+        var progress = false;
+        var first_pending: ?usize = null;
+        for (decisions, 0..) |*decision, index| {
+            if (decision.* != .pending) continue;
+            switch (try reaches(Emitter, self, decisions, index)) {
+                .yes => decision.* = .covered,
+                .no => decision.* = .anchor,
+                .wait => {
+                    if (first_pending == null) first_pending = index;
+                    continue;
+                },
+            }
+            progress = true;
+        }
+        if (progress) continue;
+        // Owners waiting on each other: publish the first to break the cycle.
+        const stuck = first_pending orelse break;
+        decisions[stuck] = .anchor;
+    }
+    const flags = try self.allocator.alloc(bool, locals.len);
+    for (flags, decisions) |*flag, decision| flag.* = decision == .anchor;
+    self.published_pc = self.pc;
+    self.published_flags = flags;
+    return flags;
+}
+/// Walk local `index`'s owner chain to a published anchor, a local already
+/// dropped (whose own chain reaches one), or a dead end.
+fn reaches(comptime Emitter: type, self: *Emitter, decisions: []const Decision, index: usize) GenerateError!Reach {
+    var at = self.coverage.owner(self.pc, index) orelse return .no;
+    for (0..cover_depth) |_| {
+        switch (decisions[at]) {
+            .anchor, .covered => return .yes,
+            .pending => return .wait,
+            .none => {
+                // A dead local still holds what it read from its own owner.
+                if (!try tracedRoot(Emitter, self, at, self.function.scope.locals[at].ty)) return .no;
+                at = self.coverage.owner(self.pc, at) orelse return .no;
+            },
+        }
+    }
+    return .no;
 }
 /// Answer which locals each safepoint publishes. A local whose type owns
 /// something is pinned: the epilogue and every overwriting store release it

@@ -2910,3 +2910,76 @@ test "QBE-MOVE-ELIDE-1 a record read again after the copy keeps its own copy" {
     // the caller's record. The write into `r` itself is in place.
     try std.testing.expectEqual(@as(usize, 2), try blits(parsed.value, "keep"));
 }
+
+const borrowed_root_program =
+    \\class Node:
+    \\    items: list[int]
+    \\
+    \\
+    \\def make(n: int) -> list[int]:
+    \\    return [n, n + 1]
+    \\
+    \\
+    \\def rows_total(rows: list[list[int]]) -> int:
+    \\    total = 0
+    \\    for row in rows:
+    \\        extra = make(len(row))
+    \\        total += row[0] + extra[1]
+    \\    return total
+    \\
+    \\
+    \\def picked(rows: list[list[int]]) -> int:
+    \\    row = rows[1]
+    \\    extra = make(len(row))
+    \\    return row[0] + extra[0] + len(rows)
+    \\
+    \\
+    \\def cleared(rows: list[list[int]], spare: mut list[list[int]]) -> int:
+    \\    row = rows[1]
+    \\    spare.clear()
+    \\    extra = make(len(row))
+    \\    return row[0] + extra[0] + len(rows)
+    \\
+    \\
+    \\def field(node: Node) -> int:
+    \\    items = node.items
+    \\    extra = make(len(items))
+    \\    return items[0] + extra[0] + len(node.items)
+    \\
+    \\
+    \\def main() -> int:
+    \\    rows = [[1, 2], [3, 4]]
+    \\    spare = [[5]]
+    \\    return rows_total(rows) + picked(rows) + cleared(rows, mut spare) + field(Node(items=[7]))
+;
+
+// spec: QBE-BORROW-ROOT-1
+test "QBE-BORROW-ROOT-1 a value a published owner reaches is not published again" {
+    const a = std.testing.allocator;
+    var parsed = try emitted(a, borrowed_root_program);
+    defer parsed.deinit();
+    // `row = rows[1]` across `make`: `rows` is published and reaches `row`.
+    const picked = try rootsPerPush(a, named(parsed.value, "picked").?.il);
+    defer a.free(picked);
+    try std.testing.expectEqualSlices(usize, &.{1}, picked);
+    // The loop's receiver is published; the loop variable is covered by it.
+    const rows = try rootsPerPush(a, named(parsed.value, "rows_total").?.il);
+    defer a.free(rows);
+    try std.testing.expectEqualSlices(usize, &.{1}, rows);
+    // A `class` field read is covered by the instance.
+    const field = try rootsPerPush(a, named(parsed.value, "field").?.il);
+    defer a.free(field);
+    try std.testing.expectEqualSlices(usize, &.{1}, field);
+}
+
+// spec-case: QBE-BORROW-ROOT-1
+test "QBE-BORROW-ROOT-1 a list of the owner's type cleared in between keeps the borrowed root" {
+    const a = std.testing.allocator;
+    var parsed = try emitted(a, borrowed_root_program);
+    defer parsed.deinit();
+    // `spare` has the type `rows` has, so `spare.clear()` could have removed
+    // `row` from the list it came from: `row` stays published at `make`.
+    const cleared = try rootsPerPush(a, named(parsed.value, "cleared").?.il);
+    defer a.free(cleared);
+    try std.testing.expectEqualSlices(usize, &.{ 3, 2 }, cleared);
+}

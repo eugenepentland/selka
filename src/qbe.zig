@@ -1419,6 +1419,12 @@ const Emitter = struct {
     ownership: ?ownership.Analysis = null,
     /// The aggregate copies this function skips (`QBE-MOVE-ELIDE-1`).
     moves: moves_module.Plan = .{},
+    /// The borrowed locals a published owner covers (`QBE-BORROW-ROOT-1`).
+    coverage: @import("qbe_cover.zig").Coverage = .{},
+    /// The pc whose published-root flags `published_flags` holds.
+    published_pc: usize = std.math.maxInt(usize),
+    /// Per local, whether the safepoint at `published_pc` publishes it.
+    published_flags: []const bool = &.{},
     /// The slices lowered as described dictionary keys and where their spans
     /// live (`DICT-RANGE-KEY-1`).
     range_keys: range_keys.Plan = .{},
@@ -1602,6 +1608,7 @@ const Emitter = struct {
             error.InternalError => return error.InternalError,
         };
         self.moves = try moves_module.Lower(Emitter).plan(self);
+        self.coverage = try @import("qbe_cover.zig").Lower(Emitter).plan(self);
     }
     /// Lower the analysed function with its frame placed as `frame` says.
     fn lower(self: *Emitter, name: []const u8, capacity: usize, frame: Frame) GenerateError![]const u8 {
