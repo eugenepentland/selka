@@ -156,13 +156,26 @@ static int same_value(const myl_native_type *type, const unsigned char *a, const
     default: return !memcmp(a,b,type->size);
     }
 }
-static inline int same_key(const myl_native_dictionary *dict, const void *entry, const void *key) {
+/* A stored `str` key against a queried one. */
+static inline int same_text_key(const void *entry, const void *key) {
+    const myl_native_text *stored=text_of(entry), *query=text_of(key);
+    return stored==query || same_text(stored,query,myl_native_text_storage(query));
+}
+/* Equality of a key that is not walked through its descriptor (HASH-KEYS-2): a
+ * `str`, a plain scalar or plain bytes wider than a word. It reads only the two
+ * keys and calls nothing, so a lookup that compares one keeps what it loaded
+ * from the dictionary in registers across the comparison instead of reloading
+ * it after a call that might have written memory; only a structural key pays
+ * for the descriptor walk. */
+static inline int same_flat_key(const myl_native_dictionary *dict, const void *entry, const void *key) {
     switch (dict->key_kind) {
-    case KEY_TEXT: return same_text(text_of(entry),text_of(key),myl_native_text_storage(text_of(key)));
-    case KEY_STRUCT: return same_value(dict->key,entry,key);
+    case KEY_TEXT: return same_text_key(entry,key);
     case KEY_WIDE: return same_octets(entry,key,dict->key->size);
     default: return scalar_bits(entry,dict->key->size)==scalar_bits(key,dict->key->size);
     }
+}
+static inline int same_key(const myl_native_dictionary *dict, const void *entry, const void *key) {
+    return dict->key_kind==KEY_STRUCT?same_value(dict->key,entry,key):same_flat_key(dict,entry,key);
 }
 /* The high and low halves of one full 64×64-bit product folded together, so
  * every output bit depends on every input bit of both factors. */
@@ -444,7 +457,7 @@ static inline __attribute__((always_inline)) size_t recall(const myl_native_dict
     if (last->state!=PROBE_FOUND || !record_key(dict,key,&bits) || bits!=last->key) return NO_ENTRY;
     if (last->entry>=dict->entries->length) return NO_ENTRY;
     const unsigned char *entry=entry_at(dict,last->entry);
-    if (dict->key_kind==KEY_TEXT) return same_key(dict,entry,key)?last->entry:NO_ENTRY;
+    if (dict->key_kind==KEY_TEXT) return same_text_key(entry,key)?last->entry:NO_ENTRY;
     record_key(dict,entry,&held);
     return held==bits?last->entry:NO_ENTRY;
 }
