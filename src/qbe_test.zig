@@ -2911,6 +2911,29 @@ test "QBE-MOVE-ELIDE-1 a record read again after the copy keeps its own copy" {
     try std.testing.expectEqual(@as(usize, 2), try blits(parsed.value, "keep"));
 }
 
+// spec-case: QBE-MOVE-ELIDE-1
+test "QBE-MOVE-ELIDE-1 an update keeps its copy while an argument still names the record" {
+    const a = std.testing.allocator;
+    var parsed = try emitted(a,
+        \\record P:
+        \\    x: int
+        \\    y: int
+        \\
+        \\
+        \\def both(a: P, b: P) -> int:
+        \\    return a.x * 100 + b.x
+        \\
+        \\
+        \\def main() -> int:
+        \\    p = P(x=1, y=2)
+        \\    return both(p, replace(p, x=2))
+    );
+    defer parsed.deinit();
+    // `p` is read for the last time as the update's base, but the first
+    // argument already names `p`'s slot: the update writes a copy.
+    try std.testing.expectEqual(@as(usize, 1), try blits(parsed.value, "main"));
+}
+
 const borrowed_root_program =
     \\class Node:
     \\    items: list[int]

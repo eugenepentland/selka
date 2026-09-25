@@ -185,6 +185,7 @@ fn placeUpdate(comptime E: type, self: *E, candidate: Candidate) Error!Update {
     if (!ownSlot(E, self, storage) or f.scope.locals[storage].ty != ty) return .copy;
     if (!try self.borrowableAt(.{ .index = storage, .slot = at_base, .pc = base.read })) return .copy;
     if (!try deadStorage(E, self, storage, base.read)) return .copy;
+    if (namedBelow(self.moves, stack[0..at_base], storage)) return .copy;
     const consumer = try resultConsumer(E, self, candidate.pc, storage) orelse return .copy;
     if (consumer.stores) candidate.in_place[consumer.pc] = true;
     return .{ .slot = @intCast(storage) };
@@ -205,6 +206,19 @@ fn deadStorage(comptime E: type, self: *E, storage: usize, pc: usize) Error!bool
         else => {},
     };
     return true;
+}
+
+/// Whether an operand still on the stack under the base may name `storage`: a
+/// read of the local or of an alias of it, or an operand whose source a join
+/// lost. `f(p, replace(p, x=2))` passes `p`'s slot as the first argument, so
+/// writing the update into that slot would change the argument too.
+fn namedBelow(plan: Plan, below: []const ownership.Source, storage: usize) bool {
+    for (below) |operand| switch (operand.origin) {
+        .fresh => {},
+        .unknown => return true,
+        .local => if (plan.resolve(operand.local) == storage) return true,
+    };
+    return false;
 }
 
 /// The instruction that consumes an update's result, when control reaches it
@@ -258,7 +272,10 @@ fn writeBack(comptime E: type, self: *E, candidate: Candidate, base: Borrowed) E
     const read = try elementRead(E, self, .{ .local = base.local, .before = base.load }) orelse return .copy;
     if (read.owner != owner) return .copy;
     const write_stack = candidate.analysis.operands[write_pc] orelse return .copy;
-    const index = write_stack[write_stack.len - 2];
+    // A whole statement: nothing but the index and the value is on the stack,
+    // so no other operand can still name the element.
+    if (write_stack.len != 2) return .copy;
+    const index = write_stack[0];
     if (index.origin != .local or index.part != .whole or index.local != read.index) return .copy;
     if (!try straightLine(E, self, .{ .from = read.pc, .to = write_pc, .owner = owner, .index = read.index, .element = base.local, .store = read.pc + 1 })) return .copy;
     candidate.in_place[write_pc] = true;

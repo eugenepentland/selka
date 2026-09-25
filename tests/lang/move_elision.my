@@ -77,3 +77,13 @@ public def test_a_negative_index_element_write_lands_in_the_same_element() -> bo
     ps[-1].x = ps[-1].x + 7
     ps[-2].y = 40
     return ps[1].x == 8 and ps[0].y == 40 and ps[0].x == 0
+
+
+def both(a: Point, b: Point) -> int:
+    return a.x * 100 + b.x
+
+
+# spec-case: QBE-MOVE-ELIDE-1
+public def test_an_argument_that_names_the_record_keeps_the_old_value() -> bool:
+    p = point(1)
+    return both(p, replace(p, x=2)) == 102
