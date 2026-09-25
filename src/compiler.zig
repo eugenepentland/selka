@@ -61,6 +61,9 @@ const typed = @import("typed.zig");
 const sema = @import("sema.zig");
 const lower = @import("lower.zig");
 pub const bytecode = @import("bytecode.zig");
+/// Opt-in value semantics (`VALUE-SEMANTICS-1`): the process switch, its
+/// environment carrier and cache-key byte.
+pub const value_semantics = @import("value_semantics.zig");
 pub const effect_set = @import("effect_set.zig");
 pub const navigation = @import("navigation.zig");
 pub const navigation_partial = @import("navigation_partial.zig");

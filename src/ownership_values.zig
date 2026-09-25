@@ -1,0 +1,199 @@
+//! Which value-semantics copies must really copy (`VALUE-SEMANTICS-2`).
+//!
+//! Under value semantics lowering puts a `value_copy` after every value that
+//! moves to a second home and is not fresh. This step answers, for each, the
+//! question the ownership analysis already answers for every transfer: is it a
+//! move (the source is never read again), a borrow (neither side is written
+//! while both are read) or a copy. Only a copy emits anything.
+//!
+//! Three corrections keep the analysis sound for values rather than for the
+//! reference runtime it was written against:
+//! - A local whose value may be shared is not its own value, so reading it for
+//!   the last time is no move: a parameter holds the caller's lent value, a
+//!   compiler temporary filled from a place holds that place (lowering never
+//!   copies into a temporary, which is a path), and a named local some store
+//!   filled with a borrow holds that borrow. The last set grows with the
+//!   borrows this step finds, so it is solved to a fixed point.
+//! - A value read through a `class` object or Cell is shared storage the
+//!   analysis cannot follow (any other name of the object may write it), so it
+//!   is always copied.
+//! - A read-only argument that a `mut` argument of the same call could reach
+//!   (`argument`) and the elements of a fresh shallow copy (`children`) are
+//!   always copied; lowering proved the first and the second is never a move.
+const typed = @import("typed.zig");
+const bytecode = @import("bytecode.zig");
+const model = @import("ownership_model.zig");
+const sources = @import("ownership_sources.zig");
+const transfer_class = @import("ownership_classify.zig");
+
+const Context = model.Context;
+const Error = model.Error;
+const none = model.none;
+const li = model.li;
+
+/// Per instruction, whether its `value_copy` must copy; empty when the
+/// function has no `value_copy` at all (always, with the switch off).
+pub fn decide(ctx: *const Context) Error![]const bool {
+    const code = ctx.instructions();
+    var any = false;
+    for (code) |instruction| if (instruction.op == .value_copy) {
+        any = true;
+    };
+    if (!any) return &.{};
+    const a = ctx.allocator;
+    const copies = try a.alloc(bool, code.len);
+    @memset(copies, false);
+    const owners = try ownersFor(ctx);
+    const arms = try armSwitches(ctx);
+    const step: Step = .{ .ctx = ctx, .owners = owners, .arms = arms };
+    // Each round can only take locals out of `owners`, so it settles.
+    var rounds: usize = 0;
+    while (rounds <= ctx.locals.list.len + 1) : (rounds += 1) {
+        if (!step.round(copies)) break;
+    }
+    return copies;
+}
+
+/// The locals whose value is their own before any copy site is classified: an
+/// `owned` local that is neither a parameter nor a temporary filled from a
+/// place.
+fn ownersFor(ctx: *const Context) Error![]bool {
+    const locals = ctx.locals.list;
+    const owners = try ctx.allocator.alloc(bool, locals.len);
+    for (owners, 0..) |*owner, index| owner.* = index >= ctx.locals.params and ctx.role(@intCast(index)) == .owned;
+    for (ctx.instructions(), 0..) |instruction, pc| {
+        if (!ctx.reachable(pc)) continue;
+        const slot = switch (instruction.op) {
+            .store_local => |slot| li(slot),
+            else => continue,
+        };
+        if (!ctx.temporary(slot)) continue;
+        const stack = ctx.flow.at[pc] orelse continue;
+        if (stack.len == 0 or stack[stack.len - 1].origin != .fresh) owners[slot] = false;
+    }
+    return owners;
+}
+
+/// Per instruction, the `switch_variant` whose arm starts there, or `none`.
+fn armSwitches(ctx: *const Context) Error![]u32 {
+    const code = ctx.instructions();
+    const arms = try ctx.allocator.alloc(u32, code.len);
+    @memset(arms, none);
+    for (code, 0..) |instruction, pc| switch (instruction.op) {
+        .switch_variant => |dispatch| for (dispatch.arms) |arm| {
+            if (arm.target < arms.len) arms[arm.target] = @intCast(pc);
+        },
+        else => {},
+    };
+    return arms;
+}
+
+/// The facts one classification round reads.
+const Step = struct {
+    ctx: *const Context,
+    owners: []bool,
+    arms: []const u32,
+
+    /// Classify every copy site once; answer whether a local left `owners`.
+    fn round(self: Step, copies: []bool) bool {
+        var changed = false;
+        for (self.ctx.instructions(), 0..) |instruction, pc| {
+            const copy = switch (instruction.op) {
+                .value_copy => |copy| copy,
+                else => continue,
+            };
+            if (!self.ctx.reachable(pc)) continue;
+            const site = self.siteAt(pc, copy) orelse {
+                copies[pc] = true;
+                continue;
+            };
+            const class = self.classify(site);
+            copies[pc] = class == .copy;
+            // A local filled with a borrow shares its value from then on.
+            if (class == .borrow and site.question.target != none and self.owners[site.question.target]) {
+                self.owners[site.question.target] = false;
+                changed = true;
+            }
+        }
+        return changed;
+    }
+
+    /// The transfer a copy site stands for, or null when it always copies.
+    fn siteAt(self: Step, pc: usize, copy: bytecode.ValueCopy) ?Site {
+        const ctx = self.ctx;
+        const code = ctx.instructions();
+        switch (copy.site) {
+            .argument, .children => return null,
+            .payload => {
+                // The arm reloads its binding (`pc - 1`) and stores the copy
+                // back; the value is the scrutinee's payload at the switch.
+                if (pc == 0 or self.arms[pc - 1] == none) return null;
+                const at = self.arms[pc - 1];
+                const stack = ctx.flow.at[at] orelse return null;
+                if (stack.len == 0) return null;
+                var source = stack[stack.len - 1];
+                if (source.origin == .local) source.part = .field;
+                const target = switch (code[pc - 1].op) {
+                    .load_local => |slot| li(slot),
+                    else => return null,
+                };
+                return .{ .question = .{ .source = source, .kind = .binding, .target = target, .ty = copy.ty } };
+            },
+            .assign, .store, .ret => {
+                const stack = ctx.flow.at[pc] orelse return null;
+                if (stack.len == 0) return null;
+                const source = stack[stack.len - 1];
+                var target: u32 = none;
+                var kind: model.Kind = if (copy.site == .ret) .@"return" else .construct;
+                if (copy.site == .assign and pc + 1 < code.len) switch (code[pc + 1].op) {
+                    .store_local => |slot| {
+                        target = li(slot);
+                        kind = if (ctx.locals.list[target].origin == .iteration) .binding else .assign;
+                    },
+                    else => {},
+                };
+                return .{ .question = .{ .source = source, .kind = kind, .target = target, .ty = copy.ty } };
+            },
+        }
+    }
+
+    /// Move, borrow or copy for one site, with the value-semantics
+    /// corrections this module's header describes.
+    fn classify(self: Step, at: Site) model.Class {
+        const source = at.question.source;
+        switch (source.origin) {
+            // Lowering saw a place the analysis calls fresh (a value a
+            // collection keeps, such as `setdefault`'s): copy.
+            .fresh, .unknown => return .copy,
+            .local => {},
+        }
+        if (self.shared(source)) return .copy;
+        return transfer_class.classify(self.ctx, at.question, self.owners);
+    }
+
+    /// Whether the value is read through a `class` object or Cell, or through
+    /// a temporary that aliases a place, anywhere along its chain of aliases.
+    fn shared(self: Step, source: sources.Source) bool {
+        const ctx = self.ctx;
+        var at = source.local;
+        var part = source.part != .whole;
+        var guard: usize = 0;
+        while (guard <= ctx.locals.list.len) : (guard += 1) {
+            if (at >= ctx.locals.list.len) return true;
+            if (part and sharedRecord(ctx, ctx.locals.list[at].ty)) return true;
+            if (ctx.temporary(at) and ctx.role(at) == .owned and !self.owners[at]) return true;
+            if (!ctx.alias(at)) return false;
+            part = ctx.locals.step[at];
+            at = ctx.locals.parents[at];
+            if (at == none) return false;
+        }
+        return true;
+    }
+};
+
+/// One copy site as the transfer it stands for.
+const Site = struct { question: transfer_class.Question };
+
+fn sharedRecord(ctx: *const Context, ty: typed.Type) bool {
+    return ty.isAggregate() and ctx.record(ty).isManagedRecord();
+}

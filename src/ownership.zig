@@ -22,6 +22,8 @@ const model = @import("ownership_model.zig");
 const sources = @import("ownership_sources.zig");
 const roles = @import("ownership_roles.zig");
 const cow = @import("ownership_cow.zig");
+const transfer_class = @import("ownership_classify.zig");
+const values = @import("ownership_values.zig");
 
 /// What one transfer costs under value semantics.
 pub const Class = model.Class;
@@ -77,7 +79,8 @@ pub fn analyze(a: std.mem.Allocator, input: Input) Error!Analysis {
     };
     const transfers = try collectTransfers(&ctx);
     const cows = try cow.place(&ctx);
-    return .{ .roles = ctx.locals.roles, .parents = ctx.locals.parents, .transfers = transfers, .cows = cows, .moves = moves, .operands = ctx.flow.at };
+    const copies = try values.decide(&ctx);
+    return .{ .roles = ctx.locals.roles, .parents = ctx.locals.parents, .transfers = transfers, .cows = cows, .moves = moves, .operands = ctx.flow.at, .copies = copies };
 }
 
 fn zeroed(comptime T: type, a: std.mem.Allocator, count: usize, value: T) Error![]T {
@@ -130,7 +133,7 @@ const Site = struct {
         const at = self.stack.len - 1 - depth;
         if (!self.types[at].isAggregate()) return;
         const source = self.stack[at];
-        const class = classify(self.ctx, .{ .source = source, .kind = kind, .target = target, .ty = self.types[at] });
+        const class = transfer_class.classify(self.ctx, .{ .source = source, .kind = kind, .target = target, .ty = self.types[at] }, null);
         try self.found.append(self.ctx.allocator, .{ .pc = @intCast(self.pc), .kind = kind, .source = source, .target = target, .class = class });
     }
 };
@@ -165,7 +168,7 @@ fn binding(site: Site, target: u32) Error!void {
     if (site.stack.len == 0 or !site.ctx.locals.value[target]) return;
     var source = site.stack[site.stack.len - 1];
     if (source.origin == .local) source.part = .field;
-    const class = classify(site.ctx, .{ .source = source, .kind = .binding, .target = target, .ty = site.ctx.locals.list[target].ty });
+    const class = transfer_class.classify(site.ctx, .{ .source = source, .kind = .binding, .target = target, .ty = site.ctx.locals.list[target].ty }, null);
     try site.found.append(site.ctx.allocator, .{ .pc = @intCast(site.pc), .kind = .binding, .source = source, .target = target, .class = class });
 }
 
@@ -192,62 +195,4 @@ fn bufferTransfers(site: Site, operation: @FieldType(model.Op, "buffer_operation
         .setdefault => try site.add(0, .dict_value, none),
         else => {},
     }
-}
-
-/// One transfer being classified.
-const Question = struct { source: Source, kind: Kind, target: u32, ty: typed.Type };
-
-/// Move, borrow or copy (see `Class`).
-fn classify(ctx: *const model.Context, question: Question) Class {
-    const source = question.source;
-    switch (source.origin) {
-        .fresh => return .move,
-        .unknown => return .copy,
-        .local => {},
-    }
-    const local = source.local;
-    const moved = movable(ctx, local) and source.read != none and !ctx.live.after(source.read, local);
-    if (question.kind == .argument) return if (moved and source.part == .whole) .move else .borrow;
-    if (moved) return .move;
-    if (immutable(ctx, question.ty)) return .borrow;
-    switch (question.kind) {
-        .assign, .binding => if (question.target != none) {
-            if (ctx.alias(question.target) and ctx.locals.parents[question.target] == local) return .borrow;
-            if (readOnlyShare(ctx, question.target, local)) return .borrow;
-        },
-        else => {},
-    }
-    return .copy;
-}
-
-/// Whether a local or match binding may share its source's payload: it is
-/// never written through, and wherever it is live the source's root keeps its
-/// value (it is live, or a parameter the caller keeps) and nothing writes the
-/// root's tree.
-fn readOnlyShare(ctx: *const model.Context, target: u32, local: u32) bool {
-    if (ctx.defs.mutated[target]) return false;
-    const root = ctx.rootOf(local);
-    const root_role = ctx.role(root);
-    const stable = root < ctx.locals.params and (root_role == .param or root_role == .mut_param);
-    for (0..ctx.instructions().len) |pc| {
-        if (!ctx.reachable(pc) or !ctx.live.before(pc, target)) continue;
-        if (!stable and !ctx.live.before(pc, root)) return false;
-        if (ctx.writesTree(pc, root, null)) return false;
-    }
-    return true;
-}
-
-/// Whether reading `local` for the last time can hand its value over: it holds
-/// a value of its own, not one the caller or another local keeps.
-fn movable(ctx: *const model.Context, local: u32) bool {
-    return ctx.role(local) == .owned;
-}
-
-/// Whether no value of `ty` can be written in place, so sharing one is free: a
-/// string, a byte string, or a scalar-only value record.
-fn immutable(ctx: *const model.Context, ty: typed.Type) bool {
-    if (!ty.isAggregate()) return true;
-    const schema = ctx.record(ty);
-    if (schema.managed) return schema.collection.kind == .string or schema.collection.kind == .bytes;
-    return !ctx.managedType(ty);
 }

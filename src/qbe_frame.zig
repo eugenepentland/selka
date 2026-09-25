@@ -199,7 +199,7 @@ fn temporaryInEntry(comptime Emitter: type, self: *Emitter, pc: usize) GenerateE
     // through the generic load/move path.
     if (try hasNonEntryAggregate(Emitter, self, pc)) return false;
     return switch (self.function.scope.instructions[pc].op) {
-        .make_record, .make_variant, .get_field, .update_record, .replace_index, .get_index, .try_result => true,
+        .make_record, .make_variant, .get_field, .update_record, .replace_index, .get_index, .try_result, .value_copy => true,
         .load_local, .move_local => |slot| !try nonEntryType(Emitter, self, self.function.scope.locals[@backingInt(slot)].ty),
         else => false,
     };
@@ -547,6 +547,7 @@ fn usesTemporary(comptime Emitter: type, self: *Emitter, pc: usize) bool {
         .file_access,
         => true,
         .load_local, .move_local => |slot| !self.isScalar(self.function.scope.locals[@backingInt(slot)].ty),
+        .value_copy => self.valueCopies(pc),
         .call => |id| self.largeResult(self.program.functions[@backingInt(id)]) catch false,
         .invoke => |ty| self.largeValue(self.program.records[ty.recordIndex()].contract.callback.?.return_type) catch false,
         else => false,

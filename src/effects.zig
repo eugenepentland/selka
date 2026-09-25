@@ -1088,6 +1088,9 @@ fn seedInstructionEffects(
         .push_unit,
         .push_integer,
         .wrap_domain,
+        // A value-semantics copy is not an effect in this stage: the switch
+        // must not change a function's published effects (`VALUE-SEMANTICS-2`).
+        .value_copy,
         .make_variant,
         .switch_variant,
         .cmp_domain,
