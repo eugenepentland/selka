@@ -760,6 +760,43 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&run_native_arena_test.step);
     qbe_step.dependOn(&run_native_heap_test.step);
     qbe_step.dependOn(&run_native_arena_test.step);
+    // ERROR-TRACE-6: the trace recorders keep the registers their convention promises.
+    const error_trace_abi_module = b.createModule(.{
+        .target = target,
+        .optimize = optimize,
+        .link_libc = true,
+    });
+    error_trace_abi_module.addIncludePath(b.path("src"));
+    error_trace_abi_module.addCSourceFiles(.{
+        .root = b.path("."),
+        .files = &.{
+            "tests/error_trace_abi_test.c",
+            "src/qbe_runtime.c",
+            "src/qbe_stack.c",
+            "src/native_heap.c",
+            "src/native_arena.c",
+            "src/native_collections.c",
+            "src/native_text.c",
+            "src/native_dictionary.c",
+            "src/native_equal.c",
+            "src/native_bytes.c",
+            "src/native_regions.c",
+        },
+        .flags = &.{ "-std=c11", "-Wall", "-Wextra", "-Werror", "-UNDEBUG" },
+    });
+    const error_trace_abi_test = b.addExecutable(.{
+        .max_rss = rss.compile,
+        .name = "error-trace-abi-test",
+        .root_module = error_trace_abi_module,
+    });
+    const run_error_trace_abi_test = b.addRunArtifact(error_trace_abi_test);
+    run_error_trace_abi_test.step.max_rss = rss.script;
+    run_error_trace_abi_test.expectExitCode(0);
+    const error_trace_abi_step = b.step("test-error-trace-abi", "Verify the error trace recorders keep the registers their calling conventions promise");
+    error_trace_abi_step.dependOn(&run_error_trace_abi_test.step);
+    compile_tests.dependOn(&error_trace_abi_test.step);
+    test_step.dependOn(&run_error_trace_abi_test.step);
+    qbe_step.dependOn(&run_error_trace_abi_test.step);
     const native_test_step = b.step("test-native-tests", "Verify native guest test discovery, execution, fixtures, and affected-test reuse");
     const native_test_unit = b.addTest(.{ .max_rss = rss.compile, .test_runner = guardian.testRunner(guardian_dep), .root_module = b.createModule(.{
         .root_source_file = b.path("src/native_test_cli_test.zig"),

@@ -311,7 +311,9 @@ instruction index the compiler already emits, so no text is built while the
 program runs. Recording a site is one call to a small runtime recorder, on the
 error path only: an `Ok` passing through `?`, and a
 `return Ok(...)`, execute nothing extra. A `return` whose value could be either
-case tests the returned case once.
+case tests the returned case once. In an LLVM build the recorder keeps every
+register but one intact, so a recording does not make an optimized loop spill
+and reload the values it holds in registers.
 
 ## Option constructors
 

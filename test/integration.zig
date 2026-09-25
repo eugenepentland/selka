@@ -1106,6 +1106,110 @@ fn expectErrorReport(binary: []const u8, wanted: []const u8) !void {
     try testing.expectEqualStrings("", reported.stdout);
     try testing.expectEqualStrings(wanted, reported.stderr);
 }
+/// A loop that keeps ten values live across an `Err` construction and, once
+/// `relay` is inlined, across a `?` that propagates: recordings an optimized
+/// caller makes with its values in registers. `main` then fails with a
+/// three-site trace.
+const kept_registers_program =
+    \\def step(x: int, i: int) -> Result[int, int]:
+    \\    if i % 5 == 2:
+    \\        return Err(i)
+    \\    return Ok((x * 7 + i) % 1000003)
+    \\
+    \\
+    \\def relay(x: int, i: int) -> Result[int, int]:
+    \\    value = step(x, i)?
+    \\    return Ok(value + 1)
+    \\
+    \\
+    \\def churn(n: int) -> int:
+    \\    a = 1
+    \\    b = 2
+    \\    c = 3
+    \\    d = 4
+    \\    e = 5
+    \\    f = 6
+    \\    g = 7
+    \\    h = 8
+    \\    k = 9
+    \\    failed = 0
+    \\    for i in range(n):
+    \\        r: Result[int, int] = Err(i) if i % 3 == 0 else Ok(i)
+    \\        match r:
+    \\            case Ok(v):
+    \\                a = (a + v * 3) % 1000003
+    \\            case Err(code):
+    \\                failed = failed + code
+    \\        match relay(a + b, i):
+    \\            case Ok(w):
+    \\                b = (b * 5 + w) % 1000033
+    \\            case Err(code):
+    \\                failed = failed + code * 2
+    \\        c = (c + b * 7) % 1000037
+    \\        d = (d * 3 + c) % 1000039
+    \\        e = (e + d * 11) % 1000081
+    \\        f = (f * 13 + e) % 1000099
+    \\        g = (g + f) % 1000117
+    \\        h = (h * 17 + g) % 1000121
+    \\        k = (k + h * 19) % 1000133
+    \\    return a + b + c + d + e + f + g + h + k + failed
+    \\
+    \\
+    \\def main(out: Stream) -> Result[int, int]:
+    \\    out.print(churn(3000))
+    \\    value = relay(1, 7)?
+    \\    return Ok(value)
+    \\
+;
+/// What `kept_registers_program` writes on stderr, `{path}` standing for its entry.
+const kept_registers_report =
+    \\error: 7
+    \\  {path}:3:16   step   Err(...) created
+    \\  {path}:8:13   relay  ? propagated
+    \\  {path}:47:13  main   ? propagated
+    \\
+;
+/// Run a build of `kept_registers_program`: its `int` error is the exit
+/// status, the loop's result is on stdout and exactly `wanted` on stderr.
+fn expectKeptReport(binary: []const u8, wanted: []const u8) !void {
+    const reported = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{binary} });
+    defer testing.allocator.free(reported.stdout);
+    defer testing.allocator.free(reported.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 7 }, reported.term);
+    try testing.expectEqualStrings("8548707\n", reported.stdout);
+    try testing.expectEqualStrings(wanted, reported.stderr);
+}
+
+// spec-case: ERROR-TRACE-6
+test "CLI computes and traces the same from QBE and from LLVM without LTO, with ThinLTO and with --release" {
+    const a = testing.allocator;
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "kept.my", .data = kept_registers_program });
+    const entry = try temporary.dir.realPathFileAlloc(testing.io, "kept.my", a);
+    defer a.free(entry);
+    const directory = std.fs.path.dirname(entry).?;
+    const cache_argument = try std.fmt.allocPrint(a, "--cache-dir={s}/cache", .{directory});
+    defer a.free(cache_argument);
+    const wanted = try std.mem.replaceOwned(u8, a, kept_registers_report, "{path}", entry);
+    defer a.free(wanted);
+    const qbe = try std.fmt.allocPrint(a, "{s}/kept-qbe", .{directory});
+    defer a.free(qbe);
+    const llvm = try std.fmt.allocPrint(a, "{s}/kept-llvm", .{directory});
+    defer a.free(llvm);
+    const thin = try std.fmt.allocPrint(a, "{s}/kept-thin", .{directory});
+    defer a.free(thin);
+    const release = try std.fmt.allocPrint(a, "{s}/kept-release", .{directory});
+    defer a.free(release);
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", qbe, cache_argument, tools[0], tools[1] }, "");
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", llvm, "--backend", "llvm", "--llvm-opt", "3", cache_argument, tools[1] }, "");
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", thin, "--mode", "ReleaseFast", "--backend", "llvm", "--llvm-opt", "3", "--lto=thin", cache_argument, tools[1] }, "");
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", release, "--release", cache_argument, tools[1] }, "");
+    try expectKeptReport(qbe, wanted);
+    try expectKeptReport(llvm, wanted);
+    try expectKeptReport(thin, wanted);
+    try expectKeptReport(release, wanted);
+}
 /// The `reason` a `native-tests-v1` report gives for the test called `name`.
 fn testReason(report: std.json.Value, name: []const u8) []const u8 {
     for (report.object.get("tests").?.array.items) |case| {
