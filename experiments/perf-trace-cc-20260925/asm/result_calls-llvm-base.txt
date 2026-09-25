@@ -1,0 +1,89 @@
+# result_calls, --backend llvm --llvm-opt 3 --lto, entry_run hot loop (objdump -M intel)
+ 10075da:	movabs rsi,0x7fffffffffffffff
+ 10075e4:	xor    r12d,r12d
+ 10075e7:	movabs r8,0xcccccccccccccccd
+ 10075f1:	movabs r9,0x2492492492492493
+ 10075fb:	lea    r10,[rbp-0x50]
+ 10075ff:	lea    r11,[rbp-0x58]
+ 1007603:	movabs r15,0x8637a2a24e5ace35
+ 100760d:	xor    ecx,ecx
+ 100760f:	xor    r14d,r14d
+ 1007612:	jmp    100763c <entry_run+0x22c>
+ 1007614:	data16 data16 cs nop WORD PTR [rax+rax*1+0x0]
+ 1007620:	test   edx,edx
+ 1007622:	jne    1007cd6 <entry_run+0x8c6>
+ 1007628:	mov    r12,QWORD PTR [rbp-0x68]
+ 100762c:	inc    rcx
+ 100762f:	cmp    rcx,0x1312d00
+ 1007636:	je     100773e <entry_run+0x32e>
+ 100763c:	mov    rdx,rcx
+ 100763f:	mulx   rax,rax,r8
+ 1007644:	mulx   rdx,rdx,r9
+ 1007649:	cmp    QWORD PTR [rbx+0x40],rsp
+ 100764d:	ja     1007cfa <entry_run+0x8ea>
+ 1007653:	mov    rdi,rcx
+ 1007656:	sub    rdi,rdx
+ 1007659:	shr    rdi,1
+ 100765c:	add    rdi,rdx
+ 100765f:	shr    rdi,0x2
+ 1007663:	lea    rdx,[rdi*8+0x0]
+ 100766b:	sub    rdx,rdi
+ 100766e:	add    rdx,0x3
+ 1007672:	cmp    rdx,rcx
+ 1007675:	jne    1007690 <entry_run+0x280>
+ 1007677:	shr    rax,0x2
+ 100767b:	lea    rax,[rax+rax*4]
+ 100767f:	neg    rax
+ 1007682:	add    rax,rcx
+ 1007685:	mov    DWORD PTR [rbp-0x50],0x1
+ 100768c:	jmp    10076d3 <entry_run+0x2c3>
+ 100768e:	xchg   ax,ax
+ 1007690:	mov    rdi,r12
+ 1007693:	add    rdi,rcx
+ 1007696:	jo     1007d02 <entry_run+0x8f2>
+ 100769c:	mov    rax,rdi
+ 100769f:	imul   r15
+ 10076a2:	add    rdx,rdi
+ 10076a5:	mov    rax,rdx
+ 10076a8:	shr    rax,0x3f
+ 10076ac:	sar    rdx,0x13
+ 10076b0:	add    rdx,rax
+ 10076b3:	imul   rax,rdx,0xf4243
+ 10076ba:	sub    rdi,rax
+ 10076bd:	mov    rax,rdi
+ 10076c0:	sar    rax,0x3f
+ 10076c4:	and    eax,0xf4243
+ 10076c9:	add    rax,rdi
+ 10076cc:	mov    DWORD PTR [rbp-0x50],0x0
+ 10076d3:	mov    rdx,QWORD PTR [r10]
+ 10076d6:	mov    QWORD PTR [rbp-0x50],rdx
+ 10076da:	mov    QWORD PTR [rbp-0x48],rax
+ 10076de:	test   edx,edx
+ 10076e0:	je     10076f0 <entry_run+0x2e0>
+ 10076e2:	mov    DWORD PTR [rbp-0x58],0x1
+ 10076e9:	mov    rax,QWORD PTR [rbp-0x48]
+ 10076ed:	jmp    1007707 <entry_run+0x2f7>
+ 10076ef:	nop
+ 10076f0:	mov    rax,QWORD PTR [rbp-0x48]
+ 10076f4:	cmp    rax,rsi
+ 10076f7:	je     1007d1b <entry_run+0x90b>
+ 10076fd:	inc    rax
+ 1007700:	mov    DWORD PTR [rbp-0x58],0x0
+ 1007707:	mov    rdx,QWORD PTR [r11]
+ 100770a:	mov    QWORD PTR [rbp-0x70],rdx
+ 100770e:	mov    QWORD PTR [rbp-0x68],rax
+ 1007712:	cmp    edx,0x1
+ 1007715:	jne    1007620 <entry_run+0x210>
+ 100771b:	mov    rdx,QWORD PTR [rbp-0x68]
+ 100771f:	mov    rax,r14
+ 1007722:	add    rax,rdx
+ 1007725:	jo     1007d10 <entry_run+0x900>
+ 100772b:	mov    r14,rax
+ 100772e:	inc    rcx
+ 1007731:	cmp    rcx,0x1312d00
+ 1007738:	jne    100763c <entry_run+0x22c>
+ 100773e:	mov    edi,0x1
+ 1007743:	mov    esi,0x20
+ 1007748:	call   100d400 <calloc@plt>
+
+# recorders
