@@ -10,10 +10,12 @@
 //! reference runtime it was written against:
 //! - A local whose value may be shared is not its own value, so reading it for
 //!   the last time is no move: a parameter holds the caller's lent value, a
-//!   compiler temporary filled from a place holds that place (lowering never
-//!   copies into a temporary, which is a path), and a named local some store
-//!   filled with a borrow holds that borrow. The last set grows with the
-//!   borrows this step finds, so it is solved to a fixed point.
+//!   local filled from a place without a copy site holds that place (lowering
+//!   never copies into a compiler temporary, which is a path, nor into a
+//!   spliced callee's parameter), and a local some copy site filled with a
+//!   borrow holds that borrow. The last set grows with the borrows this step
+//!   finds, so it is solved to a fixed point. A local filled without a copy
+//!   site is not even a safe root to borrow from: its source is untracked.
 //! - A value read through a `class` object or Cell is shared storage the
 //!   analysis cannot follow (any other name of the object may write it), so it
 //!   is always copied.
@@ -43,9 +45,11 @@ pub fn decide(ctx: *const Context) Error![]const bool {
     const a = ctx.allocator;
     const copies = try a.alloc(bool, code.len);
     @memset(copies, false);
-    const owners = try ownersFor(ctx);
     const arms = try armSwitches(ctx);
-    const step: Step = .{ .ctx = ctx, .owners = owners, .arms = arms };
+    const raw = try rawAliases(ctx, arms);
+    const owners = try ctx.allocator.alloc(bool, raw.len);
+    for (owners, raw, 0..) |*owner, alias, index| owner.* = index >= ctx.locals.params and ctx.role(@intCast(index)) == .owned and !alias;
+    const step: Step = .{ .ctx = ctx, .owners = owners, .raw = raw, .arms = arms };
     // Each round can only take locals out of `owners`, so it settles.
     var rounds: usize = 0;
     while (rounds <= ctx.locals.list.len + 1) : (rounds += 1) {
@@ -54,24 +58,39 @@ pub fn decide(ctx: *const Context) Error![]const bool {
     return copies;
 }
 
-/// The locals whose value is their own before any copy site is classified: an
-/// `owned` local that is neither a parameter nor a temporary filled from a
-/// place.
-fn ownersFor(ctx: *const Context) Error![]bool {
-    const locals = ctx.locals.list;
-    const owners = try ctx.allocator.alloc(bool, locals.len);
-    for (owners, 0..) |*owner, index| owner.* = index >= ctx.locals.params and ctx.role(@intCast(index)) == .owned;
-    for (ctx.instructions(), 0..) |instruction, pc| {
+/// Per local, whether some store fills it from a place with no copy site in
+/// between, so it may hold that place itself: a compiler temporary, a spliced
+/// callee's parameter, or a match binding whose arm keeps the payload as it is.
+fn rawAliases(ctx: *const Context, arms: []const u32) Error![]bool {
+    const code = ctx.instructions();
+    const raw = try ctx.allocator.alloc(bool, ctx.locals.list.len);
+    @memset(raw, false);
+    for (code, 0..) |instruction, pc| {
         if (!ctx.reachable(pc)) continue;
-        const slot = switch (instruction.op) {
-            .store_local => |slot| li(slot),
-            else => continue,
-        };
-        if (!ctx.temporary(slot)) continue;
         const stack = ctx.flow.at[pc] orelse continue;
-        if (stack.len == 0 or stack[stack.len - 1].origin != .fresh) owners[slot] = false;
+        const fresh = stack.len != 0 and stack[stack.len - 1].origin == .fresh;
+        switch (instruction.op) {
+            .store_local => |slot| {
+                const copied = pc > 0 and code[pc - 1].op == .value_copy;
+                if (!copied and !fresh) raw[li(slot)] = true;
+            },
+            .switch_variant => |dispatch| for (dispatch.arms) |arm| if (arm.slot) |slot| {
+                if (!fresh and !payloadCopied(code, arms, arm.target)) raw[li(slot)] = true;
+            },
+            else => {},
+        }
     }
-    return owners;
+    return raw;
+}
+
+/// Whether the arm starting at `target` rebinds its payload through a copy
+/// site (`load_local`, `value_copy`, `store_local` at its head).
+fn payloadCopied(code: []const bytecode.Instruction, arms: []const u32, target: usize) bool {
+    if (target + 1 >= code.len or arms[target] == none) return false;
+    return switch (code[target + 1].op) {
+        .value_copy => |copy| copy.site == .payload,
+        else => false,
+    };
 }
 
 /// Per instruction, the `switch_variant` whose arm starts there, or `none`.
@@ -92,6 +111,7 @@ fn armSwitches(ctx: *const Context) Error![]u32 {
 const Step = struct {
     ctx: *const Context,
     owners: []bool,
+    raw: []const bool,
     arms: []const u32,
 
     /// Classify every copy site once; answer whether a local left `owners`.
@@ -172,7 +192,8 @@ const Step = struct {
     }
 
     /// Whether the value is read through a `class` object or Cell, or through
-    /// a temporary that aliases a place, anywhere along its chain of aliases.
+    /// a local filled from a place with no copy site, anywhere along its chain
+    /// of aliases.
     fn shared(self: Step, source: sources.Source) bool {
         const ctx = self.ctx;
         var at = source.local;
@@ -181,7 +202,7 @@ const Step = struct {
         while (guard <= ctx.locals.list.len) : (guard += 1) {
             if (at >= ctx.locals.list.len) return true;
             if (part and sharedRecord(ctx, ctx.locals.list[at].ty)) return true;
-            if (ctx.temporary(at) and ctx.role(at) == .owned and !self.owners[at]) return true;
+            if (self.raw[at] and !ctx.alias(at)) return true;
             if (!ctx.alias(at)) return false;
             part = ctx.locals.step[at];
             at = ctx.locals.parents[at];

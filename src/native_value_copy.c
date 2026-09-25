@@ -20,6 +20,7 @@
 #include "native_bytes.h"
 #include "native_collections.h"
 #include "native_dictionary.h"
+#include "native_value_copy.h"
 #include "qbe_runtime.h"
 #include <string.h>
 

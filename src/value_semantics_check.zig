@@ -86,7 +86,8 @@ pub fn lostCopy(allocator: std.mem.Allocator, program: typed.Program, function: 
             .initialize, .assign => |store| {
                 const slot = @backingInt(store.slot);
                 if (slot < function.signature.parameter_count or !facts.namedStore(store.slot)) continue;
-                const root = values.pathRoot(program, store.value) orelse continue;
+                const path = values.pathRoot(program, store.value) orelse continue;
+                const root = values.namedRoot(&facts, path) orelse continue;
                 if (@backingInt(root) == position) copies[slot] = store.value;
             },
             else => {},
