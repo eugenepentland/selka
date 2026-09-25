@@ -8,7 +8,13 @@ static const myl_native_type slot_type={.size=sizeof(uint64_t),.alignment=_Align
 static const myl_native_field dict_fields[]={
     {.offset=offsetof(myl_native_dictionary,entries),.type=&pointer_type},
     {.offset=offsetof(myl_native_dictionary,index)+offsetof(myl_native_dictionary_index,slots),.type=&pointer_type}};
-static const myl_native_type dict_type={.size=sizeof(myl_native_dictionary),.alignment=_Alignof(myl_native_dictionary),.kind=MYL_NATIVE_RECORD,.fields=dict_fields,.field_count=2};
+/* The two references of `dict_fields`, as the collector's flat plan (GC-SCAN-PLAN-2). */
+static const myl_native_scan_entry dict_scan[]={
+    {.offset=offsetof(myl_native_dictionary,entries),.tag_offset=MYL_NATIVE_SCAN_ALWAYS},
+    {.offset=offsetof(myl_native_dictionary,index)+offsetof(myl_native_dictionary_index,slots),.tag_offset=MYL_NATIVE_SCAN_ALWAYS}};
+static const myl_native_type dict_type={.size=sizeof(myl_native_dictionary),.alignment=_Alignof(myl_native_dictionary),.kind=MYL_NATIVE_RECORD,.fields=dict_fields,.field_count=2,.scan=dict_scan,.scan_count=2};
+/* A dictionary's header and payload fill one slot of the 320-byte size class. */
+_Static_assert(sizeof(myl_native_dictionary)<=320-sizeof(myl_native_object),"a dictionary stays in its size class");
 /* How a dictionary's keys hash and compare: a `str` key by its text's octets, an
  * eight-byte integer as one word, a narrower integer as its zero-extended bytes,
  * a plain key wider than a word as a byte string, and any other key — a record,
@@ -41,6 +47,11 @@ myl_native_dictionary *myl_native_dictionary_new(myl_native_heap *heap, const my
     dict->entry_fields[0]=(myl_native_field){.offset=0,.type=key};
     dict->entry_fields[1]=(myl_native_field){.offset=offset,.type=value};
     dict->entry_type=(myl_native_type){.size=size,.alignment=alignment,.kind=MYL_NATIVE_RECORD,.fields=dict->entry_fields,.field_count=2};
+    size_t slots;
+    if (myl_native_scan_flatten(&dict->entry_type,dict->entry_scan,sizeof dict->entry_scan/sizeof dict->entry_scan[0],&slots)) {
+        dict->entry_type.scan=dict->entry_scan;
+        dict->entry_type.scan_count=slots;
+    }
     /* An empty dictionary carries no table: the first write sizes one. */
     dict->index=(myl_native_dictionary_index){.slots=NULL,.capacity=0};
     dict->last=(myl_native_dictionary_probe){.state=PROBE_NONE};

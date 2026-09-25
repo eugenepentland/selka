@@ -2,6 +2,7 @@
 #include "native_heap.h"
 #include "native_equal.h"
 #include "native_bytes.h"
+#include "native_dictionary.h"
 #include <assert.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -674,6 +675,112 @@ static void byte_scalar_count_test(void) {
         else assert(status == MYL_BYTES_INVALID);
     }
 }
+/* A descriptor's attached plan against a fresh flattening of its fields. */
+static void plan_matches(const myl_native_type *type) {
+    myl_native_scan_entry entries[MYL_NATIVE_SCAN_ENTRIES];
+    size_t count = 0;
+    assert(type->scan && myl_native_scan_flatten(type, entries, MYL_NATIVE_SCAN_ENTRIES, &count));
+    assert(count == type->scan_count && (!count || !memcmp(entries, type->scan, count * sizeof *entries)));
+}
+typedef struct { Node *first; int64_t count; Node *second; } Duo;
+static const myl_native_field duo_fields[] = {
+    { .offset = offsetof(Duo, first), .type = &pointer_type },
+    { .offset = offsetof(Duo, second), .type = &pointer_type }
+};
+static const myl_native_scan_entry duo_first[] = {{ .offset = offsetof(Duo, first), .tag_offset = MYL_NATIVE_SCAN_ALWAYS }};
+static const myl_native_scan_entry duo_second[] = {{ .offset = offsetof(Duo, second), .tag_offset = MYL_NATIVE_SCAN_ALWAYS }};
+/* spec-case: GC-SCAN-PLAN-2. The collector traces an element by the plan its
+   descriptor carries and derives nothing from the fields: two descriptors with
+   the same two pointer fields, whose plans name one field each, keep exactly
+   the named children alive. They sit where a plan table indexed by descriptor
+   address put them in one slot, and neither disturbs the other's plan. */
+static myl_native_type duo_types[257];
+static void attached_plan_test(void) {
+    myl_native_type *left = &duo_types[0], *right = &duo_types[256];
+    assert((((uintptr_t)left >> 4) & 255) == (((uintptr_t)right >> 4) & 255));
+    *left = (myl_native_type){ .size = sizeof(Duo), .alignment = _Alignof(Duo), .kind = MYL_NATIVE_RECORD,
+                               .fields = duo_fields, .field_count = 2, .scan = duo_first, .scan_count = 1 };
+    *right = *left;
+    right->scan = duo_second;
+    myl_native_heap heap;
+    myl_native_heap_init(&heap, 1 << 20);
+    Duo *a = myl_native_heap_alloc(&heap, left, 1), *b = NULL;
+    myl_native_root a_root, b_root;
+    myl_native_root_push(&heap, &a_root, &a, &pointer_type);
+    myl_native_root_push(&heap, &b_root, &b, &pointer_type);
+    b = myl_native_heap_alloc(&heap, right, 1);
+    Node **slots[] = { &a->first, &a->second, &b->first, &b->second };
+    for (int i = 0; i < 4; ++i) {
+        *slots[i] = myl_native_heap_alloc(&heap, &node_type, 1);
+        assert(*slots[i]);
+        (*slots[i])->value = i + 1;
+    }
+    assert(heap.objects_live == 6);
+    for (int round = 0; round < 3; ++round) myl_native_heap_collect(&heap);
+    assert(heap.objects_live == 4);
+    assert(a->first->value == 1 && b->second->value == 4);
+    assert(myl_native_root_pop(&heap, &b_root));
+    assert(myl_native_root_pop(&heap, &a_root));
+    myl_native_heap_destroy(&heap);
+}
+/* spec-case: GC-SCAN-PLAN-2. Flattening follows the recursive walk — a union
+   case's reference is live under its tag, an array repeats its element — and
+   refuses a shape past the capacity or a union inside a union. The plans the
+   runtime spells for its list, dictionary and view headers, and the one a
+   dictionary builds for its entries, are exactly that flattening. */
+static void flatten_plan_test(void) {
+    typedef struct { uint32_t tag; Node *value; } Case;
+    const myl_native_field case_fields[] = {{ .offset = offsetof(Case, value), .type = &pointer_type, .tag = 3 }};
+    const myl_native_type case_type = { .size = sizeof(Case), .alignment = _Alignof(Case), .kind = MYL_NATIVE_VARIANT,
+                                        .fields = case_fields, .field_count = 1 };
+    const myl_native_field pair_fields[] = {{ .offset = 0, .type = &case_type }, { .offset = sizeof(Case), .type = &case_type }};
+    const myl_native_type pair_type = { .size = 2 * sizeof(Case), .alignment = _Alignof(Case), .kind = MYL_NATIVE_RECORD,
+                                        .fields = pair_fields, .field_count = 2 };
+    myl_native_scan_entry entries[MYL_NATIVE_SCAN_ENTRIES];
+    size_t count = 0;
+    assert(myl_native_scan_flatten(&pair_type, entries, MYL_NATIVE_SCAN_ENTRIES, &count) && count == 2);
+    assert(entries[0].offset == offsetof(Case, value) && entries[0].tag_offset == 0 && entries[0].tag == 3);
+    assert(entries[1].offset == sizeof(Case) + offsetof(Case, value) && entries[1].tag_offset == sizeof(Case) && entries[1].tag == 3);
+    assert(!myl_native_scan_flatten(&pair_type, entries, 1, &count));
+    const myl_native_field nested_fields[] = {{ .offset = 0, .type = &case_type, .tag = 1 }};
+    const myl_native_type nested = { .size = sizeof(Case), .alignment = _Alignof(Case), .kind = MYL_NATIVE_VARIANT,
+                                     .fields = nested_fields, .field_count = 1 };
+    assert(!myl_native_scan_flatten(&nested, entries, MYL_NATIVE_SCAN_ENTRIES, &count));
+    const myl_native_field array_fields[] = {{ .offset = 0, .type = &pointer_type }};
+    const myl_native_type array = { .size = 3 * sizeof(void *), .alignment = _Alignof(void *), .kind = MYL_NATIVE_ARRAY,
+                                    .fields = array_fields, .field_count = 1, .count = 3, .stride = sizeof(void *) };
+    assert(myl_native_scan_flatten(&array, entries, MYL_NATIVE_SCAN_ENTRIES, &count) && count == 3 && entries[2].offset == 16);
+    myl_native_heap heap;
+    myl_native_heap_init(&heap, 1 << 20);
+    heap.stress = 1;
+    myl_native_root root;
+    myl_native_list *list = myl_native_list_new(&heap, &pointer_type, 1);
+    myl_native_root_push(&heap, &root, &list, &pointer_type);
+    plan_matches(((const myl_native_object *)list - 1)->element);
+    myl_native_bytes *bytes = myl_native_bytes_new(&heap, (const unsigned char *)"octets-to-view", 14);
+    list->storage = bytes;
+    myl_native_bytes *view = myl_native_bytes_view(&heap, bytes, 2, 9);
+    plan_matches(((const myl_native_object *)view - 1)->element);
+    plan_matches(&myl_native_text_view_type);
+    const myl_native_type text_key = { .size = sizeof(void *), .alignment = _Alignof(void *), .kind = MYL_NATIVE_POINTER, .collection_kind = 2 };
+    myl_native_dictionary *by_text = myl_native_dictionary_new(&heap, &text_key, &u64_type, 1);
+    list->storage = by_text;
+    plan_matches(((const myl_native_object *)by_text - 1)->element);
+    plan_matches(&by_text->entry_type);
+    assert(by_text->entry_type.scan == by_text->entry_scan && by_text->entry_type.scan_count == 1);
+    /* An entry with no reference has an empty plan, which traces nothing. */
+    myl_native_dictionary *by_number = myl_native_dictionary_new(&heap, &u64_type, &u64_type, 0);
+    list->storage = by_number;
+    plan_matches(&by_number->entry_type);
+    assert(by_number->entry_type.scan_count == 0);
+    /* An entry with more references than the dictionary holds slots for keeps the walk. */
+    const myl_native_type triple = { .size = 3 * sizeof(void *), .alignment = _Alignof(void *), .kind = MYL_NATIVE_ARRAY,
+                                     .fields = array_fields, .field_count = 1, .count = 3, .stride = sizeof(void *) };
+    myl_native_dictionary *by_triple = myl_native_dictionary_new(&heap, &text_key, &triple, 1);
+    assert(by_triple && !by_triple->entry_type.scan);
+    assert(myl_native_root_pop(&heap, &root));
+    myl_native_heap_destroy(&heap);
+}
 int main(void) {
     budget_test();
     guard_test();
@@ -696,5 +803,7 @@ int main(void) {
     aging_through_old_references_test();
     spare_test();
     block_reuse_test();
+    attached_plan_test();
+    flatten_plan_test();
     puts("native heap tests passed");
 }

@@ -58,6 +58,13 @@ typedef struct {
      * followed by a write of the same key — so the second probe answers from
      * this record instead of another hash, table walk and key comparison. */
     myl_native_dictionary_probe last;
+    /* The scan plan of `entry_type`, built with it when the dictionary is
+     * created and named by its `scan` (GC-SCAN-PLAN-1): it lives and dies with
+     * the dictionary, so a dictionary later built at this address builds the
+     * plan of its own entries. An entry with more reference slots than this
+     * holds has no plan and is traced by the collector's recursive walk. Two
+     * slots keep the dictionary in its 320-byte size class. */
+    myl_native_scan_entry entry_scan[2];
 } myl_native_dictionary;
 myl_native_dictionary *myl_native_dictionary_new(myl_native_heap *, const myl_native_type *key, const myl_native_type *value, int string_keys);
 size_t myl_native_dictionary_length(const myl_native_dictionary *);

@@ -83,16 +83,24 @@ fn emit(a: std.mem.Allocator, writer: *std.Io.Writer, catalog: *native.Catalog, 
         }
         writer.writeAll("};\n") catch return error.OutOfMemory;
     }
-    const kind: []const u8 = if (@import("numeric_surface.zig").isFloat(ty, catalog.records)) "MYL_NATIVE_FLOAT" else switch (layout.kind) {
-        .managed => "MYL_NATIVE_POINTER",
-        .owned_buffer => "MYL_NATIVE_OWNED_BUFFER",
-        .owned_pool => "MYL_NATIVE_OWNED_POOL",
-        .resource => "MYL_NATIVE_RESOURCE",
-        .record, .domain => "MYL_NATIVE_RECORD",
-        .array => "MYL_NATIVE_ARRAY",
-        .variant => "MYL_NATIVE_VARIANT",
-        else => "MYL_NATIVE_PLAIN",
-    };
+    const described: Described = .{ .ty = ty, .layout = layout };
+    const kind = described.kind(catalog);
+    // GC-SCAN-PLAN-2: a traced aggregate carries its flat scan plan, so the
+    // collector follows it with one load of the descriptor.
+    var plan: ScanPlan = .{};
+    const planned = layout.trace and (kind == .record or kind == .array or kind == .variant) and
+        try flatten(catalog, &plan, described, 0, .{ .offset = 0, .tag_offset = scan_always, .tag = 0 }) and plan.len != 0;
+    if (planned) {
+        writer.print("static const myl_native_scan_entry {s}_scan[] = {{\n", .{name}) catch return error.OutOfMemory;
+        for (plan.entries[0..plan.len]) |entry| {
+            if (entry.tag_offset == scan_always)
+                writer.print(" {{.offset={d},.tag_offset=MYL_NATIVE_SCAN_ALWAYS,.tag=0}},\n", .{entry.offset}) catch return error.OutOfMemory
+            else
+                writer.print(" {{.offset={d},.tag_offset={d},.tag={d}}},\n", .{ entry.offset, entry.tag_offset, entry.tag }) catch return error.OutOfMemory;
+        }
+        writer.writeAll("};\n") catch return error.OutOfMemory;
+    }
+    const scan = if (planned) try std.fmt.allocPrint(a, "{s}_scan", .{name}) else "NULL";
     const fields = if (layout.fields.len == 0) "NULL" else try std.fmt.allocPrint(a, "{s}_fields", .{name});
     const trace_fields = if (trace_field_count == 0) "NULL" else try std.fmt.allocPrint(a, "{s}_trace_fields", .{name});
     const trace_mode = if (!layout.trace) "MYL_NATIVE_TRACE_NONE" else "MYL_NATIVE_TRACE_FIELDS";
@@ -114,9 +122,112 @@ fn emit(a: std.mem.Allocator, writer: *std.Io.Writer, catalog: *native.Catalog, 
     writer.print(
         "const myl_native_type {s} = {{.size={d},.alignment={d},.fields={s},.field_count={d}," ++
             ".count={d},.stride={d},.kind={s},.collection_kind={d},.element={s},.key={s}," ++
-            ".trace_fields={s},.trace_field_count={d},.trace_mode={s},.cell={d}}};\n",
-        .{ name, layout.size, layout.alignment, fields, layout.fields.len, layout.count, layout.stride, kind, collection_kind, element, key, trace_fields, trace_field_count, trace_mode, @intFromBool(target.cell) },
+            ".trace_fields={s},.trace_field_count={d},.trace_mode={s},.cell={d}",
+        .{ name, layout.size, layout.alignment, fields, layout.fields.len, layout.count, layout.stride, kind.spelling(), collection_kind, element, key, trace_fields, trace_field_count, trace_mode, @intFromBool(target.cell) },
     ) catch return error.OutOfMemory;
+    writer.print(",.scan={s},.scan_count={d}}};\n", .{ scan, if (planned) plan.len else 0 }) catch return error.OutOfMemory;
+}
+/// The descriptor kinds of native_heap.h's `MYL_NATIVE_*` enumeration.
+const Kind = enum {
+    plain,
+    pointer,
+    record,
+    array,
+    variant,
+    owned_buffer,
+    owned_pool,
+    float,
+    resource,
+    /// The C enumerator this kind is spelled with.
+    fn spelling(kind: Kind) []const u8 {
+        return switch (kind) {
+            .plain => "MYL_NATIVE_PLAIN",
+            .pointer => "MYL_NATIVE_POINTER",
+            .record => "MYL_NATIVE_RECORD",
+            .array => "MYL_NATIVE_ARRAY",
+            .variant => "MYL_NATIVE_VARIANT",
+            .owned_buffer => "MYL_NATIVE_OWNED_BUFFER",
+            .owned_pool => "MYL_NATIVE_OWNED_POOL",
+            .float => "MYL_NATIVE_FLOAT",
+            .resource => "MYL_NATIVE_RESOURCE",
+        };
+    }
+};
+/// A descriptor as generated code names it: the type it is emitted for and the
+/// layout it is emitted from.
+const Described = struct {
+    ty: typed.Type,
+    layout: native.Layout,
+    /// The descriptor a field of type `ty` points at. A niche optional's
+    /// descriptor is its payload's pointer descriptor (QBE-NICHE-1).
+    fn of(catalog: *native.Catalog, ty: typed.Type) Error!Described {
+        const layout = try catalog.layout(ty);
+        if (layout.kind != .niche) return .{ .ty = ty, .layout = layout };
+        const payload = layout.fields[0].ty;
+        return .{ .ty = payload, .layout = try catalog.layout(payload) };
+    }
+    /// The kind `emit` writes for this descriptor.
+    fn kind(self: Described, catalog: *native.Catalog) Kind {
+        if (@import("numeric_surface.zig").isFloat(self.ty, catalog.records)) return .float;
+        return switch (self.layout.kind) {
+            .managed => .pointer,
+            .owned_buffer => .owned_buffer,
+            .owned_pool => .owned_pool,
+            .resource => .resource,
+            .record, .domain => .record,
+            .array => .array,
+            .variant => .variant,
+            else => .plain,
+        };
+    }
+};
+/// One reference slot of a flat scan plan, as `myl_native_scan_entry` spells it.
+const ScanEntry = struct { offset: u64, tag_offset: u64, tag: u64 };
+/// `MYL_NATIVE_SCAN_ALWAYS`: the tag offset of a slot outside any union case.
+const scan_always: u64 = std.math.maxInt(u32);
+/// A plan of at most `MYL_NATIVE_SCAN_ENTRIES` slots.
+const ScanPlan = struct { entries: [8]ScanEntry = undefined, len: usize = 0 };
+/// Append the reference slots of `target` at `base` under `condition`, exactly
+/// as `flatten` in src/native_heap.c walks the emitted descriptor: an untraced
+/// descriptor adds nothing, a reference adds one slot, an array repeats its
+/// element at each stride, a record adds its traced fields in order and a union
+/// its traced cases under their tags. False when the shape needs more than
+/// eight slots or nests a union inside a union, where the runtime keeps the
+/// recursive walk; `--gc-stress` checks every plan against that walk.
+fn flatten(catalog: *native.Catalog, plan: *ScanPlan, target: Described, base: u64, condition: ScanEntry) Error!bool {
+    const layout = target.layout;
+    if (!layout.trace) return true;
+    if (base > scan_always -% layout.size) return false;
+    const kind = target.kind(catalog);
+    switch (kind) {
+        .pointer, .owned_buffer, .owned_pool => {
+            if (plan.len == plan.entries.len) return false;
+            plan.entries[plan.len] = .{ .offset = base, .tag_offset = condition.tag_offset, .tag = condition.tag };
+            plan.len += 1;
+            return true;
+        },
+        .array => {
+            const element = (try firstTraced(catalog, layout.fields)) orelse return true;
+            const child = try Described.of(catalog, element.ty);
+            for (0..layout.count) |index| if (!try flatten(catalog, plan, child, base + index * layout.stride, condition)) return false;
+            return true;
+        },
+        .record, .variant => {
+            if (kind == .variant and condition.tag_offset != scan_always) return false;
+            for (layout.fields) |field| {
+                if (!(try catalog.layout(field.ty)).trace) continue;
+                const inner: ScanEntry = if (kind == .variant) .{ .offset = 0, .tag_offset = base, .tag = field.tag orelse 0 } else condition;
+                if (!try flatten(catalog, plan, try Described.of(catalog, field.ty), base + field.offset, inner)) return false;
+            }
+            return true;
+        },
+        else => return true,
+    }
+}
+/// The first field whose type is traced: `trace_fields[0]` of the emitted descriptor.
+fn firstTraced(catalog: *native.Catalog, fields: []const native.Field) Error!?native.Field {
+    for (fields) |field| if ((try catalog.layout(field.ty)).trace) return field;
+    return null;
 }
 
 test "native descriptors are catalog-order independent" {
@@ -215,4 +326,61 @@ test "a niche optional is described to the runtime exactly as its payload's poin
     try std.testing.expectEqualStrings(node_body, maybe_body);
     try std.testing.expect(std.mem.indexOf(u8, maybe_body, ".size=8,.alignment=8,.fields=NULL,") != null);
     try std.testing.expect(std.mem.indexOf(u8, maybe_body, ".kind=MYL_NATIVE_POINTER,") != null);
+}
+
+// spec-case: GC-SCAN-PLAN-2
+test "a traced aggregate descriptor carries the flat scan plan of its references" {
+    const span = @import("source.zig").Span{ .start = 0, .end = 0 };
+    const base = typed.Type.record_base;
+    const node: typed.Type = @fromBackingInt(base);
+    const holder: typed.Type = @fromBackingInt(base + 1);
+    const slot: typed.Type = @fromBackingInt(base + 2);
+    const trio: typed.Type = @fromBackingInt(base + 3);
+    const wide: typed.Type = @fromBackingInt(base + 4);
+    const fields = [_]typed.Field{
+        .{ .name = "span", .declaration = span, .ty = .u64 },
+        .{ .name = "first", .declaration = span, .ty = node },
+        .{ .name = "count", .declaration = span, .ty = .u32 },
+        .{ .name = "second", .declaration = span, .ty = node },
+    };
+    const cases = [_]typed.Variant{
+        .{ .name = "empty", .declaration = span, .payload = null },
+        .{ .name = "number", .declaration = span, .payload = .u64 },
+        .{ .name = "full", .declaration = span, .payload = node },
+    };
+    const records = [_]typed.Record{
+        .{ .id = node, .name = "Node", .declaration = span, .fields = &.{}, .managed = true },
+        .{ .id = holder, .name = "Holder", .declaration = span, .fields = &fields },
+        .{ .id = slot, .name = "Slot", .declaration = span, .fields = &.{}, .shape = .{ .variants = .{ .is_union = true, .cases = &cases } } },
+        .{ .id = trio, .name = "Trio", .declaration = span, .fields = &.{}, .shape = .{ .array = .{ .element = node, .length = 3 } } },
+        .{ .id = wide, .name = "Wide", .declaration = span, .fields = &.{}, .shape = .{ .array = .{ .element = node, .length = 9 } } },
+    };
+    var catalog = try native.Catalog.initRecords(std.testing.allocator, &records);
+    defer catalog.deinit();
+    const output = try generate(std.testing.allocator, &catalog);
+    defer std.testing.allocator.free(output);
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const always = ",.tag_offset=MYL_NATIVE_SCAN_ALWAYS,.tag=0}},\n";
+    // A record's plan names its two references and skips the scalars between them.
+    const holder_name = try symbol(a, &catalog, holder);
+    const holder_plan = try std.fmt.allocPrint(a, "{s}_scan[] = {{\n {{.offset=8" ++ always ++ " {{.offset=24" ++ always ++ "}};\n", .{holder_name});
+    try std.testing.expect(std.mem.indexOf(u8, output, holder_plan) != null);
+    try std.testing.expect(std.mem.indexOf(u8, output, try std.fmt.allocPrint(a, ".scan={s}_scan,.scan_count=2}};", .{holder_name})) != null);
+    // A union's reference is live only under its case's tag, read at the union's start.
+    const slot_plan = try std.fmt.allocPrint(a, "{s}_scan[] = {{\n {{.offset=8,.tag_offset=0,.tag=2}},\n}};\n", .{try symbol(a, &catalog, slot)});
+    try std.testing.expect(std.mem.indexOf(u8, output, slot_plan) != null);
+    // A fixed array repeats its element's slot at every stride.
+    const trio_plan = try std.fmt.allocPrint(a, "{s}_scan[] = {{\n {{.offset=0" ++ always ++ " {{.offset=8" ++ always ++ " {{.offset=16" ++ always ++ "}};\n", .{try symbol(a, &catalog, trio)});
+    try std.testing.expect(std.mem.indexOf(u8, output, trio_plan) != null);
+    // Nine references do not fit a plan, and a reference needs none: both keep the walk.
+    const wide_name = try symbol(a, &catalog, wide);
+    try std.testing.expect(std.mem.indexOf(u8, output, try std.fmt.allocPrint(a, "{s}_scan[]", .{wide_name})) == null);
+    const wide_head = try std.fmt.allocPrint(a, "const myl_native_type {s} = ", .{wide_name});
+    const wide_at = std.mem.indexOf(u8, output, wide_head).?;
+    try std.testing.expect(std.mem.endsWith(u8, output[wide_at..std.mem.indexOfScalarPos(u8, output, wide_at, '\n').?], ".scan=NULL,.scan_count=0};"));
+    const node_head = try std.fmt.allocPrint(a, "const myl_native_type {s} = ", .{try symbol(a, &catalog, node)});
+    const node_at = std.mem.indexOf(u8, output, node_head).?;
+    try std.testing.expect(std.mem.endsWith(u8, output[node_at..std.mem.indexOfScalarPos(u8, output, node_at, '\n').?], ".scan=NULL,.scan_count=0};"));
 }

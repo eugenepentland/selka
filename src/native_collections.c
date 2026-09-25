@@ -11,9 +11,14 @@ static const myl_native_type pointer_type = {
 static const myl_native_field list_fields[] = {
     { .offset = offsetof(myl_native_list, storage), .type = &pointer_type }
 };
+/* The header's one reference, as the collector's flat plan (GC-SCAN-PLAN-2). */
+static const myl_native_scan_entry list_scan[] = {
+    { .offset = offsetof(myl_native_list, storage), .tag_offset = MYL_NATIVE_SCAN_ALWAYS }
+};
 static const myl_native_type list_type = {
     .size = sizeof(myl_native_list), .alignment = _Alignof(myl_native_list),
-    .kind = MYL_NATIVE_RECORD, .fields = list_fields, .field_count = 1
+    .kind = MYL_NATIVE_RECORD, .fields = list_fields, .field_count = 1,
+    .scan = list_scan, .scan_count = 1
 };
 myl_native_list *myl_native_list_new(myl_native_heap *heap, const myl_native_type *element, size_t capacity) {
     if (!element) return NULL;

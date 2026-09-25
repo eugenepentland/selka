@@ -185,10 +185,14 @@ static size_t scalars_in(const unsigned char *bytes, size_t count) {
 static const myl_native_field view_fields[]={
     { .offset=offsetof(myl_native_text_view,owner), .type=&pointer_type }
 };
+static const myl_native_scan_entry view_scan[]={
+    { .offset=offsetof(myl_native_text_view,owner), .tag_offset=MYL_NATIVE_SCAN_ALWAYS }
+};
 const myl_native_type myl_native_text_view_type={
     .size=sizeof(myl_native_text_view), .alignment=_Alignof(myl_native_text_view),
     .kind=MYL_NATIVE_RECORD, .fields=view_fields, .field_count=1,
-    .trace_fields=view_fields, .trace_field_count=1, .trace_mode=MYL_NATIVE_TRACE_FIELDS
+    .trace_fields=view_fields, .trace_field_count=1, .trace_mode=MYL_NATIVE_TRACE_FIELDS,
+    .scan=view_scan, .scan_count=1
 };
 _Static_assert(sizeof(myl_native_text_view)==32, "a text view is four words");
 /* Whether a piece of `count` octets at octet `offset` of `owner` is shared as a

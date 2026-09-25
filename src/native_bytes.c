@@ -51,10 +51,14 @@ myl_native_bytes *myl_native_bytes_copy(myl_native_heap *heap, myl_native_bytes 
 static const myl_native_field view_fields[] = {
     { .offset=offsetof(myl_native_list,work)+offsetof(myl_native_drop_link,owner), .type=&pointer_type }
 };
+static const myl_native_scan_entry view_scan[] = {
+    { .offset=offsetof(myl_native_list,work)+offsetof(myl_native_drop_link,owner), .tag_offset=MYL_NATIVE_SCAN_ALWAYS }
+};
 static const myl_native_type view_header_type = {
     .size=sizeof(myl_native_list), .alignment=_Alignof(myl_native_list),
     .kind=MYL_NATIVE_RECORD, .fields=view_fields, .field_count=1,
-    .trace_fields=view_fields, .trace_field_count=1, .trace_mode=MYL_NATIVE_TRACE_FIELDS
+    .trace_fields=view_fields, .trace_field_count=1, .trace_mode=MYL_NATIVE_TRACE_FIELDS,
+    .scan=view_scan, .scan_count=1
 };
 /* The backing block a view of `source` must keep alive. A byte string owns the
    block its `storage` points into; a view already points into a block an

@@ -3,6 +3,7 @@
 #define _DEFAULT_SOURCE 1
 #include "native_heap.h"
 #include "native_arena.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdalign.h>
@@ -455,6 +456,8 @@ static void mark(myl_native_heap *heap, void *payload) {
     if (!worklist_push(heap, object)) { heap->scratch_failed = 1; return; }
     object->mark = word | MYL_NATIVE_OBJECT_MARKED;
 }
+static inline const myl_native_scan_entry *followed_plan(const myl_native_heap *, const myl_native_type *);
+static void scan_elements(myl_native_heap *, const myl_native_scan_entry *, size_t, const unsigned char *, size_t, size_t);
 static void trace(myl_native_heap *heap, const myl_native_type *type, const void *address) {
     const unsigned char *bytes = address;
     if (type->trace_mode == MYL_NATIVE_TRACE_NONE) return;
@@ -462,6 +465,8 @@ static void trace(myl_native_heap *heap, const myl_native_type *type, const void
         void *pointer;
         memcpy(&pointer, bytes, sizeof(pointer));
         mark(heap, pointer);
+    } else if (type->scan) {
+        scan_elements(heap, followed_plan(heap, type), type->scan_count, bytes, 1, type->size);
     } else if (type->kind == MYL_NATIVE_ARRAY) {
         const myl_native_field *fields = type->trace_mode == MYL_NATIVE_TRACE_FIELDS ? type->trace_fields : type->fields;
         for (size_t i = 0; i < type->count; ++i)
@@ -519,33 +524,25 @@ static int traced_payload(const myl_native_object *object) {
 static int rescanned(const myl_native_object *object) {
     return traced_payload(object) && !object->element->cell;
 }
-/* One reference slot of a flattened element: the pointer's byte offset and,
- * when it is a variant case's payload, the offset of the variant's tag and the
- * tag value under which the slot is live. */
-#define SCAN_ALWAYS UINT32_MAX
-enum { SCAN_ENTRIES = 8, SCAN_PLANS = 256 };
-typedef struct { uint32_t offset, tag_offset, tag; } scan_entry;
-/* A descriptor's references flattened into at most SCAN_ENTRIES slots, so
- * scanning an element is one loop instead of a walk of the descriptor tree.
- * `usable` is zero for a shape that does not flatten (more slots, or a variant
- * inside a variant), which keeps the recursive walk. */
-struct myl_native_scan_plan {
-    const myl_native_type *type;
-    /* `shape_signature` of `type` when the plan was built (GC-SCAN-PLAN-1). */
-    uint64_t signature;
-    int usable;
-    uint32_t count;
-    scan_entry entries[SCAN_ENTRIES];
-};
+/* A plan under construction: `count` of the `capacity` slots at `entries`
+ * are filled. */
+typedef struct {
+    myl_native_scan_entry *entries;
+    size_t capacity, count;
+} scan_builder;
+/* Whether a descriptor is one reference: the collector marks its word itself. */
+static inline int reference_kind(const myl_native_type *type) {
+    return type->kind == MYL_NATIVE_POINTER || type->kind == MYL_NATIVE_OWNED_BUFFER || type->kind == MYL_NATIVE_OWNED_POOL;
+}
 /* Append the reference slots of `type` at `base` under `condition` (a tag
- * offset and value, or SCAN_ALWAYS). Returns zero when the shape does not fit
- * a flat plan. The traversal mirrors `trace` exactly. */
-static int flatten(myl_native_scan_plan *plan, const myl_native_type *type, size_t base, scan_entry condition) {
+ * offset and value, or MYL_NATIVE_SCAN_ALWAYS). Returns zero when the shape
+ * does not fit a flat plan. The traversal mirrors `trace` exactly. */
+static int flatten(scan_builder *plan, const myl_native_type *type, size_t base, myl_native_scan_entry condition) {
     if (type->trace_mode == MYL_NATIVE_TRACE_NONE) return 1;
     if (base > UINT32_MAX - type->size) return 0;
-    if (type->kind == MYL_NATIVE_POINTER || type->kind == MYL_NATIVE_OWNED_BUFFER || type->kind == MYL_NATIVE_OWNED_POOL) {
-        if (plan->count == SCAN_ENTRIES) return 0;
-        plan->entries[plan->count++] = (scan_entry){(uint32_t)base, condition.tag_offset, condition.tag};
+    if (reference_kind(type)) {
+        if (plan->count == plan->capacity) return 0;
+        plan->entries[plan->count++] = (myl_native_scan_entry){(uint32_t)base, condition.tag_offset, condition.tag};
         return 1;
     }
     const myl_native_field *fields = type->trace_mode == MYL_NATIVE_TRACE_FIELDS ? type->trace_fields : type->fields;
@@ -556,68 +553,51 @@ static int flatten(myl_native_scan_plan *plan, const myl_native_type *type, size
     }
     if (type->kind != MYL_NATIVE_RECORD && type->kind != MYL_NATIVE_VARIANT) return 1;
     size_t field_count = type->trace_mode == MYL_NATIVE_TRACE_FIELDS ? type->trace_field_count : type->field_count;
-    if (type->kind == MYL_NATIVE_VARIANT && condition.tag_offset != SCAN_ALWAYS) return 0;
+    if (type->kind == MYL_NATIVE_VARIANT && condition.tag_offset != MYL_NATIVE_SCAN_ALWAYS) return 0;
     for (size_t i = 0; i < field_count; ++i) {
-        scan_entry inner = condition;
-        if (type->kind == MYL_NATIVE_VARIANT) inner = (scan_entry){0, (uint32_t)base, fields[i].tag};
+        myl_native_scan_entry inner = condition;
+        if (type->kind == MYL_NATIVE_VARIANT) inner = (myl_native_scan_entry){0, (uint32_t)base, fields[i].tag};
         if (!flatten(plan, fields[i].type, base + fields[i].offset, inner)) return 0;
     }
     return 1;
 }
-/* What a runtime-built descriptor's own words say about its layout: its size
- * and kind and, for each field, the offset, tag and child descriptor. Generated
- * descriptors are image data whose address never names another layout, but a
- * runtime-built one can live inside a managed object — a dictionary carries the
- * descriptor of its own entries — and once that object is reclaimed another
- * object at the same address carries a descriptor of a different layout. A
- * plan cached under the address alone would then trace the new entries with
- * the old entries' reference slots, skipping live references or marking
- * scalars. The children a runtime-built descriptor names are image data, so
- * this signature tells two such layouts apart (GC-SCAN-PLAN-1). */
-static uint64_t shape_signature(const myl_native_type *type) {
-    if (type->trace_mode != MYL_NATIVE_TRACE_LEGACY) return 0;
-    uint64_t hash = type->size * UINT64_C(0x9e3779b97f4a7c15) ^ type->kind ^ (uint64_t)type->field_count << 40;
-    for (size_t i = 0; i < type->field_count; ++i) {
-        hash ^= (uint64_t)(uintptr_t)type->fields[i].type + type->fields[i].offset * UINT64_C(0xbf58476d1ce4e5b9) + type->fields[i].tag;
-        hash *= UINT64_C(0x94d049bb133111eb);
-        hash ^= hash >> 29;
-    }
-    return hash;
+int myl_native_scan_flatten(const myl_native_type *type, myl_native_scan_entry *entries, size_t capacity, size_t *count) {
+    scan_builder plan = {entries, capacity, 0};
+    if (!flatten(&plan, type, 0, (myl_native_scan_entry){0, MYL_NATIVE_SCAN_ALWAYS, 0})) return 0;
+    *count = plan.count;
+    return 1;
 }
-/* The flat plan for `type`, from a small direct-mapped cache the heap owns,
- * built on first use; NULL when the type does not flatten or the cache could
- * not be reserved. A plan answers only the descriptor address and shape it was
- * built for (GC-SCAN-PLAN-1). */
-static const myl_native_scan_plan *scan_plan(myl_native_heap *heap, const myl_native_type *type) {
-    if (!heap->scan_plans) {
-        heap->scan_plans = calloc(SCAN_PLANS, sizeof *heap->scan_plans);
-        if (!heap->scan_plans) return NULL;
-    }
-    myl_native_scan_plan *plan = &heap->scan_plans[((uintptr_t)type >> 4) & (SCAN_PLANS - 1)];
-    uint64_t signature = shape_signature(type);
-    if (plan->type != type || plan->signature != signature) {
-        plan->type = type;
-        plan->signature = signature;
-        plan->count = 0;
-        plan->usable = flatten(plan, type, 0, (scan_entry){0, SCAN_ALWAYS, 0});
-    }
-    return plan->usable ? plan : NULL;
+/* Whether the plan attached to `type` names exactly the slots its fields
+ * flatten to, in the same order. */
+static int plan_agrees(const myl_native_type *type) {
+    myl_native_scan_entry entries[MYL_NATIVE_SCAN_ENTRIES];
+    size_t count;
+    if (!myl_native_scan_flatten(type, entries, MYL_NATIVE_SCAN_ENTRIES, &count)) return 0;
+    return count == type->scan_count && (!count || !memcmp(entries, type->scan, count * sizeof *entries));
 }
-/* Trace every element of one object's payload. */
-static void scan_payload(myl_native_heap *heap, const myl_native_object *object) {
-    if (!traced_payload(object)) return;
-    const unsigned char *payload = (const unsigned char *)(object + 1);
-    size_t count = object_count(object);
-    const myl_native_type *element = object->element;
-    const myl_native_scan_plan *plan = scan_plan(heap, element);
-    if (!plan) {
-        for (size_t i = 0; i < count; ++i) trace(heap, element, payload + i * element->size);
-        return;
+/* The plan the collector follows for `type`: the one attached to the
+ * descriptor, read with one load — no table, no lookup and no hash, so no two
+ * descriptors can share or evict one another's plan, and a descriptor built
+ * inside a managed object (a dictionary's entries) carries the plan of its own
+ * layout wherever that object lives (GC-SCAN-PLAN-1). The compiler and the
+ * runtime each build plans, so under `--gc-stress` every plan followed is first
+ * checked against a fresh flattening of its descriptor, and a disagreement
+ * aborts rather than tracing the wrong slots (GC-SCAN-PLAN-2). */
+static inline const myl_native_scan_entry *followed_plan(const myl_native_heap *heap, const myl_native_type *type) {
+    const myl_native_scan_entry *scan = type->scan;
+    if (scan && heap->stress && !plan_agrees(type)) {
+        fputs("mylang runtime: a descriptor's scan plan disagrees with its fields\n", stderr);
+        abort();
     }
-    for (size_t i = 0; i < count; ++i, payload += element->size)
-        for (uint32_t e = 0; e < plan->count; ++e) {
-            const scan_entry *entry = &plan->entries[e];
-            if (entry->tag_offset != SCAN_ALWAYS) {
+    return scan;
+}
+/* Mark every slot `scan` names in `count` consecutive elements of `size` bytes. */
+static void scan_elements(myl_native_heap *heap, const myl_native_scan_entry *scan, size_t entries,
+                          const unsigned char *payload, size_t count, size_t size) {
+    for (size_t i = 0; i < count; ++i, payload += size)
+        for (size_t e = 0; e < entries; ++e) {
+            const myl_native_scan_entry *entry = &scan[e];
+            if (entry->tag_offset != MYL_NATIVE_SCAN_ALWAYS) {
                 uint32_t tag;
                 memcpy(&tag, payload + entry->tag_offset, sizeof tag);
                 if (tag != entry->tag) continue;
@@ -626,6 +606,29 @@ static void scan_payload(myl_native_heap *heap, const myl_native_object *object)
             memcpy(&pointer, payload + entry->offset, sizeof pointer);
             mark(heap, pointer);
         }
+}
+/* Trace every element of one object's payload: a reference element's word
+ * directly, an element with a plan by that plan, and any other by the
+ * recursive walk. */
+static void scan_payload(myl_native_heap *heap, const myl_native_object *object) {
+    if (!traced_payload(object)) return;
+    const unsigned char *payload = (const unsigned char *)(object + 1);
+    size_t count = object_count(object);
+    const myl_native_type *element = object->element;
+    if (reference_kind(element)) {
+        for (size_t i = 0; i < count; ++i, payload += element->size) {
+            void *pointer;
+            memcpy(&pointer, payload, sizeof pointer);
+            mark(heap, pointer);
+        }
+        return;
+    }
+    const myl_native_scan_entry *scan = followed_plan(heap, element);
+    if (scan) {
+        if (element->scan_count) scan_elements(heap, scan, element->scan_count, payload, count, element->size);
+        return;
+    }
+    for (size_t i = 0; i < count; ++i) trace(heap, element, payload + i * element->size);
 }
 /* Clear every tracing-heap mark, so every object is young again: a bitmap
  * segment's mark bits at once, and the header bit of every object in any
@@ -1211,7 +1214,6 @@ void myl_native_heap_destroy(myl_native_heap *heap) {
     for (size_t i = 0; i < heap->pool_count; ++i) munmap(heap->pools[i], MYL_NATIVE_POOL_BYTES);
     free(heap->pool_set);
     free(heap->pools);
-    free(heap->scan_plans);
     free(heap->spare);
     free(heap->pending);
     free(heap->generations.rescan.items);

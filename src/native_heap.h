@@ -10,6 +10,18 @@ typedef struct {
     const myl_native_type *type;
     uint32_t tag;
 } myl_native_field;
+/* One reference slot of a descriptor's flat scan plan (GC-SCAN-PLAN-2): the
+ * byte offset of a pointer inside one element and, when that pointer is a
+ * union case's payload, the offset of the union's 32-bit tag and the tag value
+ * under which the slot holds a reference. `tag_offset` is
+ * MYL_NATIVE_SCAN_ALWAYS for a slot that always holds one. */
+typedef struct {
+    uint32_t offset, tag_offset, tag;
+} myl_native_scan_entry;
+#define MYL_NATIVE_SCAN_ALWAYS UINT32_MAX
+/* The most slots a generated plan holds. A shape with more, or with a union
+ * inside a union, has no plan and keeps the collector's recursive walk. */
+#define MYL_NATIVE_SCAN_ENTRIES 8
 struct myl_native_type {
     size_t size;
     size_t alignment;
@@ -35,6 +47,18 @@ struct myl_native_type {
      * the conservative rule every runtime descriptor relies on: an old object's
      * references are rescanned by every minor collection. */
     unsigned cell;
+    /* The flat scan plan (GC-SCAN-PLAN-2): the `scan_count` reference slots at
+     * `scan` are exactly the pointers the recursive walk of `fields` (or
+     * `trace_fields`) reaches in one element, in the order it reaches them, so
+     * the collector traces an element with one loop and no lookup. The compiler
+     * emits a plan with every generated aggregate descriptor that has one, the
+     * runtime spells its own record descriptors' plans, and a dictionary builds
+     * its entries' plan inside itself when it is created. A plan is never
+     * written after its descriptor is built, so a descriptor in read-only
+     * storage stays valid. NULL keeps the recursive walk; a pointer descriptor
+     * needs no plan. */
+    const myl_native_scan_entry *scan;
+    size_t scan_count;
 };
 enum { MYL_NATIVE_TRACE_LEGACY, MYL_NATIVE_TRACE_NONE, MYL_NATIVE_TRACE_FIELDS };
 enum { MYL_NATIVE_PLAIN, MYL_NATIVE_POINTER, MYL_NATIVE_RECORD,
@@ -215,7 +239,6 @@ typedef struct {
     size_t cached, cached_bytes;
 } myl_native_arena_statistics;
 typedef struct myl_native_arena_chunk myl_native_arena_chunk;
-typedef struct myl_native_scan_plan myl_native_scan_plan;
 /* One growable array of object headers the collector owns. */
 typedef struct {
     myl_native_object **items;
@@ -349,9 +372,6 @@ typedef struct {
     unsigned char *pool_next, *pool_end;
     void **pools;
     size_t pool_count, pool_capacity;
-    /* The collector's cache of element descriptors flattened into their
-     * reference slots, allocated on first use; see native_heap.c. */
-    struct myl_native_scan_plan *scan_plans;
     /* Spare segments (`GC-SPARE-1`): size-classed blocks a sweep found with
      * no object in them, unlinked from their class and from `segments`, and
      * handed to the next class that needs a fresh segment, whatever its
@@ -396,6 +416,12 @@ size_t myl_native_budget_environment(int *valid);
  * reserves far more address space than any budget would allow. Returns 1 when a
  * ceiling was installed. */
 int myl_native_budget_guard(size_t budget);
+/* Flatten `type` into the reference slots the collector's recursive walk
+ * reaches in one element, in the order it reaches them, writing at most
+ * `capacity` of them to `entries`. Returns 1 and stores the slot count, or 0
+ * when the shape needs more slots or holds a union inside a union. It is the
+ * plan a descriptor's `scan` must spell (GC-SCAN-PLAN-2). */
+int myl_native_scan_flatten(const myl_native_type *type, myl_native_scan_entry *entries, size_t capacity, size_t *count);
 void myl_native_heap_init(myl_native_heap *heap, size_t limit);
 void myl_native_heap_destroy(myl_native_heap *heap);
 void myl_native_root_push(myl_native_heap *heap, myl_native_root *root,
