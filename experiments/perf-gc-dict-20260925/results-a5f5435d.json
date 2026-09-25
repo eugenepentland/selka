@@ -1,0 +1,9305 @@
+{
+ "meta": {
+  "sides": {
+   "base": {
+    "compiler": "/home/epentland/ai/canopy/mylang-worktrees/perf-gc-dict-base/zig-out/bin/mylang",
+    "compiler_sha256": "9951170e7bc0ff4f02dd9adea8b326b5c38410aa8b662b96c6647291c985c637"
+   },
+   "mid": {
+    "compiler": "/home/epentland/ai/canopy/mylang-worktrees/perf-gc-dict/.tmp/compilers/mid/mylang",
+    "compiler_sha256": "52230553219b40cb0fd6c3fd9e7abde5bd3f37700e00e8971ea32577c1de99c7"
+   },
+   "new": {
+    "compiler": "/home/epentland/ai/canopy/mylang-worktrees/perf-gc-dict/zig-out/bin/mylang",
+    "compiler_sha256": "ca6600d393cd8298fc59c47827f1b128af721b6c104613bd64197ec362cdcba0"
+   }
+  },
+  "cpu": 10,
+  "sibling": 11,
+  "perf_reps": 3,
+  "rounds": 5,
+  "memory_limit": "8G"
+ },
+ "samples": {
+  "parity/suite/binary_trees|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 2203885736,
+      "cycles": 504360158
+     },
+     {
+      "status": 0,
+      "instructions": 2203886151,
+      "cycles": 503285791
+     },
+     {
+      "status": 0,
+      "instructions": 2203885732,
+      "cycles": 503539606
+     }
+    ],
+    "rss_kb": [
+     16388,
+     16340,
+     16328
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 2215879612,
+      "cycles": 510813598
+     },
+     {
+      "status": 0,
+      "instructions": 2215879617,
+      "cycles": 512346960
+     },
+     {
+      "status": 0,
+      "instructions": 2215879616,
+      "cycles": 509561474
+     }
+    ],
+    "rss_kb": [
+     16356,
+     16540,
+     16200
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 2187886516,
+      "cycles": 497147076
+     },
+     {
+      "status": 0,
+      "instructions": 2187886520,
+      "cycles": 493123682
+     },
+     {
+      "status": 0,
+      "instructions": 2187886513,
+      "cycles": 497941567
+     }
+    ],
+    "rss_kb": [
+     16532,
+     16524,
+     16532
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.002,
+    "load1_start": 4.48486328125,
+    "load1_end": 4.44580078125
+   }
+  },
+  "parity/suite/binary_trees|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1333790216,
+      "cycles": 409620568
+     },
+     {
+      "status": 0,
+      "instructions": 1333790209,
+      "cycles": 410721484
+     },
+     {
+      "status": 0,
+      "instructions": 1333790210,
+      "cycles": 408750157
+     }
+    ],
+    "rss_kb": [
+     16524,
+     16360,
+     16464
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1345786028,
+      "cycles": 409854944
+     },
+     {
+      "status": 0,
+      "instructions": 1345784013,
+      "cycles": 409072746
+     },
+     {
+      "status": 0,
+      "instructions": 1345784009,
+      "cycles": 408885597
+     }
+    ],
+    "rss_kb": [
+     16516,
+     16532,
+     16528
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1317790908,
+      "cycles": 407922718
+     },
+     {
+      "status": 0,
+      "instructions": 1317790905,
+      "cycles": 407690794
+     },
+     {
+      "status": 0,
+      "instructions": 1317790906,
+      "cycles": 408890271
+     }
+    ],
+    "rss_kb": [
+     16356,
+     16528,
+     16528
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.005,
+    "load1_start": 4.44580078125,
+    "load1_end": 4.40966796875
+   }
+  },
+  "parity/suite/fannkuch_redux|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 5755844443,
+      "cycles": 1446808271
+     },
+     {
+      "status": 0,
+      "instructions": 5755844453,
+      "cycles": 1444897524
+     },
+     {
+      "status": 0,
+      "instructions": 5755844923,
+      "cycles": 2070417530
+     }
+    ],
+    "rss_kb": [
+     2416,
+     2448,
+     2448
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 5755844495,
+      "cycles": 1417591535
+     },
+     {
+      "status": 0,
+      "instructions": 5755844501,
+      "cycles": 1414327051
+     },
+     {
+      "status": 0,
+      "instructions": 5755844513,
+      "cycles": 1419739566
+     }
+    ],
+    "rss_kb": [
+     2448,
+     2440,
+     2436
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 5755845415,
+      "cycles": 1462924014
+     },
+     {
+      "status": 0,
+      "instructions": 5755845408,
+      "cycles": 1466350986
+     },
+     {
+      "status": 0,
+      "instructions": 5755845630,
+      "cycles": 1643229677
+     }
+    ],
+    "rss_kb": [
+     2432,
+     2396,
+     2420
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.528,
+    "load1_start": 4.40966796875,
+    "load1_end": 10.3427734375
+   }
+  },
+  "parity/suite/fannkuch_redux|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1990833415,
+      "cycles": 959745434
+     },
+     {
+      "status": 0,
+      "instructions": 1990833413,
+      "cycles": 993409715
+     },
+     {
+      "status": 0,
+      "instructions": 1990833505,
+      "cycles": 992868674
+     }
+    ],
+    "rss_kb": [
+     2620,
+     2480,
+     2600
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1990833433,
+      "cycles": 1028355279
+     },
+     {
+      "status": 0,
+      "instructions": 1990833461,
+      "cycles": 1001492102
+     },
+     {
+      "status": 0,
+      "instructions": 1990833505,
+      "cycles": 1008285352
+     }
+    ],
+    "rss_kb": [
+     2444,
+     2444,
+     2428
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1990833334,
+      "cycles": 833734715
+     },
+     {
+      "status": 0,
+      "instructions": 1990833484,
+      "cycles": 1009157033
+     },
+     {
+      "status": 0,
+      "instructions": 1990833588,
+      "cycles": 1005466615
+     }
+    ],
+    "rss_kb": [
+     2436,
+     2436,
+     2424
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.839,
+    "load1_start": 10.3427734375,
+    "load1_end": 12.69580078125
+   }
+  },
+  "parity/suite/knucleotide|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 3029448834,
+      "cycles": 1314559694
+     },
+     {
+      "status": 0,
+      "instructions": 3029448781,
+      "cycles": 1170148324
+     },
+     {
+      "status": 0,
+      "instructions": 3029448767,
+      "cycles": 1214096707
+     }
+    ],
+    "rss_kb": [
+     28420,
+     28608,
+     28420
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 3020341536,
+      "cycles": 792304058
+     },
+     {
+      "status": 0,
+      "instructions": 3020341818,
+      "cycles": 1260929527
+     },
+     {
+      "status": 0,
+      "instructions": 3020341719,
+      "cycles": 1070064268
+     }
+    ],
+    "rss_kb": [
+     28360,
+     28608,
+     28568
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 2984436986,
+      "cycles": 1014737319
+     },
+     {
+      "status": 0,
+      "instructions": 2984437105,
+      "cycles": 1209519206
+     },
+     {
+      "status": 0,
+      "instructions": 2984437125,
+      "cycles": 1208088078
+     }
+    ],
+    "rss_kb": [
+     28556,
+     28336,
+     28528
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.726,
+    "load1_start": 12.69580078125,
+    "load1_end": 16.6865234375
+   }
+  },
+  "parity/suite/knucleotide|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1965617721,
+      "cycles": 905126756
+     },
+     {
+      "status": 0,
+      "instructions": 1965617568,
+      "cycles": 721700652
+     },
+     {
+      "status": 0,
+      "instructions": 1965617527,
+      "cycles": 655315669
+     }
+    ],
+    "rss_kb": [
+     28372,
+     28616,
+     28584
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1962661927,
+      "cycles": 734011745
+     },
+     {
+      "status": 0,
+      "instructions": 1962661941,
+      "cycles": 820572751
+     },
+     {
+      "status": 0,
+      "instructions": 1962661859,
+      "cycles": 693333863
+     }
+    ],
+    "rss_kb": [
+     28572,
+     28516,
+     28592
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1926756385,
+      "cycles": 792185118
+     },
+     {
+      "status": 0,
+      "instructions": 1926756320,
+      "cycles": 721578772
+     },
+     {
+      "status": 0,
+      "instructions": 1926756305,
+      "cycles": 750798147
+     }
+    ],
+    "rss_kb": [
+     28440,
+     28548,
+     28568
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.617,
+    "load1_start": 16.6865234375,
+    "load1_end": 17.89404296875
+   }
+  },
+  "parity/suite/mandelbrot|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 3978707020,
+      "cycles": 1716508871
+     },
+     {
+      "status": 0,
+      "instructions": 3978706893,
+      "cycles": 1721659915
+     },
+     {
+      "status": 0,
+      "instructions": 3978706934,
+      "cycles": 1687968079
+     }
+    ],
+    "rss_kb": [
+     2460,
+     2500,
+     2260
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 3978707044,
+      "cycles": 1725324251
+     },
+     {
+      "status": 0,
+      "instructions": 3978706955,
+      "cycles": 1713466691
+     },
+     {
+      "status": 0,
+      "instructions": 3978706915,
+      "cycles": 1661534761
+     }
+    ],
+    "rss_kb": [
+     2424,
+     2476,
+     2460
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 3978707921,
+      "cycles": 1707862040
+     },
+     {
+      "status": 0,
+      "instructions": 3978707910,
+      "cycles": 1699465874
+     },
+     {
+      "status": 0,
+      "instructions": 3978707732,
+      "cycles": 1645586480
+     }
+    ],
+    "rss_kb": [
+     2496,
+     2524,
+     2520
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.999,
+    "sibling_busy": 0.469,
+    "load1_start": 17.89404296875,
+    "load1_end": 19.31005859375
+   }
+  },
+  "parity/suite/mandelbrot|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 794669129,
+      "cycles": 537286882
+     },
+     {
+      "status": 0,
+      "instructions": 794669159,
+      "cycles": 573130992
+     },
+     {
+      "status": 0,
+      "instructions": 794669112,
+      "cycles": 541148640
+     }
+    ],
+    "rss_kb": [
+     2424,
+     2456,
+     2456
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 794669103,
+      "cycles": 535340561
+     },
+     {
+      "status": 0,
+      "instructions": 794669125,
+      "cycles": 545990677
+     },
+     {
+      "status": 0,
+      "instructions": 794669101,
+      "cycles": 539238775
+     }
+    ],
+    "rss_kb": [
+     2424,
+     2608,
+     2456
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 794669153,
+      "cycles": 571710083
+     },
+     {
+      "status": 0,
+      "instructions": 794669117,
+      "cycles": 544803412
+     },
+     {
+      "status": 0,
+      "instructions": 794669101,
+      "cycles": 545974159
+     }
+    ],
+    "rss_kb": [
+     2536,
+     2600,
+     2624
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.468,
+    "load1_start": 19.31005859375,
+    "load1_end": 20.2138671875
+   }
+  },
+  "parity/suite/matmul|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 3206576347,
+      "cycles": 1389725621
+     },
+     {
+      "status": 0,
+      "instructions": 3206576383,
+      "cycles": 1410413734
+     },
+     {
+      "status": 0,
+      "instructions": 3206576388,
+      "cycles": 1411363793
+     }
+    ],
+    "rss_kb": [
+     10568,
+     10604,
+     10696
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 3206626222,
+      "cycles": 1426704473
+     },
+     {
+      "status": 0,
+      "instructions": 3206626585,
+      "cycles": 1277979957
+     },
+     {
+      "status": 0,
+      "instructions": 3206626536,
+      "cycles": 1410056537
+     }
+    ],
+    "rss_kb": [
+     10592,
+     10572,
+     10572
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 3206522517,
+      "cycles": 1401911897
+     },
+     {
+      "status": 0,
+      "instructions": 3206522659,
+      "cycles": 1366709870
+     },
+     {
+      "status": 0,
+      "instructions": 3206522560,
+      "cycles": 1416979578
+     }
+    ],
+    "rss_kb": [
+     10708,
+     10592,
+     10540
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.939,
+    "load1_start": 20.2138671875,
+    "load1_end": 24.28369140625
+   }
+  },
+  "parity/suite/matmul|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 148398106,
+      "cycles": 112441840
+     },
+     {
+      "status": 0,
+      "instructions": 148398103,
+      "cycles": 110166571
+     },
+     {
+      "status": 0,
+      "instructions": 148398102,
+      "cycles": 108076698
+     }
+    ],
+    "rss_kb": [
+     10636,
+     10592,
+     10612
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 148447844,
+      "cycles": 117862363
+     },
+     {
+      "status": 0,
+      "instructions": 148447830,
+      "cycles": 115775055
+     },
+     {
+      "status": 0,
+      "instructions": 148447838,
+      "cycles": 111394069
+     }
+    ],
+    "rss_kb": [
+     10592,
+     10732,
+     10732
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 148343336,
+      "cycles": 118173055
+     },
+     {
+      "status": 0,
+      "instructions": 148343328,
+      "cycles": 109127615
+     },
+     {
+      "status": 0,
+      "instructions": 148343320,
+      "cycles": 109120238
+     }
+    ],
+    "rss_kb": [
+     10592,
+     10640,
+     10644
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 1.0,
+    "load1_start": 24.28369140625,
+    "load1_end": 23.7001953125
+   }
+  },
+  "parity/suite/nbody|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 32760217675,
+      "cycles": 11595814877
+     },
+     {
+      "status": 0,
+      "instructions": 32760213990,
+      "cycles": 6046298594
+     },
+     {
+      "status": 0,
+      "instructions": 32760214008,
+      "cycles": 6035710171
+     }
+    ],
+    "rss_kb": [
+     2460,
+     2416,
+     2416
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 32760215201,
+      "cycles": 7581966355
+     },
+     {
+      "status": 0,
+      "instructions": 32760214011,
+      "cycles": 6016108699
+     },
+     {
+      "status": 0,
+      "instructions": 32760214244,
+      "cycles": 6014559282
+     }
+    ],
+    "rss_kb": [
+     2432,
+     2392,
+     2436
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 32760215036,
+      "cycles": 6061263662
+     },
+     {
+      "status": 0,
+      "instructions": 32760215175,
+      "cycles": 6056773342
+     },
+     {
+      "status": 0,
+      "instructions": 32760214843,
+      "cycles": 6015970335
+     }
+    ],
+    "rss_kb": [
+     2456,
+     2424,
+     2404
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.999,
+    "sibling_busy": 0.245,
+    "load1_start": 23.7001953125,
+    "load1_end": 13.57958984375
+   }
+  },
+  "parity/suite/nbody|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 3570214630,
+      "cycles": 1112646812
+     },
+     {
+      "status": 0,
+      "instructions": 3570214518,
+      "cycles": 926400439
+     },
+     {
+      "status": 0,
+      "instructions": 3570214480,
+      "cycles": 926181308
+     }
+    ],
+    "rss_kb": [
+     2440,
+     2416,
+     2468
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 3570214779,
+      "cycles": 1390821976
+     },
+     {
+      "status": 0,
+      "instructions": 3570214517,
+      "cycles": 931430864
+     },
+     {
+      "status": 0,
+      "instructions": 3570214496,
+      "cycles": 927019279
+     }
+    ],
+    "rss_kb": [
+     2432,
+     2576,
+     2576
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 3570214722,
+      "cycles": 1322624590
+     },
+     {
+      "status": 0,
+      "instructions": 3570215018,
+      "cycles": 935128964
+     },
+     {
+      "status": 0,
+      "instructions": 3570214636,
+      "cycles": 933302773
+     }
+    ],
+    "rss_kb": [
+     2444,
+     2592,
+     2576
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.999,
+    "sibling_busy": 0.317,
+    "load1_start": 13.57958984375,
+    "load1_end": 12.6474609375
+   }
+  },
+  "parity/suite/raytrace|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 7202269703,
+      "cycles": 1435296343
+     },
+     {
+      "status": 0,
+      "instructions": 7202269741,
+      "cycles": 1443052511
+     },
+     {
+      "status": 0,
+      "instructions": 7202270186,
+      "cycles": 1435739083
+     }
+    ],
+    "rss_kb": [
+     2376,
+     2264,
+     2424
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 7202269822,
+      "cycles": 1447429526
+     },
+     {
+      "status": 0,
+      "instructions": 7202269772,
+      "cycles": 1456064767
+     },
+     {
+      "status": 0,
+      "instructions": 7202269898,
+      "cycles": 1457082528
+     }
+    ],
+    "rss_kb": [
+     2412,
+     2404,
+     2380
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 7202270642,
+      "cycles": 1427365051
+     },
+     {
+      "status": 0,
+      "instructions": 7202270685,
+      "cycles": 1439381180
+     },
+     {
+      "status": 0,
+      "instructions": 7202270634,
+      "cycles": 1435283135
+     }
+    ],
+    "rss_kb": [
+     2408,
+     2484,
+     2408
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.017,
+    "load1_start": 12.6474609375,
+    "load1_end": 11.83935546875
+   }
+  },
+  "parity/suite/raytrace|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1197346929,
+      "cycles": 389982903
+     },
+     {
+      "status": 0,
+      "instructions": 1197346939,
+      "cycles": 391806899
+     },
+     {
+      "status": 0,
+      "instructions": 1197346931,
+      "cycles": 391901937
+     }
+    ],
+    "rss_kb": [
+     2408,
+     2460,
+     2432
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1197346940,
+      "cycles": 387758261
+     },
+     {
+      "status": 0,
+      "instructions": 1197346944,
+      "cycles": 390836875
+     },
+     {
+      "status": 0,
+      "instructions": 1197346946,
+      "cycles": 390416888
+     }
+    ],
+    "rss_kb": [
+     2448,
+     2432,
+     2376
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1197346919,
+      "cycles": 388231720
+     },
+     {
+      "status": 0,
+      "instructions": 1197346912,
+      "cycles": 388202753
+     },
+     {
+      "status": 0,
+      "instructions": 1197346936,
+      "cycles": 388239420
+     }
+    ],
+    "rss_kb": [
+     2488,
+     2404,
+     2432
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.015,
+    "load1_start": 11.83935546875,
+    "load1_end": 11.29150390625
+   }
+  },
+  "parity/suite/sieve|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 822302549,
+      "cycles": 471842868
+     },
+     {
+      "status": 0,
+      "instructions": 822302554,
+      "cycles": 491729149
+     },
+     {
+      "status": 0,
+      "instructions": 822302557,
+      "cycles": 496498874
+     }
+    ],
+    "rss_kb": [
+     21960,
+     21924,
+     21800
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 822302659,
+      "cycles": 486709441
+     },
+     {
+      "status": 0,
+      "instructions": 822302648,
+      "cycles": 485320220
+     },
+     {
+      "status": 0,
+      "instructions": 822302632,
+      "cycles": 476167946
+     }
+    ],
+    "rss_kb": [
+     21932,
+     21764,
+     21764
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 822303131,
+      "cycles": 476052571
+     },
+     {
+      "status": 0,
+      "instructions": 822303121,
+      "cycles": 482236406
+     },
+     {
+      "status": 0,
+      "instructions": 822303140,
+      "cycles": 497505068
+     }
+    ],
+    "rss_kb": [
+     21620,
+     21960,
+     21940
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.013,
+    "load1_start": 11.29150390625,
+    "load1_end": 10.78759765625
+   }
+  },
+  "parity/suite/sieve|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 222099384,
+      "cycles": 215457513
+     },
+     {
+      "status": 0,
+      "instructions": 222099376,
+      "cycles": 215640118
+     },
+     {
+      "status": 0,
+      "instructions": 222099377,
+      "cycles": 218254688
+     }
+    ],
+    "rss_kb": [
+     21908,
+     21960,
+     21920
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 222099400,
+      "cycles": 211091176
+     },
+     {
+      "status": 0,
+      "instructions": 222099393,
+      "cycles": 214963583
+     },
+     {
+      "status": 0,
+      "instructions": 222099402,
+      "cycles": 214361473
+     }
+    ],
+    "rss_kb": [
+     21748,
+     21980,
+     21784
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 222099056,
+      "cycles": 210616966
+     },
+     {
+      "status": 0,
+      "instructions": 222099064,
+      "cycles": 220279585
+     },
+     {
+      "status": 0,
+      "instructions": 222099053,
+      "cycles": 207609259
+     }
+    ],
+    "rss_kb": [
+     21920,
+     21784,
+     21748
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.025,
+    "load1_start": 10.78759765625,
+    "load1_end": 10.32373046875
+   }
+  },
+  "parity/suite/sort_builtin|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 919570574,
+      "cycles": 444954001
+     },
+     {
+      "status": 0,
+      "instructions": 919570580,
+      "cycles": 442954098
+     },
+     {
+      "status": 0,
+      "instructions": 919570583,
+      "cycles": 444744829
+     }
+    ],
+    "rss_kb": [
+     25920,
+     25780,
+     26028
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 919570751,
+      "cycles": 445339125
+     },
+     {
+      "status": 0,
+      "instructions": 919570757,
+      "cycles": 446373743
+     },
+     {
+      "status": 0,
+      "instructions": 919570758,
+      "cycles": 444561204
+     }
+    ],
+    "rss_kb": [
+     25904,
+     25708,
+     25904
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 919571159,
+      "cycles": 445682007
+     },
+     {
+      "status": 0,
+      "instructions": 919571165,
+      "cycles": 444654462
+     },
+     {
+      "status": 0,
+      "instructions": 919571163,
+      "cycles": 445110088
+     }
+    ],
+    "rss_kb": [
+     25924,
+     25952,
+     25948
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.998,
+    "sibling_busy": 0.02,
+    "load1_start": 10.32373046875,
+    "load1_end": 10.05712890625
+   }
+  },
+  "parity/suite/sort_builtin|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 732555767,
+      "cycles": 399228008
+     },
+     {
+      "status": 0,
+      "instructions": 732555751,
+      "cycles": 394843432
+     },
+     {
+      "status": 0,
+      "instructions": 732555766,
+      "cycles": 395925944
+     }
+    ],
+    "rss_kb": [
+     25908,
+     25884,
+     25924
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 732555886,
+      "cycles": 385666199
+     },
+     {
+      "status": 0,
+      "instructions": 732555881,
+      "cycles": 387404495
+     },
+     {
+      "status": 0,
+      "instructions": 732555886,
+      "cycles": 386920801
+     }
+    ],
+    "rss_kb": [
+     25936,
+     25908,
+     25924
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 732555375,
+      "cycles": 397732887
+     },
+     {
+      "status": 0,
+      "instructions": 732555362,
+      "cycles": 397610381
+     },
+     {
+      "status": 0,
+      "instructions": 732555374,
+      "cycles": 395539990
+     }
+    ],
+    "rss_kb": [
+     26084,
+     25916,
+     25960
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.046,
+    "load1_start": 10.05712890625,
+    "load1_end": 10.05712890625
+   }
+  },
+  "parity/suite/sort_quick|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 2603181762,
+      "cycles": 1134493280
+     },
+     {
+      "status": 0,
+      "instructions": 2603181730,
+      "cycles": 1098260438
+     },
+     {
+      "status": 0,
+      "instructions": 2603181708,
+      "cycles": 1098545522
+     }
+    ],
+    "rss_kb": [
+     18424,
+     18404,
+     18404
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 2603181914,
+      "cycles": 1118087208
+     },
+     {
+      "status": 0,
+      "instructions": 2603181930,
+      "cycles": 1127588737
+     },
+     {
+      "status": 0,
+      "instructions": 2603181889,
+      "cycles": 1119694339
+     }
+    ],
+    "rss_kb": [
+     18396,
+     18440,
+     18420
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 2603182272,
+      "cycles": 1094639188
+     },
+     {
+      "status": 0,
+      "instructions": 2603182281,
+      "cycles": 1096322848
+     },
+     {
+      "status": 0,
+      "instructions": 2603182270,
+      "cycles": 1097530919
+     }
+    ],
+    "rss_kb": [
+     18424,
+     18456,
+     18428
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.999,
+    "sibling_busy": 0.023,
+    "load1_start": 10.05712890625,
+    "load1_end": 9.19921875
+   }
+  },
+  "parity/suite/sort_quick|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1122642367,
+      "cycles": 814185715
+     },
+     {
+      "status": 0,
+      "instructions": 1122642384,
+      "cycles": 815886698
+     },
+     {
+      "status": 0,
+      "instructions": 1122642361,
+      "cycles": 819402600
+     }
+    ],
+    "rss_kb": [
+     18232,
+     18476,
+     18392
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1122642451,
+      "cycles": 819806938
+     },
+     {
+      "status": 0,
+      "instructions": 1122642487,
+      "cycles": 818205866
+     },
+     {
+      "status": 0,
+      "instructions": 1122642506,
+      "cycles": 825067728
+     }
+    ],
+    "rss_kb": [
+     18396,
+     18416,
+     18428
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1122642330,
+      "cycles": 838706311
+     },
+     {
+      "status": 0,
+      "instructions": 1122641984,
+      "cycles": 823157989
+     },
+     {
+      "status": 0,
+      "instructions": 1122641966,
+      "cycles": 816287243
+     }
+    ],
+    "rss_kb": [
+     18464,
+     18448,
+     18476
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.048,
+    "load1_start": 9.19921875,
+    "load1_end": 8.55322265625
+   }
+  },
+  "parity/suite/sort_records|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 312653481,
+      "cycles": 105595654
+     },
+     {
+      "status": 0,
+      "instructions": 312653491,
+      "cycles": 104549736
+     },
+     {
+      "status": 0,
+      "instructions": 312653483,
+      "cycles": 106251043
+     }
+    ],
+    "rss_kb": [
+     41888,
+     41764,
+     41752
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 312653753,
+      "cycles": 104100368
+     },
+     {
+      "status": 0,
+      "instructions": 312653766,
+      "cycles": 104209224
+     },
+     {
+      "status": 0,
+      "instructions": 312653754,
+      "cycles": 105551849
+     }
+    ],
+    "rss_kb": [
+     41804,
+     41780,
+     41800
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 312653970,
+      "cycles": 106538425
+     },
+     {
+      "status": 0,
+      "instructions": 312653975,
+      "cycles": 105453835
+     },
+     {
+      "status": 0,
+      "instructions": 312653977,
+      "cycles": 104449876
+     }
+    ],
+    "rss_kb": [
+     41800,
+     41880,
+     41764
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.012,
+    "load1_start": 8.55322265625,
+    "load1_end": 8.55322265625
+   }
+  },
+  "parity/suite/sort_records|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 152635333,
+      "cycles": 81866375
+     },
+     {
+      "status": 0,
+      "instructions": 152635320,
+      "cycles": 81725113
+     },
+     {
+      "status": 0,
+      "instructions": 152635340,
+      "cycles": 81352065
+     }
+    ],
+    "rss_kb": [
+     41812,
+     41752,
+     41788
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 152635558,
+      "cycles": 82438688
+     },
+     {
+      "status": 0,
+      "instructions": 152635560,
+      "cycles": 81808105
+     },
+     {
+      "status": 0,
+      "instructions": 152635561,
+      "cycles": 81279509
+     }
+    ],
+    "rss_kb": [
+     41840,
+     41716,
+     41720
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 152634957,
+      "cycles": 82382925
+     },
+     {
+      "status": 0,
+      "instructions": 152634955,
+      "cycles": 83224088
+     },
+     {
+      "status": 0,
+      "instructions": 152634952,
+      "cycles": 81608937
+     }
+    ],
+    "rss_kb": [
+     41820,
+     41832,
+     41672
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.007,
+    "load1_start": 8.55322265625,
+    "load1_end": 8.2685546875
+   }
+  },
+  "parity/suite/spectral_norm|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 11523631745,
+      "cycles": 3442686348
+     },
+     {
+      "status": 0,
+      "instructions": 11523631623,
+      "cycles": 3391042266
+     },
+     {
+      "status": 0,
+      "instructions": 11523631589,
+      "cycles": 3389845991
+     }
+    ],
+    "rss_kb": [
+     2892,
+     3016,
+     3100
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 11523631765,
+      "cycles": 3407073386
+     },
+     {
+      "status": 0,
+      "instructions": 11523632553,
+      "cycles": 3412146596
+     },
+     {
+      "status": 0,
+      "instructions": 11523631661,
+      "cycles": 3393471865
+     }
+    ],
+    "rss_kb": [
+     3036,
+     3052,
+     3088
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 11523632638,
+      "cycles": 3410921614
+     },
+     {
+      "status": 0,
+      "instructions": 11523632608,
+      "cycles": 3409145893
+     },
+     {
+      "status": 0,
+      "instructions": 11523632559,
+      "cycles": 3396868499
+     }
+    ],
+    "rss_kb": [
+     3092,
+     3016,
+     3040
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.019,
+    "load1_start": 8.2685546875,
+    "load1_end": 7.25634765625
+   }
+  },
+  "parity/suite/spectral_norm|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1841815764,
+      "cycles": 641712119
+     },
+     {
+      "status": 0,
+      "instructions": 1841815757,
+      "cycles": 641306181
+     },
+     {
+      "status": 0,
+      "instructions": 1841815766,
+      "cycles": 642081772
+     }
+    ],
+    "rss_kb": [
+     2956,
+     3112,
+     2908
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1841815788,
+      "cycles": 642268395
+     },
+     {
+      "status": 0,
+      "instructions": 1841815776,
+      "cycles": 641333814
+     },
+     {
+      "status": 0,
+      "instructions": 1841815804,
+      "cycles": 641770493
+     }
+    ],
+    "rss_kb": [
+     2888,
+     2912,
+     3068
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1841815722,
+      "cycles": 641567115
+     },
+     {
+      "status": 0,
+      "instructions": 1841815717,
+      "cycles": 641681444
+     },
+     {
+      "status": 0,
+      "instructions": 1841815734,
+      "cycles": 641706476
+     }
+    ],
+    "rss_kb": [
+     2928,
+     3036,
+     2908
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.998,
+    "sibling_busy": 0.007,
+    "load1_start": 7.25634765625,
+    "load1_end": 6.7548828125
+   }
+  },
+  "parity/suite/text_ops|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1723517632,
+      "cycles": 368795094
+     },
+     {
+      "status": 0,
+      "instructions": 1723517626,
+      "cycles": 368116107
+     },
+     {
+      "status": 0,
+      "instructions": 1723517628,
+      "cycles": 364145329
+     }
+    ],
+    "rss_kb": [
+     39432,
+     39280,
+     39280
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1716570130,
+      "cycles": 370093104
+     },
+     {
+      "status": 0,
+      "instructions": 1716568359,
+      "cycles": 371395784
+     },
+     {
+      "status": 0,
+      "instructions": 1716568337,
+      "cycles": 371219321
+     }
+    ],
+    "rss_kb": [
+     39408,
+     39332,
+     39404
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1600111046,
+      "cycles": 351313698
+     },
+     {
+      "status": 0,
+      "instructions": 1600111053,
+      "cycles": 356412396
+     },
+     {
+      "status": 0,
+      "instructions": 1600111070,
+      "cycles": 349408383
+     }
+    ],
+    "rss_kb": [
+     39316,
+     39192,
+     39216
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.008,
+    "load1_start": 6.7548828125,
+    "load1_end": 6.7548828125
+   }
+  },
+  "parity/suite/text_ops|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1518814888,
+      "cycles": 328426914
+     },
+     {
+      "status": 0,
+      "instructions": 1518816032,
+      "cycles": 320956664
+     },
+     {
+      "status": 0,
+      "instructions": 1518814409,
+      "cycles": 330038755
+     }
+    ],
+    "rss_kb": [
+     39364,
+     39396,
+     39332
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1512265021,
+      "cycles": 319325213
+     },
+     {
+      "status": 0,
+      "instructions": 1512265021,
+      "cycles": 316594347
+     },
+     {
+      "status": 0,
+      "instructions": 1512265012,
+      "cycles": 317838056
+     }
+    ],
+    "rss_kb": [
+     39336,
+     39408,
+     39376
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1395807276,
+      "cycles": 312167818
+     },
+     {
+      "status": 0,
+      "instructions": 1395807266,
+      "cycles": 314072581
+     },
+     {
+      "status": 0,
+      "instructions": 1395807280,
+      "cycles": 312837652
+     }
+    ],
+    "rss_kb": [
+     39360,
+     39304,
+     39252
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.006,
+    "load1_start": 6.7548828125,
+    "load1_end": 6.5341796875
+   }
+  },
+  "parity/lib/scan_count|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1091136276,
+      "cycles": 344911352
+     },
+     {
+      "status": 0,
+      "instructions": 1091136274,
+      "cycles": 344288071
+     },
+     {
+      "status": 0,
+      "instructions": 1091136273,
+      "cycles": 343436692
+     }
+    ],
+    "rss_kb": [
+     7232,
+     7256,
+     7224
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1091134956,
+      "cycles": 343350863
+     },
+     {
+      "status": 0,
+      "instructions": 1091134952,
+      "cycles": 343410707
+     },
+     {
+      "status": 0,
+      "instructions": 1091134952,
+      "cycles": 343368723
+     }
+    ],
+    "rss_kb": [
+     7196,
+     7264,
+     7312
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1091133533,
+      "cycles": 343032719
+     },
+     {
+      "status": 0,
+      "instructions": 1091133539,
+      "cycles": 343152437
+     },
+     {
+      "status": 0,
+      "instructions": 1091133535,
+      "cycles": 342230072
+     }
+    ],
+    "rss_kb": [
+     7312,
+     7308,
+     7264
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.012,
+    "load1_start": 6.5341796875,
+    "load1_end": 6.3310546875
+   }
+  },
+  "parity/lib/scan_count|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1083252506,
+      "cycles": 346550428
+     },
+     {
+      "status": 0,
+      "instructions": 1083252498,
+      "cycles": 344571449
+     },
+     {
+      "status": 0,
+      "instructions": 1083252501,
+      "cycles": 346004258
+     }
+    ],
+    "rss_kb": [
+     7348,
+     7248,
+     7360
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1083253715,
+      "cycles": 346133700
+     },
+     {
+      "status": 0,
+      "instructions": 1083253703,
+      "cycles": 346792043
+     },
+     {
+      "status": 0,
+      "instructions": 1083253701,
+      "cycles": 346162637
+     }
+    ],
+    "rss_kb": [
+     7248,
+     7248,
+     7356
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1083249603,
+      "cycles": 345740961
+     },
+     {
+      "status": 0,
+      "instructions": 1083249591,
+      "cycles": 347140242
+     },
+     {
+      "status": 0,
+      "instructions": 1083249594,
+      "cycles": 346929007
+     }
+    ],
+    "rss_kb": [
+     7256,
+     7244,
+     7268
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.997,
+    "sibling_busy": 0.009,
+    "load1_start": 6.3310546875,
+    "load1_end": 6.3310546875
+   }
+  },
+  "parity/lib/scan_replace|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 721534564,
+      "cycles": 183497765
+     },
+     {
+      "status": 0,
+      "instructions": 721534565,
+      "cycles": 182652711
+     },
+     {
+      "status": 0,
+      "instructions": 721534568,
+      "cycles": 184705056
+     }
+    ],
+    "rss_kb": [
+     11636,
+     11636,
+     11684
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 721529763,
+      "cycles": 184280712
+     },
+     {
+      "status": 0,
+      "instructions": 721529755,
+      "cycles": 182959941
+     },
+     {
+      "status": 0,
+      "instructions": 721529771,
+      "cycles": 184405905
+     }
+    ],
+    "rss_kb": [
+     11668,
+     11640,
+     11632
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 721508430,
+      "cycles": 185188119
+     },
+     {
+      "status": 0,
+      "instructions": 721508427,
+      "cycles": 186347053
+     },
+     {
+      "status": 0,
+      "instructions": 721508439,
+      "cycles": 184199813
+     }
+    ],
+    "rss_kb": [
+     11592,
+     11440,
+     11596
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.019,
+    "load1_start": 6.3310546875,
+    "load1_end": 6.14404296875
+   }
+  },
+  "parity/lib/scan_replace|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 698656076,
+      "cycles": 194106322
+     },
+     {
+      "status": 0,
+      "instructions": 698656075,
+      "cycles": 193130548
+     },
+     {
+      "status": 0,
+      "instructions": 698656074,
+      "cycles": 194146573
+     }
+    ],
+    "rss_kb": [
+     11636,
+     11444,
+     11596
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 698659174,
+      "cycles": 198403123
+     },
+     {
+      "status": 0,
+      "instructions": 698669190,
+      "cycles": 199022942
+     },
+     {
+      "status": 0,
+      "instructions": 698659167,
+      "cycles": 198389567
+     }
+    ],
+    "rss_kb": [
+     11740,
+     11552,
+     11456
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 698624397,
+      "cycles": 195416611
+     },
+     {
+      "status": 0,
+      "instructions": 698624393,
+      "cycles": 193859550
+     },
+     {
+      "status": 0,
+      "instructions": 698624389,
+      "cycles": 194746526
+     }
+    ],
+    "rss_kb": [
+     11644,
+     11524,
+     11624
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.014,
+    "load1_start": 6.14404296875,
+    "load1_end": 6.14404296875
+   }
+  },
+  "parity/lib/scan_split|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1655358865,
+      "cycles": 360724878
+     },
+     {
+      "status": 0,
+      "instructions": 1655358995,
+      "cycles": 359933751
+     },
+     {
+      "status": 0,
+      "instructions": 1655359313,
+      "cycles": 359255757
+     }
+    ],
+    "rss_kb": [
+     66504,
+     66484,
+     66444
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1651134924,
+      "cycles": 365041908
+     },
+     {
+      "status": 0,
+      "instructions": 1651134705,
+      "cycles": 365252937
+     },
+     {
+      "status": 0,
+      "instructions": 1651134590,
+      "cycles": 365735155
+     }
+    ],
+    "rss_kb": [
+     66436,
+     66448,
+     66452
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1521369469,
+      "cycles": 345975184
+     },
+     {
+      "status": 0,
+      "instructions": 1521369116,
+      "cycles": 342984530
+     },
+     {
+      "status": 0,
+      "instructions": 1521369128,
+      "cycles": 348880181
+     }
+    ],
+    "rss_kb": [
+     66356,
+     66412,
+     66472
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.01,
+    "load1_start": 6.14404296875,
+    "load1_end": 5.97216796875
+   }
+  },
+  "parity/lib/scan_split|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1575380908,
+      "cycles": 361512503
+     },
+     {
+      "status": 0,
+      "instructions": 1575380957,
+      "cycles": 363961231
+     },
+     {
+      "status": 0,
+      "instructions": 1575380508,
+      "cycles": 362309213
+     }
+    ],
+    "rss_kb": [
+     66372,
+     66388,
+     66384
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1571157786,
+      "cycles": 358428058
+     },
+     {
+      "status": 0,
+      "instructions": 1571158001,
+      "cycles": 361752279
+     },
+     {
+      "status": 0,
+      "instructions": 1571157912,
+      "cycles": 358982170
+     }
+    ],
+    "rss_kb": [
+     66436,
+     66420,
+     66440
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1441392228,
+      "cycles": 342214603
+     },
+     {
+      "status": 0,
+      "instructions": 1441391991,
+      "cycles": 345315638
+     },
+     {
+      "status": 0,
+      "instructions": 1441392563,
+      "cycles": 339623595
+     }
+    ],
+    "rss_kb": [
+     66320,
+     66536,
+     66420
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.012,
+    "load1_start": 5.97216796875,
+    "load1_end": 5.81396484375
+   }
+  },
+  "parity/micro/alloc_churn|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 3053161866,
+      "cycles": 952053998
+     },
+     {
+      "status": 0,
+      "instructions": 3053161865,
+      "cycles": 943252238
+     },
+     {
+      "status": 0,
+      "instructions": 3053161865,
+      "cycles": 949580783
+     }
+    ],
+    "rss_kb": [
+     6728,
+     6728,
+     6712
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 3053167816,
+      "cycles": 952845346
+     },
+     {
+      "status": 0,
+      "instructions": 3053167806,
+      "cycles": 951352259
+     },
+     {
+      "status": 0,
+      "instructions": 3053168029,
+      "cycles": 956331503
+     }
+    ],
+    "rss_kb": [
+     6740,
+     6724,
+     6760
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 3053160786,
+      "cycles": 926466013
+     },
+     {
+      "status": 0,
+      "instructions": 3053160789,
+      "cycles": 923061232
+     },
+     {
+      "status": 0,
+      "instructions": 3053160771,
+      "cycles": 926981791
+     }
+    ],
+    "rss_kb": [
+     6608,
+     6768,
+     6776
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.999,
+    "sibling_busy": 0.013,
+    "load1_start": 5.81396484375,
+    "load1_end": 5.66845703125
+   }
+  },
+  "parity/micro/alloc_churn|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1945418866,
+      "cycles": 520575568
+     },
+     {
+      "status": 0,
+      "instructions": 1945418853,
+      "cycles": 530652469
+     },
+     {
+      "status": 0,
+      "instructions": 1945418849,
+      "cycles": 526922146
+     }
+    ],
+    "rss_kb": [
+     6728,
+     6544,
+     6784
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1945424721,
+      "cycles": 524888266
+     },
+     {
+      "status": 0,
+      "instructions": 1945424712,
+      "cycles": 519569662
+     },
+     {
+      "status": 0,
+      "instructions": 1945424719,
+      "cycles": 518222323
+     }
+    ],
+    "rss_kb": [
+     6760,
+     6544,
+     6780
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1945416892,
+      "cycles": 521138535
+     },
+     {
+      "status": 0,
+      "instructions": 1945416887,
+      "cycles": 518909679
+     },
+     {
+      "status": 0,
+      "instructions": 1945416874,
+      "cycles": 518801893
+     }
+    ],
+    "rss_kb": [
+     6704,
+     6740,
+     6788
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.019,
+    "load1_start": 5.66845703125,
+    "load1_end": 5.53466796875
+   }
+  },
+  "parity/micro/bytes_scan|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1503654670,
+      "cycles": 348738856
+     },
+     {
+      "status": 0,
+      "instructions": 1503654667,
+      "cycles": 345865459
+     },
+     {
+      "status": 0,
+      "instructions": 1503654673,
+      "cycles": 364476755
+     }
+    ],
+    "rss_kb": [
+     10904,
+     10688,
+     10884
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1503654816,
+      "cycles": 376436714
+     },
+     {
+      "status": 0,
+      "instructions": 1503654805,
+      "cycles": 383266123
+     },
+     {
+      "status": 0,
+      "instructions": 1503654810,
+      "cycles": 398033090
+     }
+    ],
+    "rss_kb": [
+     11008,
+     11092,
+     11084
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1503655206,
+      "cycles": 356583489
+     },
+     {
+      "status": 0,
+      "instructions": 1503655213,
+      "cycles": 356048665
+     },
+     {
+      "status": 0,
+      "instructions": 1503655198,
+      "cycles": 348841379
+     }
+    ],
+    "rss_kb": [
+     10888,
+     10888,
+     10904
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.997,
+    "sibling_busy": 0.017,
+    "load1_start": 5.53466796875,
+    "load1_end": 5.41162109375
+   }
+  },
+  "parity/micro/bytes_scan|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 195535092,
+      "cycles": 48310143
+     },
+     {
+      "status": 0,
+      "instructions": 195535090,
+      "cycles": 48244686
+     },
+     {
+      "status": 0,
+      "instructions": 195535087,
+      "cycles": 48436886
+     }
+    ],
+    "rss_kb": [
+     11060,
+     11056,
+     11048
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 195535195,
+      "cycles": 48572997
+     },
+     {
+      "status": 0,
+      "instructions": 195535193,
+      "cycles": 48936035
+     },
+     {
+      "status": 0,
+      "instructions": 195535193,
+      "cycles": 48259215
+     }
+    ],
+    "rss_kb": [
+     11096,
+     11060,
+     11188
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 195534763,
+      "cycles": 48628183
+     },
+     {
+      "status": 0,
+      "instructions": 195534760,
+      "cycles": 51896627
+     },
+     {
+      "status": 0,
+      "instructions": 195534758,
+      "cycles": 48415742
+     }
+    ],
+    "rss_kb": [
+     10900,
+     10920,
+     10740
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.011,
+    "load1_start": 5.41162109375,
+    "load1_end": 5.41162109375
+   }
+  },
+  "parity/micro/calls|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1710205419,
+      "cycles": 1050646505
+     },
+     {
+      "status": 0,
+      "instructions": 1710205411,
+      "cycles": 1050167138
+     },
+     {
+      "status": 0,
+      "instructions": 1710205417,
+      "cycles": 1050596096
+     }
+    ],
+    "rss_kb": [
+     2432,
+     2408,
+     2404
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1710205477,
+      "cycles": 1049519789
+     },
+     {
+      "status": 0,
+      "instructions": 1710205482,
+      "cycles": 1049384344
+     },
+     {
+      "status": 0,
+      "instructions": 1710205480,
+      "cycles": 1049638194
+     }
+    ],
+    "rss_kb": [
+     2432,
+     2436,
+     2452
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1710205481,
+      "cycles": 1049892259
+     },
+     {
+      "status": 0,
+      "instructions": 1710205484,
+      "cycles": 1049796154
+     },
+     {
+      "status": 0,
+      "instructions": 1710205476,
+      "cycles": 1049524839
+     }
+    ],
+    "rss_kb": [
+     2192,
+     2404,
+     2420
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.999,
+    "sibling_busy": 0.015,
+    "load1_start": 5.41162109375,
+    "load1_end": 5.1943359375
+   }
+  },
+  "parity/micro/calls|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 540209632,
+      "cycles": 467069250
+     },
+     {
+      "status": 0,
+      "instructions": 540209961,
+      "cycles": 467507707
+     },
+     {
+      "status": 0,
+      "instructions": 540209633,
+      "cycles": 467085733
+     }
+    ],
+    "rss_kb": [
+     2440,
+     2392,
+     2400
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 540209662,
+      "cycles": 467109104
+     },
+     {
+      "status": 0,
+      "instructions": 540209658,
+      "cycles": 467083157
+     },
+     {
+      "status": 0,
+      "instructions": 540209655,
+      "cycles": 467187060
+     }
+    ],
+    "rss_kb": [
+     2368,
+     2448,
+     2372
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 540209660,
+      "cycles": 467625598
+     },
+     {
+      "status": 0,
+      "instructions": 540209655,
+      "cycles": 467104999
+     },
+     {
+      "status": 0,
+      "instructions": 540209654,
+      "cycles": 467082609
+     }
+    ],
+    "rss_kb": [
+     2372,
+     2424,
+     2404
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.007,
+    "load1_start": 5.1943359375,
+    "load1_end": 5.0986328125
+   }
+  },
+  "parity/micro/dict_count|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 737281893,
+      "cycles": 146809991
+     },
+     {
+      "status": 0,
+      "instructions": 737281888,
+      "cycles": 148122783
+     },
+     {
+      "status": 0,
+      "instructions": 737281878,
+      "cycles": 146443409
+     }
+    ],
+    "rss_kb": [
+     2632,
+     2636,
+     2664
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 747267997,
+      "cycles": 147597809
+     },
+     {
+      "status": 0,
+      "instructions": 747267977,
+      "cycles": 145389880
+     },
+     {
+      "status": 0,
+      "instructions": 747267982,
+      "cycles": 146009193
+     }
+    ],
+    "rss_kb": [
+     2544,
+     2576,
+     2576
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 661312056,
+      "cycles": 130273376
+     },
+     {
+      "status": 0,
+      "instructions": 661312056,
+      "cycles": 130951169
+     },
+     {
+      "status": 0,
+      "instructions": 661312052,
+      "cycles": 130355606
+     }
+    ],
+    "rss_kb": [
+     2684,
+     2636,
+     2608
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.017,
+    "load1_start": 5.0986328125,
+    "load1_end": 5.0986328125
+   }
+  },
+  "parity/micro/dict_count|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 521016554,
+      "cycles": 102417031
+     },
+     {
+      "status": 0,
+      "instructions": 521016554,
+      "cycles": 101624157
+     },
+     {
+      "status": 0,
+      "instructions": 521016559,
+      "cycles": 102349658
+     }
+    ],
+    "rss_kb": [
+     2792,
+     2616,
+     2612
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 529003632,
+      "cycles": 102480056
+     },
+     {
+      "status": 0,
+      "instructions": 529003628,
+      "cycles": 102827340
+     },
+     {
+      "status": 0,
+      "instructions": 529003629,
+      "cycles": 101940251
+     }
+    ],
+    "rss_kb": [
+     2620,
+     2600,
+     2608
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 441047752,
+      "cycles": 85056133
+     },
+     {
+      "status": 0,
+      "instructions": 441047741,
+      "cycles": 85746020
+     },
+     {
+      "status": 0,
+      "instructions": 441047748,
+      "cycles": 84626402
+     }
+    ],
+    "rss_kb": [
+     2784,
+     2592,
+     2704
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.0,
+    "load1_start": 5.0986328125,
+    "load1_end": 5.09033203125
+   }
+  },
+  "parity/micro/fib|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1594621061,
+      "cycles": 370173641
+     },
+     {
+      "status": 0,
+      "instructions": 1594621079,
+      "cycles": 369833465
+     },
+     {
+      "status": 0,
+      "instructions": 1594621063,
+      "cycles": 370671403
+     }
+    ],
+    "rss_kb": [
+     2388,
+     2432,
+     2380
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1594621120,
+      "cycles": 369954510
+     },
+     {
+      "status": 0,
+      "instructions": 1594621110,
+      "cycles": 370275002
+     },
+     {
+      "status": 0,
+      "instructions": 1594621094,
+      "cycles": 369910264
+     }
+    ],
+    "rss_kb": [
+     2388,
+     2428,
+     2452
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1594621103,
+      "cycles": 370085203
+     },
+     {
+      "status": 0,
+      "instructions": 1594621108,
+      "cycles": 370048302
+     },
+     {
+      "status": 0,
+      "instructions": 1594621093,
+      "cycles": 369990267
+     }
+    ],
+    "rss_kb": [
+     2380,
+     2424,
+     2408
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.014,
+    "load1_start": 5.09033203125,
+    "load1_end": 5.09033203125
+   }
+  },
+  "parity/micro/fib|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 942364433,
+      "cycles": 240770769
+     },
+     {
+      "status": 0,
+      "instructions": 942364427,
+      "cycles": 240857984
+     },
+     {
+      "status": 0,
+      "instructions": 942364435,
+      "cycles": 242408620
+     }
+    ],
+    "rss_kb": [
+     2256,
+     2400,
+     2420
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 942364451,
+      "cycles": 254170831
+     },
+     {
+      "status": 0,
+      "instructions": 942364456,
+      "cycles": 253848539
+     },
+     {
+      "status": 0,
+      "instructions": 942364452,
+      "cycles": 253882279
+     }
+    ],
+    "rss_kb": [
+     2436,
+     2408,
+     2420
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 942364463,
+      "cycles": 254088921
+     },
+     {
+      "status": 0,
+      "instructions": 942364458,
+      "cycles": 254141745
+     },
+     {
+      "status": 0,
+      "instructions": 942364453,
+      "cycles": 255035617
+     }
+    ],
+    "rss_kb": [
+     2400,
+     2436,
+     2400
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.008,
+    "load1_start": 5.09033203125,
+    "load1_end": 5.0830078125
+   }
+  },
+  "parity/micro/float_loop|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1260205251,
+      "cycles": 322291653
+     },
+     {
+      "status": 0,
+      "instructions": 1260205248,
+      "cycles": 321932045
+     },
+     {
+      "status": 0,
+      "instructions": 1260205251,
+      "cycles": 323050677
+     }
+    ],
+    "rss_kb": [
+     2452,
+     2432,
+     2376
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1260205294,
+      "cycles": 322016246
+     },
+     {
+      "status": 0,
+      "instructions": 1260205294,
+      "cycles": 321941579
+     },
+     {
+      "status": 0,
+      "instructions": 1260205293,
+      "cycles": 322845097
+     }
+    ],
+    "rss_kb": [
+     2424,
+     2428,
+     2388
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1260205291,
+      "cycles": 322278835
+     },
+     {
+      "status": 0,
+      "instructions": 1260205291,
+      "cycles": 322373713
+     },
+     {
+      "status": 0,
+      "instructions": 1260205294,
+      "cycles": 322587179
+     }
+    ],
+    "rss_kb": [
+     2192,
+     2388,
+     2432
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.006,
+    "load1_start": 5.0830078125,
+    "load1_end": 5.0830078125
+   }
+  },
+  "parity/micro/float_loop|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 164210478,
+      "cycles": 141544107
+     },
+     {
+      "status": 0,
+      "instructions": 164210475,
+      "cycles": 141503473
+     },
+     {
+      "status": 0,
+      "instructions": 164210472,
+      "cycles": 141432880
+     }
+    ],
+    "rss_kb": [
+     2532,
+     2396,
+     2396
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 164210490,
+      "cycles": 141527276
+     },
+     {
+      "status": 0,
+      "instructions": 164210490,
+      "cycles": 141479672
+     },
+     {
+      "status": 0,
+      "instructions": 164210490,
+      "cycles": 141423447
+     }
+    ],
+    "rss_kb": [
+     2392,
+     2412,
+     2372
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 164210494,
+      "cycles": 141438498
+     },
+     {
+      "status": 0,
+      "instructions": 164210492,
+      "cycles": 141489144
+     },
+     {
+      "status": 0,
+      "instructions": 164210490,
+      "cycles": 141475684
+     }
+    ],
+    "rss_kb": [
+     2368,
+     2452,
+     2396
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.012,
+    "load1_start": 5.0830078125,
+    "load1_end": 4.99609375
+   }
+  },
+  "parity/micro/intloop|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1260205432,
+      "cycles": 1058438536
+     },
+     {
+      "status": 0,
+      "instructions": 1260205434,
+      "cycles": 1058516017
+     },
+     {
+      "status": 0,
+      "instructions": 1260205438,
+      "cycles": 1058382725
+     }
+    ],
+    "rss_kb": [
+     2420,
+     2436,
+     2388
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1260205483,
+      "cycles": 1058453744
+     },
+     {
+      "status": 0,
+      "instructions": 1260205491,
+      "cycles": 1058616800
+     },
+     {
+      "status": 0,
+      "instructions": 1260205484,
+      "cycles": 1058252237
+     }
+    ],
+    "rss_kb": [
+     2192,
+     2408,
+     2428
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1260205518,
+      "cycles": 1058485789
+     },
+     {
+      "status": 0,
+      "instructions": 1260205494,
+      "cycles": 1058632386
+     },
+     {
+      "status": 0,
+      "instructions": 1260205480,
+      "cycles": 1058534900
+     }
+    ],
+    "rss_kb": [
+     2388,
+     2424,
+     2452
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.007,
+    "load1_start": 4.99609375,
+    "load1_end": 4.84228515625
+   }
+  },
+  "parity/micro/intloop|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 650209655,
+      "cycles": 424191931
+     },
+     {
+      "status": 0,
+      "instructions": 650209657,
+      "cycles": 424210493
+     },
+     {
+      "status": 0,
+      "instructions": 650209654,
+      "cycles": 424329559
+     }
+    ],
+    "rss_kb": [
+     2416,
+     2364,
+     2416
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 650209675,
+      "cycles": 423997773
+     },
+     {
+      "status": 0,
+      "instructions": 650209678,
+      "cycles": 423921586
+     },
+     {
+      "status": 0,
+      "instructions": 650209674,
+      "cycles": 424072378
+     }
+    ],
+    "rss_kb": [
+     2408,
+     2364,
+     2392
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 650209674,
+      "cycles": 423947802
+     },
+     {
+      "status": 0,
+      "instructions": 650209677,
+      "cycles": 423987192
+     },
+     {
+      "status": 0,
+      "instructions": 650209673,
+      "cycles": 424011207
+     }
+    ],
+    "rss_kb": [
+     2528,
+     2440,
+     2420
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.003,
+    "load1_start": 4.84228515625,
+    "load1_end": 4.84228515625
+   }
+  },
+  "parity/micro/list_append_sum|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 592300393,
+      "cycles": 120509114
+     },
+     {
+      "status": 0,
+      "instructions": 592300380,
+      "cycles": 120220444
+     },
+     {
+      "status": 0,
+      "instructions": 592300392,
+      "cycles": 120621932
+     }
+    ],
+    "rss_kb": [
+     127888,
+     127680,
+     127696
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 592300606,
+      "cycles": 123740106
+     },
+     {
+      "status": 0,
+      "instructions": 592300612,
+      "cycles": 124070914
+     },
+     {
+      "status": 0,
+      "instructions": 592300617,
+      "cycles": 123423977
+     }
+    ],
+    "rss_kb": [
+     127888,
+     127684,
+     127732
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 592300909,
+      "cycles": 125380684
+     },
+     {
+      "status": 0,
+      "instructions": 592300896,
+      "cycles": 125522690
+     },
+     {
+      "status": 0,
+      "instructions": 592300894,
+      "cycles": 125462230
+     }
+    ],
+    "rss_kb": [
+     127700,
+     127684,
+     127560
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.009,
+    "load1_start": 4.84228515625,
+    "load1_end": 4.7744140625
+   }
+  },
+  "parity/micro/list_append_sum|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 246280687,
+      "cycles": 95785203
+     },
+     {
+      "status": 0,
+      "instructions": 246280686,
+      "cycles": 94885742
+     },
+     {
+      "status": 0,
+      "instructions": 246280684,
+      "cycles": 96375546
+     }
+    ],
+    "rss_kb": [
+     127908,
+     127748,
+     127860
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 246280869,
+      "cycles": 107570999
+     },
+     {
+      "status": 0,
+      "instructions": 246280866,
+      "cycles": 107187480
+     },
+     {
+      "status": 0,
+      "instructions": 246280869,
+      "cycles": 110401608
+     }
+    ],
+    "rss_kb": [
+     127900,
+     127744,
+     127736
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 246280288,
+      "cycles": 88113002
+     },
+     {
+      "status": 0,
+      "instructions": 246280287,
+      "cycles": 87734601
+     },
+     {
+      "status": 0,
+      "instructions": 246280291,
+      "cycles": 88081778
+     }
+    ],
+    "rss_kb": [
+     127700,
+     127700,
+     127664
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.0,
+    "load1_start": 4.7744140625,
+    "load1_end": 4.7744140625
+   }
+  },
+  "parity/micro/list_records|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 508277653,
+      "cycles": 159069616
+     },
+     {
+      "status": 0,
+      "instructions": 508277651,
+      "cycles": 161196751
+     },
+     {
+      "status": 0,
+      "instructions": 508277648,
+      "cycles": 159132008
+     }
+    ],
+    "rss_kb": [
+     65364,
+     65136,
+     65300
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 508277869,
+      "cycles": 158820434
+     },
+     {
+      "status": 0,
+      "instructions": 508277873,
+      "cycles": 159248691
+     },
+     {
+      "status": 0,
+      "instructions": 508277884,
+      "cycles": 159979564
+     }
+    ],
+    "rss_kb": [
+     65308,
+     65256,
+     65252
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 508278188,
+      "cycles": 158176178
+     },
+     {
+      "status": 0,
+      "instructions": 508278204,
+      "cycles": 157636506
+     },
+     {
+      "status": 0,
+      "instructions": 508278193,
+      "cycles": 158616502
+     }
+    ],
+    "rss_kb": [
+     65112,
+     65164,
+     64928
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.0,
+    "load1_start": 4.7744140625,
+    "load1_end": 4.7119140625
+   }
+  },
+  "parity/micro/list_records|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 103759153,
+      "cycles": 156305707
+     },
+     {
+      "status": 0,
+      "instructions": 103759148,
+      "cycles": 156544006
+     },
+     {
+      "status": 0,
+      "instructions": 103759154,
+      "cycles": 162326720
+     }
+    ],
+    "rss_kb": [
+     65300,
+     65160,
+     65340
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 103759289,
+      "cycles": 155835817
+     },
+     {
+      "status": 0,
+      "instructions": 103759292,
+      "cycles": 156706265
+     },
+     {
+      "status": 0,
+      "instructions": 103759294,
+      "cycles": 158232032
+     }
+    ],
+    "rss_kb": [
+     65148,
+     65108,
+     65176
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 103758789,
+      "cycles": 156392508
+     },
+     {
+      "status": 0,
+      "instructions": 103758793,
+      "cycles": 162353624
+     },
+     {
+      "status": 0,
+      "instructions": 103758794,
+      "cycles": 160502650
+     }
+    ],
+    "rss_kb": [
+     65160,
+     65184,
+     65104
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.005,
+    "load1_start": 4.7119140625,
+    "load1_end": 4.7119140625
+   }
+  },
+  "parity/micro/records|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1960205297,
+      "cycles": 712083211
+     },
+     {
+      "status": 0,
+      "instructions": 1960205302,
+      "cycles": 712167887
+     },
+     {
+      "status": 0,
+      "instructions": 1960205276,
+      "cycles": 711598397
+     }
+    ],
+    "rss_kb": [
+     2420,
+     2424,
+     2416
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1960205382,
+      "cycles": 712627765
+     },
+     {
+      "status": 0,
+      "instructions": 1960205347,
+      "cycles": 712653017
+     },
+     {
+      "status": 0,
+      "instructions": 1960205339,
+      "cycles": 712749542
+     }
+    ],
+    "rss_kb": [
+     2372,
+     2432,
+     2420
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1960205367,
+      "cycles": 712727305
+     },
+     {
+      "status": 0,
+      "instructions": 1960205354,
+      "cycles": 712654409
+     },
+     {
+      "status": 0,
+      "instructions": 1960205334,
+      "cycles": 712665440
+     }
+    ],
+    "rss_kb": [
+     2452,
+     2436,
+     2428
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.003,
+    "load1_start": 4.7119140625,
+    "load1_end": 4.65478515625
+   }
+  },
+  "parity/micro/records|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 620209571,
+      "cycles": 320405362
+     },
+     {
+      "status": 0,
+      "instructions": 620209581,
+      "cycles": 319856254
+     },
+     {
+      "status": 0,
+      "instructions": 620209574,
+      "cycles": 320447956
+     }
+    ],
+    "rss_kb": [
+     2452,
+     2424,
+     2372
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 620209607,
+      "cycles": 316687198
+     },
+     {
+      "status": 0,
+      "instructions": 620209602,
+      "cycles": 315938790
+     },
+     {
+      "status": 0,
+      "instructions": 620209606,
+      "cycles": 316437751
+     }
+    ],
+    "rss_kb": [
+     2424,
+     2448,
+     2420
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 620209608,
+      "cycles": 316048582
+     },
+     {
+      "status": 0,
+      "instructions": 620209605,
+      "cycles": 316878749
+     },
+     {
+      "status": 0,
+      "instructions": 620209601,
+      "cycles": 316218951
+     }
+    ],
+    "rss_kb": [
+     2404,
+     2424,
+     2444
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.003,
+    "load1_start": 4.65478515625,
+    "load1_end": 4.60205078125
+   }
+  },
+  "parity/micro/str_build|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 983073777,
+      "cycles": 188154528
+     },
+     {
+      "status": 0,
+      "instructions": 983073760,
+      "cycles": 187483168
+     },
+     {
+      "status": 0,
+      "instructions": 983073778,
+      "cycles": 186965212
+     }
+    ],
+    "rss_kb": [
+     127700,
+     127692,
+     127684
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 983074150,
+      "cycles": 193862883
+     },
+     {
+      "status": 0,
+      "instructions": 983074009,
+      "cycles": 194026869
+     },
+     {
+      "status": 0,
+      "instructions": 983074021,
+      "cycles": 194068825
+     }
+    ],
+    "rss_kb": [
+     127684,
+     127704,
+     127684
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 983074288,
+      "cycles": 193871007
+     },
+     {
+      "status": 0,
+      "instructions": 983074295,
+      "cycles": 193985189
+     },
+     {
+      "status": 0,
+      "instructions": 983074303,
+      "cycles": 193988295
+     }
+    ],
+    "rss_kb": [
+     127676,
+     127488,
+     127648
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.997,
+    "sibling_busy": 0.003,
+    "load1_start": 4.60205078125,
+    "load1_end": 4.60205078125
+   }
+  },
+  "parity/micro/str_build|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 259415903,
+      "cycles": 67636532
+     },
+     {
+      "status": 0,
+      "instructions": 259415906,
+      "cycles": 67599565
+     },
+     {
+      "status": 0,
+      "instructions": 259415901,
+      "cycles": 67586549
+     }
+    ],
+    "rss_kb": [
+     127720,
+     127744,
+     127740
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 259416107,
+      "cycles": 71805136
+     },
+     {
+      "status": 0,
+      "instructions": 259416108,
+      "cycles": 71227722
+     },
+     {
+      "status": 0,
+      "instructions": 259416107,
+      "cycles": 71297500
+     }
+    ],
+    "rss_kb": [
+     127664,
+     127504,
+     127668
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 259415553,
+      "cycles": 70150360
+     },
+     {
+      "status": 0,
+      "instructions": 259415544,
+      "cycles": 70072321
+     },
+     {
+      "status": 0,
+      "instructions": 259415554,
+      "cycles": 70067251
+     }
+    ],
+    "rss_kb": [
+     127748,
+     127720,
+     127700
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.0,
+    "load1_start": 4.60205078125,
+    "load1_end": 4.4736328125
+   }
+  },
+  "result/result_calls|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 4020206671,
+      "cycles": 710283298
+     },
+     {
+      "status": 0,
+      "instructions": 4020206673,
+      "cycles": 710928406
+     },
+     {
+      "status": 0,
+      "instructions": 4020206676,
+      "cycles": 710302646
+     }
+    ],
+    "rss_kb": [
+     2192,
+     2192,
+     2376
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 4077349580,
+      "cycles": 718578471
+     },
+     {
+      "status": 0,
+      "instructions": 4077349575,
+      "cycles": 720288420
+     },
+     {
+      "status": 0,
+      "instructions": 4077349581,
+      "cycles": 719463585
+     }
+    ],
+    "rss_kb": [
+     2376,
+     2428,
+     2376
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 4077349587,
+      "cycles": 721030675
+     },
+     {
+      "status": 0,
+      "instructions": 4077349576,
+      "cycles": 720464473
+     },
+     {
+      "status": 0,
+      "instructions": 4077349596,
+      "cycles": 721074226
+     }
+    ],
+    "rss_kb": [
+     2432,
+     2420,
+     2420
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.006,
+    "load1_start": 4.4736328125,
+    "load1_end": 4.435546875
+   }
+  },
+  "result/result_calls|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1028782303,
+      "cycles": 360756485
+     },
+     {
+      "status": 0,
+      "instructions": 1028782296,
+      "cycles": 360620755
+     },
+     {
+      "status": 0,
+      "instructions": 1028782297,
+      "cycles": 360942027
+     }
+    ],
+    "rss_kb": [
+     2452,
+     2452,
+     2392
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1111639471,
+      "cycles": 360876195
+     },
+     {
+      "status": 0,
+      "instructions": 1111639468,
+      "cycles": 360867073
+     },
+     {
+      "status": 0,
+      "instructions": 1111639469,
+      "cycles": 361258194
+     }
+    ],
+    "rss_kb": [
+     2388,
+     2412,
+     2260
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1111639498,
+      "cycles": 361223850
+     },
+     {
+      "status": 0,
+      "instructions": 1111639470,
+      "cycles": 361533220
+     },
+     {
+      "status": 0,
+      "instructions": 1111639468,
+      "cycles": 361028667
+     }
+    ],
+    "rss_kb": [
+     2404,
+     2448,
+     2412
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.003,
+    "load1_start": 4.435546875,
+    "load1_end": 4.400390625
+   }
+  },
+  "result/result_parse|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 22782566873,
+      "cycles": 4291430449
+     },
+     {
+      "status": 0,
+      "instructions": 22782566874,
+      "cycles": 4289660010
+     },
+     {
+      "status": 0,
+      "instructions": 22782566836,
+      "cycles": 4281795180
+     }
+    ],
+    "rss_kb": [
+     6584,
+     6584,
+     6584
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 22684541317,
+      "cycles": 4336969638
+     },
+     {
+      "status": 0,
+      "instructions": 22684541044,
+      "cycles": 4345435770
+     },
+     {
+      "status": 0,
+      "instructions": 22684540982,
+      "cycles": 4321029940
+     }
+    ],
+    "rss_kb": [
+     6576,
+     6548,
+     6576
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 22684394050,
+      "cycles": 4093847454
+     },
+     {
+      "status": 0,
+      "instructions": 22684393960,
+      "cycles": 4081397835
+     },
+     {
+      "status": 0,
+      "instructions": 22684393953,
+      "cycles": 4072510962
+     }
+    ],
+    "rss_kb": [
+     6372,
+     6612,
+     6556
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.005,
+    "load1_start": 4.400390625,
+    "load1_end": 4.35302734375
+   }
+  },
+  "result/result_parse|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 12204194926,
+      "cycles": 2154344837
+     },
+     {
+      "status": 0,
+      "instructions": 12204194968,
+      "cycles": 2172412292
+     },
+     {
+      "status": 0,
+      "instructions": 12204194919,
+      "cycles": 2170923084
+     }
+    ],
+    "rss_kb": [
+     6620,
+     6624,
+     6604
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 11980168991,
+      "cycles": 2090945724
+     },
+     {
+      "status": 0,
+      "instructions": 11980168981,
+      "cycles": 2092128036
+     },
+     {
+      "status": 0,
+      "instructions": 11980168979,
+      "cycles": 2095315715
+     }
+    ],
+    "rss_kb": [
+     6552,
+     6576,
+     6588
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 11980021238,
+      "cycles": 2241952174
+     },
+     {
+      "status": 0,
+      "instructions": 11980021222,
+      "cycles": 2240004409
+     },
+     {
+      "status": 0,
+      "instructions": 11980021224,
+      "cycles": 2235186010
+     }
+    ],
+    "rss_kb": [
+     6608,
+     6392,
+     6552
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.007,
+    "load1_start": 4.35302734375,
+    "load1_end": 4.67822265625
+   }
+  },
+  "schematic/fixture|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 20234130,
+      "cycles": 4762102
+     },
+     {
+      "status": 0,
+      "instructions": 20234152,
+      "cycles": 4669642
+     },
+     {
+      "status": 0,
+      "instructions": 20234100,
+      "cycles": 4717542
+     }
+    ],
+    "rss_kb": [
+     3416,
+     3392,
+     3436
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 20119771,
+      "cycles": 4778758
+     },
+     {
+      "status": 0,
+      "instructions": 20119743,
+      "cycles": 4678600
+     },
+     {
+      "status": 0,
+      "instructions": 20119748,
+      "cycles": 4816277
+     }
+    ],
+    "rss_kb": [
+     3396,
+     3364,
+     3452
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 20119728,
+      "cycles": 4703402
+     },
+     {
+      "status": 0,
+      "instructions": 20119748,
+      "cycles": 4687687
+     },
+     {
+      "status": 0,
+      "instructions": 20119766,
+      "cycles": 4690428
+     }
+    ],
+    "rss_kb": [
+     3448,
+     3440,
+     3416
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.0,
+    "load1_start": 4.67822265625,
+    "load1_end": 4.67822265625
+   }
+  },
+  "schematic/fixture|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 9003580,
+      "cycles": 3268539
+     },
+     {
+      "status": 0,
+      "instructions": 9003572,
+      "cycles": 3287047
+     },
+     {
+      "status": 0,
+      "instructions": 9003657,
+      "cycles": 3316051
+     }
+    ],
+    "rss_kb": [
+     3504,
+     3356,
+     3496
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 9048091,
+      "cycles": 3292778
+     },
+     {
+      "status": 0,
+      "instructions": 9048062,
+      "cycles": 3353101
+     },
+     {
+      "status": 0,
+      "instructions": 9048115,
+      "cycles": 3368621
+     }
+    ],
+    "rss_kb": [
+     3440,
+     3456,
+     3432
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 9049252,
+      "cycles": 3383393
+     },
+     {
+      "status": 0,
+      "instructions": 9049235,
+      "cycles": 3290520
+     },
+     {
+      "status": 0,
+      "instructions": 9049280,
+      "cycles": 3286398
+     }
+    ],
+    "rss_kb": [
+     3492,
+     3452,
+     3320
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.0,
+    "load1_start": 4.67822265625,
+    "load1_end": 4.67822265625
+   }
+  },
+  "schematic/changed-net|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 20242912,
+      "cycles": 4695889
+     },
+     {
+      "status": 0,
+      "instructions": 20242927,
+      "cycles": 4691496
+     },
+     {
+      "status": 0,
+      "instructions": 20242900,
+      "cycles": 4734760
+     }
+    ],
+    "rss_kb": [
+     3404,
+     3408,
+     3416
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 20128161,
+      "cycles": 4726114
+     },
+     {
+      "status": 0,
+      "instructions": 20128149,
+      "cycles": 4715271
+     },
+     {
+      "status": 0,
+      "instructions": 20128097,
+      "cycles": 4694078
+     }
+    ],
+    "rss_kb": [
+     3444,
+     3416,
+     3392
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 20128200,
+      "cycles": 4745916
+     },
+     {
+      "status": 0,
+      "instructions": 20128169,
+      "cycles": 4672401
+     },
+     {
+      "status": 0,
+      "instructions": 20128232,
+      "cycles": 4713338
+     }
+    ],
+    "rss_kb": [
+     3260,
+     3456,
+     3420
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.0,
+    "load1_start": 4.67822265625,
+    "load1_end": 4.67822265625
+   }
+  },
+  "schematic/changed-net|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 9008202,
+      "cycles": 3221448
+     },
+     {
+      "status": 0,
+      "instructions": 9008050,
+      "cycles": 3254827
+     },
+     {
+      "status": 0,
+      "instructions": 9008324,
+      "cycles": 3199478
+     }
+    ],
+    "rss_kb": [
+     3484,
+     3480,
+     3496
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 9052713,
+      "cycles": 3205750
+     },
+     {
+      "status": 0,
+      "instructions": 9052739,
+      "cycles": 3344017
+     },
+     {
+      "status": 0,
+      "instructions": 9052791,
+      "cycles": 3220837
+     }
+    ],
+    "rss_kb": [
+     3412,
+     3480,
+     3436
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 9053968,
+      "cycles": 3208929
+     },
+     {
+      "status": 0,
+      "instructions": 9053868,
+      "cycles": 3231611
+     },
+     {
+      "status": 0,
+      "instructions": 9053967,
+      "cycles": 3234030
+     }
+    ],
+    "rss_kb": [
+     3484,
+     3484,
+     3444
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.026,
+    "load1_start": 4.67822265625,
+    "load1_end": 4.67822265625
+   }
+  },
+  "schematic/changed-value|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 20233679,
+      "cycles": 4685740
+     },
+     {
+      "status": 0,
+      "instructions": 20233673,
+      "cycles": 4724154
+     },
+     {
+      "status": 0,
+      "instructions": 20233712,
+      "cycles": 4705681
+     }
+    ],
+    "rss_kb": [
+     3352,
+     3400,
+     3392
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 20118945,
+      "cycles": 4775685
+     },
+     {
+      "status": 0,
+      "instructions": 20118920,
+      "cycles": 4715271
+     },
+     {
+      "status": 0,
+      "instructions": 20118995,
+      "cycles": 4709665
+     }
+    ],
+    "rss_kb": [
+     3444,
+     3408,
+     3456
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 20119033,
+      "cycles": 4777148
+     },
+     {
+      "status": 0,
+      "instructions": 20118982,
+      "cycles": 4711207
+     },
+     {
+      "status": 0,
+      "instructions": 20118917,
+      "cycles": 4822741
+     }
+    ],
+    "rss_kb": [
+     3436,
+     3416,
+     3428
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.025,
+    "load1_start": 4.67822265625,
+    "load1_end": 4.67822265625
+   }
+  },
+  "schematic/changed-value|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 9003049,
+      "cycles": 3281048
+     },
+     {
+      "status": 0,
+      "instructions": 9003012,
+      "cycles": 3276857
+     },
+     {
+      "status": 0,
+      "instructions": 9003094,
+      "cycles": 3268291
+     }
+    ],
+    "rss_kb": [
+     3300,
+     3356,
+     3356
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 9047593,
+      "cycles": 3283167
+     },
+     {
+      "status": 0,
+      "instructions": 9047648,
+      "cycles": 3284698
+     },
+     {
+      "status": 0,
+      "instructions": 9047594,
+      "cycles": 3240461
+     }
+    ],
+    "rss_kb": [
+     3448,
+     3420,
+     3412
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 9048756,
+      "cycles": 3305180
+     },
+     {
+      "status": 0,
+      "instructions": 9048733,
+      "cycles": 3286728
+     },
+     {
+      "status": 0,
+      "instructions": 9048841,
+      "cycles": 3308009
+     }
+    ],
+    "rss_kb": [
+     3460,
+     3484,
+     3268
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.0,
+    "load1_start": 4.67822265625,
+    "load1_end": 4.67822265625
+   }
+  },
+  "lox/vm/binary_trees|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 6265625182,
+      "cycles": 1474503865
+     },
+     {
+      "status": 0,
+      "instructions": 6265625171,
+      "cycles": 1485505614
+     },
+     {
+      "status": 0,
+      "instructions": 6265625970,
+      "cycles": 1476121708
+     }
+    ],
+    "rss_kb": [
+     55184,
+     55184,
+     55348
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 6339844336,
+      "cycles": 1489863997
+     },
+     {
+      "status": 0,
+      "instructions": 6339845707,
+      "cycles": 1492272882
+     },
+     {
+      "status": 0,
+      "instructions": 6339844295,
+      "cycles": 1489337513
+     }
+    ],
+    "rss_kb": [
+     54840,
+     55072,
+     55112
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 6241837879,
+      "cycles": 1462327701
+     },
+     {
+      "status": 0,
+      "instructions": 6241837928,
+      "cycles": 1468002661
+     },
+     {
+      "status": 0,
+      "instructions": 6241839664,
+      "cycles": 1458555802
+     }
+    ],
+    "rss_kb": [
+     55112,
+     55132,
+     55148
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.007,
+    "load1_start": 4.67822265625,
+    "load1_end": 4.52685546875
+   }
+  },
+  "lox/vm/binary_trees|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 2685232402,
+      "cycles": 794698436
+     },
+     {
+      "status": 0,
+      "instructions": 2685231993,
+      "cycles": 792770971
+     },
+     {
+      "status": 0,
+      "instructions": 2685231996,
+      "cycles": 790443721
+     }
+    ],
+    "rss_kb": [
+     55148,
+     55132,
+     55164
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 2708323916,
+      "cycles": 805539246
+     },
+     {
+      "status": 0,
+      "instructions": 2708323704,
+      "cycles": 812534342
+     },
+     {
+      "status": 0,
+      "instructions": 2708323737,
+      "cycles": 812989453
+     }
+    ],
+    "rss_kb": [
+     55144,
+     55148,
+     55124
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 2663055393,
+      "cycles": 806364063
+     },
+     {
+      "status": 0,
+      "instructions": 2663056190,
+      "cycles": 803620379
+     },
+     {
+      "status": 0,
+      "instructions": 2663055232,
+      "cycles": 803174572
+     }
+    ],
+    "rss_kb": [
+     55168,
+     55212,
+     55196
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.999,
+    "sibling_busy": 0.005,
+    "load1_start": 4.52685546875,
+    "load1_end": 4.4453125
+   }
+  },
+  "lox/vm/closures|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 8914404608,
+      "cycles": 2060606441
+     },
+     {
+      "status": 0,
+      "instructions": 8914404084,
+      "cycles": 2062095217
+     },
+     {
+      "status": 0,
+      "instructions": 8914404097,
+      "cycles": 2051507874
+     }
+    ],
+    "rss_kb": [
+     21896,
+     21912,
+     21728
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 8918030065,
+      "cycles": 2061052263
+     },
+     {
+      "status": 0,
+      "instructions": 8918030028,
+      "cycles": 2057806744
+     },
+     {
+      "status": 0,
+      "instructions": 8918030033,
+      "cycles": 2055256034
+     }
+    ],
+    "rss_kb": [
+     21804,
+     21964,
+     21892
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 8891323198,
+      "cycles": 2019007120
+     },
+     {
+      "status": 0,
+      "instructions": 8891323169,
+      "cycles": 2010191875
+     },
+     {
+      "status": 0,
+      "instructions": 8891323177,
+      "cycles": 2021718364
+     }
+    ],
+    "rss_kb": [
+     21688,
+     21584,
+     21700
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.006,
+    "load1_start": 4.4453125,
+    "load1_end": 4.48193359375
+   }
+  },
+  "lox/vm/closures|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 3798108238,
+      "cycles": 795816835
+     },
+     {
+      "status": 0,
+      "instructions": 3798108247,
+      "cycles": 799253066
+     },
+     {
+      "status": 0,
+      "instructions": 3798108223,
+      "cycles": 794244239
+     }
+    ],
+    "rss_kb": [
+     21876,
+     21700,
+     21828
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 3806564678,
+      "cycles": 805151282
+     },
+     {
+      "status": 0,
+      "instructions": 3806564824,
+      "cycles": 803435036
+     },
+     {
+      "status": 0,
+      "instructions": 3806564688,
+      "cycles": 803662166
+     }
+    ],
+    "rss_kb": [
+     21860,
+     21868,
+     21688
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 3779859442,
+      "cycles": 805180389
+     },
+     {
+      "status": 0,
+      "instructions": 3779859476,
+      "cycles": 805747654
+     },
+     {
+      "status": 0,
+      "instructions": 3779859476,
+      "cycles": 817936023
+     }
+    ],
+    "rss_kb": [
+     21708,
+     21548,
+     21640
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.999,
+    "sibling_busy": 0.007,
+    "load1_start": 4.48193359375,
+    "load1_end": 4.4072265625
+   }
+  },
+  "lox/vm/equality|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 10175639036,
+      "cycles": 2170546433
+     },
+     {
+      "status": 0,
+      "instructions": 10175639056,
+      "cycles": 2173910502
+     },
+     {
+      "status": 0,
+      "instructions": 10175639059,
+      "cycles": 2168025421
+     }
+    ],
+    "rss_kb": [
+     3628,
+     3676,
+     3628
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 10175638492,
+      "cycles": 2175084126
+     },
+     {
+      "status": 0,
+      "instructions": 10175638493,
+      "cycles": 2167252974
+     },
+     {
+      "status": 0,
+      "instructions": 10175638522,
+      "cycles": 2161788028
+     }
+    ],
+    "rss_kb": [
+     3580,
+     3564,
+     3560
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 10175638498,
+      "cycles": 2148750640
+     },
+     {
+      "status": 0,
+      "instructions": 10175638493,
+      "cycles": 2153728412
+     },
+     {
+      "status": 0,
+      "instructions": 10175638505,
+      "cycles": 2156716026
+     }
+    ],
+    "rss_kb": [
+     3576,
+     3660,
+     3736
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.004,
+    "load1_start": 4.4072265625,
+    "load1_end": 4.31640625
+   }
+  },
+  "lox/vm/equality|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 3463059545,
+      "cycles": 756900091
+     },
+     {
+      "status": 0,
+      "instructions": 3463059538,
+      "cycles": 754684324
+     },
+     {
+      "status": 0,
+      "instructions": 3463059536,
+      "cycles": 753135481
+     }
+    ],
+    "rss_kb": [
+     3720,
+     3632,
+     3644
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 3463060641,
+      "cycles": 747207301
+     },
+     {
+      "status": 0,
+      "instructions": 3463060642,
+      "cycles": 749945942
+     },
+     {
+      "status": 0,
+      "instructions": 3463060632,
+      "cycles": 748238005
+     }
+    ],
+    "rss_kb": [
+     3620,
+     3616,
+     3620
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 3463060642,
+      "cycles": 719395721
+     },
+     {
+      "status": 0,
+      "instructions": 3463060628,
+      "cycles": 722912356
+     },
+     {
+      "status": 0,
+      "instructions": 3463060651,
+      "cycles": 727880095
+     }
+    ],
+    "rss_kb": [
+     3672,
+     3628,
+     3668
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.006,
+    "load1_start": 4.31640625,
+    "load1_end": 4.42822265625
+   }
+  },
+  "lox/vm/fib|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 4892184926,
+      "cycles": 1280592878
+     },
+     {
+      "status": 0,
+      "instructions": 4892184822,
+      "cycles": 1068673317
+     },
+     {
+      "status": 0,
+      "instructions": 4892184817,
+      "cycles": 1069281966
+     }
+    ],
+    "rss_kb": [
+     3636,
+     3636,
+     3500
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 4892184428,
+      "cycles": 1086907355
+     },
+     {
+      "status": 0,
+      "instructions": 4892184439,
+      "cycles": 1078555589
+     },
+     {
+      "status": 0,
+      "instructions": 4892184423,
+      "cycles": 1079351111
+     }
+    ],
+    "rss_kb": [
+     3576,
+     3552,
+     3724
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 4892184412,
+      "cycles": 1050460490
+     },
+     {
+      "status": 0,
+      "instructions": 4892184416,
+      "cycles": 1050959710
+     },
+     {
+      "status": 0,
+      "instructions": 4892184402,
+      "cycles": 1048050541
+     }
+    ],
+    "rss_kb": [
+     3664,
+     3600,
+     3624
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.035,
+    "load1_start": 4.42822265625,
+    "load1_end": 4.36181640625
+   }
+  },
+  "lox/vm/fib|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1803520424,
+      "cycles": 384521396
+     },
+     {
+      "status": 0,
+      "instructions": 1803520424,
+      "cycles": 393776227
+     },
+     {
+      "status": 0,
+      "instructions": 1803520419,
+      "cycles": 384263590
+     }
+    ],
+    "rss_kb": [
+     3640,
+     3620,
+     3592
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1803521622,
+      "cycles": 394146024
+     },
+     {
+      "status": 0,
+      "instructions": 1803521637,
+      "cycles": 395496766
+     },
+     {
+      "status": 0,
+      "instructions": 1803521626,
+      "cycles": 393522365
+     }
+    ],
+    "rss_kb": [
+     3556,
+     3580,
+     3592
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1803521643,
+      "cycles": 392555657
+     },
+     {
+      "status": 0,
+      "instructions": 1803521651,
+      "cycles": 393503619
+     },
+     {
+      "status": 0,
+      "instructions": 1803521643,
+      "cycles": 393566504
+     }
+    ],
+    "rss_kb": [
+     3620,
+     3616,
+     3692
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.003,
+    "load1_start": 4.36181640625,
+    "load1_end": 4.36181640625
+   }
+  },
+  "lox/vm/instantiation|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 6007998535,
+      "cycles": 1216534206
+     },
+     {
+      "status": 0,
+      "instructions": 6007998464,
+      "cycles": 1213253152
+     },
+     {
+      "status": 0,
+      "instructions": 6007998457,
+      "cycles": 1217373027
+     }
+    ],
+    "rss_kb": [
+     27008,
+     27016,
+     27008
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 6179681654,
+      "cycles": 1272231281
+     },
+     {
+      "status": 0,
+      "instructions": 6179681660,
+      "cycles": 1273603994
+     },
+     {
+      "status": 0,
+      "instructions": 6179681622,
+      "cycles": 1270179380
+     }
+    ],
+    "rss_kb": [
+     27012,
+     27008,
+     26764
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 5944214982,
+      "cycles": 1226172978
+     },
+     {
+      "status": 0,
+      "instructions": 5944214991,
+      "cycles": 1224978005
+     },
+     {
+      "status": 0,
+      "instructions": 5944214948,
+      "cycles": 1228999979
+     }
+    ],
+    "rss_kb": [
+     26960,
+     26824,
+     26936
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.999,
+    "sibling_busy": 0.004,
+    "load1_start": 4.36181640625,
+    "load1_end": 4.28076171875
+   }
+  },
+  "lox/vm/instantiation|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 3048045183,
+      "cycles": 727572903
+     },
+     {
+      "status": 0,
+      "instructions": 3048045176,
+      "cycles": 728776082
+     },
+     {
+      "status": 0,
+      "instructions": 3048045188,
+      "cycles": 737728654
+     }
+    ],
+    "rss_kb": [
+     26984,
+     27080,
+     26972
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 3102531321,
+      "cycles": 733032738
+     },
+     {
+      "status": 0,
+      "instructions": 3102531960,
+      "cycles": 736410355
+     },
+     {
+      "status": 0,
+      "instructions": 3102531300,
+      "cycles": 734014515
+     }
+    ],
+    "rss_kb": [
+     26988,
+     26948,
+     26948
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 2993278993,
+      "cycles": 720822890
+     },
+     {
+      "status": 0,
+      "instructions": 2993278721,
+      "cycles": 713779042
+     },
+     {
+      "status": 0,
+      "instructions": 2993278408,
+      "cycles": 748445756
+     }
+    ],
+    "rss_kb": [
+     27028,
+     27052,
+     27008
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.005,
+    "load1_start": 4.28076171875,
+    "load1_end": 4.2578125
+   }
+  },
+  "lox/vm/invocation|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 14305444866,
+      "cycles": 2911105725
+     },
+     {
+      "status": 0,
+      "instructions": 14305444877,
+      "cycles": 2910596161
+     },
+     {
+      "status": 0,
+      "instructions": 14305444858,
+      "cycles": 2915280384
+     }
+    ],
+    "rss_kb": [
+     3824,
+     3724,
+     3788
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 14305442792,
+      "cycles": 2898152913
+     },
+     {
+      "status": 0,
+      "instructions": 14305442795,
+      "cycles": 2886259887
+     },
+     {
+      "status": 0,
+      "instructions": 14305442756,
+      "cycles": 2871509230
+     }
+    ],
+    "rss_kb": [
+     3724,
+     3748,
+     3884
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 14305442762,
+      "cycles": 2837032906
+     },
+     {
+      "status": 0,
+      "instructions": 14305442808,
+      "cycles": 2830910411
+     },
+     {
+      "status": 0,
+      "instructions": 14305442741,
+      "cycles": 2824336455
+     }
+    ],
+    "rss_kb": [
+     3772,
+     3800,
+     3768
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.003,
+    "load1_start": 4.2578125,
+    "load1_end": 4.4482421875
+   }
+  },
+  "lox/vm/invocation|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 5639176667,
+      "cycles": 1663429540
+     },
+     {
+      "status": 0,
+      "instructions": 5639176373,
+      "cycles": 1664590786
+     },
+     {
+      "status": 0,
+      "instructions": 5639176342,
+      "cycles": 1666096343
+     }
+    ],
+    "rss_kb": [
+     3796,
+     3784,
+     3784
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 5639176928,
+      "cycles": 1662123238
+     },
+     {
+      "status": 0,
+      "instructions": 5639176916,
+      "cycles": 1663665344
+     },
+     {
+      "status": 0,
+      "instructions": 5639176884,
+      "cycles": 1665013786
+     }
+    ],
+    "rss_kb": [
+     3740,
+     3764,
+     3780
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 5639177150,
+      "cycles": 1975967787
+     },
+     {
+      "status": 0,
+      "instructions": 5639177147,
+      "cycles": 2039010749
+     },
+     {
+      "status": 0,
+      "instructions": 5639176903,
+      "cycles": 1685321397
+     }
+    ],
+    "rss_kb": [
+     3816,
+     3688,
+     3808
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.999,
+    "sibling_busy": 0.121,
+    "load1_start": 4.4482421875,
+    "load1_end": 6.40625
+   }
+  },
+  "lox/vm/method_call|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 13724128069,
+      "cycles": 3091618059
+     },
+     {
+      "status": 0,
+      "instructions": 13724127936,
+      "cycles": 3082850852
+     },
+     {
+      "status": 0,
+      "instructions": 13724127967,
+      "cycles": 3087163164
+     }
+    ],
+    "rss_kb": [
+     3432,
+     3644,
+     3656
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 13724126835,
+      "cycles": 3188072608
+     },
+     {
+      "status": 0,
+      "instructions": 13724126819,
+      "cycles": 3039164425
+     },
+     {
+      "status": 0,
+      "instructions": 13724126726,
+      "cycles": 3034733476
+     }
+    ],
+    "rss_kb": [
+     3592,
+     3528,
+     3724
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 13724126766,
+      "cycles": 3061854216
+     },
+     {
+      "status": 0,
+      "instructions": 13724127055,
+      "cycles": 3045223501
+     },
+     {
+      "status": 0,
+      "instructions": 13724126711,
+      "cycles": 2992566458
+     }
+    ],
+    "rss_kb": [
+     3620,
+     3620,
+     3640
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.017,
+    "load1_start": 6.40625,
+    "load1_end": 5.68115234375
+   }
+  },
+  "lox/vm/method_call|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 5202609958,
+      "cycles": 1649818297
+     },
+     {
+      "status": 0,
+      "instructions": 5202609967,
+      "cycles": 1641055337
+     },
+     {
+      "status": 0,
+      "instructions": 5202609942,
+      "cycles": 1639708219
+     }
+    ],
+    "rss_kb": [
+     3608,
+     3640,
+     3628
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 5202610438,
+      "cycles": 1693707331
+     },
+     {
+      "status": 0,
+      "instructions": 5202610437,
+      "cycles": 1693316500
+     },
+     {
+      "status": 0,
+      "instructions": 5202610436,
+      "cycles": 1695172902
+     }
+    ],
+    "rss_kb": [
+     3628,
+     3600,
+     3612
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 5202610709,
+      "cycles": 1713984195
+     },
+     {
+      "status": 0,
+      "instructions": 5202610770,
+      "cycles": 1711489738
+     },
+     {
+      "status": 0,
+      "instructions": 5202610701,
+      "cycles": 1714721427
+     }
+    ],
+    "rss_kb": [
+     3612,
+     3648,
+     3648
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.005,
+    "load1_start": 5.68115234375,
+    "load1_end": 5.16650390625
+   }
+  },
+  "lox/vm/properties|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 12772438173,
+      "cycles": 2782881476
+     },
+     {
+      "status": 0,
+      "instructions": 12772438182,
+      "cycles": 2778006901
+     },
+     {
+      "status": 0,
+      "instructions": 12772438140,
+      "cycles": 2774747874
+     }
+    ],
+    "rss_kb": [
+     3836,
+     3816,
+     3836
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 12772452873,
+      "cycles": 2746069757
+     },
+     {
+      "status": 0,
+      "instructions": 12772452941,
+      "cycles": 2752828526
+     },
+     {
+      "status": 0,
+      "instructions": 12772452970,
+      "cycles": 2741656217
+     }
+    ],
+    "rss_kb": [
+     3736,
+     3772,
+     3712
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 12772418889,
+      "cycles": 2685307901
+     },
+     {
+      "status": 0,
+      "instructions": 12772418802,
+      "cycles": 2692671434
+     },
+     {
+      "status": 0,
+      "instructions": 12772418904,
+      "cycles": 2694728636
+     }
+    ],
+    "rss_kb": [
+     3792,
+     3760,
+     3784
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.007,
+    "load1_start": 5.16650390625,
+    "load1_end": 4.76708984375
+   }
+  },
+  "lox/vm/properties|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 5041888210,
+      "cycles": 1613364951
+     },
+     {
+      "status": 0,
+      "instructions": 5041888193,
+      "cycles": 1614726222
+     },
+     {
+      "status": 0,
+      "instructions": 5041888160,
+      "cycles": 1623083425
+     }
+    ],
+    "rss_kb": [
+     3752,
+     3768,
+     3768
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 5041904958,
+      "cycles": 1639024192
+     },
+     {
+      "status": 0,
+      "instructions": 5041905024,
+      "cycles": 1637166558
+     },
+     {
+      "status": 0,
+      "instructions": 5041904930,
+      "cycles": 1641712208
+     }
+    ],
+    "rss_kb": [
+     3716,
+     3584,
+     3788
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 5041872021,
+      "cycles": 1647242905
+     },
+     {
+      "status": 0,
+      "instructions": 5041871997,
+      "cycles": 1637471944
+     },
+     {
+      "status": 0,
+      "instructions": 5041871984,
+      "cycles": 1641383502
+     }
+    ],
+    "rss_kb": [
+     3720,
+     3836,
+     3836
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.008,
+    "load1_start": 4.76708984375,
+    "load1_end": 4.375
+   }
+  },
+  "lox/vm/string_equality|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 8861335796,
+      "cycles": 1476250637
+     },
+     {
+      "status": 0,
+      "instructions": 8861335783,
+      "cycles": 1472736942
+     },
+     {
+      "status": 0,
+      "instructions": 8861335784,
+      "cycles": 1487568708
+     }
+    ],
+    "rss_kb": [
+     4152,
+     4140,
+     4144
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 8861333067,
+      "cycles": 2489705567
+     },
+     {
+      "status": 0,
+      "instructions": 8861332794,
+      "cycles": 1479023590
+     },
+     {
+      "status": 0,
+      "instructions": 8861332797,
+      "cycles": 1485702049
+     }
+    ],
+    "rss_kb": [
+     4132,
+     4040,
+     4060
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 8861309356,
+      "cycles": 1485132776
+     },
+     {
+      "status": 0,
+      "instructions": 8861309074,
+      "cycles": 1478051450
+     },
+     {
+      "status": 0,
+      "instructions": 8861309063,
+      "cycles": 1472784558
+     }
+    ],
+    "rss_kb": [
+     4144,
+     4084,
+     4080
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.999,
+    "sibling_busy": 0.092,
+    "load1_start": 4.375,
+    "load1_end": 4.1630859375
+   }
+  },
+  "lox/vm/string_equality|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 2822681046,
+      "cycles": 444831417
+     },
+     {
+      "status": 0,
+      "instructions": 2822681100,
+      "cycles": 446824028
+     },
+     {
+      "status": 0,
+      "instructions": 2822681086,
+      "cycles": 450971430
+     }
+    ],
+    "rss_kb": [
+     4116,
+     4080,
+     4200
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 2822666578,
+      "cycles": 472304481
+     },
+     {
+      "status": 0,
+      "instructions": 2822666581,
+      "cycles": 473274594
+     },
+     {
+      "status": 0,
+      "instructions": 2822666582,
+      "cycles": 476494451
+     }
+    ],
+    "rss_kb": [
+     4084,
+     4100,
+     4072
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 2822657447,
+      "cycles": 485117016
+     },
+     {
+      "status": 0,
+      "instructions": 2822657463,
+      "cycles": 495437683
+     },
+     {
+      "status": 0,
+      "instructions": 2822657443,
+      "cycles": 491685975
+     }
+    ],
+    "rss_kb": [
+     4144,
+     4172,
+     4096
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.008,
+    "load1_start": 4.1630859375,
+    "load1_end": 4.310546875
+   }
+  },
+  "lox/vm/strings|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 7938576765,
+      "cycles": 1844542752
+     },
+     {
+      "status": 0,
+      "instructions": 7938576756,
+      "cycles": 1839960828
+     },
+     {
+      "status": 0,
+      "instructions": 7938577839,
+      "cycles": 3523475742
+     }
+    ],
+    "rss_kb": [
+     8008,
+     7964,
+     7808
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 7938027735,
+      "cycles": 1897537032
+     },
+     {
+      "status": 0,
+      "instructions": 7938028306,
+      "cycles": 2873509491
+     },
+     {
+      "status": 0,
+      "instructions": 7938028720,
+      "cycles": 3223476888
+     }
+    ],
+    "rss_kb": [
+     7864,
+     8044,
+     7896
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 7937714830,
+      "cycles": 1877227617
+     },
+     {
+      "status": 0,
+      "instructions": 7937714832,
+      "cycles": 1865438533
+     },
+     {
+      "status": 0,
+      "instructions": 7937716487,
+      "cycles": 3154655771
+     }
+    ],
+    "rss_kb": [
+     8056,
+     7936,
+     7780
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.494,
+    "load1_start": 4.310546875,
+    "load1_end": 9.2783203125
+   }
+  },
+  "lox/vm/strings|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 3921317587,
+      "cycles": 925987076
+     },
+     {
+      "status": 0,
+      "instructions": 3921317570,
+      "cycles": 921781397
+     },
+     {
+      "status": 0,
+      "instructions": 3921317583,
+      "cycles": 928576920
+     }
+    ],
+    "rss_kb": [
+     7932,
+     7912,
+     7960
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 3910570882,
+      "cycles": 950327697
+     },
+     {
+      "status": 0,
+      "instructions": 3910570895,
+      "cycles": 952695892
+     },
+     {
+      "status": 0,
+      "instructions": 3910570896,
+      "cycles": 948430567
+     }
+    ],
+    "rss_kb": [
+     7908,
+     7920,
+     7932
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 3910558483,
+      "cycles": 954764724
+     },
+     {
+      "status": 0,
+      "instructions": 3910558488,
+      "cycles": 934821910
+     },
+     {
+      "status": 0,
+      "instructions": 3910558477,
+      "cycles": 939505316
+     }
+    ],
+    "rss_kb": [
+     7968,
+     7904,
+     7916
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.102,
+    "load1_start": 9.2783203125,
+    "load1_end": 10.17138671875
+   }
+  },
+  "lox/vm/trees|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 4685721407,
+      "cycles": 1136433257
+     },
+     {
+      "status": 0,
+      "instructions": 4685721406,
+      "cycles": 1141151236
+     },
+     {
+      "status": 0,
+      "instructions": 4685721482,
+      "cycles": 1148550047
+     }
+    ],
+    "rss_kb": [
+     59328,
+     59356,
+     59324
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 4746209440,
+      "cycles": 1138713721
+     },
+     {
+      "status": 0,
+      "instructions": 4746209523,
+      "cycles": 1137644594
+     },
+     {
+      "status": 0,
+      "instructions": 4746209619,
+      "cycles": 1526245170
+     }
+    ],
+    "rss_kb": [
+     59424,
+     59252,
+     59252
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 4671602584,
+      "cycles": 1109852018
+     },
+     {
+      "status": 0,
+      "instructions": 4671602582,
+      "cycles": 1121735167
+     },
+     {
+      "status": 0,
+      "instructions": 4671602572,
+      "cycles": 1119452495
+     }
+    ],
+    "rss_kb": [
+     59304,
+     59280,
+     59340
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.999,
+    "sibling_busy": 0.081,
+    "load1_start": 10.17138671875,
+    "load1_end": 10.6064453125
+   }
+  },
+  "lox/vm/trees|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1940437855,
+      "cycles": 676294397
+     },
+     {
+      "status": 0,
+      "instructions": 1940438106,
+      "cycles": 679593410
+     },
+     {
+      "status": 0,
+      "instructions": 1940438179,
+      "cycles": 679139627
+     }
+    ],
+    "rss_kb": [
+     59300,
+     59312,
+     59324
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1952790724,
+      "cycles": 696682711
+     },
+     {
+      "status": 0,
+      "instructions": 1952790782,
+      "cycles": 697348409
+     },
+     {
+      "status": 0,
+      "instructions": 1952790692,
+      "cycles": 698689602
+     }
+    ],
+    "rss_kb": [
+     59308,
+     59300,
+     59272
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1926906867,
+      "cycles": 695043317
+     },
+     {
+      "status": 0,
+      "instructions": 1926906839,
+      "cycles": 694897070
+     },
+     {
+      "status": 0,
+      "instructions": 1926906854,
+      "cycles": 692345514
+     }
+    ],
+    "rss_kb": [
+     59240,
+     59312,
+     59292
+    ]
+   },
+   "context": {
+    "cpu_busy": 1.0,
+    "sibling_busy": 0.015,
+    "load1_start": 10.6064453125,
+    "load1_end": 10.5126953125
+   }
+  },
+  "lox/vm/zoo|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 16144704176,
+      "cycles": 3686776309
+     },
+     {
+      "status": 0,
+      "instructions": 16144704003,
+      "cycles": 3698454850
+     },
+     {
+      "status": 0,
+      "instructions": 16144703939,
+      "cycles": 3642496649
+     }
+    ],
+    "rss_kb": [
+     3672,
+     3564,
+     3644
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 16144703137,
+      "cycles": 3637638821
+     },
+     {
+      "status": 0,
+      "instructions": 16144702955,
+      "cycles": 3627440081
+     },
+     {
+      "status": 0,
+      "instructions": 16144702980,
+      "cycles": 3625433880
+     }
+    ],
+    "rss_kb": [
+     3564,
+     3704,
+     3552
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 16144703036,
+      "cycles": 3557161285
+     },
+     {
+      "status": 0,
+      "instructions": 16144702946,
+      "cycles": 3551459107
+     },
+     {
+      "status": 0,
+      "instructions": 16144702993,
+      "cycles": 3560500494
+     }
+    ],
+    "rss_kb": [
+     3604,
+     3664,
+     3736
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.74,
+    "sibling_busy": 0.01,
+    "load1_start": 10.5126953125,
+    "load1_end": 9.08544921875
+   }
+  },
+  "lox/vm/zoo|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 6263328037,
+      "cycles": 1891129706
+     },
+     {
+      "status": 0,
+      "instructions": 6263328002,
+      "cycles": 1890294988
+     },
+     {
+      "status": 0,
+      "instructions": 6263327998,
+      "cycles": 1913595322
+     }
+    ],
+    "rss_kb": [
+     3624,
+     3600,
+     3628
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 6263328982,
+      "cycles": 1915798233
+     },
+     {
+      "status": 0,
+      "instructions": 6263328960,
+      "cycles": 1946494299
+     },
+     {
+      "status": 0,
+      "instructions": 6263328958,
+      "cycles": 1902278034
+     }
+    ],
+    "rss_kb": [
+     3604,
+     3612,
+     3604
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 6263328972,
+      "cycles": 1910478646
+     },
+     {
+      "status": 0,
+      "instructions": 6263329002,
+      "cycles": 1907955759
+     },
+     {
+      "status": 0,
+      "instructions": 6263328964,
+      "cycles": 1910770347
+     }
+    ],
+    "rss_kb": [
+     3660,
+     3676,
+     3612
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.584,
+    "sibling_busy": 0.011,
+    "load1_start": 9.08544921875,
+    "load1_end": 8.302734375
+   }
+  },
+  "lox/vm/zoo_batch|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 13355156157,
+      "cycles": 3025870825
+     },
+     {
+      "status": 0,
+      "instructions": 13355156042,
+      "cycles": 3115907905
+     },
+     {
+      "status": 0,
+      "instructions": 13355156143,
+      "cycles": 3025983788
+     }
+    ],
+    "rss_kb": [
+     3432,
+     3648,
+     3668
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 13355155023,
+      "cycles": 3003136232
+     },
+     {
+      "status": 0,
+      "instructions": 13355155017,
+      "cycles": 3003627411
+     },
+     {
+      "status": 0,
+      "instructions": 13355155062,
+      "cycles": 3013549247
+     }
+    ],
+    "rss_kb": [
+     3652,
+     3576,
+     3528
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 13355154960,
+      "cycles": 2944256984
+     },
+     {
+      "status": 0,
+      "instructions": 13355154989,
+      "cycles": 2939555133
+     },
+     {
+      "status": 0,
+      "instructions": 13355155046,
+      "cycles": 2970975164
+     }
+    ],
+    "rss_kb": [
+     3664,
+     3608,
+     3632
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.744,
+    "sibling_busy": 0.073,
+    "load1_start": 8.302734375,
+    "load1_end": 7.56103515625
+   }
+  },
+  "lox/vm/zoo_batch|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 5117372192,
+      "cycles": 1504844697
+     },
+     {
+      "status": 0,
+      "instructions": 5117372162,
+      "cycles": 1504585145
+     },
+     {
+      "status": 0,
+      "instructions": 5117372172,
+      "cycles": 1506338004
+     }
+    ],
+    "rss_kb": [
+     3612,
+     3648,
+     3720
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 5117373139,
+      "cycles": 1542889168
+     },
+     {
+      "status": 0,
+      "instructions": 5117373105,
+      "cycles": 1539257766
+     },
+     {
+      "status": 0,
+      "instructions": 5117373098,
+      "cycles": 1562911045
+     }
+    ],
+    "rss_kb": [
+     3620,
+     3588,
+     3628
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 5117373192,
+      "cycles": 1547378824
+     },
+     {
+      "status": 0,
+      "instructions": 5117373203,
+      "cycles": 1545260924
+     },
+     {
+      "status": 0,
+      "instructions": 5117373134,
+      "cycles": 1545303489
+     }
+    ],
+    "rss_kb": [
+     3664,
+     3616,
+     3648
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.731,
+    "sibling_busy": 0.012,
+    "load1_start": 7.56103515625,
+    "load1_end": 7.35546875
+   }
+  },
+  "lox/tree/binary_trees|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 15635223569,
+      "cycles": 4148229486
+     },
+     {
+      "status": 0,
+      "instructions": 15635222609,
+      "cycles": 4153222770
+     },
+     {
+      "status": 0,
+      "instructions": 15635222784,
+      "cycles": 4149182596
+     }
+    ],
+    "rss_kb": [
+     36752,
+     36604,
+     36796
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 15774325702,
+      "cycles": 4177587488
+     },
+     {
+      "status": 0,
+      "instructions": 15774331775,
+      "cycles": 4157187088
+     },
+     {
+      "status": 0,
+      "instructions": 15774324749,
+      "cycles": 4153843160
+     }
+    ],
+    "rss_kb": [
+     36884,
+     36712,
+     37060
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 15585844889,
+      "cycles": 4173459837
+     },
+     {
+      "status": 0,
+      "instructions": 15585839288,
+      "cycles": 4142699954
+     },
+     {
+      "status": 0,
+      "instructions": 15585839261,
+      "cycles": 4143868013
+     }
+    ],
+    "rss_kb": [
+     36956,
+     37016,
+     36784
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.544,
+    "sibling_busy": 0.003,
+    "load1_start": 7.35546875,
+    "load1_end": 5.92529296875
+   }
+  },
+  "lox/tree/binary_trees|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 6340649480,
+      "cycles": 2450532234
+     },
+     {
+      "status": 0,
+      "instructions": 6340649560,
+      "cycles": 2450132930
+     },
+     {
+      "status": 0,
+      "instructions": 6340830913,
+      "cycles": 2429960636
+     }
+    ],
+    "rss_kb": [
+     36760,
+     36892,
+     36720
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 6369308958,
+      "cycles": 2423566759
+     },
+     {
+      "status": 0,
+      "instructions": 6369048261,
+      "cycles": 2446375811
+     },
+     {
+      "status": 0,
+      "instructions": 6369046649,
+      "cycles": 2426061787
+     }
+    ],
+    "rss_kb": [
+     36884,
+     36868,
+     36852
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 6218141599,
+      "cycles": 2418247051
+     },
+     {
+      "status": 0,
+      "instructions": 6218301692,
+      "cycles": 2414396203
+     },
+     {
+      "status": 0,
+      "instructions": 6218326923,
+      "cycles": 2403218334
+     }
+    ],
+    "rss_kb": [
+     36756,
+     36636,
+     36812
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.606,
+    "sibling_busy": 0.005,
+    "load1_start": 5.92529296875,
+    "load1_end": 5.27685546875
+   }
+  },
+  "lox/tree/closures|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 22030157001,
+      "cycles": 5602253708
+     },
+     {
+      "status": 0,
+      "instructions": 22030156921,
+      "cycles": 5590427145
+     },
+     {
+      "status": 0,
+      "instructions": 22030214702,
+      "cycles": 5571184043
+     }
+    ],
+    "rss_kb": [
+     27372,
+     27188,
+     27284
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 22171035433,
+      "cycles": 5652964894
+     },
+     {
+      "status": 0,
+      "instructions": 22171035620,
+      "cycles": 5659006084
+     },
+     {
+      "status": 0,
+      "instructions": 22171035610,
+      "cycles": 5635503563
+     }
+    ],
+    "rss_kb": [
+     27604,
+     27484,
+     27472
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 22008031834,
+      "cycles": 5623021435
+     },
+     {
+      "status": 0,
+      "instructions": 22008033740,
+      "cycles": 5635534237
+     },
+     {
+      "status": 0,
+      "instructions": 22008031945,
+      "cycles": 5613058267
+     }
+    ],
+    "rss_kb": [
+     27452,
+     27344,
+     27488
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.678,
+    "sibling_busy": 0.005,
+    "load1_start": 5.27685546875,
+    "load1_end": 4.49951171875
+   }
+  },
+  "lox/tree/closures|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 8461718698,
+      "cycles": 3033347473
+     },
+     {
+      "status": 0,
+      "instructions": 8461718675,
+      "cycles": 3044323349
+     },
+     {
+      "status": 0,
+      "instructions": 8461718673,
+      "cycles": 3040759627
+     }
+    ],
+    "rss_kb": [
+     27400,
+     27628,
+     27476
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 8551191487,
+      "cycles": 3004701544
+     },
+     {
+      "status": 0,
+      "instructions": 8551254422,
+      "cycles": 3005352158
+     },
+     {
+      "status": 0,
+      "instructions": 8551191460,
+      "cycles": 3006809860
+     }
+    ],
+    "rss_kb": [
+     27412,
+     27292,
+     27236
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 8388194204,
+      "cycles": 2986196952
+     },
+     {
+      "status": 0,
+      "instructions": 8388197724,
+      "cycles": 2985839273
+     },
+     {
+      "status": 0,
+      "instructions": 8388193757,
+      "cycles": 2984161729
+     }
+    ],
+    "rss_kb": [
+     27476,
+     27240,
+     27300
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.682,
+    "sibling_busy": 0.006,
+    "load1_start": 4.49951171875,
+    "load1_end": 4.24658203125
+   }
+  },
+  "lox/tree/equality|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 29825464925,
+      "cycles": 6965091494
+     },
+     {
+      "status": 0,
+      "instructions": 29825464896,
+      "cycles": 6966736632
+     },
+     {
+      "status": 0,
+      "instructions": 29825474016,
+      "cycles": 6948742893
+     }
+    ],
+    "rss_kb": [
+     22376,
+     22644,
+     22512
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 29924406217,
+      "cycles": 6952663660
+     },
+     {
+      "status": 0,
+      "instructions": 29924405538,
+      "cycles": 6942446115
+     },
+     {
+      "status": 0,
+      "instructions": 29924414690,
+      "cycles": 6941883882
+     }
+    ],
+    "rss_kb": [
+     22840,
+     22400,
+     22676
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 29885449754,
+      "cycles": 6948077918
+     },
+     {
+      "status": 0,
+      "instructions": 29885449753,
+      "cycles": 6943630977
+     },
+     {
+      "status": 0,
+      "instructions": 29885449665,
+      "cycles": 6945331137
+     }
+    ],
+    "rss_kb": [
+     22556,
+     22456,
+     22684
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.621,
+    "sibling_busy": 0.006,
+    "load1_start": 4.24658203125,
+    "load1_end": 3.6953125
+   }
+  },
+  "lox/tree/equality|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 8035703727,
+      "cycles": 2922814387
+     },
+     {
+      "status": 0,
+      "instructions": 8035694605,
+      "cycles": 2923260381
+     },
+     {
+      "status": 0,
+      "instructions": 8035694616,
+      "cycles": 2922051882
+     }
+    ],
+    "rss_kb": [
+     22348,
+     22492,
+     22500
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 8001176069,
+      "cycles": 2950792207
+     },
+     {
+      "status": 0,
+      "instructions": 8001176082,
+      "cycles": 2947812407
+     },
+     {
+      "status": 0,
+      "instructions": 8001176090,
+      "cycles": 2947006856
+     }
+    ],
+    "rss_kb": [
+     22504,
+     22472,
+     22508
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 7962221854,
+      "cycles": 2946477933
+     },
+     {
+      "status": 0,
+      "instructions": 7962221816,
+      "cycles": 2946127642
+     },
+     {
+      "status": 0,
+      "instructions": 7962221831,
+      "cycles": 2947340215
+     }
+    ],
+    "rss_kb": [
+     22548,
+     22520,
+     22572
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.776,
+    "sibling_busy": 0.004,
+    "load1_start": 3.6953125,
+    "load1_end": 3.54052734375
+   }
+  },
+  "lox/tree/fib|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 12172463332,
+      "cycles": 3124125721
+     },
+     {
+      "status": 0,
+      "instructions": 12172493714,
+      "cycles": 3112961708
+     },
+     {
+      "status": 0,
+      "instructions": 12172507487,
+      "cycles": 3116492068
+     }
+    ],
+    "rss_kb": [
+     26880,
+     26884,
+     27036
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 12245545752,
+      "cycles": 3164110130
+     },
+     {
+      "status": 0,
+      "instructions": 12245545099,
+      "cycles": 3157991834
+     },
+     {
+      "status": 0,
+      "instructions": 12245545121,
+      "cycles": 3181039032
+     }
+    ],
+    "rss_kb": [
+     27032,
+     27168,
+     27164
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 12172474095,
+      "cycles": 3149447547
+     },
+     {
+      "status": 0,
+      "instructions": 12172474064,
+      "cycles": 3147783301
+     },
+     {
+      "status": 0,
+      "instructions": 12172501646,
+      "cycles": 3145139392
+     }
+    ],
+    "rss_kb": [
+     26936,
+     26936,
+     27024
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.589,
+    "sibling_busy": 0.002,
+    "load1_start": 3.54052734375,
+    "load1_end": 3.56787109375
+   }
+  },
+  "lox/tree/fib|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 4362802623,
+      "cycles": 1661524876
+     },
+     {
+      "status": 0,
+      "instructions": 4362802596,
+      "cycles": 1662658630
+     },
+     {
+      "status": 0,
+      "instructions": 4362802595,
+      "cycles": 1667792823
+     }
+    ],
+    "rss_kb": [
+     26812,
+     26800,
+     26848
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 4369589850,
+      "cycles": 1672920689
+     },
+     {
+      "status": 0,
+      "instructions": 4369589212,
+      "cycles": 1681945718
+     },
+     {
+      "status": 0,
+      "instructions": 4369589206,
+      "cycles": 1673975993
+     }
+    ],
+    "rss_kb": [
+     26984,
+     26948,
+     26952
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 4296536586,
+      "cycles": 1673177787
+     },
+     {
+      "status": 0,
+      "instructions": 4296521882,
+      "cycles": 1676721033
+     },
+     {
+      "status": 0,
+      "instructions": 4296537362,
+      "cycles": 1674129117
+     }
+    ],
+    "rss_kb": [
+     27008,
+     27024,
+     26828
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.66,
+    "sibling_busy": 0.002,
+    "load1_start": 3.56787109375,
+    "load1_end": 3.55419921875
+   }
+  },
+  "lox/tree/instantiation|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 13881422240,
+      "cycles": 3296777322
+     },
+     {
+      "status": 0,
+      "instructions": 13881427404,
+      "cycles": 3274558362
+     },
+     {
+      "status": 0,
+      "instructions": 13881422159,
+      "cycles": 3272934367
+     }
+    ],
+    "rss_kb": [
+     30196,
+     30192,
+     30212
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 14187537204,
+      "cycles": 3355999279
+     },
+     {
+      "status": 0,
+      "instructions": 14187537191,
+      "cycles": 3352634696
+     },
+     {
+      "status": 0,
+      "instructions": 14187539885,
+      "cycles": 3363867516
+     }
+    ],
+    "rss_kb": [
+     30408,
+     30364,
+     30324
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 13725791804,
+      "cycles": 3202303838
+     },
+     {
+      "status": 0,
+      "instructions": 13725694672,
+      "cycles": 3197672054
+     },
+     {
+      "status": 0,
+      "instructions": 13725694682,
+      "cycles": 3210068421
+     }
+    ],
+    "rss_kb": [
+     30332,
+     30384,
+     30384
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.666,
+    "sibling_busy": 0.002,
+    "load1_start": 3.55419921875,
+    "load1_end": 3.396484375
+   }
+  },
+  "lox/tree/instantiation|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 7039964890,
+      "cycles": 1872791964
+     },
+     {
+      "status": 0,
+      "instructions": 7040127623,
+      "cycles": 1862842602
+     },
+     {
+      "status": 0,
+      "instructions": 7039964875,
+      "cycles": 1866580760
+     }
+    ],
+    "rss_kb": [
+     30184,
+     30160,
+     29988
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 7168654086,
+      "cycles": 1885576166
+     },
+     {
+      "status": 0,
+      "instructions": 7168654062,
+      "cycles": 1890254354
+     },
+     {
+      "status": 0,
+      "instructions": 7168656732,
+      "cycles": 1887930553
+     }
+    ],
+    "rss_kb": [
+     30176,
+     30340,
+     30108
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 6848608091,
+      "cycles": 1850248833
+     },
+     {
+      "status": 0,
+      "instructions": 6848608135,
+      "cycles": 1882599813
+     },
+     {
+      "status": 0,
+      "instructions": 6848608083,
+      "cycles": 1861989795
+     }
+    ],
+    "rss_kb": [
+     30188,
+     30120,
+     30208
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.662,
+    "sibling_busy": 0.005,
+    "load1_start": 3.396484375,
+    "load1_end": 3.41552734375
+   }
+  },
+  "lox/tree/invocation|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 41416708538,
+      "cycles": 10089889285
+     },
+     {
+      "status": 0,
+      "instructions": 41416192585,
+      "cycles": 10082837108
+     },
+     {
+      "status": 0,
+      "instructions": 41416192478,
+      "cycles": 10116857083
+     }
+    ],
+    "rss_kb": [
+     24404,
+     24404,
+     24292
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 41703170415,
+      "cycles": 9975097449
+     },
+     {
+      "status": 0,
+      "instructions": 41703682777,
+      "cycles": 10008271367
+     },
+     {
+      "status": 0,
+      "instructions": 41703417498,
+      "cycles": 10024800155
+     }
+    ],
+    "rss_kb": [
+     24112,
+     24272,
+     24272
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 41138524269,
+      "cycles": 9790910532
+     },
+     {
+      "status": 0,
+      "instructions": 41138018060,
+      "cycles": 9782880154
+     },
+     {
+      "status": 0,
+      "instructions": 41138018008,
+      "cycles": 9790555427
+     }
+    ],
+    "rss_kb": [
+     24376,
+     24444,
+     24304
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.639,
+    "sibling_busy": 0.009,
+    "load1_start": 3.41552734375,
+    "load1_end": 3.26611328125
+   }
+  },
+  "lox/tree/invocation|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 18715317575,
+      "cycles": 5735635142
+     },
+     {
+      "status": 0,
+      "instructions": 18715317535,
+      "cycles": 5693648578
+     },
+     {
+      "status": 0,
+      "instructions": 18715317569,
+      "cycles": 5667302025
+     }
+    ],
+    "rss_kb": [
+     24080,
+     24288,
+     24056
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 18899931198,
+      "cycles": 5663942296
+     },
+     {
+      "status": 0,
+      "instructions": 18899931229,
+      "cycles": 5618986607
+     },
+     {
+      "status": 0,
+      "instructions": 18899931101,
+      "cycles": 5609247315
+     }
+    ],
+    "rss_kb": [
+     24244,
+     24232,
+     24252
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 18334823032,
+      "cycles": 5574225819
+     },
+     {
+      "status": 0,
+      "instructions": 18334828480,
+      "cycles": 5539398934
+     },
+     {
+      "status": 0,
+      "instructions": 18335065066,
+      "cycles": 5528677914
+     }
+    ],
+    "rss_kb": [
+     24332,
+     24268,
+     24156
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.644,
+    "sibling_busy": 0.042,
+    "load1_start": 3.26611328125,
+    "load1_end": 3.79541015625
+   }
+  },
+  "lox/tree/method_call|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 35250048937,
+      "cycles": 9280076191
+     },
+     {
+      "status": 0,
+      "instructions": 35250052138,
+      "cycles": 9280212529
+     },
+     {
+      "status": 0,
+      "instructions": 35250248383,
+      "cycles": 9281954115
+     }
+    ],
+    "rss_kb": [
+     24404,
+     24564,
+     24420
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 35434053577,
+      "cycles": 9258586748
+     },
+     {
+      "status": 0,
+      "instructions": 35434060523,
+      "cycles": 9246931624
+     },
+     {
+      "status": 0,
+      "instructions": 35434057025,
+      "cycles": 9247162196
+     }
+    ],
+    "rss_kb": [
+     24548,
+     24432,
+     24732
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 35148479927,
+      "cycles": 9204961228
+     },
+     {
+      "status": 0,
+      "instructions": 35148480475,
+      "cycles": 9219591674
+     },
+     {
+      "status": 0,
+      "instructions": 35148701832,
+      "cycles": 9202527107
+     }
+    ],
+    "rss_kb": [
+     24620,
+     24444,
+     24464
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.711,
+    "sibling_busy": 0.002,
+    "load1_start": 3.79541015625,
+    "load1_end": 3.47900390625
+   }
+  },
+  "lox/tree/method_call|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 13915886628,
+      "cycles": 4951845624
+     },
+     {
+      "status": 0,
+      "instructions": 13915886643,
+      "cycles": 4971191152
+     },
+     {
+      "status": 0,
+      "instructions": 13915886628,
+      "cycles": 4965376182
+     }
+    ],
+    "rss_kb": [
+     24436,
+     24568,
+     24232
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 13955178179,
+      "cycles": 4941185649
+     },
+     {
+      "status": 0,
+      "instructions": 13955626957,
+      "cycles": 4966055556
+     },
+     {
+      "status": 0,
+      "instructions": 13955172582,
+      "cycles": 4944426095
+     }
+    ],
+    "rss_kb": [
+     24224,
+     24420,
+     24420
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 13669626414,
+      "cycles": 4874274361
+     },
+     {
+      "status": 0,
+      "instructions": 13669626510,
+      "cycles": 4868757160
+     },
+     {
+      "status": 0,
+      "instructions": 13669633991,
+      "cycles": 4886984850
+     }
+    ],
+    "rss_kb": [
+     24492,
+     24444,
+     24468
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.77,
+    "sibling_busy": 0.006,
+    "load1_start": 3.47900390625,
+    "load1_end": 3.5693359375
+   }
+  },
+  "lox/tree/properties|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 35446773626,
+      "cycles": 8807701966
+     },
+     {
+      "status": 0,
+      "instructions": 35446763907,
+      "cycles": 8814765835
+     },
+     {
+      "status": 0,
+      "instructions": 35446763723,
+      "cycles": 8818837673
+     }
+    ],
+    "rss_kb": [
+     25748,
+     25584,
+     25884
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 35648299589,
+      "cycles": 8748888376
+     },
+     {
+      "status": 0,
+      "instructions": 35648299551,
+      "cycles": 8760971614
+     },
+     {
+      "status": 0,
+      "instructions": 35648305318,
+      "cycles": 8777385649
+     }
+    ],
+    "rss_kb": [
+     25712,
+     26004,
+     25872
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 35272735682,
+      "cycles": 8629787437
+     },
+     {
+      "status": 0,
+      "instructions": 35272735826,
+      "cycles": 8643483109
+     },
+     {
+      "status": 0,
+      "instructions": 35272736267,
+      "cycles": 8629631628
+     }
+    ],
+    "rss_kb": [
+     25740,
+     25900,
+     25904
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.647,
+    "sibling_busy": 0.037,
+    "load1_start": 3.5693359375,
+    "load1_end": 3.560546875
+   }
+  },
+  "lox/tree/properties|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 15020260462,
+      "cycles": 5096182404
+     },
+     {
+      "status": 0,
+      "instructions": 15020505160,
+      "cycles": 5142325541
+     },
+     {
+      "status": 0,
+      "instructions": 15020250945,
+      "cycles": 5140037791
+     }
+    ],
+    "rss_kb": [
+     25716,
+     25668,
+     26024
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 15138603137,
+      "cycles": 5061258590
+     },
+     {
+      "status": 0,
+      "instructions": 15138593359,
+      "cycles": 5106603916
+     },
+     {
+      "status": 0,
+      "instructions": 15138595775,
+      "cycles": 5090234417
+     }
+    ],
+    "rss_kb": [
+     25832,
+     25812,
+     25672
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 14763057382,
+      "cycles": 5033711276
+     },
+     {
+      "status": 0,
+      "instructions": 14763908755,
+      "cycles": 5056462847
+     },
+     {
+      "status": 0,
+      "instructions": 14763053719,
+      "cycles": 5051613813
+     }
+    ],
+    "rss_kb": [
+     25640,
+     25896,
+     25756
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.549,
+    "sibling_busy": 0.008,
+    "load1_start": 3.560546875,
+    "load1_end": 3.63720703125
+   }
+  },
+  "lox/tree/string_equality|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 39902604777,
+      "cycles": 8353028391
+     },
+     {
+      "status": 0,
+      "instructions": 39902604690,
+      "cycles": 8311628714
+     },
+     {
+      "status": 0,
+      "instructions": 39902604652,
+      "cycles": 8340044911
+     }
+    ],
+    "rss_kb": [
+     9076,
+     9072,
+     9096
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 40089294216,
+      "cycles": 8251078286
+     },
+     {
+      "status": 0,
+      "instructions": 40089294123,
+      "cycles": 8254457493
+     },
+     {
+      "status": 0,
+      "instructions": 40089294068,
+      "cycles": 8279731273
+     }
+    ],
+    "rss_kb": [
+     9236,
+     9396,
+     9060
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 40087533081,
+      "cycles": 8171611471
+     },
+     {
+      "status": 0,
+      "instructions": 40087533440,
+      "cycles": 8254512947
+     },
+     {
+      "status": 0,
+      "instructions": 40087533001,
+      "cycles": 8178745549
+     }
+    ],
+    "rss_kb": [
+     9104,
+     9404,
+     9276
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.595,
+    "sibling_busy": 0.008,
+    "load1_start": 3.63720703125,
+    "load1_end": 3.50439453125
+   }
+  },
+  "lox/tree/string_equality|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 12173355801,
+      "cycles": 4565966375
+     },
+     {
+      "status": 0,
+      "instructions": 12173355813,
+      "cycles": 4581297818
+     },
+     {
+      "status": 0,
+      "instructions": 12173355933,
+      "cycles": 4585048786
+     }
+    ],
+    "rss_kb": [
+     9220,
+     9160,
+     9244
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 12243710928,
+      "cycles": 4123324077
+     },
+     {
+      "status": 0,
+      "instructions": 12243710917,
+      "cycles": 4119742698
+     },
+     {
+      "status": 0,
+      "instructions": 12243711028,
+      "cycles": 4133308998
+     }
+    ],
+    "rss_kb": [
+     9228,
+     9220,
+     9204
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 12241950502,
+      "cycles": 4109844935
+     },
+     {
+      "status": 0,
+      "instructions": 12241950602,
+      "cycles": 4125381947
+     },
+     {
+      "status": 0,
+      "instructions": 12241950643,
+      "cycles": 4135996916
+     }
+    ],
+    "rss_kb": [
+     9244,
+     9096,
+     9228
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.694,
+    "sibling_busy": 0.009,
+    "load1_start": 3.50439453125,
+    "load1_end": 3.59619140625
+   }
+  },
+  "lox/tree/strings|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 14161981557,
+      "cycles": 3658362289
+     },
+     {
+      "status": 0,
+      "instructions": 14161982630,
+      "cycles": 3658519578
+     },
+     {
+      "status": 0,
+      "instructions": 14161981576,
+      "cycles": 3656018107
+     }
+    ],
+    "rss_kb": [
+     27804,
+     27668,
+     27668
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 14255744286,
+      "cycles": 3697046012
+     },
+     {
+      "status": 0,
+      "instructions": 14255734314,
+      "cycles": 3675951374
+     },
+     {
+      "status": 0,
+      "instructions": 14255734333,
+      "cycles": 3689825440
+     }
+    ],
+    "rss_kb": [
+     27592,
+     27960,
+     27784
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 14214808510,
+      "cycles": 3731896018
+     },
+     {
+      "status": 0,
+      "instructions": 14214833883,
+      "cycles": 3746418292
+     },
+     {
+      "status": 0,
+      "instructions": 14214808502,
+      "cycles": 3740613248
+     }
+    ],
+    "rss_kb": [
+     27796,
+     27820,
+     27788
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.695,
+    "sibling_busy": 0.003,
+    "load1_start": 3.59619140625,
+    "load1_end": 3.42626953125
+   }
+  },
+  "lox/tree/strings|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 6049556515,
+      "cycles": 2116661715
+     },
+     {
+      "status": 0,
+      "instructions": 6049556537,
+      "cycles": 2060054349
+     },
+     {
+      "status": 0,
+      "instructions": 6049556513,
+      "cycles": 2060050022
+     }
+    ],
+    "rss_kb": [
+     27476,
+     27720,
+     27880
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 6041346567,
+      "cycles": 2081641263
+     },
+     {
+      "status": 0,
+      "instructions": 6041346559,
+      "cycles": 2078687429
+     },
+     {
+      "status": 0,
+      "instructions": 6041376901,
+      "cycles": 2083753271
+     }
+    ],
+    "rss_kb": [
+     27580,
+     27752,
+     27556
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 6000750801,
+      "cycles": 2066087257
+     },
+     {
+      "status": 0,
+      "instructions": 6000723081,
+      "cycles": 2085831215
+     },
+     {
+      "status": 0,
+      "instructions": 6000723094,
+      "cycles": 2067451817
+     }
+    ],
+    "rss_kb": [
+     27796,
+     27792,
+     27624
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.712,
+    "sibling_busy": 0.145,
+    "load1_start": 3.42626953125,
+    "load1_end": 3.84130859375
+   }
+  },
+  "lox/tree/trees|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 13637577070,
+      "cycles": 3989812649
+     },
+     {
+      "status": 0,
+      "instructions": 13637560280,
+      "cycles": 4021604868
+     },
+     {
+      "status": 0,
+      "instructions": 13637598604,
+      "cycles": 4013553384
+     }
+    ],
+    "rss_kb": [
+     108324,
+     108144,
+     108136
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 13757986293,
+      "cycles": 4022262776
+     },
+     {
+      "status": 0,
+      "instructions": 13757974608,
+      "cycles": 4050200667
+     },
+     {
+      "status": 0,
+      "instructions": 13757974932,
+      "cycles": 4044006415
+     }
+    ],
+    "rss_kb": [
+     108252,
+     108420,
+     108448
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 13599388986,
+      "cycles": 4078918218
+     },
+     {
+      "status": 0,
+      "instructions": 13599328666,
+      "cycles": 4000577229
+     },
+     {
+      "status": 0,
+      "instructions": 13599331623,
+      "cycles": 4010582703
+     }
+    ],
+    "rss_kb": [
+     108140,
+     107980,
+     108312
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.651,
+    "sibling_busy": 0.016,
+    "load1_start": 3.84130859375,
+    "load1_end": 3.6279296875
+   }
+  },
+  "lox/tree/trees|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 5590517566,
+      "cycles": 2832552339
+     },
+     {
+      "status": 0,
+      "instructions": 5590517553,
+      "cycles": 2963381663
+     },
+     {
+      "status": 0,
+      "instructions": 5590537387,
+      "cycles": 2761833336
+     }
+    ],
+    "rss_kb": [
+     108360,
+     108100,
+     108080
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 5590142459,
+      "cycles": 2742425952
+     },
+     {
+      "status": 0,
+      "instructions": 5590162665,
+      "cycles": 2691597714
+     },
+     {
+      "status": 0,
+      "instructions": 5590156100,
+      "cycles": 2696288659
+     }
+    ],
+    "rss_kb": [
+     108072,
+     108232,
+     108072
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 5498891837,
+      "cycles": 2731104532
+     },
+     {
+      "status": 0,
+      "instructions": 5498891978,
+      "cycles": 2676435830
+     },
+     {
+      "status": 0,
+      "instructions": 5498892198,
+      "cycles": 2697711119
+     }
+    ],
+    "rss_kb": [
+     108116,
+     108412,
+     107984
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.867,
+    "sibling_busy": 0.208,
+    "load1_start": 3.6279296875,
+    "load1_end": 4.77001953125
+   }
+  },
+  "lox/tree/zoo|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 40408141214,
+      "cycles": 17194517892
+     },
+     {
+      "status": 0,
+      "instructions": 40408253451,
+      "cycles": 16163493224
+     },
+     {
+      "status": 0,
+      "instructions": 40408384537,
+      "cycles": 10580488725
+     }
+    ],
+    "rss_kb": [
+     25092,
+     25096,
+     25124
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 40676198606,
+      "cycles": 17301093027
+     },
+     {
+      "status": 0,
+      "instructions": 40676191553,
+      "cycles": 17002111072
+     },
+     {
+      "status": 0,
+      "instructions": 40676187898,
+      "cycles": 10579515033
+     }
+    ],
+    "rss_kb": [
+     24912,
+     25224,
+     25392
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 40266505773,
+      "cycles": 17114994137
+     },
+     {
+      "status": 0,
+      "instructions": 40266507476,
+      "cycles": 17120760186
+     },
+     {
+      "status": 0,
+      "instructions": 40266502232,
+      "cycles": 10516097547
+     }
+    ],
+    "rss_kb": [
+     25260,
+     25336,
+     25420
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.785,
+    "sibling_busy": 0.456,
+    "load1_start": 4.77001953125,
+    "load1_end": 4.7177734375
+   }
+  },
+  "lox/tree/zoo|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 16645913381,
+      "cycles": 5809550484
+     },
+     {
+      "status": 0,
+      "instructions": 16645913363,
+      "cycles": 5825128317
+     },
+     {
+      "status": 0,
+      "instructions": 16646161271,
+      "cycles": 5856374793
+     }
+    ],
+    "rss_kb": [
+     25072,
+     25052,
+     25232
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 16727480291,
+      "cycles": 5977783973
+     },
+     {
+      "status": 0,
+      "instructions": 16727479980,
+      "cycles": 5967653571
+     },
+     {
+      "status": 0,
+      "instructions": 16727480031,
+      "cycles": 5985008492
+     }
+    ],
+    "rss_kb": [
+     25064,
+     25024,
+     25220
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 16317818581,
+      "cycles": 5925251965
+     },
+     {
+      "status": 0,
+      "instructions": 16317818358,
+      "cycles": 5961944184
+     },
+     {
+      "status": 0,
+      "instructions": 16317818336,
+      "cycles": 5952247923
+     }
+    ],
+    "rss_kb": [
+     25076,
+     25228,
+     25248
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.652,
+    "sibling_busy": 0.065,
+    "load1_start": 4.7177734375,
+    "load1_end": 4.7880859375
+   }
+  },
+  "lox/tree/zoo_batch|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 34703395152,
+      "cycles": 9153912236
+     },
+     {
+      "status": 0,
+      "instructions": 34703399258,
+      "cycles": 9142442091
+     },
+     {
+      "status": 0,
+      "instructions": 34703394989,
+      "cycles": 9155434175
+     }
+    ],
+    "rss_kb": [
+     26696,
+     26704,
+     26712
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 34934308084,
+      "cycles": 9164502341
+     },
+     {
+      "status": 0,
+      "instructions": 34934307942,
+      "cycles": 9155398785
+     },
+     {
+      "status": 0,
+      "instructions": 34934307826,
+      "cycles": 9124995428
+     }
+    ],
+    "rss_kb": [
+     26804,
+     26804,
+     26484
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 34587812140,
+      "cycles": 9041183444
+     },
+     {
+      "status": 0,
+      "instructions": 34587808027,
+      "cycles": 9058580227
+     },
+     {
+      "status": 0,
+      "instructions": 34587807982,
+      "cycles": 9041058420
+     }
+    ],
+    "rss_kb": [
+     26860,
+     26776,
+     26868
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.756,
+    "sibling_busy": 0.041,
+    "load1_start": 4.7880859375,
+    "load1_end": 4.08544921875
+   }
+  },
+  "lox/tree/zoo_batch|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 14169413401,
+      "cycles": 5088932248
+     },
+     {
+      "status": 0,
+      "instructions": 14169413518,
+      "cycles": 5105057991
+     },
+     {
+      "status": 0,
+      "instructions": 14169413400,
+      "cycles": 5072829888
+     }
+    ],
+    "rss_kb": [
+     26660,
+     26680,
+     26648
+    ]
+   },
+   "mid": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 14247947775,
+      "cycles": 5103348825
+     },
+     {
+      "status": 0,
+      "instructions": 14247947779,
+      "cycles": 5093081388
+     },
+     {
+      "status": 0,
+      "instructions": 14247947736,
+      "cycles": 5104142074
+     }
+    ],
+    "rss_kb": [
+     26436,
+     26668,
+     26648
+    ]
+   },
+   "new": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 13901725279,
+      "cycles": 5049570991
+     },
+     {
+      "status": 0,
+      "instructions": 13901469849,
+      "cycles": 5080731420
+     },
+     {
+      "status": 0,
+      "instructions": 13901478436,
+      "cycles": 5070118593
+     }
+    ],
+    "rss_kb": [
+     26712,
+     26600,
+     26708
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.743,
+    "sibling_busy": 0.054,
+    "load1_start": 4.08544921875,
+    "load1_end": 4.16455078125
+   }
+  }
+ }
+}
