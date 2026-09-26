@@ -63,6 +63,16 @@ file and checks output during `build`. The arena migration was checked with
   rendering test checks the clean depth cap (`...`). An 80-deep recursive
   typed JSON argument was rejected cleanly as `TestValueLimit` (exit 2).
 
+The printing limit is an explicit deviation from the close-out plan's
+"documented limit with a clean trap" alternative: printing has always used
+`MYL_PRINT_MAX_DEPTH=24` and rendered `...` for deeper classes, records,
+collections and variants. The box renderer forwards the same depth, so it
+inherits that existing, terminating behavior and prints a truncated value
+instead of trapping. Equality and hashing use heap work lists, arena escape
+and GC scanning use their existing heap traversal, and typed JSON rejects its
+own depth limit cleanly. The million-node stress program directly verifies
+equality and hashing; GC stress was exercised at 200 nodes.
+
 The hidden box descriptor is `collection_kind == 5`, with its `element` naming
 the one-field record body. A future copy-on-write transfer must mark mutable
 collections reachable through that body as shared. If a pinned descendant

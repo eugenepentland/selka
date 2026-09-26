@@ -52,6 +52,7 @@ int main(void) {
     const myl_native_type unit={.size=0,.alignment=1,.kind=MYL_NATIVE_PLAIN};
     const myl_native_field field={.offset=0,.type=&unit};
     const myl_native_type huge={.size=0,.alignment=1,.kind=MYL_NATIVE_ARRAY,.count=100001,.stride=0,.fields=&field,.field_count=1};
-    assert(myl_native_equal(&huge,&one,&two)==-2);
+    /* spec-case: RECURSIVE-VALUES-3 — a large value no longer hits a fixed work limit. */
+    assert(myl_native_equal(&huge,&one,&two)==1);
     puts("native structural equality tests passed");
 }
