@@ -110,9 +110,10 @@ static const myl_rc_shape *member(const myl_rc_shape *shape, const void *address
 }
 static myl_rc_status prepare_leaf(myl_rc_scope *scope, prepare_frame *frame) {
     if (frame->shape->kind == MYL_RC_SHAPE_NONE) return MYL_RC_OK;
-    myl_rc_invariant(frame->shape->kind == MYL_RC_SHAPE_POINTER);
+    myl_rc_invariant(frame->shape->kind == MYL_RC_SHAPE_POINTER || frame->shape->kind == MYL_RC_SHAPE_HOLD_POINTER);
     myl_rc_slot slot = {.shape = frame->shape, .address = frame->address, .region = frame->region};
-    myl_rc_status status = myl_rc_unique_owned(scope->heap, &slot);
+    myl_rc_status status = frame->shape->kind == MYL_RC_SHAPE_HOLD_POINTER ?
+        myl_rc_unique_held(scope->heap, &slot) : myl_rc_unique_owned(scope->heap, &slot);
     if (status != MYL_RC_OK) return status;
     void *payload;
     memcpy(&payload, frame->address, sizeof payload);
@@ -144,7 +145,7 @@ static myl_rc_status prepare_path(myl_rc_scope *scope, const myl_rc_place *place
         if (frame->cursor++) { --used; continue; }
         unsigned char *address = frame->address;
         unsigned region = frame->region;
-        if (shape->kind == MYL_RC_SHAPE_POINTER) {
+        if (shape->kind == MYL_RC_SHAPE_POINTER || shape->kind == MYL_RC_SHAPE_HOLD_POINTER) {
             myl_rc_status status = prepare_leaf(scope, frame);
             if (status != MYL_RC_OK) return status;
             void *payload;

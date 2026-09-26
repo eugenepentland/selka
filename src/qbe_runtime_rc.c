@@ -140,6 +140,18 @@ int myl_qbe_rc_unique_field(void *context, const myl_native_type *type, void *ad
         .region = container ? myl_native_header_region(container) : ctx->heap.region_depth};
     return myl_qbe_rc_status(ctx, myl_rc_unique_owned(&ctx->heap, &slot));
 }
+int myl_qbe_rc_unique_held(void *context, const myl_native_type *type, void *address, void *container) {
+    static const myl_rc_shape held = {.size = sizeof(void *), .kind = MYL_RC_SHAPE_HOLD_POINTER};
+    static const myl_rc_shape *const shapes[] = {&held};
+    static const myl_rc_module module = {.abi = MYL_RC_ABI_VERSION, .shapes = shapes, .shape_count = 1};
+    MylQbeContext *ctx = context;
+    myl_rc_invariant(type && type->size == sizeof(void *) && type->kind == MYL_NATIVE_POINTER);
+    myl_rc_status status = myl_rc_module_register(&ctx->heap, &module);
+    if (status != MYL_RC_OK) return myl_qbe_rc_status(ctx, status);
+    myl_rc_slot slot = {.shape = &held, .address = address, .container = container,
+        .region = container ? myl_native_header_region(container) : ctx->heap.region_depth};
+    return myl_qbe_rc_status(ctx, myl_rc_unique_held(&ctx->heap, &slot));
+}
 int myl_qbe_rc_rebox_local(void *context, const myl_native_type *type, void *address, const void *body, uint32_t *owned) {
     MylQbeContext *ctx = context;
     myl_rc_invariant(type && type->collection_kind == 5 && type->element && address && body && owned);

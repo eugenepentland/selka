@@ -1,4 +1,4 @@
-#include "qbe_runtime.h"
+#include "qbe_files.h"
 #include "native_providers.h"
 #include <stdlib.h>
 #include <string.h>
@@ -35,10 +35,17 @@ static const MylangResourceProvider *provider(MylQbeContext *ctx,unsigned kind) 
     if (!ctx->providers) return &empty;
     return kind ? &ctx->providers->network:&ctx->providers->filesystem;
 }
-static int status(MylQbeContext *ctx,MylangProviderStatus value) {
-    if (value==MYLANG_PROVIDER_OUT_OF_MEMORY) myl_qbe_fail_allocation(ctx);
-    else if (value<MYLANG_PROVIDER_OK || value>MYLANG_PROVIDER_FAILED) myl_qbe_fail(ctx,"InvalidProvider");
-    return myl_qbe_failed(ctx) ? -1:(int)value;
+static int provider_status(MylangProviderStatus value) {
+    if (value==MYLANG_PROVIDER_OUT_OF_MEMORY) return MYL_RESOURCE_OOM;
+    if (value<MYLANG_PROVIDER_OK || value>MYLANG_PROVIDER_FAILED) return MYL_RESOURCE_PROVIDER;
+    return (int)value;
+}
+int myl_qbe_resource_status(void *context,int code) {
+    if (code==MYL_RESOURCE_OOM) myl_qbe_fail_allocation(context);
+    else if (code==MYL_RESOURCE_PROVIDER) myl_qbe_fail(context,"InvalidProvider");
+    else if (code==MYL_RESOURCE_OWNER) myl_qbe_fail(context,"InvalidOwner");
+    else if (code==MYL_RESOURCE_CAPABILITY) myl_qbe_fail(context,"InvalidCapability");
+    return myl_qbe_failed(context) ? -1:code;
 }
 static void unlink_resource(Resource *resource) {
     MylQbeContext *ctx=resource->context;
@@ -78,15 +85,20 @@ uint64_t myl_qbe_grant_resource_checked(void *context,unsigned kind,const char *
     if (!p->acquire || !p->complete || !p->release) { myl_qbe_fail_missing_capability(ctx,flag);return 0; }
     return (uint64_t)(INT64_C(-16)-(int64_t)(kind*8+p->permissions));
 }
-static int authority(MylQbeContext *ctx,uint64_t bits,unsigned *kind,unsigned *permissions,unsigned *scope,unsigned *stand_in) {
+static int decode_authority(uint64_t bits,unsigned *kind,unsigned *permissions,unsigned *scope,unsigned *stand_in) {
     int64_t value;memcpy(&value,&bits,8);
-    if (value > -16 || value < -16 - MYL_QBE_RESOURCE_SCOPE_MAX) { myl_qbe_fail(ctx,"InvalidCapability");return 0; }
+    if (value > -16 || value < -16 - MYL_QBE_RESOURCE_SCOPE_MAX) return 0;
     uint64_t encoded=(uint64_t)(-16-value);
     *permissions=encoded&7;*kind=(encoded>>3)&1;*scope=(unsigned)((encoded%MYL_QBE_RESOURCE_STAND_IN_UNIT)>>4);
     *stand_in=(unsigned)(encoded/MYL_QBE_RESOURCE_STAND_IN_UNIT);
-    if (*scope>MYL_QBE_RESOURCE_SCOPES) { myl_qbe_fail(ctx,"InvalidCapability");return 0; }
+    if (*scope>MYL_QBE_RESOURCE_SCOPES) return 0;
     return 1;
 }
+static int authority(MylQbeContext *ctx,uint64_t bits,unsigned *kind,unsigned *permissions,unsigned *scope,unsigned *stand_in) {
+    if (decode_authority(bits,kind,permissions,scope,stand_in)) return 1;
+    myl_qbe_fail(ctx,"InvalidCapability");return 0;
+}
+
 /* Whether a relative path stays inside a scoped root, mirroring scopedPath. An
    empty path names the directory itself and only metadata/listing accept it. */
 static int scoped_relative(const unsigned char *path,size_t length,unsigned char mode) {
@@ -172,19 +184,19 @@ uint64_t myl_qbe_restrict_resource(void *context,uint64_t bits,unsigned mask) {
     if (!authority(context,bits,&kind,&permissions,&scope,&stand_in)) return 0;
     return encode(stand_in,scope,kind,permissions&mask);
 }
-int myl_qbe_resource_new(void *context,uint64_t bits,unsigned kind,const unsigned char *request,size_t length,myl_native_resource **output) {
+int myl_qbe_resource_try_new(void *context,uint64_t bits,unsigned kind,const unsigned char *request,size_t length,myl_native_resource **output) {
     MylQbeContext *ctx=context;
     unsigned selected,permissions,scope,stand_in;
     *output=NULL;
-    if (!authority(ctx,bits,&selected,&permissions,&scope,&stand_in)) return -1;
-    if (selected!=kind) { myl_qbe_fail(ctx,"InvalidCapability");return -1; }
-    if (scope>ctx->resource_scope_count) { myl_qbe_fail(ctx,"InvalidCapability");return -1; }
+    if (!decode_authority(bits,&selected,&permissions,&scope,&stand_in)) return MYL_RESOURCE_CAPABILITY;
+    if (selected!=kind) return MYL_RESOURCE_CAPABILITY;
+    if (scope>ctx->resource_scope_count) return MYL_RESOURCE_CAPABILITY;
     /* A stand-in answers from its own registry entry and never from the host
        providers; a stand-in Network refuses every request. */
     const MylangResourceProvider *p=provider(ctx,kind);
     if (stand_in) {
         p=myl_qbe_stand_in_provider(ctx,stand_in-1,kind);
-        if (!p) { myl_qbe_fail(ctx,"InvalidCapability");return -1; }
+        if (!p) return MYL_RESOURCE_CAPABILITY;
         if (kind==1) return MYL_QBE_STAND_IN_DENIED;
     }
     /* A scoped filesystem serves only relative requests inside its root; reject
@@ -206,9 +218,9 @@ int myl_qbe_resource_new(void *context,uint64_t bits,unsigned kind,const unsigne
         } else {
             const unsigned char *path=request+2;size_t path_length=length-2;
             size_t total=2+base_length+path_length+(base_length&&path_length?1:0);
-            if (total>4096) { myl_qbe_fail(ctx,"InvalidCapability");return -1; }
+            if (total>4096) return MYL_RESOURCE_CAPABILITY;
             joined=malloc(total);
-            if (!joined) { myl_qbe_fail_allocation(ctx);return -1; }
+            if (!joined) return MYL_RESOURCE_OOM;
             joined[0]=request[0];joined[1]=':';
             size_t at=2;
             if (base_length) { memcpy(joined+at,base,base_length);at+=base_length; }
@@ -220,12 +232,12 @@ int myl_qbe_resource_new(void *context,uint64_t bits,unsigned kind,const unsigne
     }
     Resource *resource=calloc(1,sizeof *resource);
     unsigned char *bytes=malloc(effective_length?effective_length:1);
-    if (!resource || !bytes) { free(resource);free(bytes);free(joined);myl_qbe_fail_allocation(ctx);return -1; }
+    if (!resource || !bytes) { free(resource);free(bytes);free(joined);return MYL_RESOURCE_OOM; }
     if (effective_length) memcpy(bytes,effective,effective_length);
     free(joined);
     MylangResourceResult result=p->acquire(p->context,bytes,effective_length,permissions);
     free(bytes);
-    int code=status(ctx,result.status);
+    int code=provider_status(result.status);
     if (code) { free(resource);return code; }
     resource->base.drop=drop;resource->context=ctx;resource->kind=kind;resource->provider=p;
     resource->permissions=permissions;resource->handle=result.handle;
@@ -236,47 +248,61 @@ int myl_qbe_resource_new(void *context,uint64_t bits,unsigned kind,const unsigne
     *output=&resource->base;
     return 0;
 }
-int myl_qbe_resource_complete(void *context,myl_native_resource *value) {
+int myl_qbe_resource_try_complete(void *context,myl_native_resource *value) {
     Resource *resource=(Resource *)value;
-    if (!resource || resource->context!=context) { myl_qbe_fail(context,"InvalidOwner");return -1; }
+    if (!resource || resource->context!=context) return MYL_RESOURCE_OWNER;
     if (!(resource->permissions&4)) return 2;
     const MylangResourceProvider *p=resource->provider;
-    int code=status(context,p->complete(p->context,resource->handle));
+    int code=provider_status(p->complete(p->context,resource->handle));
     if (!code) { unlink_resource(resource);free(resource); }
     return code;
 }
-int myl_qbe_resource_read(void *context,myl_native_resource *value,unsigned char *output,size_t capacity,size_t *length,int *eof) {
+int myl_qbe_resource_try_read(void *context,myl_native_resource *value,unsigned char *output,size_t capacity,size_t *length,int *eof) {
     Resource *resource=(Resource *)value;
     *length=0;*eof=0;
-    if (!resource || resource->context!=context) { myl_qbe_fail(context,"InvalidOwner");return -1; }
+    if (!resource || resource->context!=context) return MYL_RESOURCE_OWNER;
     if (!(resource->permissions&1)) return 2;
     const MylangResourceProvider *p=resource->provider;
     if (!p->read) return 1;
     unsigned char *bytes=malloc(capacity?capacity:1);
-    if (!bytes) { myl_qbe_fail_allocation(context);return -1; }
+    if (!bytes) return MYL_RESOURCE_OOM;
     MylangResourceRead result=p->read(p->context,resource->handle,bytes,capacity);
-    int code=status(context,result.status);
-    if (!code && (result.length>capacity || (result.eof!=0 && result.eof!=1))) { myl_qbe_fail(context,"InvalidProvider");code=-1; }
+    int code=provider_status(result.status);
+    if (!code && (result.length>capacity || (result.eof!=0 && result.eof!=1))) code=MYL_RESOURCE_PROVIDER;
     if (!code) {
         if (result.length) memcpy(output,bytes,result.length);
         *length=result.length;*eof=result.eof;
     }
     free(bytes);return code;
 }
-int myl_qbe_resource_write(void *context,myl_native_resource *value,const unsigned char *input,size_t length,size_t *written) {
+int myl_qbe_resource_try_write(void *context,myl_native_resource *value,const unsigned char *input,size_t length,size_t *written) {
     Resource *resource=(Resource *)value;
     *written=0;
-    if (!resource || resource->context!=context) { myl_qbe_fail(context,"InvalidOwner");return -1; }
+    if (!resource || resource->context!=context) return MYL_RESOURCE_OWNER;
     if (!(resource->permissions&2)) return 2;
     const MylangResourceProvider *p=resource->provider;
     if (!p->write) return 1;
     unsigned char *bytes=malloc(length?length:1);
-    if (!bytes) { myl_qbe_fail_allocation(context);return -1; }
+    if (!bytes) return MYL_RESOURCE_OOM;
     if (length) memcpy(bytes,input,length);
     MylangResourceWrite result=p->write(p->context,resource->handle,bytes,length);
     free(bytes);
-    int code=status(context,result.status);
-    if (!code && result.length>length) { myl_qbe_fail(context,"InvalidProvider");return -1; }
+    int code=provider_status(result.status);
+    if (!code && result.length>length) return MYL_RESOURCE_PROVIDER;
     if (!code) *written=result.length;
     return code;
+}
+
+/* These ABI entries own no caller scratch when a fatal provider status traps. */
+int myl_qbe_resource_new(void *context,uint64_t bits,unsigned kind,const unsigned char *request,size_t length,myl_native_resource **output) {
+    return myl_qbe_resource_status(context,myl_qbe_resource_try_new(context,bits,kind,request,length,output));
+}
+int myl_qbe_resource_complete(void *context,myl_native_resource *value) {
+    return myl_qbe_resource_status(context,myl_qbe_resource_try_complete(context,value));
+}
+int myl_qbe_resource_read(void *context,myl_native_resource *value,unsigned char *output,size_t capacity,size_t *length,int *eof) {
+    return myl_qbe_resource_status(context,myl_qbe_resource_try_read(context,value,output,capacity,length,eof));
+}
+int myl_qbe_resource_write(void *context,myl_native_resource *value,const unsigned char *input,size_t length,size_t *written) {
+    return myl_qbe_resource_status(context,myl_qbe_resource_try_write(context,value,input,length,written));
 }

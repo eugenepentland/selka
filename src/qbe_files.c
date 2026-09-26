@@ -64,14 +64,13 @@ static myl_native_text *failure_text(void *context, unsigned kind, Owned path, i
     const char *verb = verb_of(kind), *why = reason(status);
     size_t length = strlen(verb) + strlen(why) + path.length + 5;
     char *message = malloc(length + 1);
-    if (!message) { myl_qbe_fail_allocation(context); return NULL; }
+    if (!message) return NULL;
     size_t at = (size_t)snprintf(message, length + 1, "%s '", verb);
     memcpy(message + at, path.bytes, path.length);
     at += path.length;
     at += (size_t)snprintf(message + at, length + 1 - at, "': %s", why);
     myl_native_text *text = myl_native_text_from_utf8(myl_qbe_heap(context), (const unsigned char *)message, at);
     free(message);
-    if (!text) myl_qbe_fail_allocation(context);
     return text;
 }
 /* Acquire one resource, spelling `w` as exclusive create then truncate. */
@@ -82,13 +81,13 @@ static int acquire(void *context, uint64_t authority, unsigned char mode, Owned 
     if (path.length) memcpy(frame + 2, path.bytes, path.length);
     if (mode != 'w') {
         frame[0] = mode;
-        return myl_qbe_resource_new(context, authority, 0, frame, path.length + 2, owner);
+        return myl_qbe_resource_try_new(context, authority, 0, frame, path.length + 2, owner);
     }
     frame[0] = 'c';
-    int status = myl_qbe_resource_new(context, authority, 0, frame, path.length + 2, owner);
+    int status = myl_qbe_resource_try_new(context, authority, 0, frame, path.length + 2, owner);
     if (status <= 0) return status;
     frame[0] = 't';
-    return myl_qbe_resource_new(context, authority, 0, frame, path.length + 2, owner);
+    return myl_qbe_resource_try_new(context, authority, 0, frame, path.length + 2, owner);
 }
 /* Read a whole resource into caller-owned bytes, honouring the size ceiling. */
 static int read_all(void *context, myl_native_resource *owner, size_t limit, Owned *out) {
@@ -100,7 +99,7 @@ static int read_all(void *context, myl_native_resource *owner, size_t limit, Own
         size_t wanted = sizeof chunk < limit - out->length ? sizeof chunk : limit - out->length;
         size_t width = 0;
         int eof = 0;
-        int status = myl_qbe_resource_read(context, owner, chunk, wanted, &width, &eof);
+        int status = myl_qbe_resource_try_read(context, owner, chunk, wanted, &width, &eof);
         if (status) { free(out->bytes); out->bytes = NULL; return status; }
         if (out->length + width > MYL_FILE_MAX_BYTES) { free(out->bytes); out->bytes = NULL; return 2; }
         if (width) {
@@ -108,7 +107,7 @@ static int read_all(void *context, myl_native_resource *owner, size_t limit, Own
                 size_t grown = capacity ? capacity * 2 : 16 * 1024;
                 while (grown < out->length + width) grown *= 2;
                 unsigned char *bytes = realloc(out->bytes, grown);
-                if (!bytes) { free(out->bytes); out->bytes = NULL; myl_qbe_fail_allocation(context); return -1; }
+                if (!bytes) { free(out->bytes); out->bytes = NULL; return MYL_RESOURCE_OOM; }
                 out->bytes = bytes;
                 capacity = grown;
             }
@@ -128,13 +127,13 @@ static int read_line(void *context, myl_native_resource *owner, Owned *out) {
         unsigned char octet = 0;
         size_t width = 0;
         int eof = 0;
-        int status = myl_qbe_resource_read(context, owner, &octet, 1, &width, &eof);
+        int status = myl_qbe_resource_try_read(context, owner, &octet, 1, &width, &eof);
         if (status) { free(out->bytes); out->bytes = NULL; return status; }
         if (!width) break;
         if (out->length == capacity) {
             size_t grown = capacity ? capacity * 2 : 128;
             unsigned char *bytes = realloc(out->bytes, grown);
-            if (!bytes) { free(out->bytes); out->bytes = NULL; myl_qbe_fail_allocation(context); return -1; }
+            if (!bytes) { free(out->bytes); out->bytes = NULL; return MYL_RESOURCE_OOM; }
             out->bytes = bytes;
             capacity = grown;
         }
@@ -148,7 +147,7 @@ static int write_all(void *context, myl_native_resource *owner, Owned input, siz
     *written = 0;
     while (*written < input.length) {
         size_t width = 0;
-        int status = myl_qbe_resource_write(context, owner, input.bytes + *written, input.length - *written, &width);
+        int status = myl_qbe_resource_try_write(context, owner, input.bytes + *written, input.length - *written, &width);
         if (status) return status;
         if (!width) return 3;
         *written += width;
@@ -259,7 +258,7 @@ int myl_qbe_file_access(void *context, uint64_t authority, unsigned request, myl
     Owned payload = {NULL, 0, 0};
     if (kind == MYL_FILE_WRITE_FILE || kind == MYL_FILE_WRITE_TEXT) payload = borrow(input, (request >> 16) & 1);
     int status = 0;
-    if (spelling.failed || payload.failed) { myl_qbe_fail_allocation(context); status = -1; }
+    if (spelling.failed || payload.failed) status = MYL_RESOURCE_OOM;
     myl_native_resource *owner = NULL;
     if (!status) status = acquire(context, authority, letter_of(kind, (request >> 8) & 0xff), spelling, &owner);
     /* A helper opens, uses and closes its resource within the call, so a failure
@@ -267,16 +266,23 @@ int myl_qbe_file_access(void *context, uint64_t authority, unsigned request, myl
     if (!status && kind == MYL_FILE_OPEN) *value = (uint64_t)(uintptr_t)owner;
     if (!status && kind != MYL_FILE_OPEN) {
         status = finish(context, owner, request, payload, value);
-        int completion = myl_qbe_resource_complete(context, owner);
-        if (!status && completion < 0) status = -1;
+        if (status < 0) owner->drop(owner);
+        else {
+            myl_native_root result_root;
+            myl_native_root_push(myl_qbe_heap(context), &result_root, value, &pointer_type);
+            int completion = myl_qbe_resource_try_complete(context, owner);
+            if (completion) owner->drop(owner);
+            myl_native_root_pop(myl_qbe_heap(context), &result_root);
+            if (completion < 0) status = completion;
+        }
     }
     free(payload.bytes);
     if (status < 0 || myl_qbe_failed(context)) {
         free(spelling.bytes);
-        if (!myl_qbe_failed(context)) {
-            if (status == -2) myl_qbe_fail(context, "InvalidProvider");
-            else myl_qbe_fail_allocation(context);
-        }
+        if (*value && kind != MYL_FILE_OPEN && myl_rc_enabled(myl_qbe_heap(context)))
+            myl_rc_construction_abort(myl_qbe_heap(context), (void *)(uintptr_t)*value);
+        *value = 0;
+        myl_qbe_resource_status(context, status);
         return -1;
     }
     if (kind == MYL_FILE_EXISTS) {
@@ -287,7 +293,7 @@ int myl_qbe_file_access(void *context, uint64_t authority, unsigned request, myl
     if (!status) { free(spelling.bytes); return 0; }
     myl_native_text *message = failure_text(context, kind, spelling, status);
     free(spelling.bytes);
-    if (!message) return -1;
+    if (!message) { myl_qbe_fail_allocation(context); return -1; }
     *value = (uint64_t)(uintptr_t)message;
     return 1;
 }
@@ -306,7 +312,11 @@ int myl_qbe_file_method(void *context, void *owner, unsigned request, int64_t co
         size_t written = 0;
         int status = bytes.failed ? -1 : write_all(context, owner, bytes, &written);
         free(bytes.bytes);
-        if (status) { if (!myl_qbe_failed(context)) myl_qbe_fail_file(context); return -1; }
+        if (status) {
+            if (status < 0) myl_qbe_resource_status(context, status);
+            else if (!myl_qbe_failed(context)) myl_qbe_fail_file(context);
+            return -1;
+        }
         *value = (uint64_t)written;
         return 0;
     }
@@ -314,7 +324,11 @@ int myl_qbe_file_method(void *context, void *owner, unsigned request, int64_t co
     /* Python spells "read everything" as a negative count. */
     size_t limit = kind == MYL_FILE_READ && count >= 0 ? (size_t)count : MYL_FILE_MAX_BYTES;
     int status = kind == MYL_FILE_READLINE ? read_line(context, owner, &raw) : read_all(context, owner, limit, &raw);
-    if (status) { if (!myl_qbe_failed(context)) myl_qbe_fail_file(context); return -1; }
+    if (status) {
+        if (status < 0) myl_qbe_resource_status(context, status);
+        else if (!myl_qbe_failed(context)) myl_qbe_fail_file(context);
+        return -1;
+    }
     void *payload = kind == MYL_FILE_READLINES ? (void *)lines(context, raw, text, &status) : sequence(context, raw.bytes, raw.length, text, &status);
     free(raw.bytes);
     if (!payload) {
