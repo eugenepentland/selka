@@ -4,7 +4,9 @@
 #include "native_text_methods.h"
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <sys/resource.h>
 
 static const myl_native_type number={.size=8,.alignment=8,.kind=MYL_NATIVE_PLAIN};
 static const myl_native_type pointer={.size=sizeof(void *),.alignment=_Alignof(void *),.kind=MYL_NATIVE_POINTER};
@@ -423,6 +425,107 @@ static void arena_construction_abort(void) {
     myl_rc_owner_release(&heap,child);
     finish(&heap);
 }
+/* spec-case: RC-COLLECTION-1. A long finite pinned path is copied and released
+ * under a 256 KiB host-stack ceiling using staged logical-edge traversal. */
+static void deep_pinned_snapshot(void) {
+    enum { depth=4096 };
+    myl_native_heap heap;
+    init(&heap);
+    myl_native_list **nodes=calloc(depth,sizeof *nodes);
+    myl_rc_pin *pins=calloc(depth,sizeof *pins);
+    assert(nodes && pins);
+    myl_native_list *head=NULL;
+    for (size_t i=0;i<depth;i++) {
+        myl_native_list *node=myl_native_list_new(&heap,&pointer,head?1:0);
+        assert(node);
+        if (head) { assert(myl_native_list_append(&heap,node,&head)); myl_rc_owner_release(&heap,head); }
+        nodes[i]=node;
+        head=node;
+    }
+    for (size_t i=0;i<depth;i++) assert(myl_rc_pin_acquire(&heap,nodes[i],&pins[i])==MYL_RC_OK);
+    struct rlimit original, reduced;
+    assert(!getrlimit(RLIMIT_STACK,&original));
+    reduced=original;
+    if (reduced.rlim_cur>262144) { reduced.rlim_cur=262144; assert(!setrlimit(RLIMIT_STACK,&reduced)); }
+    myl_native_list *copy=NULL;
+    assert(myl_rc_native_copy(&heap,&pointer,&copy,&head,0));
+    assert(copy && copy!=head);
+    myl_native_list *left=head, *right=copy;
+    for (size_t i=0;i<depth;i++) {
+        assert(left!=right && left->length==right->length);
+        if (left->length) { left=*(myl_native_list **)left->storage; right=*(myl_native_list **)right->storage; }
+    }
+    myl_rc_owner_release(&heap,copy);
+    myl_rc_owner_release(&heap,head);
+    for (size_t i=depth;i;i--) myl_rc_pin_release(&heap,&pins[i-1]);
+    assert(!setrlimit(RLIMIT_STACK,&original));
+    free(pins);
+    free(nodes);
+    finish(&heap);
+}
+/* spec-case: RC-DICTIONARY-1. Staged dictionary cloning keeps dead-entry
+ * positions stable in a pinned source while the copy acquires live owners. */
+static void pinned_sparse_dictionary(void) {
+    myl_native_heap heap;
+    init(&heap);
+    myl_native_dictionary *dict=myl_native_dictionary_new(&heap,&number,&pointer,0);
+    myl_native_list *child=myl_native_list_new(&heap,&number,0);
+    assert(dict && child);
+    for (int64_t i=0;i<8;i++) assert(myl_native_dictionary_write(&heap,dict,&i,&child));
+    int64_t key=3;
+    myl_native_list *removed=NULL;
+    assert(myl_rc_dictionary_pop(&heap,dict,&key,&removed)==1);
+    myl_rc_owner_release(&heap,removed);
+    assert(dict->dead==1);
+    void *backing=dict->entries->storage;
+    myl_rc_pin pin={0};
+    assert(myl_rc_pin_acquire(&heap,dict,&pin)==MYL_RC_OK);
+    myl_native_dictionary *copy=NULL;
+    assert(myl_rc_native_copy(&heap,&pointer,&copy,&dict,0));
+    assert(copy && copy!=dict && dict->dead==1 && dict->entries->storage==backing);
+    assert(myl_native_dictionary_length(copy)==7 && owners(child)==15);
+    myl_rc_owner_release(&heap,copy);
+    myl_rc_pin_release(&heap,&pin);
+    myl_rc_owner_release(&heap,dict);
+    assert(owners(child)==1);
+    myl_rc_owner_release(&heap,child);
+    finish(&heap);
+}
+/* spec-case: RC-COLLECTION-1. A failed staged arena clone undoes edges acquired
+ * by an earlier nested clone before returning, even before bulk arena close. */
+static void arena_snapshot_rollback(void) {
+    myl_native_heap heap;
+    init(&heap);
+    myl_native_list *leaf=myl_native_list_new(&heap,&number,0);
+    myl_native_list *branch=myl_native_list_new(&heap,&pointer,1);
+    myl_native_list *overflow=myl_native_list_new(&heap,&number,0);
+    myl_native_list *root=myl_native_list_new(&heap,&pointer,2);
+    assert(leaf && branch && overflow && root);
+    assert(myl_native_list_append(&heap,branch,&leaf));
+    assert(myl_native_list_append(&heap,root,&branch));
+    assert(myl_native_list_append(&heap,root,&overflow));
+    myl_rc_pin root_pin={0}, branch_pin={0};
+    assert(myl_rc_pin_acquire(&heap,root,&root_pin)==MYL_RC_OK);
+    assert(myl_rc_pin_acquire(&heap,branch,&branch_pin)==MYL_RC_OK);
+    size_t live=heap.objects_live;
+    ((myl_rc_object *)overflow-1)->owners=MYL_RC_COUNT_MAX;
+    assert(myl_native_region_begin(&heap));
+    myl_native_list *copy=NULL;
+    assert(!myl_rc_native_copy(&heap,&pointer,&copy,&root,1));
+    assert(myl_rc_take_failure(&heap)==MYL_RC_COUNT_LIMIT);
+    assert(!copy && owners(leaf)==2 && owners(branch)==2 && owners(root)==1);
+    assert(owners(overflow)==MYL_RC_COUNT_MAX && heap.objects_live>live);
+    myl_native_region_end(&heap);
+    assert(owners(leaf)==2 && heap.objects_live==live);
+    ((myl_rc_object *)overflow-1)->owners=2;
+    myl_rc_pin_release(&heap,&branch_pin);
+    myl_rc_pin_release(&heap,&root_pin);
+    myl_rc_owner_release(&heap,root);
+    myl_rc_owner_release(&heap,branch);
+    myl_rc_owner_release(&heap,overflow);
+    myl_rc_owner_release(&heap,leaf);
+    finish(&heap);
+}
 int myl_rc_collections_verify(void) {
     storage_reuse_and_holds();
     storage_boundaries();
@@ -437,12 +540,15 @@ int myl_rc_collections_verify(void) {
     sorting_and_partial_clone();
     dictionary_method_results();
     arena_construction_abort();
-    return 13;
+    deep_pinned_snapshot();
+    pinned_sparse_dictionary();
+    arena_snapshot_rollback();
+    return 16;
 }
 #ifndef MYL_RC_COLLECTIONS_LIBRARY
 int main(void) {
-    assert(myl_rc_collections_verify()==13);
-    puts("native RC collections: 13 passed");
+    assert(myl_rc_collections_verify()==16);
+    puts("native RC collections: 16 passed");
     return 0;
 }
 #endif

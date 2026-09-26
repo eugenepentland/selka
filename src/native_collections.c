@@ -1111,8 +1111,31 @@ static myl_rc_status rc_list_clone_adapter(myl_native_heap *heap, const void *pa
     *out=rc_list_clone(heap,input,input->element,region);
     return myl_rc_native_result(heap,*out);
 }
+static myl_rc_status rc_list_shell(myl_native_heap *heap, const void *payload, unsigned region, void **out) {
+    const myl_native_list *source=payload;
+    size_t capacity=source->capacity>source->length?source->capacity:source->length;
+    myl_native_list *copy=rc_list_new(heap,source->element,capacity,region,0);
+    *out=copy;
+    if (!copy) return myl_rc_native_result(heap,NULL);
+    const myl_rc_descriptor *element=myl_rc_descriptor_find(heap,source->element);
+    if (!element) abort();
+    if (source->length) myl_rc_value_seed(heap,element->shape,copy->storage,source->storage,source->length);
+    copy->length=source->length;
+    return MYL_RC_OK;
+}
+static int rc_list_next(myl_native_heap *heap, const void *payload, void *target, size_t *cursor, myl_rc_slot *to, myl_rc_slot *from) {
+    const myl_native_list *source=payload;
+    myl_native_list *copy=target;
+    const myl_rc_descriptor *element=myl_rc_descriptor_find(heap,source->element);
+    if (!element) abort();
+    if (*cursor>=source->length || element->shape->kind==MYL_RC_SHAPE_NONE) return 0;
+    size_t offset=(*cursor)++*source->element->size;
+    *to=(myl_rc_slot){.shape=element->shape,.address=(unsigned char *)copy->storage+offset,.container=copy,.region=myl_native_header_region(copy)};
+    *from=(myl_rc_slot){.shape=element->shape,.address=(unsigned char *)source->storage+offset,.container=(void *)source,.region=myl_native_header_region(source)};
+    return 1;
+}
 static const myl_rc_descriptor rc_list_descriptors[]={
-    {.type=&list_type,.shape=&rc_list_shape,.edges=rc_list_edges,.clone=rc_list_clone_adapter},
+    {.type=&list_type,.shape=&rc_list_shape,.edges=rc_list_edges,.clone=rc_list_clone_adapter,.shell=rc_list_shell,.next=rc_list_next},
     {.type=&rc_storage_type,.shape=&rc_list_shape,.edges=rc_storage_edges}
 };
 static const myl_rc_module rc_list_module={

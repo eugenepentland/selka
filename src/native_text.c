@@ -205,7 +205,7 @@ static myl_rc_status rc_text_clone_adapter(myl_native_heap *heap, const void *pa
     *out=myl_native_text_own_at(heap,(myl_native_text *)payload,region);
     return myl_rc_native_result(heap,*out);
 }
-static const myl_rc_descriptor rc_text_view_descriptor={.type=&myl_native_text_view_type,.shape=&rc_text_view_shape,.edges=rc_text_view_edges,.clone=rc_text_clone_adapter};
+static const myl_rc_descriptor rc_text_view_descriptor={.type=&myl_native_text_view_type,.shape=&rc_text_view_shape,.edges=rc_text_view_edges,.clone=rc_text_clone_adapter,.shell=rc_text_clone_adapter};
 static const myl_rc_module rc_text_view_module={.abi=MYL_RC_ABI_VERSION,.descriptors=&rc_text_view_descriptor,.descriptor_count=1};
 static myl_native_text *rc_text_result(myl_native_heap *heap, myl_native_text *text) {
     if (myl_rc_enabled(heap)) {

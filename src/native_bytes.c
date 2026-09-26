@@ -74,7 +74,7 @@ static myl_rc_status rc_bytes_clone_adapter(myl_native_heap *heap, const void *p
     heap->region_depth=saved;
     return myl_rc_native_result(heap,*out);
 }
-static const myl_rc_descriptor rc_view_descriptor={.type=&view_header_type,.shape=&rc_view_shape,.edges=rc_view_edges,.clone=rc_bytes_clone_adapter};
+static const myl_rc_descriptor rc_view_descriptor={.type=&view_header_type,.shape=&rc_view_shape,.edges=rc_view_edges,.clone=rc_bytes_clone_adapter,.shell=rc_bytes_clone_adapter};
 static const myl_rc_module rc_view_module={.abi=MYL_RC_ABI_VERSION,.descriptors=&rc_view_descriptor,.descriptor_count=1};
 static int rc_view_prepare(myl_native_heap *heap) {
     if (!myl_rc_enabled(heap)) return 1;
