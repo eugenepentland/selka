@@ -146,6 +146,13 @@ void myl_rc_native_drop(myl_native_heap *heap, const myl_native_type *type, void
         myl_rc_owner_release(heap,payload);
         return;
     }
+    const myl_rc_binding *binding=(const myl_rc_binding *)descriptor;
+    if (binding->flat.count<=MYL_RC_FLAT_LEAVES) {
+        myl_rc_flat_edges_release(heap,binding,value,1);
+        memset(value,0,type->size);
+        if (heap->rc->dead.head) myl_rc_drain(heap);
+        return;
+    }
     myl_rc_slot slot={.shape=descriptor->shape,.address=value};
     myl_rc_value_drop(heap,&slot);
 }
