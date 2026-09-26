@@ -1,0 +1,26 @@
+module classes
+
+# All defined classes and their method tables. Declare it as you need.
+public record Registry:
+    size: int
+
+
+public def new_registry() -> Registry:
+    return todo[Registry]()
+
+
+public def define(reg: mut Registry, name: str, parent: str, methods: dict[str, str]) -> bool:
+    return todo[bool]()
+
+
+public def add_method(reg: mut Registry, cls: str, method: str, body: str) -> bool:
+    return todo[bool]()
+
+
+public def lookup(reg: Registry, cls: str, method: str) -> str:
+    return todo[str]()
+
+
+# The class's table; the caller may change the result.
+public def table(reg: Registry, cls: str) -> dict[str, str]:
+    return todo[dict[str, str]]()

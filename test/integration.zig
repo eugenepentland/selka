@@ -3348,6 +3348,72 @@ test "CLI formatter supports stdout check mode and syntax-only formatting" {
     try invokeOptions("fmt", canonical, &.{ "--check", "--check" }, 2, "", "usage:");
     try invokeOptions("check", canonical, &.{"--check"}, 2, "", "usage:");
 }
+// spec: FMT-CHECK-LOCATION-1
+test "CLI formatter check locates spacing and missing final newline" {
+    try invokeOptions("fmt", "def  main() -> int:\n    return 7\n", &.{"--check"}, 1, "", "input.my:1:5: formatting differs");
+    try invokeOptions("fmt", "def main() -> int:\n    return 7", &.{"--check"}, 1, "", "input.my:2:13: formatting differs");
+    try invokeOptions("fmt-module", "module input\n\ndef  f() -> int:\n    return 7\n", &.{"--check"}, 1, "", "input.my:3:5: formatting differs");
+}
+
+// spec: FMT-TEST-MODULE-1
+test "CLI formatter and test agree on headerless sibling test imports" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper\n\npublic def value() -> int:\n    return 7\n" });
+    const source = "import helper\n\npublic def test_value() -> bool:\n    return helper.value() == 7\n";
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper_test.my", .data = source });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "helper_test.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const formatted = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "fmt", path } });
+    defer testing.allocator.free(formatted.stdout);
+    defer testing.allocator.free(formatted.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, formatted.term);
+    try testing.expectEqualStrings(source, formatted.stdout);
+    const checked = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "fmt-module", path, "--check" } });
+    defer testing.allocator.free(checked.stdout);
+    defer testing.allocator.free(checked.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, checked.term);
+    const tested = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "test", path } });
+    defer testing.allocator.free(tested.stdout);
+    defer testing.allocator.free(tested.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, tested.term);
+    try testing.expect(std.mem.indexOf(u8, tested.stdout, "1 passed") != null);
+    try invoke("fmt", source, 1, "", "E_MODULE_HEADER");
+}
+
+// spec: TEST-SIBLING-HINT-1
+test "CLI empty test selection names an unloaded sibling and preserves JSON" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper\n\npublic def value() -> int:\n    return 7\n" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper_test.my", .data = "import helper\n\npublic def test_value() -> bool:\n    return helper.value() == 7\n" });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "helper.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const empty = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "test", path, "--json" } });
+    defer testing.allocator.free(empty.stdout);
+    defer testing.allocator.free(empty.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 3 }, empty.term);
+    try testing.expect(std.mem.indexOf(u8, empty.stderr, "helper_test.my") != null);
+    try testing.expect(std.mem.indexOf(u8, empty.stderr, "Run that file explicitly") != null);
+    var parsed = try std.json.parseFromSlice(std.json.Value, testing.allocator, empty.stdout, .{});
+    defer parsed.deinit();
+    try testing.expectEqualStrings("native-tests-v1", parsed.value.object.get("version").?.string);
+    try testing.expectEqual(@as(usize, 0), parsed.value.object.get("tests").?.array.items.len);
+    try temp.dir.deleteFile(testing.io, "helper_test.my");
+    const absent = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "test", path } });
+    defer testing.allocator.free(absent.stdout);
+    defer testing.allocator.free(absent.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 3 }, absent.term);
+    try testing.expectEqualStrings("", absent.stderr);
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper_test.my", .data = "module helper_test\n\npublic def value() -> int:\n    return 7\n\n\npublic def test_value() -> bool:\n    return True\n" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper\nimport helper_test\n\ndef main() -> int:\n    return helper_test.value()\n" });
+    const loaded = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "test", path, "--filter", "does_not_exist" } });
+    defer testing.allocator.free(loaded.stdout);
+    defer testing.allocator.free(loaded.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 3 }, loaded.term);
+    try testing.expectEqualStrings("", loaded.stderr);
+}
+
 test "CLI module discovery loads real files and diagnoses cross-file cycles" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
@@ -5455,6 +5521,7 @@ test "CLI module quality reports preserve export roots and advisory thresholds" 
         \\    return 0
     , &.{"--approximate"}, 2, "", "usage:");
 }
+// spec-case: FMT-CHECK-LOCATION-1
 test "CLI module formatting is syntax only and canonical for every reachable module" {
     // The header directive group is followed by one blank line and top-level
     // declarations by two, so the fixtures below are already canonical.
@@ -5509,6 +5576,12 @@ test "CLI module formatting is syntax only and canonical for every reachable mod
         try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, output.term);
         try testing.expectEqualStrings(if (std.mem.eql(u8, name, "input.my")) root_module else child_module, output.stdout);
     }
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "child.my", .data = "module child\n\ndef  f() -> Missing:\n    return unknown()\n" });
+    const differing = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "fmt-project", path, "--check" } });
+    defer testing.allocator.free(differing.stdout);
+    defer testing.allocator.free(differing.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, differing.term);
+    try testing.expect(std.mem.indexOf(u8, differing.stderr, "child.my:3:5: formatting differs") != null);
     try temp.dir.writeFile(testing.io, .{ .sub_path = "child.my", .data =
         \\module child
         \\def broken(

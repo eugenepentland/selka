@@ -1,12 +1,9 @@
 module money
 
-
 public domain Cents: int:
     def make(value: u64) -> Cents effects():
         return wrap[Cents](int(value))
-
     def number(value: Cents) -> int effects():
         return unwrap(value)
-
     def add(left: Cents, right: Cents) -> Cents effects():
         return wrap[Cents](unwrap(left) + unwrap(right))

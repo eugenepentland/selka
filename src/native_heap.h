@@ -30,7 +30,10 @@ struct myl_native_type {
     size_t count;
     size_t stride;
     unsigned kind;
-    unsigned collection_kind; /* 0 opaque, 1 list, 2 string, 3 dictionary, 4 bytes */
+    /* 0 opaque, 1 list, 2 string, 3 dictionary, 4 bytes, 5 box: the pointer to
+     * the immutable one-field record a recursive value's boxed field or case
+     * lives in, whose body descriptor `element` names (RECURSIVE-VALUES-2). */
+    unsigned collection_kind;
     const myl_native_type *element, *key;
     /* GC-only field view. Runtime-built descriptors may leave trace_mode zero,
      * which preserves the legacy walk through `fields`. Generated descriptors

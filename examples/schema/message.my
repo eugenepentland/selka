@@ -1,6 +1,5 @@
 module message
 
-
 public enum Status:
     ready,
     failed

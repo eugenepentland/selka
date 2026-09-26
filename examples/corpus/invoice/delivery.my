@@ -1,6 +1,5 @@
 module delivery
 
-
 # Independent delivery tariff; coincidentally matches packaging today.
 public def fee(items: int) -> int effects():
     cents = 100

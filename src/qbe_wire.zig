@@ -123,6 +123,13 @@ pub fn listType(allocator: std.mem.Allocator, records: []const typed.Record, lay
 /// choice twice.
 fn managedType(allocator: std.mem.Allocator, records: []const typed.Record, layout: native.Layout, record: typed.Record) Error!?Type {
     if (try textType(allocator, records, layout, record)) |item| return item;
+    // RECURSIVE-VALUES-3: a box carries no node of its own. The adapter reads
+    // the value it holds straight from the wire and boxes it, so a recursive
+    // value crosses exactly as its unboxed spelling does.
+    if (record.collection.box) {
+        const box = try handle(allocator, records, layout, record, "box", &.{record.fields[0].ty});
+        return box;
+    }
     if (try listType(allocator, records, layout, record)) |item| return item;
     const kind = if (bytesRecord(record)) "bytes" else "dict";
     const key = dictionaryKey(record);
@@ -186,9 +193,27 @@ pub fn byAddress(layout: native.Layout, ty: typed.Type, records: []const typed.R
 /// entry would produce a manifest the generated adapter cannot resolve, which is
 /// a build failure rather than a refusal — the codec must decline instead.
 fn includable(allocator: std.mem.Allocator, records: []const typed.Record, flags: []const bool, codecs: bool) Error![]bool {
+    const refused = try allocator.alloc(bool, records.len);
+    defer allocator.free(refused);
+    @memset(refused, false);
+    // RECURSIVE-VALUES-3: a box and the value it holds reach each other, so
+    // each box is first assumed to cross; a box whose value turns out not to
+    // cross is refused and the closure is recomputed without it.
+    while (true) {
+        const included = try closure(allocator, records, flags, codecs, refused);
+        var pruned = false;
+        for (records, 0..) |record, i| if (included[i] and record.collection.box and !carriable(record.fields[0].ty, included)) {
+            refused[i] = true;
+            pruned = true;
+        };
+        if (!pruned) return included;
+        allocator.free(included);
+    }
+}
+fn closure(allocator: std.mem.Allocator, records: []const typed.Record, flags: []const bool, codecs: bool, refused: []const bool) Error![]bool {
     const included = try allocator.alloc(bool, records.len);
     errdefer allocator.free(included);
-    for (records, 0..) |record, i| included[i] = flags[i] or (codecs and (textScalar(record) != null or bytesRecord(record) or floatRecord(record)));
+    for (records, 0..) |record, i| included[i] = flags[i] or (codecs and (textScalar(record) != null or bytesRecord(record) or floatRecord(record) or (record.collection.box and !refused[i])));
     var changed = codecs;
     while (changed) {
         changed = false;

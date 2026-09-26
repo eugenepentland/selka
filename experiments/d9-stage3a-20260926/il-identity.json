@@ -1,0 +1,442 @@
+[
+  {
+    "file": "bench/parity/lib/scan_count.my",
+    "base": "d5a5807858a6e7971dd5d4090108c10fc5b32b5152d01af54fac75c03f7a5a9c",
+    "stage3a": "d5a5807858a6e7971dd5d4090108c10fc5b32b5152d01af54fac75c03f7a5a9c",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/lib/scan_replace.my",
+    "base": "270ae3dd3dd1ff4c052002c9b041a793850ebb9982b2ceaba6b6462f891b147d",
+    "stage3a": "270ae3dd3dd1ff4c052002c9b041a793850ebb9982b2ceaba6b6462f891b147d",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/lib/scan_split.my",
+    "base": "44aafd80a7cc019b03f74735a911dff0e90dc3628c67cbfc35f374cf95df7b18",
+    "stage3a": "44aafd80a7cc019b03f74735a911dff0e90dc3628c67cbfc35f374cf95df7b18",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/micro/alloc_churn.my",
+    "base": "7ba92a4af96fe5c136341096fbcb587a52fe58c6da363741f070d4d5788e0c21",
+    "stage3a": "7ba92a4af96fe5c136341096fbcb587a52fe58c6da363741f070d4d5788e0c21",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/micro/alloc_churn_arena.my",
+    "base": "91013993432aa1dfa7464b6ca70055614d7e575c28b5f0833a0f31948b414d27",
+    "stage3a": "91013993432aa1dfa7464b6ca70055614d7e575c28b5f0833a0f31948b414d27",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/micro/bytes_scan.my",
+    "base": "85ac534a34d9417beb992688c1327c88bdb9950752a83bb7a0958a23efcdf167",
+    "stage3a": "85ac534a34d9417beb992688c1327c88bdb9950752a83bb7a0958a23efcdf167",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/micro/bytes_scan_wrapping.my",
+    "base": "3bde6367cc9ad72bdee97cf4ad66cc719f948759bb396881fa485b5a001d0531",
+    "stage3a": "3bde6367cc9ad72bdee97cf4ad66cc719f948759bb396881fa485b5a001d0531",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/micro/calls.my",
+    "base": "033b2bf5b14b91c46a46e923e072887abdd17bdfacf4ee0c4ff898b637d9ba42",
+    "stage3a": "033b2bf5b14b91c46a46e923e072887abdd17bdfacf4ee0c4ff898b637d9ba42",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/micro/dict_count.my",
+    "base": "ed3251e011fee36382ad1ebe0b4021cc9d07b28017476f242654310644547a10",
+    "stage3a": "ed3251e011fee36382ad1ebe0b4021cc9d07b28017476f242654310644547a10",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/micro/fib.my",
+    "base": "7efac315780252fab8841b30f472a713757c9a8275e0effc2eaddd75df4a46f0",
+    "stage3a": "7efac315780252fab8841b30f472a713757c9a8275e0effc2eaddd75df4a46f0",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/micro/float_loop.my",
+    "base": "d1400783d6855cce298daa37f21d09fa739b8e748e1a0595a8b4536c30cd7277",
+    "stage3a": "d1400783d6855cce298daa37f21d09fa739b8e748e1a0595a8b4536c30cd7277",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/micro/intloop.my",
+    "base": "a50176b2974ee315ccacde9ce041e153b7aec76da53a0742073173d361c54f24",
+    "stage3a": "a50176b2974ee315ccacde9ce041e153b7aec76da53a0742073173d361c54f24",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/micro/list_append_sum.my",
+    "base": "3d3ebfd600a4de7ae21f2e4df8b92ebd819218461a258af7b56ae68fc9d400a5",
+    "stage3a": "3d3ebfd600a4de7ae21f2e4df8b92ebd819218461a258af7b56ae68fc9d400a5",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/micro/list_records.my",
+    "base": "c76467c374f51c9c746fed5042e22aa000bc7c47da5f12fccb8063e2b02e480d",
+    "stage3a": "c76467c374f51c9c746fed5042e22aa000bc7c47da5f12fccb8063e2b02e480d",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/micro/list_records_wrapping.my",
+    "base": "8d9f9d03ffe0c577d03f62270304fb48a82c393cf4e151164ffa4670efe9cf9e",
+    "stage3a": "8d9f9d03ffe0c577d03f62270304fb48a82c393cf4e151164ffa4670efe9cf9e",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/micro/records.my",
+    "base": "3d806aa403a32a7ff0f2d5cbbd01c8de3eb30381be1d9ceee46781d56f11df9d",
+    "stage3a": "3d806aa403a32a7ff0f2d5cbbd01c8de3eb30381be1d9ceee46781d56f11df9d",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/micro/str_build.my",
+    "base": "de396f25ecc8d580ac559cda6427b52aefecbf6c7e157a23503f83b22dc9884b",
+    "stage3a": "de396f25ecc8d580ac559cda6427b52aefecbf6c7e157a23503f83b22dc9884b",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/suite/binary_trees.my",
+    "base": "9e4a669ea7f4c5d37359974a45c170bd05a5da1c8083cc9d3d2fd6de3292ecf3",
+    "stage3a": "9e4a669ea7f4c5d37359974a45c170bd05a5da1c8083cc9d3d2fd6de3292ecf3",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/suite/binary_trees_arena.my",
+    "base": "0ff9e271dea4edd170b1b0450d591e9ca8b433da54ed277a60b7ae3e32df600d",
+    "stage3a": "0ff9e271dea4edd170b1b0450d591e9ca8b433da54ed277a60b7ae3e32df600d",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/suite/fannkuch_redux.my",
+    "base": "52567ec10f944d4ea3f8f41d0e1b693b86bcafdd60deb180bb17bb123fce6cf5",
+    "stage3a": "52567ec10f944d4ea3f8f41d0e1b693b86bcafdd60deb180bb17bb123fce6cf5",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/suite/fannkuch_redux_array.my",
+    "base": "24a8fbc24c0e32f21881e9274cec731f8c7f7c1a9b7c2a42763a0c2ac7c5afd2",
+    "stage3a": "24a8fbc24c0e32f21881e9274cec731f8c7f7c1a9b7c2a42763a0c2ac7c5afd2",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/suite/fannkuch_redux_tuned.my",
+    "base": "1e9a600f529ed2cba374ba2276fd04fcc72f1f29580959f94854a4b239e9d55c",
+    "stage3a": "1e9a600f529ed2cba374ba2276fd04fcc72f1f29580959f94854a4b239e9d55c",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/suite/knucleotide.my",
+    "base": "47ae32e16c4082be2cb7533736a0a19a0252161b53a33499909968083f7e2546",
+    "stage3a": "47ae32e16c4082be2cb7533736a0a19a0252161b53a33499909968083f7e2546",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/suite/knucleotide_arena.my",
+    "base": "29d36e2a81504dcf67cfad7de20e610282346d35b33f655020cfd2a26d66d011",
+    "stage3a": "29d36e2a81504dcf67cfad7de20e610282346d35b33f655020cfd2a26d66d011",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/suite/knucleotide_tuned.my",
+    "base": "6cb0552aa0e48459011d90766622aae86802d98f1b022493012018959b648ffc",
+    "stage3a": "6cb0552aa0e48459011d90766622aae86802d98f1b022493012018959b648ffc",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/suite/mandelbrot.my",
+    "base": "bace5b78173b2859fb730ffddf3592a6519127af4f881f1ee70c2d42cabf58c4",
+    "stage3a": "bace5b78173b2859fb730ffddf3592a6519127af4f881f1ee70c2d42cabf58c4",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/suite/matmul.my",
+    "base": "4a29145f9ce2e5d6120f1bcd95c71736ead36c69bdd045406bafacd05d96aca4",
+    "stage3a": "4a29145f9ce2e5d6120f1bcd95c71736ead36c69bdd045406bafacd05d96aca4",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/suite/matmul_flat.my",
+    "base": "afc6ba67ddd00efdc689ce8876f3191f26657fef859ed94d7e8057413d9dabf1",
+    "stage3a": "afc6ba67ddd00efdc689ce8876f3191f26657fef859ed94d7e8057413d9dabf1",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/suite/matmul_tuned.my",
+    "base": "5c8ff2bc0ebc5d6e94aba39304249cbc864497239f9260d946563e35b6126c21",
+    "stage3a": "5c8ff2bc0ebc5d6e94aba39304249cbc864497239f9260d946563e35b6126c21",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/suite/nbody.my",
+    "base": "3f99cd129b88659966b3edb44e7f15450e5a938046cb9c65cf70e471871a43a5",
+    "stage3a": "3f99cd129b88659966b3edb44e7f15450e5a938046cb9c65cf70e471871a43a5",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/suite/nbody_class.my",
+    "base": "801f5f3fbfbc34a6694aacde7c27e18134597d252ebb4b468601f21074f5186c",
+    "stage3a": "801f5f3fbfbc34a6694aacde7c27e18134597d252ebb4b468601f21074f5186c",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/suite/raytrace.my",
+    "base": "fe59ca805177679da3e7380d314bb49165685048cc507168efa14c5c6930f05e",
+    "stage3a": "fe59ca805177679da3e7380d314bb49165685048cc507168efa14c5c6930f05e",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/suite/raytrace_tuned.my",
+    "base": "9db28676bcadf467b8baea19ecbae5957a756f642c8f4b687fe10380c8136344",
+    "stage3a": "9db28676bcadf467b8baea19ecbae5957a756f642c8f4b687fe10380c8136344",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/suite/sieve.my",
+    "base": "5205a442db819524858ef86f505d5e0fdc9d378994e37b570f504797ec01ed7a",
+    "stage3a": "5205a442db819524858ef86f505d5e0fdc9d378994e37b570f504797ec01ed7a",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/suite/sieve_tuned.my",
+    "base": "92607b5cab650682501bf69698bcb27bec45ba3fdfcf22ad69fab2641d3b0b22",
+    "stage3a": "92607b5cab650682501bf69698bcb27bec45ba3fdfcf22ad69fab2641d3b0b22",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/suite/sort_builtin.my",
+    "base": "d3926578b550f88e71acab1706c0d3d689ca38efe559db2f3dcd98f7cd7dd103",
+    "stage3a": "d3926578b550f88e71acab1706c0d3d689ca38efe559db2f3dcd98f7cd7dd103",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/suite/sort_quick.my",
+    "base": "84f2ba006f203cfd2d39257f4775957cd320d720fedaa9aa6e94aef2f8b66c60",
+    "stage3a": "84f2ba006f203cfd2d39257f4775957cd320d720fedaa9aa6e94aef2f8b66c60",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/suite/sort_records.my",
+    "base": "95ab9b20690b2cf1ecc5d413ac5b3af8ca0d8476b8bc88e18bd44bd7dcf943cf",
+    "stage3a": "95ab9b20690b2cf1ecc5d413ac5b3af8ca0d8476b8bc88e18bd44bd7dcf943cf",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/suite/sort_records_keyed.my",
+    "base": "12d301d946a739a900a567dd1e5d2fef4d9e28bcabc66e75d1d9141e42dad8f2",
+    "stage3a": "12d301d946a739a900a567dd1e5d2fef4d9e28bcabc66e75d1d9141e42dad8f2",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/suite/sort_records_sorted.my",
+    "base": "d40728d90c40ab21478049a941d3672604f858795c752a39cb667d2608e3294e",
+    "stage3a": "d40728d90c40ab21478049a941d3672604f858795c752a39cb667d2608e3294e",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/suite/spectral_norm.my",
+    "base": "46707ad133fa1c59b88ea46ae42d61865ead3e11b628b4f5c7ff11d1aa527701",
+    "stage3a": "46707ad133fa1c59b88ea46ae42d61865ead3e11b628b4f5c7ff11d1aa527701",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/suite/spectral_norm_tuned.my",
+    "base": "2552ba311b7af1dda0427cae95c984e2315fdea6659d997ff0fdb45117392fa4",
+    "stage3a": "2552ba311b7af1dda0427cae95c984e2315fdea6659d997ff0fdb45117392fa4",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/suite/text_ops.my",
+    "base": "77ac50cb9d5352f8c457a45474569b58872ad208c0942eedf507cb6042352ded",
+    "stage3a": "77ac50cb9d5352f8c457a45474569b58872ad208c0942eedf507cb6042352ded",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  },
+  {
+    "file": "bench/parity/suite/text_ops_tuned.my",
+    "base": "4e86d326140d4dde6c3c40e9e120e7b7dd2ac93fe288244ff38770877991230b",
+    "stage3a": "4e86d326140d4dde6c3c40e9e120e7b7dd2ac93fe288244ff38770877991230b",
+    "equal": true,
+    "errors": [
+      "",
+      ""
+    ]
+  }
+]

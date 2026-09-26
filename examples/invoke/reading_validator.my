@@ -12,8 +12,6 @@ module reading_validator
 # caller can tell a cold sensor from an unsteady one without parsing prose. The
 # reading arrives as JSON, is decoded into fresh guest storage, and the verdict
 # goes back as typed JSON.
-
-
 public enum Rule:
     accepted,
     too_cold,

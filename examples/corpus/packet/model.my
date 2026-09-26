@@ -1,6 +1,5 @@
 module model
 
-
 public record Reading:
     sequence: u8
     value: u32

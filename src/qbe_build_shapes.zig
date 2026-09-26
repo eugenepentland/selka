@@ -100,7 +100,8 @@ pub const Shapes = struct {
         // type the wire carries one node per. Anything else is a malformed
         // manifest the generated adapter must refuse rather than walk off its
         // field table.
-        if ((kind == 5 or kind == list_kind or kind == bytes_kind) and fields.len != 1) return error.InvalidManifest;
+        const single_field = kind == 5 or kind == list_kind or kind == bytes_kind or kind == box_kind;
+        if (single_field and fields.len != 1) return error.InvalidManifest;
         // A dictionary names its key and its value; a set's value is unit.
         if (kind == dict_kind and fields.len != 2) return error.InvalidManifest;
         // An array's, a text's and a list's element count is carried by the
@@ -179,11 +180,14 @@ pub fn find(types: []const Value, name: []const u8) ?usize {
 }
 /// Manifest kind names in their stable numeric order; the index is the number
 /// the generated adapter switches on.
-const kind_names = [_][]const u8{ "scalar", "record", "array", "variant", "domain", "text", "list", "niche", "bytes", "dict" };
+const kind_names = [_][]const u8{ "scalar", "record", "array", "variant", "domain", "text", "list", "niche", "bytes", "dict", "box" };
 /// The manifest kind number of a user list, carried as one wire node per element.
 const list_kind: u8 = 6;
 /// The manifest kind number of `bytes`, carried as one `u8` node per octet.
 const bytes_kind: u8 = 8;
+/// The manifest kind number of a recursive value's box, which carries the
+/// value it holds with no node of its own (RECURSIVE-VALUES-3).
+const box_kind: u8 = 10;
 /// The manifest kind number of a dictionary or a set, carried as one key
 /// subtree (and, for a dictionary, one value subtree) per entry.
 const dict_kind: u8 = 9;

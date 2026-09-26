@@ -85,6 +85,9 @@ const Canon = struct {
         // unrelated edits; construction is already explicit in the lowered body.
         if (T == typed.Field) {
             try self.text(value.name);
+            // A boxed field (RECURSIVE-VALUES-2) is marked only where it is
+            // set, so every other unit keeps its canonical bytes.
+            if (value.boxed) try self.text("boxed");
             return self.putType(value.ty);
         }
         switch (@typeInfo(T)) {

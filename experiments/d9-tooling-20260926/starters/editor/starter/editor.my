@@ -1,0 +1,39 @@
+module editor
+
+# The editor's state. Choose the fields you need.
+public record Editor:
+    text: list[str]
+
+
+public def new_editor() -> Editor:
+    return todo[Editor]()
+
+
+public def insert(ed: mut Editor, at: int, text: str) -> bool:
+    return todo[bool]()
+
+
+public def delete(ed: mut Editor, at: int) -> bool:
+    return todo[bool]()
+
+
+public def set_line(ed: mut Editor, at: int, text: str) -> bool:
+    return todo[bool]()
+
+
+public def undo(ed: mut Editor) -> bool:
+    return todo[bool]()
+
+
+public def redo(ed: mut Editor) -> bool:
+    return todo[bool]()
+
+
+# The current text; the caller may change the result.
+public def lines(ed: Editor) -> list[str]:
+    return todo[list[str]]()
+
+
+# The texts successive undo calls would restore, most recent first.
+public def history(ed: Editor) -> list[list[str]]:
+    return todo[list[list[str]]]()

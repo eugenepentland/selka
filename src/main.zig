@@ -341,6 +341,7 @@ fn dispatch(process: std.process.Init) !u8 {
         .diagnostics = parsed.reporting.diagnostics orelse .text,
     };
     const status = run(init, parsed) catch |err| status: {
+        if (@errorReturnTrace()) |trace| std.debug.dumpErrorReturnTrace(trace); // DEBUG-RV
         const message = try std.fmt.allocPrint(init.gpa, "mylang: host failure: {s}\n", .{@errorName(err)});
         defer init.gpa.free(message);
         try init.text(message);
@@ -521,7 +522,9 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
         setWork(init, .parsed_modules, 1, 0);
         if (parsed.format_check) {
             if (std.mem.eql(u8, formatted, bytes)) return 0;
-            try init.text("formatting differs\n");
+            const difference = try formattingDifference(allocator, compilation.src, formatted);
+            defer allocator.free(difference);
+            try init.text(difference);
             return 1;
         }
         try std.Io.File.stdout().writeStreamingAll(init.io, formatted);
@@ -2969,9 +2972,19 @@ fn surfaceProject(init: Context, project: *language.project.Project, parsed: Par
     return null;
 }
 
+fn formattingDifference(allocator: std.mem.Allocator, src: language.source.Source, formatted: []const u8) ![]u8 {
+    var offset: usize = 0;
+    while (offset < @min(src.bytes.len, formatted.len) and src.bytes[offset] == formatted[offset]) : (offset += 1) {}
+    const location = src.locate(offset);
+    return std.fmt.allocPrint(allocator, "{s}:{d}:{d}: formatting differs\n", .{ location.path, location.line, location.column });
+}
+
 fn formatProject(init: Context, project: *language.project.Project) !u8 {
     var changed: std.ArrayList([]const u8) = .empty;
-    defer changed.deinit(init.gpa);
+    defer {
+        for (changed.items) |message| init.gpa.free(message);
+        changed.deinit(init.gpa);
+    }
     for (project.order.items) |module_id| {
         const src = project.modules.items[module_id].src;
         var compilation = try language.Compilation.init(init.gpa, src.path, src.bytes);
@@ -2985,13 +2998,13 @@ fn formatProject(init: Context, project: *language.project.Project) !u8 {
         };
         defer init.gpa.free(formatted);
         recordWork(init, .parsed_modules, 1, 0);
-        if (!std.mem.eql(u8, formatted, src.bytes)) try changed.append(init.gpa, src.path);
+        if (!std.mem.eql(u8, formatted, src.bytes)) {
+            try changed.ensureUnusedCapacity(init.gpa, 1);
+            const message = try formattingDifference(init.gpa, src, formatted);
+            changed.appendAssumeCapacity(message);
+        }
     }
-    for (changed.items) |path_name| {
-        const message = try std.fmt.allocPrint(init.gpa, "{s}: formatting differs\n", .{path_name});
-        defer init.gpa.free(message);
-        try init.text(message);
-    }
+    for (changed.items) |message| try init.text(message);
     return if (changed.items.len == 0) 0 else 1;
 }
 

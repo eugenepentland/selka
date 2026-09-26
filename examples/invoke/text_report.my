@@ -11,8 +11,6 @@ module text_report
 # counts. `join`, `widths` and `bracket_all` move the same list across the
 # boundary in the other direction, so the example covers text and lists as both
 # an argument and a result.
-
-
 public record Summary:
     scalars: i64
     pieces: i64

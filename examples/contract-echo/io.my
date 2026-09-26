@@ -1,6 +1,5 @@
 module io
 
-
 public host def length(host: Host) -> int effects(host)
 
 

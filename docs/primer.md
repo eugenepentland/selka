@@ -20,6 +20,8 @@ mylang docs primer                    # this page; `mylang --help` lists every c
 
 `run`, `build` and `test` all build with QBE unless you pass `--release`, so the
 edit-build-test loop stays fast; `--release` pays an LTO link on every rebuild.
+When `fmt --check` fails, `path:line:column` identifies the first formatting
+difference; `fmt FILE` prints the complete corrected source.
 
 ## File layout
 
@@ -34,6 +36,11 @@ edit-build-test loop stays fast; `--release` pays an LTO link on every rebuild.
   `name`'s `public` declarations are visible). A test may take `out: Stream`,
   but not `Filesystem`, `Clock` and the other capabilities: test the pure
   functions and keep I/O in `main`.
+  A `*_test.my` entry may omit its `module` header even when importing the
+  sibling module; both `test` and `fmt` accept that form.
+  Run `mylang test name_test.my` to select sibling tests directly. If
+  `mylang test name.my` selects none, it points out an existing sibling test
+  file; testing the containing directory also discovers it.
 
 ## Program shape and I/O
 
@@ -94,6 +101,25 @@ rebuild the record. Builtin types: `int`, `float`, `bool`, `str`, `bytes`,
 `list[T]`, `dict[K, V]` (keys `int` or `str` only), `tuple[A, B]`, `Option[T]`
 (`Some(x)` / `None`) and `Result[T, E]` (`Ok(x)` / `Err(e)`).
 
+A public declaration can expose only public types. `E_PRIVATE_INTERFACE` on
+a `public record` means one of its fields exposes a private type: mark that
+type `public` too, or keep the enclosing record private. The same rule applies
+through containers and to public function signatures.
+
+```mylang
+# doc: expect 2
+public record Count:
+    value: int
+
+public record ItemCount:
+    count: Count
+
+def main(out: Stream) -> int:
+    item = ItemCount(count=Count(value=2))
+    out.print(item.count.value)
+    return 0
+```
+
 ## Errors: Result, Option and `?`
 
 ```mylang
@@ -124,6 +150,20 @@ def main(out: Stream) -> int:
 There are no exceptions and no `try`. To compare with a literal `Ok(...)`, bind
 it to a typed name first: `expected: Result[int, str] = Ok(3)`, then
 `total("1,2") == expected`.
+
+A call used as a statement must return unit (`-> None`, or no return
+annotation). `E_EXPLICIT_DISCARD_REQUIRED` means a non-unit result was ignored:
+use the value, handle it, or write `_ = expression` to discard it explicitly.
+For a `Result`, normally use `match` or `?` to handle failure.
+
+```mylang
+# doc: expect 1
+def main(out: Stream) -> int:
+    values = [10, 20]
+    _ = values.pop()                  # pop returns the removed element
+    out.print(len(values))
+    return 0
+```
 
 ## Collections
 

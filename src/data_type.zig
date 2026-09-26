@@ -64,7 +64,15 @@ fn checkMode(allocator: std.mem.Allocator, records: []const typed.Record, root: 
             try pending.append(allocator, array.element);
             if (array.key) |key| try pending.append(allocator, key);
         } else if (record.shape.variants) |variants| {
-            for (variants.cases) |case| if (case.payload) |payload| try pending.append(allocator, payload);
-        } else for (record.fields) |field| try pending.append(allocator, field.ty);
+            // A boxed payload is a managed pointer, which no flat boundary carries
+            // (RECURSIVE-VALUES-2).
+            for (variants.cases) |case| if (case.payload) |payload| {
+                if (case.boxed) return error.NotDataType;
+                try pending.append(allocator, payload);
+            };
+        } else for (record.fields) |field| {
+            if (field.boxed) return error.NotDataType;
+            try pending.append(allocator, field.ty);
+        }
     }
 }

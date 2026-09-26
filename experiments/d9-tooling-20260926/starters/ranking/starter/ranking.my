@@ -1,0 +1,20 @@
+module ranking
+
+public record Reading:
+    name: str
+    value: int
+
+
+# Put the caller's list into ranked order (descending value, stable).
+public def rank_in_place(readings: mut list[Reading]):
+    todo[None]()
+
+
+# The first k readings in ranked order; `readings` is unchanged.
+public def top(readings: list[Reading], k: int) -> list[Reading]:
+    return todo[list[Reading]]()
+
+
+# Rank every list in the caller's groups.
+public def rank_groups(groups: mut dict[str, list[Reading]]):
+    todo[None]()

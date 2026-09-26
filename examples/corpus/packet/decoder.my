@@ -1,8 +1,7 @@
 module decoder
 import model
 
-
-def checksum(bytes: [9]u8) -> u8:
+def checksum(bytes: [9] u8) -> u8:
     sum = 0u16
     index = 0u64
     while index < 8u64:
@@ -11,7 +10,7 @@ def checksum(bytes: [9]u8) -> u8:
     return u8(sum % 256u16)
 
 
-public def decode(bytes: [9]u8, size: u64) -> model.Decoded effects():
+public def decode(bytes: [9] u8, size: u64) -> model.Decoded effects():
     if size != 9u64:
         return Err(model.Error.frame_length)
     if bytes[0] != 1u8:

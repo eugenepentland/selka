@@ -40,6 +40,11 @@ const Emitter = struct {
     /// VALUE-SEMANTICS-2: this function's lowering facts under value
     /// semantics, or null with the switch off (no copy is ever placed).
     values: ?*const value_semantics.Facts = null,
+    /// Hidden locals lowering adds after the checked ones: the box a boxed
+    /// union payload lands in before a match arm reads through it.
+    extra_locals: std.ArrayList(typed.Local) = .empty,
+    /// How many locals the checked function declares; `extra_locals` follow.
+    declared_locals: usize = 0,
 
     fn push(self: *Emitter, task: Work) !void {
         try self.work.append(self.scratch, task);
@@ -255,6 +260,7 @@ const Emitter = struct {
                 const slots = try self.allocator.alloc(?typed.LocalId, match.arms.len);
                 try self.push(.{ .mark = end });
                 var i = match.arms.len;
+                const matched = self.program.nodes[@backingInt(match.value)].ty;
                 while (i > 0) {
                     i -= 1;
                     const arm = match.arms[i];
@@ -263,6 +269,16 @@ const Emitter = struct {
                     if (!self.program.statements[@backingInt(arm.body)].terminates) try self.push(.{ .jump = .{ .target = end, .span = stmt.span } });
                     try self.push(.{ .statement = arm.body });
                     if (arm.slot) |slot| try self.payloadCopy(stmt.span, match.value, slot);
+                    const case = self.variantCase(matched, arm.tag);
+                    if (case.boxed) if (arm.slot) |slot| {
+                        // The arm's box lands in a hidden local; the binding the
+                        // arm names receives the value inside it.
+                        const box = try self.hiddenLocal(case.payload.?, stmt.span);
+                        slots[arm.tag] = box;
+                        try self.instruction(stmt.span, .{ .store_local = slot });
+                        try self.unboxValue(stmt.span);
+                        try self.instruction(stmt.span, .{ .load_local = box });
+                    };
                     try self.push(.{ .mark = targets[arm.tag] });
                 }
                 try self.push(.{ .dispatch = .{ .ty = self.program.nodes[@backingInt(match.value)].ty, .targets = targets, .slots = slots, .span = stmt.span } });
@@ -330,6 +346,8 @@ const Emitter = struct {
             .propagate => |propagate| {
                 const failure = try self.label();
                 const success = try self.label();
+                // A boxed `Some` or `Ok` payload arrives as its box.
+                if (self.propagatedBox(self.program.nodes[@backingInt(propagate.value)].ty)) try self.unboxValue(node.span);
                 try self.push(.{ .mark = success });
                 try self.instruction(node.span, .ret);
                 try self.push(.{ .mark = failure });
@@ -337,10 +355,7 @@ const Emitter = struct {
                 try self.push(.{ .propagate = .{ .input = self.program.nodes[@backingInt(propagate.value)].ty, .output = propagate.output, .target = failure, .span = node.span } });
                 try self.push(.{ .expression = propagate.value });
             },
-            .variant => |variant| {
-                try self.instruction(node.span, .{ .make_variant = .{ .ty = node.ty, .tag = variant.tag } });
-                if (variant.value) |value| try self.transfer(value, .store, null);
-            },
+            .variant => try self.emitVariant(node),
             .array => |values| {
                 try self.instruction(node.span, .{ .make_record = .{ .ty = node.ty, .fields = values.len } });
                 var i = values.len;
@@ -378,6 +393,8 @@ const Emitter = struct {
                 try self.push(.{ .expression = update.base });
             },
             .field => |field| {
+                const owner = self.program.nodes[@backingInt(field.base)].ty;
+                if (self.program.records[owner.recordIndex()].fields[field.index].boxed) try self.unboxValue(node.span);
                 try self.instruction(node.span, .{ .get_field = field.index });
                 try self.push(.{ .expression = field.base });
             },
@@ -531,13 +548,24 @@ const Emitter = struct {
             },
         }
     }
+    // A variant receives its independent payload before a recursive edge boxes it.
+    fn emitVariant(self: *Emitter, node: typed.Node) !void {
+        const variant = node.data.variant;
+        try self.instruction(node.span, .{ .make_variant = .{ .ty = node.ty, .tag = variant.tag } });
+        const case = self.variantCase(node.ty, variant.tag);
+        if (case.boxed) try self.boxValue(node.span, case.payload.?);
+        if (variant.value) |value| try self.transfer(value, .store, null);
+    }
     /// Push field values in reverse; each is a store into the record, except
     /// that a live dictionary view lends its mapping.
     fn pushFields(self: *Emitter, fields: []const typed.FieldInit, record: typed.Type) !void {
         const lent = value_semantics.isLiveView(self.program.records, record);
+        const schema = self.program.records[record.recordIndex()];
         var i = fields.len;
         while (i > 0) {
             i -= 1;
+            const field = schema.fields[fields[i].index];
+            if (field.boxed) try self.boxValue(self.program.nodes[@backingInt(fields[i].value)].span, field.ty);
             if (lent) try self.push(.{ .expression = fields[i].value }) else try self.transfer(fields[i].value, .store, null);
         }
     }
@@ -554,6 +582,33 @@ const Emitter = struct {
             else => {},
         };
         return index;
+    }
+    /// RECURSIVE-VALUES-2: wrap the value on top of the stack in a fresh box of
+    /// type `box`. The box is a one-field managed record, so building it is
+    /// an ordinary managed construction the collector and arenas already know.
+    fn boxValue(self: *Emitter, span: Span, box: typed.Type) !void {
+        try self.instruction(span, .{ .make_record = .{ .ty = box, .fields = 1 } });
+    }
+    /// Replace the box on top of the stack with the value it holds.
+    fn unboxValue(self: *Emitter, span: Span) !void {
+        try self.instruction(span, .{ .get_field = 0 });
+    }
+    /// The payload case `tag` of union `ty`, as the physical catalog lays it out.
+    fn variantCase(self: *Emitter, ty: typed.Type, tag: usize) typed.Variant {
+        return self.program.records[ty.recordIndex()].shape.variants.?.cases[tag];
+    }
+    /// Whether `?` on a value of `ty` hands on a boxed payload: an `Option`'s
+    /// `Some` or a `Result`'s `Ok` case.
+    fn propagatedBox(self: *Emitter, ty: typed.Type) bool {
+        if (@import("prelude.zig").optionShape(ty, self.program.records)) |shape| return self.variantCase(ty, shape.some).boxed;
+        const shape = typed.resultShape(ty, self.program.records) orelse return false;
+        return self.variantCase(ty, shape.ok_tag).boxed;
+    }
+    /// A hidden local of type `ty` the arm of a boxed payload receives its box in.
+    fn hiddenLocal(self: *Emitter, ty: typed.Type, span: Span) !typed.LocalId {
+        const id: typed.LocalId = @fromBackingInt(self.declared_locals + self.extra_locals.items.len);
+        try self.extra_locals.append(self.scratch, .{ .name = "<box>", .declaration = span, .ty = ty, .mutable = true, .usage = .{ .reads = 1, .temporary = true } });
+        return id;
     }
     fn finish(self: *Emitter, body: typed.StatementId) ![]const bc.Instruction {
         defer self.work.deinit(self.scratch);
@@ -651,8 +706,9 @@ pub fn lower(allocator: std.mem.Allocator, program: typed.Program) LowerError!bc
 }
 
 /// Lower with an explicit `debug` policy: a ReleaseFast build drops the nodes.
-pub fn lowerWith(allocators: Allocators, program: typed.Program, drop_debug: bool) LowerError!bc.Program {
+pub fn lowerWith(allocators: Allocators, checked: typed.Program, drop_debug: bool) LowerError!bc.Program {
     const allocator = allocators.output;
+    const program = try physical(allocator, checked);
     var scratch = std.heap.ArenaAllocator.init(allocators.scratch);
     defer scratch.deinit();
     const functions = try allocator.alloc(bc.Function, program.functions.len);
@@ -675,9 +731,10 @@ pub fn lowerSelected(allocator: std.mem.Allocator, program: typed.Program, selec
 }
 
 /// Selective lowering with an explicit `debug` policy.
-pub fn lowerSelectedWith(allocators: Allocators, program: typed.Program, selected: []const bool, drop_debug: bool) LowerError!bc.Program {
-    if (selected.len != program.functions.len) return error.InternalError;
+pub fn lowerSelectedWith(allocators: Allocators, checked: typed.Program, selected: []const bool, drop_debug: bool) LowerError!bc.Program {
+    if (selected.len != checked.functions.len) return error.InternalError;
     const allocator = allocators.output;
+    const program = try physical(allocator, checked);
     var scratch = std.heap.ArenaAllocator.init(allocators.scratch);
     defer scratch.deinit();
     const functions = try allocator.alloc(bc.Function, program.functions.len);
@@ -690,19 +747,32 @@ pub fn lowerSelectedWith(allocators: Allocators, program: typed.Program, selecte
     return result;
 }
 
+/// The checked program against the physical catalog (RECURSIVE-VALUES-2):
+/// identical unless some schema boxes a recursive field, in which case boxed
+/// fields and cases name their box records and those records are appended.
+fn physical(allocator: std.mem.Allocator, checked: typed.Program) std.mem.Allocator.Error!typed.Program {
+    var program = checked;
+    program.records = try @import("recursive_boxes.zig").physical(allocator, checked.records);
+    return program;
+}
+
 /// LOWER-EXACT-1: the allocator the lowered program lives in, and a freeing
 /// allocator the per-function scratch arena draws from, which holds every
 /// emitter list and validation table and is reset after each function.
 pub const Allocators = struct { output: std.mem.Allocator, scratch: std.mem.Allocator };
 
 fn lowerFunction(allocators: Allocators, program: typed.Program, function: typed.Function, with_body: bool, drop_debug: bool) LowerError!bc.Function {
-    var emitter: Emitter = .{ .allocator = allocators.output, .scratch = allocators.scratch, .program = program, .drop_debug = drop_debug };
+    var emitter: Emitter = .{ .allocator = allocators.output, .scratch = allocators.scratch, .program = program, .drop_debug = drop_debug, .declared_locals = function.scope.locals.len };
     defer emitter.loops.deinit(allocators.scratch);
     var facts: value_semantics.Facts = undefined;
     if (value_semantics.enabled() and with_body and function.policy.host == null) {
         facts = try value_semantics.Facts.collect(allocators.scratch, program, function);
         emitter.values = &facts;
     }
+    defer emitter.extra_locals.deinit(allocators.scratch);
+    const instructions = if (with_body and function.policy.host == null) try emitter.finish(function.scope.body) else &.{};
+    // Hidden locals follow the checked ones, so every checked slot keeps its id.
+    const locals = if (emitter.extra_locals.items.len == 0) function.scope.locals else try std.mem.concat(allocators.output, typed.Local, &.{ function.scope.locals, emitter.extra_locals.items });
     return .{
         .policy = .{
             .host = function.policy.host,
@@ -722,8 +792,8 @@ fn lowerFunction(allocators: Allocators, program: typed.Program, function: typed
             .mutation_facts = function.signature.mutation_facts,
         },
         .scope = .{
-            .locals = function.scope.locals,
-            .instructions = if (with_body and function.policy.host == null) try emitter.finish(function.scope.body) else &.{},
+            .locals = locals,
+            .instructions = instructions,
         },
         .id = function.id,
         .name = function.name,

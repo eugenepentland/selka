@@ -1,14 +1,16 @@
 #include "native_equal.h"
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
-#define WORK_LIMIT 100000u
+/* The pending comparisons live on the heap and grow with the values, so a
+ * list of any length or a recursive value of any depth compares without host
+ * recursion (RECURSIVE-VALUES-3); only running out of memory stops it. */
 typedef struct { const myl_native_type *type; const void *left,*right; } Pair;
 typedef struct { Pair *items; size_t length,capacity; Pair *seen; size_t seen_count,seen_capacity; } Work;
 static int push(Work *work, const myl_native_type *type, const void *left, const void *right) {
-    if (work->length==WORK_LIMIT) return -2;
     if (work->length==work->capacity) {
         size_t capacity=work->capacity?work->capacity*2:32;
-        if (capacity>WORK_LIMIT) capacity=WORK_LIMIT;
+        if (capacity>SIZE_MAX/sizeof(Pair)) return -1;
         Pair *items=realloc(work->items,capacity*sizeof(Pair));
         if (!items) return -1;
         work->items=items; work->capacity=capacity;
@@ -47,9 +49,14 @@ static int managed(Work *work,Pair pair) {
     const void *left,*right;
     memcpy(&left,pair.left,sizeof(left)); memcpy(&right,pair.right,sizeof(right));
     if (!left || !right) return left==right;
+    /* A box (RECURSIVE-VALUES-2) compares the value it holds, even against
+     * itself, so a NaN inside one is unequal exactly as it is inline. Each pair
+     * of boxes is compared once, so values that share subtrees compare in time
+     * proportional to their distinct box pairs rather than their paths. */
     Pair identity={pair.type,left,right};
     int visited=visit(work,identity);
     if (visited<=0) return visited<0?visited:1;
+    if (pair.type->collection_kind==5) return push(work,pair.type->element,left,right);
     if (pair.type->collection_kind==3) {
         const myl_native_dictionary *a=left,*b=right;
         if (myl_native_dictionary_length(a)!=myl_native_dictionary_length(b)) return 0;
@@ -114,9 +121,7 @@ static int compare(Work *work,Pair pair) {
 int myl_native_equal(const myl_native_type *type,const void *left,const void *right) {
     Work work={0};
     int status=push(&work,type,left,right);
-    size_t count=0;
     while (status>0 && work.length) {
-        if (++count>WORK_LIMIT) { status=-2; break; }
         Pair pair=work.items[--work.length];
         status=compare(&work,pair);
     }

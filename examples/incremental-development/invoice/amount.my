@@ -1,5 +1,4 @@
 module amount
 
-
 public def total() -> int effects():
     return 42

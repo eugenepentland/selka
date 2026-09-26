@@ -14,7 +14,9 @@ const Checker = struct {
         var move_only = schema.shape.resource != null;
         if (schema.shape.variants) |variants| {
             requires_handling = variants.fallible;
-            for (variants.cases) |case| if (case.payload) |payload| {
+            // A boxed payload is a shared managed reference, like a list element;
+            // `boxedContents` holds its value to the list rules.
+            for (variants.cases) |case| if (case.payload) |payload| if (!case.boxed) {
                 requires_handling = requires_handling or typed.requiresHandling(payload, records);
                 can_store = can_store and typed.storable(payload, records);
                 move_only = move_only or typed.moveOnly(payload, records);
@@ -24,11 +26,11 @@ const Checker = struct {
             can_store = can_store and (array.length == 0 or typed.storable(array.element, records));
             move_only = array.length != 0 and typed.moveOnly(array.element, records);
         } else if (!schema.managed) {
-            for (schema.fields) |field| {
+            for (schema.fields) |field| if (!field.boxed) {
                 requires_handling = requires_handling or typed.requiresHandling(field.ty, records);
                 can_store = can_store and typed.storable(field.ty, records);
                 move_only = move_only or typed.moveOnly(field.ty, records);
-            }
+            };
         }
         records[record_index].contract.storable = can_store and !requires_handling;
         records[record_index].contract.move_only = move_only;
@@ -67,6 +69,7 @@ const Checker = struct {
                     .name = v.cases[visit.next_field].name,
                     .ty = v.cases[visit.next_field].payload orelse continue,
                     .declaration = v.cases[visit.next_field].declaration,
+                    .boxed = v.cases[visit.next_field].boxed,
                 } else if (schema.shape.array) |a| .{
                     .name = "element",
                     .ty = a.element,
@@ -76,9 +79,10 @@ const Checker = struct {
                     .ty = element,
                     .declaration = schema.declaration,
                 } else schema.fields[visit.next_field];
-                if (!field.ty.isAggregate()) continue;
+                // A boxed edge is a pointer, so it adds nothing to the layout.
+                if (!field.ty.isAggregate() or field.boxed) continue;
                 const child = field.ty.recordIndex();
-                if (states[child] == .visiting) return sink.fail("E_RECURSIVE_RECORD", field.declaration, "record fields must form a finite by-value layout; this field closes a cycle");
+                if (states[child] == .visiting) return sink.fail(diagnostic.recursive_record, field.declaration, "record fields must form a finite by-value layout; this field closes a cycle");
                 if (states[child] == .unseen) {
                     states[child] = .visiting;
                     try work.append(allocator, .{ .record = child });
@@ -101,9 +105,27 @@ pub fn validate(allocator: std.mem.Allocator, records: []typed.Record, sink: *di
     for (records) |schema| if (schema.isCollection()) {
         if (carries(schema.shape.buffer.?, capabilities, true)) return sink.fail("E_LIST_CAPABILITY", schema.declaration, "managed list elements cannot contain allocator or provider capabilities");
     };
+    try boxedContents(records, capabilities, sink);
     try @import("cell_types.zig").validate(allocator, records, sink);
 }
 
+/// RECURSIVE-VALUES-2: a boxed value is shared by every copy of its holder,
+/// exactly as a list element is, so it obeys the list element rules: no owned
+/// resource, no pending result obligation and no capability.
+fn boxedContents(records: []const typed.Record, capabilities: []const bool, sink: *diagnostic.Sink) Error!void {
+    for (records) |schema| {
+        if (schema.shape.variants) |variants| for (variants.cases) |case| {
+            if (case.boxed) try boxedContent(records, capabilities, case.payload.?, case.declaration, sink);
+        };
+        for (schema.fields) |field| if (field.boxed) try boxedContent(records, capabilities, field.ty, field.declaration, sink);
+    }
+}
+fn boxedContent(records: []const typed.Record, capabilities: []const bool, ty: typed.Type, declaration: @import("source.zig").Span, sink: *diagnostic.Sink) Error!void {
+    if (!typed.storable(ty, records) or typed.moveOnly(ty, records) or typed.requiresHandling(ty, records))
+        return sink.fail(diagnostic.recursive_record, declaration, "a recursive value type is shared through immutable boxes, so it cannot hold an owned resource or an unhandled result");
+    if (carries(ty, capabilities, true))
+        return sink.fail(diagnostic.recursive_record, declaration, "a recursive value type is shared through immutable boxes, so it cannot hold a capability");
+}
 fn carries(ty: typed.Type, contains: []const bool, capability: bool) bool {
     if (capability and ty.capabilityIndex() != null) return true;
     return ty.isAggregate() and contains[ty.recordIndex()];
@@ -127,10 +149,15 @@ fn dependencies(allocator: std.mem.Allocator, records: []const typed.Record, cap
 fn recordCarries(schema: typed.Record, flags: []const bool, capability: bool) bool {
     if (schema.shape.array) |array| if (carries(array.element, flags, capability)) return true;
     if (schema.shape.domain) |domain| if (carries(domain, flags, capability)) return true;
+    // A boxed field or case holds a managed reference itself (RECURSIVE-VALUES-2).
     if (schema.shape.variants) |variants| for (variants.cases) |case| {
+        if (case.boxed and !capability) return true;
         if (case.payload) |payload| if (carries(payload, flags, capability)) return true;
     };
-    for (schema.fields) |field| if (carries(field.ty, flags, capability)) return true;
+    for (schema.fields) |field| {
+        if (field.boxed and !capability) return true;
+        if (carries(field.ty, flags, capability)) return true;
+    }
     return false;
 }
 

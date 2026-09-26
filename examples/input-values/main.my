@@ -1,7 +1,6 @@
 module main
 import config.values as inputs
 
-
 def main() -> int:
     if inputs.enabled():
         return int(inputs.batch_size())
