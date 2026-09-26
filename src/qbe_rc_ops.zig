@@ -51,10 +51,16 @@ pub fn callEntry(comptime E: type, self: *E, callee: bytecode.Function, base: us
 fn origin(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "op")) values.Origin {
     return switch (op) {
         .get_field => .borrowed,
+        .cast_integer => |ty| identityCast(E, self, ty),
         .get_index => |access| if (self.program.records[access.ty.recordIndex()].collection.kind == .string) .owned else .borrowed,
         .make_record => |record| if (self.program.records[record.ty.recordIndex()].managed) .owned else .borrowed,
         .make_variant, .update_record, .replace_index => .borrowed,
         .buffer_operation => |operation| @import("qbe_rc_collections.zig").resultOrigin(self.program.records[self.function.scope.locals[@backingInt(operation.owner)].ty.recordIndex()].collection.kind, operation.kind),
         else => .owned,
     };
+}
+
+fn identityCast(comptime E: type, self: *E, ty: typed.Type) values.Origin {
+    const stack = self.states[self.pc] orelse return .owned;
+    return if (stack.len != 0 and stack[stack.len - 1] == ty) .borrowed else .owned;
 }

@@ -26,3 +26,19 @@ Validation used a Debug compiler, SHA-256
 This is an integration slice. Nested receiver write-back, held/pinned callback
 scopes, aggregate construction and branch cleanup still require RC lowering and
 broader guest validation before WP-4 acceptance.
+
+The following field slice uses the same typed transaction for owned list elements,
+dictionary values, and record/box path edges. The compiler receiver local borrows
+the prepared parent edge instead of manufacturing a second snapshot owner. The
+root/parent lifetime remains live through the mutation. Identity casts are also
+classified as borrowed results: an identity text cast does not return a fresh
+runtime owner.
+
+The follow-up Debug compiler has SHA-256
+`30a6b2aa75668cda6538d169505096a57504402aa65ac983a54c8bda4ff739d5`.
+All eight ownership guests passed freshly on QBE Debug and LLVM ReleaseFast in
+counting mode, including independent outer/child snapshots of nested lists and
+nested dictionary values. A separate `str(parts[0])` probe retained its text after
+replacing the list on both backends. The focused lowering tests passed (two named
+plus 11 unconditional blocks), and whole-tree Guardian passed 88 checks. Callback
+receiver scopes remain the next integration step.

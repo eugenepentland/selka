@@ -662,3 +662,22 @@ test "RC-UNIQUE-LOWER-1 mutations use typed owner counts inside loops" {
     try t.expect(std.mem.indexOf(u8, text, "call $myl_native_cow_unique") == null);
     try t.expect(std.mem.indexOf(u8, text, "@ce") == null);
 }
+
+// spec-case: RC-UNIQUE-LOWER-1
+test "RC-UNIQUE-LOWER-1 nested receiver replaces its owned field before borrowing" {
+    const mode = @import("runtime_mode.zig");
+    const saved = mode.get();
+    defer mode.set(saved);
+    mode.set(.rc);
+    var result = try lowered(
+        \\def main() -> int:
+        \\    original = [[1, 2]]
+        \\    changed = original
+        \\    changed[0].append(3)
+        \\    return len(original[0])
+    );
+    defer result.deinit();
+    const text = try functionText(result.value, "main");
+    try t.expect(std.mem.indexOf(u8, text, "call $myl_qbe_rc_unique_field") != null);
+    try t.expect(std.mem.indexOf(u8, text, "call $myl_native_cow_unique") == null);
+}
