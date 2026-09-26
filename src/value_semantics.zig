@@ -10,9 +10,9 @@
 //! Lowering (`lower.zig`) puts one `value_copy` instruction after every value
 //! that moves to a second home and is not fresh; the ownership analysis
 //! (`ownership_values.zig`) decides which of them are moves or borrows and so
-//! emit nothing; the native emitter lowers the rest through the one runtime
-//! entry `myl_qbe_value_copy` (`qbe_value_copy.zig`, `native_value_copy.c`).
-//! Stage 3b replaces that entry with copy-on-write. `class` and `Cell` stay
+//! emit nothing; the native emitter lowers the rest through the one rooted
+//! copy-on-write transfer entry `myl_qbe_cow_transfer` (`qbe_value_copy.zig`,
+//! `qbe_cow_runtime.c`). `class` and `Cell` stay
 //! shared references, and `str`/`bytes` are immutable and shared.
 const std = @import("std");
 const typed = @import("typed.zig");
@@ -60,6 +60,9 @@ fn needsCopyDepth(records: []const typed.Record, ty: typed.Type, depth: usize) b
     if (depth > 48) return true;
     const record = records[ty.recordIndex()];
     if (record.managed) {
+        // A physical recursive box is immutable, but its one body field can
+        // still reach a mutable collection that a transfer must share.
+        if (record.collection.box) return record.fields.len == 1 and needsCopyDepth(records, record.fields[0].ty, depth + 1);
         if (!record.isCollection()) return false;
         return switch (record.collection.kind) {
             .list, .dictionary => true,
@@ -104,6 +107,7 @@ fn copiesAllDepth(records: []const typed.Record, ty: typed.Type, depth: usize) b
     if (depth > 48) return false;
     const record = records[ty.recordIndex()];
     if (record.managed) {
+        if (record.collection.box) return record.fields.len == 1 and copiesAllDepth(records, record.fields[0].ty, depth + 1);
         if (!record.isCollection()) return false;
         if (record.collection.kind == .string or record.collection.kind == .bytes) return true;
         if (record.collection.key) |key| if (!copiesAllDepth(records, key, depth + 1)) return false;

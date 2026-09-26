@@ -1,0 +1,43 @@
+module recursive
+
+
+record Branch:
+    items: list[int]
+    next: Option[Branch]
+
+
+def leaf(value: int) -> Branch:
+    return Branch(items=[value], next=None)
+
+
+# spec-case: COW-NESTED-1
+public def test_a_copied_recursive_box_shares_and_separates_nested_lists() -> bool:
+    original = Branch(items=[0], next=Some(leaf(1)))
+    changed = original
+    child = changed.next
+    if child is not None:
+        child.items.append(2)
+    changed.next = child
+    old_child = original.next
+    new_child = changed.next
+    if old_child is None or new_child is None:
+        return False
+    return original.items == [0] and changed.items == [0] and old_child.items == [1] and new_child.items == [1, 2]
+
+
+# spec-case: COW-NESTED-1
+public def test_a_boxed_collection_survives_arena_escape() -> bool:
+    original = Branch(items=[0], next=Some(leaf(1)))
+    kept = original
+    with arena() as scratch:
+        local = original
+        child = local.next
+        if child is not None:
+            child.items.append(3)
+        local.next = child
+        kept = scratch.escape(local)
+    old_child = original.next
+    new_child = kept.next
+    if old_child is None or new_child is None:
+        return False
+    return old_child.items == [1] and new_child.items == [1, 3]

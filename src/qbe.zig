@@ -6,6 +6,7 @@ const arena_lower = @import("qbe_arena.zig");
 const borrow_lower = @import("qbe_borrow.zig");
 const liveness = @import("qbe_liveness.zig");
 const ownership = @import("ownership.zig");
+const cow_lower = @import("qbe_cow.zig");
 const moves_module = @import("qbe_moves.zig");
 const range_keys = @import("qbe_range_keys.zig");
 const loop_facts = @import("qbe_loop_facts.zig");
@@ -269,6 +270,9 @@ fn generateImpl(allocator: std.mem.Allocator, program_in: bytecode.Program, src:
         .step_checks = interface.policy.step_checks,
         .frame_checks = interface.policy.frame_checks,
         .pure = &.{},
+        // COW-UNIQUE-1: the value-semantics switch enables the checks by
+        // default; an explicit internal policy can request counting.
+        .cow = if (interface.policy.cow != .off) interface.policy.cow else if (@import("value_semantics.zig").enabled()) .checks else .off,
     };
     var reuse: Reuse = try .init(a, pass, interface.reuse);
     try runPasses(&pass, &reuse, src, standins, shape.lean);
@@ -603,6 +607,8 @@ const EmitPass = struct {
     /// Whether generated code enforces the `--max-frames` ceiling itself.
     frame_checks: bool,
     pure: []const bool,
+    /// The copy-on-write code every unit carries (`COW-UNIQUE-1`).
+    cow: @import("native_interface.zig").Cow = .off,
 };
 
 /// Lower one function into text allocated from `scratch`, with the pass's
@@ -622,6 +628,7 @@ fn emitOne(pass: EmitPass, index: usize, scratch: std.mem.Allocator) GenerateErr
         .frame_checks = pass.frame_checks,
         .entry = index == @backingInt(pass.program.main),
         .pure = pass.pure,
+        .cow = if (pass.cow == .off) null else try cow_lower.request(scratch, pass.cow == .counting),
     };
     const text = try emitter.emit(pass.units[index].symbol);
     return .{ .text = text, .states = emitter.states };
@@ -1087,6 +1094,7 @@ fn flagsOf(pass: EmitPass, index: usize) fragments.Flags {
         .frame_checks = pass.frame_checks,
         .arenas = pass.arenas,
         .entry = index == @backingInt(pass.program.main),
+        .cow = pass.cow,
     };
 }
 
@@ -1435,6 +1443,9 @@ const Emitter = struct {
     /// Set while the original copy of a versioned loop is being lowered, whose
     /// header label the guard took.
     original: ?*const loop_facts.Loop = null,
+    /// The copy-on-write plan of this function, when the build emits one
+    /// (`COW-UNIQUE-1`).
+    cow: ?*cow_lower.State = null,
 
     /// Shared lowering primitive for target operation emitters.
     pub fn reject(self: *Emitter, pc: usize) GenerateError {
@@ -1577,6 +1588,7 @@ const Emitter = struct {
         // anything to prove, and step accounting counts every instruction the
         // original executes, so a counted build keeps one copy.
         if (self.checks and !self.step_checks) self.loop_plan = try loop_facts.plan(self.allocator, .{ .program = self.program, .function = f, .states = self.states });
+        if (self.cow) |state| try cow_lower.Lower(Emitter).veto(self, state);
         try self.findRoots();
         if (self.has_roots and self.has_safepoints) self.live_roots = try self.rootLiveness();
         const capacity = ir.stack_capacity;
@@ -1607,6 +1619,9 @@ const Emitter = struct {
             error.OutOfMemory => return error.OutOfMemory,
             error.InternalError => return error.InternalError,
         };
+        // COW-UNIQUE-1: the checks come before the copies and roots planned
+        // around them, which must allow for every slot a check redirects.
+        if (self.cow) |state| try cow_lower.Lower(Emitter).plan(self, state);
         self.moves = try moves_module.Lower(Emitter).plan(self);
         self.coverage = try @import("qbe_cover.zig").Lower(Emitter).plan(self);
     }
@@ -1717,6 +1732,8 @@ const Emitter = struct {
             if (self.states[pc] == null) continue;
             self.has_safepoints = self.has_safepoints or allocates(instruction.op);
         }
+        // COW-UNIQUE-1: every copy a check or share makes is an allocation.
+        if (self.cow) |state| self.has_safepoints = self.has_safepoints or state.plan.active();
     }
     const frame_lower = frame_module.Lower(Emitter);
     pub const abiStackBytes = frame_lower.abiStackBytes;
@@ -1979,6 +1996,8 @@ const Emitter = struct {
     fn emitInstructions(self: *Emitter) GenerateError!void {
         for (0..self.function.scope.instructions.len) |pc| {
             if (self.states[pc] == null) continue;
+            // COW-HOIST-1: the checks a loop's entry edges run come first.
+            try cow_lower.Lower(Emitter).entry(self, pc);
             // QBE-LOOP-VERSION-1: a versioned loop's guard and check-free copy
             // go in front of its header; the original follows unchanged.
             if (self.loop_plan.at(pc)) |loop| {
@@ -1995,6 +2014,7 @@ const Emitter = struct {
     /// copy the header is the original's (the guard took the ordinary label),
     /// and everything else is the ordinary instruction label.
     pub fn labelPrefix(self: *const Emitter, target: usize) []const u8 {
+        if (cow_lower.Lower(Emitter).enters(self, target)) return "ce";
         if (self.version) |active| {
             if (target >= active.loop.head and target <= active.loop.back) return "fi";
         } else if (self.original) |loop| {
@@ -2061,6 +2081,7 @@ const Emitter = struct {
             try self.headerLabel(pc, own);
             if (self.step_checks) try self.step();
             self.pc = pc;
+            try cow_lower.Lower(Emitter).before(self, pc, stack);
             self.expireFusedDecode(pc);
             // QBE-LOOP-VERSION-1: an instruction whose guards the loop's own
             // guard proved is lowered without them.
@@ -2449,8 +2470,11 @@ const Emitter = struct {
         const packed_args = try self.packedParameters(callee);
         for (args, 0..) |*arg, i| {
             arg.* = try self.load("s", h - count + i);
-            if (packed_args) try self.packArgument(i, arg.*);
         }
+        // COW-PIN-1: a list or dictionary a `mut` parameter receives stays
+        // unshared until the call returns.
+        const pins = try cow_lower.Lower(Emitter).pin(self, callee, args, h - count);
+        if (packed_args) for (args, 0..) |arg, i| try self.packArgument(i, arg);
         const v = self.temp();
         try self.print(" %v{d} ={s} call ${s}(l %ctx", .{ v, try self.returnType(callee), self.units[@backingInt(target)].symbol });
         const indirect = try self.largeResult(callee);
@@ -2461,6 +2485,7 @@ const Emitter = struct {
             for (args, callee.scope.locals[0..callee.signature.parameter_count]) |arg, local| try self.print(", {s} %v{d}", .{ try self.parameterType(local), arg });
         }
         try self.print(")\n", .{});
+        try cow_lower.Lower(Emitter).unpin(self, pins);
         if (indirect) try self.print(" storel %aux{d}, %s{d}\n", .{ self.pc, h - count }) else try self.store(h - count, v);
     }
     /// Lower `store_local` of operand slot `h - 1` into local `slot`.

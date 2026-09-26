@@ -42,6 +42,18 @@ int myl_native_list_sort(myl_native_list *, unsigned order);
    refused; the key list's contents are consumed either way. */
 int myl_native_list_sort_keyed(myl_native_list *values, myl_native_list *source, myl_native_list *keys, uint64_t shape, uint64_t offsets, uint64_t reverse);
 myl_native_list *myl_native_list_copy(myl_native_heap *, const myl_native_list *input);
+/* Whether `payload` is a list header — a `list`, `bytes` or `byte_buffer` whose
+ * storage it owns, not a byte-string view — read from its object header. */
+int myl_native_list_header(const void *payload);
+/* A fresh header and private storage holding `input`'s elements, both
+ * allocated at arena depth `region` (COW-UNIQUE-1). `element` describes the
+ * copy's elements and becomes its storage block's descriptor: `input`'s own
+ * for a list, the new dictionary's entry type for a dictionary's entry list.
+ * The capacity is `input`'s own, or its length when a published snapshot
+ * shares its block, so a write right after the copy does not grow it again.
+ * The copy's copy-on-write flags are clear; nothing inside the elements is
+ * marked. NULL on refusal. */
+myl_native_list *myl_native_list_clone_at(myl_native_heap *, const myl_native_list *input, const myl_native_type *element, unsigned region);
 /* `values[start:stop:step]` endpoints. An omitted endpoint arrives as one of
  * these sentinels, which no source expression can spell. */
 #define MYL_NATIVE_SLICE_FIRST INT64_MIN
