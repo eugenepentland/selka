@@ -11,6 +11,7 @@ const liveness = @import("qbe_liveness.zig");
 const native_ir = @import("native_ir.zig");
 const native_types = @import("native_types.zig");
 const ownership = @import("ownership.zig");
+const typed = @import("typed.zig");
 
 /// Failures of rendering the explanation.
 pub const Error = error{ InternalError, OutOfMemory };
@@ -54,6 +55,10 @@ fn writeFunction(w: *std.Io.Writer, function: bytecode.Function, analysis: owner
     try json.beginObject();
     try json.objectField("function");
     try json.write(function.name);
+    try json.objectField("return_origin");
+    try writeOrigin(&json, function.signature.return_origin);
+    try json.objectField("borrow_origin");
+    try writeOrigin(&json, function.signature.inferred.borrow_origin);
     try json.objectField("locals");
     try json.beginArray();
     for (analysis.roles, 0..) |role, index| {
@@ -97,6 +102,18 @@ fn writeFunction(w: *std.Io.Writer, function: bytecode.Function, analysis: owner
     }
     try json.endObject();
     try w.writeByte('\n');
+}
+
+fn writeOrigin(json: *std.json.Stringify, origin: typed.ReturnOrigin) std.Io.Writer.Error!void {
+    try json.beginObject();
+    try json.objectField("kind");
+    try json.write(@tagName(origin));
+    try json.objectField("params");
+    switch (origin) {
+        .params => |positions| try json.write(positions),
+        else => try json.write(&[_]u16{}),
+    }
+    try json.endObject();
 }
 
 fn writeCopy(json: *std.json.Stringify, pc: usize, site: bytecode.CopySite, copies: bool) std.Io.Writer.Error!void {

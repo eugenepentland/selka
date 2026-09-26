@@ -27,7 +27,7 @@ const owned = @import("semantic_entry.zig");
 const cache_key = @import("cache_key.zig");
 
 /// On-disk format version. Bump for any layout, tag or validation change.
-pub const format_version = "semantic-cache-v2";
+pub const format_version = "semantic-cache-v3";
 /// Default root for ordinary one-shot commands; `--cache-dir=DIR` maps to
 /// `DIR/semantic` through the same shared cache-root option.
 pub const default_directory = ".mylang-cache/semantic";

@@ -227,11 +227,11 @@ test "M1 direct input writes carry mutation facts while reads do not" {
         if (std.mem.eql(u8, function.name, "touch")) {
             touch_found = true;
             try t.expectEqualSlices(u16, &.{0}, function.signature.mutates);
-            try t.expect(function.signature.mutation_facts.writes);
+            try t.expect(function.signature.inferred.writes);
         } else if (std.mem.eql(u8, function.name, "peek")) {
             peek_found = true;
             try t.expectEqual(@as(usize, 0), function.signature.mutates.len);
-            try t.expect(!function.signature.mutation_facts.writes);
+            try t.expect(!function.signature.inferred.writes);
         }
     }
     try t.expect(touch_found and peek_found);
@@ -255,7 +255,7 @@ test "M1 mutates clause parses normalizes and publishes checked metadata" {
         found = true;
         try t.expectEqualSlices(u16, &.{0}, function.signature.mutates);
         try t.expectEqualSlices(u16, &.{0}, function.signature.declared_mutates);
-        try t.expect(function.signature.mutation_facts.writes);
+        try t.expect(function.signature.inferred.writes);
         try t.expect((function.policy.effect_bound.?.allowed & sets.bit(.mutation)) != 0);
     }
     try t.expect(found);
@@ -515,7 +515,7 @@ test "M1 callback body carries its direct mutation fact" {
         if (!std.mem.startsWith(u8, function.name, "lambda@")) continue;
         found = true;
         try t.expectEqualSlices(u16, &.{0}, function.signature.mutates);
-        try t.expect(function.signature.mutation_facts.writes);
+        try t.expect(function.signature.inferred.writes);
     }
     try t.expect(found);
 }
@@ -566,7 +566,7 @@ test "M1 forged or missing IR mutation summaries reject" {
     var forged = false;
     for (@constCast(program.functions)) |*function| {
         if (!std.mem.eql(u8, function.name, "touch")) continue;
-        function.signature.mutation_facts = .{};
+        function.signature.inferred = .{};
         function.signature.mutates = &.{};
         forged = true;
     }
@@ -691,7 +691,7 @@ test "legacy sharing: M1 every managed write form contributes a mutation fact" {
         for (c.program.?.functions) |function| {
             if (!std.mem.eql(u8, function.name, name)) continue;
             found = true;
-            try t.expect(function.signature.mutation_facts.writes);
+            try t.expect(function.signature.inferred.writes);
             try t.expectEqualSlices(u16, &.{0}, function.signature.mutates);
         }
         try t.expect(found);

@@ -69,6 +69,7 @@ pub const Origin = struct {
 /// Inferred transitive facts for one checked function.
 pub const Summary = struct {
     return_origin: Origin = .{},
+    borrow_origin: Origin = .{},
     /// Positions of this function's parameters it may write (transitively).
     mutates: u16 = 0,
     /// A write target's origin could not be attributed to a parameter position.
@@ -77,11 +78,12 @@ pub const Summary = struct {
     writes: bool = false,
     /// A managed write that is not proven to target definitely fresh storage.
     external: bool = false,
-    /// First located external write, used for diagnostics.
-    witness: ?source.Span = null,
-    /// First located write that reaches a parameter the signature does not
-    /// declare `mut`, where the missing-marker diagnostic points.
-    undeclared_witness: ?source.Span = null,
+    witnesses: struct {
+        /// First located external write, used for diagnostics.
+        external: ?source.Span = null,
+        /// First write reaching a parameter not declared `mut`.
+        undeclared: ?source.Span = null,
+    } = .{},
 };
 
 /// One function's cross-function facts as the effect and mutation passes infer
@@ -98,12 +100,15 @@ pub fn standIn(stubs: []const ?Fact, index: usize) ?Fact {
 fn mergeSummaries(a: Summary, b: Summary) Summary {
     return .{
         .return_origin = Origin.merge(a.return_origin, b.return_origin),
+        .borrow_origin = Origin.merge(a.borrow_origin, b.borrow_origin),
         .mutates = a.mutates | b.mutates,
         .mutates_unknown = a.mutates_unknown or b.mutates_unknown,
         .writes = a.writes or b.writes,
         .external = a.external or b.external,
-        .witness = a.witness orelse b.witness,
-        .undeclared_witness = a.undeclared_witness orelse b.undeclared_witness,
+        .witnesses = .{
+            .external = a.witnesses.external orelse b.witnesses.external,
+            .undeclared = a.witnesses.undeclared orelse b.witnesses.undeclared,
+        },
     };
 }
 
@@ -112,13 +117,41 @@ fn mergeSummaries(a: Summary, b: Summary) Summary {
 pub fn sameSummary(a: Summary, b: Summary) bool {
     return a.mutates == b.mutates and a.mutates_unknown == b.mutates_unknown and
         a.writes == b.writes and a.external == b.external and
-        a.return_origin.positions == b.return_origin.positions and a.return_origin.unknown == b.return_origin.unknown;
+        a.return_origin.positions == b.return_origin.positions and a.return_origin.unknown == b.return_origin.unknown and
+        a.borrow_origin.positions == b.borrow_origin.positions and a.borrow_origin.unknown == b.borrow_origin.unknown;
 }
 
 /// Whether a value of `ty` may reach managed storage another value could share.
 pub fn mayContainManaged(program: typed.Program, ty: typed.Type) bool {
     var path: [64]typed.Type = undefined;
     return mayContainManagedDepth(program, ty, &path, 0);
+}
+
+/// Whether the value physically holds managed backing, including immutable
+/// text and bytes that still cost a reference-count transfer. A recursive
+/// type repeats only through a box; that pointer itself is retained backing.
+fn mayContainRetained(program: typed.Program, ty: typed.Type) bool {
+    var path: [64]typed.Type = undefined;
+    return retainedDepth(program, ty, &path, 0);
+}
+
+fn retainedDepth(program: typed.Program, ty: typed.Type, path: *[64]typed.Type, depth: usize) bool {
+    if (!ty.isAggregate()) return false;
+    const index = ty.recordIndex();
+    if (index >= program.records.len or depth == path.len) return true;
+    for (path[0..depth]) |seen| if (seen == ty) return false;
+    path[depth] = ty;
+    const record = program.records[index];
+    if (record.managed) return true;
+    if (record.shape.array) |array| if (retainedDepth(program, array.element, path, depth + 1)) return true;
+    if (record.shape.variants) |variants| for (variants.cases) |case| {
+        if (case.boxed) return true;
+        if (case.payload) |payload| if (retainedDepth(program, payload, path, depth + 1)) return true;
+    };
+    for (record.fields) |field| {
+        if (field.boxed or retainedDepth(program, field.ty, path, depth + 1)) return true;
+    }
+    return false;
 }
 
 /// `path` holds the types on the current walk: a recursive value type reaches
@@ -246,7 +279,7 @@ fn bindStatement(context: *const Context, function: typed.Function, origins: []O
     switch (statement.data) {
         .initialize, .assign => |store| {
             // VALUE-SEMANTICS-4: a named local receives its own copy.
-            if (copiedHome(context.program, function, store.slot)) return false;
+            if (!context.physical and copiedHome(context.program, function, store.slot)) return false;
             const value = context.nodeOrigin(function, origins, store.value, depth);
             return widen(origins, @backingInt(store.slot), value);
         },
@@ -256,7 +289,7 @@ fn bindStatement(context: *const Context, function: typed.Function, origins: []O
                 const slot = arm.slot orelse continue;
                 const index = @backingInt(slot);
                 if (index >= function.scope.locals.len) continue;
-                if (copiedHome(context.program, function, slot)) continue;
+                if (!context.physical and copiedHome(context.program, function, slot)) continue;
                 const payload = function.scope.locals[index].ty;
                 if (widen(origins, index, context.childIfManaged(payload, function, origins, matched.value, depth))) grew = true;
             }
@@ -290,6 +323,11 @@ const Context = struct {
     allocator: std.mem.Allocator,
     program: typed.Program,
     summaries: []const Summary,
+    physical: bool = false,
+
+    fn tracks(self: *const Context, ty: typed.Type) bool {
+        return if (self.physical) mayContainRetained(self.program, ty) else mayContainManaged(self.program, ty);
+    }
 
     /// Resolve the origin of one checked expression under the current local origins.
     fn nodeOrigin(self: *const Context, function: typed.Function, origins: []const Origin, node_id: typed.NodeId, depth: usize) Origin {
@@ -304,7 +342,7 @@ const Context = struct {
             .restrict_resource => |restrict| self.childIfManaged(node.ty, function, origins, restrict.value, depth),
             .unwrap => |value| self.childIfManaged(node.ty, function, origins, value, depth),
             .propagate => |propagate| self.nodeOrigin(function, origins, propagate.value, depth + 1),
-            .block_value => |block| if (mayContainManaged(self.program, node.ty)) self.blockValueOrigin(function, origins, block, depth + 1) else Origin{},
+            .block_value => |block| if (self.tracks(node.ty)) self.blockValueOrigin(function, origins, block, depth + 1) else Origin{},
             .variant => |variant| self.variantOrigin(node.ty, function, origins, variant.value, depth),
             .array => |values| self.mergeValues(function, origins, values, depth),
             .record => |fields| self.mergeFields(function, origins, fields, depth),
@@ -344,7 +382,7 @@ const Context = struct {
         // like `bytes` but keeps writable storage, so a write through it belongs
         // to whoever owns the buffer. A read-only `str`, `bytes` or scalar-only
         // record carries no origin because nothing can be written through it.
-        if (!typed.carriesWritableStorage(self.program.records, ty)) return Origin{};
+        if (if (self.physical) !self.tracks(ty) else !typed.carriesWritableStorage(self.program.records, ty)) return Origin{};
         return self.nodeOrigin(function, origins, base, depth + 1);
     }
 
@@ -356,7 +394,7 @@ const Context = struct {
     fn updateOrigin(self: *const Context, ty: typed.Type, function: typed.Function, origins: []const Origin, update: @FieldType(@FieldType(typed.Node, "data"), "update"), depth: usize) Origin {
         var origin = self.childIfManaged(ty, function, origins, update.base, depth);
         for (update.fields) |field| {
-            if (!mayContainManaged(self.program, self.program.nodes[@backingInt(field.value)].ty)) continue;
+            if (!self.tracks(self.program.nodes[@backingInt(field.value)].ty)) continue;
             origin = Origin.merge(origin, self.nodeOrigin(function, origins, field.value, depth + 1));
         }
         return origin;
@@ -368,7 +406,7 @@ const Context = struct {
     }
 
     fn bufferOrigin(self: *const Context, ty: typed.Type, function: typed.Function, origins: []const Origin, operation: @FieldType(@FieldType(typed.Node, "data"), "buffer_operation")) Origin {
-        if (!mayContainManaged(self.program, ty)) return Origin{};
+        if (!self.tracks(ty)) return Origin{};
         const owner = self.localOrigin(function, origins, operation.owner);
         if (operation.kind == .copy and !self.ownerElementManaged(function, operation.owner)) return Origin{};
         return owner;
@@ -376,6 +414,7 @@ const Context = struct {
 
     fn invokeOrigin(self: *const Context, function: typed.Function, origins: []const Origin, invoke: @FieldType(@FieldType(typed.Node, "data"), "invoke"), depth: usize) Origin {
         const signature = callables.signature(self.program.nodes[@backingInt(invoke.callee)].ty, self.program.records) orelse return .{ .unknown = true };
+        if (self.physical) return .{ .unknown = true };
         return self.substituteOrigin(function, origins, originFromBound(signature.return_origin), invoke.arguments, depth + 1);
     }
 
@@ -389,6 +428,12 @@ const Context = struct {
     fn ownerElementManaged(self: *const Context, function: typed.Function, slot: typed.LocalId) bool {
         const index = @backingInt(slot);
         if (index >= function.scope.locals.len) return true;
+        if (self.physical) {
+            const ty = function.scope.locals[index].ty;
+            if (!ty.isAggregate() or ty.recordIndex() >= self.program.records.len) return true;
+            const element = self.program.records[ty.recordIndex()].shape.buffer orelse return true;
+            return self.tracks(element);
+        }
         return managedElement(self.program, function.scope.locals[index].ty);
     }
 
@@ -405,7 +450,7 @@ const Context = struct {
     fn mergeValues(self: *const Context, function: typed.Function, origins: []const Origin, values: []const typed.NodeId, depth: usize) Origin {
         var origin = Origin{};
         for (values) |value| {
-            if (!mayContainManaged(self.program, self.program.nodes[@backingInt(value)].ty)) continue;
+            if (!self.tracks(self.program.nodes[@backingInt(value)].ty)) continue;
             origin = Origin.merge(origin, self.nodeOrigin(function, origins, value, depth + 1));
         }
         return origin;
@@ -414,7 +459,7 @@ const Context = struct {
     fn mergeFields(self: *const Context, function: typed.Function, origins: []const Origin, fields: []const typed.FieldInit, depth: usize) Origin {
         var origin = Origin{};
         for (fields) |field| {
-            if (!mayContainManaged(self.program, self.program.nodes[@backingInt(field.value)].ty)) continue;
+            if (!self.tracks(self.program.nodes[@backingInt(field.value)].ty)) continue;
             origin = Origin.merge(origin, self.nodeOrigin(function, origins, field.value, depth + 1));
         }
         return origin;
@@ -455,7 +500,8 @@ const Context = struct {
     fn callResultOrigin(self: *const Context, function: typed.Function, origins: []const Origin, callee: typed.FunctionId, arguments: []const typed.NodeId, depth: usize) Origin {
         const index = @backingInt(callee);
         if (index >= self.summaries.len) return .{ .unknown = true };
-        return self.substituteOrigin(function, origins, self.summaries[index].return_origin, arguments, depth + 1);
+        const bound = if (self.physical) self.summaries[index].borrow_origin else self.summaries[index].return_origin;
+        return self.substituteOrigin(function, origins, bound, arguments, depth + 1);
     }
 };
 
@@ -486,9 +532,9 @@ const WriteSite = struct {
     /// signature does not declare `mut`, so a missing-marker diagnostic points
     /// at a write that needs the marker rather than at an allowed one.
     fn witness(self: WriteSite, positions: u16, span: source.Span) void {
-        if (self.summary.witness == null) self.summary.witness = span;
+        if (self.summary.witnesses.external == null) self.summary.witnesses.external = span;
         const declared = positionsBitset(self.function.signature.declared_mutates);
-        if (positions & ~declared != 0 and self.summary.undeclared_witness == null) self.summary.undeclared_witness = span;
+        if (positions & ~declared != 0 and self.summary.witnesses.undeclared == null) self.summary.witnesses.undeclared = span;
     }
 
     fn absorb(self: WriteSite, mask: u16, unknown: bool, span: source.Span) void {
@@ -594,7 +640,9 @@ fn applyStatement(context: *const Context, function: typed.Function, origins: []
         },
         .ret => |value| {
             // VALUE-SEMANTICS-4: a returned value is the caller's own copy.
-            if (value_semantics.enabled() and value_semantics.copiesAll(context.program.records, context.program.nodes[@backingInt(value)].ty)) return false;
+            const returned = context.program.nodes[@backingInt(value)].ty;
+            if (context.physical and !context.tracks(returned)) return false;
+            if (!context.physical and value_semantics.enabled() and value_semantics.copiesAll(context.program.records, returned)) return false;
             summary.return_origin = Origin.merge(summary.return_origin, context.nodeOrigin(function, origins, value, 0));
         },
         else => return bindStatement(context, function, origins, statement, 0),
@@ -662,6 +710,7 @@ fn buildSummaries(allocator: std.mem.Allocator, program: typed.Program, stubs: [
     var scratch = std.heap.ArenaAllocator.init(allocator);
     defer scratch.deinit();
     const context = Context{ .allocator = scratch.allocator(), .program = program, .summaries = summaries };
+    const physical = Context{ .allocator = scratch.allocator(), .program = program, .summaries = summaries, .physical = true };
     const budget = program.functions.len * 4 + 32;
     var iteration: usize = 0;
     while (true) {
@@ -669,7 +718,8 @@ fn buildSummaries(allocator: std.mem.Allocator, program: typed.Program, stubs: [
         for (program.functions, 0..) |_, index| {
             if (standIn(stubs, index) != null) continue;
             _ = scratch.reset(.retain_capacity);
-            const computed = try analyzeFunction(&context, index);
+            var computed = try analyzeFunction(&context, index);
+            computed.borrow_origin = (try analyzeFunction(&physical, index)).return_origin;
             const merged = mergeSummaries(summaries[index], computed);
             if (!sameSummary(merged, summaries[index])) {
                 summaries[index] = merged;
@@ -684,6 +734,7 @@ fn buildSummaries(allocator: std.mem.Allocator, program: typed.Program, stubs: [
     if (widened) for (summaries) |*summary| {
         summary.mutates_unknown = true;
         summary.return_origin.unknown = true;
+        summary.borrow_origin.unknown = true;
         summary.writes = true;
         summary.external = true;
     };
@@ -694,7 +745,8 @@ fn buildSummaries(allocator: std.mem.Allocator, program: typed.Program, stubs: [
 fn publish(allocator: std.mem.Allocator, program: typed.Program, summaries: []const Summary) std.mem.Allocator.Error!void {
     for (program.functions, summaries, 0..) |function, summary, index| {
         const mutable = @constCast(&program.functions[index]);
-        mutable.signature.mutation_facts = .{ .writes = summary.writes, .external = summary.external };
+        mutable.signature.inferred.writes = summary.writes;
+        mutable.signature.inferred.external = summary.external;
         var positions = summary.mutates;
         if (summary.mutates_unknown) {
             var bit: u5 = 0;
@@ -704,6 +756,7 @@ fn publish(allocator: std.mem.Allocator, program: typed.Program, summaries: []co
         }
         mutable.signature.mutates = try bitsetPositions(allocator, positions);
         mutable.signature.return_origin = try boundFromOrigin(allocator, summary.return_origin);
+        mutable.signature.inferred.borrow_origin = try boundFromOrigin(allocator, summary.borrow_origin);
     }
 }
 
@@ -905,7 +958,7 @@ fn checkMutDeclarations(allocator: std.mem.Allocator, program: typed.Program, re
         const message = try unmarkedWriteMessage(allocator, src, declaringFunction(request.syntax, function), function, positions & ~declared);
         try sink.items.append(allocator, .{
             .code = mutation_marker_code,
-            .span = summary.undeclared_witness orelse summary.witness orelse function.declaration,
+            .span = summary.witnesses.undeclared orelse summary.witnesses.external orelse function.declaration,
             .message = message,
         });
         violated = true;
@@ -949,7 +1002,7 @@ fn checkDeclaredBound(allocator: std.mem.Allocator, program: typed.Program, inde
             const message = try permissionMessage(allocator, function, summary, permitted, has_permission);
             try sink.items.append(allocator, .{
                 .code = permission_code,
-                .span = summary.witness orelse function.declaration,
+                .span = summary.witnesses.external orelse function.declaration,
                 .message = message,
                 .related = .{ .span = bound.span, .message = "declared effect ceiling and mutates footprint are here" },
             });
@@ -963,7 +1016,7 @@ fn checkDeclaredBound(allocator: std.mem.Allocator, program: typed.Program, inde
             const message = try permissionMessage(allocator, function, summary, permitted, has_permission);
             try sink.items.append(allocator, .{
                 .code = permission_code,
-                .span = summary.witness orelse function.declaration,
+                .span = summary.witnesses.external orelse function.declaration,
                 .message = message,
                 .related = .{ .span = bound.span, .message = "declared effect ceiling and mutates footprint are here" },
             });

@@ -346,6 +346,15 @@ fn hashSignature(hash: *Sha, allocator: std.mem.Allocator, program: typed.Progra
         },
         else => {},
     }
+    part(hash, @tagName(function.signature.inferred.borrow_origin));
+    switch (function.signature.inferred.borrow_origin) {
+        .params => |positions| for (positions) |position| {
+            var encoded: [2]u8 = undefined;
+            std.mem.writeInt(u16, &encoded, position, .little);
+            hash.update(&encoded);
+        },
+        else => {},
+    }
     for (function.signature.mutates) |position| {
         var encoded: [2]u8 = undefined;
         std.mem.writeInt(u16, &encoded, position, .little);
@@ -356,7 +365,7 @@ fn hashSignature(hash: *Sha, allocator: std.mem.Allocator, program: typed.Progra
         std.mem.writeInt(u16, &encoded, position, .little);
         hash.update(&encoded);
     }
-    hash.update(&[_]u8{ @intFromBool(function.signature.mutation_facts.writes), @intFromBool(function.signature.mutation_facts.external) });
+    hash.update(&[_]u8{ @intFromBool(function.signature.inferred.writes), @intFromBool(function.signature.inferred.external) });
     var effect_bytes: [4]u8 = undefined;
     std.mem.writeInt(u32, &effect_bytes, function.policy.effects, .little);
     hash.update(&effect_bytes);
@@ -484,6 +493,32 @@ test "facts symbols are stable and length bounded" {
     defer std.testing.allocator.free(second);
     try std.testing.expectEqualStrings(first, second);
     try std.testing.expect(std.mem.startsWith(u8, first, "myl_f_"));
+}
+
+// spec-case: RETURN-BORROW-1
+test "native function fact key changes with physical return origin" {
+    const a = std.testing.allocator;
+    const program: typed.Program = .{ .nodes = &.{}, .statements = &.{}, .functions = &.{}, .main = @fromBackingInt(0) };
+    var catalog = try native_types.Catalog.initRecords(a, &.{});
+    defer catalog.deinit();
+    var function: typed.Function = .{
+        .scope = .{ .body = @fromBackingInt(0) },
+        .id = @fromBackingInt(0),
+        .name = "accessor",
+        .declaration = .{ .start = 0, .end = 0 },
+    };
+    function.signature.return_origin = .fresh;
+    var first = Sha.init(.{});
+    function.signature.inferred.borrow_origin = .{ .params = &.{0} };
+    try hashSignature(&first, a, program, function, &catalog);
+    var second = Sha.init(.{});
+    function.signature.inferred.borrow_origin = .fresh;
+    try hashSignature(&second, a, program, function, &catalog);
+    var first_digest: [32]u8 = undefined;
+    var second_digest: [32]u8 = undefined;
+    first.final(&first_digest);
+    second.final(&second_digest);
+    try std.testing.expect(!std.mem.eql(u8, &first_digest, &second_digest));
 }
 
 // spec-case: NATIVE-TEST-6

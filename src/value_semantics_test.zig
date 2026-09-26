@@ -44,6 +44,57 @@ test "recursive type reachability finds collections without treating a cycle as 
     }
 }
 
+// spec: RETURN-BORROW-1
+test "physical return origins survive value copies and chained accessors" {
+    const saved = Saved.set(true);
+    defer saved.restore();
+    const source =
+        \\record Node:
+        \\    data: bytes
+        \\
+        \\record Branch:
+        \\    value: int
+        \\    next: Option[Branch]
+        \\
+        \\def throughBox(branch: Branch) -> Branch:
+        \\    return branch
+        \\
+        \\def at(nodes: list[Node], index: int) -> Node:
+        \\    if index < 0 or index >= len(nodes):
+        \\        return Node(data=b"")
+        \\    return nodes[index]
+        \\
+        \\def identity[T](value: T) -> T:
+        \\    return value
+        \\
+        \\def relay(nodes: list[Node], index: int) -> Node:
+        \\    return identity[Node](at(nodes, index))
+        \\
+        \\def main() -> int:
+        \\    nodes = [Node(data=b"abc")]
+        \\    return len(relay(nodes, 0).data)
+    ;
+    var compilation = try compiler.Compilation.init(t.allocator, "borrow.my", source);
+    defer compilation.deinit();
+    try compilation.check();
+    var found: usize = 0;
+    for (compilation.program.?.functions) |function| {
+        const target = std.mem.eql(u8, function.name, "at") or std.mem.eql(u8, function.name, "relay") or
+            std.mem.eql(u8, function.name, "identity[Node]") or std.mem.eql(u8, function.name, "throughBox");
+        if (!target) continue;
+        if (!std.mem.eql(u8, function.name, "throughBox")) try t.expect(function.signature.return_origin == .fresh);
+        switch (function.signature.inferred.borrow_origin) {
+            .params => |positions| try t.expectEqualSlices(u16, &.{0}, positions),
+            else => return error.TestUnexpectedResult,
+        }
+        found += 1;
+    }
+    try t.expectEqual(@as(usize, 4), found);
+    const explanation = try compilation.explainOwnership(t.allocator);
+    defer t.allocator.free(explanation);
+    try t.expect(std.mem.indexOf(u8, explanation, "\"borrow_origin\":{\"kind\":\"params\",\"params\":[0]}") != null);
+}
+
 /// The switch as a test left it, restored when the test ends.
 const Saved = struct {
     previous: bool,

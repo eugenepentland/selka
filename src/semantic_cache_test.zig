@@ -2,6 +2,7 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
+const checked_typed = @import("typed.zig");
 const native = @import("native_execute.zig");
 const semantic_key = @import("semantic_key.zig");
 const cache_key = @import("cache_key.zig");
@@ -63,6 +64,7 @@ fn compare(allocator: std.mem.Allocator, cache: *Cache, bytes: []const u8, expec
             try t.expectEqual(a.policy.effects, b.policy.effects);
             try t.expectEqualSlices(u16, a.signature.mutates, b.signature.mutates);
             try t.expect(a.signature.return_origin.eql(b.signature.return_origin));
+            try t.expect(a.signature.inferred.borrow_origin.eql(b.signature.inferred.borrow_origin));
         }
         try t.expectEqual(number, (try native.run(&cached)).value);
         try t.expectEqual(number, (try native.run(&fresh)).value);
@@ -813,9 +815,90 @@ fn storedContract(cache: *Cache, key_suffix: []const u8) [32]u8 {
     unreachable;
 }
 
-fn functionReturnOrigin(program: @import("typed.zig").Program, name: []const u8) @import("typed.zig").ReturnOrigin {
+fn functionReturnOrigin(program: checked_typed.Program, name: []const u8) checked_typed.ReturnOrigin {
     for (program.functions) |function| if (std.mem.eql(u8, function.name, name)) return function.signature.return_origin;
     unreachable;
+}
+
+fn functionBorrowOrigin(program: checked_typed.Program, name: []const u8) checked_typed.ReturnOrigin {
+    for (program.functions) |function| if (std.mem.eql(u8, function.name, name)) return function.signature.inferred.borrow_origin;
+    unreachable;
+}
+
+fn expectPhysicalOrigin(text: []const u8, position: ?u16) !void {
+    var compilation = try language.Compilation.init(t.allocator, "borrow-cache.my", text);
+    defer compilation.deinit();
+    try compilation.check();
+    const program = compilation.program.?;
+    try t.expect(functionReturnOrigin(program, "source") == .fresh);
+    try t.expect(functionReturnOrigin(program, "caller") == .fresh);
+    const origin = functionBorrowOrigin(program, "caller");
+    if (position) |expected| {
+        switch (origin) {
+            .params => |positions| try t.expectEqualSlices(u16, &.{expected}, positions),
+            else => return error.TestUnexpectedResult,
+        }
+    } else try t.expect(origin == .fresh);
+}
+
+// spec-case: RETURN-BORROW-1
+test "cached chained physical return origins invalidate from parameter to fresh and another parameter" {
+    const values = @import("value_semantics.zig");
+    const previous = values.enabled();
+    values.setEnabled(true);
+    defer values.setEnabled(previous);
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    const before =
+        \\record Node:
+        \\    data: bytes
+        \\
+        \\def source(left: list[Node], right: list[Node]) -> Node:
+        \\    return left[0]
+        \\
+    ;
+    const fresh =
+        \\record Node:
+        \\    data: bytes
+        \\
+        \\def source(left: list[Node], right: list[Node]) -> Node:
+        \\    return Node(data=b"x")
+        \\
+    ;
+    const second =
+        \\record Node:
+        \\    data: bytes
+        \\
+        \\def source(left: list[Node], right: list[Node]) -> Node:
+        \\    return right[0]
+        \\
+    ;
+    const caller =
+        \\def caller(left: list[Node], right: list[Node]) -> Node:
+        \\    return source(left, right)
+        \\
+        \\def main() -> int:
+        \\    left = [Node(data=b"x")]
+        \\    right = [Node(data=b"x")]
+        \\    return len(caller(left, right).data)
+    ;
+    const original = try std.mem.concat(t.allocator, u8, &.{ before, caller });
+    defer t.allocator.free(original);
+    const independent = try std.mem.concat(t.allocator, u8, &.{ fresh, caller });
+    defer t.allocator.free(independent);
+    const other = try std.mem.concat(t.allocator, u8, &.{ second, caller });
+    defer t.allocator.free(other);
+    try expectPhysicalOrigin(original, 0);
+    try compare(t.allocator, &cache, original, 1);
+    const first_key = storedContract(&cache, "caller");
+    try expectPhysicalOrigin(independent, null);
+    try compare(t.allocator, &cache, independent, 1);
+    const fresh_key = storedContract(&cache, "caller");
+    try t.expect(!std.mem.eql(u8, &first_key, &fresh_key));
+    try expectPhysicalOrigin(other, 1);
+    try compare(t.allocator, &cache, other, 1);
+    const second_key = storedContract(&cache, "caller");
+    try t.expect(!std.mem.eql(u8, &fresh_key, &second_key));
 }
 
 // C2 durable-store behavior is not yet registered in SPEC.md; the required registration patch is reported with this package.

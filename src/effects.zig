@@ -52,7 +52,7 @@ fn literalAllocates(records: []const typed.Record, ty: typed.Type) bool {
 const Facts = struct {
     mutates: []const u16,
     return_origin: typed.ReturnOrigin,
-    mutation_facts: typed.MutationFacts,
+    inferred: typed.InferredFacts,
 };
 
 const ReturnContext = struct {
@@ -236,7 +236,7 @@ fn inferFacts(allocator: std.mem.Allocator, program: typed.Program, function: ty
     };
     const mutates = try mutate_positions.toOwnedSlice(allocator);
     const return_origin: typed.ReturnOrigin = if (unknown) .unknown else if (saw_params) .{ .params = try return_positions.toOwnedSlice(allocator) } else .fresh;
-    return .{ .mutates = mutates, .return_origin = return_origin, .mutation_facts = .{ .writes = saw_write, .external = saw_external } };
+    return .{ .mutates = mutates, .return_origin = return_origin, .inferred = .{ .writes = saw_write, .external = saw_external } };
 }
 
 const State = struct {
@@ -651,7 +651,7 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, request: Requ
     // transitive mask stays a checked body fact for diagnostics.
     for (@constCast(program.functions), 0..) |*function, index| {
         function.policy.effects = graph.states[index].mask;
-        if (function.signature.mutation_facts.external) function.policy.effects |= sets.bit(.mutation);
+        if (function.signature.inferred.external) function.policy.effects |= sets.bit(.mutation);
     }
     var violated = mutation_violated;
     if (try checkSlotCeilings(allocator, .{ .program = program, .graph = &graph }, sink)) violated = true;
@@ -677,7 +677,8 @@ fn seedFunction(allocator: std.mem.Allocator, program: typed.Program, graph: *Gr
     const mutable = @constCast(&program.functions[index]);
     mutable.signature.mutates = facts.mutates;
     mutable.signature.return_origin = facts.return_origin;
-    mutable.signature.mutation_facts = facts.mutation_facts;
+    mutable.signature.inferred.writes = facts.inferred.writes;
+    mutable.signature.inferred.external = facts.inferred.external;
     var walker = try typed_walk.Walker.init(allocator, program, function.scope.body);
     defer walker.deinit();
     while (try walker.next()) |item| if (item == .expression) {
@@ -1013,7 +1014,7 @@ fn positionMask(positions: []const u16) sets.Mask {
 /// Check one instruction-level mutation witness against the checked summary.
 fn instructionSummaryValid(function: bytecode_model.Function, witness: mutation.Witness) bool {
     if (witness.operation != .receiver_write) return true;
-    if (!function.signature.mutation_facts.writes) return false;
+    if (!function.signature.inferred.writes) return false;
     const input = witness.input orelse return true;
     return containsPosition(function.signature.mutates, input);
 }
@@ -1148,7 +1149,7 @@ pub fn validate(allocator: std.mem.Allocator, program: bytecode_model.Program) V
         if (function.policy.effect_bound) |bound| {
             const declared = positionMask(function.signature.declared_mutates);
             if (positionMask(function.signature.mutates) & ~declared != 0) return error.InternalError;
-            if (function.signature.mutation_facts.external and bound.allowed & sets.bit(.mutation) == 0) return error.InternalError;
+            if (function.signature.inferred.external and bound.allowed & sets.bit(.mutation) == 0) return error.InternalError;
         }
         switch (function.signature.return_origin) {
             .params => |positions| if (!normalizedPositions(positions, function.signature.parameter_count)) return error.InternalError,

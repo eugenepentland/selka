@@ -1,0 +1,362 @@
+{
+  "lox/vm/binary_trees|qbe": {
+    "pre-physical-borrow": {
+      "counts": [
+        {
+          "status": 0,
+          "instructions": 8287898552,
+          "cycles": 2266003944
+        },
+        {
+          "status": 0,
+          "instructions": 8287898686,
+          "cycles": 2237718434
+        },
+        {
+          "status": 0,
+          "instructions": 8287900282,
+          "cycles": 2262751221
+        }
+      ],
+      "median": 8287898686,
+      "sha256": "6279e0c85f23255b11891d47bdf48e33fd83eb7c4d20c3eccad9115cada0f101"
+    },
+    "physical-borrow": {
+      "counts": [
+        {
+          "status": 0,
+          "instructions": 8302774167,
+          "cycles": 2267802211
+        },
+        {
+          "status": 0,
+          "instructions": 8302770337,
+          "cycles": 2267082464
+        },
+        {
+          "status": 0,
+          "instructions": 8302770345,
+          "cycles": 2318255496
+        }
+      ],
+      "median": 8302770345,
+      "sha256": "606bde4741e857d0c250fb6a29b46c85754a806de5ee41c9571048dd76ba6b95"
+    },
+    "ratio": 1.001794382335431
+  },
+  "lox/vm/binary_trees|llvm": {
+    "pre-physical-borrow": {
+      "counts": [
+        {
+          "status": 0,
+          "instructions": 4421062416,
+          "cycles": 1429315524
+        },
+        {
+          "status": 0,
+          "instructions": 4421068382,
+          "cycles": 1419319981
+        },
+        {
+          "status": 0,
+          "instructions": 4421065422,
+          "cycles": 1483148205
+        }
+      ],
+      "median": 4421065422,
+      "sha256": "02825930ca01ad09186420c6331ff4ef9dc7125ed5eccd803b0a19dbf5317910"
+    },
+    "physical-borrow": {
+      "counts": [
+        {
+          "status": 0,
+          "instructions": 4414011427,
+          "cycles": 2409450260
+        },
+        {
+          "status": 0,
+          "instructions": 4414013226,
+          "cycles": 2408418116
+        },
+        {
+          "status": 0,
+          "instructions": 4414011372,
+          "cycles": 2398807209
+        }
+      ],
+      "median": 4414011427,
+      "sha256": "68fcafd46f60347c0d71a6d5cc330a710162b9bda67a52d8cac1ca1d4a251f02"
+    },
+    "ratio": 0.9984044581279213
+  },
+  "lox/vm/closures|qbe": {
+    "pre-physical-borrow": {
+      "counts": [
+        {
+          "status": 0,
+          "instructions": 11928118148,
+          "cycles": 4106800555
+        },
+        {
+          "status": 0,
+          "instructions": 11928121919,
+          "cycles": 6108500165
+        },
+        {
+          "status": 0,
+          "instructions": 11928118805,
+          "cycles": 6047685521
+        }
+      ],
+      "median": 11928118805,
+      "sha256": "6279e0c85f23255b11891d47bdf48e33fd83eb7c4d20c3eccad9115cada0f101"
+    },
+    "physical-borrow": {
+      "counts": [
+        {
+          "status": 0,
+          "instructions": 11928124534,
+          "cycles": 5257549215
+        },
+        {
+          "status": 0,
+          "instructions": 11928118366,
+          "cycles": 5047917058
+        },
+        {
+          "status": 0,
+          "instructions": 11928121074,
+          "cycles": 4551375411
+        }
+      ],
+      "median": 11928121074,
+      "sha256": "606bde4741e857d0c250fb6a29b46c85754a806de5ee41c9571048dd76ba6b95"
+    },
+    "ratio": 1.0000001902227869
+  },
+  "lox/vm/closures|llvm": {
+    "pre-physical-borrow": {
+      "counts": [
+        {
+          "status": 0,
+          "instructions": 5868213908,
+          "cycles": 1719683506
+        },
+        {
+          "status": 0,
+          "instructions": 5868219212,
+          "cycles": 1719763981
+        },
+        {
+          "status": 0,
+          "instructions": 5868214256,
+          "cycles": 1787593112
+        }
+      ],
+      "median": 5868214256,
+      "sha256": "02825930ca01ad09186420c6331ff4ef9dc7125ed5eccd803b0a19dbf5317910"
+    },
+    "physical-borrow": {
+      "counts": [
+        {
+          "status": 0,
+          "instructions": 5833173707,
+          "cycles": 2946448367
+        },
+        {
+          "status": 0,
+          "instructions": 5833173547,
+          "cycles": 3003728283
+        },
+        {
+          "status": 0,
+          "instructions": 5833173483,
+          "cycles": 2918438552
+        }
+      ],
+      "median": 5833173547,
+      "sha256": "68fcafd46f60347c0d71a6d5cc330a710162b9bda67a52d8cac1ca1d4a251f02"
+    },
+    "ratio": 0.9940287270588029
+  },
+  "lox/vm/fib|qbe": {
+    "pre-physical-borrow": {
+      "counts": [
+        {
+          "status": 0,
+          "instructions": 5353625649,
+          "cycles": 2188139486
+        },
+        {
+          "status": 0,
+          "instructions": 5353625270,
+          "cycles": 1224354394
+        },
+        {
+          "status": 0,
+          "instructions": 5353625292,
+          "cycles": 1226705350
+        }
+      ],
+      "median": 5353625292,
+      "sha256": "6279e0c85f23255b11891d47bdf48e33fd83eb7c4d20c3eccad9115cada0f101"
+    },
+    "physical-borrow": {
+      "counts": [
+        {
+          "status": 0,
+          "instructions": 5353625864,
+          "cycles": 2744611952
+        },
+        {
+          "status": 0,
+          "instructions": 5353625838,
+          "cycles": 2699780321
+        },
+        {
+          "status": 0,
+          "instructions": 5353625856,
+          "cycles": 2750101767
+        }
+      ],
+      "median": 5353625856,
+      "sha256": "606bde4741e857d0c250fb6a29b46c85754a806de5ee41c9571048dd76ba6b95"
+    },
+    "ratio": 1.0000001053491736
+  },
+  "lox/vm/fib|llvm": {
+    "pre-physical-borrow": {
+      "counts": [
+        {
+          "status": 0,
+          "instructions": 2081308744,
+          "cycles": 874127225
+        },
+        {
+          "status": 0,
+          "instructions": 2081308718,
+          "cycles": 886645079
+        },
+        {
+          "status": 0,
+          "instructions": 2081308710,
+          "cycles": 886266182
+        }
+      ],
+      "median": 2081308718,
+      "sha256": "02825930ca01ad09186420c6331ff4ef9dc7125ed5eccd803b0a19dbf5317910"
+    },
+    "physical-borrow": {
+      "counts": [
+        {
+          "status": 0,
+          "instructions": 2052511868,
+          "cycles": 857543387
+        },
+        {
+          "status": 0,
+          "instructions": 2052511851,
+          "cycles": 833394278
+        },
+        {
+          "status": 0,
+          "instructions": 2052511770,
+          "cycles": 671457097
+        }
+      ],
+      "median": 2052511851,
+      "sha256": "68fcafd46f60347c0d71a6d5cc330a710162b9bda67a52d8cac1ca1d4a251f02"
+    },
+    "ratio": 0.9861640578589073
+  },
+  "lox/vm/trees|qbe": {
+    "pre-physical-borrow": {
+      "counts": [
+        {
+          "status": 0,
+          "instructions": 5163656347,
+          "cycles": 2870250899
+        },
+        {
+          "status": 0,
+          "instructions": 5163656219,
+          "cycles": 2882437760
+        },
+        {
+          "status": 0,
+          "instructions": 5163656012,
+          "cycles": 2402088967
+        }
+      ],
+      "median": 5163656219,
+      "sha256": "6279e0c85f23255b11891d47bdf48e33fd83eb7c4d20c3eccad9115cada0f101"
+    },
+    "physical-borrow": {
+      "counts": [
+        {
+          "status": 0,
+          "instructions": 5166390700,
+          "cycles": 2880444455
+        },
+        {
+          "status": 0,
+          "instructions": 5166390571,
+          "cycles": 2878263701
+        },
+        {
+          "status": 0,
+          "instructions": 5166390591,
+          "cycles": 2441420203
+        }
+      ],
+      "median": 5166390591,
+      "sha256": "606bde4741e857d0c250fb6a29b46c85754a806de5ee41c9571048dd76ba6b95"
+    },
+    "ratio": 1.00052954183703
+  },
+  "lox/vm/trees|llvm": {
+    "pre-physical-borrow": {
+      "counts": [
+        {
+          "status": 0,
+          "instructions": 2420080524,
+          "cycles": 1442602295
+        },
+        {
+          "status": 0,
+          "instructions": 2420080530,
+          "cycles": 1467963955
+        },
+        {
+          "status": 0,
+          "instructions": 2420080560,
+          "cycles": 1453258146
+        }
+      ],
+      "median": 2420080530,
+      "sha256": "02825930ca01ad09186420c6331ff4ef9dc7125ed5eccd803b0a19dbf5317910"
+    },
+    "physical-borrow": {
+      "counts": [
+        {
+          "status": 0,
+          "instructions": 2409259610,
+          "cycles": 1026479156
+        },
+        {
+          "status": 0,
+          "instructions": 2409259812,
+          "cycles": 1441166641
+        },
+        {
+          "status": 0,
+          "instructions": 2409259830,
+          "cycles": 1428352346
+        }
+      ],
+      "median": 2409259812,
+      "sha256": "68fcafd46f60347c0d71a6d5cc330a710162b9bda67a52d8cac1ca1d4a251f02"
+    },
+    "ratio": 0.9955287777138556
+  }
+}
