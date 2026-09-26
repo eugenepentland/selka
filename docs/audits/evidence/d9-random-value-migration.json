@@ -1,0 +1,512 @@
+{
+  "base_commit": "178d43dc",
+  "controls": [
+    {
+      "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-indexed/bin/mylang",
+      "sha256": "cdd9bed601bb0ade5705c5af8c962e7d10c55463128bba7fb57c915b271ac5cd",
+      "mode": "value",
+      "source": "trace.my",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-indexed/bin/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/trace/main.my",
+        "--value-semantics",
+        "--print-result",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/cache-old-value"
+      ],
+      "status": 0,
+      "output": "@stdlib/random.my:96:84: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def randint(generator: mut Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                     ^\n13679457532755275413 2949826092126892291 5139283748462763858 6349198060258255764\n0\n"
+    },
+    {
+      "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-indexed/bin/mylang",
+      "sha256": "cdd9bed601bb0ade5705c5af8c962e7d10c55463128bba7fb57c915b271ac5cd",
+      "mode": "value",
+      "source": "trace-observed.my",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-indexed/bin/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/trace-observed/main.my",
+        "--value-semantics",
+        "--print-result",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/cache-old-value"
+      ],
+      "status": 0,
+      "output": "@stdlib/random.my:96:84: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def randint(generator: mut Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                     ^\n13679457532755275413 2949826092126892291 2949826092126892291 5139283748462763858\n0\n"
+    },
+    {
+      "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-indexed/bin/mylang",
+      "sha256": "cdd9bed601bb0ade5705c5af8c962e7d10c55463128bba7fb57c915b271ac5cd",
+      "mode": "value",
+      "source": "original-fixture.my",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-indexed/bin/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/original-fixture/main.my",
+        "--value-semantics",
+        "--print-result",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/cache-old-value"
+      ],
+      "status": 0,
+      "output": "@stdlib/random.my:96:84: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def randint(generator: mut Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                     ^\n@stdlib/random.my:106:91: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def choice[T: copy + storable](generator: mut Random, items: list[T]) -> Option[T] effects(mutation, managed_allocation):\n                                                                                            ^\n@stdlib/random.my:117:83: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def shuffle[T: copy + storable](generator: mut Random, items: mut list[T]) effects(mutation, managed_allocation):\n                                                                                    ^\n0\n"
+    },
+    {
+      "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-indexed/bin/mylang",
+      "sha256": "cdd9bed601bb0ade5705c5af8c962e7d10c55463128bba7fb57c915b271ac5cd",
+      "mode": "value",
+      "source": "original-example.my",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-indexed/bin/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/original-example/main.my",
+        "--value-semantics",
+        "--print-result",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/cache-old-value"
+      ],
+      "status": 0,
+      "output": "@stdlib/random.my:96:84: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def randint(generator: mut Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                     ^\n0\n"
+    },
+    {
+      "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-indexed/bin/mylang",
+      "sha256": "cdd9bed601bb0ade5705c5af8c962e7d10c55463128bba7fb57c915b271ac5cd",
+      "mode": "legacy",
+      "source": "trace.my",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-indexed/bin/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/trace/main.my",
+        "--legacy-sharing",
+        "--print-result",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/cache-old-legacy"
+      ],
+      "status": 0,
+      "output": "main.my:7:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      snapshot = generator\n      ^\n@stdlib/random.my:96:84: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def randint(generator: mut Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                     ^\n13679457532755275413 2949826092126892291 5139283748462763858 6349198060258255764\n0\n"
+    },
+    {
+      "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-indexed/bin/mylang",
+      "sha256": "cdd9bed601bb0ade5705c5af8c962e7d10c55463128bba7fb57c915b271ac5cd",
+      "mode": "legacy",
+      "source": "trace-observed.my",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-indexed/bin/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/trace-observed/main.my",
+        "--legacy-sharing",
+        "--print-result",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/cache-old-legacy"
+      ],
+      "status": 0,
+      "output": "main.my:7:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      snapshot = generator\n      ^\n@stdlib/random.my:96:84: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def randint(generator: mut Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                     ^\n13679457532755275413 2949826092126892291 5139283748462763858 6349198060258255764\n0\n"
+    },
+    {
+      "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-indexed/bin/mylang",
+      "sha256": "cdd9bed601bb0ade5705c5af8c962e7d10c55463128bba7fb57c915b271ac5cd",
+      "mode": "legacy",
+      "source": "original-fixture.my",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-indexed/bin/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/original-fixture/main.my",
+        "--legacy-sharing",
+        "--print-result",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/cache-old-legacy"
+      ],
+      "status": 0,
+      "output": "main.my:9:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      alias = generator\n      ^\n@stdlib/random.my:96:84: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def randint(generator: mut Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                     ^\n@stdlib/random.my:106:91: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def choice[T: copy + storable](generator: mut Random, items: list[T]) -> Option[T] effects(mutation, managed_allocation):\n                                                                                            ^\n@stdlib/random.my:117:83: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def shuffle[T: copy + storable](generator: mut Random, items: mut list[T]) effects(mutation, managed_allocation):\n                                                                                    ^\n0\n"
+    },
+    {
+      "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-indexed/bin/mylang",
+      "sha256": "cdd9bed601bb0ade5705c5af8c962e7d10c55463128bba7fb57c915b271ac5cd",
+      "mode": "legacy",
+      "source": "original-example.my",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-indexed/bin/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/original-example/main.my",
+        "--legacy-sharing",
+        "--print-result",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/cache-old-legacy"
+      ],
+      "status": 0,
+      "output": "main.my:14:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      alias = replay\n      ^\n@stdlib/random.my:96:84: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def randint(generator: mut Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                     ^\n0\n"
+    },
+    {
+      "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-rootlive/bin/mylang",
+      "sha256": "52ddd1337b4998b2a22184cac58af5ae4b0f4bc465dd449cfae3271c7451575d",
+      "mode": "value",
+      "source": "trace.my",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-rootlive/bin/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/trace/main.my",
+        "--value-semantics",
+        "--print-result",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/cache-new-value"
+      ],
+      "status": 0,
+      "output": "@stdlib/random.my:96:84: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def randint(generator: mut Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                     ^\n13679457532755275413 2949826092126892291 2949826092126892291 5139283748462763858\n0\n"
+    },
+    {
+      "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-rootlive/bin/mylang",
+      "sha256": "52ddd1337b4998b2a22184cac58af5ae4b0f4bc465dd449cfae3271c7451575d",
+      "mode": "value",
+      "source": "trace-observed.my",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-rootlive/bin/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/trace-observed/main.my",
+        "--value-semantics",
+        "--print-result",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/cache-new-value"
+      ],
+      "status": 0,
+      "output": "@stdlib/random.my:96:84: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def randint(generator: mut Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                     ^\n13679457532755275413 2949826092126892291 2949826092126892291 5139283748462763858\n0\n"
+    },
+    {
+      "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-rootlive/bin/mylang",
+      "sha256": "52ddd1337b4998b2a22184cac58af5ae4b0f4bc465dd449cfae3271c7451575d",
+      "mode": "value",
+      "source": "original-fixture.my",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-rootlive/bin/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/original-fixture/main.my",
+        "--value-semantics",
+        "--print-result",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/cache-new-value"
+      ],
+      "status": 3,
+      "output": "@stdlib/random.my:96:84: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def randint(generator: mut Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                     ^\n@stdlib/random.my:106:91: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def choice[T: copy + storable](generator: mut Random, items: list[T]) -> Option[T] effects(mutation, managed_allocation):\n                                                                                            ^\n@stdlib/random.my:117:83: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def shuffle[T: copy + storable](generator: mut Random, items: mut list[T]) effects(mutation, managed_allocation):\n                                                                                    ^\n3\n"
+    },
+    {
+      "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-rootlive/bin/mylang",
+      "sha256": "52ddd1337b4998b2a22184cac58af5ae4b0f4bc465dd449cfae3271c7451575d",
+      "mode": "value",
+      "source": "original-example.my",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-rootlive/bin/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/original-example/main.my",
+        "--value-semantics",
+        "--print-result",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/cache-new-value"
+      ],
+      "status": 5,
+      "output": "@stdlib/random.my:96:84: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def randint(generator: mut Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                     ^\n5\n"
+    },
+    {
+      "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-rootlive/bin/mylang",
+      "sha256": "52ddd1337b4998b2a22184cac58af5ae4b0f4bc465dd449cfae3271c7451575d",
+      "mode": "legacy",
+      "source": "trace.my",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-rootlive/bin/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/trace/main.my",
+        "--legacy-sharing",
+        "--print-result",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/cache-new-legacy"
+      ],
+      "status": 0,
+      "output": "main.my:7:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      snapshot = generator\n      ^\n@stdlib/random.my:96:84: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def randint(generator: mut Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                     ^\n13679457532755275413 2949826092126892291 5139283748462763858 6349198060258255764\n0\n"
+    },
+    {
+      "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-rootlive/bin/mylang",
+      "sha256": "52ddd1337b4998b2a22184cac58af5ae4b0f4bc465dd449cfae3271c7451575d",
+      "mode": "legacy",
+      "source": "trace-observed.my",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-rootlive/bin/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/trace-observed/main.my",
+        "--legacy-sharing",
+        "--print-result",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/cache-new-legacy"
+      ],
+      "status": 0,
+      "output": "main.my:7:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      snapshot = generator\n      ^\n@stdlib/random.my:96:84: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def randint(generator: mut Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                     ^\n13679457532755275413 2949826092126892291 5139283748462763858 6349198060258255764\n0\n"
+    },
+    {
+      "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-rootlive/bin/mylang",
+      "sha256": "52ddd1337b4998b2a22184cac58af5ae4b0f4bc465dd449cfae3271c7451575d",
+      "mode": "legacy",
+      "source": "original-fixture.my",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-rootlive/bin/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/original-fixture/main.my",
+        "--legacy-sharing",
+        "--print-result",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/cache-new-legacy"
+      ],
+      "status": 0,
+      "output": "main.my:9:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      alias = generator\n      ^\n@stdlib/random.my:96:84: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def randint(generator: mut Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                     ^\n@stdlib/random.my:106:91: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def choice[T: copy + storable](generator: mut Random, items: list[T]) -> Option[T] effects(mutation, managed_allocation):\n                                                                                            ^\n@stdlib/random.my:117:83: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def shuffle[T: copy + storable](generator: mut Random, items: mut list[T]) effects(mutation, managed_allocation):\n                                                                                    ^\n0\n"
+    },
+    {
+      "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-rootlive/bin/mylang",
+      "sha256": "52ddd1337b4998b2a22184cac58af5ae4b0f4bc465dd449cfae3271c7451575d",
+      "mode": "legacy",
+      "source": "original-example.my",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-rootlive/bin/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/original-example/main.my",
+        "--legacy-sharing",
+        "--print-result",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/cache-new-legacy"
+      ],
+      "status": 0,
+      "output": "main.my:14:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      alias = replay\n      ^\n@stdlib/random.my:96:84: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def randint(generator: mut Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                     ^\n0\n"
+    }
+  ],
+  "migration": [
+    {
+      "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-indexed/bin/mylang",
+      "sha256": "cdd9bed601bb0ade5705c5af8c962e7d10c55463128bba7fb57c915b271ac5cd",
+      "mode": "value",
+      "backend": "qbe",
+      "source": "migrated-fixture",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-indexed/bin/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/migrated-fixture/main.my",
+        "--value-semantics",
+        "--print-result",
+        "--gc-stress",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/cache-migrated-old-qbe-value"
+      ],
+      "status": 3,
+      "expected": 3,
+      "output": "@stdlib/random.my:96:84: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def randint(generator: mut Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                     ^\n@stdlib/random.my:106:91: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def choice[T: copy + storable](generator: mut Random, items: list[T]) -> Option[T] effects(mutation, managed_allocation):\n                                                                                            ^\n@stdlib/random.my:117:83: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def shuffle[T: copy + storable](generator: mut Random, items: mut list[T]) effects(mutation, managed_allocation):\n                                                                                    ^\n3\n"
+    },
+    {
+      "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-indexed/bin/mylang",
+      "sha256": "cdd9bed601bb0ade5705c5af8c962e7d10c55463128bba7fb57c915b271ac5cd",
+      "mode": "value",
+      "backend": "qbe",
+      "source": "migrated-example",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-indexed/bin/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/migrated-example/main.my",
+        "--value-semantics",
+        "--print-result",
+        "--gc-stress",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/cache-migrated-old-qbe-value"
+      ],
+      "status": 5,
+      "expected": 5,
+      "output": "@stdlib/random.my:96:84: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def randint(generator: mut Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                     ^\n5\n"
+    },
+    {
+      "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-rootlive/bin/mylang",
+      "sha256": "52ddd1337b4998b2a22184cac58af5ae4b0f4bc465dd449cfae3271c7451575d",
+      "mode": "value",
+      "backend": "qbe",
+      "source": "migrated-fixture",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-rootlive/bin/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/migrated-fixture/main.my",
+        "--value-semantics",
+        "--print-result",
+        "--gc-stress",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/cache-migrated-new-qbe-value"
+      ],
+      "status": 0,
+      "expected": 0,
+      "output": "@stdlib/random.my:96:84: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def randint(generator: mut Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                     ^\n@stdlib/random.my:106:91: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def choice[T: copy + storable](generator: mut Random, items: list[T]) -> Option[T] effects(mutation, managed_allocation):\n                                                                                            ^\n@stdlib/random.my:117:83: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def shuffle[T: copy + storable](generator: mut Random, items: mut list[T]) effects(mutation, managed_allocation):\n                                                                                    ^\n0\n"
+    },
+    {
+      "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-rootlive/bin/mylang",
+      "sha256": "52ddd1337b4998b2a22184cac58af5ae4b0f4bc465dd449cfae3271c7451575d",
+      "mode": "value",
+      "backend": "qbe",
+      "source": "migrated-example",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-rootlive/bin/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/migrated-example/main.my",
+        "--value-semantics",
+        "--print-result",
+        "--gc-stress",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/cache-migrated-new-qbe-value"
+      ],
+      "status": 0,
+      "expected": 0,
+      "output": "@stdlib/random.my:96:84: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def randint(generator: mut Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                     ^\n0\n"
+    },
+    {
+      "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-rootlive/bin/mylang",
+      "sha256": "52ddd1337b4998b2a22184cac58af5ae4b0f4bc465dd449cfae3271c7451575d",
+      "mode": "legacy",
+      "backend": "qbe",
+      "source": "legacy-control",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-rootlive/bin/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/legacy-control/main.my",
+        "--legacy-sharing",
+        "--print-result",
+        "--gc-stress",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/cache-migrated-new-qbe-legacy"
+      ],
+      "status": 0,
+      "expected": 0,
+      "output": "main.my:6:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      alias = generator\n      ^\n@stdlib/random.my:96:84: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def randint(generator: mut Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                     ^\n0\n"
+    },
+    {
+      "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-rootlive/bin/mylang",
+      "sha256": "52ddd1337b4998b2a22184cac58af5ae4b0f4bc465dd449cfae3271c7451575d",
+      "mode": "value",
+      "backend": "llvm",
+      "source": "migrated-fixture",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-rootlive/bin/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/migrated-fixture/main.my",
+        "--value-semantics",
+        "--print-result",
+        "--gc-stress",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/cache-migrated-new-llvm-value",
+        "--release"
+      ],
+      "status": 0,
+      "expected": 0,
+      "output": "@stdlib/random.my:96:84: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def randint(generator: mut Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                     ^\n@stdlib/random.my:106:91: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def choice[T: copy + storable](generator: mut Random, items: list[T]) -> Option[T] effects(mutation, managed_allocation):\n                                                                                            ^\n@stdlib/random.my:117:83: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def shuffle[T: copy + storable](generator: mut Random, items: mut list[T]) effects(mutation, managed_allocation):\n                                                                                    ^\n0\n"
+    },
+    {
+      "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-rootlive/bin/mylang",
+      "sha256": "52ddd1337b4998b2a22184cac58af5ae4b0f4bc465dd449cfae3271c7451575d",
+      "mode": "value",
+      "backend": "llvm",
+      "source": "migrated-example",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-rootlive/bin/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/migrated-example/main.my",
+        "--value-semantics",
+        "--print-result",
+        "--gc-stress",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/cache-migrated-new-llvm-value",
+        "--release"
+      ],
+      "status": 0,
+      "expected": 0,
+      "output": "@stdlib/random.my:96:84: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def randint(generator: mut Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                     ^\n0\n"
+    },
+    {
+      "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-rootlive/bin/mylang",
+      "sha256": "52ddd1337b4998b2a22184cac58af5ae4b0f4bc465dd449cfae3271c7451575d",
+      "mode": "legacy",
+      "backend": "llvm",
+      "source": "legacy-control",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/.tmp-stage3f/install-rootlive/bin/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/legacy-control/main.my",
+        "--legacy-sharing",
+        "--print-result",
+        "--gc-stress",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/cache-migrated-new-llvm-legacy",
+        "--release"
+      ],
+      "status": 0,
+      "expected": 0,
+      "output": "main.my:6:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      alias = generator\n      ^\n@stdlib/random.my:96:84: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def randint(generator: mut Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                     ^\n0\n"
+    }
+  ],
+  "sources": {
+    "trace.my": {
+      "sha256": "4beaf79831a86ff38f5320523e59e045f15cde762227f6e220b83e5c9da9a005",
+      "source": "module main\nimport random\n\ndef main(out: Stream) -> int:\n    generator = random.seeded(42)\n    first = random.next_word(mut generator)\n    snapshot = generator\n    second = random.next_word(mut snapshot)\n    original_next = random.next_word(mut generator)\n    snapshot_next = random.next_word(mut snapshot)\n    out.print(first, second, original_next, snapshot_next)\n    return 0\n"
+    },
+    "trace-observed.my": {
+      "sha256": "b6dc58c52d5484666e0b9a6bc72b2e6230eae634d9adce57abe07fed121a34ec",
+      "source": "module main\nimport random\n\ndef main(out: Stream) -> int:\n    generator = random.seeded(42)\n    first = random.next_word(mut generator)\n    snapshot = generator\n    observed = generator.state[0]\n    second = random.next_word(mut snapshot)\n    original_next = random.next_word(mut generator)\n    snapshot_next = random.next_word(mut snapshot)\n    out.print(first, second, original_next, snapshot_next)\n    if observed == 0u64:\n        return 1\n    return 0\n"
+    },
+    "original-fixture.my": {
+      "sha256": "f6173f9d6b0aa0f551a2dbb010adf0f11de2fbd019a3200fd9b0583fddbf2b69",
+      "source": "module main\nimport random\nimport time\n\n\ndef streams() -> int:\n    generator = random.seeded(42)\n    first = random.next_word(mut generator)\n    alias = generator\n    second = random.next_word(mut alias)\n    if first == second:\n        return 1\n    replay = random.seeded(42)\n    if random.next_word(mut replay) != first or random.next_word(mut replay) != second:\n        return 2\n    if random.next_word(mut generator) != random.next_word(mut replay):\n        return 3\n    if first != 13679457532755275413u64:\n        return 4\n    seeded = random.seeded(0)\n    if random.next_word(mut seeded) != 16294208416658607535u64:\n        return 5\n    top = random.from_word(18446744073709551615u64)\n    wrapped = random.seeded(0 - 1)\n    if random.next_word(mut top) != random.next_word(mut wrapped):\n        return 6\n    return 0\n\n\ndef fractions() -> int:\n    generator = random.seeded(7)\n    draw = 0\n    while draw < 500:\n        value = random.random(mut generator)\n        if value < 0.0 or value >= 1.0:\n            return 10\n        draw += 1\n    return 0\n\n\ndef ranges() -> int:\n    generator = random.seeded(1)\n    draw = 0\n    low = 0\n    high = 0\n    while draw < 500:\n        match random.randint(mut generator, 0 - 3, 3):\n            case Ok(value):\n                if value < 0 - 3 or value > 3:\n                    return 20\n                if value == 0 - 3:\n                    low += 1\n                if value == 3:\n                    high += 1\n            case Err(_):\n                return 21\n        draw += 1\n    if low == 0 or high == 0:\n        return 22\n    match random.randint(mut generator, 5, 4):\n        case Ok(_):\n            return 23\n        case Err(_):\n            _ = 0\n    match random.randint(mut generator, 0 - 9223372036854775807 - 1, 9223372036854775807):\n        case Ok(_):\n            _ = 0\n        case Err(_):\n            return 24\n    match random.randint(mut generator, 0 - 9223372036854775807 - 1, 0):\n        case Ok(value):\n            if value > 0:\n                return 25\n        case Err(_):\n            return 26\n    match random.randint(mut generator, 7, 7):\n        case Ok(value):\n            if value != 7:\n                return 27\n        case Err(_):\n            return 28\n    return 0\n\n\ndef permutations() -> int:\n    generator = random.seeded(5)\n    items = [1, 2, 3, 4, 5]\n    random.shuffle(mut generator, mut items)\n    total = 0\n    for value in items:\n        total += value\n    if total != 15 or len(items) != 5:\n        return 30\n    match random.choice(mut generator, items):\n        case Some(value):\n            if value < 1 or value > 5:\n                return 31\n        case None:\n            return 32\n    empty: list[int] = []\n    match random.choice(mut generator, empty):\n        case Some(_):\n            return 33\n        case None:\n            _ = 0\n    random.shuffle(mut generator, mut empty)\n    return 0\n\n\ndef durations() -> int:\n    match time.seconds(2):\n        case Ok(duration):\n            if duration.nanoseconds != 2000000000 or time.to_milliseconds(duration) != 2000:\n                return 40\n            if time.to_seconds(duration) != 2.0:\n                return 41\n        case Err(_):\n            return 42\n    match time.milliseconds(9223372036854):\n        case Ok(_):\n            _ = 0\n        case Err(_):\n            return 43\n    match time.seconds(9223372037):\n        case Ok(_):\n            return 44\n        case Err(_):\n            _ = 0\n    match time.microseconds(0 - 9223372036854776):\n        case Ok(_):\n            return 45\n        case Err(_):\n            _ = 0\n    if time.to_milliseconds(time.nanoseconds(0 - 1500000)) != 0 - 1:\n        return 46\n    if time.to_milliseconds(time.nanoseconds(0 - 9223372036854775807 - 1)) != 0 - 9223372036854:\n        return 47\n    if time.compare(time.nanoseconds(1), time.nanoseconds(2)) != 0 - 1:\n        return 48\n    if time.compare(time.nanoseconds(2), time.nanoseconds(2)) != 0:\n        return 49\n    return 0\n\n\ndef arithmetic() -> int:\n    match time.sum(time.nanoseconds(9223372036854775807), time.nanoseconds(1)):\n        case Ok(_):\n            return 50\n        case Err(_):\n            _ = 0\n    match time.sum(time.nanoseconds(0 - 9223372036854775807 - 1), time.nanoseconds(0 - 1)):\n        case Ok(_):\n            return 51\n        case Err(_):\n            _ = 0\n    match time.difference(time.nanoseconds(5), time.nanoseconds(0 - 9223372036854775807 - 1)):\n        case Ok(_):\n            return 52\n        case Err(_):\n            _ = 0\n    match time.difference(time.nanoseconds(5), time.nanoseconds(2)):\n        case Ok(span):\n            if span.nanoseconds != 3:\n                return 53\n        case Err(_):\n            return 54\n    return 0\n\n\ndef instants() -> int:\n    start = time.from_unix_nanoseconds(1000)\n    match time.after(start, time.nanoseconds(500)):\n        case Ok(later):\n            if later.unix_nanoseconds != 1500:\n                return 60\n            if not time.expired(start, later) or time.expired(later, start):\n                return 61\n            match time.elapsed(start, later):\n                case Ok(span):\n                    if span.nanoseconds != 500:\n                        return 62\n                case Err(_):\n                    return 63\n        case Err(_):\n            return 64\n    match time.after(time.from_unix_nanoseconds(9223372036854775807), time.nanoseconds(1)):\n        case Ok(_):\n            return 65\n        case Err(_):\n            _ = 0\n    match time.elapsed(time.from_unix_nanoseconds(10), time.from_unix_nanoseconds(5)):\n        case Ok(_):\n            return 66\n        case Err(_):\n            _ = 0\n    match time.elapsed(time.from_unix_nanoseconds(0 - 9223372036854775807 - 1), time.from_unix_nanoseconds(9223372036854775807)):\n        case Ok(_):\n            return 67\n        case Err(_):\n            _ = 0\n    return 0\n\n\ndef main() -> int:\n    checks = [streams(), fractions(), ranges(), permutations(), durations(), arithmetic(), instants()]\n    for value in checks:\n        if value != 0:\n            return value\n    return 0\n"
+    },
+    "original-example.my": {
+      "sha256": "52bd6b9136a2bde6987b2f2cc6d3740559d98773a5e48f92dd8835ba5778ccf1",
+      "source": "module main\nimport random\nimport time\n\ndef streams() -> int:\n    generator = random.seeded(0)\n    if random.next_word(mut generator) != 16294208416658607535u64:\n        return 1\n    if random.next_word(mut generator) != 7960286522194355700u64:\n        return 2\n    replay = random.seeded(0)\n    if random.next_word(mut replay) != 16294208416658607535u64:\n        return 3\n    alias = replay\n    if random.next_word(mut alias) != 7960286522194355700u64:\n        return 4\n    fresh = random.seeded(0)\n    _ = random.next_word(mut fresh)\n    _ = random.next_word(mut fresh)\n    if random.next_word(mut replay) != random.next_word(mut fresh):\n        return 5\n    return 0\n\n\ndef bounds() -> int:\n    generator = random.seeded(3)\n    match random.randint(mut generator, 4, 3):\n        case Ok(_):\n            return 10\n        case Err(_):\n            _ = 0\n    match random.randint(mut generator, 0 - 9223372036854775807 - 1, 9223372036854775807):\n        case Ok(_):\n            _ = 0\n        case Err(_):\n            return 11\n    draws = 0\n    while draws < 200:\n        match random.randint(mut generator, 0, 9):\n            case Ok(value):\n                if value < 0 or value > 9:\n                    return 12\n            case Err(_):\n                return 13\n        draws += 1\n    return 0\n\n\ndef limits() -> int:\n    earliest = time.from_unix_nanoseconds(0 - 9223372036854775807 - 1)\n    latest = time.from_unix_nanoseconds(9223372036854775807)\n    match time.elapsed(earliest, latest):\n        case Ok(_):\n            return 20\n        case Err(_):\n            _ = 0\n    match time.after(latest, time.nanoseconds(1)):\n        case Ok(_):\n            return 21\n        case Err(_):\n            _ = 0\n    match time.elapsed(latest, earliest):\n        case Ok(_):\n            return 22\n        case Err(_):\n            _ = 0\n    match time.seconds(9223372037):\n        case Ok(_):\n            return 23\n        case Err(_):\n            _ = 0\n    match time.milliseconds(42):\n        case Ok(span):\n            if span.nanoseconds != 42000000:\n                return 24\n        case Err(_):\n            return 25\n    if not time.expired(earliest, latest) or time.expired(latest, earliest):\n        return 26\n    return 0\n\n\ndef main() -> int:\n    checks = [streams(), bounds(), limits()]\n    for value in checks:\n        if value != 0:\n            return value\n    return 0\n"
+    },
+    "migrated-fixture/main.my": {
+      "sha256": "429c946942031be94911f2991166cf1a835b8539618ec9465ec24d621a396f25",
+      "source": "module main\nimport random\nimport time\n\n\ndef streams() -> int:\n    generator = random.seeded(42)\n    first = random.next_word(mut generator)\n    snapshot = generator\n    second = random.next_word(mut snapshot)\n    if first == second:\n        return 1\n    replay = random.seeded(42)\n    if random.next_word(mut replay) != first or random.next_word(mut replay) != second:\n        return 2\n    if random.next_word(mut generator) != second:\n        return 3\n    third = random.next_word(mut snapshot)\n    if random.next_word(mut generator) != third or random.next_word(mut replay) != third:\n        return 7\n    if first != 13679457532755275413u64:\n        return 4\n    seeded = random.seeded(0)\n    if random.next_word(mut seeded) != 16294208416658607535u64:\n        return 5\n    top = random.from_word(18446744073709551615u64)\n    wrapped = random.seeded(0 - 1)\n    if random.next_word(mut top) != random.next_word(mut wrapped):\n        return 6\n    return 0\n\n\ndef fractions() -> int:\n    generator = random.seeded(7)\n    draw = 0\n    while draw < 500:\n        value = random.random(mut generator)\n        if value < 0.0 or value >= 1.0:\n            return 10\n        draw += 1\n    return 0\n\n\ndef ranges() -> int:\n    generator = random.seeded(1)\n    draw = 0\n    low = 0\n    high = 0\n    while draw < 500:\n        match random.randint(mut generator, 0 - 3, 3):\n            case Ok(value):\n                if value < 0 - 3 or value > 3:\n                    return 20\n                if value == 0 - 3:\n                    low += 1\n                if value == 3:\n                    high += 1\n            case Err(_):\n                return 21\n        draw += 1\n    if low == 0 or high == 0:\n        return 22\n    match random.randint(mut generator, 5, 4):\n        case Ok(_):\n            return 23\n        case Err(_):\n            _ = 0\n    match random.randint(mut generator, 0 - 9223372036854775807 - 1, 9223372036854775807):\n        case Ok(_):\n            _ = 0\n        case Err(_):\n            return 24\n    match random.randint(mut generator, 0 - 9223372036854775807 - 1, 0):\n        case Ok(value):\n            if value > 0:\n                return 25\n        case Err(_):\n            return 26\n    match random.randint(mut generator, 7, 7):\n        case Ok(value):\n            if value != 7:\n                return 27\n        case Err(_):\n            return 28\n    return 0\n\n\ndef permutations() -> int:\n    generator = random.seeded(5)\n    items = [1, 2, 3, 4, 5]\n    random.shuffle(mut generator, mut items)\n    total = 0\n    for value in items:\n        total += value\n    if total != 15 or len(items) != 5:\n        return 30\n    match random.choice(mut generator, items):\n        case Some(value):\n            if value < 1 or value > 5:\n                return 31\n        case None:\n            return 32\n    empty: list[int] = []\n    match random.choice(mut generator, empty):\n        case Some(_):\n            return 33\n        case None:\n            _ = 0\n    random.shuffle(mut generator, mut empty)\n    return 0\n\n\ndef durations() -> int:\n    match time.seconds(2):\n        case Ok(duration):\n            if duration.nanoseconds != 2000000000 or time.to_milliseconds(duration) != 2000:\n                return 40\n            if time.to_seconds(duration) != 2.0:\n                return 41\n        case Err(_):\n            return 42\n    match time.milliseconds(9223372036854):\n        case Ok(_):\n            _ = 0\n        case Err(_):\n            return 43\n    match time.seconds(9223372037):\n        case Ok(_):\n            return 44\n        case Err(_):\n            _ = 0\n    match time.microseconds(0 - 9223372036854776):\n        case Ok(_):\n            return 45\n        case Err(_):\n            _ = 0\n    if time.to_milliseconds(time.nanoseconds(0 - 1500000)) != 0 - 1:\n        return 46\n    if time.to_milliseconds(time.nanoseconds(0 - 9223372036854775807 - 1)) != 0 - 9223372036854:\n        return 47\n    if time.compare(time.nanoseconds(1), time.nanoseconds(2)) != 0 - 1:\n        return 48\n    if time.compare(time.nanoseconds(2), time.nanoseconds(2)) != 0:\n        return 49\n    return 0\n\n\ndef arithmetic() -> int:\n    match time.sum(time.nanoseconds(9223372036854775807), time.nanoseconds(1)):\n        case Ok(_):\n            return 50\n        case Err(_):\n            _ = 0\n    match time.sum(time.nanoseconds(0 - 9223372036854775807 - 1), time.nanoseconds(0 - 1)):\n        case Ok(_):\n            return 51\n        case Err(_):\n            _ = 0\n    match time.difference(time.nanoseconds(5), time.nanoseconds(0 - 9223372036854775807 - 1)):\n        case Ok(_):\n            return 52\n        case Err(_):\n            _ = 0\n    match time.difference(time.nanoseconds(5), time.nanoseconds(2)):\n        case Ok(span):\n            if span.nanoseconds != 3:\n                return 53\n        case Err(_):\n            return 54\n    return 0\n\n\ndef instants() -> int:\n    start = time.from_unix_nanoseconds(1000)\n    match time.after(start, time.nanoseconds(500)):\n        case Ok(later):\n            if later.unix_nanoseconds != 1500:\n                return 60\n            if not time.expired(start, later) or time.expired(later, start):\n                return 61\n            match time.elapsed(start, later):\n                case Ok(span):\n                    if span.nanoseconds != 500:\n                        return 62\n                case Err(_):\n                    return 63\n        case Err(_):\n            return 64\n    match time.after(time.from_unix_nanoseconds(9223372036854775807), time.nanoseconds(1)):\n        case Ok(_):\n            return 65\n        case Err(_):\n            _ = 0\n    match time.elapsed(time.from_unix_nanoseconds(10), time.from_unix_nanoseconds(5)):\n        case Ok(_):\n            return 66\n        case Err(_):\n            _ = 0\n    match time.elapsed(time.from_unix_nanoseconds(0 - 9223372036854775807 - 1), time.from_unix_nanoseconds(9223372036854775807)):\n        case Ok(_):\n            return 67\n        case Err(_):\n            _ = 0\n    return 0\n\n\ndef main() -> int:\n    checks = [streams(), fractions(), ranges(), permutations(), durations(), arithmetic(), instants()]\n    for value in checks:\n        if value != 0:\n            return value\n    return 0\n"
+    },
+    "migrated-example/main.my": {
+      "sha256": "54ba35e57124b7f8c0266033f8dbb0a3cf477dbd94b3223c469eef28f8eaf097",
+      "source": "module main\nimport random\nimport time\n\ndef streams() -> int:\n    generator = random.seeded(0)\n    if random.next_word(mut generator) != 16294208416658607535u64:\n        return 1\n    if random.next_word(mut generator) != 7960286522194355700u64:\n        return 2\n    replay = random.seeded(0)\n    if random.next_word(mut replay) != 16294208416658607535u64:\n        return 3\n    snapshot = replay\n    if random.next_word(mut snapshot) != 7960286522194355700u64:\n        return 4\n    if random.next_word(mut replay) != 7960286522194355700u64:\n        return 5\n    if random.next_word(mut replay) != random.next_word(mut snapshot):\n        return 6\n    return 0\n\n\ndef bounds() -> int:\n    generator = random.seeded(3)\n    match random.randint(mut generator, 4, 3):\n        case Ok(_):\n            return 10\n        case Err(_):\n            _ = 0\n    match random.randint(mut generator, 0 - 9223372036854775807 - 1, 9223372036854775807):\n        case Ok(_):\n            _ = 0\n        case Err(_):\n            return 11\n    draws = 0\n    while draws < 200:\n        match random.randint(mut generator, 0, 9):\n            case Ok(value):\n                if value < 0 or value > 9:\n                    return 12\n            case Err(_):\n                return 13\n        draws += 1\n    return 0\n\n\ndef limits() -> int:\n    earliest = time.from_unix_nanoseconds(0 - 9223372036854775807 - 1)\n    latest = time.from_unix_nanoseconds(9223372036854775807)\n    match time.elapsed(earliest, latest):\n        case Ok(_):\n            return 20\n        case Err(_):\n            _ = 0\n    match time.after(latest, time.nanoseconds(1)):\n        case Ok(_):\n            return 21\n        case Err(_):\n            _ = 0\n    match time.elapsed(latest, earliest):\n        case Ok(_):\n            return 22\n        case Err(_):\n            _ = 0\n    match time.seconds(9223372037):\n        case Ok(_):\n            return 23\n        case Err(_):\n            _ = 0\n    match time.milliseconds(42):\n        case Ok(span):\n            if span.nanoseconds != 42000000:\n                return 24\n        case Err(_):\n            return 25\n    if not time.expired(earliest, latest) or time.expired(latest, earliest):\n        return 26\n    return 0\n\n\ndef main() -> int:\n    checks = [streams(), bounds(), limits()]\n    for value in checks:\n        if value != 0:\n            return value\n    return 0\n"
+    },
+    "legacy-control/main.my": {
+      "sha256": "f088437b957d3e9fc6498eb5f2e0d6f809434e0e30e8f480398165f6823ac3b8",
+      "source": "module main\nimport random\n\ndef main() -> int:\n    generator = random.seeded(0)\n    alias = generator\n    first = random.next_word(mut alias)\n    second = random.next_word(mut generator)\n    if first != 16294208416658607535u64 or second != 7960286522194355700u64:\n        return 1\n    return 0\n"
+    }
+  },
+  "migration_install": {
+    "compiler": "/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/install/bin/mylang",
+    "compiler_sha256": "31bf2ae018160071c1395b00b7b056e3f1e9d0c0d81e578e3ef4e77f6786b0a0",
+    "random_noncomment_source_identical": true,
+    "random_noncomment_sha256": "adb63c19ad24046daef27d6de83c24c4082db331f90a67bad8292f7031fbace9"
+  },
+  "gate_results": {
+    "test": {
+      "command": [
+        "zig",
+        "build",
+        "test",
+        "--summary",
+        "all"
+      ],
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/gate-test.log",
+      "sha256": "5ad5a15a5ed65cdd20bd6fa836513dae9590cc521001a6824f94089e137cd250",
+      "summary": [
+        "Build Summary: 94/94 steps succeeded; 2125/23661 tests passed (21536 skipped)"
+      ]
+    },
+    "test-qbe": {
+      "command": [
+        "zig",
+        "build",
+        "test-qbe",
+        "--summary",
+        "all"
+      ],
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/gate-test-qbe.log",
+      "sha256": "3f821075c89ebf1f6c06fba58d13d9deefe4cb061b3eec1ea7312a12503260fa",
+      "summary": [
+        "Build Summary: 51/51 steps succeeded; 428/428 tests passed"
+      ]
+    },
+    "test-qbe-build": {
+      "command": [
+        "zig",
+        "build",
+        "test-qbe-build",
+        "--summary",
+        "all"
+      ],
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/gate-test-qbe-build.log",
+      "sha256": "6c5b24a85845d6f074de250368b47fd1474c490d0d4243485ede51a283a5877a",
+      "summary": [
+        "Build Summary: 29/29 steps succeeded"
+      ]
+    },
+    "fmt-check": {
+      "command": [
+        "zig",
+        "build",
+        "fmt-check",
+        "--summary",
+        "all"
+      ],
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix/.tmp-random/gate-fmt-check.log",
+      "sha256": "727fe2e22c982638ef4d6d75a47d5f97e1bb81c8b5f3ec3c0c55f158df48d93f",
+      "summary": [
+        "Build Summary: 2/2 steps succeeded"
+      ]
+    }
+  }
+}

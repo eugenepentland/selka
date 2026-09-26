@@ -55,9 +55,10 @@ returns its full-width output. Seed zero's first two words are
 `16294208416658607535` and `7960286522194355700`. This generator is for
 reproducible simulation and tests; it is not a cryptographic generator.
 
-A `Random` value holds its state in a managed cell. Copying the value therefore
-shares one stream instead of forking it, which is the opposite of the old
-explicit-state API and matches how a generator is normally passed around.
+A `Random` is a value record. Copying it snapshots its current position: each
+copy produces the same remaining sequence, and advancing one leaves the other
+unchanged. Pass `mut generator` to advance the caller's stream. Under
+`--legacy-sharing`, copies share the state list and advance one shared stream.
 
 `randint(generator, low, high)` samples the inclusive range uniformly. It computes
 the width without overflowing either bound, so `randint(generator, -2^63, 2^63-1)`
@@ -80,14 +81,13 @@ def main() -> int:
     replay = random.seeded(0)
     if random.next_word(mut replay) != 16294208416658607535u64:
         return 3
-    alias = replay
-    if random.next_word(mut alias) != 7960286522194355700u64:
+    snapshot = replay
+    if random.next_word(mut snapshot) != 7960286522194355700u64:
         return 4
-    fresh = random.seeded(0)
-    _ = random.next_word(mut fresh)
-    _ = random.next_word(mut fresh)
-    if random.next_word(mut replay) != random.next_word(mut fresh):
+    if random.next_word(mut replay) != 7960286522194355700u64:
         return 5
+    if random.next_word(mut replay) != random.next_word(mut snapshot):
+        return 7
     return sampled()
 
 def sampled() -> int:

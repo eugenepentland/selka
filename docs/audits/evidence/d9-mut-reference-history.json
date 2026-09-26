@@ -1,0 +1,145 @@
+{
+  "source_identity": {
+    "table.my": "c875ae493dbc0d6c1b70202746b0f1d2211190fa1276b9d492778455c0d0b2ca",
+    "value.my": "3b2a444e77c6a703b1aedad3c89ef38cad70aa3bb6cba1716b623980ff9a76b0",
+    "scanner_test.my": "1d7fbb34b0de402657786641217e81c9ae286cab14baf2716de2db875ae39ad0",
+    "natives.my": "2ff45343fded6d303e6233e0f787e63c319e860903e2c0c81ccbb71c2749d665",
+    "resolver.my": "41d41b2a1ddb3f6ab3fb73ad9eff69415b0450d890554766bfee37eac8d0903d",
+    "scanner.my": "af4bc6a57859318051dc47d6e1f6344ee98fbfff037e9be93c0a103765cd3e83",
+    "main.my": "18c1f669b1683123e635256c9f66c6db2766383391371c3822e61df7d9732274",
+    "resolver_test.my": "72c5176ff15db240d8ec8ff8073fcdb7736e8c60ab47410bb60fce934c179d31",
+    "heap_test.my": "c951153991a8d5d13ca1df6ded7c6f26c7b43a08ed2095f72c6091637b29b53f",
+    "lox_strings.my": "383900dda10b9218caf2087e12a2e20089e4d48b0ec5fc3e17e960a3d70d83df",
+    "driver_tests.my": "32615edbfcbe21e8d550910df45d9bfcb199ee9c8171405d38566b98d78e00bd",
+    "driver.my": "fe831d2ec08833d11139e790ab741903b27a8e0fb43582cac11ca664b4595836",
+    "compiler_test.my": "582fe817dbeffa709961b5124370ce200510adb3ac0d246572ca1c0dc19ec08a",
+    "chunk.my": "b4f6e7ae6531b224f99e026f53fee3692c90d8f2b15d3c76ca5962f1803e4b66",
+    "driver_cases.json": "0f5d302b89952c44510d690c59322af42cd9bb54f66f4049fb122a26d184ab2f",
+    "output.my": "cdc79c8a9a5eca0106fb139bca5492da201f027b0499e5e00a492368317d194c",
+    "parser_test.my": "ffe2658f030c75b40a7c54d8f0c64e848e6679e13fc69cbef9a131ed7b120e4b",
+    "interpreter.my": "94d8b5472b997d5f875b575f0cf1b5cc7fb670ac57a293c1c6a8081151a19fcd",
+    "vm.my": "0e468a351887cfbb9e26b9669e1e7a3e1f6f473512bce56395bbc639b2bf25e4",
+    "value_test.my": "b766d22b25a8a8a090b4a059030cfc7462022fdacb66a0a91bf8a9e09a53fed4",
+    "parser.my": "e9bd5d9c37e307d060ce165dc4fa0f276c2ff9dbe7cb21bd27cbdd94644b4edd",
+    "probe_ctor.my": "102aba92c9f446ec635d5ad5f0a0580bcaa14e9d59a2661926d92d755b55483d",
+    "compiler.my": "c550603195401ff6d9436b42d6fbf0c35051521da57e7b85281fc8fcf6ebe048",
+    "heap.my": "25709fc027efad66680e9ac292e877987fe00ae182af98838f5e1de70f125fe7",
+    "ast.my": "e210fb35bf3125ba06ebb978bcb3592162020a77576542f2d049879a51479bf9",
+    "lox_strings_test.my": "a44545c64e9f75cc5af761d6c703feec83c4fc0a14d2678a1b2fce28067bd0c0",
+    "table_test.my": "38279f9135e953484e6844994bc070c4156d1eb31ab4de0f295efbea17c19555",
+    "probe.my": "5eca17d0b26ebe619690b112f8cf8abb55c5d6994fabac8da77a3d8d25595281",
+    "object.my": "08c0d5c6ae304ef4d0e1f5929f52b5d1dd47cd46e6c409392c0b5b1df9567ad7",
+    "bench.json": "dbcc26195c024bc86d9e184284306f4849450f1042d1fe53092e7b52a3deea92"
+  },
+  "historical_parser": [
+    {
+      "compiler": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-stage3b/.tmp-cow/pc/install-region/bin/mylang",
+        "sha256": "76a141ef6bfb0d9f94759a49a8608d561186c661c172d1288e68d49aeb6b9790"
+      },
+      "mode": "legacy",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-stage3b/.tmp-cow/pc/install-region/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-stress-history/.tmp-history/port/parser_test.my",
+        "--filter",
+        "test_parse_logical",
+        "--max-steps=10000000",
+        "--gc-stress",
+        "--jobs",
+        "2",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-stress-history/.tmp-history/cache-9f-legacy"
+      ],
+      "status": 1,
+      "output": "scanner.my:98:20: error[E_MUTATION_MARKER]: `mut` on `scanner::Scanner` has nothing to write; only a list, dict, class, Cell, array, byte buffer or a record holding one can be `mut`\n  def advance(s: mut Scanner) -> int:\n                     ^\nscanner.my:116:23: error[E_MUTATION_MARKER]: `mut` on `scanner::Scanner` has nothing to write; only a list, dict, class, Cell, array, byte buffer or a record holding one can be `mut`\n  def match_byte(s: mut Scanner, expected: int) -> bool:\n                        ^\nscanner.my:131:28: error[E_MUTATION_MARKER]: `mut` on `scanner::Scanner` has nothing to write; only a list, dict, class, Cell, array, byte buffer or a record holding one can be `mut`\n  def skip_whitespace(s: mut Scanner):\n                             ^\nscanner.my:206:23: error[E_MUTATION_MARKER]: `mut` on `scanner::Scanner` has nothing to write; only a list, dict, class, Cell, array, byte buffer or a record holding one can be `mut`\n  def identifier(s: mut Scanner) -> Token:\n                        ^\nscanner.my:212:19: error[E_MUTATION_MARKER]: `mut` on `scanner::Scanner` has nothing to write; only a list, dict, class, Cell, array, byte buffer or a record holding one can be `mut`\n  def number(s: mut Scanner) -> Token:\n                    ^\nscanner.my:222:19: error[E_MUTATION_MARKER]: `mut` on `scanner::Scanner` has nothing to write; only a list, dict, class, Cell, array, byte buffer or a record holding one can be `mut`\n  def string(s: mut Scanner) -> Token:\n                    ^\nscanner.my:234:30: error[E_MUTATION_MARKER]: `mut` on `scanner::Scanner` has nothing to write; only a list, dict, class, Cell, array, byte buffer or a record holding one can be `mut`\n  public def scan_token(s: mut Scanner) -> Token:\n                               ^\n",
+      "interpretation": "compiler rejects scalar mut Scanner; no runtime result"
+    },
+    {
+      "compiler": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-stage3b/.tmp-cow/pc/install-region/bin/mylang",
+        "sha256": "76a141ef6bfb0d9f94759a49a8608d561186c661c172d1288e68d49aeb6b9790"
+      },
+      "mode": "value",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-stage3b/.tmp-cow/pc/install-region/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-stress-history/.tmp-history/port/parser_test.my",
+        "--filter",
+        "test_parse_logical",
+        "--max-steps=10000000",
+        "--gc-stress",
+        "--jobs",
+        "2",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-stress-history/.tmp-history/cache-9f-value",
+        "--value-semantics"
+      ],
+      "status": 1,
+      "output": "failed parser_test::test_parse_logical: NativeTestProcessFailed: .{ .signal = .ABRT }\nthread 2125418 panic: member access within null pointer of type 'const myl_native_type' (aka 'const struct myl_native_type')\nCannot print stack trace: stack tracing is disabled\n\n0 passed, 0 cached, 1 failed, 0 skipped\n",
+      "interpretation": "native GC-stress abort from null type descriptor"
+    }
+  ],
+  "historical_array": {
+    "compiler": "/home/epentland/ai/canopy/mylang-worktrees/perf-gc-dict/zig-out/bin/mylang",
+    "compiler_sha256": "48427e9ac1c01b74e60d1b4c098c8fc149a6b5fef3c07e110c7fb4ba16cbb545",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-worktrees/perf-gc-dict/zig-out/bin/mylang",
+      "test",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-stress-history/.tmp-history/array_ref.my",
+      "--gc-stress",
+      "--max-steps=10000000",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-stress-history/.tmp-history/cache-60b-array"
+    ],
+    "output": "failed array_ref::test_array_ref_liveness: expected true, got false\n0 passed, 0 cached, 1 failed, 0 skipped\n",
+    "source": "module array_ref\n\n\ndef make_noise() -> list[int]:\n    return [1, 2, 3]\n\n\ndef use_array(items: mut [1]list[int]) -> bool:\n    items[0].append(10)\n    return items[0][0] == 7\n\n\npublic def test_array_ref_liveness() -> bool:\n    items: [1]list[int] = [[7, 8, 9]]\n    noise = make_noise()\n    return use_array(mut items) and noise[0] == 1\n"
+  },
+  "history": [
+    "15d7273011c95194e5bf355d8354976ba14bcfb5 2026-09-22T21:13:45Z root liveness: publish only the locals live across a safepoint",
+    "61a52cbc4e0039ec6e16830201200109580d0c8f 2026-09-22T21:24:01Z wave 3: fixed arrays as ordinary mutable values",
+    "21c8c63f6b008703353e5a40aa79be9f76b68dd1 2026-09-22T22:14:49Z Merge branch 'perf/root-liveness' into perf/parity-integration",
+    "0804a4cf0c737ae360ec0fe2400a21a81b4412d8 2026-09-22T22:14:57Z Merge branch 'lang/fixed-array-writes' into perf/parity-integration",
+    "51dba1bda634e2ee9c9a55eab864850e416fbd95 2026-09-25T11:00:47Z D9 stage 3a: opt-in value semantics switch, copy placement and checker rules",
+    "18d66f9292811f20db31ae0b88de667a2d3eb6c9 2026-09-26T04:24:07Z Allow explicit mut record writeback in both modes",
+    "d305a5df5ff082f961606b863ac1820681503841 2026-09-26T04:38:18Z Allow explicit mut record writeback in both modes"
+  ],
+  "review_fixture": "module ref_snapshot\n\nrecord Packet:\n    items: list[int]\n\n\ndef noise() -> list[int]:\n    return [4, 5]\n\n\ndef append_noise(packet: mut Packet, extra: list[int]) -> int:\n    packet.items.append(extra[0])\n    return len(packet.items)\n\n\npublic def test_snapshot_before_reference_and_allocating_argument() -> bool:\n    kept = Packet([1, 2, 3])\n    snapshot = kept\n    scratch = noise()\n    size = append_noise(mut kept, noise())\n    return size == 4 and len(snapshot.items) == 3 and snapshot.items[0] == 1 and scratch[0] == 4\n",
+  "fixed_review": [
+    {
+      "compiler": "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-stress-root-fix/.tmp-stress/install/bin/mylang",
+      "compiler_sha256": "be46540cb7a3bb9f32efd04a394b0044f31339c450ba146f3226f18c43cb80ac",
+      "backend": "qbe",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-stress-root-fix/.tmp-stress/install/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-stress-history/.tmp-history/ref_snapshot.my",
+        "--value-semantics",
+        "--gc-stress",
+        "--max-steps=10000000",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-stress-history/.tmp-history/cache-fixed-qbe"
+      ],
+      "status": 0,
+      "output": "passed ref_snapshot::test_snapshot_before_reference_and_allocating_argument\n1 passed, 0 cached, 0 failed, 0 skipped\n"
+    },
+    {
+      "compiler": "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-stress-root-fix/.tmp-stress/install/bin/mylang",
+      "compiler_sha256": "be46540cb7a3bb9f32efd04a394b0044f31339c450ba146f3226f18c43cb80ac",
+      "backend": "llvm",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-stress-root-fix/.tmp-stress/install/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-stress-history/.tmp-history/ref_snapshot.my",
+        "--value-semantics",
+        "--gc-stress",
+        "--max-steps=10000000",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-stress-history/.tmp-history/cache-fixed-llvm",
+        "--release"
+      ],
+      "status": 0,
+      "output": "passed ref_snapshot::test_snapshot_before_reference_and_allocating_argument\n1 passed, 0 cached, 0 failed, 0 skipped\n"
+    }
+  ]
+}
