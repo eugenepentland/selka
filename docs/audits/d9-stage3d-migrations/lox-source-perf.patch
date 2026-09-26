@@ -14,7 +14,7 @@ index 287d5bb..1aaf569 100644
              return
          error_at_current(mut p, p.current.message)
 diff --git a/heap.my b/heap.my
-index f76a7814..6625492a 100644
+index f76a7814..12063d73 100644
 --- a/heap.my
 +++ b/heap.my
 @@ -13,15 +13,11 @@ public const FRAMES_MAX: int = 64
@@ -89,7 +89,32 @@ index f76a7814..6625492a 100644
  # ObjRef, rather than a shared class payload, carries object identity. Every
  # changed payload is written back into its object-table slot.
  public def set_class_methods(rt: mut Runtime, ref: value.ObjRef, methods: table.Table):
-@@ -203,6 +227,25 @@ public def env_obj(rt: Runtime, ref: value.ObjRef) -> object.EnvObj:
+@@ -184,6 +208,24 @@ public def set_class_methods(rt: mut Runtime, ref: value.ObjRef, methods: table.
+     rt.objects[ref] = object.Obj.klass(klass)
+
+
++def set_object_field(objects: mut list[object.Obj], ref: value.ObjRef, name: value.ObjRef, hash: u32, assigned: value.Value):
++    match objects[ref]:
++        case object.Obj.instance(instance):
++            klass = instance.klass
++            fields = instance.fields
++            _ = table.set(mut fields, name, hash, assigned)
++            objects[ref] = object.Obj.instance(object.InstanceObj(klass=klass, fields=fields))
++        case _:
++            assert False, "object is not an instance"
++
++
++# Moves the object table through the update while its owning runtime stays unique.
++public def set_instance_field(rt: mut Runtime, ref: value.ObjRef, name: value.ObjRef, hash: u32, assigned: value.Value):
++    objects = rt.objects
++    set_object_field(mut objects, ref, name, hash, assigned)
++    rt.objects = objects
++
++
+ public def set_instance_fields(rt: mut Runtime, ref: value.ObjRef, fields: table.Table):
+     match rt.objects[ref]:
+         case object.Obj.instance(instance):
+@@ -203,6 +245,25 @@ public def env_obj(rt: Runtime, ref: value.ObjRef) -> object.EnvObj:
              return object.new_env(value.NO_OBJ, 0)
 
 
@@ -115,7 +140,7 @@ index f76a7814..6625492a 100644
  # P3 adaptation: write one environment slot and store the environment back,
  # so the write lands in the heap under value semantics as well.
  public def set_env_slot(rt: mut Runtime, ref: value.ObjRef, slot: int, item: value.Value):
-@@ -245,105 +288,63 @@ def mark_table(marker: mut Marker, source: table.Table):
+@@ -245,105 +306,63 @@ def mark_table(marker: mut Marker, source: table.Table):
 
 
  def mark_roots(rt: mut Runtime):
@@ -528,7 +553,7 @@ diff --git a/interpreter.my b/interpreter.my
 
 
 diff --git a/vm.my b/vm.my
-index 450eb63e..d3ae62b7 100644
+index 450eb63e..34bc411d 100644
 --- a/vm.my
 +++ b/vm.my
 @@ -18,6 +18,36 @@ public enum InterpretResult:
@@ -745,7 +770,7 @@ index 450eb63e..d3ae62b7 100644
      ref = frame.upvalues[read_byte(mut frame)]
      upvalue = heap.upvalue_obj(rt, ref)
      if upvalue.slot != object.NO_SLOT:
-@@ -308,32 +343,41 @@ def set_upvalue(rt: mut heap.Runtime, frame: mut heap.CallFrame):
+@@ -308,32 +343,34 @@ def set_upvalue(rt: mut heap.Runtime, frame: mut heap.CallFrame):
          rt.objects[ref] = object.Obj.upvalue(upvalue)
 
 
@@ -793,19 +818,12 @@ index 450eb63e..d3ae62b7 100644
 -            assigned = heap.pop(mut rt)
 +            hash = heap.string_hash(rt, name)
 +            assigned = heap.peek(rt, 0)
-+            match rt.objects[instance_ref]:
-+                case object.Obj.instance(instance):
-+                    klass = instance.klass
-+                    fields = instance.fields
-+                    _ = table.set(mut fields, name, hash, assigned)
-+                    rt.objects[instance_ref] = object.Obj.instance(object.InstanceObj(klass=klass, fields=fields))
-+                case _:
-+                    assert False, "object is not an instance"
++            heap.set_instance_field(mut rt, instance_ref, name, hash, assigned)
 +            _ = heap.pop(mut rt)
              _ = heap.pop(mut rt)
              heap.push(mut rt, assigned)
              return True
-@@ -342,6 +386,8 @@ def set_property(rt: mut heap.Runtime, o: mut output.Output, frame: mut heap.Cal
+@@ -342,6 +379,8 @@ def set_property(rt: mut heap.Runtime, o: mut output.Output, frame: mut heap.Cal
 
 
  # GREATER, LESS, SUBTRACT, MULTIPLY and DIVIDE: two numbers in, one out.
@@ -814,7 +832,7 @@ index 450eb63e..d3ae62b7 100644
  def numeric(rt: mut heap.Runtime, o: mut output.Output, instruction: int) -> bool:
      if not is_number(heap.peek(rt, 0)) or not is_number(heap.peek(rt, 1)):
          return runtime_error(mut rt, mut o, b"Operands must be numbers.")
-@@ -381,7 +427,7 @@ def negate(rt: mut heap.Runtime, o: mut output.Output) -> bool:
+@@ -381,7 +420,7 @@ def negate(rt: mut heap.Runtime, o: mut output.Output) -> bool:
 
  # Allocates the closure, pushes it (rooting it while upvalues are
  # captured), then fills its upvalues from the (is_local, index) pairs.
@@ -823,7 +841,7 @@ index 450eb63e..d3ae62b7 100644
      function_ref = read_string(mut frame)
      function = heap.function_obj(rt, function_ref)
      closure = object.new_closure(function_ref, function.upvalue_count)
-@@ -418,7 +464,7 @@ def inherit(rt: mut heap.Runtime, o: mut output.Output) -> bool:
+@@ -418,7 +457,7 @@ def inherit(rt: mut heap.Runtime, o: mut output.Output) -> bool:
      return True
 
 
@@ -832,7 +850,7 @@ index 450eb63e..d3ae62b7 100644
      name = read_string(mut frame)
      methods = heap.class_obj(rt, as_obj(heap.peek(rt, 1))).methods
      _ = table.set(mut methods, name, heap.string_hash(rt, name), heap.peek(rt, 0))
-@@ -432,57 +478,79 @@ def define_method(rt: mut heap.Runtime, frame: mut heap.CallFrame):
+@@ -432,57 +471,79 @@ def define_method(rt: mut heap.Runtime, frame: mut heap.CallFrame):
  # The dispatch loop, one opcode per iteration of `frame`, the innermost
  # call frame. Handlers answer False after reporting a runtime error.
  def run(rt: mut heap.Runtime, o: mut output.Output) -> InterpretResult:
@@ -928,7 +946,7 @@ index 450eb63e..d3ae62b7 100644
          elif instruction == chunk.OP_JUMP:
              offset = read_short(mut frame)
              frame.ip = frame.ip + offset
-@@ -495,48 +563,53 @@ def run(rt: mut heap.Runtime, o: mut output.Output) -> InterpretResult:
+@@ -495,48 +556,53 @@ def run(rt: mut heap.Runtime, o: mut output.Output) -> InterpretResult:
              frame.ip = frame.ip - offset
          elif instruction == chunk.OP_CALL:
              count = read_byte(mut frame)
