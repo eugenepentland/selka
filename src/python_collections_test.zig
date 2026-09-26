@@ -48,6 +48,8 @@ test "absent list and dictionary values trap instead of returning a sentinel" {
 
 // spec: PY-COLLECTIONS-8
 test "iteration detects alias growth including continue and final step" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     for ([_][]const u8{
         "for x in items:\n        _ = x\n        alias.append(2)",
         "for x in items:\n        _ = x\n        alias.append(2)\n        continue",
