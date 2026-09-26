@@ -1,6 +1,6 @@
 module python_syntax___record_is_the_canonical_declaration_head_wit_2
 
-class LegacyPoint:
+record LegacyPoint:
     x: int
     y: int
 

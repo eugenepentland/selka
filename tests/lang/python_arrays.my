@@ -11,7 +11,7 @@ def total(values: [3]i64) -> i64:
     return values[0] + values[1] + values[2]
 
 
-class Row:
+record Row:
     cells: [2]i64
 
 

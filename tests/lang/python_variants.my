@@ -1,7 +1,7 @@
 module python_variants
 
 
-class ShapePoint:
+record ShapePoint:
     x: i64
     y: i64
 
@@ -27,7 +27,7 @@ union Link:
     none
 
 
-class VariantNode:
+record VariantNode:
     next: Link
 
 
@@ -39,7 +39,7 @@ def step(node: VariantNode) -> i64:
             return 0
 
 
-class VariantBox[T]:
+record VariantBox[T]:
     value: T
 
 
@@ -82,7 +82,7 @@ public def test_a_generic_variant_infers_its_type_arguments_from_the_expected_ty
     return choose_slot(held, VariantBox[i64](value=0)).value + choose_slot(hold[i64](0), 0) + choose_slot(empty, 0) == 42
 
 
-class VariantSpan:
+record VariantSpan:
     start: i64
     end: i64
 

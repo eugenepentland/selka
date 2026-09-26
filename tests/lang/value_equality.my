@@ -1,5 +1,7 @@
 module value_equality
 
+import pool
+
 record Point:
     x: int
     y: int
@@ -16,7 +18,7 @@ record Bag:
     name: str
 
 
-class Node:
+record Node:
     value: int
     next: Option[Node]
 
@@ -72,10 +74,10 @@ public def test_union_result_and_option_equality_is_structural() -> bool:
 
 
 # spec-case: VALUE-EQUALITY-1
-public def test_class_equality_is_reference_identity() -> bool:
+public def test_recursive_record_equality_is_structural() -> bool:
     first = Node(value=1, next=None)
     second = Node(value=1, next=None)
-    if first == second:
+    if first != second:
         return False
     if first != first:
         return False
@@ -87,16 +89,22 @@ public def test_class_equality_is_reference_identity() -> bool:
 
 
 # spec-case: VALUE-EQUALITY-1
-public def test_cyclic_class_equality_terminates() -> bool:
-    node = Node(value=1, next=None)
-    node.next = Some(node)
-    other = Node(value=1, next=None)
-    other.next = Some(other)
-    if node != node:
+public def test_pool_handles_keep_identity_separate_from_record_equality() -> bool:
+    seed: list[Node] = []
+    store = pool.create(seed)
+    first = pool.insert(mut store, Node(value=1, next=None))
+    second = pool.insert(mut store, Node(value=1, next=None))
+    if first == second:
         return False
-    if node == other:
-        return False
-    return True
+    match pool.get(store, first):
+        case Some(one):
+            match pool.get(store, second):
+                case Some(two):
+                    return one == two
+                case None:
+                    return False
+        case None:
+            return False
 
 
 # spec-case: EQUALITY-CONTEXT-1

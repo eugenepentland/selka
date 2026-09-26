@@ -31,7 +31,7 @@ def recover_result(value: Result[i64, i64]) -> i64:
             return e
 
 
-class Holder:
+record Holder:
     values: list[i64]
 
 

@@ -1,7 +1,7 @@
 module generic_inference_case_3
 
 
-class Chunk[T, const N: u64]:
+record Chunk[T, const N: u64]:
     items: [N]T
 
 

@@ -1,0 +1,20 @@
+--- a/calc.my
++++ b/calc.my
+@@ -40,13 +40,12 @@
+     div,
+     mod
+ 
+-# Recursive AST nodes must be `class` (reference types), not `record`, because
+-# a record's fields have to close in finite space. Declaring the class ahead
+-# of `union Expr` lets its fields name `Expr` before that union exists yet.
+-class UnaryMinus:
++# The recursive Expr union makes these AST records finite. Declaring the
++# records ahead of Expr lets their fields refer to the union.
++record UnaryMinus:
+     operand: Expr
+ 
+-class BinaryOp:
++record BinaryOp:
+     op: BinOp
+     left: Expr
+     right: Expr

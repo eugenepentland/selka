@@ -3,14 +3,8 @@ module option_narrowing
 record Widget:
     width: int
 
-class Counter:
+record Counter:
     value: int
-
-def increment[T: integer](candidate: mut Option[Counter], amount: T) -> int:
-    if candidate is None:
-        return 0
-    candidate.value = candidate.value + int(amount)
-    return candidate.value
 
 def append_one[T: copy + storable](candidate: mut Option[list[T]], item: T) -> int:
     if candidate is None:
@@ -18,9 +12,9 @@ def append_one[T: copy + storable](candidate: mut Option[list[T]], item: T) -> i
     candidate.append(item)
     return len(candidate)
 
-def observe(counter: mut Counter) -> Option[int]:
-    counter.value = counter.value + 1
-    return Some(counter.value)
+def observe(counter: mut list[int]) -> Option[int]:
+    counter[0] = counter[0] + 1
+    return Some(counter[0])
 
 def inferred_identity[T: copy + storable](value: T) -> T:
     return value
@@ -113,11 +107,13 @@ public def test_option_narrowing_record_write_preserves_wrapper() -> bool:
     return candidate.width == 42 and width(copied) == 42
 
 # spec-case: OPTION-FLOW-1
-public def test_option_narrowing_class_write_preserves_identity() -> bool:
+public def test_option_narrowing_record_write_preserves_independent_value() -> bool:
     counter = Counter(value=40)
     candidate: Option[Counter] = Some(counter)
-    result = increment(mut candidate, 2)
-    return result == 42 and counter.value == 42
+    if candidate is None:
+        return False
+    candidate.value = candidate.value + 2
+    return candidate.value == 42 and counter.value == 40
 
 # spec-case: OPTION-FLOW-1
 public def test_option_narrowing_collection_methods_and_index_writes() -> bool:
@@ -142,10 +138,10 @@ public def test_option_narrowing_false_disjunction_and_repeated_guard() -> bool:
 # spec-case: OPTION-FLOW-4
 # spec-case: GENERIC-EXPECTED-1
 public def test_option_narrowing_tests_and_contextual_calls_evaluate_once() -> bool:
-    counter = Counter(value=0)
+    counter: list[int] = [0]
     if observe(mut counter) is None:
         return False
     value: Option[int] = inferred_identity(observe(mut counter))
     if value is None or observe(mut counter) is None:
         return False
-    return value == 2 and counter.value == 3
+    return value == 2 and counter[0] == 3

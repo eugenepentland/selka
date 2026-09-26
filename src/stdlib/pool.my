@@ -64,14 +64,14 @@ public def insert[T: copy + storable](store: mut Pool[T], value: T) -> Handle[T]
 
 
 # The value a handle names, or nothing for a stale or foreign handle.
-public def get[T: copy + storable](store: Pool[T], handle: Handle[T]) -> Option[T] effects():
+public def get[T: copy + storable](store: Pool[T], handle: Handle[T]) -> Option[T]:
     if not occupied(store, handle):
         return None
     return Some(store.slots[handle.index])
 
 
 # Replace the value a handle names, reporting whether the handle was live.
-public def set[T: copy + storable](store: mut Pool[T], handle: Handle[T], value: T) -> bool effects(mutation):
+public def set[T: copy + storable](store: mut Pool[T], handle: Handle[T], value: T) -> bool:
     if not occupied(store, handle):
         return False
     store.slots[handle.index] = value

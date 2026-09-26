@@ -23,7 +23,7 @@ const OFFSET: int = 2
 type F = def(i64) -> i64 effects()
 
 
-class BoxCall[T]:
+record BoxCall[T]:
     value: T
 
 

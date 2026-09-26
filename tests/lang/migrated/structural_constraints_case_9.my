@@ -1,11 +1,11 @@
 module structural_constraints_case_9
 
 
-class A:
+record A:
     value: i64
 
 
-class B:
+record B:
     tag: bool
     value: i64
 

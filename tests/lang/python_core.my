@@ -56,7 +56,7 @@ def apply(f: def(int) -> int, x: int) -> int:
     return f(x)
 
 
-class Score:
+record Score:
     name: str
     points: int
 
@@ -65,7 +65,7 @@ def score(item: Score) -> int:
     return item.points
 
 
-class Counter:
+record Counter:
     n: int
 
 
@@ -73,8 +73,10 @@ record Pair:
     n: int
 
 
-def bump(counter: mut Counter) effects(mutation):
-    counter.n = counter.n + 1
+def bump(counter: Counter) -> Counter:
+    changed = counter
+    changed.n = changed.n + 1
+    return changed
 
 
 # spec: PYTHON-CORE-4
@@ -164,16 +166,16 @@ public def test_unannotated_functions_fill_the_sorted_key_callback_slot() -> boo
     return ordered[0].points * 42 == 42
 
 
-# spec: CLASS-MANAGED-1
-public def test_class_is_a_shared_managed_reference_while_record_copies() -> bool:
+# A record copy is independent of its source.
+public def test_record_copies_are_independent() -> bool:
     a = Counter(n=1)
     b = a
     b.n = 7
-    bump(mut a)
+    a = bump(a)
     pair = Pair(n=1)
     copy = pair
     copy.n = 9
-    return a.n * 10 + pair.n == 81
+    return a.n * 10 + pair.n == 21 and b.n == 7
 
 
 def main() -> int:

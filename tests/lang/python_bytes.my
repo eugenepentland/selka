@@ -5,7 +5,7 @@ def bytes_widen(value: bytes) -> bytes:
     return value + value
 
 
-class BytesPacket:
+record BytesPacket:
     tag: str
     body: bytes
 

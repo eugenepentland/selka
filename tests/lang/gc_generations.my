@@ -11,7 +11,7 @@ module gc_generations
 # is full.
 
 
-class Node:
+record Node:
     next: Option[Node]
     value: int
 
