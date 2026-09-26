@@ -1269,7 +1269,7 @@ host failure in one worker leaves the units the other workers hold running.
 - [CONTRACT-CACHE-2] Invariant checks synthesized inside a function retain only spans inside that function's declaration region, including operator positions and generated locals. Unchanged bodies constructing invariant-carrying values can be reused after source relocation; edits to a referenced invariant still invalidate them.
 - [CONTRACT-DECODE-1] Copied JSON and native wire arguments check every record or domain invariant before the selected guest body runs, including records nested in aggregates and managed collections. Invalid input traps `R_INVARIANT` at the clause without publishing a result. Compiler-generated validation callbacks retain their ordinary call dependencies in selective native builds and start with independent local and conversion-accounting state.
 
-## Value semantics (opt-in, stage 3a of D9)
+## Value semantics (default, D9)
 
 - [COW-FIELD-RETURN-1] A record field extracted to a mutable local and unconditionally stored back to the same field can transfer its payload without marking it shared when the original field cannot be observed between those operations and the temporary does not survive the store-back. Closed forward branches and reads through distinct sibling fields, including signed-index normalization, may occur before the store-back. A source observation, control-flow exit, different destination field or surviving temporary retains ordinary copy-on-write; pre-existing independent values remain unchanged.
 
