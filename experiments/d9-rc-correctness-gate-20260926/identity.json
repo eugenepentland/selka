@@ -1,0 +1,43 @@
+{
+  "source": "dab80d845760ed3282322925203b8f0afb487d23",
+  "compiler_sha256": "d2a61a896346098f87b96367853562fc49fc88367b9c801fe0349840dc0c04b2",
+  "full_gate_passed": false,
+  "main_gate": {
+    "steps_passed": 92,
+    "steps_total": 94,
+    "tests_passed": 2237,
+    "failed": 1,
+    "shard_excluded": 22761,
+    "failure": "ownership_test.test.OWNERSHIP-ANALYSIS-1 classes, callbacks and arenas are answered, never refused: legacy class read-only field projection expected borrow, got copy"
+  },
+  "qbe_gate": {
+    "steps": 51,
+    "tests_passed": 437
+  },
+  "native_build_steps": 29,
+  "fmt_steps": 2,
+  "sweeps": {
+    "qbe": {
+      "version": "native-tests-v1",
+      "passed": 792,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 792,
+      "programs": 138,
+      "dropped": 0,
+      "unloaded": 0
+    },
+    "llvm": {
+      "version": "native-tests-v1",
+      "passed": 792,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 792,
+      "programs": 138,
+      "dropped": 0,
+      "unloaded": 0
+    }
+  }
+}

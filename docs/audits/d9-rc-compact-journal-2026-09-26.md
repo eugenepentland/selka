@@ -86,3 +86,18 @@ per frame. The manifest's implementation hash changes; the canonical function
 symbol and source metadata remain stable. Payload buffers and scratch storage
 are unchanged. Neither this measurement nor the focused suite substitutes for
 the combined gate or full-corpus performance check.
+
+## Joined disjoint-transfer validation
+
+Real merge `ce8e5d2fbd2e53f709f7c28561ff05a9ca6e922b` joins compact
+`2dd16bf6` with disjoint transfer `2e359988`. The plain staging branch and
+compact internal-flag mapping remain; the guarded transfer explicitly passes
+`disjoint=false`, while proven completed producers pass `true`. The merged
+Debug install passes 12/12 steps and Guardian88; the focused disjoint-transfer
+units pass 12/12. A fresh 36-assertion subset per actual backend covers compact
+frames, aggregates, arenas, held dictionaries and mutable rebinding. All pass.
+All six standalone success/trap probes per backend also pass with balanced O/H
+and allocation counts. `joined-*` evidence records this separate source and
+compiler identity without replacing the isolated before/after measurement.
+Documentation coverage passes for all 199 declared features; these audit pages
+contain no executable examples.

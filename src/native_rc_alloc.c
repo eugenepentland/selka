@@ -1,5 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 #include "native_rc_alloc.h"
+#include "native_rc_internal.h"
+#include "native_rc_values.h"
 #include "native_arena.h"
 #include <assert.h>
 #include <stdlib.h>
@@ -15,7 +17,7 @@ struct rc_slab {
     rc_slab_links all, available;
     size_t stride, used, live;
     void *free;
-    size_t class_index;
+    struct { size_t index, capacity; } class;
 };
 typedef struct rc_large rc_large;
 struct rc_large {
@@ -29,6 +31,7 @@ typedef struct {
     rc_class classes[RC_SLAB_CLASSES];
     rc_large *large;
     size_t reserved;
+    struct { const myl_native_type *type; size_t index; } single;
 } rc_storage;
 static const size_t strides[RC_SLAB_CLASSES] = {
     16,32,48,64,80,96,112,128,160,192,224,256,320,384,448,512,
@@ -36,6 +39,7 @@ static const size_t strides[RC_SLAB_CLASSES] = {
     5120,6144,7168,8192
 };
 #define RC_SLAB_OFFSET ((sizeof(rc_slab) + 15) & ~(size_t)15)
+_Static_assert(RC_SLAB_OFFSET == 80, "cached capacity fits the existing aligned slab metadata extent");
 _Static_assert(sizeof(rc_large) % 16 == 0, "large allocator metadata preserves alignment");
 _Static_assert(sizeof(myl_rc_object) == MYL_RC_PREFIX_BYTES, "RC prefix ABI");
 _Static_assert(offsetof(myl_rc_object, common) == 16, "common header ABI");
@@ -48,7 +52,8 @@ static const myl_rc_module raw_module = {
     .abi=MYL_RC_ABI_VERSION,.descriptors=&raw_descriptor,.descriptor_count=1
 };
 static rc_storage *storage_of(const myl_native_heap *heap) {
-    return myl_rc_allocator_context(heap);
+    myl_rc_invariant(heap && heap->rc);
+    return heap->rc->allocator.context;
 }
 static int budget(myl_native_heap *heap, size_t bytes) {
     if (bytes>SIZE_MAX-heap->bytes || (heap->limit && (heap->bytes > heap->limit || bytes > heap->limit - heap->bytes))) {
@@ -78,10 +83,10 @@ static void available_remove(rc_class *class, rc_slab *slab) {
     slab->available=(rc_slab_links){0};
 }
 static size_t slots(const rc_slab *slab) {
-    return (RC_SLAB_BYTES-RC_SLAB_OFFSET)/slab->stride;
+    return slab->class.capacity;
 }
 static void slab_free(myl_native_heap *heap, rc_slab *slab) {
-    rc_class *class=&storage_of(heap)->classes[slab->class_index];
+    rc_class *class=&storage_of(heap)->classes[slab->class.index];
     assert(!slab->live);
     available_remove(class,slab);
     if (slab->all.previous) slab->all.previous->all.next=slab->all.next;
@@ -110,7 +115,8 @@ static rc_slab *slab_new(myl_native_heap *heap, size_t index) {
     if (!slab) return NULL;
     memset(slab,0,sizeof *slab);
     slab->stride=strides[index];
-    slab->class_index=index;
+    slab->class.index=index;
+    slab->class.capacity=(RC_SLAB_BYTES-RC_SLAB_OFFSET)/slab->stride;
     rc_class *class=&storage_of(heap)->classes[index];
     slab->all.next=class->all;
     if (class->all) class->all->all.previous=slab;
@@ -155,6 +161,16 @@ static myl_rc_object *large_take(myl_native_heap *heap, size_t extent) {
     charge(heap,bytes);
     return (myl_rc_object *)(large+1);
 }
+static void *initialize(myl_native_heap *heap, myl_rc_object *object,
+                        const myl_native_type *element, size_t count, uintptr_t flags) {
+    object->owners=1;
+    object->holds=0;
+    object->common=(myl_native_object){.mark=((uintptr_t)count<<MYL_NATIVE_OBJECT_COUNT_SHIFT)|flags,
+        .element=element};
+    heap->objects_live++;
+    heap->allocations++;
+    return object+1;
+}
 static myl_rc_status allocate(myl_native_heap *heap, const myl_rc_alloc_request *request, void **out) {
     *out=NULL;
     if (request->region) {
@@ -169,17 +185,41 @@ static myl_rc_status allocate(myl_native_heap *heap, const myl_rc_alloc_request 
     size_t index=class_for(extent);
     myl_rc_object *object=index<RC_SLAB_CLASSES?slab_take(heap,index):large_take(heap,extent);
     if (!object) return MYL_RC_ALLOCATION_REFUSED;
-    object->owners=1;
-    object->holds=0;
-    object->common=(myl_native_object){
-        .mark=((uintptr_t)request->count<<MYL_NATIVE_OBJECT_COUNT_SHIFT) |
-            (index==RC_SLAB_CLASSES?MYL_NATIVE_OBJECT_LARGE:0),
-        .element=request->element
-    };
-    heap->objects_live++;
-    heap->allocations++;
-    *out=object+1;
+    *out=initialize(heap,object,request->element,request->count,
+        index==RC_SLAB_CLASSES?MYL_NATIVE_OBJECT_LARGE:0);
     return MYL_RC_OK;
+}
+/* The descriptor/type contract is immutable for the heap's lifetime. This
+ * single-type cache stores only a completed registration and size-class proof,
+ * never a slab address; trim, retirement and reentrant metadata registration
+ * therefore cannot invalidate it. All other requests retain the generic hook. */
+void *myl_rc_storage_alloc(myl_native_heap *heap, const myl_native_type *element, size_t count, unsigned region) {
+    myl_rc_invariant(heap && heap->rc && element);
+    if (!region && count==1 && heap->rc->allocator.hooks.allocate==allocate) {
+        rc_storage *storage=storage_of(heap);
+        size_t index;
+        if (storage->single.type==element) index=storage->single.index;
+        else {
+            if (!myl_rc_native_shape(heap,element)) return NULL;
+            if (element->alignment>16 || element->size>strides[RC_SLAB_CLASSES-1]-MYL_RC_PREFIX_BYTES)
+                goto registered;
+            index=class_for(MYL_RC_PREFIX_BYTES+element->size);
+            storage->single.type=element;
+            storage->single.index=index;
+        }
+        myl_rc_object *object=slab_take(heap,index);
+        if (!object) { myl_rc_record_failure(heap,MYL_RC_ALLOCATION_REFUSED); return NULL; }
+        void *payload=initialize(heap,object,element,1,0);
+        MYL_RC_STAT(heap,MYL_RC_STAT_HEAP_ALLOCATE);
+        return payload;
+    }
+    if (!myl_rc_native_shape(heap,element)) return NULL;
+registered:;
+    myl_rc_alloc_request request={element,count,region};
+    void *result=NULL;
+    myl_rc_status status=myl_rc_new(heap,&request,&result);
+    if (status!=MYL_RC_OK) myl_rc_record_failure(heap,status);
+    return result;
 }
 /* Saturation disables weak absence caching permanently; it never wraps back
  * to a cached epoch that could name a previous allocation at the same address. */
@@ -202,7 +242,7 @@ static void retire(myl_native_heap *heap, void *payload) {
         return;
     }
     rc_slab *slab=(rc_slab *)((uintptr_t)object&~(uintptr_t)(RC_SLAB_BYTES-1));
-    rc_class *class=&storage_of(heap)->classes[slab->class_index];
+    rc_class *class=&storage_of(heap)->classes[slab->class.index];
     int full=!slab->free && slab->used==slots(slab);
     memcpy(object,&slab->free,sizeof slab->free);
     slab->free=object;

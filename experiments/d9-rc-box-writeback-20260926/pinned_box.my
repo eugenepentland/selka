@@ -1,0 +1,16 @@
+record Node:
+    mapping: dict[int, int]
+    child: Option[Node]
+
+def edit(value: mut Option[Node]) -> int:
+    if value is None:
+        return 0
+    value.mapping[1] = 13
+    return value.mapping[1]
+
+def main(out: Stream) -> int:
+    original: Option[Node] = Some(Node({1: 7}, None))
+    observed = edit(mut original)
+    if original is not None:
+        out.print(observed, original.mapping[1])
+    return 0
