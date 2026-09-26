@@ -1,0 +1,49 @@
+{
+  "revision": "d0178601cd213aaa602cc354377fc01fc8084e14",
+  "compiler_mode": "Debug",
+  "compiler_sha256": "6cea9d427d2bf3323ae7db77f4d7c5e86a189d93304f49d833f8ce5df35a764b",
+  "default_runtime": "gc-v1",
+  "full_gate": {
+    "test": {
+      "steps": 94,
+      "executed": 2162,
+      "total": 24087,
+      "skipped": 21925
+    },
+    "test-qbe": {
+      "steps": 51,
+      "executed": 436
+    },
+    "test-qbe-build": {
+      "steps": 29
+    },
+    "fmt-check": {
+      "steps": 2,
+      "exit": 0
+    }
+  },
+  "logs": [
+    {
+      "source": ".tmp-rc/host-staged-test.log",
+      "artifact": "docs/audits/evidence/d9-rc-host-staged-test.log.gz",
+      "raw_sha256": "059c683538e698dc7c2e44b00d583f3ca3e3022ed119c40ef954102f73fbb85c"
+    },
+    {
+      "source": ".tmp-rc/host-staged-test-qbe.log",
+      "artifact": "docs/audits/evidence/d9-rc-host-staged-test-qbe.log.gz",
+      "raw_sha256": "eacdee10bd6000c4fc23b0faf150366abd838a020d75534a7279a734b99e48cd"
+    },
+    {
+      "source": ".tmp-rc/host-staged-test-qbe-build.log",
+      "artifact": "docs/audits/evidence/d9-rc-host-staged-test-qbe-build.log.gz",
+      "raw_sha256": "272eed2334341bb8a9014c894157b527947b9389238acaf026fb506b3a057427"
+    },
+    {
+      "source": ".tmp-rc/host-staged-fmt-check.log",
+      "artifact": "docs/audits/evidence/d9-rc-host-staged-fmt-check.log.gz",
+      "raw_sha256": "727fe2e22c982638ef4d6d75a47d5f97e1bb81c8b5f3ec3c0c55f158df48d93f"
+    }
+  ],
+  "rc_guest_acceptance": false,
+  "main_untouched": "b292660a09bc703d0ceab071636a73b643c52d34"
+}
