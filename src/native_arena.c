@@ -103,13 +103,7 @@ static int depth_room(myl_native_heap *heap, unsigned region) {
     if (region < heap->arena_depth_capacity) return 1;
     size_t capacity = heap->arena_depth_capacity ? heap->arena_depth_capacity : 8;
     while (capacity <= region) capacity *= 2;
-    myl_native_arena_chunk **grown;
-    if (heap->rc) {
-        grown = myl_rc_meta_alloc(heap, capacity * sizeof *grown);
-        if (!grown) return 0;
-        if (heap->arena_depth_capacity) memcpy(grown, heap->arena_chunks, heap->arena_depth_capacity * sizeof *grown);
-        myl_rc_meta_free(heap, heap->arena_chunks, heap->arena_depth_capacity * sizeof *grown);
-    } else grown = realloc(heap->arena_chunks, capacity * sizeof *grown);
+    myl_native_arena_chunk **grown = realloc(heap->arena_chunks, capacity * sizeof *grown);
     if (!grown) return 0;
     memset(grown + heap->arena_depth_capacity, 0, (capacity - heap->arena_depth_capacity) * sizeof *grown);
     heap->arena_chunks = grown;
@@ -144,9 +138,28 @@ static void link_chunk(myl_native_heap *heap, myl_native_arena_chunk *chunk, uns
     if (heap->arena.reserved_bytes > heap->arena.peak_reserved_bytes)
         heap->arena.peak_reserved_bytes = heap->arena.reserved_bytes;
 }
+static myl_native_arena_chunk *rc_new_chunk(myl_native_heap *heap, size_t minimum, size_t preferred, unsigned region) {
+    myl_native_arena_chunk **grown = NULL;
+    size_t capacity = heap->arena_depth_capacity;
+    if (region >= capacity) {
+        capacity = capacity ? capacity : 8;
+        while (capacity <= region) capacity *= 2;
+        grown = myl_rc_meta_alloc(heap, capacity * sizeof *grown);
+        if (!grown) return NULL;
+        if (heap->arena_depth_capacity) memcpy(grown, heap->arena_chunks, heap->arena_depth_capacity * sizeof *grown);
+    }
+    myl_native_arena_chunk *chunk = rc_chunk(heap, minimum, preferred);
+    if (!chunk) { myl_rc_meta_free(heap, grown, capacity * sizeof *grown); return NULL; }
+    if (grown) {
+        myl_rc_meta_free(heap, heap->arena_chunks, heap->arena_depth_capacity * sizeof *grown);
+        heap->arena_chunks = grown;
+        heap->arena_depth_capacity = capacity;
+    }
+    link_chunk(heap, chunk, region);
+    return chunk;
+}
 static myl_native_arena_chunk *new_chunk(myl_native_heap *heap, size_t payload, unsigned region, size_t previous) {
     const size_t mask = alignof(max_align_t) - 1;
-    if (!depth_room(heap, region)) return NULL;
     size_t overhead = sizeof(myl_native_arena_chunk) + sizeof(myl_native_object);
     if (payload > SIZE_MAX - overhead - mask) return NULL;
     size_t minimum = (overhead + payload + mask) & ~mask;
@@ -155,11 +168,8 @@ static myl_native_arena_chunk *new_chunk(myl_native_heap *heap, size_t payload, 
     size_t preferred = previous < (512u << 10) ? previous * 2 : (1u << 20);
     if (preferred < (64u << 10)) preferred = 64u << 10;
     if (preferred < minimum) preferred = minimum;
-    if (heap->rc) {
-        myl_native_arena_chunk *chunk = rc_chunk(heap, minimum, preferred);
-        if (chunk) link_chunk(heap, chunk, region);
-        return chunk;
-    }
+    if (heap->rc) return rc_new_chunk(heap, minimum, preferred, region);
+    if (!depth_room(heap, region)) return NULL;
     /* Collection may reclaim older GC storage but never any arena allocation.
      * Charge the actual host reservation, including descriptor space and slack. */
     if ((heap->bytes > heap->limit || minimum > heap->limit - heap->bytes) && !heap->suspended)

@@ -4,6 +4,8 @@
    never references an object of a younger arena is kept by a store barrier, so
    bulk release at scope exit frees a whole depth without tracing survivors. */
 #include "native_regions.h"
+#include "native_rc_values.h"
+#include "native_rc_internal.h"
 #include <stdlib.h>
 #include <string.h>
 static void reach(const myl_native_heap *heap, const myl_native_type *type,
@@ -28,6 +30,17 @@ static void reach(const myl_native_heap *heap, const myl_native_type *type,
 }
 unsigned myl_native_region_reach(const myl_native_heap *heap,
                                  const myl_native_type *type, const void *value) {
+    if (myl_rc_enabled(heap)) {
+        if (type->kind == MYL_NATIVE_PLAIN || type->kind == MYL_NATIVE_FLOAT) return 0;
+        if (type->kind == MYL_NATIVE_POINTER) {
+            void *payload;
+            memcpy(&payload, value, sizeof payload);
+            return payload ? myl_native_header_region(payload) : 0;
+        }
+        const myl_rc_descriptor *descriptor = myl_rc_descriptor_find(heap, type);
+        myl_rc_invariant(descriptor != NULL);
+        return myl_rc_value_region((myl_native_heap *)heap, descriptor->shape, value);
+    }
     unsigned deepest = 0;
     reach(heap, type, value, &deepest);
     return deepest;
@@ -201,6 +214,15 @@ static void fill(Copier *copier, Clone item) {
 }
 int myl_native_region_escape(myl_native_heap *heap, const myl_native_type *type,
                              const void *value, void *output) {
+    if (myl_rc_enabled(heap)) {
+        const myl_rc_shape *shape = myl_rc_native_shape(heap, type);
+        if (!shape) return 0;
+        myl_rc_slot source = {.shape = shape, .address = (void *)value};
+        myl_rc_slot destination = {.shape = shape, .address = output, .region = heap->region_depth ? heap->region_depth - 1 : 0};
+        myl_rc_status status = myl_rc_region_escape(heap, &destination, &source);
+        if (status != MYL_RC_OK) myl_rc_record_failure(heap, status);
+        return status == MYL_RC_OK;
+    }
     if (!heap->region_depth) {
         if (type->size) memcpy(output, value, type->size);
         return 1;
