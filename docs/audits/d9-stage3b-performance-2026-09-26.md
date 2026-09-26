@@ -57,3 +57,15 @@ and `fmt-check` (2/2 steps) under the shared full-gate lock. The new pinned
 COW transfer regression also passed under `--gc-stress`. These correctness
 results do not waive the stage 3 performance gate; default activation must
 wait for it to pass.
+
+After the sweep, `b8d14efb` broadened the QBE in-place record-update proof to
+allow a prior completed `mut` call in a value-semantics build. It preserves
+the switch-off rule and IL. On the final class-free Lox source, N=30,000
+equality fell from 2,683,967,077 to 2,451,645,857 QBE instructions, an 8.66%
+reduction (2.407× the class baseline), with exact output and a matching
+`--gc-stress` result. The same source passed all 13 VM smoke scripts against
+their expected output. A separate four-step branch gate passed at `b8d14efb`:
+93/93 `test` steps with 2,088 selected tests, 51/51 `test-qbe` steps with
+428/428 tests, 29/29 `test-qbe-build` steps, and 2/2 `fmt-check` steps. The
+116-key data above remain measurements of `efbc4285`; no full sweep has yet
+measured `b8d14efb` or a joined integration commit.
