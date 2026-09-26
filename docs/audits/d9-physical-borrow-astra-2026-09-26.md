@@ -33,4 +33,4 @@ actual retain/release traffic belongs to WP-4.
 
 - Parent compiler SHA-256: `ceb38b6e1fb1a23f20d92580b3cd7f07f635f5752311f27d477f9792e388b7d5`.
 - Candidate compiler SHA-256: `ebccde0d2751e695fc1bbb4f08f41ee1e277da8ab7a1c862954803534355228b`.
-- [Raw instruction samples, outputs and binary hashes](evidence/d9-physical-borrow-astra-perf.json).
+- [Raw instruction samples and binary hashes](evidence/d9-physical-borrow-astra-perf.json).
