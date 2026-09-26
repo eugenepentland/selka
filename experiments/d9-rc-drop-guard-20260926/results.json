@@ -1,0 +1,233 @@
+{
+  "kind": "private n12 diagnostic, not full corpus acceptance",
+  "source": "# binary_trees: perfect binary trees of recursive value nodes on the collecting heap.\n# Every short-lived tree becomes garbage after its check; the tracing\n# collector reclaims it. See SUITE.md section 1.\n\n\nrecord Node:\n    left: Option[Node]\n    right: Option[Node]\n\n\ndef make(depth: int) -> Node:\n    if depth == 0:\n        return Node(left=None, right=None)\n    return Node(left=Some(make(depth - 1)), right=Some(make(depth - 1)))\n\n\ndef check(node: Node) -> int:\n    left = node.left\n    right = node.right\n    if left is None or right is None:\n        return 1\n    return 1 + check(left) + check(right)\n\n\ndef main(out: Stream) -> int:\n    max_depth = 12\n    min_depth = 4\n\n    stretch = max_depth + 1\n    out.print(f\"stretch tree of depth {stretch}\\t check: {check(make(stretch))}\")\n\n    long_lived = make(max_depth)\n\n    depth = min_depth\n    while depth <= max_depth:\n        iterations = shift_left(1, max_depth - depth + min_depth)\n        total = 0\n        for _ in range(iterations):\n            total = total + check(make(depth))\n        out.print(f\"{iterations}\\t trees of depth {depth}\\t check: {total}\")\n        depth = depth + 2\n\n    out.print(f\"long lived tree of depth {max_depth}\\t check: {check(long_lived)}\")\n    return 0\n",
+  "expected": "stretch tree of depth 13\t check: 16383\n4096\t trees of depth 4\t check: 126976\n1024\t trees of depth 6\t check: 130048\n256\t trees of depth 8\t check: 130816\n64\t trees of depth 10\t check: 131008\n16\t trees of depth 12\t check: 131056\nlong lived tree of depth 12\t check: 8191\n",
+  "before_commit": "19cb079b0254f0631fd39044078dd74fa9546388",
+  "after_patch": "diff --git a/src/qbe_rc_aggregate_test.zig b/src/qbe_rc_aggregate_test.zig\nindex a3416d51..bc61c151 100644\n--- a/src/qbe_rc_aggregate_test.zig\n+++ b/src/qbe_rc_aggregate_test.zig\n@@ -180,3 +180,16 @@ test \"RC scalar arithmetic in an owning frame emits only the managed input drop\"\n     const text = try findFunction(manifest.value, \"total\");\n     try t.expectEqual(@as(usize, 1), std.mem.count(u8, text, \"call $myl_qbe_rc_slot_drop\"));\n }\n+\n+// spec-case: RC-FRAME-1\n+test \"RC empty slot releases branch around native cleanup\" {\n+    const saved = runtime.get();\n+    defer runtime.set(saved);\n+    runtime.set(.rc);\n+    var manifest = try pairText();\n+    defer manifest.deinit();\n+    const text = try findFunction(manifest.value, \"pair\");\n+    const release = try location(text, \"call $myl_qbe_rc_slot_drop\");\n+    try t.expect(std.mem.indexOf(u8, text[0..release], \"@rcslotdrop\") != null);\n+    try t.expect(std.mem.indexOf(u8, text[release..], \"@rcslotdone\") != null);\n+}\ndiff --git a/src/qbe_rc_frame.zig b/src/qbe_rc_frame.zig\nindex 77485a68..576d58dc 100644\n--- a/src/qbe_rc_frame.zig\n+++ b/src/qbe_rc_frame.zig\n@@ -120,8 +120,13 @@ pub fn entry(comptime E: type, self: *E, index: usize, ty: typed.Type, address:\n }\n /// Clear/drop one dynamic typed entry using the runtime's unique/count ordering.\n pub fn drop(comptime E: type, self: *E, index: usize) Error!void {\n+    const live = self.temp();\n+    const label = self.temp();\n+    const flag = try guard(E, self, index);\n+    try self.print(\" %v{d} =w loaduw %v{d}\\n jnz %v{d}, @rcslotdrop{d}, @rcslotdone{d}\\n@rcslotdrop{d}\\n\", .{ live, flag, live, label, label, label });\n     const pointer = self.temp();\n     try self.print(\" %v{d} =l add %rcentries, {d}\\n call $myl_qbe_rc_slot_drop(l %ctx, l %v{d})\\n\", .{ pointer, index * entry_bytes, pointer });\n+    try self.print(\"@rcslotdone{d}\\n\", .{label});\n }\n fn localCount(comptime E: type, self: *E) usize {\n     return self.function.scope.locals.len;\n",
+  "builds": {
+    "before-qbe": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/install-before-drop-guard/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/drop-guard/binary_trees.my",
+        "--rc-runtime",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/drop-guard/before-qbe",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/drop-guard/cache"
+      ],
+      "compiler_sha256": "672138e6f41df598a9e535c82cdf8f7e25d57d5231f037f18b2ac396c7ca1d2b",
+      "binary_sha256": "558861f633c3859c2de41ac7c2d8f1af69e4f6afa539a9df4e143e259be53066"
+    },
+    "before-qbe-stats": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/install-before-drop-guard/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/drop-guard/binary_trees.my",
+        "--rc-runtime=stats",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/drop-guard/before-qbe-stats",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/drop-guard/cache"
+      ],
+      "compiler_sha256": "672138e6f41df598a9e535c82cdf8f7e25d57d5231f037f18b2ac396c7ca1d2b",
+      "binary_sha256": "a5640a5d50cb47ea4d6f4ec771042f3867d328427a36663f15b3fbdf2483ec77"
+    },
+    "before-llvm": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/install-before-drop-guard/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/drop-guard/binary_trees.my",
+        "--rc-runtime",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/drop-guard/before-llvm",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/drop-guard/cache",
+        "--backend=llvm",
+        "--llvm-opt=3",
+        "--lto"
+      ],
+      "compiler_sha256": "672138e6f41df598a9e535c82cdf8f7e25d57d5231f037f18b2ac396c7ca1d2b",
+      "binary_sha256": "91bb4fdfc4654ded870d4e5630552d1557455f3beed952bb428215e193e8ffdd"
+    },
+    "before-llvm-stats": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/install-before-drop-guard/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/drop-guard/binary_trees.my",
+        "--rc-runtime=stats",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/drop-guard/before-llvm-stats",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/drop-guard/cache",
+        "--backend=llvm",
+        "--llvm-opt=3",
+        "--lto"
+      ],
+      "compiler_sha256": "672138e6f41df598a9e535c82cdf8f7e25d57d5231f037f18b2ac396c7ca1d2b",
+      "binary_sha256": "43b9a670530652445b4baaa1a8d166e807a5d12a52d3bce1077b3efd2bb6a1a0"
+    },
+    "after-qbe": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/drop-guard/binary_trees.my",
+        "--rc-runtime",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/drop-guard/after-qbe",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/drop-guard/cache"
+      ],
+      "compiler_sha256": "a7317adb920dda76901931d7db3f54a82176e88af175dc7ea48f7b885ea18069",
+      "binary_sha256": "faf9205d964123e4b11a515398d102a641caf6674a50d7a16ee3088aa0387152"
+    },
+    "after-qbe-stats": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/drop-guard/binary_trees.my",
+        "--rc-runtime=stats",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/drop-guard/after-qbe-stats",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/drop-guard/cache"
+      ],
+      "compiler_sha256": "a7317adb920dda76901931d7db3f54a82176e88af175dc7ea48f7b885ea18069",
+      "binary_sha256": "84181e66f0ca3cc06bb3cc44b484115b9fc48e25c66703c5571df3e8924f780c"
+    },
+    "after-llvm": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/drop-guard/binary_trees.my",
+        "--rc-runtime",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/drop-guard/after-llvm",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/drop-guard/cache",
+        "--backend=llvm",
+        "--llvm-opt=3",
+        "--lto"
+      ],
+      "compiler_sha256": "a7317adb920dda76901931d7db3f54a82176e88af175dc7ea48f7b885ea18069",
+      "binary_sha256": "919d647b9133aad156af909a86f779fcb01a6ce1a288f041823e9b31ba65f896"
+    },
+    "after-llvm-stats": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/drop-guard/binary_trees.my",
+        "--rc-runtime=stats",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/drop-guard/after-llvm-stats",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/drop-guard/cache",
+        "--backend=llvm",
+        "--llvm-opt=3",
+        "--lto"
+      ],
+      "compiler_sha256": "a7317adb920dda76901931d7db3f54a82176e88af175dc7ea48f7b885ea18069",
+      "binary_sha256": "ccbf152a17eab89e082936b88c88ed1f58b563f75651e6902810b649367944e9"
+    }
+  },
+  "counts": {
+    "before-qbe-stats": {
+      "version": 1,
+      "runtime": "rc-v2-counting",
+      "saturated": false,
+      "owner_acquire": 19,
+      "owner_release": 669079,
+      "hold_acquire": 0,
+      "hold_release": 0,
+      "owner_limit": 0,
+      "hold_limit": 0,
+      "heap_allocate": 669060,
+      "arena_allocate": 0,
+      "retire": 669060,
+      "clone_shell": 0,
+      "unique_check": 33
+    },
+    "before-llvm-stats": {
+      "version": 1,
+      "runtime": "rc-v2-counting",
+      "saturated": false,
+      "owner_acquire": 19,
+      "owner_release": 669079,
+      "hold_acquire": 0,
+      "hold_release": 0,
+      "owner_limit": 0,
+      "hold_limit": 0,
+      "heap_allocate": 669060,
+      "arena_allocate": 0,
+      "retire": 669060,
+      "clone_shell": 0,
+      "unique_check": 33
+    },
+    "after-qbe-stats": {
+      "version": 1,
+      "runtime": "rc-v2-counting",
+      "saturated": false,
+      "owner_acquire": 19,
+      "owner_release": 669079,
+      "hold_acquire": 0,
+      "hold_release": 0,
+      "owner_limit": 0,
+      "hold_limit": 0,
+      "heap_allocate": 669060,
+      "arena_allocate": 0,
+      "retire": 669060,
+      "clone_shell": 0,
+      "unique_check": 33
+    },
+    "after-llvm-stats": {
+      "version": 1,
+      "runtime": "rc-v2-counting",
+      "saturated": false,
+      "owner_acquire": 19,
+      "owner_release": 669079,
+      "hold_acquire": 0,
+      "hold_release": 0,
+      "owner_limit": 0,
+      "hold_limit": 0,
+      "heap_allocate": 669060,
+      "arena_allocate": 0,
+      "retire": 669060,
+      "clone_shell": 0,
+      "unique_check": 33
+    }
+  },
+  "instructions": {
+    "before-qbe": [
+      3499458951,
+      3520955039,
+      3483227638
+    ],
+    "before-llvm": [
+      2467965398,
+      2478756874,
+      2478756819
+    ],
+    "after-qbe": [
+      3475419132,
+      3443044467,
+      3443043403
+    ],
+    "after-llvm": [
+      2437820890,
+      2443174834,
+      2410885753
+    ]
+  },
+  "ratios": {
+    "qbe": 0.9838790839412821,
+    "llvm": 0.983485298482602
+  }
+}
