@@ -117,6 +117,7 @@ test "native host generator preserves the checked copied-value bridge snapshot" 
     var digest: [32]u8 = undefined;
     std.crypto.hash.sha2.Sha256.hash(result, &digest, .{});
     // Includes cached bindings, bounded scratch and checked scalar/packed copies;
-    // tests/qbe_host_bridge.c exercises their runtime checks and cleanup.
-    try std.testing.expectEqualStrings("997c25ac873717bfa8126d1320244a36277871e96619e5f01535967af5ae219e", &std.fmt.bytesToHex(digest, .lower));
+    // tests/qbe_host_bridge.c exercises bridge contracts; native_rc_host_test.c
+    // also checks that context-tracked node scratch survives a guest trap.
+    try std.testing.expectEqualStrings("2adca0ca6e49df24c86f0acd1ed53f011a063595045e4715f98abd686e6e1a90", &std.fmt.bytesToHex(digest, .lower));
 }
