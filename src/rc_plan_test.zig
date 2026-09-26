@@ -639,3 +639,26 @@ test "RC-OWNERSHIP-PLAN-1 compiler journals owned runtime results and transactio
     try t.expect(std.mem.indexOf(u8, text, "call $myl_qbe_rc_slot_drop") != null);
     try t.expect(std.mem.indexOf(u8, text, "call $myl_qbe_rc_frame_leave") != null);
 }
+
+// spec: RC-UNIQUE-LOWER-1
+test "RC-UNIQUE-LOWER-1 mutations use typed owner counts inside loops" {
+    const mode = @import("runtime_mode.zig");
+    const saved = mode.get();
+    defer mode.set(saved);
+    mode.set(.rc);
+    var result = try lowered(
+        \\def main() -> int:
+        \\    values = [1, 2]
+        \\    other = values
+        \\    i = 0
+        \\    while i < 3:
+        \\        values.append(i)
+        \\        i += 1
+        \\    return len(other)
+    );
+    defer result.deinit();
+    const text = try functionText(result.value, "main");
+    try t.expect(std.mem.indexOf(u8, text, "call $myl_qbe_rc_unique_local") != null);
+    try t.expect(std.mem.indexOf(u8, text, "call $myl_native_cow_unique") == null);
+    try t.expect(std.mem.indexOf(u8, text, "@ce") == null);
+}

@@ -38,6 +38,13 @@ pub fn emit(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "op
 
 fn store(comptime E: type, self: *E, index: usize, operand: usize) Error!void {
     const ty = self.function.scope.locals[index].ty;
+    if (@import("qbe_rc_unique.zig").receiverParent(E, self, index)) |parent| {
+        try values.drop(E, self, operand);
+        try frame.drop(E, self, index);
+        const value = try self.load("l", parent);
+        try self.print(" storel %v{d}, %l{d}\n", .{ value, index });
+        return;
+    }
     try values.prepareOperand(E, self, ty, operand);
     const destination = self.temp();
     if (self.callerStorage(index)) {
