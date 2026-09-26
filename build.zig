@@ -750,6 +750,41 @@ pub fn build(b: *std.Build) void {
     const run_native_arena_test = b.addRunArtifact(native_arena_test);
     run_native_arena_test.step.max_rss = rss.script;
     run_native_arena_test.expectExitCode(0);
+    // COW-UNIQUE-1: copy on write over the collector, under collection stress.
+    const native_cow_module = b.createModule(.{
+        .target = target,
+        .optimize = optimize,
+        .link_libc = true,
+    });
+    native_cow_module.addIncludePath(b.path("src"));
+    native_cow_module.addCSourceFiles(.{
+        .root = b.path("."),
+        .files = &.{
+            "tests/native_cow_test.c",
+            "src/native_cow.c",
+            "src/native_heap.c",
+            "src/native_arena.c",
+            "src/native_collections.c",
+            "src/native_text.c",
+            "src/native_dictionary.c",
+            "src/native_equal.c",
+            "src/native_bytes.c",
+            "src/native_regions.c",
+        },
+        .flags = &.{ "-std=c11", "-Wall", "-Wextra", "-Werror", "-UNDEBUG" },
+    });
+    const native_cow_test = b.addExecutable(.{
+        .max_rss = rss.compile,
+        .name = "native-cow-test",
+        .root_module = native_cow_module,
+    });
+    const run_native_cow_test = b.addRunArtifact(native_cow_test);
+    run_native_cow_test.step.max_rss = rss.script;
+    run_native_cow_test.expectExitCode(0);
+    native_heap_step.dependOn(&run_native_cow_test.step);
+    compile_tests.dependOn(&native_cow_test.step);
+    test_step.dependOn(&run_native_cow_test.step);
+    qbe_step.dependOn(&run_native_cow_test.step);
     native_heap_step.dependOn(&run_native_arena_test.step);
     native_heap_step.dependOn(&run_native_heap_test.step);
     guardian.addAllChecks(b, guardian_exe, native_heap_step, .{});

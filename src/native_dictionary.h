@@ -111,6 +111,15 @@ void myl_native_dictionary_clear(myl_native_dictionary *);
  * dictionary answering lookups by scanning, which is slower and just as correct. */
 void myl_native_dictionary_reindex(myl_native_heap *, myl_native_dictionary *);
 myl_native_dictionary *myl_native_dictionary_copy(myl_native_heap *, const myl_native_dictionary *input);
+/* Whether `payload` is a dictionary or set header, read from its object header. */
+int myl_native_dictionary_header(const void *payload);
+/* A fresh dictionary with `input`'s entries in `input`'s order, allocated with
+ * its entry list and index at arena depth `region` (COW-UNIQUE-1). `input` is
+ * settled first; the settled entries and the index slots naming them are
+ * copied as they are, so no key is hashed or compared again. A refused table
+ * leaves the copy answering lookups by scanning. The copy's copy-on-write
+ * flags are clear; nothing inside the entries is marked. NULL on refusal. */
+myl_native_dictionary *myl_native_dictionary_clone_at(myl_native_heap *, const myl_native_dictionary *input, unsigned region);
 /* Squeeze removed entries out of the entry list, keeping the live ones in
  * insertion order and renumbering their index slots in place. It allocates
  * nothing and is a no-op when nothing was removed. Every reader of `entries`
@@ -120,6 +129,10 @@ void myl_native_dictionary_settle(const myl_native_dictionary *);
 /* The stored value for a key, or NULL when the key is absent: the lookup the
  * structural equality of two dictionaries asks for each entry. */
 const void *myl_native_dictionary_find(const myl_native_dictionary *, const void *key);
+/* `find` for the key a described slice names (DICT-RANGE-KEY-1): the stored
+ * value's address, or NULL when the key is absent. Copy on write writes a
+ * copied value back through it (COW-NESTED-1). */
+const void *myl_native_dictionary_find_range(const myl_native_heap *, const myl_native_dictionary *, const myl_native_text *text, const myl_native_text_span *span);
 /* Remove the most recently inserted live entry, copying its key to `output`;
  * zero when the dictionary is empty. A set's `pop` (SET-1). */
 int myl_native_dictionary_pop_last(myl_native_dictionary *, void *output);
