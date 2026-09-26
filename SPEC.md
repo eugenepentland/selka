@@ -1360,3 +1360,5 @@ host failure in one worker leaves the units the other workers hold running.
 - [RC-PHYSICAL-HOIST-1] RC uniqueness may move to a semantic loop entry only after finalized physical loans prove a closed scalar-only body with no lasting managed publication; root storage and existing hidden liveness remain unchanged, and nested list elements detach only after their owning outer list.
 
 - [RC-PRODUCED-OWNER-1] An immediately preceding unconditional ordinary-owner producer may skip its operand initialization test. Branch entries, held mappings, borrowed entries and other producers keep guarded transfers; pin, arena and failure behavior stays on the existing typed TAKE path.
+
+- [COW-MUT-REBIND-1] Reassigning a mut collection parameter invalidates the original payload uniqueness guarantee without making the caller-borrowed parameter an owned value; later direct and nested writes retain ordinary COW checks and cannot change a read-only source snapshot.

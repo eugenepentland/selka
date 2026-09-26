@@ -313,6 +313,18 @@ pub fn writesParameter(function: bytecode.Function, position: usize) bool {
     return false;
 }
 
+/// A caller's uniqueness contract applies only while the parameter slot still
+/// names the original mutable payload. Keep its borrowed role after rebinding,
+/// but require ordinary copy-on-write checks for any replacement value.
+pub fn uniqueParameter(function: bytecode.Function, position: usize) bool {
+    if (position >= function.signature.parameter_count or !writesParameter(function, position)) return false;
+    for (function.scope.instructions) |instruction| switch (instruction.op) {
+        .store_local, .move_local, .drop_local, .ref_local => |slot| if (li(slot) == position) return false,
+        else => {},
+    };
+    return true;
+}
+
 /// Whether a value of `ty` holds a managed reference: a collection, a string,
 /// a `class` or `Cell`, or an aggregate with one inside it.
 pub fn holdsManaged(program: bytecode.Program, ty: typed.Type, depth: usize) bool {
