@@ -39,8 +39,8 @@ for every accepted package above.
 
 | Work | Branch/worktree | Remaining acceptance |
 |---|---|---|
-| WP-3b COW | Integration through `d7f4cf85`; compiler source `b6328bcd` | Nested collection/array correctness is joined and full-gated: 2,118 main tests, 428 QBE tests, native-build and formatting green. Independent joined validation passes 110 stressed guest cases and 44 byte-identical switch-off IL comparisons. Formal performance acceptance remains open; the complete earlier 43-key snapshot failed and the current combination is being measured |
-| WP-3f default flip | Preparation at `codex/d9-stage3f-prep` (`5b663e23`) | Updated with all gated compiler and Lox changes; fresh four-step gate pending. Earlier `17540b57` passed the full gate, including 652 language, 49 value, 42 smoke and 2 compatibility guests, 231 golden cases and a 113-probe oracle with zero undeclared disagreements. Current default acceptance also requires the formal stage 3 performance limits |
+| WP-3b COW | Compiler `91d1311e`, joined gate `b59cf06f`; source through `3fd1c590` | Scoped receivers and indexed transfers pass the full joined gate: 2,119 main tests, 428 QBE tests, native-build and formatting. Independent stress/44-IL evidence is joined. The pre-setter 43-key sweep passes QBE (1.02928×, no outliers) but fails LLVM (1.07134×, three outliers). Setter plus global-table hoist is being measured. Broader external Lox parser/resolver native-stress failures are under investigation |
+| WP-3f default flip | Preparation at `codex/d9-stage3f-prep` (`75820f45`; report `7b51bacd`) | Current four-step gate passes: 2,123 main tests, 428 QBE tests, native-build and formatting; 652 language, 139 value, 42 smoke and two compatibility guests execute with zero cached results. The historical golden/oracle policy is retained. Formal performance and the separately discovered Lox native-stress investigation remain open |
 | WP-4 reference counting | Not started | Requires 3f/4pre and the RC performance/RSS gate, including rewritten graph programs |
 | WP-5 concurrency | Not started | Design after WP-4, following the existing concurrency proposal |
 
@@ -103,12 +103,35 @@ publication are now joined. Late publication reduces the matched VM closures
 case by 4.9% QBE and 7.7% LLVM. The fresh 43-key sweep records this exact
 combination; individual improvements do not establish acceptance.
 
-An indexed payload-transfer proof and a matching Lox setter helper remain
-isolated. Independent review found an earlier-match-alias counterexample in
-the first prototype. A conservative first-use guard and permanent regressions
-now pass independent both-backend GC-stressed probes. The corrected proof
-still requires its full gate before integration. A separate VM frame-reuse
-experiment is also isolated.
+The indexed payload-transfer proof `aa2fcbc6` and matching Lox setter
+`ff9096bb` are now joined. Independent review found and fixed an earlier-match
+alias counterexample before acceptance of that proof. The combined compiler
+passes its full gate and independent scoped-receiver checks, with all 44
+legacy IL inputs identical. The composed Lox source `b8fdb39e` passes 65 normal
+tests per mode, 104 smokes and 184 native-stressed VM traces.
+
+The complete scoped-receiver snapshot has QBE geomean 1.02928× with no outlier,
+but LLVM 1.07134× with binary trees, closures and method calls over 1.3×:
+[full measurements](d9-performance43-scoped-2026-09-26.md). That snapshot
+precedes the setter. The subsequent global-table hash hoist `617ce4dc` removes
+two more COW transfers and improves matched closures by 9.7% QBE/18.9% LLVM
+and method calls by 5.6%/10.4%. Both proposed frame caches and the weak scalar
+upvalue-accessor experiment were rejected. The complete setter/hoist/default
+combination is being measured; individual gains are not final acceptance.
+
+An expanded external Lox source-test run under native GC stress exposes ten
+parser/resolver panics. The normal 65 tests and VM stress traces pass. The
+failure reproduces before the hash hoist and in both value modes, while an
+original class-based parser test passes on `60b668cf`. Three Astra agents are
+reducing it, reviewing descriptor/root lifetime and running historical controls.
+The current full gate does not include this broader stress scope, and its
+green result does not close that investigation.
+
+The isolated physical-borrow prerequisite has been refreshed onto the current
+default at `bd923864`; its full gate passes 2,128 main tests, 429 QBE tests,
+native-build and formatting. The [RC readiness inventory](d9-rc-readiness-2026-09-26.md)
+sets out receiver lifetime holds, arena ownership, iterative destruction and
+legacy GC compatibility. WP-4 implementation and WP-5 remain unstarted.
 
 The tree interpreter's earlier matched 85.3× QBE regression is no longer
 attributed primarily to recursive-box walking: lazy projection alone did not
