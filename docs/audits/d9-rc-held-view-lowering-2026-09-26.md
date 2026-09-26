@@ -51,3 +51,20 @@ acquires and eight releases. That is a confirmed unsupported cycle, not an
 accepted cleanup result. The separate stored-type admission rule must join
 before RC acceptance; this change does not add a cycle collector or silently
 fall back to GC.
+
+## Joined nested-shape and unwind audit
+
+After joining stored-type admission `1a6352de` and plain-operand drop suppression
+`ccefacbe`, three more guest cases pass on both backends: younger-arena escape
+through records, lists and multiple held views into a dictionary with managed
+values; a 257-node recursive boxed chain carrying live views; and an older heap
+mapping retaining its identity when its view escapes an arena. The twelve-case
+run reports 4,920 heap allocations and retirements, with balanced owner and hold
+counts; see `deep-qbe.json` and `deep-llvm.json`. All six new regressions also
+pass on GC. The recorded cycle source now receives `E_LIVE_VIEW_CYCLE` before
+emission.
+
+The `trap.my` probe leaves an active hidden H receiver when an assertion fails.
+Both backends report `R_ASSERT` and fully clean up: eight allocations/retirements,
+six owner acquires plus fourteen releases, and four hold acquires/releases.
+`trap-qbe.json` and `trap-llvm.json` retain exact commands and diagnostics.
