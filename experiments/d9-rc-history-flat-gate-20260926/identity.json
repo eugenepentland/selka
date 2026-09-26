@@ -1,0 +1,90 @@
+{
+  "source_commit": "19e16e1d96112e9ccc741fa0c430ea97173a1032",
+  "main_commit": "b292660a09bc703d0ceab071636a73b643c52d34",
+  "compiler_sha256": "1b705d90e58c6b2b3799c5cbe79da9adbc57913e4c72ebbfa2b54dad044c1bbe",
+  "compiler_mode": "Debug",
+  "gate": {
+    "history-flat-final-build.log": "Build Summary: 19/19 steps succeeded",
+    "history-flat-test.log": "Build Summary: 94/94 steps succeeded; 2260/25263 tests passed (23003 skipped)",
+    "history-flat-test-qbe.log": "Build Summary: 51/51 steps succeeded; 438/438 tests passed",
+    "history-flat-test-qbe-build.log": "Build Summary: 29/29 steps succeeded",
+    "history-flat-fmt-check.log": "Build Summary: 2/2 steps succeeded"
+  },
+  "rc_sweeps": {
+    "qbe": {
+      "version": "native-tests-v1",
+      "passed": 841,
+      "failed": 1,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 842,
+      "programs": 145,
+      "dropped": 0,
+      "unloaded": 0,
+      "failures": [
+        {
+          "name": "field_augmented::test_augmented_list_field_writeback_preserves_record_snapshot",
+          "status": "failed",
+          "actual": null,
+          "expected": true,
+          "reason": "NativeTestProcessFailed: .{ .signal = .ABRT }\n",
+          "key": "d775c88575cf87860149b102a444179b51ec1f6d5da4a21f092a37c33e2b9867",
+          "dependencies": [
+            "myl_f_681a252549ee0b7231a2e3d0a775a49c5d94e6fefd8827a3f4e43f0103d54e21",
+            "myl_f_abce5c5fa51075ebb8a725818e5edbd5756611441bcb21d3d6a32867195f0670"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 0,
+          "contract": "58c9e9dbb91d1cdd09c0681e44009e3e303e3bf95903c6c1ca025796495327d9",
+          "provider": "",
+          "source": "8982c099059d4fc4cd564210ae230bf8355f4a9da565c83ccde93e095c0a15e8"
+        }
+      ]
+    },
+    "llvm": {
+      "version": "native-tests-v1",
+      "passed": 841,
+      "failed": 1,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 842,
+      "programs": 145,
+      "dropped": 0,
+      "unloaded": 0,
+      "failures": [
+        {
+          "name": "field_augmented::test_augmented_list_field_writeback_preserves_record_snapshot",
+          "status": "failed",
+          "actual": null,
+          "expected": true,
+          "reason": "NativeTestProcessFailed: .{ .signal = .ABRT }\n",
+          "key": "04512e7c7dd4d322f8cf0cf23b1b1febc3d259d107f0d46e1cc2356821676dc5",
+          "dependencies": [
+            "myl_f_681a252549ee0b7231a2e3d0a775a49c5d94e6fefd8827a3f4e43f0103d54e21",
+            "myl_f_abce5c5fa51075ebb8a725818e5edbd5756611441bcb21d3d6a32867195f0670"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 0,
+          "contract": "58c9e9dbb91d1cdd09c0681e44009e3e303e3bf95903c6c1ca025796495327d9",
+          "provider": "",
+          "source": "8982c099059d4fc4cd564210ae230bf8355f4a9da565c83ccde93e095c0a15e8"
+        }
+      ]
+    }
+  },
+  "artifacts": {
+    "history-flat-final-build.log": "7a0600255753f334be9287efea823edca1a0a02403967522e197d8ae7ff915e4",
+    "history-flat-test.log": "9202e5fe11fa1e2cb616bc918a9910790b43cedf08ffb51d9e4d2e22dd2d3a85",
+    "history-flat-test-qbe.log": "3288b0d536e4c20c9b70e6d80f15f5ab7dca5908427082cc6754384a1e9a81c5",
+    "history-flat-test-qbe-build.log": "a6f34eb0b0ba5c789e5faa740a329c5967d3c0e3e885b432122cec0bb7b2714a",
+    "history-flat-fmt-check.log": "727fe2e22c982638ef4d6d75a47d5f97e1bb81c8b5f3ec3c0c55f158df48d93f",
+    "history-flat-gate-status.log": "04d977d8c52f7ae9969997fd037e3119c50f972320c51ece951e947588f77799",
+    "history-flat-sweep-qbe.json": "6b3cdd01584fdcc2fbc513b3a86061c35aacf21e09c02157d98957d2eddee551",
+    "history-flat-sweep-qbe.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "history-flat-sweep-llvm.json": "c99e75c675ed70abcfc6729839d4a4d24a3f2aed3452b3adf815ebdd2d16011a",
+    "history-flat-sweep-llvm.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "history-flat-sweeps.log": "725da766e3681b4f462d1c9326c1dddc9342abb2213bf628870b4bdd4eb4364f"
+  }
+}

@@ -14,16 +14,17 @@ Stage 3 and WP-4pre are accepted on the integration branch. The complete
 The final combined default/borrow gate at `f6bea5d9` passes all four steps:
 2,130 executed main tests, 429 QBE tests, native-build and formatting.
 WP-4's compiler, runtime, collection, arena and host ownership paths are implemented
-behind an experimental runtime selector. The latest frozen full gate at `78ac051c`
-passes 2,246 main tests, 437 QBE tests, native build and formatting. The same source
-passes separate uncached RC sweeps of 804 assertions per backend across
-141 programs. Supplemental replay exposed arena and failed-file cleanup defects;
-their corrections and the live-view snapshot correction are now integrated.
-Live-view sharing history still diverges from GC, and a boxed Option field write
-was found to be lost. Private ABI3 loan/history work and the write-back correction
-are underway. Performance work continues; the substantial instruction gap
-still fails WP-4's acceptance limits. GC stays the default. See the
-[return-path/checker checkpoint](d9-rc-inert-checker-gate-2026-09-26.md).
+behind an experimental runtime selector. The latest frozen full gate at `19e16e1d`
+passes 2,260 main tests, 438 QBE tests, native build and formatting. ABI3 now
+preserves semantic sharing history through private loans; boxed write-back,
+GC rebox roots and indexed mutable arguments are integrated. The separate
+uncached RC sweeps execute 842 assertions across 145 programs per backend:
+841 pass and one augmented list-field snapshot case aborts on both backends.
+Its ownership transition is being corrected; earlier failed receipts remain
+archived. The complete supplemental golden replay and instruction/RSS corpus
+are running on the frozen compiler. Performance remains outside WP-4's limits;
+GC stays the default. See the
+[cumulative ABI3 checkpoint](d9-rc-history-flat-gate-2026-09-26.md).
 WP-5 has a [committed design](d9-wp5-concurrency-design-2026-09-26.md), with
 implementation dependent on WP-4 acceptance.
 
