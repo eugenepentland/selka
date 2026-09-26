@@ -215,6 +215,13 @@ use a ```mylang block; `kind: "tooling"` features may use a ```bash or ```consol
   return and exits 1; source/check errors exit 1, usage/host failures exit 2.
 - **No tuples. No methods on classes. No closures.** Records are values; functions are
   top-level and take their state as parameters.
+- **Managed collections are values.** Assignment, argument passing, stores and
+  returns preserve independent lists, dictionaries, sets and byte buffers. A
+  helper changes the caller's value through a `mut` parameter and a marked
+  argument. Use records and recursive unions for finite trees, and pool handles
+  for graph identity. `class` and builtin `Cell` are rejected under the default
+  value model; `--legacy-sharing` temporarily enables the old rules during
+  migration. See `docs/value-semantics.md`.
 - **File access needs a capability parameter on the entry point.** Write
   `def main(fs: Filesystem) -> int` and thread `fs` through; there is no ambient
   filesystem. `Network`, `Clock`, `Entropy` and `Environment` work the same way.
