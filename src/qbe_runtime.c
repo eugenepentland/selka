@@ -741,15 +741,21 @@ typedef struct NativeFrameAllocation {
     struct NativeFrameAllocation *previous, *next;
     max_align_t alignment;
 } NativeFrameAllocation;
-void *myl_qbe_frame_allocate(void *context, uint64_t bytes) {
+void *myl_qbe_frame_try_allocate(void *context, uint64_t bytes) {
     Context *ctx=context;
-    if (bytes>SIZE_MAX-sizeof(NativeFrameAllocation)) { fail(context,"OutOfMemory");return NULL; }
+    if (bytes>SIZE_MAX-sizeof(NativeFrameAllocation)) return NULL;
     NativeFrameAllocation *allocation=calloc(1,sizeof *allocation+(size_t)bytes);
-    if (!allocation) { fail(context,"OutOfMemory");return NULL; }
+    if (!allocation) return NULL;
     allocation->next=ctx->frame_allocations;
     if (allocation->next) allocation->next->previous=allocation;
     ctx->frame_allocations=allocation;
     return allocation+1;
+}
+void myl_qbe_fail_frame_allocation(void *context) { fail(context, "OutOfMemory"); }
+void *myl_qbe_frame_allocate(void *context, uint64_t bytes) {
+    void *payload = myl_qbe_frame_try_allocate(context, bytes);
+    if (!payload) myl_qbe_fail_frame_allocation(context);
+    return payload;
 }
 void myl_qbe_frame_release(void *context, void *payload) {
     if (!payload) return;

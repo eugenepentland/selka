@@ -8,7 +8,7 @@ pub const Error = values.Error;
 pub fn emit(comptime E: type, self: *E, value: usize) Error!bool {
     const state = frame.get(E, self) orelse return false;
     const ty = self.function.signature.return_type;
-    const owned = try @import("qbe_rc_state.zig").owns(state, ty);
+    const owned = !@import("qbe_rc_borrow.zig").active(E, self) and try @import("qbe_rc_state.zig").owns(state, ty);
     var source = value;
     if (owned) {
         const stack = self.states[self.pc] orelse return error.InternalError;
