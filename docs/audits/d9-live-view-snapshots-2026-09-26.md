@@ -68,3 +68,14 @@ the complete results. The exact three-history probe and full regression driver a
 The raw evidence retains the rejected candidate's failure, the corrected runs,
 commands, compiler/source hashes, stdout/stderr and RC traffic. The parent branch
 owns the combined full gate and the subsequent semantic-history correction.
+
+## Bounded reachability corpus audit
+
+The bounded type walk was checked for loss of optimization on the frozen migrated
+Lox corpus and both recursive-tree parity sources. Before/after ownership
+explanations have byte-identical per-function copy-site decisions: lox (400 functions, 382 sites), binary_trees (3 functions, 0 sites), binary_trees_recursive (3 functions, 0 sites).
+The Lox checks took 0.654 and 0.662 seconds. This establishes that the new
+conservative reachability boundary does not suppress a copy elision in these
+corpora; it is not a general guarantee for arbitrarily large type DAGs. If a
+future corpus reaches the bound, use memoized graph reachability rather than
+raising the path budget. [Raw comparison](evidence/d9-live-view-copy-audit.json.gz).
