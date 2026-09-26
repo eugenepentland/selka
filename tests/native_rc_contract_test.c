@@ -242,6 +242,10 @@ static void variants_and_wide_array_test(void) {
     OuterVariant values[3] = {{.tag = 0, .value = {.tag = 1, .pointer = (void *)(uintptr_t)1}},
         {.tag = 2, .value = {.tag = 0, .pointer = (void *)(uintptr_t)1}},
         {.tag = 2, .value = {.tag = 1, .pointer = new_value(&heap, &scalar_type, 1)}}};
+    OuterVariant seeded;
+    myl_rc_value_seed(&heap, variant, &seeded, &values[2], 1);
+    assert(seeded.tag == 2 && seeded.value.tag == 1 && !seeded.value.pointer);
+    assert(values[2].value.pointer && ((myl_rc_object *)values[2].value.pointer - 1)->owners == 1);
     myl_rc_edges_release(&heap, variant, values, 3);
     myl_rc_drain(&heap);
     assert(state.live == 0 && state.retired == 1);
@@ -337,7 +341,7 @@ static void temporary_binding_test(void) {
     static const myl_native_type other = {.size = sizeof(void *), .alignment = _Alignof(void *), .kind = MYL_NATIVE_POINTER};
     descriptor = (myl_rc_descriptor){.type = &other, .shape = &pointer_shape};
     before = heap.bytes;
-    heap.limit = before + 1000;
+    heap.limit = before + 800;
     assert(myl_rc_descriptor_import(&heap, &descriptor) == MYL_RC_ALLOCATION_REFUSED);
     assert(heap.bytes == before && !myl_rc_descriptor_find(&heap, &other));
     heap.limit = ((size_t)256) << 20;
@@ -469,7 +473,44 @@ static void uniqueness_and_alias_replace_test(void) {
     assert(myl_rc_value_replace(&heap, &to, &from, MYL_RC_COPY) == MYL_RC_OK);
     assert(*(uint64_t *)parent == 59 && state.live == 1);
     myl_rc_value_drop(&heap, &to);
+    struct { myl_native_object header; Node node; } arena = {
+        .header = {.mark = MYL_NATIVE_OBJECT_ARENA | ((uintptr_t)1 << MYL_NATIVE_ARENA_REGION_SHIFT) |
+            ((uintptr_t)1 << MYL_NATIVE_OBJECT_COUNT_SHIFT), .element = &node_type},
+        .node = {.next = new_value(&heap, &scalar_type, 1)}
+    };
+    myl_rc_construction_abort(&heap, &arena.node);
+    assert(!arena.node.next && state.live == 0);
+    myl_rc_construction_abort(&heap, &arena.node);
+    assert(state.live == 0);
     finish(&heap, &state);
+}
+// spec: RC-REGISTER-1
+static void many_bindings_test(void) {
+    myl_native_heap heap;
+    TestAllocator state;
+    start(&heap, &state);
+    const size_t count = 4096;
+    myl_native_type *types = calloc(count, sizeof *types);
+    void **values = calloc(count, sizeof *values);
+    assert(types && values);
+    for (size_t i = 0; i < count; ++i) {
+        types[i] = scalar_type;
+        myl_rc_descriptor descriptor = {.type = &types[i], .shape = &scalar_shape};
+        assert(myl_rc_descriptor_import(&heap, &descriptor) == MYL_RC_OK);
+        values[i] = new_value(&heap, &types[i], 1);
+        *(uint64_t *)values[i] = i;
+    }
+    size_t metadata = myl_rc_metadata_bytes(&heap);
+    heap.limit = heap.bytes;
+    for (size_t i = 0; i < count; ++i) {
+        assert(myl_rc_descriptor_find(&heap, &types[i])->type == &types[i]);
+        assert(*(uint64_t *)values[i] == i);
+        myl_rc_owner_release(&heap, values[i]);
+    }
+    assert(heap.bytes == metadata && state.retired == count);
+    finish(&heap, &state);
+    free(values);
+    free(types);
 }
 int myl_rc_contract_verify(void) {
     struct rlimit stack, original;
@@ -488,13 +529,14 @@ int myl_rc_contract_verify(void) {
     pointer_transfers_test();
     transfer_failure_test();
     uniqueness_and_alias_replace_test();
+    many_bindings_test();
     assert(!setrlimit(RLIMIT_STACK, &original));
-    return 12;
+    return 13;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
-    assert(myl_rc_contract_verify() == 12);
-    puts("native RC contract: 12 tests passed");
+    assert(myl_rc_contract_verify() == 13);
+    puts("native RC contract: 13 tests passed");
     return 0;
 }
 #endif

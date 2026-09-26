@@ -20,6 +20,64 @@ static size_t pointer_hash(const void *pointer) {
     value ^= value >> 27;
     return (size_t)value;
 }
+enum { INDEX_SHAPE = 1, INDEX_DESCRIPTOR = 2, INDEX_MODULE = 3 };
+static size_t index_slot(const myl_rc_index_entry *entries, size_t capacity, const void *key, unsigned kind) {
+    size_t slot = (pointer_hash(key) ^ kind) & (capacity - 1);
+    while (entries[slot].key && (entries[slot].key != key || entries[slot].kind != kind))
+        slot = (slot + 1) & (capacity - 1);
+    return slot;
+}
+static const myl_rc_index_entry *index_find(const myl_native_heap *heap, const void *key, unsigned kind) {
+    if (!heap || !heap->rc || !key || !heap->rc->metadata.index.capacity) return NULL;
+    size_t slot = index_slot(heap->rc->metadata.index.entries, heap->rc->metadata.index.capacity, key, kind);
+    return heap->rc->metadata.index.entries[slot].key ? &heap->rc->metadata.index.entries[slot] : NULL;
+}
+static int index_prepare(myl_native_heap *heap, size_t additional, myl_rc_index_entry **out, size_t *capacity) {
+    *out = NULL;
+    *capacity = heap->rc->metadata.index.capacity;
+    size_t needed, bytes;
+    if (!myl_rc_size_add(heap->rc->metadata.index.count, additional, &needed)) return 0;
+    if (needed <= *capacity / 2) return 1;
+    if (!*capacity) *capacity = 32;
+    while (needed > *capacity / 2) {
+        if (*capacity > SIZE_MAX / 2) return 0;
+        *capacity *= 2;
+    }
+    if (!myl_rc_size_mul(*capacity, sizeof(myl_rc_index_entry), &bytes)) return 0;
+    myl_rc_index_entry *entries = myl_rc_meta_alloc(heap, bytes);
+    if (!entries) return 0;
+    for (size_t i = 0; i < heap->rc->metadata.index.capacity; ++i) {
+        myl_rc_index_entry old = heap->rc->metadata.index.entries[i];
+        if (old.key) entries[index_slot(entries, *capacity, old.key, old.kind)] = old;
+    }
+    *out = entries;
+    return 1;
+}
+static void index_insert(myl_native_heap *heap, myl_rc_index_entry entry) {
+    size_t slot = index_slot(heap->rc->metadata.index.entries, heap->rc->metadata.index.capacity, entry.key, entry.kind);
+    if (heap->rc->metadata.index.entries[slot].key) return;
+    heap->rc->metadata.index.entries[slot] = entry;
+    ++heap->rc->metadata.index.count;
+}
+static void index_commit(myl_native_heap *heap, myl_rc_batch *batch, myl_rc_index_entry *grown, size_t capacity) {
+    if (grown) {
+        myl_rc_meta_free(heap, heap->rc->metadata.index.entries, heap->rc->metadata.index.capacity * sizeof *grown);
+        heap->rc->metadata.index.entries = grown;
+        heap->rc->metadata.index.capacity = capacity;
+    }
+    if (batch->module)
+        index_insert(heap, (myl_rc_index_entry){.key = batch->module, .value = batch, .kind = INDEX_MODULE});
+    for (size_t i = 0; i < batch->count.shapes; ++i) {
+        const myl_rc_shape_entry *shape = &batch->shapes[i];
+        index_insert(heap, (myl_rc_index_entry){.key = &shape->shape, .value = &shape->shape, .depth = shape->depth, .kind = INDEX_SHAPE});
+        if (shape->source)
+            index_insert(heap, (myl_rc_index_entry){.key = shape->source, .value = &shape->shape, .depth = shape->depth, .kind = INDEX_SHAPE});
+    }
+    for (size_t i = 0; i < batch->count.descriptors; ++i) {
+        const myl_rc_descriptor *descriptor = &batch->descriptors[i];
+        index_insert(heap, (myl_rc_index_entry){.key = descriptor->type, .value = descriptor, .kind = INDEX_DESCRIPTOR});
+    }
+}
 static size_t builder_slot(const shape_builder *builder, const myl_rc_shape *shape) {
     size_t slot = pointer_hash(shape) & (builder->capacity * 2 - 1);
     while (builder->slots[slot] && builder->nodes[builder->slots[slot] - 1].source != shape)
@@ -138,21 +196,15 @@ static const myl_rc_shape *copied_shape(const shape_builder *builder, const myl_
     size_t index = builder->slots[builder_slot(builder, source)] - 1;
     return &batch->shapes[index].shape;
 }
-static void batch_index(myl_rc_batch *batch, const myl_rc_shape *key, size_t index) {
-    size_t slot = pointer_hash(key) & (batch->lookup.capacity - 1);
-    while (batch->lookup.slots[slot]) slot = (slot + 1) & (batch->lookup.capacity - 1);
-    batch->lookup.slots[slot] = index + 1;
-}
 /* One reservation keeps all copied metadata addresses stable until teardown. */
 static myl_rc_batch *build_batch(shape_builder *builder, const myl_rc_module *module, int persistent) {
-    size_t shape_bytes, field_bytes, descriptor_bytes, slot_bytes, bytes = sizeof(myl_rc_batch);
+    size_t shape_bytes, field_bytes, descriptor_bytes, bytes = sizeof(myl_rc_batch);
     size_t descriptors = module ? module->descriptor_count : 0;
     if (!myl_rc_size_mul(builder->count, sizeof(myl_rc_shape_entry), &shape_bytes) ||
         !myl_rc_size_mul(builder->fields, sizeof(myl_rc_field), &field_bytes) ||
         !myl_rc_size_mul(descriptors, sizeof(myl_rc_descriptor), &descriptor_bytes) ||
-        !myl_rc_size_mul(builder->capacity, 4 * sizeof(size_t), &slot_bytes) ||
         !myl_rc_size_add(bytes, shape_bytes, &bytes) || !myl_rc_size_add(bytes, field_bytes, &bytes) ||
-        !myl_rc_size_add(bytes, descriptor_bytes, &bytes) || !myl_rc_size_add(bytes, slot_bytes, &bytes)) return NULL;
+        !myl_rc_size_add(bytes, descriptor_bytes, &bytes)) return NULL;
     myl_rc_batch *batch = myl_rc_meta_alloc(builder->heap, bytes);
     if (!batch) return NULL;
     batch->module = persistent ? module : NULL;
@@ -162,8 +214,6 @@ static myl_rc_batch *build_batch(shape_builder *builder, const myl_rc_module *mo
     batch->shapes = (myl_rc_shape_entry *)(batch + 1);
     myl_rc_field *fields = (myl_rc_field *)((unsigned char *)batch->shapes + shape_bytes);
     batch->descriptors = (myl_rc_descriptor *)((unsigned char *)fields + field_bytes);
-    batch->lookup.slots = (size_t *)((unsigned char *)batch->descriptors + descriptor_bytes);
-    batch->lookup.capacity = builder->capacity * 4;
     for (size_t i = 0; i < builder->count; ++i) {
         const myl_rc_shape *source = builder->nodes[i].source;
         myl_rc_shape_entry *entry = &batch->shapes[i];
@@ -184,8 +234,6 @@ static myl_rc_batch *build_batch(shape_builder *builder, const myl_rc_module *mo
             else entry->shape.as.variant.fields = fields;
             fields += count;
         }
-        batch_index(batch, &entry->shape, i);
-        if (persistent) batch_index(batch, source, i);
     }
     for (size_t i = 0; i < descriptors; ++i) {
         batch->descriptors[i] = module->descriptors[i];
@@ -214,8 +262,18 @@ static myl_rc_status register_shapes(shape_builder *builder, const myl_rc_module
             return MYL_RC_ALLOCATION_REFUSED;
         }
     }
+    size_t keys, capacity;
+    myl_rc_index_entry *grown;
+    if (!myl_rc_size_mul(batch->count.shapes, persistent ? 2 : 1, &keys) ||
+        !myl_rc_size_add(keys, batch->count.descriptors, &keys) ||
+        !myl_rc_size_add(keys, persistent ? 1 : 0, &keys) || !index_prepare(heap, keys, &grown, &capacity)) {
+        myl_rc_meta_free(heap, frames, maximum * sizeof(myl_rc_frame));
+        myl_rc_meta_free(heap, batch, batch->bytes);
+        return MYL_RC_ALLOCATION_REFUSED;
+    }
     /* No fallible work after this point. Old values always retain a complete
-     * stack until the replacement metadata and stack can commit together. */
+     * stack until the replacement metadata, index and stack commit together. */
+    index_commit(heap, batch, grown, capacity);
     if (frames) {
         myl_rc_meta_free(heap, heap->rc->walk.frames, heap->rc->walk.capacity * sizeof(myl_rc_frame));
         heap->rc->walk.frames = frames;
@@ -228,8 +286,7 @@ static myl_rc_status register_shapes(shape_builder *builder, const myl_rc_module
 }
 myl_rc_status myl_rc_module_register(myl_native_heap *heap, const myl_rc_module *module) {
     myl_rc_invariant(heap && heap->rc && module && module->abi == MYL_RC_ABI_VERSION && !heap->rc->walk.depth);
-    for (myl_rc_batch *batch = heap->rc->metadata.batches; batch; batch = batch->next)
-        if (batch->module == module) return MYL_RC_OK;
+    if (index_find(heap, module, INDEX_MODULE)) return MYL_RC_OK;
     myl_rc_invariant(!module->shape_count || module->shapes);
     myl_rc_invariant(!module->descriptor_count || module->descriptors);
     shape_builder builder = {.heap = heap};
@@ -258,24 +315,17 @@ myl_rc_status myl_rc_shape_import(myl_native_heap *heap, const myl_rc_shape *sou
     return status;
 }
 const myl_rc_shape *myl_rc_shape_resolve(const myl_native_heap *heap, const myl_rc_shape *source) {
-    if (!heap || !heap->rc || !source) return NULL;
-    for (myl_rc_batch *batch = heap->rc->metadata.batches; batch; batch = batch->next) {
-        if (!batch->lookup.capacity) continue;
-        size_t slot = pointer_hash(source) & (batch->lookup.capacity - 1);
-        while (batch->lookup.slots[slot]) {
-            myl_rc_shape_entry *entry = &batch->shapes[batch->lookup.slots[slot] - 1];
-            if (source == entry->source || source == &entry->shape) return &entry->shape;
-            slot = (slot + 1) & (batch->lookup.capacity - 1);
-        }
-    }
-    return NULL;
+    const myl_rc_index_entry *entry = index_find(heap, source, INDEX_SHAPE);
+    return entry ? entry->value : NULL;
+}
+size_t myl_rc_shape_depth(const myl_native_heap *heap, const myl_rc_shape *source) {
+    const myl_rc_index_entry *entry = index_find(heap, source, INDEX_SHAPE);
+    myl_rc_invariant(entry != NULL);
+    return entry->depth;
 }
 const myl_rc_descriptor *myl_rc_descriptor_find(const myl_native_heap *heap, const myl_native_type *type) {
-    if (!heap || !heap->rc) return NULL;
-    for (myl_rc_batch *batch = heap->rc->metadata.batches; batch; batch = batch->next)
-        for (size_t i = 0; i < batch->count.descriptors; ++i)
-            if (batch->descriptors[i].type == type) return &batch->descriptors[i];
-    return NULL;
+    const myl_rc_index_entry *entry = index_find(heap, type, INDEX_DESCRIPTOR);
+    return entry ? entry->value : NULL;
 }
 
 myl_rc_status myl_rc_descriptor_register(myl_native_heap *heap, const myl_rc_descriptor *descriptor) {
@@ -284,7 +334,7 @@ myl_rc_status myl_rc_descriptor_register(myl_native_heap *heap, const myl_rc_des
     myl_rc_invariant(shape && shape->size == descriptor->type->size);
     const myl_rc_descriptor *old = myl_rc_descriptor_find(heap, descriptor->type);
     if (old) {
-        myl_rc_invariant(old->shape == shape && old->edges == descriptor->edges && old->finalize == descriptor->finalize && old->clone == descriptor->clone);
+        myl_rc_invariant(old->shape == shape && old->edges == descriptor->edges && old->finalize == descriptor->finalize && old->clone == descriptor->clone && old->shell == descriptor->shell && old->next == descriptor->next);
         return MYL_RC_OK;
     }
     size_t bytes = sizeof(myl_rc_batch) + sizeof(myl_rc_descriptor);
@@ -295,6 +345,13 @@ myl_rc_status myl_rc_descriptor_register(myl_native_heap *heap, const myl_rc_des
     batch->descriptors = (myl_rc_descriptor *)(batch + 1);
     batch->descriptors[0] = *descriptor;
     batch->descriptors[0].shape = shape;
+    myl_rc_index_entry *grown;
+    size_t capacity;
+    if (!index_prepare(heap, 1, &grown, &capacity)) {
+        myl_rc_meta_free(heap, batch, bytes);
+        return MYL_RC_ALLOCATION_REFUSED;
+    }
+    index_commit(heap, batch, grown, capacity);
     batch->next = heap->rc->metadata.batches;
     heap->rc->metadata.batches = batch;
     return MYL_RC_OK;
@@ -305,7 +362,7 @@ myl_rc_status myl_rc_descriptor_import(myl_native_heap *heap, const myl_rc_descr
     myl_rc_invariant(descriptor->shape->size == descriptor->type->size);
     const myl_rc_descriptor *old = myl_rc_descriptor_find(heap, descriptor->type);
     if (old) {
-        myl_rc_invariant(old->edges == descriptor->edges && old->finalize == descriptor->finalize && old->clone == descriptor->clone);
+        myl_rc_invariant(old->edges == descriptor->edges && old->finalize == descriptor->finalize && old->clone == descriptor->clone && old->shell == descriptor->shell && old->next == descriptor->next);
         return MYL_RC_OK;
     }
     const myl_rc_module module = {.abi = MYL_RC_ABI_VERSION, .descriptors = descriptor, .descriptor_count = 1};
