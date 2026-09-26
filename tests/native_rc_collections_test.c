@@ -526,6 +526,120 @@ static void arena_snapshot_rollback(void) {
     myl_rc_owner_release(&heap,leaf);
     finish(&heap);
 }
+/* spec-case: RC-COLLECTION-1. A refused pinned pop leaves caller output and
+ * receiver unchanged; aliased append inputs survive backing relocation. */
+static void publication_refusal_output(void) {
+    myl_native_heap heap;
+    init(&heap);
+    myl_native_list *child=myl_native_list_new(&heap,&number,0);
+    myl_native_list *list=myl_native_list_new(&heap,&pointer,1);
+    myl_native_dictionary *dict=myl_native_dictionary_new(&heap,&number,&pointer,0);
+    int64_t key=1;
+    assert(child && list && dict && myl_native_list_append(&heap,list,&child));
+    assert(myl_native_dictionary_write(&heap,dict,&key,&child));
+    myl_rc_pin pin={0};
+    assert(myl_rc_pin_acquire(&heap,child,&pin)==MYL_RC_OK);
+    child->capacity=1000000;
+    heap.limit=heap.bytes;
+    myl_native_list *output=child;
+    assert(myl_rc_list_pop(&heap,list,&output)==-1 && output==child && list->length==1);
+    assert(myl_rc_dictionary_pop(&heap,dict,&key,&output)==-1 && output==child);
+    assert(myl_native_dictionary_length(dict)==1 && owners(child)==3);
+    child->capacity=0;
+    heap.limit=64u<<20;
+    myl_rc_pin_release(&heap,&pin);
+    myl_rc_owner_release(&heap,list);
+    myl_rc_owner_release(&heap,dict);
+    myl_rc_owner_release(&heap,child);
+    myl_native_list *numbers=myl_native_list_new(&heap,&number,1);
+    assert(numbers && myl_native_list_append(&heap,numbers,&key));
+    assert(myl_native_list_append(&heap,numbers,numbers->storage));
+    assert(numbers->length==2 && ((int64_t *)numbers->storage)[1]==key);
+    myl_rc_owner_release(&heap,numbers);
+    finish(&heap);
+}
+/* spec-case: RC-COLLECTION-1. Reserve refusal precedes a pinned arena snapshot,
+ * so an unpublished append cannot strand the snapshot's heap child edges. */
+static void arena_append_refusal(void) {
+    myl_native_heap heap;
+    init(&heap);
+    myl_native_list *leaf=myl_native_list_new(&heap,&number,0);
+    myl_native_list *branch=myl_native_list_new(&heap,&pointer,1);
+    assert(leaf && branch && myl_native_list_append(&heap,branch,&leaf));
+    assert(myl_native_region_begin(&heap));
+    myl_native_list *list=myl_native_list_new(&heap,&pointer,4096);
+    assert(list);
+    for (size_t i=0;i<4096;i++) assert(myl_native_list_append(&heap,list,&branch));
+    myl_rc_pin pin={0};
+    assert(myl_rc_pin_acquire(&heap,branch,&pin)==MYL_RC_OK);
+    heap.limit=heap.bytes;
+    assert(!myl_native_list_append(&heap,list,&branch));
+    assert(list->length==4096 && owners(leaf)==2 && owners(branch)==4097);
+    heap.limit=64u<<20;
+    myl_rc_native_abort(&heap,list);
+    assert(owners(branch)==1);
+    myl_native_region_end(&heap);
+    myl_rc_pin_release(&heap,&pin);
+    myl_rc_owner_release(&heap,branch);
+    myl_rc_owner_release(&heap,leaf);
+    finish(&heap);
+}
+/* spec-case: RC-DICTIONARY-1. Key/value and setdefault result publication share
+ * one rollback journal, including heap owners in nested fresh arena clones. */
+static void dictionary_publication_rollback(void) {
+    myl_native_heap heap;
+    init(&heap);
+    myl_native_list *key=myl_native_list_new(&heap,&number,0);
+    myl_native_list *leaf=myl_native_list_new(&heap,&number,0);
+    myl_native_list *overflow=myl_native_list_new(&heap,&number,0);
+    myl_native_list *value=myl_native_list_new(&heap,&pointer,2);
+    assert(key && leaf && overflow && value);
+    assert(myl_native_list_append(&heap,value,&leaf));
+    assert(myl_native_list_append(&heap,value,&overflow));
+    myl_rc_pin pin={0};
+    assert(myl_rc_pin_acquire(&heap,value,&pin)==MYL_RC_OK);
+    ((myl_rc_object *)overflow-1)->owners=MYL_RC_COUNT_MAX;
+    assert(myl_native_region_begin(&heap));
+    myl_native_dictionary *dict=myl_native_dictionary_new(&heap,&pointer,&pointer,0);
+    assert(dict && !myl_native_dictionary_write(&heap,dict,&key,&value));
+    assert(myl_rc_take_failure(&heap)==MYL_RC_COUNT_LIMIT);
+    assert(owners(key)==1 && owners(leaf)==2 && owners(value)==1);
+    myl_native_list *output=key;
+    assert(!myl_native_dictionary_setdefault(&heap,dict,&key,&value,&output));
+    assert(myl_rc_take_failure(&heap)==MYL_RC_COUNT_LIMIT);
+    assert(output==key && owners(key)==1 && owners(leaf)==2 && !myl_native_dictionary_length(dict));
+    myl_rc_native_abort(&heap,dict);
+    myl_native_region_end(&heap);
+    ((myl_rc_object *)overflow-1)->owners=2;
+    myl_rc_pin_release(&heap,&pin);
+    myl_rc_owner_release(&heap,value);
+    myl_rc_owner_release(&heap,overflow);
+    myl_rc_owner_release(&heap,leaf);
+    myl_rc_owner_release(&heap,key);
+    finish(&heap);
+}
+/* spec-case: RC-COLLECTION-1. An unpublished conditional edit in an arena
+ * releases the cloned container's heap child immediately when abandoned. */
+static void arena_edit_abort(void) {
+    myl_native_heap heap;
+    init(&heap);
+    myl_native_list *leaf=myl_native_list_new(&heap,&number,0);
+    myl_native_list *list=myl_native_list_new(&heap,&pointer,1);
+    assert(leaf && list && myl_native_list_append(&heap,list,&leaf));
+    assert(myl_rc_owner_acquire(&heap,list)==MYL_RC_OK);
+    assert(myl_native_region_begin(&heap));
+    myl_rc_slot slot={.shape=myl_rc_native_shape(&heap,&pointer),.address=&list,.region=1};
+    myl_rc_edit edit={0};
+    assert(myl_rc_unique_borrow(&heap,&slot,NULL,&edit)==MYL_RC_OK);
+    assert(edit.owned && edit.payload!=list && owners(leaf)==3);
+    myl_rc_edit_abort(&heap,&edit);
+    assert(!edit.owned && !edit.payload && owners(leaf)==2 && owners(list)==2);
+    myl_native_region_end(&heap);
+    myl_rc_owner_release(&heap,list);
+    myl_rc_owner_release(&heap,list);
+    myl_rc_owner_release(&heap,leaf);
+    finish(&heap);
+}
 int myl_rc_collections_verify(void) {
     storage_reuse_and_holds();
     storage_boundaries();
@@ -543,12 +657,16 @@ int myl_rc_collections_verify(void) {
     deep_pinned_snapshot();
     pinned_sparse_dictionary();
     arena_snapshot_rollback();
-    return 16;
+    publication_refusal_output();
+    arena_append_refusal();
+    dictionary_publication_rollback();
+    arena_edit_abort();
+    return 20;
 }
 #ifndef MYL_RC_COLLECTIONS_LIBRARY
 int main(void) {
-    assert(myl_rc_collections_verify()==16);
-    puts("native RC collections: 16 passed");
+    assert(myl_rc_collections_verify()==20);
+    puts("native RC collections: 20 passed");
     return 0;
 }
 #endif

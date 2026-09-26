@@ -178,6 +178,9 @@ typedef enum { MYL_RC_COPY, MYL_RC_TAKE } myl_rc_transfer;
  * before releasing old edges; failure preserves both slots. Relocate is only
  * proven movement of the SAME logical edge, never source-level publication. */
 myl_rc_status myl_rc_value_copy(myl_native_heap *, myl_rc_slot *, const myl_rc_slot *);
+/* One construction transaction across multiple empty slots (for example a
+ * dictionary key/value pair), including immediate fresh-arena clone rollback. */
+myl_rc_status myl_rc_value_copy_many(myl_native_heap *, myl_rc_slot *, const myl_rc_slot *, size_t);
 myl_rc_status myl_rc_value_take(myl_native_heap *, myl_rc_slot *, myl_rc_slot *);
 myl_rc_status myl_rc_value_replace(myl_native_heap *, myl_rc_slot *, myl_rc_slot *, myl_rc_transfer);
 void myl_rc_value_drop(myl_native_heap *, myl_rc_slot *);
@@ -202,6 +205,10 @@ myl_rc_status myl_rc_scope_prepare(myl_rc_scope *, const myl_rc_place *);
 /* Close even empty/partly prepared scopes: unlink, restore pins in reverse
  * order, release holds/journal exactly once, then drain. Escape first. */
 void myl_rc_scope_end(myl_rc_scope *);
+/* A checkpoint is a borrowed active scope. Unwind closes only newer scopes;
+ * all captured pin states in that prefix are restored before any hold drops. */
+myl_rc_scope *myl_rc_scope_current(myl_native_heap *);
+void myl_rc_scope_unwind(myl_native_heap *, myl_rc_scope *checkpoint);
 /* Uniqueness slots contain one managed payload pointer, never an inline
  * aggregate. The caller zero-initializes edit; failure leaves it empty. */
 myl_rc_status myl_rc_unique_owned(myl_native_heap *, myl_rc_slot *);

@@ -4,5 +4,5 @@ extern fn myl_qbe_rc_contract_verify() c_int;
 
 // spec: RC-STARTUP-1
 test "RC startup registers metadata and preserves count region and budget failures" {
-    try std.testing.expectEqual(@as(c_int, 5), myl_qbe_rc_contract_verify());
+    try std.testing.expectEqual(@as(c_int, 8), myl_qbe_rc_contract_verify());
 }
