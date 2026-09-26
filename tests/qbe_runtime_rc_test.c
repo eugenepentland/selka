@@ -639,6 +639,34 @@ int myl_qbe_rc_contract_verify(void) {
     assert(!strcmp(context.trap, "R_MEMORY_BUDGET") && !context.heap.rc);
     return 5;
 }
+// spec: RC-SEMANTIC-HISTORY-1
+int myl_qbe_rc_loan_verify(void) {
+    MylQbeContext context={0};
+    myl_native_heap_init(&context.heap,64u<<20);
+    if (!myl_rc_enabled(&context.heap)) assert(myl_rc_storage_init(&context.heap)==MYL_RC_OK);
+    assert(myl_qbe_rc_initialize(&context));
+    assert(myl_rc_descriptor_register(&context.heap,&pointer_descriptor)==MYL_RC_OK);
+    void *owner=myl_rc_storage_bytes(&context.heap,8,0),*loan=NULL;
+    assert(owner);
+    uint32_t guard=0;
+    MylQbeRcSlot entry={&pointer_type,&loan,&guard,MYL_QBE_RC_LOAN};
+    MylQbeRcFrame frame;
+    myl_qbe_rc_frame_enter(&context,&frame,&entry,1);
+    myl_rc_scope scope={0};
+    myl_rc_scope_begin(&context.heap,&scope);
+    assert(myl_rc_scope_pin(&scope,owner)==MYL_RC_OK);
+    assert(myl_rc_native_loan(&context.heap,&pointer_type,&loan,&owner));
+    guard=1;
+    myl_rc_owner_release(&context.heap,owner);
+    context.heap.limit=context.heap.bytes;
+    myl_qbe_rc_frame_cleanup(&context,&frame);
+    assert(!scope.active && !guard && !loan && !context.heap.objects_live);
+    myl_qbe_rc_frame_cleanup(&context,&frame);
+    myl_qbe_rc_frame_leave(&context,&frame);
+    myl_native_heap_destroy(&context.heap);
+    assert(!context.heap.bytes);
+    return 1;
+}
 int myl_qbe_rc_frame_verify(void) {
     frame_cleanup_test(0);
     frame_cleanup_test(1);
@@ -657,13 +685,14 @@ int myl_qbe_rc_frame_verify(void) {
     backing_bridge_test();
     held_slot_test();
     held_unique_bridge_test();
-    return 17;
+    assert(myl_qbe_rc_loan_verify() == 1);
+    return 18;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
     assert(myl_qbe_rc_contract_verify() == 5);
-    assert(myl_qbe_rc_frame_verify() == 17);
-    puts("RC startup and frame unwind: 22 checks passed");
+    assert(myl_qbe_rc_frame_verify() == 18);
+    puts("RC startup and frame unwind: 23 checks passed");
     return 0;
 }
 #endif

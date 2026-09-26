@@ -55,7 +55,12 @@ void myl_qbe_rc_slot_drop(void *context, MylQbeRcSlot *slot) {
     myl_rc_invariant(slot && slot->initialized);
     if (!*slot->initialized) return;
     *slot->initialized = 0;
-    myl_rc_invariant(slot->type && slot->address && !(slot->flags & ~15u));
+    myl_rc_invariant(slot->type && slot->address && !(slot->flags & ~31u));
+    if (slot->flags & MYL_QBE_RC_LOAN) {
+        myl_rc_invariant(slot->flags == MYL_QBE_RC_LOAN);
+        myl_rc_native_unloan(&ctx->heap, slot->type, slot->address);
+        return;
+    }
     if (slot->flags & MYL_QBE_RC_HOLD_POINTER) {
         myl_rc_invariant(slot->flags == MYL_QBE_RC_HOLD_POINTER && slot->type->size == sizeof(void *));
         myl_rc_hold hold;
