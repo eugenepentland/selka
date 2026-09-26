@@ -213,7 +213,7 @@ typedef struct myl_rc_scope {
     void *journal;
     unsigned active, region;
 } myl_rc_scope;
-typedef struct { const myl_rc_shape *shape; size_t offset; } myl_rc_projection;
+typedef struct { const myl_rc_shape *shape; size_t offset; unsigned immutable_box; } myl_rc_projection;
 typedef struct {
     myl_rc_slot receiver;
     const myl_rc_projection *path;
@@ -235,6 +235,9 @@ void myl_rc_scope_unwind(myl_native_heap *, myl_rc_scope *checkpoint);
 /* Uniqueness slots contain one managed payload pointer, never an inline
  * aggregate. The caller zero-initializes edit; failure leaves it empty. */
 myl_rc_status myl_rc_unique_owned(myl_native_heap *, myl_rc_slot *);
+/* Immutable body writes always detach, preserving older region and committing
+ * semantic history on reused mutable children, even without ordinary aliases. */
+myl_rc_status myl_rc_box_detach_owned(myl_native_heap *, myl_rc_slot *);
 /* An initialized HOLD_POINTER slot remains H after uniqueness detaches it.
  * Refusal leaves the original token and slot intact. */
 myl_rc_status myl_rc_unique_held(myl_native_heap *, myl_rc_slot *);

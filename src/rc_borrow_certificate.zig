@@ -8,7 +8,7 @@ const shapes = @import("rc_shape.zig");
 const model = @import("rc_model.zig");
 const Hash = std.crypto.hash.Blake3;
 /// Changing the accepted physical grammar changes every certificate identity.
-pub const version = "mylang-rc-borrowed-entry-v3";
+pub const version = "mylang-rc-borrowed-entry-v4";
 const Value = struct { ty: typed.Type, anchor: ?u32 = null };
 
 /// Certify a standalone function; direct calls require the program-aware entry.
@@ -179,6 +179,7 @@ const Proof = struct {
                 if (self.stack.items.len == 0) return false;
                 if (self.stack.items[self.stack.items.len - 1].ty != copy.ty) return false;
                 if ((try self.catalog.get(copy.ty)).unique_drop) return false;
+                if (@import("value_semantics.zig").needsCopy(self.catalog.native.records, copy.ty)) return false;
             },
             .push_i64 => |value| {
                 number(&self.hash, @bitCast(value));

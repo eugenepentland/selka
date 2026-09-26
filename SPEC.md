@@ -1391,6 +1391,8 @@ host failure in one worker leaves the units the other workers hold running.
 
 - [LIVE-VIEW-HISTORY-1] A live dictionary view preserves its original mapping identity when a semantic snapshot makes later owner mutations detach, regardless of mutation order or aggregate placement. A view of an already detached fresh mapping follows its owner; whole-view copies and read-only projections create no semantic sharing, including in arenas.
 
+- [RC-SEMANTIC-LOWERING-1] RC keeps copyable borrowed projections and compiler captures in private lifetime loans, then commits semantic copy history at the GC copy decision before later evaluation. Ordinary ABI and heap publications never expose a loan token.
+
 - [RC-PHYSICAL-RETAIN-1] Physical helper ownership publication preserves pointer identity and acquires direct O/H edges without semantic marks or pin snapshots; count and region refusal rolls back the whole batch.
 
 - [RC-BOX-WRITEBACK-1] A counted mutation of a collection field materialized from a boxed Option payload republishes the updated body into the owning Option slot before the receiver is used. The replacement preserves the original allocation region, retains child identity without adding semantic sharing or pin clones, retires only a locally owned prior box, and keeps earlier snapshots unchanged.

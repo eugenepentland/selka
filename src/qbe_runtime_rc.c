@@ -269,7 +269,8 @@ int myl_qbe_rc_scope_prepare(void *context, myl_rc_scope *scope, const MylQbeRcP
     for (size_t i = 0; i < request->count; ++i) {
         const myl_rc_descriptor *descriptor = myl_rc_descriptor_find(&ctx->heap, request->path[i].type);
         myl_rc_invariant(descriptor != NULL);
-        path[i] = (myl_rc_projection){descriptor->shape, request->path[i].offset};
+        path[i] = (myl_rc_projection){.shape=descriptor->shape,.offset=request->path[i].offset,
+            .immutable_box=request->path[i].type->collection_kind==5};
     }
     myl_rc_status status = request->count ? MYL_RC_OK : myl_rc_module_register(&ctx->heap, &scope_module);
     if (status == MYL_RC_OK) {
@@ -283,5 +284,17 @@ int myl_qbe_rc_scope_prepare(void *context, myl_rc_scope *scope, const MylQbeRcP
     }
     if (path != local) myl_rc_meta_free(&ctx->heap, path, bytes);
     return myl_qbe_rc_status(ctx, status);
+}
+#endif
+
+#if defined(MYL_NATIVE_RC)
+int myl_qbe_rc_box_detach(void *context, const myl_native_type *type, void *address, void *container) {
+    MylQbeContext *ctx=context;
+    myl_rc_invariant(type && type->collection_kind==5 && type->element);
+    const myl_rc_shape *shape=myl_rc_native_shape(&ctx->heap,type);
+    if (!shape) return myl_qbe_rc_status(ctx,myl_rc_take_failure(&ctx->heap));
+    myl_rc_slot slot={.shape=shape,.address=address,.container=container,
+        .region=container?myl_native_header_region(container):ctx->heap.region_depth};
+    return myl_qbe_rc_status(ctx,myl_rc_box_detach_owned(&ctx->heap,&slot));
 }
 #endif

@@ -613,8 +613,8 @@ test "RC-OWNERSHIP-PLAN-1 borrowed parameter result publishes before frame clean
     );
     defer result.deinit();
     const text = try functionText(result.value, "selected");
-    try t.expect(try at(text, "myl_qbe_rc_frame_enter") < try at(text, "myl_rc_native_copy"));
-    try t.expect(try at(text, "myl_rc_native_copy") < try at(text, "myl_qbe_rc_frame_cleanup"));
+    try t.expect(try at(text, "myl_qbe_rc_frame_enter") < try at(text, "myl_rc_native_publish"));
+    try t.expect(try at(text, "myl_rc_native_publish") < try at(text, "myl_qbe_rc_frame_cleanup"));
     try t.expect(try at(text, "myl_qbe_rc_frame_cleanup") < try at(text, "myl_qbe_rc_frame_leave"));
     try t.expect(std.mem.indexOf(u8, text, "myl_qbe_cow_transfer") == null);
 }
@@ -664,19 +664,15 @@ test "RC-UNIQUE-LOWER-1 mutations use typed owner counts inside loops" {
 }
 
 // spec-case: RC-AGGREGATE-1
-test "RC aggregate managed bodies with unique fields install finalizers" {
-    var fixture = try ShapeFixture.init(
+test "RC aggregate recursive managed bodies reject unique fields" {
+    try t.expectError(error.SourceError, ShapeFixture.init(
         \\record Owner:
         \\    handle: TextFile
         \\    next: Option[Owner]
         \\
         \\def main() -> int:
         \\    return 0
-    );
-    defer fixture.deinit();
-    const generated = try @import("rc_descriptors.zig").generate(t.allocator, &fixture.layouts);
-    defer t.allocator.free(generated);
-    try t.expect(std.mem.indexOf(u8, generated, ".finalize=myl_rc_finalize_unique") != null);
+    ));
 }
 
 // spec-case: RC-UNIQUE-LOWER-1
@@ -737,7 +733,7 @@ test "RC-OWNERSHIP-PLAN-1 semantic move from readonly parameter checks physical 
     const text = try functionText(result.value, "selected");
     try t.expect(std.mem.indexOf(u8, text, "=w loaduw") != null);
     try t.expect(std.mem.indexOf(u8, text, "@rccopy") != null);
-    try t.expect(std.mem.indexOf(u8, text, "call $myl_rc_native_copy") != null);
+    try t.expect(std.mem.indexOf(u8, text, "call $myl_rc_native_retain") != null);
 }
 
 // spec: RC-NARROWED-MUTATION-1
@@ -780,4 +776,26 @@ test "RC augmented list field publishes the captured extended value" {
     const text = try functionText(result.value, "main");
     try t.expect(std.mem.indexOf(u8, text, "call $myl_native_list_extend") != null);
     try t.expect(std.mem.indexOf(u8, text, "call $myl_rc_native_take") != null);
+}
+
+// spec: RC-SEMANTIC-LOWERING-1
+test "RC-SEMANTIC-LOWERING-1 borrowed fields loan before semantic publication" {
+    const runtime = @import("runtime_mode.zig");
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    var result = try lowered(
+        \\record Row:
+        \\    items: list[int]
+        \\def main() -> int:
+        \\    row = Row([1])
+        \\    saved = row.items
+        \\    row.items.append(2)
+        \\    return len(saved)
+    );
+    defer result.deinit();
+    const text = try functionText(result.value, "main");
+    try t.expect(std.mem.indexOf(u8, text, "call $myl_rc_native_loan") != null);
+    try t.expect(std.mem.indexOf(u8, text, "call $myl_rc_native_publish") != null);
+    try t.expect(try at(text, "call $myl_rc_native_loan") < try at(text, "call $myl_rc_native_publish"));
 }

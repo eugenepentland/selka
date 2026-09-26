@@ -1194,7 +1194,7 @@ static int rc_list_insert_at(myl_native_heap *heap, myl_native_list *list, size_
     int ok=myl_rc_list_storage_reserve(heap,list,list->length+1);
     if (ok) {
         if (aliases) value=(const unsigned char *)list->storage+offset;
-        ok=myl_rc_native_copy(heap,list->element,staged,value,region);
+        ok=myl_rc_native_retain(heap,list->element,staged,value,region);
     }
     if (ok) {
         unsigned char *storage=list->storage;
@@ -1219,7 +1219,7 @@ int myl_rc_list_insert(myl_native_heap *heap, myl_native_list *list, int64_t ind
 }
 int myl_rc_list_set(myl_native_heap *heap, myl_native_list *list, size_t index, const void *value) {
     if (index>=list->length) return 0;
-    return myl_rc_native_replace(heap,list->element,(unsigned char *)list->storage+index*list->element->size,value,myl_native_header_region(list));
+    return myl_rc_native_retain_replace(heap,list->element,(unsigned char *)list->storage+index*list->element->size,value,myl_native_header_region(list));
 }
 static int rc_list_remove_at(myl_native_heap *heap, myl_native_list *list, size_t at, void *output) {
     if (at>=list->length || list->generation==UINT64_MAX) return 0;

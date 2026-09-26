@@ -40,6 +40,16 @@ const source =
     \\            return 1
     \\        case _:
     \\            return 0
+    \\union PlainWrapped:
+    \\    empty,
+    \\    leaf: bytes
+    \\def plain_variant(items: bytes) -> int:
+    \\    wrapped = PlainWrapped.leaf(items)
+    \\    match wrapped:
+    \\        case PlainWrapped.leaf(value):
+    \\            return 1
+    \\        case _:
+    \\            return 0
     \\def main() -> int:
     \\    return count(Node(None))
 ;
@@ -87,12 +97,14 @@ test "RC-READONLY-BODY-1 mutation allocation callback and owned result retain jo
 }
 
 // spec-case: RC-READONLY-BODY-1
-test "RC-READONLY-BODY-1 inline union wrappers borrow but recursive boxes retain journals" {
+test "RC-READONLY-BODY-1 only history-free inline union wrappers borrow" {
     const saved = runtime.get();
     defer runtime.set(saved);
     runtime.set(.rc);
     var manifest = try emitted();
     defer manifest.deinit();
-    try t.expect(!contains(try named(manifest.value, "variant"), "myl_qbe_rc_frame_enter"));
+    try t.expect(!contains(try named(manifest.value, "plain_variant"), "myl_qbe_rc_frame_enter"));
+    try t.expect(contains(try named(manifest.value, "variant"), "myl_qbe_rc_frame_enter"));
+    try t.expect(contains(try named(manifest.value, "variant"), "myl_rc_native_publish"));
     try t.expect(contains(try named(manifest.value, "recursive_variant"), "myl_qbe_rc_frame_enter"));
 }

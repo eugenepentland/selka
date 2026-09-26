@@ -72,7 +72,7 @@ fn initialize(comptime E: type, self: *E, field: Field) Error!void {
         try frame.initialized(E, self, frame.pending(E, self), false);
         return;
     };
-    try slots.Lower(E).transfer(self, .{ .ty = field.ty, .source = field.source, .destination = field.destination, .region = field.region, .mode = if (shape.unique_drop) .take_empty else .copy_empty });
+    try slots.Lower(E).transfer(self, .{ .ty = field.ty, .source = field.source, .destination = field.destination, .region = field.region, .mode = if (shape.unique_drop) .take_empty else .retain_empty });
     if (shape.unique_drop) if (field.operand) |index|
         try frame.initialized(E, self, values.journalIndex(E, self, index), false);
 }
@@ -205,7 +205,12 @@ fn dispatchValue(comptime E: type, self: *E, dispatch: @FieldType(Op, "switch_va
             try frame.drop(E, self, index);
             try self.print(" blit %v{d}, %l{d}, {d}\n", .{ work, index, (try self.layout(ty)).size });
             try frame.initialized(E, self, frame.pending(E, self), false);
-            try frame.initialized(E, self, index, try state.owns(frame.get(E, self).?, ty));
+            if (try state.owns(frame.get(E, self).?, ty)) {
+                const address = self.temp();
+                try self.print(" %v{d} =l copy %l{d}\n", .{ address, index });
+                try frame.entry(E, self, index, ty, address);
+                try frame.initialized(E, self, index, true);
+            }
         };
         try values.drop(E, self, height - 1);
         try self.print(" jmp @{s}{d}\n@rcarmnext{d}\n", .{ self.labelPrefix(arm.target), arm.target, matches });
