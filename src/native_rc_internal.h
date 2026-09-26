@@ -49,5 +49,6 @@ int myl_rc_size_mul(size_t, size_t, size_t *);
 int myl_rc_is_counted(const void *);
 size_t myl_rc_shape_depth(const myl_native_heap *, const myl_rc_shape *);
 void myl_rc_scopes_close_region(myl_native_heap *, unsigned);
+myl_rc_status myl_rc_scope_extend(myl_rc_scope *, void *boundary, myl_rc_status (*)(myl_rc_scope *, void *));
 void myl_rc_enqueue(myl_native_heap *, myl_rc_object *);
 #endif

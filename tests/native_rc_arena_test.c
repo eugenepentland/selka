@@ -114,6 +114,35 @@ static void depth_reservation_refusal(void) {
     myl_native_region_end(&heap);
     finish(&heap);
 }
+static void inspect_arena_child(myl_native_heap *heap, void *payload) {
+    void *child = *(void **)payload;
+    assert(child && *(void **)child);
+    finalize(heap, child);
+}
+static void parent_finalizer_sees_arena_child(void) {
+    myl_native_heap heap;
+    start(&heap);
+    const myl_rc_shape *shape = myl_rc_native_shape(&heap, &pointer);
+    myl_native_type parent_type = pointer;
+    myl_rc_descriptor parent_descriptor = {.type = &parent_type, .shape = shape, .finalize = inspect_arena_child};
+    assert(shape && myl_rc_descriptor_register(&heap, &parent_descriptor) == MYL_RC_OK);
+    void *leaf = myl_rc_storage_bytes(&heap, 8, 0);
+    assert(leaf);
+    *(uint64_t *)leaf = 79;
+    assert(myl_native_region_begin(&heap));
+    myl_rc_alloc_request request = {.element = &pointer, .count = 1, .region = 1};
+    void *child = NULL, *parent = NULL;
+    assert(myl_rc_new(&heap, &request, &child) == MYL_RC_OK);
+    *(void **)child = leaf;
+    request.element = &parent_type;
+    assert(myl_rc_new(&heap, &request, &parent) == MYL_RC_OK);
+    *(void **)parent = child;
+    expected_region = 0;
+    finalized = 0;
+    myl_native_region_end(&heap);
+    assert(finalized == 1);
+    finish(&heap);
+}
 static void close_preserves_older_scope(void) {
     myl_native_heap heap;
     start(&heap);
@@ -140,13 +169,14 @@ int myl_native_rc_arena_verify(void) {
     nested_and_charged_reuse();
     finalizer_and_abort();
     depth_reservation_refusal();
+    parent_finalizer_sees_arena_child();
     close_preserves_older_scope();
-    return 5;
+    return 6;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
-    assert(myl_native_rc_arena_verify() == 5);
-    puts("native RC arena: 5 passed");
+    assert(myl_native_rc_arena_verify() == 6);
+    puts("native RC arena: 6 passed");
     return 0;
 }
 #endif

@@ -1,7 +1,7 @@
 /* `memmem` is a GNU extension, so the feature macro has to precede <string.h>. */
 #define _GNU_SOURCE
 #include "native_text.h"
-#include "native_rc_values.h"
+#include "native_rc_collections.h"
 #include <stdlib.h>
 #include <string.h>
 /* A text object's payload is UTF-8 octets, so the collector has nothing to walk;
@@ -588,7 +588,7 @@ myl_native_list *myl_native_text_split(myl_native_heap *heap, myl_native_text *i
             size_t end=hit==SIZE_MAX ? input->bytes : start+hit;
             myl_native_text *piece=end-start>=threshold ? long_piece(heap,input,start,end-start)
                                                          : copy_piece(heap,haystack+start,end-start,ascii);
-            if (!piece) { if (myl_rc_enabled(heap)) myl_rc_native_abort(heap,result); result=NULL; break; }
+            if (!piece) { if (myl_rc_enabled(heap)) myl_rc_list_abort_parts(heap,result,input); result=NULL; break; }
             /* The reserved slot is written in place, exactly as an append that
                finds room writes it: the collector traces the whole reservation,
                so the piece is reachable from here on. */
