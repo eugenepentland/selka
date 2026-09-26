@@ -114,6 +114,29 @@ test "checker terminates on a cyclic alias chain and reports the observed write"
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, cyclic.term);
     try testing.expect(std.mem.indexOf(u8, cyclic.stderr, "W_ALIAS_DEPENDENT") != null);
 }
+// spec: ALIAS-MIGRATION-5
+test "recursive type branches terminate and preserve class-graph warnings" {
+    const outcome = try runFixture("check",
+        \\class Item:
+        \\    n: int
+        \\
+        \\record Box:
+        \\    left: Option[Box]
+        \\    right: Option[Box]
+        \\    item: Item
+        \\
+        \\def main() -> int:
+        \\    original = Box(left=None, right=None, item=Item(n=1))
+        \\    alias = original
+        \\    alias.item.n = 2
+        \\    return original.item.n
+    , &.{"--diagnostics=json"});
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+    try testing.expect(std.mem.indexOf(u8, outcome.stderr, "W_ALIAS_DEPENDENT") != null);
+    try testing.expect(std.mem.indexOf(u8, outcome.stderr, "class graph") != null);
+}
 // spec: ALIAS-MIGRATION-3
 test "checker distinguishes a nested alias store from a fresh buffer conversion" {
     const nested = try runFixture("check",

@@ -458,7 +458,7 @@ fn share(comptime E: type, self: *E, stack: []const typed.Type, depth: u8) Error
     const value = try self.layout(ty);
     if (!value.trace or self.isScalar(ty)) return;
     var flat: Flat = .{};
-    if (try flatten(E, self, ty, 0, &flat)) {
+    if (try flatten(E, self, ty, 0, &flat, true)) {
         const base = try self.load("s", slot);
         for (flat.offsets[0..flat.len]) |offset| {
             const address = try self.address(base, offset);
@@ -502,16 +502,25 @@ fn sharePayload(comptime E: type, self: *E, payload: Shared, stack: []const type
 /// The most payload fields one aggregate's share is spelled out for.
 const flat_limit = 8;
 /// The payload fields of one aggregate, at their byte offsets.
-const Flat = struct { offsets: [flat_limit]u64 = undefined, len: usize = 0 };
+pub const Flat = struct { offsets: [flat_limit]u64 = undefined, len: usize = 0 };
+
+/// Static mutable leaves of a value transfer. A hidden recursive box needs
+/// the runtime's descriptor walk, because the box body may hold collections.
+pub fn valueLeaves(comptime E: type, self: *E, ty: typed.Type) Error!?Flat {
+    var flat: Flat = .{};
+    if (!try flatten(E, self, ty, 0, &flat, false)) return null;
+    return flat;
+}
 
 /// Collect the offsets of every payload a value of `ty` at `base` holds
 /// directly, or answer false for a shape the runtime must walk: a union, an
 /// optional, more than `flat_limit` payloads.
-fn flatten(comptime E: type, self: *E, ty: typed.Type, base: u64, flat: *Flat) Error!bool {
+fn flatten(comptime E: type, self: *E, ty: typed.Type, base: u64, flat: *Flat, trust_box: bool) Error!bool {
     const value = try self.layout(ty);
     if (!value.trace) return true;
     switch (value.kind) {
         .managed => {
+            if (!trust_box and self.program.records[ty.recordIndex()].collection.box) return false;
             if (!cow_plan.payloadType(self.program, ty)) return true;
             if (flat.len == flat_limit) return false;
             flat.offsets[flat.len] = base;
@@ -520,11 +529,11 @@ fn flatten(comptime E: type, self: *E, ty: typed.Type, base: u64, flat: *Flat) E
         },
         .record, .domain => {
             if (self.program.records[ty.recordIndex()].isManagedRecord()) return true;
-            for (value.fields) |field| if (!try flatten(E, self, field.ty, base + field.offset, flat)) return false;
+            for (value.fields) |field| if (!try flatten(E, self, field.ty, base + field.offset, flat, trust_box)) return false;
             return true;
         },
         .array => {
-            for (0..value.count) |i| if (!try flatten(E, self, value.fields[0].ty, base + i * value.stride, flat)) return false;
+            for (0..value.count) |i| if (!try flatten(E, self, value.fields[0].ty, base + i * value.stride, flat, trust_box)) return false;
             return true;
         },
         else => return false,

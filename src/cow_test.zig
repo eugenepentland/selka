@@ -76,6 +76,31 @@ test "copy on write: value-semantics copies use the rooted COW hook without dupl
     defer a.free(il);
     try std.testing.expectEqual(@as(usize, 1), count(il, "call $myl_qbe_cow_transfer("));
     try std.testing.expectEqual(@as(usize, 0), count(il, "call $myl_native_cow_share("));
+    try std.testing.expectEqual(@as(usize, 1), count(il, "\n@vcpresent"));
+}
+
+// spec-case: COW-SHARED-1
+test "copy on write: a flat record shares two leaves inline with a rooted pinned fallback" {
+    const saved = value_semantics.enabled();
+    value_semantics.setEnabled(true);
+    defer value_semantics.setEnabled(saved);
+    const source =
+        \\record Pair:
+        \\    first: list[int]
+        \\    second: list[int]
+        \\
+        \\def main() -> int:
+        \\    original = Pair(first=[1], second=[2])
+        \\    copied = original
+        \\    copied.first.append(3)
+        \\    return len(original.first) * 100 + len(copied.first) * 10 + len(copied.second)
+    ;
+    try std.testing.expectEqual(@as(i64, 121), try run(std.testing.allocator, source, true));
+    const a = std.testing.allocator;
+    const il = try unitText(a, source, "main", checks);
+    defer a.free(il);
+    try std.testing.expectEqual(@as(usize, 2), count(il, "\n@vcpresent"));
+    try std.testing.expectEqual(@as(usize, 1), count(il, "call $myl_qbe_cow_transfer("));
 }
 
 // spec: COW-UNIQUE-1
