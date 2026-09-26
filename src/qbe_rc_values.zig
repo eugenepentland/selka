@@ -25,6 +25,12 @@ pub fn source(comptime E: type, self: *E, index: usize, ty: typed.Type) Error!us
 }
 /// Drop the stable owned token without consulting an overwritten operand word.
 pub fn drop(comptime E: type, self: *E, index: usize) Error!void {
+    const state = frame.get(E, self) orelse return;
+    const stack = self.states[self.pc] orelse return error.InternalError;
+    if (index >= stack.len) return error.InternalError;
+    // Every instruction consumes the prior owners before publishing its typed
+    // result. A plain input therefore has no live obligation in this slot.
+    if (!try @import("qbe_rc_state.zig").owns(state, stack[index])) return;
     try frame.drop(E, self, journalIndex(E, self, index));
 }
 /// Prepare a borrowed publication before releasing any consumed owners.

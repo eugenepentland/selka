@@ -153,3 +153,28 @@ test "GC contract inspection does not close the returned unique payload" {
     defer t.allocator.free(drop_target);
     try t.expect(std.mem.indexOf(u8, text, drop_target) == null);
 }
+
+// spec: RC-PLAIN-OPERAND-1
+test "RC scalar arithmetic in an owning frame emits only the managed input drop" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    var compilation = try compiler.Compilation.init(t.allocator, "rc_plain_operands.my",
+        \\def total(values: list[int], count: int) -> int:
+        \\    index = 0
+        \\    result = 0
+        \\    while index < count:
+        \\        result += index
+        \\        index += 1
+        \\    return result + len(values)
+        \\def main() -> int:
+        \\    return total([17, 23], 20)
+    );
+    defer compilation.deinit();
+    const emitted = try compilation.emitQbe(t.allocator);
+    defer t.allocator.free(emitted);
+    var manifest = try std.json.parseFromSlice(Manifest, t.allocator, emitted, .{ .ignore_unknown_fields = true });
+    defer manifest.deinit();
+    const text = try findFunction(manifest.value, "total");
+    try t.expectEqual(@as(usize, 1), std.mem.count(u8, text, "call $myl_qbe_rc_slot_drop"));
+}
