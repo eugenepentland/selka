@@ -29,3 +29,9 @@ pub fn guest(allocator: std.mem.Allocator, catalog: *shapes.Catalog, function: b
         .abi = abi,
     };
 }
+
+/// An additional internal entry exists only after an every-return physical proof.
+/// The canonical guest contract above remains owned, including indirect calls.
+pub fn borrowed(allocator: std.mem.Allocator, catalog: *shapes.Catalog, function: bytecode.Function, abi: []const u8) native.Error!?model.BorrowCertificate {
+    return @import("rc_borrow_certificate.zig").certify(allocator, catalog, function, abi);
+}
