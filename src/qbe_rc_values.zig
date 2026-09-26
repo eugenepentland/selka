@@ -102,7 +102,13 @@ pub fn commitRuntime(comptime E: type, self: *E) Error!void {
 /// A pin-aware take can still allocate; its source guard changes only on success.
 pub fn prepareOperand(comptime E: type, self: *E, ty: typed.Type, index: usize) Error!void {
     const address = try source(E, self, index, ty);
-    const guard_pointer = try frame.guard(E, self, journalIndex(E, self, index));
+    try prepareGuarded(E, self, ty, address, journalIndex(E, self, index));
+}
+
+/// Physical moves consume only an initialized owner; a borrowed local or operand
+/// copies from its anchor even when semantic last-use analysis calls it a move.
+pub fn prepareGuarded(comptime E: type, self: *E, ty: typed.Type, address: usize, journal_index: usize) Error!void {
+    const guard_pointer = try frame.guard(E, self, journal_index);
     const live = self.temp();
     const label = self.temp();
     try self.print(" %v{d} =w loaduw %v{d}\n jnz %v{d}, @rctake{d}, @rccopy{d}\n@rctake{d}\n", .{ live, guard_pointer, live, label, label, label });
@@ -110,7 +116,7 @@ pub fn prepareOperand(comptime E: type, self: *E, ty: typed.Type, index: usize) 
     const region = self.temp();
     try self.print(region_mark, .{region});
     try slots.Lower(E).transfer(self, .{ .ty = ty, .destination = work, .source = address, .region = region, .mode = .take_empty });
-    try frame.initialized(E, self, journalIndex(E, self, index), false);
+    try frame.initialized(E, self, journal_index, false);
     try markWork(E, self, ty, work);
     try self.print(" jmp @rcprepared{d}\n@rccopy{d}\n", .{ label, label });
     try copied(E, self, ty, address);

@@ -702,3 +702,24 @@ test "RC-RECEIVER-LOWER-1 outgoing mutable arguments hold a nested runtime scope
     try t.expect(try at(text, "call $myl_qbe_rc_scope_pin") < try at(text, "call $myl_qbe_rc_scope_end"));
     try t.expect(std.mem.indexOf(u8, text, "call $myl_native_cow_unique") == null);
 }
+
+// spec-case: RC-OWNERSHIP-PLAN-1
+test "RC-OWNERSHIP-PLAN-1 semantic move from readonly parameter checks physical guard" {
+    const mode = @import("runtime_mode.zig");
+    const saved = mode.get();
+    defer mode.set(saved);
+    mode.set(.rc);
+    var result = try lowered(
+        \\def selected(candidate: Result[list[int], list[int]]) -> Result[list[int], list[int]]:
+        \\    items = candidate?
+        \\    return Ok(items)
+        \\def main() -> int:
+        \\    _ = selected(Ok([1]))
+        \\    return 0
+    );
+    defer result.deinit();
+    const text = try functionText(result.value, "selected");
+    try t.expect(std.mem.indexOf(u8, text, "=w loaduw") != null);
+    try t.expect(std.mem.indexOf(u8, text, "@rccopy") != null);
+    try t.expect(std.mem.indexOf(u8, text, "call $myl_rc_native_copy") != null);
+}
