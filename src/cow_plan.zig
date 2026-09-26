@@ -288,6 +288,17 @@ fn temporary(function: bytecode.Function, index: u32) bool {
     return local.name.len == 0 or local.name[0] == '<';
 }
 
+/// A hidden managed iteration source preserves header identity, unlike a value snapshot.
+pub fn iterationOwner(function: bytecode.Function, index: usize) bool {
+    if (index >= function.scope.locals.len or !temporary(function, @intCast(index))) return false;
+    for (function.scope.instructions) |instruction| {
+        if (instruction.op != .buffer_operation) continue;
+        const operation = instruction.op.buffer_operation;
+        if (operation.kind == .iteration_check and li(operation.owner) == index) return true;
+    }
+    return false;
+}
+
 /// The one reachable store into `index`, or null.
 fn singleStore(planner: *const Planner, index: u32) ?usize {
     var found: ?usize = null;
@@ -531,9 +542,9 @@ fn stageTwoRoot(planner: *Planner, site: ownership.Cow) Error!void {
     if (planner.places[via] != null) return;
     const root = planner.resolve(via);
     if (planner.places[root] != null or !planner.payload(root)) return;
-    if (planner.role(root) == .mut_param) return;
+    if (planner.role(root) == .mut_param and ownership.uniqueParameter(planner.input.function, root)) return;
     switch (planner.code()[site.pc].op) {
-        .buffer_operation => |operation| if (!writes(operation.kind) and planner.input.analysis.roles[li(operation.owner)] != .owned) return,
+        .buffer_operation => |operation| if (!writes(operation.kind) and !rootNeedsCheck(planner, li(operation.owner))) return,
         else => {},
     }
     try planner.addUnique(site.pc, .{ .local = root, .alias = if (via != root) via else none });
@@ -570,7 +581,7 @@ fn placePlaces(planner: *Planner) Error!void {
         if (found.step == .field or found.step == .entry_field) continue;
         const root = planner.resolve(found.parent);
         if (planner.places[root] != null or !planner.payload(root)) continue;
-        if (planner.role(root) != .owned or rootCovered(planner, found, root)) continue;
+        if (!rootNeedsCheck(planner, root) or rootCovered(planner, found, root)) continue;
         try planner.addUnique(rootPc(planner, found), .{ .local = root, .alias = if (found.parent != root) found.parent else none });
     }
 }
@@ -633,6 +644,7 @@ fn placeShares(planner: *Planner, written: []const bool) Error!void {
             // Unlike a pending writing place, it needs an independent value.
             if (!temporary(planner.input.function, local)) continue;
             if (written[local] or !planner.payload(local)) continue;
+            if (iterationOwner(planner.input.function, local)) continue;
         }
         const operands = planner.input.analysis.operands[transfer.pc] orelse continue;
         const types = planner.input.states[transfer.pc] orelse continue;
@@ -703,4 +715,9 @@ fn writtenRead(planner: *const Planner, pc: usize) bool {
         if (place.base == pc or place.read == pc) return true;
     };
     return false;
+}
+
+fn rootNeedsCheck(planner: *const Planner, root: u32) bool {
+    return planner.role(root) == .owned or
+        (planner.role(root) == .mut_param and !ownership.uniqueParameter(planner.input.function, root));
 }

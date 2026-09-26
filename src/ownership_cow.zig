@@ -301,7 +301,7 @@ fn rootHoistable(placement: *const Placement, root: u32, loop: Loop) bool {
 /// every iteration of `loop`.
 fn elementsHoistable(placement: *const Placement, root: u32, loop: Loop) bool {
     const ctx = placement.ctx;
-    if (ctx.role(root) != .mut_param and !rootHoistable(placement, root, loop)) return false;
+    if (!callerUnique(ctx, root) and !rootHoistable(placement, root, loop)) return false;
     if (hasEvent(placement, loop, root, &.{ .retain, .call, .mut_call, .escape })) return false;
     if (!payloadElements(ctx, root)) return false;
     for (loop.head..loop.back + 1) |pc| {
@@ -386,20 +386,28 @@ fn sites(placement: *Placement) Error![]const model.Cow {
                 if (!ctx.locals.managed[owner]) continue;
                 if (model.writesReceiver(operation.kind)) switch (ctx.role(owner)) {
                     .path => {},
-                    .mut_param => try found.append(ctx.allocator, .{ .pc = here, .local = owner, .via = owner, .elements = false, .needed = false }),
+                    .mut_param => try found.append(ctx.allocator, .{ .pc = here, .local = owner, .via = owner, .elements = false, .needed = !callerUnique(ctx, owner) }),
                     else => try found.append(ctx.allocator, .{ .pc = here, .local = owner, .via = owner, .elements = false, .needed = true, .hoisted = placement.root_hoist[pc] }),
-                } else if (ctx.marks.path_read[pc] and ctx.role(owner) == .owned) {
+                } else if (ctx.marks.path_read[pc] and rootNeedsCheck(ctx, owner)) {
                     try found.append(ctx.allocator, .{ .pc = here, .local = owner, .via = owner, .elements = false, .needed = true, .hoisted = placement.root_hoist[pc] });
                 }
                 if (ctx.marks.path_read[pc]) try found.append(ctx.allocator, .{ .pc = here, .local = ctx.rootOf(owner), .via = owner, .elements = true, .needed = true, .hoisted = placement.element_hoist[pc] });
             },
             .load_local => |slot| if (ctx.marks.unique_load[pc]) {
                 const local = li(slot);
-                const needed = ctx.role(local) != .mut_param;
+                const needed = !callerUnique(ctx, local);
                 try found.append(ctx.allocator, .{ .pc = here, .local = ctx.rootOf(local), .via = local, .elements = false, .needed = needed, .hoisted = placement.root_hoist[pc] });
             },
             else => {},
         }
     }
     return found.toOwnedSlice(ctx.allocator);
+}
+
+fn callerUnique(ctx: *const Context, local: u32) bool {
+    return ctx.role(local) == .mut_param and model.uniqueParameter(ctx.code.function, local);
+}
+
+fn rootNeedsCheck(ctx: *const Context, local: u32) bool {
+    return ctx.role(local) == .owned or (ctx.role(local) == .mut_param and !callerUnique(ctx, local));
 }

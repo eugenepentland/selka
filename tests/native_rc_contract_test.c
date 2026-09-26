@@ -2,10 +2,14 @@
 #include "native_rc.h"
 #include "native_rc_internal.h"
 #include <assert.h>
+#include <errno.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/resource.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 typedef struct { size_t live, retired, allocations; unsigned finalizing, max_finalizing; void *expect_unpinned; } TestAllocator;
 static myl_rc_status allocate(myl_native_heap *heap, const myl_rc_alloc_request *request, void **out) {
@@ -63,6 +67,24 @@ static void *new_value(myl_native_heap *heap, const myl_native_type *type, size_
 static void finish(myl_native_heap *heap, TestAllocator *state) {
     myl_rc_heap_destroy(heap);
     assert(!heap->rc && !heap->bytes && state->live == 0 && state->allocations == state->retired);
+}
+// spec-case: RC-COUNTS-1
+static void invariant_paths_test(void) {
+    volatile unsigned evaluations = 0;
+    myl_rc_invariant(++evaluations == 1);
+    assert(evaluations == 1);
+    pid_t child = fork();
+    assert(child >= 0);
+    if (!child) {
+        struct rlimit no_core = {0, 0};
+        assert(!setrlimit(RLIMIT_CORE, &no_core));
+        myl_rc_invariant(0);
+        _exit(99);
+    }
+    int status;
+    pid_t finished;
+    do { finished = waitpid(child, &status, 0); } while (finished < 0 && errno == EINTR);
+    assert(finished == child && WIFSIGNALED(status) && WTERMSIG(status) == SIGABRT);
 }
 // spec: RC-LAYOUT-1
 static void layout_test(void) {
@@ -787,6 +809,7 @@ int myl_rc_contract_verify(void) {
     assert(!getrlimit(RLIMIT_STACK, &stack));
     original = stack;
     if (stack.rlim_cur > 262144) { stack.rlim_cur = 262144; assert(!setrlimit(RLIMIT_STACK, &stack)); }
+    invariant_paths_test();
     layout_test();
     hold_and_pin_test();
     prefix_guard_and_limits_test();
@@ -808,12 +831,12 @@ int myl_rc_contract_verify(void) {
     deep_unique_test();
     local_transfer_frames_test();
     assert(!setrlimit(RLIMIT_STACK, &original));
-    return 20;
+    return 21;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
-    assert(myl_rc_contract_verify() == 20);
-    puts("native RC contract: 20 tests passed");
+    assert(myl_rc_contract_verify() == 21);
+    puts("native RC contract: 21 tests passed");
     return 0;
 }
 #endif
