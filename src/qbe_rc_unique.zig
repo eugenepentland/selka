@@ -65,11 +65,7 @@ fn stableMutParameter(comptime E: type, self: *E, index: usize) bool {
     if (!record.isCollection() or record.collection.kind != .list or record.collection.box) return false;
     const shape = state.catalog.get(record.shape.buffer orelse return false) catch return false;
     if (shape.counted or shape.unique_drop) return false;
-    for (self.function.scope.instructions) |instruction| switch (instruction.op) {
-        .store_local, .move_local, .drop_local, .ref_local => |slot| if (@backingInt(slot) == index) return false,
-        else => {},
-    };
-    return true;
+    return ownership.uniqueParameter(self.function, index);
 }
 
 /// One ordinary or held pointer edge in an already-owned containing value.

@@ -322,3 +322,36 @@ test "OWNERSHIP-ANALYSIS-1 the shared liveness solution fails cleanly without me
     const states = [_]?[]const typed.Type{&.{}};
     try std.testing.expectError(error.OutOfMemory, liveness.solve(failing.allocator(), .{ .function = function, .states = &states, .pinned = &.{false} }));
 }
+
+// spec: COW-MUT-REBIND-1
+test "COW-MUT-REBIND-1 a rebound mut parameter keeps its borrow role and requires checks" {
+    var parsed = try explained(std.testing.allocator,
+        \\def replaced(xs: mut list[int], other: list[int]) -> list[int]:
+        \\    xs = other
+        \\    xs.append(7)
+        \\    return xs
+        \\def main() -> int:
+        \\    values = [1]
+        \\    return len(replaced(mut values, [2]))
+    , "replaced");
+    defer parsed.deinit();
+    try std.testing.expect((try siteOf(parsed.value, "xs")).needed);
+    try std.testing.expectEqualStrings("mut_param", try role(parsed.value, "xs"));
+}
+
+// spec-case: COW-MUT-REBIND-1
+test "COW-MUT-REBIND-1 a conditional parameter replacement checks its captured receiver" {
+    var parsed = try explained(std.testing.allocator,
+        \\def replaced(xs: mut list[int], other: list[int], choose: bool) -> list[int]:
+        \\    if choose:
+        \\        xs = other
+        \\    xs[0] = 7
+        \\    return xs
+        \\def main() -> int:
+        \\    values = [1]
+        \\    return len(replaced(mut values, [2], True))
+    , "replaced");
+    defer parsed.deinit();
+    try std.testing.expect((try siteOf(parsed.value, "xs")).needed);
+    try std.testing.expectEqualStrings("mut_param", try role(parsed.value, "xs"));
+}

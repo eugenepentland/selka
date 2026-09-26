@@ -1356,3 +1356,5 @@ host failure in one worker leaves the units the other workers hold running.
 - [COW-READ-RECEIVER-1] A collection read captures its receiver value before evaluating its index or other arguments. A later callback that mutates the source cannot change that captured value or the length used to normalize a negative index. Capturing a pinned receiver creates a private copy; pending writing receivers retain their existing place identity rules. GC and RC preserve the same evaluation order and results.
 
 - [RC-PHYSICAL-HOIST-1] RC uniqueness may move to a semantic loop entry only after finalized physical loans prove a closed scalar-only body with no lasting managed publication; root storage and existing hidden liveness remain unchanged, and nested list elements detach only after their owning outer list.
+
+- [COW-MUT-REBIND-1] Reassigning a mut collection parameter invalidates the original payload uniqueness guarantee without making the caller-borrowed parameter an owned value; later direct and nested writes retain ordinary COW checks and cannot change a read-only source snapshot.
