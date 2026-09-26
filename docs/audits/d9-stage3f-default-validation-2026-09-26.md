@@ -1,7 +1,9 @@
 # D9 stage 3f default validation candidate, 2026-09-26
 
 The default implementation passes its correctness gate but is **not accepted
-for integration**: final stage 3 performance acceptance remains open. The
+for integration**: final stage 3 performance acceptance remains open, and
+a broader native-GC-stress failure in the external Lox source tests is under
+investigation against the historical baseline. The
 boxed-path and nested-collection/fixed-array fixes have passed their joined
 gates and are included in this candidate. Work
 is isolated on `codex/d9-stage3f-prep`; neither `main` nor the devspeed merge
@@ -90,6 +92,23 @@ composed receiver-RHS, class-reader and late-closure source fixes at `d7f4cf85`.
 Logs are `.tmp-stage3f/scopes-default-{test,test-qbe,test-qbe-build,fmt-check}.log`.
 Guardian's 88 checks pass without ratchet growth. The subsequent indexed
 payload-return proof and Lox setter helper are not part of this frozen gate.
+
+The indexed candidate at `75820f45` also passes all four gates: 94/94 main
+steps with 2,123 executed tests (21,514 shard exclusions), QBE 51/51 with
+428 tests, native-build 29/29 and formatting 2/2. This run executes 652 language,
+139 value-specific, 42 smoke and two compatibility guests with zero cached
+results in those guest lanes. The frozen Debug compiler at
+`.tmp-stage3f/install-indexed/bin/mylang` has SHA-256
+`cdd9bed601bb0ade5705c5af8c962e7d10c55463128bba7fb57c915b271ac5cd`.
+Logs are `.tmp-stage3f/indexed-default-*.log`. Its indexed proof and scoped
+receivers have separate independent joined stress/legacy-IL validation.
+
+Additional external Lox source tests under native GC stress expose ten
+parser/resolver panics, while the normal 65 tests and stressed VM traces pass.
+They reproduce before the current global-table source experiment, including
+on an older D9 compiler; comparison with the original baseline and reduction
+are still in progress. The full-gate result above does not claim that this
+broader, separately run scope is green.
 
 The complete 43-key diagnostic at earlier compiler `5bdd99ea` measured QBE
 geomean 1.06194× and LLVM 1.09626×, with three and four cases above 1.3×.

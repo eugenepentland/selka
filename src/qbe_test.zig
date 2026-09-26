@@ -2563,6 +2563,42 @@ test "QBE-ROOTLIVE-1 a safepoint publishes only the locals live across it" {
 }
 
 // spec-case: QBE-ROOTLIVE-1
+test "QBE-ROOTLIVE-1 a future aggregate reference keeps its payload live" {
+    const a = std.testing.allocator;
+    const previous = value_semantics.enabled();
+    defer value_semantics.setEnabled(previous);
+    for ([_]bool{ false, true }) |enabled| {
+        value_semantics.setEnabled(enabled);
+        var parsed = try emitted(a,
+            \\record Payload:
+            \\    items: list[i64]
+            \\    count: i64
+            \\
+            \\
+            \\def make(n: i64) -> list[i64]:
+            \\    return [n]
+            \\
+            \\
+            \\def read(value: mut Payload) -> i64:
+            \\    value.count += 1
+            \\    return value.items[0] + value.count
+            \\
+            \\
+            \\def main() -> i64:
+            \\    keep = Payload(make(4), 0)
+            \\    scratch = make(9)
+            \\    return read(mut keep) + len(scratch)
+        );
+        defer parsed.deinit();
+        const pushes = try rootsPerPush(a, named(parsed.value, "main").?.il);
+        defer a.free(pushes);
+        // Only ref_local reads `keep` after make(9). The address is not yet
+        // on the operand stack, so the local must supply the root there.
+        try std.testing.expectEqualSlices(usize, &.{1}, pushes);
+    }
+}
+
+// spec-case: QBE-ROOTLIVE-1
 test "QBE-ROOTLIVE-1 hidden receiver temporaries die after their read" {
     const a = std.testing.allocator;
     var parsed = try emitted(a,

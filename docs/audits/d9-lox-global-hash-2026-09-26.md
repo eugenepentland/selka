@@ -76,6 +76,11 @@ The compiler investigation and original-60b comparison are tracked separately.
 The successful standalone stress checks above do not replace this failing
 Debug-guest coverage.
 
+Subsequent [independent root review](d9-mut-reference-root-independent-2026-09-26.md)
+identified the omitted `ref_local` liveness use, reproduced its fixed-array
+form on original 60b, and validated the generic fix on both backends and modes.
+The results above remain the observations of the pre-fix frozen compiler.
+
 [Validation evidence](evidence/d9-lox-global-hash-runs.json.gz) preserves exact
 outputs, failure logs, commands, identities, replay hashes and scripts. Local
 scratch is `d9-lox-frame-return/.tmp-frame-return/`. `build-hoist.py` and
