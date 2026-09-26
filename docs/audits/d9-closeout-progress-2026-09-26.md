@@ -29,7 +29,7 @@ The first combined WP-3a/WP-3c/tooling gate passed at `bc07201f`:
 91/91 test steps, 49/49 QBE steps with 426 tests, 29/29 QBE-build steps,
 and formatting. T1, Q1 and Q2 subsequently passed their own full gates and were
 joined with two-parent merges. Q2 also includes the independently reproduced
-NATIVE-STAGING-2 race fix (`78ec28ba`, ported as `cc5e5d54`). The combined T1/Q1/Q2 gate passed at `13681014`: test 91/91 steps and 2,079 executed tests, QBE 49/49 and 426 tests, QBE-build 29/29, formatting 2/2. The library-switch follow-up passed three focused CLI tests. WP-3d joined at `32414db3`, WP-3e at `2544b718`. The COW correctness candidate through `8514037f` joined provisionally at `9f73bf99`; this is not performance acceptance, and the combined tree requires another full gate.
+NATIVE-STAGING-2 race fix (`78ec28ba`, ported as `cc5e5d54`). The combined T1/Q1/Q2 gate passed at `13681014`: test 91/91 steps and 2,079 executed tests, QBE 49/49 and 426 tests, QBE-build 29/29, formatting 2/2. The library-switch follow-up passed three focused CLI tests. WP-3d joined at `32414db3`, WP-3e at `2544b718`. The COW correctness candidate through `8514037f` joined provisionally at `9f73bf99`; this is not performance acceptance. The joined tree through `3a74a9b2`, including field-transfer proofs, inline COW marking and the recursive alias-warning fix, passed the full gate: test 93/93 steps, 2,103 executed tests; QBE 51/51 steps, 428 tests; QBE-build 29/29; formatting. The first resumed attempt exposed exponential recursive type traversal in the migration warning; `b39deab8` replaced it with a per-program graph fixed point, reducing the affected module check to 0.03 seconds.
 Guardian feedback entries have been appended and committed in `guardian-zig`
 for every accepted package above.
 
@@ -38,7 +38,7 @@ for every accepted package above.
 | Work | Branch/worktree | Remaining acceptance |
 |---|---|---|
 | WP-3b COW | `d9/stage3b`, `../d9-stage3b` | Full gate green at `54edf716` (93/93 test steps, 51/51 QBE steps and 426 tests, QBE-build 29/29, formatting 2/2). Million-node scalar copies pass both backends; mutable depth overflow reports `R_COW_DEPTH`. Dynamic counting and field-transfer optimization added afterward; final performance and refreshed gate pending |
-| WP-3f default flip | Preparation at `codex/d9-stage3f-prep` (`9cffdde1`) | CPython-oracle preparation retains three explicit list/nested-list/dictionary divergences; 113-probe switch-on suite has zero undeclared disagreements. Flip waits for 3b performance acceptance; [guest inventory](d9-stage3f-switch-corpus-handoff-2026-09-26.md) records 595 passing, 20 failing and four refused programs/tests |
+| WP-3f default flip | Preparation at `codex/d9-stage3f-prep` (`a7a6a850`) | CPython-oracle preparation retains three explicit list/nested-list/dictionary divergences; 113-probe switch-on suite has zero undeclared disagreements. Isolated default activation supports explicit `--legacy-sharing`, project configuration and inherited mode. Documentation examples pass (203 run, 51 checked); guest and embedded-test migration is in progress. Integration waits for the complete default gate and 3b performance acceptance |
 | WP-4 reference counting | Not started | Requires 3f/4pre and the RC performance/RSS gate, including rewritten graph programs |
 | WP-5 concurrency | Not started | Design after WP-4, following the existing concurrency proposal |
 
@@ -50,14 +50,18 @@ joined validation remain required.
 
 ## Performance work still blocking acceptance
 
-The class-free Lox tree port is correct but expensive: the bounded QBE binary-tree
-N=4 case measured 390.8 billion instructions against 192.6 million for the pinned
-class source. A conservative field extraction/store-back optimization (`b456c84b`)
-with its sibling-field follow-up (`85667ce3`) reduced a matched guest Debug
-measurement to 293.7 billion with matching output (about 25%). Matched ReleaseFast
-measurements were 47.6 billion before and 36.1 billion after the first proof. An
-earlier comparison of 390.8 to 36.1 billion mixed guest build modes and is invalid;
-all compiler builds remained Debug. This is progress, not a performance pass. The class-free VM equality case at N=1,000
-measured about 755 million instructions after that optimization against 41.3
-million for the class baseline. Sol and the orchestrator are profiling the two
-remaining costs separately. Stage 3f is not ready to flip.
+The latest class-free Lox VM equality measurement (N=30,000, QBE guest
+ReleaseFast, Debug compiler) is 3,826,313,185 instructions versus the exact
+`60b668cf` class baseline's 1,018,578,442 (3.756×), with identical stdout.
+The optional source optimization is `871cd525`; the private-scratch lowering is
+`0e18d2bc`. This remains a hard performance blocker. Matrix multiplication and
+byte scanning now match baseline closely after keeping COW transfer operand
+scratch local to QBE. Median-of-three full-suite measurement is running.
+
+Field extraction/store-back proofs progressed from `b456c84b` through
+`85667ce3` to `d83e26a0`. Matched ReleaseFast tree N=4 measurements fell from
+47.6 billion instructions to 36.1 billion and then 7.29 billion, with unchanged
+stdout. An earlier comparison of 390.8 billion to 36.1 billion mixed guest
+Debug and ReleaseFast modes and is invalid; all compiler builds remained Debug.
+These reductions are progress, not a performance pass. Stage 3f remains isolated
+until the strict stage 3 limits hold.

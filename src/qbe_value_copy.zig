@@ -32,6 +32,11 @@ pub fn Lower(comptime E: type) type {
             // aggregate sits behind the address the slot holds.
             if (self.isScalar(copy.ty)) try self.print(" %v{d} =l copy %s{d}\n", .{ source, base }) else try self.print(" %v{d} =l loadl %s{d}\n", .{ source, base });
             const output = try self.aggregatePointer();
+            // Keep the operand's stack slot local to QBE. Passing that slot to
+            // the slow runtime path makes QBE consider it escaped, which keeps
+            // every later scratch store in large loops live. The transfer can
+            // work on this private copy in place, including pinned leaves.
+            try self.print(" blit %v{d}, %v{d}, {d}\n", .{ source, output, (try self.layout(copy.ty)).size });
             // extend, update and keyed sorted copy elements into a fresh destination.
             // Their source collection stays in place; share its children,
             // not its outer payload. Ordinary element stores share the outer
@@ -52,9 +57,9 @@ pub fn Lower(comptime E: type) type {
                     else => {},
                 };
             }
-            if (!try inlineTransfer(E, self, copy.ty, source, output, children)) {
+            if (!try inlineTransfer(E, self, copy.ty, output, children)) {
                 const copied = self.temp();
-                try self.print(" %v{d} =w call $myl_qbe_cow_transfer(l %ctx, l extern ${s}, l %v{d}, l %v{d}, w {d})\n", .{ copied, try self.descriptor(copy.ty), source, output, children });
+                try self.print(" %v{d} =w call $myl_qbe_cow_transfer(l %ctx, l extern ${s}, l %v{d}, l %v{d}, w {d})\n", .{ copied, try self.descriptor(copy.ty), output, output, children });
                 try self.checkFailure("failure");
             }
             try self.store(base, try self.readValue(output, copy.ty));
@@ -66,10 +71,9 @@ pub fn Lower(comptime E: type) type {
 /// descriptor walk. Copy into private scratch, check every leaf before marking
 /// any, then set SHARED inline. A pinned or immortal leaf takes the rooted
 /// runtime path, which can replace pinned descendants in that private copy.
-fn inlineTransfer(comptime E: type, self: *E, ty: typed.Type, source: usize, output: usize, children: u8) Error!bool {
+fn inlineTransfer(comptime E: type, self: *E, ty: typed.Type, output: usize, children: u8) Error!bool {
     if (children != 0) return false;
     const leaves = try cow.valueLeaves(E, self, ty) orelse return false;
-    try self.print(" blit %v{d}, %v{d}, {d}\n", .{ source, output, (try self.layout(ty)).size });
     if (leaves.len == 0) return true;
     const slow = self.temp();
     var headers: [8]usize = undefined;
@@ -94,7 +98,7 @@ fn inlineTransfer(comptime E: type, self: *E, ty: typed.Type, source: usize, out
     const done = self.temp();
     try self.print(" jmp @vcdone{d}\n@vcslow{d}\n", .{ done, slow });
     const copied = self.temp();
-    try self.print(" %v{d} =w call $myl_qbe_cow_transfer(l %ctx, l extern ${s}, l %v{d}, l %v{d}, w 0)\n", .{ copied, try self.descriptor(ty), source, output });
+    try self.print(" %v{d} =w call $myl_qbe_cow_transfer(l %ctx, l extern ${s}, l %v{d}, l %v{d}, w 0)\n", .{ copied, try self.descriptor(ty), output, output });
     try self.checkFailure("failure");
     try self.print("@vcdone{d}\n", .{done});
     return true;
