@@ -1,0 +1,46 @@
+{
+  "commit": "743fea7386adf09f4d23b3188dabb118fae7ab61",
+  "main": "b292660a09bc703d0ceab071636a73b643c52d34",
+  "compiler_sha256": "e2673d24ef533a98eedce0243e38fc0126ea0555c99ad80ae8e475689da05625",
+  "status": "main gate failed two iteration trap tests; both RC sweeps pass",
+  "files": {
+    "docs/audits/evidence/d9-rc-optimized-attempt-optimized-test.log.gz": {
+      "original_sha256": "cda19625bda2e0e1496068f21652f8856edadc3a4bc6e4d881321c5200507dff",
+      "bytes": 177397
+    },
+    "docs/audits/evidence/d9-rc-optimized-attempt-optimized-sweep-qbe.json.gz": {
+      "original_sha256": "274b198d6c4caf278baefd9cea009a23ebe74c8a9bedfd4165d908fae5d271cf",
+      "bytes": 512081
+    },
+    "docs/audits/evidence/d9-rc-optimized-attempt-optimized-sweep-llvm.json.gz": {
+      "original_sha256": "f40e268be6d1c5fa297a13dbecee500213643740b7135a65a49112e25d5d7177",
+      "bytes": 512081
+    },
+    "docs/audits/evidence/d9-rc-optimized-attempt-optimized-sweep-qbe.log.gz": {
+      "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "docs/audits/evidence/d9-rc-optimized-attempt-optimized-sweep-llvm.log.gz": {
+      "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "docs/audits/evidence/d9-rc-optimized-attempt-optimized-test-qbe.log.gz": {
+      "original_sha256": "ce83a0ad0ff992031ba919454e21802f39da7cedde93b96ff77733406f497bb6",
+      "bytes": 17304
+    },
+    "docs/audits/evidence/d9-rc-optimized-attempt-optimized-test-qbe-build.log.gz": {
+      "original_sha256": "15280cdfe71fd67f07f5b018cbf1917f98cb437f32da8eaaaddf694ec8eb4bf5",
+      "bytes": 4600
+    },
+    "docs/audits/evidence/d9-rc-optimized-attempt-optimized-fmt-check.log.gz": {
+      "original_sha256": "727fe2e22c982638ef4d6d75a47d5f97e1bb81c8b5f3ec3c0c55f158df48d93f",
+      "bytes": 81
+    }
+  },
+  "gate_results": {
+    "test": "91/94;2225executed,22640shardexclusions,2failed",
+    "test-qbe": "48/51;436/437,1goldenmismatch",
+    "test-qbe-build": "29/29",
+    "fmt-check": "2/2"
+  }
+}
