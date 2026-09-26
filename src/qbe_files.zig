@@ -41,6 +41,7 @@ pub fn Lower(comptime E: type) type {
                 // A `with open(...)` head declares the handle type directly and traps.
                 const ok = self.temp();
                 try self.print(" %v{d} =w ceqw %v{d}, 0\n", .{ ok, status });
+                try discardOpenError(E, self, ok, value);
                 try self.require(ok, file_failure);
                 return self.store(base, value);
             }
@@ -67,6 +68,15 @@ pub fn Lower(comptime E: type) type {
             try self.store(base, value);
         }
     };
+}
+
+// The provider returns an owned error text even when this caller chooses a
+// located trap instead of publishing Result.Err. Abort only that fresh text;
+// successful open returns a raw resource handle without an RC header.
+fn discardOpenError(comptime E: type, self: *E, ok: usize, value: usize) Error!void {
+    if (!@import("runtime_mode.zig").enabled()) return;
+    const label = self.temp();
+    try self.print(" jnz %v{d}, @filechecked{d}, @fileerror{d}\n@fileerror{d}\n call $myl_rc_construction_abort(l %heap, l %v{d})\n jmp @filechecked{d}\n@filechecked{d}\n", .{ ok, label, label, label, value, label, label });
 }
 
 comptime {
