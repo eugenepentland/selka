@@ -47,4 +47,32 @@ def main() -> int:
     assert test_derived_value_survives_finished_parent_temporary()
     assert test_pending_receiver_holds_survive_temporary_releases()
     assert test_zero_iteration_and_branch_paths_keep_snapshot_owners()
+    assert test_sorted_empty_receiver_survives_its_mutation_scope()
+    assert test_sorted_text_receiver_survives_its_mutation_scope()
+    assert test_sorted_method_result_keeps_its_physical_anchor()
     return 0
+
+
+# spec-case: RC-TEMPORARY-EDGE-1
+public def test_sorted_empty_receiver_survives_its_mutation_scope() -> bool:
+    source: list[i32] = []
+    ordered = sorted(source)
+    ordered.append(7i32)
+    return ordered == [7i32] and source == []
+
+
+# spec-case: RC-TEMPORARY-EDGE-1
+public def test_sorted_text_receiver_survives_its_mutation_scope() -> bool:
+    source = ["pear", "Apple", "apple", "pear"]
+    ordered = sorted(source)
+    source.clear()
+    ordered.append("plum")
+    return ordered == ["Apple", "apple", "pear", "pear", "plum"] and source == []
+
+
+# spec-case: RC-TEMPORARY-EDGE-1
+public def test_sorted_method_result_keeps_its_physical_anchor() -> bool:
+    source = "pear,Apple,apple,pear"
+    ordered = sorted(source.split(",").copy())
+    ordered.reverse()
+    return ordered == ["pear", "pear", "apple", "Apple"] and source == "pear,Apple,apple,pear"
