@@ -761,3 +761,23 @@ test "RC-NARROWED-MUTATION-1 compiler Option receivers detach the source edge" {
     try t.expect(std.mem.indexOf(u8, text, "call $myl_qbe_rc_unique_field") != null);
     try t.expect(try at(text, "call $myl_qbe_rc_unique_field") < try at(text, "call $myl_rc_list_append"));
 }
+
+// spec-case: AUGMENTED-FIELD-1
+test "RC augmented list field publishes the captured extended value" {
+    const mode = @import("runtime_mode.zig");
+    const saved = mode.get();
+    defer mode.set(saved);
+    mode.set(.rc);
+    var result = try lowered(
+        \\record Row:
+        \\    items: list[int]
+        \\def main() -> int:
+        \\    row = Row(items=[1])
+        \\    row.items += [2]
+        \\    return len(row.items)
+    );
+    defer result.deinit();
+    const text = try functionText(result.value, "main");
+    try t.expect(std.mem.indexOf(u8, text, "call $myl_native_list_extend") != null);
+    try t.expect(std.mem.indexOf(u8, text, "call $myl_rc_native_take") != null);
+}
