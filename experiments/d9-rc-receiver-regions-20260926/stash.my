@@ -1,0 +1,10 @@
+def stash(outer: mut list[list[int]], inner: list[int]) -> None:
+    outer.append(inner)
+
+def main() -> int:
+    keeper: list[list[int]] = []
+    older: list[int] = [3]
+    with arena() as scratch:
+        stash(mut keeper, older)
+        temp: list[int] = [1]
+    return len(keeper) + keeper[0][0]
