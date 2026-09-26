@@ -853,7 +853,7 @@ fn inlineIndexWrite(comptime E: type, self: *E, write: IndexRead, failure: []con
         try self.print(unsigned_below, .{ valid, write.at, write.length });
         try requireIndexBounds(E, self, valid, write.raw_index, write.length, failure);
     }
-    if (rc_mode.enabled()) {
+    if (rc_mode.enabled() and !try plainScalarElement(E, self, write.element)) {
         const value = try operandPointer(E, self, write.element, write.slot);
         const result = self.temp();
         try self.print(" %v{d} =w call $myl_rc_list_set(l %heap, l %v{d}, l %v{d}, l %v{d})\n", .{ result, write.input, write.at, value });
@@ -863,6 +863,15 @@ fn inlineIndexWrite(comptime E: type, self: *E, write: IndexRead, failure: []con
     const address = try elementAddress(E, self, write.input, write.at, write.element);
     try self.writeValue(address, try self.load("s", write.slot), write.element);
 }
+// Scalar bits contain no owning/unique edges and have no region transition.
+// Preserve the complete existing bounds check and native element-width store.
+fn plainScalarElement(comptime E: type, self: *E, ty: typed.Type) Error!bool {
+    if (!self.isScalar(ty) or (try self.layout(ty)).size == 0) return false;
+    const state = self.cow.?.rc orelse return error.InternalError;
+    const shape = state.catalog.get(ty) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError;
+    return !shape.counted and !shape.unique_drop;
+}
+
 /// Address of element `index` in a native list-like receiver's backing storage.
 /// `storage` is the word at `list_storage_offset` in the header; the stride is
 /// the element layout's, so byte strings, lists and inline records share it.

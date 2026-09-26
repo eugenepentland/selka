@@ -1360,3 +1360,5 @@ host failure in one worker leaves the units the other workers hold running.
 - [COW-MUT-REBIND-1] Reassigning a mut collection parameter invalidates the original payload uniqueness guarantee without making the caller-borrowed parameter an owned value; later direct and nested writes retain ordinary COW checks and cannot change a read-only source snapshot.
 
 - [RC-NESTED-READ-LOAN-1] A managed collection read may lend its result directly into a single-definition compiler receiver when the complete projected chain is anchored by one stable named root and every receiver interval contains only scalar operations and further certified reads. Named rows, published results, callbacks, mutation, arena changes and dictionary hold roles retain owned publication. The physical plan keeps the root until the final scalar read; bounded or cyclic proof refusal retains ordinary ownership.
+
+- [RC-PLAIN-LIST-WRITE-1] RC writes of nonzero scalar list elements with no counted or unique edges use the native typed store after unchanged index normalization and bounds checks; managed and unique elements retain fallible ownership publication helpers.
