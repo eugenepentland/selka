@@ -1,0 +1,10 @@
+module budget
+record Pair:
+    first: list[int]
+    second: list[int]
+def large(size: int) -> Pair:
+    return Pair([7], list(range(size)))
+def main() -> int:
+    kept = large(1)
+    failed = large(100000)
+    return len(kept.first) + len(failed.second)

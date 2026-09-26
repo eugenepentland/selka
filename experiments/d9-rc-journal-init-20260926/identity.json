@@ -1,0 +1,10 @@
+{
+  "parent_commit": "19e16e1d96112e9ccc741fa0c430ea97173a1032",
+  "compiler_mode": "Debug",
+  "compiler_sha256": "37744fa72bf9456b7450281fc138ebeb5b09209d70259937f006da8ee1790811",
+  "compiler_install": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-journal-init/.tmp-init/install/bin",
+  "patch_sha256": "b824ce2669712efd5eab8f19283b52f0d643613be04c664b7feebd0ada9aefe5",
+  "validation_rows": 20,
+  "compiler_paths_in_raw_scripts_are_original": true,
+  "reused_rows": "Final validator retains the first8 QBE rows from validation-probe-v2 after verifying unchanged compiler identities; remaining12 rows rerun."
+}
