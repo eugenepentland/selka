@@ -87,6 +87,18 @@ void myl_rc_flat_edges_release(myl_native_heap *heap, const myl_rc_binding *bind
         cursor += binding->descriptor.type->size;
     }
 }
+/* Drain has already checked the heap/walker and admitted the complete binding.
+ * A single allocated element has no extent multiplication or outer loop. Edge
+ * release only enqueues, so the binding stays valid through this whole body. */
+static void flat_object_release(myl_native_heap *heap, const myl_rc_flat *flat, unsigned char *address) {
+    for (unsigned i = 0; i < flat->count; ++i) {
+        void *payload;
+        void *edge = address + flat->offsets[i];
+        memcpy(&payload, edge, sizeof payload);
+        memset(edge, 0, sizeof payload);
+        myl_rc_edge_release(heap, payload);
+    }
+}
 void myl_rc_drain(myl_native_heap *heap) {
     myl_rc_invariant(heap && heap->rc);
     if (heap->rc->dead.active || heap->rc->walk.depth) return;
@@ -102,7 +114,8 @@ void myl_rc_drain(myl_native_heap *heap) {
         if (binding->flat.count <= MYL_RC_FLAT_LEAVES) {
             /* Admission excludes every custom hook. No callback can invalidate
              * metadata here; ordered ordinary edges only enqueue more work. */
-            myl_rc_flat_edges_release(heap, binding, payload, count);
+            if (count == 1) flat_object_release(heap, &binding->flat, payload);
+            else myl_rc_flat_edges_release(heap, binding, payload, count);
         } else {
             /* A unique close hook can inspect its managed context. Run it while
              * child tokens are intact, with no descriptor frame leased. Nested
