@@ -5,8 +5,8 @@
 //! conditions wherever a value of the carrying record or domain is built or
 //! changed. Each clause is checked as an ordinary Boolean expression and
 //! placed in the body as a typed assertion that records its kind, so lowering,
-//! both native backends and every cache treat it like an `assert` whose trap
-//! message names the contract (`R_REQUIRES`, `R_ENSURES`, `R_INVARIANT`).
+//! both native backends and every cache preserve its kind independently of
+//! the message. Codegen selects a dedicated runtime entry for each contract.
 const std = @import("std");
 const ast = @import("ast.zig");
 const typed = @import("typed.zig");
@@ -27,9 +27,7 @@ pub const old_code = "E_CONTRACT_OLD";
 /// Diagnostic code for `old(...)` of a value that shares mutable storage.
 pub const old_shared_code = "E_CONTRACT_OLD_SHARED";
 
-/// The trap code each contract kind raises. The checked assertion's static
-/// message begins with this code and `: `; the native runtime reads the prefix
-/// back to report the contract's own code instead of `R_ASSERT`.
+/// The trap code each assertion kind raises, independently of its message.
 pub fn trapCode(kind: typed.AssertionKind) []const u8 {
     return switch (kind) {
         .statement => "R_ASSERT",
@@ -39,7 +37,7 @@ pub fn trapCode(kind: typed.AssertionKind) []const u8 {
     };
 }
 
-/// One contract trap message: `CODE: subject kind `clause`[: message]`. The
+/// One contract trap message: `subject kind `clause`[: message]`. The
 /// clause text has its whitespace runs folded to one space, so a condition
 /// written across lines still reads as one.
 pub fn trapMessage(allocator: std.mem.Allocator, kind: typed.AssertionKind, subject: []const u8, clause: []const u8, note: ?[]const u8) std.mem.Allocator.Error![]const u8 {
@@ -53,8 +51,8 @@ pub fn trapMessage(allocator: std.mem.Allocator, kind: typed.AssertionKind, subj
         try folded.append(allocator, if (blank) ' ' else byte);
     }
     const word = @tagName(kind);
-    if (note) |text| return std.fmt.allocPrint(allocator, "{s}: {s} {s} `{s}`: {s}", .{ trapCode(kind), subject, word, folded.items, text });
-    return std.fmt.allocPrint(allocator, "{s}: {s} {s} `{s}`", .{ trapCode(kind), subject, word, folded.items });
+    if (note) |text| return std.fmt.allocPrint(allocator, "{s} {s} `{s}`: {s}", .{ subject, word, folded.items, text });
+    return std.fmt.allocPrint(allocator, "{s} {s} `{s}`", .{ subject, word, folded.items });
 }
 
 /// One `old(...)` call of the function being checked and the hidden local its

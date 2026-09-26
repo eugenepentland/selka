@@ -369,11 +369,31 @@ test "contracts: every run protocol reports the contract's own trap code" {
     try t.expectEqualStrings("R_ASSERT", asserted.trap.code);
 }
 
+fn assertPrefixStaysLiteral(prefix: []const u8) !void {
+    const text = try std.fmt.allocPrint(t.allocator, "def main() -> int:\n    assert False, \"{s}: ordinary assertion\"\n    return 0\n", .{prefix});
+    defer t.allocator.free(text);
+    var c = try language.Compilation.init(t.allocator, unit, text);
+    defer c.deinit();
+    const accounted = try native.run(&c);
+    try t.expectEqualStrings("R_ASSERT", accounted.trap.code);
+    try t.expect(std.mem.indexOf(u8, accounted.stderr, prefix) != null);
+    const fast = try native.runUnaccounted(&c, .{});
+    try t.expectEqualStrings("R_ASSERT", fast.trap.code);
+    try t.expect(std.mem.indexOf(u8, fast.stderr, prefix) != null);
+}
+
+// spec: CONTRACT-TRAP-2
+test "contracts: literal assert prefixes cannot impersonate contract traps" {
+    try assertPrefixStaysLiteral("R_REQUIRES");
+    try assertPrefixStaysLiteral("R_ENSURES");
+    try assertPrefixStaysLiteral("R_INVARIANT");
+}
+
 // spec-case: CONTRACT-TRAP-1
 test "contracts: a contract trap message folds its clause and the record reads back its fields" {
     const message = try sema_contracts.trapMessage(t.allocator, .requires, "withdraw", "amount >\n        0", "must be positive");
     defer t.allocator.free(message);
-    try t.expectEqualStrings("R_REQUIRES: withdraw requires `amount > 0`: must be positive", message);
+    try t.expectEqualStrings("withdraw requires `amount > 0`: must be positive", message);
     var arena = std.heap.ArenaAllocator.init(t.allocator);
     defer arena.deinit();
     const record = "x.my:1:2: error[R_ENSURES]: postcondition violated: f ensures `result > 0`: why\n" ++ trap_detail.marker ++ "{\"version\":1,\"operation\":\"f ensures `result > 0`: why\"}\n";
