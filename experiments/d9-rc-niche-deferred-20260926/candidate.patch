@@ -1,0 +1,114 @@
+diff --git a/SPEC.md b/SPEC.md
+index 36b267e3..5b9f8271 100644
+--- a/SPEC.md
++++ b/SPEC.md
+@@ -1350,3 +1350,5 @@ host failure in one worker leaves the units the other workers hold running.
+ - [RC-INERT-RECEIVER-1] A compiler-only list receiver can omit its temporary hold and pin scope when a bounded closed forward region proves that one stable ordinary owner remains live through its sole consuming scalar mutation. The region permits scalar computation and descendant receiver reads but no callback, owner replacement, managed publication, arena boundary, backward edge or alternate entry. Uniqueness checks and all trap paths remain unchanged; declined regions retain full receiver scopes.
+ 
+ - [RC-INLINE-TAKE-1] RC token transfers for bounded fixed layouts with ordinary pointer leaves may relocate directly after all headers and disjoint source/destination ranges are checked. Pinned, arena, dying, held, unique-resource, and unsupported inline layouts retain the generic transactional path. Header masks are compared as full-width values before branching. Direct moves change no counts, perform no fallible work or callback, and preserve public-boundary drain ordering and source guards on fallback refusal.
++
++- [RC-NICHE-MOVE-1] A nullable pointer variant preserves pin-aware payload ownership while publishing its unchanged physical pointer directly under the optional type; its empty case publishes null without a partial constructor obligation. Arena escape, independent snapshots and error-trace construction retain their ordinary semantics.
+diff --git a/src/qbe_rc_aggregate.zig b/src/qbe_rc_aggregate.zig
+index 1cf40077..9c1e2e86 100644
+--- a/src/qbe_rc_aggregate.zig
++++ b/src/qbe_rc_aggregate.zig
+@@ -5,6 +5,7 @@ const frame = @import("qbe_rc_frame.zig");
+ const values = @import("qbe_rc_values.zig");
+ const slots = @import("qbe_rc_slots.zig");
+ const state = @import("qbe_rc_state.zig");
++const error_trace = @import("qbe_error_trace.zig");
+ const Op = @FieldType(bytecode.Instruction, "op");
+ const blit_value = values.blit_value;
+ /// Native emitter failures shared by aggregate publication helpers.
+@@ -104,6 +105,7 @@ fn construct(comptime E: type, self: *E, record: @FieldType(Op, "make_record"),
+ }
+ 
+ fn variantValue(comptime E: type, self: *E, variant: @FieldType(Op, "make_variant"), height: usize) Error!void {
++    if (try nicheValue(E, self, variant, height)) return;
+     const pointer = try self.aggregatePointer();
+     try zero(E, self, variant.ty, pointer);
+     try self.writeTag(variant.ty, variant.tag, pointer);
+@@ -118,10 +120,30 @@ fn variantValue(comptime E: type, self: *E, variant: @FieldType(Op, "make_varian
+         .operand = base,
+     });
+     try self.store(base, pointer);
+-    try @import("qbe_error_trace.zig").Lower(E).construction(self, variant.ty, variant.tag);
++    try error_trace.Lower(E).construction(self, variant.ty, variant.tag);
+     try finish(E, self, .{ .ty = variant.ty, .base = base, .consumed = @intFromBool(payload != null), .origin = .owned });
+ }
+ 
++fn nicheValue(comptime E: type, self: *E, variant: @FieldType(Op, "make_variant"), height: usize) Error!bool {
++    if ((try self.layout(variant.ty)).kind != .niche) return false;
++    const payload = self.program.records[variant.ty.recordIndex()].shape.variants.?.cases[variant.tag].payload;
++    if (payload) |ty| {
++        if (@import("value_semantics.zig").isLiveView(self.program.records, ty)) return false;
++        // The optional and its payload have the same physical pointer word.
++        // Preserve the pin-aware owned/borrowed transfer, then publish directly
++        // under the result type without a second partial aggregate journal.
++        try values.prepareOperand(E, self, ty, height - 1);
++        try values.publish(E, self, variant.ty, height - 1);
++    } else {
++        const pointer = try self.aggregatePointer();
++        try self.print(" storel 0, %v{d}\n", .{pointer});
++        try self.store(height, pointer);
++        try values.finish(E, self, .{ .ty = variant.ty, .base = height, .consumed = 0, .origin = .owned });
++    }
++    try error_trace.Lower(E).construction(self, variant.ty, variant.tag);
++    return true;
++}
++
+ fn finish(comptime E: type, self: *E, result: values.Result) Error!void {
+     // Ownership moves into pending storage before any input destructor can run.
+     // The intervening result load and journal stores cannot fail or call out.
+@@ -242,7 +264,7 @@ pub fn propagation(comptime E: type, self: *E, operation: Propagate, stack: []co
+     const success = self.temp();
+     try self.print(" %v{d} =l ceql %v{d}, {d}\n jnz %v{d}, @rctryok{d}, @rctryerror{d}\n@rctryerror{d}\n", .{ success, tag, shape.success_tag, success, tag, tag, tag });
+     if (typed.resultShape(operation.input, self.program.records)) |input| {
+-        try @import("qbe_error_trace.zig").Lower(E).propagation(self, input, typed.resultShape(operation.output, self.program.records).?);
++        try error_trace.Lower(E).propagation(self, input, typed.resultShape(operation.output, self.program.records).?);
+     }
+     const payload = try self.address(source, (try self.layout(operation.input)).payload_offset);
+     try errorValue(E, self, operation, shape, .{ .address = payload, .height = stack.len });
+diff --git a/tests/lang/rc_aggregate_values.my b/tests/lang/rc_aggregate_values.my
+index 10faff09..08283c01 100644
+--- a/tests/lang/rc_aggregate_values.my
++++ b/tests/lang/rc_aggregate_values.my
+@@ -177,3 +177,38 @@ def main() -> int:
+     assert test_propagating_error_releases_preceding_constructor_operands()
+     assert test_propagating_none_releases_preceding_constructor_operands()
+     return 0
++
++
++def optional_pinned(items: mut list[int]) -> Option[list[int]]:
++    snapshot = Some(items)
++    items.append(3)
++    return snapshot
++
++
++# spec: RC-NICHE-MOVE-1
++public def test_optional_pointer_transfer_snapshots_a_pinned_payload() -> bool:
++    items = [1, 2]
++    wrapped = optional_pinned(mut items)
++    match wrapped:
++        case Some(snapshot):
++            return snapshot == [1, 2] and items == [1, 2, 3]
++        case None:
++            return False
++
++
++def optional_arena() -> Option[list[int]]:
++    with arena() as scratch:
++        items = [17, 23]
++        return scratch.escape(Some(items))
++
++
++# spec-case: RC-NICHE-MOVE-1
++public def test_optional_pointer_transfer_survives_arena_exit_and_none() -> bool:
++    value = optional_arena()
++    retained = value
++    value = None
++    match retained:
++        case Some(items):
++            return items == [17, 23] and value is None
++        case None:
++            return False
