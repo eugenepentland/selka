@@ -1,0 +1,99 @@
+{
+  "source": "# binary_trees: perfect binary trees of recursive value nodes on the collecting heap.\n# Every short-lived tree becomes garbage after its check; the tracing\n# collector reclaims it. See SUITE.md section 1.\n\n\nrecord Node:\n    left: Option[Node]\n    right: Option[Node]\n\n\ndef make(depth: int) -> Node:\n    if depth == 0:\n        return Node(left=None, right=None)\n    return Node(left=Some(make(depth - 1)), right=Some(make(depth - 1)))\n\n\ndef check(node: Node) -> int:\n    left = node.left\n    right = node.right\n    if left is None or right is None:\n        return 1\n    return 1 + check(left) + check(right)\n\n\ndef main(out: Stream) -> int:\n    max_depth = 12\n    min_depth = 4\n\n    stretch = max_depth + 1\n    out.print(f\"stretch tree of depth {stretch}\\t check: {check(make(stretch))}\")\n\n    long_lived = make(max_depth)\n\n    depth = min_depth\n    while depth <= max_depth:\n        iterations = shift_left(1, max_depth - depth + min_depth)\n        total = 0\n        for _ in range(iterations):\n            total = total + check(make(depth))\n        out.print(f\"{iterations}\\t trees of depth {depth}\\t check: {total}\")\n        depth = depth + 2\n\n    out.print(f\"long lived tree of depth {max_depth}\\t check: {check(long_lived)}\")\n    return 0\n",
+  "expected": "stretch tree of depth 13\t check: 16383\n4096\t trees of depth 4\t check: 126976\n1024\t trees of depth 6\t check: 130048\n256\t trees of depth 8\t check: 130816\n64\t trees of depth 10\t check: 131008\n16\t trees of depth 12\t check: 131056\nlong lived tree of depth 12\t check: 8191\n",
+  "source_base": "a49441c1",
+  "compilers": {
+    "before": "fc1f3fc16f5f3d1deecf3a7446ac1df27362e2d7dedf18e77a39ea9b7263361e",
+    "after": "8a6874a9eedd11c3a60296c55840857dbb995ae401e0bee1983ae56d36573a3f"
+  },
+  "builds": {
+    "before-qbe": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/install-before-frame/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/empty-frame-perf/binary_trees.my",
+        "--rc-runtime",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/empty-frame-perf/before-qbe",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/empty-frame-perf/cache"
+      ],
+      "binary_sha256": "031789e1ca623d8b8847d71b682309b41fe751384594ec4c9eb2d9684723c2fc"
+    },
+    "before-llvm": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/install-before-frame/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/empty-frame-perf/binary_trees.my",
+        "--rc-runtime",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/empty-frame-perf/before-llvm",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/empty-frame-perf/cache",
+        "--backend=llvm",
+        "--llvm-opt=3",
+        "--lto"
+      ],
+      "binary_sha256": "d43a563c3b57128e64d651e06cdf5c971c24fa1e0757a0feb978cf20b391ba17"
+    },
+    "after-qbe": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/empty-frame-perf/binary_trees.my",
+        "--rc-runtime",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/empty-frame-perf/after-qbe",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/empty-frame-perf/cache"
+      ],
+      "binary_sha256": "c9e2a6f3bbc71c428d4248e2b8a9ec3500fae2ffa0a99c43201a936066e30b51"
+    },
+    "after-llvm": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/empty-frame-perf/binary_trees.my",
+        "--rc-runtime",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/empty-frame-perf/after-llvm",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/empty-frame-perf/cache",
+        "--backend=llvm",
+        "--llvm-opt=3",
+        "--lto"
+      ],
+      "binary_sha256": "ac843c7907eeefcfe37509ca32ca78d09f6687e5cdd9ce566667228d380f47fb"
+    }
+  },
+  "counts": {
+    "before-qbe": [
+      12795420005,
+      12875875828,
+      12790066713
+    ],
+    "before-llvm": [
+      9219197798,
+      9391691249,
+      9251398125
+    ],
+    "after-qbe": [
+      12781655066,
+      12921945990,
+      12803062863
+    ],
+    "after-llvm": [
+      9278324031,
+      9192515560,
+      9256740825
+    ]
+  },
+  "ratios": {
+    "qbe": 1.000597312006719,
+    "llvm": 1.0005775019005574
+  }
+}
