@@ -7,7 +7,7 @@ module byte_builder
 # exactly once into the immutable `bytes` it returns. Because only `byte_buffer`
 # carries the in-place append methods, a snapshot can never be written through and
 # a byte view of it stays valid.
-public class Builder:
+public record Builder:
     buffer: byte_buffer
 
 

@@ -50,6 +50,12 @@ Lox and trial sources will be kept as reviewable, reproducible patches plus
 scripts to apply them to their pinned source trees, and the 13 Lox scripts
 will be checked on the migrated port.
 
+The stage 3d source scan found one omission in P1: generic
+`network::Chunk[N]` was also a class. The tracked inventory includes this
+extra declaration, so its working total is 81; all three standard-library
+classes have become value records. `network::Failure` contains an owned
+resource, whose ownership and completion rules still apply.
+
 For each declaration, migration requires a behavior check:
 
 - Pure data carriers: use a record and preserve the output. A `mut` helper

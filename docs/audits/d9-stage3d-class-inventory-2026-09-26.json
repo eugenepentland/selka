@@ -1,6 +1,6 @@
 {
   "source": "P1 classes.jsonl on exp/e2-value-semantics",
-  "count": 80,
+  "count": 81,
   "classes": [
     {
       "corpus": "bench/parity",
@@ -27,6 +27,33 @@
       "graph": false,
       "self_referential": false,
       "field_writes": 12,
+      "state": "pending"
+    },
+    {
+      "corpus": "sexpr-port",
+      "file": "experiments/sexpr-port/main.my",
+      "name": "main::Tally",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 11,
+      "state": "pending"
+    },
+    {
+      "corpus": "sexpr-port",
+      "file": "experiments/sexpr-port/sexpr/parser.my",
+      "name": "sexpr.parser::Cursor",
+      "graph": true,
+      "self_referential": false,
+      "field_writes": 2,
+      "state": "pending"
+    },
+    {
+      "corpus": "sexpr-port",
+      "file": "experiments/sexpr-port/sexpr/tokenizer.my",
+      "name": "sexpr.tokenizer::Lexer",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 3,
       "state": "pending"
     },
     {
@@ -140,19 +167,19 @@
     {
       "corpus": "lox",
       "file": "external/lox/resolver.my",
-      "name": "resolver::Scope",
-      "graph": false,
+      "name": "resolver::Resolver",
+      "graph": true,
       "self_referential": false,
-      "field_writes": 0,
+      "field_writes": 6,
       "state": "pending"
     },
     {
       "corpus": "lox",
       "file": "external/lox/resolver.my",
-      "name": "resolver::Resolver",
-      "graph": true,
+      "name": "resolver::Scope",
+      "graph": false,
       "self_referential": false,
-      "field_writes": 6,
+      "field_writes": 0,
       "state": "pending"
     },
     {
@@ -174,6 +201,24 @@
       "state": "pending"
     },
     {
+      "corpus": "trial-T2",
+      "file": "external/trial-T2/calc.my",
+      "name": "calc::BinaryOp",
+      "graph": true,
+      "self_referential": true,
+      "field_writes": 0,
+      "state": "pending"
+    },
+    {
+      "corpus": "trial-T2",
+      "file": "external/trial-T2/calc.my",
+      "name": "calc::UnaryMinus",
+      "graph": true,
+      "self_referential": true,
+      "field_writes": 0,
+      "state": "pending"
+    },
+    {
       "corpus": "schematic",
       "file": "src/schematic/guest/io.my",
       "name": "io::Output",
@@ -183,40 +228,23 @@
       "state": "pending"
     },
     {
-      "corpus": "sexpr-port",
-      "file": "experiments/sexpr-port/main.my",
-      "name": "main::Tally",
-      "graph": false,
-      "self_referential": false,
-      "field_writes": 11,
-      "state": "pending"
-    },
-    {
-      "corpus": "sexpr-port",
-      "file": "experiments/sexpr-port/sexpr/parser.my",
-      "name": "sexpr.parser::Cursor",
-      "graph": true,
-      "self_referential": false,
-      "field_writes": 2,
-      "state": "pending"
-    },
-    {
-      "corpus": "sexpr-port",
-      "file": "experiments/sexpr-port/sexpr/tokenizer.my",
-      "name": "sexpr.tokenizer::Lexer",
-      "graph": false,
-      "self_referential": false,
-      "field_writes": 3,
-      "state": "pending"
-    },
-    {
       "corpus": "src/stdlib",
       "file": "src/stdlib/byte_builder.my",
       "name": "byte_builder::Builder",
       "graph": false,
       "self_referential": false,
       "field_writes": 0,
-      "state": "pending"
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "src/stdlib",
+      "file": "src/stdlib/network.my",
+      "name": "network::Chunk",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d",
+      "note": "P1 census omitted generic Chunk declaration"
     },
     {
       "corpus": "src/stdlib",
@@ -225,16 +253,7 @@
       "graph": false,
       "self_referential": false,
       "field_writes": 0,
-      "state": "pending"
-    },
-    {
-      "corpus": "tests/lang",
-      "file": "tests/lang/arena_class_escape.my",
-      "name": "arena_class_escape::Node",
-      "graph": true,
-      "self_referential": true,
-      "field_writes": 5,
-      "state": "pending"
+      "state": "migrated-in-3d"
     },
     {
       "corpus": "tests/lang",
@@ -252,6 +271,15 @@
       "graph": false,
       "self_referential": false,
       "field_writes": 0,
+      "state": "pending"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/arena_class_escape.my",
+      "name": "arena_class_escape::Node",
+      "graph": true,
+      "self_referential": true,
+      "field_writes": 5,
       "state": "pending"
     },
     {
@@ -464,6 +492,15 @@
     {
       "corpus": "tests/lang",
       "file": "tests/lang/nominal_bodies.my",
+      "name": "nominal_bodies::Box<[2]i64>",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "pending"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/nominal_bodies.my",
       "name": "nominal_bodies::Box<i64>",
       "graph": false,
       "self_referential": false,
@@ -472,8 +509,8 @@
     },
     {
       "corpus": "tests/lang",
-      "file": "tests/lang/nominal_bodies.my",
-      "name": "nominal_bodies::Box<[2]i64>",
+      "file": "tests/lang/nominal_instances.my",
+      "name": "nominal_instances::EmptyPhantom<nominal_instances::GrowPhantom<[1][1]i64>>",
       "graph": false,
       "self_referential": false,
       "field_writes": 0,
@@ -491,16 +528,7 @@
     {
       "corpus": "tests/lang",
       "file": "tests/lang/nominal_instances.my",
-      "name": "nominal_instances::EmptyPhantom<nominal_instances::GrowPhantom<[1][1]i64>>",
-      "graph": false,
-      "self_referential": false,
-      "field_writes": 0,
-      "state": "pending"
-    },
-    {
-      "corpus": "tests/lang",
-      "file": "tests/lang/nominal_instances.my",
-      "name": "nominal_instances::GrowPhantom<i64>",
+      "name": "nominal_instances::GrowPhantom<[1]i64>",
       "graph": true,
       "self_referential": false,
       "field_writes": 0,
@@ -509,7 +537,7 @@
     {
       "corpus": "tests/lang",
       "file": "tests/lang/nominal_instances.my",
-      "name": "nominal_instances::GrowPhantom<[1]i64>",
+      "name": "nominal_instances::GrowPhantom<i64>",
       "graph": true,
       "self_referential": false,
       "field_writes": 0,
@@ -581,7 +609,7 @@
     {
       "corpus": "tests/lang",
       "file": "tests/lang/python_calls.my",
-      "name": "python_calls::Empty",
+      "name": "python_calls::Box<i64>",
       "graph": false,
       "self_referential": false,
       "field_writes": 0,
@@ -590,7 +618,7 @@
     {
       "corpus": "tests/lang",
       "file": "tests/lang/python_calls.my",
-      "name": "python_calls::Box<i64>",
+      "name": "python_calls::Empty",
       "graph": false,
       "self_referential": false,
       "field_writes": 0,
@@ -608,7 +636,7 @@
     {
       "corpus": "tests/lang",
       "file": "tests/lang/python_collections.my",
-      "name": "python_collections::ReceiverPoint",
+      "name": "python_collections::Cell<i64>",
       "graph": false,
       "self_referential": false,
       "field_writes": 1,
@@ -617,7 +645,7 @@
     {
       "corpus": "tests/lang",
       "file": "tests/lang/python_collections.my",
-      "name": "python_collections::Cell<i64>",
+      "name": "python_collections::ReceiverPoint",
       "graph": false,
       "self_referential": false,
       "field_writes": 1,
@@ -635,19 +663,19 @@
     {
       "corpus": "tests/lang",
       "file": "tests/lang/python_core.my",
-      "name": "python_core::Score",
+      "name": "python_core::Counter",
       "graph": false,
       "self_referential": false,
-      "field_writes": 0,
+      "field_writes": 2,
       "state": "pending"
     },
     {
       "corpus": "tests/lang",
       "file": "tests/lang/python_core.my",
-      "name": "python_core::Counter",
+      "name": "python_core::Score",
       "graph": false,
       "self_referential": false,
-      "field_writes": 2,
+      "field_writes": 0,
       "state": "pending"
     },
     {
@@ -671,7 +699,7 @@
     {
       "corpus": "tests/lang",
       "file": "tests/lang/python_variants.my",
-      "name": "python_variants::VariantNode",
+      "name": "python_variants::VariantBox<i64>",
       "graph": false,
       "self_referential": false,
       "field_writes": 0,
@@ -680,7 +708,7 @@
     {
       "corpus": "tests/lang",
       "file": "tests/lang/python_variants.my",
-      "name": "python_variants::VariantBox<i64>",
+      "name": "python_variants::VariantNode",
       "graph": false,
       "self_referential": false,
       "field_writes": 0,
@@ -702,24 +730,6 @@
       "graph": true,
       "self_referential": true,
       "field_writes": 3,
-      "state": "pending"
-    },
-    {
-      "corpus": "trial-T2",
-      "file": "external/trial-T2/calc.my",
-      "name": "calc::UnaryMinus",
-      "graph": true,
-      "self_referential": true,
-      "field_writes": 0,
-      "state": "pending"
-    },
-    {
-      "corpus": "trial-T2",
-      "file": "external/trial-T2/calc.my",
-      "name": "calc::BinaryOp",
-      "graph": true,
-      "self_referential": true,
-      "field_writes": 0,
       "state": "pending"
     }
   ]

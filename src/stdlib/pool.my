@@ -1,8 +1,8 @@
 module pool
 
 
-# A slot store with generational handles. The fields are managed lists, so a
-# copy of a Pool value refers to the same store rather than a snapshot.
+# A slot store with generational handles. Under value semantics a Pool is a
+# value: pass it with `mut` to change its slots, and keep handles with it.
 public record Pool[T: copy + storable]:
     slots: list[T]
     generations: list[int]

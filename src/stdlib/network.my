@@ -6,7 +6,7 @@ public resource Connection: network
 
 
 # One `read` result: up to `N` bytes, the count actually read, and the EOF flag.
-public class Chunk[const N: u64]:
+public record Chunk[const N: u64]:
     bytes: [N]u8
     length: u64
     eof: bool
@@ -31,7 +31,7 @@ public result Written:
 
 
 # The error payload `close` keeps so a failed completion can stay live.
-public class Failure:
+public record Failure:
     resource: Connection
     code: int
 
