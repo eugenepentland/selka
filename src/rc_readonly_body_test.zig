@@ -22,6 +22,24 @@ const source =
     \\    return body(items)
     \\def returned(items: list[int]) -> list[int]:
     \\    return items
+    \\union Wrapped:
+    \\    empty,
+    \\    leaf: list[int],
+    \\    next: Wrapped
+    \\def variant(items: list[int]) -> int:
+    \\    wrapped = Wrapped.leaf(items)
+    \\    match wrapped:
+    \\        case Wrapped.leaf(values):
+    \\            return 1
+    \\        case _:
+    \\            return 0
+    \\def recursive_variant(items: list[int]) -> int:
+    \\    wrapped = Wrapped.next(Wrapped.leaf(items))
+    \\    match wrapped:
+    \\        case Wrapped.next(inner):
+    \\            return 1
+    \\        case _:
+    \\            return 0
     \\def main() -> int:
     \\    return count(Node(None))
 ;
@@ -66,4 +84,15 @@ test "RC-READONLY-BODY-1 mutation allocation callback and owned result retain jo
     try t.expect(contains(try named(manifest.value, "allocated"), "myl_qbe_rc_frame_enter"));
     try t.expect(contains(try named(manifest.value, "callback"), "myl_qbe_rc_frame_enter"));
     try t.expect(contains(try named(manifest.value, "returned"), "myl_qbe_rc_frame_enter"));
+}
+
+// spec-case: RC-READONLY-BODY-1
+test "RC-READONLY-BODY-1 inline union wrappers borrow but recursive boxes retain journals" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    var manifest = try emitted();
+    defer manifest.deinit();
+    try t.expect(!contains(try named(manifest.value, "variant"), "myl_qbe_rc_frame_enter"));
+    try t.expect(contains(try named(manifest.value, "recursive_variant"), "myl_qbe_rc_frame_enter"));
 }

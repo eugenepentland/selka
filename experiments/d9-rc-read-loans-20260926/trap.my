@@ -1,0 +1,9 @@
+module trap
+
+
+def read(values: list[int], at: int) -> int:
+    return values[at]
+
+
+def main() -> int:
+    return read([1, 2, 3], 9)

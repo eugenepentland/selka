@@ -120,8 +120,13 @@ pub fn entry(comptime E: type, self: *E, index: usize, ty: typed.Type, address: 
 }
 /// Clear/drop one dynamic typed entry using the runtime's unique/count ordering.
 pub fn drop(comptime E: type, self: *E, index: usize) Error!void {
+    const live = self.temp();
+    const label = self.temp();
+    const flag = try guard(E, self, index);
+    try self.print(" %v{d} =w loaduw %v{d}\n jnz %v{d}, @rcslotdrop{d}, @rcslotdone{d}\n@rcslotdrop{d}\n", .{ live, flag, live, label, label, label });
     const pointer = self.temp();
     try self.print(" %v{d} =l add %rcentries, {d}\n call $myl_qbe_rc_slot_drop(l %ctx, l %v{d})\n", .{ pointer, index * entry_bytes, pointer });
+    try self.print("@rcslotdone{d}\n", .{label});
 }
 fn localCount(comptime E: type, self: *E) usize {
     return self.function.scope.locals.len;

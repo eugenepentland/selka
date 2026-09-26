@@ -1,0 +1,236 @@
+{
+  "kind": "private n12 diagnostic, not full corpus acceptance",
+  "source": "# binary_trees: perfect binary trees of recursive value nodes on the collecting heap.\n# Every short-lived tree becomes garbage after its check; the tracing\n# collector reclaims it. See SUITE.md section 1.\n\n\nrecord Node:\n    left: Option[Node]\n    right: Option[Node]\n\n\ndef make(depth: int) -> Node:\n    if depth == 0:\n        return Node(left=None, right=None)\n    return Node(left=Some(make(depth - 1)), right=Some(make(depth - 1)))\n\n\ndef check(node: Node) -> int:\n    left = node.left\n    right = node.right\n    if left is None or right is None:\n        return 1\n    return 1 + check(left) + check(right)\n\n\ndef main(out: Stream) -> int:\n    max_depth = 12\n    min_depth = 4\n\n    stretch = max_depth + 1\n    out.print(f\"stretch tree of depth {stretch}\\t check: {check(make(stretch))}\")\n\n    long_lived = make(max_depth)\n\n    depth = min_depth\n    while depth <= max_depth:\n        iterations = shift_left(1, max_depth - depth + min_depth)\n        total = 0\n        for _ in range(iterations):\n            total = total + check(make(depth))\n        out.print(f\"{iterations}\\t trees of depth {depth}\\t check: {total}\")\n        depth = depth + 2\n\n    out.print(f\"long lived tree of depth {max_depth}\\t check: {check(long_lived)}\")\n    return 0\n",
+  "expected": "stretch tree of depth 13\t check: 16383\n4096\t trees of depth 4\t check: 126976\n1024\t trees of depth 6\t check: 130048\n256\t trees of depth 8\t check: 130816\n64\t trees of depth 10\t check: 131008\n16\t trees of depth 12\t check: 131056\nlong lived tree of depth 12\t check: 8191\n",
+  "before_commit": "53a0341f1c6730b5aff985268add1f181ade71ff",
+  "after_patch": "diff --git a/src/qbe_rc_aggregate_test.zig b/src/qbe_rc_aggregate_test.zig\nindex 2573fb2a..06ee5f56 100644\n--- a/src/qbe_rc_aggregate_test.zig\n+++ b/src/qbe_rc_aggregate_test.zig\n@@ -41,7 +41,9 @@ test \"RC aggregate partial construction journals fields before guarded takes or\n     var manifest = try pairText();\n     defer manifest.deinit();\n     const text = try findFunction(manifest.value, \"pair\");\n-    const cleared = try location(text, \"call $memset(l %v\");\n+    // Pair has two pointer fields. Other token moves can clear an eight-byte\n+    // source before this constructor initializes its sixteen-byte body.\n+    const cleared = try location(text, \"w 0, l 16)\");\n     const taken = cleared + try location(text[cleared..], \"call $myl_rc_native_take\");\n     const copied = cleared + try location(text[cleared..], \"call $myl_rc_native_copy\");\n     try t.expect(cleared < taken and taken < copied);\ndiff --git a/src/qbe_rc_slots.zig b/src/qbe_rc_slots.zig\nindex 7e105f7d..c9c81116 100644\n--- a/src/qbe_rc_slots.zig\n+++ b/src/qbe_rc_slots.zig\n@@ -28,6 +28,7 @@ pub fn Lower(comptime E: type) type {\n     return struct {\n         /// Prepare ownership atomically; no compiler guard changes on failure.\n         pub fn transfer(self: *E, operation: Transfer) Error!void {\n+            const moved = if (operation.mode == .take_empty) try @import(\"qbe_rc_inline_take.zig\").begin(E, self, operation) else null;\n             const helper = switch (operation.mode) {\n                 .copy_empty => \"myl_rc_native_copy\",\n                 .take_empty => \"myl_rc_native_take\",\n@@ -38,6 +39,7 @@ pub fn Lower(comptime E: type) type {\n                 result, helper, try self.descriptor(operation.ty), operation.destination, operation.source, operation.region,\n             });\n             try requireSuccess(E, self, result);\n+            if (moved) |label| try self.print(\"@rcmoved{d}\\n\", .{label});\n         }\n \n         /// Publish an ownership guard only after all preceding helpers commit.\ndiff --git a/src/root_test.zig b/src/root_test.zig\nindex 70d28603..92297a91 100644\n--- a/src/root_test.zig\n+++ b/src/root_test.zig\n@@ -4,6 +4,7 @@ pub const snapshot_project = @import(\"project.zig\");\n test {\n     _ = @import(\"qbe_rc_read_loans_test.zig\");\n     _ = @import(\"qbe_rc_aggregate_test.zig\");\n+    _ = @import(\"qbe_rc_inline_take_test.zig\");\n     _ = @import(\"native_rc_stats_test.zig\");\n     _ = @import(\"native_rc_contract_test.zig\");\n     _ = @import(\"native_rc_collections_test.zig\");\n",
+  "builds": {
+    "before-qbe": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/install-before-inline-take/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/inline-take/binary_trees.my",
+        "--rc-runtime",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/inline-take/before-qbe",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/inline-take/cache"
+      ],
+      "compiler_sha256": "ec0410666fd5d738476ff4d5258b641a3dde80476f943402e2004118bc634add",
+      "binary_sha256": "cce362537f3ee17af6a014ddddd6fe9a53731d96de904c7791bfabc986a6d21e"
+    },
+    "before-qbe-stats": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/install-before-inline-take/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/inline-take/binary_trees.my",
+        "--rc-runtime=stats",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/inline-take/before-qbe-stats",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/inline-take/cache"
+      ],
+      "compiler_sha256": "ec0410666fd5d738476ff4d5258b641a3dde80476f943402e2004118bc634add",
+      "binary_sha256": "563f5f8ec4f312889f87dbcc4ed773514905c7902ee4cbad248a57b7190e36b8"
+    },
+    "before-llvm": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/install-before-inline-take/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/inline-take/binary_trees.my",
+        "--rc-runtime",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/inline-take/before-llvm",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/inline-take/cache",
+        "--backend=llvm",
+        "--llvm-opt=3",
+        "--lto"
+      ],
+      "compiler_sha256": "ec0410666fd5d738476ff4d5258b641a3dde80476f943402e2004118bc634add",
+      "binary_sha256": "c2f58ac30be8a7a666574826f99bdfdaa1df017ad444cd438109a228a4b00cef"
+    },
+    "before-llvm-stats": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/install-before-inline-take/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/inline-take/binary_trees.my",
+        "--rc-runtime=stats",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/inline-take/before-llvm-stats",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/inline-take/cache",
+        "--backend=llvm",
+        "--llvm-opt=3",
+        "--lto"
+      ],
+      "compiler_sha256": "ec0410666fd5d738476ff4d5258b641a3dde80476f943402e2004118bc634add",
+      "binary_sha256": "fbaa0def0b520398a27634fae562e19b9ee3afe2cc8cbd06c5170afee7da3b34"
+    },
+    "after-qbe": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/inline-take/binary_trees.my",
+        "--rc-runtime",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/inline-take/after-qbe",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/inline-take/cache"
+      ],
+      "compiler_sha256": "3c620f9cff0a8002de31b73e7cb772df77b8fd8741ae5b242fe362d1326c15b4",
+      "binary_sha256": "2b2dcf7da60a3b496232439a6a61e695a7cce9bd756fe04948b8bf93cadf7a6c"
+    },
+    "after-qbe-stats": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/inline-take/binary_trees.my",
+        "--rc-runtime=stats",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/inline-take/after-qbe-stats",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/inline-take/cache"
+      ],
+      "compiler_sha256": "3c620f9cff0a8002de31b73e7cb772df77b8fd8741ae5b242fe362d1326c15b4",
+      "binary_sha256": "ff717ac46a001a7e2b3851b5ff68b8d902216837b7d89baa9d24746b4243de9c"
+    },
+    "after-llvm": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/inline-take/binary_trees.my",
+        "--rc-runtime",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/inline-take/after-llvm",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/inline-take/cache",
+        "--backend=llvm",
+        "--llvm-opt=3",
+        "--lto"
+      ],
+      "compiler_sha256": "3c620f9cff0a8002de31b73e7cb772df77b8fd8741ae5b242fe362d1326c15b4",
+      "binary_sha256": "e6b2204f3055a31483fb5ca29a5b698a6cbc2f51b88dac78f0bdeb520ba841af"
+    },
+    "after-llvm-stats": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/inline-take/binary_trees.my",
+        "--rc-runtime=stats",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/inline-take/after-llvm-stats",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/inline-take/cache",
+        "--backend=llvm",
+        "--llvm-opt=3",
+        "--lto"
+      ],
+      "compiler_sha256": "3c620f9cff0a8002de31b73e7cb772df77b8fd8741ae5b242fe362d1326c15b4",
+      "binary_sha256": "50571a5c041dffc35616d51866774372486139cfac826ebc87e0816c3138d998"
+    }
+  },
+  "counts": {
+    "before-qbe-stats": {
+      "version": 1,
+      "runtime": "rc-v2-counting",
+      "saturated": false,
+      "owner_acquire": 19,
+      "owner_release": 669079,
+      "hold_acquire": 0,
+      "hold_release": 0,
+      "owner_limit": 0,
+      "hold_limit": 0,
+      "heap_allocate": 669060,
+      "arena_allocate": 0,
+      "retire": 669060,
+      "clone_shell": 0,
+      "unique_check": 33
+    },
+    "before-llvm-stats": {
+      "version": 1,
+      "runtime": "rc-v2-counting",
+      "saturated": false,
+      "owner_acquire": 19,
+      "owner_release": 669079,
+      "hold_acquire": 0,
+      "hold_release": 0,
+      "owner_limit": 0,
+      "hold_limit": 0,
+      "heap_allocate": 669060,
+      "arena_allocate": 0,
+      "retire": 669060,
+      "clone_shell": 0,
+      "unique_check": 33
+    },
+    "after-qbe-stats": {
+      "version": 1,
+      "runtime": "rc-v2-counting",
+      "saturated": false,
+      "owner_acquire": 19,
+      "owner_release": 669079,
+      "hold_acquire": 0,
+      "hold_release": 0,
+      "owner_limit": 0,
+      "hold_limit": 0,
+      "heap_allocate": 669060,
+      "arena_allocate": 0,
+      "retire": 669060,
+      "clone_shell": 0,
+      "unique_check": 33
+    },
+    "after-llvm-stats": {
+      "version": 1,
+      "runtime": "rc-v2-counting",
+      "saturated": false,
+      "owner_acquire": 19,
+      "owner_release": 669079,
+      "hold_acquire": 0,
+      "hold_release": 0,
+      "owner_limit": 0,
+      "hold_limit": 0,
+      "heap_allocate": 669060,
+      "arena_allocate": 0,
+      "retire": 669060,
+      "clone_shell": 0,
+      "unique_check": 33
+    }
+  },
+  "instructions": {
+    "before-qbe": [
+      2320872018,
+      2320871982,
+      2326221816
+    ],
+    "before-llvm": [
+      1487643592,
+      1455441586,
+      1455441814
+    ],
+    "after-qbe": [
+      1672867859,
+      1672867788,
+      1672867891
+    ],
+    "after-llvm": [
+      963137800,
+      963139287,
+      963095564
+    ]
+  },
+  "ratios": {
+    "qbe": 0.7207928080590956,
+    "llvm": 0.6617494363124021
+  },
+  "after_complete_patch": "diff --git a/src/qbe_rc_aggregate_test.zig b/src/qbe_rc_aggregate_test.zig\nindex 2573fb2a..06ee5f56 100644\n--- a/src/qbe_rc_aggregate_test.zig\n+++ b/src/qbe_rc_aggregate_test.zig\n@@ -41,7 +41,9 @@ test \"RC aggregate partial construction journals fields before guarded takes or\n     var manifest = try pairText();\n     defer manifest.deinit();\n     const text = try findFunction(manifest.value, \"pair\");\n-    const cleared = try location(text, \"call $memset(l %v\");\n+    // Pair has two pointer fields. Other token moves can clear an eight-byte\n+    // source before this constructor initializes its sixteen-byte body.\n+    const cleared = try location(text, \"w 0, l 16)\");\n     const taken = cleared + try location(text[cleared..], \"call $myl_rc_native_take\");\n     const copied = cleared + try location(text[cleared..], \"call $myl_rc_native_copy\");\n     try t.expect(cleared < taken and taken < copied);\ndiff --git a/src/qbe_rc_inline_take.zig b/src/qbe_rc_inline_take.zig\nnew file mode 100644\nindex 00000000..4d4655b4\n--- /dev/null\n+++ b/src/qbe_rc_inline_take.zig\n@@ -0,0 +1,86 @@\n+//! Bounded physical token moves with the general transaction as a fallback.\n+const typed = @import(\"typed.zig\");\n+const native = @import(\"native_types.zig\");\n+const semantics = @import(\"value_semantics.zig\");\n+const flat_limit = 8;\n+const Flat = struct { offsets: [flat_limit]u64 = undefined, len: usize = 0, remaining: usize = 256 };\n+// These are common-header flags; no RC-only prefix word is read. Arena and\n+// pinned sources need the runtime's region/clone transaction. DYING is invalid.\n+const slow_marks: u64 = (@as(u64, 1) << 62) | (@as(u64, 1) << 60) | 1;\n+/// Native emission failures; unsupported layouts simply keep the runtime path.\n+pub const Error = error{ InternalError, OutOfMemory, SourceError, WriteFailed };\n+\n+/// Begin a pure token relocation, or decline unsupported physical layouts.\n+/// The returned label joins the caller's existing fallible runtime fallback.\n+/// Guest entry follows a draining public ownership boundary; reentrant guest\n+/// calls inside a finalizer already have an active drain. Pure moves neither\n+/// enqueue deaths nor need to invoke that already-complete/active drain.\n+pub fn begin(comptime E: type, self: *E, operation: anytype) Error!?usize {\n+    const state = self.cow.?.rc orelse return null;\n+    const shape = state.catalog.get(operation.ty) catch |err| return translate(err);\n+    if (!shape.counted or shape.unique_drop) return null;\n+    var flat: Flat = .{};\n+    if (!try flatten(self.layouts, operation.ty, 0, &flat) or flat.len == 0) return null;\n+    const size = (try self.layout(operation.ty)).size;\n+    const label = self.temp();\n+    try overlap(E, self, operation, size, label);\n+    for (flat.offsets[0..flat.len]) |offset| try pointer(E, self, operation.source, offset, label);\n+    // All pointer/header checks precede publication. Generated callers supply\n+    // the current valid region and an owning source guard; no count changes,\n+    // allocation, callback or recoverable failure remains on this path.\n+    try self.print(\" blit %v{d}, %v{d}, {d}\\n call $memset(l %v{d}, w 0, l {d})\\n\", .{ operation.source, operation.destination, size, operation.source, size });\n+    try self.print(\" jmp @rcmoved{d}\\n@rcmoveslow{d}\\n\", .{ label, label });\n+    return label;\n+}\n+\n+fn flatten(catalog: *native.Catalog, ty: typed.Type, base: u64, flat: *Flat) Error!bool {\n+    if (flat.remaining == 0 or semantics.isLiveView(catalog.records, ty)) return false;\n+    flat.remaining -= 1;\n+    const layout = catalog.layout(ty) catch |err| return translate(err);\n+    if (layout.drop) return false;\n+    switch (layout.kind) {\n+        .managed => {\n+            if (flat.len == flat_limit) return false;\n+            flat.offsets[flat.len] = base;\n+            flat.len += 1;\n+        },\n+        .record, .domain, .niche => {\n+            for (layout.fields) |field| if (!try flatten(catalog, field.ty, base + field.offset, flat)) return false;\n+        },\n+        .array => {\n+            if (layout.fields.len != 1 or layout.count > flat.remaining) return false;\n+            for (0..layout.count) |index| if (!try flatten(catalog, layout.fields[0].ty, base + index * layout.stride, flat)) return false;\n+        },\n+        .scalar, .handle, .pool_handle, .callable => {},\n+        .variant, .resource, .owned_buffer, .owned_pool => return false,\n+    }\n+    return true;\n+}\n+\n+fn overlap(comptime E: type, self: *E, operation: anytype, size: u64, label: usize) Error!void {\n+    const left = self.temp();\n+    const right = self.temp();\n+    const near_left = self.temp();\n+    const near_right = self.temp();\n+    const overlapping = self.temp();\n+    try self.print(\" %v{d} =l sub %v{d}, %v{d}\\n %v{d} =l sub %v{d}, %v{d}\\n\", .{ left, operation.source, operation.destination, right, operation.destination, operation.source });\n+    try self.print(\" %v{d} =w cultl %v{d}, {d}\\n %v{d} =w cultl %v{d}, {d}\\n\", .{ near_left, left, size, near_right, right, size });\n+    try self.print(\" %v{d} =w or %v{d}, %v{d}\\n jnz %v{d}, @rcmoveslow{d}, @rcmovecheck{d}\\n@rcmovecheck{d}\\n\", .{ overlapping, near_left, near_right, overlapping, label, label, label });\n+}\n+\n+fn pointer(comptime E: type, self: *E, source: usize, offset: u64, slow: usize) Error!void {\n+    const payload = self.temp();\n+    const nonnull = self.temp();\n+    const label = self.temp();\n+    try self.print(\" %v{d} =l loadl %v{d}\\n %v{d} =w cnel %v{d}, 0\\n jnz %v{d}, @rcmoveheader{d}, @rcmovenext{d}\\n@rcmoveheader{d}\\n\", .{ payload, try self.address(source, offset), nonnull, payload, nonnull, label, label, label });\n+    const header = self.temp();\n+    const mark = self.temp();\n+    const special = self.temp();\n+    const slow_path = self.temp();\n+    try self.print(\" %v{d} =l sub %v{d}, 16\\n %v{d} =l loadl %v{d}\\n %v{d} =l and %v{d}, {d}\\n\", .{ header, payload, mark, header, special, mark, slow_marks });\n+    try self.print(\" %v{d} =w cnel %v{d}, 0\\n jnz %v{d}, @rcmoveslow{d}, @rcmovenext{d}\\n@rcmovenext{d}\\n\", .{ slow_path, special, slow_path, slow, label, label });\n+}\n+\n+fn translate(err: anyerror) Error {\n+    return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError;\n+}\ndiff --git a/src/qbe_rc_inline_take_test.zig b/src/qbe_rc_inline_take_test.zig\nnew file mode 100644\nindex 00000000..7fef1f79\n--- /dev/null\n+++ b/src/qbe_rc_inline_take_test.zig\n@@ -0,0 +1,57 @@\n+//! Native token moves retain the fallible path for pins and unusual layouts.\n+const std = @import(\"std\");\n+const compiler = @import(\"compiler.zig\");\n+const runtime = @import(\"runtime_mode.zig\");\n+const t = std.testing;\n+const Manifest = struct { functions: []const struct { name: []const u8, il: []const u8 } };\n+fn emitted() !std.json.Parsed(Manifest) {\n+    var compilation = try compiler.Compilation.init(t.allocator, \"rc_inline_take.my\",\n+        \\\\record Pair:\n+        \\\\    left: list[int]\n+        \\\\    right: list[int]\n+        \\\\def made() -> Pair:\n+        \\\\    return Pair([1], [2])\n+        \\\\def held(view: DictValues[int, int]) -> DictValues[int, int]:\n+        \\\\    return view\n+        \\\\def main() -> int:\n+        \\\\    value = made()\n+        \\\\    return value.left[0]\n+    );\n+    defer compilation.deinit();\n+    const text = try compilation.emitQbe(t.allocator);\n+    defer t.allocator.free(text);\n+    return std.json.parseFromSlice(Manifest, t.allocator, text, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });\n+}\n+fn named(manifest: Manifest, name: []const u8) ![]const u8 {\n+    for (manifest.functions) |function| if (std.mem.eql(u8, function.name, name)) return function.il;\n+    return error.TestUnexpectedResult;\n+}\n+fn contains(text: []const u8, needle: []const u8) bool {\n+    return std.mem.indexOf(u8, text, needle) != null;\n+}\n+\n+// spec: RC-INLINE-TAKE-1\n+test \"RC-INLINE-TAKE-1 ordinary moves preflight headers and preserve fallible fallback\" {\n+    const saved = runtime.get();\n+    defer runtime.set(saved);\n+    runtime.set(.rc);\n+    var manifest = try emitted();\n+    defer manifest.deinit();\n+    const made = try named(manifest.value, \"made\");\n+    try t.expect(contains(made, \"@rcmoveheader\"));\n+    try t.expect(contains(made, \"@rcmoveslow\"));\n+    try t.expect(contains(made, \"=w cnel\"));\n+    try t.expect(contains(made, \"call $myl_rc_native_take\"));\n+    try t.expect(!contains(try named(manifest.value, \"held\"), \"@rcmoveheader\"));\n+}\n+\n+// spec-case: RC-INLINE-TAKE-1\n+test \"RC-INLINE-TAKE-1 counted artifacts share event-free token relocation\" {\n+    const saved = runtime.get();\n+    defer runtime.set(saved);\n+    runtime.set(.rc_counting);\n+    var manifest = try emitted();\n+    defer manifest.deinit();\n+    try t.expect(contains(try named(manifest.value, \"made\"), \"@rcmoveheader\"));\n+    try t.expect(!contains(try named(manifest.value, \"held\"), \"@rcmoveheader\"));\n+}\ndiff --git a/src/qbe_rc_slots.zig b/src/qbe_rc_slots.zig\nindex 7e105f7d..c9c81116 100644\n--- a/src/qbe_rc_slots.zig\n+++ b/src/qbe_rc_slots.zig\n@@ -28,6 +28,7 @@ pub fn Lower(comptime E: type) type {\n     return struct {\n         /// Prepare ownership atomically; no compiler guard changes on failure.\n         pub fn transfer(self: *E, operation: Transfer) Error!void {\n+            const moved = if (operation.mode == .take_empty) try @import(\"qbe_rc_inline_take.zig\").begin(E, self, operation) else null;\n             const helper = switch (operation.mode) {\n                 .copy_empty => \"myl_rc_native_copy\",\n                 .take_empty => \"myl_rc_native_take\",\n@@ -38,6 +39,7 @@ pub fn Lower(comptime E: type) type {\n                 result, helper, try self.descriptor(operation.ty), operation.destination, operation.source, operation.region,\n             });\n             try requireSuccess(E, self, result);\n+            if (moved) |label| try self.print(\"@rcmoved{d}\\n\", .{label});\n         }\n \n         /// Publish an ownership guard only after all preceding helpers commit.\ndiff --git a/src/root_test.zig b/src/root_test.zig\nindex 70d28603..92297a91 100644\n--- a/src/root_test.zig\n+++ b/src/root_test.zig\n@@ -4,6 +4,7 @@ pub const snapshot_project = @import(\"project.zig\");\n test {\n     _ = @import(\"qbe_rc_read_loans_test.zig\");\n     _ = @import(\"qbe_rc_aggregate_test.zig\");\n+    _ = @import(\"qbe_rc_inline_take_test.zig\");\n     _ = @import(\"native_rc_stats_test.zig\");\n     _ = @import(\"native_rc_contract_test.zig\");\n     _ = @import(\"native_rc_collections_test.zig\");\n",
+  "guest_mode": "ReleaseFast (compiler build default)",
+  "compiler_mode": "Debug"
+}
