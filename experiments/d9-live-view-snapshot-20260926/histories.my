@@ -1,0 +1,36 @@
+record HeldFields:
+    live: DictValues[int, int]
+    snapshot: dict[int, int]
+
+
+def snapshot_first(out: Stream):
+    mapping = {1: 7}
+    live = mapping.values()
+    result = HeldFields(live=live, snapshot=live.mapping)
+    result.snapshot[1] = 11
+    mapping[1] = 13
+    out.print(f"{list(result.live)} {result.snapshot[1]} {mapping[1]}")
+
+
+def owner_first(out: Stream):
+    mapping = {1: 7}
+    live = mapping.values()
+    result = HeldFields(live=live, snapshot=live.mapping)
+    mapping[1] = 13
+    result.snapshot[1] = 11
+    out.print(f"{list(result.live)} {result.snapshot[1]} {mapping[1]}")
+
+def before_view(out: Stream):
+    mapping = {1: 7}
+    snapshot = mapping
+    snapshot[1] = 11
+    mapping[1] = 13
+    live = mapping.values()
+    mapping[1] = 17
+    out.print(f"{list(live)} {snapshot[1]} {mapping[1]}")
+
+def main(out: Stream) -> int:
+    snapshot_first(out)
+    owner_first(out)
+    before_view(out)
+    return 0
