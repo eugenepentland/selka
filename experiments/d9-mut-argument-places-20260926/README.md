@@ -16,3 +16,8 @@ implementation before the integration gate.
 
 Compressed receipts preserve all commands, compiler/source identities and output.
 The standalone driver is generated from the 15-test language fixture by `run.py`.
+
+`paired-abi3-{oracles,fixture,direct}.json.gz` records the final private ABI3
+pairing: both history probes, the corrected permanent assertion, all 15 standalone
+assertions and both trap paths pass in every GC/RC and actual backend combination.
+The compiler binary identity and exact counter totals appear in the audit supplement.
