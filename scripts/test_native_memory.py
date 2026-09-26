@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Build precise native heap/list regressions with C undefined-behavior checks."""
 import concurrent.futures
+import json
 import os
 from pathlib import Path
 import shlex
@@ -27,8 +28,10 @@ def main():
 def run_suite(root, command, directory, suite, sources):
     """Compile one C suite against the runtime sources it needs and run it."""
     executable = directory / suite
-    if suite == "native_rc_stats":
+    if suite in ("native_rc_stats", "native_rc_execution"):
         command = command + ["-DMYL_NATIVE_RC_COUNTING=1"]
+    if suite == "native_rc_execution":
+        command = command + ["-DMYL_NATIVE_RC=1"]
     if "native_heap.c" in sources:
         required = ("native_arena.c", "native_collections.c", "native_text.c",
                     "native_dictionary.c", "native_equal.c", "native_bytes.c",
@@ -49,7 +52,34 @@ def run_suite(root, command, directory, suite, sources):
         + ["-o", str(executable)],
         check=True,
     )
-    subprocess.run([str(executable)], check=True)
+    if suite == "native_rc_execution":
+        verify_execution(executable)
+    else:
+        subprocess.run([str(executable)], check=True)
+
+
+def verify_execution(executable):
+    """Real execution reports complete ownership traffic once after all cleanup."""
+    expected = None
+    for mode in ("success", "trap", "fast"):
+        environment = dict(os.environ)
+        if mode == "fast":
+            # Process-exit allocator reservations are deliberately unswept.
+            environment["ASAN_OPTIONS"] = environment.get("ASAN_OPTIONS", "") + ":detect_leaks=0"
+        run = subprocess.run([str(executable), mode], check=True, capture_output=True,
+                             text=True, env=environment)
+        records = [json.loads(line.removeprefix("MYLANG_RC_COUNTS "))
+                   for line in run.stderr.splitlines() if line.startswith("MYLANG_RC_COUNTS ")]
+        assert len(records) == 1 and not run.stdout, (mode, run.stdout, run.stderr)
+        counts = records[0]
+        assert counts["version"] == 1 and counts["runtime"] == "rc-v1-counting"
+        assert not counts["saturated"]
+        assert counts["heap_allocate"] == counts["retire"] == 2
+        assert counts["arena_allocate"] == 2
+        assert counts["hold_acquire"] == counts["hold_release"] == 1
+        assert counts["owner_acquire"] == 1 and counts["owner_release"] == 3
+        assert expected is None or counts == expected, (mode, counts, expected)
+        expected = counts
 
 
 def jobs():
@@ -62,6 +92,7 @@ def jobs():
 
 # Each C suite and the runtime sources it links.
 SUITES = (
+    ("native_rc_execution", ["native_heap.c", "qbe_runtime.c", "qbe_runtime_rc.c", "qbe_stack.c"]),
     ("native_rc_arena", ["native_heap.c"]),
     ("native_rc_stats", ["native_heap.c"]),
     ("native_rc_contract", ["native_rc.c", "native_rc_stats.c", "native_rc_shapes.c", "native_rc_walk.c", "native_rc_scope.c", "native_rc_transfer.c"]),
