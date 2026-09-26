@@ -11,7 +11,7 @@
 //! Soundness rests on one fact: after a collection the frame touches a heap
 //! object only through a value it reads, and every such read is one of
 //!
-//!  1. a local read (`load_local`, `move_local`, a collection method's
+//!  1. a local read (`load_local`, `move_local`, `ref_local`, a collection method's
 //!     receiver, a resource or file method's handle) — a use below;
 //!  2. an operand on the stack — rooted by the stack half of the push, which
 //!     this analysis does not change;
@@ -243,7 +243,9 @@ fn transfer(input: Input, pc: usize, row: []usize) void {
 fn uses(input: Input, pc: usize, row: []usize) void {
     const code = input.function.scope.instructions;
     switch (code[pc].op) {
-        .load_local, .move_local => |slot| include(row, @backingInt(slot)),
+        // Taking an aggregate's address lends its existing payload to the
+        // callee. It must survive allocations before that address is formed.
+        .load_local, .move_local, .ref_local => |slot| include(row, @backingInt(slot)),
         .drop_local => |slot| if (pinnedLocal(input, @backingInt(slot))) include(row, @backingInt(slot)),
         .buffer_operation => |operation| {
             include(row, @backingInt(operation.owner));
