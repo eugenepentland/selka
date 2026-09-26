@@ -2,7 +2,7 @@
 const std = @import("std");
 const testing = std.testing;
 const compiler_path = @import("test_options").compiler_path;
-// spec: VALUE-SEMANTICS-10
+// spec: VALUE-SEMANTICS-11
 test "a scalar-only mut record parameter writes the caller in both modes" {
     const program =
         \\record Counter:
@@ -79,6 +79,55 @@ test "checker warns at a local collection alias that is written and observed" {
     try std.testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
     try std.testing.expect(std.mem.indexOf(u8, outcome.stderr, "W_ALIAS_DEPENDENT") != null);
     try std.testing.expect(std.mem.indexOf(u8, outcome.stderr, "local alias") != null);
+}
+// spec: ALIAS-MIGRATION-2
+test "checker traces a narrowed match payload back to its collection binding" {
+    const outcome = try runFixture("check",
+        \\def main() -> int:
+        \\    shared = [1]
+        \\    items: list[Option[list[int]]] = [Some(shared), Some(shared)]
+        \\    first = items[0]
+        \\    last = items[1]
+        \\    if first is not None and last is not None:
+        \\        first.append(2)
+        \\        return len(last)
+        \\    return 0
+    , &.{"--diagnostics=json"});
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+    try testing.expect(std.mem.indexOf(u8, outcome.stderr, "W_ALIAS_DEPENDENT") != null);
+}
+// spec: ALIAS-MIGRATION-3
+test "checker distinguishes a nested alias store from a fresh buffer conversion" {
+    const nested = try runFixture("check",
+        \\record Holder:
+        \\    items: list[list[int]]
+        \\
+        \\def main() -> int:
+        \\    shared = [1]
+        \\    holder = Holder(items=[shared, shared])
+        \\    first = holder.items[0]
+        \\    last = holder.items[1]
+        \\    first.append(2)
+        \\    return len(last)
+    , &.{"--diagnostics=json"});
+    defer testing.allocator.free(nested.stdout);
+    defer testing.allocator.free(nested.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, nested.term);
+    try testing.expect(std.mem.indexOf(u8, nested.stderr, "\"code\":\"W_ALIAS_DEPENDENT\"") != null);
+    try testing.expect(std.mem.indexOf(u8, nested.stderr, "\"line\":6") != null);
+    const fresh = try runFixture("check",
+        \\def main() -> int:
+        \\    empty: list[int] = []
+        \\    piece = byte_buffer(empty)
+        \\    _ = piece.append_byte(1)
+        \\    return len(empty)
+    , &.{"--diagnostics=json"});
+    defer testing.allocator.free(fresh.stdout);
+    defer testing.allocator.free(fresh.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, fresh.term);
+    try testing.expect(std.mem.indexOf(u8, fresh.stderr, "W_ALIAS_DEPENDENT") == null);
 }
 const arena_example_path = @import("test_options").arena_example_path;
 /// `run` and `run-project` build natively; the fixtures name this build's tools
