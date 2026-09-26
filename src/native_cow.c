@@ -3,6 +3,12 @@
 #include <stdlib.h>
 #include <string.h>
 myl_native_cow_statistics myl_native_cow_counters;
+static _Thread_local int cow_depth_exceeded;
+int myl_native_cow_take_depth_failure(void) {
+    int result = cow_depth_exceeded;
+    cow_depth_exceeded = 0;
+    return result;
+}
 static const myl_native_type pointer_type = {
     .size = sizeof(void *), .alignment = _Alignof(void *), .kind = MYL_NATIVE_POINTER
 };
@@ -41,31 +47,38 @@ int myl_native_cow_payload(const void *payload) {
  * byte string or dictionary reference, or an inline aggregate with one inside.
  * A text or a `class` reference cannot. */
 /* A descriptor may nest inline aggregates much deeper than 64 levels. A
- * pathological descriptor over this explicit stack bound fails a transfer
- * rather than silently leaving a mutable descendant unmarked. */
+ * pathological acyclic descriptor over this explicit stack bound fails a
+ * transfer rather than silently leaving a mutable descendant unmarked. A
+ * recursive box revisits a descriptor on the current path; that edge adds
+ * nothing, though sibling fields may still contain mutable collections. */
 #define MYL_NATIVE_COW_TYPE_DEPTH_MAX 1024
-static int holds_payload(const myl_native_type *type, unsigned depth) {
-    if (depth > MYL_NATIVE_COW_TYPE_DEPTH_MAX) return -1;
+static int holds_payload_path(const myl_native_type *type, const myl_native_type **seen, unsigned depth) {
     if (!type || type->trace_mode == MYL_NATIVE_TRACE_NONE) return 0;
+    if (depth >= MYL_NATIVE_COW_TYPE_DEPTH_MAX) { cow_depth_exceeded = 1; return -1; }
+    for (unsigned i = 0; i < depth; ++i) if (seen[i] == type) return 0;
+    seen[depth++] = type;
     switch (type->kind) {
     case MYL_NATIVE_POINTER:
         /* A recursive box is immutable but its body can contain collections.
-         * The runtime walk terminates at the value's null leaf, whereas a
-         * descriptor-only walk would follow the recursive type forever. */
-        if (type->collection_kind == 5) return 1;
+         * A cycle with no collection is safe to share without a value walk. */
+        if (type->collection_kind == 5) return type->element ? holds_payload_path(type->element, seen, depth) : 0;
         return type->collection_kind == 1 || type->collection_kind == 3 || type->collection_kind == 4;
     case MYL_NATIVE_ARRAY:
-        return type->count && type->field_count ? holds_payload(type->fields[0].type, depth + 1) : 0;
+        return type->count && type->field_count ? holds_payload_path(type->fields[0].type, seen, depth) : 0;
     case MYL_NATIVE_RECORD:
     case MYL_NATIVE_VARIANT:
         for (size_t i = 0; i < type->field_count; ++i) {
-            int held = holds_payload(type->fields[i].type, depth + 1);
+            int held = holds_payload_path(type->fields[i].type, seen, depth);
             if (held) return held;
         }
         return 0;
     default:
         return 0;
     }
+}
+static int holds_payload(const myl_native_type *type) {
+    const myl_native_type *seen[MYL_NATIVE_COW_TYPE_DEPTH_MAX];
+    return holds_payload_path(type, seen, 0);
 }
 /* Set SHARED on one payload a transfer or a copy now leaves with a second
  * holder, unless it is pinned, which the caller must copy instead. Answers 1
@@ -84,11 +97,11 @@ static int mark(void *payload) {
  * value holds directly is marked, and a pinned one is replaced in place by
  * its copy when `heap` is given. Returns 0 when that copy is refused. */
 static int share_at(myl_native_heap *heap, const myl_native_type *type, unsigned char *address, unsigned depth, int replace) {
-    if (depth > MYL_NATIVE_COW_TYPE_DEPTH_MAX) return 0;
+    if (depth > MYL_NATIVE_COW_TYPE_DEPTH_MAX) { cow_depth_exceeded = 1; return 0; }
     if (type->trace_mode == MYL_NATIVE_TRACE_NONE) return 1;
     switch (type->kind) {
     case MYL_NATIVE_POINTER: {
-        int held = holds_payload(type, depth);
+        int held = holds_payload(type);
         if (held < 0) return 0;
         if (!held) return 1;
         void *payload;
@@ -144,7 +157,7 @@ void *myl_native_cow_share(myl_native_heap *heap, void *payload) {
 }
 int myl_native_cow_share_value(myl_native_heap *heap, const myl_native_type *type, void *address) {
     if (!type || !address) return 1;
-    int held = holds_payload(type, 0);
+    int held = holds_payload(type);
     if (held < 0) return 0;
     if (!held) return 1;
     return share_at(heap, type, address, 0, 1) == 1;
@@ -156,7 +169,7 @@ int myl_native_cow_share_value(myl_native_heap *heap, const myl_native_type *typ
  * Returns 0 when such a copy is refused. */
 static int mark_elements(myl_native_heap *heap, myl_native_list *list) {
     if (!list->storage) return 1;
-    int held = holds_payload(list->element, 0);
+    int held = holds_payload(list->element);
     if (held < 0) return 0;
     if (!held) return 1;
     myl_native_root root;
@@ -169,7 +182,7 @@ static int mark_elements(myl_native_heap *heap, myl_native_list *list) {
 }
 /* Mark every key and value the entries of a fresh copy `dict` hold. */
 static int mark_entries(myl_native_heap *heap, myl_native_dictionary *dict) {
-    int keys = holds_payload(dict->key, 0), values = holds_payload(dict->value, 0);
+    int keys = holds_payload(dict->key), values = holds_payload(dict->value);
     if (keys < 0 || values < 0) return 0;
     if ((!keys && !values) || !dict->entries->storage) return 1;
     myl_native_root root;
@@ -208,13 +221,13 @@ int myl_native_cow_copy_source_children(myl_native_heap *heap, const myl_native_
     int scan = 1;
     if (type->collection_kind == 1 || type->collection_kind == 4) {
         myl_native_list *list = payload;
-        int held = holds_payload(list->element, 0);
+        int held = holds_payload(list->element);
         if (held < 0) return 0;
         if (held && list->storage) for (size_t i = 0; i < list->length && scan == 1; ++i)
             scan = share_at(heap, list->element, (unsigned char *)list->storage + i * list->element->size, 0, 0);
     } else {
         myl_native_dictionary *dict = payload;
-        int keys = holds_payload(dict->key, 0), values = holds_payload(dict->value, 0);
+        int keys = holds_payload(dict->key), values = holds_payload(dict->value);
         if (keys < 0 || values < 0) return 0;
         if (dict->entries->storage) for (size_t i = 0; i < dict->entries->length && scan == 1; ++i) {
             unsigned char *entry = (unsigned char *)dict->entries->storage + i * dict->entry_type.size;
@@ -281,7 +294,7 @@ void *myl_native_cow_rebox(myl_native_heap *heap, const myl_native_type *type,
 }
 int myl_native_cow_elements(myl_native_heap *heap, myl_native_list *list) {
     if (!list || !list->storage || list->element->kind != MYL_NATIVE_POINTER) return 1;
-    int held = holds_payload(list->element, 0);
+    int held = holds_payload(list->element);
     if (held < 0) return 0;
     if (!held) return 1;
     myl_native_root root;

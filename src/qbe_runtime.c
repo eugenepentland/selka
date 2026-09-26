@@ -2,6 +2,7 @@
 /* Separately compiled scalar runtime. Keep it independent of declaration order. */
 #include "qbe_runtime.h"
 #include "native_collections.h"
+#include "native_cow.h"
 #include "native_text.h"
 #include <inttypes.h>
 #include <setjmp.h>
@@ -476,6 +477,7 @@ void myl_qbe_fail_list_value(void *context) { fail(context, "R_LIST_VALUE"); }
 /* A refused managed allocation names the budget when the heap declined it and
    the host only when the process itself could not produce the bytes. */
 void myl_qbe_fail_allocation(void *context) {
+    if (myl_native_cow_take_depth_failure()) { fail(context, "R_COW_DEPTH"); return; }
     fail(context, ((Context *)context)->heap.exhausted ? memory_budget_code : "OutOfMemory");
 }
 void myl_qbe_fail_iteration(void *context) { fail(context, "R_LIST_ITERATION_MUTATION"); }

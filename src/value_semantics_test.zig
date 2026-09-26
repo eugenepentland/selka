@@ -10,6 +10,30 @@ const fragments = @import("qbe_fragments.zig");
 
 const entry = "\n\ndef main() -> int:\n    return 0\n";
 
+// A type cycle with only scalar fields requires no COW transfer, while a
+// collection on another edge still does.
+// spec-case: VALUE-SEMANTICS-2
+test "recursive type reachability finds collections without treating a cycle as one" {
+    const sources = [_][]const u8{
+        "record Node:\n    value: int\n    next: Option[Node]\n\n" ++ entry,
+        "record Node:\n    items: list[int]\n    next: Option[Node]\n\n" ++ entry,
+    };
+    for (sources, 0..) |source, index| {
+        var compilation = try compiler.Compilation.init(t.allocator, "node.my", source);
+        defer compilation.deinit();
+        try compilation.check();
+        const records = compilation.program.?.records;
+        var found = false;
+        for (records) |record| {
+            if (!std.mem.eql(u8, record.name, "Node")) continue;
+            found = true;
+            try t.expectEqual(index == 1, values.needsCopy(records, record.id));
+            try t.expect(values.copiesAll(records, record.id));
+        }
+        try t.expect(found);
+    }
+}
+
 /// The switch as a test left it, restored when the test ends.
 const Saved = struct {
     previous: bool,

@@ -52,17 +52,21 @@ pub fn environmentEnables(value: ?[]const u8) bool {
 /// holding one. A `class` or Cell is a shared reference, `str` and `bytes` are
 /// immutable, and a live dictionary view lends its mapping.
 pub fn needsCopy(records: []const typed.Record, ty: typed.Type) bool {
-    return needsCopyDepth(records, ty, 0);
+    var path: [1024]usize = undefined;
+    return needsCopyDepth(records, ty, &path, 0);
 }
 
-fn needsCopyDepth(records: []const typed.Record, ty: typed.Type, depth: usize) bool {
+fn needsCopyDepth(records: []const typed.Record, ty: typed.Type, path: *[1024]usize, depth: usize) bool {
     if (!ty.isAggregate() or ty.recordIndex() >= records.len) return false;
-    if (depth > 48) return true;
-    const record = records[ty.recordIndex()];
+    const index = ty.recordIndex();
+    for (path[0..depth]) |prior| if (prior == index) return false;
+    if (depth == path.len) return true; // Conservative at the explicit type-depth limit.
+    path[depth] = index;
+    const record = records[index];
     if (record.managed) {
         // A physical recursive box is immutable, but its one body field can
         // still reach a mutable collection that a transfer must share.
-        if (record.collection.box) return record.fields.len == 1 and needsCopyDepth(records, record.fields[0].ty, depth + 1);
+        if (record.collection.box) return record.fields.len == 1 and needsCopyDepth(records, record.fields[0].ty, path, depth + 1);
         if (!record.isCollection()) return false;
         return switch (record.collection.kind) {
             .list, .dictionary => true,
@@ -72,13 +76,13 @@ fn needsCopyDepth(records: []const typed.Record, ty: typed.Type, depth: usize) b
     }
     if (record.contract.callback != null or record.shape.resource != null) return false;
     if (liveView(record)) return false;
-    if (record.shape.domain) |backing| return needsCopyDepth(records, backing, depth + 1);
-    if (record.shape.array) |array| return needsCopyDepth(records, array.element, depth + 1);
+    if (record.shape.domain) |backing| return needsCopyDepth(records, backing, path, depth + 1);
+    if (record.shape.array) |array| return needsCopyDepth(records, array.element, path, depth + 1);
     if (record.shape.variants) |variants| {
-        for (variants.cases) |case| if (case.payload) |payload| if (needsCopyDepth(records, payload, depth + 1)) return true;
+        for (variants.cases) |case| if (case.payload) |payload| if (needsCopyDepth(records, payload, path, depth + 1)) return true;
         return false;
     }
-    for (record.fields) |field| if (needsCopyDepth(records, field.ty, depth + 1)) return true;
+    for (record.fields) |field| if (needsCopyDepth(records, field.ty, path, depth + 1)) return true;
     return false;
 }
 
@@ -99,29 +103,33 @@ pub fn childrenNeedCopy(records: []const typed.Record, ty: typed.Type) bool {
 /// every writable storage it reaches is a collection the copy duplicates, and
 /// no `class` object or Cell, which stay shared references.
 pub fn copiesAll(records: []const typed.Record, ty: typed.Type) bool {
-    return copiesAllDepth(records, ty, 0);
+    var path: [1024]usize = undefined;
+    return copiesAllDepth(records, ty, &path, 0);
 }
 
-fn copiesAllDepth(records: []const typed.Record, ty: typed.Type, depth: usize) bool {
+fn copiesAllDepth(records: []const typed.Record, ty: typed.Type, path: *[1024]usize, depth: usize) bool {
     if (!ty.isAggregate() or ty.recordIndex() >= records.len) return true;
-    if (depth > 48) return false;
-    const record = records[ty.recordIndex()];
+    const index = ty.recordIndex();
+    for (path[0..depth]) |prior| if (prior == index) return true;
+    if (depth == path.len) return false; // Conservative at the explicit type-depth limit.
+    path[depth] = index;
+    const record = records[index];
     if (record.managed) {
-        if (record.collection.box) return record.fields.len == 1 and copiesAllDepth(records, record.fields[0].ty, depth + 1);
+        if (record.collection.box) return record.fields.len == 1 and copiesAllDepth(records, record.fields[0].ty, path, depth + 1);
         if (!record.isCollection()) return false;
         if (record.collection.kind == .string or record.collection.kind == .bytes) return true;
-        if (record.collection.key) |key| if (!copiesAllDepth(records, key, depth + 1)) return false;
-        return copiesAllDepth(records, record.shape.buffer orelse return true, depth + 1);
+        if (record.collection.key) |key| if (!copiesAllDepth(records, key, path, depth + 1)) return false;
+        return copiesAllDepth(records, record.shape.buffer orelse return true, path, depth + 1);
     }
     if (record.contract.callback != null) return true;
     if (record.shape.resource != null) return false;
-    if (record.shape.domain) |backing| return copiesAllDepth(records, backing, depth + 1);
-    if (record.shape.array) |array| return copiesAllDepth(records, array.element, depth + 1);
+    if (record.shape.domain) |backing| return copiesAllDepth(records, backing, path, depth + 1);
+    if (record.shape.array) |array| return copiesAllDepth(records, array.element, path, depth + 1);
     if (record.shape.variants) |variants| {
-        for (variants.cases) |case| if (case.payload) |payload| if (!copiesAllDepth(records, payload, depth + 1)) return false;
+        for (variants.cases) |case| if (case.payload) |payload| if (!copiesAllDepth(records, payload, path, depth + 1)) return false;
         return true;
     }
-    for (record.fields) |field| if (!copiesAllDepth(records, field.ty, depth + 1)) return false;
+    for (record.fields) |field| if (!copiesAllDepth(records, field.ty, path, depth + 1)) return false;
     return true;
 }
 

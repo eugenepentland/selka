@@ -42,6 +42,9 @@ int myl_native_cow_share_children(myl_native_heap *heap, const myl_native_type *
 /* A bulk operation reads a source collection that must stay untouched when a
  * pinned child is replaced. Give the operation a fresh outer header first. */
 int myl_native_cow_copy_source_children(myl_native_heap *heap, const myl_native_type *type, void *address);
+/* Consume the explicit descriptor/value depth-limit failure, if a COW
+ * operation refused a transfer or shallow copy for that reason. */
+int myl_native_cow_take_depth_failure(void);
 /* QBE's one real-copy hook: copy into rooted output and share either the
  * value's direct payloads or, when `children` is set, a fresh outer
  * collection's directly held payloads. Returns zero after recording a trap
