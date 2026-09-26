@@ -128,7 +128,10 @@ boundary; a shared ancestor must never retain a pointer into a task-local heap.
 Share eligibility is established transitively by the transport plan, not by
 checking the root kind alone. Shareable leaves beneath a copied dictionary may
 still use the shared domain. Unique finalizers and provider state are never
-embedded in shared ordinary objects.
+embedded in shared ordinary objects. Read adapters must also prove physical
+immutability: lazy hashes, iteration caches or backing-pointer rewrites are
+writes even when the source operation looks read-only. Canonical backing stays
+alive through explicit edges; an interior byte pointer is not a transport root.
 
 This partition deliberately avoids applying `myl_rc_unique_held` concurrently:
 today it can reuse O=0/H=1 or O=1/H>0 dictionary storage. Making its count words
@@ -213,6 +216,9 @@ counts do not make one `myl_native_heap` concurrently callable. Tasks receive
 separate `MylQbeContext` instances; no process-global active heap is introduced.
 Immutable compiled code/frame maps may be shared, but task stacks, traps, resource
 registries and provider execution state cannot be borrowed from the parent.
+A helper's current-task heap argument is not necessarily an allocation's owner:
+shared-mode dispatch must route count updates and retirement to the shared
+domain, never to the receiving task's allocator or weak-cache epoch.
 
 Shared descriptors must be registered and stable before publication. Each
 executing drain gets exclusive, pre-reserved traversal storage; registration
@@ -275,7 +281,7 @@ when its group cancels and joins. Cancellation is cooperative, not a cross-threa
 
 | Event | Required behavior |
 | --- | --- |
-| Successful child | Publish an owned result packet, finish local cleanup, then mark joined/completed. The parent cannot observe a result whose producer still owns an untracked temporary. |
+| Successful child | Stage an owned result packet, finish local cleanup, then atomically publish completion. If cleanup traps, discard the staged success and publish the trap. The parent cannot observe a result whose producer still owns an untracked temporary. |
 | Domain `Err` | Publish the owned error payload; primitive siblings continue until their parent chooses propagation/cancellation. |
 | Cancellation/deadline | Stop admission, wake channel/join/I/O waits, reach a safe checkpoint, cancel children, join, and unwind. No successful result is fabricated. |
 | Guest trap | Preserve its code and source frames; cancel and join the execution's remaining tasks before reporting it. Bounded secondary cleanup failures do not overwrite the primary trap. |
@@ -333,7 +339,10 @@ Capability adapters and runtime registries must also avoid hidden strong cycles.
 
 1. After WP-4 is accepted, freeze this semantic contract and diagnostics. Add a
    versioned task/transport artifact identity, structural boundary admission,
-   and a transitive suspension/publication effect. The absence of allocation
+   and a transitive suspension/publication effect. Concurrency requires an
+   accepted RC artifact; tracing/legacy compatibility modes stay sequential
+   until separately specified. Reject mixed ownership ABIs without a fallback.
+   The absence of allocation
    must not imply absence of suspension. Direct/indirect calls and host adapters
    carry the new summary; cache keys include it and the boundary ABI.
 2. Implement the packet protocol and shared-count reference model independently
@@ -413,3 +422,12 @@ Outstanding assumptions are explicit:
 Only documentation is changed by this slice. Proposed APIs above are prose,
 not executable examples. Validation checks local links, document coverage and
 Guardian; it makes no runtime, concurrency-correctness or performance claim.
+
+Validation on the real two-parent integration merge `7278f0ec` (including
+integration `abe03b15`): the Debug compiler-only install completed 12/12 build
+steps; `mylang doc-coverage .` reported zero failures, 14 standard modules and
+176 documented exports; all 17 local document links/anchors resolve; the
+whole-tree Guardian run passed all 88 checks. Compiler SHA-256:
+`5a6153eb8c4fac5cbe7bd0700b169c6a7e187fc7958cdafbffb8c87db55f7d69`.
+No runnable examples were added, so no new guest doctest is claimed. The combined
+runtime gate and WP-4 acceptance remain the integration owner's separate work.
