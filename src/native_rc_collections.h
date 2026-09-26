@@ -15,6 +15,9 @@ int myl_rc_list_remove(myl_native_heap *, myl_native_list *, const void *);
  * descriptor is never consulted when the bookkeeping header is destroyed. */
 myl_native_list *myl_rc_list_storage_new(myl_native_heap *, const myl_native_type *, size_t, unsigned);
 int myl_rc_list_storage_reserve(myl_native_heap *, myl_native_list *, size_t);
+/* Abort a pointer list produced by splitting one borrowed input. Arena parts
+ * other than that input are fresh products and must undo their own edges. */
+void myl_rc_list_abort_parts(myl_native_heap *, myl_native_list *, const void *borrowed);
 typedef struct {
     myl_native_list *values, *source, *keys;
     uint64_t shape, offsets, reverse;

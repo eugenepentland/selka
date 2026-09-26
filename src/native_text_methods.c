@@ -1,7 +1,7 @@
 /* `memmem` is a GNU extension, so the feature macro has to precede <string.h>. */
 #define _GNU_SOURCE
 #include "native_text_methods.h"
-#include "native_rc_values.h"
+#include "native_rc_collections.h"
 #include <string.h>
 /* Splits on maximal runs of ASCII whitespace, dropping every empty piece. It is
    declared here rather than in the companion header so this file stays the only
@@ -159,7 +159,10 @@ static int append_line(myl_native_heap *heap, myl_native_list *result, myl_nativ
     myl_native_root_push(heap,&b,&piece,&pointer_type);
     int appended=myl_native_list_append(heap,result,&piece);
     myl_native_root_pop(heap,&b); myl_native_root_pop(heap,&a);
-    if (myl_rc_enabled(heap)) myl_rc_owner_release(heap,piece);
+    if (myl_rc_enabled(heap)) {
+        if (!appended && piece!=input) myl_rc_native_abort(heap,piece);
+        else myl_rc_owner_release(heap,piece);
+    }
     return appended;
 }
 myl_native_list *myl_native_text_lines(myl_native_heap *heap, myl_native_text *input) {
@@ -173,13 +176,13 @@ myl_native_list *myl_native_text_lines(myl_native_heap *heap, myl_native_text *i
         while (cursor<input->bytes) {
             unsigned char octet=bytes[cursor];
             if (octet!='\n' && octet!='\r') { cursor++; continue; }
-            if (!append_line(heap,result,input,start,cursor)) { if (myl_rc_enabled(heap)) myl_rc_native_abort(heap,result); result=NULL; break; }
+            if (!append_line(heap,result,input,start,cursor)) { if (myl_rc_enabled(heap)) myl_rc_list_abort_parts(heap,result,input); result=NULL; break; }
             cursor++;
             if (octet=='\r' && cursor<input->bytes && bytes[cursor]=='\n') cursor++;
             start=cursor;
         }
         if (result && start<input->bytes && !append_line(heap,result,input,start,input->bytes)) {
-            if (myl_rc_enabled(heap)) myl_rc_native_abort(heap,result);
+            if (myl_rc_enabled(heap)) myl_rc_list_abort_parts(heap,result,input);
             result=NULL;
         }
     }
@@ -243,7 +246,7 @@ myl_native_list *myl_native_text_split_whitespace(myl_native_heap *heap, myl_nat
             while (cursor<input->bytes && !space_octet(bytes[cursor])) cursor++;
             if (start==cursor) break;
             if (!append_line(heap,result,input,start,cursor)) {
-                if (myl_rc_enabled(heap)) myl_rc_native_abort(heap,result);
+                if (myl_rc_enabled(heap)) myl_rc_list_abort_parts(heap,result,input);
                 result=NULL;
                 break;
             }
