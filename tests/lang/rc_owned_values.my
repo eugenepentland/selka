@@ -1,0 +1,78 @@
+# Physical RC ownership shares these value semantics with the default collector.
+
+def selected(items: list[int]) -> list[int]:
+    return items
+
+def mixed(items: list[int], fresh: bool) -> list[int]:
+    if fresh:
+        return [8, 9]
+    return items
+
+public def test_owned_return_survives_original_replacement() -> bool:
+    values = [1, 2]
+    other = selected(values)
+    values = [3]
+    return len(other) == 2 and other[0] == 1 and values[0] == 3
+
+public def test_mixed_fresh_and_parameter_returns_own_their_results() -> bool:
+    original = [4, 5]
+    fresh = mixed(original, True)
+    borrowed = mixed(original, False)
+    original = [6]
+    return fresh[0] == 8 and borrowed[0] == 4 and original[0] == 6
+
+public def test_repeated_local_replacement_preserves_retained_value() -> bool:
+    values = [1, 2]
+    retained = values
+    index = 0
+    while index < 1000:
+        values = [index]
+        index += 1
+    return len(retained) == 2 and retained[1] == 2 and values[0] == 999
+
+public def test_list_mutation_preserves_owned_snapshot() -> bool:
+    original = [1, 2]
+    changed = original
+    changed.append(3)
+    changed[0] = 9
+    return len(original) == 2 and original[0] == 1 and len(changed) == 3 and changed[0] == 9
+
+public def test_dictionary_mutation_preserves_owned_snapshot() -> bool:
+    original = {1: [1, 2]}
+    changed = original
+    changed[1] = [8]
+    changed[2] = [3]
+    return len(original) == 1 and len(original[1]) == 2 and changed[1][0] == 8
+
+public def test_loop_mutation_rechecks_new_snapshot_owners() -> bool:
+    values = [0]
+    retained = values
+    index = 0
+    while index < 10:
+        retained = values
+        values.append(index)
+        index += 1
+    return len(retained) == 10 and len(values) == 11
+
+public def test_nested_list_mutation_preserves_each_snapshot() -> bool:
+    original = [[1, 2], [3]]
+    child = original[0]
+    changed = original
+    changed[0].append(4)
+    return len(original[0]) == 2 and len(child) == 2 and len(changed[0]) == 3
+
+public def test_nested_dictionary_value_mutation_preserves_snapshot() -> bool:
+    original = {1: [1, 2]}
+    changed = original
+    changed[1].append(4)
+    return len(original[1]) == 2 and len(changed[1]) == 3
+
+def clear_pending_rows(rows: mut list[list[int]]) -> int:
+    rows.clear()
+    return 7
+
+
+public def test_clearing_parent_keeps_captured_receiver_alive() -> bool:
+    rows = [[1]]
+    rows[0].append(clear_pending_rows(mut rows))
+    return len(rows) == 0

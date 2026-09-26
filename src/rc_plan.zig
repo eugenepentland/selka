@@ -43,7 +43,8 @@ pub fn build(a: std.mem.Allocator, input: Input) Error!Plan {
         const at = find(storage.items, binding.storage) orelse next: {
             const shape = try input.physical.catalog.get(local.ty);
             const initial = try initialOwnership(input, index, shape);
-            const guard: ?model.GuardId = if (initial == .empty or initial == .owned) @fromBackingInt(@intCast(storage.items.len)) else null;
+            const frame_slot = initial != .plain and initial != .inout and binding.anchor == null;
+            const guard: ?model.GuardId = if (frame_slot) @fromBackingInt(@intCast(storage.items.len)) else null;
             try storage.append(a, .{ .id = binding.storage, .ty = local.ty, .shape = shape, .initial = initial, .guard = guard });
             if (guard) |bit| try cleanup.append(a, .{ .storage = binding.storage, .guard = bit });
             break :next storage.items.len - 1;

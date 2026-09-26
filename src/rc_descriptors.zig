@@ -10,7 +10,7 @@ pub const Error = native.Error;
 /// The generated C module registered before guest construction begins.
 pub const module_symbol = "myl_rc_generated_module";
 
-const Item = struct { ty: typed.Type, name: []const u8, body: bool = false };
+const Item = struct { ty: typed.Type, name: []const u8, body: bool = false, unique_body: bool = false };
 
 /// Stable shape symbol corresponding to a native semantic type identity.
 pub fn symbol(allocator: std.mem.Allocator, catalog: *const native.Catalog, ty: typed.Type) Error![]const u8 {
@@ -49,7 +49,9 @@ fn collect(a: std.mem.Allocator, catalog: *native.Catalog) Error![]const Item {
         if (!ty.isAggregate()) continue;
         const record = catalog.records[ty.recordIndex()];
         if (record.managed and record.shape.array == null and !record.shape.hasRuntimeIdentity()) {
-            try items.append(a, .{ .ty = ty, .name = try std.fmt.allocPrint(a, "{s}_body", .{name}), .body = true });
+            const body = try catalog.heapLayout(ty);
+            defer catalog.releaseLayout(body);
+            try items.append(a, .{ .ty = ty, .name = try std.fmt.allocPrint(a, "{s}_body", .{name}), .body = true, .unique_body = body.drop });
         }
     }
     const result = try items.toOwnedSlice(a);
@@ -99,7 +101,7 @@ fn module(writer: *std.Io.Writer, items: []const Item) Error!void {
     writer.writeAll("static const myl_rc_shape *const myl_rc_generated_shapes[] = {\n") catch return error.OutOfMemory;
     for (items) |item| writer.print(" &{s}_rc,\n", .{item.name}) catch return error.OutOfMemory;
     writer.writeAll("};\nstatic const myl_rc_descriptor myl_rc_generated_descriptors[] = {\n") catch return error.OutOfMemory;
-    for (items) |item| writer.print(" {{.type=&{s},.shape=&{s}_rc,.edges=NULL,.finalize=NULL}},\n", .{ item.name, item.name }) catch return error.OutOfMemory;
+    for (items) |item| writer.print(" {{.type=&{s},.shape=&{s}_rc,.edges=NULL,.finalize={s}}},\n", .{ item.name, item.name, if (item.unique_body) "myl_rc_finalize_unique" else "NULL" }) catch return error.OutOfMemory;
     writer.print("}};\nconst myl_rc_module {s} = {{.abi=MYL_RC_ABI_VERSION," ++
         ".shapes=myl_rc_generated_shapes,.shape_count={d}," ++
         ".descriptors=myl_rc_generated_descriptors,.descriptor_count={d}}};\n", .{ module_symbol, items.len, items.len }) catch return error.OutOfMemory;

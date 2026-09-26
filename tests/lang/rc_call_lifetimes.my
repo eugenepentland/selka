@@ -1,0 +1,32 @@
+# Returned values retain their lifetime across direct and indirect call frames.
+
+def selected(items: list[int]) -> list[int]:
+    return items
+
+def apply(f: def(list[int]) -> list[int], items: list[int]) -> list[int]:
+    return f(items)
+
+def descend(items: list[int], depth: int) -> list[int]:
+    if depth == 0:
+        return items
+    previous = descend(items, depth - 1)
+    assert len(previous) == len(items)
+    return previous
+
+public def test_indirect_owned_return_survives_original_replacement() -> bool:
+    source = [11, 22]
+    result = apply(selected, source)
+    source = [44]
+    return result[1] == 22 and source[0] == 44
+
+public def test_non_tail_recursive_owned_return_survives_call_frames() -> bool:
+    source = [11, 22, 33]
+    result = descend(source, 32)
+    source = [44]
+    return result[1] == 22 and source[0] == 44
+
+public def test_short_circuit_temporary_returns_keep_independent_owners() -> bool:
+    items = [1, 2, 3]
+    first = len(selected(items)) == 3 and len(selected([4])) == 1
+    second = len(selected(items)) == 0 or len(selected([5, 6])) == 2
+    return first and second

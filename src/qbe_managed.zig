@@ -2,6 +2,9 @@
 const std = @import("std");
 const bytecode = @import("bytecode.zig");
 const typed = @import("typed.zig");
+const rc_mode = @import("runtime_mode.zig");
+const rc_collections = @import("qbe_rc_collections.zig");
+const rc_values = @import("qbe_rc_values.zig");
 /// Failures producing native managed collection instructions.
 pub const Error = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
 const BufferOperation = @FieldType(@FieldType(bytecode.Instruction, "op"), "buffer_operation");
@@ -17,8 +20,6 @@ const scaled_address = " %v{d} =l mul %v{d}, {d}\n %v{d} =l add %v{d}, %v{d}\n";
 /// Unsigned `index < length` test: the one comparison every bounds-checked
 /// element access — read, write and slice endpoint — is admitted by.
 const unsigned_below = " %v{d} =l cultl %v{d}, %v{d}\n";
-/// Append one element through the runtime's grow-capable helper.
-const list_append_call = " %v{d} =w call $myl_native_list_append(l %heap, l %v{d}, l %v{d})\n";
 const format = @import("qbe_format.zig");
 const allocation_failure = format.allocation_failure;
 const list_value_failure = "myl_qbe_fail_list_value";
@@ -163,12 +164,15 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
             if (self.isScalar(element)) try self.print(copy_scratch, .{ value_pointer, position }) else try self.print(load_scratch, .{ value_pointer, position });
             try arena_lower.Lower(E).barrier(self, list, element, value_pointer);
             if (op.kind == .append) {
-                if (self.loopAppend()) |presized| {
+                if (rc_mode.enabled()) {
+                    try rc_collections.append(E, self, output, list, value_pointer);
+                    try self.require(output, allocation_failure);
+                } else if (self.loopAppend()) |presized| {
                     try presizedAppend(E, self, .{ .list = list, .element = element, .value = value_pointer, .storage = presized.storage, .length = presized.state.length, .generation = presized.state.generation });
                 } else if (self.needsRootProtocol()) {
                     try inlineAppend(E, self, list, element, value_pointer, output, stack);
                 } else {
-                    try self.print(list_append_call, .{ output, list, value_pointer });
+                    try rc_collections.append(E, self, output, list, value_pointer);
                     try self.require(output, allocation_failure);
                 }
             } else {
@@ -191,27 +195,19 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
             if (self.isScalar(element)) try self.print(copy_scratch, .{ value_pointer, position }) else try self.print(load_scratch, .{ value_pointer, position });
             try arena_lower.Lower(E).barrier(self, list, element, value_pointer);
             const index_value = try self.load("s", base);
-            try self.print(" %v{d} =w call $myl_native_list_insert(l %heap, l %v{d}, l %v{d}, l %v{d})\n", .{ output, list, index_value, value_pointer });
+            const symbol = if (rc_mode.enabled()) "myl_rc_list_insert" else "myl_native_list_insert";
+            try self.print(" %v{d} =w call ${s}(l %heap, l %v{d}, l %v{d}, l %v{d})\n", .{ output, symbol, list, index_value, value_pointer });
             try self.require(output, allocation_failure);
             try self.print(store_unit, .{base});
         },
-        .pop, .pop_at => {
-            const pointer = try self.aggregatePointer();
-            const length = try receiverLength(E, self, list);
-            if (op.kind == .pop_at) {
-                const index_value = try self.load("s", base);
-                try self.print(" %v{d} =w call $myl_native_list_pop_at(l %v{d}, l %v{d}, l %agg{d})\n", .{ output, list, index_value, self.pc });
-                try requireIndexBounds(E, self, output, index_value, length, "myl_qbe_fail_pop_at_bounds");
-            } else {
-                try self.print(" %v{d} =w call $myl_native_list_pop(l %v{d}, l %agg{d})\n", .{ output, list, self.pc });
-                try requirePopBounds(E, self, output, length);
-            }
-            try self.store(base, try self.readValue(pointer, op.output));
-        },
+        .pop, .pop_at => try emitListPop(E, self, op, stack, list, output),
         .remove => {
             const element = schema.shape.buffer.?;
             const needle = try operandPointer(E, self, element, base);
-            try self.print(" %v{d} =w call $myl_native_list_remove(l %v{d}, l %v{d})\n", .{ output, list, needle });
+            if (rc_mode.enabled()) {
+                try self.print(" %v{d} =w call $myl_rc_list_remove(l %heap, l %v{d}, l %v{d})\n", .{ output, list, needle });
+                try equalResult(E, self, output);
+            } else try self.print(" %v{d} =w call $myl_native_list_remove(l %v{d}, l %v{d})\n", .{ output, list, needle });
             const found = self.temp();
             try self.print(" %v{d} =w ceqw %v{d}, 1\n", .{ found, output });
             try self.require(found, list_value_failure);
@@ -244,7 +240,11 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
             const reverse = try self.load("s", base + 2);
             const key_list = stack[base + 1];
             const key = try keyShape(E, self, self.program.records[key_list.recordIndex()].shape.buffer.?);
-            try self.print(" %v{d} =w call $myl_native_list_sort_keyed(l %v{d}, l %v{d}, l %v{d}, l {d}, l {d}, l %v{d})\n", .{ output, list, source, keys, key.shape, key.offsets, reverse });
+            if (rc_mode.enabled()) {
+                try rc_collections.keyedSort(E, self, output, .{ .values = list, .source = source, .keys = keys, .shape = key.shape, .offsets = key.offsets, .reverse = reverse });
+            } else {
+                try self.print(" %v{d} =w call $myl_native_list_sort_keyed(l %v{d}, l %v{d}, l %v{d}, l {d}, l {d}, l %v{d})\n", .{ output, list, source, keys, key.shape, key.offsets, reverse });
+            }
             try self.require(output, allocation_failure);
             try self.print(store_unit, .{base});
         },
@@ -254,12 +254,42 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
             try checkedPointer(E, self, result, base);
         },
         .clear => {
-            try self.print(" %v{d} =w call $myl_native_list_clear(l %v{d})\n", .{ output, list });
+            if (rc_mode.enabled()) {
+                try self.print(" %v{d} =w call $myl_rc_list_clear(l %heap, l %v{d})\n", .{ output, list });
+            } else {
+                try self.print(" %v{d} =w call $myl_native_list_clear(l %v{d})\n", .{ output, list });
+            }
             try self.print(store_unit, .{base});
         },
         .slice_step => try steppedSlice(E, self, base, list),
         else => return self.reject(self.pc),
     }
+}
+
+/// Publish a removed list element before changing its operand ownership.
+fn emitListPop(comptime E: type, self: *E, op: BufferOperation, stack: []const typed.Type, list: usize, output: usize) Error!void {
+    const base = stack.len - op.kind.arity();
+    const pointer = try self.aggregatePointer();
+    const length = try receiverLength(E, self, list);
+    if (op.kind == .pop_at) {
+        const index_value = try self.load("s", base);
+        if (rc_mode.enabled()) {
+            try self.print(" %v{d} =w call $myl_rc_list_pop_at(l %heap, l %v{d}, l %v{d}, l %agg{d})\n", .{ output, list, index_value, self.pc });
+        } else {
+            try self.print(" %v{d} =w call $myl_native_list_pop_at(l %v{d}, l %v{d}, l %agg{d})\n", .{ output, list, index_value, self.pc });
+        }
+        try rc_collections.removalStatus(E, self, output);
+        try requireIndexBounds(E, self, output, index_value, length, "myl_qbe_fail_pop_at_bounds");
+    } else {
+        if (rc_mode.enabled()) {
+            try self.print(" %v{d} =w call $myl_rc_list_pop(l %heap, l %v{d}, l %agg{d})\n", .{ output, list, self.pc });
+        } else {
+            try self.print(" %v{d} =w call $myl_native_list_pop(l %v{d}, l %agg{d})\n", .{ output, list, self.pc });
+        }
+        try rc_collections.removalStatus(E, self, output);
+        try requirePopBounds(E, self, output, length);
+    }
+    try self.store(base, try self.readValue(pointer, op.output));
 }
 
 /// A sort key's field description for `myl_native_list_sort_keyed`: four bits
@@ -367,6 +397,7 @@ fn emitConstruct(comptime E: type, self: *E, record: MakeRecord, stack: []const 
         const text_keys = key.isAggregate() and self.program.records[key.recordIndex()].collection.kind == .string;
         try self.print(" %v{d} =l call $myl_native_dictionary_new(l %heap, l ${s}, l ${s}, w {d})\n", .{ result, try self.descriptor(key), try self.descriptor(schema.shape.buffer.?), @intFromBool(text_keys) });
         try self.require(result, allocation_failure);
+        if (rc_mode.enabled()) try rc_values.holdRuntime(E, self, record.ty, result);
         var i: usize = 0;
         while (i < record.fields) : (i += 2) {
             const ok = self.temp();
@@ -386,10 +417,11 @@ fn emitConstruct(comptime E: type, self: *E, record: MakeRecord, stack: []const 
         }
         try self.print(" %v{d} =l call $myl_native_list_new(l %heap, l ${s}, l {d})\n", .{ result, try self.descriptor(element), record.fields });
         try self.require(result, allocation_failure);
+        if (rc_mode.enabled()) try rc_values.holdRuntime(E, self, record.ty, result);
         for (0..record.fields) |i| {
             const ok = self.temp();
             const value_pointer = try operandPointer(E, self, element, base + i);
-            try self.print(list_append_call, .{ ok, result, value_pointer });
+            try rc_collections.append(E, self, ok, result, value_pointer);
             try self.require(ok, allocation_failure);
         }
         // A text whose elements were not all constants is assembled scalar by
@@ -400,10 +432,15 @@ fn emitConstruct(comptime E: type, self: *E, record: MakeRecord, stack: []const 
             const converted = self.temp();
             try self.print(" %v{d} =l call $myl_native_text_from_points(l %heap, l %v{d})\n", .{ converted, result });
             try self.require(converted, allocation_failure);
+            if (rc_mode.enabled()) {
+                try self.print(" call $myl_rc_construction_abort(l %heap, l %v{d})\n", .{result});
+                try rc_values.commitRuntime(E, self);
+            }
             try self.store(base, converted);
             return;
         }
     }
+    if (rc_mode.enabled()) try rc_values.commitRuntime(E, self);
     try self.store(base, result);
 }
 /// Describe a constant `str`/`bytes` literal as one frozen data object, or null
@@ -550,7 +587,7 @@ fn inlineAppend(comptime E: type, self: *E, list: usize, element: typed.Type, va
     if (scalar) {
         try self.print(" %v{d} =w call $myl_native_list_append_scalar(l %heap, l %v{d}, l %v{d})\n", .{ output, list, held });
     } else {
-        try self.print(list_append_call, .{ output, list, value_pointer });
+        try rc_collections.append(E, self, output, list, value_pointer);
     }
     try self.require(output, allocation_failure);
     if (pushed) try self.restoreRoots();
@@ -816,6 +853,13 @@ fn inlineIndexWrite(comptime E: type, self: *E, write: IndexRead, failure: []con
         try self.print(unsigned_below, .{ valid, write.at, write.length });
         try requireIndexBounds(E, self, valid, write.raw_index, write.length, failure);
     }
+    if (rc_mode.enabled()) {
+        const value = try operandPointer(E, self, write.element, write.slot);
+        const result = self.temp();
+        try self.print(" %v{d} =w call $myl_rc_list_set(l %heap, l %v{d}, l %v{d}, l %v{d})\n", .{ result, write.input, write.at, value });
+        try self.require(result, allocation_failure);
+        return;
+    }
     const address = try elementAddress(E, self, write.input, write.at, write.element);
     try self.writeValue(address, try self.load("s", write.slot), write.element);
 }
@@ -939,6 +983,12 @@ fn foundOrDefault(comptime E: type, self: *E, found: usize, pointer: ?usize, bas
 /// a key already present, every write of a counting loop but the first, then
 /// publishes no root at all.
 fn guardedWrite(comptime E: type, self: *E, stack: []const typed.Type, write: Write) Error!void {
+    if (rc_mode.enabled()) {
+        const result = self.temp();
+        try writeCall(E, self, write, result, false);
+        try self.require(result, allocation_failure);
+        return;
+    }
     const found = self.temp();
     try writeCall(E, self, write, found, true);
     const label = self.temp();
@@ -1057,17 +1107,31 @@ fn dictionaryOperation(comptime E: type, self: *E, op: BufferOperation, stack: [
         .pop_key, .pop_default => {
             const key = try operandPointer(E, self, schema.collection.key.?, base);
             const pointer = try self.aggregatePointer();
-            try self.print(" %v{d} =w call $myl_native_dictionary_pop(l %v{d}, l %v{d}, l %agg{d})\n", .{ result, input, key, self.pc });
+            if (rc_mode.enabled()) {
+                try self.print(" %v{d} =w call $myl_rc_dictionary_pop(l %heap, l %v{d}, l %v{d}, l %agg{d})\n", .{ result, input, key, self.pc });
+            } else {
+                try self.print(" %v{d} =w call $myl_native_dictionary_pop(l %v{d}, l %v{d}, l %agg{d})\n", .{ result, input, key, self.pc });
+            }
+            try rc_collections.removalStatus(E, self, result);
             if (op.kind == .pop_key) {
                 try self.require(result, missing_key_failure);
                 try self.store(base, try self.readValue(pointer, op.output));
-            } else try foundOrDefault(E, self, result, pointer, base, op.output);
+            } else if (rc_mode.enabled()) {
+                try rc_collections.ownedDefault(E, self, .{ .found = result, .pointer = pointer, .base = base, .ty = op.output });
+            } else {
+                try foundOrDefault(E, self, result, pointer, base, op.output);
+            }
         },
         // A set's `pop` (SET-1): the last entry leaves, and an empty set traps
         // exactly as a missing dictionary key does.
         .pop => {
             const pointer = try self.aggregatePointer();
-            try self.print(" %v{d} =w call $myl_native_dictionary_pop_last(l %v{d}, l %agg{d})\n", .{ result, input, self.pc });
+            if (rc_mode.enabled()) {
+                try self.print(" %v{d} =w call $myl_rc_dictionary_pop_last(l %heap, l %v{d}, l %agg{d})\n", .{ result, input, self.pc });
+            } else {
+                try self.print(" %v{d} =w call $myl_native_dictionary_pop_last(l %v{d}, l %agg{d})\n", .{ result, input, self.pc });
+            }
+            try rc_collections.removalStatus(E, self, result);
             try self.require(result, missing_key_failure);
             try self.store(base, try self.readValue(pointer, op.output));
         },
@@ -1086,7 +1150,11 @@ fn dictionaryOperation(comptime E: type, self: *E, op: BufferOperation, stack: [
             try self.store(base, try self.readValue(pointer, op.output));
         },
         .clear => {
-            try self.print(" call $myl_native_dictionary_clear(l %v{d})\n", .{input});
+            if (rc_mode.enabled()) {
+                try self.print(" call $myl_rc_dictionary_clear(l %heap, l %v{d})\n", .{input});
+            } else {
+                try self.print(" call $myl_native_dictionary_clear(l %v{d})\n", .{input});
+            }
             try self.print(store_unit, .{base});
         },
         .copy => {

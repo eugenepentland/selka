@@ -1,0 +1,4 @@
+passed rc_call_lifetimes::test_indirect_owned_return_survives_original_replacement
+passed rc_call_lifetimes::test_non_tail_recursive_owned_return_survives_call_frames
+passed rc_call_lifetimes::test_short_circuit_temporary_returns_keep_independent_owners
+3 passed, 0 cached, 0 failed, 0 skipped

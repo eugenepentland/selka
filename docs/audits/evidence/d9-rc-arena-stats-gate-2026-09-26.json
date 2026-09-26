@@ -1,0 +1,49 @@
+{
+  "revision": "a9361b46a560c95fc4f06fe970c42bdd733e2a6f",
+  "compiler_mode": "Debug",
+  "compiler_sha256": "15d4d085bf2ef132092377fcf24ae372f7d0a67585d6d2d855623c1c4c53ec10",
+  "default_runtime": "gc-v1",
+  "full_gate": {
+    "test": {
+      "steps": 94,
+      "executed": 2167,
+      "total": 24147,
+      "skipped": 21980
+    },
+    "test-qbe": {
+      "steps": 51,
+      "executed": 436
+    },
+    "test-qbe-build": {
+      "steps": 29
+    },
+    "fmt-check": {
+      "steps": 2,
+      "exit": 0
+    }
+  },
+  "logs": [
+    {
+      "source": ".tmp-rc/arena-stats-test.log",
+      "artifact": "docs/audits/evidence/d9-rc-arena-stats-test.log.gz",
+      "raw_sha256": "49b2fa514d56f66ea5c4ad40cc4897a21232ea9260e198d21a5876db31fa378b"
+    },
+    {
+      "source": ".tmp-rc/arena-stats-test-qbe.log",
+      "artifact": "docs/audits/evidence/d9-rc-arena-stats-test-qbe.log.gz",
+      "raw_sha256": "d089fae6e56235d16341793387a38ab6f5879a4ccf09c3c4da1c8485aced1f67"
+    },
+    {
+      "source": ".tmp-rc/arena-stats-test-qbe-build.log",
+      "artifact": "docs/audits/evidence/d9-rc-arena-stats-test-qbe-build.log.gz",
+      "raw_sha256": "b687cfa83a019be8d3ef1a6f2e8518965eca26d5b394583d731790dabbafbdde"
+    },
+    {
+      "source": ".tmp-rc/arena-stats-fmt-check.log",
+      "artifact": "docs/audits/evidence/d9-rc-arena-stats-fmt-check.log.gz",
+      "raw_sha256": "727fe2e22c982638ef4d6d75a47d5f97e1bb81c8b5f3ec3c0c55f158df48d93f"
+    }
+  ],
+  "rc_guest_acceptance": false,
+  "main_untouched": "b292660a09bc703d0ceab071636a73b643c52d34"
+}

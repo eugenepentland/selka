@@ -10,6 +10,7 @@ const ownership = @import("ownership.zig");
 const cow_lower = @import("qbe_cow.zig");
 const value_semantics = @import("value_semantics.zig");
 const runtime_mode = @import("runtime_mode.zig");
+const rc_frame = @import("qbe_rc_frame.zig");
 const moves_module = @import("qbe_moves.zig");
 const range_keys = @import("qbe_range_keys.zig");
 const loop_facts = @import("qbe_loop_facts.zig");
@@ -1595,11 +1596,13 @@ const Emitter = struct {
         self.branch_targets = try self.collectBranchTargets();
         self.by_reference = try self.addressLocals();
         try self.planOwnership();
-        self.range_keys = try self.planRangeKeys();
+        if (runtime_mode.enabled()) self.cow.?.rc = try @import("qbe_rc_state.zig").build(Emitter, self, ir.stack_capacity);
+        if (!runtime_mode.enabled()) self.range_keys = try self.planRangeKeys();
         // QBE-LOOP-VERSION-1: only a build whose value guards are on has
         // anything to prove, and step accounting counts every instruction the
         // original executes, so a counted build keeps one copy.
-        if (self.checks and !self.step_checks) self.loop_plan = try loop_facts.plan(self.allocator, .{
+        const version_loops = self.checks and !self.step_checks;
+        if (!runtime_mode.enabled() and version_loops) self.loop_plan = try loop_facts.plan(self.allocator, .{
             .program = self.program,
             .function = f,
             .states = self.states,
@@ -1648,7 +1651,7 @@ const Emitter = struct {
             }
             break;
         }
-        self.moves = try moves_module.Lower(Emitter).plan(self);
+        if (!runtime_mode.enabled()) self.moves = try moves_module.Lower(Emitter).plan(self);
         self.coverage = try @import("qbe_cover.zig").Lower(Emitter).plan(self);
     }
     /// Lower the analysed function with its frame placed as `frame` says.
@@ -1695,12 +1698,15 @@ const Emitter = struct {
         try self.allocateDynamicTemporaries();
         try self.initializeStorage();
         if (self.has_roots) try self.print(" %heap =l call $myl_qbe_heap(l %ctx)\n", .{});
+        try rc_frame.Lower(Emitter).enter(self);
         if (self.has_roots and self.has_safepoints) try self.print(" %root_mark =l call $myl_qbe_root_mark(l %ctx)\n", .{});
         if (self.step_checks) try self.print(" %maxsteps =l add %ctx, 16\n", .{});
         try self.print(" jmp @i0\n", .{});
         try self.emitInstructions();
         if (self.step_checks) try self.print("@step_limit\n call $myl_qbe_fail_step(l %ctx)\n jmp @failure\n@failure\n", .{}) else try self.print("@failure\n", .{});
         try cow_lower.Lower(Emitter).clearScopes(self);
+        try rc_frame.Lower(Emitter).cleanup(self);
+        try rc_frame.Lower(Emitter).leave(self);
         try arena_lower.Lower(Emitter).restore(self);
         if (self.has_roots and self.has_safepoints) try root_lower.restoreFrameRoots(self);
         if (self.heap_frame) try self.print(" call $myl_qbe_frame_release(l %ctx, l %frame_memory)\n jmp @allocation_failure\n@allocation_failure\n", .{});
@@ -1783,6 +1789,8 @@ const Emitter = struct {
     }
     const frame_lower = frame_module.Lower(Emitter);
     pub const abiStackBytes = frame_lower.abiStackBytes;
+    pub const allocateSlot = frame_lower.allocateSlot;
+    pub const allocateIndex = frame_lower.allocateIndex;
     pub const allocateDynamicTemporaries = frame_lower.allocateDynamicTemporaries;
     pub const allocateNativeStorage = frame_lower.allocateNativeStorage;
     pub const allocateStorage = frame_lower.allocateStorage;
@@ -1952,6 +1960,7 @@ const Emitter = struct {
             if (writtenLocal(f, index) and !self.callerStorage(index)) continue;
             flags[index] = .value;
         }
+        if (runtime_mode.enabled()) return flags;
         self.arm_addresses = try self.payloadAddresses(f, flags);
         // QBE-ELEMREF-2 and QBE-CALLREF-1: the ordinary locals one instruction
         // fills from storage this frame can name — a list element, a
@@ -2200,6 +2209,7 @@ const Emitter = struct {
                 => if (sticky_text == null or stickyTrap(sticky_text.?)) try self.checkFailure("failure"),
                 else => {},
             }
+            try @import("qbe_rc_ops.zig").after(Emitter, self, instruction.op, stack);
             // An instruction whose successor has a body falls through into it;
             // only a real terminator (or a successor that emits nothing) jumps.
             const falls = pc + 1 < self.states.len and self.states[pc + 1] != null;
@@ -2527,6 +2537,7 @@ const Emitter = struct {
         // unshared until the call returns.
         const pins = try cow_lower.Lower(Emitter).pin(self, callee, args, h - count);
         if (packed_args) for (args, 0..) |arg, i| try self.packArgument(i, arg);
+        try @import("qbe_rc_ops.zig").callEntry(Emitter, self, callee, h - count);
         const v = self.temp();
         try self.print(" %v{d} ={s} call ${s}(l %ctx", .{ v, try self.returnType(callee), self.units[@backingInt(target)].symbol });
         const indirect = try self.largeResult(callee);
@@ -2577,6 +2588,7 @@ const Emitter = struct {
     }
     fn emitOp(self: *Emitter, op: @FieldType(bytecode.Instruction, "op"), stack: []const typed.Type) GenerateError!void {
         const h = stack.len;
+        if (try @import("qbe_rc_locals.zig").emit(Emitter, self, op, stack)) return;
         switch (op) {
             .acquire_resource, .complete_resource, .resource_io, .restrict_resource, .dir_resource, .host_resource => try @import("qbe_resources.zig").Lower(Emitter).emit(self, op, stack),
             .external_read, .stand_in, .environment_get, .environment_only, .environment_names => try @import("qbe_boundaries.zig").emit(self, op, stack),
@@ -2586,6 +2598,7 @@ const Emitter = struct {
             .file_access => |call| try @import("qbe_files.zig").Lower(Emitter).access(self, call, stack),
             .file_method => |call| try @import("qbe_files.zig").Lower(Emitter).method(self, call, stack),
             .try_result => |propagate| {
+                if (try @import("qbe_rc_aggregate.zig").propagation(Emitter, self, propagate, stack)) return;
                 const source = try self.load("s", h - 1);
                 const input_offset = (try self.layout(propagate.input)).payload_offset;
                 if (typed.resultShape(propagate.input, self.program.records)) |input| {

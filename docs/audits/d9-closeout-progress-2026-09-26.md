@@ -219,3 +219,15 @@ production collection ownership and copied-codec/host trap cleanup. GC remains
 the default. Compiler lowering, scopes/arena escape, actual borrow count
 traffic and WP-4 performance acceptance are still underway with Astra agents
 at extra-high reasoning; WP-5 remains dependent on completing WP-4.
+
+## Joined RC scopes, arenas and statistics regression checkpoint
+
+Frozen `a9361b46` passes the full gate: 94 main steps with 2,167 executed tests,
+QBE 51 steps/436 tests, native build 29 steps, and formatting 2 steps. The
+[checkpoint report](d9-rc-arena-stats-gate-2026-09-26.md) records scope-first
+trap cleanup, transactional collection transfers, stable pinned dictionary
+reads, charged arena cleanup, and optional physical counters. It also records
+the arena finalizer-ordering follow-up found during review. Compiler lowering
+now runs a first basic RC CLI guest on its own branch; full RC semantics,
+borrow traffic, performance/RSS and WP-5 remain outstanding. The accepted GC
+baseline has 58 private binaries and all 86 output checks pass.
