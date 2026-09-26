@@ -22,9 +22,9 @@ Fresh runtime success results carry one already-owned reference. Receiving
 that result transfers its token without incrementing. Construction records
 initialized edges and aborts them explicitly; no floating-result adoption or
 recursive adoption walk. Count overflow fails before publication or count
-change; underflow, double release and resurrection of a DYING object are
-internal invariant failures. The serial interface must freeze the located
-count-limit diagnostic and construction-state representation.
+change and maps to located `R_REFERENCE_COUNT_LIMIT`. Underflow, double
+release and resurrection of a DYING object are internal invariant failures.
+The serial interface must freeze the construction-state representation.
 
 | Component | Owning edges |
 | --- | --- |
@@ -175,3 +175,124 @@ separate from shared-value count changes, with exactly-once and reentrancy
 rules. These representation, traversal and error details must be frozen in
 the serial step before implementation branches start. No RC validation was
 run for this design report.
+
+## Accepted traversal and reservation decision
+
+The proposed serial design uses immutable RC ownership shapes alongside the
+existing GC descriptors, a reusable descriptor stack reserved per heap, and
+an intrusive dead-object worklist. This decision is design only; implementation
+waits for the combined stage-3/default and WP-4pre prerequisite gate. The
+ownership shapes are independent of GC `trace_fields` and flat scan tables:
+reachability aliases and live logical owners are not interchangeable.
+
+The descriptor walker is iterative. A record frame holds its next-field cursor;
+an array frame holds its next index and stride, without expanding the array;
+a variant frame reads its active tag and visits only matching fields. A managed
+pointer is a terminal edge: decrement its owner and enqueue a newly dead
+allocation, never descend into its payload in that walk. Recursive boxes thus
+stop inline-depth traversal even when their bodies refer to the same type.
+Offsets and counters use checked `size_t` arithmetic, not the GC flat plan's
+32-bit offsets or eight-entry limit. Pointer-free subtrees need no traversal.
+
+Registration computes maximum required inline frame depth iteratively over
+the shape graph, stopping at managed pointers. It then reserves budget-charged
+workspace before any owning value of that shape exists. This includes inline
+locals, arguments, results, host-owned values and arena values, not only heap
+allocation descriptors. Static module shapes can preflight at program startup;
+runtime or foreign shapes must register before construction. Metadata must
+remain valid through every corresponding value's destruction. Runtime metadata
+that lacks that lifetime must be copied into stable registered storage.
+
+Registration and workspace growth commit atomically. Checked size overflow or
+allocation refusal leaves prior shapes and workspace valid; an existing value
+must remain releasable after reservation failure. There is no fixed source-depth
+cutoff. Descriptor registration can use fallible temporary workspace, but neither
+destruction nor its queue growth can allocate. Shape registry storage, reserved
+frames and queued allocations remain charged to the heap budget.
+
+The O=H=0 transition installs DYING once. Only then may the owner/hold words
+be reused for worklist bookkeeping. Drain enumerates one object's direct edges
+completely while its metadata is live, retires that allocation through the
+allocator, and then visits the next queued object. Child decrements enqueue;
+they do not drain recursively. A wide DAG needs no separately allocated queue,
+and a million-node chain uses constant native-stack depth. Work is proportional
+to the ownership metadata visited, live edges and container storage scanned,
+without restarting descriptor scans for each child.
+
+Runtime collections supply explicit, nonallocating edge adapters:
+
+- A list visits its initialized live prefix and its one raw backing owner.
+  Capacity padding and retired bytes have no element ownership.
+- An indexed dictionary scans nonzero hash-index slots, each of which identifies
+  exactly one live key/value pair. An unindexed dictionary scans its dense entry
+  prefix; the existing invariant is `index.capacity == 0` implies `dead == 0`.
+  Destruction does not call `settle` or `slot_of`, which hash keys. Private
+  entry-list bookkeeping never releases those key/value owners a second time.
+- A bytes/text view visits its canonical owner, never its interior address.
+  Immutable boxes enumerate body edges only when the box itself dies; a normal
+  unpinned transfer retains the box alone.
+
+Raw backing allocations carry stable extent/allocation metadata and do not
+depend on dictionary-embedded entry descriptors. The dictionary adapter can use
+its header's layout while enumerating its edges, because that header remains
+alive until enumeration completes. A backing retained by a receiver hold may
+outlive the dictionary without consulting its former entry metadata. Key/value
+ownership shapes must already be registered; no synthesized dictionary entry
+shape needs to be created during teardown.
+
+## Reentrant drain and construction failure
+
+Direct-edge traversal invokes no guest callbacks. Resource hooks are queued
+using their resource work links and run only when descriptor-stack depth is
+zero, with their owner and required callback context still valid. Nested owner
+releases enqueue work; a drain-active guard prevents recursive drain. A hook
+may allocate or register a shape while the stack is idle. The outer loop must
+reacquire workspace after a callback instead of retaining pointers across a
+possible resize. Preserve existing exactly-once resource cleanup order.
+
+The teardown stack is leased only for a complete nonallocating edge walk.
+Fallible copies, scope preparation and escape have separately reserved operation
+workspace and must not retain teardown frames across allocation. Public drop
+boundaries may drain when the walker is idle and no drain is active; internal
+edge decrements only enqueue. Any batching must finish at an explicit safe
+boundary so allocation refusal and function cleanup do not strand dead objects.
+
+Construction first registers/reserves shapes, then creates one owned result
+with a valid initialized-edge boundary and variant tag. Each acquired child
+token goes into an initialized owning slot or an explicit temporary token.
+Lists commit only initialized elements to their live prefix. Dictionary key and
+value staging completes before the entry becomes live. Failure drops initialized
+owners through the already-reserved walker; it never scans uninitialized capacity
+or stale entry bytes. Failed reservation publishes no partial shape or value.
+Region escape similarly rolls back owned clone/map tokens without releasing
+source ownership, and region close enumerates each committed logical heap edge
+once before recycling chunks.
+
+Generated flat release plans remain an optional later fast path. Requiring them
+now adds a format, generator and verifier, plus loop/variant control flow, while
+runtime layouts still need a complete generic path. The reserved iterative
+walker is that complete path and never falls back to native recursion.
+
+## Boundary of the serial shared change
+
+Keep the initial shared change small enough for independent implementation:
+
+- Freeze the proposed 32-byte RC heap prefix, retain 16-byte arena/literal
+  prefixes, and define common flags, DYING and located count-limit status.
+- Freeze the owner/hold/pin and owned-result contracts above, RC ownership-shape
+  registration/reservation, internal decrement/enqueue, direct-edge walking,
+  drain, and allocator-retire interfaces.
+- Add opaque per-heap RC state; keep descriptor frames, worklist details and
+  allocator policy private. RC ownership shapes are sidecar metadata, leaving
+  the existing GC descriptor layout intact.
+- Let collection modules own their edge adapters, the compiler emit ownership
+  shapes and actions, and arena/scope/host code use the shared interfaces. Avoid
+  concurrent edits to a central collection-destructor switch.
+
+Layout assertions and reservation-failure contract tests belong with that
+shared change. Allocator reuse policy, full collection migration, compiler
+optimization and arena implementation remain with their respective branches.
+Later validation must exercise deep inline descriptors, nested variants, large
+fixed arrays, million-deep boxed chains, wide DAGs, dictionary dead entries,
+held retired backing, allocation failure and reentrant resource cleanup at a
+memory ceiling. This report adds no runtime implementation or RC test claim.
