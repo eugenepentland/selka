@@ -333,17 +333,21 @@ fn checkFieldAssignment(comptime Checker: type, self: *Checker, node: ast.Node, 
         if (!shared) noteDeadRecordWrite(Checker, self, owner, node.span);
     }
     try self.require(self.nodes.items[@backingInt(value)].ty, expected, node.span);
-    if (assignment.op == .add and expected.isAggregate() and self.catalog.records[expected.recordIndex()].isCollection() and self.catalog.records[expected.recordIndex()].collection.kind == .list) {
-        // `target.items += other` is Python's in-place extend, exactly as it is
-        // for a list binding: the field keeps the same list, which every alias
-        // observes growing, so nothing is stored back.
+    const extending = assignment.op == .add and expected.isAggregate() and self.catalog.records[expected.recordIndex()].isCollection() and self.catalog.records[expected.recordIndex()].collection.kind == .list;
+    if (extending) {
+        // Capture the field before the RHS, extend that value, then publish it
+        // through the same refreshed destination as other augmented fields.
         if (destination.index == null) try self.requireArenaStore(destination.owner, value);
         const receiver = try b.local(expected);
         try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = receiver, .value = current } }));
         try statements.append(self.allocator, try b.stmt(.{ .discard = try b.operation(receiver, .extend, try self.allocator.dupe(typed.NodeId, &.{value})) }));
-        return b.block(statements.items, try b.node(.unit, .unit));
+        if (!@import("value_semantics.zig").enabled()) return b.block(statements.items, try b.node(.unit, .unit));
+        const stored = try b.local(expected);
+        try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = stored, .value = try b.read(receiver) } }));
+        if (destination.refresh) |refresh| try statements.append(self.allocator, refresh);
+        value = try b.read(stored);
     }
-    if (assignment.op != .set) {
+    if (assignment.op != .set and !extending) {
         // `target.field op= value` reads the field through the same once-evaluated
         // destination, then evaluates the right-hand side, combines the pair with
         // the operator's ordinary rules and stores the result, the way Python and
