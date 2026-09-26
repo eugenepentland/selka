@@ -3355,6 +3355,32 @@ test "CLI formatter check locates spacing and missing final newline" {
     try invokeOptions("fmt-module", "module input\n\ndef  f() -> int:\n    return 7\n", &.{"--check"}, 1, "", "input.my:3:5: formatting differs");
 }
 
+// spec: FMT-TEST-MODULE-1
+test "CLI formatter and test agree on headerless sibling test imports" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper\n\npublic def value() -> int:\n    return 7\n" });
+    const source = "import helper\n\npublic def test_value() -> bool:\n    return helper.value() == 7\n";
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper_test.my", .data = source });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "helper_test.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const formatted = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "fmt", path } });
+    defer testing.allocator.free(formatted.stdout);
+    defer testing.allocator.free(formatted.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, formatted.term);
+    try testing.expectEqualStrings(source, formatted.stdout);
+    const checked = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "fmt-module", path, "--check" } });
+    defer testing.allocator.free(checked.stdout);
+    defer testing.allocator.free(checked.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, checked.term);
+    const tested = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "test", path } });
+    defer testing.allocator.free(tested.stdout);
+    defer testing.allocator.free(tested.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, tested.term);
+    try testing.expect(std.mem.indexOf(u8, tested.stdout, "1 passed") != null);
+    try invoke("fmt", source, 1, "", "E_MODULE_HEADER");
+}
+
 test "CLI module discovery loads real files and diagnoses cross-file cycles" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();

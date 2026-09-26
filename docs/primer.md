@@ -36,6 +36,8 @@ difference; `fmt FILE` prints the complete corrected source.
   `name`'s `public` declarations are visible). A test may take `out: Stream`,
   but not `Filesystem`, `Clock` and the other capabilities: test the pure
   functions and keep I/O in `main`.
+  A `*_test.my` entry may omit its `module` header even when importing the
+  sibling module; both `test` and `fmt` accept that form.
 
 ## Program shape and I/O
 
