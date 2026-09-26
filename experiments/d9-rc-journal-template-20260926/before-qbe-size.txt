@@ -1,0 +1,2 @@
+   text	   data	    bss	    dec	    hex	filename
+ 171424	  17936	   2704	 192064	  2ee40	.tmp/journal-template/before-qbe

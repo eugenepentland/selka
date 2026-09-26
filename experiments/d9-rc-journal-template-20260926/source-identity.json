@@ -1,0 +1,7 @@
+{
+  "src/qbe.zig": "e18e2947b41f964172328e4a1c9d67dcad247575c4b034dcc9b44af3ff1094b4",
+  "src/qbe_rc_frame.zig": "1a1ab42c165a67c0a0e717d181add9549ce1ff09f03b287bf740dd8c070cf535",
+  "src/qbe_rc_templates.zig": "ca6e10f63a141f0bdf84c4e3e201a002d777848e4fe917d84d863599d8a7a368",
+  "src/qbe_rc_templates_test.zig": "dfd5d4ba532fb9517e777949aa7e854f5f07dda1f66276f18cfe346bd0c3b6df",
+  "src/root_test.zig": "fb5bfdf4f3b3dd0a1881ff2a0813091b1cfaa64adb8cd67c48896d729d3de6c4"
+}

@@ -1,0 +1,2 @@
+   text	   data	    bss	    dec	    hex	filename
+ 189426	   7152	   4164	 200742	  31026	.tmp/journal-template/before-llvm
