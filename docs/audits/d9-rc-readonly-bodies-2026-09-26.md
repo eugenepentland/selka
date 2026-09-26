@@ -46,3 +46,11 @@ The preceding compiler predates the independently validated receiver-anchor
 cleanup correction; these diagnostics do not isolate that unrelated change.
 No formal RC performance acceptance is claimed. The root integration owns the
 full combined gate and the required matched corpus.
+
+A follow-up explicitly covers variant boxing: an inline union leaf containing a
+borrowed list remains eligible, while recursively wrapping that leaf introduces
+a physical managed `MAKE_RECORD box<Wrapped>` and retains the ownership journal.
+The expanded proof suite passes 14/14. All three permanent guest cases pass on
+both ReleaseFast backends with identical 413 acquisitions, 551 releases and
+138 allocations/retirements. The added snapshot check clears the caller's list
+after both wrappers and verifies the earlier snapshot remains intact.

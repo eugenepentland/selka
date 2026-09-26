@@ -74,7 +74,7 @@ static void index_commit(myl_native_heap *heap, myl_rc_batch *batch, myl_rc_inde
             index_insert(heap, (myl_rc_index_entry){.key = shape->source, .value = &shape->shape, .depth = shape->depth, .inline_depth = shape->inline_depth, .kind = INDEX_SHAPE});
     }
     for (size_t i = 0; i < batch->count.descriptors; ++i) {
-        const myl_rc_descriptor *descriptor = &batch->descriptors[i];
+        const myl_rc_descriptor *descriptor = &batch->bindings[i].descriptor;
         index_insert(heap, (myl_rc_index_entry){.key = descriptor->type, .value = descriptor, .kind = INDEX_DESCRIPTOR});
     }
 }
@@ -200,13 +200,80 @@ static const myl_rc_shape *copied_shape(const shape_builder *builder, const myl_
     size_t index = builder->slots[builder_slot(builder, source)] - 1;
     return &batch->shapes[index].shape;
 }
+typedef struct {
+    const myl_native_type *type;
+    const myl_rc_shape *shape;
+    size_t offset, cursor;
+} flat_frame;
+/* This is admission to an optional optimization, not a type-depth limit.
+ * Bounded inspection refuses deep/wide metadata and keeps the general walker.
+ * The GC scan plan alone cannot distinguish O from H or raw unique resources. */
+static void flat_build(myl_rc_binding *binding) {
+    const myl_rc_descriptor *descriptor = &binding->descriptor;
+    myl_rc_flat *flat = &binding->flat;
+    flat->count = MYL_RC_FLAT_LEAVES + 1;
+    if (descriptor->edges || descriptor->finalize || descriptor->clone || descriptor->shell || descriptor->next) return;
+    flat_frame frames[16] = {{.type = descriptor->type, .shape = descriptor->shape}};
+    size_t depth = 1, inspected = 0;
+    unsigned count = 0;
+    while (depth) {
+        if (++inspected > 128) return;
+        flat_frame *frame = &frames[depth - 1];
+        const myl_native_type *type = frame->type;
+        const myl_rc_shape *shape = frame->shape;
+        if (!type || (shape && type->size != shape->size)) return;
+        unsigned kind = shape ? shape->kind : MYL_RC_SHAPE_NONE;
+        if (type->kind == MYL_NATIVE_PLAIN || type->kind == MYL_NATIVE_FLOAT) {
+            if (kind != MYL_RC_SHAPE_NONE) return;
+            --depth;
+            continue;
+        }
+        if (type->kind == MYL_NATIVE_POINTER) {
+            if (kind != MYL_RC_SHAPE_POINTER || type->size != sizeof(void *) || count == MYL_RC_FLAT_LEAVES) return;
+            for (unsigned i = 0; i < count; ++i) {
+                size_t old = flat->offsets[i], next = frame->offset;
+                if (old > next ? old - next < sizeof(void *) : next - old < sizeof(void *)) return;
+            }
+            flat->offsets[count++] = frame->offset;
+            --depth;
+            continue;
+        }
+        const myl_native_type *child;
+        const myl_rc_shape *child_shape = NULL;
+        size_t offset;
+        if (type->kind == MYL_NATIVE_RECORD) {
+            if (kind != MYL_RC_SHAPE_RECORD && kind != MYL_RC_SHAPE_NONE) return;
+            if (kind == MYL_RC_SHAPE_RECORD && type->field_count != shape->as.record.count) return;
+            if (frame->cursor == type->field_count) { --depth; continue; }
+            if (!type->fields) return;
+            size_t index = frame->cursor++;
+            child = type->fields[index].type;
+            offset = type->fields[index].offset;
+            if (kind == MYL_RC_SHAPE_RECORD) {
+                if (offset != shape->as.record.fields[index].offset) return;
+                child_shape = shape->as.record.fields[index].shape;
+            }
+        } else if (type->kind == MYL_NATIVE_ARRAY) {
+            if (kind != MYL_RC_SHAPE_ARRAY && kind != MYL_RC_SHAPE_NONE) return;
+            if (kind == MYL_RC_SHAPE_ARRAY && (type->count != shape->as.array.count || type->stride != shape->as.array.stride)) return;
+            if (frame->cursor == type->count) { --depth; continue; }
+            child = type->element;
+            if (!myl_rc_size_mul(frame->cursor++, type->stride, &offset)) return;
+            if (kind == MYL_RC_SHAPE_ARRAY) child_shape = shape->as.array.element;
+        } else return; /* Includes variants, owned buffers/pools and raw resources. */
+        if (depth == sizeof frames / sizeof frames[0] || !child || offset > type->size || child->size > type->size - offset) return;
+        if (!myl_rc_size_add(frame->offset, offset, &offset)) return;
+        frames[depth++] = (flat_frame){.type = child, .shape = child_shape, .offset = offset};
+    }
+    flat->count = count;
+}
 /* One reservation keeps all copied metadata addresses stable until teardown. */
 static myl_rc_batch *build_batch(shape_builder *builder, const myl_rc_module *module, int persistent) {
     size_t shape_bytes, field_bytes, descriptor_bytes, bytes = sizeof(myl_rc_batch);
     size_t descriptors = module ? module->descriptor_count : 0;
     if (!myl_rc_size_mul(builder->count, sizeof(myl_rc_shape_entry), &shape_bytes) ||
         !myl_rc_size_mul(builder->fields, sizeof(myl_rc_field), &field_bytes) ||
-        !myl_rc_size_mul(descriptors, sizeof(myl_rc_descriptor), &descriptor_bytes) ||
+        !myl_rc_size_mul(descriptors, sizeof(myl_rc_binding), &descriptor_bytes) ||
         !myl_rc_size_add(bytes, shape_bytes, &bytes) || !myl_rc_size_add(bytes, field_bytes, &bytes) ||
         !myl_rc_size_add(bytes, descriptor_bytes, &bytes)) return NULL;
     myl_rc_batch *batch = myl_rc_meta_alloc(builder->heap, bytes);
@@ -217,7 +284,7 @@ static myl_rc_batch *build_batch(shape_builder *builder, const myl_rc_module *mo
     batch->bytes = bytes;
     batch->shapes = (myl_rc_shape_entry *)(batch + 1);
     myl_rc_field *fields = (myl_rc_field *)((unsigned char *)batch->shapes + shape_bytes);
-    batch->descriptors = (myl_rc_descriptor *)((unsigned char *)fields + field_bytes);
+    batch->bindings = (myl_rc_binding *)((unsigned char *)fields + field_bytes);
     for (size_t i = 0; i < builder->count; ++i) {
         const myl_rc_shape *source = builder->nodes[i].source;
         myl_rc_shape_entry *entry = &batch->shapes[i];
@@ -241,8 +308,9 @@ static myl_rc_batch *build_batch(shape_builder *builder, const myl_rc_module *mo
         }
     }
     for (size_t i = 0; i < descriptors; ++i) {
-        batch->descriptors[i] = module->descriptors[i];
-        batch->descriptors[i].shape = copied_shape(builder, batch, module->descriptors[i].shape);
+        batch->bindings[i].descriptor = module->descriptors[i];
+        batch->bindings[i].descriptor.shape = copied_shape(builder, batch, module->descriptors[i].shape);
+        flat_build(&batch->bindings[i]);
     }
     return batch;
 }
@@ -342,14 +410,15 @@ myl_rc_status myl_rc_descriptor_register(myl_native_heap *heap, const myl_rc_des
         myl_rc_invariant(old->shape == shape && old->edges == descriptor->edges && old->finalize == descriptor->finalize && old->clone == descriptor->clone && old->shell == descriptor->shell && old->next == descriptor->next);
         return MYL_RC_OK;
     }
-    size_t bytes = sizeof(myl_rc_batch) + sizeof(myl_rc_descriptor);
+    size_t bytes = sizeof(myl_rc_batch) + sizeof(myl_rc_binding);
     myl_rc_batch *batch = myl_rc_meta_alloc(heap, bytes);
     if (!batch) return MYL_RC_ALLOCATION_REFUSED;
     batch->bytes = bytes;
     batch->count.descriptors = 1;
-    batch->descriptors = (myl_rc_descriptor *)(batch + 1);
-    batch->descriptors[0] = *descriptor;
-    batch->descriptors[0].shape = shape;
+    batch->bindings = (myl_rc_binding *)(batch + 1);
+    batch->bindings[0].descriptor = *descriptor;
+    batch->bindings[0].descriptor.shape = shape;
+    flat_build(&batch->bindings[0]);
     myl_rc_index_entry *grown;
     size_t capacity;
     if (!index_prepare(heap, 1, &grown, &capacity)) {

@@ -1,0 +1,68 @@
+module rc_read_loans
+
+
+def total(values: list[int]) -> int:
+    result = 0
+    for index in range(len(values)):
+        result += values[index]
+    return result
+
+
+# spec-case: RC-READ-LOAN-1
+public def test_scalar_receivers_read_both_index_directions_and_empty_loops() -> bool:
+    values = [2, 3, 5, 7]
+    octets = b"abc"
+    return total(values) == 17 and total([]) == 0 and values[-1] == 7 and values[-4] == 2 and octets[-1] == 99 and len("hello") == 5
+
+
+def change_index(values: mut list[int]) -> int:
+    values.clear()
+    values.append(91)
+    return 0
+
+
+# spec-case: RC-READ-LOAN-1
+public def test_index_callback_keeps_an_explicit_receiver_snapshot() -> bool:
+    values = [7, 8]
+    snapshot = values
+    selected = values[change_index(mut values)]
+    return selected == 7 and values == [91] and snapshot == [7, 8]
+
+
+# spec-case: RC-READ-LOAN-1
+public def test_scalar_loan_roots_survive_loop_reassignment_and_branches() -> bool:
+    values = [1, 2]
+    result = 0
+    for index in range(20):
+        values = [index, index + 1]
+        if index % 2 == 0:
+            result += values[0]
+        else:
+            result += values[-1]
+    return result == 200 and values == [19, 20]
+
+
+# spec-case: RC-READ-LOAN-1
+public def test_scalar_reads_keep_pending_pins_and_named_snapshots() -> bool:
+    rows = [[7]]
+    snapshot = rows
+    rows[0].append(rows[0][0])
+    return rows == [[7, 7]] and snapshot == [[7]]
+
+
+# spec-case: RC-READ-LOAN-1
+public def test_scalar_reads_inside_an_arena_escape_only_their_result() -> bool:
+    result = 0
+    with arena():
+        values = [3, 5, 8]
+        result = total(values) + values[-1]
+    return result == 24
+
+
+def main() -> int:
+    assert test_scalar_receivers_read_both_index_directions_and_empty_loops()
+    assert test_index_callback_keeps_an_explicit_receiver_snapshot()
+    assert test_scalar_loan_roots_survive_loop_reassignment_and_branches()
+    assert test_scalar_reads_keep_pending_pins_and_named_snapshots()
+    assert test_scalar_reads_inside_an_arena_escape_only_their_result()
+    return 0
