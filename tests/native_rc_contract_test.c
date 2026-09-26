@@ -1,0 +1,372 @@
+#define _POSIX_C_SOURCE 200809L
+#include "native_rc.h"
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/resource.h>
+
+typedef struct { size_t live, retired, allocations; unsigned finalizing, max_finalizing; } TestAllocator;
+static myl_rc_status allocate(myl_native_heap *heap, const myl_rc_alloc_request *request, void **out) {
+    assert(!request->region);
+    size_t bytes = MYL_RC_PREFIX_BYTES + request->element->size * request->count;
+    if (heap->limit && bytes > heap->limit - heap->bytes) return MYL_RC_ALLOCATION_REFUSED;
+    myl_rc_object *object = calloc(1, bytes);
+    if (!object) return MYL_RC_ALLOCATION_REFUSED;
+    object->owners = 1;
+    object->common.mark = request->count << MYL_NATIVE_OBJECT_COUNT_SHIFT;
+    object->common.element = request->element;
+    *out = object + 1;
+    heap->bytes += bytes;
+    TestAllocator *state = myl_rc_allocator_context(heap);
+    ++state->live;
+    ++state->allocations;
+    return MYL_RC_OK;
+}
+static void retire(myl_native_heap *heap, void *payload) {
+    myl_rc_object *object = (myl_rc_object *)payload - 1;
+    assert(object->common.mark & MYL_RC_OBJECT_DYING);
+    size_t count = (object->common.mark & MYL_NATIVE_OBJECT_COUNT_BITS) >> MYL_NATIVE_OBJECT_COUNT_SHIFT;
+    heap->bytes -= MYL_RC_PREFIX_BYTES + count * object->common.element->size;
+    TestAllocator *state = myl_rc_allocator_context(heap);
+    --state->live;
+    ++state->retired;
+    free(object);
+}
+static void destroy(myl_native_heap *heap) {
+    TestAllocator *state = myl_rc_allocator_context(heap);
+    assert(state->live == 0);
+}
+static const myl_rc_allocator allocator = {allocate, retire, destroy};
+static const myl_rc_shape pointer_shape = {.size = sizeof(void *), .kind = MYL_RC_SHAPE_POINTER};
+static const myl_rc_shape scalar_shape = {.size = sizeof(uint64_t), .kind = MYL_RC_SHAPE_NONE};
+static const myl_native_type scalar_type = {.size = sizeof(uint64_t), .alignment = _Alignof(uint64_t), .kind = MYL_NATIVE_PLAIN};
+static const myl_rc_descriptor scalar_descriptor = {.type = &scalar_type, .shape = &scalar_shape};
+static const myl_rc_shape *const scalar_shapes[] = {&pointer_shape};
+static const myl_rc_module scalar_module = {
+    .abi = MYL_RC_ABI_VERSION, .shapes = scalar_shapes, .shape_count = 1,
+    .descriptors = &scalar_descriptor, .descriptor_count = 1
+};
+static void start(myl_native_heap *heap, TestAllocator *state) {
+    *heap = (myl_native_heap){.limit = ((size_t)256) << 20};
+    *state = (TestAllocator){0};
+    assert(myl_rc_heap_init(heap, &allocator, state) == MYL_RC_OK);
+    assert(myl_rc_module_register(heap, &scalar_module) == MYL_RC_OK);
+}
+static void *new_value(myl_native_heap *heap, const myl_native_type *type, size_t count) {
+    myl_rc_alloc_request request = {.element = type, .count = count};
+    void *out = NULL;
+    assert(myl_rc_new(heap, &request, &out) == MYL_RC_OK);
+    return out;
+}
+static void finish(myl_native_heap *heap, TestAllocator *state) {
+    myl_rc_heap_destroy(heap);
+    assert(!heap->rc && !heap->bytes && state->live == 0 && state->allocations == state->retired);
+}
+// spec: RC-LAYOUT-1
+static void layout_test(void) {
+    assert(sizeof(myl_rc_object) == 32);
+    assert(sizeof(myl_native_object) == 16);
+    assert(offsetof(myl_rc_object, common.mark) == 16);
+    assert(offsetof(myl_rc_object, common.element) == 24);
+    assert(offsetof(myl_native_heap, inline_windows) == MYL_NATIVE_HEAP_INLINE_OFFSET);
+    assert(offsetof(myl_native_heap, arena_window) == MYL_NATIVE_HEAP_ARENA_OFFSET);
+    myl_native_heap heap;
+    TestAllocator state;
+    start(&heap, &state);
+    void *value = new_value(&heap, &scalar_type, 1);
+    assert((uintptr_t)value % 16 == 0);
+    assert(*((uintptr_t *)value - 4) == 1 && *((uintptr_t *)value - 3) == 0);
+    assert(*((uintptr_t *)value - 2) == 4);
+    assert(((const myl_native_type **)value)[-1] == &scalar_type);
+    myl_rc_owner_release(&heap, value);
+    finish(&heap, &state);
+}
+// spec: RC-COUNTS-1
+static void hold_and_pin_test(void) {
+    myl_native_heap heap;
+    TestAllocator state;
+    start(&heap, &state);
+    void *value = new_value(&heap, &scalar_type, 1);
+    myl_rc_object *object = (myl_rc_object *)value - 1;
+    myl_rc_pin outer = {0}, inner = {0};
+    assert(myl_rc_pin_acquire(&heap, value, &outer) == MYL_RC_OK);
+    assert(myl_rc_pin_acquire(&heap, value, &inner) == MYL_RC_OK);
+    assert(object->owners == 1 && object->holds == 2 && myl_rc_unique(&heap, value));
+    assert(myl_rc_owner_acquire(&heap, value) == MYL_RC_OK);
+    assert(!myl_rc_unique(&heap, value));
+    myl_rc_owner_release(&heap, value);
+    myl_rc_owner_release(&heap, value);
+    assert(object->owners == 0 && object->holds == 2 && state.live == 1);
+    myl_rc_pin_release(&heap, &inner);
+    assert(object->holds == 1 && (object->common.mark & MYL_NATIVE_OBJECT_PINNED));
+    myl_rc_pin_release(&heap, &outer);
+    assert(!state.live && state.retired == 1);
+    finish(&heap, &state);
+}
+// spec: RC-COUNTS-1
+static void prefix_guard_and_limits_test(void) {
+    myl_native_heap heap;
+    TestAllocator state;
+    start(&heap, &state);
+    /* These really have no RC prefix; ASan checks the common-flag guard. */
+    const struct { myl_native_object common; uint64_t value; } literal = {
+        .common = {.mark = MYL_NATIVE_OBJECT_IMMORTAL, .element = &scalar_type}, .value = 7
+    };
+    struct { myl_native_object common; uint64_t value; } arena = {
+        .common = {.mark = MYL_NATIVE_OBJECT_ARENA | ((uintptr_t)1 << MYL_NATIVE_ARENA_REGION_SHIFT), .element = &scalar_type}
+    };
+    myl_rc_pin pin = {0};
+    assert(myl_rc_owner_acquire(&heap, (void *)&literal.value) == MYL_RC_OK);
+    assert(myl_rc_pin_acquire(&heap, (void *)&literal.value, &pin) == MYL_RC_OK);
+    myl_rc_pin_release(&heap, &pin);
+    myl_rc_owner_release(&heap, (void *)&literal.value);
+    assert(myl_rc_pin_acquire(&heap, &arena.value, &pin) == MYL_RC_OK);
+    assert(myl_rc_unique(&heap, &arena.value));
+    myl_rc_pin_release(&heap, &pin);
+    myl_rc_owner_release(&heap, &arena.value);
+    void *value = new_value(&heap, &scalar_type, 1);
+    myl_rc_object *object = (myl_rc_object *)value - 1;
+    object->owners = MYL_RC_COUNT_MAX;
+    assert(myl_rc_owner_acquire(&heap, value) == MYL_RC_COUNT_LIMIT);
+    assert(object->owners == MYL_RC_COUNT_MAX);
+    object->owners = 1;
+    object->holds = MYL_RC_COUNT_MAX;
+    myl_rc_hold hold = {0};
+    assert(myl_rc_hold_acquire(&heap, value, &hold) == MYL_RC_COUNT_LIMIT);
+    assert(!hold.payload && object->holds == MYL_RC_COUNT_MAX);
+    object->holds = 0;
+    assert(!strcmp(myl_rc_status_code(MYL_RC_COUNT_LIMIT), "R_REFERENCE_COUNT_LIMIT"));
+    myl_rc_record_failure(&heap, MYL_RC_COUNT_LIMIT);
+    myl_rc_record_failure(&heap, MYL_RC_ALLOCATION_REFUSED);
+    assert(myl_rc_take_failure(&heap) == MYL_RC_COUNT_LIMIT);
+    assert(myl_rc_take_failure(&heap) == MYL_RC_OK);
+    myl_rc_owner_release(&heap, value);
+    finish(&heap, &state);
+}
+/* Build arbitrarily deep inline metadata without consuming native stack. */
+static myl_rc_shape *deep_shapes(size_t depth, myl_rc_field **fields_out) {
+    myl_rc_shape *shapes = calloc(depth + 1, sizeof *shapes);
+    myl_rc_field *fields = calloc(depth, sizeof *fields);
+    assert(shapes && fields);
+    shapes[depth] = pointer_shape;
+    for (size_t i = 0; i < depth; ++i) {
+        fields[i].shape = &shapes[i + 1];
+        shapes[i] = (myl_rc_shape){.size = sizeof(void *), .kind = MYL_RC_SHAPE_RECORD,
+            .as.record = {.fields = &fields[i], .count = 1}};
+    }
+    *fields_out = fields;
+    return shapes;
+}
+// spec: RC-REGISTER-1
+static void reservation_failure_test(void) {
+    myl_native_heap heap;
+    TestAllocator state;
+    start(&heap, &state);
+    void *old = new_value(&heap, &scalar_type, 1);
+    size_t before = heap.bytes, reserved = myl_rc_reserved_depth(&heap);
+    size_t metadata = myl_rc_metadata_bytes(&heap);
+    myl_rc_field *fields;
+    myl_rc_shape *shapes = deep_shapes(64, &fields);
+    const myl_rc_shape *imported = NULL;
+    size_t refusals = 0;
+    for (size_t allowance = 0; allowance < ((size_t)1 << 20); allowance += 127) {
+        heap.limit = before + allowance;
+        myl_rc_status status = myl_rc_shape_import(&heap, shapes, &imported);
+        if (status == MYL_RC_OK) break;
+        ++refusals;
+        assert(status == MYL_RC_ALLOCATION_REFUSED && imported == NULL);
+        assert(heap.bytes == before && myl_rc_metadata_bytes(&heap) == metadata);
+        assert(myl_rc_reserved_depth(&heap) == reserved);
+        assert(myl_rc_shape_resolve(&heap, &pointer_shape));
+        assert(myl_rc_descriptor_find(&heap, &scalar_type));
+    }
+    assert(imported && refusals > 20 && myl_rc_reserved_depth(&heap) == 65);
+    free(shapes);
+    free(fields);
+    /* Source addresses have no lifetime/identity after import; even reusing
+     * stack storage for a different shape produces independent metadata. */
+    myl_rc_shape local = pointer_shape;
+    const myl_rc_shape *first, *second;
+    heap.limit = ((size_t)256) << 20;
+    assert(myl_rc_shape_import(&heap, &local, &first) == MYL_RC_OK);
+    local = scalar_shape;
+    assert(myl_rc_shape_import(&heap, &local, &second) == MYL_RC_OK);
+    assert(first != second && first->kind == MYL_RC_SHAPE_POINTER && second->kind == MYL_RC_SHAPE_NONE);
+    myl_rc_slot slot = {.shape = imported, .address = &old};
+    heap.limit = heap.bytes;
+    myl_rc_value_drop(&heap, &slot);
+    assert(!old && state.live == 0);
+    finish(&heap, &state);
+}
+// spec: RC-REGISTER-1
+static void deep_inline_and_overflow_test(void) {
+    myl_native_heap heap;
+    TestAllocator state;
+    start(&heap, &state);
+    myl_rc_field *fields;
+    myl_rc_shape *shapes = deep_shapes(32768, &fields);
+    const myl_rc_shape *imported;
+    assert(myl_rc_shape_import(&heap, shapes, &imported) == MYL_RC_OK);
+    assert(myl_rc_reserved_depth(&heap) == 32769);
+    free(shapes);
+    free(fields);
+    void *value = new_value(&heap, &scalar_type, 1);
+    myl_rc_slot slot = {.shape = imported, .address = &value};
+    heap.limit = heap.bytes;
+    myl_rc_value_drop(&heap, &slot);
+    assert(value == NULL && state.live == 0);
+    myl_rc_shape overflow = {.size = SIZE_MAX, .kind = MYL_RC_SHAPE_ARRAY,
+        .as.array = {.element = &pointer_shape, .count = SIZE_MAX, .stride = sizeof(void *)}};
+    size_t before = heap.bytes;
+    heap.limit = ((size_t)256) << 20;
+    assert(myl_rc_shape_import(&heap, &overflow, &imported) == MYL_RC_ALLOCATION_REFUSED);
+    assert(!imported && heap.bytes == before && myl_rc_reserved_depth(&heap) == 32769);
+    finish(&heap, &state);
+}
+typedef struct { uint32_t tag; void *pointer; } Variant;
+static const myl_rc_field variant_fields[] = {{.offset = offsetof(Variant, pointer), .shape = &pointer_shape, .tag = 1}};
+static const myl_rc_shape variant_shape = {.size = sizeof(Variant), .kind = MYL_RC_SHAPE_VARIANT,
+    .as.variant = {.fields = variant_fields, .count = 1, .tag_offset = offsetof(Variant, tag)}};
+typedef struct { uint32_t tag; Variant value; } OuterVariant;
+static const myl_rc_field outer_fields[] = {{.offset = offsetof(OuterVariant, value), .shape = &variant_shape, .tag = 2}};
+static const myl_rc_shape outer_shape = {.size = sizeof(OuterVariant), .kind = MYL_RC_SHAPE_VARIANT,
+    .as.variant = {.fields = outer_fields, .count = 1, .tag_offset = offsetof(OuterVariant, tag)}};
+// spec: RC-RELEASE-1
+static void variants_and_wide_array_test(void) {
+    myl_native_heap heap;
+    TestAllocator state;
+    start(&heap, &state);
+    const myl_rc_shape *variant;
+    assert(myl_rc_shape_import(&heap, &outer_shape, &variant) == MYL_RC_OK);
+    OuterVariant values[3] = {{.tag = 0, .value = {.tag = 1, .pointer = (void *)(uintptr_t)1}},
+        {.tag = 2, .value = {.tag = 0, .pointer = (void *)(uintptr_t)1}},
+        {.tag = 2, .value = {.tag = 1, .pointer = new_value(&heap, &scalar_type, 1)}}};
+    myl_rc_edges_release(&heap, variant, values, 3);
+    myl_rc_drain(&heap);
+    assert(state.live == 0 && state.retired == 1);
+    const size_t count = 100000;
+    myl_rc_shape array = {.size = count * sizeof(void *), .kind = MYL_RC_SHAPE_ARRAY,
+        .as.array = {.element = &pointer_shape, .count = count, .stride = sizeof(void *)}};
+    const myl_rc_shape *registered;
+    assert(myl_rc_shape_import(&heap, &array, &registered) == MYL_RC_OK);
+    void **edges = calloc(count, sizeof *edges);
+    assert(edges);
+    void *shared = new_value(&heap, &scalar_type, 1);
+    for (size_t i = 0; i < count; ++i) {
+        edges[i] = shared;
+        assert(myl_rc_owner_acquire(&heap, shared) == MYL_RC_OK);
+    }
+    myl_rc_owner_release(&heap, shared);
+    heap.limit = heap.bytes;
+    myl_rc_slot slot = {.shape = registered, .address = edges};
+    myl_rc_value_drop(&heap, &slot);
+    assert(state.live == 0 && state.retired == 2);
+    free(edges);
+    finish(&heap, &state);
+}
+typedef struct Node { struct Node *next; } Node;
+static const myl_rc_field node_fields[] = {{.offset = offsetof(Node, next), .shape = &pointer_shape}};
+static const myl_rc_shape node_shape = {.size = sizeof(Node), .kind = MYL_RC_SHAPE_RECORD,
+    .as.record = {.fields = node_fields, .count = 1}};
+static const myl_native_type node_type = {.size = sizeof(Node), .alignment = _Alignof(Node), .kind = MYL_NATIVE_RECORD};
+static const myl_rc_descriptor node_descriptor = {.type = &node_type, .shape = &node_shape};
+static const myl_rc_module node_module = {.abi = MYL_RC_ABI_VERSION, .descriptors = &node_descriptor, .descriptor_count = 1};
+// spec: RC-RELEASE-1
+static void million_chain_test(void) {
+    myl_native_heap heap;
+    TestAllocator state;
+    start(&heap, &state);
+    assert(myl_rc_module_register(&heap, &node_module) == MYL_RC_OK);
+    size_t bytes = heap.bytes;
+    assert(myl_rc_module_register(&heap, &node_module) == MYL_RC_OK);
+    assert(heap.bytes == bytes);
+    Node *head = NULL;
+    for (size_t i = 0; i < 1000000; ++i) {
+        Node *next = new_value(&heap, &node_type, 1);
+        next->next = head; /* transfer the already-owned result into one edge */
+        head = next;
+    }
+    heap.limit = heap.bytes;
+    myl_rc_owner_release(&heap, head);
+    assert(state.retired == 1000000 && state.live == 0 && heap.bytes == bytes);
+    finish(&heap, &state);
+}
+static void finalizer(myl_native_heap *heap, void *payload) {
+    (void)payload;
+    TestAllocator *state = myl_rc_allocator_context(heap);
+    ++state->finalizing;
+    if (state->finalizing > state->max_finalizing) state->max_finalizing = state->finalizing;
+    myl_rc_field *fields;
+    myl_rc_shape *shapes = deep_shapes(128, &fields);
+    const myl_rc_shape *imported;
+    assert(myl_rc_shape_import(heap, shapes, &imported) == MYL_RC_OK);
+    free(shapes);
+    free(fields);
+    void *child = new_value(heap, &scalar_type, 1);
+    myl_rc_owner_release(heap, child); /* enqueue while the outer drain owns the loop */
+    assert(state->live >= 2);
+    --state->finalizing;
+}
+static const myl_native_type resource_type = {.size = sizeof(uint64_t), .alignment = _Alignof(uint64_t), .kind = MYL_NATIVE_RESOURCE};
+static const myl_rc_descriptor resource_descriptor = {.type = &resource_type, .shape = &scalar_shape, .finalize = finalizer};
+static const myl_rc_module resource_module = {.abi = MYL_RC_ABI_VERSION, .descriptors = &resource_descriptor, .descriptor_count = 1};
+// spec: RC-REGISTER-1
+static void temporary_binding_test(void) {
+    myl_native_heap heap;
+    TestAllocator state;
+    start(&heap, &state);
+    static const myl_native_type type = {.size = sizeof(void *), .alignment = _Alignof(void *), .kind = MYL_NATIVE_POINTER};
+    const myl_rc_shape *shape;
+    assert(myl_rc_shape_import(&heap, &pointer_shape, &shape) == MYL_RC_OK);
+    myl_rc_descriptor descriptor = {.type = &type, .shape = shape};
+    size_t before = heap.bytes;
+    heap.limit = before;
+    assert(myl_rc_descriptor_register(&heap, &descriptor) == MYL_RC_ALLOCATION_REFUSED);
+    assert(heap.bytes == before && !myl_rc_descriptor_find(&heap, &type));
+    heap.limit = ((size_t)256) << 20;
+    assert(myl_rc_descriptor_register(&heap, &descriptor) == MYL_RC_OK);
+    descriptor = (myl_rc_descriptor){0};
+    assert(myl_rc_descriptor_find(&heap, &type)->shape == shape);
+    void **box = new_value(&heap, &type, 1);
+    *box = new_value(&heap, &scalar_type, 1);
+    myl_rc_owner_release(&heap, box);
+    assert(state.retired == 2);
+    finish(&heap, &state);
+}
+// spec: RC-RELEASE-1
+static void reentrant_finalizer_test(void) {
+    myl_native_heap heap;
+    TestAllocator state;
+    start(&heap, &state);
+    assert(myl_rc_module_register(&heap, &resource_module) == MYL_RC_OK);
+    void *value = new_value(&heap, &resource_type, 1);
+    myl_rc_owner_release(&heap, value);
+    assert(state.live == 0 && state.retired == 2 && state.max_finalizing == 1);
+    assert(myl_rc_reserved_depth(&heap) == 129);
+    finish(&heap, &state);
+}
+int myl_rc_contract_verify(void) {
+    struct rlimit stack, original;
+    assert(!getrlimit(RLIMIT_STACK, &stack));
+    original = stack;
+    if (stack.rlim_cur > 262144) { stack.rlim_cur = 262144; assert(!setrlimit(RLIMIT_STACK, &stack)); }
+    layout_test();
+    hold_and_pin_test();
+    prefix_guard_and_limits_test();
+    reservation_failure_test();
+    deep_inline_and_overflow_test();
+    variants_and_wide_array_test();
+    million_chain_test();
+    reentrant_finalizer_test();
+    temporary_binding_test();
+    assert(!setrlimit(RLIMIT_STACK, &original));
+    return 9;
+}
+#ifndef MYL_RC_CONTRACT_LIBRARY
+int main(void) {
+    assert(myl_rc_contract_verify() == 9);
+    puts("native RC contract: 9 tests passed");
+    return 0;
+}
+#endif
