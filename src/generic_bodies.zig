@@ -1181,6 +1181,11 @@ const Checker = struct {
         const declaration = store.index.names.get("Cell") orelse return null;
         const builtin = store.index.declarations.items[declaration].builtin_name orelse return null;
         if (!std.mem.eql(u8, builtin, "Cell")) return null;
+        if (@import("value_semantics.zig").enabled()) return self.sink.fail(
+            "E_VALUE_CELL",
+            invocation.name,
+            "builtin Cell is shared mutable state under value semantics; use a value record with `mut` and store-back, or a pool handle for identity",
+        );
         if (invocation.arguments.len != 1) return self.sink.fail("E_ARITY", span, "Cell requires one value argument");
         const keyword = if (invocation.argument_names.len == 0) null else invocation.argument_names[0];
         if (keyword == null or !std.mem.eql(u8, self.src.text(keyword.?), "value"))

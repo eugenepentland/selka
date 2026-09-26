@@ -1,9 +1,8 @@
 # Value semantics
 
-**Experimental and opt-in.** This is stage 3a of
-[D9](adr/D9-value-semantics-then-rc.md): the language rules of value semantics
-on the current garbage-collected runtime, implemented the slow way (real copies
-where a transfer needs one). Without the switch nothing on this page applies,
+**Experimental and opt-in.** This is the stage 3 value model of
+[D9](adr/D9-value-semantics-then-rc.md) on the current garbage-collected runtime.
+Without the switch nothing on this page applies,
 and the compiler behaves exactly as it does without it: `class`, `list` and
 `dict` values are shared references ([managed memory](managed-memory.md)).
 
@@ -129,8 +128,9 @@ def main() -> int:
     return len(grid[0]) + len(grid[1]) * 10
 ```
 
-A binding of a `class` type is a shared reference and stays writable, and a
-`match` on a call result binds the result itself, which nothing else holds.
+A `match` on a call result binds the result itself, which nothing else holds.
+Under this switch a `class` declaration is `E_VALUE_CLASS`: use a record or
+recursive union for finite values, or a pool handle for stable graph identity.
 
 **Writing into a returned value is an error.** `lookup(table, key).items.append(1)`
 changes a temporary copy no name holds: `E_VALUE_TEMPORARY_WRITE`. Assign the
@@ -170,13 +170,32 @@ change goes to `row`, a copy of `rows[i]`; store the copy back after changing it
 (`rows[i] = row`) so the change reaches the caller
 ```
 
-## What stays shared
+## Explicit identity and immutable sharing
 
-- `class` objects and Cells are shared references in this stage (replacing
-  them with records and `pool` ids is a later stage of D9). A list reached
-  through a class object is shared through that object; reading it into a local
-  gives the local its own copy.
+- A `class` declaration is `E_VALUE_CLASS`, including an unused declaration.
+  A finite tree can use a recursive value type. A graph with cycles or
+  observable identity uses `pool.Pool[T]` and `pool.Handle[T]`, or another
+  explicit id with a store-back after mutation.
+- The builtin `Cell[T]` is `E_VALUE_CELL` in type positions and calls. A local
+  mutable slot is a record changed through `mut`; a shared slot uses a pool
+  handle. An ordinary user-defined record named `Cell` remains legal.
+- Without `--value-semantics`, existing classes and builtin Cells continue to
+  compile during the migration window.
 - `str` and `bytes` are immutable, so sharing them is invisible.
+
+```mylang
+# doc: value-semantics
+# doc: expect-error E_VALUE_CLASS
+class Node:
+    next: Option[Node]
+```
+
+```mylang
+# doc: value-semantics
+# doc: expect-error E_VALUE_CELL
+def read(slot: Cell[int]) -> int:
+    return slot.value
+```
 
 ## Arenas and contracts
 
@@ -187,8 +206,9 @@ runtime store barrier apply unchanged; a helper that stores a copy made inside
 the arena into an older collection traps `R_ARENA_ESCAPE`.
 
 `old(xs)` of a collection is accepted in an `@ensures` clause: the capture is a
-value of its own. `old(...)` of a value that reaches a `class` or Cell is still
-`E_CONTRACT_OLD_SHARED` ([contracts](contracts.md)).
+value of its own. The legacy checker still rejects an `old(...)` value that
+reaches a `class` or builtin Cell with `E_CONTRACT_OLD_SHARED`
+([contracts](contracts.md)).
 
 ## How it is implemented
 
