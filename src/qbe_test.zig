@@ -73,7 +73,10 @@ test "scalar units remain stable across body edits and declaration reorder" {
 
 // spec: QBE-COLD-FAILRET-1
 test "QBE-COLD-FAILRET-1 aggregate failure result is zeroed only in cold return blocks" {
-    var parsed = try emitted(std.testing.allocator,
+    const saved = value_semantics.enabled();
+    value_semantics.setEnabled(true);
+    defer value_semantics.setEnabled(saved);
+    const source =
         \\record Pair:
         \\    left: int
         \\    right: int
@@ -83,7 +86,8 @@ test "QBE-COLD-FAILRET-1 aggregate failure result is zeroed only in cold return 
         \\
         \\def main() -> int:
         \\    return pair(5).right
-    );
+    ;
+    var parsed = try emitted(std.testing.allocator, source);
     defer parsed.deinit();
     const body = named(parsed.value, "pair").?.il;
     const failure = std.mem.lastIndexOf(u8, body, "\n@failure\n") orelse return error.TestUnexpectedResult;
@@ -92,6 +96,13 @@ test "QBE-COLD-FAILRET-1 aggregate failure result is zeroed only in cold return 
     try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, body, "call $memset(l %empty"));
     try std.testing.expect(std.mem.indexOf(u8, body[failure..entry_failure], "ret %empty") != null);
     try std.testing.expect(std.mem.indexOf(u8, body[entry_failure..], "ret %empty") != null);
+    value_semantics.setEnabled(false);
+    var legacy = try emitted(std.testing.allocator, source);
+    defer legacy.deinit();
+    const old = named(legacy.value, "pair").?.il;
+    const old_failure = std.mem.lastIndexOf(u8, old, "\n@failure\n") orelse return error.TestUnexpectedResult;
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, old[0..old_failure], "call $memset(l %empty"));
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, old, "call $memset(l %empty"));
 }
 
 test "QBE lowers stack joins loops casts and calls independently" {
@@ -3003,6 +3014,7 @@ test "QBE-MOVE-ELIDE-1 a mut record parameter updates its scalar field in caller
     );
     defer parsed.deinit();
     try std.testing.expectEqual(@as(usize, 0), try blits(parsed.value, "push"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, named(parsed.value, "push").?.il, "memset(l %l"));
 }
 
 // spec-case: QBE-MOVE-ELIDE-1

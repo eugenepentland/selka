@@ -23,6 +23,16 @@ pub fn Lower(comptime E: type) type {
             const analysis = self.ownership orelse return true;
             return pc >= analysis.copies.len or analysis.copies[pc];
         }
+        /// Whether a store only restores the same match binding after an
+        /// ownership-elided payload copy, with no alternate control entry.
+        pub fn selfStore(self: *const E, pc: usize, index: usize) bool {
+            const code = self.function.scope.instructions;
+            if (pc < 2 or pc >= code.len) return false;
+            if (code[pc].op != .store_local or @backingInt(code[pc].op.store_local) != index) return false;
+            if (code[pc - 2].op != .load_local or @backingInt(code[pc - 2].op.load_local) != index) return false;
+            if (code[pc - 1].op != .value_copy or code[pc - 1].op.value_copy.site != .payload) return false;
+            return !self.branch_targets[pc - 1] and !self.branch_targets[pc] and !copies(self, pc - 1);
+        }
         /// Lower one `value_copy` over the operand on top of `stack`.
         pub fn emit(self: *E, copy: bytecode.ValueCopy, stack: []const typed.Type) Error!void {
             if (!copies(self, self.pc)) return;
