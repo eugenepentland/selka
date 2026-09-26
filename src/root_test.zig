@@ -210,6 +210,7 @@ test {
     _ = @import("managed_lists_test.zig");
     _ = @import("python_collections_test.zig");
     _ = @import("managed_frontend_test.zig");
+    _ = @import("sema_mut_arguments_test.zig");
     _ = @import("surface_collections_test.zig");
     _ = @import("builtin_context_test.zig");
     _ = @import("json_document_test.zig");

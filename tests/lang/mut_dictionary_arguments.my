@@ -1,0 +1,14 @@
+module mut_dictionary_arguments
+
+def clone_during(target: mut dict[int, int], source: dict[int, dict[int, int]]) -> dict[int, dict[int, int]]:
+    target[1] = target[1]
+    return source.copy()
+
+
+# spec-case: MUT-EXPRESSION-STACK-1
+public def test_dictionary_element_argument_keeps_pinned_copy_independent() -> bool:
+    original = {0: {1: 7}}
+    copied = clone_during(mut original[0], original)
+    live = copied[0].values()
+    copied[0][1] = 13
+    return list(live) == [13] and copied[0][1] == 13 and original[0][1] == 7
