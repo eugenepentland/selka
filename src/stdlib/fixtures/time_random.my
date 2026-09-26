@@ -6,15 +6,18 @@ import time
 def streams() -> int:
     generator = random.seeded(42)
     first = random.next_word(mut generator)
-    alias = generator
-    second = random.next_word(mut alias)
+    snapshot = generator
+    second = random.next_word(mut snapshot)
     if first == second:
         return 1
     replay = random.seeded(42)
     if random.next_word(mut replay) != first or random.next_word(mut replay) != second:
         return 2
-    if random.next_word(mut generator) != random.next_word(mut replay):
+    if random.next_word(mut generator) != second:
         return 3
+    third = random.next_word(mut snapshot)
+    if random.next_word(mut generator) != third or random.next_word(mut replay) != third:
+        return 7
     if first != 13679457532755275413u64:
         return 4
     seeded = random.seeded(0)

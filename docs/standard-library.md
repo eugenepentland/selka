@@ -630,16 +630,18 @@ record Random: ...
 seeded(seed: int) -> Random          from_word(word: u64) -> Random
 from_entropy(capability: random_cap) -> Result[Random, str] effects(random, managed_allocation)
 seeded_entropy(seed: int) -> Entropy
-next_word(generator: Random) -> u64  random(generator: Random) -> float
-randint(generator: Random, low: int, high: int) -> Result[int, str]
-choice[T: copy + storable](generator: Random, items: list[T]) -> Option[T]
-shuffle[T: copy + storable](generator: Random, items: list[T])
+next_word(generator: mut Random) -> u64  random(generator: mut Random) -> float
+randint(generator: mut Random, low: int, high: int) -> Result[int, str]
+choice[T: copy + storable](generator: mut Random, items: list[T]) -> Option[T]
+shuffle[T: copy + storable](generator: mut Random, items: mut list[T])
 ```
 
 The stream is SplitMix64: deterministic simulation state, not a cryptographic
 generator. Equal seeds give equal streams, and seed zero's first word is
-`16294208416658607535`. A `Random` value keeps its state in a managed cell, so
-copies of the value advance one shared stream rather than forking it.
+`16294208416658607535`. Copying a `Random` snapshots its current position;
+each copy advances independently through the same remaining sequence. Pass
+`mut generator` to advance the caller's stream. `--legacy-sharing` preserves
+the shared state list, so copies in that mode advance one shared stream.
 
 `random` returns one of the 2^53 multiples of 2^-53 in `[0, 1)`. `randint` is
 inclusive at both ends, covers the entire signed range without overflowing, and
