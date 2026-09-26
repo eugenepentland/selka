@@ -394,6 +394,13 @@ pub const Compilation = struct {
         self.code = try bytecode_inline.inlineProgram(self.index.project.arena.allocator(), lowered);
     }
 
+    /// Explain ownership across the checked project, including per-function
+    /// physical result origins used at direct call sites (RETURN-BORROW-1).
+    pub fn explainOwnership(self: *Compilation, allocator: std.mem.Allocator) EmitNativeError![]u8 {
+        try self.emitWithOptions(false);
+        return @import("ownership_explain.zig").render(allocator, self.code.?);
+    }
+
     /// How many functions the retained bytecode program has bodies for: all
     /// of them, unless an executable's emission left some unlowered.
     pub fn loweredCount(self: *const Compilation) usize {

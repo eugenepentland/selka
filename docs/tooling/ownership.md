@@ -20,8 +20,9 @@ conservative way (`owned`, `copy`, not hoisted).
 ## Explain ownership
 
 `mylang check FILE.my --explain-ownership=OUT.jsonl` checks the program as
-usual and also writes the analysis of every lowered function to `OUT.jsonl`, one
-JSON object per line (`OWNERSHIP-EXPLAIN-1`):
+usual and also writes the analysis of every lowered function, including
+imported functions in a project, to `OUT.jsonl`, one JSON object per line
+(`OWNERSHIP-EXPLAIN-1`):
 
 ```console
 $ cat fill.my
@@ -38,7 +39,7 @@ def main() -> int:
     return len(alias) + len(items)
 $ mylang check fill.my --explain-ownership=fill.jsonl
 $ head -n 1 fill.jsonl
-{"function":"fill","locals":[{"index":1,"name":"<collection>","role":"owned"},{"index":2,"name":"out","role":"owned"}],"transfers":[{"pc":2,"kind":"assign","target":1,"source":{"origin":"fresh"},"class":"move"},{"pc":4,"kind":"assign","target":2,"source":{"origin":"local","local":1,"part":"whole"},"class":"move"},{"pc":22,"kind":"return","source":{"origin":"local","local":2,"part":"whole"},"class":"move"}],"cow":[{"pc":14,"local":2,"via":2,"elements":false,"needed":true,"hoisted":9}],"moves":[3,21]}
+{"function":"fill","return_origin":{"kind":"fresh","params":[]},"borrow_origin":{"kind":"fresh","params":[]},"locals":[{"index":1,"name":"<collection>","role":"owned"},{"index":2,"name":"out","role":"owned"}],"transfers":[{"pc":2,"kind":"assign","target":1,"source":{"origin":"fresh"},"class":"move"},{"pc":4,"kind":"assign","target":2,"source":{"origin":"local","local":1,"part":"whole"},"class":"move"},{"pc":22,"kind":"return","source":{"origin":"local","local":2,"part":"whole"},"class":"move"}],"cow":[{"pc":14,"local":2,"via":2,"elements":false,"needed":true,"hoisted":9}],"moves":[3,21]}
 ```
 
 Each line carries:
@@ -46,6 +47,8 @@ Each line carries:
 | key | meaning |
 |---|---|
 | `function` | the lowered function's name |
+| `return_origin` | the checker's logical return provenance: `fresh`, `params` with zero-based parameter positions, or `unknown` |
+| `borrow_origin` | the physical provenance of retained backing, including immutable bytes in a copied record; it has the same shape as `return_origin` (`RETURN-BORROW-1`) |
 | `locals` | every non-scalar local: `index`, `name`, `role` (`owned`, `param`, `mut_param`, `borrowed`, `path`) and, for `borrowed` and `path`, the `parent` local it names |
 | `transfers` | every transfer of a non-scalar value: `pc`, `kind` (`assign`, `binding`, `argument`, `element`, `dict_value`, `field`, `construct`, `update`, `return`), `target` for an assignment or binding, `source` (`origin` `fresh`, `local` or `unknown`, with the `local` and the `part` read: `whole`, `element`, `field`) and `class` (`move`, `borrow`, `copy`) |
 | `cow` | every copy-on-write check site: `pc`, the `local` whose payload must be unique, the local the instruction names (`via`), whether the elements must be unique too (`elements`), whether a check is `needed` at all (a `mut` parameter's caller guarantees it) and the loop header it is `hoisted` to, or `null` |
@@ -56,6 +59,15 @@ In the example the append's check moves to the loop header at pc 9: nothing in
 the loop can make `out` shared, and `out` moves out of the function at its
 return. `alias = items` in `main` is a `borrow`, because
 neither list is written afterwards.
+
+For example, an accessor returning `nodes[i]` where each `Node` record holds
+`bytes` has logical `return_origin: fresh` under `--value-semantics`: the caller
+receives an independent record value. Its physical `borrow_origin: params[0]`
+records that the copied record still holds backing from `nodes`. A direct
+caller can skip a retained-backing copy only while that source remains live and
+unwritten. Mutating the source or returning the result outside its lifetime
+keeps a real copy. The two facts are tracked through direct calls and generic
+specializations; indirect calls remain conservative.
 
 The report is an inspection surface for the compiler's own development — it
 validates the analysis against the E2b prototype's decisions and against
