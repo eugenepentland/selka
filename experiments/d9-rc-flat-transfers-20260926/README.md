@@ -21,3 +21,10 @@ Use the build/perf commands in the preceding experiment README with the desired
 Debug compiler revision. Reproduce stats separately with `--rc-runtime=stats`.
 The committed constructor-take/read-only compiler optimizations are deliberately
 absent from this isolated pair; their combined measurement is recorded separately.
+
+`combined.json` adds three interleaved runs per backend after joining the
+read-only-body and constructor-take compiler changes. Reference compiler and
+artifact hashes, actual backend/optimization checks, complete counters, build
+commands and frozen GC controls are included. The reference compiler binary
+was preserved before the root tree advanced. `combined-profile.txt` is the
+short QBE self profile after that join; about 150 samples limit its precision.
