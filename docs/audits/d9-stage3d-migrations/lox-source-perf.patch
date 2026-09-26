@@ -206,20 +206,246 @@ index f76a781..63836d6 100644
  
  def is_free(obj: object.Obj) -> bool:
 diff --git a/interpreter.my b/interpreter.my
-index ae03fa1..ab08301 100644
 --- a/interpreter.my
 +++ b/interpreter.my
-@@ -659,8 +659,9 @@ def execute(it: mut Interpreter, id: int) -> Result[Flow, RuntimeError]:
-                     heap.push(mut __wb_546, value.Value.nil)
-                     it.rt = __wb_546
-             __wb_547 = it.rt
+@@ -13,7 +13,6 @@
+ import resolver
+ import table
+ import value
+-
+
+ # jlox's RuntimeError: the message and the line of the token it names.
+ public record RuntimeError:
+@@ -338,6 +337,20 @@
+
+
+ # Evaluates expression `id`, pushing exactly one value.
++def evaluate_literal(it: mut Interpreter, node: ast.LiteralExpr) -> Result[None, RuntimeError]:
++    __wb_318 = it.rt
++    heap.push(mut __wb_318, node.constant)
++    it.rt = __wb_318
++    return Ok(None)
++
++
++def evaluate_this(it: mut Interpreter, node: ast.ThisExpr) -> Result[None, RuntimeError]:
++    __wb_327 = it.rt
++    heap.push(mut __wb_327, heap.env_obj(__wb_327, env_at(__wb_327, node.hops)).slots[node.slot])
++    it.rt = __wb_327
++    return Ok(None)
++
++
+ def evaluate(it: mut Interpreter, id: int) -> Result[None, RuntimeError]:
+     match it.program.exprs[id]:
+         case ast.Expr.assign(node):
+@@ -351,10 +364,7 @@
+         case ast.Expr.grouping(node):
+             return evaluate(mut it, node.inner)
+         case ast.Expr.literal(node):
+-            __wb_318 = it.rt
+-            heap.push(mut __wb_318, node.constant)
+-            it.rt = __wb_318
+-            return Ok(None)
++            return evaluate_literal(mut it, node)
+         case ast.Expr.logical(node):
+             return logical(mut it, node)
+         case ast.Expr.set(node):
+@@ -362,10 +372,7 @@
+         case ast.Expr.super_access(node):
+             return super_access(mut it, node)
+         case ast.Expr.this(node):
+-            __wb_327 = it.rt
+-            heap.push(mut __wb_327, heap.env_obj(__wb_327, env_at(__wb_327, node.hops)).slots[node.slot])
+-            it.rt = __wb_327
+-            return Ok(None)
++            return evaluate_this(mut it, node)
+         case ast.Expr.unary(node):
+             return unary(mut it, node)
+         case ast.Expr.variable(node):
+@@ -607,6 +614,99 @@
+     return outcome
+
+
++def execute_expression(it: mut Interpreter, expr: int) -> Result[Flow, RuntimeError]:
++    evaluate(mut it, expr)?
++    __wb_521 = it.rt
++    _ = heap.pop(mut __wb_521)
++    it.rt = __wb_521
++    return Ok(Flow.NORMAL)
++
++
++def execute_function(it: mut Interpreter, index: int) -> Result[Flow, RuntimeError]:
++    decl = it.program.functions[index]
++    __wb_524 = it.rt
++    function = heap.allocate(mut __wb_524, object.Obj.tree_function(object.TreeFunctionObj(decl=index, name=decl.name_ref, closure=__wb_524.current_env, is_initializer=False)))
++    it.rt = __wb_524
++    __wb_525 = it.rt
++    heap.push(mut __wb_525, value.Value.obj(function))
++    it.rt = __wb_525
++    define(mut it, decl.name_ref, decl.slot)
++    __wb_527 = it.rt
++    _ = heap.pop(mut __wb_527)
++    it.rt = __wb_527
++    return Ok(Flow.NORMAL)
++
++
++def execute_if_stmt(it: mut Interpreter, node: ast.IfStmt) -> Result[Flow, RuntimeError]:
++    evaluate(mut it, node.condition)?
++    __wb_530 = it.rt
++    __condition_530 = not value.is_falsey(heap.pop(mut __wb_530))
++    it.rt = __wb_530
++    if __condition_530:
++        return execute(mut it, node.then_branch)
++    match node.else_branch:
++        case Some(branch):
++            return execute(mut it, branch)
++        case None:
++            pass
++    return Ok(Flow.NORMAL)
++
++
++def execute_print(it: mut Interpreter, expr: int) -> Result[Flow, RuntimeError]:
++    evaluate(mut it, expr)?
++    __wb_539 = it.out
++    output.print_value(it.rt, mut __wb_539, heap.peek(it.rt, 0))
++    it.out = __wb_539
++    __wb_540 = it.rt
++    _ = heap.pop(mut __wb_540)
++    it.rt = __wb_540
++    return Ok(Flow.NORMAL)
++
++
++def execute_return_stmt(it: mut Interpreter, node: ast.ReturnStmt) -> Result[Flow, RuntimeError]:
++    match node.result:
++        case Some(result):
++            evaluate(mut it, result)?
++        case None:
++            __wb_546 = it.rt
++            heap.push(mut __wb_546, value.Value.nil)
++            it.rt = __wb_546
++    __wb_547 = it.rt
++    returned = heap.pop(mut __wb_547)
++    it.rt = __wb_547
++    it.returned = returned
++    return Ok(Flow.RETURN)
++
++
++def execute_var_decl(it: mut Interpreter, node: ast.VarStmt) -> Result[Flow, RuntimeError]:
++    match node.initializer:
++        case Some(initializer):
++            evaluate(mut it, initializer)?
++        case None:
++            __wb_554 = it.rt
++            heap.push(mut __wb_554, value.Value.nil)
++            it.rt = __wb_554
++    define(mut it, node.name_ref, node.slot)
++    __wb_556 = it.rt
++    _ = heap.pop(mut __wb_556)
++    it.rt = __wb_556
++    return Ok(Flow.NORMAL)
++
++
++def execute_while_stmt(it: mut Interpreter, node: ast.WhileStmt) -> Result[Flow, RuntimeError]:
++    while True:
++        evaluate(mut it, node.condition)?
++        __wb_560 = it.rt
++        __condition_560 = value.is_falsey(heap.pop(mut __wb_560))
++        it.rt = __wb_560
++        if __condition_560:
++            return Ok(Flow.NORMAL)
++        flow = execute(mut it, node.body)?
++        if flow == Flow.RETURN:
++            return Ok(flow)
++    return Ok(Flow.NORMAL)
++
++
+ def execute(it: mut Interpreter, id: int) -> Result[Flow, RuntimeError]:
+     match it.program.stmts[id]:
+         case ast.Stmt.block(node):
+@@ -614,77 +714,19 @@
+         case ast.Stmt.class_decl(_):
+             class_declaration(mut it, id)?
+         case ast.Stmt.expression(expr):
+-            evaluate(mut it, expr)?
+-            __wb_521 = it.rt
+-            _ = heap.pop(mut __wb_521)
+-            it.rt = __wb_521
++            return execute_expression(mut it, expr)
+         case ast.Stmt.function(index):
+-            decl = it.program.functions[index]
+-            __wb_524 = it.rt
+-            function = heap.allocate(mut __wb_524, object.Obj.tree_function(object.TreeFunctionObj(decl=index, name=decl.name_ref, closure=__wb_524.current_env, is_initializer=False)))
+-            it.rt = __wb_524
+-            __wb_525 = it.rt
+-            heap.push(mut __wb_525, value.Value.obj(function))
+-            it.rt = __wb_525
+-            define(mut it, decl.name_ref, decl.slot)
+-            __wb_527 = it.rt
+-            _ = heap.pop(mut __wb_527)
+-            it.rt = __wb_527
++            return execute_function(mut it, index)
+         case ast.Stmt.if_stmt(node):
+-            evaluate(mut it, node.condition)?
+-            __wb_530 = it.rt
+-            __condition_530 = not value.is_falsey(heap.pop(mut __wb_530))
+-            it.rt = __wb_530
+-            if __condition_530:
+-                return execute(mut it, node.then_branch)
+-            match node.else_branch:
+-                case Some(branch):
+-                    return execute(mut it, branch)
+-                case None:
+-                    pass
++            return execute_if_stmt(mut it, node)
+         case ast.Stmt.print(expr):
+-            evaluate(mut it, expr)?
+-            __wb_539 = it.out
+-            output.print_value(it.rt, mut __wb_539, heap.peek(it.rt, 0))
+-            it.out = __wb_539
+-            __wb_540 = it.rt
+-            _ = heap.pop(mut __wb_540)
+-            it.rt = __wb_540
++            return execute_print(mut it, expr)
+         case ast.Stmt.return_stmt(node):
+-            match node.result:
+-                case Some(result):
+-                    evaluate(mut it, result)?
+-                case None:
+-                    __wb_546 = it.rt
+-                    heap.push(mut __wb_546, value.Value.nil)
+-                    it.rt = __wb_546
+-            __wb_547 = it.rt
 -            it.returned = heap.pop(mut __wb_547)
-+            returned = heap.pop(mut __wb_547)
-             it.rt = __wb_547
-+            it.returned = returned
-             return Ok(Flow.RETURN)
+-            it.rt = __wb_547
+-            return Ok(Flow.RETURN)
++            return execute_return_stmt(mut it, node)
          case ast.Stmt.var_decl(node):
-             match node.initializer:
+-            match node.initializer:
+-                case Some(initializer):
+-                    evaluate(mut it, initializer)?
+-                case None:
+-                    __wb_554 = it.rt
+-                    heap.push(mut __wb_554, value.Value.nil)
+-                    it.rt = __wb_554
+-            define(mut it, node.name_ref, node.slot)
+-            __wb_556 = it.rt
+-            _ = heap.pop(mut __wb_556)
+-            it.rt = __wb_556
++            return execute_var_decl(mut it, node)
+         case ast.Stmt.while_stmt(node):
+-            while True:
+-                evaluate(mut it, node.condition)?
+-                __wb_560 = it.rt
+-                __condition_560 = value.is_falsey(heap.pop(mut __wb_560))
+-                it.rt = __wb_560
+-                if __condition_560:
+-                    return Ok(Flow.NORMAL)
+-                flow = execute(mut it, node.body)?
+-                if flow == Flow.RETURN:
+-                    return Ok(flow)
++            return execute_while_stmt(mut it, node)
+     return Ok(Flow.NORMAL)
+
+
 diff --git a/vm.my b/vm.my
 index 450eb63..c8123b0 100644
 --- a/vm.my
