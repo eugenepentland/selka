@@ -36,7 +36,7 @@ const data_source =
     \\module data
     \\
     \\
-    \\public class Box:
+    \\public record Box:
     \\    value: int
     \\
     \\

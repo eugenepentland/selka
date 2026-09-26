@@ -407,7 +407,7 @@ const advisory_fixture =
     \\module main
     \\
     \\
-    \\class Big:
+    \\record Big:
     \\    a: int
     \\    b: int
     \\    c: int
