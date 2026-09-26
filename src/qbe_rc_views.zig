@@ -1,4 +1,4 @@
-//! Live dictionary views retain header identity through H-only physical tokens.
+//! Live views and iteration sources retain header identity through H-only tokens.
 const typed = @import("typed.zig");
 const bytecode = @import("bytecode.zig");
 const semantics = @import("value_semantics.zig");
@@ -121,6 +121,15 @@ pub fn local(comptime E: type, self: *E, op: Op, stack: []const typed.Type) Erro
             const target = self.function.scope.locals[index];
             if (!target.usage.temporary or !holds.mayHold(E, self, target.ty)) return .unhandled;
             const operand = stack.len - 1;
+            if (@import("cow_plan.zig").iterationOwner(self.function, index)) {
+                // Acquire before releasing either input or prior iteration source:
+                // a fresh temporary can have its only owner in this operand.
+                try acquire(E, self, target.ty, try self.load("s", operand));
+                try values.drop(E, self, operand);
+                try publish(E, self, target.ty, operand);
+                try store(E, self, target.ty, index, operand);
+                return .handled;
+            }
             const label = try branch(E, self, values.journalIndex(E, self, operand));
             try store(E, self, target.ty, index, operand);
             try ordinary(E, self, label);
