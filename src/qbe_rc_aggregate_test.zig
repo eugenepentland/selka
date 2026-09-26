@@ -155,7 +155,7 @@ test "GC contract inspection does not close the returned unique payload" {
 }
 
 // spec: RC-PLAIN-OPERAND-1
-test "RC scalar arithmetic in an owning frame emits only the managed input drop" {
+test "RC scalar arithmetic with a receiver loan emits no owned input drops" {
     const saved = runtime.get();
     defer runtime.set(saved);
     runtime.set(.rc);
@@ -176,5 +176,5 @@ test "RC scalar arithmetic in an owning frame emits only the managed input drop"
     var manifest = try std.json.parseFromSlice(Manifest, t.allocator, emitted, .{ .ignore_unknown_fields = true });
     defer manifest.deinit();
     const text = try findFunction(manifest.value, "total");
-    try t.expectEqual(@as(usize, 1), std.mem.count(u8, text, "call $myl_qbe_rc_slot_drop"));
+    try t.expectEqual(@as(usize, 0), std.mem.count(u8, text, "call $myl_qbe_rc_slot_drop"));
 }

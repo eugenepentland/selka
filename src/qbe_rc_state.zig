@@ -29,6 +29,7 @@ pub fn build(comptime E: type, self: *E, capacity: usize) Error!*State {
     state.contract = calls.guest(a, &state.catalog, self.function, runtime.identity()) catch |err| return translate(err);
     const locals = try a.alloc(@import("rc_input.zig").Binding, self.function.scope.locals.len);
     for (locals, 0..) |*binding, index| binding.* = .{ .storage = @fromBackingInt(@intCast(index)) };
+    try @import("qbe_rc_read_loans.zig").bind(E, self, locals, &state.catalog);
     state.locals = plan.build(a, .{
         .code = .{ .program = self.program, .function = self.function, .states = self.states },
         .flow = .{ .live = self.live.?, .ownership = self.ownership.? },
