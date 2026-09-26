@@ -244,3 +244,16 @@ failures after earlier temporary cleanup. Exposed view-mapping mutation and
 copied-view codec fixes are being completed. The first matched binary-tree
 measurements remain far outside the RC performance threshold. WP-4 remains
 experimental and incomplete; GC remains the default, and WP-5 awaits WP-4.
+
+
+## Joined RC receiver correctness checkpoint
+
+Frozen `a49441c1` passes all four gates (main 94/94 and 2,209 executed tests,
+QBE 437, native-build 29/29, formatting 2/2) and the actual uncached RC language
+sweeps: **723/723 tests on each backend**, 125 programs and no dropped/unloaded
+programs. The [report and evidence](d9-rc-receivers-gate-2026-09-26.md) include
+copied held-view codecs, H mapping mutation, and sorted receiver-owner lifetime.
+Verified LLVM O3/full LTO also produces all three exact schematic SVG hashes.
+Historical mislabeled LLVM runner evidence is explicitly corrected and rerun.
+The measured RC instruction gap is still substantial; WP-4 performance and
+its default transition remain open, and WP-5 is not complete.
