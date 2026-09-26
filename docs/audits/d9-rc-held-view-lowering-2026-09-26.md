@@ -68,3 +68,9 @@ The `trap.my` probe leaves an active hidden H receiver when an assertion fails.
 Both backends report `R_ASSERT` and fully clean up: eight allocations/retirements,
 six owner acquires plus fourteen releases, and four hold acquires/releases.
 `trap-qbe.json` and `trap-llvm.json` retain exact commands and diagnostics.
+
+Backend evidence correction: the original LLVM-labeled basic/deep/trap records
+used a later `--qbe` option and actually ran QBE. Those historical files remain
+unchanged. New `llvm-corrected.json` and `trap-llvm-corrected.json` use actual
+LLVM O3/LTO and confirm all twelve view assertions and expected trap cleanup
+with balanced counts identical to the corresponding QBE results.

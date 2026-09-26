@@ -1,0 +1,62 @@
+{
+  "backend": "llvm",
+  "guest_mode": "ReleaseFast",
+  "cases": [
+    "rc_probe_dictionary_views.test_bound_views_are_live_and_snapshots_are_explicit",
+    "rc_probe_dictionary_views.test_items_have_key_value_fields_in_every_context",
+    "rc_probe_dictionary_views.test_views_support_comprehensions_and_generic_helpers",
+    "rc_probe_dictionary_views.test_views_keep_mapping_alive_and_empty_views_work",
+    "rc_probe_dictionary_views.test_view_reads_observe_value_replacement_and_loop_control",
+    "rc_probe_dictionary_views.test_views_work_inside_arena_and_snapshots_stay_independent",
+    "rc_probe_rc_dictionary_views.test_mapping_projection_creates_named_snapshots",
+    "rc_probe_rc_dictionary_views.test_replacing_mapping_field_rebinds_live_identity",
+    "rc_probe_rc_dictionary_views.test_stored_and_returned_views_observe_growth_and_clear",
+    "rc_probe_rc_dictionary_views.test_arena_escape_traverses_nested_held_edges_and_managed_values",
+    "rc_probe_rc_dictionary_views.test_recursive_boxes_keep_live_held_edges_through_copy_and_drop",
+    "rc_probe_rc_dictionary_views.test_escaping_an_older_held_mapping_preserves_its_live_identity"
+  ],
+  "source_sha256": {
+    "tests/lang/dictionary_views.my": "68c8200b3ff12469f35efc2d48e4270a7d1e4211e8318e9cf9d95adb082703e9",
+    "tests/lang/rc_dictionary_views.my": "26227928436f0882f26318c7c6d27f1cce240f900a48e09b80a398b4e72002d3"
+  },
+  "compiler_sha256": "6a6f47f01e0f6ec6f67d0d54b73d797ad80364ddddafb2dea946554774fe5280",
+  "source_commit": "c4066c99b129683fdd036f7d8f20b9996bf2e022",
+  "binary_sha256": "878dd7361b9e52be86c474ea082d8f4eefb6ae4c18e36c5eab0463c80bb3f5c9",
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/scripts/build-slot.sh",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/.tmp/rc-edge-audit/install/bin/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/.tmp/rc-backend-corrections/views/rc_probe_driver.my",
+    "--rc-runtime=stats",
+    "--backend",
+    "llvm",
+    "--mode",
+    "ReleaseFast",
+    "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/.tmp/rc-backend-corrections/views/cache",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/.tmp/rc-backend-corrections/views/held-views-llvm",
+    "--llvm-opt",
+    "3",
+    "--lto"
+  ],
+  "exit": 0,
+  "stdout": "0\n",
+  "stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v2-counting\",\"saturated\":false,\"owner_acquire\":6086,\"owner_release\":11006,\"hold_acquire\":2295,\"hold_release\":2295,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":4920,\"arena_allocate\":16,\"retire\":4920,\"clone_shell\":5,\"unique_check\":4539}\n",
+  "counts": {
+    "version": 1,
+    "runtime": "rc-v2-counting",
+    "saturated": false,
+    "owner_acquire": 6086,
+    "owner_release": 11006,
+    "hold_acquire": 2295,
+    "hold_release": 2295,
+    "owner_limit": 0,
+    "hold_limit": 0,
+    "heap_allocate": 4920,
+    "arena_allocate": 16,
+    "retire": 4920,
+    "clone_shell": 5,
+    "unique_check": 4539
+  }
+}

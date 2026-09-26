@@ -49,3 +49,8 @@ constructors and mutation helpers themselves now publish owned results, acquire
 logical children, preserve output on refusal, and roll back fresh arena products;
 the 22-scenario C harness covers those contracts and remains part of the focused
 RC tests.
+
+Backend evidence correction: the historical collection probe `llvm.json` used
+`--qbe` after its backend selection and ran QBE. It remains archived, but is not
+LLVM validation. The corrected runner now records actual LLVM O3/LTO commands
+and results separately in `llvm-corrected.json`.

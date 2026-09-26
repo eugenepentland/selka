@@ -38,3 +38,16 @@ allocated sort keys, set pop, identity text conversion, and detached nested view
 These are focused RC execution probes, not the full gate or WP-4 acceptance.
 Pinned callback scopes, arena escape, and generic aggregate construction require
 their corresponding integration evidence.
+
+## Backend correction (2026-09-26)
+
+The archived `llvm.json` was produced by a runner that placed `--qbe=PATH`
+after `--backend llvm`, selecting QBE again. Preserve that record as historical
+QBE evidence; its LLVM label is invalid. The corrected runner only supplies
+`--qbe` for QBE and uses explicit O3/LTO for LLVM. New actual LLVM evidence is
+recorded separately as `llvm-corrected.json`, including exact build commands.
+
+The new actual LLVM run passes 71 assertions: 13 basic, 13 view, 39 wide
+collection and six regression cases. All allocations/retirements and owners
+balance in each group. This rerun uses the current corrected compiler, rather
+than claiming to reproduce the historical compiler's LLVM output.
