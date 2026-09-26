@@ -1,0 +1,15 @@
+module paths
+
+# Add the edge src -> dst to the caller's graph (see README.md).
+public def add_edge(adj: mut dict[int, list[int]], src: int, dst: int):
+    todo[None]()
+
+
+# Append every route from `node` to `goal` that extends `path` to `found`.
+public def collect_paths(adj: dict[int, list[int]], node: int, goal: int, path: mut list[int], found: mut list[list[int]]):
+    todo[None]()
+
+
+# Every route from start to goal.
+public def all_paths(adj: dict[int, list[int]], start: int, goal: int) -> list[list[int]]:
+    return todo[list[list[int]]]()

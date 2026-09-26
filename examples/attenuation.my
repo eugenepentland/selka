@@ -1,12 +1,13 @@
 resource File: filesystem
 
+
 result Open:
     ok: File,
     err: int
 
 
 record Chunk:
-    bytes: [16]u8
+    bytes: [16] u8
     length: u64
     eof: bool
 
@@ -17,12 +18,12 @@ result Read:
 
 
 def delegate(fs: Filesystem) -> Filesystem effects():
-    return restrict_resource[read](fs)
+    return fs.read_only()
 
 
 def main(fs: Filesystem) -> int:
     reader = delegate(fs)
-    request: [1]u8 = [42u8]
+    request: [1] u8 = [42u8]
     match acquire_resource[Open](reader, request):
         case Open.ok(input):
             file = input

@@ -1,7 +1,6 @@
 module inputs
 
-
-public def bytes() -> [9]u8 effects():
+public def bytes() -> [9] u8 effects():
     return [1u8, 2u8, 4u8, 7u8, 0u8, 0u8, 1u8, 44u8, 59u8]
 
 

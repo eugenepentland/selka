@@ -806,8 +806,8 @@ fn checkLambdaValue(comptime Checker: type, self: *Checker, index: usize, node: 
     );
     const lambda = self.syntax.lambdas[index];
     if (lambda.parameters.len != contract.parameters.len) return self.sink.fail("E_ARITY", node.span, "lambda parameter count must match its expected callback type");
-    for (contract.mutates) |position| if (position < contract.parameters.len and typed.referenceArray(self.catalog.records, contract.parameters[position]))
-        return self.sink.fail(lambda_context_code, node.span, "a callback with a `mut` fixed-array parameter cannot be a lambda; write a function and call it directly");
+    for (contract.mutates) |position| if (position < contract.parameters.len and typed.referenceMut(self.catalog.records, contract.parameters[position]))
+        return self.sink.fail(lambda_context_code, node.span, "a callback with a `mut` fixed-array or record parameter cannot be a lambda; write a function and call it directly");
     if (self.lambda_types[index]) |previous| {
         const old = callables.signature(previous, self.catalog.records) orelse return error.InternalError;
         if (!callables.equal(old, contract)) return self.sink.fail(lambda_context_code, node.span, "one lambda expression cannot have conflicting callback types");

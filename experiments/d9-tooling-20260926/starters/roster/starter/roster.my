@@ -1,0 +1,25 @@
+module roster
+
+public record Team:
+    name: str
+    members: list[str]
+
+
+public record League:
+    teams: list[Team]
+    log: list[str]
+
+
+# Move `player` into `to_team` in the caller's league (see README.md).
+public def transfer(league: mut League, player: str, to_team: str) -> bool:
+    return todo[bool]()
+
+
+# The league as `transfer` would leave it; `league` itself is unchanged.
+public def with_transfer(league: League, player: str, to_team: str) -> League:
+    return todo[League]()
+
+
+# The members of `team`, or an empty list.
+public def roster(league: League, team: str) -> list[str]:
+    return todo[list[str]]()

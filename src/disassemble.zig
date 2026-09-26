@@ -85,6 +85,7 @@ fn writeInstruction(writer: *std.Io.Writer, program: bc.Program, src: Source, in
         .arena_escape => |ty| try writer.print("ARENA_ESCAPE {f}", .{ty}),
         .wrap_domain => |ty| try writer.print("WRAP_DOMAIN {s}", .{typed.typeName(ty, program.records)}),
         .unwrap_domain => |ty| try writer.print("UNWRAP_DOMAIN {s}", .{typed.typeName(ty, program.records)}),
+        .value_copy => |copy| try writer.print("VALUE_COPY {s} {s}", .{ typed.typeName(copy.ty, program.records), @tagName(copy.site) }),
         .cast_integer => |ty| try writer.print("CAST_INT {f}", .{ty}),
         .neg_integer => |ty| try writer.print("NEG_INT_CHECKED {f}", .{ty}),
         .binary_integer => |binary| try writer.print("INT_BINARY {f} {s}", .{ binary.ty, @tagName(binary.op) }),

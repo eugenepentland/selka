@@ -14,6 +14,7 @@ const source = @import("source.zig");
 const diagnostic = @import("diagnostic.zig");
 const byte_literal = @import("byte_literal.zig");
 const collections = @import("collection_lower.zig");
+const value_semantics = @import("value_semantics.zig");
 const Error = diagnostic.Error;
 const Span = source.Span;
 
@@ -599,9 +600,12 @@ fn captureOld(comptime Checker: type, self: *Checker, call_id: ast.NodeId) Error
 
 /// Whether capturing this checked value in `old(...)` would alias storage the
 /// body can still change: its type shares mutable storage, and it is not a
-/// fresh copy whose own elements share none.
+/// fresh copy whose own elements share none. Under value semantics the capture
+/// is a value of its own unless it reaches a `class` or Cell
+/// (`VALUE-SEMANTICS-7`).
 fn shared(records: []const typed.Record, node: typed.Node) bool {
     if (!typed.carriesWritableStorage(records, node.ty)) return false;
+    if (value_semantics.enabled() and value_semantics.copiesAll(records, node.ty)) return false;
     if (!fresh(node)) return true;
     const record = records[node.ty.recordIndex()];
     if (!record.isCollection()) return true;

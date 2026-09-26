@@ -3,7 +3,6 @@ import inputs
 import decoder
 import model
 
-
 def main() -> int:
     packet = inputs.bytes()
     size = inputs.size()

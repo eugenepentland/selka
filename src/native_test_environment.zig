@@ -20,6 +20,8 @@ const compiler_inputs = [_][]const u8{
     "MYLANG_QBE_LLVM_OPT",
     "MYLANG_QBE_LLVM_STICKY",
     "MYLANG_SEMANTIC_BUDGET",
+    // VALUE-SEMANTICS-1: the switch every child compiler inherits.
+    "MYLANG_VALUE_SEMANTICS",
     "OBJC_INCLUDE_PATH",
     "SOURCE_DATE_EPOCH",
     "ZIG_LIBC",

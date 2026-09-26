@@ -2,7 +2,7 @@ def set(values: mut list[int], index: int, replacement: int):
     values[index] = replacement
 
 
-def countdown(n: int) effects():
+def countdown(n: int)effects():
     if n == 0:
         return
     countdown(n - 1)

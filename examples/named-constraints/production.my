@@ -1,10 +1,8 @@
 module production
 import contracts
 
-
 public domain DiscountPrices: int:
     def make(discount: int) -> DiscountPrices effects():
         return wrap[DiscountPrices](discount)
-
     def price(policy: DiscountPrices, subtotal: int) -> int effects():
         return subtotal - unwrap(policy)

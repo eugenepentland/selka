@@ -238,6 +238,26 @@ test "mylang json interface_files is an optional boolean" {
     try t.expectError(error.DuplicateField, loadTmp(&temp, "twice.json", &failure));
 }
 
+// spec: VALUE-SEMANTICS-1
+test "mylang json value_semantics is an optional boolean" {
+    var temp = t.tmpDir(.{});
+    defer temp.cleanup();
+    var failure: project_config.Failure = .{};
+    try writeTmp(&temp, "plain.json", "{\"version\":1}");
+    var plain = try loadTmp(&temp, "plain.json", &failure);
+    defer plain.deinit();
+    try t.expect(!plain.document.value_semantics);
+    try writeTmp(&temp, "enabled.json", "{\"version\":1,\"value_semantics\":true}");
+    var enabled = try loadTmp(&temp, "enabled.json", &failure);
+    defer enabled.deinit();
+    try t.expect(enabled.document.value_semantics);
+    try writeTmp(&temp, "text.json", "{\"version\":1,\"value_semantics\":1}");
+    try t.expectError(error.InvalidValueSemantics, loadTmp(&temp, "text.json", &failure));
+    try t.expectEqualStrings("value_semantics must be true or false", failure.detail);
+    try writeTmp(&temp, "twice.json", "{\"version\":1,\"value_semantics\":true,\"value_semantics\":false}");
+    try t.expectError(error.DuplicateField, loadTmp(&temp, "twice.json", &failure));
+}
+
 // spec-case: REQUIRED-PROJECT-IMPORT-POLICY-1
 test "project config rejects unknown duplicate malformed and unsupported shapes" {
     var temp = t.tmpDir(.{});

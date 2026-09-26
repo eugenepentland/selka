@@ -109,10 +109,11 @@ fn eligible(program: bytecode.Program, index: usize, code: []const bytecode.Inst
     if (code.len == 0 or code.len > max_loop_instructions) return false;
     if (locals.len > max_locals) return false;
     if (function.signature.parameter_count > locals.len) return false;
-    // A `mut` fixed array names its caller's variable; a splice would bind a
-    // copy of it instead, so such a callee keeps its call.
+    // A `mut` fixed array (or, under value semantics, record) names its
+    // caller's variable; a splice would bind a copy of it instead, so such a
+    // callee keeps its call.
     for (function.signature.declared_mutates) |position| {
-        if (position < locals.len and typed.referenceArray(program.records, locals[position].ty)) return false;
+        if (position < locals.len and typed.referenceMut(program.records, locals[position].ty)) return false;
     }
     var returns = false;
     for (code) |instruction| {

@@ -1,6 +1,5 @@
 module report
 
-
 def render(value: i64) -> str:
     if value == 0:
         return "0"

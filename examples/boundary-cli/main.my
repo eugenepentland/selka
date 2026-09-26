@@ -8,6 +8,7 @@ def trace_requested(env: Environment) -> bool effects(environment):
         case None:
             return False
 
+
 def main(args: list[str], fs: Filesystem, env: Environment, out: Stream, err: Stream) -> Result[int, str]:
     if len(args) != 1:
         return Err("usage: boundary-cli <source.my>")

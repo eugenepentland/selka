@@ -160,6 +160,9 @@ pub fn allocates(op: @FieldType(bytecode.Instruction, "op")) bool {
         // `print` begins a sink that can allocate its buffer, so managed
         // operands and locals must be rooted across it.
         .print,
+        // A value-semantics copy allocates unless the ownership analysis
+        // proved it a move or a borrow, which then lowers to nothing.
+        .value_copy,
         => true,
         else => false,
     };

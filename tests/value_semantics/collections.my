@@ -1,0 +1,108 @@
+module collections
+
+# Every collection type is an independent value under `--value-semantics`
+# (VALUE-SEMANTICS-2): assignment, argument passing, returns and stores never
+# make two names reach the same list, dict, set or byte_buffer.
+
+
+def with_item(xs: list[int], value: int) -> list[int]:
+    copy = xs
+    copy.append(value)
+    return copy
+
+
+def with_entry(d: dict[str, int], key: str, value: int) -> dict[str, int]:
+    copy = d
+    copy[key] = value
+    return copy
+
+
+def with_member(s: set[int], value: int) -> set[int]:
+    copy = s
+    copy.add(value)
+    return copy
+
+
+def with_byte(b: byte_buffer, value: int) -> byte_buffer:
+    copy = b
+    _ = copy.append_byte(value)
+    return copy
+
+
+def total(xs: list[int]) -> int:
+    sum = 0
+    for x in xs:
+        sum += x
+    return sum
+
+
+# spec-case: VALUE-SEMANTICS-2
+public def test_a_list_assignment_is_a_copy() -> bool:
+    a = [1, 2]
+    b = a
+    b.append(3)
+    a[0] = 9
+    return a == [9, 2] and b == [1, 2, 3]
+
+
+# spec-case: VALUE-SEMANTICS-2
+public def test_a_dict_assignment_is_a_copy() -> bool:
+    a = {"x": 1}
+    b = a
+    b["y"] = 2
+    a["x"] = 5
+    return len(a) == 1 and a["x"] == 5 and len(b) == 2 and b["x"] == 1
+
+
+# spec-case: VALUE-SEMANTICS-2
+public def test_a_set_assignment_is_a_copy() -> bool:
+    a = {1, 2}
+    b = a
+    b.add(3)
+    a.discard(1)
+    return len(a) == 1 and 2 in a and len(b) == 3 and 1 in b
+
+
+# spec-case: VALUE-SEMANTICS-2
+public def test_a_byte_buffer_assignment_is_a_copy() -> bool:
+    empty: list[int] = []
+    a = byte_buffer(empty)
+    _ = a.append_byte(1)
+    b = a
+    _ = b.append_byte(2)
+    return len(a) == 1 and len(b) == 2 and b[1] == 2
+
+
+# spec-case: VALUE-SEMANTICS-2
+public def test_a_returned_copy_of_each_collection_leaves_the_argument_alone() -> bool:
+    xs = [1]
+    d = {"a": 1}
+    s = {1}
+    empty: list[int] = []
+    buffer = byte_buffer(empty)
+    grown = with_item(xs, 2)
+    keyed = with_entry(d, "b", 2)
+    member = with_member(s, 2)
+    longer = with_byte(buffer, 7)
+    unchanged = len(xs) == 1 and len(d) == 1 and len(s) == 1 and len(buffer) == 0
+    return unchanged and grown == [1, 2] and len(keyed) == 2 and 2 in member and len(longer) == 1
+
+
+# A read-only argument is lent: the callee reads the caller's own list.
+# spec-case: VALUE-SEMANTICS-2
+public def test_a_read_only_argument_is_read_in_place() -> bool:
+    xs = [1, 2, 3]
+    first = total(xs)
+    xs.append(4)
+    return first == 6 and total(xs) == 10
+
+
+# spec-case: VALUE-SEMANTICS-2
+public def test_nested_collections_copy_all_the_way_down() -> bool:
+    grid = [[1], [2]]
+    other = grid
+    other[0].append(5)
+    table = {"k": [1]}
+    copy = table
+    copy["k"].append(2)
+    return grid == [[1], [2]] and other == [[1, 5], [2]] and table["k"] == [1] and copy["k"] == [1, 2]

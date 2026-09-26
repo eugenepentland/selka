@@ -102,6 +102,9 @@ pub const Analysis = struct {
     /// Per instruction, the sources of its operands on entry; null where
     /// unreachable.
     operands: []const ?[]const Source,
+    /// Per instruction, whether a `value_copy` there must make a real copy
+    /// (`VALUE-SEMANTICS-2`); empty when the function has none.
+    copies: []const bool = &.{},
 
     /// The local at the end of `local`'s chain of aliases.
     pub fn rootOf(self: Analysis, local: u32) u32 {

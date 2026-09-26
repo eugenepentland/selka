@@ -260,7 +260,14 @@ fn addBuildPhases(timings: *language.timings.Profile, phases: native_build.Phase
     }
 }
 fn dispatch(process: std.process.Init) !u8 {
-    const args = try process.minimal.args.toSlice(process.arena.allocator());
+    // VALUE-SEMANTICS-1: settle the switch before any command runs; a
+    // command it turned on restarts with the switch in its environment.
+    const settled = switch (try @import("main_value_semantics.zig").settle(process, try process.minimal.args.toSlice(process.arena.allocator()))) {
+        .run => |switched| switched,
+        .status => |status| return status,
+    };
+    if (settled.enabled) build_identity = valueSemanticsIdentity(base_identity);
+    const args = settled.args;
     if (args.len == 2 and std.mem.eql(u8, args[1], "--features")) {
         try featureReport(process);
         return 0;
@@ -515,7 +522,9 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
         setWork(init, .parsed_modules, 1, 0);
         if (parsed.format_check) {
             if (std.mem.eql(u8, formatted, bytes)) return 0;
-            try init.text("formatting differs\n");
+            const difference = try formattingDifference(allocator, compilation.src, formatted);
+            defer allocator.free(difference);
+            try init.text(difference);
             return 1;
         }
         try std.Io.File.stdout().writeStreamingAll(init.io, formatted);
@@ -2922,7 +2931,19 @@ fn compilerIdentity(io: std.Io) !language.source_receipt.Identity {
     const builtin = @import("builtin");
     return .{ .compiler_sha256 = build_identity, .zig_version = builtin.zig_version_string, .architecture = @tagName(builtin.cpu.arch), .os = @tagName(builtin.os.tag), .abi = @tagName(builtin.abi), .optimize = @tagName(builtin.mode) };
 }
-const build_identity: [32]u8 = identity: {
+/// The identity every compiler cache is keyed by: the compiler's own, or under
+/// value semantics (`VALUE-SEMANTICS-1`) a digest of it, so no frontend,
+/// semantic, fragment or receipt cache entry is shared between the two modes.
+/// `dispatch` sets it once, before any command reads it.
+var build_identity: [32]u8 = base_identity;
+/// The cache identity under value semantics: a digest of the build's own.
+fn valueSemanticsIdentity(base: [32]u8) [32]u8 {
+    var digest: [32]u8 = undefined;
+    std.crypto.hash.sha2.Sha256.hash(&(base ++ "value-semantics".*), &digest, .{});
+    return digest;
+}
+/// The identity of this compiler build itself.
+const base_identity: [32]u8 = identity: {
     const text = @import("qbe_build_assets").compiler_identity;
     var decoded: [32]u8 = undefined;
     for (&decoded, 0..) |*byte, index| byte.* = nibble(text[index * 2]) << 4 | nibble(text[index * 2 + 1]);
@@ -2951,9 +2972,19 @@ fn surfaceProject(init: Context, project: *language.project.Project, parsed: Par
     return null;
 }
 
+fn formattingDifference(allocator: std.mem.Allocator, src: language.source.Source, formatted: []const u8) ![]u8 {
+    var offset: usize = 0;
+    while (offset < @min(src.bytes.len, formatted.len) and src.bytes[offset] == formatted[offset]) : (offset += 1) {}
+    const location = src.locate(offset);
+    return std.fmt.allocPrint(allocator, "{s}:{d}:{d}: formatting differs\n", .{ location.path, location.line, location.column });
+}
+
 fn formatProject(init: Context, project: *language.project.Project) !u8 {
     var changed: std.ArrayList([]const u8) = .empty;
-    defer changed.deinit(init.gpa);
+    defer {
+        for (changed.items) |message| init.gpa.free(message);
+        changed.deinit(init.gpa);
+    }
     for (project.order.items) |module_id| {
         const src = project.modules.items[module_id].src;
         var compilation = try language.Compilation.init(init.gpa, src.path, src.bytes);
@@ -2967,13 +2998,13 @@ fn formatProject(init: Context, project: *language.project.Project) !u8 {
         };
         defer init.gpa.free(formatted);
         recordWork(init, .parsed_modules, 1, 0);
-        if (!std.mem.eql(u8, formatted, src.bytes)) try changed.append(init.gpa, src.path);
+        if (!std.mem.eql(u8, formatted, src.bytes)) {
+            try changed.ensureUnusedCapacity(init.gpa, 1);
+            const message = try formattingDifference(init.gpa, src, formatted);
+            changed.appendAssumeCapacity(message);
+        }
     }
-    for (changed.items) |path_name| {
-        const message = try std.fmt.allocPrint(init.gpa, "{s}: formatting differs\n", .{path_name});
-        defer init.gpa.free(message);
-        try init.text(message);
-    }
+    for (changed.items) |message| try init.text(message);
     return if (changed.items.len == 0) 0 else 1;
 }
 
@@ -3138,8 +3169,8 @@ fn frontendRoot(init: Context, parsed: Parsed) ?[]const u8 {
 /// disables reuse, never failing the command.
 fn openFrontendCache(init: Context, parsed: Parsed) ?language.frontend_cache.Cache {
     const root = frontendRoot(init, parsed) orelse return null;
-    // `&build_identity` points at the immutable compile-time global, so the
-    // cache's borrowed identity outlives this frame; a local copy would dangle.
+    // `&build_identity` points at the process-lifetime global, so the cache's
+    // borrowed identity outlives this frame; a local copy would dangle.
     var cache = language.frontend_cache.Cache.init(init.gpa, init.io, root, &build_identity);
     // A joined path is freshly allocated and released by deinit; the default
     // constant is static storage and must not be freed.
@@ -3173,6 +3204,8 @@ fn manifestReplayTicket(parsed: Parsed, diagnostics: diagnostic_output.Format, p
     replayFrame(&slot, parsed.path);
     const switches = [_]bool{ parsed.drop_debug, parsed.drop_step_checks, parsed.drop_frame_checks, parsed.lean_manifest, parsed.executable_manifest };
     for (switches) |value| slot.update(&.{@intFromBool(value)});
+    // VALUE-SEMANTICS-1: value semantics changes every lowered body.
+    if (language.value_semantics.enabled()) slot.update("value-semantics");
     slot.update(&.{@backingInt(diagnostics)});
     var key = slot;
     if (policy) |identity| {

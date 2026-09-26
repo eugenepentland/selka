@@ -297,6 +297,11 @@
       "summary": "`bytes` is an immutable garbage-collected byte string with Python indexing, slicing and search.",
       "doc": "docs/bytes.md#managed-byte-strings"
     },
+    "value-semantics": {
+      "kind": "language",
+      "summary": "Opt-in value semantics (`--value-semantics`, `\"value_semantics\": true` in `mylang.json`, `MYLANG_VALUE_SEMANTICS=1`): `list`, `dict`, `set` and `byte_buffer` values, and aggregates holding one, are independent values that assignment, stores, returns and bindings copy unless the ownership analysis proves a move or a borrow; read-only arguments are lent; `mut` records are `inout`; writes through loop or match bindings and into returned values are errors; `class` and Cell stay shared.",
+      "doc": "docs/value-semantics.md#value-semantics"
+    },
     "ownership-explain": {
       "kind": "tooling",
       "summary": "`mylang check FILE.my --explain-ownership=OUT.jsonl` writes the ownership analysis of every lowered function as JSON Lines: each local's role, every transfer classed move, borrow or copy, every copy-on-write check site with the loop header it is hoisted to, and the loads that move.",
@@ -1020,6 +1025,7 @@
     "gc": "single-threaded nonmoving tracing; retained guest values root intermediates; collect-on-allocation stress option",
     "python": "static fixed-width types, function-scoped locals with E_UNBOUND definite assignment, value records; indentation is the only block syntax",
     "dictionaries": "managed insertion order; homogeneous hashable keys (integers, bool, str, bytes, and tuples, records, unions, enums, domains, Option and fixed arrays of those) and copyable values; no dict comprehension",
+    "value_semantics": "opt-in and experimental: copies are eager (no copy-on-write yet), a copy is not a `managed_allocation` effect, `class` and Cell stay shared references, rebinding a whole `mut` list or dict parameter does not reach the caller, and a function with a `mut` record parameter cannot be a function value",
     "sets": "managed insertion order over hashable elements; `set()` needs an expected type; no frozenset, no augmented operators (`|=`); generic bodies key only by integer-bounded parameters, `str` or concrete hashable types; a module that declares its own function named `set` keeps it, and there the type spelling `set[T]` is unavailable while literals still work",
     "native_tests": "fresh QBE processes; exported typed-call-compatible signatures; positive deterministic receipts only; project validity is always checked through the shared query cache; only a fully cached selection skips lowering/emission/linking, while a changed snapshot still pays one whole-project preparation emission and an uncached selection builds the whole selected-provider library; provider snapshots at most 128 sources/16 MiB",
     "standard_library": "ten embedded Python-syntax modules over managed types: math, strings, sort, path, hex, base64, json, pool, random, time"

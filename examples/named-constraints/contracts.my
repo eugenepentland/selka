@@ -1,4 +1,3 @@
 module contracts
 
-
 public constraint Prices[P] = copy + op(price(policy: P, subtotal: int) -> int effects())

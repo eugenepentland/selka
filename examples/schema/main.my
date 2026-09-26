@@ -1,6 +1,5 @@
 module main
 import message
 
-
 def main() -> int:
     return 0

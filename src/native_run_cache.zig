@@ -125,6 +125,10 @@ fn keyFor(context: fs.Context, identity: Identity) ![]const u8 {
     hash.update("native-run-validated-graph-v2");
     frame(&hash, if (identity.step_checks) "steps-on" else "steps-off");
     frame(&hash, if (identity.frame_checks) "frames-on" else "frames-off");
+    // VALUE-SEMANTICS-1: value semantics changes every lowered body, and its
+    // environment carrier is set in every process a switched command runs.
+    // Only a switched run adds the frame, so every other key is unchanged.
+    if (context.environ.get("MYLANG_VALUE_SEMANTICS")) |value| frame(&hash, value);
     frame(&hash, identity.policy orelse "");
     for (identity.sources) |source| {
         frame(&hash, source.path);

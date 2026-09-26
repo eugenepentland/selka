@@ -1826,15 +1826,16 @@ const Emitter = struct {
         if (op == .switch_variant) for (op.switch_variant.arms) |arm| if (arm.slot) |target| if (@backingInt(target) == index) return false;
         return consumesOperand(op);
     }
-    /// Whether local `index` is a `mut` fixed-array parameter. Its slot holds
+    /// Whether local `index` is a `mut` fixed-array parameter, or under value
+    /// semantics a `mut` record parameter (`VALUE-SEMANTICS-3`). Its slot holds
     /// the caller's address, as a read-only parameter's does, but this function
-    /// writes the caller's array through it: an element write lands in the
-    /// caller's variable, and no entry copy is ever taken.
+    /// writes the caller's value through it: an element or field write lands
+    /// in the caller's variable, and no entry copy is ever taken.
     pub fn callerStorage(self: *Emitter, index: usize) bool {
         const signature = self.function.signature;
         if (index >= signature.parameter_count) return false;
         for (signature.declared_mutates) |position| if (position == index)
-            return typed.referenceArray(self.program.records, self.function.scope.locals[index].ty);
+            return typed.referenceMut(self.program.records, self.function.scope.locals[index].ty);
         return false;
     }
     /// Whether an operand already on the stack below the read at this pc is a
@@ -2139,6 +2140,9 @@ const Emitter = struct {
         }
     }
     const root_lower = roots_module.Lower(Emitter);
+    const value_copy_lower = @import("qbe_value_copy.zig").Lower(Emitter);
+    /// Whether the `value_copy` at `pc` makes a real copy (`VALUE-SEMANTICS-2`).
+    pub const valueCopies = value_copy_lower.copies;
     pub const needsRootProtocol = root_lower.needsRootProtocol;
     pub const restoreRoots = root_lower.restoreRoots;
     pub const rootLiveness = root_lower.rootLiveness;
@@ -2579,6 +2583,7 @@ const Emitter = struct {
             },
             .pop, .acknowledge => try self.dropOperand(h - 1, stack[h - 1]),
             .wrap_domain, .unwrap_domain => {},
+            .value_copy => |copy| try value_copy_lower.emit(self, copy, stack),
             .jump => |target| try self.print(jump_label, .{ self.labelPrefix(target), target }),
             .assert_true => {
                 const v = try self.load("s", h - 1);

@@ -44,6 +44,7 @@ const eOptionTest = sema_shared.eOptionTest;
 const eEnvironmentName = sema_shared.eEnvironmentName;
 const variantDeclaredHere = sema_shared.variantDeclaredHere;
 const std = @import("std");
+const value_semantics = @import("value_semantics.zig");
 const dictionary_views = @import("dictionary_views.zig");
 const bufferOperation = sema_shared.bufferOperation;
 const eCollectionMethod = sema_shared.eCollectionMethod;
@@ -938,6 +939,7 @@ const Checker = struct {
         // `node.literal == ...` and `node.kind == Kind.atom("x")` can hint the
         // constructor on the other operand the way a plain binding does.
         if (node.data == .field) if (self.obviousFieldType(node.data.field.base, node.data.field.name)) |field_ty| return field_ty;
+        if (node.data == .index) return self.obviousIndexType(node.data.index.base);
         if (node.data == .integer and float_syntax.isLiteral(self.src.text(node.data.integer))) return self.catalog.names.get("float");
         return null;
     }
@@ -953,6 +955,18 @@ const Checker = struct {
         const declared = self.catalog.records[index].fields;
         if (slot >= declared.len) return null;
         return declared[slot].ty;
+    }
+    // Index expressions need no evaluation to recover a collection's declared
+    // element type. This also lets a following field continue the hint path.
+    fn obviousIndexType(self: *Checker, base_id: ast.NodeId) ?typed.Type {
+        const base = self.obviousType(base_id) orelse return null;
+        if (!base.isAggregate()) return null;
+        const index = base.recordIndex();
+        if (index >= self.catalog.records.len) return null;
+        const schema = self.catalog.records[index];
+        if (schema.shape.array) |array| return array.element;
+        if (schema.collection.kind == .list or schema.collection.kind == .dictionary) return schema.shape.buffer;
+        return null;
     }
     /// Give a binary operator's untyped operand the type of its typed side or context.
     pub fn hintBinary(self: *Checker, node: ast.Node) Error!void {
@@ -1252,15 +1266,22 @@ const Checker = struct {
             // only on a type that can carry one. Rejecting it here, before any
             // body or call is checked, keeps the declaration out of the published
             // footprint: the call site reports the missing marker instead.
-            const reference = parameter.mut and typed.referenceArray(self.catalog.records, parameter_type);
+            // VALUE-SEMANTICS-3: under value semantics a `mut` record crosses
+            // as the caller's own variable, as a `mut` fixed array does.
+            const reference = parameter.mut and typed.referenceMut(self.catalog.records, parameter_type);
             if (reference) {
+                const array = typed.referenceArray(self.catalog.records, parameter_type);
                 if (function.policy.host != null or function.policy.c_abi) {
                     try markMutRejected(self);
-                    return sink.fail(mutation_marker_code, parameter.ty, "a host or C ABI function cannot take a `mut` fixed array; pass the array and return the changed copy");
+                    const message = if (array)
+                        "a host or C ABI function cannot take a `mut` fixed array; pass the array and return the changed copy"
+                    else
+                        "a host or C ABI function cannot take a `mut` record; pass the record and return the changed copy";
+                    return sink.fail(mutation_marker_code, parameter.ty, message);
                 }
                 if (self.transfers(parameter_type)) {
                     try markMutRejected(self);
-                    return sink.fail(mutation_marker_code, parameter.ty, "a `mut` fixed array needs copyable elements without pending results");
+                    return sink.fail(mutation_marker_code, parameter.ty, if (array) "a `mut` fixed array needs copyable elements without pending results" else "a `mut` record needs copyable fields without pending results");
                 }
             }
             const writable = reference or typed.carriesWritableStorage(self.catalog.records, parameter_type);
@@ -1271,8 +1292,11 @@ const Checker = struct {
                     parameter.ty,
                     try std.fmt.allocPrint(
                         allocator,
-                        "`mut` on `{s}` has nothing to write; only a list, dict, class, Cell, array, byte buffer or a record holding one can be `mut`",
-                        .{typed.typeName(parameter_type, self.catalog.records)},
+                        "`mut` on `{s}` has nothing to write; {s}",
+                        .{ typed.typeName(parameter_type, self.catalog.records), if (value_semantics.enabled())
+                            "a number, bool, `str` or `bytes` cannot change the caller's value, so return the new value instead"
+                        else
+                            "only a list, dict, class, Cell, array, byte buffer or a record holding one can be `mut`" },
                     ),
                 );
             }
@@ -1728,7 +1752,7 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
     @import("domain_codecs.zig").check(allocator, src, program.types.domains, checker.catalog, .{ .items = functions, .names = executable_names }, sink) catch |err| return retryOr(&plan, err);
     timingAdd(timing, "domain_codec_validation", codecs_start);
     const warnings_start = timingStart(timing);
-    try warnBindings(allocator, functions, stubs, sink);
+    try warnBindings(allocator, checker.catalog.records, functions, stubs, sink);
     try warnImports(module_names, sink);
     const pass_items: []const diagnostic.Diagnostic = if (plan != null) try allocator.dupe(diagnostic.Diagnostic, sink.items.items[pass_start..]) else &.{};
     std.mem.sort(diagnostic.Diagnostic, sink.items.items, {}, warningLess);
@@ -1794,13 +1818,21 @@ fn checkHostType(allocator: std.mem.Allocator, catalog: []const typed.Record, ty
     };
 }
 
-fn warnBindings(allocator: std.mem.Allocator, functions: []const typed.Function, stubs: []const ?origins.Fact, sink: *diagnostic.Sink) Error!void {
+/// Whether local `slot` of `function` is a `mut` record parameter, which
+/// under value semantics is the caller's own variable (`VALUE-SEMANTICS-3`).
+fn inoutRecord(catalog: []const typed.Record, function: typed.Function, slot: usize) bool {
+    if (slot >= function.signature.parameter_count) return false;
+    for (function.signature.declared_mutates) |position| if (position == slot) return typed.referenceRecord(catalog, function.scope.locals[slot].ty);
+    return false;
+}
+
+fn warnBindings(allocator: std.mem.Allocator, catalog: []const typed.Record, functions: []const typed.Function, stubs: []const ?origins.Fact, sink: *diagnostic.Sink) Error!void {
     for (functions, 0..) |function, index| {
         if (function.policy.host != null) continue;
         // A stood-in body has only its parameters here; its summary replays
         // the binding warnings its checked body reported.
         if (origins.standIn(stubs, index) != null) continue;
-        for (function.scope.locals) |local| {
+        for (function.scope.locals, 0..) |local, slot| {
             if (local.usage.dead_write_span) |span| {
                 // Each field write reads its destination once; a read beyond that
                 // means the copied binding is observed after the write. A copy
@@ -1811,10 +1843,16 @@ fn warnBindings(allocator: std.mem.Allocator, functions: []const typed.Function,
                     .severity = .err,
                     .code = "E_DEAD_RECORD_WRITE",
                     .span = span,
-                    .message = "field write to a `record` copy is never observed; `record` values are copies, so the write cannot reach the original; use `class` for reference semantics, or return the updated record",
+                    .message = if (value_semantics.enabled())
+                        "field write to a record copy is never observed; the write cannot reach the original; declare the parameter `mut` to change the caller's record, or return the updated record"
+                    else
+                        "field write to a `record` copy is never observed; `record` values are copies, so the write cannot reach the original; use `class` for reference semantics, or return the updated record",
                 });
             }
             if (local.usage.temporary or local.usage.reads != 0) continue;
+            // VALUE-SEMANTICS-3: rebinding a `mut` record parameter reaches
+            // the caller, so the binding is used even if the body never reads it.
+            if (inoutRecord(catalog, function, slot)) continue;
             // A capability parameter is the signature's whole claim to an
             // effect: a body that never reads it promises authority it does not
             // use, so the over-claim is rejected rather than warned about.

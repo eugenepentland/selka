@@ -84,8 +84,30 @@ fn writeFunction(w: *std.Io.Writer, function: bytecode.Function, analysis: owner
     try json.beginArray();
     for (analysis.moves, 0..) |moves, pc| if (moves) try json.write(pc);
     try json.endArray();
+    // VALUE-SEMANTICS-2: under value semantics, every copy site and whether it
+    // copies; a program without one prints the key-less line it always did.
+    if (analysis.copies.len != 0) {
+        try json.objectField("copies");
+        try json.beginArray();
+        for (function.scope.instructions, 0..) |instruction, pc| switch (instruction.op) {
+            .value_copy => |copy| try writeCopy(&json, pc, copy.site, analysis.copies[pc]),
+            else => {},
+        };
+        try json.endArray();
+    }
     try json.endObject();
     try w.writeByte('\n');
+}
+
+fn writeCopy(json: *std.json.Stringify, pc: usize, site: bytecode.CopySite, copies: bool) std.Io.Writer.Error!void {
+    try json.beginObject();
+    try json.objectField("pc");
+    try json.write(pc);
+    try json.objectField("site");
+    try json.write(@tagName(site));
+    try json.objectField("copy");
+    try json.write(copies);
+    try json.endObject();
 }
 
 fn writeTransfer(json: *std.json.Stringify, transfer: ownership.Transfer) std.Io.Writer.Error!void {

@@ -1,6 +1,5 @@
 module value_equality
 
-
 record Point:
     x: int
     y: int
@@ -111,6 +110,32 @@ public def test_equality_through_a_field_supplies_the_option_type() -> bool:
     if second.next != Some(first):
         return False
     return True
+
+
+# spec: EQUALITY-CONTEXT-2
+public def test_equality_infers_empty_lists_through_field_and_index_paths() -> bool:
+    rows = [Bag(items=[], name="empty"), Bag(items=[7], name="full")]
+    indexed: dict[str, list[Bag]] = {"rows": rows}
+    fixed: [2]Bag = [rows[0], rows[1]]
+    nested: list[list[int]] = [[], [7]]
+    if indexed["rows"][0].items != [] or [] == indexed["rows"][1].items:
+        return False
+    if fixed[0].items != [] or fixed[1].items == []:
+        return False
+    return nested[0] == [] and [] != nested[1]
+
+
+def next_position(seen: mut list[int]) -> int:
+    seen[0] += 1
+    return 0
+
+
+# spec-case: EQUALITY-CONTEXT-2
+public def test_equality_context_does_not_evaluate_indexes_twice() -> bool:
+    seen = [0]
+    rows: list[list[int]] = [[]]
+    empty = rows[next_position(mut seen)] == []
+    return empty and seen[0] == 1
 
 
 def main() -> int:

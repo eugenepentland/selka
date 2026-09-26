@@ -1,6 +1,5 @@
 module main
 
-
 public record Stats:
     sum: int
     squares: int

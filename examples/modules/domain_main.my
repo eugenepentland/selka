@@ -1,6 +1,5 @@
 module domain_main
 import shared.units
 
-
 def main() -> int:
     return units.Distance.number(units.Distance.make(12))

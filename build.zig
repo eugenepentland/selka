@@ -1012,6 +1012,17 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&lang_tests.step);
     guardian.addAllChecks(b, guardian_exe, lang_step, .{});
     boundedChecks(lang_step);
+    // VALUE-SEMANTICS-1: the guest tests that assert value semantics run
+    // with the switch on, under the same collector stress as `test-lang`.
+    const values_step = b.step("test-value-semantics", "Run the value-semantics guest tests under --value-semantics");
+    const value_tests = bounded(b.addRunArtifact(exe), rss.suite);
+    value_tests.addArgs(&.{ "test", "tests/value_semantics", "--value-semantics", "--cache-dir", ".mylang-cache/value-semantics-tests", "--gc-stress" });
+    value_tests.setCwd(b.path("."));
+    value_tests.has_side_effects = true;
+    values_step.dependOn(&value_tests.step);
+    test_step.dependOn(&value_tests.step);
+    guardian.addAllChecks(b, guardian_exe, values_step, .{});
+    boundedChecks(values_step);
     const doctest_step = b.step("test-docs", "Execute every fenced documentation example");
     // The doctest fans its units out across a worker pool, so it is bounded like a suite.
     const doctest_run = driver(b, "mylang doctest .", rss.suite, "doctest");
