@@ -73,6 +73,7 @@ static int mark(void *payload) {
     if (word & MYL_NATIVE_OBJECT_IMMORTAL) return 1;
     if (word & MYL_NATIVE_OBJECT_PINNED) return 0;
     header->mark = word | MYL_NATIVE_OBJECT_SHARED;
+    if (counting_enabled) myl_native_cow_counters.marks++;
     return 1;
 }
 /* The walk `share_value` and a copy's element marking share: every payload a
@@ -160,6 +161,18 @@ static int mark_entries(myl_native_heap *heap, myl_native_dictionary *dict) {
     }
     myl_native_root_pop(heap, &root);
     return done;
+}
+int myl_native_cow_share_children(myl_native_heap *heap, const myl_native_type *type, void *address) {
+    if (!type || !address) return 1;
+    if (type->kind != MYL_NATIVE_POINTER) return myl_native_cow_share_value(heap, type, address);
+    void *payload;
+    memcpy(&payload, address, sizeof payload);
+    if (!payload) return 1;
+    if (type->collection_kind == 1 || type->collection_kind == 4)
+        return mark_elements(heap, payload);
+    if (type->collection_kind == 3)
+        return mark_entries(heap, payload);
+    return 1;
 }
 void *myl_native_cow_copy(myl_native_heap *heap, void *payload) {
     if (!payload) return NULL;

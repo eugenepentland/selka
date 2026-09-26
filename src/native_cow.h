@@ -35,6 +35,10 @@ void *myl_native_cow_share(myl_native_heap *heap, void *payload);
  * pinned payload is replaced at `address` by its copy, so `address` must be
  * the transfer's own private value. Returns 0 when a copy is refused. */
 int myl_native_cow_share_value(myl_native_heap *heap, const myl_native_type *type, void *address);
+/* A transfer whose outer collection is already a fresh shallow copy keeps
+ * that outer header unshared and marks the mutable payloads in its directly
+ * held elements or entries. The caller roots the value at `address`. */
+int myl_native_cow_share_children(myl_native_heap *heap, const myl_native_type *type, void *address);
 /* The slow half of a uniqueness check: `payload` when it is not shared, else a
  * fresh unshared copy whose directly held payloads are marked shared. The
  * caller stores the answer back into the slot it loaded `payload` from.

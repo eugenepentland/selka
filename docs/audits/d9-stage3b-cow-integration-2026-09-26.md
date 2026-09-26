@@ -10,6 +10,9 @@ header. `myl_native_cow_share`, `myl_native_cow_unique`,
 `myl_native_cow_unique_in`, and `myl_native_cow_copy` are the payload operations.
 `myl_native_cow_share_value` marks direct collection payloads in an inline
 record, array or active variant without walking into a marked collection.
+`myl_native_cow_share_children` handles the stage 3a hook's `children` case:
+the fresh outer collection stays unique while its directly held mutable
+payloads are marked shared.
 The C tests exercise these operations with collection on every allocation.
 Inline descriptor walks support 1,024 levels and refuse a deeper transfer
 instead of silently leaving a descendant unmarked; the C test covers both an

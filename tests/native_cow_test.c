@@ -397,6 +397,30 @@ static void deep_inline_descriptors(void) {
     assert(myl_native_root_pop(&heap, &root));
     myl_native_heap_destroy(&heap);
 }
+/* spec-case: COW-SHARED-1 -- a fresh outer list stays unique while its
+   directly held mutable children become shared with the shallow-copy source. */
+static void fresh_children(void) {
+    myl_native_heap heap;
+    myl_native_heap_init(&heap, 1 << 26);
+    heap.stress = 1;
+    myl_native_list *outer = myl_native_list_new(&heap, &integers, 1);
+    myl_native_list *row = NULL;
+    assert(outer);
+    myl_native_root outer_root, row_root;
+    myl_native_root_push(&heap, &outer_root, &outer, &pointer);
+    myl_native_root_push(&heap, &row_root, &row, &pointer);
+    row = numbers(&heap, 7, 1);
+    assert(myl_native_list_append(&heap, outer, &row));
+    assert(myl_native_cow_share_children(&heap, &rows, &outer));
+    assert(!flags(outer) && flags(row) == MYL_NATIVE_OBJECT_SHARED);
+    myl_native_list *copy = myl_native_cow_unique(&heap, row);
+    assert(copy && copy != row);
+    int64_t changed = 12;
+    assert(myl_native_list_set(copy, 0, &changed));
+    assert(at(row, 0) == 7);
+    assert(myl_native_root_pop(&heap, &row_root) && myl_native_root_pop(&heap, &outer_root));
+    myl_native_heap_destroy(&heap);
+}
 int main(void) {
     header_flags();
     share_marks();
@@ -409,6 +433,7 @@ int main(void) {
     arenas();
     stress_run();
     deep_inline_descriptors();
+    fresh_children();
     puts("native cow tests passed");
     return 0;
 }
