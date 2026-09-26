@@ -35,6 +35,24 @@ pub const Role = enum { related, origin, requirement, alternative, signature };
 pub const Related = struct { span: source.Span, message: []const u8, role: Role = .related };
 /// Guest function and source span recorded in a bounded runtime stack trace.
 pub const Trace = struct { function: []const u8, span: source.Span };
+/// An exact replacement in the diagnostic's source, mapped to an original
+/// module by diagnostic-v1 before a migration tool applies it.
+pub const Edit = struct { span: source.Span, text: []const u8 };
+/// All edits of a repair are applied together; one-edit repairs allocate none.
+pub const Fix = struct {
+    edit: Edit,
+    more: []const Edit = &.{},
+
+    /// Count every edit in this repair.
+    pub fn count(self: Fix) usize {
+        return 1 + self.more.len;
+    }
+
+    /// Read one edit by its zero-based index.
+    pub fn at(self: Fix, index: usize) Edit {
+        return if (index == 0) self.edit else self.more[index - 1];
+    }
+};
 /// Structured source diagnostic with optional related evidence and a bounded guest trace.
 pub const Diagnostic = struct {
     code: []const u8,
@@ -42,7 +60,7 @@ pub const Diagnostic = struct {
     span: source.Span,
     message: []const u8,
     related: ?Related = null,
-    provenance: struct { origin: ?Related = null, requirement: ?Related = null, obligation: ?*const Obligation = null } = .{},
+    provenance: struct { origin: ?Related = null, requirement: ?Related = null, obligation: ?*const Obligation = null, fix: ?Fix = null } = .{},
     // Bounded by-value guest trace needs no separate cleanup on trap paths.
     stack: struct { frames: [16]Trace = undefined, len: usize = 0, omitted: usize = 0 } = .{},
 

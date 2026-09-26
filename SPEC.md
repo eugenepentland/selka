@@ -399,6 +399,10 @@ The roadmap in `docs/experiments/roadmap.md` tracks unsupported and planned feat
 
 - [DIAGNOSTIC-JSON-1] CLI --diagnostics=json selects diagnostic-v1 JSON Lines on stderr without changing command results or exit statuses. Source and VM diagnostics preserve stable codes, severity, original-file byte ranges and byte-based line/columns, related/origin/requirement notes, bounded frames and omitted-frame counts. Project-loader related sites retain their own module coordinates. Auxiliary CLI messages are separate message records. Successful check-session warning replay uses the selected format, and cache identity prevents cross-format replay. Default text remains available; invalid command-line syntax and emergency output failures may use text.
 
+- [DIAGNOSTIC-FIX-1] A diagnostic may publish a machine-applicable `fix` with one or more exact source edits. Each edit names an original file, a UTF-8 byte range and replacement text. An edit that cannot be mapped wholly into one original file suppresses the entire fix, preserving the diagnostic; text rendering and diagnostics without fixes keep their existing form.
+
+- [FIX-MIGRATION-1] `mylang fix ENTRY.my|DIR` repeatedly checks and applies non-overlapping structured diagnostic fixes until none remain, reporting changed files and remaining diagnostics. `--check` reports applicable edits without writing and exits nonzero when it finds one. Fix application never guesses from diagnostic prose.
+
 
 - [HOST-SOURCE-1] Contextual host fn declarations have no guest body and require an explicit effects(host, ...) contract. Only ordinary top-level, non-generic copied data signatures are supported; capabilities, managed collections and runtime-owned graphs reject. Main retains a guest body. Host and additional declared effects propagate through ordinary and abstract generic calls, including uncalled templates. Effect-free evaluation/invocation cannot execute these calls. Modules, formatting and disassembly preserve declarations; duplicate discovery excludes external implementations.
 

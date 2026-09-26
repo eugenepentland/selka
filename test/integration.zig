@@ -2,6 +2,14 @@
 const std = @import("std");
 const testing = std.testing;
 const compiler_path = @import("test_options").compiler_path;
+// spec: FIX-MIGRATION-1
+test "fix command rejects missing entry with usage status" {
+    const result = try std.process.run(std.testing.allocator, std.testing.io, .{ .argv = &.{ compiler_path, "fix" } });
+    defer std.testing.allocator.free(result.stdout);
+    defer std.testing.allocator.free(result.stderr);
+    try std.testing.expectEqual(std.process.Child.Term{ .exited = 2 }, result.term);
+    try std.testing.expect(std.mem.indexOf(u8, result.stderr, "usage: mylang fix") != null);
+}
 const arena_example_path = @import("test_options").arena_example_path;
 /// `run` and `run-project` build natively; the fixtures name this build's tools
 /// because the compiler under test is not installed beside them.
