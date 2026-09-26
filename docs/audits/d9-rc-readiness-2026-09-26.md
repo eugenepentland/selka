@@ -20,7 +20,7 @@ legacy-sharing compatibility lane must remain supported.
 | E2b prototype | `exp/e2b-rc-runtime`, `21a2a4a1`; implementation `f04770e1`, corrections `edf5ca8c`, `experiments/value-semantics-20260924/e2b/summary.md` on that branch |
 | Joined D9 compiler | `91d1311e`; indexed transfer proof plus scoped receivers, pure box reads, current COW and ownership passes |
 | Combined validation | [60 guest probes per backend and 44 legacy IL comparisons](d9-indexed-scope-review-2026-09-26.md), frozen Debug compiler SHA-256 `d733b14aca8b25b0d4fb2d1becda50c98c2ab0f8cfac342e22a204bc58c9d82c` |
-| Physical borrow prerequisite | `450d151a` on `d9/stage4pre`, including `363231da`; `docs/audits/d9-stage4pre-borrow-closeout-2026-09-26.md` on that branch |
+| Physical borrow prerequisite | `450d151a` on `codex/d9-stage4pre`, including `363231da`; `docs/audits/d9-stage4pre-borrow-closeout-2026-09-26.md` on that branch |
 | Default/compatibility contract | `codex-d9-stage3f-prep/src/main_value_semantics.zig` and its default-validation report; value default with one-release `--legacy-sharing` |
 
 E2b measured 26 LLVM parity programs and three QBE schematic inputs. Its parity
