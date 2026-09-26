@@ -1638,7 +1638,13 @@ const Emitter = struct {
         try self.planOwnership();
         if (runtime_mode.enabled()) {
             self.cow.?.rc = try @import("qbe_rc_state.zig").build(Emitter, self, ir.stack_capacity);
-            if (certificate) |proof| self.cow.?.rc.?.contract.result = .{ .borrowed = proof };
+            const rc = self.cow.?.rc.?;
+            if (certificate) |proof| {
+                rc.contract.result = .{ .borrowed = proof };
+            } else if (@import("rc_readonly_body.zig").certify(&rc.catalog, f) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError) {
+                rc.readonly = true;
+                rc.active = false;
+            }
         }
         if (!runtime_mode.enabled()) self.range_keys = try self.planRangeKeys();
         // QBE-LOOP-VERSION-1: only a build whose value guards are on has
