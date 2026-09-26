@@ -11,7 +11,7 @@ public def id(document: Document) -> int noalloc:
     return document.identity
 
 
-public class Output:
+public record Output:
     buffer: byte_buffer
     failed: bool
 

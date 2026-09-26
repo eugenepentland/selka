@@ -101,6 +101,17 @@ pub fn runUnaccounted(compilation: *language.Compilation, options: Options) Erro
     return spawn(try program(session, manifest), options);
 }
 
+/// Build one single-file compilation under an explicit emission policy — the
+/// unaccounted protocol `runUnaccounted` uses plus whatever `policy` adds, such
+/// as copy-on-write value semantics (`COW-UNIQUE-1`) — and run it once.
+pub fn runWithPolicy(compilation: *language.Compilation, policy: @import("native_interface.zig").Policy, options: Options) Error!Run {
+    const session = try wiring.acquire();
+    var scratch = std.heap.ArenaAllocator.init(session.allocator());
+    defer scratch.deinit();
+    const manifest = try compilation.emitQbeWithOptions(scratch.allocator(), policy);
+    return spawn(try program(session, manifest), options);
+}
+
 /// Publish one emitted manifest as an executable, reusing an identical earlier build.
 pub fn program(session: *wiring.Session, manifest: []const u8) Error![]const u8 {
     var scratch = std.heap.ArenaAllocator.init(session.allocator());
@@ -159,6 +170,14 @@ fn spawn(executable: []const u8, options: Options) Error!Run {
     // native runtime failure instead writes a diagnostic to stderr (and a crash
     // ends the process by signal). A clean return leaves stderr empty and appends
     // its `--print-result` line to stdout, which `divide` reads.
+    // COW-STATS-1: the counting protocol reports one machine-readable line on
+    // stderr after a successful return. It is a measurement, not a trap.
+    if (outcome.term == .exited and std.mem.startsWith(u8, outcome.stderr, "cow-stats {") and
+        std.mem.count(u8, outcome.stderr, "\n") == 1 and std.mem.endsWith(u8, outcome.stderr, "}\n"))
+    {
+        const reported = try divide(outcome.stdout);
+        return .{ .value = reported.value, .stdout = reported.output, .stderr = outcome.stderr, .status = status };
+    }
     if (outcome.term != .exited or outcome.stderr.len != 0) {
         const trap = parse(allocator, outcome.stderr) catch Trap{ .code = "" };
         // The machine record is transport, not a diagnostic: keep `stderr` as the

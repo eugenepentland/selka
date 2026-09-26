@@ -85,9 +85,9 @@ int myl_native_object_immortal(const myl_native_heap *heap, const void *payload)
     return (((const myl_native_object *)payload - 1)->mark & MYL_NATIVE_OBJECT_IMMORTAL) != 0;
 }
 /* Element count recovered from the mark word's bits between the two flag bits
- * and the large-object flag. Never called for a free slot. */
+ * and the copy-on-write flags. Never called for a free slot. */
 static size_t object_count(const myl_native_object *object) {
-    return (size_t)((object->mark & ~MYL_NATIVE_OBJECT_LARGE) >> MYL_NATIVE_OBJECT_COUNT_SHIFT);
+    return (size_t)((object->mark & MYL_NATIVE_OBJECT_COUNT_BITS) >> MYL_NATIVE_OBJECT_COUNT_SHIFT);
 }
 /* The size classes every tracing-heap object is rounded up into. The sequence is
  * dense at the small sizes objects actually take and doubles past 256, so a
@@ -1062,7 +1062,7 @@ void *myl_native_heap_extend(myl_native_heap *heap, void *payload, size_t count)
     if (!opaque_elements(element)) memset(grown->data + previous, 0, growth);
     /* Growth does not change an object's age: an old block stays marked, so a
      * minor collection neither frees it nor needs its referrers to be young. */
-    object->mark = ((uintptr_t)count << MYL_NATIVE_OBJECT_COUNT_SHIFT) | (object->mark & (MYL_NATIVE_OBJECT_MARKED | MYL_NATIVE_OBJECT_LARGE));
+    object->mark = ((uintptr_t)count << MYL_NATIVE_OBJECT_COUNT_SHIFT) | (object->mark & (MYL_NATIVE_OBJECT_MARKED | MYL_NATIVE_OBJECT_LARGE | MYL_NATIVE_OBJECT_COW));
     object->element = element;
     heap->bytes += growth;
     return grown->data + sizeof(myl_native_object);

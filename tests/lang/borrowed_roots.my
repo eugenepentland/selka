@@ -6,7 +6,7 @@ module borrowed_roots
 # wrongly dropped — would be read after the sweep freed it.
 
 
-public class Node:
+public record Node:
     items: list[int]
     next: Option[Node]
 

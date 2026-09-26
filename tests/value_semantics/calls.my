@@ -1,0 +1,44 @@
+module calls
+
+
+record Carrier:
+    items: list[int]
+
+
+def touch(target: mut list[int], source: list[int]) -> int:
+    target.append(len(source))
+    return len(source)
+
+
+def reversed(source: list[int], target: mut list[int]) -> int:
+    target.append(len(source))
+    return len(source)
+
+
+def touch_both(first: mut list[int], second: mut list[int], source: list[int]) -> int:
+    first.append(len(source))
+    second.append(len(source))
+    return len(source)
+
+
+# spec-case: VALUE-SEMANTICS-5
+public def test_a_mut_argument_before_or_after_its_snapshot() -> bool:
+    first = [1, 2]
+    seen_first = touch(mut first, first)
+    second = [1, 2]
+    seen_second = reversed(second, mut second)
+    return seen_first == 2 and seen_second == 2 and first == [1, 2, 2] and second == [1, 2, 2]
+
+
+# spec-case: VALUE-SEMANTICS-5
+public def test_two_mut_operands_keep_one_caller_value() -> bool:
+    items = [1, 2]
+    seen = touch_both(mut items, mut items, items)
+    return seen == 2 and items == [1, 2, 2, 2]
+
+
+# spec-case: VALUE-SEMANTICS-5
+public def test_a_mut_record_field_is_redirected_after_a_later_snapshot() -> bool:
+    holder = Carrier(items=[1, 2])
+    seen = touch(mut holder.items, holder.items)
+    return seen == 2 and holder.items == [1, 2, 2]

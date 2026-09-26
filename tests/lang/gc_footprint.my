@@ -12,7 +12,7 @@ module gc_footprint
 # collects and every third collection is full.
 
 
-class Node:
+record Node:
     left: Option[Node]
     right: Option[Node]
     value: int

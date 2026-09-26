@@ -1,7 +1,7 @@
 module python_collections
 
 
-class Box:
+record Box:
     items: list[i64]
 
 
@@ -13,7 +13,7 @@ record Point:
     x: i64
 
 
-class ReceiverPoint:
+record ReceiverPoint:
     x: i64
 
 
@@ -32,7 +32,7 @@ def emit_value(log: mut list[i64]) -> i64:
     return 42
 
 
-class Cell[T]:
+record Cell[T]:
     value: T
 
 
@@ -40,7 +40,7 @@ def set_cell[T](cells: mut list[Cell[T]], value: T) effects(mutation):
     cells[0].value = value
 
 
-class WritebackPoint:
+record WritebackPoint:
     x: i64
     y: i64
 

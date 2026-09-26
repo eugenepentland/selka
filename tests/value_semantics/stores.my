@@ -98,6 +98,15 @@ public def test_extend_and_sorted_copy_the_elements_they_take() -> bool:
 
 
 # spec-case: VALUE-SEMANTICS-2
+public def test_update_copies_the_dictionary_values_it_takes() -> bool:
+    source = {"k": [1]}
+    target: dict[str, list[int]] = {}
+    target.update(source)
+    target["k"].append(2)
+    return source["k"] == [1] and target["k"] == [1, 2]
+
+
+# spec-case: VALUE-SEMANTICS-2
 public def test_setdefault_and_get_hand_back_copies() -> bool:
     table: dict[str, list[int]] = {}
     fallback = [0]

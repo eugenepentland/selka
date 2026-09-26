@@ -25,7 +25,7 @@ record Grid:
     label: str
 
 
-class Board:
+record Board:
     cells: [3]i64
 
 
@@ -47,10 +47,6 @@ def last[T: copy + storable, const N: u64](values: [N]T) -> T:
 
 def pair(left: i64, right: i64) -> tuple[i64, i64]:
     return left, right
-
-
-def paint(board: mut Board, index: i64, value: i64) -> None:
-    board.cells[index] = value
 
 
 # spec-case: PY-ARRAY-NEGATIVE-1
@@ -116,14 +112,14 @@ public def test_a_record_field_array_takes_a_negative_index() -> bool:
     return grid.cells[3] == 40 and grid.cells[0] == 11 and copy.cells[3] == 4 and copy.cells[0] == 1
 
 
-# spec-case: QBE-FIELDARRAY-READ-1
-public def test_a_class_field_array_is_written_in_place_for_every_name() -> bool:
+# spec-case: QBE-ARRAYWRITE-2
+public def test_a_record_field_array_is_independent_of_an_earlier_copy() -> bool:
     board = Board(cells=[0, 0, 0])
     alias = board
     board.cells[-1] = 7
     board.cells[0] += board.cells[-1] * 2
-    paint(mut board, -2, 5)
-    return alias.cells[2] == 7 and alias.cells[0] == 14 and alias.cells[1] == 5
+    board.cells[-2] = 5
+    return alias.cells[2] == 0 and alias.cells[0] == 0 and board.cells[2] == 7 and board.cells[0] == 14 and board.cells[1] == 5
 
 
 # spec-case: PY-ARRAY-NEGATIVE-1

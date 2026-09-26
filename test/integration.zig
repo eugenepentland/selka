@@ -2,6 +2,28 @@
 const std = @import("std");
 const testing = std.testing;
 const compiler_path = @import("test_options").compiler_path;
+
+// spec: VALUE-SEMANTICS-11
+test "a scalar-only mut record parameter writes the caller in both modes" {
+    const program =
+        \\record Counter:
+        \\    n: int
+        \\
+        \\def increment(c: mut Counter) -> None:
+        \\    c.n = c.n + 1
+        \\
+        \\def reset(c: mut Counter) -> None:
+        \\    c = Counter(n=10)
+        \\
+        \\def main() -> int:
+        \\    c = Counter(n=1)
+        \\    increment(mut c)
+        \\    reset(mut c)
+        \\    return c.n
+    ;
+    try invokeOptions("run", program, &.{"--no-cache"}, 10, "10\n", "");
+    try invokeOptions("run", program, &.{"--value-semantics"}, 10, "10\n", "");
+}
 const arena_example_path = @import("test_options").arena_example_path;
 /// `run` and `run-project` build natively; the fixtures name this build's tools
 /// because the compiler under test is not installed beside them.
@@ -4012,7 +4034,8 @@ const capability_tests =
     \\
     \\public def test_entropy(entropy: Entropy, out: Stream) -> bool:
     \\    match random.from_entropy(entropy):
-    \\        case Ok(generator):
+    \\        case Ok(sampled):
+    \\            generator = sampled
     \\            out.print("word", random.next_word(mut generator))
     \\        case Err(_):
     \\            out.print("no entropy")

@@ -144,7 +144,8 @@ def uptime(clock: Clock, start: time.Instant) -> int:
 # A die roll drawn from the entropy a caller supplies.
 def roll(entropy: Entropy) -> int:
     match random.from_entropy(entropy):
-        case Ok(generator):
+        case Ok(sampled):
+            generator = sampled
             match random.randint(mut generator, 1, 6):
                 case Ok(value):
                     return value

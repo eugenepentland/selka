@@ -1,11 +1,11 @@
 module surface_collections_case_3
 
 
-class Box[T]:
+record Box[T]:
     value: T
 
 
-class Empty:
+record Empty:
     pass
 
 

@@ -1,11 +1,11 @@
 module print_rendering
 
 
-class RenderBox:
+record RenderBox:
     n: int
 
 
-class RenderPair:
+record RenderPair:
     left: RenderBox
     right: RenderBox
 

@@ -7,6 +7,7 @@ const typed = @import("typed.zig");
 const source = @import("source.zig");
 const diagnostic = @import("diagnostic.zig");
 const requirements = @import("generic_requirements.zig");
+const value_semantics = @import("value_semantics.zig");
 const Names = @import("module_names.zig").Names;
 const Error = diagnostic.Error;
 const Span = source.Span;
@@ -263,11 +264,25 @@ pub const Index = struct {
         if (std.mem.eql(u8, text, "byte_buffer") and !self.syntax.aliases.contains(text)) try self.addByteBuffer();
         if (self.names.get(text)) |id| {
             if (self.declarations.items[id].builtin_name != null) {
-                if (ctx.names == null or !try ctx.names.?.topLevel(span)) return id;
+                if (ctx.names == null or !try ctx.names.?.topLevel(span)) {
+                    try self.rejectRetiredCell(id, span);
+                    return id;
+                }
             }
         }
         const key = if (ctx.names) |names| try names.reference(span, .type, null, null, ctx.sink) else text;
-        return self.names.get(key) orelse ctx.sink.fail("E_UNKNOWN_TYPE", span, "type is not declared");
+        const id = self.names.get(key) orelse return ctx.sink.fail("E_UNKNOWN_TYPE", span, "type is not declared");
+        try self.rejectRetiredCell(id, span);
+        return id;
+    }
+    fn rejectRetiredCell(self: *Index, id: usize, span: Span) Error!void {
+        if (!value_semantics.enabled()) return;
+        const builtin = self.declarations.items[id].builtin_name orelse return;
+        if (std.mem.eql(u8, builtin, "Cell")) return self.context.sink.fail(
+            "E_VALUE_CELL",
+            span,
+            "builtin Cell is shared mutable state under value semantics; use a value record with `mut` and store-back, or a pool handle for identity",
+        );
     }
     /// Resolve one array or enum-keyed table spelling, including its const
     /// length parameter when the spelling names one.
@@ -610,6 +625,11 @@ pub fn depends(value: Expression) bool {
 pub fn collect(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, module_names: ?*Names) Error!Index {
     var index: Index = .{ .context = .{ .allocator = allocator, .src = src, .sink = sink, .names = module_names } };
     for (program.types.records) |declaration| {
+        if (declaration.managed and value_semantics.enabled()) return sink.fail(
+            "E_VALUE_CLASS",
+            declaration.name,
+            "class is shared mutable state under value semantics; use a record or recursive union for values, or a pool handle for identity",
+        );
         try index.add(declaration.name, declaration.type_parameters, .record);
         index.declarations.items[index.declarations.items.len - 1].managed = declaration.managed;
     }

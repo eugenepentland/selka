@@ -129,6 +129,10 @@ static void *ensure(Copier *copier, const myl_native_type *type, void *source) {
     if (copier->entries[at].source) return copier->entries[at].clone;
     void *clone = shallow(copier, type, source);
     if (!clone) { copier->failed = 1; return NULL; }
+    /* COW-SHARED-1: every reference to a shared source becomes a reference to
+     * this one clone, so the clone is shared exactly when its source was. */
+    if (((const myl_native_object *)source - 1)->mark & MYL_NATIVE_OBJECT_SHARED)
+        ((myl_native_object *)clone - 1)->mark |= MYL_NATIVE_OBJECT_SHARED;
     copier->entries[at] = (Clone){source, clone, type};
     copier->count++;
     if (!enqueue(copier, copier->entries[at])) copier->failed = 1;

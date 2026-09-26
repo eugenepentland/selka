@@ -23,11 +23,11 @@ def nominal_pair[T](x: T) -> [2]T:
     return [x, x]
 
 
-class EmptyPhantom[T]:
+record EmptyPhantom[T]:
     pass
 
 
-class GrowPhantom[T]:
+record GrowPhantom[T]:
     marker: EmptyPhantom[GrowPhantom[[1]T]]
 
 

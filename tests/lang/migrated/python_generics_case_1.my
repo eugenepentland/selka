@@ -1,7 +1,7 @@
 module python_generics_case_1
 
 
-class Pair[T]:
+record Pair[T]:
     first: T
     second: T
 
