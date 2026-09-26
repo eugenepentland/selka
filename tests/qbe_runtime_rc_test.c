@@ -244,6 +244,40 @@ static void partial_unique_body_test(void) {
     myl_native_heap_destroy(&context.heap);
     assert(!context.heap.bytes);
 }
+static void arena_frame_boundary_test(void) {
+    MylQbeContext context = {0};
+    myl_native_heap_init(&context.heap, 1u << 20);
+    if (!myl_rc_enabled(&context.heap)) assert(myl_rc_storage_init(&context.heap) == MYL_RC_OK);
+    assert(myl_rc_descriptor_import(&context.heap, &pointer_descriptor) == MYL_RC_OK);
+    void *values[3] = {myl_rc_storage_bytes(&context.heap, 8, 0), NULL, NULL};
+    assert(values[0] && myl_rc_owner_acquire(&context.heap, values[0]) == MYL_RC_OK);
+    values[1] = values[0];
+    uint32_t guards[3] = {1, 1, 1};
+    MylQbeRcSlot entries[3];
+    for (size_t i = 0; i < 3; ++i) entries[i] = (MylQbeRcSlot){&pointer_type, &values[i], &guards[i], MYL_QBE_RC_COUNTED};
+    MylQbeRcFrame frame;
+    myl_qbe_rc_frame_enter(&context, &frame, entries, 3);
+    myl_rc_scope outer, inner;
+    myl_rc_scope_begin(&context.heap, &outer);
+    assert(myl_rc_scope_pin(&outer, values[0]) == MYL_RC_OK);
+    assert(myl_native_region_begin(&context.heap));
+    values[2] = myl_rc_storage_bytes(&context.heap, 8, 1);
+    assert(values[2]);
+    myl_rc_scope_begin(&context.heap, &inner);
+    assert(myl_rc_scope_pin(&inner, values[0]) == MYL_RC_OK);
+    myl_qbe_rc_arena_prepare(&context, &frame, 1);
+    assert(guards[0] && !guards[1] && !guards[2] && !values[1] && !values[2]);
+    assert(outer.active && !inner.active && ((myl_rc_object *)values[0] - 1)->owners == 1);
+    assert(((myl_rc_object *)values[0] - 1)->holds == 1);
+    assert(((myl_native_object *)values[0] - 1)->mark & MYL_NATIVE_OBJECT_PINNED);
+    myl_qbe_rc_arena_prepare(&context, &frame, 1);
+    myl_rc_arena_close(&context.heap, 1);
+    myl_qbe_rc_frame_cleanup(&context, &frame);
+    myl_qbe_rc_frame_leave(&context, &frame);
+    assert(!context.heap.objects_live && !outer.active);
+    myl_native_heap_destroy(&context.heap);
+    assert(!context.heap.bytes);
+}
 static void rebox_bridge_test(void) {
     MylQbeContext context = {0};
     myl_native_heap_init(&context.heap, 1u << 20);
@@ -400,15 +434,16 @@ int myl_qbe_rc_frame_verify(void) {
     unique_body_test();
     rebox_bridge_test();
     partial_unique_body_test();
+    arena_frame_boundary_test();
     scope_bridge_test();
     backing_bridge_test();
-    return 10;
+    return 11;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
     assert(myl_qbe_rc_contract_verify() == 5);
-    assert(myl_qbe_rc_frame_verify() == 10);
-    puts("RC startup and frame unwind: 15 checks passed");
+    assert(myl_qbe_rc_frame_verify() == 11);
+    puts("RC startup and frame unwind: 16 checks passed");
     return 0;
 }
 #endif

@@ -102,6 +102,13 @@ void myl_qbe_rc_finish(void *context) {
         myl_rc_owner_release(&ctx->heap, text);
     }
 }
+void myl_qbe_rc_arena_prepare(void *context, MylQbeRcFrame *frame, size_t watermark) {
+    MylQbeContext *ctx = context;
+    myl_rc_invariant(ctx->rc_frames == frame && watermark <= frame->count && ctx->heap.region_depth);
+    myl_rc_scopes_close_region(&ctx->heap, ctx->heap.region_depth);
+    for (size_t i = frame->count; i > watermark; --i)
+        myl_qbe_rc_slot_drop(ctx, &frame->entries[i - 1]);
+}
 int myl_qbe_rc_unique_local(void *context, const myl_native_type *type, void *address, uint32_t *owned) {
     MylQbeContext *ctx = context;
     myl_rc_invariant(owned != NULL);

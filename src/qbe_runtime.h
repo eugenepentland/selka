@@ -193,6 +193,9 @@ void myl_qbe_rc_frame_leave(void *, MylQbeRcFrame *);
 void myl_qbe_rc_unwind_to(void *, MylQbeRcFrame *checkpoint);
 void myl_qbe_rc_unwind(void *);
 void myl_qbe_rc_finish(void *);
+/* An arena statement ends with no live operand stack. Restore scopes born in
+ * its region, then drop inner locals and scratch owners while chunks live. */
+void myl_qbe_rc_arena_prepare(void *, MylQbeRcFrame *, size_t local_watermark);
 int myl_qbe_rc_unique_local(void *, const myl_native_type *, void *, uint32_t *owned);
 int myl_qbe_rc_unique_field(void *, const myl_native_type *, void *, void *container);
 /* Copy a prepared inline body into an owned replacement box. The owner slot
