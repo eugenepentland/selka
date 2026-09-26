@@ -93,12 +93,13 @@ def jobs():
 # Each C suite and the runtime sources it links.
 SUITES = (
     ("native_rc_loan", ["native_heap.c", "native_regions.c"]),
+    ("native_rc_history", ["native_heap.c", "native_regions.c"]),
     ("native_rc_hold", ["native_heap.c", "native_regions.c"]),
     ("native_file_cleanup", ["native_heap.c", "qbe_runtime.c", "qbe_files.c", "qbe_resources.c", "qbe_stand_ins.c"]),
     ("native_rc_execution", ["native_heap.c", "qbe_runtime.c", "qbe_runtime_rc.c", "qbe_stack.c"]),
     ("native_rc_arena", ["native_heap.c", "native_regions.c"]),
     ("native_rc_stats", ["native_heap.c"]),
-    ("native_rc_contract", ["native_rc.c", "native_rc_stats.c", "native_rc_shapes.c", "native_rc_walk.c", "native_rc_scope.c", "native_rc_transfer.c"]),
+    ("native_rc_contract", ["native_heap.c", "native_rc.c", "native_rc_stats.c", "native_rc_shapes.c", "native_rc_walk.c", "native_rc_scope.c", "native_rc_transfer.c"]),
     ("native_rc_collections", ["native_heap.c", "native_text_methods.c", "native_print.c"]),
     ("native_rc_codecs", ["native_heap.c", "qbe_runtime.c"]),
     ("native_rc_host", ["native_heap.c", "qbe_runtime.c"]),

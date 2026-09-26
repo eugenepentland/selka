@@ -1,3 +1,5 @@
+#include "native_collections.h"
+#include "native_dictionary.h"
 #include "native_rc_values.h"
 #include "native_rc_internal.h"
 #include <stdlib.h>
@@ -166,6 +168,23 @@ void myl_rc_native_unloan(myl_native_heap *heap, const myl_native_type *type, vo
     const myl_rc_descriptor *descriptor = myl_rc_descriptor_find(heap, type);
     myl_rc_invariant(descriptor != NULL);
     myl_rc_loan_drop(heap, descriptor->shape, value);
+}
+int myl_rc_native_mutable(const void *payload) {
+    return myl_native_list_header(payload) || myl_native_dictionary_header(payload);
+}
+int myl_rc_native_publish(myl_native_heap *heap, const myl_native_type *type, void *dst,
+                          void *src, unsigned region, unsigned semantic_mode) {
+    myl_rc_invariant(!(semantic_mode & ~(MYL_RC_HISTORY_TAKE | 3u)) && (semantic_mode & 3u) != 3u);
+    const myl_rc_shape *shape = myl_rc_native_shape(heap, type);
+    if (!shape) { memset(dst, 0, type->size); return 0; }
+    myl_rc_invariant(!myl_rc_native_has_unique(heap, type));
+    myl_rc_slot destination = {.shape=shape,.address=dst,.region=region};
+    myl_rc_slot source = {.shape=shape,.address=src};
+    myl_rc_transfer mode = semantic_mode & MYL_RC_HISTORY_TAKE ? MYL_RC_TAKE : MYL_RC_COPY;
+    unsigned policy = 1;
+    if ((semantic_mode & 3u) && type->kind == MYL_NATIVE_POINTER)
+        policy = type->collection_kind == 1 || type->collection_kind == 3 || type->collection_kind == 4 ? 2 : 0;
+    return publication_status(heap, myl_rc_semantic_transfer(heap, &destination, &source, mode, policy));
 }
 void *myl_rc_native_storage(myl_native_heap *heap, const myl_native_type *type, size_t count, unsigned region) {
     if (type->size && count>SIZE_MAX/type->size) return NULL;

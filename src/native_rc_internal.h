@@ -74,4 +74,7 @@ myl_rc_status myl_rc_loan_copy(myl_native_heap *, const myl_rc_shape *, void *, 
 void myl_rc_loan_drop(myl_native_heap *, const myl_rc_shape *, void *);
 /* Nonmutating native inline-type walk; terminal managed payloads stay opaque. */
 int myl_rc_native_has_unique(myl_native_heap *, const myl_native_type *);
+/* Native mutable collection classification used only by semantic transfers. */
+int myl_rc_native_mutable(const void *);
+myl_rc_status myl_rc_semantic_transfer(myl_native_heap *, myl_rc_slot *, const myl_rc_slot *, myl_rc_transfer, unsigned);
 #endif
