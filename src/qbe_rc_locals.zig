@@ -45,6 +45,13 @@ fn store(comptime E: type, self: *E, index: usize, operand: usize) Error!void {
         try self.print(" storel %v{d}, %l{d}\n", .{ value, index });
         return;
     }
+    if (self.cow.?.plan.place(index) != null) {
+        const value = try self.load("s", operand);
+        try values.drop(E, self, operand);
+        try frame.drop(E, self, index);
+        try self.print(" storel %v{d}, %l{d}\n", .{ value, index });
+        return;
+    }
     try values.prepareOperand(E, self, ty, operand);
     const destination = self.temp();
     if (self.callerStorage(index)) {

@@ -25,6 +25,8 @@ const typed = @import("typed.zig");
 const cow_plan = @import("cow_plan.zig");
 const format = @import("qbe_format.zig");
 const qbe_alloc = @import("qbe_alloc.zig");
+const runtime_mode = @import("runtime_mode.zig");
+const rc_unique = @import("qbe_rc_unique.zig");
 const cow_keep_label = "@cowkeep{d}\n";
 const store_pointer = " storel %v{d}, %v{d}\n";
 const store_local = " storel %v{d}, %l{d}\n";
@@ -78,7 +80,7 @@ pub fn Lower(comptime E: type) type {
     return struct {
         /// Plan the function under the ownership analysis already run.
         pub fn plan(self: *E, state: *State) Error!bool {
-            const analysis = try @import("qbe_rc_unique.zig").analysis(E, self);
+            const analysis = try rc_unique.analysis(E, self);
             const input: cow_plan.Input = .{
                 .program = self.program,
                 .function = self.function,
@@ -119,7 +121,7 @@ pub fn Lower(comptime E: type) type {
             const beginning = state.captures[pc].begin;
             if (beginning != cow_plan.none) try beginScope(E, self, state.plan.places[beginning].?, stack);
             if (site.fill) try fillPlace(E, self, pc, stack);
-            if (!@import("runtime_mode.zig").enabled()) for (site.shares) |depth| try share(E, self, stack, depth);
+            if (!runtime_mode.enabled()) for (site.shares) |depth| try share(E, self, stack, depth);
         }
         /// Whether this place retains temporary pins across an index callback.
         pub fn scoped(self: *const E, place: cow_plan.Place) bool {
@@ -377,7 +379,7 @@ fn copyCall(comptime E: type, self: *E, value: usize, container: ?usize, stack: 
 /// Make local `unique.local`'s payload unique: copy it when it is shared and
 /// store the copy into its slot and its alias's.
 fn uniqueLocal(comptime E: type, self: *E, unique: cow_plan.Unique, stack: []const typed.Type) Error!void {
-    if (@import("runtime_mode.zig").enabled()) return @import("qbe_rc_unique.zig").local(E, self, unique);
+    if (runtime_mode.enabled()) return rc_unique.local(E, self, unique);
     const label = self.temp();
     const value = try self.load("l", unique.local);
     try testShared(E, self, value, label);
@@ -391,6 +393,10 @@ fn uniqueLocal(comptime E: type, self: *E, unique: cow_plan.Unique, stack: []con
 /// for a nested write; the clone marks held values shared.
 fn uniqueField(comptime E: type, self: *E, place: cow_plan.Place, stack: []const typed.Type) Error!void {
     const cursor = try fieldChainRange(E, self, place.base + 1, place.fields_end, try fieldBase(E, self, place.parent), .detach);
+    if (runtime_mode.enabled()) {
+        const types = self.states[place.fields_end] orelse return error.InternalError;
+        return rc_unique.field(E, self, .{ .ty = types[types.len - 1], .address = cursor.address, .container = cursor.cell orelse cursor.holder });
+    }
     const value = try self.load("v", cursor.address);
     const label = self.temp();
     try testShared(E, self, value, label);
@@ -471,7 +477,7 @@ fn fillPlace(comptime E: type, self: *E, pc: usize, stack: []const typed.Type) E
     const label = self.temp();
     var value = try self.load("s", top);
     const box_path = placeHasBox(E, self, place);
-    if (!box_path) try testShared(E, self, value, label);
+    if (!box_path and !runtime_mode.enabled()) try testShared(E, self, value, label);
     var container: ?usize = null;
     var cursor: Cursor = switch (place.step) {
         .element => element: {
@@ -494,7 +500,12 @@ fn fillPlace(comptime E: type, self: *E, pc: usize, stack: []const typed.Type) E
         },
         .field => try fieldBase(E, self, place.parent),
     };
+    if (runtime_mode.enabled()) try @import("qbe_rc_values.zig").drop(E, self, top);
     cursor = try fieldChain(E, self, place, cursor);
+    if (runtime_mode.enabled()) {
+        try rc_unique.field(E, self, .{ .ty = stack[top], .address = cursor.address, .container = cursor.cell orelse container });
+        return self.store(top, try self.load("v", cursor.address));
+    }
     if (box_path) {
         // Detaching a box shares its old direct child (or replaces a pinned
         // one), so the operand read before the detachment is stale. Test and
@@ -858,6 +869,10 @@ fn fieldChainRange(comptime E: type, self: *E, begin: usize, end: usize, start: 
 }
 
 fn detachBox(comptime E: type, self: *E, ty: typed.Type, body: usize, cursor: Cursor, roots_published: bool) Error!usize {
+    if (runtime_mode.enabled()) {
+        try rc_unique.field(E, self, .{ .ty = ty, .address = cursor.address, .container = cursor.cell orelse cursor.holder });
+        return self.load("v", cursor.address);
+    }
     const pushed = if (roots_published) false else try self.roots(self.states[self.pc] orelse return error.InternalError);
     const copy = self.temp();
     const descriptor = try self.descriptor(ty);

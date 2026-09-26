@@ -34,6 +34,20 @@ pub fn local(comptime E: type, self: *E, unique: cow.Unique) Error!void {
     }
 }
 
+/// One pointer edge in an already-owned containing value.
+pub const Field = struct { ty: @import("typed.zig").Type, address: usize, container: ?usize = null };
+
+/// Detach an owned field transactionally before publishing the replacement edge.
+pub fn field(comptime E: type, self: *E, target: Field) Error!void {
+    const container = self.temp();
+    if (target.container) |value| {
+        try self.print(" %v{d} =l copy %v{d}\n", .{ container, value });
+    } else try self.print(" %v{d} =l copy 0\n", .{container});
+    const done = self.temp();
+    try self.print(" %v{d} =w call $myl_qbe_rc_unique_field(l %ctx, l extern ${s}, l %v{d}, l %v{d})\n", .{ done, try self.descriptor(target.ty), target.address, container });
+    try success(E, self, done);
+}
+
 /// A compiler-only receiver temporary aliases its prepared owning parent.
 /// User bindings and read-only compiler temporaries still establish snapshots.
 pub fn receiverParent(comptime E: type, self: *E, index: usize) ?u32 {
