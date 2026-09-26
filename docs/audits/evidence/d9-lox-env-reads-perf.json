@@ -1,0 +1,201 @@
+{
+  "cpu": 3,
+  "repetitions": 3,
+  "compiler_commit": "adcbb4ca",
+  "identities": {
+    "source": {
+      "before": {
+        "table.my": "c875ae493dbc0d6c1b70202746b0f1d2211190fa1276b9d492778455c0d0b2ca",
+        "value.my": "3b2a444e77c6a703b1aedad3c89ef38cad70aa3bb6cba1716b623980ff9a76b0",
+        "scanner_test.my": "1d7fbb34b0de402657786641217e81c9ae286cab14baf2716de2db875ae39ad0",
+        "natives.my": "2ff45343fded6d303e6233e0f787e63c319e860903e2c0c81ccbb71c2749d665",
+        "resolver.my": "41d41b2a1ddb3f6ab3fb73ad9eff69415b0450d890554766bfee37eac8d0903d",
+        "scanner.my": "af4bc6a57859318051dc47d6e1f6344ee98fbfff037e9be93c0a103765cd3e83",
+        "main.my": "18c1f669b1683123e635256c9f66c6db2766383391371c3822e61df7d9732274",
+        "resolver_test.my": "72c5176ff15db240d8ec8ff8073fcdb7736e8c60ab47410bb60fce934c179d31",
+        "heap_test.my": "c951153991a8d5d13ca1df6ded7c6f26c7b43a08ed2095f72c6091637b29b53f",
+        "lox_strings.my": "383900dda10b9218caf2087e12a2e20089e4d48b0ec5fc3e17e960a3d70d83df",
+        "driver_tests.my": "9eace4f6c8b33fd93331297f8a8195c41357b7c833b2e06e0c20594704113925",
+        "driver.my": "fe831d2ec08833d11139e790ab741903b27a8e0fb43582cac11ca664b4595836",
+        "compiler_test.my": "582fe817dbeffa709961b5124370ce200510adb3ac0d246572ca1c0dc19ec08a",
+        "chunk.my": "b4f6e7ae6531b224f99e026f53fee3692c90d8f2b15d3c76ca5962f1803e4b66",
+        "output.my": "cdc79c8a9a5eca0106fb139bca5492da201f027b0499e5e00a492368317d194c",
+        "parser_test.my": "ffe2658f030c75b40a7c54d8f0c64e848e6679e13fc69cbef9a131ed7b120e4b",
+        "interpreter.my": "939f0705cd6997d3737b157f2243256b94c795a2b78536891109f74c7d2a73ba",
+        "vm.my": "24e852a937658279250ddd71e4835383c74053946d2fc50a91d2450d1312c37d",
+        "value_test.my": "b766d22b25a8a8a090b4a059030cfc7462022fdacb66a0a91bf8a9e09a53fed4",
+        "parser.my": "e9bd5d9c37e307d060ce165dc4fa0f276c2ff9dbe7cb21bd27cbdd94644b4edd",
+        "compiler.my": "c550603195401ff6d9436b42d6fbf0c35051521da57e7b85281fc8fcf6ebe048",
+        "heap.my": "ab8451db8b4756b5dc30e99f4209a5891e3c350766c0e6c4eaaa4e0a80ce0aa2",
+        "ast.my": "e210fb35bf3125ba06ebb978bcb3592162020a77576542f2d049879a51479bf9",
+        "lox_strings_test.my": "a44545c64e9f75cc5af761d6c703feec83c4fc0a14d2678a1b2fce28067bd0c0",
+        "table_test.my": "38279f9135e953484e6844994bc070c4156d1eb31ab4de0f295efbea17c19555",
+        "object.my": "08c0d5c6ae304ef4d0e1f5929f52b5d1dd47cd46e6c409392c0b5b1df9567ad7"
+      },
+      "env": {
+        "table.my": "c875ae493dbc0d6c1b70202746b0f1d2211190fa1276b9d492778455c0d0b2ca",
+        "value.my": "3b2a444e77c6a703b1aedad3c89ef38cad70aa3bb6cba1716b623980ff9a76b0",
+        "scanner_test.my": "1d7fbb34b0de402657786641217e81c9ae286cab14baf2716de2db875ae39ad0",
+        "natives.my": "2ff45343fded6d303e6233e0f787e63c319e860903e2c0c81ccbb71c2749d665",
+        "resolver.my": "41d41b2a1ddb3f6ab3fb73ad9eff69415b0450d890554766bfee37eac8d0903d",
+        "scanner.my": "af4bc6a57859318051dc47d6e1f6344ee98fbfff037e9be93c0a103765cd3e83",
+        "main.my": "18c1f669b1683123e635256c9f66c6db2766383391371c3822e61df7d9732274",
+        "resolver_test.my": "72c5176ff15db240d8ec8ff8073fcdb7736e8c60ab47410bb60fce934c179d31",
+        "heap_test.my": "c951153991a8d5d13ca1df6ded7c6f26c7b43a08ed2095f72c6091637b29b53f",
+        "lox_strings.my": "383900dda10b9218caf2087e12a2e20089e4d48b0ec5fc3e17e960a3d70d83df",
+        "driver_tests.my": "9eace4f6c8b33fd93331297f8a8195c41357b7c833b2e06e0c20594704113925",
+        "driver.my": "fe831d2ec08833d11139e790ab741903b27a8e0fb43582cac11ca664b4595836",
+        "compiler_test.my": "582fe817dbeffa709961b5124370ce200510adb3ac0d246572ca1c0dc19ec08a",
+        "chunk.my": "b4f6e7ae6531b224f99e026f53fee3692c90d8f2b15d3c76ca5962f1803e4b66",
+        "output.my": "cdc79c8a9a5eca0106fb139bca5492da201f027b0499e5e00a492368317d194c",
+        "parser_test.my": "ffe2658f030c75b40a7c54d8f0c64e848e6679e13fc69cbef9a131ed7b120e4b",
+        "interpreter.my": "363ffb898afaf36c6b792df54614f99340e56a0ba6df228afc283c81252c7c58",
+        "vm.my": "24e852a937658279250ddd71e4835383c74053946d2fc50a91d2450d1312c37d",
+        "value_test.my": "b766d22b25a8a8a090b4a059030cfc7462022fdacb66a0a91bf8a9e09a53fed4",
+        "parser.my": "e9bd5d9c37e307d060ce165dc4fa0f276c2ff9dbe7cb21bd27cbdd94644b4edd",
+        "compiler.my": "c550603195401ff6d9436b42d6fbf0c35051521da57e7b85281fc8fcf6ebe048",
+        "heap.my": "00d41cf353546e5bb4de3ea4bbda6cf03a61ce943d078c03ed896b62a6586f5d",
+        "ast.my": "e210fb35bf3125ba06ebb978bcb3592162020a77576542f2d049879a51479bf9",
+        "lox_strings_test.my": "a44545c64e9f75cc5af761d6c703feec83c4fc0a14d2678a1b2fce28067bd0c0",
+        "table_test.my": "38279f9135e953484e6844994bc070c4156d1eb31ab4de0f295efbea17c19555",
+        "object.my": "08c0d5c6ae304ef4d0e1f5929f52b5d1dd47cd46e6c409392c0b5b1df9567ad7"
+      }
+    },
+    "compiler": {
+      "value": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-copy-through-transfers/.tmp-transfer/install-alias/bin/mylang",
+        "sha256": "6961ce9eae4b97bc8a1db8fe15e5dce6d94eca713537798d0b6ed5f578222ff9"
+      },
+      "legacy": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/zig-out/bin/mylang",
+        "sha256": "65c6e19ce8a5a2e7fb1a1b4db58b9fa15438afa0093db3d0cbf6ef9ac5270662"
+      }
+    }
+  },
+  "guest_flags": {
+    "qbe": [
+      "--mode",
+      "ReleaseFast",
+      "--backend",
+      "qbe",
+      "--keep-symbols",
+      "--value-semantics"
+    ],
+    "llvm": [
+      "--mode",
+      "ReleaseFast",
+      "--backend",
+      "llvm",
+      "--llvm-opt",
+      "3",
+      "--lto",
+      "--keep-symbols",
+      "--value-semantics"
+    ]
+  },
+  "runtime_env": {
+    "MYLANG_MEMORY_LIMIT": "8G"
+  },
+  "results": {
+    "N4|qbe": {
+      "before": {
+        "counts": [
+          104954508,
+          104954492,
+          104954487
+        ],
+        "median": 104954492,
+        "binary_sha256": "add290bb7ef1b8c03eadd3cb4e2c702f6c51e269d477ae99b3b558a4e5c83e70",
+        "stdout_sha256": "e94feff7add15ae5960cf4f8440dea45fa833bf50e4393b7d44d0e9f9f2fc39c"
+      },
+      "value": {
+        "counts": [
+          100547723,
+          100547757,
+          100547712
+        ],
+        "median": 100547723,
+        "binary_sha256": "108c8c79e77a9f57364661e21fe3fb9a3f93e566537cf324a4b9714a95f5a0d6",
+        "stdout_sha256": "e94feff7add15ae5960cf4f8440dea45fa833bf50e4393b7d44d0e9f9f2fc39c"
+      },
+      "ratio": 0.9580125736781233,
+      "script_sha256": "071825eb80ef92318d27673950ee8ed4164c15d293f169d63978a3a096c484ee",
+      "script": "var N = 4;\nclass Tree {\n  init(item, depth) {\n    this.item = item;\n    this.depth = depth;\n    if (depth > 0) {\n      var item2 = item + item;\n      depth = depth - 1;\n      this.left = Tree(item2 - 1, depth);\n      this.right = Tree(item2, depth);\n    } else {\n      this.left = nil;\n      this.right = nil;\n    }\n  }\n\n  check() {\n    if (this.left == nil) {\n      return this.item;\n    }\n\n    return this.item + this.left.check() - this.right.check();\n  }\n}\n\nvar minDepth = 4;\nvar maxDepth = N;\nvar stretchDepth = maxDepth + 1;\n\nprint \"stretch tree of depth:\";\nprint stretchDepth;\nprint \"check:\";\nprint Tree(0, stretchDepth).check();\n\nvar longLivedTree = Tree(0, maxDepth);\n\n// iterations = 2 ** maxDepth\nvar iterations = 1;\nvar d = 0;\nwhile (d < maxDepth) {\n  iterations = iterations * 2;\n  d = d + 1;\n}\n\nvar depth = minDepth;\nwhile (depth < stretchDepth) {\n  var check = 0;\n  var i = 1;\n  while (i <= iterations) {\n    check = check + Tree(i, depth).check() + Tree(-i, depth).check();\n    i = i + 1;\n  }\n\n  print \"num trees:\";\n  print iterations * 2;\n  print \"depth:\";\n  print depth;\n  print \"check:\";\n  print check;\n\n  iterations = iterations / 4;\n  depth = depth + 2;\n}\n\nprint \"long lived tree of depth:\";\nprint maxDepth;\nprint \"check:\";\nprint longLivedTree.check();\n"
+    },
+    "N4|llvm": {
+      "before": {
+        "counts": [
+          51704321,
+          51705643,
+          51704318
+        ],
+        "median": 51704321,
+        "binary_sha256": "ffb1c9218a576cae6276408214c3edf260cb9ace5347aa167b7abafc6df07cc4",
+        "stdout_sha256": "e94feff7add15ae5960cf4f8440dea45fa833bf50e4393b7d44d0e9f9f2fc39c"
+      },
+      "value": {
+        "counts": [
+          49247640,
+          49247644,
+          49247637
+        ],
+        "median": 49247640,
+        "binary_sha256": "3eae6bf2b54ecd2fb5611df44f70cf93749ccb339e6d13822756dad9f8bbb993",
+        "stdout_sha256": "e94feff7add15ae5960cf4f8440dea45fa833bf50e4393b7d44d0e9f9f2fc39c"
+      },
+      "ratio": 0.9524859634071976,
+      "script_sha256": "071825eb80ef92318d27673950ee8ed4164c15d293f169d63978a3a096c484ee",
+      "script": "var N = 4;\nclass Tree {\n  init(item, depth) {\n    this.item = item;\n    this.depth = depth;\n    if (depth > 0) {\n      var item2 = item + item;\n      depth = depth - 1;\n      this.left = Tree(item2 - 1, depth);\n      this.right = Tree(item2, depth);\n    } else {\n      this.left = nil;\n      this.right = nil;\n    }\n  }\n\n  check() {\n    if (this.left == nil) {\n      return this.item;\n    }\n\n    return this.item + this.left.check() - this.right.check();\n  }\n}\n\nvar minDepth = 4;\nvar maxDepth = N;\nvar stretchDepth = maxDepth + 1;\n\nprint \"stretch tree of depth:\";\nprint stretchDepth;\nprint \"check:\";\nprint Tree(0, stretchDepth).check();\n\nvar longLivedTree = Tree(0, maxDepth);\n\n// iterations = 2 ** maxDepth\nvar iterations = 1;\nvar d = 0;\nwhile (d < maxDepth) {\n  iterations = iterations * 2;\n  d = d + 1;\n}\n\nvar depth = minDepth;\nwhile (depth < stretchDepth) {\n  var check = 0;\n  var i = 1;\n  while (i <= iterations) {\n    check = check + Tree(i, depth).check() + Tree(-i, depth).check();\n    i = i + 1;\n  }\n\n  print \"num trees:\";\n  print iterations * 2;\n  print \"depth:\";\n  print depth;\n  print \"check:\";\n  print check;\n\n  iterations = iterations / 4;\n  depth = depth + 2;\n}\n\nprint \"long lived tree of depth:\";\nprint maxDepth;\nprint \"check:\";\nprint longLivedTree.check();\n"
+    },
+    "N10|qbe": {
+      "before": {
+        "counts": [
+          28032221672,
+          28032221428,
+          28032231562
+        ],
+        "median": 28032221672,
+        "binary_sha256": "add290bb7ef1b8c03eadd3cb4e2c702f6c51e269d477ae99b3b558a4e5c83e70",
+        "stdout_sha256": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056"
+      },
+      "value": {
+        "counts": [
+          26952058476,
+          26952064180,
+          26952058445
+        ],
+        "median": 26952058476,
+        "binary_sha256": "108c8c79e77a9f57364661e21fe3fb9a3f93e566537cf324a4b9714a95f5a0d6",
+        "stdout_sha256": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056"
+      },
+      "ratio": 0.9614670856759483,
+      "script_sha256": "fa3e536c73bc273bc8cd5ca4f4c81a6edd0c224e18aa764b34043b794f4850e4",
+      "script": "var N = 10;\nclass Tree {\n  init(item, depth) {\n    this.item = item;\n    this.depth = depth;\n    if (depth > 0) {\n      var item2 = item + item;\n      depth = depth - 1;\n      this.left = Tree(item2 - 1, depth);\n      this.right = Tree(item2, depth);\n    } else {\n      this.left = nil;\n      this.right = nil;\n    }\n  }\n\n  check() {\n    if (this.left == nil) {\n      return this.item;\n    }\n\n    return this.item + this.left.check() - this.right.check();\n  }\n}\n\nvar minDepth = 4;\nvar maxDepth = N;\nvar stretchDepth = maxDepth + 1;\n\nprint \"stretch tree of depth:\";\nprint stretchDepth;\nprint \"check:\";\nprint Tree(0, stretchDepth).check();\n\nvar longLivedTree = Tree(0, maxDepth);\n\n// iterations = 2 ** maxDepth\nvar iterations = 1;\nvar d = 0;\nwhile (d < maxDepth) {\n  iterations = iterations * 2;\n  d = d + 1;\n}\n\nvar depth = minDepth;\nwhile (depth < stretchDepth) {\n  var check = 0;\n  var i = 1;\n  while (i <= iterations) {\n    check = check + Tree(i, depth).check() + Tree(-i, depth).check();\n    i = i + 1;\n  }\n\n  print \"num trees:\";\n  print iterations * 2;\n  print \"depth:\";\n  print depth;\n  print \"check:\";\n  print check;\n\n  iterations = iterations / 4;\n  depth = depth + 2;\n}\n\nprint \"long lived tree of depth:\";\nprint maxDepth;\nprint \"check:\";\nprint longLivedTree.check();\n"
+    },
+    "N10|llvm": {
+      "before": {
+        "counts": [
+          14450728532,
+          14450725032,
+          14450724869
+        ],
+        "median": 14450725032,
+        "binary_sha256": "ffb1c9218a576cae6276408214c3edf260cb9ace5347aa167b7abafc6df07cc4",
+        "stdout_sha256": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056"
+      },
+      "value": {
+        "counts": [
+          13852240889,
+          13852294425,
+          13851562123
+        ],
+        "median": 13852240889,
+        "binary_sha256": "3eae6bf2b54ecd2fb5611df44f70cf93749ccb339e6d13822756dad9f8bbb993",
+        "stdout_sha256": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056"
+      },
+      "ratio": 0.9585844902816499,
+      "script_sha256": "fa3e536c73bc273bc8cd5ca4f4c81a6edd0c224e18aa764b34043b794f4850e4",
+      "script": "var N = 10;\nclass Tree {\n  init(item, depth) {\n    this.item = item;\n    this.depth = depth;\n    if (depth > 0) {\n      var item2 = item + item;\n      depth = depth - 1;\n      this.left = Tree(item2 - 1, depth);\n      this.right = Tree(item2, depth);\n    } else {\n      this.left = nil;\n      this.right = nil;\n    }\n  }\n\n  check() {\n    if (this.left == nil) {\n      return this.item;\n    }\n\n    return this.item + this.left.check() - this.right.check();\n  }\n}\n\nvar minDepth = 4;\nvar maxDepth = N;\nvar stretchDepth = maxDepth + 1;\n\nprint \"stretch tree of depth:\";\nprint stretchDepth;\nprint \"check:\";\nprint Tree(0, stretchDepth).check();\n\nvar longLivedTree = Tree(0, maxDepth);\n\n// iterations = 2 ** maxDepth\nvar iterations = 1;\nvar d = 0;\nwhile (d < maxDepth) {\n  iterations = iterations * 2;\n  d = d + 1;\n}\n\nvar depth = minDepth;\nwhile (depth < stretchDepth) {\n  var check = 0;\n  var i = 1;\n  while (i <= iterations) {\n    check = check + Tree(i, depth).check() + Tree(-i, depth).check();\n    i = i + 1;\n  }\n\n  print \"num trees:\";\n  print iterations * 2;\n  print \"depth:\";\n  print depth;\n  print \"check:\";\n  print check;\n\n  iterations = iterations / 4;\n  depth = depth + 2;\n}\n\nprint \"long lived tree of depth:\";\nprint maxDepth;\nprint \"check:\";\nprint longLivedTree.check();\n"
+    }
+  }
+}
