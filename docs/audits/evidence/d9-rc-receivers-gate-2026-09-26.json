@@ -1,0 +1,46 @@
+{
+  "source_commit": "a49441c1",
+  "compiler_sha256": "fc1f3fc16f5f3d1deecf3a7446ac1df27362e2d7dedf18e77a39ea9b7263361e",
+  "gate": {
+    "test": {
+      "steps": 94,
+      "executed": 2209,
+      "shard_exclusions": 22442
+    },
+    "test-qbe": {
+      "steps": 51,
+      "executed": 437
+    },
+    "test-qbe-build": {
+      "steps": 29
+    },
+    "fmt-check": {
+      "steps": 2
+    }
+  },
+  "rc_sweeps": {
+    "qbe": {
+      "version": "native-tests-v1",
+      "passed": 723,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 723,
+      "programs": 125,
+      "dropped": 0,
+      "unloaded": 0
+    },
+    "llvm": {
+      "version": "native-tests-v1",
+      "passed": 723,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 723,
+      "programs": 125,
+      "dropped": 0,
+      "unloaded": 0
+    }
+  },
+  "wp4_performance_accepted": false
+}

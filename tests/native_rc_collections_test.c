@@ -735,6 +735,53 @@ static void arena_text_split_rollback(void) {
     myl_rc_owner_release(&heap,input);
     finish(&heap);
 }
+/* spec-case: RC-TRANSFER-1. The native pointer path keeps copy/take publication
+ * rules at the count ceiling and tight budget, and falls back for pinned/arena
+ * pointers without inventing an ordinary owner for a non-heap payload. */
+static void native_pointer_transactions(void) {
+    myl_native_heap heap;
+    init(&heap);
+    assert(myl_rc_native_shape(&heap,&pointer));
+    void *source=myl_rc_storage_bytes(&heap,8,0), *target=NULL;
+    assert(source);
+    heap.limit=heap.bytes;
+    assert(myl_rc_native_copy(&heap,&pointer,&target,&source,0));
+    assert(target==source && owners(source)==2);
+    myl_rc_native_drop(&heap,&pointer,&target);
+    assert(!target && owners(source)==1);
+    ((myl_rc_object *)source-1)->owners=MYL_RC_COUNT_MAX;
+    assert(!myl_rc_native_copy(&heap,&pointer,&target,&source,0));
+    assert(!target && owners(source)==MYL_RC_COUNT_MAX && myl_rc_take_failure(&heap)==MYL_RC_COUNT_LIMIT);
+    assert(myl_rc_native_take(&heap,&pointer,&target,&source,0));
+    assert(!source && owners(target)==MYL_RC_COUNT_MAX);
+    ((myl_rc_object *)target-1)->owners=1;
+    myl_rc_native_drop(&heap,&pointer,&target);
+    heap.limit=64u<<20;
+    source=myl_rc_storage_bytes(&heap,200000,0);
+    assert(source);
+    heap.limit=heap.bytes;
+    myl_rc_pin pin={0};
+    assert(myl_rc_pin_acquire(&heap,source,&pin)==MYL_RC_OK);
+    size_t live=heap.objects_live;
+    void *sentinel=(void *)(uintptr_t)1234;
+    assert(!myl_rc_native_take(&heap,&pointer,&sentinel,&source,0));
+    assert(sentinel==(void *)(uintptr_t)1234 && source && owners(source)==1 && heap.objects_live==live);
+    assert(myl_rc_take_failure(&heap)==MYL_RC_ALLOCATION_REFUSED);
+    myl_rc_pin_release(&heap,&pin);
+    myl_rc_native_drop(&heap,&pointer,&source);
+    heap.limit=64u<<20;
+    assert(myl_native_region_begin(&heap));
+    source=myl_rc_storage_bytes(&heap,8,heap.region_depth);
+    assert(source && myl_rc_native_copy(&heap,&pointer,&target,&source,heap.region_depth));
+    assert(target==source && (((myl_native_object *)source-1)->mark&MYL_NATIVE_OBJECT_SHARED));
+    myl_rc_native_drop(&heap,&pointer,&target);
+    assert(!target && !myl_rc_native_copy(&heap,&pointer,&target,&source,0));
+    assert(!target && myl_rc_take_failure(&heap)==MYL_RC_REGION_ERROR);
+    myl_native_region_end(&heap);
+    source=NULL;
+    assert(myl_rc_native_copy(&heap,&pointer,&target,&source,0) && !target);
+    finish(&heap);
+}
 int myl_rc_collections_verify(void) {
     storage_reuse_and_holds();
     storage_boundaries();
@@ -758,12 +805,13 @@ int myl_rc_collections_verify(void) {
     arena_edit_abort();
     pinned_dictionary_readers();
     arena_text_split_rollback();
-    return 22;
+    native_pointer_transactions();
+    return 23;
 }
 #ifndef MYL_RC_COLLECTIONS_LIBRARY
 int main(void) {
-    assert(myl_rc_collections_verify()==22);
-    puts("native RC collections: 22 passed");
+    assert(myl_rc_collections_verify()==23);
+    puts("native RC collections: 23 passed");
     return 0;
 }
 #endif

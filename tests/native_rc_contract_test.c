@@ -445,9 +445,9 @@ static void transfer_failure_test(void) {
     assert(myl_rc_pin_acquire(&heap, source.first, &pins[0]) == MYL_RC_OK);
     assert(myl_rc_pin_acquire(&heap, source.second, &pins[1]) == MYL_RC_OK);
     size_t before = heap.bytes;
-    /* Two 32-byte operation frames and one 40-byte clone fit; a second clone
-     * must refuse, after the first has acquired a real temporary owner. */
-    heap.limit = before + 104;
+    /* Inline operation frames reserve no heap bytes. One 40-byte clone fits;
+     * the second refuses after the first acquired a real temporary owner. */
+    heap.limit = before + 40;
     assert(myl_rc_value_take(&heap, &to, &from) == MYL_RC_ALLOCATION_REFUSED);
     assert(!destination.first && !destination.second && first->owners == 1 && second->owners == 1);
     assert(heap.bytes == before && state.live == 2);
@@ -719,6 +719,36 @@ static void deep_unique_test(void) {
     free(shapes);
     free(fields);
 }
+// spec: RC-TRANSFER-1
+static void local_transfer_frames_test(void) {
+    myl_native_heap heap;
+    TestAllocator state;
+    start(&heap, &state);
+    myl_rc_field *small_fields, *large_fields;
+    myl_rc_shape *small = deep_shapes(7, &small_fields), *large = deep_shapes(8, &large_fields);
+    const myl_rc_shape *small_shape, *large_shape;
+    assert(myl_rc_shape_import(&heap, small, &small_shape) == MYL_RC_OK);
+    assert(myl_rc_shape_import(&heap, large, &large_shape) == MYL_RC_OK);
+    void *source = new_value(&heap, &scalar_type, 1), *destination = NULL;
+    myl_rc_slot from = {.shape = small_shape, .address = &source};
+    myl_rc_slot to = {.shape = small_shape, .address = &destination};
+    size_t bytes = heap.bytes;
+    heap.limit = bytes;
+    assert(myl_rc_value_copy(&heap, &to, &from) == MYL_RC_OK);
+    assert(destination == source && ((myl_rc_object *)source - 1)->owners == 2 && heap.bytes == bytes);
+    myl_rc_value_drop(&heap, &to);
+    from.shape = large_shape;
+    to.shape = large_shape;
+    assert(myl_rc_value_copy(&heap, &to, &from) == MYL_RC_ALLOCATION_REFUSED);
+    assert(!destination && ((myl_rc_object *)source - 1)->owners == 1 && heap.bytes == bytes);
+    heap.limit = ((size_t)256) << 20;
+    assert(myl_rc_value_copy(&heap, &to, &from) == MYL_RC_OK);
+    assert(destination == source && ((myl_rc_object *)source - 1)->owners == 2 && heap.bytes == bytes);
+    myl_rc_value_drop(&heap, &to);
+    myl_rc_value_drop(&heap, &from);
+    finish(&heap, &state);
+    free(small); free(small_fields); free(large); free(large_fields);
+}
 int myl_rc_contract_verify(void) {
     struct rlimit stack, original;
     assert(!getrlimit(RLIMIT_STACK, &stack));
@@ -742,13 +772,14 @@ int myl_rc_contract_verify(void) {
     partial_scope_test();
     pinned_diamond_test();
     deep_unique_test();
+    local_transfer_frames_test();
     assert(!setrlimit(RLIMIT_STACK, &original));
-    return 18;
+    return 19;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
-    assert(myl_rc_contract_verify() == 18);
-    puts("native RC contract: 18 tests passed");
+    assert(myl_rc_contract_verify() == 19);
+    puts("native RC contract: 19 tests passed");
     return 0;
 }
 #endif

@@ -1,0 +1,53 @@
+def write(items: mut list[list[int]], row: int, column: int, value: int) -> unit:
+    items[row][column] = value
+
+
+# spec-case: RC-INERT-RECEIVER-1
+public def test_nested_scalar_writes_keep_the_original_snapshot() -> bool:
+    rows = [[1, 2], [3, 4]]
+    before = rows
+    for index in range(20):
+        write(mut rows, -1, -1, index)
+        rows[0][-1] = rows[-1][-1] + 2
+    return rows == [[1, 21], [3, 19]] and before == [[1, 2], [3, 4]]
+
+
+def save(rows: list[list[int]], snapshots: mut list[list[list[int]]]) -> int:
+    snapshots.append(rows)
+    return 7
+
+
+# spec-case: RC-INERT-RECEIVER-1
+public def test_callback_publication_keeps_full_pending_receiver_pins() -> bool:
+    rows = [[1]]
+    snapshots: list[list[list[int]]] = []
+    rows[0].append(save(rows, mut snapshots))
+    return rows == [[1, 7]] and snapshots == [[[1]]]
+
+
+# spec-case: RC-INERT-RECEIVER-1
+public def test_managed_publication_still_establishes_independent_values() -> bool:
+    rows = [[1], [2]]
+    before = rows
+    rows[0] = rows[1]
+    rows[0].append(3)
+    return rows == [[2, 3], [2]] and before == [[1], [2]]
+
+
+# spec-case: RC-INERT-RECEIVER-1
+public def test_conditional_indices_and_zero_iterations_preserve_owners() -> bool:
+    rows = [[1, 2]]
+    before = rows
+    for index in range(0):
+        rows[0][index] = 7
+    for index in range(10):
+        rows[0][-1 if index < 5 else 0] = index
+    return rows == [[9, 4]] and before == [[1, 2]]
+
+
+def main() -> int:
+    assert test_nested_scalar_writes_keep_the_original_snapshot()
+    assert test_callback_publication_keeps_full_pending_receiver_pins()
+    assert test_managed_publication_still_establishes_independent_values()
+    assert test_conditional_indices_and_zero_iterations_preserve_owners()
+    return 0
