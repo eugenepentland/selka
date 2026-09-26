@@ -26,3 +26,9 @@ cycles:u`, filters the guest executable DSO, and reports self symbols; about
 3,000 samples were retained with none lost. The `make` symbol begins
 `myl_f_d05aa2a1`; `check` begins `myl_f_20f65c28`. The profile remains diagnostic,
 not timing/corpus evidence.
+
+`cumulative.json` joins the compiler integration at `c09fce2b` and compares RC
+with fresh GC from that same compiler, plus the frozen GC control.
+`cumulative-profile.txt` uses the same 24-run sampling method, with no lost
+samples. `cumulative-make.asm.gz` and `cumulative-make-profile.txt.gz` retain the
+actual generated constructor and its local-period annotated profile.

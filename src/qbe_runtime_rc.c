@@ -79,7 +79,12 @@ void myl_qbe_rc_frame_cleanup(void *context, MylQbeRcFrame *frame) {
     MylQbeContext *ctx = context;
     myl_rc_invariant(ctx && frame && ctx->rc_frames == frame);
     myl_rc_scope_unwind(&ctx->heap, frame->scope_checkpoint);
-    for (size_t i = frame->count; i; --i) myl_qbe_rc_slot_drop(ctx, &frame->entries[i - 1]);
+    for (size_t i = frame->count; i; --i) {
+        MylQbeRcSlot *slot = &frame->entries[i - 1];
+        /* Most normal exits have transferred these tokens already. Preserve
+         * invalid-metadata diagnosis, but skip the full helper for empty slots. */
+        if (!slot->initialized || *slot->initialized) myl_qbe_rc_slot_drop(ctx, slot);
+    }
 }
 void myl_qbe_rc_unwind_to(void *context, MylQbeRcFrame *checkpoint) {
     MylQbeContext *ctx = context;

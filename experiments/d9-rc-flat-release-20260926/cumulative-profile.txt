@@ -1,0 +1,33 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+# dso: cumulative-qbe-rc-n12
+#
+# Total Lost Samples: 0
+#
+# Samples: 2K of event 'cpu_core/cycles/u'
+# Event count (approx.): 2667167155
+#
+# Overhead  Symbol                                                                      IPC   [IPC Coverage]
+# ........  ..........................................................................  ....................
+#
+    35.06%  [.] myl_f_d05aa2a15fb3c40efeeb03bec445393f00074484cf01c8fb2da90ca6695a5531  -      -            
+     7.21%  [.] allocate                                                                -      -            
+     7.00%  [.] myl_qbe_rc_slot_drop                                                    -      -            
+     5.86%  [.] compiler_rt.fastMemset                                                  -      -            
+     5.32%  [.] myl_rc_descriptor_find                                                  -      -            
+     5.27%  [.] myl_qbe_region_mark                                                     -      -            
+     5.12%  [.] myl_qbe_rc_frame_leave                                                  -      -            
+     3.59%  [.] myl_qbe_rc_frame_cleanup                                                -      -            
+     3.32%  [.] myl_rc_invariant                                                        -      -            
+     2.73%  [.] myl_f_20f65c28671b40937c5bf23acc7c6f37e5a5ec0622e347b57685725df5ba9e50  -      -            
+     2.52%  [.] myl_rc_flat_edges_release                                               -      -            
+     2.40%  [.] myl_rc_drain                                                            -      -            
+     2.01%  [.] myl_rc_new                                                              -      -            
+     1.68%  [.] myl_qbe_rc_frame_enter                                                  -      -            
+     1.53%  [.] myl_rc_edge_release                                                     -      -            
+     1.04%  [.] myl_qbe_heap                                                            -      -            
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#
