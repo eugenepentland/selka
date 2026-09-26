@@ -92,6 +92,7 @@ def jobs():
 
 # Each C suite and the runtime sources it links.
 SUITES = (
+    ("native_rc_loan", ["native_heap.c", "native_regions.c"]),
     ("native_rc_hold", ["native_heap.c", "native_regions.c"]),
     ("native_file_cleanup", ["native_heap.c", "qbe_runtime.c", "qbe_files.c", "qbe_resources.c", "qbe_stand_ins.c"]),
     ("native_rc_execution", ["native_heap.c", "qbe_runtime.c", "qbe_runtime_rc.c", "qbe_stack.c"]),
