@@ -1,12 +1,13 @@
 resource File: filesystem
 
+
 result Open:
     ok: File,
     err: int
 
 
 record Chunk:
-    bytes: [16]u8
+    bytes: [16] u8
     length: u64
     eof: bool
 
@@ -27,11 +28,11 @@ result Status:
 
 
 def work(fs: Filesystem) -> Status effects(filesystem):
-    request: [1]u8 = [42u8]
+    request: [1] u8 = [42u8]
     file = acquire_resource[Open](fs, request)?
     chunk = read_resource[Read](file)?
     # The count reports actual write progress. This example sends one byte.
-    payload: [1]u8 = [7u8]
+    payload: [1] u8 = [7u8]
     written = write_resource[Written](file, payload)?
     return Ok(int(chunk.length) + int(written))
 

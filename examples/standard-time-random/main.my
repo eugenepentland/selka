@@ -2,7 +2,6 @@ module main
 import random
 import time
 
-
 def streams() -> int:
     generator = random.seeded(0)
     if random.next_word(mut generator) != 16294208416658607535u64:

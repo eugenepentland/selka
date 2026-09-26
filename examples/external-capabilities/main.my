@@ -2,7 +2,6 @@ module main
 import random
 import time
 
-
 def sample(clock: Clock, rng: Entropy) -> Result[int, str]:
     match time.now(clock):
         case Ok(instant):

@@ -1,5 +1,6 @@
 resource File: filesystem
 
+
 result Open:
     ok: File,
     err: int
@@ -47,7 +48,7 @@ def handle[T](r: Open) -> int effects(filesystem):
 
 
 def main(fs: Filesystem) -> int:
-    empty: [0]u8 = []
+    empty: [0] u8 = []
     first = handle[bool](acquire_resource[Open](fs, empty))
     match acquire_resource[Open](fs, empty):
         case Open.ok(file):

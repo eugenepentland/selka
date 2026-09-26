@@ -1,0 +1,26 @@
+module groups
+
+public record Person:
+    name: str
+    dept: str
+    city: str
+
+
+# An index of `people` by dept (or by city).
+public def group(people: list[Person], by_city: bool) -> dict[str, list[str]]:
+    return todo[dict[str, list[str]]]()
+
+
+# Append `name` to group `key` in the caller's index.
+public def add(index: mut dict[str, list[str]], key: str, name: str) -> bool:
+    return todo[bool]()
+
+
+# Move `name` out of its groups and into `to_group`.
+public def move(index: mut dict[str, list[str]], name: str, to_group: str) -> bool:
+    return todo[bool]()
+
+
+# A new index combining `a` and `b`; both are unchanged.
+public def merged(a: dict[str, list[str]], b: dict[str, list[str]]) -> dict[str, list[str]]:
+    return todo[dict[str, list[str]]]()

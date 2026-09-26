@@ -1,6 +1,5 @@
 module data
 
-
 public record Wire:
     n: int
 
@@ -14,14 +13,11 @@ public domain Positive: int:
     codec Wire:
         decode: from_wire,
         encode: to_wire
-
     private def raw(x: int) -> Positive:
         return wrap[Positive](x)
-
     def from_wire(x: Wire) -> Decoded effects():
         if x.n <= 0:
             return Err(-1)
         return Ok(Positive.raw(x.n))
-
     def to_wire(x: Positive) -> Wire effects():
         return Wire(n=unwrap(x))

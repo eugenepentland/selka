@@ -1,6 +1,5 @@
 module right
 
-
 public def quote(count: int) -> int effects():
     subtotal = count * 2
     return subtotal + 3

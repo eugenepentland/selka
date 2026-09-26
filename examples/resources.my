@@ -1,5 +1,6 @@
 resource File: filesystem
 
+
 result Open:
     ok: File,
     err: int
@@ -24,7 +25,7 @@ def retry(file: File) -> Finish effects(filesystem):
 
 
 def main(fs: Filesystem) -> int noalloc:
-    request: [1]u8 = [42u8]
+    request: [1] u8 = [42u8]
     match acquire_resource[Open](fs, request):
         case Open.ok(file):
             match retry(file):

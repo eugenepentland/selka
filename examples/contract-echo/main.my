@@ -1,7 +1,6 @@
 module main
 import io
 
-
 def main(host: Host) -> int:
     index = 0
     while index < io.length(host):

@@ -6,7 +6,6 @@ import delivery
 import packaging
 import handling
 
-
 record Line:
     product: catalog.Product
     count: quantity.Count

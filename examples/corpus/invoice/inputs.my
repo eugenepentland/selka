@@ -1,6 +1,5 @@
 module inputs
 
-
 public def books() -> int effects():
     return 2
 

@@ -6,6 +6,7 @@ record Reading:
     sensor: int
     samples: list[int]
 
+
 def collect(sensors: int, per_sensor: int) -> list[Reading]:
     readings: list[Reading] = []
     for sensor in range(sensors):
@@ -14,6 +15,7 @@ def collect(sensors: int, per_sensor: int) -> list[Reading]:
             samples.append(sensor * per_sensor + index)
         readings.append(Reading(sensor=sensor, samples=samples))
     return readings
+
 
 def loudest(readings: list[Reading]) -> list[int]:
     best: list[int] = []
@@ -26,6 +28,7 @@ def loudest(readings: list[Reading]) -> list[int]:
             top = total
             best = reading.samples
     return best
+
 
 def main() -> int:
     winner: list[int] = []

@@ -1,6 +1,5 @@
 module packaging
 
-
 # Independent packaging tariff; changes are reviewed separately from delivery.
 public def fee(items: int) -> int effects():
     cents = 100

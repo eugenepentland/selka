@@ -1,0 +1,34 @@
+module trie
+
+# The trie. Declare it and its node type as you need.
+public record Trie:
+    size: int
+
+
+public def new_trie() -> Trie:
+    return todo[Trie]()
+
+
+public def insert(t: mut Trie, word: str):
+    todo[None]()
+
+
+public def count(t: Trie, word: str) -> int:
+    return todo[int]()
+
+
+public def prefix_count(t: Trie, prefix: str) -> int:
+    return todo[int]()
+
+
+public def remove(t: mut Trie, word: str) -> bool:
+    return todo[bool]()
+
+
+public def words(t: Trie) -> list[str]:
+    return todo[list[str]]()
+
+
+# An independent copy of the trie as it is now.
+public def snapshot(t: Trie) -> Trie:
+    return todo[Trie]()

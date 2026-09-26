@@ -1,6 +1,5 @@
 module handling
 
-
 # A similar structure is not permission to erase different fee amounts.
 public def fee(items: int) -> int effects():
     cents = 100
