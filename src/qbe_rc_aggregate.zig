@@ -98,15 +98,16 @@ fn construct(comptime E: type, self: *E, record: @FieldType(Op, "make_record"), 
         try initialize(E, self, .{ .ty = member.ty, .source = try values.source(E, self, base + i, member.ty), .destination = try self.address(pointer, member.offset), .region = depth, .operand = base + i });
     }
     try self.store(base, pointer);
-    try finish(E, self, .{ .ty = record.ty, .base = base, .consumed = record.fields, .origin = .owned });
+    try finishConstructor(E, self, record.ty, base, record.fields);
 }
 
 fn variantValue(comptime E: type, self: *E, variant: @FieldType(Op, "make_variant"), height: usize) Error!void {
+    const payload = self.program.records[variant.ty.recordIndex()].shape.variants.?.cases[variant.tag].payload;
+    const direct_empty = payload == null and !typed.moveOnly(variant.ty, self.program.records);
     const pointer = try self.aggregatePointer();
     try zero(E, self, variant.ty, pointer);
     try self.writeTag(variant.ty, variant.tag, pointer);
-    try internal(E, self, variant.ty, pointer);
-    const payload = self.program.records[variant.ty.recordIndex()].shape.variants.?.cases[variant.tag].payload;
+    if (!direct_empty) try internal(E, self, variant.ty, pointer);
     const base = height - @intFromBool(payload != null);
     if (payload) |ty| try initialize(E, self, .{
         .ty = ty,
@@ -117,7 +118,17 @@ fn variantValue(comptime E: type, self: *E, variant: @FieldType(Op, "make_varian
     });
     try self.store(base, pointer);
     try @import("qbe_error_trace.zig").Lower(E).construction(self, variant.ty, variant.tag);
-    try finish(E, self, .{ .ty = variant.ty, .base = base, .consumed = @intFromBool(payload != null), .origin = .owned });
+    try finishConstructor(E, self, variant.ty, base, @intFromBool(payload != null));
+}
+
+fn finishConstructor(comptime E: type, self: *E, ty: typed.Type, base: usize, consumed: usize) Error!void {
+    if (typed.moveOnly(ty, self.program.records))
+        return finish(E, self, .{ .ty = ty, .base = base, .consumed = consumed, .origin = .owned });
+    // initialize consumes every ordinary input guard, including H-to-O copies;
+    // a borrowed input starts clear. Plain inputs never carry an obligation.
+    // The new body lives in separate aggregate/heap storage, so publishing to
+    // the vacated first operand cannot overwrite a still-owned input.
+    try values.constructed(E, self, ty, base);
 }
 
 fn finish(comptime E: type, self: *E, result: values.Result) Error!void {

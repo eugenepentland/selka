@@ -16,7 +16,7 @@
 //!   borrow holds that borrow. The last set grows with the borrows this step
 //!   finds, so it is solved to a fixed point. A local filled without a copy
 //!   site is not even a safe root to borrow from: its source is untracked.
-//! - A value read through a `class` object or Cell is shared storage the
+//! - A value read through a `class` object, Cell or live view is shared storage the
 //!   analysis cannot follow (any other name of the object may write it), so it
 //!   is always copied.
 //! - A read-only argument that a `mut` argument of the same call could reach
@@ -189,34 +189,10 @@ const Step = struct {
             .fresh, .unknown => return .copy,
             .local => {},
         }
-        if (self.shared(source)) return .copy;
+        if (transfer_class.sharedProjection(self.ctx, source, self.raw)) return .copy;
         return transfer_class.classify(self.ctx, at.question, self.owners);
-    }
-
-    /// Whether the value is read through a `class` object or Cell, or through
-    /// a local filled from a place with no copy site, anywhere along its chain
-    /// of aliases.
-    fn shared(self: Step, source: sources.Source) bool {
-        const ctx = self.ctx;
-        var at = source.local;
-        var part = source.part != .whole;
-        var guard: usize = 0;
-        while (guard <= ctx.locals.list.len) : (guard += 1) {
-            if (at >= ctx.locals.list.len) return true;
-            if (part and sharedRecord(ctx, ctx.locals.list[at].ty)) return true;
-            if (self.raw[at] and !ctx.alias(at)) return true;
-            if (!ctx.alias(at)) return false;
-            part = ctx.locals.step[at];
-            at = ctx.locals.parents[at];
-            if (at == none) return false;
-        }
-        return true;
     }
 };
 
 /// One copy site as the transfer it stands for.
 const Site = struct { question: transfer_class.Question };
-
-fn sharedRecord(ctx: *const Context, ty: typed.Type) bool {
-    return ty.isAggregate() and ctx.record(ty).isManagedRecord();
-}

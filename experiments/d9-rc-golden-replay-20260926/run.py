@@ -52,6 +52,9 @@ def cases():
 
 
 def signature(status, stdout, stderr):
+    # Admission diagnostics belong to the wrapper, not the compiler outcome.
+    # Keep every other line, including the compiler's leading refusal prefix.
+    stderr = b'\n'.join(line for line in stderr.splitlines() if not line.startswith(b'build-slot: '))
     code = re.search(rb'R_[A-Z_]+', stderr)
     failed = any(token in stderr for token in (b'error[', b'host failure:', b'QBE runtime failure')) or stderr.startswith((b'mylang:', b'usage:'))
     return {'status': status, 'stdout_b64': base64.b64encode(stdout).decode(), 'code': code.group().decode() if code else '', 'failed': failed}
@@ -68,9 +71,10 @@ def execute(compiler, work, backend, case):
     (cwd / 'greeting.txt').write_text('hello from a granted directory\n')
     (cwd / 'lines.txt').write_text('one\ntwo\nthree\n')
     command = [str(ROOT / 'scripts/build-slot.sh'), 'build', str(compiler), 'run', str(source), '--print-result', '--cache-dir=' + str(work / ('cache-' + backend)), *case['options']]
-    command += ['--backend=' + backend]
+    # run's --release selects actual LLVM at O3/full LTO; unlike build,
+    # run does not accept --backend/--llvm-opt/--lto options.
     if backend == 'llvm':
-        command += ['--llvm-opt=3', '--lto']
+        command += ['--release']
     environment = dict(os.environ, MYLANG_RUNTIME='rc-v2-counting', TMPDIR=str(work / 'tmp'), ZIG_LOCAL_CACHE_DIR=str(ROOT / '.zig-cache-golden-guests'))
     result = subprocess.run(command, cwd=cwd, env=environment, capture_output=True, timeout=600)
     expected = case['expected']
@@ -82,7 +86,10 @@ def execute(compiler, work, backend, case):
     legacy = '--legacy-sharing' in case['options']
     balanced = all(not row['saturated'] and row['heap_allocate'] == row['retire'] and row['heap_allocate'] + row['owner_acquire'] == row['owner_release'] and row['hold_acquire'] == row['hold_release'] for row in counters)
     observed = 'gc-legacy' if legacy else 'rc-v2-counting' if counters else 'no-RC-counter-record'
-    return key, {'command': command, 'source_sha256': SHA(source), 'expected': reference, 'actual': actual, 'matched': matched, 'runtime_observed': observed, 'balanced': balanced, 'counters': counters, 'stderr': result.stderr.decode(errors='replace')}
+    # CLI refusals happen before a guest is started. Every other ordinary case,
+    # including a successful main returning a nonzero integer, needs counters.
+    missing_counters = not legacy and not counters and (not actual['failed'] or bool(actual['code']))
+    return key, {'command': command, 'source_sha256': SHA(source), 'expected': reference, 'actual': actual, 'matched': matched, 'runtime_observed': observed, 'balanced': balanced, 'missing_required_counters': missing_counters, 'counters': counters, 'stderr': result.stderr.decode(errors='replace')}
 
 
 def main():
@@ -109,8 +116,9 @@ def main():
     result['mismatches'] = [key for key, row in result['runs'].items() if not row['matched']]
     result['imbalanced'] = [key for key, row in result['runs'].items() if not row['balanced']]
     result['no_counter_record'] = [key for key, row in result['runs'].items() if row['runtime_observed'] == 'no-RC-counter-record']
+    result['missing_required_counters'] = [key for key, row in result['runs'].items() if row['missing_required_counters']]
     output.write_text(json.dumps(result, indent=2) + '\n')
-    assert len(result['runs']) == 462 and not result['mismatches'] and not result['imbalanced'], result['mismatches'] + result['imbalanced']
+    assert len(result['runs']) == 462 and not result['mismatches'] and not result['imbalanced'] and not result['missing_required_counters'], result['mismatches'] + result['imbalanced'] + result['missing_required_counters']
 
 
 if __name__ == '__main__':

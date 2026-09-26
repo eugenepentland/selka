@@ -355,3 +355,21 @@ test "COW-MUT-REBIND-1 a conditional parameter replacement checks its captured r
     try std.testing.expect((try siteOf(parsed.value, "xs")).needed);
     try std.testing.expectEqualStrings("mut_param", try role(parsed.value, "xs"));
 }
+
+// spec-case: LIVE-VIEW-SNAPSHOT-1
+test "live view mapping projection is a copy even on its owner's last read" {
+    const source =
+        \\record Envelope:
+        \\    live: DictValues[int, int]
+        \\
+        \\def main() -> int:
+        \\    mapping = {1: 7}
+        \\    owner = Envelope(mapping.values())
+        \\    snapshot = owner.live.mapping
+        \\    snapshot[1] = 11
+        \\    return mapping[1] + snapshot[1]
+    ;
+    var parsed = try explained(std.testing.allocator, source, "main");
+    defer parsed.deinit();
+    try std.testing.expectEqualStrings("copy", try classInto(parsed.value, "assign", "snapshot"));
+}

@@ -1,0 +1,15 @@
+def grow(outer: mut list[int], count: int) -> None:
+    for index in range(count):
+        outer.append(index)
+
+def main() -> int:
+    keeper: list[int] = []
+    with arena() as scratch:
+        grow(mut keeper, 40)
+        noise: list[int] = []
+        for index in range(40):
+            noise.append(index)
+    total = 0
+    for value in keeper:
+        total = total + value
+    return total

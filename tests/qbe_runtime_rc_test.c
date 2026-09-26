@@ -161,6 +161,87 @@ static void unique_bridge_test(void) {
     myl_native_heap_destroy(&context.heap);
     assert(!context.heap.bytes);
 }
+// spec-case: RC-FRAME-1
+static void unique_region_bridge_test(void) {
+    for (unsigned region = 0; region < 2; ++region) for (unsigned mode = 0; mode < 4; ++mode) {
+        MylQbeContext context = {0};
+        myl_native_heap_init(&context.heap, 1u << 20);
+        if (!myl_rc_enabled(&context.heap)) assert(myl_rc_storage_init(&context.heap) == MYL_RC_OK);
+        assert(myl_rc_native_shape(&context.heap, &pointer_type));
+        static const myl_native_type number = {.size = 8, .alignment = 8, .kind = MYL_NATIVE_PLAIN};
+        if (region) assert(myl_native_region_begin(&context.heap));
+        myl_native_list *source = myl_native_list_new(&context.heap, &number, 0), *local = source;
+        void *snapshot = NULL;
+        assert(source && myl_rc_native_copy(&context.heap, &pointer_type, &snapshot, &source, region));
+        assert(snapshot == source);
+        myl_rc_pin pin = {0};
+        assert(myl_rc_pin_acquire(&context.heap, source, &pin) == MYL_RC_OK);
+        myl_rc_hold hold = {0};
+        if (mode == 3) assert(myl_rc_hold_acquire(&context.heap, source, &hold) == MYL_RC_OK);
+        assert(myl_native_region_begin(&context.heap));
+        uint32_t owned = mode != 2;
+        int success = mode == 1 ? myl_qbe_rc_unique_field(&context, &pointer_type, &local, NULL) :
+            mode == 3 ? myl_qbe_rc_unique_held(&context, &pointer_type, &local, NULL) :
+            myl_qbe_rc_unique_local(&context, &pointer_type, &local, &owned);
+        assert(success && owned && local != source && myl_native_header_region(local) == region);
+        uint64_t value = 19;
+        assert(myl_rc_list_append(&context.heap, local, &value));
+        assert(myl_native_header_region(local->storage) == region);
+        myl_rc_arena_close(&context.heap, region + 1);
+        assert(local->length == 1 && *(uint64_t *)local->storage == value && !source->length);
+        myl_rc_pin_release(&context.heap, &pin);
+        MylQbeRcSlot slot = {&pointer_type, &local, &owned,
+            mode == 3 ? MYL_QBE_RC_HOLD_POINTER : MYL_QBE_RC_COUNTED};
+        myl_qbe_rc_slot_drop(&context, &slot);
+        myl_rc_owner_release(&context.heap, source);
+        if (mode >= 2) myl_rc_owner_release(&context.heap, source);
+        if (region) myl_rc_arena_close(&context.heap, region);
+        assert(!context.heap.objects_live);
+        myl_native_heap_destroy(&context.heap);
+        assert(!context.heap.bytes);
+    }
+}
+// spec-case: RC-FRAME-1
+static void unique_immortal_and_ownerless_region_test(void) {
+    MylQbeContext context = {0};
+    myl_native_heap_init(&context.heap, 1u << 20);
+    if (!myl_rc_enabled(&context.heap)) assert(myl_rc_storage_init(&context.heap) == MYL_RC_OK);
+    assert(myl_rc_native_shape(&context.heap, &pointer_type));
+    static const myl_native_type number = {.size = 8, .alignment = 8, .kind = MYL_NATIVE_PLAIN};
+    myl_native_list *source = myl_native_list_new(&context.heap, &number, 0);
+    assert(source);
+    struct { myl_native_object header; myl_native_list value; } literal = {
+        .header = {.mark = MYL_NATIVE_OBJECT_LITERAL_MARK | ((uintptr_t)1 << MYL_NATIVE_OBJECT_COUNT_SHIFT),
+            .element = ((myl_native_object *)source - 1)->element}, .value = *source};
+    myl_native_list *container = myl_native_list_new(&context.heap, &pointer_type, 0);
+    assert(container);
+    myl_rc_hold held = {0};
+    myl_rc_pin pin = {0};
+    assert(myl_rc_hold_acquire(&context.heap, source, &held) == MYL_RC_OK);
+    myl_rc_owner_release(&context.heap, source);
+    assert(((myl_rc_object *)source - 1)->owners == 0);
+    assert(myl_rc_pin_acquire(&context.heap, source, &pin) == MYL_RC_OK);
+    assert(myl_native_region_begin(&context.heap));
+    myl_native_list *young = myl_native_list_new(&context.heap, &number, 0);
+    assert(young && !myl_rc_list_append(&context.heap, container, &young));
+    assert(myl_rc_take_failure(&context.heap) == MYL_RC_REGION_ERROR && !container->length);
+    myl_rc_owner_release(&context.heap, container);
+    void *ownerless = source;
+    assert(myl_qbe_rc_unique_held(&context, &pointer_type, &ownerless, NULL));
+    assert(ownerless == source && !myl_native_header_region(ownerless));
+    myl_rc_pin_release(&context.heap, &pin);
+    held.payload = ownerless;
+    myl_rc_hold_release(&context.heap, &held);
+    void *local = &literal.value;
+    uint32_t owned = 1;
+    assert(myl_qbe_rc_unique_local(&context, &pointer_type, &local, &owned));
+    assert(local != &literal.value && !myl_native_header_region(local));
+    myl_rc_arena_close(&context.heap, 1);
+    myl_rc_owner_release(&context.heap, local);
+    assert(!context.heap.objects_live);
+    myl_native_heap_destroy(&context.heap);
+    assert(!context.heap.bytes);
+}
 static const myl_native_type pointer_list = {.size = sizeof(void *), .alignment = _Alignof(void *),
     .kind = MYL_NATIVE_POINTER, .collection_kind = 1, .element = &pointer_type};
 // spec-case: RC-FRAME-1
@@ -223,7 +304,7 @@ static void unique_elements_arena_test(void) {
     assert(myl_qbe_rc_unique_elements(&context, &pointer_list, outer));
     myl_native_list **rows = outer->storage;
     assert(rows[0] != source && rows[1] != source && rows[0] != rows[1] && !rows[2]);
-    assert(myl_native_header_region(rows[0]) == 1 && myl_native_header_region(rows[1]) == 1);
+    assert(myl_native_header_region(rows[0]) == 0 && myl_native_header_region(rows[1]) == 0);
     assert(((myl_rc_object *)source - 1)->owners == 1);
     myl_rc_arena_close(&context.heap, 2);
     assert(*(uint64_t *)rows[0]->storage == 91 && *(uint64_t *)rows[1]->storage == 91);
@@ -400,6 +481,9 @@ static void scope_bridge_test(void) {
     static const myl_native_type number = {.size = 8, .alignment = 8, .kind = MYL_NATIVE_PLAIN};
     myl_native_list *items[2] = {myl_native_list_new(&context.heap, &number, 0), myl_native_list_new(&context.heap, &number, 0)};
     assert(items[0] && items[1]);
+    void *originals[2] = {items[0], items[1]};
+    for (size_t i = 0; i < 2; ++i) assert(myl_rc_owner_acquire(&context.heap, items[i]) == MYL_RC_OK);
+    assert(myl_native_region_begin(&context.heap));
     const myl_native_field field = {.type = &pointer_type};
     const myl_native_type array = {.size = sizeof items, .alignment = _Alignof(void *), .kind = MYL_NATIVE_ARRAY,
         .fields = &field, .field_count = 1, .count = 2, .stride = sizeof(void *)};
@@ -413,7 +497,11 @@ static void scope_bridge_test(void) {
     myl_qbe_rc_scope_end(&context, &scope);
     myl_qbe_rc_scope_begin(&context, &scope);
     assert(myl_qbe_rc_scope_prepare(&context, &scope, &place));
-    for (size_t i = 0; i < 2; ++i) assert(((myl_rc_object *)items[i] - 1)->holds == 1);
+    for (size_t i = 0; i < 2; ++i) {
+        assert(items[i] != originals[i] && myl_native_header_region(items[i]) == 0);
+        assert(((myl_rc_object *)items[i] - 1)->holds == 1);
+        myl_rc_owner_release(&context.heap, originals[i]);
+    }
     myl_qbe_rc_scope_end(&context, &scope);
     myl_qbe_rc_scope_begin(&context, &scope);
     place = (MylQbeRcPlace){.address = &items[0]};
@@ -423,6 +511,7 @@ static void scope_bridge_test(void) {
     for (size_t i = 0; i < 2; ++i) myl_rc_owner_release(&context.heap, items[i]);
     myl_qbe_rc_scope_end(&context, &scope);
     assert(!context.heap.objects_live);
+    myl_rc_arena_close(&context.heap, 1);
     myl_native_heap_destroy(&context.heap);
     assert(!context.heap.bytes);
 }
@@ -556,6 +645,8 @@ int myl_qbe_rc_frame_verify(void) {
     frame_trap_test();
     construction_guard_test();
     unique_bridge_test();
+    unique_region_bridge_test();
+    unique_immortal_and_ownerless_region_test();
     unique_elements_refusal_test();
     unique_elements_arena_test();
     unique_body_test();
@@ -566,13 +657,13 @@ int myl_qbe_rc_frame_verify(void) {
     backing_bridge_test();
     held_slot_test();
     held_unique_bridge_test();
-    return 15;
+    return 17;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
     assert(myl_qbe_rc_contract_verify() == 5);
-    assert(myl_qbe_rc_frame_verify() == 15);
-    puts("RC startup and frame unwind: 20 checks passed");
+    assert(myl_qbe_rc_frame_verify() == 17);
+    puts("RC startup and frame unwind: 22 checks passed");
     return 0;
 }
 #endif
