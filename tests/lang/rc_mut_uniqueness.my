@@ -1,0 +1,39 @@
+def overwrite(items: mut list[int], value: int) -> unit:
+    items[0] = value
+
+
+def capture_and_write(items: mut list[int]) -> list[int]:
+    before = items
+    for value in range(20):
+        items[0] = value
+    overwrite(mut items, 21)
+    items[-1] = 22
+    return before
+
+
+# spec-case: RC-MUT-UNIQUE-1
+public def test_caller_and_callee_snapshots_survive_mutable_scalar_writes() -> bool:
+    items = [1, 2]
+    caller = items
+    callee = capture_and_write(mut items)
+    return items == [21, 22] and caller == [1, 2] and callee == [1, 2]
+
+
+def replace_and_write(items: mut list[int], other: list[int]) -> list[int]:
+    items = other
+    items[0] = 7
+    return items
+
+
+# spec-case: RC-MUT-UNIQUE-1
+public def test_rebinding_a_mutable_parameter_requires_fresh_uniqueness() -> bool:
+    items = [1]
+    other = [2]
+    result = replace_and_write(mut items, other)
+    return result == [7] and other == [2]
+
+
+def main() -> int:
+    assert test_caller_and_callee_snapshots_survive_mutable_scalar_writes()
+    assert test_rebinding_a_mutable_parameter_requires_fresh_uniqueness()
+    return 0
