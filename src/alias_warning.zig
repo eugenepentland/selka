@@ -27,6 +27,57 @@ const Transfer = struct {
     mut_call: bool = false,
 };
 const Access = struct { span: source.Span, root: typed.LocalId, write: bool, sync_from: ?typed.LocalId = null, matched: ?source.Span = null, returned: bool = false };
+const ClassIndex = struct {
+    reachable: []bool,
+
+    fn init(a: std.mem.Allocator, records: []const typed.Record) !ClassIndex {
+        const reachable = try a.alloc(bool, records.len);
+        errdefer a.free(reachable);
+        @memset(reachable, false);
+        const parents = try a.alloc(std.ArrayList(usize), records.len);
+        errdefer a.free(parents);
+        @memset(parents, .empty);
+        const queue = try a.alloc(usize, records.len);
+        errdefer a.free(queue);
+        var tail: usize = 0;
+        for (records, 0..) |record, parent| {
+            if (record.isManagedRecord()) {
+                reachable[parent] = true;
+                queue[tail] = parent;
+                tail += 1;
+            }
+            if (record.isCollection()) {
+                if (record.shape.buffer) |child| try addParent(a, parents, child, parent);
+                continue;
+            }
+            if (record.shape.array) |array| try addParent(a, parents, array.element, parent);
+            if (record.shape.variants) |variants| for (variants.cases) |case| {
+                if (case.payload) |payload| try addParent(a, parents, payload, parent);
+            };
+            for (record.fields) |field| try addParent(a, parents, field.ty, parent);
+        }
+        var head: usize = 0;
+        while (head < tail) : (head += 1) {
+            for (parents[queue[head]].items) |parent| {
+                if (reachable[parent]) continue;
+                reachable[parent] = true;
+                queue[tail] = parent;
+                tail += 1;
+            }
+        }
+        return .{ .reachable = reachable };
+    }
+
+    fn addParent(a: std.mem.Allocator, parents: []std.ArrayList(usize), child: typed.Type, parent: usize) !void {
+        if (!child.isAggregate()) return;
+        const index = child.recordIndex();
+        if (index < parents.len) try parents[index].append(a, parent);
+    }
+
+    fn contains(self: ClassIndex, ty: typed.Type) bool {
+        return ty.isAggregate() and ty.recordIndex() < self.reachable.len and self.reachable[ty.recordIndex()];
+    }
+};
 const Reachability = struct {
     transfers: []const Transfer,
     seen: []u32,
@@ -59,15 +110,16 @@ const Reachability = struct {
         return false;
     }
 };
+const Bindings = struct { roots: []?typed.LocalId, sites: []?source.Span };
+const Events = struct { transfers: *std.ArrayList(Transfer), accesses: *std.ArrayList(Access) };
 const Context = struct {
     allocator: std.mem.Allocator,
     program: typed.Program,
     function: typed.Function,
     facts: *const values.Facts,
-    bindings: []?typed.LocalId,
-    binding_sites: []?source.Span,
-    transfers: *std.ArrayList(Transfer),
-    accesses: *std.ArrayList(Access),
+    classes: ClassIndex,
+    bindings: Bindings,
+    events: Events,
 };
 
 /// Add advisory warnings for transfer sites that have an observed write/read
@@ -77,6 +129,7 @@ pub fn check(allocator: std.mem.Allocator, src: source.Source, program: typed.Pr
     var arena = std.heap.ArenaAllocator.init(allocator);
     defer arena.deinit();
     const a = arena.allocator();
+    const classes = try ClassIndex.init(a, program.records);
     for (program.functions) |function| {
         if (function.policy.host != null) continue;
         const facts = try values.Facts.collect(a, program, function);
@@ -86,7 +139,15 @@ pub fn check(allocator: std.mem.Allocator, src: source.Source, program: typed.Pr
         @memset(bindings, null);
         const binding_sites = try a.alloc(?source.Span, function.scope.locals.len);
         @memset(binding_sites, null);
-        const ctx: Context = .{ .allocator = a, .program = program, .function = function, .facts = &facts, .bindings = bindings, .binding_sites = binding_sites, .transfers = &transfers, .accesses = &accesses };
+        const ctx: Context = .{
+            .allocator = a,
+            .program = program,
+            .function = function,
+            .facts = &facts,
+            .classes = classes,
+            .bindings = .{ .roots = bindings, .sites = binding_sites },
+            .events = .{ .transfers = &transfers, .accesses = &accesses },
+        };
         var walker = try typed_walk.Walker.init(a, program, function.scope.body);
         while (try walker.next()) |item| switch (item) {
             .statement => |id| try statement(ctx, id),
@@ -135,7 +196,7 @@ pub fn check(allocator: std.mem.Allocator, src: source.Source, program: typed.Pr
             const binding = access.matched orelse continue;
             if (alreadyReported(program, sink, binding)) continue;
             const ty = function.scope.locals[@backingInt(access.root)].ty;
-            const category: Category = if (hasClass(program.records, ty, 0)) .class_graph else .local_alias;
+            const category: Category = if (classes.contains(ty)) .class_graph else .local_alias;
             try sink.items.append(allocator, .{ .code = code, .severity = .warning, .span = binding, .message = message(category) });
         }
     }
@@ -390,7 +451,7 @@ fn addTransfer(ctx: Context, value: typed.NodeId, target: typed.LocalId, span: s
         .buffer_operation => |operation| operation.kind == .values or operation.kind == .keys or operation.kind == .items,
         else => false,
     };
-    const carries_alias = values.needsCopy(ctx.program.records, ty) or hasClass(ctx.program.records, ty, 0);
+    const carries_alias = values.needsCopy(ctx.program.records, ty) or ctx.classes.contains(ty);
     const is_view = live_view or view_result;
     if (!carries_alias and !is_view) return;
     const wraps_alias = switch (ctx.program.nodes[@backingInt(value)].data) {
@@ -405,9 +466,9 @@ fn addTransfer(ctx: Context, value: typed.NodeId, target: typed.LocalId, span: s
         if (!may_share and transfer_is_fresh) return;
     }
     const root = valueRoot(ctx, value) orelse return;
-    const final_category: Category = if (hasClass(ctx.program.records, ty, 0)) .class_graph else category;
+    const final_category: Category = if (ctx.classes.contains(ty)) .class_graph else category;
     const nested = ctx.program.nodes[@backingInt(value)].data != .local;
-    try ctx.transfers.append(ctx.allocator, .{ .span = span, .src = root, .dst = target, .category = final_category, .nested = nested, .mut_call = mutableCallBorrow(ctx, value) });
+    try ctx.events.transfers.append(ctx.allocator, .{ .span = span, .src = root, .dst = target, .category = final_category, .nested = nested, .mut_call = mutableCallBorrow(ctx, value) });
 }
 
 fn mutableCallBorrow(ctx: Context, id: typed.NodeId) bool {
@@ -493,7 +554,7 @@ fn unknownReturnArgument(ctx: Context, arguments: []const typed.NodeId) ?u16 {
     var found: ?u16 = null;
     for (arguments, 0..) |argument, position| {
         const ty = ctx.program.nodes[@backingInt(argument)].ty;
-        if (!values.needsCopy(ctx.program.records, ty) and !hasClass(ctx.program.records, ty, 0)) continue;
+        if (!values.needsCopy(ctx.program.records, ty) and !ctx.classes.contains(ty)) continue;
         if (found != null) return null;
         found = @intCast(position);
     }
@@ -507,7 +568,7 @@ fn localRoot(ctx: Context, start: typed.LocalId) typed.LocalId {
     var depth: usize = 0;
     while (depth < 64) : (depth += 1) {
         const index = @backingInt(slot);
-        if (ctx.bindings[index]) |bound| {
+        if (ctx.bindings.roots[index]) |bound| {
             slot = bound;
             continue;
         }
@@ -523,7 +584,7 @@ fn matchSite(ctx: Context, start: typed.LocalId) ?source.Span {
     var depth: usize = 0;
     while (depth < 64) : (depth += 1) {
         const index = @backingInt(slot);
-        if (ctx.binding_sites[index]) |site| return site;
+        if (ctx.bindings.sites[index]) |site| return site;
         if (!ctx.facts.synthetic[index]) return null;
         const stored = ctx.facts.stores[index] orelse return null;
         slot = values.pathRoot(ctx.program, stored) orelse return null;
@@ -535,7 +596,7 @@ fn statement(ctx: Context, id: typed.StatementId) !void {
     const stmt = ctx.program.statements[@backingInt(id)];
     switch (stmt.data) {
         .ret => |value| if (valueRoot(ctx, value)) |root| {
-            try ctx.accesses.append(ctx.allocator, .{ .span = stmt.span, .root = root, .write = false, .returned = true });
+            try ctx.events.accesses.append(ctx.allocator, .{ .span = stmt.span, .root = root, .write = false, .returned = true });
         },
         .initialize, .assign => |store| {
             // A collection literal is lowered through a synthetic local and
@@ -545,11 +606,11 @@ fn statement(ctx: Context, id: typed.StatementId) !void {
             const fresh = ctx.facts.classify(store.value, store.slot) == .fresh;
             if (fresh or stored_node.data == .block_value) {
                 if (valueRoot(ctx, store.value)) |root| {
-                    if (ctx.facts.synthetic[@backingInt(root)]) ctx.bindings[@backingInt(root)] = store.slot;
+                    if (ctx.facts.synthetic[@backingInt(root)]) ctx.bindings.roots[@backingInt(root)] = store.slot;
                 }
             }
             if (stmt.data == .assign) if (valueRoot(ctx, store.value)) |origin| {
-                try ctx.accesses.append(ctx.allocator, .{ .span = stmt.span, .root = store.slot, .write = false, .sync_from = origin });
+                try ctx.events.accesses.append(ctx.allocator, .{ .span = stmt.span, .root = store.slot, .write = false, .sync_from = origin });
             };
             if (ctx.facts.namedStore(store.slot)) {
                 const category: Category = if (callBorrow(ctx, store.value)) .across_call else .local_alias;
@@ -568,15 +629,15 @@ fn statement(ctx: Context, id: typed.StatementId) !void {
                     else => unreachable,
                 };
                 const root = values.pathRoot(ctx.program, base) orelse store.slot;
-                try ctx.accesses.append(ctx.allocator, .{ .span = stmt.span, .root = localRoot(ctx, store.slot), .write = true, .matched = matchSite(ctx, root) });
+                try ctx.events.accesses.append(ctx.allocator, .{ .span = stmt.span, .root = localRoot(ctx, store.slot), .write = true, .matched = matchSite(ctx, root) });
                 try storedChildren(ctx, store.value, store.slot);
             }
         },
         .match => |matched| for (matched.arms) |arm| if (arm.slot) |slot| {
             const borrowed_call = callBorrow(ctx, matched.value);
-            if (!borrowed_call) ctx.bindings[@backingInt(slot)] = valueRoot(ctx, matched.value);
+            if (!borrowed_call) ctx.bindings.roots[@backingInt(slot)] = valueRoot(ctx, matched.value);
             const span = ctx.function.scope.locals[@backingInt(slot)].declaration;
-            ctx.binding_sites[@backingInt(slot)] = span;
+            ctx.bindings.sites[@backingInt(slot)] = span;
             const category: Category = if (borrowed_call) .across_call else .local_alias;
             const site = if (category == .across_call) ctx.program.nodes[@backingInt(matched.value)].span else stmt.span;
             try addTransfer(ctx, matched.value, slot, site, category);
@@ -590,8 +651,8 @@ fn storedChildren(ctx: Context, id: typed.NodeId, target: typed.LocalId) !void {
     switch (node.data) {
         .local => |slot| {
             if (ctx.facts.synthetic[@backingInt(slot)]) {
-                for (ctx.transfers.items) |transfer| if (transfer.dst == slot) {
-                    try ctx.transfers.append(ctx.allocator, .{ .span = node.span, .src = transfer.src, .dst = target, .category = transfer.category });
+                for (ctx.events.transfers.items) |transfer| if (transfer.dst == slot) {
+                    try ctx.events.transfers.append(ctx.allocator, .{ .span = node.span, .src = transfer.src, .dst = target, .category = transfer.category });
                 };
             }
         },
@@ -614,9 +675,9 @@ fn storedChildren(ctx: Context, id: typed.NodeId, target: typed.LocalId) !void {
         .arena_escape => |value| try storedChildren(ctx, value, target),
         .block_value => |block| {
             if (valueRoot(ctx, block.value)) |temporary| {
-                if (ctx.facts.synthetic[@backingInt(temporary)]) ctx.bindings[@backingInt(temporary)] = target;
-                for (ctx.transfers.items) |transfer| if (transfer.dst == temporary) {
-                    try ctx.transfers.append(ctx.allocator, .{ .span = node.span, .src = transfer.src, .dst = target, .category = transfer.category });
+                if (ctx.facts.synthetic[@backingInt(temporary)]) ctx.bindings.roots[@backingInt(temporary)] = target;
+                for (ctx.events.transfers.items) |transfer| if (transfer.dst == temporary) {
+                    try ctx.events.transfers.append(ctx.allocator, .{ .span = node.span, .src = transfer.src, .dst = target, .category = transfer.category });
                 };
             }
         },
@@ -640,11 +701,11 @@ fn retainedLeaves(ctx: Context, id: typed.NodeId, target: typed.LocalId, span: s
         .wrap, .cast, .unwrap => |value| try retainedLeaves(ctx, value, target, span),
         .block_value => |block| try retainedLeaves(ctx, block.value, target, span),
         else => {
-            const carries = values.needsCopy(ctx.program.records, node.ty) or hasClass(ctx.program.records, node.ty, 0);
+            const carries = values.needsCopy(ctx.program.records, node.ty) or ctx.classes.contains(node.ty);
             if (!carries) return;
             const root = valueRoot(ctx, id) orelse return;
             if (root == target) return;
-            try ctx.transfers.append(ctx.allocator, .{ .span = span, .src = root, .dst = target, .category = .across_call, .retained = true });
+            try ctx.events.transfers.append(ctx.allocator, .{ .span = span, .src = root, .dst = target, .category = .across_call, .retained = true });
         },
     }
 }
@@ -662,7 +723,7 @@ fn callRetains(ctx: Context, arguments: []const typed.NodeId, mutates: []const u
     for (mutates) |position| {
         if (position >= arguments.len) continue;
         const owner = valueRoot(ctx, arguments[position]) orelse continue;
-        try addAccess(ctx.allocator, ctx.accesses, owner, span, true);
+        try addAccess(ctx.allocator, ctx.events.accesses, owner, span, true);
         for (arguments, 0..) |argument, candidate| {
             if (candidate == position) continue;
             var also_mut = false;
@@ -679,9 +740,9 @@ fn callRetains(ctx: Context, arguments: []const typed.NodeId, mutates: []const u
 fn expression(ctx: Context, id: typed.NodeId) !void {
     const node = ctx.program.nodes[@backingInt(id)];
     switch (node.data) {
-        .local => |slot| try addAccess(ctx.allocator, ctx.accesses, localRoot(ctx, slot), node.span, false),
+        .local => |slot| try addAccess(ctx.allocator, ctx.events.accesses, localRoot(ctx, slot), node.span, false),
         .buffer_operation => |operation| {
-            if (operation.kind.mutates()) try ctx.accesses.append(ctx.allocator, .{ .span = node.span, .root = localRoot(ctx, operation.owner), .write = true, .matched = matchSite(ctx, operation.owner) });
+            if (operation.kind.mutates()) try ctx.events.accesses.append(ctx.allocator, .{ .span = node.span, .root = localRoot(ctx, operation.owner), .write = true, .matched = matchSite(ctx, operation.owner) });
             if (values.storedArgument(ctx.program.records, ctx.function.scope.locals[@backingInt(operation.owner)].ty, operation.kind)) |position| {
                 if (position < operation.arguments.len) {
                     const value = operation.arguments[position];
@@ -696,21 +757,8 @@ fn expression(ctx: Context, id: typed.NodeId) !void {
         },
         else => {
             if (mutation.typedNode(ctx.program, ctx.function, node)) |witness| if (witness.operation == .receiver_write) {
-                if (witness.owner) |owner| try ctx.accesses.append(ctx.allocator, .{ .span = witness.span, .root = localRoot(ctx, owner), .write = true, .matched = matchSite(ctx, owner) });
+                if (witness.owner) |owner| try ctx.events.accesses.append(ctx.allocator, .{ .span = witness.span, .root = localRoot(ctx, owner), .write = true, .matched = matchSite(ctx, owner) });
             };
         },
     }
-}
-
-fn hasClass(records: []const typed.Record, ty: typed.Type, depth: usize) bool {
-    if (!ty.isAggregate() or ty.recordIndex() >= records.len or depth > 32) return false;
-    const record = records[ty.recordIndex()];
-    if (record.isManagedRecord()) return true;
-    if (record.isCollection()) return if (record.shape.buffer) |child| hasClass(records, child, depth + 1) else false;
-    if (record.shape.array) |array| if (hasClass(records, array.element, depth + 1)) return true;
-    if (record.shape.variants) |variants| for (variants.cases) |case| if (case.payload) |payload| {
-        if (hasClass(records, payload, depth + 1)) return true;
-    };
-    for (record.fields) |field| if (hasClass(records, field.ty, depth + 1)) return true;
-    return false;
 }
