@@ -26,7 +26,7 @@ pub fn classify(ctx: *const model.Context, question: Question, owners: ?[]const 
         .unknown => return .copy,
         .local => {},
     }
-    if (independentHome(ctx, question) and sharedProjection(ctx, source, null)) return .copy;
+    if (independentHome(ctx, question) and projection(ctx, source, null, false)) return .copy;
     const local = source.local;
     const moved = movable(ctx, local, owners) and source.read != none and !ctx.live.after(source.read, local);
     if (question.kind == .argument) return if (moved and source.part == .whole) .move else .borrow;
@@ -91,6 +91,13 @@ fn immutable(ctx: *const model.Context, ty: typed.Type) bool {
 /// raw alias when that table is supplied. A last read cannot move a live view
 /// mapping; alias steps preserve this boundary through materialized paths.
 pub fn sharedProjection(ctx: *const model.Context, source: sources.Source, raw: ?[]const bool) bool {
+    return projection(ctx, source, raw, true);
+}
+
+// Legacy class/Cell reads may be explained as read-only borrows. Explicit
+// semantic copies still cross their shared-storage boundary; only live views
+// force an independent publication here before ordinary borrow classification.
+fn projection(ctx: *const model.Context, source: sources.Source, raw: ?[]const bool, identities: bool) bool {
     if (source.origin != .local) return false;
     var at = source.local;
     var part = source.part != .whole;
@@ -99,7 +106,8 @@ pub fn sharedProjection(ctx: *const model.Context, source: sources.Source, raw: 
         if (at >= ctx.locals.list.len) return true;
         const values = @import("value_semantics.zig");
         const ty = ctx.locals.list[at].ty;
-        if (part and (values.sharedFields(ctx.code.program.records, ty) or values.containsLiveView(ctx.code.program.records, ty))) return true;
+        if (part and values.containsLiveView(ctx.code.program.records, ty)) return true;
+        if (part and identities and values.sharedFields(ctx.code.program.records, ty)) return true;
         if (raw) |table| if (table[at] and !ctx.alias(at)) return true;
         if (!ctx.alias(at)) return false;
         part = part or ctx.locals.step[at];
