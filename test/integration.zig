@@ -2,6 +2,27 @@
 const std = @import("std");
 const testing = std.testing;
 const compiler_path = @import("test_options").compiler_path;
+// spec: VALUE-SEMANTICS-10
+test "a scalar-only mut record parameter writes the caller in both modes" {
+    const program =
+        \\record Counter:
+        \\    n: int
+        \\
+        \\def increment(c: mut Counter) -> None:
+        \\    c.n = c.n + 1
+        \\
+        \\def reset(c: mut Counter) -> None:
+        \\    c = Counter(n=10)
+        \\
+        \\def main() -> int:
+        \\    c = Counter(n=1)
+        \\    increment(mut c)
+        \\    reset(mut c)
+        \\    return c.n
+    ;
+    try invokeOptions("run", program, &.{"--no-cache"}, 10, "10\n", "");
+    try invokeOptions("run", program, &.{"--value-semantics"}, 10, "10\n", "");
+}
 // spec: FIX-MIGRATION-1
 test "fix command previews then stores back a local alias and preserves both modes" {
     var temp = testing.tmpDir(.{});

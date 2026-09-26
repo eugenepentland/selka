@@ -378,12 +378,10 @@ pub fn referenceArray(records: []const Record, ty: Type) bool {
     return ty.isAggregate() and ty.recordIndex() < records.len and records[ty.recordIndex()].shape.array != null;
 }
 
-/// VALUE-SEMANTICS-3: under value semantics a plain value `record` or tuple
-/// also crosses a `mut` position as the caller's own storage (`inout`), so a
-/// field assignment, a nested write or a rebinding of a `mut` record parameter
-/// reaches the caller. Always false with the switch off.
+/// A plain value `record` or tuple crosses a `mut` position as the caller's
+/// own storage (`inout`) in either value mode. A field assignment, a nested
+/// write or a rebinding of the parameter therefore reaches the caller.
 pub fn referenceRecord(records: []const Record, ty: Type) bool {
-    if (!@import("wiring/value_semantics.zig").enabled) return false;
     if (!ty.isAggregate() or ty.recordIndex() >= records.len) return false;
     const record = records[ty.recordIndex()];
     return !record.managed and record.isRecord() and record.contract.callback == null;
