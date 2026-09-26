@@ -26,3 +26,27 @@ complete ownership counter matches: 669,060 allocations/retirements, 19 owner
 acquisitions, 669,079 releases, zero holds/clones and 33 uniqueness checks.
 Evidence is in `experiments/d9-rc-cleanup-overhead-20260926/`. The result remains
 far above GC and is not WP-4 acceptance.
+
+The second slice changes only the private invariant helper: its condition is
+inline, while a failed condition calls a cold, nonreturning abort function.
+Every production check remains active and every argument is evaluated once.
+The new fixture verifies single evaluation and uses a child process with core
+dumps disabled to verify failure still terminates with SIGABRT. The public
+runtime ABI, ownership rules, allocation refusal and count-limit statuses are
+unchanged. Both QBE and LLVM artifacts retain only the failure helper symbol.
+
+ASan/UBSan passes core 21, collections 27, holds 12, arenas 10, stats 4,
+execution success/trap/fast-exit 3 and startup/frame 20. All 41 focused RC tests
+pass, including the new abort regression through the linked C fixture.
+
+| Backend | Cumulative baseline | Empty scan | Plus inline checks |
+| --- | ---: | ---: | ---: |
+| QBE | 1,365,490,303 | 1,280,505,140 | 1,240,714,730 |
+| LLVM O3/full LTO | 775,491,060 | 702,690,827 | 702,646,748 |
+
+The invariant change adds a 1.032x QBE instruction improvement; LLVM is
+unchanged within 0.01%. Together the two runtime slices improve the cumulative
+baseline by 1.101x QBE and 1.104x LLVM. These are three interleaved medians with
+exact output and complete counter equality across every arm. Remaining cost
+is still far above the GC reference. Newer root compiler guard/metadata/region
+experiments are absent from this isolated comparison.

@@ -45,3 +45,16 @@ instruction/RSS acceptance. Root integration owns the full gate. Its newly
 exposed GC mutable-parameter rebinding failure also reproduces with the accepted
 stage3 compiler and is being corrected separately; this RC-only hoist does not
 change that behavior.
+
+
+Combining this proof with the nested receiver loans in `db5beb67` preserves the
+n12 matrix output on both backends. Against the same source at joined `305efc45`,
+owner acquisitions fall from 9,343 to 1,831, releases from 9,475 to 1,963, and
+uniqueness checks from 5,652 to 482. Both arms retain 132 heap allocations and
+retirements, one clone, and no holds. Counted median-of-three user instructions
+on CPU 10 fall from 7,769,760 to 2,140,056 on QBE and from 4,954,670 to 1,449,953
+on LLVM O3/full-LTO. This source changes only the mandated matrix dimension
+from 500 to 12 for diagnosis; it is not the acceptance workload. The candidate
+also includes the separately validated mutable-parameter correction, which this
+source does not exercise. [Combined raw evidence](evidence/d9-rc-hoists-nested-loans-perf.json.gz)
+records exact compiler/binary hashes, commands, output checks and counters.

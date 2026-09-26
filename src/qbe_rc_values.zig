@@ -5,7 +5,6 @@ const slots = @import("qbe_rc_slots.zig");
 const holds = @import("qbe_rc_holds.zig");
 /// QBE byte relocation shared by transactional value and aggregate publication.
 pub const blit_value = " blit %v{d}, %v{d}, {d}\n";
-const region_mark = " %v{d} =l call $myl_qbe_region_mark(l %ctx)\n";
 /// Errors shared with the native emitter.
 pub const Error = slots.Error;
 /// An already-owned runtime result is adopted; a read establishes a snapshot.
@@ -38,8 +37,7 @@ pub fn drop(comptime E: type, self: *E, index: usize) Error!void {
 /// Prepare a borrowed publication before releasing any consumed owners.
 pub fn copied(comptime E: type, self: *E, ty: typed.Type, address: usize) Error!void {
     const work = try workAddress(E, self);
-    const region = self.temp();
-    try self.print(region_mark, .{region});
+    const region = try frame.region(E, self);
     try slots.Lower(E).transfer(self, .{ .ty = ty, .destination = work, .source = address, .region = region, .mode = .copy_empty });
     try markWork(E, self, ty);
 }
@@ -146,8 +144,7 @@ fn producedOwner(comptime E: type, self: *E, ty: typed.Type, index: usize) Error
 
 fn prepareOwned(comptime E: type, self: *E, ty: typed.Type, address: usize, journal_index: usize) Error!void {
     const work = try workAddress(E, self);
-    const region = self.temp();
-    try self.print(region_mark, .{region});
+    const region = try frame.region(E, self);
     try slots.Lower(E).transfer(self, .{ .ty = ty, .destination = work, .source = address, .region = region, .mode = .take_empty });
     try frame.initialized(E, self, journal_index, false);
     try markWork(E, self, ty);
@@ -181,7 +178,6 @@ pub fn prepareGuarded(comptime E: type, self: *E, ty: typed.Type, address: usize
 /// Initialize an empty runtime output using pin-aware copy and mapped failure.
 /// Its caller must immediately journal the successful result or commit it.
 pub fn copyRuntime(comptime E: type, self: *E, ty: typed.Type, destination: usize, input: usize) Error!void {
-    const region = self.temp();
-    try self.print(region_mark, .{region});
+    const region = try frame.region(E, self);
     try slots.Lower(E).transfer(self, .{ .ty = ty, .destination = destination, .source = input, .region = region, .mode = .copy_empty });
 }

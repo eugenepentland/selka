@@ -20,6 +20,10 @@ const source =
     \\def managed(items: mut list[list[int]], value: list[int]) -> int:
     \\    items[0] = value
     \\    return len(items)
+    \\def named(items: mut list[list[int]], index: int) -> list[int]:
+    \\    saved = items[index]
+    \\    items[index][0] = 9
+    \\    return saved
     \\def main() -> int:
     \\    values = [1, 2]
     \\    return scalar(mut values, 0)
@@ -30,6 +34,18 @@ fn emitted() !std.json.Parsed(Manifest) {
     const text = try compilation.emitQbe(t.allocator);
     defer t.allocator.free(text);
     return std.json.parseFromSlice(Manifest, t.allocator, text, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
+}
+
+// spec: RC-INERT-PROJECTION-1
+test "RC-INERT-PROJECTION-1 mutation projections borrow while named snapshots acquire" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    var manifest = try emitted();
+    defer manifest.deinit();
+    try t.expect(!contains(try named(manifest.value, "nested"), "myl_rc_native_copy"));
+    try t.expect(contains(try named(manifest.value, "nested"), "myl_qbe_rc_unique_field"));
+    try t.expect(contains(try named(manifest.value, "named"), "myl_rc_native_copy"));
 }
 fn named(manifest: Manifest, name: []const u8) ![]const u8 {
     for (manifest.functions) |function| if (std.mem.eql(u8, function.name, name)) return function.il;

@@ -40,9 +40,9 @@ pub fn after(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "o
     const base = next.len - 1;
     if (base > stack.len) return error.InternalError;
     const cow = @import("qbe_cow.zig").Lower(E);
-    if (cow.scopedProjection(self, self.pc)) {
-        // The prepared scope keeps candidate payloads/backing alive. Publishing
-        // a snapshot here would clone the very pinned receiver we must mutate.
+    if (cow.scopedProjection(self, self.pc) or @import("qbe_rc_inert_receiver.zig").projection(E, self, self.pc)) {
+        // A prepared scope or proved stable owner keeps this receiver alive.
+        // It is a physical projection, so no snapshot token is published.
         for (base..stack.len) |index| try values.drop(E, self, index);
     } else try values.finish(E, self, .{ .ty = next[base], .base = base, .consumed = stack.len - base, .origin = try origin(E, self, op) });
     if (op == .buffer_operation and (op.buffer_operation.kind.writesReceiver() or

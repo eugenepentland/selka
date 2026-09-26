@@ -1,0 +1,381 @@
+{
+  "revision": "7fc669a7",
+  "source_sha256": "97137bff09108d9560736833ae682733abd5d728ca8066edb5cda4caede62a7c",
+  "compiler_sha256": "6a58bebbba5164725a92955417df3394fcc9e8caa5ec3c31d05d6ab2c2e60bc6",
+  "cpu": 0,
+  "backends": {
+    "qbe": {
+      "medians": {
+        "rc": 1229932997,
+        "gc": 105808956
+      },
+      "rc_over_gc": 11.62409160336106,
+      "counts": {
+        "version": 1,
+        "runtime": "rc-v2-counting",
+        "saturated": false,
+        "owner_acquire": 19,
+        "owner_release": 669079,
+        "hold_acquire": 0,
+        "hold_release": 0,
+        "owner_limit": 0,
+        "hold_limit": 0,
+        "heap_allocate": 669060,
+        "arena_allocate": 0,
+        "retire": 669060,
+        "clone_shell": 0,
+        "unique_check": 33
+      },
+      "samples": [
+        {
+          "mode": "rc",
+          "command": [
+            "taskset",
+            "-c",
+            "0",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-qbe-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 1229932905,
+            "cpu_core/cycles/u": 276603619
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n1229932905,,cpu_core/instructions/u,68670911,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n276603619,,cpu_core/cycles/u,68670911,100.00,,\n"
+        },
+        {
+          "mode": "gc",
+          "command": [
+            "taskset",
+            "-c",
+            "0",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-qbe-gc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 105808954,
+            "cpu_core/cycles/u": 25091001
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n105808954,,cpu_core/instructions/u,7158405,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n25091001,,cpu_core/cycles/u,7158405,100.00,,\n"
+        },
+        {
+          "mode": "gc",
+          "command": [
+            "taskset",
+            "-c",
+            "0",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-qbe-gc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 105808959,
+            "cpu_core/cycles/u": 25261106
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n105808959,,cpu_core/instructions/u,7111022,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n25261106,,cpu_core/cycles/u,7111022,100.00,,\n"
+        },
+        {
+          "mode": "rc",
+          "command": [
+            "taskset",
+            "-c",
+            "0",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-qbe-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 1229933039,
+            "cpu_core/cycles/u": 276940295
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n1229933039,,cpu_core/instructions/u,72147330,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n276940295,,cpu_core/cycles/u,72147330,100.00,,\n"
+        },
+        {
+          "mode": "rc",
+          "command": [
+            "taskset",
+            "-c",
+            "0",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-qbe-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 1229932997,
+            "cpu_core/cycles/u": 276440685
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n1229932997,,cpu_core/instructions/u,71822840,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n276440685,,cpu_core/cycles/u,71822840,100.00,,\n"
+        },
+        {
+          "mode": "gc",
+          "command": [
+            "taskset",
+            "-c",
+            "0",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-qbe-gc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 105808956,
+            "cpu_core/cycles/u": 25152873
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n105808956,,cpu_core/instructions/u,7383365,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n25152873,,cpu_core/cycles/u,7383365,100.00,,\n"
+        }
+      ],
+      "binary_sha256": {
+        "rc": "a3781aa694b196fe63f7a40e03bbcb684f5f9abe19e35704bf5932331fb9d3b8",
+        "gc": "d9407ce14c29c9d5273cd6f0469ab8e0d2ec1e37c5a4aee6d3ca99912bcdd60f"
+      }
+    },
+    "llvm": {
+      "medians": {
+        "rc": 694618424,
+        "gc": 50540743
+      },
+      "rc_over_gc": 13.743731943157227,
+      "counts": {
+        "version": 1,
+        "runtime": "rc-v2-counting",
+        "saturated": false,
+        "owner_acquire": 19,
+        "owner_release": 669079,
+        "hold_acquire": 0,
+        "hold_release": 0,
+        "owner_limit": 0,
+        "hold_limit": 0,
+        "heap_allocate": 669060,
+        "arena_allocate": 0,
+        "retire": 669060,
+        "clone_shell": 0,
+        "unique_check": 33
+      },
+      "samples": [
+        {
+          "mode": "rc",
+          "command": [
+            "taskset",
+            "-c",
+            "0",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-llvm-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 694618424,
+            "cpu_core/cycles/u": 155491706
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n694618424,,cpu_core/instructions/u,38460854,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n155491706,,cpu_core/cycles/u,38460854,100.00,,\n"
+        },
+        {
+          "mode": "gc",
+          "command": [
+            "taskset",
+            "-c",
+            "0",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-llvm-gc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 50540746,
+            "cpu_core/cycles/u": 22654674
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n50540746,,cpu_core/instructions/u,6387009,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n22654674,,cpu_core/cycles/u,6387009,100.00,,\n"
+        },
+        {
+          "mode": "gc",
+          "command": [
+            "taskset",
+            "-c",
+            "0",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-llvm-gc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 50540743,
+            "cpu_core/cycles/u": 22827362
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n50540743,,cpu_core/instructions/u,6396422,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n22827362,,cpu_core/cycles/u,6396422,100.00,,\n"
+        },
+        {
+          "mode": "rc",
+          "command": [
+            "taskset",
+            "-c",
+            "0",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-llvm-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 694575045,
+            "cpu_core/cycles/u": 155076891
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n694575045,,cpu_core/instructions/u,38692373,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n155076891,,cpu_core/cycles/u,38692373,100.00,,\n"
+        },
+        {
+          "mode": "rc",
+          "command": [
+            "taskset",
+            "-c",
+            "0",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-llvm-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 694662425,
+            "cpu_core/cycles/u": 154574378
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n694662425,,cpu_core/instructions/u,38733839,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n154574378,,cpu_core/cycles/u,38733839,100.00,,\n"
+        },
+        {
+          "mode": "gc",
+          "command": [
+            "taskset",
+            "-c",
+            "0",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-llvm-gc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 50540743,
+            "cpu_core/cycles/u": 22609475
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n50540743,,cpu_core/instructions/u,6186167,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n22609475,,cpu_core/cycles/u,6186167,100.00,,\n"
+        }
+      ],
+      "binary_sha256": {
+        "rc": "c1ca6be2914b30a81a5dac46f714008c49d91038ef170b17bfa56a80ab74e1df",
+        "gc": "dd811a8ef7cbf7616c60c33a4bee18667c37d3295ada3147ccca60565aa8e29f"
+      }
+    }
+  },
+  "commands": [
+    [
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/install-gap/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/binary_trees_n12.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-qbe-rc-n12",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cache-gap-qbe",
+      "--rc-runtime",
+      "--keep-symbols"
+    ],
+    [
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/install-gap/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/binary_trees_n12.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-qbe-stats-n12",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cache-gap-qbe",
+      "--rc-runtime=stats",
+      "--keep-symbols"
+    ],
+    [
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/install-gap/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/binary_trees_n12.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-llvm-rc-n12",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cache-gap-llvm",
+      "--rc-runtime",
+      "--keep-symbols",
+      "--backend=llvm",
+      "--llvm-opt=3",
+      "--lto"
+    ],
+    [
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/install-gap/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/binary_trees_n12.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-llvm-stats-n12",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cache-gap-llvm",
+      "--rc-runtime=stats",
+      "--keep-symbols",
+      "--backend=llvm",
+      "--llvm-opt=3",
+      "--lto"
+    ],
+    [
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/install-gap/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/binary_trees_n12.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-qbe-gc-n12",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cache-gap-qbe",
+      "--keep-symbols"
+    ],
+    [
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/install-gap/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/binary_trees_n12.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-llvm-gc-n12",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cache-gap-llvm",
+      "--keep-symbols",
+      "--backend=llvm",
+      "--llvm-opt=3",
+      "--lto"
+    ]
+  ]
+}

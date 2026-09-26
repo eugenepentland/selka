@@ -50,4 +50,17 @@ def main() -> int:
     assert test_callback_publication_keeps_full_pending_receiver_pins()
     assert test_managed_publication_still_establishes_independent_values()
     assert test_conditional_indices_and_zero_iterations_preserve_owners()
+    assert test_three_level_shared_projection_keeps_named_row_and_outer_snapshot()
     return 0
+
+
+# spec-case: RC-INERT-PROJECTION-1
+public def test_three_level_shared_projection_keeps_named_row_and_outer_snapshot() -> bool:
+    row = [1, 2]
+    rows = [row, row]
+    cube = [rows, rows]
+    before = cube
+    saved = cube[0][1]
+    cube[0][1][-1] = 7
+    cube[1][0][0 if len(saved) == 2 else 1] = 9
+    return cube == [[[1, 2], [1, 7]], [[9, 2], [1, 2]]] and before == [[[1, 2], [1, 2]], [[1, 2], [1, 2]]] and saved == [1, 2] and row == [1, 2]

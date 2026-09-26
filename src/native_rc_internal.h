@@ -49,7 +49,11 @@ struct myl_rc_state {
     myl_rc_counters stats;
 #endif
 };
-void myl_rc_invariant(int);
+__attribute__((cold, noreturn)) void myl_rc_invariant_failed(void);
+/* Keep every check in production, but only a violated invariant calls out. */
+static inline void myl_rc_invariant(int valid) {
+    if (!valid) myl_rc_invariant_failed();
+}
 void *myl_rc_meta_alloc(myl_native_heap *, size_t);
 void myl_rc_meta_free(myl_native_heap *, void *, size_t);
 int myl_rc_size_add(size_t, size_t, size_t *);
