@@ -1364,3 +1364,4 @@ host failure in one worker leaves the units the other workers hold running.
 - [COW-MUT-REBIND-1] Reassigning a mut collection parameter invalidates the original payload uniqueness guarantee without making the caller-borrowed parameter an owned value; later direct and nested writes retain ordinary COW checks and cannot change a read-only source snapshot.
 
 - [RC-STABLE-JOURNAL-1] Operand and pending RC journal entries retain their entry-time storage and guard addresses across typed publications. Type and ownership-role flags still change before initialization, so reused stack positions and held/ordinary transitions clean up their current values.
+
