@@ -1,0 +1,41 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 689  of event 'cpu_core/cycles/P'
+# Event count (approx.): 386048972
+#
+# Overhead  Symbol                                                                      IPC   [IPC Coverage]
+# ........  ..........................................................................  ....................
+#
+     9.62%  [.] walk                                                                    -      -            
+     9.33%  [.] myl_qbe_rc_slot_drop                                                    -      -            
+     9.04%  [.] visit                                                                   -      -            
+     5.51%  [.] myl_rc_descriptor_find                                                  -      -            
+     4.75%  [.] myl_rc_shape_resolve                                                    -      -            
+     4.52%  [.] myl_f_20f65c28671b40937c5bf23acc7c6f37e5a5ec0622e347b57685725df5ba9e50  -      -            
+     4.51%  [.] pointer_fast                                                            -      -            
+     4.17%  [.] myl_rc_invariant                                                        -      -            
+     3.51%  [.] myl_rc_native_copy                                                      -      -            
+     3.33%  [.] myl_f_d05aa2a15fb3c40efeeb03bec445393f00074484cf01c8fb2da90ca6695a5531  -      -            
+     3.14%  [.] myl_rc_drain                                                            -      -            
+     2.78%  [.] transfer                                                                -      -            
+     2.73%  [.] myl_rc_native_shape                                                     -      -            
+     2.61%  [.] myl_rc_pointer_transfer                                                 -      -            
+     2.53%  [.] myl_rc_edges_release                                                    -      -            
+     2.33%  [.] compiler_rt.fastMemset                                                  -      -            
+     2.16%  [.] myl_qbe_rc_frame_cleanup                                                -      -            
+     2.06%  [.] myl_rc_native_take                                                      -      -            
+     2.05%  [.] myl_rc_native_drop                                                      -      -            
+     2.01%  [.] dispose_walk                                                            -      -            
+     1.64%  [.] myl_rc_value_seed                                                       -      -            
+     1.35%  [.] transfer_pointer                                                        -      -            
+     1.30%  [.] allocate                                                                -      -            
+     1.14%  [.] myl_rc_meta_free                                                        -      -            
+     1.13%  [.] myl_rc_shape_depth                                                      -      -            
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#
