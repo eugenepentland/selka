@@ -1,0 +1,17 @@
+module scalar
+
+
+def sum(values: list[int]) -> int:
+    result = 0
+    for index in range(len(values)):
+        result += values[index]
+    return result
+
+
+def main(out: Stream) -> int:
+    values = [index for index in range(100)]
+    result = 0
+    for count in range(100):
+        result += sum(values)
+    out.print(result)
+    return 0
