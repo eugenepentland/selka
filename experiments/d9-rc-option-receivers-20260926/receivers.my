@@ -1,0 +1,56 @@
+def change(candidate: mut Option[list[int]]) -> int:
+    if candidate is None:
+        return 0
+    candidate.append(2)
+    return len(candidate)
+
+public def test_mut_optional_snapshot() -> bool:
+    original: Option[list[int]] = Some([1])
+    changed = original
+    count = change(mut changed)
+    if changed is None or original is None:
+        return False
+    return changed == [1, 2] and original == [1] and count == 2
+
+public def test_named_match_is_independent() -> bool:
+    candidate: Option[list[int]] = Some([1])
+    match candidate:
+        case Some(selected):
+            changed = selected
+            changed.append(2)
+            if candidate is None:
+                return False
+            return changed == [1, 2] and candidate == [1]
+        case None:
+            return False
+
+public def test_mut_optional_dictionary() -> bool:
+    original: Option[dict[str, int]] = Some({"a": 1})
+    changed = original
+    if changed is None:
+        return False
+    changed["b"] = 2
+    if original is None:
+        return False
+    return changed["b"] == 2 and len(changed) == 2 and len(original) == 1
+
+public def test_mut_optional_list_in_arena() -> bool:
+    candidate: Option[list[int]] = Some([1])
+    with arena() as scratch:
+        count = change(mut candidate)
+        if count != 2:
+            return False
+    if candidate is None:
+        return False
+    return candidate == [1, 2]
+
+def main() -> int:
+    if not test_mut_optional_snapshot():
+        return 1
+    if not test_named_match_is_independent():
+        return 2
+    if not test_mut_optional_dictionary():
+        return 3
+    if not test_mut_optional_list_in_arena():
+        return 4
+    return 0

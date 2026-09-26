@@ -170,7 +170,7 @@ fn dispatchValue(comptime E: type, self: *E, dispatch: @FieldType(Op, "switch_va
     for (dispatch.arms, 0..) |arm, i| {
         const matches = self.temp();
         try self.print(" %v{d} =l ceql %v{d}, {d}\n jnz %v{d}, @rcarm{d}, @rcarmnext{d}\n@rcarm{d}\n", .{ matches, tag, i, matches, matches, matches, matches });
-        if (arm.slot) |slot| {
+        if (arm.slot) |slot| if (!try @import("qbe_rc_narrowing.zig").bind(E, self, dispatch, @backingInt(slot))) {
             const index = @backingInt(slot);
             const ty = self.function.scope.locals[index].ty;
             const work = try values.workAddress(E, self);
@@ -180,7 +180,7 @@ fn dispatchValue(comptime E: type, self: *E, dispatch: @FieldType(Op, "switch_va
             try self.print(" blit %v{d}, %l{d}, {d}\n", .{ work, index, (try self.layout(ty)).size });
             try frame.initialized(E, self, frame.pending(E, self), false);
             try frame.initialized(E, self, index, try state.owns(frame.get(E, self).?, ty));
-        }
+        };
         try values.drop(E, self, height - 1);
         try self.print(" jmp @{s}{d}\n@rcarmnext{d}\n", .{ self.labelPrefix(arm.target), arm.target, matches });
     }

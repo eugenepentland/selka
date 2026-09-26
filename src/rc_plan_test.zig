@@ -739,3 +739,25 @@ test "RC-OWNERSHIP-PLAN-1 semantic move from readonly parameter checks physical 
     try t.expect(std.mem.indexOf(u8, text, "@rccopy") != null);
     try t.expect(std.mem.indexOf(u8, text, "call $myl_rc_native_copy") != null);
 }
+
+// spec: RC-NARROWED-MUTATION-1
+test "RC-NARROWED-MUTATION-1 compiler Option receivers detach the source edge" {
+    const mode = @import("runtime_mode.zig");
+    const saved = mode.get();
+    defer mode.set(saved);
+    mode.set(.rc);
+    var result = try lowered(
+        \\def change(candidate: mut Option[list[int]]) -> int:
+        \\    if candidate is None:
+        \\        return 0
+        \\    candidate.append(2)
+        \\    return len(candidate)
+        \\def main() -> int:
+        \\    candidate: Option[list[int]] = Some([1])
+        \\    return change(mut candidate)
+    );
+    defer result.deinit();
+    const text = try functionText(result.value, "change");
+    try t.expect(std.mem.indexOf(u8, text, "call $myl_qbe_rc_unique_field") != null);
+    try t.expect(try at(text, "call $myl_qbe_rc_unique_field") < try at(text, "call $myl_rc_list_append"));
+}
