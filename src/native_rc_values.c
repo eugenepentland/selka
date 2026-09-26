@@ -47,9 +47,15 @@ int myl_rc_native_take(myl_native_heap *heap, const myl_native_type *type, void 
     }
     const myl_rc_shape *shape=myl_rc_native_shape(heap,type);
     if (!shape) return 0;
-    myl_rc_slot target={.shape=shape,.address=dst,.region=region};
+    unsigned char local[128];
+    void *staged=type->size<=sizeof local?local:myl_rc_storage_bytes(heap,type->size,0);
+    if (!staged) return 0;
+    myl_rc_slot target={.shape=shape,.address=staged,.region=region};
     myl_rc_slot source={.shape=shape,.address=src,.region=region};
-    return publication_status(heap,myl_rc_value_take(heap,&target,&source));
+    int ok=publication_status(heap,myl_rc_value_take(heap,&target,&source));
+    if (ok) memmove(dst,staged,type->size);
+    if (staged!=local) myl_rc_owner_release(heap,staged);
+    return ok;
 }
 void myl_rc_native_drop(myl_native_heap *heap, const myl_native_type *type, void *value) {
     const myl_rc_descriptor *descriptor=myl_rc_descriptor_find(heap,type);
