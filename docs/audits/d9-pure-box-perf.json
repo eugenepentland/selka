@@ -1,0 +1,187 @@
+{
+  "meta": {
+    "compiler_parent": "5bdd99ea",
+    "compiler_sha256": "cec188428e5382f6977b5cadb68bb6358afe4cba5250481df2c7b59766e41302",
+    "baseline_commit": "60b668cf",
+    "cpu": 10,
+    "reps": 3,
+    "source_sha256": "b32baaeff6dc59d912dc44ca1df38e28b2e7782c52b13383182d238eb7a13f0e",
+    "harness": "experiments/perf-gc-dict-20260925/scripts/pc.py"
+  },
+  "samples": {
+    "qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "3b9e63e2b3523d282d08c35b889a2343c0ee7a24a2540ce6a41bc58f782cd7ff",
+          "stderr": "",
+          "ok": true
+        },
+        "before": {
+          "status": 0,
+          "stdout_sha256": "3b9e63e2b3523d282d08c35b889a2343c0ee7a24a2540ce6a41bc58f782cd7ff",
+          "stderr": "",
+          "ok": true
+        },
+        "pure": {
+          "status": 0,
+          "stdout_sha256": "3b9e63e2b3523d282d08c35b889a2343c0ee7a24a2540ce6a41bc58f782cd7ff",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "binaries": {
+        "base": "e279d5089268cc9f9f6628948a5c11a78bafc0da847cc8f07eacb79e1cf68594",
+        "before": "f4bdccd5918f214c6bc915738653f7a5c36dd3d6156522c75706745a05e5e627",
+        "pure": "5b2c415f6277f96153d5f27a997659555f23c54d9309f969f47c54bee255d870"
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 2187878366,
+            "cycles": 545400455
+          },
+          {
+            "status": 0,
+            "instructions": 2187878293,
+            "cycles": 554643959
+          },
+          {
+            "status": 0,
+            "instructions": 2187878256,
+            "cycles": 532991910
+          }
+        ],
+        "before": [
+          {
+            "status": 0,
+            "instructions": 7232958560,
+            "cycles": 1906025788
+          },
+          {
+            "status": 0,
+            "instructions": 7232958591,
+            "cycles": 1978902850
+          },
+          {
+            "status": 0,
+            "instructions": 7232958419,
+            "cycles": 1914665552
+          }
+        ],
+        "pure": [
+          {
+            "status": 0,
+            "instructions": 2633115013,
+            "cycles": 645423430
+          },
+          {
+            "status": 0,
+            "instructions": 2633116821,
+            "cycles": 652553971
+          },
+          {
+            "status": 0,
+            "instructions": 2633114935,
+            "cycles": 630444777
+          }
+        ]
+      },
+      "medians": {
+        "base": 2187878293,
+        "before": 7232958560,
+        "pure": 2633115013
+      },
+      "baseline_ratio": 1.2035015939526943,
+      "before_ratio": 0.3640439788445297
+    },
+    "llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "3b9e63e2b3523d282d08c35b889a2343c0ee7a24a2540ce6a41bc58f782cd7ff",
+          "stderr": "",
+          "ok": true
+        },
+        "before": {
+          "status": 0,
+          "stdout_sha256": "3b9e63e2b3523d282d08c35b889a2343c0ee7a24a2540ce6a41bc58f782cd7ff",
+          "stderr": "",
+          "ok": true
+        },
+        "pure": {
+          "status": 0,
+          "stdout_sha256": "3b9e63e2b3523d282d08c35b889a2343c0ee7a24a2540ce6a41bc58f782cd7ff",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "binaries": {
+        "base": "b0af88cb9499b80d2fe09a83cdc25b5800118f65fe3e5d1586b63bb4ee724e5d",
+        "before": "01cacf4cb3900a7cd7d4765e0fa0f001e2072e2e0632b0ba11087b42b6c3586a",
+        "pure": "a20918dcff57fffd3d4c38d6b0abcc7d6aec3d88e534c5436f53f479717aa13f"
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 1317782602,
+            "cycles": 428376776
+          },
+          {
+            "status": 0,
+            "instructions": 1317782610,
+            "cycles": 420675410
+          },
+          {
+            "status": 0,
+            "instructions": 1317782643,
+            "cycles": 424763219
+          }
+        ],
+        "before": [
+          {
+            "status": 0,
+            "instructions": 2837139290,
+            "cycles": 982647974
+          },
+          {
+            "status": 0,
+            "instructions": 2837139411,
+            "cycles": 986761989
+          },
+          {
+            "status": 0,
+            "instructions": 2837139858,
+            "cycles": 1036205427
+          }
+        ],
+        "pure": [
+          {
+            "status": 0,
+            "instructions": 1404608788,
+            "cycles": 583300006
+          },
+          {
+            "status": 0,
+            "instructions": 1404608794,
+            "cycles": 579569343
+          },
+          {
+            "status": 0,
+            "instructions": 1404608750,
+            "cycles": 584593728
+          }
+        ]
+      },
+      "medians": {
+        "base": 1317782610,
+        "before": 2837139411,
+        "pure": 1404608788
+      },
+      "baseline_ratio": 1.0658880890832214,
+      "before_ratio": 0.4950792275325381
+    }
+  }
+}

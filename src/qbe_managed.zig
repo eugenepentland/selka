@@ -675,6 +675,27 @@ fn immediateScalarProjection(comptime E: type, self: *E, element: typed.Type) Er
     }
     return false;
 }
+/// An immediate variant dispatch reads only the tag before copying its chosen
+/// payload into private arm storage. Borrow backing through that dispatch,
+/// never through a projected binding or the release of an owned payload.
+fn immediateVariantCopy(comptime E: type, self: *E, element: typed.Type) Error!bool {
+    if (self.cow == null or (try self.layout(element)).drop) return false;
+    const next = self.pc + 1;
+    const code = self.function.scope.instructions;
+    if (next >= code.len or self.states[next] == null or self.branch_targets[next]) return false;
+    const site = self.cow.?.plan.at(next);
+    if (site.unique.len != 0 or site.unique_field != null) return false;
+    if (site.fill or site.capture or site.shares.len != 0) return false;
+    const dispatch = switch (code[next].op) {
+        .switch_variant => |dispatch| dispatch,
+        else => return false,
+    };
+    if (dispatch.ty != element) return false;
+    for (dispatch.arms) |arm| if (arm.slot) |slot| {
+        if (self.byReference(@backingInt(slot))) return false;
+    };
+    return true;
+}
 /// QBE-RETFWD-1: a list element whose only consumer is the `ret` that hands it
 /// back is returned from the receiver's own storage.
 ///
@@ -753,6 +774,8 @@ fn inlineIndexRead(comptime E: type, self: *E, read: IndexRead, failure: []const
     if (self.isScalar(read.element)) {
         try self.store(read.slot, try self.readValue(address, read.element));
     } else if (try immediateScalarProjection(E, self, read.element)) {
+        try self.store(read.slot, address);
+    } else if (try immediateVariantCopy(E, self, read.element)) {
         try self.store(read.slot, address);
     } else if (try elementFeedsStore(E, self, read.element)) {
         try self.store(read.slot, address);

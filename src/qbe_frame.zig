@@ -6,6 +6,7 @@
 //! frame. Each step is a free function over the concrete emitter type; `Lower`
 //! exposes the ones the rest of the emitter calls as `self.name(...)`.
 const zero_local = @import("qbe_format.zig").zero_local;
+const cow_lower = @import("qbe_cow.zig");
 const arena_lower = @import("qbe_arena.zig");
 const std = @import("std");
 const bytecode = @import("bytecode.zig");
@@ -149,6 +150,13 @@ pub fn Lower(comptime Emitter: type) type {
 /// its slots from `%frame_memory`, so they follow that allocation instead.
 fn allocateStorage(comptime Emitter: type, self: *Emitter, capacity: usize) GenerateError!void {
     const f = self.function;
+    if (self.cow) |state| for (state.plan.places) |maybe| {
+        const place = maybe orelse continue;
+        if (!cow_lower.Lower(Emitter).scoped(self, place)) continue;
+        try allocateIndex(Emitter, self, "cowscope", place.fill, cow_lower.Lower(Emitter).scopeStorage(self, place));
+        const value = self.temp();
+        try self.print(" %v{d} =l add %cowscope{d}, 24\n storel 0, %v{d}\n", .{ value, place.fill, value });
+    };
     try allocateSlot(Emitter, self, "scratch", 16);
     try allocateSlot(Emitter, self, "arguments", try argumentVectorBytes(Emitter, self));
     for (f.scope.locals, 0..) |local, i| {
@@ -387,6 +395,7 @@ fn allocateSlot(comptime Emitter: type, self: *Emitter, name: []const u8, size: 
 }
 /// Return a value after releasing heap-backed execution storage safely.
 fn returnValue(comptime Emitter: type, self: *Emitter, value: usize) GenerateError!void {
+    try cow_lower.Lower(Emitter).clearScopes(self);
     try cleanupLocals(Emitter, self);
     try arena_lower.Lower(Emitter).restore(self);
     var output = value;
@@ -650,6 +659,7 @@ fn frameBytes(comptime Emitter: type, self: *Emitter, capacity: usize, temporari
         size = try addFrame(size, try localSlotBytes(Emitter, self, i, local.ty));
         size = try addFrame(size, try placeholderBytes(Emitter, self, i, local.ty));
     }
+    size = try addFrame(size, cow_lower.Lower(Emitter).scopeBytes(self));
     size = try addFrame(size, temporaries);
     size = try addFrame(size, self.range_keys.frameBytes());
     if (self.has_roots) size = try addFrame(size, @as(u64, self.function.scope.locals.len + capacity) * 32);

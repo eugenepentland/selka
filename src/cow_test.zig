@@ -88,6 +88,62 @@ test "copy on write: payload return copies straight into the private transfer sc
     try std.testing.expect(count(il, "call $myl_qbe_cow_transfer(") > 0);
 }
 
+// spec: QBE-VALUECOPY-ROOTS-1
+test "copy on write: inline transfer publishes roots only in its allocating fallback" {
+    const saved = value_semantics.enabled();
+    value_semantics.setEnabled(true);
+    defer value_semantics.setEnabled(saved);
+    const source =
+        \\def snapshot(xs: list[int]) -> list[int]:
+        \\    return xs
+        \\
+        \\def main() -> int:
+        \\    return len(snapshot([1]))
+    ;
+    const a = std.testing.allocator;
+    const il = try unitText(a, source, "snapshot", checks);
+    defer a.free(il);
+    const slow = std.mem.indexOf(u8, il, "\n@vcslow") orelse return error.TestUnexpectedResult;
+    const publication = std.mem.indexOf(u8, il, " storel %root0,") orelse return error.TestUnexpectedResult;
+    const call = std.mem.indexOf(u8, il, "call $myl_qbe_cow_transfer(") orelse return error.TestUnexpectedResult;
+    const done = std.mem.indexOf(u8, il, "\n@vcdone") orelse return error.TestUnexpectedResult;
+    try std.testing.expect(slow < publication and publication < call and call < done);
+    try std.testing.expectEqual(@as(usize, 0), count(il[0..slow], " storel %root"));
+    try std.testing.expectEqual(@as(usize, 1), count(il[call..done], " storel %root_mark,"));
+}
+
+// spec: QBE-VARIANT-ELEMENT-1
+test "copy on write: immediate variant dispatch copies only its selected payload" {
+    const saved = value_semantics.enabled();
+    value_semantics.setEnabled(true);
+    defer value_semantics.setEnabled(saved);
+    const source =
+        \\record Pair:
+        \\    first: int
+        \\    second: int
+        \\
+        \\union Item:
+        \\    pair: Pair,
+        \\    empty
+        \\
+        \\def read(items: list[Item], index: int) -> int:
+        \\    match items[index]:
+        \\        case Item.pair(payload):
+        \\            return payload.first + payload.second
+        \\        case Item.empty:
+        \\            return 0
+        \\
+        \\def main() -> int:
+        \\    return read([Item.pair(Pair(1, 2))], -1)
+    ;
+    const a = std.testing.allocator;
+    const il = try unitText(a, source, "read", checks);
+    defer a.free(il);
+    try std.testing.expectEqual(@as(usize, 1), count(il, " blit "));
+    try std.testing.expect(count(il, "myl_qbe_fail_normalized_index_bounds") > 0);
+    try std.testing.expectEqual(@as(i64, 3), try run(a, source, true));
+}
+
 // spec: COW-SHARED-1
 test "copy on write: a copy transfer shares the list and the first write through either name copies it" {
     // Retain the internal phase-one path during the explicit legacy window.
@@ -230,6 +286,32 @@ test "copy on write: recursive box projection protects a child exposed before a 
     try std.testing.expectEqual(@as(i64, 1), try run(a, pure_call, true));
 }
 
+// spec: QBE-PURE-BOX-READ-1
+test "copy on write: a pure recursive box read needs no COW unbox runtime" {
+    const saved = value_semantics.enabled();
+    value_semantics.setEnabled(true);
+    defer value_semantics.setEnabled(saved);
+    const source =
+        \\record Node:
+        \\    number: int
+        \\    next: Option[Node]
+        \\
+        \\def total(node: Node) -> int:
+        \\    child = node.next
+        \\    if child is None:
+        \\        return node.number
+        \\    return node.number + total(child)
+        \\
+        \\def main() -> int:
+        \\    return total(Node(1, Some(Node(2, None))))
+    ;
+    const a = std.testing.allocator;
+    const il = try unitText(a, source, "total", checks);
+    defer a.free(il);
+    try std.testing.expectEqual(@as(usize, 0), count(il, "call $myl_qbe_cow_unbox("));
+    try std.testing.expectEqual(@as(i64, 3), try run(a, source, true));
+}
+
 // spec: COW-UNIQUE-1
 test "copy on write: every in-place write tests one header bit inline and copies only on the shared path" {
     const a = std.testing.allocator;
@@ -332,6 +414,65 @@ test "copy on write: a write through a dictionary value copies the dictionary an
     const il = try unitText(a, entries, "main", checks);
     defer a.free(il);
     try std.testing.expect(count(il, "call $myl_native_cow_unique_in(") >= 1);
+}
+
+// spec-case: COW-NESTED-1
+test "copy on write: alternating collection owners keep both snapshots alive under GC stress" {
+    const saved = value_semantics.enabled();
+    value_semantics.setEnabled(true);
+    defer value_semantics.setEnabled(saved);
+    const source =
+        \\def main() -> int:
+        \\    original: list[dict[str, dict[str, list[int]]]] = [{"a": {"b": [1]}}]
+        \\    changed = original
+        \\    changed[0]["a"]["b"].append(2)
+        \\    return len(original[0]["a"]["b"]) * 10 + len(changed[0]["a"]["b"])
+    ;
+    try std.testing.expectEqual(@as(i64, 12), try run(std.testing.allocator, source, false));
+    try std.testing.expectEqual(@as(i64, 12), try run(std.testing.allocator, source, true));
+}
+
+// spec-case: COW-NESTED-1
+test "copy on write: fixed array paths retain dictionary keys and collection owners under GC stress" {
+    const saved = value_semantics.enabled();
+    value_semantics.setEnabled(true);
+    defer value_semantics.setEnabled(saved);
+    const source =
+        \\def main() -> int:
+        \\    original: dict[str, [1][1]list[int]] = {"k": [[[1]]]}
+        \\    changed = original
+        \\    changed["k"][0][0].append(2)
+        \\    return len(original["k"][0][0]) * 10 + len(changed["k"][0][0])
+    ;
+    try std.testing.expectEqual(@as(i64, 12), try run(std.testing.allocator, source, false));
+    try std.testing.expectEqual(@as(i64, 12), try run(std.testing.allocator, source, true));
+}
+
+// spec-case: COW-NESTED-1
+test "copy on write: a callback replacing an equal array entry detaches the pending receiver" {
+    const saved = value_semantics.enabled();
+    value_semantics.setEnabled(true);
+    defer value_semantics.setEnabled(saved);
+    const source =
+        \\def index(values: mut dict[str, [1]list[int]]) -> int:
+        \\    copied = values["k"]
+        \\    values["k"] = copied
+        \\    return 0
+        \\
+        \\def main() -> int:
+        \\    original: dict[str, [1]list[int]] = {"k": [[1]]}
+        \\    changed = original
+        \\    changed["k"][index(mut changed)].append(2)
+        \\    return len(original["k"][0]) * 10 + len(changed["k"][0])
+    ;
+    const a = std.testing.allocator;
+    try std.testing.expectEqual(@as(i64, 11), try run(a, source, false));
+    try std.testing.expectEqual(@as(i64, 11), try run(a, source, true));
+    const il = try unitText(a, source, "main", checks);
+    defer a.free(il);
+    try std.testing.expect(count(il, "call $myl_native_cow_scope_prepare(") == 1);
+    try std.testing.expect(count(il, "call $myl_native_cow_scope_release(") > 0);
+    try std.testing.expect(count(il, "extern $myl_native_cow_scope_type") == 1);
 }
 
 const fields =

@@ -1,0 +1,362 @@
+{
+  "lox/vm/binary_trees|qbe": {
+    "pre-closure-composition": {
+      "counts": [
+        {
+          "status": 0,
+          "instructions": 8009193478,
+          "cycles": 2413956404
+        },
+        {
+          "status": 0,
+          "instructions": 8009195279,
+          "cycles": 2406074126
+        },
+        {
+          "status": 0,
+          "instructions": 8009193370,
+          "cycles": 2408094430
+        }
+      ],
+      "median": 8009193478,
+      "sha256": "4d9cbd580cab01a6270bec7f8801b60723d4bbc11a3cd1c86c55612105838f70"
+    },
+    "late-closure-composition": {
+      "counts": [
+        {
+          "status": 0,
+          "instructions": 8009182838,
+          "cycles": 2372551047
+        },
+        {
+          "status": 0,
+          "instructions": 8009188123,
+          "cycles": 2339412915
+        },
+        {
+          "status": 0,
+          "instructions": 8009184756,
+          "cycles": 2355308456
+        }
+      ],
+      "median": 8009184756,
+      "sha256": "eaa8208a87e4a8e792d590cb7cf2967874be5c2d6491ef1af9cda5fbefdc3c60"
+    },
+    "ratio": 0.9999989110014605
+  },
+  "lox/vm/binary_trees|llvm": {
+    "pre-closure-composition": {
+      "counts": [
+        {
+          "status": 0,
+          "instructions": 4286480686,
+          "cycles": 1508046561
+        },
+        {
+          "status": 0,
+          "instructions": 4286486130,
+          "cycles": 1472350293
+        },
+        {
+          "status": 0,
+          "instructions": 4286480560,
+          "cycles": 1484390099
+        }
+      ],
+      "median": 4286480686,
+      "sha256": "7a45d9de7b0e059fc74b53bc5f1a3717b33aabbef83a473bdcf7435d5f1dcb1d"
+    },
+    "late-closure-composition": {
+      "counts": [
+        {
+          "status": 0,
+          "instructions": 4290748534,
+          "cycles": 1528478253
+        },
+        {
+          "status": 0,
+          "instructions": 4290746401,
+          "cycles": 1578086737
+        },
+        {
+          "status": 0,
+          "instructions": 4290744188,
+          "cycles": 1504982423
+        }
+      ],
+      "median": 4290746401,
+      "sha256": "c4fc7f1d18c7eea3801a44e0b640209058bdbfefd50495456f8e20ad43752533"
+    },
+    "ratio": 1.0009951555395857
+  },
+  "lox/vm/closures|qbe": {
+    "pre-closure-composition": {
+      "counts": [
+        {
+          "status": 0,
+          "instructions": 11928118443,
+          "cycles": 3249230994
+        },
+        {
+          "status": 0,
+          "instructions": 11928118276,
+          "cycles": 3243693009
+        },
+        {
+          "status": 0,
+          "instructions": 11928118244,
+          "cycles": 3181634481
+        }
+      ],
+      "median": 11928118276,
+      "sha256": "4d9cbd580cab01a6270bec7f8801b60723d4bbc11a3cd1c86c55612105838f70"
+    },
+    "late-closure-composition": {
+      "counts": [
+        {
+          "status": 0,
+          "instructions": 11344094040,
+          "cycles": 2853983436
+        },
+        {
+          "status": 0,
+          "instructions": 11344094076,
+          "cycles": 2842255558
+        },
+        {
+          "status": 0,
+          "instructions": 11344093867,
+          "cycles": 2859804744
+        }
+      ],
+      "median": 11344094040,
+      "sha256": "eaa8208a87e4a8e792d590cb7cf2967874be5c2d6491ef1af9cda5fbefdc3c60"
+    },
+    "ratio": 0.9510380243986105
+  },
+  "lox/vm/closures|llvm": {
+    "pre-closure-composition": {
+      "counts": [
+        {
+          "status": 0,
+          "instructions": 5914835553,
+          "cycles": 1968946293
+        },
+        {
+          "status": 0,
+          "instructions": 5914835163,
+          "cycles": 1887874098
+        },
+        {
+          "status": 0,
+          "instructions": 5914835214,
+          "cycles": 1872130123
+        }
+      ],
+      "median": 5914835214,
+      "sha256": "7a45d9de7b0e059fc74b53bc5f1a3717b33aabbef83a473bdcf7435d5f1dcb1d"
+    },
+    "late-closure-composition": {
+      "counts": [
+        {
+          "status": 0,
+          "instructions": 5461206936,
+          "cycles": 1664549560
+        },
+        {
+          "status": 0,
+          "instructions": 5461207187,
+          "cycles": 1641431046
+        },
+        {
+          "status": 0,
+          "instructions": 5461201637,
+          "cycles": 1659742364
+        }
+      ],
+      "median": 5461206936,
+      "sha256": "c4fc7f1d18c7eea3801a44e0b640209058bdbfefd50495456f8e20ad43752533"
+    },
+    "ratio": 0.9233066921414321
+  },
+  "lox/vm/fib|qbe": {
+    "pre-closure-composition": {
+      "counts": [
+        {
+          "status": 0,
+          "instructions": 5353625735,
+          "cycles": 1291149641
+        },
+        {
+          "status": 0,
+          "instructions": 5353625579,
+          "cycles": 1294944747
+        },
+        {
+          "status": 0,
+          "instructions": 5353625425,
+          "cycles": 1262015990
+        }
+      ],
+      "median": 5353625579,
+      "sha256": "4d9cbd580cab01a6270bec7f8801b60723d4bbc11a3cd1c86c55612105838f70"
+    },
+    "late-closure-composition": {
+      "counts": [
+        {
+          "status": 0,
+          "instructions": 5353624641,
+          "cycles": 1235717820
+        },
+        {
+          "status": 0,
+          "instructions": 5353624839,
+          "cycles": 1213763006
+        },
+        {
+          "status": 0,
+          "instructions": 5353624858,
+          "cycles": 1233460974
+        }
+      ],
+      "median": 5353624839,
+      "sha256": "eaa8208a87e4a8e792d590cb7cf2967874be5c2d6491ef1af9cda5fbefdc3c60"
+    },
+    "ratio": 0.9999998617759145
+  },
+  "lox/vm/fib|llvm": {
+    "pre-closure-composition": {
+      "counts": [
+        {
+          "status": 0,
+          "instructions": 2090050638,
+          "cycles": 594350712
+        },
+        {
+          "status": 0,
+          "instructions": 2090050879,
+          "cycles": 603551524
+        },
+        {
+          "status": 0,
+          "instructions": 2090050599,
+          "cycles": 599810790
+        }
+      ],
+      "median": 2090050638,
+      "sha256": "7a45d9de7b0e059fc74b53bc5f1a3717b33aabbef83a473bdcf7435d5f1dcb1d"
+    },
+    "late-closure-composition": {
+      "counts": [
+        {
+          "status": 0,
+          "instructions": 2097249287,
+          "cycles": 609292991
+        },
+        {
+          "status": 0,
+          "instructions": 2097249301,
+          "cycles": 611974371
+        },
+        {
+          "status": 0,
+          "instructions": 2097249289,
+          "cycles": 607718667
+        }
+      ],
+      "median": 2097249289,
+      "sha256": "c4fc7f1d18c7eea3801a44e0b640209058bdbfefd50495456f8e20ad43752533"
+    },
+    "ratio": 1.0034442471723501
+  },
+  "lox/vm/trees|qbe": {
+    "pre-closure-composition": {
+      "counts": [
+        {
+          "status": 0,
+          "instructions": 5011409886,
+          "cycles": 1519426789
+        },
+        {
+          "status": 0,
+          "instructions": 5011409805,
+          "cycles": 1523774362
+        },
+        {
+          "status": 0,
+          "instructions": 5011410186,
+          "cycles": 1557731932
+        }
+      ],
+      "median": 5011409886,
+      "sha256": "4d9cbd580cab01a6270bec7f8801b60723d4bbc11a3cd1c86c55612105838f70"
+    },
+    "late-closure-composition": {
+      "counts": [
+        {
+          "status": 0,
+          "instructions": 5011408170,
+          "cycles": 1664573880
+        },
+        {
+          "status": 0,
+          "instructions": 5011407795,
+          "cycles": 1641922096
+        },
+        {
+          "status": 0,
+          "instructions": 5011407784,
+          "cycles": 1700852048
+        }
+      ],
+      "median": 5011407795,
+      "sha256": "eaa8208a87e4a8e792d590cb7cf2967874be5c2d6491ef1af9cda5fbefdc3c60"
+    },
+    "ratio": 0.9999995827521501
+  },
+  "lox/vm/trees|llvm": {
+    "pre-closure-composition": {
+      "counts": [
+        {
+          "status": 0,
+          "instructions": 2344379030,
+          "cycles": 1422542595
+        },
+        {
+          "status": 0,
+          "instructions": 2344377254,
+          "cycles": 1184594658
+        },
+        {
+          "status": 0,
+          "instructions": 2344377556,
+          "cycles": 1124492665
+        }
+      ],
+      "median": 2344377556,
+      "sha256": "7a45d9de7b0e059fc74b53bc5f1a3717b33aabbef83a473bdcf7435d5f1dcb1d"
+    },
+    "late-closure-composition": {
+      "counts": [
+        {
+          "status": 0,
+          "instructions": 2349161193,
+          "cycles": 999398850
+        },
+        {
+          "status": 0,
+          "instructions": 2349162000,
+          "cycles": 1203308457
+        },
+        {
+          "status": 0,
+          "instructions": 2349161231,
+          "cycles": 1128566806
+        }
+      ],
+      "median": 2349161231,
+      "sha256": "c4fc7f1d18c7eea3801a44e0b640209058bdbfefd50495456f8e20ad43752533"
+    },
+    "ratio": 1.0020404883111753
+  }
+}

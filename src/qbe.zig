@@ -1625,13 +1625,22 @@ const Emitter = struct {
         for (locals, pinned) |local, *pin| pin.* = (try self.layout(local.ty)).drop;
         const input: liveness.Input = .{ .function = self.function, .states = self.states, .pinned = pinned };
         self.live = try liveness.solve(self.allocator, input);
-        self.ownership = ownership.analyze(self.allocator, .{ .program = self.program, .function = self.function, .states = self.states, .live = self.live.? }) catch |err| switch (err) {
-            error.OutOfMemory => return error.OutOfMemory,
-            error.InternalError => return error.InternalError,
-        };
-        // COW-UNIQUE-1: the checks come before the copies and roots planned
-        // around them, which must allow for every slot a check redirects.
-        if (self.cow) |state| try cow_lower.Lower(Emitter).plan(self, state);
+        // COW write-back and pending receivers have implicit parent/key uses.
+        // Extend liveness with them and repeat ownership planning until every
+        // copy, borrow and move proof reads that final lifetime.
+        while (true) {
+            self.ownership = ownership.analyze(self.allocator, .{ .program = self.program, .function = self.function, .states = self.states, .live = self.live.? }) catch |err| switch (err) {
+                error.OutOfMemory => return error.OutOfMemory,
+                error.InternalError => return error.InternalError,
+            };
+            if (self.cow) |state| {
+                if (try cow_lower.Lower(Emitter).plan(self, state)) {
+                    try liveness.extend(self.allocator, input, self.live.?);
+                    continue;
+                }
+            }
+            break;
+        }
         self.moves = try moves_module.Lower(Emitter).plan(self);
         self.coverage = try @import("qbe_cover.zig").Lower(Emitter).plan(self);
     }
@@ -1684,8 +1693,9 @@ const Emitter = struct {
         try self.print(" jmp @i0\n", .{});
         try self.emitInstructions();
         if (self.step_checks) try self.print("@step_limit\n call $myl_qbe_fail_step(l %ctx)\n jmp @failure\n@failure\n", .{}) else try self.print("@failure\n", .{});
+        try cow_lower.Lower(Emitter).clearScopes(self);
         try arena_lower.Lower(Emitter).restore(self);
-        if (self.has_roots and self.has_safepoints) try self.restoreRoots();
+        if (self.has_roots and self.has_safepoints) try root_lower.restoreFrameRoots(self);
         if (self.heap_frame) try self.print(" call $myl_qbe_frame_release(l %ctx, l %frame_memory)\n jmp @allocation_failure\n@allocation_failure\n", .{});
         try self.leaveFrame();
         // QBE-COLD-FAILRET-1: only failed paths return `%empty`. Initializing
@@ -1741,14 +1751,15 @@ const Emitter = struct {
     }
     /// A value-semantics projection of a recursive box may copy a pinned child
     /// before yielding its private body, so root and borrow planning treat it
-    /// as a safepoint. Ordinary field reads and switch-off code stay inert.
+    /// as a safepoint. Pure boxes, ordinary fields and switch-off code stay inert.
     pub fn boxProjectionAt(self: *Emitter, pc: usize, op: @FieldType(bytecode.Instruction, "op")) bool {
         if (self.cow == null or !value_semantics.enabled() or op != .get_field) return false;
         if (pc >= self.states.len) return false;
         const stack = self.states[pc] orelse return false;
         if (stack.len == 0) return false;
         const owner = stack[stack.len - 1];
-        return owner.isAggregate() and self.program.records[owner.recordIndex()].collection.box;
+        return owner.isAggregate() and self.program.records[owner.recordIndex()].collection.box and
+            value_semantics.needsCopy(self.program.records, owner);
     }
     fn findRoots(self: *Emitter) GenerateError!void {
         const f = self.function;

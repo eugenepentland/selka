@@ -574,8 +574,19 @@
                      return Ok(None)
                  case None:
                      return Err(fail(b"Undefined property '" + name_text(it.rt, node.name_ref) + b"'.", node.name.line))
-@@ -282,8 +308,16 @@
-             evaluate(mut it, node.assigned)?
+@@ -277,13 +303,25 @@
+ # The target must be an instance before the value is evaluated.
+ def set(it: mut Interpreter, node: ast.SetExpr) -> Result[None, RuntimeError]:
+     evaluate(mut it, node.target)?
+-    match instance_of(it.rt, heap.peek(it.rt, 0)):
++    receiver = instance_of(it.rt, heap.peek(it.rt, 0))
++    if receiver is None:
++        return Err(fail(b"Only instances have fields.", node.name.line))
++    evaluate(mut it, node.assigned)?
++    # The RHS may change this same object. Read its current fields afterward.
++    match instance_of(it.rt, heap.peek(it.rt, 1)):
+         case Some(instance):
+-            evaluate(mut it, node.assigned)?
              fields = instance.fields
              _ = table.set(mut fields, node.name_ref, heap.string_hash(it.rt, node.name_ref), heap.peek(it.rt, 0))
 -            assigned = heap.pop(mut it.rt)
@@ -593,7 +604,7 @@
              return Ok(None)
          case None:
              return Err(fail(b"Only instances have fields.", node.name.line))
-@@ -295,7 +329,9 @@
+@@ -295,7 +333,9 @@
      methods = heap.class_obj(it.rt, as_obj(superclass)).methods
      match table.get(methods, node.method_ref, heap.string_hash(it.rt, node.method_ref)):
          case Some(method):
@@ -604,7 +615,7 @@
              return Ok(None)
          case None:
              return Err(fail(b"Undefined property '" + name_text(it.rt, node.method_ref) + b"'.", node.method.line))
-@@ -315,7 +351,9 @@
+@@ -315,7 +355,9 @@
          case ast.Expr.grouping(node):
              return evaluate(mut it, node.inner)
          case ast.Expr.literal(node):
@@ -615,7 +626,7 @@
              return Ok(None)
          case ast.Expr.logical(node):
              return logical(mut it, node)
-@@ -324,7 +362,9 @@
+@@ -324,7 +366,9 @@
          case ast.Expr.super_access(node):
              return super_access(mut it, node)
          case ast.Expr.this(node):
@@ -626,7 +637,7 @@
              return Ok(None)
          case ast.Expr.unary(node):
              return unary(mut it, node)
-@@ -341,10 +381,14 @@
+@@ -341,10 +385,14 @@
          return Err(fail(f"Expected {arity} arguments but got {count}.".encode(), line))
      if it.depth + 1 > MAX_DEPTH:
          return Err(fail(b"Stack overflow.", line))
@@ -643,7 +654,7 @@
          i += 1
      return Ok(env)
  
-@@ -362,9 +406,13 @@
+@@ -362,9 +410,13 @@
  # returned value or nil, or `this` for an initializer.
  def run_function(it: mut Interpreter, function: object.TreeFunctionObj, env: value.ObjRef) -> Result[value.Value, RuntimeError]:
      it.depth = it.depth + 1
@@ -659,7 +670,7 @@
      it.depth = it.depth - 1
      flow = outcome?
      if function.is_initializer:
-@@ -389,14 +437,18 @@
+@@ -389,14 +441,18 @@
                  case object.Obj.tree_function(function):
                      env = enter_function(mut it, function, function.closure, count, callee_slot + 1, line)?
                      result = run_function(mut it, function, env)?
@@ -680,7 +691,7 @@
                      return Ok(None)
                  case _:
                      pass
-@@ -410,22 +462,34 @@
+@@ -410,22 +466,34 @@
  # the call's own env exists.
  def instantiate(it: mut Interpreter, class_ref: value.ObjRef, count: int, line: int) -> Result[None, RuntimeError]:
      callee_slot = it.rt.stack_top - count - 1
@@ -721,7 +732,7 @@
      return Ok(None)
  
  
-@@ -433,9 +497,13 @@
+@@ -433,9 +501,13 @@
  # current env, or into globals.
  def define(it: mut Interpreter, name: value.ObjRef, slot: int):
      if slot == ast.GLOBAL:
@@ -737,7 +748,7 @@
  
  
  def class_node(it: Interpreter, id: int) -> ast.ClassStmt:
-@@ -475,7 +543,9 @@
+@@ -475,7 +547,9 @@
  def class_declaration(it: mut Interpreter, id: int) -> Result[None, RuntimeError]:
      node = class_node(it, id)
      if node.slot == ast.GLOBAL:
@@ -748,7 +759,7 @@
      superclass = value.NO_OBJ
      match node.superclass:
          case Some(expr):
-@@ -483,30 +553,57 @@
+@@ -483,30 +557,57 @@
          case None:
              pass
      klass = object.ClassObj(name=node.name_ref, methods=table.new_table())
@@ -816,7 +827,7 @@
      return outcome
  
  
-@@ -518,16 +615,27 @@
+@@ -518,16 +619,27 @@
              class_declaration(mut it, id)?
          case ast.Stmt.expression(expr):
              evaluate(mut it, expr)?
@@ -849,7 +860,7 @@
                  return execute(mut it, node.then_branch)
              match node.else_branch:
                  case Some(branch):
-@@ -536,28 +644,43 @@
+@@ -536,28 +648,43 @@
                      pass
          case ast.Stmt.print(expr):
              evaluate(mut it, expr)?
@@ -900,7 +911,7 @@
                      return Ok(Flow.NORMAL)
                  flow = execute(mut it, node.body)?
                  if flow == Flow.RETURN:
-@@ -592,7 +715,8 @@
+@@ -592,7 +719,8 @@
  public def interpret(rt: mut heap.Runtime, o: mut output.Output, source: bytes) -> int:
      natives.start(mut rt)
      match parser.parse(mut rt, mut o, source):
@@ -910,7 +921,7 @@
              if not resolver.resolve(mut program, source, mut o):
                  return 65
              it = Interpreter(program=program, rt=rt, out=o, depth=0, returned=value.Value.nil)
-@@ -601,9 +725,17 @@
+@@ -601,9 +729,17 @@
                      case Ok(_):
                          pass
                      case Err(error):
@@ -1271,3 +1282,41 @@
          if not ok:
              return InterpretResult.RUNTIME_ERROR
  
+--- a/driver_tests.my
++++ b/driver_tests.my
+@@ -95,3 +95,15 @@
+     same_output = vm.stdout == b"20\ndone!\n" and vm_stress.stdout == vm.stdout and tree.stdout == vm.stdout and tree_stress.stdout == vm.stdout
+     stressed = vm_stress.collections == vm_stress.allocations and tree_stress.collections == tree_stress.allocations
+     return same_output and stressed and vm_stress.status == 0 and tree_stress.status == 0
++
++
++# A setter must retain property changes made while evaluating its RHS.
++public def test_run_set_rhs_keeps_receiver_mutations(out: Stream) -> bool:
++    source = b"class Box {} var box = Box(); box.keep = 1; fun rhs() { box.keep = 9; return 7; } box.value = rhs(); print box.keep; print box.value;"
++    return prints(source, b"9\n7\n", out)
++
++
++# The receiver is the object evaluated before the RHS rebinds its variable.
++public def test_run_set_rhs_keeps_original_receiver(out: Stream) -> bool:
++    source = b"class Box {} var box = Box(); var saved = box; saved.keep = 1; fun rhs() { box = Box(); box.value = 42; saved.keep = 9; return 7; } box.value = rhs(); print saved.keep; print saved.value; print box.value;"
++    return prints(source, b"9\n7\n42\n", out)
+--- a/driver_cases.json
++++ b/driver_cases.json
+@@ -53,5 +53,15 @@
+     "providers": {
+       "natives.my": "module natives\n# Test fixture for driver_tests.my (see driver_cases.json): natives.my with\n# a `clock` that returns 0 instead of reading the Clock capability.\nimport heap\nimport lox_strings\nimport object\nimport value\n\n\npublic const CLOCK: int = 0\n\n\npublic def call_native(rt: heap.Runtime, id: int) -> value.Value:\n    assert id == CLOCK, \"unknown native\"\n    _ = rt\n    return value.Value.number(0.0)\n\n\npublic def start(rt: mut heap.Runtime):\n    rt.init_string = lox_strings.copy_string(mut rt, b\"init\")\n    define_natives(mut rt)\n\n\ndef define_natives(rt: mut heap.Runtime):\n    name = lox_strings.copy_string(mut rt, b\"clock\")\n    heap.push(mut rt, value.Value.obj(name))\n    native = heap.allocate(mut rt, object.Obj.native(object.NativeObj(id=CLOCK, arity=0)))\n    heap.push(mut rt, value.Value.obj(native))\n    _ = heap.set_global(mut rt, name, value.Value.obj(native))\n    _ = heap.pop(mut rt)\n    _ = heap.pop(mut rt)\n"
+     }
++  },
++  "driver_tests::test_run_set_rhs_keeps_receiver_mutations": {
++    "providers": {
++      "natives.my": "module natives\n# Test fixture for driver_tests.my (see driver_cases.json): natives.my with\n# a `clock` that returns 0 instead of reading the Clock capability.\nimport heap\nimport lox_strings\nimport object\nimport value\n\n\npublic const CLOCK: int = 0\n\n\npublic def call_native(rt: heap.Runtime, id: int) -> value.Value:\n    assert id == CLOCK, \"unknown native\"\n    _ = rt\n    return value.Value.number(0.0)\n\n\npublic def start(rt: mut heap.Runtime):\n    rt.init_string = lox_strings.copy_string(mut rt, b\"init\")\n    define_natives(mut rt)\n\n\ndef define_natives(rt: mut heap.Runtime):\n    name = lox_strings.copy_string(mut rt, b\"clock\")\n    heap.push(mut rt, value.Value.obj(name))\n    native = heap.allocate(mut rt, object.Obj.native(object.NativeObj(id=CLOCK, arity=0)))\n    heap.push(mut rt, value.Value.obj(native))\n    _ = heap.set_global(mut rt, name, value.Value.obj(native))\n    _ = heap.pop(mut rt)\n    _ = heap.pop(mut rt)\n"
++    }
++  },
++  "driver_tests::test_run_set_rhs_keeps_original_receiver": {
++    "providers": {
++      "natives.my": "module natives\n# Test fixture for driver_tests.my (see driver_cases.json): natives.my with\n# a `clock` that returns 0 instead of reading the Clock capability.\nimport heap\nimport lox_strings\nimport object\nimport value\n\n\npublic const CLOCK: int = 0\n\n\npublic def call_native(rt: heap.Runtime, id: int) -> value.Value:\n    assert id == CLOCK, \"unknown native\"\n    _ = rt\n    return value.Value.number(0.0)\n\n\npublic def start(rt: mut heap.Runtime):\n    rt.init_string = lox_strings.copy_string(mut rt, b\"init\")\n    define_natives(mut rt)\n\n\ndef define_natives(rt: mut heap.Runtime):\n    name = lox_strings.copy_string(mut rt, b\"clock\")\n    heap.push(mut rt, value.Value.obj(name))\n    native = heap.allocate(mut rt, object.Obj.native(object.NativeObj(id=CLOCK, arity=0)))\n    heap.push(mut rt, value.Value.obj(native))\n    _ = heap.set_global(mut rt, name, value.Value.obj(native))\n    _ = heap.pop(mut rt)\n    _ = heap.pop(mut rt)\n"
++    }
+   }
+-}
+\ No newline at end of file
++}
