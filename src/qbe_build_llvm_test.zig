@@ -183,6 +183,18 @@ test "a trace recorder call goes to its preserve_most twin under preserve_mostcc
 }
 
 // spec-case: LLVM-ZIG-1
+test "network host narrowing translates with the checked capability ABI" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const table = try bundledTable(arena.allocator());
+    const signatures: llvm.Signatures = .empty;
+    var diagnostic: llvm.Diagnostic = .{ .unit = "network-host" };
+    const unit = "export function l $f(l %ctx, l %cap, l %host) {\n@start\n %v =l call $myl_qbe_host_resource(l %ctx, l %cap, l %host, l 4)\n ret %v\n}\n";
+    const translated = try llvm.translate(arena.allocator(), unit, .{ .signatures = &signatures, .runtime = &table }, &diagnostic);
+    try std.testing.expect(std.mem.indexOf(u8, translated, "declare i64 @myl_qbe_host_resource(ptr, i64, ptr, i64)") != null);
+}
+
+// spec-case: LLVM-ZIG-1
 test "the runtime registry reads helpers from headers and Zig exports and refuses unknown types" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
