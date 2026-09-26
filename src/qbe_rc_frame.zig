@@ -42,6 +42,7 @@ pub fn Lower(comptime E: type) type {
         /// Link only after every guard is initialized and every parameter is stored.
         pub fn enter(self: *E) Error!void {
             const state = get(E, self) orelse return;
+            if (fixedRegion(E, self)) try self.print(" %rcregion =l call $myl_qbe_region_mark(l %ctx)\n", .{});
             const size = count(E, self, state);
             try self.print(" call $memset(l %rcguards, w 0, l {d})\n call $memset(l %rcentries, w 0, l {d})\n", .{ size * 8, size * entry_bytes });
             for (state.locals.storage, 0..) |slot, index| {
@@ -103,6 +104,22 @@ pub fn guard(comptime E: type, self: *E, index: usize) Error!usize {
     const result = self.temp();
     try self.print(" %v{d} =l add %rcguards, {d}\n", .{ result, index * 8 });
     return result;
+}
+/// Read this transfer's arena depth, reusing the entry value in stable frames.
+/// Callees restore their own scopes before returning, including on failure.
+pub fn region(comptime E: type, self: *E) Error!usize {
+    const result = self.temp();
+    if (fixedRegion(E, self)) {
+        try self.print(" %v{d} =l copy %rcregion\n", .{result});
+    } else try self.print(" %v{d} =l call $myl_qbe_region_mark(l %ctx)\n", .{result});
+    return result;
+}
+fn fixedRegion(comptime E: type, self: *E) bool {
+    for (self.function.scope.instructions) |instruction| switch (instruction.op) {
+        .begin_arena, .end_arena => return false,
+        else => {},
+    };
+    return true;
 }
 /// Publish metadata while the entry has no initialized token.
 pub fn entry(comptime E: type, self: *E, index: usize, ty: typed.Type, address: usize) Error!void {

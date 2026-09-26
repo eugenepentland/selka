@@ -1360,3 +1360,5 @@ host failure in one worker leaves the units the other workers hold running.
 - [RC-PRODUCED-OWNER-1] An immediately preceding unconditional ordinary-owner producer may skip its operand initialization test. Branch entries, held mappings, borrowed entries and other producers keep guarded transfers; pin, arena and failure behavior stays on the existing typed TAKE path.
 
 - [RC-STABLE-JOURNAL-1] Operand and pending RC journal entries retain their entry-time storage and guard addresses across typed publications. Type and ownership-role flags still change before initialization, so reused stack positions and held/ordinary transitions clean up their current values.
+
+- [RC-FRAME-REGION-1] RC functions without arena boundary instructions reuse their entry region depth for typed transfers. Functions that open or close arenas read the current depth at each transfer; callees restore their own scopes before returning.
