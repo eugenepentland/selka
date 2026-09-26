@@ -37,8 +37,8 @@ for every accepted package above.
 
 | Work | Branch/worktree | Remaining acceptance |
 |---|---|---|
-| WP-3b COW | `d9/stage3b`, `../d9-stage3b` | Full gate green at `54edf716` (93/93 test steps, 51/51 QBE steps and 426 tests, QBE-build 29/29, formatting 2/2). Million-node scalar copies pass both backends; mutable depth overflow reports `R_COW_DEPTH`. Dynamic counting and field-transfer optimization added afterward; final performance and refreshed gate pending |
-| WP-3f default flip | Preparation at `codex/d9-stage3f-prep` (`a7a6a850`) | CPython-oracle preparation retains three explicit list/nested-list/dictionary divergences; 113-probe switch-on suite has zero undeclared disagreements. Isolated default activation supports explicit `--legacy-sharing`, project configuration and inherited mode. Documentation examples pass (203 run, 51 checked); guest and embedded-test migration is in progress. Integration waits for the complete default gate and 3b performance acceptance |
+| WP-3b COW | `d9/stage3b`, `../d9-stage3b` | Full gate green at `efbc4285`: 93/93 test steps, 2,087 tests; QBE 51/51 and 428 tests; QBE-build 29/29; formatting 2/2. [Performance evidence](d9-stage3b-performance-2026-09-26.md) preserves median-three measurements; LLVM historical-source and class-free Lox results fail the required thresholds |
+| WP-3f default flip | Preparation at `codex/d9-stage3f-prep` (`a7a6a850`) | CPython-oracle preparation retains three explicit list/nested-list/dictionary divergences; 113-probe switch-on suite has zero undeclared disagreements. Isolated default activation supports explicit `--legacy-sharing`, project configuration and inherited mode. Documentation examples pass (203 run, 51 checked), forced GC-stress language guests pass 652/652, and the first joined main gate passes all 2,106 Zig tests. Legacy Cell guests have a separate explicit compatibility lane (2/2). Remaining smoke/golden expectations and option-order configuration discovery are being fixed before the final full gate. Integration also waits for 3b performance acceptance |
 | WP-4 reference counting | Not started | Requires 3f/4pre and the RC performance/RSS gate, including rewritten graph programs |
 | WP-5 concurrency | Not started | Design after WP-4, following the existing concurrency proposal |
 
@@ -51,12 +51,12 @@ joined validation remain required.
 ## Performance work still blocking acceptance
 
 The latest class-free Lox VM equality measurement (N=30,000, QBE guest
-ReleaseFast, Debug compiler) is 3,826,313,185 instructions versus the exact
-`60b668cf` class baseline's 1,018,578,442 (3.756×), with identical stdout.
-The optional source optimization is `871cd525`; the private-scratch lowering is
+ReleaseFast, Debug compiler) is 2,683,967,077 instructions versus the exact
+`60b668cf` class baseline's 1,018,576,990 (2.635×), with identical stdout.
+The optional source optimization is `ebe6b78f`; the private-scratch lowering is
 `0e18d2bc`. This remains a hard performance blocker. Matrix multiplication and
 byte scanning now match baseline closely after keeping COW transfer operand
-scratch local to QBE. Median-of-three full-suite measurement is running.
+scratch local to QBE. The 116-key median-three sweep is preserved in the performance report. Parity geomeans are 1.0031× QBE and 1.0018× LLVM; Lox remains the blocker.
 
 Field extraction/store-back proofs progressed from `b456c84b` through
 `85667ce3` to `d83e26a0`. Matched ReleaseFast tree N=4 measurements fell from
@@ -65,3 +65,11 @@ stdout. An earlier comparison of 390.8 billion to 36.1 billion mixed guest
 Debug and ReleaseFast modes and is invalid; all compiler builds remained Debug.
 These reductions are progress, not a performance pass. Stage 3f remains isolated
 until the strict stage 3 limits hold.
+
+A matched QBE ReleaseFast tree-interpreter N=4 median-three comparison also
+remains far outside the target: 63,001,763 instructions for the class baseline,
+6,909,105,659 for the pinned class-free source, and 5,373,781,841 for the
+optimized class-free source (85.3× baseline). Every output matched. Profiling
+attributes much of this cost to repeated recursive-box descendant sharing.
+The next compiler experiment targets that traversal while preserving snapshot,
+pin and arena guarantees; it has not yet earned acceptance.
