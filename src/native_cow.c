@@ -59,9 +59,9 @@ static int holds_payload_path(const myl_native_type *type, const myl_native_type
     seen[depth++] = type;
     switch (type->kind) {
     case MYL_NATIVE_POINTER:
-        /* A recursive box is immutable. Its body is shallow-shared when a
-         * guest projection materializes it, never when the box pointer moves. */
-        if (type->collection_kind == 5) return 0;
+        /* Stop at a box without examining its body. Usually its transfer is
+         * a no-op; a pending receiver can temporarily pin this exact box. */
+        if (type->collection_kind == 5) return 1;
         return type->collection_kind == 1 || type->collection_kind == 3 || type->collection_kind == 4;
     case MYL_NATIVE_ARRAY:
         return type->count && type->field_count ? holds_payload_path(type->fields[0].type, seen, depth) : 0;
@@ -111,6 +111,16 @@ static int share_at(myl_native_heap *heap, const myl_native_type *type, unsigned
     if (type->trace_mode == MYL_NATIVE_TRACE_NONE) return 1;
     switch (type->kind) {
     case MYL_NATIVE_POINTER: {
+        if (type->collection_kind == 5) {
+            void *box;
+            memcpy(&box, address, sizeof box);
+            if (!box || !(header_of(box)->mark & MYL_NATIVE_OBJECT_PINNED)) return 1;
+            if (!replace) return 2;
+            void *copy = myl_native_cow_clone_box(heap, type, box, NULL);
+            if (!copy) return 0;
+            memcpy(address, &copy, sizeof copy);
+            return 1;
+        }
         if (type->collection_kind != 1 && type->collection_kind != 3 && type->collection_kind != 4) return 1;
         void *payload;
         memcpy(&payload, address, sizeof payload);
@@ -350,4 +360,86 @@ int myl_native_cow_elements(myl_native_heap *heap, myl_native_list *list) {
     }
     myl_native_root_pop(heap, &root);
     return done;
+}
+
+/* Temporary pins preserve the identity eager value copies give a receiver
+ * evaluated before a callback. No collection entry needs persistent metadata. */
+typedef struct myl_native_cow_scope_link {
+    struct myl_native_cow_scope_link *previous;
+    void *payload;
+    uintptr_t pinned;
+} myl_native_cow_scope_link;
+const myl_native_type myl_native_cow_scope_type = {
+    .size = sizeof(void *), .alignment = _Alignof(void *), .kind = MYL_NATIVE_POINTER
+};
+static const myl_native_field scope_fields[] = {
+    { offsetof(myl_native_cow_scope_link, previous), &myl_native_cow_scope_type, 0 },
+    { offsetof(myl_native_cow_scope_link, payload), &myl_native_cow_scope_type, 0 }
+};
+static const myl_native_type scope_link_type = {
+    .size = sizeof(myl_native_cow_scope_link), .alignment = _Alignof(myl_native_cow_scope_link),
+    .kind = MYL_NATIVE_RECORD, .fields = scope_fields, .field_count = 2
+};
+static int scope_pin(myl_native_heap *heap, void **pins, void *payload) {
+    if (!payload) return 1;
+    myl_native_root root;
+    myl_native_root_push(heap, &root, &payload, &pointer_type);
+    myl_native_cow_scope_link *link = myl_native_heap_alloc(heap, &scope_link_type, 1);
+    myl_native_root_pop(heap, &root);
+    if (!link) return 0;
+    link->previous = *pins;
+    link->payload = payload;
+    link->pinned = header_of(payload)->mark & MYL_NATIVE_OBJECT_PINNED;
+    *pins = link;
+    header_of(payload)->mark |= MYL_NATIVE_OBJECT_PINNED;
+    return 1;
+}
+int myl_native_cow_scope_pin(myl_native_heap *heap, void **pins, void *payload) {
+    return scope_pin(heap, pins, payload);
+}
+/* The projection has one step per source field/array selection. It never
+ * follows a recursive sibling merely because its descriptor reaches one. */
+static int scope_prepare_at(myl_native_heap *heap, void **pins, unsigned char *address,
+                            const myl_native_cow_path *path, size_t count) {
+    if (!count) {
+        void *payload;
+        memcpy(&payload, address, sizeof payload);
+        if (!payload || !myl_native_cow_payload(payload)) return 1;
+        void *copy = myl_native_cow_unique(heap, payload);
+        if (!copy) return 0;
+        memcpy(address, &copy, sizeof copy);
+        return scope_pin(heap, pins, copy);
+    }
+    const myl_native_type *type = path->type;
+    if (type->kind == MYL_NATIVE_ARRAY) {
+        for (size_t i = 0; i < type->count; ++i)
+            if (!scope_prepare_at(heap, pins, address + i * type->stride, path + 1, count - 1)) return 0;
+        return 1;
+    }
+    if (type->kind == MYL_NATIVE_POINTER) {
+        void *body;
+        memcpy(&body, address, sizeof body);
+        if (!body) return 1;
+        if (type->collection_kind == 5) {
+            body = myl_native_cow_clone_box(heap, type, body, NULL);
+            if (!body) return 0;
+            memcpy(address, &body, sizeof body);
+            if (!scope_pin(heap, pins, body)) return 0;
+        }
+        int done = scope_prepare_at(heap, pins, (unsigned char *)body + path->offset, path + 1, count - 1);
+        myl_native_heap_remember(heap, body);
+        return done;
+    }
+    return scope_prepare_at(heap, pins, address + path->offset, path + 1, count - 1);
+}
+int myl_native_cow_scope_prepare(myl_native_heap *heap, void **pins, void *address,
+                                 const myl_native_cow_path *path, size_t count) {
+    return !address || scope_prepare_at(heap, pins, address, path, count);
+}
+void myl_native_cow_scope_release(void *pins) {
+    myl_native_cow_scope_link *link = pins;
+    for (; link; link = link->previous) {
+        uintptr_t *mark_word = &header_of(link->payload)->mark;
+        *mark_word = (*mark_word & ~MYL_NATIVE_OBJECT_PINNED) | link->pinned;
+    }
 }

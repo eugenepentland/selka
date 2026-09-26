@@ -80,6 +80,19 @@ void *myl_native_cow_copy(myl_native_heap *heap, void *payload);
  * writes go through elements it cannot share runs this once on entry instead
  * of a check per write. Returns 0 when a copy is refused. */
 int myl_native_cow_elements(myl_native_heap *heap, myl_native_list *list);
+/* A pending inline-array receiver keeps its direct collection leaves unique
+ * and pinned while later indices run guest code. The caller roots the linked
+ * pin list through a native root of scope_type, restores it on every exit,
+ * and keeps the addressed aggregate and its enclosing owners rooted while
+ * preparing it. The nodes use the ordinary managed allocation budget. */
+extern const myl_native_type myl_native_cow_scope_type;
+int myl_native_cow_scope_pin(myl_native_heap *, void **pins, void *payload);
+/* Each step selects every element of an array, or one field at offset. Its
+ * descriptor names the source representation, including a boxed/class body. */
+typedef struct { const myl_native_type *type; size_t offset; } myl_native_cow_path;
+int myl_native_cow_scope_prepare(myl_native_heap *, void **pins, void *address,
+                                 const myl_native_cow_path *path, size_t count);
+void myl_native_cow_scope_release(void *pins);
 /* Copy-on-write counters (COW-STATS-1). Only a counting build calls
  * `myl_native_cow_tally` at its inline mark, check and pin sites, enabling
  * copy counters and one `cow-stats {...}` JSON line at exit. An ordinary
