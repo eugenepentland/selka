@@ -335,7 +335,7 @@ static void temporary_binding_test(void) {
     static const myl_native_type other = {.size = sizeof(void *), .alignment = _Alignof(void *), .kind = MYL_NATIVE_POINTER};
     descriptor = (myl_rc_descriptor){.type = &other, .shape = &pointer_shape};
     before = heap.bytes;
-    heap.limit = before + 1500;
+    heap.limit = before + 1000;
     assert(myl_rc_descriptor_import(&heap, &descriptor) == MYL_RC_ALLOCATION_REFUSED);
     assert(heap.bytes == before && !myl_rc_descriptor_find(&heap, &other));
     heap.limit = ((size_t)256) << 20;
