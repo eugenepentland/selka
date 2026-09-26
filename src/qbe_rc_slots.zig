@@ -13,6 +13,8 @@ pub const Transfer = struct {
     source: usize,
     region: usize,
     mode: Mode,
+    /// The complete value ranges occupy distinct compiler-reserved buffers.
+    disjoint: bool = false,
 };
 /// One initialized frame value; guard names its 32-bit initialization slot.
 pub const OwnedSlot = struct {
