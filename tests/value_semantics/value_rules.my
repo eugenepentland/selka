@@ -1,0 +1,132 @@
+module value_rules
+
+# The value-semantics rules (VALUE-SEMANTICS-2..5), ported from the P3
+# prototype. `zig build test-value-semantics` runs this directory with
+# `--value-semantics`; these tests assert value semantics, which the default
+# model does not have, so they are not part of tests/lang.
+
+record Counter:
+    n: int
+    items: list[int]
+
+
+record Pair:
+    left: Counter
+    right: Counter
+
+
+def appended(xs: list[int]) -> list[int]:
+    ys = xs
+    ys.append(9)
+    return ys
+
+
+def grown(xss: list[list[int]]) -> list[list[int]]:
+    ys = xss.copy()
+    ys[0].append(1)
+    return ys
+
+
+def identity(xs: list[int]) -> list[int]:
+    return xs
+
+
+def bump(c: mut Counter) -> None:
+    c.n = c.n + 1
+    c.items.append(c.n)
+
+
+def bump_left(p: mut Pair) -> None:
+    p.left.n = p.left.n + 10
+    p.right.items.append(7)
+
+
+def reset(c: mut Counter) -> None:
+    c = Counter(n=0, items=[])
+
+
+def touch(target: mut list[int], source: list[int]) -> int:
+    target.append(len(source))
+    return len(source)
+
+
+# A local that received a copy of a parameter is the function's own value.
+# spec: VALUE-SEMANTICS-4
+public def test_a_copy_of_a_parameter_is_writable_without_mut() -> bool:
+    a = [1]
+    b = appended(a)
+    return a == [1] and b == [1, 9]
+
+
+# Nested writes after `.copy()` change only the copy.
+public def test_nested_writes_after_copy_stay_in_the_copy() -> bool:
+    original = [[0], [5]]
+    changed = grown(original)
+    return original == [[0], [5]] and changed == [[0, 1], [5]]
+
+
+# A returned parameter is the caller's own copy.
+public def test_a_returned_parameter_does_not_alias_the_argument() -> bool:
+    a = [1]
+    e = identity(a)
+    e.append(3)
+    return a == [1] and e == [1, 3]
+
+
+# Field assignment through a `mut` record parameter reaches the caller.
+# spec: VALUE-SEMANTICS-3
+public def test_mut_record_parameter_is_inout() -> bool:
+    c = Counter(n=0, items=[])
+    bump(mut c)
+    bump(mut c)
+    return c.n == 2 and c.items == [1, 2]
+
+
+# Nested field and collection writes through a `mut` record parameter.
+public def test_nested_writes_through_a_mut_record() -> bool:
+    p = Pair(left=Counter(n=1, items=[]), right=Counter(n=0, items=[]))
+    bump_left(mut p)
+    return p.left.n == 11 and p.right.items == [7]
+
+
+# Rebinding a `mut` record parameter as a whole replaces the caller's value.
+public def test_rebinding_a_mut_record_replaces_the_callers_value() -> bool:
+    c = Counter(n=5, items=[1])
+    reset(mut c)
+    return c.n == 0 and len(c.items) == 0
+
+
+# A read-only argument that shares a root with a `mut` argument is a
+# snapshot taken before the call, so the callee's write is not seen through it.
+# spec: VALUE-SEMANTICS-5
+public def test_a_read_only_argument_is_a_snapshot_of_a_mut_one() -> bool:
+    a = [1, 2]
+    seen = touch(mut a, a)
+    return seen == 2 and a == [1, 2, 2]
+
+
+# Assignment, storage and element reads are independent copies.
+# spec: VALUE-SEMANTICS-2
+public def test_assignment_and_storage_copy() -> bool:
+    a = [1]
+    b = a
+    b.append(2)
+    rows: list[list[int]] = []
+    rows.append(a)
+    a.append(3)
+    first = rows[0]
+    first.append(4)
+    return a == [1, 3] and b == [1, 2] and rows == [[1]] and first == [1, 4]
+
+
+# A loop variable holds a copy; changing the collection goes through its place.
+public def test_loop_changes_go_through_the_place() -> bool:
+    grid = [[1], [2]]
+    for i in range(len(grid)):
+        grid[i].append(0)
+    total = 0
+    for row in grid:
+        local = row
+        local.append(5)
+        total = total + len(local)
+    return grid == [[1, 0], [2, 0]] and total == 6

@@ -8,6 +8,7 @@ pub const LowerError = error{
 const std = @import("std");
 const typed = @import("typed.zig");
 const bc = @import("bytecode.zig");
+const value_semantics = @import("value_semantics.zig");
 const Span = @import("source.zig").Span;
 const Label = enum(usize) { _ };
 const Work = union(enum) {
@@ -36,6 +37,9 @@ const Emitter = struct {
     work: std.ArrayList(Work) = .empty,
     labels: std.ArrayList(?usize) = .empty,
     fixups: std.ArrayList(Fixup) = .empty,
+    /// VALUE-SEMANTICS-2: this function's lowering facts under value
+    /// semantics, or null with the switch off (no copy is ever placed).
+    values: ?*const value_semantics.Facts = null,
 
     fn push(self: *Emitter, task: Work) !void {
         try self.work.append(self.scratch, task);
@@ -52,26 +56,79 @@ const Emitter = struct {
         if (call.evaluation) |evaluation| for (evaluation.cleanup) |slot| try self.instruction(span, .{ .drop_local = slot });
         try self.instruction(span, .{ .call = call.function });
         const callee = self.program.functions[@backingInt(call.function)];
+        const writable = try self.writableArguments(call.arguments, callee.signature.declared_mutates);
         var i = call.arguments.len;
         while (i > 0) {
             i -= 1;
-            // A `mut` fixed array crosses as the caller's own variable, which
-            // the checker proved the argument names.
+            // A `mut` fixed array (or, under value semantics, record) crosses
+            // as the caller's own variable, which the checker proved the
+            // argument names.
             if (referencePosition(self.program, callee, i)) {
                 const argument = self.program.nodes[@backingInt(call.arguments[i])];
                 if (argument.data != .local) return error.InternalError;
                 try self.instruction(argument.span, .{ .ref_local = argument.data.local });
-            } else try self.push(.{ .expression = call.arguments[i] });
+            } else if (declaredMutable(callee.signature.declared_mutates, i)) {
+                try self.push(.{ .expression = call.arguments[i] });
+            } else try self.readOnlyArgument(call.arguments[i], writable);
         }
         if (call.evaluation) |evaluation| try self.push(.{ .statement = evaluation.body });
     }
-    /// Whether parameter `position` of `callee` is a `mut` fixed array, which
-    /// receives the address of the caller's variable instead of a copy.
+    /// Whether parameter `position` of `callee` is a `mut` fixed array (or,
+    /// under value semantics, record), which receives the address of the
+    /// caller's variable instead of a copy.
     fn referencePosition(program: typed.Program, callee: typed.Function, position: usize) bool {
         if (position >= callee.signature.parameter_count) return false;
         for (callee.signature.declared_mutates) |declared| if (declared == position)
-            return typed.referenceArray(program.records, callee.scope.locals[position].ty);
+            return typed.referenceMut(program.records, callee.scope.locals[position].ty);
         return false;
+    }
+    /// Whether `position` is one of a callee's declared `mut` positions: its
+    /// argument is the caller's own value, never a value-semantics copy.
+    fn declaredMutable(positions: []const u16, position: usize) bool {
+        for (positions) |declared| if (declared == position) return true;
+        return false;
+    }
+    /// The arguments bound to `mut` positions, which the callee may write
+    /// while it reads the others; empty with value semantics off.
+    fn writableArguments(self: *Emitter, arguments: []const typed.NodeId, positions: []const u16) ![]const typed.NodeId {
+        if (self.values == null) return &.{};
+        var chosen: std.ArrayList(typed.NodeId) = .empty;
+        for (positions) |position| if (position < arguments.len) try chosen.append(self.scratch, arguments[position]);
+        return chosen.items;
+    }
+    /// VALUE-SEMANTICS-5: a read-only argument is lent, since the callee
+    /// cannot write it, unless a `mut` argument of the same call could reach
+    /// it: then it is a real copy taken before the call.
+    fn readOnlyArgument(self: *Emitter, id: typed.NodeId, writable: []const typed.NodeId) !void {
+        const values = self.values orelse return self.push(.{ .expression = id });
+        if (writable.len == 0 or !value_semantics.argumentConflicts(values, id, writable)) return self.push(.{ .expression = id });
+        try self.copyAfter(id, .argument);
+        try self.push(.{ .expression = id });
+    }
+    /// VALUE-SEMANTICS-2: push `id` as a value moving to a second home
+    /// (`target` names the local it is stored into). Under value semantics a
+    /// `value_copy` follows it unless the value is fresh; the ownership
+    /// analysis later leaves out every copy that is a move or a borrow.
+    fn transfer(self: *Emitter, id: typed.NodeId, site: bc.CopySite, target: ?typed.LocalId) !void {
+        if (self.values) |values| {
+            const ty = self.program.nodes[@backingInt(id)].ty;
+            if (value_semantics.needsCopy(self.program.records, ty) and values.classify(id, target) == .place) try self.copyAfter(id, site);
+        }
+        try self.push(.{ .expression = id });
+    }
+    /// Queue the one `value_copy` of `id`'s value, to run after it.
+    fn copyAfter(self: *Emitter, id: typed.NodeId, site: bc.CopySite) !void {
+        const node = self.program.nodes[@backingInt(id)];
+        try self.instruction(node.span, .{ .value_copy = .{ .ty = node.ty, .site = site } });
+    }
+    /// Under value semantics, a shallow copy, slice or concatenation of a
+    /// collection whose elements hold collections copies those elements too,
+    /// so the fresh result shares nothing. Queued before the operation itself.
+    fn childrenCopy(self: *Emitter, id: typed.NodeId) !void {
+        if (self.values == null) return;
+        const node = self.program.nodes[@backingInt(id)];
+        if (!value_semantics.childrenNeedCopy(self.program.records, node.ty)) return;
+        try self.instruction(node.span, .{ .value_copy = .{ .ty = node.ty, .site = .children } });
     }
     /// Values evaluate in source order, then `sep=` and finally `end=`. A stream
     /// receiver evaluates first and sits at the stack bottom. A dropped `debug`
@@ -166,7 +223,7 @@ const Emitter = struct {
             },
             .ret => |value| {
                 try self.instruction(stmt.span, .ret);
-                try self.push(.{ .expression = value });
+                try self.transfer(value, .ret, null);
             },
             .assertion => |check| {
                 if (check.message_value) |message| {
@@ -185,7 +242,12 @@ const Emitter = struct {
             },
             .initialize, .assign => |store| {
                 try self.instruction(stmt.span, .{ .store_local = store.slot });
-                try self.push(.{ .expression = store.value });
+                // A compiler temporary is a path to the value it holds, never a
+                // second home, so only a store into a named local transfers.
+                if (self.values != null and self.values.?.namedStore(store.slot))
+                    try self.transfer(store.value, .assign, store.slot)
+                else
+                    try self.push(.{ .expression = store.value });
             },
             .match => |match| {
                 const end = try self.label();
@@ -200,6 +262,7 @@ const Emitter = struct {
                     slots[arm.tag] = arm.slot;
                     if (!self.program.statements[@backingInt(arm.body)].terminates) try self.push(.{ .jump = .{ .target = end, .span = stmt.span } });
                     try self.push(.{ .statement = arm.body });
+                    if (arm.slot) |slot| try self.payloadCopy(stmt.span, match.value, slot);
                     try self.push(.{ .mark = targets[arm.tag] });
                 }
                 try self.push(.{ .dispatch = .{ .ty = self.program.nodes[@backingInt(match.value)].ty, .targets = targets, .slots = slots, .span = stmt.span } });
@@ -241,6 +304,22 @@ const Emitter = struct {
             },
         }
     }
+    /// VALUE-SEMANTICS-2: a named match binding of a payload another name
+    /// holds is rebound, at the top of its arm, to a copy of that payload
+    /// unless the ownership analysis proves the binding a move or a borrow.
+    fn payloadCopy(self: *Emitter, span: Span, scrutinee: typed.NodeId, slot: typed.LocalId) !void {
+        const values = self.values orelse return;
+        if (!values.namedStore(slot)) return;
+        const ty = values.function.scope.locals[@backingInt(slot)].ty;
+        if (!value_semantics.needsCopy(self.program.records, ty)) return;
+        if (values.classify(scrutinee, null) == .fresh) return;
+        const handled = typed.moveOnly(ty, self.program.records) or typed.requiresHandling(ty, self.program.records);
+        // Pushed in reverse: the arm reloads its binding, copies it and
+        // stores the copy back before its body runs.
+        try self.instruction(span, .{ .store_local = slot });
+        try self.instruction(span, .{ .value_copy = .{ .ty = ty, .site = .payload } });
+        try self.instruction(span, if (handled) .{ .move_local = slot } else .{ .load_local = slot });
+    }
     fn emitExpression(self: *Emitter, id: typed.NodeId) !void {
         const node = self.program.nodes[@backingInt(id)];
         switch (node.data) {
@@ -260,14 +339,14 @@ const Emitter = struct {
             },
             .variant => |variant| {
                 try self.instruction(node.span, .{ .make_variant = .{ .ty = node.ty, .tag = variant.tag } });
-                if (variant.value) |value| try self.push(.{ .expression = value });
+                if (variant.value) |value| try self.transfer(value, .store, null);
             },
             .array => |values| {
                 try self.instruction(node.span, .{ .make_record = .{ .ty = node.ty, .fields = values.len } });
                 var i = values.len;
                 while (i > 0) {
                     i -= 1;
-                    try self.push(.{ .expression = values[i] });
+                    try self.transfer(values[i], .store, null);
                 }
             },
             .index => |access| {
@@ -277,7 +356,7 @@ const Emitter = struct {
             },
             .replace => |replace| {
                 try self.instruction(node.span, .{ .replace_index = .{ .ty = node.ty, .from_end = replace.from_end } });
-                try self.push(.{ .expression = replace.value });
+                try self.transfer(replace.value, .store, null);
                 try self.push(.{ .expression = replace.index });
                 try self.push(.{ .expression = replace.base });
             },
@@ -289,13 +368,13 @@ const Emitter = struct {
                 const order = try self.allocator.alloc(usize, fields.len);
                 for (fields, order) |field, *index| index.* = field.index;
                 try self.instruction(node.span, .{ .make_record = .{ .ty = node.ty, .fields = fields.len, .order = order } });
-                try self.pushFields(fields);
+                try self.pushFields(fields, node.ty);
             },
             .update => |update| {
                 const indices = try self.allocator.alloc(usize, update.fields.len);
                 for (update.fields, indices) |field, *index| index.* = field.index;
                 try self.instruction(node.span, .{ .update_record = .{ .ty = node.ty, .indices = indices } });
-                try self.pushFields(update.fields);
+                try self.pushFields(update.fields, node.ty);
                 try self.push(.{ .expression = update.base });
             },
             .field => |field| {
@@ -318,11 +397,13 @@ const Emitter = struct {
             .boolean => |value| try self.instruction(node.span, .{ .push_bool = value }),
             .unit => try self.instruction(node.span, .push_unit),
             .buffer_operation => |operation| {
+                if (value_semantics.shallowResult(operation.kind)) try self.childrenCopy(id);
                 try self.instruction(node.span, .{ .buffer_operation = .{ .kind = operation.kind, .owner = operation.owner, .output = node.ty } });
+                const stored = self.storedArgument(operation);
                 var i = operation.arguments.len;
                 while (i > 0) {
                     i -= 1;
-                    try self.push(.{ .expression = operation.arguments[i] });
+                    if (stored == i) try self.transfer(operation.arguments[i], .store, null) else try self.push(.{ .expression = operation.arguments[i] });
                 }
             },
             .arena_escape => |value| {
@@ -414,11 +495,14 @@ const Emitter = struct {
             .local => |slot| try self.instruction(node.span, if (typed.moveOnly(node.ty, self.program.records) or typed.requiresHandling(node.ty, self.program.records)) .{ .move_local = slot } else .{ .load_local = slot }),
             .function_value => |target| try self.instruction(node.span, .{ .function_value = .{ .ty = node.ty, .function = target } }),
             .invoke => |call| {
-                try self.instruction(node.span, .{ .invoke = self.program.nodes[@backingInt(call.callee)].ty });
+                const callee_type = self.program.nodes[@backingInt(call.callee)].ty;
+                try self.instruction(node.span, .{ .invoke = callee_type });
+                const positions: []const u16 = if (self.program.records[callee_type.recordIndex()].contract.callback) |signature| signature.mutates else &.{};
+                const writable = try self.writableArguments(call.arguments, positions);
                 var i = call.arguments.len;
                 while (i > 0) {
                     i -= 1;
-                    try self.push(.{ .expression = call.arguments[i] });
+                    if (declaredMutable(positions, i)) try self.push(.{ .expression = call.arguments[i] }) else try self.readOnlyArgument(call.arguments[i], writable);
                 }
                 try self.push(.{ .expression = call.callee });
             },
@@ -439,6 +523,7 @@ const Emitter = struct {
                     try self.push(.{ .jump = .{ .target = alternate, .conditional = true, .span = b.op_span } });
                     try self.push(.{ .expression = b.left });
                 } else {
+                    try self.childrenCopy(id);
                     try self.push(.{ .instruction = binaryInstruction(b, self.program.nodes, self.program.records) });
                     try self.push(.{ .expression = b.right });
                     try self.push(.{ .expression = b.left });
@@ -446,12 +531,29 @@ const Emitter = struct {
             },
         }
     }
-    fn pushFields(self: *Emitter, fields: []const typed.FieldInit) !void {
+    /// Push field values in reverse; each is a store into the record, except
+    /// that a live dictionary view lends its mapping.
+    fn pushFields(self: *Emitter, fields: []const typed.FieldInit, record: typed.Type) !void {
+        const lent = value_semantics.isLiveView(self.program.records, record);
         var i = fields.len;
         while (i > 0) {
             i -= 1;
-            try self.push(.{ .expression = fields[i].value });
+            if (lent) try self.push(.{ .expression = fields[i].value }) else try self.transfer(fields[i].value, .store, null);
         }
+    }
+    /// The argument of a collection operation that the collection stores or
+    /// hands back (`value_semantics.storedArgument`), or null. An in-place
+    /// keyed sort names its own receiver as the source, which is no store.
+    fn storedArgument(self: *Emitter, operation: @FieldType(@FieldType(typed.Node, "data"), "buffer_operation")) ?usize {
+        const values = self.values orelse return null;
+        const owner = values.function.scope.locals[@backingInt(operation.owner)].ty;
+        const index = value_semantics.storedArgument(self.program.records, owner, operation.kind) orelse return null;
+        if (index >= operation.arguments.len) return null;
+        if (operation.kind == .sort_keyed) switch (self.program.nodes[@backingInt(operation.arguments[index])].data) {
+            .local => |slot| if (slot == operation.owner) return null,
+            else => {},
+        };
+        return index;
     }
     fn finish(self: *Emitter, body: typed.StatementId) ![]const bc.Instruction {
         defer self.work.deinit(self.scratch);
@@ -596,6 +698,11 @@ pub const Allocators = struct { output: std.mem.Allocator, scratch: std.mem.Allo
 fn lowerFunction(allocators: Allocators, program: typed.Program, function: typed.Function, with_body: bool, drop_debug: bool) LowerError!bc.Function {
     var emitter: Emitter = .{ .allocator = allocators.output, .scratch = allocators.scratch, .program = program, .drop_debug = drop_debug };
     defer emitter.loops.deinit(allocators.scratch);
+    var facts: value_semantics.Facts = undefined;
+    if (value_semantics.enabled() and with_body and function.policy.host == null) {
+        facts = try value_semantics.Facts.collect(allocators.scratch, program, function);
+        emitter.values = &facts;
+    }
     return .{
         .policy = .{
             .host = function.policy.host,

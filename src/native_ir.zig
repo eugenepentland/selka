@@ -178,6 +178,10 @@ const Analyzer = struct {
                     pops = 1;
                     result = ty;
                 },
+                .value_copy => |copy| {
+                    pops = 1;
+                    result = copy.ty;
+                },
                 .unwrap_domain => |ty| {
                     pops = 1;
                     if (!ty.isAggregate() or ty.recordIndex() >= self.program.records.len) return error.InternalError;

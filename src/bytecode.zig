@@ -11,6 +11,10 @@ pub const Predicate = model.Predicate;
 pub const Equality = model.Equality;
 pub const SwitchArm = model.SwitchArm;
 pub const Instruction = model.Instruction;
+/// Which transfer a value-semantics copy stands for (`VALUE-SEMANTICS-2`).
+pub const CopySite = model.CopySite;
+/// One value-semantics copy of an operand.
+pub const ValueCopy = model.ValueCopy;
 /// An element read or replace and whether it counts a negative index from the end.
 pub const Access = model.Access;
 pub const Function = model.Function;
@@ -240,9 +244,10 @@ fn validateInstruction(allocator: std.mem.Allocator, program: Program, function:
         .load_local, .store_local, .move_local, .drop_local => |slot| if (@backingInt(slot) >= function.scope.locals.len) {
             return error.InternalError;
         },
-        // Only a fixed array crosses a call as its caller's own storage.
+        // Only a fixed array (and, under value semantics, a record) crosses a
+        // call as its caller's own storage.
         .ref_local => |slot| if (@backingInt(slot) >= function.scope.locals.len or
-            !typed.referenceArray(program.records, function.scope.locals[@backingInt(slot)].ty))
+            !typed.referenceMut(program.records, function.scope.locals[@backingInt(slot)].ty))
         {
             return error.InternalError;
         },
@@ -665,6 +670,7 @@ fn validateFlow(allocator: std.mem.Allocator, program: Program, function: Functi
             .array_length,
             .wrap_domain,
             .unwrap_domain,
+            .value_copy,
             => if (height == 0) {
                 return error.InternalError;
             },

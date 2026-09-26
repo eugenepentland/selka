@@ -260,7 +260,14 @@ fn addBuildPhases(timings: *language.timings.Profile, phases: native_build.Phase
     }
 }
 fn dispatch(process: std.process.Init) !u8 {
-    const args = try process.minimal.args.toSlice(process.arena.allocator());
+    // VALUE-SEMANTICS-1: settle the switch before any command runs; a
+    // command it turned on restarts with the switch in its environment.
+    const settled = switch (try @import("main_value_semantics.zig").settle(process, try process.minimal.args.toSlice(process.arena.allocator()))) {
+        .run => |switched| switched,
+        .status => |status| return status,
+    };
+    if (settled.enabled) build_identity = valueSemanticsIdentity(base_identity);
+    const args = settled.args;
     if (args.len == 2 and std.mem.eql(u8, args[1], "--features")) {
         try featureReport(process);
         return 0;
@@ -2923,7 +2930,19 @@ fn compilerIdentity(io: std.Io) !language.source_receipt.Identity {
     const builtin = @import("builtin");
     return .{ .compiler_sha256 = build_identity, .zig_version = builtin.zig_version_string, .architecture = @tagName(builtin.cpu.arch), .os = @tagName(builtin.os.tag), .abi = @tagName(builtin.abi), .optimize = @tagName(builtin.mode) };
 }
-const build_identity: [32]u8 = identity: {
+/// The identity every compiler cache is keyed by: the compiler's own, or under
+/// value semantics (`VALUE-SEMANTICS-1`) a digest of it, so no frontend,
+/// semantic, fragment or receipt cache entry is shared between the two modes.
+/// `dispatch` sets it once, before any command reads it.
+var build_identity: [32]u8 = base_identity;
+/// The cache identity under value semantics: a digest of the build's own.
+fn valueSemanticsIdentity(base: [32]u8) [32]u8 {
+    var digest: [32]u8 = undefined;
+    std.crypto.hash.sha2.Sha256.hash(&(base ++ "value-semantics".*), &digest, .{});
+    return digest;
+}
+/// The identity of this compiler build itself.
+const base_identity: [32]u8 = identity: {
     const text = @import("qbe_build_assets").compiler_identity;
     var decoded: [32]u8 = undefined;
     for (&decoded, 0..) |*byte, index| byte.* = nibble(text[index * 2]) << 4 | nibble(text[index * 2 + 1]);
@@ -3149,8 +3168,8 @@ fn frontendRoot(init: Context, parsed: Parsed) ?[]const u8 {
 /// disables reuse, never failing the command.
 fn openFrontendCache(init: Context, parsed: Parsed) ?language.frontend_cache.Cache {
     const root = frontendRoot(init, parsed) orelse return null;
-    // `&build_identity` points at the immutable compile-time global, so the
-    // cache's borrowed identity outlives this frame; a local copy would dangle.
+    // `&build_identity` points at the process-lifetime global, so the cache's
+    // borrowed identity outlives this frame; a local copy would dangle.
     var cache = language.frontend_cache.Cache.init(init.gpa, init.io, root, &build_identity);
     // A joined path is freshly allocated and released by deinit; the default
     // constant is static storage and must not be freed.
@@ -3184,6 +3203,8 @@ fn manifestReplayTicket(parsed: Parsed, diagnostics: diagnostic_output.Format, p
     replayFrame(&slot, parsed.path);
     const switches = [_]bool{ parsed.drop_debug, parsed.drop_step_checks, parsed.drop_frame_checks, parsed.lean_manifest, parsed.executable_manifest };
     for (switches) |value| slot.update(&.{@intFromBool(value)});
+    // VALUE-SEMANTICS-1: value semantics changes every lowered body.
+    if (language.value_semantics.enabled()) slot.update("value-semantics");
     slot.update(&.{@backingInt(diagnostics)});
     var key = slot;
     if (policy) |identity| {

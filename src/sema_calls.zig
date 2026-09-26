@@ -146,8 +146,8 @@ fn functionValue(comptime Checker: type, self: *Checker, name: source.Span, out:
     for (function.signature.parameters, parameters) |input, *parameter| {
         parameter.* = try self.catalog.resolve(self.src, input.ty, self.sink);
     }
-    for (function.signature.mut_positions) |position| if (position < parameters.len and typed.referenceArray(self.catalog.records, parameters[position]))
-        return self.sink.fail(callback_type_code, name, "a function with a `mut` fixed-array parameter writes the caller's own array and cannot be used as a value; call it directly");
+    for (function.signature.mut_positions) |position| if (position < parameters.len and typed.referenceMut(self.catalog.records, parameters[position]))
+        return self.sink.fail(callback_type_code, name, "a function with a `mut` fixed-array or record parameter writes the caller's own variable and cannot be used as a value; call it directly");
     const result = try self.catalog.resolve(self.src, function.signature.return_type, self.sink);
     const expected_type = self.expected_types.get(name);
     const destination = if (expected_type) |expected| callables.signature(expected, self.catalog.records) else null;
@@ -663,13 +663,15 @@ fn checkMutationMarkers(comptime Checker: type, self: *Checker, call_name: sourc
 fn requireArrayMarkerTarget(comptime Checker: type, self: *Checker, argument: ast.NodeId, target: ast.Node) Error!void {
     const checked = self.resolved[@backingInt(argument)] orelse return;
     const node = self.nodes.items[@backingInt(checked)];
-    if (!typed.referenceArray(self.catalog.records, node.ty)) return;
+    if (!typed.referenceMut(self.catalog.records, node.ty)) return;
+    // VALUE-SEMANTICS-3: a `mut` record crosses as the caller's variable too.
+    const what = if (typed.referenceArray(self.catalog.records, node.ty)) "a fixed array" else "a record";
     if (target.data != .name or node.data != .local) return self.sink.fail(
         mutation_marker_code,
         target.span,
-        "`mut` on a fixed array passes a variable itself; copy the field or element into a local, pass `mut` that local, and store it back",
+        try std.fmt.allocPrint(self.allocator, "`mut` on {s} passes a variable itself; copy the field or element into a local, pass `mut` that local, and store it back", .{what}),
     );
-    if (!self.locals.items[@backingInt(node.data.local)].mutable) return self.sink.fail(eImmutable, target.span, "`mut` on a fixed array requires a mutable binding");
+    if (!self.locals.items[@backingInt(node.data.local)].mutable) return self.sink.fail(eImmutable, target.span, try std.fmt.allocPrint(self.allocator, "`mut` on {s} requires a mutable binding", .{what}));
     // The callee writes the variable itself (`PY-ARRAY-ITER-2` reads this).
     self.locals.items[@backingInt(node.data.local)].usage.writes += 1;
 }

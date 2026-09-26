@@ -16,6 +16,8 @@ const diagnostic = @import("diagnostic.zig");
 const source = @import("source.zig");
 const callables = @import("callables.zig");
 const Walker = @import("typed_walk.zig").Walker;
+const value_semantics = @import("value_semantics.zig");
+const value_checks = @import("value_semantics_check.zig");
 
 /// Diagnostic code for a managed write that exceeds its declared contract.
 pub const permission_code = "E_MUTATION_PERMISSION";
@@ -237,6 +239,8 @@ fn applyBlockStatements(context: *const Context, function: typed.Function, origi
 fn bindStatement(context: *const Context, function: typed.Function, origins: []Origin, statement: typed.Statement, depth: usize) bool {
     switch (statement.data) {
         .initialize, .assign => |store| {
+            // VALUE-SEMANTICS-4: a named local receives its own copy.
+            if (copiedHome(context.program, function, store.slot)) return false;
             const value = context.nodeOrigin(function, origins, store.value, depth);
             return widen(origins, @backingInt(store.slot), value);
         },
@@ -246,6 +250,7 @@ fn bindStatement(context: *const Context, function: typed.Function, origins: []O
                 const slot = arm.slot orelse continue;
                 const index = @backingInt(slot);
                 if (index >= function.scope.locals.len) continue;
+                if (copiedHome(context.program, function, slot)) continue;
                 const payload = function.scope.locals[index].ty;
                 if (widen(origins, index, context.childIfManaged(payload, function, origins, matched.value, depth))) grew = true;
             }
@@ -253,6 +258,17 @@ fn bindStatement(context: *const Context, function: typed.Function, origins: []O
         },
         else => return false,
     }
+}
+
+/// Under value semantics, whether a store into `slot` gives it a copy that
+/// shares nothing writable with its source, so the local starts fresh: a named
+/// local (not a parameter) whose type reaches no `class` or Cell.
+fn copiedHome(program: typed.Program, function: typed.Function, slot: typed.LocalId) bool {
+    if (!value_semantics.enabled()) return false;
+    const index = @backingInt(slot);
+    if (index < function.signature.parameter_count or index >= function.scope.locals.len) return false;
+    if (!value_semantics.namedHome(function, index)) return false;
+    return value_semantics.copiesAll(program.records, function.scope.locals[index].ty);
 }
 
 /// Merge `value` into one slot's origin, reporting whether it grew.
@@ -421,7 +437,7 @@ const Context = struct {
     /// origins still count.
     fn writtenArgumentOrigin(self: *const Context, function: typed.Function, origins: []const Origin, argument: typed.NodeId) Origin {
         const node = self.program.nodes[@backingInt(argument)];
-        if (!typed.referenceArray(self.program.records, node.ty)) return self.nodeOrigin(function, origins, argument, 0);
+        if (!typed.referenceMut(self.program.records, node.ty)) return self.nodeOrigin(function, origins, argument, 0);
         const own: Origin = if (node.data == .local and @backingInt(node.data.local) < function.signature.parameter_count)
             Origin.fromPosition(@intCast(@backingInt(node.data.local)))
         else
@@ -510,10 +526,20 @@ const WriteSite = struct {
 /// parameter is — so a write into any other local stays inside this frame.
 fn absorbElementWrite(context: *const Context, function: typed.Function, origins: []const Origin, store: typed.Store, span: source.Span, summary: *Summary) void {
     const slot = @backingInt(store.slot);
-    if (!store.element or slot >= function.signature.parameter_count) return;
-    if (!typed.referenceArray(context.program.records, function.scope.locals[slot].ty)) return;
+    if (slot >= function.signature.parameter_count) return;
+    const ty = function.scope.locals[slot].ty;
+    const array_write = store.element and typed.referenceArray(context.program.records, ty);
+    // VALUE-SEMANTICS-3: any assignment to a `mut` record parameter (a field
+    // write rebuilds it) lands in the caller's record.
+    const record_write = typed.referenceRecord(context.program.records, ty) and declaredMut(function, slot);
+    if (!array_write and !record_write) return;
     const site = WriteSite{ .context = context, .function = function, .origins = origins, .arguments = &.{}, .summary = summary };
     site.absorbWrite(Origin.fromPosition(@intCast(slot)), span);
+}
+
+fn declaredMut(function: typed.Function, slot: usize) bool {
+    for (function.signature.declared_mutates) |position| if (position == slot) return true;
+    return false;
 }
 
 fn absorbDirectWrite(context: *const Context, function: typed.Function, origins: []const Origin, node: typed.Node, summary: *Summary) void {
@@ -560,7 +586,11 @@ fn applyStatement(context: *const Context, function: typed.Function, origins: []
             absorbElementWrite(context, function, origins, store, statement.span, summary);
             return grew;
         },
-        .ret => |value| summary.return_origin = Origin.merge(summary.return_origin, context.nodeOrigin(function, origins, value, 0)),
+        .ret => |value| {
+            // VALUE-SEMANTICS-4: a returned value is the caller's own copy.
+            if (value_semantics.enabled() and value_semantics.copiesAll(context.program.records, context.program.nodes[@backingInt(value)].ty)) return false;
+            summary.return_origin = Origin.merge(summary.return_origin, context.nodeOrigin(function, origins, value, 0));
+        },
         else => return bindStatement(context, function, origins, statement, 0),
     }
     return false;
@@ -689,7 +719,8 @@ fn permissionMessage(allocator: std.mem.Allocator, function: typed.Function, sum
             text.writer.print("{s}p{d}", .{ if (listed) ", " else "", position }) catch return error.OutOfMemory;
             listed = true;
         }
-        text.writer.writeAll("; declare both effects(mutation) and mutates(...), or pass a fresh local snapshot") catch return error.OutOfMemory;
+        const repair = if (value_semantics.enabled()) "assign the value to a local and change that copy" else "pass a fresh local snapshot";
+        text.writer.print("; declare both effects(mutation) and mutates(...), or {s}", .{repair}) catch return error.OutOfMemory;
     }
     return allocator.dupe(u8, text.written()) catch return error.OutOfMemory;
 }
@@ -723,6 +754,15 @@ fn unmarkedWriteMessage(allocator: std.mem.Allocator, src: source.Source, declar
         text.writer.print("` (parameter {d})", .{@as(u32, position) + 1}) catch return error.OutOfMemory;
         listed = true;
     }
+    if (value_semantics.enabled()) {
+        // VALUE-SEMANTICS-4: a parameter is read-only unless declared `mut`.
+        text.writer.writeAll(", which is read-only here; declare ") catch return error.OutOfMemory;
+        writeMutatedParameters(&text.writer, src, declared, function, positions) catch return error.OutOfMemory;
+        text.writer.writeAll(" so the change reaches the caller, or assign it to a local (`copy = ") catch return error.OutOfMemory;
+        writeParameterName(&text.writer, function, @intCast(@ctz(positions))) catch return error.OutOfMemory;
+        text.writer.writeAll("`) and change the copy") catch return error.OutOfMemory;
+        return allocator.dupe(u8, text.written()) catch return error.OutOfMemory;
+    }
     text.writer.writeAll(" reachable from the caller; declare ") catch return error.OutOfMemory;
     writeMutatedParameters(&text.writer, src, declared, function, positions) catch return error.OutOfMemory;
     return allocator.dupe(u8, text.written()) catch return error.OutOfMemory;
@@ -738,6 +778,37 @@ fn unusedMutMessage(allocator: std.mem.Allocator, src: source.Source, declared: 
     text.writer.writeAll("` is declared `mut` but never written; remove `mut`: `") catch return error.OutOfMemory;
     writeMutatedParameter(&text.writer, src, declared, function, position) catch return error.OutOfMemory;
     text.writer.writeAll("`") catch return error.OutOfMemory;
+    return allocator.dupe(u8, text.written()) catch return error.OutOfMemory;
+}
+
+const lost_whole_text = "` is declared `mut` but never written: the only change goes to `{s}`, a copy of it; " ++
+    "change `{s}` in place so the change reaches the caller";
+const lost_part_text = "` is declared `mut` but never written: the only change goes to `{s}`, a copy of `{s}`; " ++
+    "store the copy back after changing it (`{s} = {s}`) so the change reaches the caller";
+
+/// One `mut` parameter whose only change went to a local copy of it.
+const LostCopyQuote = struct { src: source.Source, program: typed.Program, function: typed.Function, position: u5, copy: value_checks.LostCopy };
+
+/// VALUE-SEMANTICS-6: the rejection for a `mut` parameter whose only change
+/// went to a local copy. Removing `mut` would keep the program wrong, so the
+/// message says how the change reaches the caller: store the copy back, or,
+/// for a copy of a whole collection parameter (which rebinding cannot reach),
+/// change the parameter in place.
+fn lostCopyMessage(allocator: std.mem.Allocator, quote: LostCopyQuote) std.mem.Allocator.Error![]const u8 {
+    const function = quote.function;
+    var text: std.Io.Writer.Allocating = .init(allocator);
+    defer text.deinit();
+    const local = function.scope.locals[@backingInt(quote.copy.local)].name;
+    const value = quote.program.nodes[@backingInt(quote.copy.value)];
+    const place = quote.src.text(value.span);
+    text.writer.writeAll("`") catch return error.OutOfMemory;
+    writeParameterName(&text.writer, function, quote.position) catch return error.OutOfMemory;
+    const whole = value.data == .local and !typed.referenceMut(quote.program.records, value.ty);
+    if (whole) {
+        text.writer.print(lost_whole_text, .{ local, place }) catch return error.OutOfMemory;
+    } else {
+        text.writer.print(lost_part_text, .{ local, place, place, local }) catch return error.OutOfMemory;
+    }
     return allocator.dupe(u8, text.written()) catch return error.OutOfMemory;
 }
 
@@ -840,7 +911,11 @@ fn checkMutDeclarations(allocator: std.mem.Allocator, program: typed.Program, re
     while (position < 16) : (position += 1) {
         if (declared & (@as(u16, 1) << @intCast(position)) == 0) continue;
         if (summary.mutates & (@as(u16, 1) << @intCast(position)) != 0) continue;
-        const message = try unusedMutMessage(allocator, src, declaringFunction(request.syntax, function), function, position);
+        const lost = if (value_semantics.enabled()) try value_checks.lostCopy(allocator, program, function, position) else null;
+        const message = if (lost) |copy|
+            try lostCopyMessage(allocator, .{ .src = src, .program = program, .function = function, .position = position, .copy = copy })
+        else
+            try unusedMutMessage(allocator, src, declaringFunction(request.syntax, function), function, position);
         try sink.items.append(allocator, .{
             .code = unused_mut_code,
             .span = function.scope.locals[position].declaration,
@@ -1190,6 +1265,17 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, request: Requ
         if (try checkMutDeclarations(allocator, program, request, index, built.summaries[index])) violated = true;
     }
 
+    // VALUE-SEMANTICS-5: a read-only argument is a value of its own (lent,
+    // or a real copy where a `mut` argument of the same call could reach
+    // it), so no writable/read-only overlap is possible. Instead a write
+    // through a value binding or into a returned value is rejected.
+    if (value_semantics.enabled()) {
+        for (program.functions, 0..) |_, index| {
+            if (standIn(request.stubs, index) != null) continue;
+            if (try value_checks.checkWrites(allocator, program, index, sink)) violated = true;
+        }
+        return violated;
+    }
     for (program.functions, 0..) |_, index| {
         if (standIn(request.stubs, index) != null) continue;
         if (try collectOverlaps(allocator, program, built.summaries, index, sink)) violated = true;
