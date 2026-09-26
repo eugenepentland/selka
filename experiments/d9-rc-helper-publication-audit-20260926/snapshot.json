@@ -1,0 +1,30 @@
+{
+  "status": "Read-only audit snapshot; only captured completed rows are evidence. Background probes may append a later supplement.",
+  "groups": {
+    "base": {
+      "captured_rows": 19,
+      "planned_rows": 24,
+      "complete": false
+    },
+    "boxes": {
+      "captured_rows": 10,
+      "planned_rows": 24,
+      "complete": false
+    },
+    "reduced": {
+      "captured_rows": 4,
+      "planned_rows": 8,
+      "complete": false
+    },
+    "pinned": {
+      "captured_rows": 9,
+      "planned_rows": 12,
+      "complete": false
+    },
+    "precompact": {
+      "captured_rows": 3,
+      "planned_rows": 4,
+      "complete": false
+    }
+  }
+}
