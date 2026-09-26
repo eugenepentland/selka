@@ -1,7 +1,9 @@
 # D9 stage 3f default validation candidate, 2026-09-26
 
 The default implementation passes its correctness gate but is **not accepted
-for integration**: stage 3 performance remains above the required limits. Work
+for integration**: stage 3 performance remains above the required limits,
+and later adversarial review found boxed-field and nested-collection alias
+leaks requiring additional fixes. Work
 is isolated on `codex/d9-stage3f-prep`; neither `main` nor the devspeed merge
 branch was changed. The latest `main`, `b292660a`, is already an ancestor.
 
@@ -68,11 +70,18 @@ Principal implementation commits are `a7a6a850` (mode default and opt-out),
 `7c7c2759` (embedded fixtures), `482cab19` (Cell compatibility lane), and
 `4a9dd406` (oracle evidence). Integration uses real two-parent merges.
 
+The later joined compiler/source candidate `b937d4fc` also passes all four
+steps: 94/94 main steps with 2,112 executed tests (21,393 shard exclusions),
+51/51 QBE steps and 428 tests, 29/29 QBE-build steps, and formatting 2/2.
+
 The [stage 3b performance report](d9-stage3b-performance-2026-09-26.md) records
-the failed median-three gate and the baseline hashes. With the later
-`b8d14efb` compiler optimization and `ebe6b78f` class-free source, the N=30,000
-Lox VM equality case still costs about 2.4 times the exact `60b668cf` baseline
-on both backends. The tree interpreter also has a large regression. These
+the earlier failed median-three gate and baseline hashes. The
+[IP-publication source patch](d9-lox-ip-publication-2026-09-26.md) with compiler
+`2b889ba5` brings selected VM equality below 1.3× on both backends. However,
+the complete 13-key VM sweep remains at 1.47277× QBE and 1.63346× LLVM
+geomean, with 10/13 cases over 1.3× on each. The tree interpreter also has
+a large regression. The later alias reproducers were not covered by the
+existing gate; a green suite does not resolve those failures. These
 limits have not been waived. The default branch stays isolated until the final
 class-free benchmark suite passes; reference counting and concurrency remain
 pending their dependencies.
