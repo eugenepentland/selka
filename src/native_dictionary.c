@@ -19,6 +19,8 @@ static const myl_native_type dict_type={.size=sizeof(myl_native_dictionary),.ali
 static const myl_native_type rc_dict_type={.size=sizeof(myl_native_dictionary),.alignment=_Alignof(myl_native_dictionary),.kind=MYL_NATIVE_PLAIN};
 static int rc_dict_prepare(myl_native_heap *, const myl_native_type *, const myl_native_type *);
 static myl_native_dictionary *rc_dict_clone(myl_native_heap *, const myl_native_dictionary *, unsigned);
+static myl_rc_status rc_dict_shell(myl_native_heap *, const void *, unsigned, void **);
+static int rc_dict_next(myl_native_heap *, const void *, void *, size_t *, myl_rc_slot *, myl_rc_slot *);
 static int rc_insert(myl_native_heap *, myl_native_dictionary *, const void *, const void *);
 static int rc_dictionary(const myl_native_dictionary *dict) {
     return ((const myl_native_object *)dict-1)->element==&rc_dict_type;
@@ -62,7 +64,7 @@ myl_native_dictionary *myl_native_dictionary_new(myl_native_heap *heap, const my
     dict->entry_fields[1]=(myl_native_field){.offset=offset,.type=value};
     dict->entry_type=(myl_native_type){.size=size,.alignment=alignment,.kind=MYL_NATIVE_RECORD,.fields=dict->entry_fields,.field_count=2};
     size_t slots;
-    if (myl_native_scan_flatten(&dict->entry_type,dict->entry_scan,sizeof dict->entry_scan/sizeof dict->entry_scan[0],&slots)) {
+    if (!myl_rc_enabled(heap) && myl_native_scan_flatten(&dict->entry_type,dict->entry_scan,sizeof dict->entry_scan/sizeof dict->entry_scan[0],&slots)) {
         dict->entry_type.scan=dict->entry_scan;
         dict->entry_type.scan_count=slots;
     }
@@ -1112,7 +1114,7 @@ static myl_rc_status rc_dict_clone_adapter(myl_native_heap *heap, const void *pa
     *out=rc_dict_clone(heap,payload,region);
     return myl_rc_native_result(heap,*out);
 }
-static const myl_rc_descriptor rc_dict_descriptor={.type=&rc_dict_type,.shape=&rc_dict_shape,.edges=rc_dictionary_edges,.clone=rc_dict_clone_adapter};
+static const myl_rc_descriptor rc_dict_descriptor={.type=&rc_dict_type,.shape=&rc_dict_shape,.edges=rc_dictionary_edges,.clone=rc_dict_clone_adapter,.shell=rc_dict_shell,.next=rc_dict_next};
 static const myl_rc_module rc_dict_module={.abi=MYL_RC_ABI_VERSION,.descriptors=&rc_dict_descriptor,.descriptor_count=1};
 static int rc_dict_prepare(myl_native_heap *heap, const myl_native_type *key, const myl_native_type *value) {
     if (!myl_rc_native_shape(heap,key) || !myl_rc_native_shape(heap,value)) return 0;
@@ -1206,12 +1208,76 @@ static myl_native_dictionary *rc_dict_clone(myl_native_heap *heap, const myl_nat
     myl_native_dictionary *clone=myl_native_dictionary_new(heap,input->key,input->value,input->string_keys);
     heap->region_depth=saved;
     if (!clone) return NULL;
-    myl_native_dictionary_settle(input);
     for (size_t i=0;i<input->entries->length;i++) {
         const unsigned char *entry=entry_at(input,i);
+        uint64_t marker;
+        memcpy(&marker,entry+input->entry_type.size-8,8);
+        if (!(uint32_t)marker) continue;
         if (!rc_insert(heap,clone,entry,entry+input->value_offset)) {
             myl_rc_native_abort(heap,clone); return NULL;
         }
     }
     return clone;
+}
+/* Preserve sparse positions and stored hashes without settling a receiver
+ * whose backing may be captured. Every target key/value starts with zero
+ * owning pointers, so the iterative operation can abort at any child edge. */
+static myl_rc_status rc_dict_shell(myl_native_heap *heap, const void *payload, unsigned region, void **out) {
+    const myl_native_dictionary *source=payload;
+    unsigned saved=heap->region_depth;
+    heap->region_depth=region;
+    myl_native_dictionary *copy=myl_native_dictionary_new(heap,source->key,source->value,source->string_keys);
+    heap->region_depth=saved;
+    *out=NULL;
+    if (!copy) return myl_rc_native_result(heap,NULL);
+    if (!myl_rc_list_storage_reserve(heap,copy->entries,source->entries->length)) goto failed;
+    uint64_t *slots=NULL;
+    if (source->index.capacity) {
+        slots=myl_native_heap_alloc_at(heap,&slot_type,source->index.capacity,region);
+        if (!slots) goto failed;
+    }
+    const myl_rc_descriptor *key=myl_rc_descriptor_find(heap,source->key);
+    const myl_rc_descriptor *value=myl_rc_descriptor_find(heap,source->value);
+    if (!key || !value) abort();
+    for (size_t i=0;i<source->entries->length;i++) {
+        const unsigned char *entry=entry_at(source,i);
+        unsigned char *target=entry_at(copy,i);
+        uint64_t marker;
+        memcpy(&marker,entry+source->entry_type.size-8,8);
+        if (!(uint32_t)marker) continue;
+        memcpy(target,entry,source->entry_type.size);
+        myl_rc_value_seed(heap,key->shape,target,entry,1);
+        myl_rc_value_seed(heap,value->shape,target+copy->value_offset,entry+source->value_offset,1);
+    }
+    copy->entries->length=source->entries->length;
+    copy->dead=source->dead;
+    if (slots) {
+        memcpy(slots,source->index.slots,source->index.capacity*sizeof *slots);
+        copy->index=(myl_native_dictionary_index){.slots=slots,.capacity=source->index.capacity};
+    }
+    *out=copy;
+    return MYL_RC_OK;
+failed:
+    myl_rc_native_abort(heap,copy);
+    return myl_rc_native_result(heap,NULL);
+}
+static int rc_dict_next(myl_native_heap *heap, const void *payload, void *target, size_t *cursor, myl_rc_slot *to, myl_rc_slot *from) {
+    const myl_native_dictionary *source=payload;
+    myl_native_dictionary *copy=target;
+    while (*cursor/2<source->entries->length) {
+        size_t index=*cursor/2;
+        unsigned is_value=(unsigned)((*cursor)++&1);
+        const unsigned char *entry=entry_at(source,index);
+        uint64_t marker;
+        memcpy(&marker,entry+source->entry_type.size-8,8);
+        if (!(uint32_t)marker) continue;
+        const myl_rc_descriptor *descriptor=myl_rc_descriptor_find(heap,is_value?source->value:source->key);
+        if (!descriptor) abort();
+        if (descriptor->shape->kind==MYL_RC_SHAPE_NONE) continue;
+        size_t offset=is_value?source->value_offset:0;
+        *to=(myl_rc_slot){.shape=descriptor->shape,.address=entry_at(copy,index)+offset,.container=copy,.region=myl_native_header_region(copy)};
+        *from=(myl_rc_slot){.shape=descriptor->shape,.address=(void *)(entry+offset),.container=(void *)source,.region=myl_native_header_region(source)};
+        return 1;
+    }
+    return 0;
 }
