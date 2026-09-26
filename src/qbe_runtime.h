@@ -141,6 +141,9 @@ typedef struct {
        Appended after the frozen ABI prefix. */
     void *stand_ins;
     void (*stand_in_cleanup)(void *);
+    /* Copied-value adapter temporaries survive guest longjmp and are retired
+       while the context, managed heap and provider resources are still live. */
+    void (*adapter_cleanup)(void *);
 } MylQbeContext;
 typedef struct {
     uint64_t value, steps;
