@@ -403,6 +403,8 @@ The roadmap in `docs/experiments/roadmap.md` tracks unsupported and planned feat
 
 - [FIX-MIGRATION-1] `mylang fix ENTRY.my|DIR` repeatedly checks and applies non-overlapping structured diagnostic fixes until none remain, reporting changed files and remaining diagnostics. `--check` reports applicable edits without writing and exits nonzero when it finds one. Fix application never guesses from diagnostic prose.
 
+- [ALIAS-MIGRATION-1] With value semantics disabled, the checker warns `W_ALIAS_DEPENDENT` at a transfer whose later writes can be observed through another path. The message identifies local alias, class graph, store or across-call migration. Enabling value semantics suppresses this migration warning. The warning is advisory and does not change program execution.
+
 
 - [HOST-SOURCE-1] Contextual host fn declarations have no guest body and require an explicit effects(host, ...) contract. Only ordinary top-level, non-generic copied data signatures are supported; capabilities, managed collections and runtime-owned graphs reject. Main retains a guest body. Host and additional declared effects propagate through ordinary and abstract generic calls, including uncalled templates. Effect-free evaluation/invocation cannot execute these calls. Modules, formatting and disassembly preserve declarations; duplicate discovery excludes external implementations.
 

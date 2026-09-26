@@ -3,12 +3,61 @@ const std = @import("std");
 const testing = std.testing;
 const compiler_path = @import("test_options").compiler_path;
 // spec: FIX-MIGRATION-1
-test "fix command rejects missing entry with usage status" {
-    const result = try std.process.run(std.testing.allocator, std.testing.io, .{ .argv = &.{ compiler_path, "fix" } });
-    defer std.testing.allocator.free(result.stdout);
-    defer std.testing.allocator.free(result.stderr);
-    try std.testing.expectEqual(std.process.Child.Term{ .exited = 2 }, result.term);
-    try std.testing.expect(std.mem.indexOf(u8, result.stderr, "usage: mylang fix") != null);
+test "fix command previews then stores back a local alias and preserves both modes" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const before =
+        \\def main() -> int:
+        \\    pins = [1]
+        \\    alias = pins
+        \\    alias.append(2)
+        \\    return len(pins)
+    ;
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = before });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const preview = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "fix", path, "--check" } });
+    defer testing.allocator.free(preview.stdout);
+    defer testing.allocator.free(preview.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, preview.term);
+    try testing.expect(std.mem.indexOf(u8, preview.stdout, "would fix") != null);
+    const unchanged = try temp.dir.readFileAlloc(testing.io, "input.my", testing.allocator, .unlimited);
+    defer testing.allocator.free(unchanged);
+    try testing.expectEqualStrings(before, unchanged);
+    const fixed = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "fix", path } });
+    defer testing.allocator.free(fixed.stdout);
+    defer testing.allocator.free(fixed.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, fixed.term);
+    const changed = try temp.dir.readFileAlloc(testing.io, "input.my", testing.allocator, .unlimited);
+    defer testing.allocator.free(changed);
+    try testing.expect(std.mem.indexOf(u8, changed, "    pins = alias\n") != null);
+    const checked = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check", path, "--diagnostics=json" } });
+    defer testing.allocator.free(checked.stdout);
+    defer testing.allocator.free(checked.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, checked.term);
+    try testing.expect(std.mem.indexOf(u8, checked.stderr, "W_ALIAS_DEPENDENT") == null);
+    for ([_][]const u8{ "--value-semantics", "--no-cache" }) |mode| {
+        const run = try std.process.run(testing.allocator, testing.io, .{ .argv = &(.{ compiler_path, "run", path, "--print-result", mode } ++ tools) });
+        defer testing.allocator.free(run.stdout);
+        defer testing.allocator.free(run.stderr);
+        try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, run.term);
+        try testing.expectEqualStrings("2\n", run.stdout);
+    }
+}
+// spec: ALIAS-MIGRATION-1
+test "checker warns at a local collection alias that is written and observed" {
+    const outcome = try runFixture("check",
+        \\def main() -> int:
+        \\    pins = [1]
+        \\    alias = pins
+        \\    alias.append(2)
+        \\    return len(pins)
+    , &.{"--diagnostics=json"});
+    defer std.testing.allocator.free(outcome.stdout);
+    defer std.testing.allocator.free(outcome.stderr);
+    try std.testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+    try std.testing.expect(std.mem.indexOf(u8, outcome.stderr, "W_ALIAS_DEPENDENT") != null);
+    try std.testing.expect(std.mem.indexOf(u8, outcome.stderr, "local alias") != null);
 }
 const arena_example_path = @import("test_options").arena_example_path;
 /// `run` and `run-project` build natively; the fixtures name this build's tools
