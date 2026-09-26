@@ -98,6 +98,7 @@ fn inlineTransfer(comptime E: type, self: *E, ty: typed.Type, output: usize, chi
         const unsafe = self.temp();
         try self.print(" %v{d} =l sub %v{d}, 16\n %v{d} =l loadl %v{d}\n %v{d} =l and %v{d}, {d}\n", .{ headers[index], payload, words[index], headers[index], unsafe, words[index], cow.pinned_flag | 2 });
         const next = self.temp();
+        try self.print(" %v{d} =l cnel %v{d}, 0\n", .{ unsafe, unsafe });
         try self.print(" jnz %v{d}, @vcslow{d}, @vcnext{d}\n@vcnext{d}\n", .{ unsafe, slow, next, next });
     }
     for (headers[0..leaves.len], words[0..leaves.len]) |header, word| {
