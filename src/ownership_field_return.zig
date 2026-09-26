@@ -9,7 +9,7 @@ const Op = sources.Op;
 const li = model.li;
 const Transfer = struct { source: u32, target: u32, field: usize, copy: usize };
 
-/// Remove both copy sites for a proven straight-line field return. A borrowed
+/// Remove both copy sites for a proven unconditional field return. A borrowed
 /// source, an observation, a branch, or a surviving temporary keeps the copies.
 pub fn elide(ctx: *const Context, owners: []const bool, copies: []bool) void {
     for (ctx.instructions(), 0..) |instruction, pc| {
@@ -49,11 +49,34 @@ fn otherMutableParameter(ctx: *const Context, source: u32) bool {
 fn returnSite(ctx: *const Context, transfer: Transfer) ?usize {
     const code = ctx.instructions();
     for (transfer.copy + 2..code.len) |pc| {
-        if (!straight(ctx, pc)) return null;
-        if (writeback(ctx, transfer, pc)) return pc + 8;
+        if (writeback(ctx, transfer, pc)) return if (closedFlow(ctx, transfer.copy + 2, pc)) pc + 8 else null;
+        if (!ctx.reachable(pc)) return null;
         if (observes(ctx, pc, transfer)) return null;
     }
     return null;
+}
+
+// Forward diamonds (including signed-index normalization) may rejoin before
+// the store-back. Every edge must stay inside this region or enter its final
+// store-back; no outside edge may enter after extraction.
+fn closedFlow(ctx: *const Context, start: usize, end: usize) bool {
+    for (ctx.instructions(), 0..) |instruction, pc| {
+        const inside = pc >= start and pc < end;
+        const op = instruction.op;
+        if (inside) {
+            if (!sources.fallsThrough(op) and op != .jump) return false;
+            if (op == .try_result or op == .switch_variant) return false;
+        }
+        var buffer: [2]usize = undefined;
+        for (sources.branchTargets(op, &buffer)) |target| {
+            if (inside and (target <= pc or target > end)) return false;
+            if (!inside and target >= start and target < end) return false;
+        }
+        if (op == .switch_variant) for (op.switch_variant.arms) |arm| {
+            if (arm.target >= start and arm.target < end) return false;
+        };
+    }
+    return true;
 }
 
 fn straight(ctx: *const Context, pc: usize) bool {
@@ -74,7 +97,30 @@ fn observes(ctx: *const Context, pc: usize, transfer: Transfer) bool {
         .buffer_operation => |operation| li(operation.owner),
         else => return false,
     };
+    if (sibling(ctx, local, transfer, 0)) switch (op) {
+        .load_local => return false,
+        .store_local => if (ctx.defs.pc[local] == pc) return false,
+        .buffer_operation => |operation| if (!model.writesReceiver(operation.kind)) return false,
+        else => {},
+    };
     return ctx.rootOf(local) == transfer.source;
+}
+
+// Trace a single-definition path temporary back to the owner's other field.
+// A sibling is an independent value even when it once shared a payload with
+// this field; its own copy-on-write marks remain intact.
+fn sibling(ctx: *const Context, local: u32, transfer: Transfer, depth: usize) bool {
+    if (local == transfer.source or depth >= ctx.locals.list.len) return false;
+    if (!ctx.alias(local) or ctx.defs.count[local] != 1) return false;
+    const stack = ctx.flow.at[ctx.defs.pc[local]] orelse return false;
+    if (stack.len == 0) return false;
+    const source = stack[stack.len - 1];
+    if (source.origin != .local) return false;
+    if (source.local != transfer.source) return sibling(ctx, source.local, transfer, depth + 1);
+    const code = ctx.instructions();
+    if (source.read >= code.len or source.read + 1 >= code.len) return false;
+    const projection = code[source.read + 1].op;
+    return localIs(code[source.read].op, .load_local, transfer.source) and projection == .get_field and projection.get_field != transfer.field;
 }
 
 // Lowering preserves the RHS and parent in private temporaries before updating
