@@ -1,0 +1,46 @@
+{
+  "source": "def score(values: list[int], count: int) -> int:\n    index = 0\n    result = 0\n    while index < count:\n        result = (result * 17 + index) % 104729\n        index += 1\n    return result + len(values)\n\ndef main(out: Stream) -> int:\n    out.print(score([17, 23], 1000000))\n    return 0\n",
+  "expected": "87970\n",
+  "compilers": {
+    "before": "26de8ef6b0b5e8b09a6cb483bb27e47124b241b685d9768bfa257de27321ff4d",
+    "after": "b919ad064ffd42e25ccc52cd5a1884f9567586e1579a73daaf7237072d6ad884"
+  },
+  "cases": {
+    "before-qbe": {
+      "binary_sha256": "89d0cc65b6376710af85d5190dfc5ad56be291ff0587f19db0b861aeed0b3f3b",
+      "instructions": [
+        370237812,
+        370237744,
+        370237755
+      ]
+    },
+    "before-llvm": {
+      "binary_sha256": "b0056db8dd2d1fb0320bc4a13141e080dddf2be432cd948a65eb5ce41ce2fbac",
+      "instructions": [
+        259233160,
+        259233163,
+        259233152
+      ]
+    },
+    "after-qbe": {
+      "binary_sha256": "a632b1b28f87b2ccf80d5a4446fd6d37bc10fd4967695ea7842199f33a6c9a21",
+      "instructions": [
+        82236690,
+        82236775,
+        82236867
+      ]
+    },
+    "after-llvm": {
+      "binary_sha256": "ee06b543d0252cc0e3f9d77594a03f2f084204d9dde7dfa364d667504dd96ec7",
+      "instructions": [
+        24232918,
+        24232949,
+        24232845
+      ]
+    }
+  },
+  "ratios": {
+    "qbe": 0.22211882469955016,
+    "llvm": 0.09347923699267485
+  }
+}
