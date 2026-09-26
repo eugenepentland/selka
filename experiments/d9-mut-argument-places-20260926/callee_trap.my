@@ -1,0 +1,14 @@
+module callee_trap
+
+def change(target: mut dict[int, int], source: dict[int, dict[int, int]]) -> int:
+    target[1] = 13
+    assert source[0][1] == 7
+    assert False, "mut callee unwind"
+    return 0
+
+
+def main() -> int:
+    original = {0: {1: 7}}
+    with arena():
+        action = change
+        return action(mut original[0], original)
