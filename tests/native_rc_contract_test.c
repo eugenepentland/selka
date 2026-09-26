@@ -6,7 +6,7 @@
 #include <string.h>
 #include <sys/resource.h>
 
-typedef struct { size_t live, retired, allocations; unsigned finalizing, max_finalizing; } TestAllocator;
+typedef struct { size_t live, retired, allocations; unsigned finalizing, max_finalizing; void *expect_unpinned; } TestAllocator;
 static myl_rc_status allocate(myl_native_heap *heap, const myl_rc_alloc_request *request, void **out) {
     assert(!request->region);
     size_t bytes = MYL_RC_PREFIX_BYTES + request->element->size * request->count;
@@ -301,6 +301,8 @@ static void finalizer(myl_native_heap *heap, void *payload) {
     assert(owner->next && *(uint64_t *)owner->next == 73);
     assert(((myl_rc_object *)owner->next - 1)->owners == 1);
     TestAllocator *state = myl_rc_allocator_context(heap);
+    if (state->expect_unpinned)
+        assert(!(((myl_native_object *)state->expect_unpinned - 1)->mark & MYL_NATIVE_OBJECT_PINNED));
     ++state->finalizing;
     if (state->finalizing > state->max_finalizing) state->max_finalizing = state->finalizing;
     myl_rc_field *fields;
@@ -425,6 +427,12 @@ static void transfer_failure_test(void) {
     second->owners = MYL_RC_COUNT_MAX;
     assert(myl_rc_value_copy(&heap, &to, &from) == MYL_RC_COUNT_LIMIT);
     assert(!destination.first && !destination.second && first->owners == 1 && second->owners == MYL_RC_COUNT_MAX);
+    myl_rc_slot sources[2] = {{.shape = &pointer_shape, .address = &source.first},
+        {.shape = &pointer_shape, .address = &source.second}};
+    myl_rc_slot destinations[2] = {{.shape = &pointer_shape, .address = &destination.first},
+        {.shape = &pointer_shape, .address = &destination.second}};
+    assert(myl_rc_value_copy_many(&heap, destinations, sources, 2) == MYL_RC_COUNT_LIMIT);
+    assert(!destination.first && !destination.second && first->owners == 1 && second->owners == MYL_RC_COUNT_MAX);
     second->owners = 1;
     myl_rc_pin pins[2] = {0};
     assert(myl_rc_pin_acquire(&heap, source.first, &pins[0]) == MYL_RC_OK);
@@ -478,7 +486,9 @@ static void uniqueness_and_alias_replace_test(void) {
             ((uintptr_t)1 << MYL_NATIVE_OBJECT_COUNT_SHIFT), .element = &node_type},
         .node = {.next = new_value(&heap, &scalar_type, 1)}
     };
-    myl_rc_construction_abort(&heap, &arena.node);
+    edit = (myl_rc_edit){.payload = &arena.node, .owned = 1};
+    myl_rc_edit_abort(&heap, &edit);
+    assert(!edit.payload && !edit.owned);
     assert(!arena.node.next && state.live == 0);
     myl_rc_construction_abort(&heap, &arena.node);
     assert(state.live == 0);
@@ -548,6 +558,67 @@ static void deep_pinned_clone_test(void) {
     free(pins);
     finish(&heap, &state);
 }
+// spec: RC-SCOPES-1
+static void scope_unwind_test(void) {
+    myl_native_heap heap;
+    TestAllocator state;
+    start(&heap, &state);
+    void *value = new_value(&heap, &scalar_type, 1);
+    myl_rc_scope outer, inner;
+    myl_rc_scope_begin(&heap, &outer);
+    assert(myl_rc_scope_pin(&outer, value) == MYL_RC_OK);
+    myl_rc_scope_begin(&heap, &inner);
+    assert(myl_rc_scope_pin(&inner, value) == MYL_RC_OK);
+    myl_rc_owner_release(&heap, value);
+    myl_rc_scope_end(&inner);
+    assert(((myl_rc_object *)value - 1)->holds == 1 && (((myl_native_object *)value - 1)->mark & MYL_NATIVE_OBJECT_PINNED));
+    myl_rc_scope_end(&outer);
+    myl_rc_scope_end(&outer);
+    assert(state.live == 0);
+    assert(myl_rc_module_register(&heap, &resource_module) == MYL_RC_OK);
+    Node *resource = new_value(&heap, &resource_type, 1);
+    resource->next = new_value(&heap, &scalar_type, 1);
+    *(uint64_t *)resource->next = 73;
+    state.expect_unpinned = resource->next;
+    myl_rc_scope_begin(&heap, &outer);
+    assert(myl_rc_scope_pin(&outer, resource->next) == MYL_RC_OK);
+    assert(myl_rc_scope_pin(&outer, resource) == MYL_RC_OK);
+    myl_rc_owner_release(&heap, resource);
+    myl_rc_scope_end(&outer);
+    assert(state.live == 0 && state.retired == 4 && !outer.active && !outer.journal);
+    finish(&heap, &state);
+}
+// spec: RC-SCOPES-1
+static void partial_scope_test(void) {
+    myl_native_heap heap;
+    TestAllocator state;
+    start(&heap, &state);
+    myl_rc_shape array = {.size = 2 * sizeof(void *), .kind = MYL_RC_SHAPE_ARRAY,
+        .as.array = {.element = &pointer_shape, .count = 2, .stride = sizeof(void *)}};
+    const myl_rc_shape *shape;
+    assert(myl_rc_shape_import(&heap, &array, &shape) == MYL_RC_OK);
+    void *values[2] = {new_value(&heap, &scalar_type, 1), new_value(&heap, &scalar_type, 1)};
+    myl_rc_object *second = (myl_rc_object *)values[1] - 1;
+    second->holds = MYL_RC_COUNT_MAX;
+    myl_rc_scope scope;
+    myl_rc_scope_begin(&heap, &scope);
+    myl_rc_projection projection = {.shape = shape};
+    myl_rc_place place = {.receiver = {.shape = shape, .address = values}, .path = &projection, .count = 1};
+    size_t before = heap.bytes;
+    assert(myl_rc_scope_prepare(&scope, &place) == MYL_RC_COUNT_LIMIT);
+    assert(scope.active && !scope.journal && heap.bytes == before);
+    assert(((myl_rc_object *)values[0] - 1)->holds == 0);
+    assert(!(((myl_native_object *)values[0] - 1)->mark & MYL_NATIVE_OBJECT_PINNED));
+    assert(second->holds == MYL_RC_COUNT_MAX && second->owners == 1);
+    second->holds = 0;
+    assert(myl_rc_scope_prepare(&scope, &place) == MYL_RC_OK);
+    assert(((myl_rc_object *)values[0] - 1)->holds == 1 && second->holds == 1);
+    myl_rc_scope_end(&scope);
+    myl_rc_edges_release(&heap, shape, values, 1);
+    myl_rc_drain(&heap);
+    assert(state.live == 0);
+    finish(&heap, &state);
+}
 int myl_rc_contract_verify(void) {
     struct rlimit stack, original;
     assert(!getrlimit(RLIMIT_STACK, &stack));
@@ -567,13 +638,15 @@ int myl_rc_contract_verify(void) {
     uniqueness_and_alias_replace_test();
     many_bindings_test();
     deep_pinned_clone_test();
+    scope_unwind_test();
+    partial_scope_test();
     assert(!setrlimit(RLIMIT_STACK, &original));
-    return 14;
+    return 16;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
-    assert(myl_rc_contract_verify() == 14);
-    puts("native RC contract: 14 tests passed");
+    assert(myl_rc_contract_verify() == 16);
+    puts("native RC contract: 16 tests passed");
     return 0;
 }
 #endif

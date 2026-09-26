@@ -253,6 +253,35 @@ static myl_rc_status transfer(myl_native_heap *heap, myl_rc_slot *destination,
 myl_rc_status myl_rc_value_copy(myl_native_heap *heap, myl_rc_slot *destination, const myl_rc_slot *source) {
     return transfer(heap, destination, source, MYL_RC_COPY);
 }
+myl_rc_status myl_rc_value_copy_many(myl_native_heap *heap, myl_rc_slot *destinations,
+                                     const myl_rc_slot *sources, size_t count) {
+    myl_rc_invariant(heap && heap->rc && (!count || (destinations && sources)));
+    clone_work work = {0};
+    transfer_walk walk = {.heap = heap, .mode = MYL_RC_COPY, .clones = &work};
+    size_t initialized = 0;
+    myl_rc_status status = MYL_RC_OK;
+    for (size_t i = 0; i < count; ++i) {
+        const myl_rc_shape *shape = myl_rc_shape_resolve(heap, sources[i].shape);
+        const myl_rc_shape *target = myl_rc_shape_resolve(heap, destinations[i].shape);
+        myl_rc_invariant(shape && target && shape->size == target->size && sources[i].address != destinations[i].address);
+        if (destinations[i].region > heap->region_depth) { status = MYL_RC_REGION_ERROR; break; }
+        status = prepare_frames(&walk, shape);
+        if (status != MYL_RC_OK) break;
+        myl_rc_value_seed(heap, shape, destinations[i].address, sources[i].address, 1);
+        ++initialized;
+        walk.region = destinations[i].region;
+        status = visit(&walk, shape, destinations[i].address, sources[i].address, transfer_pointer);
+        if (status != MYL_RC_OK) break;
+    }
+    if (status == MYL_RC_OK) status = finish_clones(&walk);
+    if (status != MYL_RC_OK)
+        for (size_t i = 0; i < initialized; ++i) {
+            myl_rc_edges_release(heap, destinations[i].shape, destinations[i].address, 1);
+            memset(destinations[i].address, 0, destinations[i].shape->size);
+        }
+    dispose_walk(&walk, status != MYL_RC_OK);
+    return status;
+}
 myl_rc_status myl_rc_value_take(myl_native_heap *heap, myl_rc_slot *destination, myl_rc_slot *source) {
     return transfer(heap, destination, source, MYL_RC_TAKE);
 }
@@ -322,7 +351,7 @@ void myl_rc_edit_abort(myl_native_heap *heap, myl_rc_edit *edit) {
     void *payload = edit->payload;
     unsigned owned = edit->owned;
     *edit = (myl_rc_edit){0};
-    if (owned) myl_rc_owner_release(heap, payload);
+    if (owned) myl_rc_construction_abort(heap, payload);
 }
 void myl_rc_edit_commit(myl_native_heap *heap, myl_rc_slot *slot, myl_rc_edit *edit) {
     myl_rc_invariant(edit != NULL);
