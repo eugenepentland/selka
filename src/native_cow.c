@@ -77,8 +77,18 @@ static int holds_payload_path(const myl_native_type *type, const myl_native_type
     }
 }
 static int holds_payload(const myl_native_type *type) {
+    /* Generated descriptors have process lifetime. Repeated transfers of an
+     * inline record (notably VM call frames) otherwise re-walk its entire
+     * schema for every held field on every instruction. Direct-mapped thread
+     * local entries need no synchronization; collisions only redo the walk. */
+    static _Thread_local struct { const myl_native_type *type; int result; } cache[256];
+    if (!type) return 0;
+    size_t slot = ((uintptr_t)type >> 4) & 255;
+    if (cache[slot].type == type) return cache[slot].result;
     const myl_native_type *seen[MYL_NATIVE_COW_TYPE_DEPTH_MAX];
-    return holds_payload_path(type, seen, 0);
+    int result = holds_payload_path(type, seen, 0);
+    if (result >= 0) { cache[slot].type = type; cache[slot].result = result; }
+    return result;
 }
 /* Set SHARED on one payload a transfer or a copy now leaves with a second
  * holder, unless it is pinned, which the caller must copy instead. Answers 1
@@ -101,12 +111,16 @@ static int share_at(myl_native_heap *heap, const myl_native_type *type, unsigned
     if (type->trace_mode == MYL_NATIVE_TRACE_NONE) return 1;
     switch (type->kind) {
     case MYL_NATIVE_POINTER: {
-        int held = holds_payload(type);
-        if (held < 0) return 0;
-        if (!held) return 1;
+        const int box = type->collection_kind == 5;
+        if (!box && type->collection_kind != 1 && type->collection_kind != 3 && type->collection_kind != 4) return 1;
+        if (box) {
+            int held = holds_payload(type->element);
+            if (held < 0) return 0;
+            if (!held) return 1;
+        }
         void *payload;
         memcpy(&payload, address, sizeof payload);
-        if (type->collection_kind == 5) {
+        if (box) {
             if (!payload || !type->element) return !payload;
             /* First walk without replacements. If a pinned descendant needs
              * one, clone this immutable box and patch only the fresh body. */
