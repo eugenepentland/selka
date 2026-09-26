@@ -1362,3 +1362,5 @@ host failure in one worker leaves the units the other workers hold running.
 - [RC-NESTED-READ-LOAN-1] A managed collection read may lend its result directly into a single-definition compiler receiver when the complete projected chain is anchored by one stable named root and every receiver interval contains only scalar operations and further certified reads. Named rows, published results, callbacks, mutation, arena changes and dictionary hold roles retain owned publication. The physical plan keeps the root until the final scalar read; bounded or cyclic proof refusal retains ordinary ownership.
 
 - [RC-PLAIN-LIST-WRITE-1] RC writes of nonzero scalar list elements with no counted or unique edges use the native typed store after unchanged index normalization and bounds checks; managed and unique elements retain fallible ownership publication helpers.
+
+- [RC-INERT-PROJECTION-1] An immediate list-element read into a proved inert mutation receiver borrows from the live physical parent until fill detaches and refreshes it; named snapshots, callbacks, alternate fill entries and unproved paths retain ordinary ownership or scoped protection.

@@ -5,6 +5,23 @@ const cow = @import("cow_plan.zig");
 const Op = @FieldType(bytecode.Instruction, "op");
 const Path = struct { locals: [8]usize = undefined, len: usize = 0 };
 
+/// Lend an immediate list-element projection into its proved inert receiver.
+/// The parent remains the physical owner; fill detaches and refreshes the
+/// borrowed pointer before mutation, without an intermediate snapshot token.
+pub fn projection(comptime E: type, self: *E, pc: usize) bool {
+    const code = self.function.scope.instructions;
+    if (pc + 1 >= code.len or code[pc].op != .buffer_operation) return false;
+    const operation = code[pc].op.buffer_operation;
+    if (operation.kind != .read or code[pc + 1].op != .store_local) return false;
+    if (self.isBranchTarget(pc + 1)) return false;
+    const local = @backingInt(code[pc + 1].op.store_local);
+    const place = self.cow.?.plan.place(local) orelse return false;
+    if (place.step != .element or place.box != null) return false;
+    if (place.base != pc or place.fill != pc + 1) return false;
+    if (place.parent != @backingInt(operation.owner)) return false;
+    return proven(E, self, local);
+}
+
 /// Keep the ordinary owning anchor live through a closed scalar-only interval.
 /// Unknown effects, managed publication, callbacks, backwards edges and entries
 /// bypassing the capture retain the complete existing held/pinned protocol.
