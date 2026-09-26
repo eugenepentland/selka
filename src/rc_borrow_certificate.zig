@@ -8,7 +8,7 @@ const shapes = @import("rc_shape.zig");
 const model = @import("rc_model.zig");
 const Hash = std.crypto.hash.Blake3;
 /// Changing the accepted physical grammar changes every certificate identity.
-pub const version = "mylang-rc-borrowed-entry-v2";
+pub const version = "mylang-rc-borrowed-entry-v3";
 const Value = struct { ty: typed.Type, anchor: ?u32 = null };
 
 /// Certify a standalone function; direct calls require the program-aware entry.
@@ -20,16 +20,32 @@ pub fn certify(allocator: std.mem.Allocator, catalog: *shapes.Catalog, function:
 /// Forward branch joins are exact; unknown operations, backedges and fresh heap
 /// objects decline certification. Calls must independently prove immortal-only.
 pub fn certifyIn(allocator: std.mem.Allocator, catalog: *shapes.Catalog, functions: []const bytecode.Function, function: bytecode.Function, abi: []const u8) native.Error!?model.BorrowCertificate {
-    const answer = (try analyze(.{ .allocator = allocator, .catalog = catalog, .functions = functions, .function = function, .abi = abi, .depth = 0 })) orelse return null;
+    var traversal: Traversal = .{};
+    const answer = (try analyze(.{ .allocator = allocator, .catalog = catalog, .functions = functions, .function = function, .abi = abi, .traversal = &traversal })) orelse return null;
     const parameter = answer.value.anchor orelse return null;
     return .{ .parameter = parameter, .shape_identity = (try catalog.native.layout(answer.value.ty)).hash, .dependency_identity = answer.identity };
 }
 
 const Answer = struct { value: Value, identity: [32]u8 };
 const State = struct { stack: []Value, locals: []?Value };
-const Input = struct { allocator: std.mem.Allocator, catalog: *shapes.Catalog, functions: []const bytecode.Function, function: bytecode.Function, abi: []const u8, depth: usize };
+// One root query has a bounded call depth and total state-copy work. Active
+// instruction slices identify recursion without allocating another graph.
+const Traversal = struct { active: [16]?[*]const bytecode.Instruction = @splat(null), depth: usize = 0, remaining: usize = 65536 };
+const Input = struct { allocator: std.mem.Allocator, catalog: *shapes.Catalog, functions: []const bytecode.Function, function: bytecode.Function, abi: []const u8, traversal: *Traversal };
 fn analyze(input: Input) native.Error!?Answer {
-    if (input.depth >= 16) return null;
+    const traversal = input.traversal;
+    if (traversal.depth == traversal.active.len) return null;
+    const code = input.function.scope.instructions;
+    for (traversal.active[0..traversal.depth]) |active| if (active == code.ptr) return null;
+    // Each supported instruction pushes at most one abstract value. This
+    // bounds all copied local and stack states, including callees and joins.
+    const width = std.math.add(usize, input.function.scope.locals.len, code.len) catch return null;
+    const cells = std.math.mul(usize, code.len, width) catch return null;
+    if (cells > traversal.remaining) return null;
+    traversal.remaining -= cells;
+    traversal.active[traversal.depth] = code.ptr;
+    traversal.depth += 1;
+    defer traversal.depth -= 1;
     if (!try admissible(input.catalog, input.function)) return null;
     var arena = std.heap.ArenaAllocator.init(input.allocator);
     defer arena.deinit();
@@ -62,7 +78,7 @@ fn flow(input: Input) native.Error!?Answer {
         locals[index] = .{ .ty = ty, .anchor = if ((try input.catalog.get(ty)).counted) @intCast(index) else null };
     }
     incoming[0] = .{ .stack = &.{}, .locals = locals };
-    var proof: Proof = .{ .catalog = input.catalog, .function = input.function, .functions = input.functions, .abi = input.abi, .depth = input.depth, .locals = locals };
+    var proof: Proof = .{ .catalog = input.catalog, .function = input.function, .functions = input.functions, .abi = input.abi, .traversal = input.traversal, .locals = locals };
     part(&proof.hash, version);
     part(&proof.hash, input.abi);
     part(&proof.hash, input.function.name);
@@ -135,7 +151,7 @@ const Proof = struct {
     function: bytecode.Function,
     functions: []const bytecode.Function,
     abi: []const u8,
-    depth: usize,
+    traversal: *Traversal,
     pc: usize = 0,
     stack: std.ArrayList(Value) = .empty,
     locals: []?Value,
@@ -219,7 +235,7 @@ const Proof = struct {
         const index = @backingInt(target);
         if (index >= self.functions.len) return false;
         const callee = self.functions[index];
-        const answer = (try analyze(.{ .allocator = allocator, .catalog = self.catalog, .functions = self.functions, .function = callee, .abi = self.abi, .depth = self.depth + 1 })) orelse return false;
+        const answer = (try analyze(.{ .allocator = allocator, .catalog = self.catalog, .functions = self.functions, .function = callee, .abi = self.abi, .traversal = self.traversal })) orelse return false;
         // Only immortal factories are admitted as calls, so a canonical owned
         // result cannot create an unjournaled runtime ownership obligation.
         if (answer.value.anchor != null) return false;

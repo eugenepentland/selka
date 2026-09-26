@@ -1,0 +1,22 @@
+{
+  "compiler_source": "f6bea5d9",
+  "compiler_mode": "Debug",
+  "compiler_sha256": "8c8134078fc56eeb468e65d229db2480d99c39458b044e976d604bf64de69478",
+  "source_sha256": "7586434f76ef78264b1d7816125edd24cfd0ce992c37b61186276b183df08a4c",
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/scripts/build-slot.sh",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-physical-borrow-after-astra/.tmp-physical/install-accepted/bin/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/experiments/d9-rc-view-cycles-20260926/held_cycle.my",
+    "--backend",
+    "qbe",
+    "--mode",
+    "ReleaseFast",
+    "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/.d9-rc-contract-tmp/held-cycle-gc",
+    "--run"
+  ],
+  "exit": 0,
+  "stdout": "",
+  "stderr": ""
+}

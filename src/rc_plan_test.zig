@@ -426,7 +426,7 @@ test "RC-OWNERSHIP-PLAN-1 branch cleanup belongs to the actual unused successor 
     var input = try planInput(&fixture, &facts, "choose");
     const plan = try plans.build(fixture.arena.allocator(), input);
     try t.expect(falseEdgeDrops(input, plan, try localIndex(input, "values")));
-    input.policy.abi = "rc-v2";
+    input.policy.abi = "rc-v1";
     try t.expectError(error.AbiMismatch, plans.build(fixture.arena.allocator(), input));
 }
 
