@@ -35,6 +35,10 @@ void *myl_native_cow_share(myl_native_heap *heap, void *payload);
  * pinned payload is replaced at `address` by its copy, so `address` must be
  * the transfer's own private value. Returns 0 when a copy is refused. */
 int myl_native_cow_share_value(myl_native_heap *heap, const myl_native_type *type, void *address);
+/* Materialize one immutable recursive box body into private inline storage,
+ * shallow-sharing mutable children before the guest can write through it. */
+int myl_native_cow_unbox(myl_native_heap *heap, const myl_native_type *type,
+                         void *box, void *output);
 /* A transfer whose outer collection is already a fresh shallow copy keeps
  * that outer header unshared and marks the mutable payloads in its directly
  * held elements or entries. The caller roots the value at `address`. */
@@ -51,6 +55,8 @@ int myl_native_cow_take_depth_failure(void);
  * when any required shallow copy fails. */
 int myl_qbe_cow_transfer(void *context, const myl_native_type *type,
                           const void *value, void *output, uint32_t children);
+int myl_qbe_cow_unbox(void *context, const myl_native_type *type,
+                      void *box, void *output);
 /* The slow half of a uniqueness check: `payload` when it is not shared, else a
  * fresh unshared copy whose directly held payloads are marked shared. The
  * caller stores the answer back into the slot it loaded `payload` from.
