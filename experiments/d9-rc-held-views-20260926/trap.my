@@ -1,0 +1,9 @@
+module trap
+
+
+def main() -> int:
+    mapping = {1: [7, 8]}
+    views = [mapping.values()]
+    for value in views[0]:
+        assert len(value) == 0
+    return 0

@@ -543,6 +543,11 @@ pub fn build(b: *std.Build) void {
     });
     unit.root_module.addCSourceFiles(.{
         .root = b.path("."),
+        .files = &.{ "tests/native_file_cleanup_test.c", "src/qbe_files.c", "src/qbe_resources.c", "src/qbe_stand_ins.c" },
+        .flags = &.{ "-std=c11", "-Wall", "-Wextra", "-Werror", "-UNDEBUG", "-DMYL_FILE_CLEANUP_LIBRARY", "-ffunction-sections", "-fdata-sections" },
+    });
+    unit.root_module.addCSourceFiles(.{
+        .root = b.path("."),
         .files = &.{ "tests/qbe_runtime_rc_test.c", "src/qbe_runtime_rc.c" },
         .flags = &.{ "-std=c11", "-Wall", "-Wextra", "-Werror", "-UNDEBUG", "-DMYL_NATIVE_RC=1", "-DMYL_RC_CONTRACT_LIBRARY", "-DMYL_NATIVE_RC_COUNTING=1", "-DMYL_RC_STATS_LIBRARY", "-ffunction-sections", "-fdata-sections" },
     });
