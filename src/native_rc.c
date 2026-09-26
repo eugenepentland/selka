@@ -118,12 +118,14 @@ myl_rc_status myl_rc_new(myl_native_heap *heap, const myl_rc_alloc_request *requ
     if (request->region > heap->region_depth) return MYL_RC_REGION_ERROR;
     myl_rc_status status = heap->rc->allocator.hooks.allocate(heap, request, out);
     myl_rc_invariant(status == MYL_RC_OK ? *out != NULL : *out == NULL);
+    MYL_RC_STAT_WHEN(heap, request->region ? MYL_RC_STAT_ARENA_ALLOCATE : MYL_RC_STAT_HEAP_ALLOCATE, status == MYL_RC_OK);
     return status;
 }
 void myl_rc_allocator_retire(myl_native_heap *heap, void *payload) {
     myl_rc_invariant(myl_rc_is_counted(payload));
     myl_rc_object *object = (myl_rc_object *)payload - 1;
     myl_rc_invariant((object->common.mark & MYL_RC_OBJECT_DYING) != 0);
+    MYL_RC_STAT(heap, MYL_RC_STAT_RETIRE);
     heap->rc->allocator.hooks.retire(heap, payload);
 }
 int myl_rc_is_counted(const void *payload) {
@@ -141,8 +143,9 @@ static myl_rc_object *live_object(myl_native_heap *heap, void *payload) {
 myl_rc_status myl_rc_owner_acquire(myl_native_heap *heap, void *payload) {
     if (!myl_rc_is_counted(payload)) return MYL_RC_OK;
     myl_rc_object *object = live_object(heap, payload);
-    if (object->owners == MYL_RC_COUNT_MAX) return MYL_RC_COUNT_LIMIT;
+    if (object->owners == MYL_RC_COUNT_MAX) { MYL_RC_STAT(heap, MYL_RC_STAT_OWNER_LIMIT); return MYL_RC_COUNT_LIMIT; }
     ++object->owners;
+    MYL_RC_STAT(heap, MYL_RC_STAT_OWNER_ACQUIRE);
     return MYL_RC_OK;
 }
 void myl_rc_enqueue(myl_native_heap *heap, myl_rc_object *object) {
@@ -157,6 +160,7 @@ void myl_rc_edge_release(myl_native_heap *heap, void *payload) {
     myl_rc_object *object = live_object(heap, payload);
     myl_rc_invariant(object->owners != 0);
     --object->owners;
+    MYL_RC_STAT(heap, MYL_RC_STAT_OWNER_RELEASE);
     myl_rc_enqueue(heap, object);
 }
 void myl_rc_owner_release(myl_native_heap *heap, void *payload) {
@@ -164,6 +168,7 @@ void myl_rc_owner_release(myl_native_heap *heap, void *payload) {
     myl_rc_drain(heap);
 }
 int myl_rc_unique(const myl_native_heap *heap, const void *payload) {
+    MYL_RC_STAT(heap, MYL_RC_STAT_UNIQUE_CHECK);
     if (!payload) return 1;
     uintptr_t mark = ((const myl_native_object *)payload - 1)->mark;
     if (mark & MYL_NATIVE_OBJECT_IMMORTAL) return 0;
@@ -177,8 +182,9 @@ myl_rc_status myl_rc_hold_acquire(myl_native_heap *heap, void *payload, myl_rc_h
     myl_rc_invariant(hold && !hold->payload);
     if (myl_rc_is_counted(payload)) {
         myl_rc_object *object = live_object(heap, payload);
-        if (object->holds == MYL_RC_COUNT_MAX) return MYL_RC_COUNT_LIMIT;
+        if (object->holds == MYL_RC_COUNT_MAX) { MYL_RC_STAT(heap, MYL_RC_STAT_HOLD_LIMIT); return MYL_RC_COUNT_LIMIT; }
         ++object->holds;
+        MYL_RC_STAT(heap, MYL_RC_STAT_HOLD_ACQUIRE);
     }
     hold->payload = payload;
     return MYL_RC_OK;
@@ -191,6 +197,7 @@ void myl_rc_hold_release(myl_native_heap *heap, myl_rc_hold *hold) {
         myl_rc_object *object = live_object(heap, payload);
         myl_rc_invariant(object->holds != 0);
         --object->holds;
+        MYL_RC_STAT(heap, MYL_RC_STAT_HOLD_RELEASE);
         myl_rc_enqueue(heap, object);
     }
     myl_rc_drain(heap);

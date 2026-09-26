@@ -1,0 +1,41 @@
+{
+  "native_rc": {
+    "before": "105ddbcf9e24b07c33b91e14032ba74d9906ea7e8cb97c547523805427411a6c",
+    "after": "105ddbcf9e24b07c33b91e14032ba74d9906ea7e8cb97c547523805427411a6c"
+  },
+  "native_rc_transfer": {
+    "before": "6154f02855828965418d27b3552dea675524ecdcd34776cbd7db9d482f6ec890",
+    "after": "6154f02855828965418d27b3552dea675524ecdcd34776cbd7db9d482f6ec890"
+  },
+  "disabled_scenario": {
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "enabled_record": {
+    "version": 1,
+    "runtime": "rc-v1-counting",
+    "saturated": false,
+    "owner_acquire": 1,
+    "owner_release": 2,
+    "hold_acquire": 1,
+    "hold_release": 1,
+    "owner_limit": 0,
+    "hold_limit": 0,
+    "heap_allocate": 1,
+    "arena_allocate": 0,
+    "retire": 1,
+    "clone_shell": 0,
+    "unique_check": 2
+  },
+  "base_commit": "7c22a772",
+  "compile_flags": [
+    "-std=c11",
+    "-O2"
+  ],
+  "comparison": "objcopy --only-section=.text -O binary; nm -u contains no myl_rc_stats reference",
+  "sanitizers": [
+    "address",
+    "undefined"
+  ]
+}

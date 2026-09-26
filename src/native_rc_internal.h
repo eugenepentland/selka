@@ -1,6 +1,7 @@
 #ifndef MYLANG_NATIVE_RC_INTERNAL_H
 #define MYLANG_NATIVE_RC_INTERNAL_H
 #include "native_rc.h"
+#include "native_rc_stats.h"
 /* Private state: generated code sees only the frozen object/common prefixes. */
 typedef struct {
     const myl_rc_shape *shape;
@@ -36,6 +37,9 @@ struct myl_rc_state {
     struct { myl_rc_object *head; int active; } dead;
     myl_rc_scope *scopes;
     myl_rc_status failure;
+#if defined(MYL_NATIVE_RC_COUNTING) && MYL_NATIVE_RC_COUNTING
+    myl_rc_counters stats;
+#endif
 };
 void myl_rc_invariant(int);
 void *myl_rc_meta_alloc(myl_native_heap *, size_t);

@@ -538,13 +538,13 @@ pub fn build(b: *std.Build) void {
     unit.root_module.addIncludePath(b.path("src"));
     unit.root_module.addCSourceFiles(.{
         .root = b.path("."),
-        .files = &.{ "tests/native_rc_contract_test.c", "tests/native_rc_collections_test.c", "tests/native_rc_codecs_test.c", "tests/native_rc_host_test.c", "src/native_print.c", "src/qbe_runtime.c", "src/native_cow.c", "src/native_rc.c", "src/native_rc_shapes.c", "src/native_rc_walk.c", "src/native_rc_scope.c", "src/native_rc_transfer.c", "src/native_rc_alloc.c", "src/native_rc_values.c", "src/native_heap.c", "src/native_arena.c", "src/native_collections.c", "src/native_text.c", "src/native_text_methods.c", "src/native_dictionary.c", "src/native_equal.c", "src/native_bytes.c" },
-        .flags = &.{ "-std=c11", "-Wall", "-Wextra", "-Werror", "-UNDEBUG", "-DMYL_RC_CONTRACT_LIBRARY", "-DMYL_RC_COLLECTIONS_LIBRARY", "-DMYL_RC_CODECS_LIBRARY", "-DMYL_RC_HOST_LIBRARY", "-ffunction-sections", "-fdata-sections" },
+        .files = &.{ "tests/native_rc_stats_test.c", "tests/native_rc_contract_test.c", "tests/native_rc_collections_test.c", "tests/native_rc_codecs_test.c", "tests/native_rc_host_test.c", "src/native_print.c", "src/qbe_runtime.c", "src/native_cow.c", "src/native_rc.c", "src/native_rc_stats.c", "src/native_rc_shapes.c", "src/native_rc_walk.c", "src/native_rc_scope.c", "src/native_rc_transfer.c", "src/native_rc_alloc.c", "src/native_rc_values.c", "src/native_heap.c", "src/native_arena.c", "src/native_collections.c", "src/native_text.c", "src/native_text_methods.c", "src/native_dictionary.c", "src/native_equal.c", "src/native_bytes.c" },
+        .flags = &.{ "-std=c11", "-Wall", "-Wextra", "-Werror", "-UNDEBUG", "-DMYL_RC_CONTRACT_LIBRARY", "-DMYL_NATIVE_RC_COUNTING=1", "-DMYL_RC_STATS_LIBRARY", "-DMYL_RC_COLLECTIONS_LIBRARY", "-DMYL_RC_CODECS_LIBRARY", "-DMYL_RC_HOST_LIBRARY", "-ffunction-sections", "-fdata-sections" },
     });
     unit.root_module.addCSourceFiles(.{
         .root = b.path("."),
         .files = &.{ "tests/qbe_runtime_rc_test.c", "src/qbe_runtime_rc.c" },
-        .flags = &.{ "-std=c11", "-Wall", "-Wextra", "-Werror", "-UNDEBUG", "-DMYL_NATIVE_RC=1", "-DMYL_RC_CONTRACT_LIBRARY", "-ffunction-sections", "-fdata-sections" },
+        .flags = &.{ "-std=c11", "-Wall", "-Wextra", "-Werror", "-UNDEBUG", "-DMYL_NATIVE_RC=1", "-DMYL_RC_CONTRACT_LIBRARY", "-DMYL_NATIVE_RC_COUNTING=1", "-DMYL_RC_STATS_LIBRARY", "-ffunction-sections", "-fdata-sections" },
     });
     unit.root_module.addImport("runtime_contract", runtime_contract);
     unit.root_module.addImport("native_test_root", unit.root_module);
@@ -722,6 +722,7 @@ pub fn build(b: *std.Build) void {
             "tests/native_heap_test.c",
             "src/native_heap.c",
             "src/native_rc.c",
+            "src/native_rc_stats.c",
             "src/native_rc_shapes.c",
             "src/native_rc_walk.c",
             "src/native_rc_scope.c",
@@ -762,6 +763,7 @@ pub fn build(b: *std.Build) void {
             "tests/native_arena_chunks_test.c",
             "src/native_heap.c",
             "src/native_rc.c",
+            "src/native_rc_stats.c",
             "src/native_rc_shapes.c",
             "src/native_rc_walk.c",
             "src/native_rc_scope.c",
@@ -801,6 +803,7 @@ pub fn build(b: *std.Build) void {
             "src/native_cow.c",
             "src/native_heap.c",
             "src/native_rc.c",
+            "src/native_rc_stats.c",
             "src/native_rc_shapes.c",
             "src/native_rc_walk.c",
             "src/native_rc_scope.c",
@@ -856,6 +859,7 @@ pub fn build(b: *std.Build) void {
             "src/native_cow.c",
             "src/native_heap.c",
             "src/native_rc.c",
+            "src/native_rc_stats.c",
             "src/native_rc_shapes.c",
             "src/native_rc_walk.c",
             "src/native_rc_scope.c",
