@@ -1,0 +1,7 @@
+module library
+
+import bridge
+
+
+def main() -> int:
+    return 0

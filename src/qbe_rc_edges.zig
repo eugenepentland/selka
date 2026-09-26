@@ -24,7 +24,27 @@ pub fn after(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "o
             // anchors represented before general edge cleanup is enabled.
             const record = self.program.records[local.ty.recordIndex()];
             if (!record.isCollection() or record.collection.box) continue;
+            if (neededByReceiver(E, self, index)) continue;
             try frame.drop(E, self, index);
         }
     }
+}
+
+fn neededByReceiver(comptime E: type, self: *E, owner: usize) bool {
+    const plan = self.cow.?.plan;
+    for (self.function.scope.locals, 0..) |_, index| {
+        if (!self.live.?.after(self.pc, index)) continue;
+        var at = index;
+        var remaining = self.function.scope.locals.len;
+        while (remaining != 0) : (remaining -= 1) {
+            // A receiver can be read after its mutation scope ends. Its H
+            // then no longer keeps the payload alive; the owning parent must.
+            const parent = if (plan.place(at)) |place| place.parent else @import("qbe_rc_unique.zig").receiverParent(E, self, at) orelse break;
+            if (parent == owner) return true;
+            at = parent;
+        }
+        // Malformed cyclic physical aliases must never authorize a release.
+        if (remaining == 0) return true;
+    }
+    return false;
 }

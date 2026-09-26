@@ -13,7 +13,7 @@ static int valid_scalar(MylangScalar value,const char *type){
     return value.type && !strcmp(value.type,type) && (strcmp(type,"u8") || value.bits<256);
 }
 #include "qbe_codecs_runtime.c"
-enum { I64, U32, U8, TEXT, LIST, DICT, RECORD, BOX, DOMAIN, RESULT, DOMAIN_LIST };
+enum { I64, U32, U8, TEXT, LIST, DICT, RECORD, BOX, DOMAIN, RESULT, DOMAIN_LIST, VIEW, VIEW_LIST };
 typedef struct { myl_native_text *first,*second; } Pair;
 typedef struct { uint32_t tag,padding; myl_native_text *payload; } Result;
 static const myl_native_type integer={.size=8,.alignment=8,.kind=MYL_NATIVE_PLAIN};
@@ -25,8 +25,11 @@ static const myl_native_type pair_type={.size=sizeof(Pair),.alignment=_Alignof(P
 static const myl_native_type box_type={.size=sizeof(void *),.alignment=_Alignof(void *),.kind=MYL_NATIVE_POINTER,.collection_kind=5,.element=&pair_type};
 static const myl_native_field result_fields[]={{offsetof(Result,payload),&pointer,0},{offsetof(Result,payload),&pointer,1}};
 static const myl_native_type result_type={.size=sizeof(Result),.alignment=_Alignof(Result),.kind=MYL_NATIVE_VARIANT,.fields=result_fields,.field_count=2};
-static const myl_native_type *const co_native_types[]={&integer,&scalar,&byte,&pointer,&pointer,&pointer,&pair_type,&box_type,&pointer,&result_type,&pointer};
+static const myl_native_field view_fields[]={{0,&pointer,0}};
+static const myl_native_type view_type={.size=sizeof(void *),.alignment=_Alignof(void *),.kind=MYL_NATIVE_RECORD,.fields=view_fields,.field_count=1};
+static const myl_native_type *const co_native_types[]={&integer,&scalar,&byte,&pointer,&pointer,&pointer,&pair_type,&box_type,&pointer,&result_type,&pointer,&view_type,&pointer};
 static const size_t text_children[]={U32},list_children[]={TEXT},dict_children[]={TEXT,TEXT},pair_children[]={TEXT,TEXT},pair_offsets[]={0,sizeof(void *)},box_children[]={RECORD},domain_children[]={TEXT},result_children[]={DOMAIN,TEXT},result_offsets[]={offsetof(Result,payload),offsetof(Result,payload)},domain_list_children[]={DOMAIN};
+static const size_t view_children[]={DICT},view_offsets[]={0},view_list_children[]={VIEW};
 static const CoCodec codec={TEXT,0,1,RESULT,0,1,TEXT};
 static const CoType co_types[]={
     {"i64",8,0,0,0,NULL,NULL,NULL},
@@ -40,14 +43,17 @@ static const CoType co_types[]={
     {"Domain",sizeof(void *),1,0,4,domain_children,NULL,&codec},
     {"Result",sizeof(Result),2,0,3,result_children,result_offsets,NULL},
     {"list[Domain]",sizeof(void *),0,0,6,domain_list_children,NULL,NULL},
+    {"DictValues[str,str]",sizeof(void *),1,0,1,view_children,view_offsets,NULL},
+    {"list[DictValues]",sizeof(void *),0,0,6,view_list_children,NULL,NULL},
 };
 static const myl_rc_shape plain8={.size=8,.kind=MYL_RC_SHAPE_NONE},plain4={.size=4,.kind=MYL_RC_SHAPE_NONE},plain1={.size=1,.kind=MYL_RC_SHAPE_NONE},pointer_shape={.size=sizeof(void *),.kind=MYL_RC_SHAPE_POINTER};
 static const myl_rc_field pair_edges[]={{0,&pointer_shape,0},{sizeof(void *),&pointer_shape,0}},result_edges[]={{offsetof(Result,payload),&pointer_shape,0},{offsetof(Result,payload),&pointer_shape,1}};
 static const myl_rc_shape pair_shape={.size=sizeof(Pair),.kind=MYL_RC_SHAPE_RECORD,.as.record={pair_edges,2}},result_shape={.size=sizeof(Result),.kind=MYL_RC_SHAPE_VARIANT,.as.variant={result_edges,2,0}};
-static const myl_rc_shape *const shapes[]={&plain8,&plain4,&plain1,&pointer_shape,&pair_shape,&result_shape};
+static const myl_rc_shape view_shape={.size=sizeof(void *),.kind=MYL_RC_SHAPE_HOLD_POINTER};
+static const myl_rc_shape *const shapes[]={&plain8,&plain4,&plain1,&pointer_shape,&pair_shape,&result_shape,&view_shape};
 static const myl_rc_descriptor descriptors[]={
     {.type=&integer,.shape=&plain8},{.type=&scalar,.shape=&plain4},{.type=&byte,.shape=&plain1},{.type=&pointer,.shape=&pointer_shape},
-    {.type=&pair_type,.shape=&pair_shape},{.type=&box_type,.shape=&pointer_shape},{.type=&result_type,.shape=&result_shape}
+    {.type=&pair_type,.shape=&pair_shape},{.type=&box_type,.shape=&pointer_shape},{.type=&result_type,.shape=&result_shape},{.type=&view_type,.shape=&view_shape}
 };
 static const myl_rc_module module={MYL_RC_ABI_VERSION,shapes,sizeof shapes/sizeof *shapes,descriptors,sizeof descriptors/sizeof *descriptors};
 static unsigned mode;
@@ -61,7 +67,8 @@ static int co_method(size_t function,void *ctx,const void *input,void *output){
     return 1;
 }
 static int co_validate_one(void *ctx,size_t type,const void *value){
-    (void)ctx;(void)value;
+    (void)value;
+    if(type==VIEW && mode==4)myl_qbe_fail(ctx,"R_VIEW_CODEC_TEST");
     return type!=DOMAIN || mode!=3;
 }
 static MylQbeContext *begin(size_t type,const MylangWireNode *nodes,size_t count,int rc){
@@ -144,9 +151,33 @@ static void allocation_and_gc(void){
     assert(co_read(DOMAIN,co_arguments[0],0));
     assert(co_write(DOMAIN,co_arguments[0],0) && co_needed==3);finish(ctx);
 }
+static const MylangWireNode view_nodes[]={{"DictValues[str,str]",0,1},{"dict[str,str]",0,1},{"str",0,1},{"u32",'a',0},{"str",0,1},{"u32",'b',0}};
+static void held_views(void){
+    MylQbeContext *ctx=begin(VIEW,view_nodes,6,1);
+    assert(co_read(VIEW,co_arguments[0],0));
+    myl_native_dictionary *dict=*(myl_native_dictionary **)co_arguments[0];
+    assert(((myl_rc_object *)dict-1)->owners==0 && ((myl_rc_object *)dict-1)->holds==1);
+    assert(co_write(VIEW,co_arguments[0],0) && co_needed==6);finish(ctx);
+    ctx=begin(VIEW,view_nodes,5,1);
+    assert(!co_read(VIEW,co_arguments[0],0) && !ctx->heap.objects_live && !*(void **)co_arguments[0]);finish(ctx);
+    ctx=begin(VIEW,view_nodes,6,1);ctx->heap.limit=ctx->heap.bytes;
+    assert(!co_read(VIEW,co_arguments[0],0) && !ctx->heap.objects_live);finish(ctx);
+    ctx=begin(VIEW,view_nodes,6,0);ctx->heap.stress=1;
+    assert(co_read(VIEW,co_arguments[0],0) && co_write(VIEW,co_arguments[0],0));finish(ctx);
+}
+static void held_view_container_and_trap(void){
+    MylangWireNode nodes[7]={{"list[DictValues]",0,1}};
+    memcpy(nodes+1,view_nodes,sizeof view_nodes);
+    MylQbeContext *ctx=begin(VIEW_LIST,nodes,7,1);
+    assert(co_read(VIEW_LIST,co_arguments[0],0) && co_write(VIEW_LIST,co_arguments[0],0));finish(ctx);
+    ctx=begin(VIEW,view_nodes,6,1);mode=4;
+    jmp_buf unwind;ctx->unwind=&unwind;
+    if(!setjmp(unwind)){(void)co_read(VIEW,co_arguments[0],0);assert(0);}
+    assert(ctx->trap && !strcmp(ctx->trap,"R_VIEW_CODEC_TEST"));ctx->unwind=NULL;finish(ctx);
+}
 int myl_rc_codecs_verify(void){
-    lists_and_boxes();partial_and_duplicate();domain_ownership();callback_trap_cleanup();allocation_and_gc();return 11;
+    lists_and_boxes();partial_and_duplicate();domain_ownership();callback_trap_cleanup();allocation_and_gc();held_views();held_view_container_and_trap();return 17;
 }
 #ifndef MYL_RC_CODECS_LIBRARY
-int main(void){return myl_rc_codecs_verify()==11?0:1;}
+int main(void){return myl_rc_codecs_verify()==17?0:1;}
 #endif
