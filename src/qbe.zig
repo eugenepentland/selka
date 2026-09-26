@@ -2210,6 +2210,7 @@ const Emitter = struct {
                 else => {},
             }
             try @import("qbe_rc_ops.zig").after(Emitter, self, instruction.op, stack);
+            try cow_lower.Lower(Emitter).after(self, pc);
             // An instruction whose successor has a body falls through into it;
             // only a real terminator (or a successor that emits nothing) jumps.
             const falls = pc + 1 < self.states.len and self.states[pc + 1] != null;
