@@ -286,10 +286,14 @@ fn generateImpl(allocator: std.mem.Allocator, program_in: bytecode.Program, src:
     const entry_argv_element = if (entry_function.signature.parameter_count != 0) entry_adapter.argvElement(entry_function.scope.locals[0].ty, program.records) else null;
     const entry_argv = if (entry_argv_element) |element| native_descriptors.symbol(a, &layouts, element) catch |err| return layoutError(err) else null;
     const descriptors = native_descriptors.generate(a, &layouts) catch |err| return layoutError(err);
+    const owners = if (@import("runtime_mode.zig").enabled())
+        @import("rc_descriptors.zig").generate(a, &layouts) catch |err| return layoutError(err)
+    else
+        "";
     const renderers = @import("native_render.zig").generate(a, &layouts, program, states) catch |err| return layoutError(err);
     // A program that neither prints nor renders a value into text carries no
     // renderers, and copies nothing.
-    const runtime_data = if (renderers.len == 0) descriptors else try std.mem.concat(a, u8, &.{ descriptors, renderers });
+    const runtime_data = if (renderers.len == 0 and owners.len == 0) descriptors else try std.mem.concat(a, u8, &.{ descriptors, renderers, owners });
     // Wire types and codecs serve only a library's embedding API.
     const wire_types = if (shape.executable) null else (qbe_wire.describe(a, &layouts) catch |err| return layoutError(err)).types;
     const codecs = if (shape.executable) null else @import("qbe_codecs.zig").describe(a, program, &layouts) catch |err| return layoutError(err);

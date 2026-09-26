@@ -243,3 +243,58 @@ test "RC-OWNERSHIP-PLAN-1 held receiver publication preserves its nonsharing hol
     try t.expectEqual(source.ownership, plan.success.source.ownership);
     try t.expect(plan.success.destination.ownership == .owned);
 }
+
+const Metadata = struct { runtime_data: []const u8 };
+
+fn metadata() !std.json.Parsed(Metadata) {
+    var compilation = try compiler.Compilation.init(t.allocator, "rc_metadata.my",
+        \\record Node:
+        \\    label: bytes
+        \\    next: Option[Node]
+        \\
+        \\record Data:
+        \\    nodes: [2]Node
+        \\    result: Result[bytes, int]
+        \\
+        \\def main() -> int:
+        \\    return 0
+    );
+    defer compilation.deinit();
+    const manifest = try compilation.emitQbe(t.allocator);
+    defer t.allocator.free(manifest);
+    return std.json.parseFromSlice(Metadata, t.allocator, manifest, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
+}
+
+fn metadataCompiles(data: []const u8) !bool {
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(t.io, .{ .sub_path = "native_heap.h", .data = @embedFile("native_heap.h") });
+    try temporary.dir.writeFile(t.io, .{ .sub_path = "native_rc.h", .data = @embedFile("native_rc.h") });
+    try temporary.dir.writeFile(t.io, .{ .sub_path = "ownership.c", .data = data });
+    const zig = @import("native_test_options").zig_path;
+    const result = try std.process.run(t.allocator, t.io, .{
+        .argv = &.{ zig, "cc", "-std=c11", "-Werror", "-c", "ownership.c", "-o", "ownership.o" },
+        .cwd = .{ .dir = temporary.dir },
+    });
+    defer t.allocator.free(result.stdout);
+    defer t.allocator.free(result.stderr);
+    const success = result.term == .exited and result.term.exited == 0;
+    if (!success) try std.Io.File.stderr().writeStreamingAll(t.io, result.stderr);
+    return success;
+}
+
+// spec-case: RC-OWNERSHIP-PLAN-1
+test "RC-OWNERSHIP-PLAN-1 selected RC metadata compiles against the frozen C ABI" {
+    const mode = @import("runtime_mode.zig");
+    const saved = mode.get();
+    defer mode.set(saved);
+    mode.set(.gc);
+    var gc = try metadata();
+    defer gc.deinit();
+    try t.expect(std.mem.indexOf(u8, gc.value.runtime_data, "myl_rc_generated_module") == null);
+    mode.set(.rc);
+    var rc = try metadata();
+    defer rc.deinit();
+    try t.expect(std.mem.indexOf(u8, rc.value.runtime_data, "const myl_rc_module myl_rc_generated_module") != null);
+    try t.expect(try metadataCompiles(rc.value.runtime_data));
+}
