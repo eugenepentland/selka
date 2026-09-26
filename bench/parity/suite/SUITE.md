@@ -71,7 +71,10 @@ print "long lived tree of depth {max_depth}\t check: {check(long_lived)}"
 
 Expected first line: `stretch tree of depth 17\t check: 262143`.
 Ports: `binary_trees.my` (a `class` node on the collecting heap);
-`binary_trees_arena.my` (each short-lived tree built and checked inside its own
+`binary_trees_recursive.my` (a recursive value union with immutable boxed
+branches, producing the same output as the class port);
+`binary_trees_arena.my` (the former class tree migrated to a recursive value
+record, with each short-lived tree built and checked inside its own
 `with arena():` block); `binary_trees.zig` (one `std.heap.ArenaAllocator` per
 depth batch, `reset(.retain_capacity)` after each tree; the stretch and
 long-lived trees in their own arena); `binary_trees_gpa.zig`

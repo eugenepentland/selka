@@ -321,15 +321,15 @@ how a union is laid out, compared, copied, or passed across a module boundary.
 
 ## Recursive payloads
 
-A `record` is laid out by value, so its fields must close in finite space: a record field
-that reaches the record again is rejected with `E_RECURSIVE_RECORD`. A recursive tree
-node — an AST's binary node, for instance — therefore has to be a `class`, whose reference
-payload keeps the layout finite. Declare the class before the union so the union's payload
-names an already-declared type; the class may name the union it is eventually a case of.
+A record or union can refer to itself directly or through another value type when
+there is a way to finish the value. An `Option` field has `None`, and a union can
+have a case with no recursive payload. The compiler puts the recursive field or
+case in an immutable managed box; source code still reads and writes its value.
+Copies share boxes until a nested write creates new boxes along that path.
 
 ```mylang
 # doc: expect 42
-class Binary:
+record Binary:
     left: Expr
     right: Expr
 
@@ -349,10 +349,11 @@ def main() -> int:
     return total(tree)
 ```
 
-This returns `42`. The same shape with `record Binary` instead of `class Binary` is
-rejected: `E_RECURSIVE_RECORD: type fields must form a finite by-value layout`. A
-recursive union that reaches itself only through a `list[...]` payload — the
-`sexpr`/node-list shape — needs no `class`, because the list is already a reference.
+This returns `42`; the `number` case ends the recursion. `record Loop: next: Loop`
+still gets `E_RECURSIVE_RECORD`, because it has no finite value. Recursion through
+`list[...]` or `dict[...]` already has indirection and needs no box. Nested
+recursive values compare, hash, print, cross typed JSON boundaries and escape
+arenas as values. Printing stops with `...` at the renderer's depth cap.
 
 ## Fixed arrays and enum tables
 
