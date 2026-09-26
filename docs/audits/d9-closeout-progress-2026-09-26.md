@@ -231,3 +231,16 @@ the arena finalizer-ordering follow-up found during review. Compiler lowering
 now runs a first basic RC CLI guest on its own branch; full RC semantics,
 borrow traffic, performance/RSS and WP-5 remain outstanding. The accepted GC
 baseline has 58 private binaries and all 86 output checks pass.
+
+
+## Joined RC bounded-proof checkpoint
+
+Frozen `39f75f3f` passes all four gates: main 94/94 with 2,209 executed tests,
+QBE 437, native-build 29/29, formatting 2/2. The
+[checkpoint report](d9-rc-bounded-gate-2026-09-26.md) records held views,
+acyclicity admission, callback/frame failure cleanup and bounded borrow proofs.
+The separate RC sweep executes all 713 assertions but has eight text/sorting
+failures after earlier temporary cleanup. Exposed view-mapping mutation and
+copied-view codec fixes are being completed. The first matched binary-tree
+measurements remain far outside the RC performance threshold. WP-4 remains
+experimental and incomplete; GC remains the default, and WP-5 awaits WP-4.
