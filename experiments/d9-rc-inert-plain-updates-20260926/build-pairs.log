@@ -1,0 +1,32 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 3 after 5s (all 3 build slot(s) busy)
+before advance pins 9
+before qbe False -169075163
+-169016441
+ 
+before qbe True -169075163
+-169016441
+ MYLANG_RC_COUNTS {"version":1,"runtime":"rc-v3-counting","saturated":false,"owner_acquire":1,"owner_release":3,"hold_acquire":1520009,"hold_release":1520009,"owner_limit":0,"hold_limit":0,"heap_allocate":2,"arena_allocate":0,"retire":2,"clone_shell":0,"unique_check":20007}
+
+before llvm False -169075163
+-169016441
+ 
+before llvm True -169075163
+-169016441
+ MYLANG_RC_COUNTS {"version":1,"runtime":"rc-v3-counting","saturated":false,"owner_acquire":1,"owner_release":3,"hold_acquire":1520009,"hold_release":1520009,"owner_limit":0,"hold_limit":0,"heap_allocate":2,"arena_allocate":0,"retire":2,"clone_shell":0,"unique_check":20007}
+
+after advance pins 0
+after qbe False -169075163
+-169016441
+ 
+after qbe True -169075163
+-169016441
+ MYLANG_RC_COUNTS {"version":1,"runtime":"rc-v3-counting","saturated":false,"owner_acquire":1,"owner_release":3,"hold_acquire":20005,"hold_release":20005,"owner_limit":0,"hold_limit":0,"heap_allocate":2,"arena_allocate":0,"retire":2,"clone_shell":0,"unique_check":20007}
+
+after llvm False -169075163
+-169016441
+ 
+after llvm True -169075163
+-169016441
+ MYLANG_RC_COUNTS {"version":1,"runtime":"rc-v3-counting","saturated":false,"owner_acquire":1,"owner_release":3,"hold_acquire":20005,"hold_release":20005,"owner_limit":0,"hold_limit":0,"heap_allocate":2,"arena_allocate":0,"retire":2,"clone_shell":0,"unique_check":20007}
+
