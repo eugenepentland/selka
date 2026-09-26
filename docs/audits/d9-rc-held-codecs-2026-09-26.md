@@ -39,3 +39,8 @@ The audit also found a preexisting description issue: `invoke --describe`
 advertises a dictionary as a flat array even though the established JSON decoder
 requires `[key,value]` pairs. That schema issue is separate from this ownership
 fix and remains reported for follow-up.
+
+Backend evidence correction: the original `libraries.json` LLVM label was
+invalid because a later `--qbe` option selected QBE. It remains archived without
+modification. New `libraries-corrected.json` executes actual LLVM O3/LTO and QBE;
+all five cases pass per backend with the same balanced counts stated above.

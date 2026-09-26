@@ -1,0 +1,61 @@
+{
+  "qbe": {
+    "build": {
+      "cmd": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/.tmp/rc-edge-audit/install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/bench/parity/suite/knucleotide.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/.tmp/rc-edge-audit/knucleotide-qbe",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/.tmp/rc-edge-audit/knuc-cache",
+        "--rc-runtime=stats"
+      ],
+      "ok": true,
+      "seconds": 5.04,
+      "sha256": "1e13e1ee4b0ded2cd6d5ad5e52535ab0dd41e236ad823a901744b4996261f707",
+      "size": 274024,
+      "stderr": ""
+    },
+    "checked": {
+      "status": 0,
+      "stdout_sha256": "85ef61714a76ad7ce4c0b54cc49ec081c54c2966978de102da6a53e2d208c0bb",
+      "stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v2-counting\",\"saturated\":false,\"owner_acquire\":9283306,\"owner_release\":16283590,\"hold_acquire\":27999838,\"hold_release\":27999838,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":7000284,\"arena_allocate\":0,\"retire\":7000284,\"clone_shell\":0,\"unique_check\":15000030}\n",
+      "ok": true
+    }
+  },
+  "llvm": {
+    "build": {
+      "cmd": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/.tmp/rc-edge-audit/install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/bench/parity/suite/knucleotide.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/.tmp/rc-edge-audit/knucleotide-llvm",
+        "--backend",
+        "llvm",
+        "--llvm-opt",
+        "3",
+        "--lto",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/.tmp/rc-edge-audit/knuc-cache",
+        "--rc-runtime=stats"
+      ],
+      "ok": true,
+      "seconds": 7.55,
+      "sha256": "a76c4453bf318198f948235cc3dc6c682feda71457184cff6fdf9c03550ede36",
+      "size": 277648,
+      "stderr": ""
+    },
+    "checked": {
+      "status": 0,
+      "stdout_sha256": "85ef61714a76ad7ce4c0b54cc49ec081c54c2966978de102da6a53e2d208c0bb",
+      "stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v2-counting\",\"saturated\":false,\"owner_acquire\":9283306,\"owner_release\":16283590,\"hold_acquire\":27999838,\"hold_release\":27999838,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":7000284,\"arena_allocate\":0,\"retire\":7000284,\"clone_shell\":0,\"unique_check\":15000030}\n",
+      "ok": true
+    }
+  }
+}

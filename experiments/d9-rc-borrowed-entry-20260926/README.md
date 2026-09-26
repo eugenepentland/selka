@@ -32,3 +32,19 @@ python3 experiments/d9-rc-borrowed-entry-20260926/run.py \
 `--lox-root` locates the frozen Lox inputs needed by the acceptance workload
 inventory; this runner selects only schematic cases and reads those inputs.
 The default points at `../d9-rc-performance/.tmp-rc-performance/lox`.
+
+## Backend correction (2026-09-26)
+
+The original `before-llvm.json` and `after-llvm.json` commands appended
+`--qbe=PATH` after the LLVM selection. That later option changed the actual
+backend to QBE, despite earlier LLVM optimization options. The historical JSON
+is preserved unchanged and must not be cited as LLVM evidence. The original
+QBE traffic comparison remains valid. The runner now appends `--qbe` only for
+QBE; the `corrected/` directory records a fresh run of both actual backends,
+using the same preserved before/after Debug compilers and exact schematic
+workloads. Its command and output identities establish the corrected result.
+
+The corrected run passes all twelve SVG checks and reproduces the same 38,060
+acquire/release reduction on actual LLVM and QBE. All remaining counters match
+before/after and across backends. The LLVM binaries have separate recorded
+identities and are built with O3/full LTO without a later backend override.

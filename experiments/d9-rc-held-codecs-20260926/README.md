@@ -20,3 +20,13 @@ python3 experiments/d9-rc-held-codecs-20260926/run.py \
   --work .tmp/rc-held-bridges-final/probes \
   --output experiments/d9-rc-held-codecs-20260926/libraries.json
 ```
+
+## Backend correction (2026-09-26)
+
+The archived `libraries.json` command placed `--qbe=PATH` after `--backend
+llvm`, which selects QBE again. Its LLVM-labeled entry is therefore historical
+QBE evidence, not LLVM validation; the file is preserved unchanged. The runner
+now passes `--qbe` only for QBE and explicitly selects LLVM O3/LTO otherwise.
+`libraries-corrected.json` records newly executed QBE and actual LLVM libraries:
+all five scenarios pass on each backend, with identical balanced owner/hold
+counts. The original invocation and C sanitizer records are unaffected.

@@ -60,9 +60,9 @@ def main():
             entry, cases, identities = prepare(Path(temporary), sources)
             command = [str(ROOT / "scripts/build-slot.sh"), "build", str(compiler), "build", str(entry),
                        "--rc-runtime=stats", "--backend", args.backend, "--mode", "ReleaseFast",
-                       "--qbe=" + str(args.qbe.resolve()),
                        "--cache-dir=" + str(args.workspace.resolve() / ("cache-" + args.backend)),
                        "--max-memory=512M", "--run"]
+            command += (["--qbe=" + str(args.qbe.resolve())] if args.backend == "qbe" else ["--llvm-opt", "3", "--lto"])
             run = subprocess.run(command, cwd=ROOT, capture_output=True, text=True)
             records = [json.loads(line.removeprefix("MYLANG_RC_COUNTS "))
                        for line in run.stderr.splitlines() if line.startswith("MYLANG_RC_COUNTS ")]
@@ -71,7 +71,7 @@ def main():
             counts = records[0]
             assert not counts["saturated"] and counts["heap_allocate"] == counts["retire"], (group, counts)
             assert counts["heap_allocate"] + counts["owner_acquire"] == counts["owner_release"], (group, counts)
-            result["groups"][group] = {"cases": cases, "source_sha256": identities, "counts": counts,
+            result["groups"][group] = {"command": command, "cases": cases, "source_sha256": identities, "counts": counts,
                                         "exit": run.returncode, "stdout": run.stdout, "stderr": run.stderr}
             print(f"{args.backend}: {group}: {len(cases)} passed, {counts['retire']} allocations retired", flush=True)
     args.output.write_text(json.dumps(result, indent=2) + "\n")
