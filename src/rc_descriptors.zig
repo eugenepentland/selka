@@ -63,11 +63,11 @@ fn less(_: void, a: Item, b: Item) bool {
 
 fn emit(a: std.mem.Allocator, writer: *std.Io.Writer, catalog: *native.Catalog, item: Item, layout: native.Layout) Error!void {
     const kind: []const u8 = switch (layout.kind) {
-        .managed, .resource, .owned_buffer, .owned_pool, .niche => "POINTER",
+        .managed, .niche => "POINTER",
         .record, .domain => "RECORD",
         .array => "ARRAY",
         .variant => "VARIANT",
-        .scalar, .handle, .pool_handle, .callable => "NONE",
+        .scalar, .handle, .pool_handle, .callable, .resource, .owned_buffer, .owned_pool => "NONE",
     };
     const fields = layout.kind == .record or layout.kind == .domain or layout.kind == .variant;
     if (fields and layout.fields.len != 0) {

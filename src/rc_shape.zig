@@ -1,6 +1,6 @@
 //! Physical RC edges and unique-drop obligations (RC-OWNERSHIP-PLAN-1).
-//! A COW-free immutable value can still own a managed pointer. Resources own
-//! physical lifetime tokens too, but their unique-drop schedule forbids copies.
+//! A COW-free immutable value can still own a managed pointer. Raw external
+//! resources instead keep their existing unique-drop schedule and no RC prefix.
 const std = @import("std");
 const typed = @import("typed.zig");
 const native = @import("native_types.zig");
@@ -48,14 +48,16 @@ pub const Catalog = struct {
     fn ofLayout(self: *Catalog, layout: native.Layout) native.Error!Shape {
         var result: Shape = .{ .unique_drop = layout.drop, .copyable = layout.copy != .prohibited };
         switch (layout.kind) {
-            .managed, .resource, .owned_buffer, .owned_pool => result.counted = true,
+            .managed => result.counted = true,
             .record, .domain, .variant, .niche => {
                 for (layout.fields) |field| result.counted = result.counted or (try self.get(field.ty)).counted;
             },
             .array => if (layout.count != 0) {
                 result.counted = layout.fields.len != 0 and (try self.get(layout.fields[0].ty)).counted;
             },
-            .scalar, .handle, .pool_handle, .callable => {},
+            // These kinds do not prove a managed allocation prefix. In
+            // particular File/TextFile are raw provider-owned Resource blocks.
+            .scalar, .handle, .pool_handle, .callable, .resource, .owned_buffer, .owned_pool => {},
         }
         return result;
     }
