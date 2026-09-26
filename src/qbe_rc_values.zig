@@ -2,6 +2,7 @@
 const typed = @import("typed.zig");
 const frame = @import("qbe_rc_frame.zig");
 const slots = @import("qbe_rc_slots.zig");
+const blit_value = " blit %v{d}, %v{d}, {d}\n";
 const region_mark = " %v{d} =l call $myl_qbe_region_mark(l %ctx)\n";
 /// Errors shared with the native emitter.
 pub const Error = slots.Error;
@@ -37,7 +38,7 @@ pub fn copied(comptime E: type, self: *E, ty: typed.Type, address: usize) Error!
 /// Adopt the one edge returned by a runtime producer without another acquire.
 pub fn adopted(comptime E: type, self: *E, ty: typed.Type, address: usize) Error!void {
     const work = try workAddress(E, self);
-    try self.print(" blit %v{d}, %v{d}, {d}\n", .{ address, work, (try self.layout(ty)).size });
+    try self.print(blit_value, .{ address, work, (try self.layout(ty)).size });
     try markWork(E, self, ty, work);
 }
 /// Materialize a result, drop its inputs, then relocate its obligation to the stack.
@@ -50,6 +51,14 @@ pub fn finish(comptime E: type, self: *E, result: Result) Error!void {
             .borrowed => try copied(E, self, result.ty, address),
             .owned => try adopted(E, self, result.ty, address),
         }
+    } else if (result.origin == .borrowed and !self.isScalar(result.ty)) {
+        // A plain inline field can still live inside an owning operand. Its
+        // parent cleanup clears that storage, so preserve the physical bytes
+        // before dropping the parent even though the field owns no edges.
+        const input = try self.load("s", result.base);
+        const saved = try self.aggregatePointer();
+        try self.print(blit_value, .{ input, saved, (try self.layout(result.ty)).size });
+        try self.store(result.base, saved);
     }
     for (result.base..result.base + result.consumed) |index| try drop(E, self, index);
     if (owned) try publish(E, self, result.ty, result.base);
@@ -58,7 +67,7 @@ pub fn finish(comptime E: type, self: *E, result: Result) Error!void {
 pub fn publish(comptime E: type, self: *E, ty: typed.Type, index: usize) Error!void {
     const address = try operand(E, self, index);
     const work = try workAddress(E, self);
-    try self.print(" blit %v{d}, %v{d}, {d}\n", .{ work, address, (try self.layout(ty)).size });
+    try self.print(blit_value, .{ work, address, (try self.layout(ty)).size });
     try frame.entry(E, self, journalIndex(E, self, index), ty, address);
     try frame.initialized(E, self, frame.pending(E, self), false);
     try frame.initialized(E, self, journalIndex(E, self, index), true);
