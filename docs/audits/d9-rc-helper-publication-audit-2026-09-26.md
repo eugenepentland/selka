@@ -111,3 +111,28 @@ execution: `clone_during(mut original[0], original)` reaches
 It fails before either backend/runtime runs and is preserved separately from
 runtime outcomes. The parent requested a separate checker fix from the current
 integration baseline.
+
+## Completed backend controls supplement
+
+The initial snapshot above remains historical evidence. The
+[completed result set](../../experiments/d9-rc-helper-publication-audit-20260926/completed/summary.json)
+adds every originally planned row without replacing those archived partial files:
+24 base rows, 24 boxed rows, 12 pinned rows, eight reduced QBE rows and four
+pre-compaction QBE rows. Four pinned-dictionary rows abort in the frontend as
+reported above; the other 68 rows execute. All 34 executed RC rows have balanced
+heap allocation/retirement, owner accounting and holds. This balance does not
+make their incorrect value results acceptable.
+
+The remaining actual LLVM box controls confirm the QBE defect for local, call
+and list-constructor placements, on both heap and arena paths. Pre-compaction
+QBE also reproduces it. A stronger QBE reduction removes both the live view
+**and every retained alias**: construct one `Some(Node(...))`, narrow it, write
+`original.mapping[1] = 13`, and print that same field. GC prints `13`; RC prints
+`7`. This is a receiver write-back defect independent of the arena physical-alias
+question. The parent owns its implementation fix.
+
+Actual LLVM slicing now confirms the pinned-copy positive oracle: GC and RC both
+print `[13]`, `13`, `7`. The standalone checker fix is developed separately from
+integration `7998e84c`; none of these historical audit binaries contains it.
+The isolated setdefault control remains unexecuted and is not promoted to an
+observed discrepancy.

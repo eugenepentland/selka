@@ -20,3 +20,11 @@ The first pinned-list draft only read its `mut` parameter and was rejected by
 `E_MUTATION_MARKER` before execution. The archived source writes the same scalar
 value, keeping the receiver scope active while preserving the expected contents.
 No rejected draft is counted as a runtime outcome.
+
+`completed/` supplements the original immutable snapshot with all 72 planned
+rows. Four are the already documented frontend assertion, leaving 68 executed
+rows and 34 balanced RC count records. Each group retains its exact raw commands
+and output; the original source/runner files apply unchanged. The audit's final
+section describes the completed LLVM and pre-compaction controls and the QBE
+box reduction with neither a view nor an alias. No runtime implementation changes
+are included.
