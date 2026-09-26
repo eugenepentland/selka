@@ -91,3 +91,24 @@ test "RC-FRAME-REGION-1 stable frames read depth once while arena bodies stay dy
     try t.expect(!contains(escaped, "copy %rcregion"));
     try t.expect(std.mem.count(u8, escaped, "call $myl_qbe_region_mark") > 1);
 }
+
+// spec: RC-NO-TRACING-ROOTS-1
+test "RC-NO-TRACING-ROOTS-1 counted frames use journals while GC retains traced roots" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.gc);
+    var gc = try emitted();
+    defer gc.deinit();
+    try t.expect(contains(try named(gc.value, "made"), "%root0"));
+    runtime.set(.rc_counting);
+    var rc = try emitted();
+    defer rc.deinit();
+    const made = try named(rc.value, "made");
+    try t.expect(!contains(made, "%root0"));
+    try t.expect(!contains(made, "%root_mark"));
+    try t.expect(!contains(made, "=l add %heap, 16"));
+    try t.expect(contains(made, "call $myl_qbe_rc_frame_enter"));
+    try t.expect(contains(made, "call $myl_qbe_rc_frame_cleanup"));
+    try t.expect(contains(made, "%heap =l call $myl_qbe_heap"));
+    try t.expect(!contains(try named(rc.value, "escaped"), "%root_mark"));
+}

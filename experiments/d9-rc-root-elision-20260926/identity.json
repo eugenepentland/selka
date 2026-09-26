@@ -1,0 +1,10 @@
+{
+  "before_commit": "d57fef032dae830699e491621027aa418bd05057",
+  "before_compiler_sha256": "4e3cc120f065f63ecb3e8b75ce22c37582c1c4ba623a70853898d8063fd1aedb",
+  "after_compiler_sha256": "2b82e54a94a48a1c35eafacbf74bbc40be20dd5be0f6a69946897e46a8126ae1",
+  "patch_sha256": "a53acc9fbccb4d86cfc47e37633ddfe41c66df18d28a778b2b351c0738937b3b",
+  "guest_assertions": {
+    "qbe": 116,
+    "llvm": 116
+  }
+}

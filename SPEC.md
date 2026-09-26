@@ -1374,3 +1374,5 @@ host failure in one worker leaves the units the other workers hold running.
 - [RC-FRAME-REGION-1] RC functions without arena boundary instructions reuse their entry region depth for typed transfers. Functions that open or close arenas read the current depth at each transfer; callees restore their own scopes before returning.
 
 - [RC-LOOP-VERSION-1] RC loop versions cache element storage only inside a proved physical no-publication interval, after entry uniqueness and with no residual COW checks or allocating lowered helpers. Failed range guards execute the original loop and preserve its traps.
+
+- [RC-NO-TRACING-ROOTS-1] Counted native functions retain guarded ownership journals and arena/callback scope cleanup without publishing tracing-GC roots; GC artifacts retain their existing traced root chains.

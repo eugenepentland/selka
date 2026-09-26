@@ -11,6 +11,7 @@ const arena_lower = @import("qbe_arena.zig");
 const rc_frame = @import("qbe_rc_frame.zig");
 const rc_admission = @import("qbe_rc_admission.zig");
 const std = @import("std");
+const runtime = @import("runtime_mode.zig");
 const bytecode = @import("bytecode.zig");
 const typed = @import("typed.zig");
 const qbe_wire = @import("qbe_wire.zig");
@@ -178,7 +179,7 @@ fn allocateStorage(comptime Emitter: type, self: *Emitter, capacity: usize) Gene
     for (0..capacity) |i| try allocateIndex(Emitter, self, "s", i, 8);
     for (self.range_keys.locals, 0..) |used, i| if (used) try allocateIndex(Emitter, self, "rl", i, 16);
     for (self.range_keys.heights, 0..) |used, i| if (used) try allocateIndex(Emitter, self, "rs", i, 16);
-    if (self.has_roots) for (0..f.scope.locals.len + capacity) |i| try allocateIndex(Emitter, self, "root", i, 32);
+    if (self.has_roots and !runtime.enabled()) for (0..f.scope.locals.len + capacity) |i| try allocateIndex(Emitter, self, "root", i, 32);
 }
 fn allocateNativeStorage(comptime Emitter: type, self: *Emitter, capacity: usize) GenerateError!void {
     // A heap frame cannot derive slot addresses until its allocation has
@@ -686,7 +687,7 @@ fn frameBytes(comptime Emitter: type, self: *Emitter, capacity: usize, temporari
     size = try addFrame(size, try rc_frame.Lower(Emitter).bytes(self));
     size = try addFrame(size, temporaries);
     size = try addFrame(size, self.range_keys.frameBytes());
-    if (self.has_roots) size = try addFrame(size, @as(u64, self.function.scope.locals.len + capacity) * 32);
+    if (self.has_roots and !runtime.enabled()) size = try addFrame(size, @as(u64, self.function.scope.locals.len + capacity) * 32);
     // A result that crosses through the caller's storage occupies nothing
     // here; any other aggregate result has its zeroed copy and, in a heap
     // frame, the copy the return path hands back.
