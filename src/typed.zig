@@ -649,12 +649,15 @@ pub const FunctionPolicy = struct {
     restricted: bool = false,
     conversion: bool = false,
 };
-/// Managed-write facts recorded before M2 origin enforcement.
-pub const MutationFacts = struct {
+/// Checked write and physical-result facts used after body inference.
+pub const InferredFacts = struct {
     /// Any managed receiver write in the body.
     writes: bool = false,
     /// A write not proven to target definitely fresh local storage.
     external: bool = false,
+    /// Backing a result may retain even when value semantics make it logically
+    /// independent of its source.
+    borrow_origin: ReturnOrigin = .unknown,
 };
 /// Resolved value result and parameter count of a checked function.
 pub const FunctionSignature = struct {
@@ -668,7 +671,7 @@ pub const FunctionSignature = struct {
     /// Declared `mutates(...)` footprint; empty also spells an omitted clause.
     declared_mutates: []const u16 = &.{},
     /// Write facts kept separate so a fresh-local write can stay unenforced.
-    mutation_facts: MutationFacts = .{},
+    inferred: InferredFacts = .{},
 };
 /// Checked function body and its lexical local table.
 pub const FunctionScope = struct {
