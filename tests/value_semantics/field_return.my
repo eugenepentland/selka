@@ -14,6 +14,11 @@ record CountOwner:
     count: int
 
 
+record IndexedOwner:
+    box: Box
+    others: list[Box]
+
+
 def push(box: mut Box):
     box.items.append(2)
 
@@ -71,6 +76,14 @@ def observe_sibling(owner: mut CountOwner) -> int:
     return seen
 
 
+def indexed_sibling(owner: mut IndexedOwner, index: int) -> int:
+    work = owner.box
+    push(mut work)
+    seen = owner.others[index].items[-1]
+    owner.box = work
+    return seen
+
+
 # spec-case: COW-FIELD-RETURN-1
 public def test_field_return_preserves_existing_copies_and_sibling_values() -> bool:
     box = Box([1])
@@ -117,3 +130,11 @@ public def test_a_sibling_scalar_field_stays_readable_during_mutation() -> bool:
     owner = CountOwner(Box([1]), 7)
     seen = observe_sibling(mut owner)
     return seen == 7 and owner.box.items == [1, 2]
+
+
+# spec-case: COW-FIELD-RETURN-1
+public def test_sibling_index_normalization_keeps_shared_snapshots_independent() -> bool:
+    original = Box([7])
+    owner = IndexedOwner(original, [original])
+    seen = indexed_sibling(mut owner, -1)
+    return seen == 7 and owner.box.items == [7, 2] and owner.others[0].items == [7] and original.items == [7]

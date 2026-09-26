@@ -122,6 +122,7 @@ fn fieldReturnSites(body: []const u8) !Sites {
         \\record Owner:
         \\    box: Box
         \\    count: int
+        \\    others: list[Box]
         \\
         \\def push(box: mut Box):
         \\    box.items.append(2)
@@ -143,12 +144,16 @@ test "record field return avoids copies only without observations or exits" {
     try t.expectEqual(@as(usize, 0), returned.copies);
     const sibling = try fieldReturnSites("    seen = owner.count\n    owner.box = work\n    assert seen == 7\n");
     try t.expectEqual(@as(usize, 0), sibling.copies);
+    const indexed = try fieldReturnSites("    seen = owner.others[0].items[-1]\n    owner.box = work\n    assert seen == 7\n");
+    try t.expectEqual(@as(usize, 0), indexed.copies);
     const observed = try fieldReturnSites("    seen = len(owner.box.items)\n    owner.box = work\n    assert seen == 1\n");
     try t.expect(observed.copies >= 1);
     const branched = try fieldReturnSites("    if stop:\n        return\n    owner.box = work\n");
     try t.expect(branched.copies >= 1);
     const retained = try fieldReturnSites("    owner.box = work\n    push(mut work)\n    assert len(work.items) == 3\n");
     try t.expect(retained.copies >= 1);
+    const conditional_observation = try fieldReturnSites("    if stop:\n        assert len(owner.box.items) == 1\n    owner.box = work\n");
+    try t.expect(conditional_observation.copies >= 1);
 }
 
 // spec-case: VALUE-SEMANTICS-1
