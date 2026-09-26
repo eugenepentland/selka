@@ -1,0 +1,9 @@
+{
+  "source": "9192db49",
+  "reason": "Stopped superseded exploratory correctness run after both full-size matmul cases exceeded 600-second budgets. Plain operand removal and dead temporary cleanup supersede this compiler.",
+  "completed_checks": 10,
+  "passed": 8,
+  "failed": 2,
+  "cancelled_inflight": "parity/suite/nbody|qbe",
+  "not_acceptance": true
+}
