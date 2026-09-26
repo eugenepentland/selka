@@ -1,0 +1,217 @@
+diff --git a/SPEC.md b/SPEC.md
+index 78dc85ee..2e8c0191 100644
+--- a/SPEC.md
++++ b/SPEC.md
+@@ -1371,3 +1371,5 @@ host failure in one worker leaves the units the other workers hold running.
+ - [RC-INERT-PROJECTION-1] An immediate list-element read into a proved inert mutation receiver borrows from the live physical parent until fill detaches and refreshes it; named snapshots, callbacks, alternate fill entries and unproved paths retain ordinary ownership or scoped protection.
+ 
+ - [RC-FRAME-REGION-1] RC functions without arena boundary instructions reuse their entry region depth for typed transfers. Functions that open or close arenas read the current depth at each transfer; callees restore their own scopes before returning.
++
++- [RC-JOURNAL-TEMPLATE-1] RC frame entry copies immutable content-addressed initial type/role metadata, then binds every dynamic address and initialized-word pointer before linking the frame. Templates include all lowered local and operand entries; ordinary, held and partial-construction publications keep their existing typed role updates and runtime ABI.
+diff --git a/src/qbe.zig b/src/qbe.zig
+index ea609a04..030f0031 100644
+--- a/src/qbe.zig
++++ b/src/qbe.zig
+@@ -298,7 +298,11 @@ fn generateImpl(allocator: std.mem.Allocator, program_in: bytecode.Program, src:
+     const renderers = @import("native_render.zig").generate(a, &layouts, program, states) catch |err| return layoutError(err);
+     // A program that neither prints nor renders a value into text carries no
+     // renderers, and copies nothing.
+-    const runtime_data = if (renderers.len == 0 and owners.len == 0) descriptors else try std.mem.concat(a, u8, &.{ descriptors, renderers, owners });
++    const journals = if (runtime_mode.enabled())
++        @import("qbe_rc_templates.zig").generate(a, &layouts, program) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError
++    else
++        "";
++    const runtime_data = if (renderers.len == 0 and owners.len == 0 and journals.len == 0) descriptors else try std.mem.concat(a, u8, &.{ descriptors, renderers, owners, journals });
+     // Wire types and codecs serve only a library's embedding API.
+     const wire_types = if (shape.executable) null else (qbe_wire.describe(a, &layouts) catch |err| return layoutError(err)).types;
+     const codecs = if (shape.executable) null else @import("qbe_codecs.zig").describe(a, program, &layouts) catch |err| return layoutError(err);
+diff --git a/src/qbe_rc_frame.zig b/src/qbe_rc_frame.zig
+index 1be17037..17e460ee 100644
+--- a/src/qbe_rc_frame.zig
++++ b/src/qbe_rc_frame.zig
+@@ -2,6 +2,7 @@
+ const typed = @import("typed.zig");
+ const runtime = @import("runtime_mode.zig");
+ const state_model = @import("qbe_rc_state.zig");
++const templates = @import("qbe_rc_templates.zig");
+ /// Errors shared with the native emitter.
+ pub const Error = state_model.Error;
+ /// Frozen C journal entry/frame sizes, verified against the runtime header.
+@@ -44,26 +45,30 @@ pub fn Lower(comptime E: type) type {
+             const state = get(E, self) orelse return;
+             if (fixedRegion(E, self)) try self.print(" %rcregion =l call $myl_qbe_region_mark(l %ctx)\n", .{});
+             const size = count(E, self, state);
+-            try self.print(" call $memset(l %rcguards, w 0, l {d})\n call $memset(l %rcentries, w 0, l {d})\n", .{ size * 8, size * entry_bytes });
++            if (state.locals.storage.len != self.function.scope.locals.len) return error.InternalError;
++            const template = templates.describe(self.allocator, &state.catalog, self.function.scope.locals, state.operands.len + 2) catch |err|
++                return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError;
++            if (template.count != size) return error.InternalError;
++            try self.print(" call $memset(l %rcguards, w 0, l {d})\n call $memcpy(l %rcentries, l extern ${s}, l {d})\n", .{ size * 8, template.symbol, size * entry_bytes });
+             for (state.locals.storage, 0..) |slot, index| {
+                 const address = self.temp();
+                 if (self.byReference(index)) {
+                     try self.print(" %v{d} =l loadl %l{d}\n", .{ address, index });
+                 } else try self.print(" %v{d} =l copy %l{d}\n", .{ address, index });
+-                try entry(E, self, index, slot.ty, address);
++                try initialAddress(E, self, index, address);
+                 if (slot.initial == .owned) try initialized(E, self, index, true);
+             }
+             for (state.operands, 0..) |_, index| {
+                 const address = self.temp();
+                 try self.print(" %v{d} =l copy %rcs{d}\n", .{ address, index });
+-                try entry(E, self, localCount(E, self) + index, .unit, address);
++                try initialAddress(E, self, localCount(E, self) + index, address);
+             }
+             const work = self.temp();
+             try self.print(" %v{d} =l copy %rcwork\n", .{work});
+-            try entry(E, self, size - 2, .unit, work);
++            try initialAddress(E, self, size - 2, work);
+             const internal = self.temp();
+             try self.print(" %v{d} =l copy %rcinternal\n", .{internal});
+-            try entry(E, self, size - 1, .unit, internal);
++            try initialAddress(E, self, size - 1, internal);
+             try self.print(" call $myl_qbe_rc_frame_enter(l %ctx, l %rcframe, l %rcentries, l {d})\n", .{size});
+         }
+         /// Release live obligations through the same order used by runtime traps.
+@@ -123,7 +128,14 @@ fn fixedRegion(comptime E: type, self: *E) bool {
+ }
+ /// Publish metadata while the entry has no initialized token.
+ pub fn entry(comptime E: type, self: *E, index: usize, ty: typed.Type, address: usize) Error!void {
+-    const pointer = try typedEntry(E, self, index, ty);
++    try addressFields(E, self, index, address, try typedEntry(E, self, index, ty));
++}
++fn initialAddress(comptime E: type, self: *E, index: usize, address: usize) Error!void {
++    const pointer = self.temp();
++    try self.print(" %v{d} =l add %rcentries, {d}\n", .{ pointer, index * entry_bytes });
++    try addressFields(E, self, index, address, pointer);
++}
++fn addressFields(comptime E: type, self: *E, index: usize, address: usize, pointer: usize) Error!void {
+     const field = self.temp();
+     try self.print(" %v{d} =l add %v{d}, 8\n storel %v{d}, %v{d}\n", .{ field, pointer, address, field });
+     const at_guard = try self.address(pointer, 16);
+diff --git a/src/qbe_rc_templates.zig b/src/qbe_rc_templates.zig
+new file mode 100644
+index 00000000..4d2bbb0c
+--- /dev/null
++++ b/src/qbe_rc_templates.zig
+@@ -0,0 +1,53 @@
++//! Immutable initial journal metadata; dynamic addresses are patched before linking.
++const std = @import("std");
++const typed = @import("typed.zig");
++const bytecode = @import("bytecode.zig");
++const native = @import("native_types.zig");
++const shapes = @import("rc_shape.zig");
++const descriptors = @import("native_descriptors.zig");
++/// Metadata generation and validated stack-analysis failures.
++pub const Error = native.Error || @import("native_ir.zig").AnalyzeError;
++/// Content-addressed initial metadata, with zero dynamic addresses and guards.
++pub const Template = struct { symbol: []const u8, body: []const u8, count: usize };
++
++/// Describe every lowered local followed by the operand and two work entries.
++pub fn describe(a: std.mem.Allocator, catalog: *shapes.Catalog, locals: []const typed.Local, extra: usize) Error!Template {
++    var output: std.Io.Writer.Allocating = .init(a);
++    defer output.deinit();
++    for (locals) |local| try entry(a, &output.writer, catalog, local.ty);
++    for (0..extra) |_| try entry(a, &output.writer, catalog, .unit);
++    const body = try output.toOwnedSlice();
++    var digest: [32]u8 = undefined;
++    std.crypto.hash.sha2.Sha256.hash(body, &digest, .{});
++    return .{ .symbol = try std.fmt.allocPrint(a, "myl_rc_journal_v1_{s}", .{std.fmt.bytesToHex(digest, .lower)}), .body = body, .count = locals.len + extra };
++}
++
++fn entry(a: std.mem.Allocator, writer: *std.Io.Writer, catalog: *shapes.Catalog, ty: typed.Type) Error!void {
++    const shape = try catalog.get(ty);
++    const flags = @as(u32, @intFromBool(shape.unique_drop)) | (@as(u32, @intFromBool(shape.counted)) << 1);
++    writer.print("{{.type=&{s}, .address=0, .initialized=0, .flags={d}}},\n", .{ try descriptors.symbol(a, catalog.native, ty), flags }) catch return error.OutOfMemory;
++}
++
++/// Generate deterministic C arrays independently of lean/cached unit emission.
++pub fn generate(allocator: std.mem.Allocator, layouts: *native.Catalog, program: bytecode.Program) Error![]const u8 {
++    var arena = std.heap.ArenaAllocator.init(allocator);
++    defer arena.deinit();
++    const a = arena.allocator();
++    var seen: std.StringHashMapUnmanaged(void) = .empty;
++    var output: std.Io.Writer.Allocating = .init(allocator);
++    defer output.deinit();
++    output.writer.writeAll("#include \"qbe_runtime.h\"\n_Static_assert(sizeof(MylQbeRcSlot)==32, \"journal template ABI\");\n") catch return error.OutOfMemory;
++    for (program.functions) |function| {
++        if (function.policy.c_abi or function.policy.host != null or function.scope.instructions.len == 0) continue;
++        var scratch = std.heap.ArenaAllocator.init(a);
++        defer scratch.deinit();
++        const work = scratch.allocator();
++        const ir = try @import("native_ir.zig").analyze(work, program, function);
++        var catalog = try shapes.Catalog.init(work, layouts);
++        const template = try describe(work, &catalog, function.scope.locals, ir.stack_capacity + 2);
++        if (seen.contains(template.symbol)) continue;
++        try seen.put(a, try a.dupe(u8, template.symbol), {});
++        output.writer.print("const MylQbeRcSlot {s}[{d}] = {{\n{s}}};\n", .{ template.symbol, template.count, template.body }) catch return error.OutOfMemory;
++    }
++    return output.toOwnedSlice();
++}
+diff --git a/src/qbe_rc_templates_test.zig b/src/qbe_rc_templates_test.zig
+new file mode 100644
+index 00000000..dbe2efe2
+--- /dev/null
++++ b/src/qbe_rc_templates_test.zig
+@@ -0,0 +1,49 @@
++//! Initial RC metadata templates preserve typed cleanup and cache identity.
++const std = @import("std");
++const compiler = @import("compiler.zig");
++const runtime = @import("runtime_mode.zig");
++const native = @import("native_types.zig");
++const shapes = @import("rc_shape.zig");
++const templates = @import("qbe_rc_templates.zig");
++const t = std.testing;
++
++// spec: RC-JOURNAL-TEMPLATE-1
++test "RC journal templates replace initial metadata stores and retain dynamic binding" {
++    const saved = runtime.get();
++    defer runtime.set(saved);
++    runtime.set(.rc);
++    var compilation = try compiler.Compilation.init(t.allocator, "rc_templates.my",
++        \\def total(values: list[int]) -> int:
++        \\    result = 0
++        \\    for value in values:
++        \\        result += value
++        \\    return result
++        \\def main() -> int:
++        \\    return total([1, 2])
++    );
++    defer compilation.deinit();
++    const text = try compilation.emitQbe(t.allocator);
++    defer t.allocator.free(text);
++    try t.expect(std.mem.indexOf(u8, text, "const MylQbeRcSlot myl_rc_journal_v1_") != null);
++    try t.expect(std.mem.indexOf(u8, text, "call $memcpy(l %rcentries, l extern $myl_rc_journal_v1_") != null);
++    try t.expect(std.mem.indexOf(u8, text, "call $memset(l %rcentries") == null);
++    try t.expect(std.mem.indexOf(u8, text, "call $myl_qbe_rc_frame_enter") != null);
++}
++
++// spec-case: RC-JOURNAL-TEMPLATE-1
++test "RC journal templates hash complete ordered local types and all physical extra entries" {
++    var arena = std.heap.ArenaAllocator.init(t.allocator);
++    defer arena.deinit();
++    const a = arena.allocator();
++    var layouts = try native.Catalog.initRecords(a, &.{});
++    defer layouts.deinit();
++    var catalog = try shapes.Catalog.init(a, &layouts);
++    const first = try templates.describe(a, &catalog, &.{.{ .name = "n", .declaration = .{ .start = 0, .end = 0 }, .mutable = false, .ty = .i64 }}, 3);
++    const repeat = try templates.describe(a, &catalog, &.{.{ .name = "renamed", .declaration = .{ .start = 0, .end = 0 }, .mutable = false, .ty = .i64 }}, 3);
++    const changed = try templates.describe(a, &catalog, &.{.{ .name = "n", .declaration = .{ .start = 0, .end = 0 }, .mutable = false, .ty = .bool }}, 3);
++    const wider = try templates.describe(a, &catalog, &.{.{ .name = "n", .declaration = .{ .start = 0, .end = 0 }, .mutable = false, .ty = .i64 }}, 4);
++    try t.expectEqual(@as(usize, 4), first.count);
++    try t.expectEqualStrings(first.symbol, repeat.symbol);
++    try t.expect(!std.mem.eql(u8, first.symbol, changed.symbol));
++    try t.expect(!std.mem.eql(u8, first.symbol, wider.symbol));
++}
+diff --git a/src/root_test.zig b/src/root_test.zig
+index aabd6d95..e408b6fd 100644
+--- a/src/root_test.zig
++++ b/src/root_test.zig
+@@ -3,6 +3,7 @@
+ pub const snapshot_project = @import("project.zig");
+ test {
+     _ = @import("qbe_rc_read_loans_test.zig");
++    _ = @import("qbe_rc_templates_test.zig");
+     _ = @import("qbe_rc_aggregate_test.zig");
+     _ = @import("qbe_rc_inline_take_test.zig");
+     _ = @import("native_rc_stats_test.zig");

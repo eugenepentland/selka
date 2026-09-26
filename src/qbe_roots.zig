@@ -4,6 +4,7 @@
 //! free function over the concrete emitter type; `Lower` exposes the ones the
 //! rest of the emitter calls as `self.name(...)`.
 const liveness = @import("qbe_liveness.zig");
+const runtime = @import("runtime_mode.zig");
 const std = @import("std");
 const bytecode = @import("bytecode.zig");
 const typed = @import("typed.zig");
@@ -179,7 +180,7 @@ pub fn pureCallee(name: []const u8) bool {
 /// Whether an instruction needs the root protocol: its opcode admits
 /// allocation, and it is not a call to a function that cannot collect.
 fn rootedSafepoint(comptime Emitter: type, self: *Emitter, op: @FieldType(bytecode.Instruction, "op")) bool {
-    if (!self.has_roots or !self.has_safepoints) return false;
+    if (!needsRootProtocol(Emitter, self)) return false;
     if (!allocates(op) and !self.boxProjectionAt(self.pc, op)) return false;
     return !callsPureFunction(Emitter, self, op) or cowMutCallMayCopy(Emitter, self, op);
 }
@@ -328,7 +329,7 @@ fn rootLiveness(comptime Emitter: type, self: *Emitter) GenerateError!liveness.R
 /// A lowering that roots only its allocating branch asks first, because
 /// without the protocol there is no `%root_mark` or root slot to link.
 fn needsRootProtocol(comptime Emitter: type, self: *Emitter) bool {
-    return self.has_roots and self.has_safepoints;
+    return !runtime.enabled() and self.has_roots and self.has_safepoints;
 }
 /// Push every live traced local and operand as a `myl_native_root` link
 /// built from straight-line stores instead of a runtime call. The chain
@@ -337,7 +338,8 @@ fn needsRootProtocol(comptime Emitter: type, self: *Emitter) bool {
 /// walks every live root. Field order matches `struct myl_native_root`.
 /// Returns whether any root was pushed.
 fn roots(comptime Emitter: type, self: *Emitter, stack: []const typed.Type) GenerateError!bool {
-    if (!try liveRoots(Emitter, self, stack)) return false;
+    // Counted heaps drain journaled obligations; they never trace this chain.
+    if (runtime.enabled() or !try liveRoots(Emitter, self, stack)) return false;
     const base = self.temp();
     try self.print(" %v{d} =l add %heap, {d}\n", .{ base, heap_roots_offset });
     const head = self.temp();
@@ -399,6 +401,7 @@ fn restoreRoots(comptime Emitter: type, self: *Emitter) GenerateError!void {
 }
 
 fn restoreTo(comptime Emitter: type, self: *Emitter, scope: ?usize) GenerateError!void {
+    if (runtime.enabled()) return;
     const base = self.temp();
     try self.print(" %v{d} =l add %heap, {d}\n", .{ base, heap_roots_offset });
     if (scope) |fill| {

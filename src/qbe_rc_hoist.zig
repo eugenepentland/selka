@@ -65,6 +65,18 @@ pub fn covers(comptime E: type, self: *E, local: usize) bool {
     return false;
 }
 
+/// A fast loop may cache storage only inside a physically proved interval.
+/// The emitter still rejects checks left inside it and any allocating helper
+/// that the fast copy actually emits. The ordinary loop remains the fallback.
+pub fn permitsVersion(comptime E: type, self: *E, head: usize, back: usize) bool {
+    if (frame.get(E, self) == null) return false;
+    const plan = self.cow.?.plan;
+    for (plan.loops.entries, 0..) |entries, outer| {
+        if (entries.len != 0 and head >= outer and back <= plan.loops.back[outer]) return true;
+    }
+    return false;
+}
+
 fn proven(comptime E: type, self: *E, site: ownership.Cow, stores: []const bool) bool {
     const code = self.function.scope.instructions;
     const head = site.hoisted;

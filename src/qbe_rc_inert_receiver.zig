@@ -22,6 +22,52 @@ pub fn projection(comptime E: type, self: *E, pc: usize) bool {
     return proven(E, self, local);
 }
 
+/// A single-definition inert receiver whose journal can never gain O or H.
+/// Refuse every other physical writer, including pattern bindings, inout
+/// addresses, held-role handling and uniqueness that could install a clone.
+pub fn emptyLocal(comptime E: type, self: *E, local: usize) bool {
+    const code = self.function.scope.instructions;
+    if (local < self.function.signature.parameter_count or !list(E, self, local)) return false;
+    if (self.byReference(local) or self.callerStorage(local)) return false;
+    if (@import("qbe_rc_holds.zig").mayHold(E, self, self.function.scope.locals[local].ty)) return false;
+    if (!proven(E, self, local)) return false;
+    const at = definition(E, self, local) orelse return false;
+    if (at == 0 or self.isBranchTarget(at)) return false;
+    const plan = self.cow.?.plan;
+    if (!borrowedInput(E, self, local, at)) return false;
+    for (code) |instruction| switch (instruction.op) {
+        .ref_local => |id| if (@backingInt(id) == local) return false,
+        .switch_variant => |dispatch| for (dispatch.arms) |arm| {
+            if (arm.slot) |id| if (@backingInt(id) == local) return false;
+        },
+        else => {},
+    };
+    return noCloneTarget(plan, local);
+}
+
+// Both accepted producers leave the new operand guard empty. A raw load lends
+// a pointer; an inert projection consumes only its plain index and publishes
+// no token. There is no intervening value_copy, alternate entry or planned
+// capture snapshot. Fill may refresh the pointer but owns it in the parent.
+fn borrowedInput(comptime E: type, self: *E, local: usize, at: usize) bool {
+    const plan = self.cow.?.plan;
+    if (plan.at(at).read_captures.len != 0 or plan.at(at - 1).read_captures.len != 0) return false;
+    if (plan.place(local) != null) return projection(E, self, at - 1);
+    if (local >= plan.aliases.len or plan.aliases[local] == cow.none) return false;
+    const previous = self.function.scope.instructions[at - 1].op;
+    return previous == .load_local and @backingInt(previous.load_local) == plan.aliases[local];
+}
+
+fn noCloneTarget(plan: cow.Plan, local: usize) bool {
+    for (plan.sites) |site| for (site.unique) |unique| {
+        if (unique.local == local or unique.alias == local) return false;
+    };
+    for (plan.loops.entries) |entries| for (entries) |entry| if (entry.local == local) return false;
+    // Capturing a later mutable alias can call unique_local on this slot.
+    for (plan.aliases) |parent| if (parent == local) return false;
+    return true;
+}
+
 /// Keep the ordinary owning anchor live through a closed scalar-only interval.
 /// Unknown effects, managed publication, callbacks, backwards edges and entries
 /// bypassing the capture retain the complete existing held/pinned protocol.
