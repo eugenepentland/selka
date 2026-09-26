@@ -394,7 +394,12 @@ static __attribute__((noinline)) uint64_t fail(void *context, const char *code) 
            sticky flag after a call; the trampoline armed this jump while the
            entry ran. A context without one (the direct C entry points and
            budget parsing) keeps the sticky behavior. */
-        if (ctx->unwind) longjmp(*(jmp_buf *)ctx->unwind, 1);
+        if (ctx->unwind) {
+#if (defined(MYL_NATIVE_RC) && MYL_NATIVE_RC) || defined(MYL_RC_CONTRACT_LIBRARY)
+            myl_qbe_rc_unwind(ctx);
+#endif
+            longjmp(*(jmp_buf *)ctx->unwind, 1);
+        }
     }
     return 0;
 }

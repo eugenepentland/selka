@@ -85,6 +85,32 @@ typedef struct {
 #define MYL_QBE_ENVIRONMENT_NAMES 16
 #define MYL_QBE_ENVIRONMENT_NAME_LIMIT 128
 typedef struct { const unsigned char *names; size_t length; } MylQbeEnvironmentScope;
+/* Compiler-reserved storage; registration and failure cleanup allocate nothing.
+ * The initialized word is cleared before either drop can call foreign code. */
+#define MYL_QBE_RC_SLOT_BYTES 32
+#define MYL_QBE_RC_SLOT_TYPE_OFFSET 0
+#define MYL_QBE_RC_SLOT_ADDRESS_OFFSET 8
+#define MYL_QBE_RC_SLOT_INITIALIZED_OFFSET 16
+#define MYL_QBE_RC_SLOT_FLAGS_OFFSET 24
+#define MYL_QBE_RC_FRAME_BYTES 32
+#define MYL_QBE_RC_FRAME_PREVIOUS_OFFSET 0
+#define MYL_QBE_RC_FRAME_ENTRIES_OFFSET 8
+#define MYL_QBE_RC_FRAME_COUNT_OFFSET 16
+#define MYL_QBE_RC_FRAME_SCOPE_OFFSET 24
+#define MYL_QBE_RC_UNIQUE_DROP 1u
+#define MYL_QBE_RC_COUNTED 2u
+typedef struct {
+    const myl_native_type *type;
+    void *address;
+    uint32_t *initialized;
+    unsigned flags;
+} MylQbeRcSlot;
+typedef struct MylQbeRcFrame {
+    struct MylQbeRcFrame *previous;
+    MylQbeRcSlot *entries;
+    size_t count;
+    myl_rc_scope *scope_checkpoint;
+} MylQbeRcFrame;
 typedef struct {
     uint64_t steps, frames, max_steps, max_frames;
     const char *trap;
@@ -145,6 +171,7 @@ typedef struct {
     /* Copied-value adapter temporaries survive guest longjmp and are retired
        while the context, managed heap and provider resources are still live. */
     void (*adapter_cleanup)(void *);
+    MylQbeRcFrame *rc_frames;
 } MylQbeContext;
 typedef struct {
     uint64_t value, steps;
@@ -155,6 +182,15 @@ typedef struct {
     MylQbeTrapDetail trap_detail;
 } MylQbeResult;
 void myl_qbe_fail_capability(void *);
+void myl_qbe_rc_frame_enter(void *, MylQbeRcFrame *, MylQbeRcSlot *, size_t);
+void myl_qbe_rc_slot_drop(void *, MylQbeRcSlot *);
+/* Restore this frame's scopes and drop initialized entries, keeping it linked. */
+void myl_qbe_rc_frame_cleanup(void *, MylQbeRcFrame *);
+/* Normal exit already released its owners and closed its receiver scopes. */
+void myl_qbe_rc_frame_leave(void *, MylQbeRcFrame *);
+/* Nested landing pads may unwind a prefix; the checkpoint frame remains live. */
+void myl_qbe_rc_unwind_to(void *, MylQbeRcFrame *checkpoint);
+void myl_qbe_rc_unwind(void *);
 void myl_qbe_fail_missing_capability(void *, const char *flag);
 uint64_t myl_qbe_on_stack(uint64_t (*entry)(void *), MylQbeContext *);
 void *myl_qbe_frame_allocate(void *, uint64_t bytes);

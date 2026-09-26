@@ -61,8 +61,23 @@ void myl_rc_scope_end(myl_rc_scope *scope) {
     myl_rc_drain(heap);
 }
 void myl_rc_scopes_close_region(myl_native_heap *heap, unsigned region) {
-    while (heap->rc->scopes && heap->rc->scopes->region >= region)
-        myl_rc_scope_end(heap->rc->scopes);
+    myl_rc_scope *boundary = heap->rc->scopes;
+    while (boundary && boundary->region >= region) boundary = boundary->previous;
+    myl_rc_scope_unwind(heap, boundary);
+}
+myl_rc_scope *myl_rc_scope_current(myl_native_heap *heap) {
+    return heap && heap->rc ? heap->rc->scopes : NULL;
+}
+void myl_rc_scope_unwind(myl_native_heap *heap, myl_rc_scope *checkpoint) {
+    if (!heap || !heap->rc) { myl_rc_invariant(!checkpoint); return; }
+    for (myl_rc_scope *scope = heap->rc->scopes; scope != checkpoint; scope = scope->previous) {
+        myl_rc_invariant(scope != NULL);
+        for (scope_entry *entry = scope->journal; entry; entry = entry->previous) {
+            restore(entry);
+            entry->pinned = 0;
+        }
+    }
+    while (heap->rc->scopes != checkpoint) myl_rc_scope_end(heap->rc->scopes);
 }
 typedef struct {
     const myl_rc_shape *shape;
