@@ -211,6 +211,13 @@ static void deep_inline_and_overflow_test(void) {
     assert(myl_rc_reserved_depth(&heap) == 32769);
     free(shapes);
     free(fields);
+    struct { myl_native_object header; uint64_t value; } arena = {
+        .header = {.mark = MYL_NATIVE_OBJECT_ARENA | ((uintptr_t)7 << MYL_NATIVE_ARENA_REGION_SHIFT), .element = &scalar_type}
+    };
+    void *borrowed = &arena.value;
+    heap.limit = heap.bytes;
+    assert(myl_rc_value_region(&heap, imported, &borrowed) == 7 && borrowed == &arena.value);
+    heap.limit = ((size_t)256) << 20;
     void *value = new_value(&heap, &scalar_type, 1);
     myl_rc_slot slot = {.shape = imported, .address = &value};
     heap.limit = heap.bytes;

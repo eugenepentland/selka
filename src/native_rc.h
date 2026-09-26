@@ -153,6 +153,8 @@ void myl_rc_pin_release(myl_native_heap *, myl_rc_pin *);
  * stack for a complete nonallocating direct-edge walk; it never recurses into
  * managed payloads. An adapter may call it repeatedly while no walk is active. */
 void myl_rc_edges_release(myl_native_heap *, const myl_rc_shape *, void *, size_t count);
+/* Read direct arena edges using the same reserved iterative shape stack. */
+unsigned myl_rc_value_region(myl_native_heap *, const myl_rc_shape *, const void *);
 void myl_rc_drain(myl_native_heap *);
 /* Seed empty construction storage with scalar bytes/active tags, clearing all
  * direct owners without releasing them. Source and destination are distinct. */

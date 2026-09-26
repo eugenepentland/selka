@@ -8,16 +8,21 @@ static void push(myl_native_heap *heap, const myl_rc_shape *shape, unsigned char
     *frame = (myl_rc_frame){.shape = shape, .address = address};
 }
 /* Frames keep the next child/index, not an expanded list of array elements. */
-static void walk(myl_native_heap *heap, int release) {
+enum { WALK_CLEAR, WALK_RELEASE, WALK_REGION };
+static unsigned walk(myl_native_heap *heap, unsigned action) {
+    unsigned region = 0;
     while (heap->rc->walk.depth) {
         myl_rc_frame *frame = &heap->rc->walk.frames[heap->rc->walk.depth - 1];
         const myl_rc_shape *shape = frame->shape;
         if (shape->kind == MYL_RC_SHAPE_POINTER) {
             void *payload;
             memcpy(&payload, frame->address, sizeof payload);
-            memset(frame->address, 0, sizeof payload);
+            if (action == WALK_REGION) {
+                unsigned found = payload ? myl_native_header_region(payload) : 0;
+                if (found > region) region = found;
+            } else memset(frame->address, 0, sizeof payload);
             --heap->rc->walk.depth;
-            if (release) myl_rc_edge_release(heap, payload);
+            if (action == WALK_RELEASE) myl_rc_edge_release(heap, payload);
         } else if (shape->kind == MYL_RC_SHAPE_ARRAY) {
             if (frame->cursor == shape->as.array.count) { --heap->rc->walk.depth; continue; }
             size_t index = frame->cursor++;
@@ -36,6 +41,14 @@ static void walk(myl_native_heap *heap, int release) {
             push(heap, field->shape, frame->address + field->offset);
         }
     }
+    return region;
+}
+unsigned myl_rc_value_region(myl_native_heap *heap, const myl_rc_shape *source, const void *address) {
+    myl_rc_invariant(heap && heap->rc && !heap->rc->walk.depth);
+    const myl_rc_shape *shape = myl_rc_shape_resolve(heap, source);
+    myl_rc_invariant(shape && (!shape->size || address));
+    push(heap, shape, (unsigned char *)address);
+    return walk(heap, WALK_REGION);
 }
 void myl_rc_edges_release(myl_native_heap *heap, const myl_rc_shape *source, void *address, size_t count) {
     myl_rc_invariant(heap && heap->rc && !heap->rc->walk.depth);
@@ -48,7 +61,7 @@ void myl_rc_edges_release(myl_native_heap *heap, const myl_rc_shape *source, voi
     unsigned char *cursor = address;
     for (size_t i = 0; i < count; ++i) {
         push(heap, shape, cursor);
-        walk(heap, 1);
+        walk(heap, WALK_RELEASE);
         cursor += shape->size;
     }
 }
@@ -106,7 +119,7 @@ void myl_rc_value_seed(myl_native_heap *heap, const myl_rc_shape *source_shape,
     unsigned char *cursor = destination;
     for (size_t i = 0; i < count; ++i) {
         push(heap, shape, cursor);
-        walk(heap, 0);
+        walk(heap, WALK_CLEAR);
         cursor += shape->size;
     }
 }
