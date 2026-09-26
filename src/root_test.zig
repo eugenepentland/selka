@@ -254,6 +254,7 @@ test {
     _ = @import("qbe_rc_views_test.zig");
     _ = @import("qbe_rc_journal_test.zig");
     _ = @import("cow_test.zig");
+    _ = @import("cow_rebox_roots_test.zig");
     _ = @import("qbe_text_test.zig");
     _ = @import("qbe_range_keys_test.zig");
     _ = @import("qbe_literals_test.zig");

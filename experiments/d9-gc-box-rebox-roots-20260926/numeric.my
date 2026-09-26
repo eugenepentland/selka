@@ -1,0 +1,19 @@
+record Node:
+    mapping: dict[int, int]
+    child: Option[Node]
+
+def through(value: Option[Node]) -> Option[Node]:
+    return value
+
+def repeated() -> int:
+    original: Option[Node] = Some(Node({1: 7}, None))
+    saved = through(original)
+    if original is None or saved is None:
+        return -1
+    original.mapping[1] = 13
+    original.mapping[1] = 17
+    return original.mapping[1] * 100 + saved.mapping[1]
+
+def main(out: Stream) -> int:
+    out.print(repeated())
+    return 0
