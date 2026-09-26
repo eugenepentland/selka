@@ -681,3 +681,24 @@ test "RC-UNIQUE-LOWER-1 nested receiver replaces its owned field before borrowin
     try t.expect(std.mem.indexOf(u8, text, "call $myl_qbe_rc_unique_field") != null);
     try t.expect(std.mem.indexOf(u8, text, "call $myl_native_cow_unique") == null);
 }
+
+// spec: RC-RECEIVER-LOWER-1
+test "RC-RECEIVER-LOWER-1 outgoing mutable arguments hold a nested runtime scope" {
+    const mode = @import("runtime_mode.zig");
+    const saved = mode.get();
+    defer mode.set(saved);
+    mode.set(.rc);
+    var result = try lowered(
+        \\def change(value: mut list[int]) -> int:
+        \\    value.append(3)
+        \\    return len(value)
+        \\def main() -> int:
+        \\    value = [1, 2]
+        \\    return change(mut value)
+    );
+    defer result.deinit();
+    const text = try functionText(result.value, "main");
+    try t.expect(try at(text, "call $myl_qbe_rc_scope_begin") < try at(text, "call $myl_qbe_rc_scope_pin"));
+    try t.expect(try at(text, "call $myl_qbe_rc_scope_pin") < try at(text, "call $myl_qbe_rc_scope_end"));
+    try t.expect(std.mem.indexOf(u8, text, "call $myl_native_cow_unique") == null);
+}

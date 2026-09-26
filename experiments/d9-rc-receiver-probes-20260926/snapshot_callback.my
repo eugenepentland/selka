@@ -1,0 +1,16 @@
+# Pending receiver snapshots: RC regression and preserved GC control.
+
+def save_pending_rows(rows: list[list[int]], saved: mut list[list[list[int]]]) -> int:
+    saved.append(rows)
+    return 2
+
+public def test_callback_snapshot_keeps_captured_receiver_independent() -> bool:
+    rows = [[1]]
+    saved: list[list[list[int]]] = []
+    rows[0].append(save_pending_rows(rows, mut saved))
+    return rows[0] == [1, 2] and saved[0][0] == [1]
+
+def main() -> int:
+    if test_callback_snapshot_keeps_captured_receiver_independent():
+        return 0
+    return 1

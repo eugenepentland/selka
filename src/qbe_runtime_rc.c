@@ -3,6 +3,7 @@
 #include "native_rc_internal.h"
 #include "native_rc_values.h"
 #include "native_arena.h"
+#include "native_dictionary.h"
 #include <string.h>
 _Static_assert(sizeof(MylQbeRcSlot) == MYL_QBE_RC_SLOT_BYTES, "RC slot journal size");
 _Static_assert(offsetof(MylQbeRcSlot, type) == MYL_QBE_RC_SLOT_TYPE_OFFSET, "RC slot type");
@@ -121,7 +122,67 @@ int myl_qbe_rc_unique_field(void *context, const myl_native_type *type, void *ad
     const myl_rc_descriptor *descriptor = myl_rc_descriptor_find(&ctx->heap, type);
     myl_rc_invariant(descriptor && descriptor->shape->kind == MYL_RC_SHAPE_POINTER);
     myl_rc_slot slot = {.shape = descriptor->shape, .address = address, .container = container,
-        .region = container ? myl_native_header_region(container) : 0};
+        .region = container ? myl_native_header_region(container) : ctx->heap.region_depth};
     return myl_qbe_rc_status(ctx, myl_rc_unique_owned(&ctx->heap, &slot));
+}
+_Static_assert(sizeof(myl_rc_scope) == MYL_QBE_RC_SCOPE_BYTES, "RC scope size");
+_Static_assert(sizeof(MylQbeRcPath) == MYL_QBE_RC_PATH_BYTES, "RC native projection size");
+_Static_assert(sizeof(MylQbeRcPlace) == MYL_QBE_RC_PLACE_BYTES, "RC native place size");
+void myl_qbe_rc_scope_begin(void *context, myl_rc_scope *scope) {
+    myl_rc_scope_begin(&((MylQbeContext *)context)->heap, scope);
+}
+void myl_qbe_rc_scope_end(void *context, myl_rc_scope *scope) {
+    myl_rc_invariant(scope && (!scope->active || scope->heap == &((MylQbeContext *)context)->heap));
+    myl_rc_scope_end(scope);
+}
+static myl_rc_status capture_backing(myl_rc_scope *scope, void *payload) {
+    if (myl_native_list_header(payload)) return myl_rc_scope_hold(scope, ((myl_native_list *)payload)->storage);
+    if (!myl_native_dictionary_header(payload)) return MYL_RC_OK;
+    myl_native_dictionary *dictionary = payload;
+    myl_rc_status status = myl_rc_scope_hold(scope, dictionary->entries);
+    if (status == MYL_RC_OK && dictionary->entries) status = myl_rc_scope_hold(scope, dictionary->entries->storage);
+    if (status == MYL_RC_OK) status = myl_rc_scope_hold(scope, dictionary->index.slots);
+    return status;
+}
+int myl_qbe_rc_scope_pin(void *context, myl_rc_scope *scope, void *payload) {
+    void *boundary = scope->journal;
+    myl_rc_status status = myl_rc_scope_pin(scope, payload);
+    if (status == MYL_RC_OK) status = myl_rc_scope_extend(scope, boundary, capture_backing);
+    return myl_qbe_rc_status(context, status);
+}
+int myl_qbe_rc_scope_hold(void *context, myl_rc_scope *scope, void *payload) {
+    void *boundary = scope->journal;
+    myl_rc_status status = myl_rc_scope_hold(scope, payload);
+    if (status == MYL_RC_OK) status = myl_rc_scope_extend(scope, boundary, capture_backing);
+    return myl_qbe_rc_status(context, status);
+}
+static const myl_rc_shape scope_pointer = {.size = sizeof(void *), .kind = MYL_RC_SHAPE_POINTER};
+static const myl_rc_shape *const scope_shapes[] = {&scope_pointer};
+static const myl_rc_module scope_module = {.abi = MYL_RC_ABI_VERSION, .shapes = scope_shapes, .shape_count = 1};
+int myl_qbe_rc_scope_prepare(void *context, myl_rc_scope *scope, const MylQbeRcPlace *request) {
+    MylQbeContext *ctx = context;
+    myl_rc_invariant(request && (!request->count || request->path));
+    if (!request->address) return 1;
+    size_t bytes;
+    if (!myl_rc_size_mul(request->count, sizeof(myl_rc_projection), &bytes)) return myl_qbe_rc_status(ctx, MYL_RC_ALLOCATION_REFUSED);
+    myl_rc_projection local[8], *path = bytes <= sizeof local ? local : myl_rc_meta_alloc(&ctx->heap, bytes);
+    if (!path) return myl_qbe_rc_status(ctx, MYL_RC_ALLOCATION_REFUSED);
+    for (size_t i = 0; i < request->count; ++i) {
+        const myl_rc_descriptor *descriptor = myl_rc_descriptor_find(&ctx->heap, request->path[i].type);
+        myl_rc_invariant(descriptor != NULL);
+        path[i] = (myl_rc_projection){descriptor->shape, request->path[i].offset};
+    }
+    myl_rc_status status = request->count ? MYL_RC_OK : myl_rc_module_register(&ctx->heap, &scope_module);
+    if (status == MYL_RC_OK) {
+        void *boundary = scope->journal;
+        myl_rc_place place = {.receiver = {.shape = request->count ? path[0].shape : &scope_pointer,
+            .address = request->address, .container = request->container,
+            .region = request->container ? myl_native_header_region(request->container) : ctx->heap.region_depth},
+            .path = path, .count = request->count};
+        status = myl_rc_scope_prepare(scope, &place);
+        if (status == MYL_RC_OK) status = myl_rc_scope_extend(scope, boundary, capture_backing);
+    }
+    if (path != local) myl_rc_meta_free(&ctx->heap, path, bytes);
+    return myl_qbe_rc_status(ctx, status);
 }
 #endif
