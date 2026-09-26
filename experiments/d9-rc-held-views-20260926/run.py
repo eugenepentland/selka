@@ -29,7 +29,8 @@ def main():
     binary = work / ("held-views-" + args.backend)
     command = [str(ROOT / "scripts/build-slot.sh"), "build", str(compiler), "build", str(entry),
                "--rc-runtime=stats", "--backend", args.backend, "--mode", "ReleaseFast",
-               "--qbe=" + str(args.qbe.resolve()), "--cache-dir=" + str(work / "cache"), "-o", str(binary)]
+               "--cache-dir=" + str(work / "cache"), "-o", str(binary)]
+    command += (["--qbe=" + str(args.qbe.resolve())] if args.backend == "qbe" else ["--llvm-opt", "3", "--lto"])
     subprocess.run(command, cwd=ROOT, check=True)
     run = subprocess.run([str(binary)], cwd=ROOT, capture_output=True, text=True)
     counts = [json.loads(line.removeprefix("MYLANG_RC_COUNTS "))

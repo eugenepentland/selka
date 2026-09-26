@@ -38,3 +38,15 @@ record Debug compiler hashes, native binary hashes, source hashes, commands and
 all twelve output validations. These measurements isolate the certified-entry
 patch after the plain-projection correctness fix. Cache invalidation integration
 and the combined full gate remain with the compiler/integration owners.
+
+Backend evidence correction: the original before/after LLVM-labeled files
+appended `--qbe`, which selected QBE again. They remain unchanged as historical
+QBE records; the original QBE ownership comparison is valid. Corrected actual
+backend commands and output checks are recorded separately in the experiment's
+`corrected/` directory using the preserved before/after compiler installations.
+
+The corrected run passes all twelve exact SVG checks. Actual LLVM and QBE
+both preserve the measured reduction: 38,060 acquisitions and 38,060 releases
+per workload, with unchanged allocation, retirement, hold, clone and uniqueness
+counts. Thus the numerical traffic result stands; its LLVM evidence is now the
+new corrected run, not the historically mislabeled records.

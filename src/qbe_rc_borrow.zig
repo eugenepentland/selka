@@ -8,10 +8,11 @@ const runtime = @import("runtime_mode.zig");
 /// Errors shared with the concrete native emitter.
 pub const Error = frame.Error;
 
-/// Whether this body is the separately certified internal borrowed entry.
+/// Whether this body has a complete caller-anchored loan certificate.
 pub fn active(comptime E: type, self: *E) bool {
-    const state = frame.get(E, self) orelse return false;
-    return state.contract.result == .borrowed;
+    if (!runtime.enabled()) return false;
+    const state = if (self.cow) |cow| cow.rc orelse return false else return false;
+    return state.readonly or state.contract.result == .borrowed;
 }
 
 /// Resolve a direct callee's every-return proof in the current physical catalog.
@@ -38,7 +39,10 @@ pub fn local(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "o
             const ty = self.function.scope.locals[index].ty;
             const destination = self.temp();
             try self.print(" %v{d} =l copy %l{d}\n", .{ destination, index });
-            try self.writeValue(destination, try self.load("s", stack.len - 1), ty);
+            const value = try self.load("s", stack.len - 1);
+            // Local scalar slots are canonical machine words even when their
+            // packed field layout is a byte (for example a branch's bool).
+            if (self.isScalar(ty)) try self.print(" storel %v{d}, %v{d}\n", .{ value, destination }) else try self.writeValue(destination, value, ty);
             return true;
         },
         else => return false,

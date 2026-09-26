@@ -28,6 +28,7 @@ const qbe_alloc = @import("qbe_alloc.zig");
 const runtime_mode = @import("runtime_mode.zig");
 const rc_unique = @import("qbe_rc_unique.zig");
 const rc_scope = @import("qbe_rc_scope.zig");
+const semantics = @import("value_semantics.zig");
 const cow_keep_label = "@cowkeep{d}\n";
 const store_pointer = " storel %v{d}, %v{d}\n";
 const store_local = " storel %v{d}, %l{d}\n";
@@ -87,7 +88,7 @@ pub fn Lower(comptime E: type) type {
                 .function = self.function,
                 .states = self.states,
                 .analysis = analysis,
-                .shares = !@import("value_semantics.zig").enabled(),
+                .shares = !semantics.enabled(),
             };
             state.plan = cow_plan.plan(self.allocator, input) catch |err| return switch (err) {
                 error.OutOfMemory => error.OutOfMemory,
@@ -337,7 +338,7 @@ fn prepareMutArgumentRc(comptime E: type, self: *E, arg: *usize, source: @import
         };
         const cursor = try fieldChainRange(E, self, source.read + 1, end, try fieldBase(E, self, source.local), .published);
         const types = self.states[self.pc] orelse return error.InternalError;
-        try rc_unique.field(E, self, .{ .ty = types[slot], .address = cursor.address, .container = cursor.cell orelse cursor.holder });
+        try rc_unique.field(E, self, .{ .ty = types[slot], .address = cursor.address, .container = cursor.cell orelse cursor.holder, .held = cursor.held });
         try self.store(slot, try self.load("v", cursor.address));
     }
     arg.* = try self.load("s", slot);
@@ -458,7 +459,7 @@ fn uniqueField(comptime E: type, self: *E, place: cow_plan.Place, stack: []const
     const cursor = try fieldChainRange(E, self, place.base + 1, place.fields_end, try fieldBase(E, self, place.parent), .detach);
     if (runtime_mode.enabled()) {
         const types = self.states[place.fields_end] orelse return error.InternalError;
-        return rc_unique.field(E, self, .{ .ty = types[types.len - 1], .address = cursor.address, .container = cursor.cell orelse cursor.holder });
+        return rc_unique.field(E, self, .{ .ty = types[types.len - 1], .address = cursor.address, .container = cursor.cell orelse cursor.holder, .held = cursor.held });
     }
     const value = try self.load("v", cursor.address);
     const label = self.temp();
@@ -523,7 +524,7 @@ fn filledPlace(comptime E: type, self: *E, pc: usize) Error!struct { local: u32,
 /// Where a place's value lives while its write-back address is computed: the
 /// temporary holding that address, the `class` or detached box body it lies
 /// in, and an outer list/dictionary keeping an element address alive.
-const Cursor = struct { address: usize, cell: ?usize, holder: ?usize = null };
+const Cursor = struct { address: usize, cell: ?usize, holder: ?usize = null, held: bool = false };
 
 /// Make the value a place's fill stores unique: copy it when it is shared,
 /// write the copy back into the place it was read from, and store the copy.
@@ -567,7 +568,7 @@ fn fillPlace(comptime E: type, self: *E, pc: usize, stack: []const typed.Type) E
     if (runtime_mode.enabled()) try @import("qbe_rc_values.zig").drop(E, self, top);
     cursor = try fieldChain(E, self, place, cursor);
     if (runtime_mode.enabled()) {
-        try rc_unique.field(E, self, .{ .ty = stack[top], .address = cursor.address, .container = cursor.cell orelse container });
+        try rc_unique.field(E, self, .{ .ty = stack[top], .address = cursor.address, .container = cursor.cell orelse container, .held = cursor.held });
         return self.store(top, try self.load("v", cursor.address));
     }
     if (box_path) {
@@ -978,7 +979,7 @@ fn fieldChainRange(comptime E: type, self: *E, begin: usize, end: usize, start: 
             const boxed = self.program.records[source.recordIndex()].collection.box;
             if (walk == .pin and boxed) try scopePin(E, self, walk.pin, body);
             const detaching = walk == .detach or walk == .published;
-            if (detaching and boxed and @import("value_semantics.zig").enabled()) {
+            if (detaching and boxed and semantics.enabled()) {
                 // A nested write must never target an immutable box's old
                 // body. Detach each box on the path before descending; the
                 // previous cursor then names either owned inline storage or
@@ -987,13 +988,14 @@ fn fieldChainRange(comptime E: type, self: *E, begin: usize, end: usize, start: 
                 cursor = .{ .address = try self.address(copy, member.offset), .cell = copy };
             } else cursor = .{ .address = try self.address(body, member.offset), .cell = body };
         } else cursor.address = try self.address(cursor.address, member.offset);
+        cursor.held = semantics.isLiveView(self.program.records, source);
     }
     return cursor;
 }
 
 fn detachBox(comptime E: type, self: *E, ty: typed.Type, body: usize, cursor: Cursor, roots_published: bool) Error!usize {
     if (runtime_mode.enabled()) {
-        try rc_unique.field(E, self, .{ .ty = ty, .address = cursor.address, .container = cursor.cell orelse cursor.holder });
+        try rc_unique.field(E, self, .{ .ty = ty, .address = cursor.address, .container = cursor.cell orelse cursor.holder, .held = cursor.held });
         return self.load("v", cursor.address);
     }
     const pushed = if (roots_published) false else try self.roots(self.states[self.pc] orelse return error.InternalError);
