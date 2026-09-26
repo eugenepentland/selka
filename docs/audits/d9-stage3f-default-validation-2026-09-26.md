@@ -1,9 +1,9 @@
 # D9 stage 3f default validation candidate, 2026-09-26
 
 The default implementation passes its correctness gate but is **not accepted
-for integration**: stage 3 performance remains above the required limits,
-and the nested-collection/fixed-array follow-up remains unfinished. The boxed
-path fix has passed its gate and is included in this candidate. Work
+for integration**: final stage 3 performance acceptance remains open. The
+boxed-path and nested-collection/fixed-array fixes have passed their joined
+gates and are included in this candidate. Work
 is isolated on `codex/d9-stage3f-prep`; neither `main` nor the devspeed merge
 branch was changed. The latest `main`, `b292660a`, is already an ancestor.
 
@@ -82,10 +82,20 @@ COW scratch optimization, unused alias initialization removal, and the latest
 validated external Lox source. It does not include the unfinished nested-array
 callback fix. Logs are `.tmp-stage3f/astra-default-*.log` in this worktree.
 
-The latest complete VM sweep uses `adcbb4ca` with the direct-frame source at
-`6d54bace`: QBE geomean 1.19444× with 4/13 cases above 1.3×, LLVM geomean
-1.35771× with 9/13 above 1.3×. Exact outputs match, but the formal 43-key
-stage 3 limit is still unmet. The tree interpreter is additional audit coverage,
+The refreshed candidate at `5b663e23` passes all four gates: 94/94 main
+steps with 2,122 executed tests (21,503 shard exclusions), QBE 51/51 with
+428 tests, native-build 29/29 and formatting 2/2. It includes pure recursive-box
+reads and the scoped nested receivers from integration `b6328bcd`, plus the
+composed receiver-RHS, class-reader and late-closure source fixes at `d7f4cf85`.
+Logs are `.tmp-stage3f/scopes-default-{test,test-qbe,test-qbe-build,fmt-check}.log`.
+Guardian's 88 checks pass without ratchet growth. The subsequent indexed
+payload-return proof and Lox setter helper are not part of this frozen gate.
+
+The complete 43-key diagnostic at earlier compiler `5bdd99ea` measured QBE
+geomean 1.06194× and LLVM 1.09626×, with three and four cases above 1.3×.
+All outputs and SVG checks matched. Pure-box reads and later source changes
+improve individual blockers, and the full current combination is being
+measured. The final stage 3 limit is still unestablished. The tree interpreter is additional audit coverage,
 with a remaining regression tracked separately. No performance limit has been
 waived. The default branch stays isolated until the final joined correctness
 and baseline performance gates pass; reference counting and concurrency remain
