@@ -13,6 +13,70 @@ const myl_rc_shape *myl_rc_native_shape(myl_native_heap *heap, const myl_native_
     if (status!=MYL_RC_OK) { myl_rc_record_failure(heap,status); return NULL; }
     return myl_rc_descriptor_find(heap,type)->shape;
 }
+/* Indexed descriptors live in immutable private bindings. Registration alone
+ * builds the optional flat plan; imported public metadata remains unchanged. */
+static const myl_rc_binding *native_binding(myl_native_heap *heap, const myl_native_type *type) {
+    const myl_rc_descriptor *descriptor=myl_rc_descriptor_find(heap,type);
+    if (!descriptor) {
+        if (!myl_rc_native_shape(heap,type)) return NULL;
+        descriptor=myl_rc_descriptor_find(heap,type);
+    }
+    return (const myl_rc_binding *)descriptor;
+}
+/* No callback/allocation runs between preflight and publication. Repeated
+ * payloads need one increment per physical edge, so include earlier aliases
+ * when checking capacity. Refusal has acquired no tokens to roll back. */
+static int flat_transfer(myl_native_heap *heap, const myl_rc_binding *binding,
+                         void *destination, void *source, unsigned region, myl_rc_transfer mode) {
+    const myl_rc_flat *flat=&binding->flat;
+    if (flat->count>MYL_RC_FLAT_LEAVES) return -1;
+    myl_rc_invariant(heap && heap->rc && destination && source && destination!=source);
+    size_t bytes=binding->descriptor.type->size;
+    uintptr_t dst=(uintptr_t)destination, src=(uintptr_t)source;
+    if (dst>src?dst-src<bytes:src-dst<bytes) return -1;
+    if (region>heap->region_depth) return MYL_RC_REGION_ERROR;
+    void *payloads[MYL_RC_FLAT_LEAVES];
+    for (unsigned i=0;i<flat->count;i++) {
+        void *payload;
+        memcpy(&payload,(const unsigned char *)source+flat->offsets[i],sizeof payload);
+        payloads[i]=payload;
+        if (!payload) continue;
+        uintptr_t mark=((myl_native_object *)payload-1)->mark;
+        if (mark&MYL_NATIVE_OBJECT_IMMORTAL) continue;
+        if (mark&MYL_NATIVE_OBJECT_PINNED) return -1;
+        if (mark&MYL_NATIVE_OBJECT_ARENA) {
+            if (myl_native_header_region(payload)>region) return -1;
+            continue;
+        }
+        const myl_rc_object *object=(const myl_rc_object *)payload-1;
+        myl_rc_invariant(!(mark&MYL_RC_OBJECT_DYING) && (object->owners || object->holds));
+        if (mode==MYL_RC_COPY) {
+            uintptr_t additions=1;
+            for (unsigned j=0;j<i;j++) if (payloads[j]==payload) ++additions;
+            if (object->owners>MYL_RC_COUNT_MAX-additions) {
+                MYL_RC_STAT(heap,MYL_RC_STAT_OWNER_LIMIT);
+                memset(destination,0,bytes);
+                if (heap->rc->dead.head) myl_rc_drain(heap);
+                return MYL_RC_COUNT_LIMIT;
+            }
+        }
+    }
+    if (mode==MYL_RC_COPY) for (unsigned i=0;i<flat->count;i++) {
+        void *payload=payloads[i];
+        if (!payload) continue;
+        myl_native_object *common=(myl_native_object *)payload-1;
+        if (common->mark&MYL_NATIVE_OBJECT_IMMORTAL) continue;
+        if (common->mark&MYL_NATIVE_OBJECT_ARENA) common->mark|=MYL_NATIVE_OBJECT_SHARED;
+        else {
+            ++((myl_rc_object *)payload-1)->owners;
+            MYL_RC_STAT(heap,MYL_RC_STAT_OWNER_ACQUIRE);
+        }
+    }
+    memcpy(destination,source,bytes);
+    if (mode==MYL_RC_TAKE) memset(source,0,bytes);
+    if (heap->rc->dead.head) myl_rc_drain(heap);
+    return MYL_RC_OK;
+}
 static int publication_status(myl_native_heap *heap, myl_rc_status status) {
     if (status==MYL_RC_OK) return 1;
     myl_rc_record_failure(heap,status);
@@ -23,10 +87,13 @@ int myl_rc_native_copy(myl_native_heap *heap, const myl_native_type *type, void 
         memmove(dst,src,type->size);
         return 1;
     }
-    const myl_rc_shape *shape=myl_rc_native_shape(heap,type);
-    if (!shape) return 0;
+    const myl_rc_binding *binding=native_binding(heap,type);
+    if (!binding) return 0;
+    const myl_rc_shape *shape=binding->descriptor.shape;
     if (shape->kind==MYL_RC_SHAPE_POINTER)
         return publication_status(heap,myl_rc_pointer_transfer(heap,shape,dst,(void *)src,region,MYL_RC_COPY));
+    int flat=flat_transfer(heap,binding,dst,(void *)src,region,MYL_RC_COPY);
+    if (flat>=0) return publication_status(heap,(myl_rc_status)flat);
     myl_rc_slot target={.shape=shape,.address=dst,.region=region};
     myl_rc_slot source={.shape=shape,.address=(void *)src,.region=region};
     return publication_status(heap,myl_rc_value_copy(heap,&target,&source));
@@ -48,8 +115,9 @@ int myl_rc_native_take(myl_native_heap *heap, const myl_native_type *type, void 
         if (dst!=src) memset(src,0,type->size);
         return 1;
     }
-    const myl_rc_shape *shape=myl_rc_native_shape(heap,type);
-    if (!shape) return 0;
+    const myl_rc_binding *binding=native_binding(heap,type);
+    if (!binding) return 0;
+    const myl_rc_shape *shape=binding->descriptor.shape;
     if (shape->kind==MYL_RC_SHAPE_POINTER) {
         void *staged=NULL;
         myl_rc_status status=myl_rc_pointer_transfer(heap,shape,&staged,src,region,MYL_RC_TAKE);
@@ -61,7 +129,9 @@ int myl_rc_native_take(myl_native_heap *heap, const myl_native_type *type, void 
     if (!staged) return 0;
     myl_rc_slot target={.shape=shape,.address=staged,.region=region};
     myl_rc_slot source={.shape=shape,.address=src,.region=region};
-    int ok=publication_status(heap,myl_rc_value_take(heap,&target,&source));
+    int flat=flat_transfer(heap,binding,staged,src,region,MYL_RC_TAKE);
+    myl_rc_status status=flat>=0?(myl_rc_status)flat:myl_rc_value_take(heap,&target,&source);
+    int ok=publication_status(heap,status);
     if (ok) memmove(dst,staged,type->size);
     if (staged!=local) myl_rc_owner_release(heap,staged);
     return ok;
