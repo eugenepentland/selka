@@ -467,36 +467,52 @@ static void bulk_source_children(void) {
     assert(myl_native_root_pop(&heap, &row_root) && myl_native_root_pop(&heap, &taken_root) && myl_native_root_pop(&heap, &source_root));
     myl_native_heap_destroy(&heap);
 }
-/* spec-case: COW-NESTED-1 -- sharing sees a collection through an immutable
-   recursive box; a pinned descendant path-copies the box rather than
-   mutating a body still held by the source. */
+/* spec-case: COW-NESTED-1 -- copying an immutable recursive box is constant
+   time. Projecting its body creates a private inline value and shares only
+   directly held mutable children. A pinned child is copied into that value,
+   never patched into the source box. */
 static void boxed_children(void) {
     myl_native_heap heap;
     myl_native_heap_init(&heap, 1 << 26);
     heap.stress = 1;
     BoxBody *source = myl_native_heap_alloc(&heap, &box_body, 1), *copy = NULL;
+    BoxBody projected = {0}, pinned_projection = {0};
     myl_native_list *row = NULL;
     assert(source);
-    myl_native_root source_root, copy_root, row_root;
+    myl_native_root source_root, copy_root, row_root, projected_root, pinned_root;
     myl_native_root_push(&heap, &source_root, &source, &box_pointer);
     myl_native_root_push(&heap, &copy_root, &copy, &box_pointer);
     myl_native_root_push(&heap, &row_root, &row, &pointer);
+    myl_native_root_push(&heap, &projected_root, &projected, &box_body);
+    myl_native_root_push(&heap, &pinned_root, &pinned_projection, &box_body);
     row = numbers(&heap, 4, 1);
     source->items = row;
     copy = source;
     assert(myl_native_cow_share_value(&heap, &box_pointer, &copy));
-    assert(copy == source && flags(row) == MYL_NATIVE_OBJECT_SHARED);
+    assert(copy == source && !flags(row));
+    assert(myl_native_cow_unbox(&heap, &box_pointer, copy, &projected));
+    assert(projected.items == row && flags(row) == MYL_NATIVE_OBJECT_SHARED);
+    /* The child was exposed before another box copy; it is already protected. */
+    copy = source;
+    assert(myl_native_cow_share_value(&heap, &box_pointer, &copy));
+    assert(copy == source);
+    myl_native_list *changed = myl_native_cow_unique(&heap, projected.items);
+    assert(changed && changed != row);
+    projected.items = changed;
+    int64_t extra = 9;
+    assert(myl_native_list_append(&heap, projected.items, &extra));
+    assert(at(source->items, 0) == 4 && source->items->length == 1);
     ((myl_native_object *)row - 1)->mark &= ~MYL_NATIVE_OBJECT_SHARED;
     ((myl_native_object *)row - 1)->mark |= MYL_NATIVE_OBJECT_PINNED;
-    assert(myl_native_cow_share_value(&heap, &box_pointer, &copy));
-    assert(copy != source && source->items == row && copy->items != row);
-    assert(flags(row) == MYL_NATIVE_OBJECT_PINNED && at(copy->items, 0) == 4);
+    assert(myl_native_cow_unbox(&heap, &box_pointer, copy, &pinned_projection));
+    assert(copy == source && source->items == row && pinned_projection.items != row);
+    assert(flags(row) == MYL_NATIVE_OBJECT_PINNED && at(pinned_projection.items, 0) == 4);
+    assert(myl_native_root_pop(&heap, &pinned_root) && myl_native_root_pop(&heap, &projected_root));
     assert(myl_native_root_pop(&heap, &row_root) && myl_native_root_pop(&heap, &copy_root) && myl_native_root_pop(&heap, &source_root));
     myl_native_heap_destroy(&heap);
 }
-/* spec-case: COW-SHARED-1 -- a pure recursive descriptor does not require a
-   walk down a long immutable value, but a sibling list in a recursive body is
-   still discovered and marked. */
+/* spec-case: COW-SHARED-1 -- transferring a recursive box never visits its
+   descendants. Projecting a mixed body marks only the sibling list there. */
 static void recursive_descriptor_reachability(void) {
     myl_native_heap heap;
     myl_native_heap_init(&heap, 1 << 26);
@@ -527,7 +543,12 @@ static void recursive_descriptor_reachability(void) {
     mixed->items = row;
     mixed_copy = mixed;
     assert(myl_native_cow_share_value(&heap, &mixed_box, &mixed_copy));
-    assert(mixed_copy == mixed && flags(row) == MYL_NATIVE_OBJECT_SHARED);
+    assert(mixed_copy == mixed && !flags(row));
+    MixedBody projected = {0};
+    myl_native_root projected_root;
+    myl_native_root_push(&heap, &projected_root, &projected, &mixed_body);
+    assert(myl_native_cow_unbox(&heap, &mixed_box, mixed_copy, &projected));
+    assert(projected.items == row && flags(row) == MYL_NATIVE_OBJECT_SHARED);
     assert(!myl_native_cow_take_depth_failure());
     heap.stress = 0;
     for (int i = 0; i < 1100; ++i) {
@@ -537,8 +558,9 @@ static void recursive_descriptor_reachability(void) {
         mixed = next;
     }
     mixed_copy = mixed;
-    assert(!myl_native_cow_share_value(&heap, &mixed_box, &mixed_copy));
-    assert(myl_native_cow_take_depth_failure());
+    assert(myl_native_cow_share_value(&heap, &mixed_box, &mixed_copy));
+    assert(mixed_copy == mixed && !myl_native_cow_take_depth_failure());
+    assert(myl_native_root_pop(&heap, &projected_root));
     assert(!myl_native_cow_take_depth_failure());
     assert(myl_native_root_pop(&heap, &row_root) && myl_native_root_pop(&heap, &mixed_copy_root) && myl_native_root_pop(&heap, &mixed_root));
     assert(myl_native_root_pop(&heap, &taken_root) && myl_native_root_pop(&heap, &head_root));

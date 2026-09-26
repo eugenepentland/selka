@@ -18,3 +18,10 @@ int myl_qbe_cow_transfer(void *context, const myl_native_type *type,
     if (!done) myl_qbe_fail_allocation(context);
     return done;
 }
+
+int myl_qbe_cow_unbox(void *context, const myl_native_type *type,
+                      void *box, void *output) {
+    int done = myl_native_cow_unbox(myl_qbe_heap(context), type, box, output);
+    if (!done) myl_qbe_fail_allocation(context);
+    return done;
+}

@@ -49,8 +49,8 @@ int myl_native_cow_payload(const void *payload) {
 /* A descriptor may nest inline aggregates much deeper than 64 levels. A
  * pathological acyclic descriptor over this explicit stack bound fails a
  * transfer rather than silently leaving a mutable descendant unmarked. A
- * recursive box revisits a descriptor on the current path; that edge adds
- * nothing, though sibling fields may still contain mutable collections. */
+ * recursive box ends this shallow walk, though sibling fields in the same
+ * inline value may still contain mutable collections. */
 #define MYL_NATIVE_COW_TYPE_DEPTH_MAX 1024
 static int holds_payload_path(const myl_native_type *type, const myl_native_type **seen, unsigned depth) {
     if (!type || type->trace_mode == MYL_NATIVE_TRACE_NONE) return 0;
@@ -59,9 +59,9 @@ static int holds_payload_path(const myl_native_type *type, const myl_native_type
     seen[depth++] = type;
     switch (type->kind) {
     case MYL_NATIVE_POINTER:
-        /* A recursive box is immutable but its body can contain collections.
-         * A cycle with no collection is safe to share without a value walk. */
-        if (type->collection_kind == 5) return type->element ? holds_payload_path(type->element, seen, depth) : 0;
+        /* A recursive box is immutable. Its body is shallow-shared when a
+         * guest projection materializes it, never when the box pointer moves. */
+        if (type->collection_kind == 5) return 0;
         return type->collection_kind == 1 || type->collection_kind == 3 || type->collection_kind == 4;
     case MYL_NATIVE_ARRAY:
         return type->count && type->field_count ? holds_payload_path(type->fields[0].type, seen, depth) : 0;
@@ -111,28 +111,9 @@ static int share_at(myl_native_heap *heap, const myl_native_type *type, unsigned
     if (type->trace_mode == MYL_NATIVE_TRACE_NONE) return 1;
     switch (type->kind) {
     case MYL_NATIVE_POINTER: {
-        const int box = type->collection_kind == 5;
-        if (!box && type->collection_kind != 1 && type->collection_kind != 3 && type->collection_kind != 4) return 1;
-        if (box) {
-            int held = holds_payload(type->element);
-            if (held < 0) return 0;
-            if (!held) return 1;
-        }
+        if (type->collection_kind != 1 && type->collection_kind != 3 && type->collection_kind != 4) return 1;
         void *payload;
         memcpy(&payload, address, sizeof payload);
-        if (box) {
-            if (!payload || !type->element) return !payload;
-            /* First walk without replacements. If a pinned descendant needs
-             * one, clone this immutable box and patch only the fresh body. */
-            int result = share_at(heap, type->element, payload, depth + 1, 0);
-            if (result != 2 || !replace) return result;
-            unsigned region = myl_native_header_region(payload);
-            void *clone = myl_native_heap_alloc_at(heap, type->element, 1, region);
-            if (!clone) return 0;
-            memcpy(clone, payload, type->element->size);
-            memcpy(address, &clone, sizeof clone);
-            return share_at(heap, type->element, clone, depth + 1, 1);
-        }
         if (mark(payload)) return 1;
         if (!replace) return 2;
         void *copy = myl_native_cow_copy(heap, payload);
@@ -175,6 +156,23 @@ int myl_native_cow_share_value(myl_native_heap *heap, const myl_native_type *typ
     if (held < 0) return 0;
     if (!held) return 1;
     return share_at(heap, type, address, 0, 1) == 1;
+}
+/* A box body is never mutated in place. Unboxing produces an independent
+ * inline value: share its immediate mutable children before that value is
+ * exposed, whether or not the box pointer was copied earlier. Child boxes
+ * remain opaque until their own body is projected. Replace a pinned child
+ * only in this private output, leaving the immutable source intact. */
+int myl_native_cow_unbox(myl_native_heap *heap, const myl_native_type *type,
+                         void *box, void *output) {
+    if (!type || type->collection_kind != 5 || !type->element || !box || !output) return 0;
+    memcpy(output, box, type->element->size);
+    myl_native_root box_root, output_root;
+    myl_native_root_push(heap, &box_root, &box, type);
+    myl_native_root_push(heap, &output_root, output, type->element);
+    int done = myl_native_cow_share_value(heap, type->element, output);
+    myl_native_root_pop(heap, &output_root);
+    myl_native_root_pop(heap, &box_root);
+    return done;
 }
 /* Mark every payload the elements of a fresh copy `list` hold, now that the
  * original holds them too. A pinned element — possible only if a `mut`

@@ -107,11 +107,33 @@ test "copy on write: a flat record shares two leaves inline with a rooted pinned
 }
 
 // spec-case: COW-NESTED-1
-test "copy on write: nested recursive box fields detach before mutable child writes" {
+test "copy on write: recursive box projection protects a child exposed before a later box copy" {
     const saved = value_semantics.enabled();
     value_semantics.setEnabled(true);
     defer value_semantics.setEnabled(saved);
+    const source =
+        \\record Branch:
+        \\    items: list[int]
+        \\    next: Option[Branch]
+        \\
+        \\def main() -> int:
+        \\    root = Branch(items=[0], next=Some(Branch(items=[1], next=None)))
+        \\    exposed = root.next
+        \\    copied = root
+        \\    if exposed is None:
+        \\        return 0
+        \\    exposed.items.append(2)
+        \\    old = copied.next
+        \\    if old is None:
+        \\        return 0
+        \\    return len(old.items) * 10 + len(exposed.items)
+    ;
+    try std.testing.expectEqual(@as(i64, 12), try run(std.testing.allocator, source, false));
+    try std.testing.expectEqual(@as(i64, 12), try run(std.testing.allocator, source, true));
     const a = std.testing.allocator;
+    const il = try unitText(a, source, "main", checks);
+    defer a.free(il);
+    try std.testing.expect(count(il, "call $myl_qbe_cow_unbox(") > 0);
     // A zero-length array makes a direct recursive record-field cycle
     // inhabitable. A nested write must detach that box before writeback.
     const direct =

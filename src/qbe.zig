@@ -7,6 +7,7 @@ const borrow_lower = @import("qbe_borrow.zig");
 const liveness = @import("qbe_liveness.zig");
 const ownership = @import("ownership.zig");
 const cow_lower = @import("qbe_cow.zig");
+const value_semantics = @import("value_semantics.zig");
 const moves_module = @import("qbe_moves.zig");
 const range_keys = @import("qbe_range_keys.zig");
 const loop_facts = @import("qbe_loop_facts.zig");
@@ -272,7 +273,7 @@ fn generateImpl(allocator: std.mem.Allocator, program_in: bytecode.Program, src:
         .pure = &.{},
         // COW-UNIQUE-1: the value-semantics switch enables the checks by
         // default; an explicit internal policy can request counting.
-        .cow = if (interface.policy.cow != .off) interface.policy.cow else if (@import("value_semantics.zig").enabled()) .checks else .off,
+        .cow = if (interface.policy.cow != .off) interface.policy.cow else if (value_semantics.enabled()) .checks else .off,
     };
     var reuse: Reuse = try .init(a, pass, interface.reuse);
     try runPasses(&pass, &reuse, src, standins, shape.lean);
@@ -1590,7 +1591,12 @@ const Emitter = struct {
         // QBE-LOOP-VERSION-1: only a build whose value guards are on has
         // anything to prove, and step accounting counts every instruction the
         // original executes, so a counted build keeps one copy.
-        if (self.checks and !self.step_checks) self.loop_plan = try loop_facts.plan(self.allocator, .{ .program = self.program, .function = f, .states = self.states });
+        if (self.checks and !self.step_checks) self.loop_plan = try loop_facts.plan(self.allocator, .{
+            .program = self.program,
+            .function = f,
+            .states = self.states,
+            .box_cow = self.cow != null and value_semantics.enabled(),
+        });
         if (self.cow) |state| try cow_lower.Lower(Emitter).veto(self, state);
         try self.findRoots();
         if (self.has_roots and self.has_safepoints) self.live_roots = try self.rootLiveness();
@@ -1731,6 +1737,17 @@ const Emitter = struct {
             .by_reference = addressed,
         }, self.arenas);
     }
+    /// A value-semantics projection of a recursive box may copy a pinned child
+    /// before yielding its private body, so root and borrow planning treat it
+    /// as a safepoint. Ordinary field reads and switch-off code stay inert.
+    pub fn boxProjectionAt(self: *Emitter, pc: usize, op: @FieldType(bytecode.Instruction, "op")) bool {
+        if (self.cow == null or !value_semantics.enabled() or op != .get_field) return false;
+        if (pc >= self.states.len) return false;
+        const stack = self.states[pc] orelse return false;
+        if (stack.len == 0) return false;
+        const owner = stack[stack.len - 1];
+        return owner.isAggregate() and self.program.records[owner.recordIndex()].collection.box;
+    }
     fn findRoots(self: *Emitter) GenerateError!void {
         const f = self.function;
         for (f.scope.locals) |local| self.has_roots = self.has_roots or (try self.layout(local.ty)).trace;
@@ -1739,7 +1756,7 @@ const Emitter = struct {
         };
         for (f.scope.instructions, 0..) |instruction, pc| {
             if (self.states[pc] == null) continue;
-            self.has_safepoints = self.has_safepoints or allocates(instruction.op);
+            self.has_safepoints = self.has_safepoints or allocates(instruction.op) or self.boxProjectionAt(pc, instruction.op);
         }
         // COW-UNIQUE-1: every copy a check or share makes is an allocation.
         if (self.cow) |state| self.has_safepoints = self.has_safepoints or state.plan.active();

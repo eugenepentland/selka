@@ -175,7 +175,7 @@ pub fn pureCallee(name: []const u8) bool {
 /// allocation, and it is not a call to a function that cannot collect.
 fn rootedSafepoint(comptime Emitter: type, self: *Emitter, op: @FieldType(bytecode.Instruction, "op")) bool {
     if (!self.has_roots or !self.has_safepoints) return false;
-    if (!allocates(op)) return false;
+    if (!allocates(op) and !self.boxProjectionAt(self.pc, op)) return false;
     return !callsPureFunction(Emitter, self, op) or cowMutCallMayCopy(Emitter, self, op);
 }
 /// Preparing a mutable collection argument can copy it before a callee runs,

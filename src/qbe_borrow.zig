@@ -248,7 +248,7 @@ fn inertWhileLive(comptime E: type, self: *E, range: Range) Error!bool {
     const returns = try epilogueKeepsBorrows(E, self);
     for (code, 0..) |instruction, pc| {
         if (!live[pc] or pc == range.store) continue;
-        if (!try inert(E, self, instruction.op, returns)) return false;
+        if (!try inert(E, self, pc, instruction.op, returns)) return false;
     }
     return true;
 }
@@ -486,14 +486,13 @@ fn epilogueKeepsBorrows(comptime E: type, self: *E) Error!bool {
 /// backing storage can stop naming the element it was checked for. Everything
 /// outside this set declines the address-holding form, so an opcode added later
 /// only costs the copy it already paid.
-fn inert(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "op"), returns: bool) Error!bool {
+fn inert(comptime E: type, self: *E, pc: usize, op: @FieldType(bytecode.Instruction, "op"), returns: bool) Error!bool {
     return switch (op) {
         .load_local,
         .push_i64,
         .push_integer,
         .push_bool,
         .push_unit,
-        .get_field,
         .array_length,
         .add_i64_checked,
         .sub_i64_checked,
@@ -514,6 +513,7 @@ fn inert(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "op"),
         .jump,
         .jump_if_false,
         => true,
+        .get_field => !self.boxProjectionAt(pc, op),
         // The result leaves through a copy the epilogue makes, so the borrow
         // must still name live storage when the epilogue runs.
         .ret => returns,
