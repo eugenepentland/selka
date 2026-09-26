@@ -163,6 +163,51 @@ public def test_propagating_none_releases_preceding_constructor_operands() -> bo
     return none_after_prior_operand() is None
 
 
+# spec-case: RC-AGGREGATE-1
+public def test_reordered_constructor_fields_preserve_aliased_input_snapshots() -> bool:
+    source = [17, 23]
+    result = Pair(right=source, left=source)
+    source.append(99)
+    result.left.append(31)
+    return result.right == [17, 23] and result.left == [17, 23, 31] and source == [17, 23, 99]
+
+
+record HeldFields:
+    live: DictValues[int, int]
+    snapshot: dict[int, int]
+
+
+# spec-case: RC-AGGREGATE-1
+public def test_constructor_publishes_nested_holds_and_converts_held_mapping_inputs() -> bool:
+    mapping = {1: 7}
+    live = mapping.values()
+    mapping[1] = 13
+    prior = live.mapping
+    result = HeldFields(live=live, snapshot=live.mapping)
+    result.snapshot[1] = 11
+    return list(result.live) == [13] and result.snapshot[1] == 11 and prior[1] == 13
+
+
+def pinned_pair(items: mut list[int]) -> Pair:
+    result = Pair(items, items)
+    items.append(29)
+    return result
+
+
+def arena_pinned_pair() -> Pair:
+    with arena() as scratch:
+        items = [17, 23]
+        result = pinned_pair(mut items)
+        assert items == [17, 23, 29]
+        return scratch.escape(result)
+
+
+# spec-case: RC-AGGREGATE-1
+public def test_constructor_publication_keeps_pinned_copies_through_arena_escape() -> bool:
+    escaped = arena_pinned_pair()
+    return escaped.left == [17, 23] and escaped.right == [17, 23]
+
+
 def main() -> int:
     assert test_record_fields_survive_original_and_sibling_replacement()
     assert test_record_update_preserves_prior_aggregate_snapshot()
@@ -176,4 +221,7 @@ def main() -> int:
     assert test_boxed_record_update_preserves_an_earlier_snapshot()
     assert test_propagating_error_releases_preceding_constructor_operands()
     assert test_propagating_none_releases_preceding_constructor_operands()
+    assert test_reordered_constructor_fields_preserve_aliased_input_snapshots()
+    assert test_constructor_publishes_nested_holds_and_converts_held_mapping_inputs()
+    assert test_constructor_publication_keeps_pinned_copies_through_arena_escape()
     return 0

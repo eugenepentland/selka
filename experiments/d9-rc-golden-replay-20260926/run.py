@@ -68,9 +68,10 @@ def execute(compiler, work, backend, case):
     (cwd / 'greeting.txt').write_text('hello from a granted directory\n')
     (cwd / 'lines.txt').write_text('one\ntwo\nthree\n')
     command = [str(ROOT / 'scripts/build-slot.sh'), 'build', str(compiler), 'run', str(source), '--print-result', '--cache-dir=' + str(work / ('cache-' + backend)), *case['options']]
-    command += ['--backend=' + backend]
+    # run's --release selects actual LLVM at O3/full LTO; unlike build,
+    # run does not accept --backend/--llvm-opt/--lto options.
     if backend == 'llvm':
-        command += ['--llvm-opt=3', '--lto']
+        command += ['--release']
     environment = dict(os.environ, MYLANG_RUNTIME='rc-v2-counting', TMPDIR=str(work / 'tmp'), ZIG_LOCAL_CACHE_DIR=str(ROOT / '.zig-cache-golden-guests'))
     result = subprocess.run(command, cwd=cwd, env=environment, capture_output=True, timeout=600)
     expected = case['expected']
