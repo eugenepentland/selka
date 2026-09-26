@@ -160,6 +160,9 @@ void myl_rc_value_seed(myl_native_heap *, const myl_rc_shape *, void *, const vo
 /* Abort one unpublished owned allocation. Arena payload edges are released
  * immediately and zeroed so later region teardown cannot release them twice. */
 void myl_rc_construction_abort(myl_native_heap *, void *);
+/* Descriptor finalizer for a noncopyable managed body containing raw unique
+ * resource fields. Runs their existing drop adapter before counted children. */
+void myl_rc_finalize_unique(myl_native_heap *, void *);
 
 /* Owned slots identify a complete initialized value. Construction registers
  * first, then tracks initialized fields/tags or a collection's live prefix;

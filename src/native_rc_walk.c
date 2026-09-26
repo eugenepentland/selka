@@ -129,3 +129,11 @@ void myl_rc_construction_abort(myl_native_heap *heap, void *payload) {
     memset(payload, 0, bytes);
     myl_rc_drain(heap);
 }
+void myl_rc_finalize_unique(myl_native_heap *heap, void *payload) {
+    const myl_native_object *header = (const myl_native_object *)payload - 1;
+    size_t count = (header->mark >> MYL_NATIVE_OBJECT_COUNT_SHIFT) &
+        (header->mark & MYL_NATIVE_OBJECT_ARENA ? MYL_NATIVE_ARENA_COUNT_MAX : MYL_NATIVE_OBJECT_COUNT_MAX);
+    myl_rc_invariant(!heap->rc->walk.depth);
+    for (size_t i = 0; i < count; ++i)
+        myl_native_owned_drop(heap, header->element, (unsigned char *)payload + i * header->element->size);
+}

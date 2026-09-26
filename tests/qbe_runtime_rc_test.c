@@ -1,4 +1,5 @@
 #include "qbe_runtime.h"
+#include "native_rc_collections.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -113,6 +114,77 @@ static void frame_trap_test(void) {
     myl_rc_heap_destroy(&fixture->context.heap);
     free(fixture);
 }
+static void construction_guard_test(void) {
+    FrameFixture *fixture = frame_fixture();
+    struct { myl_native_object header; void *child; } arena = {
+        .header = {.mark = MYL_NATIVE_OBJECT_ARENA | ((uintptr_t)1 << MYL_NATIVE_ARENA_REGION_SHIFT) |
+            ((uintptr_t)1 << MYL_NATIVE_OBJECT_COUNT_SHIFT), .element = &pointer_type}, .child = fixture->slots[0]
+    };
+    fixture->guards[0] = 0;
+    fixture->slots[1] = &arena.child;
+    fixture->entries[1].type = &pointer_type;
+    fixture->entries[1].flags = MYL_QBE_RC_CONSTRUCTION;
+    myl_qbe_rc_frame_cleanup(&fixture->context, &fixture->inner);
+    assert(!arena.child && !fixture->slots[1] && !fixture->guards[1]);
+    assert(fixture->value.header.owners == 1 && !fixture->value.header.holds);
+    myl_rc_construction_abort(&fixture->context.heap, &arena.child);
+    myl_qbe_rc_frame_leave(&fixture->context, &fixture->inner);
+    myl_qbe_rc_frame_leave(&fixture->context, &fixture->outer);
+    myl_rc_heap_destroy(&fixture->context.heap);
+    free(fixture);
+}
+static void unique_bridge_test(void) {
+    MylQbeContext context = {0};
+    myl_native_heap_init(&context.heap, 1u << 20);
+    if (!myl_rc_enabled(&context.heap)) assert(myl_rc_storage_init(&context.heap) == MYL_RC_OK);
+    assert(myl_qbe_rc_initialize(&context));
+    assert(myl_rc_native_shape(&context.heap, &pointer_type));
+    static const myl_native_type number = {.size = 8, .alignment = 8, .kind = MYL_NATIVE_PLAIN};
+    myl_native_list *source = myl_native_list_new(&context.heap, &number, 0), *local = source;
+    uint32_t owned = 0;
+    assert(source && myl_qbe_rc_unique_local(&context, &pointer_type, &local, &owned));
+    assert(!owned && local == source);
+    assert(myl_rc_owner_acquire(&context.heap, source) == MYL_RC_OK);
+    assert(myl_qbe_rc_unique_local(&context, &pointer_type, &local, &owned));
+    assert(owned && local != source && ((myl_rc_object *)source - 1)->owners == 2);
+    MylQbeRcSlot slot = {&pointer_type, &local, &owned, MYL_QBE_RC_COUNTED};
+    myl_qbe_rc_slot_drop(&context, &slot);
+    myl_rc_owner_release(&context.heap, source);
+    local = source;
+    assert(myl_rc_owner_acquire(&context.heap, source) == MYL_RC_OK);
+    assert(myl_qbe_rc_unique_field(&context, &pointer_type, &local, NULL));
+    assert(local != source && ((myl_rc_object *)source - 1)->owners == 1);
+    myl_rc_owner_release(&context.heap, local);
+    myl_rc_owner_release(&context.heap, source);
+    myl_native_heap_destroy(&context.heap);
+    assert(!context.heap.bytes);
+}
+static void unique_body_test(void) {
+    MylQbeContext context = {0};
+    myl_native_heap_init(&context.heap, 1u << 20);
+    if (!myl_rc_enabled(&context.heap)) assert(myl_rc_storage_init(&context.heap) == MYL_RC_OK);
+    typedef struct { void *resource, *child; } Body;
+    const myl_native_field fields[] = {{.offset = 0, .type = &resource_type}, {.offset = sizeof(void *), .type = &pointer_type}};
+    const myl_native_type body_type = {.size = sizeof(Body), .alignment = _Alignof(Body), .kind = MYL_NATIVE_RECORD,
+        .fields = fields, .field_count = 2};
+    const myl_rc_field child_field = {.offset = offsetof(Body, child), .shape = &pointer};
+    const myl_rc_shape body_shape = {.size = sizeof(Body), .kind = MYL_RC_SHAPE_RECORD, .as.record = {&child_field, 1}};
+    const myl_rc_descriptor descriptor = {.type = &body_type, .shape = &body_shape, .finalize = myl_rc_finalize_unique};
+    assert(myl_rc_descriptor_import(&context.heap, &descriptor) == MYL_RC_OK);
+    void *child = myl_rc_storage_bytes(&context.heap, 8, 0), *payload = NULL;
+    assert(child && myl_rc_owner_acquire(&context.heap, child) == MYL_RC_OK);
+    uint32_t guard = 0;
+    FrameResource resource = {.base = {.drop = close_resource}, .context = &context,
+        .guard = &guard, .object = (myl_rc_object *)child - 1};
+    myl_rc_alloc_request request = {.element = &body_type, .count = 1};
+    assert(myl_rc_new(&context.heap, &request, &payload) == MYL_RC_OK);
+    *(Body *)payload = (Body){&resource, child};
+    myl_rc_owner_release(&context.heap, payload);
+    assert(resource.closed == 1 && ((myl_rc_object *)child - 1)->owners == 1);
+    myl_rc_owner_release(&context.heap, child);
+    myl_native_heap_destroy(&context.heap);
+    assert(!context.heap.bytes);
+}
 int myl_qbe_rc_contract_verify(void) {
     MylQbeContext context = {0};
     context.heap.limit = 65536;
@@ -151,13 +223,16 @@ int myl_qbe_rc_frame_verify(void) {
     frame_cleanup_test(0);
     frame_cleanup_test(1);
     frame_trap_test();
-    return 3;
+    construction_guard_test();
+    unique_bridge_test();
+    unique_body_test();
+    return 6;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
     assert(myl_qbe_rc_contract_verify() == 5);
-    assert(myl_qbe_rc_frame_verify() == 3);
-    puts("RC startup and frame unwind: 8 checks passed");
+    assert(myl_qbe_rc_frame_verify() == 6);
+    puts("RC startup and frame unwind: 11 checks passed");
     return 0;
 }
 #endif
