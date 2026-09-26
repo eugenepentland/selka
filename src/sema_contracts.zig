@@ -173,6 +173,7 @@ fn boundaryValidator(comptime Checker: type, self: *Checker, ty: typed.Type, inv
     self.active.clearRetainingCapacity();
     self.owner = null;
     self.return_type = .i64;
+    self.conversion_fields = null;
     self.contract.ensures = &.{};
     self.contract.olds = &.{};
     const record = self.catalog.records[ty.recordIndex()];

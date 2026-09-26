@@ -725,6 +725,12 @@ const invariant_boundary_source =
     \\
     \\def main() -> int:
     \\    return 0
+    \\
+    \\record Single:
+    \\    value: int
+    \\
+    \\conversion def convert(single: Single) -> Single:
+    \\    return Single(value=single.value)
 ;
 
 fn invariantLibrary(context: fs.Context, temporary: *testing.TmpDir, resolved: Tools) !runner.Prepared {
