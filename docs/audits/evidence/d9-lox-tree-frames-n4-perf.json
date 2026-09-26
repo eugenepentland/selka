@@ -1,0 +1,159 @@
+{
+  "compiler_commit": "adcbb4ca",
+  "compiler_sha256": "6961ce9eae4b97bc8a1db8fe15e5dce6d94eca713537798d0b6ed5f578222ff9",
+  "cpu": 2,
+  "repetitions": 3,
+  "script_sha256": "071825eb80ef92318d27673950ee8ed4164c15d293f169d63978a3a096c484ee",
+  "source_before": "143a3e2b",
+  "results": {
+    "qbe": {
+      "baseline": {
+        "counts": [
+          58266102,
+          58266097,
+          58266098
+        ],
+        "median": 58266098,
+        "binary_sha256": "6473a9596ed692049cd4a88b344f54030b46a15d591b36cca82cef64ae8cd59f"
+      },
+      "before": {
+        "counts": [
+          121351446,
+          121350186,
+          121350179
+        ],
+        "median": 121350186,
+        "binary_sha256": "dd1f0b5afbf73db264454c0fa414695a5df848d9725045350a5a411732a921ba"
+      },
+      "helpers": {
+        "counts": [
+          104954440,
+          104954454,
+          104954435
+        ],
+        "median": 104954440,
+        "binary_sha256": "92294bee0d4a45c2ba644382ab538972dbf057516a808f9aca229e09bfdc04c2"
+      },
+      "helpers_over_before": 0.8648889915998975,
+      "helpers_over_baseline": 1.8012951545167826
+    },
+    "llvm": {
+      "baseline": {
+        "counts": [
+          21479725,
+          21479737,
+          21479725
+        ],
+        "median": 21479725,
+        "binary_sha256": "61621ee380e5562967b53d6ba81c54fe28ceb2adc22ad6fa943e6772b7887fa0"
+      },
+      "before": {
+        "counts": [
+          58327707,
+          58327719,
+          58327716
+        ],
+        "median": 58327716,
+        "binary_sha256": "23de3286a6d7e8edf49824b8bec140040f57262281a71ceecaecc6b57d24ed14"
+      },
+      "helpers": {
+        "counts": [
+          51704325,
+          51704328,
+          51704321
+        ],
+        "median": 51704325,
+        "binary_sha256": "ee971f91c7697404f8c315dcf3d7e125353ffe34a55b92a31f4e5ec93b7280f4"
+      },
+      "helpers_over_before": 0.8864452192847736,
+      "helpers_over_baseline": 2.407122297887892
+    }
+  },
+  "source_sha256": {
+    "before": {
+      "ast.my": "e210fb35bf3125ba06ebb978bcb3592162020a77576542f2d049879a51479bf9",
+      "chunk.my": "b4f6e7ae6531b224f99e026f53fee3692c90d8f2b15d3c76ca5962f1803e4b66",
+      "compiler.my": "c550603195401ff6d9436b42d6fbf0c35051521da57e7b85281fc8fcf6ebe048",
+      "compiler_test.my": "582fe817dbeffa709961b5124370ce200510adb3ac0d246572ca1c0dc19ec08a",
+      "driver.my": "fe831d2ec08833d11139e790ab741903b27a8e0fb43582cac11ca664b4595836",
+      "driver_tests.my": "9eace4f6c8b33fd93331297f8a8195c41357b7c833b2e06e0c20594704113925",
+      "heap.my": "ab8451db8b4756b5dc30e99f4209a5891e3c350766c0e6c4eaaa4e0a80ce0aa2",
+      "heap_test.my": "c951153991a8d5d13ca1df6ded7c6f26c7b43a08ed2095f72c6091637b29b53f",
+      "interpreter.my": "2df9a4ca818ae77d842ab17a773fa3b628dfcf8a16a0528daccd61806a2478db",
+      "lox_strings.my": "383900dda10b9218caf2087e12a2e20089e4d48b0ec5fc3e17e960a3d70d83df",
+      "lox_strings_test.my": "a44545c64e9f75cc5af761d6c703feec83c4fc0a14d2678a1b2fce28067bd0c0",
+      "main.my": "18c1f669b1683123e635256c9f66c6db2766383391371c3822e61df7d9732274",
+      "natives.my": "2ff45343fded6d303e6233e0f787e63c319e860903e2c0c81ccbb71c2749d665",
+      "object.my": "08c0d5c6ae304ef4d0e1f5929f52b5d1dd47cd46e6c409392c0b5b1df9567ad7",
+      "output.my": "cdc79c8a9a5eca0106fb139bca5492da201f027b0499e5e00a492368317d194c",
+      "parser.my": "e9bd5d9c37e307d060ce165dc4fa0f276c2ff9dbe7cb21bd27cbdd94644b4edd",
+      "parser_test.my": "ffe2658f030c75b40a7c54d8f0c64e848e6679e13fc69cbef9a131ed7b120e4b",
+      "resolver.my": "41d41b2a1ddb3f6ab3fb73ad9eff69415b0450d890554766bfee37eac8d0903d",
+      "resolver_test.my": "72c5176ff15db240d8ec8ff8073fcdb7736e8c60ab47410bb60fce934c179d31",
+      "scanner.my": "af4bc6a57859318051dc47d6e1f6344ee98fbfff037e9be93c0a103765cd3e83",
+      "scanner_test.my": "1d7fbb34b0de402657786641217e81c9ae286cab14baf2716de2db875ae39ad0",
+      "table.my": "c875ae493dbc0d6c1b70202746b0f1d2211190fa1276b9d492778455c0d0b2ca",
+      "table_test.my": "38279f9135e953484e6844994bc070c4156d1eb31ab4de0f295efbea17c19555",
+      "value.my": "3b2a444e77c6a703b1aedad3c89ef38cad70aa3bb6cba1716b623980ff9a76b0",
+      "value_test.my": "b766d22b25a8a8a090b4a059030cfc7462022fdacb66a0a91bf8a9e09a53fed4",
+      "vm.my": "cb2671e53519a8346b8a15c9b0e047ad67b5db0f8c1e35afd809ed2d74ed26db"
+    },
+    "helpers": {
+      "ast.my": "e210fb35bf3125ba06ebb978bcb3592162020a77576542f2d049879a51479bf9",
+      "chunk.my": "b4f6e7ae6531b224f99e026f53fee3692c90d8f2b15d3c76ca5962f1803e4b66",
+      "compiler.my": "c550603195401ff6d9436b42d6fbf0c35051521da57e7b85281fc8fcf6ebe048",
+      "compiler_test.my": "582fe817dbeffa709961b5124370ce200510adb3ac0d246572ca1c0dc19ec08a",
+      "driver.my": "fe831d2ec08833d11139e790ab741903b27a8e0fb43582cac11ca664b4595836",
+      "driver_tests.my": "9eace4f6c8b33fd93331297f8a8195c41357b7c833b2e06e0c20594704113925",
+      "heap.my": "ab8451db8b4756b5dc30e99f4209a5891e3c350766c0e6c4eaaa4e0a80ce0aa2",
+      "heap_test.my": "c951153991a8d5d13ca1df6ded7c6f26c7b43a08ed2095f72c6091637b29b53f",
+      "interpreter.my": "939f0705cd6997d3737b157f2243256b94c795a2b78536891109f74c7d2a73ba",
+      "lox_strings.my": "383900dda10b9218caf2087e12a2e20089e4d48b0ec5fc3e17e960a3d70d83df",
+      "lox_strings_test.my": "a44545c64e9f75cc5af761d6c703feec83c4fc0a14d2678a1b2fce28067bd0c0",
+      "main.my": "18c1f669b1683123e635256c9f66c6db2766383391371c3822e61df7d9732274",
+      "natives.my": "2ff45343fded6d303e6233e0f787e63c319e860903e2c0c81ccbb71c2749d665",
+      "object.my": "08c0d5c6ae304ef4d0e1f5929f52b5d1dd47cd46e6c409392c0b5b1df9567ad7",
+      "output.my": "cdc79c8a9a5eca0106fb139bca5492da201f027b0499e5e00a492368317d194c",
+      "parser.my": "e9bd5d9c37e307d060ce165dc4fa0f276c2ff9dbe7cb21bd27cbdd94644b4edd",
+      "parser_test.my": "ffe2658f030c75b40a7c54d8f0c64e848e6679e13fc69cbef9a131ed7b120e4b",
+      "resolver.my": "41d41b2a1ddb3f6ab3fb73ad9eff69415b0450d890554766bfee37eac8d0903d",
+      "resolver_test.my": "72c5176ff15db240d8ec8ff8073fcdb7736e8c60ab47410bb60fce934c179d31",
+      "scanner.my": "af4bc6a57859318051dc47d6e1f6344ee98fbfff037e9be93c0a103765cd3e83",
+      "scanner_test.my": "1d7fbb34b0de402657786641217e81c9ae286cab14baf2716de2db875ae39ad0",
+      "table.my": "c875ae493dbc0d6c1b70202746b0f1d2211190fa1276b9d492778455c0d0b2ca",
+      "table_test.my": "38279f9135e953484e6844994bc070c4156d1eb31ab4de0f295efbea17c19555",
+      "value.my": "3b2a444e77c6a703b1aedad3c89ef38cad70aa3bb6cba1716b623980ff9a76b0",
+      "value_test.my": "b766d22b25a8a8a090b4a059030cfc7462022fdacb66a0a91bf8a9e09a53fed4",
+      "vm.my": "cb2671e53519a8346b8a15c9b0e047ad67b5db0f8c1e35afd809ed2d74ed26db"
+    }
+  },
+  "guest_flags": {
+    "qbe": [
+      "--value-semantics",
+      "--mode",
+      "ReleaseFast",
+      "--backend",
+      "qbe",
+      "--keep-symbols"
+    ],
+    "llvm": [
+      "--value-semantics",
+      "--mode",
+      "ReleaseFast",
+      "--backend",
+      "llvm",
+      "--llvm-opt",
+      "3",
+      "--lto",
+      "--keep-symbols"
+    ]
+  },
+  "runtime_env": {
+    "MYLANG_MEMORY_LIMIT": "8G"
+  },
+  "engine": "tree",
+  "script": "var N = 4;\nclass Tree {\n  init(item, depth) {\n    this.item = item;\n    this.depth = depth;\n    if (depth > 0) {\n      var item2 = item + item;\n      depth = depth - 1;\n      this.left = Tree(item2 - 1, depth);\n      this.right = Tree(item2, depth);\n    } else {\n      this.left = nil;\n      this.right = nil;\n    }\n  }\n\n  check() {\n    if (this.left == nil) {\n      return this.item;\n    }\n\n    return this.item + this.left.check() - this.right.check();\n  }\n}\n\nvar minDepth = 4;\nvar maxDepth = N;\nvar stretchDepth = maxDepth + 1;\n\nprint \"stretch tree of depth:\";\nprint stretchDepth;\nprint \"check:\";\nprint Tree(0, stretchDepth).check();\n\nvar longLivedTree = Tree(0, maxDepth);\n\n// iterations = 2 ** maxDepth\nvar iterations = 1;\nvar d = 0;\nwhile (d < maxDepth) {\n  iterations = iterations * 2;\n  d = d + 1;\n}\n\nvar depth = minDepth;\nwhile (depth < stretchDepth) {\n  var check = 0;\n  var i = 1;\n  while (i <= iterations) {\n    check = check + Tree(i, depth).check() + Tree(-i, depth).check();\n    i = i + 1;\n  }\n\n  print \"num trees:\";\n  print iterations * 2;\n  print \"depth:\";\n  print depth;\n  print \"check:\";\n  print check;\n\n  iterations = iterations / 4;\n  depth = depth + 2;\n}\n\nprint \"long lived tree of depth:\";\nprint maxDepth;\nprint \"check:\";\nprint longLivedTree.check();\n",
+  "script_path": "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-source-perf/.tmp-lox-perf/tree4.lox",
+  "baseline_binaries": "/home/epentland/ai/canopy/mylang-worktrees/d9-stage3b/.tmp-cow/pc/bin/base/lox.{qbe,llvm}",
+  "purpose": "Matched small tree-engine diagnostic; supplemental to the formal stage3 VM gate."
+}
