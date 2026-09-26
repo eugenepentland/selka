@@ -63,12 +63,12 @@ static int managed(Work *work,Pair pair) {
         /* Every key of one side is looked up in the other's table, hashing and
          * comparing it structurally (HASH-KEYS-1), so equality ignores
          * insertion order and costs one expected-constant probe per entry. */
-        myl_native_dictionary_settle(a);
-        for (size_t i=0;i<a->entries->length;i++) {
-            const unsigned char *entry=(const unsigned char *)a->entries->storage+i*a->entry_type.size;
-            const void *other=myl_native_dictionary_find(b,entry);
+        size_t cursor=0;
+        const void *key, *value;
+        while (myl_native_dictionary_next(a,&cursor,&key,&value)) {
+            const void *other=myl_native_dictionary_find(b,key);
             if (!other) return 0;
-            int status=push(work,pair.type->element,entry+a->value_offset,other);
+            int status=push(work,pair.type->element,value,other);
             if (status<0) return status;
         }
         return 1;

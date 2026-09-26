@@ -2,6 +2,8 @@
 #include "native_rc_dictionary.h"
 #include "native_bytes.h"
 #include "native_text_methods.h"
+#include "native_print.h"
+#include "native_equal.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -640,6 +642,54 @@ static void arena_edit_abort(void) {
     myl_rc_owner_release(&heap,leaf);
     finish(&heap);
 }
+static void print_number(MylPrint *out, const void *value, unsigned depth) {
+    myl_print_integer(out,value,depth,8,1);
+}
+/* spec-case: RC-DICTIONARY-1. Read-only iteration, snapshots, update, equality
+ * and printing preserve a pinned sparse receiver's captured entry addresses. */
+static void pinned_dictionary_readers(void) {
+    static const myl_native_type dictionary_pointer={.size=sizeof(void *),.alignment=_Alignof(void *),.kind=MYL_NATIVE_POINTER,.collection_kind=3,.element=&number};
+    myl_native_heap heap;
+    init(&heap);
+    myl_native_dictionary *dict=myl_native_dictionary_new(&heap,&number,&number,0);
+    assert(dict);
+    for (int64_t key=0;key<8;key++) {
+        int64_t value=key+10;
+        assert(myl_native_dictionary_write(&heap,dict,&key,&value));
+    }
+    int64_t removed=3, last=7, output=0;
+    assert(myl_rc_dictionary_pop(&heap,dict,&removed,&output)==1 && output==13);
+    const void *captured=myl_native_dictionary_find(dict,&last);
+    uint64_t generation=dict->entries->generation;
+    myl_rc_pin pin={0};
+    assert(myl_rc_pin_acquire(&heap,dict,&pin)==MYL_RC_OK);
+    myl_native_dictionary *copy=myl_native_dictionary_clone_at(&heap,dict,0);
+    myl_native_list *keys=myl_native_dictionary_snapshot(&heap,dict,1);
+    assert(copy && keys && keys->length==7 && myl_native_dictionary_update(&heap,copy,dict));
+    for (size_t i=0;i<7;i++) {
+        int64_t key=-1, value=-1, expected=(int64_t)(i<3?i:i+1);
+        assert(myl_native_dictionary_key_at(dict,i,&key) && key==expected);
+        assert(myl_native_dictionary_value_at(dict,i,&value) && value==expected+10);
+    }
+    assert(myl_native_equal(&dictionary_pointer,&dict,&copy)==1);
+    MylPrint rendered={0};
+    myl_print_dictionary(&rendered,&dict,0,print_number,print_number);
+    const char *expected="{0: 10, 1: 11, 2: 12, 4: 14, 5: 15, 6: 16, 7: 17}";
+    assert(!rendered.failed && rendered.length==strlen(expected) && !memcmp(rendered.bytes,expected,rendered.length));
+    free(rendered.bytes);
+    rendered=(MylPrint){0};
+    myl_print_set(&rendered,&dict,0,print_number);
+    expected="{0, 1, 2, 4, 5, 6, 7}";
+    assert(!rendered.failed && rendered.length==strlen(expected) && !memcmp(rendered.bytes,expected,rendered.length));
+    free(rendered.bytes);
+    assert(dict->dead==1 && dict->entries->generation==generation);
+    assert(myl_native_dictionary_find(dict,&last)==captured && *(const int64_t *)captured==17);
+    myl_rc_pin_release(&heap,&pin);
+    myl_rc_owner_release(&heap,keys);
+    myl_rc_owner_release(&heap,copy);
+    myl_rc_owner_release(&heap,dict);
+    finish(&heap);
+}
 int myl_rc_collections_verify(void) {
     storage_reuse_and_holds();
     storage_boundaries();
@@ -661,12 +711,13 @@ int myl_rc_collections_verify(void) {
     arena_append_refusal();
     dictionary_publication_rollback();
     arena_edit_abort();
-    return 20;
+    pinned_dictionary_readers();
+    return 21;
 }
 #ifndef MYL_RC_COLLECTIONS_LIBRARY
 int main(void) {
-    assert(myl_rc_collections_verify()==20);
-    puts("native RC collections: 20 passed");
+    assert(myl_rc_collections_verify()==21);
+    puts("native RC collections: 21 passed");
     return 0;
 }
 #endif

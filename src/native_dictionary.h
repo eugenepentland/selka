@@ -92,6 +92,9 @@ int myl_native_dictionary_contains_range(const myl_native_heap *, const myl_nati
 int myl_native_dictionary_overwrite_range(const myl_native_heap *, myl_native_dictionary *, const myl_native_text *text, const myl_native_text_span *span, const void *value);
 int myl_native_dictionary_write_range(myl_native_heap *, myl_native_dictionary *, myl_native_text *text, const myl_native_text_span *span, const void *value);
 myl_native_list *myl_native_dictionary_snapshot(myl_native_heap *, myl_native_dictionary *, int keys);
+/* Borrow the next live key/value pair without moving RC entry storage. Start
+ * cursor at zero; it advances through physical rows in insertion order. */
+int myl_native_dictionary_next(const myl_native_dictionary *, size_t *cursor, const void **key, const void **value);
 /* Insertion-order reads return zero outside the live entry range and preserve
  * output. They are internal iteration primitives, not source-level methods. */
 int myl_native_dictionary_key_at(const myl_native_dictionary *, size_t index, void *output);
@@ -123,8 +126,7 @@ myl_native_dictionary *myl_native_dictionary_clone_at(myl_native_heap *, const m
 /* Squeeze removed entries out of the entry list, keeping the live ones in
  * insertion order and renumbering their index slots in place. It allocates
  * nothing and is a no-op when nothing was removed. Every reader of `entries`
- * by position — iteration, snapshots, printing, equality, copying, the arena
- * escape copier — settles first. */
+ * by raw position must first settle or use the stable live-entry cursor. */
 void myl_native_dictionary_settle(const myl_native_dictionary *);
 /* The stored value for a key, or NULL when the key is absent: the lookup the
  * structural equality of two dictionaries asks for each entry. */
