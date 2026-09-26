@@ -1609,7 +1609,25 @@ fn exportedFunctions(allocator: std.mem.Allocator, module_names: ?*Names, functi
 
 /// Reuse supported checked bodies, then rerun all cross-function validation passes.
 pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, module_names: ?*Names, cache: ?*semantic_cache.Cache) Error!typed.Program {
+    return checkCore(allocator, src, program, sink, .{ .names = module_names, .cache = cache });
+}
+
+/// Check every library declaration and body without creating an executable entry.
+/// Checked trees are discarded; library success cannot seed executable caches.
+pub fn checkLibrary(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, names: ?*Names) Error!void {
+    _ = try checkCore(allocator, src, program, sink, .{ .names = names, .entry_required = false });
+}
+
+const CheckOptions = struct {
+    names: ?*Names,
+    cache: ?*semantic_cache.Cache = null,
+    entry_required: bool = true,
+};
+
+fn checkCore(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, options: CheckOptions) Error!typed.Program {
     defer normalizeDiagnostics(sink);
+    const cache = options.cache;
+    const module_names = options.names;
     const timing = activeTiming(cache);
     const catalog = try records.collectWithNames(allocator, src, program, sink, module_names);
     var session = if (cache) |c| try c.begin(allocator, src, program, catalog.records) else null;
@@ -1688,21 +1706,10 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
         try checker.spec_fingerprints.append(allocator, null);
         try checker.spec_ranges.append(allocator, .{ .nodes = .{ .start = 0, .end = 0 }, .statements = .{ .start = 0, .end = 0 } });
     }
-    const main_name = if (module_names) |names| try std.fmt.allocPrint(allocator, "{s}::main", .{names.index.project.modules.items[0].name}) else "main";
     checker.ordinary_count = checker.instance_keys.items.len;
-    const main_declaration = checker.functions.get(main_name) orelse {
-        if (failed) return error.SourceError;
-        return sink.fail("E_MAIN", .{ .start = 0, .end = 0 }, "the program requires an entry point: def main() -> int");
-    };
-    const entry = program.functions[@backingInt(main_declaration)];
-    const main = ordinary_ids[@backingInt(main_declaration)] orelse return sink.fail("E_MAIN", entry.name, "main cannot have type parameters");
-    if (entry.policy.host != null or entry.policy.constant) return sink.fail("E_MAIN", entry.name, "main must have a guest function body");
-    // An entry point may take `args: list[str]` first, followed by at most one
-    // capability of each kind. Streams split by name, so `out: Stream` and
-    // `err: Stream` may both appear; any other Stream name is rejected.
-    try validateEntryParameters(src, &checker, sink, entry);
-    const entry_message = "main must return int, None, or Result[int or None, E] whose error E print can render";
-    if (!entry_adapter.supported(try checker.ty(entry.signature.return_type), checker.catalog.records)) return sink.fail("E_TYPE", entry.signature.return_type, entry_message);
+    // A library has no executable entry. This placeholder remains internal:
+    // library checking neither adapts, returns nor caches the checked program.
+    const main = if (options.entry_required) try checkEntry(&checker, module_names, failed) else @as(typed.FunctionId, @fromBackingInt(0));
     var plan = try openPlan(cache, &session, allocator, @backingInt(main));
     var checked_functions: std.ArrayList(typed.Function) = .empty;
     var i: usize = 0;
@@ -1740,7 +1747,7 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
         .records = checker.catalog.records,
     };
     const entry_start = timingStart(timing);
-    try entry_adapter.adapt(allocator, &checked);
+    if (options.entry_required) try entry_adapter.adapt(allocator, &checked);
     const exported = try exportedFunctions(allocator, module_names, checked.functions);
     timingAdd(timing, "entry_adaptation", entry_start);
     const effects_start = timingStart(timing);
@@ -1772,6 +1779,28 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
     if (session) |*queries| try queries.remember(checked);
     timingAdd(timing, "retention_store_io", retain_start);
     return checked;
+}
+
+fn checkEntry(checker: *Checker, module_names: ?*Names, failed: bool) Error!typed.FunctionId {
+    const allocator = checker.allocator;
+    const src = checker.src;
+    const program = checker.syntax;
+    const sink = checker.sink;
+    const main_name = if (module_names) |names| try std.fmt.allocPrint(allocator, "{s}::main", .{names.index.project.modules.items[0].name}) else "main";
+    const main_declaration = checker.functions.get(main_name) orelse {
+        if (failed) return error.SourceError;
+        return sink.fail("E_MAIN", .{ .start = 0, .end = 0 }, "the program requires an entry point: def main() -> int; use check-module to check a library");
+    };
+    const entry = program.functions[@backingInt(main_declaration)];
+    const main = checker.ordinary_ids[@backingInt(main_declaration)] orelse return sink.fail("E_MAIN", entry.name, "main cannot have type parameters");
+    if (entry.policy.host != null or entry.policy.constant) return sink.fail("E_MAIN", entry.name, "main must have a guest function body");
+    // An entry point may take `args: list[str]` first, followed by at most one
+    // capability of each kind. Streams split by name, so `out: Stream` and
+    // `err: Stream` may both appear; any other Stream name is rejected.
+    try validateEntryParameters(src, checker, sink, entry);
+    const entry_message = "main must return int, None, or Result[int or None, E] whose error E print can render";
+    if (!entry_adapter.supported(try checker.ty(entry.signature.return_type), checker.catalog.records)) return sink.fail("E_TYPE", entry.signature.return_type, entry_message);
+    return main;
 }
 
 // This initial conversion form is declarative. Restricting its body avoids
