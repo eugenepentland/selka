@@ -1,4 +1,5 @@
 #include "native_rc_values.h"
+#include "native_rc_internal.h"
 #include <stdlib.h>
 #include <string.h>
 const myl_rc_shape *myl_rc_native_shape(myl_native_heap *heap, const myl_native_type *type) {
@@ -24,6 +25,8 @@ int myl_rc_native_copy(myl_native_heap *heap, const myl_native_type *type, void 
     }
     const myl_rc_shape *shape=myl_rc_native_shape(heap,type);
     if (!shape) return 0;
+    if (shape->kind==MYL_RC_SHAPE_POINTER)
+        return publication_status(heap,myl_rc_pointer_transfer(heap,shape,dst,(void *)src,region,MYL_RC_COPY));
     myl_rc_slot target={.shape=shape,.address=dst,.region=region};
     myl_rc_slot source={.shape=shape,.address=(void *)src,.region=region};
     return publication_status(heap,myl_rc_value_copy(heap,&target,&source));
@@ -47,6 +50,12 @@ int myl_rc_native_take(myl_native_heap *heap, const myl_native_type *type, void 
     }
     const myl_rc_shape *shape=myl_rc_native_shape(heap,type);
     if (!shape) return 0;
+    if (shape->kind==MYL_RC_SHAPE_POINTER) {
+        void *staged=NULL;
+        myl_rc_status status=myl_rc_pointer_transfer(heap,shape,&staged,src,region,MYL_RC_TAKE);
+        if (status==MYL_RC_OK) memcpy(dst,&staged,sizeof staged);
+        return publication_status(heap,status);
+    }
     unsigned char local[128];
     void *staged=type->size<=sizeof local?local:myl_rc_storage_bytes(heap,type->size,0);
     if (!staged) return 0;
@@ -60,6 +69,13 @@ int myl_rc_native_take(myl_native_heap *heap, const myl_native_type *type, void 
 void myl_rc_native_drop(myl_native_heap *heap, const myl_native_type *type, void *value) {
     const myl_rc_descriptor *descriptor=myl_rc_descriptor_find(heap,type);
     if (!descriptor) abort();
+    if (descriptor->shape->kind==MYL_RC_SHAPE_POINTER) {
+        void *payload;
+        memcpy(&payload,value,sizeof payload);
+        memset(value,0,sizeof payload);
+        myl_rc_owner_release(heap,payload);
+        return;
+    }
     myl_rc_slot slot={.shape=descriptor->shape,.address=value};
     myl_rc_value_drop(heap,&slot);
 }
