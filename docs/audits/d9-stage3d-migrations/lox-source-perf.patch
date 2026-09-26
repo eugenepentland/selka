@@ -95,10 +95,37 @@ diff --git a/heap.my b/heap.my
 
 
  # ObjRef, rather than a shared class payload, carries object identity. Every
-@@ -203,6 +235,25 @@
+@@ -184,6 +216,24 @@
+     rt.objects[ref] = object.Obj.klass(klass)
+
+
++def set_object_field(objects: mut list[object.Obj], ref: value.ObjRef, name: value.ObjRef, hash: u32, assigned: value.Value):
++    match objects[ref]:
++        case object.Obj.instance(instance):
++            klass = instance.klass
++            fields = instance.fields
++            _ = table.set(mut fields, name, hash, assigned)
++            objects[ref] = object.Obj.instance(object.InstanceObj(klass=klass, fields=fields))
++        case _:
++            assert False, "object is not an instance"
++
++
++# Moves the object table through the update while its owning runtime stays unique.
++public def set_instance_field(rt: mut Runtime, ref: value.ObjRef, name: value.ObjRef, hash: u32, assigned: value.Value):
++    objects = rt.objects
++    set_object_field(mut objects, ref, name, hash, assigned)
++    rt.objects = objects
++
++
+ public def set_instance_fields(rt: mut Runtime, ref: value.ObjRef, fields: table.Table):
+     match rt.objects[ref]:
+         case object.Obj.instance(instance):
+@@ -201,6 +251,25 @@
+         case _:
+             assert False, "object is not an env"
              return object.new_env(value.NO_OBJ, 0)
-
-
++
++
 +# Read one scalar or value without returning the environment's mutable slots.
 +public def env_enclosing(rt: Runtime, ref: value.ObjRef) -> value.ObjRef:
 +    match rt.objects[ref]:
@@ -116,12 +143,10 @@ diff --git a/heap.my b/heap.my
 +        case _:
 +            assert False, "object is not an env"
 +            return value.Value.nil
-+
-+
+
+
  # P3 adaptation: write one environment slot and store the environment back,
- # so the write lands in the heap under value semantics as well.
- public def set_env_slot(rt: mut Runtime, ref: value.ObjRef, slot: int, item: value.Value):
-@@ -245,105 +296,63 @@
+@@ -245,105 +314,63 @@
 
 
  def mark_roots(rt: mut Runtime):
@@ -752,7 +777,7 @@ diff --git a/vm.my b/vm.my
      ref = frame.upvalues[read_byte(mut frame)]
      upvalue = heap.upvalue_obj(rt, ref)
      if upvalue.slot != object.NO_SLOT:
-@@ -308,32 +343,41 @@
+@@ -308,32 +343,34 @@
          rt.objects[ref] = object.Obj.upvalue(upvalue)
 
 
@@ -800,19 +825,12 @@ diff --git a/vm.my b/vm.my
 -            assigned = heap.pop(mut rt)
 +            hash = heap.string_hash(rt, name)
 +            assigned = heap.peek(rt, 0)
-+            match rt.objects[instance_ref]:
-+                case object.Obj.instance(instance):
-+                    klass = instance.klass
-+                    fields = instance.fields
-+                    _ = table.set(mut fields, name, hash, assigned)
-+                    rt.objects[instance_ref] = object.Obj.instance(object.InstanceObj(klass=klass, fields=fields))
-+                case _:
-+                    assert False, "object is not an instance"
++            heap.set_instance_field(mut rt, instance_ref, name, hash, assigned)
 +            _ = heap.pop(mut rt)
              _ = heap.pop(mut rt)
              heap.push(mut rt, assigned)
              return True
-@@ -342,6 +386,8 @@
+@@ -342,6 +379,8 @@
 
 
  # GREATER, LESS, SUBTRACT, MULTIPLY and DIVIDE: two numbers in, one out.
@@ -821,7 +839,7 @@ diff --git a/vm.my b/vm.my
  def numeric(rt: mut heap.Runtime, o: mut output.Output, instruction: int) -> bool:
      if not is_number(heap.peek(rt, 0)) or not is_number(heap.peek(rt, 1)):
          return runtime_error(mut rt, mut o, b"Operands must be numbers.")
-@@ -379,17 +425,15 @@
+@@ -379,17 +418,15 @@
      return True
 
 
@@ -845,7 +863,7 @@ diff --git a/vm.my b/vm.my
          is_local = read_byte(mut frame)
          index = read_byte(mut frame)
          if is_local == 1:
-@@ -397,9 +441,8 @@
+@@ -397,9 +434,8 @@
          else:
              captured[i] = frame.upvalues[index]
          i += 1
@@ -857,7 +875,7 @@ diff --git a/vm.my b/vm.my
 
 
  def inherit(rt: mut heap.Runtime, o: mut output.Output) -> bool:
-@@ -418,7 +461,7 @@
+@@ -418,7 +454,7 @@
      return True
 
 
@@ -866,7 +884,7 @@ diff --git a/vm.my b/vm.my
      name = read_string(mut frame)
      methods = heap.class_obj(rt, as_obj(heap.peek(rt, 1))).methods
      _ = table.set(mut methods, name, heap.string_hash(rt, name), heap.peek(rt, 0))
-@@ -432,57 +475,79 @@
+@@ -432,57 +468,79 @@
  # The dispatch loop, one opcode per iteration of `frame`, the innermost
  # call frame. Handlers answer False after reporting a runtime error.
  def run(rt: mut heap.Runtime, o: mut output.Output) -> InterpretResult:
@@ -962,7 +980,7 @@ diff --git a/vm.my b/vm.my
          elif instruction == chunk.OP_JUMP:
              offset = read_short(mut frame)
              frame.ip = frame.ip + offset
-@@ -495,48 +560,53 @@
+@@ -495,48 +553,53 @@
              frame.ip = frame.ip - offset
          elif instruction == chunk.OP_CALL:
              count = read_byte(mut frame)

@@ -552,3 +552,50 @@ test "copy on write: a counting build counts every inline check, mark and pin an
     try std.testing.expect(std.mem.indexOf(u8, result.stderr, "cow-stats {\"marks\":1,") != null);
     try std.testing.expect(std.mem.indexOf(u8, result.stderr, "\"copies\":1,") != null);
 }
+
+// spec: COW-INDEX-RETURN-1
+test "copy on write: a unique mut-list element field returns without sharing" {
+    const saved = value_semantics.enabled();
+    value_semantics.setEnabled(true);
+    defer value_semantics.setEnabled(saved);
+    const source =
+        \\record Payload:
+        \\    number: int
+        \\    items: list[int]
+        \\
+        \\union Item:
+        \\    payload: Payload,
+        \\    empty
+        \\
+        \\def change(items: mut list[Item], index: int):
+        \\    match items[index]:
+        \\        case Item.payload(old):
+        \\            fields = old.items
+        \\            fields.append(2)
+        \\            items[index] = Item.payload(Payload(0, fields))
+        \\        case Item.empty:
+        \\            pass
+        \\
+        \\def observe(items: mut list[Item], index: int) -> int:
+        \\    seen = -1
+        \\    match items[index]:
+        \\        case Item.payload(old):
+        \\            fields = old.items
+        \\            fields.append(2)
+        \\            seen = len(old.items)
+        \\            items[index] = Item.payload(Payload(0, fields))
+        \\        case Item.empty:
+        \\            pass
+        \\    return seen
+        \\
+        \\def main() -> int:
+        \\    return 0
+    ;
+    const a = std.testing.allocator;
+    const il = try unitText(a, source, "change", checks);
+    defer a.free(il);
+    const negative = try unitText(a, source, "observe", checks);
+    defer a.free(negative);
+    try std.testing.expectEqual(@as(usize, 0), count(il, "call $myl_qbe_cow_transfer("));
+    try std.testing.expect(count(negative, "call $myl_qbe_cow_transfer(") > 0);
+}
