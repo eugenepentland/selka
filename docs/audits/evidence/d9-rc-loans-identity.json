@@ -1,0 +1,25 @@
+{
+  "source_commit": "3f300771cddb13f397f8469a20ad7e90892a02d3",
+  "compiler_sha256": "339b1ffe5799a10e09377e7042eafabc3a9b9f955d7645f7631da021075d4f23",
+  "compiler_mode": "Debug",
+  "main": "b292660a09bc703d0ceab071636a73b643c52d34",
+  "gate": [
+    "zig build test --summary all",
+    "zig build test-qbe --summary all",
+    "zig build test-qbe-build --summary all",
+    "zig build fmt-check"
+  ],
+  "sweep_common": [
+    "mylang",
+    "test",
+    "tests/lang",
+    "--rc-runtime=stats",
+    "--force",
+    "--json",
+    "--jobs",
+    "3"
+  ],
+  "llvm_additional": [
+    "--release"
+  ]
+}
