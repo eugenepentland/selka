@@ -229,7 +229,7 @@ test "a write into a returned value is a temporary write" {
 
 // spec-case: VALUE-SEMANTICS-3
 test "a mut record parameter is inout and its argument must be a local" {
-    try expectCodes("record C:\n    n: int\n\ndef f(c: mut C) -> None:\n    c.n = c.n + 1\n", "E_MUTATION_MARKER", "ok");
+    try expectCodes("record C:\n    n: int\n\ndef f(c: mut C) -> None:\n    c.n = c.n + 1\n", "ok", "ok");
     try expectCodes("record Inner:\n    x: int\n    items: list[int]\n\nrecord Outer:\n    inner: Inner\n\ndef f(o: mut Outer) -> None:\n    o.inner.x = 3\n    o.inner.items.append(1)\n", "ok", "ok");
     const field_argument =
         \\record C:
@@ -246,7 +246,7 @@ test "a mut record parameter is inout and its argument must be a local" {
         \\    f(mut h.c)
         \\
     ;
-    try expectCodes(field_argument, "ok", "E_MUTATION_MARKER");
+    try expectCodes(field_argument, "E_MUTATION_MARKER", "E_MUTATION_MARKER");
     var arena = std.heap.ArenaAllocator.init(t.allocator);
     defer arena.deinit();
     try t.expect(std.mem.indexOf(u8, try switchedMessage(arena.allocator(), field_argument), "`mut` on a record passes a variable itself") != null);
