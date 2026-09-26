@@ -22,6 +22,7 @@ static myl_native_dictionary *rc_dict_clone(myl_native_heap *, const myl_native_
 static myl_rc_status rc_dict_shell(myl_native_heap *, const void *, unsigned, void **);
 static int rc_dict_next(myl_native_heap *, const void *, void *, size_t *, myl_rc_slot *, myl_rc_slot *);
 static int rc_insert(myl_native_heap *, myl_native_dictionary *, const void *, const void *);
+static int rc_insert_result(myl_native_heap *, myl_native_dictionary *, const void *, const void *, void *);
 static int rc_dictionary(const myl_native_dictionary *dict) {
     return ((const myl_native_object *)dict-1)->element==&rc_dict_type;
 }
@@ -992,15 +993,21 @@ int myl_native_dictionary_update(myl_native_heap *heap, myl_native_dictionary *d
     }
     return 1;
 }
+static int rc_existing_result(myl_native_heap *heap, const myl_native_type *type, void *output, const void *value) {
+    unsigned char local[128];
+    void *staged=type->size<=sizeof local?local:myl_rc_storage_bytes(heap,type->size,0);
+    if (!staged) return 0;
+    int ok=myl_rc_native_copy(heap,type,staged,value,heap->region_depth);
+    if (ok) memcpy(output,staged,type->size);
+    if (staged!=local) myl_rc_owner_release(heap,staged);
+    return ok;
+}
 int myl_native_dictionary_setdefault(myl_native_heap *heap, myl_native_dictionary *dict, const void *key, const void *fallback, void *output) {
     located at=find(dict,key);
     if (myl_rc_enabled(heap)) {
-        const void *value=at.entry==NO_ENTRY?fallback:entry_at(dict,at.entry)+dict->value_offset;
-        if (!myl_rc_native_copy(heap,dict->value,output,value,heap->region_depth)) return 0;
-        if (at.entry==NO_ENTRY && !rc_insert(heap,dict,key,fallback)) {
-            myl_rc_native_drop(heap,dict->value,output); return 0;
-        }
-        return 1;
+        if (at.entry==NO_ENTRY) return rc_insert_result(heap,dict,key,fallback,output);
+        const void *value=entry_at(dict,at.entry)+dict->value_offset;
+        return rc_existing_result(heap,dict->value,output,value);
     }
     if (at.entry!=NO_ENTRY) {
         copy_value(dict,output,entry_at(dict,at.entry)+dict->value_offset);
@@ -1122,29 +1129,46 @@ static int rc_dict_prepare(myl_native_heap *heap, const myl_native_type *key, co
     if (status!=MYL_RC_OK) myl_rc_record_failure(heap,status);
     return status==MYL_RC_OK;
 }
-static int rc_insert(myl_native_heap *heap, myl_native_dictionary *dict, const void *key, const void *value) {
-    size_t width=dict->entry_type.size;
-    unsigned char local[128];
-    unsigned char *entry=width<=sizeof local?local:myl_rc_storage_bytes(heap,width,0);
-    if (!entry) return 0;
-    memset(entry,0,width);
+static int rc_insert_result(myl_native_heap *heap, myl_native_dictionary *dict, const void *key, const void *value, void *output) {
+    size_t width=dict->entry_type.size, extra=output?dict->value->size:0;
+    if (width>(SIZE_MAX-extra)/2) return 0;
+    size_t bytes=width*2+extra;
+    unsigned char local[384];
+    unsigned char *scratch=bytes<=sizeof local?local:myl_rc_storage_bytes(heap,bytes,0);
+    if (!scratch) return 0;
+    unsigned char *entry=scratch+width, *result=entry+width;
+    /* Inputs may point into this dictionary. Save borrowed bytes before any
+     * capacity growth or compaction moves their source slots. */
+    memset(scratch,0,bytes);
+    memcpy(scratch,key,dict->key->size);
+    memcpy(scratch+dict->value_offset,value,dict->value->size);
     unsigned region=myl_native_header_region(dict);
-    int key_ready=0, value_ready=0, ok=0;
-    if (dict->key_kind==KEY_TEXT && (text_of(key)->flags&MYL_TEXT_VIEW)) {
-        myl_native_text *owned=myl_native_text_own_at(heap,(myl_native_text *)text_of(key),region);
-        if (!owned) goto done;
-        memcpy(entry,&owned,sizeof owned);
-        key_ready=1;
-    } else {
-        key_ready=myl_rc_native_copy(heap,dict->key,entry,key,region);
-        if (!key_ready) goto done;
-    }
-    value_ready=myl_rc_native_copy(heap,dict->value,entry+dict->value_offset,value,region);
-    if (!value_ready) goto done;
+    myl_native_text *owned=NULL;
+    int ok=0;
     if (dict->dead && dict->dead*2>=dict->entries->length) myl_native_dictionary_settle(dict);
     if (dict->entries->length==SIZE_MAX || dict->entries->generation==UINT64_MAX) goto done;
     if (!myl_rc_list_storage_reserve(heap,dict->entries,dict->entries->length+1)) goto done;
     index_reserve(heap,dict,dict->entries->length+1);
+    if (dict->key_kind==KEY_TEXT && (text_of(scratch)->flags&MYL_TEXT_VIEW)) {
+        owned=myl_native_text_own_at(heap,(myl_native_text *)text_of(scratch),region);
+        if (!owned) goto done;
+        memcpy(scratch,&owned,sizeof owned);
+    }
+    const myl_rc_descriptor *key_shape=myl_rc_descriptor_find(heap,dict->key);
+    const myl_rc_descriptor *value_shape=myl_rc_descriptor_find(heap,dict->value);
+    if (!key_shape || !value_shape) abort();
+    myl_rc_slot targets[]={
+        {.shape=key_shape->shape,.address=entry,.region=region},
+        {.shape=value_shape->shape,.address=entry+dict->value_offset,.region=region},
+        {.shape=value_shape->shape,.address=result,.region=heap->region_depth}
+    };
+    myl_rc_slot sources[]={
+        {.shape=key_shape->shape,.address=scratch},
+        {.shape=value_shape->shape,.address=scratch+dict->value_offset},
+        {.shape=value_shape->shape,.address=scratch+dict->value_offset}
+    };
+    myl_rc_status status=myl_rc_value_copy_many(heap,targets,sources,output?3:2);
+    if (status!=MYL_RC_OK) { myl_rc_record_failure(heap,status); goto done; }
     uint32_t hash=hash_key(dict,entry);
     uint64_t marker=((uint64_t)hash<<32)|1;
     memcpy(entry+width-8,&marker,8);
@@ -1154,14 +1178,15 @@ static int rc_insert(myl_native_heap *heap, myl_native_dictionary *dict, const v
     dict->entries->generation++;
     if (dict->index.capacity) index_place(&dict->index,pack_slot(hash,added));
     dict->last.state=PROBE_NONE;
+    if (output) memcpy(output,result,dict->value->size);
     ok=1;
 done:
-    if (!ok) {
-        if (value_ready) myl_rc_native_drop(heap,dict->value,entry+dict->value_offset);
-        if (key_ready) myl_rc_native_drop(heap,dict->key,entry);
-    }
-    if (entry!=local) myl_rc_owner_release(heap,entry);
+    if (owned) myl_rc_owner_release(heap,owned);
+    if (scratch!=local) myl_rc_owner_release(heap,scratch);
     return ok;
+}
+static int rc_insert(myl_native_heap *heap, myl_native_dictionary *dict, const void *key, const void *value) {
+    return rc_insert_result(heap,dict,key,value,NULL);
 }
 int myl_rc_dictionary_overwrite(myl_native_heap *heap, myl_native_dictionary *dict, const void *key, const void *value) {
     size_t at=find(dict,key).entry;

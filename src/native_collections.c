@@ -1185,10 +1185,16 @@ static int rc_list_insert_at(myl_native_heap *heap, myl_native_list *list, size_
     void *staged=size<=sizeof local?local:myl_rc_storage_bytes(heap,size,0);
     if (!staged) return 0;
     unsigned region=myl_native_header_region(list);
-    int ok=myl_rc_native_copy(heap,list->element,staged,value,region);
-    if (ok && !myl_rc_list_storage_reserve(heap,list,list->length+1)) {
-        myl_rc_native_drop(heap,list->element,staged);
-        ok=0;
+    /* A borrowed input may point into this list. Preserve its byte offset
+     * across reserve, then clone only once no later allocation can refuse. */
+    uintptr_t input=(uintptr_t)value, old=(uintptr_t)list->storage;
+    size_t extent=list->length*size;
+    int aliases=old && input>=old && input-old<extent;
+    size_t offset=aliases?(size_t)(input-old):0;
+    int ok=myl_rc_list_storage_reserve(heap,list,list->length+1);
+    if (ok) {
+        if (aliases) value=(const unsigned char *)list->storage+offset;
+        ok=myl_rc_native_copy(heap,list->element,staged,value,region);
     }
     if (ok) {
         unsigned char *storage=list->storage;
@@ -1294,6 +1300,6 @@ int myl_rc_list_sort_keyed(myl_native_heap *heap, const myl_rc_sort_request *req
             temporary->length=0;
         }
     }
-    if (temporary) myl_rc_owner_release(heap,temporary);
+    if (temporary) myl_rc_native_abort(heap,temporary);
     return ok;
 }
