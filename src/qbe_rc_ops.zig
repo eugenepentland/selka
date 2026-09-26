@@ -36,7 +36,17 @@ pub fn after(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "o
     if (next.len == 0) return error.InternalError;
     const base = next.len - 1;
     if (base > stack.len) return error.InternalError;
-    try values.finish(E, self, .{ .ty = next[base], .base = base, .consumed = stack.len - base, .origin = origin(E, self, op) });
+    const cow = @import("qbe_cow.zig").Lower(E);
+    if (cow.scopedProjection(self, self.pc)) {
+        // The prepared scope keeps candidate payloads/backing alive. Publishing
+        // a snapshot here would clone the very pinned receiver we must mutate.
+        for (base..stack.len) |index| try values.drop(E, self, index);
+    } else try values.finish(E, self, .{ .ty = next[base], .base = base, .consumed = stack.len - base, .origin = origin(E, self, op) });
+    if (op == .buffer_operation and (op.buffer_operation.kind.writesReceiver() or
+        op.buffer_operation.kind == .set_add or op.buffer_operation.kind == .set_discard))
+    {
+        try cow.finishReceiver(self, @backingInt(op.buffer_operation.owner));
+    }
 }
 
 /// Consumed unique arguments belong to the callee even when admission fails.
