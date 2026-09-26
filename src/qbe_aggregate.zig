@@ -29,6 +29,7 @@ pub fn emit(self: anytype, op: @FieldType(bytecode.Instruction, "op"), stack: []
             if (try fieldWriteAt(@TypeOf(self), self, self.pc)) |write| return fieldWriteRead(@TypeOf(self), self, write, h);
             const source = try self.load("s", h - 1);
             const member = try self.field(stack[h - 1], index);
+            if (try boxRead(@TypeOf(self), self, stack, source)) return;
             var value = try self.readValue(try self.address(source, member.offset), member.ty);
             const shared = self.program.records[stack[h - 1].recordIndex()].isManagedRecord() and !self.isScalar(member.ty);
             if (shared and !try elementRead(@TypeOf(self), self, self.pc, h, member.ty)) {
@@ -113,6 +114,19 @@ pub fn emit(self: anytype, op: @FieldType(bytecode.Instruction, "op"), stack: []
         },
         else => return error.InternalError,
     }
+}
+
+/// In COW mode each materialized box body is a private shallow snapshot;
+/// copying the immutable box pointer itself leaves its subtree untouched.
+fn boxRead(comptime E: type, self: E, stack: []const typed.Type, source: usize) Error!bool {
+    if (self.cow == null or !@import("value_semantics.zig").enabled()) return false;
+    if (!self.program.records[stack[stack.len - 1].recordIndex()].collection.box) return false;
+    const snapshot = try self.aggregatePointer();
+    const done = self.temp();
+    try self.print(" %v{d} =w call $myl_qbe_cow_unbox(l %ctx, l extern ${s}, l %v{d}, l %v{d})\n", .{ done, try self.descriptor(stack[stack.len - 1]), source, snapshot });
+    try self.checkFailure("failure");
+    try self.store(stack.len - 1, snapshot);
+    return true;
 }
 
 /// The index operand of a fixed-array access and the array's element count.
@@ -266,6 +280,7 @@ fn fieldWriteAt(comptime E: type, self: E, pc: usize) Error!?FieldWrite {
     if (!record.isAggregate()) return null;
     const schema = self.program.records[record.recordIndex()];
     if (!schema.isRecord() or schema.isCollection()) return null;
+    if (schema.collection.box) return null;
     const managed = schema.isManagedRecord();
     if (!managed and !try ownRecord(E, self, slot, record)) return null;
     const array = (try self.field(record, field_index)).ty;

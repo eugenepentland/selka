@@ -202,6 +202,8 @@ pub const Input = struct {
     program: bytecode.Program,
     function: bytecode.Function,
     states: []const ?[]const typed.Type,
+    /// Box projections can clone pinned children under value semantics.
+    box_cow: bool = false,
 };
 
 /// Loop bodies longer than this many instructions are left alone. The copy
@@ -419,7 +421,7 @@ const Analyzer = struct {
         @memset(self.writes.stores, 0);
         for (all[self.head .. self.back + 1], self.head..) |instruction, pc| {
             if (self.input.states[pc] == null) return false;
-            if (!try self.allowed(instruction.op)) return false;
+            if (!try self.allowed(pc, instruction.op)) return false;
             switch (instruction.op) {
                 .store_local => |slot| {
                     self.writes.written[slotOf(slot)] = true;
@@ -468,14 +470,21 @@ const Analyzer = struct {
 
     /// Whether one instruction may appear in a versioned loop. The list admits
     /// nothing that calls guest code, allocates, or resizes a collection.
-    fn allowed(self: *Analyzer, op: @FieldType(bytecode.Instruction, "op")) Error!bool {
+    fn allowed(self: *Analyzer, pc: usize, op: @FieldType(bytecode.Instruction, "op")) Error!bool {
         return switch (op) {
             .push_i64, .push_bool, .push_unit, .push_integer => true,
             .load_local, .store_local, .pop, .acknowledge => true,
             .jump, .jump_if_false => true,
             .cmp_i64, .cmp_bool, .cmp_enum, .cmp_domain, .not_bool => true,
             .add_i64_checked, .sub_i64_checked, .mul_i64_checked, .div_i64_checked, .rem_i64_checked, .neg_i64_checked => true,
-            .wrap_domain, .unwrap_domain, .assert_true, .unary_float, .get_field => true,
+            .wrap_domain, .unwrap_domain, .assert_true, .unary_float => true,
+            .get_field => {
+                if (!self.input.box_cow) return true;
+                const stack = self.input.states[pc] orelse return false;
+                if (stack.len == 0) return false;
+                const owner = stack[stack.len - 1];
+                return !owner.isAggregate() or !self.input.program.records[owner.recordIndex()].collection.box;
+            },
             .binary_integer => |binary| binary.ty.isInteger(),
             .cast_integer, .neg_integer => |ty| ty.isInteger(),
             .array_length => |ty| !self.managed(ty),

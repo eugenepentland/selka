@@ -1,6 +1,5 @@
 module recursive
 
-
 record Branch:
     items: list[int]
     next: Option[Branch]
@@ -57,3 +56,38 @@ public def test_repeated_write_through_a_boxed_child() -> bool:
     if old_child is None or new_child is None:
         return False
     return old_child.items == [1] and new_child.items == [1, 2, 3, 4]
+
+
+def child_of(root: Branch) -> Branch:
+    child = root.next
+    if child is None:
+        return leaf(-1)
+    return child
+
+
+# spec-case: COW-NESTED-1
+public def test_a_projected_child_is_protected_before_a_later_box_copy() -> bool:
+    original = Branch(items=[0], next=Some(leaf(1)))
+    exposed = child_of(original)
+    copied = original
+    exposed.items.append(2)
+    old = child_of(copied)
+    assert old.items == [1]
+    assert exposed.items == [1, 2]
+    return child_of(original).items == [1]
+
+
+def read_child_while_pinned(items: mut list[int], root: Branch) -> Branch:
+    snapshot = child_of(root)
+    items[0] = 7
+    return snapshot
+
+
+# spec-case: COW-PIN-1
+public def test_a_box_projection_copies_a_pinned_child() -> bool:
+    original = Branch(items=[0], next=Some(leaf(1)))
+    child = child_of(original)
+    snapshot = read_child_while_pinned(mut child.items, Branch(items=[0], next=Some(child)))
+    assert snapshot.items == [1]
+    assert child.items == [7]
+    return child_of(original).items == [1]

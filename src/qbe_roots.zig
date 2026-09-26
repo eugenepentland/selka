@@ -175,8 +175,26 @@ pub fn pureCallee(name: []const u8) bool {
 /// allocation, and it is not a call to a function that cannot collect.
 fn rootedSafepoint(comptime Emitter: type, self: *Emitter, op: @FieldType(bytecode.Instruction, "op")) bool {
     if (!self.has_roots or !self.has_safepoints) return false;
-    if (!allocates(op)) return false;
-    return !callsPureFunction(Emitter, self, op);
+    if (!allocates(op) and !self.boxProjectionAt(self.pc, op)) return false;
+    return !callsPureFunction(Emitter, self, op) or cowMutCallMayCopy(Emitter, self, op);
+}
+/// Preparing a mutable collection argument can copy it before a callee runs,
+/// including a callee otherwise classified noalloc. The call's outer root
+/// chain must already be published when that preparation begins.
+fn cowMutCallMayCopy(comptime Emitter: type, self: *Emitter, op: @FieldType(bytecode.Instruction, "op")) bool {
+    if (self.cow == null) return false;
+    const id = switch (op) {
+        .call => |callee| @backingInt(callee),
+        else => return false,
+    };
+    const function = self.program.functions[id];
+    for (function.signature.declared_mutates) |position| {
+        if (position < function.scope.locals.len and @import("cow_plan.zig").payloadType(self.program, function.scope.locals[position].ty)) return true;
+    }
+    for (function.signature.mutates) |position| {
+        if (position < function.scope.locals.len and @import("cow_plan.zig").payloadType(self.program, function.scope.locals[position].ty)) return true;
+    }
+    return false;
 }
 /// Whether this instruction is a direct call to a function that can neither
 /// allocate nor reach an allocation, so no collection can run inside it and
