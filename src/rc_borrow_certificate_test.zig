@@ -3,7 +3,7 @@ const std = @import("std");
 const compiler = @import("compiler.zig");
 const native = @import("native_types.zig");
 const shapes = @import("rc_shape.zig");
-const proof = @import("rc_borrow_certificate.zig");
+const calls = @import("rc_calls.zig");
 const model = @import("rc_model.zig");
 const t = std.testing;
 
@@ -19,13 +19,13 @@ fn certificate(source: []const u8) !?model.BorrowCertificate {
     var catalog = try shapes.Catalog.init(t.allocator, &layouts);
     defer catalog.deinit();
     for (program.functions) |function| if (std.mem.eql(u8, function.name, "selected")) {
-        return proof.certify(t.allocator, &catalog, function, "rc-v2");
+        return calls.borrowedIn(t.allocator, &catalog, program.functions, function, "rc-v2");
     };
     return error.TestUnexpectedResult;
 }
 
 // spec: RC-BORROW-ENTRY-1
-test "RC-BORROW-ENTRY-1 readonly physical field and array projections certify one anchor" {
+test "RC-BORROW-ENTRY-1 public call contract certifies physical field and array anchors" {
     const field = (try certificate(
         \\record Child:
         \\    items: list[int]
@@ -111,4 +111,67 @@ test "RC-BORROW-ENTRY-1 physical anchor and projection edits change certificate 
     try t.expect(!std.mem.eql(u8, &first.dependency_identity, &second.dependency_identity));
     try t.expect(!std.mem.eql(u8, &at_zero.dependency_identity, &at_one.dependency_identity));
     try t.expectEqualSlices(u8, &at_zero.shape_identity, &at_one.shape_identity);
+}
+
+// spec-case: RC-BORROW-ENTRY-1
+test "RC-BORROW-ENTRY-1 branch projections and immortal inline fallback certify" {
+    const answer = (try certificate(
+        \\record Span:
+        \\    source: bytes
+        \\    start: int
+        \\record Node:
+        \\    span: Span
+        \\    next: int
+        \\def empty() -> Span:
+        \\    return Span(b"", 0)
+        \\def selected(nodes: list[Node], index: int) -> Node:
+        \\    if index < 0 or index >= len(nodes):
+        \\        return Node(empty(), len(nodes))
+        \\    return nodes[index]
+    )).?;
+    try t.expectEqual(@as(u32, 0), answer.parameter);
+}
+
+// spec-case: RC-BORROW-ENTRY-1
+test "RC-BORROW-ENTRY-1 different parameter paths and fresh factory fallback decline" {
+    try t.expectEqual(null, try certificate(
+        \\def selected(first: bytes, second: bytes, choice: bool) -> bytes:
+        \\    if choice:
+        \\        return first
+        \\    return second
+    ));
+    try t.expectEqual(null, try certificate(
+        \\record Span:
+        \\    source: list[int]
+        \\def empty() -> Span:
+        \\    return Span([7])
+        \\def selected(nodes: list[Span], index: int) -> Span:
+        \\    if index < 0:
+        \\        return empty()
+        \\    return nodes[index]
+    ));
+}
+
+const fallback =
+    \\record Span:
+    \\    source: bytes
+    \\    start: int
+    \\def empty() -> Span:
+    \\    return Span(b"", OFFSET)
+    \\def selected(nodes: list[Span], index: int) -> Span:
+    \\    if index < 0:
+    \\        return empty()
+    \\    return nodes[index]
+;
+
+// spec-case: RC-BORROW-ENTRY-1
+test "RC-BORROW-ENTRY-1 immortal helper edits change transitive dependency identity" {
+    const first_source = try std.mem.replaceOwned(u8, t.allocator, fallback, "OFFSET", "0");
+    defer t.allocator.free(first_source);
+    const second_source = try std.mem.replaceOwned(u8, t.allocator, fallback, "OFFSET", "1");
+    defer t.allocator.free(second_source);
+    const first = (try certificate(first_source)).?;
+    const second = (try certificate(second_source)).?;
+    try t.expect(!std.mem.eql(u8, &first.dependency_identity, &second.dependency_identity));
+    try t.expectEqual(first.parameter, second.parameter);
 }

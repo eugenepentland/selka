@@ -341,6 +341,11 @@ static void sorting_and_partial_clone(void) {
     myl_native_list *keys=myl_native_list_new(&heap,&number,0);
     myl_native_list *sorted=myl_native_list_new(&heap,&text_pointer,3);
     assert(values && keys && sorted);
+    myl_native_list *empty=myl_native_list_new(&heap,&text_pointer,0);
+    myl_rc_sort_request empty_request={.values=empty,.source=values,.keys=keys,.shape=1};
+    assert(empty && myl_rc_list_sort_keyed(&heap,&empty_request));
+    assert(empty->length==0 && empty->storage==NULL && values->storage==NULL);
+    myl_rc_owner_release(&heap,empty);
     for (unsigned i=0;i<3;i++) {
         unsigned char letter=(unsigned char)('c'-i);
         myl_native_text *text=myl_native_text_from_utf8(&heap,&letter,1);

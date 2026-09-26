@@ -8,6 +8,7 @@ test {
     _ = @import("native_rc_collections_test.zig");
     _ = @import("native_rc_arena_test.zig");
     _ = @import("native_rc_hold_test.zig");
+    _ = @import("view_cycles_test.zig");
     _ = @import("qbe_runtime_rc_test.zig");
     _ = @import("native_rc_codecs_test.zig");
     _ = @import("native_rc_host_test.zig");
@@ -237,6 +238,9 @@ test {
     _ = @import("ownership_test.zig");
     _ = @import("rc_plan_test.zig");
     _ = @import("rc_borrow_certificate_test.zig");
+    _ = @import("qbe_rc_borrow_test.zig");
+    _ = @import("qbe_rc_admission_test.zig");
+    _ = @import("qbe_rc_views_test.zig");
     _ = @import("cow_test.zig");
     _ = @import("qbe_text_test.zig");
     _ = @import("qbe_range_keys_test.zig");
