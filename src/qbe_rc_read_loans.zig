@@ -97,7 +97,7 @@ fn valid(comptime E: type, self: *E, target: usize, check: *Check, catalog: *sha
             const operation = op.buffer_operation;
             if (@backingInt(operation.owner) != target) return false;
             if (operation.kind != .length and operation.kind != .read) return false;
-            if (!try plain(E, self, operation.output, catalog)) {
+            if (!try terminal(E, self, operation.output, catalog)) {
                 if (operation.kind != .read or !child(E, self, pc, check)) return false;
             }
             read = true;
@@ -144,6 +144,14 @@ pub fn borrowedResult(comptime E: type, self: *E, op: Op) bool {
 
 fn plain(comptime E: type, self: *E, ty: typed.Type, catalog: *shapes.Catalog) Error!bool {
     if (!self.isScalar(ty)) return false;
+    return terminal(E, self, ty, catalog);
+}
+
+// Plain inline results are copied to operand scratch by values.finish before
+// the receiver anchor can end. No interior pointer or ownership token escapes.
+// Keep the intervening instruction whitelist scalar-only.
+fn terminal(comptime E: type, self: *E, ty: typed.Type, catalog: *shapes.Catalog) Error!bool {
+    _ = self;
     const shape = catalog.get(ty) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError;
     return !shape.counted and !shape.unique_drop;
 }

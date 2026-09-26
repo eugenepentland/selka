@@ -1,0 +1,4 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 2 after 5s (all 3 build slot(s) busy)
+qbe {'version': 1, 'runtime': 'rc-v3-counting', 'saturated': False, 'owner_acquire': 35, 'owner_release': 117, 'hold_acquire': 11, 'hold_release': 11, 'owner_limit': 0, 'hold_limit': 0, 'heap_allocate': 82, 'arena_allocate': 6, 'retire': 82, 'clone_shell': 5, 'unique_check': 89}
+llvm {'version': 1, 'runtime': 'rc-v3-counting', 'saturated': False, 'owner_acquire': 35, 'owner_release': 117, 'hold_acquire': 11, 'hold_release': 11, 'owner_limit': 0, 'hold_limit': 0, 'heap_allocate': 82, 'arena_allocate': 6, 'retire': 82, 'clone_shell': 5, 'unique_check': 89}
