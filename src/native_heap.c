@@ -1081,14 +1081,7 @@ void *myl_native_heap_alloc_at(myl_native_heap *heap, const myl_native_type *ele
 #if defined(MYL_NATIVE_RC) && MYL_NATIVE_RC
     if (!myl_rc_enabled(heap)) return NULL;
 #endif
-    if (myl_rc_enabled(heap)) {
-        if (!myl_rc_native_shape(heap,element)) return NULL;
-        myl_rc_alloc_request request={element,count,region};
-        void *result=NULL;
-        myl_rc_status status=myl_rc_new(heap,&request,&result);
-        if (status!=MYL_RC_OK) myl_rc_record_failure(heap,status);
-        return result;
-    }
+    if (myl_rc_enabled(heap)) return myl_rc_storage_alloc(heap,element,count,region);
     return alloc_object(heap, element, count, region, 1);
 }
 static void *alloc_object(myl_native_heap *heap, const myl_native_type *element, size_t count, unsigned region, int zero) {

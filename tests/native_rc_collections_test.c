@@ -23,6 +23,11 @@ static void init(myl_native_heap *heap) {
 static uintptr_t owners(const void *payload) {
     return ((const myl_rc_object *)payload-1)->owners;
 }
+static size_t allocation_count(const void *payload) {
+    uintptr_t mark=((const myl_native_object *)payload-1)->mark;
+    return (mark>>MYL_NATIVE_OBJECT_COUNT_SHIFT) &
+        (mark&MYL_NATIVE_OBJECT_ARENA?MYL_NATIVE_ARENA_COUNT_MAX:MYL_NATIVE_OBJECT_COUNT_MAX);
+}
 static void finish(myl_native_heap *heap) {
     assert(heap->objects_live==0);
     myl_native_heap_destroy(heap);
@@ -89,6 +94,164 @@ static void storage_boundaries(void) {
     finish(&second);
     finish(&first);
 }
+/* spec-case: RC-STORAGE-1. Cached admission belongs to this heap and type;
+ * reused slots reset their complete prefix and payload across size classes. */
+static void native_allocation_cache(void) {
+    static const size_t widths[]={0,1,16,17,224,225,8160,8161};
+    myl_native_type types[sizeof widths/sizeof widths[0]];
+    for (size_t i=0;i<sizeof widths/sizeof widths[0];i++)
+        types[i]=(myl_native_type){.size=widths[i],.alignment=1,.kind=MYL_NATIVE_PLAIN};
+    myl_native_heap heap;
+    for (unsigned round=0;round<2;round++) {
+        init(&heap);
+        assert(!myl_rc_descriptor_find(&heap,&types[0]));
+        for (size_t i=0;i<sizeof widths/sizeof widths[0];i++) for (unsigned repeated=0;repeated<2;repeated++) {
+            void *value=myl_native_heap_alloc(&heap,&types[i],1);
+            assert(value && (uintptr_t)value%16==0 && owners(value)==1);
+            myl_rc_object *header=(myl_rc_object *)value-1;
+            assert(!header->holds && header->common.element==&types[i]);
+            assert(allocation_count(value)==1 && !myl_native_header_region(value));
+            for (size_t at=0;at<widths[i];at++) assert(((unsigned char *)value)[at]==0);
+            memset(value,0xa5,widths[i]);
+            myl_rc_owner_release(&heap,value);
+        }
+        /* Return to an earlier type after a different cached classification. */
+        void *value=myl_native_heap_alloc(&heap,&types[1],1);
+        assert(value && !*(unsigned char *)value && owners(value)==1);
+        myl_rc_owner_release(&heap,value);
+        finish(&heap);
+    }
+}
+/* spec-case: RC-STORAGE-1. Cold metadata refusal is atomic; a full cached slab
+ * refuses before publication, and trimming cannot leave a cached slab pointer. */
+static void native_allocation_budget(void) {
+    myl_native_heap heap;
+    init(&heap);
+    static const myl_native_type byte={.size=1,.alignment=1,.kind=MYL_NATIVE_PLAIN};
+    static const myl_native_type missing={.size=9,.alignment=1,.kind=MYL_NATIVE_PLAIN};
+    assert(myl_rc_native_shape(&heap,&number) && myl_rc_native_shape(&heap,&byte));
+    size_t metadata=heap.bytes;
+    heap.limit=metadata;
+    assert(!myl_native_heap_alloc(&heap,&missing,1));
+    assert(myl_rc_take_failure(&heap)==MYL_RC_ALLOCATION_REFUSED);
+    assert(heap.bytes==metadata && !myl_rc_descriptor_find(&heap,&missing));
+    heap.limit=0;
+    heap.exhausted=0;
+    void *retry=myl_native_heap_alloc(&heap,&missing,1);
+    assert(retry && myl_rc_descriptor_find(&heap,&missing) && owners(retry)==1);
+    myl_rc_owner_release(&heap,retry);
+    finish(&heap);
+    init(&heap);
+    assert(myl_rc_native_shape(&heap,&number) && myl_rc_native_shape(&heap,&byte));
+    metadata=heap.bytes;
+    heap.limit=metadata;
+    assert(!myl_native_heap_alloc(&heap,&number,1));
+    assert(myl_rc_take_failure(&heap)==MYL_RC_ALLOCATION_REFUSED && !heap.objects_live);
+    heap.exhausted=0;
+    heap.limit=metadata+65536;
+    void *values[2048];
+    size_t count=0;
+    while (count<sizeof values/sizeof values[0]) {
+        void *value=myl_native_heap_alloc(&heap,&number,1);
+        if (!value) break;
+        values[count++]=value;
+    }
+    /* The aligned 80-byte slab metadata leaves exactly 1363 48-byte slots. */
+    assert(count==1363 && heap.bytes==heap.limit && heap.objects_live==count);
+    assert(myl_rc_take_failure(&heap)==MYL_RC_ALLOCATION_REFUSED);
+    for (size_t i=0;i<count;i++) myl_rc_owner_release(&heap,values[i]);
+    /* A generic large request trims the empty cached type's slab. The cache
+     * stores its class only and must safely refill on the next count=1 hit. */
+    heap.exhausted=0;
+    void *large=myl_native_heap_alloc(&heap,&byte,9000);
+    assert(large && heap.bytes<heap.limit);
+    myl_rc_owner_release(&heap,large);
+    assert(heap.bytes==metadata);
+    void *again=myl_native_heap_alloc(&heap,&number,1);
+    assert(again && owners(again)==1 && *(uint64_t *)again==0 && heap.bytes==heap.limit);
+    myl_rc_owner_release(&heap,again);
+    finish(&heap);
+}
+/* spec-case: RC-STORAGE-1. A warm heap-body cache cannot bypass the requested
+ * arena, count, alignment or overflow semantics of generic allocation. */
+static void native_allocation_regions_and_counts(void) {
+    myl_native_heap heap;
+    init(&heap);
+    static const myl_native_type over_aligned={.size=32,.alignment=32,.kind=MYL_NATIVE_PLAIN};
+    assert(myl_rc_native_shape(&heap,&over_aligned));
+    void *kept=myl_native_heap_alloc(&heap,&number,1);
+    assert(kept && myl_native_region_begin(&heap));
+    void *arena=myl_native_heap_alloc(&heap,&number,1);
+    assert(arena && myl_native_header_region(arena)==1 && allocation_count(arena)==1);
+    assert(*(uint64_t *)arena==0);
+    void *empty=myl_native_heap_alloc_at(&heap,&number,0,0);
+    void *many=myl_native_heap_alloc_at(&heap,&number,3,0);
+    assert(empty && many && owners(empty)==1 && owners(many)==1);
+    assert(!allocation_count(empty) && allocation_count(many)==3);
+    for (size_t i=0;i<3;i++) assert(((uint64_t *)many)[i]==0);
+    size_t live=heap.objects_live, charged=heap.bytes;
+    assert(!myl_native_heap_alloc_at(&heap,&number,1,2));
+    assert(myl_rc_take_failure(&heap)==MYL_RC_REGION_ERROR);
+    assert(!myl_native_heap_alloc_at(&heap,&number,SIZE_MAX,0));
+    assert(myl_rc_take_failure(&heap)==MYL_RC_ALLOCATION_REFUSED);
+    assert(!myl_native_heap_alloc_at(&heap,&over_aligned,1,0));
+    assert(myl_rc_take_failure(&heap)==MYL_RC_ALLOCATION_REFUSED);
+    assert(heap.objects_live==live && heap.bytes==charged);
+    myl_native_region_end(&heap);
+    myl_rc_owner_release(&heap,empty);
+    myl_rc_owner_release(&heap,many);
+    myl_rc_owner_release(&heap,kept);
+    finish(&heap);
+}
+typedef struct { unsigned allocations, retirements, refuse; } AllocatorProbe;
+static myl_rc_status probe_allocate(myl_native_heap *heap, const myl_rc_alloc_request *request, void **out) {
+    AllocatorProbe *probe=myl_rc_allocator_context(heap);
+    ++probe->allocations;
+    *out=NULL;
+    if (probe->refuse) return MYL_RC_ALLOCATION_REFUSED;
+    assert(!request->region && request->element==&number);
+    size_t bytes=sizeof(myl_rc_object)+request->count*number.size;
+    myl_rc_object *object=calloc(1,bytes);
+    assert(object);
+    object->owners=1;
+    object->common=(myl_native_object){.element=&number,.mark=request->count<<MYL_NATIVE_OBJECT_COUNT_SHIFT};
+    heap->bytes+=bytes;
+    *out=object+1;
+    return MYL_RC_OK;
+}
+static void probe_retire(myl_native_heap *heap, void *payload) {
+    AllocatorProbe *probe=myl_rc_allocator_context(heap);
+    ++probe->retirements;
+    size_t bytes=sizeof(myl_rc_object)+allocation_count(payload)*number.size;
+    assert(heap->bytes>=bytes);
+    heap->bytes-=bytes;
+    free((myl_rc_object *)payload-1);
+}
+/* spec-case: RC-STORAGE-1. The public native adapter still invokes custom
+ * allocation/retirement hooks, including a refused request after a success. */
+static void native_allocation_custom_hooks(void) {
+    myl_native_heap heap;
+    init(&heap);
+    void *value=myl_native_heap_alloc(&heap,&number,1);
+    assert(value);
+    myl_rc_owner_release(&heap,value);
+    myl_rc_heap_destroy(&heap);
+    AllocatorProbe probe={0};
+    static const myl_rc_allocator hooks={.allocate=probe_allocate,.retire=probe_retire};
+    assert(myl_rc_heap_init(&heap,&hooks,&probe)==MYL_RC_OK);
+    value=myl_native_heap_alloc(&heap,&number,1);
+    assert(value && owners(value)==1 && probe.allocations==1);
+    myl_rc_owner_release(&heap,value);
+    assert(probe.retirements==1);
+    probe.refuse=1;
+    size_t charged=heap.bytes;
+    assert(!myl_native_heap_alloc(&heap,&number,1) && probe.allocations==2);
+    assert(myl_rc_take_failure(&heap)==MYL_RC_ALLOCATION_REFUSED && heap.bytes==charged);
+    assert(probe.retirements==1);
+    myl_native_heap_destroy(&heap);
+    assert(!heap.bytes);
+}
+
 /* spec-case: RC-COLLECTION-1. Live list slots own one edge apiece; clone, replace,
  * pop, remove, clear and backing relocation preserve that exact accounting. */
 static void list_edges_and_retired_backing(void) {
@@ -984,6 +1147,10 @@ static void flat_body_order(void) {
 int myl_rc_collections_verify(void) {
     storage_reuse_and_holds();
     storage_boundaries();
+    native_allocation_cache();
+    native_allocation_budget();
+    native_allocation_regions_and_counts();
+    native_allocation_custom_hooks();
     list_edges_and_retired_backing();
     construction_refusal();
     dictionary_dead_edges();
@@ -1009,12 +1176,12 @@ int myl_rc_collections_verify(void) {
     flat_record_admission();
     flat_drop_order();
     flat_body_order();
-    return 27;
+    return 31;
 }
 #ifndef MYL_RC_COLLECTIONS_LIBRARY
 int main(void) {
-    assert(myl_rc_collections_verify()==27);
-    puts("native RC collections: 27 passed");
+    assert(myl_rc_collections_verify()==31);
+    puts("native RC collections: 31 passed");
     return 0;
 }
 #endif
