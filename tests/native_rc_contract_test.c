@@ -1,5 +1,6 @@
 #define _POSIX_C_SOURCE 200809L
 #include "native_rc.h"
+#include "native_rc_internal.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -370,6 +371,38 @@ static void reentrant_finalizer_test(void) {
     myl_rc_owner_release(&heap, value);
     assert(state.live == 0 && state.retired == 3 && state.max_finalizing == 1);
     assert(myl_rc_reserved_depth(&heap) == 129);
+    finish(&heap, &state);
+}
+static void take_during_finalize(myl_native_heap *heap, void *payload) {
+    Node *owner = payload;
+    TestAllocator *state = myl_rc_allocator_context(heap);
+    assert(heap->rc->dead.active && !heap->rc->walk.depth && !state->retired);
+    for (unsigned i = 0; i < 2; ++i) {
+        void *sibling = new_value(heap, &scalar_type, 1);
+        myl_rc_owner_release(heap, sibling);
+    }
+    assert(heap->rc->dead.head && state->live == 4 && !state->retired);
+    void *moved = NULL, *original = owner->next;
+    myl_rc_slot source = {.shape = &pointer_shape, .address = &owner->next};
+    myl_rc_slot destination = {.shape = &pointer_shape, .address = &moved};
+    /* Models a guest's proven raw TAKE during callback reentry: no publication
+     * or counts change, and the active outer drain retains all queued siblings. */
+    myl_rc_value_relocate(&destination, &source);
+    assert(!owner->next && moved == original && ((myl_rc_object *)moved - 1)->owners == 1);
+    myl_rc_value_drop(heap, &destination);
+    assert(!moved && state->live == 4 && !state->retired && heap->rc->dead.head);
+}
+// spec-case: RC-RELEASE-1
+static void reentrant_relocation_test(void) {
+    myl_native_heap heap;
+    TestAllocator state;
+    start(&heap, &state);
+    const myl_rc_descriptor descriptor = {.type = &resource_type, .shape = &node_shape, .finalize = take_during_finalize};
+    assert(myl_rc_descriptor_import(&heap, &descriptor) == MYL_RC_OK);
+    Node *value = new_value(&heap, &resource_type, 1);
+    value->next = new_value(&heap, &scalar_type, 1);
+    myl_rc_owner_release(&heap, value);
+    assert(!heap.rc->dead.active && !heap.rc->dead.head && !state.live && state.retired == 4);
     finish(&heap, &state);
 }
 // spec: RC-TRANSFER-1
@@ -762,6 +795,7 @@ int myl_rc_contract_verify(void) {
     variants_and_wide_array_test();
     million_chain_test();
     reentrant_finalizer_test();
+    reentrant_relocation_test();
     temporary_binding_test();
     pointer_transfers_test();
     transfer_failure_test();
@@ -774,12 +808,12 @@ int myl_rc_contract_verify(void) {
     deep_unique_test();
     local_transfer_frames_test();
     assert(!setrlimit(RLIMIT_STACK, &original));
-    return 19;
+    return 20;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
-    assert(myl_rc_contract_verify() == 19);
-    puts("native RC contract: 19 tests passed");
+    assert(myl_rc_contract_verify() == 20);
+    puts("native RC contract: 20 tests passed");
     return 0;
 }
 #endif
