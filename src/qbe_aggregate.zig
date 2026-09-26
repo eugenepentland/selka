@@ -122,6 +122,7 @@ fn boxRead(comptime E: type, self: E, stack: []const typed.Type, source: usize) 
     if (self.cow == null or !@import("value_semantics.zig").enabled()) return false;
     if (!self.program.records[stack[stack.len - 1].recordIndex()].collection.box) return false;
     if (!@import("value_semantics.zig").needsCopy(self.program.records, stack[stack.len - 1])) return false;
+    if (@import("qbe_cow.zig").Lower(@TypeOf(self.*)).scopedProjection(self, self.pc)) return false;
     const snapshot = try self.aggregatePointer();
     const done = self.temp();
     try self.print(" %v{d} =w call $myl_qbe_cow_unbox(l %ctx, l extern ${s}, l %v{d}, l %v{d})\n", .{ done, try self.descriptor(stack[stack.len - 1]), source, snapshot });

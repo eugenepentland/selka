@@ -409,6 +409,65 @@ test "copy on write: a write through a dictionary value copies the dictionary an
     try std.testing.expect(count(il, "call $myl_native_cow_unique_in(") >= 1);
 }
 
+// spec-case: COW-NESTED-1
+test "copy on write: alternating collection owners keep both snapshots alive under GC stress" {
+    const saved = value_semantics.enabled();
+    value_semantics.setEnabled(true);
+    defer value_semantics.setEnabled(saved);
+    const source =
+        \\def main() -> int:
+        \\    original: list[dict[str, dict[str, list[int]]]] = [{"a": {"b": [1]}}]
+        \\    changed = original
+        \\    changed[0]["a"]["b"].append(2)
+        \\    return len(original[0]["a"]["b"]) * 10 + len(changed[0]["a"]["b"])
+    ;
+    try std.testing.expectEqual(@as(i64, 12), try run(std.testing.allocator, source, false));
+    try std.testing.expectEqual(@as(i64, 12), try run(std.testing.allocator, source, true));
+}
+
+// spec-case: COW-NESTED-1
+test "copy on write: fixed array paths retain dictionary keys and collection owners under GC stress" {
+    const saved = value_semantics.enabled();
+    value_semantics.setEnabled(true);
+    defer value_semantics.setEnabled(saved);
+    const source =
+        \\def main() -> int:
+        \\    original: dict[str, [1][1]list[int]] = {"k": [[[1]]]}
+        \\    changed = original
+        \\    changed["k"][0][0].append(2)
+        \\    return len(original["k"][0][0]) * 10 + len(changed["k"][0][0])
+    ;
+    try std.testing.expectEqual(@as(i64, 12), try run(std.testing.allocator, source, false));
+    try std.testing.expectEqual(@as(i64, 12), try run(std.testing.allocator, source, true));
+}
+
+// spec-case: COW-NESTED-1
+test "copy on write: a callback replacing an equal array entry detaches the pending receiver" {
+    const saved = value_semantics.enabled();
+    value_semantics.setEnabled(true);
+    defer value_semantics.setEnabled(saved);
+    const source =
+        \\def index(values: mut dict[str, [1]list[int]]) -> int:
+        \\    copied = values["k"]
+        \\    values["k"] = copied
+        \\    return 0
+        \\
+        \\def main() -> int:
+        \\    original: dict[str, [1]list[int]] = {"k": [[1]]}
+        \\    changed = original
+        \\    changed["k"][index(mut changed)].append(2)
+        \\    return len(original["k"][0]) * 10 + len(changed["k"][0])
+    ;
+    const a = std.testing.allocator;
+    try std.testing.expectEqual(@as(i64, 11), try run(a, source, false));
+    try std.testing.expectEqual(@as(i64, 11), try run(a, source, true));
+    const il = try unitText(a, source, "main", checks);
+    defer a.free(il);
+    try std.testing.expect(count(il, "call $myl_native_cow_scope_prepare(") == 1);
+    try std.testing.expect(count(il, "call $myl_native_cow_scope_release(") > 0);
+    try std.testing.expect(count(il, "extern $myl_native_cow_scope_type") == 1);
+}
+
 const fields =
     \\record Bag:
     \\    items: list[int]

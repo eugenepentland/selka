@@ -566,6 +566,48 @@ static void recursive_descriptor_reachability(void) {
     assert(myl_native_root_pop(&heap, &taken_root) && myl_native_root_pop(&heap, &head_root));
     myl_native_heap_destroy(&heap);
 }
+/* spec-case: COW-NESTED-1 -- scoped projections pin only the selected boxed
+   path, keep it rooted across collection, and restore an enclosing pin. */
+static void scoped_projections(void) {
+    myl_native_heap heap;
+    myl_native_heap_init(&heap, 1 << 26);
+    heap.stress = 1;
+    MixedBody *original = NULL, *current = NULL, *snapshot = NULL;
+    void *pins = NULL, *inner = NULL;
+    myl_native_root original_root, current_root, snapshot_root, pins_root, inner_root;
+    myl_native_root_push(&heap, &original_root, &original, &mixed_box);
+    myl_native_root_push(&heap, &current_root, &current, &mixed_box);
+    myl_native_root_push(&heap, &snapshot_root, &snapshot, &mixed_box);
+    myl_native_root_push(&heap, &pins_root, &pins, &myl_native_cow_scope_type);
+    myl_native_root_push(&heap, &inner_root, &inner, &myl_native_cow_scope_type);
+    original = myl_native_heap_alloc(&heap, &mixed_body, 1);
+    assert(original);
+    original->items = numbers(&heap, 1, 1);
+    current = original;
+    const myl_native_cow_path path[] = {{ &mixed_box, offsetof(MixedBody, items) }};
+    assert(myl_native_cow_scope_prepare(&heap, &pins, &current, path, 1));
+    assert(current != original && current->items != original->items);
+    assert(flags(current) == MYL_NATIVE_OBJECT_PINNED);
+    assert(flags(current->items) == MYL_NATIVE_OBJECT_PINNED);
+    snapshot = current;
+    assert(myl_native_cow_share_value(&heap, &mixed_box, &snapshot));
+    assert(snapshot != current && snapshot->items != current->items);
+    assert(myl_native_cow_scope_pin(&heap, &inner, current->items));
+    myl_native_cow_scope_release(inner);
+    inner = NULL;
+    assert(flags(current->items) == MYL_NATIVE_OBJECT_PINNED);
+    myl_native_heap_collect(&heap);
+    int64_t next = 2;
+    assert(myl_native_list_append(&heap, current->items, &next));
+    assert(current->items->length == 2 && snapshot->items->length == 1 && original->items->length == 1);
+    myl_native_cow_scope_release(pins);
+    pins = NULL;
+    assert(!flags(current) && !flags(current->items));
+    assert(myl_native_root_pop(&heap, &inner_root) && myl_native_root_pop(&heap, &pins_root));
+    assert(myl_native_root_pop(&heap, &snapshot_root) && myl_native_root_pop(&heap, &current_root));
+    assert(myl_native_root_pop(&heap, &original_root));
+    myl_native_heap_destroy(&heap);
+}
 int main(void) {
     header_flags();
     share_marks();
@@ -582,6 +624,7 @@ int main(void) {
     bulk_source_children();
     boxed_children();
     recursive_descriptor_reachability();
+    scoped_projections();
     puts("native cow tests passed");
     return 0;
 }
