@@ -120,3 +120,33 @@ commands use `--release` without a later QBE override, selecting O3/full LTO.
 
 Full combined gates belong to the parent integration. This isolated result closes
 the indexed argument preparation defect; final history parity depends on ABI3.
+
+
+## Paired ABI3 execution supplement
+
+The immutable Debug compiler at
+`d9-rc-compiler-astra/.tmp-rc/install-history-joined/bin/mylang` includes this
+place correction and the cohesive private semantic-history implementation. Its
+SHA256 is `586a983780fa8508a67905b58589be541ec65df5af2e84d305c8c9b0967d4455`.
+The compiler owner is committing that implementation separately; these receipts
+identify the actual binary and do not substitute for its combined integration gate.
+
+All paired checks pass on actual QBE and LLVM O3/full LTO:
+
+- Both history probes print exactly `[7]`, 13, 7 under GC stress and ABI3 RC,
+  eight executions. The corrected permanent checker fixture also passes all four
+  runtime/backend combinations.
+- The original reproducer prints 7, 13 in all four combinations.
+- The standalone driver passes all 15 assertions in all four combinations.
+  Each RC backend allocates/retires 233 heap objects, acquires 26 additional
+  ordinary owners and releases 259 owners, and acquires/releases 381 holds.
+- Callee and later-argument failures preserve their intended located `R_ASSERT`
+  on all four combinations. RC callee failure allocates/retires 16 objects,
+  acquires/releases owners 1/17 and holds 19/19. RC argument failure
+  allocates/retires eight objects, acquires/releases owners 1/9 and holds 22/22.
+
+The paired receipt files retain complete commands, output, compiler/source hashes
+and counters. ABI2's historical failure remains recorded rather than overwritten.
+No further production change was needed after the documented argument-place fix;
+ABI3 supplies the required physical-loan and semantic-sharing behavior. These
+results establish this pairing, not whole-corpus WP-4 performance acceptance.
