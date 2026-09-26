@@ -60,6 +60,7 @@ const runtime_units = [_][]const u8{
     "native_bytes.c",
     "qbe_bytes.c",
     "native_rc.c",
+    "native_rc_stats.c",
     "native_rc_shapes.c",
     "native_rc_walk.c",
     "native_regions.c",
