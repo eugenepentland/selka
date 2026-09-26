@@ -11683,7 +11683,7 @@ const value_only_program =
 
 // spec-case: VALUE-SEMANTICS-1
 test "CLI --value-semantics switches run and check and other commands refuse it" {
-    try invoke("run", value_program, 0, "22\n", "");
+    try invoke("run", value_program, 0, "22\n", "warning[W_ALIAS_DEPENDENT]");
     try invokeOptions("run", value_program, &.{"--value-semantics"}, 0, "12\n", "");
     try invoke("check", value_only_program, 1, "", "error[E_MUTATION_MARKER]");
     try invokeOptions("check", value_only_program, &.{"--value-semantics"}, 0, "", "");
