@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/measure.py", line 13, in <module>
+    done=subprocess.run(command,text=True,capture_output=True,env=dict(os.environ,TMPDIR=str(work)),check=True)
+  File "/usr/lib/python3.14/subprocess.py", line 578, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/scripts/build-slot.sh', 'build', '/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/install/bin/mylang', 'build', '/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/experiments/d9-rc-flat-abi3-20260926/binary_trees_n12.my', '-o', '/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/prefix-qbe-rc-n12', '--prefix-dir', '/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/prefix-prefix-qbe', '--keep-symbols', '--rc-runtime']' returned non-zero exit status 2.
