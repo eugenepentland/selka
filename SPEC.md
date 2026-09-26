@@ -1365,3 +1365,5 @@ host failure in one worker leaves the units the other workers hold running.
 
 - [RC-STABLE-JOURNAL-1] Operand and pending RC journal entries retain their entry-time storage and guard addresses across typed publications. Type and ownership-role flags still change before initialization, so reused stack positions and held/ordinary transitions clean up their current values.
 
+
+- [RC-PLAIN-LIST-WRITE-1] RC writes of nonzero scalar list elements with no counted or unique edges use the native typed store after unchanged index normalization and bounds checks; managed and unique elements retain fallible ownership publication helpers.
