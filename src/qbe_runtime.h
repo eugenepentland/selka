@@ -100,6 +100,8 @@ typedef struct { const unsigned char *names; size_t length; } MylQbeEnvironmentS
 #define MYL_QBE_RC_UNIQUE_DROP 1u
 #define MYL_QBE_RC_COUNTED 2u
 #define MYL_QBE_RC_CONSTRUCTION 4u
+/* Exclusive journal token for a hidden live-view receiver (one pointer). */
+#define MYL_QBE_RC_HOLD_POINTER 8u
 typedef struct {
     const myl_native_type *type;
     void *address;

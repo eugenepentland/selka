@@ -3,7 +3,7 @@
 #include "native_heap.h"
 /* RC-v1 is an artifact/heap ABI, never a property inferred from an arbitrary
  * pointer. GC, arena and immortal objects keep their 16-byte common header. */
-#define MYL_RC_ABI_VERSION 1u
+#define MYL_RC_ABI_VERSION 2u
 #define MYL_RC_PREFIX_BYTES ((size_t)32)
 #define MYL_RC_COUNT_MAX UINTPTR_MAX
 #define MYL_RC_COUNT_LIMIT_CODE "R_REFERENCE_COUNT_LIMIT"
@@ -29,7 +29,9 @@ void myl_rc_record_failure(myl_native_heap *, myl_rc_status);
 myl_rc_status myl_rc_take_failure(myl_native_heap *);
 
 /* Ownership shapes are independent of native_type's GC scan view. A pointer
- * is a terminal owning edge; its pointee is never part of inline depth. NONE
+ * is a terminal owning edge; HOLD_POINTER is a terminal nonsharing lifetime
+ * token. Its copy acquires H without pinning or snapshotting, take transfers H,
+ * and drop releases H. Neither pointee is part of inline depth. NONE
  * ignores every byte. Variant tags are u32 at tag_offset. All sizes/offsets
  * and array arithmetic are checked size_t values, with no source-depth cap. */
 typedef struct myl_rc_shape myl_rc_shape;
@@ -41,7 +43,7 @@ typedef struct {
 } myl_rc_field;
 typedef enum {
     MYL_RC_SHAPE_NONE, MYL_RC_SHAPE_POINTER, MYL_RC_SHAPE_RECORD,
-    MYL_RC_SHAPE_ARRAY, MYL_RC_SHAPE_VARIANT
+    MYL_RC_SHAPE_ARRAY, MYL_RC_SHAPE_VARIANT, MYL_RC_SHAPE_HOLD_POINTER
 } myl_rc_shape_kind;
 struct myl_rc_shape {
     size_t size;
@@ -160,7 +162,7 @@ void myl_rc_edges_release(myl_native_heap *, const myl_rc_shape *, void *, size_
 unsigned myl_rc_value_region(myl_native_heap *, const myl_rc_shape *, const void *);
 void myl_rc_drain(myl_native_heap *);
 /* Seed empty construction storage with scalar bytes/active tags, clearing all
- * direct owners without releasing them. Source and destination are distinct. */
+ * direct owners and holds without releasing them. Source and destination are distinct. */
 void myl_rc_value_seed(myl_native_heap *, const myl_rc_shape *, void *, const void *, size_t);
 /* Abort one unpublished owned allocation. Arena payload edges are released
  * immediately and zeroed so later region teardown cannot release them twice. */
@@ -183,8 +185,10 @@ struct myl_rc_slot {
     unsigned region;
 };
 typedef enum { MYL_RC_COPY, MYL_RC_TAKE } myl_rc_transfer;
-/* Copy/take initialize an empty destination and both preserve snapshots across
- * pins (including a last ordinary owner taken from a pending receiver). Take
+/* Copy/take initialize an empty destination. Ordinary POINTER edges preserve
+ * snapshots across pins, including the last owner taken from a pending receiver.
+ * HOLD_POINTER edges preserve live identity regardless of pins. Source/target
+ * shapes must express the same token kinds; this is not an O/H conversion. Take
  * clears its source only on success. Replace prepares incoming ownership
  * before releasing old edges; failure preserves both slots. Relocate is only
  * proven movement of the SAME logical edge, never source-level publication. */
