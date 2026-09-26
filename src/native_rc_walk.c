@@ -70,6 +70,22 @@ void myl_rc_edges_release(myl_native_heap *heap, const myl_rc_shape *source, voi
         cursor += shape->size;
     }
 }
+void myl_rc_flat_edges_release(myl_native_heap *heap, const myl_rc_binding *binding, void *address, size_t count) {
+    myl_rc_invariant(heap && heap->rc && !heap->rc->walk.depth && binding->flat.count <= MYL_RC_FLAT_LEAVES);
+    size_t bytes;
+    myl_rc_invariant(myl_rc_size_mul(binding->descriptor.type->size, count, &bytes) && (!bytes || address));
+    unsigned char *cursor = address;
+    for (size_t i = 0; i < count; ++i) {
+        for (unsigned j = 0; j < binding->flat.count; ++j) {
+            void *payload;
+            void *edge = cursor + binding->flat.offsets[j];
+            memcpy(&payload, edge, sizeof payload);
+            memset(edge, 0, sizeof payload);
+            myl_rc_edge_release(heap, payload);
+        }
+        cursor += binding->descriptor.type->size;
+    }
+}
 void myl_rc_drain(myl_native_heap *heap) {
     myl_rc_invariant(heap && heap->rc);
     if (heap->rc->dead.active || heap->rc->walk.depth) return;

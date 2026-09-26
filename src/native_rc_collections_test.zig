@@ -8,5 +8,5 @@ extern fn myl_rc_collections_verify() c_int;
 // spec: RC-VIEWS-1
 // spec-case: RC-TRANSFER-1
 test "RC production storage and collection ownership" {
-    try std.testing.expectEqual(@as(c_int, 25), myl_rc_collections_verify());
+    try std.testing.expectEqual(@as(c_int, 26), myl_rc_collections_verify());
 }

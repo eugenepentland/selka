@@ -893,6 +893,67 @@ static void flat_record_admission(void) {
     myl_native_region_end(&heap);
     finish(&heap);
 }
+typedef struct { const unsigned char *value; size_t bytes; unsigned order[3], count; } DropLog;
+typedef struct { DropLog *log; unsigned id; } DropObserver;
+static void observe_drop(myl_native_heap *heap, void *payload) {
+    DropObserver *observer=payload;
+    DropLog *log=observer->log;
+    assert(!heap->rc->walk.depth && heap->rc->dead.active && log->count<3);
+    for (size_t i=0;i<log->bytes;i++) assert(!log->value[i]);
+    log->order[log->count++]=observer->id;
+}
+static const myl_native_type drop_observer_type={.size=sizeof(DropObserver),.alignment=_Alignof(DropObserver),.kind=MYL_NATIVE_PLAIN};
+static DropObserver *drop_observer(myl_native_heap *heap, DropLog *log, unsigned id) {
+    static const myl_rc_shape shape={.size=sizeof(DropObserver),.kind=MYL_RC_SHAPE_NONE};
+    static const myl_rc_descriptor descriptor={.type=&drop_observer_type,.shape=&shape,.finalize=observe_drop};
+    assert(myl_rc_descriptor_import(heap,&descriptor)==MYL_RC_OK);
+    myl_rc_alloc_request request={.element=&drop_observer_type,.count=1};
+    void *payload=NULL;
+    assert(myl_rc_new(heap,&request,&payload)==MYL_RC_OK);
+    *(DropObserver *)payload=(DropObserver){.log=log,.id=id};
+    return payload;
+}
+/* spec-case: RC-RELEASE-1. Flat slot drops preserve descriptor traversal order,
+ * zero the complete value before callbacks, and never treat holds as owners. */
+static void flat_drop_order(void) {
+    static const myl_native_field fields[]={
+        {.offset=16,.type=&pointer},{.offset=0,.type=&pointer},{.offset=24,.type=&pointer},{.offset=8,.type=&pointer},
+        {.offset=40,.type=&pointer},{.offset=48,.type=&pointer},{.offset=56,.type=&pointer},{.offset=64,.type=&pointer},
+        {.offset=32,.type=&number}};
+    static const myl_rc_field edges[]={
+        {.offset=16,.shape=&flat_pointer},{.offset=0,.shape=&flat_pointer},{.offset=24,.shape=&flat_pointer},{.offset=8,.shape=&flat_pointer},
+        {.offset=40,.shape=&flat_pointer},{.offset=48,.shape=&flat_pointer},{.offset=56,.shape=&flat_pointer},{.offset=64,.shape=&flat_pointer},
+        {.offset=32,.shape=&flat_scalar}};
+    static const myl_native_type type={.size=72,.alignment=8,.kind=MYL_NATIVE_RECORD,.fields=fields,.field_count=9};
+    static const myl_rc_shape shape={.size=72,.kind=MYL_RC_SHAPE_RECORD,.as.record={.fields=edges,.count=9}};
+    struct { void *a,*b,*alias,*c; uint64_t scalar; void *pinned,*arena,*literal,*nil; } value={0};
+    struct { myl_native_object header; uint64_t data; } literal={.header={.mark=MYL_NATIVE_OBJECT_IMMORTAL}};
+    DropLog log={.value=(const unsigned char *)&value,.bytes=sizeof value};
+    myl_native_heap heap;
+    init(&heap);
+    assert(flat_count(&heap,&type,&shape)==8);
+    value.a=drop_observer(&heap,&log,1);
+    value.b=drop_observer(&heap,&log,2);
+    value.c=drop_observer(&heap,&log,3);
+    value.alias=value.a;
+    assert(myl_rc_owner_acquire(&heap,value.a)==MYL_RC_OK);
+    value.scalar=123456;
+    value.pinned=myl_rc_storage_bytes(&heap,8,0);
+    myl_rc_pin pin={0};
+    assert(value.pinned && myl_rc_pin_acquire(&heap,value.pinned,&pin)==MYL_RC_OK);
+    assert(myl_native_region_begin(&heap));
+    value.arena=myl_rc_storage_bytes(&heap,8,1);
+    value.literal=&literal.data;
+    assert(value.arena);
+    heap.limit=heap.bytes;
+    myl_rc_native_drop(&heap,&type,&value);
+    assert(log.count==3 && log.order[0]==2 && log.order[1]==3 && log.order[2]==1);
+    assert(owners(pin.hold.payload)==0 && ((myl_rc_object *)pin.hold.payload-1)->holds==1);
+    assert(literal.header.mark==MYL_NATIVE_OBJECT_IMMORTAL);
+    myl_rc_pin_release(&heap,&pin);
+    myl_native_region_end(&heap);
+    finish(&heap);
+}
 int myl_rc_collections_verify(void) {
     storage_reuse_and_holds();
     storage_boundaries();
@@ -919,12 +980,13 @@ int myl_rc_collections_verify(void) {
     native_pointer_transactions();
     flat_array_transactions();
     flat_record_admission();
-    return 25;
+    flat_drop_order();
+    return 26;
 }
 #ifndef MYL_RC_COLLECTIONS_LIBRARY
 int main(void) {
-    assert(myl_rc_collections_verify()==25);
-    puts("native RC collections: 25 passed");
+    assert(myl_rc_collections_verify()==26);
+    puts("native RC collections: 26 passed");
     return 0;
 }
 #endif
