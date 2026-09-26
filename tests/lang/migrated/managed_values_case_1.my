@@ -5,6 +5,7 @@ public def program() -> i64:
     scores: dict[str, i64] = {b"x": 1}
     alias = scores
     alias[b"x"] = 40
+    scores = alias
     names = list(scores.keys())
     key: str = b"x"
     if names[0] == key:
