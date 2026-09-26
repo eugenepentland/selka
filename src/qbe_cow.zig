@@ -22,6 +22,7 @@
 const std = @import("std");
 const bytecode = @import("bytecode.zig");
 const typed = @import("typed.zig");
+const rc_values = @import("qbe_rc_values.zig");
 const cow_plan = @import("cow_plan.zig");
 const format = @import("qbe_format.zig");
 const qbe_alloc = @import("qbe_alloc.zig");
@@ -118,6 +119,7 @@ pub fn Lower(comptime E: type) type {
             const state = self.cow orelse return;
             const site = state.plan.at(pc);
             if (site.capture) try capture(E, self, state, pc, stack);
+            try readCaptures(E, self, stack, site.read_captures);
             if (site.unique_field) |field| try uniqueField(E, self, field, stack);
             for (site.unique) |unique| try uniqueLocal(E, self, unique, stack);
             const beginning = state.captures[pc].begin;
@@ -323,7 +325,7 @@ fn pinCallRc(comptime E: type, self: *E, callee: bytecode.Function, args: []usiz
 }
 
 fn prepareMutArgumentRc(comptime E: type, self: *E, arg: *usize, source: @import("ownership.zig").Source, slot: usize) Error!void {
-    try @import("qbe_rc_values.zig").drop(E, self, slot);
+    try rc_values.drop(E, self, slot);
     if (source.part == .whole) {
         const root = rc_unique.receiverParent(E, self, source.local) orelse source.local;
         try rc_unique.local(E, self, .{ .local = root, .alias = if (root != source.local) source.local else cow_plan.none });
@@ -400,6 +402,7 @@ fn pinPayload(comptime E: type, self: *E, arg: usize) Error!PinMark {
     const next = self.temp();
     try self.print(" %v{d} =l sub %v{d}, {d}\n %v{d} =l loadl %v{d}\n", .{ header, arg, header_bytes, word, header });
     try self.print(" %v{d} =l and %v{d}, {d}\n %v{d} =l or %v{d}, {d}\n storel %v{d}, %v{d}\n", .{ old, word, pinned_flag, next, word, pinned_flag, next, header });
+    try self.print(" %v{d} =l cnel %v{d}, 0\n", .{ old, old });
     return .{ .header = header, .old = old };
 }
 
@@ -565,7 +568,7 @@ fn fillPlace(comptime E: type, self: *E, pc: usize, stack: []const typed.Type) E
         },
         .field => try fieldBase(E, self, place.parent),
     };
-    if (runtime_mode.enabled()) try @import("qbe_rc_values.zig").drop(E, self, top);
+    if (runtime_mode.enabled()) try rc_values.drop(E, self, top);
     cursor = try fieldChain(E, self, place, cursor);
     if (runtime_mode.enabled()) {
         try rc_unique.field(E, self, .{ .ty = stack[top], .address = cursor.address, .container = cursor.cell orelse container, .held = cursor.held });
@@ -1011,6 +1014,18 @@ fn detachBox(comptime E: type, self: *E, ty: typed.Type, body: usize, cursor: Cu
     return copy;
 }
 
+fn readCaptures(comptime E: type, self: *E, stack: []const typed.Type, depths: []const u8) Error!void {
+    for (depths) |depth| try readCapture(E, self, stack, depth);
+}
+
+/// Preserve a selected read receiver before evaluating a mutating key.
+fn readCapture(comptime E: type, self: *E, stack: []const typed.Type, depth: u8) Error!void {
+    if (!runtime_mode.enabled()) return share(E, self, stack, depth);
+    const slot = stack.len - 1 - depth;
+    try rc_values.prepareOperand(E, self, stack[slot], slot);
+    try rc_values.publish(E, self, stack[slot], slot);
+}
+
 /// Share the payloads of the operand `depth` places below the top.
 fn share(comptime E: type, self: *E, stack: []const typed.Type, depth: u8) Error!void {
     if (depth >= stack.len) return error.InternalError;
@@ -1050,7 +1065,7 @@ fn sharePayload(comptime E: type, self: *E, payload: Shared, stack: []const type
     const flag = self.temp();
     const next = self.temp();
     try self.print(" %v{d} =l sub %v{d}, {d}\n %v{d} =l loadl %v{d}\n %v{d} =l and %v{d}, {d}\n", .{ header, payload.value, header_bytes, word, header, flag, word, pinned_flag });
-    try self.print(" jnz %v{d}, @sharecopy{d}, @sharemark{d}\n@sharecopy{d}\n", .{ flag, label, label, label });
+    try self.print(" %v{d} =l cnel %v{d}, 0\n jnz %v{d}, @sharecopy{d}, @sharemark{d}\n@sharecopy{d}\n", .{ flag, flag, flag, label, label, label });
     const pushed = try self.roots(stack);
     const copy = self.temp();
     try self.print(" %v{d} =l call $myl_native_cow_share(l %heap, l %v{d})\n", .{ copy, payload.value });
