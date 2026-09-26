@@ -98,6 +98,22 @@ test "checker traces a narrowed match payload back to its collection binding" {
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
     try testing.expect(std.mem.indexOf(u8, outcome.stderr, "W_ALIAS_DEPENDENT") != null);
 }
+// spec: ALIAS-MIGRATION-4
+test "checker terminates on a cyclic alias chain and reports the observed write" {
+    const cyclic = try runFixture("check",
+        \\def main() -> int:
+        \\    shared = [1]
+        \\    first = shared
+        \\    second = first
+        \\    first = second
+        \\    second.append(2)
+        \\    return len(shared)
+    , &.{"--diagnostics=json"});
+    defer testing.allocator.free(cyclic.stdout);
+    defer testing.allocator.free(cyclic.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, cyclic.term);
+    try testing.expect(std.mem.indexOf(u8, cyclic.stderr, "W_ALIAS_DEPENDENT") != null);
+}
 // spec: ALIAS-MIGRATION-3
 test "checker distinguishes a nested alias store from a fresh buffer conversion" {
     const nested = try runFixture("check",

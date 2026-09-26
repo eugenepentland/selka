@@ -27,6 +27,38 @@ const Transfer = struct {
     mut_call: bool = false,
 };
 const Access = struct { span: source.Span, root: typed.LocalId, write: bool, sync_from: ?typed.LocalId = null, matched: ?source.Span = null, returned: bool = false };
+const Reachability = struct {
+    transfers: []const Transfer,
+    seen: []u32,
+    queue: []typed.LocalId,
+    generation: u32 = 0,
+
+    fn contains(self: *Reachability, origin: typed.LocalId, target: typed.LocalId) bool {
+        if (origin == target) return true;
+        self.generation +%= 1;
+        if (self.generation == 0) {
+            @memset(self.seen, 0);
+            self.generation = 1;
+        }
+        var head: usize = 0;
+        var tail: usize = 1;
+        self.queue[0] = origin;
+        self.seen[@backingInt(origin)] = self.generation;
+        while (head < tail) : (head += 1) {
+            const current = self.queue[head];
+            for (self.transfers) |transfer| {
+                if (transfer.src != current or transfer.dst == current) continue;
+                if (transfer.dst == target) return true;
+                const next = @backingInt(transfer.dst);
+                if (self.seen[next] == self.generation) continue;
+                self.seen[next] = self.generation;
+                self.queue[tail] = transfer.dst;
+                tail += 1;
+            }
+        }
+        return false;
+    }
+};
 const Context = struct {
     allocator: std.mem.Allocator,
     program: typed.Program,
@@ -60,16 +92,22 @@ pub fn check(allocator: std.mem.Allocator, src: source.Source, program: typed.Pr
             .statement => |id| try statement(ctx, id),
             .expression => |id| try expression(ctx, id),
         };
+        var reach: Reachability = .{
+            .transfers = transfers.items,
+            .seen = try a.alloc(u32, function.scope.locals.len),
+            .queue = try a.alloc(typed.LocalId, function.scope.locals.len),
+        };
+        @memset(reach.seen, 0);
         for (transfers.items, 0..) |transfer, index| {
             if (transfer.src == transfer.dst and transfer.category != .store and transfer.category != .class_graph) continue;
             const sides = try transferSides(a, function.scope.locals.len, transfers.items, index);
             const self_store = selfWrite(src, transfer, accesses.items);
-            const repeated = duplicateStore(src, transfers.items, accesses.items, index);
+            const repeated = duplicateStore(src, transfers.items, accesses.items, index, &reach);
             const sibling = siblingDiverges(transfer, transfers.items, accesses.items);
             const cycle = reciprocalStore(transfer, transfers.items);
             const evidenced = self_store or repeated or sibling or cycle;
             if (!evidenced) {
-                if (!diverges(function, transfer, sides, transfers.items, accesses.items)) continue;
+                if (!diverges(function, transfer, sides, accesses.items, &reach)) continue;
             }
             if (alreadyReported(program, sink, transfer.span)) continue;
             const fix = try storeBackFix(allocator, src, function, transfer, accesses.items);
@@ -114,7 +152,7 @@ fn plainRecordRead(program: typed.Program, span: source.Span) bool {
     return false;
 }
 
-fn duplicateStore(src: source.Source, transfers: []const Transfer, accesses: []const Access, omitted: usize) bool {
+fn duplicateStore(src: source.Source, transfers: []const Transfer, accesses: []const Access, omitted: usize, reach: *Reachability) bool {
     const transfer = transfers[omitted];
     if (transfer.category != .store and transfer.category != .class_graph) return false;
     const location = src.locate(transfer.span.start);
@@ -125,23 +163,13 @@ fn duplicateStore(src: source.Source, transfers: []const Transfer, accesses: []c
         if (!std.mem.eql(u8, peer.path, location.path) or peer.line != location.line) continue;
         for (accesses) |write| {
             if (!write.write or write.span.start < transfer.span.end) continue;
-            if (!descends(transfers, transfer.dst, write.root, 0)) continue;
+            if (!reach.contains(transfer.dst, write.root)) continue;
             for (accesses) |read| {
                 if (read.write or read.span.start < write.span.end) continue;
                 if (read.root == write.root and transfer.category != .class_graph) continue;
-                if (descends(transfers, transfer.dst, read.root, 0)) return true;
+                if (reach.contains(transfer.dst, read.root)) return true;
             }
         }
-    }
-    return false;
-}
-
-fn descends(transfers: []const Transfer, origin: typed.LocalId, target: typed.LocalId, depth: usize) bool {
-    if (origin == target) return true;
-    if (depth == 12) return false;
-    for (transfers) |transfer| {
-        if (transfer.src != origin or transfer.dst == origin) continue;
-        if (descends(transfers, transfer.dst, target, depth + 1)) return true;
     }
     return false;
 }
@@ -225,12 +253,12 @@ fn transferSides(a: std.mem.Allocator, locals: usize, transfers: []const Transfe
     return sides;
 }
 
-fn diverges(function: typed.Function, transfer: Transfer, sides: []const u2, transfers: []const Transfer, accesses: []const Access) bool {
+fn diverges(function: typed.Function, transfer: Transfer, sides: []const u2, accesses: []const Access, reach: *Reachability) bool {
     if (transfer.nested and @backingInt(transfer.src) < function.signature.parameter_count) {
         var writes_result = false;
         for (accesses) |access| {
             if (!access.write or access.span.start < transfer.span.end) continue;
-            if (descends(transfers, transfer.dst, access.root, 0)) writes_result = true;
+            if (reach.contains(transfer.dst, access.root)) writes_result = true;
         }
         if (!writes_result and !transfer.mut_call) return false;
     }
