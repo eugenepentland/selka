@@ -56,7 +56,7 @@ test "bytecode rejects managed metadata on a shape that cannot own storage" {
 }
 
 // spec: GC-SOURCE-1
-test "managed aliases mutate immutable bindings across helpers without allocator authority" {
+test "managed copies are stored back after helper mutation without allocator authority" {
     const source =
         \\def change(values: mut list[i64]):
         \\    values.append(40)
@@ -67,6 +67,7 @@ test "managed aliases mutate immutable bindings across helpers without allocator
         \\    values: list[i64] = []
         \\    alias = values
         \\    change(mut alias)
+        \\    values = alias
         \\    if len(values) != 1:
         \\        return 1
         \\    return values[0u64]
@@ -76,7 +77,9 @@ test "managed aliases mutate immutable bindings across helpers without allocator
 }
 
 // spec: GC-SOURCE-2
-test "managed recursive record cycles are traced at a later managed allocation" {
+test "legacy sharing: managed recursive record cycles are traced at a later managed allocation" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     const source =
         \\class Node:
         \\    children: list[Node]
@@ -103,7 +106,7 @@ test "managed recursive record cycles are traced at a later managed allocation" 
 // spec: GC-SOURCE-3
 test "managed intermediate call arguments and record snapshots survive collection" {
     const source =
-        \\class Holder:
+        \\record Holder:
         \\    values: list[i64]
         \\
         \\
@@ -198,7 +201,9 @@ test "noalloc rejects transitive managed allocation while permitting fixed-slot 
 }
 
 // spec: GC-SOURCE-11
-test "managed cycles lose local and record roots on block break and continue exits" {
+test "legacy sharing: managed cycles lose local and record roots on block break and continue exits" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     const prefix =
         \\class Node:
         \\    children: list[Node]
@@ -258,7 +263,7 @@ test "managed elements reject owned resources and unchecked results" {
         \\resource File: filesystem
         \\
         \\
-        \\class Wrapper:
+        \\record Wrapper:
         \\    file: File
         \\
         \\
@@ -279,9 +284,9 @@ test "managed elements reject owned resources and unchecked results" {
 }
 
 // spec: GC-ROOTS-1
-test "a managed alias keeps one identity and an aggregate snapshot roots its elements" {
+test "an independent collection snapshot roots its elements across later mutations" {
     const source =
-        \\class Holder:
+        \\record Holder:
         \\    items: list[i64]
         \\
         \\
@@ -296,7 +301,7 @@ test "a managed alias keeps one identity and an aggregate snapshot roots its ele
         \\    values: list[i64] = []
         \\    alias = values
         \\    alias.append(11)
-        \\    holder = Holder(items=values)
+        \\    holder = Holder(items=alias)
         \\    alias.append(31)
         \\    i = 0
         \\    while i < 40:
@@ -306,11 +311,13 @@ test "a managed alias keeps one identity and an aggregate snapshot roots its ele
         \\    return total(holder)
     ;
     const result = try execute(source);
-    try t.expectEqual(@as(i64, 42), result.value);
+    try t.expectEqual(@as(i64, 11), result.value);
 }
 
 // spec: GC-CYCLES-1
-test "an unreachable managed cycle is reclaimed while a reachable one survives collection" {
+test "legacy sharing: an unreachable managed cycle is reclaimed while a reachable one survives collection" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     const source =
         \\class Node:
         \\    links: list[Node]
@@ -419,7 +426,7 @@ test "a managed element declaration refuses a capability, directly or inside a r
         \\    values.append(fs)
         \\    return len(values)
         ,
-        \\class Holder:
+        \\record Holder:
         \\    fs: Filesystem
         \\
         \\
@@ -428,11 +435,11 @@ test "a managed element declaration refuses a capability, directly or inside a r
         \\    values.append(Holder(fs=fs))
         \\    return len(values)
         ,
-        \\class Holder:
+        \\record Holder:
         \\    fs: Filesystem
         \\
         \\
-        \\class Outer:
+        \\record Outer:
         \\    holder: Holder
         \\
         \\

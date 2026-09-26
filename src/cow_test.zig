@@ -56,6 +56,9 @@ const assigned =
 
 // spec: COW-SHARED-1
 test "copy on write: a copy transfer shares the list and the first write through either name copies it" {
+    // Retain the internal phase-one path during the explicit legacy window.
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     try std.testing.expectEqual(@as(i64, 23), try run(std.testing.allocator, assigned, false));
     try std.testing.expectEqual(@as(i64, 23), try run(std.testing.allocator, assigned, true));
     const a = std.testing.allocator;
@@ -121,7 +124,11 @@ test "copy on write: every in-place write tests one header bit inline and copies
     defer a.free(il);
     try std.testing.expectEqual(@as(usize, 2), count(il, shared_test));
     try std.testing.expectEqual(@as(usize, 2), count(il, "call $myl_native_cow_unique(l %heap"));
-    const off = try unitText(a, source, "fill", plain);
+    const off = legacy: {
+        const scope = @import("test_support.zig").LegacySharing.enter();
+        defer scope.restore();
+        break :legacy try unitText(a, source, "fill", plain);
+    };
     defer a.free(off);
     try std.testing.expectEqual(@as(usize, 0), count(off, "cow"));
     try std.testing.expectEqual(@as(i64, 2), try run(std.testing.allocator, source, true));
@@ -224,6 +231,8 @@ const fields =
 
 // spec-case: COW-NESTED-1
 test "copy on write: a write through a record or class field writes the copy back into the field" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     const a = std.testing.allocator;
     const il = try unitText(a, fields, "main", checks);
     defer a.free(il);
