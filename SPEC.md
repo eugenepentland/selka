@@ -1369,3 +1369,5 @@ host failure in one worker leaves the units the other workers hold running.
 - [RC-INERT-PROJECTION-1] An immediate list-element read into a proved inert mutation receiver borrows from the live physical parent until fill detaches and refreshes it; named snapshots, callbacks, alternate fill entries and unproved paths retain ordinary ownership or scoped protection.
 
 - [RC-LOOP-VERSION-1] RC loop versions cache element storage only inside a proved physical no-publication interval, after entry uniqueness and with no residual COW checks or allocating lowered helpers. Failed range guards execute the original loop and preserve its traps.
+
+- [LIVE-VIEW-SNAPSHOT-1] Copying a live dictionary view preserves its mapping identity, but publishing that mapping into an independent value requires a snapshot even on the view owner's last read. Projections through records, arrays, variants and collection elements preserve this boundary; field and indexed-payload extract/mutate/store-back proofs must not erase it. Fresh view construction does not make its externally owned mapping fresh.
