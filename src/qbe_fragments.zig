@@ -702,6 +702,8 @@ pub fn recordKey(source_identity: Digest, drop_debug: bool) Digest {
     hash.update("standin-record-v1");
     hash.update(&source_identity);
     hash.update(&.{@intFromBool(drop_debug)});
+    // VALUE-SEMANTICS-1: value semantics changes every lowered body.
+    if (@import("value_semantics.zig").enabled()) hash.update("value-semantics");
     return digestOf(&hash);
 }
 /// Old entries a pack keeps beyond the ones the latest build used, as a

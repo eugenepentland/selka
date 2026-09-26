@@ -209,7 +209,9 @@ pub fn pushedSource(program: bytecode.Program, function: bytecode.Function, pc: 
     const here: u32 = @intCast(pc);
     return switch (function.scope.instructions[pc].op) {
         .load_local, .move_local, .ref_local => |slot| .{ .origin = .local, .local = @intCast(@backingInt(slot)), .read = here },
-        .wrap_domain, .unwrap_domain => if (h > 0) stack[h - 1] else .{},
+        // A value-semantics copy is the transfer of the value below it, which
+        // `ownership_values.zig` classifies from that value's own source.
+        .wrap_domain, .unwrap_domain, .value_copy => if (h > 0) stack[h - 1] else .{},
         .get_field, .try_result => if (h > 0) partOf(stack[h - 1], .field) else .{},
         .get_index => |access| if (h > 1 and !isString(program, access.ty)) partOf(stack[h - 2], .element) else .{ .origin = .fresh },
         .buffer_operation => |operation| bufferSource(program, function, operation, here),
@@ -277,7 +279,7 @@ pub fn popsOf(program: bytecode.Program, op: Op) usize {
         .drop_local, .jump, .begin_arena, .end_arena => 0,
         .invoke => |callback_type| program.records[callback_type.recordIndex()].contract.callback.?.valueCount() + 1,
         .store_local, .pop, .acknowledge, .jump_if_false, .ret, .assert_true => 1,
-        .cast_integer, .neg_integer, .neg_i64_checked, .not_bool, .wrap_domain, .unwrap_domain, .get_field => 1,
+        .cast_integer, .neg_integer, .neg_i64_checked, .not_bool, .wrap_domain, .unwrap_domain, .get_field, .value_copy => 1,
         .switch_variant, .unary_float, .arena_escape, .array_length => 1,
         .add_i64_checked, .sub_i64_checked, .mul_i64_checked, .div_i64_checked, .rem_i64_checked, .cmp_i64 => 2,
         .cmp_bool, .cmp_domain, .cmp_enum, .binary_integer, .get_index => 2,

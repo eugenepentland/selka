@@ -23,8 +23,11 @@ const prose_tags = [_][]const u8{ "", "text", "rust", "python", "go" };
 /// Directives the runner understands; an unknown name fails its block.
 const known_directives = [_][]const u8{
     "expect", "expect-error", "check",      "project",     "file",
-    "skip",   not_mylang,     "allow-read", "allow-write",
+    "skip",   not_mylang,     "allow-read", "allow-write", value_semantics,
 };
+/// Directive that checks and runs its unit under `--value-semantics`
+/// (`VALUE-SEMANTICS-8`); every other unit runs without the switch.
+const value_semantics = "value-semantics";
 /// Neutral entry point appended to declaration-only examples before checking.
 const stub = "def main() -> int:\n    return 0\n";
 /// Most bytes the runner reads from one documentation page.
@@ -50,7 +53,7 @@ const usage =
     "  Runs every fenced ```mylang / ```my example in README.md, SPEC.md and\n" ++
     "  docs/**/*.md (except docs/legacy/) through this compiler. Leading `# doc:`\n" ++
     "  directives pin expected output, expected diagnostic codes, projects, files,\n" ++
-    "  skips and capability grants. --filter GLOB limits the scan to matching\n" ++
+    "  skips, capability grants and value semantics. --filter GLOB limits the scan to matching\n" ++
     "  repository-relative pages, --report PATH writes a doc-examples-v1 JSON\n" ++
     "  report, and --verbose prints each command and diagnostic. --jobs N bounds the\n" ++
     "  worker pool, which otherwise follows cores and free memory. Exits 1 when any\n" ++
@@ -773,6 +776,7 @@ fn fileName(allocator: std.mem.Allocator, unit: *const Unit, member: *const Fenc
 
 fn commandOptions(allocator: std.mem.Allocator, unit: *const Unit, subcommand: []const u8, fixtures: []const u8) ![]const []const u8 {
     var argv: std.ArrayList([]const u8) = .empty;
+    if (unitHasDirective(unit, value_semantics)) try argv.append(allocator, "--value-semantics");
     if (std.mem.startsWith(u8, subcommand, "run")) {
         if (!unitPrints(unit)) try argv.append(allocator, "--print-result");
         const flags = [_][]const u8{ "--allow-read=", "--allow-write=" };
@@ -1373,6 +1377,34 @@ test "doctest grouping folds project fences and plan picks run or check" {
     try testing.expectEqual(@as(usize, 2), units[0].members.items.len);
     const decided = try plan(allocator, units[0]);
     try testing.expectEqual(Action.run, decided.action);
+}
+
+// spec: VALUE-SEMANTICS-8
+test "doctest runs a value-semantics unit with the switch and every other unit without it" {
+    const text =
+        "```mylang\n" ++
+        "# doc: value-semantics\n" ++
+        "# doc: expect 1\n" ++
+        "def main() -> int:\n" ++
+        "    return 1\n" ++
+        "```\n" ++
+        "```mylang\n" ++
+        "def main() -> int:\n" ++
+        "    return 2\n" ++
+        "```\n";
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
+    const found = try fences(allocator, "docs/values.md", text);
+    try testing.expectEqual(@as(?[]const u8, null), found[0].error_message);
+    const units = try group(allocator, try executableBlocks(allocator, found));
+    try testing.expectEqual(@as(usize, 2), units.len);
+    const switched = try commandOptions(allocator, units[0], "run", "fixtures");
+    try testing.expectEqualStrings("--value-semantics", switched[0]);
+    const checked = try commandOptions(allocator, units[0], "check", "fixtures");
+    try testing.expectEqualStrings("--value-semantics", checked[0]);
+    const plain = try commandOptions(allocator, units[1], "run", "fixtures");
+    for (plain) |argument| try testing.expect(!std.mem.eql(u8, argument, "--value-semantics"));
 }
 
 test "doctest mis-tagged prose fences look like guest source and not-mylang opts out" {

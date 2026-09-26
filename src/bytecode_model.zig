@@ -92,11 +92,25 @@ pub const Instruction = struct {
         invoke: typed.Type,
         call: typed.FunctionId,
         ret,
+        /// VALUE-SEMANTICS-2: the top operand moves to a second home under
+        /// value semantics. The native emitter makes it an independent copy
+        /// unless the ownership analysis proves the transfer a move or a borrow
+        /// (`ownership_values.zig`). Never emitted with the switch off.
+        value_copy: ValueCopy,
     },
     /// Set exactly on an instruction spliced from an inlined callee, so the
     /// native emitter can rebuild the callee's frames for a trap trace.
     inline_origin: ?InlineOrigin = null,
 };
+/// Which transfer a value-semantics copy stands for. `assign` stores into a
+/// named local, `store` into a field, element, dictionary value or payload,
+/// `ret` returns, `payload` rebinds a match arm's payload: the ownership
+/// analysis may prove any of these a move or a borrow. `argument` is a
+/// read-only argument a `mut` argument of the same call could reach, and
+/// `children` copies the elements of a fresh shallow copy: both always copy.
+pub const CopySite = enum(u8) { assign, store, ret, payload, argument, children };
+/// One value-semantics copy of an operand of type `ty`.
+pub const ValueCopy = struct { ty: typed.Type, site: CopySite };
 /// Whole-path file helper; operands are the capability, the path and any input.
 pub const FileAccess = struct { kind: @import("file_operations.zig").Access, mode: u8, text: bool, operands: usize, output: typed.Type, shapes: typed.FileShapes };
 /// Method on an open handle held in a local slot, with one optional operand.

@@ -1,0 +1,216 @@
+# Value semantics
+
+**Experimental and opt-in.** This is stage 3a of
+[D9](adr/D9-value-semantics-then-rc.md): the language rules of value semantics
+on the current garbage-collected runtime, implemented the slow way (real copies
+where a transfer needs one). Without the switch nothing on this page applies,
+and the compiler behaves exactly as it does without it: `class`, `list` and
+`dict` values are shared references ([managed memory](managed-memory.md)).
+
+Under value semantics every `list`, `dict`, `set` and `byte_buffer` is an
+independent value, like a record or an `int` already is. Assignment, argument
+passing, storing into a field or element, and returning never make two names
+reach the same collection. A function changes its caller's value only through a
+`mut` parameter, marked `mut` at the call site.
+
+```mylang
+# doc: value-semantics
+# doc: expect 12
+def main() -> int:
+    a = [1]
+    b = a
+    b.append(2)
+    return len(a) * 10 + len(b)
+```
+
+This prints `12`: `b` is a copy of `a`, so appending to `b` leaves `a` with one
+element. Without the switch the same program prints `22`, because `b` and `a`
+name one list. The syntax is Python's; the meaning is not, which is why the
+switch exists and why the rules below turn the mistakes it invites into
+compile errors.
+
+## Turning it on
+
+- `--value-semantics` on `check`, `check-project`, `build`, `run`,
+  `run-project` and `test` (and on `emit-qbe`, `emit-project-qbe` and
+  `dump-bytecode` for inspection). It goes before any `--` that starts guest
+  arguments. Any other command refuses it (exit 2).
+- `"value_semantics": true` in the project's `mylang.json`
+  ([configuration](tooling/import-policy.md#configuration-shape)).
+- `MYLANG_VALUE_SEMANTICS=1` in the environment. This is how every child
+  compiler a command spawns — the build driver's frontend, the test runner's
+  builds — inherits the switch: a command turned on by the flag or the
+  configuration restarts itself with the variable set.
+
+The switch is part of every cache identity, so a cached check, object or test
+result from one mode is never reused in the other. `.api` interface files do
+not change.
+
+## The rules
+
+**A copy is your own value.** A local that received a value — from a
+parameter, a field, an element, a call — owns it. Changing it needs no `mut`
+and does not change the parameter it came from, and a returned value never
+aliases an argument:
+
+```mylang
+# doc: value-semantics
+# doc: expect 21
+def appended(xs: list[int]) -> list[int]:
+    ys = xs
+    ys.append(9)
+    return ys
+
+def main() -> int:
+    a = [1]
+    b = appended(a)
+    return len(a) + len(b) * 10
+```
+
+A parameter itself stays read-only: `xs.append(9)` in `appended` is
+`E_MUTATION_MARKER`, and the message says to declare `xs: mut list[int]` or
+to assign it to a local and change the copy.
+
+**`mut` records are `inout`.** A `mut` parameter of a plain `record` or tuple
+is the caller's variable: a field assignment, a nested field or collection
+write and a rebinding of the whole parameter all reach the caller.
+
+```mylang
+# doc: value-semantics
+# doc: expect 22
+record Counter:
+    n: int
+    items: list[int]
+
+def bump(c: mut Counter) -> None:
+    c.n = c.n + 1
+    c.items.append(c.n)
+
+def main() -> int:
+    c = Counter(n=0, items=[])
+    bump(mut c)
+    bump(mut c)
+    return c.n * 10 + len(c.items)
+```
+
+The argument of a `mut` record must be a mutable local: `mut holder.counter`
+or `mut rows[i]` is `E_MUTATION_MARKER` ("copy the field or element into a
+local, pass `mut` that local, and store it back"), and a `for` or `match`
+binding is `E_IMMUTABLE`. A `mut` list or dict argument may still be an element
+or a field, since the callee changes that collection in place.
+
+**Loop variables and match bindings are copies, so writing through one is an
+error.** `for row in grid: row.append(0)` would change a copy that is gone when
+the iteration ends: it is `E_VALUE_BINDING_WRITE`. The same holds for
+`enumerate`, `zip`, `reversed`, `d.values()`, `d.items()` and a named `match`
+payload binding of a value another name holds.
+
+```mylang
+# doc: value-semantics
+# doc: expect-error E_VALUE_BINDING_WRITE
+def pad(grid: mut list[list[int]]) -> None:
+    for row in grid:
+        row.append(0)
+```
+
+Change the collection through its place instead, or copy the binding into a
+local if the change is meant to stay local:
+
+```mylang
+# doc: value-semantics
+# doc: expect 22
+def pad(grid: mut list[list[int]]) -> None:
+    for i in range(len(grid)):
+        grid[i].append(0)
+
+def main() -> int:
+    grid = [[1], [2]]
+    pad(mut grid)
+    return len(grid[0]) + len(grid[1]) * 10
+```
+
+A binding of a `class` type is a shared reference and stays writable, and a
+`match` on a call result binds the result itself, which nothing else holds.
+
+**Writing into a returned value is an error.** `lookup(table, key).items.append(1)`
+changes a temporary copy no name holds: `E_VALUE_TEMPORARY_WRITE`. Assign the
+result to a local, change it, and store it back.
+
+**No read-only/writable overlap errors.** `E_MUTATION_OVERLAP` is never
+reported under the switch, because a read-only argument is a value of its own.
+Where one could share storage with a `mut` argument of the same call, the
+compiler passes a copy taken before the call:
+
+```mylang
+# doc: value-semantics
+# doc: expect 23
+def touch(target: mut list[int], source: list[int]) -> int:
+    target.append(len(source))
+    return len(source)
+
+def main() -> int:
+    a = [1, 2]
+    seen = touch(mut a, a)
+    return seen * 10 + len(a)
+```
+
+The callee sees `source` as `[1, 2]` even though it appends to `target`, which
+is the same variable. The natural recursive helper
+`walk(adj, node, mut path, mut found)` is accepted.
+
+**A `mut` parameter changed only through a copy.** When the only change to a
+`mut` parameter went to a local copy of it, the parameter is never written;
+the error says how the change reaches the caller instead of suggesting to drop
+`mut`:
+
+```text
+# doc: not-mylang
+error[E_MUTATION_MARKER]: `rows` is declared `mut` but never written: the only
+change goes to `row`, a copy of `rows[i]`; store the copy back after changing it
+(`rows[i] = row`) so the change reaches the caller
+```
+
+## What stays shared
+
+- `class` objects and Cells are shared references in this stage (replacing
+  them with records and `pool` ids is a later stage of D9). A list reached
+  through a class object is shared through that object; reading it into a local
+  gives the local its own copy.
+- `str` and `bytes` are immutable, so sharing them is invisible.
+
+## Arenas and contracts
+
+A copy made inside `with arena()` allocates in that arena, like any other
+allocation, and leaves it only through `escape`
+([arenas](arenas.md#getting-a-result-out)). The static escape rules and the
+runtime store barrier apply unchanged; a helper that stores a copy made inside
+the arena into an older collection traps `R_ARENA_ESCAPE`.
+
+`old(xs)` of a collection is accepted in an `@ensures` clause: the capture is a
+value of its own. `old(...)` of a value that reaches a `class` or Cell is still
+`E_CONTRACT_OLD_SHARED` ([contracts](contracts.md)).
+
+## How it is implemented
+
+Lowering places one `value_copy` instruction after every transfer that is not
+fresh. The ownership analysis of stage 2
+([ownership](tooling/ownership.md)) then leaves out every copy it proves a move
+(the source is never read again) or a borrow (neither side is written while
+both are read); `mylang check --explain-ownership` lists each copy site with
+`"copy": true` or `false`. Every copy that remains goes through one runtime
+entry, `myl_qbe_value_copy`, which duplicates each list, dictionary, set and
+byte string the value reaches. A read-only argument is lent without a copy.
+The next stage replaces that entry with copy-on-write, so the copies become
+checks at the writes.
+
+## Limits
+
+- Copies are eager, so a program that stores or returns large collections pays
+  for each copy; this stage is the reference for the rules, not for speed.
+- A copy is not reported as a `managed_allocation` effect.
+- Rebinding a whole `mut` list or dict parameter does not reach the caller; it
+  is rejected as a `mut` that is never written.
+- A function with a `mut` record parameter cannot be a function value, and a
+  callback type with one cannot take a lambda.
+- A write to a local copy that is never read or stored back afterwards is not
+  diagnosed; only writes through bindings and into returned values are.

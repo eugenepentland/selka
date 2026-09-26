@@ -24,6 +24,7 @@ pub const Error = error{
     InvalidInterfaceFiles,
     InvalidJson,
     InvalidLint,
+    InvalidValueSemantics,
     InvalidVersion,
     MissingConfig,
     MissingImportPolicy,
@@ -71,6 +72,9 @@ pub const Document = struct {
     /// `interface_files: true`: every project module's generated `.api` file
     /// must be current, or checking the project fails (API-FILE-3).
     interface_files: bool = false,
+    /// `value_semantics: true`: the project is checked and built with value
+    /// semantics, as `--value-semantics` asks (VALUE-SEMANTICS-1).
+    value_semantics: bool = false,
 };
 
 /// One resolved policy file: absolute path, exact bytes and content digest.
@@ -394,6 +398,7 @@ fn parseDocument(allocator: std.mem.Allocator, bytes: []const u8, failure: *Fail
     var budgets_seen = false;
     var lint_seen = false;
     var interface_files: ?bool = null;
+    var value_semantics: ?bool = null;
 
     while (true) {
         const key_token = try readToken(allocator, &scanner, failure);
@@ -426,12 +431,9 @@ fn parseDocument(allocator: std.mem.Allocator, bytes: []const u8, failure: *Fail
             lint_seen = true;
             try skipValue(allocator, &scanner, failure, &diagnostics);
         } else if (std.mem.eql(u8, key, "interface_files")) {
-            if (interface_files != null) return fail(failure, &diagnostics, "duplicate interface_files field", error.DuplicateField);
-            interface_files = switch (value) {
-                .true => true,
-                .false => false,
-                else => return fail(failure, &diagnostics, "interface_files must be true or false", error.InvalidInterfaceFiles),
-            };
+            interface_files = try booleanField("interface_files", interface_files, value, .{ .failure = failure, .diagnostics = &diagnostics, .invalid = error.InvalidInterfaceFiles });
+        } else if (std.mem.eql(u8, key, "value_semantics")) {
+            value_semantics = try booleanField("value_semantics", value_semantics, value, .{ .failure = failure, .diagnostics = &diagnostics, .invalid = error.InvalidValueSemantics });
         } else {
             return fail(failure, &diagnostics, "unknown field in mylang.json", error.UnknownField);
         }
@@ -441,7 +443,7 @@ fn parseDocument(allocator: std.mem.Allocator, bytes: []const u8, failure: *Fail
     if (!isEndOfDocument(trailing)) return fail(failure, &diagnostics, "trailing content after the configuration object", error.InvalidJson);
     if (version == null) return fail(failure, &diagnostics, "mylang.json must carry version: 1", error.MissingVersion);
     if (lint_seen and version.? != 2) return fail(failure, &diagnostics, "lint requires mylang.json version 2", error.InvalidLint);
-    return .{ .version = version.?, .import_policy = import_policy, .budgets = budgets, .lint = lint_seen, .interface_files = interface_files orelse false };
+    return .{ .version = version.?, .import_policy = import_policy, .budgets = budgets, .lint = lint_seen, .interface_files = interface_files orelse false, .value_semantics = value_semantics orelse false };
 }
 
 /// Read the body of a `budgets` object after its opening brace. Every key is
@@ -509,6 +511,20 @@ fn readToken(allocator: std.mem.Allocator, scanner: *std.json.Scanner, failure: 
     return scanner.nextAlloc(allocator, .alloc_if_needed) catch |err| switch (err) {
         error.OutOfMemory => error.OutOfMemory,
         else => fail(failure, scanner.diagnostics.?, "malformed JSON", error.InvalidJson),
+    };
+}
+
+/// Where a boolean field's rejection is reported, and the error it names.
+const BooleanRejection = struct { failure: *Failure, diagnostics: *const std.json.Scanner.Diagnostics, invalid: Error };
+
+/// Read one optional boolean field named `name`: a repeat is a duplicate, and
+/// anything but `true` or `false` is `rejection.invalid`.
+fn booleanField(comptime name: []const u8, seen: ?bool, value: std.json.Scanner.Token, rejection: BooleanRejection) Error!bool {
+    if (seen != null) return fail(rejection.failure, rejection.diagnostics, "duplicate " ++ name ++ " field", error.DuplicateField);
+    return switch (value) {
+        .true => true,
+        .false => false,
+        else => fail(rejection.failure, rejection.diagnostics, name ++ " must be true or false", rejection.invalid),
     };
 }
 

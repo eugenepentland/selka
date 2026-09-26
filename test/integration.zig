@@ -11393,3 +11393,58 @@ test "CLI check --explain-ownership writes one JSON line per function" {
     try testing.expect(std.mem.indexOf(u8, report, "\"kind\":\"argument\",\"source\":{\"origin\":\"local\",\"local\":1,\"part\":\"whole\"},\"class\":\"move\"") != null);
     try invokeOptions("run", "def main() -> int:\n    return 0\n", &.{"--explain-ownership=unused.jsonl"}, 2, "", "usage");
 }
+
+const value_program =
+    \\def main() -> int:
+    \\    a = [1]
+    \\    b = a
+    \\    b.append(2)
+    \\    return len(a) * 10 + len(b)
+;
+const value_only_program =
+    \\def grown(xs: list[int]) -> list[int]:
+    \\    ys = xs
+    \\    ys.append(1)
+    \\    return ys
+    \\
+    \\def main() -> int:
+    \\    return len(grown([1]))
+;
+
+// spec-case: VALUE-SEMANTICS-1
+test "CLI --value-semantics switches run and check and other commands refuse it" {
+    try invoke("run", value_program, 0, "22\n", "");
+    try invokeOptions("run", value_program, &.{"--value-semantics"}, 0, "12\n", "");
+    try invoke("check", value_only_program, 1, "", "error[E_MUTATION_MARKER]");
+    try invokeOptions("check", value_only_program, &.{"--value-semantics"}, 0, "", "");
+    try invokeOptions("fmt", value_program, &.{"--value-semantics"}, 2, "", "--value-semantics applies to check");
+}
+
+// spec-case: VALUE-SEMANTICS-1
+test "CLI mylang.json value_semantics switches its project and a build carries it to the frontend" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "mylang.json", .data = "{\"version\": 1, \"value_semantics\": true}\n" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = value_program });
+    const entry = try temp.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
+    defer testing.allocator.free(entry);
+    const configured = try std.process.run(testing.allocator, testing.io, .{ .argv = &(.{ compiler_path, "run", entry, "--print-result" } ++ tools) });
+    defer testing.allocator.free(configured.stdout);
+    defer testing.allocator.free(configured.stderr);
+    try testing.expectEqualStrings("12\n", configured.stdout);
+    var plain = testing.tmpDir(.{});
+    defer plain.cleanup();
+    try plain.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = value_program });
+    const source = try plain.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
+    defer testing.allocator.free(source);
+    const output = try std.fmt.allocPrint(testing.allocator, "{s}.bin", .{source});
+    defer testing.allocator.free(output);
+    const built = try std.process.run(testing.allocator, testing.io, .{ .argv = &(.{ compiler_path, "build", source, "-o", output, "--value-semantics" } ++ tools) });
+    defer testing.allocator.free(built.stdout);
+    defer testing.allocator.free(built.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, built.term);
+    const ran = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{output} });
+    defer testing.allocator.free(ran.stdout);
+    defer testing.allocator.free(ran.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 12 }, ran.term);
+}

@@ -22,6 +22,7 @@ const Error = diagnostic.Error;
 const numeric_surface = @import("numeric_surface.zig");
 const arrays = @import("array_literals.zig");
 const markerPositionDeclared = sema_shared.markerPositionDeclared;
+const value_semantics = @import("value_semantics.zig");
 /// Diagnostic code for an assignment whose target cannot be written as spelled.
 const eAssignmentTarget = "E_ASSIGNMENT_TARGET";
 /// The ordinary binary operator one augmented assignment applies to its operand pair.
@@ -440,6 +441,11 @@ fn noteDeadRecordWrite(comptime Checker: type, self: *Checker, slot: typed.Local
     const local = &self.locals.items[@backingInt(slot)];
     if (local.origin == .local) return;
     if (!local.ty.isAggregate()) return;
+    // VALUE-SEMANTICS-4: a write through a `for` variable is its own error
+    // (`E_VALUE_BINDING_WRITE`), and a `mut` record parameter is the caller's
+    // record, so its field writes are observed.
+    if (value_semantics.enabled() and local.origin == .iteration) return;
+    if (local.origin == .parameter and referenceRecordParameter(Checker, self, slot)) return;
     // A managed record (`class` or Cell) is shared, so a field write reaches
     // the original; only copied value `record`s can have dead writes.
     if (self.catalog.records[local.ty.recordIndex()].managed) return;
@@ -508,6 +514,16 @@ fn referenceParameter(comptime Checker: type, self: *Checker, slot: typed.LocalI
     const signature = self.syntaxFunction(id).signature;
     if (index >= signature.parameters.len or !markerPositionDeclared(signature.mut_positions, @intCast(index))) return false;
     return typed.referenceArray(self.catalog.records, self.locals.items[index].ty);
+}
+/// Whether local `slot` is a `mut` record parameter that names the caller's
+/// record (value semantics only, `VALUE-SEMANTICS-3`).
+fn referenceRecordParameter(comptime Checker: type, self: *Checker, slot: typed.LocalId) bool {
+    if (self.current_lambda != null) return false;
+    const id = self.current_function orelse return false;
+    const index = @backingInt(slot);
+    const signature = self.syntaxFunction(id).signature;
+    if (index >= signature.parameters.len or !markerPositionDeclared(signature.mut_positions, @intCast(index))) return false;
+    return typed.referenceRecord(self.catalog.records, self.locals.items[index].ty);
 }
 /// Refuse rebinding a `mut` fixed-array parameter as a whole. The name is
 /// the caller's array, so `values = other` would either silently stay local
