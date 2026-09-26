@@ -14,6 +14,10 @@ pub fn guest(allocator: std.mem.Allocator, catalog: *shapes.Catalog, function: b
     const parameters = try allocator.alloc(model.Parameter, count);
     errdefer allocator.free(parameters);
     for (function.scope.locals[0..count], parameters, 0..) |local, *mode, position| {
+        if ((try catalog.get(local.ty)).unique_drop) {
+            mode.* = .consume_on_entry;
+            continue;
+        }
         const writes = @import("ownership_model.zig").writesParameter(function, position);
         mode.* = if (!writes) .read else if (typed.referenceMut(catalog.native.records, local.ty)) .caller_storage else .mutable_payload;
     }

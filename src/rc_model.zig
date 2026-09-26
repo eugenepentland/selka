@@ -47,6 +47,8 @@ pub const Parameter = enum {
     read,
     caller_storage,
     mutable_payload,
+    /// Move-only guest arguments become the callee's cleanup obligation.
+    consume_on_entry,
     consume_on_success,
 };
 /// A separate certificate is required before a result may be called borrowed.
@@ -59,9 +61,10 @@ pub const BorrowCertificate = struct {
 pub const Result = union(enum) { plain, owned, borrowed: BorrowCertificate };
 /// Argument/result obligations when a call reports a runtime failure.
 pub const Failure = enum {
-    /// No output token; caller input storage remains caller-owned.
+    /// No output token. Read/inout inputs stay with the caller; entry-consumed
+    /// arguments stay consumed even if admission fails before the body runs.
     /// Mutable contents may have changed before a guest trap.
-    caller_keeps_inputs,
+    parameter_contracts,
     /// The helper's separately modeled checkpoints describe partial progress.
     checkpoints,
 };
@@ -69,7 +72,7 @@ pub const Failure = enum {
 pub const CallContract = struct {
     parameters: []const Parameter,
     result: Result,
-    failure: Failure = .caller_keeps_inputs,
+    failure: Failure = .parameter_contracts,
     /// Parameters whose reachable storage the call may invalidate.
     mutates: []const u16 = &.{},
     /// The ownership/runtime ABI identity supplied by the resolved selector.
