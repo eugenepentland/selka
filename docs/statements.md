@@ -27,10 +27,9 @@ payload binding, and a move-only resource stay scoped to their own block; the
 loop rebinds its variable at the top of every iteration, so assigning it in the
 body never changes which iteration comes next. A `record` declares a value record with annotated fields and named
 construction, and assigning a record copies its fields, so the copy's scalar
-fields move independently of the original. That copy is shallow: a managed field
-— a list, dictionary, string or record holding one — still refers to the same
-object in both records, exactly as [managed collections](managed-memory.md)
-behave everywhere else.
+fields move independently of the original. Managed fields are independent
+values too; the runtime can share their backing storage until a write, as
+[managed collections](managed-memory.md) explains.
 
 ```mylang
 # doc: expect 42
@@ -43,14 +42,14 @@ def main() -> int:
     second = first
     second.count = 40
     second.seen.append(7)
-    if len(first.seen) != 1:
+    if len(first.seen) != 0 or len(second.seen) != 1:
         return 1
     return second.count + first.count
 ```
 
-`second.count = 40` leaves `first.count` at 2, because the two records are
-separate values. `second.seen.append(7)` is visible through `first.seen`, because
-the two records point at one list.
+`second.count = 40` leaves `first.count` at 2, and
+`second.seen.append(7)` leaves `first.seen` empty. Both records preserve
+independent values.
 
 ## Statement endings
 

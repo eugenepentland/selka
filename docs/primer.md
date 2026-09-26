@@ -72,11 +72,11 @@ def main(args: list[str], fs: Filesystem, out: Stream, err: Stream) -> int:
 ## Types and declarations
 
 ```mylang
-record Item:              # value type: copied on assignment; fields by keyword
+record Item:              # independent value; fields by keyword
     name: str
     count: int
 
-class Node:               # reference type: shared, mutable or recursive data
+record Node:              # recursive tree value
     value: int
     next: Option[Node]
 
@@ -97,10 +97,10 @@ def area(s: Shape) -> float:
 ```
 
 Construct with keywords: `Item(name="a", count=1)`, `Shape.rect(w=2.0, h=3.0)`,
-`Node(value=1, next=None)`. Recursive data (trees, ASTs) goes through a `class`
-(a `union` may name a class declared above it). Writing a field of a `record`
-copy (`for it in items: it.count = 0`) is a compile error: use a `class`, or
-rebuild the record. Builtin types: `int`, `float`, `bool`, `str`, `bytes`,
+`Node(value=1, next=None)`. Recursive trees and ASTs use records and unions;
+graphs with identity use pool handles. Writing a field of a `record`
+copy (`for it in items: it.count = 0`) is a compile error: update the owning
+collection or rebuild the record. Builtin types: `int`, `float`, `bool`, `str`, `bytes`,
 `list[T]`, `dict[K, V]` (keys `int` or `str` only), `tuple[A, B]`, `Option[T]`
 (`Some(x)` / `None`) and `Result[T, E]` (`Ok(x)` / `Err(e)`).
 
