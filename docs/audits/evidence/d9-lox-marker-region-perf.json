@@ -1,0 +1,1170 @@
+{
+ "meta": {
+  "compiler_commit": "2b889ba5+closed-region-wip",
+  "compiler_sha256": "76a141ef6bfb0d9f94759a49a8608d561186c661c172d1288e68d49aeb6b9790",
+  "source_main_sha256": "18c1f669b1683123e635256c9f66c6db2766383391371c3822e61df7d9732274",
+  "baseline_compiler_sha256": "48427e9ac1c01b74e60d1b4c098c8fc149a6b5fef3c07e110c7fb4ba16cbb545",
+  "cpu": 10,
+  "perf_reps": 3,
+  "harness": "experiments/perf-gc-dict-20260925/scripts/pc.py, tree calibrated sizes for lox/vm",
+  "source_code_commit": "9f42e5a9",
+  "compiler_build_note": "Built from 2b889ba5 plus the ownership_field_return.zig change committed as 9f42e5a9; later test-only additions do not affect the compiler.",
+  "source_tree_sha256": "41549b4349bf487c6a9574e04129e6e0836514944d09d8552532a8df00edfc14",
+  "binaries": {
+   "base": {
+    "qbe": "6473a9596ed692049cd4a88b344f54030b46a15d591b36cca82cef64ae8cd59f",
+    "llvm": "61621ee380e5562967b53d6ba81c54fe28ceb2adc22ad6fa943e6772b7887fa0"
+   },
+   "coldip": {
+    "qbe": "3efc9ab5f4bbf05a1f7335b183a23a3c8152ec5ef67125be58a2a278730d3b9c",
+    "llvm": "be85b88360504e006415ff7a13d76e20195b04946196ab5a27637d315c3667ab"
+   },
+   "region": {
+    "qbe": "a4cdf3177e98fff8f02631ab61aada1b44f9b48e989f2ca2555ad395f5e65874",
+    "llvm": "3980701d52516d47454325c044397b5ecb4ac0f9543ed7a913d8a2620712955f"
+   }
+  }
+ },
+ "samples": {
+  "lox/vm/binary_trees|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 6241829777,
+      "cycles": 1500256001
+     },
+     {
+      "status": 0,
+      "instructions": 6241829777,
+      "cycles": 1490435162
+     },
+     {
+      "status": 0,
+      "instructions": 6241830382,
+      "cycles": 1489135265
+     }
+    ]
+   },
+   "region": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 9530801867,
+      "cycles": 2759373215
+     },
+     {
+      "status": 0,
+      "instructions": 9530802573,
+      "cycles": 2778956084
+     },
+     {
+      "status": 0,
+      "instructions": 9530802019,
+      "cycles": 2743958610
+     }
+    ]
+   },
+   "ratio": 1.526924373061127,
+   "baseline_median": 6241829777,
+   "candidate_median": 9530802019
+  },
+  "lox/vm/binary_trees|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 2663046917,
+      "cycles": 824069228
+     },
+     {
+      "status": 0,
+      "instructions": 2663047054,
+      "cycles": 814781337
+     },
+     {
+      "status": 0,
+      "instructions": 2663046953,
+      "cycles": 862498798
+     }
+    ]
+   },
+   "region": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 4834343507,
+      "cycles": 1888819812
+     },
+     {
+      "status": 0,
+      "instructions": 4834348432,
+      "cycles": 1894390037
+     },
+     {
+      "status": 0,
+      "instructions": 4834343720,
+      "cycles": 1865120840
+     }
+    ]
+   },
+   "ratio": 1.815343028238376,
+   "baseline_median": 2663046953,
+   "candidate_median": 4834343720
+  },
+  "lox/vm/closures|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 8891315135,
+      "cycles": 2049506513
+     },
+     {
+      "status": 0,
+      "instructions": 8891315217,
+      "cycles": 2053729248
+     },
+     {
+      "status": 0,
+      "instructions": 8891315174,
+      "cycles": 2048341076
+     }
+    ]
+   },
+   "region": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 15492484855,
+      "cycles": 3959618671
+     },
+     {
+      "status": 0,
+      "instructions": 15492484759,
+      "cycles": 4028525936
+     },
+     {
+      "status": 0,
+      "instructions": 15492484746,
+      "cycles": 3979452802
+     }
+    ]
+   },
+   "ratio": 1.7424289270841677,
+   "baseline_median": 8891315174,
+   "candidate_median": 15492484759
+  },
+  "lox/vm/closures|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 3779851265,
+      "cycles": 816335010
+     },
+     {
+      "status": 0,
+      "instructions": 3779851616,
+      "cycles": 840553139
+     },
+     {
+      "status": 0,
+      "instructions": 3779851223,
+      "cycles": 813955742
+     }
+    ]
+   },
+   "region": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 7040860221,
+      "cycles": 2761263177
+     },
+     {
+      "status": 0,
+      "instructions": 7040860050,
+      "cycles": 2690738691
+     },
+     {
+      "status": 0,
+      "instructions": 7040859972,
+      "cycles": 2657903434
+     }
+    ]
+   },
+   "ratio": 1.8627346835563912,
+   "baseline_median": 3779851265,
+   "candidate_median": 7040860050
+  },
+  "lox/vm/equality|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 10175630919,
+      "cycles": 2191117845
+     },
+     {
+      "status": 0,
+      "instructions": 10175630568,
+      "cycles": 2214530267
+     },
+     {
+      "status": 0,
+      "instructions": 10175630695,
+      "cycles": 2230523283
+     }
+    ]
+   },
+   "region": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 11024317172,
+      "cycles": 2604855342
+     },
+     {
+      "status": 0,
+      "instructions": 11024317442,
+      "cycles": 2616259679
+     },
+     {
+      "status": 0,
+      "instructions": 11024317909,
+      "cycles": 2713137239
+     }
+    ]
+   },
+   "ratio": 1.08340384713618,
+   "baseline_median": 10175630695,
+   "candidate_median": 11024317442
+  },
+  "lox/vm/equality|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 3463052437,
+      "cycles": 768788386
+     },
+     {
+      "status": 0,
+      "instructions": 3463052522,
+      "cycles": 762556521
+     },
+     {
+      "status": 0,
+      "instructions": 3463052475,
+      "cycles": 778014598
+     }
+    ]
+   },
+   "region": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 4153024789,
+      "cycles": 962950882
+     },
+     {
+      "status": 0,
+      "instructions": 4153024816,
+      "cycles": 987312071
+     },
+     {
+      "status": 0,
+      "instructions": 4153025213,
+      "cycles": 1584387172
+     }
+    ]
+   },
+   "ratio": 1.1992381998196548,
+   "baseline_median": 3463052475,
+   "candidate_median": 4153024816
+  },
+  "lox/vm/fib|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 4892176429,
+      "cycles": 1101037976
+     },
+     {
+      "status": 0,
+      "instructions": 4892176356,
+      "cycles": 1085190060
+     },
+     {
+      "status": 0,
+      "instructions": 4892176353,
+      "cycles": 1184730429
+     }
+    ]
+   },
+   "region": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 7016675125,
+      "cycles": 1753271661
+     },
+     {
+      "status": 0,
+      "instructions": 7016674948,
+      "cycles": 1731061851
+     },
+     {
+      "status": 0,
+      "instructions": 7016675903,
+      "cycles": 1723801417
+     }
+    ]
+   },
+   "ratio": 1.4342645510713066,
+   "baseline_median": 4892176356,
+   "candidate_median": 7016675125
+  },
+  "lox/vm/fib|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1803513594,
+      "cycles": 568584830
+     },
+     {
+      "status": 0,
+      "instructions": 1803513355,
+      "cycles": 404297070
+     },
+     {
+      "status": 0,
+      "instructions": 1803513442,
+      "cycles": 420636716
+     }
+    ]
+   },
+   "region": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 2646968923,
+      "cycles": 1149917411
+     },
+     {
+      "status": 0,
+      "instructions": 2646967757,
+      "cycles": 1004045405
+     },
+     {
+      "status": 0,
+      "instructions": 2646967554,
+      "cycles": 1005530230
+     }
+    ]
+   },
+   "ratio": 1.4676728741564877,
+   "baseline_median": 1803513442,
+   "candidate_median": 2646967757
+  },
+  "lox/vm/instantiation|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 5944206913,
+      "cycles": 1297805030
+     },
+     {
+      "status": 0,
+      "instructions": 5944206984,
+      "cycles": 1282045646
+     },
+     {
+      "status": 0,
+      "instructions": 5944207030,
+      "cycles": 1398454136
+     }
+    ]
+   },
+   "region": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 9821221359,
+      "cycles": 2384984693
+     },
+     {
+      "status": 0,
+      "instructions": 9821221374,
+      "cycles": 2383502281
+     },
+     {
+      "status": 0,
+      "instructions": 9821221969,
+      "cycles": 2357295851
+     }
+    ]
+   },
+   "ratio": 1.652234082769282,
+   "baseline_median": 5944206984,
+   "candidate_median": 9821221374
+  },
+  "lox/vm/instantiation|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 2993269468,
+      "cycles": 735992135
+     },
+     {
+      "status": 0,
+      "instructions": 2993269527,
+      "cycles": 748790370
+     },
+     {
+      "status": 0,
+      "instructions": 2993269496,
+      "cycles": 732248419
+     }
+    ]
+   },
+   "region": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 4701150975,
+      "cycles": 1718827348
+     },
+     {
+      "status": 0,
+      "instructions": 4701150990,
+      "cycles": 1715672014
+     },
+     {
+      "status": 0,
+      "instructions": 4701150996,
+      "cycles": 1749592789
+     }
+    ]
+   },
+   "ratio": 1.5705739146716644,
+   "baseline_median": 2993269496,
+   "candidate_median": 4701150990
+  },
+  "lox/vm/invocation|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 14305434837,
+      "cycles": 2864784984
+     },
+     {
+      "status": 0,
+      "instructions": 14305434955,
+      "cycles": 2867553615
+     },
+     {
+      "status": 0,
+      "instructions": 14305434782,
+      "cycles": 2880711607
+     }
+    ]
+   },
+   "region": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 22402452167,
+      "cycles": 4898286571
+     },
+     {
+      "status": 0,
+      "instructions": 22402452150,
+      "cycles": 4839893354
+     },
+     {
+      "status": 0,
+      "instructions": 22402451895,
+      "cycles": 4835585489
+     }
+    ]
+   },
+   "ratio": 1.5660098700430716,
+   "baseline_median": 14305434837,
+   "candidate_median": 22402452150
+  },
+  "lox/vm/invocation|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 5639168571,
+      "cycles": 1648890404
+     },
+     {
+      "status": 0,
+      "instructions": 5639168575,
+      "cycles": 1650249847
+     },
+     {
+      "status": 0,
+      "instructions": 5639168627,
+      "cycles": 1651139637
+     }
+    ]
+   },
+   "region": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 9071937642,
+      "cycles": 4360468880
+     },
+     {
+      "status": 0,
+      "instructions": 9071937648,
+      "cycles": 4338404759
+     },
+     {
+      "status": 0,
+      "instructions": 9071937528,
+      "cycles": 4340405056
+     }
+    ]
+   },
+   "ratio": 1.6087367350957407,
+   "baseline_median": 5639168575,
+   "candidate_median": 9071937642
+  },
+  "lox/vm/method_call|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 13724118468,
+      "cycles": 2974213826
+     },
+     {
+      "status": 0,
+      "instructions": 13724118865,
+      "cycles": 3079055178
+     },
+     {
+      "status": 0,
+      "instructions": 13724119037,
+      "cycles": 3370401666
+     }
+    ]
+   },
+   "region": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 21122627653,
+      "cycles": 5217042216
+     },
+     {
+      "status": 0,
+      "instructions": 21122627993,
+      "cycles": 5227458120
+     },
+     {
+      "status": 0,
+      "instructions": 21122628238,
+      "cycles": 5330701756
+     }
+    ]
+   },
+   "ratio": 1.5390880974419483,
+   "baseline_median": 13724118865,
+   "candidate_median": 21122627993
+  },
+  "lox/vm/method_call|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 5202602525,
+      "cycles": 1679875321
+     },
+     {
+      "status": 0,
+      "instructions": 5202602429,
+      "cycles": 1658788011
+     },
+     {
+      "status": 0,
+      "instructions": 5202602380,
+      "cycles": 1661067085
+     }
+    ]
+   },
+   "region": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 9303994342,
+      "cycles": 3596185822
+     },
+     {
+      "status": 0,
+      "instructions": 9303991723,
+      "cycles": 3574865216
+     },
+     {
+      "status": 0,
+      "instructions": 9303990590,
+      "cycles": 3577798512
+     }
+    ]
+   },
+   "ratio": 1.7883341750540669,
+   "baseline_median": 5202602429,
+   "candidate_median": 9303991723
+  },
+  "lox/vm/properties|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 12772410613,
+      "cycles": 2672475089
+     },
+     {
+      "status": 0,
+      "instructions": 12772410578,
+      "cycles": 2678681842
+     },
+     {
+      "status": 0,
+      "instructions": 12772411306,
+      "cycles": 4103686915
+     }
+    ]
+   },
+   "region": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 18541651583,
+      "cycles": 4240281696
+     },
+     {
+      "status": 0,
+      "instructions": 18541651567,
+      "cycles": 4243333259
+     },
+     {
+      "status": 0,
+      "instructions": 18541651619,
+      "cycles": 4256453455
+     }
+    ]
+   },
+   "ratio": 1.4516955447805568,
+   "baseline_median": 12772410613,
+   "candidate_median": 18541651583
+  },
+  "lox/vm/properties|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 5041863666,
+      "cycles": 1646425960
+     },
+     {
+      "status": 0,
+      "instructions": 5041863705,
+      "cycles": 1637966604
+     },
+     {
+      "status": 0,
+      "instructions": 5041863705,
+      "cycles": 1664008038
+     }
+    ]
+   },
+   "region": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 7646751635,
+      "cycles": 3639046249
+     },
+     {
+      "status": 0,
+      "instructions": 7646751634,
+      "cycles": 3657778549
+     },
+     {
+      "status": 0,
+      "instructions": 7646751752,
+      "cycles": 3641929166
+     }
+    ]
+   },
+   "ratio": 1.5166517943388158,
+   "baseline_median": 5041863705,
+   "candidate_median": 7646751635
+  },
+  "lox/vm/string_equality|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 8861301134,
+      "cycles": 2488361367
+     },
+     {
+      "status": 0,
+      "instructions": 8861300825,
+      "cycles": 1474005445
+     },
+     {
+      "status": 0,
+      "instructions": 8861300807,
+      "cycles": 1477175327
+     }
+    ]
+   },
+   "region": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 9406803899,
+      "cycles": 2224618724
+     },
+     {
+      "status": 0,
+      "instructions": 9406804392,
+      "cycles": 2238904596
+     },
+     {
+      "status": 0,
+      "instructions": 9406803846,
+      "cycles": 2223201706
+     }
+    ]
+   },
+   "ratio": 1.0615601574501337,
+   "baseline_median": 8861300825,
+   "candidate_median": 9406803899
+  },
+  "lox/vm/string_equality|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 2822649047,
+      "cycles": 487548547
+     },
+     {
+      "status": 0,
+      "instructions": 2822649059,
+      "cycles": 488835019
+     },
+     {
+      "status": 0,
+      "instructions": 2822649054,
+      "cycles": 483556164
+     }
+    ]
+   },
+   "region": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 3301402458,
+      "cycles": 679879199
+     },
+     {
+      "status": 0,
+      "instructions": 3301402453,
+      "cycles": 681001962
+     },
+     {
+      "status": 0,
+      "instructions": 3301402456,
+      "cycles": 677139244
+     }
+    ]
+   },
+   "ratio": 1.1696113802463521,
+   "baseline_median": 2822649054,
+   "candidate_median": 3301402456
+  },
+  "lox/vm/strings|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 7937706719,
+      "cycles": 1891797060
+     },
+     {
+      "status": 0,
+      "instructions": 7937706753,
+      "cycles": 1915031340
+     },
+     {
+      "status": 0,
+      "instructions": 7937706686,
+      "cycles": 1917987264
+     }
+    ]
+   },
+   "region": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 9398104460,
+      "cycles": 2565230880
+     },
+     {
+      "status": 0,
+      "instructions": 9398104302,
+      "cycles": 2345945699
+     },
+     {
+      "status": 0,
+      "instructions": 9398106888,
+      "cycles": 2319418819
+     }
+    ]
+   },
+   "ratio": 1.1839823254623827,
+   "baseline_median": 7937706719,
+   "candidate_median": 9398104460
+  },
+  "lox/vm/strings|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 3910550138,
+      "cycles": 942496199
+     },
+     {
+      "status": 0,
+      "instructions": 3910550591,
+      "cycles": 1216704799
+     },
+     {
+      "status": 0,
+      "instructions": 3910550187,
+      "cycles": 962720702
+     }
+    ]
+   },
+   "region": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 4823898798,
+      "cycles": 1223682037
+     },
+     {
+      "status": 0,
+      "instructions": 4823899227,
+      "cycles": 1495334517
+     },
+     {
+      "status": 0,
+      "instructions": 4823901425,
+      "cycles": 1236084894
+     }
+    ]
+   },
+   "ratio": 1.2335602399468706,
+   "baseline_median": 3910550187,
+   "candidate_median": 4823899227
+  },
+  "lox/vm/trees|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 4671594360,
+      "cycles": 1119257617
+     },
+     {
+      "status": 0,
+      "instructions": 4671594237,
+      "cycles": 1132979009
+     },
+     {
+      "status": 0,
+      "instructions": 4671594274,
+      "cycles": 1137211853
+     }
+    ]
+   },
+   "region": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 6260979363,
+      "cycles": 1797527036
+     },
+     {
+      "status": 0,
+      "instructions": 6260979738,
+      "cycles": 1835362330
+     },
+     {
+      "status": 0,
+      "instructions": 6260979375,
+      "cycles": 1824225910
+     }
+    ]
+   },
+   "ratio": 1.3402232744923517,
+   "baseline_median": 4671594274,
+   "candidate_median": 6260979375
+  },
+  "lox/vm/trees|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1926898524,
+      "cycles": 712362199
+     },
+     {
+      "status": 0,
+      "instructions": 1926898485,
+      "cycles": 719176508
+     },
+     {
+      "status": 0,
+      "instructions": 1926898716,
+      "cycles": 710800718
+     }
+    ]
+   },
+   "region": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 2801773529,
+      "cycles": 1423123068
+     },
+     {
+      "status": 0,
+      "instructions": 2801773523,
+      "cycles": 1427113375
+     },
+     {
+      "status": 0,
+      "instructions": 2801773492,
+      "cycles": 1420408184
+     }
+    ]
+   },
+   "ratio": 1.454032730890192,
+   "baseline_median": 1926898524,
+   "candidate_median": 2801773523
+  },
+  "lox/vm/zoo|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 16144694857,
+      "cycles": 3673065778
+     },
+     {
+      "status": 0,
+      "instructions": 16144695265,
+      "cycles": 3743132604
+     },
+     {
+      "status": 0,
+      "instructions": 16144695136,
+      "cycles": 3771817387
+     }
+    ]
+   },
+   "region": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 22631085957,
+      "cycles": 5637598759
+     },
+     {
+      "status": 0,
+      "instructions": 22631086452,
+      "cycles": 5753284346
+     },
+     {
+      "status": 0,
+      "instructions": 22631086526,
+      "cycles": 5858393863
+     }
+    ]
+   },
+   "ratio": 1.4017661071553107,
+   "baseline_median": 16144695136,
+   "candidate_median": 22631086452
+  },
+  "lox/vm/zoo|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 6263320977,
+      "cycles": 2007676081
+     },
+     {
+      "status": 0,
+      "instructions": 6263320814,
+      "cycles": 1978250666
+     },
+     {
+      "status": 0,
+      "instructions": 6263320845,
+      "cycles": 1971368483
+     }
+    ]
+   },
+   "region": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 9381451135,
+      "cycles": 3992958213
+     },
+     {
+      "status": 0,
+      "instructions": 9381450625,
+      "cycles": 3977741749
+     },
+     {
+      "status": 0,
+      "instructions": 9381450467,
+      "cycles": 3941734572
+     }
+    ]
+   },
+   "ratio": 1.4978397015201925,
+   "baseline_median": 6263320845,
+   "candidate_median": 9381450625
+  },
+  "lox/vm/zoo_batch|qbe": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 13355147090,
+      "cycles": 2982934522
+     },
+     {
+      "status": 0,
+      "instructions": 13355147485,
+      "cycles": 3000849210
+     },
+     {
+      "status": 0,
+      "instructions": 13355147051,
+      "cycles": 2974196604
+     }
+    ]
+   },
+   "region": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 18583539662,
+      "cycles": 4646339070
+     },
+     {
+      "status": 0,
+      "instructions": 18583539734,
+      "cycles": 4612052563
+     },
+     {
+      "status": 0,
+      "instructions": 18583540618,
+      "cycles": 4828650881
+     }
+    ]
+   },
+   "ratio": 1.3914889599317772,
+   "baseline_median": 13355147090,
+   "candidate_median": 18583539734
+  },
+  "lox/vm/zoo_batch|llvm": {
+   "base": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 5117365005,
+      "cycles": 1584345500
+     },
+     {
+      "status": 0,
+      "instructions": 5117365032,
+      "cycles": 1550697436
+     },
+     {
+      "status": 0,
+      "instructions": 5117365032,
+      "cycles": 1544456766
+     }
+    ]
+   },
+   "region": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 7650940524,
+      "cycles": 3234752752
+     },
+     {
+      "status": 0,
+      "instructions": 7650939448,
+      "cycles": 3234714580
+     },
+     {
+      "status": 0,
+      "instructions": 7650939056,
+      "cycles": 3213511527
+     }
+    ]
+   },
+   "ratio": 1.4950935491521529,
+   "baseline_median": 5117365032,
+   "candidate_median": 7650939448
+  }
+ },
+ "counters": {
+  "before": {
+   "marks": 13999514,
+   "checks": 10477018,
+   "hoisted": 97672,
+   "copies": 410240,
+   "copied_bytes": 2090704513,
+   "pinned_copies": 0,
+   "pins": 0
+  },
+  "after": {
+   "marks": 13387790,
+   "checks": 10477018,
+   "hoisted": 97672,
+   "copies": 196128,
+   "copied_bytes": 50879893,
+   "pinned_copies": 0,
+   "pins": 0
+  },
+  "program": "lox/vm/trees",
+  "size": 5
+ }
+}
