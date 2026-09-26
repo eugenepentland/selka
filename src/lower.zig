@@ -18,7 +18,7 @@ const Work = union(enum) {
     mark: Label,
     jump: struct { target: Label, conditional: bool = false, span: Span },
     propagate: struct { input: typed.Type, output: typed.Type, target: Label, span: Span },
-    dispatch: struct { ty: typed.Type, targets: []const Label, slots: []const ?typed.LocalId, span: Span },
+    dispatch: struct { ty: typed.Type, targets: []const Label, slots: []const ?typed.LocalId, span: Span, borrowed: bool },
 };
 const Fixup = struct { instruction: usize, label: Label, arm: ?usize = null, propagation: bool = false };
 const Emitter = struct {
@@ -268,7 +268,7 @@ const Emitter = struct {
                     slots[arm.tag] = arm.slot;
                     if (!self.program.statements[@backingInt(arm.body)].terminates) try self.push(.{ .jump = .{ .target = end, .span = stmt.span } });
                     try self.push(.{ .statement = arm.body });
-                    if (arm.slot) |slot| try self.payloadCopy(stmt.span, match.value, slot);
+                    if (!match.borrowed) if (arm.slot) |slot| try self.payloadCopy(stmt.span, match.value, slot);
                     const case = self.variantCase(matched, arm.tag);
                     if (case.boxed) if (arm.slot) |slot| {
                         // The arm's box lands in a hidden local; the binding the
@@ -281,8 +281,12 @@ const Emitter = struct {
                     };
                     try self.push(.{ .mark = targets[arm.tag] });
                 }
-                try self.push(.{ .dispatch = .{ .ty = self.program.nodes[@backingInt(match.value)].ty, .targets = targets, .slots = slots, .span = stmt.span } });
-                try self.push(.{ .expression = match.value });
+                try self.push(.{ .dispatch = .{ .ty = self.program.nodes[@backingInt(match.value)].ty, .targets = targets, .slots = slots, .span = stmt.span, .borrowed = match.borrowed } });
+                if (match.borrowed) {
+                    const node = self.program.nodes[@backingInt(match.value)];
+                    if (node.data != .local) return error.InternalError;
+                    try self.instruction(node.span, .{ .load_local = node.data.local });
+                } else try self.push(.{ .expression = match.value });
             },
             .branch => |branch| {
                 const otherwise = try self.label();
@@ -658,7 +662,7 @@ const Emitter = struct {
                     arm.* = .{ .target = 0, .slot = slot };
                     try self.fixups.append(self.scratch, .{ .instruction = self.code.items.len, .label = target, .arm = i });
                 }
-                try self.code.append(self.scratch, .{ .span = dispatch.span, .op = .{ .switch_variant = .{ .ty = dispatch.ty, .arms = arms } } });
+                try self.code.append(self.scratch, .{ .span = dispatch.span, .op = .{ .switch_variant = .{ .ty = dispatch.ty, .arms = arms, .borrowed = dispatch.borrowed } } });
             },
             .mark => |id| self.labels.items[@backingInt(id)] = self.code.items.len,
             .jump => |jump| {
