@@ -200,6 +200,10 @@ void myl_qbe_rc_finish(void *);
 void myl_qbe_rc_arena_prepare(void *, MylQbeRcFrame *, size_t local_watermark);
 int myl_qbe_rc_unique_local(void *, const myl_native_type *, void *, uint32_t *owned);
 int myl_qbe_rc_unique_field(void *, const myl_native_type *, void *, void *container);
+/* The compiler proves the list unique and each live element an ordinary owning
+ * pointer. Detach shared children at the list's region; refusal may leave an
+ * equivalent detached prefix. This does not establish the loop's alias proof. */
+int myl_qbe_rc_unique_elements(void *, const myl_native_type *list_type, void *list);
 int myl_qbe_rc_unique_held(void *, const myl_native_type *, void *, void *container);
 /* Copy a prepared inline body into an owned replacement box. The owner slot
  * and guard change only on success; borrowed prior owners are not released. */

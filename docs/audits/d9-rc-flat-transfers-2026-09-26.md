@@ -57,4 +57,27 @@ zero clones. The scaled GC control remains 105,808,932 instructions; this
 isolated runtime change remains roughly 55x that control. It is not WP-4
 acceptance. Raw counts, hashes and sampled profile are under
 `experiments/d9-rc-flat-transfers-20260926/`. The independent read-only-body and
-constructor-take compiler changes will be measured after this isolated commit.
+constructor-take compiler changes were then merged at `2aafa6b1` and measured
+against a preserved compiler binary from the constructor-take reference.
+
+| Backend | Read-only bodies + constructor take, before flat | Plus flat | Frozen GC |
+| --- | ---: | ---: | ---: |
+| QBE | 3,488,667,057 | 2,382,637,927 | 105,808,977 |
+| LLVM | 2,467,965,407 | 1,517,873,558 | 50,540,745 |
+
+These are three interleaved instruction medians per arm on the same private
+CPU, with Debug compilers and identical depth-12 source. LLVM explicitly uses
+`--backend=llvm --llvm-opt=3 --lto`, with no later QBE selection; artifact
+manifests confirm the backend and optimization. The GC reference uses the
+preserved compiler from the frozen `39f` experiment. The added flat path yields
+1.464x QBE and 1.626x LLVM improvements after the compiler changes. Every arm's
+stdout matches exactly. Both RC revisions and both backends have identical
+complete counters: 669,060 allocations/retirements, 19 owner acquisitions,
+669,079 releases, zero holds/clones, and 33 uniqueness checks.
+
+The combined runtimes remain 22.52x QBE and 30.03x LLVM above this scaled GC
+control. These results do not satisfy the WP-4 corpus gate. Joined focused RC
+validation passes all 37 tests, and the Debug compiler build passes all 88
+Guardian checks. `combined.json` preserves all commands, hashes, raw runs and
+counters. `combined-profile.txt` is a short sampled QBE profile (about 150
+samples); its proportions are directional, not exact per-operation costs.
