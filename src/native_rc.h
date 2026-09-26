@@ -56,7 +56,9 @@ struct myl_rc_shape {
  * whole call. Raw backing has NONE shape and stable extent metadata; a held
  * dictionary backing must never borrow a dictionary-embedded descriptor.
  * finalize is reserved for explicitly unique resource hooks: it runs with an
- * idle descriptor stack, before retire, and may enqueue, allocate or register. */
+ * idle descriptor stack, BEFORE releasing managed child edges and before
+ * retire, so its callback context stays alive. It may enqueue, allocate or
+ * register; existing unique cleanup delegates this hook exactly once. */
 typedef struct {
     const myl_native_type *type;
     const myl_rc_shape *shape;
