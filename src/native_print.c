@@ -192,14 +192,14 @@ void myl_print_dictionary(MylPrint *out, const void *value, unsigned depth, MylP
     if (myl_print_deep(out, depth)) return;
     myl_native_dictionary *dict;
     memcpy(&dict, value, sizeof dict);
-    myl_native_dictionary_settle(dict);
     byte(out, '{');
-    for (size_t i = 0; i < dict->entries->length; ++i) {
-        const unsigned char *entry = (const unsigned char *)dict->entries->storage + i * dict->entry_type.size;
-        if (i) literal(out, ", ");
-        key(out, entry, depth + 1);
+    size_t cursor=0, count=0;
+    const void *key_value, *item_value;
+    while (myl_native_dictionary_next(dict,&cursor,&key_value,&item_value)) {
+        if (count++) literal(out, ", ");
+        key(out, key_value, depth + 1);
         literal(out, ": ");
-        item(out, entry + dict->value_offset, depth + 1);
+        item(out, item_value, depth + 1);
     }
     byte(out, '}');
 }
@@ -209,15 +209,16 @@ void myl_print_set(MylPrint *out, const void *value, unsigned depth, MylPrintFn 
     if (myl_print_deep(out, depth)) return;
     myl_native_dictionary *dict;
     memcpy(&dict, value, sizeof dict);
-    myl_native_dictionary_settle(dict);
-    if (!dict->entries->length) {
+    if (!myl_native_dictionary_length(dict)) {
         literal(out, "set()");
         return;
     }
     byte(out, '{');
-    for (size_t i = 0; i < dict->entries->length; ++i) {
-        if (i) literal(out, ", ");
-        element(out, (const unsigned char *)dict->entries->storage + i * dict->entry_type.size, depth + 1);
+    size_t cursor=0, count=0;
+    const void *key, *item;
+    while (myl_native_dictionary_next(dict,&cursor,&key,&item)) {
+        if (count++) literal(out, ", ");
+        element(out, key, depth + 1);
     }
     byte(out, '}');
 }

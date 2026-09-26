@@ -208,3 +208,14 @@ fix and pass in both base and optimized ports. The composed source includes
 this fix, scalar instance/class readers and late closure publication. Each
 component has port tests, both-backend smoke/stress validation and exact patch
 replay; the current composition is included in the fresh performance sweep.
+
+## Joined RC host and staged-clone regression checkpoint
+
+The experimental branch passes a new frozen four-command gate at `d0178601`:
+94 main steps and 2,162 executed tests, QBE 51 steps/436 tests, native build
+29 steps, and formatting 2 steps. The [checkpoint report](d9-rc-host-staged-gate-2026-09-26.md)
+retains exact evidence for startup registration, iterative pinned snapshots,
+production collection ownership and copied-codec/host trap cleanup. GC remains
+the default. Compiler lowering, scopes/arena escape, actual borrow count
+traffic and WP-4 performance acceptance are still underway with Astra agents
+at extra-high reasoning; WP-5 remains dependent on completing WP-4.

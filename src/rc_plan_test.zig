@@ -2,11 +2,13 @@
 const std = @import("std");
 const compiler = @import("compiler.zig");
 const native = @import("native_types.zig");
+const typed = @import("typed.zig");
 const shapes = @import("rc_shape.zig");
 const model = @import("rc_model.zig");
 const calls = @import("rc_calls.zig");
 const transfers = @import("rc_transfer.zig");
 const plans = @import("rc_plan.zig");
+const slots = @import("qbe_rc_slots.zig");
 const t = std.testing;
 
 const ShapeFixture = struct {
@@ -30,7 +32,7 @@ const ShapeFixture = struct {
         self.compilation.deinit();
     }
 
-    fn typeNamed(self: *const ShapeFixture, name: []const u8) !@import("typed.zig").Type {
+    fn typeNamed(self: *const ShapeFixture, name: []const u8) !typed.Type {
         for (self.layouts.records) |record| if (std.mem.eql(u8, record.name, name)) return record.id;
         return error.TestUnexpectedResult;
     }
@@ -82,7 +84,7 @@ test "RC-OWNERSHIP-PLAN-1 raw resources keep unique cleanup without an RC header
     try t.expect(try rawResourceShape(&fixture, metadata_text, .text_file));
 }
 
-fn rawResourceShape(fixture: *ShapeFixture, text: []const u8, ty: @import("typed.zig").Type) !bool {
+fn rawResourceShape(fixture: *ShapeFixture, text: []const u8, ty: typed.Type) !bool {
     const a = fixture.arena.allocator();
     const name = try @import("rc_descriptors.zig").symbol(a, &fixture.layouts, ty);
     const definition = try std.fmt.allocPrint(a, "const myl_rc_shape {s} = {{.size=8,.kind=MYL_RC_SHAPE_NONE}};", .{name});
@@ -515,4 +517,67 @@ test "RC-OWNERSHIP-PLAN-1 zero iteration does not initialize a loop-only owner" 
     try t.expect(plan.entry[local].ownership == .empty);
     try t.expect(release >= try firstDefinition(input, local));
     try t.expect(release <= try lastBackEdge(input));
+}
+
+const SlotEmitter = struct {
+    output: std.Io.Writer.Allocating,
+    serial: usize = 100,
+
+    fn init() SlotEmitter {
+        return .{ .output = .init(t.allocator) };
+    }
+
+    fn deinit(self: *SlotEmitter) void {
+        self.output.deinit();
+    }
+
+    /// Allocate an SSA identity distinct from the fixture's incoming addresses.
+    pub fn temp(self: *SlotEmitter) usize {
+        defer self.serial += 1;
+        return self.serial;
+    }
+
+    /// Write one lowered instruction sequence to this test's native IR buffer.
+    pub fn print(self: *SlotEmitter, comptime format: []const u8, args: anytype) slots.Error!void {
+        self.output.writer.print(format, args) catch return error.OutOfMemory;
+    }
+
+    /// Stable stand-in for the already-tested physical native descriptor symbol.
+    pub fn descriptor(_: *SlotEmitter, _: typed.Type) slots.Error![]const u8 {
+        return "fixture_descriptor";
+    }
+};
+
+fn at(text: []const u8, needle: []const u8) !usize {
+    return std.mem.indexOf(u8, text, needle) orelse error.TestUnexpectedResult;
+}
+
+// spec-case: RC-OWNERSHIP-PLAN-1
+test "RC-OWNERSHIP-PLAN-1 slot ownership publishes only beyond the runtime failure branch" {
+    var emitter = SlotEmitter.init();
+    defer emitter.deinit();
+    const lower = slots.Lower(SlotEmitter);
+    try lower.transfer(&emitter, .{ .ty = .i64, .destination = 1, .source = 2, .region = 3, .mode = .copy_empty });
+    try lower.initialized(&emitter, 4, true);
+    const text = emitter.output.written();
+    const helper = try at(text, "call $myl_rc_native_copy");
+    const status = try at(text, "call $myl_rc_take_failure");
+    const trap = try at(text, "call $myl_qbe_rc_status");
+    const failure = try at(text, "jmp @failure");
+    const published = try at(text, "storew 1, %v4");
+    try t.expect(helper < status);
+    try t.expect(status < trap);
+    try t.expect(trap < failure);
+    try t.expect(failure < published);
+}
+
+// spec-case: RC-OWNERSHIP-PLAN-1
+test "RC-OWNERSHIP-PLAN-1 raw resource slot cleanup clears its guard before closing" {
+    var emitter = SlotEmitter.init();
+    defer emitter.deinit();
+    try slots.Lower(SlotEmitter).release(&emitter, .{ .ty = .file, .address = 1, .guard = 2, .unique_drop = true, .counted = false });
+    const text = emitter.output.written();
+    try t.expect(try at(text, "storew 0, %v2") < try at(text, "call $myl_native_owned_drop"));
+    try t.expect(std.mem.indexOf(u8, text, "call $myl_rc_native_drop") == null);
+    try t.expect(std.mem.indexOf(u8, text, "@rcreleased") != null);
 }

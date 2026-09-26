@@ -27,11 +27,13 @@ def main():
 def run_suite(root, command, directory, suite, sources):
     """Compile one C suite against the runtime sources it needs and run it."""
     executable = directory / suite
+    if suite == "native_rc_stats":
+        command = command + ["-DMYL_NATIVE_RC_COUNTING=1"]
     if "native_heap.c" in sources:
         required = ("native_arena.c", "native_collections.c", "native_text.c",
                     "native_dictionary.c", "native_equal.c", "native_bytes.c",
-                    "native_rc.c", "native_rc_shapes.c", "native_rc_walk.c",
-                    "native_rc_transfer.c", "native_rc_alloc.c", "native_rc_values.c")
+                    "native_rc.c", "native_rc_stats.c", "native_rc_shapes.c", "native_rc_walk.c",
+                    "native_rc_scope.c", "native_rc_transfer.c", "native_rc_alloc.c", "native_rc_values.c")
         at = sources.index("native_heap.c") + 1
         for source in required:
             if source not in sources:
@@ -60,8 +62,9 @@ def jobs():
 
 # Each C suite and the runtime sources it links.
 SUITES = (
-    ("native_rc_contract", ["native_rc.c", "native_rc_shapes.c", "native_rc_walk.c", "native_rc_transfer.c"]),
-    ("native_rc_collections", ["native_heap.c", "native_text_methods.c"]),
+    ("native_rc_stats", ["native_heap.c"]),
+    ("native_rc_contract", ["native_rc.c", "native_rc_stats.c", "native_rc_shapes.c", "native_rc_walk.c", "native_rc_scope.c", "native_rc_transfer.c"]),
+    ("native_rc_collections", ["native_heap.c", "native_text_methods.c", "native_print.c"]),
     ("native_rc_codecs", ["native_heap.c", "qbe_runtime.c"]),
     ("native_rc_host", ["native_heap.c", "qbe_runtime.c"]),
     ("native_heap", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c", "native_equal.c", "native_bytes.c"]),
