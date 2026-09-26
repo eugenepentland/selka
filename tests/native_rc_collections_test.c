@@ -690,6 +690,46 @@ static void pinned_dictionary_readers(void) {
     myl_rc_owner_release(&heap,dict);
     finish(&heap);
 }
+/* spec-case: RC-VIEWS-1. Failed arena split construction immediately releases
+ * heap backing retained by earlier fresh text views, before arena bulk close. */
+static void arena_text_split_rollback(void) {
+    myl_native_heap heap;
+    init(&heap);
+    unsigned char raw[1025];
+    memset(raw,'x',sizeof raw);
+    raw[512]=' ';
+    myl_native_text *input=myl_native_text_from_utf8(&heap,raw,sizeof raw);
+    myl_native_text *separator=myl_native_text_from_utf8(&heap,(const unsigned char *)" ",1);
+    assert(input && separator);
+    for (unsigned mode=0;mode<3;mode++) {
+        ((unsigned char *)myl_native_text_storage(input))[512]=mode==2?'\n':' ';
+        ((myl_rc_object *)input-1)->owners=MYL_RC_COUNT_MAX-1;
+        assert(myl_native_region_begin(&heap));
+        myl_native_list *parts=mode==0?myl_native_text_split(&heap,input,separator):
+            mode==1?myl_native_text_split_whitespace(&heap,input):myl_native_text_lines(&heap,input);
+        assert(!parts && myl_rc_take_failure(&heap)==MYL_RC_COUNT_LIMIT);
+        assert(owners(input)==MYL_RC_COUNT_MAX-1);
+        ((myl_rc_object *)input-1)->owners=1;
+        myl_native_region_end(&heap);
+        assert(owners(input)==1);
+    }
+    /* Leave precisely enough room for the result header and its first view,
+     * then refuse the append's initial raw backing after that view was made. */
+    ((unsigned char *)myl_native_text_storage(input))[512]='x';
+    assert(myl_native_region_begin(&heap));
+    assert(myl_rc_storage_bytes(&heap,1,1));
+    size_t room=(size_t)(heap.arena_window.limit-heap.arena_window.cursor);
+    size_t needed=sizeof(myl_native_object)*2+sizeof(myl_native_list)+sizeof(myl_native_text_view);
+    assert(room>needed+sizeof(myl_native_object));
+    assert(myl_rc_storage_bytes(&heap,room-needed-sizeof(myl_native_object),1));
+    heap.limit=heap.bytes;
+    assert(!myl_native_text_lines(&heap,input) && owners(input)==1);
+    heap.limit=64u<<20;
+    myl_native_region_end(&heap);
+    myl_rc_owner_release(&heap,separator);
+    myl_rc_owner_release(&heap,input);
+    finish(&heap);
+}
 int myl_rc_collections_verify(void) {
     storage_reuse_and_holds();
     storage_boundaries();
@@ -712,12 +752,13 @@ int myl_rc_collections_verify(void) {
     dictionary_publication_rollback();
     arena_edit_abort();
     pinned_dictionary_readers();
-    return 21;
+    arena_text_split_rollback();
+    return 22;
 }
 #ifndef MYL_RC_COLLECTIONS_LIBRARY
 int main(void) {
-    assert(myl_rc_collections_verify()==21);
-    puts("native RC collections: 21 passed");
+    assert(myl_rc_collections_verify()==22);
+    puts("native RC collections: 22 passed");
     return 0;
 }
 #endif

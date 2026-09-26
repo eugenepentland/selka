@@ -1303,3 +1303,14 @@ int myl_rc_list_sort_keyed(myl_native_heap *heap, const myl_rc_sort_request *req
     if (temporary) myl_rc_native_abort(heap,temporary);
     return ok;
 }
+
+void myl_rc_list_abort_parts(myl_native_heap *heap, myl_native_list *list, const void *borrowed) {
+    if (list->element->kind!=MYL_NATIVE_POINTER) abort();
+    void **parts=list->storage;
+    for (size_t i=0;i<list->length;i++) {
+        void *part=parts[i];
+        if (part && part!=borrowed && (((myl_native_object *)part-1)->mark&MYL_NATIVE_OBJECT_ARENA))
+            myl_rc_native_abort(heap,part);
+    }
+    myl_rc_native_abort(heap,list);
+}
