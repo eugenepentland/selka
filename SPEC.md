@@ -1393,3 +1393,9 @@ host failure in one worker leaves the units the other workers hold running.
 - [RC-PHYSICAL-RETAIN-1] Physical helper ownership publication preserves pointer identity and acquires direct O/H edges without semantic marks or pin snapshots; count and region refusal rolls back the whole batch.
 
 - [RC-BOX-WRITEBACK-1] A counted mutation of a collection field materialized from a boxed Option payload republishes the updated body into the owning Option slot before the receiver is used. The replacement preserves the original allocation region, retains child identity without adding semantic sharing or pin clones, retires only a locally owned prior box, and keeps earlier snapshots unchanged.
+
+- [MUT-EXPRESSION-STACK-1] A transparent `mut` argument marker consumes exactly one checked target expression, regardless of whether that target lowers to an indexed read, a field or a synthesized block. Nested dictionary mutation arguments compose with later call arguments without checker stack underflow, while missing-marker and nonassignable-target diagnostics remain unchanged.
+
+- [RECURSIVE-FILE-CONTRACT-1] Recursive immutable box admissibility detects builtin `File` and `TextFile` resource leaves through records, variants and nonempty fixed arrays, including declaration-order and generic wrappers, and rejects them with the existing `E_RECURSIVE_RECORD` rule before execution. Zero-length resource arrays contain no obligation; ordinary scoped file handling and acyclic resource/Result transfers keep their existing contracts.
+
+- [COW-BOX-REBOX-ROOTS-1] Reboxing a narrowed recursive value after a nested collection write is a GC safepoint independent of the preceding child-copy safepoint. The compiler republishes every live frame root around that allocation, including older snapshots no longer reachable through the latest box owner; repeated standalone writes preserve those snapshots under collection stress.

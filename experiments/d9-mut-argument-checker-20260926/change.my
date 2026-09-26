@@ -1,0 +1,10 @@
+def change(target: mut dict[int,int], source: dict[int,dict[int,int]]) -> int:
+    target[1] = 13
+    return source[0][1]
+
+def main(out: Stream) -> int:
+    original = {0:{1:7}}
+    before = change(mut original[0], original)
+    out.print(before)
+    out.print(original[0][1])
+    return 0

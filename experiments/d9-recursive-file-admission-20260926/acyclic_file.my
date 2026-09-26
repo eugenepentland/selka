@@ -1,0 +1,22 @@
+import filesystem
+
+record Owner:
+    file: TextFile
+
+def opened(fs: Filesystem) -> Result[Owner, str]:
+    return Ok(Owner(fs.open("data", "w")?))
+
+def exercise(fs: Filesystem) -> Result[int, str]:
+    original = opened(fs)?
+    return Ok(13)
+
+def main(out: Stream) -> int:
+    fs = filesystem.memory()
+    match exercise(fs):
+        case Ok(value):
+            out.print(value)
+            out.print(fs.read_text("data"))
+            return 0
+        case Err(message):
+            out.print(message)
+            return 2

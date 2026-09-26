@@ -608,7 +608,11 @@ fn fillPlace(comptime E: type, self: *E, pc: usize, stack: []const typed.Type) E
         const new = self.temp();
         const body = (try fieldBase(E, self, place.parent)).address;
         try self.print(" %v{d} =l loadl %l{d}\n", .{ old, box.owner });
+        // The preceding child copy restored its roots. Reboxing allocates too,
+        // and earlier snapshots can be reachable only from other live locals.
+        const pushed = try self.roots(stack);
         try self.print(" %v{d} =l call $myl_native_cow_rebox(l %heap, l extern ${s}, l %v{d}, l %v{d})\n", .{ new, try self.descriptor(box.ty), old, body });
+        if (pushed) try self.restoreRoots();
         try self.require(new, format.allocation_failure);
         try self.print(store_local, .{ new, box.owner });
     }

@@ -1,0 +1,5 @@
+{
+  "base_commit": "7998e84c",
+  "compiler_sha256": "e96e7e5a99dc3289de88c1ab357e6b13f6a429b2f19ee18a1803a069e33c2a06",
+  "implementation": "The sema_expressions.zig change in this commit; Debug compiler installed after Guardian88 passed."
+}
