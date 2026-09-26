@@ -62,6 +62,10 @@ typedef struct {
     const myl_rc_shape *shape;
     void (*edges)(myl_native_heap *, void *, size_t);
     void (*finalize)(myl_native_heap *, void *);
+    /* Optional collection clone: copy logical edges pin-aware into the exact
+     * destination region. Fresh owned success; complete rollback on failure.
+     * Without it a descriptor with no custom edges uses the generic body copy. */
+    myl_rc_status (*clone)(myl_native_heap *, const void *, unsigned, void **);
 } myl_rc_descriptor;
 typedef struct {
     unsigned abi;
