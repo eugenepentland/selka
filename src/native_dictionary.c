@@ -73,7 +73,7 @@ myl_native_dictionary *myl_native_dictionary_new(myl_native_heap *heap, const my
     myl_native_root_push(heap,&root,&dict,&pointer_type);
     dict->entries=myl_rc_enabled(heap)?myl_rc_list_storage_new(heap,&dict->entry_type,0,heap->region_depth):myl_native_list_new(heap,&dict->entry_type,0);
     myl_native_root_pop(heap,&root);
-    if (!dict->entries && myl_rc_enabled(heap)) { myl_rc_owner_release(heap,dict); return NULL; }
+    if (!dict->entries && myl_rc_enabled(heap)) { myl_rc_native_abort(heap,dict); return NULL; }
     return dict->entries ? dict : NULL;
 }
 static inline unsigned char *entry_at(const myl_native_dictionary *dict, size_t index) {
@@ -889,7 +889,7 @@ myl_native_list *myl_native_dictionary_snapshot(myl_native_heap *heap, myl_nativ
             const unsigned char *entry=entry_at(dict,i);
             if (myl_rc_enabled(heap)) {
                 if (!myl_rc_list_append(heap,result,entry+(keys?0:dict->value_offset))) {
-                    myl_rc_owner_release(heap,result); result=NULL; break;
+                    myl_rc_native_abort(heap,result); result=NULL; break;
                 }
             } else memcpy((unsigned char *)result->storage+i*element->size,entry+(keys?0:dict->value_offset),element->size);
         }
@@ -1076,7 +1076,7 @@ myl_native_dictionary *myl_native_dictionary_copy(myl_native_heap *heap, const m
     myl_native_root_push(heap,&root,&rooted,&pointer_type);
     myl_native_dictionary *result=myl_native_dictionary_new(heap,input->key,input->value,input->string_keys);
     if (result && !myl_native_dictionary_update(heap,result,input)) {
-        if (myl_rc_enabled(heap)) myl_rc_owner_release(heap,result);
+        if (myl_rc_enabled(heap)) myl_rc_native_abort(heap,result);
         result=NULL;
     }
     myl_native_root_pop(heap,&root);
@@ -1210,7 +1210,7 @@ static myl_native_dictionary *rc_dict_clone(myl_native_heap *heap, const myl_nat
     for (size_t i=0;i<input->entries->length;i++) {
         const unsigned char *entry=entry_at(input,i);
         if (!rc_insert(heap,clone,entry,entry+input->value_offset)) {
-            myl_rc_owner_release(heap,clone); return NULL;
+            myl_rc_native_abort(heap,clone); return NULL;
         }
     }
     return clone;

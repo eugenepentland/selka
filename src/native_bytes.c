@@ -307,7 +307,7 @@ myl_native_list *myl_native_bytes_split(myl_native_heap *heap, myl_native_bytes 
             size_t hit=left>1 ? myl_native_octets_find((const unsigned char *)input->storage+start,input->length-start,separator->storage,width) : SIZE_MAX;
             size_t end=hit==SIZE_MAX ? input->length : start+hit;
             myl_native_bytes *piece=copy_range(heap,input,start,end-start);
-            if (!piece) { if (myl_rc_enabled(heap)) myl_rc_owner_release(heap,result); result=NULL; break; }
+            if (!piece) { if (myl_rc_enabled(heap)) myl_rc_native_abort(heap,result); result=NULL; break; }
             /* The reserved slot is written in place, as an append that finds
                room writes it; the collector traces the whole reservation. */
             ((myl_native_bytes **)result->storage)[result->length++]=piece;
@@ -343,7 +343,7 @@ myl_native_list *myl_native_bytes_split_whitespace(myl_native_heap *heap, myl_na
             myl_native_bytes *piece=copy_range(heap,input,start,cursor-start);
             int appended=piece && myl_native_list_append(heap,result,&piece);
             if (myl_rc_enabled(heap)) myl_rc_owner_release(heap,piece);
-            if (!appended) { if (myl_rc_enabled(heap)) myl_rc_owner_release(heap,result); result=NULL; break; }
+            if (!appended) { if (myl_rc_enabled(heap)) myl_rc_native_abort(heap,result); result=NULL; break; }
         }
     }
     myl_native_root_pop(heap,&b); myl_native_root_pop(heap,&a);

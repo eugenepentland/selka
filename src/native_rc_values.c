@@ -68,3 +68,15 @@ myl_rc_status myl_rc_native_result(myl_native_heap *heap, const void *result) {
     myl_rc_record_failure(heap,status);
     return status;
 }
+void myl_rc_native_abort(myl_native_heap *heap, void *payload) {
+    if (!payload) return;
+    const myl_native_object *common=(const myl_native_object *)payload-1;
+    if (!(common->mark&MYL_NATIVE_OBJECT_ARENA)) { myl_rc_owner_release(heap,payload); return; }
+    const myl_rc_descriptor *descriptor=myl_rc_descriptor_find(heap,common->element);
+    if (!descriptor || descriptor->finalize) abort();
+    size_t count=(common->mark>>MYL_NATIVE_OBJECT_COUNT_SHIFT)&MYL_NATIVE_ARENA_COUNT_MAX;
+    if (descriptor->edges) descriptor->edges(heap,payload,count);
+    else myl_rc_edges_release(heap,descriptor->shape,payload,count);
+    memset(payload,0,count*common->element->size);
+    myl_rc_drain(heap);
+}

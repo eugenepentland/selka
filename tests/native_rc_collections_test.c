@@ -1,6 +1,7 @@
 #include "native_rc_collections.h"
 #include "native_rc_dictionary.h"
 #include "native_bytes.h"
+#include "native_text_methods.h"
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -8,6 +9,8 @@
 static const myl_native_type number={.size=8,.alignment=8,.kind=MYL_NATIVE_PLAIN};
 static const myl_native_type pointer={.size=sizeof(void *),.alignment=_Alignof(void *),.kind=MYL_NATIVE_POINTER};
 static const myl_native_type text_pointer={.size=sizeof(void *),.alignment=_Alignof(void *),.kind=MYL_NATIVE_POINTER,.collection_kind=2};
+myl_native_list *myl_native_text_split_whitespace(myl_native_heap *, myl_native_text *);
+myl_native_list *myl_native_bytes_split_whitespace(myl_native_heap *, myl_native_bytes *);
 static void init(myl_native_heap *heap) {
     myl_native_heap_init(heap,64u<<20);
     if (!myl_rc_enabled(heap)) assert(myl_rc_storage_init(heap)==MYL_RC_OK);
@@ -288,6 +291,138 @@ static void production_deep_and_wide(void) {
     myl_rc_owner_release(&heap,dag);
     finish(&heap);
 }
+/* spec-case: RC-VIEWS-1. Nonempty text and byte transforms transfer each
+ * temporary success token once, including split helpers that append pieces. */
+static void transforms_release_temporaries(void) {
+    myl_native_heap heap;
+    init(&heap);
+    const unsigned char raw[]=" a,b\nc\r\nd ";
+    myl_native_text *input=myl_native_text_from_utf8(&heap,raw,sizeof raw-1);
+    myl_native_text *comma=myl_native_text_from_utf8(&heap,(const unsigned char *)",",1);
+    myl_native_text *insert=myl_native_text_from_utf8(&heap,(const unsigned char *)"::",2);
+    assert(input && comma && insert);
+    myl_native_text *trim=myl_native_text_trim(&heap,input,MYL_TEXT_BOTH);
+    myl_native_text *upper=myl_native_text_case(&heap,input,1);
+    myl_native_text *padded=myl_native_text_zfill(&heap,input,20);
+    myl_native_text *replaced=myl_native_text_replace(&heap,input,comma,insert);
+    myl_native_list *lines=myl_native_text_lines(&heap,input);
+    myl_native_list *words=myl_native_text_split_whitespace(&heap,input);
+    myl_native_list *pieces=myl_native_text_split(&heap,input,comma);
+    assert(trim && upper && padded && replaced && lines && words && pieces);
+    assert(trim->bytes==sizeof raw-3 && padded->length==20 && lines->length==3 && words->length==3 && pieces->length==2);
+    myl_native_text *joined=myl_native_text_join(&heap,comma,pieces);
+    myl_native_bytes *bytes=myl_native_bytes_encode(&heap,input);
+    myl_native_bytes *delimiter=myl_native_bytes_encode(&heap,comma);
+    assert(joined && myl_native_text_equal(joined,input) && bytes && delimiter);
+    myl_native_list *byte_parts=myl_native_bytes_split(&heap,bytes,delimiter);
+    myl_native_list *byte_words=myl_native_bytes_split_whitespace(&heap,bytes);
+    myl_native_bytes *byte_joined=myl_native_bytes_join(&heap,delimiter,byte_parts);
+    myl_native_text *hex=myl_native_bytes_hex(&heap,bytes);
+    int status=-1;
+    myl_native_bytes *unhex=myl_native_bytes_from_hex(&heap,hex,&status);
+    assert(byte_parts && byte_words && byte_joined && hex && unhex && status==MYL_BYTES_OK);
+    assert(byte_words->length==3 && byte_joined->length==sizeof raw-1 && !memcmp(unhex->storage,raw,sizeof raw-1));
+    myl_native_text *decoded=myl_native_bytes_decode(&heap,bytes,&status);
+    assert(decoded && status==MYL_BYTES_OK && myl_native_text_equal(decoded,input));
+    void *owned[]={input,comma,insert,trim,upper,padded,replaced,lines,words,pieces,joined,bytes,delimiter,byte_parts,byte_words,byte_joined,hex,unhex,decoded};
+    for (size_t i=0;i<sizeof owned/sizeof owned[0];i++) myl_rc_owner_release(&heap,owned[i]);
+    finish(&heap);
+}
+/* spec-case: RC-COLLECTION-1. Sorting relocates existing owners; keyed sorted
+ * copies acquire their own edges, and failed pinned cloning unwinds its prefix. */
+static void sorting_and_partial_clone(void) {
+    myl_native_heap heap;
+    init(&heap);
+    myl_native_list *values=myl_native_list_new(&heap,&text_pointer,0);
+    myl_native_list *keys=myl_native_list_new(&heap,&number,0);
+    myl_native_list *sorted=myl_native_list_new(&heap,&text_pointer,3);
+    assert(values && keys && sorted);
+    for (unsigned i=0;i<3;i++) {
+        unsigned char letter=(unsigned char)('c'-i);
+        myl_native_text *text=myl_native_text_from_utf8(&heap,&letter,1);
+        int64_t key=(int64_t)i;
+        assert(text && myl_native_list_append(&heap,values,&text) && myl_native_list_append(&heap,keys,&key));
+        myl_rc_owner_release(&heap,text);
+    }
+    assert(myl_native_list_sort(values,3));
+    myl_rc_sort_request request={.values=sorted,.source=values,.keys=keys,.shape=1,.reverse=1};
+    assert(myl_rc_list_sort_keyed(&heap,&request));
+    assert(myl_native_text_storage(*(myl_native_text **)sorted->storage)[0]=='c');
+    myl_rc_owner_release(&heap,values);
+    assert(myl_native_text_storage(*(myl_native_text **)sorted->storage)[0]=='c');
+    myl_rc_owner_release(&heap,keys);
+    myl_rc_owner_release(&heap,sorted);
+    myl_native_list *a=myl_native_list_new(&heap,&number,4);
+    myl_native_list *b=myl_native_list_new(&heap,&number,4);
+    myl_native_list *parent=myl_native_list_new(&heap,&pointer,2);
+    assert(a && b && parent && myl_native_list_append(&heap,parent,&a) && myl_native_list_append(&heap,parent,&b));
+    myl_rc_pin first={0}, second={0};
+    assert(myl_rc_pin_acquire(&heap,a,&first)==MYL_RC_OK && myl_rc_pin_acquire(&heap,b,&second)==MYL_RC_OK);
+    size_t live=heap.objects_live;
+    b->capacity=1000000;
+    heap.limit=heap.bytes;
+    assert(!myl_native_list_copy(&heap,parent));
+    assert(heap.objects_live==live && owners(a)==2 && owners(b)==2);
+    b->capacity=4;
+    heap.limit=64u<<20;
+    myl_rc_pin_release(&heap,&second);
+    myl_rc_pin_release(&heap,&first);
+    myl_rc_owner_release(&heap,parent);
+    myl_rc_owner_release(&heap,a);
+    myl_rc_owner_release(&heap,b);
+    finish(&heap);
+}
+/* spec-case: RC-DICTIONARY-1. Existing/new setdefault, self update, snapshots,
+ * copies and clear each establish or consume exactly their declared edges. */
+static void dictionary_method_results(void) {
+    myl_native_heap heap;
+    init(&heap);
+    myl_native_dictionary *dict=myl_native_dictionary_new(&heap,&number,&pointer,0);
+    myl_native_list *child=myl_native_list_new(&heap,&number,0);
+    int64_t first=1, second=2;
+    myl_native_list *one=NULL, *two=NULL;
+    assert(dict && child && myl_native_dictionary_write(&heap,dict,&first,&child));
+    assert(myl_native_dictionary_setdefault(&heap,dict,&first,&child,&one));
+    assert(myl_native_dictionary_setdefault(&heap,dict,&second,&child,&two));
+    assert(one==child && two==child && owners(child)==5);
+    assert(myl_native_dictionary_update(&heap,dict,dict) && owners(child)==5);
+    myl_native_list *snapshot=myl_native_dictionary_snapshot(&heap,dict,0);
+    myl_native_dictionary *clone=myl_native_dictionary_clone_at(&heap,dict,0);
+    assert(snapshot && clone && owners(child)==9);
+    myl_rc_dictionary_clear(&heap,dict);
+    assert(!myl_native_dictionary_length(dict) && owners(child)==7);
+    myl_rc_owner_release(&heap,dict);
+    myl_rc_owner_release(&heap,clone);
+    myl_rc_owner_release(&heap,snapshot);
+    myl_rc_owner_release(&heap,one);
+    myl_rc_owner_release(&heap,two);
+    assert(owners(child)==1);
+    myl_rc_owner_release(&heap,child);
+    finish(&heap);
+}
+/* spec-case: RC-COLLECTION-1. Unpublished arena containers undo committed
+ * heap edges immediately; their empty headers remain safe for bulk close. */
+static void arena_construction_abort(void) {
+    myl_native_heap heap;
+    init(&heap);
+    myl_native_list *child=myl_native_list_new(&heap,&number,0);
+    assert(child && myl_native_region_begin(&heap));
+    myl_native_list *list=myl_native_list_new(&heap,&pointer,1);
+    myl_native_dictionary *dict=myl_native_dictionary_new(&heap,&number,&pointer,0);
+    int64_t key=1;
+    assert(list && dict && myl_native_list_append(&heap,list,&child));
+    assert(myl_native_dictionary_write(&heap,dict,&key,&child) && owners(child)==3);
+    assert(myl_native_header_region(list)==1);
+    assert(!myl_rc_storage_extend(&heap,list->storage,1024));
+    myl_rc_native_abort(&heap,list);
+    assert(owners(child)==2 && list->length==0 && !list->storage);
+    myl_rc_native_abort(&heap,dict);
+    assert(owners(child)==1 && !dict->entries);
+    myl_native_region_end(&heap);
+    assert(heap.region_depth==0 && heap.objects_live==1);
+    myl_rc_owner_release(&heap,child);
+    finish(&heap);
+}
 int myl_rc_collections_verify(void) {
     storage_reuse_and_holds();
     storage_boundaries();
@@ -298,12 +433,16 @@ int myl_rc_collections_verify(void) {
     pinned_pop_and_count_refusal();
     dictionary_probe_reuse();
     production_deep_and_wide();
-    return 9;
+    transforms_release_temporaries();
+    sorting_and_partial_clone();
+    dictionary_method_results();
+    arena_construction_abort();
+    return 13;
 }
 #ifndef MYL_RC_COLLECTIONS_LIBRARY
 int main(void) {
-    assert(myl_rc_collections_verify()==9);
-    puts("native RC collections: 9 passed");
+    assert(myl_rc_collections_verify()==13);
+    puts("native RC collections: 13 passed");
     return 0;
 }
 #endif

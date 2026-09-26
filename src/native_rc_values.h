@@ -14,4 +14,7 @@ void myl_rc_native_drop(myl_native_heap *, const myl_native_type *, void *value)
 void *myl_rc_native_storage(myl_native_heap *, const myl_native_type *, size_t count, unsigned region);
 /* Convert a NULL native constructor result without losing its first failure. */
 myl_rc_status myl_rc_native_result(myl_native_heap *, const void *);
+/* Undo an unpublished constructor, including its committed arena-to-heap
+ * edges. Arena bytes stay reserved but become an empty object for teardown. */
+void myl_rc_native_abort(myl_native_heap *, void *);
 #endif
