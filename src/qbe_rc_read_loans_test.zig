@@ -54,3 +54,43 @@ test "RC scalar receiver loans do not borrow managed element results" {
         \\    return len(selected([[1]], 0))
     , "selected") > 0);
 }
+
+// spec: RC-NESTED-READ-LOAN-1
+test "RC nested receiver loans borrow rows until a scalar result" {
+    try t.expectEqual(@as(usize, 0), try copiesIn(
+        \\def selected(rows: list[list[int]], i: int, j: int, output: mut list[int]) -> int:
+        \\    value = rows[i][j]
+        \\    output.append(value)
+        \\    return value
+        \\def main() -> int:
+        \\    output: list[int] = []
+        \\    return selected([[1]], 0, 0, mut output)
+    , "selected"));
+}
+
+// spec-case: RC-NESTED-READ-LOAN-1
+test "RC nested receiver loans refuse a callback inside a projected row" {
+    try t.expect(try copiesIn(
+        \\def change(rows: mut list[list[int]]) -> int:
+        \\    rows[0][0] = 9
+        \\    return 0
+        \\def selected(rows: mut list[list[int]]) -> int:
+        \\    return rows[0][change(mut rows)]
+        \\def main() -> int:
+        \\    rows = [[1]]
+        \\    return selected(mut rows)
+    , "selected") > 0);
+}
+
+// spec-case: RC-NESTED-READ-LOAN-1
+test "RC nested receiver loans retain ownership for named rows" {
+    try t.expect(try copiesIn(
+        \\def selected(rows: list[list[int]], output: mut list[int]) -> int:
+        \\    row = rows[0]
+        \\    output.append(7)
+        \\    return row[0]
+        \\def main() -> int:
+        \\    output: list[int] = []
+        \\    return selected([[1]], mut output)
+    , "selected") > 0);
+}
