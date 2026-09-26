@@ -95,14 +95,15 @@ const object_key_version = "mylang-object-key-v3";
 const frame_pointer_flags = [_][]const u8{ "-fno-omit-frame-pointer", "-momit-leaf-frame-pointer" };
 /// Whether the runtime unit `name` can reach `fail` and so needs frame
 /// pointers. Every `qbe_*` unit reports traps; of the `native_*` data-structure
-/// layer only the text methods do (a located `R_TEXT_SCALAR`). The rest —
+/// layer the text methods (a located `R_TEXT_SCALAR`) and value copies
+/// (allocation failure) do. The rest —
 /// the heap, the collector, lists, dictionaries, text, bytes, arenas — return
 /// a status the generated code turns into a trap itself, and they keep every
 /// register: the collector and allocator are where an allocation-heavy program
 /// spends its time. `qbe_build.zig`'s bundled-source test keeps this list
 /// honest.
 pub fn keepsFramePointers(name: []const u8) bool {
-    return std.mem.startsWith(u8, name, "qbe_") or std.mem.eql(u8, name, "native_text_methods.c");
+    return std.mem.startsWith(u8, name, "qbe_") or std.mem.eql(u8, name, "native_text_methods.c") or std.mem.eql(u8, name, "native_value_copy.c");
 }
 /// Annotate assembly for the frame map, reporting a call positioned in another
 /// unit's function — a guest body inlined into another guest body, whose
@@ -501,6 +502,11 @@ test "only the runtime units that can reach fail keep frame pointers" {
     try std.testing.expect(keepsFramePointers("qbe_stack.c") and !keepsFramePointers("native_heap.c"));
     const loose = try std.mem.join(context.allocator, " ", try cache.flags());
     try std.testing.expect(std.mem.indexOf(u8, loose, "-fno-omit-frame-pointer") != null);
+}
+
+// spec: VALUE-SEMANTICS-9
+test "value copies retain frame pointers when they report an allocation failure" {
+    try std.testing.expect(keepsFramePointers("native_value_copy.c"));
 }
 
 // spec-case: QBE-STRIP-1
