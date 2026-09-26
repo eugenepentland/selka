@@ -1,0 +1,271 @@
+{
+  "qbe-rc": {
+    "samples": 1688,
+    "total_period": 135126753993,
+    "symbols": [
+      {
+        "name": "myl_f_d05aa2a15fb3c40efeeb03bec445393f00074484cf01c8fb2da90ca6695a5531",
+        "period": 40362408111,
+        "share": 0.29870034555178393
+      },
+      {
+        "name": "slab_take",
+        "period": 12607539672,
+        "share": 0.09330158017895636
+      },
+      {
+        "name": "compiler_rt.fastMemset",
+        "period": 12450633282,
+        "share": 0.09214040087609136
+      },
+      {
+        "name": "myl_rc_drain",
+        "period": 11763391024,
+        "share": 0.08705449273657075
+      },
+      {
+        "name": "myl_f_20f65c28671b40937c5bf23acc7c6f37e5a5ec0622e347b57685725df5ba9e50",
+        "period": 11341512486,
+        "share": 0.08393239792163976
+      },
+      {
+        "name": "myl_qbe_rc_frame_cleanup",
+        "period": 8729129185,
+        "share": 0.06459956246305004
+      },
+      {
+        "name": "myl_rc_storage_alloc",
+        "period": 6474977454,
+        "share": 0.047917805043518065
+      },
+      {
+        "name": "myl_rc_descriptor_find",
+        "period": 6030673585,
+        "share": 0.04462975248641293
+      },
+      {
+        "name": "myl_rc_edge_release",
+        "period": 5697082071,
+        "share": 0.0421610221710434
+      },
+      {
+        "name": "myl_native_heap_alloc",
+        "period": 3232028151,
+        "share": 0.0239184917530649
+      },
+      {
+        "name": "myl_rc_scope_current",
+        "period": 2951289479,
+        "share": 0.02184089672688272
+      },
+      {
+        "name": "myl_rc_enabled",
+        "period": 2432868030,
+        "share": 0.01800434005930484
+      },
+      {
+        "name": "retire",
+        "period": 2382493376,
+        "share": 0.017631544498755744
+      },
+      {
+        "name": "myl_qbe_rc_frame_enter",
+        "period": 2263559180,
+        "share": 0.01675137685996113
+      },
+      {
+        "name": "myl_qbe_heap",
+        "period": 1849553714,
+        "share": 0.013687546391411228
+      },
+      {
+        "name": "myl_rc_scope_unwind",
+        "period": 1553025527,
+        "share": 0.01149310170716046
+      },
+      {
+        "name": "myl_qbe_rc_frame_leave",
+        "period": 1472094413,
+        "share": 0.010894174317813178
+      },
+      {
+        "name": "myl_rc_allocator_retire",
+        "period": 963035522,
+        "share": 0.0071269048766603865
+      },
+      {
+        "name": "myl_qbe_region_mark",
+        "period": 334014144,
+        "share": 0.0024718579713481686
+      },
+      {
+        "name": "myl_rc_native_drop",
+        "period": 153970362,
+        "share": 0.0011394513480874125
+      },
+      {
+        "name": "myl_qbe_rc_slot_drop",
+        "period": 81473939,
+        "share": 0.0006029445434929978
+      },
+      {
+        "name": "[unknown]",
+        "period": 1286,
+        "share": 9.516990248034959e-09
+      }
+    ]
+  },
+  "qbe-gc": {
+    "samples": 340,
+    "total_period": 24630932460,
+    "symbols": [
+      {
+        "name": "myl_f_d05aa2a15fb3c40efeeb03bec445393f00074484cf01c8fb2da90ca6695a5531",
+        "period": 10861341160,
+        "share": 0.44096345835215695
+      },
+      {
+        "name": "myl_f_20f65c28671b40937c5bf23acc7c6f37e5a5ec0622e347b57685725df5ba9e50",
+        "period": 10079770223,
+        "share": 0.4092321815006106
+      },
+      {
+        "name": "myl_qbe_heap",
+        "period": 1297365284,
+        "share": 0.0526721952612589
+      },
+      {
+        "name": "myl_qbe_root_mark",
+        "period": 697824763,
+        "share": 0.028331236104570928
+      },
+      {
+        "name": "scan_payload",
+        "period": 464223093,
+        "share": 0.018847158699894385
+      },
+      {
+        "name": "collect",
+        "period": 458083808,
+        "share": 0.01859790768148613
+      },
+      {
+        "name": "mark",
+        "period": 387285551,
+        "share": 0.015723544028588513
+      },
+      {
+        "name": "myl_f_7f6c7360bf24fccf4b59cf9e9a9dfc99fd6a3b085fb2260ef707a34067bb911e",
+        "period": 385036041,
+        "share": 0.015632215370867043
+      },
+      {
+        "name": "[unknown]",
+        "period": 1286,
+        "share": 5.2210772048051e-08
+      },
+      {
+        "name": "compiler_rt.fastMemset",
+        "period": 1251,
+        "share": 5.078979458173546e-08
+      }
+    ]
+  },
+  "llvm-rc": {
+    "samples": 973,
+    "total_period": 73569594733,
+    "symbols": [
+      {
+        "name": "myl_f_d05aa2a15fb3c40efeeb03bec445393f00074484cf01c8fb2da90ca6695a5531",
+        "period": 35004109856,
+        "share": 0.4757958771288261
+      },
+      {
+        "name": "myl_rc_drain",
+        "period": 18814506427,
+        "share": 0.2557375298216868
+      },
+      {
+        "name": "slab_take",
+        "period": 5505404655,
+        "share": 0.07483260815803466
+      },
+      {
+        "name": "myl_f_20f65c28671b40937c5bf23acc7c6f37e5a5ec0622e347b57685725df5ba9e50",
+        "period": 4930809206,
+        "share": 0.06702237825143628
+      },
+      {
+        "name": "myl_rc_storage_alloc",
+        "period": 3783242798,
+        "share": 0.05142399943523147
+      },
+      {
+        "name": "retire",
+        "period": 2572610692,
+        "share": 0.034968395589734615
+      },
+      {
+        "name": "[unknown]",
+        "period": 2110188522,
+        "share": 0.02868288903395936
+      },
+      {
+        "name": "myl_qbe_rc_slot_drop",
+        "period": 307456422,
+        "share": 0.0041791234968172105
+      },
+      {
+        "name": "memset@plt",
+        "period": 230908760,
+        "share": 0.0031386439036128707
+      },
+      {
+        "name": "myl_rc_flat_edges_release",
+        "period": 230446270,
+        "share": 0.003132357475072949
+      },
+      {
+        "name": "myl_rc_scope_unwind",
+        "period": 79911125,
+        "share": 0.0010861977055876791
+      }
+    ]
+  },
+  "llvm-gc": {
+    "samples": 342,
+    "total_period": 11915057416,
+    "symbols": [
+      {
+        "name": "myl_f_d05aa2a15fb3c40efeeb03bec445393f00074484cf01c8fb2da90ca6695a5531",
+        "period": 7232579800,
+        "share": 0.607011745515201
+      },
+      {
+        "name": "myl_f_20f65c28671b40937c5bf23acc7c6f37e5a5ec0622e347b57685725df5ba9e50",
+        "period": 3277313788,
+        "share": 0.27505648303457575
+      },
+      {
+        "name": "collect",
+        "period": 718555247,
+        "share": 0.0603064863149628
+      },
+      {
+        "name": "mark",
+        "period": 395594786,
+        "share": 0.03320124882224906
+      },
+      {
+        "name": "scan_payload",
+        "period": 291011223,
+        "share": 0.02442382045169324
+      },
+      {
+        "name": "[unknown]",
+        "period": 2572,
+        "share": 2.1586131817931644e-07
+      }
+    ]
+  }
+}
