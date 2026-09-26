@@ -2470,11 +2470,11 @@ const Emitter = struct {
         const packed_args = try self.packedParameters(callee);
         for (args, 0..) |*arg, i| {
             arg.* = try self.load("s", h - count + i);
-            if (packed_args) try self.packArgument(i, arg.*);
         }
         // COW-PIN-1: a list or dictionary a `mut` parameter receives stays
         // unshared until the call returns.
-        const pins = try cow_lower.Lower(Emitter).pin(self, callee, args);
+        const pins = try cow_lower.Lower(Emitter).pin(self, callee, args, h - count);
+        if (packed_args) for (args, 0..) |arg, i| try self.packArgument(i, arg);
         const v = self.temp();
         try self.print(" %v{d} ={s} call ${s}(l %ctx", .{ v, try self.returnType(callee), self.units[@backingInt(target)].symbol });
         const indirect = try self.largeResult(callee);

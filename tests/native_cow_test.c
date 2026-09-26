@@ -22,6 +22,10 @@ static const myl_native_field holder_fields[] = {
     {.offset = offsetof(Holder, name), .type = &text_type},
     {.offset = offsetof(Holder, count), .type = &number}};
 static const myl_native_type holder = {.size = sizeof(Holder), .alignment = _Alignof(Holder), .kind = MYL_NATIVE_RECORD, .fields = holder_fields, .field_count = 3};
+typedef struct { myl_native_list *items; } BoxBody;
+static const myl_native_field box_fields[] = {{.offset = offsetof(BoxBody, items), .type = &integers}};
+static const myl_native_type box_body = {.size = sizeof(BoxBody), .alignment = _Alignof(BoxBody), .kind = MYL_NATIVE_RECORD, .fields = box_fields, .field_count = 1};
+static const myl_native_type box_pointer = {.size = sizeof(void *), .alignment = _Alignof(void *), .kind = MYL_NATIVE_POINTER, .collection_kind = 5, .element = &box_body};
 typedef struct { uint32_t tag; myl_native_list *payload; } Choice;
 static const myl_native_field choice_fields[] = {{.offset = offsetof(Choice, payload), .type = &integers, .tag = 1}};
 static const myl_native_type choice = {.size = sizeof(Choice), .alignment = _Alignof(Choice), .kind = MYL_NATIVE_VARIANT, .fields = choice_fields, .field_count = 1};
@@ -421,6 +425,59 @@ static void fresh_children(void) {
     assert(myl_native_root_pop(&heap, &row_root) && myl_native_root_pop(&heap, &outer_root));
     myl_native_heap_destroy(&heap);
 }
+/* spec-case: COW-SHARED-1 -- a bulk source shares children in place until a
+   pinned child needs replacement; then only its private source copy changes. */
+static void bulk_source_children(void) {
+    myl_native_heap heap;
+    myl_native_heap_init(&heap, 1 << 26);
+    heap.stress = 1;
+    myl_native_list *source = myl_native_list_new(&heap, &integers, 1), *taken = NULL, *row = NULL;
+    assert(source);
+    myl_native_root source_root, taken_root, row_root;
+    myl_native_root_push(&heap, &source_root, &source, &pointer);
+    myl_native_root_push(&heap, &taken_root, &taken, &pointer);
+    myl_native_root_push(&heap, &row_root, &row, &pointer);
+    row = numbers(&heap, 6, 1);
+    assert(myl_native_list_append(&heap, source, &row));
+    taken = source;
+    assert(myl_native_cow_copy_source_children(&heap, &rows, &taken) && taken == source);
+    assert(flags(row) == MYL_NATIVE_OBJECT_SHARED);
+    ((myl_native_object *)row - 1)->mark &= ~MYL_NATIVE_OBJECT_SHARED;
+    ((myl_native_object *)row - 1)->mark |= MYL_NATIVE_OBJECT_PINNED;
+    assert(myl_native_cow_copy_source_children(&heap, &rows, &taken));
+    assert(taken != source && ((myl_native_list **)source->storage)[0] == row);
+    assert(((myl_native_list **)taken->storage)[0] != row);
+    assert(flags(row) == MYL_NATIVE_OBJECT_PINNED);
+    assert(myl_native_root_pop(&heap, &row_root) && myl_native_root_pop(&heap, &taken_root) && myl_native_root_pop(&heap, &source_root));
+    myl_native_heap_destroy(&heap);
+}
+/* spec-case: COW-NESTED-1 -- sharing sees a collection through an immutable
+   recursive box; a pinned descendant path-copies the box rather than
+   mutating a body still held by the source. */
+static void boxed_children(void) {
+    myl_native_heap heap;
+    myl_native_heap_init(&heap, 1 << 26);
+    heap.stress = 1;
+    BoxBody *source = myl_native_heap_alloc(&heap, &box_body, 1), *copy = NULL;
+    myl_native_list *row = NULL;
+    assert(source);
+    myl_native_root source_root, copy_root, row_root;
+    myl_native_root_push(&heap, &source_root, &source, &box_pointer);
+    myl_native_root_push(&heap, &copy_root, &copy, &box_pointer);
+    myl_native_root_push(&heap, &row_root, &row, &pointer);
+    row = numbers(&heap, 4, 1);
+    source->items = row;
+    copy = source;
+    assert(myl_native_cow_share_value(&heap, &box_pointer, &copy));
+    assert(copy == source && flags(row) == MYL_NATIVE_OBJECT_SHARED);
+    ((myl_native_object *)row - 1)->mark &= ~MYL_NATIVE_OBJECT_SHARED;
+    ((myl_native_object *)row - 1)->mark |= MYL_NATIVE_OBJECT_PINNED;
+    assert(myl_native_cow_share_value(&heap, &box_pointer, &copy));
+    assert(copy != source && source->items == row && copy->items != row);
+    assert(flags(row) == MYL_NATIVE_OBJECT_PINNED && at(copy->items, 0) == 4);
+    assert(myl_native_root_pop(&heap, &row_root) && myl_native_root_pop(&heap, &copy_root) && myl_native_root_pop(&heap, &source_root));
+    myl_native_heap_destroy(&heap);
+}
 int main(void) {
     header_flags();
     share_marks();
@@ -434,6 +491,8 @@ int main(void) {
     stress_run();
     deep_inline_descriptors();
     fresh_children();
+    bulk_source_children();
+    boxed_children();
     puts("native cow tests passed");
     return 0;
 }

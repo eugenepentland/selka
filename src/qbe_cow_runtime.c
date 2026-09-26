@@ -11,8 +11,9 @@ int myl_qbe_cow_transfer(void *context, const myl_native_type *type,
     if (output != value) memmove(output, value, type->size);
     myl_native_root root;
     myl_native_root_push(heap, &root, output, type);
-    int done = children ? myl_native_cow_share_children(heap, type, output)
-                        : myl_native_cow_share_value(heap, type, output);
+    int done = children == 2 ? myl_native_cow_copy_source_children(heap, type, output)
+                           : children ? myl_native_cow_share_children(heap, type, output)
+                                      : myl_native_cow_share_value(heap, type, output);
     myl_native_root_pop(heap, &root);
     if (!done) myl_qbe_fail_allocation(context);
     return done;

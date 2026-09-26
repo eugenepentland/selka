@@ -24,6 +24,10 @@ const bytecode = @import("bytecode.zig");
 const typed = @import("typed.zig");
 const cow_plan = @import("cow_plan.zig");
 const format = @import("qbe_format.zig");
+const qbe_alloc = @import("qbe_alloc.zig");
+const cow_keep_label = "@cowkeep{d}\n";
+const store_pointer = " storel %v{d}, %v{d}\n";
+const store_local = " storel %v{d}, %l{d}\n";
 
 /// Failures emitting copy-on-write code can meet.
 pub const Error = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
@@ -100,6 +104,7 @@ pub fn Lower(comptime E: type) type {
             const state = self.cow orelse return;
             const site = state.plan.at(pc);
             if (site.capture) try capture(E, self, state, pc, stack);
+            if (site.unique_field) |field| try uniqueField(E, self, field, stack);
             for (site.unique) |unique| try uniqueLocal(E, self, unique, stack);
             if (site.fill) try fillPlace(E, self, pc, stack);
             for (site.shares) |depth| try share(E, self, stack, depth);
@@ -128,26 +133,8 @@ pub fn Lower(comptime E: type) type {
         }
         /// Pin every list or dictionary argument a `mut` parameter of
         /// `callee` receives, before the call.
-        pub fn pin(self: *E, callee: bytecode.Function, args: []const usize) Error!Pins {
-            var pins: Pins = .{};
-            const state = self.cow orelse return pins;
-            for (args, 0..) |arg, position| {
-                if (position >= callee.signature.parameter_count) break;
-                if (!writesParameter(callee, position)) continue;
-                if (!cow_plan.payloadType(self.program, callee.scope.locals[position].ty)) continue;
-                if (pins.len == pins.headers.len) return error.InternalError;
-                if (state.counting) try tally(E, self, .pin);
-                const header = self.temp();
-                const word = self.temp();
-                const old = self.temp();
-                const next = self.temp();
-                try self.print(" %v{d} =l sub %v{d}, {d}\n %v{d} =l loadl %v{d}\n", .{ header, arg, header_bytes, word, header });
-                try self.print(" %v{d} =l and %v{d}, {d}\n %v{d} =l or %v{d}, {d}\n storel %v{d}, %v{d}\n", .{ old, word, pinned_flag, next, word, pinned_flag, next, header });
-                pins.headers[pins.len] = header;
-                pins.olds[pins.len] = old;
-                pins.len += 1;
-            }
-            return pins;
+        pub fn pin(self: *E, callee: bytecode.Function, args: []usize, base: usize) Error!Pins {
+            return pinCall(E, self, callee, args, base);
         }
         /// Undo `pins` after the call returned: a payload pinned by this call
         /// alone is unpinned; one an outer caller pinned stays pinned.
@@ -163,6 +150,88 @@ pub fn Lower(comptime E: type) type {
             }
         }
     };
+}
+
+fn pinCall(comptime E: type, self: *E, callee: bytecode.Function, args: []usize, base: usize) Error!Pins {
+    var pins: Pins = .{};
+    var owners: [8]u32 = @splat(cow_plan.none);
+    var positions: [8]usize = undefined;
+    const state = self.cow orelse return pins;
+    for (args, 0..) |*arg, position| {
+        if (position >= callee.signature.parameter_count) break;
+        if (!writesParameter(callee, position)) continue;
+        if (!cow_plan.payloadType(self.program, callee.scope.locals[position].ty)) continue;
+        // A later read-only argument can have shared this same root
+        // after its earlier mut-argument load was checked. Resolve
+        // that new sharing before pinning and calling the callee.
+        const operands = self.ownership.?.operands[self.pc] orelse return error.InternalError;
+        const source = operands[base + position];
+        if (pins.len == pins.headers.len) return error.InternalError;
+        var repeated: ?usize = null;
+        if (source.origin == .local and source.part == .whole) for (owners[0..pins.len], 0..) |owner, index| {
+            if (owner == source.local) {
+                repeated = positions[index];
+                break;
+            }
+        };
+        if (repeated) |previous|
+            try reuseMutArgument(E, self, arg, args[previous], base + position)
+        else
+            try prepareMutArgument(E, self, arg, source, base + position);
+        owners[pins.len] = if (source.origin == .local and source.part == .whole) source.local else cow_plan.none;
+        positions[pins.len] = position;
+        if (state.counting) try tally(E, self, .pin);
+        const mark = try pinPayload(E, self, arg.*);
+        pins.headers[pins.len] = mark.header;
+        pins.olds[pins.len] = mark.old;
+        pins.len += 1;
+    }
+    return pins;
+}
+
+fn reuseMutArgument(comptime E: type, self: *E, arg: *usize, previous: usize, slot: usize) Error!void {
+    try self.print(" storel %v{d}, %s{d}\n", .{ previous, slot });
+    arg.* = try self.load("s", slot);
+}
+
+/// A later snapshot can share a mut operand after the load's first uniqueness
+/// check. The call already published roots, so this copy must use them rather
+/// than pushing the same frames again and making their next links cyclic.
+fn prepareMutArgument(comptime E: type, self: *E, arg: *usize, source: @import("ownership.zig").Source, slot: usize) Error!void {
+    if (source.origin != .local or source.local >= self.function.scope.locals.len or
+        (source.part != .whole and source.part != .field)) return;
+    const label = self.temp();
+    try testShared(E, self, arg.*, label);
+    const copy = self.temp();
+    try self.print(" %v{d} =l call $myl_native_cow_unique(l %heap, l %v{d})\n", .{ copy, arg.* });
+    try self.require(copy, format.allocation_failure);
+    if (source.part == .whole) {
+        try self.print(store_local, .{ copy, source.local });
+    } else {
+        if (source.read == cow_plan.none) return error.InternalError;
+        var end = source.read + 1;
+        while (end < self.pc) : (end += 1) switch (self.function.scope.instructions[end].op) {
+            .get_field, .wrap_domain, .unwrap_domain => {},
+            else => break,
+        };
+        const cursor = try fieldChainRange(E, self, source.read + 1, end, try fieldBase(E, self, source.local));
+        if (cursor.cell) |body| try qbe_alloc.barrier(*E, self, body);
+        try self.print(store_pointer, .{ copy, cursor.address });
+    }
+    try self.print(" storel %v{d}, %s{d}\n", .{ copy, slot });
+    try self.print(cow_keep_label, .{label});
+    arg.* = try self.load("s", slot);
+}
+
+const PinMark = struct { header: usize, old: usize };
+fn pinPayload(comptime E: type, self: *E, arg: usize) Error!PinMark {
+    const header = self.temp();
+    const word = self.temp();
+    const old = self.temp();
+    const next = self.temp();
+    try self.print(" %v{d} =l sub %v{d}, {d}\n %v{d} =l loadl %v{d}\n", .{ header, arg, header_bytes, word, header });
+    try self.print(" %v{d} =l and %v{d}, {d}\n %v{d} =l or %v{d}, {d}\n storel %v{d}, %v{d}\n", .{ old, word, pinned_flag, next, word, pinned_flag, next, header });
+    return .{ .header = header, .old = old };
 }
 
 /// Whether `function`'s body may write parameter `position` in place.
@@ -209,9 +278,22 @@ fn uniqueLocal(comptime E: type, self: *E, unique: cow_plan.Unique, stack: []con
     const value = try self.load("l", unique.local);
     try testShared(E, self, value, label);
     const copy = try copyCall(E, self, value, null, stack);
-    try self.print(" storel %v{d}, %l{d}\n", .{ copy, unique.local });
-    if (unique.alias != cow_plan.none) try self.print(" storel %v{d}, %l{d}\n", .{ copy, unique.alias });
-    try self.print("@cowkeep{d}\n", .{label});
+    try self.print(store_local, .{ copy, unique.local });
+    if (unique.alias != cow_plan.none) try self.print(store_local, .{ copy, unique.alias });
+    try self.print(cow_keep_label, .{label});
+}
+
+/// Clone a dictionary stored through record fields before reading an entry
+/// for a nested write; the clone marks held values shared.
+fn uniqueField(comptime E: type, self: *E, place: cow_plan.Place, stack: []const typed.Type) Error!void {
+    const cursor = try fieldChainRange(E, self, place.base + 1, place.fields_end, try fieldBase(E, self, place.parent));
+    const value = try self.load("v", cursor.address);
+    const label = self.temp();
+    try testShared(E, self, value, label);
+    const copy = try copyCall(E, self, value, cursor.cell, stack);
+    if (cursor.cell) |body| try qbe_alloc.barrier(*E, self, body);
+    try self.print(store_pointer, .{ copy, cursor.address });
+    try self.print(cow_keep_label, .{label});
 }
 
 /// Make every element of list local `local` unique where it lives.
@@ -270,14 +352,31 @@ fn fillPlace(comptime E: type, self: *E, pc: usize, stack: []const typed.Type) E
             container = dictionary;
             break :entry .{ .address = try entrySlot(E, self, place, dictionary), .cell = null };
         },
+        .entry_field => entry: {
+            const cursor_field = try fieldChainRange(E, self, place.base + 1, place.fields_end, try fieldBase(E, self, place.parent));
+            const dictionary = try self.load("v", cursor_field.address);
+            container = dictionary;
+            break :entry .{ .address = try entrySlot(E, self, place, dictionary), .cell = null };
+        },
         .field => try fieldBase(E, self, place.parent),
     };
-    cursor = try fieldChain(E, self, place, cursor);
+    if (place.step != .entry_field) cursor = try fieldChain(E, self, place, cursor);
     const copy = try copyCall(E, self, value, cursor.cell orelse container, stack);
-    if (cursor.cell) |body| try @import("qbe_alloc.zig").barrier(*E, self, body);
-    try self.print(" storel %v{d}, %v{d}\n", .{ copy, cursor.address });
+    if (cursor.cell) |body| try qbe_alloc.barrier(*E, self, body);
+    try self.print(store_pointer, .{ copy, cursor.address });
+    if (place.box) |box| {
+        const owner_type = self.function.scope.locals[box.owner].ty;
+        if ((try self.layout(owner_type)).size != 8) return error.InternalError;
+        const old = self.temp();
+        const new = self.temp();
+        const body = (try fieldBase(E, self, place.parent)).address;
+        try self.print(" %v{d} =l loadl %l{d}\n", .{ old, box.owner });
+        try self.print(" %v{d} =l call $myl_native_cow_rebox(l %heap, l extern ${s}, l %v{d}, l %v{d})\n", .{ new, try self.descriptor(box.ty), old, body });
+        try self.require(new, format.allocation_failure);
+        try self.print(store_local, .{ new, box.owner });
+    }
     try self.store(top, copy);
-    try self.print("@cowkeep{d}\n", .{label});
+    try self.print(cow_keep_label, .{label});
 }
 
 /// The address of the element a place's base read took, in its list's
@@ -298,11 +397,12 @@ fn elementSlot(comptime E: type, self: *E, place: cow_plan.Place, list: usize) E
 /// the fill writes that slot. A described slice key (`DICT-RANGE-KEY-1`) is
 /// looked up by its span.
 fn entrySlot(comptime E: type, self: *E, place: cow_plan.Place, dictionary: usize) Error!usize {
-    const operands = self.states[place.base] orelse return error.InternalError;
+    const read = if (place.step == .entry_field) place.read else place.base;
+    const operands = self.states[read] orelse return error.InternalError;
     if (operands.len < 2) return error.InternalError;
     const key_slot = operands.len - 1;
     const slot = self.temp();
-    if (self.range_keys.role(place.base) == .key) {
+    if (self.range_keys.role(read) == .key) {
         const text = try self.load("s", key_slot);
         try self.print(" %v{d} =l call $myl_native_dictionary_find_range(l %heap, l %v{d}, l %v{d}, l %rs{d})\n", .{ slot, dictionary, text, key_slot });
         return slot;
@@ -327,8 +427,12 @@ fn fieldBase(comptime E: type, self: *E, parent: u32) Error!Cursor {
 /// of an inline record lies inside the value, one of a `class` inside the
 /// body its reference names.
 fn fieldChain(comptime E: type, self: *E, place: cow_plan.Place, start: Cursor) Error!Cursor {
+    return fieldChainRange(E, self, place.base + 1, place.fill, start);
+}
+
+fn fieldChainRange(comptime E: type, self: *E, begin: usize, end: usize, start: Cursor) Error!Cursor {
     var cursor = start;
-    for (place.base + 1..place.fill) |pc| {
+    for (begin..end) |pc| {
         const index = switch (self.function.scope.instructions[pc].op) {
             .get_field => |field| field,
             .wrap_domain, .unwrap_domain => continue,
@@ -391,7 +495,7 @@ fn sharePayload(comptime E: type, self: *E, payload: Shared, stack: []const type
     if (pushed) try self.restoreRoots();
     try self.require(copy, format.allocation_failure);
     if (payload.slot) |slot| try self.store(slot, copy);
-    if (payload.address) |address| try self.print(" storel %v{d}, %v{d}\n", .{ copy, address });
+    if (payload.address) |address| try self.print(store_pointer, .{ copy, address });
     try self.print(" jmp @shared{d}\n@sharemark{d}\n %v{d} =l or %v{d}, {d}\n storel %v{d}, %v{d}\n@shared{d}\n", .{ label, label, next, word, shared_flag, next, header, label });
 }
 

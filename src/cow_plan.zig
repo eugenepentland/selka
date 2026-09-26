@@ -45,6 +45,8 @@ pub const Step = enum(u8) {
     element,
     /// The value the dictionary local `parent` holds for the base read's key.
     entry,
+    /// A dictionary reached through fields of the record local `parent`.
+    entry_field,
     /// A field of the record or `class` local `parent`.
     field,
 };
@@ -58,6 +60,13 @@ pub const Place = struct {
     /// The instruction reading out of `parent`: `buffer_operation` read,
     /// `get_index` or `load_local`.
     base: u32,
+    /// The dictionary read for `entry_field` (the other steps use `base`).
+    read: u32 = none,
+    /// First instruction after the field chain for `entry_field`.
+    fields_end: u32 = none,
+    /// An Option local whose boxed payload was unwrapped into this field's
+    /// parent; a replacement field must rebox that value before it is read.
+    box: ?BoxOwner = null,
     /// The `store_local` that fills the temporary.
     fill: u32,
 };
@@ -74,6 +83,8 @@ pub const Hoisted = struct { local: u32, elements: bool };
 pub const Site = struct {
     /// Payloads made unique first.
     unique: []const Unique = &.{},
+    /// Make a dictionary held by record fields unique before its value read.
+    unique_field: ?Place = null,
     /// Whether the instruction fills a place: the value it stores is made
     /// unique and written back into the place first.
     fill: bool = false,
@@ -306,7 +317,41 @@ fn findPlace(planner: *Planner, index: u32) Error!void {
         .get_index => |access| if (dictionaryType(planner.input.program, access.ty)) try entryParent(planner, pc, fill) else null,
         else => null,
     };
-    planner.places[index] = found;
+    if (found) |place| {
+        var answer = place;
+        if (place.step == .field) if (boxedOwner(planner, place.parent, fill)) |box| {
+            answer.box = box;
+        };
+        planner.places[index] = answer;
+    }
+}
+
+const BoxOwner = struct { owner: u32, ty: typed.Type };
+
+fn boxedOwner(planner: *const Planner, parent: u32, fill: usize) ?BoxOwner {
+    const code = planner.code();
+    var store = fill;
+    while (store > 2) {
+        store -= 1;
+        if (code[store].op != .store_local or li(code[store].op.store_local) != parent) continue;
+        if (code[store - 1].op != .get_field or code[store - 1].op.get_field != 0) return null;
+        if (code[store - 2].op != .load_local) return null;
+        const hidden = li(code[store - 2].op.load_local);
+        const ty = planner.local(hidden).ty;
+        if (!ty.isAggregate() or !planner.input.program.records[ty.recordIndex()].collection.box) return null;
+        var switch_pc = store - 2;
+        while (switch_pc > 0) {
+            switch_pc -= 1;
+            if (code[switch_pc].op != .switch_variant) continue;
+            for (code[switch_pc].op.switch_variant.arms) |arm| if (arm.slot) |slot| if (li(slot) == hidden) {
+                if (switch_pc == 0) return null;
+                if (code[switch_pc - 1].op != .load_local) return null;
+                return .{ .owner = li(code[switch_pc - 1].op.load_local), .ty = ty };
+            };
+        }
+        return null;
+    }
+    return null;
 }
 
 /// The entry place a dictionary read at `pc` begins, when its dictionary
@@ -315,17 +360,26 @@ fn entryParent(planner: *const Planner, pc: usize, fill: usize) Error!?Place {
     const operands = planner.input.analysis.operands[pc] orelse return null;
     if (operands.len < 2) return null;
     const source = operands[operands.len - 2];
-    if (source.origin != .local or source.part != .whole or source.local == none or source.read == none) return null;
+    if (source.origin != .local or source.local == none or source.read == none) return null;
     switch (planner.code()[source.read].op) {
         .load_local => |slot| if (li(slot) != source.local) return null,
         else => return null,
     }
-    return .{ .parent = source.local, .step = .entry, .base = @intCast(pc), .fill = @intCast(fill) };
+    if (source.part == .whole) return .{ .parent = source.local, .step = .entry, .base = @intCast(pc), .fill = @intCast(fill) };
+    if (source.part != .field) return null;
+    var end = source.read + 1;
+    while (end < pc) : (end += 1) switch (planner.code()[end].op) {
+        .get_field, .wrap_domain, .unwrap_domain => {},
+        else => break,
+    };
+    if (end == source.read + 1) return null;
+    return .{ .parent = source.local, .step = .entry_field, .base = source.read, .read = @intCast(pc), .fields_end = @intCast(end), .fill = @intCast(fill) };
 }
 
 /// Where the payload a place is read out of is made unique: before the load
 /// that pushes a dictionary, before the read that loads a list itself.
 fn rootPc(planner: *const Planner, found: Place) usize {
+    if (found.step == .entry_field) return found.base;
     if (found.step != .entry) return found.base;
     const operands = planner.input.analysis.operands[found.base].?;
     return operands[operands.len - 2].read;
@@ -455,12 +509,16 @@ fn loopBacks(planner: *const Planner) Error![]u32 {
 fn placePlaces(planner: *Planner) Error!void {
     for (planner.places) |maybe| {
         const found = maybe orelse continue;
+        if (found.step == .entry_field) {
+            planner.sites[found.base].unique_field = found;
+            planner.marks.checked[found.base] = true;
+        }
         if (found.step == .element) planner.sites[found.base].capture = true;
         if (!elementsHoisted(planner, found)) {
             planner.sites[found.fill].fill = true;
             planner.marks.checked[found.fill] = true;
         }
-        if (found.step == .field) continue;
+        if (found.step == .field or found.step == .entry_field) continue;
         const root = planner.resolve(found.parent);
         if (planner.places[root] != null or !planner.payload(root)) continue;
         if (planner.role(root) != .owned or rootCovered(planner, found, root)) continue;
