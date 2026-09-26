@@ -21,11 +21,11 @@ fn reject(body: []const u8, code: []const u8) !void {
 }
 
 const owned_source =
-    \\class Item:
+    \\record Item:
     \\    n: i64
     \\
     \\
-    \\class Error:
+    \\record Error:
     \\    detail: [2]Item
     \\
     \\

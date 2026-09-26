@@ -51,6 +51,8 @@ test "managed list formatting preserves contextual list case identifiers" {
 
 // spec: GC-GENERIC-1
 test "managed generic list creation mutation and copy identity preserve shared aliases" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     try evaluate(
         \\def make[T]() -> list[T]:
         \\    items: list[T] = []
@@ -75,6 +77,8 @@ test "managed generic list creation mutation and copy identity preserve shared a
 
 // spec: GC-GENERIC-2
 test "managed nominal recursive list record edges allow finite reference graphs" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     try evaluate(
         \\class Node[T]:
         \\    value: T
@@ -93,7 +97,7 @@ test "managed nominal recursive list record edges allow finite reference graphs"
 // spec: GC-GENERIC-5
 test "managed lists reject nested and generic capabilities before helper alias escape" {
     const cases = [_][]const u8{
-        \\class Box:
+        \\record Box:
         \\    value: [1]Clock
         \\
         \\

@@ -49,11 +49,11 @@ test "integer casts check narrowing signedness and retain operand traps" {
 
 test "integer widths remain distinct in functions records compound assignment and conversions" {
     const source =
-        \\class Small:
+        \\record Small:
         \\    n: u8
         \\
         \\
-        \\class Wide:
+        \\record Wide:
         \\    n: u64
         \\
         \\
@@ -83,7 +83,7 @@ test "integer widths remain distinct in functions records compound assignment an
 
 fn allocationScenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, "widths.my",
-        \\class Small:
+        \\record Small:
         \\    n: u8
         \\
         \\

@@ -2785,6 +2785,8 @@ const barrier_program =
 
 // spec: QBE-GEN-BARRIER-1
 test "QBE-GEN-BARRIER-1 a reference store into a class body runs the barrier and a scalar store does not" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     const a = std.testing.allocator;
     var parsed = try emitted(a, barrier_program);
     defer parsed.deinit();
@@ -2796,6 +2798,8 @@ test "QBE-GEN-BARRIER-1 a reference store into a class body runs the barrier and
 
 // spec-case: QBE-INLINE-ALLOC-1
 test "QBE-INLINE-ALLOC-1 a small class body is popped inline and only the refill call publishes roots" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     const a = std.testing.allocator;
     var parsed = try emitted(a, barrier_program);
     defer parsed.deinit();
@@ -2820,6 +2824,8 @@ test "QBE-INLINE-ALLOC-1 a small class body is popped inline and only the refill
 
 // spec-case: QBE-INLINE-ALLOC-1
 test "QBE-INLINE-ALLOC-1 a program with arenas bumps the arena window before calling the runtime" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     const a = std.testing.allocator;
     var parsed = try emitted(a,
         \\class Node:
@@ -2978,6 +2984,8 @@ const borrowed_root_program =
 
 // spec: QBE-BORROW-ROOT-1
 test "QBE-BORROW-ROOT-1 a value a published owner reaches is not published again" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     const a = std.testing.allocator;
     var parsed = try emitted(a, borrowed_root_program);
     defer parsed.deinit();
@@ -2997,6 +3005,8 @@ test "QBE-BORROW-ROOT-1 a value a published owner reaches is not published again
 
 // spec-case: QBE-BORROW-ROOT-1
 test "QBE-BORROW-ROOT-1 a list of the owner's type cleared in between keeps the borrowed root" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     const a = std.testing.allocator;
     var parsed = try emitted(a, borrowed_root_program);
     defer parsed.deinit();

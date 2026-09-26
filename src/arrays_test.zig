@@ -49,7 +49,7 @@ test "fixed arrays have structural types preserve copies and support every integ
 }
 
 const allocation_source =
-    \\class Box:
+    \\record Box:
     \\    n: i64
     \\
     \\
@@ -130,7 +130,7 @@ test "array duplicate identity preserves length element type index replacement a
 test "deep array type syntax observes the shared parser budget" {
     var source: std.Io.Writer.Allocating = .init(testing.allocator);
     defer source.deinit();
-    try source.writer.writeAll("class Deep:\n    value: ");
+    try source.writer.writeAll("record Deep:\n    value: ");
     for (0..300) |_| try source.writer.writeAll("[1]");
     try source.writer.writeAll("i64\n\n\ndef main() -> i64:\n    return 0\n");
     try reject(source.written(), "E_NESTING_LIMIT");

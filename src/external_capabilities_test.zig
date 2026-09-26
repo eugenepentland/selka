@@ -49,7 +49,7 @@ test "ordinary source cannot spell the raw clock and random provider reads" {
 // The runtime's pinned SplitMix64 stream draws 16294208416658607535 first from
 // seed zero, and that word's high bit proves the sample keeps all its bits.
 const forwarded = declarations ++
-    \\class Authority:
+    \\record Authority:
     \\    clock: Clock
     \\
     \\

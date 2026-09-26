@@ -17,7 +17,7 @@ fn scenario(allocator: std.mem.Allocator) !void {
         \\type Other = Chosen
         \\
         \\
-        \\class Pair[T]:
+        \\record Pair[T]:
         \\    left: T
         \\    right: T
         \\
@@ -74,7 +74,7 @@ test "aliases preserve nominal domains and owned result obligations and reject c
         \\    return 0
         , .code = "E_DUPLICATE_TYPE" },
         .{ .text =
-        \\class A:
+        \\record A:
         \\    pass
         \\
         \\
@@ -149,7 +149,7 @@ fn privateTarget(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8,
         \\module main
         \\
         \\
-        \\class Secret:
+        \\record Secret:
         \\    value: i64
         \\
         \\
@@ -174,7 +174,7 @@ fn schemaAliases(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8,
         \\public type Count = i64
         \\
         \\
-        \\public class Pair[T]:
+        \\public record Pair[T]:
         \\    value: T
         \\
         \\

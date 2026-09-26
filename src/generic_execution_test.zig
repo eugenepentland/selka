@@ -40,11 +40,11 @@ test "generic execution specializes widths forwarding recursion and shared insta
 }
 test "generic execution preserves nominal values through copy contracts" {
     var compilation = try language.Compilation.init(t.allocator, "nominal.my",
-        \\class A:
+        \\record A:
         \\    x: i64
         \\
         \\
-        \\class B:
+        \\record B:
         \\    x: i64
         \\
         \\

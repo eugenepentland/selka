@@ -44,32 +44,32 @@ fn bothForms(text: []const u8, code: []const u8) !void {
 }
 test "nominal provider environment contracts reject wrong missing extra and renamed fields in both checkers" {
     const schemas = [_][]const u8{
-        \\class Entry[T]:
+        \\record Entry[T]:
         \\    present: bool
         \\    length: u64
         \\    bytes: [4]i64
         ,
-        \\class Entry[T]:
+        \\record Entry[T]:
         \\    present: bool
         \\    length: i64
         \\    bytes: [4]u8
         ,
-        \\class Entry[T]:
+        \\record Entry[T]:
         \\    present: i64
         \\    length: u64
         \\    bytes: [4]u8
         ,
-        \\class Entry[T]:
+        \\record Entry[T]:
         \\    present: bool
         \\    length: u64
         ,
-        \\class Entry[T]:
+        \\record Entry[T]:
         \\    present: bool
         \\    length: u64
         \\    bytes: [4]u8
         \\    extra: bool
         ,
-        \\class Entry[T]:
+        \\record Entry[T]:
         \\    exists: bool
         \\    length: u64
         \\    bytes: [4]u8
@@ -86,7 +86,7 @@ test "nominal provider environment contracts reject wrong missing extra and rena
         try bothForms(text, "E_ENVIRONMENT_RESULT");
     }
     try reject(
-        \\class Entry[T: integer]:
+        \\record Entry[T: integer]:
         \\    present: bool
         \\    length: u64
         \\    bytes: [4]T
@@ -105,7 +105,7 @@ test "nominal provider environment contracts reject wrong missing extra and rena
         \\    return 0
     , "E_ENVIRONMENT_RESULT");
     try reject(
-        \\class Entry[T]:
+        \\record Entry[T]:
         \\    present: bool
         \\    length: u64
         \\    bytes: [4]u8
@@ -128,7 +128,7 @@ test "nominal provider completion and read contracts reject wrong named shapes i
     const Case = struct { declaration: []const u8, body: []const u8, code: []const u8 };
     const cases = [_]Case{
         .{ .declaration =
-        \\class Failure[T]:
+        \\record Failure[T]:
         \\    code: u64
         \\    resource: File
         \\
@@ -140,7 +140,7 @@ test "nominal provider completion and read contracts reject wrong named shapes i
         \\    return complete_resource[R[T]](input)
         , .code = "E_COMPLETION_RESULT" },
         .{ .declaration =
-        \\class Failure[T]:
+        \\record Failure[T]:
         \\    code: i64
         \\    resource: i64
         \\
@@ -152,7 +152,7 @@ test "nominal provider completion and read contracts reject wrong named shapes i
         \\    return complete_resource[R[T]](input)
         , .code = "E_COMPLETION_RESULT" },
         .{ .declaration =
-        \\class Chunk[T]:
+        \\record Chunk[T]:
         \\    bytes: [4]u8
         \\    length: u64
         \\    present: bool
@@ -166,7 +166,7 @@ test "nominal provider completion and read contracts reject wrong named shapes i
         \\    return read_resource[R[T]](file)
         , .code = "E_RESOURCE_IO_RESULT" },
         .{ .declaration =
-        \\class Chunk[T]:
+        \\record Chunk[T]:
         \\    bytes: [4]u8
         \\    length: u64
         \\    eof: bool

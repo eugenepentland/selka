@@ -70,11 +70,11 @@ test "truncating helpers check arity and defer to a binding of the same name" {
 // spec: PY-CONVERSION-1
 test "a conversion body accepts the Python record constructor" {
     try execute(
-        \\class Source:
+        \\record Source:
         \\    kept: i64
         \\    dropped: i64
         \\
-        \\class Target:
+        \\record Target:
         \\    kept: i64
         \\
         \\conversion def narrow(input: Source) -> Target:
@@ -85,10 +85,10 @@ test "a conversion body accepts the Python record constructor" {
         \\    return narrow(Source(kept=42, dropped=1)).kept
     , 42);
     try reject(
-        \\class Source:
+        \\record Source:
         \\    kept: i64
         \\
-        \\class Target:
+        \\record Target:
         \\    kept: i64
         \\
         \\def helper(value: i64) -> Target:

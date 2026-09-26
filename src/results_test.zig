@@ -103,7 +103,7 @@ test "nominal typed results handle success and failure through exhaustive matche
 }
 
 const owned_source =
-    \\class Item:
+    \\record Item:
     \\    n: i64
     \\
     \\
