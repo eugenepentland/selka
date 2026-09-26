@@ -19,12 +19,14 @@ full gates with `../.d9-closeout-gate.lock`. The original dirty checkout, `main`
 | T5 primer diagnostics | `0472d324` | Runnable discard/public-interface examples; primer doctests and feature coverage; joined full gate |
 | T6 headerless test formatting | `2d0d045e` | Formatter/test agreement and ordinary-module rejection regression; joined full gate |
 | Q1 distinct contract traps | `cfa31018` | Dedicated runtime entries preserve literal assertion prefixes; 21 focused contract tests; full gate: test 91/91, 2,073 executed; QBE 49/49, 426; QBE build 29/29; formatting green |
+| Q2 invariant cache and input validation | `bb02624b`; [report](d9-invariant-closeout-2026-09-26.md) | Cache relocation and nested native/JSON input regressions; full gate: test 91/91, 2,076 executed; QBE 49/49, 426; QBE build 29/29; formatting green |
 | Q3 list write-back decision | `bafcdc4a`; [decision](d9-list-writeback-decision-2026-09-26.md) | Retains copied write-back based on prior LLVM full-LTO regression; documentation/whole-tree Guardian and joined full gate |
 
 The first combined WP-3a/WP-3c/tooling gate passed at `bc07201f`:
 91/91 test steps, 49/49 QBE steps with 426 tests, 29/29 QBE-build steps,
-and formatting. T1 and Q1 subsequently passed their own full gates and were
-joined with two-parent merges. Later implementation work requires another joined gate.
+and formatting. T1, Q1 and Q2 subsequently passed their own full gates and were
+joined with two-parent merges. Q2 also includes the independently reproduced
+NATIVE-STAGING-2 race fix (`78ec28ba`, ported as `cc5e5d54`). Later implementation work requires another joined gate.
 Guardian feedback entries have been appended and committed in `guardian-zig`
 for every accepted package above.
 
@@ -35,7 +37,6 @@ for every accepted package above.
 | WP-3b COW | `d9/stage3b`, `../d9-stage3b` | Phase 2 `a95dabb6` passes 37 value-semantics guest tests under GC stress and native heap tests; full gate exposed stale IL assertions and an independent staging race; performance gate pending |
 | WP-3d class/Cell retirement | `codex/d9-stage3d` | Active inventory migrated; S-expression 114/114 both modes; Lox 63/63 both modes and VM 13/13 pinned scripts with COW; full gate pending. Historical snapshots/rejection fixtures are explicitly inventoried exceptions; tree interpreter remains slow |
 | WP-3e migration warnings/fix | `codex/d9-stage3e` | Minimal native fix-tool prerequisite ported; historical P1 agreement now 80/101 exact, 83/101 after three proven line shifts, below the required 95%; 30 extras. Dual-mode explicit mut-record fix `18d66f92`; analysis and final gate pending |
-| Q2 invariants | `codex/d9-invariant-closeout` | Cache fix `16f23ed8`, native/JSON invariant validation `c03fc089`, checker-state fix `4a459262`; focused tests and whole-tree Guardian green. Full gate independently reproduced the staging race; fix and rerun pending |
 | WP-3f default flip | Not started | Waits for 3b/3d/3e; includes complete switch-on corpus migration and the stage 3 performance gate |
 | WP-4pre borrow inference | Not started | Requires explain output, invalidation tests and schematic transfer measurements |
 | WP-4 reference counting | Not started | Requires 3f/4pre and the RC performance/RSS gate, including rewritten graph programs |
