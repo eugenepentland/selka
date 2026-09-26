@@ -1,0 +1,27 @@
+{
+  "source_commit": "2b42a543c4245b3bfe5dff863ac69779f45dc2b9",
+  "compiler_mode": "Debug",
+  "compiler_path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-integration/.tmp-rc/install-place-constructor/bin/mylang",
+  "compiler_sha256": "0fcd8e4a799a76c9a7405812fa3db2db28c8e38cabd82a526656c54f4df53841",
+  "main": {
+    "steps": 94,
+    "executed": 2266,
+    "shard_excluded": 23069
+  },
+  "qbe": {
+    "steps": 51,
+    "tests": 438
+  },
+  "native_build_steps": 29,
+  "format_steps": 2,
+  "rc_sweeps": {
+    "assertions_per_backend": 851,
+    "programs_per_backend": 146,
+    "cached": 0,
+    "failed": 0,
+    "skipped": 0,
+    "dropped": 0,
+    "unloaded": 0
+  },
+  "performance_acceptance": false
+}
