@@ -3348,6 +3348,56 @@ test "CLI formatter supports stdout check mode and syntax-only formatting" {
     try invokeOptions("fmt", canonical, &.{ "--check", "--check" }, 2, "", "usage:");
     try invokeOptions("check", canonical, &.{"--check"}, 2, "", "usage:");
 }
+// spec: CHECK-LIBRARY-1
+test "CLI check-module checks bodies and never invents main" {
+    try invoke("check-module", "module input\n\npublic def value() -> int:\n    return 7\n", 0, "", "");
+    try invoke("check-module", "module input\n\npublic record Pair:\n    value: int\n", 0, "", "");
+    try invoke("check-module", "module input\n\npublic def identity[T](value: T) -> T:\n    return value\n", 0, "", "");
+    try invoke("check-module", "module input\n\npublic def value() -> int:\n    return False\n", 1, "", "E_TYPE");
+    try invoke("check-module", "module input\n\npublic def value() -> int:\n    return main()\n", 1, "", "E_UNKNOWN_SYMBOL");
+    try invoke("check-module", "module input\n\nrecord Hidden:\n    value: int\n\npublic def value() -> Hidden:\n    return Hidden(7)\n", 1, "", "E_PRIVATE_INTERFACE");
+    try invoke("check-module", "module input\n\npublic def value(out: Stream) -> None noio:\n    out.print(7)\n", 1, "", "E_EFFECT");
+}
+
+fn expectLibraryCommand(path: []const u8, cache: []const u8, command: []const u8, status: u8, diagnostic: []const u8) !void {
+    const result = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, command, path, cache } });
+    defer testing.allocator.free(result.stdout);
+    defer testing.allocator.free(result.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = status }, result.term);
+    try testing.expectEqualStrings("", result.stdout);
+    try testing.expect(std.mem.indexOf(u8, result.stderr, diagnostic) != null);
+}
+
+// spec-case: CHECK-LIBRARY-1
+test "CLI check-module follows imports and cannot cache an executable verdict" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper\n\npublic def value() -> int:\n    return 7\n" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "library.my", .data = "module library\nimport helper\n\npublic def value() -> int:\n    return helper.value()\n" });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "library.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const cache = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}/cache", .{std.fs.path.dirname(path).?});
+    defer testing.allocator.free(cache);
+    try expectLibraryCommand(path, cache, "check-module", 0, "");
+    try expectLibraryCommand(path, cache, "check-project", 1, "E_MAIN");
+    try expectLibraryCommand(path, cache, "run", 1, "E_MAIN");
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper\n\npublic def value() -> int:\n    return False\n" });
+    try expectLibraryCommand(path, cache, "check-module", 1, "E_TYPE");
+}
+
+// spec-case: CHECK-LIBRARY-1
+test "CLI check-module enforces configured warning and interface gates" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "library.my", .data = "module library\n\npublic def value() -> int:\n    unused: int = 1\n    return 7\n" });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "library.my", testing.allocator);
+    defer testing.allocator.free(path);
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "mylang.json", .data = "{\"version\":2,\"lint\":{\"warnings\":\"deny\"}}" });
+    try expectLibraryCommand(path, "--no-cache", "check-module", 1, "W_UNUSED_BINDING");
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "mylang.json", .data = "{\"version\":2,\"interface_files\":true}" });
+    try expectLibraryCommand(path, "--no-cache", "check-module", 1, "E_INTERFACE_FILE_STALE");
+}
+
 // spec: FMT-CHECK-LOCATION-1
 test "CLI formatter check locates spacing and missing final newline" {
     try invokeOptions("fmt", "def  main() -> int:\n    return 7\n", &.{"--check"}, 1, "", "input.my:1:5: formatting differs");

@@ -99,8 +99,9 @@ const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--j
     "scover-duplicates|discover-project-duplicates|report-project-quality|report-quality|fmt|fm" ++
     "t-module|fmt-project|emit-qbe|emit-project-qbe|list-modules|list-interfaces|list-" ++
     "declarations|check" ++
-    "-project|run-project|check-policy> <file.my>\n  schema-project: --schema-report (include " ++
+    "-project|check-module|run-project|check-policy> <file.my>\n  schema-project: --schema-report (include " ++
     "checked source and compiler identities)\n  " ++
+    "check-module: type-check a library module and its imports without an executable main\n  " ++
     "input-module: reads a typed JSON manifest and writes generated " ++
     "module source\n  run: builds the program natively and runs it; it loads the reachable module graph when the entry " ++
     "file opens with a module header or an import/export directive, including a headerless script that imports embedded " ++
@@ -453,6 +454,7 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
         .@"list-modules",
         .@"list-interfaces",
         .@"check-project",
+        .@"check-module",
         .@"run-project",
         .@"check-policy",
         .lint,
@@ -596,6 +598,7 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
         .@"list-modules",
         .@"list-interfaces",
         .@"check-project",
+        .@"check-module",
         .@"run-project",
         .@"check-policy",
         .lint,
@@ -798,6 +801,7 @@ const Command = enum {
     api,
     context,
     @"check-project",
+    @"check-module",
     @"run-project",
     @"list-interfaces",
     @"list-modules",
@@ -2219,7 +2223,7 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         init.timings.end();
         var fragment_store: language.qbe_fragments.Store = undefined;
         compilation.reuse = try openFragments(init, parsed, &fragment_store);
-        if (parsed.command == .@"index-project") return indexProject(init, &compilation, functions, parsed);
+        if (try earlyProjectCheck(init, parsed, &compilation, functions, &files, &configured)) |status| return status;
         const semantic_before = if (functions) |f| f.statistics else null;
         // `check` needs no checked trees: unchanged bodies are stood in by the
         // summaries the entry's last successful check left.
@@ -2295,6 +2299,29 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
     defer init.gpa.free(output);
     try std.Io.File.stdout().writeStreamingAll(init.io, output);
     return 0;
+}
+
+/// Finish project commands that do not need an executable checked program.
+fn earlyProjectCheck(init: Context, parsed: Parsed, compilation: *language.project_compile.Compilation, functions: ?*language.semantic_cache.Cache, files: *ModuleFiles, configured: *const ConfiguredPolicy) !?u8 {
+    return switch (parsed.command) {
+        .@"check-module" => try checkLibraryProject(init, parsed, compilation, files, configured),
+        .@"index-project" => try indexProject(init, compilation, functions, parsed),
+        else => null,
+    };
+}
+
+/// Check a library without recording an executable verdict or lowering its bodies.
+fn checkLibraryProject(init: Context, parsed: Parsed, compilation: *language.project_compile.Compilation, files: *ModuleFiles, configured: *const ConfiguredPolicy) !u8 {
+    compilation.checkLibrary() catch |err| switch (err) {
+        error.SourceError => {
+            try reportProject(init, compilation);
+            return 1;
+        },
+        else => return err,
+    };
+    try reportProject(init, compilation);
+    if (try enforceInterfaceFiles(init, parsed, configured, compilation.index, files.root)) |status| return status;
+    return if (try projectWarningsDenied(init, compilation, configured)) 1 else 0;
 }
 
 /// SYNTAX-RELEASE-1: release the merged syntax of a checked program when this
@@ -2795,7 +2822,7 @@ fn enforceInterfaceFiles(init: Context, parsed: Parsed, configured: *const Confi
 /// `interface_files` gate applies to it.
 fn enforcesInterfaceFiles(parsed: Parsed) bool {
     return switch (parsed.command) {
-        .@"check-project", .@"run-project", .run => true,
+        .@"check-project", .@"check-module", .@"run-project", .run => true,
         .@"emit-project-qbe" => parsed.select_file == null,
         else => false,
     };
