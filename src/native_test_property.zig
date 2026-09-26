@@ -244,13 +244,17 @@ pub const Property = struct {
         return std.fmt.allocPrint(self.context.allocator, "the test process ended without answering: {s}", .{outcome.ending});
     }
     /// A pass is `True` or `Ok(True)`. A trap of the test's own `@requires`
-    /// (its innermost frame is the test itself) is a discard; every other
+    /// (its innermost frame is the test itself), or a decoded input invariant,
+    /// is a discard; every other
     /// trap, `False`, `Ok(False)` and `Err(...)` is a failure.
     fn classify(self: *Property, outcome: execute.Outcome) Error!Class {
         const name = v.text(v.get(self.function, "name"));
         if (std.mem.eql(u8, outcome.status, "trap")) {
             const own = std.mem.eql(u8, outcome.trap.code, "R_REQUIRES") and std.mem.eql(u8, outcome.trap.frame, name);
-            if (own) return .{ .discard = outcome.trap.message };
+            // Reserved compiler-generated frame names identify decode validation,
+            // before the selected test body runs. Source cannot declare one.
+            const decoded = std.mem.eql(u8, outcome.trap.code, "R_INVARIANT") and std.mem.startsWith(u8, outcome.trap.frame, "@invariant:");
+            if (own or decoded) return .{ .discard = outcome.trap.message };
             return .{ .fail = try self.withOutput(std.mem.trimEnd(u8, outcome.diagnostics, "\n"), outcome.output) };
         }
         if (!std.mem.eql(u8, outcome.status, "value")) return .{ .fail = try self.withOutput(std.mem.trimEnd(u8, outcome.diagnostics, "\n"), outcome.output) };

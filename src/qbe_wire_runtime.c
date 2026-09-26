@@ -13,6 +13,27 @@ static uint64_t wire_word(const void *input,const QbeWireType *type) {
     if (*type->name=='i' && type->size<8 && (bits & (UINT64_C(1)<<(type->size*8-1)))) bits|=UINT64_MAX<<(type->size*8);
     return bits;
 }
+static int wire_validate_one(void *,size_t,const void *);
+/* The ordinary wire reader runs before a guest context exists. Validate its
+   completed argument tree inside execute(), before any guest body observes it. */
+static int wire_validate(void *ctx,size_t index,const void *input,size_t depth) {
+    if(depth>=128){myl_qbe_fail(ctx,"WireLimit");return 0;}
+    const QbeWireType *type=&wire_types[index];
+    if(type->kind==3 || type->kind==7){
+        size_t tag=0;
+        if(type->kind==3){uint32_t value;memcpy(&value,input,4);tag=value;}
+        else {const void *reference;memcpy(&reference,input,sizeof reference);
+            while(tag<type->count && (type->children[tag]==SIZE_MAX)!=(reference==NULL))++tag;}
+        if(tag>=type->count){myl_qbe_fail(ctx,"InternalError");return 0;}
+        const size_t child=type->children[tag];
+        return child==SIZE_MAX || wire_validate(ctx,child,(const unsigned char *)input+type->offsets[tag],depth+1);
+    }
+    if(type->kind!=0) for(size_t i=0;i<type->count;++i){
+        const size_t child=type->children[type->kind==2?0:i],offset=type->kind==2?i*type->stride:type->offsets[i];
+        if(!wire_validate(ctx,child,(const unsigned char *)input+offset,depth+1))return 0;
+    }
+    return wire_validate_one(ctx,index,input);
+}
 static int wire_read(size_t index,void *output,size_t depth) {
     if (depth>=128) return wire_bad("WireLimit");
     if (wire_cursor>=wire_count) return wire_bad("InvalidArgument");

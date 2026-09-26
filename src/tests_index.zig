@@ -56,6 +56,7 @@ pub fn discoveredTests(memory: std.mem.Allocator, program: typed.Program, module
         if (function.type_arguments.len != 0) continue;
         if (std.mem.eql(u8, function.name, entry_adapter.wrapper_name)) continue;
         if (std.mem.startsWith(u8, function.name, "lambda@")) continue;
+        if (@import("invariant_callbacks.zig").isName(function.name)) continue;
         const local = localName(function.name);
         if (!std.mem.startsWith(u8, local, "test_") and !attributed.contains(function.name)) continue;
         try tests.append(memory, function.id);

@@ -705,3 +705,98 @@ test "a record holding a text or a list composes with Option and Result" {
     defer a.free(none);
     try testing.expect(std.mem.indexOf(u8, none, "\"value\":{\"case\":\"none\"}") != null);
 }
+
+const invariant_boundary_source =
+    \\module main
+    \\
+    \\def ordered(low: int, high: int) -> bool:
+    \\    return low <= high
+    \\
+    \\@invariant(ordered(self.low, self.high), "range order")
+    \\public record Span:
+    \\    low: int
+    \\    high: int
+    \\
+    \\public record Pair:
+    \\    spans: [2]Span
+    \\
+    \\public def read(pair: Pair) -> int:
+    \\    return pair.spans[1].high
+    \\
+    \\def main() -> int:
+    \\    return 0
+;
+
+fn invariantLibrary(context: fs.Context, temporary: *testing.TmpDir, resolved: Tools) !runner.Prepared {
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = invariant_boundary_source });
+    const entry = try temporary.dir.realPathFileAlloc(testing.io, "main.my", context.allocator);
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", context.allocator);
+    const opts: options.Options = .{
+        .source = entry,
+        .cache = try std.fs.path.join(context.allocator, &.{ root, "cache" }),
+        .toolchain = .{ .zig = resolved.zig, .qbe = resolved.qbe, .compiler = resolved.compiler },
+        .mode = "Debug",
+    };
+    var prepared = switch (try runner.check(context, opts, .native)) {
+        .ok => |value| value,
+        .rejected => |diagnostics| {
+            try std.Io.File.stderr().writeStreamingAll(testing.io, diagnostics);
+            return error.SourceRejected;
+        },
+    };
+    try runner.build(&prepared, "main::read");
+    return prepared;
+}
+
+// spec: CONTRACT-DECODE-1
+test "invariant boundary validates nested records through ordinary and codec wire entries" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const resolved = try tools(a);
+    var environment = try testing.environ.createMap(a);
+    defer environment.deinit();
+    var context = try fs.Context.init(a, testing.io, &environment);
+    defer context.deinit();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const prepared = try invariantLibrary(context, &temporary, resolved);
+    defer context.remove(prepared.session.temporary);
+    var loaded = try std.DynLib.open(prepared.project.executor.?.library);
+    defer loaded.close();
+    const OrdinaryCall = *const fn ([*:0]const u8, [*]const WireNode, usize, ?[*]WireNode, usize, ?*const RunOptions, *WireResult) callconv(.c) c_int;
+    const ordinary = loaded.lookup(OrdinaryCall, "mylang_native_call_values_v1") orelse return error.MissingWireEntry;
+    const codec = try codecEntry(&loaded);
+    var input = [_]WireNode{
+        .{ .type = "main::Pair", .bits = 0, .children = 1 },
+        .{ .type = "[2]main::Span", .bits = 0, .children = 2 },
+        .{ .type = "main::Span", .bits = 0, .children = 2 },
+        .{ .type = "i64", .bits = 0, .children = 0 },
+        .{ .type = "i64", .bits = 1, .children = 0 },
+        .{ .type = "main::Span", .bits = 0, .children = 2 },
+        .{ .type = "i64", .bits = 2, .children = 0 },
+        .{ .type = "i64", .bits = 4, .children = 0 },
+    };
+    const sentinel: WireNode = .{ .type = "sentinel", .bits = 0xfeed, .children = 7 };
+    var output = [_]WireNode{sentinel};
+    var result: WireResult = undefined;
+    var encoded: CodecResult = undefined;
+    try testing.expectEqual(@as(c_int, 0), ordinary("main::read", &input, input.len, &output, output.len, null, &result));
+    try testing.expectEqual(@as(u64, 4), output[0].bits);
+    // Only the second element breaks its clause. It must fail before the
+    // target can observe it, and before any output buffer is published.
+    input[6].bits = 9;
+    output[0] = sentinel;
+    try testing.expectEqual(@as(c_int, 1), ordinary("main::read", &input, input.len, &output, output.len, null, &result));
+    try testing.expectEqualStrings("R_INVARIANT", std.mem.span(result.execution.code.?));
+    try testing.expectEqual(@as(usize, 0), result.node_count);
+    try testing.expectEqual(@as(u64, 0xfeed), output[0].bits);
+    try testing.expectEqualStrings("@invariant:main::Span", std.mem.span(result.execution.frames[0].function.?));
+    const stress: CodecOptions = .{ .run = .{ .max_steps = 0, .max_frames = 0, .providers = null, .stress = 1 }, .max_calls = 0 };
+    try testing.expectEqual(@as(c_int, 1), codec("main::read", &input, input.len, &output, output.len, &stress, &encoded));
+    try testing.expectEqualStrings("R_INVARIANT", std.mem.span(encoded.value.execution.code.?));
+    try testing.expectEqual(@as(u64, 0xfeed), output[0].bits);
+    input[6].bits = 2;
+    try testing.expectEqual(@as(c_int, 0), codec("main::read", &input, input.len, &output, output.len, &stress, &encoded));
+    try testing.expectEqual(@as(u64, 4), output[0].bits);
+}

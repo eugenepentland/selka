@@ -34,7 +34,8 @@ pub fn libraryWrapper(allocator: std.mem.Allocator, manifest: Value) Error![]con
     const any_supported = try lookup(w, units);
     try dispatch.ending(w, templates.embed_end, any_supported);
     const wire = v.get(manifest, "wire_types");
-    if (wire != .null) try @import("qbe_build_wire.zig").write(w, units, v.array(wire));
+    const validations = v.array(v.get(v.get(manifest, "codecs"), "validations"));
+    if (wire != .null) try @import("qbe_build_wire.zig").write(w, units, v.array(wire), validations);
     const codecs = v.get(manifest, "codecs");
     if (codecs != .null) try @import("qbe_build_codecs.zig").write(w, units, codecs, v.array(wire));
     return output.toOwnedSlice();
