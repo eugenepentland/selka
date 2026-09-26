@@ -1,0 +1,135 @@
+{
+  "medians": {
+    "before": 1015144525,
+    "after": 651143727
+  },
+  "improvement": 1.5590175915186233,
+  "iterations": 500000,
+  "description": "O2 C production allocator; eight repeated owning pointer leaves copied then dropped, closed budget",
+  "measurements": [
+    {
+      "arm": "before",
+      "command": [
+        "taskset",
+        "-c",
+        "0",
+        "perf",
+        "stat",
+        "-x,",
+        "-e",
+        "instructions:u",
+        "--",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/drop-micro-before"
+      ],
+      "counters": {
+        "cpu_core/instructions/u": 1015144525
+      },
+      "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n1015144525,,cpu_core/instructions/u,130522478,100.00,,\n",
+      "stdout": "4500000\n"
+    },
+    {
+      "arm": "after",
+      "command": [
+        "taskset",
+        "-c",
+        "0",
+        "perf",
+        "stat",
+        "-x,",
+        "-e",
+        "instructions:u",
+        "--",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/drop-micro-after"
+      ],
+      "counters": {
+        "cpu_core/instructions/u": 642143712
+      },
+      "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n642143712,,cpu_core/instructions/u,79199560,100.00,,\n",
+      "stdout": "4500000\n"
+    },
+    {
+      "arm": "after",
+      "command": [
+        "taskset",
+        "-c",
+        "0",
+        "perf",
+        "stat",
+        "-x,",
+        "-e",
+        "instructions:u",
+        "--",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/drop-micro-after"
+      ],
+      "counters": {
+        "cpu_core/instructions/u": 660143777
+      },
+      "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n660143777,,cpu_core/instructions/u,79441014,100.00,,\n",
+      "stdout": "4500000\n"
+    },
+    {
+      "arm": "before",
+      "command": [
+        "taskset",
+        "-c",
+        "0",
+        "perf",
+        "stat",
+        "-x,",
+        "-e",
+        "instructions:u",
+        "--",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/drop-micro-before"
+      ],
+      "counters": {
+        "cpu_core/instructions/u": 1019644520
+      },
+      "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n1019644520,,cpu_core/instructions/u,128087754,100.00,,\n",
+      "stdout": "4500000\n"
+    },
+    {
+      "arm": "before",
+      "command": [
+        "taskset",
+        "-c",
+        "0",
+        "perf",
+        "stat",
+        "-x,",
+        "-e",
+        "instructions:u",
+        "--",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/drop-micro-before"
+      ],
+      "counters": {
+        "cpu_core/instructions/u": 1010644527
+      },
+      "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n1010644527,,cpu_core/instructions/u,125962342,100.00,,\n",
+      "stdout": "4500000\n"
+    },
+    {
+      "arm": "after",
+      "command": [
+        "taskset",
+        "-c",
+        "0",
+        "perf",
+        "stat",
+        "-x,",
+        "-e",
+        "instructions:u",
+        "--",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/drop-micro-after"
+      ],
+      "counters": {
+        "cpu_core/instructions/u": 651143727
+      },
+      "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n651143727,,cpu_core/instructions/u,77415285,100.00,,\n",
+      "stdout": "4500000\n"
+    }
+  ],
+  "binary_sha256": {
+    "before": "0a65ca2db58e1a594b9e715d28ac2d1fcd7d3e8cf338dbb229dded3f1295a764",
+    "after": "478f2a0735703d5b80c0a022b778d296a3a66c558f3042c981eaa5feb1bc0156"
+  }
+}

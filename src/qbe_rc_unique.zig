@@ -35,6 +35,7 @@ pub fn local(comptime E: type, self: *E, unique: cow.Unique) Error!void {
 }
 
 fn localCall(comptime E: type, self: *E, index: usize, address: usize, guard: usize) Error!void {
+    if (stableMutParameter(E, self, index)) return;
     const ty = self.function.scope.locals[index].ty;
     const holds = @import("qbe_rc_holds.zig");
     const label = self.temp();
@@ -49,6 +50,26 @@ fn localCall(comptime E: type, self: *E, index: usize, address: usize, guard: us
     try self.print(" %v{d} =w call $myl_qbe_rc_unique_local(l %ctx, l extern ${s}, l %v{d}, l %v{d})\n", .{ done, try self.descriptor(ty), address, guard });
     try success(E, self, done);
     if (maybe_held) try self.print("@rcuniquelocal{d}\n", .{label});
+}
+
+// The caller already detached and pinned this exact payload for the complete
+// activation. Pin-aware publications cannot introduce a second snapshot owner.
+// A source-level rebind instead installs an ordinary value in the parameter
+// slot, so any instruction that can replace that slot declines this shortcut.
+fn stableMutParameter(comptime E: type, self: *E, index: usize) bool {
+    const state = frame.get(E, self) orelse return false;
+    if (index >= state.contract.parameters.len or state.contract.parameters[index] != .mutable_payload) return false;
+    const ty = self.function.scope.locals[index].ty;
+    if (!ty.isAggregate()) return false;
+    const record = self.program.records[ty.recordIndex()];
+    if (!record.isCollection() or record.collection.kind != .list or record.collection.box) return false;
+    const shape = state.catalog.get(record.shape.buffer orelse return false) catch return false;
+    if (shape.counted or shape.unique_drop) return false;
+    for (self.function.scope.instructions) |instruction| switch (instruction.op) {
+        .store_local, .move_local, .drop_local, .ref_local => |slot| if (@backingInt(slot) == index) return false,
+        else => {},
+    };
+    return true;
 }
 
 /// One ordinary or held pointer edge in an already-owned containing value.

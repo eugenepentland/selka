@@ -1,0 +1,12 @@
+module trap
+
+
+def read(rows: list[list[int]], at: int, output: mut list[int]) -> int:
+    value = rows[0][at]
+    output.append(value)
+    return value
+
+
+def main() -> int:
+    output: list[int] = []
+    return read([[1, 2, 3]], 9, mut output)

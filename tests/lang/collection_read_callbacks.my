@@ -1,0 +1,142 @@
+module collection_read_callbacks
+
+
+def change_index(values: mut list[int]) -> int:
+    values.clear()
+    values.append(91)
+    return 0
+
+
+# spec: COW-READ-RECEIVER-1
+public def test_read_receiver_is_captured_before_a_mutating_index() -> bool:
+    values = [7, 8]
+    selected = values[change_index(mut values)]
+    return selected == 7 and values == [91]
+
+
+def change_negative(values: mut list[int]) -> int:
+    values.clear()
+    values.append(91)
+    return -1
+
+
+# spec-case: COW-READ-RECEIVER-1
+public def test_negative_index_uses_the_captured_receiver_length() -> bool:
+    values = [7, 8]
+    selected = values[change_negative(mut values)]
+    return selected == 8 and values == [91]
+
+
+def select_pinned(values: mut list[int]) -> int:
+    return values[change_index(mut values)]
+
+
+# spec-case: COW-READ-RECEIVER-1
+public def test_read_capture_copies_an_already_pinned_parameter() -> bool:
+    values = [7, 8]
+    selected = select_pinned(mut values)
+    return selected == 7 and values == [91]
+
+
+def swap_row(rows: mut list[list[int]]) -> int:
+    rows[0] = [91]
+    return 0
+
+
+# spec-case: COW-READ-RECEIVER-1
+public def test_nested_read_keeps_the_row_selected_before_replacement() -> bool:
+    rows = [[7, 8]]
+    selected = rows[0][swap_row(mut rows)]
+    return selected == 7 and rows == [[91]]
+
+
+def change_key(values: mut dict[int, int]) -> int:
+    values[0] = 91
+    return 0
+
+
+# spec-case: COW-READ-RECEIVER-1
+public def test_dictionary_read_captures_before_key_mutation() -> bool:
+    values = {0: 7}
+    selected = values[change_key(mut values)]
+    return selected == 7 and values[0] == 91
+
+
+def select_pinned_mapping(values: mut dict[int, int]) -> int:
+    return values[change_key(mut values)]
+
+
+# spec-case: COW-READ-RECEIVER-1
+public def test_dictionary_read_copies_a_pinned_receiver() -> bool:
+    values = {0: 7}
+    selected = select_pinned_mapping(mut values)
+    return selected == 7 and values[0] == 91
+
+
+record Payload:
+    mapping: dict[int, int]
+
+
+def change_field(value: mut Payload) -> int:
+    value.mapping[0] = 91
+    return 0
+
+
+# spec-case: COW-READ-RECEIVER-1
+public def test_dictionary_read_captures_a_record_field_before_key_mutation() -> bool:
+    value = Payload({0: 7})
+    selected = value.mapping[change_field(mut value)]
+    return selected == 7 and value.mapping[0] == 91
+
+
+def change_nested_key(values: mut dict[int, list[int]]) -> int:
+    values[0] = [91]
+    return 0
+
+
+# spec-case: COW-READ-RECEIVER-1
+public def test_dictionary_read_captures_a_managed_result_before_replacement() -> bool:
+    values = {0: [7, 8]}
+    selected = values[change_nested_key(mut values)]
+    return selected == [7, 8] and values[0] == [91]
+
+
+def snapshot_pinned(values: mut list[int]) -> int:
+    snapshot = values
+    values[0] = 92
+    return snapshot[0]
+
+
+# spec-case: COW-READ-RECEIVER-1
+public def test_pinned_named_snapshot_takes_the_slow_copy_path() -> bool:
+    values = [7, 8]
+    selected = snapshot_pinned(mut values)
+    return selected == 7 and values == [92, 8]
+
+
+def snapshot_after_call(values: mut list[int]) -> int:
+    ignored = change_index(mut values)
+    snapshot = values
+    values[0] = 92
+    return snapshot[0] + ignored
+
+
+# spec-case: COW-READ-RECEIVER-1
+public def test_nested_call_preserves_the_outer_pin_for_a_later_snapshot() -> bool:
+    values = [7, 8]
+    selected = snapshot_after_call(mut values)
+    return selected == 91 and values == [92]
+
+
+def main() -> int:
+    assert test_read_receiver_is_captured_before_a_mutating_index()
+    assert test_negative_index_uses_the_captured_receiver_length()
+    assert test_read_capture_copies_an_already_pinned_parameter()
+    assert test_nested_read_keeps_the_row_selected_before_replacement()
+    assert test_dictionary_read_captures_before_key_mutation()
+    assert test_dictionary_read_copies_a_pinned_receiver()
+    assert test_dictionary_read_captures_a_record_field_before_key_mutation()
+    assert test_dictionary_read_captures_a_managed_result_before_replacement()
+    assert test_pinned_named_snapshot_takes_the_slow_copy_path()
+    assert test_nested_call_preserves_the_outer_pin_for_a_later_snapshot()
+    return 0

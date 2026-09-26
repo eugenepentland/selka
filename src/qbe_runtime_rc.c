@@ -140,6 +140,27 @@ int myl_qbe_rc_unique_field(void *context, const myl_native_type *type, void *ad
         .region = container ? myl_native_header_region(container) : ctx->heap.region_depth};
     return myl_qbe_rc_status(ctx, myl_rc_unique_owned(&ctx->heap, &slot));
 }
+int myl_qbe_rc_unique_elements(void *context, const myl_native_type *type, void *payload) {
+    MylQbeContext *ctx = context;
+    myl_rc_invariant(type && type->kind == MYL_NATIVE_POINTER && type->collection_kind == 1 && type->element);
+    const myl_native_type *element = type->element;
+    const myl_rc_descriptor *descriptor = myl_rc_descriptor_find(&ctx->heap, element);
+    myl_rc_invariant(element->kind == MYL_NATIVE_POINTER && element->size == sizeof(void *) &&
+        descriptor && descriptor->shape->kind == MYL_RC_SHAPE_POINTER);
+    if (!payload) return 1;
+    myl_rc_invariant(myl_native_list_header(payload) && myl_rc_unique(&ctx->heap, payload));
+    myl_native_list *list = payload;
+    descriptor = myl_rc_descriptor_find(&ctx->heap, list->element);
+    myl_rc_invariant(list->element->kind == MYL_NATIVE_POINTER && list->element->size == sizeof(void *) &&
+        descriptor && descriptor->shape->kind == MYL_RC_SHAPE_POINTER);
+    myl_rc_slot slot = {.shape = descriptor->shape, .container = list, .region = myl_native_header_region(list)};
+    for (size_t i = 0; i < list->length; ++i) {
+        slot.address = (unsigned char *)list->storage + i * sizeof(void *);
+        myl_rc_status status = myl_rc_unique_owned(&ctx->heap, &slot);
+        if (status != MYL_RC_OK) return myl_qbe_rc_status(ctx, status);
+    }
+    return 1;
+}
 int myl_qbe_rc_unique_held(void *context, const myl_native_type *type, void *address, void *container) {
     static const myl_rc_shape held = {.size = sizeof(void *), .kind = MYL_RC_SHAPE_HOLD_POINTER};
     static const myl_rc_shape *const shapes[] = {&held};
