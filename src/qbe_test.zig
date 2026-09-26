@@ -71,6 +71,29 @@ test "scalar units remain stable across body edits and declaration reorder" {
     try std.testing.expect(!std.mem.eql(u8, callee_before.il, callee_after.il));
 }
 
+// spec: QBE-COLD-FAILRET-1
+test "QBE-COLD-FAILRET-1 aggregate failure result is zeroed only in cold return blocks" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Pair:
+        \\    left: int
+        \\    right: int
+        \\
+        \\def pair(x: int) -> Pair:
+        \\    return Pair(left=x, right=x + 1)
+        \\
+        \\def main() -> int:
+        \\    return pair(5).right
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "pair").?.il;
+    const failure = std.mem.lastIndexOf(u8, body, "\n@failure\n") orelse return error.TestUnexpectedResult;
+    const entry_failure = std.mem.lastIndexOf(u8, body, "\n@entry_failure\n") orelse return error.TestUnexpectedResult;
+    try std.testing.expect(std.mem.indexOf(u8, body[0..failure], "call $memset(l %empty") == null);
+    try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, body, "call $memset(l %empty"));
+    try std.testing.expect(std.mem.indexOf(u8, body[failure..entry_failure], "ret %empty") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body[entry_failure..], "ret %empty") != null);
+}
+
 test "QBE lowers stack joins loops casts and calls independently" {
     const a = std.testing.allocator;
     var c = try language.Compilation.init(a, "qbe.my",
@@ -2963,6 +2986,78 @@ test "QBE-MOVE-ELIDE-1 a prior mut call does not prevent a later local field upd
     );
     defer parsed.deinit();
     try std.testing.expectEqual(@as(usize, 0), try blits(parsed.value, "main"));
+}
+
+// spec-case: QBE-MOVE-ELIDE-1
+test "QBE-MOVE-ELIDE-1 a mut record parameter updates its scalar field in caller storage" {
+    const saved = value_semantics.enabled();
+    value_semantics.setEnabled(true);
+    defer value_semantics.setEnabled(saved);
+    var parsed = try emitted(std.testing.allocator,
+        \\record Runtime:
+        \\    stack: list[int]
+        \\    stack_top: int
+        \\
+        \\def push(rt: mut Runtime, item: int):
+        \\    rt.stack[rt.stack_top] = item
+        \\    rt.stack_top = rt.stack_top + 1
+        \\
+        \\def main() -> int:
+        \\    rt = Runtime(stack=[0, 0], stack_top=0)
+        \\    push(mut rt, 7)
+        \\    return rt.stack[0] + rt.stack_top
+    );
+    defer parsed.deinit();
+    try std.testing.expectEqual(@as(usize, 0), try blits(parsed.value, "push"));
+}
+
+// spec-case: QBE-MOVE-ELIDE-1
+test "QBE-MOVE-ELIDE-1 two mut parameters of one type keep the observable store back" {
+    const saved = value_semantics.enabled();
+    value_semantics.setEnabled(true);
+    defer value_semantics.setEnabled(saved);
+    var parsed = try emitted(std.testing.allocator,
+        \\record Pair:
+        \\    x: int
+        \\    y: int
+        \\
+        \\def observe(a: mut Pair, b: mut Pair) -> int:
+        \\    a.x = a.x + 1
+        \\    seen = b.x
+        \\    b.x = b.x + 1
+        \\    return seen
+        \\
+        \\def main() -> int:
+        \\    p = Pair(x=0, y=0)
+        \\    return observe(mut p, mut p) * 10 + p.x
+    );
+    defer parsed.deinit();
+    try std.testing.expect((try blits(parsed.value, "observe")) >= 2);
+}
+
+// spec-case: QBE-MOVE-ELIDE-1
+test "QBE-MOVE-ELIDE-1 replace result passed beside its old mut source stays private" {
+    const saved = value_semantics.enabled();
+    value_semantics.setEnabled(true);
+    defer value_semantics.setEnabled(saved);
+    var parsed = try emitted(std.testing.allocator,
+        \\record Pair:
+        \\    x: int
+        \\    y: int
+        \\
+        \\def witness(old: Pair, new: Pair) -> int:
+        \\    return old.x * 10 + new.x
+        \\
+        \\def adjust(p: mut Pair) -> int:
+        \\    p.x = p.x + 1
+        \\    return witness(p, replace(p, x=p.x + 1))
+        \\
+        \\def main() -> int:
+        \\    p = Pair(x=0, y=0)
+        \\    return adjust(mut p) * 10 + p.x
+    );
+    defer parsed.deinit();
+    try std.testing.expect((try blits(parsed.value, "adjust")) >= 1);
 }
 
 const borrowed_root_program =

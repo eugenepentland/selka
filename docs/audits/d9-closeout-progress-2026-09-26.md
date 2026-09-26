@@ -38,7 +38,7 @@ for every accepted package above.
 | Work | Branch/worktree | Remaining acceptance |
 |---|---|---|
 | WP-3b COW | `d9/stage3b`, `../d9-stage3b` | Full gate green at `efbc4285`: 93/93 test steps, 2,087 tests; QBE 51/51 and 428 tests; QBE-build 29/29; formatting 2/2. [Performance evidence](d9-stage3b-performance-2026-09-26.md) preserves median-three measurements; LLVM historical-source and class-free Lox results fail the required thresholds |
-| WP-3f default flip | Preparation at `codex/d9-stage3f-prep` (`a7a6a850`) | CPython-oracle preparation retains three explicit list/nested-list/dictionary divergences; 113-probe switch-on suite has zero undeclared disagreements. Isolated default activation supports explicit `--legacy-sharing`, project configuration and inherited mode. Documentation examples pass (203 run, 51 checked), forced GC-stress language guests pass 652/652, and the first joined main gate passes all 2,106 Zig tests. Legacy Cell guests have a separate explicit compatibility lane (2/2). Remaining smoke/golden expectations and option-order configuration discovery are being fixed before the final full gate. Integration also waits for 3b performance acceptance |
+| WP-3f default flip | Preparation at `codex/d9-stage3f-prep` (`d172b006`) | Full correctness gate green at source commit `81eaf8d1`: test 94/94 steps, 2,108 executed Zig tests; QBE 51/51 and 428 tests; QBE build 29/29; formatting 2/2. Includes 652 language, 49 value, 42 smoke and 2 compatibility guests, plus 231 historical golden cases. The 113-probe oracle has zero undeclared disagreements. Guide-only follow-up passes docs/coverage/formatting 28/28. Report: `docs/audits/d9-stage3f-default-validation-2026-09-26.md` on that branch. Subsequent review found a boxed-field alias leak; its fix and performance acceptance still block integration |
 | WP-4 reference counting | Not started | Requires 3f/4pre and the RC performance/RSS gate, including rewritten graph programs |
 | WP-5 concurrency | Not started | Design after WP-4, following the existing concurrency proposal |
 
@@ -50,11 +50,14 @@ joined validation remain required.
 
 ## Performance work still blocking acceptance
 
-The latest class-free Lox VM equality measurement (N=30,000, QBE guest
-ReleaseFast, Debug compiler) is 2,683,967,077 instructions versus the exact
-`60b668cf` class baseline's 1,018,576,990 (2.635×), with identical stdout.
-The optional source optimization is `ebe6b78f`; the private-scratch lowering is
-`0e18d2bc`. This remains a hard performance blocker. Matrix multiplication and
+The committed `b8d14efb` compiler and `ebe6b78f` class-free Lox source cost
+2,451,645,857 instructions on VM equality N=30,000 under QBE ReleaseFast
+versus the exact `60b668cf` class baseline's 1,018,576,990 (2.407×); LLVM
+full LTO is 842,084,943 versus 346,979,824 (2.427×). An uncommitted
+mut-parameter scalar-update optimization reduces median-three costs to
+1,509,436,771 QBE (1.482×) and 530,344,081 LLVM (1.528×), with identical
+stdout. These are provisional measurements pending its full gate and review.
+Every compiler was Debug. This remains a hard performance blocker. Matrix multiplication and
 byte scanning now match baseline closely after keeping COW transfer operand
 scratch local to QBE. The 116-key median-three sweep is preserved in the performance report. Parity geomeans are 1.0031× QBE and 1.0018× LLVM; Lox remains the blocker.
 
@@ -73,3 +76,10 @@ optimized class-free source (85.3× baseline). Every output matched. Profiling
 attributes much of this cost to repeated recursive-box descendant sharing.
 The next compiler experiment targets that traversal while preserving snapshot,
 pin and arena guarantees; it has not yet earned acceptance.
+
+Independent review after the default gate reproduced a nested boxed-record
+alias leak using `record A: child: B` and `record B: items: list[int]; tail: [0]A`.
+Mutating `changed.child.items` after `changed = original` also changes the
+original. The recursive-box performance experiment must fix this immutable-box
+write-back path and its GC allocation/root analysis before integration. A green
+existing suite does not close this newly discovered correctness issue.
