@@ -23,6 +23,7 @@ const std = @import("std");
 const bytecode = @import("bytecode.zig");
 const typed = @import("typed.zig");
 const arena_lower = @import("qbe_arena.zig");
+const cow_plan = @import("cow_plan.zig");
 const ownership = @import("ownership.zig");
 
 /// Failures raised while planning.
@@ -147,15 +148,47 @@ fn aliasTarget(comptime E: type, self: *E, index: usize) Error!?usize {
         source = loaded;
     }
     const target = source orelse return null;
-    if (target == index or f.scope.locals[target].ty != ty or !ownSlot(E, self, target)) return null;
+    if (target == index or f.scope.locals[target].ty != ty) return null;
+    const caller = self.cow != null and self.callerStorage(target);
+    if (!ownSlot(E, self, target) and !caller) return null;
+    // A second mutable parameter of the same type could be the same caller
+    // variable. A write through it is invisible to the local write scan.
+    if (caller) for (f.scope.locals[0..f.signature.parameter_count], 0..) |parameter, other| {
+        if (other != target and parameter.ty == ty and self.callerStorage(other)) return null;
+    };
     // COW-NESTED-1: a copy written back into a field of either local writes
     // that local's own slot.
-    if (self.cow) |state| if (state.plan.writesSlot(index) or state.plan.writesSlot(target)) return null;
+    if (self.cow) |state| {
+        if (!caller and (state.plan.writesSlot(index) or state.plan.writesSlot(target))) return null;
+        if (caller) for (code, 0..) |instruction, pc| {
+            if (live.before(pc, index) and (state.plan.disturbs(index, pc, false) or state.plan.disturbs(target, pc, false))) return null;
+            const read = switch (instruction.op) {
+                .load_local, .move_local => |slot| @backingInt(slot) == index,
+                else => false,
+            };
+            if (read and disturbedOperand(E, self, state.plan, pc, index, target)) return null;
+        };
+    }
     for (code, 0..) |_, pc| {
         if (self.states[pc] == null) continue;
         if (live.before(pc, index) and writesLocal(f, pc, target)) return null;
     }
     return target;
+}
+
+/// A local's liveness ends at its last read, but the address a read pushes may
+/// remain on the operand stack. Decline a caller-storage alias if COW could
+/// replace that storage before the operand's consuming instruction reads it.
+fn disturbedOperand(comptime E: type, self: *E, plan: cow_plan.Plan, pc: usize, alias: usize, target: usize) bool {
+    const before = self.states[pc] orelse return true;
+    const slot = before.len;
+    for (pc + 1..self.states.len) |at| {
+        if (self.states[at] == null or self.isBranchTarget(at)) return true;
+        if (plan.disturbs(alias, at, false) or plan.disturbs(target, at, false)) return true;
+        const after = if (at + 1 < self.states.len) self.states[at + 1] else null;
+        if (after == null or after.?.len <= slot + 1) return false;
+    }
+    return true;
 }
 
 /// One update being placed: the analysis, its pc and shape, and the table of
@@ -187,11 +220,17 @@ fn placeUpdate(comptime E: type, self: *E, candidate: Candidate) Error!Update {
     // `Update` for why its write-back keeps the copy.
     if (self.borrowsElement(loaded)) return .copy;
     const storage = self.moves.resolve(loaded);
-    if (!ownSlot(E, self, storage) or f.scope.locals[storage].ty != ty) return .copy;
+    const caller = self.cow != null and self.callerStorage(storage);
+    if (!ownSlot(E, self, storage) and !caller) return .copy;
+    if (f.scope.locals[storage].ty != ty) return .copy;
     if (!try self.borrowableAt(.{ .index = storage, .slot = at_base, .pc = base.read })) return .copy;
     if (!try deadStorage(E, self, storage, base.read)) return .copy;
     if (namedBelow(self.moves, stack[0..at_base], storage)) return .copy;
     const consumer = try resultConsumer(E, self, candidate.pc, storage) orelse return .copy;
+    // Caller storage is observable through another `mut` alias. Commit only
+    // when the next instruction stores the updated record back to that same
+    // parameter; every right-hand operand was evaluated before this update.
+    if (caller and (!consumer.stores or consumer.pc != candidate.pc + 1)) return .copy;
     if (consumer.stores) candidate.in_place[consumer.pc] = true;
     return .{ .slot = @intCast(storage) };
 }

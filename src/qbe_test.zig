@@ -2959,6 +2959,78 @@ test "QBE-MOVE-ELIDE-1 a prior mut call does not prevent a later local field upd
     try std.testing.expectEqual(@as(usize, 0), try blits(parsed.value, "main"));
 }
 
+// spec-case: QBE-MOVE-ELIDE-1
+test "QBE-MOVE-ELIDE-1 a mut record parameter updates its scalar field in caller storage" {
+    const saved = value_semantics.enabled();
+    value_semantics.setEnabled(true);
+    defer value_semantics.setEnabled(saved);
+    var parsed = try emitted(std.testing.allocator,
+        \\record Runtime:
+        \\    stack: list[int]
+        \\    stack_top: int
+        \\
+        \\def push(rt: mut Runtime, item: int):
+        \\    rt.stack[rt.stack_top] = item
+        \\    rt.stack_top = rt.stack_top + 1
+        \\
+        \\def main() -> int:
+        \\    rt = Runtime(stack=[0, 0], stack_top=0)
+        \\    push(mut rt, 7)
+        \\    return rt.stack[0] + rt.stack_top
+    );
+    defer parsed.deinit();
+    try std.testing.expectEqual(@as(usize, 0), try blits(parsed.value, "push"));
+}
+
+// spec-case: QBE-MOVE-ELIDE-1
+test "QBE-MOVE-ELIDE-1 two mut parameters of one type keep the observable store back" {
+    const saved = value_semantics.enabled();
+    value_semantics.setEnabled(true);
+    defer value_semantics.setEnabled(saved);
+    var parsed = try emitted(std.testing.allocator,
+        \\record Pair:
+        \\    x: int
+        \\    y: int
+        \\
+        \\def observe(a: mut Pair, b: mut Pair) -> int:
+        \\    a.x = a.x + 1
+        \\    seen = b.x
+        \\    b.x = b.x + 1
+        \\    return seen
+        \\
+        \\def main() -> int:
+        \\    p = Pair(x=0, y=0)
+        \\    return observe(mut p, mut p) * 10 + p.x
+    );
+    defer parsed.deinit();
+    try std.testing.expect((try blits(parsed.value, "observe")) >= 2);
+}
+
+// spec-case: QBE-MOVE-ELIDE-1
+test "QBE-MOVE-ELIDE-1 replace result passed beside its old mut source stays private" {
+    const saved = value_semantics.enabled();
+    value_semantics.setEnabled(true);
+    defer value_semantics.setEnabled(saved);
+    var parsed = try emitted(std.testing.allocator,
+        \\record Pair:
+        \\    x: int
+        \\    y: int
+        \\
+        \\def witness(old: Pair, new: Pair) -> int:
+        \\    return old.x * 10 + new.x
+        \\
+        \\def adjust(p: mut Pair) -> int:
+        \\    p.x = p.x + 1
+        \\    return witness(p, replace(p, x=p.x + 1))
+        \\
+        \\def main() -> int:
+        \\    p = Pair(x=0, y=0)
+        \\    return adjust(mut p) * 10 + p.x
+    );
+    defer parsed.deinit();
+    try std.testing.expect((try blits(parsed.value, "adjust")) >= 1);
+}
+
 const borrowed_root_program =
     \\class Node:
     \\    items: list[int]
