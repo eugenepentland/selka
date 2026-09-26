@@ -41,13 +41,13 @@ pub fn copied(comptime E: type, self: *E, ty: typed.Type, address: usize) Error!
     const region = self.temp();
     try self.print(region_mark, .{region});
     try slots.Lower(E).transfer(self, .{ .ty = ty, .destination = work, .source = address, .region = region, .mode = .copy_empty });
-    try markWork(E, self, ty, work);
+    try markWork(E, self, ty);
 }
 /// Adopt the one edge returned by a runtime producer without another acquire.
 pub fn adopted(comptime E: type, self: *E, ty: typed.Type, address: usize) Error!void {
     const work = try workAddress(E, self);
     try self.print(blit_value, .{ address, work, (try self.layout(ty)).size });
-    try markWork(E, self, ty, work);
+    try markWork(E, self, ty);
 }
 /// Materialize a result, drop its inputs, then relocate its obligation to the stack.
 pub fn finish(comptime E: type, self: *E, result: Result) Error!void {
@@ -76,7 +76,7 @@ pub fn publish(comptime E: type, self: *E, ty: typed.Type, index: usize) Error!v
     const address = try operand(E, self, index);
     const work = try workAddress(E, self);
     try self.print(blit_value, .{ work, address, (try self.layout(ty)).size });
-    try frame.entry(E, self, journalIndex(E, self, index), ty, address);
+    try frame.stableEntry(E, self, journalIndex(E, self, index), ty);
     try frame.initialized(E, self, frame.pending(E, self), false);
     try frame.initialized(E, self, journalIndex(E, self, index), true);
     try self.store(index, try self.readValue(address, ty));
@@ -91,8 +91,8 @@ pub fn workAddress(comptime E: type, self: *E) Error!usize {
     try self.print(" %v{d} =l copy %rcwork\n", .{work});
     return work;
 }
-fn markWork(comptime E: type, self: *E, ty: typed.Type, work: usize) Error!void {
-    try frame.entry(E, self, frame.pending(E, self), ty, work);
+fn markWork(comptime E: type, self: *E, ty: typed.Type) Error!void {
+    try frame.stableEntry(E, self, frame.pending(E, self), ty);
     try frame.initialized(E, self, frame.pending(E, self), true);
 }
 
@@ -150,7 +150,7 @@ fn prepareOwned(comptime E: type, self: *E, ty: typed.Type, address: usize, jour
     try self.print(region_mark, .{region});
     try slots.Lower(E).transfer(self, .{ .ty = ty, .destination = work, .source = address, .region = region, .mode = .take_empty });
     try frame.initialized(E, self, journal_index, false);
-    try markWork(E, self, ty, work);
+    try markWork(E, self, ty);
 }
 
 /// Physical moves consume only an initialized owner; a borrowed local or operand
