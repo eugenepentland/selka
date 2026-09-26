@@ -19,8 +19,10 @@ The structural tests pass 13 selected tests, including conditional rebinds whose
 receiver is a compiler temporary. All six source assertions pass with native GC
 stress on both actual backends: direct list writes, nested shared rows, dictionary
 values, conditional replacement, caller/callee snapshots and the original failing
-regression. Whole-tree Guardian passes all 88 checks. RC and broader receiver
-validation continues against the frozen compiler below; root integration owns
+regression. A further 35 pending-receiver and callback assertions pass in each
+mode/backend combination. Altogether all 164 actual assertions pass (41 each
+under GC stress and counted RC, on both backends). RC counters balance and match
+across backends. Whole-tree Guardian passes all 88 checks; root integration owns
 the complete fresh gate.
 
 Corrected Debug compiler SHA256: `9cd555d25e06ac185a003daf4dc0ee0c46e30c144c38814ed85596ec072e8b4c`.
