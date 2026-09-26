@@ -2598,6 +2598,7 @@ const Emitter = struct {
             .file_access => |call| try @import("qbe_files.zig").Lower(Emitter).access(self, call, stack),
             .file_method => |call| try @import("qbe_files.zig").Lower(Emitter).method(self, call, stack),
             .try_result => |propagate| {
+                if (try @import("qbe_rc_aggregate.zig").propagation(Emitter, self, propagate, stack)) return;
                 const source = try self.load("s", h - 1);
                 const input_offset = (try self.layout(propagate.input)).payload_offset;
                 if (typed.resultShape(propagate.input, self.program.records)) |input| {

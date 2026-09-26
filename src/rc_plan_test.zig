@@ -663,6 +663,22 @@ test "RC-UNIQUE-LOWER-1 mutations use typed owner counts inside loops" {
     try t.expect(std.mem.indexOf(u8, text, "@ce") == null);
 }
 
+// spec-case: RC-AGGREGATE-1
+test "RC aggregate managed bodies with unique fields install finalizers" {
+    var fixture = try ShapeFixture.init(
+        \\record Owner:
+        \\    handle: TextFile
+        \\    next: Option[Owner]
+        \\
+        \\def main() -> int:
+        \\    return 0
+    );
+    defer fixture.deinit();
+    const generated = try @import("rc_descriptors.zig").generate(t.allocator, &fixture.layouts);
+    defer t.allocator.free(generated);
+    try t.expect(std.mem.indexOf(u8, generated, ".finalize=myl_rc_finalize_unique") != null);
+}
+
 // spec-case: RC-UNIQUE-LOWER-1
 test "RC-UNIQUE-LOWER-1 nested receiver replaces its owned field before borrowing" {
     const mode = @import("runtime_mode.zig");
@@ -701,4 +717,25 @@ test "RC-RECEIVER-LOWER-1 outgoing mutable arguments hold a nested runtime scope
     try t.expect(try at(text, "call $myl_qbe_rc_scope_begin") < try at(text, "call $myl_qbe_rc_scope_pin"));
     try t.expect(try at(text, "call $myl_qbe_rc_scope_pin") < try at(text, "call $myl_qbe_rc_scope_end"));
     try t.expect(std.mem.indexOf(u8, text, "call $myl_native_cow_unique") == null);
+}
+
+// spec-case: RC-OWNERSHIP-PLAN-1
+test "RC-OWNERSHIP-PLAN-1 semantic move from readonly parameter checks physical guard" {
+    const mode = @import("runtime_mode.zig");
+    const saved = mode.get();
+    defer mode.set(saved);
+    mode.set(.rc);
+    var result = try lowered(
+        \\def selected(candidate: Result[list[int], list[int]]) -> Result[list[int], list[int]]:
+        \\    items = candidate?
+        \\    return Ok(items)
+        \\def main() -> int:
+        \\    _ = selected(Ok([1]))
+        \\    return 0
+    );
+    defer result.deinit();
+    const text = try functionText(result.value, "selected");
+    try t.expect(std.mem.indexOf(u8, text, "=w loaduw") != null);
+    try t.expect(std.mem.indexOf(u8, text, "@rccopy") != null);
+    try t.expect(std.mem.indexOf(u8, text, "call $myl_rc_native_copy") != null);
 }
