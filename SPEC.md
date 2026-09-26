@@ -1372,3 +1372,5 @@ host failure in one worker leaves the units the other workers hold running.
 - [RC-INERT-PROJECTION-1] An immediate list-element read into a proved inert mutation receiver borrows from the live physical parent until fill detaches and refreshes it; named snapshots, callbacks, alternate fill entries and unproved paths retain ordinary ownership or scoped protection.
 
 - [RC-FRAME-REGION-1] RC functions without arena boundary instructions reuse their entry region depth for typed transfers. Functions that open or close arenas read the current depth at each transfer; callees restore their own scopes before returning.
+
+- [RC-LOOP-VERSION-1] RC loop versions cache element storage only inside a proved physical no-publication interval, after entry uniqueness and with no residual COW checks or allocating lowered helpers. Failed range guards execute the original loop and preserve its traps.

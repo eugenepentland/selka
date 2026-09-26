@@ -25,6 +25,7 @@ pub fn after(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "o
             const record = self.program.records[local.ty.recordIndex()];
             if (!record.isCollection() or record.collection.box) continue;
             if (neededByReceiver(E, self, index)) continue;
+            if (@import("qbe_rc_inert_receiver.zig").emptyLocal(E, self, index)) continue;
             try frame.drop(E, self, index);
         }
     }
