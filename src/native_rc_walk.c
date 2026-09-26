@@ -99,18 +99,36 @@ static void flat_object_release(myl_native_heap *heap, const myl_rc_flat *flat, 
         myl_rc_edge_release(heap, payload);
     }
 }
+typedef struct {
+    const myl_native_type *type;
+    const myl_rc_binding *binding;
+    const myl_rc_batch *generation;
+} drain_cache;
+/* Bindings are immutable batch allocations, not entries in the replaceable
+ * hash table. Registration changes the batch head; generic callbacks discard
+ * this conservative invocation-local cache before they can reenter. */
+static const myl_rc_binding *drain_binding(myl_native_heap *heap, drain_cache *cache, const myl_native_type *type) {
+    const myl_rc_batch *generation = heap->rc->metadata.batches;
+    if (cache->type == type && cache->generation == generation) return cache->binding;
+    const myl_rc_descriptor *descriptor = myl_rc_descriptor_find(heap, type);
+    myl_rc_invariant(descriptor != NULL);
+    const myl_rc_binding *binding = (const myl_rc_binding *)descriptor;
+    if (binding->flat.count <= MYL_RC_FLAT_LEAVES) *cache = (drain_cache){type, binding, generation};
+    else *cache = (drain_cache){0};
+    return binding;
+}
 void myl_rc_drain(myl_native_heap *heap) {
     myl_rc_invariant(heap && heap->rc);
     if (heap->rc->dead.active || heap->rc->walk.depth) return;
     heap->rc->dead.active = 1;
+    drain_cache cache = {0};
     while (heap->rc->dead.head) {
         myl_rc_object *object = heap->rc->dead.head;
         heap->rc->dead.head = (myl_rc_object *)object->owners;
         void *payload = object + 1;
-        const myl_rc_descriptor *descriptor = myl_rc_descriptor_find(heap, object->common.element);
-        myl_rc_invariant(descriptor != NULL);
+        const myl_rc_binding *binding = drain_binding(heap, &cache, object->common.element);
+        const myl_rc_descriptor *descriptor = &binding->descriptor;
         size_t count = (size_t)((object->common.mark & MYL_NATIVE_OBJECT_COUNT_BITS) >> MYL_NATIVE_OBJECT_COUNT_SHIFT);
-        const myl_rc_binding *binding = (const myl_rc_binding *)descriptor;
         if (binding->flat.count <= MYL_RC_FLAT_LEAVES) {
             /* Admission excludes every custom hook. No callback can invalidate
              * metadata here; ordered ordinary edges only enqueue more work. */
