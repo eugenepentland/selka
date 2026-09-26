@@ -15,6 +15,10 @@ fn emitted() !std.json.Parsed(Manifest) {
         \\    return made()
         \\def copied(items: list[int]) -> list[int]:
         \\    return items
+        \\def escaped() -> Pair:
+        \\    with arena() as scratch:
+        \\        value = made()
+        \\        return scratch.escape(value)
         \\def held(view: DictValues[int, int]) -> DictValues[int, int]:
         \\    return view
         \\def main() -> int:
@@ -71,4 +75,19 @@ test "RC-PRODUCED-OWNER-1 fresh call results move without an initialization bran
     try t.expect(contains(forwarded, "@rcmoveheader"));
     try t.expect(!contains(forwarded, "@rccopy"));
     try t.expect(contains(try named(manifest.value, "copied"), "@rccopy"));
+}
+
+// spec: RC-FRAME-REGION-1
+test "RC-FRAME-REGION-1 stable frames read depth once while arena bodies stay dynamic" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    var manifest = try emitted();
+    defer manifest.deinit();
+    const made = try named(manifest.value, "made");
+    const escaped = try named(manifest.value, "escaped");
+    try t.expectEqual(@as(usize, 1), std.mem.count(u8, made, "call $myl_qbe_region_mark"));
+    try t.expect(contains(made, "copy %rcregion"));
+    try t.expect(!contains(escaped, "copy %rcregion"));
+    try t.expect(std.mem.count(u8, escaped, "call $myl_qbe_region_mark") > 1);
 }

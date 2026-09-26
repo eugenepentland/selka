@@ -1369,3 +1369,5 @@ host failure in one worker leaves the units the other workers hold running.
 - [RC-PLAIN-LIST-WRITE-1] RC writes of nonzero scalar list elements with no counted or unique edges use the native typed store after unchanged index normalization and bounds checks; managed and unique elements retain fallible ownership publication helpers.
 
 - [RC-INERT-PROJECTION-1] An immediate list-element read into a proved inert mutation receiver borrows from the live physical parent until fill detaches and refreshes it; named snapshots, callbacks, alternate fill entries and unproved paths retain ordinary ownership or scoped protection.
+
+- [RC-FRAME-REGION-1] RC functions without arena boundary instructions reuse their entry region depth for typed transfers. Functions that open or close arenas read the current depth at each transfer; callees restore their own scopes before returning.
