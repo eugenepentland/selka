@@ -3,9 +3,10 @@
 `set[T]` holds each distinct value of a hashable type once. It keeps its elements in
 the order they were first added, answers `in`, `add`, `remove` and `discard` in
 expected constant time, and prints the way Python prints a set. Like a list or a
-dictionary it lives on the tracing heap and is shared on assignment: every alias sees
-the same elements, a function that changes a set parameter declares it `mut`, and
-the call site marks it with `mut`.
+dictionary it lives on the tracing heap. Assignment gives the destination an
+independent value, even if the implementation shares backing storage until a
+write. A function that changes its caller's set declares the parameter `mut`,
+and the call site marks the argument with `mut`.
 
 ## Set literals and construction
 
