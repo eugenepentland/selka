@@ -1,6 +1,7 @@
-# Runtime diagnostic stress for COW-SHARED-1. With --value-semantics, the
-# non-borrowed copy crosses the bounded walk of collection-bearing boxes and
-# must fail with R_COW_DEPTH rather than leave a nested list unmarked.
+# Runtime stress for COW-SHARED-1. A non-borrowed copy of 1,100
+# collection-bearing recursive boxes transfers their immutable pointers
+# without a depth trap. Projecting each box remains safe and a later write
+# leaves the copy's outer list unchanged.
 
 
 record Node:
@@ -16,5 +17,16 @@ def main(out: Stream) -> int:
         i += 1
     copied = node
     node.items.append(-1)
+    if len(copied.items) != 1 or len(node.items) != 2:
+        return 1
+    cursor: Option[Node] = Some(copied)
+    seen = 0
+    while cursor is not None:
+        if len(cursor.items) != 1:
+            return 2
+        cursor = cursor.next
+        seen += 1
+    if seen != 1101:
+        return 3
     out.print(copied.items[0])
     return 0

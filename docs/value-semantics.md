@@ -239,10 +239,13 @@ copies, copied bytes and pins. Ordinary builds emit no counter calls.
 
 ## Limits
 
-- A transfer of a recursive value that can hold collections walks its existing
-  boxes to mark those collections shared. It traps `R_COW_DEPTH` after 1,024
-  descriptor edges rather than leaving a deeper collection unmarked. A
-  scalar-only recursive value requires no such walk.
+- A transfer carries immutable recursive boxes without walking their bodies.
+  Projecting a box makes a private shallow snapshot and shares its immediate
+  mutable children; a write through a box detaches it first. Box hops alone
+  do not consume the copy-on-write depth budget, so a deep boxed chain can be
+  copied and traversed. Inline record, array and variant descriptor walks
+  remain bounded at 1,024 edges and trap `R_COW_DEPTH` if exceeded rather
+  than leaving a mutable child unshared.
 - A copy is not reported as a `managed_allocation` effect.
 - Rebinding a whole `mut` list or dict parameter does not reach the caller; it
   is rejected as a `mut` that is never written.
