@@ -180,3 +180,16 @@ test "RC scalar arithmetic with a receiver loan emits no owned input drops" {
     const text = try findFunction(manifest.value, "total");
     try t.expectEqual(@as(usize, 0), std.mem.count(u8, text, "call $myl_qbe_rc_slot_drop"));
 }
+
+// spec-case: RC-FRAME-1
+test "RC empty slot releases branch around native cleanup" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    var manifest = try pairText();
+    defer manifest.deinit();
+    const text = try findFunction(manifest.value, "pair");
+    const release = try location(text, "call $myl_qbe_rc_slot_drop");
+    try t.expect(std.mem.indexOf(u8, text[0..release], "@rcslotdrop") != null);
+    try t.expect(std.mem.indexOf(u8, text[release..], "@rcslotdone") != null);
+}
