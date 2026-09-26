@@ -11,14 +11,13 @@ def streams() -> int:
     replay = random.seeded(0)
     if random.next_word(mut replay) != 16294208416658607535u64:
         return 3
-    alias = replay
-    if random.next_word(mut alias) != 7960286522194355700u64:
+    snapshot = replay
+    if random.next_word(mut snapshot) != 7960286522194355700u64:
         return 4
-    fresh = random.seeded(0)
-    _ = random.next_word(mut fresh)
-    _ = random.next_word(mut fresh)
-    if random.next_word(mut replay) != random.next_word(mut fresh):
+    if random.next_word(mut replay) != 7960286522194355700u64:
         return 5
+    if random.next_word(mut replay) != random.next_word(mut snapshot):
+        return 6
     return 0
 
 
