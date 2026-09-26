@@ -1,0 +1,5311 @@
+{
+  "meta": {
+    "compiler_commit": "b6328bcd",
+    "source_commit": "d7f4cf85409b8d0d01caf61a295aa24817a190c0",
+    "compiler_sha256": "7509c8733b37eaef9da45e06ef6ca41b6048f236664e3aa7727e23d45964f32d",
+    "baseline_commit": "60b668cf",
+    "baseline_compiler_sha256": "48427e9ac1c01b74e60d1b4c098c8fc149a6b5fef3c07e110c7fb4ba16cbb545",
+    "cpu": 2,
+    "perf_reps": 3,
+    "harness": "experiments/perf-gc-dict-20260925/scripts/pc.py",
+    "vm_size": "tree-calibrated, historical harness configuration",
+    "program_ids": [
+      "parity/suite/binary_trees",
+      "parity/suite/fannkuch_redux",
+      "parity/suite/knucleotide",
+      "parity/suite/mandelbrot",
+      "parity/suite/matmul",
+      "parity/suite/nbody",
+      "parity/suite/raytrace",
+      "parity/suite/sieve",
+      "parity/suite/sort_builtin",
+      "parity/suite/sort_quick",
+      "parity/suite/sort_records",
+      "parity/suite/spectral_norm",
+      "parity/suite/text_ops",
+      "parity/lib/scan_count",
+      "parity/lib/scan_replace",
+      "parity/lib/scan_split",
+      "parity/micro/alloc_churn",
+      "parity/micro/bytes_scan",
+      "parity/micro/calls",
+      "parity/micro/dict_count",
+      "parity/micro/fib",
+      "parity/micro/float_loop",
+      "parity/micro/intloop",
+      "parity/micro/list_append_sum",
+      "parity/micro/list_records",
+      "parity/micro/records",
+      "parity/micro/str_build",
+      "schematic/fixture",
+      "schematic/changed-net",
+      "schematic/changed-value",
+      "lox/vm/binary_trees",
+      "lox/vm/closures",
+      "lox/vm/equality",
+      "lox/vm/fib",
+      "lox/vm/instantiation",
+      "lox/vm/invocation",
+      "lox/vm/method_call",
+      "lox/vm/properties",
+      "lox/vm/string_equality",
+      "lox/vm/strings",
+      "lox/vm/trees",
+      "lox/vm/zoo",
+      "lox/vm/zoo_batch"
+    ],
+    "status": "complete diagnostic before indexed setter and global-table hash hoist",
+    "binaries": {
+      "parity-suite-binary_trees.qbe": {
+        "base": "e279d5089268cc9f9f6628948a5c11a78bafc0da847cc8f07eacb79e1cf68594",
+        "current": "4bff2f42c1bcbcd42f2f33c901cc6c4e035ebe05d4c70e718554b3b61e553f09"
+      },
+      "parity-suite-binary_trees.llvm": {
+        "base": "b0af88cb9499b80d2fe09a83cdc25b5800118f65fe3e5d1586b63bb4ee724e5d",
+        "current": "c152893d93f410f228ebbbf4875418aeaf344f395be7f534ba182e15216dd1b4"
+      },
+      "parity-suite-fannkuch_redux.qbe": {
+        "base": "ae5f663600ce79cca5293759924eb3be72d0ef6a3f0356b056da3c12e172d800",
+        "current": "83390db1686d0d114cf30d141082aece79e52c8abb55798d7e82d9866e6a0bae"
+      },
+      "parity-suite-fannkuch_redux.llvm": {
+        "base": "2ca34b747d91d8d3175b64a5cff545d2ea52e832d65ec198f060a5bb64f3ce6a",
+        "current": "7800dc0712b35b77b53dd24e105ae28d47b93928635c3355598150e59cf6a2e6"
+      },
+      "parity-suite-knucleotide.qbe": {
+        "base": "5b3b0af8c50866ddf791f708183d17f312522d8f0231c1b37936f99450b306e5",
+        "current": "29d1c1f55162a3e628fe31a21389409746387e3e5c798b4586e2012326626d23"
+      },
+      "parity-suite-knucleotide.llvm": {
+        "base": "31c98a801032428488cf8eeb9b08c5b14e6311bacc2047f1676514515be4c963",
+        "current": "acda2399ae6de051d904b3db70950cc6d0c44809b565e7a06ebd2c0cd8969575"
+      },
+      "parity-suite-mandelbrot.qbe": {
+        "base": "ff4b9e5e2e378be1a7145b3a0419a18199a8faf291a929fcebb1539741e88df4",
+        "current": "4f94e7030ba1a70cb1cba5164020c5750e461fe26feab67499007a1ad766a02b"
+      },
+      "parity-suite-mandelbrot.llvm": {
+        "base": "f77b1a0a7014bf9e799e5e0234886e027ce1760043fb068579d304e4fa9d1dd1",
+        "current": "773dc6e08bde4d94116262e09e0de99612e57175b72f361f02d467903724c14f"
+      },
+      "parity-suite-matmul.qbe": {
+        "base": "eb2efbc5bf5329db99845945c8da2681bb711c984b2e9ae2328da88e4f22ced4",
+        "current": "1495f73004b0b7745b917e2e29db93595ef0e9575c6bcbe47f8ee0cc8d65bda3"
+      },
+      "parity-suite-matmul.llvm": {
+        "base": "8334abd69b4260a7629a528705843fee7165bd870cc786aa0cbb778eaa8d19a8",
+        "current": "ec44f9c1339305236bfb486296ab1813ef60f0b03e7b0899a728c4812b48af1c"
+      },
+      "parity-suite-nbody.qbe": {
+        "base": "7d48589de10cb6b780f2732bba85d657d0085af10b417ce602bd12b251dbdce3",
+        "current": "59037f3698b71defa30a5d5c034cb7ae62f37f1bc410602ec01a20cc53543b97"
+      },
+      "parity-suite-nbody.llvm": {
+        "base": "0b6f9ce443448b93310aa8a22323012b9aad4c3aff79ee564af89c58dd61de67",
+        "current": "ad69c17db55d48d0ccfeffbd8346d92f1caa4abb61be46fa8cad49885a71e073"
+      },
+      "parity-suite-raytrace.qbe": {
+        "base": "34f50ecfc7422308922df09fa12fe04938552349596d07076cb38e0d7c900ab9",
+        "current": "c17ce684c813a699a36c1b8c84442294455876380643173e71b303a19bf1dc6d"
+      },
+      "parity-suite-raytrace.llvm": {
+        "base": "36bc14156465e7f0f4bd6e3e9bae89ed1744c2b68315410fcd45351a8d4da9be",
+        "current": "27e4b99005673c78163ffc228bc87062f8cf34738dae8023760b7a52f39b5fec"
+      },
+      "parity-suite-sieve.qbe": {
+        "base": "b8f1582b76a8fc85d199deeaa891259a16091306f85349304ecd854bbbc638b3",
+        "current": "001fdbb77904964b12f1b501bd45286663df20227b163ed432d44b3b5bd6b046"
+      },
+      "parity-suite-sieve.llvm": {
+        "base": "d6fcfce35ae9eeba1e13ae143f107864b6fc085a7424a8a06a416a7602c21320",
+        "current": "78d95976ea38e89034bce00838ec8e81380641294549c784ba6df91c10443288"
+      },
+      "parity-suite-sort_builtin.qbe": {
+        "base": "4ac62d878c1edb310a882066f4cf181f9395708a765a84d178506bb131c2612d",
+        "current": "fe7f38002620cb070beebf0aa3e7171d515a9d37e8b716e63ad78d622847234f"
+      },
+      "parity-suite-sort_builtin.llvm": {
+        "base": "b2adba4748bf18bd99e963e2dd492ffb80eeaff0c547071f1b591a8f51b4b274",
+        "current": "a131eb5d25a56c0fc538bc0cedd8b2527877cb47ad0b3a0534e501ace8777161"
+      },
+      "parity-suite-sort_quick.qbe": {
+        "base": "b2e3875e1b5836786bd2dcc9132276f7c1fd412d73722c2a3e05369c8f9807d4",
+        "current": "1f3e294df1e91b4f2260045ea9ba6c94f96db4c8f704054945e53ff4923300e7"
+      },
+      "parity-suite-sort_quick.llvm": {
+        "base": "934ed17cbe10d6630c672db8e12472f0cde9fb97349f7b3af064fa3dcb0aa329",
+        "current": "73dcfbf467565f22d06bd4606905026ab5ae3f6d7732cefa2b0c89ebbdc189ec"
+      },
+      "parity-suite-sort_records.qbe": {
+        "base": "3b409ad2dffe06d7bf5b9cd46e05b0c524fa995f27a23ef9b0e660536bd575d7",
+        "current": "dd6f2996cf2199fd4a8a87dd824a6d25c41f7782c1fa4e8ca9ede447fe0347ac"
+      },
+      "parity-suite-sort_records.llvm": {
+        "base": "eac3182e8ec6fac212382dba142755228017ae577b567f148bfd83964e77d3ff",
+        "current": "bedb9cfad2a553105865b71411ee3e5674da109f20a2243d5d3a8645426838ba"
+      },
+      "parity-suite-spectral_norm.qbe": {
+        "base": "704cf9a8802171ee20a5e94b407d9a5c2e15d94805a064f66c98c3d95070262f",
+        "current": "79c0382544dce3fdca74a0ff615d44b9e09686e1a2a27364101987cc415bd996"
+      },
+      "parity-suite-spectral_norm.llvm": {
+        "base": "250ce5d872edae6d50b63663e8f936e8d2b4a6138df3a78b459082928aa6538c",
+        "current": "c614b70f3dba80419ce150e3b0540dcb21367f07832e7da6e6db69eeab5f7629"
+      },
+      "parity-suite-text_ops.qbe": {
+        "base": "54554c2e02a07e94d31568358d743e79eb5e8a4a8244531a5b5ad39be3744607",
+        "current": "76542b52a70df78f3fb9559c7bb955540ce33f2f2ac299213b962ceafa461cbf"
+      },
+      "parity-suite-text_ops.llvm": {
+        "base": "e672f48176d85f1b3bb0a33a8977191af58bdbf6a212dd9a4aea49f216b4144c",
+        "current": "8c454ec242ae1a47aff0cca7616637887061aad11c0471b49308ed5db3c07d20"
+      },
+      "parity-lib-scan_count.qbe": {
+        "base": "f2e0d8cc2b22bb7a61d2e0c3515a2a5607d325e5a98017f9d4921c1b16ee9bba",
+        "current": "597d0ad07dabc229b95f75ff0a75b4217b45064dc0bd5016acf2c60255fad979"
+      },
+      "parity-lib-scan_count.llvm": {
+        "base": "383218e509719d6d45b78a0f95183b990a3525f174cc71d1c1073bf8de546d24",
+        "current": "9363d9f63bfdd68b9ee320399073d8f0cfce9fcda7f85dda30fb6148eee9f280"
+      },
+      "parity-lib-scan_replace.qbe": {
+        "base": "2c106f56d922c586ac29bab1b717a51dbeada563eb5a5d15d9651abc54da025b",
+        "current": "8c396450bb1e3c17cb3f1d56bfe5c2ec20b30417e19c97cdc150e7131b08aaa5"
+      },
+      "parity-lib-scan_replace.llvm": {
+        "base": "0510e20742efaa45eca222deebaadb9cc1982db02296af01ce4bef5eeac9440a",
+        "current": "dbb9b2c02be1c1ec3d9e2857855c66133d84bb1c63e7d5034b1c7e1cc7adc271"
+      },
+      "parity-lib-scan_split.qbe": {
+        "base": "6faf3a903fe0d44ce1da9ca8da1c56297be242bd0cdecef15db8a93c570c3af0",
+        "current": "1f6e7fe85928f04afd56444d1286a4126bf56b2395e8a782c3b2afa56178c9a2"
+      },
+      "parity-lib-scan_split.llvm": {
+        "base": "6f32474985703ba1ece214272ec712f06fb419f5b8cee39729b12f6a7fe61813",
+        "current": "227e5b34e4b94ca5a4fef4e52d5e3236ccfc562931bd950949b2525fb89cc383"
+      },
+      "parity-micro-alloc_churn.qbe": {
+        "base": "6d25d53759dd98ee190e07832496b5bfa40fd5fcb54874c4cd832b78dfb7c626",
+        "current": "c37a65108199b583d9f72825b425235cd96fb2905c79be925a3f50f5b7fb4808"
+      },
+      "parity-micro-alloc_churn.llvm": {
+        "base": "7ea6882123644f356526d83afaffe7c414d68a0a70f79880129cdd8c752eee20",
+        "current": "5d105e2a2216cad33592853b725134ef738f392c1f5664dc8f716d8ccb9dbb69"
+      },
+      "parity-micro-bytes_scan.qbe": {
+        "base": "fb2543c9c7f25eddfc538b327963da7676a69ba27b6f5c150370661e49025da0",
+        "current": "9459fe8bd778d00f597df383c1f4cff9b9816bcf8438f3732baf84c1701c2e5e"
+      },
+      "parity-micro-bytes_scan.llvm": {
+        "base": "7ad2899cd4a196318f72790a1fb5617c4f6e0f50cd7a990958007a1e6f03c4ed",
+        "current": "2e5507083119a42fd8e1e042b893cc877b9321b5e47acbc39d8bc257cebc0419"
+      },
+      "parity-micro-calls.qbe": {
+        "base": "ade4ad9230e295c0375ccb935afa9bda4b41db465fe85d02c6c95404855ff64b",
+        "current": "cdf0f4223bdcac7df3e0d15ca58ffea42fc816936b5585f0e9615ad9f7aab660"
+      },
+      "parity-micro-calls.llvm": {
+        "base": "22752dda1ede7e1ae6dcb0bdb93fef076329c38a7fe8f21cbb1668d6dcd58966",
+        "current": "12552e7585540c19dd936acb11792d4c9bc114c7c1c348fbc13811abc7bf841e"
+      },
+      "parity-micro-dict_count.qbe": {
+        "base": "c49190bc6bc1b7267a3b267a4282ed8e56782759c68013e4c51c4133cd9a49ab",
+        "current": "81cbf3548a4b5ea91971792f4a27de5fa3425c35941416fae17a5d38e1afbf94"
+      },
+      "parity-micro-dict_count.llvm": {
+        "base": "067d0806745deda310953425ca15e20e02f9ecd678e1fca878ccf71ffd417dbb",
+        "current": "e8d247cb48b1a1ec06a415daec0c5337a356a46581c371bcefc8688267e9a762"
+      },
+      "parity-micro-fib.qbe": {
+        "base": "1fcda2dc56212c798c75e9a7e0e0460a78208a72d1dc70e1eba9ba9ce0cdc11d",
+        "current": "47a4fdbb4755e874e014647619f7e4120beb59f487c20ce1df74f8637836c77b"
+      },
+      "parity-micro-fib.llvm": {
+        "base": "553340c05e5cd6a102fc169deed1effb6710d76ac0644e3db8c72ddfa4b5875d",
+        "current": "047bac25d7acbbd2c9189f954b6f33a550ed0a9bfeb5e127bffb874eacdca671"
+      },
+      "parity-micro-float_loop.qbe": {
+        "base": "7eba6ad764b2a6e072b801a634e593c6bf44f83f3512d492566c2ec841e778fb",
+        "current": "7dea96f07bb7f871a9ca08cb0d433ce981e08bd7af52374f0a628790c77a3808"
+      },
+      "parity-micro-float_loop.llvm": {
+        "base": "a5757996215dc44cccbbdbdad2340068c25df9c9ce94ab7de95981c0ef771c32",
+        "current": "4f25d30ed6fca5094dd63772b425cc7987698e4a0ce15b325f2c1e8961b6e58a"
+      },
+      "parity-micro-intloop.qbe": {
+        "base": "3ab487deb4e2afb8d89200f7f39b15ff2c02edca3e2b243ea09aec55aeda59e5",
+        "current": "2a608ade82e197bb1ddb4696eeb8a5f3b00f0ce0c16e2f15946f24057639a3d9"
+      },
+      "parity-micro-intloop.llvm": {
+        "base": "cf37e16a71c99a719e950e43973752b5052a53fc2a14f8572e206e28893d8603",
+        "current": "08d0500e3d2b9b1934cc1497549fbc79ac098e16fb7e55ac36737a959514fedb"
+      },
+      "parity-micro-list_append_sum.qbe": {
+        "base": "601b55d9587ccfe4112088811a7c98c0f2613b4b70a687eba5077ff109cb5da4",
+        "current": "877a78d9f421f826f5b49d655ce7f99922862c73304636125e26e9951fc1f721"
+      },
+      "parity-micro-list_append_sum.llvm": {
+        "base": "4a10f781b770c5cd28163d255c9a17619f175a9ea54c7afb68c815d6b894c01f",
+        "current": "442857e2c5e641066a35de5d32f485829adc2b7814c1978bd53c193c8437f579"
+      },
+      "parity-micro-list_records.qbe": {
+        "base": "beec571d6271389c4e42c7f8e4aa764d5110096429b87727113923c7772bf9e2",
+        "current": "5a811f70338664f3638a34a16649111171efe3f207c75c48ddb67c45c1c0de05"
+      },
+      "parity-micro-list_records.llvm": {
+        "base": "11a02fe4bb2068d79fd306690a919d97dc96bef4d037e2e71fbdc79c1aff651e",
+        "current": "a5a9fe9e8c97054247b5ecb442c96fc653aff34e5937a1b4b8ad688b49fcf81d"
+      },
+      "parity-micro-records.qbe": {
+        "base": "befb2bfbfa67024a386dcca7c2f56cc10d0be1a026293ee5050832150a2e95fc",
+        "current": "229098b14a0504faf9d35f0b67dbb618a12f8805fc6a57cec29b6f25798d67ae"
+      },
+      "parity-micro-records.llvm": {
+        "base": "3edb4ee108450b65ad56c258986a9cef545d904e4209c634babef82bc6128383",
+        "current": "5f892869dfd578044a487925ff9dc99122bbda6ef6c732354f7551ace9a795e8"
+      },
+      "parity-micro-str_build.qbe": {
+        "base": "c3bbaf0f2062f947d27096920496b95eedd977f832fc61c875e5b78a4ceb2627",
+        "current": "1bf44fd3cd9121d77e4aa2550e2f79d0b8dde378553d9b8ea6214ab5ec5aeecf"
+      },
+      "parity-micro-str_build.llvm": {
+        "base": "55a6228ea75bd1ded5298bc374c98065e335e39f6d012357b01cd8b296be1a96",
+        "current": "5779cf7fd15bf900d420a513309e15935cd1bd4bcbd423d0a66f025e1f1c065e"
+      },
+      "schematic.qbe": {
+        "base": "d8aa5e374e22dc37ba3eb4c43bd653ccb47cafa589c169732d74681207da080e",
+        "current": "d992e274e0d329c1dc1f770cbfb0df7a1ed478e81b75e1d5a2f168e439c647f7"
+      },
+      "schematic.llvm": {
+        "base": "84bf3ca74f376267fe7a1a39b63fc2058b687198bc465f767877cbe4ed6a3060",
+        "current": "2d42433aa865144eef17ed1d9ab1745534cb66a7d624240b9079f17338a18369"
+      },
+      "lox.qbe": {
+        "base": "6473a9596ed692049cd4a88b344f54030b46a15d591b36cca82cef64ae8cd59f",
+        "current": "2ba4ec4a0be2df0ded7d3521451b0c23fd76d68bf0a363ddbb72ad296ffa0f06"
+      },
+      "lox.llvm": {
+        "base": "61621ee380e5562967b53d6ba81c54fe28ceb2adc22ad6fa943e6772b7887fa0",
+        "current": "1f11442efd5856150b4f4b842d460beb7b5a57d169343865d92f4a9f05bbd7ae"
+      }
+    },
+    "source_sha256": {
+      "bench/parity/lib/scan_count.my": "41d7dcc4fee9aa9afd94ce9e105f6006089fe56f24c529cd73c5b971954860d0",
+      "bench/parity/lib/scan_replace.my": "41bf8635b96b832ed68f68e5838e72a0575e9e7c85e6d4c464bdf58bf7cf18d7",
+      "bench/parity/lib/scan_split.my": "2f90e0005a25c444123ed3a716bc866d20d66ee40f832b4ffdab935958adce99",
+      "bench/parity/micro/alloc_churn.my": "d4a37e7fa38f210b45b9cc22c2fb8d88794c9380cdda43808222bf50c7dd78ee",
+      "bench/parity/micro/alloc_churn_arena.my": "a3fe2a489c82e006ecdb17efcd4bca3ce1e26dfe7db47d0a137d5933d6e30231",
+      "bench/parity/micro/bytes_scan.my": "582f9f12677fbe00b0a3085d15ecc8368f853375d39494652290febb5fdd6c8f",
+      "bench/parity/micro/bytes_scan_wrapping.my": "ce6e267905dfc3254e46eac29036556b1df60e5b2c4b032890e016dd0fe4bd70",
+      "bench/parity/micro/calls.my": "855d9631ff016e45a89f36497069a6b893c6ff392a059c38f24ab661b013c01e",
+      "bench/parity/micro/dict_count.my": "227510603349ab558eed1a9a456bb6cf3c53b725de87a1436a41b35f58844324",
+      "bench/parity/micro/fib.my": "b11f8d8e1b69b6379cf86648ccd541fb5afe4400936eab5fef86c13aee1ecb1f",
+      "bench/parity/micro/float_loop.my": "4720be16bb671df9aa135b94e614bb22fbf3c08a6ac0154da9c4ebb0feca3849",
+      "bench/parity/micro/intloop.my": "ffa6b1fc04ee992d5169e706c36cae587af2e76d6bc703c2995567b03b70a5bc",
+      "bench/parity/micro/list_append_sum.my": "88ca6385237fbddd80aa7857864d269e23517995b6a39b8917c8e44bb451d91e",
+      "bench/parity/micro/list_records.my": "f00d78fee460025506c298f1ccd3be1e9001fb1fd47ebbcabf12a28dceff0f95",
+      "bench/parity/micro/list_records_wrapping.my": "9c09b4dabfe237a18e6d1a5bc77710262a8a94635fb588ffb3c1ca4a3298337e",
+      "bench/parity/micro/records.my": "cb97b3e7dfa31ea9321c8546b30ba55840f377320c3ec92a25d423e2e8f255ae",
+      "bench/parity/micro/str_build.my": "5334b905ede8311d0d5062ac08e9d3b6bfa62d56f855dbdb44bbbbeb22f2de65",
+      "bench/parity/suite/binary_trees.my": "b32baaeff6dc59d912dc44ca1df38e28b2e7782c52b13383182d238eb7a13f0e",
+      "bench/parity/suite/binary_trees_arena.my": "34f06bf310727d07d2a948111afb6121522cb85671291c028fdd0dd1181378e7",
+      "bench/parity/suite/binary_trees_recursive.my": "9ae28fed264404684020a4d3d25710f2c912bd2a93115608ce604ef6d5f8b119",
+      "bench/parity/suite/fannkuch_redux.my": "0a7441bd509f728d0b3db53ddfdf6a5c027fcb3468d467c42d00850839d9a8f4",
+      "bench/parity/suite/fannkuch_redux_array.my": "cbc0d88e7b55c5c29f93e0e8e1feeea34740395faf1f2b0645dad5ae05f20140",
+      "bench/parity/suite/fannkuch_redux_tuned.my": "742efc1e2e25e36fcce21b07a1816a29f23bd70bf201d0b980802d44d28d22ae",
+      "bench/parity/suite/knucleotide.my": "af9d44a003ecb0a1cae06054d02ebc9a60e200d72cdcc695aa0c11b9b11c8a89",
+      "bench/parity/suite/knucleotide_arena.my": "1155f5d534b7d61b5cac1e3b7ebfdec32422c6989b56c1a7f8dd113f31ee1d04",
+      "bench/parity/suite/knucleotide_tuned.my": "06dd65e8766c632012e2efdf0157e1d028a326290a7799b8b154936aeb7b1be9",
+      "bench/parity/suite/mandelbrot.my": "e49311f1d951bf4557b39b5c4144a0acadd108bba2b7e64cff8b61d067c4bf39",
+      "bench/parity/suite/matmul.my": "b2ce9712f44aa2dec0e7a705c04cc721c398700b28ce4e71113d37ea0dc45958",
+      "bench/parity/suite/matmul_flat.my": "ba2f9cf3c5db326d95f37b5aa2dfcc52310d540e47d251756b4e7da0a3955862",
+      "bench/parity/suite/matmul_tuned.my": "5df7768e3ec70266cf55fc1be92ee2f6aeea25ef70f1c25a83f4491bd46bbe59",
+      "bench/parity/suite/nbody.my": "5884c8d579c9e0fac2465192a167988c41f06843f4a1bd81ccea05063024c896",
+      "bench/parity/suite/nbody_class.my": "7e3a1a8d223bfcf3631da0bce68141ed02a154e16c89decbf3692e3e7b57c08c",
+      "bench/parity/suite/raytrace.my": "2e208f13a75b24bd74da85b4056a7736b9015ae56fb0ca8d70d62f45c7acdca9",
+      "bench/parity/suite/raytrace_tuned.my": "fcf68fd73809ed302e77193c1152e7d1c3220188f34f4e5535a03d30ad340c07",
+      "bench/parity/suite/sieve.my": "c5840cc33a26b1e98f0d018f221a0dd2305f66bd3adb96432b4593372901d5d9",
+      "bench/parity/suite/sieve_tuned.my": "50197fce72cc68e7f898afceb8d421f5cd69bde07c8b8a5f9b9dce729169e374",
+      "bench/parity/suite/sort_builtin.my": "6f055dd2119cea3567c316426f98a58958d61441eb471a336342420514da27c4",
+      "bench/parity/suite/sort_quick.my": "934075c767c81daf95763a50a6f456d003b14a919b74aca1bbe1d96559759150",
+      "bench/parity/suite/sort_records.my": "1d1c98e607191a3be266c885cf0469edaf3a710a01cd10d72a6180182b31f853",
+      "bench/parity/suite/sort_records_keyed.my": "4430d517c98272007891f24effe95eb502b3d664d69d413a1fb3736be432351c",
+      "bench/parity/suite/sort_records_sorted.my": "b266b561ee4e85f894097438de53bf40792d59a3ed68bb8cb88d6d6c537b79af",
+      "bench/parity/suite/spectral_norm.my": "05c43175ec30195c66b56826d7e8a74be4a6dc517ccd88dc519cd0d98501db5a",
+      "bench/parity/suite/spectral_norm_tuned.my": "7260887dca9e239ad01e7b47e321ea438cf3d262a0fb06510b7e4076a67aace1",
+      "bench/parity/suite/text_ops.my": "bf608ad3843a7763953d8874107dc470d946f459415ef046d0a7a32967f7bcdb",
+      "bench/parity/suite/text_ops_tuned.my": "23c3dc7f45f8393b7bfe9905cedbfb8a80ed20b7c680a0ceb4d724c50fd644b7",
+      "src/schematic/guest/bulk_io_test.my": "3d3bd83347bb5f3784115155f6d9c6849ff38962f27319428830908da5887cef",
+      "src/schematic/guest/circuit.my": "610c83d3554b8fc31da4db43140ce89e96abab430e5e5900ece10c814183dc1e",
+      "src/schematic/guest/draw.my": "667f3a7ff63790a9bf5759bc1fd31fa678f774c36b43db45336dbd5880013451",
+      "src/schematic/guest/io.my": "579311835ac0c6ef67175df7ba7a2730c40b9053e151bea8ea49b81cab44a877",
+      "src/schematic/guest/layout.my": "f7088cbac1cb86687dbd8be520cec340f53294a9b6f6060ddaeabc53cff70196",
+      "src/schematic/guest/layout_graph.my": "2d5ab0f3d31ff988ad2ec6efa2a9f8902a66f448e8a8ec2c6290bc5fc27e0b87",
+      "src/schematic/guest/layout_routes.my": "872b092939e8456094a652cb6aaa6d79c73ceee4db253f03a1a6d7d1f29b5e97",
+      "src/schematic/guest/main.my": "e36e7ad737558e1a88255e65985babad7403bf6dbe231dc8a4a453e3ea1460e5",
+      "src/schematic/guest/ports.my": "e111098aebadb3ce7a785e003994f5acc827492aa1ed6bb4e4ce5e23f44ad364",
+      "src/schematic/guest/schematic.my": "6a99d9ab58785d1a9c5c4f0c15682878b2768dd15bbe01507714390c85e535bf",
+      "src/schematic/guest/schematic_inputs.my": "e5e710a4a414c5e77de95e841dc838be623f3e2b51412a792636aa977bc37b16",
+      "src/schematic/guest/sexpr.my": "f8902fc28ae10086839576996cc7bea7b95b0dcc0ed672aa640fc0048b6ae8d0",
+      "src/schematic/guest/svg.my": "43f7ab87cceb0700e9ad9d0de6cf6d0a4ab9e353a85a04ae4d50e50cedd2145c",
+      "src/schematic/guest/text.my": "a4c489ec07a37e4ce08d33d9531ce564229c0d0a2b29cfc0fd11b849d81d43aa",
+      "src/schematic/guest/validate.my": "4a9161860b0b4a82b46e17912e92ef8f93c6ff6db3f146aa19ce18c6dd6b095c",
+      ".tmp-perf43-scoped/lox/benchmarks/lox/ports/mylang/ast.my": "e210fb35bf3125ba06ebb978bcb3592162020a77576542f2d049879a51479bf9",
+      ".tmp-perf43-scoped/lox/benchmarks/lox/ports/mylang/chunk.my": "b4f6e7ae6531b224f99e026f53fee3692c90d8f2b15d3c76ca5962f1803e4b66",
+      ".tmp-perf43-scoped/lox/benchmarks/lox/ports/mylang/compiler.my": "c550603195401ff6d9436b42d6fbf0c35051521da57e7b85281fc8fcf6ebe048",
+      ".tmp-perf43-scoped/lox/benchmarks/lox/ports/mylang/compiler_test.my": "582fe817dbeffa709961b5124370ce200510adb3ac0d246572ca1c0dc19ec08a",
+      ".tmp-perf43-scoped/lox/benchmarks/lox/ports/mylang/driver.my": "fe831d2ec08833d11139e790ab741903b27a8e0fb43582cac11ca664b4595836",
+      ".tmp-perf43-scoped/lox/benchmarks/lox/ports/mylang/driver_tests.my": "32615edbfcbe21e8d550910df45d9bfcb199ee9c8171405d38566b98d78e00bd",
+      ".tmp-perf43-scoped/lox/benchmarks/lox/ports/mylang/heap.my": "65cf7fedb6f75b824677a50bda011ad4aa36ffbc9edd8d025368e0f26144f137",
+      ".tmp-perf43-scoped/lox/benchmarks/lox/ports/mylang/heap_test.my": "c951153991a8d5d13ca1df6ded7c6f26c7b43a08ed2095f72c6091637b29b53f",
+      ".tmp-perf43-scoped/lox/benchmarks/lox/ports/mylang/interpreter.my": "94d8b5472b997d5f875b575f0cf1b5cc7fb670ac57a293c1c6a8081151a19fcd",
+      ".tmp-perf43-scoped/lox/benchmarks/lox/ports/mylang/lox_strings.my": "383900dda10b9218caf2087e12a2e20089e4d48b0ec5fc3e17e960a3d70d83df",
+      ".tmp-perf43-scoped/lox/benchmarks/lox/ports/mylang/lox_strings_test.my": "a44545c64e9f75cc5af761d6c703feec83c4fc0a14d2678a1b2fce28067bd0c0",
+      ".tmp-perf43-scoped/lox/benchmarks/lox/ports/mylang/main.my": "18c1f669b1683123e635256c9f66c6db2766383391371c3822e61df7d9732274",
+      ".tmp-perf43-scoped/lox/benchmarks/lox/ports/mylang/natives.my": "2ff45343fded6d303e6233e0f787e63c319e860903e2c0c81ccbb71c2749d665",
+      ".tmp-perf43-scoped/lox/benchmarks/lox/ports/mylang/object.my": "08c0d5c6ae304ef4d0e1f5929f52b5d1dd47cd46e6c409392c0b5b1df9567ad7",
+      ".tmp-perf43-scoped/lox/benchmarks/lox/ports/mylang/output.my": "cdc79c8a9a5eca0106fb139bca5492da201f027b0499e5e00a492368317d194c",
+      ".tmp-perf43-scoped/lox/benchmarks/lox/ports/mylang/parser.my": "e9bd5d9c37e307d060ce165dc4fa0f276c2ff9dbe7cb21bd27cbdd94644b4edd",
+      ".tmp-perf43-scoped/lox/benchmarks/lox/ports/mylang/parser_test.my": "ffe2658f030c75b40a7c54d8f0c64e848e6679e13fc69cbef9a131ed7b120e4b",
+      ".tmp-perf43-scoped/lox/benchmarks/lox/ports/mylang/resolver.my": "41d41b2a1ddb3f6ab3fb73ad9eff69415b0450d890554766bfee37eac8d0903d",
+      ".tmp-perf43-scoped/lox/benchmarks/lox/ports/mylang/resolver_test.my": "72c5176ff15db240d8ec8ff8073fcdb7736e8c60ab47410bb60fce934c179d31",
+      ".tmp-perf43-scoped/lox/benchmarks/lox/ports/mylang/scanner.my": "af4bc6a57859318051dc47d6e1f6344ee98fbfff037e9be93c0a103765cd3e83",
+      ".tmp-perf43-scoped/lox/benchmarks/lox/ports/mylang/scanner_test.my": "1d7fbb34b0de402657786641217e81c9ae286cab14baf2716de2db875ae39ad0",
+      ".tmp-perf43-scoped/lox/benchmarks/lox/ports/mylang/table.my": "c875ae493dbc0d6c1b70202746b0f1d2211190fa1276b9d492778455c0d0b2ca",
+      ".tmp-perf43-scoped/lox/benchmarks/lox/ports/mylang/table_test.my": "38279f9135e953484e6844994bc070c4156d1eb31ab4de0f295efbea17c19555",
+      ".tmp-perf43-scoped/lox/benchmarks/lox/ports/mylang/value.my": "3b2a444e77c6a703b1aedad3c89ef38cad70aa3bb6cba1716b623980ff9a76b0",
+      ".tmp-perf43-scoped/lox/benchmarks/lox/ports/mylang/value_test.my": "b766d22b25a8a8a090b4a059030cfc7462022fdacb66a0a91bf8a9e09a53fed4",
+      ".tmp-perf43-scoped/lox/benchmarks/lox/ports/mylang/vm.my": "ab78189e515b697617635acc33f874c3bf81595f09c2e9ce799ec334d01c681e"
+    },
+    "provider_sha256": "57bb57e4350e9f9ddc23abda8e324aeb8b957131393d529fa6cb0a909a824d2d",
+    "baseline_recovery": "A profiling command outside this harness rewrote shared lox.llvm ELF metadata. The run stopped at the recorded SHA check, preserving 61 completed samples. Exact original SHA61621ee380e5562967b53d6ba81c54fe28ceb2adc22ad6fa943e6772b7887fa0 was restored, then all58 baseline binaries were copied privately and checked against original hashes. The remaining25 samples completed. No sample used altered bytes."
+  },
+  "samples": {
+    "parity/suite/binary_trees|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "3b9e63e2b3523d282d08c35b889a2343c0ee7a24a2540ce6a41bc58f782cd7ff",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "3b9e63e2b3523d282d08c35b889a2343c0ee7a24a2540ce6a41bc58f782cd7ff",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 2187878703,
+            "cycles": 495984834
+          },
+          {
+            "status": 0,
+            "instructions": 2187878722,
+            "cycles": 498926344
+          },
+          {
+            "status": 0,
+            "instructions": 2187878723,
+            "cycles": 497945766
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 2633115458,
+            "cycles": 599528768
+          },
+          {
+            "status": 0,
+            "instructions": 2633115433,
+            "cycles": 597276578
+          },
+          {
+            "status": 0,
+            "instructions": 2633117014,
+            "cycles": 597922665
+          }
+        ]
+      },
+      "medians": {
+        "base": 2187878722,
+        "current": 2633115458
+      },
+      "ratio": 1.2035015613630526
+    },
+    "parity/suite/binary_trees|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "3b9e63e2b3523d282d08c35b889a2343c0ee7a24a2540ce6a41bc58f782cd7ff",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "3b9e63e2b3523d282d08c35b889a2343c0ee7a24a2540ce6a41bc58f782cd7ff",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 1317783077,
+            "cycles": 408227279
+          },
+          {
+            "status": 0,
+            "instructions": 1317783090,
+            "cycles": 408273146
+          },
+          {
+            "status": 0,
+            "instructions": 1317783087,
+            "cycles": 408559527
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 1404610818,
+            "cycles": 553637045
+          },
+          {
+            "status": 0,
+            "instructions": 1404609242,
+            "cycles": 551240106
+          },
+          {
+            "status": 0,
+            "instructions": 1404609232,
+            "cycles": 552120716
+          }
+        ]
+      },
+      "medians": {
+        "base": 1317783087,
+        "current": 1404609242
+      },
+      "ratio": 1.0658880477800516
+    },
+    "parity/suite/fannkuch_redux|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "26f4debed9b9f8db7609e17f35756a3f72c1d85d40977a4377a1ef34ffc4d4c8",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "26f4debed9b9f8db7609e17f35756a3f72c1d85d40977a4377a1ef34ffc4d4c8",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 5755837652,
+            "cycles": 1466157335
+          },
+          {
+            "status": 0,
+            "instructions": 5755837688,
+            "cycles": 1465470309
+          },
+          {
+            "status": 0,
+            "instructions": 5755837651,
+            "cycles": 1461650416
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 5755839695,
+            "cycles": 1488474796
+          },
+          {
+            "status": 0,
+            "instructions": 5755839690,
+            "cycles": 1489771769
+          },
+          {
+            "status": 0,
+            "instructions": 5755839681,
+            "cycles": 1490122945
+          }
+        ]
+      },
+      "medians": {
+        "base": 5755837652,
+        "current": 5755839690
+      },
+      "ratio": 1.0000003540753097
+    },
+    "parity/suite/fannkuch_redux|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "26f4debed9b9f8db7609e17f35756a3f72c1d85d40977a4377a1ef34ffc4d4c8",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "26f4debed9b9f8db7609e17f35756a3f72c1d85d40977a4377a1ef34ffc4d4c8",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 1990825382,
+            "cycles": 760497012
+          },
+          {
+            "status": 0,
+            "instructions": 1990825421,
+            "cycles": 767406474
+          },
+          {
+            "status": 0,
+            "instructions": 1990825459,
+            "cycles": 772452418
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 1985384275,
+            "cycles": 771781338
+          },
+          {
+            "status": 0,
+            "instructions": 1985384272,
+            "cycles": 773059125
+          },
+          {
+            "status": 0,
+            "instructions": 1985384332,
+            "cycles": 790187633
+          }
+        ]
+      },
+      "medians": {
+        "base": 1990825421,
+        "current": 1985384275
+      },
+      "ratio": 0.9972668894305826
+    },
+    "parity/suite/knucleotide|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "85ef61714a76ad7ce4c0b54cc49ec081c54c2966978de102da6a53e2d208c0bb",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "85ef61714a76ad7ce4c0b54cc49ec081c54c2966978de102da6a53e2d208c0bb",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 2984428871,
+            "cycles": 699625682
+          },
+          {
+            "status": 0,
+            "instructions": 2984428852,
+            "cycles": 694835352
+          },
+          {
+            "status": 0,
+            "instructions": 2984428902,
+            "cycles": 705656651
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 2984431103,
+            "cycles": 698797211
+          },
+          {
+            "status": 0,
+            "instructions": 2984431122,
+            "cycles": 697397231
+          },
+          {
+            "status": 0,
+            "instructions": 2984431085,
+            "cycles": 697184773
+          }
+        ]
+      },
+      "medians": {
+        "base": 2984428871,
+        "current": 2984431103
+      },
+      "ratio": 1.0000007478817878
+    },
+    "parity/suite/knucleotide|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "85ef61714a76ad7ce4c0b54cc49ec081c54c2966978de102da6a53e2d208c0bb",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "85ef61714a76ad7ce4c0b54cc49ec081c54c2966978de102da6a53e2d208c0bb",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 1926748284,
+            "cycles": 527226838
+          },
+          {
+            "status": 0,
+            "instructions": 1926748284,
+            "cycles": 524401150
+          },
+          {
+            "status": 0,
+            "instructions": 1926748482,
+            "cycles": 525741739
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 1931471721,
+            "cycles": 532716691
+          },
+          {
+            "status": 0,
+            "instructions": 1931471712,
+            "cycles": 530796721
+          },
+          {
+            "status": 0,
+            "instructions": 1931472178,
+            "cycles": 532025873
+          }
+        ]
+      },
+      "medians": {
+        "base": 1926748284,
+        "current": 1931471721
+      },
+      "ratio": 1.0024515070490652
+    },
+    "parity/suite/mandelbrot|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "81099b928a218f1185879f016cab56946854dfda8fad9735bd1e45e8091fd28b",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "81099b928a218f1185879f016cab56946854dfda8fad9735bd1e45e8091fd28b",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 3978699786,
+            "cycles": 1627074143
+          },
+          {
+            "status": 0,
+            "instructions": 3978699886,
+            "cycles": 1635300875
+          },
+          {
+            "status": 0,
+            "instructions": 3978699900,
+            "cycles": 1628471360
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 3978701754,
+            "cycles": 1626292812
+          },
+          {
+            "status": 0,
+            "instructions": 3978701864,
+            "cycles": 1630042940
+          },
+          {
+            "status": 0,
+            "instructions": 3978701823,
+            "cycles": 1628553014
+          }
+        ]
+      },
+      "medians": {
+        "base": 3978699886,
+        "current": 3978701823
+      },
+      "ratio": 1.00000048684245
+    },
+    "parity/suite/mandelbrot|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "81099b928a218f1185879f016cab56946854dfda8fad9735bd1e45e8091fd28b",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "81099b928a218f1185879f016cab56946854dfda8fad9735bd1e45e8091fd28b",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 794661254,
+            "cycles": 538201923
+          },
+          {
+            "status": 0,
+            "instructions": 794661256,
+            "cycles": 533100038
+          },
+          {
+            "status": 0,
+            "instructions": 794661261,
+            "cycles": 534095202
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 794663295,
+            "cycles": 535312082
+          },
+          {
+            "status": 0,
+            "instructions": 794663255,
+            "cycles": 534034484
+          },
+          {
+            "status": 0,
+            "instructions": 794663276,
+            "cycles": 532970599
+          }
+        ]
+      },
+      "medians": {
+        "base": 794661256,
+        "current": 794663276
+      },
+      "ratio": 1.0000025419636163
+    },
+    "parity/suite/matmul|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "808e7e925cc6db0490c4ba77159937c810a33790b95990cb679a12cf17113bab",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "808e7e925cc6db0490c4ba77159937c810a33790b95990cb679a12cf17113bab",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 3206514473,
+            "cycles": 975703633
+          },
+          {
+            "status": 0,
+            "instructions": 3206514300,
+            "cycles": 960570987
+          },
+          {
+            "status": 0,
+            "instructions": 3206514307,
+            "cycles": 953438907
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 3206533551,
+            "cycles": 972115798
+          },
+          {
+            "status": 0,
+            "instructions": 3206533507,
+            "cycles": 975556470
+          },
+          {
+            "status": 0,
+            "instructions": 3206533513,
+            "cycles": 968440406
+          }
+        ]
+      },
+      "medians": {
+        "base": 3206514307,
+        "current": 3206533513
+      },
+      "ratio": 1.0000059896816795
+    },
+    "parity/suite/matmul|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "808e7e925cc6db0490c4ba77159937c810a33790b95990cb679a12cf17113bab",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "808e7e925cc6db0490c4ba77159937c810a33790b95990cb679a12cf17113bab",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 148335512,
+            "cycles": 95638908
+          },
+          {
+            "status": 0,
+            "instructions": 148335514,
+            "cycles": 100377734
+          },
+          {
+            "status": 0,
+            "instructions": 148335504,
+            "cycles": 96977355
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 148591216,
+            "cycles": 95660648
+          },
+          {
+            "status": 0,
+            "instructions": 148591185,
+            "cycles": 93968431
+          },
+          {
+            "status": 0,
+            "instructions": 148591184,
+            "cycles": 97219155
+          }
+        ]
+      },
+      "medians": {
+        "base": 148335512,
+        "current": 148591185
+      },
+      "ratio": 1.0017236128864409
+    },
+    "parity/suite/nbody|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "179a443bca1492bd09db9648ca9f9d7f3ae224f95c6e59a3bcb3601907c98245",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "179a443bca1492bd09db9648ca9f9d7f3ae224f95c6e59a3bcb3601907c98245",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 32760206965,
+            "cycles": 6078188960
+          },
+          {
+            "status": 0,
+            "instructions": 32760207070,
+            "cycles": 6041514972
+          },
+          {
+            "status": 0,
+            "instructions": 32760207142,
+            "cycles": 6093508421
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 32990209182,
+            "cycles": 6058527306
+          },
+          {
+            "status": 0,
+            "instructions": 32990209158,
+            "cycles": 6072886202
+          },
+          {
+            "status": 0,
+            "instructions": 32990209147,
+            "cycles": 6106901327
+          }
+        ]
+      },
+      "medians": {
+        "base": 32760207070,
+        "current": 32990209158
+      },
+      "ratio": 1.0070207763799706
+    },
+    "parity/suite/nbody|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "179a443bca1492bd09db9648ca9f9d7f3ae224f95c6e59a3bcb3601907c98245",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "179a443bca1492bd09db9648ca9f9d7f3ae224f95c6e59a3bcb3601907c98245",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 3570206714,
+            "cycles": 927123619
+          },
+          {
+            "status": 0,
+            "instructions": 3570206696,
+            "cycles": 926706880
+          },
+          {
+            "status": 0,
+            "instructions": 3570206714,
+            "cycles": 928873434
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 3595207788,
+            "cycles": 962020432
+          },
+          {
+            "status": 0,
+            "instructions": 3595207759,
+            "cycles": 961434885
+          },
+          {
+            "status": 0,
+            "instructions": 3595207775,
+            "cycles": 957593237
+          }
+        ]
+      },
+      "medians": {
+        "base": 3570206714,
+        "current": 3595207775
+      },
+      "ratio": 1.0070026928418352
+    },
+    "parity/suite/raytrace|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "b939e42eec95f2858153e10ced40ac145579904f397ad58553fb49b2f7f4105b",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "b939e42eec95f2858153e10ced40ac145579904f397ad58553fb49b2f7f4105b",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 7202262772,
+            "cycles": 1440908494
+          },
+          {
+            "status": 0,
+            "instructions": 7202262759,
+            "cycles": 1436989925
+          },
+          {
+            "status": 0,
+            "instructions": 7202262831,
+            "cycles": 1445348666
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 6231729770,
+            "cycles": 1402611169
+          },
+          {
+            "status": 0,
+            "instructions": 6231729770,
+            "cycles": 1402694260
+          },
+          {
+            "status": 0,
+            "instructions": 6231729756,
+            "cycles": 1408459612
+          }
+        ]
+      },
+      "medians": {
+        "base": 7202262772,
+        "current": 6231729770
+      },
+      "ratio": 0.865246099354621
+    },
+    "parity/suite/raytrace|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "b939e42eec95f2858153e10ced40ac145579904f397ad58553fb49b2f7f4105b",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "b939e42eec95f2858153e10ced40ac145579904f397ad58553fb49b2f7f4105b",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 1197339119,
+            "cycles": 389747796
+          },
+          {
+            "status": 0,
+            "instructions": 1197339102,
+            "cycles": 418344255
+          },
+          {
+            "status": 0,
+            "instructions": 1197339156,
+            "cycles": 397827493
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 1197340294,
+            "cycles": 448098941
+          },
+          {
+            "status": 0,
+            "instructions": 1197340300,
+            "cycles": 392145483
+          },
+          {
+            "status": 0,
+            "instructions": 1197340631,
+            "cycles": 424800090
+          }
+        ]
+      },
+      "medians": {
+        "base": 1197339119,
+        "current": 1197340300
+      },
+      "ratio": 1.0000009863538084
+    },
+    "parity/suite/sieve|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "cf9c0ad3d037bc30d279b430355c9cfab624c7b170305ceee94acb2d79a1be5e",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "cf9c0ad3d037bc30d279b430355c9cfab624c7b170305ceee94acb2d79a1be5e",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 822295584,
+            "cycles": 593302943
+          },
+          {
+            "status": 0,
+            "instructions": 822295350,
+            "cycles": 543467804
+          },
+          {
+            "status": 0,
+            "instructions": 822295701,
+            "cycles": 549334570
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 822297384,
+            "cycles": 548809797
+          },
+          {
+            "status": 0,
+            "instructions": 822297387,
+            "cycles": 602001229
+          },
+          {
+            "status": 0,
+            "instructions": 822297358,
+            "cycles": 549366617
+          }
+        ]
+      },
+      "medians": {
+        "base": 822295584,
+        "current": 822297384
+      },
+      "ratio": 1.0000021889938788
+    },
+    "parity/suite/sieve|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "cf9c0ad3d037bc30d279b430355c9cfab624c7b170305ceee94acb2d79a1be5e",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "cf9c0ad3d037bc30d279b430355c9cfab624c7b170305ceee94acb2d79a1be5e",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 222091325,
+            "cycles": 306601666
+          },
+          {
+            "status": 0,
+            "instructions": 222091317,
+            "cycles": 309003180
+          },
+          {
+            "status": 0,
+            "instructions": 222091331,
+            "cycles": 303487909
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 222097898,
+            "cycles": 310951441
+          },
+          {
+            "status": 0,
+            "instructions": 222097873,
+            "cycles": 287549047
+          },
+          {
+            "status": 0,
+            "instructions": 222097882,
+            "cycles": 293629260
+          }
+        ]
+      },
+      "medians": {
+        "base": 222091325,
+        "current": 222097882
+      },
+      "ratio": 1.0000295238906787
+    },
+    "parity/suite/sort_builtin|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "3ed8d60b4a0df990e6dd04272765b81f07a2851bef6265fe0625295796d2d526",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "3ed8d60b4a0df990e6dd04272765b81f07a2851bef6265fe0625295796d2d526",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 919563592,
+            "cycles": 450674899
+          },
+          {
+            "status": 0,
+            "instructions": 919563364,
+            "cycles": 463242611
+          },
+          {
+            "status": 0,
+            "instructions": 919563369,
+            "cycles": 446065732
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 919565594,
+            "cycles": 448167074
+          },
+          {
+            "status": 0,
+            "instructions": 919565297,
+            "cycles": 445656416
+          },
+          {
+            "status": 0,
+            "instructions": 919565321,
+            "cycles": 446673195
+          }
+        ]
+      },
+      "medians": {
+        "base": 919563369,
+        "current": 919565321
+      },
+      "ratio": 1.0000021227465836
+    },
+    "parity/suite/sort_builtin|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "3ed8d60b4a0df990e6dd04272765b81f07a2851bef6265fe0625295796d2d526",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "3ed8d60b4a0df990e6dd04272765b81f07a2851bef6265fe0625295796d2d526",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 732547583,
+            "cycles": 400393352
+          },
+          {
+            "status": 0,
+            "instructions": 732547593,
+            "cycles": 397209153
+          },
+          {
+            "status": 0,
+            "instructions": 732547574,
+            "cycles": 399805824
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 734453023,
+            "cycles": 397897580
+          },
+          {
+            "status": 0,
+            "instructions": 734453027,
+            "cycles": 398235383
+          },
+          {
+            "status": 0,
+            "instructions": 734453036,
+            "cycles": 396958615
+          }
+        ]
+      },
+      "medians": {
+        "base": 732547583,
+        "current": 734453027
+      },
+      "ratio": 1.0026011197691713
+    },
+    "parity/suite/sort_quick|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "3ed8d60b4a0df990e6dd04272765b81f07a2851bef6265fe0625295796d2d526",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "3ed8d60b4a0df990e6dd04272765b81f07a2851bef6265fe0625295796d2d526",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 2603174522,
+            "cycles": 1099746112
+          },
+          {
+            "status": 0,
+            "instructions": 2603174591,
+            "cycles": 1101904029
+          },
+          {
+            "status": 0,
+            "instructions": 2603174519,
+            "cycles": 1105832305
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 2804350903,
+            "cycles": 1153591981
+          },
+          {
+            "status": 0,
+            "instructions": 2804350986,
+            "cycles": 1158072788
+          },
+          {
+            "status": 0,
+            "instructions": 2804350927,
+            "cycles": 1151757936
+          }
+        ]
+      },
+      "medians": {
+        "base": 2603174522,
+        "current": 2804350927
+      },
+      "ratio": 1.0772811823793655
+    },
+    "parity/suite/sort_quick|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "3ed8d60b4a0df990e6dd04272765b81f07a2851bef6265fe0625295796d2d526",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "3ed8d60b4a0df990e6dd04272765b81f07a2851bef6265fe0625295796d2d526",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 1122634846,
+            "cycles": 850171187
+          },
+          {
+            "status": 0,
+            "instructions": 1122634127,
+            "cycles": 821901170
+          },
+          {
+            "status": 0,
+            "instructions": 1122634196,
+            "cycles": 825440629
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 1181716223,
+            "cycles": 823968998
+          },
+          {
+            "status": 0,
+            "instructions": 1181716187,
+            "cycles": 821195622
+          },
+          {
+            "status": 0,
+            "instructions": 1181716212,
+            "cycles": 824097951
+          }
+        ]
+      },
+      "medians": {
+        "base": 1122634196,
+        "current": 1181716212
+      },
+      "ratio": 1.0526280209622263
+    },
+    "parity/suite/sort_records|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "70b262bab78d435e643072f077431ebca2c4bb096339676bcf5ecd475d0934d1",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "70b262bab78d435e643072f077431ebca2c4bb096339676bcf5ecd475d0934d1",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 312646193,
+            "cycles": 110656295
+          },
+          {
+            "status": 0,
+            "instructions": 312646190,
+            "cycles": 107356864
+          },
+          {
+            "status": 0,
+            "instructions": 312646181,
+            "cycles": 107392039
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 312648143,
+            "cycles": 108021613
+          },
+          {
+            "status": 0,
+            "instructions": 312648143,
+            "cycles": 107947825
+          },
+          {
+            "status": 0,
+            "instructions": 312648141,
+            "cycles": 107375171
+          }
+        ]
+      },
+      "medians": {
+        "base": 312646190,
+        "current": 312648143
+      },
+      "ratio": 1.0000062466777542
+    },
+    "parity/suite/sort_records|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "70b262bab78d435e643072f077431ebca2c4bb096339676bcf5ecd475d0934d1",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "70b262bab78d435e643072f077431ebca2c4bb096339676bcf5ecd475d0934d1",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 152627169,
+            "cycles": 84348407
+          },
+          {
+            "status": 0,
+            "instructions": 152627458,
+            "cycles": 85493853
+          },
+          {
+            "status": 0,
+            "instructions": 152627372,
+            "cycles": 117863146
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 152627999,
+            "cycles": 83765229
+          },
+          {
+            "status": 0,
+            "instructions": 152627997,
+            "cycles": 83813455
+          },
+          {
+            "status": 0,
+            "instructions": 152628105,
+            "cycles": 117247430
+          }
+        ]
+      },
+      "medians": {
+        "base": 152627372,
+        "current": 152627999
+      },
+      "ratio": 1.0000041080442634
+    },
+    "parity/suite/spectral_norm|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "ce457b58748ed3834ca9c4264b0817d08facda1f697dcd05b18dfd3bdf238050",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "ce457b58748ed3834ca9c4264b0817d08facda1f697dcd05b18dfd3bdf238050",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 11523625197,
+            "cycles": 3461393506
+          },
+          {
+            "status": 0,
+            "instructions": 11523625346,
+            "cycles": 3484014192
+          },
+          {
+            "status": 0,
+            "instructions": 11523625016,
+            "cycles": 3447871595
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 11523630635,
+            "cycles": 3486558497
+          },
+          {
+            "status": 0,
+            "instructions": 11523631397,
+            "cycles": 3591890280
+          },
+          {
+            "status": 0,
+            "instructions": 11523630764,
+            "cycles": 3458900791
+          }
+        ]
+      },
+      "medians": {
+        "base": 11523625197,
+        "current": 11523630764
+      },
+      "ratio": 1.0000004830945042
+    },
+    "parity/suite/spectral_norm|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "ce457b58748ed3834ca9c4264b0817d08facda1f697dcd05b18dfd3bdf238050",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "ce457b58748ed3834ca9c4264b0817d08facda1f697dcd05b18dfd3bdf238050",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 1841807948,
+            "cycles": 643459163
+          },
+          {
+            "status": 0,
+            "instructions": 1841808009,
+            "cycles": 655417309
+          },
+          {
+            "status": 0,
+            "instructions": 1841808026,
+            "cycles": 649248648
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 1841811063,
+            "cycles": 643747788
+          },
+          {
+            "status": 0,
+            "instructions": 1841811099,
+            "cycles": 645725588
+          },
+          {
+            "status": 0,
+            "instructions": 1841811165,
+            "cycles": 666363547
+          }
+        ]
+      },
+      "medians": {
+        "base": 1841808009,
+        "current": 1841811099
+      },
+      "ratio": 1.000001677699296
+    },
+    "parity/suite/text_ops|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "0967b572d16c244fceff04c57b479c96e1e0fc0580feae10a3dbaa6c6e0a76bf",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "0967b572d16c244fceff04c57b479c96e1e0fc0580feae10a3dbaa6c6e0a76bf",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 1600105051,
+            "cycles": 359562218
+          },
+          {
+            "status": 0,
+            "instructions": 1600103280,
+            "cycles": 364992417
+          },
+          {
+            "status": 0,
+            "instructions": 1600103268,
+            "cycles": 358037573
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 1601704940,
+            "cycles": 344544956
+          },
+          {
+            "status": 0,
+            "instructions": 1601705189,
+            "cycles": 367310862
+          },
+          {
+            "status": 0,
+            "instructions": 1601704913,
+            "cycles": 348528302
+          }
+        ]
+      },
+      "medians": {
+        "base": 1600103280,
+        "current": 1601704940
+      },
+      "ratio": 1.0010009728872
+    },
+    "parity/suite/text_ops|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "0967b572d16c244fceff04c57b479c96e1e0fc0580feae10a3dbaa6c6e0a76bf",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "0967b572d16c244fceff04c57b479c96e1e0fc0580feae10a3dbaa6c6e0a76bf",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 1395799453,
+            "cycles": 322752265
+          },
+          {
+            "status": 0,
+            "instructions": 1395799461,
+            "cycles": 318670426
+          },
+          {
+            "status": 0,
+            "instructions": 1395799462,
+            "cycles": 323337971
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 1401477620,
+            "cycles": 312643068
+          },
+          {
+            "status": 0,
+            "instructions": 1401478142,
+            "cycles": 315370825
+          },
+          {
+            "status": 0,
+            "instructions": 1401477669,
+            "cycles": 322626670
+          }
+        ]
+      },
+      "medians": {
+        "base": 1395799461,
+        "current": 1401477669
+      },
+      "ratio": 1.004068068629237
+    },
+    "parity/lib/scan_count|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "ed19251b9e188ce793cf598d9ddb5ce7a53a896a68efeed98423cdf3b592c9db",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "ed19251b9e188ce793cf598d9ddb5ce7a53a896a68efeed98423cdf3b592c9db",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 1091125766,
+            "cycles": 359215059
+          },
+          {
+            "status": 0,
+            "instructions": 1091125755,
+            "cycles": 344585645
+          },
+          {
+            "status": 0,
+            "instructions": 1091125742,
+            "cycles": 344919981
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 1091193119,
+            "cycles": 347681473
+          },
+          {
+            "status": 0,
+            "instructions": 1091193110,
+            "cycles": 347173499
+          },
+          {
+            "status": 0,
+            "instructions": 1091193093,
+            "cycles": 345907277
+          }
+        ]
+      },
+      "medians": {
+        "base": 1091125755,
+        "current": 1091193110
+      },
+      "ratio": 1.0000617298232504
+    },
+    "parity/lib/scan_count|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "ed19251b9e188ce793cf598d9ddb5ce7a53a896a68efeed98423cdf3b592c9db",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "ed19251b9e188ce793cf598d9ddb5ce7a53a896a68efeed98423cdf3b592c9db",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 1083241765,
+            "cycles": 345935246
+          },
+          {
+            "status": 0,
+            "instructions": 1083241809,
+            "cycles": 350159623
+          },
+          {
+            "status": 0,
+            "instructions": 1083241787,
+            "cycles": 350687398
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 1083295903,
+            "cycles": 345482185
+          },
+          {
+            "status": 0,
+            "instructions": 1083295925,
+            "cycles": 347085725
+          },
+          {
+            "status": 0,
+            "instructions": 1083295919,
+            "cycles": 349147262
+          }
+        ]
+      },
+      "medians": {
+        "base": 1083241787,
+        "current": 1083295919
+      },
+      "ratio": 1.0000499722228682
+    },
+    "parity/lib/scan_replace|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "3d8a3742b117ed70e76fc626cb9d3a353d29890edf73d686abd9ee1a1afeb052",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "3d8a3742b117ed70e76fc626cb9d3a353d29890edf73d686abd9ee1a1afeb052",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 721500660,
+            "cycles": 187625153
+          },
+          {
+            "status": 0,
+            "instructions": 721500640,
+            "cycles": 188237810
+          },
+          {
+            "status": 0,
+            "instructions": 721500648,
+            "cycles": 191255112
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 721560754,
+            "cycles": 188028472
+          },
+          {
+            "status": 0,
+            "instructions": 721560742,
+            "cycles": 187321930
+          },
+          {
+            "status": 0,
+            "instructions": 721560750,
+            "cycles": 187802140
+          }
+        ]
+      },
+      "medians": {
+        "base": 721500648,
+        "current": 721560750
+      },
+      "ratio": 1.0000833013804862
+    },
+    "parity/lib/scan_replace|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "3d8a3742b117ed70e76fc626cb9d3a353d29890edf73d686abd9ee1a1afeb052",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "3d8a3742b117ed70e76fc626cb9d3a353d29890edf73d686abd9ee1a1afeb052",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 698616601,
+            "cycles": 202025935
+          },
+          {
+            "status": 0,
+            "instructions": 698616577,
+            "cycles": 200067322
+          },
+          {
+            "status": 0,
+            "instructions": 698616589,
+            "cycles": 230054537
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 698697205,
+            "cycles": 205408199
+          },
+          {
+            "status": 0,
+            "instructions": 698697197,
+            "cycles": 201204365
+          },
+          {
+            "status": 0,
+            "instructions": 698697313,
+            "cycles": 202255655
+          }
+        ]
+      },
+      "medians": {
+        "base": 698616589,
+        "current": 698697205
+      },
+      "ratio": 1.0001153937671525
+    },
+    "parity/lib/scan_split|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "acd0b3e0d83a905f4007e5ade083a9293c977a9e53239489b3ab0b8c5f951a0d",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "acd0b3e0d83a905f4007e5ade083a9293c977a9e53239489b3ab0b8c5f951a0d",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 1521361718,
+            "cycles": 358442359
+          },
+          {
+            "status": 0,
+            "instructions": 1521361349,
+            "cycles": 350571891
+          },
+          {
+            "status": 0,
+            "instructions": 1521361914,
+            "cycles": 357714861
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 1521427218,
+            "cycles": 351513463
+          },
+          {
+            "status": 0,
+            "instructions": 1521427133,
+            "cycles": 350464259
+          },
+          {
+            "status": 0,
+            "instructions": 1521427021,
+            "cycles": 363451690
+          }
+        ]
+      },
+      "medians": {
+        "base": 1521361718,
+        "current": 1521427133
+      },
+      "ratio": 1.0000429976640177
+    },
+    "parity/lib/scan_split|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "acd0b3e0d83a905f4007e5ade083a9293c977a9e53239489b3ab0b8c5f951a0d",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "acd0b3e0d83a905f4007e5ade083a9293c977a9e53239489b3ab0b8c5f951a0d",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 1441384177,
+            "cycles": 351668817
+          },
+          {
+            "status": 0,
+            "instructions": 1441384110,
+            "cycles": 352472506
+          },
+          {
+            "status": 0,
+            "instructions": 1441384251,
+            "cycles": 355956962
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 1441434491,
+            "cycles": 348559821
+          },
+          {
+            "status": 0,
+            "instructions": 1441434819,
+            "cycles": 348258673
+          },
+          {
+            "status": 0,
+            "instructions": 1441433970,
+            "cycles": 346070860
+          }
+        ]
+      },
+      "medians": {
+        "base": 1441384177,
+        "current": 1441434491
+      },
+      "ratio": 1.0000349067242467
+    },
+    "parity/micro/alloc_churn|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "52b8ac479aedeaea1e9da11e3d85b1828bc0ca8b06c48875723325d749fb9f70",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "52b8ac479aedeaea1e9da11e3d85b1828bc0ca8b06c48875723325d749fb9f70",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 3053153005,
+            "cycles": 931496099
+          },
+          {
+            "status": 0,
+            "instructions": 3053153245,
+            "cycles": 935960340
+          },
+          {
+            "status": 0,
+            "instructions": 3053153057,
+            "cycles": 934393832
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 3060154994,
+            "cycles": 947020528
+          },
+          {
+            "status": 0,
+            "instructions": 3060154978,
+            "cycles": 946112142
+          },
+          {
+            "status": 0,
+            "instructions": 3060154981,
+            "cycles": 954350224
+          }
+        ]
+      },
+      "medians": {
+        "base": 3053153057,
+        "current": 3060154981
+      },
+      "ratio": 1.0022933419547857
+    },
+    "parity/micro/alloc_churn|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "52b8ac479aedeaea1e9da11e3d85b1828bc0ca8b06c48875723325d749fb9f70",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "52b8ac479aedeaea1e9da11e3d85b1828bc0ca8b06c48875723325d749fb9f70",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 1945409202,
+            "cycles": 533658248
+          },
+          {
+            "status": 0,
+            "instructions": 1945409215,
+            "cycles": 665357005
+          },
+          {
+            "status": 0,
+            "instructions": 1945409169,
+            "cycles": 560235277
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 1950411261,
+            "cycles": 568361267
+          },
+          {
+            "status": 0,
+            "instructions": 1950411337,
+            "cycles": 700671827
+          },
+          {
+            "status": 0,
+            "instructions": 1950411310,
+            "cycles": 566168055
+          }
+        ]
+      },
+      "medians": {
+        "base": 1945409202,
+        "current": 1950411310
+      },
+      "ratio": 1.0025712369381503
+    },
+    "parity/micro/bytes_scan|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "6bad0207281a4d36c465d56f11f4cb248fa0b9c7dedba4591d717f815e861c7a",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "6bad0207281a4d36c465d56f11f4cb248fa0b9c7dedba4591d717f815e861c7a",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 1503647499,
+            "cycles": 433057394
+          },
+          {
+            "status": 0,
+            "instructions": 1503647492,
+            "cycles": 408060195
+          },
+          {
+            "status": 0,
+            "instructions": 1503647471,
+            "cycles": 422201210
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 1503649828,
+            "cycles": 393196786
+          },
+          {
+            "status": 0,
+            "instructions": 1503649834,
+            "cycles": 387386110
+          },
+          {
+            "status": 0,
+            "instructions": 1503649818,
+            "cycles": 389402184
+          }
+        ]
+      },
+      "medians": {
+        "base": 1503647492,
+        "current": 1503649828
+      },
+      "ratio": 1.0000015535556122
+    },
+    "parity/micro/bytes_scan|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "6bad0207281a4d36c465d56f11f4cb248fa0b9c7dedba4591d717f815e861c7a",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "6bad0207281a4d36c465d56f11f4cb248fa0b9c7dedba4591d717f815e861c7a",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 195526961,
+            "cycles": 49765674
+          },
+          {
+            "status": 0,
+            "instructions": 195526986,
+            "cycles": 51889920
+          },
+          {
+            "status": 0,
+            "instructions": 195526971,
+            "cycles": 49966870
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 195529368,
+            "cycles": 51293064
+          },
+          {
+            "status": 0,
+            "instructions": 195529334,
+            "cycles": 50333668
+          },
+          {
+            "status": 0,
+            "instructions": 195529334,
+            "cycles": 49807739
+          }
+        ]
+      },
+      "medians": {
+        "base": 195526971,
+        "current": 195529334
+      },
+      "ratio": 1.0000120852892465
+    },
+    "parity/micro/calls|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "93acd367386ad3b42a26b3815a580aae055ca2f18ea40258ccaa29f7e6921380",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "93acd367386ad3b42a26b3815a580aae055ca2f18ea40258ccaa29f7e6921380",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 1710197927,
+            "cycles": 1051908240
+          },
+          {
+            "status": 0,
+            "instructions": 1710197799,
+            "cycles": 1053109719
+          },
+          {
+            "status": 0,
+            "instructions": 1710197794,
+            "cycles": 1052114244
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 1710199687,
+            "cycles": 1054778853
+          },
+          {
+            "status": 0,
+            "instructions": 1710199707,
+            "cycles": 1053268924
+          },
+          {
+            "status": 0,
+            "instructions": 1710200192,
+            "cycles": 1057253635
+          }
+        ]
+      },
+      "medians": {
+        "base": 1710197799,
+        "current": 1710199707
+      },
+      "ratio": 1.0000011156604232
+    },
+    "parity/micro/calls|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "93acd367386ad3b42a26b3815a580aae055ca2f18ea40258ccaa29f7e6921380",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "93acd367386ad3b42a26b3815a580aae055ca2f18ea40258ccaa29f7e6921380",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 540201898,
+            "cycles": 468193325
+          },
+          {
+            "status": 0,
+            "instructions": 540201877,
+            "cycles": 469086875
+          },
+          {
+            "status": 0,
+            "instructions": 540201878,
+            "cycles": 469519976
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 540201913,
+            "cycles": 468490538
+          },
+          {
+            "status": 0,
+            "instructions": 540201937,
+            "cycles": 468296508
+          },
+          {
+            "status": 0,
+            "instructions": 540201918,
+            "cycles": 468043387
+          }
+        ]
+      },
+      "medians": {
+        "base": 540201878,
+        "current": 540201918
+      },
+      "ratio": 1.000000074046392
+    },
+    "parity/micro/dict_count|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "4561c81a11a51b8dc19629f530cf4b4d5f27edb937a404d61e9c1ecea9ad7a04",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "4561c81a11a51b8dc19629f530cf4b4d5f27edb937a404d61e9c1ecea9ad7a04",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 661304243,
+            "cycles": 132486081
+          },
+          {
+            "status": 0,
+            "instructions": 661304233,
+            "cycles": 150229732
+          },
+          {
+            "status": 0,
+            "instructions": 661304231,
+            "cycles": 132170807
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 661306169,
+            "cycles": 130973401
+          },
+          {
+            "status": 0,
+            "instructions": 661306177,
+            "cycles": 132234220
+          },
+          {
+            "status": 0,
+            "instructions": 661306176,
+            "cycles": 133944085
+          }
+        ]
+      },
+      "medians": {
+        "base": 661304233,
+        "current": 661306176
+      },
+      "ratio": 1.0000029381333175
+    },
+    "parity/micro/dict_count|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "4561c81a11a51b8dc19629f530cf4b4d5f27edb937a404d61e9c1ecea9ad7a04",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "4561c81a11a51b8dc19629f530cf4b4d5f27edb937a404d61e9c1ecea9ad7a04",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 441039943,
+            "cycles": 86536386
+          },
+          {
+            "status": 0,
+            "instructions": 441039918,
+            "cycles": 86920936
+          },
+          {
+            "status": 0,
+            "instructions": 441039919,
+            "cycles": 86203602
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 441036024,
+            "cycles": 103294175
+          },
+          {
+            "status": 0,
+            "instructions": 441035759,
+            "cycles": 87821827
+          },
+          {
+            "status": 0,
+            "instructions": 441035781,
+            "cycles": 91088145
+          }
+        ]
+      },
+      "medians": {
+        "base": 441039919,
+        "current": 441035781
+      },
+      "ratio": 0.9999906176293307
+    },
+    "parity/micro/fib|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "653226562ad6143cebbec0872e5596358984edb431588afde338b77586d860c6",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "653226562ad6143cebbec0872e5596358984edb431588afde338b77586d860c6",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 1594613358,
+            "cycles": 371704089
+          },
+          {
+            "status": 0,
+            "instructions": 1594613359,
+            "cycles": 371680110
+          },
+          {
+            "status": 0,
+            "instructions": 1594613346,
+            "cycles": 372432804
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 1594615268,
+            "cycles": 373509073
+          },
+          {
+            "status": 0,
+            "instructions": 1594615245,
+            "cycles": 372265567
+          },
+          {
+            "status": 0,
+            "instructions": 1594615266,
+            "cycles": 371533868
+          }
+        ]
+      },
+      "medians": {
+        "base": 1594613358,
+        "current": 1594615266
+      },
+      "ratio": 1.0000011965282936
+    },
+    "parity/micro/fib|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "653226562ad6143cebbec0872e5596358984edb431588afde338b77586d860c6",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "653226562ad6143cebbec0872e5596358984edb431588afde338b77586d860c6",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 942356703,
+            "cycles": 274289729
+          },
+          {
+            "status": 0,
+            "instructions": 942356670,
+            "cycles": 258236069
+          },
+          {
+            "status": 0,
+            "instructions": 942356683,
+            "cycles": 255158389
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 942356696,
+            "cycles": 234236459
+          },
+          {
+            "status": 0,
+            "instructions": 942356690,
+            "cycles": 227208969
+          },
+          {
+            "status": 0,
+            "instructions": 942356701,
+            "cycles": 227322920
+          }
+        ]
+      },
+      "medians": {
+        "base": 942356683,
+        "current": 942356696
+      },
+      "ratio": 1.0000000137952012
+    },
+    "parity/micro/float_loop|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "18857ead20b4390f11fa3f83075eac1fe493a9c167053a4e4f2986f603cd3d38",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "18857ead20b4390f11fa3f83075eac1fe493a9c167053a4e4f2986f603cd3d38",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 1260197537,
+            "cycles": 324736080
+          },
+          {
+            "status": 0,
+            "instructions": 1260197541,
+            "cycles": 320747782
+          },
+          {
+            "status": 0,
+            "instructions": 1260197533,
+            "cycles": 318412997
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 1260199462,
+            "cycles": 318741532
+          },
+          {
+            "status": 0,
+            "instructions": 1260199456,
+            "cycles": 319545051
+          },
+          {
+            "status": 0,
+            "instructions": 1260199650,
+            "cycles": 325776444
+          }
+        ]
+      },
+      "medians": {
+        "base": 1260197537,
+        "current": 1260199462
+      },
+      "ratio": 1.0000015275382974
+    },
+    "parity/micro/float_loop|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "18857ead20b4390f11fa3f83075eac1fe493a9c167053a4e4f2986f603cd3d38",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "18857ead20b4390f11fa3f83075eac1fe493a9c167053a4e4f2986f603cd3d38",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 164202690,
+            "cycles": 141558237
+          },
+          {
+            "status": 0,
+            "instructions": 164202695,
+            "cycles": 141702050
+          },
+          {
+            "status": 0,
+            "instructions": 164202690,
+            "cycles": 141521391
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 164203046,
+            "cycles": 141481438
+          },
+          {
+            "status": 0,
+            "instructions": 164203041,
+            "cycles": 141542874
+          },
+          {
+            "status": 0,
+            "instructions": 164203035,
+            "cycles": 141526580
+          }
+        ]
+      },
+      "medians": {
+        "base": 164202690,
+        "current": 164203041
+      },
+      "ratio": 1.0000021376020087
+    },
+    "parity/micro/intloop|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "3e7f5ece27d4e9e45a39c15df220019984badbca4a8e78992344f1ade32b2714",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "3e7f5ece27d4e9e45a39c15df220019984badbca4a8e78992344f1ade32b2714",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 1260197729,
+            "cycles": 1058576274
+          },
+          {
+            "status": 0,
+            "instructions": 1260197744,
+            "cycles": 1059984179
+          },
+          {
+            "status": 0,
+            "instructions": 1260198294,
+            "cycles": 1065501632
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 1260199641,
+            "cycles": 1061838732
+          },
+          {
+            "status": 0,
+            "instructions": 1260199657,
+            "cycles": 1060298621
+          },
+          {
+            "status": 0,
+            "instructions": 1260199660,
+            "cycles": 1062093554
+          }
+        ]
+      },
+      "medians": {
+        "base": 1260197744,
+        "current": 1260199657
+      },
+      "ratio": 1.0000015180157313
+    },
+    "parity/micro/intloop|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "3e7f5ece27d4e9e45a39c15df220019984badbca4a8e78992344f1ade32b2714",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "3e7f5ece27d4e9e45a39c15df220019984badbca4a8e78992344f1ade32b2714",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 650201894,
+            "cycles": 424428021
+          },
+          {
+            "status": 0,
+            "instructions": 650201887,
+            "cycles": 424330755
+          },
+          {
+            "status": 0,
+            "instructions": 650201927,
+            "cycles": 424837551
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 650201925,
+            "cycles": 424218483
+          },
+          {
+            "status": 0,
+            "instructions": 650201915,
+            "cycles": 425056052
+          },
+          {
+            "status": 0,
+            "instructions": 650201940,
+            "cycles": 424437020
+          }
+        ]
+      },
+      "medians": {
+        "base": 650201894,
+        "current": 650201925
+      },
+      "ratio": 1.0000000476774988
+    },
+    "parity/micro/list_append_sum|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "ecea822e423e436f316f3a4402edf9858cd7c64191481740276675bd6abacc71",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "ecea822e423e436f316f3a4402edf9858cd7c64191481740276675bd6abacc71",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 592293105,
+            "cycles": 124974795
+          },
+          {
+            "status": 0,
+            "instructions": 592293139,
+            "cycles": 127769406
+          },
+          {
+            "status": 0,
+            "instructions": 592293130,
+            "cycles": 147419348
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 592295027,
+            "cycles": 122048408
+          },
+          {
+            "status": 0,
+            "instructions": 592295035,
+            "cycles": 121483455
+          },
+          {
+            "status": 0,
+            "instructions": 592295065,
+            "cycles": 130087424
+          }
+        ]
+      },
+      "medians": {
+        "base": 592293130,
+        "current": 592295035
+      },
+      "ratio": 1.0000032163128416
+    },
+    "parity/micro/list_append_sum|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "ecea822e423e436f316f3a4402edf9858cd7c64191481740276675bd6abacc71",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "ecea822e423e436f316f3a4402edf9858cd7c64191481740276675bd6abacc71",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 246272512,
+            "cycles": 87464260
+          },
+          {
+            "status": 0,
+            "instructions": 246272505,
+            "cycles": 91068876
+          },
+          {
+            "status": 0,
+            "instructions": 246272511,
+            "cycles": 88837360
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 246274719,
+            "cycles": 93924160
+          },
+          {
+            "status": 0,
+            "instructions": 246274744,
+            "cycles": 83787541
+          },
+          {
+            "status": 0,
+            "instructions": 246274731,
+            "cycles": 85979759
+          }
+        ]
+      },
+      "medians": {
+        "base": 246272511,
+        "current": 246274731
+      },
+      "ratio": 1.0000090144043725
+    },
+    "parity/micro/list_records|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "8a4d740c5439703ae4eb250524b47c5352b838feece3f8ca42055ce22f1ffa9f",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "8a4d740c5439703ae4eb250524b47c5352b838feece3f8ca42055ce22f1ffa9f",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 508270393,
+            "cycles": 150263441
+          },
+          {
+            "status": 0,
+            "instructions": 508270413,
+            "cycles": 150269234
+          },
+          {
+            "status": 0,
+            "instructions": 508270402,
+            "cycles": 152645700
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 508272310,
+            "cycles": 158407460
+          },
+          {
+            "status": 0,
+            "instructions": 508272311,
+            "cycles": 148666206
+          },
+          {
+            "status": 0,
+            "instructions": 508272326,
+            "cycles": 146440703
+          }
+        ]
+      },
+      "medians": {
+        "base": 508270402,
+        "current": 508272311
+      },
+      "ratio": 1.000003755874811
+    },
+    "parity/micro/list_records|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "8a4d740c5439703ae4eb250524b47c5352b838feece3f8ca42055ce22f1ffa9f",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "8a4d740c5439703ae4eb250524b47c5352b838feece3f8ca42055ce22f1ffa9f",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 103751005,
+            "cycles": 148322401
+          },
+          {
+            "status": 0,
+            "instructions": 103751021,
+            "cycles": 153034004
+          },
+          {
+            "status": 0,
+            "instructions": 103751014,
+            "cycles": 146361405
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 103753075,
+            "cycles": 150375877
+          },
+          {
+            "status": 0,
+            "instructions": 103753071,
+            "cycles": 151512544
+          },
+          {
+            "status": 0,
+            "instructions": 103753068,
+            "cycles": 150176157
+          }
+        ]
+      },
+      "medians": {
+        "base": 103751014,
+        "current": 103753071
+      },
+      "ratio": 1.0000198263122517
+    },
+    "parity/micro/records|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "0ff7e248711867ad5a1bfa1f13922a0de635c92a8ed527363e232827ab66c6c0",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "0ff7e248711867ad5a1bfa1f13922a0de635c92a8ed527363e232827ab66c6c0",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 1960197607,
+            "cycles": 712906989
+          },
+          {
+            "status": 0,
+            "instructions": 1960197614,
+            "cycles": 713271075
+          },
+          {
+            "status": 0,
+            "instructions": 1960197626,
+            "cycles": 712864442
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 1960199485,
+            "cycles": 711492880
+          },
+          {
+            "status": 0,
+            "instructions": 1960199480,
+            "cycles": 711893209
+          },
+          {
+            "status": 0,
+            "instructions": 1960199541,
+            "cycles": 711871160
+          }
+        ]
+      },
+      "medians": {
+        "base": 1960197614,
+        "current": 1960199485
+      },
+      "ratio": 1.0000009544956012
+    },
+    "parity/micro/records|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "0ff7e248711867ad5a1bfa1f13922a0de635c92a8ed527363e232827ab66c6c0",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "0ff7e248711867ad5a1bfa1f13922a0de635c92a8ed527363e232827ab66c6c0",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 620202071,
+            "cycles": 321126586
+          },
+          {
+            "status": 0,
+            "instructions": 620201837,
+            "cycles": 316999127
+          },
+          {
+            "status": 0,
+            "instructions": 620201834,
+            "cycles": 317952042
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 620201855,
+            "cycles": 317250309
+          },
+          {
+            "status": 0,
+            "instructions": 620201854,
+            "cycles": 316860428
+          },
+          {
+            "status": 0,
+            "instructions": 620201857,
+            "cycles": 316499364
+          }
+        ]
+      },
+      "medians": {
+        "base": 620201837,
+        "current": 620201855
+      },
+      "ratio": 1.00000002902281
+    },
+    "parity/micro/str_build|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "e8e4291ddf65fcad3e471a7587aada2668080c48b025d42dbd6c7ec2b9453b34",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "e8e4291ddf65fcad3e471a7587aada2668080c48b025d42dbd6c7ec2b9453b34",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 983066505,
+            "cycles": 194474767
+          },
+          {
+            "status": 0,
+            "instructions": 983066553,
+            "cycles": 196052024
+          },
+          {
+            "status": 0,
+            "instructions": 983066547,
+            "cycles": 200389983
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 983068860,
+            "cycles": 193062483
+          },
+          {
+            "status": 0,
+            "instructions": 983068845,
+            "cycles": 193303686
+          },
+          {
+            "status": 0,
+            "instructions": 983068893,
+            "cycles": 196396251
+          }
+        ]
+      },
+      "medians": {
+        "base": 983066547,
+        "current": 983068860
+      },
+      "ratio": 1.000002352841735
+    },
+    "parity/micro/str_build|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "e8e4291ddf65fcad3e471a7587aada2668080c48b025d42dbd6c7ec2b9453b34",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "e8e4291ddf65fcad3e471a7587aada2668080c48b025d42dbd6c7ec2b9453b34",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 259407748,
+            "cycles": 70628099
+          },
+          {
+            "status": 0,
+            "instructions": 259407758,
+            "cycles": 70604979
+          },
+          {
+            "status": 0,
+            "instructions": 259407772,
+            "cycles": 72350550
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 259410157,
+            "cycles": 70978443
+          },
+          {
+            "status": 0,
+            "instructions": 259410162,
+            "cycles": 69548239
+          },
+          {
+            "status": 0,
+            "instructions": 259410181,
+            "cycles": 73404005
+          }
+        ]
+      },
+      "medians": {
+        "base": 259407758,
+        "current": 259410162
+      },
+      "ratio": 1.0000092672633176
+    },
+    "schematic/fixture|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+          "svg_bytes": 49617,
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+          "svg_bytes": 49617,
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 20109711,
+            "cycles": 4732368
+          },
+          {
+            "status": 0,
+            "instructions": 20109799,
+            "cycles": 4692793
+          },
+          {
+            "status": 0,
+            "instructions": 20109735,
+            "cycles": 4696974
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 18511998,
+            "cycles": 4466575
+          },
+          {
+            "status": 0,
+            "instructions": 18512003,
+            "cycles": 4411223
+          },
+          {
+            "status": 0,
+            "instructions": 18511946,
+            "cycles": 4439968
+          }
+        ]
+      },
+      "medians": {
+        "base": 20109735,
+        "current": 18511998
+      },
+      "ratio": 0.9205490773498507
+    },
+    "schematic/fixture|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+          "svg_bytes": 49617,
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+          "svg_bytes": 49617,
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 9040546,
+            "cycles": 3241457
+          },
+          {
+            "status": 0,
+            "instructions": 9040545,
+            "cycles": 3308924
+          },
+          {
+            "status": 0,
+            "instructions": 9040537,
+            "cycles": 3316723
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 9006291,
+            "cycles": 3368530
+          },
+          {
+            "status": 0,
+            "instructions": 9006372,
+            "cycles": 3250069
+          },
+          {
+            "status": 0,
+            "instructions": 9006344,
+            "cycles": 3332253
+          }
+        ]
+      },
+      "medians": {
+        "base": 9040545,
+        "current": 9006344
+      },
+      "ratio": 0.9962169316119769
+    },
+    "schematic/changed-net|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+          "svg_bytes": 49647,
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+          "svg_bytes": 49647,
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 20119948,
+            "cycles": 4819081
+          },
+          {
+            "status": 0,
+            "instructions": 20120012,
+            "cycles": 4575956
+          },
+          {
+            "status": 0,
+            "instructions": 20119978,
+            "cycles": 4712545
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 18520531,
+            "cycles": 4530636
+          },
+          {
+            "status": 0,
+            "instructions": 18520484,
+            "cycles": 4408812
+          },
+          {
+            "status": 0,
+            "instructions": 18520421,
+            "cycles": 4471853
+          }
+        ]
+      },
+      "medians": {
+        "base": 20119978,
+        "current": 18520484
+      },
+      "ratio": 0.9205021993562816
+    },
+    "schematic/changed-net|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+          "svg_bytes": 49647,
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+          "svg_bytes": 49647,
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 9044892,
+            "cycles": 3226787
+          },
+          {
+            "status": 0,
+            "instructions": 9044955,
+            "cycles": 3215909
+          },
+          {
+            "status": 0,
+            "instructions": 9044892,
+            "cycles": 3227501
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 9010611,
+            "cycles": 3210557
+          },
+          {
+            "status": 0,
+            "instructions": 9010690,
+            "cycles": 3239028
+          },
+          {
+            "status": 0,
+            "instructions": 9010592,
+            "cycles": 3191238
+          }
+        ]
+      },
+      "medians": {
+        "base": 9044892,
+        "current": 9010611
+      },
+      "ratio": 0.9962099049938905
+    },
+    "schematic/changed-value|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+          "svg_bytes": 49617,
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+          "svg_bytes": 49617,
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 20110624,
+            "cycles": 4654421
+          },
+          {
+            "status": 0,
+            "instructions": 20110672,
+            "cycles": 4632866
+          },
+          {
+            "status": 0,
+            "instructions": 20110669,
+            "cycles": 4691396
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 18511016,
+            "cycles": 4397750
+          },
+          {
+            "status": 0,
+            "instructions": 18511093,
+            "cycles": 4377712
+          },
+          {
+            "status": 0,
+            "instructions": 18511013,
+            "cycles": 4406200
+          }
+        ]
+      },
+      "medians": {
+        "base": 20110669,
+        "current": 18511016
+      },
+      "ratio": 0.9204574944771852
+    },
+    "schematic/changed-value|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+          "svg_bytes": 49617,
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+          "svg_bytes": 49617,
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 9039979,
+            "cycles": 3304471
+          },
+          {
+            "status": 0,
+            "instructions": 9040088,
+            "cycles": 3312039
+          },
+          {
+            "status": 0,
+            "instructions": 9040035,
+            "cycles": 3340327
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 9005663,
+            "cycles": 3244335
+          },
+          {
+            "status": 0,
+            "instructions": 9005492,
+            "cycles": 3305486
+          },
+          {
+            "status": 0,
+            "instructions": 9005475,
+            "cycles": 3203794
+          }
+        ]
+      },
+      "medians": {
+        "base": 9040035,
+        "current": 9005492
+      },
+      "ratio": 0.9961788864755502
+    },
+    "lox/vm/binary_trees|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 6241832504,
+            "cycles": 1508177030
+          },
+          {
+            "status": 0,
+            "instructions": 6241830544,
+            "cycles": 1478690111
+          },
+          {
+            "status": 0,
+            "instructions": 6241832002,
+            "cycles": 1474234934
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 8001355118,
+            "cycles": 2210899518
+          },
+          {
+            "status": 0,
+            "instructions": 8001355166,
+            "cycles": 2240871103
+          },
+          {
+            "status": 0,
+            "instructions": 8001355145,
+            "cycles": 2214827500
+          }
+        ]
+      },
+      "medians": {
+        "base": 6241832002,
+        "current": 8001355145
+      },
+      "ratio": 1.2818921019399778
+    },
+    "lox/vm/binary_trees|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 2663049525,
+            "cycles": 813903650
+          },
+          {
+            "status": 0,
+            "instructions": 2663047615,
+            "cycles": 800688309
+          },
+          {
+            "status": 0,
+            "instructions": 2663047666,
+            "cycles": 816554612
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 4293664375,
+            "cycles": 1437657752
+          },
+          {
+            "status": 0,
+            "instructions": 4293664322,
+            "cycles": 1399015192
+          },
+          {
+            "status": 0,
+            "instructions": 4293664323,
+            "cycles": 1400825276
+          }
+        ]
+      },
+      "medians": {
+        "base": 2663047666,
+        "current": 4293664323
+      },
+      "ratio": 1.612312230764254
+    },
+    "lox/vm/closures|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "8dacb3b0327cbd368e9c06434c1dd66b88f2a69dba30a2f64fc0dd78570cf7f0",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "8dacb3b0327cbd368e9c06434c1dd66b88f2a69dba30a2f64fc0dd78570cf7f0",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 8891315724,
+            "cycles": 2012276711
+          },
+          {
+            "status": 0,
+            "instructions": 8891315708,
+            "cycles": 2017148156
+          },
+          {
+            "status": 0,
+            "instructions": 8891315718,
+            "cycles": 2028343922
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 11312797229,
+            "cycles": 2706954338
+          },
+          {
+            "status": 0,
+            "instructions": 11312795641,
+            "cycles": 2689900940
+          },
+          {
+            "status": 0,
+            "instructions": 11312801064,
+            "cycles": 2677923699
+          }
+        ]
+      },
+      "medians": {
+        "base": 8891315718,
+        "current": 11312797229
+      },
+      "ratio": 1.2723423155582967
+    },
+    "lox/vm/closures|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "8dacb3b0327cbd368e9c06434c1dd66b88f2a69dba30a2f64fc0dd78570cf7f0",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "8dacb3b0327cbd368e9c06434c1dd66b88f2a69dba30a2f64fc0dd78570cf7f0",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 3779851828,
+            "cycles": 807175001
+          },
+          {
+            "status": 0,
+            "instructions": 3779851869,
+            "cycles": 836859095
+          },
+          {
+            "status": 0,
+            "instructions": 3779851810,
+            "cycles": 807376702
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 5456507269,
+            "cycles": 1566303266
+          },
+          {
+            "status": 0,
+            "instructions": 5456503644,
+            "cycles": 1567384560
+          },
+          {
+            "status": 0,
+            "instructions": 5456503634,
+            "cycles": 1573124295
+          }
+        ]
+      },
+      "medians": {
+        "base": 3779851828,
+        "current": 5456503644
+      },
+      "ratio": 1.4435760691940012
+    },
+    "lox/vm/equality|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "2d5c043a952d70ef9564858b25a01a30613abfb3d1562f67ef8d089646bbf786",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "2d5c043a952d70ef9564858b25a01a30613abfb3d1562f67ef8d089646bbf786",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 10175631057,
+            "cycles": 2148071028
+          },
+          {
+            "status": 0,
+            "instructions": 10175631062,
+            "cycles": 2145014875
+          },
+          {
+            "status": 0,
+            "instructions": 10175631074,
+            "cycles": 2148824133
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 10695380427,
+            "cycles": 2505594054
+          },
+          {
+            "status": 0,
+            "instructions": 10695380394,
+            "cycles": 2491518297
+          },
+          {
+            "status": 0,
+            "instructions": 10695380455,
+            "cycles": 2507848667
+          }
+        ]
+      },
+      "medians": {
+        "base": 10175631062,
+        "current": 10695380427
+      },
+      "ratio": 1.0510778507822438
+    },
+    "lox/vm/equality|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "2d5c043a952d70ef9564858b25a01a30613abfb3d1562f67ef8d089646bbf786",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "2d5c043a952d70ef9564858b25a01a30613abfb3d1562f67ef8d089646bbf786",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 3463053014,
+            "cycles": 728046227
+          },
+          {
+            "status": 0,
+            "instructions": 3463053055,
+            "cycles": 736138012
+          },
+          {
+            "status": 0,
+            "instructions": 3463053027,
+            "cycles": 744473471
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 4218690982,
+            "cycles": 961302509
+          },
+          {
+            "status": 0,
+            "instructions": 4218691014,
+            "cycles": 960071393
+          },
+          {
+            "status": 0,
+            "instructions": 4218691035,
+            "cycles": 965073932
+          }
+        ]
+      },
+      "medians": {
+        "base": 3463053027,
+        "current": 4218691014
+      },
+      "ratio": 1.2181999470145566
+    },
+    "lox/vm/fib|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "a2926b4c752026e4c4fb427a6c468ba4cd1a584ecc8f6ff23fa80c09fdfcb655",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "a2926b4c752026e4c4fb427a6c468ba4cd1a584ecc8f6ff23fa80c09fdfcb655",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 4892176951,
+            "cycles": 1054771015
+          },
+          {
+            "status": 0,
+            "instructions": 4892176962,
+            "cycles": 1049239513
+          },
+          {
+            "status": 0,
+            "instructions": 4892176970,
+            "cycles": 1049212041
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 5334084439,
+            "cycles": 1191137116
+          },
+          {
+            "status": 0,
+            "instructions": 5334084449,
+            "cycles": 1184176178
+          },
+          {
+            "status": 0,
+            "instructions": 5334084421,
+            "cycles": 1181996483
+          }
+        ]
+      },
+      "medians": {
+        "base": 4892176962,
+        "current": 5334084439
+      },
+      "ratio": 1.090329413762527
+    },
+    "lox/vm/fib|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "a2926b4c752026e4c4fb427a6c468ba4cd1a584ecc8f6ff23fa80c09fdfcb655",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "a2926b4c752026e4c4fb427a6c468ba4cd1a584ecc8f6ff23fa80c09fdfcb655",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 1803514018,
+            "cycles": 390628893
+          },
+          {
+            "status": 0,
+            "instructions": 1803514041,
+            "cycles": 388835571
+          },
+          {
+            "status": 0,
+            "instructions": 1803514066,
+            "cycles": 396439431
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 2094163993,
+            "cycles": 709860168
+          },
+          {
+            "status": 0,
+            "instructions": 2094163987,
+            "cycles": 725974355
+          },
+          {
+            "status": 0,
+            "instructions": 2094163915,
+            "cycles": 597312911
+          }
+        ]
+      },
+      "medians": {
+        "base": 1803514041,
+        "current": 2094163987
+      },
+      "ratio": 1.1611575731558166
+    },
+    "lox/vm/instantiation|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "1833dec4f1106eb4e293cc1cdf906c6c3c576d000a51b001d8da50a853dd22ec",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "1833dec4f1106eb4e293cc1cdf906c6c3c576d000a51b001d8da50a853dd22ec",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 5944207497,
+            "cycles": 1225131197
+          },
+          {
+            "status": 0,
+            "instructions": 5944207504,
+            "cycles": 1227820247
+          },
+          {
+            "status": 0,
+            "instructions": 5944207491,
+            "cycles": 1224444327
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 7368399666,
+            "cycles": 1635472521
+          },
+          {
+            "status": 0,
+            "instructions": 7368399663,
+            "cycles": 1629051508
+          },
+          {
+            "status": 0,
+            "instructions": 7368399652,
+            "cycles": 1627507355
+          }
+        ]
+      },
+      "medians": {
+        "base": 5944207497,
+        "current": 7368399663
+      },
+      "ratio": 1.2395932791240514
+    },
+    "lox/vm/instantiation|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "1833dec4f1106eb4e293cc1cdf906c6c3c576d000a51b001d8da50a853dd22ec",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "1833dec4f1106eb4e293cc1cdf906c6c3c576d000a51b001d8da50a853dd22ec",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 2993270123,
+            "cycles": 715619624
+          },
+          {
+            "status": 0,
+            "instructions": 2993270128,
+            "cycles": 741157607
+          },
+          {
+            "status": 0,
+            "instructions": 2993270097,
+            "cycles": 714980569
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 3881296772,
+            "cycles": 1136764235
+          },
+          {
+            "status": 0,
+            "instructions": 3881297805,
+            "cycles": 1135726353
+          },
+          {
+            "status": 0,
+            "instructions": 3881295980,
+            "cycles": 1141916627
+          }
+        ]
+      },
+      "medians": {
+        "base": 2993270123,
+        "current": 3881296772
+      },
+      "ratio": 1.2966744104304146
+    },
+    "lox/vm/invocation|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "aceaf168c6709487a120d0059d87a99ab4aad4ee7f8a4d05a91c8ee20161ef75",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "aceaf168c6709487a120d0059d87a99ab4aad4ee7f8a4d05a91c8ee20161ef75",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 14305436436,
+            "cycles": 5513502779
+          },
+          {
+            "status": 0,
+            "instructions": 14305435291,
+            "cycles": 2817687613
+          },
+          {
+            "status": 0,
+            "instructions": 14305435281,
+            "cycles": 2820752021
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 14876943040,
+            "cycles": 6354325899
+          },
+          {
+            "status": 0,
+            "instructions": 14876942354,
+            "cycles": 4608939067
+          },
+          {
+            "status": 0,
+            "instructions": 14876942000,
+            "cycles": 3009052858
+          }
+        ]
+      },
+      "medians": {
+        "base": 14305435291,
+        "current": 14876942354
+      },
+      "ratio": 1.0399503441436384
+    },
+    "lox/vm/invocation|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "aceaf168c6709487a120d0059d87a99ab4aad4ee7f8a4d05a91c8ee20161ef75",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "aceaf168c6709487a120d0059d87a99ab4aad4ee7f8a4d05a91c8ee20161ef75",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 5639169255,
+            "cycles": 1640266594
+          },
+          {
+            "status": 0,
+            "instructions": 5639169257,
+            "cycles": 1639732797
+          },
+          {
+            "status": 0,
+            "instructions": 5639169309,
+            "cycles": 1697837955
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 6301659178,
+            "cycles": 2124846720
+          },
+          {
+            "status": 0,
+            "instructions": 6301659157,
+            "cycles": 2125688849
+          },
+          {
+            "status": 0,
+            "instructions": 6301659193,
+            "cycles": 2125892360
+          }
+        ]
+      },
+      "medians": {
+        "base": 5639169257,
+        "current": 6301659178
+      },
+      "ratio": 1.1174800561585627
+    },
+    "lox/vm/method_call|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "21d91041c5d1a59661f8936571ee5c87e96f6f0c7a532b52ec17c5b9bea8220b",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "21d91041c5d1a59661f8936571ee5c87e96f6f0c7a532b52ec17c5b9bea8220b",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 13724119305,
+            "cycles": 3020038180
+          },
+          {
+            "status": 0,
+            "instructions": 13724119291,
+            "cycles": 2969623563
+          },
+          {
+            "status": 0,
+            "instructions": 13724119314,
+            "cycles": 3023540608
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 16165158818,
+            "cycles": 3831702473
+          },
+          {
+            "status": 0,
+            "instructions": 16165158757,
+            "cycles": 3828845519
+          },
+          {
+            "status": 0,
+            "instructions": 16165158765,
+            "cycles": 3824365879
+          }
+        ]
+      },
+      "medians": {
+        "base": 13724119305,
+        "current": 16165158765
+      },
+      "ratio": 1.1778649256648968
+    },
+    "lox/vm/method_call|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "21d91041c5d1a59661f8936571ee5c87e96f6f0c7a532b52ec17c5b9bea8220b",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "21d91041c5d1a59661f8936571ee5c87e96f6f0c7a532b52ec17c5b9bea8220b",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 5202603092,
+            "cycles": 1649637883
+          },
+          {
+            "status": 0,
+            "instructions": 5202603063,
+            "cycles": 1651724959
+          },
+          {
+            "status": 0,
+            "instructions": 5202603055,
+            "cycles": 1651376089
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 7533924731,
+            "cycles": 2087796667
+          },
+          {
+            "status": 0,
+            "instructions": 7533924696,
+            "cycles": 2129017147
+          },
+          {
+            "status": 0,
+            "instructions": 7533924701,
+            "cycles": 2152708816
+          }
+        ]
+      },
+      "medians": {
+        "base": 5202603063,
+        "current": 7533924701
+      },
+      "ratio": 1.448106766895201
+    },
+    "lox/vm/properties|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 12772411405,
+            "cycles": 2665014871
+          },
+          {
+            "status": 0,
+            "instructions": 12772411445,
+            "cycles": 2670154965
+          },
+          {
+            "status": 0,
+            "instructions": 12772411430,
+            "cycles": 2670312342
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 12966323152,
+            "cycles": 2779163495
+          },
+          {
+            "status": 0,
+            "instructions": 12966323138,
+            "cycles": 2779631368
+          },
+          {
+            "status": 0,
+            "instructions": 12966323122,
+            "cycles": 2780456760
+          }
+        ]
+      },
+      "medians": {
+        "base": 12772411430,
+        "current": 12966323138
+      },
+      "ratio": 1.0151820749795561
+    },
+    "lox/vm/properties|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 5041864345,
+            "cycles": 1627899679
+          },
+          {
+            "status": 0,
+            "instructions": 5041864370,
+            "cycles": 1649711515
+          },
+          {
+            "status": 0,
+            "instructions": 5041864352,
+            "cycles": 1641834437
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 5595826810,
+            "cycles": 1866336440
+          },
+          {
+            "status": 0,
+            "instructions": 5595826789,
+            "cycles": 1873978849
+          },
+          {
+            "status": 0,
+            "instructions": 5595826791,
+            "cycles": 1871495844
+          }
+        ]
+      },
+      "medians": {
+        "base": 5041864352,
+        "current": 5595826791
+      },
+      "ratio": 1.1098725392681885
+    },
+    "lox/vm/string_equality|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "876e13f4e07bb39705302c01f445ffd2d2c3b180a207e4d959d6b671c67da09b",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "876e13f4e07bb39705302c01f445ffd2d2c3b180a207e4d959d6b671c67da09b",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 8861301676,
+            "cycles": 1473786134
+          },
+          {
+            "status": 0,
+            "instructions": 8861301685,
+            "cycles": 1467602584
+          },
+          {
+            "status": 0,
+            "instructions": 8861301672,
+            "cycles": 1478713667
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 9401484502,
+            "cycles": 2223621961
+          },
+          {
+            "status": 0,
+            "instructions": 9401484528,
+            "cycles": 2223873645
+          },
+          {
+            "status": 0,
+            "instructions": 9401484524,
+            "cycles": 2223608901
+          }
+        ]
+      },
+      "medians": {
+        "base": 8861301676,
+        "current": 9401484524
+      },
+      "ratio": 1.0609597627697334
+    },
+    "lox/vm/string_equality|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "876e13f4e07bb39705302c01f445ffd2d2c3b180a207e4d959d6b671c67da09b",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "876e13f4e07bb39705302c01f445ffd2d2c3b180a207e4d959d6b671c67da09b",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 2822649792,
+            "cycles": 483360604
+          },
+          {
+            "status": 0,
+            "instructions": 2822649799,
+            "cycles": 493847302
+          },
+          {
+            "status": 0,
+            "instructions": 2822649801,
+            "cycles": 491642198
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 3127548712,
+            "cycles": 701039495
+          },
+          {
+            "status": 0,
+            "instructions": 3127548729,
+            "cycles": 697415990
+          },
+          {
+            "status": 0,
+            "instructions": 3127548720,
+            "cycles": 696130419
+          }
+        ]
+      },
+      "medians": {
+        "base": 2822649799,
+        "current": 3127548720
+      },
+      "ratio": 1.1080186855301777
+    },
+    "lox/vm/strings|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "e4d563316c0e9f5ccddf477f14ca54e9e5a7a58bee5f2e7a60382f48fd5bf988",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "e4d563316c0e9f5ccddf477f14ca54e9e5a7a58bee5f2e7a60382f48fd5bf988",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 7937707384,
+            "cycles": 1855465984
+          },
+          {
+            "status": 0,
+            "instructions": 7937707293,
+            "cycles": 1861431091
+          },
+          {
+            "status": 0,
+            "instructions": 7937707427,
+            "cycles": 1854288290
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 8876433988,
+            "cycles": 2152744512
+          },
+          {
+            "status": 0,
+            "instructions": 8876434023,
+            "cycles": 2153826565
+          },
+          {
+            "status": 0,
+            "instructions": 8876433934,
+            "cycles": 2151478886
+          }
+        ]
+      },
+      "medians": {
+        "base": 7937707384,
+        "current": 8876433988
+      },
+      "ratio": 1.1182616791710145
+    },
+    "lox/vm/strings|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "e4d563316c0e9f5ccddf477f14ca54e9e5a7a58bee5f2e7a60382f48fd5bf988",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "e4d563316c0e9f5ccddf477f14ca54e9e5a7a58bee5f2e7a60382f48fd5bf988",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 3910550717,
+            "cycles": 919693548
+          },
+          {
+            "status": 0,
+            "instructions": 3910550749,
+            "cycles": 919216076
+          },
+          {
+            "status": 0,
+            "instructions": 3910550700,
+            "cycles": 916512859
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 4758740590,
+            "cycles": 1206141476
+          },
+          {
+            "status": 0,
+            "instructions": 4758743146,
+            "cycles": 1203056701
+          },
+          {
+            "status": 0,
+            "instructions": 4758740490,
+            "cycles": 1219489840
+          }
+        ]
+      },
+      "medians": {
+        "base": 3910550717,
+        "current": 4758740590
+      },
+      "ratio": 1.216897806570501
+    },
+    "lox/vm/trees|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "17ab3b16ce7c5de5f4592400fb2b7e34eedbc57f86b65d948015ebfe1bd33ff5",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "17ab3b16ce7c5de5f4592400fb2b7e34eedbc57f86b65d948015ebfe1bd33ff5",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 4671594870,
+            "cycles": 1095902437
+          },
+          {
+            "status": 0,
+            "instructions": 4671594879,
+            "cycles": 1095201423
+          },
+          {
+            "status": 0,
+            "instructions": 4671595016,
+            "cycles": 1087538290
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 4981014281,
+            "cycles": 1394564981
+          },
+          {
+            "status": 0,
+            "instructions": 4981014232,
+            "cycles": 1397368058
+          },
+          {
+            "status": 0,
+            "instructions": 4981014314,
+            "cycles": 1405386975
+          }
+        ]
+      },
+      "medians": {
+        "base": 4671594879,
+        "current": 4981014281
+      },
+      "ratio": 1.0662342112307124
+    },
+    "lox/vm/trees|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "17ab3b16ce7c5de5f4592400fb2b7e34eedbc57f86b65d948015ebfe1bd33ff5",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "17ab3b16ce7c5de5f4592400fb2b7e34eedbc57f86b65d948015ebfe1bd33ff5",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 1926899111,
+            "cycles": 695358385
+          },
+          {
+            "status": 0,
+            "instructions": 1926899068,
+            "cycles": 694274043
+          },
+          {
+            "status": 0,
+            "instructions": 1926899069,
+            "cycles": 687096641
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 2341837634,
+            "cycles": 960679677
+          },
+          {
+            "status": 0,
+            "instructions": 2341837763,
+            "cycles": 975680740
+          },
+          {
+            "status": 0,
+            "instructions": 2341837678,
+            "cycles": 971098834
+          }
+        ]
+      },
+      "medians": {
+        "base": 1926899069,
+        "current": 2341837678
+      },
+      "ratio": 1.2153400848417764
+    },
+    "lox/vm/zoo|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "86462511f5bae5ed2d407ecc8d2699a032b2ee003e4d10c3e38511780dd6d016",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "86462511f5bae5ed2d407ecc8d2699a032b2ee003e4d10c3e38511780dd6d016",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 16144695076,
+            "cycles": 3525489804
+          },
+          {
+            "status": 0,
+            "instructions": 16144696119,
+            "cycles": 5957648448
+          },
+          {
+            "status": 0,
+            "instructions": 16144695108,
+            "cycles": 3527441147
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 16691944636,
+            "cycles": 3894949927
+          },
+          {
+            "status": 0,
+            "instructions": 16691943976,
+            "cycles": 3900496407
+          },
+          {
+            "status": 0,
+            "instructions": 16691943948,
+            "cycles": 3895548295
+          }
+        ]
+      },
+      "medians": {
+        "base": 16144695108,
+        "current": 16691943976
+      },
+      "ratio": 1.0338965130241964
+    },
+    "lox/vm/zoo|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "86462511f5bae5ed2d407ecc8d2699a032b2ee003e4d10c3e38511780dd6d016",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "86462511f5bae5ed2d407ecc8d2699a032b2ee003e4d10c3e38511780dd6d016",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 6263321136,
+            "cycles": 1931324430
+          },
+          {
+            "status": 0,
+            "instructions": 6263321115,
+            "cycles": 1890236674
+          },
+          {
+            "status": 0,
+            "instructions": 6263321105,
+            "cycles": 1892079799
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 7302412962,
+            "cycles": 2233791786
+          },
+          {
+            "status": 0,
+            "instructions": 7302412960,
+            "cycles": 2234279385
+          },
+          {
+            "status": 0,
+            "instructions": 7302412932,
+            "cycles": 2232590479
+          }
+        ]
+      },
+      "medians": {
+        "base": 6263321115,
+        "current": 7302412960
+      },
+      "ratio": 1.1659010971849237
+    },
+    "lox/vm/zoo_batch|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "96c7f4674ee2ab05724af164ad07904320aa13dd5cd3ca8b72b29c07c662b8bf",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "96c7f4674ee2ab05724af164ad07904320aa13dd5cd3ca8b72b29c07c662b8bf",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 13355147468,
+            "cycles": 2925182604
+          },
+          {
+            "status": 0,
+            "instructions": 13355147490,
+            "cycles": 2915195886
+          },
+          {
+            "status": 0,
+            "instructions": 13355147445,
+            "cycles": 2916395512
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 13863352136,
+            "cycles": 3284269552
+          },
+          {
+            "status": 0,
+            "instructions": 13863352130,
+            "cycles": 3280682842
+          },
+          {
+            "status": 0,
+            "instructions": 13863352144,
+            "cycles": 3286717394
+          }
+        ]
+      },
+      "medians": {
+        "base": 13355147468,
+        "current": 13863352136
+      },
+      "ratio": 1.0380530929529381
+    },
+    "lox/vm/zoo_batch|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "96c7f4674ee2ab05724af164ad07904320aa13dd5cd3ca8b72b29c07c662b8bf",
+          "stderr": "",
+          "ok": true
+        },
+        "current": {
+          "status": 0,
+          "stdout_sha256": "96c7f4674ee2ab05724af164ad07904320aa13dd5cd3ca8b72b29c07c662b8bf",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 5117365412,
+            "cycles": 1524711319
+          },
+          {
+            "status": 0,
+            "instructions": 5117365463,
+            "cycles": 1673957266
+          },
+          {
+            "status": 0,
+            "instructions": 5117365419,
+            "cycles": 1520323908
+          }
+        ],
+        "current": [
+          {
+            "status": 0,
+            "instructions": 5989294791,
+            "cycles": 1799854013
+          },
+          {
+            "status": 0,
+            "instructions": 5989294791,
+            "cycles": 1803174061
+          },
+          {
+            "status": 0,
+            "instructions": 5989295756,
+            "cycles": 1803224948
+          }
+        ]
+      },
+      "medians": {
+        "base": 5117365419,
+        "current": 5989294791
+      },
+      "ratio": 1.170386380609573
+    }
+  }
+}
