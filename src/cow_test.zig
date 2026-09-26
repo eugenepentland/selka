@@ -283,6 +283,32 @@ test "copy on write: recursive box projection protects a child exposed before a 
     try std.testing.expectEqual(@as(i64, 1), try run(a, pure_call, true));
 }
 
+// spec: QBE-PURE-BOX-READ-1
+test "copy on write: a pure recursive box read needs no COW unbox runtime" {
+    const saved = value_semantics.enabled();
+    value_semantics.setEnabled(true);
+    defer value_semantics.setEnabled(saved);
+    const source =
+        \\record Node:
+        \\    number: int
+        \\    next: Option[Node]
+        \\
+        \\def total(node: Node) -> int:
+        \\    child = node.next
+        \\    if child is None:
+        \\        return node.number
+        \\    return node.number + total(child)
+        \\
+        \\def main() -> int:
+        \\    return total(Node(1, Some(Node(2, None))))
+    ;
+    const a = std.testing.allocator;
+    const il = try unitText(a, source, "total", checks);
+    defer a.free(il);
+    try std.testing.expectEqual(@as(usize, 0), count(il, "call $myl_qbe_cow_unbox("));
+    try std.testing.expectEqual(@as(i64, 3), try run(a, source, true));
+}
+
 // spec: COW-UNIQUE-1
 test "copy on write: every in-place write tests one header bit inline and copies only on the shared path" {
     const a = std.testing.allocator;
