@@ -4,6 +4,12 @@ Status: design proposal, not implemented or accepted. Reviewed against checkout
 `244f747` on 2026-09-13. All examples below are proposed syntax, not executable
 documentation. No compiler build or Guardian gate was run for this review.
 
+The [WP-5 D9 design](audits/d9-wp5-concurrency-design-2026-09-26.md) now refines
+this historical proposal for value semantics, RC ownership/holds, native tasks
+and acyclic heaps. That follow-up is also a proposal; implementation waits for
+WP-4 acceptance. The older VM, GC and cycle-preserving statements below remain
+as historical context, not the current implementation contract.
+
 The design goal is ordinary Python-shaped functions, Go-like blocking calls,
 automatic task lifetime management, and explicit access to more control.
 
@@ -38,9 +44,10 @@ benchmark fine-grained work and large graphs before committing to this default.
   isolated execution, bounded admission, cancellation, and scope cleanup. Their
   current typed JSON transport does not support arbitrary managed graphs or
   capabilities; it is a precedent, not a ready implementation of this proposal.
-- [The VM](../src/vm.zig) has explicit frames, locals, operands, owners, borrows,
-  provider state, and arena stacks. These are useful ingredients for a resumable
-  execution context, but `runValues` currently runs one execution to completion.
+- The former VM (`src/vm.zig`, since removed) had explicit frames, locals,
+  operands, owners, borrows, provider state, and arena stacks. These were useful
+  ingredients for a resumable execution context, but `runValues` then ran one
+  execution to completion. The current WP-5 design uses native execution.
 - [Effects](../src/effect_set.zig) are inferred transitively. Add a suspension
   effect and an optional `nosuspend` bound, including through callbacks and host
   declarations. Today that effect does not exist. `nogc` and `noalloc` must not
