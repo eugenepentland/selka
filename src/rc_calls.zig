@@ -35,3 +35,8 @@ pub fn guest(allocator: std.mem.Allocator, catalog: *shapes.Catalog, function: b
 pub fn borrowed(allocator: std.mem.Allocator, catalog: *shapes.Catalog, function: bytecode.Function, abi: []const u8) native.Error!?model.BorrowCertificate {
     return @import("rc_borrow_certificate.zig").certify(allocator, catalog, function, abi);
 }
+
+/// Program-aware proof also folds dependencies of immortal-only helper bodies.
+pub fn borrowedIn(allocator: std.mem.Allocator, catalog: *shapes.Catalog, functions: []const bytecode.Function, function: bytecode.Function, abi: []const u8) native.Error!?model.BorrowCertificate {
+    return @import("rc_borrow_certificate.zig").certifyIn(allocator, catalog, functions, function, abi);
+}
