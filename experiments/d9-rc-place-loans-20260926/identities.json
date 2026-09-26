@@ -1,0 +1,42 @@
+{
+  "source_parent": "607644b18779a7893fe8d7d82232693b8fc94d0e",
+  "runtime": "rc-v3",
+  "compilers": {
+    "baseline": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-integration/.tmp-rc/install-history-flat/bin/mylang",
+      "sha256": "1b705d90e58c6b2b3799c5cbe79da9adbc57913e4c72ebbfa2b54dad044c1bbe"
+    },
+    "rejected_whole_parent_owner": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/install-augmented/bin/mylang",
+      "sha256": "c77204e6e6b1999cadd4512dc38544161bed2843e062e5d3de0c101bfd47fb03"
+    },
+    "corrected": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/install-augmented-loan/bin/mylang",
+      "sha256": "26ea2be612a3fcd1041e02fc51f402843847cbd8a8850663a2b59be7fb21427c"
+    }
+  },
+  "sources": {
+    "src/native_rc.h": "171447baf3a1d68145234ae892056462d9fbc6c9166db75de571b80598f61985",
+    "src/native_rc_scope.c": "3b826de475d5598c643833bc9a96a2228f790a4d79ea5bb88221e6e867511bd7",
+    "src/native_rc_transfer.c": "6e9c67fca1d04e77571e8e7ba5d4e5608488a311fc38665aa9597324eeda4da4",
+    "src/python_collections_test.zig": "614946592ea0aac955ba28af5d2a307539bfc2f93301b4214b595a663fa9d610",
+    "src/qbe_cow.zig": "1370015bf8a840111b81dfd0407713d646ddd2d22e75d4de922098b6866512f6",
+    "src/qbe_rc_loans.zig": "8a366a8c8e491165230901aaf6d974330ed2d00dbb57d66c658f8b56fec971df",
+    "src/qbe_rc_scope.zig": "cbc38e94aa3f88aff655df2996e4bd08b87fa15f1efebef9b248911b796f89fd",
+    "src/qbe_rc_unique.zig": "0d657ea7416c5fbeb17a27b1919e5de9d1c997e7cdb9d08b306ac4ac8cf74c98",
+    "src/qbe_runtime.h": "373db1ea4e2d1a26f291ae7da88ae3d4f3a944ee082efd45b37f3a434ad98c2e",
+    "src/qbe_runtime_rc.c": "df76ca0fb29efe4f57077c61989ea2182c18236ca9e1fb71fc1e0bee228d6cf7",
+    "src/qbe_runtime_rc_test.zig": "5e6bd238e98e52cd4dcc244682ee7b57da9d9d68f24f3cdc90d344a2154bd4dc",
+    "tests/lang/field_augmented.my": "bd39d2d632fe904d8ae25de8a8377b9217277ba220728148239656847532b4fe",
+    "tests/lang/rc_semantic_publication.my": "e75b97cea024c16e0ec796d06a4e749f78975a64b2456d1055740a5dd918e56e",
+    "tests/lang/rc_semantic_history.my": "3117bdc2a9e06e771c1636e828627090d6ebf4d9e719cd0e80d416cb47abcb8e",
+    "tests/lang/rc_aggregate_values.my": "7403fa9dee5e8188b035a886cd00054613cb12eec7ce1b6654e79beb32d8cb44",
+    "tests/lang/rc_box_writeback.my": "51035ea595e5774cd267f4d9e085afbbc8f3aa5e6d33e895afa07d436de058a6",
+    "tests/lang/mut_argument_places.my": "bca377211fdf5bfdf0628006e6e52e9e2f6d6380ef2313b80a1a2a0419255e0b",
+    "tests/lang/mut_dictionary_arguments.my": "2dc068518542eaa38d666ba2b735f44e160be0269bfe09b25ea0a9e8165ff250",
+    "tests/lang/rc_view_receivers.my": "acb8c7291b1e967d5d44bf5b2db18958b00a2d1e7d26445b5ef534e84296e561",
+    "tests/lang/array_places.my": "a6805b55d5939fc12dd729524402b97448cc7c7073b711f092208bfbd55fc688"
+  },
+  "build_note": "Debug compiler; QBE default guests, LLVM --release (ReleaseFast O3 full LTO); no trailing --qbe flag",
+  "negative_control_note": "after-rc in iteration-values-controls is the rejected whole-parent ownership normalization, not the corrected implementation."
+}

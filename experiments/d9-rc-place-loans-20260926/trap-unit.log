@@ -1,0 +1,7 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 1 after 5s (all 3 build slot(s) busy)
+focused tests: units filter='record field growth'
+selected: 12 test(s)
+result: PASS - 12 passed, 0 failed, 0 skipped
+elapsed: 3.2s
+log: /home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.mylang-cache/focused-tests/units-record_field_growth-20260926-231215.log

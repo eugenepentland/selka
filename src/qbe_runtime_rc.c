@@ -184,7 +184,7 @@ int myl_qbe_rc_unique_elements(void *context, const myl_native_type *type, void 
     }
     return 1;
 }
-int myl_qbe_rc_unique_held(void *context, const myl_native_type *type, void *address, void *container) {
+static int unique_held(void *context, const myl_native_type *type, void *address, void *container, unsigned box) {
     static const myl_rc_shape held = {.size = sizeof(void *), .kind = MYL_RC_SHAPE_HOLD_POINTER};
     static const myl_rc_shape *const shapes[] = {&held};
     static const myl_rc_module module = {.abi = MYL_RC_ABI_VERSION, .shapes = shapes, .shape_count = 1};
@@ -194,7 +194,14 @@ int myl_qbe_rc_unique_held(void *context, const myl_native_type *type, void *add
     if (status != MYL_RC_OK) return myl_qbe_rc_status(ctx, status);
     myl_rc_slot slot = {.shape = &held, .address = address, .container = container,
         .region = unique_region(address, container)};
-    return myl_qbe_rc_status(ctx, myl_rc_unique_held(&ctx->heap, &slot));
+    if (box) myl_rc_invariant(type->collection_kind == 5 && type->element);
+    return myl_qbe_rc_status(ctx, box ? myl_rc_box_detach_held(&ctx->heap, &slot) : myl_rc_unique_held(&ctx->heap, &slot));
+}
+int myl_qbe_rc_unique_held(void *context, const myl_native_type *type, void *address, void *container) {
+    return unique_held(context,type,address,container,0);
+}
+int myl_qbe_rc_box_detach_held(void *context, const myl_native_type *type, void *address, void *container) {
+    return unique_held(context,type,address,container,1);
 }
 int myl_qbe_rc_rebox_local(void *context, const myl_native_type *type, void *address, const void *body, uint32_t *owned) {
     MylQbeContext *ctx = context;
@@ -258,7 +265,7 @@ int myl_qbe_rc_scope_hold(void *context, myl_rc_scope *scope, void *payload) {
 static const myl_rc_shape scope_pointer = {.size = sizeof(void *), .kind = MYL_RC_SHAPE_POINTER};
 static const myl_rc_shape *const scope_shapes[] = {&scope_pointer};
 static const myl_rc_module scope_module = {.abi = MYL_RC_ABI_VERSION, .shapes = scope_shapes, .shape_count = 1};
-int myl_qbe_rc_scope_prepare(void *context, myl_rc_scope *scope, const MylQbeRcPlace *request) {
+static int scope_prepare(void *context, myl_rc_scope *scope, const MylQbeRcPlace *request, unsigned loan) {
     MylQbeContext *ctx = context;
     myl_rc_invariant(request && (!request->count || request->path));
     if (!request->address) return 1;
@@ -279,11 +286,17 @@ int myl_qbe_rc_scope_prepare(void *context, myl_rc_scope *scope, const MylQbeRcP
             .address = request->address, .container = request->container,
             .region = request->container ? myl_native_header_region(request->container) : ctx->heap.region_depth},
             .path = path, .count = request->count};
-        status = myl_rc_scope_prepare(scope, &place);
+        status = loan ? myl_rc_scope_prepare_loan(scope, &place) : myl_rc_scope_prepare(scope, &place);
         if (status == MYL_RC_OK) status = myl_rc_scope_extend(scope, boundary, capture_backing);
     }
     if (path != local) myl_rc_meta_free(&ctx->heap, path, bytes);
     return myl_qbe_rc_status(ctx, status);
+}
+int myl_qbe_rc_scope_prepare(void *context, myl_rc_scope *scope, const MylQbeRcPlace *request) {
+    return scope_prepare(context,scope,request,0);
+}
+int myl_qbe_rc_scope_prepare_loan(void *context, myl_rc_scope *scope, const MylQbeRcPlace *request) {
+    return scope_prepare(context,scope,request,1);
 }
 #endif
 
