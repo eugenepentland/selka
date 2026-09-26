@@ -28,6 +28,7 @@ const format = @import("qbe_format.zig");
 const qbe_alloc = @import("qbe_alloc.zig");
 const runtime_mode = @import("runtime_mode.zig");
 const rc_unique = @import("qbe_rc_unique.zig");
+const rc_frame = @import("qbe_rc_frame.zig");
 const rc_scope = @import("qbe_rc_scope.zig");
 const inert_receiver = @import("qbe_rc_inert_receiver.zig");
 const semantics = @import("value_semantics.zig");
@@ -586,6 +587,7 @@ fn fillPlace(comptime E: type, self: *E, pc: usize, stack: []const typed.Type) E
     cursor = try fieldChain(E, self, place, cursor);
     if (runtime_mode.enabled()) {
         try rc_unique.field(E, self, .{ .ty = stack[top], .address = cursor.address, .container = cursor.cell orelse container, .held = cursor.held });
+        try reboxRcPlace(E, self, place);
         return self.store(top, try self.load("v", cursor.address));
     }
     if (box_path) {
@@ -612,6 +614,17 @@ fn fillPlace(comptime E: type, self: *E, pc: usize, stack: []const typed.Type) E
     }
     try self.store(top, copy);
     try self.print(cow_keep_label, .{label});
+}
+
+fn reboxRcPlace(comptime E: type, self: *E, place: cow_plan.Place) Error!void {
+    const box = place.box orelse return;
+    if ((try self.layout(self.function.scope.locals[box.owner].ty)).size != 8) return error.InternalError;
+    const address = (try fieldBase(E, self, box.owner)).address;
+    const body = (try fieldBase(E, self, place.parent)).address;
+    const guard = try rc_frame.guard(E, self, box.owner);
+    const done = self.temp();
+    try self.print(" %v{d} =w call $myl_qbe_rc_rebox_local(l %ctx, l extern ${s}, l %v{d}, l %v{d}, l %v{d})\n", .{ done, try self.descriptor(box.ty), address, body, guard });
+    try rc_unique.success(E, self, done);
 }
 
 fn placeHasArray(comptime E: type, self: *const E, place: cow_plan.Place) bool {
