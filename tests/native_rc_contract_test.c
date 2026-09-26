@@ -512,6 +512,42 @@ static void many_bindings_test(void) {
     free(values);
     free(types);
 }
+// spec: RC-TRANSFER-1
+static void deep_pinned_clone_test(void) {
+    myl_native_heap heap;
+    TestAllocator state;
+    start(&heap, &state);
+    assert(myl_rc_module_register(&heap, &node_module) == MYL_RC_OK);
+    const size_t count = 32768;
+    myl_rc_pin *pins = calloc(count, sizeof *pins);
+    assert(pins);
+    Node *head = NULL;
+    for (size_t i = 0; i < count; ++i) {
+        Node *node = new_value(&heap, &node_type, 1);
+        node->next = head;
+        head = node;
+        assert(myl_rc_pin_acquire(&heap, node, &pins[i]) == MYL_RC_OK);
+    }
+    Node *copy = NULL;
+    myl_rc_slot from = {.shape = &pointer_shape, .address = &head};
+    myl_rc_slot to = {.shape = &pointer_shape, .address = &copy};
+    assert(myl_rc_value_copy(&heap, &to, &from) == MYL_RC_OK);
+    assert(state.live == count * 2);
+    Node *old = head, *fresh = copy;
+    for (size_t i = 0; i < count; ++i) {
+        assert(old && fresh && old != fresh);
+        assert(((myl_rc_object *)old - 1)->owners == 1 && ((myl_rc_object *)fresh - 1)->owners == 1);
+        old = old->next;
+        fresh = fresh->next;
+    }
+    assert(!old && !fresh);
+    myl_rc_value_drop(&heap, &to);
+    myl_rc_value_drop(&heap, &from);
+    for (size_t i = 0; i < count; ++i) myl_rc_pin_release(&heap, &pins[i]);
+    assert(state.live == 0 && state.retired == count * 2);
+    free(pins);
+    finish(&heap, &state);
+}
 int myl_rc_contract_verify(void) {
     struct rlimit stack, original;
     assert(!getrlimit(RLIMIT_STACK, &stack));
@@ -530,13 +566,14 @@ int myl_rc_contract_verify(void) {
     transfer_failure_test();
     uniqueness_and_alias_replace_test();
     many_bindings_test();
+    deep_pinned_clone_test();
     assert(!setrlimit(RLIMIT_STACK, &original));
-    return 13;
+    return 14;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
-    assert(myl_rc_contract_verify() == 13);
-    puts("native RC contract: 13 tests passed");
+    assert(myl_rc_contract_verify() == 14);
+    puts("native RC contract: 14 tests passed");
     return 0;
 }
 #endif
