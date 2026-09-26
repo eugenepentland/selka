@@ -3,7 +3,7 @@ const std = @import("std");
 const compiler = @import("compiler.zig");
 const native = @import("native_types.zig");
 const shapes = @import("rc_shape.zig");
-const proof = @import("rc_borrow_certificate.zig");
+const calls = @import("rc_calls.zig");
 const model = @import("rc_model.zig");
 const t = std.testing;
 
@@ -19,13 +19,13 @@ fn certificate(source: []const u8) !?model.BorrowCertificate {
     var catalog = try shapes.Catalog.init(t.allocator, &layouts);
     defer catalog.deinit();
     for (program.functions) |function| if (std.mem.eql(u8, function.name, "selected")) {
-        return proof.certifyIn(t.allocator, &catalog, program.functions, function, "rc-v1");
+        return calls.borrowedIn(t.allocator, &catalog, program.functions, function, "rc-v1");
     };
     return error.TestUnexpectedResult;
 }
 
 // spec: RC-BORROW-ENTRY-1
-test "RC-BORROW-ENTRY-1 readonly physical field and array projections certify one anchor" {
+test "RC-BORROW-ENTRY-1 public call contract certifies physical field and array anchors" {
     const field = (try certificate(
         \\record Child:
         \\    items: list[int]

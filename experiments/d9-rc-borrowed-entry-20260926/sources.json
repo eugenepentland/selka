@@ -1,0 +1,22 @@
+{
+  "source_revision": "902e8a58166fcf3dae3160187fa1bbd83d6ab63e",
+  "hook_patch_sha256": "506d4e2f483f561cfbdc66774872e14924c6034a3cf501440267894a86222a21",
+  "files": {
+    "src/schematic/guest/bulk_io_test.my": "3d3bd83347bb5f3784115155f6d9c6849ff38962f27319428830908da5887cef",
+    "src/schematic/guest/circuit.my": "610c83d3554b8fc31da4db43140ce89e96abab430e5e5900ece10c814183dc1e",
+    "src/schematic/guest/draw.my": "667f3a7ff63790a9bf5759bc1fd31fa678f774c36b43db45336dbd5880013451",
+    "src/schematic/guest/io.my": "579311835ac0c6ef67175df7ba7a2730c40b9053e151bea8ea49b81cab44a877",
+    "src/schematic/guest/layout.my": "f7088cbac1cb86687dbd8be520cec340f53294a9b6f6060ddaeabc53cff70196",
+    "src/schematic/guest/layout_graph.my": "2d5ab0f3d31ff988ad2ec6efa2a9f8902a66f448e8a8ec2c6290bc5fc27e0b87",
+    "src/schematic/guest/layout_routes.my": "872b092939e8456094a652cb6aaa6d79c73ceee4db253f03a1a6d7d1f29b5e97",
+    "src/schematic/guest/main.my": "e36e7ad737558e1a88255e65985babad7403bf6dbe231dc8a4a453e3ea1460e5",
+    "src/schematic/guest/ports.my": "e111098aebadb3ce7a785e003994f5acc827492aa1ed6bb4e4ce5e23f44ad364",
+    "src/schematic/guest/schematic.my": "6a99d9ab58785d1a9c5c4f0c15682878b2768dd15bbe01507714390c85e535bf",
+    "src/schematic/guest/schematic_inputs.my": "e5e710a4a414c5e77de95e841dc838be623f3e2b51412a792636aa977bc37b16",
+    "src/schematic/guest/sexpr.my": "f8902fc28ae10086839576996cc7bea7b95b0dcc0ed672aa640fc0048b6ae8d0",
+    "src/schematic/guest/svg.my": "43f7ab87cceb0700e9ad9d0de6cf6d0a4ab9e353a85a04ae4d50e50cedd2145c",
+    "src/schematic/guest/text.my": "a4c489ec07a37e4ce08d33d9531ce564229c0d0a2b29cfc0fd11b849d81d43aa",
+    "src/schematic/guest/validate.my": "4a9161860b0b4a82b46e17912e92ef8f93c6ff6db3f146aa19ce18c6dd6b095c",
+    "src/schematic/native_schematic.c": "57bb57e4350e9f9ddc23abda8e324aeb8b957131393d529fa6cb0a909a824d2d"
+  }
+}
