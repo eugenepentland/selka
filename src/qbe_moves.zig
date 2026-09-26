@@ -42,7 +42,8 @@ pub const Update = union(enum) {
 // place cut nbody's instructions to 0.68x on the QBE backend, but under the
 // LLVM backend with full LTO it raised them to 1.06x (thin LTO 1.00x, no LTO
 // 0.99x), an effect of the translator's memory classes on LLVM's optimizer
-// rather than of the stores themselves, so it waits for that to be understood.
+// rather than of the stores themselves. D9 drops this optional optimization;
+// see docs/audits/d9-list-writeback-decision-2026-09-26.md for the decision.
 
 /// The copies one function skips.
 pub const Plan = struct {
