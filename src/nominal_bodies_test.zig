@@ -4,7 +4,7 @@ const t = std.testing;
 const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
 const definitions =
-    \\class Box[T]:
+    \\record Box[T]:
     \\    value: T
     \\
     \\

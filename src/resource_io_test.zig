@@ -15,7 +15,7 @@ const declarations =
     \\    err: i64
     \\
     \\
-    \\class Chunk:
+    \\record Chunk:
     \\    eof: bool
     \\    bytes: [4]u8
     \\    length: u64
@@ -31,7 +31,7 @@ const declarations =
     \\    err: i64
     \\
     \\
-    \\class Failure:
+    \\record Failure:
     \\    resource: File
     \\    code: i64
     \\

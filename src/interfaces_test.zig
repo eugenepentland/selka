@@ -50,7 +50,7 @@ const entry =
     \\import units
     \\
     \\
-    \\public class Sample:
+    \\public record Sample:
     \\    distance: units.Distance
     \\
     \\
@@ -243,14 +243,14 @@ test "module interfaces reject duplicate exports missing symbols and private typ
         \\import units
         \\
         \\
-        \\class units:
+        \\record units:
         \\    pass
     , "E_IMPORT_ALIAS");
     try reject(
         \\module main
         \\
         \\
-        \\class X:
+        \\record X:
         \\    pass
         \\
         \\
@@ -261,7 +261,7 @@ test "module interfaces reject duplicate exports missing symbols and private typ
         \\module main
         \\
         \\
-        \\class Secret:
+        \\record Secret:
         \\    pass
         \\
         \\
@@ -272,18 +272,18 @@ test "module interfaces reject duplicate exports missing symbols and private typ
         \\module main
         \\
         \\
-        \\class Secret:
+        \\record Secret:
         \\    pass
         \\
         \\
-        \\public class Box:
+        \\public record Box:
         \\    value: [2]Secret
     , "E_PRIVATE_INTERFACE");
     try reject(
         \\module main
         \\
         \\
-        \\class Secret:
+        \\record Secret:
         \\    pass
         \\
         \\
@@ -544,7 +544,7 @@ fn discoveryScenario(allocator: std.mem.Allocator) !void {
         \\import shared as s
         \\
         \\
-        \\class Box:
+        \\record Box:
         \\    n: i64
         \\
         \\
@@ -572,7 +572,7 @@ fn discoveryScenario(allocator: std.mem.Allocator) !void {
         \\import shared as q
         \\
         \\
-        \\class Box:
+        \\record Box:
         \\    n: i64
         \\
         \\
@@ -599,7 +599,7 @@ fn discoveryScenario(allocator: std.mem.Allocator) !void {
         \\module shared
         \\
         \\
-        \\public class Box:
+        \\public record Box:
         \\    n: i64
         \\
         \\
@@ -798,7 +798,7 @@ test "public type selection rejects private and unknown nominal types" {
         \\module main
         \\
         \\
-        \\class Hidden:
+        \\record Hidden:
         \\    n: i64
         \\
         \\
@@ -819,7 +819,7 @@ test "schema rendering rejects an exported declaration missing its checked type"
         \\module main
         \\
         \\
-        \\public class Visible:
+        \\public record Visible:
         \\    n: i64
         \\
         \\
@@ -869,7 +869,7 @@ test "generic syntax module interfaces retain scoped type names without hiding p
         \\module main
         \\
         \\
-        \\class Secret:
+        \\record Secret:
         \\    pass
         \\
         \\
@@ -1005,7 +1005,7 @@ test "named constraints reject nominal bounds and wrong kinds" {
         \\constraint Prices[P] = copy
         \\
         \\
-        \\public class Box[T: Prices]:
+        \\public record Box[T: Prices]:
         \\    pass
     , "E_GENERIC_REQUIREMENT");
     try reject(
@@ -1063,7 +1063,7 @@ test "named constraints enforce private interface exposure and unknown names" {
         \\module main
         \\
         \\
-        \\class Secret:
+        \\record Secret:
         \\    pass
         \\
         \\
@@ -1077,7 +1077,7 @@ test "named constraints participate in duplicate declaration checks" {
         \\module main
         \\
         \\
-        \\class Prices:
+        \\record Prices:
         \\    pass
         \\
         \\
@@ -1091,7 +1091,7 @@ test "named constraints reject subject shadowing declarations imports and builti
         \\module main
         \\
         \\
-        \\class P:
+        \\record P:
         \\    pass
         \\
         \\
@@ -1365,7 +1365,7 @@ test "generic body contracts respect module-local declaration and import scopes"
         \\module units
         \\
         \\
-        \\class T:
+        \\record T:
         \\    pass
     );
     try rejectChecked(
@@ -1564,7 +1564,7 @@ fn genericExecutionScenario(allocator: std.mem.Allocator) !void {
         \\module units
         \\
         \\
-        \\public class Box:
+        \\public record Box:
         \\    value: i64
         \\
         \\
@@ -1652,7 +1652,7 @@ test "exports after declarations retain interface validation and scope boundarie
         \\module main
         \\
         \\
-        \\class Secret:
+        \\record Secret:
         \\    pass
         \\
         \\
@@ -1673,7 +1673,7 @@ test "exports after declarations retain interface validation and scope boundarie
         \\module main
         \\
         \\
-        \\class Value:
+        \\record Value:
         \\    export Value
     , "E_SYNTAX");
     try reject(
@@ -1693,7 +1693,7 @@ fn scatteredExports(allocator: std.mem.Allocator) !void {
         \\module main
         \\
         \\
-        \\public class Value:
+        \\public record Value:
         \\    n: i64
         \\
         \\
@@ -1885,7 +1885,7 @@ test "cross module bodies enforce private functions private types nominal identi
         \\module units
         \\
         \\
-        \\class Hidden:
+        \\record Hidden:
         \\    pass
     , "E_PRIVATE_SYMBOL");
     try rejectChecked(
@@ -1893,7 +1893,7 @@ test "cross module bodies enforce private functions private types nominal identi
         \\import units
         \\
         \\
-        \\class X:
+        \\record X:
         \\    pass
         \\
         \\
@@ -1903,7 +1903,7 @@ test "cross module bodies enforce private functions private types nominal identi
         \\module units
         \\
         \\
-        \\public class X:
+        \\public record X:
         \\    pass
         \\
         \\
@@ -2053,7 +2053,7 @@ test "interface closure includes domain backing and enum table keys" {
         \\    b
         \\
         \\
-        \\public class Table:
+        \\public record Table:
         \\    values: [Key]i64
     , "E_PRIVATE_INTERFACE");
     try reject(

@@ -82,7 +82,7 @@ const allocation_source =
     \\    b
     \\
     \\
-    \\class Box:
+    \\record Box:
     \\    n: i64
     \\
     \\

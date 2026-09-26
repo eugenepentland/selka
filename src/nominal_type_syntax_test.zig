@@ -6,7 +6,7 @@ const native = @import("native_execute.zig");
 const ast = @import("ast.zig");
 const copy = @import("ast_copy.zig");
 const fixture =
-    \\class Pair[T, U: equality]:
+    \\record Pair[T, U: equality]:
     \\    first: T
     \\    second: U
     \\
@@ -85,7 +85,7 @@ fn parseReject(text: []const u8, code: []const u8) !void {
 }
 test "nominal templates reject malformed declarations and application lists" {
     try parseReject(
-        \\class Box[T, T]:
+        \\record Box[T, T]:
         \\    value: T
     , "E_GENERIC_PARAMETER");
     try parseReject(
@@ -143,7 +143,7 @@ test "nominal application list and nesting bounds reject excessive syntax" {
 // spec: PRELUDE-TYPES-CATALOG-1
 test "unused nominal templates retain only unconditional concrete prelude schemas" {
     const cases = [_][]const u8{
-        \\class Box[T]:
+        \\record Box[T]:
         \\    value: T
         \\
         \\
@@ -182,7 +182,7 @@ test "unused nominal templates retain only unconditional concrete prelude schema
         try t.expectEqual(@as(usize, 3), compilation.program.?.records.len);
     }
     var invalid = try language.Compilation.init(t.allocator, "requirements.my",
-        \\class Box[T: missing]:
+        \\record Box[T: missing]:
         \\    value: T
         \\
         \\
@@ -208,7 +208,7 @@ const Modules = struct {
             \\    some: T
             \\
             \\
-            \\class Hidden[T]:
+            \\record Hidden[T]:
             \\    value: T
             \\
             \\
@@ -226,7 +226,7 @@ const public_module =
     \\import model as m
     \\
     \\
-    \\public class Box[T]:
+    \\public record Box[T]:
     \\    value: m.Slot[[2]T]
     \\
     \\
@@ -276,7 +276,7 @@ test "nominal template interfaces enforce privacy arity kind and parameter scope
         \\import model as m
         \\
         \\
-        \\public class Outer:
+        \\public record Outer:
         \\    slot: m.Hidden[i64]
     , "E_PRIVATE_SYMBOL");
     try interfaceReject(
@@ -284,11 +284,11 @@ test "nominal template interfaces enforce privacy arity kind and parameter scope
         \\import model as m
         \\
         \\
-        \\class Secret:
+        \\record Secret:
         \\    pass
         \\
         \\
-        \\public class Outer:
+        \\public record Outer:
         \\    slot: m.Slot[Secret]
     , "E_PRIVATE_INTERFACE");
     try interfaceReject(
@@ -296,7 +296,7 @@ test "nominal template interfaces enforce privacy arity kind and parameter scope
         \\import model as m
         \\
         \\
-        \\public class Outer:
+        \\public record Outer:
         \\    slot: m.Slot[i64, bool]
     , "E_GENERIC_ARITY");
     try interfaceReject(
@@ -304,32 +304,32 @@ test "nominal template interfaces enforce privacy arity kind and parameter scope
         \\import model as m
         \\
         \\
-        \\public class Outer:
+        \\public record Outer:
         \\    slot: m.Slot
     , "E_GENERIC_ARITY");
     try interfaceReject(
         \\module main
         \\
         \\
-        \\public class Plain:
+        \\public record Plain:
         \\    pass
         \\
         \\
-        \\public class Outer:
+        \\public record Outer:
         \\    value: Plain[i64]
     , "E_GENERIC_ARITY");
     try interfaceReject(
         \\module main
         \\
         \\
-        \\public class Outer[T]:
+        \\public record Outer[T]:
         \\    value: T[i64]
     , "E_TYPE_APPLICATION");
     try interfaceReject(
         \\module main
         \\
         \\
-        \\public class Outer[T]:
+        \\public record Outer[T]:
         \\    value: Missing[T]
     , "E_UNKNOWN_SYMBOL");
     try interfaceReject(
@@ -340,18 +340,18 @@ test "nominal template interfaces enforce privacy arity kind and parameter scope
         \\    return 0
         \\
         \\
-        \\public class Outer:
+        \\public record Outer:
         \\    value: helper[i64]
     , "E_SYMBOL_KIND");
     try interfaceReject(
         \\module main
         \\
         \\
-        \\class T:
+        \\record T:
         \\    pass
         \\
         \\
-        \\class Outer[T]:
+        \\record Outer[T]:
         \\    value: T
     , "E_SHADOWING");
     try interfaceReject(
@@ -359,14 +359,14 @@ test "nominal template interfaces enforce privacy arity kind and parameter scope
         \\import model as m
         \\
         \\
-        \\class Outer[m]:
+        \\record Outer[m]:
         \\    value: m
     , "E_SHADOWING");
     try interfaceReject(
         \\module main
         \\
         \\
-        \\class Outer[T: bad]:
+        \\record Outer[T: bad]:
         \\    value: T
     , "E_GENERIC_REQUIREMENT");
 }

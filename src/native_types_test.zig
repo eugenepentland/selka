@@ -4,11 +4,11 @@ const Catalog = @import("native_types.zig").Catalog;
 test "frontend generic names and layouts survive source declaration reorder" {
     const compiler = @import("compiler.zig");
     var first = try compiler.Compilation.init(std.testing.allocator, "types.my",
-        \\class Box[T]:
+        \\record Box[T]:
         \\    value: T
         \\
         \\
-        \\class Noise:
+        \\record Noise:
         \\    x: u8
         \\
         \\
@@ -19,11 +19,11 @@ test "frontend generic names and layouts survive source declaration reorder" {
     defer first.deinit();
     try first.check();
     var second = try compiler.Compilation.init(std.testing.allocator, "types.my",
-        \\class Noise:
+        \\record Noise:
         \\    x: u8
         \\
         \\
-        \\class Box[T]:
+        \\record Box[T]:
         \\    value: T
         \\
         \\
