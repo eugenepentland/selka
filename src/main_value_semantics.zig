@@ -1,24 +1,18 @@
-//! The `--value-semantics` switch at the command line (`VALUE-SEMANTICS-1`).
-//!
-//! The switch is settled before any command runs. It is on when the command
-//! line names `--value-semantics` (before any `--` that starts guest
-//! arguments), when the entry's `mylang.json` says `"value_semantics": true`,
-//! or when the environment carries `MYLANG_VALUE_SEMANTICS=1`. The environment
-//! variable is the one carrier every child compiler a command spawns inherits
-//! (the build driver's frontend, the test runner's builds, a directory test's
-//! per-file runs), so a command turned on any other way first replaces itself
-//! with the same command, flag removed, and the variable set. From then on
-//! every process of the command sees the same switch, and the environment
-//! fingerprint that keys cached test results sees it too.
+//! Value semantics by default, with a one-release legacy-sharing opt-out
+//! (`VALUE-SEMANTICS-1`). Explicit flags win over the inherited environment,
+//! then the entry's project configuration. The resolved mode is carried into
+//! child compilers as `MYLANG_VALUE_SEMANTICS=0|1`, including test-cache keys.
 const std = @import("std");
 const language = @import("mylang");
 const project_config = @import("project_config.zig");
 
 const values = language.value_semantics;
+const legacy_option = "--legacy-sharing";
+const Flag = struct { index: usize, enabled: bool };
 
 /// The commands that accept `--value-semantics`: every command that checks,
 /// builds or runs a program, and the inspection commands that show its IL.
-const commands = [_][]const u8{ "check", "check-module", "check-project", "build", "run", "run-project", "test", "emit-qbe", "emit-project-qbe", "dump-bytecode" };
+const commands = [_][]const u8{ "check", "check-module", "check-project", "build", "run", "run-project", "test", "emit-qbe", "emit-project-qbe", "dump-bytecode", "fix", "invoke" };
 
 /// Failures settling the switch: memory, and writing a refusal to stderr.
 pub const Error = std.mem.Allocator.Error || std.Io.File.Writer.Error;
@@ -34,28 +28,40 @@ pub const Settled = union(enum) {
 /// Settle the switch for this process; see the module comment.
 pub fn settle(process: std.process.Init, args: []const [:0]const u8) Error!Settled {
     const flag = position(args);
-    const inherited = values.environmentEnables(process.environ_map.get(values.variable));
+    const environment = process.environ_map.get(values.variable);
+    if (flag) |selected| if (duplicate(args, selected.index)) {
+        try std.Io.File.stderr().writeStreamingAll(process.io, "mylang: choose exactly one of --value-semantics and --legacy-sharing\n");
+        return .{ .status = 2 };
+    };
     if (flag != null and !accepts(args[1])) {
-        try std.Io.File.stderr().writeStreamingAll(process.io, "mylang: --value-semantics applies to check, check-module, check-project, build, run, run-project, test, emit-qbe, emit-project-qbe and dump-bytecode\n");
+        try std.Io.File.stderr().writeStreamingAll(process.io, "mylang: --value-semantics and --legacy-sharing apply to check, check-module, check-project, " ++
+            "build, run, run-project, test, emit-qbe, emit-project-qbe, dump-bytecode, fix and invoke\n");
         return .{ .status = 2 };
     }
-    if (!inherited) {
-        const configured = flag == null and args.len >= 2 and accepts(args[1]) and configuredOn(process, args);
-        if (flag == null and !configured) return .{ .run = .{ .args = args, .enabled = false } };
-        return .{ .status = try replace(process, args, flag) };
-    }
-    values.setEnabled(true);
-    return .{ .run = .{ .args = if (flag) |index| try without(process.arena.allocator(), args, index) else args, .enabled = true } };
+    const inherited: ?bool = if (environment) |value| values.environmentEnables(value) else null;
+    const enabled = if (flag) |selected| selected.enabled else inherited orelse configuredOn(process, args);
+    if (inherited == null or inherited.? != enabled) return .{ .status = try replace(process, args, flag, enabled) };
+    values.setEnabled(enabled);
+    return .{ .run = .{ .args = if (flag) |selected| try without(process.arena.allocator(), args, selected.index) else args, .enabled = enabled } };
 }
 
-/// The index of `--value-semantics` before any `--`, or null.
-fn position(args: []const [:0]const u8) ?usize {
+/// The first mode flag before any `--`, or null.
+fn position(args: []const [:0]const u8) ?Flag {
     if (args.len < 3) return null;
     for (args[2..], 2..) |arg, index| {
         if (std.mem.eql(u8, arg, "--")) return null;
-        if (std.mem.eql(u8, arg, values.option)) return index;
+        if (std.mem.eql(u8, arg, values.option)) return .{ .index = index, .enabled = true };
+        if (std.mem.eql(u8, arg, legacy_option)) return .{ .index = index, .enabled = false };
     }
     return null;
+}
+
+fn duplicate(args: []const [:0]const u8, first: usize) bool {
+    for (args[first + 1 ..]) |arg| {
+        if (std.mem.eql(u8, arg, "--")) return false;
+        if (std.mem.eql(u8, arg, values.option) or std.mem.eql(u8, arg, legacy_option)) return true;
+    }
+    return false;
 }
 
 fn accepts(command: []const u8) bool {
@@ -68,11 +74,12 @@ fn accepts(command: []const u8) bool {
 /// command itself reports it.
 fn configuredOn(process: std.process.Init, args: []const [:0]const u8) bool {
     const a = process.arena.allocator();
-    const entry = firstPath(args) orelse return false;
-    const found = project_config.discover(a, process.io, entry) catch return false;
-    const path = found orelse return false;
+    if (args.len < 2 or !accepts(args[1])) return true;
+    const entry = firstPath(args) orelse return true;
+    const found = project_config.discover(a, process.io, entry) catch return true;
+    const path = found orelse return true;
     var failure: project_config.Failure = .{};
-    var config = project_config.load(a, process.io, path, &failure) catch return false;
+    var config = project_config.load(a, process.io, path, &failure) catch return true;
     defer config.deinit();
     return config.document.value_semantics;
 }
@@ -94,16 +101,16 @@ fn without(a: std.mem.Allocator, args: []const [:0]const u8, index: usize) Error
     return kept;
 }
 
-/// Replace this process with the same command, `--value-semantics` removed
-/// and `MYLANG_VALUE_SEMANTICS=1` in its environment. Returns only when the
+/// Replace this process with the same command, its mode flag removed,
+/// and the resolved environment value. Returns only when the
 /// replacement fails.
-fn replace(process: std.process.Init, args: []const [:0]const u8, flag: ?usize) Error!u8 {
+fn replace(process: std.process.Init, args: []const [:0]const u8, flag: ?Flag, enabled: bool) Error!u8 {
     const a = process.arena.allocator();
-    try process.environ_map.put(values.variable, "1");
+    try process.environ_map.put(values.variable, if (enabled) "1" else "0");
     const self = std.Io.Dir.cwd().realPathFileAlloc(process.io, "/proc/self/exe", a) catch |err| return failed(process, err);
     var argv: std.ArrayList([]const u8) = .empty;
     try argv.append(a, self);
-    for (args[1..], 1..) |arg, index| if (flag == null or index != flag.?) try argv.append(a, arg);
+    for (args[1..], 1..) |arg, index| if (flag == null or index != flag.?.index) try argv.append(a, arg);
     const err = std.process.replace(process.io, .{ .argv = argv.items, .environ_map = process.environ_map });
     return failed(process, err);
 }

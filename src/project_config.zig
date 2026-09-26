@@ -72,9 +72,9 @@ pub const Document = struct {
     /// `interface_files: true`: every project module's generated `.api` file
     /// must be current, or checking the project fails (API-FILE-3).
     interface_files: bool = false,
-    /// `value_semantics: true`: the project is checked and built with value
-    /// semantics, as `--value-semantics` asks (VALUE-SEMANTICS-1).
-    value_semantics: bool = false,
+    /// Value semantics is the default; explicit false selects legacy sharing
+    /// for the migration release (VALUE-SEMANTICS-1).
+    value_semantics: bool = true,
 };
 
 /// One resolved policy file: absolute path, exact bytes and content digest.
@@ -443,7 +443,7 @@ fn parseDocument(allocator: std.mem.Allocator, bytes: []const u8, failure: *Fail
     if (!isEndOfDocument(trailing)) return fail(failure, &diagnostics, "trailing content after the configuration object", error.InvalidJson);
     if (version == null) return fail(failure, &diagnostics, "mylang.json must carry version: 1", error.MissingVersion);
     if (lint_seen and version.? != 2) return fail(failure, &diagnostics, "lint requires mylang.json version 2", error.InvalidLint);
-    return .{ .version = version.?, .import_policy = import_policy, .budgets = budgets, .lint = lint_seen, .interface_files = interface_files orelse false, .value_semantics = value_semantics orelse false };
+    return .{ .version = version.?, .import_policy = import_policy, .budgets = budgets, .lint = lint_seen, .interface_files = interface_files orelse false, .value_semantics = value_semantics orelse true };
 }
 
 /// Read the body of a `budgets` object after its opening brace. Every key is

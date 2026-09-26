@@ -1,5 +1,22 @@
 //! Allocators used to verify bounded live runtime storage.
 const std = @import("std");
+const values = @import("value_semantics.zig");
+
+/// Explicit scope for tests of the one-release legacy sharing contract.
+pub const LegacySharing = struct {
+    previous: bool,
+    /// Enter legacy mode for a fixture that intentionally tests shared identity.
+    pub fn enter() LegacySharing {
+        const scope: LegacySharing = .{ .previous = values.enabled() };
+        values.setEnabled(false);
+        return scope;
+    }
+    /// Restore the caller's mode after that fixture.
+    pub fn restore(self: LegacySharing) void {
+        values.setEnabled(self.previous);
+    }
+};
+
 /// Test allocator enforcing a live-byte bound; resize/remap deliberately force fallback paths.
 pub const LimitedLiveAllocator = struct {
     parent: std.mem.Allocator,

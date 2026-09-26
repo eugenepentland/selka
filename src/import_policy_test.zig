@@ -246,11 +246,15 @@ test "mylang json value_semantics is an optional boolean" {
     try writeTmp(&temp, "plain.json", "{\"version\":1}");
     var plain = try loadTmp(&temp, "plain.json", &failure);
     defer plain.deinit();
-    try t.expect(!plain.document.value_semantics);
+    try t.expect(plain.document.value_semantics);
     try writeTmp(&temp, "enabled.json", "{\"version\":1,\"value_semantics\":true}");
     var enabled = try loadTmp(&temp, "enabled.json", &failure);
     defer enabled.deinit();
     try t.expect(enabled.document.value_semantics);
+    try writeTmp(&temp, "disabled.json", "{\"version\":1,\"value_semantics\":false}");
+    var disabled = try loadTmp(&temp, "disabled.json", &failure);
+    defer disabled.deinit();
+    try t.expect(!disabled.document.value_semantics);
     try writeTmp(&temp, "text.json", "{\"version\":1,\"value_semantics\":1}");
     try t.expectError(error.InvalidValueSemantics, loadTmp(&temp, "text.json", &failure));
     try t.expectEqualStrings("value_semantics must be true or false", failure.detail);

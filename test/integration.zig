@@ -20,7 +20,7 @@ test "a scalar-only mut record parameter writes the caller in both modes" {
         \\    reset(mut c)
         \\    return c.n
     ;
-    try invokeOptions("run", program, &.{"--no-cache"}, 10, "10\n", "");
+    try invokeOptions("run", program, &.{ "--legacy-sharing", "--no-cache" }, 10, "10\n", "");
     try invokeOptions("run", program, &.{"--value-semantics"}, 10, "10\n", "");
 }
 // spec: FIX-MIGRATION-1
@@ -37,7 +37,7 @@ test "fix command previews then stores back a local alias and preserves both mod
     try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = before });
     const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
     defer testing.allocator.free(path);
-    const preview = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "fix", path, "--check" } });
+    const preview = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "fix", path, "--check", "--legacy-sharing" } });
     defer testing.allocator.free(preview.stdout);
     defer testing.allocator.free(preview.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, preview.term);
@@ -45,19 +45,19 @@ test "fix command previews then stores back a local alias and preserves both mod
     const unchanged = try temp.dir.readFileAlloc(testing.io, "input.my", testing.allocator, .unlimited);
     defer testing.allocator.free(unchanged);
     try testing.expectEqualStrings(before, unchanged);
-    const fixed = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "fix", path } });
+    const fixed = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "fix", path, "--legacy-sharing" } });
     defer testing.allocator.free(fixed.stdout);
     defer testing.allocator.free(fixed.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, fixed.term);
     const changed = try temp.dir.readFileAlloc(testing.io, "input.my", testing.allocator, .unlimited);
     defer testing.allocator.free(changed);
     try testing.expect(std.mem.indexOf(u8, changed, "    pins = alias\n") != null);
-    const checked = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check", path, "--diagnostics=json" } });
+    const checked = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check", path, "--diagnostics=json", "--legacy-sharing" } });
     defer testing.allocator.free(checked.stdout);
     defer testing.allocator.free(checked.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, checked.term);
     try testing.expect(std.mem.indexOf(u8, checked.stderr, "W_ALIAS_DEPENDENT") == null);
-    for ([_][]const u8{ "--value-semantics", "--no-cache" }) |mode| {
+    for ([_][]const u8{ "--value-semantics", "--legacy-sharing" }) |mode| {
         const run = try std.process.run(testing.allocator, testing.io, .{ .argv = &(.{ compiler_path, "run", path, "--print-result", mode } ++ tools) });
         defer testing.allocator.free(run.stdout);
         defer testing.allocator.free(run.stderr);
@@ -73,7 +73,7 @@ test "checker warns at a local collection alias that is written and observed" {
         \\    alias = pins
         \\    alias.append(2)
         \\    return len(pins)
-    , &.{"--diagnostics=json"});
+    , &.{ "--diagnostics=json", "--legacy-sharing" });
     defer std.testing.allocator.free(outcome.stdout);
     defer std.testing.allocator.free(outcome.stderr);
     try std.testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
@@ -92,7 +92,7 @@ test "checker traces a narrowed match payload back to its collection binding" {
         \\        first.append(2)
         \\        return len(last)
         \\    return 0
-    , &.{"--diagnostics=json"});
+    , &.{ "--diagnostics=json", "--legacy-sharing" });
     defer testing.allocator.free(outcome.stdout);
     defer testing.allocator.free(outcome.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
@@ -108,7 +108,7 @@ test "checker terminates on a cyclic alias chain and reports the observed write"
         \\    first = second
         \\    second.append(2)
         \\    return len(shared)
-    , &.{"--diagnostics=json"});
+    , &.{ "--diagnostics=json", "--legacy-sharing" });
     defer testing.allocator.free(cyclic.stdout);
     defer testing.allocator.free(cyclic.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, cyclic.term);
@@ -127,7 +127,7 @@ test "checker distinguishes a nested alias store from a fresh buffer conversion"
         \\    last = holder.items[1]
         \\    first.append(2)
         \\    return len(last)
-    , &.{"--diagnostics=json"});
+    , &.{ "--diagnostics=json", "--legacy-sharing" });
     defer testing.allocator.free(nested.stdout);
     defer testing.allocator.free(nested.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, nested.term);
@@ -139,7 +139,7 @@ test "checker distinguishes a nested alias store from a fresh buffer conversion"
         \\    piece = byte_buffer(empty)
         \\    _ = piece.append_byte(1)
         \\    return len(empty)
-    , &.{"--diagnostics=json"});
+    , &.{ "--diagnostics=json", "--legacy-sharing" });
     defer testing.allocator.free(fresh.stdout);
     defer testing.allocator.free(fresh.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, fresh.term);
@@ -11681,27 +11681,90 @@ const value_only_program =
     \\    return len(grown([1]))
 ;
 
+const value_cache_program =
+    \\module main
+    \\
+    \\public def test_snapshot() -> bool:
+    \\    a = [1]
+    \\    b = a
+    \\    b.append(2)
+    \\    return len(a) == 1 and len(b) == 2
+    \\
+    \\def main() -> int:
+    \\    return 0
+;
+
 // spec-case: VALUE-SEMANTICS-1
-test "CLI --value-semantics switches run and check and other commands refuse it" {
-    try invoke("run", value_program, 0, "22\n", "warning[W_ALIAS_DEPENDENT]");
-    try invokeOptions("run", value_program, &.{"--value-semantics"}, 0, "12\n", "");
-    try invoke("check", value_only_program, 1, "", "error[E_MUTATION_MARKER]");
-    try invokeOptions("check", value_only_program, &.{"--value-semantics"}, 0, "", "");
-    try invokeOptions("fmt", value_program, &.{"--value-semantics"}, 2, "", "--value-semantics applies to check");
+test "CLI legacy opt out cannot reuse default value test results" {
+    var project = try PropertyProject.init(value_cache_program);
+    defer project.deinit();
+    const first = try project.run(&.{});
+    defer freeRun(first);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, first.term);
+    try testing.expect(std.mem.indexOf(u8, first.stdout, "passed main::test_snapshot") != null);
+    const legacy = try project.run(&.{"--legacy-sharing"});
+    defer freeRun(legacy);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, legacy.term);
+    try testing.expect(std.mem.indexOf(u8, legacy.stdout, "failed main::test_snapshot") != null);
+    const again = try project.run(&.{});
+    defer freeRun(again);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, again.term);
+    try testing.expect(std.mem.indexOf(u8, again.stdout, "cached main::test_snapshot") != null);
+}
+
+fn semanticModeRun(entry: []const u8, environment: *const std.process.Environ.Map, extra: []const []const u8) !std.process.RunResult {
+    var args: std.ArrayList([]const u8) = .empty;
+    defer args.deinit(testing.allocator);
+    try args.appendSlice(testing.allocator, &.{ compiler_path, "run", entry, "--print-result" });
+    try args.appendSlice(testing.allocator, extra);
+    try args.appendSlice(testing.allocator, &tools);
+    return std.process.run(testing.allocator, testing.io, .{ .argv = args.items, .environ_map = environment });
 }
 
 // spec-case: VALUE-SEMANTICS-1
-test "CLI mylang.json value_semantics switches its project and a build carries it to the frontend" {
+test "CLI explicit semantic mode wins over the inherited mode and project opt out" {
+    var project = try PropertyProject.init(value_program);
+    defer project.deinit();
+    try project.temporary.dir.writeFile(testing.io, .{ .sub_path = "mylang.json", .data = "{\"version\":1,\"value_semantics\":false}" });
+    var environment = try std.process.Environ.createMap(testing.environ, testing.allocator);
+    defer environment.deinit();
+    try environment.put("MYLANG_VALUE_SEMANTICS", "1");
+    const inherited = try semanticModeRun(project.path, &environment, &.{});
+    defer freeRun(inherited);
+    try testing.expectEqualStrings("12\n", inherited.stdout);
+    const legacy = try semanticModeRun(project.path, &environment, &.{"--legacy-sharing"});
+    defer freeRun(legacy);
+    try testing.expectEqualStrings("22\n", legacy.stdout);
+    try environment.put("MYLANG_VALUE_SEMANTICS", "0");
+    const values = try semanticModeRun(project.path, &environment, &.{"--value-semantics"});
+    defer freeRun(values);
+    try testing.expectEqualStrings("12\n", values.stdout);
+}
+
+// spec-case: VALUE-SEMANTICS-1
+test "CLI value semantics defaults on and legacy sharing is an explicit opt out" {
+    try invoke("run", value_program, 0, "12\n", "");
+    try invokeOptions("run", value_program, &.{"--legacy-sharing"}, 0, "22\n", "warning[W_ALIAS_DEPENDENT]");
+    try invokeOptions("run", value_program, &.{"--value-semantics"}, 0, "12\n", "");
+    try invoke("check", value_only_program, 0, "", "");
+    try invokeOptions("check", value_only_program, &.{"--legacy-sharing"}, 1, "", "error[E_MUTATION_MARKER]");
+    try invokeOptions("check", value_only_program, &.{"--value-semantics"}, 0, "", "");
+    try invokeOptions("fmt", value_program, &.{"--value-semantics"}, 2, "", "--value-semantics and --legacy-sharing apply to check");
+    try invokeOptions("check", value_program, &.{ "--legacy-sharing", "--value-semantics" }, 2, "", "choose exactly one");
+}
+
+// spec-case: VALUE-SEMANTICS-1
+test "CLI mylang.json value_semantics opts out and a default build carries values to the frontend" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "mylang.json", .data = "{\"version\": 1, \"value_semantics\": true}\n" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "mylang.json", .data = "{\"version\": 1, \"value_semantics\": false}\n" });
     try temp.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = value_program });
     const entry = try temp.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
     defer testing.allocator.free(entry);
     const configured = try std.process.run(testing.allocator, testing.io, .{ .argv = &(.{ compiler_path, "run", entry, "--print-result" } ++ tools) });
     defer testing.allocator.free(configured.stdout);
     defer testing.allocator.free(configured.stderr);
-    try testing.expectEqualStrings("12\n", configured.stdout);
+    try testing.expectEqualStrings("22\n", configured.stdout);
     var plain = testing.tmpDir(.{});
     defer plain.cleanup();
     try plain.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = value_program });
@@ -11709,7 +11772,7 @@ test "CLI mylang.json value_semantics switches its project and a build carries i
     defer testing.allocator.free(source);
     const output = try std.fmt.allocPrint(testing.allocator, "{s}.bin", .{source});
     defer testing.allocator.free(output);
-    const built = try std.process.run(testing.allocator, testing.io, .{ .argv = &(.{ compiler_path, "build", source, "-o", output, "--value-semantics" } ++ tools) });
+    const built = try std.process.run(testing.allocator, testing.io, .{ .argv = &(.{ compiler_path, "build", source, "-o", output } ++ tools) });
     defer testing.allocator.free(built.stdout);
     defer testing.allocator.free(built.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, built.term);
