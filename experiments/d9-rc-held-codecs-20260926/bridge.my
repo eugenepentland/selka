@@ -1,0 +1,7 @@
+module bridge
+
+public def receive(view: DictValues[int, int]) -> int:
+    return list(view)[0]
+
+public def produce() -> DictValues[int, int]:
+    return {1: 7}.values()
