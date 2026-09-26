@@ -6,6 +6,7 @@ const values = @import("qbe_rc_values.zig");
 const slots = @import("qbe_rc_slots.zig");
 const state = @import("qbe_rc_state.zig");
 const Op = @FieldType(bytecode.Instruction, "op");
+const blit_value = values.blit_value;
 /// Native emitter failures shared by aggregate publication helpers.
 pub const Error = values.Error;
 
@@ -62,6 +63,17 @@ fn initialize(comptime E: type, self: *E, field: Field) Error!void {
         try self.writeValue(field.destination, try self.readValue(field.source, field.ty), field.ty);
         return;
     }
+    if (!shape.unique_drop) if (field.operand) |index| {
+        // Constructor inputs are consumed. An initialized ordinary owner can
+        // move into the already-journaled partial aggregate; borrowed or held
+        // inputs still acquire an independent value through prepareOperand.
+        // No fallible operation separates this publication and guard handoff.
+        try values.prepareOperand(E, self, field.ty, index);
+        const work = try values.workAddress(E, self);
+        try self.print(blit_value, .{ work, field.destination, (try self.layout(field.ty)).size });
+        try frame.initialized(E, self, frame.pending(E, self), false);
+        return;
+    };
     try slots.Lower(E).transfer(self, .{ .ty = field.ty, .source = field.source, .destination = field.destination, .region = field.region, .mode = if (shape.unique_drop) .take_empty else .copy_empty });
     if (shape.unique_drop) if (field.operand) |index|
         try frame.initialized(E, self, values.journalIndex(E, self, index), false);
@@ -127,7 +139,7 @@ pub fn prepareBase(comptime E: type, self: *E, ty: typed.Type, base: usize) Erro
         try self.print(" %v{d} =l copy %rcinternal\n", .{address});
         break :blk address;
     } else try self.aggregatePointer();
-    try self.print(" blit %v{d}, %v{d}, {d}\n", .{ work, storage, (try self.layout(ty)).size });
+    try self.print(blit_value, .{ work, storage, (try self.layout(ty)).size });
     try frame.initialized(E, self, frame.pending(E, self), false);
     try internal(E, self, ty, storage);
     if (managed) {
@@ -146,7 +158,7 @@ fn replace(comptime E: type, self: *E, field: Field) Error!void {
     const shape = frame.get(E, self).?.catalog.get(field.ty) catch return error.InternalError;
     if (shape.unique_drop) try self.print(" call $myl_native_owned_drop(l %heap, l extern ${s}, l %v{d})\n", .{ try self.descriptor(field.ty), field.destination });
     if (shape.counted) try self.print(" call $myl_rc_native_drop(l %heap, l extern ${s}, l %v{d})\n", .{ try self.descriptor(field.ty), field.destination });
-    try self.print(" blit %v{d}, %v{d}, {d}\n", .{ work, field.destination, (try self.layout(field.ty)).size });
+    try self.print(blit_value, .{ work, field.destination, (try self.layout(field.ty)).size });
     try frame.initialized(E, self, frame.pending(E, self), false);
 }
 
