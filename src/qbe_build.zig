@@ -1617,7 +1617,7 @@ test "RC runtime contract partitions native objects archives and manifest replay
     const rc_archive = try runtimeInstalledHash(a, "archive", "Debug", "qbe", .rc);
     try std.testing.expect(!std.mem.eql(u8, gc_archive, rc_archive));
     try std.testing.expect(!std.mem.eql(u8, rc_archive, try runtimeInstalledHash(a, "archive", "Debug", "qbe", .rc_counting)));
-    const manifest = try std.json.parseFromSlice(std.json.Value, a, "{\"version\":\"qbe-units-v1\",\"abi\":\"" ++ native_abi ++ "\",\"entry\":\"\",\"functions\":[],\"runtime_contract\":\"rc-v1\"}", .{});
+    const manifest = try std.json.parseFromSlice(std.json.Value, a, "{\"version\":\"qbe-units-v1\",\"abi\":\"" ++ native_abi ++ "\",\"entry\":\"\",\"functions\":[],\"runtime_contract\":\"rc-v2\"}", .{});
     try validate(a, manifest.value, .rc);
     try std.testing.expectError(error.InvalidNativeManifest, validate(a, manifest.value, .gc));
     try std.testing.expectError(error.InvalidNativeManifest, validate(a, manifest.value, .rc_counting));

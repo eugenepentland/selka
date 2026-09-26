@@ -20,7 +20,7 @@ pub fn settle(process: std.process.Init, args: []const [:0]const u8, values: boo
     };
     if (parsed.explicit != null and !accepts(args[1])) return refuse(process, "runtime selection applies to commands that check, emit, build or run programs");
     const environment = process.environ_map.get(contract.variable);
-    const requested = parsed.explicit orelse (contract.parse(environment) catch return refuse(process, "MYLANG_RUNTIME must be gc-v1, rc-v1 or rc-v1-counting"));
+    const requested = parsed.explicit orelse (contract.parse(environment) catch return refuse(process, "MYLANG_RUNTIME must be gc-v1, rc-v2 or rc-v2-counting"));
     const selected = contract.resolve(requested, values, parsed.explicit != null) catch return refuse(process, "explicit RC requires value semantics; --legacy-sharing uses GC");
     if (environment == null or !std.mem.eql(u8, environment.?, selected.identity())) {
         return .{ .status = try restart.replace(process, parsed.args, contract.variable, selected.identity()) };
