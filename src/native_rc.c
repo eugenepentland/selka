@@ -100,6 +100,7 @@ void myl_rc_heap_destroy(myl_native_heap *heap) {
         myl_rc_meta_free(heap, batch, batch->bytes);
     }
     myl_rc_meta_free(heap, state->walk.frames, state->walk.capacity * sizeof(myl_rc_frame));
+    myl_rc_meta_free(heap, state->metadata.index.entries, state->metadata.index.capacity * sizeof(myl_rc_index_entry));
     myl_rc_invariant(state->metadata.bytes == sizeof *state);
     heap->bytes -= sizeof *state;
     free(state);
