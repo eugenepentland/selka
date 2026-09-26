@@ -1,0 +1,39 @@
+module rc_dictionary_views
+
+
+def mapping_of(view: DictValues[int, int]) -> dict[int, int]:
+    return view.mapping
+
+
+# spec-case: DICT-VIEWS-1
+public def test_mapping_projection_creates_named_snapshots() -> bool:
+    mapping = {1: 7}
+    view = mapping.values()
+    snapshot = view.mapping
+    returned = mapping_of(view)
+    mapping[1] = 9
+    return snapshot[1] == 7 and returned[1] == 7 and list(view) == [7] and mapping[1] == 9
+
+
+# spec-case: DICT-VIEWS-1
+public def test_replacing_mapping_field_rebinds_live_identity() -> bool:
+    first = {1: 7}
+    second = {2: 8}
+    view = first.values()
+    view.mapping = second
+    first.clear()
+    second[2] = 9
+    return list(view) == [9]
+
+
+# spec-case: DICT-VIEWS-1
+public def test_stored_and_returned_views_observe_growth_and_clear() -> bool:
+    mapping = {1: 7}
+    views = [mapping.values(), mapping.values()]
+    for index in range(2, 100):
+        mapping[index] = index
+    if len(views[0]) != 99 or len(views[1]) != 99:
+        return False
+    mapping.clear()
+    mapping[100] = 42
+    return list(views[0]) == [42] and list(views[1]) == [42]

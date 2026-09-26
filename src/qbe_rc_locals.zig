@@ -4,12 +4,26 @@ const values = @import("qbe_rc_values.zig");
 const bytecode = @import("bytecode.zig");
 const typed = @import("typed.zig");
 const state_model = @import("qbe_rc_state.zig");
+const views = @import("qbe_rc_views.zig");
 /// Errors shared with the native emitter.
 pub const Error = values.Error;
 
 /// Handle local ownership instructions whose legacy lowering copies raw bytes.
 pub fn emit(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "op"), stack: []const typed.Type) Error!bool {
     if (try @import("qbe_rc_borrow.zig").local(E, self, op, stack)) |handled| return handled;
+    if (frame.get(E, self) == null) return false;
+    switch (try views.local(E, self, op, stack)) {
+        .handled => return true,
+        .unhandled => return ordinary(E, self, op, stack),
+        .ordinary => |label| {
+            if (!try ordinary(E, self, op, stack)) return error.InternalError;
+            try views.joined(E, self, label);
+            return true;
+        },
+    }
+}
+
+fn ordinary(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "op"), stack: []const typed.Type) Error!bool {
     const state = frame.get(E, self) orelse return false;
     switch (op) {
         .value_copy => |copy| {
@@ -72,7 +86,12 @@ fn store(comptime E: type, self: *E, index: usize, operand: usize) Error!void {
     const work = try values.workAddress(E, self);
     try self.print(" blit %v{d}, %v{d}, {d}\n", .{ work, destination, (try self.layout(ty)).size });
     try frame.initialized(E, self, frame.pending(E, self), false);
-    if (!self.callerStorage(index)) try frame.initialized(E, self, index, true);
+    if (!self.callerStorage(index)) {
+        // This local may previously have held an H receiver token. The new
+        // publication is an ordinary owning value, so restore its typed role.
+        if (@import("qbe_rc_holds.zig").mayHold(E, self, ty)) try frame.entry(E, self, index, ty, destination);
+        try frame.initialized(E, self, index, true);
+    }
 }
 
 fn move(comptime E: type, self: *E, index: usize, operand_index: usize) Error!void {

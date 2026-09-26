@@ -68,6 +68,7 @@ fn initialize(comptime E: type, self: *E, field: Field) Error!void {
 }
 
 fn construct(comptime E: type, self: *E, record: @FieldType(Op, "make_record"), height: usize) Error!void {
+    if (try @import("qbe_rc_views.zig").construct(E, self, record, height)) return;
     const managed = self.program.records[record.ty.recordIndex()].isManagedRecord();
     const pointer = if (managed)
         try @import("qbe_alloc.zig").cell(*E, self, record.ty, self.states[self.pc].?)
@@ -150,6 +151,7 @@ fn replace(comptime E: type, self: *E, field: Field) Error!void {
 }
 
 fn updateValue(comptime E: type, self: *E, update: @FieldType(Op, "update_record"), height: usize) Error!void {
+    if (try @import("qbe_rc_views.zig").update(E, self, update, height)) return;
     const base = height - update.indices.len - 1;
     const pointer = try prepareBase(E, self, update.ty, base);
     const depth = if (self.program.records[update.ty.recordIndex()].isManagedRecord()) blk: {
