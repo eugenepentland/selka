@@ -279,9 +279,16 @@ public def test_deep_values_compare_hash_and_escape_without_recursion() -> bool:
 
 # spec-case: RECURSIVE-VALUES-3
 public def test_printing_a_deep_value_stops_at_the_depth_cap() -> bool:
-    text = f"{chain_of(40)}"
-    assert text.startswith("Some(Node(value=39, left=Some(Node(value=38, ")
-    return "left=Some(...), right=None))" in text and len(text) < 1000
+    boxed = f"{chain_of(40)}"
+    assert boxed.startswith("Some(Node(value=39, left=Some(Node(value=38, ")
+    assert "left=Some(...), right=None))" in boxed and len(boxed) < 1000
+    # Branch recurses through a list, so it has no hidden box. Its existing
+    # renderer and the new box path must obey the same depth-24 ellipsis rule.
+    plain = Branch(label="leaf", kids=[])
+    for _ in range(40):
+        plain = Branch(label="branch", kids=[plain])
+    ordinary = f"{plain}"
+    return ordinary.startswith("Branch(label='branch', kids=[Branch(") and "..." in ordinary and len(ordinary) < 1000
 
 
 # spec-case: RECURSIVE-VALUES-3
