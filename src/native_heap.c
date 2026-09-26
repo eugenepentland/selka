@@ -3,6 +3,7 @@
 #define _DEFAULT_SOURCE 1
 #include "native_heap.h"
 #include "native_arena.h"
+#include "native_rc_values.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -488,6 +489,9 @@ void myl_native_heap_init(myl_native_heap *heap, size_t limit) {
     heap->limit = limit;
     heap->next_pool_identity = 1;
     heap->next_collection = 1u << 20;
+#if defined(MYL_NATIVE_RC) && MYL_NATIVE_RC
+    if (myl_rc_storage_init(heap)!=MYL_RC_OK) heap->scratch_failed=1;
+#endif
 }
 void myl_native_root_push(myl_native_heap *heap, myl_native_root *root,
                           void *address, const myl_native_type *type) {
@@ -951,6 +955,7 @@ static void collect(myl_native_heap *heap, int full) {
     schedule(heap, full);
 }
 void myl_native_heap_collect(myl_native_heap *heap) {
+    if (myl_rc_enabled(heap)) { myl_rc_drain(heap); return; }
     collect(heap, 1);
 }
 /* The collection an allocation of `bytes` more runs when it is due. Budget
@@ -997,7 +1002,11 @@ static void *alloc_object(myl_native_heap *heap, const myl_native_type *element,
  * the collector out of it, so stale bytes of a reused slot are never
  * observed. An arena block is carved from a zero-filled chunk as before. */
 void *myl_native_heap_alloc_block(myl_native_heap *heap, size_t prefix, size_t extra) {
+#if defined(MYL_NATIVE_RC) && MYL_NATIVE_RC
+    if (!myl_rc_enabled(heap)) return NULL;
+#endif
     if (prefix > SIZE_MAX - extra) return NULL;
+    if (myl_rc_enabled(heap)) return myl_rc_storage_bytes(heap,prefix+extra,heap->region_depth);
     return alloc_object(heap, &block_type, prefix + extra, heap->region_depth, 0);
 }
 /* The list slot naming the one-slot segment whose whole payload is `payload`, or
@@ -1023,6 +1032,7 @@ static int opaque_elements(const myl_native_type *element) {
     return element->kind == MYL_NATIVE_PLAIN || element->trace_mode == MYL_NATIVE_TRACE_NONE;
 }
 void *myl_native_heap_extend(myl_native_heap *heap, void *payload, size_t count) {
+    if (myl_rc_enabled(heap)) return myl_rc_storage_extend(heap,payload,count);
     if (!payload) return NULL;
     myl_native_object *object = (myl_native_object *)payload - 1;
     if (object->mark & (MYL_NATIVE_OBJECT_IMMORTAL | MYL_NATIVE_OBJECT_ARENA)) return NULL;
@@ -1068,6 +1078,17 @@ void *myl_native_heap_extend(myl_native_heap *heap, void *payload, size_t count)
     return grown->data + sizeof(myl_native_object);
 }
 void *myl_native_heap_alloc_at(myl_native_heap *heap, const myl_native_type *element, size_t count, unsigned region) {
+#if defined(MYL_NATIVE_RC) && MYL_NATIVE_RC
+    if (!myl_rc_enabled(heap)) return NULL;
+#endif
+    if (myl_rc_enabled(heap)) {
+        if (!myl_rc_native_shape(heap,element)) return NULL;
+        myl_rc_alloc_request request={element,count,region};
+        void *result=NULL;
+        myl_rc_status status=myl_rc_new(heap,&request,&result);
+        if (status!=MYL_RC_OK) myl_rc_record_failure(heap,status);
+        return result;
+    }
     return alloc_object(heap, element, count, region, 1);
 }
 static void *alloc_object(myl_native_heap *heap, const myl_native_type *element, size_t count, unsigned region, int zero) {
@@ -1148,6 +1169,10 @@ static myl_native_object *open_window(myl_native_heap *heap, size_t class_index,
     return (myl_native_object *)span.start;
 }
 void *myl_native_heap_alloc_small(myl_native_heap *heap, const myl_native_type *element, size_t class_index) {
+#if defined(MYL_NATIVE_RC) && MYL_NATIVE_RC
+    if (!myl_rc_enabled(heap)) return NULL;
+#endif
+    if (myl_rc_enabled(heap)) return myl_native_heap_alloc(heap,element,1);
     /* The class is the smallest stride that holds the object: a constant-time
      * check of the compiler's choice against the runtime's own table. */
     size_t stride = element && element->size < MYL_NATIVE_CLASS_LIMIT ? round_stride(sizeof(myl_native_object) + element->size) : 0;
@@ -1196,6 +1221,7 @@ void myl_native_heap_settle(myl_native_heap *heap) {
     }
 }
 void myl_native_heap_remember(myl_native_heap *heap, void *payload) {
+    if (myl_rc_enabled(heap)) return;
     myl_native_object *object = (myl_native_object *)payload - 1;
     if (!(object->mark & MYL_NATIVE_OBJECT_MARKED)) return;
     if (!stack_push(&heap->generations.remembered, object)) heap->generations.force_full = 1;
@@ -1205,6 +1231,10 @@ void myl_native_heap_destroy(myl_native_heap *heap) {
     myl_native_arena_release(heap, 0);
     myl_native_arena_reclaim(heap);
     free(heap->arena_chunks);
+    if (myl_rc_enabled(heap)) {
+        for (size_t i=0;i<128;i++) myl_rc_owner_release(heap,heap->text_scalars[i]);
+        myl_rc_heap_destroy(heap);
+    }
     while (heap->segments) {
         myl_native_segment *segment = heap->segments;
         heap->segments = segment->next;
@@ -1222,6 +1252,7 @@ void myl_native_heap_destroy(myl_native_heap *heap) {
 }
 
 void myl_native_heap_release(myl_native_heap *heap, void *payload) {
+    if (myl_rc_enabled(heap)) { myl_rc_owner_release(heap,payload); return; }
     if (!payload) return;
     myl_native_object *object = (myl_native_object *)payload - 1;
     if (object->mark & (MYL_NATIVE_OBJECT_IMMORTAL | MYL_NATIVE_OBJECT_ARENA)) return;
