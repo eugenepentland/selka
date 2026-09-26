@@ -1,6 +1,7 @@
 #include "qbe_runtime.h"
 #include "native_rc_collections.h"
 #include "native_rc_dictionary.h"
+#include "native_rc_values.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -186,6 +187,63 @@ static void unique_body_test(void) {
     myl_native_heap_destroy(&context.heap);
     assert(!context.heap.bytes);
 }
+static void partial_unique_body_test(void) {
+    MylQbeContext context = {0};
+    myl_native_heap_init(&context.heap, 2u << 20);
+    if (!myl_rc_enabled(&context.heap)) assert(myl_rc_storage_init(&context.heap) == MYL_RC_OK);
+    typedef struct { void *resource, *child; } Pair;
+    const myl_native_field fields[] = {{.type = &resource_type}, {.offset = sizeof(void *), .type = &pointer_type}};
+    const myl_native_type pair = {.size = sizeof(Pair), .kind = MYL_NATIVE_RECORD, .fields = fields, .field_count = 2};
+    const myl_native_field element = {.type = &pair};
+    const myl_native_type body = {.size = 2 * sizeof(Pair), .kind = MYL_NATIVE_ARRAY, .fields = &element, .count = 2, .stride = sizeof(Pair)};
+    const myl_rc_shape raw = {.size = sizeof(void *), .kind = MYL_RC_SHAPE_NONE};
+    const myl_rc_field edges[] = {{.shape = &raw}, {.offset = sizeof(void *), .shape = &pointer}};
+    const myl_rc_shape pair_shape = {.size = sizeof(Pair), .kind = MYL_RC_SHAPE_RECORD, .as.record = {edges, 2}};
+    const myl_rc_shape body_shape = {.size = 2 * sizeof(Pair), .kind = MYL_RC_SHAPE_ARRAY,
+        .as.array = {.element = &pair_shape, .count = 2, .stride = sizeof(Pair)}};
+    const myl_rc_descriptor descriptors[] = {{.type = &body, .shape = &body_shape, .finalize = myl_rc_finalize_unique}, {.type = &pair, .shape = &pair_shape}};
+    const myl_rc_module module = {.abi = MYL_RC_ABI_VERSION, .descriptors = descriptors, .descriptor_count = 2};
+    assert(myl_rc_module_register(&context.heap, &module) == MYL_RC_OK);
+    assert(myl_rc_descriptor_import(&context.heap, &pointer_descriptor) == MYL_RC_OK);
+    void *child = myl_rc_storage_bytes(&context.heap, 8, 0), *overflow = NULL;
+    myl_rc_alloc_request node_request = {.element = &pointer_type, .count = 1};
+    assert(myl_rc_new(&context.heap, &node_request, &overflow) == MYL_RC_OK);
+    void *limit_child = myl_rc_storage_bytes(&context.heap, 8, 0);
+    assert(limit_child);
+    memcpy(overflow, &limit_child, sizeof limit_child);
+    assert(child && overflow && myl_rc_owner_acquire(&context.heap, child) == MYL_RC_OK);
+    uint32_t guard = 0;
+    FrameResource committed = {.base = {.drop = close_resource}, .context = &context,
+        .guard = &guard, .object = (myl_rc_object *)child - 1};
+    FrameResource incoming = committed;
+    assert(myl_native_region_begin(&context.heap));
+    Pair *payload = NULL;
+    myl_rc_alloc_request request = {.element = &body, .count = 1, .region = 1};
+    assert(myl_rc_new(&context.heap, &request, (void **)&payload) == MYL_RC_OK);
+    payload[0] = (Pair){&committed, child};
+    Pair source = {&incoming, overflow};
+    ((myl_rc_object *)limit_child - 1)->owners = MYL_RC_COUNT_MAX;
+    myl_rc_pin pin = {0};
+    /* TAKE preserves an ordinary unpinned token; pinning forces its fallible
+     * detached copy, whose incoming raw resource must remain source-owned. */
+    assert(myl_rc_pin_acquire(&context.heap, overflow, &pin) == MYL_RC_OK);
+    assert(!myl_rc_native_take(&context.heap, &pair, &payload[1], &source, 1));
+    assert(source.resource == &incoming && source.child == overflow);
+    assert(!payload[1].resource && !payload[1].child && !incoming.closed);
+    assert(myl_rc_take_failure(&context.heap) == MYL_RC_COUNT_LIMIT);
+    ((myl_rc_object *)limit_child - 1)->owners = 1;
+    myl_rc_pin_release(&context.heap, &pin);
+    myl_native_owned_drop(&context.heap, &pair, &source);
+    assert(incoming.closed == 1 && !source.resource);
+    myl_rc_construction_abort(&context.heap, payload);
+    assert(committed.closed == 1 && ((myl_rc_object *)child - 1)->owners == 1);
+    myl_rc_arena_close(&context.heap, 1);
+    assert(committed.closed == 1 && incoming.closed == 1);
+    myl_rc_owner_release(&context.heap, child);
+    myl_rc_owner_release(&context.heap, overflow);
+    myl_native_heap_destroy(&context.heap);
+    assert(!context.heap.bytes);
+}
 static void rebox_bridge_test(void) {
     MylQbeContext context = {0};
     myl_native_heap_init(&context.heap, 1u << 20);
@@ -341,15 +399,16 @@ int myl_qbe_rc_frame_verify(void) {
     unique_bridge_test();
     unique_body_test();
     rebox_bridge_test();
+    partial_unique_body_test();
     scope_bridge_test();
     backing_bridge_test();
-    return 9;
+    return 10;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
     assert(myl_qbe_rc_contract_verify() == 5);
-    assert(myl_qbe_rc_frame_verify() == 9);
-    puts("RC startup and frame unwind: 14 checks passed");
+    assert(myl_qbe_rc_frame_verify() == 10);
+    puts("RC startup and frame unwind: 15 checks passed");
     return 0;
 }
 #endif

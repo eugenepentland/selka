@@ -235,6 +235,7 @@ test {
     _ = @import("qbe_test.zig");
     _ = @import("ownership_test.zig");
     _ = @import("rc_plan_test.zig");
+    _ = @import("rc_borrow_certificate_test.zig");
     _ = @import("cow_test.zig");
     _ = @import("qbe_text_test.zig");
     _ = @import("qbe_range_keys_test.zig");
