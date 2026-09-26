@@ -261,12 +261,12 @@ fn addBuildPhases(timings: *language.timings.Profile, phases: native_build.Phase
         if (measured) |value| timings.add(name, @intFromFloat(@max(0, value) * std.time.ns_per_s), false);
     }
 }
-fn dispatch(process: std.process.Init) !u8 {
+fn settleModes(process: std.process.Init) !@import("main_runtime_mode.zig").Settled {
     // VALUE-SEMANTICS-1: settle the switch before any command runs; a
     // command it turned on restarts with the switch in its environment.
     const settled = switch (try @import("main_value_semantics.zig").settle(process, try process.minimal.args.toSlice(process.arena.allocator()))) {
         .run => |switched| switched,
-        .status => |status| return status,
+        .status => |status| return .{ .status = status },
     };
     if (settled.enabled) build_identity = valueSemanticsIdentity(base_identity);
     // COW-STATS-1: build and frontend children inherit this selector, with
@@ -274,7 +274,18 @@ fn dispatch(process: std.process.Init) !u8 {
     const cow_counting = settled.enabled and language.value_semantics.environmentEnables(process.environ_map.get(language.value_semantics.counting_variable));
     language.value_semantics.setCounting(cow_counting);
     if (cow_counting) build_identity = cowCountingIdentity(build_identity);
-    const args = settled.args;
+    const args = switch (try @import("main_runtime_mode.zig").settle(process, settled.args, settled.enabled)) {
+        .run => |normalized| normalized,
+        .status => |status| return .{ .status = status },
+    };
+    build_identity = runtimeIdentity(build_identity);
+    return .{ .run = args };
+}
+fn dispatch(process: std.process.Init) !u8 {
+    const args = switch (try settleModes(process)) {
+        .run => |normalized| normalized,
+        .status => |status| return status,
+    };
     if (args.len == 2 and std.mem.eql(u8, args[1], "--features")) {
         try featureReport(process);
         return 0;
@@ -3018,6 +3029,15 @@ fn cowCountingIdentity(base: [32]u8) [32]u8 {
     std.crypto.hash.sha2.Sha256.hash(&(base ++ "cow-counting".*), &digest, .{});
     return digest;
 }
+/// Partition every frontend cache by the normalized native ownership contract.
+fn runtimeIdentity(base: [32]u8) [32]u8 {
+    var hash = std.crypto.hash.sha2.Sha256.init(.{});
+    hash.update(&base);
+    hash.update(language.runtime_mode.identity());
+    var digest: [32]u8 = undefined;
+    hash.final(&digest);
+    return digest;
+}
 /// The identity of this compiler build itself.
 const base_identity: [32]u8 = identity: {
     const text = @import("qbe_build_assets").compiler_identity;
@@ -3283,6 +3303,7 @@ fn manifestReplayTicket(parsed: Parsed, diagnostics: diagnostic_output.Format, p
     // VALUE-SEMANTICS-1: value semantics changes every lowered body.
     if (language.value_semantics.enabled()) slot.update("value-semantics");
     if (language.value_semantics.counting()) slot.update("cow-counting");
+    replayFrame(&slot, language.runtime_mode.identity());
     slot.update(&.{@backingInt(diagnostics)});
     var key = slot;
     if (policy) |identity| {
