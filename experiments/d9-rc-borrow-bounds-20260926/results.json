@@ -1,0 +1,1212 @@
+{
+  "compiler_sha256": "76a1ed2a9255441058d791f652f34b64bedb60740dbc827c606bb50ca124b6b9",
+  "checks": {
+    "bound-element_access-llvm": {
+      "version": "native-tests-v1",
+      "tests": [
+        {
+          "name": "element_access::test_borrow_ends_when_the_receiver_is_written",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "9d41ac347c6bfa3998ed4aa024330568d0cccbe3fae0a52e5de2aba906c54ed0",
+          "dependencies": [
+            "myl_f_045e63d2fbbae7a156a8e86be589c17d4b0ae2254684b90091a180a5168ca530"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 1802,
+          "contract": "f5f09aeedd631f825ee45a3a6253a67047ca18265994851bd7672fe35177fc79",
+          "provider": "",
+          "source": "c6b7402aefade2bf13a36af93cc742fd1bfcbd0d432cffe308b19c776973bc3f"
+        },
+        {
+          "name": "element_access::test_call_result_field_read_keeps_the_returned_value",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "32237aea87842cfaa7c99e648b9859f746f46072965a24a3c7444d60f486142b",
+          "dependencies": [
+            "myl_f_7fe8f0ee4f65f3a00136d91dc60a3dba62c357c247a0d2551fc962e6690dab88",
+            "myl_f_e8f7e7736428257541b7353a1d9656735915ab1ec5b7e507e9f8641a3e983e31"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 84,
+          "contract": "f5f09aeedd631f825ee45a3a6253a67047ca18265994851bd7672fe35177fc79",
+          "provider": "",
+          "source": "c6b7402aefade2bf13a36af93cc742fd1bfcbd0d432cffe308b19c776973bc3f"
+        },
+        {
+          "name": "element_access::test_call_result_local_is_a_value_of_its_own",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "c53c01ea616130aa3f74f4fbf01c364e7d6812dd7713d109444915f2ee8b4ea5",
+          "dependencies": [
+            "myl_f_2800efce62df65b845913fcfc9c221b1738d1fce021fdb0b9dca34a191d4409b",
+            "myl_f_7fe8f0ee4f65f3a00136d91dc60a3dba62c357c247a0d2551fc962e6690dab88"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 90,
+          "contract": "f5f09aeedd631f825ee45a3a6253a67047ca18265994851bd7672fe35177fc79",
+          "provider": "",
+          "source": "c6b7402aefade2bf13a36af93cc742fd1bfcbd0d432cffe308b19c776973bc3f"
+        },
+        {
+          "name": "element_access::test_element_copy_taken_before_a_write_keeps_its_value",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "84275b914160ef1f42bb62d5c2f51adf52550549a0d02079529bf7f6ff8dcce9",
+          "dependencies": [
+            "myl_f_f0e369203c70f1bf9b238bb8240e33e5522dcb693a3ebd1e45a10a19bf05b789"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 83,
+          "contract": "f5f09aeedd631f825ee45a3a6253a67047ca18265994851bd7672fe35177fc79",
+          "provider": "",
+          "source": "c6b7402aefade2bf13a36af93cc742fd1bfcbd0d432cffe308b19c776973bc3f"
+        },
+        {
+          "name": "element_access::test_element_local_survives_the_branch_that_returns_it",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "507edda4d012e4c5c7027b8b3995a96e71a0efbb92c6ce403f7fb7354f863400",
+          "dependencies": [
+            "myl_f_08680e4608300f9ce9baff8a546777edc07158d783b8bd6298b5adee47ec846d",
+            "myl_f_d3747b20e9c73f5bc22edd707c8c4fb073bf5c90c1cea68cef30d0ac126e0311"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 205,
+          "contract": "f5f09aeedd631f825ee45a3a6253a67047ca18265994851bd7672fe35177fc79",
+          "provider": "",
+          "source": "c6b7402aefade2bf13a36af93cc742fd1bfcbd0d432cffe308b19c776973bc3f"
+        },
+        {
+          "name": "element_access::test_element_write_inside_an_arena_scope",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "d93d642b373e0eef26b686985072cb4280e527590bb1ed775944f34692c40564",
+          "dependencies": [
+            "myl_f_68219615c8ac359c0e0b70a4371a9be7f0f0bdb55003953809edcb88fd655175"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 60,
+          "contract": "f5f09aeedd631f825ee45a3a6253a67047ca18265994851bd7672fe35177fc79",
+          "provider": "",
+          "source": "c6b7402aefade2bf13a36af93cc742fd1bfcbd0d432cffe308b19c776973bc3f"
+        },
+        {
+          "name": "element_access::test_field_read_through_an_element_sees_the_current_value",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "5af1865184ef083a77cbb0472d26f2089d09e28e5d127c8fcc88bb15dd5a03d1",
+          "dependencies": [
+            "myl_f_935013acd57cff91f88394f0557e22d76b95edfe7f694c0d9a97bb8c03c19e6a",
+            "myl_f_e9c8c17dedd6bbc32ca1e159fa4b1ae70f3873a5a79ea287473acc64338f7128"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 95,
+          "contract": "f5f09aeedd631f825ee45a3a6253a67047ca18265994851bd7672fe35177fc79",
+          "provider": "",
+          "source": "c6b7402aefade2bf13a36af93cc742fd1bfcbd0d432cffe308b19c776973bc3f"
+        },
+        {
+          "name": "element_access::test_loop_variable_reads_every_element",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "f9023343847cd53d28a2d459ee2bd4628da6bf90548243cf5e802d2d8e12e84a",
+          "dependencies": [
+            "myl_f_60cba712e3062c3296fc2f0fafd787141130a53cadfaf6592442cf9474a5ba23",
+            "myl_f_868e82af8c06f5953a71a230b14a0cb725f147a01a0a26d129038e8e23d5cc8d"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 222,
+          "contract": "f5f09aeedd631f825ee45a3a6253a67047ca18265994851bd7672fe35177fc79",
+          "provider": "",
+          "source": "c6b7402aefade2bf13a36af93cc742fd1bfcbd0d432cffe308b19c776973bc3f"
+        },
+        {
+          "name": "element_access::test_managed_field_survives_an_element_write",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "6b31d9bf3d1b601d85066e9d49433bef80994a79e9dfc094fcc4e84a67186104",
+          "dependencies": [
+            "myl_f_1972748f812de8d677bf95bda0e01a3800ff0ba77c543013cdb61f15998acdb5"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 6691,
+          "contract": "f5f09aeedd631f825ee45a3a6253a67047ca18265994851bd7672fe35177fc79",
+          "provider": "",
+          "source": "c6b7402aefade2bf13a36af93cc742fd1bfcbd0d432cffe308b19c776973bc3f"
+        },
+        {
+          "name": "element_access::test_nested_field_read_through_an_element",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "98e63b59bef00ca8f33d25e9a70fd6abd9a8300e48714200d845615aff92b4d5",
+          "dependencies": [
+            "myl_f_930a0c4478e825d551b95981a47ae70354b9285f54c6d4365f8e4e4bcc006b0e",
+            "myl_f_d683ca788d6d6d621aff55a30a1c7ec502b08abd8aa4075b192d62d7f0fb9fb3"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 77,
+          "contract": "f5f09aeedd631f825ee45a3a6253a67047ca18265994851bd7672fe35177fc79",
+          "provider": "",
+          "source": "c6b7402aefade2bf13a36af93cc742fd1bfcbd0d432cffe308b19c776973bc3f"
+        },
+        {
+          "name": "element_access::test_record_element_write_replaces_the_whole_element",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "38f6910976d3769b31e702264af46d8372e28af0a2a828b80563fe3b99855950",
+          "dependencies": [
+            "myl_f_03e2c4294658fe2bdb9e7257c4950b15e16fd0077b6b25095da66e738781d451",
+            "myl_f_785005eb01023371d8af8008b946be0a63efe5465f1578f91e7e39b483a14ff6",
+            "myl_f_f7056027e20daec1c1d112315f67197125189e8b1483d49ea98c49dd5ccfbd2c"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 158,
+          "contract": "f5f09aeedd631f825ee45a3a6253a67047ca18265994851bd7672fe35177fc79",
+          "provider": "",
+          "source": "c6b7402aefade2bf13a36af93cc742fd1bfcbd0d432cffe308b19c776973bc3f"
+        },
+        {
+          "name": "element_access::test_recursive_helper_returns_independent_records",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "6382a59fc7d2c562926cd6c7ddc8baf14cd461feeacd93facbd26d226393935c",
+          "dependencies": [
+            "myl_f_c380c33be0dc4f56f099744555be76c6f2d7866f54714d422ba36ac3fa911069",
+            "myl_f_dffef6036310e05defb199e096c6c8c1ca15264d267b0c416e01b6d59c6481ef"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 222,
+          "contract": "f5f09aeedd631f825ee45a3a6253a67047ca18265994851bd7672fe35177fc79",
+          "provider": "",
+          "source": "c6b7402aefade2bf13a36af93cc742fd1bfcbd0d432cffe308b19c776973bc3f"
+        },
+        {
+          "name": "element_access::test_returned_element_is_an_independent_value",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "93bf93e618653e5998e58f7daddaf3cc0cac7088dcdd298ea524fe5cddbd5e69",
+          "dependencies": [
+            "myl_f_32327ad6332322d6f505f20331a77afa8f7e16b540bcdb556aeca2e12fbe79de",
+            "myl_f_7fe8f0ee4f65f3a00136d91dc60a3dba62c357c247a0d2551fc962e6690dab88"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 84,
+          "contract": "f5f09aeedd631f825ee45a3a6253a67047ca18265994851bd7672fe35177fc79",
+          "provider": "",
+          "source": "c6b7402aefade2bf13a36af93cc742fd1bfcbd0d432cffe308b19c776973bc3f"
+        },
+        {
+          "name": "element_access::test_scalar_element_write_lands_in_place",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "25a50a5979664bedad89916f23fab734388a3c2662b16cb1505945e69374c341",
+          "dependencies": [
+            "myl_f_b5e02da4c759c3fe61abacba1ca591f0ff6786b90111b676c1d25c3670e1ea1f"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 98,
+          "contract": "f5f09aeedd631f825ee45a3a6253a67047ca18265994851bd7672fe35177fc79",
+          "provider": "",
+          "source": "c6b7402aefade2bf13a36af93cc742fd1bfcbd0d432cffe308b19c776973bc3f"
+        }
+      ],
+      "passed": 14,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 14,
+      "modules": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/tests/lang/element_access.my"
+      ]
+    },
+    "bound-element_access-qbe": {
+      "version": "native-tests-v1",
+      "tests": [
+        {
+          "name": "element_access::test_borrow_ends_when_the_receiver_is_written",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "bdb38d1e68bcd25a5180eb0fb278da1b8b15fb2b9d1d1c278bd967d0c2b7d4ae",
+          "dependencies": [
+            "myl_f_045e63d2fbbae7a156a8e86be589c17d4b0ae2254684b90091a180a5168ca530"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 1802,
+          "contract": "f5f09aeedd631f825ee45a3a6253a67047ca18265994851bd7672fe35177fc79",
+          "provider": "",
+          "source": "c6b7402aefade2bf13a36af93cc742fd1bfcbd0d432cffe308b19c776973bc3f"
+        },
+        {
+          "name": "element_access::test_call_result_field_read_keeps_the_returned_value",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "2c06437ab93888b3ed1e0cc4c24720cd6f5728e545e0c5e57abaa29c16f8ab76",
+          "dependencies": [
+            "myl_f_7fe8f0ee4f65f3a00136d91dc60a3dba62c357c247a0d2551fc962e6690dab88",
+            "myl_f_e8f7e7736428257541b7353a1d9656735915ab1ec5b7e507e9f8641a3e983e31"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 84,
+          "contract": "f5f09aeedd631f825ee45a3a6253a67047ca18265994851bd7672fe35177fc79",
+          "provider": "",
+          "source": "c6b7402aefade2bf13a36af93cc742fd1bfcbd0d432cffe308b19c776973bc3f"
+        },
+        {
+          "name": "element_access::test_call_result_local_is_a_value_of_its_own",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "26e78d5aca2f0e0069dd947d7f2a9b85488c4503b10253fce0fbc29a19d65b8d",
+          "dependencies": [
+            "myl_f_2800efce62df65b845913fcfc9c221b1738d1fce021fdb0b9dca34a191d4409b",
+            "myl_f_7fe8f0ee4f65f3a00136d91dc60a3dba62c357c247a0d2551fc962e6690dab88"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 90,
+          "contract": "f5f09aeedd631f825ee45a3a6253a67047ca18265994851bd7672fe35177fc79",
+          "provider": "",
+          "source": "c6b7402aefade2bf13a36af93cc742fd1bfcbd0d432cffe308b19c776973bc3f"
+        },
+        {
+          "name": "element_access::test_element_copy_taken_before_a_write_keeps_its_value",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "968beaf4aead2753f4fa732fc314ed4287a9338c3df528d7edf247c7890c1e58",
+          "dependencies": [
+            "myl_f_f0e369203c70f1bf9b238bb8240e33e5522dcb693a3ebd1e45a10a19bf05b789"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 83,
+          "contract": "f5f09aeedd631f825ee45a3a6253a67047ca18265994851bd7672fe35177fc79",
+          "provider": "",
+          "source": "c6b7402aefade2bf13a36af93cc742fd1bfcbd0d432cffe308b19c776973bc3f"
+        },
+        {
+          "name": "element_access::test_element_local_survives_the_branch_that_returns_it",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "7f40b92d4076d9a225fe184af17770c2a07bc9fa3df6aa6b8b0d1cb30a799e55",
+          "dependencies": [
+            "myl_f_08680e4608300f9ce9baff8a546777edc07158d783b8bd6298b5adee47ec846d",
+            "myl_f_d3747b20e9c73f5bc22edd707c8c4fb073bf5c90c1cea68cef30d0ac126e0311"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 205,
+          "contract": "f5f09aeedd631f825ee45a3a6253a67047ca18265994851bd7672fe35177fc79",
+          "provider": "",
+          "source": "c6b7402aefade2bf13a36af93cc742fd1bfcbd0d432cffe308b19c776973bc3f"
+        },
+        {
+          "name": "element_access::test_element_write_inside_an_arena_scope",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "79485ecb2601670c6e314a2450993e503d0b2ecd7f2781117b05375132e3e2b7",
+          "dependencies": [
+            "myl_f_68219615c8ac359c0e0b70a4371a9be7f0f0bdb55003953809edcb88fd655175"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 60,
+          "contract": "f5f09aeedd631f825ee45a3a6253a67047ca18265994851bd7672fe35177fc79",
+          "provider": "",
+          "source": "c6b7402aefade2bf13a36af93cc742fd1bfcbd0d432cffe308b19c776973bc3f"
+        },
+        {
+          "name": "element_access::test_field_read_through_an_element_sees_the_current_value",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "8e3bd762ced95414e4d2a759bd0dc6f1e8e6b469a2f483ef32f9c1fdf57af49e",
+          "dependencies": [
+            "myl_f_935013acd57cff91f88394f0557e22d76b95edfe7f694c0d9a97bb8c03c19e6a",
+            "myl_f_e9c8c17dedd6bbc32ca1e159fa4b1ae70f3873a5a79ea287473acc64338f7128"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 95,
+          "contract": "f5f09aeedd631f825ee45a3a6253a67047ca18265994851bd7672fe35177fc79",
+          "provider": "",
+          "source": "c6b7402aefade2bf13a36af93cc742fd1bfcbd0d432cffe308b19c776973bc3f"
+        },
+        {
+          "name": "element_access::test_loop_variable_reads_every_element",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "d062c1d67851ba2f5a20b21ef5ac6eb16a097451bb9c0cfae16870b182b25751",
+          "dependencies": [
+            "myl_f_60cba712e3062c3296fc2f0fafd787141130a53cadfaf6592442cf9474a5ba23",
+            "myl_f_868e82af8c06f5953a71a230b14a0cb725f147a01a0a26d129038e8e23d5cc8d"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 222,
+          "contract": "f5f09aeedd631f825ee45a3a6253a67047ca18265994851bd7672fe35177fc79",
+          "provider": "",
+          "source": "c6b7402aefade2bf13a36af93cc742fd1bfcbd0d432cffe308b19c776973bc3f"
+        },
+        {
+          "name": "element_access::test_managed_field_survives_an_element_write",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "30fd30ec7fd93c7be0a5e79c5f398a1d2a3a906ef529acaa0e30446cccb6f53a",
+          "dependencies": [
+            "myl_f_1972748f812de8d677bf95bda0e01a3800ff0ba77c543013cdb61f15998acdb5"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 6691,
+          "contract": "f5f09aeedd631f825ee45a3a6253a67047ca18265994851bd7672fe35177fc79",
+          "provider": "",
+          "source": "c6b7402aefade2bf13a36af93cc742fd1bfcbd0d432cffe308b19c776973bc3f"
+        },
+        {
+          "name": "element_access::test_nested_field_read_through_an_element",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "bda797dcaf8c8e5b6f9b16a3f28ccea14f75604ed59c331b3d59a0b787589c42",
+          "dependencies": [
+            "myl_f_930a0c4478e825d551b95981a47ae70354b9285f54c6d4365f8e4e4bcc006b0e",
+            "myl_f_d683ca788d6d6d621aff55a30a1c7ec502b08abd8aa4075b192d62d7f0fb9fb3"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 77,
+          "contract": "f5f09aeedd631f825ee45a3a6253a67047ca18265994851bd7672fe35177fc79",
+          "provider": "",
+          "source": "c6b7402aefade2bf13a36af93cc742fd1bfcbd0d432cffe308b19c776973bc3f"
+        },
+        {
+          "name": "element_access::test_record_element_write_replaces_the_whole_element",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "87d4a267f4d814d6c8f09aa2b08728b932dd2c193dec16044799984d80d690f1",
+          "dependencies": [
+            "myl_f_03e2c4294658fe2bdb9e7257c4950b15e16fd0077b6b25095da66e738781d451",
+            "myl_f_785005eb01023371d8af8008b946be0a63efe5465f1578f91e7e39b483a14ff6",
+            "myl_f_f7056027e20daec1c1d112315f67197125189e8b1483d49ea98c49dd5ccfbd2c"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 158,
+          "contract": "f5f09aeedd631f825ee45a3a6253a67047ca18265994851bd7672fe35177fc79",
+          "provider": "",
+          "source": "c6b7402aefade2bf13a36af93cc742fd1bfcbd0d432cffe308b19c776973bc3f"
+        },
+        {
+          "name": "element_access::test_recursive_helper_returns_independent_records",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "5c1f38561adc4fb6e3f21182e5275657abecaed0300aae5a15c6d3f195e246e6",
+          "dependencies": [
+            "myl_f_c380c33be0dc4f56f099744555be76c6f2d7866f54714d422ba36ac3fa911069",
+            "myl_f_dffef6036310e05defb199e096c6c8c1ca15264d267b0c416e01b6d59c6481ef"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 222,
+          "contract": "f5f09aeedd631f825ee45a3a6253a67047ca18265994851bd7672fe35177fc79",
+          "provider": "",
+          "source": "c6b7402aefade2bf13a36af93cc742fd1bfcbd0d432cffe308b19c776973bc3f"
+        },
+        {
+          "name": "element_access::test_returned_element_is_an_independent_value",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "b11dab930a16c11ada6c01c91d2fbd2de9323002c01e9f48a93d07ad15e1fe09",
+          "dependencies": [
+            "myl_f_32327ad6332322d6f505f20331a77afa8f7e16b540bcdb556aeca2e12fbe79de",
+            "myl_f_7fe8f0ee4f65f3a00136d91dc60a3dba62c357c247a0d2551fc962e6690dab88"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 84,
+          "contract": "f5f09aeedd631f825ee45a3a6253a67047ca18265994851bd7672fe35177fc79",
+          "provider": "",
+          "source": "c6b7402aefade2bf13a36af93cc742fd1bfcbd0d432cffe308b19c776973bc3f"
+        },
+        {
+          "name": "element_access::test_scalar_element_write_lands_in_place",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "6447508c7a734da73ade33865429305bd0170c31730e50d6011339bec07f0840",
+          "dependencies": [
+            "myl_f_b5e02da4c759c3fe61abacba1ca591f0ff6786b90111b676c1d25c3670e1ea1f"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 98,
+          "contract": "f5f09aeedd631f825ee45a3a6253a67047ca18265994851bd7672fe35177fc79",
+          "provider": "",
+          "source": "c6b7402aefade2bf13a36af93cc742fd1bfcbd0d432cffe308b19c776973bc3f"
+        }
+      ],
+      "passed": 14,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 14,
+      "modules": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/tests/lang/element_access.my"
+      ]
+    },
+    "bound-option_niche-llvm": {
+      "version": "native-tests-v1",
+      "tests": [
+        {
+          "name": "option_niche::test_a_tree_of_optional_children_survives_collection",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "75bfe9fb507b0837ad79ac4d4b132cff05089ccd2a821da637811af17d22aeff",
+          "dependencies": [
+            "myl_f_140977acd17ad2b6f0a7168ee32ff90cb2907653d938955228239b9a9e4bc2ff",
+            "myl_f_83aa48adcba5cd9e5b60981e644a811fdc937b3cff0002e82e128042362b4d23",
+            "myl_f_8741256652e3a982f8056992b22c12c14156ecf434c82fe6699ae52f2329a895",
+            "myl_f_b5c79004343e724412c85e4c249ea23fa5c817a95f9bb4f146aec520de515c20",
+            "myl_f_c86b483af7dcb6a3d47566ff302a9479910d731f6d0f2844955fad4d203d1aea"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 15147,
+          "contract": "220809bad76b738c7c52222a4a109d6475184d0afa4d220b74294b2404bef45a",
+          "provider": "",
+          "source": "e54e18daf1c8a27c556c24999dad06b1c76b81cda21bd27f12a6ba808570d5e4"
+        },
+        {
+          "name": "option_niche::test_a_user_union_of_the_same_shape_matches_like_an_option",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "c28ef750bf77529fc9732f141302253e20c358d1ea398af927f4154a1dbe2b33",
+          "dependencies": [
+            "myl_f_140977acd17ad2b6f0a7168ee32ff90cb2907653d938955228239b9a9e4bc2ff",
+            "myl_f_83aa48adcba5cd9e5b60981e644a811fdc937b3cff0002e82e128042362b4d23",
+            "myl_f_b5c79004343e724412c85e4c249ea23fa5c817a95f9bb4f146aec520de515c20",
+            "myl_f_c86b483af7dcb6a3d47566ff302a9479910d731f6d0f2844955fad4d203d1aea",
+            "myl_f_d8e1d2382cbaba02b764f6253a76b544f10901a1f5d58d24dcbd3f15e8baf4bc"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 1631,
+          "contract": "220809bad76b738c7c52222a4a109d6475184d0afa4d220b74294b2404bef45a",
+          "provider": "",
+          "source": "e54e18daf1c8a27c556c24999dad06b1c76b81cda21bd27f12a6ba808570d5e4"
+        },
+        {
+          "name": "option_niche::test_an_escaped_graph_keeps_its_optional_links",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "cd46b041cf89e43fd8141f3e9060e6b119a9ff5e749b59c912d7447e04252c1e",
+          "dependencies": [
+            "myl_f_140977acd17ad2b6f0a7168ee32ff90cb2907653d938955228239b9a9e4bc2ff",
+            "myl_f_83aa48adcba5cd9e5b60981e644a811fdc937b3cff0002e82e128042362b4d23",
+            "myl_f_b0166da7cc286446fd1e84494cd5ab52e2481e1956203b221f537c6971416874",
+            "myl_f_b5c79004343e724412c85e4c249ea23fa5c817a95f9bb4f146aec520de515c20",
+            "myl_f_c86b483af7dcb6a3d47566ff302a9479910d731f6d0f2844955fad4d203d1aea"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 3320,
+          "contract": "220809bad76b738c7c52222a4a109d6475184d0afa4d220b74294b2404bef45a",
+          "provider": "",
+          "source": "e54e18daf1c8a27c556c24999dad06b1c76b81cda21bd27f12a6ba808570d5e4"
+        },
+        {
+          "name": "option_niche::test_an_optional_optional_keeps_some_none_apart_from_none",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "6d41bd22ac37fc34fda7401641ec2d68954119acc07f8441965e4c1a8d1bc803",
+          "dependencies": [
+            "myl_f_140977acd17ad2b6f0a7168ee32ff90cb2907653d938955228239b9a9e4bc2ff",
+            "myl_f_83aa48adcba5cd9e5b60981e644a811fdc937b3cff0002e82e128042362b4d23",
+            "myl_f_a0405cf7d03ea15cc03de2a960205ba0cb02ae5152d7d35b550ff041f084c1d6",
+            "myl_f_b5c79004343e724412c85e4c249ea23fa5c817a95f9bb4f146aec520de515c20",
+            "myl_f_c86b483af7dcb6a3d47566ff302a9479910d731f6d0f2844955fad4d203d1aea",
+            "myl_f_f5587603ba0c8a2ac446006bef808ee9ca09f6a162e4391e79caa7733c49b1d0"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 3241,
+          "contract": "220809bad76b738c7c52222a4a109d6475184d0afa4d220b74294b2404bef45a",
+          "provider": "",
+          "source": "e54e18daf1c8a27c556c24999dad06b1c76b81cda21bd27f12a6ba808570d5e4"
+        },
+        {
+          "name": "option_niche::test_construct_test_and_match_a_niche_optional",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "fcc8a25280c316145972c4fcb3982abd72927fc8648ede10d64c78562d79eb50",
+          "dependencies": [
+            "myl_f_140977acd17ad2b6f0a7168ee32ff90cb2907653d938955228239b9a9e4bc2ff",
+            "myl_f_83aa48adcba5cd9e5b60981e644a811fdc937b3cff0002e82e128042362b4d23",
+            "myl_f_a0405cf7d03ea15cc03de2a960205ba0cb02ae5152d7d35b550ff041f084c1d6",
+            "myl_f_a1baaafd5e35175b9d418638863a04dc3273f544bb858250dee0fd93cc8bf4f1",
+            "myl_f_b5c79004343e724412c85e4c249ea23fa5c817a95f9bb4f146aec520de515c20",
+            "myl_f_c86b483af7dcb6a3d47566ff302a9479910d731f6d0f2844955fad4d203d1aea"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 6388,
+          "contract": "220809bad76b738c7c52222a4a109d6475184d0afa4d220b74294b2404bef45a",
+          "provider": "",
+          "source": "e54e18daf1c8a27c556c24999dad06b1c76b81cda21bd27f12a6ba808570d5e4"
+        },
+        {
+          "name": "option_niche::test_equality_of_niche_optionals",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "98475d34f212b3a0b555e40e3fa88ab519353feec909bfd4562ecde22a30c012",
+          "dependencies": [
+            "myl_f_435288660072bf7e8195c0518beb5b6ae3128c0182604bcbde1f330cdafdae4b",
+            "myl_f_881d42b5a4c00f29a02b149ed5d80d2fe2d3cdb457459d4e603ea0193705aa7d",
+            "myl_f_c86b483af7dcb6a3d47566ff302a9479910d731f6d0f2844955fad4d203d1aea"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 159,
+          "contract": "220809bad76b738c7c52222a4a109d6475184d0afa4d220b74294b2404bef45a",
+          "provider": "",
+          "source": "e54e18daf1c8a27c556c24999dad06b1c76b81cda21bd27f12a6ba808570d5e4"
+        },
+        {
+          "name": "option_niche::test_methods_on_niche_optionals",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "5e7ffb05bbc2fce519472f1219873384a82956c861301e348f17754dd5ea9c0e",
+          "dependencies": [
+            "myl_f_ace30cd014194deb09a9a2a6b7a247114f8060124574e56c2627d9b09dcd03e9",
+            "myl_f_c86b483af7dcb6a3d47566ff302a9479910d731f6d0f2844955fad4d203d1aea",
+            "myl_f_f0f03460cfb7c98ee02c225f8e62acd78ee0d6064a939375155697553e4ec0da"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 81,
+          "contract": "220809bad76b738c7c52222a4a109d6475184d0afa4d220b74294b2404bef45a",
+          "provider": "",
+          "source": "e54e18daf1c8a27c556c24999dad06b1c76b81cda21bd27f12a6ba808570d5e4"
+        },
+        {
+          "name": "option_niche::test_niche_optionals_cross_callbacks",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "f8405088918ac5adb27685934f4d8e907685979a13d9891bf9689a6b531a15f6",
+          "dependencies": [
+            "myl_f_140977acd17ad2b6f0a7168ee32ff90cb2907653d938955228239b9a9e4bc2ff",
+            "myl_f_53143340419862bb25919d3fe038613a7e5e4a9f0da538eb6d5c25711d6d0c8b",
+            "myl_f_682cbeafde5724b73aabc65761af0bbcdf04291e18dd6e95447792a9f866ef14",
+            "myl_f_83aa48adcba5cd9e5b60981e644a811fdc937b3cff0002e82e128042362b4d23",
+            "myl_f_a0405cf7d03ea15cc03de2a960205ba0cb02ae5152d7d35b550ff041f084c1d6",
+            "myl_f_b5c79004343e724412c85e4c249ea23fa5c817a95f9bb4f146aec520de515c20",
+            "myl_f_b7c3d9c21b9a692fa956a8049f11f20caebea04a9047d08d269c11d50b2171dc",
+            "myl_f_c86b483af7dcb6a3d47566ff302a9479910d731f6d0f2844955fad4d203d1aea",
+            "myl_f_edc0df2dba896d0c8899aaf3f0883f99887ac6c16bb0d081e592418fc648fc52"
+          ],
+          "cacheable": true,
+          "reasons": [
+            "conservative-indirect-target-set"
+          ],
+          "steps": 3246,
+          "contract": "220809bad76b738c7c52222a4a109d6475184d0afa4d220b74294b2404bef45a",
+          "provider": "",
+          "source": "e54e18daf1c8a27c556c24999dad06b1c76b81cda21bd27f12a6ba808570d5e4"
+        },
+        {
+          "name": "option_niche::test_niche_optionals_in_lists_dicts_records_and_arrays",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "771888156ac9517d9df33295fcaa45e792b0a515efda52d464493919c2276ccb",
+          "dependencies": [
+            "myl_f_140977acd17ad2b6f0a7168ee32ff90cb2907653d938955228239b9a9e4bc2ff",
+            "myl_f_6d2f6320994dd93dbb6f2b011473b3685356512b99fb75f4e4e94ab48e2c7b0d",
+            "myl_f_83aa48adcba5cd9e5b60981e644a811fdc937b3cff0002e82e128042362b4d23",
+            "myl_f_a0405cf7d03ea15cc03de2a960205ba0cb02ae5152d7d35b550ff041f084c1d6",
+            "myl_f_b5c79004343e724412c85e4c249ea23fa5c817a95f9bb4f146aec520de515c20",
+            "myl_f_c86b483af7dcb6a3d47566ff302a9479910d731f6d0f2844955fad4d203d1aea",
+            "myl_f_f0f03460cfb7c98ee02c225f8e62acd78ee0d6064a939375155697553e4ec0da"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 7191,
+          "contract": "220809bad76b738c7c52222a4a109d6475184d0afa4d220b74294b2404bef45a",
+          "provider": "",
+          "source": "e54e18daf1c8a27c556c24999dad06b1c76b81cda21bd27f12a6ba808570d5e4"
+        },
+        {
+          "name": "option_niche::test_niche_optionals_render_like_tagged_ones",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "d383d19aea2ba85264054494fc9ab5104b22b04ba00b0afa2390dee9cfed58a9",
+          "dependencies": [
+            "myl_f_435288660072bf7e8195c0518beb5b6ae3128c0182604bcbde1f330cdafdae4b",
+            "myl_f_69e539e9a987ef90e151316c5b54ac1ea4c2b91d3f58d08729aa23dbd59c58b0"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 116,
+          "contract": "220809bad76b738c7c52222a4a109d6475184d0afa4d220b74294b2404bef45a",
+          "provider": "",
+          "source": "e54e18daf1c8a27c556c24999dad06b1c76b81cda21bd27f12a6ba808570d5e4"
+        },
+        {
+          "name": "option_niche::test_optional_text_and_lists_survive_collection",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "d0d9bf38835cf63841ac86b85d46cd594b0e43e6045ce8473fdd85574b44fcbb",
+          "dependencies": [
+            "myl_f_140977acd17ad2b6f0a7168ee32ff90cb2907653d938955228239b9a9e4bc2ff",
+            "myl_f_490c08d83abfa048dcfb047e6049af0313b93cde12b25c3d8cfcc0397d61f86c",
+            "myl_f_83aa48adcba5cd9e5b60981e644a811fdc937b3cff0002e82e128042362b4d23",
+            "myl_f_b5c79004343e724412c85e4c249ea23fa5c817a95f9bb4f146aec520de515c20",
+            "myl_f_c86b483af7dcb6a3d47566ff302a9479910d731f6d0f2844955fad4d203d1aea"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 6976,
+          "contract": "220809bad76b738c7c52222a4a109d6475184d0afa4d220b74294b2404bef45a",
+          "provider": "",
+          "source": "e54e18daf1c8a27c556c24999dad06b1c76b81cda21bd27f12a6ba808570d5e4"
+        },
+        {
+          "name": "option_niche::test_question_mark_propagates_none_and_unwraps_some",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "fcab39f368ea5d9328193580bb00b68aa265b806231c6a35f70f15c119b854c6",
+          "dependencies": [
+            "myl_f_140977acd17ad2b6f0a7168ee32ff90cb2907653d938955228239b9a9e4bc2ff",
+            "myl_f_1ed13dec52d94c501d4193bcc9f81eca200c8986c5892d9fe193ca6d57467383",
+            "myl_f_29d678dbff643a6bd980df67e4ec5b6753ccb19323871f093f4e5ad3eb044dc7",
+            "myl_f_83aa48adcba5cd9e5b60981e644a811fdc937b3cff0002e82e128042362b4d23",
+            "myl_f_8eab2b05f5d8d8f5b31248db58708d00249c59a10688e418d697fcfd66c43a0f",
+            "myl_f_a0405cf7d03ea15cc03de2a960205ba0cb02ae5152d7d35b550ff041f084c1d6",
+            "myl_f_b5c79004343e724412c85e4c249ea23fa5c817a95f9bb4f146aec520de515c20",
+            "myl_f_c86b483af7dcb6a3d47566ff302a9479910d731f6d0f2844955fad4d203d1aea"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 3378,
+          "contract": "220809bad76b738c7c52222a4a109d6475184d0afa4d220b74294b2404bef45a",
+          "provider": "",
+          "source": "e54e18daf1c8a27c556c24999dad06b1c76b81cda21bd27f12a6ba808570d5e4"
+        }
+      ],
+      "passed": 12,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 12,
+      "modules": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/tests/lang/option_niche.my"
+      ]
+    },
+    "bound-option_niche-qbe": {
+      "version": "native-tests-v1",
+      "tests": [
+        {
+          "name": "option_niche::test_a_tree_of_optional_children_survives_collection",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "00c866928ec39785f635cfcc17eb259808bb81c92d55019c2fa202a851137aff",
+          "dependencies": [
+            "myl_f_140977acd17ad2b6f0a7168ee32ff90cb2907653d938955228239b9a9e4bc2ff",
+            "myl_f_83aa48adcba5cd9e5b60981e644a811fdc937b3cff0002e82e128042362b4d23",
+            "myl_f_8741256652e3a982f8056992b22c12c14156ecf434c82fe6699ae52f2329a895",
+            "myl_f_b5c79004343e724412c85e4c249ea23fa5c817a95f9bb4f146aec520de515c20",
+            "myl_f_c86b483af7dcb6a3d47566ff302a9479910d731f6d0f2844955fad4d203d1aea"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 15147,
+          "contract": "220809bad76b738c7c52222a4a109d6475184d0afa4d220b74294b2404bef45a",
+          "provider": "",
+          "source": "e54e18daf1c8a27c556c24999dad06b1c76b81cda21bd27f12a6ba808570d5e4"
+        },
+        {
+          "name": "option_niche::test_a_user_union_of_the_same_shape_matches_like_an_option",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "3cab6bc0dcbc88fbd069c36a4a858ef9b44ad442bf4dda1d1638f621262e8e36",
+          "dependencies": [
+            "myl_f_140977acd17ad2b6f0a7168ee32ff90cb2907653d938955228239b9a9e4bc2ff",
+            "myl_f_83aa48adcba5cd9e5b60981e644a811fdc937b3cff0002e82e128042362b4d23",
+            "myl_f_b5c79004343e724412c85e4c249ea23fa5c817a95f9bb4f146aec520de515c20",
+            "myl_f_c86b483af7dcb6a3d47566ff302a9479910d731f6d0f2844955fad4d203d1aea",
+            "myl_f_d8e1d2382cbaba02b764f6253a76b544f10901a1f5d58d24dcbd3f15e8baf4bc"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 1631,
+          "contract": "220809bad76b738c7c52222a4a109d6475184d0afa4d220b74294b2404bef45a",
+          "provider": "",
+          "source": "e54e18daf1c8a27c556c24999dad06b1c76b81cda21bd27f12a6ba808570d5e4"
+        },
+        {
+          "name": "option_niche::test_an_escaped_graph_keeps_its_optional_links",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "94fd601cd94ea9f03e23f57b44cdcea66107dabdff302acc6d346d1db5f223c7",
+          "dependencies": [
+            "myl_f_140977acd17ad2b6f0a7168ee32ff90cb2907653d938955228239b9a9e4bc2ff",
+            "myl_f_83aa48adcba5cd9e5b60981e644a811fdc937b3cff0002e82e128042362b4d23",
+            "myl_f_b0166da7cc286446fd1e84494cd5ab52e2481e1956203b221f537c6971416874",
+            "myl_f_b5c79004343e724412c85e4c249ea23fa5c817a95f9bb4f146aec520de515c20",
+            "myl_f_c86b483af7dcb6a3d47566ff302a9479910d731f6d0f2844955fad4d203d1aea"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 3320,
+          "contract": "220809bad76b738c7c52222a4a109d6475184d0afa4d220b74294b2404bef45a",
+          "provider": "",
+          "source": "e54e18daf1c8a27c556c24999dad06b1c76b81cda21bd27f12a6ba808570d5e4"
+        },
+        {
+          "name": "option_niche::test_an_optional_optional_keeps_some_none_apart_from_none",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "84fcd8d8c5a18415bcb7c2be14ba926b0cad22229187e9615116aa4f4a93d3d9",
+          "dependencies": [
+            "myl_f_140977acd17ad2b6f0a7168ee32ff90cb2907653d938955228239b9a9e4bc2ff",
+            "myl_f_83aa48adcba5cd9e5b60981e644a811fdc937b3cff0002e82e128042362b4d23",
+            "myl_f_a0405cf7d03ea15cc03de2a960205ba0cb02ae5152d7d35b550ff041f084c1d6",
+            "myl_f_b5c79004343e724412c85e4c249ea23fa5c817a95f9bb4f146aec520de515c20",
+            "myl_f_c86b483af7dcb6a3d47566ff302a9479910d731f6d0f2844955fad4d203d1aea",
+            "myl_f_f5587603ba0c8a2ac446006bef808ee9ca09f6a162e4391e79caa7733c49b1d0"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 3241,
+          "contract": "220809bad76b738c7c52222a4a109d6475184d0afa4d220b74294b2404bef45a",
+          "provider": "",
+          "source": "e54e18daf1c8a27c556c24999dad06b1c76b81cda21bd27f12a6ba808570d5e4"
+        },
+        {
+          "name": "option_niche::test_construct_test_and_match_a_niche_optional",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "8f5a4a6361673ca5717192c139a97b709a19058842570ec4643d55906f307bb7",
+          "dependencies": [
+            "myl_f_140977acd17ad2b6f0a7168ee32ff90cb2907653d938955228239b9a9e4bc2ff",
+            "myl_f_83aa48adcba5cd9e5b60981e644a811fdc937b3cff0002e82e128042362b4d23",
+            "myl_f_a0405cf7d03ea15cc03de2a960205ba0cb02ae5152d7d35b550ff041f084c1d6",
+            "myl_f_a1baaafd5e35175b9d418638863a04dc3273f544bb858250dee0fd93cc8bf4f1",
+            "myl_f_b5c79004343e724412c85e4c249ea23fa5c817a95f9bb4f146aec520de515c20",
+            "myl_f_c86b483af7dcb6a3d47566ff302a9479910d731f6d0f2844955fad4d203d1aea"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 6388,
+          "contract": "220809bad76b738c7c52222a4a109d6475184d0afa4d220b74294b2404bef45a",
+          "provider": "",
+          "source": "e54e18daf1c8a27c556c24999dad06b1c76b81cda21bd27f12a6ba808570d5e4"
+        },
+        {
+          "name": "option_niche::test_equality_of_niche_optionals",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "6e921ea582ee4340b5efa066a78cb166c93c74850dde2dd5de6b1f7b9c4d0a63",
+          "dependencies": [
+            "myl_f_435288660072bf7e8195c0518beb5b6ae3128c0182604bcbde1f330cdafdae4b",
+            "myl_f_881d42b5a4c00f29a02b149ed5d80d2fe2d3cdb457459d4e603ea0193705aa7d",
+            "myl_f_c86b483af7dcb6a3d47566ff302a9479910d731f6d0f2844955fad4d203d1aea"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 159,
+          "contract": "220809bad76b738c7c52222a4a109d6475184d0afa4d220b74294b2404bef45a",
+          "provider": "",
+          "source": "e54e18daf1c8a27c556c24999dad06b1c76b81cda21bd27f12a6ba808570d5e4"
+        },
+        {
+          "name": "option_niche::test_methods_on_niche_optionals",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "6172f6d1e90fa1f57f8695e9aab3e9921cfb80d632a7ef36ed6bae5ad4bc6a30",
+          "dependencies": [
+            "myl_f_ace30cd014194deb09a9a2a6b7a247114f8060124574e56c2627d9b09dcd03e9",
+            "myl_f_c86b483af7dcb6a3d47566ff302a9479910d731f6d0f2844955fad4d203d1aea",
+            "myl_f_f0f03460cfb7c98ee02c225f8e62acd78ee0d6064a939375155697553e4ec0da"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 81,
+          "contract": "220809bad76b738c7c52222a4a109d6475184d0afa4d220b74294b2404bef45a",
+          "provider": "",
+          "source": "e54e18daf1c8a27c556c24999dad06b1c76b81cda21bd27f12a6ba808570d5e4"
+        },
+        {
+          "name": "option_niche::test_niche_optionals_cross_callbacks",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "239303e86264b5d1088a62f3eef1fc82abc56f1d5a74066eb395d840b6f1fc3d",
+          "dependencies": [
+            "myl_f_140977acd17ad2b6f0a7168ee32ff90cb2907653d938955228239b9a9e4bc2ff",
+            "myl_f_53143340419862bb25919d3fe038613a7e5e4a9f0da538eb6d5c25711d6d0c8b",
+            "myl_f_682cbeafde5724b73aabc65761af0bbcdf04291e18dd6e95447792a9f866ef14",
+            "myl_f_83aa48adcba5cd9e5b60981e644a811fdc937b3cff0002e82e128042362b4d23",
+            "myl_f_a0405cf7d03ea15cc03de2a960205ba0cb02ae5152d7d35b550ff041f084c1d6",
+            "myl_f_b5c79004343e724412c85e4c249ea23fa5c817a95f9bb4f146aec520de515c20",
+            "myl_f_b7c3d9c21b9a692fa956a8049f11f20caebea04a9047d08d269c11d50b2171dc",
+            "myl_f_c86b483af7dcb6a3d47566ff302a9479910d731f6d0f2844955fad4d203d1aea",
+            "myl_f_edc0df2dba896d0c8899aaf3f0883f99887ac6c16bb0d081e592418fc648fc52"
+          ],
+          "cacheable": true,
+          "reasons": [
+            "conservative-indirect-target-set"
+          ],
+          "steps": 3246,
+          "contract": "220809bad76b738c7c52222a4a109d6475184d0afa4d220b74294b2404bef45a",
+          "provider": "",
+          "source": "e54e18daf1c8a27c556c24999dad06b1c76b81cda21bd27f12a6ba808570d5e4"
+        },
+        {
+          "name": "option_niche::test_niche_optionals_in_lists_dicts_records_and_arrays",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "ff4f19a933abe34290eebd29abf5d2239521b6a5872010457b8b905ae07cad89",
+          "dependencies": [
+            "myl_f_140977acd17ad2b6f0a7168ee32ff90cb2907653d938955228239b9a9e4bc2ff",
+            "myl_f_6d2f6320994dd93dbb6f2b011473b3685356512b99fb75f4e4e94ab48e2c7b0d",
+            "myl_f_83aa48adcba5cd9e5b60981e644a811fdc937b3cff0002e82e128042362b4d23",
+            "myl_f_a0405cf7d03ea15cc03de2a960205ba0cb02ae5152d7d35b550ff041f084c1d6",
+            "myl_f_b5c79004343e724412c85e4c249ea23fa5c817a95f9bb4f146aec520de515c20",
+            "myl_f_c86b483af7dcb6a3d47566ff302a9479910d731f6d0f2844955fad4d203d1aea",
+            "myl_f_f0f03460cfb7c98ee02c225f8e62acd78ee0d6064a939375155697553e4ec0da"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 7191,
+          "contract": "220809bad76b738c7c52222a4a109d6475184d0afa4d220b74294b2404bef45a",
+          "provider": "",
+          "source": "e54e18daf1c8a27c556c24999dad06b1c76b81cda21bd27f12a6ba808570d5e4"
+        },
+        {
+          "name": "option_niche::test_niche_optionals_render_like_tagged_ones",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "34850f0dcabbb01670052d1a941219ee570196c17c34a06ffe837b5b8dd9d606",
+          "dependencies": [
+            "myl_f_435288660072bf7e8195c0518beb5b6ae3128c0182604bcbde1f330cdafdae4b",
+            "myl_f_69e539e9a987ef90e151316c5b54ac1ea4c2b91d3f58d08729aa23dbd59c58b0"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 116,
+          "contract": "220809bad76b738c7c52222a4a109d6475184d0afa4d220b74294b2404bef45a",
+          "provider": "",
+          "source": "e54e18daf1c8a27c556c24999dad06b1c76b81cda21bd27f12a6ba808570d5e4"
+        },
+        {
+          "name": "option_niche::test_optional_text_and_lists_survive_collection",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "4d8fd20bddbbaf3b41015c498ee9ded618264daf367ebbdfaadf1da0000ace5c",
+          "dependencies": [
+            "myl_f_140977acd17ad2b6f0a7168ee32ff90cb2907653d938955228239b9a9e4bc2ff",
+            "myl_f_490c08d83abfa048dcfb047e6049af0313b93cde12b25c3d8cfcc0397d61f86c",
+            "myl_f_83aa48adcba5cd9e5b60981e644a811fdc937b3cff0002e82e128042362b4d23",
+            "myl_f_b5c79004343e724412c85e4c249ea23fa5c817a95f9bb4f146aec520de515c20",
+            "myl_f_c86b483af7dcb6a3d47566ff302a9479910d731f6d0f2844955fad4d203d1aea"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 6976,
+          "contract": "220809bad76b738c7c52222a4a109d6475184d0afa4d220b74294b2404bef45a",
+          "provider": "",
+          "source": "e54e18daf1c8a27c556c24999dad06b1c76b81cda21bd27f12a6ba808570d5e4"
+        },
+        {
+          "name": "option_niche::test_question_mark_propagates_none_and_unwraps_some",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "9978abee7d478e74631dc8920df03cec235a2763e9fe7c347def85b03c4e21e4",
+          "dependencies": [
+            "myl_f_140977acd17ad2b6f0a7168ee32ff90cb2907653d938955228239b9a9e4bc2ff",
+            "myl_f_1ed13dec52d94c501d4193bcc9f81eca200c8986c5892d9fe193ca6d57467383",
+            "myl_f_29d678dbff643a6bd980df67e4ec5b6753ccb19323871f093f4e5ad3eb044dc7",
+            "myl_f_83aa48adcba5cd9e5b60981e644a811fdc937b3cff0002e82e128042362b4d23",
+            "myl_f_8eab2b05f5d8d8f5b31248db58708d00249c59a10688e418d697fcfd66c43a0f",
+            "myl_f_a0405cf7d03ea15cc03de2a960205ba0cb02ae5152d7d35b550ff041f084c1d6",
+            "myl_f_b5c79004343e724412c85e4c249ea23fa5c817a95f9bb4f146aec520de515c20",
+            "myl_f_c86b483af7dcb6a3d47566ff302a9479910d731f6d0f2844955fad4d203d1aea"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 3378,
+          "contract": "220809bad76b738c7c52222a4a109d6475184d0afa4d220b74294b2404bef45a",
+          "provider": "",
+          "source": "e54e18daf1c8a27c556c24999dad06b1c76b81cda21bd27f12a6ba808570d5e4"
+        }
+      ],
+      "passed": 12,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 12,
+      "modules": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/tests/lang/option_niche.my"
+      ]
+    },
+    "bound-rc_call_lifetimes-llvm": {
+      "version": "native-tests-v1",
+      "tests": [
+        {
+          "name": "rc_call_lifetimes::test_indirect_owned_return_survives_original_replacement",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "80819c6a7db834600a4918b41527f0601f33339f35ca0af00ef8d386d3a12a40",
+          "dependencies": [
+            "myl_f_4df132df107e146e82d8fbca2fc5589a64fa77c07e002445e3a03240ae874863",
+            "myl_f_6de43ad61af2872e89a358cf98b211d658dfa5c9ed841a8b6cd29ea4450dcebf",
+            "myl_f_a762f052c412c2f774b3372b0a94357b9d4b2b4365487cdcff888eeea4f96494"
+          ],
+          "cacheable": true,
+          "reasons": [
+            "conservative-indirect-target-set"
+          ],
+          "steps": 59,
+          "contract": "241817697f71866323d60b4335e1ef6432a7bcc244bdcd6cf642ad5ec0a273b8",
+          "provider": "",
+          "source": "41c6937dbbb19d201979df9613886dc0ee6d75bdba813fda2efe130c2fdcc2b5"
+        },
+        {
+          "name": "rc_call_lifetimes::test_non_tail_recursive_owned_return_survives_call_frames",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "a96a0c4f2bd9646a66fcd9761922d1b245cd0d477fdbc19855a6546b22636188",
+          "dependencies": [
+            "myl_f_054dba95fbd3ab4103a47280d028d4bb52d16c004af461dc58a08b174678d7b0",
+            "myl_f_ce4ff43248dd073a526fb4a36d635871c9841be81fff18505a62e83dbdddfbd9"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 798,
+          "contract": "241817697f71866323d60b4335e1ef6432a7bcc244bdcd6cf642ad5ec0a273b8",
+          "provider": "",
+          "source": "41c6937dbbb19d201979df9613886dc0ee6d75bdba813fda2efe130c2fdcc2b5"
+        },
+        {
+          "name": "rc_call_lifetimes::test_short_circuit_temporary_returns_keep_independent_owners",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "1a85351303070ec457ec1b4b43cf3cc8350f0812d5c80e9c263b0e6d10a26354",
+          "dependencies": [
+            "myl_f_6de43ad61af2872e89a358cf98b211d658dfa5c9ed841a8b6cd29ea4450dcebf",
+            "myl_f_9209ca012055f1ebd24bcc95fd672926529bde7e6e4b3e25f097bc8779cccc08"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 80,
+          "contract": "241817697f71866323d60b4335e1ef6432a7bcc244bdcd6cf642ad5ec0a273b8",
+          "provider": "",
+          "source": "41c6937dbbb19d201979df9613886dc0ee6d75bdba813fda2efe130c2fdcc2b5"
+        }
+      ],
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 3,
+      "modules": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/tests/lang/rc_call_lifetimes.my"
+      ]
+    },
+    "bound-rc_call_lifetimes-qbe": {
+      "version": "native-tests-v1",
+      "tests": [
+        {
+          "name": "rc_call_lifetimes::test_indirect_owned_return_survives_original_replacement",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "555871fb261c728211c575069d381ee0767f297988d13f60dbeee927ce3d9322",
+          "dependencies": [
+            "myl_f_4df132df107e146e82d8fbca2fc5589a64fa77c07e002445e3a03240ae874863",
+            "myl_f_6de43ad61af2872e89a358cf98b211d658dfa5c9ed841a8b6cd29ea4450dcebf",
+            "myl_f_a762f052c412c2f774b3372b0a94357b9d4b2b4365487cdcff888eeea4f96494"
+          ],
+          "cacheable": true,
+          "reasons": [
+            "conservative-indirect-target-set"
+          ],
+          "steps": 59,
+          "contract": "241817697f71866323d60b4335e1ef6432a7bcc244bdcd6cf642ad5ec0a273b8",
+          "provider": "",
+          "source": "41c6937dbbb19d201979df9613886dc0ee6d75bdba813fda2efe130c2fdcc2b5"
+        },
+        {
+          "name": "rc_call_lifetimes::test_non_tail_recursive_owned_return_survives_call_frames",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "ba6b8816fe56b7457ea83e87137a67e1f8537095cfd7043434eb5d803af287dd",
+          "dependencies": [
+            "myl_f_054dba95fbd3ab4103a47280d028d4bb52d16c004af461dc58a08b174678d7b0",
+            "myl_f_ce4ff43248dd073a526fb4a36d635871c9841be81fff18505a62e83dbdddfbd9"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 798,
+          "contract": "241817697f71866323d60b4335e1ef6432a7bcc244bdcd6cf642ad5ec0a273b8",
+          "provider": "",
+          "source": "41c6937dbbb19d201979df9613886dc0ee6d75bdba813fda2efe130c2fdcc2b5"
+        },
+        {
+          "name": "rc_call_lifetimes::test_short_circuit_temporary_returns_keep_independent_owners",
+          "status": "passed",
+          "actual": true,
+          "expected": true,
+          "reason": "",
+          "key": "75262ac8266716a0c639e8f57deab3dee76b7dca3c7920ae012bafbbc6d00916",
+          "dependencies": [
+            "myl_f_6de43ad61af2872e89a358cf98b211d658dfa5c9ed841a8b6cd29ea4450dcebf",
+            "myl_f_9209ca012055f1ebd24bcc95fd672926529bde7e6e4b3e25f097bc8779cccc08"
+          ],
+          "cacheable": true,
+          "reasons": [],
+          "steps": 80,
+          "contract": "241817697f71866323d60b4335e1ef6432a7bcc244bdcd6cf642ad5ec0a273b8",
+          "provider": "",
+          "source": "41c6937dbbb19d201979df9613886dc0ee6d75bdba813fda2efe130c2fdcc2b5"
+        }
+      ],
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 3,
+      "modules": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/tests/lang/rc_call_lifetimes.my"
+      ]
+    }
+  },
+  "unit_regression": 12,
+  "existing_borrow_tests": 21,
+  "abi_negative_fixture": 12
+}
