@@ -35,6 +35,11 @@ balanced and identical backend counters. The structural selection passes 12
 tests and whole-tree Guardian passes 88 checks. Exact commands and identities
 are in [raw evidence](evidence/d9-rc-physical-hoists.json.gz).
 
+Median-of-three retired user instructions on CPU 10 also fall for the same
+counted probes: flat writes are 0.4369× QBE / 0.5861× LLVM, and nested writes
+are 0.5486× QBE / 0.6120× LLVM. Exact binaries, perf commands, raw samples and
+all output/count checks are in [timing evidence](evidence/d9-rc-physical-hoists-perf.json.gz).
+
 These are focused traffic and correctness results, not the required 43-program
 instruction/RSS acceptance. Root integration owns the full gate. Its newly
 exposed GC mutable-parameter rebinding failure also reproduces with the accepted
