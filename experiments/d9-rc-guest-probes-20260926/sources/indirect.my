@@ -1,0 +1,12 @@
+def selected(items: list[int]) -> list[int]:
+    return items
+
+def apply(f: def(list[int]) -> list[int], items: list[int]) -> list[int]:
+    return f(items)
+
+def main() -> int:
+    source = [11, 22]
+    result = apply(selected, source)
+    source = [44]
+    assert result[1] == 22
+    return 0

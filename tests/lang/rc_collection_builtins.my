@@ -1,0 +1,61 @@
+module rc_collection_builtins
+
+# spec-case: RC-COLLECTION-1
+public def test_nested_list_mutators_publish_owned_results() -> bool:
+    values = [[1], [2]]
+    first = values.pop(0)
+    values.insert(0, [3])
+    values.append(first)
+    values[1] = [4]
+    if values != [[3], [4], [1]] or first != [1]:
+        return False
+    values.clear()
+    return len(values) == 0 and first == [1]
+
+
+# spec-case: RC-DICTIONARY-1
+public def test_dictionary_results_survive_receiver_clear() -> bool:
+    mapping = {"a": [10], "b": [20]}
+    existing = mapping.setdefault("a", [99])
+    inserted = mapping.setdefault("c", [30])
+    removed = mapping.pop("b")
+    fallback = mapping.pop("missing", [42])
+    if existing != [10] or inserted != [30] or removed != [20] or fallback != [42]:
+        return False
+    copied = mapping.copy()
+    copied.update({"d": [40]})
+    values = list(mapping.values())
+    keys = list(mapping.keys())
+    mapping.clear()
+    return values == [[10], [30]] and keys == ["a", "c"] and len(copied) == 3
+
+
+def word_length(word: str) -> int:
+    return len(word)
+
+
+# spec-case: RC-COLLECTION-1
+public def test_keyed_sort_owns_its_managed_elements() -> bool:
+    words = ["pear", "apple", "fig"]
+    ordered = sorted(words, key=word_length)
+    return ordered == ["fig", "pear", "apple"] and words == ["pear", "apple", "fig"]
+
+
+# spec-case: RC-DICTIONARY-1
+public def test_set_pop_owns_the_removed_key() -> bool:
+    selected = {"first", "second"}
+    last = selected.pop()
+    selected.clear()
+    return last == "second" and len(selected) == 0
+
+
+def main() -> int:
+    if not test_nested_list_mutators_publish_owned_results():
+        return 1
+    if not test_dictionary_results_survive_receiver_clear():
+        return 2
+    if not test_keyed_sort_owns_its_managed_elements():
+        return 3
+    if not test_set_pop_owns_the_removed_key():
+        return 4
+    return 0

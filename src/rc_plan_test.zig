@@ -663,6 +663,22 @@ test "RC-UNIQUE-LOWER-1 mutations use typed owner counts inside loops" {
     try t.expect(std.mem.indexOf(u8, text, "@ce") == null);
 }
 
+// spec-case: RC-AGGREGATE-1
+test "RC aggregate managed bodies with unique fields install finalizers" {
+    var fixture = try ShapeFixture.init(
+        \\record Owner:
+        \\    handle: TextFile
+        \\    next: Option[Owner]
+        \\
+        \\def main() -> int:
+        \\    return 0
+    );
+    defer fixture.deinit();
+    const generated = try @import("rc_descriptors.zig").generate(t.allocator, &fixture.layouts);
+    defer t.allocator.free(generated);
+    try t.expect(std.mem.indexOf(u8, generated, ".finalize=myl_rc_finalize_unique") != null);
+}
+
 // spec-case: RC-UNIQUE-LOWER-1
 test "RC-UNIQUE-LOWER-1 nested receiver replaces its owned field before borrowing" {
     const mode = @import("runtime_mode.zig");

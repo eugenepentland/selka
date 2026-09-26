@@ -1,0 +1,13 @@
+def descend(items: list[int], depth: int) -> list[int]:
+    fresh = [depth, depth + 1]
+    if depth == 0:
+        assert len(fresh) == 0, "intentional nested RC cleanup probe"
+        return items
+    previous = descend(fresh, depth - 1)
+    assert len(previous) == len(items)
+    return previous
+
+def main() -> int:
+    items = [1, 2]
+    result = descend(items, 32)
+    return len(result)
