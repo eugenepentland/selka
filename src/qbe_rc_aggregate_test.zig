@@ -91,3 +91,32 @@ fn hasPlainSnapshot(text: []const u8) bool {
     }
     return false;
 }
+
+fn borrowsContractBeforeReturn(code: compiler.bytecode.Program) bool {
+    for (code.functions) |function| {
+        if (!std.mem.eql(u8, function.name, "checked")) continue;
+        for (function.scope.instructions, 0..) |instruction, index| {
+            if (instruction.op != .switch_variant or !instruction.op.switch_variant.borrowed or index == 0) continue;
+            return function.scope.instructions[index - 1].op == .load_local;
+        }
+    }
+    return false;
+}
+
+// spec: RC-CONTRACT-RESULT-1
+test "RC contract inspection borrows the complete result before its final return" {
+    var compilation = try compiler.Compilation.init(t.allocator, "rc_contract.my",
+        \\@ensures(len(result) == 2)
+        \\def checked() -> Result[list[int], str]:
+        \\    return Ok([17, 23])
+        \\def main() -> int:
+        \\    match checked():
+        \\        case Ok(values):
+        \\            return values[0]
+        \\        case Err(_):
+        \\            return 1
+    );
+    defer compilation.deinit();
+    try compilation.emit();
+    try t.expect(borrowsContractBeforeReturn(compilation.code.?));
+}

@@ -76,6 +76,7 @@ const curated = [_]Entry{
     entry("myl_qbe_frame_allocate", &.{ P, i64_type }, P),
     entry("myl_qbe_frame_release", &.{ P, P }, V),
     entry("myl_qbe_heap", &.{P}, P),
+    entry("myl_qbe_host_resource", &.{ P, i64_type, P, i64_type }, i64_type),
     entry("myl_qbe_int_neg", &.{ P, i64_type, i64_type, i64_type }, i64_type),
     entry("myl_qbe_int_binary", &.{ P, i64_type, i64_type, i64_type, i64_type, i64_type }, i64_type),
     entry("myl_qbe_print_byte", &.{ P, i32_type }, V),
