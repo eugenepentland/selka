@@ -77,6 +77,9 @@ test "copy on write: value-semantics copies use the rooted COW hook without dupl
     try std.testing.expectEqual(@as(usize, 1), count(il, "call $myl_qbe_cow_transfer("));
     try std.testing.expectEqual(@as(usize, 0), count(il, "call $myl_native_cow_share("));
     try std.testing.expectEqual(@as(usize, 1), count(il, "\n@vcpresent"));
+    const transfer = std.mem.indexOf(u8, il, "call $myl_qbe_cow_transfer(") orelse return error.TestUnexpectedResult;
+    const end = std.mem.indexOfScalarPos(u8, il, transfer, '\n') orelse return error.TestUnexpectedResult;
+    try std.testing.expect(std.mem.indexOf(u8, il[transfer..end], "%s") == null);
 }
 
 // spec-case: COW-SHARED-1
