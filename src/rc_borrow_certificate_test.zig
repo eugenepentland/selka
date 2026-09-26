@@ -19,7 +19,7 @@ fn certificate(source: []const u8) !?model.BorrowCertificate {
     var catalog = try shapes.Catalog.init(t.allocator, &layouts);
     defer catalog.deinit();
     for (program.functions) |function| if (std.mem.eql(u8, function.name, "selected")) {
-        return calls.borrowedIn(t.allocator, &catalog, program.functions, function, "rc-v2");
+        return calls.borrowedIn(t.allocator, &catalog, program.functions, function, "rc-v3");
     };
     return error.TestUnexpectedResult;
 }
