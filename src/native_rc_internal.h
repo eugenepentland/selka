@@ -18,12 +18,20 @@ typedef struct myl_rc_batch {
     myl_rc_shape_entry *shapes;
     myl_rc_descriptor *descriptors;
     struct { size_t shapes, descriptors; } count;
-    struct { size_t *slots; size_t capacity; } lookup;
     size_t bytes;
 } myl_rc_batch;
+typedef struct {
+    const void *key, *value;
+    size_t depth;
+    unsigned kind;
+} myl_rc_index_entry;
 struct myl_rc_state {
     struct { myl_rc_allocator hooks; void *context; } allocator;
-    struct { myl_rc_batch *batches; size_t bytes; } metadata;
+    struct {
+        myl_rc_batch *batches;
+        size_t bytes;
+        struct { myl_rc_index_entry *entries; size_t count, capacity; } index;
+    } metadata;
     struct { myl_rc_frame *frames; size_t capacity, depth; } walk;
     struct { myl_rc_object *head; int active; } dead;
     myl_rc_scope *scopes;
@@ -35,5 +43,6 @@ void myl_rc_meta_free(myl_native_heap *, void *, size_t);
 int myl_rc_size_add(size_t, size_t, size_t *);
 int myl_rc_size_mul(size_t, size_t, size_t *);
 int myl_rc_is_counted(const void *);
+size_t myl_rc_shape_depth(const myl_native_heap *, const myl_rc_shape *);
 void myl_rc_enqueue(myl_native_heap *, myl_rc_object *);
 #endif

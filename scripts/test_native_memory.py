@@ -11,7 +11,7 @@ import tempfile
 def main():
     root = Path(__file__).resolve().parents[1]
     compiler = shlex.split(os.environ.get("CC", "cc"))
-    flags = ["-std=c11", "-Wall", "-Wextra", "-Werror", "-fsanitize=undefined"]
+    flags = ["-std=c11", "-Wall", "-Wextra", "-Werror", "-fsanitize=undefined", "-ffunction-sections", "-fdata-sections", "-Wl,--gc-sections"]
     if os.environ.get("MYLANG_TEST_ASAN") == "1":
         flags.append("-fsanitize=address")
     with tempfile.TemporaryDirectory(prefix="mylang-native-memory-") as directory:
@@ -57,7 +57,7 @@ def jobs():
 # Each C suite and the runtime sources it links.
 SUITES = (
     ("native_rc_contract", ["native_rc.c", "native_rc_shapes.c", "native_rc_walk.c", "native_rc_transfer.c"]),
-    ("native_rc_collections", ["native_heap.c"]),
+    ("native_rc_collections", ["native_heap.c", "native_text_methods.c"]),
     ("native_heap", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c", "native_equal.c", "native_bytes.c"]),
     ("native_collections", ["native_heap.c", "native_collections.c"]),
     ("native_text_dictionary", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c"]),

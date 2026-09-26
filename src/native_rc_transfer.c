@@ -147,7 +147,7 @@ static myl_rc_status transfer(myl_native_heap *heap, myl_rc_slot *destination,
     transfer_walk walk = {.heap = heap, .region = destination->region, .mode = mode};
     size_t frame_bytes = 0;
     if (shape->kind != MYL_RC_SHAPE_NONE && shape->kind != MYL_RC_SHAPE_POINTER) {
-        walk.capacity = heap->rc->walk.capacity;
+        walk.capacity = myl_rc_shape_depth(heap, shape);
         myl_rc_invariant(myl_rc_size_mul(walk.capacity, sizeof(transfer_frame), &frame_bytes));
         walk.frames = myl_rc_meta_alloc(heap, frame_bytes);
         if (!walk.frames) return MYL_RC_ALLOCATION_REFUSED;

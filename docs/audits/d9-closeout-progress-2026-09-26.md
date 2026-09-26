@@ -13,8 +13,11 @@ Stage 3 and WP-4pre are accepted on the integration branch. The complete
 1.046853543× LLVM, with every output correct and no program above 1.3×.
 The final combined default/borrow gate at `f6bea5d9` passes all four steps:
 2,130 executed main tests, 429 QBE tests, native-build and formatting.
-WP-4 implementation is beginning behind an experimental runtime selector;
-GC remains the default until RC's own correctness/performance/RSS acceptance.
+WP-4 foundations are implemented behind an experimental runtime selector.
+The joined foundation at `3e0c1400` passes its full regression gate: 2,153 main
+tests, 436 QBE tests, native build and formatting. Compiler cleanup, complete
+runtime/arena/host ownership, and RC performance/RSS acceptance remain in progress;
+GC stays the default. See the [foundation report](d9-rc-foundation-gate-2026-09-26.md).
 
 ## Accepted work
 

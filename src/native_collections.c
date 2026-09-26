@@ -1074,7 +1074,7 @@ myl_native_list *myl_native_list_slice_step(myl_native_heap *heap, myl_native_li
             const void *source=(const unsigned char *)input->storage+(size_t)at*input->element->size;
             if (myl_rc_enabled(heap)) {
                 if (!myl_rc_list_append(heap,result,source)) {
-                    myl_rc_owner_release(heap,result);
+                    myl_rc_native_abort(heap,result);
                     result=NULL;
                     break;
                 }
@@ -1128,7 +1128,7 @@ static myl_native_list *rc_list_new(myl_native_heap *heap, const myl_native_type
     if (status!=MYL_RC_OK) { myl_rc_record_failure(heap,status); return NULL; }
     list->element=element;
     if (capacity) list->storage=myl_rc_native_storage(heap,element,capacity,region);
-    if (capacity && !list->storage) { myl_rc_owner_release(heap,list); return NULL; }
+    if (capacity && !list->storage) { myl_rc_native_abort(heap,list); return NULL; }
     list->capacity=capacity;
     return list;
 }
@@ -1247,7 +1247,7 @@ static myl_native_list *rc_list_clone(myl_native_heap *heap, const myl_native_li
     if (!clone) return NULL;
     for (size_t i=0;i<input->length;i++) {
         if (!myl_rc_list_append(heap,clone,(const unsigned char *)input->storage+i*element->size)) {
-            myl_rc_owner_release(heap,clone);
+            myl_rc_native_abort(heap,clone);
             return NULL;
         }
     }

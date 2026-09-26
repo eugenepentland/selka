@@ -173,13 +173,13 @@ myl_native_list *myl_native_text_lines(myl_native_heap *heap, myl_native_text *i
         while (cursor<input->bytes) {
             unsigned char octet=bytes[cursor];
             if (octet!='\n' && octet!='\r') { cursor++; continue; }
-            if (!append_line(heap,result,input,start,cursor)) { if (myl_rc_enabled(heap)) myl_rc_owner_release(heap,result); result=NULL; break; }
+            if (!append_line(heap,result,input,start,cursor)) { if (myl_rc_enabled(heap)) myl_rc_native_abort(heap,result); result=NULL; break; }
             cursor++;
             if (octet=='\r' && cursor<input->bytes && bytes[cursor]=='\n') cursor++;
             start=cursor;
         }
         if (result && start<input->bytes && !append_line(heap,result,input,start,input->bytes)) {
-            if (myl_rc_enabled(heap)) myl_rc_owner_release(heap,result);
+            if (myl_rc_enabled(heap)) myl_rc_native_abort(heap,result);
             result=NULL;
         }
     }
@@ -242,7 +242,11 @@ myl_native_list *myl_native_text_split_whitespace(myl_native_heap *heap, myl_nat
             size_t start=cursor;
             while (cursor<input->bytes && !space_octet(bytes[cursor])) cursor++;
             if (start==cursor) break;
-            if (!append_line(heap,result,input,start,cursor)) { result=NULL; break; }
+            if (!append_line(heap,result,input,start,cursor)) {
+                if (myl_rc_enabled(heap)) myl_rc_native_abort(heap,result);
+                result=NULL;
+                break;
+            }
         }
     }
     myl_native_root_pop(heap,&b); myl_native_root_pop(heap,&a);
