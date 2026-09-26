@@ -1,0 +1,50 @@
+{
+  "commit": "d57fef032dae830699e491621027aa418bd05057",
+  "main": "b292660a09bc703d0ceab071636a73b643c52d34",
+  "compiler_sha256": "4e3cc120f065f63ecb3e8b75ce22c37582c1c4ba623a70853898d8063fd1aedb",
+  "status": "all four required gate commands and both actual RC language sweeps pass",
+  "gate_results": {
+    "test": "94/94;2232executed,22695shardexclusions",
+    "test-qbe": "51/51;437/437",
+    "test-qbe-build": "29/29",
+    "fmt-check": "2/2"
+  },
+  "files": {
+    "docs/audits/evidence/d9-rc-identity-build.log.gz": {
+      "original_sha256": "eecb62bce6dc05e9d741e72e265c7e6a45bad5f86beb534f1f32cc437b243c71",
+      "bytes": 2669
+    },
+    "docs/audits/evidence/d9-rc-identity-test.log.gz": {
+      "original_sha256": "ba938178035fe6fbbe1890583dba815909a0439e78038fc56bf4acaa58044c77",
+      "bytes": 173968
+    },
+    "docs/audits/evidence/d9-rc-identity-test-qbe.log.gz": {
+      "original_sha256": "fd6698dbd2be90cbdf8556fac61a8d0528fc2d01d338c222ed829ad90c35ca46",
+      "bytes": 16349
+    },
+    "docs/audits/evidence/d9-rc-identity-test-qbe-build.log.gz": {
+      "original_sha256": "aeb5436aa5ea8c89bb81c12161d5145abb8cee957a80024ea83fdc4dd3d97cce",
+      "bytes": 4600
+    },
+    "docs/audits/evidence/d9-rc-identity-fmt-check.log.gz": {
+      "original_sha256": "727fe2e22c982638ef4d6d75a47d5f97e1bb81c8b5f3ec3c0c55f158df48d93f",
+      "bytes": 81
+    },
+    "docs/audits/evidence/d9-rc-identity-sweep-qbe.json.gz": {
+      "original_sha256": "2a2fb71e8187e8ffffea5d10c0b9350ecd13a187875cbe4e3117916e8cb9080b",
+      "bytes": 518578
+    },
+    "docs/audits/evidence/d9-rc-identity-sweep-qbe.log.gz": {
+      "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "docs/audits/evidence/d9-rc-identity-sweep-llvm.json.gz": {
+      "original_sha256": "076a8b3a60d61b3c3403bbdaea71a83ca2f59eab9b6b026a6582f9c279f15709",
+      "bytes": 518578
+    },
+    "docs/audits/evidence/d9-rc-identity-sweep-llvm.log.gz": {
+      "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  }
+}
