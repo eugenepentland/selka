@@ -1730,11 +1730,13 @@ const Emitter = struct {
         try self.enterFrame(name);
         // A build without instruction-budget accounting cannot honor a runtime
         // step ceiling; refuse it once, before any guest instruction runs.
-        if (self.entry) try self.requireAccounting();
+        if (self.entry and !runtime_mode.enabled()) try self.requireAccounting();
         try arena_lower.Lower(Emitter).mark(self);
         if (self.heap_frame) {
-            try self.print(" %frame_memory =l call $myl_qbe_frame_allocate(l %ctx, l {d})\n", .{frame.heap});
-            try self.checkFailure("allocation_failure");
+            if (!try @import("qbe_rc_admission.zig").allocate(Emitter, self, frame.heap)) {
+                try self.print(" %frame_memory =l call $myl_qbe_frame_allocate(l %ctx, l {d})\n", .{frame.heap});
+                try self.checkFailure("allocation_failure");
+            }
             try self.allocateStorage(capacity);
             try self.allocateTemporaries(.all);
         }
@@ -1742,6 +1744,7 @@ const Emitter = struct {
         try self.initializeStorage();
         if (self.has_roots) try self.print(" %heap =l call $myl_qbe_heap(l %ctx)\n", .{});
         try rc_frame.Lower(Emitter).enter(self);
+        if (self.entry and runtime_mode.enabled()) try self.requireAccounting();
         if (self.has_roots and self.has_safepoints) try self.print(" %root_mark =l call $myl_qbe_root_mark(l %ctx)\n", .{});
         if (self.step_checks) try self.print(" %maxsteps =l add %ctx, 16\n", .{});
         try self.print(" jmp @i0\n", .{});
@@ -2542,6 +2545,7 @@ const Emitter = struct {
         }
         const value = self.temp();
         const indirect = try self.largeValue(signature.return_type);
+        try @import("qbe_rc_admission.zig").invoke(Emitter, self, signature.parameters, base + 1);
         try self.print(" %v{d} ={s} call %v{d}(l %ctx", .{ value, if (indirect) "l" else try self.abiType(signature.return_type), function_pointer });
         if (indirect) try self.print(", l %aux{d}", .{self.pc});
         if (packed_args) {
