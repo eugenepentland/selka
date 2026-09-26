@@ -55,7 +55,9 @@ def main():
         for backend in ('qbe', 'llvm'):
             binary = pc.WORK / ('schematic.' + backend)
             command, cwd = pc.build_command(programs[0], str(compiler), backend, binary, pc.WORK / ('cache-' + backend))
-            command += ['--rc-runtime=stats', '--qbe=' + str(qbe)]
+            command += ['--rc-runtime=stats']
+            if backend == 'qbe':
+                command.append('--qbe=' + str(qbe))
             result = {'compiler_sha256': digest(compiler), 'qbe_sha256': digest(qbe)}
             result['build'] = pc.do_build({'bin': binary, 'cmd': [str(ROOT / 'scripts/build-slot.sh'), 'build', *command], 'cwd': cwd})
             assert result['build']['ok'], result['build']

@@ -30,7 +30,8 @@ def main():
         library = work / ("bridge-" + backend + ".so")
         command = [str(ROOT / "scripts/build-slot.sh"), "build", str(compiler), "build", str(FIXTURE / "library.my"),
                    "--library", "--rc-runtime=stats", "--backend", backend, "--mode", "ReleaseFast",
-                   "--qbe=" + str(args.qbe.resolve()), "--cache-dir=" + str(work / ("cache-" + backend)), "-o", str(library)]
+                   "--cache-dir=" + str(work / ("cache-" + backend)), "-o", str(library)]
+        command += (["--qbe=" + str(args.qbe.resolve())] if backend == "qbe" else ["--llvm-opt", "3", "--lto"])
         subprocess.run(command, cwd=ROOT, check=True)
         run = subprocess.run([str(driver), str(library)], capture_output=True, text=True, check=True)
         counts = [json.loads(line.removeprefix("MYLANG_RC_COUNTS "))

@@ -24,3 +24,13 @@ lifetime checks, not a performance acceptance measurement.
 `trap.my` deliberately asserts during iteration while a hidden H receiver remains
 live. `trap-*.json` record the exact build commands and expected `R_ASSERT` exit
 with balanced allocation, owner and hold counts on both backends.
+
+## Backend correction (2026-09-26)
+
+The archived `llvm.json`, `deep-llvm.json` and `trap-llvm.json` passed `--qbe`
+after `--backend llvm`. That later option selected QBE, so these preserved
+historical files do not establish LLVM validation. `llvm-corrected.json` now
+records all twelve assertions compiled with actual LLVM O3/LTO, and
+`trap-llvm-corrected.json` records the actual LLVM trap run. All pass with
+balanced ownership and the same counts as the corresponding QBE runs. The
+runner now passes `--qbe` only on QBE commands.
