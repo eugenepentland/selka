@@ -50,6 +50,13 @@ landing partial D9 work. This is a scheduling deviation, not an acceptance waive
 Performance limits, arenas, Debug compiler builds, real merge commits and final
 joined validation remain required.
 
+The Astra integration at `63b3a2ba`, including the gated box changes, closed-region
+proof, transfer/alias scratch changes and latest Lox source, passed all four gates:
+93/93 main steps with 2,112 executed tests, QBE 51/51 with 428 tests, build 29/29
+and formatting 2/2. This does not include the unfinished nested-array follow-up
+and does not establish performance acceptance. The isolated default candidate
+is receiving the same changes for its own fresh gate.
+
 ## Performance work still blocking acceptance
 
 The closed-region ownership proof `9f42e5a9` permits field extraction and
