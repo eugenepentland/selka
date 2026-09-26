@@ -344,7 +344,7 @@ const Builder = struct {
             "unknown"
         else
             originName(function.signature.return_origin);
-        self.symbols.items[slot].details.mutation_writes = function.signature.mutation_facts.writes;
+        self.symbols.items[slot].details.mutation_writes = function.signature.inferred.writes;
         for (function.scope.locals, 0..) |local, i| {
             if (local.usage.temporary) continue;
             try self.add(local.declaration, .{

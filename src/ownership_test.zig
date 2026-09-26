@@ -6,12 +6,61 @@ const language = @import("compiler.zig");
 const liveness = @import("qbe_liveness.zig");
 const bytecode = @import("bytecode.zig");
 const typed = @import("typed.zig");
+const values = @import("value_semantics.zig");
 
 const Local = struct { index: u32, name: []const u8, role: []const u8, parent: ?u32 = null };
 const Origin = struct { origin: []const u8, local: ?u32 = null, part: ?[]const u8 = null };
 const Transfer = struct { pc: u32, kind: []const u8, target: ?u32 = null, source: Origin, class: []const u8 };
 const Cow = struct { pc: u32, local: u32, via: u32, elements: bool, needed: bool, hoisted: ?u32 };
-const Function = struct { function: []const u8, locals: []Local, transfers: []Transfer, cow: []Cow, moves: []u32 };
+const ReturnOrigin = struct { kind: []const u8, params: []u16 };
+const Function = struct {
+    function: []const u8,
+    return_origin: ReturnOrigin,
+    borrow_origin: ReturnOrigin,
+    locals: []Local,
+    transfers: []Transfer,
+    cow: []Cow,
+    moves: []u32,
+};
+
+// spec-case: RETURN-BORROW-1
+test "a returned element borrows only while its argument stays live and stable" {
+    const previous = values.enabled();
+    values.setEnabled(true);
+    defer values.setEnabled(previous);
+    const source =
+        \\record Node:
+        \\    data: bytes
+        \\
+        \\def at(nodes: list[Node], i: int) -> Node:
+        \\    return nodes[i]
+        \\
+        \\def stable(nodes: list[Node]) -> int:
+        \\    item = at(nodes, 0)
+        \\    return len(item.data) + len(nodes)
+        \\
+        \\def changed(nodes: mut list[Node]) -> int:
+        \\    item = at(nodes, 0)
+        \\    nodes.append(Node(data=b"x"))
+        \\    return len(item.data)
+        \\
+        \\def escaped(nodes: list[Node]) -> Node:
+        \\    return at(nodes, 0)
+        \\
+        \\def main() -> int:
+        \\    nodes = [Node(data=b"abc")]
+        \\    return stable(nodes) + changed(mut nodes) + len(escaped(nodes).data)
+    ;
+    var stable = try explained(std.testing.allocator, source, "stable");
+    defer stable.deinit();
+    var changed = try explained(std.testing.allocator, source, "changed");
+    defer changed.deinit();
+    var escaped = try explained(std.testing.allocator, source, "escaped");
+    defer escaped.deinit();
+    try std.testing.expectEqualStrings("borrow", try classInto(stable.value, "assign", "item"));
+    try std.testing.expectEqualStrings("copy", try classInto(changed.value, "assign", "item"));
+    try std.testing.expectEqualStrings("copy", try classInto(escaped.value, "return", "nodes"));
+}
 
 /// The explanation of function `name` in `source`.
 fn explained(a: std.mem.Allocator, source: []const u8, name: []const u8) !std.json.Parsed(Function) {

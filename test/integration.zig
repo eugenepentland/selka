@@ -2,6 +2,10 @@
 const std = @import("std");
 const testing = std.testing;
 const compiler_path = @import("test_options").compiler_path;
+// Mirror src/semantic_store.zig's directory format: this CLI test cannot
+// import files outside its Zig module root.
+const semantic_cache_version = "semantic-cache-v3";
+
 // spec: VALUE-SEMANTICS-11
 test "a scalar-only mut record parameter writes the caller in both modes" {
     const program =
@@ -569,7 +573,7 @@ fn c2PathExists(path: []const u8) bool {
 }
 
 fn c2FirstSemanticFile(allocator: std.mem.Allocator, cache_base: []const u8) ![]u8 {
-    const version_dir = try std.fs.path.join(allocator, &.{ cache_base, "semantic", "semantic-cache-v2" });
+    const version_dir = try std.fs.path.join(allocator, &.{ cache_base, "semantic", semantic_cache_version });
     defer allocator.free(version_dir);
     var directory = std.Io.Dir.cwd().openDir(testing.io, version_dir, .{ .iterate = true }) catch return error.MissingSemanticEntry;
     defer directory.close(testing.io);
@@ -8609,7 +8613,7 @@ fn c3sCheckReport(path: []const u8, cache_argument: []const u8, no_cache: bool) 
 /// First semantic file whose payload carries the `specialization-v1` stable-key
 /// prefix. The durable file name is a hash, so the kind marker is the discriminator.
 fn c3sFirstSpecializationFile(allocator: std.mem.Allocator, cache_base: []const u8) ![]u8 {
-    const version_dir = try std.fs.path.join(allocator, &.{ cache_base, "semantic", "semantic-cache-v2" });
+    const version_dir = try std.fs.path.join(allocator, &.{ cache_base, "semantic", semantic_cache_version });
     defer allocator.free(version_dir);
     var directory = std.Io.Dir.cwd().openDir(testing.io, version_dir, .{ .iterate = true }) catch return error.MissingSpecializationEntry;
     defer directory.close(testing.io);
@@ -11682,9 +11686,53 @@ test "CLI check --explain-ownership writes one JSON line per function" {
     );
     defer testing.allocator.free(report);
     try testing.expectEqual(@as(usize, 2), std.mem.count(u8, report, "\n"));
-    try testing.expect(std.mem.indexOf(u8, report, "{\"function\":\"total\",\"locals\":[{\"index\":0,\"name\":\"xs\",\"role\":\"param\"},{\"index\":1,\"name\":\"ys\",\"role\":\"borrowed\",\"parent\":0}") != null);
+    try testing.expect(std.mem.indexOf(u8, report, "{\"function\":\"total\",\"return_origin\":") != null);
+    try testing.expect(std.mem.indexOf(u8, report, "\"borrow_origin\":{\"kind\":\"fresh\",\"params\":[]},\"locals\":[{\"index\":0,\"name\":\"xs\",\"role\":\"param\"},{\"index\":1,\"name\":\"ys\",\"role\":\"borrowed\",\"parent\":0}") != null);
     try testing.expect(std.mem.indexOf(u8, report, "\"kind\":\"argument\",\"source\":{\"origin\":\"local\",\"local\":1,\"part\":\"whole\"},\"class\":\"move\"") != null);
     try invokeOptions("run", "def main() -> int:\n    return 0\n", &.{"--explain-ownership=unused.jsonl"}, 2, "", "usage");
+}
+
+// spec-case: RETURN-BORROW-1
+test "CLI project ownership explanation includes imported accessor borrow origin" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data =
+        \\module main
+        \\import helper
+        \\
+        \\def main() -> int:
+        \\    return len(helper.at([helper.Node(data=b"x")], 0).data)
+    });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data =
+        \\module helper
+        \\public record Node:
+        \\    data: bytes
+        \\
+        \\public def at(nodes: list[Node], index: int) -> Node:
+        \\    return nodes[index]
+    });
+    const path = try temporary.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const option = try std.fmt.allocPrint(testing.allocator, "--explain-ownership={s}.jsonl", .{path});
+    defer testing.allocator.free(option);
+    const cache = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}/cache", .{std.fs.path.dirname(path).?});
+    defer testing.allocator.free(cache);
+    const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check", path, "--value-semantics", option, cache } });
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+    const report = try temporary.dir.readFileAlloc(testing.io, "main.my.jsonl", testing.allocator, .limited(1 << 20));
+    defer testing.allocator.free(report);
+    try testing.expect(std.mem.indexOf(u8, report, "\"function\":\"helper::at\"") != null);
+    try testing.expect(std.mem.indexOf(u8, report, "\"borrow_origin\":{\"kind\":\"params\",\"params\":[0]}") != null);
+    try temporary.dir.deleteFile(testing.io, "main.my.jsonl");
+    const cached = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check", path, "--value-semantics", option, cache } });
+    defer testing.allocator.free(cached.stdout);
+    defer testing.allocator.free(cached.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, cached.term);
+    const replayed = try temporary.dir.readFileAlloc(testing.io, "main.my.jsonl", testing.allocator, .limited(1 << 20));
+    defer testing.allocator.free(replayed);
+    try testing.expectEqualStrings(report, replayed);
 }
 
 const value_program =

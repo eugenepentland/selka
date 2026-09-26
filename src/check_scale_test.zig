@@ -81,8 +81,8 @@ fn checkProject(files: []const File, previous: ?[]const u8, mode: Mode) !Outcome
             function.name,
             function.policy.effects,
             function.signature.mutates,
-            function.signature.mutation_facts.writes,
-            function.signature.mutation_facts.external,
+            function.signature.inferred.writes,
+            function.signature.inferred.external,
             @tagName(function.signature.return_origin),
         });
     };

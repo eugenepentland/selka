@@ -2300,7 +2300,13 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         if (requested_output) |output| break :result output;
         try reportProject(init, &compilation);
         if (parsed.command == .@"project-dependencies") break :result try init.gpa.dupe(u8, dependency_receipt.?);
-        if (parsed.command == .@"check-project") return finishCheckProject(init, &project, &compilation, verdict, frontend, &configured);
+        if (parsed.command == .@"check-project") return finishRequestedProjectCheck(init, parsed, .{
+            .project = &project,
+            .compilation = &compilation,
+            .verdict = verdict,
+            .frontend = frontend,
+            .configured = &configured,
+        });
         if (parsed.command == .@"discover-project-duplicates") return discoverProject(init, parsed, &project, &compilation, frontend_start);
         if (parsed.command == .@"check-policy") return checkProjectPolicy(init, parsed, &project);
         return runProjectProgram(init, &compilation, parsed, &configured);
@@ -2333,6 +2339,32 @@ fn checkLibraryProject(init: Context, parsed: Parsed, compilation: *language.pro
     return if (try projectWarningsDenied(init, compilation, configured)) 1 else 0;
 }
 
+const RequestedProjectCheck = struct {
+    project: *language.project.Project,
+    compilation: *language.project_compile.Compilation,
+    verdict: ?*language.check_cache.Cache,
+    frontend: ?*language.frontend_cache.Cache,
+    configured: *const ConfiguredPolicy,
+};
+
+fn finishRequestedProjectCheck(init: Context, parsed: Parsed, request: RequestedProjectCheck) !u8 {
+    if (parsed.explain_ownership) |destination| {
+        const explained = try explainProjectOwnership(init, request.compilation, destination);
+        if (explained != 0) return explained;
+    }
+    return finishCheckProject(init, request.project, request.compilation, request.verdict, request.frontend, request.configured);
+}
+
+fn explainProjectOwnership(init: Context, compilation: *language.project_compile.Compilation, destination: []const u8) !u8 {
+    const ownership = compilation.explainOwnership(init.gpa) catch |err| switch (err) {
+        error.SourceError => return 1,
+        else => return err,
+    };
+    defer init.gpa.free(ownership);
+    std.Io.Dir.cwd().writeFile(init.io, .{ .sub_path = destination, .data = ownership }) catch return 2;
+    return 0;
+}
+
 /// SYNTAX-RELEASE-1: release the merged syntax of a checked program when this
 /// command's remaining work is lowering and emission alone: a whole-program
 /// `emit-project-qbe`, the build frontend. An invalidation explanation and a
@@ -2348,6 +2380,7 @@ fn releaseCheckedSyntax(parsed: Parsed, compilation: *language.project_compile.C
 /// command that inspects the checked program some other way.
 fn openSummaries(init: Context, parsed: Parsed, project: *const language.project.Project, functions: ?*language.semantic_cache.Cache, request: *language.semantic_summary.Request) !void {
     if (parsed.reporting.explain_invalidation) return;
+    if (parsed.explain_ownership != null) request.facts_only = true;
     // `check` stands summaries in for whole bodies; a command that lowers the
     // program checks every body and stands them in only for pass facts. The
     // `native-test-compile` session is one: its facts and its selective
@@ -2892,6 +2925,7 @@ const Replayed = struct {
 };
 
 fn replayStoredVerdict(init: Context, parsed: Parsed, project: *const language.project.Project, stores: Replayed) !bool {
+    if (parsed.explain_ownership != null) return false;
     if (try replayCheck(init, parsed.command, project, stores.verdict)) return true;
     if (try replayManifest(init, parsed, project, stores.policy)) return true;
     if (parsed.reporting.explain_invalidation) return false;

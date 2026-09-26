@@ -252,7 +252,10 @@ fn bufferSource(program: bytecode.Program, function: bytecode.Function, operatio
 /// A call's result: new when the callee's return origin says so, part of the
 /// one argument it may return, and unknown otherwise.
 fn callSource(signature: typed.FunctionSignature, stack: []const Source) Source {
-    return switch (signature.return_origin) {
+    // RETURN-BORROW-1: the checker bound is about logical independence. A
+    // value copy may still retain backing from an argument, so the native
+    // ownership plan uses the separate physical result bound.
+    return switch (signature.inferred.borrow_origin) {
         .fresh => .{ .origin = .fresh },
         .unknown => .{},
         .params => |positions| {

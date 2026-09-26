@@ -789,7 +789,7 @@ fn lowerFunction(allocators: Allocators, program: typed.Program, function: typed
             .mutates = function.signature.mutates,
             .return_origin = function.signature.return_origin,
             .declared_mutates = function.signature.declared_mutates,
-            .mutation_facts = function.signature.mutation_facts,
+            .inferred = function.signature.inferred,
         },
         .scope = .{
             .locals = locals,

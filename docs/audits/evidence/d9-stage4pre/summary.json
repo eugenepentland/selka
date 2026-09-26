@@ -1,0 +1,48 @@
+{
+  "functions": 113,
+  "transfer_changes": [
+    {
+      "kind": "argument",
+      "from": "move",
+      "to": "borrow",
+      "sites": 28
+    },
+    {
+      "kind": "assign",
+      "from": "copy",
+      "to": "borrow",
+      "sites": 1
+    },
+    {
+      "kind": "assign",
+      "from": "move",
+      "to": "borrow",
+      "sites": 43
+    },
+    {
+      "kind": "assign",
+      "from": "move",
+      "to": "copy",
+      "sites": 1
+    },
+    {
+      "kind": "construct",
+      "from": "move",
+      "to": "copy",
+      "sites": 4
+    },
+    {
+      "kind": "field",
+      "from": "move",
+      "to": "copy",
+      "sites": 1
+    },
+    {
+      "kind": "return",
+      "from": "move",
+      "to": "copy",
+      "sites": 6
+    }
+  ],
+  "value_copy_changes": []
+}
