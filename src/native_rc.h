@@ -71,7 +71,8 @@ typedef struct {
     myl_rc_status (*clone)(myl_native_heap *, const void *, unsigned, void **);
     /* Iterative clone protocol: shell owns private backing but initializes no
      * logical value edges. next yields one empty destination/source slot pair
-     * without allocation or hashing, returning 1 for a pair and 0 at the end. */
+     * without allocation or hashing, returning 1 for a pair and 0 at the end.
+     * A terminal shell with no remaining logical edges leaves next NULL. */
     myl_rc_status (*shell)(myl_native_heap *, const void *, unsigned, void **);
     int (*next)(myl_native_heap *, const void *, void *, size_t *, myl_rc_slot *, myl_rc_slot *);
 } myl_rc_descriptor;
@@ -186,7 +187,7 @@ typedef struct myl_rc_scope {
     myl_native_heap *heap;
     struct myl_rc_scope *previous;
     void *journal;
-    unsigned active;
+    unsigned active, region;
 } myl_rc_scope;
 typedef struct { const myl_rc_shape *shape; size_t offset; } myl_rc_projection;
 typedef struct {

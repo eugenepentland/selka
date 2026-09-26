@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include "native_heap.h"
+#include "native_rc.h"
 
 struct MylangNativeProvidersTag;
 /* Native ABI v3: execution context and sticky structured traps.
@@ -179,6 +180,11 @@ void myl_qbe_fail_list_bounds(void *context);
 void myl_qbe_fail_list_capacity(void *context);
 void myl_qbe_fail_list_value(void *context);
 void myl_qbe_fail_allocation(void *context);
+/* RC-v1 adapters preserve active-frame locations for status failures. Module
+ * registration runs before host initialize and before any owned guest value. */
+int myl_qbe_rc_initialize(void *context);
+int myl_qbe_rc_register(void *context, const myl_rc_module *module);
+int myl_qbe_rc_status(void *context, myl_rc_status status);
 void myl_qbe_fail_iteration(void *context);
 void myl_qbe_fail_assert(void *context);
 void myl_qbe_fail_requires(void *context);
