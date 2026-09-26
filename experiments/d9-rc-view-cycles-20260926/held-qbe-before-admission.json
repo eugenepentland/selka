@@ -1,0 +1,26 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/scripts/build-slot.sh",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/.tmp/rc-held-views/install/bin/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/audit/held_cycle.my",
+    "--rc-runtime=stats",
+    "--backend",
+    "qbe",
+    "--mode",
+    "ReleaseFast",
+    "--keep-symbols",
+    "--qbe=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/.tmp/rc-held-views/install/bin/qbe",
+    "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/.tmp/rc-held-views/cache-cycle-qbe",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/.tmp/rc-held-views/cycle-qbe"
+  ],
+  "returncode": 0,
+  "stdout": "",
+  "stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v2-counting\",\"saturated\":false,\"owner_acquire\":0,\"owner_release\":1,\"hold_acquire\":9,\"hold_release\":8,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":4,\"arena_allocate\":0,\"retire\":0,\"clone_shell\":0,\"unique_check\":2}\n",
+  "cases": [],
+  "source_sha256": {
+    "tests/lang/dictionary_views.my": "68c8200b3ff12469f35efc2d48e4270a7d1e4211e8318e9cf9d95adb082703e9"
+  }
+}
