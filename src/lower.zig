@@ -204,7 +204,7 @@ const Emitter = struct {
         const types = try self.allocator.alloc(typed.Type, 1);
         types[0] = self.program.nodes[@backingInt(message)].ty;
         try self.push(.{ .mark = done });
-        try self.instruction(condition_span, .{ .assert_true = "" });
+        try self.instruction(condition_span, .{ .assert_true = .{ .message = "" } });
         try self.instruction(condition_span, .{ .push_bool = false });
         try self.instruction(span, .pop);
         try self.instruction(span, .{ .print = .{ .sink = .stderr, .types = types, .separator = false, .terminator = false, .stream = false, .debug = true } });
@@ -235,7 +235,7 @@ const Emitter = struct {
                     try self.emitValuedAssert(stmt.span, check, message);
                     return;
                 }
-                try self.instruction(self.program.nodes[@backingInt(check.condition)].span, .{ .assert_true = check.message });
+                try self.instruction(self.program.nodes[@backingInt(check.condition)].span, .{ .assert_true = .{ .message = check.message, .kind = check.kind } });
                 try self.push(.{ .expression = check.condition });
             },
             // `_ = expr` releases a result-bearing value, which settles its obligation.
