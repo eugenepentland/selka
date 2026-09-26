@@ -203,6 +203,35 @@ static void million_chain_escape(void) {
     myl_rc_owner_release(&heap, copy);
     finish(&heap);
 }
+/* Sparse source addresses reproduce the low-bit alignment of arena chunks
+ * without a large logical graph. Only the linked pointer objects are escaped;
+ * raw padding must remain private to the ending arena. */
+static void strided_chain_escape(void) {
+    myl_native_heap heap;
+    start(&heap);
+    heap.limit = (size_t)256 << 20;
+    assert(myl_rc_native_shape(&heap, &pointer));
+    assert(myl_native_region_begin(&heap));
+    const size_t count = 32768;
+    myl_rc_alloc_request request = {.element = &pointer, .count = 1, .region = 1};
+    void *head = NULL;
+    for (size_t i = 0; i < count; ++i) {
+        void *node = NULL;
+        assert(myl_rc_new(&heap, &request, &node) == MYL_RC_OK);
+        *(void **)node = head;
+        head = node;
+        assert(myl_rc_storage_bytes(&heap, 2016, 1));
+    }
+    void *copy = NULL;
+    assert(myl_native_region_escape(&heap, &pointer, &head, &copy));
+    assert(copy != head && heap.arena.escaped == count);
+    myl_native_region_end(&heap);
+    size_t found = 0;
+    for (void *node = copy; node; node = *(void **)node) ++found;
+    assert(found == count);
+    myl_rc_owner_release(&heap, copy);
+    finish(&heap);
+}
 static void escape_rollback_to_outer_arena(void) {
     myl_native_heap heap;
     start(&heap);
@@ -256,16 +285,17 @@ int myl_native_rc_arena_verify(void) {
     depth_reservation_refusal();
     parent_finalizer_sees_arena_child();
     million_chain_escape();
+    strided_chain_escape();
     escape_rollback_to_outer_arena();
     sparse_dictionary_escape();
     close_preserves_older_scope();
     assert(!setrlimit(RLIMIT_STACK, &original));
-    return 9;
+    return 10;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
-    assert(myl_native_rc_arena_verify() == 9);
-    puts("native RC arena: 9 passed");
+    assert(myl_native_rc_arena_verify() == 10);
+    puts("native RC arena: 10 passed");
     return 0;
 }
 #endif
