@@ -237,14 +237,74 @@ static void arena_mark_refusal_is_atomic(void) {
     assert(!shared(limit)); header(limit)->owners=1;
     myl_native_region_end(&heap); myl_rc_owner_release(&heap,limit); finish(&heap);
 }
+// spec: RC-PHYSICAL-RETAIN-1
+static void physical_retain_preserves_pinned_identity(void) {
+    myl_native_heap heap; start(&heap);
+    void *source=mapping(&heap),*out=NULL;
+    myl_rc_pin pin={0}; assert(myl_rc_pin_acquire(&heap,source,&pin)==MYL_RC_OK);
+    assert(myl_rc_native_retain(&heap,&pointer,&out,&source,0));
+    assert(source==out && header(source)->owners==2 && !shared(source));
+    myl_rc_native_drop(&heap,&pointer,&out); myl_rc_pin_release(&heap,&pin);
+    myl_rc_owner_release(&heap,source); finish(&heap);
+}
+static void physical_retain_arena_has_no_history(void) {
+    myl_native_heap heap; start(&heap); assert(myl_native_region_begin(&heap));
+    void *source=mapping(&heap),*out=NULL;
+    assert(myl_rc_native_retain(&heap,&pointer,&out,&source,1));
+    assert(source==out && !shared(source));
+    myl_rc_native_drop(&heap,&pointer,&out);
+    assert(!myl_rc_native_retain(&heap,&pointer,&out,&source,0));
+    assert(myl_rc_take_failure(&heap)==MYL_RC_REGION_ERROR && !out && !shared(source));
+    myl_native_region_end(&heap); finish(&heap);
+}
+static void physical_retain_refusal_rolls_back_prefix(void) {
+    myl_native_heap heap; start(&heap);
+    void *source[]={mapping(&heap),mapping(&heap)},*out[2]={0};
+    header(source[1])->owners=MYL_RC_COUNT_MAX;
+    assert(!myl_rc_native_retain(&heap,&pair,out,source,0));
+    assert(myl_rc_take_failure(&heap)==MYL_RC_COUNT_LIMIT && !out[0] && !out[1]);
+    assert(header(source[0])->owners==1 && !shared(source[0]) && !shared(source[1]));
+    header(source[1])->owners=1; myl_rc_native_drop(&heap,&pair,source); finish(&heap);
+}
+static void physical_retain_replace_commits_before_retiring(void) {
+    myl_native_heap heap; start(&heap);
+    void *source=mapping(&heap),*target=mapping(&heap),*old=target;
+    myl_rc_hold view={0}; assert(myl_rc_hold_acquire(&heap,old,&view)==MYL_RC_OK);
+    header(source)->owners=MYL_RC_COUNT_MAX;
+    assert(!myl_rc_native_retain_replace(&heap,&pointer,&target,&source,0));
+    assert(myl_rc_take_failure(&heap)==MYL_RC_COUNT_LIMIT && target==old && header(old)->owners==1);
+    header(source)->owners=1;
+    assert(myl_rc_native_retain_replace(&heap,&pointer,&target,&source,0));
+    assert(target==source && header(source)->owners==2 && header(old)->owners==0);
+    assert(read_value(view.payload)==7 && !shared(source));
+    myl_rc_hold_release(&heap,&view); myl_rc_owner_release(&heap,target);
+    myl_rc_owner_release(&heap,source); finish(&heap);
+}
+static void physical_retain_mixed_hold_refusal(void) {
+    myl_native_heap heap; start(&heap);
+    const myl_native_type mixed={.size=16,.alignment=8,.kind=MYL_NATIVE_RECORD,.fields=pair_fields,.field_count=2};
+    const myl_rc_shape held={.size=8,.kind=MYL_RC_SHAPE_HOLD_POINTER};
+    const myl_rc_field edges[]={{.shape=&owned},{.offset=8,.shape=&held}};
+    const myl_rc_shape shape={.size=16,.kind=MYL_RC_SHAPE_RECORD,.as.record={edges,2}};
+    const myl_rc_descriptor descriptor={.type=&mixed,.shape=&shape};
+    assert(myl_rc_descriptor_import(&heap,&descriptor)==MYL_RC_OK);
+    void *payload=mapping(&heap),*source[]={payload,payload},*out[2]={0};
+    header(payload)->holds=MYL_RC_COUNT_MAX;
+    assert(!myl_rc_native_retain(&heap,&mixed,out,source,0));
+    assert(myl_rc_take_failure(&heap)==MYL_RC_COUNT_LIMIT && !out[0] && !out[1]);
+    assert(header(payload)->owners==1 && header(payload)->holds==MYL_RC_COUNT_MAX && !shared(payload));
+    header(payload)->holds=0; myl_rc_owner_release(&heap,payload); finish(&heap);
+}
 int myl_rc_history_verify(void) {
     both_mutation_orders(0); both_mutation_orders(1); loan_then_pinned_publication(); publication_then_pin();
     late_count_refusal(); semantic_clone_marks_reused_children(); pinned_snapshot_preserves_older_region();
     take_publishes_history_before_disarming(); physical_clone_does_not_mark_children();
     cloned_prefix_refusal_discards_marks(); metadata_refusal_preserves_history(); ownerless_view_publication(); children_preserve_unpinned_outer(); source_children_replace_only_output();
     repeated_pinned_mutable_snapshots_keep_distinct_identity(); whole_view_publication_preserves_identity();
-    arena_mark_refusal_is_atomic(); return 17;
+    arena_mark_refusal_is_atomic(); physical_retain_preserves_pinned_identity();
+    physical_retain_arena_has_no_history(); physical_retain_refusal_rolls_back_prefix();
+    physical_retain_replace_commits_before_retiring(); physical_retain_mixed_hold_refusal(); return 22;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
-int main(void) { assert(myl_rc_history_verify()==17); puts("native rc semantic history: 17 passed"); }
+int main(void) { assert(myl_rc_history_verify()==22); puts("native rc semantic history: 22 passed"); }
 #endif

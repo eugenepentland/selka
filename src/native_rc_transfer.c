@@ -535,8 +535,21 @@ myl_rc_status myl_rc_value_copy(myl_native_heap *heap, myl_rc_slot *destination,
 myl_rc_status myl_rc_region_escape(myl_native_heap *heap, myl_rc_slot *destination, const myl_rc_slot *source) {
     return transfer(heap, destination, source, MYL_RC_COPY, 1, 0);
 }
-myl_rc_status myl_rc_value_copy_many(myl_native_heap *heap, myl_rc_slot *destinations,
-                                     const myl_rc_slot *sources, size_t count) {
+/* Physical helper publication retains identity. Semantic SHARE was performed
+ * by the compiler before this helper, or follows a fresh shallow producer. */
+static myl_rc_status retain_pointer(transfer_walk *walk, unsigned char *destination,
+                                      const unsigned char *source, myl_rc_shape_kind kind) {
+    void *payload;
+    memcpy(&payload, source, sizeof payload);
+    if (payload && myl_native_header_region(payload) > walk->region) return MYL_RC_REGION_ERROR;
+    if (kind == MYL_RC_SHAPE_HOLD_POINTER) return transfer_hold(walk, destination, payload);
+    myl_rc_status status = myl_rc_owner_acquire(walk->heap, payload);
+    if (status == MYL_RC_OK) memcpy(destination, &payload, sizeof payload);
+    return status;
+}
+static myl_rc_status copy_many(myl_native_heap *heap, myl_rc_slot *destinations,
+                                 const myl_rc_slot *sources, size_t count, int retaining) {
+
     myl_rc_invariant(heap && heap->rc && (!count || (destinations && sources)));
     clone_work work = {0};
     transfer_frame local[LOCAL_TRANSFER_FRAMES];
@@ -554,7 +567,7 @@ myl_rc_status myl_rc_value_copy_many(myl_native_heap *heap, myl_rc_slot *destina
         myl_rc_value_seed(heap, shape, destinations[i].address, sources[i].address, 1);
         ++initialized;
         walk.region = destinations[i].region;
-        status = visit(&walk, shape, destinations[i].address, sources[i].address, transfer_pointer);
+        status = visit(&walk, shape, destinations[i].address, sources[i].address, retaining ? retain_pointer : transfer_pointer);
         if (status != MYL_RC_OK) break;
     }
     if (status == MYL_RC_OK) status = finish_clones(&walk);
@@ -565,6 +578,14 @@ myl_rc_status myl_rc_value_copy_many(myl_native_heap *heap, myl_rc_slot *destina
         }
     dispose_walk(&walk, status != MYL_RC_OK);
     return status;
+}
+myl_rc_status myl_rc_value_copy_many(myl_native_heap *heap, myl_rc_slot *destinations,
+                                     const myl_rc_slot *sources, size_t count) {
+    return copy_many(heap, destinations, sources, count, 0);
+}
+myl_rc_status myl_rc_value_retain_many(myl_native_heap *heap, myl_rc_slot *destinations,
+                                       const myl_rc_slot *sources, size_t count) {
+    return copy_many(heap, destinations, sources, count, 1);
 }
 myl_rc_status myl_rc_value_take(myl_native_heap *heap, myl_rc_slot *destination, myl_rc_slot *source) {
     return transfer(heap, destination, source, MYL_RC_TAKE, 0, 0);

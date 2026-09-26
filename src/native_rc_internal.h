@@ -76,5 +76,7 @@ void myl_rc_loan_drop(myl_native_heap *, const myl_rc_shape *, void *);
 int myl_rc_native_has_unique(myl_native_heap *, const myl_native_type *);
 /* Native mutable collection classification used only by semantic transfers. */
 int myl_rc_native_mutable(const void *);
+/* Acquire ordinary edges without semantic history or pinned snapshots. */
+myl_rc_status myl_rc_value_retain_many(myl_native_heap *, myl_rc_slot *, const myl_rc_slot *, size_t);
 myl_rc_status myl_rc_semantic_transfer(myl_native_heap *, myl_rc_slot *, const myl_rc_slot *, myl_rc_transfer, unsigned);
 #endif

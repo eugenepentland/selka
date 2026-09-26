@@ -30,6 +30,14 @@ void myl_rc_native_unloan(myl_native_heap *, const myl_native_type *, void *valu
  * A COPY source may be an ordinary value or a frame-private physical loan. */
 int myl_rc_native_publish(myl_native_heap *, const myl_native_type *, void *dst,
                           void *src, unsigned region, unsigned semantic_mode);
+/* Physical owning publication after semantic evaluation: retain direct O/H
+ * edges without pin cloning or history. Source and empty destination are
+ * distinct; younger-region and count failures roll back all acquisitions. */
+int myl_rc_native_retain(myl_native_heap *, const myl_native_type *, void *dst,
+                         const void *src, unsigned region);
+/* Stage the same identity-preserving retain before replacing an owned slot. */
+int myl_rc_native_retain_replace(myl_native_heap *, const myl_native_type *, void *dst,
+                                 const void *src, unsigned region);
 /* Checked raw storage for count native elements. */
 void *myl_rc_native_storage(myl_native_heap *, const myl_native_type *, size_t count, unsigned region);
 /* Convert a NULL native constructor result without losing its first failure. */

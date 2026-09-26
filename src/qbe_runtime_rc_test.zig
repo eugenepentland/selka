@@ -16,6 +16,7 @@ test "RC frame unwind restores scopes before releasing guarded owners and resour
 extern fn myl_qbe_rc_loan_verify() c_int;
 
 // spec: RC-SEMANTIC-HISTORY-1
+// spec: RC-PHYSICAL-RETAIN-1
 test "RC loan cleanup clears guards and restores scopes before lifetime release" {
     try std.testing.expectEqual(@as(c_int, 1), myl_qbe_rc_loan_verify());
 }
@@ -31,5 +32,5 @@ extern fn myl_rc_history_verify() c_int;
 
 // spec: RC-HISTORY-PUBLISH-1
 test "RC semantic publication commits history atomically and preserves pinned snapshot identity" {
-    try std.testing.expectEqual(@as(c_int, 17), myl_rc_history_verify());
+    try std.testing.expectEqual(@as(c_int, 22), myl_rc_history_verify());
 }
