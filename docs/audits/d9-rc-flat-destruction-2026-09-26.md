@@ -69,3 +69,50 @@ Evidence is in `experiments/d9-rc-flat-destruction-20260926`: original binary an
 compiler identities, all ten samples per backend, manifests, counters, source,
 raw perf records, weighted samples and disassembly. This first commit contains
 read-only evidence and the proposal; implementation and validation are separate.
+
+## Implemented single-element path
+
+The candidate adds a private ordered loop in `native_rc_walk.c` and selects it
+only in the existing admitted-flat drain branch when allocation count is one.
+Both actual backends inline it into drain. The ordinary edge-release primitive,
+generic walker, finalizers, queue retirement and descriptor admission are
+unchanged. The source avoids repeating the extent multiplication, public helper
+entry checks and outer element loop already established by drain and allocation.
+No changes to `native_rc.c`, metadata, headers, history or compiler lowering are
+needed.
+
+Five interleaved before/after/accepted-GC runs give:
+
+| Backend | Before instructions | After | After / before | After / accepted GC |
+| --- | ---: | ---: | ---: | ---: |
+| QBE | 683,033,639 | 636,737,941 | 0.932220 | 6.018126 |
+| LLVM O3 / full LTO | 388,701,854 | 349,946,715 | 0.900296 | 6.925211 |
+
+Every output byte and all counts match the frozen before arm on both backends.
+These 6.78% and 9.97% instruction reductions justify retaining this bounded
+candidate, but the remaining gap still fails WP-4 acceptance. No full corpus
+result is inferred from this workload.
+
+The added production test releases a one-element record whose descriptor visits
+fields in a different order from their addresses. It includes aliased children,
+a pinned last owner, arena/immortal/null leaves and callback observers. It checks
+that the parent retires before child callbacks, preserves their queue order,
+and leaves the pinned child alive at O=0 until its H token is released. A zero
+allocation-count case and the existing two-element body case exercise fallback.
+
+Validation on the independent ABI2 ancestry:
+
+- ASan and UBSan: contract 21, collection 32, held-view 12, arena 10 scenarios,
+  plus counting and execution harnesses. Existing reentrant finalizers and the
+  million-node, bounded-stack destruction case are included.
+- The 54-assertion unaccounted driver passes before and after on actual QBE and
+  LLVM. All four runs have identical balanced counts: 1,466 heap allocations and
+  retirements, O 1,031/2,497, H 67/67, 103 arena allocations and 36 clones.
+- Focused production collection wrapper: 12/12; Debug install: 12/12 steps;
+  Guardian: 88 checks; formatting and whitespace checks pass.
+
+`candidate.json.gz` records compiler/runtime-source/executable hashes, manifests,
+all individual samples and counts. The candidate changes only the flat ordinary
+edge branch; the concurrently developed ABI3 generic LOAN walker remains a
+separate integration validation responsibility. The parent coordinates the full
+regression gate, joined history checks and Guardian feedback.
