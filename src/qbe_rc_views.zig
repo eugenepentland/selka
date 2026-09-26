@@ -135,12 +135,6 @@ pub fn local(comptime E: type, self: *E, op: Op, stack: []const typed.Type) Erro
             try ordinary(E, self, label);
             return .{ .ordinary = label };
         },
-        .value_copy => |copy| {
-            if (copy.site != .assign or !holds.mayHold(E, self, copy.ty)) return .unhandled;
-            const label = try branch(E, self, values.journalIndex(E, self, stack.len - 1));
-            try ordinary(E, self, label);
-            return .{ .ordinary = label };
-        },
         else => return .unhandled,
     }
 }

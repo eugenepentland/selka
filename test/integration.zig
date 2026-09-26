@@ -11969,7 +11969,7 @@ test "CLI RC runtime contract inheritance respects project discovery and explici
     var environment = try std.process.Environ.createMap(testing.environ, testing.allocator);
     defer environment.deinit();
     _ = environment.swapRemove("MYLANG_VALUE_SEMANTICS");
-    try environment.put("MYLANG_RUNTIME", "rc-v2");
+    try environment.put("MYLANG_RUNTIME", "rc-v3");
     const inherited = try semanticModeRun(project.path, &environment, &.{});
     defer freeRun(inherited);
     try testing.expectEqual(std.process.Child.Term{ .exited = 22 }, inherited.term);
@@ -11981,7 +11981,7 @@ test "CLI RC runtime contract inheritance respects project discovery and explici
     defer freeRun(refused);
     try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, refused.term);
     try testing.expect(std.mem.indexOf(u8, refused.stderr, "explicit RC requires value semantics") != null);
-    try environment.put("MYLANG_RUNTIME", "unknown-version");
+    try environment.put("MYLANG_RUNTIME", "rc-v2");
     const invalid = try semanticModeRun(project.path, &environment, &.{});
     defer freeRun(invalid);
     try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, invalid.term);

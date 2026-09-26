@@ -26,6 +26,7 @@ pub fn local(comptime E: type, self: *E, unique: cow.Unique) Error!void {
     const address = self.temp();
     const guard = try frame.guard(E, self, unique.local);
     try self.print(" %v{d} =l copy %l{d}\n", .{ address, unique.local });
+    try @import("qbe_rc_local_roles.zig").owning(E, self, unique.local);
     try localCall(E, self, unique.local, address, guard);
     if (unique.alias != cow.none) {
         const value = try self.load("l", unique.local);
@@ -47,6 +48,9 @@ fn localCall(comptime E: type, self: *E, index: usize, address: usize, guard: us
         try self.print(" jmp @rcuniquelocal{d}\n@rcuniqueowner{d}\n", .{ label, label });
     }
     const done = self.temp();
+    // A prior borrowed receiver can leave a cleared guard with an H/LOAN
+    // descriptor. This helper may publish a fresh O even from that empty slot.
+    try frame.entry(E, self, index, ty, address);
     try self.print(" %v{d} =w call $myl_qbe_rc_unique_local(l %ctx, l extern ${s}, l %v{d}, l %v{d})\n", .{ done, try self.descriptor(ty), address, guard });
     try success(E, self, done);
     if (maybe_held) try self.print("@rcuniquelocal{d}\n", .{label});

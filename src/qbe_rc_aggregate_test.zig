@@ -45,15 +45,15 @@ test "RC aggregate partial construction journals fields before guarded takes or 
     // source before this constructor initializes its sixteen-byte body.
     const cleared = try location(text, "w 0, l 16)");
     const taken = cleared + try location(text[cleared..], "call $myl_rc_native_take");
-    const copied = cleared + try location(text[cleared..], "call $myl_rc_native_copy");
+    const copied = cleared + try location(text[cleared..], "call $myl_rc_native_retain");
     try t.expect(cleared < taken and taken < copied);
     try t.expect(std.mem.indexOf(u8, text[cleared..taken], "storew 1") != null);
     try t.expect(std.mem.indexOf(u8, text[taken..copied], "storew 0") != null);
     try t.expect(try location(text, "call $myl_qbe_rc_frame_enter") < cleared);
     try t.expect(try location(text, "call $myl_qbe_rc_frame_cleanup") > copied);
-    // Each successful field initialization consumes its input token. Complete
-    // publication therefore needs no additional empty-operand release calls.
-    try t.expect(std.mem.indexOf(u8, text, "call $myl_qbe_rc_slot_drop") == null);
+    // A semantic publication can retire a private loan before construction.
+    // The constructor still adopts its completed inputs before frame cleanup.
+    try t.expect(try location(text, "call $myl_rc_native_publish") < cleared);
 }
 
 // spec: RC-PLAIN-PROJECTION-1

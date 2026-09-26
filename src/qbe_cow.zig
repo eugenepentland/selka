@@ -28,6 +28,7 @@ const format = @import("qbe_format.zig");
 const qbe_alloc = @import("qbe_alloc.zig");
 const runtime_mode = @import("runtime_mode.zig");
 const rc_unique = @import("qbe_rc_unique.zig");
+const rc_frame = @import("qbe_rc_frame.zig");
 const rc_scope = @import("qbe_rc_scope.zig");
 const inert_receiver = @import("qbe_rc_inert_receiver.zig");
 const semantics = @import("value_semantics.zig");
@@ -127,7 +128,9 @@ pub fn Lower(comptime E: type) type {
             const beginning = state.captures[pc].begin;
             if (beginning != cow_plan.none) try beginScope(E, self, state.plan.places[beginning].?, stack);
             if (site.fill) try fillPlace(E, self, pc, stack);
-            if (!runtime_mode.enabled()) for (site.shares) |depth| try share(E, self, stack, depth);
+            for (site.shares) |depth| {
+                if (runtime_mode.enabled()) try readCapture(E, self, stack, depth) else try share(E, self, stack, depth);
+            }
         }
         /// Whether this place retains temporary pins across an index callback.
         pub fn scoped(self: *const E, place: cow_plan.Place) bool {
@@ -621,6 +624,7 @@ fn fillPlace(comptime E: type, self: *E, pc: usize, stack: []const typed.Type) E
     cursor = try fieldChain(E, self, place, cursor);
     if (runtime_mode.enabled()) {
         try rc_unique.field(E, self, .{ .ty = stack[top], .address = cursor.address, .container = cursor.cell orelse container, .held = cursor.held });
+        try reboxRcPlace(E, self, place);
         return self.store(top, try self.load("v", cursor.address));
     }
     if (box_path) {
@@ -641,12 +645,29 @@ fn fillPlace(comptime E: type, self: *E, pc: usize, stack: []const typed.Type) E
         const new = self.temp();
         const body = (try fieldBase(E, self, place.parent)).address;
         try self.print(" %v{d} =l loadl %l{d}\n", .{ old, box.owner });
+        // The preceding child copy restored its roots. Reboxing allocates too,
+        // and earlier snapshots can be reachable only from other live locals.
+        const pushed = try self.roots(stack);
         try self.print(" %v{d} =l call $myl_native_cow_rebox(l %heap, l extern ${s}, l %v{d}, l %v{d})\n", .{ new, try self.descriptor(box.ty), old, body });
+        if (pushed) try self.restoreRoots();
         try self.require(new, format.allocation_failure);
         try self.print(store_local, .{ new, box.owner });
     }
     try self.store(top, copy);
     try self.print(cow_keep_label, .{label});
+}
+
+fn reboxRcPlace(comptime E: type, self: *E, place: cow_plan.Place) Error!void {
+    const box = place.box orelse return;
+    if ((try self.layout(self.function.scope.locals[box.owner].ty)).size != 8) return error.InternalError;
+    try @import("qbe_rc_local_roles.zig").owning(E, self, box.owner);
+    const address = (try fieldBase(E, self, box.owner)).address;
+    const body = (try fieldBase(E, self, place.parent)).address;
+    const guard = try rc_frame.guard(E, self, box.owner);
+    const done = self.temp();
+    try rc_frame.entry(E, self, box.owner, self.function.scope.locals[box.owner].ty, address);
+    try self.print(" %v{d} =w call $myl_qbe_rc_rebox_local(l %ctx, l extern ${s}, l %v{d}, l %v{d}, l %v{d})\n", .{ done, try self.descriptor(box.ty), address, body, guard });
+    try rc_unique.success(E, self, done);
 }
 
 fn placeHasArray(comptime E: type, self: *const E, place: cow_plan.Place) bool {
@@ -1088,7 +1109,16 @@ fn fieldChainRange(comptime E: type, self: *E, begin: usize, end: usize, start: 
 
 fn detachBox(comptime E: type, self: *E, ty: typed.Type, body: usize, cursor: Cursor, roots_published: bool) Error!usize {
     if (runtime_mode.enabled()) {
-        try rc_unique.field(E, self, .{ .ty = ty, .address = cursor.address, .container = cursor.cell orelse cursor.holder, .held = cursor.held });
+        if (cursor.held) return error.InternalError;
+        const container = self.temp();
+        if (cursor.cell orelse cursor.holder) |value| {
+            try self.print(" %v{d} =l copy %v{d}\n", .{ container, value });
+        } else try self.print(" %v{d} =l copy 0\n", .{container});
+        const done = self.temp();
+        try self.print(" %v{d} =w call $myl_qbe_rc_box_detach(l %ctx, l extern ${s}, l %v{d}, l %v{d})\n", .{
+            done, try self.descriptor(ty), cursor.address, container,
+        });
+        try rc_unique.success(E, self, done);
         return self.load("v", cursor.address);
     }
     const pushed = if (roots_published) false else try self.roots(self.states[self.pc] orelse return error.InternalError);
@@ -1112,7 +1142,12 @@ fn readCaptures(comptime E: type, self: *E, stack: []const typed.Type, depths: [
 fn readCapture(comptime E: type, self: *E, stack: []const typed.Type, depth: u8) Error!void {
     if (!runtime_mode.enabled()) return share(E, self, stack, depth);
     const slot = stack.len - 1 - depth;
-    try rc_values.prepareOperand(E, self, stack[slot], slot);
+    try @import("qbe_rc_history.zig").prepare(E, self, .{
+        .ty = stack[slot],
+        .source = try rc_values.source(E, self, slot, stack[slot]),
+        .journal = rc_values.journalIndex(E, self, slot),
+        .mode = 0,
+    });
     try rc_values.publish(E, self, stack[slot], slot);
 }
 

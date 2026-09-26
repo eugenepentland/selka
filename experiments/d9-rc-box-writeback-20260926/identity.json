@@ -1,0 +1,12 @@
+{
+  "source_parent": "3494bc6e5318cdbd81dd287e8860179d18100bb9",
+  "compiler_sha256": "b3a99d2e0a9af39450080fdffb484d007ef94c304bf922e539ab943273d5e66b",
+  "initial_abi2_compiler_sha256": "96ca8786c73149173d81472b46fdf051822f01a212ad00e3e1fcafb8bd0aea70",
+  "runtime": "rc-v3-counting",
+  "unaccounted_rc_assertions_per_backend": 5,
+  "accounted_rc_assertions_per_backend": 83,
+  "sanitizer_bridge_cases": 25,
+  "focused_zig_tests": 16,
+  "known_gc_direct_failure": "test_repeated_option_writes_replace_the_latest_owner",
+  "required_recursive_admission_fix": "75802ff9"
+}

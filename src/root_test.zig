@@ -211,6 +211,7 @@ test {
     _ = @import("python_collections_test.zig");
     _ = @import("managed_frontend_test.zig");
     _ = @import("sema_mut_arguments_test.zig");
+    _ = @import("recursive_resources_test.zig");
     _ = @import("surface_collections_test.zig");
     _ = @import("builtin_context_test.zig");
     _ = @import("json_document_test.zig");
@@ -254,6 +255,7 @@ test {
     _ = @import("qbe_rc_views_test.zig");
     _ = @import("qbe_rc_journal_test.zig");
     _ = @import("cow_test.zig");
+    _ = @import("cow_rebox_roots_test.zig");
     _ = @import("qbe_text_test.zig");
     _ = @import("qbe_range_keys_test.zig");
     _ = @import("qbe_literals_test.zig");

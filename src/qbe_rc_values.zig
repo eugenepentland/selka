@@ -3,6 +3,7 @@ const typed = @import("typed.zig");
 const frame = @import("qbe_rc_frame.zig");
 const slots = @import("qbe_rc_slots.zig");
 const holds = @import("qbe_rc_holds.zig");
+const loans = @import("qbe_rc_loans.zig");
 const state_model = @import("qbe_rc_state.zig");
 /// QBE byte relocation shared by transactional value and aggregate publication.
 pub const blit_value = " blit %v{d}, %v{d}, {d}\n";
@@ -39,7 +40,7 @@ pub fn drop(comptime E: type, self: *E, index: usize) Error!void {
 pub fn copied(comptime E: type, self: *E, ty: typed.Type, address: usize) Error!void {
     const work = try workAddress(E, self);
     const region = try frame.region(E, self);
-    try slots.Lower(E).transfer(self, .{ .ty = ty, .destination = work, .source = address, .region = region, .mode = .copy_empty });
+    try slots.Lower(E).transfer(self, .{ .ty = ty, .destination = work, .source = address, .region = region, .mode = if (try loans.eligible(E, self, ty)) .retain_empty else .copy_empty });
     try markWork(E, self, ty);
 }
 /// Adopt the one edge returned by a runtime producer without another acquire.
@@ -55,7 +56,10 @@ pub fn finish(comptime E: type, self: *E, result: Result) Error!void {
     if (owned) {
         const address = try source(E, self, result.base, result.ty);
         switch (result.origin) {
-            .borrowed => try copied(E, self, result.ty, address),
+            .borrowed => if (try loans.eligible(E, self, result.ty))
+                try loans.prepare(E, self, result.ty, address)
+            else
+                try copied(E, self, result.ty, address),
             .owned => try adopted(E, self, result.ty, address),
         }
     } else if (result.origin == .borrowed and !self.isScalar(result.ty)) {
@@ -76,6 +80,7 @@ pub fn publish(comptime E: type, self: *E, ty: typed.Type, index: usize) Error!v
     const work = try workAddress(E, self);
     try self.print(blit_value, .{ work, address, (try self.layout(ty)).size });
     try frame.stableEntry(E, self, journalIndex(E, self, index), ty);
+    try loans.copyRole(E, self, journalIndex(E, self, index), frame.pending(E, self));
     try frame.initialized(E, self, frame.pending(E, self), false);
     try frame.initialized(E, self, journalIndex(E, self, index), true);
     try self.store(index, try self.readValue(address, ty));
@@ -146,16 +151,28 @@ fn producedOwner(comptime E: type, self: *E, ty: typed.Type, index: usize) Error
     if (!shape.counted or shape.unique_drop) return false;
     const stack = self.states[self.pc] orelse return false;
     if (stack.len == 0 or index != stack.len - 1) return false;
-    const capture = self.cow.?.captures[self.pc - 1];
+    var pc = self.pc;
     const no_scope = @import("cow_plan.zig").none;
-    if (capture.begin != no_scope or capture.active != no_scope) return false;
-    // Only these completed producers unconditionally publish an ordinary owner.
-    // A branch into the consumer, a held mapping, a raw local read or any other
-    // instruction retains the guard test. No proof is carried across a call.
-    return switch (self.function.scope.instructions[self.pc - 1].op) {
-        .call, .make_record, .make_variant, .value_copy, .move_local => true,
-        else => false,
-    };
+    while (pc != 0) {
+        if (self.branch_targets[pc]) return false;
+        pc -= 1;
+        const capture = self.cow.?.captures[pc];
+        if (capture.begin != no_scope or capture.active != no_scope) return false;
+        switch (self.function.scope.instructions[pc].op) {
+            .value_copy => {
+                const analysis = self.ownership orelse return true;
+                if (pc >= analysis.copies.len or analysis.copies[pc]) return true;
+            },
+            .call => |target| {
+                const certificate = try @import("qbe_rc_borrow.zig").certificate(E, self, self.program.functions[@backingInt(target)]);
+                return certificate == null;
+            },
+            .make_record, .make_variant => return true,
+            .move_local => |local| return !self.function.scope.locals[@backingInt(local)].usage.temporary,
+            else => return false,
+        }
+    }
+    return false;
 }
 
 fn prepareOwned(comptime E: type, self: *E, ty: typed.Type, address: usize, journal_index: usize, disjoint: bool) Error!void {
@@ -175,31 +192,35 @@ pub fn prepareGuarded(comptime E: type, self: *E, ty: typed.Type, address: usize
     // Plain aggregate updates still stage their bits in work storage, but an
     // omitted operand has no ownership guard to inspect or transfer.
     if (!try state_model.owns(frame.get(E, self).?, ty)) return copied(E, self, ty, address);
-    const guard_pointer = try frame.guard(E, self, journal_index);
-    const live = self.temp();
     const label = self.temp();
-    try self.print(" %v{d} =w loaduw %v{d}\n", .{ live, guard_pointer });
-    var transferable = live;
-    const may_hold = holds.mayHold(E, self, ty);
-    if (may_hold) {
-        const held = try holds.held(E, self, journal_index);
-        const owner = self.temp();
-        transferable = self.temp();
-        try self.print(" %v{d} =w xor %v{d}, 1\n %v{d} =w and %v{d}, %v{d}\n", .{ owner, held, transferable, live, owner });
-    }
+    const transferable = try loans.owner(E, self, journal_index);
     try self.print(" jnz %v{d}, @rctake{d}, @rccopy{d}\n@rctake{d}\n", .{ transferable, label, label, label });
     try prepareOwned(E, self, ty, address, journal_index, false);
     try self.print(" jmp @rcprepared{d}\n@rccopy{d}\n", .{ label, label });
     try copied(E, self, ty, address);
     // A copied H token becomes an independent O only after success; refusal
     // keeps the original hold guarded for ordinary unwind.
-    if (may_hold) try frame.drop(E, self, journal_index);
+    try frame.drop(E, self, journal_index);
     try self.print("@rcprepared{d}\n", .{label});
+}
+
+/// Preserve a compiler-private borrowed capture without creating a snapshot.
+/// An existing ordinary owner remains an owner; a raw read acquires a loan.
+pub fn preparePrivate(comptime E: type, self: *E, ty: typed.Type, address: usize, index: usize) Error!void {
+    if (!try loans.eligible(E, self, ty)) return prepareGuarded(E, self, ty, address, index);
+    const owner = try loans.owner(E, self, index);
+    const label = self.temp();
+    try self.print(" jnz %v{d}, @rcprivateown{d}, @rcprivateloan{d}\n@rcprivateown{d}\n", .{ owner, label, label, label });
+    try prepareOwned(E, self, ty, address, index, false);
+    try self.print(" jmp @rcprivateprepared{d}\n@rcprivateloan{d}\n", .{ label, label });
+    try loans.prepare(E, self, ty, address);
+    try frame.drop(E, self, index);
+    try self.print("@rcprivateprepared{d}\n", .{label});
 }
 
 /// Initialize an empty runtime output using pin-aware copy and mapped failure.
 /// Its caller must immediately journal the successful result or commit it.
 pub fn copyRuntime(comptime E: type, self: *E, ty: typed.Type, destination: usize, input: usize) Error!void {
     const region = try frame.region(E, self);
-    try slots.Lower(E).transfer(self, .{ .ty = ty, .destination = destination, .source = input, .region = region, .mode = .copy_empty });
+    try slots.Lower(E).transfer(self, .{ .ty = ty, .destination = destination, .source = input, .region = region, .mode = if (try loans.eligible(E, self, ty)) .retain_empty else .copy_empty });
 }

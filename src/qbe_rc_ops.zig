@@ -64,7 +64,7 @@ pub fn callEntry(comptime E: type, self: *E, callee: bytecode.Function, base: us
 fn origin(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "op")) Error!values.Origin {
     return switch (op) {
         .call => |target| if (try @import("qbe_rc_borrow.zig").certificate(E, self, self.program.functions[@backingInt(target)]) != null) .borrowed else .owned,
-        .get_field => .borrowed,
+        .get_field => if (@import("qbe_rc_box_history.zig").boxMaterialization(E, self)) .owned else .borrowed,
         .cast_integer => |ty| identityCast(E, self, ty),
         .get_index => |access| if (self.program.records[access.ty.recordIndex()].collection.kind == .string) .owned else .borrowed,
         .make_record => |record| if (self.program.records[record.ty.recordIndex()].managed) .owned else .borrowed,

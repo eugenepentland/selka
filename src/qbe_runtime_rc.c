@@ -55,7 +55,12 @@ void myl_qbe_rc_slot_drop(void *context, MylQbeRcSlot *slot) {
     myl_rc_invariant(slot && slot->initialized);
     if (!*slot->initialized) return;
     *slot->initialized = 0;
-    myl_rc_invariant(slot->type && slot->address && !(slot->flags & ~15u));
+    myl_rc_invariant(slot->type && slot->address && !(slot->flags & ~31u));
+    if (slot->flags & MYL_QBE_RC_LOAN) {
+        myl_rc_invariant(slot->flags == MYL_QBE_RC_LOAN);
+        myl_rc_native_unloan(&ctx->heap, slot->type, slot->address);
+        return;
+    }
     if (slot->flags & MYL_QBE_RC_HOLD_POINTER) {
         myl_rc_invariant(slot->flags == MYL_QBE_RC_HOLD_POINTER && slot->type->size == sizeof(void *));
         myl_rc_hold hold;
@@ -205,7 +210,9 @@ int myl_qbe_rc_rebox_local(void *context, const myl_native_type *type, void *add
     if (status == MYL_RC_OK) {
         myl_rc_slot destination = {.shape = descriptor->shape, .address = replacement, .region = request.region};
         myl_rc_slot source = {.shape = descriptor->shape, .address = (void *)body};
-        status = myl_rc_value_copy(&ctx->heap, &destination, &source);
+        // This body was already evaluated and detached. Publishing its box is
+        // physical retention: another pin clone would strand the live receiver.
+        status = myl_rc_value_retain_many(&ctx->heap, &destination, &source, 1);
     }
     if (status != MYL_RC_OK) {
         myl_rc_construction_abort(&ctx->heap, replacement);
@@ -262,7 +269,8 @@ int myl_qbe_rc_scope_prepare(void *context, myl_rc_scope *scope, const MylQbeRcP
     for (size_t i = 0; i < request->count; ++i) {
         const myl_rc_descriptor *descriptor = myl_rc_descriptor_find(&ctx->heap, request->path[i].type);
         myl_rc_invariant(descriptor != NULL);
-        path[i] = (myl_rc_projection){descriptor->shape, request->path[i].offset};
+        path[i] = (myl_rc_projection){.shape=descriptor->shape,.offset=request->path[i].offset,
+            .immutable_box=request->path[i].type->collection_kind==5};
     }
     myl_rc_status status = request->count ? MYL_RC_OK : myl_rc_module_register(&ctx->heap, &scope_module);
     if (status == MYL_RC_OK) {
@@ -276,5 +284,17 @@ int myl_qbe_rc_scope_prepare(void *context, myl_rc_scope *scope, const MylQbeRcP
     }
     if (path != local) myl_rc_meta_free(&ctx->heap, path, bytes);
     return myl_qbe_rc_status(ctx, status);
+}
+#endif
+
+#if defined(MYL_NATIVE_RC)
+int myl_qbe_rc_box_detach(void *context, const myl_native_type *type, void *address, void *container) {
+    MylQbeContext *ctx=context;
+    myl_rc_invariant(type && type->collection_kind==5 && type->element);
+    const myl_rc_shape *shape=myl_rc_native_shape(&ctx->heap,type);
+    if (!shape) return myl_qbe_rc_status(ctx,myl_rc_take_failure(&ctx->heap));
+    myl_rc_slot slot={.shape=shape,.address=address,.container=container,
+        .region=container?myl_native_header_region(container):ctx->heap.region_depth};
+    return myl_qbe_rc_status(ctx,myl_rc_box_detach_owned(&ctx->heap,&slot));
 }
 #endif
