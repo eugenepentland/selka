@@ -6,6 +6,7 @@ const shapes = @import("rc_shape.zig");
 const model = @import("rc_model.zig");
 const calls = @import("rc_calls.zig");
 const transfers = @import("rc_transfer.zig");
+const plans = @import("rc_plan.zig");
 const t = std.testing;
 
 const ShapeFixture = struct {
@@ -62,18 +63,30 @@ test "RC-OWNERSHIP-PLAN-1 immutable backing and pure recursive boxes still own e
 }
 
 // spec-case: RC-OWNERSHIP-PLAN-1
-test "RC-OWNERSHIP-PLAN-1 resources own lifetime without becoming copyable" {
+test "RC-OWNERSHIP-PLAN-1 raw resources keep unique cleanup without an RC header" {
     var fixture = try ShapeFixture.init("def main() -> int:\n    return 0\n");
     defer fixture.deinit();
     var facts = try shapes.Catalog.init(t.allocator, &fixture.layouts);
     defer facts.deinit();
     const file = try facts.get(.file);
     const integer = try facts.get(.i64);
-    try t.expect(file.counted);
+    try t.expect(!file.counted);
     try t.expect(file.unique_drop);
     try t.expect(!file.copyable);
     try t.expect(!integer.counted);
     try t.expect(!integer.unique_drop);
+    try t.expect(!(try facts.get(.text_file)).counted);
+    const metadata_text = try @import("rc_descriptors.zig").generate(t.allocator, &fixture.layouts);
+    defer t.allocator.free(metadata_text);
+    try t.expect(try rawResourceShape(&fixture, metadata_text, .file));
+    try t.expect(try rawResourceShape(&fixture, metadata_text, .text_file));
+}
+
+fn rawResourceShape(fixture: *ShapeFixture, text: []const u8, ty: @import("typed.zig").Type) !bool {
+    const a = fixture.arena.allocator();
+    const name = try @import("rc_descriptors.zig").symbol(a, &fixture.layouts, ty);
+    const definition = try std.fmt.allocPrint(a, "const myl_rc_shape {s} = {{.size=8,.kind=MYL_RC_SHAPE_NONE}};", .{name});
+    return std.mem.indexOf(u8, text, definition) != null;
 }
 
 // spec-case: RC-OWNERSHIP-PLAN-1
@@ -96,7 +109,7 @@ test "RC-OWNERSHIP-PLAN-1 mixed fresh provenance keeps canonical owned result" {
     try t.expect(function.signature.inferred.borrow_origin == .params);
     try t.expectEqualSlices(u16, &.{0}, function.signature.inferred.borrow_origin.params);
     try t.expect(contract.result == .owned);
-    try t.expect(contract.failure == .caller_keeps_inputs);
+    try t.expect(contract.failure == .parameter_contracts);
     try t.expectEqualSlices(model.Parameter, &.{ .read, .read }, contract.parameters);
 }
 
@@ -162,7 +175,7 @@ fn ownedValue(storage: u32, token: u32) model.ValueState {
         .value = @fromBackingInt(@intCast(storage)),
         .ty = .file,
         .storage = @fromBackingInt(@intCast(storage)),
-        .shape = .{ .counted = true, .unique_drop = true, .copyable = false },
+        .shape = .{ .unique_drop = true, .copyable = false },
         .ownership = .{ .owned = .{ .token = @fromBackingInt(@intCast(token)) } },
     };
 }
@@ -199,7 +212,7 @@ test "RC-OWNERSHIP-PLAN-1 owning replacement commits only at precise helper succ
     const source = ownedValue(0, 2);
     const destination = ownedValue(1, 3);
     const plan = try transfers.plan(.{ .slots = .{ .source = source, .destination = destination }, .intent = .last_use, .token = @fromBackingInt(@intCast(4)), .checkpoint = .{ .pc = 8, .step = 2 } });
-    try t.expectEqual(transfers.Operation.take, plan.operation);
+    try t.expectEqual(transfers.Operation.take_unique, plan.operation);
     try t.expect(plan.success.source.ownership == .empty);
     try t.expectEqual(@as(model.TokenId, @fromBackingInt(@intCast(4))), plan.success.destination.ownership.owned.token);
     try t.expectEqualDeep(source, plan.failure().source);
@@ -297,4 +310,209 @@ test "RC-OWNERSHIP-PLAN-1 selected RC metadata compiles against the frozen C ABI
     defer rc.deinit();
     try t.expect(std.mem.indexOf(u8, rc.value.runtime_data, "const myl_rc_module myl_rc_generated_module") != null);
     try t.expect(try metadataCompiles(rc.value.runtime_data));
+}
+
+// spec-case: RC-OWNERSHIP-PLAN-1
+test "RC-OWNERSHIP-PLAN-1 move-only guest parameters preserve callee drop ownership" {
+    var fixture = try ShapeFixture.init("def consume(file: File) -> int:\n    return 0\n\ndef main() -> int:\n    return 0\n");
+    defer fixture.deinit();
+    try fixture.compilation.emit();
+    var facts = try shapes.Catalog.init(t.allocator, &fixture.layouts);
+    defer facts.deinit();
+    const function = try namedFunction(fixture.compilation.code.?, "consume");
+    const contract = try calls.guest(fixture.arena.allocator(), &facts, function, "rc-v1");
+    try t.expectEqualSlices(model.Parameter, &.{.consume_on_entry}, contract.parameters);
+    try t.expect(contract.failure == .parameter_contracts);
+}
+
+fn planInput(fixture: *ShapeFixture, facts: *shapes.Catalog, name: []const u8) !plans.Input {
+    try fixture.compilation.emit();
+    const a = fixture.arena.allocator();
+    const program = fixture.compilation.code.?;
+    const function = try namedFunction(program, name);
+    const ir = try @import("native_ir.zig").analyze(a, program, function);
+    const pinned = try a.alloc(bool, function.scope.locals.len);
+    for (function.scope.locals, pinned) |local, *pin| pin.* = (try facts.get(local.ty)).unique_drop;
+    const live = try @import("qbe_liveness.zig").solve(a, .{ .function = function, .states = ir.states, .pinned = pinned });
+    const analysis = try @import("ownership.zig").analyze(a, .{ .program = program, .function = function, .states = ir.states, .live = live });
+    const bindings = try a.alloc(@import("rc_input.zig").Binding, function.scope.locals.len);
+    for (bindings, 0..) |*binding, index| binding.* = .{ .storage = @fromBackingInt(@intCast(index)) };
+    return .{
+        .code = .{ .program = program, .function = function, .states = ir.states },
+        .flow = .{ .live = live, .ownership = analysis },
+        .physical = .{ .catalog = facts, .locals = bindings },
+        .contracts = .{ .current = try calls.guest(a, facts, function, "rc-v1") },
+        .policy = .{ .abi = "rc-v1" },
+    };
+}
+
+fn localIndex(input: plans.Input, name: []const u8) !usize {
+    for (input.code.function.scope.locals, 0..) |local, index| if (std.mem.eql(u8, local.name, name)) return index;
+    return error.TestUnexpectedResult;
+}
+
+fn firstReference(input: plans.Input, local: usize) !usize {
+    for (input.code.function.scope.instructions, 0..) |instruction, pc| {
+        if (instruction.op == .ref_local and @backingInt(instruction.op.ref_local) == local) return pc;
+    }
+    return error.TestUnexpectedResult;
+}
+
+fn firstRelease(plan: plans.Plan, id: model.StorageId) !usize {
+    var first: usize = std.math.maxInt(usize);
+    for (plan.edges) |edge| for (edge.releases) |release| {
+        if (release.storage == id) first = @min(first, edge.from);
+    };
+    if (first == std.math.maxInt(usize)) return error.TestUnexpectedResult;
+    return first;
+}
+
+// spec-case: RC-OWNERSHIP-PLAN-1
+test "RC-OWNERSHIP-PLAN-1 final ref_local liveness delays edge release until the consuming call" {
+    var fixture = try ShapeFixture.init(
+        \\record Data:
+        \\    values: list[int]
+        \\
+        \\def consume(data: mut Data) -> int:
+        \\    data.values.append(4)
+        \\    return len(data.values)
+        \\
+        \\def main() -> int:
+        \\    data = Data([1, 2, 3])
+        \\    scratch = [9, 10]
+        \\    size = consume(mut data)
+        \\    return size + len(scratch)
+    );
+    defer fixture.deinit();
+    var facts = try shapes.Catalog.init(t.allocator, &fixture.layouts);
+    defer facts.deinit();
+    const input = try planInput(&fixture, &facts, "main");
+    const data = try localIndex(input, "data");
+    const plan = try plans.build(fixture.arena.allocator(), input);
+    const reference = try firstReference(input, data);
+    try t.expect(plan.entry[data].ownership == .empty);
+    try t.expect(try firstRelease(plan, input.physical.locals[data].storage) > reference);
+    try t.expect(input.flow.live.before(reference, data));
+}
+
+fn falseEdgeDrops(input: plans.Input, plan: plans.Plan, local: usize) bool {
+    for (input.code.function.scope.instructions, 0..) |instruction, pc| {
+        if (instruction.op != .jump_if_false) continue;
+        for (plan.edges) |edge| {
+            if (edge.from != pc or edge.to != instruction.op.jump_if_false) continue;
+            for (edge.releases) |release| if (release.storage == input.physical.locals[local].storage) return true;
+        }
+    }
+    return false;
+}
+
+// spec-case: RC-OWNERSHIP-PLAN-1
+test "RC-OWNERSHIP-PLAN-1 branch cleanup belongs to the actual unused successor edge" {
+    var fixture = try ShapeFixture.init(
+        \\def choose(use: bool) -> int:
+        \\    values = [1, 2]
+        \\    if use:
+        \\        return len(values)
+        \\    return 0
+        \\
+        \\def main() -> int:
+        \\    return choose(False)
+    );
+    defer fixture.deinit();
+    var facts = try shapes.Catalog.init(t.allocator, &fixture.layouts);
+    defer facts.deinit();
+    var input = try planInput(&fixture, &facts, "choose");
+    const plan = try plans.build(fixture.arena.allocator(), input);
+    try t.expect(falseEdgeDrops(input, plan, try localIndex(input, "values")));
+    input.policy.abi = "rc-v2";
+    try t.expectError(error.AbiMismatch, plans.build(fixture.arena.allocator(), input));
+}
+
+// spec-case: RC-OWNERSHIP-PLAN-1
+test "RC-OWNERSHIP-PLAN-1 entry-owned resources have a guard but no early edge drop" {
+    var fixture = try ShapeFixture.init("def consume(file: File) -> int:\n    return 0\n\ndef main() -> int:\n    return 0\n");
+    defer fixture.deinit();
+    var facts = try shapes.Catalog.init(t.allocator, &fixture.layouts);
+    defer facts.deinit();
+    var input = try planInput(&fixture, &facts, "consume");
+    const plan = try plans.build(fixture.arena.allocator(), input);
+    try t.expect(plan.entry[0].ownership == .owned);
+    try t.expectEqual(@as(usize, 1), plan.cleanup.len);
+    try t.expectEqual(@as(usize, 0), plan.edges.len);
+    input.physical.locals = &.{};
+    try t.expectError(error.InvalidState, plans.build(fixture.arena.allocator(), input));
+}
+
+fn cleanupCount(plan: plans.Plan, id: model.StorageId) usize {
+    var count: usize = 0;
+    for (plan.cleanup) |release| if (release.storage == id) {
+        count += 1;
+    };
+    return count;
+}
+
+// spec-case: RC-OWNERSHIP-PLAN-1
+test "RC-OWNERSHIP-PLAN-1 actual storage aliases share one cleanup guard" {
+    var fixture = try ShapeFixture.init(
+        \\record Data:
+        \\    values: list[int]
+        \\
+        \\def main() -> int:
+        \\    first = Data([1])
+        \\    second = first
+        \\    return len(second.values)
+    );
+    defer fixture.deinit();
+    var facts = try shapes.Catalog.init(t.allocator, &fixture.layouts);
+    defer facts.deinit();
+    const input = try planInput(&fixture, &facts, "main");
+    const first = try localIndex(input, "first");
+    const second = try localIndex(input, "second");
+    const bindings = @constCast(input.physical.locals);
+    bindings[second].storage = bindings[first].storage;
+    const plan = try plans.build(fixture.arena.allocator(), input);
+    try t.expectEqual(plan.entry[first].storage, plan.entry[second].storage);
+    try t.expectEqual(@as(usize, 1), cleanupCount(plan, bindings[first].storage));
+    bindings[first].anchor = .{ .storage = bindings[first].storage };
+    try t.expectError(error.InvalidState, plans.build(fixture.arena.allocator(), input));
+}
+
+fn firstDefinition(input: plans.Input, local: usize) !usize {
+    for (input.code.function.scope.instructions, 0..) |instruction, pc| {
+        if (instruction.op == .store_local and @backingInt(instruction.op.store_local) == local) return pc;
+    }
+    return error.TestUnexpectedResult;
+}
+
+fn lastBackEdge(input: plans.Input) !usize {
+    var result: ?usize = null;
+    for (input.code.function.scope.instructions, 0..) |instruction, pc| {
+        if (instruction.op == .jump and instruction.op.jump < pc) result = pc;
+    }
+    return result orelse error.TestUnexpectedResult;
+}
+
+// spec-case: RC-OWNERSHIP-PLAN-1
+test "RC-OWNERSHIP-PLAN-1 zero iteration does not initialize a loop-only owner" {
+    var fixture = try ShapeFixture.init(
+        \\def walk(limit: int) -> int:
+        \\    total = 0
+        \\    while total < limit:
+        \\        values = [total]
+        \\        total = total + len(values)
+        \\    return total
+        \\
+        \\def main() -> int:
+        \\    return walk(0)
+    );
+    defer fixture.deinit();
+    var facts = try shapes.Catalog.init(t.allocator, &fixture.layouts);
+    defer facts.deinit();
+    const input = try planInput(&fixture, &facts, "walk");
+    const local = try localIndex(input, "values");
+    const plan = try plans.build(fixture.arena.allocator(), input);
+    const release = try firstRelease(plan, input.physical.locals[local].storage);
+    try t.expect(plan.entry[local].ownership == .empty);
+    try t.expect(release >= try firstDefinition(input, local));
+    try t.expect(release <= try lastBackEdge(input));
 }

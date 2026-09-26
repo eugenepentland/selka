@@ -16,7 +16,15 @@ pub const Input = struct {
     checkpoint: model.Checkpoint,
 };
 /// Runtime operation; take is pin-aware and can allocate, unlike relocation.
-pub const Operation = enum { plain, self, copy, take };
+pub const Operation = enum {
+    plain,
+    self,
+    copy,
+    take,
+    /// Prepare incoming ownership before the separate unique-drop scheduler
+    /// closes the old destination; generic RC replacement cannot do that close.
+    take_unique,
+};
 /// One atomic replacement. Failure preserves the input slots exactly.
 pub const Plan = struct {
     operation: Operation,
@@ -57,7 +65,7 @@ pub fn plan(input: Input) Error!Plan {
     if (source.ownership == .plain) return error.InvalidState;
     const taking = input.intent == .last_use and source.ownership == .owned;
     if (!taking and !source.shape.copyable) return error.CopyProhibited;
-    result.operation = if (taking) .take else .copy;
+    result.operation = if (taking and source.shape.unique_drop) .take_unique else if (taking) .take else .copy;
     // Caller storage remains an external ownership obligation after a write.
     if (destination.ownership != .inout) result.success.destination.ownership = .{ .owned = .{ .token = input.token } };
     if (taking) result.success.source.ownership = .empty;

@@ -24,6 +24,7 @@ const diagnostic = @import("diagnostic.zig");
 const Source = @import("source.zig").Source;
 const entry_adapter = @import("entry_adapter.zig");
 const native_descriptors = @import("native_descriptors.zig");
+const runtime_mode = @import("runtime_mode.zig");
 const test_dependencies = @import("native_test_dependencies.zig");
 const native_interface = @import("native_interface.zig");
 const prelude = @import("prelude.zig");
