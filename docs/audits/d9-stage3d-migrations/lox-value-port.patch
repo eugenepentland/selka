@@ -40,7 +40,7 @@
      rt: heap.Runtime
      out: output.Output
      source: bytes
-@@ -81,6 +81,20 @@
+@@ -81,6 +81,13 @@
  
  def current_chunk(p: Parser) -> chunk.Chunk:
      return current_compiler(p).function.code
@@ -51,17 +51,10 @@
 +def store_compiler(p: mut Parser, index: int, updated: FnCompiler):
 +    p.compilers[index] = updated
 +    p.rt.objects[updated.function_ref] = object.Obj.function(updated.function)
-+
-+
-+def store_chunk(p: mut Parser, updated: chunk.Chunk):
-+    index = len(p.compilers) - 1
-+    current = p.compilers[index]
-+    current.function.code = updated
-+    store_compiler(mut p, index, current)
  
  
  def error_at(p: mut Parser, token: scanner.Token, message: bytes):
-@@ -100,7 +114,9 @@
+@@ -100,7 +107,9 @@
          _ = line.append_utf8("'")
      _ = line.append_utf8(": ")
      _ = line.append_range(message, 0, len(message))
@@ -72,7 +65,7 @@
      p.had_error = True
  
  
-@@ -115,7 +131,9 @@
+@@ -115,7 +124,9 @@
  def advance(p: mut Parser):
      p.previous = p.current
      while True:
@@ -83,27 +76,39 @@
          if p.current.kind != scanner.TokenKind.ERROR:
              return
          error_at_current(mut p, p.current.message)
-@@ -142,6 +160,7 @@
+@@ -142,6 +153,11 @@
  def emit_byte(p: mut Parser, byte: int):
      code = current_chunk(p)
      chunk.write_byte(mut code, byte, p.previous.line)
-+    store_chunk(mut p, code)
++    current_index = len(p.compilers) - 1
++    current = p.compilers[current_index]
++    current.function.code = code
++    p.compilers[current_index] = current
++    p.rt.objects[current.function_ref] = object.Obj.function(current.function)
  
  
  def emit_bytes(p: mut Parser, first: int, second: int):
-@@ -176,6 +195,7 @@
+@@ -176,6 +192,11 @@
  def make_constant(p: mut Parser, constant: value.Value) -> int:
      code = current_chunk(p)
      index = chunk.add_constant(mut code, constant)
-+    store_chunk(mut p, code)
++    current_index = len(p.compilers) - 1
++    current = p.compilers[current_index]
++    current.function.code = code
++    p.compilers[current_index] = current
++    p.rt.objects[current.function_ref] = object.Obj.function(current.function)
      if index >= UINT8_COUNT:
          error(mut p, b"Too many constants in one chunk.")
          return 0
-@@ -193,21 +213,28 @@
+@@ -193,21 +214,32 @@
          error(mut p, b"Too much code to jump over.")
      code.code[offset] = bit_and(shift_right(jump, 8), 255)
      code.code[offset + 1] = bit_and(jump, 255)
-+    store_chunk(mut p, code)
++    current_index = len(p.compilers) - 1
++    current = p.compilers[current_index]
++    current.function.code = code
++    p.compilers[current_index] = current
++    p.rt.objects[current.function_ref] = object.Obj.function(current.function)
  
  
  # Allocates the function first, roots it, then interns its name (SPEC §8.3).
@@ -130,7 +135,7 @@
  
  
  # Finishes the innermost function and answers its compiler, which still
-@@ -220,23 +247,24 @@
+@@ -220,23 +252,24 @@
  
  
  def begin_scope(p: mut Parser):
@@ -163,39 +168,40 @@
      return make_constant(mut p, value.Value.obj(ref))
  
  
-@@ -267,6 +295,7 @@
+@@ -267,6 +300,8 @@
          return 0
      target.upvalues.append(UpvalueRef(index=index, is_local=is_local))
      target.function.upvalue_count = count + 1
-+    store_compiler(mut p, level, target)
++    p.compilers[level] = target
++    p.rt.objects[target.function_ref] = object.Obj.function(target.function)
      return count
  
  
-@@ -277,6 +306,7 @@
+@@ -277,6 +312,7 @@
      if local != -1:
          enclosing = p.compilers[level - 1]
          enclosing.locals[local].is_captured = True
-+        store_compiler(mut p, level - 1, enclosing)
++        p.compilers[level - 1] = enclosing
          return add_upvalue(mut p, level, local, True)
      upvalue = resolve_upvalue(mut p, level - 1, name)
      if upvalue != -1:
-@@ -290,6 +320,7 @@
+@@ -290,6 +326,7 @@
          error(mut p, b"Too many local variables in function.")
          return
      current.locals.append(Local(name=name, depth=-1, is_captured=False))
-+    store_compiler(mut p, len(p.compilers) - 1, current)
++    p.compilers[len(p.compilers) - 1] = current
  
  
  def declare_variable(p: mut Parser):
-@@ -321,6 +352,7 @@
+@@ -321,6 +358,7 @@
      if current.scope_depth == 0:
          return
      current.locals[len(current.locals) - 1].depth = current.scope_depth
-+    store_compiler(mut p, len(p.compilers) - 1, current)
++    p.compilers[len(p.compilers) - 1] = current
  
  
  def define_variable(p: mut Parser, global_index: int):
-@@ -430,7 +462,10 @@
+@@ -430,7 +468,10 @@
  def string(p: mut Parser):
      token = p.previous
      chars = p.source.view(token.start + 1, token.start + token.length - 1)
@@ -207,7 +213,7 @@
  
  
  def named_variable(p: mut Parser, name: bytes, can_assign: bool):
-@@ -619,9 +654,11 @@
+@@ -619,9 +660,12 @@
  
  
  def parameter(p: mut Parser):
@@ -217,12 +223,13 @@
 +    index = len(p.compilers) - 1
 +    target = p.compilers[index]
 +    target.function.arity += 1
-+    store_compiler(mut p, index, target)
++    p.compilers[index] = target
++    p.rt.objects[target.function_ref] = object.Obj.function(target.function)
 +    if target.function.arity > 255:
          error_at_current(mut p, b"Can't have more than 255 parameters.")
      constant = parse_variable(mut p, b"Expect parameter name.")
      define_variable(mut p, constant)
-@@ -850,6 +887,8 @@
+@@ -850,6 +894,8 @@
      while not match_token(mut p, scanner.TokenKind.EOF):
          declaration(mut p)
      script = end_compiler(mut p)
@@ -567,15 +574,16 @@
                      return Ok(None)
                  case None:
                      return Err(fail(b"Undefined property '" + name_text(it.rt, node.name_ref) + b"'.", node.name.line))
-@@ -282,8 +308,15 @@
+@@ -282,8 +308,16 @@
              evaluate(mut it, node.assigned)?
              fields = instance.fields
              _ = table.set(mut fields, node.name_ref, heap.string_hash(it.rt, node.name_ref), heap.peek(it.rt, 0))
 -            assigned = heap.pop(mut it.rt)
 -            replace_top(mut it.rt, assigned)
-+            __wb_fields = it.rt
-+            heap.set_instance_fields(mut __wb_fields, as_obj(heap.peek(__wb_fields, 1)), fields)
-+            it.rt = __wb_fields
++            instance_ref = as_obj(heap.peek(it.rt, 1))
++            updated_instance = instance
++            updated_instance.fields = fields
++            it.rt.objects[instance_ref] = object.Obj.instance(updated_instance)
 +            __wb_285 = it.rt
 +            assigned = heap.pop(mut __wb_285)
 +            it.rt = __wb_285
@@ -585,7 +593,7 @@
              return Ok(None)
          case None:
              return Err(fail(b"Only instances have fields.", node.name.line))
-@@ -295,7 +328,9 @@
+@@ -295,7 +329,9 @@
      methods = heap.class_obj(it.rt, as_obj(superclass)).methods
      match table.get(methods, node.method_ref, heap.string_hash(it.rt, node.method_ref)):
          case Some(method):
@@ -596,7 +604,7 @@
              return Ok(None)
          case None:
              return Err(fail(b"Undefined property '" + name_text(it.rt, node.method_ref) + b"'.", node.method.line))
-@@ -315,7 +350,9 @@
+@@ -315,7 +351,9 @@
          case ast.Expr.grouping(node):
              return evaluate(mut it, node.inner)
          case ast.Expr.literal(node):
@@ -607,7 +615,7 @@
              return Ok(None)
          case ast.Expr.logical(node):
              return logical(mut it, node)
-@@ -324,7 +361,9 @@
+@@ -324,7 +362,9 @@
          case ast.Expr.super_access(node):
              return super_access(mut it, node)
          case ast.Expr.this(node):
@@ -618,7 +626,7 @@
              return Ok(None)
          case ast.Expr.unary(node):
              return unary(mut it, node)
-@@ -341,10 +380,14 @@
+@@ -341,10 +381,14 @@
          return Err(fail(f"Expected {arity} arguments but got {count}.".encode(), line))
      if it.depth + 1 > MAX_DEPTH:
          return Err(fail(b"Stack overflow.", line))
@@ -635,7 +643,7 @@
          i += 1
      return Ok(env)
  
-@@ -362,9 +405,13 @@
+@@ -362,9 +406,13 @@
  # returned value or nil, or `this` for an initializer.
  def run_function(it: mut Interpreter, function: object.TreeFunctionObj, env: value.ObjRef) -> Result[value.Value, RuntimeError]:
      it.depth = it.depth + 1
@@ -651,7 +659,7 @@
      it.depth = it.depth - 1
      flow = outcome?
      if function.is_initializer:
-@@ -389,14 +436,18 @@
+@@ -389,14 +437,18 @@
                  case object.Obj.tree_function(function):
                      env = enter_function(mut it, function, function.closure, count, callee_slot + 1, line)?
                      result = run_function(mut it, function, env)?
@@ -672,7 +680,7 @@
                      return Ok(None)
                  case _:
                      pass
-@@ -410,22 +461,34 @@
+@@ -410,22 +462,34 @@
  # the call's own env exists.
  def instantiate(it: mut Interpreter, class_ref: value.ObjRef, count: int, line: int) -> Result[None, RuntimeError]:
      callee_slot = it.rt.stack_top - count - 1
@@ -713,7 +721,7 @@
      return Ok(None)
  
  
-@@ -433,9 +496,13 @@
+@@ -433,9 +497,13 @@
  # current env, or into globals.
  def define(it: mut Interpreter, name: value.ObjRef, slot: int):
      if slot == ast.GLOBAL:
@@ -729,7 +737,7 @@
  
  
  def class_node(it: Interpreter, id: int) -> ast.ClassStmt:
-@@ -475,7 +542,9 @@
+@@ -475,7 +543,9 @@
  def class_declaration(it: mut Interpreter, id: int) -> Result[None, RuntimeError]:
      node = class_node(it, id)
      if node.slot == ast.GLOBAL:
@@ -740,7 +748,7 @@
      superclass = value.NO_OBJ
      match node.superclass:
          case Some(expr):
-@@ -483,30 +552,57 @@
+@@ -483,30 +553,57 @@
          case None:
              pass
      klass = object.ClassObj(name=node.name_ref, methods=table.new_table())
@@ -808,7 +816,7 @@
      return outcome
  
  
-@@ -518,16 +614,27 @@
+@@ -518,16 +615,27 @@
              class_declaration(mut it, id)?
          case ast.Stmt.expression(expr):
              evaluate(mut it, expr)?
@@ -841,7 +849,7 @@
                  return execute(mut it, node.then_branch)
              match node.else_branch:
                  case Some(branch):
-@@ -536,28 +643,43 @@
+@@ -536,28 +644,43 @@
                      pass
          case ast.Stmt.print(expr):
              evaluate(mut it, expr)?
@@ -892,7 +900,7 @@
                      return Ok(Flow.NORMAL)
                  flow = execute(mut it, node.body)?
                  if flow == Flow.RETURN:
-@@ -592,7 +714,8 @@
+@@ -592,7 +715,8 @@
  public def interpret(rt: mut heap.Runtime, o: mut output.Output, source: bytes) -> int:
      natives.start(mut rt)
      match parser.parse(mut rt, mut o, source):
@@ -902,7 +910,7 @@
              if not resolver.resolve(mut program, source, mut o):
                  return 65
              it = Interpreter(program=program, rt=rt, out=o, depth=0, returned=value.Value.nil)
-@@ -601,9 +724,17 @@
+@@ -601,9 +725,17 @@
                      case Ok(_):
                          pass
                      case Err(error):
@@ -1192,31 +1200,40 @@
  
  
  def get_property(rt: mut heap.Runtime, o: mut output.Output, frame: mut heap.CallFrame) -> bool:
-@@ -321,6 +329,7 @@
+@@ -321,6 +329,10 @@
              name = read_string(mut frame)
              fields = instance.fields
              _ = table.set(mut fields, name, heap.string_hash(rt, name), heap.peek(rt, 0))
-+            heap.set_instance_fields(mut rt, as_obj(heap.peek(rt, 1)), fields)
++            instance_ref = as_obj(heap.peek(rt, 1))
++            updated_instance = instance
++            updated_instance.fields = fields
++            rt.objects[instance_ref] = object.Obj.instance(updated_instance)
              assigned = heap.pop(mut rt)
              _ = heap.pop(mut rt)
              heap.push(mut rt, assigned)
-@@ -398,6 +407,7 @@
+@@ -398,6 +410,10 @@
      source = heap.class_obj(rt, as_obj(parent)).methods
      snapshot = table.Table(entries=source.entries.copy(), count=source.count)
      table.add_all(snapshot, mut methods)
-+    heap.set_class_methods(mut rt, as_obj(heap.peek(rt, 0)), methods)
++    subclass_ref = as_obj(heap.peek(rt, 0))
++    subclass = heap.class_obj(rt, subclass_ref)
++    subclass.methods = methods
++    rt.objects[subclass_ref] = object.Obj.klass(subclass)
      _ = heap.pop(mut rt)
      return True
  
-@@ -406,6 +416,7 @@
+@@ -406,6 +422,10 @@
      name = read_string(mut frame)
      methods = heap.class_obj(rt, as_obj(heap.peek(rt, 1))).methods
      _ = table.set(mut methods, name, heap.string_hash(rt, name), heap.peek(rt, 0))
-+    heap.set_class_methods(mut rt, as_obj(heap.peek(rt, 1)), methods)
++    class_ref = as_obj(heap.peek(rt, 1))
++    klass = heap.class_obj(rt, class_ref)
++    klass.methods = methods
++    rt.objects[class_ref] = object.Obj.klass(klass)
      _ = heap.pop(mut rt)
  
  
-@@ -415,6 +426,7 @@
+@@ -415,6 +435,7 @@
      frame = rt.frames[rt.frame_count - 1]
      while True:
          instruction = read_byte(mut frame)
@@ -1224,7 +1241,7 @@
          ok = True
          if instruction == chunk.OP_CONSTANT:
              heap.push(mut rt, read_constant(mut frame))
-@@ -474,18 +486,21 @@
+@@ -474,18 +495,21 @@
              frame.ip = frame.ip - offset
          elif instruction == chunk.OP_CALL:
              count = read_byte(mut frame)
@@ -1246,7 +1263,7 @@
              ok = invoke_from_class(mut rt, mut o, as_obj(heap.pop(mut rt)), method, count)
              if ok:
                  frame = rt.frames[rt.frame_count - 1]
-@@ -512,6 +527,7 @@
+@@ -512,6 +536,7 @@
              ok = inherit(mut rt, mut o)
          elif instruction == chunk.OP_METHOD:
              define_method(mut rt, mut frame)
