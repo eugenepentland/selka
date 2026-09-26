@@ -120,7 +120,16 @@ pub fn prepareGuarded(comptime E: type, self: *E, ty: typed.Type, address: usize
     const guard_pointer = try frame.guard(E, self, journal_index);
     const live = self.temp();
     const label = self.temp();
-    try self.print(" %v{d} =w loaduw %v{d}\n jnz %v{d}, @rctake{d}, @rccopy{d}\n@rctake{d}\n", .{ live, guard_pointer, live, label, label, label });
+    try self.print(" %v{d} =w loaduw %v{d}\n", .{ live, guard_pointer });
+    var transferable = live;
+    const may_hold = @import("qbe_rc_holds.zig").mayHold(E, self, ty);
+    if (may_hold) {
+        const held = try @import("qbe_rc_holds.zig").held(E, self, journal_index);
+        const owner = self.temp();
+        transferable = self.temp();
+        try self.print(" %v{d} =w xor %v{d}, 1\n %v{d} =w and %v{d}, %v{d}\n", .{ owner, held, transferable, live, owner });
+    }
+    try self.print(" jnz %v{d}, @rctake{d}, @rccopy{d}\n@rctake{d}\n", .{ transferable, label, label, label });
     const work = try workAddress(E, self);
     const region = self.temp();
     try self.print(region_mark, .{region});
@@ -129,6 +138,9 @@ pub fn prepareGuarded(comptime E: type, self: *E, ty: typed.Type, address: usize
     try markWork(E, self, ty, work);
     try self.print(" jmp @rcprepared{d}\n@rccopy{d}\n", .{ label, label });
     try copied(E, self, ty, address);
+    // A copied H token becomes an independent O only after success; refusal
+    // keeps the original hold guarded for ordinary unwind.
+    if (may_hold) try frame.drop(E, self, journal_index);
     try self.print("@rcprepared{d}\n", .{label});
 }
 
