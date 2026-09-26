@@ -1255,6 +1255,11 @@ test "the production check starts beside the declaration check unless a fixture 
         .source = captured,
     };
     const early = speculate(session, captured, "") orelse return error.TestUnexpectedResult;
+    // Inspect the spawned session before starting the declaration check. The
+    // children can append their log lines in either order after being spawned.
+    try std.testing.expect(early == .compiling);
+    try std.testing.expect(early.compiling.child.stdin != null);
+    try std.testing.expect(early.compiling.child.stdout != null);
     const production = try session.interfaceCheck(captured.entry_path);
     var graphs: Graphs = .{ .allocator = context.allocator, .session = session, .captured = captured, .production = production, .directory = "", .early = early };
     defer graphs.deinit();
@@ -1263,7 +1268,7 @@ test "the production check starts beside the declaration check unless a fixture 
     const calls = try context.read(log);
     // One session, started before the declaration check, prepared the graph.
     try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, calls, "native-test-compile"));
-    try std.testing.expect(std.mem.indexOf(u8, calls, "native-test-compile").? < std.mem.indexOf(u8, calls, "list-interfaces").?);
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, calls, "list-interfaces"));
     // A session the selection never used is killed without a word.
     abandon(speculate(session, captured, ""));
     // Only a configuration that names no provider fixture lets the check start early.
