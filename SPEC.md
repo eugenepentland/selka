@@ -1376,8 +1376,12 @@ host failure in one worker leaves the units the other workers hold running.
 
 - [RC-LOOP-VERSION-1] RC loop versions cache element storage only inside a proved physical no-publication interval, after entry uniqueness and with no residual COW checks or allocating lowered helpers. Failed range guards execute the original loop and preserve its traps.
 
+- [RC-FILE-OPEN-TRAP-1] A trapping file open releases the provider's unpublished owned error text before reporting R_FILE, including inside an arena. Fallible open publishes that text in Result.Err; successful handles retain their unique resource cleanup.
+
 - [RC-NO-TRACING-ROOTS-1] Counted native functions retain guarded ownership journals and arena/callback scope cleanup without publishing tracing-GC roots; GC artifacts retain their existing traced root chains.
 
 - [LIVE-VIEW-SNAPSHOT-1] Copying a live dictionary view preserves its mapping identity, but publishing that mapping into an independent value requires a snapshot even on the view owner's last read. Projections through records, arrays, variants and collection elements preserve this boundary; field and indexed-payload extract/mutate/store-back proofs must not erase it. Fresh view construction does not make its externally owned mapping fresh.
 
 - [RC-SEMANTIC-HISTORY-1] Experimental RC separates semantic sharing history from physical lifetime. A frame-private loan copies inline bytes and holds every managed edge without cloning pinned payloads, changing ordinary owner counts or setting sharing marks. Failed acquisition clears its output and rolls back all holds; cleanup clears the loan before allocation-free release. Raw unique resources and uniquely finalized boxed bodies cannot become loans. Loans never enter ordinary heap or provider ownership.
+
+- [RC-COMPACT-JOURNAL-1] RC frames omit journal entries only for locals with no counted or unique obligation and operand positions whose complete reachable physical type union is plain. Retained positions keep their original reverse cleanup order, both construction scratch entries, dynamic held roles and exact arena local-prefix watermarks. Omitted guard requests fail internally; plain aggregate staging copies bits without inspecting an absent ownership guard.

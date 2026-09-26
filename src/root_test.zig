@@ -250,6 +250,7 @@ test {
     _ = @import("qbe_rc_plain_write_test.zig");
     _ = @import("qbe_rc_admission_test.zig");
     _ = @import("qbe_rc_views_test.zig");
+    _ = @import("qbe_rc_journal_test.zig");
     _ = @import("cow_test.zig");
     _ = @import("qbe_text_test.zig");
     _ = @import("qbe_range_keys_test.zig");

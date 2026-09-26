@@ -1,0 +1,12 @@
+{
+  "before_commit": "b7e33441663d7f6eb23fc9e67b721677214a2c44",
+  "source_tree": "b73534705ca67916633ae27ed205d3be4797c3e1",
+  "compiler_sha256": "0a1150d75282eb35dd0852f5f2dd1becfbb0dd3426cbd1f2b1a92737c1949b6a",
+  "metadata_only_replacement": {
+    "original_fix": "96c9b4676d63fcbc393060079293894b2e90c101",
+    "replacement_fix": "dea5c301feabaadf669aa97b26f4fabd0195d65f",
+    "original_merge": "b7e33441663d7f6eb23fc9e67b721677214a2c44",
+    "replacement_merge": "c31666341191f490caba5fb9b172320d0aea5509",
+    "identical_source_tree": "b73534705ca67916633ae27ed205d3be4797c3e1"
+  }
+}
