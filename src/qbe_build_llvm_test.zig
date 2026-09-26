@@ -285,3 +285,19 @@ test "RC runtime helpers use checked C status and transfer signatures" {
     try std.testing.expect(@import("qbe_build_llvm_runtime.zig").isHelper("myl_rc_unknown"));
     try std.testing.expectEqual(@as(?llvm.RuntimeSignature, null), table.signature("myl_rc_unknown"));
 }
+
+// spec: LLVM-SELF-ADDRESS-1
+test "an LLVM callback may name the function currently being defined" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var signatures: llvm.Signatures = .empty;
+    try signatures.put(a, "through", .{ .parameters = &.{ "l", "l" }, .result = "l" });
+    const table: llvm.RuntimeTable = .{};
+    const options: llvm.Options = .{ .signatures = &signatures, .runtime = &table };
+    var diagnostic: llvm.Diagnostic = .{ .unit = "self-callback" };
+    const translated = try llvm.translate(a, "export function l $recurse(l %ctx) {\n@start\n %v =l call $through(l $recurse, l %ctx)\n ret %v\n}\n", options, &diagnostic);
+    try std.testing.expect(std.mem.indexOf(u8, translated, "ptrtoint (ptr @recurse to i64)") != null);
+    try std.testing.expect(std.mem.indexOf(u8, translated, "declare i64 @recurse") == null);
+    try std.testing.expect(std.mem.indexOf(u8, translated, "declare i64 @through(i64, i64)") != null);
+}

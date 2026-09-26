@@ -1,0 +1,15 @@
+record Pair:
+    first: int
+    second: int
+
+def through(callback: def(Pair) -> int, value: Pair) -> int:
+    return callback(value)
+
+def recurse(value: Pair) -> int:
+    if value.first == 0:
+        return value.second
+    return through(recurse, Pair(value.first - 1, value.second + value.first))
+
+def main(out: Stream) -> int:
+    out.print(recurse(Pair(20, 7)))
+    return 0
