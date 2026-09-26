@@ -1,0 +1,382 @@
+{
+  "reduced/qbe/rc/no_view_call": {
+    "balanced": true,
+    "counts": {
+      "version": 1,
+      "runtime": "rc-v2-counting",
+      "saturated": false,
+      "owner_acquire": 10,
+      "owner_release": 19,
+      "hold_acquire": 4,
+      "hold_release": 4,
+      "owner_limit": 0,
+      "hold_limit": 0,
+      "heap_allocate": 9,
+      "arena_allocate": 0,
+      "retire": 9,
+      "clone_shell": 1,
+      "unique_check": 1
+    }
+  },
+  "reduced/qbe/rc/no_view_local": {
+    "balanced": true,
+    "counts": {
+      "version": 1,
+      "runtime": "rc-v2-counting",
+      "saturated": false,
+      "owner_acquire": 10,
+      "owner_release": 19,
+      "hold_acquire": 4,
+      "hold_release": 4,
+      "owner_limit": 0,
+      "hold_limit": 0,
+      "heap_allocate": 9,
+      "arena_allocate": 0,
+      "retire": 9,
+      "clone_shell": 1,
+      "unique_check": 1
+    }
+  },
+  "precompact/qbe/rc/append_arena": {
+    "balanced": true,
+    "counts": {
+      "version": 1,
+      "runtime": "rc-v2-counting",
+      "saturated": false,
+      "owner_acquire": 0,
+      "owner_release": 0,
+      "hold_acquire": 0,
+      "hold_release": 0,
+      "owner_limit": 0,
+      "hold_limit": 0,
+      "heap_allocate": 0,
+      "arena_allocate": 15,
+      "retire": 0,
+      "clone_shell": 3,
+      "unique_check": 5
+    }
+  },
+  "base/qbe/rc/append_arena": {
+    "balanced": true,
+    "counts": {
+      "version": 1,
+      "runtime": "rc-v2-counting",
+      "saturated": false,
+      "owner_acquire": 0,
+      "owner_release": 0,
+      "hold_acquire": 0,
+      "hold_release": 0,
+      "owner_limit": 0,
+      "hold_limit": 0,
+      "heap_allocate": 0,
+      "arena_allocate": 15,
+      "retire": 0,
+      "clone_shell": 3,
+      "unique_check": 5
+    }
+  },
+  "base/qbe/rc/append_heap": {
+    "balanced": true,
+    "counts": {
+      "version": 1,
+      "runtime": "rc-v2-counting",
+      "saturated": false,
+      "owner_acquire": 7,
+      "owner_release": 15,
+      "hold_acquire": 10,
+      "hold_release": 10,
+      "owner_limit": 0,
+      "hold_limit": 0,
+      "heap_allocate": 8,
+      "arena_allocate": 0,
+      "retire": 8,
+      "clone_shell": 0,
+      "unique_check": 5
+    }
+  },
+  "base/qbe/rc/nested_arena": {
+    "balanced": true,
+    "counts": {
+      "version": 1,
+      "runtime": "rc-v2-counting",
+      "saturated": false,
+      "owner_acquire": 0,
+      "owner_release": 0,
+      "hold_acquire": 0,
+      "hold_release": 0,
+      "owner_limit": 0,
+      "hold_limit": 0,
+      "heap_allocate": 0,
+      "arena_allocate": 14,
+      "retire": 0,
+      "clone_shell": 1,
+      "unique_check": 3
+    }
+  },
+  "base/qbe/rc/nested_heap": {
+    "balanced": true,
+    "counts": {
+      "version": 1,
+      "runtime": "rc-v2-counting",
+      "saturated": false,
+      "owner_acquire": 4,
+      "owner_release": 14,
+      "hold_acquire": 10,
+      "hold_release": 10,
+      "owner_limit": 0,
+      "hold_limit": 0,
+      "heap_allocate": 10,
+      "arena_allocate": 0,
+      "retire": 10,
+      "clone_shell": 0,
+      "unique_check": 3
+    }
+  },
+  "base/qbe/rc/setdefault_arena": {
+    "balanced": true,
+    "counts": {
+      "version": 1,
+      "runtime": "rc-v2-counting",
+      "saturated": false,
+      "owner_acquire": 0,
+      "owner_release": 0,
+      "hold_acquire": 0,
+      "hold_release": 0,
+      "owner_limit": 0,
+      "hold_limit": 0,
+      "heap_allocate": 0,
+      "arena_allocate": 16,
+      "retire": 0,
+      "clone_shell": 1,
+      "unique_check": 4
+    }
+  },
+  "base/qbe/rc/setdefault_heap": {
+    "balanced": true,
+    "counts": {
+      "version": 1,
+      "runtime": "rc-v2-counting",
+      "saturated": false,
+      "owner_acquire": 5,
+      "owner_release": 17,
+      "hold_acquire": 10,
+      "hold_release": 10,
+      "owner_limit": 0,
+      "hold_limit": 0,
+      "heap_allocate": 12,
+      "arena_allocate": 0,
+      "retire": 12,
+      "clone_shell": 0,
+      "unique_check": 4
+    }
+  },
+  "base/llvm/rc/append_arena": {
+    "balanced": true,
+    "counts": {
+      "version": 1,
+      "runtime": "rc-v2-counting",
+      "saturated": false,
+      "owner_acquire": 0,
+      "owner_release": 0,
+      "hold_acquire": 0,
+      "hold_release": 0,
+      "owner_limit": 0,
+      "hold_limit": 0,
+      "heap_allocate": 0,
+      "arena_allocate": 15,
+      "retire": 0,
+      "clone_shell": 3,
+      "unique_check": 5
+    }
+  },
+  "base/llvm/rc/append_heap": {
+    "balanced": true,
+    "counts": {
+      "version": 1,
+      "runtime": "rc-v2-counting",
+      "saturated": false,
+      "owner_acquire": 7,
+      "owner_release": 15,
+      "hold_acquire": 10,
+      "hold_release": 10,
+      "owner_limit": 0,
+      "hold_limit": 0,
+      "heap_allocate": 8,
+      "arena_allocate": 0,
+      "retire": 8,
+      "clone_shell": 0,
+      "unique_check": 5
+    }
+  },
+  "base/llvm/rc/nested_arena": {
+    "balanced": true,
+    "counts": {
+      "version": 1,
+      "runtime": "rc-v2-counting",
+      "saturated": false,
+      "owner_acquire": 0,
+      "owner_release": 0,
+      "hold_acquire": 0,
+      "hold_release": 0,
+      "owner_limit": 0,
+      "hold_limit": 0,
+      "heap_allocate": 0,
+      "arena_allocate": 14,
+      "retire": 0,
+      "clone_shell": 1,
+      "unique_check": 3
+    }
+  },
+  "pinned/qbe/rc/copy": {
+    "balanced": true,
+    "counts": {
+      "version": 1,
+      "runtime": "rc-v2-counting",
+      "saturated": false,
+      "owner_acquire": 12,
+      "owner_release": 30,
+      "hold_acquire": 18,
+      "hold_release": 18,
+      "owner_limit": 0,
+      "hold_limit": 0,
+      "heap_allocate": 18,
+      "arena_allocate": 0,
+      "retire": 18,
+      "clone_shell": 2,
+      "unique_check": 6
+    }
+  },
+  "pinned/qbe/rc/slice": {
+    "balanced": true,
+    "counts": {
+      "version": 1,
+      "runtime": "rc-v2-counting",
+      "saturated": false,
+      "owner_acquire": 15,
+      "owner_release": 33,
+      "hold_acquire": 18,
+      "hold_release": 18,
+      "owner_limit": 0,
+      "hold_limit": 0,
+      "heap_allocate": 18,
+      "arena_allocate": 0,
+      "retire": 18,
+      "clone_shell": 2,
+      "unique_check": 7
+    }
+  },
+  "pinned/llvm/rc/copy": {
+    "balanced": true,
+    "counts": {
+      "version": 1,
+      "runtime": "rc-v2-counting",
+      "saturated": false,
+      "owner_acquire": 12,
+      "owner_release": 30,
+      "hold_acquire": 18,
+      "hold_release": 18,
+      "owner_limit": 0,
+      "hold_limit": 0,
+      "heap_allocate": 18,
+      "arena_allocate": 0,
+      "retire": 18,
+      "clone_shell": 2,
+      "unique_check": 6
+    }
+  },
+  "boxes/qbe/rc/call_arena": {
+    "balanced": true,
+    "counts": {
+      "version": 1,
+      "runtime": "rc-v2-counting",
+      "saturated": false,
+      "owner_acquire": 0,
+      "owner_release": 0,
+      "hold_acquire": 0,
+      "hold_release": 0,
+      "owner_limit": 0,
+      "hold_limit": 0,
+      "heap_allocate": 0,
+      "arena_allocate": 11,
+      "retire": 0,
+      "clone_shell": 1,
+      "unique_check": 2
+    }
+  },
+  "boxes/qbe/rc/call_heap": {
+    "balanced": true,
+    "counts": {
+      "version": 1,
+      "runtime": "rc-v2-counting",
+      "saturated": false,
+      "owner_acquire": 13,
+      "owner_release": 24,
+      "hold_acquire": 6,
+      "hold_release": 6,
+      "owner_limit": 0,
+      "hold_limit": 0,
+      "heap_allocate": 11,
+      "arena_allocate": 0,
+      "retire": 11,
+      "clone_shell": 1,
+      "unique_check": 2
+    }
+  },
+  "boxes/qbe/rc/constructor_arena": {
+    "balanced": true,
+    "counts": {
+      "version": 1,
+      "runtime": "rc-v2-counting",
+      "saturated": false,
+      "owner_acquire": 0,
+      "owner_release": 0,
+      "hold_acquire": 0,
+      "hold_release": 0,
+      "owner_limit": 0,
+      "hold_limit": 0,
+      "heap_allocate": 0,
+      "arena_allocate": 13,
+      "retire": 0,
+      "clone_shell": 1,
+      "unique_check": 3
+    }
+  },
+  "boxes/qbe/rc/constructor_heap": {
+    "balanced": true,
+    "counts": {
+      "version": 1,
+      "runtime": "rc-v2-counting",
+      "saturated": false,
+      "owner_acquire": 17,
+      "owner_release": 30,
+      "hold_acquire": 6,
+      "hold_release": 6,
+      "owner_limit": 0,
+      "hold_limit": 0,
+      "heap_allocate": 13,
+      "arena_allocate": 0,
+      "retire": 13,
+      "clone_shell": 1,
+      "unique_check": 3
+    }
+  },
+  "boxes/qbe/rc/local_arena": {
+    "balanced": true,
+    "counts": {
+      "version": 1,
+      "runtime": "rc-v2-counting",
+      "saturated": false,
+      "owner_acquire": 0,
+      "owner_release": 0,
+      "hold_acquire": 0,
+      "hold_release": 0,
+      "owner_limit": 0,
+      "hold_limit": 0,
+      "heap_allocate": 0,
+      "arena_allocate": 11,
+      "retire": 0,
+      "clone_shell": 1,
+      "unique_check": 2
+    }
+  }
+}

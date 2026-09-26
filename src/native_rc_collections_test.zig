@@ -7,6 +7,7 @@ extern fn myl_rc_collections_verify() c_int;
 // spec: RC-DICTIONARY-1
 // spec: RC-VIEWS-1
 // spec-case: RC-TRANSFER-1
+// spec: RC-FLAT-SINGLE-DESTRUCTION-1
 test "RC production storage and collection ownership" {
-    try std.testing.expectEqual(@as(c_int, 31), myl_rc_collections_verify());
+    try std.testing.expectEqual(@as(c_int, 32), myl_rc_collections_verify());
 }

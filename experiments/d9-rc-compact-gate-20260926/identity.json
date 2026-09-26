@@ -1,0 +1,41 @@
+{
+  "source": "7998e84cf7dfd3b74f0f2ff596714034dfc4b4fa",
+  "compiler_sha256": "bacbf1e4794adcc770510414f81bf878c0b418a09b170cf30b8f6d6abaf7bacf",
+  "full_gate_passed": true,
+  "main_gate": {
+    "steps": 94,
+    "tests_passed": 2241,
+    "failed": 0,
+    "shard_excluded": 22794
+  },
+  "qbe_gate": {
+    "steps": 51,
+    "tests_passed": 437
+  },
+  "native_build_steps": 29,
+  "fmt_steps": 2,
+  "sweeps": {
+    "qbe": {
+      "version": "native-tests-v1",
+      "passed": 795,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 795,
+      "programs": 139,
+      "dropped": 0,
+      "unloaded": 0
+    },
+    "llvm": {
+      "version": "native-tests-v1",
+      "passed": 795,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 795,
+      "programs": 139,
+      "dropped": 0,
+      "unloaded": 0
+    }
+  }
+}
