@@ -1,0 +1,570 @@
+{
+  "identity": {
+    "compiler": "/home/epentland/ai/canopy/mylang-worktrees/d9-copy-through-transfers/.tmp-transfer/install-variant/bin/mylang",
+    "compiler_commit": "f8dad8e8",
+    "compiler_sha256": "2e5e577f14fd1e27462afbfc4e4d46a5421bdd81f8229b1c1ee01b1a69701434",
+    "source": {
+      "before": {
+        "table.my": "c875ae493dbc0d6c1b70202746b0f1d2211190fa1276b9d492778455c0d0b2ca",
+        "value.my": "3b2a444e77c6a703b1aedad3c89ef38cad70aa3bb6cba1716b623980ff9a76b0",
+        "scanner_test.my": "1d7fbb34b0de402657786641217e81c9ae286cab14baf2716de2db875ae39ad0",
+        "natives.my": "2ff45343fded6d303e6233e0f787e63c319e860903e2c0c81ccbb71c2749d665",
+        "resolver.my": "41d41b2a1ddb3f6ab3fb73ad9eff69415b0450d890554766bfee37eac8d0903d",
+        "scanner.my": "af4bc6a57859318051dc47d6e1f6344ee98fbfff037e9be93c0a103765cd3e83",
+        "main.my": "18c1f669b1683123e635256c9f66c6db2766383391371c3822e61df7d9732274",
+        "resolver_test.my": "72c5176ff15db240d8ec8ff8073fcdb7736e8c60ab47410bb60fce934c179d31",
+        "heap_test.my": "c951153991a8d5d13ca1df6ded7c6f26c7b43a08ed2095f72c6091637b29b53f",
+        "lox_strings.my": "383900dda10b9218caf2087e12a2e20089e4d48b0ec5fc3e17e960a3d70d83df",
+        "driver_tests.my": "9eace4f6c8b33fd93331297f8a8195c41357b7c833b2e06e0c20594704113925",
+        "driver.my": "fe831d2ec08833d11139e790ab741903b27a8e0fb43582cac11ca664b4595836",
+        "compiler_test.my": "582fe817dbeffa709961b5124370ce200510adb3ac0d246572ca1c0dc19ec08a",
+        "chunk.my": "b4f6e7ae6531b224f99e026f53fee3692c90d8f2b15d3c76ca5962f1803e4b66",
+        "output.my": "cdc79c8a9a5eca0106fb139bca5492da201f027b0499e5e00a492368317d194c",
+        "parser_test.my": "ffe2658f030c75b40a7c54d8f0c64e848e6679e13fc69cbef9a131ed7b120e4b",
+        "interpreter.my": "363ffb898afaf36c6b792df54614f99340e56a0ba6df228afc283c81252c7c58",
+        "vm.my": "24e852a937658279250ddd71e4835383c74053946d2fc50a91d2450d1312c37d",
+        "value_test.my": "b766d22b25a8a8a090b4a059030cfc7462022fdacb66a0a91bf8a9e09a53fed4",
+        "parser.my": "e9bd5d9c37e307d060ce165dc4fa0f276c2ff9dbe7cb21bd27cbdd94644b4edd",
+        "compiler.my": "c550603195401ff6d9436b42d6fbf0c35051521da57e7b85281fc8fcf6ebe048",
+        "heap.my": "00d41cf353546e5bb4de3ea4bbda6cf03a61ce943d078c03ed896b62a6586f5d",
+        "ast.my": "e210fb35bf3125ba06ebb978bcb3592162020a77576542f2d049879a51479bf9",
+        "lox_strings_test.my": "a44545c64e9f75cc5af761d6c703feec83c4fc0a14d2678a1b2fce28067bd0c0",
+        "table_test.my": "38279f9135e953484e6844994bc070c4156d1eb31ab4de0f295efbea17c19555",
+        "object.my": "08c0d5c6ae304ef4d0e1f5929f52b5d1dd47cd46e6c409392c0b5b1df9567ad7"
+      },
+      "port": {
+        "table.my": "c875ae493dbc0d6c1b70202746b0f1d2211190fa1276b9d492778455c0d0b2ca",
+        "value.my": "3b2a444e77c6a703b1aedad3c89ef38cad70aa3bb6cba1716b623980ff9a76b0",
+        "scanner_test.my": "1d7fbb34b0de402657786641217e81c9ae286cab14baf2716de2db875ae39ad0",
+        "natives.my": "2ff45343fded6d303e6233e0f787e63c319e860903e2c0c81ccbb71c2749d665",
+        "resolver.my": "41d41b2a1ddb3f6ab3fb73ad9eff69415b0450d890554766bfee37eac8d0903d",
+        "scanner.my": "af4bc6a57859318051dc47d6e1f6344ee98fbfff037e9be93c0a103765cd3e83",
+        "main.my": "18c1f669b1683123e635256c9f66c6db2766383391371c3822e61df7d9732274",
+        "resolver_test.my": "72c5176ff15db240d8ec8ff8073fcdb7736e8c60ab47410bb60fce934c179d31",
+        "heap_test.my": "c951153991a8d5d13ca1df6ded7c6f26c7b43a08ed2095f72c6091637b29b53f",
+        "lox_strings.my": "383900dda10b9218caf2087e12a2e20089e4d48b0ec5fc3e17e960a3d70d83df",
+        "driver_tests.my": "9eace4f6c8b33fd93331297f8a8195c41357b7c833b2e06e0c20594704113925",
+        "driver.my": "fe831d2ec08833d11139e790ab741903b27a8e0fb43582cac11ca664b4595836",
+        "compiler_test.my": "582fe817dbeffa709961b5124370ce200510adb3ac0d246572ca1c0dc19ec08a",
+        "chunk.my": "b4f6e7ae6531b224f99e026f53fee3692c90d8f2b15d3c76ca5962f1803e4b66",
+        "output.my": "cdc79c8a9a5eca0106fb139bca5492da201f027b0499e5e00a492368317d194c",
+        "parser_test.my": "ffe2658f030c75b40a7c54d8f0c64e848e6679e13fc69cbef9a131ed7b120e4b",
+        "interpreter.my": "363ffb898afaf36c6b792df54614f99340e56a0ba6df228afc283c81252c7c58",
+        "vm.my": "31e329318e5eff37901f388a011eca6cd94250fa3e6706216dca0eb3f5957370",
+        "value_test.my": "b766d22b25a8a8a090b4a059030cfc7462022fdacb66a0a91bf8a9e09a53fed4",
+        "parser.my": "e9bd5d9c37e307d060ce165dc4fa0f276c2ff9dbe7cb21bd27cbdd94644b4edd",
+        "compiler.my": "c550603195401ff6d9436b42d6fbf0c35051521da57e7b85281fc8fcf6ebe048",
+        "heap.my": "00d41cf353546e5bb4de3ea4bbda6cf03a61ce943d078c03ed896b62a6586f5d",
+        "ast.my": "e210fb35bf3125ba06ebb978bcb3592162020a77576542f2d049879a51479bf9",
+        "lox_strings_test.my": "a44545c64e9f75cc5af761d6c703feec83c4fc0a14d2678a1b2fce28067bd0c0",
+        "table_test.my": "38279f9135e953484e6844994bc070c4156d1eb31ab4de0f295efbea17c19555",
+        "object.my": "08c0d5c6ae304ef4d0e1f5929f52b5d1dd47cd46e6c409392c0b5b1df9567ad7"
+      }
+    }
+  },
+  "cpu": 3,
+  "repetitions": 3,
+  "size": "tree",
+  "engine": "vm",
+  "results": {
+    "lox/vm/binary_trees|qbe": {
+      "before": {
+        "counts": [
+          {
+            "status": 0,
+            "instructions": 8295329398,
+            "cycles": 4230973929
+          },
+          {
+            "status": 0,
+            "instructions": 8295328576,
+            "cycles": 3926097809
+          },
+          {
+            "status": 0,
+            "instructions": 8295328043,
+            "cycles": 2314893231
+          }
+        ],
+        "median": 8295328576,
+        "binary_sha256": "a072208f0d33c8e2a8e19e279ebcbc6ad4d9c0a6eb0050193939532f4fe20624",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-instance-reads/.tmp-instance/lox-before-qbe",
+          "--engine=vm",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-instance-reads/.tmp-instance/measure/lox-scripts/binary_trees.tree.lox"
+        ],
+        "stdout_sha256": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056"
+      },
+      "port": {
+        "counts": [
+          {
+            "status": 0,
+            "instructions": 8016623598,
+            "cycles": 4589027945
+          },
+          {
+            "status": 0,
+            "instructions": 8016623373,
+            "cycles": 4627600223
+          },
+          {
+            "status": 0,
+            "instructions": 8016623436,
+            "cycles": 4633937188
+          }
+        ],
+        "median": 8016623436,
+        "binary_sha256": "e504fc191725cce55b8e2ede022d09d61d1b60457bf7d1f7e9fa8924994784be",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-instance-reads/.tmp-instance/lox-port-qbe",
+          "--engine=vm",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-instance-reads/.tmp-instance/measure/lox-scripts/binary_trees.tree.lox"
+        ],
+        "stdout_sha256": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056"
+      },
+      "ratio": 0.9664021578595032
+    },
+    "lox/vm/binary_trees|llvm": {
+      "before": {
+        "counts": [
+          {
+            "status": 0,
+            "instructions": 4430087360,
+            "cycles": 1594642135
+          },
+          {
+            "status": 0,
+            "instructions": 4430086147,
+            "cycles": 2341490429
+          },
+          {
+            "status": 0,
+            "instructions": 4430088445,
+            "cycles": 2482019460
+          }
+        ],
+        "median": 4430087360,
+        "binary_sha256": "acacece56626d64b40efe4efcae8908d92479098934e5fe97573bcd4c8c58df4",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-instance-reads/.tmp-instance/lox-before-llvm",
+          "--engine=vm",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-instance-reads/.tmp-instance/measure/lox-scripts/binary_trees.tree.lox"
+        ],
+        "stdout_sha256": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056"
+      },
+      "port": {
+        "counts": [
+          {
+            "status": 0,
+            "instructions": 4295504976,
+            "cycles": 2367835376
+          },
+          {
+            "status": 0,
+            "instructions": 4295504944,
+            "cycles": 2365745114
+          },
+          {
+            "status": 0,
+            "instructions": 4295504980,
+            "cycles": 2372856688
+          }
+        ],
+        "median": 4295504976,
+        "binary_sha256": "0f8fa72c1ecc449c05c378aa49a9784ffb4c10576093b8199544ca535ee3ec80",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-instance-reads/.tmp-instance/lox-port-llvm",
+          "--engine=vm",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-instance-reads/.tmp-instance/measure/lox-scripts/binary_trees.tree.lox"
+        ],
+        "stdout_sha256": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056"
+      },
+      "ratio": 0.969620828425379
+    },
+    "lox/vm/closures|qbe": {
+      "before": {
+        "counts": [
+          {
+            "status": 0,
+            "instructions": 11938113067,
+            "cycles": 4185362049
+          },
+          {
+            "status": 0,
+            "instructions": 11938113890,
+            "cycles": 6040519791
+          },
+          {
+            "status": 0,
+            "instructions": 11938113064,
+            "cycles": 4293942316
+          }
+        ],
+        "median": 11938113067,
+        "binary_sha256": "a072208f0d33c8e2a8e19e279ebcbc6ad4d9c0a6eb0050193939532f4fe20624",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-instance-reads/.tmp-instance/lox-before-qbe",
+          "--engine=vm",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-instance-reads/.tmp-instance/measure/lox-scripts/closures.tree.lox"
+        ],
+        "stdout_sha256": "8dacb3b0327cbd368e9c06434c1dd66b88f2a69dba30a2f64fc0dd78570cf7f0"
+      },
+      "port": {
+        "counts": [
+          {
+            "status": 0,
+            "instructions": 11938113301,
+            "cycles": 5075121160
+          },
+          {
+            "status": 0,
+            "instructions": 11938113426,
+            "cycles": 5314115341
+          },
+          {
+            "status": 0,
+            "instructions": 11938113518,
+            "cycles": 5415719294
+          }
+        ],
+        "median": 11938113426,
+        "binary_sha256": "e504fc191725cce55b8e2ede022d09d61d1b60457bf7d1f7e9fa8924994784be",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-instance-reads/.tmp-instance/lox-port-qbe",
+          "--engine=vm",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-instance-reads/.tmp-instance/measure/lox-scripts/closures.tree.lox"
+        ],
+        "stdout_sha256": "8dacb3b0327cbd368e9c06434c1dd66b88f2a69dba30a2f64fc0dd78570cf7f0"
+      },
+      "ratio": 1.000000030071754
+    },
+    "lox/vm/closures|llvm": {
+      "before": {
+        "counts": [
+          {
+            "status": 0,
+            "instructions": 5879090176,
+            "cycles": 2586713038
+          },
+          {
+            "status": 0,
+            "instructions": 5879090256,
+            "cycles": 2821956635
+          },
+          {
+            "status": 0,
+            "instructions": 5879090217,
+            "cycles": 2812870572
+          }
+        ],
+        "median": 5879090217,
+        "binary_sha256": "acacece56626d64b40efe4efcae8908d92479098934e5fe97573bcd4c8c58df4",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-instance-reads/.tmp-instance/lox-before-llvm",
+          "--engine=vm",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-instance-reads/.tmp-instance/measure/lox-scripts/closures.tree.lox"
+        ],
+        "stdout_sha256": "8dacb3b0327cbd368e9c06434c1dd66b88f2a69dba30a2f64fc0dd78570cf7f0"
+      },
+      "port": {
+        "counts": [
+          {
+            "status": 0,
+            "instructions": 5925710985,
+            "cycles": 2643424459
+          },
+          {
+            "status": 0,
+            "instructions": 5925711097,
+            "cycles": 2827126359
+          },
+          {
+            "status": 0,
+            "instructions": 5925713927,
+            "cycles": 2830665871
+          }
+        ],
+        "median": 5925711097,
+        "binary_sha256": "0f8fa72c1ecc449c05c378aa49a9784ffb4c10576093b8199544ca535ee3ec80",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-instance-reads/.tmp-instance/lox-port-llvm",
+          "--engine=vm",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-instance-reads/.tmp-instance/measure/lox-scripts/closures.tree.lox"
+        ],
+        "stdout_sha256": "8dacb3b0327cbd368e9c06434c1dd66b88f2a69dba30a2f64fc0dd78570cf7f0"
+      },
+      "ratio": 1.0079299480496473
+    },
+    "lox/vm/fib|qbe": {
+      "before": {
+        "counts": [
+          {
+            "status": 0,
+            "instructions": 5353625595,
+            "cycles": 2160252243
+          },
+          {
+            "status": 0,
+            "instructions": 5353625656,
+            "cycles": 2237272783
+          },
+          {
+            "status": 0,
+            "instructions": 5353625295,
+            "cycles": 1401999029
+          }
+        ],
+        "median": 5353625595,
+        "binary_sha256": "a072208f0d33c8e2a8e19e279ebcbc6ad4d9c0a6eb0050193939532f4fe20624",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-instance-reads/.tmp-instance/lox-before-qbe",
+          "--engine=vm",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-instance-reads/.tmp-instance/measure/lox-scripts/fib.tree.lox"
+        ],
+        "stdout_sha256": "a2926b4c752026e4c4fb427a6c468ba4cd1a584ecc8f6ff23fa80c09fdfcb655"
+      },
+      "port": {
+        "counts": [
+          {
+            "status": 0,
+            "instructions": 5353626119,
+            "cycles": 2375933713
+          },
+          {
+            "status": 0,
+            "instructions": 5353625336,
+            "cycles": 1571341999
+          },
+          {
+            "status": 0,
+            "instructions": 5353625183,
+            "cycles": 1214019332
+          }
+        ],
+        "median": 5353625336,
+        "binary_sha256": "e504fc191725cce55b8e2ede022d09d61d1b60457bf7d1f7e9fa8924994784be",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-instance-reads/.tmp-instance/lox-port-qbe",
+          "--engine=vm",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-instance-reads/.tmp-instance/measure/lox-scripts/fib.tree.lox"
+        ],
+        "stdout_sha256": "a2926b4c752026e4c4fb427a6c468ba4cd1a584ecc8f6ff23fa80c09fdfcb655"
+      },
+      "ratio": 0.9999999516215702
+    },
+    "lox/vm/fib|llvm": {
+      "before": {
+        "counts": [
+          {
+            "status": 0,
+            "instructions": 2081308595,
+            "cycles": 581256159
+          },
+          {
+            "status": 0,
+            "instructions": 2081308601,
+            "cycles": 579893486
+          },
+          {
+            "status": 0,
+            "instructions": 2081308609,
+            "cycles": 580011674
+          }
+        ],
+        "median": 2081308601,
+        "binary_sha256": "acacece56626d64b40efe4efcae8908d92479098934e5fe97573bcd4c8c58df4",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-instance-reads/.tmp-instance/lox-before-llvm",
+          "--engine=vm",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-instance-reads/.tmp-instance/measure/lox-scripts/fib.tree.lox"
+        ],
+        "stdout_sha256": "a2926b4c752026e4c4fb427a6c468ba4cd1a584ecc8f6ff23fa80c09fdfcb655"
+      },
+      "port": {
+        "counts": [
+          {
+            "status": 0,
+            "instructions": 2090050490,
+            "cycles": 589312344
+          },
+          {
+            "status": 0,
+            "instructions": 2090050500,
+            "cycles": 591102267
+          },
+          {
+            "status": 0,
+            "instructions": 2090050496,
+            "cycles": 588392640
+          }
+        ],
+        "median": 2090050496,
+        "binary_sha256": "0f8fa72c1ecc449c05c378aa49a9784ffb4c10576093b8199544ca535ee3ec80",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-instance-reads/.tmp-instance/lox-port-llvm",
+          "--engine=vm",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-instance-reads/.tmp-instance/measure/lox-scripts/fib.tree.lox"
+        ],
+        "stdout_sha256": "a2926b4c752026e4c4fb427a6c468ba4cd1a584ecc8f6ff23fa80c09fdfcb655"
+      },
+      "ratio": 1.0042001916466399
+    },
+    "lox/vm/trees|qbe": {
+      "before": {
+        "counts": [
+          {
+            "status": 0,
+            "instructions": 5166388844,
+            "cycles": 1478810507
+          },
+          {
+            "status": 0,
+            "instructions": 5166388734,
+            "cycles": 1450046834
+          },
+          {
+            "status": 0,
+            "instructions": 5166388615,
+            "cycles": 1440869822
+          }
+        ],
+        "median": 5166388734,
+        "binary_sha256": "a072208f0d33c8e2a8e19e279ebcbc6ad4d9c0a6eb0050193939532f4fe20624",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-instance-reads/.tmp-instance/lox-before-qbe",
+          "--engine=vm",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-instance-reads/.tmp-instance/measure/lox-scripts/trees.tree.lox"
+        ],
+        "stdout_sha256": "17ab3b16ce7c5de5f4592400fb2b7e34eedbc57f86b65d948015ebfe1bd33ff5"
+      },
+      "port": {
+        "counts": [
+          {
+            "status": 0,
+            "instructions": 5014142561,
+            "cycles": 1448492508
+          },
+          {
+            "status": 0,
+            "instructions": 5014142523,
+            "cycles": 1416455746
+          },
+          {
+            "status": 0,
+            "instructions": 5014142484,
+            "cycles": 1425369035
+          }
+        ],
+        "median": 5014142523,
+        "binary_sha256": "e504fc191725cce55b8e2ede022d09d61d1b60457bf7d1f7e9fa8924994784be",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-instance-reads/.tmp-instance/lox-port-qbe",
+          "--engine=vm",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-instance-reads/.tmp-instance/measure/lox-scripts/trees.tree.lox"
+        ],
+        "stdout_sha256": "17ab3b16ce7c5de5f4592400fb2b7e34eedbc57f86b65d948015ebfe1bd33ff5"
+      },
+      "ratio": 0.9705314062029309
+    },
+    "lox/vm/trees|llvm": {
+      "before": {
+        "counts": [
+          {
+            "status": 0,
+            "instructions": 2423010247,
+            "cycles": 1043045876
+          },
+          {
+            "status": 0,
+            "instructions": 2423009835,
+            "cycles": 1052676641
+          },
+          {
+            "status": 0,
+            "instructions": 2423009864,
+            "cycles": 1054070784
+          }
+        ],
+        "median": 2423009864,
+        "binary_sha256": "acacece56626d64b40efe4efcae8908d92479098934e5fe97573bcd4c8c58df4",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-instance-reads/.tmp-instance/lox-before-llvm",
+          "--engine=vm",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-instance-reads/.tmp-instance/measure/lox-scripts/trees.tree.lox"
+        ],
+        "stdout_sha256": "17ab3b16ce7c5de5f4592400fb2b7e34eedbc57f86b65d948015ebfe1bd33ff5"
+      },
+      "port": {
+        "counts": [
+          {
+            "status": 0,
+            "instructions": 2347306453,
+            "cycles": 952577317
+          },
+          {
+            "status": 0,
+            "instructions": 2347306528,
+            "cycles": 951356560
+          },
+          {
+            "status": 0,
+            "instructions": 2347306483,
+            "cycles": 948944249
+          }
+        ],
+        "median": 2347306483,
+        "binary_sha256": "0f8fa72c1ecc449c05c378aa49a9784ffb4c10576093b8199544ca535ee3ec80",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-instance-reads/.tmp-instance/lox-port-llvm",
+          "--engine=vm",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-instance-reads/.tmp-instance/measure/lox-scripts/trees.tree.lox"
+        ],
+        "stdout_sha256": "17ab3b16ce7c5de5f4592400fb2b7e34eedbc57f86b65d948015ebfe1bd33ff5"
+      },
+      "ratio": 0.9687564701552531
+    }
+  },
+  "counts": {
+    "before": {
+      "stderr": "cow-stats {\"marks\":8239219,\"checks\":16836929,\"hoisted\":265580,\"copies\":1063200,\"copied_bytes\":273336509,\"pinned_copies\":0,\"pins\":0}\n",
+      "binary_sha256": "74b09e43590e9f1e3d7050df1ef35fc257666ca63a56bdba8194d5d83c3a55d6"
+    },
+    "port": {
+      "stderr": "cow-stats {\"marks\":5055149,\"checks\":16836929,\"hoisted\":265580,\"copies\":1063200,\"copied_bytes\":273336509,\"pinned_copies\":0,\"pins\":0}\n",
+      "binary_sha256": "38308b121c2db146dc43df7e87eba6c0bf0eb22f0672c26a2ffa50d7d8e382c2"
+    }
+  },
+  "before_source_commit": "bb0fe9b4",
+  "guest_flags": {
+    "qbe": [
+      "--value-semantics",
+      "--mode",
+      "ReleaseFast",
+      "--backend",
+      "qbe",
+      "--keep-symbols"
+    ],
+    "llvm": [
+      "--value-semantics",
+      "--mode",
+      "ReleaseFast",
+      "--backend",
+      "llvm",
+      "--llvm-opt",
+      "3",
+      "--lto",
+      "--keep-symbols"
+    ]
+  },
+  "script_sha256": {
+    "lox/vm/binary_trees|qbe": "fa3e536c73bc273bc8cd5ca4f4c81a6edd0c224e18aa764b34043b794f4850e4",
+    "lox/vm/binary_trees|llvm": "fa3e536c73bc273bc8cd5ca4f4c81a6edd0c224e18aa764b34043b794f4850e4",
+    "lox/vm/closures|qbe": "039b3c8a51a0614e2ad75dcdd85b7f8b26320e11086cbe9b5b5fffdc363e04aa",
+    "lox/vm/closures|llvm": "039b3c8a51a0614e2ad75dcdd85b7f8b26320e11086cbe9b5b5fffdc363e04aa",
+    "lox/vm/fib|qbe": "be2e695e8e83fb548c1280b86975bfac88a1121fd1f292edc1566a14e5426f0a",
+    "lox/vm/fib|llvm": "be2e695e8e83fb548c1280b86975bfac88a1121fd1f292edc1566a14e5426f0a",
+    "lox/vm/trees|qbe": "23667ffaea75fed6a2fea42bc900cd0aecb66089af9a18cac13816a6b6f3a176",
+    "lox/vm/trees|llvm": "23667ffaea75fed6a2fea42bc900cd0aecb66089af9a18cac13816a6b6f3a176"
+  },
+  "harness": "experiments/perf-gc-dict-20260925/scripts/pc.py"
+}
