@@ -77,6 +77,20 @@ test "RC-PRODUCED-OWNER-1 fresh call results move without an initialization bran
     try t.expect(contains(try named(manifest.value, "copied"), "@rccopy"));
 }
 
+// spec: RC-DISJOINT-TAKE-1
+test "RC-DISJOINT-TAKE-1 completed operand publications occupy separate pending buffers" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc_counting);
+    var manifest = try emitted();
+    defer manifest.deinit();
+    const forwarded = try named(manifest.value, "forwarded");
+    try t.expect(!contains(forwarded, "@rcmovecheck"));
+    try t.expect(contains(forwarded, "@rcmoveheader"));
+    try t.expect(contains(forwarded, "call $myl_rc_native_take"));
+    try t.expect(contains(try named(manifest.value, "copied"), "@rcmovecheck"));
+}
+
 // spec: RC-FRAME-REGION-1
 test "RC-FRAME-REGION-1 stable frames read depth once while arena bodies stay dynamic" {
     const saved = runtime.get();
