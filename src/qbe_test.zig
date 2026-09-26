@@ -2,6 +2,7 @@
 const std = @import("std");
 const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
+const value_semantics = @import("value_semantics.zig");
 const Unit = struct { name: []const u8, symbol: []const u8, il: []const u8 };
 const Manifest = struct { version: []const u8, abi: []const u8, functions: []Unit, entry: []const u8 };
 fn emitted(a: std.mem.Allocator, input: []const u8) !std.json.Parsed(Manifest) {
@@ -2938,6 +2939,30 @@ test "QBE-MOVE-ELIDE-1 an update keeps its copy while an argument still names th
     // `p` is read for the last time as the update's base, but the first
     // argument already names `p`'s slot: the update writes a copy.
     try std.testing.expectEqual(@as(usize, 1), try blits(parsed.value, "main"));
+}
+
+// spec-case: QBE-MOVE-ELIDE-1
+test "QBE-MOVE-ELIDE-1 a prior mut call does not prevent a later local field update under value semantics" {
+    const saved = value_semantics.enabled();
+    value_semantics.setEnabled(true);
+    defer value_semantics.setEnabled(saved);
+    var parsed = try emitted(std.testing.allocator,
+        \\record Frame:
+        \\    code: list[int]
+        \\    ip: int
+        \\
+        \\def advance(frame: mut Frame) -> None:
+        \\    frame.ip = frame.ip + 1
+        \\
+        \\def main() -> int:
+        \\    frame = Frame(code=[1, 2], ip=0)
+        \\    advance(mut frame)
+        \\    for _ in range(10):
+        \\        frame.ip = frame.ip + 1
+        \\    return frame.ip
+    );
+    defer parsed.deinit();
+    try std.testing.expectEqual(@as(usize, 0), try blits(parsed.value, "main"));
 }
 
 const borrowed_root_program =

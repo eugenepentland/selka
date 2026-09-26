@@ -14,10 +14,39 @@ index 287d5bb..1aaf569 100644
              return
          error_at_current(mut p, p.current.message)
 diff --git a/heap.my b/heap.my
-index f76a781..39749db 100644
+index f76a781..8361a53 100644
 --- a/heap.my
 +++ b/heap.my
-@@ -245,105 +245,63 @@ def mark_table(marker: mut Marker, source: table.Table):
+@@ -13,15 +13,11 @@ public const FRAMES_MAX: int = 64
+ const FIRST_GC: int = 1048576
+ 
+ 
+-# An active VM call, clox's CallFrame: the closure (a GC root), its
+-# function and code (so the dispatch loop reaches the chunk without a table
+-# lookup), its captured upvalues, the index of the next instruction and the
+-# stack index of slot 0. The Runtime keeps FRAMES_MAX of them and reuses them.
++# An active VM call: the closure is a GC root, and the instruction and stack
++# offsets survive calls. The dispatch loop caches code and upvalues locally.
++# Keeping only scalars here avoids sharing those collections on every opcode.
+ public record CallFrame:
+     closure: value.ObjRef
+-    function: object.FunctionObj
+-    code: list[int]
+-    upvalues: list[value.ObjRef]
+     ip: int
+     base: int
+ 
+@@ -68,8 +64,7 @@ public def new_runtime(gc_stress: bool, clock: Option[Clock]) -> Runtime:
+     frames: list[CallFrame] = []
+     i = 0
+     while i < FRAMES_MAX:
+-        function = object.new_function()
+-        frames.append(CallFrame(closure=value.NO_OBJ, function=function, code=function.code.code, upvalues=[], ip=0, base=0))
++        frames.append(CallFrame(closure=value.NO_OBJ, ip=0, base=0))
+         i += 1
+     return Runtime(
+         objects=[],
+@@ -245,105 +240,63 @@ def mark_table(marker: mut Marker, source: table.Table):
  
  
  def mark_roots(rt: mut Runtime):
@@ -166,23 +195,314 @@ index ae03fa1..ab08301 100644
          case ast.Stmt.var_decl(node):
              match node.initializer:
 diff --git a/vm.my b/vm.my
-index 450eb63..c98fafa 100644
+index 450eb63..22c05aa 100644
 --- a/vm.my
 +++ b/vm.my
-@@ -434,7 +434,11 @@ def define_method(rt: mut heap.Runtime, frame: mut heap.CallFrame):
+@@ -18,6 +18,34 @@ public enum InterpretResult:
+     RUNTIME_ERROR
+ 
+ 
++# Cached data for the currently running frame. The Runtime stores only the
++# scalar CallFrame so each instruction does not share code and upvalue lists.
++record ExecFrame:
++    closure: value.ObjRef
++    function: object.FunctionObj
++    code: list[int]
++    upvalues: list[value.ObjRef]
++    ip: int
++    base: int
++
++
++def load_frame(rt: heap.Runtime, stored: heap.CallFrame) -> ExecFrame:
++    closure = heap.closure_obj(rt, stored.closure)
++    function = heap.function_obj(rt, closure.function)
++    return ExecFrame(
++        closure=stored.closure,
++        function=function,
++        code=function.code.code,
++        upvalues=closure.upvalues,
++        ip=stored.ip,
++        base=stored.base
++    )
++
++
++def stored_frame(frame: ExecFrame) -> heap.CallFrame:
++    return heap.CallFrame(closure=frame.closure, ip=frame.ip, base=frame.base)
++
++
+ def reset_stack(rt: mut heap.Runtime):
+     rt.stack_top = 0
+     rt.frame_count = 0
+@@ -32,15 +60,16 @@ def runtime_error(rt: mut heap.Runtime, o: mut output.Output, message: bytes) ->
+     i = rt.frame_count - 1
+     while i >= 0:
+         frame = rt.frames[i]
++        function = heap.function_obj(rt, heap.closure_obj(rt, frame.closure).function)
+         empty: list[int] = []
+         line = byte_buffer(empty)
+         _ = line.append_utf8("[line ")
+-        _ = line.append_int(frame.function.code.lines[frame.ip - 1])
++        _ = line.append_int(function.code.lines[frame.ip - 1])
+         _ = line.append_utf8("] in ")
+-        if frame.function.name == value.NO_OBJ:
++        if function.name == value.NO_OBJ:
+             _ = line.append_utf8("script")
+         else:
+-            name = heap.string_obj(rt, frame.function.name).chars
++            name = heap.string_obj(rt, function.name).chars
+             _ = line.append_range(name, 0, len(name))
+             _ = line.append_utf8("()")
+         output.error_line(mut o, bytes(line))
+@@ -134,9 +163,6 @@ def call(rt: mut heap.Runtime, o: mut output.Output, closure: value.ObjRef, coun
+     rt.frame_count = rt.frame_count + 1
+     rt.frames[frame_index] = heap.CallFrame(
+         closure=closure,
+-        function=function,
+-        code=function.code.code,
+-        upvalues=heap.closure_obj(rt, closure).upvalues,
+         ip=0,
+         base=rt.stack_top - count - 1
+     )
+@@ -249,26 +275,26 @@ def concatenate(rt: mut heap.Runtime):
+     heap.push(mut rt, value.Value.obj(result))
+ 
+ 
+-def read_byte(frame: mut heap.CallFrame) -> int:
++def read_byte(frame: mut ExecFrame) -> int:
+     byte = frame.code[frame.ip]
+     frame.ip = frame.ip + 1
+     return byte
+ 
+ 
+-def read_short(frame: mut heap.CallFrame) -> int:
++def read_short(frame: mut ExecFrame) -> int:
+     frame.ip = frame.ip + 2
+     return frame.code[frame.ip - 2] * 256 + frame.code[frame.ip - 1]
+ 
+ 
+-def read_constant(frame: mut heap.CallFrame) -> value.Value:
++def read_constant(frame: mut ExecFrame) -> value.Value:
+     return frame.function.code.constants[read_byte(mut frame)]
+ 
+ 
+-def read_string(frame: mut heap.CallFrame) -> value.ObjRef:
++def read_string(frame: mut ExecFrame) -> value.ObjRef:
+     return as_obj(read_constant(mut frame))
+ 
+ 
+-def get_global(rt: mut heap.Runtime, o: mut output.Output, frame: mut heap.CallFrame) -> bool:
++def get_global(rt: mut heap.Runtime, o: mut output.Output, frame: mut ExecFrame) -> bool:
+     name = read_string(mut frame)
+     match table.get(rt.globals, name, heap.string_hash(rt, name)):
+         case Some(found):
+@@ -280,7 +306,7 @@ def get_global(rt: mut heap.Runtime, o: mut output.Output, frame: mut heap.CallF
+ 
+ # Assigning an undefined global is an error; the entry the failed `set`
+ # just made is deleted again, leaving a tombstone as clox does.
+-def set_global(rt: mut heap.Runtime, o: mut output.Output, frame: mut heap.CallFrame) -> bool:
++def set_global(rt: mut heap.Runtime, o: mut output.Output, frame: mut ExecFrame) -> bool:
+     name = read_string(mut frame)
+     if heap.set_global(mut rt, name, heap.peek(rt, 0)):
+         __wb_282 = rt.globals
+@@ -290,7 +316,7 @@ def set_global(rt: mut heap.Runtime, o: mut output.Output, frame: mut heap.CallF
+     return True
+ 
+ 
+-def get_upvalue(rt: mut heap.Runtime, frame: mut heap.CallFrame):
++def get_upvalue(rt: mut heap.Runtime, frame: mut ExecFrame):
+     upvalue = heap.upvalue_obj(rt, frame.upvalues[read_byte(mut frame)])
+     if upvalue.slot != object.NO_SLOT:
+         heap.push(mut rt, rt.stack[upvalue.slot])
+@@ -298,7 +324,7 @@ def get_upvalue(rt: mut heap.Runtime, frame: mut heap.CallFrame):
+         heap.push(mut rt, upvalue.closed)
+ 
+ 
+-def set_upvalue(rt: mut heap.Runtime, frame: mut heap.CallFrame):
++def set_upvalue(rt: mut heap.Runtime, frame: mut ExecFrame):
+     ref = frame.upvalues[read_byte(mut frame)]
+     upvalue = heap.upvalue_obj(rt, ref)
+     if upvalue.slot != object.NO_SLOT:
+@@ -308,7 +334,7 @@ def set_upvalue(rt: mut heap.Runtime, frame: mut heap.CallFrame):
+         rt.objects[ref] = object.Obj.upvalue(upvalue)
+ 
+ 
+-def get_property(rt: mut heap.Runtime, o: mut output.Output, frame: mut heap.CallFrame) -> bool:
++def get_property(rt: mut heap.Runtime, o: mut output.Output, frame: mut ExecFrame) -> bool:
+     match instance_of(rt, heap.peek(rt, 0)):
+         case Some(instance):
+             name = read_string(mut frame)
+@@ -323,7 +349,7 @@ def get_property(rt: mut heap.Runtime, o: mut output.Output, frame: mut heap.Cal
+             return runtime_error(mut rt, mut o, b"Only instances have properties.")
+ 
+ 
+-def set_property(rt: mut heap.Runtime, o: mut output.Output, frame: mut heap.CallFrame) -> bool:
++def set_property(rt: mut heap.Runtime, o: mut output.Output, frame: mut ExecFrame) -> bool:
+     match instance_of(rt, heap.peek(rt, 1)):
+         case Some(instance):
+             name = read_string(mut frame)
+@@ -381,7 +407,7 @@ def negate(rt: mut heap.Runtime, o: mut output.Output) -> bool:
+ 
+ # Allocates the closure, pushes it (rooting it while upvalues are
+ # captured), then fills its upvalues from the (is_local, index) pairs.
+-def make_closure(rt: mut heap.Runtime, frame: mut heap.CallFrame):
++def make_closure(rt: mut heap.Runtime, frame: mut ExecFrame):
+     function_ref = read_string(mut frame)
+     function = heap.function_obj(rt, function_ref)
+     closure = object.new_closure(function_ref, function.upvalue_count)
+@@ -418,7 +444,7 @@ def inherit(rt: mut heap.Runtime, o: mut output.Output) -> bool:
+     return True
+ 
+ 
+-def define_method(rt: mut heap.Runtime, frame: mut heap.CallFrame):
++def define_method(rt: mut heap.Runtime, frame: mut ExecFrame):
+     name = read_string(mut frame)
+     methods = heap.class_obj(rt, as_obj(heap.peek(rt, 1))).methods
+     _ = table.set(mut methods, name, heap.string_hash(rt, name), heap.peek(rt, 0))
+@@ -432,30 +458,41 @@ def define_method(rt: mut heap.Runtime, frame: mut heap.CallFrame):
+ # The dispatch loop, one opcode per iteration of `frame`, the innermost
+ # call frame. Handlers answer False after reporting a runtime error.
  def run(rt: mut heap.Runtime, o: mut output.Output) -> InterpretResult:
-     frame = rt.frames[rt.frame_count - 1]
+-    frame = rt.frames[rt.frame_count - 1]
++    frame = load_frame(rt, rt.frames[rt.frame_count - 1])
      while True:
 -        instruction = read_byte(mut frame)
+-        rt.frames[rt.frame_count - 1] = frame
 +        instruction = frame.code[frame.ip]
 +        frame.ip = frame.ip + 1
 +        # Publish the active IP for GC roots and runtime error traces before
 +        # executing the instruction. The next iteration publishes any operand
 +        # reads or jump before another instruction can observe the frame.
-         rt.frames[rt.frame_count - 1] = frame
++        rt.frames[rt.frame_count - 1] = stored_frame(frame)
          ok = True
          if instruction == chunk.OP_CONSTANT:
-@@ -536,7 +540,6 @@ def run(rt: mut heap.Runtime, o: mut output.Output) -> InterpretResult:
+-            heap.push(mut rt, read_constant(mut frame))
++            constant = read_constant(mut frame)
++            rt.stack[rt.stack_top] = constant
++            rt.stack_top = rt.stack_top + 1
+         elif instruction == chunk.OP_NIL:
+-            heap.push(mut rt, value.Value.nil)
++            rt.stack[rt.stack_top] = value.Value.nil
++            rt.stack_top = rt.stack_top + 1
+         elif instruction == chunk.OP_TRUE:
+-            heap.push(mut rt, value.Value.boolean(True))
++            rt.stack[rt.stack_top] = value.Value.boolean(True)
++            rt.stack_top = rt.stack_top + 1
+         elif instruction == chunk.OP_FALSE:
+-            heap.push(mut rt, value.Value.boolean(False))
++            rt.stack[rt.stack_top] = value.Value.boolean(False)
++            rt.stack_top = rt.stack_top + 1
+         elif instruction == chunk.OP_POP:
+-            _ = heap.pop(mut rt)
++            rt.stack_top = rt.stack_top - 1
+         elif instruction == chunk.OP_GET_LOCAL:
+-            heap.push(mut rt, rt.stack[frame.base + read_byte(mut frame)])
++            local = rt.stack[frame.base + read_byte(mut frame)]
++            rt.stack[rt.stack_top] = local
++            rt.stack_top = rt.stack_top + 1
+         elif instruction == chunk.OP_SET_LOCAL:
+             rt.stack[frame.base + read_byte(mut frame)] = heap.peek(rt, 0)
+         elif instruction == chunk.OP_GET_GLOBAL:
+             ok = get_global(mut rt, mut o, mut frame)
+         elif instruction == chunk.OP_DEFINE_GLOBAL:
+             _ = heap.set_global(mut rt, read_string(mut frame), heap.peek(rt, 0))
+-            _ = heap.pop(mut rt)
++            rt.stack_top = rt.stack_top - 1
+         elif instruction == chunk.OP_SET_GLOBAL:
+             ok = set_global(mut rt, mut o, mut frame)
+         elif instruction == chunk.OP_GET_UPVALUE:
+@@ -468,21 +505,26 @@ def run(rt: mut heap.Runtime, o: mut output.Output) -> InterpretResult:
+             ok = set_property(mut rt, mut o, mut frame)
+         elif instruction == chunk.OP_GET_SUPER:
+             name = read_string(mut frame)
+-            ok = bind_method(mut rt, mut o, as_obj(heap.pop(mut rt)), name)
++            rt.stack_top = rt.stack_top - 1
++            superclass = as_obj(rt.stack[rt.stack_top])
++            ok = bind_method(mut rt, mut o, superclass, name)
+         elif instruction == chunk.OP_EQUAL:
+-            right = heap.pop(mut rt)
+-            left = heap.pop(mut rt)
+-            heap.push(mut rt, value.Value.boolean(value.values_equal(left, right)))
++            right = rt.stack[rt.stack_top - 1]
++            left = rt.stack[rt.stack_top - 2]
++            rt.stack_top = rt.stack_top - 1
++            rt.stack[rt.stack_top - 1] = value.Value.boolean(value.values_equal(left, right))
+         elif instruction == chunk.OP_GREATER or instruction == chunk.OP_LESS or instruction == chunk.OP_SUBTRACT or instruction == chunk.OP_MULTIPLY or instruction == chunk.OP_DIVIDE:
+             ok = numeric(mut rt, mut o, instruction)
+         elif instruction == chunk.OP_ADD:
+             ok = add(mut rt, mut o)
+         elif instruction == chunk.OP_NOT:
+-            heap.push(mut rt, value.Value.boolean(value.is_falsey(heap.pop(mut rt))))
++            top = rt.stack_top - 1
++            rt.stack[top] = value.Value.boolean(value.is_falsey(rt.stack[top]))
+         elif instruction == chunk.OP_NEGATE:
+             ok = negate(mut rt, mut o)
+         elif instruction == chunk.OP_PRINT:
+-            output.print_value(rt, mut o, heap.pop(mut rt))
++            rt.stack_top = rt.stack_top - 1
++            output.print_value(rt, mut o, rt.stack[rt.stack_top])
+         elif instruction == chunk.OP_JUMP:
+             offset = read_short(mut frame)
+             frame.ip = frame.ip + offset
+@@ -495,48 +537,52 @@ def run(rt: mut heap.Runtime, o: mut output.Output) -> InterpretResult:
+             frame.ip = frame.ip - offset
+         elif instruction == chunk.OP_CALL:
+             count = read_byte(mut frame)
+-            rt.frames[rt.frame_count - 1] = frame
++            rt.frames[rt.frame_count - 1] = stored_frame(frame)
+             ok = call_value(mut rt, mut o, heap.peek(rt, count), count)
+             if ok:
+-                frame = rt.frames[rt.frame_count - 1]
++                frame = load_frame(rt, rt.frames[rt.frame_count - 1])
+         elif instruction == chunk.OP_INVOKE:
+             method = read_string(mut frame)
+             count = read_byte(mut frame)
+-            rt.frames[rt.frame_count - 1] = frame
++            rt.frames[rt.frame_count - 1] = stored_frame(frame)
+             ok = invoke(mut rt, mut o, method, count)
+             if ok:
+-                frame = rt.frames[rt.frame_count - 1]
++                frame = load_frame(rt, rt.frames[rt.frame_count - 1])
+         elif instruction == chunk.OP_SUPER_INVOKE:
+             method = read_string(mut frame)
+             count = read_byte(mut frame)
+-            rt.frames[rt.frame_count - 1] = frame
+-            ok = invoke_from_class(mut rt, mut o, as_obj(heap.pop(mut rt)), method, count)
++            rt.frames[rt.frame_count - 1] = stored_frame(frame)
++            rt.stack_top = rt.stack_top - 1
++            superclass = as_obj(rt.stack[rt.stack_top])
++            ok = invoke_from_class(mut rt, mut o, superclass, method, count)
+             if ok:
+-                frame = rt.frames[rt.frame_count - 1]
++                frame = load_frame(rt, rt.frames[rt.frame_count - 1])
+         elif instruction == chunk.OP_CLOSURE:
+             make_closure(mut rt, mut frame)
+         elif instruction == chunk.OP_CLOSE_UPVALUE:
+             close_upvalues(mut rt, rt.stack_top - 1)
+-            _ = heap.pop(mut rt)
++            rt.stack_top = rt.stack_top - 1
+         elif instruction == chunk.OP_RETURN:
+-            result = heap.pop(mut rt)
++            rt.stack_top = rt.stack_top - 1
++            result = rt.stack[rt.stack_top]
+             close_upvalues(mut rt, frame.base)
+             rt.frame_count = rt.frame_count - 1
+             if rt.frame_count == 0:
+-                _ = heap.pop(mut rt)
++                rt.stack_top = rt.stack_top - 1
+                 return InterpretResult.OK
+             rt.stack_top = frame.base
+-            heap.push(mut rt, result)
+-            frame = rt.frames[rt.frame_count - 1]
++            rt.stack[rt.stack_top] = result
++            rt.stack_top = rt.stack_top + 1
++            frame = load_frame(rt, rt.frames[rt.frame_count - 1])
+         elif instruction == chunk.OP_CLASS:
+             name = read_string(mut frame)
+             klass = heap.allocate(mut rt, object.Obj.klass(object.ClassObj(name=name, methods=table.new_table())))
+-            heap.push(mut rt, value.Value.obj(klass))
++            rt.stack[rt.stack_top] = value.Value.obj(klass)
++            rt.stack_top = rt.stack_top + 1
+         elif instruction == chunk.OP_INHERIT:
              ok = inherit(mut rt, mut o)
          elif instruction == chunk.OP_METHOD:
              define_method(mut rt, mut frame)
