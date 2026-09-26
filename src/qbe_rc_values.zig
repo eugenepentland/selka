@@ -3,6 +3,7 @@ const typed = @import("typed.zig");
 const frame = @import("qbe_rc_frame.zig");
 const slots = @import("qbe_rc_slots.zig");
 const holds = @import("qbe_rc_holds.zig");
+const state_model = @import("qbe_rc_state.zig");
 /// QBE byte relocation shared by transactional value and aggregate publication.
 pub const blit_value = " blit %v{d}, %v{d}, {d}\n";
 /// Errors shared with the native emitter.
@@ -31,7 +32,7 @@ pub fn drop(comptime E: type, self: *E, index: usize) Error!void {
     if (index >= stack.len) return error.InternalError;
     // Every instruction consumes the prior owners before publishing its typed
     // result. A plain input therefore has no live obligation in this slot.
-    if (!try @import("qbe_rc_state.zig").owns(state, stack[index])) return;
+    if (!try state_model.owns(state, stack[index])) return;
     try frame.drop(E, self, journalIndex(E, self, index));
 }
 /// Prepare a borrowed publication before releasing any consumed owners.
@@ -50,7 +51,7 @@ pub fn adopted(comptime E: type, self: *E, ty: typed.Type, address: usize) Error
 /// Materialize a result, drop its inputs, then relocate its obligation to the stack.
 pub fn finish(comptime E: type, self: *E, result: Result) Error!void {
     const state = frame.get(E, self) orelse return;
-    const owned = try @import("qbe_rc_state.zig").owns(state, result.ty);
+    const owned = try state_model.owns(state, result.ty);
     if (owned) {
         const address = try source(E, self, result.base, result.ty);
         switch (result.origin) {
@@ -78,6 +79,21 @@ pub fn publish(comptime E: type, self: *E, ty: typed.Type, index: usize) Error!v
     try frame.initialized(E, self, frame.pending(E, self), false);
     try frame.initialized(E, self, journalIndex(E, self, index), true);
     try self.store(index, try self.readValue(address, ty));
+}
+/// Publish a complete constructor whose input guards are already disarmed.
+/// The internal guard retains its partial body until this infallible handoff
+/// publishes the complete typed operand. No callback may split these stores.
+pub fn constructed(comptime E: type, self: *E, ty: typed.Type, index: usize) Error!void {
+    const state = frame.get(E, self) orelse return error.InternalError;
+    if (try state_model.owns(state, ty)) {
+        const input = try source(E, self, index, ty);
+        const address = try operand(E, self, index);
+        try self.print(blit_value, .{ input, address, (try self.layout(ty)).size });
+        try frame.stableEntry(E, self, journalIndex(E, self, index), ty);
+        try frame.initialized(E, self, journalIndex(E, self, index), true);
+        try self.store(index, try self.readValue(address, ty));
+    }
+    try commitRuntime(E, self);
 }
 /// Index the operand's ownership flag independently of its logical stack value.
 pub fn journalIndex(comptime E: type, self: *E, index: usize) usize {

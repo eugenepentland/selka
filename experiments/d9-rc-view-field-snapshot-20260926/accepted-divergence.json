@@ -1,0 +1,52 @@
+{
+  "source_sha256": "a0216576799cb1f22850b93f6eea7b2a16f07d5a186d6ac0d869372f953d072f",
+  "compiler_sha256": "8c8134078fc56eeb468e65d229db2480d99c39458b044e976d604bf64de69478",
+  "compiler_revision": "f6bea5d9",
+  "cases": {
+    "qbe": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-physical-borrow-after-astra/.tmp-physical/install-accepted/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/live-view-divergence.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/divergence-accepted-qbe",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cache-divergence-accepted-qbe"
+      ],
+      "exit": 0,
+      "stdout": "[13] 13 13\n",
+      "stderr": "",
+      "binary_sha256": "4d3878eeda2b2a67e13a3fe56c01e35528a38cb9b6f75945afc792deed4acc15",
+      "backend": "qbe",
+      "run_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/divergence-accepted-qbe"
+      ]
+    },
+    "llvm": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-physical-borrow-after-astra/.tmp-physical/install-accepted/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/live-view-divergence.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/divergence-accepted-llvm",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cache-divergence-accepted-llvm",
+        "--backend=llvm",
+        "--llvm-opt=3",
+        "--lto"
+      ],
+      "exit": 0,
+      "stdout": "[13] 13 13\n",
+      "stderr": "",
+      "binary_sha256": "5e8d2b2dde6b064e2eb62f72a53fe357a418092354b11b5ce818914d7fc06fae",
+      "backend": "llvm",
+      "run_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/divergence-accepted-llvm"
+      ]
+    }
+  }
+}

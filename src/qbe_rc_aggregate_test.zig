@@ -51,6 +51,9 @@ test "RC aggregate partial construction journals fields before guarded takes or 
     try t.expect(std.mem.indexOf(u8, text[taken..copied], "storew 0") != null);
     try t.expect(try location(text, "call $myl_qbe_rc_frame_enter") < cleared);
     try t.expect(try location(text, "call $myl_qbe_rc_frame_cleanup") > copied);
+    // Each successful field initialization consumes its input token. Complete
+    // publication therefore needs no additional empty-operand release calls.
+    try t.expect(std.mem.indexOf(u8, text, "call $myl_qbe_rc_slot_drop") == null);
 }
 
 // spec: RC-PLAIN-PROJECTION-1
@@ -190,7 +193,9 @@ test "RC empty slot releases branch around native cleanup" {
     runtime.set(.rc);
     var manifest = try pairText();
     defer manifest.deinit();
-    const text = try findFunction(manifest.value, "pair");
+    // main still releases its original list after the call owns Pair's fields;
+    // pair itself directly publishes inputs already consumed by its fields.
+    const text = try findFunction(manifest.value, "main");
     const release = try location(text, "call $myl_qbe_rc_slot_drop");
     try t.expect(std.mem.indexOf(u8, text[0..release], "@rcslotdrop") != null);
     try t.expect(std.mem.indexOf(u8, text[release..], "@rcslotdone") != null);

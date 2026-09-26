@@ -1,0 +1,13 @@
+record HeldFields:
+    live: DictValues[int, int]
+    snapshot: dict[int, int]
+
+
+def main(out: Stream) -> int:
+    mapping = {1: 7}
+    live = mapping.values()
+    result = HeldFields(live=live, snapshot=live.mapping)
+    result.snapshot[1] = 11
+    mapping[1] = 13
+    out.print(f"{list(result.live)} {result.snapshot[1]} {mapping[1]}")
+    return 0
