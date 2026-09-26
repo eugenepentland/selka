@@ -395,6 +395,41 @@ myl_rc_status myl_rc_pointer_transfer(myl_native_heap *heap, const myl_rc_shape 
     myl_rc_slot origin = {.shape = shape, .address = source};
     return transfer(heap, &target, &origin, mode, 0);
 }
+static myl_rc_status loan_pointer(transfer_walk *walk, unsigned char *destination,
+                                   const unsigned char *source, myl_rc_shape_kind kind) {
+    (void)kind;
+    void *payload;
+    memcpy(&payload, source, sizeof payload);
+    if (payload) {
+        const myl_native_object *header = (const myl_native_object *)payload - 1;
+        const myl_rc_descriptor *descriptor = myl_rc_descriptor_find(walk->heap, header->element);
+        myl_rc_invariant((header->mark & MYL_NATIVE_OBJECT_IMMORTAL) || (descriptor && !descriptor->finalize));
+    }
+    myl_rc_hold hold = {0};
+    myl_rc_status status = myl_rc_hold_acquire(walk->heap, payload, &hold);
+    if (status == MYL_RC_OK) memcpy(destination, &payload, sizeof payload);
+    return status;
+}
+myl_rc_status myl_rc_loan_copy(myl_native_heap *heap, const myl_rc_shape *source_shape,
+                               void *destination, const void *source) {
+    myl_rc_invariant(heap && heap->rc && destination && source && destination != source);
+    const myl_rc_shape *shape = myl_rc_shape_resolve(heap, source_shape);
+    myl_rc_invariant(shape != NULL);
+    uintptr_t dst = (uintptr_t)destination, src = (uintptr_t)source;
+    myl_rc_invariant(dst > src ? dst - src >= shape->size : src - dst >= shape->size);
+    clone_work work = {0};
+    transfer_frame local[LOCAL_TRANSFER_FRAMES];
+    transfer_walk walk = {.heap = heap, .frames = local, .capacity = LOCAL_TRANSFER_FRAMES, .clones = &work};
+    memset(destination, 0, shape->size);
+    myl_rc_status status = prepare_frames(&walk, shape);
+    if (status == MYL_RC_OK) {
+        myl_rc_value_seed(heap, shape, destination, source, 1);
+        status = visit(&walk, shape, destination, source, loan_pointer);
+        if (status != MYL_RC_OK) myl_rc_loan_drop(heap, shape, destination);
+    }
+    dispose_walk(&walk, 0);
+    return status;
+}
 myl_rc_status myl_rc_value_copy(myl_native_heap *heap, myl_rc_slot *destination, const myl_rc_slot *source) {
     return transfer(heap, destination, source, MYL_RC_COPY, 0);
 }
