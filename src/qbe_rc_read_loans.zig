@@ -138,7 +138,7 @@ pub fn borrowedResult(comptime E: type, self: *E, op: Op) bool {
     if (self.pc + 1 >= code.len or code[self.pc + 1].op != .store_local) return false;
     const state = self.cow.?.rc orelse return false;
     const target = @backingInt(code[self.pc + 1].op.store_local);
-    const ownership = state.locals.entry[target].ownership;
+    const ownership = state.plan.locals.entry[target].ownership;
     return ownership == .borrowed and ownership.borrowed == .storage;
 }
 
@@ -180,7 +180,7 @@ fn scalar(comptime E: type, self: *E, op: Op, catalog: *shapes.Catalog) Error!bo
 /// load is borrowed, and the planner retains the physical source anchor.
 pub fn store(comptime E: type, self: *E, index: usize, operand: usize) Error!bool {
     const state = self.cow.?.rc orelse return false;
-    const ownership = state.locals.entry[index].ownership;
+    const ownership = state.plan.locals.entry[index].ownership;
     if (ownership != .borrowed or ownership.borrowed != .storage) return false;
     const payload = try self.load("s", operand);
     try self.print(" storel %v{d}, %l{d}\n", .{ payload, index });

@@ -1,0 +1,5 @@
+def main(fs: Filesystem) -> int:
+    with open(fs,"greeting.txt","r") as file:
+        text = file.read()
+        assert text == "hello\n"
+    return 0
