@@ -2,8 +2,8 @@
 
 The default implementation passes its correctness gate but is **not accepted
 for integration**: stage 3 performance remains above the required limits,
-and later adversarial review found boxed-field and nested-collection alias
-leaks requiring additional fixes. Work
+and the nested-collection/fixed-array follow-up remains unfinished. The boxed
+path fix has passed its gate and is included in this candidate. Work
 is isolated on `codex/d9-stage3f-prep`; neither `main` nor the devspeed merge
 branch was changed. The latest `main`, `b292660a`, is already an ancestor.
 
@@ -74,14 +74,19 @@ The later joined compiler/source candidate `b937d4fc` also passes all four
 steps: 94/94 main steps with 2,112 executed tests (21,393 shard exclusions),
 51/51 QBE steps and 428 tests, 29/29 QBE-build steps, and formatting 2/2.
 
-The [stage 3b performance report](d9-stage3b-performance-2026-09-26.md) records
-the earlier failed median-three gate and baseline hashes. The
-[IP-publication source patch](d9-lox-ip-publication-2026-09-26.md) with compiler
-`2b889ba5` brings selected VM equality below 1.3× on both backends. However,
-the complete 13-key VM sweep remains at 1.47277× QBE and 1.63346× LLVM
-geomean, with 10/13 cases over 1.3× on each. The tree interpreter also has
-a large regression. The later alias reproducers were not covered by the
-existing gate; a green suite does not resolve those failures. These
-limits have not been waived. The default branch stays isolated until the final
-class-free benchmark suite passes; reference counting and concurrency remain
+The Astra merge at `17540b57` passes a third complete gate: 94/94 main
+steps with 2,116 executed tests (21,437 shard exclusions), QBE 51/51 with
+428 tests, QBE-build 29/29, and formatting 2/2. It includes immutable-box
+path detachment and lazy projection, closed-region field transfers, private
+COW scratch optimization, unused alias initialization removal, and the latest
+validated external Lox source. It does not include the unfinished nested-array
+callback fix. Logs are `.tmp-stage3f/astra-default-*.log` in this worktree.
+
+The latest complete VM sweep uses `adcbb4ca` with the direct-frame source at
+`6d54bace`: QBE geomean 1.19444× with 4/13 cases above 1.3×, LLVM geomean
+1.35771× with 9/13 above 1.3×. Exact outputs match, but the formal 43-key
+stage 3 limit is still unmet. The tree interpreter is additional audit coverage,
+with a remaining regression tracked separately. No performance limit has been
+waived. The default branch stays isolated until the final joined correctness
+and baseline performance gates pass; reference counting and concurrency remain
 pending their dependencies.
