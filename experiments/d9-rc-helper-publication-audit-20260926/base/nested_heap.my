@@ -1,0 +1,7 @@
+def main(out: Stream) -> int:
+    outer = {0:{1:7}}
+    live = outer[0].values()
+    outer[0][1] = 13
+    out.print(list(live))
+    out.print(outer[0][1])
+    return 0

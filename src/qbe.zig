@@ -1737,6 +1737,7 @@ const Emitter = struct {
         // A build without instruction-budget accounting cannot honor a runtime
         // step ceiling; refuse it once, before any guest instruction runs.
         if (self.entry and !runtime_mode.enabled()) try self.requireAccounting();
+        const inert_resume = try @import("qbe_rc_inert_return.zig").emit(Emitter, self);
         try arena_lower.Lower(Emitter).mark(self);
         if (self.heap_frame) {
             if (!try @import("qbe_rc_admission.zig").allocate(Emitter, self, frame.heap)) {
@@ -1753,7 +1754,7 @@ const Emitter = struct {
         if (self.entry and runtime_mode.enabled()) try self.requireAccounting();
         if (self.needsRootProtocol()) try self.print(" %root_mark =l call $myl_qbe_root_mark(l %ctx)\n", .{});
         if (self.step_checks) try self.print(" %maxsteps =l add %ctx, 16\n", .{});
-        try self.print(" jmp @i0\n", .{});
+        try @import("qbe_rc_inert_return.zig").enterBody(Emitter, self, inert_resume);
         try self.emitInstructions();
         if (self.step_checks) try self.print("@step_limit\n call $myl_qbe_fail_step(l %ctx)\n jmp @failure\n@failure\n", .{}) else try self.print("@failure\n", .{});
         try cow_lower.Lower(Emitter).clearScopes(self);

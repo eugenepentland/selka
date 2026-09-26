@@ -1,0 +1,65 @@
+module rc_contract_results
+import filesystem
+
+@ensures(len(result) == 2)
+def checked(fail: bool) -> Result[list[str], str]:
+    if fail:
+        return Err("skip the postcondition")
+    return Ok([str(17), str(23)])
+
+
+def forwarded(fail: bool) -> Result[list[str], str]:
+    values = checked(fail)?
+    return Ok(values)
+
+
+# spec-case: RC-CONTRACT-RESULT-1
+public def test_postcondition_keeps_the_managed_success_payload() -> bool:
+    count = 0
+    while count < 40:
+        match forwarded(False):
+            case Ok(values):
+                if values != ["17", "23"]:
+                    return False
+            case Err(_):
+                return False
+        count += 1
+    return True
+
+
+# spec-case: RC-CONTRACT-RESULT-1
+public def test_postcondition_preserves_the_propagated_error() -> bool:
+    match forwarded(True):
+        case Ok(_):
+            return False
+        case Err(message):
+            return message == "skip the postcondition"
+
+
+@ensures(True)
+def opened(fs: Filesystem) -> Result[TextFile, str]:
+    return fs.open("data", "w")
+
+
+def unique_roundtrip() -> Result[bool, str]:
+    fs = filesystem.memory()
+    with opened(fs)? as file:
+        _ = file.write("hello")
+    text = fs.read_text("data")?
+    return Ok(text == "hello")
+
+
+# spec-case: RC-CONTRACT-RESULT-1
+public def test_postcondition_keeps_the_unique_file_payload() -> bool:
+    match unique_roundtrip():
+        case Ok(correct):
+            return correct
+        case Err(_):
+            return False
+
+
+def main() -> int:
+    assert test_postcondition_keeps_the_managed_success_payload()
+    assert test_postcondition_preserves_the_propagated_error()
+    assert test_postcondition_keeps_the_unique_file_payload()
+    return 0

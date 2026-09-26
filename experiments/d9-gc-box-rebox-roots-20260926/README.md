@@ -42,3 +42,26 @@ All manifests, commands, stdout and stderr are preserved. LLVM commands use
 RC rebox fix is recorded in a later supplement; this first commit stays on the
 stable ABI2 ancestry and does not claim that existing RC boxed writes were fixed
 by a GC-only change.
+
+## Joined RC control
+
+Real two-parent merge `10e9a577` joins the independently mergeable GC fix
+`98c53c06` with the parent's RC rebox fix `fd7e8532`, including that branch's
+private ABI3 ancestry. This supplement does not promote that private ancestry to
+the accepted integration baseline. The joined Debug compiler SHA-256 is
+`de468588b3aeb5f2684772fdd39a209a2e55223be6fb4c12921edd610d4a4d5b`.
+
+All eight normal-program runs pass: the minimal warm-then-repeat regression and
+the five-case standalone source, each on actual QBE and LLVM under GC stress and
+counted RC. Both backends produce identical balanced RC counts:
+
+| Program | Heap allocated / retired | O acquired / released | H acquired / released |
+| --- | --- | --- | --- |
+| Minimal warm then repeat | 25 / 25 | 26 / 51 | 12 / 12 |
+| Five-case standalone | 55 / 55 | 42 / 97 | 16 / 16 |
+
+The five-case source prints True for every case in all four backend/runtime
+combinations. The minimal program exits zero in all four. The focused permanent
+regression passes 12/12 again on the joined source; Debug install is 12/12 and
+Guardian reports 88 checks passed. `joined.json.gz` retains commands, exact source,
+exit codes, stdout, stderr, compiler hash and counts; `joined.py` is its runner.

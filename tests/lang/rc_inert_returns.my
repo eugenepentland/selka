@@ -1,0 +1,139 @@
+module rc_inert_returns
+import filesystem
+
+record Node:
+    left: Option[Node]
+    right: Option[Node]
+
+
+record Tagged:
+    node: Option[Node]
+    tag: int
+
+
+record Wide:
+    first: Node
+    second: Node
+    third: Node
+    fourth: Node
+
+
+union Choice:
+    empty,
+    full: Node
+
+
+def make(depth: int) -> Node:
+    if depth <= 0:
+        return Node(None, None)
+    return Node(Some(make(depth - 1)), Some(make(depth - 1)))
+
+
+def empty(value: Node) -> bool:
+    return value.left is None and value.right is None
+
+
+def boolean(flag: bool) -> Node:
+    if not flag:
+        return Node(None, None)
+    return make(1)
+
+
+def wide(flag: bool) -> Wide:
+    if flag:
+        return Wide(Node(None, None), Node(None, None), Node(None, None), Node(None, None))
+    return Wide(make(1), make(2), make(1), make(2))
+
+
+def choice(flag: bool) -> Choice:
+    if flag:
+        return Choice.empty
+    return Choice.full(make(1))
+
+
+# spec-case: RC-INERT-RETURN-1
+public def test_zero_tagged_union_and_nonempty_case_preserve_their_layout() -> bool:
+    match choice(True):
+        case Choice.empty:
+            match choice(False):
+                case Choice.full(value):
+                    return not empty(value)
+                case Choice.empty:
+                    return False
+        case Choice.full(_):
+            return False
+
+
+# spec-case: RC-INERT-RETURN-1
+public def test_null_return_preserves_both_scalar_comparison_paths() -> bool:
+    return empty(make(0)) and empty(make(-1)) and not empty(make(3))
+
+
+# spec-case: RC-INERT-RETURN-1
+public def test_boolean_null_branch_and_nonempty_fallback_stay_distinct() -> bool:
+    return empty(boolean(False)) and not empty(boolean(True))
+
+
+# spec-case: RC-INERT-RETURN-1
+public def test_wide_zero_return_preserves_every_inline_field() -> bool:
+    zero = wide(True)
+    full = wide(False)
+    return empty(zero.first) and empty(zero.second) and empty(zero.third) and empty(zero.fourth) and not empty(full.second)
+
+
+def shared(items: list[int], flag: bool) -> Node:
+    if flag:
+        return Node(None, None)
+    return make(len(items))
+
+
+# spec-case: RC-INERT-RETURN-1
+public def test_incoming_managed_owner_retains_ordinary_cleanup() -> bool:
+    items = [1, 2]
+    first = shared(items, True)
+    second = shared(items, False)
+    return empty(first) and not empty(second) and items == [1, 2]
+
+
+def nonzero(flag: bool) -> Tagged:
+    if flag:
+        return Tagged(None, 7)
+    return Tagged(Some(make(1)), 9)
+
+
+# spec-case: RC-INERT-RETURN-1
+public def test_nonzero_plain_fields_are_not_replaced_by_zero() -> bool:
+    return nonzero(True).tag == 7 and nonzero(False).tag == 9
+
+
+def consume(file: TextFile, flag: bool) -> Node:
+    _ = file.write("saved")
+    if flag:
+        return Node(None, None)
+    return make(1)
+
+
+def resource_check() -> Result[bool, str]:
+    fs = filesystem.memory()
+    value = consume(fs.open("content", "w")?, True)
+    text = fs.read_text("content")?
+    return Ok(empty(value) and text == "saved")
+
+
+# spec-case: RC-INERT-RETURN-1
+public def test_unique_incoming_resource_is_closed_on_null_return() -> bool:
+    match resource_check():
+        case Ok(result):
+            return result
+        case Err(_):
+            return False
+
+
+# spec-case: RC-INERT-RETURN-1
+public def test_null_result_inside_an_arena_keeps_outer_values_alive() -> bool:
+    kept = make(2)
+    with arena() as scratch:
+        temporary = make(0)
+        if not empty(temporary):
+            return False
+    return not empty(kept)

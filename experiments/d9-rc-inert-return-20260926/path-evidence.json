@@ -1,0 +1,10 @@
+{
+  "make": true,
+  "boolean": true,
+  "wide": true,
+  "choice": true,
+  "shared": false,
+  "nonzero": false,
+  "consume": false,
+  "resource_check": false
+}
