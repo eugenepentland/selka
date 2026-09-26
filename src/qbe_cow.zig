@@ -148,11 +148,16 @@ pub fn Lower(comptime E: type) type {
             if (runtime_mode.enabled() and state.captures[pc].begin != cow_plan.none) return true;
             const active = state.captures[pc].active;
             if (active == cow_plan.none) return false;
-            return pathStep(E, self, state.plan.places[active].?, pc);
+            const place = state.plan.places[active].?;
+            return pc < place.fill and pathStep(E, self, place, pc);
         }
         /// A prepared compiler receiver borrows a held, pinned path through use.
         pub fn borrowReceiver(self: *E, local: usize, payload: usize) Error!void {
             return borrowReceiverImpl(E, self, local, payload);
+        }
+        /// Release a GC receiver scope only after its consuming operation.
+        pub fn after(self: *E, pc: usize) Error!void {
+            return finishGcScopes(E, self, pc);
         }
         /// End receiver holds only after the mutator and its result publication.
         pub fn finishReceiver(self: *E, owner: usize) Error!void {
@@ -528,7 +533,7 @@ fn fillPlace(comptime E: type, self: *E, pc: usize, stack: []const typed.Type) E
     if (stack.len == 0) return error.InternalError;
     const place = (try filledPlace(E, self, pc)).place;
     if (scopePlace(E, self, place)) {
-        if (runtime_mode.enabled()) return;
+        if (runtime_mode.enabled() or scopeEnd(E, self, place) != place.fill) return;
         try releaseScope(E, self, place);
         return scopeRootStore(E, self, activeScope(E, self, pc, place.fill));
     }
@@ -662,7 +667,7 @@ fn prepareScopes(comptime E: type, self: *E, state: *State) void {
         if (!needsScope(E, self, place)) continue;
         const start = scopeStart(place);
         state.captures[start].begin = @intCast(local);
-        for (start + 1..place.fill + 1) |pc| {
+        for (start + 1..scopeEnd(E, self, place) + 1) |pc| {
             const previous = state.captures[pc].active;
             if (previous == cow_plan.none or scopeStart(state.plan.places[previous].?) < start) state.captures[pc].active = @intCast(local);
         }
@@ -676,12 +681,58 @@ fn scopePlace(comptime E: type, self: *const E, place: cow_plan.Place) bool {
 }
 
 fn needsScope(comptime E: type, self: *const E, place: cow_plan.Place) bool {
-    if (!self.cow.?.plan.at(place.fill).fill or !placeHasArray(E, self, place)) return false;
-    for (scopeStart(place) + 1..place.fill) |pc| switch (self.function.scope.instructions[pc].op) {
+    if (!self.cow.?.plan.at(place.fill).fill) return false;
+    const end = scopeEnd(E, self, place);
+    if (end == place.fill and !placeHasArray(E, self, place)) return false;
+    for (scopeStart(place) + 1..end) |pc| switch (self.function.scope.instructions[pc].op) {
         .call, .invoke => return true,
         else => {},
     };
     return false;
+}
+
+// A source receiver remains selected while later arguments run callbacks.
+// The single-assignment place local identifies the consuming mutation without
+// extending unrelated projections beyond their existing fill-time scope.
+fn scopeEnd(comptime E: type, self: *const E, place: cow_plan.Place) usize {
+    if (runtime_mode.enabled()) return place.fill;
+    const code = self.function.scope.instructions;
+    const target = switch (code[place.fill].op) {
+        .store_local => |local| local,
+        else => return place.fill,
+    };
+    for (code[place.fill + 1 ..], place.fill + 1..) |instruction, pc| {
+        if (instruction.op != .buffer_operation) continue;
+        const operation = instruction.op.buffer_operation;
+        if (operation.owner == target and (operation.kind.writesReceiver() or
+            operation.kind == .set_add or operation.kind == .set_discard)) return pc;
+    }
+    return place.fill;
+}
+
+fn finishGcScopes(comptime E: type, self: *E, pc: usize) Error!void {
+    if (runtime_mode.enabled()) return;
+    const state = self.cow orelse return;
+    const operation = switch (self.function.scope.instructions[pc].op) {
+        .buffer_operation => |operation| operation,
+        else => return,
+    };
+    if (!operation.kind.writesReceiver() and operation.kind != .set_add and operation.kind != .set_discard) return;
+    var next: ?usize = null;
+    var closed = false;
+    var at = @min(pc + 1, state.captures.len);
+    while (at != 0) {
+        at -= 1;
+        const local = state.captures[at].begin;
+        if (local == cow_plan.none) continue;
+        const place = state.plan.places[local].?;
+        const end = scopeEnd(E, self, place);
+        if (end == pc and end != place.fill) {
+            try releaseScope(E, self, place);
+            closed = true;
+        } else if (end > pc and next == null) next = place.fill;
+    }
+    if (closed) try scopeRootStore(E, self, next);
 }
 
 fn scopeStart(place: cow_plan.Place) usize {
