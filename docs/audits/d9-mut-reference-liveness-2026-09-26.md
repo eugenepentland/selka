@@ -35,9 +35,10 @@ Scanner record, so that comparison alone does not date the defect. Independent
 fixed-array controls do: a `[1]list[int]` used only by a later mutable call
 returns a wrong result under native GC stress on exact `60b668cf`, while its
 normal run succeeds. Adding an ordinary read after the intervening allocation
-also makes it succeed. `ref_local` was added in `61a52cbc` after root liveness
-in `15d72730`; the use case was missing from that introduction. D9's mutable
-record support made the existing omission visible in the migrated parser.
+also makes it succeed. `ref_local` in `61a52cbc` and root liveness in
+`15d72730` were developed on parallel branches. Their integration at
+`0804a4cf` omitted the new instruction's liveness use. D9's mutable record
+support made the existing omission visible in the migrated parser.
 
 The permanent four-test guest fixture covers a record, a managed fixed array,
 a reference reached through a forward branch and a forwarded mutable parameter.
