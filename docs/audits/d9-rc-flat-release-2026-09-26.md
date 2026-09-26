@@ -65,3 +65,32 @@ points primarily to descriptor lookup (14.91%), native take (14.23%), generated
 make (14.35%), slot drop (6.14%) and allocation (5.48%). Independent newer
 compiler inline-TAKE changes are absent from this isolated slice and must be
 measured after joining.
+
+At cumulative merge `d69e579c`, the release slices join integration `c09fce2b`,
+including inline TAKE, inert receivers, empty generated cleanup guards and
+mutable scalar-list proofs. Fresh RC and GC artifacts use the same Debug
+compiler and unchanged depth-12 source:
+
+| Backend | Cumulative RC instructions | Same-compiler GC | RC / GC |
+| --- | ---: | ---: | ---: |
+| QBE | 1,365,490,130 | 105,808,962 | 12.905x |
+| LLVM O3/full LTO | 775,491,413 | 50,540,744 | 15.344x |
+
+The frozen GC controls agree within tens of instructions. Exact stdout and
+complete counters still match the earlier RC arms. This is still far outside
+WP-4 acceptance. The new 24-run QBE profile has roughly 2,000 samples with none
+lost: generated `make` 35.06%, allocation 7.21%, slot drop 7.00%, memset 5.86%,
+descriptor lookup 5.32%, region mark 5.27%, frame leave 5.12%, frame cleanup
+3.59%, invariant checks 3.32%, flat-edge release 2.52%, and drain 2.40%.
+Transfer reflection has fallen below the one-percent reporting cutoff.
+
+Generated journal bookkeeping is now the main direction for further work.
+The retained assembly shows `make` initializing six entries, zeroing 48 guard
+bytes plus 192 table bytes and then writing each entry's fields, before its
+first branch. Normal frame cleanup calls the dynamic slot-drop helper for all
+six entries, including disarmed ones. Repeated region-mark calls remain in
+constructors despite a stable inherited depth. These are observations and
+optimization candidates, not changes in this evidence commit. Root owns the
+compiler guard/region experiments; runtime empty-guard scan and invariant-call
+experiments follow separately. The longer profile, complete commands/hashes and
+compressed annotated assembly are retained alongside the raw counters.
