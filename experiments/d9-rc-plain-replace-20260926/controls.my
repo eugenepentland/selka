@@ -1,0 +1,43 @@
+# Native collection helpers preserve plain records and array payloads.
+record Sample:
+    x: float
+    y: float
+    z: float
+
+
+def replace(values: mut dict[int, Sample], key: int, value: Sample) -> None:
+    values[key] = value
+
+
+public def test_dictionary_plain_records_preserve_snapshot_and_repeated_updates() -> bool:
+    values = {0: Sample(1.0, 2.0, 3.0)}
+    snapshot = values
+    for i in range(100):
+        replace(mut values, 0, Sample(float(i), float(i + 1), float(i + 2)))
+    return values[0].x == 99.0 and values[0].z == 101.0 and snapshot[0].y == 2.0
+
+
+public def test_plain_list_replacements_keep_source_and_snapshot_bits() -> bool:
+    values = [Sample(1.0, 2.0, 3.0), Sample(4.0, 5.0, 6.0)]
+    before = values
+    values[1] = values[0]
+    values[0].x = 8.0
+    return values[1].x == 1.0 and values[0].x == 8.0 and before[1].x == 4.0
+
+
+public def test_nested_plain_arrays_replace_inside_an_arena() -> bool:
+    row: [3]int = [1, 2, 3]
+    with arena():
+        values = {0: row}
+        for i in range(40):
+            next_row: [3]int = [i, i + 1, i + 2]
+            values[0] = next_row
+        assert values[0][0] == 39 and values[0][2] == 41
+    return row[0] == 1 and row[2] == 3
+
+
+def main() -> int:
+    assert test_dictionary_plain_records_preserve_snapshot_and_repeated_updates()
+    assert test_plain_list_replacements_keep_source_and_snapshot_bits()
+    assert test_nested_plain_arrays_replace_inside_an_arena()
+    return 0

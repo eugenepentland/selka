@@ -1,0 +1,9 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 3 after 15s (all 3 build slot(s) busy)
+native rc loans: 9 passed
+native rc semantic history: 35 passed
+native RC live holds: 12 tests passed
+native RC arena: 10 passed
+MYLANG_RC_COUNTS {"version":1,"runtime":"rc-v3-counting","saturated":false,"owner_acquire":1,"owner_release":2,"hold_acquire":1,"hold_release":1,"owner_limit":0,"hold_limit":0,"heap_allocate":1,"arena_allocate":0,"retire":1,"clone_shell":0,"unique_check":2}
+native RC contract: 22 tests passed
+native RC collections: 35 passed
