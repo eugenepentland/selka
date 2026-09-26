@@ -14,7 +14,7 @@ index 287d5bb..1aaf569 100644
              return
          error_at_current(mut p, p.current.message)
 diff --git a/heap.my b/heap.my
-index f76a781..63836d6 100644
+index f76a7814..2e2b52cd 100644
 --- a/heap.my
 +++ b/heap.my
 @@ -13,15 +13,11 @@ public const FRAMES_MAX: int = 64
@@ -72,7 +72,33 @@ index f76a781..63836d6 100644
  public def closure_obj(rt: Runtime, ref: value.ObjRef) -> object.ClosureObj:
      match rt.objects[ref]:
          case object.Obj.closure(payload):
-@@ -245,105 +259,63 @@ def mark_table(marker: mut Marker, source: table.Table):
+@@ -203,6 +217,25 @@ public def env_obj(rt: Runtime, ref: value.ObjRef) -> object.EnvObj:
+             return object.new_env(value.NO_OBJ, 0)
+
+
++# Read one scalar or value without returning the environment's mutable slots.
++public def env_enclosing(rt: Runtime, ref: value.ObjRef) -> value.ObjRef:
++    match rt.objects[ref]:
++        case object.Obj.env(payload):
++            return payload.enclosing
++        case _:
++            assert False, "object is not an env"
++            return value.NO_OBJ
++
++
++public def env_slot(rt: Runtime, ref: value.ObjRef, slot: int) -> value.Value:
++    match rt.objects[ref]:
++        case object.Obj.env(payload):
++            return payload.slots[slot]
++        case _:
++            assert False, "object is not an env"
++            return value.Value.nil
++
++
+ # P3 adaptation: write one environment slot and store the environment back,
+ # so the write lands in the heap under value semantics as well.
+ public def set_env_slot(rt: mut Runtime, ref: value.ObjRef, slot: int, item: value.Value):
+@@ -245,105 +278,63 @@ def mark_table(marker: mut Marker, source: table.Table):
 
 
  def mark_roots(rt: mut Runtime):
@@ -216,6 +242,35 @@ diff --git a/interpreter.my b/interpreter.my
 
  # jlox's RuntimeError: the message and the line of the token it names.
  public record RuntimeError:
+@@ -108,7 +107,7 @@ def env_at(rt: heap.Runtime, hops: int) -> value.ObjRef:
+     env = rt.current_env
+     i = 0
+     while i < hops:
+-        env = heap.env_obj(rt, env).enclosing
++        env = heap.env_enclosing(rt, env)
+         i += 1
+     return env
+
+@@ -141,7 +140,7 @@ def get_variable(it: mut Interpreter, name: value.ObjRef, hops: int, slot: int,
+             case None:
+                 return Err(fail(b"Undefined variable '" + name_text(it.rt, name) + b"'.", line))
+     __wb_141 = it.rt
+-    heap.push(mut __wb_141, heap.env_obj(__wb_141, env_at(__wb_141, hops)).slots[slot])
++    heap.push(mut __wb_141, heap.env_slot(__wb_141, env_at(__wb_141, hops), slot))
+     it.rt = __wb_141
+     return Ok(None)
+
+@@ -324,8 +323,8 @@ def set(it: mut Interpreter, node: ast.SetExpr) -> Result[None, RuntimeError]:
+
+
+ def super_access(it: mut Interpreter, node: ast.SuperExpr) -> Result[None, RuntimeError]:
+-    superclass = heap.env_obj(it.rt, env_at(it.rt, node.hops)).slots[0]
+-    receiver = heap.env_obj(it.rt, env_at(it.rt, node.hops - 1)).slots[0]
++    superclass = heap.env_slot(it.rt, env_at(it.rt, node.hops), 0)
++    receiver = heap.env_slot(it.rt, env_at(it.rt, node.hops - 1), 0)
+     methods = heap.class_obj(it.rt, as_obj(superclass)).methods
+     match table.get(methods, node.method_ref, heap.string_hash(it.rt, node.method_ref)):
+         case Some(method):
 @@ -338,6 +337,20 @@
 
 
@@ -229,7 +284,7 @@ diff --git a/interpreter.my b/interpreter.my
 +
 +def evaluate_this(it: mut Interpreter, node: ast.ThisExpr) -> Result[None, RuntimeError]:
 +    __wb_327 = it.rt
-+    heap.push(mut __wb_327, heap.env_obj(__wb_327, env_at(__wb_327, node.hops)).slots[node.slot])
++    heap.push(mut __wb_327, heap.env_slot(__wb_327, env_at(__wb_327, node.hops), node.slot))
 +    it.rt = __wb_327
 +    return Ok(None)
 +
@@ -261,6 +316,15 @@ diff --git a/interpreter.my b/interpreter.my
          case ast.Expr.unary(node):
              return unary(mut it, node)
          case ast.Expr.variable(node):
+@@ -416,7 +423,7 @@ def run_function(it: mut Interpreter, function: object.TreeFunctionObj, env: val
+     it.depth = it.depth - 1
+     flow = outcome?
+     if function.is_initializer:
+-        return Ok(heap.env_obj(it.rt, heap.env_obj(it.rt, env).enclosing).slots[0])
++        return Ok(heap.env_slot(it.rt, heap.env_enclosing(it.rt, env), 0))
+     if flow == Flow.RETURN:
+         return Ok(it.returned)
+     return Ok(value.Value.nil)
 @@ -607,6 +614,99 @@
      return outcome
 
