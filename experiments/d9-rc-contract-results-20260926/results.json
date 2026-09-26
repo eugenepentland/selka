@@ -1,0 +1,563 @@
+{
+  "base": "f5a4c71dd49b0203afd1df4b47493aea0c24acdc",
+  "compiler_sha256": "d3126375a0905bf14b7acb4bf580375cb3a67c6d2fab04e2a5cc86c815eb7605",
+  "guest_sha256": "ae563f4070893ff007d9ff4dc983bf75d3a06cfc9a75a9c856b625c728306296",
+  "backends": {
+    "qbe": {
+      "existing_tests": {
+        "version": "native-tests-v1",
+        "tests": [
+          {
+            "name": "contracts::test_contracts_may_call_helpers_and_allocate",
+            "status": "passed",
+            "actual": true,
+            "expected": true,
+            "reason": "",
+            "key": "1cd38dabc43f6fec6c601f641c9fa7b7cfcebc5d306b950b20d2e952aca466db",
+            "dependencies": [
+              "myl_f_26a95f413a93bc94317c84e1bd93e18218eac9a6fde2cd49034edd9e0594b486",
+              "myl_f_52384083113014b5fd6d73fd44af634c10c6ece030b638685e38c642900b7b5f",
+              "myl_f_8fa4b39ffb91449d573229379096d9c51d08a3c21d239ec9ad8036ebdb7f0d84",
+              "myl_f_beef28443b851dd20900defc1d6dd3a93dc277fcc61624953f5c967bb01c2d90",
+              "myl_f_ea2529edbeb8432888eb7b369c70aaf5a48c0010721e760b03af49fd211dd634"
+            ],
+            "cacheable": true,
+            "reasons": [
+              "conservative-codec-runtime-set"
+            ],
+            "steps": 49,
+            "contract": "7364058ef6ef452fde9f09159ac2f7a95e0b342b8a0291c5a800b00101232581",
+            "provider": "",
+            "source": "cf2aa099e4e588c42a977302c32dff5bb0c0f589cab637c2b524becae11d1786"
+          },
+          {
+            "name": "contracts::test_domain_invariant_holds_through_wrap",
+            "status": "passed",
+            "actual": true,
+            "expected": true,
+            "reason": "",
+            "key": "ad5dad46ca15b4195018d1dae278f83af2081f5de6bb5fe820d1c499a7c0cc3e",
+            "dependencies": [
+              "myl_f_0d6cc6da55f33e097d49f4a32ea1b87763308e3397f52ceb12b87b18e2b577d5",
+              "myl_f_2e46c39f10930e37c770cac46eebba1bf8d829c4169077caee3392dd852d8aff",
+              "myl_f_8fa4b39ffb91449d573229379096d9c51d08a3c21d239ec9ad8036ebdb7f0d84",
+              "myl_f_ea2529edbeb8432888eb7b369c70aaf5a48c0010721e760b03af49fd211dd634",
+              "myl_f_fa8d0b3f896f2852a88dd176bee72835d83bea704e82d75fc69e20e1c15038dd"
+            ],
+            "cacheable": true,
+            "reasons": [
+              "conservative-codec-runtime-set"
+            ],
+            "steps": 25,
+            "contract": "7364058ef6ef452fde9f09159ac2f7a95e0b342b8a0291c5a800b00101232581",
+            "provider": "",
+            "source": "cf2aa099e4e588c42a977302c32dff5bb0c0f589cab637c2b524becae11d1786"
+          },
+          {
+            "name": "contracts::test_ensures_checks_only_ok_results",
+            "status": "passed",
+            "actual": true,
+            "expected": true,
+            "reason": "",
+            "key": "49edce257f341cf57e270b7193a0fc294077ad0a58e859c2fea9b4a24fae885a",
+            "dependencies": [
+              "myl_f_37af30971bab51957fbb3a0490a686d686598d9c1ad1f24fc1313a65965df8e0",
+              "myl_f_69b1b0a9ef89c2b425124af69305edbf903928d76dd25f570370b4abf59da15f",
+              "myl_f_8fa4b39ffb91449d573229379096d9c51d08a3c21d239ec9ad8036ebdb7f0d84",
+              "myl_f_99438dd805b3caab91b001889b8f3181bf424eea171a8d1da46477cf91a31efa",
+              "myl_f_a7e968013dc9c25baca6af6e82fc052b1f7b287b2a326d6fa2f0fbcf5842df66",
+              "myl_f_ea2529edbeb8432888eb7b369c70aaf5a48c0010721e760b03af49fd211dd634"
+            ],
+            "cacheable": true,
+            "reasons": [
+              "conservative-codec-runtime-set"
+            ],
+            "steps": 107,
+            "contract": "7364058ef6ef452fde9f09159ac2f7a95e0b342b8a0291c5a800b00101232581",
+            "provider": "",
+            "source": "cf2aa099e4e588c42a977302c32dff5bb0c0f589cab637c2b524becae11d1786"
+          },
+          {
+            "name": "contracts::test_generic_function_checks_its_clauses",
+            "status": "passed",
+            "actual": true,
+            "expected": true,
+            "reason": "",
+            "key": "976e7251015ed85d1097f0b41c8671b784974b3bf1be145eed78fcdf02a9efe8",
+            "dependencies": [
+              "myl_f_37e99b600465794ec7b677f2541444f904fe95e0bdefdf97e546c541782fe9d6",
+              "myl_f_8fa4b39ffb91449d573229379096d9c51d08a3c21d239ec9ad8036ebdb7f0d84",
+              "myl_f_b61da4698bc964af990dad7deb0f71cff4d7cd4d50e122c4baf3cedb28e49f05",
+              "myl_f_ce4c5e89279551671de8e81656f1ad49eb2a8adf6798d3626b4a9a791e5cfd05",
+              "myl_f_ea2529edbeb8432888eb7b369c70aaf5a48c0010721e760b03af49fd211dd634"
+            ],
+            "cacheable": true,
+            "reasons": [
+              "conservative-codec-runtime-set"
+            ],
+            "steps": 216,
+            "contract": "7364058ef6ef452fde9f09159ac2f7a95e0b342b8a0291c5a800b00101232581",
+            "provider": "",
+            "source": "cf2aa099e4e588c42a977302c32dff5bb0c0f589cab637c2b524becae11d1786"
+          },
+          {
+            "name": "contracts::test_invariant_holds_through_construction_and_defaults",
+            "status": "passed",
+            "actual": true,
+            "expected": true,
+            "reason": "",
+            "key": "1ea09874542e1a452f2ab550995019dadfe5b2c94a7d9e85029261230b22e430",
+            "dependencies": [
+              "myl_f_0c2622f4551042b589e8a1c7d1344213aaeb3adc1fa584e431d0bccee1fd0235",
+              "myl_f_8fa4b39ffb91449d573229379096d9c51d08a3c21d239ec9ad8036ebdb7f0d84",
+              "myl_f_ea2529edbeb8432888eb7b369c70aaf5a48c0010721e760b03af49fd211dd634"
+            ],
+            "cacheable": true,
+            "reasons": [
+              "conservative-codec-runtime-set"
+            ],
+            "steps": 53,
+            "contract": "7364058ef6ef452fde9f09159ac2f7a95e0b342b8a0291c5a800b00101232581",
+            "provider": "",
+            "source": "cf2aa099e4e588c42a977302c32dff5bb0c0f589cab637c2b524becae11d1786"
+          },
+          {
+            "name": "contracts::test_invariant_holds_through_destructuring_targets",
+            "status": "passed",
+            "actual": true,
+            "expected": true,
+            "reason": "",
+            "key": "401890b3cbfec3f38e0d04679434cccfd74adc33422e73a327a835f5819310fa",
+            "dependencies": [
+              "myl_f_72854c68163361080ecce1b9f9a0209843ac7e14bda6c5f8a782f4a4be1e79b3",
+              "myl_f_8fa4b39ffb91449d573229379096d9c51d08a3c21d239ec9ad8036ebdb7f0d84",
+              "myl_f_ea2529edbeb8432888eb7b369c70aaf5a48c0010721e760b03af49fd211dd634"
+            ],
+            "cacheable": true,
+            "reasons": [
+              "conservative-codec-runtime-set"
+            ],
+            "steps": 71,
+            "contract": "7364058ef6ef452fde9f09159ac2f7a95e0b342b8a0291c5a800b00101232581",
+            "provider": "",
+            "source": "cf2aa099e4e588c42a977302c32dff5bb0c0f589cab637c2b524becae11d1786"
+          },
+          {
+            "name": "contracts::test_invariant_holds_through_replace_and_field_writes",
+            "status": "passed",
+            "actual": true,
+            "expected": true,
+            "reason": "",
+            "key": "3870ab376c300c01a7b62b9bebc6091e9f02b48d1e837698186fc38ac0de8676",
+            "dependencies": [
+              "myl_f_8fa4b39ffb91449d573229379096d9c51d08a3c21d239ec9ad8036ebdb7f0d84",
+              "myl_f_e40fdc05c925e21399f379e7f3279d35f624188a696b276781c3f4e4fa73acf6",
+              "myl_f_ea2529edbeb8432888eb7b369c70aaf5a48c0010721e760b03af49fd211dd634"
+            ],
+            "cacheable": true,
+            "reasons": [
+              "conservative-codec-runtime-set"
+            ],
+            "steps": 112,
+            "contract": "7364058ef6ef452fde9f09159ac2f7a95e0b342b8a0291c5a800b00101232581",
+            "provider": "",
+            "source": "cf2aa099e4e588c42a977302c32dff5bb0c0f589cab637c2b524becae11d1786"
+          },
+          {
+            "name": "contracts::test_old_captures_parameters_at_entry",
+            "status": "passed",
+            "actual": true,
+            "expected": true,
+            "reason": "",
+            "key": "58cd20b3b65f38858479b3a9781318f224c27e1b670db339197f5b6538ffd402",
+            "dependencies": [
+              "myl_f_8fa4b39ffb91449d573229379096d9c51d08a3c21d239ec9ad8036ebdb7f0d84",
+              "myl_f_ea2529edbeb8432888eb7b369c70aaf5a48c0010721e760b03af49fd211dd634",
+              "myl_f_f21b5876af765284ce7e91a8059f8f2b3bcd6c1bad40e0012edf784c0d035ad5",
+              "myl_f_fddd55b25c6834cbb854be71d5dcc45b01f7400dda555c4c3ff06702895bcee3"
+            ],
+            "cacheable": true,
+            "reasons": [
+              "conservative-codec-runtime-set"
+            ],
+            "steps": 32,
+            "contract": "7364058ef6ef452fde9f09159ac2f7a95e0b342b8a0291c5a800b00101232581",
+            "provider": "",
+            "source": "cf2aa099e4e588c42a977302c32dff5bb0c0f589cab637c2b524becae11d1786"
+          },
+          {
+            "name": "contracts::test_procedure_postcondition_runs_at_its_implicit_end",
+            "status": "passed",
+            "actual": true,
+            "expected": true,
+            "reason": "",
+            "key": "dab0134bc0fb97b7e861d63e472859466a202836bea24e940edc709e75dcab97",
+            "dependencies": [
+              "myl_f_44daa4c69b34f5e7e747bdc6466eff013ca9da63cfe86f986e4307563583e6f9",
+              "myl_f_8fa4b39ffb91449d573229379096d9c51d08a3c21d239ec9ad8036ebdb7f0d84",
+              "myl_f_da01d1e8be01312cfef7e81c9827519954b959ce7983cd6332b3763115318549",
+              "myl_f_ea2529edbeb8432888eb7b369c70aaf5a48c0010721e760b03af49fd211dd634"
+            ],
+            "cacheable": true,
+            "reasons": [
+              "conservative-codec-runtime-set"
+            ],
+            "steps": 56,
+            "contract": "7364058ef6ef452fde9f09159ac2f7a95e0b342b8a0291c5a800b00101232581",
+            "provider": "",
+            "source": "cf2aa099e4e588c42a977302c32dff5bb0c0f589cab637c2b524becae11d1786"
+          },
+          {
+            "name": "contracts::test_propagated_error_skips_the_postcondition",
+            "status": "passed",
+            "actual": true,
+            "expected": true,
+            "reason": "",
+            "key": "546c18ee8f0cfdbbec145c377d26996a07eb477dcb2dce84940c529ad461bd11",
+            "dependencies": [
+              "myl_f_37af30971bab51957fbb3a0490a686d686598d9c1ad1f24fc1313a65965df8e0",
+              "myl_f_7cf6dd318d6e3999d1e08902137be3e3bc9412ac2c32fce71f5724616b4ef7c8",
+              "myl_f_8fa4b39ffb91449d573229379096d9c51d08a3c21d239ec9ad8036ebdb7f0d84",
+              "myl_f_a7e968013dc9c25baca6af6e82fc052b1f7b287b2a326d6fa2f0fbcf5842df66",
+              "myl_f_ae8306a0a6a0b46eee284c496a32ce93eec9d5df69470d80753ff228db07d845",
+              "myl_f_ea2529edbeb8432888eb7b369c70aaf5a48c0010721e760b03af49fd211dd634"
+            ],
+            "cacheable": true,
+            "reasons": [
+              "conservative-codec-runtime-set"
+            ],
+            "steps": 76,
+            "contract": "7364058ef6ef452fde9f09159ac2f7a95e0b342b8a0291c5a800b00101232581",
+            "provider": "",
+            "source": "cf2aa099e4e588c42a977302c32dff5bb0c0f589cab637c2b524becae11d1786"
+          },
+          {
+            "name": "contracts::test_withdraw_holds_every_clause_on_both_returns",
+            "status": "passed",
+            "actual": true,
+            "expected": true,
+            "reason": "",
+            "key": "af58b039f82acbac8a1c969a3b62b43bd0e7708ad191efa20bdf382b7eb92e36",
+            "dependencies": [
+              "myl_f_1d0719636ff9f25def7f87a7accfb2c77c711ec1c15b560f686b7a9f69306700",
+              "myl_f_8fa4b39ffb91449d573229379096d9c51d08a3c21d239ec9ad8036ebdb7f0d84",
+              "myl_f_ddba3b78b9a1f8b91a6daba564ceee908c301728def9a5f636c3c870913c7620",
+              "myl_f_ea2529edbeb8432888eb7b369c70aaf5a48c0010721e760b03af49fd211dd634"
+            ],
+            "cacheable": true,
+            "reasons": [
+              "conservative-codec-runtime-set"
+            ],
+            "steps": 170,
+            "contract": "7364058ef6ef452fde9f09159ac2f7a95e0b342b8a0291c5a800b00101232581",
+            "provider": "",
+            "source": "cf2aa099e4e588c42a977302c32dff5bb0c0f589cab637c2b524becae11d1786"
+          }
+        ],
+        "passed": 11,
+        "failed": 0,
+        "skipped": 0,
+        "cached": 0,
+        "executed": 11,
+        "modules": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/tests/lang/contracts.my"
+        ]
+      },
+      "regression_main_stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v1-counting\",\"saturated\":false,\"owner_acquire\":361,\"owner_release\":602,\"hold_acquire\":0,\"hold_release\":0,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":241,\"arena_allocate\":0,\"retire\":241,\"clone_shell\":0,\"unique_check\":160}\n",
+      "counts": {
+        "version": 1,
+        "runtime": "rc-v1-counting",
+        "saturated": false,
+        "owner_acquire": 361,
+        "owner_release": 602,
+        "hold_acquire": 0,
+        "hold_release": 0,
+        "owner_limit": 0,
+        "hold_limit": 0,
+        "heap_allocate": 241,
+        "arena_allocate": 0,
+        "retire": 241,
+        "clone_shell": 0,
+        "unique_check": 160
+      }
+    },
+    "llvm": {
+      "existing_tests": {
+        "version": "native-tests-v1",
+        "tests": [
+          {
+            "name": "contracts::test_contracts_may_call_helpers_and_allocate",
+            "status": "passed",
+            "actual": true,
+            "expected": true,
+            "reason": "",
+            "key": "c51dd5ab8be98e8e8baf2166c99d18e2fabe0f4dab37cf9cc67d84eca3bb9a95",
+            "dependencies": [
+              "myl_f_26a95f413a93bc94317c84e1bd93e18218eac9a6fde2cd49034edd9e0594b486",
+              "myl_f_52384083113014b5fd6d73fd44af634c10c6ece030b638685e38c642900b7b5f",
+              "myl_f_8fa4b39ffb91449d573229379096d9c51d08a3c21d239ec9ad8036ebdb7f0d84",
+              "myl_f_beef28443b851dd20900defc1d6dd3a93dc277fcc61624953f5c967bb01c2d90",
+              "myl_f_ea2529edbeb8432888eb7b369c70aaf5a48c0010721e760b03af49fd211dd634"
+            ],
+            "cacheable": true,
+            "reasons": [
+              "conservative-codec-runtime-set"
+            ],
+            "steps": 49,
+            "contract": "7364058ef6ef452fde9f09159ac2f7a95e0b342b8a0291c5a800b00101232581",
+            "provider": "",
+            "source": "cf2aa099e4e588c42a977302c32dff5bb0c0f589cab637c2b524becae11d1786"
+          },
+          {
+            "name": "contracts::test_domain_invariant_holds_through_wrap",
+            "status": "passed",
+            "actual": true,
+            "expected": true,
+            "reason": "",
+            "key": "2a58d57c7f733842c350707858f9838fe23536736f4c7e177758ec8297ffbdcf",
+            "dependencies": [
+              "myl_f_0d6cc6da55f33e097d49f4a32ea1b87763308e3397f52ceb12b87b18e2b577d5",
+              "myl_f_2e46c39f10930e37c770cac46eebba1bf8d829c4169077caee3392dd852d8aff",
+              "myl_f_8fa4b39ffb91449d573229379096d9c51d08a3c21d239ec9ad8036ebdb7f0d84",
+              "myl_f_ea2529edbeb8432888eb7b369c70aaf5a48c0010721e760b03af49fd211dd634",
+              "myl_f_fa8d0b3f896f2852a88dd176bee72835d83bea704e82d75fc69e20e1c15038dd"
+            ],
+            "cacheable": true,
+            "reasons": [
+              "conservative-codec-runtime-set"
+            ],
+            "steps": 25,
+            "contract": "7364058ef6ef452fde9f09159ac2f7a95e0b342b8a0291c5a800b00101232581",
+            "provider": "",
+            "source": "cf2aa099e4e588c42a977302c32dff5bb0c0f589cab637c2b524becae11d1786"
+          },
+          {
+            "name": "contracts::test_ensures_checks_only_ok_results",
+            "status": "passed",
+            "actual": true,
+            "expected": true,
+            "reason": "",
+            "key": "68536bec1c54d7dd507beaa99799a9ff3688aa150203510d0965554b26ce5dc2",
+            "dependencies": [
+              "myl_f_37af30971bab51957fbb3a0490a686d686598d9c1ad1f24fc1313a65965df8e0",
+              "myl_f_69b1b0a9ef89c2b425124af69305edbf903928d76dd25f570370b4abf59da15f",
+              "myl_f_8fa4b39ffb91449d573229379096d9c51d08a3c21d239ec9ad8036ebdb7f0d84",
+              "myl_f_99438dd805b3caab91b001889b8f3181bf424eea171a8d1da46477cf91a31efa",
+              "myl_f_a7e968013dc9c25baca6af6e82fc052b1f7b287b2a326d6fa2f0fbcf5842df66",
+              "myl_f_ea2529edbeb8432888eb7b369c70aaf5a48c0010721e760b03af49fd211dd634"
+            ],
+            "cacheable": true,
+            "reasons": [
+              "conservative-codec-runtime-set"
+            ],
+            "steps": 107,
+            "contract": "7364058ef6ef452fde9f09159ac2f7a95e0b342b8a0291c5a800b00101232581",
+            "provider": "",
+            "source": "cf2aa099e4e588c42a977302c32dff5bb0c0f589cab637c2b524becae11d1786"
+          },
+          {
+            "name": "contracts::test_generic_function_checks_its_clauses",
+            "status": "passed",
+            "actual": true,
+            "expected": true,
+            "reason": "",
+            "key": "3b9d19f0208fd808e4b12fba43feed6c384bdddb77c2edc3ed11ff98eea180b7",
+            "dependencies": [
+              "myl_f_37e99b600465794ec7b677f2541444f904fe95e0bdefdf97e546c541782fe9d6",
+              "myl_f_8fa4b39ffb91449d573229379096d9c51d08a3c21d239ec9ad8036ebdb7f0d84",
+              "myl_f_b61da4698bc964af990dad7deb0f71cff4d7cd4d50e122c4baf3cedb28e49f05",
+              "myl_f_ce4c5e89279551671de8e81656f1ad49eb2a8adf6798d3626b4a9a791e5cfd05",
+              "myl_f_ea2529edbeb8432888eb7b369c70aaf5a48c0010721e760b03af49fd211dd634"
+            ],
+            "cacheable": true,
+            "reasons": [
+              "conservative-codec-runtime-set"
+            ],
+            "steps": 216,
+            "contract": "7364058ef6ef452fde9f09159ac2f7a95e0b342b8a0291c5a800b00101232581",
+            "provider": "",
+            "source": "cf2aa099e4e588c42a977302c32dff5bb0c0f589cab637c2b524becae11d1786"
+          },
+          {
+            "name": "contracts::test_invariant_holds_through_construction_and_defaults",
+            "status": "passed",
+            "actual": true,
+            "expected": true,
+            "reason": "",
+            "key": "83bf2780ee721e222102535711fd6d6f50ad7d0280bc0881809723d023c96e41",
+            "dependencies": [
+              "myl_f_0c2622f4551042b589e8a1c7d1344213aaeb3adc1fa584e431d0bccee1fd0235",
+              "myl_f_8fa4b39ffb91449d573229379096d9c51d08a3c21d239ec9ad8036ebdb7f0d84",
+              "myl_f_ea2529edbeb8432888eb7b369c70aaf5a48c0010721e760b03af49fd211dd634"
+            ],
+            "cacheable": true,
+            "reasons": [
+              "conservative-codec-runtime-set"
+            ],
+            "steps": 53,
+            "contract": "7364058ef6ef452fde9f09159ac2f7a95e0b342b8a0291c5a800b00101232581",
+            "provider": "",
+            "source": "cf2aa099e4e588c42a977302c32dff5bb0c0f589cab637c2b524becae11d1786"
+          },
+          {
+            "name": "contracts::test_invariant_holds_through_destructuring_targets",
+            "status": "passed",
+            "actual": true,
+            "expected": true,
+            "reason": "",
+            "key": "72c6e5e8d58e404d8bb9b67204dcb4add9d9a77a305308c42fc4d4ca8262a6b2",
+            "dependencies": [
+              "myl_f_72854c68163361080ecce1b9f9a0209843ac7e14bda6c5f8a782f4a4be1e79b3",
+              "myl_f_8fa4b39ffb91449d573229379096d9c51d08a3c21d239ec9ad8036ebdb7f0d84",
+              "myl_f_ea2529edbeb8432888eb7b369c70aaf5a48c0010721e760b03af49fd211dd634"
+            ],
+            "cacheable": true,
+            "reasons": [
+              "conservative-codec-runtime-set"
+            ],
+            "steps": 71,
+            "contract": "7364058ef6ef452fde9f09159ac2f7a95e0b342b8a0291c5a800b00101232581",
+            "provider": "",
+            "source": "cf2aa099e4e588c42a977302c32dff5bb0c0f589cab637c2b524becae11d1786"
+          },
+          {
+            "name": "contracts::test_invariant_holds_through_replace_and_field_writes",
+            "status": "passed",
+            "actual": true,
+            "expected": true,
+            "reason": "",
+            "key": "30f932dd4e4931704b6435c5416e185456748cce338e50312da0382c49b7adaa",
+            "dependencies": [
+              "myl_f_8fa4b39ffb91449d573229379096d9c51d08a3c21d239ec9ad8036ebdb7f0d84",
+              "myl_f_e40fdc05c925e21399f379e7f3279d35f624188a696b276781c3f4e4fa73acf6",
+              "myl_f_ea2529edbeb8432888eb7b369c70aaf5a48c0010721e760b03af49fd211dd634"
+            ],
+            "cacheable": true,
+            "reasons": [
+              "conservative-codec-runtime-set"
+            ],
+            "steps": 112,
+            "contract": "7364058ef6ef452fde9f09159ac2f7a95e0b342b8a0291c5a800b00101232581",
+            "provider": "",
+            "source": "cf2aa099e4e588c42a977302c32dff5bb0c0f589cab637c2b524becae11d1786"
+          },
+          {
+            "name": "contracts::test_old_captures_parameters_at_entry",
+            "status": "passed",
+            "actual": true,
+            "expected": true,
+            "reason": "",
+            "key": "588cb891c54519a7ab92d597c57016855f993e495b1bf81e393e6d161d350e38",
+            "dependencies": [
+              "myl_f_8fa4b39ffb91449d573229379096d9c51d08a3c21d239ec9ad8036ebdb7f0d84",
+              "myl_f_ea2529edbeb8432888eb7b369c70aaf5a48c0010721e760b03af49fd211dd634",
+              "myl_f_f21b5876af765284ce7e91a8059f8f2b3bcd6c1bad40e0012edf784c0d035ad5",
+              "myl_f_fddd55b25c6834cbb854be71d5dcc45b01f7400dda555c4c3ff06702895bcee3"
+            ],
+            "cacheable": true,
+            "reasons": [
+              "conservative-codec-runtime-set"
+            ],
+            "steps": 32,
+            "contract": "7364058ef6ef452fde9f09159ac2f7a95e0b342b8a0291c5a800b00101232581",
+            "provider": "",
+            "source": "cf2aa099e4e588c42a977302c32dff5bb0c0f589cab637c2b524becae11d1786"
+          },
+          {
+            "name": "contracts::test_procedure_postcondition_runs_at_its_implicit_end",
+            "status": "passed",
+            "actual": true,
+            "expected": true,
+            "reason": "",
+            "key": "d8a248f1f81483c7d21883eb0d1cc6b3f70c79b8d2dc601ef694ccac0fda79c3",
+            "dependencies": [
+              "myl_f_44daa4c69b34f5e7e747bdc6466eff013ca9da63cfe86f986e4307563583e6f9",
+              "myl_f_8fa4b39ffb91449d573229379096d9c51d08a3c21d239ec9ad8036ebdb7f0d84",
+              "myl_f_da01d1e8be01312cfef7e81c9827519954b959ce7983cd6332b3763115318549",
+              "myl_f_ea2529edbeb8432888eb7b369c70aaf5a48c0010721e760b03af49fd211dd634"
+            ],
+            "cacheable": true,
+            "reasons": [
+              "conservative-codec-runtime-set"
+            ],
+            "steps": 56,
+            "contract": "7364058ef6ef452fde9f09159ac2f7a95e0b342b8a0291c5a800b00101232581",
+            "provider": "",
+            "source": "cf2aa099e4e588c42a977302c32dff5bb0c0f589cab637c2b524becae11d1786"
+          },
+          {
+            "name": "contracts::test_propagated_error_skips_the_postcondition",
+            "status": "passed",
+            "actual": true,
+            "expected": true,
+            "reason": "",
+            "key": "d9e94bbbaf5f644b32422ad9304413ea4f3d0e2cd84157899afc1b434ce26fc0",
+            "dependencies": [
+              "myl_f_37af30971bab51957fbb3a0490a686d686598d9c1ad1f24fc1313a65965df8e0",
+              "myl_f_7cf6dd318d6e3999d1e08902137be3e3bc9412ac2c32fce71f5724616b4ef7c8",
+              "myl_f_8fa4b39ffb91449d573229379096d9c51d08a3c21d239ec9ad8036ebdb7f0d84",
+              "myl_f_a7e968013dc9c25baca6af6e82fc052b1f7b287b2a326d6fa2f0fbcf5842df66",
+              "myl_f_ae8306a0a6a0b46eee284c496a32ce93eec9d5df69470d80753ff228db07d845",
+              "myl_f_ea2529edbeb8432888eb7b369c70aaf5a48c0010721e760b03af49fd211dd634"
+            ],
+            "cacheable": true,
+            "reasons": [
+              "conservative-codec-runtime-set"
+            ],
+            "steps": 76,
+            "contract": "7364058ef6ef452fde9f09159ac2f7a95e0b342b8a0291c5a800b00101232581",
+            "provider": "",
+            "source": "cf2aa099e4e588c42a977302c32dff5bb0c0f589cab637c2b524becae11d1786"
+          },
+          {
+            "name": "contracts::test_withdraw_holds_every_clause_on_both_returns",
+            "status": "passed",
+            "actual": true,
+            "expected": true,
+            "reason": "",
+            "key": "4ecf62ab6b50857d042e97f570a486fb05bc5355fa61fd436a88eea73770281d",
+            "dependencies": [
+              "myl_f_1d0719636ff9f25def7f87a7accfb2c77c711ec1c15b560f686b7a9f69306700",
+              "myl_f_8fa4b39ffb91449d573229379096d9c51d08a3c21d239ec9ad8036ebdb7f0d84",
+              "myl_f_ddba3b78b9a1f8b91a6daba564ceee908c301728def9a5f636c3c870913c7620",
+              "myl_f_ea2529edbeb8432888eb7b369c70aaf5a48c0010721e760b03af49fd211dd634"
+            ],
+            "cacheable": true,
+            "reasons": [
+              "conservative-codec-runtime-set"
+            ],
+            "steps": 170,
+            "contract": "7364058ef6ef452fde9f09159ac2f7a95e0b342b8a0291c5a800b00101232581",
+            "provider": "",
+            "source": "cf2aa099e4e588c42a977302c32dff5bb0c0f589cab637c2b524becae11d1786"
+          }
+        ],
+        "passed": 11,
+        "failed": 0,
+        "skipped": 0,
+        "cached": 0,
+        "executed": 11,
+        "modules": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/tests/lang/contracts.my"
+        ]
+      },
+      "regression_main_stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v1-counting\",\"saturated\":false,\"owner_acquire\":361,\"owner_release\":602,\"hold_acquire\":0,\"hold_release\":0,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":241,\"arena_allocate\":0,\"retire\":241,\"clone_shell\":0,\"unique_check\":160}\n",
+      "counts": {
+        "version": 1,
+        "runtime": "rc-v1-counting",
+        "saturated": false,
+        "owner_acquire": 361,
+        "owner_release": 602,
+        "hold_acquire": 0,
+        "hold_release": 0,
+        "owner_limit": 0,
+        "hold_limit": 0,
+        "heap_allocate": 241,
+        "arena_allocate": 0,
+        "retire": 241,
+        "clone_shell": 0,
+        "unique_check": 160
+      }
+    }
+  }
+}
