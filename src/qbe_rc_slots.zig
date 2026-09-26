@@ -28,6 +28,7 @@ pub fn Lower(comptime E: type) type {
     return struct {
         /// Prepare ownership atomically; no compiler guard changes on failure.
         pub fn transfer(self: *E, operation: Transfer) Error!void {
+            const moved = if (operation.mode == .take_empty) try @import("qbe_rc_inline_take.zig").begin(E, self, operation) else null;
             const helper = switch (operation.mode) {
                 .copy_empty => "myl_rc_native_copy",
                 .take_empty => "myl_rc_native_take",
@@ -38,6 +39,7 @@ pub fn Lower(comptime E: type) type {
                 result, helper, try self.descriptor(operation.ty), operation.destination, operation.source, operation.region,
             });
             try requireSuccess(E, self, result);
+            if (moved) |label| try self.print("@rcmoved{d}\n", .{label});
         }
 
         /// Publish an ownership guard only after all preceding helpers commit.

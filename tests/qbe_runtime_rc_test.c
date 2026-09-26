@@ -161,6 +161,78 @@ static void unique_bridge_test(void) {
     myl_native_heap_destroy(&context.heap);
     assert(!context.heap.bytes);
 }
+static const myl_native_type pointer_list = {.size = sizeof(void *), .alignment = _Alignof(void *),
+    .kind = MYL_NATIVE_POINTER, .collection_kind = 1, .element = &pointer_type};
+// spec-case: RC-FRAME-1
+static void unique_elements_refusal_test(void) {
+    MylQbeContext context = {0};
+    myl_native_heap_init(&context.heap, 1u << 20);
+    if (!myl_rc_enabled(&context.heap)) assert(myl_rc_storage_init(&context.heap) == MYL_RC_OK);
+    static const myl_native_type number = {.size = 8, .alignment = 8, .kind = MYL_NATIVE_PLAIN};
+    myl_native_list *first = myl_native_list_new(&context.heap, &number, 1);
+    myl_native_list *second = myl_native_list_new(&context.heap, &pointer_type, 1);
+    myl_native_list *outer = myl_native_list_new(&context.heap, &pointer_type, 3);
+    void *leaf = myl_rc_storage_bytes(&context.heap, 8, 0);
+    uint64_t value = 73;
+    assert(first && second && outer && leaf);
+    assert(myl_rc_list_append(&context.heap, first, &value));
+    assert(myl_rc_list_append(&context.heap, second, &leaf));
+    assert(myl_rc_list_append(&context.heap, outer, &first));
+    assert(myl_rc_list_append(&context.heap, outer, &first));
+    assert(myl_rc_list_append(&context.heap, outer, &second));
+    myl_rc_pin pin = {0};
+    assert(myl_rc_pin_acquire(&context.heap, first, &pin) == MYL_RC_OK);
+    ((myl_rc_object *)leaf - 1)->owners = MYL_RC_COUNT_MAX;
+    assert(!myl_qbe_rc_unique_elements(&context, &pointer_list, outer));
+    assert(!strcmp(context.trap, "R_REFERENCE_COUNT_LIMIT"));
+    myl_native_list **rows = outer->storage;
+    assert(rows[0] != first && rows[1] != first && rows[0] != rows[1] && rows[2] == second);
+    assert(((myl_rc_object *)first - 1)->owners == 1 && ((myl_rc_object *)first - 1)->holds == 1);
+    assert(((myl_native_object *)first - 1)->mark & MYL_NATIVE_OBJECT_PINNED);
+    assert(*(uint64_t *)rows[0]->storage == 73 && *(uint64_t *)rows[1]->storage == 73);
+    assert(((myl_rc_object *)leaf - 1)->owners == MYL_RC_COUNT_MAX);
+    ((myl_rc_object *)leaf - 1)->owners = 2;
+    context.trap = NULL;
+    assert(myl_qbe_rc_unique_elements(&context, &pointer_list, outer) && rows[2] != second);
+    assert(((myl_rc_object *)leaf - 1)->owners == 3);
+    myl_rc_pin_release(&context.heap, &pin);
+    myl_rc_owner_release(&context.heap, outer);
+    myl_rc_owner_release(&context.heap, first);
+    myl_rc_owner_release(&context.heap, second);
+    myl_rc_owner_release(&context.heap, leaf);
+    assert(!context.heap.objects_live);
+    myl_native_heap_destroy(&context.heap);
+    assert(!context.heap.bytes);
+}
+// spec-case: RC-FRAME-1
+static void unique_elements_arena_test(void) {
+    MylQbeContext context = {0};
+    myl_native_heap_init(&context.heap, 1u << 20);
+    if (!myl_rc_enabled(&context.heap)) assert(myl_rc_storage_init(&context.heap) == MYL_RC_OK);
+    static const myl_native_type number = {.size = 8, .alignment = 8, .kind = MYL_NATIVE_PLAIN};
+    myl_native_list *source = myl_native_list_new(&context.heap, &number, 1);
+    uint64_t value = 91;
+    assert(source && myl_rc_list_append(&context.heap, source, &value));
+    assert(myl_native_region_begin(&context.heap));
+    myl_native_list *outer = myl_native_list_new(&context.heap, &pointer_type, 3);
+    void *empty = NULL;
+    assert(outer && myl_rc_list_append(&context.heap, outer, &source));
+    assert(myl_rc_list_append(&context.heap, outer, &source));
+    assert(myl_rc_list_append(&context.heap, outer, &empty));
+    assert(myl_native_region_begin(&context.heap));
+    assert(myl_qbe_rc_unique_elements(&context, &pointer_list, outer));
+    myl_native_list **rows = outer->storage;
+    assert(rows[0] != source && rows[1] != source && rows[0] != rows[1] && !rows[2]);
+    assert(myl_native_header_region(rows[0]) == 1 && myl_native_header_region(rows[1]) == 1);
+    assert(((myl_rc_object *)source - 1)->owners == 1);
+    myl_rc_arena_close(&context.heap, 2);
+    assert(*(uint64_t *)rows[0]->storage == 91 && *(uint64_t *)rows[1]->storage == 91);
+    myl_rc_arena_close(&context.heap, 1);
+    myl_rc_owner_release(&context.heap, source);
+    assert(!context.heap.objects_live);
+    myl_native_heap_destroy(&context.heap);
+    assert(!context.heap.bytes);
+}
 static void unique_body_test(void) {
     MylQbeContext context = {0};
     myl_native_heap_init(&context.heap, 1u << 20);
@@ -484,6 +556,8 @@ int myl_qbe_rc_frame_verify(void) {
     frame_trap_test();
     construction_guard_test();
     unique_bridge_test();
+    unique_elements_refusal_test();
+    unique_elements_arena_test();
     unique_body_test();
     rebox_bridge_test();
     partial_unique_body_test();
@@ -492,13 +566,13 @@ int myl_qbe_rc_frame_verify(void) {
     backing_bridge_test();
     held_slot_test();
     held_unique_bridge_test();
-    return 13;
+    return 15;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
     assert(myl_qbe_rc_contract_verify() == 5);
-    assert(myl_qbe_rc_frame_verify() == 13);
-    puts("RC startup and frame unwind: 18 checks passed");
+    assert(myl_qbe_rc_frame_verify() == 15);
+    puts("RC startup and frame unwind: 20 checks passed");
     return 0;
 }
 #endif

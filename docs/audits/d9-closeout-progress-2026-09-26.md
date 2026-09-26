@@ -257,3 +257,17 @@ Verified LLVM O3/full LTO also produces all three exact schematic SVG hashes.
 Historical mislabeled LLVM runner evidence is explicitly corrected and rerun.
 The measured RC instruction gap is still substantial; WP-4 performance and
 its default transition remain open, and WP-5 is not complete.
+
+
+## RC borrowing and constructors checkpoint
+
+Integration `3f300771` passes all four gate commands: 94 main steps with 2,215
+executed tests, 51 QBE steps with 437 tests, 29 native-build steps and 2 formatting
+steps. Actual uncached RC sweeps pass 731/731 tests on each backend, across 127
+programs. See [the joined gate report](d9-rc-loans-gate-2026-09-26.md).
+The receiver loans, recursive read-only bodies, pointer fast paths and constructor
+ownership transfers are integrated. Private n12 constructor owner acquisitions
+fall from 1,996,163 to 19, with all 669,060 allocations retired. This is focused
+evidence; complete performance/RSS acceptance and the default transition remain
+open. The superseded exact-workload diagnostic is preserved in
+[the early performance report](d9-rc-early-performance-2026-09-26.md).

@@ -14,11 +14,17 @@ typedef struct {
     size_t depth;
     size_t inline_depth;
 } myl_rc_shape_entry;
+#define MYL_RC_FLAT_LEAVES 8
+/* Private plan, never part of emitted metadata. count > the bound means the
+ * authoritative shape/native-kind pair requires generic traversal. */
+typedef struct { size_t offsets[MYL_RC_FLAT_LEAVES]; unsigned count; } myl_rc_flat;
+typedef struct { myl_rc_descriptor descriptor; myl_rc_flat flat; } myl_rc_binding;
+_Static_assert(offsetof(myl_rc_binding, descriptor) == 0, "indexed descriptor is its private binding prefix");
 typedef struct myl_rc_batch {
     struct myl_rc_batch *next;
     const myl_rc_module *module;
     myl_rc_shape_entry *shapes;
-    myl_rc_descriptor *descriptors;
+    myl_rc_binding *bindings;
     struct { size_t shapes, descriptors; } count;
     size_t bytes;
 } myl_rc_batch;

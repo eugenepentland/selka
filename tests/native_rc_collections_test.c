@@ -1,4 +1,5 @@
 #include "native_rc_collections.h"
+#include "native_rc_internal.h"
 #include "native_rc_dictionary.h"
 #include "native_bytes.h"
 #include "native_text_methods.h"
@@ -782,6 +783,116 @@ static void native_pointer_transactions(void) {
     assert(myl_rc_native_copy(&heap,&pointer,&target,&source,0) && !target);
     finish(&heap);
 }
+static const myl_rc_shape flat_pointer={.size=8,.kind=MYL_RC_SHAPE_POINTER};
+static const myl_rc_shape flat_scalar={.size=8,.kind=MYL_RC_SHAPE_NONE};
+static const myl_native_type flat_array_type={.size=64,.alignment=8,.kind=MYL_NATIVE_ARRAY,.element=&pointer,.count=8,.stride=8};
+static const myl_rc_shape flat_array_shape={.size=64,.kind=MYL_RC_SHAPE_ARRAY,.as.array={.element=&flat_pointer,.count=8,.stride=8}};
+static const myl_native_type wide_array_type={.size=72,.alignment=8,.kind=MYL_NATIVE_ARRAY,.element=&pointer,.count=9,.stride=8};
+static const myl_rc_shape wide_array_shape={.size=72,.kind=MYL_RC_SHAPE_ARRAY,.as.array={.element=&flat_pointer,.count=9,.stride=8}};
+static unsigned flat_count(myl_native_heap *heap, const myl_native_type *type, const myl_rc_shape *shape) {
+    myl_rc_descriptor descriptor={.type=type,.shape=shape};
+    assert(myl_rc_descriptor_import(heap,&descriptor)==MYL_RC_OK);
+    return ((const myl_rc_binding *)myl_rc_descriptor_find(heap,type))->flat.count;
+}
+/* spec-case: RC-TRANSFER-1. Repeated aliases consume eight count units, not one;
+ * preflight refuses atomically and take preserves overlap/self staging. */
+static void flat_array_transactions(void) {
+    myl_native_heap heap;
+    init(&heap);
+    assert(flat_count(&heap,&flat_array_type,&flat_array_shape)==8);
+    assert(flat_count(&heap,&wide_array_type,&wide_array_shape)>8);
+    void *leaf=myl_rc_storage_bytes(&heap,8,0);
+    assert(leaf);
+    void *source[9]={0}, *target[8]={0};
+    for (unsigned i=0;i<8;i++) {
+        source[i]=leaf;
+        assert(myl_rc_owner_acquire(&heap,leaf)==MYL_RC_OK);
+    }
+    myl_rc_object *object=(myl_rc_object *)leaf-1;
+    object->owners=MYL_RC_COUNT_MAX-7;
+    memset(target,0xa5,sizeof target);
+    assert(!myl_rc_native_copy(&heap,&flat_array_type,target,source,0));
+    assert(myl_rc_take_failure(&heap)==MYL_RC_COUNT_LIMIT && object->owners==MYL_RC_COUNT_MAX-7);
+    for (unsigned i=0;i<8;i++) assert(source[i]==leaf && !target[i]);
+    object->owners=MYL_RC_COUNT_MAX-8;
+    size_t bytes=heap.bytes;
+    heap.limit=bytes;
+    assert(myl_rc_native_copy(&heap,&flat_array_type,target,source,0));
+    assert(object->owners==MYL_RC_COUNT_MAX && heap.bytes==bytes);
+    myl_rc_native_drop(&heap,&flat_array_type,target);
+    assert(object->owners==MYL_RC_COUNT_MAX-8);
+    object->owners=MYL_RC_COUNT_MAX;
+    assert(myl_rc_native_take(&heap,&flat_array_type,target,source,0));
+    assert(object->owners==MYL_RC_COUNT_MAX && heap.bytes==bytes);
+    for (unsigned i=0;i<8;i++) assert(!source[i] && target[i]==leaf);
+    object->owners=9;
+    assert(myl_rc_native_take(&heap,&flat_array_type,source,target,0));
+    assert(myl_rc_native_take(&heap,&flat_array_type,source,source,0));
+    assert(object->owners==9);
+    assert(myl_rc_native_take(&heap,&flat_array_type,source+1,source,0));
+    assert(!source[0] && object->owners==9);
+    for (unsigned i=1;i<9;i++) assert(source[i]==leaf);
+    myl_rc_native_drop(&heap,&flat_array_type,source+1);
+    assert(object->owners==1);
+    heap.limit=64u<<20;
+    source[0]=leaf;
+    for (unsigned i=1;i<8;i++) source[i]=leaf;
+    myl_rc_pin pin={0};
+    assert(myl_rc_pin_acquire(&heap,leaf,&pin)==MYL_RC_OK);
+    assert(myl_rc_native_copy(&heap,&flat_array_type,target,source,0));
+    assert(target[0]!=leaf && owners(target[0])==8 && owners(leaf)==1);
+    for (unsigned i=1;i<8;i++) assert(target[i]==target[0]);
+    myl_rc_pin_release(&heap,&pin);
+    myl_rc_native_drop(&heap,&flat_array_type,target);
+    void *wide[9]={0};
+    source[8]=leaf;
+    assert(myl_rc_native_copy(&heap,&wide_array_type,wide,source,0) && owners(leaf)==10);
+    myl_rc_native_drop(&heap,&wide_array_type,wide);
+    assert(owners(leaf)==1);
+    myl_rc_owner_release(&heap,leaf);
+    finish(&heap);
+}
+/* spec-case: RC-TRANSFER-1. Admission pairs full native fields with RC token
+ * kinds, excluding H/variants/raw resources even when GC tracing looks alike. */
+static void flat_record_admission(void) {
+    static const myl_native_type resource={.size=8,.kind=MYL_NATIVE_RESOURCE};
+    static const myl_native_field fields[]={{.offset=0,.type=&pointer},{.offset=8,.type=&number}};
+    static const myl_rc_field edges[]={{.offset=0,.shape=&flat_pointer},{.offset=8,.shape=&flat_scalar}};
+    static const myl_native_type record={.size=16,.kind=MYL_NATIVE_RECORD,.fields=fields,.field_count=2};
+    static const myl_rc_shape shape={.size=16,.kind=MYL_RC_SHAPE_RECORD,.as.record={.fields=edges,.count=2}};
+    static const myl_native_field unique_fields[]={{.offset=0,.type=&pointer},{.offset=8,.type=&resource}};
+    static const myl_native_type unique={.size=16,.kind=MYL_NATIVE_RECORD,.fields=unique_fields,.field_count=2};
+    static const myl_rc_shape held={.size=8,.kind=MYL_RC_SHAPE_HOLD_POINTER};
+    static const myl_rc_field held_edges[]={{.offset=0,.shape=&held},{.offset=8,.shape=&flat_scalar}};
+    static const myl_native_type view={.size=16,.kind=MYL_NATIVE_RECORD,.fields=fields,.field_count=2};
+    static const myl_rc_shape view_shape={.size=16,.kind=MYL_RC_SHAPE_RECORD,.as.record={.fields=held_edges,.count=2}};
+    static const myl_native_type variant={.size=16,.kind=MYL_NATIVE_VARIANT,.fields=fields,.field_count=2};
+    static const myl_rc_field cases[]={{.offset=8,.shape=&flat_pointer,.tag=1}};
+    static const myl_rc_shape variant_shape={.size=16,.kind=MYL_RC_SHAPE_VARIANT,.as.variant={.fields=cases,.count=1,.tag_offset=0}};
+    myl_native_heap heap;
+    init(&heap);
+    assert(flat_count(&heap,&record,&shape)==1);
+    assert(flat_count(&heap,&unique,&shape)>8);
+    assert(flat_count(&heap,&view,&view_shape)>8);
+    assert(flat_count(&heap,&variant,&variant_shape)>8);
+    struct { void *value; uint64_t number; } source={myl_rc_storage_bytes(&heap,8,0),12345}, target={0};
+    assert(source.value && myl_rc_native_copy(&heap,&record,&target,&source,0));
+    assert(source.value==target.value && target.number==12345 && owners(source.value)==2);
+    myl_rc_native_drop(&heap,&record,&target);
+    ((myl_rc_object *)source.value-1)->owners=MYL_RC_COUNT_MAX;
+    target.number=54321;
+    assert(!myl_rc_native_copy(&heap,&record,&target,&source,0));
+    assert(!target.value && !target.number && source.number==12345 && myl_rc_take_failure(&heap)==MYL_RC_COUNT_LIMIT);
+    ((myl_rc_object *)source.value-1)->owners=1;
+    assert(myl_native_region_begin(&heap));
+    myl_rc_native_drop(&heap,&record,&source);
+    source.value=myl_rc_storage_bytes(&heap,8,heap.region_depth);
+    source.number=67890;
+    assert(source.value && !myl_rc_native_copy(&heap,&record,&target,&source,0));
+    assert(!target.value && !target.number && source.number==67890 && myl_rc_take_failure(&heap)==MYL_RC_REGION_ERROR);
+    myl_native_region_end(&heap);
+    finish(&heap);
+}
 int myl_rc_collections_verify(void) {
     storage_reuse_and_holds();
     storage_boundaries();
@@ -806,12 +917,14 @@ int myl_rc_collections_verify(void) {
     pinned_dictionary_readers();
     arena_text_split_rollback();
     native_pointer_transactions();
-    return 23;
+    flat_array_transactions();
+    flat_record_admission();
+    return 25;
 }
 #ifndef MYL_RC_COLLECTIONS_LIBRARY
 int main(void) {
-    assert(myl_rc_collections_verify()==23);
-    puts("native RC collections: 23 passed");
+    assert(myl_rc_collections_verify()==25);
+    puts("native RC collections: 25 passed");
     return 0;
 }
 #endif
