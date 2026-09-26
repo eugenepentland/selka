@@ -51,7 +51,7 @@ fn returnSite(ctx: *const Context, transfer: Transfer) ?usize {
     for (transfer.copy + 2..code.len) |pc| {
         if (!straight(ctx, pc)) return null;
         if (writeback(ctx, transfer, pc)) return pc + 8;
-        if (observes(ctx, code[pc].op, transfer.source)) return null;
+        if (observes(ctx, pc, transfer)) return null;
     }
     return null;
 }
@@ -62,13 +62,19 @@ fn straight(ctx: *const Context, pc: usize) bool {
     return ctx.reachable(pc) and !ctx.flow.targets[pc] and sources.fallsThrough(op) and sources.branchTargets(op, &buffer).len == 0;
 }
 
-fn observes(ctx: *const Context, op: Op, root: u32) bool {
+fn observes(ctx: *const Context, pc: usize, transfer: Transfer) bool {
+    const code = ctx.instructions();
+    const op = code[pc].op;
+    if (localIs(op, .load_local, transfer.source) and pc + 1 < code.len) {
+        const next = code[pc + 1].op;
+        if (next == .get_field and next.get_field != transfer.field) return false;
+    }
     const local = switch (op) {
         .load_local, .ref_local, .move_local, .store_local, .drop_local => |slot| li(slot),
         .buffer_operation => |operation| li(operation.owner),
         else => return false,
     };
-    return ctx.rootOf(local) == root;
+    return ctx.rootOf(local) == transfer.source;
 }
 
 // Lowering preserves the RHS and parent in private temporaries before updating

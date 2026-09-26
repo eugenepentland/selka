@@ -9,6 +9,11 @@ record Owner:
     other: Box
 
 
+record CountOwner:
+    box: Box
+    count: int
+
+
 def push(box: mut Box):
     box.items.append(2)
 
@@ -58,6 +63,14 @@ def observe_alias(first: mut Owner, second: mut Owner) -> int:
     return seen
 
 
+def observe_sibling(owner: mut CountOwner) -> int:
+    work = owner.box
+    push(mut work)
+    seen = owner.count
+    owner.box = work
+    return seen
+
+
 # spec-case: COW-FIELD-RETURN-1
 public def test_field_return_preserves_existing_copies_and_sibling_values() -> bool:
     box = Box([1])
@@ -97,3 +110,10 @@ public def test_two_mut_parameters_can_observe_the_same_original_field() -> bool
     owner = Owner(Box([1]), Box([]))
     seen = observe_alias(mut owner, mut owner)
     return seen == 1 and owner.box.items == [1, 2] and owner.other.items == [9]
+
+
+# spec-case: COW-FIELD-RETURN-1
+public def test_a_sibling_scalar_field_stays_readable_during_mutation() -> bool:
+    owner = CountOwner(Box([1]), 7)
+    seen = observe_sibling(mut owner)
+    return seen == 7 and owner.box.items == [1, 2]
