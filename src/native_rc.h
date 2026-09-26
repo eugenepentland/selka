@@ -33,6 +33,7 @@ myl_rc_status myl_rc_take_failure(myl_native_heap *);
  * ignores every byte. Variant tags are u32 at tag_offset. All sizes/offsets
  * and array arithmetic are checked size_t values, with no source-depth cap. */
 typedef struct myl_rc_shape myl_rc_shape;
+typedef struct myl_rc_slot myl_rc_slot;
 typedef struct {
     size_t offset;
     const myl_rc_shape *shape;
@@ -68,6 +69,12 @@ typedef struct {
      * destination region. Fresh owned success; complete rollback on failure.
      * Without it a descriptor with no custom edges uses the generic body copy. */
     myl_rc_status (*clone)(myl_native_heap *, const void *, unsigned, void **);
+    /* Iterative clone protocol: shell owns private backing but initializes no
+     * logical value edges. next yields one empty destination/source slot pair
+     * without allocation or hashing, returning 1 for a pair and 0 at the end.
+     * A terminal shell with no remaining logical edges leaves next NULL. */
+    myl_rc_status (*shell)(myl_native_heap *, const void *, unsigned, void **);
+    int (*next)(myl_native_heap *, const void *, void *, size_t *, myl_rc_slot *, myl_rc_slot *);
 } myl_rc_descriptor;
 typedef struct {
     unsigned abi;
@@ -147,17 +154,23 @@ void myl_rc_pin_release(myl_native_heap *, myl_rc_pin *);
  * managed payloads. An adapter may call it repeatedly while no walk is active. */
 void myl_rc_edges_release(myl_native_heap *, const myl_rc_shape *, void *, size_t count);
 void myl_rc_drain(myl_native_heap *);
+/* Seed empty construction storage with scalar bytes/active tags, clearing all
+ * direct owners without releasing them. Source and destination are distinct. */
+void myl_rc_value_seed(myl_native_heap *, const myl_rc_shape *, void *, const void *, size_t);
+/* Abort one unpublished owned allocation. Arena payload edges are released
+ * immediately and zeroed so later region teardown cannot release them twice. */
+void myl_rc_construction_abort(myl_native_heap *, void *);
 
 /* Owned slots identify a complete initialized value. Construction registers
  * first, then tracks initialized fields/tags or a collection's live prefix;
  * an uncommitted child token stays in an explicit temporary. Empty slots have
  * zeroed ownership-bearing bytes and a valid inactive variant tag. container
  * is a borrowed authority/lifetime anchor, never an extra owner. */
-typedef struct {
+struct myl_rc_slot {
     const myl_rc_shape *shape;
     void *address, *container;
     unsigned region;
-} myl_rc_slot;
+};
 typedef enum { MYL_RC_COPY, MYL_RC_TAKE } myl_rc_transfer;
 /* Copy/take initialize an empty destination and both preserve snapshots across
  * pins (including a last ordinary owner taken from a pending receiver). Take
@@ -174,7 +187,7 @@ typedef struct myl_rc_scope {
     myl_native_heap *heap;
     struct myl_rc_scope *previous;
     void *journal;
-    unsigned active;
+    unsigned active, region;
 } myl_rc_scope;
 typedef struct { const myl_rc_shape *shape; size_t offset; } myl_rc_projection;
 typedef struct {

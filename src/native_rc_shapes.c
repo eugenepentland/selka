@@ -334,7 +334,7 @@ myl_rc_status myl_rc_descriptor_register(myl_native_heap *heap, const myl_rc_des
     myl_rc_invariant(shape && shape->size == descriptor->type->size);
     const myl_rc_descriptor *old = myl_rc_descriptor_find(heap, descriptor->type);
     if (old) {
-        myl_rc_invariant(old->shape == shape && old->edges == descriptor->edges && old->finalize == descriptor->finalize && old->clone == descriptor->clone);
+        myl_rc_invariant(old->shape == shape && old->edges == descriptor->edges && old->finalize == descriptor->finalize && old->clone == descriptor->clone && old->shell == descriptor->shell && old->next == descriptor->next);
         return MYL_RC_OK;
     }
     size_t bytes = sizeof(myl_rc_batch) + sizeof(myl_rc_descriptor);
@@ -362,7 +362,7 @@ myl_rc_status myl_rc_descriptor_import(myl_native_heap *heap, const myl_rc_descr
     myl_rc_invariant(descriptor->shape->size == descriptor->type->size);
     const myl_rc_descriptor *old = myl_rc_descriptor_find(heap, descriptor->type);
     if (old) {
-        myl_rc_invariant(old->edges == descriptor->edges && old->finalize == descriptor->finalize && old->clone == descriptor->clone);
+        myl_rc_invariant(old->edges == descriptor->edges && old->finalize == descriptor->finalize && old->clone == descriptor->clone && old->shell == descriptor->shell && old->next == descriptor->next);
         return MYL_RC_OK;
     }
     const myl_rc_module module = {.abi = MYL_RC_ABI_VERSION, .descriptors = descriptor, .descriptor_count = 1};

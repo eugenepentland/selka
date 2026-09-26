@@ -256,7 +256,7 @@ static uintptr_t entry_address(const int32_t *field) {
     return (uintptr_t)field + (uintptr_t)(intptr_t)*field;
 }
 static size_t raw_entry_count(void) {
-    if (!__start_mylang_frame_map || !__stop_mylang_frame_map || __stop_mylang_frame_map <= __start_mylang_frame_map) return 0;
+    if (!__start_mylang_frame_map || !__stop_mylang_frame_map || &__stop_mylang_frame_map[0] <= &__start_mylang_frame_map[0]) return 0;
     return (size_t)(__stop_mylang_frame_map - __start_mylang_frame_map) / 3;
 }
 /* The call site whose entries start at raw entry `index`, and how many there are. */
@@ -477,6 +477,13 @@ void myl_qbe_fail_list_value(void *context) { fail(context, "R_LIST_VALUE"); }
 /* A refused managed allocation names the budget when the heap declined it and
    the host only when the process itself could not produce the bytes. */
 void myl_qbe_fail_allocation(void *context) {
+#if defined(MYL_NATIVE_RC) && MYL_NATIVE_RC
+    Context *ctx = context;
+    if (ctx->heap.rc) {
+        myl_rc_status status = myl_rc_take_failure(&ctx->heap);
+        if (status != MYL_RC_OK) { (void)myl_qbe_rc_status(context, status); return; }
+    }
+#endif
     if (myl_native_cow_take_depth_failure()) { fail(context, "R_COW_DEPTH"); return; }
     fail(context, ((Context *)context)->heap.exhausted ? memory_budget_code : "OutOfMemory");
 }
@@ -615,10 +622,11 @@ uint64_t myl_qbe_int_binary(void *context, uint64_t op, uint64_t is_signed, uint
     switch (op) {
         case 0: result = a + b; break;
         case 1: result = a - b; break;
-        case 2: if (__builtin_mul_overflow(a, b, &result))
-            return fail_detail(context, "R_OVERFLOW", operation_name(op),
-                MYL_QBE_TRAP_PRESENT_LEFT | MYL_QBE_TRAP_PRESENT_RIGHT | MYL_QBE_TRAP_PRESENT_WIDTH | unsigned_bit(is_signed),
-                0, 0, (int64_t)a, (int64_t)b, width);
+        case 2:
+            if (__builtin_mul_overflow(a, b, &result))
+                return fail_detail(context, "R_OVERFLOW", operation_name(op),
+                    MYL_QBE_TRAP_PRESENT_LEFT | MYL_QBE_TRAP_PRESENT_RIGHT | MYL_QBE_TRAP_PRESENT_WIDTH | unsigned_bit(is_signed),
+                    0, 0, (int64_t)a, (int64_t)b, width);
             break;
         case 3: case 4: case 5: case 6: {
             if (!b) return fail_detail(context, "R_DIVISION_BY_ZERO", operation_name(op),
@@ -939,8 +947,11 @@ static int execute_config_args(uint64_t (*entry)(void *), uint64_t steps, uint64
     context->guest_argc=guest_argc;context->guest_argv=guest_argv;
     myl_native_heap_init(&context->heap, budget ? budget : SIZE_MAX);
     context->heap.stress = stress;
-    context->frame_data = calloc((size_t)capacity, sizeof(MylQbeActiveFrame));
-    if (!context->frame_data) context->trap = "OutOfMemory";
+#if defined(MYL_NATIVE_RC) && MYL_NATIVE_RC
+    (void)myl_qbe_rc_initialize(context);
+#endif
+    if (!context->trap) context->frame_data = calloc((size_t)capacity, sizeof(MylQbeActiveFrame));
+    if (!context->trap && !context->frame_data) context->trap = "OutOfMemory";
     /* QBE-FLOAT-ENV-1: verify the process floating-point environment exactly
        once, before any guest or host code runs. The per-operation checks are
        gone, so this is what preserves R_FLOAT_ENVIRONMENT for a process that
@@ -958,6 +969,7 @@ static int execute_config_args(uint64_t (*entry)(void *), uint64_t steps, uint64
     result->reported = context->reported;
     result->trap_detail = context->trap_detail;
     memcpy(result->trace, context->trace, sizeof result->trace);
+    if (context->adapter_cleanup) context->adapter_cleanup(context);
     if (context->cleanup) context->cleanup(context);
     /* Stand-ins go after the resources, whose handles they may still own. */
     if (context->stand_in_cleanup) context->stand_in_cleanup(context);
