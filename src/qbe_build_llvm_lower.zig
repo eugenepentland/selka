@@ -55,6 +55,7 @@ fn globals(e: *Emitter, out: *Lines) Error!void {
     const sorted = try e.arena.dupe([]const u8, names);
     std.mem.sort([]const u8, sorted, {}, lessString);
     for (sorted) |name| {
+        if (std.mem.eql(u8, name, e.unit.function.name)) continue;
         if (e.module.declarations.contains(name)) continue;
         if (try e.knownSignature(name)) |known| {
             try e.declare(name, known);

@@ -83,3 +83,24 @@ public def test_augmented_field_reads_the_field_before_the_right_side() -> bool:
 
 def main() -> int:
     return 0
+
+
+# spec-case: AUGMENTED-FIELD-1
+public def test_augmented_list_field_writeback_preserves_record_snapshot() -> bool:
+    c = new_counter()
+    before = c
+    c.items += [9, 8]
+    return c.items == [1, 9, 8] and before.items == [1]
+
+
+def replace_items(counter: mut FieldCounter) -> list[int]:
+    counter.items = [50]
+    counter.n = 7
+    return [2]
+
+
+# spec-case: AUGMENTED-FIELD-1
+public def test_augmented_list_field_reads_then_refreshes_other_fields() -> bool:
+    c = new_counter()
+    c.items += replace_items(mut c)
+    return c.items == [1, 2] and c.n == 7

@@ -1,0 +1,11 @@
+{
+  "compiler_sha256": "b9559aafbcc8d31ddb17f685268e0a1f27302e5c49cf85a07cef60d031f924a0",
+  "binary_sha256": "f1184dedb861deee451b461929f0728219599ee9393e4119c476017708dc0f1b",
+  "stdout": "217\n",
+  "stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v2-counting\",\"saturated\":false,\"owner_acquire\":0,\"owner_release\":0,\"hold_acquire\":0,\"hold_release\":0,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":0,\"arena_allocate\":0,\"retire\":0,\"clone_shell\":0,\"unique_check\":0}\n",
+  "backend": "llvm",
+  "llvm_opt": 3,
+  "lto": true,
+  "focused_tests": 12,
+  "golden_corpus_tests": 12
+}

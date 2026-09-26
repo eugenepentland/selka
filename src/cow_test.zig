@@ -599,3 +599,22 @@ test "copy on write: a unique mut-list element field returns without sharing" {
     try std.testing.expectEqual(@as(usize, 0), count(il, "call $myl_qbe_cow_transfer("));
     try std.testing.expect(count(negative, "call $myl_qbe_cow_transfer(") > 0);
 }
+
+// spec: COW-RECEIVER-ARGUMENT-1
+test "copy on write: receiver stays pinned across later argument callbacks" {
+    const saved = value_semantics.enabled();
+    value_semantics.setEnabled(true);
+    defer value_semantics.setEnabled(saved);
+    const source =
+        \\def save(rows: list[list[int]], saved: mut list[list[list[int]]]) -> int:
+        \\    saved.append(rows)
+        \\    return 2
+        \\def main() -> int:
+        \\    rows = [[1]]
+        \\    saved: list[list[list[int]]] = []
+        \\    rows[0].append(save(rows, mut saved))
+        \\    return len(rows[0]) * 10 + len(saved[0][0])
+    ;
+    try std.testing.expectEqual(@as(i64, 21), try run(std.testing.allocator, source, false));
+    try std.testing.expectEqual(@as(i64, 21), try run(std.testing.allocator, source, true));
+}

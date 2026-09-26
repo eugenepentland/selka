@@ -1,0 +1,88 @@
+# Pending receiver snapshots across later argument callbacks.
+
+def save_pending_rows(rows: list[list[int]], saved: mut list[list[list[int]]]) -> int:
+    saved.append(rows)
+    return 2
+
+# spec-case: COW-RECEIVER-ARGUMENT-1
+public def test_callback_snapshot_keeps_captured_receiver_independent() -> bool:
+    rows = [[1]]
+    saved: list[list[list[int]]] = []
+    rows[0].append(save_pending_rows(rows, mut saved))
+    return rows[0] == [1, 2] and saved[0][0] == [1]
+
+def main() -> int:
+    if test_callback_snapshot_keeps_captured_receiver_independent():
+        return 0
+    return 1
+
+
+# spec-case: COW-RECEIVER-ARGUMENT-1
+public def test_loop_receiver_scopes_restore_the_previous_pin_state() -> bool:
+    rows = [[1]]
+    saved: list[list[list[int]]] = []
+    for i in range(3):
+        rows[0].append(save_pending_rows(rows, mut saved))
+    return rows[0] == [1, 2, 2, 2] and saved[0][0] == [1] and saved[1][0] == [1, 2] and saved[2][0] == [1, 2, 2]
+
+
+def nested_argument(rows: mut list[list[int]], saved: mut list[list[list[int]]]) -> int:
+    rows[1].append(save_pending_rows(rows, mut saved))
+    return 3
+
+
+# spec-case: COW-RECEIVER-ARGUMENT-1
+public def test_nested_argument_scopes_preserve_both_receivers() -> bool:
+    rows = [[1], [8]]
+    saved: list[list[list[int]]] = []
+    rows[0].append(nested_argument(mut rows, mut saved))
+    return rows[0] == [1, 3] and rows[1] == [8, 2] and saved[0][0] == [1] and saved[0][1] == [8]
+
+
+def unavailable() -> Option[int]:
+    return None
+
+
+def abandoned(rows: mut list[list[int]]) -> Option[int]:
+    rows[0].append(unavailable()?)
+    return Some(1)
+
+
+# spec-case: COW-RECEIVER-ARGUMENT-1
+public def test_argument_propagation_releases_the_receiver_scope() -> bool:
+    rows = [[1]]
+    result = abandoned(mut rows)
+    before = rows
+    rows[0].append(3)
+    return result == None and before[0] == [1] and rows[0] == [1, 3]
+
+
+def save_entries(entries: dict[str, list[int]], saved: mut list[dict[str, list[int]]]) -> int:
+    saved.append(entries)
+    return 2
+
+
+# spec-case: COW-RECEIVER-ARGUMENT-1
+public def test_dictionary_receiver_survives_argument_snapshot() -> bool:
+    entries = {"k": [1]}
+    saved: list[dict[str, list[int]]] = []
+    entries["k"].append(save_entries(entries, mut saved))
+    return entries["k"] == [1, 2] and saved[0]["k"] == [1]
+
+
+record Node:
+    items: list[int]
+    next: Option[Node]
+
+
+def save_nodes(nodes: list[Node], saved: mut list[list[Node]]) -> int:
+    saved.append(nodes)
+    return 2
+
+
+# spec-case: COW-RECEIVER-ARGUMENT-1
+public def test_recursive_box_receiver_survives_argument_snapshot() -> bool:
+    nodes = [Node(items=[1], next=None)]
+    saved: list[list[Node]] = []
+    nodes[0].items.append(save_nodes(nodes, mut saved))
+    return nodes[0].items == [1, 2] and saved[0][0].items == [1]

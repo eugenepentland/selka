@@ -40,7 +40,7 @@ pub const Class = union(enum) {
 
 /// The runtime helpers whose C definition fixes the class of their result.
 fn helperClass(name: []const u8) ?Class {
-    if (std.mem.eql(u8, name, "myl_qbe_frame_allocate")) return .frame;
+    if (std.mem.eql(u8, name, "myl_qbe_frame_allocate") or std.mem.eql(u8, name, "myl_qbe_frame_try_allocate")) return .frame;
     if (std.mem.eql(u8, name, "myl_qbe_heap")) return .foreign;
     return null;
 }

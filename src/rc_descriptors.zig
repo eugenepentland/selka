@@ -64,14 +64,17 @@ fn less(_: void, a: Item, b: Item) bool {
 }
 
 fn emit(a: std.mem.Allocator, writer: *std.Io.Writer, catalog: *native.Catalog, item: Item, layout: native.Layout) Error!void {
-    const kind: []const u8 = switch (layout.kind) {
+    const live_view = @import("value_semantics.zig").isLiveView(catalog.records, item.ty);
+    if (live_view and (item.body or layout.size != 8)) return error.InvalidType;
+    const kind: []const u8 = if (live_view) "HOLD_POINTER" else switch (layout.kind) {
         .managed, .niche => "POINTER",
         .record, .domain => "RECORD",
         .array => "ARRAY",
         .variant => "VARIANT",
         .scalar, .handle, .pool_handle, .callable, .resource, .owned_buffer, .owned_pool => "NONE",
     };
-    const fields = layout.kind == .record or layout.kind == .domain or layout.kind == .variant;
+    const field_layout = layout.kind == .record or layout.kind == .domain or layout.kind == .variant;
+    const fields = !live_view and field_layout;
     if (fields and layout.fields.len != 0) {
         writer.print("static const myl_rc_field {s}_rc_fields[] = {{\n", .{item.name}) catch return error.OutOfMemory;
         for (layout.fields) |field| {
@@ -80,7 +83,7 @@ fn emit(a: std.mem.Allocator, writer: *std.Io.Writer, catalog: *native.Catalog, 
         writer.writeAll("};\n") catch return error.OutOfMemory;
     }
     writer.print("const myl_rc_shape {s}_rc = {{.size={d},.kind=MYL_RC_SHAPE_{s}", .{ item.name, layout.size, kind }) catch return error.OutOfMemory;
-    switch (layout.kind) {
+    if (!live_view) switch (layout.kind) {
         .record, .domain, .variant => {
             const member = if (layout.kind == .variant) "variant" else "record";
             const list = if (layout.fields.len == 0) "NULL" else try std.fmt.allocPrint(a, "{s}_rc_fields", .{item.name});
@@ -93,7 +96,7 @@ fn emit(a: std.mem.Allocator, writer: *std.Io.Writer, catalog: *native.Catalog, 
             writer.print(",.as.array={{.element=&{s},.count={d},.stride={d}}}", .{ try symbol(a, catalog, layout.fields[0].ty), layout.count, layout.stride }) catch return error.OutOfMemory;
         },
         else => {},
-    }
+    };
     writer.writeAll("};\n") catch return error.OutOfMemory;
 }
 

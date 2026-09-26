@@ -107,7 +107,7 @@ test "RC-OWNERSHIP-PLAN-1 mixed fresh provenance keeps canonical owned result" {
     var facts = try shapes.Catalog.init(t.allocator, &fixture.layouts);
     defer facts.deinit();
     const function = try namedFunction(fixture.compilation.code.?, "choose");
-    const contract = try calls.guest(fixture.arena.allocator(), &facts, function, "rc-v1");
+    const contract = try calls.guest(fixture.arena.allocator(), &facts, function, "rc-v2");
     try t.expect(function.signature.inferred.borrow_origin == .params);
     try t.expectEqualSlices(u16, &.{0}, function.signature.inferred.borrow_origin.params);
     try t.expect(contract.result == .owned);
@@ -138,7 +138,7 @@ test "RC-OWNERSHIP-PLAN-1 mut aggregates and mutable payloads keep distinct call
     var facts = try shapes.Catalog.init(t.allocator, &fixture.layouts);
     defer facts.deinit();
     const function = try namedFunction(fixture.compilation.code.?, "change");
-    const contract = try calls.guest(fixture.arena.allocator(), &facts, function, "rc-v1");
+    const contract = try calls.guest(fixture.arena.allocator(), &facts, function, "rc-v2");
     try t.expect(contract.result == .plain);
     try t.expectEqualSlices(model.Parameter, &.{ .caller_storage, .mutable_payload, .caller_storage }, contract.parameters);
 }
@@ -322,7 +322,7 @@ test "RC-OWNERSHIP-PLAN-1 move-only guest parameters preserve callee drop owners
     var facts = try shapes.Catalog.init(t.allocator, &fixture.layouts);
     defer facts.deinit();
     const function = try namedFunction(fixture.compilation.code.?, "consume");
-    const contract = try calls.guest(fixture.arena.allocator(), &facts, function, "rc-v1");
+    const contract = try calls.guest(fixture.arena.allocator(), &facts, function, "rc-v2");
     try t.expectEqualSlices(model.Parameter, &.{.consume_on_entry}, contract.parameters);
     try t.expect(contract.failure == .parameter_contracts);
 }
@@ -343,8 +343,8 @@ fn planInput(fixture: *ShapeFixture, facts: *shapes.Catalog, name: []const u8) !
         .code = .{ .program = program, .function = function, .states = ir.states },
         .flow = .{ .live = live, .ownership = analysis },
         .physical = .{ .catalog = facts, .locals = bindings },
-        .contracts = .{ .current = try calls.guest(a, facts, function, "rc-v1") },
-        .policy = .{ .abi = "rc-v1" },
+        .contracts = .{ .current = try calls.guest(a, facts, function, "rc-v2") },
+        .policy = .{ .abi = "rc-v2" },
     };
 }
 
@@ -426,7 +426,7 @@ test "RC-OWNERSHIP-PLAN-1 branch cleanup belongs to the actual unused successor 
     var input = try planInput(&fixture, &facts, "choose");
     const plan = try plans.build(fixture.arena.allocator(), input);
     try t.expect(falseEdgeDrops(input, plan, try localIndex(input, "values")));
-    input.policy.abi = "rc-v2";
+    input.policy.abi = "rc-v1";
     try t.expectError(error.AbiMismatch, plans.build(fixture.arena.allocator(), input));
 }
 
@@ -738,4 +738,46 @@ test "RC-OWNERSHIP-PLAN-1 semantic move from readonly parameter checks physical 
     try t.expect(std.mem.indexOf(u8, text, "=w loaduw") != null);
     try t.expect(std.mem.indexOf(u8, text, "@rccopy") != null);
     try t.expect(std.mem.indexOf(u8, text, "call $myl_rc_native_copy") != null);
+}
+
+// spec: RC-NARROWED-MUTATION-1
+test "RC-NARROWED-MUTATION-1 compiler Option receivers detach the source edge" {
+    const mode = @import("runtime_mode.zig");
+    const saved = mode.get();
+    defer mode.set(saved);
+    mode.set(.rc);
+    var result = try lowered(
+        \\def change(candidate: mut Option[list[int]]) -> int:
+        \\    if candidate is None:
+        \\        return 0
+        \\    candidate.append(2)
+        \\    return len(candidate)
+        \\def main() -> int:
+        \\    candidate: Option[list[int]] = Some([1])
+        \\    return change(mut candidate)
+    );
+    defer result.deinit();
+    const text = try functionText(result.value, "change");
+    try t.expect(std.mem.indexOf(u8, text, "call $myl_qbe_rc_unique_field") != null);
+    try t.expect(try at(text, "call $myl_qbe_rc_unique_field") < try at(text, "call $myl_rc_list_append"));
+}
+
+// spec-case: AUGMENTED-FIELD-1
+test "RC augmented list field publishes the captured extended value" {
+    const mode = @import("runtime_mode.zig");
+    const saved = mode.get();
+    defer mode.set(saved);
+    mode.set(.rc);
+    var result = try lowered(
+        \\record Row:
+        \\    items: list[int]
+        \\def main() -> int:
+        \\    row = Row(items=[1])
+        \\    row.items += [2]
+        \\    return len(row.items)
+    );
+    defer result.deinit();
+    const text = try functionText(result.value, "main");
+    try t.expect(std.mem.indexOf(u8, text, "call $myl_native_list_extend") != null);
+    try t.expect(std.mem.indexOf(u8, text, "call $myl_rc_native_take") != null);
 }

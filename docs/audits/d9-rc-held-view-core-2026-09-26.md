@@ -46,3 +46,15 @@ Validation completed on the edited runtime:
 This is runtime evidence, not a completed WP-4 performance or guest acceptance
 claim. The compiler still needs the explicit H construction/projection schedule
 before the live-view guest cases can validate the joined implementation.
+
+## Compiler artifact identity integration
+
+RC native manifests, generated objects, replay receipts and borrowed-return proofs
+now select `rc-v2` or `rc-v2-counting`, matching metadata ABI 2. The old `rc-v1`
+selectors are rejected; GC remains `gc-v1`. The counter JSON schema remains
+version 1, with its runtime field identifying version 2. The standalone native
+memory driver includes the six held-pointer production scenarios.
+
+Validation: runtime-version filter 12/12; cache/manifest/C-flags filter 15/15;
+CLI conflict/inheritance filter 2/2; native memory suite 23/23 build steps.
+These focused results are separate from the pending combined full gate.

@@ -89,7 +89,7 @@ pub fn emit(self: anytype, op: @FieldType(bytecode.Instruction, "op"), stack: []
             for (dispatch.arms, 0..) |arm, i| {
                 const matches = self.temp();
                 try self.print(" %v{d} =l ceql %v{d}, {d}\n jnz %v{d}, @arm{d}, @armnext{d}\n@arm{d}\n", .{ matches, tag, i, matches, matches, matches, matches });
-                try armPayload(@TypeOf(self), self, dispatch.ty, arm.slot, i, pointer);
+                try armPayload(@TypeOf(self), self, dispatch, arm.slot, i, pointer);
                 try self.print(" jmp @{s}{d}\n@armnext{d}\n", .{ self.labelPrefix(arm.target), arm.target, matches });
             }
             try self.print(" jmp @failure\n", .{});
@@ -658,7 +658,19 @@ fn storesReference(comptime E: type, self: E, ty: typed.Type, indices: []const u
     return false;
 }
 
-fn armPayload(comptime E: type, self: E, ty_value: typed.Type, slot_value: ?typed.LocalId, i: usize, pointer: usize) Error!void {
+/// Whether this local only borrows a payload for contract inspection.
+pub fn borrowedPayload(function: bytecode.Function, index: usize) bool {
+    for (function.scope.instructions) |instruction| {
+        if (instruction.op != .switch_variant or !instruction.op.switch_variant.borrowed) continue;
+        for (instruction.op.switch_variant.arms) |arm| if (arm.slot) |slot| {
+            if (@backingInt(slot) == index) return true;
+        };
+    }
+    return false;
+}
+
+fn armPayload(comptime E: type, self: E, dispatch: @FieldType(@FieldType(bytecode.Instruction, "op"), "switch_variant"), slot_value: ?typed.LocalId, i: usize, pointer: usize) Error!void {
+    const ty_value = dispatch.ty;
     if (slot_value) |slot| {
         // QBE-MATCHPROJ-1: a projected binding already names the payload where it
         // lives — `initializeStorage` stored that address once at entry — so the
@@ -667,10 +679,10 @@ fn armPayload(comptime E: type, self: E, ty_value: typed.Type, slot_value: ?type
         const ty = self.function.scope.locals[@backingInt(slot)].ty;
         const payload = try self.readValue(try self.address(pointer, (try self.layout(ty_value)).payload_offset), ty);
         if (self.isScalar(ty)) try self.print(" storel %v{d}, %l{d}\n", .{ payload, @backingInt(slot) }) else try self.print(" blit %v{d}, %l{d}, {d}\n", .{ payload, @backingInt(slot), (try self.layout(ty)).size });
-    } else if (self.program.records[ty_value.recordIndex()].shape.variants.?.cases[i].payload) |payload_ty| {
+    } else if (!dispatch.borrowed) if (self.program.records[ty_value.recordIndex()].shape.variants.?.cases[i].payload) |payload_ty| {
         if ((try self.layout(payload_ty)).drop) {
             const payload = try self.address(pointer, (try self.layout(ty_value)).payload_offset);
             try self.print(" call $myl_native_owned_drop(l %heap, l extern ${s}, l %v{d})\n", .{ try self.descriptor(payload_ty), payload });
         }
-    }
+    };
 }

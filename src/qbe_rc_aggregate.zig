@@ -21,6 +21,7 @@ pub fn handles(records: []const typed.Record, op: Op) bool {
 
 /// Handle aggregates only when this function has a live ownership journal.
 pub fn emit(comptime E: type, self: *E, op: Op, stack: []const typed.Type) Error!bool {
+    if (@import("qbe_rc_borrow.zig").active(E, self)) return false;
     if (frame.get(E, self) == null or !handles(self.program.records, op) or op == .replace_index) return false;
     switch (op) {
         .make_record => |record| try construct(E, self, record, stack.len),
@@ -67,6 +68,7 @@ fn initialize(comptime E: type, self: *E, field: Field) Error!void {
 }
 
 fn construct(comptime E: type, self: *E, record: @FieldType(Op, "make_record"), height: usize) Error!void {
+    if (try @import("qbe_rc_views.zig").construct(E, self, record, height)) return;
     const managed = self.program.records[record.ty.recordIndex()].isManagedRecord();
     const pointer = if (managed)
         try @import("qbe_alloc.zig").cell(*E, self, record.ty, self.states[self.pc].?)
@@ -149,6 +151,7 @@ fn replace(comptime E: type, self: *E, field: Field) Error!void {
 }
 
 fn updateValue(comptime E: type, self: *E, update: @FieldType(Op, "update_record"), height: usize) Error!void {
+    if (try @import("qbe_rc_views.zig").update(E, self, update, height)) return;
     const base = height - update.indices.len - 1;
     const pointer = try prepareBase(E, self, update.ty, base);
     const depth = if (self.program.records[update.ty.recordIndex()].isManagedRecord()) blk: {
@@ -170,7 +173,9 @@ fn dispatchValue(comptime E: type, self: *E, dispatch: @FieldType(Op, "switch_va
     for (dispatch.arms, 0..) |arm, i| {
         const matches = self.temp();
         try self.print(" %v{d} =l ceql %v{d}, {d}\n jnz %v{d}, @rcarm{d}, @rcarmnext{d}\n@rcarm{d}\n", .{ matches, tag, i, matches, matches, matches, matches });
-        if (arm.slot) |slot| {
+        if (arm.slot) |slot| if (dispatch.borrowed) {
+            try borrowPayload(E, self, dispatch.ty, pointer, @backingInt(slot));
+        } else if (!try @import("qbe_rc_narrowing.zig").bind(E, self, dispatch, @backingInt(slot))) {
             const index = @backingInt(slot);
             const ty = self.function.scope.locals[index].ty;
             const work = try values.workAddress(E, self);
@@ -180,11 +185,21 @@ fn dispatchValue(comptime E: type, self: *E, dispatch: @FieldType(Op, "switch_va
             try self.print(" blit %v{d}, %l{d}, {d}\n", .{ work, index, (try self.layout(ty)).size });
             try frame.initialized(E, self, frame.pending(E, self), false);
             try frame.initialized(E, self, index, try state.owns(frame.get(E, self).?, ty));
-        }
+        };
         try values.drop(E, self, height - 1);
         try self.print(" jmp @{s}{d}\n@rcarmnext{d}\n", .{ self.labelPrefix(arm.target), arm.target, matches });
     }
     try self.print(" jmp @failure\n", .{});
+}
+
+fn borrowPayload(comptime E: type, self: *E, parent: typed.Type, pointer: usize, index: usize) Error!void {
+    // Contract inspection leaves the complete result, including unique fields,
+    // in its hidden owner until the subsequent return or boundary cleanup.
+    const ty = self.function.scope.locals[index].ty;
+    const selected = try self.address(pointer, (try self.layout(parent)).payload_offset);
+    try frame.drop(E, self, index);
+    try self.print(" blit %v{d}, %l{d}, {d}\n", .{ selected, index, (try self.layout(ty)).size });
+    try frame.initialized(E, self, index, false);
 }
 
 /// One checked fixed-array update and the instruction's consumed operand range.

@@ -95,9 +95,9 @@ test "RC runtime contract separates persistent test results" {
     defer context.deinit();
     try environment.put("MYLANG_RUNTIME", "gc-v1");
     const gc = try capture(context);
-    try environment.put("MYLANG_RUNTIME", "rc-v1");
+    try environment.put("MYLANG_RUNTIME", "rc-v2");
     const rc = try capture(context);
     try std.testing.expect(!std.mem.eql(u8, gc.hash, rc.hash));
-    try environment.put("MYLANG_RUNTIME", "rc-v1-counting");
+    try environment.put("MYLANG_RUNTIME", "rc-v2-counting");
     try std.testing.expect(!std.mem.eql(u8, rc.hash, (try capture(context)).hash));
 }

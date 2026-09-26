@@ -1295,7 +1295,7 @@ int myl_rc_list_sort_keyed(myl_native_heap *heap, const myl_rc_sort_request *req
     if (ok && temporary) {
         if (request->values->length || request->values->capacity<temporary->length) ok=0;
         else {
-            memcpy(request->values->storage,temporary->storage,temporary->length*temporary->element->size);
+            if (temporary->length) memcpy(request->values->storage,temporary->storage,temporary->length*temporary->element->size);
             request->values->length=temporary->length;
             temporary->length=0;
         }

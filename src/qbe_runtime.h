@@ -220,6 +220,9 @@ int myl_qbe_rc_scope_hold(void *, myl_rc_scope *, void *payload);
 int myl_qbe_rc_scope_prepare(void *, myl_rc_scope *, const MylQbeRcPlace *);
 void myl_qbe_fail_missing_capability(void *, const char *flag);
 uint64_t myl_qbe_on_stack(uint64_t (*entry)(void *), MylQbeContext *);
+/* Admission must release consumed ABI arguments before raising an OOM trap. */
+void *myl_qbe_frame_try_allocate(void *, uint64_t bytes);
+void myl_qbe_fail_frame_allocation(void *);
 void *myl_qbe_frame_allocate(void *, uint64_t bytes);
 void myl_qbe_frame_release(void *, void *);
 void myl_qbe_enter_at_sized(void *, const MylQbeFunction *, uint64_t bytes);
