@@ -206,6 +206,22 @@ test "copy on write: a write through a dictionary value copies the dictionary an
     try std.testing.expect(count(il, "call $myl_native_cow_unique_in(") >= 1);
 }
 
+// spec-case: COW-NESTED-1
+test "copy on write: alternating collection owners keep both snapshots alive under GC stress" {
+    const saved = value_semantics.enabled();
+    value_semantics.setEnabled(true);
+    defer value_semantics.setEnabled(saved);
+    const source =
+        \\def main() -> int:
+        \\    original: list[dict[str, dict[str, list[int]]]] = [{"a": {"b": [1]}}]
+        \\    changed = original
+        \\    changed[0]["a"]["b"].append(2)
+        \\    return len(original[0]["a"]["b"]) * 10 + len(changed[0]["a"]["b"])
+    ;
+    try std.testing.expectEqual(@as(i64, 12), try run(std.testing.allocator, source, false));
+    try std.testing.expectEqual(@as(i64, 12), try run(std.testing.allocator, source, true));
+}
+
 const fields =
     \\record Bag:
     \\    items: list[int]

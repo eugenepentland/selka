@@ -226,7 +226,11 @@ arrays mark up to eight payloads inline; boxed, variant and larger values use
 a rooted runtime transfer, as does a pinned payload that must be cloned. A
 read-only argument is lent without a copy. Before a write, an inline check
 clones a shared payload and redirects the owning slot; nested writes repeat
-that step along their path. Checks proven stable across a loop are hoisted.
+that step along their path, including alternating list and dictionary
+lookups such as `changed[0]["items"][0].append(2)`. Every intermediate
+collection belongs to the changed value, so an earlier snapshot keeps its
+original contents. Receivers and keys still evaluate once in source order.
+Checks proven stable across a loop are hoisted.
 
 For internal measurements, `MYLANG_COW_COUNTING=1` together with
 `--value-semantics` builds a separately cached instrumented binary. At exit it
