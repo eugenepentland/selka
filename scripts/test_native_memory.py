@@ -62,6 +62,7 @@ def jobs():
 
 # Each C suite and the runtime sources it links.
 SUITES = (
+    ("native_rc_arena", ["native_heap.c"]),
     ("native_rc_stats", ["native_heap.c"]),
     ("native_rc_contract", ["native_rc.c", "native_rc_stats.c", "native_rc_shapes.c", "native_rc_walk.c", "native_rc_scope.c", "native_rc_transfer.c"]),
     ("native_rc_collections", ["native_heap.c", "native_text_methods.c", "native_print.c"]),
