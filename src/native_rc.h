@@ -160,6 +160,12 @@ void myl_rc_pin_release(myl_native_heap *, myl_rc_pin *);
 void myl_rc_edges_release(myl_native_heap *, const myl_rc_shape *, void *, size_t count);
 /* Read direct arena edges using the same reserved iterative shape stack. */
 unsigned myl_rc_value_region(myl_native_heap *, const myl_rc_shape *, const void *);
+/* Public ownership boundaries drain before returning to ordinary guest code.
+ * Guest reentry from a finalizer instead inherits the active outer drain: its
+ * queued siblings remain pending and nested drains do nothing. Direct-edge
+ * adapters cannot enter guest code. A proven pure token relocation therefore
+ * needs no drain; callers of internal enqueue-only helpers must drain before
+ * entering guest code outside an active finalizer. */
 void myl_rc_drain(myl_native_heap *);
 /* Seed empty construction storage with scalar bytes/active tags, clearing all
  * direct owners and holds without releasing them. Source and destination are distinct. */
