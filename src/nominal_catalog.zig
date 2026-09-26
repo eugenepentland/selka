@@ -214,6 +214,7 @@ const Builder = struct {
         try self.identify();
         try self.fill(first);
         try record_layouts.validate(self.context.allocator, self.catalog.records, self.context.sink);
+        try @import("view_cycles.zig").validate(self.context.allocator, self.catalog.*, self.context.sink);
     }
     fn runtimeType(self: Builder, id: layouts.Id) Error!typed.Type {
         return self.identities.items.items[@backingInt(id)].ty orelse error.InternalError;
@@ -414,6 +415,7 @@ pub fn collect(allocator: std.mem.Allocator, src: source.Source, program: ast.Pr
     while (resolved.next()) |entry| try catalog.arrays.resolved.put(allocator, entry.key_ptr.*, try builder.runtimeType(entry.value_ptr.*));
     try builder.fill(0);
     try record_layouts.validate(allocator, catalog.records, sink);
+    try @import("view_cycles.zig").validate(allocator, catalog, sink);
     return catalog;
 }
 
