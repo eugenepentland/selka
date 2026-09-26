@@ -1,0 +1,13 @@
+def descend(items: list[int], depth: int) -> list[int]:
+    if depth == 0:
+        return items
+    previous = descend(items, depth - 1)
+    assert len(previous) == len(items)
+    return previous
+
+def main() -> int:
+    source = [11, 22, 33]
+    result = descend(source, 32)
+    source = [44]
+    assert result[1] == 22
+    return 0

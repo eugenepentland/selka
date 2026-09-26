@@ -1,0 +1,497 @@
+{
+  "revision": "2b0ac238ac7558c57779774dbd8b664030c56a5e",
+  "compiler_mode": "Debug",
+  "compiler_sha256": "e563f826a84dbc693c7d377ceac18a1211126502f4012616f92d290708f84218",
+  "qbe_guest_mode": "Debug",
+  "llvm_guest_flags": [
+    "--release",
+    "--mode ReleaseFast",
+    "--llvm-opt 3",
+    "--lto"
+  ],
+  "runtime": "rc-v1-counting",
+  "source_sha256": {
+    "indirect.my": "07b6a2d55d20e37c26246150fb88b40ea50a110f87f0be578f18e452baabd947",
+    "mixed_loop.my": "507ae77b97c3cbbc1ea2a07b21ce410582f282485aa938351a1b333957b1687e",
+    "nested_trap.my": "ecd9b04b81f5763797699eba2c8882f10872645fd6cafb41971c461bea5d919a",
+    "recursive.my": "d5b286b4e36fbb1b79ef4f5f907b4afed689052aec3848273d8376f88154acf7",
+    "short_circuit.my": "60163fb70722942ff4b786234413360ae1e11f1f1aee4042774ed9792dbb2205",
+    "trap.my": "a576cae73480e326b418bd924ffadeecd8de1b62920e77267b7365be71389e98"
+  },
+  "executions": [
+    {
+      "case": "indirect",
+      "backend": "qbe",
+      "build_status": 0,
+      "build_stderr": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/indirect.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/indirect-qbe",
+        "--rc-runtime=stats",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/cache"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v1-counting\",\"saturated\":false,\"owner_acquire\":4,\"owner_release\":8,\"hold_acquire\":0,\"hold_release\":0,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":4,\"arena_allocate\":0,\"retire\":4,\"clone_shell\":0,\"unique_check\":0}\n",
+      "binary_sha256": "a12000bc9c5422520e74f0386cce5a0c480611676b18b0e1f23e5d825db7755c",
+      "counts": [
+        {
+          "version": 1,
+          "runtime": "rc-v1-counting",
+          "saturated": false,
+          "owner_acquire": 4,
+          "owner_release": 8,
+          "hold_acquire": 0,
+          "hold_release": 0,
+          "owner_limit": 0,
+          "hold_limit": 0,
+          "heap_allocate": 4,
+          "arena_allocate": 0,
+          "retire": 4,
+          "clone_shell": 0,
+          "unique_check": 0
+        }
+      ],
+      "ok": true
+    },
+    {
+      "case": "indirect",
+      "backend": "llvm",
+      "build_status": 0,
+      "build_stderr": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/indirect.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/indirect-llvm",
+        "--rc-runtime=stats",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/cache",
+        "--release"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v1-counting\",\"saturated\":false,\"owner_acquire\":4,\"owner_release\":8,\"hold_acquire\":0,\"hold_release\":0,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":4,\"arena_allocate\":0,\"retire\":4,\"clone_shell\":0,\"unique_check\":0}\n",
+      "binary_sha256": "06b4be2d668c62a301a40a6046528a1cff8905b905e8c8a9b94374feb40e90a4",
+      "counts": [
+        {
+          "version": 1,
+          "runtime": "rc-v1-counting",
+          "saturated": false,
+          "owner_acquire": 4,
+          "owner_release": 8,
+          "hold_acquire": 0,
+          "hold_release": 0,
+          "owner_limit": 0,
+          "hold_limit": 0,
+          "heap_allocate": 4,
+          "arena_allocate": 0,
+          "retire": 4,
+          "clone_shell": 0,
+          "unique_check": 0
+        }
+      ],
+      "ok": true
+    },
+    {
+      "case": "mixed_loop",
+      "backend": "qbe",
+      "build_status": 0,
+      "build_stderr": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/mixed_loop.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/mixed_loop-qbe",
+        "--rc-runtime=stats",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/cache"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v1-counting\",\"saturated\":false,\"owner_acquire\":2004,\"owner_release\":3010,\"hold_acquire\":0,\"hold_release\":0,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":1006,\"arena_allocate\":0,\"retire\":1006,\"clone_shell\":0,\"unique_check\":0}\n",
+      "binary_sha256": "8a555e88caeb706adaeac7799ad2b8fe4a17f1a723825710df77dbaeeab95d1e",
+      "counts": [
+        {
+          "version": 1,
+          "runtime": "rc-v1-counting",
+          "saturated": false,
+          "owner_acquire": 2004,
+          "owner_release": 3010,
+          "hold_acquire": 0,
+          "hold_release": 0,
+          "owner_limit": 0,
+          "hold_limit": 0,
+          "heap_allocate": 1006,
+          "arena_allocate": 0,
+          "retire": 1006,
+          "clone_shell": 0,
+          "unique_check": 0
+        }
+      ],
+      "ok": true
+    },
+    {
+      "case": "mixed_loop",
+      "backend": "llvm",
+      "build_status": 0,
+      "build_stderr": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/mixed_loop.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/mixed_loop-llvm",
+        "--rc-runtime=stats",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/cache",
+        "--release"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v1-counting\",\"saturated\":false,\"owner_acquire\":2004,\"owner_release\":3010,\"hold_acquire\":0,\"hold_release\":0,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":1006,\"arena_allocate\":0,\"retire\":1006,\"clone_shell\":0,\"unique_check\":0}\n",
+      "binary_sha256": "4fea2089458e2fe50026e86b2cd7a2b761e53aeda196f08f4132e78e096548f8",
+      "counts": [
+        {
+          "version": 1,
+          "runtime": "rc-v1-counting",
+          "saturated": false,
+          "owner_acquire": 2004,
+          "owner_release": 3010,
+          "hold_acquire": 0,
+          "hold_release": 0,
+          "owner_limit": 0,
+          "hold_limit": 0,
+          "heap_allocate": 1006,
+          "arena_allocate": 0,
+          "retire": 1006,
+          "clone_shell": 0,
+          "unique_check": 0
+        }
+      ],
+      "ok": true
+    },
+    {
+      "case": "short_circuit",
+      "backend": "qbe",
+      "build_status": 0,
+      "build_stderr": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/short_circuit.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/short_circuit-qbe",
+        "--rc-runtime=stats",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/cache"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v1-counting\",\"saturated\":false,\"owner_acquire\":5,\"owner_release\":11,\"hold_acquire\":0,\"hold_release\":0,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":6,\"arena_allocate\":0,\"retire\":6,\"clone_shell\":0,\"unique_check\":0}\n",
+      "binary_sha256": "450432684f57253d4ca2ec479002ea6d97d49fc34b7db3489a2efab24c51afb5",
+      "counts": [
+        {
+          "version": 1,
+          "runtime": "rc-v1-counting",
+          "saturated": false,
+          "owner_acquire": 5,
+          "owner_release": 11,
+          "hold_acquire": 0,
+          "hold_release": 0,
+          "owner_limit": 0,
+          "hold_limit": 0,
+          "heap_allocate": 6,
+          "arena_allocate": 0,
+          "retire": 6,
+          "clone_shell": 0,
+          "unique_check": 0
+        }
+      ],
+      "ok": true
+    },
+    {
+      "case": "short_circuit",
+      "backend": "llvm",
+      "build_status": 0,
+      "build_stderr": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/short_circuit.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/short_circuit-llvm",
+        "--rc-runtime=stats",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/cache",
+        "--release"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v1-counting\",\"saturated\":false,\"owner_acquire\":5,\"owner_release\":11,\"hold_acquire\":0,\"hold_release\":0,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":6,\"arena_allocate\":0,\"retire\":6,\"clone_shell\":0,\"unique_check\":0}\n",
+      "binary_sha256": "f7e0213695d14f93ea1ca2695b33c01871e9fb1e6c914d0985584ae4e29a4593",
+      "counts": [
+        {
+          "version": 1,
+          "runtime": "rc-v1-counting",
+          "saturated": false,
+          "owner_acquire": 5,
+          "owner_release": 11,
+          "hold_acquire": 0,
+          "hold_release": 0,
+          "owner_limit": 0,
+          "hold_limit": 0,
+          "heap_allocate": 6,
+          "arena_allocate": 0,
+          "retire": 6,
+          "clone_shell": 0,
+          "unique_check": 0
+        }
+      ],
+      "ok": true
+    },
+    {
+      "case": "trap",
+      "backend": "qbe",
+      "build_status": 0,
+      "build_stderr": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/trap.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/trap-qbe",
+        "--rc-runtime=stats",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/cache"
+      ],
+      "exit": 1,
+      "stdout": "",
+      "stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v1-counting\",\"saturated\":false,\"owner_acquire\":5,\"owner_release\":9,\"hold_acquire\":0,\"hold_release\":0,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":4,\"arena_allocate\":0,\"retire\":4,\"clone_shell\":0,\"unique_check\":0}\n/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/trap.my:4:12: error[R_ASSERT]: native execution failed: intentional RC cleanup probe\n  in fail at /home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/trap.my:4:12\n  in main at /home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/trap.my:9:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"intentional RC cleanup probe\"}\n",
+      "binary_sha256": "04f8942a9977311135c1601b7ab465d25c2793a5cd4e3c1a5be1ed63fcd95335",
+      "counts": [
+        {
+          "version": 1,
+          "runtime": "rc-v1-counting",
+          "saturated": false,
+          "owner_acquire": 5,
+          "owner_release": 9,
+          "hold_acquire": 0,
+          "hold_release": 0,
+          "owner_limit": 0,
+          "hold_limit": 0,
+          "heap_allocate": 4,
+          "arena_allocate": 0,
+          "retire": 4,
+          "clone_shell": 0,
+          "unique_check": 0
+        }
+      ],
+      "ok": true
+    },
+    {
+      "case": "trap",
+      "backend": "llvm",
+      "build_status": 0,
+      "build_stderr": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/trap.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/trap-llvm",
+        "--rc-runtime=stats",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/cache",
+        "--release"
+      ],
+      "exit": 1,
+      "stdout": "",
+      "stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v1-counting\",\"saturated\":false,\"owner_acquire\":5,\"owner_release\":9,\"hold_acquire\":0,\"hold_release\":0,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":4,\"arena_allocate\":0,\"retire\":4,\"clone_shell\":0,\"unique_check\":0}\n/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/trap.my:4:12: error[R_ASSERT]: native execution failed: intentional RC cleanup probe\n  in fail at /home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/trap.my:4:12\n  in main at /home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/trap.my:9:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"intentional RC cleanup probe\"}\n",
+      "binary_sha256": "4d92ff71eccf93de3fb3d78b8a7bafe6f4a9c5cb70655b4d2d3202855a172b4a",
+      "counts": [
+        {
+          "version": 1,
+          "runtime": "rc-v1-counting",
+          "saturated": false,
+          "owner_acquire": 5,
+          "owner_release": 9,
+          "hold_acquire": 0,
+          "hold_release": 0,
+          "owner_limit": 0,
+          "hold_limit": 0,
+          "heap_allocate": 4,
+          "arena_allocate": 0,
+          "retire": 4,
+          "clone_shell": 0,
+          "unique_check": 0
+        }
+      ],
+      "ok": true
+    },
+    {
+      "case": "recursive",
+      "backend": "qbe",
+      "build_status": 0,
+      "build_stderr": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/recursive.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/recursive-qbe",
+        "--rc-runtime=stats",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/cache"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v1-counting\",\"saturated\":false,\"owner_acquire\":100,\"owner_release\":104,\"hold_acquire\":0,\"hold_release\":0,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":4,\"arena_allocate\":0,\"retire\":4,\"clone_shell\":0,\"unique_check\":0}\n",
+      "binary_sha256": "d0ebc425794d6e3409781deb4619a8d9fa1a5af0a64b1cf287a805c543bc5cb5",
+      "counts": [
+        {
+          "version": 1,
+          "runtime": "rc-v1-counting",
+          "saturated": false,
+          "owner_acquire": 100,
+          "owner_release": 104,
+          "hold_acquire": 0,
+          "hold_release": 0,
+          "owner_limit": 0,
+          "hold_limit": 0,
+          "heap_allocate": 4,
+          "arena_allocate": 0,
+          "retire": 4,
+          "clone_shell": 0,
+          "unique_check": 0
+        }
+      ],
+      "ok": true
+    },
+    {
+      "case": "recursive",
+      "backend": "llvm",
+      "build_status": 0,
+      "build_stderr": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/recursive.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/recursive-llvm",
+        "--rc-runtime=stats",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/cache",
+        "--release"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v1-counting\",\"saturated\":false,\"owner_acquire\":100,\"owner_release\":104,\"hold_acquire\":0,\"hold_release\":0,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":4,\"arena_allocate\":0,\"retire\":4,\"clone_shell\":0,\"unique_check\":0}\n",
+      "binary_sha256": "19f143d9e24dc6812f223a51c7bb1322c6668688005aa6798c38517b0d524d76",
+      "counts": [
+        {
+          "version": 1,
+          "runtime": "rc-v1-counting",
+          "saturated": false,
+          "owner_acquire": 100,
+          "owner_release": 104,
+          "hold_acquire": 0,
+          "hold_release": 0,
+          "owner_limit": 0,
+          "hold_limit": 0,
+          "heap_allocate": 4,
+          "arena_allocate": 0,
+          "retire": 4,
+          "clone_shell": 0,
+          "unique_check": 0
+        }
+      ],
+      "ok": true
+    },
+    {
+      "case": "nested_trap",
+      "backend": "qbe",
+      "build_status": 0,
+      "build_stderr": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/nested_trap.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/nested_trap-qbe",
+        "--rc-runtime=stats",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/cache"
+      ],
+      "exit": 1,
+      "stdout": "",
+      "stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v1-counting\",\"saturated\":false,\"owner_acquire\":35,\"owner_release\":103,\"hold_acquire\":0,\"hold_release\":0,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":68,\"arena_allocate\":0,\"retire\":68,\"clone_shell\":0,\"unique_check\":0}\n/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/nested_trap.my:4:16: error[R_ASSERT]: native execution failed: intentional nested RC cleanup probe\n  in descend at /home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/nested_trap.my:4:16\n  in descend at /home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/nested_trap.my:6:16\n  in descend at /home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/nested_trap.my:6:16\n  in descend at /home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/nested_trap.my:6:16\n  in descend at /home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/nested_trap.my:6:16\n  in descend at /home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/nested_trap.my:6:16\n  in descend at /home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/nested_trap.my:6:16\n  in descend at /home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/nested_trap.my:6:16\n  in descend at /home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/nested_trap.my:6:16\n  in descend at /home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/nested_trap.my:6:16\n  in descend at /home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/nested_trap.my:6:16\n  in descend at /home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/nested_trap.my:6:16\n  in descend at /home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/nested_trap.my:6:16\n  in descend at /home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/nested_trap.my:6:16\n  in descend at /home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/nested_trap.my:6:16\n  in descend at /home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/nested_trap.my:6:16\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"intentional nested RC cleanup probe\"}\n",
+      "binary_sha256": "4988d3009f16b6f5746865ec77139fb8a1e120a5237ca901af6b0dc733bd1683",
+      "counts": [
+        {
+          "version": 1,
+          "runtime": "rc-v1-counting",
+          "saturated": false,
+          "owner_acquire": 35,
+          "owner_release": 103,
+          "hold_acquire": 0,
+          "hold_release": 0,
+          "owner_limit": 0,
+          "hold_limit": 0,
+          "heap_allocate": 68,
+          "arena_allocate": 0,
+          "retire": 68,
+          "clone_shell": 0,
+          "unique_check": 0
+        }
+      ],
+      "ok": true
+    },
+    {
+      "case": "nested_trap",
+      "backend": "llvm",
+      "build_status": 0,
+      "build_stderr": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/nested_trap.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/nested_trap-llvm",
+        "--rc-runtime=stats",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/cache",
+        "--release"
+      ],
+      "exit": 1,
+      "stdout": "",
+      "stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v1-counting\",\"saturated\":false,\"owner_acquire\":35,\"owner_release\":103,\"hold_acquire\":0,\"hold_release\":0,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":68,\"arena_allocate\":0,\"retire\":68,\"clone_shell\":0,\"unique_check\":0}\n/home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/nested_trap.my:4:16: error[R_ASSERT]: native execution failed: intentional nested RC cleanup probe\n  in descend at /home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/nested_trap.my:4:16\n  in descend at /home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/nested_trap.my:6:16\n  in descend at /home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/nested_trap.my:6:16\n  in descend at /home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/nested_trap.my:6:16\n  in descend at /home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/nested_trap.my:6:16\n  in descend at /home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/nested_trap.my:6:16\n  in descend at /home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/nested_trap.my:6:16\n  in descend at /home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/nested_trap.my:6:16\n  in descend at /home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/nested_trap.my:6:16\n  in descend at /home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/nested_trap.my:6:16\n  in descend at /home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/nested_trap.my:6:16\n  in descend at /home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/nested_trap.my:6:16\n  in descend at /home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/nested_trap.my:6:16\n  in descend at /home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/nested_trap.my:6:16\n  in descend at /home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/nested_trap.my:6:16\n  in descend at /home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes/.tmp-probes/guests/nested_trap.my:6:16\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"intentional nested RC cleanup probe\"}\n",
+      "binary_sha256": "a0a8da3f6d3aafec02c4ec10f6451093d2af51ff80e04dcf634b25ca225551c7",
+      "counts": [
+        {
+          "version": 1,
+          "runtime": "rc-v1-counting",
+          "saturated": false,
+          "owner_acquire": 35,
+          "owner_release": 103,
+          "hold_acquire": 0,
+          "hold_release": 0,
+          "owner_limit": 0,
+          "hold_limit": 0,
+          "heap_allocate": 68,
+          "arena_allocate": 0,
+          "retire": 68,
+          "clone_shell": 0,
+          "unique_check": 0
+        }
+      ],
+      "ok": true
+    }
+  ]
+}
