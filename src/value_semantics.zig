@@ -136,7 +136,7 @@ fn copiesAllDepth(records: []const typed.Record, ty: typed.Type, path: *[1024]us
         return copiesAllDepth(records, record.shape.buffer orelse return true, path, depth + 1);
     }
     if (record.contract.callback != null) return true;
-    if (record.shape.resource != null) return false;
+    if (record.shape.resource != null or liveView(record)) return false;
     if (record.shape.domain) |backing| return copiesAllDepth(records, backing, path, depth + 1);
     if (record.shape.array) |array| return copiesAllDepth(records, array.element, path, depth + 1);
     if (record.shape.variants) |variants| {
@@ -156,6 +156,19 @@ pub fn isLiveView(records: []const typed.Record, ty: typed.Type) bool {
 /// Whether `ty` is a `class` or Cell: a shared reference, never copied.
 pub fn sharedRecord(records: []const typed.Record, ty: typed.Type) bool {
     return ty.isAggregate() and ty.recordIndex() < records.len and records[ty.recordIndex()].isManagedRecord();
+}
+
+/// Whether reading a field crosses externally held identity, even on the
+/// last read of the aggregate that exposes it.
+pub fn sharedFields(records: []const typed.Record, ty: typed.Type) bool {
+    return sharedRecord(records, ty) or isLiveView(records, ty);
+}
+
+/// Whether a value can contain a live dictionary view, including through
+/// recursive boxes, containers and inline aggregates. Exhausted proof bounds
+/// conservatively answer yes. This does not make the view itself a snapshot.
+pub fn containsLiveView(records: []const typed.Record, ty: typed.Type) bool {
+    return @import("value_semantics_views.zig").contains(records, ty);
 }
 
 /// A `DictKeys`, `DictValues` or `DictItems` projection record.
@@ -261,9 +274,9 @@ pub const Facts = struct {
         const node = self.program.nodes[@backingInt(id)];
         return switch (node.data) {
             .local => .place,
-            // A field of a `class` object or Cell is shared storage, whoever
+            // A field of a `class`, Cell or live view is shared storage, whoever
             // produced the object.
-            .field => |field| if (sharedRecord(self.program.records, self.program.nodes[@backingInt(field.base)].ty)) .place else self.classify(field.base, null),
+            .field => |field| if (sharedFields(self.program.records, self.program.nodes[@backingInt(field.base)].ty)) .place else self.classify(field.base, null),
             .index => |access| self.classify(access.base, null),
             .block_value => |block| self.classify(block.value, target),
             .propagate => |propagate| self.classify(propagate.value, null),

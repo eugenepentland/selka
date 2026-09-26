@@ -53,6 +53,7 @@ fn readArm(ctx: *const Context, pc: usize, payload: u32, start: usize) ?Arm {
     if (ctx.flow.targets[start + 1] or ctx.flow.targets[start + 2]) return null;
     const ty = ctx.locals.list[payload].ty;
     if (!ty.isAggregate()) return null;
+    if (values.containsLiveView(ctx.code.program.records, ty)) return null;
     if (ctx.record(ty).managed or !ctx.record(ty).isRecord()) return null;
     return .{ .owner = owner, .index = index, .payload = payload, .start = start + 3 };
 }
