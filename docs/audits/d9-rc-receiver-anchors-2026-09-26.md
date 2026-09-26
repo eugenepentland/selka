@@ -34,3 +34,10 @@ LLVM commands omit `--qbe`, which otherwise overrides the preceding backend
 selection. Raw reproducer, before failures, commands and results are in
 [compressed evidence](evidence/d9-rc-receiver-anchors.json.gz). Integration owns
 the combined full gate.
+
+The mandated `parity/suite/knucleotide` workload also passes `pc.check` on both
+actual backends after this fix. Its output SHA256 is
+`85ef61714a76ad7ce4c0b54cc49ec081c54c2966978de102da6a53e2d208c0bb`.
+Both count 7,000,284 heap allocations/retirements, 9,283,306 owner acquisitions,
+16,283,590 owner releases and 27,999,838 balanced holds, with no clones. Exact
+commands and checks are in [evidence](evidence/d9-rc-knucleotide-anchors.json).

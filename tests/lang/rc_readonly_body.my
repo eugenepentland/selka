@@ -1,0 +1,44 @@
+record Link:
+    next: Option[Link]
+
+
+def length(node: Link) -> int:
+    tail = node.next
+    if tail is None:
+        return 1
+    return 1 + length(tail)
+
+
+def list_sum(values: list[int]) -> int:
+    total = 0
+    for index in range(len(values)):
+        total += values[index]
+    return total
+
+
+# spec-case: RC-READONLY-BODY-1
+public def test_recursive_reader_preserves_caller_snapshot() -> bool:
+    node = Link(None)
+    for index in range(128):
+        node = Link(Some(node))
+    before = node
+    total = 0
+    for index in range(8):
+        total += length(node)
+    node = Link(None)
+    return total == 1032 and length(before) == 129 and length(node) == 1
+
+
+# spec-case: RC-READONLY-BODY-1
+public def test_loop_reader_leaves_collection_available_for_later_mutation() -> bool:
+    values = [1, 2, 3]
+    before = values
+    first = list_sum(values)
+    values.append(4)
+    return first == 6 and list_sum(values) == 10 and list_sum(before) == 6
+
+
+def main() -> int:
+    assert test_recursive_reader_preserves_caller_snapshot()
+    assert test_loop_reader_leaves_collection_available_for_later_mutation()
+    return 0

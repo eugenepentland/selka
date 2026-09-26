@@ -1,6 +1,7 @@
 #include "native_rc_internal.h"
 #include <string.h>
 
+#define LOCAL_TRANSFER_FRAMES 8
 typedef struct {
     const myl_rc_shape *shape;
     unsigned char *destination;
@@ -249,6 +250,9 @@ static myl_rc_status commit_take(transfer_walk *walk, unsigned char *destination
     if (old != fresh) transfer_release(walk->heap, old, kind);
     return MYL_RC_OK;
 }
+/* Every operation starts with eight uninitialized automatic frames. Only
+ * deeper shapes own charged heap storage; capacity distinguishes the two.
+ * There is no maximum depth, and callbacks retain independent frame storage. */
 static myl_rc_status prepare_frames(transfer_walk *walk, const myl_rc_shape *shape) {
     size_t needed = myl_rc_shape_depth(walk->heap, shape), bytes;
     if (needed <= 1 || needed <= walk->capacity) return MYL_RC_OK;
@@ -256,7 +260,8 @@ static myl_rc_status prepare_frames(transfer_walk *walk, const myl_rc_shape *sha
     myl_rc_invariant(myl_rc_size_mul(needed, sizeof(transfer_frame), &bytes));
     transfer_frame *frames = myl_rc_meta_alloc(walk->heap, bytes);
     if (!frames) return MYL_RC_ALLOCATION_REFUSED;
-    myl_rc_meta_free(walk->heap, walk->frames, walk->capacity * sizeof *frames);
+    if (walk->capacity > LOCAL_TRANSFER_FRAMES)
+        myl_rc_meta_free(walk->heap, walk->frames, walk->capacity * sizeof *frames);
     walk->frames = frames;
     walk->capacity = needed;
     return MYL_RC_OK;
@@ -301,12 +306,15 @@ static void dispose_walk(transfer_walk *walk, int failed) {
     myl_rc_meta_free(walk->heap, work->arenas, work->arena_capacity * sizeof *work->arenas);
     myl_rc_meta_free(walk->heap, work->memo.entries, work->memo.capacity * sizeof(clone_memo));
     myl_rc_meta_free(walk->heap, work->items, work->capacity * sizeof *work->items);
-    myl_rc_meta_free(walk->heap, walk->frames, walk->capacity * sizeof *walk->frames);
+    if (walk->capacity > LOCAL_TRANSFER_FRAMES)
+        myl_rc_meta_free(walk->heap, walk->frames, walk->capacity * sizeof *walk->frames);
     myl_rc_drain(walk->heap);
 }
 static myl_rc_status clone_payload(myl_native_heap *heap, const void *payload, unsigned region, void **out) {
     clone_work work = {0};
-    transfer_walk walk = {.heap = heap, .clones = &work, .region = region, .mode = MYL_RC_COPY};
+    transfer_frame local[LOCAL_TRANSFER_FRAMES];
+    transfer_walk walk = {.heap = heap, .frames = local, .capacity = LOCAL_TRANSFER_FRAMES,
+        .clones = &work, .region = region, .mode = MYL_RC_COPY};
     void *copy = NULL;
     myl_rc_status status = schedule_clone(&walk, payload, region, &copy);
     if (status == MYL_RC_OK) status = finish_clones(&walk);
@@ -315,6 +323,36 @@ static myl_rc_status clone_payload(myl_native_heap *heap, const void *payload, u
     *out = status == MYL_RC_OK ? copy : NULL;
     return status;
 }
+/* A single unpinned edge cannot create a clone journal or partially acquired
+ * aggregate. Validate before publishing; only pinned/escaping values need the
+ * general transaction. The negative result is private, never a runtime status. */
+static int pointer_fast(myl_native_heap *heap, void *destination, void *source,
+                        unsigned region, myl_rc_transfer mode) {
+    myl_rc_invariant(heap && heap->rc && destination && source && destination != source);
+    if (region > heap->region_depth) return MYL_RC_REGION_ERROR;
+    myl_rc_status status = MYL_RC_OK;
+    void *payload;
+    memcpy(&payload, source, sizeof payload);
+    if (payload) {
+        myl_native_object *common = (myl_native_object *)payload - 1;
+        uintptr_t mark = common->mark;
+        if (!(mark & MYL_NATIVE_OBJECT_IMMORTAL)) {
+            unsigned origin = mark & MYL_NATIVE_OBJECT_ARENA ? myl_native_header_region(payload) : 0;
+            if (origin > region) return -1;
+            if (mark & MYL_NATIVE_OBJECT_PINNED) return -1;
+            if (mode == MYL_RC_COPY) {
+                if (origin) common->mark |= MYL_NATIVE_OBJECT_SHARED;
+                else status = myl_rc_owner_acquire(heap, payload);
+            }
+        }
+    }
+    if (status == MYL_RC_OK) {
+        memcpy(destination, &payload, sizeof payload);
+        if (mode == MYL_RC_TAKE) memset(source, 0, sizeof payload);
+    } else if (mode == MYL_RC_COPY) memset(destination, 0, sizeof payload);
+    if (heap->rc->dead.head) myl_rc_drain(heap);
+    return (int)status;
+}
 static myl_rc_status transfer(myl_native_heap *heap, myl_rc_slot *destination,
                               const myl_rc_slot *source, myl_rc_transfer mode, unsigned escaping) {
     myl_rc_invariant(heap && heap->rc && destination && source && destination->address && source->address);
@@ -322,9 +360,15 @@ static myl_rc_status transfer(myl_native_heap *heap, myl_rc_slot *destination,
     const myl_rc_shape *target = myl_rc_shape_resolve(heap, destination->shape);
     myl_rc_invariant(shape && target && shape->size == target->size && source->address != destination->address);
     if (destination->region > heap->region_depth) return MYL_RC_REGION_ERROR;
+    if (shape->kind == MYL_RC_SHAPE_POINTER) {
+        int fast = pointer_fast(heap, destination->address, source->address, destination->region, mode);
+        if (fast >= 0) return (myl_rc_status)fast;
+    }
     clone_work work = {0};
     work.memo.escaping = escaping;
-    transfer_walk walk = {.heap = heap, .region = destination->region, .mode = mode, .clones = &work};
+    transfer_frame local[LOCAL_TRANSFER_FRAMES];
+    transfer_walk walk = {.heap = heap, .frames = local, .capacity = LOCAL_TRANSFER_FRAMES,
+        .region = destination->region, .mode = mode, .clones = &work};
     myl_rc_status status = prepare_frames(&walk, shape);
     if (status != MYL_RC_OK) return status;
     if (mode == MYL_RC_COPY) myl_rc_value_seed(heap, shape, destination->address, source->address, 1);
@@ -343,6 +387,14 @@ static myl_rc_status transfer(myl_native_heap *heap, myl_rc_slot *destination,
     dispose_walk(&walk, status != MYL_RC_OK);
     return status;
 }
+myl_rc_status myl_rc_pointer_transfer(myl_native_heap *heap, const myl_rc_shape *shape,
+                                       void *destination, void *source, unsigned region, myl_rc_transfer mode) {
+    int fast = pointer_fast(heap, destination, source, region, mode);
+    if (fast >= 0) return (myl_rc_status)fast;
+    myl_rc_slot target = {.shape = shape, .address = destination, .region = region};
+    myl_rc_slot origin = {.shape = shape, .address = source};
+    return transfer(heap, &target, &origin, mode, 0);
+}
 myl_rc_status myl_rc_value_copy(myl_native_heap *heap, myl_rc_slot *destination, const myl_rc_slot *source) {
     return transfer(heap, destination, source, MYL_RC_COPY, 0);
 }
@@ -353,7 +405,9 @@ myl_rc_status myl_rc_value_copy_many(myl_native_heap *heap, myl_rc_slot *destina
                                      const myl_rc_slot *sources, size_t count) {
     myl_rc_invariant(heap && heap->rc && (!count || (destinations && sources)));
     clone_work work = {0};
-    transfer_walk walk = {.heap = heap, .mode = MYL_RC_COPY, .clones = &work};
+    transfer_frame local[LOCAL_TRANSFER_FRAMES];
+    transfer_walk walk = {.heap = heap, .frames = local, .capacity = LOCAL_TRANSFER_FRAMES,
+        .mode = MYL_RC_COPY, .clones = &work};
     size_t initialized = 0;
     myl_rc_status status = MYL_RC_OK;
     for (size_t i = 0; i < count; ++i) {
