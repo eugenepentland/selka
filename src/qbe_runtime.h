@@ -102,6 +102,9 @@ typedef struct { const unsigned char *names; size_t length; } MylQbeEnvironmentS
 #define MYL_QBE_RC_CONSTRUCTION 4u
 /* Exclusive journal token for a hidden live-view receiver (one pointer). */
 #define MYL_QBE_RC_HOLD_POINTER 8u
+/* Exclusive frame-private copyable value: one H per managed edge, including
+ * ordinary O-shaped leaves. Never a heap field, provider value or unique drop. */
+#define MYL_QBE_RC_LOAN 16u
 typedef struct {
     const myl_native_type *type;
     void *address;
