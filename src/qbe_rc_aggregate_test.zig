@@ -34,7 +34,7 @@ fn location(text: []const u8, needle: []const u8) !usize {
 }
 
 // spec: RC-AGGREGATE-1
-test "RC aggregate partial construction is zeroed and journaled before copying fields" {
+test "RC aggregate partial construction journals fields before guarded takes or copies" {
     const saved = runtime.get();
     defer runtime.set(saved);
     runtime.set(.rc);
@@ -42,9 +42,11 @@ test "RC aggregate partial construction is zeroed and journaled before copying f
     defer manifest.deinit();
     const text = try findFunction(manifest.value, "pair");
     const cleared = try location(text, "call $memset(l %v");
+    const taken = cleared + try location(text[cleared..], "call $myl_rc_native_take");
     const copied = cleared + try location(text[cleared..], "call $myl_rc_native_copy");
-    try t.expect(cleared < copied);
-    try t.expect(std.mem.indexOf(u8, text[cleared..copied], "storew 1") != null);
+    try t.expect(cleared < taken and taken < copied);
+    try t.expect(std.mem.indexOf(u8, text[cleared..taken], "storew 1") != null);
+    try t.expect(std.mem.indexOf(u8, text[taken..copied], "storew 0") != null);
     try t.expect(try location(text, "call $myl_qbe_rc_frame_enter") < cleared);
     try t.expect(try location(text, "call $myl_qbe_rc_frame_cleanup") > copied);
 }
