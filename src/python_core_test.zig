@@ -272,6 +272,8 @@ test "an unannotated function whose body exceeds the slot it fills is rejected a
 }
 // spec: DEAD-RECORD-WRITE-1
 test "dead record writes reject loop and parameter copies but not fresh locals" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     var loop = try language.Compilation.init(t.allocator, "dead-loop.my",
         \\record Item:
         \\    visited: bool
@@ -369,6 +371,8 @@ test "reading a parameter copy after a field write keeps the write accepted" {
 }
 // spec: CLASS-MANAGED-1
 test "a self-referential class graph prints to the depth cap and terminates" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     try run(
         \\class Node:
         \\    children: list[Node]

@@ -346,6 +346,8 @@ test "an element write into a local array names no scratch" {
 
 // spec: QBE-ARRAYWRITE-2
 test "an element write through a record or class field copies neither the array nor the record" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     var parsed = try emitted(
         \\record Grid:
         \\    cells: [4]int
@@ -380,6 +382,8 @@ test "an element write through a record or class field copies neither the array 
 
 // spec: QBE-FIELDARRAY-READ-1
 test "an element read of a class field array loads from the cell without a snapshot" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     var parsed = try emitted(
         \\class Board:
         \\    cells: [4]int
