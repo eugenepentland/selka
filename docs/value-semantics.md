@@ -1,9 +1,9 @@
 # Value semantics
 
-**Experimental and opt-in.** This is stage 3a of
-[D9](adr/D9-value-semantics-then-rc.md): the language rules of value semantics
-on the current garbage-collected runtime, implemented the slow way (real copies
-where a transfer needs one). Without the switch nothing on this page applies,
+**Experimental and opt-in.** This is stage 3 of
+[D9](adr/D9-value-semantics-then-rc.md): value semantics on the current
+garbage-collected runtime, with copy-on-write for mutable collections. Without
+the switch nothing on this page applies,
 and the compiler behaves exactly as it does without it: `class`, `list` and
 `dict` values are shared references ([managed memory](managed-memory.md)).
 
@@ -180,11 +180,13 @@ change goes to `row`, a copy of `rows[i]`; store the copy back after changing it
 
 ## Arenas and contracts
 
-A copy made inside `with arena()` allocates in that arena, like any other
-allocation, and leaves it only through `escape`
-([arenas](arenas.md#getting-a-result-out)). The static escape rules and the
-runtime store barrier apply unchanged; a helper that stores a copy made inside
-the arena into an older collection traps `R_ARENA_ESCAPE`.
+A transfer made inside `with arena()` usually marks an existing collection
+shared without allocating. When a later write must clone a shared payload,
+the clone uses that payload's owning region. In particular, writing an outer
+value while an inner arena is open cannot leave its new storage dangling when
+the inner arena ends. New collections still allocate in the current arena and
+leave it only through `escape` ([arenas](arenas.md#getting-a-result-out)). The
+static escape rules and runtime store barrier apply unchanged.
 
 `old(xs)` of a collection is accepted in an `@ensures` clause: the capture is a
 value of its own. `old(...)` of a value that reaches a `class` or Cell is still
@@ -197,16 +199,23 @@ fresh. The ownership analysis of stage 2
 ([ownership](tooling/ownership.md)) then leaves out every copy it proves a move
 (the source is never read again) or a borrow (neither side is written while
 both are read); `mylang check --explain-ownership` lists each copy site with
-`"copy": true` or `false`. Every copy that remains goes through one runtime
-entry, `myl_qbe_value_copy`, which duplicates each list, dictionary, set and
-byte string the value reaches. A read-only argument is lent without a copy.
-The next stage replaces that entry with copy-on-write, so the copies become
-checks at the writes.
+`"copy": true` or `false`. Every copy that remains goes through one rooted
+runtime transfer, which marks the collection payloads it reaches shared. A
+read-only argument is lent without a copy. Before a write, an inline check
+clones a shared payload and redirects the owning slot; nested writes repeat
+that step along their path. Checks proven stable across a loop are hoisted.
+
+For internal measurements, `MYLANG_COW_COUNTING=1` together with
+`--value-semantics` builds a separately cached instrumented binary. At exit it
+prints a `cow-stats` JSON line on stderr with marks, checks, hoisted checks,
+copies, copied bytes and pins. Ordinary builds emit no counter calls.
 
 ## Limits
 
-- Copies are eager, so a program that stores or returns large collections pays
-  for each copy; this stage is the reference for the rules, not for speed.
+- A transfer of a recursive value that can hold collections walks its existing
+  boxes to mark those collections shared. It traps `R_COW_DEPTH` after 1,024
+  descriptor edges rather than leaving a deeper collection unmarked. A
+  scalar-only recursive value requires no such walk.
 - A copy is not reported as a `managed_allocation` effect.
 - Rebinding a whole `mut` list or dict parameter does not reach the caller; it
   is rejected as a `mut` that is never written.

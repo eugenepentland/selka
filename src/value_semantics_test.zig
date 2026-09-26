@@ -37,13 +37,16 @@ test "recursive type reachability finds collections without treating a cycle as 
 /// The switch as a test left it, restored when the test ends.
 const Saved = struct {
     previous: bool,
+    previous_counting: bool,
     fn set(on: bool) Saved {
-        const saved: Saved = .{ .previous = values.enabled() };
+        const saved: Saved = .{ .previous = values.enabled(), .previous_counting = values.counting() };
         values.setEnabled(on);
+        values.setCounting(false);
         return saved;
     }
     fn restore(self: Saved) void {
         values.setEnabled(self.previous);
+        values.setCounting(self.previous_counting);
     }
 };
 
@@ -352,6 +355,19 @@ test "the switch changes the fragment record key and nothing without it" {
     try t.expect(values.environmentEnables("1"));
     try t.expect(!values.environmentEnables("0"));
     try t.expect(!values.environmentEnables(null));
+}
+
+// spec-case: COW-STATS-1
+test "counting emission has a distinct fragment key from ordinary value semantics" {
+    const identity: fragments.Digest = @splat(9);
+    const saved = Saved.set(true);
+    defer saved.restore();
+    const ordinary = fragments.recordKey(identity, false);
+    values.setCounting(true);
+    const counted = fragments.recordKey(identity, false);
+    try t.expect(!std.mem.eql(u8, &ordinary, &counted));
+    values.setCounting(false);
+    try t.expectEqualSlices(u8, &ordinary, &fragments.recordKey(identity, false));
 }
 
 /// How many diagnostics with `code` checking `body` reports with the switch at `on`.

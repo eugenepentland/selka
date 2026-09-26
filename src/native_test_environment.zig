@@ -15,6 +15,8 @@ const compiler_inputs = [_][]const u8{
     "GCC_EXEC_PREFIX",
     "LIBRARY_PATH",
     "MYLANG_HOST_COMPILER",
+    // COW-STATS-1: counting compiles distinct test binaries.
+    "MYLANG_COW_COUNTING",
     "MYLANG_QBE_LLVM_ALIAS",
     "MYLANG_QBE_LLVM_ELEMENT_GEP",
     "MYLANG_QBE_LLVM_OPT",
@@ -76,6 +78,9 @@ test "environment fingerprints ignore unrelated variables but retain compiler in
     const c_changed = try capture(context);
     try environment.put("MYLANG_QBE_LLVM_STICKY", "0");
     try std.testing.expect(!std.mem.eql(u8, c_changed.hash, (try capture(context)).hash));
+    const llvm_changed = try capture(context);
+    try environment.put("MYLANG_COW_COUNTING", "1");
+    try std.testing.expect(!std.mem.eql(u8, llvm_changed.hash, (try capture(context)).hash));
     try environment.put("LD_LIBRARY_PATH", "/mutable");
     try std.testing.expect(!(try capture(context)).cacheable);
 }

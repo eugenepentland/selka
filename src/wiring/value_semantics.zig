@@ -7,3 +7,6 @@
 
 /// Whether this process checks and lowers programs with value semantics.
 pub var enabled: bool = false;
+
+/// Internal measurement build: count COW sites only with value semantics.
+pub var counting: bool = false;

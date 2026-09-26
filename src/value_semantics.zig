@@ -27,6 +27,9 @@ pub const Error = std.mem.Allocator.Error;
 /// a command spawns (the build driver's frontend, the test runner's builds).
 pub const variable = "MYLANG_VALUE_SEMANTICS";
 
+/// Internal instrumentation selector inherited by build and test children.
+pub const counting_variable = "MYLANG_COW_COUNTING";
+
 /// The command-line spelling of the switch.
 pub const option = "--value-semantics";
 
@@ -39,6 +42,16 @@ pub fn enabled() bool {
 /// before any checking or lowering; a test restores the previous value.
 pub fn setEnabled(value: bool) void {
     flag.enabled = value;
+}
+
+/// Whether the compiler emits counter calls beside COW marks and checks.
+pub fn counting() bool {
+    return flag.counting;
+}
+
+/// Set counting before frontend caching or native emission begins.
+pub fn setCounting(value: bool) void {
+    flag.counting = value;
 }
 
 /// Whether an environment value turns the switch on: exactly `1`.
