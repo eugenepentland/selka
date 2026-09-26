@@ -53,8 +53,11 @@ joined validation remain required.
 The class-free Lox tree port is correct but expensive: the bounded QBE binary-tree
 N=4 case measured 390.8 billion instructions against 192.6 million for the pinned
 class source. A conservative field extraction/store-back optimization (`b456c84b`)
-reduced a prototype measurement to 36.1 billion with matching output; this is
-progress, not a performance pass. The class-free VM equality case at N=1,000
+with its sibling-field follow-up (`85667ce3`) reduced a matched guest Debug
+measurement to 293.7 billion with matching output (about 25%). Matched ReleaseFast
+measurements were 47.6 billion before and 36.1 billion after the first proof. An
+earlier comparison of 390.8 to 36.1 billion mixed guest build modes and is invalid;
+all compiler builds remained Debug. This is progress, not a performance pass. The class-free VM equality case at N=1,000
 measured about 755 million instructions after that optimization against 41.3
 million for the class baseline. Sol and the orchestrator are profiling the two
 remaining costs separately. Stage 3f is not ready to flip.
