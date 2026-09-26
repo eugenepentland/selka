@@ -477,6 +477,13 @@ void myl_qbe_fail_list_value(void *context) { fail(context, "R_LIST_VALUE"); }
 /* A refused managed allocation names the budget when the heap declined it and
    the host only when the process itself could not produce the bytes. */
 void myl_qbe_fail_allocation(void *context) {
+#if defined(MYL_NATIVE_RC) && MYL_NATIVE_RC
+    Context *ctx = context;
+    if (ctx->heap.rc) {
+        myl_rc_status status = myl_rc_take_failure(&ctx->heap);
+        if (status != MYL_RC_OK) { (void)myl_qbe_rc_status(context, status); return; }
+    }
+#endif
     if (myl_native_cow_take_depth_failure()) { fail(context, "R_COW_DEPTH"); return; }
     fail(context, ((Context *)context)->heap.exhausted ? memory_budget_code : "OutOfMemory");
 }
@@ -939,8 +946,11 @@ static int execute_config_args(uint64_t (*entry)(void *), uint64_t steps, uint64
     context->guest_argc=guest_argc;context->guest_argv=guest_argv;
     myl_native_heap_init(&context->heap, budget ? budget : SIZE_MAX);
     context->heap.stress = stress;
-    context->frame_data = calloc((size_t)capacity, sizeof(MylQbeActiveFrame));
-    if (!context->frame_data) context->trap = "OutOfMemory";
+#if defined(MYL_NATIVE_RC) && MYL_NATIVE_RC
+    (void)myl_qbe_rc_initialize(context);
+#endif
+    if (!context->trap) context->frame_data = calloc((size_t)capacity, sizeof(MylQbeActiveFrame));
+    if (!context->trap && !context->frame_data) context->trap = "OutOfMemory";
     /* QBE-FLOAT-ENV-1: verify the process floating-point environment exactly
        once, before any guest or host code runs. The per-operation checks are
        gone, so this is what preserves R_FLOAT_ENVIRONMENT for a process that
