@@ -2,6 +2,34 @@ record Link:
     next: Option[Link]
 
 
+union Wrapped:
+    empty,
+    leaf: list[int],
+    next: Wrapped
+
+
+def inline_variant(items: list[int]) -> int:
+    wrapped = Wrapped.leaf(items)
+    match wrapped:
+        case Wrapped.leaf(values):
+            return 1
+        case _:
+            return 0
+
+
+def recursive_variant(items: list[int]) -> int:
+    wrapped = Wrapped.next(Wrapped.leaf(items))
+    match wrapped:
+        case Wrapped.next(inner):
+            match inner:
+                case Wrapped.leaf(values):
+                    return len(values)
+                case _:
+                    return 0
+        case _:
+            return 0
+
+
 def length(node: Link) -> int:
     tail = node.next
     if tail is None:
@@ -41,4 +69,15 @@ public def test_loop_reader_leaves_collection_available_for_later_mutation() -> 
 def main() -> int:
     assert test_recursive_reader_preserves_caller_snapshot()
     assert test_loop_reader_leaves_collection_available_for_later_mutation()
+    assert test_inline_and_recursive_variant_wrappers_preserve_input()
     return 0
+
+
+# spec-case: RC-READONLY-BODY-1
+public def test_inline_and_recursive_variant_wrappers_preserve_input() -> bool:
+    items = [1, 2, 3]
+    before = items
+    inline_result = inline_variant(items)
+    recursive_result = recursive_variant(items)
+    items.clear()
+    return inline_result == 1 and recursive_result == 3 and len(before) == 3 and len(items) == 0
