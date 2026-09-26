@@ -75,6 +75,7 @@ static uint64_t co_word(const void *input,size_t index){
     return bits;
 }
 static int co_read(size_t,void *,size_t);
+static int co_validate_one(void *,size_t,const void *);
 /* A dictionary or a set: one key subtree per entry, followed for a dictionary
    (`count` 2) by its value subtree; a set's unit value carries none. The keys
    are hashed and compared by the program's own key descriptor, so any
@@ -205,7 +206,7 @@ static int co_read(size_t index,void *output,size_t depth){
         const void *payload=(const unsigned char *)result+co_types[codec->result].offsets[tag];
         if(tag==codec->ok){memcpy(output,payload,type->size);co_domain=previous;ok=1;}
         else{co_rejected=1;co_needed=0;if(co_write(codec->error_type,payload,0))co_bad("DomainCodecRejected");}
-    domain_done:free(wire);free(result);return ok;
+    domain_done:free(wire);free(result);return ok && co_validate_one(co_context,index,output);
     }
     if(type->kind==3){
         if(node->bits>=type->count)return co_bad("InvalidArgument");
@@ -226,7 +227,7 @@ static int co_read(size_t index,void *output,size_t depth){
         size_t child=type->children[type->kind==2 ? 0:i],offset=type->kind==2 ? i*type->stride:type->offsets[i];
         if(!co_read(child,(unsigned char *)output+offset,depth+1))return 0;
     }
-    return 1;
+    return co_validate_one(co_context,index,output);
 }
 /* The entries of a dictionary or a set in insertion order: each key
    subtree, then for a dictionary its value subtree. */

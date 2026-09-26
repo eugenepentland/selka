@@ -367,6 +367,9 @@ fn validateSelection(allocator: std.mem.Allocator, program: bytecode.Program, se
         const codec = record.contract.codec orelse continue;
         if (!selected[@backingInt(codec.decode)] or !selected[@backingInt(codec.encode)]) return error.InternalError;
     }
+    for (program.functions) |function| if (@import("invariant_callbacks.zig").isName(function.name)) {
+        if (!selected[@backingInt(function.id)]) return error.InternalError;
+    };
 }
 
 /// Group one function's per-instruction inline provenance into the contiguous

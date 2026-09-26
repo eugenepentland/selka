@@ -314,20 +314,18 @@ pub const Context = struct {
     /// rather than one sibling each, and stale scratch stays contained.
     pub fn temporary(self: Context, parent: []const u8) Error![]const u8 {
         const staging = try std.fs.path.join(self.allocator, &.{ parent, staging_name });
-        // A concurrent `remove` reclaims the shared folder the moment it empties,
-        // so one attempt can lose the folder twice: between `createDirPath`'s
-        // `mkdir` and the check that tolerates an existing component, and again
-        // between that check and this invocation's private child. The first loss
-        // arrives as `FileNotFound`, or as `Unexpected` because the Linux `statx`
-        // behind the check has no ENOENT arm and reports the vanished folder
-        // through the generic errno path. Both are a lost race, not a broken
-        // filesystem, so each costs one of a bounded number of fresh attempts;
-        // the last real error is what an exhausted budget returns.
+        // Only the shared staging folder is reclaimed concurrently. Create its
+        // stable parent first, then use a single mkdir for staging: the Zig
+        // createDirPath existence check can call statx just as another builder
+        // removes staging, and this toolchain panics on that ENOENT before its
+        // error can reach our retry. The single mkdir has no such check.
+        try std.Io.Dir.cwd().createDirPath(self.io, parent);
         var attempt: usize = 0;
         var last: Error = error.FileNotFound;
         while (attempt < staging_attempts) : (attempt += 1) {
-            std.Io.Dir.cwd().createDirPath(self.io, staging) catch |err| switch (err) {
-                error.FileNotFound, error.Unexpected => {
+            std.Io.Dir.cwd().createDir(self.io, staging, .default_dir) catch |err| switch (err) {
+                error.PathAlreadyExists => {},
+                error.FileNotFound => {
                     last = err;
                     continue;
                 },
@@ -650,11 +648,9 @@ const StagingRace = struct {
     losses: std.atomic.Value(usize) = .init(0),
 };
 /// Run one worker's rounds through a private build context; a round that cannot
-/// stage a child counts as a loss instead of aborting the other workers. Losing
-/// the folder inside the existence check is the race this test provokes, so a run
-/// that hits it makes the standard library print `unexpected errno: 2` with a
-/// stack trace before `temporary` retries; that diagnostic is expected here and
-/// is not a failure.
+/// stage a child counts as a loss instead of aborting the other workers. Reclaim
+/// can remove the folder before another worker creates its private child;
+/// `temporary` must retry without a standard-library errno panic.
 fn raceStaging(worker: *StagingRace) void {
     var context = Context.init(worker.allocator, std.testing.io, worker.environment) catch {
         _ = worker.losses.fetchAdd(1, .monotonic);

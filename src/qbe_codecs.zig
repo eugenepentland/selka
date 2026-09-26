@@ -17,6 +17,8 @@ pub const Metadata = struct {
     descriptors: []const []const u8,
     codecs: []const Codec,
     callbacks: []const Callback,
+    /// Per-type invariant functions invoked only at copied-value boundaries.
+    validations: []const Callback,
 };
 
 /// Derive metadata for every declared domain codec in the program.
@@ -37,16 +39,12 @@ pub fn describe(allocator: std.mem.Allocator, program: bytecode.Program, catalog
             .error_type = typed.typeName(shape.error_type, program.records),
         });
         for ([_]typed.FunctionId{ codec.decode, codec.encode }) |id| {
-            const function = program.functions[@backingInt(id)];
-            var digest: [32]u8 = undefined;
-            std.crypto.hash.sha2.Sha256.hash(function.name, &digest, .{});
-            try callbacks.append(allocator, .{
-                .index = @backingInt(id),
-                .symbol = try std.fmt.allocPrint(allocator, "myl_f_{s}", .{std.fmt.bytesToHex(digest, .lower)}),
-                .input = typed.typeName(function.scope.locals[0].ty, program.records),
-                .output = typed.typeName(function.signature.return_type, program.records),
-            });
+            try callbacks.append(allocator, try callback(allocator, program, program.functions[@backingInt(id)]));
         }
+    };
+    var validations: std.ArrayList(Callback) = .empty;
+    for (program.functions) |function| if (@import("invariant_callbacks.zig").isName(function.name)) {
+        try validations.append(allocator, try callback(allocator, program, function));
     };
     const table = try @import("qbe_wire.zig").describeWithDomains(allocator, catalog, true);
     const descriptors = try allocator.alloc([]const u8, table.types.len);
@@ -56,5 +54,17 @@ pub fn describe(allocator: std.mem.Allocator, program: bytecode.Program, catalog
         .descriptors = descriptors,
         .codecs = try codecs.toOwnedSlice(allocator),
         .callbacks = try callbacks.toOwnedSlice(allocator),
+        .validations = try validations.toOwnedSlice(allocator),
+    };
+}
+
+fn callback(allocator: std.mem.Allocator, program: bytecode.Program, function: bytecode.Function) native.Error!Callback {
+    var digest: [32]u8 = undefined;
+    std.crypto.hash.sha2.Sha256.hash(function.name, &digest, .{});
+    return .{
+        .index = @backingInt(function.id),
+        .symbol = try std.fmt.allocPrint(allocator, "myl_f_{s}", .{std.fmt.bytesToHex(digest, .lower)}),
+        .input = typed.typeName(function.scope.locals[0].ty, program.records),
+        .output = typed.typeName(function.signature.return_type, program.records),
     };
 }

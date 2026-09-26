@@ -1,4 +1,5 @@
 //! Full semantic checking over relocated module syntax and explicit namespaces.
+const invariant_callbacks = @import("invariant_callbacks.zig");
 /// Failures returned by init; callers must handle these boundary errors.
 pub const InitError = error{
     EmptySourceMap,
@@ -328,6 +329,7 @@ pub const Compilation = struct {
         if (function.type_arguments.len != 0) return false;
         if (@import("std").mem.eql(u8, function.name, @import("entry_adapter.zig").wrapper_name)) return false;
         if (@import("std").mem.startsWith(u8, function.name, "lambda@")) return false;
+        if (invariant_callbacks.isName(function.name)) return false;
         const original = self.src.originalSpan(function.declaration) catch return error.InternalError;
         if (original.input >= self.index.units.len or original.input >= self.index.project.modules.items.len) return error.InternalError;
         if (ast.hasAttribute(self.index.units[original.input].syntax, original.span, .@"test")) return true;
@@ -342,6 +344,7 @@ pub const Compilation = struct {
         if (@import("std").mem.eql(u8, function.name, @import("entry_adapter.zig").wrapper_name)) return false;
         // Expression lambdas are synthesized callable bodies, not module declarations.
         if (@import("std").mem.startsWith(u8, function.name, "lambda@")) return false;
+        if (invariant_callbacks.isName(function.name)) return false;
         const original = self.src.originalSpan(function.declaration) catch return error.InternalError;
         if (original.input >= self.index.units.len or original.input >= self.index.project.modules.items.len) return error.InternalError;
         const unit = self.index.units[original.input];
@@ -459,6 +462,7 @@ pub const Compilation = struct {
 /// for a function whose unit is never reused without lowering it.
 fn sourceIdentity(prepared: semantic_key.Prepared, ast_index: usize, function: typed.Function) ?fragments.Digest {
     if (function.type_arguments.len != 0 or std.mem.startsWith(u8, function.name, "lambda@")) return null;
+    if (invariant_callbacks.isName(function.name)) return null;
     if (function.policy.host != null or function.policy.c_abi or function.policy.conversion) return null;
     if (ast_index >= prepared.keys.len or ast_index >= prepared.recalled.digests.len) return null;
     // The key ends in the declared name, which the checked name must end in.

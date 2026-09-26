@@ -178,6 +178,9 @@ fn collectCodecs(allocator: std.mem.Allocator, program: typed.Program) Error![]t
         try appendUnique(allocator, &ids, codec.decode);
         try appendUnique(allocator, &ids, codec.encode);
     }
+    for (program.functions) |function| if (@import("invariant_callbacks.zig").isName(function.name)) {
+        try appendUnique(allocator, &ids, function.id);
+    };
     return ids.toOwnedSlice(allocator) catch error.OutOfMemory;
 }
 
