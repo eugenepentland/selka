@@ -13,7 +13,14 @@ pub const Policy = struct {
     /// Emit the per-call depth ceiling and its counter. A build that can never
     /// be given a runtime frame ceiling turns this off.
     frame_checks: bool = true,
+    /// Emit copy-on-write value semantics (`COW-UNIQUE-1`): `checks` shares a
+    /// payload at every transfer the ownership analysis calls a copy and makes
+    /// it unique before every in-place write; `counting` also counts every
+    /// inline check, mark and pin (`COW-STATS-1`).
+    cow: Cow = .off,
 };
+/// Which copy-on-write code a build emits.
+pub const Cow = @import("cow_plan.zig").Mode;
 /// Public declaration roots and exact language-schema-v1 bytes from one check.
 pub const Interface = struct {
     roots: []const typed.FunctionId = &.{},

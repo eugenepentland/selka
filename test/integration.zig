@@ -2,6 +2,149 @@
 const std = @import("std");
 const testing = std.testing;
 const compiler_path = @import("test_options").compiler_path;
+// spec: VALUE-SEMANTICS-11
+test "a scalar-only mut record parameter writes the caller in both modes" {
+    const program =
+        \\record Counter:
+        \\    n: int
+        \\
+        \\def increment(c: mut Counter) -> None:
+        \\    c.n = c.n + 1
+        \\
+        \\def reset(c: mut Counter) -> None:
+        \\    c = Counter(n=10)
+        \\
+        \\def main() -> int:
+        \\    c = Counter(n=1)
+        \\    increment(mut c)
+        \\    reset(mut c)
+        \\    return c.n
+    ;
+    try invokeOptions("run", program, &.{"--no-cache"}, 10, "10\n", "");
+    try invokeOptions("run", program, &.{"--value-semantics"}, 10, "10\n", "");
+}
+// spec: FIX-MIGRATION-1
+test "fix command previews then stores back a local alias and preserves both modes" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const before =
+        \\def main() -> int:
+        \\    pins = [1]
+        \\    alias = pins
+        \\    alias.append(2)
+        \\    return len(pins)
+    ;
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = before });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const preview = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "fix", path, "--check" } });
+    defer testing.allocator.free(preview.stdout);
+    defer testing.allocator.free(preview.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, preview.term);
+    try testing.expect(std.mem.indexOf(u8, preview.stdout, "would fix") != null);
+    const unchanged = try temp.dir.readFileAlloc(testing.io, "input.my", testing.allocator, .unlimited);
+    defer testing.allocator.free(unchanged);
+    try testing.expectEqualStrings(before, unchanged);
+    const fixed = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "fix", path } });
+    defer testing.allocator.free(fixed.stdout);
+    defer testing.allocator.free(fixed.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, fixed.term);
+    const changed = try temp.dir.readFileAlloc(testing.io, "input.my", testing.allocator, .unlimited);
+    defer testing.allocator.free(changed);
+    try testing.expect(std.mem.indexOf(u8, changed, "    pins = alias\n") != null);
+    const checked = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check", path, "--diagnostics=json" } });
+    defer testing.allocator.free(checked.stdout);
+    defer testing.allocator.free(checked.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, checked.term);
+    try testing.expect(std.mem.indexOf(u8, checked.stderr, "W_ALIAS_DEPENDENT") == null);
+    for ([_][]const u8{ "--value-semantics", "--no-cache" }) |mode| {
+        const run = try std.process.run(testing.allocator, testing.io, .{ .argv = &(.{ compiler_path, "run", path, "--print-result", mode } ++ tools) });
+        defer testing.allocator.free(run.stdout);
+        defer testing.allocator.free(run.stderr);
+        try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, run.term);
+        try testing.expectEqualStrings("2\n", run.stdout);
+    }
+}
+// spec: ALIAS-MIGRATION-1
+test "checker warns at a local collection alias that is written and observed" {
+    const outcome = try runFixture("check",
+        \\def main() -> int:
+        \\    pins = [1]
+        \\    alias = pins
+        \\    alias.append(2)
+        \\    return len(pins)
+    , &.{"--diagnostics=json"});
+    defer std.testing.allocator.free(outcome.stdout);
+    defer std.testing.allocator.free(outcome.stderr);
+    try std.testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+    try std.testing.expect(std.mem.indexOf(u8, outcome.stderr, "W_ALIAS_DEPENDENT") != null);
+    try std.testing.expect(std.mem.indexOf(u8, outcome.stderr, "local alias") != null);
+}
+// spec: ALIAS-MIGRATION-2
+test "checker traces a narrowed match payload back to its collection binding" {
+    const outcome = try runFixture("check",
+        \\def main() -> int:
+        \\    shared = [1]
+        \\    items: list[Option[list[int]]] = [Some(shared), Some(shared)]
+        \\    first = items[0]
+        \\    last = items[1]
+        \\    if first is not None and last is not None:
+        \\        first.append(2)
+        \\        return len(last)
+        \\    return 0
+    , &.{"--diagnostics=json"});
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+    try testing.expect(std.mem.indexOf(u8, outcome.stderr, "W_ALIAS_DEPENDENT") != null);
+}
+// spec: ALIAS-MIGRATION-4
+test "checker terminates on a cyclic alias chain and reports the observed write" {
+    const cyclic = try runFixture("check",
+        \\def main() -> int:
+        \\    shared = [1]
+        \\    first = shared
+        \\    second = first
+        \\    first = second
+        \\    second.append(2)
+        \\    return len(shared)
+    , &.{"--diagnostics=json"});
+    defer testing.allocator.free(cyclic.stdout);
+    defer testing.allocator.free(cyclic.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, cyclic.term);
+    try testing.expect(std.mem.indexOf(u8, cyclic.stderr, "W_ALIAS_DEPENDENT") != null);
+}
+// spec: ALIAS-MIGRATION-3
+test "checker distinguishes a nested alias store from a fresh buffer conversion" {
+    const nested = try runFixture("check",
+        \\record Holder:
+        \\    items: list[list[int]]
+        \\
+        \\def main() -> int:
+        \\    shared = [1]
+        \\    holder = Holder(items=[shared, shared])
+        \\    first = holder.items[0]
+        \\    last = holder.items[1]
+        \\    first.append(2)
+        \\    return len(last)
+    , &.{"--diagnostics=json"});
+    defer testing.allocator.free(nested.stdout);
+    defer testing.allocator.free(nested.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, nested.term);
+    try testing.expect(std.mem.indexOf(u8, nested.stderr, "\"code\":\"W_ALIAS_DEPENDENT\"") != null);
+    try testing.expect(std.mem.indexOf(u8, nested.stderr, "\"line\":6") != null);
+    const fresh = try runFixture("check",
+        \\def main() -> int:
+        \\    empty: list[int] = []
+        \\    piece = byte_buffer(empty)
+        \\    _ = piece.append_byte(1)
+        \\    return len(empty)
+    , &.{"--diagnostics=json"});
+    defer testing.allocator.free(fresh.stdout);
+    defer testing.allocator.free(fresh.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, fresh.term);
+    try testing.expect(std.mem.indexOf(u8, fresh.stderr, "W_ALIAS_DEPENDENT") == null);
+}
 const arena_example_path = @import("test_options").arena_example_path;
 /// `run` and `run-project` build natively; the fixtures name this build's tools
 /// because the compiler under test is not installed beside them.
@@ -4012,7 +4155,8 @@ const capability_tests =
     \\
     \\public def test_entropy(entropy: Entropy, out: Stream) -> bool:
     \\    match random.from_entropy(entropy):
-    \\        case Ok(generator):
+    \\        case Ok(sampled):
+    \\            generator = sampled
     \\            out.print("word", random.next_word(mut generator))
     \\        case Err(_):
     \\            out.print("no entropy")
@@ -11539,7 +11683,7 @@ const value_only_program =
 
 // spec-case: VALUE-SEMANTICS-1
 test "CLI --value-semantics switches run and check and other commands refuse it" {
-    try invoke("run", value_program, 0, "22\n", "");
+    try invoke("run", value_program, 0, "22\n", "warning[W_ALIAS_DEPENDENT]");
     try invokeOptions("run", value_program, &.{"--value-semantics"}, 0, "12\n", "");
     try invoke("check", value_only_program, 1, "", "error[E_MUTATION_MARKER]");
     try invokeOptions("check", value_only_program, &.{"--value-semantics"}, 0, "", "");

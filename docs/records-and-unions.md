@@ -355,6 +355,14 @@ still gets `E_RECURSIVE_RECORD`, because it has no finite value. Recursion throu
 recursive values compare, hash, print, cross typed JSON boundaries and escape
 arenas as values. Printing stops with `...` at the renderer's depth cap.
 
+With `--value-semantics`, copying a recursive value that can contain mutable
+collections walks its existing boxes to mark those collections shared. The
+walk permits 1,024 descriptor edges from the copied value: record, `Option`
+and hidden box layers each count, so this is not a limit of 1,024 logical
+nodes. A deeper transfer reports `R_COW_DEPTH` rather than leaving a collection
+unmarked. A scalar-only recursive value needs no walk; a million-node chain
+can still be copied and have its outer fields changed independently.
+
 ## Fixed arrays and enum tables
 
 A fixed array `[N]T` and an enum-indexed table `[Kind]T` are value types with no

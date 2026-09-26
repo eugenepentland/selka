@@ -33,7 +33,7 @@ record Grid:
     label: str
 
 
-class Board:
+record Board:
     cells: [3]i64
 
 
@@ -153,11 +153,11 @@ public def test_an_array_field_of_a_record_is_written_and_a_copy_is_not() -> boo
 
 
 # spec-case: PY-ARRAY-WRITE-1
-public def test_an_array_field_of_a_class_is_shared_by_every_name() -> bool:
+public def test_an_array_field_of_a_record_is_copied_for_each_name() -> bool:
     board = Board(cells=[1, 2, 3])
     alias = board
     alias.cells[2] = 30
-    return board.cells[2] == 30 and board.cells[0] == 1
+    return board.cells[2] == 3 and alias.cells[2] == 30 and board.cells[0] == 1
 
 
 # spec-case: PY-ARRAY-WRITE-1

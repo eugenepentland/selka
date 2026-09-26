@@ -24,8 +24,8 @@ def token_count(src: bytes) -> int:
             return -1
 
 
-def raw_next(lx: tk.Lexer) -> tk.RawToken:
-    match tk.next_raw(lx):
+def raw_next(lx: mut tk.Lexer) -> tk.RawToken:
+    match tk.next_raw(mut lx):
         case Ok(token):
             return token
         case Err(_):
@@ -162,9 +162,9 @@ public def test_token_count_helper() -> bool:
 public def test_streaming_ranges_and_lazy_materialization() -> bool:
     src = b"(10mil \"x\")"
     lx = tk.lexer(src)
-    opening = raw_next(lx)
-    measure = raw_next(lx)
-    string = raw_next(lx)
+    opening = raw_next(mut lx)
+    measure = raw_next(mut lx)
+    string = raw_next(mut lx)
     return opening.kind == tk.Kind.lparen and opening.source.start == 0 and opening.source.end == 1 and measure.kind == tk.Kind.unit_val and measure.source.start == 1 and measure.source.end == 6 and measure.text_start == 1 and measure.text_end == 3 and tk.materialize(src, measure).text == "10" and string.source.start == 7 and string.source.end == 10 and tk.materialize(src, string).text == "x"
 
 
@@ -173,7 +173,7 @@ public def test_streaming_ranges_and_lazy_materialization() -> bool:
 public def test_streaming_unicode_byte_range() -> bool:
     src = "é".encode() + b" atom"
     lx = tk.lexer(src)
-    match tk.next_raw(lx):
+    match tk.next_raw(mut lx):
         case Ok(_):
             return False
         case Err(problem):
@@ -194,16 +194,16 @@ def unterminated_at(src: bytes, offset: int) -> bool:
 public def test_streaming_cursor_after_each_token() -> bool:
     src = b"(10mil\n  b)"
     lx = tk.lexer(src)
-    opening = raw_next(lx)
-    after_opening = lx.pos == 1 and lx.line == 1 and lx.col == 2
-    measure = raw_next(lx)
-    after_measure = lx.pos == 6 and lx.line == 1 and lx.col == 7
-    letter = raw_next(lx)
-    after_letter = lx.pos == 10 and lx.line == 2 and lx.col == 4
-    closing = raw_next(lx)
-    after_closing = lx.pos == 11 and lx.line == 2 and lx.col == 5
-    last = raw_next(lx)
-    return opening.source.start == 0 and opening.source.end == 1 and after_opening and measure.kind == tk.Kind.unit_val and measure.source.start == 1 and measure.source.end == 6 and after_measure and letter.source.span.line == 2u32 and letter.source.span.col == 3u32 and letter.source.span.offset == 9u32 and after_letter and closing.kind == tk.Kind.rparen and closing.source.span.offset == 10u32 and after_closing and last.kind == tk.Kind.eof and last.source.span.offset == 11u32 and lx.pos == 11 and lx.line == 2 and lx.col == 5
+    opening = raw_next(mut lx)
+    after_opening = lx.cursor[0] == 1 and lx.cursor[1] == 1 and lx.cursor[2] == 2
+    measure = raw_next(mut lx)
+    after_measure = lx.cursor[0] == 6 and lx.cursor[1] == 1 and lx.cursor[2] == 7
+    letter = raw_next(mut lx)
+    after_letter = lx.cursor[0] == 10 and lx.cursor[1] == 2 and lx.cursor[2] == 4
+    closing = raw_next(mut lx)
+    after_closing = lx.cursor[0] == 11 and lx.cursor[1] == 2 and lx.cursor[2] == 5
+    last = raw_next(mut lx)
+    return opening.source.start == 0 and opening.source.end == 1 and after_opening and measure.kind == tk.Kind.unit_val and measure.source.start == 1 and measure.source.end == 6 and after_measure and letter.source.span.line == 2u32 and letter.source.span.col == 3u32 and letter.source.span.offset == 9u32 and after_letter and closing.kind == tk.Kind.rparen and closing.source.span.offset == 10u32 and after_closing and last.kind == tk.Kind.eof and last.source.span.offset == 11u32 and lx.cursor[0] == 11 and lx.cursor[1] == 2 and lx.cursor[2] == 5
 
 
 # A `\` at the end of the source swallows the end and leaves the string open;
@@ -314,8 +314,8 @@ def ordinary_200() -> bytes:
 public def test_two_hundred_byte_run_before_quote() -> bool:
     src = b"\"" + ordinary_200() + b"\""
     lx = tk.lexer(src)
-    token = raw_next(lx)
-    return token.kind == tk.Kind.string and token.source.start == 0 and token.source.end == 202 and token.text_start == 1 and token.text_end == 201 and len(tk.materialize(src, token).text) == 200 and lx.pos == 202 and lx.line == 1 and lx.col == 203
+    token = raw_next(mut lx)
+    return token.kind == tk.Kind.string and token.source.start == 0 and token.source.end == 202 and token.text_start == 1 and token.text_end == 201 and len(tk.materialize(src, token).text) == 200 and lx.cursor[0] == 202 and lx.cursor[1] == 1 and lx.cursor[2] == 203
 
 
 # Every punctuation byte `is_atom_continue` accepts, in one atom, so a scan
@@ -334,9 +334,9 @@ public def test_atom_with_every_continue_byte() -> bool:
 public def test_atom_stops_at_lparen() -> bool:
     src = b"abc(def)"
     lx = tk.lexer(src)
-    word = raw_next(lx)
-    after_word = lx.pos == 3 and lx.line == 1 and lx.col == 4
-    opening = raw_next(lx)
+    word = raw_next(mut lx)
+    after_word = lx.cursor[0] == 3 and lx.cursor[1] == 1 and lx.cursor[2] == 4
+    opening = raw_next(mut lx)
     return word.kind == tk.Kind.atom and word.source.start == 0 and word.source.end == 3 and word.text_start == 0 and word.text_end == 3 and after_word and opening.kind == tk.Kind.lparen and opening.source.span.offset == 3u32 and opening.source.span.col == 4u32
 
 
@@ -398,8 +398,8 @@ public def test_blank_run_column() -> bool:
 public def test_unterminated_cursor_after_ordinary_run() -> bool:
     src = b"\"ab\ncd"
     lx = tk.lexer(src)
-    match tk.next_raw(lx):
+    match tk.next_raw(mut lx):
         case Ok(_):
             return False
         case Err(problem):
-            return problem.message == "unterminated string" and problem.offset == 0 and problem.line == 1 and lx.pos == 6 and lx.line == 2 and lx.col == 3
+            return problem.message == "unterminated string" and problem.offset == 0 and problem.line == 1 and lx.cursor[0] == 6 and lx.cursor[1] == 2 and lx.cursor[2] == 3

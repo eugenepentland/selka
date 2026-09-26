@@ -16,12 +16,13 @@ def max_parse_depth() -> int:
 def mil_to_mm() -> float:
     return 0.0254
 
-# One-token lookahead shared by recursive calls. Token text stays in src until
-# a node needs it, and traversal does not copy a list cursor per node.
-class Cursor:
+# One-token lookahead shared by recursive calls through `mut Cursor`. Token
+# text stays in src until a node needs it; the one-element current-token list
+# makes the cursor's update visible in both migration modes.
+record Cursor:
     src: bytes
     lexer: tk.Lexer
-    current: tk.RawToken
+    current: list[tk.RawToken]
     cap: int
 
 def located(span: ast.Span, message: str) -> ParseError:
@@ -37,10 +38,13 @@ def lex_failure(src: bytes, problem: tk.LexError) -> ParseError:
         message = "unexpected character"
     return ParseError(message=message, line=int(span.line), col=int(span.col), offset=problem.offset)
 
-def advance(cursor: Cursor) -> Result[bool, ParseError]:
-    match tk.next_raw(cursor.lexer):
+def advance(cursor: mut Cursor) -> Result[bool, ParseError]:
+    lx = cursor.lexer
+    outcome = tk.next_raw(mut lx)
+    cursor.lexer = lx
+    match outcome:
         case Ok(token):
-            cursor.current = token
+            cursor.current[0] = token
             return Ok(True)
         case Err(problem):
             return Err(lex_failure(cursor.src, problem))
@@ -164,12 +168,12 @@ def parse_leaf(src: bytes, raw: tk.RawToken) -> Result[ast.Node, ParseError]:
         return parse_si(src, raw)
     return Err(located(span, "unexpected token"))
 
-def parse_node(cursor: Cursor, depth: int) -> Result[ast.Node, ParseError]:
-    raw = cursor.current
+def parse_node(cursor: mut Cursor, depth: int) -> Result[ast.Node, ParseError]:
+    raw = cursor.current[0]
     match raw.kind:
         case tk.Kind.lparen:
-            _ = advance(cursor)?
-            return parse_list(cursor, depth, raw.source.span)
+            _ = advance(mut cursor)?
+            return parse_list(mut cursor, depth, raw.source.span)
         case tk.Kind.rparen:
             return Err(located(raw.source.span, "unexpected ')' — no matching '(' is open here"))
         case tk.Kind.eof:
@@ -178,32 +182,35 @@ def parse_node(cursor: Cursor, depth: int) -> Result[ast.Node, ParseError]:
             # A string node keeps the bytes between the quotes with escapes
             # intact, which is exactly the tokenizer's text range.
             node = ast.Node.string(view_of(cursor.src, raw.text_start, raw.text_end), raw.source.span)
-            _ = advance(cursor)?
+            _ = advance(mut cursor)?
             return Ok(node)
         case _:
             node = parse_leaf(cursor.src, raw)?
-            _ = advance(cursor)?
+            _ = advance(mut cursor)?
             return Ok(node)
 
-def parse_list(cursor: Cursor, depth: int, open_span: ast.Span) -> Result[ast.Node, ParseError]:
+def parse_list(cursor: mut Cursor, depth: int, open_span: ast.Span) -> Result[ast.Node, ParseError]:
     if depth >= cursor.cap:
         return Err(located(open_span, "s-expression nesting is too deep"))
     entries: list[ast.Node] = []
     while True:
-        if cursor.current.kind == tk.Kind.eof:
+        if cursor.current[0].kind == tk.Kind.eof:
             return Err(located(open_span, "unexpected end of input — a '(' was never closed"))
-        if cursor.current.kind == tk.Kind.rparen:
-            _ = advance(cursor)?
+        if cursor.current[0].kind == tk.Kind.rparen:
+            _ = advance(mut cursor)?
             return Ok(ast.Node.form(entries, open_span))
-        entries.append(parse_node(cursor, depth + 1)?)
+        entries.append(parse_node(mut cursor, depth + 1)?)
 
 # The old parser tokenized all input first. Drain only the syntax-error path so
 # a later lexical failure retains its historical precedence.
-def finish_after_syntax_error(cursor: Cursor, syntax: ParseError) -> Result[list[ast.Node], ParseError]:
-    while cursor.current.kind != tk.Kind.eof:
-        match tk.next_raw(cursor.lexer):
+def finish_after_syntax_error(cursor: mut Cursor, syntax: ParseError) -> Result[list[ast.Node], ParseError]:
+    while cursor.current[0].kind != tk.Kind.eof:
+        lx = cursor.lexer
+        outcome = tk.next_raw(mut lx)
+        cursor.lexer = lx
+        match outcome:
             case Ok(token):
-                cursor.current = token
+                cursor.current[0] = token
             case Err(problem):
                 return Err(lex_failure(cursor.src, problem))
     return Err(syntax)
@@ -220,17 +227,17 @@ public def parse_with_depth_cap(src: bytes, cap: int) -> Result[list[ast.Node], 
         return Err(ParseError(message="document exceeds the 4 GiB source range", line=1, col=1, offset=0))
     lx = tk.lexer(src)
     first = tk.RawToken(kind=tk.Kind.eof, source=tk.SpanToken(start=0, end=0, span=ast.Span(line=1, col=1, offset=0)), text_start=0, text_end=0)
-    match tk.next_raw(lx):
+    match tk.next_raw(mut lx):
         case Ok(token):
             first = token
         case Err(problem):
             return Err(lex_failure(src, problem))
-    cursor = Cursor(src=src, lexer=lx, current=first, cap=cap)
+    cursor = Cursor(src=src, lexer=lx, current=[first], cap=cap)
     nodes: list[ast.Node] = []
-    while cursor.current.kind != tk.Kind.eof:
-        match parse_node(cursor, 0):
+    while cursor.current[0].kind != tk.Kind.eof:
+        match parse_node(mut cursor, 0):
             case Ok(node):
                 nodes.append(node)
             case Err(problem):
-                return finish_after_syntax_error(cursor, problem)
+                return finish_after_syntax_error(mut cursor, problem)
     return Ok(nodes)

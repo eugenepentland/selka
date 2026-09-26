@@ -1,10 +1,10 @@
 module const_lengths___one_helper_serves_distinct_nominal_element_t
 
-class A:
+record A:
     value: i64
 
 
-class B:
+record B:
     value: i64
 
 

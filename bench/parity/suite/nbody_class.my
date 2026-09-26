@@ -1,13 +1,13 @@
-# nbody (class variant): the same program as nbody.my, but `Body` is a
-# `class`, so `bodies[i]` yields a reference and `bi.vx = ...` writes the
-# shared object directly. See SUITE.md section 2.
+# nbody (former class variant): each Body is now a value record. The
+# original class benchmark is retained in git history; this source checks
+# explicit indexed store-back under value semantics. See SUITE.md section 2.
 #
 # The constants are zero-argument functions because a module `const` may not
 # have type `float` (E_CONSTANT_TYPE: constant types currently require builtin
 # integers or bool).
 
 
-class Body:
+record Body:
     x: float
     y: float
     z: float
@@ -81,10 +81,9 @@ def offset_momentum(bodies: mut list[Body]) -> None:
         px = px + b.vx * b.mass
         py = py + b.vy * b.mass
         pz = pz + b.vz * b.mass
-    sun = bodies[0]
-    sun.vx = (0.0 - px) / solar_mass()
-    sun.vy = (0.0 - py) / solar_mass()
-    sun.vz = (0.0 - pz) / solar_mass()
+    bodies[0].vx = (0.0 - px) / solar_mass()
+    bodies[0].vy = (0.0 - py) / solar_mass()
+    bodies[0].vz = (0.0 - pz) / solar_mass()
 
 
 def energy(bodies: list[Body]) -> float:
@@ -105,24 +104,22 @@ def energy(bodies: list[Body]) -> float:
 def advance(bodies: mut list[Body], dt: float) -> None:
     n = len(bodies)
     for i in range(n):
-        bi = bodies[i]
         for j in range(i + 1, n):
-            bj = bodies[j]
-            dx = bi.x - bj.x
-            dy = bi.y - bj.y
-            dz = bi.z - bj.z
+            dx = bodies[i].x - bodies[j].x
+            dy = bodies[i].y - bodies[j].y
+            dz = bodies[i].z - bodies[j].z
             d2 = dx * dx + dy * dy + dz * dz
             mag = dt / (d2 * sqrt(d2))
-            bi.vx = bi.vx - dx * bj.mass * mag
-            bi.vy = bi.vy - dy * bj.mass * mag
-            bi.vz = bi.vz - dz * bj.mass * mag
-            bj.vx = bj.vx + dx * bi.mass * mag
-            bj.vy = bj.vy + dy * bi.mass * mag
-            bj.vz = bj.vz + dz * bi.mass * mag
-    for b in bodies:
-        b.x = b.x + dt * b.vx
-        b.y = b.y + dt * b.vy
-        b.z = b.z + dt * b.vz
+            bodies[i].vx = bodies[i].vx - dx * bodies[j].mass * mag
+            bodies[i].vy = bodies[i].vy - dy * bodies[j].mass * mag
+            bodies[i].vz = bodies[i].vz - dz * bodies[j].mass * mag
+            bodies[j].vx = bodies[j].vx + dx * bodies[i].mass * mag
+            bodies[j].vy = bodies[j].vy + dy * bodies[i].mass * mag
+            bodies[j].vz = bodies[j].vz + dz * bodies[i].mass * mag
+    for i in range(n):
+        bodies[i].x = bodies[i].x + dt * bodies[i].vx
+        bodies[i].y = bodies[i].y + dt * bodies[i].vy
+        bodies[i].z = bodies[i].z + dt * bodies[i].vz
 
 
 def main(out: Stream) -> int:

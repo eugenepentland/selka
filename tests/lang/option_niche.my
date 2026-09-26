@@ -9,7 +9,7 @@ module option_niche
 # collector failed to trace, or a `None` it tried to follow, fails here.
 
 
-class Node:
+record Node:
     value: int
     left: Option[Node]
     right: Option[Node]

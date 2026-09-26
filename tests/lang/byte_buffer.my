@@ -1,7 +1,7 @@
 module byte_buffer
 
 
-class Packet:
+record Packet:
     tag: str
     body: byte_buffer
 

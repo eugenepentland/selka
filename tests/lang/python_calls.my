@@ -19,11 +19,11 @@ def pick[T](first: T, second: T) -> T:
     return first
 
 
-class Empty:
+record Empty:
     pass
 
 
-class Box[T]:
+record Box[T]:
     value: T
 
 

@@ -84,7 +84,8 @@ typedef struct myl_native_root {
  * generational store barrier tests — bit 1 marks storage that lives outside
  * the heap (a frozen `str`/`bytes` literal), which the collector never queues,
  * re-traces, frees or bulk-releases, and the bits above hold the element count
- * (below bit 62, the arena flag, and bit 63, the large flag). A free slot of a
+ * (below bits 60 and 61, the copy-on-write flags, bit 62, the arena flag, and
+ * bit 63, the large flag). A free slot of a
  * segment without mark bits is never marked: the first slot of a hole holds a
  * `myl_native_hole` whose first word is an aligned address, and every other
  * free slot keeps its last occupant's unmarked word. A free slot of a bitmap
@@ -110,12 +111,28 @@ enum { MYL_NATIVE_OBJECT_MARKED = 1, MYL_NATIVE_OBJECT_IMMORTAL = 2,
  * so the flag alone tells an arena payload from every other managed payload. */
 #define MYL_NATIVE_OBJECT_ARENA (((uintptr_t)1) << 62)
 #define MYL_NATIVE_ARENA_REGION_SHIFT 40
-/* Largest element count a tracing-heap mark word holds below the arena flag. */
-#define MYL_NATIVE_OBJECT_COUNT_MAX ((size_t)((MYL_NATIVE_OBJECT_ARENA >> MYL_NATIVE_OBJECT_COUNT_SHIFT) - 1))
+/* The copy-on-write flags of a list, byte buffer, dictionary or set header
+ * (COW-SHARED-1, COW-PIN-1), below the arena flag in both mark-word layouts.
+ * SHARED says a value transfer left a second holder of this payload, so the
+ * first write through any holder copies it first (`native_cow.h`); it is
+ * sticky, because nothing counts the holders. PINNED says a caller lent this
+ * payload to a `mut` parameter, whose slot the callee cannot redirect, so a
+ * transfer copies it at once instead of setting SHARED. The collector never
+ * reads, sets or clears either flag: it keeps both through every mark, sweep
+ * and growth, and a fresh allocation starts with both clear. */
+#define MYL_NATIVE_OBJECT_SHARED (((uintptr_t)1) << 61)
+#define MYL_NATIVE_OBJECT_PINNED (((uintptr_t)1) << 60)
+#define MYL_NATIVE_OBJECT_COW (MYL_NATIVE_OBJECT_SHARED | MYL_NATIVE_OBJECT_PINNED)
+/* Largest element count a tracing-heap mark word holds below the
+ * copy-on-write flags. */
+#define MYL_NATIVE_OBJECT_COUNT_MAX ((size_t)((MYL_NATIVE_OBJECT_PINNED >> MYL_NATIVE_OBJECT_COUNT_SHIFT) - 1))
+/* The count bits of a tracing-heap mark word, in place. */
+#define MYL_NATIVE_OBJECT_COUNT_BITS ((uintptr_t)MYL_NATIVE_OBJECT_COUNT_MAX << MYL_NATIVE_OBJECT_COUNT_SHIFT)
 /* Largest element count and arena depth an arena mark word holds. The depth
- * bound is far beyond any nesting a native stack can reach. */
+ * sits below the copy-on-write flags; its bound is far beyond any nesting a
+ * native stack can reach. */
 #define MYL_NATIVE_ARENA_COUNT_MAX ((((size_t)1) << (MYL_NATIVE_ARENA_REGION_SHIFT - MYL_NATIVE_OBJECT_COUNT_SHIFT)) - 1)
-#define MYL_NATIVE_ARENA_REGION_MAX ((unsigned)((MYL_NATIVE_OBJECT_ARENA >> MYL_NATIVE_ARENA_REGION_SHIFT) - 1))
+#define MYL_NATIVE_ARENA_REGION_MAX ((unsigned)((MYL_NATIVE_OBJECT_PINNED >> MYL_NATIVE_ARENA_REGION_SHIFT) - 1))
 /* Arena depth owning one non-null managed payload, read from its header: the
  * recorded depth for an arena allocation, 0 for a tracing-heap object or a
  * frozen literal. One load, whatever the number of arena chunks. */

@@ -65,6 +65,7 @@ const everyday_help =
     \\
     \\Everyday commands:
     \\  mylang check FILE.my              type-check without building
+    \\  mylang fix FILE.my [--check]     apply safe diagnostic repairs
     \\  mylang run FILE.my [-- ARGS...]   build natively and run; arguments after --
     \\  mylang build FILE.my -o OUT       native executable, built by QBE in about a second
     \\  mylang build FILE.my -o OUT --release   optimized (LLVM -O3 + LTO), for shipping or timing
@@ -268,6 +269,11 @@ fn dispatch(process: std.process.Init) !u8 {
         .status => |status| return status,
     };
     if (settled.enabled) build_identity = valueSemanticsIdentity(base_identity);
+    // COW-STATS-1: build and frontend children inherit this selector, with
+    // their cached work partitioned from ordinary value-semantics builds.
+    const cow_counting = settled.enabled and language.value_semantics.environmentEnables(process.environ_map.get(language.value_semantics.counting_variable));
+    language.value_semantics.setCounting(cow_counting);
+    if (cow_counting) build_identity = cowCountingIdentity(build_identity);
     const args = settled.args;
     if (args.len == 2 and std.mem.eql(u8, args[1], "--features")) {
         try featureReport(process);
@@ -280,6 +286,7 @@ fn dispatch(process: std.process.Init) !u8 {
         return 0;
     }
     if (args.len >= 2 and std.mem.eql(u8, args[1], "build")) return buildCommand(process, args[2..]);
+    if (args.len >= 2 and std.mem.eql(u8, args[1], "fix")) return @import("fix_command.zig").run(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "emit-runtime")) return @import("qbe_build.zig").emitRuntime(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "test")) return @import("native_test_command.zig").run(process, args[2..]) catch |err| switch (err) {
         // `run` already rendered the child compiler's located diagnostic; exit 1
@@ -934,6 +941,7 @@ const Parsed = struct {
             .drop_debug = self.drop_debug,
             .step_checks = !self.drop_step_checks,
             .frame_checks = !self.drop_frame_checks,
+            .cow = if (language.value_semantics.counting()) .counting else .off,
         };
     }
 
@@ -945,6 +953,7 @@ const Parsed = struct {
         return .{
             .step_checks = self.saw_steps,
             .frame_checks = frames,
+            .cow = if (language.value_semantics.counting()) .counting else .off,
         };
     }
 };
@@ -2969,6 +2978,12 @@ fn valueSemanticsIdentity(base: [32]u8) [32]u8 {
     std.crypto.hash.sha2.Sha256.hash(&(base ++ "value-semantics".*), &digest, .{});
     return digest;
 }
+/// A counting build cannot reuse an ordinary value-semantics cache entry.
+fn cowCountingIdentity(base: [32]u8) [32]u8 {
+    var digest: [32]u8 = undefined;
+    std.crypto.hash.sha2.Sha256.hash(&(base ++ "cow-counting".*), &digest, .{});
+    return digest;
+}
 /// The identity of this compiler build itself.
 const base_identity: [32]u8 = identity: {
     const text = @import("qbe_build_assets").compiler_identity;
@@ -3233,6 +3248,7 @@ fn manifestReplayTicket(parsed: Parsed, diagnostics: diagnostic_output.Format, p
     for (switches) |value| slot.update(&.{@intFromBool(value)});
     // VALUE-SEMANTICS-1: value semantics changes every lowered body.
     if (language.value_semantics.enabled()) slot.update("value-semantics");
+    if (language.value_semantics.counting()) slot.update("cow-counting");
     slot.update(&.{@backingInt(diagnostics)});
     var key = slot;
     if (policy) |identity| {

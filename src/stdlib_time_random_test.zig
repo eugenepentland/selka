@@ -38,7 +38,8 @@ const seeded =
     "module main\nimport random\n" ++
     "def main(entropy: Entropy) -> int:\n" ++
     "    match random.from_entropy(entropy):\n" ++
-    "        case Ok(generator):\n" ++
+    "        case Ok(sampled):\n" ++
+    "            generator = sampled\n" ++
     "            replay = random.from_word(generator.state[0])\n" ++
     "            if random.next_word(mut generator) != random.next_word(mut replay):\n" ++
     "                return 1\n" ++

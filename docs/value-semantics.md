@@ -1,9 +1,9 @@
 # Value semantics
 
-**Experimental and opt-in.** This is stage 3a of
-[D9](adr/D9-value-semantics-then-rc.md): the language rules of value semantics
-on the current garbage-collected runtime, implemented the slow way (real copies
-where a transfer needs one). Without the switch nothing on this page applies,
+**Experimental and opt-in.** This is stage 3 of
+[D9](adr/D9-value-semantics-then-rc.md): value semantics on the current
+garbage-collected runtime, with copy-on-write for mutable collections. Without
+the switch nothing on this page applies,
 and the compiler behaves exactly as it does without it: `class`, `list` and
 `dict` values are shared references ([managed memory](managed-memory.md)).
 
@@ -129,8 +129,9 @@ def main() -> int:
     return len(grid[0]) + len(grid[1]) * 10
 ```
 
-A binding of a `class` type is a shared reference and stays writable, and a
-`match` on a call result binds the result itself, which nothing else holds.
+A `match` on a call result binds the result itself, which nothing else holds.
+Under this switch a `class` declaration is `E_VALUE_CLASS`: use a record or
+recursive union for finite values, or a pool handle for stable graph identity.
 
 **Writing into a returned value is an error.** `lookup(table, key).items.append(1)`
 changes a temporary copy no name holds: `E_VALUE_TEMPORARY_WRITE`. Assign the
@@ -170,25 +171,47 @@ change goes to `row`, a copy of `rows[i]`; store the copy back after changing it
 (`rows[i] = row`) so the change reaches the caller
 ```
 
-## What stays shared
+## Explicit identity and immutable sharing
 
-- `class` objects and Cells are shared references in this stage (replacing
-  them with records and `pool` ids is a later stage of D9). A list reached
-  through a class object is shared through that object; reading it into a local
-  gives the local its own copy.
+- A `class` declaration is `E_VALUE_CLASS`, including an unused declaration.
+  A finite tree can use a recursive value type. A graph with cycles or
+  observable identity uses `pool.Pool[T]` and `pool.Handle[T]`, or another
+  explicit id with a store-back after mutation.
+- The builtin `Cell[T]` is `E_VALUE_CELL` in type positions and calls. A local
+  mutable slot is a record changed through `mut`; a shared slot uses a pool
+  handle. An ordinary user-defined record named `Cell` remains legal.
+- Without `--value-semantics`, existing classes and builtin Cells continue to
+  compile during the migration window.
 - `str` and `bytes` are immutable, so sharing them is invisible.
+
+```mylang
+# doc: value-semantics
+# doc: expect-error E_VALUE_CLASS
+class Node:
+    next: Option[Node]
+```
+
+```mylang
+# doc: value-semantics
+# doc: expect-error E_VALUE_CELL
+def read(slot: Cell[int]) -> int:
+    return slot.value
+```
 
 ## Arenas and contracts
 
-A copy made inside `with arena()` allocates in that arena, like any other
-allocation, and leaves it only through `escape`
-([arenas](arenas.md#getting-a-result-out)). The static escape rules and the
-runtime store barrier apply unchanged; a helper that stores a copy made inside
-the arena into an older collection traps `R_ARENA_ESCAPE`.
+A transfer made inside `with arena()` usually marks an existing collection
+shared without allocating. When a later write must clone a shared payload,
+the clone uses that payload's owning region. In particular, writing an outer
+value while an inner arena is open cannot leave its new storage dangling when
+the inner arena ends. New collections still allocate in the current arena and
+leave it only through `escape` ([arenas](arenas.md#getting-a-result-out)). The
+static escape rules and runtime store barrier apply unchanged.
 
 `old(xs)` of a collection is accepted in an `@ensures` clause: the capture is a
-value of its own. `old(...)` of a value that reaches a `class` or Cell is still
-`E_CONTRACT_OLD_SHARED` ([contracts](contracts.md)).
+value of its own. The legacy checker still rejects an `old(...)` value that
+reaches a `class` or builtin Cell with `E_CONTRACT_OLD_SHARED`
+([contracts](contracts.md)).
 
 ## How it is implemented
 
@@ -197,16 +220,23 @@ fresh. The ownership analysis of stage 2
 ([ownership](tooling/ownership.md)) then leaves out every copy it proves a move
 (the source is never read again) or a borrow (neither side is written while
 both are read); `mylang check --explain-ownership` lists each copy site with
-`"copy": true` or `false`. Every copy that remains goes through one runtime
-entry, `myl_qbe_value_copy`, which duplicates each list, dictionary, set and
-byte string the value reaches. A read-only argument is lent without a copy.
-The next stage replaces that entry with copy-on-write, so the copies become
-checks at the writes.
+`"copy": true` or `false`. Every copy that remains goes through one rooted
+runtime transfer, which marks the collection payloads it reaches shared. A
+read-only argument is lent without a copy. Before a write, an inline check
+clones a shared payload and redirects the owning slot; nested writes repeat
+that step along their path. Checks proven stable across a loop are hoisted.
+
+For internal measurements, `MYLANG_COW_COUNTING=1` together with
+`--value-semantics` builds a separately cached instrumented binary. At exit it
+prints a `cow-stats` JSON line on stderr with marks, checks, hoisted checks,
+copies, copied bytes and pins. Ordinary builds emit no counter calls.
 
 ## Limits
 
-- Copies are eager, so a program that stores or returns large collections pays
-  for each copy; this stage is the reference for the rules, not for speed.
+- A transfer of a recursive value that can hold collections walks its existing
+  boxes to mark those collections shared. It traps `R_COW_DEPTH` after 1,024
+  descriptor edges rather than leaving a deeper collection unmarked. A
+  scalar-only recursive value requires no such walk.
 - A copy is not reported as a `managed_allocation` effect.
 - Rebinding a whole `mut` list or dict parameter does not reach the caller; it
   is rejected as a `mut` that is never written.

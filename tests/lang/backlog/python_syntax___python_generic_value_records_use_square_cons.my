@@ -1,6 +1,6 @@
 module python_syntax___python_generic_value_records_use_square_cons
 
-class Box[T]:
+record Box[T]:
     value: T
 
 def main() -> int:

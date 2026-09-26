@@ -127,7 +127,8 @@ public def test_a_result_verdict(xs: list[int]) -> Result[bool, str]:
 
 public def test_a_capability_beside_generated_data(limit: u8, entropy: Entropy) -> bool:
     match random.from_entropy(entropy):
-        case Ok(generator):
+        case Ok(sampled):
+            generator = sampled
             match random.randint(mut generator, 0, int(limit)):
                 case Ok(value):
                     return value >= 0 and value <= int(limit)

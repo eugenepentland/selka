@@ -1,5 +1,13 @@
 # sexpr-port — the EDA S-expression reader, ported to mylang
 
+The D9 value migration made `Tally`, `Cursor` and `Lexer` records. `Tally` is
+returned and assigned after each count update; parser and tokenizer state
+cross function calls through `mut` records, with cursor lists so the legacy
+mode also preserves their updates. The old `mutates(...)` spelling in the
+printer became `mut` parameters. The 114 guest tests pass with and without
+`--value-semantics`; the four reference fixtures and 17 Zig printer goldens
+also agree under the switch.
+
 `/home/epentland/ai/canopy/eda` (the sibling Zig EDA project) parses its design
 files with a hand-written S-expression reader under `eda/src/sexpr/`. This
 directory is a from-scratch **mylang port** of that reader plus the measurement

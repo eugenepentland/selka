@@ -12,7 +12,7 @@ public record Point:
     y: int
 
 
-public class Node:
+public record Node:
     value: int
     children: list[Node]
     tag: Option[str]
@@ -24,7 +24,7 @@ public union Shape:
     empty
 
 
-public class Scene:
+public record Scene:
     shapes: list[Shape]
     index: dict[str, Point]
     root: Option[Node]

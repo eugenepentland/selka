@@ -1,8 +1,8 @@
 module pool
 
 
-# A slot store with generational handles. The fields are managed lists, so a
-# copy of a Pool value refers to the same store rather than a snapshot.
+# A slot store with generational handles. Under value semantics a Pool is a
+# value: pass it with `mut` to change its slots, and keep handles with it.
 public record Pool[T: copy + storable]:
     slots: list[T]
     generations: list[int]
@@ -64,14 +64,14 @@ public def insert[T: copy + storable](store: mut Pool[T], value: T) -> Handle[T]
 
 
 # The value a handle names, or nothing for a stale or foreign handle.
-public def get[T: copy + storable](store: Pool[T], handle: Handle[T]) -> Option[T] effects():
+public def get[T: copy + storable](store: Pool[T], handle: Handle[T]) -> Option[T]:
     if not occupied(store, handle):
         return None
     return Some(store.slots[handle.index])
 
 
 # Replace the value a handle names, reporting whether the handle was live.
-public def set[T: copy + storable](store: mut Pool[T], handle: Handle[T], value: T) -> bool effects(mutation):
+public def set[T: copy + storable](store: mut Pool[T], handle: Handle[T], value: T) -> bool:
     if not occupied(store, handle):
         return False
     store.slots[handle.index] = value

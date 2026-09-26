@@ -1,7 +1,7 @@
 module surface_statements_case_2
 
 
-class Holder[T]:
+record Holder[T]:
     value: T
 
 

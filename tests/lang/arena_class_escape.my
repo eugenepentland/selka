@@ -1,25 +1,20 @@
 module arena_class_escape
 
-# `name.escape(value)` copies `class` instances out of an arena exactly as it
-# copies collections: each instance reachable in the dying arena gets one clone
-# in the enclosing region, sharing and cycles are preserved, and an instance
-# that already lives in an older region is shared. Under `--gc-stress` every
-# allocation collects, so the clones are exercised as ordinary collected
-# objects: they are promoted, then given young objects through the class store
-# barrier, and must keep them.
+# `name.escape(value)` carries finite value trees and nested lists out of an
+# arena. Earlier values remain independent after a copied value is changed.
 
 
-class Node:
+record Node:
     value: int
     next: Option[Node]
 
 
-class Box:
+record Box:
     items: list[Node]
     label: str
 
 
-class Empty:
+record Empty:
     pass
 
 
@@ -39,8 +34,8 @@ def next_value(node: Node) -> int:
             return 0 - 1
 
 
-# spec: ARENA-ESCAPE-CLASS-1
-public def test_escape_copies_a_class_instance_and_the_instances_it_reaches() -> bool:
+# spec: ARENA-ESCAPE-VALUE-1
+public def test_escape_copies_a_record_and_the_values_it_reaches() -> bool:
     kept = Node(value=0, next=None)
     with arena() as scratch:
         leaf = Node(value=5, next=None)
@@ -49,31 +44,21 @@ public def test_escape_copies_a_class_instance_and_the_instances_it_reaches() ->
     return kept.value * 10 + next_value(kept) == 75
 
 
-# spec-case: ARENA-ESCAPE-CLASS-1
-public def test_escape_preserves_a_cycle_through_class_instances() -> bool:
+# spec-case: ARENA-ESCAPE-VALUE-1
+public def test_escape_copies_a_finite_recursive_record() -> bool:
     kept = Node(value=0, next=None)
     with arena() as scratch:
         first = Node(value=1, next=None)
         second = Node(value=2, next=Some(first))
-        first.next = Some(second)
-        kept = scratch.escape(first)
+        kept = scratch.escape(second)
     _ = churn(20)
-    back = kept
-    match kept.next:
-        case Some(child):
-            match child.next:
-                case Some(again):
-                    back = again
-                case None:
-                    pass
-        case None:
-            pass
-    back.value = 100
-    return kept.value == 100 and next_value(kept) == 2
+    earlier = kept
+    kept.value = 100
+    return earlier.value == 2 and kept.value == 100 and next_value(kept) == 1
 
 
-# spec-case: ARENA-ESCAPE-CLASS-1
-public def test_escape_copies_classes_inside_lists_and_lists_inside_classes() -> bool:
+# spec-case: ARENA-ESCAPE-VALUE-1
+public def test_escape_copies_records_inside_lists_and_lists_inside_records() -> bool:
     kept = Box(items=[], label="")
     with arena() as scratch:
         shared = Node(value=3, next=None)
@@ -81,21 +66,21 @@ public def test_escape_copies_classes_inside_lists_and_lists_inside_classes() ->
         kept = scratch.escape(box)
     _ = churn(20)
     kept.items[0].value = 30
-    return kept.items[1].value == 30 and kept.items[2].value == 4 and kept.label == "made in the arena"
+    return kept.items[1].value == 3 and kept.items[2].value == 4 and kept.label == "made in the arena"
 
 
-# spec-case: ARENA-ESCAPE-CLASS-1
-public def test_escape_shares_a_class_instance_that_already_lives_outside_the_arena() -> bool:
+# spec-case: ARENA-ESCAPE-VALUE-1
+public def test_escape_keeps_an_older_value_independent() -> bool:
     older = Node(value=9, next=None)
     kept = Node(value=0, next=None)
     with arena() as scratch:
         kept = scratch.escape(Node(value=1, next=Some(older)))
     older.value = 90
-    return next_value(kept) == 90
+    return next_value(kept) == 9 and older.value == 90
 
 
-# spec-case: ARENA-ESCAPE-CLASS-1
-public def test_an_escaped_class_instance_keeps_a_young_object_stored_after_promotion() -> bool:
+# spec-case: ARENA-ESCAPE-VALUE-1
+public def test_an_escaped_record_keeps_a_young_value_stored_after_promotion() -> bool:
     kept = Node(value=0, next=None)
     with arena() as scratch:
         kept = scratch.escape(Node(value=1, next=None))
@@ -105,8 +90,8 @@ public def test_an_escaped_class_instance_keeps_a_young_object_stored_after_prom
     return next_value(kept) == 6
 
 
-# spec-case: ARENA-ESCAPE-CLASS-1
-public def test_escape_into_an_enclosing_arena_copies_the_class_instance_there() -> bool:
+# spec-case: ARENA-ESCAPE-VALUE-1
+public def test_escape_into_an_enclosing_arena_copies_the_record_there() -> bool:
     total = 0
     with arena() as outer:
         middle = Node(value=0, next=None)
@@ -117,8 +102,8 @@ public def test_escape_into_an_enclosing_arena_copies_the_class_instance_there()
     return total == 23
 
 
-# spec-case: ARENA-ESCAPE-CLASS-1
-public def test_escape_copies_a_class_with_no_fields() -> bool:
+# spec-case: ARENA-ESCAPE-VALUE-1
+public def test_escape_copies_a_record_with_no_fields() -> bool:
     kept: list[Empty] = []
     with arena() as scratch:
         made = Empty()

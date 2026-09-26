@@ -137,7 +137,8 @@ import time
 
 def first(entropy: Entropy) -> u64:
     match random.from_entropy(entropy):
-        case Ok(generator):
+        case Ok(sampled):
+            generator = sampled
             return random.next_word(mut generator)
         case Err(_):
             return 0u64
