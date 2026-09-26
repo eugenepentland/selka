@@ -13,11 +13,17 @@ Stage 3 and WP-4pre are accepted on the integration branch. The complete
 1.046853543× LLVM, with every output correct and no program above 1.3×.
 The final combined default/borrow gate at `f6bea5d9` passes all four steps:
 2,130 executed main tests, 429 QBE tests, native-build and formatting.
-WP-4 foundations are implemented behind an experimental runtime selector.
-The joined foundation at `3e0c1400` passes its full regression gate: 2,153 main
-tests, 436 QBE tests, native build and formatting. Compiler cleanup, complete
-runtime/arena/host ownership, and RC performance/RSS acceptance remain in progress;
-GC stays the default. See the [foundation report](d9-rc-foundation-gate-2026-09-26.md).
+WP-4's compiler, runtime, collection, arena and host ownership paths are implemented
+behind an experimental runtime selector. The latest frozen full gate at `d57fef03`
+passes 2,232 main tests, 437 QBE tests, native build and formatting; its separate
+uncached RC sweeps pass 774 assertions on each backend across 136 programs.
+Supplemental golden replay has exposed arena and failed-file cleanup defects,
+and a separate live-view audit found snapshot/history discrepancies. Fixes and
+performance work continue; the substantial instruction gap still fails WP-4's
+acceptance limits. GC stays the default. See the
+[identity checkpoint](d9-rc-identity-gate-2026-09-26.md).
+WP-5 has a [committed design](d9-wp5-concurrency-design-2026-09-26.md), with
+implementation dependent on WP-4 acceptance.
 
 ## Accepted work
 
@@ -52,8 +58,8 @@ for every accepted package above.
 
 | Work | Branch/worktree | Remaining acceptance |
 |---|---|---|
-| WP-4 reference counting | Shared interface and experimental selector work from `266d9d5a` | Prerequisites accepted. Freeze shared ownership/shape interfaces, implement allocator/collections/compiler/arenas/host support, then full correctness and RC performance/RSS acceptance including rewritten graph programs |
-| WP-5 concurrency | Not started | Design after WP-4, following the existing concurrency proposal |
+| WP-4 reference counting | `codex/d9-rc-integration`; frozen correctness checkpoint `d57fef03`, later fixes and measured optimizations joined through `e2667d56` | Complete supplemental replay and live-view parity fixes; gate the final combined source; pass complete RC instruction/RSS acceptance including rewritten graph programs. Later source is not covered by the earlier gate |
+| WP-5 concurrency | Design committed in `df482879`; [proposal](d9-wp5-concurrency-design-2026-09-26.md) | Resolve the documented Weft-source provenance gap and remaining design decisions; implement and validate after WP-4 acceptance |
 
 The plan's literal “on main” scheduling dependencies are being supplied by validated
 integration commits so downstream development can continue without prematurely
@@ -271,3 +277,30 @@ fall from 1,996,163 to 19, with all 669,060 allocations retired. This is focused
 evidence; complete performance/RSS acceptance and the default transition remain
 open. The superseded exact-workload diagnostic is preserved in
 [the early performance report](d9-rc-early-performance-2026-09-26.md).
+
+## RC identity and supplemental replay checkpoint
+
+Frozen `d57fef03` passes all four gate commands: main 94/94 steps with 2,232
+executed tests, QBE 51/51 with 437 tests, native build 29/29, and formatting 2/2.
+Its uncached counted-runtime sweeps pass 774/774 assertions per backend, across
+136 programs with none dropped or unloaded. Exact compiler hashes, logs and
+backend selection are retained in the [identity report](d9-rc-identity-gate-2026-09-26.md).
+
+An additional immutable-compiler replay covers 231 authoritative native goldens
+per backend: 226 RC cases and five explicit legacy-sharing GC fallbacks.
+This replay is still running. It has reproduced two older-receiver arena traps
+and two failed-file error-text leaks. The receiver-region correction `1e708148`,
+joined at `e2667d56`, passes the two exact cases and 83 RC guests per backend,
+eight GC guests per backend, 45 focused tests and 92 sanitizer scenarios:
+[receiver-region evidence](d9-rc-receiver-regions-2026-09-26.md).
+The failed-file correction and a distinct live-view mapping snapshot/history
+correction remain in progress. A scheduling-wrapper diagnostic prefix caused
+one harness classification error; the guest refusal itself was unchanged.
+
+Later integrated optimizations include physical loop versioning (`a9b60357`),
+completed-constructor publication (`03a0cf08`) and omission of tracing roots
+from counted frames (`10f122a6`). Each has focused both-backend evidence, but
+the combined source still needs a fresh full gate and complete performance/RSS
+acceptance. The frame-template experiment was rejected after an LLVM regression;
+its evidence remains committed. Specialized allocation and compact journal
+indices are being measured next. No partial timing establishes WP-4 acceptance.
