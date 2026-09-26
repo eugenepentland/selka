@@ -146,7 +146,18 @@ diff --git a/heap.my b/heap.my
 
 
  # P3 adaptation: write one environment slot and store the environment back,
-@@ -245,105 +314,63 @@
+@@ -217,8 +286,9 @@
+
+ # Binds a global; answers whether the name was new.
+ public def set_global(rt: mut Runtime, name: value.ObjRef, item: value.Value) -> bool:
++    hash = string_hash(rt, name)
+     __wb_202 = rt.globals
+-    __result_202 = table.set(mut __wb_202, name, string_hash(rt, name), item)
++    __result_202 = table.set(mut __wb_202, name, hash, item)
+     rt.globals = __wb_202
+     return __result_202
+
+@@ -245,105 +315,63 @@
 
 
  def mark_roots(rt: mut Runtime):
