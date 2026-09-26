@@ -3981,7 +3981,8 @@ const capability_tests =
     \\
     \\public def test_entropy(entropy: Entropy, out: Stream) -> bool:
     \\    match random.from_entropy(entropy):
-    \\        case Ok(generator):
+    \\        case Ok(sampled):
+    \\            generator = sampled
     \\            out.print("word", random.next_word(mut generator))
     \\        case Err(_):
     \\            out.print("no entropy")

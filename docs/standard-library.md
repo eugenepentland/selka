@@ -676,7 +676,8 @@ def main() -> int:
 
 def drawn(entropy: Entropy) -> int:
     match random.from_entropy(entropy):
-        case Ok(generator):
+        case Ok(sampled):
+            generator = sampled
             return int(random.next_word(mut generator) % 1000u64)
         case Err(_):
             return 500

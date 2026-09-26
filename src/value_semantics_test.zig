@@ -122,7 +122,7 @@ test "a transfer neither side writes is a borrow and copies nothing" {
 }
 
 // spec-case: VALUE-SEMANTICS-2
-test "a list read out of a record is a value copy" {
+test "a read-only list taken from a record borrows until a write" {
     const through_class =
         \\record Box:
         \\    items: list[int]
@@ -134,7 +134,8 @@ test "a list read out of a record is a value copy" {
         \\
     ;
     const on = try sites(through_class, true);
-    try t.expect(on.copies >= 1);
+    try t.expect(on.placed >= 1);
+    try t.expectEqual(@as(usize, 0), on.copies);
 }
 
 // spec-case: VALUE-SEMANTICS-2
@@ -193,7 +194,9 @@ test "a write through a loop or match binding is a binding write" {
 
 // spec-case: VALUE-SEMANTICS-4
 test "a record loop binding is read-only and a match on a call result stays writable" {
-    try expectCodes("record Body:\n    items: list[int]\n\ndef f(bodies: mut list[Body]) -> None:\n    for b in bodies:\n        b.items.append(1)\n", "E_MUTATION_MARKER", "E_VALUE_BINDING_WRITE");
+    const loop_write = "record Body:\n    items: list[int]\n\ndef f(bodies: mut list[Body]) -> None:\n    for b in bodies:\n        b.items.append(1)\n";
+    try expectCodes(loop_write, "ok", "E_MUTATION_MARKER");
+    try t.expectEqual(@as(usize, 1), try countCode(loop_write, "E_VALUE_BINDING_WRITE", true));
     const call_result =
         \\def make() -> Option[list[int]]:
         \\    return Some([1])
