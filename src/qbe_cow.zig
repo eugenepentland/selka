@@ -105,6 +105,7 @@ pub fn Lower(comptime E: type) type {
         /// (`QBE-LOOP-VERSION-1`): a copy there would move the storage its
         /// guard read.
         pub fn veto(self: *E, state: *State) Error!void {
+            try refineRcLoops(E, self, state);
             var kept: std.ArrayList(@TypeOf(self.loop_plan.loops[0])) = .empty;
             for (self.loop_plan.loops) |loop| {
                 const checked = for (loop.head..loop.back + 1) |pc| {
@@ -221,6 +222,12 @@ pub fn Lower(comptime E: type) type {
             }
         }
     };
+}
+
+fn refineRcLoops(comptime E: type, self: *E, state: *State) Error!void {
+    if (!try @import("qbe_rc_hoist.zig").refine(E, self)) return;
+    @memset(state.captures, .{});
+    prepareScopes(E, self, state);
 }
 
 /// The emitter reads place parents and saved keys after their final bytecode
@@ -477,6 +484,12 @@ fn uniqueField(comptime E: type, self: *E, place: cow_plan.Place, stack: []const
 /// Make every element of list local `local` unique where it lives.
 fn uniqueElements(comptime E: type, self: *E, local: u32, stack: []const typed.Type) Error!void {
     const list = try self.load("l", local);
+    if (runtime_mode.enabled()) {
+        const done = self.temp();
+        const ty = self.function.scope.locals[local].ty;
+        try self.print(" %v{d} =w call $myl_qbe_rc_unique_elements(l %ctx, l extern ${s}, l %v{d})\n", .{ done, try self.descriptor(ty), list });
+        return rc_unique.success(E, self, done);
+    }
     const pushed = try self.roots(stack);
     const done = self.temp();
     try self.print(" %v{d} =w call $myl_native_cow_elements(l %heap, l %v{d})\n", .{ done, list });

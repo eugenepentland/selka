@@ -31,6 +31,8 @@ pub const Class = model.Class;
 pub const Kind = model.Kind;
 /// What a local's slot means for ownership.
 pub const Role = model.Role;
+/// Whether a mutable parameter retains the caller-established unique payload.
+pub const uniqueParameter = model.uniqueParameter;
 /// One transfer of a non-scalar value.
 pub const Transfer = model.Transfer;
 /// One copy-on-write check site.

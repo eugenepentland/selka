@@ -557,7 +557,7 @@ test "RC-OWNERSHIP-PLAN-1 slot ownership publishes only beyond the runtime failu
     var emitter = SlotEmitter.init();
     defer emitter.deinit();
     const lower = slots.Lower(SlotEmitter);
-    try lower.transfer(&emitter, .{ .ty = .i64, .destination = 1, .source = 2, .region = 3, .mode = .copy_empty });
+    try lower.runtimeTransfer(&emitter, .{ .ty = .i64, .destination = 1, .source = 2, .region = 3, .mode = .copy_empty });
     try lower.initialized(&emitter, 4, true);
     const text = emitter.output.written();
     const helper = try at(text, "call $myl_rc_native_copy");
