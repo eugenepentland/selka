@@ -409,11 +409,17 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
+    const runtime_contract = b.addModule("runtime_contract", .{
+        .root_source_file = b.path("src/runtime_contract.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
     const core = b.addModule("mylang", .{
         .root_source_file = b.path("src/compiler.zig"),
         .target = target,
         .optimize = optimize,
     });
+    core.addImport("runtime_contract", runtime_contract);
     const exe = b.addExecutable(.{
         .max_rss = rss.compile,
         .name = "mylang",
@@ -426,6 +432,7 @@ pub fn build(b: *std.Build) void {
     });
     // Snapshot identity needs the actual application/test root rather than the
     // generated Zig or Guardian test-runner root exposed by `@import("root")`.
+    exe.root_module.addImport("runtime_contract", runtime_contract);
     exe.root_module.addImport("native_test_root", exe.root_module);
     addUserDocs(b, exe.root_module);
     const build_assets = @import("build_qbe_assets.zig").module(b, target, optimize, .{ .compile = rss.compile, .run = rss.driver });
@@ -485,6 +492,7 @@ pub fn build(b: *std.Build) void {
     // Host applications build their own guests natively, so they carry the same
     // native build driver the compiler does rather than shelling out to it.
     const native_build = b.createModule(.{ .root_source_file = b.path("src/qbe_build.zig"), .target = target, .optimize = optimize });
+    native_build.addImport("runtime_contract", runtime_contract);
     native_build.addImport("qbe_build_assets", build_assets);
     native_build.addImport("memory_budget", budget);
     // A host application links guest executables, so it falls back to the tools
@@ -526,6 +534,7 @@ pub fn build(b: *std.Build) void {
             .link_libc = true,
         }),
     });
+    unit.root_module.addImport("runtime_contract", runtime_contract);
     unit.root_module.addImport("native_test_root", unit.root_module);
     unit.root_module.addImport("qbe_build_assets", build_assets);
     unit.root_module.addImport("memory_budget", budget);
@@ -839,6 +848,7 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     }) });
+    native_test_unit.root_module.addImport("runtime_contract", runtime_contract);
     native_test_unit.root_module.addImport("native_test_root", native_test_unit.root_module);
     native_test_unit.root_module.addImport("qbe_build_assets", build_assets);
     native_test_unit.root_module.addImport("memory_budget", budget);
@@ -856,6 +866,7 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     }) });
+    ffi_unit.root_module.addImport("runtime_contract", runtime_contract);
     guardian.enableTestDiagnostics(ffi_unit.root_module);
     const run_ffi_unit = bounded(b.addRunArtifact(ffi_unit), rss.suite);
     cached(run_ffi_unit, "native_roots");
@@ -881,6 +892,7 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     }) });
+    qbe_build_unit.root_module.addImport("runtime_contract", runtime_contract);
     qbe_build_unit.root_module.addImport("qbe_build_assets", build_assets);
     qbe_build_unit.root_module.addImport("memory_budget", budget);
     guardian.enableTestDiagnostics(qbe_build_unit.root_module);
