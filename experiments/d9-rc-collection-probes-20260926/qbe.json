@@ -1,0 +1,190 @@
+{
+  "source_commit": "e1a7850273ee5c5a98bb3085e8514f26efab33ef",
+  "compiler_sha256": "8eacebf14822b1f37e2a486ca26b74fe64b7ec111ad45bc96d37a2e37d8ef6c6",
+  "backend": "qbe",
+  "guest_mode": "ReleaseFast",
+  "runtime": "stats",
+  "groups": {
+    "basic": {
+      "cases": [
+        "rc_probe_lists.test_growth_and_indexing",
+        "rc_probe_lists.test_slices",
+        "rc_probe_lists.test_membership_and_iteration",
+        "rc_probe_lists.test_comprehension_and_loops",
+        "rc_probe_dicts.test_insertion_order",
+        "rc_probe_dicts.test_copies_and_values",
+        "rc_probe_dicts.test_membership_and_get",
+        "rc_probe_text.test_indexing_and_slicing",
+        "rc_probe_text.test_methods",
+        "rc_probe_text.test_interpolation_and_conversion",
+        "rc_probe_bytes.test_indexing_and_slicing",
+        "rc_probe_bytes.test_search_and_split",
+        "rc_probe_bytes.test_conversion"
+      ],
+      "source_sha256": {
+        "tests/guest/lists.my": "bba3aa75b0d3948cb04c1cdcdb331bc62244e96f9f85c539d025233bebb87fbc",
+        "tests/guest/dicts.my": "a3769555a3244030b8e45b9082d8b708e7380218fbe257d953169bbb89d70457",
+        "tests/guest/text.my": "c68bef314f0506b1a17518c1ff5812da67de1b525487c7cf417aaed096fc00b7",
+        "tests/guest/bytes.my": "9189967b040b815b24261456da22be86a027d33537d61d9bf721a072d7ed25a9"
+      },
+      "counts": {
+        "version": 1,
+        "runtime": "rc-v1-counting",
+        "saturated": false,
+        "owner_acquire": 68,
+        "owner_release": 306,
+        "hold_acquire": 0,
+        "hold_release": 0,
+        "owner_limit": 0,
+        "hold_limit": 0,
+        "heap_allocate": 238,
+        "arena_allocate": 0,
+        "retire": 238,
+        "clone_shell": 6,
+        "unique_check": 50
+      },
+      "exit": 0,
+      "stdout": "0\n",
+      "stderr": "rc_probe_lists.my:5:47: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation)` is exactly what the parameters imply; remove it\n  public def test_growth_and_indexing() -> bool effects(managed_allocation):\n                                                ^\nrc_probe_lists.my:16:34: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation)` is exactly what the parameters imply; remove it\n  public def test_slices() -> bool effects(managed_allocation):\n                                   ^\nrc_probe_lists.my:28:52: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation)` is exactly what the parameters imply; remove it\n  public def test_membership_and_iteration() -> bool effects(managed_allocation):\n                                                     ^\nrc_probe_lists.my:45:51: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation)` is exactly what the parameters imply; remove it\n  public def test_comprehension_and_loops() -> bool effects(managed_allocation):\n                                                    ^\nrc_probe_dicts.my:4:43: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation)` is exactly what the parameters imply; remove it\n  public def test_insertion_order() -> bool effects(managed_allocation):\n                                            ^\nrc_probe_dicts.my:20:45: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation)` is exactly what the parameters imply; remove it\n  public def test_copies_and_values() -> bool effects(managed_allocation):\n                                              ^\nrc_probe_dicts.my:36:46: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation)` is exactly what the parameters imply; remove it\n  public def test_membership_and_get() -> bool effects(managed_allocation):\n                                               ^\nrc_probe_text.my:4:48: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation)` is exactly what the parameters imply; remove it\n  public def test_indexing_and_slicing() -> bool effects(managed_allocation):\n                                                 ^\nrc_probe_text.my:15:35: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation)` is exactly what the parameters imply; remove it\n  public def test_methods() -> bool effects(managed_allocation):\n                                    ^\nrc_probe_text.my:37:56: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation)` is exactly what the parameters imply; remove it\n  public def test_interpolation_and_conversion() -> bool effects(managed_allocation):\n                                                         ^\nrc_probe_bytes.my:4:48: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation)` is exactly what the parameters imply; remove it\n  public def test_indexing_and_slicing() -> bool effects(managed_allocation):\n                                                 ^\nrc_probe_bytes.my:18:44: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation)` is exactly what the parameters imply; remove it\n  public def test_search_and_split() -> bool effects(managed_allocation):\n                                             ^\nrc_probe_bytes.my:32:38: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation)` is exactly what the parameters imply; remove it\n  public def test_conversion() -> bool effects(managed_allocation):\n                                       ^\nMYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v1-counting\",\"saturated\":false,\"owner_acquire\":68,\"owner_release\":306,\"hold_acquire\":0,\"hold_release\":0,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":238,\"arena_allocate\":0,\"retire\":238,\"clone_shell\":6,\"unique_check\":50}\n"
+    },
+    "views": {
+      "cases": [
+        "rc_probe_byte_views.test_a_view_reads_its_range_with_every_byte_string_operation",
+        "rc_probe_byte_views.test_view_endpoints_clamp_like_a_slice",
+        "rc_probe_byte_views.test_views_retain_their_source_across_collection",
+        "rc_probe_byte_views.test_views_nest_and_slices_copy_their_range",
+        "rc_probe_byte_views.test_scalar_count_counts_scalars_and_rejects_malformed_utf8",
+        "rc_probe_byte_views.test_byte_strings_parse_numbers_without_decoding",
+        "rc_probe_text_views.test_pieces_outlive_every_other_reference_to_their_receiver",
+        "rc_probe_text_views.test_views_of_views_read_the_right_octets",
+        "rc_probe_text_views.test_non_ascii_pieces_index_by_scalar",
+        "rc_probe_text_views.test_pieces_are_dictionary_keys_equal_to_owned_text",
+        "rc_probe_text_views.test_a_short_piece_does_not_keep_a_large_receiver_alive",
+        "rc_probe_text_views.test_pieces_at_the_policy_edges",
+        "rc_probe_text_views.test_every_consumer_reads_a_piece"
+      ],
+      "source_sha256": {
+        "tests/lang/byte_views.my": "5483a3c9d3bf62e1cfe56122e2e158caa5146beaae424fcec8533e77fb25893c",
+        "tests/lang/text_views.my": "4d9a82d9f4a9dad2b96bd1a1e9b8d4bf3667faa8cc5730fcb654a43aa82ed21a"
+      },
+      "counts": {
+        "version": 1,
+        "runtime": "rc-v1-counting",
+        "saturated": false,
+        "owner_acquire": 27762,
+        "owner_release": 71253,
+        "hold_acquire": 0,
+        "hold_release": 0,
+        "owner_limit": 0,
+        "hold_limit": 0,
+        "heap_allocate": 43491,
+        "arena_allocate": 0,
+        "retire": 43491,
+        "clone_shell": 10002,
+        "unique_check": 19802
+      },
+      "exit": 0,
+      "stdout": "0\n",
+      "stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v1-counting\",\"saturated\":false,\"owner_acquire\":27762,\"owner_release\":71253,\"hold_acquire\":0,\"hold_release\":0,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":43491,\"arena_allocate\":0,\"retire\":43491,\"clone_shell\":10002,\"unique_check\":19802}\n"
+    },
+    "wide": {
+      "cases": [
+        "rc_probe_python_bytes.test_byte_literals_index_slice_concatenate_compare_and_iterate",
+        "rc_probe_python_bytes.test_membership_accepts_a_byte_scalar_or_a_contiguous_subsequence",
+        "rc_probe_python_bytes.test_byte_strings_alias_through_helpers_and_survive_collection_stress",
+        "rc_probe_python_bytes.test_split_join_prefix_suffix_search_and_container_storage",
+        "rc_probe_python_bytes.test_generic_bodies_preserve_managed_byte_string_identities",
+        "rc_probe_python_bytes.test_find_any_reports_the_first_octet_of_a_set_at_or_after_start",
+        "rc_probe_python_bytes.test_find_any_searches_a_two_octet_set_with_one_pass_per_octet",
+        "rc_probe_python_bytes.test_find_any_walks_an_input_missing_one_octet_in_linear_time",
+        "rc_probe_python_bytes.test_find_any_finds_either_octet_across_its_search_windows",
+        "rc_probe_python_bytes.test_find_any_clamps_start_and_reads_values_as_a_byte_set",
+        "rc_probe_python_bytes.test_find_keeps_its_first_index_answer_for_short_and_long_needles",
+        "rc_probe_python_bytes.test_integer_list_text_and_hexadecimal_conversions_round_trip",
+        "rc_probe_python_bytes.test_a_decoded_slice_keeps_clamping_and_invalid_utf8",
+        "rc_probe_byte_buffer.test_append_methods_write_in_place_and_refuse_without_writing",
+        "rc_probe_byte_buffer.test_a_buffer_storeback_preserves_an_earlier_snapshot",
+        "rc_probe_byte_buffer.test_growth_preserves_identity_content_and_earlier_snapshots",
+        "rc_probe_byte_buffer.test_byte_kinds_share_reads_and_compare_by_content",
+        "rc_probe_byte_buffer.test_buffers_are_traced_through_record_fields_lists_and_generics",
+        "rc_probe_byte_buffer.test_byte_buffer_builds_from_an_integer_list",
+        "rc_probe_byte_buffer.test_append_float_matches_the_printed_spelling",
+        "rc_probe_byte_buffer.test_growth_past_the_segment_threshold_keeps_every_octet",
+        "rc_probe_keyed_sorting.test_sort_key_orders_in_place_and_keeps_equal_keys_in_input_order",
+        "rc_probe_keyed_sorting.test_reverse_orders_descending_and_keeps_equal_keys_in_input_order",
+        "rc_probe_keyed_sorting.test_reverse_false_and_reverse_first_are_the_ascending_sort",
+        "rc_probe_keyed_sorting.test_reverse_without_a_key_sorts_elements_descending",
+        "rc_probe_keyed_sorting.test_reverse_keeps_signed_zeros_in_input_order",
+        "rc_probe_keyed_sorting.test_float_keys_put_nans_last_and_first_in_reverse",
+        "rc_probe_keyed_sorting.test_str_keys_order_by_unicode_scalar_value",
+        "rc_probe_keyed_sorting.test_tuple_keys_compare_field_by_field",
+        "rc_probe_keyed_sorting.test_narrow_unsigned_wide_and_bool_keys_order_by_value",
+        "rc_probe_keyed_sorting.test_keys_spread_over_the_whole_int_range_take_the_wide_path",
+        "rc_probe_keyed_sorting.test_empty_and_one_element_lists_sort_to_themselves",
+        "rc_probe_keyed_sorting.test_key_is_called_once_per_element",
+        "rc_probe_keyed_sorting.test_long_lists_match_a_stable_count_order",
+        "rc_probe_keyed_sorting.test_sorted_copy_leaves_its_input_unchanged",
+        "rc_probe_keyed_sorting.test_sort_by_key_forwards_to_the_keyed_sort",
+        "rc_probe_keyed_sorting.test_a_generic_body_sorts_with_key_and_reverse",
+        "rc_probe_keyed_sorting.test_a_generic_body_calls_sorted_with_an_unannotated_key_function",
+        "rc_probe_keyed_sorting.test_an_expression_receiver_takes_key_and_reverse"
+      ],
+      "source_sha256": {
+        "tests/lang/python_bytes.my": "b1b2311cb06d6b91dc4f9a5082b8864a5cb9a3af091b876b485268989ec0087c",
+        "tests/lang/byte_buffer.my": "fe48ad7a0fed4f4ed37f1e14e13348ef2a76b0007686a72c32de3a88f2f73c51",
+        "tests/lang/keyed_sorting.my": "85320bc410a1938dadd96d0be9a4e5881ff17ed6f43fffa4371c00aadbcb8d55"
+      },
+      "counts": {
+        "version": 1,
+        "runtime": "rc-v1-counting",
+        "saturated": false,
+        "owner_acquire": 6292,
+        "owner_release": 7114,
+        "hold_acquire": 0,
+        "hold_release": 0,
+        "owner_limit": 0,
+        "hold_limit": 0,
+        "heap_allocate": 822,
+        "arena_allocate": 0,
+        "retire": 822,
+        "clone_shell": 19,
+        "unique_check": 77948
+      },
+      "exit": 0,
+      "stdout": "0\n",
+      "stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v1-counting\",\"saturated\":false,\"owner_acquire\":6292,\"owner_release\":7114,\"hold_acquire\":0,\"hold_release\":0,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":822,\"arena_allocate\":0,\"retire\":822,\"clone_shell\":19,\"unique_check\":77948}\n"
+    },
+    "regression": {
+      "cases": [
+        "rc_probe_rc_collection_builtins.test_nested_list_mutators_publish_owned_results",
+        "rc_probe_rc_collection_builtins.test_dictionary_results_survive_receiver_clear",
+        "rc_probe_rc_collection_builtins.test_keyed_sort_owns_its_managed_elements",
+        "rc_probe_rc_collection_builtins.test_set_pop_owns_the_removed_key",
+        "rc_probe_rc_collection_builtins.test_identity_text_conversion_retains_its_input",
+        "rc_probe_rc_collection_builtins.test_detached_views_keep_their_canonical_storage"
+      ],
+      "source_sha256": {
+        "tests/lang/rc_collection_builtins.my": "e23b4bdde8d6e18b2fee68af9d22079816c78a3b68a074b007f462b32521c556"
+      },
+      "counts": {
+        "version": 1,
+        "runtime": "rc-v1-counting",
+        "saturated": false,
+        "owner_acquire": 174,
+        "owner_release": 701,
+        "hold_acquire": 0,
+        "hold_release": 0,
+        "owner_limit": 0,
+        "hold_limit": 0,
+        "heap_allocate": 527,
+        "arena_allocate": 0,
+        "retire": 527,
+        "clone_shell": 4,
+        "unique_check": 273
+      },
+      "exit": 0,
+      "stdout": "0\n",
+      "stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v1-counting\",\"saturated\":false,\"owner_acquire\":174,\"owner_release\":701,\"hold_acquire\":0,\"hold_release\":0,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":527,\"arena_allocate\":0,\"retire\":527,\"clone_shell\":4,\"unique_check\":273}\n"
+    }
+  }
+}
