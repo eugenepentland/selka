@@ -4,6 +4,7 @@
 //! the byte-specific methods are emitted here.
 const bytecode = @import("bytecode.zig");
 const typed = @import("typed.zig");
+const rc_mode = @import("runtime_mode.zig");
 /// Failures reported while emitting native byte-string instructions.
 pub const Error = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
 const BufferOperation = @FieldType(@FieldType(bytecode.Instruction, "op"), "buffer_operation");
@@ -143,11 +144,11 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
             // later and leave a null byte string in the slot it would have
             // filled, so the store that follows and any root push over it see a
             // value the collector can trace.
-            if (self.fusibleSlice(self.pc)) |_| {
+            if (!rc_mode.enabled()) if (self.fusibleSlice(self.pc)) |_| {
                 try self.print(" storel 0, %s{d}\n", .{base});
                 self.fuseDecode(self.pc + 2, input, start, end);
                 return;
-            }
+            };
             try self.print(" %v{d} =l call $myl_native_bytes_slice(l %heap, l %v{d}, l %v{d}, l %v{d})\n", .{ result, input, start, end });
             try self.require(result, allocation_failure);
             try self.store(base, result);
@@ -304,6 +305,7 @@ fn emitBufferStatus(comptime E: type, self: *E, status: usize, base: usize) Erro
 /// Lower one octet-buffer method with its capacity-sufficient case inline, or
 /// answer false when this method has no inlined case.
 fn inlineBufferAppend(comptime E: type, self: *E, op: BufferOperation, stack: []const typed.Type, input: usize) Error!bool {
+    if (rc_mode.enabled()) return false;
     const element = (try mutableOctetBuffer(E, self, op)) orelse return false;
     try self.markObject(input);
     const append: BufferAppend = .{ .input = input, .element = element, .base = stack.len - op.kind.arity() };

@@ -8,6 +8,7 @@
 const zero_local = @import("qbe_format.zig").zero_local;
 const cow_lower = @import("qbe_cow.zig");
 const arena_lower = @import("qbe_arena.zig");
+const rc_frame = @import("qbe_rc_frame.zig");
 const std = @import("std");
 const bytecode = @import("bytecode.zig");
 const typed = @import("typed.zig");
@@ -31,6 +32,14 @@ pub fn Lower(comptime Emitter: type) type {
         /// reserve plus the exact argument, argument-vector and result copies.
         pub fn abiStackBytes(self: *Emitter) GenerateError!u64 {
             return impl.abiStackBytes(Emitter, self);
+        }
+        /// Reserve one named physical buffer within the selected frame.
+        pub fn allocateSlot(self: *Emitter, name: []const u8, size: u64) GenerateError!void {
+            return impl.allocateSlot(Emitter, self, name, size);
+        }
+        /// Reserve one indexed physical buffer within the selected frame.
+        pub fn allocateIndex(self: *Emitter, name: []const u8, index: usize, size: u64) GenerateError!void {
+            return impl.allocateIndex(Emitter, self, name, index, size);
         }
         /// Allocate the aggregate temporaries that live outside the entry block, unless
         /// the frame is heap-allocated.
@@ -150,6 +159,7 @@ pub fn Lower(comptime Emitter: type) type {
 /// its slots from `%frame_memory`, so they follow that allocation instead.
 fn allocateStorage(comptime Emitter: type, self: *Emitter, capacity: usize) GenerateError!void {
     const f = self.function;
+    try rc_frame.Lower(Emitter).allocate(self);
     if (self.cow) |state| for (state.plan.places) |maybe| {
         const place = maybe orelse continue;
         if (!cow_lower.Lower(Emitter).scoped(self, place)) continue;
@@ -395,6 +405,7 @@ fn allocateSlot(comptime Emitter: type, self: *Emitter, name: []const u8, size: 
 }
 /// Return a value after releasing heap-backed execution storage safely.
 fn returnValue(comptime Emitter: type, self: *Emitter, value: usize) GenerateError!void {
+    if (try @import("qbe_rc_return.zig").emit(Emitter, self, value)) return;
     try cow_lower.Lower(Emitter).clearScopes(self);
     try cleanupLocals(Emitter, self);
     try arena_lower.Lower(Emitter).restore(self);
@@ -660,6 +671,7 @@ fn frameBytes(comptime Emitter: type, self: *Emitter, capacity: usize, temporari
         size = try addFrame(size, try placeholderBytes(Emitter, self, i, local.ty));
     }
     size = try addFrame(size, cow_lower.Lower(Emitter).scopeBytes(self));
+    size = try addFrame(size, try rc_frame.Lower(Emitter).bytes(self));
     size = try addFrame(size, temporaries);
     size = try addFrame(size, self.range_keys.frameBytes());
     if (self.has_roots) size = try addFrame(size, @as(u64, self.function.scope.locals.len + capacity) * 32);
