@@ -11806,6 +11806,53 @@ test "CLI mylang.json value_semantics opts out and a default build carries value
     try testing.expectEqual(std.process.Child.Term{ .exited = 12 }, ran.term);
 }
 
+// spec: VALUE-SEMANTICS-12
+test "CLI project opt out uses the entry after valued options and for test directories" {
+    var project = try PropertyProject.init(
+        \\module main
+        \\
+        \\class Box:
+        \\    value: int
+        \\
+        \\public def test_box() -> bool:
+        \\    box = Box(value=1)
+        \\    return box.value == 1
+        \\
+        \\def main() -> int:
+        \\    return 0
+    );
+    defer project.deinit();
+    try project.temporary.dir.writeFile(testing.io, .{ .sub_path = "mylang.json", .data = "{\"version\":1,\"value_semantics\":false}\n" });
+    var environment = try std.process.Environ.createMap(testing.environ, testing.allocator);
+    defer environment.deinit();
+    _ = environment.swapRemove("MYLANG_VALUE_SEMANTICS");
+    const directory = std.fs.path.dirname(project.path).?;
+    for ([_][]const u8{ project.path, directory }) |entry| {
+        const result = try std.process.run(testing.allocator, testing.io, .{
+            .argv = &(.{ compiler_path, "test", "--filter", "test_box", entry, "--no-cache", "--json" } ++ tools),
+            .environ_map = &environment,
+        });
+        defer freeRun(result);
+        try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+        try testing.expect(std.mem.indexOf(u8, result.stdout, "\"passed\":1") != null);
+    }
+    const output = try std.fs.path.join(testing.allocator, &.{ directory, "legacy-program" });
+    defer testing.allocator.free(output);
+    const built = try std.process.run(testing.allocator, testing.io, .{
+        .argv = &(.{ compiler_path, "build", "-o", output, project.path, "--no-cache" } ++ tools),
+        .environ_map = &environment,
+    });
+    defer freeRun(built);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, built.term);
+    const described = try std.process.run(testing.allocator, testing.io, .{
+        .argv = &(.{ compiler_path, "invoke", "--function", "main::test_box", "--describe", project.path } ++ tools),
+        .environ_map = &environment,
+    });
+    defer freeRun(described);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, described.term);
+    try testing.expect(std.mem.indexOf(u8, described.stdout, "\"status\":\"described\"") != null);
+}
+
 const decoded_invariant_source =
     \\module main
     \\

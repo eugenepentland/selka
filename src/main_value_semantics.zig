@@ -39,7 +39,7 @@ pub fn settle(process: std.process.Init, args: []const [:0]const u8) Error!Settl
         return .{ .status = 2 };
     }
     const inherited: ?bool = if (environment) |value| values.environmentEnables(value) else null;
-    const enabled = if (flag) |selected| selected.enabled else inherited orelse configuredOn(process, args);
+    const enabled = if (flag) |selected| selected.enabled else inherited orelse (try configuredOn(process, args));
     if (inherited == null or inherited.? != enabled) return .{ .status = try replace(process, args, flag, enabled) };
     values.setEnabled(enabled);
     return .{ .run = .{ .args = if (flag) |selected| try without(process.arena.allocator(), args, selected.index) else args, .enabled = enabled } };
@@ -72,11 +72,18 @@ fn accepts(command: []const u8) bool {
 /// Whether the `mylang.json` nearest the command's first path argument turns
 /// the switch on. A configuration that does not load is not read here: the
 /// command itself reports it.
-fn configuredOn(process: std.process.Init, args: []const [:0]const u8) bool {
+fn configuredOn(process: std.process.Init, args: []const [:0]const u8) std.mem.Allocator.Error!bool {
     const a = process.arena.allocator();
     if (args.len < 2 or !accepts(args[1])) return true;
-    const entry = firstPath(args) orelse return true;
-    const found = project_config.discover(a, process.io, entry) catch return true;
+    const entry = (try firstPath(a, args)) orelse return true;
+    // `test` and `fix` also accept a directory. Discovery starts at the
+    // entry's parent, so give it a virtual child of that directory.
+    const stat = std.Io.Dir.cwd().statFile(process.io, entry, .{}) catch null;
+    const discovery_entry = if (stat != null and stat.?.kind == .directory)
+        try std.fs.path.join(a, &.{ entry, ".mylang-mode-entry" })
+    else
+        entry;
+    const found = project_config.discover(a, process.io, discovery_entry) catch return true;
     const path = found orelse return true;
     var failure: project_config.Failure = .{};
     var config = project_config.load(a, process.io, path, &failure) catch return true;
@@ -84,9 +91,17 @@ fn configuredOn(process: std.process.Init, args: []const [:0]const u8) bool {
     return config.document.value_semantics;
 }
 
-/// The first argument after the command that is not an option.
-fn firstPath(args: []const [:0]const u8) ?[]const u8 {
+/// Find the entry by using each command's parser where options may take a
+/// separate value before the path. A malformed command reports its own usage.
+fn firstPath(a: std.mem.Allocator, args: []const [:0]const u8) std.mem.Allocator.Error!?[]const u8 {
     if (args.len < 3) return null;
+    if (std.mem.eql(u8, args[1], "test") or std.mem.eql(u8, args[1], "build") or std.mem.eql(u8, args[1], "invoke")) {
+        const options = try a.alloc([]const u8, args.len - 2);
+        for (args[2..], options) |arg, *option| option.* = arg;
+        if (std.mem.eql(u8, args[1], "test")) return (@import("native_test_options.zig").parse(options) catch return null).source;
+        if (std.mem.eql(u8, args[1], "build")) return (@import("qbe_build_options.zig").parse(options) catch return null).source;
+        return (@import("invoke_command.zig").parse(options) catch return null).entry;
+    }
     for (args[2..]) |arg| {
         if (std.mem.eql(u8, arg, "--")) return null;
         if (arg.len != 0 and arg[0] != '-') return arg;
