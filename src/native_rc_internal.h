@@ -4,7 +4,7 @@
 #include "native_rc_stats.h"
 /* Private state: generated code sees only the frozen object/common prefixes. */
 typedef struct {
-    const myl_rc_shape *shape;
+    union { const myl_rc_shape *shape; const myl_native_type *type; };
     unsigned char *address;
     size_t cursor;
 } myl_rc_frame;
@@ -12,6 +12,7 @@ typedef struct {
     const myl_rc_shape *source;
     myl_rc_shape shape;
     size_t depth;
+    size_t inline_depth;
 } myl_rc_shape_entry;
 typedef struct myl_rc_batch {
     struct myl_rc_batch *next;
@@ -24,6 +25,7 @@ typedef struct myl_rc_batch {
 typedef struct {
     const void *key, *value;
     size_t depth;
+    size_t inline_depth;
     unsigned kind;
 } myl_rc_index_entry;
 struct myl_rc_state {

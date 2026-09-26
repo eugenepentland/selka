@@ -3,7 +3,7 @@
 
 typedef struct {
     const myl_rc_shape *source;
-    size_t cursor, depth;
+    size_t cursor, depth, inline_depth;
     unsigned color;
 } shape_node;
 typedef struct {
@@ -69,9 +69,9 @@ static void index_commit(myl_native_heap *heap, myl_rc_batch *batch, myl_rc_inde
         index_insert(heap, (myl_rc_index_entry){.key = batch->module, .value = batch, .kind = INDEX_MODULE});
     for (size_t i = 0; i < batch->count.shapes; ++i) {
         const myl_rc_shape_entry *shape = &batch->shapes[i];
-        index_insert(heap, (myl_rc_index_entry){.key = &shape->shape, .value = &shape->shape, .depth = shape->depth, .kind = INDEX_SHAPE});
+        index_insert(heap, (myl_rc_index_entry){.key = &shape->shape, .value = &shape->shape, .depth = shape->depth, .inline_depth = shape->inline_depth, .kind = INDEX_SHAPE});
         if (shape->source)
-            index_insert(heap, (myl_rc_index_entry){.key = shape->source, .value = &shape->shape, .depth = shape->depth, .kind = INDEX_SHAPE});
+            index_insert(heap, (myl_rc_index_entry){.key = shape->source, .value = &shape->shape, .depth = shape->depth, .inline_depth = shape->inline_depth, .kind = INDEX_SHAPE});
     }
     for (size_t i = 0; i < batch->count.descriptors; ++i) {
         const myl_rc_descriptor *descriptor = &batch->descriptors[i];
@@ -178,11 +178,15 @@ static int compute_depths(shape_builder *builder, size_t *maximum) {
                 myl_rc_invariant(next->color != 1); /* inline cycles are invalid */
                 if (next->color == 0) { stack[used++] = index; continue; }
                 if (next->depth > node->depth) node->depth = next->depth;
+                if (next->inline_depth > node->inline_depth) node->inline_depth = next->inline_depth;
                 ++node->cursor;
             } else {
                 if (node->source->kind == MYL_RC_SHAPE_POINTER) node->depth = 1;
                 else if (node->depth) ++node->depth;
-                if (node->depth > *maximum) *maximum = node->depth;
+                ++node->inline_depth;
+                const myl_rc_index_entry *known = index_find(builder->heap, node->source, INDEX_SHAPE);
+                if (known && known->inline_depth > node->inline_depth) node->inline_depth = known->inline_depth;
+                if (node->inline_depth > *maximum) *maximum = node->inline_depth;
                 node->color = 2;
                 --used;
             }
@@ -220,6 +224,7 @@ static myl_rc_batch *build_batch(shape_builder *builder, const myl_rc_module *mo
         entry->source = persistent ? source : NULL;
         entry->shape = *source;
         entry->depth = builder->nodes[i].depth;
+        entry->inline_depth = builder->nodes[i].inline_depth;
         if (!entry->depth) entry->shape.kind = MYL_RC_SHAPE_NONE;
         if (source->kind == MYL_RC_SHAPE_ARRAY && source->as.array.count)
             entry->shape.as.array.element = copied_shape(builder, batch, source->as.array.element);

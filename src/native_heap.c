@@ -1314,6 +1314,7 @@ static void myl_native_schedule(myl_native_drop_link **work, const myl_native_ty
 }
 
 void myl_native_owned_drop(myl_native_heap *heap, const myl_native_type *type, void *value) {
+    if (myl_rc_enabled(heap)) { myl_rc_owned_drop(heap, type, value); return; }
     (void)heap;
     myl_native_drop_link *work = NULL;
     myl_native_schedule(&work, type, value);
