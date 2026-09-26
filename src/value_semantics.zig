@@ -160,10 +160,7 @@ pub fn sharedRecord(records: []const typed.Record, ty: typed.Type) bool {
 
 /// A `DictKeys`, `DictValues` or `DictItems` projection record.
 fn liveView(record: typed.Record) bool {
-    for ([_][]const u8{ "DictKeys", "DictValues", "DictItems" }) |name| {
-        if (std.mem.startsWith(u8, record.name, name) and (record.name.len == name.len or record.name[name.len] == '<')) return true;
-    }
-    return false;
+    return record.shape.builtin == .live_view;
 }
 
 /// Whether local `index` of `function` is a home a transferred value is

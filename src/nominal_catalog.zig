@@ -337,9 +337,12 @@ const Builder = struct {
                 .record => {
                     try self.fields(node, schema, declaration);
                     schema.managed = declaration.managed;
-                    // A synthesized case-payload record borrows `builtin_name` for
-                    // its display name but is an ordinary record, not the builtin Cell.
-                    schema.shape.builtin_cell = if (declaration.builtin_name) |name| std.mem.eql(u8, name, "Cell") and !self.index.isSynthetic(id) else false;
+                    // Synthesized payload names do not grant builtin identity.
+                    if (!self.index.isSynthetic(id)) if (declaration.builtin_name) |name| {
+                        if (std.mem.eql(u8, name, "Cell")) schema.shape.builtin = .cell;
+                        if (std.mem.eql(u8, name, "DictKeys") or std.mem.eql(u8, name, "DictValues") or
+                            std.mem.eql(u8, name, "DictItems")) schema.shape.builtin = .live_view;
+                    };
                 },
                 .variants, .result, .enumeration => try self.variants(node, schema, declaration),
                 .buffer => {

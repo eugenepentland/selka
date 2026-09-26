@@ -160,7 +160,7 @@ pub const Record = struct {
     }
     /// The builtin Cell is the managed record with a closed one-field content policy.
     pub fn isCell(self: Record) bool {
-        return self.managed and self.isRecord() and self.shape.builtin_cell;
+        return self.managed and self.isRecord() and self.shape.builtin == .cell;
     }
     /// A managed nominal record: the builtin Cell or a user `class` declaration.
     /// Managed records carry reference identity, so assignment and calls share them.
@@ -191,8 +191,8 @@ pub const RecordShape = struct {
     variants: ?Variants = null,
     buffer: ?Type = null,
     resource: ?external_resources.Kind = null,
-    /// The builtin Cell: a managed record with closed field and content rules.
-    builtin_cell: bool = false,
+    /// Declaration identity for builtin records with special transfer policies.
+    builtin: enum { none, cell, live_view } = .none,
     /// An anonymous tuple: positional fields no source can name, taken apart by
     /// destructuring only. It keeps the plain record representation, so
     /// construction, field reads, equality and layout are the record ones.
@@ -322,7 +322,7 @@ fn equalitySupport(ty: Type, records: []const Record, visited: *[64]usize, depth
     for (visited[0..depth]) |seen| if (seen == index) return true;
     const record = records[index];
     if (record.contract.callback != null) return false;
-    if (record.shape.builtin_cell or record.shape.resource != null) return false;
+    if (record.shape.builtin == .cell or record.shape.resource != null) return false;
     if (record.isEnum() or record.shape.domain != null) return true;
     if (depth == visited.len) return false;
     visited[depth] = index;
