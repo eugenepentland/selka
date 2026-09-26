@@ -1,0 +1,8 @@
+{
+  "src/qbe_rc_fresh_constructor.zig": "24b0c2afb62fd76855d4e5880de1fc57143ba57f874d53624eb29736c09fadd3",
+  "src/qbe_rc_aggregate.zig": "20955c8b1c2ac2f348748b58f09905edbdb68d013d07f73ce49364c8ee324151",
+  "tests/lang/rc_fresh_constructors.my": "303ffa74512d28ef2fed75820c301b250ce057685a985f7793e15798ed9d0d77",
+  "experiments/d9-rc-inert-return-20260926/binary_trees_n12.my": "97137bff09108d9560736833ae682733abd5d728ca8066edb5cda4caede62a7c",
+  "experiments/d9-rc-fresh-constructor-20260926/trap.my": "7e9c563d7669b825639934718374ea3b471ebbd3f276f80cb86aa3cc40bcdabd",
+  "experiments/d9-rc-fresh-constructor-20260926/arithmetic-trap.my": "9dcbe9695edf1207e468cf43e30b153e1dc6374317c0772364bd48160da4663b"
+}

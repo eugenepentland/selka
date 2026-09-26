@@ -1,9 +1,9 @@
-# Proposed linear fresh-constructor transfer
+# Linear fresh-constructor transfer
 
-This is a bounded follow-up design, not an implemented optimization or acceptance
-claim. Its control is the immutable post-inert compiler described in
-`d9-rc-inert-return-2026-09-26.md`. ABI3 semantic history is a required integration
-boundary; no history or physical-loan event may be silently skipped.
+The implemented candidate is a bounded constructor-field relocation. It uses the
+cohesive ABI3 cumulative control `19e16e1d`; the earlier post-inert profile below
+records the investigation that motivated it. This is performance evidence, not
+WP-4 acceptance. No history or physical-loan event is skipped.
 
 ## Evidence and narrow target
 
@@ -31,8 +31,8 @@ not predict a speedup. The raw profiles and binary identities belong to
 
 ## Certificate conditions
 
-An initial certificate should admit a deliberately small grammar and reject on
-budget exhaustion or any unsupported operation. Its purpose is to prove a
+The certificate admits a deliberately small grammar and rejects on budget
+exhaustion or any unsupported operation. Its purpose is to prove a
 physical single-owner bundle that can relocate into an empty destination.
 
 - Parameters are scalar values only. There is no incoming ordinary owner, held
@@ -109,3 +109,78 @@ Retain emitted-path evidence that the certificate fired, full samples and the
 frozen accepted GC arm. Reassess on the cohesive ABI3 compiler rather than claiming
 old ABI2 assembly predicts its code shape. Full gates and the acceptance corpus
 remain parent-coordinated.
+
+## Implemented boundary
+
+`qbe_rc_fresh_constructor.certify` inspects at most 128 instructions. Each shape walk follows at most 128 unique types /
+512 type edges using fixed local arrays. All local
+bindings, including incoming parameters, must be integer, boolean or unit values.
+The allowed bytecodes are scalar constants/checked arithmetic, scalar local
+loads/stores, ordinary constructors, a direct self call, return, and forward
+branches whose targets have empty operand stacks. Every reachable typed stack is
+copyable and excludes unique content; the full recursive type graph excludes
+collections, live views, resources and callbacks. Fallible Result variants refuse.
+Entry functions, host/C ABI functions, heap frames, borrowed bodies, managed locals,
+inlining, captures, uniqueness work, semantic shares, all physical ownership copies
+and every non-move transfer refuse. Unknown/new bytecodes refuse automatically.
+
+This grammar proves physical linearity in addition to the ownership analysis:
+managed values have no local storage or load operation, no duplication opcode,
+and no managed value crossing a join. Self calls receive only scalar inputs and
+return only the same certified construction language. Successful recursive returns
+are fresh by induction. Constructors consume each managed operand once; no
+operation can observe, pin, retain, loan or alias the new graph before consumption.
+There are no arena transitions or external callees, so child and parent inherit
+the same current region. A caller may already be inside an arena.
+
+Only `qbe_rc_aggregate.initialize` uses the certificate, and only for an ordinary
+counted operand field of at most 256 bytes. It still tests the initialized flag and
+rejects dynamic H/LOAN roles. The destination is the existing zero-initialized,
+guarded partial aggregate or newly allocated managed body. The ordinary source is
+its independent stable operand storage (or scalar operand word). A byte blit then
+clears the source guard without any intervening call or failure point. Stale source
+bits have no ownership obligation and cannot be used again in the certified
+linear grammar. The unchanged `prepareOperand` path remains as the dynamic and
+static fallback. The internal construction journal, final publication, failure
+paths, frame accounting, region checks in fallback and runtime ABI are unchanged.
+
+## Matched cumulative result
+
+The immutable control Debug compiler is SHA-256
+`1b705d90e58c6b2b3799c5cbe79da9adbc57913e4c72ebbfa2b54dad044c1bbe`.
+Candidate identity, manifests, all three interleaved samples, exact commands,
+source hash and counter snapshots are archived under
+`experiments/d9-rc-fresh-constructor-20260926`.
+
+| Backend | Before instructions | After instructions | After / before | After / accepted GC |
+| --- | ---: | ---: | ---: | ---: |
+| QBE | 599,762,396 | 524,564,349 | 0.874620 | 4.957918 |
+| LLVM O3/full LTO | 329,568,532 | 296,064,457 | 0.898340 | 5.85892 |
+
+Both arms produce the exact expected output. Each allocates and retires 669,060
+objects, acquires 19 additional ordinary owners and releases 669,079; H traffic
+and clones remain zero, and uniqueness checks remain 33. This is a 12.54% QBE and
+10.17% LLVM retired-instruction reduction in this workload, not a corpus timing
+or acceptance result. The accepted GC binaries and acceptance thresholds remain
+unchanged.
+
+## Validation
+
+All 78 selected actual guest assertions pass on each backend. The five new
+standalone assertions pass on both control and candidate in GC stress and RC
+counting modes: 299 heap allocations/retirements, O 8/307, H 8/8, and 62 arena
+allocations/escape clones. The 256 KiB refusal probe traps after 4,089 allocations
+and retires all 4,089 on both compilers/backends. The frame-limit probe preserves
+`R_FRAME_LIMIT` before allocation. Checked division after an earlier child traps
+with `R_DIVISION_BY_ZERO` and retires that child immediately. Every before/after
+counter vector matches. The SSA of this arithmetic probe contains eight admitted
+handoffs, so it exercises the certified function rather than only a refusal.
+
+The broad focused RC run passes 114 tests; the five final certificate cases pass
+separately (16 with the project's unnamed blocks), including an unused managed
+incoming parameter that must refuse. Whole-tree Guardian passes all 88 checks;
+no limits or baselines were changed. The final Debug install is byte-identical
+to the measured candidate, SHA-256
+`1b85b2f80b4b229b7bed0c8a120457df28892501edbd0b4732ebb338cd334f8b`.
+The parent independently reviewed the certificate and handoff and found no
+blocker. Full integration gates remain parent-coordinated.

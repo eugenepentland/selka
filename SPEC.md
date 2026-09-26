@@ -1407,3 +1407,5 @@ host failure in one worker leaves the units the other workers hold running.
 
 
 - [RC-FLAT-SINGLE-DESTRUCTION-1] A dying heap allocation with one element may traverse its prevalidated bounded ordinary-edge plan without the repeated-element extent loop. It preserves descriptor edge order, clears each edge before release, defers callbacks until parent traversal completes, retains O/H death and arena/immortal checks, and leaves custom finalizers, H shapes and zero/multiple elements on their existing paths.
+
+- [RC-FRESH-CONSTRUCTOR-1] A bounded scalar-input constructor proof may relocate a complete ordinary-owned operand directly into its already guarded partial body only when every managed producer is physically linear and fresh. Aliases, copies including immutable-box copies, loans, holds, unique resources, captures, uncertified calls, mixed managed branch provenance and arena transitions retain ordinary typed preparation. Dynamic owner-role refusal, allocation failure cleanup and native frame admission remain intact.

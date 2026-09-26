@@ -66,10 +66,12 @@ fn initialize(comptime E: type, self: *E, field: Field) Error!void {
         // move into the already-journaled partial aggregate; borrowed or held
         // inputs still acquire an independent value through prepareOperand.
         // No fallible operation separates this publication and guard handoff.
+        const fresh = try @import("qbe_rc_fresh_constructor.zig").begin(E, self, field.ty, index, field.source, field.destination);
         try values.prepareOperand(E, self, field.ty, index);
         const work = try values.workAddress(E, self);
         try self.print(blit_value, .{ work, field.destination, (try self.layout(field.ty)).size });
         try frame.initialized(E, self, frame.pending(E, self), false);
+        if (fresh) |label| try self.print("@rcfreshdone{d}\n", .{label});
         return;
     };
     try slots.Lower(E).transfer(self, .{ .ty = field.ty, .source = field.source, .destination = field.destination, .region = field.region, .mode = if (shape.unique_drop) .take_empty else .retain_empty });
