@@ -1,5 +1,5 @@
-//! Opt-in value semantics (`VALUE-SEMANTICS-1`, stage 3a of D9,
-//! `docs/value-semantics.md`). Under the switch, `list`, `dict`, `set` and
+//! Default value semantics (`VALUE-SEMANTICS-1`, stage 3 of D9,
+//! `docs/value-semantics.md`). In this mode, `list`, `dict`, `set` and
 //! `byte_buffer` values, and every inline aggregate holding one, are
 //! independent values: assignment, a store into a field, element, dictionary
 //! value, tuple or payload, a match or loop binding and a return never make two
@@ -12,8 +12,9 @@
 //! (`ownership_values.zig`) decides which of them are moves or borrows and so
 //! emit nothing; the native emitter lowers the rest through the one rooted
 //! copy-on-write transfer entry `myl_qbe_cow_transfer` (`qbe_value_copy.zig`,
-//! `qbe_cow_runtime.c`). `class` and `Cell` stay
-//! shared references, and `str`/`bytes` are immutable and shared.
+//! `qbe_cow_runtime.c`). Builtin `class` and `Cell` are rejected in the default
+//! mode; the one-release legacy-sharing mode retains their reference behavior.
+//! `str` and `bytes` are immutable and shared.
 const std = @import("std");
 const typed = @import("typed.zig");
 const typed_walk = @import("typed_walk.zig");

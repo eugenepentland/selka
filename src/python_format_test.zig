@@ -45,7 +45,7 @@ test "malformed format strings and unconvertible values are rejected" {
 /// the two spellings must agree byte for byte, and scored so the converted text
 /// is checked as well.
 const rendered_holes =
-    \\class Point:
+    \\record Point:
     \\    x: int
     \\    y: int
     \\

@@ -55,7 +55,7 @@ test "nominal instances preserve argument order and nominal declaration identity
         \\    return takes(Box[bool](value=True))
     , "E_TYPE");
     try reject(
-        \\class Pair[A, B]:
+        \\record Pair[A, B]:
         \\    a: A
         \\    b: B
         \\
@@ -68,11 +68,11 @@ test "nominal instances preserve argument order and nominal declaration identity
         \\    return takes(Pair[bool, i64](a=True, b=1))
     , "E_TYPE");
     try reject(
-        \\class A[T]:
+        \\record A[T]:
         \\    value: T
         \\
         \\
-        \\class B[T]:
+        \\record B[T]:
         \\    value: T
         \\
         \\
@@ -152,11 +152,11 @@ const Modules = struct {
             \\    value: T
             \\
             \\
-            \\public class Empty[T]:
+            \\public record Empty[T]:
             \\    pass
             \\
             \\
-            \\class Hidden:
+            \\record Hidden:
             \\    value: i64
             \\
             \\
@@ -199,7 +199,7 @@ fn longNamedRecords(allocator: std.mem.Allocator, count: usize, length: usize) !
     const stem = try allocator.alloc(u8, length - 6);
     defer allocator.free(stem);
     @memset(stem, 'n');
-    for (0..count) |index| try text.writer.print("class R{s}{d:0>5}:\n    v: i64\n\n\n", .{ stem, index });
+    for (0..count) |index| try text.writer.print("record R{s}{d:0>5}:\n    v: i64\n\n\n", .{ stem, index });
     try text.writer.writeAll("def main() -> i64:\n    return 0\n");
     return text.toOwnedSlice();
 }
@@ -218,16 +218,16 @@ fn largeNames(allocator: std.mem.Allocator) ![]u8 {
     var text: std.Io.Writer.Allocating = .init(allocator);
     defer text.deinit();
     try text.writer.writeAll(
-        \\class Pair[A, B]:
+        \\record Pair[A, B]:
         \\    a: A
         \\    b: B
         \\
         \\
         \\
     );
-    for (0..18) |i| try text.writer.print("class Chain{d}[T]:\n    next: Chain{d}[Pair[T, T]]\n\n\n", .{ i, i + 1 });
+    for (0..18) |i| try text.writer.print("record Chain{d}[T]:\n    next: Chain{d}[Pair[T, T]]\n\n\n", .{ i, i + 1 });
     try text.writer.writeAll(
-        \\class Chain18[T]:
+        \\record Chain18[T]:
         \\    pass
         \\
         \\

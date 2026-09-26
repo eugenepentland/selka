@@ -98,13 +98,13 @@ public def test_add_remove_discard_pop_clear_copy_and_update() -> bool:
 
 
 # spec-case: SET-1
-public def test_a_set_is_shared_on_assignment_and_written_through_mut() -> bool:
+public def test_a_set_copy_is_independent_and_mut_writes_its_caller() -> bool:
     values: set[int] = {1}
-    alias = values
+    alias = values.copy()
     alias.add(2)
     grow(mut values, 3)
     words = {"x", "y", "x"}
-    return len(values) == 3 and 2 in values and 3 in alias and members(words) == 2
+    return len(values) == 2 and 2 not in values and 3 in values and 2 in alias and 3 not in alias and members(words) == 2
 
 
 # spec-case: SET-1

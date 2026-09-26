@@ -25,6 +25,11 @@
 //!   compares exit status and the first `R_*` code on each side, so absolute
 //!   paths and diagnostic prose may drift without turning the harness red.
 //!
+//! Five source cases intentionally retain historical shared-alias outcomes.
+//! Their recorded option arrays now select `--legacy-sharing`; every other
+//! replay uses the default value model. Sources and expected outcomes remain
+//! unchanged, and these five cases still count as checked.
+//!
 //! What is intentionally skipped (counted, never silently green)
 //! -------------------------------------------------------------
 //! * `qbe_docs` entries are `docs/file.md:line` labels (plus two bundled

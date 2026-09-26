@@ -118,12 +118,12 @@ public def test_option_narrowing_record_write_preserves_independent_value() -> b
 # spec-case: OPTION-FLOW-1
 public def test_option_narrowing_collection_methods_and_index_writes() -> bool:
     items: list[int] = [40]
-    candidate: Option[list[int]] = Some(items)
+    candidate: Option[list[int]] = Some(items.copy())
     count = append_one(mut candidate, 2)
     if candidate is None:
         return False
     candidate[0] = candidate[0] + candidate[1]
-    return count == 2 and items[0] == 42
+    return count == 2 and candidate[0] == 42 and items[0] == 40
 
 # spec-case: OPTION-FLOW-2
 public def test_option_narrowing_false_disjunction_and_repeated_guard() -> bool:

@@ -59,13 +59,15 @@ parameter shows the body's writes), `result`, and `old(...)`:
   postcondition reads that value. It may use only the parameters, cannot nest,
   and is legal only inside `@ensures` (`E_CONTRACT_OLD`).
 
-`list`, `dict`, `class`, `Cell` and `byte_buffer` values are shared on
-assignment, so `old(xs)` would see the body's changes to `xs`. It is rejected
-with `E_CONTRACT_OLD_SHARED`; capture what you need instead, such as
-`old(len(xs))`, or a fresh copy, such as `old(xs.copy())`:
+Under value semantics, `old(xs)` captures an independent value at function
+entry, so a later write through `mut xs` does not change the capture. In
+compatibility mode, an `old(...)` expression that reaches shared state is
+rejected with `E_CONTRACT_OLD_SHARED`; capture a scalar such as `old(len(xs))`
+or an explicit copy there.
 
 ```mylang
-# doc: expect-error E_CONTRACT_OLD_SHARED
+# doc: value-semantics
+# doc: expect 2
 @ensures(len(items) == len(old(items)) + 1)
 def add(items: mut list[int], value: int):
     items.append(value)

@@ -1,0 +1,7 @@
+# oracle: cpython
+# Value independence extends to collections nested inside a copied list.
+def main() -> int:
+    original = [[1]]
+    copied = original
+    copied[0].append(2)
+    return len(original[0]) * 10 + len(copied[0])

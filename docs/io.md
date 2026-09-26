@@ -127,14 +127,14 @@ def main(out: Stream, err: Stream) -> int:
     return written
 ```
 
-A `Stream` stored in a class or record field is called through the field
+A `Stream` stored in a record field is called through the field
 expression directly, `sink.stream.write(data)` or `sink.stream.print(...)`,
 with the same effect and result. That form takes positional arguments only; bind
 the stream to a name first to pass `sep=` or `end=`.
 
 ```mylang
 # doc: expect ok 2
-class Sink:
+record Sink:
     stream: Stream
     label: str
 

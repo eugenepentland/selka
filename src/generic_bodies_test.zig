@@ -107,7 +107,7 @@ test "generic body contracts reject top-level and type-parameter shadowing" {
         \\    return 0
     , "E_SHADOWING");
     try reject(
-        \\class T:
+        \\record T:
         \\    pass
         \\
         \\
@@ -230,7 +230,7 @@ test "DIAG-ORACLE-1 arity diagnostics report expected and given counts" {
 // spec-case: DIAG-ORACLE-1
 test "DIAG-ORACLE-1 unknown field diagnostics list declared fields" {
     try expectMessage(
-        \\class Point:
+        \\record Point:
         \\    y: i64
         \\    x: i64
         \\

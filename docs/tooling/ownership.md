@@ -2,13 +2,13 @@
 
 The compiler runs one ownership analysis over every function it lowers
 (`OWNERSHIP-ANALYSIS-1`). It answers, without assuming any particular runtime,
-what value semantics would cost the function: which transfers of a value can
+what value semantics costs the function: which transfers of a value can
 hand it over (a *move*), which can share it because neither side is written
 while both are read (a *borrow*), and which would need a real *copy*; and, for
 every in-place write of a list, dictionary, set or byte buffer, where a
-copy-on-write check would go and which loop entry it could be hoisted to. It is
-the shared analysis of stage 2 of
-[D9](../adr/D9-value-semantics-then-rc.md): today's collector already uses it to
+copy-on-write check goes and which loop entry can hoist it. It is
+the shared analysis developed for stage 2 of
+[D9](../adr/D9-value-semantics-then-rc.md): the current collector uses it to
 skip aggregate copies (`QBE-MOVE-ELIDE-1`) and root records
 (`QBE-BORROW-ROOT-1`), see [Performance](../performance.md#records-are-values-not-copies).
 

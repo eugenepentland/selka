@@ -175,28 +175,22 @@ exists to prevent. A receiver is never marked: `values.append(1)` and
 `mapping.sort()` need nothing.
 
 `mut` is accepted only on a type that can carry a write back to the caller:
-`list`, `dict`, `class`, `Cell`, `[N]T`, `byte_buffer`, and a `record`, union,
+`list`, `dict`, `[N]T`, `byte_buffer`, and a `record`, union,
 option or result holding one. A scalar, `str` or `bytes` parameter declared `mut`
 is rejected, because no write through it could be observed. A fixed array is a
 value with no reference of its own, so a `mut [N]T` parameter names the caller's
 variable itself and its argument must be one; see
 [passing an array to be written](records-and-unions.md#passing-an-array-to-be-written).
 
-The guarantee is for the duration of the call and covers lists, dictionaries,
-`Cell`, and mutable descendants reached through records, arrays, options, unions,
-collections and recursive graphs. A value-record copy does not sever the origin
-of its managed descendants, and returning or wrapping an input does not make it
-fresh. Definitely-fresh local storage may always be built and mutated. A shallow
-`.copy()` severs only the outer container.
-
-If a writable input graph may overlap a read-only input, the call rejects unless
-the compiler can prove the two are disjoint; passing the same value twice is the
-simplest case. Two writable aliases are permitted and ordinary sequential
-ordering applies. Unknown possible overlap is treated as overlap, so a caller
-that intends two independent arguments either declares both writable or builds an
-independent snapshot.
+The guarantee covers the complete value, including managed descendants of records,
+arrays, options, unions and collections. Assignment and non-`mut` passing preserve
+independent values. A `mut` argument marks the caller's place to update; the
+compiler snapshots any read-only argument that might overlap it. Two overlapping
+`mut` arguments still violate exclusivity. Definitely-fresh local storage may
+always be built and mutated.
 
 ```mylang
+# doc: value-semantics
 # doc: expect 7
 def replace_first(values: mut list[int], replacement: int) -> None effects(mutation):
     values[0] = replacement
@@ -212,6 +206,7 @@ A write through a parameter that is not declared `mut` is rejected at the write
 site with the declaration to paste:
 
 ```mylang
+# doc: value-semantics
 # doc: expect-error E_MUTATION_MARKER
 def overwrite(values: list[int]) -> None effects(mutation):
     values[0] = 42
@@ -222,162 +217,99 @@ def main() -> int:
     return 0
 ```
 
-### Sharing, aliases and snapshots
+### Values and caller mutation
 
-Mutation follows the managed object, not the variable spelling. Two names bound
-to the same list name one writable object, and a `mut` parameter names a
-parameter position rather than the caller's variable:
+Assignment preserves an independent value. A helper changes its caller's value
+only through a `mut` parameter and a marked argument:
 
 ```mylang
+# doc: value-semantics
+# doc: expect 1
 # doc: expect 5
 def set_first(values: mut list[int], replacement: int) -> None effects(mutation):
     values[0] = replacement
 
 
 def main(out: Stream) -> int effects(managed_allocation, output):
-    shared = [1, 2]
-    alias = shared
-    set_first(mut alias, 5)
-    out.print(shared[0])
+    original = [1, 2]
+    copy = original
+    set_first(mut copy, 5)
+    out.print(original[0])
+    out.print(copy[0])
     return 0
 ```
 
-A shallow `.copy()` severs only the copied outer container. Appending to the copy
-does not change the original's length, but a managed descendant reached through
-the copy is still the same object:
+The same rule applies to nested managed values. A copy of an outer list keeps
+its inner lists independent when one of them is changed. The implementation may
+share storage until a write, but that sharing has no observable mutation effect:
 
 ```mylang
+# doc: value-semantics
 # doc: expect 1
 # doc: expect 9
 def main(out: Stream) -> int effects(managed_allocation, output):
     original = [[1]]
-    copy = original.copy()
-    copy.append([2])
+    copy = original
     copy[0][0] = 9
-    out.print(len(original))
     out.print(original[0][0])
+    out.print(copy[0][0])
     return 0
 ```
 
-If one argument is writable and another is promised read-only, the compiler must
-prove the two input graphs disjoint. Unknown overlap is treated as overlap, so
-two parameters of the same managed type reject even when a caller passes
-unrelated values:
+A read-only argument can be the same value as a `mut` argument. The callee reads
+its snapshot from before the call while the writable parameter changes the
+caller's value. `E_MUTATION_OVERLAP` still rejects two overlapping `mut`
+arguments.
 
 ```mylang
-# doc: expect-error E_MUTATION_OVERLAP
-def touch(x: mut list[int], y: list[int]) -> None effects(mutation):
-    x[0] = 1
-    _ = y[0]
-
-
-def use(a: mut list[int], b: list[int]) -> None effects(mutation):
-    touch(mut a, b)
+# doc: value-semantics
+# doc: expect 23
+def touch(target: mut list[int], source: list[int]) -> int effects(mutation, managed_allocation):
+    target.append(len(source))
+    return len(source)
 
 
 def main() -> int:
-    a = [1]
-    b = [2]
-    use(mut a, b)
-    return 0
+    a = [1, 2]
+    seen = touch(mut a, a)
+    return seen * 10 + len(a)
 ```
 
-Two writable aliases are permitted, and ordinary sequential ordering applies:
+### Return values
+
+Returning a managed value, or wrapping it in another value, does not give the
+caller write access to the callee's input. The returned value is independent;
+a caller can update its own copy. A write through a read-only parameter itself
+remains `E_MUTATION_MARKER`.
 
 ```mylang
-# doc: expect 0
-def pair(first: mut list[int], second: mut list[int]) -> None effects(mutation):
-    first[0] = 1
-    second[1] = 2
-
-
-def use(values: mut list[int]) -> None effects(mutation):
-    pair(mut values, mut values)
-
-
-def main() -> int:
-    values = [0, 0]
-    use(mut values)
-    return values[0] + values[1] - 3
-```
-
-The other repair is to build an independent snapshot where the writable and
-read-only arguments meet. The snapshot allocation is visible as its own effect:
-
-```mylang
-# doc: expect 0
-def touch(x: mut list[int], y: list[int]) -> None effects(mutation):
-    x[0] = 1
-    _ = y[0]
-
-
-def use(a: mut list[int], b: list[int]) -> None effects(mutation, managed_allocation):
-    snapshot = b.copy()
-    touch(mut a, snapshot)
-
-
-def main() -> int:
-    a = [1]
-    b = [2]
-    use(mut a, b)
-    return 0
-```
-
-### Return aliases
-
-Returning a parameter, or wrapping it in a fresh container, does not make it
-fresh. A function that returns an input publishes that alias unless its body
-proves otherwise, so a caller that writes through the result still needs the
-input's permission:
-
-```mylang
-# doc: expect-error E_MUTATION_MARKER
+# doc: value-semantics
+# doc: expect 1
+# doc: expect 9
 def identity(values: list[int]) -> list[int] effects():
     return values
 
 
-def overwrite(values: list[int]) -> None effects(mutation):
-    picked = identity(values)
-    picked[0] = 0
-
-
-def main() -> int:
-    values = [1]
-    overwrite(values)
+def main(out: Stream) -> int effects(managed_allocation, output):
+    original = [1]
+    picked = identity(original)
+    picked[0] = 9
+    out.print(original[0])
+    out.print(picked[0])
     return 0
 ```
 
-Declaring the write on the original parameter accepts the same program:
-
-```mylang
-# doc: expect 0
-def identity(values: list[int]) -> list[int] effects():
-    return values
-
-
-def overwrite(values: mut list[int]) -> None effects(mutation):
-    picked = identity(values)
-    picked[0] = 0
-
-
-def main() -> int:
-    values = [1]
-    overwrite(mut values)
-    return 0
-```
-
-Private helpers derive a precision return-origin bound from their bodies. The
-language currently has no syntax for a narrower declared return-origin, so an
-exported declaration defaults to `unknown`, never `fresh`.
+Private helpers derive a return-origin bound from their bodies for ownership
+optimization; it does not change the value rule seen by callers.
 
 ### Fresh local mutation
 
 Definitely-fresh storage may be built, filled and mutated locally without a
 `mutation` effect; the existing `managed_allocation` effect still applies. A
-caller can also write a result the compiler proved fresh even though the same
-function borrowed its input:
+caller can also write a returned value without changing the input:
 
 ```mylang
+# doc: value-semantics
 # doc: expect 1
 # doc: expect 9
 def doubled(values: list[int]) -> list[int] effects(managed_allocation):
@@ -400,7 +332,7 @@ def main(out: Stream) -> int effects(managed_allocation, output):
 
 `fs.read_only()` derives a read-only `Filesystem` from an existing one by
 intersecting its permission mask. The derived capability is an ordinary typed
-value: it can be passed, returned and stored in a record or class field, but it
+value: it can be passed, returned and stored in a record field, but it
 performs no I/O when it is created and contributes no effect of its own. The old
 bracket spelling `restrict_resource[...]` is removed and reports
 `E_REMOVED_SPELLING` naming the replacement.

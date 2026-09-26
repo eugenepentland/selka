@@ -140,7 +140,7 @@ test "declaration and type identity changes invalidate dependents while unrelate
     // An unrelated declaration inserted ahead of the same functions preserves the
     // three ordinary bodies: the dependency digests and stable identities match.
     try compare(t.allocator, &cache,
-        \\class Item:
+        \\record Item:
         \\    n: i64
         \\
         \\
@@ -312,7 +312,7 @@ test "constant-length and nominal specializations stay on the fresh path" {
         \\    return i64(size[3]())
     , 3);
     const nominal =
-        \\class Chunk[const N: u64]:
+        \\record Chunk[const N: u64]:
         \\    items: [N]i64
         \\
         \\
@@ -443,11 +443,11 @@ test "insert delete and reorder unrelated declarations preserve function and typ
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
     const ordered =
-        \\class A:
+        \\record A:
         \\    n: i64
         \\
         \\
-        \\class B:
+        \\record B:
         \\    n: i64
         \\
         \\
@@ -467,11 +467,11 @@ test "insert delete and reorder unrelated declarations preserve function and typ
     try compare(t.allocator, &cache, ordered, 42);
     try t.expectEqual(@as(usize, 3), cache.statistics.checked);
     const shuffled =
-        \\class B:
+        \\record B:
         \\    n: i64
         \\
         \\
-        \\class A:
+        \\record A:
         \\    n: i64
         \\
         \\
@@ -749,6 +749,8 @@ test "semantic cache binds the mutation contract version and effects contract" {
 
 // spec-case: SEMANTIC-CACHE-7
 test "a reused caller recomputes its return-origin bound after a callee alias change" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
     const base =
@@ -1443,7 +1445,7 @@ test "const-length specialization keys keep identity and nominal generics miss c
     try t.expectEqual(stored_two + 1, cache.reuse.specializations.statistics.stored);
 
     const nominal =
-        \\class Box[T]:
+        \\record Box[T]:
         \\    value: T
         \\
         \\

@@ -1,5 +1,9 @@
 # Aliasing model decision (2026-09-17)
 
+**Status: superseded by [D9](../adr/D9-value-semantics-then-rc.md) for the
+default value model.** This records the historical shared-reference decision.
+During the one-release migration window, `--legacy-sharing` selects these rules.
+
 The scorecard (`agent-audit-guide-scorecard-2026-09-17.md` §2.1) ranks "decide the
 aliasing model" as the first item and calls it "the only item in this scorecard
 that needs a language decision rather than tooling". This records the decision.

@@ -10,6 +10,16 @@ const fragments = @import("qbe_fragments.zig");
 
 const entry = "\n\ndef main() -> int:\n    return 0\n";
 
+// spec-case: VALUE-SEMANTICS-1
+test "legacy test fixtures explicitly restore the default value model" {
+    try t.expect(values.enabled());
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
+    try t.expect(!values.enabled());
+    legacy.restore();
+    try t.expect(values.enabled());
+}
+
 // A type cycle with only scalar fields requires no COW transfer, while a
 // collection on another edge still does.
 // spec-case: VALUE-SEMANTICS-2

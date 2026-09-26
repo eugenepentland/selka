@@ -5,25 +5,25 @@ const language = @import("compiler.zig");
 const templates = @import("nominal_templates.zig");
 const layouts = @import("nominal_layouts.zig");
 const fixture =
-    \\class Empty[T]:
+    \\record Empty[T]:
     \\    pass
     \\
     \\
-    \\class Box[T]:
+    \\record Box[T]:
     \\    value: T
     \\
     \\
-    \\class Pair[A, B]:
+    \\record Pair[A, B]:
     \\    first: A
     \\    second: B
     \\
     \\
-    \\class Other[A, B]:
+    \\record Other[A, B]:
     \\    first: A
     \\    second: B
     \\
     \\
-    \\class Model[T]:
+    \\record Model[T]:
     \\    a: Pair[i64, bool]
     \\    b: Pair[i64, bool]
     \\    c: Pair[bool, i64]
@@ -31,15 +31,15 @@ const fixture =
     \\    nested: Box[Box[T]]
     \\
     \\
-    \\class Grow[T]:
+    \\record Grow[T]:
     \\    marker: Empty[Grow[[1]T]]
     \\
     \\
-    \\class Left[T]:
+    \\record Left[T]:
     \\    box: Box[T]
     \\
     \\
-    \\class Right[T]:
+    \\record Right[T]:
     \\    box: Box[T]
     \\
     \\
@@ -48,7 +48,7 @@ const fixture =
     \\    b
     \\
     \\
-    \\class Table:
+    \\record Table:
     \\    data: [Key[i64]]Box[i64]
 ;
 fn root(graph: layouts.Graph, index: templates.Index, name: []const u8) !layouts.Node {
@@ -109,22 +109,22 @@ fn reject(text: []const u8, code: []const u8, detail: []const u8) !void {
 }
 test "nominal layout expansion bounds argument growth without host stack recursion" {
     try reject(
-        \\class Grow[T]:
+        \\record Grow[T]:
         \\    next: Grow[[1]T]
     , "E_GENERIC_LIMIT", "4096 type instances");
     try reject(
-        \\class Box[T]:
+        \\record Box[T]:
         \\    value: T
         \\
         \\
-        \\class Grow[T]:
+        \\record Grow[T]:
         \\    next: Grow[Box[T]]
     , "E_GENERIC_LIMIT", "4096 type instances");
 }
 fn identitySource(allocator: std.mem.Allocator, count: usize, wrap: bool) ![]u8 {
     var text: std.Io.Writer.Allocating = .init(allocator);
     defer text.deinit();
-    try text.writer.writeAll("class Tag[T]:\n    pass\n\n\nclass Values[T]:\n");
+    try text.writer.writeAll("record Tag[T]:\n    pass\n\n\nrecord Values[T]:\n");
     for (0..count) |i| {
         try text.writer.print("    f{d}: ", .{i});
         if (wrap) try text.writer.writeAll("Tag[");
@@ -153,9 +153,9 @@ test "nominal layout expansion bounds distinct array identities" {
 fn workSource(allocator: std.mem.Allocator) ![]u8 {
     var text: std.Io.Writer.Allocating = .init(allocator);
     defer text.deinit();
-    try text.writer.writeAll("class Big[T]:\n");
+    try text.writer.writeAll("record Big[T]:\n");
     for (0..512) |i| try text.writer.print("    f{d}: T\n", .{i});
-    try text.writer.writeAll("\n\nclass Uses[U]:\n");
+    try text.writer.writeAll("\n\nrecord Uses[U]:\n");
     for (0..256) |i| try text.writer.print("    f{d}: Big[[{d}]U]\n", .{ i, i + 1 });
     return text.toOwnedSlice();
 }
@@ -170,10 +170,10 @@ test "nominal layout expansion bounds repeated field work independently of ident
 fn sharedWorkSource(allocator: std.mem.Allocator, count: usize) ![]u8 {
     var text: std.Io.Writer.Allocating = .init(allocator);
     defer text.deinit();
-    try text.writer.writeAll("class Big[T]:\n");
+    try text.writer.writeAll("record Big[T]:\n");
     for (0..512) |i| try text.writer.print("    f{d}: T\n", .{i});
     for (0..2) |owner| {
-        try text.writer.print("\n\nclass Uses{d}[U]:\n", .{owner});
+        try text.writer.print("\n\nrecord Uses{d}[U]:\n", .{owner});
         for (0..count) |i| try text.writer.print("    f{d}: Big[[{d}]U]\n", .{ i, owner * count + i + 1 });
     }
     return text.toOwnedSlice();
@@ -206,7 +206,7 @@ test "nominal layout budgets apply per declaration so a program may exceed them 
     try t.expectEqual(@as(u8, 'f'), site[1][0]);
 }
 fn materializeMany(allocator: std.mem.Allocator) !void {
-    var compilation = try language.Compilation.init(allocator, "many.my", "class Box[T]:\n    value: T\n");
+    var compilation = try language.Compilation.init(allocator, "many.my", "record Box[T]:\n    value: T\n");
     defer compilation.deinit();
     try compilation.parse();
     var sink: language.diagnostic.Sink = .{ .allocator = compilation.arena.allocator() };
@@ -230,9 +230,9 @@ test "every materialized concrete type gets its own layout budget" {
 fn wideSource(allocator: std.mem.Allocator, records: usize) ![]u8 {
     var text: std.Io.Writer.Allocating = .init(allocator);
     defer text.deinit();
-    try text.writer.writeAll("class Leaf:\n    v: i64\n\n\n");
+    try text.writer.writeAll("record Leaf:\n    v: i64\n\n\n");
     for (0..records) |i| {
-        try text.writer.print("class W{d}:\n", .{i});
+        try text.writer.print("record W{d}:\n", .{i});
         for (0..16) |j| try text.writer.print("    f{d}: Leaf\n", .{j});
         try text.writer.writeAll("\n\n");
     }
@@ -264,15 +264,15 @@ fn longSource(allocator: std.mem.Allocator) ![]u8 {
     var text: std.Io.Writer.Allocating = .init(allocator);
     defer text.deinit();
     try text.writer.writeAll(
-        \\class Marker[T]:
+        \\record Marker[T]:
         \\    pass
         \\
         \\
         \\
     );
-    for (0..1200) |i| try text.writer.print("class Link{d}:\n    next: Link{d}\n\n\n", .{ i, i + 1 });
+    for (0..1200) |i| try text.writer.print("record Link{d}:\n    next: Link{d}\n\n\n", .{ i, i + 1 });
     try text.writer.writeAll(
-        \\class Link1200:
+        \\record Link1200:
         \\    value: i64
     );
     return text.toOwnedSlice();

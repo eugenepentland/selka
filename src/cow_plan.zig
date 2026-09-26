@@ -163,6 +163,19 @@ pub const Plan = struct {
     }
 };
 
+/// The temporary retaining a dictionary key until a nested write-back.
+pub fn entryKey(place: Place, operands: []const ?[]const ownership.Source) ?usize {
+    const read = switch (place.step) {
+        .entry => place.base,
+        .entry_field => place.read,
+        else => return null,
+    };
+    const stack = operands[read] orelse return null;
+    if (stack.len == 0) return null;
+    const key = stack[stack.len - 1];
+    return if (key.origin == .local and key.part == .whole and key.local != none) key.local else null;
+}
+
 /// What planning reads.
 pub const Input = struct {
     program: bytecode.Program,
@@ -314,7 +327,7 @@ fn findPlace(planner: *Planner, index: u32) Error!void {
             return;
         } else .{ .parent = li(slot), .step = .field, .base = base, .fill = @intCast(fill) },
         .buffer_operation => |operation| if (operation.kind == .read and listType(planner, li(operation.owner))) .{ .parent = li(operation.owner), .step = .element, .base = base, .fill = @intCast(fill) } else null,
-        .get_index => |access| if (dictionaryType(planner.input.program, access.ty)) try entryParent(planner, pc, fill) else null,
+        .get_index => |access| if (dictionaryType(planner.input.program, access.ty)) try entryParent(planner, pc, fill) else try arrayParent(planner, pc, fill),
         else => null,
     };
     if (found) |place| {
@@ -324,6 +337,30 @@ fn findPlace(planner: *Planner, index: u32) Error!void {
         };
         planner.places[index] = answer;
     }
+}
+
+/// A fixed-array access stays within its root's inline value. Follow its
+/// operand's original read, retaining any outer list or dictionary place.
+fn arrayParent(planner: *const Planner, pc: usize, fill: usize) Error!?Place {
+    const states = planner.input.states[pc] orelse return null;
+    const operands = planner.input.analysis.operands[pc] orelse return null;
+    if (states.len < 2 or operands.len < 2) return null;
+    const ty = states[states.len - 2];
+    if (!arrayType(planner.input.program, ty)) return null;
+    const source = operands[operands.len - 2];
+    if (source.origin != .local or source.read == none or source.local == none) return null;
+    const read = planner.code()[source.read].op;
+    if (read == .buffer_operation and read.buffer_operation.kind == .read and listType(planner, source.local))
+        return .{ .parent = source.local, .step = .element, .base = source.read, .fill = @intCast(fill) };
+    if (read != .load_local) return null;
+    const depth = (planner.input.states[source.read] orelse return null).len;
+    for (source.read + 1..pc) |at| {
+        const stack = planner.input.states[at] orelse continue;
+        const op = planner.code()[at].op;
+        if (op == .get_index and stack.len == depth + 2 and dictionaryType(planner.input.program, op.get_index.ty))
+            return entryParent(planner, at, fill);
+    }
+    return .{ .parent = source.local, .step = .field, .base = source.read, .fill = @intCast(fill) };
 }
 
 const BoxOwner = struct { owner: u32, ty: typed.Type };
@@ -411,6 +448,10 @@ fn dictionaryType(program: bytecode.Program, ty: typed.Type) bool {
     if (!ty.isAggregate() or ty.recordIndex() >= program.records.len) return false;
     const record = program.records[ty.recordIndex()];
     return record.isCollection() and record.collection.kind == .dictionary;
+}
+
+fn arrayType(program: bytecode.Program, ty: typed.Type) bool {
+    return ty.isAggregate() and program.records[ty.recordIndex()].shape.array != null;
 }
 
 /// Keep only the places a write goes through: the receiver of a writing
@@ -514,6 +555,7 @@ fn placePlaces(planner: *Planner) Error!void {
             planner.marks.checked[found.base] = true;
         }
         if (found.step == .element) planner.sites[found.base].capture = true;
+        captureArrayIndices(planner, found);
         if (!elementsHoisted(planner, found)) {
             planner.sites[found.fill].fill = true;
             planner.marks.checked[found.fill] = true;
@@ -523,6 +565,19 @@ fn placePlaces(planner: *Planner) Error!void {
         if (planner.places[root] != null or !planner.payload(root)) continue;
         if (planner.role(root) != .owned or rootCovered(planner, found, root)) continue;
         try planner.addUnique(rootPc(planner, found), .{ .local = root, .alias = if (found.parent != root) found.parent else none });
+    }
+}
+
+/// Preserve each inline-array index across later index expressions in the
+/// same path. The operand stack distinguishes the path from key evaluation.
+fn captureArrayIndices(planner: *Planner, found: Place) void {
+    const begin = found.base + 1;
+    const first = planner.input.states[begin] orelse return;
+    for (begin..found.fill) |pc| {
+        const stack = planner.input.states[pc] orelse continue;
+        const op = planner.code()[pc].op;
+        if (op != .get_index or !arrayType(planner.input.program, op.get_index.ty) or stack.len != first.len + 1) continue;
+        planner.sites[pc].capture = true;
     }
 }
 

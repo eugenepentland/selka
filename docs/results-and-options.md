@@ -227,7 +227,7 @@ function returning `Option[int]` can walk an `Option[Node]` with `?`.
 
 ```mylang
 # doc: expect 4
-class Node:
+record Node:
     value: int
     left: Option[Node]
 

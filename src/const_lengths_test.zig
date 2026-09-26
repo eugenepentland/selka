@@ -5,7 +5,7 @@ const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
 fn nominalScenario(allocator: std.mem.Allocator) !void {
     const text =
-        \\class Chunk[T, const N: u64]:
+        \\record Chunk[T, const N: u64]:
         \\    items: [N]T
         \\
         \\
@@ -42,7 +42,7 @@ test "uncalled const length templates reject kind confusion unprovable construct
         \\    return 0
         , .code = "E_GENERIC_LENGTH" },
         .{ .source =
-        \\class Bad[const N: u64]:
+        \\record Bad[const N: u64]:
         \\    x: N
         , .code = "E_GENERIC_LENGTH" },
         .{ .source =
@@ -59,15 +59,15 @@ test "uncalled const length templates reject kind confusion unprovable construct
         \\    return N
         , .code = "E_SHADOWING" },
         .{ .source =
-        \\class Bad[T]:
+        \\record Bad[T]:
         \\    x: [T]i64
         , .code = "E_GENERIC_ARRAY_KEY" },
         .{ .source =
-        \\class Chunk[const N: u64]:
+        \\record Chunk[const N: u64]:
         \\    x: [N]i64
         \\
         \\
-        \\class Bad:
+        \\record Bad:
         \\    x: Chunk[1048577]
         , .code = "E_GENERIC_LENGTH" },
     };

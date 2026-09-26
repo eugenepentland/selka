@@ -12,8 +12,11 @@
   "0c43e2e8d7cea313d847904415466668": {
    "case": [
     "def main() -> int:\n    older: list[int] = [5]\n    kept: list[list[int]] = []\n    with arena() as scratch:\n        holder: list[list[int]] = [older]\n        kept = scratch.escape(holder)\n    older.append(6)\n    return len(kept[0]) * 10 + kept[0][0]\n",
-    []
+    [
+     "--legacy-sharing"
+    ]
    ],
+   "note": "Historical shared-alias outcome retained in the explicit D9 compatibility mode.",
    "returncode": 25,
    "stderr": "",
    "stdout": "MjUK"
@@ -84,8 +87,11 @@
   "7d2decb0f3cf94524b3698d276e5c5b5": {
    "case": [
     "def main() -> int:\n    kept: Option[list[int]] = None\n    with arena() as scratch:\n        found: Option[list[int]] = Some([4, 5, 6])\n        kept = scratch.escape(found)\n    match kept:\n        case Some(values):\n            values.append(7)\n            return len(values)\n        case None:\n            return 0\n",
-    []
+    [
+     "--legacy-sharing"
+    ]
    ],
+   "note": "Historical shared-alias outcome retained in the explicit D9 compatibility mode.",
    "returncode": 4,
    "stderr": "",
    "stdout": "NAo="
@@ -165,8 +171,11 @@
   "f2baede7359943efcd31fce0aade5d5d": {
    "case": [
     "def main() -> int:\n    kept: list[list[int]] = []\n    with arena() as scratch:\n        shared: list[int] = [7]\n        holder: list[list[int]] = [shared, shared]\n        kept = scratch.escape(holder)\n    kept[0].append(9)\n    return len(kept) * 10 + kept[0][0] + kept[1][1]\n",
-    []
+    [
+     "--legacy-sharing"
+    ]
    ],
+   "note": "Historical shared-alias outcome retained in the explicit D9 compatibility mode.",
    "returncode": 36,
    "stderr": "",
    "stdout": "MzYK"

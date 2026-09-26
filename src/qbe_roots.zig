@@ -118,6 +118,11 @@ pub fn Lower(comptime Emitter: type) type {
         pub fn restoreRoots(self: *Emitter) GenerateError!void {
             return impl.restoreRoots(Emitter, self);
         }
+        /// Leave the function with exactly the caller's root chain, regardless
+        /// of the bytecode position retained while emitting a failure block.
+        pub fn restoreFrameRoots(self: *Emitter) GenerateError!void {
+            return impl.restoreTo(Emitter, self, null);
+        }
         /// Answer which locals each safepoint publishes. A local whose type owns
         /// something is pinned: the epilogue and every overwriting store release it
         /// through its slot, so it stays published wherever it was before.
@@ -390,8 +395,15 @@ fn pushRoot(comptime Emitter: type, self: *Emitter, slot: RootSlot, previous: []
 /// Restore the heap's root chain to this frame's mark with one store,
 /// replacing the former `myl_qbe_root_restore` call.
 fn restoreRoots(comptime Emitter: type, self: *Emitter) GenerateError!void {
+    return restoreTo(Emitter, self, @import("qbe_cow.zig").Lower(Emitter).scopeRoot(self, self.pc));
+}
+
+fn restoreTo(comptime Emitter: type, self: *Emitter, scope: ?usize) GenerateError!void {
     const base = self.temp();
-    try self.print(" %v{d} =l add %heap, {d}\n storel %root_mark, %v{d}\n", .{ base, heap_roots_offset, base });
+    try self.print(" %v{d} =l add %heap, {d}\n", .{ base, heap_roots_offset });
+    if (scope) |fill| {
+        try self.print(" storel %cowscope{d}, %v{d}\n", .{ fill, base });
+    } else try self.print(" storel %root_mark, %v{d}\n", .{base});
 }
 
 test "trap helpers and listed runtime reads are no safepoint, an indirect call always is" {

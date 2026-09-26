@@ -40,8 +40,8 @@ const Emitter = struct {
     /// VALUE-SEMANTICS-2: this function's lowering facts under value
     /// semantics, or null with the switch off (no copy is ever placed).
     values: ?*const value_semantics.Facts = null,
-    /// Hidden locals lowering adds after the checked ones: the box a boxed
-    /// union payload lands in before a match arm reads through it.
+    /// Hidden locals lowering adds after the checked ones: boxed match
+    /// payloads and dictionary receivers that a nested write can replace.
     extra_locals: std.ArrayList(typed.Local) = .empty,
     /// How many locals the checked function declares; `extra_locals` follow.
     declared_locals: usize = 0,
@@ -273,7 +273,7 @@ const Emitter = struct {
                     if (case.boxed) if (arm.slot) |slot| {
                         // The arm's box lands in a hidden local; the binding the
                         // arm names receives the value inside it.
-                        const box = try self.hiddenLocal(case.payload.?, stmt.span);
+                        const box = try self.hiddenLocal(case.payload.?, stmt.span, "<box>");
                         slots[arm.tag] = box;
                         try self.instruction(stmt.span, .{ .store_local = slot });
                         try self.unboxValue(stmt.span);
@@ -366,8 +366,8 @@ const Emitter = struct {
             },
             .index => |access| {
                 try self.instruction(node.span, .{ .get_index = .{ .ty = self.program.nodes[@backingInt(access.base)].ty, .from_end = access.from_end } });
-                try self.push(.{ .expression = access.index });
-                try self.push(.{ .expression = access.base });
+                try self.indexKey(access.base, access.index, node.ty);
+                try self.indexReceiver(access.base);
             },
             .replace => |replace| {
                 try self.instruction(node.span, .{ .replace_index = .{ .ty = node.ty, .from_end = replace.from_end } });
@@ -604,10 +604,38 @@ const Emitter = struct {
         const shape = typed.resultShape(ty, self.program.records) orelse return false;
         return self.variantCase(ty, shape.ok_tag).boxed;
     }
-    /// A hidden local of type `ty` the arm of a boxed payload receives its box in.
-    fn hiddenLocal(self: *Emitter, ty: typed.Type, span: Span) !typed.LocalId {
+    /// COW-NESTED-1: give every dictionary read a local owner, so a later
+    /// nested write can make that dictionary unique and publish its copy
+    /// back into the collection or field it came from. The receiver still
+    /// evaluates once, before the key; read-only paths need no COW checks.
+    fn indexReceiver(self: *Emitter, id: typed.NodeId) !void {
+        const node = self.program.nodes[@backingInt(id)];
+        if (self.values != null and node.data != .local and node.ty.isAggregate() and
+            self.program.records[node.ty.recordIndex()].collection.kind == .dictionary)
+        {
+            const owner = try self.hiddenLocal(node.ty, node.span, "<index-owner>");
+            try self.instruction(node.span, .{ .load_local = owner });
+            try self.instruction(node.span, .{ .store_local = owner });
+        }
+        try self.push(.{ .expression = id });
+    }
+    /// A dictionary key can be needed again after later array indices have
+    /// overwritten its operand slot. Keep its value without rerunning it.
+    fn indexKey(self: *Emitter, base: typed.NodeId, key: typed.NodeId, output: typed.Type) !void {
+        const ty = self.program.nodes[@backingInt(base)].ty;
+        const inline_result = output.isAggregate() and !self.program.records[output.recordIndex()].managed;
+        if (self.values != null and ty.isAggregate() and self.program.records[ty.recordIndex()].collection.kind == .dictionary and inline_result) {
+            const node = self.program.nodes[@backingInt(key)];
+            const slot = try self.hiddenLocal(node.ty, node.span, "<index-key>");
+            try self.instruction(node.span, .{ .load_local = slot });
+            try self.instruction(node.span, .{ .store_local = slot });
+        }
+        try self.push(.{ .expression = key });
+    }
+    /// A hidden local for an intermediate value lowering must name.
+    fn hiddenLocal(self: *Emitter, ty: typed.Type, span: Span, name: []const u8) !typed.LocalId {
         const id: typed.LocalId = @fromBackingInt(self.declared_locals + self.extra_locals.items.len);
-        try self.extra_locals.append(self.scratch, .{ .name = "<box>", .declaration = span, .ty = ty, .mutable = true, .usage = .{ .reads = 1, .temporary = true } });
+        try self.extra_locals.append(self.scratch, .{ .name = name, .declaration = span, .ty = ty, .mutable = true, .usage = .{ .reads = 1, .temporary = true } });
         return id;
     }
     fn finish(self: *Emitter, body: typed.StatementId) ![]const bc.Instruction {

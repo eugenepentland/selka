@@ -146,6 +146,9 @@ test "copy on write: immediate variant dispatch copies only its selected payload
 
 // spec: COW-SHARED-1
 test "copy on write: a copy transfer shares the list and the first write through either name copies it" {
+    // Retain the internal phase-one path during the explicit legacy window.
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     try std.testing.expectEqual(@as(i64, 23), try run(std.testing.allocator, assigned, false));
     try std.testing.expectEqual(@as(i64, 23), try run(std.testing.allocator, assigned, true));
     const a = std.testing.allocator;
@@ -283,6 +286,32 @@ test "copy on write: recursive box projection protects a child exposed before a 
     try std.testing.expectEqual(@as(i64, 1), try run(a, pure_call, true));
 }
 
+// spec: QBE-PURE-BOX-READ-1
+test "copy on write: a pure recursive box read needs no COW unbox runtime" {
+    const saved = value_semantics.enabled();
+    value_semantics.setEnabled(true);
+    defer value_semantics.setEnabled(saved);
+    const source =
+        \\record Node:
+        \\    number: int
+        \\    next: Option[Node]
+        \\
+        \\def total(node: Node) -> int:
+        \\    child = node.next
+        \\    if child is None:
+        \\        return node.number
+        \\    return node.number + total(child)
+        \\
+        \\def main() -> int:
+        \\    return total(Node(1, Some(Node(2, None))))
+    ;
+    const a = std.testing.allocator;
+    const il = try unitText(a, source, "total", checks);
+    defer a.free(il);
+    try std.testing.expectEqual(@as(usize, 0), count(il, "call $myl_qbe_cow_unbox("));
+    try std.testing.expectEqual(@as(i64, 3), try run(a, source, true));
+}
+
 // spec: COW-UNIQUE-1
 test "copy on write: every in-place write tests one header bit inline and copies only on the shared path" {
     const a = std.testing.allocator;
@@ -301,7 +330,11 @@ test "copy on write: every in-place write tests one header bit inline and copies
     defer a.free(il);
     try std.testing.expectEqual(@as(usize, 2), count(il, shared_test));
     try std.testing.expectEqual(@as(usize, 2), count(il, "call $myl_native_cow_unique(l %heap"));
-    const off = try unitText(a, source, "fill", plain);
+    const off = legacy: {
+        const scope = @import("test_support.zig").LegacySharing.enter();
+        defer scope.restore();
+        break :legacy try unitText(a, source, "fill", plain);
+    };
     defer a.free(off);
     try std.testing.expectEqual(@as(usize, 0), count(off, "cow"));
     try std.testing.expectEqual(@as(i64, 2), try run(std.testing.allocator, source, true));
@@ -383,6 +416,65 @@ test "copy on write: a write through a dictionary value copies the dictionary an
     try std.testing.expect(count(il, "call $myl_native_cow_unique_in(") >= 1);
 }
 
+// spec-case: COW-NESTED-1
+test "copy on write: alternating collection owners keep both snapshots alive under GC stress" {
+    const saved = value_semantics.enabled();
+    value_semantics.setEnabled(true);
+    defer value_semantics.setEnabled(saved);
+    const source =
+        \\def main() -> int:
+        \\    original: list[dict[str, dict[str, list[int]]]] = [{"a": {"b": [1]}}]
+        \\    changed = original
+        \\    changed[0]["a"]["b"].append(2)
+        \\    return len(original[0]["a"]["b"]) * 10 + len(changed[0]["a"]["b"])
+    ;
+    try std.testing.expectEqual(@as(i64, 12), try run(std.testing.allocator, source, false));
+    try std.testing.expectEqual(@as(i64, 12), try run(std.testing.allocator, source, true));
+}
+
+// spec-case: COW-NESTED-1
+test "copy on write: fixed array paths retain dictionary keys and collection owners under GC stress" {
+    const saved = value_semantics.enabled();
+    value_semantics.setEnabled(true);
+    defer value_semantics.setEnabled(saved);
+    const source =
+        \\def main() -> int:
+        \\    original: dict[str, [1][1]list[int]] = {"k": [[[1]]]}
+        \\    changed = original
+        \\    changed["k"][0][0].append(2)
+        \\    return len(original["k"][0][0]) * 10 + len(changed["k"][0][0])
+    ;
+    try std.testing.expectEqual(@as(i64, 12), try run(std.testing.allocator, source, false));
+    try std.testing.expectEqual(@as(i64, 12), try run(std.testing.allocator, source, true));
+}
+
+// spec-case: COW-NESTED-1
+test "copy on write: a callback replacing an equal array entry detaches the pending receiver" {
+    const saved = value_semantics.enabled();
+    value_semantics.setEnabled(true);
+    defer value_semantics.setEnabled(saved);
+    const source =
+        \\def index(values: mut dict[str, [1]list[int]]) -> int:
+        \\    copied = values["k"]
+        \\    values["k"] = copied
+        \\    return 0
+        \\
+        \\def main() -> int:
+        \\    original: dict[str, [1]list[int]] = {"k": [[1]]}
+        \\    changed = original
+        \\    changed["k"][index(mut changed)].append(2)
+        \\    return len(original["k"][0]) * 10 + len(changed["k"][0])
+    ;
+    const a = std.testing.allocator;
+    try std.testing.expectEqual(@as(i64, 11), try run(a, source, false));
+    try std.testing.expectEqual(@as(i64, 11), try run(a, source, true));
+    const il = try unitText(a, source, "main", checks);
+    defer a.free(il);
+    try std.testing.expect(count(il, "call $myl_native_cow_scope_prepare(") == 1);
+    try std.testing.expect(count(il, "call $myl_native_cow_scope_release(") > 0);
+    try std.testing.expect(count(il, "extern $myl_native_cow_scope_type") == 1);
+}
+
 const fields =
     \\record Bag:
     \\    items: list[int]
@@ -404,6 +496,8 @@ const fields =
 
 // spec-case: COW-NESTED-1
 test "copy on write: a write through a record or class field writes the copy back into the field" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     const a = std.testing.allocator;
     const il = try unitText(a, fields, "main", checks);
     defer a.free(il);
@@ -457,4 +551,51 @@ test "copy on write: a counting build counts every inline check, mark and pin an
     try std.testing.expectEqual(@as(i64, 23), result.value);
     try std.testing.expect(std.mem.indexOf(u8, result.stderr, "cow-stats {\"marks\":1,") != null);
     try std.testing.expect(std.mem.indexOf(u8, result.stderr, "\"copies\":1,") != null);
+}
+
+// spec: COW-INDEX-RETURN-1
+test "copy on write: a unique mut-list element field returns without sharing" {
+    const saved = value_semantics.enabled();
+    value_semantics.setEnabled(true);
+    defer value_semantics.setEnabled(saved);
+    const source =
+        \\record Payload:
+        \\    number: int
+        \\    items: list[int]
+        \\
+        \\union Item:
+        \\    payload: Payload,
+        \\    empty
+        \\
+        \\def change(items: mut list[Item], index: int):
+        \\    match items[index]:
+        \\        case Item.payload(old):
+        \\            fields = old.items
+        \\            fields.append(2)
+        \\            items[index] = Item.payload(Payload(0, fields))
+        \\        case Item.empty:
+        \\            pass
+        \\
+        \\def observe(items: mut list[Item], index: int) -> int:
+        \\    seen = -1
+        \\    match items[index]:
+        \\        case Item.payload(old):
+        \\            fields = old.items
+        \\            fields.append(2)
+        \\            seen = len(old.items)
+        \\            items[index] = Item.payload(Payload(0, fields))
+        \\        case Item.empty:
+        \\            pass
+        \\    return seen
+        \\
+        \\def main() -> int:
+        \\    return 0
+    ;
+    const a = std.testing.allocator;
+    const il = try unitText(a, source, "change", checks);
+    defer a.free(il);
+    const negative = try unitText(a, source, "observe", checks);
+    defer a.free(negative);
+    try std.testing.expectEqual(@as(usize, 0), count(il, "call $myl_qbe_cow_transfer("));
+    try std.testing.expect(count(negative, "call $myl_qbe_cow_transfer(") > 0);
 }

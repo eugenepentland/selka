@@ -457,9 +457,9 @@ test "cached syntax decodes in place and a damaged entry is still a counted miss
 // value, an Option payload and a call's return type, never by naming it.
 const reach_shapes =
     \\module shapes
-    \\public class Inner:
+    \\public record Inner:
     \\    x: int
-    \\public class Outer:
+    \\public record Outer:
     \\    items: list[Inner]
     \\    table: dict[str, Inner]
     \\    maybe: Option[Inner]
@@ -571,6 +571,8 @@ fn cycleFiles(shapes: []const u8) [4]File {
 
 // spec-case: SEMANTIC-KEY-TRANSITIVE-1
 test "a type reached through a declaration cycle or a facade re-export invalidates its users" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     const original = cycleFiles(cycle_shapes);
     const renamed = cycleFiles("module shapes\npublic class A:\n    b: B\n    z: int\npublic class B:\n    a: A\n");
     const outcome = try checkAfterEdit(&original, &renamed);

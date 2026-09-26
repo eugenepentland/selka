@@ -16,20 +16,21 @@ public def test_insertion_order() -> bool effects(managed_allocation):
     return len(counts) == 2
 
 
-public def test_aliases_and_values() -> bool effects(managed_allocation):
+# spec-case: VALUE-SEMANTICS-1
+public def test_copies_and_values() -> bool effects(managed_allocation):
     counts: dict[str, int] = {}
     counts["pear"] = 2
     counts["apple"] = 3
-    alias = counts
-    alias["fig"] = 5
-    if counts["fig"] != 5 or len(counts) != 3:
+    copied = counts
+    copied["fig"] = 5
+    if "fig" in counts or len(counts) != 2 or copied["fig"] != 5:
         return False
     total = 0
-    for amount in counts.values():
+    for amount in copied.values():
         total += amount
     if total != 10:
         return False
-    return len(counts.keys()) == 3
+    return len(copied.keys()) == 3 and len(counts.keys()) == 2
 
 
 public def test_membership_and_get() -> bool effects(managed_allocation):

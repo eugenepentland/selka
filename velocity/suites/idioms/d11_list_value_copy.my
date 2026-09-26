@@ -1,0 +1,7 @@
+# oracle: cpython
+# D9 deliberately differs: assignment gives each name an independent list value.
+def main() -> int:
+    original = [1]
+    copied = original
+    copied.append(2)
+    return len(original) * 10 + len(copied)

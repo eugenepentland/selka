@@ -71,7 +71,8 @@ fn explained(a: std.mem.Allocator, source: []const u8, name: []const u8) !std.js
     var lines = std.mem.splitScalar(u8, text, '\n');
     while (lines.next()) |line| {
         if (line.len == 0) continue;
-        const parsed = try std.json.parseFromSlice(Function, a, line, .{ .allocate = .alloc_always });
+        // The transfer assertions do not inspect additive copy-site detail.
+        const parsed = try std.json.parseFromSlice(Function, a, line, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
         if (std.mem.eql(u8, parsed.value.function, name)) return parsed;
         parsed.deinit();
     }
@@ -265,6 +266,8 @@ test "OWNERSHIP-ANALYSIS-1 an element written through a temporary needs its elem
 
 // spec-case: OWNERSHIP-ANALYSIS-1
 test "OWNERSHIP-ANALYSIS-1 classes, callbacks and arenas are answered, never refused" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     const a = std.testing.allocator;
     const source =
         \\class Node:

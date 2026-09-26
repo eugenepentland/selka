@@ -24,7 +24,7 @@ test "a scalar-only mut record parameter writes the caller in both modes" {
         \\    reset(mut c)
         \\    return c.n
     ;
-    try invokeOptions("run", program, &.{"--no-cache"}, 10, "10\n", "");
+    try invokeOptions("run", program, &.{ "--legacy-sharing", "--no-cache" }, 10, "10\n", "");
     try invokeOptions("run", program, &.{"--value-semantics"}, 10, "10\n", "");
 }
 // spec: FIX-MIGRATION-1
@@ -41,7 +41,7 @@ test "fix command previews then stores back a local alias and preserves both mod
     try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = before });
     const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
     defer testing.allocator.free(path);
-    const preview = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "fix", path, "--check" } });
+    const preview = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "fix", path, "--check", "--legacy-sharing" } });
     defer testing.allocator.free(preview.stdout);
     defer testing.allocator.free(preview.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, preview.term);
@@ -49,19 +49,19 @@ test "fix command previews then stores back a local alias and preserves both mod
     const unchanged = try temp.dir.readFileAlloc(testing.io, "input.my", testing.allocator, .unlimited);
     defer testing.allocator.free(unchanged);
     try testing.expectEqualStrings(before, unchanged);
-    const fixed = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "fix", path } });
+    const fixed = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "fix", path, "--legacy-sharing" } });
     defer testing.allocator.free(fixed.stdout);
     defer testing.allocator.free(fixed.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, fixed.term);
     const changed = try temp.dir.readFileAlloc(testing.io, "input.my", testing.allocator, .unlimited);
     defer testing.allocator.free(changed);
     try testing.expect(std.mem.indexOf(u8, changed, "    pins = alias\n") != null);
-    const checked = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check", path, "--diagnostics=json" } });
+    const checked = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check", path, "--diagnostics=json", "--legacy-sharing" } });
     defer testing.allocator.free(checked.stdout);
     defer testing.allocator.free(checked.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, checked.term);
     try testing.expect(std.mem.indexOf(u8, checked.stderr, "W_ALIAS_DEPENDENT") == null);
-    for ([_][]const u8{ "--value-semantics", "--no-cache" }) |mode| {
+    for ([_][]const u8{ "--value-semantics", "--legacy-sharing" }) |mode| {
         const run = try std.process.run(testing.allocator, testing.io, .{ .argv = &(.{ compiler_path, "run", path, "--print-result", mode } ++ tools) });
         defer testing.allocator.free(run.stdout);
         defer testing.allocator.free(run.stderr);
@@ -77,7 +77,7 @@ test "checker warns at a local collection alias that is written and observed" {
         \\    alias = pins
         \\    alias.append(2)
         \\    return len(pins)
-    , &.{"--diagnostics=json"});
+    , &.{ "--diagnostics=json", "--legacy-sharing" });
     defer std.testing.allocator.free(outcome.stdout);
     defer std.testing.allocator.free(outcome.stderr);
     try std.testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
@@ -96,7 +96,7 @@ test "checker traces a narrowed match payload back to its collection binding" {
         \\        first.append(2)
         \\        return len(last)
         \\    return 0
-    , &.{"--diagnostics=json"});
+    , &.{ "--diagnostics=json", "--legacy-sharing" });
     defer testing.allocator.free(outcome.stdout);
     defer testing.allocator.free(outcome.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
@@ -112,7 +112,7 @@ test "checker terminates on a cyclic alias chain and reports the observed write"
         \\    first = second
         \\    second.append(2)
         \\    return len(shared)
-    , &.{"--diagnostics=json"});
+    , &.{ "--diagnostics=json", "--legacy-sharing" });
     defer testing.allocator.free(cyclic.stdout);
     defer testing.allocator.free(cyclic.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, cyclic.term);
@@ -134,7 +134,7 @@ test "recursive type branches terminate and preserve class-graph warnings" {
         \\    alias = original
         \\    alias.item.n = 2
         \\    return original.item.n
-    , &.{"--diagnostics=json"});
+    , &.{ "--diagnostics=json", "--legacy-sharing" });
     defer testing.allocator.free(outcome.stdout);
     defer testing.allocator.free(outcome.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
@@ -154,7 +154,7 @@ test "checker distinguishes a nested alias store from a fresh buffer conversion"
         \\    last = holder.items[1]
         \\    first.append(2)
         \\    return len(last)
-    , &.{"--diagnostics=json"});
+    , &.{ "--diagnostics=json", "--legacy-sharing" });
     defer testing.allocator.free(nested.stdout);
     defer testing.allocator.free(nested.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, nested.term);
@@ -166,7 +166,7 @@ test "checker distinguishes a nested alias store from a fresh buffer conversion"
         \\    piece = byte_buffer(empty)
         \\    _ = piece.append_byte(1)
         \\    return len(empty)
-    , &.{"--diagnostics=json"});
+    , &.{ "--diagnostics=json", "--legacy-sharing" });
     defer testing.allocator.free(fresh.stdout);
     defer testing.allocator.free(fresh.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, fresh.term);
@@ -900,7 +900,7 @@ test "a cached check sees a field renamed in a record reached only through a lis
     defer testing.allocator.free(entry);
     const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}/cache", .{directory});
     defer testing.allocator.free(cache_argument);
-    const shapes = "module shapes\npublic class Inner:\n    x: int\npublic class Outer:\n    items: list[Inner]\npublic def make() -> Outer:\n    items: list[Inner] = []\n    items.append(Inner(x=1))\n    return Outer(items=items)\n";
+    const shapes = "module shapes\npublic record Inner:\n    x: int\npublic record Outer:\n    items: list[Inner]\npublic def make() -> Outer:\n    items: list[Inner] = []\n    items.append(Inner(x=1))\n    return Outer(items=items)\n";
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "shapes.my", .data = shapes });
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "user.my", .data = "module user\nimport shapes\npublic def first(o: shapes.Outer) -> int:\n    v = o.items[0]\n    return v.x\n" });
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport shapes\nimport user\ndef main() -> int:\n    return user.first(shapes.make())\n" });
@@ -908,7 +908,7 @@ test "a cached check sees a field renamed in a record reached only through a lis
     defer testing.allocator.free(seed.stdout);
     defer testing.allocator.free(seed.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, seed.term);
-    const renamed = "module shapes\npublic class Inner:\n    y: int\npublic class Outer:\n    items: list[Inner]\npublic def make() -> Outer:\n    items: list[Inner] = []\n    items.append(Inner(y=1))\n    return Outer(items=items)\n";
+    const renamed = "module shapes\npublic record Inner:\n    y: int\npublic record Outer:\n    items: list[Inner]\npublic def make() -> Outer:\n    items: list[Inner] = []\n    items.append(Inner(y=1))\n    return Outer(items=items)\n";
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "shapes.my", .data = renamed });
     const cached = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check", entry, cache_argument } });
     defer testing.allocator.free(cached.stdout);
@@ -3355,12 +3355,12 @@ test "CLI checks runs and dumps records and declared complete conversions" {
     try testing.expect(std.mem.indexOf(u8, dumped.stdout, "conversion function to_view(source: Source) -> View") != null);
     try testing.expect(std.mem.indexOf(u8, dumped.stdout, "MAKE_RECORD") != null);
     const incomplete =
-        \\class Source:
+        \\record Source:
         \\    x: i64
         \\    added: bool
         \\
         \\
-        \\class View:
+        \\record View:
         \\    y: i64
         \\
         \\
@@ -3388,7 +3388,7 @@ test "CLI checks resource ownership completion and implicit cleanup effects with
         \\resource File: filesystem
         \\
         \\
-        \\class Wrapper:
+        \\record Wrapper:
         \\    file: File
         \\
         \\
@@ -3528,7 +3528,8 @@ test "CLI check-module checks bodies and never invents main" {
     try invoke("check-module", "module input\n\nrecord Hidden:\n    value: int\n\npublic def value() -> Hidden:\n    return Hidden(7)\n", 1, "", "E_PRIVATE_INTERFACE");
     try invoke("check-module", "module input\n\npublic def value(out: Stream) -> None noio:\n    out.print(7)\n", 1, "", "E_EFFECT");
     const library = "module input\n\npublic def grown(xs: list[int]) -> list[int]:\n    copy = xs\n    copy.append(1)\n    return copy\n";
-    try invoke("check-module", library, 1, "", "E_MUTATION_MARKER");
+    try invoke("check-module", library, 0, "", "");
+    try invokeOptions("check-module", library, &.{"--legacy-sharing"}, 1, "", "E_MUTATION_MARKER");
     try invokeOptions("check-module", library, &.{"--value-semantics"}, 0, "", "");
 }
 
@@ -3703,7 +3704,7 @@ test "CLI module interfaces parse bodies and check exported signature visibility
         \\import units
         \\
         \\
-        \\public class Sample:
+        \\public record Sample:
         \\    distance: units.Distance
         \\
         \\
@@ -3748,7 +3749,7 @@ test "CLI module interfaces parse bodies and check exported signature visibility
         \\module input
         \\
         \\
-        \\class Secret:
+        \\record Secret:
         \\    pass
         \\
         \\
@@ -5913,7 +5914,7 @@ test "CLI executes generic fixed arrays and reports uncalled template shape erro
 }
 test "CLI formats nominal templates and runs programs with unused declarations" {
     const source =
-        \\class Box[T]:
+        \\record Box[T]:
         \\    value: T
         \\
         \\
@@ -5921,7 +5922,7 @@ test "CLI formats nominal templates and runs programs with unused declarations" 
         \\    return 0
     ;
     try invoke("fmt", source, 0,
-        \\class Box[T]:
+        \\record Box[T]:
         \\    value: T
         \\
         \\
@@ -5933,11 +5934,11 @@ test "CLI formats nominal templates and runs programs with unused declarations" 
 }
 test "CLI reports unused nominal template requirement errors" {
     try invokeOptions("check",
-        \\class Key[T: equality]:
+        \\record Key[T: equality]:
         \\    value: T
         \\
         \\
-        \\class Bad[U]:
+        \\record Bad[U]:
         \\    key: Key[U]
         \\
         \\
@@ -5945,7 +5946,7 @@ test "CLI reports unused nominal template requirement errors" {
         \\    return 0
     , &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_GENERIC_REQUIREMENT\"");
     try invokeOptions("check",
-        \\class Bad[T]:
+        \\record Bad[T]:
         \\    value: Missing
         \\
         \\
@@ -5963,15 +5964,15 @@ test "CLI rejects recursive nominal layouts but preserves finite nested and phan
         \\    return 0
     , &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_RECURSIVE_RECORD\"");
     try invokeOptions("check",
-        \\class Box[T]:
+        \\record Box[T]:
         \\    value: T
         \\
         \\
-        \\class Empty[T]:
+        \\record Empty[T]:
         \\    pass
         \\
         \\
-        \\class Finite[U]:
+        \\record Finite[U]:
         \\    nested: Box[Box[U]]
         \\    phantom: Empty[Finite[[1]U]]
         \\
@@ -5982,7 +5983,7 @@ test "CLI rejects recursive nominal layouts but preserves finite nested and phan
 }
 test "CLI executes concrete nominal instances and reports argument identity errors" {
     const definitions =
-        \\class Box[T]:
+        \\record Box[T]:
         \\    value: T
         \\
         \\
@@ -6011,7 +6012,7 @@ test "CLI executes concrete nominal instances and reports argument identity erro
 }
 test "CLI specializes nominal generic bodies and reports uncalled shape errors" {
     const definitions =
-        \\class Box[T]:
+        \\record Box[T]:
         \\    value: T
     ;
     try invoke("run", definitions ++ "\n\n\n" ++
@@ -6836,7 +6837,7 @@ const clock_program =
 test "CLI accepts Python capability spellings and lets a declared type keep the name" {
     try invokeProject("check", clock_program, 0, "", "");
     const declared =
-        \\class Clock:
+        \\record Clock:
         \\    ticks: int
         \\
         \\def main() -> int:
@@ -8403,7 +8404,7 @@ const r3_alias_main =
     \\public type Truth = bool
     \\public type Count = int
     \\public type Counts = [2]Count
-    \\public class Pair[T]:
+    \\public record Pair[T]:
     \\    left: T
     \\    right: T
     \\public type Chosen = Pair[Count]
@@ -10385,7 +10386,7 @@ const invoke_app =
     \\module app
     \\
     \\
-    \\public class Point:
+    \\public record Point:
     \\    x: i64
     \\    y: i64
     \\
@@ -11450,7 +11451,7 @@ const refused_properties =
 test "CLI property test names the parameter and type it cannot generate" {
     var project = try PropertyProject.init(refused_properties);
     defer project.deinit();
-    const result = try project.run(&.{});
+    const result = try project.run(&.{"--legacy-sharing"});
     defer freeRun(result);
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, result.term);
     try testing.expect(std.mem.indexOf(u8, result.stdout, "failed main::test_class: property test parameter `boxes: List<main::Box>` cannot be generated: it holds main::Box, and a class value has identity") != null);
@@ -11752,27 +11753,90 @@ const value_only_program =
     \\    return len(grown([1]))
 ;
 
+const value_cache_program =
+    \\module main
+    \\
+    \\public def test_snapshot() -> bool:
+    \\    a = [1]
+    \\    b = a
+    \\    b.append(2)
+    \\    return len(a) == 1 and len(b) == 2
+    \\
+    \\def main() -> int:
+    \\    return 0
+;
+
 // spec-case: VALUE-SEMANTICS-1
-test "CLI --value-semantics switches run and check and other commands refuse it" {
-    try invoke("run", value_program, 0, "22\n", "warning[W_ALIAS_DEPENDENT]");
-    try invokeOptions("run", value_program, &.{"--value-semantics"}, 0, "12\n", "");
-    try invoke("check", value_only_program, 1, "", "error[E_MUTATION_MARKER]");
-    try invokeOptions("check", value_only_program, &.{"--value-semantics"}, 0, "", "");
-    try invokeOptions("fmt", value_program, &.{"--value-semantics"}, 2, "", "--value-semantics applies to check");
+test "CLI legacy opt out cannot reuse default value test results" {
+    var project = try PropertyProject.init(value_cache_program);
+    defer project.deinit();
+    const first = try project.run(&.{});
+    defer freeRun(first);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, first.term);
+    try testing.expect(std.mem.indexOf(u8, first.stdout, "passed main::test_snapshot") != null);
+    const legacy = try project.run(&.{"--legacy-sharing"});
+    defer freeRun(legacy);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, legacy.term);
+    try testing.expect(std.mem.indexOf(u8, legacy.stdout, "failed main::test_snapshot") != null);
+    const again = try project.run(&.{});
+    defer freeRun(again);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, again.term);
+    try testing.expect(std.mem.indexOf(u8, again.stdout, "cached main::test_snapshot") != null);
+}
+
+fn semanticModeRun(entry: []const u8, environment: *const std.process.Environ.Map, extra: []const []const u8) !std.process.RunResult {
+    var args: std.ArrayList([]const u8) = .empty;
+    defer args.deinit(testing.allocator);
+    try args.appendSlice(testing.allocator, &.{ compiler_path, "run", entry, "--print-result" });
+    try args.appendSlice(testing.allocator, extra);
+    try args.appendSlice(testing.allocator, &tools);
+    return std.process.run(testing.allocator, testing.io, .{ .argv = args.items, .environ_map = environment });
 }
 
 // spec-case: VALUE-SEMANTICS-1
-test "CLI mylang.json value_semantics switches its project and a build carries it to the frontend" {
+test "CLI explicit semantic mode wins over the inherited mode and project opt out" {
+    var project = try PropertyProject.init(value_program);
+    defer project.deinit();
+    try project.temporary.dir.writeFile(testing.io, .{ .sub_path = "mylang.json", .data = "{\"version\":1,\"value_semantics\":false}" });
+    var environment = try std.process.Environ.createMap(testing.environ, testing.allocator);
+    defer environment.deinit();
+    try environment.put("MYLANG_VALUE_SEMANTICS", "1");
+    const inherited = try semanticModeRun(project.path, &environment, &.{});
+    defer freeRun(inherited);
+    try testing.expectEqualStrings("12\n", inherited.stdout);
+    const legacy = try semanticModeRun(project.path, &environment, &.{"--legacy-sharing"});
+    defer freeRun(legacy);
+    try testing.expectEqualStrings("22\n", legacy.stdout);
+    try environment.put("MYLANG_VALUE_SEMANTICS", "0");
+    const values = try semanticModeRun(project.path, &environment, &.{"--value-semantics"});
+    defer freeRun(values);
+    try testing.expectEqualStrings("12\n", values.stdout);
+}
+
+// spec-case: VALUE-SEMANTICS-1
+test "CLI value semantics defaults on and legacy sharing is an explicit opt out" {
+    try invoke("run", value_program, 0, "12\n", "");
+    try invokeOptions("run", value_program, &.{"--legacy-sharing"}, 0, "22\n", "warning[W_ALIAS_DEPENDENT]");
+    try invokeOptions("run", value_program, &.{"--value-semantics"}, 0, "12\n", "");
+    try invoke("check", value_only_program, 0, "", "");
+    try invokeOptions("check", value_only_program, &.{"--legacy-sharing"}, 1, "", "error[E_MUTATION_MARKER]");
+    try invokeOptions("check", value_only_program, &.{"--value-semantics"}, 0, "", "");
+    try invokeOptions("fmt", value_program, &.{"--value-semantics"}, 2, "", "--value-semantics and --legacy-sharing apply to check");
+    try invokeOptions("check", value_program, &.{ "--legacy-sharing", "--value-semantics" }, 2, "", "choose exactly one");
+}
+
+// spec-case: VALUE-SEMANTICS-1
+test "CLI mylang.json value_semantics opts out and a default build carries values to the frontend" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "mylang.json", .data = "{\"version\": 1, \"value_semantics\": true}\n" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "mylang.json", .data = "{\"version\": 1, \"value_semantics\": false}\n" });
     try temp.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = value_program });
     const entry = try temp.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
     defer testing.allocator.free(entry);
     const configured = try std.process.run(testing.allocator, testing.io, .{ .argv = &(.{ compiler_path, "run", entry, "--print-result" } ++ tools) });
     defer testing.allocator.free(configured.stdout);
     defer testing.allocator.free(configured.stderr);
-    try testing.expectEqualStrings("12\n", configured.stdout);
+    try testing.expectEqualStrings("22\n", configured.stdout);
     var plain = testing.tmpDir(.{});
     defer plain.cleanup();
     try plain.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = value_program });
@@ -11780,7 +11844,7 @@ test "CLI mylang.json value_semantics switches its project and a build carries i
     defer testing.allocator.free(source);
     const output = try std.fmt.allocPrint(testing.allocator, "{s}.bin", .{source});
     defer testing.allocator.free(output);
-    const built = try std.process.run(testing.allocator, testing.io, .{ .argv = &(.{ compiler_path, "build", source, "-o", output, "--value-semantics" } ++ tools) });
+    const built = try std.process.run(testing.allocator, testing.io, .{ .argv = &(.{ compiler_path, "build", source, "-o", output } ++ tools) });
     defer testing.allocator.free(built.stdout);
     defer testing.allocator.free(built.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, built.term);
@@ -11788,6 +11852,53 @@ test "CLI mylang.json value_semantics switches its project and a build carries i
     defer testing.allocator.free(ran.stdout);
     defer testing.allocator.free(ran.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 12 }, ran.term);
+}
+
+// spec: VALUE-SEMANTICS-12
+test "CLI project opt out uses the entry after valued options and for test directories" {
+    var project = try PropertyProject.init(
+        \\module main
+        \\
+        \\class Box:
+        \\    value: int
+        \\
+        \\public def test_box() -> bool:
+        \\    box = Box(value=1)
+        \\    return box.value == 1
+        \\
+        \\def main() -> int:
+        \\    return 0
+    );
+    defer project.deinit();
+    try project.temporary.dir.writeFile(testing.io, .{ .sub_path = "mylang.json", .data = "{\"version\":1,\"value_semantics\":false}\n" });
+    var environment = try std.process.Environ.createMap(testing.environ, testing.allocator);
+    defer environment.deinit();
+    _ = environment.swapRemove("MYLANG_VALUE_SEMANTICS");
+    const directory = std.fs.path.dirname(project.path).?;
+    for ([_][]const u8{ project.path, directory }) |entry| {
+        const result = try std.process.run(testing.allocator, testing.io, .{
+            .argv = &(.{ compiler_path, "test", "--filter", "test_box", entry, "--no-cache", "--json" } ++ tools),
+            .environ_map = &environment,
+        });
+        defer freeRun(result);
+        try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+        try testing.expect(std.mem.indexOf(u8, result.stdout, "\"passed\":1") != null);
+    }
+    const output = try std.fs.path.join(testing.allocator, &.{ directory, "legacy-program" });
+    defer testing.allocator.free(output);
+    const built = try std.process.run(testing.allocator, testing.io, .{
+        .argv = &(.{ compiler_path, "build", "-o", output, project.path, "--no-cache" } ++ tools),
+        .environ_map = &environment,
+    });
+    defer freeRun(built);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, built.term);
+    const described = try std.process.run(testing.allocator, testing.io, .{
+        .argv = &(.{ compiler_path, "invoke", "--function", "main::test_box", "--describe", project.path } ++ tools),
+        .environ_map = &environment,
+    });
+    defer freeRun(described);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, described.term);
+    try testing.expect(std.mem.indexOf(u8, described.stdout, "\"status\":\"described\"") != null);
 }
 
 const decoded_invariant_source =

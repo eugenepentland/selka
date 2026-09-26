@@ -42,7 +42,7 @@ test "standalone named constraints namespace rejects duplicate declarations used
 // spec: NAMED-CONSTRAINT-NAMESPACE-2
 test "standalone named constraints namespace rejects nominal and function collisions" {
     try reject(
-        \\class C:
+        \\record C:
         \\    value: int
         \\constraint C[T] = copy
         \\def main() -> int:
@@ -50,7 +50,7 @@ test "standalone named constraints namespace rejects nominal and function collis
     , "E_DUPLICATE_SYMBOL");
     try reject(
         \\constraint C[T] = copy
-        \\class C:
+        \\record C:
         \\    value: int
         \\def main() -> int:
         \\    return 0

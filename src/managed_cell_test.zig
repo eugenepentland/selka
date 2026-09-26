@@ -26,6 +26,8 @@ fn reject(source: []const u8, code: []const u8) !void {
 
 // spec-case: MANAGED-CELL-1
 test "Cell rejects result obligations equality and rendering" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     try reject(
         \\def main() -> int:
         \\    cell: Cell[Result[int, str]] = Cell(value=Ok(1))
@@ -57,6 +59,8 @@ test "Cell rejects result obligations equality and rendering" {
 
 // spec: CELL-COLLECTION-1
 test "Cell is rejected by collection and prelude operations instead of crashing" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     try reject(
         \\def main() -> int:
         \\    cell = Cell(value=1)
@@ -76,6 +80,8 @@ test "Cell is rejected by collection and prelude operations instead of crashing"
 
 // spec: CELL-GENERIC-1
 test "generic Cell construction is recognized and tracks allocation effects" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     try run(
         \\def make[T](value: T) -> Cell[T]:
         \\    return Cell(value=value)
@@ -125,6 +131,8 @@ test "generic Cell construction is recognized and tracks allocation effects" {
 
 // spec: CELL-EQUALITY-1
 test "Cell equality is rejected for membership search and nested containers" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     try reject(
         \\def main() -> int:
         \\    cell = Cell(value=1)

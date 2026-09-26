@@ -45,12 +45,16 @@ const unpinned_mask: i64 = @bitCast(~pinned_flag);
 /// The event kinds `myl_native_cow_tally` counts (`native_cow.h`).
 const Tally = enum(u32) { mark = 0, check = 1, hoisted = 2, pin = 3 };
 
+/// One instruction's saved array index and pending-scope plan. Scope indices
+/// name place locals; `active` excludes a scope beginning at this instruction.
+const Capture = struct { index: usize = 0, begin: u32 = cow_plan.none, active: u32 = cow_plan.none };
+
 /// The copy-on-write state of the function being lowered.
 pub const State = struct {
     plan: cow_plan.Plan = .{},
     /// Per instruction, the temporary holding an element place's index,
     /// captured by its base read for the fill's write-back.
-    captures: []usize = &.{},
+    captures: []Capture = &.{},
     /// Whether every inline mark, check and pin also counts itself.
     counting: bool,
 };
@@ -71,7 +75,7 @@ pub const Pins = struct { headers: [8]usize = undefined, olds: [8]usize = undefi
 pub fn Lower(comptime E: type) type {
     return struct {
         /// Plan the function under the ownership analysis already run.
-        pub fn plan(self: *E, state: *State) Error!void {
+        pub fn plan(self: *E, state: *State) Error!bool {
             const analysis = self.ownership orelse return error.InternalError;
             const input: cow_plan.Input = .{
                 .program = self.program,
@@ -84,8 +88,10 @@ pub fn Lower(comptime E: type) type {
                 error.OutOfMemory => error.OutOfMemory,
                 error.InternalError => error.InternalError,
             };
-            state.captures = try self.allocator.alloc(usize, self.function.scope.instructions.len);
-            @memset(state.captures, 0);
+            state.captures = try self.allocator.alloc(Capture, self.function.scope.instructions.len);
+            @memset(state.captures, .{});
+            prepareScopes(E, self, state);
+            return retainPlaces(E, self, state.plan);
         }
         /// Keep a versioned loop only when no check is left inside it
         /// (`QBE-LOOP-VERSION-1`): a copy there would move the storage its
@@ -108,8 +114,43 @@ pub fn Lower(comptime E: type) type {
             if (site.capture) try capture(E, self, state, pc, stack);
             if (site.unique_field) |field| try uniqueField(E, self, field, stack);
             for (site.unique) |unique| try uniqueLocal(E, self, unique, stack);
+            const beginning = state.captures[pc].begin;
+            if (beginning != cow_plan.none) try beginScope(E, self, state.plan.places[beginning].?, stack);
             if (site.fill) try fillPlace(E, self, pc, stack);
             for (site.shares) |depth| try share(E, self, stack, depth);
+        }
+        /// Whether this place retains temporary pins across an index callback.
+        pub fn scoped(self: *const E, place: cow_plan.Place) bool {
+            return scopePlace(E, self, place);
+        }
+        /// Bytes reserved for the persistent roots of pending array receivers.
+        pub fn scopeBytes(self: *const E) usize {
+            const state = self.cow orelse return 0;
+            var count: usize = 0;
+            for (state.plan.places) |maybe| if (maybe) |place| {
+                if (scopePlace(E, self, place)) count += scopeStorageBytes(E, self, place);
+            };
+            return count;
+        }
+        /// Storage for one scope root and its finite source-path projection.
+        pub fn scopeStorage(self: *const E, place: cow_plan.Place) usize {
+            return scopeStorageBytes(E, self, place);
+        }
+        /// A boxed projection already detached and protected by a pending path
+        /// reads that prepared body without creating an independent value.
+        pub fn scopedProjection(self: *const E, pc: usize) bool {
+            const state = self.cow orelse return false;
+            const active = state.captures[pc].active;
+            if (active == cow_plan.none) return false;
+            return pathStep(E, self, state.plan.places[active].?, pc);
+        }
+        /// The persistent root left after an instruction's temporary roots.
+        pub fn scopeRoot(self: *const E, pc: usize) ?usize {
+            return activeScope(E, self, pc, null);
+        }
+        /// Undo every still-active pending receiver before returning or trapping.
+        pub fn clearScopes(self: *E) Error!void {
+            return clearScopesImpl(E, self);
         }
         /// Emit the entry block of the loop headed at `head`: its hoisted
         /// checks, entered by every jump from outside the loop.
@@ -152,6 +193,51 @@ pub fn Lower(comptime E: type) type {
             }
         }
     };
+}
+
+/// The emitter reads place parents and saved keys after their final bytecode
+/// use. Include those reads before move, borrow and GC-root planning.
+fn retainPlaces(comptime E: type, self: *E, plan: cow_plan.Plan) bool {
+    const live = self.live orelse return false;
+    var changed = false;
+    for (plan.places) |maybe| if (maybe) |place| {
+        if (!plan.at(place.fill).fill) continue;
+        changed = retainPlace(E, self, live, place, place.fill) or changed;
+        if (!scopePlace(E, self, place)) continue;
+        var local: usize = place.parent;
+        var guard: usize = 0;
+        while (guard < self.function.scope.locals.len) : (guard += 1) {
+            const ancestor = plan.place(local) orelse break;
+            changed = retainPlace(E, self, live, ancestor, place.fill) or changed;
+            local = ancestor.parent;
+        }
+    };
+    return changed;
+}
+
+fn retainPlace(comptime E: type, self: *E, live: @import("qbe_liveness.zig").Solution, place: cow_plan.Place, end: usize) bool {
+    var changed = false;
+    const key = cow_plan.entryKey(place, self.ownership.?.operands);
+    // An element-address borrow was proved only over the original bytecode
+    // uses. An implicit COW read/allocation needs stable copied storage.
+    if (self.by_reference[place.parent] == .element) @constCast(self.by_reference)[place.parent] = .none;
+    if (key) |local| if (self.by_reference[local] == .element) {
+        @constCast(self.by_reference)[local] = .none;
+    };
+    for (place.base + 1..end + 1) |pc| {
+        changed = retainLocal(live, pc, place.parent) or changed;
+        if (key) |local| changed = retainLocal(live, pc, local) or changed;
+    }
+    return changed;
+}
+
+fn retainLocal(live: @import("qbe_liveness.zig").Solution, pc: usize, local: usize) bool {
+    const at = pc * live.words + local / 64;
+    const bit = @as(usize, 1) << @intCast(local % 64);
+    const changed = live.live_in[at] & live.live_out[at] & bit == 0;
+    @constCast(live.live_in)[at] |= bit;
+    @constCast(live.live_out)[at] |= bit;
+    return changed;
 }
 
 fn pinCall(comptime E: type, self: *E, callee: bytecode.Function, args: []usize, base: usize) Error!Pins {
@@ -217,7 +303,7 @@ fn prepareMutArgument(comptime E: type, self: *E, arg: *usize, source: @import("
             .get_field, .wrap_domain, .unwrap_domain => {},
             else => break,
         };
-        const cursor = try fieldChainRange(E, self, source.read + 1, end, try fieldBase(E, self, source.local), true);
+        const cursor = try fieldChainRange(E, self, source.read + 1, end, try fieldBase(E, self, source.local), .published);
         // Detachment can share an old direct child or replace a pinned one in
         // the new body. Reload the current child before checking uniqueness.
         // The unique copy then lives in an SSA temporary only until its store,
@@ -301,7 +387,7 @@ fn uniqueLocal(comptime E: type, self: *E, unique: cow_plan.Unique, stack: []con
 /// Clone a dictionary stored through record fields before reading an entry
 /// for a nested write; the clone marks held values shared.
 fn uniqueField(comptime E: type, self: *E, place: cow_plan.Place, stack: []const typed.Type) Error!void {
-    const cursor = try fieldChainRange(E, self, place.base + 1, place.fields_end, try fieldBase(E, self, place.parent), false);
+    const cursor = try fieldChainRange(E, self, place.base + 1, place.fields_end, try fieldBase(E, self, place.parent), .detach);
     const value = try self.load("v", cursor.address);
     const label = self.temp();
     try testShared(E, self, value, label);
@@ -325,7 +411,30 @@ fn uniqueElements(comptime E: type, self: *E, local: u32, stack: []const typed.T
 /// consumes, for the fill's write-back.
 fn capture(comptime E: type, self: *E, state: *State, pc: usize, stack: []const typed.Type) Error!void {
     if (stack.len == 0) return error.InternalError;
-    state.captures[pc] = try self.load("s", stack.len - 1);
+    const op = self.function.scope.instructions[pc].op;
+    state.captures[pc].index = if (op == .get_index)
+        try captureArrayIndex(E, self, op.get_index, stack)
+    else
+        try self.load("s", stack.len - 1);
+}
+
+/// Keep the checked read's effective index, including a negative index or
+/// enum-table key, without evaluating its expression a second time.
+fn captureArrayIndex(comptime E: type, self: *E, access: bytecode.Access, stack: []const typed.Type) Error!usize {
+    const raw = try self.load("s", stack.len - 1);
+    const ty = stack[stack.len - 1];
+    if (!self.isScalar(ty)) {
+        const tag = self.temp();
+        try self.print(" %v{d} =l loaduw %v{d}\n", .{ tag, raw });
+        return tag;
+    }
+    const signed = if (ty.integer()) |info| info.signed else false;
+    if (!access.from_end or !signed) return raw;
+    const mask = self.temp();
+    const correction = self.temp();
+    const index = self.temp();
+    try self.print(" %v{d} =l sar %v{d}, 63\n %v{d} =l and %v{d}, {d}\n %v{d} =l add %v{d}, %v{d}\n", .{ mask, raw, correction, mask, (try self.layout(access.ty)).count, index, raw, correction });
+    return index;
 }
 
 /// The place local `index` fills at the current instruction.
@@ -351,6 +460,10 @@ const Cursor = struct { address: usize, cell: ?usize, holder: ?usize = null };
 fn fillPlace(comptime E: type, self: *E, pc: usize, stack: []const typed.Type) Error!void {
     if (stack.len == 0) return error.InternalError;
     const place = (try filledPlace(E, self, pc)).place;
+    if (scopePlace(E, self, place)) {
+        try releaseScope(E, self, place);
+        return scopeRootStore(E, self, activeScope(E, self, pc, place.fill));
+    }
     const top = stack.len - 1;
     const label = self.temp();
     var value = try self.load("s", top);
@@ -366,17 +479,19 @@ fn fillPlace(comptime E: type, self: *E, pc: usize, stack: []const typed.Type) E
         .entry => entry: {
             const dictionary = try self.load("l", place.parent);
             container = dictionary;
-            break :entry .{ .address = try entrySlot(E, self, place, dictionary), .cell = null, .holder = dictionary };
+            const slot = try entrySlot(E, self, place, dictionary);
+            break :entry .{ .address = slot, .cell = null, .holder = dictionary };
         },
         .entry_field => entry: {
-            const cursor_field = try fieldChainRange(E, self, place.base + 1, place.fields_end, try fieldBase(E, self, place.parent), false);
+            const cursor_field = try fieldChainRange(E, self, place.base + 1, place.fields_end, try fieldBase(E, self, place.parent), .detach);
             const dictionary = try self.load("v", cursor_field.address);
             container = dictionary;
-            break :entry .{ .address = try entrySlot(E, self, place, dictionary), .cell = null, .holder = dictionary };
+            const slot = try entrySlot(E, self, place, dictionary);
+            break :entry .{ .address = slot, .cell = null, .holder = dictionary };
         },
         .field => try fieldBase(E, self, place.parent),
     };
-    if (place.step != .entry_field) cursor = try fieldChain(E, self, place, cursor);
+    cursor = try fieldChain(E, self, place, cursor);
     if (box_path) {
         // Detaching a box shares its old direct child (or replaces a pinned
         // one), so the operand read before the detachment is stale. Test and
@@ -403,14 +518,223 @@ fn fillPlace(comptime E: type, self: *E, pc: usize, stack: []const typed.Type) E
     try self.print(cow_keep_label, .{label});
 }
 
-fn placeHasBox(comptime E: type, self: *E, place: cow_plan.Place) bool {
-    const end = switch (place.step) {
-        .field, .element, .entry => place.fill,
-        .entry_field => place.fields_end,
+fn placeHasArray(comptime E: type, self: *const E, place: cow_plan.Place) bool {
+    const begin = chainBegin(place);
+    const first = self.states[begin] orelse return false;
+    for (begin..place.fill) |pc| {
+        const operands = self.states[pc] orelse continue;
+        const op = self.function.scope.instructions[pc].op;
+        if (op == .get_index and operands.len == first.len + 1 and self.cow.?.plan.at(pc).capture) return true;
+    }
+    return false;
+}
+
+/// Pinning is needed only when a callback can replace the already-evaluated
+/// inline aggregate before its leaf receiver is filled.
+fn clearScopesImpl(comptime E: type, self: *E) Error!void {
+    const state = self.cow orelse return;
+    if (Lower(E).scopeBytes(self) == 0) return;
+    var pc = state.captures.len;
+    while (pc != 0) {
+        pc -= 1;
+        const beginning = state.captures[pc].begin;
+        if (beginning != cow_plan.none) try releaseScope(E, self, state.plan.places[beginning].?);
+    }
+    try scopeRootStore(E, self, null);
+}
+
+fn pathStep(comptime E: type, self: *const E, place: cow_plan.Place, pc: usize) bool {
+    const stack = self.states[pc] orelse return false;
+    const depth = (self.states[chainBegin(place)] orelse return false).len;
+    return switch (self.function.scope.instructions[pc].op) {
+        .get_field => stack.len == depth,
+        .get_index => stack.len == depth + 1 and self.cow.?.plan.at(pc).capture,
+        else => false,
     };
-    for (place.base + 1..end) |pc| {
+}
+
+fn scopeStorageBytes(comptime E: type, self: *const E, place: cow_plan.Place) usize {
+    var count: usize = 0;
+    const first = chainBegin(place);
+    for (first..place.fill) |pc| if (pathStep(E, self, place, pc)) {
+        count += 1;
+    };
+    return 32 + count * 16;
+}
+
+const Projection = struct { address: usize, count: usize };
+fn scopePath(comptime E: type, self: *E, place: cow_plan.Place) Error!Projection {
+    const first = chainBegin(place);
+    const path = self.temp();
+    try self.print(" %v{d} =l add %cowscope{d}, 32\n", .{ path, place.fill });
+    var count: usize = 0;
+    for (first..place.fill) |pc| {
+        if (!pathStep(E, self, place, pc)) continue;
+        const op = self.function.scope.instructions[pc].op;
+        const stack = self.states[pc].?;
+        const ty = if (op == .get_index) op.get_index.ty else stack[stack.len - 1];
+        const offset = if (op == .get_field) (try self.field(ty, op.get_field)).offset else 0;
+        const at = try self.address(path, count * 16);
+        const position = try self.address(at, 8);
+        try self.print(" storel extern ${s}, %v{d}\n storel {d}, %v{d}\n", .{ try self.descriptor(ty), at, offset, position });
+        count += 1;
+    }
+    return .{ .address = path, .count = count };
+}
+
+fn prepareScopes(comptime E: type, self: *E, state: *State) void {
+    for (state.plan.places, 0..) |maybe, local| {
+        const place = maybe orelse continue;
+        if (!needsScope(E, self, place)) continue;
+        const start = scopeStart(place);
+        state.captures[start].begin = @intCast(local);
+        for (start + 1..place.fill + 1) |pc| {
+            const previous = state.captures[pc].active;
+            if (previous == cow_plan.none or scopeStart(state.plan.places[previous].?) < start) state.captures[pc].active = @intCast(local);
+        }
+    }
+}
+
+fn scopePlace(comptime E: type, self: *const E, place: cow_plan.Place) bool {
+    const state = self.cow.?;
+    const local = state.captures[scopeStart(place)].begin;
+    return local != cow_plan.none and state.plan.places[local].?.fill == place.fill;
+}
+
+fn needsScope(comptime E: type, self: *const E, place: cow_plan.Place) bool {
+    if (!self.cow.?.plan.at(place.fill).fill or !placeHasArray(E, self, place)) return false;
+    for (scopeStart(place) + 1..place.fill) |pc| switch (self.function.scope.instructions[pc].op) {
+        .call, .invoke => return true,
+        else => {},
+    };
+    return false;
+}
+
+fn scopeStart(place: cow_plan.Place) usize {
+    return if (place.step == .entry_field) place.read else place.base;
+}
+
+fn activeScope(comptime E: type, self: *const E, pc: usize, excluded: ?usize) ?usize {
+    const state = self.cow orelse return null;
+    if (pc >= state.captures.len) return null;
+    var local = state.captures[pc].active;
+    if (local == cow_plan.none) return null;
+    const place = state.plan.places[local].?;
+    if (excluded == place.fill) local = state.captures[scopeStart(place)].active;
+    return if (local == cow_plan.none) null else state.plan.places[local].?.fill;
+}
+
+fn scopeRootStore(comptime E: type, self: *E, root: ?usize) Error!void {
+    const head = self.temp();
+    try self.print(" %v{d} =l add %heap, 16\n", .{head});
+    if (root) |fill| try self.print(" storel %cowscope{d}, %v{d}\n", .{ fill, head }) else try self.print(" storel %root_mark, %v{d}\n", .{head});
+}
+
+fn releaseScope(comptime E: type, self: *E, place: cow_plan.Place) Error!void {
+    const address = self.temp();
+    const pins = self.temp();
+    try self.print(" %v{d} =l add %cowscope{d}, 24\n %v{d} =l loadl %v{d}\n call $myl_native_cow_scope_release(l %v{d})\n storel 0, %v{d}\n", .{ address, place.fill, pins, address, pins, address });
+}
+
+fn beginScope(comptime E: type, self: *E, place: cow_plan.Place, stack: []const typed.Type) Error!void {
+    const previous = self.temp();
+    const head = self.temp();
+    const address = self.temp();
+    const descriptor = self.temp();
+    const pins = self.temp();
+    try self.print(" %v{d} =l add %heap, 16\n %v{d} =l loadl %v{d}\n storel %v{d}, %cowscope{d}\n", .{ head, previous, head, previous, place.fill });
+    try self.print(" %v{d} =l add %cowscope{d}, 8\n %v{d} =l add %cowscope{d}, 16\n %v{d} =l add %cowscope{d}, 24\n", .{ address, place.fill, descriptor, place.fill, pins, place.fill });
+    try self.print(" storel %v{d}, %v{d}\n storel extern $myl_native_cow_scope_type, %v{d}\n storel %cowscope{d}, %v{d}\n", .{ pins, address, descriptor, place.fill, head });
+    _ = try self.roots(stack);
+    try pinAncestors(E, self, place, pins);
+    const cursor: Cursor = switch (place.step) {
+        .element => element: {
+            const list = try self.load("l", place.parent);
+            break :element .{ .address = try elementSlot(E, self, place, list), .cell = null, .holder = list };
+        },
+        .entry => entry: {
+            const dictionary = try self.load("l", place.parent);
+            break :entry .{ .address = try entrySlot(E, self, place, dictionary), .cell = null, .holder = dictionary };
+        },
+        .entry_field => entry: {
+            const field = try fieldChainRange(E, self, place.base + 1, place.fields_end, try fieldBase(E, self, place.parent), .published);
+            const dictionary = try self.load("v", field.address);
+            try scopePin(E, self, pins, dictionary);
+            break :entry .{ .address = try entrySlot(E, self, place, dictionary), .cell = null, .holder = dictionary };
+        },
+        .field => try fieldBase(E, self, place.parent),
+    };
+    if (place.step == .element) {
+        const length = try self.load("v", cursor.holder.?);
+        const present = self.temp();
+        try self.print(" %v{d} =w cultl %v{d}, %v{d}\n jnz %v{d}, @cowvalid{d}, @cowempty{d}\n@cowvalid{d}\n", .{ present, self.cow.?.captures[place.base].index, length, present, place.fill, place.fill, place.fill });
+    } else if (place.step != .field) {
+        try self.print(" jnz %v{d}, @cowvalid{d}, @cowempty{d}\n@cowvalid{d}\n", .{ cursor.address, place.fill, place.fill, place.fill });
+    }
+    const path = try scopePath(E, self, place);
+    const done = self.temp();
+    try self.print(" %v{d} =w call $myl_native_cow_scope_prepare(l %heap, l %v{d}, l %v{d}, l %v{d}, l {d})\n", .{ done, pins, cursor.address, path.address, path.count });
+    if (cursor.cell) |body| try qbe_alloc.barrier(*E, self, body);
+    try self.require(done, format.allocation_failure);
+    if (place.step != .field) try self.print("@cowempty{d}\n", .{place.fill});
+    try scopeRootStore(E, self, place.fill);
+}
+
+fn scopePin(comptime E: type, self: *E, pins: usize, payload: usize) Error!void {
+    const done = self.temp();
+    try self.print(" %v{d} =w call $myl_native_cow_scope_pin(l %heap, l %v{d}, l %v{d})\n", .{ done, pins, payload });
+    try self.require(done, format.allocation_failure);
+}
+
+fn pinAncestors(comptime E: type, self: *E, place: cow_plan.Place, pins: usize) Error!void {
+    var local: usize = place.parent;
+    var guard: usize = 0;
+    while (guard < self.function.scope.locals.len) : (guard += 1) {
+        if (cow_plan.payloadType(self.program, self.function.scope.locals[local].ty)) try scopePin(E, self, pins, try self.load("l", local));
+        const ancestor = self.cow.?.plan.place(local) orelse break;
+        if (placeHasBox(E, self, ancestor) or ancestor.step == .entry_field) try pinAncestorBoxes(E, self, ancestor, pins);
+        local = ancestor.parent;
+    }
+}
+
+fn pinAncestorBoxes(comptime E: type, self: *E, place: cow_plan.Place, pins: usize) Error!void {
+    const cursor: Cursor = switch (place.step) {
+        .element => element: {
+            const list = try self.load("l", place.parent);
+            break :element .{ .address = try elementSlot(E, self, place, list), .cell = null, .holder = list };
+        },
+        .entry => entry: {
+            const dictionary = try self.load("l", place.parent);
+            break :entry .{ .address = try entrySlot(E, self, place, dictionary), .cell = null, .holder = dictionary };
+        },
+        .entry_field => entry: {
+            const field = try fieldChainRange(E, self, place.base + 1, place.fields_end, try fieldBase(E, self, place.parent), .{ .pin = pins });
+            const dictionary = try self.load("v", field.address);
+            break :entry .{ .address = try entrySlot(E, self, place, dictionary), .cell = null, .holder = dictionary };
+        },
+        .field => try fieldBase(E, self, place.parent),
+    };
+    _ = try fieldChainRange(E, self, chainBegin(place), place.fill, cursor, .{ .pin = pins });
+}
+
+fn firstArray(comptime E: type, self: *const E, place: cow_plan.Place) ?usize {
+    const begin = chainBegin(place);
+    const first = self.states[begin] orelse return null;
+    for (begin..place.fill) |pc| {
+        const operands = self.states[pc] orelse continue;
+        const op = self.function.scope.instructions[pc].op;
+        if (op == .get_index and operands.len == first.len + 1 and self.cow.?.plan.at(pc).capture) return pc;
+    }
+    return null;
+}
+
+fn placeHasBox(comptime E: type, self: *E, place: cow_plan.Place) bool {
+    const begin = chainBegin(place);
+    const first = self.states[begin] orelse return false;
+    for (begin..place.fill) |pc| {
         if (self.function.scope.instructions[pc].op != .get_field) continue;
         const operands = self.states[pc] orelse continue;
+        if (operands.len != first.len) continue;
         const source = operands[operands.len - 1];
         if (self.program.records[source.recordIndex()].collection.box) return true;
     }
@@ -426,7 +750,7 @@ fn elementSlot(comptime E: type, self: *E, place: cow_plan.Place, list: usize) E
     const stride = (try self.layout(element)).size;
     const offset = self.temp();
     const slot = self.temp();
-    try self.print(" %v{d} =l mul %v{d}, {d}\n %v{d} =l add %v{d}, %v{d}\n", .{ offset, self.cow.?.captures[place.base], stride, slot, storage, offset });
+    try self.print(" %v{d} =l mul %v{d}, {d}\n %v{d} =l add %v{d}, %v{d}\n", .{ offset, self.cow.?.captures[place.base].index, stride, slot, storage, offset });
     return slot;
 }
 
@@ -436,6 +760,21 @@ fn elementSlot(comptime E: type, self: *E, place: cow_plan.Place, list: usize) E
 /// looked up by its span.
 fn entrySlot(comptime E: type, self: *E, place: cow_plan.Place, dictionary: usize) Error!usize {
     const read = if (place.step == .entry_field) place.read else place.base;
+    if (cow_plan.entryKey(place, self.ownership.?.operands)) |local| {
+        const slot = self.temp();
+        if (local < self.range_keys.locals.len and self.range_keys.locals[local]) {
+            const text = try self.load("l", local);
+            try self.print(" %v{d} =l call $myl_native_dictionary_find_range(l %heap, l %v{d}, l %v{d}, l %rl{d})\n", .{ slot, dictionary, text, local });
+            return slot;
+        }
+        const key = (try fieldBase(E, self, @intCast(local))).address;
+        try self.print(" %v{d} =l call $myl_native_dictionary_find(l %v{d}, l %v{d})\n", .{ slot, dictionary, key });
+        return slot;
+    }
+    return lookupSlot(E, self, read, dictionary);
+}
+
+fn lookupSlot(comptime E: type, self: *E, read: usize, dictionary: usize) Error!usize {
     const operands = self.states[read] orelse return error.InternalError;
     if (operands.len < 2) return error.InternalError;
     const key_slot = operands.len - 1;
@@ -465,28 +804,49 @@ fn fieldBase(comptime E: type, self: *E, parent: u32) Error!Cursor {
 /// of an inline record lies inside the value, one of a `class` inside the
 /// body its reference names.
 fn fieldChain(comptime E: type, self: *E, place: cow_plan.Place, start: Cursor) Error!Cursor {
-    return fieldChainRange(E, self, place.base + 1, place.fill, start, false);
+    return fieldChainRange(E, self, chainBegin(place), place.fill, start, .detach);
 }
 
-fn fieldChainRange(comptime E: type, self: *E, begin: usize, end: usize, start: Cursor, roots_published: bool) Error!Cursor {
+fn chainBegin(place: cow_plan.Place) usize {
+    return (if (place.step == .entry_field) place.read else place.base) + 1;
+}
+
+const Walk = union(enum) { detach, published, read, pin: usize };
+
+fn fieldChainRange(comptime E: type, self: *E, begin: usize, end: usize, start: Cursor, walk: Walk) Error!Cursor {
     var cursor = start;
+    const depth = (self.states[begin] orelse return error.InternalError).len;
     for (begin..end) |pc| {
+        const operands = self.states[pc] orelse continue;
+        const op = self.function.scope.instructions[pc].op;
+        if (op == .get_index and operands.len == depth + 1) {
+            const array = try self.layout(op.get_index.ty);
+            if (array.kind != .array) return error.InternalError;
+            const offset = self.temp();
+            const address = self.temp();
+            try self.print(" %v{d} =l mul %v{d}, {d}\n %v{d} =l add %v{d}, %v{d}\n", .{ offset, self.cow.?.captures[pc].index, array.stride, address, cursor.address, offset });
+            cursor.address = address;
+            continue;
+        }
+        if (operands.len != depth) continue;
         const index = switch (self.function.scope.instructions[pc].op) {
             .get_field => |field| field,
             .wrap_domain, .unwrap_domain => continue,
-            else => return error.InternalError,
+            else => continue,
         };
-        const operands = self.states[pc] orelse return error.InternalError;
         const source = operands[operands.len - 1];
         const member = try self.field(source, index);
         if (self.program.records[source.recordIndex()].isManagedRecord()) {
             const body = try self.load("v", cursor.address);
-            if (self.program.records[source.recordIndex()].collection.box and @import("value_semantics.zig").enabled()) {
+            const boxed = self.program.records[source.recordIndex()].collection.box;
+            if (walk == .pin and boxed) try scopePin(E, self, walk.pin, body);
+            const detaching = walk == .detach or walk == .published;
+            if (detaching and boxed and @import("value_semantics.zig").enabled()) {
                 // A nested write must never target an immutable box's old
                 // body. Detach each box on the path before descending; the
                 // previous cursor then names either owned inline storage or
                 // an ancestor box already detached by this walk.
-                const copy = try detachBox(E, self, source, body, cursor, roots_published);
+                const copy = try detachBox(E, self, source, body, cursor, walk == .published);
                 cursor = .{ .address = try self.address(copy, member.offset), .cell = copy };
             } else cursor = .{ .address = try self.address(body, member.offset), .cell = body };
         } else cursor.address = try self.address(cursor.address, member.offset);
@@ -517,7 +877,7 @@ fn share(comptime E: type, self: *E, stack: []const typed.Type, depth: u8) Error
     const value = try self.layout(ty);
     if (!value.trace or self.isScalar(ty)) return;
     var flat: Flat = .{};
-    if (try flatten(E, self, ty, 0, &flat, true)) {
+    if (try flatten(E, self, ty, 0, &flat, false)) {
         const base = try self.load("s", slot);
         for (flat.offsets[0..flat.len]) |offset| {
             const address = try self.address(base, offset);

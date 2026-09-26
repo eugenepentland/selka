@@ -38,6 +38,8 @@ fn value(source: []const u8) !i64 {
 
 // spec: HASH-KEYS-1
 test "an unhashable key or element type is refused with the path to its offending part" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     try rejected("def main() -> int:\n    d: dict[float, int] = {}\n    return len(d)\n", "E_DICT_KEY", "`float` cannot be a dictionary key: a float is not hashable because NaN is not equal to itself");
     try rejected(
         "record At:\n    x: float\n\nrecord Reading:\n    name: str\n    at: At\n\ndef main() -> int:\n    d: dict[Reading, int] = {}\n    return len(d)\n",

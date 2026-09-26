@@ -1,0 +1,9 @@
+# oracle: cpython
+# A dictionary copy and an extracted list are independent values; store back edits.
+def main() -> int:
+    original = {"first": [1]}
+    copied = original
+    row = copied["first"]
+    row.append(2)
+    copied["first"] = row
+    return len(original["first"]) * 10 + len(copied["first"])

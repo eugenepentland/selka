@@ -51,14 +51,14 @@
    "name": "ctl_alias_shared",
    "group": "collections",
    "audit": "2.1",
-   "note": "managed lists share storage",
+   "note": "Historical shared-list baseline; D9 value assignment leaves the source independent",
    "baseline": {
     "status": 0,
     "stdout": "2"
    },
    "target": {
     "status": 0,
-    "stdout": "2"
+    "stdout": "1"
    },
    "must_pass": true
   },

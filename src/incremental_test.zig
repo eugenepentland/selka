@@ -544,7 +544,7 @@ test "record field and union case edits change the nominal interface hash" {
         \\module main
         \\
         \\
-        \\class Point:
+        \\record Point:
         \\    x: i64
         \\
         \\
@@ -572,7 +572,7 @@ test "record field and union case edits change the nominal interface hash" {
         \\module main
         \\
         \\
-        \\class Point:
+        \\record Point:
         \\    x: i64
         \\    y: i64
         \\
@@ -594,7 +594,7 @@ test "record field and union case edits change the nominal interface hash" {
         \\module main
         \\
         \\
-        \\class Point:
+        \\record Point:
         \\    x: i64
         \\
         \\

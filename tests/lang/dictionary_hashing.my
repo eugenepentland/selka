@@ -248,7 +248,7 @@ public def test_a_missed_read_never_shadows_a_key_inserted_before_the_write() ->
         counts[0] = seen + 1
         if len(counts) != 2 or counts[other] != 2 or counts[0] != 1:
             return False
-    # The same key inserted by setdefault, by update or through an alias.
+    # The same key inserted by setdefault, by update or into an explicit copy.
     counts.clear()
     missing = 7 in counts
     _ = counts.setdefault(7, 3)
@@ -260,11 +260,11 @@ public def test_a_missed_read_never_shadows_a_key_inserted_before_the_write() ->
     counts[5] = before + 1
     if len(counts) != 3 or counts[5] != 1 or list(counts.keys())[1] != 5:
         return False
-    alias = counts
+    alias = counts.copy()
     absent = counts.get(8, -1)
     alias[8] = 4
     counts[8] = absent + 100
-    if len(counts) != 4 or alias[8] != 99:
+    if len(counts) != 4 or counts[8] != 99 or alias[8] != 4:
         return False
     # Growth, a pop and a clear between the miss and the write.
     grown: dict[i64, i64] = {}

@@ -54,7 +54,7 @@ $ mylang reference --query E_MODULE_NAME   # one feature or error code, from the
   [constant length parameters](const-length-generics.md),
   [type aliases](type-aliases.md), [scalar domains](domains.md),
   [contracts](contracts.md),
-  [value semantics (experimental, opt-in)](value-semantics.md),
+  [value semantics](value-semantics.md),
   [module constants](module-constants.md) and
   [constant evaluation](source-evaluation.md).
 - Values: [results and options](results-and-options.md), [text](text.md),

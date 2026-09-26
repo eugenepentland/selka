@@ -4,7 +4,7 @@ const t = std.testing;
 const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
 const schema =
-    \\class Sample:
+    \\record Sample:
     \\    values: [2]i64
     \\    tag: u8
     \\
@@ -97,7 +97,7 @@ test "generic record updates and array replacement preserve snapshots under allo
     try t.checkAllAllocationFailures(stable.allocator(), updateScenario, .{});
 }
 const variants =
-    \\class Payload:
+    \\record Payload:
     \\    n: i64
     \\
     \\
@@ -154,11 +154,11 @@ test "generic concrete variants construct and match with scoped payloads under a
 
 test "generic concrete shapes reject mismatched nominal values and malformed constructors before instantiation" {
     try reject(
-        \\class A:
+        \\record A:
         \\    n: i64
         \\
         \\
-        \\class B:
+        \\record B:
         \\    n: i64
         \\
         \\
@@ -170,7 +170,7 @@ test "generic concrete shapes reject mismatched nominal values and malformed con
         \\    return 0
     , "E_GENERIC_TYPE");
     try reject(
-        \\class A:
+        \\record A:
         \\    n: i64
         \\
         \\
@@ -183,7 +183,7 @@ test "generic concrete shapes reject mismatched nominal values and malformed con
         \\    return 0
     , "E_MISSING_FIELD");
     try reject(
-        \\class A:
+        \\record A:
         \\    n: i64
         \\    m: i64
         \\
@@ -197,7 +197,7 @@ test "generic concrete shapes reject mismatched nominal values and malformed con
         \\    return 0
     , "E_DUPLICATE_FIELD");
     try reject(
-        \\class A:
+        \\record A:
         \\    n: i64
         \\
         \\

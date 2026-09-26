@@ -1,8 +1,9 @@
 # D9: Move to value semantics, then to a reference-counted runtime
 
-Status: accepted as the direction on 2026-09-24. Each stage below has its own
-gate, and nothing ships until that gate passes. Nothing in this record is
-implemented yet.
+Status: accepted as the direction on 2026-09-24. Stages 1 and 2 and the
+value-model components of stage 3 are implemented. The stage 3 default flip
+is being validated against its full and performance gates; reference counting
+and concurrency remain planned. Each stage ships only after its gate passes.
 
 ## Rule
 
@@ -62,7 +63,9 @@ on the branches named below.
   - Hoisting copy-on-write checks out of loops was essential (1.27× geomean
     without it).
   - `class` and arenas were refused, so object graphs are unmeasured.
-- **P4, agent A/B:** pending. Its kit is at
+- **P4, agent A/B:** passed its rule on 18 of 18 runs in both arms, with no
+  wrong answer exiting 0. The value arm took 2.22 repair rounds against 3.11
+  for the shared-reference arm, within noise. The kit is at
   `/home/epentland/ai/trials/value-semantics-20260924/`.
 
 ## Stages and gates
@@ -113,7 +116,8 @@ Each stage merges on its own and can be reverted on its own.
 ## Compatibility consequence
 
 - **Supersedes the 2026-09-17 aliasing decision** (`class` as a shared
-  reference) once stage 3 lands. Until then, today's rules stand.
+  reference) for the default value model. The old rule remains available for
+  one migration release through `--legacy-sharing`.
 - **Supersedes D3's tracing-GC clause** once stage 4 lands. The rest of D3
   (managed, value-oriented defaults and opt-in systems tools) is unchanged.
 - **Python semantics:** `b = a; b.append(x)` will no longer change `a`. Stage 3's
