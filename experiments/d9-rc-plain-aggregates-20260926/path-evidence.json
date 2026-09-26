@@ -1,0 +1,38 @@
+[
+  {
+    "arm": "before",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/scripts/build-slot.sh",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/fresh-final/bin/mylang",
+      "emit-qbe",
+      "bench/parity/suite/nbody.my",
+      "--rc-runtime",
+      "--drop-step-checks",
+      "--drop-frame-checks"
+    ],
+    "calls": {
+      "myl_rc_list_set": 9,
+      "myl_rc_native_copy": 9,
+      "myl_rc_native_loan": 24
+    }
+  },
+  {
+    "arm": "after",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/scripts/build-slot.sh",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/plain-candidate/bin/mylang",
+      "emit-qbe",
+      "bench/parity/suite/nbody.my",
+      "--rc-runtime",
+      "--drop-step-checks",
+      "--drop-frame-checks"
+    ],
+    "calls": {
+      "myl_rc_list_set": 0,
+      "myl_rc_native_copy": 0,
+      "myl_rc_native_loan": 24
+    }
+  }
+]

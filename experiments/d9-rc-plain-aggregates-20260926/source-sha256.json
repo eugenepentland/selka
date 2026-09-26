@@ -1,0 +1,6 @@
+{
+  "src/qbe_managed.zig": "0f43bcd98b9ee9d68817a71475d96388f7fb85492529f8aed73ddf130ac1a383",
+  "src/qbe_rc_aggregate.zig": "a2a3b9decf5b72d408c9cd3b8377199f574e53a6e556d6bc6135ddd2eeaf50f1",
+  "src/qbe_rc_plain_aggregate_test.zig": "a5e485e2c5976a495a30bafe8e902f4ea2cb5530499a92a57832f9c899dce6fd",
+  "tests/lang/rc_plain_aggregates.my": "33fdff0766d721a75b0392babd5be2b7a23b96042e7be7838562278c85926e13"
+}

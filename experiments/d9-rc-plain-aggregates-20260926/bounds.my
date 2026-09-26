@@ -1,0 +1,13 @@
+record Point:
+    x: int
+    y: int
+
+
+def edit(values: mut list[Point], index: int) -> None:
+    values[index].x = 7
+
+
+def main() -> int:
+    values = [Point(1, 2)]
+    edit(mut values, -2)
+    return 0
