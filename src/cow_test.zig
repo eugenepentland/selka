@@ -254,6 +254,11 @@ const pinned =
 
 // spec: COW-PIN-1
 test "copy on write: a mut argument is pinned for the call, so a callee's copy of it is a real one" {
+    const saved = value_semantics.enabled();
+    value_semantics.setEnabled(true);
+    defer value_semantics.setEnabled(saved);
+    try std.testing.expectEqual(@as(i64, 12), try run(std.testing.allocator, pinned, false));
+    try std.testing.expectEqual(@as(i64, 12), try run(std.testing.allocator, pinned, true));
     const a = std.testing.allocator;
     const il = try unitText(a, pinned, "main", checks);
     defer a.free(il);
