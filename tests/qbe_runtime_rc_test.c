@@ -145,14 +145,18 @@ int myl_qbe_rc_contract_verify(void) {
     assert(myl_rc_heap_init(&context.heap, &allocator, NULL) == MYL_RC_ALLOCATION_REFUSED);
     assert(!myl_qbe_rc_initialize(&context));
     assert(!strcmp(context.trap, "R_MEMORY_BUDGET") && !context.heap.rc);
+    return 5;
+}
+int myl_qbe_rc_frame_verify(void) {
     frame_cleanup_test(0);
     frame_cleanup_test(1);
     frame_trap_test();
-    return 8;
+    return 3;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
-    assert(myl_qbe_rc_contract_verify() == 8);
+    assert(myl_qbe_rc_contract_verify() == 5);
+    assert(myl_qbe_rc_frame_verify() == 3);
     puts("RC startup and frame unwind: 8 checks passed");
     return 0;
 }
