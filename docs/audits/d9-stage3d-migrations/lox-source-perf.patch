@@ -1,0 +1,192 @@
+diff --git a/compiler.my b/compiler.my
+index 287d5bb..1aaf569 100644
+--- a/compiler.my
++++ b/compiler.my
+@@ -125,8 +125,9 @@ def advance(p: mut Parser):
+     p.previous = p.current
+     while True:
+         __wb_118 = p.lexer
+-        p.current = scanner.scan_token(mut __wb_118)
++        next_token = scanner.scan_token(mut __wb_118)
+         p.lexer = __wb_118
++        p.current = next_token
+         if p.current.kind != scanner.TokenKind.ERROR:
+             return
+         error_at_current(mut p, p.current.message)
+diff --git a/heap.my b/heap.my
+index f76a781..39749db 100644
+--- a/heap.my
++++ b/heap.my
+@@ -245,105 +245,63 @@ def mark_table(marker: mut Marker, source: table.Table):
+ 
+ 
+ def mark_roots(rt: mut Runtime):
+-    __wb_227 = rt.marker
+-    mark_table(mut __wb_227, rt.globals)
+-    rt.marker = __wb_227
+-    __wb_228 = rt.marker
+-    mark_object(mut __wb_228, rt.init_string)
+-    rt.marker = __wb_228
++    marker = rt.marker
++    mark_table(mut marker, rt.globals)
++    mark_object(mut marker, rt.init_string)
+     i = 0
+     while i < rt.stack_top:
+-        __wb_231 = rt.marker
+-        mark_value(mut __wb_231, rt.stack[i])
+-        rt.marker = __wb_231
++        mark_value(mut marker, rt.stack[i])
+         i += 1
+     i = 0
+     while i < rt.frame_count:
+-        __wb_235 = rt.marker
+-        mark_object(mut __wb_235, rt.frames[i].closure)
+-        rt.marker = __wb_235
++        mark_object(mut marker, rt.frames[i].closure)
+         i += 1
+     upvalue = rt.open_upvalues
+     while upvalue != value.NO_OBJ:
+-        __wb_239 = rt.marker
+-        mark_object(mut __wb_239, upvalue)
+-        rt.marker = __wb_239
++        mark_object(mut marker, upvalue)
+         upvalue = upvalue_obj(rt, upvalue).next_open
+     for function in rt.compiling:
+-        __wb_242 = rt.marker
+-        mark_object(mut __wb_242, function)
+-        rt.marker = __wb_242
+-    __wb_243 = rt.marker
+-    mark_object(mut __wb_243, rt.current_env)
+-    rt.marker = __wb_243
++        mark_object(mut marker, function)
++    mark_object(mut marker, rt.current_env)
+     for env in rt.saved_envs:
+-        __wb_245 = rt.marker
+-        mark_object(mut __wb_245, env)
+-        rt.marker = __wb_245
++        mark_object(mut marker, env)
+     for ref in rt.permanent_roots:
+-        __wb_247 = rt.marker
+-        mark_object(mut __wb_247, ref)
+-        rt.marker = __wb_247
++        mark_object(mut marker, ref)
++    rt.marker = marker
+ 
+ 
+ # Marks everything one object references directly (SPEC §7.4 step 2).
+ def blacken(rt: mut Runtime, ref: value.ObjRef):
++    marker = rt.marker
+     match rt.objects[ref]:
+         case object.Obj.klass(payload):
+-            __wb_254 = rt.marker
+-            mark_object(mut __wb_254, payload.name)
+-            rt.marker = __wb_254
+-            __wb_255 = rt.marker
+-            mark_table(mut __wb_255, payload.methods)
+-            rt.marker = __wb_255
++            mark_object(mut marker, payload.name)
++            mark_table(mut marker, payload.methods)
+         case object.Obj.instance(payload):
+-            __wb_257 = rt.marker
+-            mark_object(mut __wb_257, payload.klass)
+-            rt.marker = __wb_257
+-            __wb_258 = rt.marker
+-            mark_table(mut __wb_258, payload.fields)
+-            rt.marker = __wb_258
++            mark_object(mut marker, payload.klass)
++            mark_table(mut marker, payload.fields)
+         case object.Obj.closure(payload):
+-            __wb_260 = rt.marker
+-            mark_object(mut __wb_260, payload.function)
+-            rt.marker = __wb_260
++            mark_object(mut marker, payload.function)
+             for upvalue in payload.upvalues:
+-                __wb_262 = rt.marker
+-                mark_object(mut __wb_262, upvalue)
+-                rt.marker = __wb_262
++                mark_object(mut marker, upvalue)
+         case object.Obj.function(payload):
+-            __wb_264 = rt.marker
+-            mark_object(mut __wb_264, payload.name)
+-            rt.marker = __wb_264
++            mark_object(mut marker, payload.name)
+             for constant in payload.code.constants:
+-                __wb_266 = rt.marker
+-                mark_value(mut __wb_266, constant)
+-                rt.marker = __wb_266
++                mark_value(mut marker, constant)
+         case object.Obj.upvalue(payload):
+-            __wb_268 = rt.marker
+-            mark_value(mut __wb_268, payload.closed)
+-            rt.marker = __wb_268
++            mark_value(mut marker, payload.closed)
+         case object.Obj.bound_method(payload):
+-            __wb_270 = rt.marker
+-            mark_value(mut __wb_270, payload.receiver)
+-            rt.marker = __wb_270
+-            __wb_271 = rt.marker
+-            mark_object(mut __wb_271, payload.method)
+-            rt.marker = __wb_271
++            mark_value(mut marker, payload.receiver)
++            mark_object(mut marker, payload.method)
+         case object.Obj.env(payload):
+-            __wb_273 = rt.marker
+-            mark_object(mut __wb_273, payload.enclosing)
+-            rt.marker = __wb_273
++            mark_object(mut marker, payload.enclosing)
+             for slot in payload.slots:
+-                __wb_275 = rt.marker
+-                mark_value(mut __wb_275, slot)
+-                rt.marker = __wb_275
++                mark_value(mut marker, slot)
+         case object.Obj.tree_function(payload):
+-            __wb_277 = rt.marker
+-            mark_object(mut __wb_277, payload.closure)
+-            rt.marker = __wb_277
++            mark_object(mut marker, payload.closure)
+         case _:
+             pass
++    rt.marker = marker
+ 
+ 
+ def is_free(obj: object.Obj) -> bool:
+diff --git a/interpreter.my b/interpreter.my
+index ae03fa1..ab08301 100644
+--- a/interpreter.my
++++ b/interpreter.my
+@@ -659,8 +659,9 @@ def execute(it: mut Interpreter, id: int) -> Result[Flow, RuntimeError]:
+                     heap.push(mut __wb_546, value.Value.nil)
+                     it.rt = __wb_546
+             __wb_547 = it.rt
+-            it.returned = heap.pop(mut __wb_547)
++            returned = heap.pop(mut __wb_547)
+             it.rt = __wb_547
++            it.returned = returned
+             return Ok(Flow.RETURN)
+         case ast.Stmt.var_decl(node):
+             match node.initializer:
+diff --git a/vm.my b/vm.my
+index 450eb63..c98fafa 100644
+--- a/vm.my
++++ b/vm.my
+@@ -434,7 +434,11 @@ def define_method(rt: mut heap.Runtime, frame: mut heap.CallFrame):
+ def run(rt: mut heap.Runtime, o: mut output.Output) -> InterpretResult:
+     frame = rt.frames[rt.frame_count - 1]
+     while True:
+-        instruction = read_byte(mut frame)
++        instruction = frame.code[frame.ip]
++        frame.ip = frame.ip + 1
++        # Publish the active IP for GC roots and runtime error traces before
++        # executing the instruction. The next iteration publishes any operand
++        # reads or jump before another instruction can observe the frame.
+         rt.frames[rt.frame_count - 1] = frame
+         ok = True
+         if instruction == chunk.OP_CONSTANT:
+@@ -536,7 +540,6 @@ def run(rt: mut heap.Runtime, o: mut output.Output) -> InterpretResult:
+             ok = inherit(mut rt, mut o)
+         elif instruction == chunk.OP_METHOD:
+             define_method(mut rt, mut frame)
+-        rt.frames[rt.frame_count - 1] = frame
+         if not ok:
+             return InterpretResult.RUNTIME_ERROR
+ 
