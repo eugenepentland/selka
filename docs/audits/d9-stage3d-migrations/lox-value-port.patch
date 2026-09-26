@@ -1,0 +1,1256 @@
+--- a/ast.my
++++ b/ast.my
+@@ -181,7 +181,7 @@
+ 
+ # A parsed script: the node arrays and the top-level statements. A runtime
+ # TreeFunction names its declaration by its index in `functions`.
+-public class Program:
++public record Program:
+     exprs: list[Expr]
+     stmts: list[Stmt]
+     functions: list[FunctionDecl]
+--- a/chunk.my
++++ b/chunk.my
+@@ -45,7 +45,7 @@
+ 
+ # A function's bytecode. `code` holds bytes (0..255); `lines[i]` is the
+ # source line of `code[i]`.
+-public class Chunk:
++public record Chunk:
+     code: list[int]
+     lines: list[int]
+     constants: list[value.Value]
+--- a/compiler.my
++++ b/compiler.my
+@@ -46,7 +46,7 @@
+ 
+ # The state for one function being compiled; `function` is the heap
+ # object whose chunk receives the code.
+-class FnCompiler:
++record FnCompiler:
+     function: object.FunctionObj
+     function_ref: value.ObjRef
+     kind: FunctionType
+@@ -62,7 +62,7 @@
+ # The whole compilation: scanner and parser state, the chains of function
+ # and class compilers (innermost last), and the runtime and output it
+ # allocates into and reports through.
+-class Parser:
++record Parser:
+     rt: heap.Runtime
+     out: output.Output
+     source: bytes
+@@ -81,6 +81,20 @@
+ 
+ def current_chunk(p: Parser) -> chunk.Chunk:
+     return current_compiler(p).function.code
++
++
++# A function object has an ObjRef identity, but its payload is a value. Every
++# compiler update writes both the active compiler slot and the object table.
++def store_compiler(p: mut Parser, index: int, updated: FnCompiler):
++    p.compilers[index] = updated
++    p.rt.objects[updated.function_ref] = object.Obj.function(updated.function)
++
++
++def store_chunk(p: mut Parser, updated: chunk.Chunk):
++    index = len(p.compilers) - 1
++    current = p.compilers[index]
++    current.function.code = updated
++    store_compiler(mut p, index, current)
+ 
+ 
+ def error_at(p: mut Parser, token: scanner.Token, message: bytes):
+@@ -100,7 +114,9 @@
+         _ = line.append_utf8("'")
+     _ = line.append_utf8(": ")
+     _ = line.append_range(message, 0, len(message))
+-    output.error_line(mut p.out, bytes(line))
++    __wb_103 = p.out
++    output.error_line(mut __wb_103, bytes(line))
++    p.out = __wb_103
+     p.had_error = True
+ 
+ 
+@@ -115,7 +131,9 @@
+ def advance(p: mut Parser):
+     p.previous = p.current
+     while True:
+-        p.current = scanner.scan_token(mut p.lexer)
++        __wb_118 = p.lexer
++        p.current = scanner.scan_token(mut __wb_118)
++        p.lexer = __wb_118
+         if p.current.kind != scanner.TokenKind.ERROR:
+             return
+         error_at_current(mut p, p.current.message)
+@@ -142,6 +160,7 @@
+ def emit_byte(p: mut Parser, byte: int):
+     code = current_chunk(p)
+     chunk.write_byte(mut code, byte, p.previous.line)
++    store_chunk(mut p, code)
+ 
+ 
+ def emit_bytes(p: mut Parser, first: int, second: int):
+@@ -176,6 +195,7 @@
+ def make_constant(p: mut Parser, constant: value.Value) -> int:
+     code = current_chunk(p)
+     index = chunk.add_constant(mut code, constant)
++    store_chunk(mut p, code)
+     if index >= UINT8_COUNT:
+         error(mut p, b"Too many constants in one chunk.")
+         return 0
+@@ -193,21 +213,28 @@
+         error(mut p, b"Too much code to jump over.")
+     code.code[offset] = bit_and(shift_right(jump, 8), 255)
+     code.code[offset + 1] = bit_and(jump, 255)
++    store_chunk(mut p, code)
+ 
+ 
+ # Allocates the function first, roots it, then interns its name (SPEC §8.3).
+ def init_compiler(p: mut Parser, kind: FunctionType):
+     function = object.new_function()
+-    ref = heap.allocate(mut p.rt, object.Obj.function(function))
++    __wb_201 = p.rt
++    ref = heap.allocate(mut __wb_201, object.Obj.function(function))
++    p.rt = __wb_201
+     p.rt.compiling.append(ref)
+     fn_compiler = FnCompiler(function=function, function_ref=ref, kind=kind, locals=[], upvalues=[], scope_depth=0)
+     p.compilers.append(fn_compiler)
+     if kind != FunctionType.SCRIPT:
+-        function.name = lox_strings.copy_string(mut p.rt, scanner.lexeme(p.source, p.previous))
++        __wb_206 = p.rt
++        function.name = lox_strings.copy_string(mut __wb_206, scanner.lexeme(p.source, p.previous))
++        p.rt = __wb_206
+     slot_zero = b""
+     if kind != FunctionType.FUNCTION:
+         slot_zero = b"this"
+     fn_compiler.locals.append(Local(name=slot_zero, depth=0, is_captured=False))
++    fn_compiler.function = function
++    store_compiler(mut p, len(p.compilers) - 1, fn_compiler)
+ 
+ 
+ # Finishes the innermost function and answers its compiler, which still
+@@ -220,23 +247,24 @@
+ 
+ 
+ def begin_scope(p: mut Parser):
+-    current = current_compiler(p)
+-    current.scope_depth = current.scope_depth + 1
++    p.compilers[len(p.compilers) - 1].scope_depth += 1
+ 
+ 
+ def end_scope(p: mut Parser):
+-    current = current_compiler(p)
+-    current.scope_depth = current.scope_depth - 1
+-    while len(current.locals) > 0 and current.locals[len(current.locals) - 1].depth > current.scope_depth:
+-        if current.locals[len(current.locals) - 1].is_captured:
++    index = len(p.compilers) - 1
++    p.compilers[index].scope_depth -= 1
++    while len(p.compilers[index].locals) > 0 and p.compilers[index].locals[len(p.compilers[index].locals) - 1].depth > p.compilers[index].scope_depth:
++        if p.compilers[index].locals[len(p.compilers[index].locals) - 1].is_captured:
+             emit_byte(mut p, chunk.OP_CLOSE_UPVALUE)
+         else:
+             emit_byte(mut p, chunk.OP_POP)
+-        _ = current.locals.pop()
++        _ = p.compilers[index].locals.pop()
+ 
+ 
+ def identifier_constant(p: mut Parser, name: bytes) -> int:
+-    ref = lox_strings.copy_string(mut p.rt, name)
++    __wb_239 = p.rt
++    ref = lox_strings.copy_string(mut __wb_239, name)
++    p.rt = __wb_239
+     return make_constant(mut p, value.Value.obj(ref))
+ 
+ 
+@@ -267,6 +295,7 @@
+         return 0
+     target.upvalues.append(UpvalueRef(index=index, is_local=is_local))
+     target.function.upvalue_count = count + 1
++    store_compiler(mut p, level, target)
+     return count
+ 
+ 
+@@ -277,6 +306,7 @@
+     if local != -1:
+         enclosing = p.compilers[level - 1]
+         enclosing.locals[local].is_captured = True
++        store_compiler(mut p, level - 1, enclosing)
+         return add_upvalue(mut p, level, local, True)
+     upvalue = resolve_upvalue(mut p, level - 1, name)
+     if upvalue != -1:
+@@ -290,6 +320,7 @@
+         error(mut p, b"Too many local variables in function.")
+         return
+     current.locals.append(Local(name=name, depth=-1, is_captured=False))
++    store_compiler(mut p, len(p.compilers) - 1, current)
+ 
+ 
+ def declare_variable(p: mut Parser):
+@@ -321,6 +352,7 @@
+     if current.scope_depth == 0:
+         return
+     current.locals[len(current.locals) - 1].depth = current.scope_depth
++    store_compiler(mut p, len(p.compilers) - 1, current)
+ 
+ 
+ def define_variable(p: mut Parser, global_index: int):
+@@ -430,7 +462,10 @@
+ def string(p: mut Parser):
+     token = p.previous
+     chars = p.source.view(token.start + 1, token.start + token.length - 1)
+-    emit_constant(mut p, value.Value.obj(lox_strings.copy_string(mut p.rt, chars)))
++    __wb_433 = p.rt
++    ref = lox_strings.copy_string(mut __wb_433, chars)
++    p.rt = __wb_433
++    emit_constant(mut p, value.Value.obj(ref))
+ 
+ 
+ def named_variable(p: mut Parser, name: bytes, can_assign: bool):
+@@ -619,9 +654,11 @@
+ 
+ 
+ def parameter(p: mut Parser):
+-    target = current_compiler(p).function
+-    target.arity = target.arity + 1
+-    if target.arity > 255:
++    index = len(p.compilers) - 1
++    target = p.compilers[index]
++    target.function.arity += 1
++    store_compiler(mut p, index, target)
++    if target.function.arity > 255:
+         error_at_current(mut p, b"Can't have more than 255 parameters.")
+     constant = parse_variable(mut p, b"Expect parameter name.")
+     define_variable(mut p, constant)
+@@ -850,6 +887,8 @@
+     while not match_token(mut p, scanner.TokenKind.EOF):
+         declaration(mut p)
+     script = end_compiler(mut p)
++    rt = p.rt
++    out = p.out
+     if p.had_error:
+         return value.NO_OBJ
+     return script.function_ref
+--- a/heap.my
++++ b/heap.my
+@@ -17,7 +17,7 @@
+ # function and code (so the dispatch loop reaches the chunk without a table
+ # lookup), its captured upvalues, the index of the next instruction and the
+ # stack index of slot 0. The Runtime keeps FRAMES_MAX of them and reuses them.
+-public class CallFrame:
++public record CallFrame:
+     closure: value.ObjRef
+     function: object.FunctionObj
+     code: list[int]
+@@ -28,12 +28,12 @@
+ 
+ # The collector's mark state: one mark bit per object-table slot and the gray
+ # stack of marked objects whose references are not yet traced.
+-public class Marker:
++public record Marker:
+     marks: list[bool]
+     gray: list[value.ObjRef]
+ 
+ 
+-public class Runtime:
++public record Runtime:
+     objects: list[object.Obj]
+     marker: Marker
+     free_slots: list[int]
+@@ -176,6 +176,24 @@
+             return object.ClassObj(name=value.NO_OBJ, methods=table.new_table())
+ 
+ 
++# ObjRef, rather than a shared class payload, carries object identity. Every
++# changed payload is written back into its object-table slot.
++public def set_class_methods(rt: mut Runtime, ref: value.ObjRef, methods: table.Table):
++    klass = class_obj(rt, ref)
++    klass.methods = methods
++    rt.objects[ref] = object.Obj.klass(klass)
++
++
++public def set_instance_fields(rt: mut Runtime, ref: value.ObjRef, fields: table.Table):
++    match rt.objects[ref]:
++        case object.Obj.instance(instance):
++            updated = instance
++            updated.fields = fields
++            rt.objects[ref] = object.Obj.instance(updated)
++        case _:
++            assert False, "object is not an instance"
++
++
+ public def env_obj(rt: Runtime, ref: value.ObjRef) -> object.EnvObj:
+     match rt.objects[ref]:
+         case object.Obj.env(payload):
+@@ -199,7 +217,10 @@
+ 
+ # Binds a global; answers whether the name was new.
+ public def set_global(rt: mut Runtime, name: value.ObjRef, item: value.Value) -> bool:
+-    return table.set(mut rt.globals, name, string_hash(rt, name), item)
++    __wb_202 = rt.globals
++    __result_202 = table.set(mut __wb_202, name, string_hash(rt, name), item)
++    rt.globals = __wb_202
++    return __result_202
+ 
+ 
+ def mark_object(marker: mut Marker, ref: value.ObjRef):
+@@ -224,57 +245,103 @@
+ 
+ 
+ def mark_roots(rt: mut Runtime):
+-    mark_table(mut rt.marker, rt.globals)
+-    mark_object(mut rt.marker, rt.init_string)
++    __wb_227 = rt.marker
++    mark_table(mut __wb_227, rt.globals)
++    rt.marker = __wb_227
++    __wb_228 = rt.marker
++    mark_object(mut __wb_228, rt.init_string)
++    rt.marker = __wb_228
+     i = 0
+     while i < rt.stack_top:
+-        mark_value(mut rt.marker, rt.stack[i])
++        __wb_231 = rt.marker
++        mark_value(mut __wb_231, rt.stack[i])
++        rt.marker = __wb_231
+         i += 1
+     i = 0
+     while i < rt.frame_count:
+-        mark_object(mut rt.marker, rt.frames[i].closure)
++        __wb_235 = rt.marker
++        mark_object(mut __wb_235, rt.frames[i].closure)
++        rt.marker = __wb_235
+         i += 1
+     upvalue = rt.open_upvalues
+     while upvalue != value.NO_OBJ:
+-        mark_object(mut rt.marker, upvalue)
++        __wb_239 = rt.marker
++        mark_object(mut __wb_239, upvalue)
++        rt.marker = __wb_239
+         upvalue = upvalue_obj(rt, upvalue).next_open
+     for function in rt.compiling:
+-        mark_object(mut rt.marker, function)
+-    mark_object(mut rt.marker, rt.current_env)
++        __wb_242 = rt.marker
++        mark_object(mut __wb_242, function)
++        rt.marker = __wb_242
++    __wb_243 = rt.marker
++    mark_object(mut __wb_243, rt.current_env)
++    rt.marker = __wb_243
+     for env in rt.saved_envs:
+-        mark_object(mut rt.marker, env)
++        __wb_245 = rt.marker
++        mark_object(mut __wb_245, env)
++        rt.marker = __wb_245
+     for ref in rt.permanent_roots:
+-        mark_object(mut rt.marker, ref)
++        __wb_247 = rt.marker
++        mark_object(mut __wb_247, ref)
++        rt.marker = __wb_247
+ 
+ 
+ # Marks everything one object references directly (SPEC §7.4 step 2).
+ def blacken(rt: mut Runtime, ref: value.ObjRef):
+     match rt.objects[ref]:
+         case object.Obj.klass(payload):
+-            mark_object(mut rt.marker, payload.name)
+-            mark_table(mut rt.marker, payload.methods)
++            __wb_254 = rt.marker
++            mark_object(mut __wb_254, payload.name)
++            rt.marker = __wb_254
++            __wb_255 = rt.marker
++            mark_table(mut __wb_255, payload.methods)
++            rt.marker = __wb_255
+         case object.Obj.instance(payload):
+-            mark_object(mut rt.marker, payload.klass)
+-            mark_table(mut rt.marker, payload.fields)
++            __wb_257 = rt.marker
++            mark_object(mut __wb_257, payload.klass)
++            rt.marker = __wb_257
++            __wb_258 = rt.marker
++            mark_table(mut __wb_258, payload.fields)
++            rt.marker = __wb_258
+         case object.Obj.closure(payload):
+-            mark_object(mut rt.marker, payload.function)
++            __wb_260 = rt.marker
++            mark_object(mut __wb_260, payload.function)
++            rt.marker = __wb_260
+             for upvalue in payload.upvalues:
+-                mark_object(mut rt.marker, upvalue)
++                __wb_262 = rt.marker
++                mark_object(mut __wb_262, upvalue)
++                rt.marker = __wb_262
+         case object.Obj.function(payload):
+-            mark_object(mut rt.marker, payload.name)
++            __wb_264 = rt.marker
++            mark_object(mut __wb_264, payload.name)
++            rt.marker = __wb_264
+             for constant in payload.code.constants:
+-                mark_value(mut rt.marker, constant)
++                __wb_266 = rt.marker
++                mark_value(mut __wb_266, constant)
++                rt.marker = __wb_266
+         case object.Obj.upvalue(payload):
+-            mark_value(mut rt.marker, payload.closed)
++            __wb_268 = rt.marker
++            mark_value(mut __wb_268, payload.closed)
++            rt.marker = __wb_268
+         case object.Obj.bound_method(payload):
+-            mark_value(mut rt.marker, payload.receiver)
+-            mark_object(mut rt.marker, payload.method)
++            __wb_270 = rt.marker
++            mark_value(mut __wb_270, payload.receiver)
++            rt.marker = __wb_270
++            __wb_271 = rt.marker
++            mark_object(mut __wb_271, payload.method)
++            rt.marker = __wb_271
+         case object.Obj.env(payload):
+-            mark_object(mut rt.marker, payload.enclosing)
++            __wb_273 = rt.marker
++            mark_object(mut __wb_273, payload.enclosing)
++            rt.marker = __wb_273
+             for slot in payload.slots:
+-                mark_value(mut rt.marker, slot)
++                __wb_275 = rt.marker
++                mark_value(mut __wb_275, slot)
++                rt.marker = __wb_275
+         case object.Obj.tree_function(payload):
+-            mark_object(mut rt.marker, payload.closure)
++            __wb_277 = rt.marker
++            mark_object(mut __wb_277, payload.closure)
++            rt.marker = __wb_277
+         case _:
+             pass
+ 
+@@ -310,7 +377,9 @@
+     while i < len(rt.strings.entries):
+         entry = rt.strings.entries[i]
+         if entry.key != value.NO_OBJ and not rt.marker.marks[entry.key]:
+-            _ = table.delete(mut rt.strings, entry.key, entry.hash)
++            __wb_313 = rt.strings
++            _ = table.delete(mut __wb_313, entry.key, entry.hash)
++            rt.strings = __wb_313
+         i += 1
+     sweep(mut rt)
+     rt.collections = rt.collections + 1
+--- a/heap_test.my
++++ b/heap_test.my
+@@ -32,6 +32,7 @@
+     field_name = lox_strings.copy_string(mut rt, b"x")
+     field_value = lox_strings.copy_string(mut rt, b"unrooted")
+     _ = table.set(mut fields, field_name, heap.string_hash(rt, field_name), value.Value.obj(field_value))
++    rt.objects[instance] = object.Obj.instance(object.InstanceObj(klass=klass, fields=fields))
+     rt.stack_top = 0
+     root(mut rt, instance)
+     heap.collect(mut rt)
+--- a/interpreter.my
++++ b/interpreter.my
+@@ -33,7 +33,7 @@
+ # The evaluator's state: the program being run (nodes are addressed by
+ # index), the runtime and output, the active call count, and the return
+ # register a `return` unwinds with.
+-class Interpreter:
++record Interpreter:
+     program: ast.Program
+     rt: heap.Runtime
+     out: output.Output
+@@ -134,11 +134,15 @@
+     if hops == ast.GLOBAL:
+         match table.get(it.rt.globals, name, heap.string_hash(it.rt, name)):
+             case Some(found):
+-                heap.push(mut it.rt, found)
++                __wb_137 = it.rt
++                heap.push(mut __wb_137, found)
++                it.rt = __wb_137
+                 return Ok(None)
+             case None:
+                 return Err(fail(b"Undefined variable '" + name_text(it.rt, name) + b"'.", line))
+-    heap.push(mut it.rt, heap.env_obj(it.rt, env_at(it.rt, hops)).slots[slot])
++    __wb_141 = it.rt
++    heap.push(mut __wb_141, heap.env_obj(__wb_141, env_at(__wb_141, hops)).slots[slot])
++    it.rt = __wb_141
+     return Ok(None)
+ 
+ 
+@@ -148,11 +152,15 @@
+     if node.hops == ast.GLOBAL:
+         match table.get(it.rt.globals, node.name_ref, heap.string_hash(it.rt, node.name_ref)):
+             case Some(_):
+-                _ = heap.set_global(mut it.rt, node.name_ref, heap.peek(it.rt, 0))
++                __wb_151 = it.rt
++                _ = heap.set_global(mut __wb_151, node.name_ref, heap.peek(__wb_151, 0))
++                it.rt = __wb_151
+             case None:
+                 return Err(fail(b"Undefined variable '" + name_text(it.rt, node.name_ref) + b"'.", node.name.line))
+     else:
+-        heap.set_env_slot(mut it.rt, env_at(it.rt, node.hops), node.slot, heap.peek(it.rt, 0))
++        __wb_155 = it.rt
++        heap.set_env_slot(mut __wb_155, env_at(__wb_155, node.hops), node.slot, heap.peek(__wb_155, 0))
++        it.rt = __wb_155
+     return Ok(None)
+ 
+ 
+@@ -177,15 +185,21 @@
+             if a is not None and b is not None:
+                 result = value.Value.number(a + b)
+             elif is_string(it.rt, left) and is_string(it.rt, right):
+-                result = value.Value.obj(lox_strings.concat(mut it.rt, as_obj(left), as_obj(right)))
++                __wb_180 = it.rt
++                result = value.Value.obj(lox_strings.concat(mut __wb_180, as_obj(left), as_obj(right)))
++                it.rt = __wb_180
+             else:
+                 return Err(fail(b"Operands must be two numbers or two strings.", node.operator.line))
+         elif a is None or b is None:
+             return Err(fail(b"Operands must be numbers.", node.operator.line))
+         else:
+             result = arithmetic(kind, a, b)
+-    _ = heap.pop(mut it.rt)
+-    replace_top(mut it.rt, result)
++    __wb_187 = it.rt
++    _ = heap.pop(mut __wb_187)
++    it.rt = __wb_187
++    __wb_188 = it.rt
++    replace_top(mut __wb_188, result)
++    it.rt = __wb_188
+     return Ok(None)
+ 
+ 
+@@ -211,11 +225,15 @@
+     evaluate(mut it, node.right)?
+     operand = heap.peek(it.rt, 0)
+     if node.operator.kind == ast.TokenKind.BANG:
+-        replace_top(mut it.rt, value.Value.boolean(value.is_falsey(operand)))
++        __wb_214 = it.rt
++        replace_top(mut __wb_214, value.Value.boolean(value.is_falsey(operand)))
++        it.rt = __wb_214
+         return Ok(None)
+     match operand:
+         case value.Value.number(number):
+-            replace_top(mut it.rt, value.Value.number(-number))
++            __wb_218 = it.rt
++            replace_top(mut __wb_218, value.Value.number(-number))
++            it.rt = __wb_218
+             return Ok(None)
+         case _:
+             return Err(fail(b"Operand must be a number.", node.operator.line))
+@@ -229,7 +247,9 @@
+             return Ok(None)
+     elif falsey:
+         return Ok(None)
+-    _ = heap.pop(mut it.rt)
++    __wb_232 = it.rt
++    _ = heap.pop(mut __wb_232)
++    it.rt = __wb_232
+     return evaluate(mut it, node.right)
+ 
+ 
+@@ -259,14 +279,20 @@
+             hash = heap.string_hash(it.rt, node.name_ref)
+             match table.get(instance.fields, node.name_ref, hash):
+                 case Some(field):
+-                    replace_top(mut it.rt, field)
++                    __wb_262 = it.rt
++                    replace_top(mut __wb_262, field)
++                    it.rt = __wb_262
+                     return Ok(None)
+                 case None:
+                     pass
+             match table.get(heap.class_obj(it.rt, instance.klass).methods, node.name_ref, hash):
+                 case Some(method):
+-                    bound = bind(mut it.rt, heap.peek(it.rt, 0), as_obj(method))
+-                    replace_top(mut it.rt, value.Value.obj(bound))
++                    __wb_268 = it.rt
++                    bound = bind(mut __wb_268, heap.peek(__wb_268, 0), as_obj(method))
++                    it.rt = __wb_268
++                    __wb_269 = it.rt
++                    replace_top(mut __wb_269, value.Value.obj(bound))
++                    it.rt = __wb_269
+                     return Ok(None)
+                 case None:
+                     return Err(fail(b"Undefined property '" + name_text(it.rt, node.name_ref) + b"'.", node.name.line))
+@@ -282,8 +308,15 @@
+             evaluate(mut it, node.assigned)?
+             fields = instance.fields
+             _ = table.set(mut fields, node.name_ref, heap.string_hash(it.rt, node.name_ref), heap.peek(it.rt, 0))
+-            assigned = heap.pop(mut it.rt)
+-            replace_top(mut it.rt, assigned)
++            __wb_fields = it.rt
++            heap.set_instance_fields(mut __wb_fields, as_obj(heap.peek(__wb_fields, 1)), fields)
++            it.rt = __wb_fields
++            __wb_285 = it.rt
++            assigned = heap.pop(mut __wb_285)
++            it.rt = __wb_285
++            __wb_286 = it.rt
++            replace_top(mut __wb_286, assigned)
++            it.rt = __wb_286
+             return Ok(None)
+         case None:
+             return Err(fail(b"Only instances have fields.", node.name.line))
+@@ -295,7 +328,9 @@
+     methods = heap.class_obj(it.rt, as_obj(superclass)).methods
+     match table.get(methods, node.method_ref, heap.string_hash(it.rt, node.method_ref)):
+         case Some(method):
+-            heap.push(mut it.rt, value.Value.obj(bind(mut it.rt, receiver, as_obj(method))))
++            __wb_298 = it.rt
++            heap.push(mut __wb_298, value.Value.obj(bind(mut __wb_298, receiver, as_obj(method))))
++            it.rt = __wb_298
+             return Ok(None)
+         case None:
+             return Err(fail(b"Undefined property '" + name_text(it.rt, node.method_ref) + b"'.", node.method.line))
+@@ -315,7 +350,9 @@
+         case ast.Expr.grouping(node):
+             return evaluate(mut it, node.inner)
+         case ast.Expr.literal(node):
+-            heap.push(mut it.rt, node.constant)
++            __wb_318 = it.rt
++            heap.push(mut __wb_318, node.constant)
++            it.rt = __wb_318
+             return Ok(None)
+         case ast.Expr.logical(node):
+             return logical(mut it, node)
+@@ -324,7 +361,9 @@
+         case ast.Expr.super_access(node):
+             return super_access(mut it, node)
+         case ast.Expr.this(node):
+-            heap.push(mut it.rt, heap.env_obj(it.rt, env_at(it.rt, node.hops)).slots[node.slot])
++            __wb_327 = it.rt
++            heap.push(mut __wb_327, heap.env_obj(__wb_327, env_at(__wb_327, node.hops)).slots[node.slot])
++            it.rt = __wb_327
+             return Ok(None)
+         case ast.Expr.unary(node):
+             return unary(mut it, node)
+@@ -341,10 +380,14 @@
+         return Err(fail(f"Expected {arity} arguments but got {count}.".encode(), line))
+     if it.depth + 1 > MAX_DEPTH:
+         return Err(fail(b"Stack overflow.", line))
+-    env = new_env(mut it.rt, enclosing, it.program.functions[function.decl].slot_count)
++    __wb_344 = it.rt
++    env = new_env(mut __wb_344, enclosing, it.program.functions[function.decl].slot_count)
++    it.rt = __wb_344
+     i = 0
+     while i < count:
+-        heap.set_env_slot(mut it.rt, env, i, it.rt.stack[args + i])
++        __wb_347 = it.rt
++        heap.set_env_slot(mut __wb_347, env, i, __wb_347.stack[args + i])
++        it.rt = __wb_347
+         i += 1
+     return Ok(env)
+ 
+@@ -362,9 +405,13 @@
+ # returned value or nil, or `this` for an initializer.
+ def run_function(it: mut Interpreter, function: object.TreeFunctionObj, env: value.ObjRef) -> Result[value.Value, RuntimeError]:
+     it.depth = it.depth + 1
+-    switch_env(mut it.rt, env)
++    __wb_365 = it.rt
++    switch_env(mut __wb_365, env)
++    it.rt = __wb_365
+     outcome = run_body(mut it, function.decl)
+-    restore_env(mut it.rt)
++    __wb_367 = it.rt
++    restore_env(mut __wb_367)
++    it.rt = __wb_367
+     it.depth = it.depth - 1
+     flow = outcome?
+     if function.is_initializer:
+@@ -389,14 +436,18 @@
+                 case object.Obj.tree_function(function):
+                     env = enter_function(mut it, function, function.closure, count, callee_slot + 1, line)?
+                     result = run_function(mut it, function, env)?
+-                    finish_call(mut it.rt, count, result)
++                    __wb_392 = it.rt
++                    finish_call(mut __wb_392, count, result)
++                    it.rt = __wb_392
+                     return Ok(None)
+                 case object.Obj.klass(_):
+                     return instantiate(mut it, ref, count, line)
+                 case object.Obj.native(native):
+                     if count != native.arity:
+                         return Err(fail(f"Expected {native.arity} arguments but got {count}.".encode(), line))
+-                    finish_call(mut it.rt, count, natives.call_native(it.rt, native.id))
++                    __wb_399 = it.rt
++                    finish_call(mut __wb_399, count, natives.call_native(__wb_399, native.id))
++                    it.rt = __wb_399
+                     return Ok(None)
+                 case _:
+                     pass
+@@ -410,22 +461,34 @@
+ # the call's own env exists.
+ def instantiate(it: mut Interpreter, class_ref: value.ObjRef, count: int, line: int) -> Result[None, RuntimeError]:
+     callee_slot = it.rt.stack_top - count - 1
+-    instance = heap.allocate(mut it.rt, object.Obj.instance(object.InstanceObj(klass=class_ref, fields=table.new_table())))
++    __wb_413 = it.rt
++    instance = heap.allocate(mut __wb_413, object.Obj.instance(object.InstanceObj(klass=class_ref, fields=table.new_table())))
++    it.rt = __wb_413
+     it.rt.stack[callee_slot] = value.Value.obj(instance)
+     methods = heap.class_obj(it.rt, class_ref).methods
+     match table.get(methods, it.rt.init_string, heap.string_hash(it.rt, it.rt.init_string)):
+         case Some(init_value):
+             initializer = tree_function_obj(it.rt, as_obj(init_value))
+-            this_env = new_env(mut it.rt, initializer.closure, 1)
+-            heap.set_env_slot(mut it.rt, this_env, 0, value.Value.obj(instance))
+-            heap.push(mut it.rt, value.Value.obj(this_env))
++            __wb_419 = it.rt
++            this_env = new_env(mut __wb_419, initializer.closure, 1)
++            it.rt = __wb_419
++            __wb_420 = it.rt
++            heap.set_env_slot(mut __wb_420, this_env, 0, value.Value.obj(instance))
++            it.rt = __wb_420
++            __wb_421 = it.rt
++            heap.push(mut __wb_421, value.Value.obj(this_env))
++            it.rt = __wb_421
+             env = enter_function(mut it, initializer, this_env, count, callee_slot + 1, line)?
+-            _ = heap.pop(mut it.rt)
++            __wb_423 = it.rt
++            _ = heap.pop(mut __wb_423)
++            it.rt = __wb_423
+             _ = run_function(mut it, initializer, env)?
+         case None:
+             if count != 0:
+                 return Err(fail(f"Expected 0 arguments but got {count}.".encode(), line))
+-    finish_call(mut it.rt, count, value.Value.obj(instance))
++    __wb_428 = it.rt
++    finish_call(mut __wb_428, count, value.Value.obj(instance))
++    it.rt = __wb_428
+     return Ok(None)
+ 
+ 
+@@ -433,9 +496,13 @@
+ # current env, or into globals.
+ def define(it: mut Interpreter, name: value.ObjRef, slot: int):
+     if slot == ast.GLOBAL:
+-        _ = heap.set_global(mut it.rt, name, heap.peek(it.rt, 0))
++        __wb_436 = it.rt
++        _ = heap.set_global(mut __wb_436, name, heap.peek(__wb_436, 0))
++        it.rt = __wb_436
+     else:
+-        heap.set_env_slot(mut it.rt, it.rt.current_env, slot, heap.peek(it.rt, 0))
++        __wb_438 = it.rt
++        heap.set_env_slot(mut __wb_438, __wb_438.current_env, slot, heap.peek(__wb_438, 0))
++        it.rt = __wb_438
+ 
+ 
+ def class_node(it: Interpreter, id: int) -> ast.ClassStmt:
+@@ -475,7 +542,9 @@
+ def class_declaration(it: mut Interpreter, id: int) -> Result[None, RuntimeError]:
+     node = class_node(it, id)
+     if node.slot == ast.GLOBAL:
+-        _ = heap.set_global(mut it.rt, node.name_ref, value.Value.nil)
++        __wb_478 = it.rt
++        _ = heap.set_global(mut __wb_478, node.name_ref, value.Value.nil)
++        it.rt = __wb_478
+     superclass = value.NO_OBJ
+     match node.superclass:
+         case Some(expr):
+@@ -483,30 +552,57 @@
+         case None:
+             pass
+     klass = object.ClassObj(name=node.name_ref, methods=table.new_table())
+-    heap.push(mut it.rt, value.Value.obj(heap.allocate(mut it.rt, object.Obj.klass(klass))))
++    __wb_486 = it.rt
++    heap.push(mut __wb_486, value.Value.obj(heap.allocate(mut __wb_486, object.Obj.klass(klass))))
++    it.rt = __wb_486
+     methods = klass.methods
++    klass_ref = as_obj(heap.peek(it.rt, 0))
+     if superclass != value.NO_OBJ:
+         table.add_all(heap.class_obj(it.rt, superclass).methods, mut methods)
+-        env = new_env(mut it.rt, it.rt.current_env, 1)
+-        heap.set_env_slot(mut it.rt, env, 0, value.Value.obj(superclass))
+-        switch_env(mut it.rt, env)
++        __wb_methods = it.rt
++        heap.set_class_methods(mut __wb_methods, klass_ref, methods)
++        it.rt = __wb_methods
++        __wb_490 = it.rt
++        env = new_env(mut __wb_490, __wb_490.current_env, 1)
++        it.rt = __wb_490
++        __wb_491 = it.rt
++        heap.set_env_slot(mut __wb_491, env, 0, value.Value.obj(superclass))
++        it.rt = __wb_491
++        __wb_492 = it.rt
++        switch_env(mut __wb_492, env)
++        it.rt = __wb_492
+     for method in node.methods:
+         decl = it.program.functions[method]
+-        function = heap.allocate(mut it.rt, object.Obj.tree_function(object.TreeFunctionObj(decl=method, name=decl.name_ref, closure=it.rt.current_env, is_initializer=decl.name_ref == it.rt.init_string)))
++        __wb_495 = it.rt
++        function = heap.allocate(mut __wb_495, object.Obj.tree_function(object.TreeFunctionObj(decl=method, name=decl.name_ref, closure=__wb_495.current_env, is_initializer=decl.name_ref == __wb_495.init_string)))
++        it.rt = __wb_495
+         _ = table.set(mut methods, decl.name_ref, heap.string_hash(it.rt, decl.name_ref), value.Value.obj(function))
++        __wb_methods = it.rt
++        heap.set_class_methods(mut __wb_methods, klass_ref, methods)
++        it.rt = __wb_methods
+     if superclass != value.NO_OBJ:
+-        restore_env(mut it.rt)
++        __wb_498 = it.rt
++        restore_env(mut __wb_498)
++        it.rt = __wb_498
+     define(mut it, node.name_ref, node.slot)
+-    _ = heap.pop(mut it.rt)
++    __wb_500 = it.rt
++    _ = heap.pop(mut __wb_500)
++    it.rt = __wb_500
+     if superclass != value.NO_OBJ:
+-        _ = heap.pop(mut it.rt)
++        __wb_502 = it.rt
++        _ = heap.pop(mut __wb_502)
++        it.rt = __wb_502
+     return Ok(None)
+ 
+ 
+ def execute_block(it: mut Interpreter, id: int, slot_count: int) -> Result[Flow, RuntimeError]:
+-    switch_env(mut it.rt, new_env(mut it.rt, it.rt.current_env, slot_count))
++    __wb_507 = it.rt
++    switch_env(mut __wb_507, new_env(mut __wb_507, __wb_507.current_env, slot_count))
++    it.rt = __wb_507
+     outcome = run_block(mut it, id)
+-    restore_env(mut it.rt)
++    __wb_509 = it.rt
++    restore_env(mut __wb_509)
++    it.rt = __wb_509
+     return outcome
+ 
+ 
+@@ -518,16 +614,27 @@
+             class_declaration(mut it, id)?
+         case ast.Stmt.expression(expr):
+             evaluate(mut it, expr)?
+-            _ = heap.pop(mut it.rt)
++            __wb_521 = it.rt
++            _ = heap.pop(mut __wb_521)
++            it.rt = __wb_521
+         case ast.Stmt.function(index):
+             decl = it.program.functions[index]
+-            function = heap.allocate(mut it.rt, object.Obj.tree_function(object.TreeFunctionObj(decl=index, name=decl.name_ref, closure=it.rt.current_env, is_initializer=False)))
+-            heap.push(mut it.rt, value.Value.obj(function))
++            __wb_524 = it.rt
++            function = heap.allocate(mut __wb_524, object.Obj.tree_function(object.TreeFunctionObj(decl=index, name=decl.name_ref, closure=__wb_524.current_env, is_initializer=False)))
++            it.rt = __wb_524
++            __wb_525 = it.rt
++            heap.push(mut __wb_525, value.Value.obj(function))
++            it.rt = __wb_525
+             define(mut it, decl.name_ref, decl.slot)
+-            _ = heap.pop(mut it.rt)
++            __wb_527 = it.rt
++            _ = heap.pop(mut __wb_527)
++            it.rt = __wb_527
+         case ast.Stmt.if_stmt(node):
+             evaluate(mut it, node.condition)?
+-            if not value.is_falsey(heap.pop(mut it.rt)):
++            __wb_530 = it.rt
++            __condition_530 = not value.is_falsey(heap.pop(mut __wb_530))
++            it.rt = __wb_530
++            if __condition_530:
+                 return execute(mut it, node.then_branch)
+             match node.else_branch:
+                 case Some(branch):
+@@ -536,28 +643,43 @@
+                     pass
+         case ast.Stmt.print(expr):
+             evaluate(mut it, expr)?
+-            output.print_value(it.rt, mut it.out, heap.peek(it.rt, 0))
+-            _ = heap.pop(mut it.rt)
++            __wb_539 = it.out
++            output.print_value(it.rt, mut __wb_539, heap.peek(it.rt, 0))
++            it.out = __wb_539
++            __wb_540 = it.rt
++            _ = heap.pop(mut __wb_540)
++            it.rt = __wb_540
+         case ast.Stmt.return_stmt(node):
+             match node.result:
+                 case Some(result):
+                     evaluate(mut it, result)?
+                 case None:
+-                    heap.push(mut it.rt, value.Value.nil)
+-            it.returned = heap.pop(mut it.rt)
++                    __wb_546 = it.rt
++                    heap.push(mut __wb_546, value.Value.nil)
++                    it.rt = __wb_546
++            __wb_547 = it.rt
++            it.returned = heap.pop(mut __wb_547)
++            it.rt = __wb_547
+             return Ok(Flow.RETURN)
+         case ast.Stmt.var_decl(node):
+             match node.initializer:
+                 case Some(initializer):
+                     evaluate(mut it, initializer)?
+                 case None:
+-                    heap.push(mut it.rt, value.Value.nil)
++                    __wb_554 = it.rt
++                    heap.push(mut __wb_554, value.Value.nil)
++                    it.rt = __wb_554
+             define(mut it, node.name_ref, node.slot)
+-            _ = heap.pop(mut it.rt)
++            __wb_556 = it.rt
++            _ = heap.pop(mut __wb_556)
++            it.rt = __wb_556
+         case ast.Stmt.while_stmt(node):
+             while True:
+                 evaluate(mut it, node.condition)?
+-                if value.is_falsey(heap.pop(mut it.rt)):
++                __wb_560 = it.rt
++                __condition_560 = value.is_falsey(heap.pop(mut __wb_560))
++                it.rt = __wb_560
++                if __condition_560:
+                     return Ok(Flow.NORMAL)
+                 flow = execute(mut it, node.body)?
+                 if flow == Flow.RETURN:
+@@ -592,7 +714,8 @@
+ public def interpret(rt: mut heap.Runtime, o: mut output.Output, source: bytes) -> int:
+     natives.start(mut rt)
+     match parser.parse(mut rt, mut o, source):
+-        case Some(program):
++        case Some(parsed):
++            program = parsed
+             if not resolver.resolve(mut program, source, mut o):
+                 return 65
+             it = Interpreter(program=program, rt=rt, out=o, depth=0, returned=value.Value.nil)
+@@ -601,9 +724,17 @@
+                     case Ok(_):
+                         pass
+                     case Err(error):
+-                        output.error_line(mut it.out, error.message)
+-                        output.error_line(mut it.out, f"[line {error.line}]".encode())
++                        __wb_604 = it.out
++                        output.error_line(mut __wb_604, error.message)
++                        it.out = __wb_604
++                        __wb_605 = it.out
++                        output.error_line(mut __wb_605, f"[line {error.line}]".encode())
++                        it.out = __wb_605
++                        rt = it.rt
++                        o = it.out
+                         return 70
++            rt = it.rt
++            o = it.out
+             return 0
+         case None:
+             return 65
+--- a/lox_strings.my
++++ b/lox_strings.my
+@@ -41,7 +41,9 @@
+ 
+ def intern(rt: mut heap.Runtime, chars: bytes, hash: u32) -> value.ObjRef:
+     ref = heap.allocate(mut rt, object.Obj.string(object.StringObj(chars=chars, hash=hash)))
+-    _ = table.set(mut rt.strings, ref, hash, value.Value.nil)
++    __wb_44 = rt.strings
++    _ = table.set(mut __wb_44, ref, hash, value.Value.nil)
++    rt.strings = __wb_44
+     return ref
+ 
+ 
+--- a/object.my
++++ b/object.my
+@@ -1,8 +1,7 @@
+ module object
+ # Lox heap objects (SPEC §4.2): one union case per kind, stored inline in the
+-# Runtime's object table. Payloads that change after allocation (a function
+-# under compilation, an upvalue that closes) are classes so the table slot
+-# keeps pointing at the one mutable payload; the rest are value records.
++# Runtime's object table. Every payload is a value record. ObjRef indices
++# carry identity; changes to a payload are stored back into its table slot.
+ import chunk
+ import table
+ import value
+@@ -15,7 +14,7 @@
+ 
+ # Compiled by the VM compiler, which fills in arity, upvalue count and name
+ # after allocation. `name` is NO_OBJ for the top-level script.
+-public class FunctionObj:
++public record FunctionObj:
+     arity: int
+     upvalue_count: int
+     code: chunk.Chunk
+@@ -35,7 +34,7 @@
+ 
+ # Open while `slot` indexes a live stack slot; closing copies that slot into
+ # `closed` and sets `slot` to NO_SLOT.
+-public class UpvalueObj:
++public record UpvalueObj:
+     slot: int
+     closed: value.Value
+     next_open: value.ObjRef
+--- a/output.my
++++ b/output.my
+@@ -13,7 +13,7 @@
+ # In capture mode the streams are held only as the authority capture stands
+ # in for: nothing is written to them, and `stdout` and `stderr` keep
+ # everything instead.
+-public class Output:
++public record Output:
+     stdout: byte_buffer
+     stderr: byte_buffer
+     out: Stream
+--- a/parser.my
++++ b/parser.my
+@@ -16,7 +16,7 @@
+     pass
+ 
+ 
+-class Parser:
++record Parser:
+     rt: heap.Runtime
+     out: output.Output
+     source: bytes
+@@ -35,7 +35,9 @@
+     _ = text.append_range(location, 0, len(location))
+     _ = text.append_utf8(": ")
+     _ = text.append_range(message, 0, len(message))
+-    output.error_line(mut p.out, bytes(text))
++    __wb_38 = p.out
++    output.error_line(mut __wb_38, bytes(text))
++    p.out = __wb_38
+     p.had_error = True
+ 
+ 
+@@ -51,7 +53,9 @@
+ # contents), rooted permanently if this call created it.
+ def intern(p: mut Parser, chars: bytes) -> value.ObjRef:
+     before = p.rt.allocations
+-    ref = lox_strings.copy_string(mut p.rt, chars)
++    __wb_54 = p.rt
++    ref = lox_strings.copy_string(mut __wb_54, chars)
++    p.rt = __wb_54
+     if p.rt.allocations != before:
+         p.rt.permanent_roots.append(ref)
+     return ref
+@@ -491,6 +495,8 @@
+                 p.program.statements.append(parsed)
+             case None:
+                 pass
++    rt = p.rt
++    out = p.out
+     if p.had_error:
+         return None
+     return Some(p.program)
+--- a/resolver.my
++++ b/resolver.my
+@@ -30,11 +30,11 @@
+     slot: int
+ 
+ 
+-class Scope:
++record Scope:
+     entries: list[ScopeEntry]
+ 
+ 
+-class Resolver:
++record Resolver:
+     program: ast.Program
+     source: bytes
+     out: output.Output
+@@ -59,7 +59,9 @@
+     _ = text.append_range(r.source, start, start + length)
+     _ = text.append_utf8("': ")
+     _ = text.append_range(message, 0, len(message))
+-    output.error_line(mut r.out, bytes(text))
++    __wb_62 = r.out
++    output.error_line(mut __wb_62, bytes(text))
++    r.out = __wb_62
+     r.had_error = True
+ 
+ 
+@@ -93,9 +95,11 @@
+     if index != -1:
+         error(mut r, line, start, length, b"Already a variable with this name in this scope.")
+         scope.entries[index].defined = False
++        r.scopes[len(r.scopes) - 1] = scope
+         return scope.entries[index].slot
+     slot = len(scope.entries)
+     scope.entries.append(ScopeEntry(name=name, defined=False, slot=slot))
++    r.scopes[len(r.scopes) - 1] = scope
+     return slot
+ 
+ 
+@@ -104,12 +108,14 @@
+         return
+     scope = r.scopes[len(r.scopes) - 1]
+     scope.entries[find(scope, name)].defined = True
++    r.scopes[len(r.scopes) - 1] = scope
+ 
+ 
+ # Adds a name that is defined on arrival (`this`, `super`).
+ def put_defined(r: mut Resolver, name: int):
+     scope = r.scopes[len(r.scopes) - 1]
+     scope.entries.append(ScopeEntry(name=name, defined=True, slot=len(scope.entries)))
++    r.scopes[len(r.scopes) - 1] = scope
+ 
+ 
+ def resolve_local(r: Resolver, name: int) -> Address:
+@@ -301,4 +307,6 @@
+     while i < len(r.program.statements):
+         resolve_statement(mut r, r.program.statements[i])
+         i += 1
++    program = r.program
++    out = r.out
+     return not r.had_error
+--- a/resolver_test.my
++++ b/resolver_test.my
+@@ -13,7 +13,8 @@
+     rt = heap.new_runtime(False, None)
+     o = output.capture(out)
+     match parser.parse(mut rt, mut o, source):
+-        case Some(program):
++        case Some(parsed):
++            program = parsed
+             _ = resolver.resolve(mut program, source, mut o)
+             return bytes(o.stderr)
+         case None:
+@@ -41,7 +42,8 @@
+     rt = heap.new_runtime(False, None)
+     o = output.capture(out)
+     match parser.parse(mut rt, mut o, source):
+-        case Some(program):
++        case Some(parsed):
++            program = parsed
+             if not resolver.resolve(mut program, source, mut o):
+                 return False
+             f = program.functions[0]
+--- a/scanner.my
++++ b/scanner.my
+@@ -55,7 +55,7 @@
+     message: bytes
+ 
+ 
+-public class Scanner:
++public record Scanner:
+     source: bytes
+     start: int
+     current: int
+--- a/table.my
++++ b/table.my
+@@ -11,7 +11,7 @@
+     value: value.Value
+ 
+ 
+-public class Table:
++public record Table:
+     entries: list[Entry]
+     count: int
+ 
+--- a/vm.my
++++ b/vm.my
+@@ -130,14 +130,16 @@
+         return arity_error(mut rt, mut o, function.arity, count)
+     if rt.frame_count == heap.FRAMES_MAX:
+         return runtime_error(mut rt, mut o, b"Stack overflow.")
+-    frame = rt.frames[rt.frame_count]
++    frame_index = rt.frame_count
+     rt.frame_count = rt.frame_count + 1
+-    frame.closure = closure
+-    frame.function = function
+-    frame.code = function.code.code
+-    frame.upvalues = heap.closure_obj(rt, closure).upvalues
+-    frame.ip = 0
+-    frame.base = rt.stack_top - count - 1
++    rt.frames[frame_index] = heap.CallFrame(
++        closure=closure,
++        function=function,
++        code=function.code.code,
++        upvalues=heap.closure_obj(rt, closure).upvalues,
++        ip=0,
++        base=rt.stack_top - count - 1
++    )
+     return True
+ 
+ 
+@@ -224,6 +226,7 @@
+     else:
+         link = heap.upvalue_obj(rt, previous)
+         link.next_open = created
++        rt.objects[previous] = object.Obj.upvalue(link)
+     return created
+ 
+ 
+@@ -233,6 +236,7 @@
+         upvalue = heap.upvalue_obj(rt, rt.open_upvalues)
+         upvalue.closed = rt.stack[upvalue.slot]
+         upvalue.slot = object.NO_SLOT
++        rt.objects[rt.open_upvalues] = object.Obj.upvalue(upvalue)
+         rt.open_upvalues = upvalue.next_open
+ 
+ 
+@@ -279,7 +283,9 @@
+ def set_global(rt: mut heap.Runtime, o: mut output.Output, frame: mut heap.CallFrame) -> bool:
+     name = read_string(mut frame)
+     if heap.set_global(mut rt, name, heap.peek(rt, 0)):
+-        _ = table.delete(mut rt.globals, name, heap.string_hash(rt, name))
++        __wb_282 = rt.globals
++        _ = table.delete(mut __wb_282, name, heap.string_hash(rt, name))
++        rt.globals = __wb_282
+         return runtime_error(mut rt, mut o, b"Undefined variable '" + name_text(rt, name) + b"'.")
+     return True
+ 
+@@ -293,11 +299,13 @@
+ 
+ 
+ def set_upvalue(rt: mut heap.Runtime, frame: mut heap.CallFrame):
+-    upvalue = heap.upvalue_obj(rt, frame.upvalues[read_byte(mut frame)])
++    ref = frame.upvalues[read_byte(mut frame)]
++    upvalue = heap.upvalue_obj(rt, ref)
+     if upvalue.slot != object.NO_SLOT:
+         rt.stack[upvalue.slot] = heap.peek(rt, 0)
+     else:
+         upvalue.closed = heap.peek(rt, 0)
++        rt.objects[ref] = object.Obj.upvalue(upvalue)
+ 
+ 
+ def get_property(rt: mut heap.Runtime, o: mut output.Output, frame: mut heap.CallFrame) -> bool:
+@@ -321,6 +329,7 @@
+             name = read_string(mut frame)
+             fields = instance.fields
+             _ = table.set(mut fields, name, heap.string_hash(rt, name), heap.peek(rt, 0))
++            heap.set_instance_fields(mut rt, as_obj(heap.peek(rt, 1)), fields)
+             assigned = heap.pop(mut rt)
+             _ = heap.pop(mut rt)
+             heap.push(mut rt, assigned)
+@@ -398,6 +407,7 @@
+     source = heap.class_obj(rt, as_obj(parent)).methods
+     snapshot = table.Table(entries=source.entries.copy(), count=source.count)
+     table.add_all(snapshot, mut methods)
++    heap.set_class_methods(mut rt, as_obj(heap.peek(rt, 0)), methods)
+     _ = heap.pop(mut rt)
+     return True
+ 
+@@ -406,6 +416,7 @@
+     name = read_string(mut frame)
+     methods = heap.class_obj(rt, as_obj(heap.peek(rt, 1))).methods
+     _ = table.set(mut methods, name, heap.string_hash(rt, name), heap.peek(rt, 0))
++    heap.set_class_methods(mut rt, as_obj(heap.peek(rt, 1)), methods)
+     _ = heap.pop(mut rt)
+ 
+ 
+@@ -415,6 +426,7 @@
+     frame = rt.frames[rt.frame_count - 1]
+     while True:
+         instruction = read_byte(mut frame)
++        rt.frames[rt.frame_count - 1] = frame
+         ok = True
+         if instruction == chunk.OP_CONSTANT:
+             heap.push(mut rt, read_constant(mut frame))
+@@ -474,18 +486,21 @@
+             frame.ip = frame.ip - offset
+         elif instruction == chunk.OP_CALL:
+             count = read_byte(mut frame)
++            rt.frames[rt.frame_count - 1] = frame
+             ok = call_value(mut rt, mut o, heap.peek(rt, count), count)
+             if ok:
+                 frame = rt.frames[rt.frame_count - 1]
+         elif instruction == chunk.OP_INVOKE:
+             method = read_string(mut frame)
+             count = read_byte(mut frame)
++            rt.frames[rt.frame_count - 1] = frame
+             ok = invoke(mut rt, mut o, method, count)
+             if ok:
+                 frame = rt.frames[rt.frame_count - 1]
+         elif instruction == chunk.OP_SUPER_INVOKE:
+             method = read_string(mut frame)
+             count = read_byte(mut frame)
++            rt.frames[rt.frame_count - 1] = frame
+             ok = invoke_from_class(mut rt, mut o, as_obj(heap.pop(mut rt)), method, count)
+             if ok:
+                 frame = rt.frames[rt.frame_count - 1]
+@@ -512,6 +527,7 @@
+             ok = inherit(mut rt, mut o)
+         elif instruction == chunk.OP_METHOD:
+             define_method(mut rt, mut frame)
++        rt.frames[rt.frame_count - 1] = frame
+         if not ok:
+             return InterpretResult.RUNTIME_ERROR
+ 

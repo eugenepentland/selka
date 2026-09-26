@@ -63,7 +63,7 @@
       "graph": false,
       "self_referential": false,
       "field_writes": 0,
-      "state": "pending"
+      "state": "migrated-in-3d-patch"
     },
     {
       "corpus": "lox",
@@ -72,7 +72,7 @@
       "graph": false,
       "self_referential": false,
       "field_writes": 0,
-      "state": "pending"
+      "state": "migrated-in-3d-patch"
     },
     {
       "corpus": "lox",
@@ -81,7 +81,7 @@
       "graph": true,
       "self_referential": false,
       "field_writes": 3,
-      "state": "pending"
+      "state": "migrated-in-3d-patch"
     },
     {
       "corpus": "lox",
@@ -90,7 +90,7 @@
       "graph": true,
       "self_referential": false,
       "field_writes": 5,
-      "state": "pending"
+      "state": "migrated-in-3d-patch"
     },
     {
       "corpus": "lox",
@@ -99,7 +99,7 @@
       "graph": true,
       "self_referential": false,
       "field_writes": 11,
-      "state": "pending"
+      "state": "migrated-in-3d-patch"
     },
     {
       "corpus": "lox",
@@ -108,7 +108,7 @@
       "graph": false,
       "self_referential": false,
       "field_writes": 0,
-      "state": "pending"
+      "state": "migrated-in-3d-patch"
     },
     {
       "corpus": "lox",
@@ -117,7 +117,7 @@
       "graph": true,
       "self_referential": false,
       "field_writes": 21,
-      "state": "pending"
+      "state": "migrated-in-3d-patch"
     },
     {
       "corpus": "lox",
@@ -126,7 +126,7 @@
       "graph": true,
       "self_referential": false,
       "field_writes": 3,
-      "state": "pending"
+      "state": "migrated-in-3d-patch"
     },
     {
       "corpus": "lox",
@@ -135,7 +135,7 @@
       "graph": true,
       "self_referential": false,
       "field_writes": 3,
-      "state": "pending"
+      "state": "migrated-in-3d-patch"
     },
     {
       "corpus": "lox",
@@ -144,7 +144,7 @@
       "graph": false,
       "self_referential": false,
       "field_writes": 4,
-      "state": "pending"
+      "state": "migrated-in-3d-patch"
     },
     {
       "corpus": "lox",
@@ -153,7 +153,7 @@
       "graph": false,
       "self_referential": false,
       "field_writes": 1,
-      "state": "pending"
+      "state": "migrated-in-3d-patch"
     },
     {
       "corpus": "lox",
@@ -162,7 +162,7 @@
       "graph": true,
       "self_referential": false,
       "field_writes": 2,
-      "state": "pending"
+      "state": "migrated-in-3d-patch"
     },
     {
       "corpus": "lox",
@@ -171,7 +171,7 @@
       "graph": true,
       "self_referential": false,
       "field_writes": 6,
-      "state": "pending"
+      "state": "migrated-in-3d-patch"
     },
     {
       "corpus": "lox",
@@ -180,7 +180,7 @@
       "graph": false,
       "self_referential": false,
       "field_writes": 0,
-      "state": "pending"
+      "state": "migrated-in-3d-patch"
     },
     {
       "corpus": "lox",
@@ -189,7 +189,7 @@
       "graph": false,
       "self_referential": false,
       "field_writes": 14,
-      "state": "pending"
+      "state": "migrated-in-3d-patch"
     },
     {
       "corpus": "lox",
@@ -198,7 +198,7 @@
       "graph": false,
       "self_referential": false,
       "field_writes": 4,
-      "state": "pending"
+      "state": "migrated-in-3d-patch"
     },
     {
       "corpus": "trial-T2",
