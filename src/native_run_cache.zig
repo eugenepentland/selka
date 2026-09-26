@@ -5,13 +5,14 @@
 //! source graph, policy, and emission controls. The native executable cache adds
 //! runtime, backend, toolchain, mode, and target identity when consuming it.
 const std = @import("std");
+const runtime = @import("runtime_contract");
 const fs = @import("qbe_build_io.zig");
 const builder = @import("qbe_build.zig");
 const options = @import("qbe_build_options.zig");
 const bundled = @import("qbe_build_assets");
 
 /// Filesystem and allocation failures while reading or publishing the cache.
-pub const Error = fs.Error;
+pub const Error = fs.Error || error{InvalidRuntimeContract};
 
 /// One resolved module contributing to an emitted project manifest.
 pub const Source = struct { path: []const u8, bytes: []const u8 };
@@ -129,6 +130,7 @@ fn keyFor(context: fs.Context, identity: Identity) ![]const u8 {
     // environment carrier is set in every process a switched command runs.
     // Only a switched run adds the frame, so every other key is unchanged.
     if (context.environ.get("MYLANG_VALUE_SEMANTICS")) |value| frame(&hash, value);
+    frame(&hash, (try runtime.parse(context.environ.get(runtime.variable))).identity());
     frame(&hash, identity.policy orelse "");
     for (identity.sources) |source| {
         frame(&hash, source.path);
@@ -218,4 +220,21 @@ test "a cached lean manifest is a hit only while every stored unit text it names
     try context.write(meta, "{\"name\":\"f\"}");
     try std.Io.Dir.cwd().deleteFile(std.testing.io, text);
     try std.testing.expect((try load(std.testing.allocator, std.testing.io, &environment, settings, identity)) == null);
+}
+
+// spec-case: RC-RUNTIME-CONTRACT-1
+test "RC runtime contract separates manifest cache keys before any emission" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    const input: Identity = .{ .sources = &.{.{ .path = "main.my", .bytes = "source" }} };
+    const gc = try keyFor(context, input);
+    try environment.put(runtime.variable, "rc-v1");
+    const rc = try keyFor(context, input);
+    try std.testing.expect(!std.mem.eql(u8, gc, rc));
+    try environment.put(runtime.variable, "rc-v1-counting");
+    try std.testing.expect(!std.mem.eql(u8, rc, try keyFor(context, input)));
+    try environment.put(runtime.variable, "future");
+    try std.testing.expectError(error.InvalidRuntimeContract, keyFor(context, input));
 }

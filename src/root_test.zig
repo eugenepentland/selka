@@ -35,6 +35,9 @@ test {
     _ = @import("native_run_cache.zig");
     _ = @import("wiring/native_session.zig");
     _ = @import("value_semantics_test.zig");
+    _ = @import("runtime_mode.zig");
+    _ = @import("main_runtime_flags.zig");
+    _ = @import("compiler.zig").runtime_mode;
     _ = @import("qbe_build_test.zig");
     _ = @import("qbe_build_llvm_test.zig");
     _ = @import("qbe_build_llvm_sticky.zig");
@@ -225,6 +228,7 @@ test {
     _ = @import("qbe_roots.zig");
     _ = @import("qbe_test.zig");
     _ = @import("ownership_test.zig");
+    _ = @import("rc_plan_test.zig");
     _ = @import("cow_test.zig");
     _ = @import("qbe_text_test.zig");
     _ = @import("qbe_range_keys_test.zig");

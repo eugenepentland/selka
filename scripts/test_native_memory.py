@@ -29,7 +29,9 @@ def run_suite(root, command, directory, suite, sources):
     executable = directory / suite
     if "native_heap.c" in sources:
         required = ("native_arena.c", "native_collections.c", "native_text.c",
-                    "native_dictionary.c", "native_equal.c")
+                    "native_dictionary.c", "native_equal.c", "native_bytes.c",
+                    "native_rc.c", "native_rc_shapes.c", "native_rc_walk.c",
+                    "native_rc_transfer.c", "native_rc_alloc.c", "native_rc_values.c")
         at = sources.index("native_heap.c") + 1
         for source in required:
             if source not in sources:
@@ -54,6 +56,8 @@ def jobs():
 
 # Each C suite and the runtime sources it links.
 SUITES = (
+    ("native_rc_contract", ["native_rc.c", "native_rc_shapes.c", "native_rc_walk.c", "native_rc_transfer.c"]),
+    ("native_rc_collections", ["native_heap.c"]),
     ("native_heap", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c", "native_equal.c", "native_bytes.c"]),
     ("native_collections", ["native_heap.c", "native_collections.c"]),
     ("native_text_dictionary", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c"]),

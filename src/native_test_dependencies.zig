@@ -20,7 +20,7 @@ const Fact = std.crypto.hash.Blake3;
 /// UTF-8 text storage: a text header, a `str` frozen-literal block and the
 /// object a text is allocated as all changed shape, so a v7 image cannot be
 /// linked against a v8 runtime either.
-pub const abi = "mylang-qbe-native-v8";
+pub const abi = "mylang-qbe-native-v9";
 /// The semantic reason another implementation can affect a function's behavior.
 pub const Kind = enum { call, function_value, indirect, codec };
 /// A dependency names a persistent linker symbol rather than a function-table index.

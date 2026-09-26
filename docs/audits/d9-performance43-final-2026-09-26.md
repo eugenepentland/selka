@@ -2,8 +2,9 @@
 
 The complete stage 3 instruction gate passes on both backends. All 86
 baseline/candidate output comparisons pass, including schematic SVG checks.
-This closes the performance criterion; the separate default migration gate
-still needs its random-stream assertions corrected before WP-3f is complete.
+This closes the performance criterion. The separate random-stream migration
+subsequently passed its full correctness gate at `9ab98d5f`, completing
+[WP-3f acceptance](d9-stage3f-default-validation-2026-09-26.md).
 
 | Backend | Programs | Instruction geomean | Largest ratio | Programs above 1.3× |
 | --- | ---: | ---: | --- | --- |
