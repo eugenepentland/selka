@@ -881,36 +881,67 @@ int myl_native_dictionary_write_range(myl_native_heap *heap, myl_native_dictiona
     copy_value(dict,entry_at(dict,at.entry)+dict->value_offset,value);
     return 1;
 }
+/* Cursor reads keep pinned entry addresses stable and visit a sparse source
+ * in linear time. GC readers retain their historical initial compaction. */
+int myl_native_dictionary_next(const myl_native_dictionary *dict, size_t *cursor, const void **key, const void **value) {
+    if (!*cursor && !rc_dictionary(dict)) myl_native_dictionary_settle(dict);
+    while (*cursor<dict->entries->length) {
+        const unsigned char *entry=entry_at(dict,(*cursor)++);
+        if (rc_dictionary(dict)) {
+            uint64_t marker;
+            memcpy(&marker,entry+dict->entry_type.size-8,8);
+            if (!(uint32_t)marker) continue;
+        }
+        *key=entry;
+        *value=entry+dict->value_offset;
+        return 1;
+    }
+    return 0;
+}
 myl_native_list *myl_native_dictionary_snapshot(myl_native_heap *heap, myl_native_dictionary *dict, int keys) {
-    myl_native_dictionary_settle(dict);
     myl_native_root root;
     myl_native_root_push(heap,&root,&dict,&pointer_type);
     const myl_native_type *element=keys?dict->key:dict->value;
-    myl_native_list *result=myl_native_list_new(heap,element,dict->entries->length);
+    myl_native_list *result=myl_native_list_new(heap,element,myl_native_dictionary_length(dict));
     if (result) {
-        for (size_t i=0;i<dict->entries->length;i++) {
-            const unsigned char *entry=entry_at(dict,i);
+        size_t cursor=0;
+        const void *key, *value;
+        while (myl_native_dictionary_next(dict,&cursor,&key,&value)) {
+            const void *item=keys?key:value;
             if (myl_rc_enabled(heap)) {
-                if (!myl_rc_list_append(heap,result,entry+(keys?0:dict->value_offset))) {
+                if (!myl_rc_list_append(heap,result,item)) {
                     myl_rc_native_abort(heap,result); result=NULL; break;
                 }
-            } else memcpy((unsigned char *)result->storage+i*element->size,entry+(keys?0:dict->value_offset),element->size);
+            } else {
+                memcpy((unsigned char *)result->storage+result->length*element->size,item,element->size);
+                result->length++;
+            }
         }
-        if (result) result->length=dict->entries->length;
     }
     myl_native_root_pop(heap,&root);
     return result;
 }
-int myl_native_dictionary_key_at(const myl_native_dictionary *dict, size_t index, void *output) {
+static const unsigned char *ordinal_entry(const myl_native_dictionary *dict, size_t index) {
+    if (rc_dictionary(dict) && dict->dead && (((const myl_native_object *)dict-1)->mark&MYL_NATIVE_OBJECT_PINNED)) {
+        size_t cursor=0;
+        const void *key, *value;
+        while (myl_native_dictionary_next(dict,&cursor,&key,&value))
+            if (!index--) return key;
+        return NULL;
+    }
     myl_native_dictionary_settle(dict);
-    if (index>=dict->entries->length) return 0;
-    memmove(output,entry_at(dict,index),dict->key->size);
+    return index<dict->entries->length?entry_at(dict,index):NULL;
+}
+int myl_native_dictionary_key_at(const myl_native_dictionary *dict, size_t index, void *output) {
+    const unsigned char *entry=ordinal_entry(dict,index);
+    if (!entry) return 0;
+    memmove(output,entry,dict->key->size);
     return 1;
 }
 int myl_native_dictionary_value_at(const myl_native_dictionary *dict, size_t index, void *output) {
-    myl_native_dictionary_settle(dict);
-    if (index>=dict->entries->length) return 0;
-    memmove(output,entry_at(dict,index)+dict->value_offset,dict->value->size);
+    const unsigned char *entry=ordinal_entry(dict,index);
+    if (!entry) return 0;
+    memmove(output,entry+dict->value_offset,dict->value->size);
     return 1;
 }
 /* Empty the slot at `hole` and close the gap linear probing needs closed: every
@@ -986,11 +1017,10 @@ const void *myl_native_dictionary_find(const myl_native_dictionary *dict, const 
     return index==NO_ENTRY?NULL:entry_at(dict,index)+dict->value_offset;
 }
 int myl_native_dictionary_update(myl_native_heap *heap, myl_native_dictionary *dict, const myl_native_dictionary *source) {
-    myl_native_dictionary_settle(source);
-    for (size_t i=0;i<source->entries->length;i++) {
-        const unsigned char *entry=(const unsigned char *)source->entries->storage+i*source->entry_type.size;
-        if (!myl_native_dictionary_write(heap,dict,entry,entry+source->value_offset)) return 0;
-    }
+    size_t cursor=0;
+    const void *key, *value;
+    while (myl_native_dictionary_next(source,&cursor,&key,&value))
+        if (!myl_native_dictionary_write(heap,dict,key,value)) return 0;
     return 1;
 }
 static int rc_existing_result(myl_native_heap *heap, const myl_native_type *type, void *output, const void *value) {
