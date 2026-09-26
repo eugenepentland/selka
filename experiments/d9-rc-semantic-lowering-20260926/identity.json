@@ -1,0 +1,9 @@
+{
+  "base": "de10cf780f259b1ff3a2b0d29f4dc4880131be16",
+  "compiler": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/install-history-candidate/bin/mylang",
+  "compiler_sha256": "825db00e5526581784ef1ef452af1c73e29f5b3314cedc6fc5b782312293fdfa",
+  "build_mode": "Debug",
+  "runtime": "rc-v3-counting",
+  "guest_llvm": "--release (ReleaseFast, LLVM O3 full LTO)",
+  "partial_stage4_acceptance": false
+}

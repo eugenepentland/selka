@@ -1,0 +1,17 @@
+module argument_trap
+
+def fail(root: mut dict[int, dict[int, int]]) -> dict[int, dict[int, int]]:
+    root[0][1] = 21
+    assert False, "mut argument unwind"
+    return root
+
+
+def change(target: mut dict[int, int], source: dict[int, dict[int, int]]) -> int:
+    target[1] = 13
+    return source[0][1]
+
+
+def main() -> int:
+    original = {0: {1: 7}}
+    with arena():
+        return change(mut original[0], fail(mut original))

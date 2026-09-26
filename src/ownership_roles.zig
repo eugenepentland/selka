@@ -222,6 +222,18 @@ fn uniqueLoads(ctx: *Context) Error!void {
                     ctx.marks.unique_load[operand.read] = true;
                 }
             },
+            .invoke => |ty| {
+                const signature = ctx.record(ty).contract.callback.?;
+                if (signature.valueCount() + 1 > stack.len) return error.InternalError;
+                const base = stack.len - signature.valueCount();
+                for (signature.mutates) |position| {
+                    if (!ctx.managedType(signature.parameters[position])) continue;
+                    const operand = stack[base + position];
+                    if (operand.origin != .local or operand.part != .whole or operand.read == none) continue;
+                    if (ctx.instructions()[operand.read].op != .load_local) continue;
+                    ctx.marks.unique_load[operand.read] = true;
+                }
+            },
             else => {},
         }
     }

@@ -1,0 +1,58 @@
+module positive
+
+record Plain:
+    left: int
+    right: int
+
+
+def update(value: mut Plain, items: list[int]) -> int:
+    value.left = items[0]
+    return value.left + value.right
+
+
+# spec-case: RC-COMPACT-JOURNAL-1
+public def test_plain_updates_stage_bits_inside_a_managed_frame() -> bool:
+    items = [8]
+    value = Plain(1, 2)
+    value.right = 5
+    total = update(mut value, items)
+    return total == 13 and value.left == 8 and value.right == 5 and items == [8]
+
+
+def escaped() -> list[int]:
+    count = 2
+    outside = [5]
+    with arena() as outer:
+        scale = 3
+        first = [count]
+        lifted: list[int] = []
+        with arena() as inner:
+            suffix = 4
+            second = [first[0] + suffix]
+            lifted = inner.escape(second)
+        first.extend(lifted)
+        first.append(outside[0] + scale)
+        return outer.escape(first)
+
+
+# spec-case: RC-COMPACT-JOURNAL-1
+public def test_plain_local_gaps_preserve_nested_arena_cleanup_boundaries() -> bool:
+    return escaped() == [2, 6, 8]
+
+
+# spec-case: RC-COMPACT-JOURNAL-1
+public def test_reused_operands_retain_ordinary_and_held_cleanup_roles() -> bool:
+    mapping = {1: [3]}
+    live = mapping.values()
+    ordinary = live.mapping
+    scalar = len(ordinary)
+    mapping[1] = [7]
+    materialized = list(live)
+    return scalar == 1 and ordinary[1] == [3] and materialized == [[3]]
+
+
+def main() -> int:
+    assert test_plain_updates_stage_bits_inside_a_managed_frame()
+    assert test_plain_local_gaps_preserve_nested_arena_cleanup_boundaries()
+    assert test_reused_operands_retain_ordinary_and_held_cleanup_roles()
+    return 0

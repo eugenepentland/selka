@@ -1,0 +1,25 @@
+{
+  "groups": {
+    "base": {
+      "rows": 24,
+      "frontend_aborts": 0
+    },
+    "boxes": {
+      "rows": 24,
+      "frontend_aborts": 0
+    },
+    "pinned": {
+      "rows": 12,
+      "frontend_aborts": 4
+    },
+    "reduced": {
+      "rows": 8,
+      "frontend_aborts": 0
+    },
+    "precompact": {
+      "rows": 4,
+      "frontend_aborts": 0
+    }
+  },
+  "balanced_executed_rc_rows": 34
+}

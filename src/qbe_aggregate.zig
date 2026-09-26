@@ -128,7 +128,12 @@ fn arrayAccess(self: anytype, op: @FieldType(bytecode.Instruction, "op"), stack:
 /// A box reaching mutable collections needs a private shallow COW snapshot;
 /// pure boxes use ordinary field lowering and its private-copy lifetime rules.
 fn boxRead(comptime E: type, self: E, stack: []const typed.Type, source: usize) Error!bool {
-    if (runtime_mode.enabled()) return false;
+    if (runtime_mode.enabled()) {
+        const history = @import("qbe_rc_box_history.zig");
+        if (!history.boxMaterialization(@TypeOf(self.*), self)) return false;
+        try history.unbox(@TypeOf(self.*), self, source);
+        return true;
+    }
     if (self.cow == null or !@import("value_semantics.zig").enabled()) return false;
     if (!self.program.records[stack[stack.len - 1].recordIndex()].collection.box) return false;
     if (!@import("value_semantics.zig").needsCopy(self.program.records, stack[stack.len - 1])) return false;

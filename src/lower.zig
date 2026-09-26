@@ -73,7 +73,7 @@ const Emitter = struct {
                 if (argument.data != .local) return error.InternalError;
                 try self.instruction(argument.span, .{ .ref_local = argument.data.local });
             } else if (declaredMutable(callee.signature.declared_mutates, i)) {
-                try self.push(.{ .expression = call.arguments[i] });
+                try self.mutableArgument(call.arguments[i]);
             } else try self.readOnlyArgument(call.arguments[i], writable);
         }
         if (call.evaluation) |evaluation| try self.push(.{ .statement = evaluation.body });
@@ -92,6 +92,16 @@ const Emitter = struct {
     fn declaredMutable(positions: []const u16, position: usize) bool {
         for (positions) |declared| if (declared == position) return true;
         return false;
+    }
+    /// A nested mutable argument is a writing place, not an owned read result.
+    fn mutableArgument(self: *Emitter, id: typed.NodeId) !void {
+        const node = self.program.nodes[@backingInt(id)];
+        if (self.values != null and node.data != .local) {
+            const owner = try self.hiddenLocal(node.ty, node.span, "<mut-argument>");
+            try self.instruction(node.span, .{ .load_local = owner });
+            try self.instruction(node.span, .{ .store_local = owner });
+        }
+        try self.push(.{ .expression = id });
     }
     /// The arguments bound to `mut` positions, which the callee may write
     /// while it reads the others; empty with value semantics off.
@@ -523,7 +533,7 @@ const Emitter = struct {
                 var i = call.arguments.len;
                 while (i > 0) {
                     i -= 1;
-                    if (declaredMutable(positions, i)) try self.push(.{ .expression = call.arguments[i] }) else try self.readOnlyArgument(call.arguments[i], writable);
+                    if (declaredMutable(positions, i)) try self.mutableArgument(call.arguments[i]) else try self.readOnlyArgument(call.arguments[i], writable);
                 }
                 try self.push(.{ .expression = call.callee });
             },

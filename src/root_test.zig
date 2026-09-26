@@ -2,6 +2,7 @@
 /// Canonical project loader exposed to native-test snapshot identity.
 pub const snapshot_project = @import("project.zig");
 test {
+    _ = @import("qbe_mut_argument_places_test.zig");
     _ = @import("qbe_rc_read_loans_test.zig");
     _ = @import("qbe_rc_aggregate_test.zig");
     _ = @import("qbe_rc_inline_take_test.zig");
@@ -210,6 +211,8 @@ test {
     _ = @import("managed_lists_test.zig");
     _ = @import("python_collections_test.zig");
     _ = @import("managed_frontend_test.zig");
+    _ = @import("sema_mut_arguments_test.zig");
+    _ = @import("recursive_resources_test.zig");
     _ = @import("surface_collections_test.zig");
     _ = @import("builtin_context_test.zig");
     _ = @import("json_document_test.zig");
@@ -251,7 +254,9 @@ test {
     _ = @import("qbe_rc_plain_write_test.zig");
     _ = @import("qbe_rc_admission_test.zig");
     _ = @import("qbe_rc_views_test.zig");
+    _ = @import("qbe_rc_journal_test.zig");
     _ = @import("cow_test.zig");
+    _ = @import("cow_rebox_roots_test.zig");
     _ = @import("qbe_text_test.zig");
     _ = @import("qbe_range_keys_test.zig");
     _ = @import("qbe_literals_test.zig");

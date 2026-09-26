@@ -42,7 +42,7 @@ test "RC-BORROW-ENTRY-1 native alternate owns a separate source map and no inter
     defer t.allocator.free(own_map);
     try t.expect(std.mem.indexOf(u8, borrowed.il, own_map) != null);
     try t.expect(std.mem.indexOf(u8, borrowed.il, "call $myl_rc_native_copy") == null);
-    try t.expect(std.mem.indexOf(u8, ordinary.il, "call $myl_rc_native_copy") != null);
+    try t.expect(std.mem.indexOf(u8, ordinary.il, "call $myl_rc_native_retain") != null);
 }
 
 const Pair = struct { canonical: ?Function, alternate: ?Function };

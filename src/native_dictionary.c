@@ -1,6 +1,7 @@
 #include "native_dictionary.h"
 #include "native_equal.h"
 #include "native_rc_dictionary.h"
+#include "native_rc_internal.h"
 #include "native_rc_collections.h"
 #include <stdlib.h>
 #include <string.h>
@@ -728,7 +729,7 @@ int myl_native_dictionary_write(myl_native_heap *heap, myl_native_dictionary *di
     if (myl_rc_enabled(heap)) {
         size_t at=find(dict,key).entry;
         if (at==NO_ENTRY) return rc_insert(heap,dict,key,value);
-        return myl_rc_native_replace(heap,dict->value,entry_at(dict,at)+dict->value_offset,value,myl_native_header_region(dict));
+        return myl_rc_native_retain_replace(heap,dict->value,entry_at(dict,at)+dict->value_offset,value,myl_native_header_region(dict));
     }
     size_t index=recall(dict,key);
     if (index==NO_ENTRY) return write_walk(heap,dict,key,value);
@@ -844,7 +845,7 @@ int myl_native_dictionary_contains_range(const myl_native_heap *heap, const myl_
 int myl_native_dictionary_overwrite_range(const myl_native_heap *heap, myl_native_dictionary *dict, const myl_native_text *text, const myl_native_text_span *span, const void *value) {
     size_t index=find_span(heap,dict,span_of(text,span)).entry;
     if (index==NO_ENTRY) return 0;
-    if (myl_rc_enabled(heap)) return myl_rc_native_replace((myl_native_heap *)heap,dict->value,entry_at(dict,index)+dict->value_offset,value,myl_native_header_region(dict));
+    if (myl_rc_enabled(heap)) return myl_rc_native_retain_replace((myl_native_heap *)heap,dict->value,entry_at(dict,index)+dict->value_offset,value,myl_native_header_region(dict));
     copy_value(dict,entry_at(dict,index)+dict->value_offset,value);
     return 1;
 }
@@ -870,7 +871,7 @@ static __attribute__((noinline)) int insert_span(myl_native_heap *heap, myl_nati
 int myl_native_dictionary_write_range(myl_native_heap *heap, myl_native_dictionary *dict, myl_native_text *text, const myl_native_text_span *span, const void *value) {
     located at=find_span(heap,dict,span_of(text,span));
     if (myl_rc_enabled(heap)) {
-        if (at.entry!=NO_ENTRY) return myl_rc_native_replace(heap,dict->value,entry_at(dict,at.entry)+dict->value_offset,value,myl_native_header_region(dict));
+        if (at.entry!=NO_ENTRY) return myl_rc_native_retain_replace(heap,dict->value,entry_at(dict,at.entry)+dict->value_offset,value,myl_native_header_region(dict));
         myl_native_text *owned=myl_native_text_piece_at(heap,text,span,myl_native_header_region(dict));
         if (!owned) return 0;
         int ok=rc_insert(heap,dict,&owned,value);
@@ -1027,7 +1028,7 @@ static int rc_existing_result(myl_native_heap *heap, const myl_native_type *type
     unsigned char local[128];
     void *staged=type->size<=sizeof local?local:myl_rc_storage_bytes(heap,type->size,0);
     if (!staged) return 0;
-    int ok=myl_rc_native_copy(heap,type,staged,value,heap->region_depth);
+    int ok=myl_rc_native_retain(heap,type,staged,value,heap->region_depth);
     if (ok) memcpy(output,staged,type->size);
     if (staged!=local) myl_rc_owner_release(heap,staged);
     return ok;
@@ -1197,7 +1198,7 @@ static int rc_insert_result(myl_native_heap *heap, myl_native_dictionary *dict, 
         {.shape=value_shape->shape,.address=scratch+dict->value_offset},
         {.shape=value_shape->shape,.address=scratch+dict->value_offset}
     };
-    myl_rc_status status=myl_rc_value_copy_many(heap,targets,sources,output?3:2);
+    myl_rc_status status=myl_rc_value_retain_many(heap,targets,sources,output?3:2);
     if (status!=MYL_RC_OK) { myl_rc_record_failure(heap,status); goto done; }
     uint32_t hash=hash_key(dict,entry);
     uint64_t marker=((uint64_t)hash<<32)|1;
@@ -1221,7 +1222,7 @@ static int rc_insert(myl_native_heap *heap, myl_native_dictionary *dict, const v
 int myl_rc_dictionary_overwrite(myl_native_heap *heap, myl_native_dictionary *dict, const void *key, const void *value) {
     size_t at=find(dict,key).entry;
     if (at==NO_ENTRY) return 0;
-    return myl_rc_native_replace(heap,dict->value,entry_at(dict,at)+dict->value_offset,value,myl_native_header_region(dict));
+    return myl_rc_native_retain_replace(heap,dict->value,entry_at(dict,at)+dict->value_offset,value,myl_native_header_region(dict));
 }
 static int rc_pop_entry(myl_native_heap *heap, myl_native_dictionary *dict, located at, void *output, int key_result) {
     if (dict->entries->generation==UINT64_MAX) return -1;

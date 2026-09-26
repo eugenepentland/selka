@@ -171,8 +171,8 @@ int myl_rc_unique(const myl_native_heap *heap, const void *payload) {
     MYL_RC_STAT(heap, MYL_RC_STAT_UNIQUE_CHECK);
     if (!payload) return 1;
     uintptr_t mark = ((const myl_native_object *)payload - 1)->mark;
-    if (mark & MYL_NATIVE_OBJECT_IMMORTAL) return 0;
-    if (mark & MYL_NATIVE_OBJECT_ARENA) return !(mark & MYL_NATIVE_OBJECT_SHARED);
+    if (mark & (MYL_NATIVE_OBJECT_IMMORTAL | MYL_NATIVE_OBJECT_SHARED)) return 0;
+    if (mark & MYL_NATIVE_OBJECT_ARENA) return 1;
     myl_rc_invariant(heap && heap->rc && !(mark & MYL_RC_OBJECT_DYING));
     const myl_rc_object *object = (const myl_rc_object *)payload - 1;
     myl_rc_invariant(object->owners || object->holds);

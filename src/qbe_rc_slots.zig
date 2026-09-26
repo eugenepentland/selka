@@ -5,7 +5,7 @@ const typed = @import("typed.zig");
 /// Native emission failures shared with the main QBE emitter.
 pub const Error = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
 /// Which atomic runtime operation establishes the destination ownership.
-pub const Mode = enum { copy_empty, take_empty, replace_copy };
+pub const Mode = enum { copy_empty, retain_empty, take_empty, replace_copy };
 /// One ownership operation; region is an SSA value containing the target depth.
 pub const Transfer = struct {
     ty: typed.Type,
@@ -13,6 +13,8 @@ pub const Transfer = struct {
     source: usize,
     region: usize,
     mode: Mode,
+    /// The complete value ranges occupy distinct compiler-reserved buffers.
+    disjoint: bool = false,
 };
 /// One initialized frame value; guard names its 32-bit initialization slot.
 pub const OwnedSlot = struct {
@@ -37,6 +39,7 @@ pub fn Lower(comptime E: type) type {
         pub fn runtimeTransfer(self: *E, operation: Transfer) Error!void {
             const helper = switch (operation.mode) {
                 .copy_empty => "myl_rc_native_copy",
+                .retain_empty => "myl_rc_native_retain",
                 .take_empty => "myl_rc_native_take",
                 .replace_copy => "myl_rc_native_replace",
             };
@@ -69,7 +72,8 @@ pub fn Lower(comptime E: type) type {
     };
 }
 
-fn requireSuccess(comptime E: type, self: *E, result: usize) Error!void {
+/// Map a sticky RC refusal before any compiler ownership guard changes.
+pub fn requireSuccess(comptime E: type, self: *E, result: usize) Error!void {
     const branch = self.temp();
     const status = self.temp();
     const checked = self.temp();

@@ -536,9 +536,14 @@ static void sorting_and_partial_clone(void) {
     myl_rc_pin first={0}, second={0};
     assert(myl_rc_pin_acquire(&heap,a,&first)==MYL_RC_OK && myl_rc_pin_acquire(&heap,b,&second)==MYL_RC_OK);
     size_t live=heap.objects_live;
+    myl_native_list *fresh=myl_native_list_copy(&heap,parent), *published=NULL;
+    assert(fresh && *(void **)fresh->storage==a && owners(a)==3 && owners(b)==3);
+    const myl_native_type list_pointer={.size=sizeof(void *),.alignment=_Alignof(void *),.kind=MYL_NATIVE_POINTER,.collection_kind=1};
     b->capacity=1000000;
     heap.limit=heap.bytes;
-    assert(!myl_native_list_copy(&heap,parent));
+    assert(!myl_rc_native_publish(&heap,&list_pointer,&published,&fresh,0,MYL_RC_HISTORY_CHILDREN|MYL_RC_HISTORY_TAKE));
+    assert(!published && fresh && owners(a)==3 && owners(b)==3);
+    myl_rc_owner_release(&heap,fresh);
     assert(heap.objects_live==live && owners(a)==2 && owners(b)==2);
     b->capacity=4;
     heap.limit=64u<<20;
@@ -759,8 +764,8 @@ static void arena_append_refusal(void) {
     myl_rc_owner_release(&heap,leaf);
     finish(&heap);
 }
-/* spec-case: RC-DICTIONARY-1. Key/value and setdefault result publication share
- * one rollback journal, including heap owners in nested fresh arena clones. */
+/* spec-case: RC-DICTIONARY-1. Physical key/value and setdefault result retains
+ * share one rollback journal; an earlier language SHARE owns pin snapshots. */
 static void dictionary_publication_rollback(void) {
     myl_native_heap heap;
     init(&heap);
@@ -773,19 +778,19 @@ static void dictionary_publication_rollback(void) {
     assert(myl_native_list_append(&heap,value,&overflow));
     myl_rc_pin pin={0};
     assert(myl_rc_pin_acquire(&heap,value,&pin)==MYL_RC_OK);
-    ((myl_rc_object *)overflow-1)->owners=MYL_RC_COUNT_MAX;
+    ((myl_rc_object *)value-1)->owners=MYL_RC_COUNT_MAX;
     assert(myl_native_region_begin(&heap));
     myl_native_dictionary *dict=myl_native_dictionary_new(&heap,&pointer,&pointer,0);
     assert(dict && !myl_native_dictionary_write(&heap,dict,&key,&value));
     assert(myl_rc_take_failure(&heap)==MYL_RC_COUNT_LIMIT);
-    assert(owners(key)==1 && owners(leaf)==2 && owners(value)==1);
+    assert(owners(key)==1 && owners(leaf)==2 && owners(value)==MYL_RC_COUNT_MAX);
     myl_native_list *output=key;
     assert(!myl_native_dictionary_setdefault(&heap,dict,&key,&value,&output));
     assert(myl_rc_take_failure(&heap)==MYL_RC_COUNT_LIMIT);
     assert(output==key && owners(key)==1 && owners(leaf)==2 && !myl_native_dictionary_length(dict));
     myl_rc_native_abort(&heap,dict);
     myl_native_region_end(&heap);
-    ((myl_rc_object *)overflow-1)->owners=2;
+    ((myl_rc_object *)value-1)->owners=1;
     myl_rc_pin_release(&heap,&pin);
     myl_rc_owner_release(&heap,value);
     myl_rc_owner_release(&heap,overflow);

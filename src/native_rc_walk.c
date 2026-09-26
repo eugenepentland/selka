@@ -8,7 +8,7 @@ static void push(myl_native_heap *heap, const myl_rc_shape *shape, unsigned char
     *frame = (myl_rc_frame){.shape = shape, .address = address};
 }
 /* Frames keep the next child/index, not an expanded list of array elements. */
-enum { WALK_CLEAR, WALK_RELEASE, WALK_REGION };
+enum { WALK_CLEAR, WALK_RELEASE, WALK_REGION, WALK_UNLOAN };
 static unsigned walk(myl_native_heap *heap, unsigned action) {
     unsigned region = 0;
     while (heap->rc->walk.depth) {
@@ -22,8 +22,8 @@ static unsigned walk(myl_native_heap *heap, unsigned action) {
                 if (found > region) region = found;
             } else memset(frame->address, 0, sizeof payload);
             --heap->rc->walk.depth;
-            if (action == WALK_RELEASE) {
-                if (shape->kind == MYL_RC_SHAPE_HOLD_POINTER) {
+            if (action == WALK_RELEASE || action == WALK_UNLOAN) {
+                if (shape->kind == MYL_RC_SHAPE_HOLD_POINTER || action == WALK_UNLOAN) {
                     myl_rc_hold hold = {.payload = payload};
                     myl_rc_hold_release(heap, &hold);
                 } else myl_rc_edge_release(heap, payload);
@@ -137,6 +137,40 @@ void myl_rc_value_drop(myl_native_heap *heap, myl_rc_slot *slot) {
     myl_rc_edges_release(heap, slot->shape, slot->address, 1);
     memset(slot->address, 0, slot->shape->size);
     myl_rc_drain(heap);
+}
+void myl_rc_loan_drop(myl_native_heap *heap, const myl_rc_shape *source, void *address) {
+    myl_rc_invariant(heap && heap->rc && !heap->rc->walk.depth);
+    const myl_rc_shape *shape = myl_rc_shape_resolve(heap, source);
+    myl_rc_invariant(shape && (!shape->size || address));
+    push(heap, shape, address);
+    walk(heap, WALK_UNLOAN);
+    memset(address, 0, shape->size);
+    myl_rc_drain(heap);
+}
+/* Registration reserved the full inline depth, including count-free native
+ * records. Check every variant arm without reading a value or closing a token. */
+int myl_rc_native_has_unique(myl_native_heap *heap, const myl_native_type *type) {
+    myl_rc_invariant(heap && heap->rc && !heap->rc->walk.depth);
+    for (;;) {
+        if (type->kind == MYL_NATIVE_POINTER && type->collection_kind == 5 && type->element) {
+            const myl_rc_descriptor *body = myl_rc_descriptor_find(heap, type->element);
+            myl_rc_invariant(body != NULL);
+            if (body->finalize) { heap->rc->walk.depth = 0; return 1; }
+        }
+        if (type->kind == MYL_NATIVE_RESOURCE || type->kind == MYL_NATIVE_OWNED_BUFFER ||
+            type->kind == MYL_NATIVE_OWNED_POOL) { heap->rc->walk.depth = 0; return 1; }
+        if (type->kind == MYL_NATIVE_RECORD || type->kind == MYL_NATIVE_VARIANT || type->kind == MYL_NATIVE_ARRAY) {
+            myl_rc_invariant(heap->rc->walk.depth < heap->rc->walk.capacity);
+            heap->rc->walk.frames[heap->rc->walk.depth++] = (myl_rc_frame){.type = type};
+        }
+        for (;;) {
+            if (!heap->rc->walk.depth) return 0;
+            myl_rc_frame *frame = &heap->rc->walk.frames[heap->rc->walk.depth - 1];
+            size_t count = frame->type->kind == MYL_NATIVE_ARRAY ? (frame->type->count ? 1 : 0) : frame->type->field_count;
+            if (frame->cursor < count) { type = frame->type->fields[frame->cursor++].type; break; }
+            --heap->rc->walk.depth;
+        }
+    }
 }
 void myl_rc_value_relocate(myl_rc_slot *destination, myl_rc_slot *source) {
     myl_rc_invariant(destination && source && destination->shape && source->shape);

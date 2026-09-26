@@ -1,0 +1,12 @@
+def clone_during(target: mut dict[int,int], source: dict[int,dict[int,int]]) -> dict[int,dict[int,int]]:
+    target[1] = target[1]
+    return source.copy()
+def main(out: Stream) -> int:
+    original = {0:{1:7}}
+    copied = clone_during(mut original[0], original)
+    live = copied[0].values()
+    copied[0][1] = 13
+    out.print(list(live))
+    out.print(copied[0][1])
+    out.print(original[0][1])
+    return 0

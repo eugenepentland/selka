@@ -10,7 +10,7 @@ pub const Error = frame.Error;
 pub fn after(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "op")) Error!void {
     const state = frame.get(E, self) orelse return;
     if (op != .store_local or @import("qbe_rc_borrow.zig").active(E, self)) return;
-    for (state.locals.edges) |edge| {
+    for (state.plan.locals.edges) |edge| {
         if (edge.from != self.pc or edge.to != self.pc + 1) continue;
         for (edge.releases) |release| {
             const index = @backingInt(release.storage);

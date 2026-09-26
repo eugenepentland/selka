@@ -29,7 +29,16 @@ fn ordinary(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "op
         .value_copy => |copy| {
             if (!try state_model.owns(state, copy.ty)) return true;
             const base = stack.len - 1;
-            try values.prepareOperand(E, self, copy.ty, base);
+            if (!@import("qbe_value_copy.zig").Lower(E).copies(self, self.pc)) return true;
+            if (try @import("qbe_rc_loans.zig").eligible(E, self, copy.ty)) {
+                const history = @import("qbe_rc_history.zig");
+                try history.prepare(E, self, .{
+                    .ty = copy.ty,
+                    .source = try values.source(E, self, base, copy.ty),
+                    .journal = values.journalIndex(E, self, base),
+                    .mode = history.mode(E, self, copy),
+                });
+            } else try values.prepareOperand(E, self, copy.ty, base);
             try values.publish(E, self, copy.ty, base);
         },
         .store_local => |local| {
@@ -69,7 +78,9 @@ fn store(comptime E: type, self: *E, index: usize, operand: usize) Error!void {
         try self.print(" storel %v{d}, %l{d}\n", .{ value, index });
         return;
     }
-    try values.prepareOperand(E, self, ty, operand);
+    if (self.function.scope.locals[index].usage.temporary and !self.callerStorage(index)) {
+        try values.preparePrivate(E, self, ty, try values.source(E, self, operand, ty), values.journalIndex(E, self, operand));
+    } else try values.prepareOperand(E, self, ty, operand);
     const destination = self.temp();
     if (self.callerStorage(index)) {
         try self.print(" %v{d} =l loadl %l{d}\n", .{ destination, index });
@@ -88,7 +99,8 @@ fn store(comptime E: type, self: *E, index: usize, operand: usize) Error!void {
     if (!self.callerStorage(index)) {
         // This local may previously have held an H receiver token. The new
         // publication is an ordinary owning value, so restore its typed role.
-        if (@import("qbe_rc_holds.zig").mayHold(E, self, ty)) try frame.entry(E, self, index, ty, destination);
+        try frame.entry(E, self, index, ty, destination);
+        try @import("qbe_rc_loans.zig").copyRole(E, self, index, frame.pending(E, self));
         try frame.initialized(E, self, index, true);
     }
 }
@@ -106,6 +118,8 @@ fn move(comptime E: type, self: *E, index: usize, operand_index: usize) Error!vo
     const address = self.temp();
     const operation: []const u8 = if (self.byReference(index) or self.callerStorage(index)) "loadl" else "copy";
     try self.print(" %v{d} =l {s} %l{d}\n", .{ address, operation, index });
-    try values.prepareGuarded(E, self, ty, address, index);
+    if (self.function.scope.locals[index].usage.temporary and !self.callerStorage(index)) {
+        try values.preparePrivate(E, self, ty, address, index);
+    } else try values.prepareGuarded(E, self, ty, address, index);
     try values.publish(E, self, ty, operand_index);
 }

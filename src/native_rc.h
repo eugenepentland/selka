@@ -1,9 +1,9 @@
 #ifndef MYLANG_NATIVE_RC_H
 #define MYLANG_NATIVE_RC_H
 #include "native_heap.h"
-/* RC-v1 is an artifact/heap ABI, never a property inferred from an arbitrary
+/* The versioned RC artifact/heap ABI is never inferred from an arbitrary
  * pointer. GC, arena and immortal objects keep their 16-byte common header. */
-#define MYL_RC_ABI_VERSION 2u
+#define MYL_RC_ABI_VERSION 3u
 #define MYL_RC_PREFIX_BYTES ((size_t)32)
 #define MYL_RC_COUNT_MAX UINTPTR_MAX
 #define MYL_RC_COUNT_LIMIT_CODE "R_REFERENCE_COUNT_LIMIT"
@@ -213,7 +213,7 @@ typedef struct myl_rc_scope {
     void *journal;
     unsigned active, region;
 } myl_rc_scope;
-typedef struct { const myl_rc_shape *shape; size_t offset; } myl_rc_projection;
+typedef struct { const myl_rc_shape *shape; size_t offset; unsigned immutable_box; } myl_rc_projection;
 typedef struct {
     myl_rc_slot receiver;
     const myl_rc_projection *path;
@@ -235,6 +235,9 @@ void myl_rc_scope_unwind(myl_native_heap *, myl_rc_scope *checkpoint);
 /* Uniqueness slots contain one managed payload pointer, never an inline
  * aggregate. The caller zero-initializes edit; failure leaves it empty. */
 myl_rc_status myl_rc_unique_owned(myl_native_heap *, myl_rc_slot *);
+/* Immutable body writes always detach, preserving older region and committing
+ * semantic history on reused mutable children, even without ordinary aliases. */
+myl_rc_status myl_rc_box_detach_owned(myl_native_heap *, myl_rc_slot *);
 /* An initialized HOLD_POINTER slot remains H after uniqueness detaches it.
  * Refusal leaves the original token and slot intact. */
 myl_rc_status myl_rc_unique_held(myl_native_heap *, myl_rc_slot *);

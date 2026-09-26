@@ -69,8 +69,8 @@ pub fn after(comptime E: type, self: *E, op: Op, stack: []const typed.Type) Erro
 
 fn entry(comptime E: type, self: *E, ty: typed.Type, index: usize, address: usize) Error!void {
     try frame.entry(E, self, index, ty, address);
-    const at = self.temp();
-    try self.print(" %v{d} =l add %rcentries, {d}\n storew {d}, %v{d}\n", .{ at, index * frame.entry_bytes + 24, holds.flag, at });
+    const at = try frame.entryField(E, self, index, 24);
+    try self.print(" storew {d}, %v{d}\n", .{ holds.flag, at });
     try frame.initialized(E, self, index, true);
 }
 
@@ -132,12 +132,6 @@ pub fn local(comptime E: type, self: *E, op: Op, stack: []const typed.Type) Erro
             }
             const label = try branch(E, self, values.journalIndex(E, self, operand));
             try store(E, self, target.ty, index, operand);
-            try ordinary(E, self, label);
-            return .{ .ordinary = label };
-        },
-        .value_copy => |copy| {
-            if (copy.site != .assign or !holds.mayHold(E, self, copy.ty)) return .unhandled;
-            const label = try branch(E, self, values.journalIndex(E, self, stack.len - 1));
             try ordinary(E, self, label);
             return .{ .ordinary = label };
         },

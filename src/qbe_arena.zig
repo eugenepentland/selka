@@ -93,7 +93,7 @@ fn emitEnd(comptime E: type, self: *E, watermark: usize) Error!void {
     // Restore this region's receiver pins and release inner owned tokens before
     // either clearing their physical slots or returning arena chunks for reuse.
     if (@import("qbe_rc_frame.zig").get(E, self) != null)
-        try self.print(" call $myl_qbe_rc_arena_prepare(l %ctx, l %rcframe, l {d})\n", .{scanned});
+        try self.print(" call $myl_qbe_rc_arena_prepare(l %ctx, l %rcframe, l {d})\n", .{try @import("qbe_rc_frame.zig").watermark(E, self, scanned)});
     // Bindings introduced inside the block die with it; clearing their slots keeps
     // a released arena object out of the next frame-root scan.
     var index = locals.len;
