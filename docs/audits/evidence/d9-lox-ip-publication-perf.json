@@ -1,0 +1,130 @@
+{
+  "experiment": "Lox instruction-pointer publication, equality N=30000",
+  "cpu": 11,
+  "statistic": "median of three instructions:u",
+  "guest_mode": "ReleaseFast; LLVM opt3 full LTO",
+  "compiler_changes": "8a31f237 plus cold-return change subsequently committed as 2b889ba5; confirmed from emitted aggregate-return IL",
+  "compiler_mode": "Debug",
+  "compiler_sha256": "5139b78f0d4da0c5e34ad563e9d503763fbc1669c1e76e69e7c1041c75e5ec66",
+  "baseline_compiler_commit": "60b668cf",
+  "baseline_compiler_sha256": "48427e9ac1c01b74e60d1b4c098c8fc149a6b5fef3c07e110c7fb4ba16cbb545",
+  "source_sha256": {
+    "ast.my": "e210fb35bf3125ba06ebb978bcb3592162020a77576542f2d049879a51479bf9",
+    "chunk.my": "b4f6e7ae6531b224f99e026f53fee3692c90d8f2b15d3c76ca5962f1803e4b66",
+    "compiler.my": "c550603195401ff6d9436b42d6fbf0c35051521da57e7b85281fc8fcf6ebe048",
+    "compiler_test.my": "582fe817dbeffa709961b5124370ce200510adb3ac0d246572ca1c0dc19ec08a",
+    "driver.my": "fe831d2ec08833d11139e790ab741903b27a8e0fb43582cac11ca664b4595836",
+    "driver_tests.my": "9eace4f6c8b33fd93331297f8a8195c41357b7c833b2e06e0c20594704113925",
+    "heap.my": "da676ca87bb8bad8b39f0df29e24f7dd48e11cad825eb43cdc2463b8039d4aee",
+    "heap_test.my": "c951153991a8d5d13ca1df6ded7c6f26c7b43a08ed2095f72c6091637b29b53f",
+    "interpreter.my": "2df9a4ca818ae77d842ab17a773fa3b628dfcf8a16a0528daccd61806a2478db",
+    "lox_strings.my": "383900dda10b9218caf2087e12a2e20089e4d48b0ec5fc3e17e960a3d70d83df",
+    "lox_strings_test.my": "a44545c64e9f75cc5af761d6c703feec83c4fc0a14d2678a1b2fce28067bd0c0",
+    "main.my": "18c1f669b1683123e635256c9f66c6db2766383391371c3822e61df7d9732274",
+    "natives.my": "2ff45343fded6d303e6233e0f787e63c319e860903e2c0c81ccbb71c2749d665",
+    "object.my": "08c0d5c6ae304ef4d0e1f5929f52b5d1dd47cd46e6c409392c0b5b1df9567ad7",
+    "output.my": "cdc79c8a9a5eca0106fb139bca5492da201f027b0499e5e00a492368317d194c",
+    "parser.my": "e9bd5d9c37e307d060ce165dc4fa0f276c2ff9dbe7cb21bd27cbdd94644b4edd",
+    "parser_test.my": "ffe2658f030c75b40a7c54d8f0c64e848e6679e13fc69cbef9a131ed7b120e4b",
+    "resolver.my": "41d41b2a1ddb3f6ab3fb73ad9eff69415b0450d890554766bfee37eac8d0903d",
+    "resolver_test.my": "72c5176ff15db240d8ec8ff8073fcdb7736e8c60ab47410bb60fce934c179d31",
+    "scanner.my": "af4bc6a57859318051dc47d6e1f6344ee98fbfff037e9be93c0a103765cd3e83",
+    "scanner_test.my": "1d7fbb34b0de402657786641217e81c9ae286cab14baf2716de2db875ae39ad0",
+    "table.my": "c875ae493dbc0d6c1b70202746b0f1d2211190fa1276b9d492778455c0d0b2ca",
+    "table_test.my": "38279f9135e953484e6844994bc070c4156d1eb31ab4de0f295efbea17c19555",
+    "value.my": "3b2a444e77c6a703b1aedad3c89ef38cad70aa3bb6cba1716b623980ff9a76b0",
+    "value_test.my": "b766d22b25a8a8a090b4a059030cfc7462022fdacb66a0a91bf8a9e09a53fed4",
+    "vm.my": "3d66fdd9b085dd0aeb7b47ab709c92db58cc131132b5dd31b7e96934eea9f309"
+  },
+  "script": "var N = 30000;\nvar i = 0;\n\nwhile (i < N) {\n  i = i + 1;\n\n  1; 1; 1; 2; 1; nil; 1; \"str\"; 1; true;\n  nil; nil; nil; 1; nil; \"str\"; nil; true;\n  true; true; true; 1; true; false; true; \"str\"; true; nil;\n  \"str\"; \"str\"; \"str\"; \"stru\"; \"str\"; 1; \"str\"; nil; \"str\"; true;\n}\n\ni = 0;\nwhile (i < N) {\n  i = i + 1;\n\n  1 == 1; 1 == 2; 1 == nil; 1 == \"str\"; 1 == true;\n  nil == nil; nil == 1; nil == \"str\"; nil == true;\n  true == true; true == 1; true == false; true == \"str\"; true == nil;\n  \"str\" == \"str\"; \"str\" == \"stru\"; \"str\" == 1; \"str\" == nil; \"str\" == true;\n}\n\nprint i;\n",
+  "baseline": {
+    "qbe": {
+      "binary_sha256": "6473a9596ed692049cd4a88b344f54030b46a15d591b36cca82cef64ae8cd59f",
+      "runs": [
+        {
+          "instructions": 1018578411,
+          "stdout": "30000\n",
+          "exit": 0
+        },
+        {
+          "instructions": 1018578412,
+          "stdout": "30000\n",
+          "exit": 0
+        },
+        {
+          "instructions": 1018578413,
+          "stdout": "30000\n",
+          "exit": 0
+        }
+      ],
+      "median": 1018578412
+    },
+    "llvm": {
+      "binary_sha256": "61621ee380e5562967b53d6ba81c54fe28ceb2adc22ad6fa943e6772b7887fa0",
+      "runs": [
+        {
+          "instructions": 346981117,
+          "stdout": "30000\n",
+          "exit": 0
+        },
+        {
+          "instructions": 346981113,
+          "stdout": "30000\n",
+          "exit": 0
+        },
+        {
+          "instructions": 346981117,
+          "stdout": "30000\n",
+          "exit": 0
+        }
+      ],
+      "median": 346981117
+    }
+  },
+  "candidate": {
+    "qbe": {
+      "binary_sha256": "3efc9ab5f4bbf05a1f7335b183a23a3c8152ec5ef67125be58a2a278730d3b9c",
+      "runs": [
+        {
+          "instructions": 1103706551,
+          "stdout": "30000\n",
+          "exit": 0
+        },
+        {
+          "instructions": 1103706544,
+          "stdout": "30000\n",
+          "exit": 0
+        },
+        {
+          "instructions": 1103706548,
+          "stdout": "30000\n",
+          "exit": 0
+        }
+      ],
+      "median": 1103706548,
+      "ratio": 1.0835754370965405
+    },
+    "llvm": {
+      "binary_sha256": "be85b88360504e006415ff7a13d76e20195b04946196ab5a27637d315c3667ab",
+      "runs": [
+        {
+          "instructions": 416046170,
+          "stdout": "30000\n",
+          "exit": 0
+        },
+        {
+          "instructions": 416046170,
+          "stdout": "30000\n",
+          "exit": 0
+        },
+        {
+          "instructions": 416046178,
+          "stdout": "30000\n",
+          "exit": 0
+        }
+      ],
+      "median": 416046170,
+      "ratio": 1.1990455665055686
+    }
+  }
+}
