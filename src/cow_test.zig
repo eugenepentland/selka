@@ -88,6 +88,30 @@ test "copy on write: payload return copies straight into the private transfer sc
     try std.testing.expect(count(il, "call $myl_qbe_cow_transfer(") > 0);
 }
 
+// spec: QBE-VALUECOPY-ROOTS-1
+test "copy on write: inline transfer publishes roots only in its allocating fallback" {
+    const saved = value_semantics.enabled();
+    value_semantics.setEnabled(true);
+    defer value_semantics.setEnabled(saved);
+    const source =
+        \\def snapshot(xs: list[int]) -> list[int]:
+        \\    return xs
+        \\
+        \\def main() -> int:
+        \\    return len(snapshot([1]))
+    ;
+    const a = std.testing.allocator;
+    const il = try unitText(a, source, "snapshot", checks);
+    defer a.free(il);
+    const slow = std.mem.indexOf(u8, il, "\n@vcslow") orelse return error.TestUnexpectedResult;
+    const publication = std.mem.indexOf(u8, il, " storel %root0,") orelse return error.TestUnexpectedResult;
+    const call = std.mem.indexOf(u8, il, "call $myl_qbe_cow_transfer(") orelse return error.TestUnexpectedResult;
+    const done = std.mem.indexOf(u8, il, "\n@vcdone") orelse return error.TestUnexpectedResult;
+    try std.testing.expect(slow < publication and publication < call and call < done);
+    try std.testing.expectEqual(@as(usize, 0), count(il[0..slow], " storel %root"));
+    try std.testing.expectEqual(@as(usize, 1), count(il[call..done], " storel %root_mark,"));
+}
+
 // spec: COW-SHARED-1
 test "copy on write: a copy transfer shares the list and the first write through either name copies it" {
     try std.testing.expectEqual(@as(i64, 23), try run(std.testing.allocator, assigned, false));
