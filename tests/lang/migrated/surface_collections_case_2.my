@@ -5,5 +5,6 @@ public def program() -> i64:
     values: list[i64] = []
     alias = values
     alias.append(10)
+    values = alias
     values[0] = 41
-    return alias[0] + len(values)
+    return values[0] + len(values)

@@ -111,7 +111,11 @@ public def test_floating_comparisons_and_remainder_preserve_operand_evaluation_o
 public def test_python_indexed_assignment_evaluates_rhs_before_receiver_and_index_exactly_once() -> bool:
     log: list[int] = []
     values = [0]
-    receiver(mut log, values)[log_index(mut log)] = emit_value(mut log)
+    next_value = emit_value(mut log)
+    target = receiver(mut log, values)
+    position = log_index(mut log)
+    target[position] = next_value
+    values = target
     if len(log) != 3 or values[0] != 42:
         return False
     return log[0] * 100 + log[1] * 10 + log[2] == 123

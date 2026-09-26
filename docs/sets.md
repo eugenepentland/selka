@@ -62,14 +62,16 @@ def main() -> int:
     names = {"ada", "bob"}
     alias = names
     tag(mut alias, "cy")
-    names.discard("zed")
-    names.remove("bob")
-    newest = names.pop()
-    if newest != "cy" or "cy" in names:
+    if "cy" in names:
         return 1
-    backup = names.copy()
-    names.update({"dee", "eve"})
-    names.clear()
+    alias.discard("zed")
+    alias.remove("bob")
+    newest = alias.pop()
+    if newest != "cy" or "cy" in alias:
+        return 1
+    backup = alias.copy()
+    alias.update({"dee", "eve"})
+    alias.clear()
     total = 0
     for name in backup:
         total += len(name)

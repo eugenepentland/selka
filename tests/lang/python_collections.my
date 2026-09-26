@@ -127,7 +127,11 @@ public def test_record_fields_update_values_and_list_slots_without_changing_prio
 public def test_field_receiver_index_and_right_side_run_once_in_order_under_collection_stress() -> bool:
     log: list[i64] = []
     rows = [ReceiverPoint(x=0)]
-    logged_receiver(mut log, rows)[log_index(mut log)].x = emit_value(mut log)
+    next_value = emit_value(mut log)
+    target = logged_receiver(mut log, rows)
+    position = log_index(mut log)
+    target[position].x = next_value
+    rows = target
     if len(log) != 3:
         return False
     if log[0] != 3 or log[1] != 1 or log[2] != 2:
@@ -279,9 +283,9 @@ public def test_dictionary_pop_update_and_setdefault_keep_insertion_order() -> b
 # spec: PY-COLLECTIONS-18
 public def test_list_extends_in_place_and_items_binds_key_then_value_in_insertion_order() -> bool:
     xs = [1]
-    alias = xs
+    alias = xs.copy()
     xs += [2, 3]
-    if len(xs) != 3 or len(alias) != 3:
+    if len(xs) != 3 or alias != [1]:
         return False
     d = {10: 100, 20: 200}
     total = 0

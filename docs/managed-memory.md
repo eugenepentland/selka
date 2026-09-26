@@ -7,19 +7,23 @@ escape hatch, and they change *when* managed objects are freed rather than how
 they are written.
 
 ```mylang
-# doc: expect 42
+# doc: value-semantics
+# doc: expect 1
+# doc: expect 2
 def main(out: Stream) -> int:
-    values: list[int] = []
+    values: list[int] = [1]
     alias = values
     alias.append(42)
-    out.print(values[0])
+    out.print(len(values))
+    out.print(len(alias))
     return 0
 ```
 
-A list assignment or function argument copies a shared reference, so every alias
-observes the same mutations. Appending grows capacity automatically. Reading
-returns a value snapshot, including shared references in its fields; it never exposes an interior pointer into growable storage. Independent
-containers require explicit construction and copying of their elements.
+A list assignment or function argument transfers a value. The implementation
+may share backing storage until a write, but writing `alias` leaves `values`
+unchanged. Appending grows capacity automatically. Reading returns a value
+snapshot, never an interior pointer into growable storage. Use a `mut`
+parameter with a marked call when a helper must change its caller's value.
 
 Use `list[Node]` for application collections and `nodes: list[Node] = []`
 for an empty list. Read with `nodes[index]`, write with `nodes[index] = value`,
@@ -33,7 +37,8 @@ with cleanup, rather than returning a recoverable collection result. Keep
 application cardinality checks where input limits are part of its contract.
 
 List elements can be ordinary copyable values, records, and other managed lists.
-Recursive graphs through list references are supported:
+Recursive record types are supported, but stored values are independent; use
+explicit pool handles for identity-bearing graphs:
 
 ```text
 record Node:
@@ -41,12 +46,12 @@ record Node:
     children: list[Node]
 ```
 
-`record` retains value semantics, while `class` is a GC-managed reference record:
-assignment, argument passing and field reads share one object, so a field write through
-a class parameter reaches the caller's object. Capturing closures and managed hash maps
+`record` and its mutable managed fields are values. The builtin `Cell` and
+legacy `class` are rejected; replace identity-bearing
+graphs with records plus stable ids in a pool or object table. Capturing closures
 remain absent. Byte literals and the managed
 [`bytes`](bytes.md) type keep their documented behavior. Owned resources, provider
-capabilities, and must-handle results cannot be hidden inside freely aliased
+capabilities, and must-handle results cannot be hidden inside copyable
 lists. There are no interior pointers into managed storage. Host invocation, JSON encoding
 of managed graphs, and QBE native emission reject unsupported managed boundaries;
 ordinary scalar host calls from managed applications still work.
@@ -86,14 +91,15 @@ application and normal/stress SVG comparison.
 
 `list[T]` is the growable sequence application code reaches for. Its storage lives
 on the tracing heap, so there is no allocator argument to thread and no free to
-write. Assignment and argument passing copy a reference rather than the contents,
-so every alias observes the same appends and slot writes. Elements must be
+write. Assignment and argument passing preserve the value independently, with
+copy-on-write backing where possible. Elements must be
 copyable storable values — scalars, records, strings, byte strings and other
 managed collections — which keeps owned resources, provider capabilities and
-unchecked results out of freely aliased storage. Reading an element yields a
+unchecked results out of copyable storage. Reading an element yields a
 snapshot of that value, never an interior pointer into growable storage.
 
 ```mylang
+# doc: value-semantics
 # doc: expect 42
 def widen(target: mut list[int]) -> None:
     target.append(2)
@@ -104,6 +110,8 @@ def main() -> int:
     widen(mut alias)
     return values[0] + alias[1]
 ```
+
+Here `widen(mut alias)` changes `alias` to `[40, 2]`; `values` remains `[40]`.
 
 ## List methods and indexing
 
@@ -128,8 +136,8 @@ index outside the list traps with a located `R_LIST_BOUNDS` instead of returning
 default. Receivers may be arbitrary expressions and nested indexes work; the
 receiver, the index and the assigned value are each evaluated exactly once, and a
 Python-surface indexed write evaluates the assigned value before the target it
-writes into. `values += other` extends the receiver in place, so aliases observe
-the added elements. Ordering helpers also live in the
+writes into. `values += other` extends the receiver value; an earlier copy
+retains its contents. Ordering helpers also live in the
 [`sort` module](standard-library.md#sort), which returns new lists and leaves its
 input untouched.
 
@@ -166,9 +174,8 @@ nothing to infer from: it takes its type from an annotation, field, parameter or
 return type, and otherwise reports `E_LIST_INFERENCE`. `values[start:end]` copies
 the selected elements into a fresh list — negative endpoints count from the end,
 both endpoints clamp to the list, a reversed interval produces an empty list, and
-an omitted endpoint means the start or the end. The copy is shallow: the new list
-owns its own storage, but records and nested collections inside it are still
-shared with the original.
+an omitted endpoint means the start or the end. The new list and its managed
+elements remain independent on later writes.
 
 ```mylang
 # doc: expect 42
@@ -195,7 +202,7 @@ rewriting an existing key leaves that key in its original position. A key is any
 [hashable](sets.md#hashable-keys) value — an integer, `bool`, `str`, `bytes`, or a
 tuple, record, union, enum, domain, `Option` or fixed array built only from those —
 hashed and compared structurally and copied into the table; a `float`, list, dict,
-set, `byte_buffer`, `class` or function key is rejected with `E_DICT_KEY` naming the
+set, `byte_buffer` or function key is rejected with `E_DICT_KEY` naming the
 offending part. Values are any copyable storable
 type, including lists and other dictionaries. `counts[key]` traps with
 `R_MISSING_KEY` when the key is absent, so `counts.get(key, fallback)` is the
@@ -210,8 +217,8 @@ fallback; `counts.copy()` returns a fresh shallow dictionary; and
 `R_MISSING_KEY`. `counts.items()` yields `DictItem[K, V]` value records with `key`
 and `value` fields. A two-name loop `for name, value in counts.items()` unpacks
 those fields. The same behavior applies to a view held in a variable, returned
-from a helper, or passed as a parameter. A dictionary is shared by assignment
-exactly as a list is.
+from a helper, or passed as a parameter. Assignment copies a dictionary value;
+only a `mut` parameter and marked call write back to a caller.
 
 The view types are `DictKeys[K, V]`, `DictValues[K, V]` and `DictItems[K, V]`.
 They retain their dictionary, report its current size through `len`, and iterate
@@ -291,7 +298,7 @@ the position, and
 `for index in range(end)` or `range(start, end)` counts integers; there is no step
 argument. `break` and `continue` carry their Python meanings. A loop fixes its
 bound when it starts and rechecks it before each step, so changing the
-collection's length through an alias during iteration traps with
+collection's length through the iterated place during iteration traps with
 `R_LIST_ITERATION_MUTATION` rather than reading past the end.
 
 ```mylang
@@ -331,12 +338,10 @@ equal element, a dictionary for a key, a string for a substring, and a byte
 string for a single octet or a contiguous subsequence. The needle is evaluated
 before the container, and each is evaluated exactly once. `==` and `!=` compare
 contents rather than identities, recursing through nested lists, dictionaries,
-plain records, fixed arrays, unions, `Result` and `Option` values with cycle
-detection so a self-referential graph still terminates; dictionary equality
-ignores insertion order. A managed `class` is the one exception: it compares by
-reference identity, so two separately built instances with equal fields are not
-equal, while a value is always equal to itself. A type that reaches a callback,
-`Cell` or resource has no equality at all and is rejected with `E_TYPE`. There is
+plain records, fixed arrays, unions, `Result` and `Option` values; dictionary
+equality ignores insertion order. A type that reaches a callback or resource
+has no equality and is rejected with `E_TYPE`. Legacy `class` identity and
+builtin `Cell` are available only in compatibility mode. There is
 no identity comparison operator, so two separately built lists holding equal
 elements are equal.
 
@@ -369,9 +374,10 @@ def main() -> int:
 ```
 
 Aggregates compare the same way. Records, fixed arrays, unions, `Result` and
-`Option` compare structurally; a class compares by reference identity:
+`Option` compare structurally. Use a pool handle when identity must be compared:
 
 ```mylang
+# doc: value-semantics
 # doc: expect 42
 record Point:
     x: int
@@ -384,7 +390,7 @@ union Shape:
     point: Point
 
 
-class Node:
+record Node:
     value: int
 
 
@@ -393,7 +399,7 @@ def main() -> int:
         return 1
     if Shape.radius(4) == Shape.point(Point(x=4, y=0)):
         return 2
-    if Node(value=1) == Node(value=1):
+    if Node(value=1) != Node(value=1):
         return 3
     first = Node(value=1)
     if first != first:
@@ -487,16 +493,22 @@ allocation without the program saying anything.
 
 ## Reclaiming cycles
 
+Ordinary value programs cannot construct a mutable cycle through assignments
+or container stores. Identity-bearing graphs use explicit pool handles. The
+tracing collector still handles cycles made by programs run with
+`--legacy-sharing` during the migration release.
+
 Reference counts on execution values exist to protect temporary roots — operands,
 intermediate results and retained aggregate snapshots — across an allocation that
 might collect. They are not the reclamation algorithm. Collection subtracts the
 edges internal to the managed graph, marks what the remaining roots reach and
 sweeps the rest, so a cycle nothing outside points at is reclaimed like any other
 garbage, and sweeping releases every dead edge before freeing a single object
-header. Records are values rather than references, so a cycle is always formed
-through the managed collections their fields hold.
+header. In compatibility mode, records can hold collections whose shared
+references form a cycle.
 
 ```mylang
+# doc: legacy-sharing
 # doc: expect 42
 record Node:
     name: str
@@ -520,7 +532,7 @@ def main() -> int:
     return total + 2
 ```
 
-`left.peers` reaches `right.peers` and back again, so neither list can be freed by
+In compatibility mode, `left.peers` reaches `right.peers` and back again, so neither list can be freed by
 dropping a count to zero; each round of the loop leaves a whole cycle unreachable
 and the tracing pass collects it. The same program under `--gc-stress`, which
 collects at every safepoint, returns the same answer.

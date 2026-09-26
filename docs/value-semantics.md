@@ -1,11 +1,9 @@
 # Value semantics
 
-**Experimental and opt-in.** This is stage 3 of
-[D9](adr/D9-value-semantics-then-rc.md): value semantics on the current
-garbage-collected runtime, with copy-on-write for mutable collections. Without
-the switch nothing on this page applies,
-and the compiler behaves exactly as it does without it: `class`, `list` and
-`dict` values are shared references ([managed memory](managed-memory.md)).
+This is the default value model of
+[D9](adr/D9-value-semantics-then-rc.md) on the current garbage-collected runtime.
+The one-release compatibility mode restores the previous shared-reference
+behavior for code that has not yet migrated.
 
 Under value semantics every `list`, `dict`, `set` and `byte_buffer` is an
 independent value, like a record or an `int` already is. Assignment, argument
@@ -23,26 +21,22 @@ def main() -> int:
     return len(a) * 10 + len(b)
 ```
 
-This prints `12`: `b` is a copy of `a`, so appending to `b` leaves `a` with one
-element. Without the switch the same program prints `22`, because `b` and `a`
-name one list. The syntax is Python's; the meaning is not, which is why the
-switch exists and why the rules below turn the mistakes it invites into
-compile errors.
+This returns `12`: `b` is an independent value, so appending to `b` leaves `a`
+with one element. Compatibility mode returns `22` because the names share one
+list. The syntax resembles Python's; the value rule differs.
 
-## Turning it on
+## Selecting a mode
 
-- `--value-semantics` on `check`, `check-project`, `build`, `run`,
-  `run-project` and `test` (and on `emit-qbe`, `emit-project-qbe` and
-  `dump-bytecode` for inspection). It goes before any `--` that starts guest
-  arguments. Any other command refuses it (exit 2).
-- `"value_semantics": true` in the project's `mylang.json`
-  ([configuration](tooling/import-policy.md#configuration-shape)).
-- `MYLANG_VALUE_SEMANTICS=1` in the environment. This is how every child
-  compiler a command spawns — the build driver's frontend, the test runner's
-  builds — inherits the switch: a command turned on by the flag or the
-  configuration restarts itself with the variable set.
+- Value semantics need no flag. `--value-semantics` remains an explicit spelling
+  for scripts that already use it.
+- `--legacy-sharing` temporarily selects the old shared-reference behavior on
+  commands that accept the value-semantics flag.
+- `"value_semantics": false` in `mylang.json` or
+  `MYLANG_VALUE_SEMANTICS=0` in the environment selects compatibility mode;
+  `true` or `1` selects value semantics. A command-line flag takes priority over
+  the environment, then project configuration, then the default.
 
-The switch is part of every cache identity, so a cached check, object or test
+The selected mode is part of every cache identity, so a cached check, object or test
 result from one mode is never reused in the other. `.api` interface files do
 not change.
 
@@ -130,15 +124,15 @@ def main() -> int:
 ```
 
 A `match` on a call result binds the result itself, which nothing else holds.
-Under this switch a `class` declaration is `E_VALUE_CLASS`: use a record or
+Under the default mode a `class` declaration is `E_VALUE_CLASS`: use a record or
 recursive union for finite values, or a pool handle for stable graph identity.
 
 **Writing into a returned value is an error.** `lookup(table, key).items.append(1)`
 changes a temporary copy no name holds: `E_VALUE_TEMPORARY_WRITE`. Assign the
 result to a local, change it, and store it back.
 
-**No read-only/writable overlap errors.** `E_MUTATION_OVERLAP` is never
-reported under the switch, because a read-only argument is a value of its own.
+**No read-only/writable overlap errors.** `E_MUTATION_OVERLAP` is not
+reported for a read-only argument, because it is a value of its own.
 Where one could share storage with a `mut` argument of the same call, the
 compiler passes a copy taken before the call:
 
@@ -180,8 +174,8 @@ change goes to `row`, a copy of `rows[i]`; store the copy back after changing it
 - The builtin `Cell[T]` is `E_VALUE_CELL` in type positions and calls. A local
   mutable slot is a record changed through `mut`; a shared slot uses a pool
   handle. An ordinary user-defined record named `Cell` remains legal.
-- Without `--value-semantics`, existing classes and builtin Cells continue to
-  compile during the migration window.
+- Under `--legacy-sharing`, existing classes and builtin Cells continue to
+  compile during the one-release migration window.
 - `str` and `bytes` are immutable, so sharing them is invisible.
 
 ```mylang
@@ -209,7 +203,7 @@ leave it only through `escape` ([arenas](arenas.md#getting-a-result-out)). The
 static escape rules and runtime store barrier apply unchanged.
 
 `old(xs)` of a collection is accepted in an `@ensures` clause: the capture is a
-value of its own. The legacy checker still rejects an `old(...)` value that
+value of its own. The compatibility checker still rejects an `old(...)` value that
 reaches a `class` or builtin Cell with `E_CONTRACT_OLD_SHARED`
 ([contracts](contracts.md)).
 

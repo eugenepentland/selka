@@ -44,13 +44,13 @@ record Node:
 
 
 # spec-case: ARENA-MANAGED-2
-public def test_escape_preserves_a_cycle_through_a_record_field() -> bool:
+public def test_escape_preserves_nested_record_children() -> bool:
     kept: list[Node] = []
     with arena() as scratch:
         nodes: list[Node] = []
-        nodes.append(Node(value=5, links=nodes))
+        nodes.append(Node(value=5, links=[Node(value=1, links=[])]))
         kept = scratch.escape(nodes)
-    return kept[0].value + len(kept[0].links) == 6
+    return kept[0].value + kept[0].links[0].value == 6
 
 
 def solve(limit: int) -> list[int]:
@@ -66,14 +66,14 @@ public def test_an_escaped_copy_may_be_returned_from_the_outermost_arena_scope()
 
 
 # spec-case: ARENA-MANAGED-2
-public def test_escape_shares_objects_that_already_live_in_the_enclosing_region() -> bool:
+public def test_escape_keeps_an_independent_outer_region_snapshot() -> bool:
     older: list[int] = [4]
     kept: list[list[int]] = []
     with arena() as scratch:
-        holder: list[list[int]] = [older]
+        holder: list[list[int]] = [older.copy()]
         kept = scratch.escape(holder)
     older.append(5)
-    return len(kept[0]) * 10 + kept[0][1] == 25
+    return len(kept[0]) == 1 and kept[0][0] == 4 and older == [4, 5]
 
 
 def risky(flag: int) -> Result[int, int]:
