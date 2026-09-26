@@ -938,6 +938,7 @@ const Checker = struct {
         // `node.literal == ...` and `node.kind == Kind.atom("x")` can hint the
         // constructor on the other operand the way a plain binding does.
         if (node.data == .field) if (self.obviousFieldType(node.data.field.base, node.data.field.name)) |field_ty| return field_ty;
+        if (node.data == .index) return self.obviousIndexType(node.data.index.base);
         if (node.data == .integer and float_syntax.isLiteral(self.src.text(node.data.integer))) return self.catalog.names.get("float");
         return null;
     }
@@ -953,6 +954,18 @@ const Checker = struct {
         const declared = self.catalog.records[index].fields;
         if (slot >= declared.len) return null;
         return declared[slot].ty;
+    }
+    // Index expressions need no evaluation to recover a collection's declared
+    // element type. This also lets a following field continue the hint path.
+    fn obviousIndexType(self: *Checker, base_id: ast.NodeId) ?typed.Type {
+        const base = self.obviousType(base_id) orelse return null;
+        if (!base.isAggregate()) return null;
+        const index = base.recordIndex();
+        if (index >= self.catalog.records.len) return null;
+        const schema = self.catalog.records[index];
+        if (schema.shape.array) |array| return array.element;
+        if (schema.collection.kind == .list or schema.collection.kind == .dictionary) return schema.shape.buffer;
+        return null;
     }
     /// Give a binary operator's untyped operand the type of its typed side or context.
     pub fn hintBinary(self: *Checker, node: ast.Node) Error!void {
