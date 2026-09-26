@@ -30,7 +30,7 @@ typedef struct {
     myl_rc_transfer mode;
     clone_work *clones;
 } transfer_walk;
-typedef myl_rc_status (*pointer_action)(transfer_walk *, unsigned char *, const unsigned char *);
+typedef myl_rc_status (*pointer_action)(transfer_walk *, unsigned char *, const unsigned char *, myl_rc_shape_kind);
 
 static void push(transfer_walk *walk, const myl_rc_shape *shape, unsigned char *destination, const unsigned char *source) {
     if (shape->kind == MYL_RC_SHAPE_NONE) return;
@@ -42,13 +42,14 @@ static void push(transfer_walk *walk, const myl_rc_shape *shape, unsigned char *
 static myl_rc_status visit(transfer_walk *walk, const myl_rc_shape *shape, void *destination,
                            const void *source, pointer_action action) {
     walk->depth = 0;
-    if (shape->kind == MYL_RC_SHAPE_POINTER) return action(walk, destination, source);
+    if (shape->kind == MYL_RC_SHAPE_POINTER || shape->kind == MYL_RC_SHAPE_HOLD_POINTER)
+        return action(walk, destination, source, shape->kind);
     push(walk, shape, destination, source);
     while (walk->depth) {
         transfer_frame *frame = &walk->frames[walk->depth - 1];
         shape = frame->shape;
-        if (shape->kind == MYL_RC_SHAPE_POINTER) {
-            myl_rc_status status = action(walk, frame->destination, frame->source);
+        if (shape->kind == MYL_RC_SHAPE_POINTER || shape->kind == MYL_RC_SHAPE_HOLD_POINTER) {
+            myl_rc_status status = action(walk, frame->destination, frame->source, shape->kind);
             if (status != MYL_RC_OK) { walk->depth = 0; return status; }
             --walk->depth;
         } else if (shape->kind == MYL_RC_SHAPE_ARRAY) {
@@ -172,9 +173,33 @@ static myl_rc_status schedule_clone(transfer_walk *walk, const void *payload, un
     *out = copy;
     return MYL_RC_OK;
 }
-static myl_rc_status transfer_pointer(transfer_walk *walk, unsigned char *destination, const unsigned char *source) {
+/* H-token escape preserves live identity in the same/older region. Only a
+ * younger arena referent needs a snapshot: its fresh O becomes H before the
+ * ordinary owner is released, so a hold-only shell survives staged filling. */
+static myl_rc_status transfer_hold(transfer_walk *walk, unsigned char *destination, void *payload) {
+    void *result = payload;
+    unsigned region = payload ? myl_native_header_region(payload) : 0;
+    if (region > walk->region) {
+        if (!walk->clones->memo.escaping) return MYL_RC_REGION_ERROR;
+        myl_rc_status status = schedule_clone(walk, payload, walk->region, &result);
+        if (status != MYL_RC_OK) return status;
+        myl_rc_hold hold = {0};
+        status = myl_rc_hold_acquire(walk->heap, result, &hold);
+        myl_rc_owner_release(walk->heap, result);
+        if (status != MYL_RC_OK) return status;
+    } else if (walk->mode == MYL_RC_COPY) {
+        myl_rc_hold hold = {0};
+        myl_rc_status status = myl_rc_hold_acquire(walk->heap, result, &hold);
+        if (status != MYL_RC_OK) return status;
+    }
+    memcpy(destination, &result, sizeof result);
+    return MYL_RC_OK;
+}
+static myl_rc_status transfer_pointer(transfer_walk *walk, unsigned char *destination,
+                                       const unsigned char *source, myl_rc_shape_kind kind) {
     void *payload, *result;
     memcpy(&payload, source, sizeof payload);
+    if (kind == MYL_RC_SHAPE_HOLD_POINTER) return transfer_hold(walk, destination, payload);
     result = payload;
     if (payload) {
         myl_native_object *common = (myl_native_object *)payload - 1;
@@ -197,20 +222,26 @@ static myl_rc_status transfer_pointer(transfer_walk *walk, unsigned char *destin
     memcpy(destination, &result, sizeof result);
     return MYL_RC_OK;
 }
+static void transfer_release(myl_native_heap *heap, void *payload, myl_rc_shape_kind kind) {
+    if (kind == MYL_RC_SHAPE_HOLD_POINTER) {
+        myl_rc_hold hold = {.payload = payload};
+        myl_rc_hold_release(heap, &hold);
+    } else myl_rc_edge_release(heap, payload);
+}
 /* In a TAKE staging value only differing pointers are new clone tokens. The
  * unchanged words still borrow the source tokens until the transaction commits. */
-static myl_rc_status rollback_take(transfer_walk *walk, unsigned char *destination, const unsigned char *source) {
+static myl_rc_status rollback_take(transfer_walk *walk, unsigned char *destination, const unsigned char *source, myl_rc_shape_kind kind) {
     void *old, *fresh;
     memcpy(&old, source, sizeof old);
     memcpy(&fresh, destination, sizeof fresh);
-    if (old != fresh) myl_rc_edge_release(walk->heap, fresh);
+    if (old != fresh) transfer_release(walk->heap, fresh, kind);
     return MYL_RC_OK;
 }
-static myl_rc_status commit_take(transfer_walk *walk, unsigned char *destination, const unsigned char *source) {
+static myl_rc_status commit_take(transfer_walk *walk, unsigned char *destination, const unsigned char *source, myl_rc_shape_kind kind) {
     void *old, *fresh;
     memcpy(&old, source, sizeof old);
     memcpy(&fresh, destination, sizeof fresh);
-    if (old != fresh) myl_rc_edge_release(walk->heap, old);
+    if (old != fresh) transfer_release(walk->heap, old, kind);
     return MYL_RC_OK;
 }
 static myl_rc_status prepare_frames(transfer_walk *walk, const myl_rc_shape *shape) {

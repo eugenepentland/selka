@@ -15,8 +15,8 @@ pub const Selection = enum {
     pub fn identity(self: Selection) []const u8 {
         return switch (self) {
             .gc => "gc-v1",
-            .rc => "rc-v1",
-            .rc_counting => "rc-v1-counting",
+            .rc => "rc-v2",
+            .rc_counting => "rc-v2-counting",
         };
     }
 

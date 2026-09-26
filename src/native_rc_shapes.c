@@ -114,7 +114,7 @@ static int builder_add(shape_builder *builder, const myl_rc_shape *shape) {
 }
 static size_t child_count(const myl_rc_shape *shape) {
     switch (shape->kind) {
-        case MYL_RC_SHAPE_NONE: case MYL_RC_SHAPE_POINTER: return 0;
+        case MYL_RC_SHAPE_NONE: case MYL_RC_SHAPE_POINTER: case MYL_RC_SHAPE_HOLD_POINTER: return 0;
         case MYL_RC_SHAPE_RECORD: return shape->as.record.count;
         case MYL_RC_SHAPE_ARRAY: return shape->as.array.count ? 1 : 0;
         case MYL_RC_SHAPE_VARIANT: return shape->as.variant.count;
@@ -132,7 +132,7 @@ static const myl_rc_shape *child_shape(const myl_rc_shape *shape, size_t index) 
 /* Validate the physical extent before touching any child address at runtime. */
 static int validate_shape(shape_builder *builder, const myl_rc_shape *shape) {
     size_t children = child_count(shape), extent;
-    if (shape->kind == MYL_RC_SHAPE_POINTER) myl_rc_invariant(shape->size == sizeof(void *));
+    if (shape->kind == MYL_RC_SHAPE_POINTER || shape->kind == MYL_RC_SHAPE_HOLD_POINTER) myl_rc_invariant(shape->size == sizeof(void *));
     if (shape->kind == MYL_RC_SHAPE_ARRAY) {
         if (!children) return 1;
         myl_rc_invariant(shape->as.array.element != NULL);
@@ -181,7 +181,7 @@ static int compute_depths(shape_builder *builder, size_t *maximum) {
                 if (next->inline_depth > node->inline_depth) node->inline_depth = next->inline_depth;
                 ++node->cursor;
             } else {
-                if (node->source->kind == MYL_RC_SHAPE_POINTER) node->depth = 1;
+                if (node->source->kind == MYL_RC_SHAPE_POINTER || node->source->kind == MYL_RC_SHAPE_HOLD_POINTER) node->depth = 1;
                 else if (node->depth) ++node->depth;
                 ++node->inline_depth;
                 const myl_rc_index_entry *known = index_find(builder->heap, node->source, INDEX_SHAPE);

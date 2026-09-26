@@ -26,3 +26,9 @@ Compile it with `MYL_NATIVE_RC=1`, `MYL_NATIVE_RC_COUNTING=1`, function/data sec
 and linker garbage collection, linking qbe_providers.c, qbe_stand_ins.c and the
 production native runtime sources. Its small runtime error mocks keep refusal
 returns observable without longjmp.
+
+The LLVM follow-up `capabilities-llvm.json` now passes both capability scenarios
+with exactly the same traffic as QBE, after the checked host-resource signature
+fix f5a4c71d. It was run while the metadata ABI2/HOLD_POINTER slice was present,
+so its counter record says rc-v2-counting; the earlier QBE record remains the
+historical rc-v1-counting evidence.

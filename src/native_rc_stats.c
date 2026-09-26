@@ -31,7 +31,7 @@ void myl_rc_stats_report(const myl_native_heap *heap) {
     _Static_assert(sizeof names/sizeof *names==MYL_RC_STAT_COUNT,"statistics event names");
     myl_rc_counters stats;
     if (!myl_rc_stats_snapshot(heap,&stats)) return;
-    fprintf(stderr,"MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v1-counting\",\"saturated\":%s",stats.saturated?"true":"false");
+    fprintf(stderr,"MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v2-counting\",\"saturated\":%s",stats.saturated?"true":"false");
     for (size_t i=0;i<MYL_RC_STAT_COUNT;++i) fprintf(stderr,",\"%s\":%" PRIu64,names[i],stats.events[i]);
     fputs("}\n",stderr);
 #else

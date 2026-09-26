@@ -391,11 +391,38 @@ static void backing_bridge_test(void) {
     myl_native_heap_destroy(&context.heap);
     assert(!context.heap.bytes);
 }
+// spec: RC-HOLD-VIEW-1
+static void held_slot_test(void) {
+    MylQbeContext context = {0};
+    myl_native_heap_init(&context.heap, 1024 * 1024);
+    if (!myl_rc_enabled(&context.heap)) assert(myl_rc_storage_init(&context.heap) == MYL_RC_OK);
+    void *payload = myl_rc_storage_bytes(&context.heap, 8, 0);
+    assert(payload);
+    myl_rc_hold hold = {0};
+    assert(myl_rc_hold_acquire(&context.heap, payload, &hold) == MYL_RC_OK);
+    myl_rc_owner_release(&context.heap, payload);
+    uint32_t initialized = 1;
+    MylQbeRcSlot slot = {&pointer_type, &payload, &initialized, MYL_QBE_RC_HOLD_POINTER};
+    MylQbeRcFrame frame;
+    myl_qbe_rc_frame_enter(&context, &frame, &slot, 1);
+    myl_qbe_rc_unwind(&context);
+    assert(!payload && !initialized && !context.rc_frames && !context.heap.objects_live);
+    myl_qbe_rc_slot_drop(&context, &slot);
+    myl_native_heap_destroy(&context.heap);
+    assert(!context.heap.bytes);
+}
 int myl_qbe_rc_contract_verify(void) {
     MylQbeContext context = {0};
     context.heap.limit = 65536;
     assert(myl_rc_heap_init(&context.heap, &allocator, NULL) == MYL_RC_OK);
     assert(!myl_rc_shape_resolve(&context.heap, &pointer));
+    myl_rc_module stale = myl_rc_generated_module;
+    stale.abi = MYL_RC_ABI_VERSION - 1;
+    size_t before = context.heap.bytes;
+    assert(!myl_qbe_rc_register(&context, &stale));
+    assert(!strcmp(context.trap, "R_INTERNAL") && context.heap.bytes == before);
+    assert(!myl_rc_shape_resolve(&context.heap, &pointer));
+    context.trap = NULL;
     assert(myl_qbe_rc_initialize(&context));
     assert(!context.trap && myl_rc_shape_resolve(&context.heap, &pointer));
     size_t bytes = context.heap.bytes;
@@ -437,13 +464,14 @@ int myl_qbe_rc_frame_verify(void) {
     arena_frame_boundary_test();
     scope_bridge_test();
     backing_bridge_test();
-    return 11;
+    held_slot_test();
+    return 12;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
     assert(myl_qbe_rc_contract_verify() == 5);
-    assert(myl_qbe_rc_frame_verify() == 11);
-    puts("RC startup and frame unwind: 16 checks passed");
+    assert(myl_qbe_rc_frame_verify() == 12);
+    puts("RC startup and frame unwind: 17 checks passed");
     return 0;
 }
 #endif

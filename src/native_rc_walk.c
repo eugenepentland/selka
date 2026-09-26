@@ -14,7 +14,7 @@ static unsigned walk(myl_native_heap *heap, unsigned action) {
     while (heap->rc->walk.depth) {
         myl_rc_frame *frame = &heap->rc->walk.frames[heap->rc->walk.depth - 1];
         const myl_rc_shape *shape = frame->shape;
-        if (shape->kind == MYL_RC_SHAPE_POINTER) {
+        if (shape->kind == MYL_RC_SHAPE_POINTER || shape->kind == MYL_RC_SHAPE_HOLD_POINTER) {
             void *payload;
             memcpy(&payload, frame->address, sizeof payload);
             if (action == WALK_REGION) {
@@ -22,7 +22,12 @@ static unsigned walk(myl_native_heap *heap, unsigned action) {
                 if (found > region) region = found;
             } else memset(frame->address, 0, sizeof payload);
             --heap->rc->walk.depth;
-            if (action == WALK_RELEASE) myl_rc_edge_release(heap, payload);
+            if (action == WALK_RELEASE) {
+                if (shape->kind == MYL_RC_SHAPE_HOLD_POINTER) {
+                    myl_rc_hold hold = {.payload = payload};
+                    myl_rc_hold_release(heap, &hold);
+                } else myl_rc_edge_release(heap, payload);
+            }
         } else if (shape->kind == MYL_RC_SHAPE_ARRAY) {
             if (frame->cursor == shape->as.array.count) { --heap->rc->walk.depth; continue; }
             size_t index = frame->cursor++;
