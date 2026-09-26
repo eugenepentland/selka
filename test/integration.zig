@@ -3357,6 +3357,9 @@ test "CLI check-module checks bodies and never invents main" {
     try invoke("check-module", "module input\n\npublic def value() -> int:\n    return main()\n", 1, "", "E_UNKNOWN_SYMBOL");
     try invoke("check-module", "module input\n\nrecord Hidden:\n    value: int\n\npublic def value() -> Hidden:\n    return Hidden(7)\n", 1, "", "E_PRIVATE_INTERFACE");
     try invoke("check-module", "module input\n\npublic def value(out: Stream) -> None noio:\n    out.print(7)\n", 1, "", "E_EFFECT");
+    const library = "module input\n\npublic def grown(xs: list[int]) -> list[int]:\n    copy = xs\n    copy.append(1)\n    return copy\n";
+    try invoke("check-module", library, 1, "", "E_MUTATION_MARKER");
+    try invokeOptions("check-module", library, &.{"--value-semantics"}, 0, "", "");
 }
 
 fn expectLibraryCommand(path: []const u8, cache: []const u8, command: []const u8, status: u8, diagnostic: []const u8) !void {
