@@ -1,4 +1,5 @@
 //! Independent native QBE units. Source locations never enter native artifact bytes.
+const zero_failure_result = " call $memset(l %empty, w 0, l {d})\n";
 const slice_abi = ":myl_slice";
 const scalar_lower = @import("qbe_scalar.zig");
 const zero_local = @import("qbe_format.zig").zero_local;
@@ -1642,6 +1643,7 @@ const Emitter = struct {
         const return_bytes = try self.returnStorageBytes();
         if (return_bytes != 0) {
             try self.print(" %empty =l alloc8 {d}\n", .{@max(8, return_bytes)});
+            if (self.cow == null) try self.print(zero_failure_result, .{@max(8, return_bytes)});
             if (self.heap_frame) try self.print(" %return_storage =l alloc8 {d}\n", .{@max(8, return_bytes)});
         }
         // QBE promotes a slot to a temporary only when its `alloc8` sits in the
@@ -1680,9 +1682,9 @@ const Emitter = struct {
         // QBE-COLD-FAILRET-1: only failed paths return `%empty`. Initializing
         // it in the entry block makes every successful aggregate-returning
         // call pay for a zero value it never reads.
-        if (return_bytes != 0) try self.print(" call $memset(l %empty, w 0, l {d})\n", .{@max(8, return_bytes)});
+        if (return_bytes != 0 and self.cow != null) try self.print(zero_failure_result, .{@max(8, return_bytes)});
         try self.print(" ret {s}\n@entry_failure\n", .{if (return_bytes == 0) "0" else "%empty"});
-        if (return_bytes != 0) try self.print(" call $memset(l %empty, w 0, l {d})\n", .{@max(8, return_bytes)});
+        if (return_bytes != 0 and self.cow != null) try self.print(zero_failure_result, .{@max(8, return_bytes)});
         try self.print(" ret {s}\n}}\n", .{if (return_bytes == 0) "0" else "%empty"});
         var text = try self.output.toOwnedSlice();
         // With no step check, the only reason to store a position is a trap trace
@@ -1824,6 +1826,9 @@ const Emitter = struct {
         // frame protocol places after the entry block, because that scratch is
         // what stops QBE folding a null-like address into the load.
         if (value.size == 0) return false;
+        // A match binding's elided COW rebind leaves this slot untouched.
+        // Name its storage directly; storeLocal drops the redundant store.
+        if (value_copy_lower.selfStore(self, read.pc + 2, index)) return true;
         // The consumer is the first instruction whose own execution leaves the
         // stack at or below the operand this read pushes. Every instruction
         // before it either pushed another operand above ours or read ours; in
@@ -1843,6 +1848,9 @@ const Emitter = struct {
             consumer += 1;
         }
         const op = self.function.scope.instructions[consumer].op;
+        // A real value copy reads the source into private scratch before it
+        // marks or replaces any collection. It consumes the source address.
+        if (op == .value_copy) return value_copy_lower.copies(self, consumer);
         // A match arm's payload binding copies out of the scrutinee. Naming the
         // scrutinee's slot would copy a region onto itself, so that arm keeps
         // the scratch copy the other locals use.
@@ -2497,6 +2505,7 @@ const Emitter = struct {
     /// Lower `store_local` of operand slot `h - 1` into local `slot`.
     fn storeLocal(self: *Emitter, slot: typed.LocalId, h: usize) GenerateError!void {
         const index = @backingInt(slot);
+        if (value_copy_lower.selfStore(self, self.pc, index)) return;
         // QBE-MOVE-ELIDE-1: an alias's value already sits in the slot
         // it names, and an update written in place into this local's
         // own slot left nothing to copy.

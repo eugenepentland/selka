@@ -54,6 +54,40 @@ const assigned =
     \\    return len(xs) * 10 + len(ys)
 ;
 
+// spec: QBE-VALUECOPY-BORROW-1
+test "copy on write: payload return copies straight into the private transfer scratch" {
+    const saved = value_semantics.enabled();
+    value_semantics.setEnabled(true);
+    defer value_semantics.setEnabled(saved);
+    const source =
+        \\record Box:
+        \\    items: list[int]
+        \\    number: int
+        \\
+        \\union Item:
+        \\    box: Box,
+        \\    empty
+        \\
+        \\def take(items: list[Item]) -> Box:
+        \\    match items[0]:
+        \\        case Item.box(payload):
+        \\            return payload
+        \\        case Item.empty:
+        \\            return Box([], 0)
+        \\
+        \\def main() -> int:
+        \\    items = [Item.box(Box([1], 7))]
+        \\    copied = take(items)
+        \\    copied.items.append(2)
+        \\    return len(take(items).items) * 10 + len(copied.items)
+    ;
+    const a = std.testing.allocator;
+    const il = try unitText(a, source, "take", checks);
+    defer a.free(il);
+    try std.testing.expectEqual(@as(usize, 0), count(il, "blit %l"));
+    try std.testing.expect(count(il, "call $myl_qbe_cow_transfer(") > 0);
+}
+
 // spec: COW-SHARED-1
 test "copy on write: a copy transfer shares the list and the first write through either name copies it" {
     try std.testing.expectEqual(@as(i64, 23), try run(std.testing.allocator, assigned, false));
