@@ -62,3 +62,29 @@ Validation completed for this foundation:
 
 The root integration owner supplies the build wiring and runs the joined full
 four-command gate. No full-gate result or guest RC coverage is claimed here.
+
+## Scope, trap and arena runtime follow-up
+
+The shared runtime now implements pin-aware copy/take/replace, iterative staged
+cloning, multi-slot construction rollback, borrowed edit tokens, and receiver
+scope journals. Guarded compiler frame journals reserve storage in the frame,
+clear initialized bits before callbacks, and clean owners before `longjmp` can
+invalidate their storage. A prefix unwind preserves a suspended outer frame.
+
+Arena close detaches the closing chunk lists before callbacks, restores receiver
+scopes, visits each allocation's logical ownership descriptor while all detached
+chunks remain live, then releases the chunks. Raw collection backing is never
+interpreted as a second owner. Aborted arena allocations carry the DYING bit so
+their unique hook cannot run again at region close. RC retained chunks and the
+depth table remain charged, with reuse allowed at the exact budget ceiling.
+Runtime teardown closes logical arena ownership and ASCII cache owners before
+the optional counting report, including the executable exit-without-sweep path.
+
+Focused validation is now 16 core contract scenarios, eight startup/frame
+scenarios, 20 production collection scenarios, and four arena scenarios. Core,
+collection and arena suites pass ASan/UBSan; the startup/frame fixture exercises
+the real runtime longjmp through its Debug Zig wrapper. The arena tests include
+cross-chunk list/dictionary ownership, tombstones, nested regions, exact-budget
+cache reuse, reservation refusal, and a finalizer that opens another arena.
+Escape graph copying and complete compiler ownership lowering remain separate
+work; this runtime evidence does not claim WP-4 guest or performance acceptance.
