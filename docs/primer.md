@@ -20,6 +20,8 @@ mylang docs primer                    # this page; `mylang --help` lists every c
 
 `run`, `build` and `test` all build with QBE unless you pass `--release`, so the
 edit-build-test loop stays fast; `--release` pays an LTO link on every rebuild.
+When `fmt --check` fails, `path:line:column` identifies the first formatting
+difference; `fmt FILE` prints the complete corrected source.
 
 ## File layout
 

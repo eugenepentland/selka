@@ -3348,6 +3348,13 @@ test "CLI formatter supports stdout check mode and syntax-only formatting" {
     try invokeOptions("fmt", canonical, &.{ "--check", "--check" }, 2, "", "usage:");
     try invokeOptions("check", canonical, &.{"--check"}, 2, "", "usage:");
 }
+// spec: FMT-CHECK-LOCATION-1
+test "CLI formatter check locates spacing and missing final newline" {
+    try invokeOptions("fmt", "def  main() -> int:\n    return 7\n", &.{"--check"}, 1, "", "input.my:1:5: formatting differs");
+    try invokeOptions("fmt", "def main() -> int:\n    return 7", &.{"--check"}, 1, "", "input.my:2:13: formatting differs");
+    try invokeOptions("fmt-module", "module input\n\ndef  f() -> int:\n    return 7\n", &.{"--check"}, 1, "", "input.my:3:5: formatting differs");
+}
+
 test "CLI module discovery loads real files and diagnoses cross-file cycles" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
@@ -5455,6 +5462,7 @@ test "CLI module quality reports preserve export roots and advisory thresholds" 
         \\    return 0
     , &.{"--approximate"}, 2, "", "usage:");
 }
+// spec-case: FMT-CHECK-LOCATION-1
 test "CLI module formatting is syntax only and canonical for every reachable module" {
     // The header directive group is followed by one blank line and top-level
     // declarations by two, so the fixtures below are already canonical.
@@ -5509,6 +5517,12 @@ test "CLI module formatting is syntax only and canonical for every reachable mod
         try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, output.term);
         try testing.expectEqualStrings(if (std.mem.eql(u8, name, "input.my")) root_module else child_module, output.stdout);
     }
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "child.my", .data = "module child\n\ndef  f() -> Missing:\n    return unknown()\n" });
+    const differing = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "fmt-project", path, "--check" } });
+    defer testing.allocator.free(differing.stdout);
+    defer testing.allocator.free(differing.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, differing.term);
+    try testing.expect(std.mem.indexOf(u8, differing.stderr, "child.my:3:5: formatting differs") != null);
     try temp.dir.writeFile(testing.io, .{ .sub_path = "child.my", .data =
         \\module child
         \\def broken(
