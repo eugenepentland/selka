@@ -31,7 +31,7 @@ pub fn Lower(comptime E: type) type {
             if (self.isScalar(copy.ty)) try self.print(" %v{d} =l copy %s{d}\n", .{ source, base }) else try self.print(" %v{d} =l loadl %s{d}\n", .{ source, base });
             const output = try self.aggregatePointer();
             const copied = self.temp();
-            // extend and keyed sorted copy elements into a fresh destination.
+            // extend, update and keyed sorted copy elements into a fresh destination.
             // Their source collection stays in place; share its children,
             // not its outer payload. Ordinary element stores share the outer
             // element instead.
@@ -39,7 +39,7 @@ pub fn Lower(comptime E: type) type {
             if (copy.site == .store) {
                 const code = self.function.scope.instructions;
                 if (self.pc + 1 < code.len) switch (code[self.pc + 1].op) {
-                    .buffer_operation => |operation| if (operation.kind == .extend) {
+                    .buffer_operation => |operation| if (operation.kind == .extend or operation.kind == .update) {
                         children = 2;
                     },
                     else => {},
