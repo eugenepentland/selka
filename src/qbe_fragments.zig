@@ -44,6 +44,9 @@ pub const Flags = struct {
     arenas: bool,
     /// This function is the program's entry.
     entry: bool,
+    /// The copy-on-write code the unit carries (`COW-UNIQUE-1`). Folded into
+    /// a key only when it is on, so every other key is unchanged.
+    cow: @import("cow_plan.zig").Mode = .off,
 };
 
 /// One memoized canonical digest and the ordinals it named, in first-mention order.
@@ -242,7 +245,8 @@ pub const Keys = struct {
         var canon = self.encoder();
         defer self.recycle(&canon);
         try canon.text(format_version);
-        try canon.put(flags);
+        try canon.put(.{ .step_checks = flags.step_checks, .frame_checks = flags.frame_checks, .arenas = flags.arenas, .entry = flags.entry });
+        if (flags.cow != .off) try canon.text(@tagName(flags.cow));
         try canon.raw(&own.digest);
         var reached: std.ArrayList(u32) = .empty;
         defer reached.deinit(self.allocator);

@@ -243,6 +243,9 @@ fn disturbs(comptime E: type, self: *E, candidate: Candidate, pc: usize) Error!b
     const f = self.function;
     const owner = candidate.read.owner;
     if (moves.writesLocal(f, pc, owner)) return true;
+    // COW-UNIQUE-1: a check redirecting the owner, or a copy written back
+    // into an object, can leave the value reachable from this local alone.
+    if (self.cow) |state| if (state.plan.disturbs(owner, pc, candidate.read.kind == .heap)) return true;
     // A constructor, `replace` or update forwarded into the owner writes its
     // slot the instruction before the store does.
     if (pc + 1 < f.scope.instructions.len and moves.writesLocal(f, pc + 1, owner)) return true;

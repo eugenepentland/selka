@@ -147,6 +147,9 @@ fn aliasTarget(comptime E: type, self: *E, index: usize) Error!?usize {
     }
     const target = source orelse return null;
     if (target == index or f.scope.locals[target].ty != ty or !ownSlot(E, self, target)) return null;
+    // COW-NESTED-1: a copy written back into a field of either local writes
+    // that local's own slot.
+    if (self.cow) |state| if (state.plan.writesSlot(index) or state.plan.writesSlot(target)) return null;
     for (code, 0..) |_, pc| {
         if (self.states[pc] == null) continue;
         if (live.before(pc, index) and writesLocal(f, pc, target)) return null;
