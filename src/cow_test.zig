@@ -7,6 +7,7 @@ const std = @import("std");
 const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
 const Policy = @import("native_interface.zig").Policy;
+const value_semantics = @import("value_semantics.zig");
 
 const Unit = struct { name: []const u8, symbol: []const u8, il: []const u8 };
 const Manifest = struct { functions: []Unit };
@@ -62,6 +63,19 @@ test "copy on write: a copy transfer shares the list and the first write through
     defer a.free(il);
     try std.testing.expectEqual(@as(usize, 1), count(il, "call $myl_native_cow_share("));
     try std.testing.expectEqual(@as(usize, 1), count(il, "2305843009213693952\n storel"));
+}
+
+// spec-case: COW-SHARED-1
+test "copy on write: value-semantics copies use the rooted COW hook without duplicate transfer marks" {
+    const previous = value_semantics.enabled();
+    value_semantics.setEnabled(true);
+    defer value_semantics.setEnabled(previous);
+    try std.testing.expectEqual(@as(i64, 23), try run(std.testing.allocator, assigned, true));
+    const a = std.testing.allocator;
+    const il = try unitText(a, assigned, "main", checks);
+    defer a.free(il);
+    try std.testing.expectEqual(@as(usize, 1), count(il, "call $myl_qbe_cow_transfer("));
+    try std.testing.expectEqual(@as(usize, 0), count(il, "call $myl_native_cow_share("));
 }
 
 // spec: COW-UNIQUE-1

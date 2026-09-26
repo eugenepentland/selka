@@ -2,11 +2,10 @@
 //! value-semantics copy becomes code. The ownership analysis decided, per
 //! instruction, whether the copy is real (`ownership_values.zig`); a move or a
 //! borrow emits nothing. A real copy places the operand in this pc's aggregate
-//! scratch through the single runtime entry `myl_qbe_value_copy`
-//! (`native_value_copy.c`), which replaces every list, dict, set and
-//! byte_buffer the value reaches with an independent copy allocated in the
-//! current region, and the operand becomes the scratch. Stage 3b of D9 swaps
-//! this entry for copy-on-write: the decision and the call site stay.
+//! scratch through the single runtime entry `myl_qbe_cow_transfer`
+//! (`qbe_cow_runtime.c`). It marks the value's directly held mutable
+//! collection payloads shared, or the children of an already-fresh outer
+//! collection. The operand becomes the scratch; moves and borrows do nothing.
 const bytecode = @import("bytecode.zig");
 const typed = @import("typed.zig");
 
@@ -33,7 +32,7 @@ pub fn Lower(comptime E: type) type {
             const output = try self.aggregatePointer();
             const copied = self.temp();
             const children: u8 = @intFromBool(copy.site == .children);
-            try self.print(" %v{d} =w call $myl_qbe_value_copy(l %ctx, l extern ${s}, l %v{d}, l %v{d}, w {d})\n", .{ copied, try self.descriptor(copy.ty), source, output, children });
+            try self.print(" %v{d} =w call $myl_qbe_cow_transfer(l %ctx, l extern ${s}, l %v{d}, l %v{d}, w {d})\n", .{ copied, try self.descriptor(copy.ty), source, output, children });
             try self.checkFailure("failure");
             try self.store(base, try self.readValue(output, copy.ty));
         }

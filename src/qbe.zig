@@ -270,7 +270,9 @@ fn generateImpl(allocator: std.mem.Allocator, program_in: bytecode.Program, src:
         .step_checks = interface.policy.step_checks,
         .frame_checks = interface.policy.frame_checks,
         .pure = &.{},
-        .cow = interface.policy.cow,
+        // COW-UNIQUE-1: the value-semantics switch enables the checks by
+        // default; an explicit internal policy can request counting.
+        .cow = if (interface.policy.cow != .off) interface.policy.cow else if (@import("value_semantics.zig").enabled()) .checks else .off,
     };
     var reuse: Reuse = try .init(a, pass, interface.reuse);
     try runPasses(&pass, &reuse, src, standins, shape.lean);

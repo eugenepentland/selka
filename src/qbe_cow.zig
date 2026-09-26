@@ -67,7 +67,14 @@ pub fn Lower(comptime E: type) type {
         /// Plan the function under the ownership analysis already run.
         pub fn plan(self: *E, state: *State) Error!void {
             const analysis = self.ownership orelse return error.InternalError;
-            state.plan = cow_plan.plan(self.allocator, .{ .program = self.program, .function = self.function, .states = self.states, .analysis = analysis }) catch |err| return switch (err) {
+            const input: cow_plan.Input = .{
+                .program = self.program,
+                .function = self.function,
+                .states = self.states,
+                .analysis = analysis,
+                .shares = !@import("value_semantics.zig").enabled(),
+            };
+            state.plan = cow_plan.plan(self.allocator, input) catch |err| return switch (err) {
                 error.OutOfMemory => error.OutOfMemory,
                 error.InternalError => error.InternalError,
             };
@@ -177,7 +184,7 @@ fn testShared(comptime E: type, self: *E, value: usize, label: usize) Error!void
     const header = self.temp();
     const word = self.temp();
     const flag = self.temp();
-    try self.print(" %v{d} =l sub %v{d}, {d}\n %v{d} =l loadl %v{d}\n %v{d} =l and %v{d}, {d}\n", .{ header, value, header_bytes, word, header, flag, word, shared_flag });
+    try self.print(" %v{d} =l sub %v{d}, {d}\n %v{d} =l loadl %v{d}\n %v{d} =l shr %v{d}, 61\n %v{d} =l and %v{d}, 1\n", .{ header, value, header_bytes, word, header, flag, word, flag, flag });
     try self.print(" jnz %v{d}, @cowcopy{d}, @cowkeep{d}\n@cowcopy{d}\n", .{ flag, label, label, label });
 }
 
