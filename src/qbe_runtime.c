@@ -4,6 +4,9 @@
 #include "native_collections.h"
 #include "native_cow.h"
 #include "native_text.h"
+#if defined(MYL_NATIVE_RC_COUNTING) && MYL_NATIVE_RC_COUNTING
+#include "native_rc_stats.h"
+#endif
 #include <inttypes.h>
 #include <setjmp.h>
 #include <signal.h>
@@ -978,6 +981,12 @@ static int execute_config_args(uint64_t (*entry)(void *), uint64_t steps, uint64
     if (context->cleanup) context->cleanup(context);
     /* Stand-ins go after the resources, whose handles they may still own. */
     if (context->stand_in_cleanup) context->stand_in_cleanup(context);
+#if defined(MYL_NATIVE_RC) && MYL_NATIVE_RC
+    myl_qbe_rc_finish(context);
+#endif
+#if defined(MYL_NATIVE_RC_COUNTING) && MYL_NATIVE_RC_COUNTING
+    myl_rc_stats_report(&context->heap);
+#endif
     while (context->frame_allocations) myl_qbe_frame_release(context,(NativeFrameAllocation *)context->frame_allocations+1);
     free(context->host_state);
     free(context->frame_data);
