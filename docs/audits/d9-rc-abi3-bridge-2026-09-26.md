@@ -26,3 +26,8 @@ are retained. This is private compatibility infrastructure, not a completed
 semantic-history implementation. It must join the runtime and compiler loan
 implementation before integration or acceptance claims. No full gate or
 performance acceptance is claimed for this isolated bridge.
+
+Private follow-up joins loan infrastructure `95683dd1` and adds its permanent
+standalone memory-suite registration. All seven native loan cases pass with
+AddressSanitizer and UndefinedBehaviorSanitizer through that driver. Compiler
+loan emission and semantic-history completion remain separate pending work.
