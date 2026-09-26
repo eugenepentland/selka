@@ -159,39 +159,48 @@ static void *sequence(void *context, const unsigned char *bytes, size_t length, 
     myl_native_heap *heap = myl_qbe_heap(context);
     if (!text) {
         myl_native_bytes *value = myl_native_bytes_new(heap, bytes, length);
-        if (!value) myl_qbe_fail_allocation(context);
+        if (!value) *status = -1;
         return value;
     }
     if (!myl_native_text_valid_utf8(bytes, length)) { *status = 5; return NULL; }
     myl_native_text *value = myl_native_text_from_utf8(heap, bytes, length);
-    if (!value) myl_qbe_fail_allocation(context);
+    if (!value) *status = -1;
     return value;
 }
 /* Decode one `l:` directory snapshot into a managed list of entry names. */
-static myl_native_list *listing(void *context, Owned raw) {
+static myl_native_list *listing(void *context, Owned raw, int *status) {
     myl_native_heap *heap = myl_qbe_heap(context);
     myl_native_list *list = myl_native_list_new(heap, &pointer_type, 0);
-    if (!list) { myl_qbe_fail_allocation(context); return NULL; }
-    if (!raw.length || raw.bytes[0] != 1) { myl_qbe_fail(context, "InvalidProvider"); return NULL; }
+    if (!list) { *status = -1; return NULL; }
+    if (!raw.length || raw.bytes[0] != 1) *status = -2;
     myl_native_root root;
     myl_native_root_push(heap, &root, &list, &pointer_type);
     size_t cursor = 1;
-    while (cursor + 3 <= raw.length) {
+    while (!*status && cursor + 3 <= raw.length) {
         size_t width = (size_t)raw.bytes[cursor + 1] | ((size_t)raw.bytes[cursor + 2] << 8);
         cursor += 3;
-        if (cursor + width > raw.length) { myl_qbe_fail(context, "InvalidProvider"); list = NULL; break; }
+        if (cursor + width > raw.length) { *status = -2; break; }
         myl_native_text *name = myl_native_text_from_utf8(heap, raw.bytes + cursor, width);
-        if (!name || !myl_native_list_append(heap, list, &name)) { myl_qbe_fail_allocation(context); list = NULL; break; }
+        int appended = name && myl_native_list_append(heap, list, &name);
+        if (myl_rc_enabled(heap)) {
+            if (appended) myl_rc_owner_release(heap, name);
+            else myl_rc_construction_abort(heap, name);
+        }
+        if (!appended) { *status = -1; break; }
         cursor += width;
     }
     myl_native_root_pop(heap, &root);
+    if (*status) {
+        if (myl_rc_enabled(heap)) myl_rc_construction_abort(heap, list);
+        return NULL;
+    }
     return list;
 }
 /* Split a whole read into lines, keeping each terminator. */
 static myl_native_list *lines(void *context, Owned raw, int text, int *status) {
     myl_native_heap *heap = myl_qbe_heap(context);
     myl_native_list *list = myl_native_list_new(heap, &pointer_type, 0);
-    if (!list) { myl_qbe_fail_allocation(context); return NULL; }
+    if (!list) { *status = -1; return NULL; }
     myl_native_root root;
     myl_native_root_push(heap, &root, &list, &pointer_type);
     size_t start = 0;
@@ -199,10 +208,19 @@ static myl_native_list *lines(void *context, Owned raw, int text, int *status) {
         const unsigned char *found = memchr(raw.bytes + start, '\n', raw.length - start);
         size_t end = found ? (size_t)(found - raw.bytes) + 1 : raw.length;
         void *line = sequence(context, raw.bytes + start, end - start, text, status);
-        if (!line || !myl_native_list_append(heap, list, &line)) { list = NULL; break; }
+        int appended = line && myl_native_list_append(heap, list, &line);
+        if (myl_rc_enabled(heap)) {
+            if (appended) myl_rc_owner_release(heap, line);
+            else myl_rc_construction_abort(heap, line);
+        }
+        if (!appended) { if (!*status) *status = -1; break; }
         start = end;
     }
     myl_native_root_pop(heap, &root);
+    if (*status) {
+        if (myl_rc_enabled(heap)) myl_rc_construction_abort(heap, list);
+        return NULL;
+    }
     return list;
 }
 /* Run the body of one whole-path helper against an acquired resource. */
@@ -223,7 +241,7 @@ static int finish(void *context, myl_native_resource *owner, unsigned request, O
     }
     status = read_all(context, owner, MYL_FILE_MAX_BYTES, &raw);
     if (status) return status;
-    void *payload = kind == MYL_FILE_LISTDIR ? (void *)listing(context, raw) : sequence(context, raw.bytes, raw.length, text, &status);
+    void *payload = kind == MYL_FILE_LISTDIR ? (void *)listing(context, raw, &status) : sequence(context, raw.bytes, raw.length, text, &status);
     free(raw.bytes);
     if (!payload) return myl_qbe_failed(context) ? -1 : status;
     *value = (uint64_t)(uintptr_t)payload;
@@ -253,7 +271,14 @@ int myl_qbe_file_access(void *context, uint64_t authority, unsigned request, myl
         if (!status && completion < 0) status = -1;
     }
     free(payload.bytes);
-    if (status < 0 || myl_qbe_failed(context)) { free(spelling.bytes); return -1; }
+    if (status < 0 || myl_qbe_failed(context)) {
+        free(spelling.bytes);
+        if (!myl_qbe_failed(context)) {
+            if (status == -2) myl_qbe_fail(context, "InvalidProvider");
+            else myl_qbe_fail_allocation(context);
+        }
+        return -1;
+    }
     if (kind == MYL_FILE_EXISTS) {
         *value = status == 0;
         free(spelling.bytes);
@@ -292,7 +317,13 @@ int myl_qbe_file_method(void *context, void *owner, unsigned request, int64_t co
     if (status) { if (!myl_qbe_failed(context)) myl_qbe_fail_file(context); return -1; }
     void *payload = kind == MYL_FILE_READLINES ? (void *)lines(context, raw, text, &status) : sequence(context, raw.bytes, raw.length, text, &status);
     free(raw.bytes);
-    if (!payload) { if (!myl_qbe_failed(context)) myl_qbe_fail_file(context); return -1; }
+    if (!payload) {
+        if (!myl_qbe_failed(context)) {
+            if (status < 0) myl_qbe_fail_allocation(context);
+            else myl_qbe_fail_file(context);
+        }
+        return -1;
+    }
     *value = (uint64_t)(uintptr_t)payload;
     return 0;
 }

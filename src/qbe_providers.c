@@ -198,7 +198,6 @@ static int allow_has(const char *allow,const unsigned char *bytes,size_t length)
    authority lists the `--allow-env` allowlist, or the whole process environment
    when no allowlist is set; a narrowed authority lists its scope names. */
 void *myl_qbe_environment_names(void *context,uint64_t authority) {
-    MylQbeContext *ctx=context;
     if (MYL_QBE_IS_STAND_IN(authority)) return myl_qbe_stand_in_environment_names(context,authority);
     const unsigned char *scope;size_t scope_length;
     if (!environment_scope(context,authority,&scope,&scope_length)) { myl_qbe_fail_capability(context);return NULL; }
@@ -241,11 +240,22 @@ void *myl_qbe_environment_names(void *context,uint64_t authority) {
     if (!list) { myl_qbe_fail_allocation(context);return NULL; }
     myl_native_root root;
     myl_native_root_push(heap,&root,&list,&pointer_type);
+    int failed=0;
     for (unsigned i=0;i<count;i++) {
         if (!myl_native_text_valid_utf8(names[i].bytes,names[i].length)) continue;
         myl_native_text *text=myl_native_text_from_utf8(heap,names[i].bytes,names[i].length);
-        if (!text || !myl_native_list_append(heap,list,&text)) { myl_qbe_fail_allocation(context);list=NULL;break; }
+        int appended=text && myl_native_list_append(heap,list,&text);
+        if (myl_rc_enabled(heap)) {
+            if (appended) myl_rc_owner_release(heap,text);
+            else myl_rc_construction_abort(heap,text);
+        }
+        if (!appended) { failed=1;break; }
     }
     myl_native_root_pop(heap,&root);
+    if (failed) {
+        if (myl_rc_enabled(heap)) myl_rc_construction_abort(heap,list);
+        myl_qbe_fail_allocation(context);
+        return NULL;
+    }
     return list;
 }
