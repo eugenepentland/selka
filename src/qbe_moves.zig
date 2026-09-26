@@ -204,9 +204,13 @@ fn deadStorage(comptime E: type, self: *E, storage: usize, pc: usize) Error!bool
         if (index != storage and self.moves.resolve(index) != storage) continue;
         if (live.after(pc, index)) return false;
     }
-    // A `mut` argument hands the slot's address to a callee that may still be
-    // reading it; no such reference may exist anywhere in the frame.
-    for (self.function.scope.instructions) |instruction| switch (instruction.op) {
+    // In a value-semantics build, a `mut` call elsewhere in the function does
+    // not retain the local's address after the call. `borrowableAt` has already
+    // rejected a pending reference below this operand or a ref_local within
+    // the read-to-update window, and `resultConsumer` rejects a write before
+    // the result is consumed. Keep the legacy rule when the switch is off so
+    // its generated IL stays identical.
+    if (self.cow == null) for (self.function.scope.instructions) |instruction| switch (instruction.op) {
         .ref_local => |slot| if (@backingInt(slot) == storage) return false,
         else => {},
     };
