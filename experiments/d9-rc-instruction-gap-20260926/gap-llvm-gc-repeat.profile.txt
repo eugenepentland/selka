@@ -1,0 +1,22 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+# dso: gap-llvm-gc-repeat
+#
+# Total Lost Samples: 0
+#
+# Samples: 289  of event 'cpu_core/instructions/u'
+# Event count (approx.): 12024686978
+#
+# Overhead  Symbol                                                                      IPC   [IPC Coverage]
+# ........  ..........................................................................  ....................
+#
+    59.35%  [.] myl_f_d05aa2a15fb3c40efeeb03bec445393f00074484cf01c8fb2da90ca6695a5531  -      -            
+    31.04%  [.] myl_f_20f65c28671b40937c5bf23acc7c6f37e5a5ec0622e347b57685725df5ba9e50  -      -            
+     4.84%  [.] scan_payload                                                            -      -            
+     2.93%  [.] collect                                                                 -      -            
+     1.85%  [.] mark                                                                    -      -            
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#
