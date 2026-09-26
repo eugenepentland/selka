@@ -33,7 +33,7 @@ const checks: Policy = .{ .step_checks = false, .frame_checks = false, .cow = .c
 /// The same protocol without it.
 const plain: Policy = .{ .step_checks = false, .frame_checks = false };
 /// The inline shared-flag test every check spells.
-const shared_test = ", 2305843009213693952\n";
+const shared_test = ", 61\n";
 /// The pinned flag a pin sets.
 const pin_set = " or ";
 
