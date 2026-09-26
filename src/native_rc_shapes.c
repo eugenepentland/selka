@@ -144,7 +144,7 @@ static void batch_index(myl_rc_batch *batch, const myl_rc_shape *key, size_t ind
     batch->lookup.slots[slot] = index + 1;
 }
 /* One reservation keeps all copied metadata addresses stable until teardown. */
-static myl_rc_batch *build_batch(shape_builder *builder, const myl_rc_module *module) {
+static myl_rc_batch *build_batch(shape_builder *builder, const myl_rc_module *module, int persistent) {
     size_t shape_bytes, field_bytes, descriptor_bytes, slot_bytes, bytes = sizeof(myl_rc_batch);
     size_t descriptors = module ? module->descriptor_count : 0;
     if (!myl_rc_size_mul(builder->count, sizeof(myl_rc_shape_entry), &shape_bytes) ||
@@ -155,7 +155,7 @@ static myl_rc_batch *build_batch(shape_builder *builder, const myl_rc_module *mo
         !myl_rc_size_add(bytes, descriptor_bytes, &bytes) || !myl_rc_size_add(bytes, slot_bytes, &bytes)) return NULL;
     myl_rc_batch *batch = myl_rc_meta_alloc(builder->heap, bytes);
     if (!batch) return NULL;
-    batch->module = module;
+    batch->module = persistent ? module : NULL;
     batch->count.shapes = builder->count;
     batch->count.descriptors = descriptors;
     batch->bytes = bytes;
@@ -167,7 +167,7 @@ static myl_rc_batch *build_batch(shape_builder *builder, const myl_rc_module *mo
     for (size_t i = 0; i < builder->count; ++i) {
         const myl_rc_shape *source = builder->nodes[i].source;
         myl_rc_shape_entry *entry = &batch->shapes[i];
-        entry->source = module ? source : NULL;
+        entry->source = persistent ? source : NULL;
         entry->shape = *source;
         entry->depth = builder->nodes[i].depth;
         if (!entry->depth) entry->shape.kind = MYL_RC_SHAPE_NONE;
@@ -185,7 +185,7 @@ static myl_rc_batch *build_batch(shape_builder *builder, const myl_rc_module *mo
             fields += count;
         }
         batch_index(batch, &entry->shape, i);
-        if (module) batch_index(batch, source, i);
+        if (persistent) batch_index(batch, source, i);
     }
     for (size_t i = 0; i < descriptors; ++i) {
         batch->descriptors[i] = module->descriptors[i];
@@ -198,13 +198,13 @@ static void builder_free(shape_builder *builder) {
     myl_rc_meta_free(builder->heap, builder->slots, builder->capacity * 2 * sizeof(size_t));
 }
 static myl_rc_status register_shapes(shape_builder *builder, const myl_rc_module *module,
-                                      const myl_rc_shape **out) {
+                                      const myl_rc_shape **out, int persistent) {
     myl_native_heap *heap = builder->heap;
     size_t maximum;
     for (size_t i = 0; i < builder->count; ++i)
         if (!validate_shape(builder, builder->nodes[i].source)) return MYL_RC_ALLOCATION_REFUSED;
     if (!compute_depths(builder, &maximum)) return MYL_RC_ALLOCATION_REFUSED;
-    myl_rc_batch *batch = build_batch(builder, module);
+    myl_rc_batch *batch = build_batch(builder, module, persistent);
     if (!batch) return MYL_RC_ALLOCATION_REFUSED;
     myl_rc_frame *frames = NULL;
     if (maximum > heap->rc->walk.capacity) {
@@ -243,7 +243,7 @@ myl_rc_status myl_rc_module_register(myl_native_heap *heap, const myl_rc_module 
         for (size_t j = 0; j < i; ++j) myl_rc_invariant(module->descriptors[j].type != descriptor->type);
         if (!builder_add(&builder, descriptor->shape)) goto done;
     }
-    status = register_shapes(&builder, module, NULL);
+    status = register_shapes(&builder, module, NULL, 1);
 done:
     builder_free(&builder);
     return status;
@@ -253,7 +253,7 @@ myl_rc_status myl_rc_shape_import(myl_native_heap *heap, const myl_rc_shape *sou
     *out = NULL;
     shape_builder builder = {.heap = heap};
     myl_rc_status status = MYL_RC_ALLOCATION_REFUSED;
-    if (builder_add(&builder, source)) status = register_shapes(&builder, NULL, out);
+    if (builder_add(&builder, source)) status = register_shapes(&builder, NULL, out, 0);
     builder_free(&builder);
     return status;
 }
@@ -298,4 +298,20 @@ myl_rc_status myl_rc_descriptor_register(myl_native_heap *heap, const myl_rc_des
     batch->next = heap->rc->metadata.batches;
     heap->rc->metadata.batches = batch;
     return MYL_RC_OK;
+}
+
+myl_rc_status myl_rc_descriptor_import(myl_native_heap *heap, const myl_rc_descriptor *descriptor) {
+    myl_rc_invariant(heap && heap->rc && descriptor && descriptor->type && descriptor->shape && !heap->rc->walk.depth);
+    myl_rc_invariant(descriptor->shape->size == descriptor->type->size);
+    const myl_rc_descriptor *old = myl_rc_descriptor_find(heap, descriptor->type);
+    if (old) {
+        myl_rc_invariant(old->edges == descriptor->edges && old->finalize == descriptor->finalize && old->clone == descriptor->clone);
+        return MYL_RC_OK;
+    }
+    const myl_rc_module module = {.abi = MYL_RC_ABI_VERSION, .descriptors = descriptor, .descriptor_count = 1};
+    shape_builder builder = {.heap = heap};
+    myl_rc_status status = MYL_RC_ALLOCATION_REFUSED;
+    if (builder_add(&builder, descriptor->shape)) status = register_shapes(&builder, &module, NULL, 0);
+    builder_free(&builder);
+    return status;
 }

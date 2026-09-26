@@ -332,6 +332,15 @@ static void temporary_binding_test(void) {
     *box = new_value(&heap, &scalar_type, 1);
     myl_rc_owner_release(&heap, box);
     assert(state.retired == 2);
+    static const myl_native_type other = {.size = sizeof(void *), .alignment = _Alignof(void *), .kind = MYL_NATIVE_POINTER};
+    descriptor = (myl_rc_descriptor){.type = &other, .shape = &pointer_shape};
+    before = heap.bytes;
+    heap.limit = before + 1500;
+    assert(myl_rc_descriptor_import(&heap, &descriptor) == MYL_RC_ALLOCATION_REFUSED);
+    assert(heap.bytes == before && !myl_rc_descriptor_find(&heap, &other));
+    heap.limit = ((size_t)256) << 20;
+    assert(myl_rc_descriptor_import(&heap, &descriptor) == MYL_RC_OK);
+    assert(myl_rc_descriptor_find(&heap, &other)->shape->kind == MYL_RC_SHAPE_POINTER);
     finish(&heap, &state);
 }
 // spec: RC-RELEASE-1

@@ -91,6 +91,9 @@ const myl_rc_shape *myl_rc_shape_resolve(const myl_native_heap *, const myl_rc_s
  * identity stays valid through teardown and shape must already be registered.
  * The binding is copied atomically and its adapter code remains loaded. */
 myl_rc_status myl_rc_descriptor_register(myl_native_heap *, const myl_rc_descriptor *);
+/* Atomically import a temporary shape graph and its binding together. Failure
+ * publishes neither shape nor binding; only native_type/code have long lifetime. */
+myl_rc_status myl_rc_descriptor_import(myl_native_heap *, const myl_rc_descriptor *);
 const myl_rc_descriptor *myl_rc_descriptor_find(const myl_native_heap *, const myl_native_type *);
 size_t myl_rc_reserved_depth(const myl_native_heap *);
 size_t myl_rc_metadata_bytes(const myl_native_heap *);
