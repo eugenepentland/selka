@@ -21,6 +21,7 @@ pub fn handles(records: []const typed.Record, op: Op) bool {
 
 /// Handle aggregates only when this function has a live ownership journal.
 pub fn emit(comptime E: type, self: *E, op: Op, stack: []const typed.Type) Error!bool {
+    if (@import("qbe_rc_borrow.zig").active(E, self)) return false;
     if (frame.get(E, self) == null or !handles(self.program.records, op) or op == .replace_index) return false;
     switch (op) {
         .make_record => |record| try construct(E, self, record, stack.len),

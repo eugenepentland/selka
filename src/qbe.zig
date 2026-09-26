@@ -5,6 +5,7 @@ const scalar_lower = @import("qbe_scalar.zig");
 const zero_local = @import("qbe_format.zig").zero_local;
 const arena_lower = @import("qbe_arena.zig");
 const borrow_lower = @import("qbe_borrow.zig");
+const rc_borrow = @import("qbe_rc_borrow.zig");
 const liveness = @import("qbe_liveness.zig");
 const ownership = @import("ownership.zig");
 const cow_lower = @import("qbe_cow.zig");
@@ -280,6 +281,8 @@ fn generateImpl(allocator: std.mem.Allocator, program_in: bytecode.Program, src:
     };
     var reuse: Reuse = try .init(a, pass, interface.reuse);
     try runPasses(&pass, &reuse, src, standins, shape.lean);
+    const canonical = if (requested) |mask| try selectedUnits(a, units, mask) else units;
+    const emitted = try appendBorrowedUnits(pass, src, canonical, requested);
     const entry_function = program.functions[@backingInt(program.main)];
     const entry_parameters = try a.alloc([]const u8, entry_function.signature.parameter_count);
     const entry_parameter_names = try a.alloc([]const u8, entry_function.signature.parameter_count);
@@ -301,7 +304,6 @@ fn generateImpl(allocator: std.mem.Allocator, program_in: bytecode.Program, src:
     const codecs = if (shape.executable) null else @import("qbe_codecs.zig").describe(a, program, &layouts) catch |err| return layoutError(err);
     const text_format = textFormat(program, &reuse);
     const host = @import("qbe_host.zig").describe(a, program, &layouts) catch |err| return layoutError(err);
-    const emitted = if (requested) |mask| try selectedUnits(a, units, mask) else units;
     return std.json.Stringify.valueAlloc(allocator, .{
         .host = host,
         .text_format = text_format,
@@ -330,6 +332,14 @@ fn generateImpl(allocator: std.mem.Allocator, program_in: bytecode.Program, src:
 fn runPasses(pass: *EmitPass, reuse: *Reuse, src: Source, standins: ?*fragments.Standins, lean: bool) GenerateError!void {
     const allocates = if (standins) |state| stood: {
         reuse.standin = try StandIn.init(pass.allocator, pass.program, state, src);
+        if (runtime_mode.enabled()) {
+            // RC certificates require every physical body, including transitive
+            // immortal helpers. Stored semantic summaries are not certificates.
+            @memset(state.selected, true);
+            try state.lower.run(state.lower.context, state);
+            try reinline(pass.*, &reuse.standin.?);
+            try reuse.forget(pass.allocator, pass.program);
+        }
         pass.arenas = arenasPresent(pass.program, reuse);
         break :stood try standInPasses(pass, reuse);
     } else plain: {
@@ -353,6 +363,29 @@ fn selectedUnits(allocator: std.mem.Allocator, units: []const Unit, selected: []
         index += 1;
     };
     return result;
+}
+
+/// Alternate entries have their own symbol and frame map; pass indices stay canonical.
+fn appendBorrowedUnits(pass: EmitPass, src: Source, canonical: []const Unit, requested: ?[]const bool) GenerateError![]const Unit {
+    if (!runtime_mode.enabled()) return canonical;
+    const a = pass.allocator;
+    var result: std.ArrayList(Unit) = .empty;
+    try result.appendSlice(a, canonical);
+    var catalog = try @import("rc_shape.zig").Catalog.init(a, pass.layouts);
+    defer catalog.deinit();
+    for (pass.program.functions, 0..) |function, index| {
+        if (requested) |mask| if (!mask[index]) continue;
+        const proof = (@import("rc_calls.zig").borrowedIn(a, &catalog, pass.program.functions, function, runtime_mode.identity()) catch |err| return layoutError(err)) orelse continue;
+        const emitted = try emitEntry(pass, index, a, proof);
+        var unit = pass.units[index];
+        unit.symbol = try rc_borrow.symbol(a, unit.symbol);
+        unit.il = emitted.text;
+        unit.stored = null;
+        unit.@"export" = null;
+        try fillPositions(a, pass.program, src, index, &unit);
+        try result.append(a, unit);
+    }
+    return result.toOwnedSlice(a);
 }
 
 fn validateSelection(allocator: std.mem.Allocator, program: bytecode.Program, selected: []const bool) GenerateError!void {
@@ -625,7 +658,12 @@ const EmitPass = struct {
 
 /// Lower one function into text allocated from `scratch`, with the pass's
 /// current allocation analysis. Its operand stacks are returned beside it.
-fn emitOne(pass: EmitPass, index: usize, scratch: std.mem.Allocator) GenerateError!struct { text: []const u8, states: []?[]const typed.Type } {
+const EmittedEntry = struct { text: []const u8, states: []?[]const typed.Type };
+fn emitOne(pass: EmitPass, index: usize, scratch: std.mem.Allocator) GenerateError!EmittedEntry {
+    return emitEntry(pass, index, scratch, null);
+}
+
+fn emitEntry(pass: EmitPass, index: usize, scratch: std.mem.Allocator, certificate: ?@import("rc_model.zig").BorrowCertificate) GenerateError!EmittedEntry {
     var emitter = Emitter{
         .allocator = scratch,
         .program = pass.program,
@@ -642,7 +680,8 @@ fn emitOne(pass: EmitPass, index: usize, scratch: std.mem.Allocator) GenerateErr
         .pure = pass.pure,
         .cow = if (pass.cow == .off) null else try cow_lower.request(scratch, pass.cow == .counting),
     };
-    const text = try emitter.emit(pass.units[index].symbol);
+    const name = if (certificate != null) try rc_borrow.symbol(scratch, pass.units[index].symbol) else pass.units[index].symbol;
+    const text = try emitter.emit(name, certificate);
     return .{ .text = text, .states = emitter.states };
 }
 
@@ -1043,7 +1082,8 @@ fn firstPass(pass: EmitPass, reuse: *Reuse) GenerateError![]bool {
             continue;
         }
         if (reuse.configured) |configured| {
-            reuse.local[index] = try reuse.keys.?.local(index, flagsOf(pass, index));
+            const body_key = try reuse.keys.?.local(index, flagsOf(pass, index));
+            reuse.local[index] = @import("qbe_rc_cache.zig").key(pass.allocator, pass.program, pass.layouts, index, body_key) catch |err| return layoutError(err);
             if (try configured.store.first(reuse.local[index])) |answer| {
                 allocates[index] = answer;
                 continue;
@@ -1581,7 +1621,7 @@ const Emitter = struct {
             else => null,
         };
     }
-    fn emit(self: *Emitter, name: []const u8) GenerateError![]const u8 {
+    fn emit(self: *Emitter, name: []const u8, certificate: ?@import("rc_model.zig").BorrowCertificate) GenerateError![]const u8 {
         const f = self.function;
         if (f.policy.c_abi) return @import("qbe_c_abi.zig").emit(self, name);
         if (f.policy.host != null) return @import("qbe_host_lower.zig").emit(self, name);
@@ -1596,7 +1636,10 @@ const Emitter = struct {
         self.branch_targets = try self.collectBranchTargets();
         self.by_reference = try self.addressLocals();
         try self.planOwnership();
-        if (runtime_mode.enabled()) self.cow.?.rc = try @import("qbe_rc_state.zig").build(Emitter, self, ir.stack_capacity);
+        if (runtime_mode.enabled()) {
+            self.cow.?.rc = try @import("qbe_rc_state.zig").build(Emitter, self, ir.stack_capacity);
+            if (certificate) |proof| self.cow.?.rc.?.contract.result = .{ .borrowed = proof };
+        }
         if (!runtime_mode.enabled()) self.range_keys = try self.planRangeKeys();
         // QBE-LOOP-VERSION-1: only a build whose value guards are on has
         // anything to prove, and step accounting counts every instruction the
@@ -2540,7 +2583,9 @@ const Emitter = struct {
         if (packed_args) for (args, 0..) |arg, i| try self.packArgument(i, arg);
         try @import("qbe_rc_ops.zig").callEntry(Emitter, self, callee, h - count);
         const v = self.temp();
-        try self.print(" %v{d} ={s} call ${s}(l %ctx", .{ v, try self.returnType(callee), self.units[@backingInt(target)].symbol });
+        const canonical = self.units[@backingInt(target)].symbol;
+        const callee_symbol = if (try rc_borrow.certificate(Emitter, self, callee) != null) try rc_borrow.symbol(self.allocator, canonical) else canonical;
+        try self.print(" %v{d} ={s} call ${s}(l %ctx", .{ v, try self.returnType(callee), callee_symbol });
         const indirect = try self.largeResult(callee);
         if (indirect) try self.print(", l %aux{d}", .{self.pc});
         if (packed_args) {

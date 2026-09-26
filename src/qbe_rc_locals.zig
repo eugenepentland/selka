@@ -9,6 +9,7 @@ pub const Error = values.Error;
 
 /// Handle local ownership instructions whose legacy lowering copies raw bytes.
 pub fn emit(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "op"), stack: []const typed.Type) Error!bool {
+    if (try @import("qbe_rc_borrow.zig").local(E, self, op, stack)) |handled| return handled;
     const state = frame.get(E, self) orelse return false;
     switch (op) {
         .value_copy => |copy| {
