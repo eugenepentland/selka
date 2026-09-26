@@ -114,17 +114,39 @@ static void depth_reservation_refusal(void) {
     myl_native_region_end(&heap);
     finish(&heap);
 }
+static void close_preserves_older_scope(void) {
+    myl_native_heap heap;
+    start(&heap);
+    void *value = myl_rc_storage_bytes(&heap, 8, 0);
+    assert(value);
+    *(uint64_t *)value = 123;
+    myl_rc_scope outer, inner;
+    myl_rc_scope_begin(&heap, &outer);
+    assert(myl_rc_scope_pin(&outer, value) == MYL_RC_OK);
+    assert(myl_native_region_begin(&heap));
+    myl_rc_scope_begin(&heap, &inner);
+    assert(myl_rc_scope_pin(&inner, value) == MYL_RC_OK);
+    myl_rc_owner_release(&heap, value);
+    myl_native_region_end(&heap);
+    assert(!inner.active && outer.active && !heap.region_depth);
+    myl_rc_object *header = (myl_rc_object *)value - 1;
+    assert(!header->owners && header->holds == 1);
+    assert((header->common.mark & MYL_NATIVE_OBJECT_PINNED) && *(uint64_t *)value == 123);
+    myl_rc_scope_end(&outer);
+    finish(&heap);
+}
 int myl_native_rc_arena_verify(void) {
     collection_edges();
     nested_and_charged_reuse();
     finalizer_and_abort();
     depth_reservation_refusal();
-    return 4;
+    close_preserves_older_scope();
+    return 5;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
-    assert(myl_native_rc_arena_verify() == 4);
-    puts("native RC arena: 4 passed");
+    assert(myl_native_rc_arena_verify() == 5);
+    puts("native RC arena: 5 passed");
     return 0;
 }
 #endif

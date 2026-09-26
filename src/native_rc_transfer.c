@@ -112,6 +112,7 @@ static myl_rc_status schedule_clone(transfer_walk *walk, const void *payload, un
     }
     if (status != MYL_RC_OK) return status;
     myl_rc_invariant(copy != NULL);
+    MYL_RC_STAT(walk->heap, MYL_RC_STAT_CLONE);
     if (pending)
         work->items[work->count++] = (clone_frame){.source = payload, .destination = copy, .descriptor = descriptor, .region = region};
     if (region) work->arenas[work->arena_count++] = copy;
