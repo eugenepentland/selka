@@ -1,0 +1,8 @@
+{
+  "base_commit": "75802ff9",
+  "compilers": {
+    "before": "bacbf1e4794adcc770510414f81bf878c0b418a09b170cf30b8f6d6abaf7bacf",
+    "after": "80aa6063d5d9ebdfb04aaa2891b71762dd1be62da22e8aacec2183246cdcdf19"
+  },
+  "production_change": "Four lines in GC fillPlace; RC branch unchanged."
+}
