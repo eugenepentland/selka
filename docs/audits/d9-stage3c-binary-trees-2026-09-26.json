@@ -1,0 +1,145 @@
+{
+ "meta": {
+  "sides": {
+   "stage3c": {
+    "compiler": "/home/epentland/ai/canopy/mylang-worktrees/d9-stage3c/zig-out/bin/mylang",
+    "compiler_sha256": "04903a652b4718e9fb3084c56e00a5701ca952e3cca199629d11c199e222aeeb"
+   }
+  },
+  "cpu": 10,
+  "sibling": 11,
+  "perf_reps": 3,
+  "rounds": 5,
+  "memory_limit": "8G"
+ },
+ "samples": {
+  "parity/suite/binary_trees|qbe": {
+   "stage3c": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 2187878848,
+      "cycles": 494619485
+     },
+     {
+      "status": 0,
+      "instructions": 2187878861,
+      "cycles": 494377487
+     },
+     {
+      "status": 0,
+      "instructions": 2187878860,
+      "cycles": 500842681
+     }
+    ],
+    "rss_kb": [
+     16512,
+     16500,
+     16524
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.561,
+    "sibling_busy": 0.01,
+    "load1_start": 2.86767578125,
+    "load1_end": 2.86767578125
+   }
+  },
+  "parity/suite/binary_trees|llvm": {
+   "stage3c": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1317783223,
+      "cycles": 410632255
+     },
+     {
+      "status": 0,
+      "instructions": 1317783219,
+      "cycles": 408396726
+     },
+     {
+      "status": 0,
+      "instructions": 1317783212,
+      "cycles": 410634918
+     }
+    ],
+    "rss_kb": [
+     16356,
+     16432,
+     16372
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.544,
+    "sibling_busy": 0.0,
+    "load1_start": 2.86767578125,
+    "load1_end": 2.86767578125
+   }
+  },
+  "parity/suite/binary_trees_recursive|qbe": {
+   "stage3c": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 2173386674,
+      "cycles": 495628158
+     },
+     {
+      "status": 0,
+      "instructions": 2173386658,
+      "cycles": 495833692
+     },
+     {
+      "status": 0,
+      "instructions": 2173386679,
+      "cycles": 495248219
+     }
+    ],
+    "rss_kb": [
+     13784,
+     13728,
+     14008
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.531,
+    "sibling_busy": 0.01,
+    "load1_start": 2.86767578125,
+    "load1_end": 2.86767578125
+   }
+  },
+  "parity/suite/binary_trees_recursive|llvm": {
+   "stage3c": {
+    "perf": [
+     {
+      "status": 0,
+      "instructions": 1131572132,
+      "cycles": 439373229
+     },
+     {
+      "status": 0,
+      "instructions": 1131572121,
+      "cycles": 442227356
+     },
+     {
+      "status": 0,
+      "instructions": 1131572127,
+      "cycles": 441142811
+     }
+    ],
+    "rss_kb": [
+     13984,
+     13744,
+     13972
+    ]
+   },
+   "context": {
+    "cpu_busy": 0.506,
+    "sibling_busy": 0.0,
+    "load1_start": 2.86767578125,
+    "load1_end": 2.86767578125
+   }
+  }
+ }
+}

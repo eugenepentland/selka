@@ -13,7 +13,9 @@ pub fn write(w: *std.Io.Writer, units: []const Value, metadata: Value, ordinary:
     // a pool sized by argument count alone runs out on a list of text: the list
     // takes the argument's slot and the first text element has nowhere to root.
     // The nesting bound is the runtime's own, so the pool cannot be short of it.
-    try w.writeAll("#define QBE_CODEC_DEPTH 128\n#define QBE_CODEC_ROOTS (QBE_CODEC_ARGUMENTS+QBE_CODEC_DEPTH)\n");
+    // A value being read keeps a root per finished sibling box on its path,
+    // so the pool allows a few per level (RECURSIVE-VALUES-3).
+    try w.writeAll("#define QBE_CODEC_DEPTH 128\n#define QBE_CODEC_ROOTS (QBE_CODEC_ARGUMENTS+8*QBE_CODEC_DEPTH)\n");
     try w.writeAll(@embedFile("qbe_codecs_runtime.c"));
     try w.writeByte('\n');
     try shapes.typedefs(w);

@@ -2,10 +2,11 @@
 # stretch tree and every short-lived tree are built and checked inside their
 # own `with arena():` block, so each one is released in bulk at block exit
 # instead of being traced. Only the scalar check count leaves a block. The
-# long-lived tree stays on the collecting heap. See SUITE.md section 1.
+# long-lived tree stays on the collecting heap. The tree now uses a recursive
+# value record with boxed Option children. See SUITE.md section 1.
 
 
-class Node:
+record Node:
     left: Option[Node]
     right: Option[Node]
 

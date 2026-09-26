@@ -227,7 +227,7 @@ const Builder = struct {
         const fields_out = try allocator.alloc(typed.Field, declaration.fields.len);
         for (declaration.fields, fields_out, node.edges, 0..) |field, *out, edge, i| {
             const name = field.builtin_name orelse self.context.src.text(field.name);
-            out.* = .{ .name = name, .declaration = field.name, .ty = try self.runtimeType(edge.target), .default_value = field.default_value };
+            out.* = .{ .name = name, .declaration = field.name, .ty = try self.runtimeType(edge.target), .default_value = field.default_value, .boxed = edge.boxed };
             try self.catalog.field_names.items[schema.id.recordIndex()].put(allocator, name, i);
         }
         schema.fields = fields_out;
@@ -241,6 +241,7 @@ const Builder = struct {
             out.* = .{ .name = name, .declaration = field.name, .payload = null, .fielded = field.ty != null and field.ty.? == .named and self.index.isSynthetic(field.ty.?.named) };
             if (field.ty != null) {
                 out.payload = try self.runtimeType(node.edges[edge].target);
+                out.boxed = node.edges[edge].boxed;
                 edge += 1;
             }
             try self.catalog.field_names.items[schema.id.recordIndex()].put(allocator, name, i);
@@ -266,10 +267,11 @@ const Builder = struct {
     fn fillTuple(self: Builder, node: layouts.Node, schema: *typed.Record) Error!void {
         const allocator = self.context.allocator;
         const fields_out = try allocator.alloc(typed.Field, node.key.arguments.len);
-        for (node.key.arguments, fields_out, 0..) |argument, *out, index| out.* = .{
+        for (node.key.arguments, fields_out, node.edges, 0..) |argument, *out, edge, index| out.* = .{
             .name = try typed.positionalFieldName(allocator, index),
             .declaration = node.site,
             .ty = try self.runtimeType(argument),
+            .boxed = edge.boxed,
         };
         schema.fields = fields_out;
         schema.shape.tuple = true;

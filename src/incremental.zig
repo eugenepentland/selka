@@ -642,9 +642,11 @@ fn writeTypedRecord(writer: *std.Io.Writer, record: typed.Record, records: []con
     try writerWrite(writer, "\npublic-arguments=");
     try writerWrite(writer, if (record.contract.public_arguments) "true" else "false");
     try writerWrite(writer, "\nfields=");
+    // A boxed field or case is laid out as a pointer (RECURSIVE-VALUES-2), so
+    // the mark is part of the layout a dependant was checked against.
     for (record.fields) |field| {
         try writerWrite(writer, field.name);
-        try writerWrite(writer, ":");
+        try writerWrite(writer, if (field.boxed) ":boxed:" else ":");
         try writerWrite(writer, typed.typeName(field.ty, records));
         try writerWrite(writer, "\x00");
     }
@@ -655,7 +657,7 @@ fn writeTypedRecord(writer: *std.Io.Writer, record: typed.Record, records: []con
             try writerWrite(writer, "\x00");
             try writerWrite(writer, case.name);
             if (case.payload) |payload| {
-                try writerWrite(writer, ":");
+                try writerWrite(writer, if (case.boxed) ":boxed:" else ":");
                 try writerWrite(writer, typed.typeName(payload, records));
             }
         }

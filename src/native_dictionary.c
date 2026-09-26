@@ -1,4 +1,5 @@
 #include "native_dictionary.h"
+#include "native_equal.h"
 #include <stdlib.h>
 #include <string.h>
 static const myl_native_type pointer_type={.size=sizeof(void *),.alignment=_Alignof(void *),.kind=MYL_NATIVE_POINTER};
@@ -131,6 +132,15 @@ static int same_value(const myl_native_type *type, const unsigned char *a, const
         if (left==right) return 1;
         if (!left || !right) return 0;
         if (type->collection_kind==2) return myl_native_text_equal(left,right);
+        /* A box holds a recursive value of any depth (RECURSIVE-VALUES-3), so it
+         * is compared by the equality runtime's heap work list instead of this
+         * walk's host recursion. A hashable value holds no float, so one box is
+         * always equal to itself, which the check above already answered; only
+         * if the work list cannot be allocated is the value walked here. */
+        if (type->collection_kind==5) {
+            int equal=myl_native_equal(type,a,b);
+            return equal<0?same_value(type->element,left,right):equal;
+        }
         if (type->collection_kind==4) {
             const myl_native_list *x=left, *y=right;
             return x->length==y->length && (!x->length || !memcmp(x->storage,y->storage,x->length));
@@ -211,13 +221,17 @@ static inline uint64_t mix_word(uint64_t state, uint64_t word) {
  * that case's payload, and each element of a fixed array. Padding and an
  * inactive case's bytes are never read, so equal values hash equally however
  * they were built, and no seed is involved. */
-static uint64_t hash_value(const myl_native_type *type, const unsigned char *value, uint64_t state) {
+typedef struct box_memo box_memo;
+static uint64_t box_hash(const myl_native_type *body, const void *box, box_memo *memo);
+static uint64_t hash_walk(const myl_native_type *type, const unsigned char *value, uint64_t state, box_memo *memo) {
     switch (type->kind) {
     case MYL_NATIVE_POINTER: {
         const void *pointer;
         memcpy(&pointer,value,sizeof pointer);
         if (!pointer) return mix_word(state,0);
         if (type->collection_kind==2) return mix_word(state,(uint64_t)text_hash(pointer)+1);
+        /* A box mixes in the hash of the value it holds (RECURSIVE-VALUES-3). */
+        if (type->collection_kind==5) return mix_word(state,box_hash(type->element,pointer,memo));
         if (type->collection_kind==4) {
             const myl_native_list *octets=pointer;
             return mix_word(state,(uint64_t)myl_native_octets_hash(octets->storage,octets->length)+1);
@@ -225,18 +239,18 @@ static uint64_t hash_value(const myl_native_type *type, const unsigned char *val
         return mix_word(state,(uint64_t)(uintptr_t)pointer);
     }
     case MYL_NATIVE_RECORD:
-        for (size_t i=0;i<type->field_count;i++) state=hash_value(type->fields[i].type,value+type->fields[i].offset,state);
+        for (size_t i=0;i<type->field_count;i++) state=hash_walk(type->fields[i].type,value+type->fields[i].offset,state,memo);
         return state;
     case MYL_NATIVE_VARIANT: {
         uint32_t tag;
         memcpy(&tag,value,4);
         state=mix_word(state,tag);
         for (size_t i=0;i<type->field_count;i++)
-            if (type->fields[i].tag==tag) state=hash_value(type->fields[i].type,value+type->fields[i].offset,state);
+            if (type->fields[i].tag==tag) state=hash_walk(type->fields[i].type,value+type->fields[i].offset,state,memo);
         return state;
     }
     case MYL_NATIVE_ARRAY:
-        for (size_t i=0;i<type->count;i++) state=hash_value(type->fields[0].type,value+i*type->stride,state);
+        for (size_t i=0;i<type->count;i++) state=hash_walk(type->fields[0].type,value+i*type->stride,state,memo);
         return state;
     default:
         for (size_t at=0;at<type->size;at+=8) {
@@ -246,6 +260,106 @@ static uint64_t hash_value(const myl_native_type *type, const unsigned char *val
         }
         return state;
     }
+}
+static uint64_t hash_value(const myl_native_type *type, const unsigned char *value, uint64_t state) {
+    return hash_walk(type,value,state,NULL);
+}
+/* The hashes of the boxes one key hash has already met, by box address, so a
+ * value whose subtrees share boxes hashes each box once. */
+struct box_memo { const void **boxes; uint64_t *hashes; size_t capacity, count; };
+static size_t box_slot(const box_memo *memo, const void *box) {
+    size_t at=(size_t)(scalar_hash((uint64_t)(uintptr_t)box))&(memo->capacity-1);
+    while (memo->boxes[at] && memo->boxes[at]!=box) at=(at+1)&(memo->capacity-1);
+    return at;
+}
+static int box_known(const box_memo *memo, const void *box) {
+    return memo->capacity && memo->boxes[box_slot(memo,box)]==box;
+}
+static int box_remember(box_memo *memo, const void *box, uint64_t hash) {
+    if (memo->count*2>=memo->capacity) {
+        size_t capacity=memo->capacity?memo->capacity*2:64;
+        const void **boxes=calloc(capacity,sizeof *boxes);
+        uint64_t *hashes=malloc(capacity*sizeof *hashes);
+        if (!boxes || !hashes) { free(boxes); free(hashes); return 0; }
+        box_memo grown={boxes,hashes,capacity,memo->count};
+        for (size_t i=0;i<memo->capacity;i++) if (memo->boxes[i]) {
+            size_t at=box_slot(&grown,memo->boxes[i]);
+            grown.boxes[at]=memo->boxes[i]; grown.hashes[at]=memo->hashes[i];
+        }
+        free(memo->boxes); free(memo->hashes);
+        *memo=grown;
+    }
+    size_t at=box_slot(memo,box);
+    memo->boxes[at]=box; memo->hashes[at]=hash; memo->count++;
+    return 1;
+}
+/* One box still to hash: its body descriptor, its address, and whether the
+ * boxes it holds have been queued ahead of it. */
+typedef struct { const myl_native_type *body; const void *box; int expanded; } box_visit;
+typedef struct { box_visit *items; size_t length, capacity; } box_stack;
+static int box_push(box_stack *stack, const myl_native_type *body, const void *box) {
+    if (stack->length==stack->capacity) {
+        size_t capacity=stack->capacity?stack->capacity*2:32;
+        box_visit *items=realloc(stack->items,capacity*sizeof *items);
+        if (!items) return 0;
+        stack->items=items; stack->capacity=capacity;
+    }
+    stack->items[stack->length++]=(box_visit){body,box,0};
+    return 1;
+}
+/* Queue every box directly inside one box's value that is not hashed yet. The
+ * walk follows only the value's inline shape, which its declarations bound. */
+static int box_children(box_stack *stack, const box_memo *memo, const myl_native_type *type, const unsigned char *value) {
+    switch (type->kind) {
+    case MYL_NATIVE_POINTER: {
+        const void *pointer;
+        memcpy(&pointer,value,sizeof pointer);
+        if (type->collection_kind!=5 || !pointer || box_known(memo,pointer)) return 1;
+        return box_push(stack,type->element,pointer);
+    }
+    case MYL_NATIVE_RECORD:
+        for (size_t i=0;i<type->field_count;i++) if (!box_children(stack,memo,type->fields[i].type,value+type->fields[i].offset)) return 0;
+        return 1;
+    case MYL_NATIVE_VARIANT: {
+        uint32_t tag;
+        memcpy(&tag,value,4);
+        for (size_t i=0;i<type->field_count;i++)
+            if (type->fields[i].tag==tag && !box_children(stack,memo,type->fields[i].type,value+type->fields[i].offset)) return 0;
+        return 1;
+    }
+    case MYL_NATIVE_ARRAY:
+        for (size_t i=0;i<type->count;i++) if (!box_children(stack,memo,type->fields[0].type,value+i*type->stride)) return 0;
+        return 1;
+    default: return 1;
+    }
+}
+/* The hash of the value inside one box (RECURSIVE-VALUES-3): its own fold from
+ * a fixed start, so it depends on that value alone. The boxes below it are
+ * hashed first, children before parents, off a heap stack, so a recursive key
+ * of any depth hashes without host recursion. If that bookkeeping cannot be
+ * allocated, the value is hashed by plain recursion instead. */
+static uint64_t box_hash(const myl_native_type *body, const void *box, box_memo *memo) {
+    if (memo && box_known(memo,box)) return memo->hashes[box_slot(memo,box)];
+    box_memo local={0};
+    box_memo *known=memo?memo:&local;
+    box_stack stack={0};
+    int ok=box_push(&stack,body,box);
+    while (ok && stack.length) {
+        box_visit *top=&stack.items[stack.length-1];
+        if (box_known(known,top->box)) { stack.length--; continue; }
+        if (!top->expanded) {
+            top->expanded=1;
+            ok=box_children(&stack,known,top->body,top->box);
+            continue;
+        }
+        const box_visit item=*top;
+        ok=box_remember(known,item.box,hash_walk(item.body,item.box,KEY_MIX,known));
+        stack.length--;
+    }
+    uint64_t hash=ok?known->hashes[box_slot(known,box)]:hash_walk(body,box,KEY_MIX,NULL);
+    free(stack.items);
+    if (!memo) { free(local.boxes); free(local.hashes); }
+    return hash;
 }
 /* The table hash of one key. Equal keys have equal bytes and so equal hashes. */
 static uint32_t hash_key(const myl_native_dictionary *dict, const void *key) {

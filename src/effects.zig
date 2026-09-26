@@ -714,7 +714,10 @@ fn directEffect(program: typed.Program, function: typed.Function, node: typed.No
         .external_read => |read| read.kind.effect(),
         .cast => if (allocatingSequence(program.records, node.ty)) .managed_allocation else null,
         .array => if (literalAllocates(program.records, node.ty)) .managed_allocation else null,
-        .record => if (node.ty.isAggregate() and program.records[node.ty.recordIndex()].managed) .managed_allocation else null,
+        .record => |fields| if (node.ty.isAggregate() and program.records[node.ty.recordIndex()].managed) .managed_allocation else boxing(program.records, node.ty, fields),
+        // Building a boxed field or case allocates its box (RECURSIVE-VALUES-2).
+        .update => |update| boxing(program.records, node.ty, update.fields),
+        .variant => |variant| if (variant.value != null and program.records[node.ty.recordIndex()].shape.variants.?.cases[variant.tag].boxed) .managed_allocation else null,
         .binary => |binary| if (binary.op == .add and allocatingSequence(program.records, node.ty)) .managed_allocation else null,
         // Charged by the receiver, as `validate` charges `get_index`: only a
         // `str` read builds a fresh string. A static-array or dictionary
@@ -741,16 +744,22 @@ fn directEffect(program: typed.Program, function: typed.Function, node: typed.No
         .local,
         .propagate,
         .wrap,
-        .variant,
         .block_value,
         .unwrap,
         .replace,
         .length,
-        .update,
         .field,
         .unary,
         => null,
     };
+}
+
+/// The allocation of a record construction or update that stores a boxed
+/// field: each boxed value it writes gets a fresh box (RECURSIVE-VALUES-2).
+fn boxing(records: []const typed.Record, ty: typed.Type, fields: []const typed.FieldInit) ?sets.Effect {
+    const schema = records[ty.recordIndex()];
+    for (fields) |field| if (schema.fields[field.index].boxed) return .managed_allocation;
+    return null;
 }
 
 /// Whether a local names storage a contract condition did not build itself.

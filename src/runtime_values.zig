@@ -286,7 +286,10 @@ pub const ManagedKind = enum { list, string, dictionary, bytes };
 /// `set` marks a `set[T]`: a dictionary-kind collection whose keys are the
 /// elements and whose values are unit, so every dictionary path — hashing,
 /// iteration, equality, tracing, arena escape — serves it unchanged.
-pub const CollectionShape = struct { kind: ManagedKind = .list, key: ?Type = null, contains_cell: bool = false, set: bool = false };
+/// `box` marks the one-field managed record the backend stores a recursive
+/// value's boxed field in (RECURSIVE-VALUES-2): it is never written after it
+/// is built, and equality, hashing and printing look through it.
+pub const CollectionShape = struct { kind: ManagedKind = .list, key: ?Type = null, contains_cell: bool = false, set: bool = false, box: bool = false };
 
 /// Collector mark bit and the arena nesting depth that owns one managed object.
 /// Depth 0 is the ordinary heap; depth k is the k-th nested active arena scope.

@@ -44,10 +44,14 @@ pub const Scope = enum { all, closure };
 /// payload alone is owned by `allocator`. `.closure` describes only what the
 /// roots reach, in program order, so its units carry exactly the facts a plan
 /// of any root reads while a large project's untested code costs nothing.
-pub fn render(allocator: std.mem.Allocator, src: source.Source, program: typed.Program, roots: []const typed.FunctionId, schema: []const u8, scope: Scope) Error![]u8 {
+pub fn render(allocator: std.mem.Allocator, src: source.Source, input: typed.Program, roots: []const typed.FunctionId, schema: []const u8, scope: Scope) Error![]u8 {
     var arena = std.heap.ArenaAllocator.init(allocator);
     defer arena.deinit();
     const scratch = arena.allocator();
+    // Layout fingerprints describe the catalog the backend lays out, where a
+    // recursive value's boxed fields hold boxes (RECURSIVE-VALUES-2).
+    var program = input;
+    program.records = try @import("recursive_boxes.zig").physical(scratch, input.records);
     var catalog = native_types.Catalog.initRecords(scratch, program.records) catch |err| return mapLayoutError(err);
     defer catalog.deinit();
     const exported = try scratch.alloc(bool, program.functions.len);

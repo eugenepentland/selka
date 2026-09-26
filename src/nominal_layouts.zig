@@ -99,10 +99,19 @@ const KeyContext = struct {
 };
 const Map = std.HashMapUnmanaged(Key, Id, KeyContext, std.hash_map.default_max_load_percentage);
 const State = enum { unneeded, queued, ready, visiting, complete };
+/// RECURSIVE-VALUES-1: a cycle every value of which holds another value of it.
+const no_finite_value = "this recursive type has no finite value: every value of it holds another one; " ++
+    "give the cycle a way out such as an `Option[...]` field, a payload-free union case or a `list[...]`";
+/// The two boxing passes of RECURSIVE-VALUES-2, in the order they run.
+const Pass = enum { union_payload, field };
 /// Only storage dependencies form edges; phantom type arguments remain identities.
-pub const Edge = struct { target: Id, span: Span };
+/// A `boxed` edge closes a recursive value type: the field or case stores a
+/// pointer to an immutable managed box holding the value (RECURSIVE-VALUES-2).
+pub const Edge = struct { target: Id, span: Span, boxed: bool = false };
 /// Graph-owned layout identity with a separately discovered storage dependency list.
-pub const Node = struct { key: Key, site: Span, edges: []const Edge = &.{}, state: State = .unneeded };
+/// `inhabited` says the type has a finite value, which is what lets a cycle
+/// through it be boxed instead of rejected (RECURSIVE-VALUES-1).
+pub const Node = struct { key: Key, site: Span, edges: []Edge = &.{}, state: State = .unneeded, inhabited: bool = false };
 /// NOMINAL-LAYOUT-BUDGET-1: one demand on the graph — a declaration's symbolic
 /// root, or one concrete type the checker materializes — and what expanding it
 /// has cost so far. Every limit is charged to the demand whose expansion first
@@ -295,7 +304,64 @@ pub const Graph = struct {
             self.budget.expanded += 1;
         }
     }
+    /// Whether a named node's declaration is laid out through a pointer, so its
+    /// fields are no by-value storage of the node itself.
+    fn managedNode(self: *const Graph, node: Node) bool {
+        return node.key.base == .named and self.templates.declarations.items[node.key.base.named].managed;
+    }
+    /// RECURSIVE-VALUES-1: the least fixpoint of "has a finite value" over the
+    /// nodes this request expanded. A record or tuple needs every field, a union
+    /// one case, an array its element unless it is empty; builtins, parameters
+    /// and pointer-laid-out declarations always have one. Older nodes already
+    /// carry their answer, and no older node reaches a newer one. Nodes are
+    /// visited in reverse discovery order, which is roughly children first.
+    fn inhabit(self: *Graph, first: usize) void {
+        var changed = true;
+        while (changed) {
+            changed = false;
+            var position = self.pending.items.len;
+            while (position > first) {
+                position -= 1;
+                const id = self.pending.items[position].id;
+                const node = self.nodes.items[@backingInt(id)];
+                if (node.inhabited or !self.hasValue(node)) continue;
+                self.nodes.items[@backingInt(id)].inhabited = true;
+                changed = true;
+            }
+        }
+    }
+    fn hasValue(self: *const Graph, node: Node) bool {
+        switch (node.key.base) {
+            .named => |declaration_id| {
+                const declaration = self.templates.declarations.items[declaration_id];
+                if (declaration.managed) return true;
+                switch (declaration.kind) {
+                    .variants, .result, .enumeration => {
+                        // A payload-free case has no edge and is a value by itself.
+                        if (node.edges.len < declaration.fields.len) return true;
+                        for (node.edges) |edge| if (self.nodes.items[@backingInt(edge.target)].inhabited) return true;
+                        return false;
+                    },
+                    .record, .tuple => {},
+                    .domain, .buffer, .resource => return true,
+                }
+            },
+            .array => |array| if (array.length == 0 or array.length_parameter != null) return true,
+            .tuple => {},
+            .callback, .builtin, .length, .parameter => return true,
+        }
+        for (node.edges) |edge| if (!self.nodes.items[@backingInt(edge.target)].inhabited) return false;
+        return true;
+    }
     fn acyclic(self: *Graph, first: usize) Error!void {
+        self.inhabit(first);
+        try self.finite(first);
+        try self.box(first);
+    }
+    /// Reject a cycle through a type with no finite value (RECURSIVE-VALUES-1).
+    /// A cycle through a type that has one is a recursive value type, which
+    /// `box` lays out instead.
+    fn finite(self: *Graph, first: usize) Error!void {
         const Visit = struct { id: Id, next: usize = 0 };
         var stack: std.ArrayList(Visit) = .empty;
         defer stack.deinit(self.allocator);
@@ -308,7 +374,7 @@ pub const Graph = struct {
                 const top = stack.items.len - 1;
                 const visit = stack.items[top];
                 const node = self.nodes.items[@backingInt(visit.id)];
-                if (visit.next == node.edges.len or (node.key.base == .named and self.templates.declarations.items[node.key.base.named].managed)) {
+                if (visit.next == node.edges.len or self.managedNode(node)) {
                     self.nodes.items[@backingInt(visit.id)].state = .complete;
                     _ = stack.pop();
                     continue;
@@ -316,15 +382,136 @@ pub const Graph = struct {
                 stack.items[top].next += 1;
                 const edge = node.edges[visit.next];
                 const child = self.nodes.items[@backingInt(edge.target)];
-                if (child.state == .visiting) return self.sink.failRelated(
-                    "E_RECURSIVE_RECORD",
-                    edge.span,
-                    "type fields must form a finite by-value layout; this edge closes a cycle",
-                    .{ .span = child.site, .message = "this layout is already being expanded" },
-                );
+                if (child.state == .visiting and child.inhabited) continue;
+                if (child.state == .visiting) return self.sink.failRelated(diagnostic.recursive_record, edge.span, no_finite_value, .{ .span = child.site, .message = "this type contains itself" });
                 if (child.state == .complete) continue;
                 self.nodes.items[@backingInt(edge.target)].state = .visiting;
                 try stack.append(self.allocator, .{ .id = edge.target });
+            }
+        }
+    }
+    /// RECURSIVE-VALUES-2: choose which edges of the newly expanded nodes store
+    /// their value behind an immutable box. Inside every strongly connected set
+    /// of by-value storage, first each union case payload that stays inside the
+    /// set is boxed — one box per recursive case, and an `Option` of a boxed
+    /// value is one nullable word — and then, for a cycle through no union at
+    /// all, each record or tuple field that still closes one. The choice depends
+    /// only on the declarations, never on the order they were discovered in.
+    fn box(self: *Graph, first: usize) Error!void {
+        const members = self.pending.items[first..];
+        if (members.len == 0) return;
+        const allocator = self.allocator;
+        var local: std.AutoHashMapUnmanaged(usize, usize) = .empty;
+        defer local.deinit(allocator);
+        for (members, 0..) |member, position| try local.put(allocator, @backingInt(member.id), position);
+        const component = try allocator.alloc(usize, members.len);
+        defer allocator.free(component);
+        try self.components(members, &local, component);
+        // Most requests close no cycle at all, and then nothing is boxed.
+        if (!self.cyclic(members, &local, component)) return;
+        for ([_]Pass{ .union_payload, .field }) |pass| {
+            for (members, 0..) |member, position| {
+                const node = &self.nodes.items[@backingInt(member.id)];
+                if (self.managedNode(node.*) or !self.boxable(node.*, pass)) continue;
+                for (node.edges) |*edge| {
+                    const target = local.get(@backingInt(edge.target)) orelse continue;
+                    if (component[target] == component[position]) edge.boxed = true;
+                }
+            }
+            try self.components(members, &local, component);
+        }
+        // Every inhabited cycle runs through a union case or a field (arrays
+        // alone cannot close one), so the two passes leave none.
+        if (self.cyclic(members, &local, component)) return error.InternalError;
+    }
+    /// Whether some unboxed by-value edge stays inside its component.
+    fn cyclic(self: *const Graph, members: []const Pending, local: *const std.AutoHashMapUnmanaged(usize, usize), component: []const usize) bool {
+        for (members, 0..) |member, position| {
+            const node = self.nodes.items[@backingInt(member.id)];
+            if (self.managedNode(node)) continue;
+            for (node.edges) |edge| {
+                if (edge.boxed) continue;
+                const target = local.get(@backingInt(edge.target)) orelse continue;
+                if (component[target] == component[position]) return true;
+            }
+        }
+        return false;
+    }
+    /// Whether the boxing pass `pass` boxes the edges of `node`: a union's
+    /// case payloads (an `Option` or `Result` is one), or a record's or
+    /// tuple's fields. An array element is never boxed.
+    fn boxable(self: *const Graph, node: Node, pass: Pass) bool {
+        return switch (node.key.base) {
+            .named => |declaration_id| switch (self.templates.declarations.items[declaration_id].kind) {
+                .variants, .result => pass == .union_payload,
+                .record => pass == .field,
+                else => false,
+            },
+            .tuple => pass == .field,
+            else => false,
+        };
+    }
+    /// Tarjan's strongly connected components of the request's nodes over their
+    /// unboxed by-value edges, iteratively, so a long declaration chain never
+    /// recurses on the host stack. `component[i]` names member `i`'s set.
+    fn components(self: *Graph, members: []const Pending, local: *const std.AutoHashMapUnmanaged(usize, usize), component: []usize) Error!void {
+        const allocator = self.allocator;
+        const unvisited = std.math.maxInt(usize);
+        const order = try allocator.alloc(usize, members.len);
+        defer allocator.free(order);
+        const low = try allocator.alloc(usize, members.len);
+        defer allocator.free(low);
+        const on_stack = try allocator.alloc(bool, members.len);
+        defer allocator.free(on_stack);
+        @memset(order, unvisited);
+        @memset(on_stack, false);
+        var stack: std.ArrayList(usize) = .empty;
+        defer stack.deinit(allocator);
+        const Frame = struct { member: usize, next: usize = 0 };
+        var frames: std.ArrayList(Frame) = .empty;
+        defer frames.deinit(allocator);
+        var counter: usize = 0;
+        var sets: usize = 0;
+        for (0..members.len) |root| {
+            if (order[root] != unvisited) continue;
+            try frames.append(allocator, .{ .member = root });
+            order[root] = counter;
+            low[root] = counter;
+            counter += 1;
+            try stack.append(allocator, root);
+            on_stack[root] = true;
+            while (frames.items.len != 0) {
+                const top = &frames.items[frames.items.len - 1];
+                const node = self.nodes.items[@backingInt(members[top.member].id)];
+                const edges: []const Edge = if (self.managedNode(node)) &.{} else node.edges;
+                if (top.next < edges.len) {
+                    const edge = edges[top.next];
+                    top.next += 1;
+                    if (edge.boxed) continue;
+                    const target = local.get(@backingInt(edge.target)) orelse continue;
+                    if (order[target] == unvisited) {
+                        order[target] = counter;
+                        low[target] = counter;
+                        counter += 1;
+                        try stack.append(allocator, target);
+                        on_stack[target] = true;
+                        try frames.append(allocator, .{ .member = target });
+                    } else if (on_stack[target]) low[top.member] = @min(low[top.member], order[target]);
+                    continue;
+                }
+                const finished = top.member;
+                _ = frames.pop();
+                if (frames.items.len != 0) {
+                    const parent = frames.items[frames.items.len - 1].member;
+                    low[parent] = @min(low[parent], low[finished]);
+                }
+                if (low[finished] != order[finished]) continue;
+                while (stack.pop()) |member| {
+                    on_stack[member] = false;
+                    component[member] = sets;
+                    if (member == finished) break;
+                }
+                sets += 1;
             }
         }
     }

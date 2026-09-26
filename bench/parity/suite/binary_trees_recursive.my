@@ -1,0 +1,43 @@
+# binary_trees: the same workload and output as binary_trees.my, with a
+# recursive union whose branch payloads are immutable managed boxes.
+
+
+union Tree:
+    leaf,
+    branch(left: Tree, right: Tree)
+
+
+def make(depth: int) -> Tree:
+    if depth == 0:
+        return Tree.leaf
+    return Tree.branch(make(depth - 1), make(depth - 1))
+
+
+def check(tree: Tree) -> int:
+    match tree:
+        case Tree.leaf:
+            return 1
+        case Tree.branch(left, right):
+            return 1 + check(left) + check(right)
+
+
+def main(out: Stream) -> int:
+    max_depth = 16
+    min_depth = 4
+
+    stretch = max_depth + 1
+    out.print(f"stretch tree of depth {stretch}\t check: {check(make(stretch))}")
+
+    long_lived = make(max_depth)
+
+    depth = min_depth
+    while depth <= max_depth:
+        iterations = shift_left(1, max_depth - depth + min_depth)
+        total = 0
+        for _ in range(iterations):
+            total = total + check(make(depth))
+        out.print(f"{iterations}\t trees of depth {depth}\t check: {total}")
+        depth = depth + 2
+
+    out.print(f"long lived tree of depth {max_depth}\t check: {check(long_lived)}")
+    return 0

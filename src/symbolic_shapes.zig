@@ -383,6 +383,10 @@ pub const Context = struct {
             var result = self.leaf(visit.value);
             if (result == null) {
                 if (try self.child(visit.value, &stack.items[last].next, &stack.items[last].result, span)) |child_type| {
+                    // A recursive value type reaches itself again through a
+                    // boxed field (RECURSIVE-VALUES-2); the visit already on
+                    // the stack answers for that repeat.
+                    if (child_type == .nominal and onStack(self, stack.items, child_type)) continue;
                     try stack.append(self.arena.allocator(), .{ .value = child_type });
                     continue;
                 }
@@ -399,6 +403,11 @@ pub const Context = struct {
         return error.InternalError;
     }
 };
+/// Whether a nominal value is already being derived further down `visits`.
+fn onStack(self: Context, visits: anytype, value: Value) bool {
+    for (visits) |visit| if (visit.value == .nominal and symbolic.same(visit.value, value, self.catalog)) return true;
+    return false;
+}
 /// Coalesce equivalent expanded requirement members by resolved identity and
 /// reject same-name members whose resolved types differ. Spans stay in their
 /// declaring coordinate space; only the comparison is normalized, so nominal
