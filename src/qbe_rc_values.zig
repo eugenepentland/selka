@@ -5,7 +5,6 @@ const slots = @import("qbe_rc_slots.zig");
 const holds = @import("qbe_rc_holds.zig");
 /// QBE byte relocation shared by transactional value and aggregate publication.
 pub const blit_value = " blit %v{d}, %v{d}, {d}\n";
-const region_mark = " %v{d} =l call $myl_qbe_region_mark(l %ctx)\n";
 /// Errors shared with the native emitter.
 pub const Error = slots.Error;
 /// An already-owned runtime result is adopted; a read establishes a snapshot.
@@ -38,16 +37,15 @@ pub fn drop(comptime E: type, self: *E, index: usize) Error!void {
 /// Prepare a borrowed publication before releasing any consumed owners.
 pub fn copied(comptime E: type, self: *E, ty: typed.Type, address: usize) Error!void {
     const work = try workAddress(E, self);
-    const region = self.temp();
-    try self.print(region_mark, .{region});
+    const region = try frame.region(E, self);
     try slots.Lower(E).transfer(self, .{ .ty = ty, .destination = work, .source = address, .region = region, .mode = .copy_empty });
-    try markWork(E, self, ty, work);
+    try markWork(E, self, ty);
 }
 /// Adopt the one edge returned by a runtime producer without another acquire.
 pub fn adopted(comptime E: type, self: *E, ty: typed.Type, address: usize) Error!void {
     const work = try workAddress(E, self);
     try self.print(blit_value, .{ address, work, (try self.layout(ty)).size });
-    try markWork(E, self, ty, work);
+    try markWork(E, self, ty);
 }
 /// Materialize a result, drop its inputs, then relocate its obligation to the stack.
 pub fn finish(comptime E: type, self: *E, result: Result) Error!void {
@@ -76,7 +74,7 @@ pub fn publish(comptime E: type, self: *E, ty: typed.Type, index: usize) Error!v
     const address = try operand(E, self, index);
     const work = try workAddress(E, self);
     try self.print(blit_value, .{ work, address, (try self.layout(ty)).size });
-    try frame.entry(E, self, journalIndex(E, self, index), ty, address);
+    try frame.stableEntry(E, self, journalIndex(E, self, index), ty);
     try frame.initialized(E, self, frame.pending(E, self), false);
     try frame.initialized(E, self, journalIndex(E, self, index), true);
     try self.store(index, try self.readValue(address, ty));
@@ -91,8 +89,8 @@ pub fn workAddress(comptime E: type, self: *E) Error!usize {
     try self.print(" %v{d} =l copy %rcwork\n", .{work});
     return work;
 }
-fn markWork(comptime E: type, self: *E, ty: typed.Type, work: usize) Error!void {
-    try frame.entry(E, self, frame.pending(E, self), ty, work);
+fn markWork(comptime E: type, self: *E, ty: typed.Type) Error!void {
+    try frame.stableEntry(E, self, frame.pending(E, self), ty);
     try frame.initialized(E, self, frame.pending(E, self), true);
 }
 
@@ -146,11 +144,10 @@ fn producedOwner(comptime E: type, self: *E, ty: typed.Type, index: usize) Error
 
 fn prepareOwned(comptime E: type, self: *E, ty: typed.Type, address: usize, journal_index: usize) Error!void {
     const work = try workAddress(E, self);
-    const region = self.temp();
-    try self.print(region_mark, .{region});
+    const region = try frame.region(E, self);
     try slots.Lower(E).transfer(self, .{ .ty = ty, .destination = work, .source = address, .region = region, .mode = .take_empty });
     try frame.initialized(E, self, journal_index, false);
-    try markWork(E, self, ty, work);
+    try markWork(E, self, ty);
 }
 
 /// Physical moves consume only an initialized owner; a borrowed local or operand
@@ -181,7 +178,6 @@ pub fn prepareGuarded(comptime E: type, self: *E, ty: typed.Type, address: usize
 /// Initialize an empty runtime output using pin-aware copy and mapped failure.
 /// Its caller must immediately journal the successful result or commit it.
 pub fn copyRuntime(comptime E: type, self: *E, ty: typed.Type, destination: usize, input: usize) Error!void {
-    const region = self.temp();
-    try self.print(region_mark, .{region});
+    const region = try frame.region(E, self);
     try slots.Lower(E).transfer(self, .{ .ty = ty, .destination = destination, .source = input, .region = region, .mode = .copy_empty });
 }

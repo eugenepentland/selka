@@ -35,9 +35,7 @@ pub fn emit(comptime E: type, self: *E, op: Op, stack: []const typed.Type) Error
 }
 
 fn region(comptime E: type, self: *E) Error!usize {
-    const result = self.temp();
-    try self.print(" %v{d} =l call $myl_qbe_region_mark(l %ctx)\n", .{result});
-    return result;
+    return frame.region(E, self);
 }
 
 fn internal(comptime E: type, self: *E, ty: typed.Type, address: usize) Error!void {

@@ -42,6 +42,7 @@ pub fn Lower(comptime E: type) type {
         /// Link only after every guard is initialized and every parameter is stored.
         pub fn enter(self: *E) Error!void {
             const state = get(E, self) orelse return;
+            if (fixedRegion(E, self)) try self.print(" %rcregion =l call $myl_qbe_region_mark(l %ctx)\n", .{});
             const size = count(E, self, state);
             try self.print(" call $memset(l %rcguards, w 0, l {d})\n call $memset(l %rcentries, w 0, l {d})\n", .{ size * 8, size * entry_bytes });
             for (state.locals.storage, 0..) |slot, index| {
@@ -104,20 +105,48 @@ pub fn guard(comptime E: type, self: *E, index: usize) Error!usize {
     try self.print(" %v{d} =l add %rcguards, {d}\n", .{ result, index * 8 });
     return result;
 }
+/// Read this transfer's arena depth, reusing the entry value in stable frames.
+/// Callees restore their own scopes before returning, including on failure.
+pub fn region(comptime E: type, self: *E) Error!usize {
+    const result = self.temp();
+    if (fixedRegion(E, self)) {
+        try self.print(" %v{d} =l copy %rcregion\n", .{result});
+    } else try self.print(" %v{d} =l call $myl_qbe_region_mark(l %ctx)\n", .{result});
+    return result;
+}
+fn fixedRegion(comptime E: type, self: *E) bool {
+    for (self.function.scope.instructions) |instruction| switch (instruction.op) {
+        .begin_arena, .end_arena => return false,
+        else => {},
+    };
+    return true;
+}
 /// Publish metadata while the entry has no initialized token.
 pub fn entry(comptime E: type, self: *E, index: usize, ty: typed.Type, address: usize) Error!void {
-    const state = get(E, self) orelse return error.InternalError;
-    const shape = state.catalog.get(ty) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError;
-    const pointer = self.temp();
+    const pointer = try typedEntry(E, self, index, ty);
     const field = self.temp();
-    const flag = @as(u32, @intFromBool(shape.unique_drop)) | (@as(u32, @intFromBool(shape.counted)) << 1);
-    try self.print(" %v{d} =l add %rcentries, {d}\n storel extern ${s}, %v{d}\n", .{ pointer, index * entry_bytes, try self.descriptor(ty), pointer });
     try self.print(" %v{d} =l add %v{d}, 8\n storel %v{d}, %v{d}\n", .{ field, pointer, address, field });
     const at_guard = try self.address(pointer, 16);
     const guard_pointer = try guard(E, self, index);
     try self.print(" storel %v{d}, %v{d}\n", .{ guard_pointer, at_guard });
-    try self.print(" storew {d}, %v{d}\n", .{ flag, try self.address(pointer, 24) });
 }
+/// Change an operand or pending value's type while preserving its fixed addresses.
+/// Entry initialized these address/guard pointers before linking the frame; all
+/// later publications in these slots use the same physical operand/work storage.
+pub fn stableEntry(comptime E: type, self: *E, index: usize, ty: typed.Type) Error!void {
+    if (index < localCount(E, self) or index > pending(E, self)) return error.InternalError;
+    _ = try typedEntry(E, self, index, ty);
+}
+fn typedEntry(comptime E: type, self: *E, index: usize, ty: typed.Type) Error!usize {
+    const state = get(E, self) orelse return error.InternalError;
+    const shape = state.catalog.get(ty) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError;
+    const pointer = self.temp();
+    const flag = @as(u32, @intFromBool(shape.unique_drop)) | (@as(u32, @intFromBool(shape.counted)) << 1);
+    try self.print(" %v{d} =l add %rcentries, {d}\n storel extern ${s}, %v{d}\n", .{ pointer, index * entry_bytes, try self.descriptor(ty), pointer });
+    try self.print(" storew {d}, %v{d}\n", .{ flag, try self.address(pointer, 24) });
+    return pointer;
+}
+
 /// Clear/drop one dynamic typed entry using the runtime's unique/count ordering.
 pub fn drop(comptime E: type, self: *E, index: usize) Error!void {
     const live = self.temp();

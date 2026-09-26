@@ -1351,14 +1351,23 @@ host failure in one worker leaves the units the other workers hold running.
 
 - [RC-INERT-RECEIVER-1] A compiler-only list receiver can omit its temporary hold and pin scope when a bounded closed forward region proves that one stable ordinary owner remains live through its sole consuming scalar mutation. The region permits scalar computation and descendant receiver reads but no callback, owner replacement, managed publication, arena boundary, backward edge or alternate entry. Uniqueness checks and all trap paths remain unchanged; declined regions retain full receiver scopes.
 
+- [RC-NESTED-READ-LOAN-1] A managed collection read may lend its result directly into a single-definition compiler receiver when the complete projected chain is anchored by one stable named root and every receiver interval contains only scalar operations and further certified reads. Named rows, published results, callbacks, mutation, arena changes and dictionary hold roles retain owned publication. The physical plan keeps the root until the final scalar read; bounded or cyclic proof refusal retains ordinary ownership.
+
 - [RC-INLINE-TAKE-1] RC token transfers for bounded fixed layouts with ordinary pointer leaves may relocate directly after all headers and disjoint source/destination ranges are checked. Pinned, arena, dying, held, unique-resource, and unsupported inline layouts retain the generic transactional path. Header masks are compared as full-width values before branching. Direct moves change no counts, perform no fallible work or callback, and preserve public-boundary drain ordering and source guards on fallback refusal.
 
 - [RC-MUT-UNIQUE-1] A scalar-element list parameter with the mutable-payload ABI may use the caller's established uniqueness throughout its activation when no bytecode instruction rebinds, moves, drops or exposes the parameter slot by reference. The caller pins the payload, so snapshot publication copies instead of adding another owner. Rebound parameters and other layouts retain ordinary runtime uniqueness checks.
-
-- [RC-NESTED-READ-LOAN-1] A managed collection read may lend its result directly into a single-definition compiler receiver when the complete projected chain is anchored by one stable named root and every receiver interval contains only scalar operations and further certified reads. Named rows, published results, callbacks, mutation, arena changes and dictionary hold roles retain owned publication. The physical plan keeps the root until the final scalar read; bounded or cyclic proof refusal retains ordinary ownership.
 
 - [RC-PHYSICAL-HOIST-1] RC uniqueness may move to a semantic loop entry only after finalized physical loans prove a closed scalar-only body with no lasting managed publication; root storage and existing hidden liveness remain unchanged, and nested list elements detach only after their owning outer list.
 
 - [RC-PRODUCED-OWNER-1] An immediately preceding unconditional ordinary-owner producer may skip its operand initialization test. Branch entries, held mappings, borrowed entries and other producers keep guarded transfers; pin, arena and failure behavior stays on the existing typed TAKE path.
 
 - [COW-MUT-REBIND-1] Reassigning a mut collection parameter invalidates the original payload uniqueness guarantee without making the caller-borrowed parameter an owned value; later direct and nested writes retain ordinary COW checks and cannot change a read-only source snapshot.
+
+- [RC-STABLE-JOURNAL-1] Operand and pending RC journal entries retain their entry-time storage and guard addresses across typed publications. Type and ownership-role flags still change before initialization, so reused stack positions and held/ordinary transitions clean up their current values.
+
+
+- [RC-PLAIN-LIST-WRITE-1] RC writes of nonzero scalar list elements with no counted or unique edges use the native typed store after unchanged index normalization and bounds checks; managed and unique elements retain fallible ownership publication helpers.
+
+- [RC-INERT-PROJECTION-1] An immediate list-element read into a proved inert mutation receiver borrows from the live physical parent until fill detaches and refreshes it; named snapshots, callbacks, alternate fill entries and unproved paths retain ordinary ownership or scoped protection.
+
+- [RC-FRAME-REGION-1] RC functions without arena boundary instructions reuse their entry region depth for typed transfers. Functions that open or close arenas read the current depth at each transfer; callees restore their own scopes before returning.
