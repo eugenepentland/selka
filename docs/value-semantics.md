@@ -224,6 +224,12 @@ that step along their path, including fixed-array elements and alternating
 list and dictionary lookups such as `changed[0]["items"][0].append(2)`.
 Every intermediate collection belongs to the changed value, so an earlier snapshot keeps its
 original contents. Receivers and keys still evaluate once in source order.
+A read also captures its receiver value before evaluating the key. For example,
+if `values` is `[7, 8]`, then `values[change(mut values)]` reads the captured
+list even when `change` clears `values`, appends `91` and returns `0`: the read
+returns `7`, and `values` is `[91]` afterward. A negative index is normalized
+using the captured list's length. The same rule applies to dictionary keys;
+copying an already pinned receiver preserves the caller's mutation target.
 If an array index calls a function, the receiver evaluated before that call
 keeps its identity. Replacing or removing its containing entry leaves the
 pending write on the old value. Updating another entry, growing a dictionary,
