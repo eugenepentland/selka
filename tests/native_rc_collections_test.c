@@ -266,13 +266,17 @@ static void dictionary_probe_reuse(void) {
 /* spec-case: RC-STORAGE-1. Production slabs drain a million-deep chain at
  * their memory ceiling and then reuse capacity for a wide shared DAG. */
 static void production_deep_and_wide(void) {
-    static const myl_native_type node_type={.size=sizeof(void *),.alignment=_Alignof(void *),.kind=MYL_NATIVE_RECORD};
+    static const myl_native_field field={.type=&pointer};
+    static const myl_native_type node_type={.size=sizeof(void *),.alignment=_Alignof(void *),.kind=MYL_NATIVE_RECORD,.fields=&field,.field_count=1};
     static const myl_rc_shape edge_shape={.size=sizeof(void *),.kind=MYL_RC_SHAPE_POINTER};
-    static const myl_rc_descriptor descriptor={.type=&node_type,.shape=&edge_shape};
+    static const myl_rc_field edge={.shape=&edge_shape};
+    static const myl_rc_shape node_shape={.size=sizeof(void *),.kind=MYL_RC_SHAPE_RECORD,.as.record={.fields=&edge,.count=1}};
+    static const myl_rc_descriptor descriptor={.type=&node_type,.shape=&node_shape};
     static const myl_rc_module module={.abi=MYL_RC_ABI_VERSION,.descriptors=&descriptor,.descriptor_count=1};
     myl_native_heap heap;
     init(&heap);
     assert(myl_rc_module_register(&heap,&module)==MYL_RC_OK);
+    assert(((const myl_rc_binding *)myl_rc_descriptor_find(&heap,&node_type))->flat.count==1);
     myl_rc_alloc_request request={.element=&node_type,.count=1,.region=0};
     void *head=NULL;
     for (size_t i=0;i<1000000;i++) {
@@ -899,6 +903,7 @@ static void observe_drop(myl_native_heap *heap, void *payload) {
     DropObserver *observer=payload;
     DropLog *log=observer->log;
     assert(!heap->rc->walk.depth && heap->rc->dead.active && log->count<3);
+    if (!log->value) assert(heap->objects_live==3-log->count);
     for (size_t i=0;i<log->bytes;i++) assert(!log->value[i]);
     log->order[log->count++]=observer->id;
 }
@@ -954,6 +959,28 @@ static void flat_drop_order(void) {
     myl_native_region_end(&heap);
     finish(&heap);
 }
+/* spec-case: RC-RELEASE-1. Repeated allocation elements enqueue their ordinary
+ * leaves in the same order as the generic walker before retiring the parent. */
+static void flat_body_order(void) {
+    myl_native_heap heap;
+    init(&heap);
+    assert(flat_count(&heap,&flat_array_type,&flat_array_shape)==8);
+    DropLog log={0};
+    void *a=drop_observer(&heap,&log,1), *b=drop_observer(&heap,&log,2), *c=drop_observer(&heap,&log,3);
+    myl_rc_alloc_request request={.element=&flat_array_type,.count=2};
+    void *payload=NULL;
+    assert(myl_rc_new(&heap,&request,&payload)==MYL_RC_OK);
+    void **body=payload;
+    body[0]=a;
+    body[7]=b;
+    body[8]=a;
+    body[15]=c;
+    assert(myl_rc_owner_acquire(&heap,a)==MYL_RC_OK);
+    heap.limit=heap.bytes;
+    myl_rc_owner_release(&heap,payload);
+    assert(log.count==3 && log.order[0]==3 && log.order[1]==1 && log.order[2]==2);
+    finish(&heap);
+}
 int myl_rc_collections_verify(void) {
     storage_reuse_and_holds();
     storage_boundaries();
@@ -981,12 +1008,13 @@ int myl_rc_collections_verify(void) {
     flat_array_transactions();
     flat_record_admission();
     flat_drop_order();
-    return 26;
+    flat_body_order();
+    return 27;
 }
 #ifndef MYL_RC_COLLECTIONS_LIBRARY
 int main(void) {
-    assert(myl_rc_collections_verify()==26);
-    puts("native RC collections: 26 passed");
+    assert(myl_rc_collections_verify()==27);
+    puts("native RC collections: 27 passed");
     return 0;
 }
 #endif

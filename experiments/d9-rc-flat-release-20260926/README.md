@@ -17,3 +17,12 @@ Build against the ordinary native heap/arena/collection/text/dictionary/equality
 bytes and RC source closure. All sources are identical except
 `native_rc_values.c` and `native_rc_walk.c`, taken from `5acc3f20` for the baseline.
 The measurement includes both copy and drop; it is not a pure-drop estimate.
+
+`object-body.json` repeats all three arms after extending the same cached plan
+to ordinary object bodies in the drain. Each arm retains its own compiler
+binary and runtime-source identity. This join changes no compiler lowering.
+`object-body-profile.txt` samples 24 QBE runs at 997 Hz with `perf record -e
+cycles:u`, filters the guest executable DSO, and reports self symbols; about
+3,000 samples were retained with none lost. The `make` symbol begins
+`myl_f_d05aa2a1`; `check` begins `myl_f_20f65c28`. The profile remains diagnostic,
+not timing/corpus evidence.

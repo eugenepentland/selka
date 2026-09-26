@@ -32,3 +32,36 @@ preserve exact stdout and all counters: 669,060 heap allocations/retirements,
 checks. These results are not WP-4 performance acceptance. Commands, hashes,
 raw runs and the focused C source are in
 `experiments/d9-rc-flat-release-20260926/`.
+
+The second slice applies the plan to eligible dying object bodies. Admission
+excludes every descriptor callback, so this branch needs no second descriptor
+lookup and cannot reenter before enqueueing all ordinary children. It clears
+only owner fields, preserving the generic body walk's treatment of scalar
+bytes, then retires the parent before draining its queued children. Repeated
+allocation elements iterate without a fixed count bound; a zero-leaf body
+returns immediately. Custom edges/finalizers, H tokens, raw unique kinds,
+variants and unadmitted shapes retain the complete existing fallback.
+
+The production million-node chain now uses a fully described flat one-field
+record; the core fixture continues exercising generic million-node release.
+A new two-element allocation test verifies duplicate alias releases and exact
+queued finalizer order across element boundaries, including parent retirement
+before child callbacks. ASan/UBSan passes core 20, collections 27, holds 12,
+arenas 10, stats 4 and execution 3; all 37 focused RC tests pass.
+
+| Backend | Before release changes | Typed drops | Plus object bodies |
+| --- | ---: | ---: | ---: |
+| QBE | 2,387,989,758 | 2,391,775,037 | 2,139,834,663 |
+| LLVM | 1,517,873,829 | 1,511,277,297 | 1,330,292,365 |
+
+These are three interleaved instruction medians from the repeated experiment.
+Both release changes improve this scaled workload by 1.116x QBE and 1.141x
+LLVM; the object-body increment is 1.118x and 1.136x. The much smaller typed-drop
+LLVM delta varies between runs alongside descriptor hash/address overhead;
+no large whole-workload typed-drop claim is supported. Output and complete
+ownership counters remain exactly identical. This still does not approach the
+WP-4 performance threshold. A longer QBE self profile after the body change
+points primarily to descriptor lookup (14.91%), native take (14.23%), generated
+make (14.35%), slot drop (6.14%) and allocation (5.48%). Independent newer
+compiler inline-TAKE changes are absent from this isolated slice and must be
+measured after joining.
