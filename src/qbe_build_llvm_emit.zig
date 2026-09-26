@@ -736,7 +736,7 @@ pub const Emitter = struct {
     /// site; a runtime helper with no checked C signature is refused.
     fn inferExternal(self: *Emitter, name: []const u8, call: Call) Error!Declaration {
         const signature = try self.callSiteSignature(call);
-        const helper = std.mem.startsWith(u8, name, "myl_native_") or std.mem.startsWith(u8, name, "myl_qbe_");
+        const helper = runtime.isHelper(name);
         if (helper and self.options.runtime.signature(name) == null) return self.fail(try self.print("{s}: runtime helper ${s} has no checked C signature", .{ self.unit.function.name, name }));
         if (self.module.declarations.get(name)) |previous| {
             if (!sameSignature(previous, signature)) return self.fail(try self.print("{s}: external ${s} is called with conflicting signatures", .{ self.unit.function.name, name }));

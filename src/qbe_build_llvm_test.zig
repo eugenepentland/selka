@@ -258,3 +258,18 @@ test "a unit built without LTO writes its assembly where the -S command's -o say
     try std.testing.expectEqualStrings("-o", argv[at - 1]);
     try std.testing.expectEqual(@as(?usize, null), compile.outputPosition(&.{ "zig", "clang", "-o" }, "/w/unit.s"));
 }
+
+// spec-case: RC-RUNTIME-CONTRACT-1
+test "RC runtime helpers use checked C status and transfer signatures" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const table = try bundledTable(arena.allocator());
+    try std.testing.expectEqualStrings("i32", table.signature("myl_rc_owner_acquire").?.result);
+    try std.testing.expectEqualStrings("void", table.signature("myl_rc_owner_release").?.result);
+    try std.testing.expectEqualDeep(@as([]const []const u8, &.{ "ptr", "ptr" }), table.signature("myl_rc_owner_acquire").?.parameters);
+    try std.testing.expectEqualDeep(@as([]const []const u8, &.{ "ptr", "ptr", "ptr", "i32" }), table.signature("myl_rc_value_replace").?.parameters);
+    try std.testing.expectEqualDeep(@as([]const []const u8, &.{ "ptr", "ptr", "i64", "ptr" }), table.signature("myl_rc_list_set").?.parameters);
+    try std.testing.expectEqualStrings("i32", table.signature("myl_rc_dictionary_pop").?.result);
+    try std.testing.expect(@import("qbe_build_llvm_runtime.zig").isHelper("myl_rc_unknown"));
+    try std.testing.expectEqual(@as(?llvm.RuntimeSignature, null), table.signature("myl_rc_unknown"));
+}

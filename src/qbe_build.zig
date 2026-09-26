@@ -50,7 +50,7 @@ const runtime_units = [_][]const u8{
     "qbe_stack.c",   "qbe_providers.c",    "qbe_resources.c",     "native_equal.c",       "native_bytes.c",        "qbe_bytes.c",
     "native_rc.c",   "native_rc_shapes.c", "native_rc_walk.c",    "native_regions.c",     "qbe_arena.c",           "native_print.c",
     "qbe_io.c",      "native_scoped.c",    "qbe_grants.c",        "qbe_files.c",          "native_text_methods.c", "qbe_stand_ins.c",
-    "native_cow.c",  "qbe_cow_runtime.c",  "native_value_copy.c",
+    "native_cow.c",  "qbe_cow_runtime.c",  "native_value_copy.c", "native_rc_transfer.c", "native_rc_alloc.c",     "native_rc_values.c",
 };
 /// Execute a native build using process-owned allocation and I/O policy.
 pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {

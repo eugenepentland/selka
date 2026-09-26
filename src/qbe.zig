@@ -9,6 +9,7 @@ const liveness = @import("qbe_liveness.zig");
 const ownership = @import("ownership.zig");
 const cow_lower = @import("qbe_cow.zig");
 const value_semantics = @import("value_semantics.zig");
+const runtime_mode = @import("runtime_mode.zig");
 const moves_module = @import("qbe_moves.zig");
 const range_keys = @import("qbe_range_keys.zig");
 const loop_facts = @import("qbe_loop_facts.zig");

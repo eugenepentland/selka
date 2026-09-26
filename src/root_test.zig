@@ -3,6 +3,7 @@
 pub const snapshot_project = @import("project.zig");
 test {
     _ = @import("native_rc_contract_test.zig");
+    _ = @import("native_rc_collections_test.zig");
     _ = @import("native_test_cli_test.zig");
     _ = @import("native_test_cases.zig");
     _ = @import("native_test_snapshot.zig");
@@ -35,6 +36,7 @@ test {
     _ = @import("wiring/native_session.zig");
     _ = @import("value_semantics_test.zig");
     _ = @import("runtime_mode.zig");
+    _ = @import("main_runtime_flags.zig");
     _ = @import("compiler.zig").runtime_mode;
     _ = @import("qbe_build_test.zig");
     _ = @import("qbe_build_llvm_test.zig");
