@@ -35,9 +35,13 @@ The remaining tree regression is real extra audit evidence. The formal D9
 stage 3 performance gate includes the Lox VM, not the tree interpreter.
 
 A separate calibrated 13-script tree audit using the mandated `pc.py` harness
-and frozen compiler `9f42e5a9` is still running at this commit: four of 26
-program/backend rows have completed. This partial run is not an acceptance
-result. Its source remains frozen independently of later VM source changes.
+and frozen compiler `9f42e5a9` was deliberately stopped after seven of 26
+program/backend rows. Its [completed raw rows](evidence/d9-lox-tree-frames-calibrated-partial.json)
+are preserved as partial diagnostic evidence, with source and binary hashes;
+they are not an acceptance result. Finishing the historical snapshot would
+not establish the final compiler/source baseline needed for a future
+reference-counting comparison. Only the exact owned harness and its active
+guest child were terminated; CPU 11 was then released.
 
 ## Validation and reproduction
 
