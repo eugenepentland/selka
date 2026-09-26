@@ -234,7 +234,7 @@ fn schemaScenario(allocator: std.mem.Allocator) !void {
         \\module data
         \\
         \\
-        \\public class Point:
+        \\public record Point:
         \\    x: u64
         \\    y: [2]bool
         \\
@@ -253,7 +253,7 @@ fn schemaScenario(allocator: std.mem.Allocator) !void {
         \\    return x
         \\
         \\
-        \\class Hidden:
+        \\record Hidden:
         \\    secret: i8
         },
     } };
@@ -293,7 +293,7 @@ fn schemaReceiptScenario(allocator: std.mem.Allocator) !void {
         \\module data
         \\
         \\
-        \\public class Item:
+        \\public record Item:
         \\    n: u64
         },
     } };

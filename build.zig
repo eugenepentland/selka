@@ -1048,6 +1048,15 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&lang_tests.step);
     guardian.addAllChecks(b, guardian_exe, lang_step, .{});
     boundedChecks(lang_step);
+    const legacy_step = b.step("test-legacy-sharing", "Run migration-window sharing tests under --legacy-sharing");
+    const legacy_tests = bounded(b.addRunArtifact(exe), rss.suite);
+    legacy_tests.addArgs(&.{ "test", "tests/legacy", "--legacy-sharing", "--cache-dir", ".mylang-cache/legacy-tests", "--gc-stress" });
+    legacy_tests.setCwd(b.path("."));
+    legacy_tests.has_side_effects = true;
+    legacy_step.dependOn(&legacy_tests.step);
+    test_step.dependOn(&legacy_tests.step);
+    guardian.addAllChecks(b, guardian_exe, legacy_step, .{});
+    boundedChecks(legacy_step);
     // VALUE-SEMANTICS-1: the guest tests that assert value semantics run
     // with the switch on, under the same collector stress as `test-lang`.
     const values_step = b.step("test-value-semantics", "Run the value-semantics guest tests under --value-semantics");

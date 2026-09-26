@@ -18,7 +18,7 @@ fn analyzeSource(allocator: std.mem.Allocator, input: []const u8) !void {
 
 test "native analysis covers concrete record and generic calls" {
     try analyzeSource(std.testing.allocator,
-        \\class Box[T]:
+        \\record Box[T]:
         \\    value: T
         \\
         \\

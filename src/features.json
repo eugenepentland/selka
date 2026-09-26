@@ -134,7 +134,7 @@
     },
     "collection-membership-and-value-equality": {
       "kind": "language",
-      "summary": "`in`, `not in`, `==` and `!=` compare managed collection contents rather than identities; records, fixed arrays, unions, `Result` and `Option` compare structurally with cycle detection, and a managed `class` compares by reference identity.",
+      "summary": "`in`, `not in`, `==` and `!=` compare managed collection contents rather than identities; records, fixed arrays, unions, `Result` and `Option` compare structurally with cycle detection. In legacy-sharing mode, a managed `class` compares by reference identity.",
       "doc": "docs/managed-memory.md#membership-and-value-equality"
     },
     "managed-arenas": {
@@ -269,7 +269,7 @@
     },
     "python-assignments-and-value-records": {
       "kind": "language",
-      "summary": "Assignment creates a mutable function-scoped local; `record` copies on assignment while `class` shares one managed object.",
+      "summary": "Assignment creates a mutable function-scoped local; records and managed collections are independent values. In legacy-sharing mode, `class` assignments share one managed object.",
       "doc": "docs/statements.md#assignments-and-value-records"
     },
     "canonical-prelude-types": {
@@ -299,7 +299,7 @@
     },
     "value-semantics": {
       "kind": "language",
-      "summary": "Opt-in value semantics (`--value-semantics`, `\"value_semantics\": true` in `mylang.json`, `MYLANG_VALUE_SEMANTICS=1`): `list`, `dict`, `set` and `byte_buffer` values, and aggregates holding one, are independent values that assignment, stores, returns and bindings copy unless the ownership analysis proves a move or a borrow; read-only arguments are lent; `mut` records are `inout`; writes through loop or match bindings and into returned values are errors; `class` and Cell stay shared.",
+      "summary": "Value semantics is the default: `list`, `dict`, `set` and `byte_buffer` values, and aggregates holding one, are independent across assignments, stores, returns and bindings unless ownership proves a move or borrow. Copies use copy-on-write storage; read-only arguments are lent, `mut` records are `inout`, and writes through loop or match bindings and into returned values are errors. `class` declarations and builtin `Cell` are rejected; `--legacy-sharing` or `\"value_semantics\": false` in `mylang.json` selects their former shared behavior for one migration release.",
       "doc": "docs/value-semantics.md#value-semantics"
     },
     "ownership-explain": {
@@ -334,7 +334,7 @@
     },
     "managed-sets": {
       "kind": "language",
-      "summary": "`set[T]` keeps insertion order over hashable elements: `{a, b}` literals, `set()` with a type from context, `set(iterable)`, `{x for x in xs if p}` comprehensions, `add`, `remove`, `discard`, `pop`, `clear`, `copy`, `update`, `in`, `len`, `for`, `sorted` and `list`, Python rendering (`{1, 2}`, `set()`), shared on assignment with `mut` parameters.",
+      "summary": "`set[T]` keeps insertion order over hashable elements: `{a, b}` literals, `set()` with a type from context, `set(iterable)`, `{x for x in xs if p}` comprehensions, `add`, `remove`, `discard`, `pop`, `clear`, `copy`, `update`, `in`, `len`, `for`, `sorted` and `list`, and Python rendering (`{1, 2}`, `set()`). Assignments give independent values by default; `mut` parameters write through to callers.",
       "doc": "docs/sets.md#set-literals-and-construction"
     },
     "set-operators": {
@@ -439,7 +439,7 @@
     },
     "managed-class-records": {
       "kind": "language",
-      "summary": "`class` declares a GC-managed reference record: assignment, calls and field reads share one object, while `record` stays a copied value type.",
+      "summary": "In legacy-sharing mode, `class` declares a GC-managed reference record whose assignments, calls and field reads share one object. Default value semantics rejects `class`; use a `record` for values or a pool handle for identity.",
       "doc": "docs/records-and-unions.md#managed-class-records"
     },
     "tagged-unions": {
@@ -1021,11 +1021,11 @@
     "semantic_reuse": "ordinary checked bodies and concrete specializations replay across processes; symbolic templates keep abstract checking; unresolved nested or interned-identity references stay conservative; in-memory retention is bounded by one shared reuse.max_bytes budget and a zero budget disables reuse",
     "text_data": "managed Unicode scalar strings and managed bytes; host byte I/O keeps its scalar ABI",
     "time_random": "Unix wall clock and explicit entropy capabilities; deterministic noncryptographic SplitMix64",
-    "managed_lists": "copyable shared aliases; automatic growth; no owned/resource elements, borrowed interiors, untraced storage embedding, or host escape",
+    "managed_lists": "independent values by default with copy-on-write payloads; shared aliases only in legacy-sharing mode; automatic growth; no owned/resource elements, borrowed interiors, untraced storage embedding, or host escape",
     "gc": "single-threaded nonmoving tracing; retained guest values root intermediates; collect-on-allocation stress option",
     "python": "static fixed-width types, function-scoped locals with E_UNBOUND definite assignment, value records; indentation is the only block syntax",
     "dictionaries": "managed insertion order; homogeneous hashable keys (integers, bool, str, bytes, and tuples, records, unions, enums, domains, Option and fixed arrays of those) and copyable values; no dict comprehension",
-    "value_semantics": "opt-in and experimental: copies are eager (no copy-on-write yet), a copy is not a `managed_allocation` effect, `class` and Cell stay shared references, rebinding a whole `mut` list or dict parameter does not reach the caller, and a function with a `mut` record parameter cannot be a function value",
+    "value_semantics": "default model: independent collection and aggregate values with rooted copy-on-write transfers (up to 1,024 descriptor edges), cloning writable payloads in their owning arena region; a copy is not a `managed_allocation` effect. `class` declarations and builtin Cell are rejected by default and retained only by the one-release `--legacy-sharing` or project opt-out. A `mut` collection parameter writes the caller's collection but whole-parameter rebinding does not; a `mut` record parameter is inout and cannot be a function value",
     "sets": "managed insertion order over hashable elements; `set()` needs an expected type; no frozenset, no augmented operators (`|=`); generic bodies key only by integer-bounded parameters, `str` or concrete hashable types; a module that declares its own function named `set` keeps it, and there the type spelling `set[T]` is unavailable while literals still work",
     "native_tests": "fresh QBE processes; exported typed-call-compatible signatures; positive deterministic receipts only; project validity is always checked through the shared query cache; only a fully cached selection skips lowering/emission/linking, while a changed snapshot still pays one whole-project preparation emission and an uncached selection builds the whole selected-provider library; provider snapshots at most 128 sources/16 MiB",
     "standard_library": "ten embedded Python-syntax modules over managed types: math, strings, sort, path, hex, base64, json, pool, random, time"

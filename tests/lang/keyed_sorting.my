@@ -107,9 +107,9 @@ def plain_rank(e: Entry) -> int:
 # spec: LIST-SORT-KEY-1
 public def test_sort_key_orders_in_place_and_keeps_equal_keys_in_input_order() -> bool:
     entries = spread_entries()
-    alias = entries
+    before = entries.copy()
     entries.sort(key=lambda e: e.rank)
-    return ids(entries) == [3, 1, 4, 0, 2] and ids(alias) == [3, 1, 4, 0, 2]
+    return ids(entries) == [3, 1, 4, 0, 2] and ids(before) == [0, 1, 2, 3, 4]
 
 
 # spec-case: LIST-SORT-KEY-1

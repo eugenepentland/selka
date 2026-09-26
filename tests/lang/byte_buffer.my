@@ -64,19 +64,20 @@ public def test_append_methods_write_in_place_and_refuse_without_writing() -> bo
     return buffer[0] == 65 and len(buffer) == 8
 
 
-# A buffer is one managed object: two names for it observe every append, and a
-# snapshot taken before an append is a different object that never changes.
+# A buffer update can be stored back explicitly; an immutable snapshot taken
+# before the append remains unchanged.
 # spec-case: PY-BYTES-6
-public def test_a_buffer_alias_observes_appends_while_a_snapshot_does_not() -> bool:
+public def test_a_buffer_storeback_preserves_an_earlier_snapshot() -> bool:
     empty: list[int] = []
     buffer = byte_buffer(empty)
-    alias = buffer
     _ = buffer.append_range(b"seed", 0, 4)
+    alias = buffer
     if len(alias) != 4 or alias != b"seed":
         return False
     snapshot = bytes(buffer)
     if not alias.append_byte(33):
         return False
+    buffer = alias
     if buffer != b"seed!" or alias != b"seed!":
         return False
     if snapshot != b"seed" or len(snapshot) != 4:
@@ -145,29 +146,35 @@ public def test_byte_kinds_share_reads_and_compare_by_content() -> bool:
             return False
 
 
-# A buffer survives collection at every allocation and is storable in a record
-# field and a list, where each read sees the same current content.
+# A buffer survives collection at every allocation and can be stored back into
+# a record field or list slot after a local mutation.
 # spec-case: PY-BYTES-6
 public def test_buffers_are_traced_through_record_fields_lists_and_generics() -> bool:
     packet = Packet(tag="head", body=buffer_of(b"body"))
     if packet.body != b"body":
         return False
-    if not packet.body.append_byte(33):
+    body = packet.body
+    if not body.append_byte(33):
         return False
+    packet.body = body
     if packet.body != b"body!" or packet.tag != "head":
         return False
     both = buffer_pair[i64](buffer_of(b"7"))
+    both[1] = buffer_of(b"7")
+    both[2] = buffer_of(b"7")
     if len(both) != 3:
         return False
     if both[0] != b"7" or both[2] != b"7":
         return False
     index = 0
+    first = both[0]
     while index < 200:
-        _ = both[0].append_byte(index % 256)
+        _ = first.append_byte(index % 256)
         index += 1
-    if len(both[0]) != 201 or len(both[1]) != 201 or len(both[2]) != 201:
+    both[0] = first
+    if len(both[0]) != 201 or len(both[1]) != 1 or len(both[2]) != 1:
         return False
-    return both[0][0] == 55 and both[2][200] == 199
+    return both[0][0] == 55 and both[0][200] == 199 and both[2][0] == 55
 
 
 # A buffer built from an integer list carries exactly those octets, and an
@@ -230,7 +237,7 @@ public def test_append_float_matches_the_printed_spelling() -> bool:
 
 # A backing that outgrows the size classes grows by extending its own
 # reservation, so every octet written before the growth is still there after it,
-# and the buffer's identity, length and element descriptor are unchanged.
+# while the grown value's length and element descriptor are unchanged.
 # spec: BUFFER-GROWTH-1
 public def test_growth_past_the_segment_threshold_keeps_every_octet() -> bool:
     seed = byte_buffer([index % 256 for index in range(65536)])
@@ -238,13 +245,12 @@ public def test_growth_past_the_segment_threshold_keeps_every_octet() -> bool:
         return False
     empty: list[int] = []
     buffer = byte_buffer(empty)
-    alias = buffer
     writes = 0
     while writes < 6:
         if not buffer.append_range(seed, 0, 65536):
             return False
         writes += 1
-    if len(buffer) != 6 * 65536 or len(alias) != 6 * 65536:
+    if len(buffer) != 6 * 65536:
         return False
     check = 0
     while check < 6 * 65536:

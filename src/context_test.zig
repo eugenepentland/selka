@@ -59,7 +59,7 @@ const model_source =
     \\module model
     \\
     \\
-    \\public class Box:
+    \\public record Box:
     \\    value: int
     \\
     \\

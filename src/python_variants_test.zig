@@ -34,7 +34,7 @@ fn reject(text: []const u8, code: []const u8) !void {
 }
 
 const shapes =
-    \\class Point:
+    \\record Point:
     \\    x: i64
     \\    y: i64
     \\
@@ -135,7 +135,7 @@ test "an imported generic variant takes its arguments from the expected type acr
         \\module model
         \\
         \\
-        \\public class Box:
+        \\public record Box:
         \\    value: i64
         \\
         \\

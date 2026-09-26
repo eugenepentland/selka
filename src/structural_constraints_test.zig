@@ -83,7 +83,7 @@ test "structural fields reject incomplete forwarding unknown fields and hidden o
         \\    return 0
     , "E_GENERIC_REQUIREMENT");
     try reject(
-        \\class Box[T: copy + field(value: i64)]:
+        \\record Box[T: copy + field(value: i64)]:
         \\    item: T
         \\
         \\
@@ -223,7 +223,7 @@ test "structural concrete operations reject private absent wrong typed and exces
     , "E_EFFECT_BOUND");
 }
 const example = domain ++ operation ++
-    \\class A:
+    \\record A:
     \\    value: i64
     \\
     \\
@@ -289,11 +289,11 @@ test "structural imported operation dispatch survives AST source relocation" {
 // spec: STRUCTURAL-COMPOSITE-1
 test "structural composite fields substitute arrays and nominal applications" {
     try run(
-        \\class Box[U]:
+        \\record Box[U]:
         \\    value: U
         \\
         \\
-        \\class A:
+        \\record A:
         \\    items: [2]i64
         \\    box: Box[i64]
         \\
@@ -312,16 +312,16 @@ test "structural composite fields substitute arrays and nominal applications" {
 }
 
 const composite =
-    \\class Box[U]:
+    \\record Box[U]:
     \\    value: U
     \\
     \\
-    \\class A:
+    \\record A:
     \\    items: [2]i64
     \\    box: Box[i64]
     \\
     \\
-    \\class B:
+    \\record B:
     \\    items: [2]bool
     \\    box: Box[bool]
     \\

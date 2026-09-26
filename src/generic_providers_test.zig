@@ -21,7 +21,7 @@ const schema =
     \\    err: i64
     \\
     \\
-    \\class Failure:
+    \\record Failure:
     \\    resource: File
     \\    code: i64
     \\
@@ -31,7 +31,7 @@ const schema =
     \\    err: Failure
     \\
     \\
-    \\class Chunk:
+    \\record Chunk:
     \\    bytes: [4]u8
     \\    length: u64
     \\    eof: bool
@@ -42,7 +42,7 @@ const schema =
     \\    err: i64
     \\
     \\
-    \\class Progress:
+    \\record Progress:
     \\    length: u64
     \\    eof: bool
     \\
@@ -52,7 +52,7 @@ const schema =
     \\    err: i64
     \\
     \\
-    \\class Entry:
+    \\record Entry:
     \\    bytes: [4]u8
     \\    length: u64
     \\    present: bool

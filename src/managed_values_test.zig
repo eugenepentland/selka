@@ -20,7 +20,7 @@ fn runSource(source: []const u8, expected: i64) !void {
 
 test "user nominal str declaration preserves its declared fields" {
     try runSource(
-        \\class str:
+        \\record str:
         \\    n: i64
         \\
         \\

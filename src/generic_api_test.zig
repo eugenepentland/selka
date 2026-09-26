@@ -7,7 +7,7 @@ const library =
     \\module lib
     \\
     \\
-    \\public class Box[T]:
+    \\public record Box[T]:
     \\    value: T
     \\
     \\
@@ -153,7 +153,7 @@ test "public generic schemas retain structural field operation and codec constra
         \\module lib
         \\
         \\
-        \\class Secret:
+        \\record Secret:
         \\    pass
         \\
         \\

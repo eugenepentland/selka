@@ -48,8 +48,11 @@
   "6e06c7f076922c47cd30183459ea9d90": {
    "case": [
     "def main() -> int:\n    values: dict[str,int] = {\"first\": 40, \"second\": 2}\n    alias = values\n    alias[\"first\"] = 41\n    keys = list(values.keys())\n    before = list(values.values())\n    values[\"first\"] = 42\n    if keys[0] != \"first\":\n        return 1\n    return before[0] + values.get(\"missing\", 1)\n",
-    []
+    [
+     "--legacy-sharing"
+    ]
    ],
+   "note": "Historical shared-alias outcome retained in the explicit D9 compatibility mode.",
    "returncode": 42,
    "stderr": "",
    "stdout": "NDIK"

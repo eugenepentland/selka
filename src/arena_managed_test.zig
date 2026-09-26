@@ -86,6 +86,8 @@ test "ARENA-MANAGED-2 escape copies a shared subgraph once into the enclosing re
 
 // spec-case: ARENA-MANAGED-2
 test "ARENA-MANAGED-2 escape preserves a cycle through a record field" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     const source =
         \\record Node:
         \\    value: int
@@ -120,6 +122,8 @@ test "ARENA-MANAGED-2 an escaped copy may be returned from the outermost arena s
 
 // spec-case: ARENA-MANAGED-2
 test "ARENA-MANAGED-2 escape shares objects that already live in the enclosing region" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     const source =
         \\def main() -> int:
         \\    older: list[int] = [4]
@@ -168,6 +172,8 @@ test "ARENA-MANAGED-3 the store barrier covers dictionary values written through
 
 // spec: ARENA-MANAGED-4
 test "ARENA-MANAGED-4 static rejections name the escaping expression the arena and the binding" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     try reject(
         \\def main() -> int:
         \\    keeper: list[int] = []

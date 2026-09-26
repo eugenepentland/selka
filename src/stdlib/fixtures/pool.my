@@ -48,19 +48,21 @@ def sharing() -> int:
         return 20
     alias = store
     _ = pool.insert(mut alias, 40)
-    if pool.count(store) != 4 or pool.capacity(store) != 4:
+    if pool.count(store) != 3 or pool.capacity(store) != 3:
         return 21
-    live = pool.handles(store)
+    if pool.count(alias) != 4 or pool.capacity(alias) != 4:
+        return 21
+    live = pool.handles(alias)
     total = 0
     for handle in live:
-        total += value_of(store, handle)
+        total += value_of(alias, handle)
     if len(live) != 4 or total != 46:
         return 22
     other: list[int] = []
     outside = pool.create(other)
     foreign = pool.insert(mut outside, 7)
-    _ = pool.remove(mut store, pool.handles(store)[0])
-    if pool.count(store) != 3:
+    _ = pool.remove(mut alias, pool.handles(alias)[0])
+    if pool.count(alias) != 3 or pool.count(store) != 3:
         return 23
     if value_of(outside, foreign) != 7:
         return 24

@@ -81,7 +81,7 @@ test "domain backing types require built-in scalars and exact wrapping types" {
         \\    return 0
     , "E_DOMAIN_BASE");
     try reject(
-        \\class Record:
+        \\record Record:
         \\    pass
         \\
         \\
@@ -192,7 +192,7 @@ test "domain namespaces support forward calls recursion private helpers and shar
         \\    pass
         \\
         \\
-        \\class D:
+        \\record D:
         \\    pass
         \\
         \\
@@ -229,7 +229,7 @@ test "domain namespaces support forward calls recursion private helpers and shar
         \\    return D.missing()
     , "E_UNKNOWN_FUNCTION");
     try reject(
-        \\class D:
+        \\record D:
         \\    pass
         \\
         \\

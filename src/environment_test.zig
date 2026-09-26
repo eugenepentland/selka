@@ -39,7 +39,7 @@ fn lookup(source: []const u8, value: ?[]const u8, arguments: []const []const u8,
     try t.expectEqual(expected, outcome.value);
 }
 const forwarded = declarations ++
-    \\class Authority:
+    \\record Authority:
     \\    env: Environment
     \\
     \\
@@ -109,7 +109,7 @@ test "environment execution reporting and byte conversions release all failed al
     try t.checkAllAllocationFailures(no_resize.allocator(), scenario, .{});
 }
 const zero_capacity = declarations ++
-    \\class Empty:
+    \\record Empty:
     \\    bytes: [0]u8
     \\    length: u64
     \\    present: bool

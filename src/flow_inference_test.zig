@@ -70,6 +70,8 @@ test "flow inference does not infer presence from an unsafe Boolean alternative"
 
 // spec: OPTION-FLOW-4
 test "flow inference keeps heap fields and checked payloads explicit" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     try reject(
         \\class Box:
         \\    item: Option[int]

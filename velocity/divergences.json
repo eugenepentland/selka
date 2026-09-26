@@ -2,7 +2,7 @@
  "version": "divergence-policy-v1",
  "note": "The declared, reviewed list of places where this language intentionally answers differently from CPython. velocity/score.py reads this file: strict C2 counts every completed probe that disagrees with CPython, and C2_policy counts only the disagreements no entry here claims. `--gate` fails on C2_policy, so a declared divergence does not block a package and an undeclared one always does. An entry claims a probe by name or fnmatch glob in `probes`; every claimed probe must still diverge (score.py reports a claimed probe that now agrees as a stale entry). `cases` are expression/value pairs the divergence is reproducible from: velocity/divergence_evidence.py evaluates each expression under both runtimes and fails when the declared value does not reproduce. Deleting an entry, not editing one, is how a divergence stops being declared: the divergence then becomes a C2 gate failure until the language changes or a new reviewed entry replaces it.",
  "gate_rule": "score.py --gate exits 1 when a completed probe disagrees with CPython and no entry in this file claims its name; a claimed disagreement is reported but does not gate.",
- "reviewed_on": "2026-09-21",
+ "reviewed_on": "2026-09-26",
  "entries": [
   {
    "id": "round-half-away-from-zero",
@@ -35,6 +35,34 @@
     {"expression": "int(round(2.6))", "mylang": 3, "cpython": 3},
     {"expression": "round(2.5) + 0.5", "mylang": 3.5, "cpython": 2.5}
    ]
+  },
+  {
+   "id": "collection-value-semantics",
+   "status": "declared",
+   "title": "List and dictionary assignment creates independent values",
+   "probes": [
+    "d11_list_value_copy.my",
+    "d12_nested_list_value_copy.my",
+    "d13_dict_value_copy.my"
+   ],
+   "idiom": "python-mutable-collection-aliasing",
+   "mylang": "Assignment copies a collection value, including mutable descendants. Changing the copy leaves the original unchanged. Each probe returns 12.",
+   "cpython": "Assignment aliases the collection object. Mutations through the second name affect the original, including nested lists. Each probe returns 22.",
+   "documented_at": [
+    "docs/adr/D9-value-semantics-then-rc.md",
+    "docs/managed-memory.md",
+    "docs/records-and-unions.md"
+   ],
+   "rationale": "D9 adopts independent values and copy-on-write before reference counting. Keep these valid Python probes under the CPython oracle so the intentional semantic difference stays visible in strict C2; exempt only these named cases from C2_policy.",
+   "decision": "Keep value semantics and record the distinct Python result.",
+   "tracked_by": "docs/audits/d9-closeout-plan-2026-09-26.md WP-3f",
+   "evidence": "velocity/suites/idioms/divergence-evidence-d9.json",
+   "review": {
+    "state": "accepted-for-gating",
+    "reviewed_on": "2026-09-26",
+    "reviewer": "D9 default-flip implementation of the accepted value-semantics decision"
+   },
+   "cases": []
   }
  ]
 }

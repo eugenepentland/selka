@@ -1,15 +1,16 @@
 module lists
 
 
+# spec-case: VALUE-SEMANTICS-1
 public def test_growth_and_indexing() -> bool effects(managed_allocation):
     scores: list[int] = [10, 20, 30]
     scores.append(40)
     scores[1] = scores[1] + 5
     if len(scores) != 4 or scores[-1] != 40 or scores[1] != 25:
         return False
-    alias = scores
-    alias.append(50)
-    return len(scores) == 5 and scores[-1] == 50 and scores[0] == 10
+    copied = scores
+    copied.append(50)
+    return len(scores) == 4 and scores[-1] == 40 and len(copied) == 5 and copied[-1] == 50 and scores[0] == 10
 
 
 public def test_slices() -> bool effects(managed_allocation):
