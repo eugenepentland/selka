@@ -38,6 +38,9 @@ difference; `fmt FILE` prints the complete corrected source.
   functions and keep I/O in `main`.
   A `*_test.my` entry may omit its `module` header even when importing the
   sibling module; both `test` and `fmt` accept that form.
+  Run `mylang test name_test.my` to select sibling tests directly. If
+  `mylang test name.my` selects none, it points out an existing sibling test
+  file; testing the containing directory also discovers it.
 
 ## Program shape and I/O
 

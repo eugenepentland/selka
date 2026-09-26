@@ -3381,6 +3381,39 @@ test "CLI formatter and test agree on headerless sibling test imports" {
     try invoke("fmt", source, 1, "", "E_MODULE_HEADER");
 }
 
+// spec: TEST-SIBLING-HINT-1
+test "CLI empty test selection names an unloaded sibling and preserves JSON" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper\n\npublic def value() -> int:\n    return 7\n" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper_test.my", .data = "import helper\n\npublic def test_value() -> bool:\n    return helper.value() == 7\n" });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "helper.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const empty = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "test", path, "--json" } });
+    defer testing.allocator.free(empty.stdout);
+    defer testing.allocator.free(empty.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 3 }, empty.term);
+    try testing.expect(std.mem.indexOf(u8, empty.stderr, "helper_test.my") != null);
+    try testing.expect(std.mem.indexOf(u8, empty.stderr, "Run that file explicitly") != null);
+    var parsed = try std.json.parseFromSlice(std.json.Value, testing.allocator, empty.stdout, .{});
+    defer parsed.deinit();
+    try testing.expectEqualStrings("native-tests-v1", parsed.value.object.get("version").?.string);
+    try testing.expectEqual(@as(usize, 0), parsed.value.object.get("tests").?.array.items.len);
+    try temp.dir.deleteFile(testing.io, "helper_test.my");
+    const absent = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "test", path } });
+    defer testing.allocator.free(absent.stdout);
+    defer testing.allocator.free(absent.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 3 }, absent.term);
+    try testing.expectEqualStrings("", absent.stderr);
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper_test.my", .data = "module helper_test\n\npublic def value() -> int:\n    return 7\n\n\npublic def test_value() -> bool:\n    return True\n" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper\nimport helper_test\n\ndef main() -> int:\n    return helper_test.value()\n" });
+    const loaded = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "test", path, "--filter", "does_not_exist" } });
+    defer testing.allocator.free(loaded.stdout);
+    defer testing.allocator.free(loaded.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 3 }, loaded.term);
+    try testing.expectEqualStrings("", loaded.stderr);
+}
+
 test "CLI module discovery loads real files and diagnoses cross-file cycles" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
