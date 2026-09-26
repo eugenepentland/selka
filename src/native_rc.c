@@ -13,8 +13,8 @@ _Static_assert(sizeof(myl_rc_object) % _Alignof(max_align_t) == 0, "RC payload p
 _Static_assert(offsetof(myl_native_heap, inline_windows) == MYL_NATIVE_HEAP_INLINE_OFFSET, "GC inline window unchanged");
 _Static_assert(offsetof(myl_native_heap, arena_window) == MYL_NATIVE_HEAP_ARENA_OFFSET, "arena inline window unchanged");
 
-void myl_rc_invariant(int valid) {
-    if (!valid) abort();
+void myl_rc_invariant_failed(void) {
+    abort();
 }
 int myl_rc_size_add(size_t a, size_t b, size_t *out) {
     if (a > SIZE_MAX - b) return 0;
