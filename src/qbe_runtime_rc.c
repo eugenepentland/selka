@@ -125,6 +125,32 @@ int myl_qbe_rc_unique_field(void *context, const myl_native_type *type, void *ad
         .region = container ? myl_native_header_region(container) : ctx->heap.region_depth};
     return myl_qbe_rc_status(ctx, myl_rc_unique_owned(&ctx->heap, &slot));
 }
+int myl_qbe_rc_rebox_local(void *context, const myl_native_type *type, void *address, const void *body, uint32_t *owned) {
+    MylQbeContext *ctx = context;
+    myl_rc_invariant(type && type->collection_kind == 5 && type->element && address && body && owned);
+    void *old;
+    memcpy(&old, address, sizeof old);
+    myl_rc_invariant(old != NULL);
+    const myl_rc_descriptor *descriptor = myl_rc_descriptor_find(&ctx->heap, type->element);
+    myl_rc_invariant(descriptor && !descriptor->finalize && !descriptor->edges);
+    myl_rc_alloc_request request = {.element = type->element, .count = 1, .region = myl_native_header_region(old)};
+    void *replacement = NULL;
+    myl_rc_status status = myl_rc_new(&ctx->heap, &request, &replacement);
+    if (status == MYL_RC_OK) {
+        myl_rc_slot destination = {.shape = descriptor->shape, .address = replacement, .region = request.region};
+        myl_rc_slot source = {.shape = descriptor->shape, .address = (void *)body};
+        status = myl_rc_value_copy(&ctx->heap, &destination, &source);
+    }
+    if (status != MYL_RC_OK) {
+        myl_rc_construction_abort(&ctx->heap, replacement);
+        return myl_qbe_rc_status(ctx, status);
+    }
+    uint32_t previous = *owned;
+    memcpy(address, &replacement, sizeof replacement);
+    *owned = 1;
+    if (previous) myl_rc_owner_release(&ctx->heap, old);
+    return 1;
+}
 _Static_assert(sizeof(myl_rc_scope) == MYL_QBE_RC_SCOPE_BYTES, "RC scope size");
 _Static_assert(sizeof(MylQbeRcPath) == MYL_QBE_RC_PATH_BYTES, "RC native projection size");
 _Static_assert(sizeof(MylQbeRcPlace) == MYL_QBE_RC_PLACE_BYTES, "RC native place size");
