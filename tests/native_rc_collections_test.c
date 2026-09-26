@@ -10,6 +10,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/resource.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include <signal.h>
 
 static const myl_native_type number={.size=8,.alignment=8,.kind=MYL_NATIVE_PLAIN};
 static const myl_native_type pointer={.size=sizeof(void *),.alignment=_Alignof(void *),.kind=MYL_NATIVE_POINTER};
@@ -1191,6 +1194,110 @@ static void flat_single_body_order(void) {
     myl_native_region_end(&heap);
     finish(&heap);
 }
+static const myl_native_field plain_pair_fields[]={{.type=&number},{.offset=8,.type=&number}};
+static const myl_native_type plain_pair={.size=16,.alignment=8,.kind=MYL_NATIVE_RECORD,
+    .fields=plain_pair_fields,.field_count=2};
+static const myl_rc_shape plain_pair_shape={.size=16,.kind=MYL_RC_SHAPE_NONE};
+/* spec-case: RC-PLAIN-REPLACE-1. Plain record replacement is memmove-compatible,
+ * preserves source bits, refuses invalid regions atomically, and needs no extra
+ * allocation for a wide nested array once its metadata is registered. */
+static void plain_retain_replace(void) {
+    static const myl_native_type wide={.size=256,.alignment=8,.kind=MYL_NATIVE_ARRAY,
+        .element=&plain_pair,.count=16,.stride=16};
+    static const myl_rc_shape wide_shape={.size=256,.kind=MYL_RC_SHAPE_NONE};
+    myl_native_heap heap;
+    init(&heap);
+    assert(flat_count(&heap,&plain_pair,&plain_pair_shape)==0);
+    assert(flat_count(&heap,&wide,&wide_shape)==0);
+    uint64_t bits[]={1,2,3,4};
+    assert(myl_rc_native_retain_replace(&heap,&plain_pair,bits+1,bits,0));
+    assert(bits[0]==1 && bits[1]==1 && bits[2]==2 && bits[3]==4);
+    assert(myl_rc_native_retain_replace(&heap,&plain_pair,bits,bits+1,0));
+    assert(bits[0]==1 && bits[1]==2 && bits[2]==2 && bits[3]==4);
+    assert(myl_rc_native_retain_replace(&heap,&plain_pair,bits,bits,~0u));
+    assert(!myl_rc_native_retain_replace(&heap,&plain_pair,bits+2,bits,1));
+    assert(bits[2]==2 && bits[3]==4 && myl_rc_take_failure(&heap)==MYL_RC_REGION_ERROR);
+    assert(myl_native_region_begin(&heap));
+    assert(myl_rc_native_retain_replace(&heap,&plain_pair,bits+2,bits,1));
+    assert(bits[2]==1 && bits[3]==2);
+    myl_native_region_end(&heap);
+    unsigned char source[256], destination[256];
+    for (size_t i=0;i<sizeof source;i++) source[i]=(unsigned char)i;
+    size_t bytes=heap.bytes, allocations=heap.allocations;
+    heap.limit=bytes;
+    assert(myl_rc_native_retain_replace(&heap,&wide,destination,source,0));
+    assert(!memcmp(source,destination,sizeof source) && heap.bytes==bytes && heap.allocations==allocations);
+    static const myl_native_type cold={.size=16,.alignment=8,.kind=MYL_NATIVE_PLAIN};
+    memset(destination,0x5a,sizeof destination);
+    assert(!myl_rc_native_retain_replace(&heap,&cold,destination,source,0));
+    assert(myl_rc_take_failure(&heap)==MYL_RC_ALLOCATION_REFUSED);
+    for (size_t i=0;i<sizeof destination;i++) assert(destination[i]==0x5a);
+    finish(&heap);
+}
+static uint64_t *plain_callback_source;
+static void replace_source_finalizer(myl_native_heap *heap, void *payload) {
+    (void)heap; (void)payload;
+    plain_callback_source[0]=99;
+}
+/* spec-case: RC-PLAIN-REPLACE-1. A queued finalizer can alter the original source;
+ * retain replacement must stage its bits before draining that callback. */
+static void plain_replace_pending_death(void) {
+    static const myl_native_type finalized={.size=8,.alignment=8,.kind=MYL_NATIVE_PLAIN};
+    static const myl_rc_descriptor descriptor={.type=&finalized,.shape=&flat_scalar,.finalize=replace_source_finalizer};
+    myl_native_heap heap;
+    init(&heap);
+    assert(flat_count(&heap,&plain_pair,&plain_pair_shape)==0);
+    assert(myl_rc_descriptor_import(&heap,&descriptor)==MYL_RC_OK);
+    assert(((const myl_rc_binding *)myl_rc_descriptor_find(&heap,&finalized))->flat.count>MYL_RC_FLAT_LEAVES);
+    void *queued=myl_native_heap_alloc(&heap,&finalized,1);
+    assert(queued);
+    uint64_t source[]={7,8}, target[]={1,2};
+    plain_callback_source=source;
+    heap.rc->dead.active=1;
+    myl_rc_owner_release(&heap,queued);
+    heap.rc->dead.active=0;
+    assert(heap.rc->dead.head);
+    assert(myl_rc_native_retain_replace(&heap,&plain_pair,target,source,0));
+    assert(source[0]==99 && source[1]==8 && target[0]==7 && target[1]==8);
+    assert(!heap.rc->dead.head);
+    plain_callback_source=NULL;
+    finish(&heap);
+}
+/* spec-case: RC-PLAIN-REPLACE-1. Held tokens remain H and counted-shape NONE
+ * cannot grant copying of a raw resource hidden in an inline record. */
+static void plain_replace_excludes_ownership(void) {
+    static const myl_rc_shape held_shape={.size=8,.kind=MYL_RC_SHAPE_HOLD_POINTER};
+    static const myl_native_type held_type={.size=8,.alignment=8,.kind=MYL_NATIVE_POINTER};
+    static const myl_native_type resource={.size=8,.alignment=8,.kind=MYL_NATIVE_RESOURCE};
+    static const myl_native_field fields[]={{.type=&resource},{.offset=8,.type=&number}};
+    static const myl_native_type unique={.size=16,.alignment=8,.kind=MYL_NATIVE_RECORD,.fields=fields,.field_count=2};
+    myl_native_heap heap;
+    init(&heap);
+    assert(flat_count(&heap,&held_type,&held_shape)>MYL_RC_FLAT_LEAVES);
+    assert(flat_count(&heap,&unique,&plain_pair_shape)>MYL_RC_FLAT_LEAVES);
+    void *source=myl_rc_storage_bytes(&heap,8,0), *target=myl_rc_storage_bytes(&heap,8,0);
+    myl_rc_hold source_hold={0}, target_hold={0};
+    assert(myl_rc_hold_acquire(&heap,source,&source_hold)==MYL_RC_OK);
+    assert(myl_rc_hold_acquire(&heap,target,&target_hold)==MYL_RC_OK);
+    myl_rc_owner_release(&heap,source);
+    myl_rc_owner_release(&heap,target);
+    assert(myl_rc_native_retain_replace(&heap,&held_type,&target_hold.payload,&source_hold.payload,0));
+    assert(target_hold.payload==source && owners(source)==0 && ((myl_rc_object *)source-1)->holds==2);
+    myl_rc_hold_release(&heap,&target_hold);
+    myl_rc_hold_release(&heap,&source_hold);
+    pid_t child=fork();
+    assert(child>=0);
+    if (!child) {
+        struct rlimit no_core={0,0};
+        assert(!setrlimit(RLIMIT_CORE,&no_core));
+        uint64_t input[]={123,456}, output[2]={0};
+        (void)myl_rc_native_retain_replace(&heap,&unique,output,input,0);
+        _exit(0);
+    }
+    int status=0;
+    assert(waitpid(child,&status,0)==child && WIFSIGNALED(status) && WTERMSIG(status)==SIGABRT);
+    finish(&heap);
+}
 int myl_rc_collections_verify(void) {
     storage_reuse_and_holds();
     storage_boundaries();
@@ -1224,12 +1331,15 @@ int myl_rc_collections_verify(void) {
     flat_drop_order();
     flat_body_order();
     flat_single_body_order();
-    return 32;
+    plain_retain_replace();
+    plain_replace_pending_death();
+    plain_replace_excludes_ownership();
+    return 35;
 }
 #ifndef MYL_RC_COLLECTIONS_LIBRARY
 int main(void) {
-    assert(myl_rc_collections_verify()==32);
-    puts("native RC collections: 32 passed");
+    assert(myl_rc_collections_verify()==35);
+    puts("native RC collections: 35 passed");
     return 0;
 }
 #endif
