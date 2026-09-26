@@ -55,7 +55,12 @@ void myl_qbe_rc_slot_drop(void *context, MylQbeRcSlot *slot) {
     myl_rc_invariant(slot && slot->initialized);
     if (!*slot->initialized) return;
     *slot->initialized = 0;
-    myl_rc_invariant(slot->type && slot->address && !(slot->flags & ~15u));
+    myl_rc_invariant(slot->type && slot->address && !(slot->flags & ~31u));
+    if (slot->flags & MYL_QBE_RC_LOAN) {
+        myl_rc_invariant(slot->flags == MYL_QBE_RC_LOAN);
+        myl_rc_native_unloan(&ctx->heap, slot->type, slot->address);
+        return;
+    }
     if (slot->flags & MYL_QBE_RC_HOLD_POINTER) {
         myl_rc_invariant(slot->flags == MYL_QBE_RC_HOLD_POINTER && slot->type->size == sizeof(void *));
         myl_rc_hold hold;
@@ -205,7 +210,9 @@ int myl_qbe_rc_rebox_local(void *context, const myl_native_type *type, void *add
     if (status == MYL_RC_OK) {
         myl_rc_slot destination = {.shape = descriptor->shape, .address = replacement, .region = request.region};
         myl_rc_slot source = {.shape = descriptor->shape, .address = (void *)body};
-        status = myl_rc_value_copy(&ctx->heap, &destination, &source);
+        // This body was already evaluated and detached. Publishing its box is
+        // physical retention: another pin clone would strand the live receiver.
+        status = myl_rc_value_retain_many(&ctx->heap, &destination, &source, 1);
     }
     if (status != MYL_RC_OK) {
         myl_rc_construction_abort(&ctx->heap, replacement);

@@ -1,9 +1,9 @@
 #ifndef MYLANG_NATIVE_RC_H
 #define MYLANG_NATIVE_RC_H
 #include "native_heap.h"
-/* RC-v1 is an artifact/heap ABI, never a property inferred from an arbitrary
+/* The versioned RC artifact/heap ABI is never inferred from an arbitrary
  * pointer. GC, arena and immortal objects keep their 16-byte common header. */
-#define MYL_RC_ABI_VERSION 2u
+#define MYL_RC_ABI_VERSION 3u
 #define MYL_RC_PREFIX_BYTES ((size_t)32)
 #define MYL_RC_COUNT_MAX UINTPTR_MAX
 #define MYL_RC_COUNT_LIMIT_CODE "R_REFERENCE_COUNT_LIMIT"
