@@ -14,6 +14,10 @@ Build commands run through `scripts/build-slot.sh build`; measurement itself
 does not use a build slot. Before and final installations/binaries were retained
 separately. Compressed build and focused-unit logs preserve their verdicts.
 
+`guests.py`, `guests.json.gz` and `guests.log.gz` record the later broader check:
+115 guest tests pass per backend across 17 files. The final compiler hash matches
+the measured after arm. LLVM uses `--release`, with no later backend override.
+
 See [the audit](../../docs/audits/d9-rc-small-allocation-2026-09-26.md) for cache,
 budget, layout, custom-hook and validation details. This experiment does not
 establish WP-4 performance acceptance.

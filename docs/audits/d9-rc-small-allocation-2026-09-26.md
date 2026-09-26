@@ -77,5 +77,11 @@ real-execution (3) sanitizer scenarios pass, as do the existing GC heap,
 collection and region sanitizer suites. The final focused Debug RC unit gate
 passes 45/45. Both Debug installs exercised Guardian's 88 checks without any rule
 or ratchet change. The parent coordinates the joined full gate and feedback log;
-the separate broader guest run is recorded as follow-up evidence. The remaining
-RC performance gap is still well outside WP-4 acceptance.
+the separate broader guest run passes 115/115 on QBE and 115/115 on actual LLVM
+across 17 files per backend, using the final immutable Debug compiler. These
+cover aggregates, arenas, temporary lifetimes, held views, capabilities,
+contracts, recursive values, borrowed results, read loans, mutation receivers,
+callback captures, journal types, iteration identity and loop versions. The
+commands, compiler hash and individual results are preserved in `guests.json.gz`;
+the LLVM invocation uses `--release` without a conflicting `--qbe` selector.
+The remaining RC performance gap is still well outside WP-4 acceptance.
