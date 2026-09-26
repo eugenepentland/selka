@@ -18,7 +18,7 @@ const values = language.value_semantics;
 
 /// The commands that accept `--value-semantics`: every command that checks,
 /// builds or runs a program, and the inspection commands that show its IL.
-const commands = [_][]const u8{ "check", "check-project", "build", "run", "run-project", "test", "emit-qbe", "emit-project-qbe", "dump-bytecode" };
+const commands = [_][]const u8{ "check", "check-module", "check-project", "build", "run", "run-project", "test", "emit-qbe", "emit-project-qbe", "dump-bytecode" };
 
 /// Failures settling the switch: memory, and writing a refusal to stderr.
 pub const Error = std.mem.Allocator.Error || std.Io.File.Writer.Error;
@@ -36,7 +36,7 @@ pub fn settle(process: std.process.Init, args: []const [:0]const u8) Error!Settl
     const flag = position(args);
     const inherited = values.environmentEnables(process.environ_map.get(values.variable));
     if (flag != null and !accepts(args[1])) {
-        try std.Io.File.stderr().writeStreamingAll(process.io, "mylang: --value-semantics applies to check, check-project, build, run, run-project, test, emit-qbe, emit-project-qbe and dump-bytecode\n");
+        try std.Io.File.stderr().writeStreamingAll(process.io, "mylang: --value-semantics applies to check, check-module, check-project, build, run, run-project, test, emit-qbe, emit-project-qbe and dump-bytecode\n");
         return .{ .status = 2 };
     }
     if (!inherited) {

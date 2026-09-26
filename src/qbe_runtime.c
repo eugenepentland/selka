@@ -489,21 +489,9 @@ static int innermost_visit(Context *ctx, const MylQbeFunction *function, uint64_
     *(InnermostFrame *)state = (InnermostFrame){function, position};
     return 0;
 }
-/* A contract clause is checked like an assertion whose message begins with its
-   own trap code and ": " (CONTRACT-TRAP-1): report that code, and the rest of
-   the message as the detail, instead of `R_ASSERT`. */
-static const char *const contract_codes[] = {"R_REQUIRES", "R_ENSURES", "R_INVARIANT"};
-static const char *contract_code(const char **message) {
-    for (size_t i = 0; i < sizeof contract_codes / sizeof contract_codes[0]; ++i) {
-        size_t length = strlen(contract_codes[i]);
-        if (!strncmp(*message, contract_codes[i], length) && (*message)[length] == ':' && (*message)[length + 1] == ' ') {
-            *message += length + 2;
-            return contract_codes[i];
-        }
-    }
-    return "R_ASSERT";
-}
-void myl_qbe_fail_assert(void *context) {
+/* The generated call selects the trap kind. Message bytes are always literal,
+   including an assert message beginning with a contract-looking prefix. */
+static void fail_assertion(void *context, const char *code) {
     Context *ctx = context;
     InnermostFrame frame = {0};
     if (ctx->active_frame) frame = (InnermostFrame){ctx->active_frame->function, ctx->active_frame->position};
@@ -511,13 +499,16 @@ void myl_qbe_fail_assert(void *context) {
     if (frame.function && frame.function->messages && frame.position < frame.function->count) {
         const char *message = frame.function->messages[frame.position];
         if (message && *message) {
-            const char *code = contract_code(&message);
             fail_detail(context, code, message, 0, 0, 0, 0, 0, 0);
             return;
         }
     }
-    fail(context, "R_ASSERT");
+    fail(context, code);
 }
+void myl_qbe_fail_assert(void *context) { fail_assertion(context, "R_ASSERT"); }
+void myl_qbe_fail_requires(void *context) { fail_assertion(context, "R_REQUIRES"); }
+void myl_qbe_fail_ensures(void *context) { fail_assertion(context, "R_ENSURES"); }
+void myl_qbe_fail_invariant(void *context) { fail_assertion(context, "R_INVARIANT"); }
 void myl_qbe_fail_bounds(void *context) {
     fail(context, "R_INDEX_BOUNDS");
 }

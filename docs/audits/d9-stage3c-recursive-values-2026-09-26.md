@@ -60,7 +60,9 @@ file and checks output during `build`. The arena migration was checked with
   guest test runner's step budget rejects that much construction, so this is a
   standalone native stress program; the regular guest regression uses 3,000.
 - A 200-node copy of that program passed under `--gc-stress`. The recursive
-  rendering test checks the clean depth cap (`...`). An 80-deep recursive
+  rendering test pairs a boxed `Option[Node]` chain with an ordinary
+  list-recursive `Branch` aggregate and checks that both stop at the depth-24
+  ellipsis cap. An 80-deep recursive
   typed JSON argument was rejected cleanly as `TestValueLimit` (exit 2).
 
 The printing limit is an explicit deviation from the close-out plan's
@@ -68,7 +70,9 @@ The printing limit is an explicit deviation from the close-out plan's
 `MYL_PRINT_MAX_DEPTH=24` and rendered `...` for deeper classes, records,
 collections and variants. The box renderer forwards the same depth, so it
 inherits that existing, terminating behavior and prints a truncated value
-instead of trapping. Equality and hashing use heap work lists, arena escape
+instead of trapping. This is the accepted printing exception to plan §3c's
+clean-trap wording: it bounds native stack use and preserves the established
+printer contract for deep ordinary aggregates. Equality and hashing use heap work lists, arena escape
 and GC scanning use their existing heap traversal, and typed JSON rejects its
 own depth limit cleanly. The million-node stress program directly verifies
 equality and hashing; GC stress was exercised at 200 nodes.

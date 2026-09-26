@@ -3484,6 +3484,9 @@ test "CLI check-module checks bodies and never invents main" {
     try invoke("check-module", "module input\n\npublic def value() -> int:\n    return main()\n", 1, "", "E_UNKNOWN_SYMBOL");
     try invoke("check-module", "module input\n\nrecord Hidden:\n    value: int\n\npublic def value() -> Hidden:\n    return Hidden(7)\n", 1, "", "E_PRIVATE_INTERFACE");
     try invoke("check-module", "module input\n\npublic def value(out: Stream) -> None noio:\n    out.print(7)\n", 1, "", "E_EFFECT");
+    const library = "module input\n\npublic def grown(xs: list[int]) -> list[int]:\n    copy = xs\n    copy.append(1)\n    return copy\n";
+    try invoke("check-module", library, 1, "", "E_MUTATION_MARKER");
+    try invokeOptions("check-module", library, &.{"--value-semantics"}, 0, "", "");
 }
 
 fn expectLibraryCommand(path: []const u8, cache: []const u8, command: []const u8, status: u8, diagnostic: []const u8) !void {
@@ -11467,7 +11470,7 @@ test "CLI property test discards inputs that break a precondition or a record in
     defer testing.allocator.free(cases);
     const explicit = try project.run(&.{ "--cases", cases, "--filter", "test_span" });
     defer freeRun(explicit);
-    try testing.expect(std.mem.indexOf(u8, explicit.stdout, "failed main::test_span: R_REQUIRES: test_span requires `self.low <= self.high`: parameter span holds a Span that breaks this invariant: a span never runs backwards") != null);
+    try testing.expect(std.mem.indexOf(u8, explicit.stdout, "failed main::test_span: R_INVARIANT: Span invariant `self.low <= self.high`: a span never runs backwards") != null);
 }
 
 const hanging_property =
@@ -11697,4 +11700,52 @@ test "CLI mylang.json value_semantics switches its project and a build carries i
     defer testing.allocator.free(ran.stdout);
     defer testing.allocator.free(ran.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 12 }, ran.term);
+}
+
+const decoded_invariant_source =
+    \\module main
+    \\
+    \\@invariant(self.low <= self.high, "range order")
+    \\public record Span:
+    \\    low: int
+    \\    high: int
+    \\
+    \\public record Batch:
+    \\    spans: list[Span]
+    \\
+    \\public def read(batch: Batch, out: Stream) -> int:
+    \\    out.print("body ran")
+    \\    return len(batch.spans)
+    \\
+    \\def main() -> int:
+    \\    return 0
+;
+
+// spec-case: CONTRACT-DECODE-1
+test "CLI invariant boundary rejects invalid JSON collection elements before the body" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const entry = try writeInvokeSource(a, &temporary, "main.my", decoded_invariant_source);
+    const invalid = try writeInvokeRequest(a, &temporary, "invalid.json", "{\"batch\":{\"spans\":[{\"low\":\"1\",\"high\":\"2\"},{\"low\":\"9\",\"high\":\"3\"}]}}");
+    const valid = try writeInvokeRequest(a, &temporary, "valid.json", "{\"batch\":{\"spans\":[{\"low\":\"1\",\"high\":\"2\"},{\"low\":\"3\",\"high\":\"9\"}]}}");
+    const cache = try invokeCacheOption(a, &temporary);
+    const rejected = try runInvoke(entry, &.{ "--function", "main::read", try invokeInputOption(a, invalid) }, cache);
+    defer freeRun(rejected);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, rejected.term);
+    try testing.expect(std.mem.indexOf(u8, rejected.stdout, "R_INVARIANT") != null);
+    try testing.expect(std.mem.indexOf(u8, rejected.stdout, "body ran") == null);
+    const accepted = try runInvoke(entry, &.{ "--function", "main::read", try invokeInputOption(a, valid) }, cache);
+    defer freeRun(accepted);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, accepted.term);
+    try testing.expect(std.mem.indexOf(u8, accepted.stdout, "body ran") != null);
+    try testing.expect(std.mem.indexOf(u8, accepted.stdout, "\"value\":\"2\"") != null);
+    // Reusing the native artifact never reuses a prior successful invocation.
+    const again = try runInvoke(entry, &.{ "--function", "main::read", try invokeInputOption(a, invalid) }, cache);
+    defer freeRun(again);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, again.term);
+    try testing.expect(std.mem.indexOf(u8, again.stdout, "R_INVARIANT") != null);
+    try testing.expect(std.mem.indexOf(u8, again.stdout, "body ran") == null);
 }

@@ -110,6 +110,10 @@ field write (`r.f = v`, `r.f += v`, a destructuring target, and a nested
 domain. A plain copy is the same value, so it is not checked again. A domain
 invariant may read its representation with `unwrap(self)`.
 
+Copied JSON and native wire inputs check their invariants before the selected
+function runs, including records nested in arrays, lists, dictionaries and
+recursive values. A broken input traps `R_INVARIANT` at the invariant clause.
+
 ```mylang
 # doc: expect 707
 @invariant(self.low <= self.high, "a range never runs backwards")
@@ -177,7 +181,8 @@ def main() -> int:
 ## Tests
 
 A test's arguments come from the test runner rather than from guest code, so no
-constructor checked them. Every `test_` (or `@test`) function therefore checks,
+constructor checked them. The copied-value boundary validates their invariants
+first. Every `test_` (or `@test`) function therefore checks,
 on entry and before its own `@requires`, the `@invariant` of every record or
 domain its parameters hold — in fields, collection elements and keys, arrays,
 tuples and union cases — as a precondition of the test naming the parameter.
@@ -190,8 +195,8 @@ test's own `@requires`; a cases-file argument that breaks one fails the test:
 $ cat cases.json
 {"ranges::test_span": {"arguments": {"span": {"low": "5", "high": "1"}}}}
 $ mylang test ranges.my --cases cases.json
-failed ranges::test_span: R_REQUIRES: test_span requires `self.low <= self.high`: parameter span holds a Span that breaks this invariant: a span never runs backwards
-  in ranges::test_span at ranges.my:8:22
+failed ranges::test_span: R_INVARIANT: Span invariant `self.low <= self.high`: a span never runs backwards
+  in @invariant:ranges::Span at ranges.my:1:12
 
 0 passed, 0 cached, 1 failed, 0 skipped
 ```

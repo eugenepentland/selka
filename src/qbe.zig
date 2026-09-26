@@ -367,6 +367,9 @@ fn validateSelection(allocator: std.mem.Allocator, program: bytecode.Program, se
         const codec = record.contract.codec orelse continue;
         if (!selected[@backingInt(codec.decode)] or !selected[@backingInt(codec.encode)]) return error.InternalError;
     }
+    for (program.functions) |function| if (@import("invariant_callbacks.zig").isName(function.name)) {
+        if (!selected[@backingInt(function.id)]) return error.InternalError;
+    };
 }
 
 /// Group one function's per-instruction inline provenance into the contiguous
@@ -1111,7 +1114,7 @@ fn fillPositions(a: std.mem.Allocator, program: bytecode.Program, src: Source, i
         location.* = .{ .path = value.path, .line = value.line, .column = value.column };
         // ERROR-TRACE-1: a converting `?` never traps, so its slot names the
         // union case the error trace reports it wrapped the error in.
-        message.* = if (instruction.op == .assert_true) instruction.op.assert_true else try error_trace.conversionCase(a, program.records, instruction.op) orelse "";
+        message.* = if (instruction.op == .assert_true) instruction.op.assert_true.message else try error_trace.conversionCase(a, program.records, instruction.op) orelse "";
     }
     unit.locations = locations;
     unit.messages = messages;
@@ -2585,9 +2588,15 @@ const Emitter = struct {
             .wrap_domain, .unwrap_domain => {},
             .value_copy => |copy| try value_copy_lower.emit(self, copy, stack),
             .jump => |target| try self.print(jump_label, .{ self.labelPrefix(target), target }),
-            .assert_true => {
+            .assert_true => |assertion| {
                 const v = try self.load("s", h - 1);
-                try self.require(v, "myl_qbe_fail_assert");
+                const failure = switch (assertion.kind) {
+                    .statement => "myl_qbe_fail_assert",
+                    .requires => "myl_qbe_fail_requires",
+                    .ensures => "myl_qbe_fail_ensures",
+                    .invariant => "myl_qbe_fail_invariant",
+                };
+                try self.require(v, failure);
             },
             .jump_if_false => |target| try self.conditionalJump(target, h),
             .ret => {

@@ -24,6 +24,9 @@ pub fn render(w: *std.Io.Writer, units: []const Value, shapes: shape.Shapes) sha
 }
 fn call(w: *std.Io.Writer, shapes: shape.Shapes, unit: Value, item: Value) shape.Error!void {
     const parameters = v.array(v.get(item, v.parameters_key));
+    if (!shapes.codecs) for (parameters, 0..) |parameter, index| {
+        try w.print("if(!wire_validate(ctx,{d},wire_arguments[{d}],0))return 0;\n", .{ try shapes.index(v.text(parameter)), index });
+    };
     const usesVector = try shapes.usesVector(parameters);
     const result = v.text(v.get(item, "result"));
     const size = try shapes.size(result);

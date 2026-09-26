@@ -181,6 +181,9 @@ void myl_qbe_fail_list_value(void *context);
 void myl_qbe_fail_allocation(void *context);
 void myl_qbe_fail_iteration(void *context);
 void myl_qbe_fail_assert(void *context);
+void myl_qbe_fail_requires(void *context);
+void myl_qbe_fail_ensures(void *context);
+void myl_qbe_fail_invariant(void *context);
 void myl_qbe_fail_bounds(void *context);
 /* Detailed variants record the original values first seen at the failing
  * operation. They are the only paths that populate `trap_detail`; the

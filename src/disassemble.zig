@@ -134,7 +134,7 @@ fn writeInstruction(writer: *std.Io.Writer, program: bc.Program, src: Source, in
         .pop => try writer.writeAll("POP"),
         .jump => |target| try writer.print("JUMP {d}", .{target}),
         .jump_if_false => |target| try writer.print("JUMP_IF_FALSE {d}", .{target}),
-        .assert_true => |message| try writer.print("ASSERT_TRUE {s}", .{message}),
+        .assert_true => |assertion| try writer.print("ASSERT_TRUE {s} {s}", .{ @tagName(assertion.kind), assertion.message }),
         .div_i64_checked => try writer.writeAll("DIV_I64_CHECKED"),
         .rem_i64_checked => try writer.writeAll("REM_I64_CHECKED"),
         .not_bool => try writer.writeAll("NOT_BOOL"),

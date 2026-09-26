@@ -1210,6 +1210,8 @@ const Checker = struct {
     }
     const contract_checks = sema_contracts.Checks(Checker);
     pub const indexInvariants = contract_checks.indexInvariants;
+    /// Compile native decoded-value invariant callbacks after source bodies.
+    pub const boundaryValidators = contract_checks.boundaryValidators;
     pub const contractSeeded = contract_checks.contractSeeded;
     pub const contractPrologue = contract_checks.contractPrologue;
     pub const contractReturn = contract_checks.contractReturn;
@@ -1523,6 +1525,31 @@ fn checkInstance(step: InstanceStep) Error!?typed.Function {
     });
     return function;
 }
+/// Check ordinary bodies and any generic bodies required by invariant callbacks.
+fn checkBodies(initial: InstanceStep, contracts_failed: bool, prior_failure: bool) Error![]typed.Function {
+    var step = initial;
+    var failed = prior_failure;
+    var functions: std.ArrayList(typed.Function) = .empty;
+    var validators: ?[]typed.Function = null;
+    while (true) {
+        while (step.index < step.checker.instance_keys.items.len and (!contracts_failed or step.index < step.checker.ordinary_count)) : (step.index += 1) {
+            const function = (try checkInstance(step)) orelse {
+                failed = true;
+                continue;
+            };
+            try functions.append(step.allocator, function);
+        }
+        if (failed) return error.SourceError;
+        if (validators != null) break;
+        validators = try step.checker.boundaryValidators();
+    }
+    for (validators.?) |*function| {
+        function.id = @fromBackingInt(functions.items.len);
+        try functions.append(step.allocator, function.*);
+    }
+    return functions.toOwnedSlice(step.allocator);
+}
+
 /// One body's fresh interval recording inputs.
 const RangeRecord = struct {
     checker: *Checker,
@@ -1601,6 +1628,7 @@ fn exportedFunctions(allocator: std.mem.Allocator, module_names: ?*Names, functi
     for (functions, 0..) |function, index| {
         exported[index] = function.type_arguments.len == 0 and
             !std.mem.startsWith(u8, function.name, "lambda@") and
+            !@import("invariant_callbacks.zig").isName(function.name) and
             !std.mem.eql(u8, function.name, entry_adapter.wrapper_name) and
             (if (module_names) |names| names.index.functionExported(names.src, function.declaration) else false);
     }
@@ -1711,30 +1739,16 @@ fn checkCore(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
     // library checking neither adapts, returns nor caches the checked program.
     const main = if (options.entry_required) try checkEntry(&checker, module_names, failed) else @as(typed.FunctionId, @fromBackingInt(0));
     var plan = try openPlan(cache, &session, allocator, @backingInt(main));
-    var checked_functions: std.ArrayList(typed.Function) = .empty;
-    var i: usize = 0;
-    while (i < checker.instance_keys.items.len and (!contracts_failed or i < checker.ordinary_count)) : (i += 1) {
-        const function = (try checkInstance(.{
-            .checker = &checker,
-            .session = &session,
-            .spec_session = &spec_session,
-            .cache = cache,
-            .plan = &plan,
-            .allocator = allocator,
-            .index = i,
-        })) orelse {
-            failed = true;
-            continue;
-        };
-        try checked_functions.append(allocator, function);
-    }
-    // Failed functions leave no executable placeholders. Cross-function passes
-    // require a complete graph and must never see the partial function list.
-    // A body that failed is checked in full whether or not others stood in:
-    // a stood-in body had no errors and its inputs are unchanged.
-    if (failed) return error.SourceError;
+    const functions = try checkBodies(.{
+        .checker = &checker,
+        .session = &session,
+        .spec_session = &spec_session,
+        .cache = cache,
+        .plan = &plan,
+        .allocator = allocator,
+        .index = 0,
+    }, contracts_failed, failed);
     const pass_start = sink.items.items.len;
-    const functions = try checked_functions.toOwnedSlice(allocator);
     try @import("c_abi.zig").validateImports(allocator, functions, sink);
     var executable_names: std.StringHashMapUnmanaged(typed.FunctionId) = .empty;
     for (functions) |function| try executable_names.put(allocator, function.name, function.id);

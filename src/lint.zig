@@ -930,6 +930,7 @@ fn isSyntheticOrEntry(name: []const u8) bool {
         std.mem.startsWith(u8, local, "test_") or
         std.mem.startsWith(u8, local, "bench_") or
         std.mem.startsWith(u8, name, "lambda@") or
+        @import("invariant_callbacks.zig").isName(name) or
         std.mem.eql(u8, name, "__mylang_entry");
 }
 

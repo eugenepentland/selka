@@ -83,7 +83,8 @@ pub const Instruction = struct {
         cmp_i64: Predicate,
         cmp_bool: Equality,
         not_bool,
-        assert_true: []const u8,
+        /// The trap kind is explicit; user messages cannot select a contract code.
+        assert_true: struct { message: []const u8, kind: typed.AssertionKind = .statement },
         pop,
         acknowledge: typed.Type,
         jump: usize,
