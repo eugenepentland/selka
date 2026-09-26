@@ -23,7 +23,7 @@ pub fn begin(comptime E: type, self: *E, operation: anytype) Error!?usize {
     if (!try flatten(self.layouts, operation.ty, 0, &flat) or flat.len == 0) return null;
     const size = (try self.layout(operation.ty)).size;
     const label = self.temp();
-    try overlap(E, self, operation, size, label);
+    if (!operation.disjoint) try overlap(E, self, operation, size, label);
     for (flat.offsets[0..flat.len]) |offset| try pointer(E, self, operation.source, offset, label);
     // All pointer/header checks precede publication. Generated callers supply
     // the current valid region and an owning source guard; no count changes,

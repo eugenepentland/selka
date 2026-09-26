@@ -133,7 +133,7 @@ pub fn commitRuntime(comptime E: type, self: *E) Error!void {
 /// A pin-aware take can still allocate; its source guard changes only on success.
 pub fn prepareOperand(comptime E: type, self: *E, ty: typed.Type, index: usize) Error!void {
     const address = try source(E, self, index, ty);
-    if (try producedOwner(E, self, ty, index)) return prepareOwned(E, self, ty, address, journalIndex(E, self, index));
+    if (try producedOwner(E, self, ty, index)) return prepareOwned(E, self, ty, address, journalIndex(E, self, index), true);
     try prepareGuarded(E, self, ty, address, journalIndex(E, self, index));
 }
 
@@ -158,10 +158,13 @@ fn producedOwner(comptime E: type, self: *E, ty: typed.Type, index: usize) Error
     };
 }
 
-fn prepareOwned(comptime E: type, self: *E, ty: typed.Type, address: usize, journal_index: usize) Error!void {
+fn prepareOwned(comptime E: type, self: *E, ty: typed.Type, address: usize, journal_index: usize, disjoint: bool) Error!void {
     const work = try workAddress(E, self);
     const region = try frame.region(E, self);
-    try slots.Lower(E).transfer(self, .{ .ty = ty, .destination = work, .source = address, .region = region, .mode = .take_empty });
+    // producedOwner admits only completed publications: scalar input bits are
+    // in sN, wider values in rcsN. Both buffers are distinct from rcwork, whose
+    // pending obligation was cleared before that producer finished publishing.
+    try slots.Lower(E).transfer(self, .{ .ty = ty, .destination = work, .source = address, .region = region, .mode = .take_empty, .disjoint = disjoint });
     try frame.initialized(E, self, journal_index, false);
     try markWork(E, self, ty);
 }
@@ -182,7 +185,7 @@ pub fn prepareGuarded(comptime E: type, self: *E, ty: typed.Type, address: usize
         try self.print(" %v{d} =w xor %v{d}, 1\n %v{d} =w and %v{d}, %v{d}\n", .{ owner, held, transferable, live, owner });
     }
     try self.print(" jnz %v{d}, @rctake{d}, @rccopy{d}\n@rctake{d}\n", .{ transferable, label, label, label });
-    try prepareOwned(E, self, ty, address, journal_index);
+    try prepareOwned(E, self, ty, address, journal_index, false);
     try self.print(" jmp @rcprepared{d}\n@rccopy{d}\n", .{ label, label });
     try copied(E, self, ty, address);
     // A copied H token becomes an independent O only after success; refusal
