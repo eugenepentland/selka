@@ -2,7 +2,9 @@
 
 This is the integration ledger for the [close-out plan](d9-closeout-plan-2026-09-26.md).
 It records completed acceptance separately from work in progress. The three delegated
-workers use GPT-6 Sol. The orchestrator works in separate worktrees and serializes
+workers initially used GPT-6 Sol. At the user's request, the current workers
+use GPT-6 Astra with extra-high reasoning; their worktrees and evidence were
+preserved across the handoff. The orchestrator works in separate worktrees and serializes
 full gates with `../.d9-closeout-gate.lock`. The original dirty checkout, `main`
 (`b292660a`), and the pending devspeed merge are untouched.
 
@@ -37,8 +39,8 @@ for every accepted package above.
 
 | Work | Branch/worktree | Remaining acceptance |
 |---|---|---|
-| WP-3b COW | `d9/stage3b`, `../d9-stage3b` | Full gate green at `efbc4285`: 93/93 test steps, 2,087 tests; QBE 51/51 and 428 tests; QBE-build 29/29; formatting 2/2. [Performance evidence](d9-stage3b-performance-2026-09-26.md) preserves median-three measurements; LLVM historical-source and class-free Lox results fail the required thresholds |
-| WP-3f default flip | Preparation at `codex/d9-stage3f-prep` (`d172b006`) | Full correctness gate green at source commit `81eaf8d1`: test 94/94 steps, 2,108 executed Zig tests; QBE 51/51 and 428 tests; QBE build 29/29; formatting 2/2. Includes 652 language, 49 value, 42 smoke and 2 compatibility guests, plus 231 historical golden cases. The 113-probe oracle has zero undeclared disagreements. Guide-only follow-up passes docs/coverage/formatting 28/28. Report: `docs/audits/d9-stage3f-default-validation-2026-09-26.md` on that branch. Subsequent review found a boxed-field alias leak; its fix and performance acceptance still block integration |
+| WP-3b COW | `d9/stage3b`, `../d9-stage3b` | Joined compiler/source gate green at `d4904aa7`: 93/93 test steps, 2,108 tests; QBE 51/51 and 428 tests; QBE-build 29/29; formatting 2/2. The 13-key class-free VM sweep after `2b889ba5` and `b51cddc1` still fails: 1.47277× QBE geomean, 1.63346× LLVM; 10/13 cases exceed 1.3× on each backend. Profiling found repeated copies of the guest collector's mark bitmap during `heap::blacken`; transfer-proof work is in progress |
+| WP-3f default flip | Preparation at `codex/d9-stage3f-prep` (`b937d4fc`) | Full existing-suite gate green at source commit `b937d4fc`: test 94/94 steps, 2,112 executed Zig tests; QBE 51/51 and 428 tests; QBE build 29/29; formatting 2/2. Includes 652 language, 49 value, 42 smoke and 2 compatibility guests, plus 231 historical golden cases. The 113-probe oracle has zero undeclared disagreements. Guide-only follow-up passes docs/coverage/formatting 28/28. Report: `docs/audits/d9-stage3f-default-validation-2026-09-26.md` on that branch. Subsequent review found boxed-field and nested list/dictionary alias leaks; their fixes and performance acceptance still block integration |
 | WP-4 reference counting | Not started | Requires 3f/4pre and the RC performance/RSS gate, including rewritten graph programs |
 | WP-5 concurrency | Not started | Design after WP-4, following the existing concurrency proposal |
 
@@ -50,16 +52,18 @@ joined validation remain required.
 
 ## Performance work still blocking acceptance
 
-The committed `b8d14efb` compiler and `ebe6b78f` class-free Lox source cost
-2,451,645,857 instructions on VM equality N=30,000 under QBE ReleaseFast
-versus the exact `60b668cf` class baseline's 1,018,576,990 (2.407×); LLVM
-full LTO is 842,084,943 versus 346,979,824 (2.427×). An uncommitted
-mut-parameter scalar-update optimization reduces median-three costs to
-1,509,436,771 QBE (1.482×) and 530,344,081 LLVM (1.528×), with identical
-stdout. These are provisional measurements pending its full gate and review.
-Every compiler was Debug. This remains a hard performance blocker. Matrix multiplication and
-byte scanning now match baseline closely after keeping COW transfer operand
-scratch local to QBE. The 116-key median-three sweep is preserved in the performance report. Parity geomeans are 1.0031× QBE and 1.0018× LLVM; Lox remains the blocker.
+The compiler changes `8a31f237` and `2b889ba5`, together with the Lox source
+patch `b51cddc1`, reduce selected VM equality N=30,000 to 1.0836× QBE and
+1.1991× LLVM full LTO. [The report](d9-lox-ip-publication-2026-09-26.md)
+preserves matched baseline measurements, source/binary hashes, 63/63 port tests
+in both modes, 52 smoke runs, and 276 exact runtime-error trace comparisons.
+The broader VM sweep still fails as described above; `trees` is worst at
+2.3944× QBE and 3.8210× LLVM. Its counted run copies about 2.09 GB in 410,240
+COW operations, dominated by copying marker lists in the guest collector.
+These measurements do not waive the 43-key acceptance gate. Matrix
+multiplication and byte scanning match baseline closely after private-scratch
+lowering. The prior 116-key sweep remains preserved in the performance report.
+Every compiler was Debug.
 
 Field extraction/store-back proofs progressed from `b456c84b` through
 `85667ce3` to `d83e26a0`. Matched ReleaseFast tree N=4 measurements fell from
@@ -83,3 +87,11 @@ Mutating `changed.child.items` after `changed = original` also changes the
 original. The recursive-box performance experiment must fix this immutable-box
 write-back path and its GC allocation/root analysis before integration. A green
 existing suite does not close this newly discovered correctness issue.
+
+A second regression affects general nested collection paths:
+`original = [{"k": [1]}]; changed = original; changed[0]["k"].append(2)`
+changes the original too. It reproduces without recursive boxes. The nested
+path planner loses a dictionary receiver that comes directly from a list
+read; a separate correction is in progress on `codex/d9-nested-cow`.
+The standalone box-path fix `daaf525b` and its lazy-sharing follow-on have
+focused validation but are not yet accepted by the joined gate.
