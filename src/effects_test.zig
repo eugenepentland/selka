@@ -679,7 +679,9 @@ const mutation_forms =
     \\    return 0
 ;
 
-test "M1 every managed write form contributes a mutation fact" {
+test "legacy sharing: M1 every managed write form contributes a mutation fact" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     var c = try language.Compilation.init(t.allocator, fixture_path, mutation_forms);
     defer c.deinit();
     try c.check();
@@ -717,7 +719,9 @@ test "M1 mutates clause normalizes duplicate names to sorted positions" {
 
 // spec-case: MUTATION-METADATA-1
 // spec: MUTATION-ENFORCE-1
-test "M2 a write through an unmarked parameter is the marker error, not a permission one" {
+test "legacy sharing: M2 a write through an unmarked parameter is the marker error, not a permission one" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     try reject(
         \\def touch(values: list[int]) -> None effects():
         \\    values[0] = 1
@@ -755,8 +759,8 @@ test "M2 a mut parameter with no mutation ceiling still exceeds its contract" {
 }
 
 // spec-case: MUT-PARAM-4
-test "M2 a mut footprint still rejects a writable argument aliasing a read-only one" {
-    try reject(
+test "M2 a mut footprint accepts an independent read-only snapshot" {
+    try accept(
         \\def touch(dst: mut list[int], src: list[int]) -> None effects(mutation):
         \\    dst[0] = src[0]
         \\
@@ -765,10 +769,10 @@ test "M2 a mut footprint still rejects a writable argument aliasing a read-only 
         \\    values = [1]
         \\    touch(mut values, values)
         \\    return 0
-    , "E_MUTATION_OVERLAP", "may alias");
-    // A fresh local stays one object through a second name, so the alias still
-    // overlaps, while a copy is a different object and does not.
-    try reject(
+    );
+    // Each read-only argument is an independent snapshot, including a
+    // second local copied from the same source.
+    try accept(
         \\def touch(dst: mut list[int], src: list[int]) -> None effects(mutation):
         \\    dst[0] = src[0]
         \\
@@ -778,7 +782,7 @@ test "M2 a mut footprint still rejects a writable argument aliasing a read-only 
         \\    alias = values
         \\    touch(mut values, alias)
         \\    return 0
-    , "E_MUTATION_OVERLAP", "may alias");
+    );
     try result(
         \\def touch(dst: mut list[int], src: list[int]) -> None effects(mutation):
         \\    dst[0] = src[0] + 1
@@ -872,7 +876,9 @@ const recursive_graphs_tail =
 // The per-path walk this replaced re-walked every path to a pair, so these two
 // graphs never finished checking; expanding each pair once settles them at once.
 // spec: MUT-OVERLAP-PROOF-1
-test "the overlap proof over two recursive class graphs expands each type pair once" {
+test "legacy sharing: the overlap proof over two recursive class graphs expands each type pair once" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     var c = try language.Compilation.init(t.allocator, fixture_path, recursive_graphs_head ++ "    extra: list[Heap]\n" ++ recursive_graphs_tail);
     defer c.deinit();
     try c.check();
@@ -880,7 +886,9 @@ test "the overlap proof over two recursive class graphs expands each type pair o
 }
 
 // spec-case: MUT-OVERLAP-PROOF-1
-test "the overlap proof still rejects two recursive graphs that share one component deep down" {
+test "legacy sharing: the overlap proof still rejects two recursive graphs that share one component deep down" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     try reject(recursive_graphs_head ++ "    source: list[Expr]\n" ++ recursive_graphs_tail, "E_MUTATION_OVERLAP", "may alias");
 }
 
@@ -915,7 +923,9 @@ fn upvalueProgram(comptime parameter: []const u8, comptime argument: []const u8)
 }
 
 // spec: MUT-TRACK-1
-test "a write through a match payload writes the owner of the matched value" {
+test "legacy sharing: a write through a match payload writes the owner of the matched value" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     try accept(comptime upvalueProgram("rt: mut Runtime", "mut rt"));
     try reject(comptime upvalueProgram("rt: Runtime", "rt"), marker_code, "declare `rt: mut Runtime`");
 }
@@ -923,7 +933,9 @@ test "a write through a match payload writes the owner of the matched value" {
 // A binding a later loop statement widens carries the widened origin at the
 // write: on the second iteration `b` is `a`, which the first made `p`.
 // spec-case: MUT-TRACK-1
-test "binding origins reach a fixed point across a loop" {
+test "legacy sharing: binding origins reach a fixed point across a loop" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     try reject(
         \\class Box:
         \\    n: int
@@ -943,7 +955,9 @@ test "binding origins reach a fixed point across a loop" {
 }
 
 // spec-case: MUT-TRACK-1
-test "the missing-marker diagnostic points at the write that needs the marker" {
+test "legacy sharing: the missing-marker diagnostic points at the write that needs the marker" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     const source =
         \\class Box:
         \\    n: int
@@ -984,43 +998,43 @@ test "M2 forwarding mut x where x is the caller's own parameter needs that param
 }
 
 // spec-case: MUTATION-METADATA-1
-test "M2 nested record aliases keep the input origin" {
-    try reject(
+test "M2 a copied record field is independent of its input" {
+    try accept(
         \\record Box:
         \\    values: list[int]
         \\
         \\
-        \\def change(box: mut Box) -> None effects():
+        \\def change(box: Box) -> None effects():
         \\    alias = box.values
         \\    alias[0] = 42
         \\
         \\
         \\def main() -> int:
         \\    box = Box(values=[1])
-        \\    change(mut box)
+        \\    change(box)
         \\    return 0
-    , "E_MUTATION_PERMISSION", "exceeds its contract");
+    );
     try result(
         \\record Box:
         \\    values: list[int]
         \\
         \\
-        \\def change(box: mut Box) -> None:
+        \\def change(box: Box) -> None:
         \\    alias = box.values
         \\    alias[0] = 42
         \\
         \\
         \\def main() -> int:
         \\    box = Box(values=[1])
-        \\    change(mut box)
-        \\    if box.values[0] != 42:
+        \\    change(box)
+        \\    if box.values[0] != 1:
         \\        return 1
         \\    return 0
     , 0);
 }
 
 // spec-case: MUTATION-METADATA-1
-test "M2 shallow copy severs only the outer container" {
+test "M2 copied collections keep nested mutable values independent" {
     try result(
         \\def edit(values: list[int]) -> None:
         \\    copy = values.copy()
@@ -1034,8 +1048,8 @@ test "M2 shallow copy severs only the outer container" {
         \\        return 1
         \\    return 0
     , 0);
-    try reject(
-        \\def edit(values: mut list[list[int]]) -> None effects(managed_allocation):
+    try result(
+        \\def edit(values: list[list[int]]) -> None effects(managed_allocation):
         \\    copy = values.copy()
         \\    copy[0][0] = 99
         \\
@@ -1043,14 +1057,14 @@ test "M2 shallow copy severs only the outer container" {
         \\def main() -> int:
         \\    inner = [1]
         \\    values = [inner]
-        \\    edit(mut values)
-        \\    return 0
-    , "E_MUTATION_PERMISSION", "exceeds its contract");
+        \\    edit(values)
+        \\    return values[0][0]
+    , 1);
 }
 
 // spec-case: MUTATION-METADATA-1
-test "M2 identity-returning helpers do not launder input origins" {
-    try reject(
+test "M2 identity-returning helpers return independent values" {
+    try accept(
         \\def identity(values: list[int]) -> list[int] effects():
         \\    return values
         \\
@@ -1059,16 +1073,16 @@ test "M2 identity-returning helpers do not launder input origins" {
         \\    values[0] = 1
         \\
         \\
-        \\def launder(values: mut list[int]) -> None effects():
+        \\def launder(values: list[int]) -> None effects():
         \\    alias = identity(values)
         \\    overwrite(mut alias)
         \\
         \\
         \\def main() -> int:
         \\    values = [1]
-        \\    launder(mut values)
+        \\    launder(values)
         \\    return 0
-    , "E_MUTATION_PERMISSION", "exceeds its contract");
+    );
     try result(
         \\def identity(values: list[int]) -> list[int] effects():
         \\    return values
@@ -1082,15 +1096,15 @@ test "M2 identity-returning helpers do not launder input origins" {
         \\    values = [1]
         \\    alias = identity(values)
         \\    overwrite(mut alias)
-        \\    if values[0] != 42:
+        \\    if values[0] != 1:
         \\        return 1
         \\    return 0
     , 0);
 }
 
 // spec-case: MUTATION-METADATA-1
-test "M2 return wrappers keep borrowed descendant origins" {
-    try reject(
+test "M2 return wrappers copy their mutable descendants" {
+    try accept(
         \\record Box:
         \\    values: list[int]
         \\
@@ -1103,16 +1117,16 @@ test "M2 return wrappers keep borrowed descendant origins" {
         \\    box.values[0] = 1
         \\
         \\
-        \\def launder(values: mut list[int]) -> None effects():
+        \\def launder(values: list[int]) -> None effects():
         \\    box = boxed(values)
         \\    overwrite(mut box)
         \\
         \\
         \\def main() -> int:
         \\    values = [1]
-        \\    launder(mut values)
+        \\    launder(values)
         \\    return 0
-    , "E_MUTATION_PERMISSION", "exceeds its contract");
+    );
 }
 
 // spec-case: MUTATION-METADATA-1
@@ -1207,8 +1221,8 @@ test "M2 indirect callbacks obey mutation contracts" {
 }
 
 // spec-case: MUTATION-METADATA-1
-test "M2 writable and read-only arguments that may overlap reject" {
-    try reject(
+test "M2 writable and read-only arguments have independent values" {
+    try accept(
         \\def touch(x: mut list[int], y: list[int]) -> None:
         \\    x[0] = 1
         \\    _ = y[0]
@@ -1222,8 +1236,8 @@ test "M2 writable and read-only arguments that may overlap reject" {
         \\    values = [1]
         \\    use(mut values)
         \\    return 0
-    , "E_MUTATION_OVERLAP", "may alias");
-    try reject(
+    );
+    try accept(
         \\def touch(x: mut list[int], y: list[int]) -> None:
         \\    x[0] = 1
         \\    _ = y[0]
@@ -1238,7 +1252,7 @@ test "M2 writable and read-only arguments that may overlap reject" {
         \\    b = [2]
         \\    use(mut a, b)
         \\    return 0
-    , "E_MUTATION_OVERLAP", "may alias");
+    );
     try result(
         \\def touch(x: mut list[int], y: list[int]) -> None:
         \\    x[0] = 1
@@ -1367,7 +1381,7 @@ test "an element read allocates only from a str receiver so whole-program loweri
 }
 
 // spec: MUTATION-OVERLAP-1
-test "unannotated helpers accept shared collection arguments while declared mutates contracts still reject overlap" {
+test "unannotated and mutating helpers accept independent read-only collection arguments" {
     try accept(
         \\def total(first: list[int], second: list[int]) -> int:
         \\    return first[0] + second[0]
@@ -1380,7 +1394,7 @@ test "unannotated helpers accept shared collection arguments while declared muta
         \\def main() -> int:
         \\    return 0
     );
-    try reject(
+    try accept(
         \\def touch(dst: mut list[int], src: list[int]) -> None:
         \\    dst[0] = src[0]
         \\
@@ -1391,7 +1405,7 @@ test "unannotated helpers accept shared collection arguments while declared muta
         \\
         \\def main() -> int:
         \\    return 0
-    , "E_MUTATION_OVERLAP", "may alias");
+    );
 }
 
 /// Every `E_MUTATION_MARKER` message one source produces, copied out because the
@@ -1440,7 +1454,9 @@ test "M1 an unmarked written parameter is rejected with every position listed" {
 }
 
 // spec-case: MUT-PARAM-2
-test "M1 a class parameter written through needs its own mut" {
+test "legacy sharing: M1 a class parameter written through needs its own mut" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     const messages = try markerMessages(
         \\class Cursor:
         \\    pos: int
@@ -1464,7 +1480,9 @@ test "M1 a class parameter written through needs its own mut" {
 }
 
 // spec-case: MUT-PARAM-2
-test "M1 a class parameter written through is accepted once marked" {
+test "legacy sharing: M1 a class parameter written through is accepted once marked" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     try accept(
         \\class Cursor:
         \\    pos: int
@@ -1482,7 +1500,9 @@ test "M1 a class parameter written through is accepted once marked" {
 }
 
 // spec-case: MUT-PARAM-2
-test "M1 a write through a match payload binding needs the matched parameter's mut" {
+test "legacy sharing: M1 a write through a match payload binding needs the matched parameter's mut" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     const messages = try markerMessages(
         \\def grow(candidate: Option[list[int]]) -> int:
         \\    match candidate:
@@ -1505,7 +1525,9 @@ test "M1 a write through a match payload binding needs the matched parameter's m
 }
 
 // spec-case: MUT-PARAM-2
-test "M1 a field write through a narrowed Option parameter needs mut and is accepted once marked" {
+test "legacy sharing: M1 a field write through a narrowed Option parameter needs mut and is accepted once marked" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     const messages = try markerMessages(
         \\class Counter:
         \\    value: int
@@ -1593,12 +1615,12 @@ test "M1 mut on a scalar, str or bytes parameter has nothing to write" {
     }
     try t.expectEqual(@as(usize, 1), messages.len);
     try t.expect(std.mem.indexOf(u8, messages[0], "`mut` on `i64` has nothing to write") != null);
-    try t.expect(std.mem.indexOf(u8, messages[0], "only a list, dict, class, Cell, array, byte buffer or a record holding one can be `mut`") != null);
+    try t.expect(std.mem.indexOf(u8, messages[0], "return the new value instead") != null);
 }
 
 // spec-case: MUTATION-OVERLAP-1
-test "a declared footprint without a ceiling still enforces overlap at call sites" {
-    try reject(
+test "a declared footprint without a ceiling accepts a read-only snapshot" {
+    try accept(
         \\def touch(dst: mut list[int], src: list[int]) -> None:
         \\    dst[0] = src[0]
         \\
@@ -1611,7 +1633,7 @@ test "a declared footprint without a ceiling still enforces overlap at call site
         \\    values = [1]
         \\    forward(mut values, values)
         \\    return 0
-    , "E_MUTATION_OVERLAP", "may alias");
+    );
 }
 
 /// The first warning one accepted compilation produced, with the source text its
@@ -1650,8 +1672,8 @@ test "a body that exceeds the ceiling its own signature implies names the parame
 }
 
 // spec-case: DERIVED-EFFECTS-1
-test "a recursive class and union signature derives its ceiling without expanding every path" {
-    try result("class Binary:\n    left: Expr\n    right: Expr\n\n\n" ++
+test "a recursive record and union signature derives its ceiling without expanding every path" {
+    try result("record Binary:\n    left: Expr\n    right: Expr\n\n\n" ++
         "union Expr:\n    number: int,\n    binary: Binary\n\n\n" ++
         "def total(expr: Expr) -> int:\n" ++
         "    match expr:\n" ++
@@ -1662,11 +1684,11 @@ test "a recursive class and union signature derives its ceiling without expandin
 
 // spec-case: DERIVED-EFFECTS-1
 test "a record that holds a capability permits that capability's effect" {
-    try accept("class Authority:\n    env: Environment\n\n\n" ++
+    try accept("record Authority:\n    env: Environment\n\n\n" ++
         "def lookup(auth: Authority) -> int effects(environment):\n    _ = auth.env\n    return 0\n\n\n" ++
         "def main(env: Environment) -> int:\n    return lookup(Authority(env=env))\n");
     // The same shape without the capability in the record is an over-claim.
-    try reject("class Holder:\n    value: int\n\n\n" ++
+    try reject("record Holder:\n    value: int\n\n\n" ++
         "def lookup(held: Holder) -> int effects(environment):\n    _ = held\n    return 0\n\n\n" ++
         "def main() -> int:\n    return 0\n", "E_DERIVED_EFFECTS", "add `env: Environment` to the parameters or drop the clause");
 }

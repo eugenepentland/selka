@@ -39,6 +39,7 @@ def choose_holder(value: mut Holder, other: list[i64]) -> i64:
     _ = other
     xs = value.values
     xs.append(42)
+    value.values = xs
     return xs[0u64]
 
 

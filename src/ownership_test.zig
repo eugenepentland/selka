@@ -11,7 +11,8 @@ const Local = struct { index: u32, name: []const u8, role: []const u8, parent: ?
 const Origin = struct { origin: []const u8, local: ?u32 = null, part: ?[]const u8 = null };
 const Transfer = struct { pc: u32, kind: []const u8, target: ?u32 = null, source: Origin, class: []const u8 };
 const Cow = struct { pc: u32, local: u32, via: u32, elements: bool, needed: bool, hoisted: ?u32 };
-const Function = struct { function: []const u8, locals: []Local, transfers: []Transfer, cow: []Cow, moves: []u32 };
+const Copy = struct { pc: u32, site: []const u8, copy: bool };
+const Function = struct { function: []const u8, locals: []Local, transfers: []Transfer, cow: []Cow, moves: []u32, copies: []Copy = &.{} };
 
 /// The explanation of function `name` in `source`.
 fn explained(a: std.mem.Allocator, source: []const u8, name: []const u8) !std.json.Parsed(Function) {
@@ -216,6 +217,8 @@ test "OWNERSHIP-ANALYSIS-1 an element written through a temporary needs its elem
 
 // spec-case: OWNERSHIP-ANALYSIS-1
 test "OWNERSHIP-ANALYSIS-1 classes, callbacks and arenas are answered, never refused" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     const a = std.testing.allocator;
     const source =
         \\class Node:
