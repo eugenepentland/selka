@@ -261,15 +261,34 @@ fn enforceInvariants(comptime Checker: type, self: *Checker, first: usize) Error
         try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = held, .value = built } }));
         const checked_nodes = self.nodes.items.len;
         const checked_statements = self.statements.items.len;
+        const checked_locals = self.locals.items.len;
         for (invariant.clauses) |attribute| try statements.append(self.allocator, try invariantStatement(Checker, self, attribute, invariant, held));
         // The check runs where the value was built or changed, so a trap names
         // that site (the clause text rides in its message), and the body keeps
         // no span outside its own declaration.
-        for (self.nodes.items[checked_nodes..]) |*checked| checked.span = node.span;
-        for (self.statements.items[checked_statements..]) |*checked| checked.span = node.span;
+        relocateChecks(self.nodes.items[checked_nodes..], self.statements.items[checked_statements..], self.locals.items[checked_locals..], node.span);
         const body = try b.stmt(.{ .block = try statements.toOwnedSlice(self.allocator) });
         const read = try b.read(held);
         self.nodes.items[index] = .{ .ty = node.ty, .span = node.span, .data = .{ .block_value = .{ .body = body, .value = read } } };
+    }
+}
+
+/// Inlined invariant code belongs to its use site, including operators and
+/// temporary binding metadata that the checked-body cache relocates separately.
+fn relocateChecks(nodes: []typed.Node, statements: []typed.Statement, locals: []typed.Local, span: Span) void {
+    for (nodes) |*node| {
+        node.span = span;
+        switch (node.data) {
+            .unary => |*unary| unary.op_span = span,
+            .binary => |*binary| binary.op_span = span,
+            else => {},
+        }
+    }
+    for (statements) |*statement| statement.span = span;
+    for (locals) |*local| {
+        local.declaration = span;
+        if (local.ownership.transfer_span != null) local.ownership.transfer_span = span;
+        if (local.usage.dead_write_span != null) local.usage.dead_write_span = span;
     }
 }
 
@@ -523,12 +542,12 @@ fn harnessClause(comptime Checker: type, self: *Checker, walk: Walk, attribute: 
     defer self.option_facts.restore(facts);
     const checked_nodes = self.nodes.items.len;
     const checked_statements = self.statements.items.len;
+    const checked_locals = self.locals.items.len;
     const context = try std.fmt.allocPrint(self.allocator, "parameter {s} holds a {s} that breaks this invariant", .{ walk.parameter, invariant.name });
     const statement = try clauseStatement(Checker, self, .{ .attribute = attribute, .kind = .requires, .subject = walk.subject, .context = context });
     // The clause is declared on the type, possibly in another module; its
     // check runs in the test, so it reports the parameter's own location.
-    for (self.nodes.items[checked_nodes..]) |*checked| checked.span = walk.span;
-    for (self.statements.items[checked_statements..]) |*checked| checked.span = walk.span;
+    relocateChecks(self.nodes.items[checked_nodes..], self.statements.items[checked_statements..], self.locals.items[checked_locals..], walk.span);
     return statement;
 }
 /// Whether a value of this type holds, at any depth a generator reaches, a

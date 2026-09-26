@@ -1934,3 +1934,15 @@ test "generic publication rolls back cleanly on allocation failure" {
     try genericScenario(steady.allocator());
     try t.checkAllAllocationFailures(steady.allocator(), genericScenario, .{});
 }
+
+// spec: CONTRACT-CACHE-2
+test "invariant checks retain relocatable bodies including operator positions" {
+    const source = "@invariant(self.low <= self.high and -self.low <= 0)\nrecord Span:\n    low: int\n    high: int\n\ndef make() -> Span:\n    return Span(1, 2)\n\ndef main() -> int:\n    return make().high\n";
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    try compare(t.allocator, &cache, source, 2);
+    try t.expectEqual(@as(usize, 2), cache.statistics.checked);
+    try compare(t.allocator, &cache, "# Move every declaration down one line.\n" ++ source, 2);
+    try t.expectEqual(@as(usize, 2), cache.statistics.reused);
+    try t.expectEqual(@as(usize, 2), cache.statistics.checked);
+}
