@@ -2,6 +2,5 @@ module main
 import left
 import right
 
-
 def main() -> int:
     return left.price(10) + right.quote(10)

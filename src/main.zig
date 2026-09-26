@@ -100,8 +100,9 @@ const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--j
     "scover-duplicates|discover-project-duplicates|report-project-quality|report-quality|fmt|fm" ++
     "t-module|fmt-project|emit-qbe|emit-project-qbe|list-modules|list-interfaces|list-" ++
     "declarations|check" ++
-    "-project|run-project|check-policy> <file.my>\n  schema-project: --schema-report (include " ++
+    "-project|check-module|run-project|check-policy> <file.my>\n  schema-project: --schema-report (include " ++
     "checked source and compiler identities)\n  " ++
+    "check-module: type-check a library module and its imports without an executable main\n  " ++
     "input-module: reads a typed JSON manifest and writes generated " ++
     "module source\n  run: builds the program natively and runs it; it loads the reachable module graph when the entry " ++
     "file opens with a module header or an import/export directive, including a headerless script that imports embedded " ++
@@ -343,6 +344,7 @@ fn dispatch(process: std.process.Init) !u8 {
         .diagnostics = parsed.reporting.diagnostics orelse .text,
     };
     const status = run(init, parsed) catch |err| status: {
+        if (@errorReturnTrace()) |trace| std.debug.dumpErrorReturnTrace(trace); // DEBUG-RV
         const message = try std.fmt.allocPrint(init.gpa, "mylang: host failure: {s}\n", .{@errorName(err)});
         defer init.gpa.free(message);
         try init.text(message);
@@ -454,6 +456,7 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
         .@"list-modules",
         .@"list-interfaces",
         .@"check-project",
+        .@"check-module",
         .@"run-project",
         .@"check-policy",
         .lint,
@@ -523,7 +526,9 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
         setWork(init, .parsed_modules, 1, 0);
         if (parsed.format_check) {
             if (std.mem.eql(u8, formatted, bytes)) return 0;
-            try init.text("formatting differs\n");
+            const difference = try formattingDifference(allocator, compilation.src, formatted);
+            defer allocator.free(difference);
+            try init.text(difference);
             return 1;
         }
         try std.Io.File.stdout().writeStreamingAll(init.io, formatted);
@@ -595,6 +600,7 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
         .@"list-modules",
         .@"list-interfaces",
         .@"check-project",
+        .@"check-module",
         .@"run-project",
         .@"check-policy",
         .lint,
@@ -797,6 +803,7 @@ const Command = enum {
     api,
     context,
     @"check-project",
+    @"check-module",
     @"run-project",
     @"list-interfaces",
     @"list-modules",
@@ -2218,7 +2225,7 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         init.timings.end();
         var fragment_store: language.qbe_fragments.Store = undefined;
         compilation.reuse = try openFragments(init, parsed, &fragment_store);
-        if (parsed.command == .@"index-project") return indexProject(init, &compilation, functions, parsed);
+        if (try earlyProjectCheck(init, parsed, &compilation, functions, &files, &configured)) |status| return status;
         const semantic_before = if (functions) |f| f.statistics else null;
         // `check` needs no checked trees: unchanged bodies are stood in by the
         // summaries the entry's last successful check left.
@@ -2294,6 +2301,29 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
     defer init.gpa.free(output);
     try std.Io.File.stdout().writeStreamingAll(init.io, output);
     return 0;
+}
+
+/// Finish project commands that do not need an executable checked program.
+fn earlyProjectCheck(init: Context, parsed: Parsed, compilation: *language.project_compile.Compilation, functions: ?*language.semantic_cache.Cache, files: *ModuleFiles, configured: *const ConfiguredPolicy) !?u8 {
+    return switch (parsed.command) {
+        .@"check-module" => try checkLibraryProject(init, parsed, compilation, files, configured),
+        .@"index-project" => try indexProject(init, compilation, functions, parsed),
+        else => null,
+    };
+}
+
+/// Check a library without recording an executable verdict or lowering its bodies.
+fn checkLibraryProject(init: Context, parsed: Parsed, compilation: *language.project_compile.Compilation, files: *ModuleFiles, configured: *const ConfiguredPolicy) !u8 {
+    compilation.checkLibrary() catch |err| switch (err) {
+        error.SourceError => {
+            try reportProject(init, compilation);
+            return 1;
+        },
+        else => return err,
+    };
+    try reportProject(init, compilation);
+    if (try enforceInterfaceFiles(init, parsed, configured, compilation.index, files.root)) |status| return status;
+    return if (try projectWarningsDenied(init, compilation, configured)) 1 else 0;
 }
 
 /// SYNTAX-RELEASE-1: release the merged syntax of a checked program when this
@@ -2794,7 +2824,7 @@ fn enforceInterfaceFiles(init: Context, parsed: Parsed, configured: *const Confi
 /// `interface_files` gate applies to it.
 fn enforcesInterfaceFiles(parsed: Parsed) bool {
     return switch (parsed.command) {
-        .@"check-project", .@"run-project", .run => true,
+        .@"check-project", .@"check-module", .@"run-project", .run => true,
         .@"emit-project-qbe" => parsed.select_file == null,
         else => false,
     };
@@ -2971,9 +3001,19 @@ fn surfaceProject(init: Context, project: *language.project.Project, parsed: Par
     return null;
 }
 
+fn formattingDifference(allocator: std.mem.Allocator, src: language.source.Source, formatted: []const u8) ![]u8 {
+    var offset: usize = 0;
+    while (offset < @min(src.bytes.len, formatted.len) and src.bytes[offset] == formatted[offset]) : (offset += 1) {}
+    const location = src.locate(offset);
+    return std.fmt.allocPrint(allocator, "{s}:{d}:{d}: formatting differs\n", .{ location.path, location.line, location.column });
+}
+
 fn formatProject(init: Context, project: *language.project.Project) !u8 {
     var changed: std.ArrayList([]const u8) = .empty;
-    defer changed.deinit(init.gpa);
+    defer {
+        for (changed.items) |message| init.gpa.free(message);
+        changed.deinit(init.gpa);
+    }
     for (project.order.items) |module_id| {
         const src = project.modules.items[module_id].src;
         var compilation = try language.Compilation.init(init.gpa, src.path, src.bytes);
@@ -2987,13 +3027,13 @@ fn formatProject(init: Context, project: *language.project.Project) !u8 {
         };
         defer init.gpa.free(formatted);
         recordWork(init, .parsed_modules, 1, 0);
-        if (!std.mem.eql(u8, formatted, src.bytes)) try changed.append(init.gpa, src.path);
+        if (!std.mem.eql(u8, formatted, src.bytes)) {
+            try changed.ensureUnusedCapacity(init.gpa, 1);
+            const message = try formattingDifference(init.gpa, src, formatted);
+            changed.appendAssumeCapacity(message);
+        }
     }
-    for (changed.items) |path_name| {
-        const message = try std.fmt.allocPrint(init.gpa, "{s}: formatting differs\n", .{path_name});
-        defer init.gpa.free(message);
-        try init.text(message);
-    }
+    for (changed.items) |message| try init.text(message);
     return if (changed.items.len == 0) 0 else 1;
 }
 

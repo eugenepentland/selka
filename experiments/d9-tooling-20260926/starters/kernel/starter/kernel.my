@@ -1,0 +1,23 @@
+module kernel
+
+const M: int = 1000003
+
+
+# out[i] = (row i of m) . v  (mod M)
+public def mul(m: list[list[int]], v: list[int], out: mut list[int]):
+    todo[None]()
+
+
+# v after k applications of m; v is unchanged.
+public def power(m: list[list[int]], v: list[int], k: int) -> list[int]:
+    return todo[list[int]]()
+
+
+# Smooth the caller's list in place, `rounds` times.
+public def smooth(values: mut list[int], rounds: int):
+    todo[None]()
+
+
+# Smooth every row of the caller's rows.
+public def smooth_rows(rows: mut list[list[int]], rounds: int):
+    todo[None]()

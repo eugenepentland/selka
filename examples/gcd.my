@@ -1,12 +1,10 @@
 def gcd(a: int, b: int) -> int:
     x = a
     y = b
-
     while y != 0:
         remainder = remtrunc(x, y)
         x = y
         y = remainder
-
     return x
 
 

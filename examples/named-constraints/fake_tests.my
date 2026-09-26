@@ -2,7 +2,6 @@ module fake_tests
 import checkout
 import fakes
 
-
 def main() -> int:
     assert test_checkout()
     return 0

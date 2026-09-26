@@ -75,7 +75,7 @@ pub const Generator = struct {
             .sequence => |shape| self.sequence(shape, depth),
             .keyed => |pair| if (pair.table) self.table(pair, depth) else self.dict(pair, depth),
             .record => |fields| self.record(fields, depth),
-            .cases => |cases| if (cases.payloads) self.variant(cases.cases, depth) else v.get(cases.cases[@intCast(self.stream.below(cases.cases.len))], "name"),
+            .cases => |cases| if (cases.payloads) self.variant(name, cases.cases, depth) else v.get(cases.cases[@intCast(self.stream.below(cases.cases.len))], "name"),
             .refused => error.UnsupportedTestType,
         };
     }
@@ -183,16 +183,27 @@ pub const Generator = struct {
         for (fields) |field| try object.put(self.arena, field.name, try self.value(field.type, depth + 1));
         return .{ .object = object };
     }
-    /// A case drawn uniformly; past the depth limit the first case's minimal
-    /// value, so a recursive union still ends.
-    fn variant(self: *Generator, cases: []const Value, depth: usize) Error!Value {
-        if (depth > depth_limit or self.nodes >= node_budget) return minimal(self.arena, self.schema, cases, 0, depth);
-        const index: usize = @intCast(self.stream.below(cases.len));
+    /// A case drawn uniformly; past the depth limit the minimal value of the
+    /// first case that holds no other value of the union, so a recursive union
+    /// still ends. A recursive value type (RECURSIVE-VALUES-3) is also bounded
+    /// by the run's size: nested deeper than the size allows, the draw keeps to
+    /// the cases that end the recursion, so small runs build small trees.
+    fn variant(self: *Generator, name: []const u8, cases: []const Value, depth: usize) Error!Value {
+        if (depth > depth_limit or self.nodes >= node_budget) return minimal(self.arena, self.schema, cases, try types.baseCase(self.schema, name, cases), depth);
+        const index = if (depth > 2 + self.size / 8) try self.leafCase(name, cases) else @as(usize, @intCast(self.stream.below(cases.len)));
         const payload = v.get(cases[index], "payload");
         var object: std.json.ObjectMap = .empty;
         try object.put(self.arena, "case", v.get(cases[index], "name"));
         if (payload == .string) try object.put(self.arena, "value", try self.value(payload.string, depth + 1));
         return .{ .object = object };
+    }
+    /// A case drawn uniformly among those that hold no other value of union
+    /// `name`; every case when all of them do, or when none does.
+    fn leafCase(self: *Generator, name: []const u8, cases: []const Value) Error!usize {
+        var leaves: std.ArrayList(usize) = .empty;
+        for (0..cases.len) |index| if (!try types.recursiveCase(self.schema, name, cases, index)) try leaves.append(self.arena, index);
+        if (leaves.items.len == 0 or leaves.items.len == cases.len) return @intCast(self.stream.below(cases.len));
+        return leaves.items[@intCast(self.stream.below(leaves.items.len))];
     }
     fn decimal(self: *Generator, number: i128) Error!Value {
         return .{ .string = try std.fmt.allocPrint(self.arena, "{d}", .{number}) };
@@ -265,7 +276,7 @@ pub fn simplest(arena: std.mem.Allocator, schema: types.Schema, name: []const u8
         .sequence => |sequence| filled(arena, schema, sequence.element, sequence.length orelse 0, depth),
         .keyed => |pair| if (pair.table) keyed(arena, schema, pair, depth) else .{ .array = .init(arena) },
         .record => |fields| fieldwise(arena, schema, fields, depth),
-        .cases => |cases| if (cases.payloads) minimal(arena, schema, cases.cases, 0, depth) else v.get(cases.cases[0], "name"),
+        .cases => |cases| if (cases.payloads) minimal(arena, schema, cases.cases, try types.baseCase(schema, name, cases.cases), depth) else v.get(cases.cases[0], "name"),
         .refused => error.UnsupportedTestType,
     };
 }

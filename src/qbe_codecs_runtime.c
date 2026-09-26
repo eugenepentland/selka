@@ -100,8 +100,27 @@ static int co_read_dictionary(const CoType *type,const MylangWireNode *node,void
     if(ok)memcpy(output,&dict,sizeof dict);
     return ok;
 }
+/* A recursive value's box (RECURSIVE-VALUES-3) has no node: the value it
+   holds is read from the wire into scratch memory, whose own references are
+   rooted as they are read, and only then copied into a fresh box, which takes
+   over the root. A box is never written after this, like one the guest built. */
+static int co_read_box(size_t index,void *output,size_t depth){
+    const CoType *content=&co_types[co_types[index].children[0]];
+    size_t mark=co_root_count;
+    void *scratch=calloc(content->size?content->size:1,1);
+    if(!scratch)return co_bad("OutOfMemory");
+    if(!co_read(co_types[index].children[0],scratch,depth+1)){free(scratch);return 0;}
+    void *box=myl_native_heap_alloc(myl_qbe_heap(co_context),co_native_types[index]->element,1);
+    if(box)memcpy(box,scratch,content->size);
+    free(scratch);
+    if(!box)return co_bad("OutOfMemory");
+    co_unroot_to(mark);
+    if(!co_root(box))return co_bad("OutOfMemory");
+    memcpy(output,&box,sizeof box);return 1;
+}
 static int co_read(size_t index,void *output,size_t depth){
     if(depth>=QBE_CODEC_DEPTH)return co_bad("WireLimit");
+    if(co_types[index].kind==10)return co_read_box(index,output,depth);
     if(co_cursor>=co_count)return co_bad("InvalidArgument");
     const CoType *type=&co_types[index];const MylangWireNode *node=&co_input[co_cursor++];
     if(!node->type || strcmp(node->type,type->name))return co_bad("InvalidArgument");
@@ -231,6 +250,11 @@ static int co_write_dictionary(const CoType *type,MylangWireNode *node,const voi
 }
 static int co_write(size_t index,const void *input,size_t depth){
     if(depth>=QBE_CODEC_DEPTH || co_needed>=100000)return co_bad("WireLimit");
+    if(co_types[index].kind==10){
+        /* A box writes the value it holds and no node of its own. */
+        const void *box;memcpy(&box,input,sizeof box);
+        return box ? co_write(co_types[index].children[0],box,depth+1) : co_bad("InternalError");
+    }
     const CoType *type=&co_types[index];MylangWireNode *node=&co_prepared[co_needed++];
     *node=(MylangWireNode){type->name,0,type->count};
     if(type->kind==0){node->bits=co_word(input,index);node->children=0;return 1;}

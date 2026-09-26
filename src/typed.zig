@@ -123,11 +123,16 @@ pub const StreamWrite = struct { stream: NodeId, text: NodeId };
 pub const FieldInit = struct { index: usize, value: NodeId };
 /// Named aggregate field with its declaration location and resolved type.
 /// `default_value` is the backing node id of a declared record-field default.
-pub const Field = struct { name: []const u8, declaration: Span, ty: Type, default_value: ?usize = null };
+/// `boxed` marks a field that closes a recursive value type: it stores a
+/// pointer to an immutable managed box, while `ty` stays the value's own type
+/// everywhere the checker looks (RECURSIVE-VALUES-2).
+pub const Field = struct { name: []const u8, declaration: Span, ty: Type, default_value: ?usize = null, boxed: bool = false };
 /// Named closed variant case and its optional resolved payload type.
 /// `fielded` marks a parenthesized case whose payload is one synthesized record
 /// of named fields, so construction and patterns bind one name per field.
-pub const Variant = struct { name: []const u8, declaration: Span, payload: ?Type, fielded: bool = false };
+/// `boxed` marks a payload that closes a recursive value type and is stored
+/// behind an immutable managed box (RECURSIVE-VALUES-2).
+pub const Variant = struct { name: []const u8, declaration: Span, payload: ?Type, fielded: bool = false, boxed: bool = false };
 /// Closed case set distinguishing enums, unions, and fallible results.
 pub const Variants = struct { fallible: bool = false, is_union: bool, cases: []const Variant };
 /// Fixed element count and type, with an optional enum key for tables.
@@ -428,10 +433,13 @@ fn writableDepth(records: []const Record, ty: Type, depth: usize) bool {
         return !isImmutableBytes(record);
     }
     if (record.shape.array) |array| if (writableDepth(records, array.element, depth + 1)) return true;
+    // A boxed value is immutable: a write through it copies the path to it into
+    // the holder's own storage, so it adds no storage a callee could write.
     if (record.shape.variants) |variants| for (variants.cases) |case| {
+        if (case.boxed) continue;
         if (case.payload) |payload| if (writableDepth(records, payload, depth + 1)) return true;
     };
-    for (record.fields) |field| if (writableDepth(records, field.ty, depth + 1)) return true;
+    for (record.fields) |field| if (!field.boxed and writableDepth(records, field.ty, depth + 1)) return true;
     return false;
 }
 

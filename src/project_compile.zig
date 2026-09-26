@@ -50,6 +50,7 @@ const Names = @import("module_names.zig").Names;
 pub const FactsScope = native_test_facts.Scope;
 const native_test_facts = @import("native_test_facts.zig");
 const semantic_cache = @import("semantic_cache.zig");
+const sema = @import("sema.zig");
 const semantic_key = @import("semantic_key.zig");
 const fragments = @import("qbe_fragments.zig");
 const lower = @import("lower.zig");
@@ -74,6 +75,13 @@ pub const Compilation = struct {
     pub fn check(self: *Compilation) CheckError!void {
         return self.checkWithCache(null);
     }
+    /// Validate library bodies, imports, effects and exports without requiring main.
+    /// Success is deliberately not retained as an executable checked program.
+    pub fn checkLibrary(self: *Compilation) CheckError!void {
+        for (self.diagnostics.items.items) |item| if (item.severity == .err) return error.SourceError;
+        var names: Names = .{ .index = self.index, .src = self.src };
+        try sema.checkLibrary(self.index.project.arena.allocator(), self.src, self.syntax, &self.diagnostics, &names);
+    }
     /// Reuse supported function queries while checking fresh module/type/effect dependencies.
     pub fn checkWithCache(self: *Compilation, cache: ?*semantic_cache.Cache) CheckError!void {
         if (self.program != null) return;
@@ -84,7 +92,7 @@ pub const Compilation = struct {
         if (cache) |semantic| semantic.resolution = self.index;
         const before = self.diagnostics.items.items.len;
         const counters = if (cache) |semantic| Counters.save(semantic) else null;
-        self.program = @import("sema.zig").checkCached(self.index.project.arena.allocator(), self.src, self.syntax, &self.diagnostics, &names, cache) catch |err| {
+        self.program = sema.checkCached(self.index.project.arena.allocator(), self.src, self.syntax, &self.diagnostics, &names, cache) catch |err| {
             // A check whose stood-in bodies met a changed cross-function fact
             // repeats in full, from the same diagnostics and work counters.
             const semantic = cache orelse return err;
@@ -93,7 +101,7 @@ pub const Compilation = struct {
             self.diagnostics.items.shrinkRetainingCapacity(before);
             counters.?.restore(semantic);
             request.* = .{ .facts_only = request.facts_only };
-            self.program = try @import("sema.zig").checkCached(self.index.project.arena.allocator(), self.src, self.syntax, &self.diagnostics, &names, cache);
+            self.program = try sema.checkCached(self.index.project.arena.allocator(), self.src, self.syntax, &self.diagnostics, &names, cache);
             return self.prepareStandIns(request.prepared);
         };
         if (cache) |semantic| if (semantic.context.summaries) |request| try self.prepareStandIns(request.prepared);

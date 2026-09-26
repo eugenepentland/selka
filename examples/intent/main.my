@@ -1,6 +1,5 @@
 module main
 
-
 def configured_limit() -> int:
     return 7
 

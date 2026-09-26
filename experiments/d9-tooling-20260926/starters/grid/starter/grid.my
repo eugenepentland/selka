@@ -1,0 +1,20 @@
+module grid
+
+# A rows x cols grid of zeros.
+public def blank(rows: int, cols: int) -> list[list[int]]:
+    return todo[list[list[int]]]()
+
+
+# One Game of Life generation; `g` is unchanged.
+public def step(g: list[list[int]]) -> list[list[int]]:
+    return todo[list[list[int]]]()
+
+
+# The grid after `generations` steps; `g` is unchanged.
+public def run(g: list[list[int]], generations: int) -> list[list[int]]:
+    return todo[list[list[int]]]()
+
+
+# Paint-bucket fill of the caller's grid; returns the number of changed cells.
+public def fill(g: mut list[list[int]], row: int, col: int, color: int) -> int:
+    return todo[int]()

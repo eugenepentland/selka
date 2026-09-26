@@ -1,6 +1,5 @@
 module quantity
 
-
 public enum InvalidQuantity:
     outside_range
 
@@ -15,6 +14,5 @@ public domain Count: u16:
         if value < 0 or value > 99:
             return Err(InvalidQuantity.outside_range)
         return Ok(wrap[Count](u16(value)))
-
     def number(value: Count) -> u16 effects():
         return unwrap(value)

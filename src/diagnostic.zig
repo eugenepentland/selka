@@ -18,6 +18,9 @@ pub const immutable = "E_IMMUTABLE";
 pub const resource_result = "E_RESOURCE_RESULT";
 /// Shared diagnostic code for bounded generic parsing, checking and specialization.
 pub const generic_limit = "E_GENERIC_LIMIT";
+/// A type whose by-value layout cannot be built: a cycle with no finite value,
+/// or a recursive value type holding what a shared box cannot (RECURSIVE-VALUES-1).
+pub const recursive_record = "E_RECURSIVE_RECORD";
 const std = @import("std");
 const ast = @import("ast.zig");
 const source = @import("source.zig");

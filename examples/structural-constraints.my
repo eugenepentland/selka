@@ -18,7 +18,6 @@ def forward[U: copy + field(value: int)](item: U) -> int:
 domain Counter: int:
     def make(n: int) -> Counter:
         return wrap[Counter](n)
-
     def score(item: Counter) -> int effects():
         return unwrap(item)
 

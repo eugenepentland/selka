@@ -254,6 +254,16 @@ test "equality carries a field access type into a contextual constructor" {
     , "E_OPTION_INFERENCE");
 }
 
+// spec-case: EQUALITY-CONTEXT-2
+test "equality does not invent an element type for two empty lists" {
+    try reject(
+        \\def main() -> int:
+        \\    if [] == []:
+        \\        return 0
+        \\    return 1
+    , "E_LIST_INFERENCE");
+}
+
 // spec: RECORD-DEFAULT-1
 test "record field defaults fill omitted fields in positional and named construction" {
     try result(

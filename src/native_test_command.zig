@@ -389,7 +389,18 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     if (opts.flags.output.report) try emitWorkReport(context, &work, results, replayed);
     const loaded = try snapshot.sourcesOf(context, prepared, production);
     const test_status = try report(context, .{ .results = results, .replayed = replayed, .loaded = loaded }, opts.flags.output.json);
+    if (selected.len == 0 and benches.len == 0) try reportSiblingTests(context, opts.source, loaded);
     return finish(context, opts, bench_states, &bench_context, test_status, test_failed);
+}
+
+fn reportSiblingTests(context: fs.Context, source_path: []const u8, loaded: []const []const u8) Error!void {
+    if (!std.mem.endsWith(u8, source_path, ".my") or std.mem.endsWith(u8, source_path, "_test.my")) return;
+    const sibling = try std.fmt.allocPrint(context.allocator, "{s}_test.my", .{source_path[0 .. source_path.len - 3]});
+    if (!context.exists(sibling)) return;
+    const absolute = try context.absolute(sibling);
+    for (loaded) |path| if (std.mem.eql(u8, path, absolute)) return;
+    const message = try std.fmt.allocPrint(context.allocator, "mylang test: no tests selected; sibling test file {s} is not included by this entry. Run that file explicitly with mylang test, or test its directory.\n", .{sibling});
+    try std.Io.File.stderr().writeStreamingAll(context.io, message);
 }
 
 /// Benchmark policy, baseline, identity and provenance for one invocation. The

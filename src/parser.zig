@@ -579,12 +579,14 @@ pub const Parser = struct {
         return span;
     }
     /// Parse module headers and bodies without loading imports or checking names.
-    /// A file with no `module` header is a module program only when it opens with
-    /// imports of compiler-embedded standard modules and nothing else; every
-    /// other headerless file still reports `E_MODULE_HEADER`.
+    /// Headerless test entries accept project imports like the test runner;
+    /// other headerless files may import only embedded standard modules.
     pub fn parseModule(self: *Parser) diagnostic.Error!ast.Program {
         self.module_syntax = true;
-        if (try self.standardImportScript()) {
+        const first_token = self.current();
+        const has_header = first_token.tag == .ident and std.mem.eql(u8, self.src.text(first_token.span), "module");
+        const headerless_test = !has_header and std.mem.endsWith(u8, self.src.path, "_test.my");
+        if (headerless_test or try self.standardImportScript()) {
             try self.importDirectives();
             return self.parse();
         }
