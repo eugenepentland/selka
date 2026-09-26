@@ -2,6 +2,7 @@
 const managed_lower = @import("qbe_managed.zig");
 const bytecode = @import("bytecode.zig");
 const typed = @import("typed.zig");
+const runtime_mode = @import("runtime_mode.zig");
 /// Errors reported while emitting native operations.
 pub const Error = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
 /// Emit aggregate operations using native layouts and independent value snapshots.
@@ -119,6 +120,7 @@ pub fn emit(self: anytype, op: @FieldType(bytecode.Instruction, "op"), stack: []
 /// A box reaching mutable collections needs a private shallow COW snapshot;
 /// pure boxes use ordinary field lowering and its private-copy lifetime rules.
 fn boxRead(comptime E: type, self: E, stack: []const typed.Type, source: usize) Error!bool {
+    if (runtime_mode.enabled()) return false;
     if (self.cow == null or !@import("value_semantics.zig").enabled()) return false;
     if (!self.program.records[stack[stack.len - 1].recordIndex()].collection.box) return false;
     if (!@import("value_semantics.zig").needsCopy(self.program.records, stack[stack.len - 1])) return false;
@@ -261,6 +263,7 @@ const FieldWrite = struct { read: usize, replace: usize, slot: usize, managed: b
 ///  - the `replace` is followed by an update of exactly that field of exactly
 ///    that record type and a store into the same local.
 fn fieldWriteAt(comptime E: type, self: E, pc: usize) Error!?FieldWrite {
+    if (runtime_mode.enabled()) return null;
     const code = self.function.scope.instructions;
     if (pc < 2 or pc + 1 >= code.len) return null;
     const field_index = switch (code[pc].op) {
@@ -452,6 +455,7 @@ fn fieldWriteRead(comptime E: type, self: E, write: FieldWrite, h: usize) Error!
 /// element-aligned region of the same stride, so the two are the same region or
 /// disjoint, exactly as they were when the write went to the scratch copy.
 fn replaceDestination(comptime E: type, self: E, pc: usize) Error!?usize {
+    if (runtime_mode.enabled()) return null;
     const code = self.function.scope.instructions;
     const ty = switch (code[pc].op) {
         .replace_index => |access| access.ty,
@@ -542,6 +546,7 @@ fn writesLocal(op: @FieldType(bytecode.Instruction, "op"), slot: usize) bool {
 ///    operand can name the destination's storage and be read back half
 ///    overwritten (`p = Pair(a=p.b, b=p.a)`).
 fn constructorDestination(comptime E: type, self: E, pc: usize) Error!?usize {
+    if (runtime_mode.enabled()) return null;
     const code = self.function.scope.instructions;
     const record = switch (code[pc].op) {
         .make_record => |record| record,

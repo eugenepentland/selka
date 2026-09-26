@@ -51,7 +51,7 @@ pub fn Lower(comptime E: type) type {
         pub fn release(self: *E, slot: OwnedSlot) Error!void {
             const live = self.temp();
             const finish = self.temp();
-            try self.print(" %v{d} =w loadw %v{d}\n jnz %v{d}, @rcrelease{d}, @rcreleased{d}\n@rcrelease{d}\n", .{
+            try self.print(" %v{d} =w loaduw %v{d}\n jnz %v{d}, @rcrelease{d}, @rcreleased{d}\n@rcrelease{d}\n", .{
                 live, slot.guard, live, finish, finish, finish,
             });
             try initialized(self, slot.guard, false);

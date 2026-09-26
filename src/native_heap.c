@@ -1228,9 +1228,7 @@ void myl_native_heap_remember(myl_native_heap *heap, void *payload) {
     object->mark &= ~(uintptr_t)MYL_NATIVE_OBJECT_MARKED;
 }
 void myl_native_heap_destroy(myl_native_heap *heap) {
-    myl_native_arena_release(heap, 0);
-    myl_native_arena_reclaim(heap);
-    free(heap->arena_chunks);
+    myl_native_arena_destroy(heap);
     if (myl_rc_enabled(heap)) {
         for (size_t i=0;i<128;i++) myl_rc_owner_release(heap,heap->text_scalars[i]);
         myl_rc_heap_destroy(heap);
