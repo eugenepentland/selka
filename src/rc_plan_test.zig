@@ -581,3 +581,61 @@ test "RC-OWNERSHIP-PLAN-1 raw resource slot cleanup clears its guard before clos
     try t.expect(std.mem.indexOf(u8, text, "call $myl_rc_native_drop") == null);
     try t.expect(std.mem.indexOf(u8, text, "@rcreleased") != null);
 }
+
+const Emitted = struct { functions: []const struct { name: []const u8, il: []const u8 } };
+
+fn lowered(source: []const u8) !std.json.Parsed(Emitted) {
+    var compilation = try compiler.Compilation.init(t.allocator, "rc_frame.my", source);
+    defer compilation.deinit();
+    const manifest = try compilation.emitQbe(t.allocator);
+    defer t.allocator.free(manifest);
+    return std.json.parseFromSlice(Emitted, t.allocator, manifest, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
+}
+
+fn functionText(program: Emitted, name: []const u8) ![]const u8 {
+    for (program.functions) |function| if (std.mem.eql(u8, function.name, name)) return function.il;
+    return error.TestUnexpectedResult;
+}
+
+// spec-case: RC-OWNERSHIP-PLAN-1
+test "RC-OWNERSHIP-PLAN-1 borrowed parameter result publishes before frame cleanup" {
+    const mode = @import("runtime_mode.zig");
+    const saved = mode.get();
+    defer mode.set(saved);
+    mode.set(.rc);
+    var result = try lowered(
+        \\def selected(value: list[int]) -> list[int]:
+        \\    return value
+        \\
+        \\def main() -> int:
+        \\    values = [1, 2]
+        \\    return len(selected(values))
+    );
+    defer result.deinit();
+    const text = try functionText(result.value, "selected");
+    try t.expect(try at(text, "myl_qbe_rc_frame_enter") < try at(text, "myl_rc_native_copy"));
+    try t.expect(try at(text, "myl_rc_native_copy") < try at(text, "myl_qbe_rc_frame_cleanup"));
+    try t.expect(try at(text, "myl_qbe_rc_frame_cleanup") < try at(text, "myl_qbe_rc_frame_leave"));
+    try t.expect(std.mem.indexOf(u8, text, "myl_qbe_cow_transfer") == null);
+}
+
+// spec-case: RC-OWNERSHIP-PLAN-1
+test "RC-OWNERSHIP-PLAN-1 compiler journals owned runtime results and transactional local stores" {
+    const mode = @import("runtime_mode.zig");
+    const saved = mode.get();
+    defer mode.set(saved);
+    mode.set(.rc);
+    var result = try lowered(
+        \\def main() -> int:
+        \\    values = [1, 2]
+        \\    other = values
+        \\    values = [3]
+        \\    return len(other) + len(values)
+    );
+    defer result.deinit();
+    const text = try functionText(result.value, "main");
+    try t.expect(try at(text, "call $myl_native_list_new") < try at(text, "call $myl_rc_native_take"));
+    try t.expect(std.mem.indexOf(u8, text, "%rcwork") != null);
+    try t.expect(std.mem.indexOf(u8, text, "call $myl_qbe_rc_slot_drop") != null);
+    try t.expect(std.mem.indexOf(u8, text, "call $myl_qbe_rc_frame_leave") != null);
+}

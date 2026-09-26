@@ -57,6 +57,8 @@ pub const State = struct {
     captures: []Capture = &.{},
     /// Whether every inline mark, check and pin also counts itself.
     counting: bool,
+    /// Physical ownership state in the experimental RC lane.
+    rc: ?*@import("qbe_rc_state.zig").State = null,
 };
 
 /// The state a function's lowering starts from when the build emits

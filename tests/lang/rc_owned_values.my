@@ -1,0 +1,31 @@
+# Physical RC ownership shares these value semantics with the default collector.
+
+def selected(items: list[int]) -> list[int]:
+    return items
+
+def mixed(items: list[int], fresh: bool) -> list[int]:
+    if fresh:
+        return [8, 9]
+    return items
+
+public def test_owned_return_survives_original_replacement() -> bool:
+    values = [1, 2]
+    other = selected(values)
+    values = [3]
+    return len(other) == 2 and other[0] == 1 and values[0] == 3
+
+public def test_mixed_fresh_and_parameter_returns_own_their_results() -> bool:
+    original = [4, 5]
+    fresh = mixed(original, True)
+    borrowed = mixed(original, False)
+    original = [6]
+    return fresh[0] == 8 and borrowed[0] == 4 and original[0] == 6
+
+public def test_repeated_local_replacement_preserves_retained_value() -> bool:
+    values = [1, 2]
+    retained = values
+    index = 0
+    while index < 1000:
+        values = [index]
+        index += 1
+    return len(retained) == 2 and retained[1] == 2 and values[0] == 999

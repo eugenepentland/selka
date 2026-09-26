@@ -55,7 +55,7 @@ pub fn cell(comptime E: type, self: E, ty: typed.Type, stack: []const typed.Type
     self.layouts.releaseLayout(body);
     const descriptor = try self.descriptor(ty);
     const pointer = self.temp();
-    const class_index = (if (aligned) inlineClass(size) else null) orelse {
+    const class_index = (if (aligned and !@import("runtime_mode.zig").enabled()) inlineClass(size) else null) orelse {
         try self.print(" %v{d} =l call $myl_native_heap_alloc(l %heap, l extern ${s}_body, l 1)\n", .{ pointer, descriptor });
         try self.require(pointer, allocation_failure);
         return pointer;
