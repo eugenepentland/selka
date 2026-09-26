@@ -1,0 +1,78 @@
+# D9 stage 3f default validation candidate, 2026-09-26
+
+The default implementation passes its correctness gate but is **not accepted
+for integration**: stage 3 performance remains above the required limits. Work
+is isolated on `codex/d9-stage3f-prep`; neither `main` nor the devspeed merge
+branch was changed. The latest `main`, `b292660a`, is already an ancestor.
+
+## Implemented behavior
+
+Value semantics is the default. `--legacy-sharing` provides the one-release
+compatibility mode; `--value-semantics` remains an explicit selector. An explicit
+flag wins over `MYLANG_VALUE_SEMANTICS=0|1`, which wins over the entry project's
+`value_semantics` setting, whose default is true. The resolved mode is inherited
+by child compilers and included in their cache identities. Commands with
+separate-valued options before the source use their actual argument parser for
+project discovery, including directory test entries.
+
+Guest assertions, embedded Zig fixtures, the CLI suite, active guides, feature
+metadata, and mutation/collection specifications describe independent values.
+Tests that intentionally exercise legacy identity use explicit compatibility
+scopes. Two builtin Cell guests moved to `tests/legacy`; the full gate now runs
+them with `--legacy-sharing --gc-stress`. Five historical golden cases select
+that mode individually, preserving their original source and expected outcome.
+The other 226 replayable golden cases run with the default. No replay coverage
+was removed.
+
+The historical idiom manifest retains its shared-list baseline and changes its
+required target to the independent-list result. The velocity suite adds three
+explicit CPython divergences for list, nested-list and dictionary assignment;
+all other disagreements remain gate failures. The
+[113-probe score](evidence/d9-stage3f-default-score.json.gz) has zero undeclared
+wrong answers and no stale policy declarations. The
+[reproduced divergence evidence](../../velocity/suites/idioms/divergence-evidence-d9.json)
+records the compiler hash, Python version and raw observations.
+
+## Validation
+
+All compilers were Debug builds. At `81eaf8d1`, the serialized full gate passed:
+
+| Command | Result |
+| --- | --- |
+| `zig build test --summary all` | 94/94 steps; 2,108 executed Zig tests, 21,349 shard exclusions |
+| `zig build test-qbe --summary all` | 51/51 steps; 428/428 tests |
+| `zig build test-qbe-build --summary all` | 29/29 steps |
+| `zig build fmt-check --summary all` | 2/2 steps |
+
+The main gate includes 652/652 language guests across 113 programs, 49/49
+value-specific guests, 42/42 smoke guests, and 2/2 explicit compatibility
+guests. A separate forced run of all 652 language guests passed with GC stress
+and no cached results. The golden replay checked all 231 reproducible cases
+(175 recorded sources and 56 mapped fixtures), with zero mismatches; its 373
+previously documented skips are unchanged. Documentation ran 203 examples and
+checked 51 more. The original GC footprint step budget was retained.
+
+The first default gate exposed the remaining smoke alias assertions, the
+historical idiom target, and five historical goldens; those were migrated
+explicitly before the successful gate. Review also reproduced the option-order
+configuration bug and added a regression covering test files/directories,
+build output options, and invoke function options. All whole-tree Guardian
+commit hooks passed 88 checks without ratchet growth. Later guide-only wording
+updates are validated separately; the full-gate source commit above is fixed.
+
+## Commits and remaining work
+
+Principal implementation commits are `a7a6a850` (mode default and opt-out),
+`ae9ec04b` (project discovery), `0c7ab218` (guest migration), `ea6b1e66` and
+`f10aa1a5` (documentation), `3bd5cf28`, `5946f5da`, `c300fb25`, `4cb429ff`,
+`7c7c2759` (embedded fixtures), `482cab19` (Cell compatibility lane), and
+`4a9dd406` (oracle evidence). Integration uses real two-parent merges.
+
+The [stage 3b performance report](d9-stage3b-performance-2026-09-26.md) records
+the failed median-three gate and the baseline hashes. With the later
+`b8d14efb` compiler optimization and `ebe6b78f` class-free source, the N=30,000
+Lox VM equality case still costs about 2.4 times the exact `60b668cf` baseline
+on both backends. The tree interpreter also has a large regression. These
+limits have not been waived. The default branch stays isolated until the final
+class-free benchmark suite passes; reference counting and concurrency remain
+pending their dependencies.
