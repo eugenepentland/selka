@@ -1,0 +1,13 @@
+module run
+
+import rc_semantic_publication as role
+import field_augmented as field
+
+def main(out: Stream) -> int:
+    out.print(field.test_augmented_list_field_writeback_preserves_record_snapshot())
+    out.print(field.test_augmented_list_field_reads_then_refreshes_other_fields())
+    out.print(role.test_augmented_field_detaches_an_owned_edge_from_a_private_capture())
+    out.print(role.test_dictionary_field_detachment_preserves_the_captured_snapshot())
+    out.print(role.test_scoped_field_path_keeps_the_original_snapshot_during_a_callback())
+    out.print(role.test_arena_field_capture_preserves_its_loan_during_replacement())
+    return 0

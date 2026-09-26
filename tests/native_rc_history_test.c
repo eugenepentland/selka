@@ -337,6 +337,90 @@ static void immutable_box_refusal_preserves_children(void) {
     header(right)->owners=2; myl_rc_owner_release(&heap,box);
     myl_rc_native_drop(&heap,&pair,source); finish(&heap);
 }
+// spec: RC-PLACE-ROLE-1
+static void inline_loan_leaf_preserves_identity(unsigned ownerless) {
+    myl_native_heap heap; start(&heap);
+    void *owner=mapping(&heap),*source[]={owner,NULL},*loan[2]={0};
+    assert(myl_rc_native_loan(&heap,&pair,loan,source));
+    if (ownerless) myl_rc_owner_release(&heap,owner);
+    const myl_rc_projection path={.shape=&pair_shape,.offset=0};
+    myl_rc_place place={.receiver={.shape=&pair_shape,.address=loan},.path=&path,.count=1};
+    myl_rc_scope scope={0}; myl_rc_scope_begin(&heap,&scope);
+    assert(myl_rc_scope_prepare_loan(&scope,&place)==MYL_RC_OK && loan[0]==owner);
+    write_value(&heap,loan[0],13); myl_rc_scope_end(&scope);
+    assert(read_value(owner)==13 && !shared(owner) && header(owner)->holds==1);
+    assert(header(owner)->owners==!ownerless);
+    myl_rc_native_unloan(&heap,&pair,loan);
+    if (!ownerless) myl_rc_owner_release(&heap,owner);
+    finish(&heap);
+}
+static void loan_box_path(unsigned arena,unsigned ownerless,unsigned failure) {
+    myl_native_heap heap; start(&heap);
+    if (arena) assert(myl_native_region_begin(&heap));
+    void *children[]={mapping(&heap),mapping(&heap)},*box=NULL,*loan=NULL;
+    myl_rc_alloc_request request={.element=&pair,.count=1,.region=arena};
+    assert(myl_rc_new(&heap,&request,&box)==MYL_RC_OK);
+    assert(myl_rc_native_retain(&heap,&pair,box,children,arena));
+    myl_rc_native_drop(&heap,&pair,children);
+    void *left=((void **)box)[0],*right=((void **)box)[1],*old=box;
+    assert(myl_rc_native_loan(&heap,&pointer,&loan,&box));
+    if (ownerless) myl_rc_owner_release(&heap,box);
+    myl_rc_hold view={0}; assert(myl_rc_hold_acquire(&heap,left,&view)==MYL_RC_OK);
+    const myl_rc_projection path={.shape=&owned,.offset=0,.immutable_box=1};
+    myl_rc_place place={.receiver={.shape=&owned,.address=&loan,.region=arena},.path=&path,.count=1};
+    myl_rc_scope scope={0}; myl_rc_scope_begin(&heap,&scope);
+    size_t limit=heap.limit;
+    if (failure==1) header(right)->owners=MYL_RC_COUNT_MAX;
+    if (failure==2) heap.limit=heap.bytes;
+    myl_rc_status status=myl_rc_scope_prepare_loan(&scope,&place);
+    if (failure) {
+        assert(status==(failure==1?MYL_RC_COUNT_LIMIT:MYL_RC_ALLOCATION_REFUSED));
+        assert(loan==old && !shared(left) && !shared(right));
+        assert(header(old)->holds==1 && header(left)->owners==1);
+        if (failure==1) header(right)->owners=1;
+        heap.limit=limit;
+    } else {
+        assert(status==MYL_RC_OK && loan!=old && !shared(loan));
+        assert(myl_native_header_region(loan)==arena);
+        write_value(&heap,*(void **)loan,13);
+        assert(read_value(view.payload)==7 && read_value(*(void **)loan)==13);
+        if (!ownerless) assert(read_value(*(void **)box)==7);
+    }
+    myl_rc_scope_end(&scope);
+    if (!arena) assert(header(loan)->owners==(failure?!ownerless:0) && header(loan)->holds==1);
+    myl_rc_native_unloan(&heap,&pointer,&loan);
+    myl_rc_hold_release(&heap,&view);
+    if (!ownerless) myl_rc_owner_release(&heap,box);
+    if (arena) myl_native_region_end(&heap);
+    finish(&heap);
+}
+static void array_loan_box_path(void) {
+    myl_native_heap heap; start(&heap);
+    const myl_native_field field={.type=&pointer};
+    const myl_native_type array={.size=16,.alignment=8,.kind=MYL_NATIVE_ARRAY,.fields=&field,.field_count=1,.count=2,.stride=8};
+    const myl_rc_shape shape={.size=16,.kind=MYL_RC_SHAPE_ARRAY,.as.array={&owned,2,8}};
+    const myl_rc_descriptor descriptor={.type=&array,.shape=&shape};
+    assert(myl_rc_descriptor_import(&heap,&descriptor)==MYL_RC_OK);
+    void *child=mapping(&heap),*body[]={child,NULL},*box=NULL;
+    myl_rc_alloc_request request={.element=&pair,.count=1};
+    assert(myl_rc_new(&heap,&request,&box)==MYL_RC_OK && myl_rc_native_retain(&heap,&pair,box,body,0));
+    myl_rc_owner_release(&heap,child);
+    void *source[]={box,box},*loan[2]={0};
+    assert(myl_rc_native_loan(&heap,&array,loan,source));
+    const myl_rc_shape *imported=myl_rc_descriptor_find(&heap,&array)->shape;
+    const myl_rc_projection path[]={{.shape=imported},{.shape=&owned,.offset=0,.immutable_box=1}};
+    myl_rc_place place={.receiver={.shape=imported,.address=loan},.path=path,.count=2};
+    myl_rc_scope scope={0}; myl_rc_scope_begin(&heap,&scope);
+    assert(myl_rc_scope_prepare_loan(&scope,&place)==MYL_RC_OK);
+    assert(loan[0]!=box && loan[1]!=box && loan[0]!=loan[1]);
+    assert(header(loan[0])->owners==0 && header(*(void **)loan[0])->owners==1);
+    assert(header(loan[1])->owners==0 && header(*(void **)loan[1])->owners==1);
+    write_value(&heap,*(void **)loan[0],13);
+    assert(read_value(*(void **)loan[1])==7 && read_value(*(void **)box)==7);
+    myl_rc_scope_end(&scope); myl_rc_native_unloan(&heap,&array,loan);
+    myl_rc_owner_release(&heap,box); finish(&heap);
+}
+
 int myl_rc_history_verify(void) {
     both_mutation_orders(0); both_mutation_orders(1); loan_then_pinned_publication(); publication_then_pin();
     late_count_refusal(); semantic_clone_marks_reused_children(); pinned_snapshot_preserves_older_region();
@@ -348,8 +432,11 @@ int myl_rc_history_verify(void) {
     physical_retain_replace_commits_before_retiring(); physical_retain_mixed_hold_refusal();
     immutable_box_detaches_without_alias_history(0,0); immutable_box_detaches_without_alias_history(1,0);
     immutable_box_detaches_without_alias_history(0,1); immutable_box_detaches_without_alias_history(1,1);
-    immutable_box_refusal_preserves_children(); return 27;
+    immutable_box_refusal_preserves_children();
+    inline_loan_leaf_preserves_identity(0); inline_loan_leaf_preserves_identity(1);
+    loan_box_path(0,0,0); loan_box_path(1,0,0); loan_box_path(0,1,0);
+    loan_box_path(0,0,1); loan_box_path(0,0,2); array_loan_box_path(); return 35;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
-int main(void) { assert(myl_rc_history_verify()==27); puts("native rc semantic history: 27 passed"); }
+int main(void) { assert(myl_rc_history_verify()==35); puts("native rc semantic history: 35 passed"); }
 #endif

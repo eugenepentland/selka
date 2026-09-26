@@ -209,6 +209,7 @@ int myl_qbe_rc_unique_field(void *, const myl_native_type *, void *, void *conta
 int myl_qbe_rc_unique_elements(void *, const myl_native_type *list_type, void *list);
 /* Immutable write paths detach their owned box edge even in an arena. */
 int myl_qbe_rc_box_detach(void *context, const myl_native_type *type, void *address, void *container);
+int myl_qbe_rc_box_detach_held(void *context, const myl_native_type *type, void *address, void *container);
 int myl_qbe_rc_unique_held(void *, const myl_native_type *, void *, void *container);
 /* Copy a prepared inline body into an owned replacement box. The owner slot
  * and guard change only on success; borrowed prior owners are not released. */
@@ -227,6 +228,7 @@ void myl_qbe_rc_scope_end(void *, myl_rc_scope *);
 int myl_qbe_rc_scope_pin(void *, myl_rc_scope *, void *payload);
 int myl_qbe_rc_scope_hold(void *, myl_rc_scope *, void *payload);
 int myl_qbe_rc_scope_prepare(void *, myl_rc_scope *, const MylQbeRcPlace *);
+int myl_qbe_rc_scope_prepare_loan(void *, myl_rc_scope *, const MylQbeRcPlace *);
 void myl_qbe_fail_missing_capability(void *, const char *flag);
 uint64_t myl_qbe_on_stack(uint64_t (*entry)(void *), MylQbeContext *);
 /* Admission must release consumed ABI arguments before raising an OOM trap. */

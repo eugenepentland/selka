@@ -1407,3 +1407,5 @@ host failure in one worker leaves the units the other workers hold running.
 
 
 - [RC-FLAT-SINGLE-DESTRUCTION-1] A dying heap allocation with one element may traverse its prevalidated bounded ordinary-edge plan without the repeated-element extent loop. It preserves descriptor edge order, clears each edge before release, defers callbacks until parent traversal completes, retains O/H death and arena/immortal checks, and leaves custom finalizers, H shapes and zero/multiple elements on their existing paths.
+
+- [RC-PLACE-ROLE-1] RC receiver preparation preserves a private inline capture's loan role: its managed leaves are held references, while fields reached after dereferencing a heap body resume ordinary ownership. Scoped and immediate detachment replace the held leaf only after the replacement hold succeeds; immutable boxes retain transactional child sharing. Unshared mutable identity, snapshot independence, iteration checks and refusal rollback remain unchanged.

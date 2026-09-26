@@ -3,7 +3,7 @@ const unique = @import("qbe_rc_unique.zig");
 /// Native emitter failures.
 pub const Error = unique.Error;
 /// Typed pending path; its stack request is reused only between synchronous calls.
-pub const Place = struct { scope: usize, address: usize, container: ?usize, path: usize, count: usize };
+pub const Place = struct { scope: usize, address: usize, container: ?usize, path: usize, count: usize, loan: ?usize = null };
 
 /// Address the frame's single non-overlapping outgoing-call scope.
 pub fn callAddress(comptime E: type, self: *E) Error!usize {
@@ -48,6 +48,12 @@ pub fn prepare(comptime E: type, self: *E, place: Place) Error!void {
     try self.print(" storel %v{d}, %v{d}\n", .{ place.path, try self.address(request, 16) });
     try self.print(" storel {d}, %v{d}\n", .{ place.count, try self.address(request, 24) });
     const done = self.temp();
+    if (place.loan) |loan| {
+        try self.print(" jnz %v{d}, @rcscopeloan{d}, @rcscopeowner{d}\n@rcscopeloan{d}\n", .{ loan, done, done, done });
+        try self.print(" %v{d} =w call $myl_qbe_rc_scope_prepare_loan(l %ctx, l %v{d}, l %v{d})\n", .{ done, place.scope, request });
+        try self.print(" jmp @rcscopejoined{d}\n@rcscopeowner{d}\n", .{ done, done });
+    }
     try self.print(" %v{d} =w call $myl_qbe_rc_scope_prepare(l %ctx, l %v{d}, l %v{d})\n", .{ done, place.scope, request });
+    if (place.loan != null) try self.print("@rcscopejoined{d}\n", .{done});
     try unique.success(E, self, done);
 }
