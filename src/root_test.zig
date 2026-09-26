@@ -4,6 +4,7 @@ pub const snapshot_project = @import("project.zig");
 test {
     _ = @import("qbe_rc_read_loans_test.zig");
     _ = @import("qbe_rc_aggregate_test.zig");
+    _ = @import("qbe_rc_inline_take_test.zig");
     _ = @import("native_rc_stats_test.zig");
     _ = @import("native_rc_contract_test.zig");
     _ = @import("native_rc_collections_test.zig");

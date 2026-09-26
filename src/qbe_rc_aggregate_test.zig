@@ -41,7 +41,9 @@ test "RC aggregate partial construction journals fields before guarded takes or 
     var manifest = try pairText();
     defer manifest.deinit();
     const text = try findFunction(manifest.value, "pair");
-    const cleared = try location(text, "call $memset(l %v");
+    // Pair has two pointer fields. Other token moves can clear an eight-byte
+    // source before this constructor initializes its sixteen-byte body.
+    const cleared = try location(text, "w 0, l 16)");
     const taken = cleared + try location(text[cleared..], "call $myl_rc_native_take");
     const copied = cleared + try location(text[cleared..], "call $myl_rc_native_copy");
     try t.expect(cleared < taken and taken < copied);
