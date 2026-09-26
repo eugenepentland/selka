@@ -619,6 +619,36 @@ static void partial_scope_test(void) {
     assert(state.live == 0);
     finish(&heap, &state);
 }
+// spec: RC-TRANSFER-1
+static void pinned_diamond_test(void) {
+    myl_native_heap heap;
+    TestAllocator state;
+    start(&heap, &state);
+    const myl_native_type pair_type = {.size = sizeof(Pair), .alignment = _Alignof(Pair), .kind = MYL_NATIVE_RECORD};
+    const myl_rc_descriptor descriptor = {.type = &pair_type, .shape = &pair_shape};
+    assert(myl_rc_descriptor_import(&heap, &descriptor) == MYL_RC_OK);
+    enum { depth = 256 };
+    myl_rc_pin pins[depth] = {0};
+    Pair *head = NULL;
+    for (size_t i = 0; i < depth; ++i) {
+        Pair *node = new_value(&heap, &pair_type, 1);
+        *node = (Pair){head, head};
+        assert(myl_rc_owner_acquire(&heap, head) == MYL_RC_OK);
+        head = node;
+        assert(myl_rc_pin_acquire(&heap, node, &pins[i]) == MYL_RC_OK);
+    }
+    Pair *copy = NULL;
+    myl_rc_slot from = {.shape = &pointer_shape, .address = &head};
+    myl_rc_slot to = {.shape = &pointer_shape, .address = &copy};
+    assert(myl_rc_value_copy(&heap, &to, &from) == MYL_RC_OK);
+    assert(state.allocations == depth * 2 && state.live == depth * 2);
+    for (Pair *old = head, *fresh = copy; old; old = old->first, fresh = fresh->first)
+        assert(fresh && fresh != old && fresh->first == fresh->second);
+    myl_rc_value_drop(&heap, &to);
+    myl_rc_value_drop(&heap, &from);
+    for (size_t i = depth; i; --i) myl_rc_pin_release(&heap, &pins[i - 1]);
+    finish(&heap, &state);
+}
 int myl_rc_contract_verify(void) {
     struct rlimit stack, original;
     assert(!getrlimit(RLIMIT_STACK, &stack));
@@ -640,13 +670,14 @@ int myl_rc_contract_verify(void) {
     deep_pinned_clone_test();
     scope_unwind_test();
     partial_scope_test();
+    pinned_diamond_test();
     assert(!setrlimit(RLIMIT_STACK, &original));
-    return 16;
+    return 17;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
-    assert(myl_rc_contract_verify() == 16);
-    puts("native RC contract: 16 tests passed");
+    assert(myl_rc_contract_verify() == 17);
+    puts("native RC contract: 17 tests passed");
     return 0;
 }
 #endif

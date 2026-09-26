@@ -88,3 +88,17 @@ cross-chunk list/dictionary ownership, tombstones, nested regions, exact-budget
 cache reuse, reservation refusal, and a finalizer that opens another arena.
 Escape graph copying and complete compiler ownership lowering remain separate
 work; this runtime evidence does not claim WP-4 guest or performance acceptance.
+
+The subsequent escape slice uses that iterative staged clone engine and adds a
+source/destination-region map shared by pinned copy and arena escape. Repeated
+diamond children reuse one physical clone and acquire one owner per actual
+output edge. The native region adapter returns owned outputs and preserves its
+sticky count/allocation failure. On failure, unpublished ancestor-arena clones
+release their acquired heap children before the arena closes.
+
+Seventeen core scenarios and nine arena scenarios pass ASan/UBSan. New cases
+include a 256-level pinned diamond (exactly 256 clones), one million real arena
+nodes escaped and released under a 256 KiB stack limit, a sparse dictionary with
+16 edges to one shared escaped child, and a count refusal after an earlier
+ancestor-arena clone edge acquired an owner. These are runtime contract checks;
+the integrated compiler and WP-4 performance acceptance remain outstanding.

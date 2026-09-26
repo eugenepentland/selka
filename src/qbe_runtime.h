@@ -195,6 +195,20 @@ void myl_qbe_rc_unwind(void *);
 void myl_qbe_rc_finish(void *);
 int myl_qbe_rc_unique_local(void *, const myl_native_type *, void *, uint32_t *owned);
 int myl_qbe_rc_unique_field(void *, const myl_native_type *, void *, void *container);
+typedef struct { const myl_native_type *type; size_t offset; } MylQbeRcPath;
+typedef struct {
+    void *address, *container;
+    const MylQbeRcPath *path;
+    size_t count;
+} MylQbeRcPlace;
+#define MYL_QBE_RC_SCOPE_BYTES 32
+#define MYL_QBE_RC_PATH_BYTES 16
+#define MYL_QBE_RC_PLACE_BYTES 32
+void myl_qbe_rc_scope_begin(void *, myl_rc_scope *);
+void myl_qbe_rc_scope_end(void *, myl_rc_scope *);
+int myl_qbe_rc_scope_pin(void *, myl_rc_scope *, void *payload);
+int myl_qbe_rc_scope_hold(void *, myl_rc_scope *, void *payload);
+int myl_qbe_rc_scope_prepare(void *, myl_rc_scope *, const MylQbeRcPlace *);
 void myl_qbe_fail_missing_capability(void *, const char *flag);
 uint64_t myl_qbe_on_stack(uint64_t (*entry)(void *), MylQbeContext *);
 void *myl_qbe_frame_allocate(void *, uint64_t bytes);
