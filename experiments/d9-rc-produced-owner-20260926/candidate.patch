@@ -1,0 +1,119 @@
+diff --git a/SPEC.md b/SPEC.md
+index 654f46c1..b32062a2 100644
+--- a/SPEC.md
++++ b/SPEC.md
+@@ -1356,3 +1356,5 @@ host failure in one worker leaves the units the other workers hold running.
+ - [RC-MUT-UNIQUE-1] A scalar-element list parameter with the mutable-payload ABI may use the caller's established uniqueness throughout its activation when no bytecode instruction rebinds, moves, drops or exposes the parameter slot by reference. The caller pins the payload, so snapshot publication copies instead of adding another owner. Rebound parameters and other layouts retain ordinary runtime uniqueness checks.
+ 
+ - [RC-NESTED-READ-LOAN-1] A managed collection read may lend its result directly into a single-definition compiler receiver when the complete projected chain is anchored by one stable named root and every receiver interval contains only scalar operations and further certified reads. Named rows, published results, callbacks, mutation, arena changes and dictionary hold roles retain owned publication. The physical plan keeps the root until the final scalar read; bounded or cyclic proof refusal retains ordinary ownership.
++
++- [RC-PRODUCED-OWNER-1] An immediately preceding unconditional ordinary-owner producer may skip its operand initialization test. Branch entries, held mappings, borrowed entries and other producers keep guarded transfers; pin, arena and failure behavior stays on the existing typed TAKE path.
+diff --git a/src/qbe_rc_inline_take_test.zig b/src/qbe_rc_inline_take_test.zig
+index 7fef1f79..c8ea1d97 100644
+--- a/src/qbe_rc_inline_take_test.zig
++++ b/src/qbe_rc_inline_take_test.zig
+@@ -11,6 +11,10 @@ fn emitted() !std.json.Parsed(Manifest) {
+         \\    right: list[int]
+         \\def made() -> Pair:
+         \\    return Pair([1], [2])
++        \\def forwarded() -> Pair:
++        \\    return made()
++        \\def copied(items: list[int]) -> list[int]:
++        \\    return items
+         \\def held(view: DictValues[int, int]) -> DictValues[int, int]:
+         \\    return view
+         \\def main() -> int:
+@@ -55,3 +59,16 @@ test "RC-INLINE-TAKE-1 counted artifacts share event-free token relocation" {
+     try t.expect(contains(try named(manifest.value, "made"), "@rcmoveheader"));
+     try t.expect(!contains(try named(manifest.value, "held"), "@rcmoveheader"));
+ }
++
++// spec: RC-PRODUCED-OWNER-1
++test "RC-PRODUCED-OWNER-1 fresh call results move without an initialization branch" {
++    const saved = runtime.get();
++    defer runtime.set(saved);
++    runtime.set(.rc);
++    var manifest = try emitted();
++    defer manifest.deinit();
++    const forwarded = try named(manifest.value, "forwarded");
++    try t.expect(contains(forwarded, "@rcmoveheader"));
++    try t.expect(!contains(forwarded, "@rccopy"));
++    try t.expect(contains(try named(manifest.value, "copied"), "@rccopy"));
++}
+diff --git a/src/qbe_rc_values.zig b/src/qbe_rc_values.zig
+index 6684117c..f799e6ba 100644
+--- a/src/qbe_rc_values.zig
++++ b/src/qbe_rc_values.zig
+@@ -2,6 +2,7 @@
+ const typed = @import("typed.zig");
+ const frame = @import("qbe_rc_frame.zig");
+ const slots = @import("qbe_rc_slots.zig");
++const holds = @import("qbe_rc_holds.zig");
+ /// QBE byte relocation shared by transactional value and aggregate publication.
+ pub const blit_value = " blit %v{d}, %v{d}, {d}\n";
+ const region_mark = " %v{d} =l call $myl_qbe_region_mark(l %ctx)\n";
+@@ -118,9 +119,40 @@ pub fn commitRuntime(comptime E: type, self: *E) Error!void {
+ /// A pin-aware take can still allocate; its source guard changes only on success.
+ pub fn prepareOperand(comptime E: type, self: *E, ty: typed.Type, index: usize) Error!void {
+     const address = try source(E, self, index, ty);
++    if (try producedOwner(E, self, ty, index)) return prepareOwned(E, self, ty, address, journalIndex(E, self, index));
+     try prepareGuarded(E, self, ty, address, journalIndex(E, self, index));
+ }
+ 
++fn producedOwner(comptime E: type, self: *E, ty: typed.Type, index: usize) Error!bool {
++    if (self.pc == 0 or self.branch_targets[self.pc]) return false;
++    if (@import("qbe_rc_borrow.zig").active(E, self)) return false;
++    if (holds.mayHold(E, self, ty)) return false;
++    const state = frame.get(E, self) orelse return false;
++    const shape = state.catalog.get(ty) catch return error.InternalError;
++    if (!shape.counted or shape.unique_drop) return false;
++    const stack = self.states[self.pc] orelse return false;
++    if (stack.len == 0 or index != stack.len - 1) return false;
++    const capture = self.cow.?.captures[self.pc - 1];
++    const no_scope = @import("cow_plan.zig").none;
++    if (capture.begin != no_scope or capture.active != no_scope) return false;
++    // Only these completed producers unconditionally publish an ordinary owner.
++    // A branch into the consumer, a held mapping, a raw local read or any other
++    // instruction retains the guard test. No proof is carried across a call.
++    return switch (self.function.scope.instructions[self.pc - 1].op) {
++        .call, .make_record, .make_variant, .value_copy, .move_local => true,
++        else => false,
++    };
++}
++
++fn prepareOwned(comptime E: type, self: *E, ty: typed.Type, address: usize, journal_index: usize) Error!void {
++    const work = try workAddress(E, self);
++    const region = self.temp();
++    try self.print(region_mark, .{region});
++    try slots.Lower(E).transfer(self, .{ .ty = ty, .destination = work, .source = address, .region = region, .mode = .take_empty });
++    try frame.initialized(E, self, journal_index, false);
++    try markWork(E, self, ty, work);
++}
++
+ /// Physical moves consume only an initialized owner; a borrowed local or operand
+ /// copies from its anchor even when semantic last-use analysis calls it a move.
+ pub fn prepareGuarded(comptime E: type, self: *E, ty: typed.Type, address: usize, journal_index: usize) Error!void {
+@@ -129,20 +161,15 @@ pub fn prepareGuarded(comptime E: type, self: *E, ty: typed.Type, address: usize
+     const label = self.temp();
+     try self.print(" %v{d} =w loaduw %v{d}\n", .{ live, guard_pointer });
+     var transferable = live;
+-    const may_hold = @import("qbe_rc_holds.zig").mayHold(E, self, ty);
++    const may_hold = holds.mayHold(E, self, ty);
+     if (may_hold) {
+-        const held = try @import("qbe_rc_holds.zig").held(E, self, journal_index);
++        const held = try holds.held(E, self, journal_index);
+         const owner = self.temp();
+         transferable = self.temp();
+         try self.print(" %v{d} =w xor %v{d}, 1\n %v{d} =w and %v{d}, %v{d}\n", .{ owner, held, transferable, live, owner });
+     }
+     try self.print(" jnz %v{d}, @rctake{d}, @rccopy{d}\n@rctake{d}\n", .{ transferable, label, label, label });
+-    const work = try workAddress(E, self);
+-    const region = self.temp();
+-    try self.print(region_mark, .{region});
+-    try slots.Lower(E).transfer(self, .{ .ty = ty, .destination = work, .source = address, .region = region, .mode = .take_empty });
+-    try frame.initialized(E, self, journal_index, false);
+-    try markWork(E, self, ty, work);
++    try prepareOwned(E, self, ty, address, journal_index);
+     try self.print(" jmp @rcprepared{d}\n@rccopy{d}\n", .{ label, label });
+     try copied(E, self, ty, address);
+     // A copied H token becomes an independent O only after success; refusal

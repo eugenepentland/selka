@@ -35,7 +35,7 @@ pub fn local(comptime E: type, self: *E, unique: cow.Unique) Error!void {
 }
 
 fn localCall(comptime E: type, self: *E, index: usize, address: usize, guard: usize) Error!void {
-    if (stableMutParameter(E, self, index)) return;
+    if (stableMutParameter(E, self, index) or @import("qbe_rc_hoist.zig").covers(E, self, index)) return;
     const ty = self.function.scope.locals[index].ty;
     const holds = @import("qbe_rc_holds.zig");
     const label = self.temp();
