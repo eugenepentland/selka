@@ -1,0 +1,55 @@
+module mut_reference_roots
+
+record Packet:
+    items: list[int]
+
+
+def bump(packet: mut Packet) -> int:
+    packet.items.append(9)
+    return len(packet.items)
+
+
+def bump_array(slots: mut [1]list[int]) -> int:
+    slots[0].append(9)
+    return len(slots[0])
+
+
+# spec-case: QBE-ROOTLIVE-1
+public def test_record_reference_after_allocation() -> bool:
+    kept = Packet([1, 2, 3])
+    scratch = [4, 5]
+    result = bump(mut kept)
+    return result == 4 and len(scratch) == 2
+
+
+# spec-case: QBE-ROOTLIVE-1
+public def test_array_reference_after_allocation() -> bool:
+    kept: [1]list[int] = [[1, 2, 3]]
+    scratch = [4, 5]
+    result = bump_array(mut kept)
+    return result == 4 and len(scratch) == 2
+
+
+def selected(take: bool) -> bool:
+    kept = Packet([1, 2, 3])
+    scratch = [4, 5]
+    result = 0
+    if take:
+        result = bump(mut kept)
+    return result == 4 and len(scratch) == 2
+
+
+# spec-case: QBE-ROOTLIVE-1
+public def test_reference_through_forward_branch() -> bool:
+    return selected(True)
+
+
+def through_parameter(packet: mut Packet) -> int:
+    scratch = [4, 5]
+    return bump(mut packet) + len(scratch)
+
+
+# spec-case: QBE-ROOTLIVE-1
+public def test_forwarded_reference_after_allocation() -> bool:
+    kept = Packet([1, 2, 3])
+    return through_parameter(mut kept) == 6
