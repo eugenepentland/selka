@@ -1,13 +1,17 @@
 # D9 stage 3f default validation candidate, 2026-09-26
 
-The default implementation passes its correctness gate but is **not accepted
-for integration**: final stage 3 performance acceptance remains open, and
-a broader native-GC-stress failure in the external Lox source tests is under
-investigation against the historical baseline. The
-boxed-path and nested-collection/fixed-array fixes have passed their joined
-gates and are included in this candidate. Work
-is isolated on `codex/d9-stage3f-prep`; neither `main` nor the devspeed merge
-branch was changed. The latest `main`, `b292660a`, is already an ancestor.
+The default implementation now passes correctness and the complete stage 3
+performance gate. The accepted implementation is `9ab98d5f`, joined with
+performance evidence at `66101ab7` on `codex/d9-stage3f-prep`. The latest
+`main`, `b292660a`, is already an ancestor. Neither `main` nor the devspeed
+merge branch was changed; downstream work uses validated integration commits.
+
+The final correctness gate passed 94/94 main steps with 2,125 executed tests,
+QBE 51/51 with 428 tests, native-build 29/29 and formatting 2/2. The complete
+43-program-per-backend performance sweep measured 1.021851044× QBE and
+1.046853543× LLVM, with every output correct and no program above 1.3×:
+[final performance evidence](d9-performance43-final-2026-09-26.md).
+The borrowed-inference join has its own subsequent combined gate.
 
 ## Implemented behavior
 
@@ -103,19 +107,33 @@ results in those guest lanes. The frozen Debug compiler at
 Logs are `.tmp-stage3f/indexed-default-*.log`. Its indexed proof and scoped
 receivers have separate independent joined stress/legacy-IL validation.
 
-Additional external Lox source tests under native GC stress expose ten
-parser/resolver panics, while the normal 65 tests and stressed VM traces pass.
-They reproduce before the current global-table source experiment, including
-on an older D9 compiler; comparison with the original baseline and reduction
-are still in progress. The full-gate result above does not claim that this
-broader, separately run scope is green.
+The broader external Lox native-GC-stress failures are resolved by the
+[`ref_local` liveness correction](d9-mut-reference-liveness-2026-09-26.md),
+joined at `178d43dc`. Its 260 uncached port tests cover both modes and
+backends; all 44 legacy IL comparisons remain identical. The historical
+fixed-array counterexample establishes a pre-existing root defect, made more
+visible by the later mut-record migration.
 
-The complete 43-key diagnostic at earlier compiler `5bdd99ea` measured QBE
-geomean 1.06194× and LLVM 1.09626×, with three and four cases above 1.3×.
-All outputs and SVG checks matched. Pure-box reads and later source changes
-improve individual blockers, and the full current combination is being
-measured. The final stage 3 limit is still unestablished. The tree interpreter is additional audit coverage,
-with a remaining regression tracked separately. No performance limit has been
-waived. The default branch stays isolated until the final joined correctness
-and baseline performance gates pass; reference counting and concurrency remain
-pending their dependencies.
+Correct liveness also exposed random-stream assertions that still expected
+sharing: the previous compiler incorrectly treated the source as dead and
+moved it. The [migration at `9ab98d5f`](d9-random-value-migration-2026-09-26.md)
+now checks independent generator snapshots under value semantics and pins
+shared streams explicitly under legacy sharing. The old compiler fails the
+new snapshot tests; the corrected compiler passes both backends with native
+GC stress. Generator algorithm, signature and representation are unchanged;
+the only embedded `random.my` changes are comments. This final full gate
+executes 656 language guests, 139 value-specific guests, 42 smoke guests and
+two compatibility guests uncached. Logs are in
+`d9-random-value-fix/.tmp-random/gate-*.log`; its fresh Debug compiler SHA is
+`31bf2ae018160071c1395b00b7b056e3f1e9d0c0d81e578e3ef4e77f6786b0a0`.
+
+The frozen performance compiler is `178d43dc`, SHA
+`52ddd1337b4998b2a22184cac58af5ae4b0f4bc465dd449cfae3271c7451575d`.
+It includes the root correction, indexed transfer proof, and final Lox
+setter/hash-hoist composition. The later random migration changes only
+comments, tests, specification and examples, so no measured compiler/runtime
+algorithm changed between that sweep and the accepted correctness gate.
+Earlier failing sweeps remain historical evidence. The formal performance
+limits are satisfied without changing the workload or threshold. The tree
+interpreter remains supplemental audit coverage. Reference counting and
+concurrency retain their own implementation and acceptance requirements.
