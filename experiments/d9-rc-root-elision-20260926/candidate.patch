@@ -1,0 +1,148 @@
+diff --git a/SPEC.md b/SPEC.md
+index afcb2a6d..eca36678 100644
+--- a/SPEC.md
++++ b/SPEC.md
+@@ -1372,3 +1372,5 @@ host failure in one worker leaves the units the other workers hold running.
+ - [RC-INERT-PROJECTION-1] An immediate list-element read into a proved inert mutation receiver borrows from the live physical parent until fill detaches and refreshes it; named snapshots, callbacks, alternate fill entries and unproved paths retain ordinary ownership or scoped protection.
+ 
+ - [RC-FRAME-REGION-1] RC functions without arena boundary instructions reuse their entry region depth for typed transfers. Functions that open or close arenas read the current depth at each transfer; callees restore their own scopes before returning.
++
++- [RC-NO-TRACING-ROOTS-1] Counted native functions retain guarded ownership journals and arena/callback scope cleanup without publishing tracing-GC roots; GC artifacts retain their existing traced root chains.
+diff --git a/src/qbe.zig b/src/qbe.zig
+index ea609a04..474d1fe1 100644
+--- a/src/qbe.zig
++++ b/src/qbe.zig
+@@ -1659,7 +1659,7 @@ const Emitter = struct {
+         });
+         if (self.cow) |state| try cow_lower.Lower(Emitter).veto(self, state);
+         try self.findRoots();
+-        if (self.has_roots and self.has_safepoints) self.live_roots = try self.rootLiveness();
++        if (self.needsRootProtocol()) self.live_roots = try self.rootLiveness();
+         const capacity = ir.stack_capacity;
+         // QBE-FRAMEFIT-1: before the body exists, the only bound on the per-pc
+         // aggregate scratch counts every buffer the lowering might declare, and
+@@ -1751,7 +1751,7 @@ const Emitter = struct {
+         if (self.has_roots) try self.print(" %heap =l call $myl_qbe_heap(l %ctx)\n", .{});
+         try rc_frame.Lower(Emitter).enter(self);
+         if (self.entry and runtime_mode.enabled()) try self.requireAccounting();
+-        if (self.has_roots and self.has_safepoints) try self.print(" %root_mark =l call $myl_qbe_root_mark(l %ctx)\n", .{});
++        if (self.needsRootProtocol()) try self.print(" %root_mark =l call $myl_qbe_root_mark(l %ctx)\n", .{});
+         if (self.step_checks) try self.print(" %maxsteps =l add %ctx, 16\n", .{});
+         try self.print(" jmp @i0\n", .{});
+         try self.emitInstructions();
+@@ -1760,7 +1760,7 @@ const Emitter = struct {
+         try rc_frame.Lower(Emitter).cleanup(self);
+         try rc_frame.Lower(Emitter).leave(self);
+         try arena_lower.Lower(Emitter).restore(self);
+-        if (self.has_roots and self.has_safepoints) try root_lower.restoreFrameRoots(self);
++        if (self.needsRootProtocol()) try root_lower.restoreFrameRoots(self);
+         if (self.heap_frame) try self.print(" call $myl_qbe_frame_release(l %ctx, l %frame_memory)\n jmp @allocation_failure\n@allocation_failure\n", .{});
+         try self.leaveFrame();
+         // QBE-COLD-FAILRET-1: only failed paths return `%empty`. Initializing
+diff --git a/src/qbe_frame.zig b/src/qbe_frame.zig
+index 654c982e..c22ab684 100644
+--- a/src/qbe_frame.zig
++++ b/src/qbe_frame.zig
+@@ -11,6 +11,7 @@ const arena_lower = @import("qbe_arena.zig");
+ const rc_frame = @import("qbe_rc_frame.zig");
+ const rc_admission = @import("qbe_rc_admission.zig");
+ const std = @import("std");
++const runtime = @import("runtime_mode.zig");
+ const bytecode = @import("bytecode.zig");
+ const typed = @import("typed.zig");
+ const qbe_wire = @import("qbe_wire.zig");
+@@ -178,7 +179,7 @@ fn allocateStorage(comptime Emitter: type, self: *Emitter, capacity: usize) Gene
+     for (0..capacity) |i| try allocateIndex(Emitter, self, "s", i, 8);
+     for (self.range_keys.locals, 0..) |used, i| if (used) try allocateIndex(Emitter, self, "rl", i, 16);
+     for (self.range_keys.heights, 0..) |used, i| if (used) try allocateIndex(Emitter, self, "rs", i, 16);
+-    if (self.has_roots) for (0..f.scope.locals.len + capacity) |i| try allocateIndex(Emitter, self, "root", i, 32);
++    if (self.has_roots and !runtime.enabled()) for (0..f.scope.locals.len + capacity) |i| try allocateIndex(Emitter, self, "root", i, 32);
+ }
+ fn allocateNativeStorage(comptime Emitter: type, self: *Emitter, capacity: usize) GenerateError!void {
+     // A heap frame cannot derive slot addresses until its allocation has
+@@ -686,7 +687,7 @@ fn frameBytes(comptime Emitter: type, self: *Emitter, capacity: usize, temporari
+     size = try addFrame(size, try rc_frame.Lower(Emitter).bytes(self));
+     size = try addFrame(size, temporaries);
+     size = try addFrame(size, self.range_keys.frameBytes());
+-    if (self.has_roots) size = try addFrame(size, @as(u64, self.function.scope.locals.len + capacity) * 32);
++    if (self.has_roots and !runtime.enabled()) size = try addFrame(size, @as(u64, self.function.scope.locals.len + capacity) * 32);
+     // A result that crosses through the caller's storage occupies nothing
+     // here; any other aggregate result has its zeroed copy and, in a heap
+     // frame, the copy the return path hands back.
+diff --git a/src/qbe_rc_inline_take_test.zig b/src/qbe_rc_inline_take_test.zig
+index 4b0a3f79..355ec784 100644
+--- a/src/qbe_rc_inline_take_test.zig
++++ b/src/qbe_rc_inline_take_test.zig
+@@ -91,3 +91,24 @@ test "RC-FRAME-REGION-1 stable frames read depth once while arena bodies stay dy
+     try t.expect(!contains(escaped, "copy %rcregion"));
+     try t.expect(std.mem.count(u8, escaped, "call $myl_qbe_region_mark") > 1);
+ }
++
++// spec: RC-NO-TRACING-ROOTS-1
++test "RC-NO-TRACING-ROOTS-1 counted frames use journals while GC retains traced roots" {
++    const saved = runtime.get();
++    defer runtime.set(saved);
++    runtime.set(.gc);
++    var gc = try emitted();
++    defer gc.deinit();
++    try t.expect(contains(try named(gc.value, "made"), "%root0"));
++    runtime.set(.rc_counting);
++    var rc = try emitted();
++    defer rc.deinit();
++    const made = try named(rc.value, "made");
++    try t.expect(!contains(made, "%root0"));
++    try t.expect(!contains(made, "%root_mark"));
++    try t.expect(!contains(made, "=l add %heap, 16"));
++    try t.expect(contains(made, "call $myl_qbe_rc_frame_enter"));
++    try t.expect(contains(made, "call $myl_qbe_rc_frame_cleanup"));
++    try t.expect(contains(made, "%heap =l call $myl_qbe_heap"));
++    try t.expect(!contains(try named(rc.value, "escaped"), "%root_mark"));
++}
+diff --git a/src/qbe_roots.zig b/src/qbe_roots.zig
+index e8a9321b..a8584bc5 100644
+--- a/src/qbe_roots.zig
++++ b/src/qbe_roots.zig
+@@ -4,6 +4,7 @@
+ //! free function over the concrete emitter type; `Lower` exposes the ones the
+ //! rest of the emitter calls as `self.name(...)`.
+ const liveness = @import("qbe_liveness.zig");
++const runtime = @import("runtime_mode.zig");
+ const std = @import("std");
+ const bytecode = @import("bytecode.zig");
+ const typed = @import("typed.zig");
+@@ -179,7 +180,7 @@ pub fn pureCallee(name: []const u8) bool {
+ /// Whether an instruction needs the root protocol: its opcode admits
+ /// allocation, and it is not a call to a function that cannot collect.
+ fn rootedSafepoint(comptime Emitter: type, self: *Emitter, op: @FieldType(bytecode.Instruction, "op")) bool {
+-    if (!self.has_roots or !self.has_safepoints) return false;
++    if (!needsRootProtocol(Emitter, self)) return false;
+     if (!allocates(op) and !self.boxProjectionAt(self.pc, op)) return false;
+     return !callsPureFunction(Emitter, self, op) or cowMutCallMayCopy(Emitter, self, op);
+ }
+@@ -328,7 +329,7 @@ fn rootLiveness(comptime Emitter: type, self: *Emitter) GenerateError!liveness.R
+ /// A lowering that roots only its allocating branch asks first, because
+ /// without the protocol there is no `%root_mark` or root slot to link.
+ fn needsRootProtocol(comptime Emitter: type, self: *Emitter) bool {
+-    return self.has_roots and self.has_safepoints;
++    return !runtime.enabled() and self.has_roots and self.has_safepoints;
+ }
+ /// Push every live traced local and operand as a `myl_native_root` link
+ /// built from straight-line stores instead of a runtime call. The chain
+@@ -337,7 +338,8 @@ fn needsRootProtocol(comptime Emitter: type, self: *Emitter) bool {
+ /// walks every live root. Field order matches `struct myl_native_root`.
+ /// Returns whether any root was pushed.
+ fn roots(comptime Emitter: type, self: *Emitter, stack: []const typed.Type) GenerateError!bool {
+-    if (!try liveRoots(Emitter, self, stack)) return false;
++    // Counted heaps drain journaled obligations; they never trace this chain.
++    if (runtime.enabled() or !try liveRoots(Emitter, self, stack)) return false;
+     const base = self.temp();
+     try self.print(" %v{d} =l add %heap, {d}\n", .{ base, heap_roots_offset });
+     const head = self.temp();
+@@ -399,6 +401,7 @@ fn restoreRoots(comptime Emitter: type, self: *Emitter) GenerateError!void {
+ }
+ 
+ fn restoreTo(comptime Emitter: type, self: *Emitter, scope: ?usize) GenerateError!void {
++    if (runtime.enabled()) return;
+     const base = self.temp();
+     try self.print(" %v{d} =l add %heap, {d}\n", .{ base, heap_roots_offset });
+     if (scope) |fill| {

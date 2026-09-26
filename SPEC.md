@@ -1372,3 +1372,5 @@ host failure in one worker leaves the units the other workers hold running.
 - [RC-INERT-PROJECTION-1] An immediate list-element read into a proved inert mutation receiver borrows from the live physical parent until fill detaches and refreshes it; named snapshots, callbacks, alternate fill entries and unproved paths retain ordinary ownership or scoped protection.
 
 - [RC-FRAME-REGION-1] RC functions without arena boundary instructions reuse their entry region depth for typed transfers. Functions that open or close arenas read the current depth at each transfer; callees restore their own scopes before returning.
+
+- [RC-NO-TRACING-ROOTS-1] Counted native functions retain guarded ownership journals and arena/callback scope cleanup without publishing tracing-GC roots; GC artifacts retain their existing traced root chains.
