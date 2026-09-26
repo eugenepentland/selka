@@ -175,3 +175,27 @@ test "RC-BORROW-ENTRY-1 immortal helper edits change transitive dependency ident
     try t.expect(!std.mem.eql(u8, &first.dependency_identity, &second.dependency_identity));
     try t.expectEqual(first.parameter, second.parameter);
 }
+
+fn oversizedProof() !?model.BorrowCertificate {
+    var source: std.Io.Writer.Allocating = .init(t.allocator);
+    defer source.deinit();
+    try source.writer.writeAll("def selected(values: list[int]) -> list[int]:\n    count = 0\n");
+    for (0..256) |_| try source.writer.writeAll("    count += 1\n");
+    try source.writer.writeAll("    return values\n");
+    return certificate(source.written());
+}
+
+// spec: RC-BORROW-BOUND-1
+test "RC borrowed entry proof declines recursive and oversized queries" {
+    try t.expectEqual(null, try certificate(
+        \\def selected(values: list[int]) -> list[int]:
+        \\    return selected(values)
+    ));
+    try t.expectEqual(null, try certificate(
+        \\def other(values: list[int]) -> list[int]:
+        \\    return selected(values)
+        \\def selected(values: list[int]) -> list[int]:
+        \\    return other(values)
+    ));
+    try t.expectEqual(null, try oversizedProof());
+}
