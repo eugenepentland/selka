@@ -445,6 +445,7 @@ fn cleanupLocals(comptime Emitter: type, self: *Emitter) GenerateError!void {
         if (self.byReference(index)) continue;
         const local = self.function.scope.locals[index];
         if (!(try self.layout(local.ty)).drop) continue;
+        if (@import("qbe_aggregate.zig").borrowedPayload(self.function, index)) continue;
         try self.print(drop_local, .{ try self.descriptor(local.ty), index });
     }
 }
