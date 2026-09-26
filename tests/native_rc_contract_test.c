@@ -242,6 +242,10 @@ static void variants_and_wide_array_test(void) {
     OuterVariant values[3] = {{.tag = 0, .value = {.tag = 1, .pointer = (void *)(uintptr_t)1}},
         {.tag = 2, .value = {.tag = 0, .pointer = (void *)(uintptr_t)1}},
         {.tag = 2, .value = {.tag = 1, .pointer = new_value(&heap, &scalar_type, 1)}}};
+    OuterVariant seeded;
+    myl_rc_value_seed(&heap, variant, &seeded, &values[2], 1);
+    assert(seeded.tag == 2 && seeded.value.tag == 1 && !seeded.value.pointer);
+    assert(values[2].value.pointer && ((myl_rc_object *)values[2].value.pointer - 1)->owners == 1);
     myl_rc_edges_release(&heap, variant, values, 3);
     myl_rc_drain(&heap);
     assert(state.live == 0 && state.retired == 1);
@@ -469,6 +473,15 @@ static void uniqueness_and_alias_replace_test(void) {
     assert(myl_rc_value_replace(&heap, &to, &from, MYL_RC_COPY) == MYL_RC_OK);
     assert(*(uint64_t *)parent == 59 && state.live == 1);
     myl_rc_value_drop(&heap, &to);
+    struct { myl_native_object header; Node node; } arena = {
+        .header = {.mark = MYL_NATIVE_OBJECT_ARENA | ((uintptr_t)1 << MYL_NATIVE_ARENA_REGION_SHIFT) |
+            ((uintptr_t)1 << MYL_NATIVE_OBJECT_COUNT_SHIFT), .element = &node_type},
+        .node = {.next = new_value(&heap, &scalar_type, 1)}
+    };
+    myl_rc_construction_abort(&heap, &arena.node);
+    assert(!arena.node.next && state.live == 0);
+    myl_rc_construction_abort(&heap, &arena.node);
+    assert(state.live == 0);
     finish(&heap, &state);
 }
 // spec: RC-REGISTER-1
