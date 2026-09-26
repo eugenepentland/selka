@@ -159,6 +159,11 @@ fn inert(comptime E: type, self: *E, pc: usize, path: Path, local: usize) bool {
         .load_local => |id| plain(E, self, self.function.scope.locals[@backingInt(id)].ty),
         .store_local => |id| store(E, self, pc, @backingInt(id), path, local),
         .value_copy => |copy| plain(E, self, copy.ty),
+        // All inputs were checked above. An inline plain update writes only
+        // private result scratch; it cannot replace the receiver or its index
+        // storage, publish a managed edge, or run a unique finalizer.
+        .update_record => |update| plain(E, self, update.ty) and
+            !self.program.records[update.ty.recordIndex()].isManagedRecord(),
         .buffer_operation => |operation| switch (operation.kind) {
             .length, .capacity => list(E, self, @backingInt(operation.owner)),
             .read => read(E, self, pc, path),
