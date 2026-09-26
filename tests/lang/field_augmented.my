@@ -1,7 +1,7 @@
 module field_augmented
 
 
-class FieldCounter:
+record FieldCounter:
     n: int
     total: float
     label: str
@@ -13,25 +13,26 @@ record FieldPoint:
     y: int
 
 
-class FieldHolder:
+record FieldHolder:
     inner: FieldCounter
     point: FieldPoint
 
 
-def bump(counter: mut FieldCounter) -> int:
-    counter.n += 1
-    counter.n *= 3
-    counter.n -= 1
-    counter.n //= 2
-    counter.n %= 5
-    counter.total += 0.5
-    counter.total /= 2.0
-    counter.label += "!"
-    return counter.n
+def bump(counter: FieldCounter) -> FieldCounter:
+    updated = counter
+    updated.n += 1
+    updated.n *= 3
+    updated.n -= 1
+    updated.n //= 2
+    updated.n %= 5
+    updated.total += 0.5
+    updated.total /= 2.0
+    updated.label += "!"
+    return updated
 
 
 def reset(counter: mut FieldCounter) -> int:
-    counter.n = 100
+    counter.items.append(100)
     return 1
 
 
@@ -42,10 +43,9 @@ def new_counter() -> FieldCounter:
 # An augmented assignment to a class field reads the field, applies the
 # operator's ordinary rules and stores the result, like a binding does.
 # spec: AUGMENTED-FIELD-1
-public def test_augmented_assignment_updates_a_class_field() -> bool:
+public def test_augmented_assignment_updates_a_record_value() -> bool:
     c = new_counter()
-    if bump(mut c) != 2:
-        return False
+    c = bump(c)
     return c.n == 2 and c.total == 0.75 and c.label == "a!"
 
 

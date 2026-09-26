@@ -792,6 +792,10 @@ int myl_native_dictionary_read_range(const myl_native_heap *heap, const myl_nati
     copy_value(dict,output,entry_at(dict,index)+dict->value_offset);
     return 1;
 }
+const void *myl_native_dictionary_find_range(const myl_native_heap *heap, const myl_native_dictionary *dict, const myl_native_text *text, const myl_native_text_span *span) {
+    size_t index=find_span(heap,dict,span_of(text,span)).entry;
+    return index==NO_ENTRY?NULL:entry_at(dict,index)+dict->value_offset;
+}
 int myl_native_dictionary_contains_range(const myl_native_heap *heap, const myl_native_dictionary *dict, const myl_native_text *text, const myl_native_text_span *span) {
     return find_span(heap,dict,span_of(text,span)).entry!=NO_ENTRY;
 }
@@ -961,6 +965,47 @@ void myl_native_dictionary_reindex(myl_native_heap *heap, myl_native_dictionary 
     dict->dead=0;
     dict->index=(myl_native_dictionary_index){.slots=NULL,.capacity=0};
     index_reserve(heap,dict,dict->entries->length);
+}
+int myl_native_dictionary_header(const void *payload) {
+    return payload && ((const myl_native_object *)payload-1)->element==&dict_type;
+}
+/* Give `dict` its own entry descriptor, shaped like `from`'s: the field table
+ * and scan plan it names live inside `dict`, so they die with it. */
+static void entry_shape(myl_native_dictionary *dict, const myl_native_dictionary *from) {
+    memcpy(dict->entry_fields,from->entry_fields,sizeof dict->entry_fields);
+    memcpy(dict->entry_scan,from->entry_scan,sizeof dict->entry_scan);
+    dict->entry_type=from->entry_type;
+    dict->entry_type.fields=dict->entry_fields;
+    if (from->entry_type.scan) dict->entry_type.scan=dict->entry_scan;
+}
+myl_native_dictionary *myl_native_dictionary_clone_at(myl_native_heap *heap, const myl_native_dictionary *input, unsigned region) {
+    myl_native_dictionary_settle(input);
+    const myl_native_dictionary *rooted=input;
+    myl_native_root source_root,clone_root;
+    myl_native_root_push(heap,&source_root,&rooted,&pointer_type);
+    myl_native_dictionary *dict=myl_native_heap_alloc_at(heap,&dict_type,1,region);
+    if (dict) {
+        myl_native_root_push(heap,&clone_root,&dict,&pointer_type);
+        dict->key=rooted->key; dict->value=rooted->value; dict->value_offset=rooted->value_offset;
+        dict->string_keys=rooted->string_keys; dict->key_kind=rooted->key_kind; dict->dead=0;
+        entry_shape(dict,rooted);
+        dict->index=(myl_native_dictionary_index){.slots=NULL,.capacity=0};
+        dict->last=(myl_native_dictionary_probe){.state=PROBE_NONE};
+        dict->entries=myl_native_list_clone_at(heap,rooted->entries,&dict->entry_type,region);
+        size_t capacity=rooted->index.capacity;
+        if (dict->entries && capacity) {
+            int exhausted=heap->exhausted;
+            uint64_t *slots=myl_native_heap_alloc_at(heap,&slot_type,capacity,region);
+            if (slots) {
+                memcpy(slots,rooted->index.slots,capacity*sizeof(uint64_t));
+                dict->index=(myl_native_dictionary_index){.slots=slots,.capacity=capacity};
+            } else heap->exhausted=exhausted;
+        }
+        myl_native_root_pop(heap,&clone_root);
+        if (!dict->entries) dict=NULL;
+    }
+    myl_native_root_pop(heap,&source_root);
+    return dict;
 }
 myl_native_dictionary *myl_native_dictionary_copy(myl_native_heap *heap, const myl_native_dictionary *input) {
     const myl_native_dictionary *rooted=input;

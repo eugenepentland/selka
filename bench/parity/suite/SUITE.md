@@ -124,7 +124,7 @@ main: offset_momentum; print int(energy * 1e9); repeat steps: advance; print int
 `0.5 * b.mass * (...)` is `(0.5 * b.mass) * (...)`; `dx * bj.mass * mag` is
 `(dx * bj.mass) * mag`. First line: `-169075164`.
 Ports: `nbody.my` (a `record Body` held in a `list[Body]` and updated in place
-through `bodies[i].field = ...`); `nbody_class.my` (a `class Body`); `nbody.zig`
+through `bodies[i].field = ...`); `nbody_class.my` (the historical class variant, now migrated to a value record and indexed store-back for D9); `nbody.zig`
 (an array of structs); `nbody.rs` (an array or `Vec` of structs, index loops).
 
 ## 3. `spectral_norm` — float kernel through small function calls

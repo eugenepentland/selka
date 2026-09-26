@@ -996,6 +996,33 @@ myl_native_list *myl_native_list_copy(myl_native_heap *heap, const myl_native_li
     myl_native_root_pop(heap, &root);
     return result;
 }
+int myl_native_list_header(const void *payload) {
+    return payload && ((const myl_native_object *)payload - 1)->element == &list_type;
+}
+myl_native_list *myl_native_list_clone_at(myl_native_heap *heap, const myl_native_list *input, const myl_native_type *element, unsigned region) {
+    const myl_native_list *rooted = input;
+    myl_native_root source_root, clone_root;
+    myl_native_root_push(heap, &source_root, &rooted, &pointer_type);
+    myl_native_list *clone = myl_native_heap_alloc_at(heap, &list_type, 1, region);
+    if (clone) {
+        myl_native_root_push(heap, &clone_root, &clone, &pointer_type);
+        size_t capacity = rooted->capacity > rooted->length ? rooted->capacity : rooted->length;
+        clone->element = element;
+        if (capacity) {
+            void *storage = myl_native_heap_alloc_at(heap, element, capacity, region);
+            if (storage && rooted->length) memcpy(storage, rooted->storage, rooted->length * rooted->element->size);
+            clone->storage = storage;
+        }
+        myl_native_root_pop(heap, &clone_root);
+        if (capacity && !clone->storage) clone = NULL;
+        else {
+            clone->length = rooted->length;
+            clone->capacity = capacity;
+        }
+    }
+    myl_native_root_pop(heap, &source_root);
+    return clone;
+}
 /* Resolve an omitted endpoint, then apply Python's clamp for the step's sign. */
 int64_t myl_native_slice_start(int64_t length, int64_t start, int64_t step) {
     if (start == MYL_NATIVE_SLICE_FIRST) start = step > 0 ? 0 : length - 1;

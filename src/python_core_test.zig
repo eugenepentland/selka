@@ -367,7 +367,7 @@ test "reading a parameter copy after a field write keeps the write accepted" {
     try observed.check();
     try t.expectEqual(@as(usize, 0), observed.diagnostics.items.len);
 }
-// spec-case: CLASS-MANAGED-1
+// spec: CLASS-MANAGED-1
 test "a self-referential class graph prints to the depth cap and terminates" {
     try run(
         \\class Node:

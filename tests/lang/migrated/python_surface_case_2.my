@@ -1,7 +1,7 @@
 module python_surface_case_2
 
 
-class Buffer:
+record Buffer:
     len: int
     replace: int
 

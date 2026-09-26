@@ -3,7 +3,7 @@
 
 A seeded sequence of source mutations is applied to a copy of a small project
 (`tests/fixtures/incremental/`: records nested in lists, dictionaries, Options,
-tuples, unions and class fields, an enum, a recursive class and a facade
+tuples, unions and record fields, an enum, a recursive record and a facade
 re-export). Before every step the cache is warmed on the unmutated project; the
 step then applies one or two mutations and runs `check` twice, once with the
 persistent cache and once with `--no-cache`. Exit status, stdout and stderr

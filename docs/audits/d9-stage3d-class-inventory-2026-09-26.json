@@ -1,0 +1,883 @@
+{
+  "source": "P1 classes.jsonl on exp/e2-value-semantics",
+  "count": 81,
+  "classes": [
+    {
+      "corpus": "bench/parity",
+      "file": "bench/parity/suite/binary_trees.my",
+      "name": "Node",
+      "graph": true,
+      "self_referential": true,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "bench/parity",
+      "file": "bench/parity/suite/binary_trees_arena.my",
+      "name": "Node",
+      "graph": true,
+      "self_referential": true,
+      "field_writes": 0,
+      "state": "migrated-in-3c"
+    },
+    {
+      "corpus": "bench/parity",
+      "file": "bench/parity/suite/nbody_class.my",
+      "name": "Body",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 12,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "sexpr-port",
+      "file": "experiments/sexpr-port/main.my",
+      "name": "main::Tally",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 11,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "sexpr-port",
+      "file": "experiments/sexpr-port/sexpr/parser.my",
+      "name": "sexpr.parser::Cursor",
+      "graph": true,
+      "self_referential": false,
+      "field_writes": 2,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "sexpr-port",
+      "file": "experiments/sexpr-port/sexpr/tokenizer.my",
+      "name": "sexpr.tokenizer::Lexer",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 3,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "lox",
+      "file": "external/lox/ast.my",
+      "name": "ast::Program",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d-patch"
+    },
+    {
+      "corpus": "lox",
+      "file": "external/lox/chunk.my",
+      "name": "chunk::Chunk",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d-patch"
+    },
+    {
+      "corpus": "lox",
+      "file": "external/lox/compiler.my",
+      "name": "compiler::FnCompiler",
+      "graph": true,
+      "self_referential": false,
+      "field_writes": 3,
+      "state": "migrated-in-3d-patch"
+    },
+    {
+      "corpus": "lox",
+      "file": "external/lox/compiler.my",
+      "name": "compiler::Parser",
+      "graph": true,
+      "self_referential": false,
+      "field_writes": 5,
+      "state": "migrated-in-3d-patch"
+    },
+    {
+      "corpus": "lox",
+      "file": "external/lox/heap.my",
+      "name": "heap::CallFrame",
+      "graph": true,
+      "self_referential": false,
+      "field_writes": 11,
+      "state": "migrated-in-3d-patch"
+    },
+    {
+      "corpus": "lox",
+      "file": "external/lox/heap.my",
+      "name": "heap::Marker",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d-patch"
+    },
+    {
+      "corpus": "lox",
+      "file": "external/lox/heap.my",
+      "name": "heap::Runtime",
+      "graph": true,
+      "self_referential": false,
+      "field_writes": 21,
+      "state": "migrated-in-3d-patch"
+    },
+    {
+      "corpus": "lox",
+      "file": "external/lox/interpreter.my",
+      "name": "interpreter::Interpreter",
+      "graph": true,
+      "self_referential": false,
+      "field_writes": 3,
+      "state": "migrated-in-3d-patch"
+    },
+    {
+      "corpus": "lox",
+      "file": "external/lox/object.my",
+      "name": "object::FunctionObj",
+      "graph": true,
+      "self_referential": false,
+      "field_writes": 3,
+      "state": "migrated-in-3d-patch"
+    },
+    {
+      "corpus": "lox",
+      "file": "external/lox/object.my",
+      "name": "object::UpvalueObj",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 4,
+      "state": "migrated-in-3d-patch"
+    },
+    {
+      "corpus": "lox",
+      "file": "external/lox/output.my",
+      "name": "output::Output",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 1,
+      "state": "migrated-in-3d-patch"
+    },
+    {
+      "corpus": "lox",
+      "file": "external/lox/parser.my",
+      "name": "parser::Parser",
+      "graph": true,
+      "self_referential": false,
+      "field_writes": 2,
+      "state": "migrated-in-3d-patch"
+    },
+    {
+      "corpus": "lox",
+      "file": "external/lox/resolver.my",
+      "name": "resolver::Resolver",
+      "graph": true,
+      "self_referential": false,
+      "field_writes": 6,
+      "state": "migrated-in-3d-patch"
+    },
+    {
+      "corpus": "lox",
+      "file": "external/lox/resolver.my",
+      "name": "resolver::Scope",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d-patch"
+    },
+    {
+      "corpus": "lox",
+      "file": "external/lox/scanner.my",
+      "name": "scanner::Scanner",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 14,
+      "state": "migrated-in-3d-patch"
+    },
+    {
+      "corpus": "lox",
+      "file": "external/lox/table.my",
+      "name": "table::Table",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 4,
+      "state": "migrated-in-3d-patch"
+    },
+    {
+      "corpus": "trial-T2",
+      "file": "external/trial-T2/calc.my",
+      "name": "calc::BinaryOp",
+      "graph": true,
+      "self_referential": true,
+      "field_writes": 0,
+      "state": "migrated-in-3d-patch"
+    },
+    {
+      "corpus": "trial-T2",
+      "file": "external/trial-T2/calc.my",
+      "name": "calc::UnaryMinus",
+      "graph": true,
+      "self_referential": true,
+      "field_writes": 0,
+      "state": "migrated-in-3d-patch"
+    },
+    {
+      "corpus": "schematic",
+      "file": "src/schematic/guest/io.my",
+      "name": "io::Output",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 6,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "src/stdlib",
+      "file": "src/stdlib/byte_builder.my",
+      "name": "byte_builder::Builder",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "src/stdlib",
+      "file": "src/stdlib/network.my",
+      "name": "network::Chunk",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d",
+      "note": "P1 census omitted generic Chunk declaration"
+    },
+    {
+      "corpus": "src/stdlib",
+      "file": "src/stdlib/network.my",
+      "name": "network::Failure",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/arena_class_escape.my",
+      "name": "arena_class_escape::Box",
+      "graph": true,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/arena_class_escape.my",
+      "name": "arena_class_escape::Empty",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/arena_class_escape.my",
+      "name": "arena_class_escape::Node",
+      "graph": true,
+      "self_referential": true,
+      "field_writes": 5,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/array_negative_index.my",
+      "name": "array_negative_index::Board",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 3,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/array_places.my",
+      "name": "array_places::Board",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 1,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/backlog/const_lengths___one_helper_serves_distinct_nominal_element_t.my",
+      "name": "const_lengths___one_helper_serves_distinct_nominal_element_t::A",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/backlog/const_lengths___one_helper_serves_distinct_nominal_element_t.my",
+      "name": "const_lengths___one_helper_serves_distinct_nominal_element_t::B",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/backlog/python_syntax___python_generic_value_records_use_square_cons.my",
+      "name": "python_syntax___python_generic_value_records_use_square_cons::Box<i64>",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/backlog/python_syntax___record_is_the_canonical_declaration_head_wit_2.my",
+      "name": "python_syntax___record_is_the_canonical_declaration_head_wit_2::LegacyPoint",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/builtin_context.my",
+      "name": "builtin_context::Holder",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/byte_buffer.my",
+      "name": "byte_buffer::Packet",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/callbacks.my",
+      "name": "callbacks::BoxCall<def(i64) -> i64 effects()>",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/field_augmented.my",
+      "name": "field_augmented::FieldCounter",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 11,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/field_augmented.my",
+      "name": "field_augmented::FieldHolder",
+      "graph": true,
+      "self_referential": false,
+      "field_writes": 2,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/gc_footprint.my",
+      "name": "gc_footprint::Node",
+      "graph": true,
+      "self_referential": true,
+      "field_writes": 1,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/gc_generations.my",
+      "name": "gc_generations::Node",
+      "graph": true,
+      "self_referential": true,
+      "field_writes": 2,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/migrated/generic_inference_case_2.my",
+      "name": "generic_inference_case_2::Box<i64>",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/migrated/generic_inference_case_3.my",
+      "name": "generic_inference_case_3::Chunk<i64,2>",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/migrated/python_generics_case_1.my",
+      "name": "python_generics_case_1::Pair<i64>",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/migrated/python_surface_case_2.my",
+      "name": "python_surface_case_2::Buffer",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/migrated/structural_constraints_case_9.my",
+      "name": "structural_constraints_case_9::A",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/migrated/structural_constraints_case_9.my",
+      "name": "structural_constraints_case_9::B",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/migrated/surface_collections_case_3.my",
+      "name": "surface_collections_case_3::Box<i64>",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/migrated/surface_collections_case_3.my",
+      "name": "surface_collections_case_3::Empty",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/migrated/surface_statements_case_1.my",
+      "name": "surface_statements_case_1::point",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/migrated/surface_statements_case_2.my",
+      "name": "surface_statements_case_2::Holder<List<i64>>",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/nominal_bodies.my",
+      "name": "nominal_bodies::Box<[2]i64>",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/nominal_bodies.my",
+      "name": "nominal_bodies::Box<i64>",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 1,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/nominal_instances.my",
+      "name": "nominal_instances::EmptyPhantom<nominal_instances::GrowPhantom<[1][1]i64>>",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/nominal_instances.my",
+      "name": "nominal_instances::EmptyPhantom<nominal_instances::GrowPhantom<[1]i64>>",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/nominal_instances.my",
+      "name": "nominal_instances::GrowPhantom<[1]i64>",
+      "graph": true,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/nominal_instances.my",
+      "name": "nominal_instances::GrowPhantom<i64>",
+      "graph": true,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/option_narrowing.my",
+      "name": "option_narrowing::Counter",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 2,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/option_niche.my",
+      "name": "option_niche::Node",
+      "graph": true,
+      "self_referential": true,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/option_propagation.my",
+      "name": "option_propagation::Node",
+      "graph": true,
+      "self_referential": true,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/print_rendering.my",
+      "name": "print_rendering::RenderBox",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/print_rendering.my",
+      "name": "print_rendering::RenderPair",
+      "graph": true,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/python_arrays.my",
+      "name": "python_arrays::Row",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/python_bytes.my",
+      "name": "python_bytes::BytesPacket",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/python_calls.my",
+      "name": "python_calls::Box<i64>",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/python_calls.my",
+      "name": "python_calls::Empty",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/python_collections.my",
+      "name": "python_collections::Box",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/python_collections.my",
+      "name": "python_collections::Cell<i64>",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 1,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/python_collections.my",
+      "name": "python_collections::ReceiverPoint",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 1,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/python_collections.my",
+      "name": "python_collections::WritebackPoint",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 2,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/python_core.my",
+      "name": "python_core::Counter",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 2,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/python_core.my",
+      "name": "python_core::Score",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/python_values.my",
+      "name": "python_values::ValuesBox",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/python_variants.my",
+      "name": "python_variants::ShapePoint",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/python_variants.my",
+      "name": "python_variants::VariantBox<i64>",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/python_variants.my",
+      "name": "python_variants::VariantNode",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/python_variants.my",
+      "name": "python_variants::VariantSpan",
+      "graph": false,
+      "self_referential": false,
+      "field_writes": 0,
+      "state": "migrated-in-3d"
+    },
+    {
+      "corpus": "tests/lang",
+      "file": "tests/lang/value_equality.my",
+      "name": "value_equality::Node",
+      "graph": true,
+      "self_referential": true,
+      "field_writes": 3,
+      "state": "migrated-in-3d"
+    }
+  ],
+  "excluded_historical_count": 24,
+  "excluded_historical": [
+    {
+      "file": "experiments/cascade/designs/B/main.my",
+      "line": 17,
+      "name": "Tally",
+      "reason": "archived comparative language-design variant"
+    },
+    {
+      "file": "experiments/cascade/designs/B/sexpr/tokenizer.my",
+      "line": 59,
+      "name": "Lexer",
+      "reason": "archived comparative language-design variant"
+    },
+    {
+      "file": "experiments/cascade/designs/P1/main.my",
+      "line": 17,
+      "name": "Tally",
+      "reason": "archived comparative language-design variant"
+    },
+    {
+      "file": "experiments/cascade/designs/P1/sexpr/tokenizer.my",
+      "line": 85,
+      "name": "Lexer",
+      "reason": "archived comparative language-design variant"
+    },
+    {
+      "file": "experiments/cascade/designs/P2/main.my",
+      "line": 17,
+      "name": "Tally",
+      "reason": "archived comparative language-design variant"
+    },
+    {
+      "file": "experiments/cascade/designs/P2/sexpr/tokenizer.my",
+      "line": 255,
+      "name": "Lexer",
+      "reason": "archived comparative language-design variant"
+    },
+    {
+      "file": "experiments/local-reasoning-audit-20260921/sources/class_field_augmented_rejected.my",
+      "line": 1,
+      "name": "Cursor",
+      "reason": "archived diagnostic probe intentionally exercising class rules"
+    },
+    {
+      "file": "experiments/local-reasoning-audit-20260921/sources/unannotated_class_write.my",
+      "line": 1,
+      "name": "Cursor",
+      "reason": "archived diagnostic probe intentionally exercising class rules"
+    },
+    {
+      "file": "experiments/perf-parity-plan-20260922/probes/barrier_store.my",
+      "line": 10,
+      "name": "Node",
+      "reason": "archived baseline and class-barrier benchmark"
+    },
+    {
+      "file": "experiments/perf-parity-plan-20260922/suite/binary_trees.my",
+      "line": 6,
+      "name": "Node",
+      "reason": "archived baseline and class-barrier benchmark"
+    },
+    {
+      "file": "experiments/perf-parity-plan-20260922/suite/binary_trees_arena.my",
+      "line": 8,
+      "name": "Node",
+      "reason": "archived baseline and class-barrier benchmark"
+    },
+    {
+      "file": "experiments/perf-parity-plan-20260922/suite/nbody_class.my",
+      "line": 10,
+      "name": "Body",
+      "reason": "archived baseline and class-barrier benchmark"
+    },
+    {
+      "file": "experiments/project-invocation-m3/pack/apps/sexpr-port/snapshot/main.my",
+      "line": 17,
+      "name": "Tally",
+      "reason": "archived project-invocation source snapshot"
+    },
+    {
+      "file": "experiments/project-invocation-m3/pack/apps/sexpr-port/snapshot/sexpr/parser.my",
+      "line": 21,
+      "name": "Cursor",
+      "reason": "archived project-invocation source snapshot"
+    },
+    {
+      "file": "experiments/project-invocation-m3/pack/apps/sexpr-port/snapshot/sexpr/tokenizer.my",
+      "line": 101,
+      "name": "Lexer",
+      "reason": "archived project-invocation source snapshot"
+    },
+    {
+      "file": "experiments/readiness-probes-2026-09-18/expr/main.my",
+      "line": 54,
+      "name": "Binary",
+      "reason": "archived readiness source snapshot"
+    },
+    {
+      "file": "experiments/readiness-probes-2026-09-18/expr/main.my",
+      "line": 59,
+      "name": "Unary",
+      "reason": "archived readiness source snapshot"
+    },
+    {
+      "file": "experiments/readiness-probes-2026-09-18/expr/main.my",
+      "line": 73,
+      "name": "Parser",
+      "reason": "archived readiness source snapshot"
+    },
+    {
+      "file": "experiments/readiness-probes-2026-09-18/proj/sexpr/parser.my",
+      "line": 14,
+      "name": "State",
+      "reason": "archived readiness source snapshot"
+    },
+    {
+      "file": "experiments/readiness-probes-2026-09-18/sexpr-bytes/main.my",
+      "line": 17,
+      "name": "Cursor",
+      "reason": "archived readiness source snapshot"
+    },
+    {
+      "file": "experiments/readiness-probes-2026-09-18/sexpr-str/main.my",
+      "line": 19,
+      "name": "Cursor",
+      "reason": "archived readiness source snapshot"
+    },
+    {
+      "file": "experiments/struct-layout-audit-20260920/probe.my",
+      "line": 21,
+      "name": "Counter",
+      "reason": "archived class-layout measurement probe"
+    },
+    {
+      "file": "velocity/suites/idioms/a38_class_methods.my",
+      "line": 2,
+      "name": "Point",
+      "reason": "Python syntax/rejection corpus; class token is an input, not mylang code"
+    },
+    {
+      "file": "velocity/suites/idioms/a39_dataclass.my",
+      "line": 5,
+      "name": "Point",
+      "reason": "Python syntax/rejection corpus; class token is an input, not mylang code"
+    }
+  ]
+}

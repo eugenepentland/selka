@@ -27,9 +27,9 @@ module sexpr.tokenizer
 #    that is not valid UTF-8 becomes "" rather than being preserved raw.
 #  - The byte loops do not touch the Lexer's cursor fields. Zig's methods read
 #    and write `self.pos`/`self.line`/`self.col` because they are inlined into
-#    one optimizer unit; here the Lexer is a heap object the backend cannot see
-#    through, so `next_raw` and the readers hold src/length/pos/line/col in
-#    local variables and store the cursor back only at token boundaries.
+#    one optimizer unit; here the Lexer is a value record with a three-element
+#    mutable cursor list, so `next_raw` and the readers hold the positions in
+#    locals and store the cursor back only at token boundaries.
 #  - The string body and the comment tail are scanned as runs: an inner loop
 #    looks for the one byte class that ends the run, and the column moves once
 #    for the whole run instead of once per byte. Blanks stay per byte, because a
@@ -94,19 +94,16 @@ public record LexError:
 
 
 # Mirror of Zig's `Tokenizer` struct: the source plus the `pos`/`line`/`col`
-# cursor used for span reporting. A class, so one shared cursor travels from
-# token to token the way `*Tokenizer` methods mutate theirs in Zig. The cursor
-# is only read and written at token boundaries: while scanning, `next_raw` and
-# the readers below keep `src`/`length`/`pos`/`line`/`col` in local variables.
-public class Lexer:
+# cursor used for span reporting. `mut Lexer` carries the cursor from token to
+# token. The positions are read and written at token boundaries; while scanning,
+# `next_raw` and the readers keep them in local variables.
+public record Lexer:
     src: bytes
-    pos: int
-    line: int
-    col: int
+    cursor: list[int]
 
 
 public def lexer(src: bytes) -> Lexer:
-    return Lexer(src=src, pos=0, line=1, col=1)
+    return Lexer(src=src, cursor=[0, 1, 1])
 
 
 # Reusable source-location lookup for diagnostics produced outside the normal
@@ -140,10 +137,10 @@ def peek(src: bytes, length: int, index: int) -> int:
 
 # Store the scan cursor back into the Lexer. Called once per token, never per
 # byte: inside a token the cursor is local.
-def store_cursor(lx: Lexer, pos: int, line: int, col: int):
-    lx.pos = pos
-    lx.line = line
-    lx.col = col
+def store_cursor(lx: mut Lexer, pos: int, line: int, col: int):
+    lx.cursor[0] = pos
+    lx.cursor[1] = line
+    lx.cursor[2] = col
 
 
 def is_space(byte: int) -> bool:
@@ -242,12 +239,12 @@ def si_suffix_len(src: bytes, length: int, pos: int) -> int:
 # therefore tests two bytes per byte instead of three and does the escape
 # bookkeeping once per quote instead of once per body byte; the column still
 # advances once per run, with the delimiter doing its own cursor update.
-def read_string(lx: Lexer, offset: int) -> Result[RawToken, LexError]:
+def read_string(lx: mut Lexer, offset: int) -> Result[RawToken, LexError]:
     src = lx.src
     length = len(src)
-    pos = lx.pos
-    line = lx.line
-    col = lx.col
+    pos = lx.cursor[0]
+    line = lx.cursor[1]
+    col = lx.cursor[2]
     start_line = line
     start_col = col
     pos = pos + 1  # skip opening "
@@ -287,38 +284,38 @@ def read_string(lx: Lexer, offset: int) -> Result[RawToken, LexError]:
         closed = True
         break
     if not closed:
-        store_cursor(lx, pos, line, col)
+        store_cursor(mut lx, pos, line, col)
         return Err(LexError(message="unterminated string", offset=offset, line=start_line))
     text_end = pos
     pos = pos + 1  # skip closing "
     col = col + 1
-    store_cursor(lx, pos, line, col)
+    store_cursor(mut lx, pos, line, col)
     return Ok(raw(Kind.string, offset, pos, start, text_end, start_line, start_col))
 
 
-def read_atom(lx: Lexer, offset: int) -> RawToken:
+def read_atom(lx: mut Lexer, offset: int) -> RawToken:
     src = lx.src
     length = len(src)
-    pos = lx.pos
-    line = lx.line
-    col = lx.col
+    pos = lx.cursor[0]
+    line = lx.cursor[1]
+    col = lx.cursor[2]
     start_line = line
     start_col = col
     start = pos
     while pos < length and is_atom_continue(src[pos]):
         pos = pos + 1
         col = col + 1
-    store_cursor(lx, pos, line, col)
+    store_cursor(mut lx, pos, line, col)
     return raw(Kind.atom, offset, pos, start, pos, start_line, start_col)
 
 
 # An operator atom, allowing the two-character `>= <= == !=` forms.
-def read_operator(lx: Lexer, offset: int) -> RawToken:
+def read_operator(lx: mut Lexer, offset: int) -> RawToken:
     src = lx.src
     length = len(src)
-    pos = lx.pos
-    line = lx.line
-    col = lx.col
+    pos = lx.cursor[0]
+    line = lx.cursor[1]
+    col = lx.cursor[2]
     start_line = line
     start_col = col
     start = pos
@@ -327,7 +324,7 @@ def read_operator(lx: Lexer, offset: int) -> RawToken:
     if peek(src, length, pos) == 61:
         pos = pos + 1
         col = col + 1
-    store_cursor(lx, pos, line, col)
+    store_cursor(mut lx, pos, line, col)
     return raw(Kind.atom, offset, pos, start, pos, start_line, start_col)
 
 
@@ -335,12 +332,12 @@ def read_operator(lx: Lexer, offset: int) -> RawToken:
 # one of `mm`/`mil`, an SI suffix, `%`, or — when more atom characters follow —
 # a fallback to an atom (`204928-0301.stp`, `12.5abc`, `100kHz`, `5V3`).
 # None of those bytes can be a newline, so only the column moves.
-def read_number(lx: Lexer, offset: int) -> RawToken:
+def read_number(lx: mut Lexer, offset: int) -> RawToken:
     src = lx.src
     length = len(src)
-    pos = lx.pos
-    line = lx.line
-    col = lx.col
+    pos = lx.cursor[0]
+    line = lx.cursor[1]
+    col = lx.cursor[2]
     start_line = line
     start_col = col
     start = pos
@@ -364,12 +361,12 @@ def read_number(lx: Lexer, offset: int) -> RawToken:
         if peek(src, length, pos + 1) == 109 and not is_atom_continue(peek(src, length, pos + 2)):
             pos = pos + 2
             col = col + 2
-            store_cursor(lx, pos, line, col)
+            store_cursor(mut lx, pos, line, col)
             return raw(Kind.unit_val, offset, pos, start, num_end, start_line, start_col)
         if peek(src, length, pos + 1) == 105 and peek(src, length, pos + 2) == 108 and not is_atom_continue(peek(src, length, pos + 3)):
             pos = pos + 3
             col = col + 3
-            store_cursor(lx, pos, line, col)
+            store_cursor(mut lx, pos, line, col)
             return raw(Kind.unit_val, offset, pos, start, num_end, start_line, start_col)
     # SI scale (or a bare unit letter); the text keeps the suffix verbatim so
     # the parser can apply the scale.
@@ -377,22 +374,22 @@ def read_number(lx: Lexer, offset: int) -> RawToken:
     if suffix > 0:
         pos = pos + suffix
         col = col + suffix
-        store_cursor(lx, pos, line, col)
+        store_cursor(mut lx, pos, line, col)
         return raw(Kind.si_val, offset, pos, start, pos, start_line, start_col)
     # Percent literal: only when the sign ends the token, so a standalone `%`
     # still lexes as an operator atom.
     if peek(src, length, pos) == 37 and not is_atom_continue(peek(src, length, pos + 1)):
         pos = pos + 1
         col = col + 1
-        store_cursor(lx, pos, line, col)
+        store_cursor(mut lx, pos, line, col)
         return raw(Kind.si_val, offset, pos, start, pos, start_line, start_col)
     if is_atom_continue(peek(src, length, pos)):
         while pos < length and is_atom_continue(src[pos]):
             pos = pos + 1
             col = col + 1
-        store_cursor(lx, pos, line, col)
+        store_cursor(mut lx, pos, line, col)
         return raw(Kind.atom, offset, pos, start, pos, start_line, start_col)
-    store_cursor(lx, pos, line, col)
+    store_cursor(mut lx, pos, line, col)
     if is_float:
         return raw(Kind.float_val, offset, pos, start, pos, start_line, start_col)
     return raw(Kind.int_val, offset, pos, start, pos, start_line, start_col)
@@ -404,12 +401,12 @@ def read_number(lx: Lexer, offset: int) -> RawToken:
 #
 # The skip loop is the only place the scanner itself consumes a newline, so it
 # is the only place line/col need updating here; the readers do their own.
-public def next_raw(lx: Lexer) -> Result[RawToken, LexError]:
+public def next_raw(lx: mut Lexer) -> Result[RawToken, LexError]:
     src = lx.src
     length = len(src)
-    pos = lx.pos
-    line = lx.line
-    col = lx.col
+    pos = lx.cursor[0]
+    line = lx.cursor[1]
+    col = lx.cursor[2]
     # Skip whitespace and `;` comments to end of line. A comment is consumed as
     # a run up to the next line break, so the column moves once for the whole
     # comment. Blanks stay per byte: a single blank between two tokens is the
@@ -439,24 +436,24 @@ public def next_raw(lx: Lexer) -> Result[RawToken, LexError]:
     offset = pos
     byte = peek(src, length, pos)
     if byte == -1:
-        store_cursor(lx, pos, line, col)
+        store_cursor(mut lx, pos, line, col)
         return Ok(raw(Kind.eof, offset, offset, offset, offset, line, col))
     if byte == 40:
-        store_cursor(lx, pos + 1, line, col + 1)
+        store_cursor(mut lx, pos + 1, line, col + 1)
         return Ok(raw(Kind.lparen, offset, pos + 1, offset, pos + 1, line, col))
     if byte == 41:
-        store_cursor(lx, pos + 1, line, col + 1)
+        store_cursor(mut lx, pos + 1, line, col + 1)
         return Ok(raw(Kind.rparen, offset, pos + 1, offset, pos + 1, line, col))
     # Hand the cursor over at the token boundary; each reader re-reads it once.
-    store_cursor(lx, pos, line, col)
+    store_cursor(mut lx, pos, line, col)
     if byte == 34:
-        return read_string(lx, offset)
+        return read_string(mut lx, offset)
     if is_digit(byte) or (byte == 45 and is_digit(peek(src, length, pos + 1))):
-        return Ok(read_number(lx, offset))
+        return Ok(read_number(mut lx, offset))
     if is_atom_start(byte):
-        return Ok(read_atom(lx, offset))
+        return Ok(read_atom(mut lx, offset))
     if is_operator_char(byte):
-        return Ok(read_operator(lx, offset))
+        return Ok(read_operator(mut lx, offset))
     return Err(LexError(message="unexpected character", offset=offset, line=line))
 
 
@@ -465,7 +462,7 @@ public def tokenize(src: bytes) -> Result[list[Token], LexError]:
     lx = lexer(src)
     tokens: list[Token] = []
     while True:
-        match next_raw(lx):
+        match next_raw(mut lx):
             case Ok(found):
                 token = materialize(src, found)
                 tokens.append(token)

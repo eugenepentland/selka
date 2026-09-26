@@ -14,7 +14,7 @@ import sexpr.parser as parser
 import sexpr.printer as printer
 
 
-class Tally:
+record Tally:
     forms: int
     nodes: int
     atoms: int
@@ -26,34 +26,36 @@ class Tally:
     values: float
 
 
-def tally(counts: Tally, node: ast.Node, depth: int) mutates(counts):
-    counts.nodes = counts.nodes + 1
-    if depth > counts.depth:
-        counts.depth = depth
+def tally(counts: Tally, node: ast.Node, depth: int) -> Tally:
+    updated = counts
+    updated.nodes = updated.nodes + 1
+    if depth > updated.depth:
+        updated.depth = depth
     match node:
         case ast.Node.atom(_, _):
-            counts.atoms = counts.atoms + 1
+            updated.atoms = updated.atoms + 1
         case ast.Node.string(_, _):
-            counts.strings = counts.strings + 1
+            updated.strings = updated.strings + 1
         case ast.Node.integer(value, _):
-            counts.ints = counts.ints + 1
-            counts.values = counts.values + float(value)
+            updated.ints = updated.ints + 1
+            updated.values = updated.values + float(value)
         case ast.Node.decimal(value, _, _):
-            counts.floats = counts.floats + 1
-            counts.values = counts.values + value
+            updated.floats = updated.floats + 1
+            updated.values = updated.values + value
         case ast.Node.measure(value, _):
-            counts.measures = counts.measures + 1
-            counts.values = counts.values + value
+            updated.measures = updated.measures + 1
+            updated.values = updated.values + value
         case ast.Node.form(entries, _):
-            counts.forms = counts.forms + 1
+            updated.forms = updated.forms + 1
             for child in entries:
-                tally(counts, child, depth + 1)
+                updated = tally(updated, child, depth + 1)
 
+    return updated
 
 def summarise(nodes: list[ast.Node]) -> str:
     counts = Tally(forms=0, nodes=0, atoms=0, strings=0, ints=0, floats=0, measures=0, depth=0, values=0.0)
     for node in nodes:
-        tally(counts, node, 0)
+        counts = tally(counts, node, 0)
     return f"forms={counts.forms} nodes={counts.nodes} atoms={counts.atoms} strings={counts.strings} ints={counts.ints} floats={counts.floats} measures={counts.measures} max_depth={counts.depth} value_sum={counts.values}"
 
 

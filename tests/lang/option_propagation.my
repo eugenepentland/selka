@@ -6,7 +6,7 @@ module option_propagation
 # unwrapped reference must stay alive across the allocation that follows it.
 
 
-class Node:
+record Node:
     value: int
     left: Option[Node]
 

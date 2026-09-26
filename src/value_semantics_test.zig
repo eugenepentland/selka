@@ -122,9 +122,9 @@ test "a transfer neither side writes is a borrow and copies nothing" {
 }
 
 // spec-case: VALUE-SEMANTICS-2
-test "a list read out of a class object is always a real copy" {
+test "a read-only list taken from a record borrows until a write" {
     const through_class =
-        \\class Box:
+        \\record Box:
         \\    items: list[int]
         \\
         \\def main() -> int:
@@ -134,7 +134,8 @@ test "a list read out of a class object is always a real copy" {
         \\
     ;
     const on = try sites(through_class, true);
-    try t.expect(on.copies >= 1);
+    try t.expect(on.placed >= 1);
+    try t.expectEqual(@as(usize, 0), on.copies);
 }
 
 // spec-case: VALUE-SEMANTICS-2
@@ -192,8 +193,10 @@ test "a write through a loop or match binding is a binding write" {
 }
 
 // spec-case: VALUE-SEMANTICS-4
-test "a class binding and a match on a call result stay writable" {
-    try expectCodes("class Body:\n    x: int\n\ndef f(bodies: mut list[Body]) -> None:\n    for b in bodies:\n        b.x = 1\n", "ok", "ok");
+test "a record loop binding is read-only and a match on a call result stays writable" {
+    const loop_write = "record Body:\n    items: list[int]\n\ndef f(bodies: mut list[Body]) -> None:\n    for b in bodies:\n        b.items.append(1)\n";
+    try expectCodes(loop_write, "ok", "E_MUTATION_MARKER");
+    try t.expectEqual(@as(usize, 1), try countCode(loop_write, "E_VALUE_BINDING_WRITE", true));
     const call_result =
         \\def make() -> Option[list[int]]:
         \\    return Some([1])
@@ -307,11 +310,26 @@ test "a mut parameter whose only change went to a local copy says to store it ba
 }
 
 // spec-case: VALUE-SEMANTICS-7
-test "old of a collection is a value under the switch and a class stays shared" {
+test "old of a collection is a value under the switch" {
     const captured = "@ensures(len(xs) == len(old(xs)) + 1)\ndef push(xs: mut list[int]) -> None:\n    xs.append(1)\n";
     try expectCodes(captured, "E_CONTRACT_OLD_SHARED", "ok");
     const class_capture = "class Box:\n    n: int\n\n@ensures(old(b).n <= b.n)\ndef bump(b: mut Box) -> None:\n    b.n = b.n + 1\n";
-    try expectCodes(class_capture, "E_CONTRACT_OLD_SHARED", "E_CONTRACT_OLD_SHARED");
+    try expectCodes(class_capture, "E_CONTRACT_OLD_SHARED", "E_VALUE_CLASS");
+}
+
+// spec: VALUE-SEMANTICS-10
+test "class and builtin Cell retire only under value semantics" {
+    try expectCodes("class Box:\n    n: int\n", "ok", "E_VALUE_CLASS");
+    try expectCodes("def peek(slot: Cell[int]) -> int:\n    return slot.value\n", "ok", "E_VALUE_CELL");
+    try expectCodes("def make() -> int:\n    slot = Cell(value=3)\n    return slot.value\n", "ok", "E_VALUE_CELL");
+    try expectCodes("record Cell:\n    value: int\n\ndef make() -> int:\n    return Cell(value=3).value\n", "ok", "ok");
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const class_message = try switchedMessage(arena.allocator(), "class Box:\n    n: int\n");
+    try t.expect(std.mem.indexOf(u8, class_message, "recursive union") != null);
+    try t.expect(std.mem.indexOf(u8, class_message, "pool handle") != null);
+    const cell_message = try switchedMessage(arena.allocator(), "def peek(slot: Cell[int]) -> int:\n    return slot.value\n");
+    try t.expect(std.mem.indexOf(u8, cell_message, "store-back") != null);
 }
 
 // spec-case: VALUE-SEMANTICS-1

@@ -1,7 +1,7 @@
 module surface_statements_case_1
 
 
-class point:
+record point:
     Value: i64
 
 

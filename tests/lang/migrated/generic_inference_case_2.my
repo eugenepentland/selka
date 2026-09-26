@@ -1,7 +1,7 @@
 module generic_inference_case_2
 
 
-class Box[T]:
+record Box[T]:
     value: T
 
 
