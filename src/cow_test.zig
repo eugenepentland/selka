@@ -112,6 +112,38 @@ test "copy on write: inline transfer publishes roots only in its allocating fall
     try std.testing.expectEqual(@as(usize, 1), count(il[call..done], " storel %root_mark,"));
 }
 
+// spec: QBE-VARIANT-ELEMENT-1
+test "copy on write: immediate variant dispatch copies only its selected payload" {
+    const saved = value_semantics.enabled();
+    value_semantics.setEnabled(true);
+    defer value_semantics.setEnabled(saved);
+    const source =
+        \\record Pair:
+        \\    first: int
+        \\    second: int
+        \\
+        \\union Item:
+        \\    pair: Pair,
+        \\    empty
+        \\
+        \\def read(items: list[Item], index: int) -> int:
+        \\    match items[index]:
+        \\        case Item.pair(payload):
+        \\            return payload.first + payload.second
+        \\        case Item.empty:
+        \\            return 0
+        \\
+        \\def main() -> int:
+        \\    return read([Item.pair(Pair(1, 2))], -1)
+    ;
+    const a = std.testing.allocator;
+    const il = try unitText(a, source, "read", checks);
+    defer a.free(il);
+    try std.testing.expectEqual(@as(usize, 1), count(il, " blit "));
+    try std.testing.expect(count(il, "myl_qbe_fail_normalized_index_bounds") > 0);
+    try std.testing.expectEqual(@as(i64, 3), try run(a, source, true));
+}
+
 // spec: COW-SHARED-1
 test "copy on write: a copy transfer shares the list and the first write through either name copies it" {
     try std.testing.expectEqual(@as(i64, 23), try run(std.testing.allocator, assigned, false));
