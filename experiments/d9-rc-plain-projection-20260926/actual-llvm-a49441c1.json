@@ -1,0 +1,61 @@
+{
+  "source_commit": "a49441c1",
+  "purpose": "actual LLVM replacement validation for earlier mislabeled plain-projection evidence",
+  "compiler_sha256": "fc1f3fc16f5f3d1deecf3a7446ac1df27362e2d7dedf18e77a39ea9b7263361e",
+  "build": {
+    "cmd": [
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/scripts/build-slot.sh",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/install-before-frame/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/src/schematic/guest/main.my",
+      "--project",
+      "--provider",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/src/schematic/native_schematic.c",
+      "--zig",
+      "/home/epentland/.local/bin/zig",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/schematic-actual-llvm/schematic.llvm",
+      "--max-frames=1024",
+      "--backend",
+      "llvm",
+      "--llvm-opt",
+      "3",
+      "--lto",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/schematic-actual-llvm/cache",
+      "--rc-runtime=stats"
+    ],
+    "ok": true,
+    "seconds": 37.81,
+    "sha256": "ccf638a41f82ffead34b4b472f409f0193c88fb805f3cd82d0841f6e5bc94d77",
+    "size": 1478376,
+    "stderr": "build-slot: all 3 build slot(s) busy; waiting (0s so far)\nbuild-slot: build slot 2 after 15s (all 3 build slot(s) busy)\nlayout.my:223:25: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def nearest(pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], rows: list[Row], nets: list[g.Net], lookup: list[int]) -> int:\n                          ^\nlayout.my:274:23: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def depth(pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net], lookup: list[int]) -> int:\n                        ^\nlayout.my:274:44: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def depth(pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net], lookup: list[int]) -> int:\n                                             ^\nlayout_routes.my:42:50: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def blocked(a: l.Point, b: l.Point, net_id: int, parts: list[c.Part], pins: list[c.Pin], points: list[l.Point]) -> bool:\n                                                   ^\n"
+  },
+  "checks": {
+    "schematic/fixture": {
+      "status": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v2-counting\",\"saturated\":false,\"owner_acquire\":5710224,\"owner_release\":5762935,\"hold_acquire\":26139,\"hold_release\":26139,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":52711,\"arena_allocate\":0,\"retire\":52711,\"clone_shell\":26282,\"unique_check\":16850}\n",
+      "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+      "svg_bytes": 49617,
+      "ok": true
+    },
+    "schematic/changed-net": {
+      "status": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v2-counting\",\"saturated\":false,\"owner_acquire\":5710378,\"owner_release\":5763089,\"hold_acquire\":26199,\"hold_release\":26199,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":52711,\"arena_allocate\":0,\"retire\":52711,\"clone_shell\":26282,\"unique_check\":16880}\n",
+      "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+      "svg_bytes": 49647,
+      "ok": true
+    },
+    "schematic/changed-value": {
+      "status": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v2-counting\",\"saturated\":false,\"owner_acquire\":5710224,\"owner_release\":5762935,\"hold_acquire\":26139,\"hold_release\":26139,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":52711,\"arena_allocate\":0,\"retire\":52711,\"clone_shell\":26282,\"unique_check\":16850}\n",
+      "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+      "svg_bytes": 49617,
+      "ok": true
+    }
+  }
+}
