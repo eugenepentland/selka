@@ -20,6 +20,9 @@ pub fn analysis(comptime E: type, self: *E) Error!ownership.Analysis {
 /// Make one guarded local unique, preserving a borrowed caller's owning edge.
 /// The helper sets the guard only when a borrowed input acquired a fresh clone.
 pub fn local(comptime E: type, self: *E, unique: cow.Unique) Error!void {
+    if (unique.alias != cow.none and receiverFilled(E, self, unique.alias)) {
+        return local(E, self, .{ .local = unique.alias });
+    }
     const ty = self.function.scope.locals[unique.local].ty;
     const address = self.temp();
     const guard = try frame.guard(E, self, unique.local);
@@ -77,4 +80,12 @@ pub fn receiverParent(comptime E: type, self: *E, index: usize) ?u32 {
 pub fn success(comptime E: type, self: *E, done: usize) Error!void {
     const label = self.temp();
     try self.print(" jnz %v{d}, @rcunique{d}, @failure\n@rcunique{d}\n", .{ done, label, label });
+}
+
+fn receiverFilled(comptime E: type, self: *E, index: usize) bool {
+    if (receiverParent(E, self, index) == null) return false;
+    for (self.function.scope.instructions[0..self.pc]) |instruction| {
+        if (instruction.op == .store_local and @backingInt(instruction.op.store_local) == index) return true;
+    }
+    return false;
 }

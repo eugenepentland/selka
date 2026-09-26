@@ -41,7 +41,9 @@ fn store(comptime E: type, self: *E, index: usize, operand: usize) Error!void {
     if (@import("qbe_rc_unique.zig").receiverParent(E, self, index)) |parent| {
         try values.drop(E, self, operand);
         try frame.drop(E, self, index);
+        try @import("qbe_rc_unique.zig").local(E, self, .{ .local = parent });
         const value = try self.load("l", parent);
+        try @import("qbe_cow.zig").Lower(E).borrowReceiver(self, index, value);
         try self.print(" storel %v{d}, %l{d}\n", .{ value, index });
         return;
     }
@@ -49,6 +51,7 @@ fn store(comptime E: type, self: *E, index: usize, operand: usize) Error!void {
         const value = try self.load("s", operand);
         try values.drop(E, self, operand);
         try frame.drop(E, self, index);
+        try @import("qbe_cow.zig").Lower(E).borrowReceiver(self, index, value);
         try self.print(" storel %v{d}, %l{d}\n", .{ value, index });
         return;
     }

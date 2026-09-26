@@ -1317,3 +1317,5 @@ host failure in one worker leaves the units the other workers hold running.
 - [RC-RUNTIME-CONTRACT-1] Native memory selection uses explicit versioned GC, RC and counted-RC ownership contracts; unknown versions are rejected, inherited RC cannot change legacy-sharing behavior, and an explicit RC request with legacy sharing is incompatible. Lowering reads one normalized process selection rather than independently parsing environment state. RC remains experimental with GC selected until its acceptance gate passes.
 
 - [RC-UNIQUE-LOWER-1] Experimental RC mutations check physical owner counts through typed guarded slots. Failed detachment leaves the original owner intact and preserves its runtime status; borrowed inputs adopt only a fresh clone. Semantic COW loop hoisting remains disabled until physical temporary ownership is proved compatible.
+
+- [RC-RECEIVER-LOWER-1] Experimental RC call and pending receiver scopes use non-sharing lifetime holds and typed pin journals. Projections borrow prepared candidates until the mutator publishes its result; normal completion restores pins before dropping holds, and frame cleanup unwinds scopes on every trap or return.

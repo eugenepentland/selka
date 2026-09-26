@@ -17,7 +17,10 @@ pub fn Lower(comptime E: type) type {
             const state = get(E, self) orelse return 0;
             var total = frame_bytes + count(E, self, state) * (entry_bytes + 8);
             for (state.operands) |operand| total += alignedBytes(operand.bytes);
-            return total + alignedBytes(state.pending) + 56;
+            for (self.function.scope.locals, 0..) |_, index| if (receiverStorage(E, self, index)) {
+                total += 32;
+            };
+            return total + alignedBytes(state.pending) + 120;
         }
         /// Reserve table, guards and stable operand/pending-value buffers.
         pub fn allocate(self: *E) Error!void {
@@ -29,6 +32,12 @@ pub fn Lower(comptime E: type) type {
             try self.allocateSlot("rcwork", state.pending);
             try self.allocateSlot("rcinternal", 8);
             try self.allocateSlot("rcsort", 48);
+            try self.allocateSlot("rccall", 32);
+            try self.allocateSlot("rcplace", 32);
+            for (self.function.scope.locals, 0..) |_, index| if (receiverStorage(E, self, index)) {
+                try self.allocateIndex("rcborrow", index, 32);
+                try self.print(" call $memset(l %rcborrow{d}, w 0, l 32)\n", .{index});
+            };
         }
         /// Link only after every guard is initialized and every parameter is stored.
         pub fn enter(self: *E) Error!void {
@@ -122,4 +131,9 @@ fn count(comptime E: type, self: *E, state: *state_model.State) u64 {
 }
 fn alignedBytes(bytes_value: u64) u64 {
     return (bytes_value + 7) & ~@as(u64, 7);
+}
+
+fn receiverStorage(comptime E: type, self: *E, index: usize) bool {
+    const plan = self.cow.?.plan;
+    return plan.place(index) != null or (index < plan.aliases.len and plan.aliases[index] != @import("cow_plan.zig").none);
 }
