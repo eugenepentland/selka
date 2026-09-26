@@ -1,0 +1,17 @@
+{
+  "replace": {
+    "compiler_rt.fastMemset": 3,
+    "myl_qbe_heap": 1,
+    "myl_qbe_region_mark": 1,
+    "myl_qbe_rc_frame_enter": 1,
+    "myl_qbe_rc_slot_drop": 2,
+    "myl_qbe_rc_unique_local": 1,
+    "myl_qbe_rc_scope_begin": 1,
+    "myl_qbe_rc_scope_pin": 1,
+    "myl_qbe_rc_frame_cleanup": 2,
+    "myl_qbe_rc_frame_leave": 2,
+    "myl_native_dictionary_write": 1,
+    "myl_qbe_fail_allocation": 1,
+    "myl_qbe_rc_scope_end": 1
+  }
+}

@@ -142,6 +142,18 @@ fn finish(comptime E: type, self: *E, result: values.Result) Error!void {
 
 /// Own the complete base before a fallible aggregate update or index check.
 pub fn prepareBase(comptime E: type, self: *E, ty: typed.Type, base: usize) Error!usize {
+    const shape = frame.get(E, self).?.catalog.get(ty) catch return error.InternalError;
+    if (!shape.counted and !shape.unique_drop) {
+        if (!self.program.records[ty.recordIndex()].isManagedRecord() and (try self.layout(ty)).size != 0) {
+            // The same private per-PC scratch used by ordinary GC updates is
+            // separate from operand/local/backing storage. Plain bits have no
+            // publication, region, pin or cleanup obligation to prepare.
+            const source = try self.load("s", base);
+            const storage = try self.aggregatePointer();
+            try self.print(blit_value, .{ source, storage, (try self.layout(ty)).size });
+            return storage;
+        }
+    }
     try values.prepareOperand(E, self, ty, base);
     const work = try values.workAddress(E, self);
     const managed = self.program.records[ty.recordIndex()].isManagedRecord();

@@ -1,0 +1,17 @@
+{
+  "parent": "e9cde8d6",
+  "steps": 10000,
+  "guest_source_sha256": "32f2aa44dd28aa52b7fed916bb057dccf38b53e5bcb0af2b7d8c7b5d2c1fdce7",
+  "source_changes": {
+    "src/qbe_rc_inert_receiver.zig": "8b8605aa4a55cdd2e83b8e066aad2d7d75b02da9f1bddff31f43e30946a6eb4b",
+    "src/qbe_rc_inert_receiver_test.zig": "6b1cee9fdf32ee0586365cfe5a0a5b671dbeaecd88012b2c42232d08f22cc0ea",
+    "tests/lang/rc_inert_receivers.my": "15876aabd131b5115af924403594738f8152aafba8a75c0da7a5a440243c3b48"
+  },
+  "compiler_before": {
+    "sha256": "11d7a1936e91503c4d84259ff00bd0ded643aa974a6afff5b514b898effab044"
+  },
+  "compiler_after": {
+    "sha256": "a438f3bccec1e4c6683b0908feaed1fa78929c4556cf42651d26ad2fc1299f6a"
+  },
+  "scope": "Isolated inert UPDATE_RECORD proof on top of terminal read admission; excludes concurrent plain aggregate stores/updates and C retain_replace changes."
+}

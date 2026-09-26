@@ -1,0 +1,324 @@
+{
+  "weighted_period": 501600000,
+  "method": "One leaf PC per instruction sample, exact nm function extents; no inclusive call-chain sum.",
+  "functions": [
+    {
+      "symbol": "myl_f_e40dfff1a71eb7baf65ea49495977ddd33d81611a9c59c5573fc42205baa7e85",
+      "name": "advance",
+      "period": 67800000,
+      "percent": 13.516746411483254
+    },
+    {
+      "symbol": "myl_rc_shape_resolve",
+      "name": "myl_rc_shape_resolve",
+      "period": 51600000,
+      "percent": 10.287081339712918
+    },
+    {
+      "symbol": "myl_rc_native_retain_replace",
+      "name": "myl_rc_native_retain_replace",
+      "period": 39900000,
+      "percent": 7.954545454545454
+    },
+    {
+      "symbol": "myl_rc_descriptor_find",
+      "name": "myl_rc_descriptor_find",
+      "period": 37300000,
+      "percent": 7.4362041467304625
+    },
+    {
+      "symbol": "myl_rc_native_has_unique",
+      "name": "myl_rc_native_has_unique",
+      "period": 28500000,
+      "percent": 5.681818181818182
+    },
+    {
+      "symbol": "external/unresolved",
+      "name": "external/unresolved",
+      "period": 24800000,
+      "percent": 4.944178628389155
+    },
+    {
+      "symbol": "memcpy",
+      "name": "memcpy",
+      "period": 22000000,
+      "percent": 4.385964912280702
+    },
+    {
+      "symbol": "myl_rc_loan_copy",
+      "name": "myl_rc_loan_copy",
+      "period": 17500000,
+      "percent": 3.488835725677831
+    },
+    {
+      "symbol": "walk",
+      "name": "walk",
+      "period": 16900000,
+      "percent": 3.369218500797448
+    },
+    {
+      "symbol": "myl_rc_value_seed",
+      "name": "myl_rc_value_seed",
+      "period": 16700000,
+      "percent": 3.3293460925039873
+    },
+    {
+      "symbol": "myl_rc_drain",
+      "name": "myl_rc_drain",
+      "period": 16500000,
+      "percent": 3.289473684210526
+    },
+    {
+      "symbol": "myl_rc_meta_free",
+      "name": "myl_rc_meta_free",
+      "period": 16300000,
+      "percent": 3.2496012759170654
+    },
+    {
+      "symbol": "myl_rc_shape_depth",
+      "name": "myl_rc_shape_depth",
+      "period": 11000000,
+      "percent": 2.192982456140351
+    },
+    {
+      "symbol": "memset",
+      "name": "memset",
+      "period": 10300000,
+      "percent": 2.053429027113238
+    },
+    {
+      "symbol": "myl_rc_loan_drop",
+      "name": "myl_rc_loan_drop",
+      "period": 9600000,
+      "percent": 1.9138755980861244
+    },
+    {
+      "symbol": "myl_rc_scope_end",
+      "name": "myl_rc_scope_end",
+      "period": 9300000,
+      "percent": 1.854066985645933
+    },
+    {
+      "symbol": "myl_rc_size_mul",
+      "name": "myl_rc_size_mul",
+      "period": 8700000,
+      "percent": 1.7344497607655502
+    },
+    {
+      "symbol": "myl_rc_native_loan",
+      "name": "myl_rc_native_loan",
+      "period": 8200000,
+      "percent": 1.634768740031898
+    },
+    {
+      "symbol": "myl_rc_native_shape",
+      "name": "myl_rc_native_shape",
+      "period": 7500000,
+      "percent": 1.4952153110047848
+    },
+    {
+      "symbol": "copy_many",
+      "name": "copy_many",
+      "period": 6900000,
+      "percent": 1.375598086124402
+    },
+    {
+      "symbol": "dispose_walk",
+      "name": "dispose_walk",
+      "period": 6100000,
+      "percent": 1.2161084529505581
+    },
+    {
+      "symbol": "myl_rc_meta_alloc",
+      "name": "myl_rc_meta_alloc",
+      "period": 5800000,
+      "percent": 1.1562998405103668
+    },
+    {
+      "symbol": "visit",
+      "name": "visit",
+      "period": 4900000,
+      "percent": 0.9768740031897927
+    },
+    {
+      "symbol": "myl_rc_native_retain",
+      "name": "myl_rc_native_retain",
+      "period": 4900000,
+      "percent": 0.9768740031897927
+    },
+    {
+      "symbol": "myl_rc_native_copy",
+      "name": "myl_rc_native_copy",
+      "period": 4900000,
+      "percent": 0.9768740031897927
+    },
+    {
+      "symbol": "myl_rc_hold_release",
+      "name": "myl_rc_hold_release",
+      "period": 4400000,
+      "percent": 0.8771929824561403
+    },
+    {
+      "symbol": "capture",
+      "name": "capture",
+      "period": 4400000,
+      "percent": 0.8771929824561403
+    },
+    {
+      "symbol": "prepare_frames",
+      "name": "prepare_frames",
+      "period": 4300000,
+      "percent": 0.8572567783094099
+    },
+    {
+      "symbol": "myl_rc_native_drop",
+      "name": "myl_rc_native_drop",
+      "period": 4200000,
+      "percent": 0.8373205741626795
+    },
+    {
+      "symbol": "myl_rc_hold_acquire",
+      "name": "myl_rc_hold_acquire",
+      "period": 3500000,
+      "percent": 0.6977671451355661
+    },
+    {
+      "symbol": "loan_pointer",
+      "name": "loan_pointer",
+      "period": 3500000,
+      "percent": 0.6977671451355661
+    },
+    {
+      "symbol": "flat_transfer",
+      "name": "flat_transfer",
+      "period": 3100000,
+      "percent": 0.6180223285486444
+    },
+    {
+      "symbol": "myl_rc_native_unloan",
+      "name": "myl_rc_native_unloan",
+      "period": 3000000,
+      "percent": 0.5980861244019139
+    },
+    {
+      "symbol": "myl_rc_pin_acquire",
+      "name": "myl_rc_pin_acquire",
+      "period": 2500000,
+      "percent": 0.4984051036682616
+    },
+    {
+      "symbol": "myl_qbe_rc_scope_pin",
+      "name": "myl_qbe_rc_scope_pin",
+      "period": 2200000,
+      "percent": 0.43859649122807015
+    },
+    {
+      "symbol": "myl_rc_list_set",
+      "name": "myl_rc_list_set",
+      "period": 2200000,
+      "percent": 0.43859649122807015
+    },
+    {
+      "symbol": "myl_qbe_rc_slot_drop",
+      "name": "myl_qbe_rc_slot_drop",
+      "period": 1700000,
+      "percent": 0.33891547049441784
+    },
+    {
+      "symbol": "myl_native_list_header",
+      "name": "myl_native_list_header",
+      "period": 900000,
+      "percent": 0.17942583732057416
+    },
+    {
+      "symbol": "myl_rc_scope_begin",
+      "name": "myl_rc_scope_begin",
+      "period": 800000,
+      "percent": 0.1594896331738437
+    },
+    {
+      "symbol": "capture_backing",
+      "name": "capture_backing",
+      "period": 800000,
+      "percent": 0.1594896331738437
+    },
+    {
+      "symbol": "myl_qbe_rc_scope_end",
+      "name": "myl_qbe_rc_scope_end",
+      "period": 800000,
+      "percent": 0.1594896331738437
+    },
+    {
+      "symbol": "myl_rc_scope_hold",
+      "name": "myl_rc_scope_hold",
+      "period": 700000,
+      "percent": 0.13955342902711323
+    },
+    {
+      "symbol": "myl_qbe_float_unary",
+      "name": "myl_qbe_float_unary",
+      "period": 700000,
+      "percent": 0.13955342902711323
+    },
+    {
+      "symbol": "myl_rc_scope_extend",
+      "name": "myl_rc_scope_extend",
+      "period": 600000,
+      "percent": 0.11961722488038277
+    },
+    {
+      "symbol": "myl_rc_flat_edges_release",
+      "name": "myl_rc_flat_edges_release",
+      "period": 600000,
+      "percent": 0.11961722488038277
+    },
+    {
+      "symbol": "myl_qbe_rc_scope_begin",
+      "name": "myl_qbe_rc_scope_begin",
+      "period": 600000,
+      "percent": 0.11961722488038277
+    },
+    {
+      "symbol": "myl_qbe_rc_frame_cleanup",
+      "name": "myl_qbe_rc_frame_cleanup",
+      "period": 500000,
+      "percent": 0.09968102073365231
+    },
+    {
+      "symbol": "myl_rc_scope_pin",
+      "name": "myl_rc_scope_pin",
+      "period": 400000,
+      "percent": 0.07974481658692185
+    },
+    {
+      "symbol": "finish_clones",
+      "name": "finish_clones",
+      "period": 400000,
+      "percent": 0.07974481658692185
+    },
+    {
+      "symbol": "myl_rc_value_retain_many",
+      "name": "myl_rc_value_retain_many",
+      "period": 300000,
+      "percent": 0.05980861244019139
+    },
+    {
+      "symbol": "myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605",
+      "name": "main",
+      "period": 200000,
+      "percent": 0.03987240829346093
+    },
+    {
+      "symbol": "myl_qbe_rc_unique_local",
+      "name": "myl_qbe_rc_unique_local",
+      "period": 200000,
+      "percent": 0.03987240829346093
+    },
+    {
+      "symbol": "myl_qbe_rc_frame_enter",
+      "name": "myl_qbe_rc_frame_enter",
+      "period": 200000,
+      "percent": 0.03987240829346093
+    }
+  ]
+}

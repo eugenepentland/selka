@@ -5,6 +5,24 @@ const runtime = @import("runtime_mode.zig");
 const t = std.testing;
 const Manifest = struct { functions: []const struct { name: []const u8, il: []const u8 } };
 const source =
+    \\record Point:
+    \\    x: int
+    \\    y: int
+    \\record ManagedPoint:
+    \\    x: int
+    \\    values: list[int]
+    \\def plain_field(items: mut list[Point], index: int) -> int:
+    \\    items[index].x = 7
+    \\    return len(items)
+    \\def managed_field(items: mut list[ManagedPoint], index: int) -> int:
+    \\    items[index].x = 7
+    \\    return len(items)
+    \\def point_index(items: mut list[Point]) -> int:
+    \\    items.append(Point(3, 5))
+    \\    return 0
+    \\def callback_field(items: mut list[Point]) -> int:
+    \\    items[point_index(mut items)].x = 7
+    \\    return len(items)
     \\def scalar(items: mut list[int], index: int) -> int:
     \\    items[index] = 7
     \\    return len(items)
@@ -67,4 +85,16 @@ test "RC-INERT-RECEIVER-1 scalar index regions omit pins but callback and public
     try t.expect(contains(try named(manifest.value, "nested"), "myl_qbe_rc_unique_field"));
     try t.expect(contains(try named(manifest.value, "callback"), "myl_qbe_rc_scope_pin"));
     try t.expect(contains(try named(manifest.value, "managed"), "myl_qbe_rc_scope_pin"));
+}
+
+// spec: RC-INERT-PLAIN-UPDATE-1
+test "RC inert plain field updates omit receiver scopes but managed and callback paths retain them" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    var manifest = try emitted();
+    defer manifest.deinit();
+    try t.expect(!contains(try named(manifest.value, "plain_field"), "myl_qbe_rc_scope_pin"));
+    try t.expect(contains(try named(manifest.value, "managed_field"), "myl_qbe_rc_scope_pin"));
+    try t.expect(contains(try named(manifest.value, "callback_field"), "myl_qbe_rc_scope_pin"));
 }
