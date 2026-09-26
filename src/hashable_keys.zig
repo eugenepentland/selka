@@ -41,7 +41,9 @@ pub const Refusal = struct { path: []const u8, part: typed.Type, reason: Reason 
 pub fn refusal(allocator: std.mem.Allocator, records: []const typed.Record, ty: typed.Type) std.mem.Allocator.Error!?Refusal {
     var path: std.ArrayList(u8) = .empty;
     defer path.deinit(allocator);
-    return walk(allocator, records, ty, &path, 0);
+    var seen: Seen = .empty;
+    defer seen.deinit(allocator);
+    return walk(allocator, records, ty, &path, &seen, 0);
 }
 
 /// The diagnostic text for a refused key type: which role it plays, the path
@@ -61,7 +63,12 @@ pub fn message(allocator: std.mem.Allocator, records: []const typed.Record, key:
     return std.fmt.allocPrint(allocator, "`{s}` cannot be {s}: `{s}{s}` is `{s}`, and {s}", .{ key_name, role, key_name, found.path, part_name, reason });
 }
 
-fn walk(allocator: std.mem.Allocator, records: []const typed.Record, ty: typed.Type, path: *std.ArrayList(u8), depth: usize) std.mem.Allocator.Error!?Refusal {
+/// Value types already walked. A recursive value type (RECURSIVE-VALUES-2)
+/// reaches itself again through a boxed field; the walk that got there first
+/// already checks every part, so a repeat has nothing new to refuse.
+const Seen = std.AutoHashMapUnmanaged(typed.Type, void);
+
+fn walk(allocator: std.mem.Allocator, records: []const typed.Record, ty: typed.Type, path: *std.ArrayList(u8), seen: *Seen, depth: usize) std.mem.Allocator.Error!?Refusal {
     if (ty.isInteger() or ty == .bool or ty == .unit) return null;
     if (!ty.isAggregate() or ty.recordIndex() >= records.len) return refuse(allocator, path, ty, .capability);
     const record = records[ty.recordIndex()];
@@ -73,28 +80,29 @@ fn walk(allocator: std.mem.Allocator, records: []const typed.Record, ty: typed.T
         return refuse(allocator, path, ty, .shared);
     }
     if (record.isEnum()) return null;
+    if ((try seen.getOrPut(allocator, ty)).found_existing) return null;
     // A value type nests only value types, so its depth is bounded by the
     // declarations; the bound here only guards a malformed catalog.
     if (depth == 64) return refuse(allocator, path, ty, .shared);
-    if (record.shape.domain) |backing| return walk(allocator, records, backing, path, depth + 1);
+    if (record.shape.domain) |backing| return walk(allocator, records, backing, path, seen, depth + 1);
     const mark = path.items.len;
     if (record.shape.array) |array| {
         try path.appendSlice(allocator, "[]");
-        if (try walk(allocator, records, array.element, path, depth + 1)) |found| return found;
+        if (try walk(allocator, records, array.element, path, seen, depth + 1)) |found| return found;
         path.shrinkRetainingCapacity(mark);
         return null;
     }
     if (record.shape.variants) |variants| {
         for (variants.cases) |case| if (case.payload) |payload| {
             try path.print(allocator, ".{s}", .{case.name});
-            if (try walk(allocator, records, payload, path, depth + 1)) |found| return found;
+            if (try walk(allocator, records, payload, path, seen, depth + 1)) |found| return found;
             path.shrinkRetainingCapacity(mark);
         };
         return null;
     }
     for (record.fields, 0..) |field, index| {
         if (record.shape.tuple) try path.print(allocator, "[{d}]", .{index}) else try path.print(allocator, ".{s}", .{field.name});
-        if (try walk(allocator, records, field.ty, path, depth + 1)) |found| return found;
+        if (try walk(allocator, records, field.ty, path, seen, depth + 1)) |found| return found;
         path.shrinkRetainingCapacity(mark);
     }
     return null;

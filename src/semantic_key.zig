@@ -380,9 +380,12 @@ fn mixRecord(hash: *Hash, record: typed.Record, records: []const typed.Record) v
     var count: [8]u8 = undefined;
     std.mem.writeInt(u64, &count, record.fields.len, .little);
     hash.update(&count);
+    // A boxed field or case is laid out as a pointer (RECURSIVE-VALUES-2);
+    // the mark is framed only where it is set, so other keys keep their bytes.
     for (record.fields) |field| {
         frame(hash, field.name);
         frame(hash, typed.typeName(field.ty, records));
+        if (field.boxed) frame(hash, "boxed");
     }
     if (record.shape.variants) |variants| {
         frame(hash, if (variants.fallible) "result" else if (variants.is_union) "union" else "enum");
@@ -391,6 +394,7 @@ fn mixRecord(hash: *Hash, record: typed.Record, records: []const typed.Record) v
         for (variants.cases) |case| {
             frame(hash, case.name);
             frame(hash, if (case.payload) |payload| typed.typeName(payload, records) else "-");
+            if (case.boxed) frame(hash, "boxed");
         }
     }
     if (record.shape.array) |array| {

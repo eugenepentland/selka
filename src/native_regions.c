@@ -109,7 +109,9 @@ static void *shallow(Copier *copier, const myl_native_type *type, void *source) 
        header, age and barrier descriptor (`cell`) a constructor would give it:
        a fresh tracing-heap object is young, and `fill` writes its fields
        before anything can observe it, so no store barrier is owed. */
-    if (!type->collection_kind) {
+    /* A box (RECURSIVE-VALUES-2) is a one-field record body like a class's, so
+       it is cloned the same way; the copy is the enclosing region's own box. */
+    if (!type->collection_kind || type->collection_kind == 5) {
         const myl_native_object *header = (const myl_native_object *)source - 1;
         if (!header->element) return NULL;
         return myl_native_heap_alloc(copier->heap, header->element, arena_count(header));
@@ -178,7 +180,7 @@ static void fill_dictionary(Copier *copier, Clone item) {
 static void fill(Copier *copier, Clone item) {
     if (item.type->collection_kind == 3) return fill_dictionary(copier, item);
     if (item.type->collection_kind == 2) return;
-    if (!item.type->collection_kind) {
+    if (!item.type->collection_kind || item.type->collection_kind == 5) {
         const myl_native_object *header = (const myl_native_object *)item.source - 1;
         const myl_native_type *body = header->element;
         size_t count = arena_count(header);

@@ -353,3 +353,33 @@ test "nominal layout cycles in unused private imported templates retain original
     try t.expectEqualStrings("value", compilation.src.text(problem.span));
     try t.expectEqualStrings("Loop", compilation.src.text(problem.related.?.span));
 }
+
+// spec-case: RECURSIVE-VALUES-1
+test "finite recursive value layouts type-check while an endless record still reports its cycle" {
+    var finite_value = try language.Compilation.init(t.allocator, "finite-recursive.my",
+        \\union Chain:
+        \\    stop,
+        \\    link: Pair
+        \\
+        \\record Pair:
+        \\    value: i64
+        \\    tail: Chain
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    );
+    defer finite_value.deinit();
+    try finite_value.check();
+    try t.expectEqual(@as(usize, 0), finite_value.diagnostics.items.len);
+
+    var endless = try language.Compilation.init(t.allocator, "endless-recursive.my",
+        \\record Loop:
+        \\    next: Loop
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    );
+    defer endless.deinit();
+    try t.expectError(error.SourceError, endless.check());
+    try t.expectEqualStrings("E_RECURSIVE_RECORD", endless.diagnostics.items[0].code);
+}

@@ -115,14 +115,20 @@ pub fn sameSummary(a: Summary, b: Summary) bool {
 
 /// Whether a value of `ty` may reach managed storage another value could share.
 pub fn mayContainManaged(program: typed.Program, ty: typed.Type) bool {
-    return mayContainManagedDepth(program, ty, 0);
+    var path: [64]typed.Type = undefined;
+    return mayContainManagedDepth(program, ty, &path, 0);
 }
 
-fn mayContainManagedDepth(program: typed.Program, ty: typed.Type, depth: usize) bool {
+/// `path` holds the types on the current walk: a recursive value type reaches
+/// itself again through a boxed field (RECURSIVE-VALUES-2), and the visit
+/// already on the path answers for everything below the repeat.
+fn mayContainManagedDepth(program: typed.Program, ty: typed.Type, path: *[64]typed.Type, depth: usize) bool {
     if (!ty.isAggregate()) return false;
     const index = ty.recordIndex();
     if (index >= program.records.len) return true;
-    if (depth == 64) return true;
+    if (depth == path.len) return true;
+    for (path[0..depth]) |seen| if (seen == ty) return false;
+    path[depth] = ty;
     const record = program.records[index];
     if (record.managed) {
         // Strings and bytes are immutable managed buffers; they carry no
@@ -131,11 +137,11 @@ fn mayContainManagedDepth(program: typed.Program, ty: typed.Type, depth: usize) 
         if (kind == .string or kind == .bytes) return false;
         return true;
     }
-    if (record.shape.array) |array| if (mayContainManagedDepth(program, array.element, depth + 1)) return true;
+    if (record.shape.array) |array| if (mayContainManagedDepth(program, array.element, path, depth + 1)) return true;
     if (record.shape.variants) |variants| for (variants.cases) |case| {
-        if (case.payload) |payload| if (mayContainManagedDepth(program, payload, depth + 1)) return true;
+        if (case.payload) |payload| if (mayContainManagedDepth(program, payload, path, depth + 1)) return true;
     };
-    for (record.fields) |field| if (mayContainManagedDepth(program, field.ty, depth + 1)) return true;
+    for (record.fields) |field| if (mayContainManagedDepth(program, field.ty, path, depth + 1)) return true;
     return false;
 }
 

@@ -140,6 +140,46 @@ fn walk(schema: Schema, name: []const u8, seen: *std.StringHashMapUnmanaged(void
     return null;
 }
 
+/// Whether a value of type `from` can hold a value of type `target`, through
+/// fields, payloads and elements. A recursive value type (RECURSIVE-VALUES-3)
+/// is one whose case reaches its own union again.
+pub fn reaches(schema: Schema, from: []const u8, target: []const u8) error{OutOfMemory}!bool {
+    var seen: std.StringHashMapUnmanaged(void) = .empty;
+    defer seen.deinit(schema.arena);
+    var pending: std.ArrayList([]const u8) = .empty;
+    defer pending.deinit(schema.arena);
+    try pending.append(schema.arena, from);
+    while (pending.pop()) |name| {
+        if (std.mem.eql(u8, name, target)) return true;
+        if ((try seen.getOrPut(schema.arena, name)).found_existing) continue;
+        switch (try schema.shape(name)) {
+            .sequence => |sequence| try pending.append(schema.arena, sequence.element),
+            .keyed => |pair| try pending.appendSlice(schema.arena, &.{ pair.key, pair.value }),
+            .record => |fields| for (fields) |field| try pending.append(schema.arena, field.type),
+            .cases => |cases| for (cases.cases) |case| {
+                const payload = v.get(case, "payload");
+                if (payload == .string) try pending.append(schema.arena, payload.string);
+            },
+            .integer, .atom, .refused => {},
+        }
+    }
+    return false;
+}
+
+/// Whether case `index` of union `name` can hold another `name`.
+pub fn recursiveCase(schema: Schema, name: []const u8, cases: []const Value, index: usize) error{OutOfMemory}!bool {
+    const payload = v.get(cases[index], "payload");
+    return payload == .string and try reaches(schema, payload.string, name);
+}
+
+/// The first case of union `name` that holds no other `name`: the leaf a
+/// recursive value's generator and shrinker head for. A union with no such
+/// case keeps its first case.
+pub fn baseCase(schema: Schema, name: []const u8, cases: []const Value) error{OutOfMemory}!usize {
+    for (0..cases.len) |index| if (!try recursiveCase(schema, name, cases, index)) return index;
+    return 0;
+}
+
 /// Whether one checked result type is a property's verdict: `bool`, or a
 /// `Result` whose success payload is `bool`.
 pub fn verdict(schema: Schema, name: []const u8) bool {

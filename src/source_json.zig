@@ -22,9 +22,11 @@ fn supports(ty: typed.Type, records: []const typed.Record, depth: usize, work: *
     if (record.shape.hasRuntimeIdentity() or record.contract.move_only) return false;
     if (record.shape.domain != null) return record.contract.codec_declared or record.contract.codec != null;
     if (record.shape.array) |array| return supports(array.element, records, depth + 1, work);
+    // The source codec encodes flat data; a recursive value type's boxed field
+    // or case has no implicit source codec (RECURSIVE-VALUES-2).
     if (record.shape.variants) |variants| {
-        for (variants.cases) |case| if (case.payload) |payload| if (!supports(payload, records, depth + 1, work)) return false;
-    } else for (record.fields) |field| if (!supports(field.ty, records, depth + 1, work)) return false;
+        for (variants.cases) |case| if (case.payload) |payload| if (case.boxed or !supports(payload, records, depth + 1, work)) return false;
+    } else for (record.fields) |field| if (field.boxed or !supports(field.ty, records, depth + 1, work)) return false;
     return true;
 }
 /// Owned byte buffers are the explicit input/output boundary, never raw pointers.

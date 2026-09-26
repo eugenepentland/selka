@@ -110,6 +110,12 @@ fn emit(a: std.mem.Allocator, writer: *std.Io.Writer, catalog: *native.Catalog, 
     const record = catalog.records[item.ty.recordIndex()];
     if (numeric_surface.isFloat(item.ty, catalog.records)) return body(writer, item.name, "myl_print_float(o, v, d);");
     if (record.managed and record.isCollection()) return collection(a, writer, catalog, item, record);
+    // RECURSIVE-VALUES-3: a box prints as the value it holds, at the depth the
+    // box itself was reached at, so boxing never shows in the output.
+    if (record.collection.box) {
+        const inner = try symbol(a, catalog, record.fields[0].ty);
+        return body(writer, item.name, try std.fmt.allocPrint(a, "{s}(o, *(const void *const *)v, d);", .{inner}));
+    }
     if (record.shape.variants != null) return variant(a, writer, catalog, item, record);
     if (record.shape.array) |array| {
         const layout = try catalog.layout(item.ty);

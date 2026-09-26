@@ -117,6 +117,11 @@
       "summary": "A record is constructed by calling its type with positional or named fields.",
       "doc": "docs/records-and-unions.md#positional-and-named-constructors"
     },
+    "recursive-value-types": {
+      "kind": "language",
+      "summary": "Records and unions can contain themselves through finite recursive paths; immutable managed boxes preserve value behavior for construction, reads and updates.",
+      "doc": "docs/records-and-unions.md#recursive-payloads"
+    },
     "record-field-defaults": {
       "kind": "language",
       "summary": "Record fields may declare scalar defaults omitted at construction.",

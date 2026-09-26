@@ -29,7 +29,11 @@ pub fn generate(allocator: std.mem.Allocator, catalog: *native.Catalog) Error![]
     defer output.deinit();
     const writer = &output.writer;
     writer.writeAll("#include \"native_heap.h\"\n") catch return error.OutOfMemory;
-    for (items) |item| writer.print("extern const myl_native_type {s};\n", .{item.name}) catch return error.OutOfMemory;
+    for (items) |item| {
+        writer.print("extern const myl_native_type {s};\n", .{item.name}) catch return error.OutOfMemory;
+        // A box pointer names its body before the body is emitted (RECURSIVE-VALUES-2).
+        if (boxed(catalog, item.ty)) writer.print("extern const myl_native_type {s}_body;\n", .{item.name}) catch return error.OutOfMemory;
+    }
     for (items) |item| {
         const layout = try catalog.layout(item.ty);
         if (layout.kind == .niche) {
@@ -55,6 +59,10 @@ pub fn generate(allocator: std.mem.Allocator, catalog: *native.Catalog) Error![]
         }
     }
     return output.toOwnedSlice();
+}
+/// Whether `ty` is a box record of the physical catalog (RECURSIVE-VALUES-2).
+fn boxed(catalog: *const native.Catalog, ty: typed.Type) bool {
+    return ty.isAggregate() and ty.recordIndex() < catalog.records.len and catalog.records[ty.recordIndex()].collection.box;
 }
 /// One descriptor to emit: its symbol, the semantic type it describes, and
 /// whether it is a class body the store barrier watches.
@@ -107,7 +115,14 @@ fn emit(a: std.mem.Allocator, writer: *std.Io.Writer, catalog: *native.Catalog, 
     var collection_kind: usize = 0;
     var element: []const u8 = "NULL";
     var key: []const u8 = "NULL";
-    if (layout.kind == .managed and catalog.records[ty.recordIndex()].isCollection()) {
+    if (layout.kind == .managed and boxed(catalog, ty) and !target.cell) {
+        // RECURSIVE-VALUES-2: a box pointer is kind 5, and its element is the
+        // body the value lives in, which equality, hashing and escape read.
+        collection_kind = 5;
+        // A niche optional emits this descriptor under its own name, so the
+        // body is named from the box type rather than from `name`.
+        element = try std.fmt.allocPrint(a, "&{s}_body", .{try symbol(a, catalog, ty)});
+    } else if (layout.kind == .managed and catalog.records[ty.recordIndex()].isCollection()) {
         const record = catalog.records[ty.recordIndex()];
         collection_kind = switch (record.collection.kind) {
             .list => 1,

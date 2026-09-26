@@ -38,7 +38,7 @@ pub const Candidates = struct {
             .sequence => |shape| if (shape.length != null) try self.elements(shape.element, value) else try self.sequence(shape.element, value, shape.distinct),
             .keyed => |pair| if (pair.table) try self.fields(value, pair.value, null) else try self.dict(pair, value),
             .record => |declared| try self.fields(value, "", declared),
-            .cases => |cases| if (cases.payloads) try self.variant(cases.cases, value) else try self.enumeration(cases.cases, value),
+            .cases => |cases| if (cases.payloads) try self.variant(name, cases.cases, value) else try self.enumeration(cases.cases, value),
             .refused => return error.UnsupportedTestType,
         }
     }
@@ -209,9 +209,18 @@ pub const Candidates = struct {
         for (cases[0..current]) |case| try self.add(v.get(case, "name"));
     }
     /// Every earlier case at its simplest, then the payload shrunk in place.
-    fn variant(self: *Candidates, cases: []const Value, value: Value) Error!void {
+    fn variant(self: *Candidates, name: []const u8, cases: []const Value, value: Value) Error!void {
         const current = caseIndex(cases, v.text(v.get(value, "case"))) orelse return error.UnsupportedTestType;
+        // RECURSIVE-VALUES-3: a recursive value shrinks toward its leaves: the
+        // simplest leaf case first, then each value of its own type it holds.
+        if (try types.recursiveCase(self.schema, name, cases, current)) {
+            try self.add(try generate.minimal(self.arena, self.schema, cases, try types.baseCase(self.schema, name, cases), 0));
+            try subtermsOf(self, name, v.text(v.get(cases[current], "payload")), v.get(value, "value"));
+        }
         for (0..current) |index| {
+            // An earlier case that holds another value of this union is a
+            // bigger value, not a simpler one, so it is never a candidate.
+            if (try types.recursiveCase(self.schema, name, cases, index)) continue;
             try self.add(try generate.minimal(self.arena, self.schema, cases, index, 0));
         }
         const payload = v.get(cases[current], "payload");
@@ -226,6 +235,22 @@ pub const Candidates = struct {
     }
 };
 
+/// A value's closest values of type `target`: walking `value`, a value of
+/// type `name`, through fields, payloads and elements, each value of type
+/// `target` met is a candidate, and the walk does not look inside it.
+fn subtermsOf(self: *Candidates, target: []const u8, name: []const u8, value: Value) Error!void {
+    if (std.mem.eql(u8, name, target)) return self.add(value);
+    switch (try self.schema.shape(name)) {
+        .record => |fields| for (fields) |field| try subtermsOf(self, target, field.type, v.get(value, field.name)),
+        .cases => |cases| if (cases.payloads) {
+            const index = caseIndex(cases.cases, v.text(v.get(value, "case"))) orelse return;
+            const payload = v.get(cases.cases[index], "payload");
+            if (payload == .string) try subtermsOf(self, target, payload.string, v.get(value, "value"));
+        },
+        .sequence => |sequence| if (value == .array) for (value.array.items) |item| try subtermsOf(self, target, sequence.element, item),
+        else => {},
+    }
+}
 /// What must stay distinct among a collection's slots: nothing (a list), the
 /// elements themselves (a set), or the keys of `[key, value]` pairs.
 const Distinct = enum {

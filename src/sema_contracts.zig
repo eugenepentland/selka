@@ -443,7 +443,7 @@ fn harnessValue(comptime Checker: type, self: *Checker, walk: Walk, slot: typed.
     }
     if (record.shape.domain != null) return;
     for (record.fields, 0..) |field, index| {
-        if (!try carries(Checker, self, field.ty)) continue;
+        if (field.boxed or !try carries(Checker, self, field.ty)) continue;
         const held = try hiddenLocal(Checker, self, "self", field.ty, walk.span);
         const value = try b.node(field.ty, .{ .field = .{ .base = try b.read(slot), .index = index } });
         try out.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = held, .value = value } }));
@@ -497,7 +497,10 @@ fn harnessCases(comptime Checker: type, self: *Checker, walk: Walk, slot: typed.
     for (cases, arms, 0..) |case, *arm, tag| {
         var body: std.ArrayList(typed.StatementId) = .empty;
         var payload: ?typed.LocalId = null;
-        if (case.payload) |payload_type| if (try carries(Checker, self, payload_type)) {
+        // A boxed payload closes a recursive value type (RECURSIVE-VALUES-2):
+        // the harness checks invariants down to it, not through every level
+        // of an input of unbounded depth.
+        if (case.payload) |payload_type| if (!case.boxed and try carries(Checker, self, payload_type)) {
             payload = try hiddenLocal(Checker, self, "self", payload_type, walk.span);
             try harnessValue(Checker, self, walk, payload.?, depth + 1, &body);
         };

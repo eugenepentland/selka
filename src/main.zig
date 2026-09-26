@@ -334,6 +334,7 @@ fn dispatch(process: std.process.Init) !u8 {
         .diagnostics = parsed.reporting.diagnostics orelse .text,
     };
     const status = run(init, parsed) catch |err| status: {
+        if (@errorReturnTrace()) |trace| std.debug.dumpErrorReturnTrace(trace); // DEBUG-RV
         const message = try std.fmt.allocPrint(init.gpa, "mylang: host failure: {s}\n", .{@errorName(err)});
         defer init.gpa.free(message);
         try init.text(message);
