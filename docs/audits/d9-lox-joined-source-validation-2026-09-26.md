@@ -18,7 +18,9 @@ and its unchanged legacy default with no flag.
 | 13 scripts × both engines × both backends × both modes | 104/104 matched |
 | Error traces × both backends × both modes | 184/184 matched |
 
-All guests use ReleaseFast; LLVM additionally uses O3 and full LTO. The trace
+The port tests use the native test runner's Debug guest default. The four
+standalone smoke/trace executables use ReleaseFast; LLVM additionally uses O3
+and full LTO. The trace
 checks compare exact observations against the `60b668cf` binaries with native
 GC stress enabled and exercise both settings of the Lox collector's stress
 mode. The smoke checks use the pinned expected outputs. Builds and validation
