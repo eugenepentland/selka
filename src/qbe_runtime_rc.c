@@ -101,4 +101,27 @@ void myl_qbe_rc_finish(void *context) {
         myl_rc_owner_release(&ctx->heap, text);
     }
 }
+int myl_qbe_rc_unique_local(void *context, const myl_native_type *type, void *address, uint32_t *owned) {
+    MylQbeContext *ctx = context;
+    myl_rc_invariant(owned != NULL);
+    const myl_rc_descriptor *descriptor = myl_rc_descriptor_find(&ctx->heap, type);
+    myl_rc_invariant(descriptor && descriptor->shape->kind == MYL_RC_SHAPE_POINTER);
+    myl_rc_slot slot = {.shape = descriptor->shape, .address = address, .region = ctx->heap.region_depth};
+    if (*owned) return myl_qbe_rc_status(ctx, myl_rc_unique_owned(&ctx->heap, &slot));
+    myl_rc_edit edit = {0};
+    myl_rc_status status = myl_rc_unique_borrow(&ctx->heap, &slot, NULL, &edit);
+    if (status == MYL_RC_OK && edit.owned) {
+        memcpy(address, &edit.payload, sizeof edit.payload);
+        *owned = 1;
+    }
+    return myl_qbe_rc_status(ctx, status);
+}
+int myl_qbe_rc_unique_field(void *context, const myl_native_type *type, void *address, void *container) {
+    MylQbeContext *ctx = context;
+    const myl_rc_descriptor *descriptor = myl_rc_descriptor_find(&ctx->heap, type);
+    myl_rc_invariant(descriptor && descriptor->shape->kind == MYL_RC_SHAPE_POINTER);
+    myl_rc_slot slot = {.shape = descriptor->shape, .address = address, .container = container,
+        .region = container ? myl_native_header_region(container) : 0};
+    return myl_qbe_rc_status(ctx, myl_rc_unique_owned(&ctx->heap, &slot));
+}
 #endif

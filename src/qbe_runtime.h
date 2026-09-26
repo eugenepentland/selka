@@ -193,6 +193,8 @@ void myl_qbe_rc_frame_leave(void *, MylQbeRcFrame *);
 void myl_qbe_rc_unwind_to(void *, MylQbeRcFrame *checkpoint);
 void myl_qbe_rc_unwind(void *);
 void myl_qbe_rc_finish(void *);
+int myl_qbe_rc_unique_local(void *, const myl_native_type *, void *, uint32_t *owned);
+int myl_qbe_rc_unique_field(void *, const myl_native_type *, void *, void *container);
 void myl_qbe_fail_missing_capability(void *, const char *flag);
 uint64_t myl_qbe_on_stack(uint64_t (*entry)(void *), MylQbeContext *);
 void *myl_qbe_frame_allocate(void *, uint64_t bytes);
