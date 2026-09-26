@@ -2,7 +2,8 @@
 const typed = @import("typed.zig");
 const frame = @import("qbe_rc_frame.zig");
 const slots = @import("qbe_rc_slots.zig");
-const blit_value = " blit %v{d}, %v{d}, {d}\n";
+/// QBE byte relocation shared by transactional value and aggregate publication.
+pub const blit_value = " blit %v{d}, %v{d}, {d}\n";
 const region_mark = " %v{d} =l call $myl_qbe_region_mark(l %ctx)\n";
 /// Errors shared with the native emitter.
 pub const Error = slots.Error;
