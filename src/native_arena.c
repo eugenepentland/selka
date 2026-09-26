@@ -294,20 +294,20 @@ static myl_native_arena_chunk *detach(myl_native_heap *heap, unsigned region) {
     }
     return all;
 }
-static void release_edges(myl_native_heap *heap, myl_native_arena_chunk *chunk) {
+static void release_pass(myl_native_heap *heap, myl_native_arena_chunk *chunk, unsigned finalizing) {
     const size_t mask = alignof(max_align_t) - 1;
     size_t offset = 0;
     while (offset < chunk->used) {
         myl_native_object *header = (myl_native_object *)(chunk->data + offset);
         size_t count = (header->mark >> MYL_NATIVE_OBJECT_COUNT_SHIFT) & MYL_NATIVE_ARENA_COUNT_MAX;
         offset = (offset + sizeof *header + payload_bytes(header->element, count) + mask) & ~mask;
-        if (header->mark & MYL_RC_OBJECT_DYING) continue;
-        header->mark |= MYL_RC_OBJECT_DYING;
+        if (finalizing && (header->mark & MYL_RC_OBJECT_DYING)) continue;
         const myl_rc_descriptor *descriptor = myl_rc_descriptor_find(heap, header->element);
         myl_rc_invariant(descriptor != NULL);
-        if (descriptor->finalize) descriptor->finalize(heap, header + 1);
-        descriptor = myl_rc_descriptor_find(heap, header->element);
-        if (descriptor->edges) descriptor->edges(heap, header + 1, count);
+        if (finalizing) {
+            header->mark |= MYL_RC_OBJECT_DYING;
+            if (descriptor->finalize) descriptor->finalize(heap, header + 1);
+        } else if (descriptor->edges) descriptor->edges(heap, header + 1, count);
         else myl_rc_edges_release(heap, descriptor->shape, header + 1, count);
     }
 }
@@ -318,7 +318,8 @@ static void rc_release(myl_native_heap *heap, unsigned region) {
     myl_rc_scopes_close_region(heap, region);
     /* Keep every backing and descriptor alive until all logical owners drop.
      * Raw bytes must not be zeroed before their list or dictionary owner. */
-    for (myl_native_arena_chunk *chunk = chunks; chunk; chunk = chunk->next) release_edges(heap, chunk);
+    for (myl_native_arena_chunk *chunk = chunks; chunk; chunk = chunk->next) release_pass(heap, chunk, 1);
+    for (myl_native_arena_chunk *chunk = chunks; chunk; chunk = chunk->next) release_pass(heap, chunk, 0);
     myl_rc_drain(heap);
     myl_rc_invariant(heap->region_depth == (region ? region - 1 : 0));
     heap->region_depth = saved;
