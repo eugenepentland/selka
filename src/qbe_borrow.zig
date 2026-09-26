@@ -159,6 +159,13 @@ fn claimOne(comptime E: type, self: *E, candidate: Candidate) Error!void {
     if (slot < f.signature.parameter_count) return;
     if (f.scope.locals[slot].ty != candidate.source.ty) return;
     if (self.isScalar(candidate.source.ty)) return;
+    // A nested COW write through a recursive box implicitly reads its parent
+    // at the temporary's store. That use can outlive this analysis's explicit
+    // get_field run, so the parent must live in stable local storage rather
+    // than as an unrooted address into a list element.
+    if (self.cow != null and @import("value_semantics.zig").enabled() and !candidate.source.stable) {
+        if (containsBox(self.program, candidate.source.ty, 0)) return;
+    }
     const value = try self.layout(candidate.source.ty);
     // A value that owns something would have to be released through this slot,
     // and a zero-length aggregate keeps the scratch that stops QBE folding a
@@ -175,6 +182,20 @@ fn claimOne(comptime E: type, self: *E, candidate: Candidate) Error!void {
         for (writes) |at| if (!try inertWhileLive(E, self, .{ .store = at, .slot = slot, .writes = writes })) return;
     }
     candidate.flags[slot] = if (candidate.source.stable) .value else .element;
+}
+
+fn containsBox(program: bytecode.Program, ty: typed.Type, depth: usize) bool {
+    if (!ty.isAggregate() or ty.recordIndex() >= program.records.len) return false;
+    const schema = program.records[ty.recordIndex()];
+    if (schema.collection.box) return true;
+    if (schema.managed or depth == 128) return depth == 128;
+    if (schema.shape.array) |array| return array.length != 0 and containsBox(program, array.element, depth + 1);
+    if (schema.shape.domain) |base| return containsBox(program, base, depth + 1);
+    if (schema.shape.variants) |variants| for (variants.cases) |case| if (case.payload) |payload| {
+        if (containsBox(program, payload, depth + 1)) return true;
+    };
+    for (schema.fields) |field| if (containsBox(program, field.ty, depth + 1)) return true;
+    return false;
 }
 
 /// Every instruction that writes local `slot`, in program order.

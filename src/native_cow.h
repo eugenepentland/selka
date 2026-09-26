@@ -63,6 +63,8 @@ void *myl_native_cow_unique(myl_native_heap *heap, void *payload);
 void *myl_native_cow_unique_in(myl_native_heap *heap, void *payload, void *container);
 void *myl_native_cow_rebox(myl_native_heap *heap, const myl_native_type *type,
                            void *old_box, void *body);
+void *myl_native_cow_clone_box(myl_native_heap *heap, const myl_native_type *type,
+                               void *old_box, void *container);
 /* A fresh unshared copy of `payload` whatever its flags, with its directly
  * held payloads marked shared: an argument a `mut` argument of the same call
  * could reach must not share storage with it. NULL on refusal. */

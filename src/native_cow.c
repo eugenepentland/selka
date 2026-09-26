@@ -306,6 +306,30 @@ void *myl_native_cow_rebox(myl_native_heap *heap, const myl_native_type *type,
     myl_native_root_pop(heap, &old_root);
     return copy;
 }
+/* Detach a box reached by a nested collection write before forming an
+ * address inside its body. Its parent is rooted across allocation, and the
+ * fresh body's direct mutable children are shared with the old body. */
+void *myl_native_cow_clone_box(myl_native_heap *heap, const myl_native_type *type,
+                               void *old_box, void *container) {
+    if (!old_box || !type || type->collection_kind != 5 || !type->element) return NULL;
+    myl_native_root old_root, container_root, copy_root;
+    myl_native_root_push(heap, &old_root, &old_box, type);
+    myl_native_root_push(heap, &container_root, &container, &pointer_type);
+    void *copy = myl_native_heap_alloc_at(heap, type->element, 1, myl_native_header_region(old_box));
+    if (!copy) {
+        myl_native_root_pop(heap, &container_root);
+        myl_native_root_pop(heap, &old_root);
+        return NULL;
+    }
+    memcpy(copy, old_box, type->element->size);
+    myl_native_root_push(heap, &copy_root, &copy, type);
+    int done = myl_native_cow_share_value(heap, type->element, copy);
+    if (done) myl_native_heap_remember(heap, copy);
+    myl_native_root_pop(heap, &copy_root);
+    myl_native_root_pop(heap, &container_root);
+    myl_native_root_pop(heap, &old_root);
+    return done ? copy : NULL;
+}
 int myl_native_cow_elements(myl_native_heap *heap, myl_native_list *list) {
     if (!list || !list->storage || list->element->kind != MYL_NATIVE_POINTER) return 1;
     int held = holds_payload(list->element);
