@@ -299,16 +299,23 @@ pub fn iterationOwner(function: bytecode.Function, index: usize) bool {
     return false;
 }
 
-/// The one reachable store into `index`, or null.
+/// The one reachable store into `index`, or null. A terminal drop only ends
+/// the place lifetime; named-argument evaluation emits that cleanup explicitly.
 fn singleStore(planner: *const Planner, index: u32) ?usize {
     var found: ?usize = null;
+    var ended = false;
     for (planner.code(), 0..) |instruction, pc| {
         if (!planner.reachable(pc)) continue;
         switch (instruction.op) {
-            .store_local, .move_local, .drop_local => |slot| if (li(slot) == index) {
+            .store_local, .move_local => |slot| if (li(slot) == index) {
                 if (instruction.op != .store_local or found != null) return null;
                 found = pc;
             },
+            .drop_local => |slot| if (li(slot) == index) {
+                if (found == null) return null;
+                ended = true;
+            },
+            .load_local => |slot| if (li(slot) == index and ended) return null,
             .switch_variant => |dispatch| for (dispatch.arms) |arm| if (arm.slot) |slot| if (li(slot) == index) return null,
             .ref_local => |slot| if (li(slot) == index) return null,
             else => {},
@@ -720,4 +727,29 @@ fn writtenRead(planner: *const Planner, pc: usize) bool {
 fn rootNeedsCheck(planner: *const Planner, root: u32) bool {
     return planner.role(root) == .owned or
         (planner.role(root) == .mut_param and !ownership.uniqueParameter(planner.input.function, root));
+}
+
+fn testSingleStore(a: std.mem.Allocator, ops: []const Op) !?usize {
+    const code = try a.alloc(bytecode.Instruction, ops.len);
+    defer a.free(code);
+    const states = try a.alloc(?[]const typed.Type, ops.len);
+    defer a.free(states);
+    for (code, ops, states) |*instruction, op, *state| {
+        instruction.* = .{ .span = .{ .start = 0, .end = 0 }, .op = op };
+        state.* = &.{};
+    }
+    // This query reads only the instruction stream and reachability table.
+    var planner: Planner = undefined;
+    planner.input.function.scope.instructions = code;
+    planner.input.states = states;
+    return singleStore(&planner, 0);
+}
+
+// spec-case: COW-MUT-ARGUMENT-1
+test "COW-MUT-ARGUMENT-1 named place permits terminal cleanup but rejects a later read" {
+    const local: typed.LocalId = @fromBackingInt(@intCast(0));
+    try std.testing.expectEqual(@as(?usize, 0), try testSingleStore(std.testing.allocator, &.{ .{ .store_local = local }, .{ .load_local = local }, .{ .drop_local = local } }));
+    try std.testing.expectEqual(@as(?usize, null), try testSingleStore(std.testing.allocator, &.{ .{ .store_local = local }, .{ .drop_local = local }, .{ .load_local = local } }));
+    try std.testing.expectEqual(@as(?usize, null), try testSingleStore(std.testing.allocator, &.{ .{ .drop_local = local }, .{ .store_local = local } }));
+    try std.testing.expectEqual(@as(?usize, null), try testSingleStore(std.testing.allocator, &.{ .{ .store_local = local }, .{ .drop_local = local }, .{ .store_local = local } }));
 }
