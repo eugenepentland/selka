@@ -117,21 +117,22 @@ pub const wire_end =
 /// Fixed adapter source section.
 pub const codec_execute =
     \\static uint64_t co_execute(void *ctx){
-    \\ co_context=ctx;
+    \\ co_context=ctx;((MylQbeContext *)ctx)->adapter_cleanup=co_cleanup;
     \\ for(size_t i=0;i<co_argument_count;++i){
     \\  size_t size=co_types[co_parameter_types[i]].size;co_arguments[i]=calloc(size ? size:1,1);
-    \\  if(!co_arguments[i]){co_bad("OutOfMemory");return 0;}
+    \\  if(!co_arguments[i]){co_bad("OutOfMemory");goto cleanup;}
     \\  if(co_injected && co_injected[i]){uint64_t sentinel=co_injected[i];
-    \\   if(sentinel>2){if(co_cursor>=co_count){co_bad("InvalidArgument");return 0;}
-    \\    sentinel=myl_qbe_stand_in(ctx,sentinel-3,co_input[co_cursor++].bits);if(myl_qbe_failed(ctx))return 0;}
+    \\   if(sentinel>2){if(co_cursor>=co_count){co_bad("InvalidArgument");goto cleanup;}
+    \\    sentinel=myl_qbe_stand_in(ctx,sentinel-3,co_input[co_cursor++].bits);if(myl_qbe_failed(ctx))goto cleanup;}
     \\   memcpy(co_arguments[i],&sentinel,size<8?size:8);continue;}
-    \\  if(!co_read(co_parameter_types[i],co_arguments[i],0))return 0;
+    \\  if(!co_read(co_parameter_types[i],co_arguments[i],0))goto cleanup;
     \\ }
-    \\ if(co_cursor!=co_count){co_bad("InvalidArgument");return 0;}
+    \\ if(co_cursor!=co_count){co_bad("InvalidArgument");goto cleanup;}
     \\ size_t size=co_types[co_result_type].size;co_return=calloc(size ? size:1,1);
-    \\ if(!co_return){co_bad("OutOfMemory");return 0;}
-    \\ if(co_charge() && co_public(ctx))co_write(co_result_type,co_return,0);
-    \\ return 0;
+    \\ if(!co_return){co_bad("OutOfMemory");goto cleanup;}
+    \\ if(co_charge() && co_public(ctx) && co_root_value(co_result_type,co_return))co_write(co_result_type,co_return,0);
+    \\cleanup:
+    \\ co_cleanup(ctx);return 0;
     \\}
 ;
 /// Fixed adapter source section.
@@ -145,7 +146,7 @@ pub const codec_start =
     \\ int status=2;co_input=arguments;co_count=node_count;co_cursor=0;co_needed=0;co_rejected=0;co_error=NULL;co_domain=NULL;
     \\ co_capacity=capacity;
     \\ co_calls=0;co_max_calls=options && options->max_calls ? options->max_calls:4096;
-    \\ memset(co_arguments,0,sizeof co_arguments);co_return=NULL;co_prepared=NULL;
+    \\ memset(co_arguments,0,sizeof co_arguments);co_return=NULL;co_prepared=NULL;co_context=NULL;co_root_count=0;
     \\
 ;
 /// Fixed adapter source section.
@@ -160,7 +161,6 @@ pub const codec_end =
     \\  else if(co_needed)memcpy(output,co_prepared,co_needed*sizeof *output);
     \\ }
     \\done:
-    \\ co_unroot();
     \\ out->calls=co_calls;out->domain=co_domain;out->rejected=co_rejected;
     \\ for(size_t i=0;i<QBE_CODEC_ARGUMENTS;++i){free(co_arguments[i]);co_arguments[i]=NULL;}
     \\ free(co_return);free(co_prepared);co_return=NULL;co_prepared=NULL;co_input=NULL;co_context=NULL;

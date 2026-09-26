@@ -5,6 +5,8 @@ test {
     _ = @import("native_rc_contract_test.zig");
     _ = @import("native_rc_collections_test.zig");
     _ = @import("qbe_runtime_rc_test.zig");
+    _ = @import("native_rc_codecs_test.zig");
+    _ = @import("native_rc_host_test.zig");
     _ = @import("native_test_cli_test.zig");
     _ = @import("native_test_cases.zig");
     _ = @import("native_test_snapshot.zig");
