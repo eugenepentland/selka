@@ -1741,14 +1741,15 @@ const Emitter = struct {
     }
     /// A value-semantics projection of a recursive box may copy a pinned child
     /// before yielding its private body, so root and borrow planning treat it
-    /// as a safepoint. Ordinary field reads and switch-off code stay inert.
+    /// as a safepoint. Pure boxes, ordinary fields and switch-off code stay inert.
     pub fn boxProjectionAt(self: *Emitter, pc: usize, op: @FieldType(bytecode.Instruction, "op")) bool {
         if (self.cow == null or !value_semantics.enabled() or op != .get_field) return false;
         if (pc >= self.states.len) return false;
         const stack = self.states[pc] orelse return false;
         if (stack.len == 0) return false;
         const owner = stack[stack.len - 1];
-        return owner.isAggregate() and self.program.records[owner.recordIndex()].collection.box;
+        return owner.isAggregate() and self.program.records[owner.recordIndex()].collection.box and
+            value_semantics.needsCopy(self.program.records, owner);
     }
     fn findRoots(self: *Emitter) GenerateError!void {
         const f = self.function;

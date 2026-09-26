@@ -1,0 +1,39 @@
+module pure_box
+
+
+record Node:
+    number: int
+    next: Option[Node]
+
+
+def total(node: Node) -> int:
+    child = node.next
+    if child is None:
+        return node.number
+    return node.number + total(child)
+
+
+def rewrite_next(node: Node) -> Node:
+    child = node.next
+    if child is None:
+        return node
+    rewritten = child
+    rewritten.number = 9
+    return Node(node.number, Some(rewritten))
+
+
+# spec-case: QBE-PURE-BOX-READ-1
+public def test_pure_box_projection_retains_private_value_updates() -> bool:
+    original = Node(1, Some(Node(2, Some(Node(3, None)))))
+    changed = rewrite_next(original)
+    return total(original) == 6 and total(changed) == 13
+
+
+# spec-case: QBE-PURE-BOX-READ-1
+public def test_pure_box_read_remains_live_across_other_allocations() -> bool:
+    original = Node(1, Some(Node(2, None)))
+    copied = original
+    junk: list[Node] = []
+    for i in range(100):
+        junk.append(Node(i, Some(Node(i + 1, None))))
+    return total(original) == 3 and total(copied) == 3 and len(junk) == 100
