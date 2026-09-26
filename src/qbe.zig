@@ -308,6 +308,7 @@ fn generateImpl(allocator: std.mem.Allocator, program_in: bytecode.Program, src:
         .runtime_data = runtime_data,
         .version = "qbe-units-v1",
         .abi = test_dependencies.abi,
+        .runtime_contract = @import("runtime_mode.zig").identity(),
         // Where a lean manifest's stored texts and metadata live, by digest.
         .store = if (shape.lean) try interface.reuse.?.store.textRoot() else null,
         .functions = emitted,
@@ -1100,6 +1101,7 @@ fn flagsOf(pass: EmitPass, index: usize) fragments.Flags {
         .arenas = pass.arenas,
         .entry = index == @backingInt(pass.program.main),
         .cow = pass.cow,
+        .runtime = @import("runtime_mode.zig").get(),
     };
 }
 

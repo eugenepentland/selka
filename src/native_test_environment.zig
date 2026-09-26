@@ -15,6 +15,8 @@ const compiler_inputs = [_][]const u8{
     "GCC_EXEC_PREFIX",
     "LIBRARY_PATH",
     "MYLANG_HOST_COMPILER",
+    // RC-RUNTIME-CONTRACT-1: runtime ownership and instrumentation ABI.
+    "MYLANG_RUNTIME",
     // COW-STATS-1: counting compiles distinct test binaries.
     "MYLANG_COW_COUNTING",
     "MYLANG_QBE_LLVM_ALIAS",
@@ -83,4 +85,19 @@ test "environment fingerprints ignore unrelated variables but retain compiler in
     try std.testing.expect(!std.mem.eql(u8, llvm_changed.hash, (try capture(context)).hash));
     try environment.put("LD_LIBRARY_PATH", "/mutable");
     try std.testing.expect(!(try capture(context)).cacheable);
+}
+
+// spec-case: RC-RUNTIME-CONTRACT-1
+test "RC runtime contract separates persistent test results" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    try environment.put("MYLANG_RUNTIME", "gc-v1");
+    const gc = try capture(context);
+    try environment.put("MYLANG_RUNTIME", "rc-v1");
+    const rc = try capture(context);
+    try std.testing.expect(!std.mem.eql(u8, gc.hash, rc.hash));
+    try environment.put("MYLANG_RUNTIME", "rc-v1-counting");
+    try std.testing.expect(!std.mem.eql(u8, rc.hash, (try capture(context)).hash));
 }

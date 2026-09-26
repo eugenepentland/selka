@@ -534,6 +534,12 @@ pub fn build(b: *std.Build) void {
             .link_libc = true,
         }),
     });
+    unit.root_module.addIncludePath(b.path("src"));
+    unit.root_module.addCSourceFiles(.{
+        .root = b.path("."),
+        .files = &.{ "tests/native_rc_contract_test.c", "src/native_rc.c", "src/native_rc_shapes.c", "src/native_rc_walk.c" },
+        .flags = &.{ "-std=c11", "-Wall", "-Wextra", "-Werror", "-UNDEBUG", "-DMYL_RC_CONTRACT_LIBRARY" },
+    });
     unit.root_module.addImport("runtime_contract", runtime_contract);
     unit.root_module.addImport("native_test_root", unit.root_module);
     unit.root_module.addImport("qbe_build_assets", build_assets);
