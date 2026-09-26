@@ -732,5 +732,152 @@
       "field_writes": 3,
       "state": "migrated-in-3d"
     }
+  ],
+  "excluded_historical_count": 24,
+  "excluded_historical": [
+    {
+      "file": "experiments/cascade/designs/B/main.my",
+      "line": 17,
+      "name": "Tally",
+      "reason": "archived comparative language-design variant"
+    },
+    {
+      "file": "experiments/cascade/designs/B/sexpr/tokenizer.my",
+      "line": 59,
+      "name": "Lexer",
+      "reason": "archived comparative language-design variant"
+    },
+    {
+      "file": "experiments/cascade/designs/P1/main.my",
+      "line": 17,
+      "name": "Tally",
+      "reason": "archived comparative language-design variant"
+    },
+    {
+      "file": "experiments/cascade/designs/P1/sexpr/tokenizer.my",
+      "line": 85,
+      "name": "Lexer",
+      "reason": "archived comparative language-design variant"
+    },
+    {
+      "file": "experiments/cascade/designs/P2/main.my",
+      "line": 17,
+      "name": "Tally",
+      "reason": "archived comparative language-design variant"
+    },
+    {
+      "file": "experiments/cascade/designs/P2/sexpr/tokenizer.my",
+      "line": 255,
+      "name": "Lexer",
+      "reason": "archived comparative language-design variant"
+    },
+    {
+      "file": "experiments/local-reasoning-audit-20260921/sources/class_field_augmented_rejected.my",
+      "line": 1,
+      "name": "Cursor",
+      "reason": "archived diagnostic probe intentionally exercising class rules"
+    },
+    {
+      "file": "experiments/local-reasoning-audit-20260921/sources/unannotated_class_write.my",
+      "line": 1,
+      "name": "Cursor",
+      "reason": "archived diagnostic probe intentionally exercising class rules"
+    },
+    {
+      "file": "experiments/perf-parity-plan-20260922/probes/barrier_store.my",
+      "line": 10,
+      "name": "Node",
+      "reason": "archived baseline and class-barrier benchmark"
+    },
+    {
+      "file": "experiments/perf-parity-plan-20260922/suite/binary_trees.my",
+      "line": 6,
+      "name": "Node",
+      "reason": "archived baseline and class-barrier benchmark"
+    },
+    {
+      "file": "experiments/perf-parity-plan-20260922/suite/binary_trees_arena.my",
+      "line": 8,
+      "name": "Node",
+      "reason": "archived baseline and class-barrier benchmark"
+    },
+    {
+      "file": "experiments/perf-parity-plan-20260922/suite/nbody_class.my",
+      "line": 10,
+      "name": "Body",
+      "reason": "archived baseline and class-barrier benchmark"
+    },
+    {
+      "file": "experiments/project-invocation-m3/pack/apps/sexpr-port/snapshot/main.my",
+      "line": 17,
+      "name": "Tally",
+      "reason": "archived project-invocation source snapshot"
+    },
+    {
+      "file": "experiments/project-invocation-m3/pack/apps/sexpr-port/snapshot/sexpr/parser.my",
+      "line": 21,
+      "name": "Cursor",
+      "reason": "archived project-invocation source snapshot"
+    },
+    {
+      "file": "experiments/project-invocation-m3/pack/apps/sexpr-port/snapshot/sexpr/tokenizer.my",
+      "line": 101,
+      "name": "Lexer",
+      "reason": "archived project-invocation source snapshot"
+    },
+    {
+      "file": "experiments/readiness-probes-2026-09-18/expr/main.my",
+      "line": 54,
+      "name": "Binary",
+      "reason": "archived readiness source snapshot"
+    },
+    {
+      "file": "experiments/readiness-probes-2026-09-18/expr/main.my",
+      "line": 59,
+      "name": "Unary",
+      "reason": "archived readiness source snapshot"
+    },
+    {
+      "file": "experiments/readiness-probes-2026-09-18/expr/main.my",
+      "line": 73,
+      "name": "Parser",
+      "reason": "archived readiness source snapshot"
+    },
+    {
+      "file": "experiments/readiness-probes-2026-09-18/proj/sexpr/parser.my",
+      "line": 14,
+      "name": "State",
+      "reason": "archived readiness source snapshot"
+    },
+    {
+      "file": "experiments/readiness-probes-2026-09-18/sexpr-bytes/main.my",
+      "line": 17,
+      "name": "Cursor",
+      "reason": "archived readiness source snapshot"
+    },
+    {
+      "file": "experiments/readiness-probes-2026-09-18/sexpr-str/main.my",
+      "line": 19,
+      "name": "Cursor",
+      "reason": "archived readiness source snapshot"
+    },
+    {
+      "file": "experiments/struct-layout-audit-20260920/probe.my",
+      "line": 21,
+      "name": "Counter",
+      "reason": "archived class-layout measurement probe"
+    },
+    {
+      "file": "velocity/suites/idioms/a38_class_methods.my",
+      "line": 2,
+      "name": "Point",
+      "reason": "Python syntax/rejection corpus; class token is an input, not mylang code"
+    },
+    {
+      "file": "velocity/suites/idioms/a39_dataclass.my",
+      "line": 5,
+      "name": "Point",
+      "reason": "Python syntax/rejection corpus; class token is an input, not mylang code"
+    }
   ]
 }

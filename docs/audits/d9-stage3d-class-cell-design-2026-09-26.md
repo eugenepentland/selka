@@ -56,6 +56,17 @@ extra declaration, so its working total is 81; all three standard-library
 classes have become value records. `network::Failure` contains an owned
 resource, whose ownership and completion rules still apply.
 
+The repository also contains 24 `class` declarations outside the P1 census.
+They are inventoried individually in `d9-stage3d-class-inventory-2026-09-26.json`
+as historical exclusions: fixed snapshots of earlier projects and language
+designs, baseline class-layout/barrier measurements, diagnostic rejection
+inputs, and two Python-syntax parser probes. Altering them would erase the
+input that those archives measure. The active incremental-check fixture was
+not an archive; its two classes were migrated to records. Thus the literal
+"no class left in the repo" acceptance wording has this explicit archival
+exception, while the current standard library, parity/schematic sources,
+trial ports and active test fixtures contain no class declarations.
+
 For each declaration, migration requires a behavior check:
 
 - Pure data carriers: use a record and preserve the output. A `mut` helper
