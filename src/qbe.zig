@@ -1644,7 +1644,7 @@ const Emitter = struct {
         try self.print(") {{\n@entry\n %trap =l add %ctx, 32\n", .{});
         const return_bytes = try self.returnStorageBytes();
         if (return_bytes != 0) {
-            try self.print(" %empty =l alloc8 {d}\n call $memset(l %empty, w 0, l {d})\n", .{ @max(8, return_bytes), @max(8, return_bytes) });
+            try self.print(" %empty =l alloc8 {d}\n", .{@max(8, return_bytes)});
             if (self.heap_frame) try self.print(" %return_storage =l alloc8 {d}\n", .{@max(8, return_bytes)});
         }
         // QBE promotes a slot to a temporary only when its `alloc8` sits in the
@@ -1680,7 +1680,13 @@ const Emitter = struct {
         if (self.has_roots and self.has_safepoints) try self.restoreRoots();
         if (self.heap_frame) try self.print(" call $myl_qbe_frame_release(l %ctx, l %frame_memory)\n jmp @allocation_failure\n@allocation_failure\n", .{});
         try self.leaveFrame();
-        try self.print(" ret {s}\n@entry_failure\n ret {s}\n}}\n", .{ if (return_bytes == 0) "0" else "%empty", if (return_bytes == 0) "0" else "%empty" });
+        // QBE-COLD-FAILRET-1: only failed paths return `%empty`. Initializing
+        // it in the entry block makes every successful aggregate-returning
+        // call pay for a zero value it never reads.
+        if (return_bytes != 0) try self.print(" call $memset(l %empty, w 0, l {d})\n", .{@max(8, return_bytes)});
+        try self.print(" ret {s}\n@entry_failure\n", .{if (return_bytes == 0) "0" else "%empty"});
+        if (return_bytes != 0) try self.print(" call $memset(l %empty, w 0, l {d})\n", .{@max(8, return_bytes)});
+        try self.print(" ret {s}\n}}\n", .{if (return_bytes == 0) "0" else "%empty"});
         var text = try self.output.toOwnedSlice();
         // With no step check, the only reason to store a position is a trap trace
         // or an `assert` message, and both are emitted by a body that mentions a

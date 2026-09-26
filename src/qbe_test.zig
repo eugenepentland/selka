@@ -71,6 +71,29 @@ test "scalar units remain stable across body edits and declaration reorder" {
     try std.testing.expect(!std.mem.eql(u8, callee_before.il, callee_after.il));
 }
 
+// spec: QBE-COLD-FAILRET-1
+test "QBE-COLD-FAILRET-1 aggregate failure result is zeroed only in cold return blocks" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Pair:
+        \\    left: int
+        \\    right: int
+        \\
+        \\def pair(x: int) -> Pair:
+        \\    return Pair(left=x, right=x + 1)
+        \\
+        \\def main() -> int:
+        \\    return pair(5).right
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "pair").?.il;
+    const failure = std.mem.lastIndexOf(u8, body, "\n@failure\n") orelse return error.TestUnexpectedResult;
+    const entry_failure = std.mem.lastIndexOf(u8, body, "\n@entry_failure\n") orelse return error.TestUnexpectedResult;
+    try std.testing.expect(std.mem.indexOf(u8, body[0..failure], "call $memset(l %empty") == null);
+    try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, body, "call $memset(l %empty"));
+    try std.testing.expect(std.mem.indexOf(u8, body[failure..entry_failure], "ret %empty") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body[entry_failure..], "ret %empty") != null);
+}
+
 test "QBE lowers stack joins loops casts and calls independently" {
     const a = std.testing.allocator;
     var c = try language.Compilation.init(a, "qbe.my",
