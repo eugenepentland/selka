@@ -222,10 +222,11 @@ read-only argument is lent without a copy. Before a write, an inline check
 clones a shared payload and redirects the owning slot; nested writes repeat
 that step along their path. Checks proven stable across a loop are hoisted.
 
-For internal measurements, `MYLANG_COW_COUNTING=1` together with
-`--value-semantics` builds a separately cached instrumented binary. At exit it
+For internal measurements, `MYLANG_COW_COUNTING=1` in the default value mode
+builds a separately cached instrumented binary. At exit it
 prints a `cow-stats` JSON line on stderr with marks, checks, hoisted checks,
-copies, copied bytes and pins. Ordinary builds emit no counter calls.
+copies, copied bytes and pins. Legacy-sharing runs ignore this selector;
+ordinary builds emit no counter calls.
 
 ## Limits
 

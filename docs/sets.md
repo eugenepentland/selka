@@ -141,8 +141,9 @@ def main() -> int:
 
 A key type that cannot be hashed is rejected where the dictionary or set is built,
 with `E_DICT_KEY` or `E_SET_ELEMENT` naming the offending part: `float`, because NaN
-is not equal to itself; a `list`, `dict`, `set`, `byte_buffer` or `class` value,
-because it is a shared reference whose contents can change after it is stored; a
+is not equal to itself; a mutable `list`, `dict`, `set` or `byte_buffer` value,
+whose contents can change after it is stored; a `class` in legacy-sharing mode,
+whose referenced contents are mutable; a
 function value, which has no equality; and a capability, file or resource. A record
 with a `float` field nested in it is refused with the path to that field, such as
 `Reading.at.x`. Inside a generic function a type parameter used as
