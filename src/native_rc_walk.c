@@ -115,6 +115,8 @@ void myl_rc_construction_abort(myl_native_heap *heap, void *payload) {
     myl_native_object *header = (myl_native_object *)payload - 1;
     myl_rc_invariant(!(header->mark & MYL_NATIVE_OBJECT_IMMORTAL));
     if (!(header->mark & MYL_NATIVE_OBJECT_ARENA)) { myl_rc_owner_release(heap, payload); return; }
+    if (header->mark & MYL_RC_OBJECT_DYING) return;
+    header->mark |= MYL_RC_OBJECT_DYING;
     const myl_rc_descriptor *descriptor = myl_rc_descriptor_find(heap, header->element);
     myl_rc_invariant(descriptor != NULL);
     size_t count = (header->mark >> MYL_NATIVE_OBJECT_COUNT_SHIFT) & MYL_NATIVE_ARENA_COUNT_MAX;

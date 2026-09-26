@@ -99,6 +99,7 @@ typedef struct { const unsigned char *names; size_t length; } MylQbeEnvironmentS
 #define MYL_QBE_RC_FRAME_SCOPE_OFFSET 24
 #define MYL_QBE_RC_UNIQUE_DROP 1u
 #define MYL_QBE_RC_COUNTED 2u
+#define MYL_QBE_RC_CONSTRUCTION 4u
 typedef struct {
     const myl_native_type *type;
     void *address;
@@ -191,6 +192,7 @@ void myl_qbe_rc_frame_leave(void *, MylQbeRcFrame *);
 /* Nested landing pads may unwind a prefix; the checkpoint frame remains live. */
 void myl_qbe_rc_unwind_to(void *, MylQbeRcFrame *checkpoint);
 void myl_qbe_rc_unwind(void *);
+void myl_qbe_rc_finish(void *);
 void myl_qbe_fail_missing_capability(void *, const char *flag);
 uint64_t myl_qbe_on_stack(uint64_t (*entry)(void *), MylQbeContext *);
 void *myl_qbe_frame_allocate(void *, uint64_t bytes);

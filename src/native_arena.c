@@ -1,4 +1,5 @@
 #include "native_arena.h"
+#include "native_rc_internal.h"
 #include <stdalign.h>
 #include <stdlib.h>
 #include <string.h>
@@ -72,12 +73,11 @@ static myl_native_arena_chunk *uncache(myl_native_heap *heap, size_t minimum, si
     return chunk;
 }
 /* Retain a chunk the closing scope released instead of returning it to the
- * host. The caller has already discharged it from `heap->bytes` and from every
- * arena reservation counter, so a retained chunk is charged to nothing and can
- * never refuse a later allocation; the bounds below cap the host bytes held
- * that way. Returns zero when the chunk must be freed. */
+ * host. GC discharges retained bytes; RC keeps the complete reservation charged
+ * until reuse or reclamation. Returns zero when the chunk must be freed. */
 static int cache(myl_native_heap *heap, myl_native_arena_chunk *chunk) {
-    size_t ceiling = MYL_ARENA_CACHE_BYTES < heap->limit ? MYL_ARENA_CACHE_BYTES : heap->limit;
+    size_t limit = heap->rc && !heap->limit ? SIZE_MAX : heap->limit;
+    size_t ceiling = MYL_ARENA_CACHE_BYTES < limit ? MYL_ARENA_CACHE_BYTES : limit;
     if (chunk->bytes > MYL_ARENA_CACHE_CHUNK_BYTES) return 0;
     if (heap->arena.cached >= (size_t)MYL_ARENA_CACHE_CHUNKS) return 0;
     if (heap->arena.cached_bytes >= ceiling || chunk->bytes > ceiling - heap->arena.cached_bytes) return 0;
@@ -91,6 +91,7 @@ void myl_native_arena_reclaim(myl_native_heap *heap) {
     while (heap->arena_cache) {
         myl_native_arena_chunk *chunk = heap->arena_cache;
         heap->arena_cache = chunk->next;
+        if (heap->rc) heap->bytes -= chunk->bytes;
         free(chunk);
     }
     heap->arena.cached = 0;
@@ -102,12 +103,46 @@ static int depth_room(myl_native_heap *heap, unsigned region) {
     if (region < heap->arena_depth_capacity) return 1;
     size_t capacity = heap->arena_depth_capacity ? heap->arena_depth_capacity : 8;
     while (capacity <= region) capacity *= 2;
-    myl_native_arena_chunk **grown = realloc(heap->arena_chunks, capacity * sizeof *grown);
+    myl_native_arena_chunk **grown;
+    if (heap->rc) {
+        grown = myl_rc_meta_alloc(heap, capacity * sizeof *grown);
+        if (!grown) return 0;
+        if (heap->arena_depth_capacity) memcpy(grown, heap->arena_chunks, heap->arena_depth_capacity * sizeof *grown);
+        myl_rc_meta_free(heap, heap->arena_chunks, heap->arena_depth_capacity * sizeof *grown);
+    } else grown = realloc(heap->arena_chunks, capacity * sizeof *grown);
     if (!grown) return 0;
     memset(grown + heap->arena_depth_capacity, 0, (capacity - heap->arena_depth_capacity) * sizeof *grown);
     heap->arena_chunks = grown;
     heap->arena_depth_capacity = capacity;
     return 1;
+}
+static myl_native_arena_chunk *rc_chunk(myl_native_heap *heap, size_t minimum, size_t preferred) {
+    myl_native_arena_chunk *chunk = uncache(heap, minimum, preferred);
+    if (chunk) { heap->arena.reused++; return chunk; }
+    size_t available = !heap->limit ? SIZE_MAX - heap->bytes : heap->bytes > heap->limit ? 0 : heap->limit - heap->bytes;
+    if (minimum > available && heap->arena_cache) {
+        myl_native_arena_reclaim(heap);
+        available = !heap->limit ? SIZE_MAX - heap->bytes : heap->bytes > heap->limit ? 0 : heap->limit - heap->bytes;
+    }
+    if (minimum > available) { heap->exhausted = 1; return NULL; }
+    size_t bytes = preferred < available ? preferred : available & ~(alignof(max_align_t) - 1);
+    chunk = calloc(1, bytes);
+    if (!chunk && heap->arena_cache) { myl_native_arena_reclaim(heap); chunk = calloc(1, bytes); }
+    if (!chunk) return NULL;
+    chunk->bytes = bytes;
+    heap->bytes += bytes;
+    heap->arena.chunks++;
+    return chunk;
+}
+static void link_chunk(myl_native_heap *heap, myl_native_arena_chunk *chunk, unsigned region) {
+    chunk->next = heap->arena_chunks[region];
+    chunk->region = region;
+    heap->arena_chunks[region] = chunk;
+    if (heap->arena_depths <= region) heap->arena_depths = (size_t)region + 1;
+    heap->arena.chunks_live++;
+    heap->arena.reserved_bytes += chunk->bytes;
+    if (heap->arena.reserved_bytes > heap->arena.peak_reserved_bytes)
+        heap->arena.peak_reserved_bytes = heap->arena.reserved_bytes;
 }
 static myl_native_arena_chunk *new_chunk(myl_native_heap *heap, size_t payload, unsigned region, size_t previous) {
     const size_t mask = alignof(max_align_t) - 1;
@@ -120,6 +155,11 @@ static myl_native_arena_chunk *new_chunk(myl_native_heap *heap, size_t payload, 
     size_t preferred = previous < (512u << 10) ? previous * 2 : (1u << 20);
     if (preferred < (64u << 10)) preferred = 64u << 10;
     if (preferred < minimum) preferred = minimum;
+    if (heap->rc) {
+        myl_native_arena_chunk *chunk = rc_chunk(heap, minimum, preferred);
+        if (chunk) link_chunk(heap, chunk, region);
+        return chunk;
+    }
     /* Collection may reclaim older GC storage but never any arena allocation.
      * Charge the actual host reservation, including descriptor space and slack. */
     if ((heap->bytes > heap->limit || minimum > heap->limit - heap->bytes) && !heap->suspended)
@@ -138,15 +178,8 @@ static myl_native_arena_chunk *new_chunk(myl_native_heap *heap, size_t payload, 
         chunk->bytes = bytes;
         heap->arena.chunks++;
     }
-    chunk->next = heap->arena_chunks[region];
-    chunk->region = region;
-    heap->arena_chunks[region] = chunk;
-    if (heap->arena_depths <= region) heap->arena_depths = (size_t)region + 1;
     heap->bytes += chunk->bytes;
-    heap->arena.chunks_live++;
-    heap->arena.reserved_bytes += chunk->bytes;
-    if (heap->arena.reserved_bytes > heap->arena.peak_reserved_bytes)
-        heap->arena.peak_reserved_bytes = heap->arena.reserved_bytes;
+    link_chunk(heap, chunk, region);
     return chunk;
 }
 
@@ -245,10 +278,65 @@ void myl_native_arena_trace(myl_native_heap *heap, void (*trace)(myl_native_heap
     }
 }
 
+/* Detach before callbacks so reentrant arenas cannot use dying chunks. */
+static myl_native_arena_chunk *detach(myl_native_heap *heap, unsigned region) {
+    myl_native_arena_chunk *all = NULL;
+    while (heap->arena_depths > region) {
+        size_t depth = --heap->arena_depths;
+        myl_native_arena_chunk *chunk = heap->arena_chunks[depth];
+        heap->arena_chunks[depth] = NULL;
+        while (chunk) {
+            myl_native_arena_chunk *next = chunk->next;
+            chunk->next = all;
+            all = chunk;
+            chunk = next;
+        }
+    }
+    return all;
+}
+static void release_edges(myl_native_heap *heap, myl_native_arena_chunk *chunk) {
+    const size_t mask = alignof(max_align_t) - 1;
+    size_t offset = 0;
+    while (offset < chunk->used) {
+        myl_native_object *header = (myl_native_object *)(chunk->data + offset);
+        size_t count = (header->mark >> MYL_NATIVE_OBJECT_COUNT_SHIFT) & MYL_NATIVE_ARENA_COUNT_MAX;
+        offset = (offset + sizeof *header + payload_bytes(header->element, count) + mask) & ~mask;
+        if (header->mark & MYL_RC_OBJECT_DYING) continue;
+        header->mark |= MYL_RC_OBJECT_DYING;
+        const myl_rc_descriptor *descriptor = myl_rc_descriptor_find(heap, header->element);
+        myl_rc_invariant(descriptor != NULL);
+        if (descriptor->finalize) descriptor->finalize(heap, header + 1);
+        descriptor = myl_rc_descriptor_find(heap, header->element);
+        if (descriptor->edges) descriptor->edges(heap, header + 1, count);
+        else myl_rc_edges_release(heap, descriptor->shape, header + 1, count);
+    }
+}
+static void rc_release(myl_native_heap *heap, unsigned region) {
+    myl_native_arena_chunk *chunks = detach(heap, region);
+    unsigned saved = heap->region_depth;
+    heap->region_depth = region ? region - 1 : 0;
+    myl_rc_scopes_close_region(heap, region);
+    /* Keep every backing and descriptor alive until all logical owners drop.
+     * Raw bytes must not be zeroed before their list or dictionary owner. */
+    for (myl_native_arena_chunk *chunk = chunks; chunk; chunk = chunk->next) release_edges(heap, chunk);
+    myl_rc_drain(heap);
+    myl_rc_invariant(heap->region_depth == (region ? region - 1 : 0));
+    heap->region_depth = saved;
+    while (chunks) {
+        myl_native_arena_chunk *chunk = chunks;
+        chunks = chunk->next;
+        heap->objects_live -= chunk->count;
+        heap->arena.released += chunk->count;
+        heap->arena.reserved_bytes -= chunk->bytes;
+        heap->arena.chunks_live--;
+        if (!cache(heap, chunk)) { heap->bytes -= chunk->bytes; free(chunk); }
+    }
+}
 void myl_native_arena_release(myl_native_heap *heap, unsigned region) {
     /* A reused chunk is zeroed up to `used`, which must cover what generated
      * code bumped out of the window. */
     myl_native_arena_sync(heap);
+    if (heap->rc) { rc_release(heap, region); return; }
     /* Only the lists of `region` and deeper are visited, deepest first, so
      * closing a scope costs the chunks it frees, not every open chunk. */
     while (heap->arena_depths > region) {
@@ -267,4 +355,16 @@ void myl_native_arena_release(myl_native_heap *heap, unsigned region) {
         }
     }
     while (heap->arena_depths && !heap->arena_chunks[heap->arena_depths - 1]) heap->arena_depths--;
+}
+void myl_native_arena_destroy(myl_native_heap *heap) {
+    myl_native_arena_release(heap, 0);
+    myl_native_arena_reclaim(heap);
+    if (heap->rc) myl_rc_meta_free(heap, heap->arena_chunks, heap->arena_depth_capacity * sizeof *heap->arena_chunks);
+    else free(heap->arena_chunks);
+    heap->arena_chunks = NULL;
+    heap->arena_depth_capacity = 0;
+}
+void myl_rc_arena_close(myl_native_heap *heap, unsigned depth) {
+    myl_rc_invariant(heap && heap->rc && depth && depth == heap->region_depth);
+    myl_native_region_end(heap);
 }

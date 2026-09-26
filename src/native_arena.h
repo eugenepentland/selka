@@ -19,4 +19,5 @@ void myl_native_arena_sync(myl_native_heap *);
  * and when a host reservation fails, since retained chunks are the only bytes
  * the runtime can give back without losing a live allocation. */
 void myl_native_arena_reclaim(myl_native_heap *);
+void myl_native_arena_destroy(myl_native_heap *);
 #endif

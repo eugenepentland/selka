@@ -2,6 +2,8 @@
 #if defined(MYL_NATIVE_RC) && MYL_NATIVE_RC
 #include "native_rc_internal.h"
 #include "native_rc_values.h"
+#include "native_arena.h"
+#include <string.h>
 _Static_assert(sizeof(MylQbeRcSlot) == MYL_QBE_RC_SLOT_BYTES, "RC slot journal size");
 _Static_assert(offsetof(MylQbeRcSlot, type) == MYL_QBE_RC_SLOT_TYPE_OFFSET, "RC slot type");
 _Static_assert(offsetof(MylQbeRcSlot, address) == MYL_QBE_RC_SLOT_ADDRESS_OFFSET, "RC slot address");
@@ -52,7 +54,15 @@ void myl_qbe_rc_slot_drop(void *context, MylQbeRcSlot *slot) {
     myl_rc_invariant(slot && slot->initialized);
     if (!*slot->initialized) return;
     *slot->initialized = 0;
-    myl_rc_invariant(slot->type && slot->address && !(slot->flags & ~3u));
+    myl_rc_invariant(slot->type && slot->address && !(slot->flags & ~7u));
+    if (slot->flags & MYL_QBE_RC_CONSTRUCTION) {
+        myl_rc_invariant(slot->flags == MYL_QBE_RC_CONSTRUCTION && slot->type->size == sizeof(void *));
+        void *payload;
+        memcpy(&payload, slot->address, sizeof payload);
+        memset(slot->address, 0, sizeof payload);
+        myl_rc_construction_abort(&ctx->heap, payload);
+        return;
+    }
     if (slot->flags & MYL_QBE_RC_UNIQUE_DROP) myl_native_owned_drop(&ctx->heap, slot->type, slot->address);
     if (slot->flags & MYL_QBE_RC_COUNTED) myl_rc_native_drop(&ctx->heap, slot->type, slot->address);
 }
@@ -78,5 +88,17 @@ void myl_qbe_rc_unwind(void *context) {
     MylQbeContext *ctx = context;
     myl_qbe_rc_unwind_to(ctx, NULL);
     myl_rc_scope_unwind(&ctx->heap, NULL);
+}
+void myl_qbe_rc_finish(void *context) {
+    MylQbeContext *ctx = context;
+    if (!ctx->heap.rc) return;
+    myl_qbe_rc_unwind(ctx);
+    myl_native_arena_release(&ctx->heap, 0);
+    ctx->heap.region_depth = 0;
+    for (size_t i = 0; i < 128; ++i) {
+        void *text = ctx->heap.text_scalars[i];
+        ctx->heap.text_scalars[i] = NULL;
+        myl_rc_owner_release(&ctx->heap, text);
+    }
 }
 #endif
