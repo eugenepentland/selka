@@ -29,6 +29,7 @@ fn extraction(ctx: *const Context, owners: []const bool, pc: usize) ?Transfer {
     const target = li(code[pc + 1].op.store_local);
     const ty = ctx.locals.list[source].ty;
     if (!ty.isAggregate()) return null;
+    if (@import("value_semantics.zig").containsLiveView(ctx.code.program.records, ty)) return null;
     if (ctx.record(ty).managed or !ctx.record(ty).isRecord()) return null;
     if (ctx.role(source) != .mut_param and !owners[source]) return null;
     if (ctx.role(source) == .mut_param and otherMutableParameter(ctx, source)) return null;

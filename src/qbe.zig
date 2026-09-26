@@ -1659,7 +1659,7 @@ const Emitter = struct {
         });
         if (self.cow) |state| try cow_lower.Lower(Emitter).veto(self, state);
         try self.findRoots();
-        if (self.has_roots and self.has_safepoints) self.live_roots = try self.rootLiveness();
+        if (self.needsRootProtocol()) self.live_roots = try self.rootLiveness();
         const capacity = ir.stack_capacity;
         // QBE-FRAMEFIT-1: before the body exists, the only bound on the per-pc
         // aggregate scratch counts every buffer the lowering might declare, and
@@ -1751,7 +1751,7 @@ const Emitter = struct {
         if (self.has_roots) try self.print(" %heap =l call $myl_qbe_heap(l %ctx)\n", .{});
         try rc_frame.Lower(Emitter).enter(self);
         if (self.entry and runtime_mode.enabled()) try self.requireAccounting();
-        if (self.has_roots and self.has_safepoints) try self.print(" %root_mark =l call $myl_qbe_root_mark(l %ctx)\n", .{});
+        if (self.needsRootProtocol()) try self.print(" %root_mark =l call $myl_qbe_root_mark(l %ctx)\n", .{});
         if (self.step_checks) try self.print(" %maxsteps =l add %ctx, 16\n", .{});
         try self.print(" jmp @i0\n", .{});
         try self.emitInstructions();
@@ -1760,7 +1760,7 @@ const Emitter = struct {
         try rc_frame.Lower(Emitter).cleanup(self);
         try rc_frame.Lower(Emitter).leave(self);
         try arena_lower.Lower(Emitter).restore(self);
-        if (self.has_roots and self.has_safepoints) try root_lower.restoreFrameRoots(self);
+        if (self.needsRootProtocol()) try root_lower.restoreFrameRoots(self);
         if (self.heap_frame) try self.print(" call $myl_qbe_frame_release(l %ctx, l %frame_memory)\n jmp @allocation_failure\n@allocation_failure\n", .{});
         try self.leaveFrame();
         // QBE-COLD-FAILRET-1: only failed paths return `%empty`. Initializing
