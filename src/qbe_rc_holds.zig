@@ -6,10 +6,15 @@ const Error = frame.Error;
 /// Exclusive terminal-pointer journal role, matching MYL_QBE_RC_HOLD_POINTER.
 pub const flag: u32 = 8;
 
-/// Only functions with a reachable live view can create terminal H dictionary slots.
+/// Live views and managed iteration sources can create terminal H collection slots.
 pub fn mayHold(comptime E: type, self: *E, ty: typed.Type) bool {
     if (!ty.isAggregate()) return false;
-    if (self.program.records[ty.recordIndex()].collection.kind != .dictionary) return false;
+    const record = self.program.records[ty.recordIndex()];
+    if (!record.isCollection()) return false;
+    for (self.function.scope.locals, 0..) |local, index| {
+        if (local.ty == ty and @import("cow_plan.zig").iterationOwner(self.function, index)) return true;
+    }
+    if (record.collection.kind != .dictionary) return false;
     for (self.states) |state| if (state) |stack| for (stack) |value| {
         if (semantics.isLiveView(self.program.records, value)) return true;
     };

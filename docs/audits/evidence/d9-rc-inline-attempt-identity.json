@@ -1,0 +1,39 @@
+{
+  "commit": "c09fce2b6191045d83b2aad3e81c727bc6c33d4b",
+  "compiler_sha256": "2b8ed635ac605465afb2c34e98e6412e9f68dd263862a7c15273399a7047c96b",
+  "status": "main gate failed; both actual RC guest sweeps pass",
+  "gate_commands": [
+    "zig build test --summary all"
+  ],
+  "not_run": [
+    "test-qbe",
+    "test-qbe-build",
+    "fmt-check"
+  ],
+  "guest_commands": [
+    "mylang test tests/lang --rc-runtime=stats --force --json --jobs 6",
+    "mylang test tests/lang --rc-runtime=stats --force --json --jobs 6 --release"
+  ],
+  "files": {
+    "docs/audits/evidence/d9-rc-inline-attempt-inline-test.log.gz": {
+      "original_sha256": "d521f35f4749f7a48a87736f6f847046791dc38604450dd3c6b1902f37b490b0",
+      "bytes": 148508
+    },
+    "docs/audits/evidence/d9-rc-inline-attempt-inline-sweep-qbe.json.gz": {
+      "original_sha256": "cc946236c857ed0343d01eb85920eaec457b5932a781a1529ceddfea30b0fd36",
+      "bytes": 503608
+    },
+    "docs/audits/evidence/d9-rc-inline-attempt-inline-sweep-llvm.json.gz": {
+      "original_sha256": "7972538db4eaef6e651982049990b9ad6d8c1b1f9ff9ed1168bf594f67ad8c35",
+      "bytes": 503608
+    },
+    "docs/audits/evidence/d9-rc-inline-attempt-inline-sweep-qbe.log.gz": {
+      "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "docs/audits/evidence/d9-rc-inline-attempt-inline-sweep-llvm.log.gz": {
+      "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  }
+}

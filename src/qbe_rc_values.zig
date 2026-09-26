@@ -2,6 +2,7 @@
 const typed = @import("typed.zig");
 const frame = @import("qbe_rc_frame.zig");
 const slots = @import("qbe_rc_slots.zig");
+const holds = @import("qbe_rc_holds.zig");
 /// QBE byte relocation shared by transactional value and aggregate publication.
 pub const blit_value = " blit %v{d}, %v{d}, {d}\n";
 const region_mark = " %v{d} =l call $myl_qbe_region_mark(l %ctx)\n";
@@ -118,7 +119,38 @@ pub fn commitRuntime(comptime E: type, self: *E) Error!void {
 /// A pin-aware take can still allocate; its source guard changes only on success.
 pub fn prepareOperand(comptime E: type, self: *E, ty: typed.Type, index: usize) Error!void {
     const address = try source(E, self, index, ty);
+    if (try producedOwner(E, self, ty, index)) return prepareOwned(E, self, ty, address, journalIndex(E, self, index));
     try prepareGuarded(E, self, ty, address, journalIndex(E, self, index));
+}
+
+fn producedOwner(comptime E: type, self: *E, ty: typed.Type, index: usize) Error!bool {
+    if (self.pc == 0 or self.branch_targets[self.pc]) return false;
+    if (@import("qbe_rc_borrow.zig").active(E, self)) return false;
+    if (holds.mayHold(E, self, ty)) return false;
+    const state = frame.get(E, self) orelse return false;
+    const shape = state.catalog.get(ty) catch return error.InternalError;
+    if (!shape.counted or shape.unique_drop) return false;
+    const stack = self.states[self.pc] orelse return false;
+    if (stack.len == 0 or index != stack.len - 1) return false;
+    const capture = self.cow.?.captures[self.pc - 1];
+    const no_scope = @import("cow_plan.zig").none;
+    if (capture.begin != no_scope or capture.active != no_scope) return false;
+    // Only these completed producers unconditionally publish an ordinary owner.
+    // A branch into the consumer, a held mapping, a raw local read or any other
+    // instruction retains the guard test. No proof is carried across a call.
+    return switch (self.function.scope.instructions[self.pc - 1].op) {
+        .call, .make_record, .make_variant, .value_copy, .move_local => true,
+        else => false,
+    };
+}
+
+fn prepareOwned(comptime E: type, self: *E, ty: typed.Type, address: usize, journal_index: usize) Error!void {
+    const work = try workAddress(E, self);
+    const region = self.temp();
+    try self.print(region_mark, .{region});
+    try slots.Lower(E).transfer(self, .{ .ty = ty, .destination = work, .source = address, .region = region, .mode = .take_empty });
+    try frame.initialized(E, self, journal_index, false);
+    try markWork(E, self, ty, work);
 }
 
 /// Physical moves consume only an initialized owner; a borrowed local or operand
@@ -129,20 +161,15 @@ pub fn prepareGuarded(comptime E: type, self: *E, ty: typed.Type, address: usize
     const label = self.temp();
     try self.print(" %v{d} =w loaduw %v{d}\n", .{ live, guard_pointer });
     var transferable = live;
-    const may_hold = @import("qbe_rc_holds.zig").mayHold(E, self, ty);
+    const may_hold = holds.mayHold(E, self, ty);
     if (may_hold) {
-        const held = try @import("qbe_rc_holds.zig").held(E, self, journal_index);
+        const held = try holds.held(E, self, journal_index);
         const owner = self.temp();
         transferable = self.temp();
         try self.print(" %v{d} =w xor %v{d}, 1\n %v{d} =w and %v{d}, %v{d}\n", .{ owner, held, transferable, live, owner });
     }
     try self.print(" jnz %v{d}, @rctake{d}, @rccopy{d}\n@rctake{d}\n", .{ transferable, label, label, label });
-    const work = try workAddress(E, self);
-    const region = self.temp();
-    try self.print(region_mark, .{region});
-    try slots.Lower(E).transfer(self, .{ .ty = ty, .destination = work, .source = address, .region = region, .mode = .take_empty });
-    try frame.initialized(E, self, journal_index, false);
-    try markWork(E, self, ty, work);
+    try prepareOwned(E, self, ty, address, journal_index);
     try self.print(" jmp @rcprepared{d}\n@rccopy{d}\n", .{ label, label });
     try copied(E, self, ty, address);
     // A copied H token becomes an independent O only after success; refusal

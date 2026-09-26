@@ -1,0 +1,526 @@
+{
+  "revision": "d69e579cbca88313404ea856d629005b3d640527",
+  "source_sha256": "97137bff09108d9560736833ae682733abd5d728ca8066edb5cda4caede62a7c",
+  "compiler_sha256": "4d7da296a33d791820ea3d13aa459847680eeff3b1d8a69bf2858f9c53fffcf4",
+  "cpu": 0,
+  "kind": "same-compiler cumulative RC and GC private depth12 diagnostic, not acceptance",
+  "backends": {
+    "qbe": {
+      "medians": {
+        "rc": 1365490130,
+        "gc": 105808962,
+        "frozen_gc": 105808984
+      },
+      "rc_over_gc": 12.90524076779054,
+      "rc_over_frozen_gc": 12.905238084508968,
+      "measurements": [
+        {
+          "arm": "gc",
+          "command": [
+            "taskset",
+            "-c",
+            "0",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cumulative-qbe-gc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 105808964,
+            "cpu_core/cycles/u": 39933104
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n105808964,,cpu_core/instructions/u,12732640,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n39933104,,cpu_core/cycles/u,12732640,100.00,,\n",
+          "stdout_sha256": "ce89644f86ddae760ef63b4e854cfc0308cd88ce0d501e6ddf91cd1311852497"
+        },
+        {
+          "arm": "rc",
+          "command": [
+            "taskset",
+            "-c",
+            "0",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cumulative-qbe-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 1365490916,
+            "cpu_core/cycles/u": 447615546
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n1365490916,,cpu_core/instructions/u,139565242,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n447615546,,cpu_core/cycles/u,139565242,100.00,,\n",
+          "stdout_sha256": "ce89644f86ddae760ef63b4e854cfc0308cd88ce0d501e6ddf91cd1311852497"
+        },
+        {
+          "arm": "frozen_gc",
+          "command": [
+            "taskset",
+            "-c",
+            "0",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 105808984,
+            "cpu_core/cycles/u": 24529081
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n105808984,,cpu_core/instructions/u,8218166,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n24529081,,cpu_core/cycles/u,8218166,100.00,,\n",
+          "stdout_sha256": "ce89644f86ddae760ef63b4e854cfc0308cd88ce0d501e6ddf91cd1311852497"
+        },
+        {
+          "arm": "frozen_gc",
+          "command": [
+            "taskset",
+            "-c",
+            "0",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 105808986,
+            "cpu_core/cycles/u": 24375336
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n105808986,,cpu_core/instructions/u,8328802,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n24375336,,cpu_core/cycles/u,8328802,100.00,,\n",
+          "stdout_sha256": "ce89644f86ddae760ef63b4e854cfc0308cd88ce0d501e6ddf91cd1311852497"
+        },
+        {
+          "arm": "rc",
+          "command": [
+            "taskset",
+            "-c",
+            "0",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cumulative-qbe-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 1365490130,
+            "cpu_core/cycles/u": 408821208
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n1365490130,,cpu_core/instructions/u,126908921,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n408821208,,cpu_core/cycles/u,126908921,100.00,,\n",
+          "stdout_sha256": "ce89644f86ddae760ef63b4e854cfc0308cd88ce0d501e6ddf91cd1311852497"
+        },
+        {
+          "arm": "gc",
+          "command": [
+            "taskset",
+            "-c",
+            "0",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cumulative-qbe-gc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 105808962,
+            "cpu_core/cycles/u": 26374479
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n105808962,,cpu_core/instructions/u,10092475,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n26374479,,cpu_core/cycles/u,10092475,100.00,,\n",
+          "stdout_sha256": "ce89644f86ddae760ef63b4e854cfc0308cd88ce0d501e6ddf91cd1311852497"
+        },
+        {
+          "arm": "rc",
+          "command": [
+            "taskset",
+            "-c",
+            "0",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cumulative-qbe-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 1365490088,
+            "cpu_core/cycles/u": 381357265
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n1365490088,,cpu_core/instructions/u,121936504,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n381357265,,cpu_core/cycles/u,121936504,100.00,,\n",
+          "stdout_sha256": "ce89644f86ddae760ef63b4e854cfc0308cd88ce0d501e6ddf91cd1311852497"
+        },
+        {
+          "arm": "gc",
+          "command": [
+            "taskset",
+            "-c",
+            "0",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cumulative-qbe-gc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 105808957,
+            "cpu_core/cycles/u": 25031550
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n105808957,,cpu_core/instructions/u,8485391,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n25031550,,cpu_core/cycles/u,8485391,100.00,,\n",
+          "stdout_sha256": "ce89644f86ddae760ef63b4e854cfc0308cd88ce0d501e6ddf91cd1311852497"
+        },
+        {
+          "arm": "frozen_gc",
+          "command": [
+            "taskset",
+            "-c",
+            "0",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 105808981,
+            "cpu_core/cycles/u": 24542796
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n105808981,,cpu_core/instructions/u,7994455,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n24542796,,cpu_core/cycles/u,7994455,100.00,,\n",
+          "stdout_sha256": "ce89644f86ddae760ef63b4e854cfc0308cd88ce0d501e6ddf91cd1311852497"
+        }
+      ],
+      "counts": {
+        "version": 1,
+        "runtime": "rc-v2-counting",
+        "saturated": false,
+        "owner_acquire": 19,
+        "owner_release": 669079,
+        "hold_acquire": 0,
+        "hold_release": 0,
+        "owner_limit": 0,
+        "hold_limit": 0,
+        "heap_allocate": 669060,
+        "arena_allocate": 0,
+        "retire": 669060,
+        "clone_shell": 0,
+        "unique_check": 33
+      },
+      "binary_sha256": {
+        "rc": "b560c016cf54f2f5bca29a301d5f3264e57906c07614946589a57e1b5bcf59a1",
+        "gc": "30f3429bf0980deabff221d709d6a96cc8b7ef0330a14eca480f1ac4d649a7c2",
+        "frozen_gc": "363701a87394bd7599f2c1d6e5216bfc9d9d4d7ec34c97501b606df08ebfcbb5"
+      }
+    },
+    "llvm": {
+      "medians": {
+        "rc": 775491413,
+        "gc": 50540744,
+        "frozen_gc": 50540748
+      },
+      "rc_over_gc": 15.343885974452611,
+      "rc_over_frozen_gc": 15.343884760075177,
+      "measurements": [
+        {
+          "arm": "gc",
+          "command": [
+            "taskset",
+            "-c",
+            "0",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cumulative-llvm-gc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 50540747,
+            "cpu_core/cycles/u": 22511199
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n50540747,,cpu_core/instructions/u,6766343,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n22511199,,cpu_core/cycles/u,6766343,100.00,,\n",
+          "stdout_sha256": "ce89644f86ddae760ef63b4e854cfc0308cd88ce0d501e6ddf91cd1311852497"
+        },
+        {
+          "arm": "rc",
+          "command": [
+            "taskset",
+            "-c",
+            "0",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cumulative-llvm-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 791547530,
+            "cpu_core/cycles/u": 177448524
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n791547530,,cpu_core/instructions/u,47953644,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n177448524,,cpu_core/cycles/u,47953644,100.00,,\n",
+          "stdout_sha256": "ce89644f86ddae760ef63b4e854cfc0308cd88ce0d501e6ddf91cd1311852497"
+        },
+        {
+          "arm": "frozen_gc",
+          "command": [
+            "taskset",
+            "-c",
+            "0",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/frozen-gc-llvm-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 50540747,
+            "cpu_core/cycles/u": 22682372
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n50540747,,cpu_core/instructions/u,7160657,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n22682372,,cpu_core/cycles/u,7160657,100.00,,\n",
+          "stdout_sha256": "ce89644f86ddae760ef63b4e854cfc0308cd88ce0d501e6ddf91cd1311852497"
+        },
+        {
+          "arm": "frozen_gc",
+          "command": [
+            "taskset",
+            "-c",
+            "0",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/frozen-gc-llvm-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 50540748,
+            "cpu_core/cycles/u": 22680798
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n50540748,,cpu_core/instructions/u,7047737,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n22680798,,cpu_core/cycles/u,7047737,100.00,,\n",
+          "stdout_sha256": "ce89644f86ddae760ef63b4e854cfc0308cd88ce0d501e6ddf91cd1311852497"
+        },
+        {
+          "arm": "rc",
+          "command": [
+            "taskset",
+            "-c",
+            "0",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cumulative-llvm-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 775491413,
+            "cpu_core/cycles/u": 191911591
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n775491413,,cpu_core/instructions/u,57982289,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n191911591,,cpu_core/cycles/u,57982289,100.00,,\n",
+          "stdout_sha256": "ce89644f86ddae760ef63b4e854cfc0308cd88ce0d501e6ddf91cd1311852497"
+        },
+        {
+          "arm": "gc",
+          "command": [
+            "taskset",
+            "-c",
+            "0",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cumulative-llvm-gc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 50540744,
+            "cpu_core/cycles/u": 22432163
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n50540744,,cpu_core/instructions/u,6935573,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n22432163,,cpu_core/cycles/u,6935573,100.00,,\n",
+          "stdout_sha256": "ce89644f86ddae760ef63b4e854cfc0308cd88ce0d501e6ddf91cd1311852497"
+        },
+        {
+          "arm": "rc",
+          "command": [
+            "taskset",
+            "-c",
+            "0",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cumulative-llvm-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 775491041,
+            "cpu_core/cycles/u": 173803811
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n775491041,,cpu_core/instructions/u,50753795,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n173803811,,cpu_core/cycles/u,50753795,100.00,,\n",
+          "stdout_sha256": "ce89644f86ddae760ef63b4e854cfc0308cd88ce0d501e6ddf91cd1311852497"
+        },
+        {
+          "arm": "gc",
+          "command": [
+            "taskset",
+            "-c",
+            "0",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cumulative-llvm-gc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 50540743,
+            "cpu_core/cycles/u": 22413682
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n50540743,,cpu_core/instructions/u,6783852,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n22413682,,cpu_core/cycles/u,6783852,100.00,,\n",
+          "stdout_sha256": "ce89644f86ddae760ef63b4e854cfc0308cd88ce0d501e6ddf91cd1311852497"
+        },
+        {
+          "arm": "frozen_gc",
+          "command": [
+            "taskset",
+            "-c",
+            "0",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/frozen-gc-llvm-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 50540748,
+            "cpu_core/cycles/u": 22781969
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n50540748,,cpu_core/instructions/u,6799262,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n22781969,,cpu_core/cycles/u,6799262,100.00,,\n",
+          "stdout_sha256": "ce89644f86ddae760ef63b4e854cfc0308cd88ce0d501e6ddf91cd1311852497"
+        }
+      ],
+      "counts": {
+        "version": 1,
+        "runtime": "rc-v2-counting",
+        "saturated": false,
+        "owner_acquire": 19,
+        "owner_release": 669079,
+        "hold_acquire": 0,
+        "hold_release": 0,
+        "owner_limit": 0,
+        "hold_limit": 0,
+        "heap_allocate": 669060,
+        "arena_allocate": 0,
+        "retire": 669060,
+        "clone_shell": 0,
+        "unique_check": 33
+      },
+      "binary_sha256": {
+        "rc": "c4ca6bcb2f5f7538275a110d6aade7cc44fe94a6184288e1eb70902a2c168d10",
+        "gc": "f5a4f6ec77f104dcde825b329b14e1d4df8852b93a469e0cc33e265a269d6ad5",
+        "frozen_gc": "7cfd9058e351b5c1381848669b49521f4087a2ac790edcfd9b59c7a659a2877c"
+      }
+    }
+  },
+  "build_commands": [
+    [
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/install-cumulative/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/binary_trees_n12.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cumulative-qbe-rc-n12",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cache-cumulative-qbe",
+      "--rc-runtime",
+      "--keep-symbols"
+    ],
+    [
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/install-cumulative/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/binary_trees_n12.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cumulative-qbe-stats-n12",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cache-cumulative-qbe",
+      "--rc-runtime=stats",
+      "--keep-symbols"
+    ],
+    [
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/install-cumulative/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/binary_trees_n12.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cumulative-llvm-rc-n12",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cache-cumulative-llvm",
+      "--rc-runtime",
+      "--keep-symbols",
+      "--backend=llvm",
+      "--llvm-opt=3",
+      "--lto"
+    ],
+    [
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/install-cumulative/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/binary_trees_n12.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cumulative-llvm-stats-n12",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cache-cumulative-llvm",
+      "--rc-runtime=stats",
+      "--keep-symbols",
+      "--backend=llvm",
+      "--llvm-opt=3",
+      "--lto"
+    ],
+    [
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/install-cumulative/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/binary_trees_n12.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cumulative-qbe-gc-n12",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cache-cumulative-gc-qbe",
+      "--keep-symbols"
+    ],
+    [
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/install-cumulative/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/binary_trees_n12.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cumulative-llvm-gc-n12",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cache-cumulative-gc-llvm",
+      "--keep-symbols",
+      "--backend=llvm",
+      "--llvm-opt=3",
+      "--lto"
+    ]
+  ]
+}

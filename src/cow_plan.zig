@@ -288,6 +288,17 @@ fn temporary(function: bytecode.Function, index: u32) bool {
     return local.name.len == 0 or local.name[0] == '<';
 }
 
+/// A hidden managed iteration source preserves header identity, unlike a value snapshot.
+pub fn iterationOwner(function: bytecode.Function, index: usize) bool {
+    if (index >= function.scope.locals.len or !temporary(function, @intCast(index))) return false;
+    for (function.scope.instructions) |instruction| {
+        if (instruction.op != .buffer_operation) continue;
+        const operation = instruction.op.buffer_operation;
+        if (operation.kind == .iteration_check and li(operation.owner) == index) return true;
+    }
+    return false;
+}
+
 /// The one reachable store into `index`, or null.
 fn singleStore(planner: *const Planner, index: u32) ?usize {
     var found: ?usize = null;
@@ -633,6 +644,7 @@ fn placeShares(planner: *Planner, written: []const bool) Error!void {
             // Unlike a pending writing place, it needs an independent value.
             if (!temporary(planner.input.function, local)) continue;
             if (written[local] or !planner.payload(local)) continue;
+            if (iterationOwner(planner.input.function, local)) continue;
         }
         const operands = planner.input.analysis.operands[transfer.pc] orelse continue;
         const types = planner.input.states[transfer.pc] orelse continue;
