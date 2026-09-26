@@ -1,0 +1,233 @@
+{
+  "kind": "private n12 diagnostic, not full corpus acceptance",
+  "source": "# binary_trees: perfect binary trees of recursive value nodes on the collecting heap.\n# Every short-lived tree becomes garbage after its check; the tracing\n# collector reclaims it. See SUITE.md section 1.\n\n\nrecord Node:\n    left: Option[Node]\n    right: Option[Node]\n\n\ndef make(depth: int) -> Node:\n    if depth == 0:\n        return Node(left=None, right=None)\n    return Node(left=Some(make(depth - 1)), right=Some(make(depth - 1)))\n\n\ndef check(node: Node) -> int:\n    left = node.left\n    right = node.right\n    if left is None or right is None:\n        return 1\n    return 1 + check(left) + check(right)\n\n\ndef main(out: Stream) -> int:\n    max_depth = 12\n    min_depth = 4\n\n    stretch = max_depth + 1\n    out.print(f\"stretch tree of depth {stretch}\\t check: {check(make(stretch))}\")\n\n    long_lived = make(max_depth)\n\n    depth = min_depth\n    while depth <= max_depth:\n        iterations = shift_left(1, max_depth - depth + min_depth)\n        total = 0\n        for _ in range(iterations):\n            total = total + check(make(depth))\n        out.print(f\"{iterations}\\t trees of depth {depth}\\t check: {total}\")\n        depth = depth + 2\n\n    out.print(f\"long lived tree of depth {max_depth}\\t check: {check(long_lived)}\")\n    return 0\n",
+  "expected": "stretch tree of depth 13\t check: 16383\n4096\t trees of depth 4\t check: 126976\n1024\t trees of depth 6\t check: 130048\n256\t trees of depth 8\t check: 130816\n64\t trees of depth 10\t check: 131008\n16\t trees of depth 12\t check: 131056\nlong lived tree of depth 12\t check: 8191\n",
+  "before_commit": "91b25b86dce263f006314e707ab1e280039619e9",
+  "after_patch": "diff --git a/src/qbe_rc_aggregate.zig b/src/qbe_rc_aggregate.zig\nindex 04fa78af..1cf40077 100644\n--- a/src/qbe_rc_aggregate.zig\n+++ b/src/qbe_rc_aggregate.zig\n@@ -6,6 +6,7 @@ const values = @import(\"qbe_rc_values.zig\");\n const slots = @import(\"qbe_rc_slots.zig\");\n const state = @import(\"qbe_rc_state.zig\");\n const Op = @FieldType(bytecode.Instruction, \"op\");\n+const blit_value = values.blit_value;\n /// Native emitter failures shared by aggregate publication helpers.\n pub const Error = values.Error;\n \n@@ -62,6 +63,17 @@ fn initialize(comptime E: type, self: *E, field: Field) Error!void {\n         try self.writeValue(field.destination, try self.readValue(field.source, field.ty), field.ty);\n         return;\n     }\n+    if (!shape.unique_drop) if (field.operand) |index| {\n+        // Constructor inputs are consumed. An initialized ordinary owner can\n+        // move into the already-journaled partial aggregate; borrowed or held\n+        // inputs still acquire an independent value through prepareOperand.\n+        // No fallible operation separates this publication and guard handoff.\n+        try values.prepareOperand(E, self, field.ty, index);\n+        const work = try values.workAddress(E, self);\n+        try self.print(blit_value, .{ work, field.destination, (try self.layout(field.ty)).size });\n+        try frame.initialized(E, self, frame.pending(E, self), false);\n+        return;\n+    };\n     try slots.Lower(E).transfer(self, .{ .ty = field.ty, .source = field.source, .destination = field.destination, .region = field.region, .mode = if (shape.unique_drop) .take_empty else .copy_empty });\n     if (shape.unique_drop) if (field.operand) |index|\n         try frame.initialized(E, self, values.journalIndex(E, self, index), false);\n@@ -127,7 +139,7 @@ pub fn prepareBase(comptime E: type, self: *E, ty: typed.Type, base: usize) Erro\n         try self.print(\" %v{d} =l copy %rcinternal\\n\", .{address});\n         break :blk address;\n     } else try self.aggregatePointer();\n-    try self.print(\" blit %v{d}, %v{d}, {d}\\n\", .{ work, storage, (try self.layout(ty)).size });\n+    try self.print(blit_value, .{ work, storage, (try self.layout(ty)).size });\n     try frame.initialized(E, self, frame.pending(E, self), false);\n     try internal(E, self, ty, storage);\n     if (managed) {\n@@ -146,7 +158,7 @@ fn replace(comptime E: type, self: *E, field: Field) Error!void {\n     const shape = frame.get(E, self).?.catalog.get(field.ty) catch return error.InternalError;\n     if (shape.unique_drop) try self.print(\" call $myl_native_owned_drop(l %heap, l extern ${s}, l %v{d})\\n\", .{ try self.descriptor(field.ty), field.destination });\n     if (shape.counted) try self.print(\" call $myl_rc_native_drop(l %heap, l extern ${s}, l %v{d})\\n\", .{ try self.descriptor(field.ty), field.destination });\n-    try self.print(\" blit %v{d}, %v{d}, {d}\\n\", .{ work, field.destination, (try self.layout(field.ty)).size });\n+    try self.print(blit_value, .{ work, field.destination, (try self.layout(field.ty)).size });\n     try frame.initialized(E, self, frame.pending(E, self), false);\n }\n \ndiff --git a/src/qbe_rc_aggregate_test.zig b/src/qbe_rc_aggregate_test.zig\nindex 51010799..a3416d51 100644\n--- a/src/qbe_rc_aggregate_test.zig\n+++ b/src/qbe_rc_aggregate_test.zig\n@@ -34,7 +34,7 @@ fn location(text: []const u8, needle: []const u8) !usize {\n }\n \n // spec: RC-AGGREGATE-1\n-test \"RC aggregate partial construction is zeroed and journaled before copying fields\" {\n+test \"RC aggregate partial construction journals fields before guarded takes or copies\" {\n     const saved = runtime.get();\n     defer runtime.set(saved);\n     runtime.set(.rc);\n@@ -42,9 +42,11 @@ test \"RC aggregate partial construction is zeroed and journaled before copying f\n     defer manifest.deinit();\n     const text = try findFunction(manifest.value, \"pair\");\n     const cleared = try location(text, \"call $memset(l %v\");\n+    const taken = cleared + try location(text[cleared..], \"call $myl_rc_native_take\");\n     const copied = cleared + try location(text[cleared..], \"call $myl_rc_native_copy\");\n-    try t.expect(cleared < copied);\n-    try t.expect(std.mem.indexOf(u8, text[cleared..copied], \"storew 1\") != null);\n+    try t.expect(cleared < taken and taken < copied);\n+    try t.expect(std.mem.indexOf(u8, text[cleared..taken], \"storew 1\") != null);\n+    try t.expect(std.mem.indexOf(u8, text[taken..copied], \"storew 0\") != null);\n     try t.expect(try location(text, \"call $myl_qbe_rc_frame_enter\") < cleared);\n     try t.expect(try location(text, \"call $myl_qbe_rc_frame_cleanup\") > copied);\n }\ndiff --git a/src/qbe_rc_values.zig b/src/qbe_rc_values.zig\nindex 80a749ac..6684117c 100644\n--- a/src/qbe_rc_values.zig\n+++ b/src/qbe_rc_values.zig\n@@ -2,7 +2,8 @@\n const typed = @import(\"typed.zig\");\n const frame = @import(\"qbe_rc_frame.zig\");\n const slots = @import(\"qbe_rc_slots.zig\");\n-const blit_value = \" blit %v{d}, %v{d}, {d}\\n\";\n+/// QBE byte relocation shared by transactional value and aggregate publication.\n+pub const blit_value = \" blit %v{d}, %v{d}, {d}\\n\";\n const region_mark = \" %v{d} =l call $myl_qbe_region_mark(l %ctx)\\n\";\n /// Errors shared with the native emitter.\n pub const Error = slots.Error;\n",
+  "builds": {
+    "before-qbe": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/install-before-constructor/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/constructor-transfer/binary_trees.my",
+        "--rc-runtime",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/constructor-transfer/before-qbe",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/constructor-transfer/cache"
+      ],
+      "compiler_sha256": "34c0ab68dcfa94183b612ac64eba514adaf750b5462a9ea6ec476273ea07f324",
+      "binary_sha256": "df88e43ceb4d49b399baf74367a434a0303f1a42e3e1739810fd45f833146fed"
+    },
+    "before-qbe-stats": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/install-before-constructor/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/constructor-transfer/binary_trees.my",
+        "--rc-runtime=stats",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/constructor-transfer/before-qbe-stats",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/constructor-transfer/cache"
+      ],
+      "compiler_sha256": "34c0ab68dcfa94183b612ac64eba514adaf750b5462a9ea6ec476273ea07f324",
+      "binary_sha256": "39251a7364fb9982f89c0f86013878d8e0f154868747cb3950fd8e5f2e690ff8"
+    },
+    "before-llvm": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/install-before-constructor/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/constructor-transfer/binary_trees.my",
+        "--rc-runtime",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/constructor-transfer/before-llvm",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/constructor-transfer/cache",
+        "--backend=llvm",
+        "--llvm-opt=3",
+        "--lto"
+      ],
+      "compiler_sha256": "34c0ab68dcfa94183b612ac64eba514adaf750b5462a9ea6ec476273ea07f324",
+      "binary_sha256": "4e70cd29d231faddb55173bd0169c64dbcc356d5cac248c12d9aee25ea6c1966"
+    },
+    "before-llvm-stats": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/install-before-constructor/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/constructor-transfer/binary_trees.my",
+        "--rc-runtime=stats",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/constructor-transfer/before-llvm-stats",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/constructor-transfer/cache",
+        "--backend=llvm",
+        "--llvm-opt=3",
+        "--lto"
+      ],
+      "compiler_sha256": "34c0ab68dcfa94183b612ac64eba514adaf750b5462a9ea6ec476273ea07f324",
+      "binary_sha256": "3ae12d0475975df3d077e6fb9fab0300faffb8f2f42179d21f05a34b8153ff16"
+    },
+    "after-qbe": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/constructor-transfer/binary_trees.my",
+        "--rc-runtime",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/constructor-transfer/after-qbe",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/constructor-transfer/cache"
+      ],
+      "compiler_sha256": "672138e6f41df598a9e535c82cdf8f7e25d57d5231f037f18b2ac396c7ca1d2b",
+      "binary_sha256": "ac460ae5bfed3f0540fde3c6752efed882920934a62a63b793efb94abafce8ef"
+    },
+    "after-qbe-stats": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/constructor-transfer/binary_trees.my",
+        "--rc-runtime=stats",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/constructor-transfer/after-qbe-stats",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/constructor-transfer/cache"
+      ],
+      "compiler_sha256": "672138e6f41df598a9e535c82cdf8f7e25d57d5231f037f18b2ac396c7ca1d2b",
+      "binary_sha256": "0e724451b694ff15d83762c4d559ffe3f3e8b02bcb89a24630f694665f4850c5"
+    },
+    "after-llvm": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/constructor-transfer/binary_trees.my",
+        "--rc-runtime",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/constructor-transfer/after-llvm",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/constructor-transfer/cache",
+        "--backend=llvm",
+        "--llvm-opt=3",
+        "--lto"
+      ],
+      "compiler_sha256": "672138e6f41df598a9e535c82cdf8f7e25d57d5231f037f18b2ac396c7ca1d2b",
+      "binary_sha256": "9a5ec407186d01111e063725bbfd6b87ad7f922537e56cfeb70f151fd6e7014c"
+    },
+    "after-llvm-stats": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/constructor-transfer/binary_trees.my",
+        "--rc-runtime=stats",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/constructor-transfer/after-llvm-stats",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/.tmp-schematic/constructor-transfer/cache",
+        "--backend=llvm",
+        "--llvm-opt=3",
+        "--lto"
+      ],
+      "compiler_sha256": "672138e6f41df598a9e535c82cdf8f7e25d57d5231f037f18b2ac396c7ca1d2b",
+      "binary_sha256": "23fddf5e3301c9cf23c0c9acd92a5977a430683ab53c71e4b8a1cd4098bcfd8a"
+    }
+  },
+  "counts": {
+    "before-qbe-stats": {
+      "version": 1,
+      "runtime": "rc-v2-counting",
+      "saturated": false,
+      "owner_acquire": 1996163,
+      "owner_release": 2665223,
+      "hold_acquire": 0,
+      "hold_release": 0,
+      "owner_limit": 0,
+      "hold_limit": 0,
+      "heap_allocate": 669060,
+      "arena_allocate": 0,
+      "retire": 669060,
+      "clone_shell": 0,
+      "unique_check": 33
+    },
+    "before-llvm-stats": {
+      "version": 1,
+      "runtime": "rc-v2-counting",
+      "saturated": false,
+      "owner_acquire": 1996163,
+      "owner_release": 2665223,
+      "hold_acquire": 0,
+      "hold_release": 0,
+      "owner_limit": 0,
+      "hold_limit": 0,
+      "heap_allocate": 669060,
+      "arena_allocate": 0,
+      "retire": 669060,
+      "clone_shell": 0,
+      "unique_check": 33
+    },
+    "after-qbe-stats": {
+      "version": 1,
+      "runtime": "rc-v2-counting",
+      "saturated": false,
+      "owner_acquire": 19,
+      "owner_release": 669079,
+      "hold_acquire": 0,
+      "hold_release": 0,
+      "owner_limit": 0,
+      "hold_limit": 0,
+      "heap_allocate": 669060,
+      "arena_allocate": 0,
+      "retire": 669060,
+      "clone_shell": 0,
+      "unique_check": 33
+    },
+    "after-llvm-stats": {
+      "version": 1,
+      "runtime": "rc-v2-counting",
+      "saturated": false,
+      "owner_acquire": 19,
+      "owner_release": 669079,
+      "hold_acquire": 0,
+      "hold_release": 0,
+      "owner_limit": 0,
+      "hold_limit": 0,
+      "heap_allocate": 669060,
+      "arena_allocate": 0,
+      "retire": 669060,
+      "clone_shell": 0,
+      "unique_check": 33
+    }
+  },
+  "instructions": {
+    "before-qbe": [
+      4178156170,
+      4199739531,
+      4199564832
+    ],
+    "before-llvm": [
+      3061410108,
+      3067025067,
+      3029297161
+    ],
+    "after-qbe": [
+      3499458704,
+      3477875801,
+      3483228433
+    ],
+    "after-llvm": [
+      2478756882,
+      2467965680,
+      2484021625
+    ]
+  },
+  "ratios": {
+    "qbe": 0.829426041112252,
+    "llvm": 0.8096781530584795
+  }
+}
