@@ -24,3 +24,18 @@ in [results.json](../../experiments/d9-rc-contract-results-20260926/results.json
 The focused Zig filter passed 12/12 (one selected regression plus supporting
 unnamed tests). This package requires the next combined integration full gate;
 these focused results do not claim a full-gate verdict.
+
+## GC compatibility follow-up
+
+The first combined gate at `9192db49` found that GC's unconditional unique-local
+cleanup still closed a borrowed contract payload before the caller could use it.
+The GC emitter now excludes explicitly borrowed match locals from destruction and
+skips discarded-payload destruction when inspecting a borrowed variant. This is
+the same ownership distinction already enforced by RC guards.
+
+All three new guests now pass uncached with `--gc-stress` on QBE and LLVM,
+including the returned file resource. The focused GC IL regression passes 12/12.
+The RC main still passes on both backends with the identical balanced traffic
+above under ABI 2. Exact execution records and source hashes are retained in
+[gc-compatibility.json](../../experiments/d9-rc-contract-results-20260926/gc-compatibility.json).
+The failed combined gate is retained and will be rerun after integration.

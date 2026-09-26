@@ -72,7 +72,7 @@ def verify_execution(executable):
                    for line in run.stderr.splitlines() if line.startswith("MYLANG_RC_COUNTS ")]
         assert len(records) == 1 and not run.stdout, (mode, run.stdout, run.stderr)
         counts = records[0]
-        assert counts["version"] == 1 and counts["runtime"] == "rc-v1-counting"
+        assert counts["version"] == 1 and counts["runtime"] == "rc-v2-counting"
         assert not counts["saturated"]
         assert counts["heap_allocate"] == counts["retire"] == 2
         assert counts["arena_allocate"] == 2
@@ -92,6 +92,7 @@ def jobs():
 
 # Each C suite and the runtime sources it links.
 SUITES = (
+    ("native_rc_hold", ["native_heap.c", "native_regions.c"]),
     ("native_rc_execution", ["native_heap.c", "qbe_runtime.c", "qbe_runtime_rc.c", "qbe_stack.c"]),
     ("native_rc_arena", ["native_heap.c", "native_regions.c"]),
     ("native_rc_stats", ["native_heap.c"]),

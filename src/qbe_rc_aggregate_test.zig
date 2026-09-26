@@ -120,3 +120,36 @@ test "RC contract inspection borrows the complete result before its final return
     try compilation.emit();
     try t.expect(borrowsContractBeforeReturn(compilation.code.?));
 }
+
+fn contractPayloadSlot(code: compiler.bytecode.Program) !usize {
+    for (code.functions) |function| {
+        if (!std.mem.eql(u8, function.name, "checked")) continue;
+        for (function.scope.locals, 0..) |_, index| {
+            if (@import("qbe_aggregate.zig").borrowedPayload(function, index)) return index;
+        }
+    }
+    return error.TestUnexpectedResult;
+}
+
+// spec-case: RC-CONTRACT-RESULT-1
+test "GC contract inspection does not close the returned unique payload" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.gc);
+    var compilation = try compiler.Compilation.init(t.allocator, "gc_contract.my",
+        \\@ensures(True)
+        \\def checked(fs: Filesystem) -> Result[TextFile, str]:
+        \\    return fs.open("data", "w")
+        \\def main() -> int:
+        \\    return 0
+    );
+    defer compilation.deinit();
+    const emitted = try compilation.emitQbe(t.allocator);
+    defer t.allocator.free(emitted);
+    var manifest = try std.json.parseFromSlice(Manifest, t.allocator, emitted, .{ .ignore_unknown_fields = true });
+    defer manifest.deinit();
+    const text = try findFunction(manifest.value, "checked");
+    const drop_target = try std.fmt.allocPrint(t.allocator, ", l %l{d})", .{try contractPayloadSlot(compilation.code.?)});
+    defer t.allocator.free(drop_target);
+    try t.expect(std.mem.indexOf(u8, text, drop_target) == null);
+}
