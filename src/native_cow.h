@@ -54,11 +54,10 @@ void *myl_native_cow_copy(myl_native_heap *heap, void *payload);
  * writes go through elements it cannot share runs this once on entry instead
  * of a check per write. Returns 0 when a copy is refused. */
 int myl_native_cow_elements(myl_native_heap *heap, myl_native_list *list);
-/* Copy-on-write counters (COW-STATS-1). The runtime counts the copies it
- * makes; a counting build also calls `myl_native_cow_tally` at every inline
- * mark, check and pin. A counting build, or any build run with
- * `MYLANG_COW_STATS` set, prints the totals to standard error at exit as one
- * `cow-stats {...}` JSON line. */
+/* Copy-on-write counters (COW-STATS-1). Only a counting build calls
+ * `myl_native_cow_tally` at its inline mark, check and pin sites, enabling
+ * copy counters and one `cow-stats {...}` JSON line at exit. An ordinary
+ * checks build does not update counters. */
 typedef struct {
     uint64_t marks, checks, hoisted, copies, copied_bytes, pinned_copies, pins;
 } myl_native_cow_statistics;

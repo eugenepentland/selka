@@ -103,6 +103,10 @@ static void share_marks(void) {
    shared one is copied once, the copy holds the same elements and is
    unshared, and the original is left exactly as it was. */
 static void unique_copies(void) {
+    /* An ordinary checks build incurs no counter work; this C test enables
+       counting explicitly to verify the slow-path copy measurements below. */
+    assert(myl_native_cow_counters.copies == 0);
+    myl_native_cow_tally(MYL_NATIVE_COW_CHECK);
     myl_native_heap heap;
     myl_native_heap_init(&heap, 1 << 26);
     heap.stress = 1;
@@ -368,6 +372,31 @@ static void stress_run(void) {
     assert(heap.objects_live == 0);
     myl_native_heap_destroy(&heap);
 }
+/* spec-case: COW-SHARED-1 -- inline descriptor nesting beyond 64 levels
+   still reaches and marks a mutable payload; an extreme depth is refused
+   cleanly instead of silently leaving its descendant unmarked. */
+static void deep_inline_descriptors(void) {
+    enum { DEPTH = 1030 };
+    myl_native_type types[DEPTH];
+    myl_native_field fields[DEPTH];
+    for (size_t i = 0; i < DEPTH; ++i) {
+        fields[i] = (myl_native_field){.offset = 0, .type = i + 1 < DEPTH ? &types[i + 1] : &integers};
+        types[i] = (myl_native_type){.size = sizeof(void *), .alignment = _Alignof(void *),
+            .kind = MYL_NATIVE_RECORD, .fields = &fields[i], .field_count = 1};
+    }
+    myl_native_heap heap;
+    myl_native_heap_init(&heap, 1 << 26);
+    myl_native_list *list = numbers(&heap, 1, 1);
+    myl_native_root root;
+    myl_native_root_push(&heap, &root, &list, &pointer);
+    assert(myl_native_cow_share_value(&heap, &types[DEPTH - 81], &list));
+    assert(flags(list) == MYL_NATIVE_OBJECT_SHARED);
+    ((myl_native_object *)list - 1)->mark &= ~MYL_NATIVE_OBJECT_SHARED;
+    assert(!myl_native_cow_share_value(&heap, &types[0], &list));
+    assert(!flags(list));
+    assert(myl_native_root_pop(&heap, &root));
+    myl_native_heap_destroy(&heap);
+}
 int main(void) {
     header_flags();
     share_marks();
@@ -379,6 +408,7 @@ int main(void) {
     byte_buffers();
     arenas();
     stress_run();
+    deep_inline_descriptors();
     puts("native cow tests passed");
     return 0;
 }

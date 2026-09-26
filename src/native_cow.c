@@ -9,21 +9,14 @@ static const myl_native_type pointer_type = {
 static myl_native_object *header_of(const void *payload) {
     return (myl_native_object *)payload - 1;
 }
-/* Whether the report is printed at exit: decided once, on the first event the
- * runtime counts — always in a counting build, else from `MYLANG_COW_STATS`.
- * A program that never copies never reads the environment. */
-static int report_state;
+/* Only a counting build calls tally; ordinary checks do no counter work. */
+static int counting_enabled;
 static void report_at_exit(void) { myl_native_cow_report(stderr); }
-static void arm_report(void) {
-    if (report_state) return;
-    const char *setting = getenv("MYLANG_COW_STATS");
-    report_state = setting && *setting ? 1 : -1;
-    if (report_state == 1 && atexit(report_at_exit)) report_state = -1;
-}
 void myl_native_cow_tally(uint32_t kind) {
-    /* A counting build was asked for its counts: it reports whatever the
-     * environment says. */
-    if (!report_state) report_state = atexit(report_at_exit) ? -1 : 1;
+    if (!counting_enabled) {
+        counting_enabled = 1;
+        atexit(report_at_exit);
+    }
     switch (kind) {
     case MYL_NATIVE_COW_MARK: myl_native_cow_counters.marks++; break;
     case MYL_NATIVE_COW_CHECK: myl_native_cow_counters.checks++; break;
@@ -47,17 +40,24 @@ int myl_native_cow_payload(const void *payload) {
 /* Whether a value of `type` can hold a copy-on-write payload directly: a list,
  * byte string or dictionary reference, or an inline aggregate with one inside.
  * A text or a `class` reference cannot. */
+/* A descriptor may nest inline aggregates much deeper than 64 levels. A
+ * pathological descriptor over this explicit stack bound fails a transfer
+ * rather than silently leaving a mutable descendant unmarked. */
+#define MYL_NATIVE_COW_TYPE_DEPTH_MAX 1024
 static int holds_payload(const myl_native_type *type, unsigned depth) {
-    if (!type || depth > 64 || type->trace_mode == MYL_NATIVE_TRACE_NONE) return 0;
+    if (depth > MYL_NATIVE_COW_TYPE_DEPTH_MAX) return -1;
+    if (!type || type->trace_mode == MYL_NATIVE_TRACE_NONE) return 0;
     switch (type->kind) {
     case MYL_NATIVE_POINTER:
         return type->collection_kind == 1 || type->collection_kind == 3 || type->collection_kind == 4;
     case MYL_NATIVE_ARRAY:
-        return type->count && type->field_count && holds_payload(type->fields[0].type, depth + 1);
+        return type->count && type->field_count ? holds_payload(type->fields[0].type, depth + 1) : 0;
     case MYL_NATIVE_RECORD:
     case MYL_NATIVE_VARIANT:
-        for (size_t i = 0; i < type->field_count; ++i)
-            if (holds_payload(type->fields[i].type, depth + 1)) return 1;
+        for (size_t i = 0; i < type->field_count; ++i) {
+            int held = holds_payload(type->fields[i].type, depth + 1);
+            if (held) return held;
+        }
         return 0;
     default:
         return 0;
@@ -79,16 +79,19 @@ static int mark(void *payload) {
  * value holds directly is marked, and a pinned one is replaced in place by
  * its copy when `heap` is given. Returns 0 when that copy is refused. */
 static int share_at(myl_native_heap *heap, const myl_native_type *type, unsigned char *address, unsigned depth) {
-    if (depth > 64 || type->trace_mode == MYL_NATIVE_TRACE_NONE) return 1;
+    if (depth > MYL_NATIVE_COW_TYPE_DEPTH_MAX) return 0;
+    if (type->trace_mode == MYL_NATIVE_TRACE_NONE) return 1;
     switch (type->kind) {
     case MYL_NATIVE_POINTER: {
-        if (!holds_payload(type, depth)) return 1;
+        int held = holds_payload(type, depth);
+        if (held < 0) return 0;
+        if (!held) return 1;
         void *payload;
         memcpy(&payload, address, sizeof payload);
         if (mark(payload)) return 1;
         void *copy = myl_native_cow_copy(heap, payload);
         if (!copy) return 0;
-        myl_native_cow_counters.pinned_copies++;
+        if (counting_enabled) myl_native_cow_counters.pinned_copies++;
         memcpy(address, &copy, sizeof copy);
         return 1;
     }
@@ -114,11 +117,14 @@ static int share_at(myl_native_heap *heap, const myl_native_type *type, unsigned
 void *myl_native_cow_share(myl_native_heap *heap, void *payload) {
     if (mark(payload)) return payload;
     void *copy = myl_native_cow_copy(heap, payload);
-    if (copy) myl_native_cow_counters.pinned_copies++;
+    if (copy && counting_enabled) myl_native_cow_counters.pinned_copies++;
     return copy;
 }
 int myl_native_cow_share_value(myl_native_heap *heap, const myl_native_type *type, void *address) {
-    if (!type || !address || !holds_payload(type, 0)) return 1;
+    if (!type || !address) return 1;
+    int held = holds_payload(type, 0);
+    if (held < 0) return 0;
+    if (!held) return 1;
     return share_at(heap, type, address, 0);
 }
 /* Mark every payload the elements of a fresh copy `list` hold, now that the
@@ -127,7 +133,10 @@ int myl_native_cow_share_value(myl_native_heap *heap, const myl_native_type *typ
  * — is replaced in the copy by a copy of its own, so the copy is rooted here.
  * Returns 0 when such a copy is refused. */
 static int mark_elements(myl_native_heap *heap, myl_native_list *list) {
-    if (!list->storage || !holds_payload(list->element, 0)) return 1;
+    if (!list->storage) return 1;
+    int held = holds_payload(list->element, 0);
+    if (held < 0) return 0;
+    if (!held) return 1;
     myl_native_root root;
     myl_native_root_push(heap, &root, &list, &pointer_type);
     int done = 1;
@@ -139,6 +148,7 @@ static int mark_elements(myl_native_heap *heap, myl_native_list *list) {
 /* Mark every key and value the entries of a fresh copy `dict` hold. */
 static int mark_entries(myl_native_heap *heap, myl_native_dictionary *dict) {
     int keys = holds_payload(dict->key, 0), values = holds_payload(dict->value, 0);
+    if (keys < 0 || values < 0) return 0;
     if ((!keys && !values) || !dict->entries->storage) return 1;
     myl_native_root root;
     myl_native_root_push(heap, &root, &dict, &pointer_type);
@@ -154,20 +164,23 @@ static int mark_entries(myl_native_heap *heap, myl_native_dictionary *dict) {
 void *myl_native_cow_copy(myl_native_heap *heap, void *payload) {
     if (!payload) return NULL;
     unsigned region = myl_native_header_region(payload);
-    arm_report();
     if (myl_native_list_header(payload)) {
         const myl_native_list *list = payload;
         myl_native_list *copy = myl_native_list_clone_at(heap, list, list->element, region);
         if (!copy || !mark_elements(heap, copy)) return NULL;
-        myl_native_cow_counters.copies++;
-        myl_native_cow_counters.copied_bytes += copy->length * copy->element->size;
+        if (counting_enabled) {
+            myl_native_cow_counters.copies++;
+            myl_native_cow_counters.copied_bytes += copy->length * copy->element->size;
+        }
         return copy;
     }
     if (myl_native_dictionary_header(payload)) {
         myl_native_dictionary *copy = myl_native_dictionary_clone_at(heap, payload, region);
         if (!copy || !mark_entries(heap, copy)) return NULL;
-        myl_native_cow_counters.copies++;
-        myl_native_cow_counters.copied_bytes += copy->entries->length * copy->entry_type.size;
+        if (counting_enabled) {
+            myl_native_cow_counters.copies++;
+            myl_native_cow_counters.copied_bytes += copy->entries->length * copy->entry_type.size;
+        }
         return copy;
     }
     /* Anything else is immutable or a shared reference by design: it is its
@@ -187,7 +200,10 @@ void *myl_native_cow_unique_in(myl_native_heap *heap, void *payload, void *conta
     return copy;
 }
 int myl_native_cow_elements(myl_native_heap *heap, myl_native_list *list) {
-    if (!list || !list->storage || !holds_payload(list->element, 0) || list->element->kind != MYL_NATIVE_POINTER) return 1;
+    if (!list || !list->storage || list->element->kind != MYL_NATIVE_POINTER) return 1;
+    int held = holds_payload(list->element, 0);
+    if (held < 0) return 0;
+    if (!held) return 1;
     myl_native_root root;
     myl_native_root_push(heap, &root, &list, &pointer_type);
     int done = 1;

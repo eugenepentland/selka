@@ -11,6 +11,11 @@ header. `myl_native_cow_share`, `myl_native_cow_unique`,
 `myl_native_cow_share_value` marks direct collection payloads in an inline
 record, array or active variant without walking into a marked collection.
 The C tests exercise these operations with collection on every allocation.
+Inline descriptor walks support 1,024 levels and refuse a deeper transfer
+instead of silently leaving a descendant unmarked; the C test covers both an
+81-level successful share and an over-limit refusal. Copy counters are enabled
+only by a counting build's first tally call, so the ordinary checks policy
+does not update counters or read an environment variable.
 
 Stage 3a's only real-copy hook is `qbe_value_copy.zig:Lower.emit`, which emits
 `myl_qbe_value_copy(ctx, descriptor, source, output, children)` after ownership
@@ -49,3 +54,15 @@ an outer owner whose COW replacement survives an inner arena exit, plus a heap
 owner surviving an arena exit. This choice preserves the region lifetime
 invariant without changing the language's arena escape rules; phase 2 should
 compare the same cases with stage 3a's eager implementation.
+
+Stage 3c adds immutable hidden `box<T>` pointers with descriptor
+`collection_kind == 5`. Once that branch joins, sharing a box must traverse
+its body to mark collection payloads reachable through inline fields, without
+marking the box itself as a mutable payload. A pinned descendant cannot be
+replaced inside an existing immutable box: clone each box on that path with
+its body descriptor, replace the pinned child only in the fresh box, and
+redirect the copied value's pointer to it. Nested mutation must likewise
+write through an unboxed path copy and publish new boxes from the inside out.
+Tests must include transfer, nested writes, `mut` pinning and arena exit with
+boxed collections under collection stress. The phase 1 C runtime does not
+know the stage 3c descriptor yet; this work belongs to the joined phase 2.
