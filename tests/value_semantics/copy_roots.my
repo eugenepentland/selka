@@ -1,0 +1,29 @@
+module copy_roots
+
+
+def snapshot(xs: list[int]) -> list[int]:
+    return xs
+
+
+def keep_then_grow(xs: mut list[int], survivor: list[int]) -> list[int]:
+    saved = snapshot(xs)
+    xs.append(survivor[0])
+    return saved
+
+
+# spec-case: QBE-VALUECOPY-ROOTS-1
+public def test_pinned_transfer_keeps_original_and_other_live_values() -> bool:
+    xs = [1, 2]
+    survivor = [9]
+    saved = keep_then_grow(mut xs, survivor)
+    saved.append(3)
+    return saved == [1, 2, 3] and xs == [1, 2, 9] and survivor == [9]
+
+
+# spec-case: QBE-VALUECOPY-ROOTS-1
+public def test_fast_transfer_keeps_independent_snapshots() -> bool:
+    xs = [1, 2]
+    saved = snapshot(xs)
+    xs.append(9)
+    saved.append(3)
+    return saved == [1, 2, 3] and xs == [1, 2, 9]

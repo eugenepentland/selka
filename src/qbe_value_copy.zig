@@ -67,7 +67,7 @@ pub fn Lower(comptime E: type) type {
                     else => {},
                 };
             }
-            if (!try inlineTransfer(E, self, copy.ty, output, children)) {
+            if (!try inlineTransfer(E, self, copy.ty, output, children, stack)) {
                 const copied = self.temp();
                 try self.print(" %v{d} =w call $myl_qbe_cow_transfer(l %ctx, l extern ${s}, l %v{d}, l %v{d}, w {d})\n", .{ copied, try self.descriptor(copy.ty), output, output, children });
                 try self.checkFailure("failure");
@@ -81,7 +81,7 @@ pub fn Lower(comptime E: type) type {
 /// descriptor walk. Copy into private scratch, check every leaf before marking
 /// any, then set SHARED inline. A pinned or immortal leaf takes the rooted
 /// runtime path, which can replace pinned descendants in that private copy.
-fn inlineTransfer(comptime E: type, self: *E, ty: typed.Type, output: usize, children: u8) Error!bool {
+fn inlineTransfer(comptime E: type, self: *E, ty: typed.Type, output: usize, children: u8, stack: []const typed.Type) Error!bool {
     if (children != 0) return false;
     const leaves = try cow.valueLeaves(E, self, ty) orelse return false;
     if (leaves.len == 0) return true;
@@ -107,9 +107,15 @@ fn inlineTransfer(comptime E: type, self: *E, ty: typed.Type, output: usize, chi
     }
     const done = self.temp();
     try self.print(" jmp @vcdone{d}\n@vcslow{d}\n", .{ done, slow });
+    // The preceding pointer checks and share-bit stores cannot collect. Keep
+    // every original operand live only across the allocating fallback; the
+    // runtime also roots its private output while replacing pinned leaves.
+    const pushed = self.needsRootProtocol() and try self.roots(stack);
     const copied = self.temp();
     try self.print(" %v{d} =w call $myl_qbe_cow_transfer(l %ctx, l extern ${s}, l %v{d}, l %v{d}, w 0)\n", .{ copied, try self.descriptor(ty), output, output });
     try self.checkFailure("failure");
+    if (pushed) try self.restoreRoots();
     try self.print("@vcdone{d}\n", .{done});
+    self.inline_roots = true;
     return true;
 }
