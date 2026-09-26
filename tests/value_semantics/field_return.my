@@ -1,0 +1,99 @@
+module field_return
+
+record Box:
+    items: list[int]
+
+
+record Owner:
+    box: Box
+    other: Box
+
+
+def push(box: mut Box):
+    box.items.append(2)
+
+
+def change(owner: mut Owner):
+    work = owner.box
+    push(mut work)
+    owner.box = work
+
+
+def observe(owner: mut Owner) -> int:
+    work = owner.box
+    push(mut work)
+    seen = len(owner.box.items)
+    owner.box = work
+    return seen
+
+
+def conditional(owner: mut Owner, stop: bool):
+    work = owner.box
+    push(mut work)
+    if stop:
+        return
+    owner.box = work
+
+
+def retain(owner: mut Owner) -> int:
+    work = owner.box
+    push(mut work)
+    owner.box = work
+    push(mut work)
+    return len(work.items)
+
+
+def other_field(owner: mut Owner):
+    work = owner.box
+    push(mut work)
+    owner.other = work
+
+
+def observe_alias(first: mut Owner, second: mut Owner) -> int:
+    work = first.box
+    push(mut work)
+    seen = len(second.box.items)
+    second.other = Box([9])
+    first.box = work
+    return seen
+
+
+# spec-case: COW-FIELD-RETURN-1
+public def test_field_return_preserves_existing_copies_and_sibling_values() -> bool:
+    box = Box([1])
+    owner = Owner(box, box)
+    saved = owner
+    change(mut owner)
+    change(mut owner)
+    return owner.box.items == [1, 2, 2] and owner.other.items == [1] and saved.box.items == [1] and box.items == [1]
+
+
+# spec-case: COW-FIELD-RETURN-1
+public def test_observation_before_store_back_sees_original_value() -> bool:
+    owner = Owner(Box([1]), Box([]))
+    seen = observe(mut owner)
+    return seen == 1 and owner.box.items == [1, 2]
+
+
+# spec-case: COW-FIELD-RETURN-1
+public def test_early_return_does_not_write_the_original_field() -> bool:
+    owner = Owner(Box([1]), Box([]))
+    conditional(mut owner, True)
+    untouched = owner.box.items == [1]
+    conditional(mut owner, False)
+    return untouched and owner.box.items == [1, 2]
+
+
+# spec-case: COW-FIELD-RETURN-1
+public def test_retained_temporary_and_other_destination_stay_independent() -> bool:
+    owner = Owner(Box([1]), Box([]))
+    size = retain(mut owner)
+    other_field(mut owner)
+    return size == 3 and owner.box.items == [1, 2] and owner.other.items == [1, 2, 2]
+
+
+# spec-case: COW-FIELD-RETURN-1
+public def test_two_mut_parameters_can_observe_the_same_original_field() -> bool:
+    owner = Owner(Box([1]), Box([]))
+    seen = observe_alias(mut owner, mut owner)
+    return seen == 1 and owner.box.items == [1, 2] and owner.other.items == [9]

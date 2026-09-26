@@ -87,6 +87,26 @@ const assignments =
     \\
 ;
 
+fn fieldReturnSites(body: []const u8) !Sites {
+    const prefix = "record Box:\n    items: list[int]\n\nrecord Owner:\n    box: Box\n\ndef push(box: mut Box):\n    box.items.append(2)\n\ndef change(owner: mut Owner, stop: bool):\n    work = owner.box\n    push(mut work)\n";
+    const source = try std.mem.concat(t.allocator, u8, &.{ prefix, body, entry });
+    defer t.allocator.free(source);
+    return sites(source, true);
+}
+
+// spec: COW-FIELD-RETURN-1
+test "record field return avoids copies only without observations or exits" {
+    const returned = try fieldReturnSites("    owner.box = work\n");
+    try t.expect(returned.placed >= 2);
+    try t.expectEqual(@as(usize, 0), returned.copies);
+    const observed = try fieldReturnSites("    seen = len(owner.box.items)\n    owner.box = work\n    assert seen == 1\n");
+    try t.expect(observed.copies >= 1);
+    const branched = try fieldReturnSites("    if stop:\n        return\n    owner.box = work\n");
+    try t.expect(branched.copies >= 1);
+    const retained = try fieldReturnSites("    owner.box = work\n    push(mut work)\n    assert len(work.items) == 3\n");
+    try t.expect(retained.copies >= 1);
+}
+
 // spec-case: VALUE-SEMANTICS-1
 test "value semantics off places no copy site at all" {
     const off = try sites(assignments, false);
