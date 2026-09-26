@@ -257,6 +257,7 @@ test {
     _ = @import("qbe_rc_admission_test.zig");
     _ = @import("qbe_rc_views_test.zig");
     _ = @import("qbe_rc_journal_test.zig");
+    _ = @import("qbe_rc_empty_locals_test.zig");
     _ = @import("cow_test.zig");
     _ = @import("cow_rebox_roots_test.zig");
     _ = @import("qbe_text_test.zig");

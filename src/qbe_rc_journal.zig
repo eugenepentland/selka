@@ -7,6 +7,25 @@ pub const Operand = struct { bytes: u64 = 8, may_own: bool = false };
 /// A prefix count preserves logical cleanup order while omitting plain positions.
 pub const Layout = struct {
     prefix: []const usize,
+    empty_locals: []const bool = &.{},
+
+    /// Only explicitly certified managed locals can synthesize empty role reads.
+    pub fn emptyLocal(self: Layout, logical: usize) bool {
+        return logical < self.empty_locals.len and self.empty_locals[logical];
+    }
+
+    /// Omit certified local positions while preserving all remaining order.
+    /// Unexpected publication still fails through require; no guard is aliased.
+    pub fn omitting(self: Layout, allocator: std.mem.Allocator, empty: []const bool) error{ OutOfMemory, InternalError }!Layout {
+        if (empty.len >= self.prefix.len - 2) return error.InternalError;
+        const prefix = try allocator.alloc(usize, self.prefix.len);
+        prefix[0] = 0;
+        for (prefix[1..], 0..) |*next, index| {
+            const omitted = index < empty.len and empty[index];
+            next.* = prefix[index] + @intFromBool(!omitted and self.prefix[index + 1] != self.prefix[index]);
+        }
+        return .{ .prefix = prefix, .empty_locals = empty };
+    }
 
     /// Resolve a retained position; an omitted position has no physical slot.
     pub fn slot(self: Layout, logical: usize) error{InternalError}!?usize {
