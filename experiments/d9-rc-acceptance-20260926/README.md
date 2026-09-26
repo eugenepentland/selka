@@ -51,3 +51,13 @@ fail the driver; partial results never count as acceptance.
 This harness does not establish RC correctness or acceptance by itself. The
 full language/arena/legacy gates and actual borrow-inference count-traffic
 comparison remain separate requirements.
+
+## Prepared GC baseline
+
+The first GC build is complete: all 58 private executables built and all 86
+program/backend output checks passed. Every private executable was independently
+rehashed after completion. [The compressed manifest](gc-builds.json.gz) retains
+compiler, source, harness and binary identities plus exact build commands and
+checks. These are baseline preparation results; RC instruction or RSS ratios
+have not yet been measured. The manifest's source commit is `9f396a35`, and the
+standalone harness is committed at `a5af97b6`.
