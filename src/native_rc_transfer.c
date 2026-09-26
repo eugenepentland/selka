@@ -14,11 +14,13 @@ typedef struct {
     size_t cursor;
     unsigned region;
 } clone_frame;
+typedef struct { const void *source; void *destination; unsigned region; } clone_memo;
 typedef struct {
     clone_frame *items;
     size_t count, capacity;
     void **arenas;
     size_t arena_count, arena_capacity;
+    struct { clone_memo *entries, local[4]; size_t count, capacity; unsigned escaping; } memo;
 } clone_work;
 typedef struct {
     myl_native_heap *heap;
@@ -84,9 +86,59 @@ static size_t payload_count(const void *payload) {
     return (mark >> MYL_NATIVE_OBJECT_COUNT_SHIFT) &
         (mark & MYL_NATIVE_OBJECT_ARENA ? MYL_NATIVE_ARENA_COUNT_MAX : MYL_NATIVE_OBJECT_COUNT_MAX);
 }
+static size_t memo_at(const clone_memo *entries, size_t capacity, const void *source, unsigned region) {
+    uintptr_t hash = ((uintptr_t)source >> 4) ^ ((uintptr_t)region * UINT64_C(0x9e3779b97f4a7c15));
+    hash ^= hash >> 23;
+    size_t at = (size_t)hash & (capacity - 1);
+    while (entries[at].source && (entries[at].source != source || entries[at].region != region))
+        at = (at + 1) & (capacity - 1);
+    return at;
+}
+static void *memo_find(const clone_work *work, const void *source, unsigned region) {
+    if (work->memo.capacity) {
+        size_t at = memo_at(work->memo.entries, work->memo.capacity, source, region);
+        return work->memo.entries[at].destination;
+    }
+    for (size_t i = 0; i < work->memo.count; ++i)
+        if (work->memo.local[i].source == source && work->memo.local[i].region == region) return work->memo.local[i].destination;
+    return NULL;
+}
+static myl_rc_status memo_reserve(transfer_walk *walk) {
+    clone_work *work = walk->clones;
+    if (!work->memo.capacity && work->memo.count < 4) return MYL_RC_OK;
+    if (work->memo.capacity && work->memo.count < work->memo.capacity / 2) return MYL_RC_OK;
+    size_t capacity = work->memo.capacity ? work->memo.capacity * 2 : 32, bytes;
+    if (capacity < work->memo.capacity || !myl_rc_size_mul(capacity, sizeof(clone_memo), &bytes)) return MYL_RC_ALLOCATION_REFUSED;
+    clone_memo *entries = myl_rc_meta_alloc(walk->heap, bytes);
+    if (!entries) return MYL_RC_ALLOCATION_REFUSED;
+    const clone_memo *old = work->memo.capacity ? work->memo.entries : work->memo.local;
+    size_t count = work->memo.capacity ? work->memo.capacity : work->memo.count;
+    for (size_t i = 0; i < count; ++i)
+        if (old[i].source) entries[memo_at(entries, capacity, old[i].source, old[i].region)] = old[i];
+    myl_rc_meta_free(walk->heap, work->memo.entries, work->memo.capacity * sizeof(clone_memo));
+    work->memo.entries = entries;
+    work->memo.capacity = capacity;
+    return MYL_RC_OK;
+}
+static void memo_insert(clone_work *work, const void *source, void *destination, unsigned region) {
+    clone_memo *entry = work->memo.capacity ?
+        &work->memo.entries[memo_at(work->memo.entries, work->memo.capacity, source, region)] : &work->memo.local[work->memo.count];
+    *entry = (clone_memo){source, destination, region};
+    ++work->memo.count;
+}
 static myl_rc_status schedule_clone(transfer_walk *walk, const void *payload, unsigned region, void **out) {
     *out = NULL;
     clone_work *work = walk->clones;
+    void *known = memo_find(work, payload, region);
+    if (known) {
+        myl_rc_status status = myl_rc_owner_acquire(walk->heap, known);
+        if (status != MYL_RC_OK) return status;
+        if (region) ((myl_native_object *)known - 1)->mark |= MYL_NATIVE_OBJECT_SHARED;
+        *out = known;
+        return MYL_RC_OK;
+    }
+    myl_rc_status reserved = memo_reserve(walk);
+    if (reserved != MYL_RC_OK) return reserved;
     const myl_native_object *common = (const myl_native_object *)payload - 1;
     const myl_rc_descriptor *descriptor = myl_rc_descriptor_find(walk->heap, common->element);
     myl_rc_invariant(descriptor && !descriptor->finalize);
@@ -112,6 +164,7 @@ static myl_rc_status schedule_clone(transfer_walk *walk, const void *payload, un
     }
     if (status != MYL_RC_OK) return status;
     myl_rc_invariant(copy != NULL);
+    memo_insert(work, payload, copy, region);
     MYL_RC_STAT(walk->heap, MYL_RC_STAT_CLONE);
     if (pending)
         work->items[work->count++] = (clone_frame){.source = payload, .destination = copy, .descriptor = descriptor, .region = region};
@@ -128,8 +181,8 @@ static myl_rc_status transfer_pointer(transfer_walk *walk, unsigned char *destin
         uintptr_t mark = common->mark;
         if (!(mark & MYL_NATIVE_OBJECT_IMMORTAL)) {
             unsigned region = mark & MYL_NATIVE_OBJECT_ARENA ? myl_native_header_region(payload) : 0;
-            if (region > walk->region) return MYL_RC_REGION_ERROR;
-            if (mark & MYL_NATIVE_OBJECT_PINNED) {
+            if (region > walk->region && !walk->clones->memo.escaping) return MYL_RC_REGION_ERROR;
+            if ((mark & MYL_NATIVE_OBJECT_PINNED) || region > walk->region) {
                 myl_rc_status status = schedule_clone(walk, payload, walk->region, &result);
                 if (status != MYL_RC_OK) return status;
             } else if (walk->mode == MYL_RC_COPY) {
@@ -210,6 +263,7 @@ static void dispose_walk(transfer_walk *walk, int failed) {
         for (size_t i = 0; i < work->arena_count; ++i)
             myl_rc_construction_abort(walk->heap, work->arenas[i]);
     myl_rc_meta_free(walk->heap, work->arenas, work->arena_capacity * sizeof *work->arenas);
+    myl_rc_meta_free(walk->heap, work->memo.entries, work->memo.capacity * sizeof(clone_memo));
     myl_rc_meta_free(walk->heap, work->items, work->capacity * sizeof *work->items);
     myl_rc_meta_free(walk->heap, walk->frames, walk->capacity * sizeof *walk->frames);
     myl_rc_drain(walk->heap);
@@ -226,13 +280,14 @@ static myl_rc_status clone_payload(myl_native_heap *heap, const void *payload, u
     return status;
 }
 static myl_rc_status transfer(myl_native_heap *heap, myl_rc_slot *destination,
-                              const myl_rc_slot *source, myl_rc_transfer mode) {
+                              const myl_rc_slot *source, myl_rc_transfer mode, unsigned escaping) {
     myl_rc_invariant(heap && heap->rc && destination && source && destination->address && source->address);
     const myl_rc_shape *shape = myl_rc_shape_resolve(heap, source->shape);
     const myl_rc_shape *target = myl_rc_shape_resolve(heap, destination->shape);
     myl_rc_invariant(shape && target && shape->size == target->size && source->address != destination->address);
     if (destination->region > heap->region_depth) return MYL_RC_REGION_ERROR;
     clone_work work = {0};
+    work.memo.escaping = escaping;
     transfer_walk walk = {.heap = heap, .region = destination->region, .mode = mode, .clones = &work};
     myl_rc_status status = prepare_frames(&walk, shape);
     if (status != MYL_RC_OK) return status;
@@ -248,11 +303,15 @@ static myl_rc_status transfer(myl_native_heap *heap, myl_rc_slot *destination,
         (void)visit(&walk, shape, destination->address, source->address, commit_take);
         memset(source->address, 0, shape->size);
     }
+    if (status == MYL_RC_OK && escaping) heap->arena.escaped += work.memo.count;
     dispose_walk(&walk, status != MYL_RC_OK);
     return status;
 }
 myl_rc_status myl_rc_value_copy(myl_native_heap *heap, myl_rc_slot *destination, const myl_rc_slot *source) {
-    return transfer(heap, destination, source, MYL_RC_COPY);
+    return transfer(heap, destination, source, MYL_RC_COPY, 0);
+}
+myl_rc_status myl_rc_region_escape(myl_native_heap *heap, myl_rc_slot *destination, const myl_rc_slot *source) {
+    return transfer(heap, destination, source, MYL_RC_COPY, 1);
 }
 myl_rc_status myl_rc_value_copy_many(myl_native_heap *heap, myl_rc_slot *destinations,
                                      const myl_rc_slot *sources, size_t count) {
@@ -284,7 +343,7 @@ myl_rc_status myl_rc_value_copy_many(myl_native_heap *heap, myl_rc_slot *destina
     return status;
 }
 myl_rc_status myl_rc_value_take(myl_native_heap *heap, myl_rc_slot *destination, myl_rc_slot *source) {
-    return transfer(heap, destination, source, MYL_RC_TAKE);
+    return transfer(heap, destination, source, MYL_RC_TAKE, 0);
 }
 myl_rc_status myl_rc_value_replace(myl_native_heap *heap, myl_rc_slot *destination,
                                    myl_rc_slot *source, myl_rc_transfer mode) {
@@ -306,7 +365,7 @@ myl_rc_status myl_rc_value_replace(myl_native_heap *heap, myl_rc_slot *destinati
     if (!storage) return MYL_RC_ALLOCATION_REFUSED;
     myl_rc_slot incoming = *destination;
     incoming.address = storage;
-    myl_rc_status status = transfer(heap, &incoming, source, mode);
+    myl_rc_status status = transfer(heap, &incoming, source, mode, 0);
     if (status == MYL_RC_OK) {
         memcpy(storage + size, destination->address, size);
         memcpy(destination->address, storage, size);

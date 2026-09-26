@@ -1,0 +1,24 @@
+record Pair:
+    left: list[int]
+    right: list[int]
+
+
+union Choice:
+    both: Pair,
+    empty
+
+
+def descend(depth: int) -> int:
+    value = Choice.both(Pair([depth], [depth + 1]))
+    if depth == 0:
+        assert False, "aggregate unwind probe"
+    child = descend(depth - 1)
+    match value:
+        case Choice.both(fields):
+            return fields.left[0] + fields.right[0] + child
+        case Choice.empty:
+            return 0
+
+
+def main() -> int:
+    return descend(32)

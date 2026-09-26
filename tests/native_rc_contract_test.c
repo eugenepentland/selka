@@ -211,6 +211,13 @@ static void deep_inline_and_overflow_test(void) {
     assert(myl_rc_reserved_depth(&heap) == 32769);
     free(shapes);
     free(fields);
+    struct { myl_native_object header; uint64_t value; } arena = {
+        .header = {.mark = MYL_NATIVE_OBJECT_ARENA | ((uintptr_t)7 << MYL_NATIVE_ARENA_REGION_SHIFT), .element = &scalar_type}
+    };
+    void *borrowed = &arena.value;
+    heap.limit = heap.bytes;
+    assert(myl_rc_value_region(&heap, imported, &borrowed) == 7 && borrowed == &arena.value);
+    heap.limit = ((size_t)256) << 20;
     void *value = new_value(&heap, &scalar_type, 1);
     myl_rc_slot slot = {.shape = imported, .address = &value};
     heap.limit = heap.bytes;
@@ -619,6 +626,99 @@ static void partial_scope_test(void) {
     assert(state.live == 0);
     finish(&heap, &state);
 }
+// spec: RC-TRANSFER-1
+static void pinned_diamond_test(void) {
+    myl_native_heap heap;
+    TestAllocator state;
+    start(&heap, &state);
+    const myl_native_type pair_type = {.size = sizeof(Pair), .alignment = _Alignof(Pair), .kind = MYL_NATIVE_RECORD};
+    const myl_rc_descriptor descriptor = {.type = &pair_type, .shape = &pair_shape};
+    assert(myl_rc_descriptor_import(&heap, &descriptor) == MYL_RC_OK);
+    enum { depth = 256 };
+    myl_rc_pin pins[depth] = {0};
+    Pair *head = NULL;
+    for (size_t i = 0; i < depth; ++i) {
+        Pair *node = new_value(&heap, &pair_type, 1);
+        *node = (Pair){head, head};
+        assert(myl_rc_owner_acquire(&heap, head) == MYL_RC_OK);
+        head = node;
+        assert(myl_rc_pin_acquire(&heap, node, &pins[i]) == MYL_RC_OK);
+    }
+    Pair *copy = NULL;
+    myl_rc_slot from = {.shape = &pointer_shape, .address = &head};
+    myl_rc_slot to = {.shape = &pointer_shape, .address = &copy};
+    assert(myl_rc_value_copy(&heap, &to, &from) == MYL_RC_OK);
+    assert(state.allocations == depth * 2 && state.live == depth * 2);
+    for (Pair *old = head, *fresh = copy; old; old = old->first, fresh = fresh->first)
+        assert(fresh && fresh != old && fresh->first == fresh->second);
+    myl_rc_value_drop(&heap, &to);
+    myl_rc_value_drop(&heap, &from);
+    for (size_t i = depth; i; --i) myl_rc_pin_release(&heap, &pins[i - 1]);
+    finish(&heap, &state);
+}
+typedef struct { myl_native_resource base; void **slot; unsigned closed; myl_native_heap *heap; } DeepUnique;
+static void deep_unique_close(myl_native_resource *base) {
+    DeepUnique *resource = (DeepUnique *)base;
+    assert(!*resource->slot);
+    ++resource->closed;
+    if (resource->heap) {
+        myl_rc_field *fields;
+        myl_rc_shape *shapes = deep_shapes(32772, &fields);
+        const myl_rc_shape *imported;
+        assert(myl_rc_shape_import(resource->heap, shapes, &imported) == MYL_RC_OK);
+        free(shapes);
+        free(fields);
+        void *child = new_value(resource->heap, &scalar_type, 1);
+        myl_rc_owner_release(resource->heap, child);
+    }
+}
+// spec: RC-RELEASE-1
+// spec: RC-REGISTER-1
+static void deep_unique_test(void) {
+    enum { depth = 32768 };
+    myl_native_heap heap;
+    TestAllocator state;
+    start(&heap, &state);
+    myl_rc_field *fields;
+    myl_rc_shape *shapes = deep_shapes(depth, &fields);
+    shapes[depth].kind = MYL_RC_SHAPE_NONE;
+    myl_native_type *types = calloc(depth + 1, sizeof *types);
+    myl_native_field *native_fields = calloc(depth, sizeof *native_fields);
+    assert(types && native_fields);
+    types[depth] = (myl_native_type){.size = sizeof(void *), .kind = MYL_NATIVE_RESOURCE};
+    for (size_t i = 0; i < depth; ++i) {
+        native_fields[i].type = &types[i + 1];
+        types[i] = (myl_native_type){.size = sizeof(void *), .kind = MYL_NATIVE_RECORD, .fields = &native_fields[i], .field_count = 1};
+    }
+    const myl_rc_descriptor descriptor = {.type = types, .shape = shapes, .finalize = myl_rc_finalize_unique};
+    assert(myl_rc_descriptor_import(&heap, &descriptor) == MYL_RC_OK);
+    const myl_rc_shape *collapsed = myl_rc_descriptor_find(&heap, types)->shape;
+    assert(collapsed->kind == MYL_RC_SHAPE_NONE && myl_rc_reserved_depth(&heap) == depth + 1);
+    /* A new parent around an imported count-free shape must retain its full
+     * unique traversal reservation, even though counted traversal is empty. */
+    const myl_rc_field outer_field = {.shape = collapsed};
+    const myl_rc_shape outer = {.size = sizeof(void *), .kind = MYL_RC_SHAPE_RECORD, .as.record = {&outer_field, 1}};
+    const myl_rc_shape *imported;
+    assert(myl_rc_shape_import(&heap, &outer, &imported) == MYL_RC_OK);
+    assert(imported->kind == MYL_RC_SHAPE_NONE && myl_rc_reserved_depth(&heap) == depth + 2);
+    void **body = new_value(&heap, types, 1);
+    DeepUnique resource = {.base = {.drop = deep_unique_close}, .slot = body};
+    *body = &resource;
+    heap.limit = heap.bytes;
+    myl_rc_owner_release(&heap, body);
+    assert(resource.closed == 1 && state.live == 0);
+    heap.limit = ((size_t)256) << 20;
+    body = new_value(&heap, types, 1);
+    resource = (DeepUnique){.base = {.drop = deep_unique_close}, .slot = body, .heap = &heap};
+    *body = &resource;
+    myl_rc_owner_release(&heap, body);
+    assert(resource.closed == 1 && state.live == 0 && myl_rc_reserved_depth(&heap) == 32773);
+    finish(&heap, &state);
+    free(types);
+    free(native_fields);
+    free(shapes);
+    free(fields);
+}
 int myl_rc_contract_verify(void) {
     struct rlimit stack, original;
     assert(!getrlimit(RLIMIT_STACK, &stack));
@@ -640,13 +740,15 @@ int myl_rc_contract_verify(void) {
     deep_pinned_clone_test();
     scope_unwind_test();
     partial_scope_test();
+    pinned_diamond_test();
+    deep_unique_test();
     assert(!setrlimit(RLIMIT_STACK, &original));
-    return 16;
+    return 18;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
-    assert(myl_rc_contract_verify() == 16);
-    puts("native RC contract: 16 tests passed");
+    assert(myl_rc_contract_verify() == 18);
+    puts("native RC contract: 18 tests passed");
     return 0;
 }
 #endif

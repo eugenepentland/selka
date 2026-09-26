@@ -85,7 +85,10 @@ typedef struct {
 } myl_rc_module;
 /* Module metadata and native_type identities are immutable and live through
  * heap teardown. Registration copies shapes/fields and descriptor bindings,
- * then atomically publishes them and budget-charged teardown frames. Every
+ * then atomically publishes them and budget-charged teardown frames. Shapes
+ * retain the native inline nesting even for raw-resource NONE leaves, so
+ * registration also reserves the independent unique-drop traversal depth.
+ * Count-free shapes may collapse internally after this reservation. Every
  * inline local/argument/result/host/arena shape registers before construction,
  * even if no allocation ever uses that shape. Repeated module registration is
  * idempotent. Failure preserves all old registrations and release capacity. */
@@ -153,6 +156,8 @@ void myl_rc_pin_release(myl_native_heap *, myl_rc_pin *);
  * stack for a complete nonallocating direct-edge walk; it never recurses into
  * managed payloads. An adapter may call it repeatedly while no walk is active. */
 void myl_rc_edges_release(myl_native_heap *, const myl_rc_shape *, void *, size_t count);
+/* Read direct arena edges using the same reserved iterative shape stack. */
+unsigned myl_rc_value_region(myl_native_heap *, const myl_rc_shape *, const void *);
 void myl_rc_drain(myl_native_heap *);
 /* Seed empty construction storage with scalar bytes/active tags, clearing all
  * direct owners without releasing them. Source and destination are distinct. */
@@ -163,6 +168,9 @@ void myl_rc_construction_abort(myl_native_heap *, void *);
 /* Descriptor finalizer for a noncopyable managed body containing raw unique
  * resource fields. Runs their existing drop adapter before counted children. */
 void myl_rc_finalize_unique(myl_native_heap *, void *);
+/* Close raw unique resources using the reserved inline stack, then call each
+ * detached resource hook at idle walker depth. Managed pointers are terminal. */
+void myl_rc_owned_drop(myl_native_heap *, const myl_native_type *, void *);
 
 /* Owned slots identify a complete initialized value. Construction registers
  * first, then tracks initialized fields/tags or a collection's live prefix;
