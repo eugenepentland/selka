@@ -1,0 +1,60 @@
+{
+  "qbe/grow": {
+    "command": [
+      ".tmp-rc/profile/install-publish-joined/bin/mylang",
+      "build",
+      ".tmp-rc/arena-receiver/grow.my",
+      "-o",
+      ".tmp-rc/arena-receiver/gc-qbe-grow"
+    ],
+    "exit": 12,
+    "stdout": "",
+    "stderr": "",
+    "manifest_backend": "qbe",
+    "compiler_sha256": "d429e8f1df7479619c4bf516114ea05c7514c628916422214c4f5fd0a8a99aaa"
+  },
+  "qbe/stash": {
+    "command": [
+      ".tmp-rc/profile/install-publish-joined/bin/mylang",
+      "build",
+      ".tmp-rc/arena-receiver/stash.my",
+      "-o",
+      ".tmp-rc/arena-receiver/gc-qbe-stash"
+    ],
+    "exit": 4,
+    "stdout": "",
+    "stderr": "",
+    "manifest_backend": "qbe",
+    "compiler_sha256": "d429e8f1df7479619c4bf516114ea05c7514c628916422214c4f5fd0a8a99aaa"
+  },
+  "llvm/grow": {
+    "command": [
+      ".tmp-rc/profile/install-publish-joined/bin/mylang",
+      "build",
+      ".tmp-rc/arena-receiver/grow.my",
+      "-o",
+      ".tmp-rc/arena-receiver/gc-llvm-grow",
+      "--release"
+    ],
+    "exit": 12,
+    "stdout": "",
+    "stderr": "",
+    "manifest_backend": "llvm",
+    "compiler_sha256": "d429e8f1df7479619c4bf516114ea05c7514c628916422214c4f5fd0a8a99aaa"
+  },
+  "llvm/stash": {
+    "command": [
+      ".tmp-rc/profile/install-publish-joined/bin/mylang",
+      "build",
+      ".tmp-rc/arena-receiver/stash.my",
+      "-o",
+      ".tmp-rc/arena-receiver/gc-llvm-stash",
+      "--release"
+    ],
+    "exit": 4,
+    "stdout": "",
+    "stderr": "",
+    "manifest_backend": "llvm",
+    "compiler_sha256": "d429e8f1df7479619c4bf516114ea05c7514c628916422214c4f5fd0a8a99aaa"
+  }
+}

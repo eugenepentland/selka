@@ -112,10 +112,16 @@ static myl_rc_status prepare_leaf(myl_rc_scope *scope, prepare_frame *frame) {
     if (frame->shape->kind == MYL_RC_SHAPE_NONE) return MYL_RC_OK;
     myl_rc_invariant(frame->shape->kind == MYL_RC_SHAPE_POINTER || frame->shape->kind == MYL_RC_SHAPE_HOLD_POINTER);
     myl_rc_slot slot = {.shape = frame->shape, .address = frame->address, .region = frame->region};
+    void *payload;
+    memcpy(&payload, frame->address, sizeof payload);
+    /* Inline paths have no managed container from which to recover their
+     * binding lifetime. Preserve each existing leaf's older allocation region
+     * instead of moving it into the arena of the call that prepares it. */
+    unsigned origin = payload ? myl_native_header_region(payload) : 0;
+    if (origin < slot.region) slot.region = origin;
     myl_rc_status status = frame->shape->kind == MYL_RC_SHAPE_HOLD_POINTER ?
         myl_rc_unique_held(scope->heap, &slot) : myl_rc_unique_owned(scope->heap, &slot);
     if (status != MYL_RC_OK) return status;
-    void *payload;
     memcpy(&payload, frame->address, sizeof payload);
     return myl_rc_scope_pin(scope, payload);
 }

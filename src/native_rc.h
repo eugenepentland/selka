@@ -222,6 +222,8 @@ typedef struct {
 void myl_rc_scope_begin(myl_native_heap *, myl_rc_scope *);
 myl_rc_status myl_rc_scope_hold(myl_rc_scope *, void *);
 myl_rc_status myl_rc_scope_pin(myl_rc_scope *, void *);
+/* Receiver detachment never moves an existing leaf into a younger region.
+ * The place's destination region remains the maximum allocation depth. */
 myl_rc_status myl_rc_scope_prepare(myl_rc_scope *, const myl_rc_place *);
 /* Close even empty/partly prepared scopes: unlink, restore pins in reverse
  * order, release holds/journal exactly once, then drain. Escape first. */

@@ -122,12 +122,24 @@ void myl_qbe_rc_arena_prepare(void *context, MylQbeRcFrame *frame, size_t waterm
     for (size_t i = frame->count; i > watermark; --i)
         myl_qbe_rc_slot_drop(ctx, &frame->entries[i - 1]);
 }
+/* Detachment replaces an existing value, so it must not shorten that value's
+ * allocation lifetime merely because the mutation runs inside a younger arena.
+ * An enclosing object can impose a stricter bound; ordinary transfers still
+ * choose their destination region explicitly. */
+static unsigned unique_region(void *address, void *container) {
+    void *payload;
+    memcpy(&payload, address, sizeof payload);
+    unsigned region = payload ? myl_native_header_region(payload) : 0;
+    if (container && myl_native_header_region(container) < region)
+        region = myl_native_header_region(container);
+    return region;
+}
 int myl_qbe_rc_unique_local(void *context, const myl_native_type *type, void *address, uint32_t *owned) {
     MylQbeContext *ctx = context;
     myl_rc_invariant(owned != NULL);
     const myl_rc_descriptor *descriptor = myl_rc_descriptor_find(&ctx->heap, type);
     myl_rc_invariant(descriptor && descriptor->shape->kind == MYL_RC_SHAPE_POINTER);
-    myl_rc_slot slot = {.shape = descriptor->shape, .address = address, .region = ctx->heap.region_depth};
+    myl_rc_slot slot = {.shape = descriptor->shape, .address = address, .region = unique_region(address, NULL)};
     if (*owned) return myl_qbe_rc_status(ctx, myl_rc_unique_owned(&ctx->heap, &slot));
     myl_rc_edit edit = {0};
     myl_rc_status status = myl_rc_unique_borrow(&ctx->heap, &slot, NULL, &edit);
@@ -142,7 +154,7 @@ int myl_qbe_rc_unique_field(void *context, const myl_native_type *type, void *ad
     const myl_rc_descriptor *descriptor = myl_rc_descriptor_find(&ctx->heap, type);
     myl_rc_invariant(descriptor && descriptor->shape->kind == MYL_RC_SHAPE_POINTER);
     myl_rc_slot slot = {.shape = descriptor->shape, .address = address, .container = container,
-        .region = container ? myl_native_header_region(container) : ctx->heap.region_depth};
+        .region = unique_region(address, container)};
     return myl_qbe_rc_status(ctx, myl_rc_unique_owned(&ctx->heap, &slot));
 }
 int myl_qbe_rc_unique_elements(void *context, const myl_native_type *type, void *payload) {
@@ -161,6 +173,7 @@ int myl_qbe_rc_unique_elements(void *context, const myl_native_type *type, void 
     myl_rc_slot slot = {.shape = descriptor->shape, .container = list, .region = myl_native_header_region(list)};
     for (size_t i = 0; i < list->length; ++i) {
         slot.address = (unsigned char *)list->storage + i * sizeof(void *);
+        slot.region = unique_region(slot.address, list);
         myl_rc_status status = myl_rc_unique_owned(&ctx->heap, &slot);
         if (status != MYL_RC_OK) return myl_qbe_rc_status(ctx, status);
     }
@@ -175,7 +188,7 @@ int myl_qbe_rc_unique_held(void *context, const myl_native_type *type, void *add
     myl_rc_status status = myl_rc_module_register(&ctx->heap, &module);
     if (status != MYL_RC_OK) return myl_qbe_rc_status(ctx, status);
     myl_rc_slot slot = {.shape = &held, .address = address, .container = container,
-        .region = container ? myl_native_header_region(container) : ctx->heap.region_depth};
+        .region = unique_region(address, container)};
     return myl_qbe_rc_status(ctx, myl_rc_unique_held(&ctx->heap, &slot));
 }
 int myl_qbe_rc_rebox_local(void *context, const myl_native_type *type, void *address, const void *body, uint32_t *owned) {
