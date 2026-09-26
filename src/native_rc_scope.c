@@ -49,6 +49,17 @@ static myl_rc_status capture(myl_rc_scope *scope, void *payload, unsigned pinned
 }
 myl_rc_status myl_rc_scope_hold(myl_rc_scope *scope, void *payload) { return capture(scope, payload, 0); }
 myl_rc_status myl_rc_scope_pin(myl_rc_scope *scope, void *payload) { return capture(scope, payload, 1); }
+myl_rc_status myl_rc_scope_extend(myl_rc_scope *scope, void *boundary,
+                                   myl_rc_status (*extend)(myl_rc_scope *, void *)) {
+    /* The adapter may append holds. Follow only the original prefix, whose
+     * nodes remain stable, and roll the complete prefix back on refusal. */
+    for (scope_entry *entry = scope->journal; entry != boundary; entry = entry->previous) {
+        myl_rc_invariant(entry != NULL);
+        myl_rc_status status = extend(scope, entry->pin.hold.payload);
+        if (status != MYL_RC_OK) { unwind(scope, boundary); return status; }
+    }
+    return MYL_RC_OK;
+}
 void myl_rc_scope_end(myl_rc_scope *scope) {
     myl_rc_invariant(scope != NULL);
     if (!scope->active) return;
