@@ -10,6 +10,7 @@ pub const Error = values.Error;
 /// Branch payloads and local transfers publish at their explicit commit sites.
 pub fn after(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "op"), stack: []const typed.Type) Error!void {
     if (frame.get(E, self) == null) return;
+    if (@import("qbe_rc_aggregate.zig").handles(self.program.records, op)) return;
     switch (op) {
         .load_local,
         .ref_local,
