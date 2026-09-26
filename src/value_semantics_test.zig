@@ -88,7 +88,22 @@ const assignments =
 ;
 
 fn fieldReturnSites(body: []const u8) !Sites {
-    const prefix = "record Box:\n    items: list[int]\n\nrecord Owner:\n    box: Box\n\ndef push(box: mut Box):\n    box.items.append(2)\n\ndef change(owner: mut Owner, stop: bool):\n    work = owner.box\n    push(mut work)\n";
+    const prefix =
+        \\record Box:
+        \\    items: list[int]
+        \\
+        \\record Owner:
+        \\    box: Box
+        \\    count: int
+        \\
+        \\def push(box: mut Box):
+        \\    box.items.append(2)
+        \\
+        \\def change(owner: mut Owner, stop: bool):
+        \\    work = owner.box
+        \\    push(mut work)
+        \\
+    ;
     const source = try std.mem.concat(t.allocator, u8, &.{ prefix, body, entry });
     defer t.allocator.free(source);
     return sites(source, true);
@@ -99,6 +114,8 @@ test "record field return avoids copies only without observations or exits" {
     const returned = try fieldReturnSites("    owner.box = work\n");
     try t.expect(returned.placed >= 2);
     try t.expectEqual(@as(usize, 0), returned.copies);
+    const sibling = try fieldReturnSites("    seen = owner.count\n    owner.box = work\n    assert seen == 7\n");
+    try t.expectEqual(@as(usize, 0), sibling.copies);
     const observed = try fieldReturnSites("    seen = len(owner.box.items)\n    owner.box = work\n    assert seen == 1\n");
     try t.expect(observed.copies >= 1);
     const branched = try fieldReturnSites("    if stop:\n        return\n    owner.box = work\n");
