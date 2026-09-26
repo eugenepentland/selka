@@ -120,7 +120,7 @@ fn receiverStores(comptime E: type, self: *E) Error![]bool {
         if (self.isBranchTarget(pc) or instruction.op != .store_local) continue;
         const local = @backingInt(instruction.op.store_local);
         if (!self.function.scope.locals[local].usage.temporary) continue;
-        const role = self.cow.?.rc.?.locals.entry[local].ownership;
+        const role = self.cow.?.rc.?.plan.locals.entry[local].ownership;
         if (role == .borrowed and role.borrowed == .storage) {
             result[pc] = true;
         } else if (code.len <= budget) {

@@ -118,8 +118,8 @@ pub fn holdRuntime(comptime E: type, self: *E, ty: typed.Type, value: usize) Err
     try self.print(" storel %v{d}, %rcinternal\n %v{d} =l copy %rcinternal\n", .{ value, address });
     const index = frame.pending(E, self) + 1;
     try frame.entry(E, self, index, ty, address);
-    const flag = self.temp();
-    try self.print(" %v{d} =l add %rcentries, {d}\n storew 4, %v{d}\n", .{ flag, index * frame.entry_bytes + 24, flag });
+    const flag = try frame.entryField(E, self, index, 24);
+    try self.print(" storew 4, %v{d}\n", .{flag});
     try frame.initialized(E, self, frame.pending(E, self) + 1, true);
 }
 /// Hand the internal producer to the generic post-operation result adoption.
@@ -172,6 +172,9 @@ fn prepareOwned(comptime E: type, self: *E, ty: typed.Type, address: usize, jour
 /// Physical moves consume only an initialized owner; a borrowed local or operand
 /// copies from its anchor even when semantic last-use analysis calls it a move.
 pub fn prepareGuarded(comptime E: type, self: *E, ty: typed.Type, address: usize, journal_index: usize) Error!void {
+    // Plain aggregate updates still stage their bits in work storage, but an
+    // omitted operand has no ownership guard to inspect or transfer.
+    if (!try state_model.owns(frame.get(E, self).?, ty)) return copied(E, self, ty, address);
     const guard_pointer = try frame.guard(E, self, journal_index);
     const live = self.temp();
     const label = self.temp();

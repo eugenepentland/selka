@@ -1,6 +1,7 @@
 # Compact RC journal positions: implementation design
 
-Status: approved design, implementation pending the missing-file error cleanup.
+Status: implemented and focused-validated; see the
+[implementation report](d9-rc-compact-journal-2026-09-26.md).
 Base: integration `814813c8`, joined by real merge `87849c52`. This is a
 bounded unchanged-ABI experiment; it is not a WP-4 performance acceptance claim.
 The preceding metadata-template candidate was rejected and archived at

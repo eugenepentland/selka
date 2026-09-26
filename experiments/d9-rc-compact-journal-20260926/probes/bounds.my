@@ -1,0 +1,3 @@
+def main() -> int:
+    values = ["owned"]
+    return len(values[3])
