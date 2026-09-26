@@ -6,6 +6,10 @@ const t = std.testing;
 const Manifest = struct { functions: []const struct { name: []const u8, il: []const u8 } };
 
 fn copiesIn(source: []const u8, name: []const u8) !usize {
+    return callsIn(source, name, false);
+}
+
+fn callsIn(source: []const u8, name: []const u8, loans: bool) !usize {
     const saved = runtime.get();
     defer runtime.set(saved);
     runtime.set(.rc);
@@ -16,9 +20,44 @@ fn copiesIn(source: []const u8, name: []const u8) !usize {
     var manifest = try std.json.parseFromSlice(Manifest, t.allocator, emitted, .{ .ignore_unknown_fields = true });
     defer manifest.deinit();
     for (manifest.value.functions) |function| {
+        if (loans and std.mem.eql(u8, function.name, name)) return std.mem.count(u8, function.il, "call $myl_rc_native_loan");
         if (std.mem.eql(u8, function.name, name)) return std.mem.count(u8, function.il, "call $myl_rc_native_publish") + std.mem.count(u8, function.il, "call $myl_rc_native_retain");
     }
     return error.TestUnexpectedResult;
+}
+
+// spec: RC-PLAIN-READ-LOAN-1
+test "RC plain aggregate reads borrow their inert receiver until the inline copy" {
+    try t.expectEqual(@as(usize, 0), try callsIn(
+        \\record Point:
+        \\    x: int
+        \\    y: int
+        \\def selected(rows: list[Point], at: int, output: mut list[int]) -> int:
+        \\    point = rows[at]
+        \\    output.append(point.x)
+        \\    return point.y
+        \\def main() -> int:
+        \\    output: list[int] = []
+        \\    return selected([Point(3, 7)], -1, mut output)
+    , "selected", true));
+}
+
+// spec-case: RC-PLAIN-READ-LOAN-1
+test "RC plain aggregate read callbacks retain the captured list loan" {
+    try t.expect(try callsIn(
+        \\record Point:
+        \\    x: int
+        \\    y: int
+        \\def change(rows: mut list[Point]) -> int:
+        \\    rows.clear()
+        \\    rows.append(Point(9, 11))
+        \\    return 0
+        \\def selected(rows: mut list[Point]) -> int:
+        \\    return rows[change(mut rows)].x
+        \\def main() -> int:
+        \\    rows = [Point(3, 7)]
+        \\    return selected(mut rows)
+    , "selected", true) > 0);
 }
 
 // spec: RC-READ-LOAN-1
