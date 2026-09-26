@@ -59,7 +59,8 @@ fn returnSite(ctx: *const Context, transfer: Transfer) ?usize {
 // Branches, loops and match arms may rejoin before the store-back. Every
 // edge must stay inside this region or enter its final store-back; no outside
 // edge may enter after extraction, including at the store-back itself.
-fn closedFlow(ctx: *const Context, start: usize, end: usize) bool {
+/// Whether every continuing edge commits at end, with no outside entry.
+pub fn closedFlow(ctx: *const Context, start: usize, end: usize) bool {
     for (ctx.instructions(), 0..) |instruction, pc| {
         const inside = pc >= start and pc < end;
         const op = instruction.op;
