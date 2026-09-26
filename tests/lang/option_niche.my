@@ -222,16 +222,21 @@ public def test_an_escaped_graph_keeps_its_optional_links() -> bool:
     kept: list[Option[list[int]]] = []
     with arena() as scratch:
         shared: list[int] = [3, 4]
-        working: list[Option[list[int]]] = [Some(shared), None, Some(shared)]
+        working: list[Option[list[int]]] = [Some(shared.copy()), None, Some(shared.copy())]
         kept = scratch.escape(working)
     _ = churn(10)
-    first = kept[0]
-    last = kept[2]
-    total = 0
-    if first is not None and last is not None:
-        first.append(5)
-        total = len(last) * 10 + last[0]
-    return len(kept) == 3 and kept[1] is None and total == 33
+    match kept[0]:
+        case Some(first):
+            changed = first
+            changed.append(5)
+            kept[0] = Some(changed)
+            match kept[2]:
+                case Some(last):
+                    return len(kept) == 3 and kept[1] is None and len(changed) == 3 and len(last) == 2 and last[0] == 3
+                case None:
+                    return False
+        case None:
+            return False
 
 
 # spec-case: QBE-NICHE-2

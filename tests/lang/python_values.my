@@ -32,15 +32,15 @@ public def test_python_values_unicode_literals_chained_methods_indexing_and_memb
 
 
 # spec-case: PY-DICT-1
-public def test_python_values_dictionary_literal_growing_aliases_and_arbitrary_method_receivers() -> bool:
+public def test_python_values_dictionary_snapshot_and_arbitrary_method_receivers() -> bool:
     box = ValuesBox(values={"one": 1})
-    alias = box.values
+    before = box.values.copy()
     box.values["two"] = 40
-    if "two" not in alias:
+    if "two" in before or "two" not in box.values:
         return False
     if list(box.values.keys())[0] != "one":
         return False
-    return alias.get("two",0) + {"fallback": 2}.get("fallback",0) == 42
+    return box.values.get("two",0) + {"fallback": 2}.get("fallback",0) == 42
 
 
 # spec-case: PY-DICT-1

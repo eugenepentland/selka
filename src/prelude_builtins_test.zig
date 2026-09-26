@@ -137,7 +137,7 @@ test "sorted returns a new ascending list for int, float and str" {
 // spec: PRELUDE-SORT-KEY-1
 test "sorted key lambdas order records stably and diagnose invalid inputs" {
     try run(
-        \\class Item:
+        \\record Item:
         \\    key: int
         \\    position: int
         \\
@@ -204,7 +204,7 @@ test "keyed sorts reject bad keys, a non-bool reverse and misplaced operands" {
 
 // spec-case: LIST-SORT-KEY-2
 test "a mut key and a comparison function are rejected with their repair" {
-    try reject("class Box:\n    n: int\n\n\ndef grow(b: mut Box) -> int effects(mutation):\n    b.n = b.n + 1\n    return b.n\n\n\ndef main() -> int:\n    xs = [Box(n=1)]\n    xs.sort(key=grow)\n    return 0\n", "E_SORT_KEY");
+    try reject("record Box:\n    n: int\n\n\ndef grow(b: mut Box) -> int effects(mutation):\n    b.n = b.n + 1\n    return b.n\n\n\ndef main() -> int:\n    xs = [Box(n=1)]\n    xs.sort(key=grow)\n    return 0\n", "E_CALLBACK_TYPE");
     var compilation = try language.Compilation.init(t.allocator, "cmp.my", "def order(a: int) -> int:\n    return a\n\n\ndef main() -> int:\n    xs = [2, 1]\n    xs.sort(cmp=order)\n    return xs[0]\n");
     defer compilation.deinit();
     try t.expectError(error.SourceError, compilation.check());
@@ -382,5 +382,5 @@ test "prelude types are registered from syntax instead of raw source text" {
     try run("def main() -> int:\n    n = 4 // 2; raw: bytes = \"hi\".encode()\n    return len(raw) + n\n", 4);
     try run("def main() -> int:\n    raw = \"hi\".encode()\n    return len(raw)\n", 2);
     try run("def main() -> int:\n    # bytes after a comment stays ordinary syntax\n    raw: bytes = \"hi\".encode()\n    return len(raw) + 40\n", 42);
-    try run("class bytes:\n    value: int\n\nclass str:\n    value: int\n\ndef main() -> int:\n    raw: bytes = bytes(value=20)\n    text: str = str(value=22)\n    return raw.value + text.value\n", 42);
+    try run("record bytes:\n    value: int\n\nrecord str:\n    value: int\n\ndef main() -> int:\n    raw: bytes = bytes(value=20)\n    text: str = str(value=22)\n    return raw.value + text.value\n", 42);
 }

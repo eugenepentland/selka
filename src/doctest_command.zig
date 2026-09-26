@@ -22,12 +22,15 @@ const executable_tags = [_][]const u8{ "mylang", "my" };
 const prose_tags = [_][]const u8{ "", "text", "rust", "python", "go" };
 /// Directives the runner understands; an unknown name fails its block.
 const known_directives = [_][]const u8{
-    "expect", "expect-error", "check",      "project",     "file",
-    "skip",   not_mylang,     "allow-read", "allow-write", value_semantics,
+    "expect",       "expect-error", "check",      "project",     "file",
+    "skip",         not_mylang,     "allow-read", "allow-write", value_semantics,
+    legacy_sharing,
 };
 /// Directive that checks and runs its unit under `--value-semantics`
-/// (`VALUE-SEMANTICS-8`); every other unit runs without the switch.
+/// (`VALUE-SEMANTICS-8`); unmarked units use the default value model.
 const value_semantics = "value-semantics";
+/// One-release opt-out for examples documenting legacy sharing.
+const legacy_sharing = "legacy-sharing";
 /// Neutral entry point appended to declaration-only examples before checking.
 const stub = "def main() -> int:\n    return 0\n";
 /// Most bytes the runner reads from one documentation page.
@@ -777,6 +780,7 @@ fn fileName(allocator: std.mem.Allocator, unit: *const Unit, member: *const Fenc
 fn commandOptions(allocator: std.mem.Allocator, unit: *const Unit, subcommand: []const u8, fixtures: []const u8) ![]const []const u8 {
     var argv: std.ArrayList([]const u8) = .empty;
     if (unitHasDirective(unit, value_semantics)) try argv.append(allocator, "--value-semantics");
+    if (unitHasDirective(unit, legacy_sharing)) try argv.append(allocator, "--legacy-sharing");
     if (std.mem.startsWith(u8, subcommand, "run")) {
         if (!unitPrints(unit)) try argv.append(allocator, "--print-result");
         const flags = [_][]const u8{ "--allow-read=", "--allow-write=" };
@@ -1380,7 +1384,7 @@ test "doctest grouping folds project fences and plan picks run or check" {
 }
 
 // spec: VALUE-SEMANTICS-8
-test "doctest runs a value-semantics unit with the switch and every other unit without it" {
+test "doctest selects explicit value and legacy modes while plain units use the default" {
     const text =
         "```mylang\n" ++
         "# doc: value-semantics\n" ++
@@ -1391,6 +1395,11 @@ test "doctest runs a value-semantics unit with the switch and every other unit w
         "```mylang\n" ++
         "def main() -> int:\n" ++
         "    return 2\n" ++
+        "```\n" ++
+        "```mylang\n" ++
+        "# doc: legacy-sharing\n" ++
+        "def main() -> int:\n" ++
+        "    return 3\n" ++
         "```\n";
     var arena = std.heap.ArenaAllocator.init(testing.allocator);
     defer arena.deinit();
@@ -1398,13 +1407,15 @@ test "doctest runs a value-semantics unit with the switch and every other unit w
     const found = try fences(allocator, "docs/values.md", text);
     try testing.expectEqual(@as(?[]const u8, null), found[0].error_message);
     const units = try group(allocator, try executableBlocks(allocator, found));
-    try testing.expectEqual(@as(usize, 2), units.len);
+    try testing.expectEqual(@as(usize, 3), units.len);
     const switched = try commandOptions(allocator, units[0], "run", "fixtures");
     try testing.expectEqualStrings("--value-semantics", switched[0]);
     const checked = try commandOptions(allocator, units[0], "check", "fixtures");
     try testing.expectEqualStrings("--value-semantics", checked[0]);
     const plain = try commandOptions(allocator, units[1], "run", "fixtures");
     for (plain) |argument| try testing.expect(!std.mem.eql(u8, argument, "--value-semantics"));
+    const legacy = try commandOptions(allocator, units[2], "run", "fixtures");
+    try testing.expectEqualStrings("--legacy-sharing", legacy[0]);
 }
 
 test "doctest mis-tagged prose fences look like guest source and not-mylang opts out" {

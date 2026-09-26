@@ -3,9 +3,10 @@
 `set[T]` holds each distinct value of a hashable type once. It keeps its elements in
 the order they were first added, answers `in`, `add`, `remove` and `discard` in
 expected constant time, and prints the way Python prints a set. Like a list or a
-dictionary it lives on the tracing heap and is shared on assignment: every alias sees
-the same elements, a function that changes a set parameter declares it `mut`, and
-the call site marks it with `mut`.
+dictionary it lives on the tracing heap. Assignment gives the destination an
+independent value, even if the implementation shares backing storage until a
+write. A function that changes its caller's set declares the parameter `mut`,
+and the call site marks the argument with `mut`.
 
 ## Set literals and construction
 
@@ -62,14 +63,16 @@ def main() -> int:
     names = {"ada", "bob"}
     alias = names
     tag(mut alias, "cy")
-    names.discard("zed")
-    names.remove("bob")
-    newest = names.pop()
-    if newest != "cy" or "cy" in names:
+    if "cy" in names:
         return 1
-    backup = names.copy()
-    names.update({"dee", "eve"})
-    names.clear()
+    alias.discard("zed")
+    alias.remove("bob")
+    newest = alias.pop()
+    if newest != "cy" or "cy" in alias:
+        return 1
+    backup = alias.copy()
+    alias.update({"dee", "eve"})
+    alias.clear()
     total = 0
     for name in backup:
         total += len(name)
@@ -138,8 +141,9 @@ def main() -> int:
 
 A key type that cannot be hashed is rejected where the dictionary or set is built,
 with `E_DICT_KEY` or `E_SET_ELEMENT` naming the offending part: `float`, because NaN
-is not equal to itself; a `list`, `dict`, `set`, `byte_buffer` or `class` value,
-because it is a shared reference whose contents can change after it is stored; a
+is not equal to itself; a mutable `list`, `dict`, `set` or `byte_buffer` value,
+whose contents can change after it is stored; a `class` in legacy-sharing mode,
+whose referenced contents are mutable; a
 function value, which has no equality; and a capability, file or resource. A record
 with a `float` field nested in it is refused with the path to that field, such as
 `Reading.at.x`. Inside a generic function a type parameter used as

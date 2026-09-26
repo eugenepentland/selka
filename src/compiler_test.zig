@@ -887,6 +887,8 @@ test "the pausing collector reclaims garbage and still enforces the byte budget"
 
 // spec: CLASS-WRITE-1
 test "a class field write mutates the receiver in place without copying it" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     const source =
         \\class Box:
         \\    n: int

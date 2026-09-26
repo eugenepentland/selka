@@ -20,16 +20,16 @@ fn reject(source: []const u8, code: []const u8) !void {
 
 fn allocationScenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, fixture_path,
-        \\class Inner:
+        \\record Inner:
         \\    x: i64
         \\
         \\
-        \\class Source:
+        \\record Source:
         \\    inner: Inner
         \\    ignored: bool
         \\
         \\
-        \\class Target:
+        \\record Target:
         \\    value: i64
         \\
         \\
@@ -61,12 +61,12 @@ test "record schemas conversion checking construction assignment projection and 
 
 test "duplicate discovery retains nominal record and resolved field identities" {
     var compilation = try language.Compilation.init(testing.allocator, "identity.my",
-        \\class A:
+        \\record A:
         \\    x: i64
         \\    y: i64
         \\
         \\
-        \\class B:
+        \\record B:
         \\    x: i64
         \\    y: i64
         \\
@@ -103,12 +103,12 @@ test "duplicate discovery retains nominal record and resolved field identities" 
 
 test "complete conversion accounts named source fields and requires complete destination" {
     try result(
-        \\class Source:
+        \\record Source:
         \\    x: i64
         \\    ignored: bool
         \\
         \\
-        \\class Target:
+        \\record Target:
         \\    y: i64
         \\
         \\
@@ -121,12 +121,12 @@ test "complete conversion accounts named source fields and requires complete des
         \\    return convert(Source(x=4, ignored=True)).y
     , 8);
     try reject(
-        \\class Source:
+        \\record Source:
         \\    x: i64
         \\    added: bool
         \\
         \\
-        \\class Target:
+        \\record Target:
         \\    y: i64
         \\
         \\
@@ -138,11 +138,11 @@ test "complete conversion accounts named source fields and requires complete des
         \\    return 0
     , "E_INCOMPLETE_CONVERSION");
     try reject(
-        \\class Source:
+        \\record Source:
         \\    x: i64
         \\
         \\
-        \\class Target:
+        \\record Target:
         \\    y: i64
         \\    added: bool
         \\
@@ -155,7 +155,7 @@ test "complete conversion accounts named source fields and requires complete des
         \\    return 0
     , "E_INCOMPLETE_CONSTRUCTION");
     try result(
-        \\class Source:
+        \\record Source:
         \\    x: i64
         \\    added: bool
         \\
@@ -168,11 +168,11 @@ test "complete conversion accounts named source fields and requires complete des
         \\    return geometry(Source(x=5, added=True))
     , 5);
     try reject(
-        \\class Source:
+        \\record Source:
         \\    x: i64
         \\
         \\
-        \\class Target:
+        \\record Target:
         \\    y: i64
         \\
         \\
@@ -188,11 +188,11 @@ test "complete conversion accounts named source fields and requires complete des
         \\    return 0
     , "E_INCOMPLETE_CONVERSION");
     try reject(
-        \\class Source:
+        \\record Source:
         \\    x: i64
         \\
         \\
-        \\class Target:
+        \\record Target:
         \\    y: i64
         \\
         \\
@@ -205,7 +205,7 @@ test "complete conversion accounts named source fields and requires complete des
         \\    return 0
     , "E_CONVERSION_BODY");
     try reject(
-        \\class Source:
+        \\record Source:
         \\    x: i64
         \\
         \\

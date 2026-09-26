@@ -601,8 +601,11 @@
   "d54f49d93ad22d7d05838f09604be5ca": {
    "case": [
     "def build() -> list[i64]:\n    xs: list[i64] = []\n    i = 0\n    while i < 40:\n        xs.append(i)\n        i += 1\n    return xs\n\n\ndef main() -> i64:\n    xs = build()\n    alias = xs\n    alias[2u64] = 42\n    return xs[2u64] + len(xs)\n",
-    []
+    [
+     "--legacy-sharing"
+    ]
    ],
+   "note": "Historical shared-alias outcome retained in the explicit D9 compatibility mode.",
    "returncode": 82,
    "stderr": "",
    "stdout": "ODIK"

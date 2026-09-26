@@ -14,7 +14,7 @@ const Files = struct {
             \\module data
             \\
             \\
-            \\public class Box:
+            \\public record Box:
             \\    value: i64
             \\
             \\
@@ -161,7 +161,7 @@ test "navigation synthesized array shapes never resolve to function local or fie
         \\module main
         \\
         \\
-        \\class Box:
+        \\record Box:
         \\    n: i64
         \\
         \\
@@ -246,7 +246,7 @@ test "navigation publishes declared mutation footprints and return origins" {
         }
         if (std.mem.eql(u8, name, "pick")) {
             saw_pick = true;
-            try t.expectEqualStrings("params", symbol.get("return_origin").?.string);
+            try t.expectEqualStrings("fresh", symbol.get("return_origin").?.string);
             try t.expect(!symbol.get("mutation_writes").?.bool);
         }
         if (std.mem.eql(u8, name, "total")) {

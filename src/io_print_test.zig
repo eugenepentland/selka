@@ -48,6 +48,8 @@ test "IO-1 print renders scalars, text, bytes and containers with Python spellin
 
 // spec: IO-2
 test "IO-2 print renders records, enums, unions and checked results by name" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     const record = "class Point:\n    x: int\n    y: int\n\ndef main(out: Stream) -> int:\n    out.print(Point(x=1, y=2))\n    return 0\n";
     try expectOutput(record, "Point(x=1, y=2)\n");
     const colours = "enum Colour:\n    red,\n    green\n\n\ndef main(out: Stream) -> int:\n    out.print(Colour.green)\n    return 0\n";
@@ -106,6 +108,8 @@ test "generic function bodies reject the reserved io builtins with a located dia
 
 // spec: IO-6
 test "IO-6 the native backend lowers print through generated per-type renderers" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     const source =
         \\class Point:
         \\    x: int
@@ -136,9 +140,9 @@ test "IO-6 the native backend lowers print through generated per-type renderers"
 }
 
 // spec: IO-15
-test "IO-15 print and write work on a Stream held in a class field" {
+test "IO-15 print and write work on a Stream held in a record field" {
     const source =
-        \\class Sink:
+        \\record Sink:
         \\    stream: Stream
         \\    label: str
         \\
@@ -157,7 +161,7 @@ test "IO-15 print and write work on a Stream held in a class field" {
         \\    return emit(pair.first) - 6
     ;
     try expectOutput(source, "x\nhello\nn 6\n");
-    try reject("class Sink:\n    stream: Stream\n\ndef main(out: Stream) -> int:\n    sink = Sink(stream=out)\n    sink.stream.flush()\n    return 0\n", "E_COLLECTION_METHOD");
+    try reject("record Sink:\n    stream: Stream\n\ndef main(out: Stream) -> int:\n    sink = Sink(stream=out)\n    sink.stream.flush()\n    return 0\n", "E_COLLECTION_METHOD");
 }
 
 // spec: QBE-BULK-TEXT-1

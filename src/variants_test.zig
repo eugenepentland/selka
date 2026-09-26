@@ -139,7 +139,7 @@ test "match return analysis and control flow joins handle empty arms loops and n
 }
 
 const nested =
-    \\class Box:
+    \\record Box:
     \\    n: i64
     \\
     \\

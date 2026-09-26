@@ -16,15 +16,15 @@ const api =
     \\module library.api
     \\
     \\
-    \\public class Inputs:
+    \\public record Inputs:
     \\    value: i64
     \\
     \\
-    \\public class Box[T]:
+    \\public record Box[T]:
     \\    value: T
     \\
     \\
-    \\class Hidden:
+    \\record Hidden:
     \\    value: i64
     \\
     \\
@@ -80,7 +80,7 @@ const header = "module main\nimport library.api as api\n";
 const dotted = header ++
     \\
     \\
-    \\public class Sample:
+    \\public record Sample:
     \\    input: api.Inputs
     \\
     \\
@@ -138,7 +138,7 @@ test "dotted imports retain private symbol private domain and alias shadow check
     try scenario(t.allocator, header ++
         \\
         \\
-        \\public class Sample:
+        \\public record Sample:
         \\    input: api.Hidden
         \\
         \\

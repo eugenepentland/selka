@@ -146,6 +146,9 @@ test "copy on write: immediate variant dispatch copies only its selected payload
 
 // spec: COW-SHARED-1
 test "copy on write: a copy transfer shares the list and the first write through either name copies it" {
+    // Retain the internal phase-one path during the explicit legacy window.
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     try std.testing.expectEqual(@as(i64, 23), try run(std.testing.allocator, assigned, false));
     try std.testing.expectEqual(@as(i64, 23), try run(std.testing.allocator, assigned, true));
     const a = std.testing.allocator;
@@ -327,7 +330,11 @@ test "copy on write: every in-place write tests one header bit inline and copies
     defer a.free(il);
     try std.testing.expectEqual(@as(usize, 2), count(il, shared_test));
     try std.testing.expectEqual(@as(usize, 2), count(il, "call $myl_native_cow_unique(l %heap"));
-    const off = try unitText(a, source, "fill", plain);
+    const off = legacy: {
+        const scope = @import("test_support.zig").LegacySharing.enter();
+        defer scope.restore();
+        break :legacy try unitText(a, source, "fill", plain);
+    };
     defer a.free(off);
     try std.testing.expectEqual(@as(usize, 0), count(off, "cow"));
     try std.testing.expectEqual(@as(i64, 2), try run(std.testing.allocator, source, true));
@@ -489,6 +496,8 @@ const fields =
 
 // spec-case: COW-NESTED-1
 test "copy on write: a write through a record or class field writes the copy back into the field" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     const a = std.testing.allocator;
     const il = try unitText(a, fields, "main", checks);
     defer a.free(il);
@@ -542,4 +551,51 @@ test "copy on write: a counting build counts every inline check, mark and pin an
     try std.testing.expectEqual(@as(i64, 23), result.value);
     try std.testing.expect(std.mem.indexOf(u8, result.stderr, "cow-stats {\"marks\":1,") != null);
     try std.testing.expect(std.mem.indexOf(u8, result.stderr, "\"copies\":1,") != null);
+}
+
+// spec: COW-INDEX-RETURN-1
+test "copy on write: a unique mut-list element field returns without sharing" {
+    const saved = value_semantics.enabled();
+    value_semantics.setEnabled(true);
+    defer value_semantics.setEnabled(saved);
+    const source =
+        \\record Payload:
+        \\    number: int
+        \\    items: list[int]
+        \\
+        \\union Item:
+        \\    payload: Payload,
+        \\    empty
+        \\
+        \\def change(items: mut list[Item], index: int):
+        \\    match items[index]:
+        \\        case Item.payload(old):
+        \\            fields = old.items
+        \\            fields.append(2)
+        \\            items[index] = Item.payload(Payload(0, fields))
+        \\        case Item.empty:
+        \\            pass
+        \\
+        \\def observe(items: mut list[Item], index: int) -> int:
+        \\    seen = -1
+        \\    match items[index]:
+        \\        case Item.payload(old):
+        \\            fields = old.items
+        \\            fields.append(2)
+        \\            seen = len(old.items)
+        \\            items[index] = Item.payload(Payload(0, fields))
+        \\        case Item.empty:
+        \\            pass
+        \\    return seen
+        \\
+        \\def main() -> int:
+        \\    return 0
+    ;
+    const a = std.testing.allocator;
+    const il = try unitText(a, source, "change", checks);
+    defer a.free(il);
+    const negative = try unitText(a, source, "observe", checks);
+    defer a.free(negative);
+    try std.testing.expectEqual(@as(usize, 0), count(il, "call $myl_qbe_cow_transfer("));
+    try std.testing.expect(count(negative, "call $myl_qbe_cow_transfer(") > 0);
 }

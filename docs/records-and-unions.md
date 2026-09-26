@@ -13,10 +13,9 @@ written. For the syntax these examples use, see the
 
 `record` declares a value record. Every field carries a type annotation, and the record
 has no methods, no inheritance and no implicit `self` — a function that operates on a
-record takes it as an ordinary parameter. Assignment and argument passing copy the
-fields, so writing `point.x = ...` inside a helper changes only that helper's copy;
-managed fields such as `list`, `dict`, `str` and `bytes` still share the collection they
-point at, because copying a record copies the reference, not the collection. Ordinary
+record takes it as an ordinary parameter. Assignment and argument passing preserve
+independent values, including managed fields such as `list` and `dict`. The runtime
+can share backing storage until either value is written. Ordinary
 field assignment updates a record local or a record held in a list slot.
 
 ```mylang
@@ -44,7 +43,7 @@ This returns `14`. `shift` reassigns its own parameter, so `origin.x` is still `
 afterwards and only `moved.x` is `11`. Records with only scalar fields carry no
 collected reference, which is what lets them leave an arena block freely; see
 [managed arenas](arenas.md) for that rule and [managed memory](managed-memory.md) for
-what sharing a managed field means.
+how managed fields are copied.
 
 A rule every value of a record must satisfy is written as an invariant above it,
 such as `@invariant(self.low <= self.high)`. It is checked at every
@@ -53,12 +52,11 @@ construction, `replace(...)` and field write, and a violation traps
 
 ## Managed class records
 
-`class` declares the same named fields as `record` but with reference semantics.
-Construction allocates a GC-traced object, and assignment, argument passing and field
-reads all refer to that one object, so a write through any binding reaches the original.
-Use `record` when a copied value is wanted and `class` when the object has identity.
+For one migration release, `--legacy-sharing` accepts `class` as a managed
+reference record. Assignment and calls then share its identity:
 
 ```mylang
+# doc: legacy-sharing
 # doc: expect 8
 class Counter:
     n: int
@@ -74,11 +72,34 @@ def main() -> int:
     return a.n
 ```
 
-This returns `8`: `b` is the same object as `a`, and `bump` receives that object.
-Classes may hold managed fields and be held by other classes, so a self-referential
-graph is legal; printing one stops at the renderer's depth cap. A class instance has no
-value copy to mistake for an alias, so only a `record` copy write is rejected; a
-`record` copy write that nothing reads afterwards is `E_DEAD_RECORD_WRITE`.
+## Identity and recursive records
+
+Use a recursive record or union for a finite tree. Use a stable handle in
+`pool.Pool[T]` for a graph whose nodes need identity. A `class` declaration is
+rejected with `E_VALUE_CLASS` under value semantics; compatibility mode accepts
+the former shared-reference spelling for one migration release.
+
+```mylang
+# doc: value-semantics
+# doc: expect 2
+record Counter:
+    n: int
+
+def bump(counter: mut Counter):
+    counter.n = counter.n + 1
+
+def main() -> int:
+    a = Counter(n=1)
+    b = a
+    b.n = 7
+    bump(mut a)
+    return a.n
+```
+
+This returns `2`: writing `b` leaves `a` at `1`, then the marked `mut` call
+changes `a`. Recursive value fields that would be infinitely large are stored
+in immutable boxes; writing a nested path copies its boxes. A record copy write
+that nothing reads afterwards is `E_DEAD_RECORD_WRITE`.
 
 ## Positional and named constructors
 
@@ -355,7 +376,7 @@ still gets `E_RECURSIVE_RECORD`, because it has no finite value. Recursion throu
 recursive values compare, hash, print, cross typed JSON boundaries and escape
 arenas as values. Printing stops with `...` at the renderer's depth cap.
 
-With `--value-semantics`, copying a recursive value carries its immutable
+Under the default value model, copying a recursive value carries its immutable
 box pointers without walking their bodies. Reading through a box makes a private
 shallow snapshot and shares its immediate mutable children; a nested write
 detaches each box it crosses. Box hops alone do not consume the copy-on-write
@@ -436,7 +457,7 @@ This returns `91234`: every element of `counts` was written, `before` is the
 copy taken before the loop and still holds zeros, and only `points[1]` changed.
 An index is checked exactly as a read is (see negative indices below).
 `points[1].y += 1` keeps its operator, as `point.y += 1` does, and a field of a
-record or `class` holding an array, `window.samples[i] = v`, is written where
+record holding an array, `window.samples[i] = v`, is written where
 the field lives rather than by copying the array and the record.
 
 ### Negative indices
@@ -524,5 +545,5 @@ writes reads the elements where they are.
 - [Contracts](contracts.md#invariants) — an `@invariant` a record checks at every construction, `replace` and field write
 - [Results and options](results-and-options.md) — `Result`, `Option` and their contextual constructors
 - [Python-style application code](python-syntax.md) — the surrounding syntax
-- [Managed memory](managed-memory.md) — what a managed field shares
+- [Managed memory](managed-memory.md) — how managed fields are copied
 - [Match expressions](match-expressions.md) — producing a value from a match

@@ -1,0 +1,201 @@
+{
+ "version": "divergence-evidence-v1",
+ "measured_on": "2026-09-26",
+ "policy": {
+  "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/velocity/divergences.json",
+  "version": "divergence-policy-v1",
+  "sha256": "26bd13f4f6b7bed50000de062222b3f12ca260c15ce9f39da4712c76983a8594"
+ },
+ "binary": {
+  "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep/zig-out/focus/mylang",
+  "sha256": "0f191d22eb1703e0d99c995f2f8362abb4c5269a0d53478d0d5d3bb4a0bef6a5"
+ },
+ "python": {
+  "executable": "/usr/bin/python3",
+  "version": "3.14.4"
+ },
+ "cases": [
+  {
+   "entry": "round-half-away-from-zero",
+   "expression": "int(round(2.5))",
+   "declared": {
+    "mylang": 3,
+    "cpython": 2
+   },
+   "observed": {
+    "mylang": "3",
+    "cpython": "2"
+   },
+   "reproduces": {
+    "mylang": true,
+    "cpython": true
+   }
+  },
+  {
+   "entry": "round-half-away-from-zero",
+   "expression": "int(round(0.5))",
+   "declared": {
+    "mylang": 1,
+    "cpython": 0
+   },
+   "observed": {
+    "mylang": "1",
+    "cpython": "0"
+   },
+   "reproduces": {
+    "mylang": true,
+    "cpython": true
+   }
+  },
+  {
+   "entry": "round-half-away-from-zero",
+   "expression": "int(round(-0.5))",
+   "declared": {
+    "mylang": -1,
+    "cpython": 0
+   },
+   "observed": {
+    "mylang": "-1",
+    "cpython": "0"
+   },
+   "reproduces": {
+    "mylang": true,
+    "cpython": true
+   }
+  },
+  {
+   "entry": "round-half-away-from-zero",
+   "expression": "int(round(-2.5))",
+   "declared": {
+    "mylang": -3,
+    "cpython": -2
+   },
+   "observed": {
+    "mylang": "-3",
+    "cpython": "-2"
+   },
+   "reproduces": {
+    "mylang": true,
+    "cpython": true
+   }
+  },
+  {
+   "entry": "round-half-away-from-zero",
+   "expression": "int(round(1.4))",
+   "declared": {
+    "mylang": 1,
+    "cpython": 1
+   },
+   "observed": {
+    "mylang": "1",
+    "cpython": "1"
+   },
+   "reproduces": {
+    "mylang": true,
+    "cpython": true
+   }
+  },
+  {
+   "entry": "round-half-away-from-zero",
+   "expression": "int(round(2.6))",
+   "declared": {
+    "mylang": 3,
+    "cpython": 3
+   },
+   "observed": {
+    "mylang": "3",
+    "cpython": "3"
+   },
+   "reproduces": {
+    "mylang": true,
+    "cpython": true
+   }
+  },
+  {
+   "entry": "round-half-away-from-zero",
+   "expression": "round(2.5) + 0.5",
+   "declared": {
+    "mylang": 3.5,
+    "cpython": 2.5
+   },
+   "observed": {
+    "mylang": "3.5",
+    "cpython": "2.5"
+   },
+   "reproduces": {
+    "mylang": true,
+    "cpython": true
+   }
+  }
+ ],
+ "probes": [
+  {
+   "entry": "round-half-away-from-zero",
+   "probe": "d05_round_half.my",
+   "mylang": {
+    "status": 61,
+    "value": "317",
+    "stderr_first_line": ""
+   },
+   "cpython": {
+    "status": 208,
+    "stdout": "",
+    "ok": true,
+    "error": null
+   },
+   "agrees": false
+  },
+  {
+   "entry": "collection-value-semantics",
+   "probe": "d11_list_value_copy.my",
+   "mylang": {
+    "status": 12,
+    "value": "12",
+    "stderr_first_line": ""
+   },
+   "cpython": {
+    "status": 22,
+    "stdout": "",
+    "ok": true,
+    "error": null
+   },
+   "agrees": false
+  },
+  {
+   "entry": "collection-value-semantics",
+   "probe": "d12_nested_list_value_copy.my",
+   "mylang": {
+    "status": 12,
+    "value": "12",
+    "stderr_first_line": ""
+   },
+   "cpython": {
+    "status": 22,
+    "stdout": "",
+    "ok": true,
+    "error": null
+   },
+   "agrees": false
+  },
+  {
+   "entry": "collection-value-semantics",
+   "probe": "d13_dict_value_copy.my",
+   "mylang": {
+    "status": 12,
+    "value": "12",
+    "stderr_first_line": ""
+   },
+   "cpython": {
+    "status": 22,
+    "stdout": "",
+    "ok": true,
+    "error": null
+   },
+   "agrees": false
+  }
+ ],
+ "commands": {
+  "record": "python3 velocity/divergence_evidence.py --binary zig-out/focus/mylang",
+  "strict_c2": "python3 velocity/score.py --probe 'd05*' --json"
+ }
+}

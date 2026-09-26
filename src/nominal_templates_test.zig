@@ -4,7 +4,7 @@ const t = std.testing;
 const language = @import("compiler.zig");
 const templates = @import("nominal_templates.zig");
 const fixture =
-    \\class Pair[T, U]:
+    \\record Pair[T, U]:
     \\    first: T
     \\    second: U
     \\
@@ -14,7 +14,7 @@ const fixture =
     \\    some: T
     \\
     \\
-    \\class Row[T: equality]:
+    \\record Row[T: equality]:
     \\    pair: Pair[T, bool]
     \\    slots: [2]Slot[T]
     \\
@@ -22,7 +22,7 @@ const fixture =
     \\resource File: filesystem
     \\
     \\
-    \\class Owned[T]:
+    \\record Owned[T]:
     \\    file: File
     \\    value: T
     \\
@@ -32,7 +32,7 @@ const fixture =
     \\    err: i64
     \\
     \\
-    \\class Pending:
+    \\record Pending:
     \\    answer: Answer[i64]
     \\
     \\
@@ -45,7 +45,7 @@ const fixture =
     \\    pass
     \\
     \\
-    \\class Empty:
+    \\record Empty:
     \\    zero: [0]File
     \\
     \\
@@ -87,14 +87,14 @@ fn metadataScenario(allocator: std.mem.Allocator) !void {
 }
 fn rejectionScenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, "invalid.my",
-        \\class Box[T]:
+        \\record Box[T]:
         \\    value: T
         \\
         \\
         \\resource File: filesystem
         \\
         \\
-        \\class Bad:
+        \\record Bad:
         \\    value: Box[File]
     );
     defer compilation.deinit();
@@ -108,7 +108,7 @@ fn rejectionScenario(allocator: std.mem.Allocator) !void {
 }
 fn separateSinkScenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, "allocators.my",
-        \\class Box[T]:
+        \\record Box[T]:
         \\    value: T
     );
     defer compilation.deinit();
@@ -141,11 +141,11 @@ fn reject(text: []const u8, code: []const u8, token: []const u8) !void {
 }
 test "unused nominal template fields reject unknown names duplicate members and invalid result schemas" {
     try reject(
-        \\class Box[T]:
+        \\record Box[T]:
         \\    value: Missing
     , "E_UNKNOWN_TYPE", "Missing");
     try reject(
-        \\class Box[T]:
+        \\record Box[T]:
         \\    value: T
         \\    value: i64
     , "E_DUPLICATE_FIELD", "value");
@@ -166,7 +166,7 @@ test "unused nominal template fields reject unknown names duplicate members and 
         \\    err
     , "E_RESULT_SCHEMA", "err");
     try reject(
-        \\class Box[T]:
+        \\record Box[T]:
         \\    value: T
         \\
         \\
@@ -176,61 +176,61 @@ test "unused nominal template fields reject unknown names duplicate members and 
 }
 test "nominal template applications check arity and constructor kinds inside unused declarations" {
     try reject(
-        \\class Pair[T, U]:
+        \\record Pair[T, U]:
         \\    a: T
         \\    b: U
         \\
         \\
-        \\class Bad[V]:
+        \\record Bad[V]:
         \\    x: Pair[V]
     , "E_GENERIC_ARITY", "Pair[V]");
     try reject(
-        \\class Box[T]:
+        \\record Box[T]:
         \\    value: T
         \\
         \\
-        \\class Bad:
+        \\record Bad:
         \\    value: Box
     , "E_GENERIC_ARITY", "Box");
     try reject(
-        \\class Plain:
+        \\record Plain:
         \\    pass
         \\
         \\
-        \\class Bad[T]:
+        \\record Bad[T]:
         \\    value: Plain[T]
     , "E_GENERIC_ARITY", "Plain[T]");
     try reject(
-        \\class Bad[T]:
+        \\record Bad[T]:
         \\    value: T[i64]
     , "E_TYPE_APPLICATION", "T");
     try reject(
-        \\class Bad[T]:
+        \\record Bad[T]:
         \\    value: [2]Missing[T]
     , "E_UNKNOWN_TYPE", "Missing");
 }
 test "nominal template requirements reject insufficient symbolic promises and concrete operations" {
     const prefix =
-        \\class Key[T: equality]:
+        \\record Key[T: equality]:
         \\    value: T
         \\
         \\
-        \\class Number[T: integer]:
+        \\record Number[T: integer]:
         \\    value: T
         \\
         \\
         \\
     ;
     try reject(prefix ++
-        \\class Bad[T]:
+        \\record Bad[T]:
         \\    value: Key[T]
     , "E_GENERIC_REQUIREMENT", "T");
     try reject(prefix ++
-        \\class Bad[T: equality]:
+        \\record Bad[T: equality]:
         \\    value: Number[T]
     , "E_GENERIC_REQUIREMENT", "T");
     try reject(prefix ++
-        \\class Bad[T]:
+        \\record Bad[T]:
         \\    value: Number[bool]
     , "E_GENERIC_REQUIREMENT", "bool");
     try reject(prefix ++
@@ -238,19 +238,19 @@ test "nominal template requirements reject insufficient symbolic promises and co
         \\    pass
         \\
         \\
-        \\class Bad[T]:
+        \\record Bad[T]:
         \\    value: Number[Id]
     , "E_GENERIC_REQUIREMENT", "Id");
     try reject(prefix ++
-        \\class Bad[T]:
+        \\record Bad[T]:
         \\    value: Key[[0]T]
     , "E_GENERIC_REQUIREMENT", "[0]T");
     try reject(prefix ++
-        \\class Bad[T]:
+        \\record Bad[T]:
         \\    value: Key[Key[i64]]
     , "E_GENERIC_REQUIREMENT", "Key[i64]");
     var repaired = try language.Compilation.init(t.allocator, "repaired.my", prefix ++
-        \\class Good[T: integer]:
+        \\record Good[T: integer]:
         \\    key: Key[T]
         \\    number: Number[T]
         \\    flag: Key[bool]
@@ -263,7 +263,7 @@ test "nominal template requirements reject insufficient symbolic promises and co
 }
 test "nominal template requirements preserve transitive owner and pending result obligations" {
     const prefix =
-        \\class Box[T]:
+        \\record Box[T]:
         \\    value: T
         \\
         \\
@@ -273,19 +273,19 @@ test "nominal template requirements preserve transitive owner and pending result
         \\
     ;
     try reject(prefix ++
-        \\class Bad:
+        \\record Bad:
         \\    value: Box[File]
     , "E_GENERIC_REQUIREMENT", "File");
     try reject(prefix ++
-        \\class Bad:
+        \\record Bad:
         \\    value: Box[Outer]
         \\
         \\
-        \\class Outer:
+        \\record Outer:
         \\    inner: Inner
         \\
         \\
-        \\class Inner:
+        \\record Inner:
         \\    file: File
     , "E_GENERIC_REQUIREMENT", "Outer");
     try reject(prefix ++
@@ -294,30 +294,30 @@ test "nominal template requirements preserve transitive owner and pending result
         \\    err: i64
         \\
         \\
-        \\class Pending:
+        \\record Pending:
         \\    answer: Answer
         \\
         \\
-        \\class Bad:
+        \\record Bad:
         \\    value: Box[[1]Pending]
     , "E_GENERIC_REQUIREMENT", "[1]Pending");
     try reject(prefix ++
-        \\class Owner[T]:
+        \\record Owner[T]:
         \\    file: File
         \\    value: T
         \\
         \\
-        \\class Bad:
+        \\record Bad:
         \\    value: Box[Owner[i64]]
     , "E_GENERIC_REQUIREMENT", "Owner[i64]");
     try reject(prefix ++
-        \\class Bad:
+        \\record Bad:
         \\    value: Box[Box[File]]
     , "E_GENERIC_REQUIREMENT", "File");
 }
 test "nominal template arrays validate lengths keys and symbolic enum table boundaries" {
     try reject(
-        \\class Box[T]:
+        \\record Box[T]:
         \\    value: [2u8]T
     , "E_ARRAY_LENGTH", "2u8");
     try reject(
@@ -326,15 +326,15 @@ test "nominal template arrays validate lengths keys and symbolic enum table boun
         \\    two
         \\
         \\
-        \\class Box[T]:
+        \\record Box[T]:
         \\    value: [Key]T
     , "E_GENERIC_ARRAY_KEY", "[Key]T");
     try reject(
-        \\class Key:
+        \\record Key:
         \\    pass
         \\
         \\
-        \\class Box[T]:
+        \\record Box[T]:
         \\    value: [Key]i64
     , "E_TABLE_KEY", "Key");
     try reject(
@@ -343,11 +343,11 @@ test "nominal template arrays validate lengths keys and symbolic enum table boun
         \\    two
         \\
         \\
-        \\class Box[T]:
+        \\record Box[T]:
         \\    value: [Key[bool]]i64
     , "E_GENERIC_REQUIREMENT", "bool");
     var compilation = try language.Compilation.init(t.allocator, "valid.my",
-        \\class Box[T]:
+        \\record Box[T]:
         \\    value: T
         \\
         \\
@@ -364,7 +364,7 @@ test "nominal template arrays validate lengths keys and symbolic enum table boun
         \\    second
         \\
         \\
-        \\class Valid[U: integer]:
+        \\record Valid[U: integer]:
         \\    empty: Box[[0]File]
         \\    table: [Key]Box[i64]
         \\    tags: [Tag[i64]]bool
@@ -379,7 +379,7 @@ test "nominal guarantee propagation handles long reverse ordered declaration cha
     var text: std.Io.Writer.Allocating = .init(t.allocator);
     defer text.deinit();
     try text.writer.writeAll(
-        \\class Box[T]:
+        \\record Box[T]:
         \\    value: T
         \\
         \\
@@ -388,13 +388,13 @@ test "nominal guarantee propagation handles long reverse ordered declaration cha
         \\
         \\
     );
-    for (0..1200) |i| try text.writer.print("class Link{d}:\n    next: Link{d}\n\n\n", .{ i, i + 1 });
+    for (0..1200) |i| try text.writer.print("record Link{d}:\n    next: Link{d}\n\n\n", .{ i, i + 1 });
     try text.writer.writeAll(
-        \\class Link1200:
+        \\record Link1200:
         \\    file: File
         \\
         \\
-        \\class Bad:
+        \\record Bad:
         \\    value: Box[Link0]
     );
     try reject(text.written(), "E_GENERIC_REQUIREMENT", "Link0");
@@ -405,15 +405,15 @@ test "nominal guarantee propagation handles long reverse ordered declaration cha
 fn aliasChain(allocator: std.mem.Allocator, levels: usize) ![]u8 {
     var text: std.Io.Writer.Allocating = .init(allocator);
     defer text.deinit();
-    try text.writer.writeAll("class Pair[A, B]:\n    first: A\n    second: B\n\n\n");
+    try text.writer.writeAll("record Pair[A, B]:\n    first: A\n    second: B\n\n\n");
     for (0..levels) |level| try text.writer.print("type T{d} = Pair[T{d}, T{d}]\n\n\n", .{ level, level + 1, level + 1 });
-    try text.writer.print("type T{d} = i64\n\n\nclass Holder:\n    value: T0\n", .{levels});
+    try text.writer.print("type T{d} = i64\n\n\nrecord Holder:\n    value: T0\n", .{levels});
     return text.toOwnedSlice();
 }
 // spec: NOMINAL-TEMPLATE-BUDGET-1
 test "nominal expression checking bounds each top-level expression without issuing executable type IDs" {
     var compilation = try language.Compilation.init(t.allocator, "budget.my",
-        \\class Box[T]:
+        \\record Box[T]:
         \\    value: T
     );
     defer compilation.deinit();
@@ -447,7 +447,7 @@ const Modules = struct {
             \\import right as r
             \\
             \\
-            \\class Holder[T]:
+            \\record Holder[T]:
             \\    a: l.Box[T]
             \\    b: r.Box[T]
             \\    c: l.Box[T]
@@ -460,20 +460,20 @@ const Modules = struct {
             \\module left
             \\
             \\
-            \\public class Box[U: equality]:
+            \\public record Box[U: equality]:
             \\    value: U
         else
             \\module left
             \\
             \\
-            \\public class Box[U]:
+            \\public record Box[U]:
             \\    value: U
         );
         if (std.mem.eql(u8, path, "right.my")) return allocator.dupe(u8,
             \\module right
             \\
             \\
-            \\public class Box[U]:
+            \\public record Box[U]:
             \\    value: U
         );
         return error.NotFound;

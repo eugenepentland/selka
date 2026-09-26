@@ -58,6 +58,8 @@ test "direct C supports bool void and binary64 without provider registration" {
 
 // spec: C-FFI-1
 test "direct C declarations reject unsupported signatures and preserve effect checking" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     try reject(
         \\extern def f(host: Host, x: None) -> i64 effects(host)
     ++ entry, "E_EXTERN_SIGNATURE");

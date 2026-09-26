@@ -4,7 +4,7 @@ The closed loop that measures and improves agent development speed. The design i
 [`docs/velocity-loop.md`](../docs/velocity-loop.md); the goal, metrics and baselines are
 [`goal.json`](goal.json) (user-owned); the ranked work is [`backlog.json`](backlog.json);
 an iteration starts from [`LOOP-PROMPT.md`](LOOP-PROMPT.md). `suites/idioms/` holds the
-110 first-try probes with their oracle tags and the 17 September baseline in
+first-try probes with their oracle tags and the 17 September baseline in
 `manifest.json`. `gen_project.py` and `solve.py` are backlog items V1 and V2 and do not
 exist yet.
 
@@ -66,3 +66,20 @@ now owns `cpython_oracle()` and the "did this run complete" classifier, and `sco
 imports both; the recorded-expectation corpus under `tests/fixtures/idioms` stays where
 it is. The other lanes (B, D, the gate list) are still unbuilt, so `score.py` is lane C
 only and does not write `velocity/current.json`.
+
+## D9 collection values
+
+The `d11`–`d13` probes keep the CPython oracle and expose the deliberate
+difference in list assignment, nested lists, and dictionary assignment. Each
+returns 12 under value semantics and 22 under Python's shared-object rules.
+`divergences.json` names these three probes explicitly: strict C2 continues to
+count them, while C2_policy accepts the documented D9 decision. New, unrelated
+disagreements still fail the gate. The original manifest and score snapshots
+remain historical baselines.
+
+After the default flip, reproduce the declarations with:
+
+```sh
+python3 velocity/divergence_evidence.py --out velocity/suites/idioms/divergence-evidence-d9.json
+python3 velocity/score.py --gate
+```
