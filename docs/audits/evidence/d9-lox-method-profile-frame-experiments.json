@@ -1,0 +1,1175 @@
+{
+  "method_call": {
+    "program": {
+      "id": "lox/vm/method_call",
+      "kind": "lox",
+      "script": "method_call",
+      "engine": "vm",
+      "size": 50000,
+      "build_key": "lox",
+      "arms": [
+        "qbe",
+        "llvm"
+      ],
+      "expected_path": "/home/epentland/ai/canopy/mylang-worktrees/d9-stage3b/.tmp-cow/pc/lox/bench/expected/method_call.tree.out"
+    },
+    "cpu": 11,
+    "builds": {
+      "base": {
+        "compiler": "/home/epentland/ai/canopy/mylang-worktrees/perf-gc-dict/zig-out/bin/mylang",
+        "compiler_sha256": "48427e9ac1c01b74e60d1b4c098c8fc149a6b5fef3c07e110c7fb4ba16cbb545",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/perf-gc-dict/zig-out/bin/mylang",
+          "build",
+          "main.my",
+          "--project",
+          "--mode",
+          "ReleaseFast",
+          "--backend",
+          "llvm",
+          "--llvm-opt",
+          "3",
+          "--lto",
+          "--keep-symbols",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-nested-cow/.tmp-nested/method-profile/cache-base",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-nested-cow/.tmp-nested/method-profile/lox-base.llvm.sym"
+        ],
+        "status": 0,
+        "seconds": 6.895822815014981,
+        "stderr": "",
+        "source_sha256": {
+          "ast.my": "eebbaedaf3ed1e9f085e42389bd64c380de72b2526b98ab2970fd6826abcdff5",
+          "chunk.my": "830c40df455dafbdcd3de8f39cae6f208fb05635a7e6c29a20e0138aa0e3fc13",
+          "compiler.my": "e703c22aa6ec6bd2e936a2180dd50159b279263f64828a6d1876b0450050f7ae",
+          "compiler_test.my": "582fe817dbeffa709961b5124370ce200510adb3ac0d246572ca1c0dc19ec08a",
+          "driver.my": "fe831d2ec08833d11139e790ab741903b27a8e0fb43582cac11ca664b4595836",
+          "driver_tests.my": "9eace4f6c8b33fd93331297f8a8195c41357b7c833b2e06e0c20594704113925",
+          "heap.my": "b73e8b23fed9994f11c45b2dc606c9460ad5b45e6035128d8ed34aa4171333e7",
+          "heap_test.my": "fe480117a1e7c8363f9ab1046495571fbc047dc8953b5627737ba8a761390a2a",
+          "interpreter.my": "3ba1ef85985239ae0992cea9d9899db29b036205b35be40510d0fe9cf9bb7f84",
+          "lox_strings.my": "162d84edbf03b5c3fe7825064bd84d270253c2cb6d3a607fc10f165a279dd8f8",
+          "lox_strings_test.my": "a44545c64e9f75cc5af761d6c703feec83c4fc0a14d2678a1b2fce28067bd0c0",
+          "main.my": "18c1f669b1683123e635256c9f66c6db2766383391371c3822e61df7d9732274",
+          "natives.my": "2ff45343fded6d303e6233e0f787e63c319e860903e2c0c81ccbb71c2749d665",
+          "object.my": "f7afa2167250d22ccac18f5aa681f0f7ef3ea5316748635de86708272e408021",
+          "output.my": "5baeeb7cf1b61d853f40c0cb6d127cd08b7494846153c6bc5df9bce7c602428a",
+          "parser.my": "9d80f9cc4e1ff13bb5d7aaede3fe4c83629bfe8f4a0112833426828544e6707f",
+          "parser_test.my": "ffe2658f030c75b40a7c54d8f0c64e848e6679e13fc69cbef9a131ed7b120e4b",
+          "resolver.my": "5956428fa9aca965f5551562bc3c4b7e5d5d75d13c6b47ecad28e85c11c3466c",
+          "resolver_test.my": "3e9babe3a9029b56285a02420271d3f6035c495e470107e4aa2036149fa200e8",
+          "scanner.my": "bd1714fc883c01cc391caacda77644afd38547d0d3973caff998f2c3a62c54f6",
+          "scanner_test.my": "1d7fbb34b0de402657786641217e81c9ae286cab14baf2716de2db875ae39ad0",
+          "table.my": "6c4f06c8b5d1e663726f4036fedcf87335e4507498a69b426c9009d19ed4c3d9",
+          "table_test.my": "38279f9135e953484e6844994bc070c4156d1eb31ab4de0f295efbea17c19555",
+          "value.my": "3b2a444e77c6a703b1aedad3c89ef38cad70aa3bb6cba1716b623980ff9a76b0",
+          "value_test.my": "b766d22b25a8a8a090b4a059030cfc7462022fdacb66a0a91bf8a9e09a53fed4",
+          "vm.my": "2d383f35de67934c35f23a6fdc36787b56dcb90e94ea1d0b20fbc12c0ab7d1e8"
+        },
+        "binary_sha256": "7d590eea34ad9e6ed166d309ce17fd92055672c0099e547e4a4a3a162bcb53b9"
+      },
+      "current": {
+        "compiler": "/home/epentland/ai/canopy/mylang-worktrees/d9-performance43/.tmp-perf43/install/bin/mylang",
+        "compiler_sha256": "ceb38b6e1fb1a23f20d92580b3cd7f07f635f5752311f27d477f9792e388b7d5",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-performance43/.tmp-perf43/install/bin/mylang",
+          "build",
+          "main.my",
+          "--project",
+          "--mode",
+          "ReleaseFast",
+          "--backend",
+          "llvm",
+          "--llvm-opt",
+          "3",
+          "--lto",
+          "--keep-symbols",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-nested-cow/.tmp-nested/method-profile/cache-current",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-nested-cow/.tmp-nested/method-profile/lox-current.llvm.sym",
+          "--value-semantics"
+        ],
+        "status": 0,
+        "seconds": 8.366337512037717,
+        "stderr": "",
+        "source_sha256": {
+          "ast.my": "e210fb35bf3125ba06ebb978bcb3592162020a77576542f2d049879a51479bf9",
+          "chunk.my": "b4f6e7ae6531b224f99e026f53fee3692c90d8f2b15d3c76ca5962f1803e4b66",
+          "compiler.my": "c550603195401ff6d9436b42d6fbf0c35051521da57e7b85281fc8fcf6ebe048",
+          "compiler_test.my": "582fe817dbeffa709961b5124370ce200510adb3ac0d246572ca1c0dc19ec08a",
+          "driver.my": "fe831d2ec08833d11139e790ab741903b27a8e0fb43582cac11ca664b4595836",
+          "driver_tests.my": "32615edbfcbe21e8d550910df45d9bfcb199ee9c8171405d38566b98d78e00bd",
+          "heap.my": "f9851094e79c865522feb71187ae67499c929230b056cf8b4d140ec90a3366fe",
+          "heap_test.my": "c951153991a8d5d13ca1df6ded7c6f26c7b43a08ed2095f72c6091637b29b53f",
+          "interpreter.my": "94d8b5472b997d5f875b575f0cf1b5cc7fb670ac57a293c1c6a8081151a19fcd",
+          "lox_strings.my": "383900dda10b9218caf2087e12a2e20089e4d48b0ec5fc3e17e960a3d70d83df",
+          "lox_strings_test.my": "a44545c64e9f75cc5af761d6c703feec83c4fc0a14d2678a1b2fce28067bd0c0",
+          "main.my": "18c1f669b1683123e635256c9f66c6db2766383391371c3822e61df7d9732274",
+          "natives.my": "2ff45343fded6d303e6233e0f787e63c319e860903e2c0c81ccbb71c2749d665",
+          "object.my": "08c0d5c6ae304ef4d0e1f5929f52b5d1dd47cd46e6c409392c0b5b1df9567ad7",
+          "output.my": "cdc79c8a9a5eca0106fb139bca5492da201f027b0499e5e00a492368317d194c",
+          "parser.my": "e9bd5d9c37e307d060ce165dc4fa0f276c2ff9dbe7cb21bd27cbdd94644b4edd",
+          "parser_test.my": "ffe2658f030c75b40a7c54d8f0c64e848e6679e13fc69cbef9a131ed7b120e4b",
+          "resolver.my": "41d41b2a1ddb3f6ab3fb73ad9eff69415b0450d890554766bfee37eac8d0903d",
+          "resolver_test.my": "72c5176ff15db240d8ec8ff8073fcdb7736e8c60ab47410bb60fce934c179d31",
+          "scanner.my": "af4bc6a57859318051dc47d6e1f6344ee98fbfff037e9be93c0a103765cd3e83",
+          "scanner_test.my": "1d7fbb34b0de402657786641217e81c9ae286cab14baf2716de2db875ae39ad0",
+          "table.my": "c875ae493dbc0d6c1b70202746b0f1d2211190fa1276b9d492778455c0d0b2ca",
+          "table_test.my": "38279f9135e953484e6844994bc070c4156d1eb31ab4de0f295efbea17c19555",
+          "value.my": "3b2a444e77c6a703b1aedad3c89ef38cad70aa3bb6cba1716b623980ff9a76b0",
+          "value_test.my": "b766d22b25a8a8a090b4a059030cfc7462022fdacb66a0a91bf8a9e09a53fed4",
+          "vm.my": "07465dc266949546124c9efc10b565d898bd5deab81af0182ffa958e37ec2ceb"
+        },
+        "binary_sha256": "68941b133f50550cfa451846ba598a6ff87ad2f582fa82f3adda1114b15ca76b"
+      }
+    },
+    "checks": {
+      "base": {
+        "status": 0,
+        "stdout_sha256": "21d91041c5d1a59661f8936571ee5c87e96f6f0c7a532b52ec17c5b9bea8220b",
+        "stderr": "",
+        "ok": true
+      },
+      "current": {
+        "status": 0,
+        "stdout_sha256": "21d91041c5d1a59661f8936571ee5c87e96f6f0c7a532b52ec17c5b9bea8220b",
+        "stderr": "",
+        "ok": true
+      }
+    },
+    "counts": {
+      "base": [
+        {
+          "status": 0,
+          "instructions": 5202602530,
+          "cycles": 1660011894
+        },
+        {
+          "status": 0,
+          "instructions": 5202602551,
+          "cycles": 1666519799
+        },
+        {
+          "status": 0,
+          "instructions": 5202602521,
+          "cycles": 1656679068
+        }
+      ],
+      "current": [
+        {
+          "status": 0,
+          "instructions": 7570389121,
+          "cycles": 2112672733
+        },
+        {
+          "status": 0,
+          "instructions": 7570389161,
+          "cycles": 2114166628
+        },
+        {
+          "status": 0,
+          "instructions": 7570389146,
+          "cycles": 2103461824
+        }
+      ]
+    },
+    "profiles": {
+      "base": {
+        "command": [
+          "taskset",
+          "-c",
+          "11",
+          "perf",
+          "record",
+          "-e",
+          "cpu_core/instructions/u",
+          "-c",
+          "100003",
+          "-g",
+          "--call-graph",
+          "fp",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-nested-cow/.tmp-nested/method-profile/base.perf.data",
+          "--",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-nested-cow/.tmp-nested/method-profile/lox-base.llvm.sym",
+          "--engine=vm",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-nested-cow/.tmp-nested/method-profile/lox-scripts/method_call.tree.lox"
+        ],
+        "status": 0
+      },
+      "current": {
+        "command": [
+          "taskset",
+          "-c",
+          "11",
+          "perf",
+          "record",
+          "-e",
+          "cpu_core/instructions/u",
+          "-c",
+          "100003",
+          "-g",
+          "--call-graph",
+          "fp",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-nested-cow/.tmp-nested/method-profile/current.perf.data",
+          "--",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-nested-cow/.tmp-nested/method-profile/lox-current.llvm.sym",
+          "--engine=vm",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-nested-cow/.tmp-nested/method-profile/lox-scripts/method_call.tree.lox"
+        ],
+        "status": 0
+      }
+    },
+    "instruction_medians": {
+      "base": 5202602530,
+      "current": 7570389146
+    },
+    "instruction_ratio": 1.4551158006683245
+  },
+  "profiles": {
+    "base": "# To display the perf.data header info, please use --header/--header-only options.\n#\n#\n# Total Lost Samples: 0\n#\n# Samples: 4K of event 'cpu_core/instructions/u'\n# Event count (approx.): 45530086507\n#\n# Overhead  Symbol                                                                      IPC   [IPC Coverage]\n# ........  ..........................................................................  ....................\n#\n    28.29%  [.] vm::run  -      -            \n    22.34%  [.] vm::instance_of  -      -            \n    14.83%  [.] table::get  -      -            \n     8.19%  [.] table::set  -      -            \n     7.23%  [.] table::find_entry  -      -            \n     3.45%  [.] heap::function_obj  -      -            \n     3.40%  [.] heap::peek  -      -            \n     2.99%  [.] vm::read_constant  -      -            \n     2.99%  [.] vm::call  -      -            \n     1.43%  [.] heap::string_obj  -      -            \n     1.36%  [.] vm::invoke_from_class  -      -            \n     0.72%  [.] heap::closure_obj  -      -            \n     0.64%  [.] vm::close_upvalues  -      -            \n     0.64%  [.] heap::set_global  -      -            \n     0.59%  [.] heap::class_obj  -      -            \n     0.42%  [.] vm::get_upvalue  -      -            \n\n\n#\n# (Cannot load tips.txt file, please install perf!)\n#\n",
+    "current": "# To display the perf.data header info, please use --header/--header-only options.\n#\n#\n# Total Lost Samples: 0\n#\n# Samples: 5K of event 'cpu_core/instructions/u'\n# Event count (approx.): 59790113601\n#\n# Overhead  Symbol                                                                      IPC   [IPC Coverage]\n# ........  ..........................................................................  ....................\n#\n    27.53%  [.] vm::run  -      -            \n    16.27%  [.] table::get  -      -            \n     9.37%  [.] vm::load_frame  -      -            \n     8.88%  [.] alloc_object                                                            -      -            \n     6.59%  [.] table::find_entry  -      -            \n     3.28%  [.] heap::push  -      -            \n     2.83%  [.] heap::string_obj  -      -            \n     2.69%  [.] myl_native_list_clone_at                                                -      -            \n     2.61%  [.] slot_take                                                               -      -            \n     2.58%  [.] table::set  -      -            \n     2.49%  [.] heap::peek  -      -            \n     2.37%  [.] heap::set_global  -      -            \n     1.81%  [.] prepare                                                                 -      -            \n     1.34%  [.] vm::invoke_from_class  -      -            \n     1.25%  [.] myl_native_cow_copy                                                     -      -            \n     1.09%  [.] heap::class_obj  -      -            \n     1.05%  [.] vm::read_constant  -      -            \n     0.97%  [.] vm::close_upvalues  -      -            \n     0.55%  [.] 0x0000000000198440                                                      -      -            \n\n\n#\n# (Cannot load tips.txt file, please install perf!)\n#\n"
+  },
+  "method_scripts": {
+    "build.py": {
+      "sha256": "2b70172c4811ea3d0e786895f889224cfd5946e2d304a639027512bf1e456360",
+      "source": "from pathlib import Path\nimport subprocess,hashlib,os,json,time\nwork=Path(__file__).resolve().parent\nroot=work.parents[1]\ncompilers={'base':root.parent/'perf-gc-dict/zig-out/bin/mylang','current':root.parent/'d9-performance43/.tmp-perf43/install/bin/mylang'}\nenv={k:v for k,v in os.environ.items() if not k.startswith('MYLANG_')}\nenv['TMPDIR']=str(root/'.tmp-nested/tmp')\nresult={}\nfor name,compiler in compilers.items():\n source=work/('source-'+name)\n binary=work/('lox-'+name+'.llvm.sym')\n cmd=[str(compiler),'build','main.my','--project','--mode','ReleaseFast','--backend','llvm','--llvm-opt','3','--lto','--keep-symbols','--cache-dir',str(work/('cache-'+name)),'-o',str(binary)]\n if name=='current': cmd+=['--value-semantics']\n print('BUILD',name,flush=True)\n started=time.monotonic()\n done=subprocess.run(cmd,cwd=source,env=env,capture_output=True,text=True)\n result[name]={'compiler':str(compiler),'compiler_sha256':hashlib.sha256(compiler.read_bytes()).hexdigest(),'command':cmd,'status':done.returncode,'seconds':time.monotonic()-started,'stderr':done.stderr,'source_sha256':{str(p.relative_to(source)):hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(source.rglob('*.my'))}}\n if done.returncode: print(done.stderr,flush=True)\n else: result[name]['binary_sha256']=hashlib.sha256(binary.read_bytes()).hexdigest()\n (work/'builds.json').write_text(json.dumps(result,indent=2)+'\\n')\n if done.returncode: raise SystemExit(done.returncode)\n print(name,'PASS',flush=True)\n"
+    },
+    "measure.py": {
+      "sha256": "870f583e22c8ff6830c3de2f063954e3afa0f8e80982b0409cebc5ecfaa4392c",
+      "source": "from pathlib import Path\nimport importlib.util,os,subprocess,json,statistics,hashlib\nwork=Path(__file__).resolve().parent\nroot=work.parents[1]\nos.environ['PC_WORK']=str(work)\ns=importlib.util.spec_from_file_location('pc',root/'experiments/perf-gc-dict-20260925/scripts/pc.py')\npc=importlib.util.module_from_spec(s);s.loader.exec_module(pc)\npc.LOX_PORT=work/'source-current'\npc.LOX_BENCH=root.parent/'d9-stage3b/.tmp-cow/pc/lox/bench'\nprogram=next(p for p in pc.programs() if p['id']=='lox/vm/method_call')\nruns={name:pc.run_spec(program,work/('lox-'+name+'.llvm.sym'),name) for name in ['base','current']}\nresult={'program':program,'cpu':11,'builds':json.loads((work/'builds.json').read_text()),'checks':{},'counts':{'base':[],'current':[]},'profiles':{}}\nfor name,run in runs.items():\n result['checks'][name]=pc.check(program,run)\n assert result['checks'][name]['ok'],result['checks'][name]\nfor rep in range(3):\n for name in (['base','current'] if rep%2==0 else ['current','base']):\n  one=pc.perf_counts(runs[name],11)\n  assert one['status']==0 and 'instructions' in one,one\n  result['counts'][name].append(one)\n  print('COUNT',name,one,flush=True)\nmedians={name:statistics.median(x['instructions'] for x in rows) for name,rows in result['counts'].items()}\nresult['instruction_medians']=medians\nresult['instruction_ratio']=medians['current']/medians['base']\nprint('RATIO',result['instruction_ratio'],flush=True)\n(work/'results.json').write_text(json.dumps(result,indent=2)+'\\n')\nfor name,run in runs.items():\n cmd=['taskset','-c','11','perf','record','-e','cpu_core/instructions/u','-c','100003','-g','--call-graph','fp','-o',str(work/(name+'.perf.data')),'--',*run['argv']]\n with (work/(name+'.profile.out')).open('wb') as out,(work/(name+'.profile.err')).open('wb') as err:\n  r=subprocess.run(cmd,cwd=run['cwd'],env=run['env'],stdout=out,stderr=err,timeout=600)\n result['profiles'][name]={'command':cmd,'status':r.returncode}\n (work/'results.json').write_text(json.dumps(result,indent=2)+'\\n')\n print('PROFILE',name,r.returncode,flush=True)\n assert r.returncode==0\n"
+    },
+    "profile-long.py": {
+      "sha256": "2c76ae11549ee4dbd43a460e666ac88cb8eef344526859971dab5fbc16b6a242",
+      "source": "from pathlib import Path\nimport importlib.util,os,subprocess,json,statistics,hashlib\nwork=Path(__file__).resolve().parent\nroot=work.parents[1]\nos.environ['PC_WORK']=str(work)\ns=importlib.util.spec_from_file_location('pc',root/'experiments/perf-gc-dict-20260925/scripts/pc.py')\npc=importlib.util.module_from_spec(s);s.loader.exec_module(pc)\npc.LOX_PORT=work/'source-current'\npc.LOX_BENCH=root.parent/'d9-stage3b/.tmp-cow/pc/lox/bench'\nprogram=next(p for p in pc.programs() if p['id']=='lox/vm/method_call')\nruns={name:pc.run_spec(program,work/('lox-'+name+'.llvm.sym'),name) for name in ['base','current']}\nresult={'program':program,'cpu':11,'builds':json.loads((work/'builds.json').read_text()),'checks':{},'counts':{'base':[],'current':[]},'profiles':{}}\nfor name,run in runs.items():\n result['checks'][name]=pc.check(program,run)\n assert result['checks'][name]['ok'],result['checks'][name]\nfor name,run in runs.items():\n cmd=['taskset','-c','11','perf','record','-e','cpu_core/instructions/u','-c','10000019','-g','--call-graph','fp','-o',str(work/(name+'.long.perf.data')),'--','bash','-c','for repetition in {1..10}; do \"$@\" || exit; done','profile-loop',*run['argv']]\n with (work/(name+'.long.profile.out')).open('wb') as out,(work/(name+'.long.profile.err')).open('wb') as err:\n  done=subprocess.run(cmd,cwd=run['cwd'],env=run['env'],stdout=out,stderr=err,timeout=600)\n print(name,done.returncode,flush=True)\n assert done.returncode==0\n"
+    }
+  },
+  "recovery": {
+    "measurements_before_metadata_rewrite": true,
+    "expected_baseline_sha256": "61621ee380e5562967b53d6ba81c54fe28ceb2adc22ad6fa943e6772b7887fa0",
+    "restored_baseline_sha256": "61621ee380e5562967b53d6ba81c54fe28ceb2adc22ad6fa943e6772b7887fa0",
+    "expected_symbolic_sha256": "7d590eea34ad9e6ed166d309ce17fd92055672c0099e547e4a4a3a162bcb53b9",
+    "restored_symbolic_sha256": "7d590eea34ad9e6ed166d309ce17fd92055672c0099e547e4a4a3a162bcb53b9",
+    "text_sha256": "89884f7cb60760749d23440284738e75c0c8fd7c3ba2b66368055855e73146d4",
+    "log": "REBUILD False\nSHA 61621ee380e5562967b53d6ba81c54fe28ceb2adc22ad6fa943e6772b7887fa0\nRESTORED /home/epentland/ai/canopy/mylang-worktrees/d9-stage3b/.tmp-cow/pc/bin/base/lox.llvm\nREBUILD True\nSHA 7d590eea34ad9e6ed166d309ce17fd92055672c0099e547e4a4a3a162bcb53b9\nRESTORED /home/epentland/ai/canopy/mylang-worktrees/d9-nested-cow/.tmp-nested/method-profile/lox-base.llvm.sym\n",
+    "recovery_script": "from pathlib import Path\nimport json,subprocess,os,hashlib,shutil\nw=Path(__file__).resolve().parent;root=w.parents[1]\nenv={k:v for k,v in os.environ.items() if not k.startswith('MYLANG_')}\nenv['TMPDIR']=str(root/'.tmp-nested/tmp')\nbuild=json.loads((w/'builds.json').read_text())['base']\nfor symbols,output,expected in [(False,w/'baseline-recovered','61621ee380e5562967b53d6ba81c54fe28ceb2adc22ad6fa943e6772b7887fa0'),(True,w/'symbols-recovered',build['binary_sha256'])]:\n cmd=build['command'].copy();cmd[cmd.index('-o')+1]=str(output)\n if not symbols:cmd.remove('--keep-symbols')\n print('REBUILD',symbols,flush=True)\n subprocess.run(cmd,cwd=w/'source-base',env=env,check=True)\n digest=hashlib.sha256(output.read_bytes()).hexdigest()\n print('SHA',digest,flush=True)\n assert digest==expected,(digest,expected)\n destination=(root.parent/'d9-stage3b/.tmp-cow/pc/bin/base/lox.llvm') if not symbols else w/'lox-base.llvm.sym'\n shutil.copyfile(output,destination)\n assert hashlib.sha256(destination.read_bytes()).hexdigest()==expected\n print('RESTORED',destination,flush=True)\n"
+  },
+  "frame_cache": {
+    "push_pop": {
+      "cpu": 11,
+      "builds": {
+        "before-llvm": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-performance43/.tmp-perf43/install/bin/mylang",
+            "build",
+            "main.my",
+            "--project",
+            "--mode",
+            "ReleaseFast",
+            "--backend",
+            "llvm",
+            "--llvm-opt",
+            "3",
+            "--lto",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-frame-return/.tmp-frame-return/guest-cache",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-frame-return/.tmp-frame-return/lox-before-llvm",
+            "--value-semantics"
+          ],
+          "status": 0,
+          "stderr": "",
+          "compiler_sha256": "ceb38b6e1fb1a23f20d92580b3cd7f07f635f5752311f27d477f9792e388b7d5",
+          "source_sha256": {
+            "ast.my": "e210fb35bf3125ba06ebb978bcb3592162020a77576542f2d049879a51479bf9",
+            "chunk.my": "b4f6e7ae6531b224f99e026f53fee3692c90d8f2b15d3c76ca5962f1803e4b66",
+            "compiler.my": "c550603195401ff6d9436b42d6fbf0c35051521da57e7b85281fc8fcf6ebe048",
+            "compiler_test.my": "582fe817dbeffa709961b5124370ce200510adb3ac0d246572ca1c0dc19ec08a",
+            "driver.my": "fe831d2ec08833d11139e790ab741903b27a8e0fb43582cac11ca664b4595836",
+            "driver_tests.my": "32615edbfcbe21e8d550910df45d9bfcb199ee9c8171405d38566b98d78e00bd",
+            "heap.my": "65cf7fedb6f75b824677a50bda011ad4aa36ffbc9edd8d025368e0f26144f137",
+            "heap_test.my": "c951153991a8d5d13ca1df6ded7c6f26c7b43a08ed2095f72c6091637b29b53f",
+            "interpreter.my": "94d8b5472b997d5f875b575f0cf1b5cc7fb670ac57a293c1c6a8081151a19fcd",
+            "lox_strings.my": "383900dda10b9218caf2087e12a2e20089e4d48b0ec5fc3e17e960a3d70d83df",
+            "lox_strings_test.my": "a44545c64e9f75cc5af761d6c703feec83c4fc0a14d2678a1b2fce28067bd0c0",
+            "main.my": "18c1f669b1683123e635256c9f66c6db2766383391371c3822e61df7d9732274",
+            "natives.my": "2ff45343fded6d303e6233e0f787e63c319e860903e2c0c81ccbb71c2749d665",
+            "object.my": "08c0d5c6ae304ef4d0e1f5929f52b5d1dd47cd46e6c409392c0b5b1df9567ad7",
+            "output.my": "cdc79c8a9a5eca0106fb139bca5492da201f027b0499e5e00a492368317d194c",
+            "parser.my": "e9bd5d9c37e307d060ce165dc4fa0f276c2ff9dbe7cb21bd27cbdd94644b4edd",
+            "parser_test.my": "ffe2658f030c75b40a7c54d8f0c64e848e6679e13fc69cbef9a131ed7b120e4b",
+            "resolver.my": "41d41b2a1ddb3f6ab3fb73ad9eff69415b0450d890554766bfee37eac8d0903d",
+            "resolver_test.my": "72c5176ff15db240d8ec8ff8073fcdb7736e8c60ab47410bb60fce934c179d31",
+            "scanner.my": "af4bc6a57859318051dc47d6e1f6344ee98fbfff037e9be93c0a103765cd3e83",
+            "scanner_test.my": "1d7fbb34b0de402657786641217e81c9ae286cab14baf2716de2db875ae39ad0",
+            "table.my": "c875ae493dbc0d6c1b70202746b0f1d2211190fa1276b9d492778455c0d0b2ca",
+            "table_test.my": "38279f9135e953484e6844994bc070c4156d1eb31ab4de0f295efbea17c19555",
+            "value.my": "3b2a444e77c6a703b1aedad3c89ef38cad70aa3bb6cba1716b623980ff9a76b0",
+            "value_test.my": "b766d22b25a8a8a090b4a059030cfc7462022fdacb66a0a91bf8a9e09a53fed4",
+            "vm.my": "ab78189e515b697617635acc33f874c3bf81595f09c2e9ce799ec334d01c681e"
+          },
+          "binary_sha256": "90256c32dcff0e572a0a7807bbac1591bbb27433c97f87f12c2d7ce4fcd262b9"
+        },
+        "port-llvm": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-performance43/.tmp-perf43/install/bin/mylang",
+            "build",
+            "main.my",
+            "--project",
+            "--mode",
+            "ReleaseFast",
+            "--backend",
+            "llvm",
+            "--llvm-opt",
+            "3",
+            "--lto",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-frame-return/.tmp-frame-return/guest-cache",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-frame-return/.tmp-frame-return/lox-port-llvm",
+            "--value-semantics"
+          ],
+          "status": 0,
+          "stderr": "",
+          "compiler_sha256": "ceb38b6e1fb1a23f20d92580b3cd7f07f635f5752311f27d477f9792e388b7d5",
+          "source_sha256": {
+            "ast.my": "e210fb35bf3125ba06ebb978bcb3592162020a77576542f2d049879a51479bf9",
+            "chunk.my": "b4f6e7ae6531b224f99e026f53fee3692c90d8f2b15d3c76ca5962f1803e4b66",
+            "compiler.my": "c550603195401ff6d9436b42d6fbf0c35051521da57e7b85281fc8fcf6ebe048",
+            "compiler_test.my": "582fe817dbeffa709961b5124370ce200510adb3ac0d246572ca1c0dc19ec08a",
+            "driver.my": "fe831d2ec08833d11139e790ab741903b27a8e0fb43582cac11ca664b4595836",
+            "driver_tests.my": "32615edbfcbe21e8d550910df45d9bfcb199ee9c8171405d38566b98d78e00bd",
+            "heap.my": "65cf7fedb6f75b824677a50bda011ad4aa36ffbc9edd8d025368e0f26144f137",
+            "heap_test.my": "c951153991a8d5d13ca1df6ded7c6f26c7b43a08ed2095f72c6091637b29b53f",
+            "interpreter.my": "94d8b5472b997d5f875b575f0cf1b5cc7fb670ac57a293c1c6a8081151a19fcd",
+            "lox_strings.my": "383900dda10b9218caf2087e12a2e20089e4d48b0ec5fc3e17e960a3d70d83df",
+            "lox_strings_test.my": "a44545c64e9f75cc5af761d6c703feec83c4fc0a14d2678a1b2fce28067bd0c0",
+            "main.my": "18c1f669b1683123e635256c9f66c6db2766383391371c3822e61df7d9732274",
+            "natives.my": "2ff45343fded6d303e6233e0f787e63c319e860903e2c0c81ccbb71c2749d665",
+            "object.my": "08c0d5c6ae304ef4d0e1f5929f52b5d1dd47cd46e6c409392c0b5b1df9567ad7",
+            "output.my": "cdc79c8a9a5eca0106fb139bca5492da201f027b0499e5e00a492368317d194c",
+            "parser.my": "e9bd5d9c37e307d060ce165dc4fa0f276c2ff9dbe7cb21bd27cbdd94644b4edd",
+            "parser_test.my": "ffe2658f030c75b40a7c54d8f0c64e848e6679e13fc69cbef9a131ed7b120e4b",
+            "resolver.my": "41d41b2a1ddb3f6ab3fb73ad9eff69415b0450d890554766bfee37eac8d0903d",
+            "resolver_test.my": "72c5176ff15db240d8ec8ff8073fcdb7736e8c60ab47410bb60fce934c179d31",
+            "scanner.my": "af4bc6a57859318051dc47d6e1f6344ee98fbfff037e9be93c0a103765cd3e83",
+            "scanner_test.my": "1d7fbb34b0de402657786641217e81c9ae286cab14baf2716de2db875ae39ad0",
+            "table.my": "c875ae493dbc0d6c1b70202746b0f1d2211190fa1276b9d492778455c0d0b2ca",
+            "table_test.my": "38279f9135e953484e6844994bc070c4156d1eb31ab4de0f295efbea17c19555",
+            "value.my": "3b2a444e77c6a703b1aedad3c89ef38cad70aa3bb6cba1716b623980ff9a76b0",
+            "value_test.my": "b766d22b25a8a8a090b4a059030cfc7462022fdacb66a0a91bf8a9e09a53fed4",
+            "vm.my": "c9c83d701eaf32c643290c68394a8b2b7f2707bcdfd0c760db4a381eac4a0402"
+          },
+          "binary_sha256": "78b9e5aebe72479e73936683fd42ea0a67ff9b151a5f1f843d24920583ed0d16"
+        }
+      },
+      "samples": {
+        "lox/vm/method_call": {
+          "checks": {
+            "before": {
+              "status": 0,
+              "stdout_sha256": "21d91041c5d1a59661f8936571ee5c87e96f6f0c7a532b52ec17c5b9bea8220b",
+              "stderr": "",
+              "ok": true
+            },
+            "port": {
+              "status": 0,
+              "stdout_sha256": "21d91041c5d1a59661f8936571ee5c87e96f6f0c7a532b52ec17c5b9bea8220b",
+              "stderr": "",
+              "ok": true
+            }
+          },
+          "counts": {
+            "before": [
+              {
+                "status": 0,
+                "instructions": 7522736276,
+                "cycles": 2348858776
+              },
+              {
+                "status": 0,
+                "instructions": 7522741623,
+                "cycles": 2106468812
+              },
+              {
+                "status": 0,
+                "instructions": 7522736098,
+                "cycles": 2100691507
+              }
+            ],
+            "port": [
+              {
+                "status": 0,
+                "instructions": 7540952039,
+                "cycles": 1961171287
+              },
+              {
+                "status": 0,
+                "instructions": 7540952072,
+                "cycles": 1944466106
+              },
+              {
+                "status": 0,
+                "instructions": 7540952090,
+                "cycles": 1943527191
+              }
+            ]
+          },
+          "size": 50000,
+          "medians": {
+            "before": 7522736276,
+            "port": 7540952072
+          },
+          "ratio": 1.0024214322198313
+        },
+        "lox/vm/closures": {
+          "checks": {
+            "before": {
+              "status": 0,
+              "stdout_sha256": "8dacb3b0327cbd368e9c06434c1dd66b88f2a69dba30a2f64fc0dd78570cf7f0",
+              "stderr": "",
+              "ok": true
+            },
+            "port": {
+              "status": 0,
+              "stdout_sha256": "8dacb3b0327cbd368e9c06434c1dd66b88f2a69dba30a2f64fc0dd78570cf7f0",
+              "stderr": "",
+              "ok": true
+            }
+          },
+          "counts": {
+            "before": [
+              {
+                "status": 0,
+                "instructions": 5455133675,
+                "cycles": 1629726515
+              },
+              {
+                "status": 0,
+                "instructions": 5455133502,
+                "cycles": 1658763559
+              },
+              {
+                "status": 0,
+                "instructions": 5455133436,
+                "cycles": 1639024273
+              }
+            ],
+            "port": [
+              {
+                "status": 0,
+                "instructions": 5491076277,
+                "cycles": 1515191089
+              },
+              {
+                "status": 0,
+                "instructions": 5491076212,
+                "cycles": 1512067448
+              },
+              {
+                "status": 0,
+                "instructions": 5491076259,
+                "cycles": 1543572686
+              }
+            ]
+          },
+          "size": 200000,
+          "medians": {
+            "before": 5455133502,
+            "port": 5491076259
+          },
+          "ratio": 1.0065887951205634
+        },
+        "lox/vm/binary_trees": {
+          "checks": {
+            "before": {
+              "status": 0,
+              "stdout_sha256": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056",
+              "stderr": "",
+              "ok": true
+            },
+            "port": {
+              "status": 0,
+              "stdout_sha256": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056",
+              "stderr": "",
+              "ok": true
+            }
+          },
+          "counts": {
+            "before": [
+              {
+                "status": 0,
+                "instructions": 4289947017,
+                "cycles": 1550688232
+              },
+              {
+                "status": 0,
+                "instructions": 4289953545,
+                "cycles": 1546497974
+              },
+              {
+                "status": 0,
+                "instructions": 4289947097,
+                "cycles": 1555629720
+              }
+            ],
+            "port": [
+              {
+                "status": 0,
+                "instructions": 4286716836,
+                "cycles": 1535389429
+              },
+              {
+                "status": 0,
+                "instructions": 4286719522,
+                "cycles": 1579027344
+              },
+              {
+                "status": 0,
+                "instructions": 4286725465,
+                "cycles": 1526588746
+              }
+            ]
+          },
+          "size": 10,
+          "medians": {
+            "before": 4289947097,
+            "port": 4286719522
+          },
+          "ratio": 0.9992476422373001
+        },
+        "lox/vm/fib": {
+          "checks": {
+            "before": {
+              "status": 0,
+              "stdout_sha256": "a2926b4c752026e4c4fb427a6c468ba4cd1a584ecc8f6ff23fa80c09fdfcb655",
+              "stderr": "",
+              "ok": true
+            },
+            "port": {
+              "status": 0,
+              "stdout_sha256": "a2926b4c752026e4c4fb427a6c468ba4cd1a584ecc8f6ff23fa80c09fdfcb655",
+              "stderr": "",
+              "ok": true
+            }
+          },
+          "counts": {
+            "before": [
+              {
+                "status": 0,
+                "instructions": 2094162972,
+                "cycles": 613706256
+              },
+              {
+                "status": 0,
+                "instructions": 2094162958,
+                "cycles": 602870681
+              },
+              {
+                "status": 0,
+                "instructions": 2094162974,
+                "cycles": 622168721
+              }
+            ],
+            "port": [
+              {
+                "status": 0,
+                "instructions": 2102393066,
+                "cycles": 558434842
+              },
+              {
+                "status": 0,
+                "instructions": 2102393067,
+                "cycles": 574611146
+              },
+              {
+                "status": 0,
+                "instructions": 2102393050,
+                "cycles": 567490027
+              }
+            ]
+          },
+          "size": 28,
+          "medians": {
+            "before": 2094162972,
+            "port": 2102393066
+          },
+          "ratio": 1.0039300160064142
+        },
+        "lox/vm/trees": {
+          "checks": {
+            "before": {
+              "status": 0,
+              "stdout_sha256": "17ab3b16ce7c5de5f4592400fb2b7e34eedbc57f86b65d948015ebfe1bd33ff5",
+              "stderr": "",
+              "ok": true
+            },
+            "port": {
+              "status": 0,
+              "stdout_sha256": "17ab3b16ce7c5de5f4592400fb2b7e34eedbc57f86b65d948015ebfe1bd33ff5",
+              "stderr": "",
+              "ok": true
+            }
+          },
+          "counts": {
+            "before": [
+              {
+                "status": 0,
+                "instructions": 2340270933,
+                "cycles": 997859224
+              },
+              {
+                "status": 0,
+                "instructions": 2340271183,
+                "cycles": 1011755157
+              },
+              {
+                "status": 0,
+                "instructions": 2340270981,
+                "cycles": 1082804918
+              }
+            ],
+            "port": [
+              {
+                "status": 0,
+                "instructions": 2350146230,
+                "cycles": 987351663
+              },
+              {
+                "status": 0,
+                "instructions": 2350146309,
+                "cycles": 997274904
+              },
+              {
+                "status": 0,
+                "instructions": 2350146327,
+                "cycles": 986836521
+              }
+            ]
+          },
+          "size": 5,
+          "medians": {
+            "before": 2340270981,
+            "port": 2350146309
+          },
+          "ratio": 1.0042197369792536
+        }
+      }
+    },
+    "indexed_reuse": {
+      "cpu": 11,
+      "builds": {
+        "before-llvm": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-performance43/.tmp-perf43/install/bin/mylang",
+            "build",
+            "main.my",
+            "--project",
+            "--mode",
+            "ReleaseFast",
+            "--backend",
+            "llvm",
+            "--llvm-opt",
+            "3",
+            "--lto",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-frame-return/.tmp-frame-return/guest-cache",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-frame-return/.tmp-frame-return/lox-before-llvm",
+            "--value-semantics"
+          ],
+          "status": 0,
+          "stderr": "",
+          "compiler_sha256": "ceb38b6e1fb1a23f20d92580b3cd7f07f635f5752311f27d477f9792e388b7d5",
+          "source_sha256": {
+            "ast.my": "e210fb35bf3125ba06ebb978bcb3592162020a77576542f2d049879a51479bf9",
+            "chunk.my": "b4f6e7ae6531b224f99e026f53fee3692c90d8f2b15d3c76ca5962f1803e4b66",
+            "compiler.my": "c550603195401ff6d9436b42d6fbf0c35051521da57e7b85281fc8fcf6ebe048",
+            "compiler_test.my": "582fe817dbeffa709961b5124370ce200510adb3ac0d246572ca1c0dc19ec08a",
+            "driver.my": "fe831d2ec08833d11139e790ab741903b27a8e0fb43582cac11ca664b4595836",
+            "driver_tests.my": "32615edbfcbe21e8d550910df45d9bfcb199ee9c8171405d38566b98d78e00bd",
+            "heap.my": "65cf7fedb6f75b824677a50bda011ad4aa36ffbc9edd8d025368e0f26144f137",
+            "heap_test.my": "c951153991a8d5d13ca1df6ded7c6f26c7b43a08ed2095f72c6091637b29b53f",
+            "interpreter.my": "94d8b5472b997d5f875b575f0cf1b5cc7fb670ac57a293c1c6a8081151a19fcd",
+            "lox_strings.my": "383900dda10b9218caf2087e12a2e20089e4d48b0ec5fc3e17e960a3d70d83df",
+            "lox_strings_test.my": "a44545c64e9f75cc5af761d6c703feec83c4fc0a14d2678a1b2fce28067bd0c0",
+            "main.my": "18c1f669b1683123e635256c9f66c6db2766383391371c3822e61df7d9732274",
+            "natives.my": "2ff45343fded6d303e6233e0f787e63c319e860903e2c0c81ccbb71c2749d665",
+            "object.my": "08c0d5c6ae304ef4d0e1f5929f52b5d1dd47cd46e6c409392c0b5b1df9567ad7",
+            "output.my": "cdc79c8a9a5eca0106fb139bca5492da201f027b0499e5e00a492368317d194c",
+            "parser.my": "e9bd5d9c37e307d060ce165dc4fa0f276c2ff9dbe7cb21bd27cbdd94644b4edd",
+            "parser_test.my": "ffe2658f030c75b40a7c54d8f0c64e848e6679e13fc69cbef9a131ed7b120e4b",
+            "resolver.my": "41d41b2a1ddb3f6ab3fb73ad9eff69415b0450d890554766bfee37eac8d0903d",
+            "resolver_test.my": "72c5176ff15db240d8ec8ff8073fcdb7736e8c60ab47410bb60fce934c179d31",
+            "scanner.my": "af4bc6a57859318051dc47d6e1f6344ee98fbfff037e9be93c0a103765cd3e83",
+            "scanner_test.my": "1d7fbb34b0de402657786641217e81c9ae286cab14baf2716de2db875ae39ad0",
+            "table.my": "c875ae493dbc0d6c1b70202746b0f1d2211190fa1276b9d492778455c0d0b2ca",
+            "table_test.my": "38279f9135e953484e6844994bc070c4156d1eb31ab4de0f295efbea17c19555",
+            "value.my": "3b2a444e77c6a703b1aedad3c89ef38cad70aa3bb6cba1716b623980ff9a76b0",
+            "value_test.my": "b766d22b25a8a8a090b4a059030cfc7462022fdacb66a0a91bf8a9e09a53fed4",
+            "vm.my": "ab78189e515b697617635acc33f874c3bf81595f09c2e9ce799ec334d01c681e"
+          },
+          "binary_sha256": "90256c32dcff0e572a0a7807bbac1591bbb27433c97f87f12c2d7ce4fcd262b9"
+        },
+        "port-llvm": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-performance43/.tmp-perf43/install/bin/mylang",
+            "build",
+            "main.my",
+            "--project",
+            "--mode",
+            "ReleaseFast",
+            "--backend",
+            "llvm",
+            "--llvm-opt",
+            "3",
+            "--lto",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-frame-return/.tmp-frame-return/guest-cache",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-frame-return/.tmp-frame-return/lox-port-llvm",
+            "--value-semantics"
+          ],
+          "status": 0,
+          "stderr": "",
+          "compiler_sha256": "ceb38b6e1fb1a23f20d92580b3cd7f07f635f5752311f27d477f9792e388b7d5",
+          "source_sha256": {
+            "ast.my": "e210fb35bf3125ba06ebb978bcb3592162020a77576542f2d049879a51479bf9",
+            "chunk.my": "b4f6e7ae6531b224f99e026f53fee3692c90d8f2b15d3c76ca5962f1803e4b66",
+            "compiler.my": "c550603195401ff6d9436b42d6fbf0c35051521da57e7b85281fc8fcf6ebe048",
+            "compiler_test.my": "582fe817dbeffa709961b5124370ce200510adb3ac0d246572ca1c0dc19ec08a",
+            "driver.my": "fe831d2ec08833d11139e790ab741903b27a8e0fb43582cac11ca664b4595836",
+            "driver_tests.my": "32615edbfcbe21e8d550910df45d9bfcb199ee9c8171405d38566b98d78e00bd",
+            "heap.my": "65cf7fedb6f75b824677a50bda011ad4aa36ffbc9edd8d025368e0f26144f137",
+            "heap_test.my": "c951153991a8d5d13ca1df6ded7c6f26c7b43a08ed2095f72c6091637b29b53f",
+            "interpreter.my": "94d8b5472b997d5f875b575f0cf1b5cc7fb670ac57a293c1c6a8081151a19fcd",
+            "lox_strings.my": "383900dda10b9218caf2087e12a2e20089e4d48b0ec5fc3e17e960a3d70d83df",
+            "lox_strings_test.my": "a44545c64e9f75cc5af761d6c703feec83c4fc0a14d2678a1b2fce28067bd0c0",
+            "main.my": "18c1f669b1683123e635256c9f66c6db2766383391371c3822e61df7d9732274",
+            "natives.my": "2ff45343fded6d303e6233e0f787e63c319e860903e2c0c81ccbb71c2749d665",
+            "object.my": "08c0d5c6ae304ef4d0e1f5929f52b5d1dd47cd46e6c409392c0b5b1df9567ad7",
+            "output.my": "cdc79c8a9a5eca0106fb139bca5492da201f027b0499e5e00a492368317d194c",
+            "parser.my": "e9bd5d9c37e307d060ce165dc4fa0f276c2ff9dbe7cb21bd27cbdd94644b4edd",
+            "parser_test.my": "ffe2658f030c75b40a7c54d8f0c64e848e6679e13fc69cbef9a131ed7b120e4b",
+            "resolver.my": "41d41b2a1ddb3f6ab3fb73ad9eff69415b0450d890554766bfee37eac8d0903d",
+            "resolver_test.my": "72c5176ff15db240d8ec8ff8073fcdb7736e8c60ab47410bb60fce934c179d31",
+            "scanner.my": "af4bc6a57859318051dc47d6e1f6344ee98fbfff037e9be93c0a103765cd3e83",
+            "scanner_test.my": "1d7fbb34b0de402657786641217e81c9ae286cab14baf2716de2db875ae39ad0",
+            "table.my": "c875ae493dbc0d6c1b70202746b0f1d2211190fa1276b9d492778455c0d0b2ca",
+            "table_test.my": "38279f9135e953484e6844994bc070c4156d1eb31ab4de0f295efbea17c19555",
+            "value.my": "3b2a444e77c6a703b1aedad3c89ef38cad70aa3bb6cba1716b623980ff9a76b0",
+            "value_test.my": "b766d22b25a8a8a090b4a059030cfc7462022fdacb66a0a91bf8a9e09a53fed4",
+            "vm.my": "c9c83d701eaf32c643290c68394a8b2b7f2707bcdfd0c760db4a381eac4a0402"
+          },
+          "binary_sha256": "78b9e5aebe72479e73936683fd42ea0a67ff9b151a5f1f843d24920583ed0d16"
+        },
+        "indexed-llvm": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-performance43/.tmp-perf43/install/bin/mylang",
+            "build",
+            "main.my",
+            "--project",
+            "--mode",
+            "ReleaseFast",
+            "--backend",
+            "llvm",
+            "--llvm-opt",
+            "3",
+            "--lto",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-frame-return/.tmp-frame-return/guest-cache",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-frame-return/.tmp-frame-return/lox-indexed-llvm",
+            "--value-semantics"
+          ],
+          "status": 0,
+          "stderr": "",
+          "compiler_sha256": "ceb38b6e1fb1a23f20d92580b3cd7f07f635f5752311f27d477f9792e388b7d5",
+          "source_sha256": {
+            "ast.my": "e210fb35bf3125ba06ebb978bcb3592162020a77576542f2d049879a51479bf9",
+            "chunk.my": "b4f6e7ae6531b224f99e026f53fee3692c90d8f2b15d3c76ca5962f1803e4b66",
+            "compiler.my": "c550603195401ff6d9436b42d6fbf0c35051521da57e7b85281fc8fcf6ebe048",
+            "compiler_test.my": "582fe817dbeffa709961b5124370ce200510adb3ac0d246572ca1c0dc19ec08a",
+            "driver.my": "fe831d2ec08833d11139e790ab741903b27a8e0fb43582cac11ca664b4595836",
+            "driver_tests.my": "32615edbfcbe21e8d550910df45d9bfcb199ee9c8171405d38566b98d78e00bd",
+            "heap.my": "65cf7fedb6f75b824677a50bda011ad4aa36ffbc9edd8d025368e0f26144f137",
+            "heap_test.my": "c951153991a8d5d13ca1df6ded7c6f26c7b43a08ed2095f72c6091637b29b53f",
+            "interpreter.my": "94d8b5472b997d5f875b575f0cf1b5cc7fb670ac57a293c1c6a8081151a19fcd",
+            "lox_strings.my": "383900dda10b9218caf2087e12a2e20089e4d48b0ec5fc3e17e960a3d70d83df",
+            "lox_strings_test.my": "a44545c64e9f75cc5af761d6c703feec83c4fc0a14d2678a1b2fce28067bd0c0",
+            "main.my": "18c1f669b1683123e635256c9f66c6db2766383391371c3822e61df7d9732274",
+            "natives.my": "2ff45343fded6d303e6233e0f787e63c319e860903e2c0c81ccbb71c2749d665",
+            "object.my": "08c0d5c6ae304ef4d0e1f5929f52b5d1dd47cd46e6c409392c0b5b1df9567ad7",
+            "output.my": "cdc79c8a9a5eca0106fb139bca5492da201f027b0499e5e00a492368317d194c",
+            "parser.my": "e9bd5d9c37e307d060ce165dc4fa0f276c2ff9dbe7cb21bd27cbdd94644b4edd",
+            "parser_test.my": "ffe2658f030c75b40a7c54d8f0c64e848e6679e13fc69cbef9a131ed7b120e4b",
+            "resolver.my": "41d41b2a1ddb3f6ab3fb73ad9eff69415b0450d890554766bfee37eac8d0903d",
+            "resolver_test.my": "72c5176ff15db240d8ec8ff8073fcdb7736e8c60ab47410bb60fce934c179d31",
+            "scanner.my": "af4bc6a57859318051dc47d6e1f6344ee98fbfff037e9be93c0a103765cd3e83",
+            "scanner_test.my": "1d7fbb34b0de402657786641217e81c9ae286cab14baf2716de2db875ae39ad0",
+            "table.my": "c875ae493dbc0d6c1b70202746b0f1d2211190fa1276b9d492778455c0d0b2ca",
+            "table_test.my": "38279f9135e953484e6844994bc070c4156d1eb31ab4de0f295efbea17c19555",
+            "value.my": "3b2a444e77c6a703b1aedad3c89ef38cad70aa3bb6cba1716b623980ff9a76b0",
+            "value_test.my": "b766d22b25a8a8a090b4a059030cfc7462022fdacb66a0a91bf8a9e09a53fed4",
+            "vm.my": "2f635a2ced31e0528c298f2ce3c3c9f7a373358c830fe796bc3eebce1873a080"
+          },
+          "binary_sha256": "2ba72c0e07fdb196a1c7edb49023a40162f5cd2faef60687f4df087b40592f0b"
+        }
+      },
+      "samples": {
+        "lox/vm/method_call": {
+          "checks": {
+            "before": {
+              "status": 0,
+              "stdout_sha256": "21d91041c5d1a59661f8936571ee5c87e96f6f0c7a532b52ec17c5b9bea8220b",
+              "stderr": "",
+              "ok": true
+            },
+            "indexed": {
+              "status": 0,
+              "stdout_sha256": "21d91041c5d1a59661f8936571ee5c87e96f6f0c7a532b52ec17c5b9bea8220b",
+              "stderr": "",
+              "ok": true
+            }
+          },
+          "counts": {
+            "before": [
+              {
+                "status": 0,
+                "instructions": 7522736037,
+                "cycles": 2110054641
+              },
+              {
+                "status": 0,
+                "instructions": 7522736012,
+                "cycles": 2103428547
+              },
+              {
+                "status": 0,
+                "instructions": 7522736478,
+                "cycles": 2846090682
+              }
+            ],
+            "indexed": [
+              {
+                "status": 0,
+                "instructions": 7642216756,
+                "cycles": 1938595867
+              },
+              {
+                "status": 0,
+                "instructions": 7642216799,
+                "cycles": 1957488982
+              },
+              {
+                "status": 0,
+                "instructions": 7642217212,
+                "cycles": 2534511447
+              }
+            ]
+          },
+          "size": 50000,
+          "medians": {
+            "before": 7522736037,
+            "indexed": 7642216799
+          },
+          "ratio": 1.0158826205535252
+        },
+        "lox/vm/closures": {
+          "checks": {
+            "before": {
+              "status": 0,
+              "stdout_sha256": "8dacb3b0327cbd368e9c06434c1dd66b88f2a69dba30a2f64fc0dd78570cf7f0",
+              "stderr": "",
+              "ok": true
+            },
+            "indexed": {
+              "status": 0,
+              "stdout_sha256": "8dacb3b0327cbd368e9c06434c1dd66b88f2a69dba30a2f64fc0dd78570cf7f0",
+              "stderr": "",
+              "ok": true
+            }
+          },
+          "counts": {
+            "before": [
+              {
+                "status": 0,
+                "instructions": 5455133593,
+                "cycles": 1681902997
+              },
+              {
+                "status": 0,
+                "instructions": 5455133382,
+                "cycles": 1637282403
+              },
+              {
+                "status": 0,
+                "instructions": 5455133330,
+                "cycles": 1551913208
+              }
+            ],
+            "indexed": [
+              {
+                "status": 0,
+                "instructions": 5568841821,
+                "cycles": 1507888961
+              },
+              {
+                "status": 0,
+                "instructions": 5568841104,
+                "cycles": 1503261352
+              },
+              {
+                "status": 0,
+                "instructions": 5568838693,
+                "cycles": 1455955205
+              }
+            ]
+          },
+          "size": 200000,
+          "medians": {
+            "before": 5455133382,
+            "indexed": 5568841104
+          },
+          "ratio": 1.0208441689758119
+        },
+        "lox/vm/binary_trees": {
+          "checks": {
+            "before": {
+              "status": 0,
+              "stdout_sha256": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056",
+              "stderr": "",
+              "ok": true
+            },
+            "indexed": {
+              "status": 0,
+              "stdout_sha256": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056",
+              "stderr": "",
+              "ok": true
+            }
+          },
+          "counts": {
+            "before": [
+              {
+                "status": 0,
+                "instructions": 4289946950,
+                "cycles": 1487668971
+              },
+              {
+                "status": 0,
+                "instructions": 4289955716,
+                "cycles": 1454713924
+              },
+              {
+                "status": 0,
+                "instructions": 4289949643,
+                "cycles": 1448249936
+              }
+            ],
+            "indexed": [
+              {
+                "status": 0,
+                "instructions": 4322869516,
+                "cycles": 1433304394
+              },
+              {
+                "status": 0,
+                "instructions": 4322863813,
+                "cycles": 1426170515
+              },
+              {
+                "status": 0,
+                "instructions": 4322860081,
+                "cycles": 1413152357
+              }
+            ]
+          },
+          "size": 10,
+          "medians": {
+            "before": 4289949643,
+            "indexed": 4322863813
+          },
+          "ratio": 1.0076723907595762
+        },
+        "lox/vm/fib": {
+          "checks": {
+            "before": {
+              "status": 0,
+              "stdout_sha256": "a2926b4c752026e4c4fb427a6c468ba4cd1a584ecc8f6ff23fa80c09fdfcb655",
+              "stderr": "",
+              "ok": true
+            },
+            "indexed": {
+              "status": 0,
+              "stdout_sha256": "a2926b4c752026e4c4fb427a6c468ba4cd1a584ecc8f6ff23fa80c09fdfcb655",
+              "stderr": "",
+              "ok": true
+            }
+          },
+          "counts": {
+            "before": [
+              {
+                "status": 0,
+                "instructions": 2094162932,
+                "cycles": 598071893
+              },
+              {
+                "status": 0,
+                "instructions": 2094162932,
+                "cycles": 604369188
+              },
+              {
+                "status": 0,
+                "instructions": 2094162910,
+                "cycles": 604419054
+              }
+            ],
+            "indexed": [
+              {
+                "status": 0,
+                "instructions": 2171812957,
+                "cycles": 563093086
+              },
+              {
+                "status": 0,
+                "instructions": 2171812958,
+                "cycles": 561828404
+              },
+              {
+                "status": 0,
+                "instructions": 2171812944,
+                "cycles": 557422108
+              }
+            ]
+          },
+          "size": 28,
+          "medians": {
+            "before": 2094162932,
+            "indexed": 2171812957
+          },
+          "ratio": 1.0370792662850934
+        },
+        "lox/vm/trees": {
+          "checks": {
+            "before": {
+              "status": 0,
+              "stdout_sha256": "17ab3b16ce7c5de5f4592400fb2b7e34eedbc57f86b65d948015ebfe1bd33ff5",
+              "stderr": "",
+              "ok": true
+            },
+            "indexed": {
+              "status": 0,
+              "stdout_sha256": "17ab3b16ce7c5de5f4592400fb2b7e34eedbc57f86b65d948015ebfe1bd33ff5",
+              "stderr": "",
+              "ok": true
+            }
+          },
+          "counts": {
+            "before": [
+              {
+                "status": 0,
+                "instructions": 2340270809,
+                "cycles": 1011051086
+              },
+              {
+                "status": 0,
+                "instructions": 2340270845,
+                "cycles": 962303530
+              },
+              {
+                "status": 0,
+                "instructions": 2340270896,
+                "cycles": 969592217
+              }
+            ],
+            "indexed": [
+              {
+                "status": 0,
+                "instructions": 2386183347,
+                "cycles": 963811654
+              },
+              {
+                "status": 0,
+                "instructions": 2386183222,
+                "cycles": 962237779
+              },
+              {
+                "status": 0,
+                "instructions": 2386183320,
+                "cycles": 940497841
+              }
+            ]
+          },
+          "size": 5,
+          "medians": {
+            "before": 2340270845,
+            "indexed": 2386183320
+          },
+          "ratio": 1.0196184450607895
+        }
+      }
+    },
+    "indexed_builds": {
+      "indexed-llvm": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-performance43/.tmp-perf43/install/bin/mylang",
+          "build",
+          "main.my",
+          "--project",
+          "--mode",
+          "ReleaseFast",
+          "--backend",
+          "llvm",
+          "--llvm-opt",
+          "3",
+          "--lto",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-frame-return/.tmp-frame-return/guest-cache",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-frame-return/.tmp-frame-return/lox-indexed-llvm",
+          "--value-semantics"
+        ],
+        "status": 0,
+        "stderr": "",
+        "compiler_sha256": "ceb38b6e1fb1a23f20d92580b3cd7f07f635f5752311f27d477f9792e388b7d5",
+        "source_sha256": {
+          "ast.my": "e210fb35bf3125ba06ebb978bcb3592162020a77576542f2d049879a51479bf9",
+          "chunk.my": "b4f6e7ae6531b224f99e026f53fee3692c90d8f2b15d3c76ca5962f1803e4b66",
+          "compiler.my": "c550603195401ff6d9436b42d6fbf0c35051521da57e7b85281fc8fcf6ebe048",
+          "compiler_test.my": "582fe817dbeffa709961b5124370ce200510adb3ac0d246572ca1c0dc19ec08a",
+          "driver.my": "fe831d2ec08833d11139e790ab741903b27a8e0fb43582cac11ca664b4595836",
+          "driver_tests.my": "32615edbfcbe21e8d550910df45d9bfcb199ee9c8171405d38566b98d78e00bd",
+          "heap.my": "65cf7fedb6f75b824677a50bda011ad4aa36ffbc9edd8d025368e0f26144f137",
+          "heap_test.my": "c951153991a8d5d13ca1df6ded7c6f26c7b43a08ed2095f72c6091637b29b53f",
+          "interpreter.my": "94d8b5472b997d5f875b575f0cf1b5cc7fb670ac57a293c1c6a8081151a19fcd",
+          "lox_strings.my": "383900dda10b9218caf2087e12a2e20089e4d48b0ec5fc3e17e960a3d70d83df",
+          "lox_strings_test.my": "a44545c64e9f75cc5af761d6c703feec83c4fc0a14d2678a1b2fce28067bd0c0",
+          "main.my": "18c1f669b1683123e635256c9f66c6db2766383391371c3822e61df7d9732274",
+          "natives.my": "2ff45343fded6d303e6233e0f787e63c319e860903e2c0c81ccbb71c2749d665",
+          "object.my": "08c0d5c6ae304ef4d0e1f5929f52b5d1dd47cd46e6c409392c0b5b1df9567ad7",
+          "output.my": "cdc79c8a9a5eca0106fb139bca5492da201f027b0499e5e00a492368317d194c",
+          "parser.my": "e9bd5d9c37e307d060ce165dc4fa0f276c2ff9dbe7cb21bd27cbdd94644b4edd",
+          "parser_test.my": "ffe2658f030c75b40a7c54d8f0c64e848e6679e13fc69cbef9a131ed7b120e4b",
+          "resolver.my": "41d41b2a1ddb3f6ab3fb73ad9eff69415b0450d890554766bfee37eac8d0903d",
+          "resolver_test.my": "72c5176ff15db240d8ec8ff8073fcdb7736e8c60ab47410bb60fce934c179d31",
+          "scanner.my": "af4bc6a57859318051dc47d6e1f6344ee98fbfff037e9be93c0a103765cd3e83",
+          "scanner_test.my": "1d7fbb34b0de402657786641217e81c9ae286cab14baf2716de2db875ae39ad0",
+          "table.my": "c875ae493dbc0d6c1b70202746b0f1d2211190fa1276b9d492778455c0d0b2ca",
+          "table_test.my": "38279f9135e953484e6844994bc070c4156d1eb31ab4de0f295efbea17c19555",
+          "value.my": "3b2a444e77c6a703b1aedad3c89ef38cad70aa3bb6cba1716b623980ff9a76b0",
+          "value_test.my": "b766d22b25a8a8a090b4a059030cfc7462022fdacb66a0a91bf8a9e09a53fed4",
+          "vm.my": "2f635a2ced31e0528c298f2ce3c3c9f7a373358c830fe796bc3eebce1873a080"
+        },
+        "binary_sha256": "2ba72c0e07fdb196a1c7edb49023a40162f5cd2faef60687f4df087b40592f0b"
+      }
+    },
+    "push_pop_delta": "--- before/vm.my\n+++ candidate/vm.my\n@@ -476,6 +476,7 @@\n # call frame. Handlers answer False after reporting a runtime error.\n def run(rt: mut heap.Runtime, o: mut output.Output) -> InterpretResult:\n     frame = load_frame(rt, rt.frames[rt.frame_count - 1])\n+    suspended: list[ExecFrame] = []\n     while True:\n         instruction = frame.code[frame.ip]\n         frame.ip = frame.ip + 1\n@@ -561,15 +562,19 @@\n         elif instruction == chunk.OP_CALL:\n             count = read_byte(mut frame)\n             rt.frames[rt.frame_count - 1].ip = frame.ip\n+            previous_count = rt.frame_count\n             ok = call_value(mut rt, mut o, heap.peek(rt, count), count)\n-            if ok:\n+            if ok and rt.frame_count > previous_count:\n+                suspended.append(frame)\n                 frame = load_frame(rt, rt.frames[rt.frame_count - 1])\n         elif instruction == chunk.OP_INVOKE:\n             method = read_string(mut frame)\n             count = read_byte(mut frame)\n             rt.frames[rt.frame_count - 1].ip = frame.ip\n+            previous_count = rt.frame_count\n             ok = invoke(mut rt, mut o, method, count)\n-            if ok:\n+            if ok and rt.frame_count > previous_count:\n+                suspended.append(frame)\n                 frame = load_frame(rt, rt.frames[rt.frame_count - 1])\n         elif instruction == chunk.OP_SUPER_INVOKE:\n             method = read_string(mut frame)\n@@ -577,8 +582,10 @@\n             rt.frames[rt.frame_count - 1].ip = frame.ip\n             rt.stack_top = rt.stack_top - 1\n             superclass = as_obj(rt.stack[rt.stack_top])\n+            previous_count = rt.frame_count\n             ok = invoke_from_class(mut rt, mut o, superclass, method, count)\n-            if ok:\n+            if ok and rt.frame_count > previous_count:\n+                suspended.append(frame)\n                 frame = load_frame(rt, rt.frames[rt.frame_count - 1])\n         elif instruction == chunk.OP_CLOSURE:\n             make_closure(mut rt, mut frame)\n@@ -596,7 +603,7 @@\n             rt.stack_top = frame.base\n             rt.stack[rt.stack_top] = result\n             rt.stack_top = rt.stack_top + 1\n-            frame = load_frame(rt, rt.frames[rt.frame_count - 1])\n+            frame = suspended.pop()\n         elif instruction == chunk.OP_CLASS:\n             name = read_string(mut frame)\n             klass = heap.allocate(mut rt, object.Obj.klass(object.ClassObj(name=name, methods=table.new_table())))\n",
+    "indexed_delta": "--- before/vm.my\n+++ candidate/vm.my\n@@ -476,6 +476,7 @@\n # call frame. Handlers answer False after reporting a runtime error.\n def run(rt: mut heap.Runtime, o: mut output.Output) -> InterpretResult:\n     frame = load_frame(rt, rt.frames[rt.frame_count - 1])\n+    suspended: list[ExecFrame] = []\n     while True:\n         instruction = frame.code[frame.ip]\n         frame.ip = frame.ip + 1\n@@ -561,15 +562,25 @@\n         elif instruction == chunk.OP_CALL:\n             count = read_byte(mut frame)\n             rt.frames[rt.frame_count - 1].ip = frame.ip\n+            previous_count = rt.frame_count\n             ok = call_value(mut rt, mut o, heap.peek(rt, count), count)\n-            if ok:\n+            if ok and rt.frame_count > previous_count:\n+                if len(suspended) < previous_count:\n+                    suspended.append(frame)\n+                else:\n+                    suspended[previous_count - 1] = frame\n                 frame = load_frame(rt, rt.frames[rt.frame_count - 1])\n         elif instruction == chunk.OP_INVOKE:\n             method = read_string(mut frame)\n             count = read_byte(mut frame)\n             rt.frames[rt.frame_count - 1].ip = frame.ip\n+            previous_count = rt.frame_count\n             ok = invoke(mut rt, mut o, method, count)\n-            if ok:\n+            if ok and rt.frame_count > previous_count:\n+                if len(suspended) < previous_count:\n+                    suspended.append(frame)\n+                else:\n+                    suspended[previous_count - 1] = frame\n                 frame = load_frame(rt, rt.frames[rt.frame_count - 1])\n         elif instruction == chunk.OP_SUPER_INVOKE:\n             method = read_string(mut frame)\n@@ -577,8 +588,13 @@\n             rt.frames[rt.frame_count - 1].ip = frame.ip\n             rt.stack_top = rt.stack_top - 1\n             superclass = as_obj(rt.stack[rt.stack_top])\n+            previous_count = rt.frame_count\n             ok = invoke_from_class(mut rt, mut o, superclass, method, count)\n-            if ok:\n+            if ok and rt.frame_count > previous_count:\n+                if len(suspended) < previous_count:\n+                    suspended.append(frame)\n+                else:\n+                    suspended[previous_count - 1] = frame\n                 frame = load_frame(rt, rt.frames[rt.frame_count - 1])\n         elif instruction == chunk.OP_CLOSURE:\n             make_closure(mut rt, mut frame)\n@@ -596,7 +612,7 @@\n             rt.stack_top = frame.base\n             rt.stack[rt.stack_top] = result\n             rt.stack_top = rt.stack_top + 1\n-            frame = load_frame(rt, rt.frames[rt.frame_count - 1])\n+            frame = suspended[rt.frame_count - 1]\n         elif instruction == chunk.OP_CLASS:\n             name = read_string(mut frame)\n             klass = heap.allocate(mut rt, object.Obj.klass(object.ClassObj(name=name, methods=table.new_table())))\n"
+  },
+  "harness": {
+    "sha256": "067f7396a1fc0cbbb4c1b2101847db836b7631452fdab0cc096085d71931e5a0"
+  }
+}
