@@ -145,3 +145,37 @@ public def test_nested_byte_buffer_leaf() -> bool:
     changed = original
     _ = changed[0]["k"].append_byte(2)
     return len(original[0]["k"]) == 1 and len(changed[0]["k"]) == 2 and changed[0]["k"][1] == 2
+
+
+def grow_key(value: mut list[dict[str, list[int]]]) -> str:
+    value[0]["k"].append(7)
+    return "k"
+
+
+def replace_key(value: mut list[dict[str, list[int]]]) -> str:
+    value[0] = {"k": [9]}
+    return "k"
+
+
+# spec-case: COW-NESTED-1
+public def test_key_mutates_original() -> bool:
+    original: list[dict[str, list[int]]] = [{"k": [1]}]
+    changed = original
+    changed[0][grow_key(mut original)].append(2)
+    return original[0]["k"] == [1, 7] and changed[0]["k"] == [1, 2]
+
+
+# spec-case: COW-NESTED-1
+public def test_key_replaces_changed_receiver() -> bool:
+    original: list[dict[str, list[int]]] = [{"k": [1]}]
+    changed = original
+    changed[0][replace_key(mut changed)].append(2)
+    return original[0]["k"] == [1] and changed[0]["k"] == [9]
+
+
+# spec-case: COW-NESTED-1
+public def test_key_grows_changed_receiver() -> bool:
+    original: list[dict[str, list[int]]] = [{"k": [1]}]
+    changed = original
+    changed[0][grow_key(mut changed)].append(2)
+    return original[0]["k"] == [1] and changed[0]["k"] == [1, 7, 2]

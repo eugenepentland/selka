@@ -131,6 +131,36 @@ pub fn solve(a: std.mem.Allocator, input: Input) error{OutOfMemory}!Solution {
     return .{ .words = words, .live_in = live, .live_out = out };
 }
 
+/// Propagate additional implicit uses placed in a solved table back through
+/// predecessors. Existing rows only grow; writes and match bindings still kill
+/// an incoming lifetime before its definition. COW then reruns ownership on
+/// the extended solution before making copy, borrow or move decisions.
+pub fn extend(a: std.mem.Allocator, input: Input, solution: Solution) error{OutOfMemory}!void {
+    const scratch = try a.alloc(usize, solution.words);
+    defer a.free(scratch);
+    var changed = true;
+    while (changed) {
+        changed = false;
+        var pc = input.function.scope.instructions.len;
+        while (pc != 0) {
+            pc -= 1;
+            if (pc >= input.states.len or input.states[pc] == null) continue;
+            const at = pc * solution.words;
+            liveAfter(input, solution.live_in, pc, scratch);
+            const out = @constCast(solution.live_out[at..][0..solution.words]);
+            for (out, scratch) |*word, incoming| word.* |= incoming;
+            @memcpy(scratch, out);
+            transfer(input, pc, scratch);
+            const into = @constCast(solution.live_in[at..][0..solution.words]);
+            for (into, scratch) |*word, incoming| {
+                const next = word.* | incoming;
+                changed = changed or word.* != next;
+                word.* = next;
+            }
+        }
+    }
+}
+
 /// Answer, for every instruction, which locals a safepoint there publishes.
 /// The rows are allocated from `a` and owned by the caller.
 pub fn analyze(a: std.mem.Allocator, input: Input) error{OutOfMemory}!Roots {

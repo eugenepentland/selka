@@ -366,7 +366,7 @@ const Emitter = struct {
             },
             .index => |access| {
                 try self.instruction(node.span, .{ .get_index = .{ .ty = self.program.nodes[@backingInt(access.base)].ty, .from_end = access.from_end } });
-                try self.push(.{ .expression = access.index });
+                try self.indexKey(access.base, access.index, node.ty);
                 try self.indexReceiver(access.base);
             },
             .replace => |replace| {
@@ -618,6 +618,19 @@ const Emitter = struct {
             try self.instruction(node.span, .{ .store_local = owner });
         }
         try self.push(.{ .expression = id });
+    }
+    /// A dictionary key can be needed again after later array indices have
+    /// overwritten its operand slot. Keep its value without rerunning it.
+    fn indexKey(self: *Emitter, base: typed.NodeId, key: typed.NodeId, output: typed.Type) !void {
+        const ty = self.program.nodes[@backingInt(base)].ty;
+        const inline_result = output.isAggregate() and !self.program.records[output.recordIndex()].managed;
+        if (self.values != null and ty.isAggregate() and self.program.records[ty.recordIndex()].collection.kind == .dictionary and inline_result) {
+            const node = self.program.nodes[@backingInt(key)];
+            const slot = try self.hiddenLocal(node.ty, node.span, "<index-key>");
+            try self.instruction(node.span, .{ .load_local = slot });
+            try self.instruction(node.span, .{ .store_local = slot });
+        }
+        try self.push(.{ .expression = key });
     }
     /// A hidden local for an intermediate value lowering must name.
     fn hiddenLocal(self: *Emitter, ty: typed.Type, span: Span, name: []const u8) !typed.LocalId {

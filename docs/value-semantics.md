@@ -226,10 +226,18 @@ arrays mark up to eight payloads inline; boxed, variant and larger values use
 a rooted runtime transfer, as does a pinned payload that must be cloned. A
 read-only argument is lent without a copy. Before a write, an inline check
 clones a shared payload and redirects the owning slot; nested writes repeat
-that step along their path, including alternating list and dictionary
-lookups such as `changed[0]["items"][0].append(2)`. Every intermediate
-collection belongs to the changed value, so an earlier snapshot keeps its
+that step along their path, including fixed-array elements and alternating
+list and dictionary lookups such as `changed[0]["items"][0].append(2)`.
+Every intermediate collection belongs to the changed value, so an earlier snapshot keeps its
 original contents. Receivers and keys still evaluate once in source order.
+If an array index calls a function, the receiver evaluated before that call
+keeps its identity. Replacing or removing its containing entry leaves the
+pending write on the old value. Updating another entry, growing a dictionary,
+or moving a list element keeps the pending write on the selected value.
+This also holds when a replacement is equal to the old value or the callback
+saves a snapshot of the parent. Temporary pins protect just the selected
+field path and its possible array elements; unrelated recursive branches
+stay lazy. The pins are released when evaluation finishes or returns early.
 Checks proven stable across a loop are hoisted.
 
 For internal measurements, `MYLANG_COW_COUNTING=1` together with
