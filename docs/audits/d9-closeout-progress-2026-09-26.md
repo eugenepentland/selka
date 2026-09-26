@@ -16,7 +16,7 @@ full gates with `../.d9-closeout-gate.lock`. The original dirty checkout, `main`
 | WP-3c recursive values | `67afc00a`, `2e4ac251`; [report](d9-stage3c-recursive-values-2026-09-26.md) | Full gate; million-node equality/hash and both-backend tree measurements; existing depth-bounded printing truncation documented as a plan deviation |
 | WP-3d class/Cell retirement | `19144c19`; [report](d9-stage3d-closeout-2026-09-26.md) | Full four-step gate at `f1265a0b`; S-expression 114/114 and Lox 63/63 in both modes; VM 13/13 scripts; historical/diagnostic class exceptions inventoried; formal VM performance remains a stage 3f blocker; tree timing is a supplemental audit |
 | WP-3e migration diagnostic/fix | `dd4ee663`; [report](d9-stage3e-closeout-2026-09-26.md) | 93/101 exact, 96/101 normalized census matches; 14 extras classified. Full four-step gate; Lox 63/63 tests and 13/13 VM scripts in both modes. Cyclic graph checker cost reduced from over 150 seconds to 0.30 seconds |
-| WP-4pre physical borrow inference | `450d151a`; `docs/audits/d9-stage4pre-borrow-closeout-2026-09-26.md` on branch `codex/d9-stage4pre` | Gated prerequisite, integration after default switch. Full gate: 93/93 test steps, 2,089 tests; QBE 51/51, 427 tests; QBE build 29/29; formatting. Schematic: 72 added borrow classifications, 12 conservative copies; actual RC traffic measurement remains WP-4 |
+| WP-4pre physical borrow inference | `450d151a`, refreshed at `ba4a1340`; report `86da9613` on branch `codex/d9-physical-borrow-after-astra` | Isolated prerequisite, integration after default switch. Refreshed full gate: 93/93 main steps, 2,119 executed tests; QBE 51/51, 429 tests; QBE build 29/29; formatting. Schematic: 72 added borrow classifications, 12 conservative copies. Four matched VM cases show approximately unchanged GC cost; actual RC traffic measurement remains WP-4 |
 | T1 library checking | `ff10f2f1`, `f3f3a53f` | New `check-module`; three focused CLI tests; full gate: test 91/91 steps, 2,075 executed tests; QBE 49/49, 426 tests; QBE build 29/29; formatting green |
 | T2 formatting feedback and fixtures | `30948da9`, `df177cc2` | First-difference file/line/column; three focused CLI tests; 93 examples and nine copied pilot starters format clean; joined full gate |
 | T3 indexed empty-list inference | `8842ac60` | Seven guest tests and twelve selected Zig tests; original regression reproduced; joined full gate |
@@ -39,8 +39,8 @@ for every accepted package above.
 
 | Work | Branch/worktree | Remaining acceptance |
 |---|---|---|
-| WP-3b COW | `d9/stage3b`, `../d9-stage3b`; optimization follow-up `d9/copy-through-transfers` | Gated compiler follow-ups through `f8dad8e8` are joined. The latest complete 13-key VM sweep (`adcbb4ca` plus source `6d54bace`) remains outside acceptance: 1.19444× QBE geomean, 1.35771× LLVM, with 4/13 and 9/13 over 1.3×. Subsequent root publication and variant-copy improvements have four-case measurements only; a frozen 43-key sweep is in preparation. Nested fixed-array correctness work remains open |
-| WP-3f default flip | Preparation at `codex/d9-stage3f-prep` (`17540b57`; report `1f93f097`) | Full existing-suite gate green at source commit `17540b57`: test 94/94 steps, 2,116 executed Zig tests; QBE 51/51 and 428 tests; QBE build 29/29; formatting 2/2. Includes 652 language, 49 value, 42 smoke and 2 compatibility guests, plus 231 historical golden cases. The 113-probe oracle has zero undeclared disagreements. Guide-only follow-up passes docs/coverage/formatting 28/28. Report: `docs/audits/d9-stage3f-default-validation-2026-09-26.md` on that branch. Subsequent review found boxed-field and nested collection alias leaks. The box fix is gated and joined; the nested-list/dictionary fix is in validation with a further fixed-array follow-up. Final joined correctness and performance acceptance still block default integration |
+| WP-3b COW | Integration through `d7f4cf85`; compiler source `b6328bcd` | Nested collection/array correctness is joined and full-gated: 2,118 main tests, 428 QBE tests, native-build and formatting green. Independent joined validation passes 110 stressed guest cases and 44 byte-identical switch-off IL comparisons. Formal performance acceptance remains open; the complete earlier 43-key snapshot failed and the current combination is being measured |
+| WP-3f default flip | Preparation at `codex/d9-stage3f-prep` (`5b663e23`) | Updated with all gated compiler and Lox changes; fresh four-step gate pending. Earlier `17540b57` passed the full gate, including 652 language, 49 value, 42 smoke and 2 compatibility guests, 231 golden cases and a 113-probe oracle with zero undeclared disagreements. Current default acceptance also requires the formal stage 3 performance limits |
 | WP-4 reference counting | Not started | Requires 3f/4pre and the RC performance/RSS gate, including rewritten graph programs |
 | WP-5 concurrency | Not started | Design after WP-4, following the existing concurrency proposal |
 
@@ -50,12 +50,13 @@ landing partial D9 work. This is a scheduling deviation, not an acceptance waive
 Performance limits, arenas, Debug compiler builds, real merge commits and final
 joined validation remain required.
 
-The Astra integration at `63b3a2ba`, including the gated box changes, closed-region
-proof, transfer/alias scratch changes and latest Lox source, passed all four gates:
-93/93 main steps with 2,112 executed tests, QBE 51/51 with 428 tests, build 29/29
-and formatting 2/2. This does not include the unfinished nested-array follow-up
-and does not establish performance acceptance. The isolated default candidate
-passed its fresh four-step gate at `17540b57` (2,116 main tests). Later compiler changes and the nested-path follow-up still need joined validation.
+The joined compiler at `b6328bcd` passed all four gates: 93/93 main steps
+with 2,118 executed tests, QBE 51/51 with 428 tests, native-build 29/29 and
+formatting 2/2. It includes pure recursive-box reads, scoped nested receivers,
+closed-region transfer analysis and the earlier copy/root optimizations.
+Source-only Lox improvements join at `d7f4cf85`; compiler code is unchanged
+from `b6328bcd`. The isolated default candidate is refreshed to this source
+and remains separate pending its current gate and performance acceptance.
 
 ## Performance work still blocking acceptance
 
@@ -76,7 +77,7 @@ exact error-trace comparisons under native GC stress; a clean replay matches
 every `.my` module byte for byte:
 [direct-frame report](d9-lox-direct-frame-2026-09-26.md).
 These source measurements are isolated improvements, not baseline acceptance.
-The combined compiler/source still needs a fresh full gate and the complete
+The final combined compiler/source must satisfy the complete
 43-key-per-backend acceptance sweep: the historical 27 parity keys, three
 schematic cases and 13 Lox VM scripts. The newly added recursive-tree parity
 variant and Lox tree interpreter are supplemental, not extra formal thresholds.
@@ -89,8 +90,25 @@ The immediate variant-copy optimization (`f8dad8e8`) removes two whole-Obj
 copies from frame loading and saves another 1–3%; it passed the four-step
 gate, three both-backend stressed guest regressions and 44 identical switch-off
 IL comparisons: [report](d9-variant-element-2026-09-26.md). These follow-ups
-and the validated environment readers are joined at `5bdd99ea`; this joined
-commit is being measured independently and has not had its final full gate.
+and the validated environment readers joined at `5bdd99ea`. Its complete
+43-key diagnostic sweep passed every output/SVG check but failed performance:
+QBE geomean 1.06194×, LLVM 1.09626×. Three QBE and four LLVM programs
+exceeded 1.3×; the raw data and exact baseline/compiler hashes are in the
+[43-key audit](d9-performance43-2026-09-26.md).
+
+The later pure-box read guard (`f6b5de09`) reduces the parity binary-tree ratio
+from 3.31× to 1.20× on QBE and from 2.15× to 1.07× on LLVM in matched
+measurements. Scoped receivers, instance/class scalar readers and late closure
+publication are now joined. Late publication reduces the matched VM closures
+case by 4.9% QBE and 7.7% LLVM. The fresh 43-key sweep records this exact
+combination; individual improvements do not establish acceptance.
+
+An indexed payload-transfer proof and a matching Lox setter helper remain
+isolated. Independent review found an earlier-match-alias counterexample in
+the first prototype. A conservative first-use guard and permanent regressions
+now pass independent both-backend GC-stressed probes. The corrected proof
+still requires its full gate before integration. A separate VM frame-reuse
+experiment is also isolated.
 
 The tree interpreter's earlier matched 85.3× QBE regression is no longer
 attributed primarily to recursive-box walking: lazy projection alone did not
@@ -117,21 +135,21 @@ and formatting. Million-node copy/equality/hash and a 1,101-node collection
 chain passed on both backends. It joined at `3b2f8f7a`; final integration
 validation passed at `63b3a2ba`; later joined changes need a new gate.
 
-The separate nested regression
-`original = [{"k": [1]}]; changed = original; changed[0]["k"].append(2)`
-is fixed by `6b40a61c` in `codex/d9-nested-cow`: materializing the dictionary
-receiver retains its owning path and source evaluation order. Fifteen guest
-regressions and three adversarial key callbacks pass under GC stress. Its
-main gate passed, while the QBE gate exposed an existing test that assumed
-child log order matched spawn order. `bb83e6eb` now checks the live compile
-session before declaration checking and verifies one call per child; all 228
-native-test tests pass. The fix is joined at `6cac1c74`.
+The nested receiver fixes (`6b40a61c`, `a2c62941`, `426d201e`) are now
+joined at `b6328bcd`. Scoped pins preserve the selected receiver across index
+callbacks, dictionary replacement/rehash and nested fixed arrays. They copy
+only the finite pending path and retain constant-time unpinned box transfers.
+The branch passed all four gates and six deep recursive checks. Independent
+joined validation passes all 55 regressions on each backend under GC stress,
+with zero cached verdicts, and all 44 switch-off IL comparisons are byte
+identical: [joined evidence](d9-nested-cow-joined-validation-2026-09-26.md).
+The full integration gate above closes these known correctness follow-ups.
 
-Nested fixed arrays still require a follow-up: paths through an inline array
-must retain keys and owners across later index callbacks and avoid stale
-dictionary addresses after rehash or entry replacement. The current scoped-pin prototype passes 18 normal array cases and 16
-adversarial callback cases under GC stress, including recursive-box snapshots
-and a 1,200-node recursive sibling. It detaches only the finite pending source
-path and preserves constant-time transfers for unpinned boxes. Ancestor-box,
-trap and cleanup-root review and the fresh four-step gate remain in progress.
-A green existing suite does not close a newly discovered correctness issue.
+The Lox migration had a separate assignment bug: evaluating a right-hand side
+could mutate another receiver field, then a stale saved instance overwrote
+that mutation. `4a926ec7` keeps the original receiver identity and reloads its
+fields after right-hand-side evaluation. Two new regressions fail before the
+fix and pass in both base and optimized ports. The composed source includes
+this fix, scalar instance/class readers and late closure publication. Each
+component has port tests, both-backend smoke/stress validation and exact patch
+replay; the current composition is included in the fresh performance sweep.
