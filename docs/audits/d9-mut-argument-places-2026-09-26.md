@@ -150,3 +150,10 @@ and counters. ABI2's historical failure remains recorded rather than overwritten
 No further production change was needed after the documented argument-place fix;
 ABI3 supplies the required physical-loan and semantic-sharing behavior. These
 results establish this pairing, not whole-corpus WP-4 performance acceptance.
+
+The cohesive source is now committed as `b1b01207337fd71352dc1aa5ea1a1a679483ba55`
+and real-merged into this evidence branch. The standalone matrix was repeated
+against its final immutable `install-history-candidate` compiler; it preserves
+all four corrected outputs, all 60 assertions and all eight intended trap outcomes,
+with the same paired ABI3 counter totals. The final receipt names that compiler's
+separate SHA256 rather than attributing the earlier private binary to a later build.
