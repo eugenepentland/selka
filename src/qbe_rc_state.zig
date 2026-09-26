@@ -17,6 +17,7 @@ pub const State = struct {
     operands: []Operand,
     pending: u64,
     active: bool,
+    readonly: bool = false,
 };
 /// Internal compiler failures; legal programs never decline RC lowering.
 pub const Error = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
@@ -38,6 +39,7 @@ pub fn build(comptime E: type, self: *E, capacity: usize) Error!*State {
         .policy = .{ .abi = runtime.identity() },
     }) catch |err| return translate(err);
     state.active = false;
+    state.readonly = false;
     for (state.locals.storage) |slot| state.active = state.active or slot.shape.counted or slot.shape.unique_drop;
     state.operands = try a.alloc(Operand, capacity);
     @memset(state.operands, .{});
