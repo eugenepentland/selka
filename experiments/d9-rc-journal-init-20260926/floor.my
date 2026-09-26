@@ -1,0 +1,13 @@
+record Node:
+    left: Option[Node]
+    right: Option[Node]
+
+def make(depth: int) -> Node:
+    if depth == 0:
+        return Node(None, None)
+    return Node(Some(make(depth - 1)), None)
+
+def main() -> int:
+    kept = make(2)
+    other = make(1000000)
+    return 1 if kept.left is None or other.left is None else 0

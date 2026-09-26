@@ -44,7 +44,9 @@ pub fn Lower(comptime E: type) type {
             const state = get(E, self) orelse return;
             if (fixedRegion(E, self)) try self.print(" %rcregion =l call $myl_qbe_region_mark(l %ctx)\n", .{});
             const size = count(state);
-            try self.print(" call $memset(l %rcguards, w 0, l {d})\n call $memset(l %rcentries, w 0, l {d})\n", .{ size * 8, size * entry_bytes });
+            // Every retained entry gets all semantic fields below before linking.
+            // Guard words alone need clearing; the C slot's padding is unread.
+            try self.print(" call $memset(l %rcguards, w 0, l {d})\n", .{size * 8});
             for (state.plan.locals.storage, 0..) |slot, index| {
                 if (try state.plan.journal.slot(index) == null) continue;
                 const address = self.temp();
