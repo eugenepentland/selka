@@ -1,0 +1,191 @@
+{
+  "purpose": "Isolated runtime flat-transfer diagnostic, not corpus acceptance",
+  "base_commit": "16a5b211",
+  "compiler_mode": "Debug",
+  "backend": "qbe",
+  "guest_optimization": "default",
+  "lto": false,
+  "cpu": 0,
+  "source_change": "Only max_depth = 16 -> max_depth = 12",
+  "source_sha256": "97137bff09108d9560736833ae682733abd5d728ca8066edb5cda4caede62a7c",
+  "compiler_sha256": {
+    "before": "9ae054fa0d4d76c86fea72e3bcb99b3348624928ba748022f99e9a1933393146",
+    "flat": "82a102024d6bcdffdc150d24aab068d1f6612d9628e8b7292e6225cf63bd2ef6"
+  },
+  "binary_sha256": {
+    "stack-rc": "061510e2b60d25cb04173267a9f90010ad03a982cc33867c382f8fa400dd893f",
+    "flat-rc": "ccc649e1469564ccc9a6ab48dedb6ead1b4b8ce187a0b2838ab1ae1f2b5483e8",
+    "stack-stats": "9c1f0f115e8e634b7e195414ef4538ede213416b125c7d9599d06b7506c5cfaf",
+    "flat-stats": "0ca88c3f01f4f11f0619ebc8746cfec29fc38484977730c762e2f5fe41c7bafe"
+  },
+  "medians_instructions": {
+    "stack-rc": 8160503827,
+    "flat-rc": 5789852276
+  },
+  "improvement": 1.4094494018140644,
+  "counts_before": {
+    "version": 1,
+    "runtime": "rc-v2-counting",
+    "saturated": false,
+    "owner_acquire": 3992307,
+    "owner_release": 4661367,
+    "hold_acquire": 0,
+    "hold_release": 0,
+    "owner_limit": 0,
+    "hold_limit": 0,
+    "heap_allocate": 669060,
+    "arena_allocate": 0,
+    "retire": 669060,
+    "clone_shell": 0,
+    "unique_check": 33
+  },
+  "counts_after": {
+    "version": 1,
+    "runtime": "rc-v2-counting",
+    "saturated": false,
+    "owner_acquire": 3992307,
+    "owner_release": 4661367,
+    "hold_acquire": 0,
+    "hold_release": 0,
+    "owner_limit": 0,
+    "hold_limit": 0,
+    "heap_allocate": 669060,
+    "arena_allocate": 0,
+    "retire": 669060,
+    "clone_shell": 0,
+    "unique_check": 33
+  },
+  "measurements": [
+    {
+      "arm": "stack-rc",
+      "command": [
+        "taskset",
+        "-c",
+        "0",
+        "perf",
+        "stat",
+        "-x,",
+        "-e",
+        "instructions:u,cycles:u",
+        "--",
+        ".tmp-rc/profile/stack-rc-n12"
+      ],
+      "counters": {
+        "cpu_core/instructions/u": 8160503827,
+        "cpu_core/cycles/u": 2096694797
+      },
+      "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n8160503827,,cpu_core/instructions/u,700588936,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n2096694797,,cpu_core/cycles/u,700588936,100.00,,\n",
+      "stdout_sha256": "ce89644f86ddae760ef63b4e854cfc0308cd88ce0d501e6ddf91cd1311852497"
+    },
+    {
+      "arm": "flat-rc",
+      "command": [
+        "taskset",
+        "-c",
+        "0",
+        "perf",
+        "stat",
+        "-x,",
+        "-e",
+        "instructions:u,cycles:u",
+        "--",
+        ".tmp-rc/profile/flat-rc-n12"
+      ],
+      "counters": {
+        "cpu_core/instructions/u": 5769780653,
+        "cpu_core/cycles/u": 1512878034
+      },
+      "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n5769780653,,cpu_core/instructions/u,501803621,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n1512878034,,cpu_core/cycles/u,501803621,100.00,,\n",
+      "stdout_sha256": "ce89644f86ddae760ef63b4e854cfc0308cd88ce0d501e6ddf91cd1311852497"
+    },
+    {
+      "arm": "flat-rc",
+      "command": [
+        "taskset",
+        "-c",
+        "0",
+        "perf",
+        "stat",
+        "-x,",
+        "-e",
+        "instructions:u,cycles:u",
+        "--",
+        ".tmp-rc/profile/flat-rc-n12"
+      ],
+      "counters": {
+        "cpu_core/instructions/u": 5791167450,
+        "cpu_core/cycles/u": 1512695875
+      },
+      "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n5791167450,,cpu_core/instructions/u,483397661,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n1512695875,,cpu_core/cycles/u,483397661,100.00,,\n",
+      "stdout_sha256": "ce89644f86ddae760ef63b4e854cfc0308cd88ce0d501e6ddf91cd1311852497"
+    },
+    {
+      "arm": "stack-rc",
+      "command": [
+        "taskset",
+        "-c",
+        "0",
+        "perf",
+        "stat",
+        "-x,",
+        "-e",
+        "instructions:u,cycles:u",
+        "--",
+        ".tmp-rc/profile/stack-rc-n12"
+      ],
+      "counters": {
+        "cpu_core/instructions/u": 8181912468,
+        "cpu_core/cycles/u": 2100405277
+      },
+      "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n8181912468,,cpu_core/instructions/u,672357764,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n2100405277,,cpu_core/cycles/u,672357764,100.00,,\n",
+      "stdout_sha256": "ce89644f86ddae760ef63b4e854cfc0308cd88ce0d501e6ddf91cd1311852497"
+    },
+    {
+      "arm": "stack-rc",
+      "command": [
+        "taskset",
+        "-c",
+        "0",
+        "perf",
+        "stat",
+        "-x,",
+        "-e",
+        "instructions:u,cycles:u",
+        "--",
+        ".tmp-rc/profile/stack-rc-n12"
+      ],
+      "counters": {
+        "cpu_core/instructions/u": 8160503804,
+        "cpu_core/cycles/u": 2107401701
+      },
+      "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n8160503804,,cpu_core/instructions/u,674385781,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n2107401701,,cpu_core/cycles/u,674385781,100.00,,\n",
+      "stdout_sha256": "ce89644f86ddae760ef63b4e854cfc0308cd88ce0d501e6ddf91cd1311852497"
+    },
+    {
+      "arm": "flat-rc",
+      "command": [
+        "taskset",
+        "-c",
+        "0",
+        "perf",
+        "stat",
+        "-x,",
+        "-e",
+        "instructions:u,cycles:u",
+        "--",
+        ".tmp-rc/profile/flat-rc-n12"
+      ],
+      "counters": {
+        "cpu_core/instructions/u": 5789852276,
+        "cpu_core/cycles/u": 1501860846
+      },
+      "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n5789852276,,cpu_core/instructions/u,478946125,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n1501860846,,cpu_core/cycles/u,478946125,100.00,,\n",
+      "stdout_sha256": "ce89644f86ddae760ef63b4e854cfc0308cd88ce0d501e6ddf91cd1311852497"
+    }
+  ],
+  "runtime_sources_sha256": {
+    "src/native_rc_internal.h": "9e2490f5108e34cdfe0c32e20a0e9b471076cf786d057b2051dcb6101c4be95e",
+    "src/native_rc_shapes.c": "9197b9f8eb588416e498788db5c772938fc3d680b14da5ab8a0d0492699652d5",
+    "src/native_rc_values.c": "3051aaf68a1b17d6649e63668781e1958ca4ec81a0db0ddc36dbc951b141f857"
+  }
+}
