@@ -2,7 +2,9 @@
 
 This is the integration ledger for the [close-out plan](d9-closeout-plan-2026-09-26.md).
 It records completed acceptance separately from work in progress. The three delegated
-workers use GPT-6 Sol. The orchestrator works in separate worktrees and serializes
+workers initially used GPT-6 Sol. At the user's request, the current workers
+use GPT-6 Astra with extra-high reasoning; their worktrees and evidence were
+preserved across the handoff. The orchestrator works in separate worktrees and serializes
 full gates with `../.d9-closeout-gate.lock`. The original dirty checkout, `main`
 (`b292660a`), and the pending devspeed merge are untouched.
 
@@ -37,8 +39,8 @@ for every accepted package above.
 
 | Work | Branch/worktree | Remaining acceptance |
 |---|---|---|
-| WP-3b COW | `d9/stage3b`, `../d9-stage3b` | Full gate green at `efbc4285`: 93/93 test steps, 2,087 tests; QBE 51/51 and 428 tests; QBE-build 29/29; formatting 2/2. [Performance evidence](d9-stage3b-performance-2026-09-26.md) preserves median-three measurements; LLVM historical-source and class-free Lox results fail the required thresholds |
-| WP-3f default flip | Preparation at `codex/d9-stage3f-prep` (`d172b006`) | Full correctness gate green at source commit `81eaf8d1`: test 94/94 steps, 2,108 executed Zig tests; QBE 51/51 and 428 tests; QBE build 29/29; formatting 2/2. Includes 652 language, 49 value, 42 smoke and 2 compatibility guests, plus 231 historical golden cases. The 113-probe oracle has zero undeclared disagreements. Guide-only follow-up passes docs/coverage/formatting 28/28. Report: `docs/audits/d9-stage3f-default-validation-2026-09-26.md` on that branch. Subsequent review found a boxed-field alias leak; its fix and performance acceptance still block integration |
+| WP-3b COW | `d9/stage3b`, `../d9-stage3b`; optimization follow-up `d9/copy-through-transfers` | Gated closed-region proof `9f42e5a9` is joined: main 93/93, 2,094 selected tests; QBE 51/51, 428 tests; build 29/29; formatting. The 13-key class-free VM sweep still fails: 1.39885× QBE geomean, 1.49821× LLVM, with 10/13 over 1.3× each. Further copy/zeroing reductions and the latest source patch need a combined sweep; nested fixed-array correctness work remains open |
+| WP-3f default flip | Preparation at `codex/d9-stage3f-prep` (`b937d4fc`) | Full existing-suite gate green at source commit `b937d4fc`: test 94/94 steps, 2,112 executed Zig tests; QBE 51/51 and 428 tests; QBE build 29/29; formatting 2/2. Includes 652 language, 49 value, 42 smoke and 2 compatibility guests, plus 231 historical golden cases. The 113-probe oracle has zero undeclared disagreements. Guide-only follow-up passes docs/coverage/formatting 28/28. Report: `docs/audits/d9-stage3f-default-validation-2026-09-26.md` on that branch. Subsequent review found boxed-field and nested collection alias leaks. The box fix is gated and joined; the nested-list/dictionary fix is in validation with a further fixed-array follow-up. Final joined correctness and performance acceptance still block default integration |
 | WP-4 reference counting | Not started | Requires 3f/4pre and the RC performance/RSS gate, including rewritten graph programs |
 | WP-5 concurrency | Not started | Design after WP-4, following the existing concurrency proposal |
 
@@ -50,36 +52,59 @@ joined validation remain required.
 
 ## Performance work still blocking acceptance
 
-The committed `b8d14efb` compiler and `ebe6b78f` class-free Lox source cost
-2,451,645,857 instructions on VM equality N=30,000 under QBE ReleaseFast
-versus the exact `60b668cf` class baseline's 1,018,576,990 (2.407×); LLVM
-full LTO is 842,084,943 versus 346,979,824 (2.427×). An uncommitted
-mut-parameter scalar-update optimization reduces median-three costs to
-1,509,436,771 QBE (1.482×) and 530,344,081 LLVM (1.528×), with identical
-stdout. These are provisional measurements pending its full gate and review.
-Every compiler was Debug. This remains a hard performance blocker. Matrix multiplication and
-byte scanning now match baseline closely after keeping COW transfer operand
-scratch local to QBE. The 116-key median-three sweep is preserved in the performance report. Parity geomeans are 1.0031× QBE and 1.0018× LLVM; Lox remains the blocker.
+The closed-region ownership proof `9f42e5a9` permits field extraction and
+store-back across internal loops and match arms while preserving copies for
+source observations, early exits and external entries. It reduces the Lox VM
+`trees` N=5 counted copy traffic from about 2.09 GB to 50.9 MB. The matched
+13-case VM sweep improves from 1.47277×/1.63346× to 1.39885×/1.49821×
+(QBE/LLVM geomeans), still failing the plan's limits:
+[report and raw measurements](d9-closed-region-transfers-2026-09-26.md).
+Its standalone four-step gate passed before integration at `f71fe47a`.
 
-Field extraction/store-back proofs progressed from `b456c84b` through
-`85667ce3` to `d83e26a0`. Matched ReleaseFast tree N=4 measurements fell from
-47.6 billion instructions to 36.1 billion and then 7.29 billion, with unchanged
-stdout. An earlier comparison of 390.8 billion to 36.1 billion mixed guest
-Debug and ReleaseFast modes and is invalid; all compiler builds remained Debug.
-These reductions are progress, not a performance pass. Stage 3f remains isolated
-until the strict stage 3 limits hold.
+The external Lox patch now keeps only used active-frame fields (`143a3e2b`)
+and reads them directly from heap variants (`6d54bace`). The latter saves
+2–6% in four matched VM cases on both backends using the same `9f42e5a9`
+Debug compiler. It passes 63 port tests per mode, 52 VM smoke runs and 184
+exact error-trace comparisons under native GC stress; a clean replay matches
+every `.my` module byte for byte:
+[direct-frame report](d9-lox-direct-frame-2026-09-26.md).
+These source measurements are isolated improvements, not baseline acceptance.
+The combined compiler/source still needs a fresh full gate and the complete
+43-key-per-backend acceptance sweep. No threshold or baseline has changed.
 
-A matched QBE ReleaseFast tree-interpreter N=4 median-three comparison also
-remains far outside the target: 63,001,763 instructions for the class baseline,
-6,909,105,659 for the pinned class-free source, and 5,373,781,841 for the
-optimized class-free source (85.3× baseline). Every output matched. Profiling
-attributes much of this cost to repeated recursive-box descendant sharing.
-The next compiler experiment targets that traversal while preserving snapshot,
-pin and arena guarantees; it has not yet earned acceptance.
+The tree interpreter's earlier matched 85.3× QBE regression is no longer
+attributed primarily to recursive-box walking: lazy projection alone did not
+resolve it. The closed-region proof removes repeated copies of `rt.objects`
+and reduces an independently matched tree N=4 run from about 5.18 billion
+to 156.9 million instructions (2.69× its same-run baseline). Astra is measuring
+smaller interpreter helpers to reduce large aggregate temporary initialization.
+These experiments remain provisional and preserve exact output and matched
+compiler/guest modes. Every compiler build is Debug.
 
-Independent review after the default gate reproduced a nested boxed-record
-alias leak using `record A: child: B` and `record B: items: list[int]; tail: [0]A`.
-Mutating `changed.child.items` after `changed = original` also changes the
-original. The recursive-box performance experiment must fix this immutable-box
-write-back path and its GC allocation/root analysis before integration. A green
-existing suite does not close this newly discovered correctness issue.
+## Correctness follow-ups
+
+The immutable-box alias leak in `changed.child.items.append(2)` is fixed by
+`daaf525b`: nested writes detach boxes before making their mutable leaves
+unique, preserving roots and generational barriers throughout allocation.
+`0bde7992` makes immutable box transfers constant time and protects mutable
+children on projection. The branch at `89ca1742` passed the full gate:
+main 93/93 with 2,104 executed tests, QBE 51/51 with 428 tests, build 29/29,
+and formatting. Million-node copy/equality/hash and a 1,101-node collection
+chain passed on both backends. It joined at `3b2f8f7a`; final integration
+validation remains pending.
+
+The separate nested regression
+`original = [{"k": [1]}]; changed = original; changed[0]["k"].append(2)`
+is fixed by `6b40a61c` in `codex/d9-nested-cow`: materializing the dictionary
+receiver retains its owning path and source evaluation order. Fifteen guest
+regressions and three adversarial key callbacks pass under GC stress. Its
+main gate passed, while the QBE gate exposed an existing test that assumed
+child log order matched spawn order. `bb83e6eb` now checks the live compile
+session before declaration checking and verifies one call per child; all 228
+native-test tests pass. The fix is joined at `6cac1c74`.
+
+Nested fixed arrays still require a follow-up: paths through an inline array
+must retain keys and owners across later index callbacks and avoid stale
+dictionary addresses after rehash or entry replacement. Initial array cases
+pass, but callback safety and the fresh four-step gate remain in progress.
+A green existing suite does not close a newly discovered correctness issue.

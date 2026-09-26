@@ -14,13 +14,13 @@ index 287d5bb..1aaf569 100644
              return
          error_at_current(mut p, p.current.message)
 diff --git a/heap.my b/heap.my
-index f76a781..8361a53 100644
+index f76a781..63836d6 100644
 --- a/heap.my
 +++ b/heap.my
 @@ -13,15 +13,11 @@ public const FRAMES_MAX: int = 64
  const FIRST_GC: int = 1048576
- 
- 
+
+
 -# An active VM call, clox's CallFrame: the closure (a GC root), its
 -# function and code (so the dispatch loop reaches the chunk without a table
 -# lookup), its captured upvalues, the index of the next instruction and the
@@ -35,7 +35,7 @@ index f76a781..8361a53 100644
 -    upvalues: list[value.ObjRef]
      ip: int
      base: int
- 
+
 @@ -68,8 +64,7 @@ public def new_runtime(gc_stress: bool, clock: Option[Clock]) -> Runtime:
      frames: list[CallFrame] = []
      i = 0
@@ -46,9 +46,35 @@ index f76a781..8361a53 100644
          i += 1
      return Runtime(
          objects=[],
-@@ -245,105 +240,63 @@ def mark_table(marker: mut Marker, source: table.Table):
- 
- 
+@@ -149,6 +144,25 @@ public def function_obj(rt: Runtime, ref: value.ObjRef) -> object.FunctionObj:
+             return object.new_function()
+
+
++# Scalar reads avoid materializing a snapshot of unused collection fields.
++public def function_arity(rt: Runtime, ref: value.ObjRef) -> int:
++    match rt.objects[ref]:
++        case object.Obj.function(payload):
++            return payload.arity
++        case _:
++            assert False, "object is not a function"
++            return 0
++
++
++public def closure_function(rt: Runtime, ref: value.ObjRef) -> value.ObjRef:
++    match rt.objects[ref]:
++        case object.Obj.closure(payload):
++            return payload.function
++        case _:
++            assert False, "object is not a closure"
++            return value.NO_OBJ
++
++
+ public def closure_obj(rt: Runtime, ref: value.ObjRef) -> object.ClosureObj:
+     match rt.objects[ref]:
+         case object.Obj.closure(payload):
+@@ -245,105 +259,63 @@ def mark_table(marker: mut Marker, source: table.Table):
+
+
  def mark_roots(rt: mut Runtime):
 -    __wb_227 = rt.marker
 -    mark_table(mut __wb_227, rt.globals)
@@ -100,8 +126,8 @@ index f76a781..8361a53 100644
 -        rt.marker = __wb_247
 +        mark_object(mut marker, ref)
 +    rt.marker = marker
- 
- 
+
+
  # Marks everything one object references directly (SPEC §7.4 step 2).
  def blacken(rt: mut Runtime, ref: value.ObjRef):
 +    marker = rt.marker
@@ -176,8 +202,8 @@ index f76a781..8361a53 100644
          case _:
              pass
 +    rt.marker = marker
- 
- 
+
+
  def is_free(obj: object.Obj) -> bool:
 diff --git a/interpreter.my b/interpreter.my
 index ae03fa1..ab08301 100644
@@ -195,18 +221,17 @@ index ae03fa1..ab08301 100644
          case ast.Stmt.var_decl(node):
              match node.initializer:
 diff --git a/vm.my b/vm.my
-index 450eb63..1522f26 100644
+index 450eb63..8dbdc07 100644
 --- a/vm.my
 +++ b/vm.my
-@@ -18,6 +18,30 @@ public enum InterpretResult:
+@@ -18,6 +18,36 @@ public enum InterpretResult:
      RUNTIME_ERROR
- 
- 
+
+
 +# Cached data for the currently running frame. The Runtime stores only the
 +# scalar CallFrame so each instruction does not share code and upvalue lists.
 +record ExecFrame:
-+    closure: value.ObjRef
-+    function: object.FunctionObj
++    constants: list[value.Value]
 +    code: list[int]
 +    upvalues: list[value.ObjRef]
 +    ip: int
@@ -214,22 +239,29 @@ index 450eb63..1522f26 100644
 +
 +
 +def load_frame(rt: heap.Runtime, stored: heap.CallFrame) -> ExecFrame:
-+    closure = heap.closure_obj(rt, stored.closure)
-+    function = heap.function_obj(rt, closure.function)
-+    return ExecFrame(
-+        closure=stored.closure,
-+        function=function,
-+        code=function.code.code,
-+        upvalues=closure.upvalues,
-+        ip=stored.ip,
-+        base=stored.base
-+    )
++    match rt.objects[stored.closure]:
++        case object.Obj.closure(closure):
++            match rt.objects[closure.function]:
++                case object.Obj.function(function):
++                    return ExecFrame(
++                        constants=function.code.constants,
++                        code=function.code.code,
++                        upvalues=closure.upvalues,
++                        ip=stored.ip,
++                        base=stored.base
++                    )
++                case _:
++                    assert False, "object is not a function"
++        case _:
++            assert False, "object is not a closure"
++    return ExecFrame(constants=[], code=[], upvalues=[], ip=stored.ip, base=stored.base)
++
 +
 +
  def reset_stack(rt: mut heap.Runtime):
      rt.stack_top = 0
      rt.frame_count = 0
-@@ -32,15 +56,16 @@ def runtime_error(rt: mut heap.Runtime, o: mut output.Output, message: bytes) ->
+@@ -32,15 +62,16 @@ def runtime_error(rt: mut heap.Runtime, o: mut output.Output, message: bytes) ->
      i = rt.frame_count - 1
      while i >= 0:
          frame = rt.frames[i]
@@ -249,7 +281,19 @@ index 450eb63..1522f26 100644
              _ = line.append_range(name, 0, len(name))
              _ = line.append_utf8("()")
          output.error_line(mut o, bytes(line))
-@@ -134,9 +159,6 @@ def call(rt: mut heap.Runtime, o: mut output.Output, closure: value.ObjRef, coun
+@@ -125,18 +156,15 @@ def arity_error(rt: mut heap.Runtime, o: mut output.Output, arity: int, count: i
+
+ # Pushes a frame for the closure whose callee and arguments are on the stack.
+ def call(rt: mut heap.Runtime, o: mut output.Output, closure: value.ObjRef, count: int) -> bool:
+-    function = heap.function_obj(rt, heap.closure_obj(rt, closure).function)
+-    if count != function.arity:
+-        return arity_error(mut rt, mut o, function.arity, count)
++    arity = heap.function_arity(rt, heap.closure_function(rt, closure))
++    if count != arity:
++        return arity_error(mut rt, mut o, arity, count)
+     if rt.frame_count == heap.FRAMES_MAX:
+         return runtime_error(mut rt, mut o, b"Stack overflow.")
+     frame_index = rt.frame_count
      rt.frame_count = rt.frame_count + 1
      rt.frames[frame_index] = heap.CallFrame(
          closure=closure,
@@ -259,40 +303,41 @@ index 450eb63..1522f26 100644
          ip=0,
          base=rt.stack_top - count - 1
      )
-@@ -249,26 +271,26 @@ def concatenate(rt: mut heap.Runtime):
+@@ -249,26 +277,26 @@ def concatenate(rt: mut heap.Runtime):
      heap.push(mut rt, value.Value.obj(result))
- 
- 
+
+
 -def read_byte(frame: mut heap.CallFrame) -> int:
 +def read_byte(frame: mut ExecFrame) -> int:
      byte = frame.code[frame.ip]
      frame.ip = frame.ip + 1
      return byte
- 
- 
+
+
 -def read_short(frame: mut heap.CallFrame) -> int:
 +def read_short(frame: mut ExecFrame) -> int:
      frame.ip = frame.ip + 2
      return frame.code[frame.ip - 2] * 256 + frame.code[frame.ip - 1]
- 
- 
+
+
 -def read_constant(frame: mut heap.CallFrame) -> value.Value:
+-    return frame.function.code.constants[read_byte(mut frame)]
 +def read_constant(frame: mut ExecFrame) -> value.Value:
-     return frame.function.code.constants[read_byte(mut frame)]
- 
- 
++    return frame.constants[read_byte(mut frame)]
+
+
 -def read_string(frame: mut heap.CallFrame) -> value.ObjRef:
 +def read_string(frame: mut ExecFrame) -> value.ObjRef:
      return as_obj(read_constant(mut frame))
- 
- 
+
+
 -def get_global(rt: mut heap.Runtime, o: mut output.Output, frame: mut heap.CallFrame) -> bool:
 +def get_global(rt: mut heap.Runtime, o: mut output.Output, frame: mut ExecFrame) -> bool:
      name = read_string(mut frame)
      match table.get(rt.globals, name, heap.string_hash(rt, name)):
          case Some(found):
-@@ -280,7 +302,7 @@ def get_global(rt: mut heap.Runtime, o: mut output.Output, frame: mut heap.CallF
- 
+@@ -280,7 +308,7 @@ def get_global(rt: mut heap.Runtime, o: mut output.Output, frame: mut heap.CallF
+
  # Assigning an undefined global is an error; the entry the failed `set`
  # just made is deleted again, leaving a tombstone as clox does.
 -def set_global(rt: mut heap.Runtime, o: mut output.Output, frame: mut heap.CallFrame) -> bool:
@@ -300,44 +345,44 @@ index 450eb63..1522f26 100644
      name = read_string(mut frame)
      if heap.set_global(mut rt, name, heap.peek(rt, 0)):
          __wb_282 = rt.globals
-@@ -290,7 +312,7 @@ def set_global(rt: mut heap.Runtime, o: mut output.Output, frame: mut heap.CallF
+@@ -290,7 +318,7 @@ def set_global(rt: mut heap.Runtime, o: mut output.Output, frame: mut heap.CallF
      return True
- 
- 
+
+
 -def get_upvalue(rt: mut heap.Runtime, frame: mut heap.CallFrame):
 +def get_upvalue(rt: mut heap.Runtime, frame: mut ExecFrame):
      upvalue = heap.upvalue_obj(rt, frame.upvalues[read_byte(mut frame)])
      if upvalue.slot != object.NO_SLOT:
          heap.push(mut rt, rt.stack[upvalue.slot])
-@@ -298,7 +320,7 @@ def get_upvalue(rt: mut heap.Runtime, frame: mut heap.CallFrame):
+@@ -298,7 +326,7 @@ def get_upvalue(rt: mut heap.Runtime, frame: mut heap.CallFrame):
          heap.push(mut rt, upvalue.closed)
- 
- 
+
+
 -def set_upvalue(rt: mut heap.Runtime, frame: mut heap.CallFrame):
 +def set_upvalue(rt: mut heap.Runtime, frame: mut ExecFrame):
      ref = frame.upvalues[read_byte(mut frame)]
      upvalue = heap.upvalue_obj(rt, ref)
      if upvalue.slot != object.NO_SLOT:
-@@ -308,7 +330,7 @@ def set_upvalue(rt: mut heap.Runtime, frame: mut heap.CallFrame):
+@@ -308,7 +336,7 @@ def set_upvalue(rt: mut heap.Runtime, frame: mut heap.CallFrame):
          rt.objects[ref] = object.Obj.upvalue(upvalue)
- 
- 
+
+
 -def get_property(rt: mut heap.Runtime, o: mut output.Output, frame: mut heap.CallFrame) -> bool:
 +def get_property(rt: mut heap.Runtime, o: mut output.Output, frame: mut ExecFrame) -> bool:
      match instance_of(rt, heap.peek(rt, 0)):
          case Some(instance):
              name = read_string(mut frame)
-@@ -323,7 +345,7 @@ def get_property(rt: mut heap.Runtime, o: mut output.Output, frame: mut heap.Cal
+@@ -323,7 +351,7 @@ def get_property(rt: mut heap.Runtime, o: mut output.Output, frame: mut heap.Cal
              return runtime_error(mut rt, mut o, b"Only instances have properties.")
- 
- 
+
+
 -def set_property(rt: mut heap.Runtime, o: mut output.Output, frame: mut heap.CallFrame) -> bool:
 +def set_property(rt: mut heap.Runtime, o: mut output.Output, frame: mut ExecFrame) -> bool:
      match instance_of(rt, heap.peek(rt, 1)):
          case Some(instance):
              name = read_string(mut frame)
-@@ -381,7 +403,7 @@ def negate(rt: mut heap.Runtime, o: mut output.Output) -> bool:
- 
+@@ -381,7 +409,7 @@ def negate(rt: mut heap.Runtime, o: mut output.Output) -> bool:
+
  # Allocates the closure, pushes it (rooting it while upvalues are
  # captured), then fills its upvalues from the (is_local, index) pairs.
 -def make_closure(rt: mut heap.Runtime, frame: mut heap.CallFrame):
@@ -345,16 +390,16 @@ index 450eb63..1522f26 100644
      function_ref = read_string(mut frame)
      function = heap.function_obj(rt, function_ref)
      closure = object.new_closure(function_ref, function.upvalue_count)
-@@ -418,7 +440,7 @@ def inherit(rt: mut heap.Runtime, o: mut output.Output) -> bool:
+@@ -418,7 +446,7 @@ def inherit(rt: mut heap.Runtime, o: mut output.Output) -> bool:
      return True
- 
- 
+
+
 -def define_method(rt: mut heap.Runtime, frame: mut heap.CallFrame):
 +def define_method(rt: mut heap.Runtime, frame: mut ExecFrame):
      name = read_string(mut frame)
      methods = heap.class_obj(rt, as_obj(heap.peek(rt, 1))).methods
      _ = table.set(mut methods, name, heap.string_hash(rt, name), heap.peek(rt, 0))
-@@ -432,57 +454,79 @@ def define_method(rt: mut heap.Runtime, frame: mut heap.CallFrame):
+@@ -432,57 +460,79 @@ def define_method(rt: mut heap.Runtime, frame: mut heap.CallFrame):
  # The dispatch loop, one opcode per iteration of `frame`, the innermost
  # call frame. Handlers answer False after reporting a runtime error.
  def run(rt: mut heap.Runtime, o: mut output.Output) -> InterpretResult:
@@ -450,7 +495,7 @@ index 450eb63..1522f26 100644
          elif instruction == chunk.OP_JUMP:
              offset = read_short(mut frame)
              frame.ip = frame.ip + offset
-@@ -495,48 +539,53 @@ def run(rt: mut heap.Runtime, o: mut output.Output) -> InterpretResult:
+@@ -495,48 +545,53 @@ def run(rt: mut heap.Runtime, o: mut output.Output) -> InterpretResult:
              frame.ip = frame.ip - offset
          elif instruction == chunk.OP_CALL:
              count = read_byte(mut frame)
@@ -517,4 +562,4 @@ index 450eb63..1522f26 100644
 -        rt.frames[rt.frame_count - 1] = frame
          if not ok:
              return InterpretResult.RUNTIME_ERROR
- 
+

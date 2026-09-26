@@ -1,4 +1,5 @@
 //! Independent native QBE units. Source locations never enter native artifact bytes.
+const zero_failure_result = " call $memset(l %empty, w 0, l {d})\n";
 const slice_abi = ":myl_slice";
 const scalar_lower = @import("qbe_scalar.zig");
 const zero_local = @import("qbe_format.zig").zero_local;
@@ -7,6 +8,7 @@ const borrow_lower = @import("qbe_borrow.zig");
 const liveness = @import("qbe_liveness.zig");
 const ownership = @import("ownership.zig");
 const cow_lower = @import("qbe_cow.zig");
+const value_semantics = @import("value_semantics.zig");
 const moves_module = @import("qbe_moves.zig");
 const range_keys = @import("qbe_range_keys.zig");
 const loop_facts = @import("qbe_loop_facts.zig");
@@ -272,7 +274,7 @@ fn generateImpl(allocator: std.mem.Allocator, program_in: bytecode.Program, src:
         .pure = &.{},
         // COW-UNIQUE-1: the value-semantics switch enables the checks by
         // default; an explicit internal policy can request counting.
-        .cow = if (interface.policy.cow != .off) interface.policy.cow else if (@import("value_semantics.zig").enabled()) .checks else .off,
+        .cow = if (interface.policy.cow != .off) interface.policy.cow else if (value_semantics.enabled()) .checks else .off,
     };
     var reuse: Reuse = try .init(a, pass, interface.reuse);
     try runPasses(&pass, &reuse, src, standins, shape.lean);
@@ -1590,7 +1592,12 @@ const Emitter = struct {
         // QBE-LOOP-VERSION-1: only a build whose value guards are on has
         // anything to prove, and step accounting counts every instruction the
         // original executes, so a counted build keeps one copy.
-        if (self.checks and !self.step_checks) self.loop_plan = try loop_facts.plan(self.allocator, .{ .program = self.program, .function = f, .states = self.states });
+        if (self.checks and !self.step_checks) self.loop_plan = try loop_facts.plan(self.allocator, .{
+            .program = self.program,
+            .function = f,
+            .states = self.states,
+            .box_cow = self.cow != null and value_semantics.enabled(),
+        });
         if (self.cow) |state| try cow_lower.Lower(Emitter).veto(self, state);
         try self.findRoots();
         if (self.has_roots and self.has_safepoints) self.live_roots = try self.rootLiveness();
@@ -1645,6 +1652,7 @@ const Emitter = struct {
         const return_bytes = try self.returnStorageBytes();
         if (return_bytes != 0) {
             try self.print(" %empty =l alloc8 {d}\n", .{@max(8, return_bytes)});
+            if (self.cow == null) try self.print(zero_failure_result, .{@max(8, return_bytes)});
             if (self.heap_frame) try self.print(" %return_storage =l alloc8 {d}\n", .{@max(8, return_bytes)});
         }
         // QBE promotes a slot to a temporary only when its `alloc8` sits in the
@@ -1683,9 +1691,9 @@ const Emitter = struct {
         // QBE-COLD-FAILRET-1: only failed paths return `%empty`. Initializing
         // it in the entry block makes every successful aggregate-returning
         // call pay for a zero value it never reads.
-        if (return_bytes != 0) try self.print(" call $memset(l %empty, w 0, l {d})\n", .{@max(8, return_bytes)});
+        if (return_bytes != 0 and self.cow != null) try self.print(zero_failure_result, .{@max(8, return_bytes)});
         try self.print(" ret {s}\n@entry_failure\n", .{if (return_bytes == 0) "0" else "%empty"});
-        if (return_bytes != 0) try self.print(" call $memset(l %empty, w 0, l {d})\n", .{@max(8, return_bytes)});
+        if (return_bytes != 0 and self.cow != null) try self.print(zero_failure_result, .{@max(8, return_bytes)});
         try self.print(" ret {s}\n}}\n", .{if (return_bytes == 0) "0" else "%empty"});
         var text = try self.output.toOwnedSlice();
         // With no step check, the only reason to store a position is a trap trace
@@ -1731,6 +1739,17 @@ const Emitter = struct {
             .by_reference = addressed,
         }, self.arenas);
     }
+    /// A value-semantics projection of a recursive box may copy a pinned child
+    /// before yielding its private body, so root and borrow planning treat it
+    /// as a safepoint. Ordinary field reads and switch-off code stay inert.
+    pub fn boxProjectionAt(self: *Emitter, pc: usize, op: @FieldType(bytecode.Instruction, "op")) bool {
+        if (self.cow == null or !value_semantics.enabled() or op != .get_field) return false;
+        if (pc >= self.states.len) return false;
+        const stack = self.states[pc] orelse return false;
+        if (stack.len == 0) return false;
+        const owner = stack[stack.len - 1];
+        return owner.isAggregate() and self.program.records[owner.recordIndex()].collection.box;
+    }
     fn findRoots(self: *Emitter) GenerateError!void {
         const f = self.function;
         for (f.scope.locals) |local| self.has_roots = self.has_roots or (try self.layout(local.ty)).trace;
@@ -1739,7 +1758,7 @@ const Emitter = struct {
         };
         for (f.scope.instructions, 0..) |instruction, pc| {
             if (self.states[pc] == null) continue;
-            self.has_safepoints = self.has_safepoints or allocates(instruction.op);
+            self.has_safepoints = self.has_safepoints or allocates(instruction.op) or self.boxProjectionAt(pc, instruction.op);
         }
         // COW-UNIQUE-1: every copy a check or share makes is an allocation.
         if (self.cow) |state| self.has_safepoints = self.has_safepoints or state.plan.active();
@@ -1827,6 +1846,9 @@ const Emitter = struct {
         // frame protocol places after the entry block, because that scratch is
         // what stops QBE folding a null-like address into the load.
         if (value.size == 0) return false;
+        // A match binding's elided COW rebind leaves this slot untouched.
+        // Name its storage directly; storeLocal drops the redundant store.
+        if (value_copy_lower.selfStore(self, read.pc + 2, index)) return true;
         // The consumer is the first instruction whose own execution leaves the
         // stack at or below the operand this read pushes. Every instruction
         // before it either pushed another operand above ours or read ours; in
@@ -1846,6 +1868,9 @@ const Emitter = struct {
             consumer += 1;
         }
         const op = self.function.scope.instructions[consumer].op;
+        // A real value copy reads the source into private scratch before it
+        // marks or replaces any collection. It consumes the source address.
+        if (op == .value_copy) return value_copy_lower.copies(self, consumer);
         // A match arm's payload binding copies out of the scrutinee. Naming the
         // scrutinee's slot would copy a region onto itself, so that arm keeps
         // the scratch copy the other locals use.
@@ -2500,6 +2525,7 @@ const Emitter = struct {
     /// Lower `store_local` of operand slot `h - 1` into local `slot`.
     fn storeLocal(self: *Emitter, slot: typed.LocalId, h: usize) GenerateError!void {
         const index = @backingInt(slot);
+        if (value_copy_lower.selfStore(self, self.pc, index)) return;
         // QBE-MOVE-ELIDE-1: an alias's value already sits in the slot
         // it names, and an update written in place into this local's
         // own slot left nothing to copy.

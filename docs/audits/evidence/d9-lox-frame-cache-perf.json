@@ -1,0 +1,400 @@
+{
+  "cpu": 11,
+  "harness": "experiments/perf-gc-dict-20260925/scripts/pc.py",
+  "statistic": "median of three instructions:u",
+  "compiler_sha256": "5139b78f0d4da0c5e34ad563e9d503763fbc1669c1e76e69e7c1041c75e5ec66",
+  "compiler_changes": "8a31f237 plus 2b889ba5 cold-return emission",
+  "compiler_mode": "Debug",
+  "guest_mode": "ReleaseFast; LLVM opt3 fullLTO",
+  "before_source_commit": "b51cddc1",
+  "source_sha256": {
+    "ast.my": "e210fb35bf3125ba06ebb978bcb3592162020a77576542f2d049879a51479bf9",
+    "chunk.my": "b4f6e7ae6531b224f99e026f53fee3692c90d8f2b15d3c76ca5962f1803e4b66",
+    "compiler.my": "c550603195401ff6d9436b42d6fbf0c35051521da57e7b85281fc8fcf6ebe048",
+    "compiler_test.my": "582fe817dbeffa709961b5124370ce200510adb3ac0d246572ca1c0dc19ec08a",
+    "driver.my": "fe831d2ec08833d11139e790ab741903b27a8e0fb43582cac11ca664b4595836",
+    "driver_tests.my": "9eace4f6c8b33fd93331297f8a8195c41357b7c833b2e06e0c20594704113925",
+    "heap.my": "ab8451db8b4756b5dc30e99f4209a5891e3c350766c0e6c4eaaa4e0a80ce0aa2",
+    "heap_test.my": "c951153991a8d5d13ca1df6ded7c6f26c7b43a08ed2095f72c6091637b29b53f",
+    "interpreter.my": "2df9a4ca818ae77d842ab17a773fa3b628dfcf8a16a0528daccd61806a2478db",
+    "lox_strings.my": "383900dda10b9218caf2087e12a2e20089e4d48b0ec5fc3e17e960a3d70d83df",
+    "lox_strings_test.my": "a44545c64e9f75cc5af761d6c703feec83c4fc0a14d2678a1b2fce28067bd0c0",
+    "main.my": "18c1f669b1683123e635256c9f66c6db2766383391371c3822e61df7d9732274",
+    "natives.my": "2ff45343fded6d303e6233e0f787e63c319e860903e2c0c81ccbb71c2749d665",
+    "object.my": "08c0d5c6ae304ef4d0e1f5929f52b5d1dd47cd46e6c409392c0b5b1df9567ad7",
+    "output.my": "cdc79c8a9a5eca0106fb139bca5492da201f027b0499e5e00a492368317d194c",
+    "parser.my": "e9bd5d9c37e307d060ce165dc4fa0f276c2ff9dbe7cb21bd27cbdd94644b4edd",
+    "parser_test.my": "ffe2658f030c75b40a7c54d8f0c64e848e6679e13fc69cbef9a131ed7b120e4b",
+    "resolver.my": "41d41b2a1ddb3f6ab3fb73ad9eff69415b0450d890554766bfee37eac8d0903d",
+    "resolver_test.my": "72c5176ff15db240d8ec8ff8073fcdb7736e8c60ab47410bb60fce934c179d31",
+    "scanner.my": "af4bc6a57859318051dc47d6e1f6344ee98fbfff037e9be93c0a103765cd3e83",
+    "scanner_test.my": "1d7fbb34b0de402657786641217e81c9ae286cab14baf2716de2db875ae39ad0",
+    "table.my": "c875ae493dbc0d6c1b70202746b0f1d2211190fa1276b9d492778455c0d0b2ca",
+    "table_test.my": "38279f9135e953484e6844994bc070c4156d1eb31ab4de0f295efbea17c19555",
+    "value.my": "3b2a444e77c6a703b1aedad3c89ef38cad70aa3bb6cba1716b623980ff9a76b0",
+    "value_test.my": "b766d22b25a8a8a090b4a059030cfc7462022fdacb66a0a91bf8a9e09a53fed4",
+    "vm.my": "cb2671e53519a8346b8a15c9b0e047ad67b5db0f8c1e35afd809ed2d74ed26db"
+  },
+  "samples": {
+    "lox/vm/binary_trees|qbe": {
+      "ip-deferred": {
+        "counts": [
+          {
+            "status": 0,
+            "instructions": 10382646302,
+            "cycles": 3009895326
+          },
+          {
+            "status": 0,
+            "instructions": 10382658422,
+            "cycles": 2997750456
+          },
+          {
+            "status": 0,
+            "instructions": 10382651255,
+            "cycles": 3073405332
+          }
+        ],
+        "median": 10382651255,
+        "sha256": "3efc9ab5f4bbf05a1f7335b183a23a3c8152ec5ef67125be58a2a278730d3b9c"
+      },
+      "compact-exec": {
+        "counts": [
+          {
+            "status": 0,
+            "instructions": 10137239420,
+            "cycles": 3049600409
+          },
+          {
+            "status": 0,
+            "instructions": 10137239261,
+            "cycles": 3035152594
+          },
+          {
+            "status": 0,
+            "instructions": 10137244295,
+            "cycles": 2919182729
+          }
+        ],
+        "median": 10137239420,
+        "sha256": "e8ba4123f16335301ac2b038fb28e7a0f06ea532ab8479baebe474c79caa56b9"
+      },
+      "ratio": 0.9763632786103823
+    },
+    "lox/vm/binary_trees|llvm": {
+      "ip-deferred": {
+        "counts": [
+          {
+            "status": 0,
+            "instructions": 5618284651,
+            "cycles": 2381844112
+          },
+          {
+            "status": 0,
+            "instructions": 5618284484,
+            "cycles": 2290697023
+          },
+          {
+            "status": 0,
+            "instructions": 5618291426,
+            "cycles": 2288071812
+          }
+        ],
+        "median": 5618284651,
+        "sha256": "be85b88360504e006415ff7a13d76e20195b04946196ab5a27637d315c3667ab"
+      },
+      "compact-exec": {
+        "counts": [
+          {
+            "status": 0,
+            "instructions": 5512842923,
+            "cycles": 2164716662
+          },
+          {
+            "status": 0,
+            "instructions": 5512836084,
+            "cycles": 2119780372
+          },
+          {
+            "status": 0,
+            "instructions": 5512840337,
+            "cycles": 2153466698
+          }
+        ],
+        "median": 5512840337,
+        "sha256": "0b4b3877f7987d71716fc597c59e5af99cffaba3ceba753cba69a1e64defbb7e"
+      },
+      "ratio": 0.9812319381181173
+    },
+    "lox/vm/closures|qbe": {
+      "ip-deferred": {
+        "counts": [
+          {
+            "status": 0,
+            "instructions": 15522693342,
+            "cycles": 3892939893
+          },
+          {
+            "status": 0,
+            "instructions": 15522696243,
+            "cycles": 3788860936
+          },
+          {
+            "status": 0,
+            "instructions": 15522693051,
+            "cycles": 3852026789
+          }
+        ],
+        "median": 15522693342,
+        "sha256": "3efc9ab5f4bbf05a1f7335b183a23a3c8152ec5ef67125be58a2a278730d3b9c"
+      },
+      "compact-exec": {
+        "counts": [
+          {
+            "status": 0,
+            "instructions": 14589420094,
+            "cycles": 3625987226
+          },
+          {
+            "status": 0,
+            "instructions": 14589423668,
+            "cycles": 3616701696
+          },
+          {
+            "status": 0,
+            "instructions": 14589420116,
+            "cycles": 3599436103
+          }
+        ],
+        "median": 14589420116,
+        "sha256": "e8ba4123f16335301ac2b038fb28e7a0f06ea532ab8479baebe474c79caa56b9"
+      },
+      "ratio": 0.9398768496266799
+    },
+    "lox/vm/closures|llvm": {
+      "ip-deferred": {
+        "counts": [
+          {
+            "status": 0,
+            "instructions": 7070070516,
+            "cycles": 2633881825
+          },
+          {
+            "status": 0,
+            "instructions": 7070070571,
+            "cycles": 2629257439
+          },
+          {
+            "status": 0,
+            "instructions": 7070070703,
+            "cycles": 2616444208
+          }
+        ],
+        "median": 7070070571,
+        "sha256": "be85b88360504e006415ff7a13d76e20195b04946196ab5a27637d315c3667ab"
+      },
+      "compact-exec": {
+        "counts": [
+          {
+            "status": 0,
+            "instructions": 6669186591,
+            "cycles": 2241609575
+          },
+          {
+            "status": 0,
+            "instructions": 6669183384,
+            "cycles": 2240521037
+          },
+          {
+            "status": 0,
+            "instructions": 6669183434,
+            "cycles": 2247055922
+          }
+        ],
+        "median": 6669183434,
+        "sha256": "0b4b3877f7987d71716fc597c59e5af99cffaba3ceba753cba69a1e64defbb7e"
+      },
+      "ratio": 0.943298000638868
+    },
+    "lox/vm/fib|qbe": {
+      "ip-deferred": {
+        "counts": [
+          {
+            "status": 0,
+            "instructions": 7016674982,
+            "cycles": 1586423084
+          },
+          {
+            "status": 0,
+            "instructions": 7016674987,
+            "cycles": 1565077847
+          },
+          {
+            "status": 0,
+            "instructions": 7016674981,
+            "cycles": 1566972870
+          }
+        ],
+        "median": 7016674982,
+        "sha256": "3efc9ab5f4bbf05a1f7335b183a23a3c8152ec5ef67125be58a2a278730d3b9c"
+      },
+      "compact-exec": {
+        "counts": [
+          {
+            "status": 0,
+            "instructions": 6541527352,
+            "cycles": 1524164036
+          },
+          {
+            "status": 0,
+            "instructions": 6541527329,
+            "cycles": 1519125790
+          },
+          {
+            "status": 0,
+            "instructions": 6541527356,
+            "cycles": 1520907549
+          }
+        ],
+        "median": 6541527352,
+        "sha256": "e8ba4123f16335301ac2b038fb28e7a0f06ea532ab8479baebe474c79caa56b9"
+      },
+      "ratio": 0.9322830783499443
+    },
+    "lox/vm/fib|llvm": {
+      "ip-deferred": {
+        "counts": [
+          {
+            "status": 0,
+            "instructions": 2646967470,
+            "cycles": 973317135
+          },
+          {
+            "status": 0,
+            "instructions": 2646967513,
+            "cycles": 975169065
+          },
+          {
+            "status": 0,
+            "instructions": 2646967472,
+            "cycles": 972921131
+          }
+        ],
+        "median": 2646967472,
+        "sha256": "be85b88360504e006415ff7a13d76e20195b04946196ab5a27637d315c3667ab"
+      },
+      "compact-exec": {
+        "counts": [
+          {
+            "status": 0,
+            "instructions": 2443332767,
+            "cycles": 796652613
+          },
+          {
+            "status": 0,
+            "instructions": 2443332756,
+            "cycles": 801073040
+          },
+          {
+            "status": 0,
+            "instructions": 2443332757,
+            "cycles": 797006198
+          }
+        ],
+        "median": 2443332757,
+        "sha256": "0b4b3877f7987d71716fc597c59e5af99cffaba3ceba753cba69a1e64defbb7e"
+      },
+      "ratio": 0.923068674944412
+    },
+    "lox/vm/trees|qbe": {
+      "ip-deferred": {
+        "counts": [
+          {
+            "status": 0,
+            "instructions": 11185837911,
+            "cycles": 4184248235
+          },
+          {
+            "status": 0,
+            "instructions": 11185843073,
+            "cycles": 4024640349
+          },
+          {
+            "status": 0,
+            "instructions": 11185831620,
+            "cycles": 3973383927
+          }
+        ],
+        "median": 11185837911,
+        "sha256": "3efc9ab5f4bbf05a1f7335b183a23a3c8152ec5ef67125be58a2a278730d3b9c"
+      },
+      "compact-exec": {
+        "counts": [
+          {
+            "status": 0,
+            "instructions": 10915101776,
+            "cycles": 3929726339
+          },
+          {
+            "status": 0,
+            "instructions": 10915102090,
+            "cycles": 4080766113
+          },
+          {
+            "status": 0,
+            "instructions": 10915114019,
+            "cycles": 4178430396
+          }
+        ],
+        "median": 10915102090,
+        "sha256": "e8ba4123f16335301ac2b038fb28e7a0f06ea532ab8479baebe474c79caa56b9"
+      },
+      "ratio": 0.975796554254218
+    },
+    "lox/vm/trees|llvm": {
+      "ip-deferred": {
+        "counts": [
+          {
+            "status": 0,
+            "instructions": 7362655954,
+            "cycles": 3561859416
+          },
+          {
+            "status": 0,
+            "instructions": 7362656931,
+            "cycles": 3552724037
+          },
+          {
+            "status": 0,
+            "instructions": 7362655619,
+            "cycles": 3597474426
+          }
+        ],
+        "median": 7362655954,
+        "sha256": "be85b88360504e006415ff7a13d76e20195b04946196ab5a27637d315c3667ab"
+      },
+      "compact-exec": {
+        "counts": [
+          {
+            "status": 0,
+            "instructions": 7246129330,
+            "cycles": 3669636570
+          },
+          {
+            "status": 0,
+            "instructions": 7246142355,
+            "cycles": 3883953864
+          },
+          {
+            "status": 0,
+            "instructions": 7246129585,
+            "cycles": 3629801186
+          }
+        ],
+        "median": 7246129585,
+        "sha256": "0b4b3877f7987d71716fc597c59e5af99cffaba3ceba753cba69a1e64defbb7e"
+      },
+      "ratio": 0.984173324174316
+    }
+  }
+}

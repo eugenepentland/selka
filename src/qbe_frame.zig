@@ -220,6 +220,9 @@ fn initializeStorage(comptime Emitter: type, self: *Emitter) GenerateError!void 
         // A parameter is stored into its slot below, before any instruction
         // can run, so a root push can never observe it unset.
         if (i < f.signature.parameter_count) continue;
+        // Reads and roots of a COW move alias use its owner's storage, and
+        // stores to it emit nothing. Its unused physical slot needs no clear.
+        if (self.cow != null and self.moves.aliased(i)) continue;
         const placeholder = try placeholderBytes(Emitter, self, i, local.ty);
         if (placeholder != 0) {
             try self.print(" call $memset(l %lz{d}, w 0, l {d})\n storel %lz{d}, %l{d}\n", .{ i, placeholder, i, i });

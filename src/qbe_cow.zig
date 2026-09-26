@@ -28,6 +28,8 @@ const qbe_alloc = @import("qbe_alloc.zig");
 const cow_keep_label = "@cowkeep{d}\n";
 const store_pointer = " storel %v{d}, %v{d}\n";
 const store_local = " storel %v{d}, %l{d}\n";
+const store_operand = " storel %v{d}, %s{d}\n";
+const unique_call = " %v{d} =l call $myl_native_cow_unique(l %heap, l %v{d})\n";
 
 /// Failures emitting copy-on-write code can meet.
 pub const Error = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
@@ -190,7 +192,7 @@ fn pinCall(comptime E: type, self: *E, callee: bytecode.Function, args: []usize,
 }
 
 fn reuseMutArgument(comptime E: type, self: *E, arg: *usize, previous: usize, slot: usize) Error!void {
-    try self.print(" storel %v{d}, %s{d}\n", .{ previous, slot });
+    try self.print(store_operand, .{ previous, slot });
     arg.* = try self.load("s", slot);
 }
 
@@ -201,12 +203,13 @@ fn prepareMutArgument(comptime E: type, self: *E, arg: *usize, source: @import("
     if (source.origin != .local or source.local >= self.function.scope.locals.len or
         (source.part != .whole and source.part != .field)) return;
     const label = self.temp();
-    try testShared(E, self, arg.*, label);
-    const copy = self.temp();
-    try self.print(" %v{d} =l call $myl_native_cow_unique(l %heap, l %v{d})\n", .{ copy, arg.* });
-    try self.require(copy, format.allocation_failure);
     if (source.part == .whole) {
+        try testShared(E, self, arg.*, label);
+        const copy = self.temp();
+        try self.print(unique_call, .{ copy, arg.* });
+        try self.require(copy, format.allocation_failure);
         try self.print(store_local, .{ copy, source.local });
+        try self.print(store_operand, .{ copy, slot });
     } else {
         if (source.read == cow_plan.none) return error.InternalError;
         var end = source.read + 1;
@@ -214,11 +217,23 @@ fn prepareMutArgument(comptime E: type, self: *E, arg: *usize, source: @import("
             .get_field, .wrap_domain, .unwrap_domain => {},
             else => break,
         };
-        const cursor = try fieldChainRange(E, self, source.read + 1, end, try fieldBase(E, self, source.local));
+        const cursor = try fieldChainRange(E, self, source.read + 1, end, try fieldBase(E, self, source.local), true);
+        // Detachment can share an old direct child or replace a pinned one in
+        // the new body. Reload the current child before checking uniqueness.
+        // The unique copy then lives in an SSA temporary only until its store,
+        // with no allocating operation between them.
+        const current = try self.load("v", cursor.address);
+        try self.print(store_operand, .{ current, slot });
+        try testShared(E, self, current, label);
+        const copy = self.temp();
+        if (cursor.cell orelse cursor.holder) |held| {
+            try self.print(" %v{d} =l call $myl_native_cow_unique_in(l %heap, l %v{d}, l %v{d})\n", .{ copy, current, held });
+        } else try self.print(unique_call, .{ copy, current });
+        try self.require(copy, format.allocation_failure);
         if (cursor.cell) |body| try qbe_alloc.barrier(*E, self, body);
         try self.print(store_pointer, .{ copy, cursor.address });
+        try self.print(store_operand, .{ copy, slot });
     }
-    try self.print(" storel %v{d}, %s{d}\n", .{ copy, slot });
     try self.print(cow_keep_label, .{label});
     arg.* = try self.load("s", slot);
 }
@@ -265,7 +280,7 @@ fn copyCall(comptime E: type, self: *E, value: usize, container: ?usize, stack: 
     const copy = self.temp();
     if (container) |held| {
         try self.print(" %v{d} =l call $myl_native_cow_unique_in(l %heap, l %v{d}, l %v{d})\n", .{ copy, value, held });
-    } else try self.print(" %v{d} =l call $myl_native_cow_unique(l %heap, l %v{d})\n", .{ copy, value });
+    } else try self.print(unique_call, .{ copy, value });
     if (pushed) try self.restoreRoots();
     try self.require(copy, format.allocation_failure);
     return copy;
@@ -286,7 +301,7 @@ fn uniqueLocal(comptime E: type, self: *E, unique: cow_plan.Unique, stack: []con
 /// Clone a dictionary stored through record fields before reading an entry
 /// for a nested write; the clone marks held values shared.
 fn uniqueField(comptime E: type, self: *E, place: cow_plan.Place, stack: []const typed.Type) Error!void {
-    const cursor = try fieldChainRange(E, self, place.base + 1, place.fields_end, try fieldBase(E, self, place.parent));
+    const cursor = try fieldChainRange(E, self, place.base + 1, place.fields_end, try fieldBase(E, self, place.parent), false);
     const value = try self.load("v", cursor.address);
     const label = self.temp();
     try testShared(E, self, value, label);
@@ -325,9 +340,9 @@ fn filledPlace(comptime E: type, self: *E, pc: usize) Error!struct { local: u32,
 }
 
 /// Where a place's value lives while its write-back address is computed: the
-/// temporary holding that address, and the `class` body it lies in, whose
-/// store needs the generational barrier, or null.
-const Cursor = struct { address: usize, cell: ?usize };
+/// temporary holding that address, the `class` or detached box body it lies
+/// in, and an outer list/dictionary keeping an element address alive.
+const Cursor = struct { address: usize, cell: ?usize, holder: ?usize = null };
 
 /// Make the value a place's fill stores unique: copy it when it is shared,
 /// write the copy back into the place it was read from, and store the copy.
@@ -338,29 +353,38 @@ fn fillPlace(comptime E: type, self: *E, pc: usize, stack: []const typed.Type) E
     const place = (try filledPlace(E, self, pc)).place;
     const top = stack.len - 1;
     const label = self.temp();
-    const value = try self.load("s", top);
-    try testShared(E, self, value, label);
+    var value = try self.load("s", top);
+    const box_path = placeHasBox(E, self, place);
+    if (!box_path) try testShared(E, self, value, label);
     var container: ?usize = null;
     var cursor: Cursor = switch (place.step) {
         .element => element: {
             const list = try self.load("l", place.parent);
             container = list;
-            break :element .{ .address = try elementSlot(E, self, place, list), .cell = null };
+            break :element .{ .address = try elementSlot(E, self, place, list), .cell = null, .holder = list };
         },
         .entry => entry: {
             const dictionary = try self.load("l", place.parent);
             container = dictionary;
-            break :entry .{ .address = try entrySlot(E, self, place, dictionary), .cell = null };
+            break :entry .{ .address = try entrySlot(E, self, place, dictionary), .cell = null, .holder = dictionary };
         },
         .entry_field => entry: {
-            const cursor_field = try fieldChainRange(E, self, place.base + 1, place.fields_end, try fieldBase(E, self, place.parent));
+            const cursor_field = try fieldChainRange(E, self, place.base + 1, place.fields_end, try fieldBase(E, self, place.parent), false);
             const dictionary = try self.load("v", cursor_field.address);
             container = dictionary;
-            break :entry .{ .address = try entrySlot(E, self, place, dictionary), .cell = null };
+            break :entry .{ .address = try entrySlot(E, self, place, dictionary), .cell = null, .holder = dictionary };
         },
         .field => try fieldBase(E, self, place.parent),
     };
     if (place.step != .entry_field) cursor = try fieldChain(E, self, place, cursor);
+    if (box_path) {
+        // Detaching a box shares its old direct child (or replaces a pinned
+        // one), so the operand read before the detachment is stale. Test and
+        // mutate the child now held by the detached path.
+        value = try self.load("v", cursor.address);
+        try self.store(top, value);
+        try testShared(E, self, value, label);
+    }
     const copy = try copyCall(E, self, value, cursor.cell orelse container, stack);
     if (cursor.cell) |body| try qbe_alloc.barrier(*E, self, body);
     try self.print(store_pointer, .{ copy, cursor.address });
@@ -377,6 +401,20 @@ fn fillPlace(comptime E: type, self: *E, pc: usize, stack: []const typed.Type) E
     }
     try self.store(top, copy);
     try self.print(cow_keep_label, .{label});
+}
+
+fn placeHasBox(comptime E: type, self: *E, place: cow_plan.Place) bool {
+    const end = switch (place.step) {
+        .field, .element, .entry => place.fill,
+        .entry_field => place.fields_end,
+    };
+    for (place.base + 1..end) |pc| {
+        if (self.function.scope.instructions[pc].op != .get_field) continue;
+        const operands = self.states[pc] orelse continue;
+        const source = operands[operands.len - 1];
+        if (self.program.records[source.recordIndex()].collection.box) return true;
+    }
+    return false;
 }
 
 /// The address of the element a place's base read took, in its list's
@@ -427,10 +465,10 @@ fn fieldBase(comptime E: type, self: *E, parent: u32) Error!Cursor {
 /// of an inline record lies inside the value, one of a `class` inside the
 /// body its reference names.
 fn fieldChain(comptime E: type, self: *E, place: cow_plan.Place, start: Cursor) Error!Cursor {
-    return fieldChainRange(E, self, place.base + 1, place.fill, start);
+    return fieldChainRange(E, self, place.base + 1, place.fill, start, false);
 }
 
-fn fieldChainRange(comptime E: type, self: *E, begin: usize, end: usize, start: Cursor) Error!Cursor {
+fn fieldChainRange(comptime E: type, self: *E, begin: usize, end: usize, start: Cursor, roots_published: bool) Error!Cursor {
     var cursor = start;
     for (begin..end) |pc| {
         const index = switch (self.function.scope.instructions[pc].op) {
@@ -443,10 +481,31 @@ fn fieldChainRange(comptime E: type, self: *E, begin: usize, end: usize, start: 
         const member = try self.field(source, index);
         if (self.program.records[source.recordIndex()].isManagedRecord()) {
             const body = try self.load("v", cursor.address);
-            cursor = .{ .address = try self.address(body, member.offset), .cell = body };
+            if (self.program.records[source.recordIndex()].collection.box and @import("value_semantics.zig").enabled()) {
+                // A nested write must never target an immutable box's old
+                // body. Detach each box on the path before descending; the
+                // previous cursor then names either owned inline storage or
+                // an ancestor box already detached by this walk.
+                const copy = try detachBox(E, self, source, body, cursor, roots_published);
+                cursor = .{ .address = try self.address(copy, member.offset), .cell = copy };
+            } else cursor = .{ .address = try self.address(body, member.offset), .cell = body };
         } else cursor.address = try self.address(cursor.address, member.offset);
     }
     return cursor;
+}
+
+fn detachBox(comptime E: type, self: *E, ty: typed.Type, body: usize, cursor: Cursor, roots_published: bool) Error!usize {
+    const pushed = if (roots_published) false else try self.roots(self.states[self.pc] orelse return error.InternalError);
+    const copy = self.temp();
+    const descriptor = try self.descriptor(ty);
+    if (cursor.cell orelse cursor.holder) |parent| {
+        try self.print(" %v{d} =l call $myl_native_cow_clone_box(l %heap, l extern ${s}, l %v{d}, l %v{d})\n", .{ copy, descriptor, body, parent });
+    } else try self.print(" %v{d} =l call $myl_native_cow_clone_box(l %heap, l extern ${s}, l %v{d}, l 0)\n", .{ copy, descriptor, body });
+    if (pushed) try self.restoreRoots();
+    try self.require(copy, format.allocation_failure);
+    if (cursor.cell) |parent| try qbe_alloc.barrier(*E, self, parent);
+    try self.print(store_pointer, .{ copy, cursor.address });
+    return copy;
 }
 
 /// Share the payloads of the operand `depth` places below the top.

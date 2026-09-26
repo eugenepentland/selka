@@ -54,6 +54,40 @@ const assigned =
     \\    return len(xs) * 10 + len(ys)
 ;
 
+// spec: QBE-VALUECOPY-BORROW-1
+test "copy on write: payload return copies straight into the private transfer scratch" {
+    const saved = value_semantics.enabled();
+    value_semantics.setEnabled(true);
+    defer value_semantics.setEnabled(saved);
+    const source =
+        \\record Box:
+        \\    items: list[int]
+        \\    number: int
+        \\
+        \\union Item:
+        \\    box: Box,
+        \\    empty
+        \\
+        \\def take(items: list[Item]) -> Box:
+        \\    match items[0]:
+        \\        case Item.box(payload):
+        \\            return payload
+        \\        case Item.empty:
+        \\            return Box([], 0)
+        \\
+        \\def main() -> int:
+        \\    items = [Item.box(Box([1], 7))]
+        \\    copied = take(items)
+        \\    copied.items.append(2)
+        \\    return len(take(items).items) * 10 + len(copied.items)
+    ;
+    const a = std.testing.allocator;
+    const il = try unitText(a, source, "take", checks);
+    defer a.free(il);
+    try std.testing.expectEqual(@as(usize, 0), count(il, "blit %l"));
+    try std.testing.expect(count(il, "call $myl_qbe_cow_transfer(") > 0);
+}
+
 // spec: COW-SHARED-1
 test "copy on write: a copy transfer shares the list and the first write through either name copies it" {
     // Retain the internal phase-one path during the explicit legacy window.
@@ -107,6 +141,93 @@ test "copy on write: a flat record shares two leaves inline with a rooted pinned
     defer a.free(il);
     try std.testing.expectEqual(@as(usize, 2), count(il, "\n@vcpresent"));
     try std.testing.expectEqual(@as(usize, 1), count(il, "call $myl_qbe_cow_transfer("));
+}
+
+// spec-case: COW-NESTED-1
+test "copy on write: recursive box projection protects a child exposed before a later box copy" {
+    const saved = value_semantics.enabled();
+    value_semantics.setEnabled(true);
+    defer value_semantics.setEnabled(saved);
+    const source =
+        \\record Branch:
+        \\    items: list[int]
+        \\    next: Option[Branch]
+        \\
+        \\def main() -> int:
+        \\    root = Branch(items=[0], next=Some(Branch(items=[1], next=None)))
+        \\    exposed = root.next
+        \\    copied = root
+        \\    if exposed is None:
+        \\        return 0
+        \\    exposed.items.append(2)
+        \\    old = copied.next
+        \\    if old is None:
+        \\        return 0
+        \\    return len(old.items) * 10 + len(exposed.items)
+    ;
+    try std.testing.expectEqual(@as(i64, 12), try run(std.testing.allocator, source, false));
+    try std.testing.expectEqual(@as(i64, 12), try run(std.testing.allocator, source, true));
+    const a = std.testing.allocator;
+    const il = try unitText(a, source, "main", checks);
+    defer a.free(il);
+    try std.testing.expect(count(il, "call $myl_qbe_cow_unbox(") > 0);
+    // A zero-length array makes a direct recursive record-field cycle
+    // inhabitable. A nested write must detach that box before writeback.
+    const direct =
+        \\record A:
+        \\    child: B
+        \\
+        \\record B:
+        \\    items: list[int]
+        \\    tail: [0]A
+        \\
+        \\def main() -> int:
+        \\    first = A(child=B(items=[1], tail=[]))
+        \\    changed = first
+        \\    changed.child.items.append(2)
+        \\    return len(first.child.items) * 10 + len(changed.child.items)
+    ;
+    try std.testing.expectEqual(@as(i64, 12), try run(a, direct, false));
+    try std.testing.expectEqual(@as(i64, 12), try run(a, direct, true));
+    const direct_il = try unitText(a, direct, "main", checks);
+    defer a.free(direct_il);
+    try std.testing.expect(count(direct_il, "call $myl_native_cow_clone_box(") > 0);
+    const element =
+        \\record A:
+        \\    child: B
+        \\
+        \\record B:
+        \\    items: list[int]
+        \\    tail: [0]A
+        \\
+        \\def main() -> int:
+        \\    first = A(child=B(items=[1], tail=[]))
+        \\    values: list[A] = [first]
+        \\    values[0].child.items.append(2)
+        \\    return len(first.child.items) * 10 + len(values[0].child.items)
+    ;
+    try std.testing.expectEqual(@as(i64, 12), try run(a, element, true));
+    const pure_call =
+        \\record A:
+        \\    child: B
+        \\
+        \\record B:
+        \\    items: list[int]
+        \\    tail: [0]A
+        \\
+        \\def set_first(xs: mut list[int]) -> None:
+        \\    xs[0] = 7
+        \\
+        \\def main() -> int:
+        \\    sibling = [[11], [22], [33]]
+        \\    original = A(child=B(items=[1], tail=[]))
+        \\    changed = original
+        \\    set_first(mut changed.child.items)
+        \\    if sibling[0][0] == 11 and sibling[2][0] == 33 and original.child.items == [1] and changed.child.items == [7]:
+        \\        return 1
+        \\    return 0
+    ;
+    try std.testing.expectEqual(@as(i64, 1), try run(a, pure_call, true));
 }
 
 // spec: COW-UNIQUE-1

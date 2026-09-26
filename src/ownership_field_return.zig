@@ -10,7 +10,7 @@ const li = model.li;
 const Transfer = struct { source: u32, target: u32, field: usize, copy: usize };
 
 /// Remove both copy sites for a proven unconditional field return. A borrowed
-/// source, an observation, a branch, or a surviving temporary keeps the copies.
+/// source, an observation, an exit, or a surviving temporary keeps the copies.
 pub fn elide(ctx: *const Context, owners: []const bool, copies: []bool) void {
     for (ctx.instructions(), 0..) |instruction, pc| {
         if (instruction.op != .value_copy or !copies[pc]) continue;
@@ -56,27 +56,31 @@ fn returnSite(ctx: *const Context, transfer: Transfer) ?usize {
     return null;
 }
 
-// Forward diamonds (including signed-index normalization) may rejoin before
-// the store-back. Every edge must stay inside this region or enter its final
-// store-back; no outside edge may enter after extraction.
+// Branches, loops and match arms may rejoin before the store-back. Every
+// edge must stay inside this region or enter its final store-back; no outside
+// edge may enter after extraction, including at the store-back itself.
 fn closedFlow(ctx: *const Context, start: usize, end: usize) bool {
     for (ctx.instructions(), 0..) |instruction, pc| {
         const inside = pc >= start and pc < end;
         const op = instruction.op;
         if (inside) {
-            if (!sources.fallsThrough(op) and op != .jump) return false;
-            if (op == .try_result or op == .switch_variant) return false;
+            if (!sources.fallsThrough(op) and op != .jump and op != .switch_variant) return false;
+            if (op == .try_result) return false;
         }
         var buffer: [2]usize = undefined;
         for (sources.branchTargets(op, &buffer)) |target| {
-            if (inside and (target <= pc or target > end)) return false;
-            if (!inside and target >= start and target < end) return false;
+            if (!closedEdge(inside, target, start, end)) return false;
         }
         if (op == .switch_variant) for (op.switch_variant.arms) |arm| {
-            if (arm.target >= start and arm.target < end) return false;
+            if (!closedEdge(inside, arm.target, start, end)) return false;
         };
     }
     return true;
+}
+
+fn closedEdge(inside: bool, target: usize, start: usize, end: usize) bool {
+    const enters = target >= start and target <= end;
+    return inside == enters;
 }
 
 fn straight(ctx: *const Context, pc: usize) bool {
@@ -141,7 +145,10 @@ fn writeback(ctx: *const Context, transfer: Transfer, pc: usize) bool {
     const update = ops[9].op.update_record;
     if (update.ty != ctx.locals.list[transfer.source].ty or update.indices.len != 1 or update.indices[0] != transfer.field) return false;
     if (!localIs(ops[10].op, .store_local, transfer.source)) return false;
-    for (pc..pc + 11) |at| if (!straight(ctx, at)) return false;
+    // The first load may be the region's join. closedFlow verifies that every
+    // branch entering it comes from after this extraction.
+    if (!ctx.reachable(pc)) return false;
+    for (pc + 1..pc + 11) |at| if (!straight(ctx, at)) return false;
     return !ctx.live.after(pc + 10, transfer.target) and !ctx.live.after(pc + 10, value) and !ctx.live.after(pc + 10, parent);
 }
 

@@ -166,6 +166,45 @@ test "record field return avoids copies only without observations or exits" {
     try t.expect(conditional_observation.copies >= 1);
 }
 
+// spec-case: COW-FIELD-RETURN-1
+test "record field return accepts closed loops and match joins" {
+    const loop = try fieldReturnSites("    i = 0\n    while i < 3:\n        push(mut work)\n        i += 1\n    owner.box = work\n");
+    try t.expectEqual(@as(usize, 0), loop.copies);
+    const matched = try fieldReturnSites("    choice: Option[int] = Some(3)\n    match choice:\n        case Some(n):\n" ++
+        "            for i in range(n):\n                push(mut work)\n        case None:\n            push(mut work)\n    owner.box = work\n");
+    try t.expectEqual(@as(usize, 0), matched.copies);
+    const observed = try fieldReturnSites("    for i in range(3):\n        assert len(owner.box.items) == 1\n        push(mut work)\n    owner.box = work\n");
+    try t.expect(observed.copies >= 1);
+    const exits = try fieldReturnSites("    for i in range(3):\n        push(mut work)\n        if stop:\n            return\n    owner.box = work\n");
+    try t.expect(exits.copies >= 1);
+    const breaks = try fieldReturnSites("    for i in range(3):\n        if stop:\n            break\n        push(mut work)\n    owner.box = work\n");
+    try t.expectEqual(@as(usize, 0), breaks.copies);
+    const continues = try fieldReturnSites("    for i in range(3):\n        if stop:\n            continue\n        push(mut work)\n    owner.box = work\n");
+    try t.expectEqual(@as(usize, 0), continues.copies);
+}
+
+// spec-case: COW-FIELD-RETURN-1
+test "record field return rejects an external branch into its store back" {
+    const source =
+        \\record Box:
+        \\    items: list[int]
+        \\
+        \\record Owner:
+        \\    box: Box
+        \\
+        \\def change(owner: mut Owner, stop: bool):
+        \\    if stop:
+        \\        work = owner.box
+        \\        work.items.append(2)
+        \\    else:
+        \\        work = Box([3])
+        \\    owner.box = work
+        \\
+    ;
+    const counted = try sites(source ++ entry, true);
+    try t.expect(counted.copies >= 1);
+}
+
 // spec-case: VALUE-SEMANTICS-1
 test "value semantics off places no copy site at all" {
     const off = try sites(assignments, false);
