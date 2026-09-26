@@ -1,10 +1,11 @@
 //! Content-addressed native objects and direct assembler/compiler invocations.
 const std = @import("std");
 const fs = @import("qbe_build_io.zig");
+const ownership_contract = @import("runtime_contract");
 const frame_map = @import("qbe_frame_map.zig");
 const options = @import("qbe_build_options.zig");
 /// Cache and native tool failures.
-pub const Error = fs.Error || error{EmptyNativeObject};
+pub const Error = fs.Error || error{ EmptyNativeObject, InvalidRuntimeContract };
 /// Wave-3 contract mirrored for the native-build module.
 ///
 /// The canonical `cache_key.Contract` lives in the `mylang` module. A Zig file
@@ -290,6 +291,7 @@ pub const Cache = struct {
             if (!any) continue;
             try argv.append(a, "-cflags");
             try argv.appendSlice(a, &common);
+            try argv.appendSlice(a, (try ownership_contract.parse(self.context.environ.get(ownership_contract.variable))).cFlags());
             if (pointers) try argv.appendSlice(a, &frame_pointer_flags);
             try argv.append(a, "--");
             for (sources) |source| if (keepsFramePointers(source) == pointers) try argv.append(a, try std.fs.path.join(a, &.{ self.assets, source }));
@@ -423,6 +425,7 @@ pub const Cache = struct {
             "-fdebug-compilation-dir=mylang-qbe", debug,   shared,                shared_debug,      "-I",
             self.assets,
         });
+        try result.appendSlice(a, (try ownership_contract.parse(self.context.environ.get(ownership_contract.variable))).cFlags());
         if (pointers) try result.appendSlice(a, &frame_pointer_flags);
         if (self.codegen.lto.flag()) |flag| try result.append(a, flag);
         return result.toOwnedSlice(a);
@@ -662,4 +665,28 @@ test "under ThinLTO the runtime is thin bitcode and the generated C units stay m
 test "native object cache mirror uses the effects-v4 contract" {
     const testing = std.testing;
     try testing.expectEqualStrings("effects-v4", Contract.default.effects);
+}
+
+// spec-case: RC-RUNTIME-CONTRACT-1
+test "RC runtime contract reaches generated C and each merged archive source group" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    const a = context.allocator;
+    const cache: Cache = .{ .context = context, .directory = "objects", .temporary = "work", .assets = "/assets", .environment = "env", .zig = "/zig", .mode = "ReleaseFast", .codegen = .{ .tool = "/qbe" } };
+    const gc = try std.mem.join(a, " ", try cache.flags());
+    try std.testing.expect(std.mem.indexOf(u8, gc, "MYL_NATIVE_RC") == null);
+    try environment.put(ownership_contract.variable, "rc-v1-counting");
+    const counted = try std.mem.join(a, " ", try cache.generatedFlags());
+    try std.testing.expect(std.mem.indexOf(u8, counted, "-DMYL_NATIVE_RC=1") != null);
+    try std.testing.expect(std.mem.indexOf(u8, counted, "-DMYL_NATIVE_RC_COUNTING=1") != null);
+    const merged = try std.mem.join(a, " ", try cache.mergeCommand(&.{ "qbe_runtime.c", "native_heap.c" }, "out.o"));
+    try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, merged, "-DMYL_NATIVE_RC=1"));
+    try environment.put(ownership_contract.variable, "rc-v1");
+    const plain = try std.mem.join(a, " ", try cache.flags());
+    try std.testing.expect(std.mem.indexOf(u8, plain, "-DMYL_NATIVE_RC=1") != null);
+    try std.testing.expect(std.mem.indexOf(u8, plain, "MYL_NATIVE_RC_COUNTING") == null);
+    try environment.put(ownership_contract.variable, "rc-v2");
+    try std.testing.expectError(error.InvalidRuntimeContract, cache.flags());
 }

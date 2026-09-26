@@ -23,6 +23,7 @@ const diagnostic = @import("diagnostic.zig");
 const Source = @import("source.zig").Source;
 const entry_adapter = @import("entry_adapter.zig");
 const native_descriptors = @import("native_descriptors.zig");
+const runtime_mode = @import("runtime_mode.zig");
 const test_dependencies = @import("native_test_dependencies.zig");
 const native_interface = @import("native_interface.zig");
 const prelude = @import("prelude.zig");
@@ -286,7 +287,7 @@ fn generateImpl(allocator: std.mem.Allocator, program_in: bytecode.Program, src:
     const entry_argv_element = if (entry_function.signature.parameter_count != 0) entry_adapter.argvElement(entry_function.scope.locals[0].ty, program.records) else null;
     const entry_argv = if (entry_argv_element) |element| native_descriptors.symbol(a, &layouts, element) catch |err| return layoutError(err) else null;
     const descriptors = native_descriptors.generate(a, &layouts) catch |err| return layoutError(err);
-    const owners = if (@import("runtime_mode.zig").enabled())
+    const owners = if (runtime_mode.enabled())
         @import("rc_descriptors.zig").generate(a, &layouts) catch |err| return layoutError(err)
     else
         "";
@@ -312,6 +313,7 @@ fn generateImpl(allocator: std.mem.Allocator, program_in: bytecode.Program, src:
         .runtime_data = runtime_data,
         .version = "qbe-units-v1",
         .abi = test_dependencies.abi,
+        .runtime_contract = runtime_mode.identity(),
         // Where a lean manifest's stored texts and metadata live, by digest.
         .store = if (shape.lean) try interface.reuse.?.store.textRoot() else null,
         .functions = emitted,
@@ -1104,6 +1106,7 @@ fn flagsOf(pass: EmitPass, index: usize) fragments.Flags {
         .arenas = pass.arenas,
         .entry = index == @backingInt(pass.program.main),
         .cow = pass.cow,
+        .runtime = runtime_mode.get(),
     };
 }
 

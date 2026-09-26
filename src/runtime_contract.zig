@@ -20,6 +20,15 @@ pub const Selection = enum {
         };
     }
 
+    /// Native flags shared by loose objects, generated adapters and LTO archives.
+    pub fn cFlags(self: Selection) []const []const u8 {
+        return switch (self) {
+            .gc => &.{},
+            .rc => &.{"-DMYL_NATIVE_RC=1"},
+            .rc_counting => &.{ "-DMYL_NATIVE_RC=1", "-DMYL_NATIVE_RC_COUNTING=1" },
+        };
+    }
+
     /// Whether this artifact uses reference counting rather than tracing GC.
     pub fn enabled(self: Selection) bool {
         return self != .gc;
