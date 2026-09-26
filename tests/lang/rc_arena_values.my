@@ -1,0 +1,103 @@
+module rc_arena_values
+
+
+def identity(items: list[int]) -> list[int]:
+    return items
+
+
+record Pair:
+    first: list[int]
+    second: list[int]
+
+
+# spec: RC-ARENA-FRAME-1
+public def test_an_inner_binding_releases_its_older_heap_owner() -> bool:
+    older: list[int] = [3, 4]
+    total = 0
+    for index in range(40):
+        with arena():
+            alias = identity(older)
+            total += alias[0] + len(alias)
+    return total == 200 and older == [3, 4]
+
+
+# spec-case: RC-ARENA-FRAME-1
+public def test_inline_owners_close_before_nested_chunks_are_reused() -> bool:
+    heap: list[int] = [7]
+    total = 0
+    with arena():
+        outer: list[int] = [8]
+        for index in range(20):
+            with arena():
+                pair = Pair(first=identity(heap), second=identity(outer))
+                local: list[list[int]] = [pair.first, pair.second]
+                total += local[0][0] + local[1][0]
+        total += outer[0]
+    return total == 308 and heap == [7]
+
+
+# spec-case: RC-ARENA-FRAME-1
+public def test_break_and_continue_drop_inner_heap_aliases() -> bool:
+    heap: list[int] = [5]
+    total = 0
+    for index in range(8):
+        with arena():
+            alias = identity(heap)
+            total += alias[0]
+            if index == 0:
+                continue
+            if index == 3:
+                break
+    return total == 20 and heap == [5]
+
+
+def escape_return(older: list[int]) -> list[list[int]]:
+    with arena() as scratch:
+        alias = identity(older)
+        child: list[int] = [11]
+        graph: list[list[int]] = [alias, child, child]
+        return scratch.escape(graph)
+
+
+# spec-case: RC-ARENA-FRAME-1
+public def test_escape_return_preserves_shared_children_and_source_owners() -> bool:
+    heap: list[int] = [9]
+    escaped = escape_return(heap)
+    escaped[1].append(12)
+    heap.append(10)
+    return escaped[0] == [9] and escaped[1] == [11, 12] and escaped[2] == [11] and heap == [9, 10]
+
+
+def fail_inside(older: list[int]) -> Result[int, int]:
+    with arena():
+        alias = identity(older)
+        young: list[list[int]] = [alias]
+        if len(young) == 1:
+            return Err(17)
+        return Ok(0)
+
+
+def propagate(older: list[int]) -> Result[int, int]:
+    with arena():
+        alias = identity(older)
+        value = fail_inside(alias)?
+        return Ok(value)
+
+
+# spec-case: RC-ARENA-FRAME-1
+public def test_result_propagation_releases_nested_arena_frame_owners() -> bool:
+    heap: list[int] = [13]
+    match propagate(heap):
+        case Err(kept):
+            return kept == 17 and heap == [13]
+        case Ok(value):
+            return value == 13
+
+
+def main() -> int:
+    assert test_an_inner_binding_releases_its_older_heap_owner()
+    assert test_inline_owners_close_before_nested_chunks_are_reused()
+    assert test_break_and_continue_drop_inner_heap_aliases()
+    assert test_escape_return_preserves_shared_children_and_source_owners()
+    assert test_result_propagation_releases_nested_arena_frame_owners()
+    return 0
