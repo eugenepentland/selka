@@ -39,6 +39,12 @@ int myl_native_cow_share_value(myl_native_heap *heap, const myl_native_type *typ
  * that outer header unshared and marks the mutable payloads in its directly
  * held elements or entries. The caller roots the value at `address`. */
 int myl_native_cow_share_children(myl_native_heap *heap, const myl_native_type *type, void *address);
+/* QBE's one real-copy hook: copy into rooted output and share either the
+ * value's direct payloads or, when `children` is set, a fresh outer
+ * collection's directly held payloads. Returns zero after recording a trap
+ * when any required shallow copy fails. */
+int myl_qbe_cow_transfer(void *context, const myl_native_type *type,
+                          const void *value, void *output, uint32_t children);
 /* The slow half of a uniqueness check: `payload` when it is not shared, else a
  * fresh unshared copy whose directly held payloads are marked shared. The
  * caller stores the answer back into the slot it loaded `payload` from.
