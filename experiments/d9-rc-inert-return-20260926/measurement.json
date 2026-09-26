@@ -1,0 +1,471 @@
+{
+  "base": "41e08854",
+  "source_sha256": "97137bff09108d9560736833ae682733abd5d728ca8066edb5cda4caede62a7c",
+  "cpu": 2,
+  "compilers": {
+    "before": "8de65a6fa17f18cfb3e31f1de31566f053e3249d888474f68e70648431fb2ecf",
+    "after": "211029a12d92f68ed5542f543949ecec0860d3d433977be7aaa1db95172ed525"
+  },
+  "backends": {
+    "qbe": {
+      "medians": {
+        "before": 907414130,
+        "after": 683032866,
+        "gc": 105803344
+      },
+      "after_over_before": 0.7527245206111128,
+      "after_over_gc": 6.455683158747799,
+      "samples": [
+        {
+          "arm": "before",
+          "command": [
+            "taskset",
+            "-c",
+            "2",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-allocator-qbe-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 907414130,
+            "cpu_core/cycles/u": 184100807
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n907414130,,cpu_core/instructions/u,46956526,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n184100807,,cpu_core/cycles/u,46956526,100.00,,\n"
+        },
+        {
+          "arm": "after",
+          "command": [
+            "taskset",
+            "-c",
+            "2",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/inert-return-final-qbe-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 683076543,
+            "cpu_core/cycles/u": 137430617
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n683076543,,cpu_core/instructions/u,37377024,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n137430617,,cpu_core/cycles/u,37377024,100.00,,\n"
+        },
+        {
+          "arm": "gc",
+          "command": [
+            "taskset",
+            "-c",
+            "2",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-allocator-qbe-gc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 105803344,
+            "cpu_core/cycles/u": 25210428
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n105803344,,cpu_core/instructions/u,7720205,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n25210428,,cpu_core/cycles/u,7720205,100.00,,\n"
+        },
+        {
+          "arm": "gc",
+          "command": [
+            "taskset",
+            "-c",
+            "2",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-allocator-qbe-gc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 105803341,
+            "cpu_core/cycles/u": 24157255
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n105803341,,cpu_core/instructions/u,7223345,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n24157255,,cpu_core/cycles/u,7223345,100.00,,\n"
+        },
+        {
+          "arm": "after",
+          "command": [
+            "taskset",
+            "-c",
+            "2",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/inert-return-final-qbe-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 683032782,
+            "cpu_core/cycles/u": 138382579
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n683032782,,cpu_core/instructions/u,37835070,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n138382579,,cpu_core/cycles/u,37835070,100.00,,\n"
+        },
+        {
+          "arm": "before",
+          "command": [
+            "taskset",
+            "-c",
+            "2",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-allocator-qbe-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 912722648,
+            "cpu_core/cycles/u": 185858934
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n912722648,,cpu_core/instructions/u,50661855,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n185858934,,cpu_core/cycles/u,50661855,100.00,,\n"
+        },
+        {
+          "arm": "before",
+          "command": [
+            "taskset",
+            "-c",
+            "2",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-allocator-qbe-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 907370471,
+            "cpu_core/cycles/u": 183886126
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n907370471,,cpu_core/instructions/u,50532081,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n183886126,,cpu_core/cycles/u,50532081,100.00,,\n"
+        },
+        {
+          "arm": "after",
+          "command": [
+            "taskset",
+            "-c",
+            "2",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/inert-return-final-qbe-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 683032866,
+            "cpu_core/cycles/u": 137824949
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n683032866,,cpu_core/instructions/u,37678171,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n137824949,,cpu_core/cycles/u,37678171,100.00,,\n"
+        },
+        {
+          "arm": "gc",
+          "command": [
+            "taskset",
+            "-c",
+            "2",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-allocator-qbe-gc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 105803346,
+            "cpu_core/cycles/u": 24645968
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n105803346,,cpu_core/instructions/u,7588881,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n24645968,,cpu_core/cycles/u,7588881,100.00,,\n"
+        }
+      ],
+      "counts": {
+        "before": {
+          "version": 1,
+          "runtime": "rc-v2-counting",
+          "saturated": false,
+          "owner_acquire": 19,
+          "owner_release": 669079,
+          "hold_acquire": 0,
+          "hold_release": 0,
+          "owner_limit": 0,
+          "hold_limit": 0,
+          "heap_allocate": 669060,
+          "arena_allocate": 0,
+          "retire": 669060,
+          "clone_shell": 0,
+          "unique_check": 33
+        },
+        "after": {
+          "version": 1,
+          "runtime": "rc-v2-counting",
+          "saturated": false,
+          "owner_acquire": 19,
+          "owner_release": 669079,
+          "hold_acquire": 0,
+          "hold_release": 0,
+          "owner_limit": 0,
+          "hold_limit": 0,
+          "heap_allocate": 669060,
+          "arena_allocate": 0,
+          "retire": 669060,
+          "clone_shell": 0,
+          "unique_check": 33
+        }
+      },
+      "binary_sha256": {
+        "before": "17d41e105e1beba5de967ce2245e247b8e6092ba45a9aaa60c4e19f42221286e",
+        "after": "429fb07c7d9d83dfa8bd6f0f522be60a247497e8b4bd38dae961603c94398cde",
+        "gc": "2be73697a0e98540c784cdb87925cf4c81133d697175b140c2c8de4d5af46b70"
+      }
+    },
+    "llvm": {
+      "medians": {
+        "before": 465108537,
+        "after": 388701879,
+        "gc": 50532266
+      },
+      "after_over_before": 0.8357229508345919,
+      "after_over_gc": 7.692152158781084,
+      "samples": [
+        {
+          "arm": "before",
+          "command": [
+            "taskset",
+            "-c",
+            "2",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-allocator-llvm-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 465108899,
+            "cpu_core/cycles/u": 105536855
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n465108899,,cpu_core/instructions/u,26647120,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n105536855,,cpu_core/cycles/u,26647120,100.00,,\n"
+        },
+        {
+          "arm": "after",
+          "command": [
+            "taskset",
+            "-c",
+            "2",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/inert-return-final-llvm-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 388701573,
+            "cpu_core/cycles/u": 90434085
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n388701573,,cpu_core/instructions/u,23982416,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n90434085,,cpu_core/cycles/u,23982416,100.00,,\n"
+        },
+        {
+          "arm": "gc",
+          "command": [
+            "taskset",
+            "-c",
+            "2",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-allocator-llvm-gc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 50532266,
+            "cpu_core/cycles/u": 23322085
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n50532266,,cpu_core/instructions/u,7302268,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n23322085,,cpu_core/cycles/u,7302268,100.00,,\n"
+        },
+        {
+          "arm": "gc",
+          "command": [
+            "taskset",
+            "-c",
+            "2",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-allocator-llvm-gc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 50532263,
+            "cpu_core/cycles/u": 22361897
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n50532263,,cpu_core/instructions/u,6763606,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n22361897,,cpu_core/cycles/u,6763606,100.00,,\n"
+        },
+        {
+          "arm": "after",
+          "command": [
+            "taskset",
+            "-c",
+            "2",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/inert-return-final-llvm-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 394055406,
+            "cpu_core/cycles/u": 91576457
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n394055406,,cpu_core/instructions/u,24233672,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n91576457,,cpu_core/cycles/u,24233672,100.00,,\n"
+        },
+        {
+          "arm": "before",
+          "command": [
+            "taskset",
+            "-c",
+            "2",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-allocator-llvm-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 459755511,
+            "cpu_core/cycles/u": 104904472
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n459755511,,cpu_core/instructions/u,27657439,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n104904472,,cpu_core/cycles/u,27657439,100.00,,\n"
+        },
+        {
+          "arm": "before",
+          "command": [
+            "taskset",
+            "-c",
+            "2",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-allocator-llvm-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 465108537,
+            "cpu_core/cycles/u": 105224178
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n465108537,,cpu_core/instructions/u,28034525,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n105224178,,cpu_core/cycles/u,28034525,100.00,,\n"
+        },
+        {
+          "arm": "after",
+          "command": [
+            "taskset",
+            "-c",
+            "2",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/inert-return-final-llvm-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 388701879,
+            "cpu_core/cycles/u": 90365053
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n388701879,,cpu_core/instructions/u,24064777,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n90365053,,cpu_core/cycles/u,24064777,100.00,,\n"
+        },
+        {
+          "arm": "gc",
+          "command": [
+            "taskset",
+            "-c",
+            "2",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-allocator-llvm-gc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 50532267,
+            "cpu_core/cycles/u": 22458838
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n50532267,,cpu_core/instructions/u,7039395,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n22458838,,cpu_core/cycles/u,7039395,100.00,,\n"
+        }
+      ],
+      "counts": {
+        "before": {
+          "version": 1,
+          "runtime": "rc-v2-counting",
+          "saturated": false,
+          "owner_acquire": 19,
+          "owner_release": 669079,
+          "hold_acquire": 0,
+          "hold_release": 0,
+          "owner_limit": 0,
+          "hold_limit": 0,
+          "heap_allocate": 669060,
+          "arena_allocate": 0,
+          "retire": 669060,
+          "clone_shell": 0,
+          "unique_check": 33
+        },
+        "after": {
+          "version": 1,
+          "runtime": "rc-v2-counting",
+          "saturated": false,
+          "owner_acquire": 19,
+          "owner_release": 669079,
+          "hold_acquire": 0,
+          "hold_release": 0,
+          "owner_limit": 0,
+          "hold_limit": 0,
+          "heap_allocate": 669060,
+          "arena_allocate": 0,
+          "retire": 669060,
+          "clone_shell": 0,
+          "unique_check": 33
+        }
+      },
+      "binary_sha256": {
+        "before": "12e49bb2d47c85c3bc18596d284dcf71f13a9e1478a235a20c01486a06f88f44",
+        "after": "45b768cb45cda370c156a5d037f6991875475448d02b3b7f61afd9045fc3df28",
+        "gc": "c59e838b8bbd0ef6214577db34e32053f89c29a69077a2ea278354c393c90450"
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 2 after 5s (all 3 build slot(s) busy)
+qbe before {'version': 1, 'runtime': 'rc-v2-counting', 'saturated': False, 'owner_acquire': 1031, 'owner_release': 2497, 'hold_acquire': 67, 'hold_release': 67, 'owner_limit': 0, 'hold_limit': 0, 'heap_allocate': 1466, 'arena_allocate': 103, 'retire': 1466, 'clone_shell': 36, 'unique_check': 833}
+qbe after {'version': 1, 'runtime': 'rc-v2-counting', 'saturated': False, 'owner_acquire': 1031, 'owner_release': 2497, 'hold_acquire': 67, 'hold_release': 67, 'owner_limit': 0, 'hold_limit': 0, 'heap_allocate': 1466, 'arena_allocate': 103, 'retire': 1466, 'clone_shell': 36, 'unique_check': 833}
+llvm before {'version': 1, 'runtime': 'rc-v2-counting', 'saturated': False, 'owner_acquire': 1031, 'owner_release': 2497, 'hold_acquire': 67, 'hold_release': 67, 'owner_limit': 0, 'hold_limit': 0, 'heap_allocate': 1466, 'arena_allocate': 103, 'retire': 1466, 'clone_shell': 36, 'unique_check': 833}
+llvm after {'version': 1, 'runtime': 'rc-v2-counting', 'saturated': False, 'owner_acquire': 1031, 'owner_release': 2497, 'hold_acquire': 67, 'hold_release': 67, 'owner_limit': 0, 'hold_limit': 0, 'heap_allocate': 1466, 'arena_allocate': 103, 'retire': 1466, 'clone_shell': 36, 'unique_check': 833}
