@@ -63,14 +63,16 @@ void myl_rc_drain(myl_native_heap *heap) {
         const myl_rc_descriptor *descriptor = myl_rc_descriptor_find(heap, object->common.element);
         myl_rc_invariant(descriptor != NULL);
         size_t count = (size_t)((object->common.mark & MYL_NATIVE_OBJECT_COUNT_BITS) >> MYL_NATIVE_OBJECT_COUNT_SHIFT);
+        /* A unique close hook can inspect its managed context. Run it while
+         * child tokens are intact, with no descriptor frame leased. Nested
+         * releases only enqueue. Reacquire metadata after a registering hook. */
+        void (*finalize)(myl_native_heap *, void *) = descriptor->finalize;
+        if (finalize) finalize(heap, payload);
+        descriptor = myl_rc_descriptor_find(heap, object->common.element);
+        myl_rc_invariant(descriptor && !heap->rc->walk.depth);
         if (descriptor->edges) descriptor->edges(heap, payload, count);
         else myl_rc_edges_release(heap, descriptor->shape, payload, count);
         myl_rc_invariant(!heap->rc->walk.depth);
-        /* The adapter/finalizer is copied before calling guest-capable unique
-         * hooks. No descriptor frame or movable allocation is borrowed across
-         * that callback; nested drains only enqueue until this loop resumes. */
-        void (*finalize)(myl_native_heap *, void *) = descriptor->finalize;
-        if (finalize) finalize(heap, payload);
         myl_rc_allocator_retire(heap, payload);
     }
     heap->rc->dead.active = 0;

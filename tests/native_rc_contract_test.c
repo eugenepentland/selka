@@ -293,7 +293,9 @@ static void million_chain_test(void) {
     finish(&heap, &state);
 }
 static void finalizer(myl_native_heap *heap, void *payload) {
-    (void)payload;
+    Node *owner = payload;
+    assert(owner->next && *(uint64_t *)owner->next == 73);
+    assert(((myl_rc_object *)owner->next - 1)->owners == 1);
     TestAllocator *state = myl_rc_allocator_context(heap);
     ++state->finalizing;
     if (state->finalizing > state->max_finalizing) state->max_finalizing = state->finalizing;
@@ -308,8 +310,8 @@ static void finalizer(myl_native_heap *heap, void *payload) {
     assert(state->live >= 2);
     --state->finalizing;
 }
-static const myl_native_type resource_type = {.size = sizeof(uint64_t), .alignment = _Alignof(uint64_t), .kind = MYL_NATIVE_RESOURCE};
-static const myl_rc_descriptor resource_descriptor = {.type = &resource_type, .shape = &scalar_shape, .finalize = finalizer};
+static const myl_native_type resource_type = {.size = sizeof(Node), .alignment = _Alignof(Node), .kind = MYL_NATIVE_RESOURCE};
+static const myl_rc_descriptor resource_descriptor = {.type = &resource_type, .shape = &node_shape, .finalize = finalizer};
 static const myl_rc_module resource_module = {.abi = MYL_RC_ABI_VERSION, .descriptors = &resource_descriptor, .descriptor_count = 1};
 // spec: RC-REGISTER-1
 static void temporary_binding_test(void) {
@@ -332,6 +334,15 @@ static void temporary_binding_test(void) {
     *box = new_value(&heap, &scalar_type, 1);
     myl_rc_owner_release(&heap, box);
     assert(state.retired == 2);
+    static const myl_native_type other = {.size = sizeof(void *), .alignment = _Alignof(void *), .kind = MYL_NATIVE_POINTER};
+    descriptor = (myl_rc_descriptor){.type = &other, .shape = &pointer_shape};
+    before = heap.bytes;
+    heap.limit = before + 1000;
+    assert(myl_rc_descriptor_import(&heap, &descriptor) == MYL_RC_ALLOCATION_REFUSED);
+    assert(heap.bytes == before && !myl_rc_descriptor_find(&heap, &other));
+    heap.limit = ((size_t)256) << 20;
+    assert(myl_rc_descriptor_import(&heap, &descriptor) == MYL_RC_OK);
+    assert(myl_rc_descriptor_find(&heap, &other)->shape->kind == MYL_RC_SHAPE_POINTER);
     finish(&heap, &state);
 }
 // spec: RC-RELEASE-1
@@ -340,10 +351,124 @@ static void reentrant_finalizer_test(void) {
     TestAllocator state;
     start(&heap, &state);
     assert(myl_rc_module_register(&heap, &resource_module) == MYL_RC_OK);
-    void *value = new_value(&heap, &resource_type, 1);
+    Node *value = new_value(&heap, &resource_type, 1);
+    value->next = new_value(&heap, &scalar_type, 1);
+    *(uint64_t *)value->next = 73;
     myl_rc_owner_release(&heap, value);
-    assert(state.live == 0 && state.retired == 2 && state.max_finalizing == 1);
+    assert(state.live == 0 && state.retired == 3 && state.max_finalizing == 1);
     assert(myl_rc_reserved_depth(&heap) == 129);
+    finish(&heap, &state);
+}
+// spec: RC-TRANSFER-1
+static void pointer_transfers_test(void) {
+    myl_native_heap heap;
+    TestAllocator state;
+    start(&heap, &state);
+    void *source = new_value(&heap, &scalar_type, 1), *destination = NULL;
+    *(uint64_t *)source = 47;
+    myl_rc_slot from = {.shape = &pointer_shape, .address = &source};
+    myl_rc_slot to = {.shape = &pointer_shape, .address = &destination};
+    assert(myl_rc_value_copy(&heap, &to, &from) == MYL_RC_OK);
+    assert(source == destination && ((myl_rc_object *)source - 1)->owners == 2);
+    myl_rc_value_drop(&heap, &to);
+    myl_rc_pin pin = {0};
+    assert(myl_rc_pin_acquire(&heap, source, &pin) == MYL_RC_OK);
+    void *held = source;
+    assert(myl_rc_value_take(&heap, &to, &from) == MYL_RC_OK);
+    assert(!source && destination != held && *(uint64_t *)destination == 47);
+    assert(((myl_rc_object *)held - 1)->owners == 0 && ((myl_rc_object *)held - 1)->holds == 1);
+    myl_rc_value_drop(&heap, &to);
+    myl_rc_pin_release(&heap, &pin);
+    source = new_value(&heap, &scalar_type, 1);
+    ((myl_rc_object *)source - 1)->owners = MYL_RC_COUNT_MAX;
+    assert(myl_rc_value_take(&heap, &to, &from) == MYL_RC_OK);
+    assert(!source && ((myl_rc_object *)destination - 1)->owners == MYL_RC_COUNT_MAX);
+    ((myl_rc_object *)destination - 1)->owners = 1;
+    myl_rc_value_drop(&heap, &to);
+    source = new_value(&heap, &scalar_type, 1);
+    destination = new_value(&heap, &scalar_type, 1);
+    heap.limit = heap.bytes;
+    assert(myl_rc_value_replace(&heap, &to, &from, MYL_RC_COPY) == MYL_RC_OK);
+    assert(source == destination && ((myl_rc_object *)source - 1)->owners == 2);
+    myl_rc_value_drop(&heap, &to);
+    myl_rc_value_drop(&heap, &from);
+    uint64_t old_scalar = 3, fresh_scalar = 5;
+    to = (myl_rc_slot){.shape = &scalar_shape, .address = &old_scalar};
+    from = (myl_rc_slot){.shape = &scalar_shape, .address = &fresh_scalar};
+    heap.limit = heap.bytes;
+    assert(myl_rc_value_replace(&heap, &to, &from, MYL_RC_COPY) == MYL_RC_OK);
+    assert(old_scalar == 5 && fresh_scalar == 5);
+    finish(&heap, &state);
+}
+typedef struct { void *first, *second; } Pair;
+static const myl_rc_field pair_fields[] = {
+    {.offset = offsetof(Pair, first), .shape = &pointer_shape},
+    {.offset = offsetof(Pair, second), .shape = &pointer_shape}
+};
+static const myl_rc_shape pair_shape = {.size = sizeof(Pair), .kind = MYL_RC_SHAPE_RECORD,
+    .as.record = {.fields = pair_fields, .count = 2}};
+// spec: RC-TRANSFER-1
+static void transfer_failure_test(void) {
+    myl_native_heap heap;
+    TestAllocator state;
+    start(&heap, &state);
+    const myl_rc_shape *shape;
+    assert(myl_rc_shape_import(&heap, &pair_shape, &shape) == MYL_RC_OK);
+    Pair source = {new_value(&heap, &scalar_type, 1), new_value(&heap, &scalar_type, 1)}, destination = {0};
+    myl_rc_slot from = {.shape = shape, .address = &source};
+    myl_rc_slot to = {.shape = shape, .address = &destination};
+    myl_rc_object *first = (myl_rc_object *)source.first - 1, *second = (myl_rc_object *)source.second - 1;
+    second->owners = MYL_RC_COUNT_MAX;
+    assert(myl_rc_value_copy(&heap, &to, &from) == MYL_RC_COUNT_LIMIT);
+    assert(!destination.first && !destination.second && first->owners == 1 && second->owners == MYL_RC_COUNT_MAX);
+    second->owners = 1;
+    myl_rc_pin pins[2] = {0};
+    assert(myl_rc_pin_acquire(&heap, source.first, &pins[0]) == MYL_RC_OK);
+    assert(myl_rc_pin_acquire(&heap, source.second, &pins[1]) == MYL_RC_OK);
+    size_t before = heap.bytes;
+    /* Two 32-byte operation frames and one 40-byte clone fit; a second clone
+     * must refuse, after the first has acquired a real temporary owner. */
+    heap.limit = before + 104;
+    assert(myl_rc_value_take(&heap, &to, &from) == MYL_RC_ALLOCATION_REFUSED);
+    assert(!destination.first && !destination.second && first->owners == 1 && second->owners == 1);
+    assert(heap.bytes == before && state.live == 2);
+    heap.limit = ((size_t)256) << 20;
+    myl_rc_pin_release(&heap, &pins[1]);
+    myl_rc_pin_release(&heap, &pins[0]);
+    myl_rc_value_drop(&heap, &from);
+    finish(&heap, &state);
+}
+// spec: RC-TRANSFER-1
+static void uniqueness_and_alias_replace_test(void) {
+    myl_native_heap heap;
+    TestAllocator state;
+    start(&heap, &state);
+    void *source = new_value(&heap, &scalar_type, 1);
+    assert(myl_rc_owner_acquire(&heap, source) == MYL_RC_OK);
+    void *alias = source;
+    myl_rc_slot slot = {.shape = &pointer_shape, .address = &source};
+    myl_rc_edit edit = {0};
+    assert(myl_rc_unique_borrow(&heap, &slot, NULL, &edit) == MYL_RC_OK);
+    assert(edit.owned && edit.payload != source && ((myl_rc_object *)source - 1)->owners == 2);
+    myl_rc_edit_abort(&heap, &edit);
+    assert(!edit.owned && !edit.payload && state.live == 1);
+    assert(myl_rc_unique_borrow(&heap, &slot, NULL, &edit) == MYL_RC_OK);
+    myl_rc_edit_commit(&heap, &slot, &edit);
+    assert(source != alias && ((myl_rc_object *)alias - 1)->owners == 1);
+    assert(myl_rc_unique_borrow(&heap, &slot, NULL, &edit) == MYL_RC_OK);
+    assert(!edit.owned && edit.payload == source);
+    myl_rc_edit_commit(&heap, &slot, &edit);
+    myl_rc_value_drop(&heap, &slot);
+    myl_rc_owner_release(&heap, alias);
+    assert(myl_rc_module_register(&heap, &node_module) == MYL_RC_OK);
+    Node *parent = new_value(&heap, &node_type, 1);
+    parent->next = new_value(&heap, &scalar_type, 1);
+    *(uint64_t *)parent->next = 59;
+    myl_rc_slot from = {.shape = &pointer_shape, .address = &parent->next};
+    myl_rc_slot to = {.shape = &pointer_shape, .address = &parent};
+    assert(myl_rc_value_replace(&heap, &to, &from, MYL_RC_COPY) == MYL_RC_OK);
+    assert(*(uint64_t *)parent == 59 && state.live == 1);
+    myl_rc_value_drop(&heap, &to);
     finish(&heap, &state);
 }
 int myl_rc_contract_verify(void) {
@@ -360,13 +485,16 @@ int myl_rc_contract_verify(void) {
     million_chain_test();
     reentrant_finalizer_test();
     temporary_binding_test();
+    pointer_transfers_test();
+    transfer_failure_test();
+    uniqueness_and_alias_replace_test();
     assert(!setrlimit(RLIMIT_STACK, &original));
-    return 9;
+    return 12;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
-    assert(myl_rc_contract_verify() == 9);
-    puts("native RC contract: 9 tests passed");
+    assert(myl_rc_contract_verify() == 12);
+    puts("native RC contract: 12 tests passed");
     return 0;
 }
 #endif

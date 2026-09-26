@@ -56,12 +56,18 @@ struct myl_rc_shape {
  * whole call. Raw backing has NONE shape and stable extent metadata; a held
  * dictionary backing must never borrow a dictionary-embedded descriptor.
  * finalize is reserved for explicitly unique resource hooks: it runs with an
- * idle descriptor stack, before retire, and may enqueue, allocate or register. */
+ * idle descriptor stack, BEFORE releasing managed child edges and before
+ * retire, so its callback context stays alive. It may enqueue, allocate or
+ * register; existing unique cleanup delegates this hook exactly once. */
 typedef struct {
     const myl_native_type *type;
     const myl_rc_shape *shape;
     void (*edges)(myl_native_heap *, void *, size_t);
     void (*finalize)(myl_native_heap *, void *);
+    /* Optional collection clone: copy logical edges pin-aware into the exact
+     * destination region. Fresh owned success; complete rollback on failure.
+     * Without it a descriptor with no custom edges uses the generic body copy. */
+    myl_rc_status (*clone)(myl_native_heap *, const void *, unsigned, void **);
 } myl_rc_descriptor;
 typedef struct {
     unsigned abi;
@@ -87,6 +93,9 @@ const myl_rc_shape *myl_rc_shape_resolve(const myl_native_heap *, const myl_rc_s
  * identity stays valid through teardown and shape must already be registered.
  * The binding is copied atomically and its adapter code remains loaded. */
 myl_rc_status myl_rc_descriptor_register(myl_native_heap *, const myl_rc_descriptor *);
+/* Atomically import a temporary shape graph and its binding together. Failure
+ * publishes neither shape nor binding; only native_type/code have long lifetime. */
+myl_rc_status myl_rc_descriptor_import(myl_native_heap *, const myl_rc_descriptor *);
 const myl_rc_descriptor *myl_rc_descriptor_find(const myl_native_heap *, const myl_native_type *);
 size_t myl_rc_reserved_depth(const myl_native_heap *);
 size_t myl_rc_metadata_bytes(const myl_native_heap *);
