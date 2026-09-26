@@ -1,0 +1,39 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/scripts/build-slot.sh",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/.tmp/rc-held-views-deep/install/bin/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/experiments/d9-rc-held-views-20260926/trap.my",
+    "--rc-runtime=stats",
+    "--backend",
+    "qbe",
+    "--mode",
+    "ReleaseFast",
+    "--qbe=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/.tmp/rc-held-views-deep/install/bin/qbe",
+    "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/.tmp/rc-held-views-deep/trap-cache-qbe",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/.tmp/rc-held-views-deep/trap-qbe"
+  ],
+  "exit": 1,
+  "stdout": "",
+  "stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v2-counting\",\"saturated\":false,\"owner_acquire\":6,\"owner_release\":14,\"hold_acquire\":4,\"hold_release\":4,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":8,\"arena_allocate\":0,\"retire\":8,\"clone_shell\":0,\"unique_check\":3}\ntrap.my:8:16: error[R_ASSERT]: native execution failed: len(value) == 0\n  in trap::main at trap.my:8:16\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"len(value) == 0\"}\n",
+  "counts": {
+    "version": 1,
+    "runtime": "rc-v2-counting",
+    "saturated": false,
+    "owner_acquire": 6,
+    "owner_release": 14,
+    "hold_acquire": 4,
+    "hold_release": 4,
+    "owner_limit": 0,
+    "hold_limit": 0,
+    "heap_allocate": 8,
+    "arena_allocate": 0,
+    "retire": 8,
+    "clone_shell": 0,
+    "unique_check": 3
+  },
+  "compiler_sha256": "442a8409445be6c84b0560000d78f73ceb40e8dc2833a48c0edd611e35c58682",
+  "source_sha256": "a9939450f23869c63db394baddbbe3944f924cc18db30fed4d9673c560fbd682"
+}

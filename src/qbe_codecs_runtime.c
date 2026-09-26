@@ -175,6 +175,27 @@ static int co_read_box(size_t index,void *output,size_t depth){
     if(!co_root(box)){co_abort(box);return co_bad("OutOfMemory");}
     memcpy(output,&box,sizeof box);return 1;
 }
+/* A live view has a held dictionary edge. Decode its mapping into an ordinary
+   owning temporary first, then convert O to H before publishing the record.
+   This keeps partially decoded dictionaries out of an H-shaped cleanup slot. */
+static int co_read_held(size_t index,const MylangWireNode *node,void *output,size_t depth){
+    const CoType *type=&co_types[index];
+    if(type->kind!=1 || type->count!=1 || type->size!=sizeof(void *) ||
+       type->offsets[0] || node->bits || node->children!=1)return co_bad("InvalidArgument");
+    size_t child=type->children[0];
+    if(co_types[child].kind!=9)return co_bad("InternalError");
+    void *mapping=co_temporary(child,1);
+    if(!mapping)return co_bad("OutOfMemory");
+    int ok=co_read(child,mapping,depth+1);
+    if(ok){
+        myl_rc_hold hold={0};
+        myl_rc_status status=myl_rc_hold_acquire(myl_qbe_heap(co_context),*(void **)mapping,&hold);
+        if(status==MYL_RC_OK)memcpy(output,&hold.payload,sizeof hold.payload);
+        else ok=co_bad(myl_rc_status_code(status));
+    }
+    co_temporary_free(mapping);
+    return ok && co_validate_one(co_context,index,output);
+}
 static int co_read_inner(size_t,void *,size_t);
 static int co_read(size_t index,void *output,size_t depth){
     memset(output,0,co_types[index].size);
@@ -189,6 +210,11 @@ static int co_read_inner(size_t index,void *output,size_t depth){
     if(co_cursor>=co_count)return co_bad("InvalidArgument");
     const CoType *type=&co_types[index];const MylangWireNode *node=&co_input[co_cursor++];
     if(!node->type || strcmp(node->type,type->name))return co_bad("InvalidArgument");
+    if(type->kind==1 && myl_rc_enabled(myl_qbe_heap(co_context))){
+        const myl_rc_descriptor *ownership=myl_rc_descriptor_find(myl_qbe_heap(co_context),co_native_types[index]);
+        if(ownership && ownership->shape->kind==MYL_RC_SHAPE_HOLD_POINTER)
+            return co_read_held(index,node,output,depth);
+    }
     if(type->kind==0){
         if(node->children || !valid_scalar((MylangScalar){node->type,node->bits},type->name))return co_bad("InvalidArgument");
         memcpy(output,&node->bits,type->size);return 1;
