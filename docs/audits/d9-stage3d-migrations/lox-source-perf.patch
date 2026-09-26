@@ -234,15 +234,15 @@ index f76a7814..2e2b52cd 100644
 diff --git a/interpreter.my b/interpreter.my
 --- a/interpreter.my
 +++ b/interpreter.my
-@@ -13,7 +13,6 @@
- import resolver
+@@ -14,7 +14,6 @@
  import table
  import value
--
 
+-
  # jlox's RuntimeError: the message and the line of the token it names.
  public record RuntimeError:
-@@ -108,7 +107,7 @@ def env_at(rt: heap.Runtime, hops: int) -> value.ObjRef:
+     message: bytes
+@@ -108,7 +107,7 @@
      env = rt.current_env
      i = 0
      while i < hops:
@@ -251,7 +251,7 @@ diff --git a/interpreter.my b/interpreter.my
          i += 1
      return env
 
-@@ -141,7 +140,7 @@ def get_variable(it: mut Interpreter, name: value.ObjRef, hops: int, slot: int,
+@@ -141,7 +140,7 @@
              case None:
                  return Err(fail(b"Undefined variable '" + name_text(it.rt, name) + b"'.", line))
      __wb_141 = it.rt
@@ -260,7 +260,7 @@ diff --git a/interpreter.my b/interpreter.my
      it.rt = __wb_141
      return Ok(None)
 
-@@ -324,8 +323,8 @@ def set(it: mut Interpreter, node: ast.SetExpr) -> Result[None, RuntimeError]:
+@@ -328,8 +327,8 @@
 
 
  def super_access(it: mut Interpreter, node: ast.SuperExpr) -> Result[None, RuntimeError]:
@@ -271,7 +271,7 @@ diff --git a/interpreter.my b/interpreter.my
      methods = heap.class_obj(it.rt, as_obj(superclass)).methods
      match table.get(methods, node.method_ref, heap.string_hash(it.rt, node.method_ref)):
          case Some(method):
-@@ -338,6 +337,20 @@
+@@ -342,6 +341,20 @@
 
 
  # Evaluates expression `id`, pushing exactly one value.
@@ -292,7 +292,7 @@ diff --git a/interpreter.my b/interpreter.my
  def evaluate(it: mut Interpreter, id: int) -> Result[None, RuntimeError]:
      match it.program.exprs[id]:
          case ast.Expr.assign(node):
-@@ -351,10 +364,7 @@
+@@ -355,10 +368,7 @@
          case ast.Expr.grouping(node):
              return evaluate(mut it, node.inner)
          case ast.Expr.literal(node):
@@ -304,7 +304,7 @@ diff --git a/interpreter.my b/interpreter.my
          case ast.Expr.logical(node):
              return logical(mut it, node)
          case ast.Expr.set(node):
-@@ -362,10 +372,7 @@
+@@ -366,10 +376,7 @@
          case ast.Expr.super_access(node):
              return super_access(mut it, node)
          case ast.Expr.this(node):
@@ -316,7 +316,7 @@ diff --git a/interpreter.my b/interpreter.my
          case ast.Expr.unary(node):
              return unary(mut it, node)
          case ast.Expr.variable(node):
-@@ -416,7 +423,7 @@ def run_function(it: mut Interpreter, function: object.TreeFunctionObj, env: val
+@@ -420,7 +427,7 @@
      it.depth = it.depth - 1
      flow = outcome?
      if function.is_initializer:
@@ -325,7 +325,7 @@ diff --git a/interpreter.my b/interpreter.my
      if flow == Flow.RETURN:
          return Ok(it.returned)
      return Ok(value.Value.nil)
-@@ -607,6 +614,99 @@
+@@ -611,6 +618,99 @@
      return outcome
 
 
@@ -425,7 +425,7 @@ diff --git a/interpreter.my b/interpreter.my
  def execute(it: mut Interpreter, id: int) -> Result[Flow, RuntimeError]:
      match it.program.stmts[id]:
          case ast.Stmt.block(node):
-@@ -614,77 +714,19 @@
+@@ -618,77 +718,19 @@
          case ast.Stmt.class_decl(_):
              class_declaration(mut it, id)?
          case ast.Stmt.expression(expr):
