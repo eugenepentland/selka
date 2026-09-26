@@ -1,0 +1,676 @@
+{
+  "meta": {
+    "cpu": 10,
+    "perf_reps": 3,
+    "compiler_sha256": "1a09accf6f62e3014bf28bf84acc4ffb437869e4d6532877ea6fdda94dcb819b",
+    "source_main_sha256": "18c1f669b1683123e635256c9f66c6db2766383391371c3822e61df7d9732274",
+    "compiler_commit": "af9b1318",
+    "comparison_compiler_commit": "adcbb4ca",
+    "source_commit": "6d54bace",
+    "baseline_commit": "60b668cf",
+    "harness": "experiments/perf-gc-dict-20260925/scripts/pc.py, tree-calibrated VM sizes",
+    "sample_labels": {
+      "base": "60b668cf",
+      "region": "adcbb4ca",
+      "transfer": "af9b1318"
+    }
+  },
+  "samples": {
+    "lox/vm/binary_trees|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056",
+          "stderr": "",
+          "ok": true
+        },
+        "region": {
+          "status": 0,
+          "stdout_sha256": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056",
+          "stderr": "",
+          "ok": true
+        },
+        "transfer": {
+          "status": 0,
+          "stdout_sha256": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 6241830321,
+            "cycles": 2788902101
+          },
+          {
+            "status": 0,
+            "instructions": 6241831420,
+            "cycles": 2757808522
+          },
+          {
+            "status": 0,
+            "instructions": 6241830757,
+            "cycles": 2764964578
+          }
+        ],
+        "region": [
+          {
+            "status": 0,
+            "instructions": 8579739711,
+            "cycles": 4665749229
+          },
+          {
+            "status": 0,
+            "instructions": 8579739832,
+            "cycles": 4727235951
+          },
+          {
+            "status": 0,
+            "instructions": 8579739811,
+            "cycles": 4658943171
+          }
+        ],
+        "transfer": [
+          {
+            "status": 0,
+            "instructions": 8414268179,
+            "cycles": 4482700055
+          },
+          {
+            "status": 0,
+            "instructions": 8414269187,
+            "cycles": 4574898157
+          },
+          {
+            "status": 0,
+            "instructions": 8414268384,
+            "cycles": 4550285583
+          }
+        ]
+      },
+      "medians": {
+        "base": 6241830757,
+        "region": 8579739811,
+        "transfer": 8414268384
+      },
+      "ratio_vs_base": 1.3480449425136505,
+      "ratio_vs_region": 0.980713701039296
+    },
+    "lox/vm/binary_trees|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056",
+          "stderr": "",
+          "ok": true
+        },
+        "region": {
+          "status": 0,
+          "stdout_sha256": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056",
+          "stderr": "",
+          "ok": true
+        },
+        "transfer": {
+          "status": 0,
+          "stdout_sha256": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 2663047416,
+            "cycles": 1245816956
+          },
+          {
+            "status": 0,
+            "instructions": 2663047157,
+            "cycles": 1247464882
+          },
+          {
+            "status": 0,
+            "instructions": 2663047328,
+            "cycles": 1242911722
+          }
+        ],
+        "region": [
+          {
+            "status": 0,
+            "instructions": 4611864090,
+            "cycles": 2758659222
+          },
+          {
+            "status": 0,
+            "instructions": 4611858576,
+            "cycles": 2738829806
+          },
+          {
+            "status": 0,
+            "instructions": 4611858713,
+            "cycles": 2701322247
+          }
+        ],
+        "transfer": [
+          {
+            "status": 0,
+            "instructions": 4487960996,
+            "cycles": 2691746267
+          },
+          {
+            "status": 0,
+            "instructions": 4487967046,
+            "cycles": 2687654612
+          },
+          {
+            "status": 0,
+            "instructions": 4487972565,
+            "cycles": 2626025929
+          }
+        ]
+      },
+      "medians": {
+        "base": 2663047328,
+        "region": 4611858713,
+        "transfer": 4487967046
+      },
+      "ratio_vs_base": 1.685274985094069,
+      "ratio_vs_region": 0.9731362830672216
+    },
+    "lox/vm/closures|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "8dacb3b0327cbd368e9c06434c1dd66b88f2a69dba30a2f64fc0dd78570cf7f0",
+          "stderr": "",
+          "ok": true
+        },
+        "region": {
+          "status": 0,
+          "stdout_sha256": "8dacb3b0327cbd368e9c06434c1dd66b88f2a69dba30a2f64fc0dd78570cf7f0",
+          "stderr": "",
+          "ok": true
+        },
+        "transfer": {
+          "status": 0,
+          "stdout_sha256": "8dacb3b0327cbd368e9c06434c1dd66b88f2a69dba30a2f64fc0dd78570cf7f0",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 8891314915,
+            "cycles": 2024585852
+          },
+          {
+            "status": 0,
+            "instructions": 8891316035,
+            "cycles": 4044605578
+          },
+          {
+            "status": 0,
+            "instructions": 8891316227,
+            "cycles": 4000616275
+          }
+        ],
+        "region": [
+          {
+            "status": 0,
+            "instructions": 12575433349,
+            "cycles": 3166664581
+          },
+          {
+            "status": 0,
+            "instructions": 12575434686,
+            "cycles": 6006246931
+          },
+          {
+            "status": 0,
+            "instructions": 12575437793,
+            "cycles": 6032539115
+          }
+        ],
+        "transfer": [
+          {
+            "status": 0,
+            "instructions": 12212909894,
+            "cycles": 5357089351
+          },
+          {
+            "status": 0,
+            "instructions": 12212909991,
+            "cycles": 5795119574
+          },
+          {
+            "status": 0,
+            "instructions": 12212910073,
+            "cycles": 5794562758
+          }
+        ]
+      },
+      "medians": {
+        "base": 8891316035,
+        "region": 12575434686,
+        "transfer": 12212909991
+      },
+      "ratio_vs_base": 1.3735773132936444,
+      "ratio_vs_region": 0.9711719949208919
+    },
+    "lox/vm/closures|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "8dacb3b0327cbd368e9c06434c1dd66b88f2a69dba30a2f64fc0dd78570cf7f0",
+          "stderr": "",
+          "ok": true
+        },
+        "region": {
+          "status": 0,
+          "stdout_sha256": "8dacb3b0327cbd368e9c06434c1dd66b88f2a69dba30a2f64fc0dd78570cf7f0",
+          "stderr": "",
+          "ok": true
+        },
+        "transfer": {
+          "status": 0,
+          "stdout_sha256": "8dacb3b0327cbd368e9c06434c1dd66b88f2a69dba30a2f64fc0dd78570cf7f0",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 3779851221,
+            "cycles": 802992272
+          },
+          {
+            "status": 0,
+            "instructions": 3779851336,
+            "cycles": 805240700
+          },
+          {
+            "status": 0,
+            "instructions": 3779851212,
+            "cycles": 829135497
+          }
+        ],
+        "region": [
+          {
+            "status": 0,
+            "instructions": 6262962176,
+            "cycles": 2222520829
+          },
+          {
+            "status": 0,
+            "instructions": 6262960245,
+            "cycles": 2283077407
+          },
+          {
+            "status": 0,
+            "instructions": 6262959216,
+            "cycles": 2180801711
+          }
+        ],
+        "transfer": [
+          {
+            "status": 0,
+            "instructions": 6011490325,
+            "cycles": 2097709000
+          },
+          {
+            "status": 0,
+            "instructions": 6011491355,
+            "cycles": 2167398026
+          },
+          {
+            "status": 0,
+            "instructions": 6011490016,
+            "cycles": 2109960927
+          }
+        ]
+      },
+      "medians": {
+        "base": 3779851221,
+        "region": 6262960245,
+        "transfer": 6011490325
+      },
+      "ratio_vs_base": 1.590403953362375,
+      "ratio_vs_region": 0.9598480734089347
+    },
+    "lox/vm/fib|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "a2926b4c752026e4c4fb427a6c468ba4cd1a584ecc8f6ff23fa80c09fdfcb655",
+          "stderr": "",
+          "ok": true
+        },
+        "region": {
+          "status": 0,
+          "stdout_sha256": "a2926b4c752026e4c4fb427a6c468ba4cd1a584ecc8f6ff23fa80c09fdfcb655",
+          "stderr": "",
+          "ok": true
+        },
+        "transfer": {
+          "status": 0,
+          "stdout_sha256": "a2926b4c752026e4c4fb427a6c468ba4cd1a584ecc8f6ff23fa80c09fdfcb655",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 4892176141,
+            "cycles": 1050075660
+          },
+          {
+            "status": 0,
+            "instructions": 4892176130,
+            "cycles": 1072572697
+          },
+          {
+            "status": 0,
+            "instructions": 4892176128,
+            "cycles": 1050189076
+          }
+        ],
+        "region": [
+          {
+            "status": 0,
+            "instructions": 5627717596,
+            "cycles": 1244913881
+          },
+          {
+            "status": 0,
+            "instructions": 5627717595,
+            "cycles": 1249550902
+          },
+          {
+            "status": 0,
+            "instructions": 5627717607,
+            "cycles": 1246093059
+          }
+        ],
+        "transfer": [
+          {
+            "status": 0,
+            "instructions": 5461098902,
+            "cycles": 1256500571
+          },
+          {
+            "status": 0,
+            "instructions": 5461098947,
+            "cycles": 1246096665
+          },
+          {
+            "status": 0,
+            "instructions": 5461098875,
+            "cycles": 1255645323
+          }
+        ]
+      },
+      "medians": {
+        "base": 4892176130,
+        "region": 5627717596,
+        "transfer": 5461098902
+      },
+      "ratio_vs_base": 1.1162923731447911,
+      "ratio_vs_region": 0.970393202722463
+    },
+    "lox/vm/fib|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "a2926b4c752026e4c4fb427a6c468ba4cd1a584ecc8f6ff23fa80c09fdfcb655",
+          "stderr": "",
+          "ok": true
+        },
+        "region": {
+          "status": 0,
+          "stdout_sha256": "a2926b4c752026e4c4fb427a6c468ba4cd1a584ecc8f6ff23fa80c09fdfcb655",
+          "stderr": "",
+          "ok": true
+        },
+        "transfer": {
+          "status": 0,
+          "stdout_sha256": "a2926b4c752026e4c4fb427a6c468ba4cd1a584ecc8f6ff23fa80c09fdfcb655",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 1803513255,
+            "cycles": 389313697
+          },
+          {
+            "status": 0,
+            "instructions": 1803513281,
+            "cycles": 395237468
+          },
+          {
+            "status": 0,
+            "instructions": 1803513266,
+            "cycles": 388804609
+          }
+        ],
+        "region": [
+          {
+            "status": 0,
+            "instructions": 2255123697,
+            "cycles": 742106669
+          },
+          {
+            "status": 0,
+            "instructions": 2255123683,
+            "cycles": 741578837
+          },
+          {
+            "status": 0,
+            "instructions": 2255123686,
+            "cycles": 742130001
+          }
+        ],
+        "transfer": [
+          {
+            "status": 0,
+            "instructions": 2137873727,
+            "cycles": 700362529
+          },
+          {
+            "status": 0,
+            "instructions": 2137873742,
+            "cycles": 699505706
+          },
+          {
+            "status": 0,
+            "instructions": 2137873728,
+            "cycles": 699072113
+          }
+        ]
+      },
+      "medians": {
+        "base": 1803513266,
+        "region": 2255123686,
+        "transfer": 2137873728
+      },
+      "ratio_vs_base": 1.185393957617831,
+      "ratio_vs_region": 0.9480073049971061
+    },
+    "lox/vm/trees|qbe": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "17ab3b16ce7c5de5f4592400fb2b7e34eedbc57f86b65d948015ebfe1bd33ff5",
+          "stderr": "",
+          "ok": true
+        },
+        "region": {
+          "status": 0,
+          "stdout_sha256": "17ab3b16ce7c5de5f4592400fb2b7e34eedbc57f86b65d948015ebfe1bd33ff5",
+          "stderr": "",
+          "ok": true
+        },
+        "transfer": {
+          "status": 0,
+          "stdout_sha256": "17ab3b16ce7c5de5f4592400fb2b7e34eedbc57f86b65d948015ebfe1bd33ff5",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 4671594292,
+            "cycles": 1097801350
+          },
+          {
+            "status": 0,
+            "instructions": 4671594102,
+            "cycles": 1101277218
+          },
+          {
+            "status": 0,
+            "instructions": 4671594115,
+            "cycles": 1101007661
+          }
+        ],
+        "region": [
+          {
+            "status": 0,
+            "instructions": 5411759320,
+            "cycles": 1530439435
+          },
+          {
+            "status": 0,
+            "instructions": 5411759305,
+            "cycles": 1525641954
+          },
+          {
+            "status": 0,
+            "instructions": 5411759594,
+            "cycles": 1521197670
+          }
+        ],
+        "transfer": [
+          {
+            "status": 0,
+            "instructions": 5281532622,
+            "cycles": 1527060029
+          },
+          {
+            "status": 0,
+            "instructions": 5281532063,
+            "cycles": 1507792189
+          },
+          {
+            "status": 0,
+            "instructions": 5281531941,
+            "cycles": 1513633570
+          }
+        ]
+      },
+      "medians": {
+        "base": 4671594115,
+        "region": 5411759320,
+        "transfer": 5281532063
+      },
+      "ratio_vs_base": 1.1305631296266843,
+      "ratio_vs_region": 0.9759362437795922
+    },
+    "lox/vm/trees|llvm": {
+      "checks": {
+        "base": {
+          "status": 0,
+          "stdout_sha256": "17ab3b16ce7c5de5f4592400fb2b7e34eedbc57f86b65d948015ebfe1bd33ff5",
+          "stderr": "",
+          "ok": true
+        },
+        "region": {
+          "status": 0,
+          "stdout_sha256": "17ab3b16ce7c5de5f4592400fb2b7e34eedbc57f86b65d948015ebfe1bd33ff5",
+          "stderr": "",
+          "ok": true
+        },
+        "transfer": {
+          "status": 0,
+          "stdout_sha256": "17ab3b16ce7c5de5f4592400fb2b7e34eedbc57f86b65d948015ebfe1bd33ff5",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "perf": {
+        "base": [
+          {
+            "status": 0,
+            "instructions": 1926898803,
+            "cycles": 688324705
+          },
+          {
+            "status": 0,
+            "instructions": 1926898490,
+            "cycles": 693711233
+          },
+          {
+            "status": 0,
+            "instructions": 1926898493,
+            "cycles": 693020946
+          }
+        ],
+        "region": [
+          {
+            "status": 0,
+            "instructions": 2579182216,
+            "cycles": 1255920755
+          },
+          {
+            "status": 0,
+            "instructions": 2579182302,
+            "cycles": 1275811591
+          },
+          {
+            "status": 0,
+            "instructions": 2579182215,
+            "cycles": 1262168857
+          }
+        ],
+        "transfer": [
+          {
+            "status": 0,
+            "instructions": 2482005932,
+            "cycles": 1198680330
+          },
+          {
+            "status": 0,
+            "instructions": 2482005308,
+            "cycles": 1187350906
+          },
+          {
+            "status": 0,
+            "instructions": 2482005346,
+            "cycles": 1202168951
+          }
+        ]
+      },
+      "medians": {
+        "base": 1926898493,
+        "region": 2579182216,
+        "transfer": 2482005346
+      },
+      "ratio_vs_base": 1.2880830801500867,
+      "ratio_vs_region": 0.9623226038869368
+    }
+  }
+}
