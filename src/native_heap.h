@@ -5,6 +5,8 @@
 /* Descriptor storage outlives the heap. Offsets describe native bytes, never VM
  * tagged values. Variant fields trace only when their u32 tag matches. */
 typedef struct myl_native_type myl_native_type;
+/* RC-v1 owns its allocator/descriptor/worklist state behind this boundary. */
+typedef struct myl_rc_state myl_rc_state;
 typedef struct {
     size_t offset;
     const myl_native_type *type;
@@ -409,6 +411,8 @@ typedef struct {
     /* A direct-mapped cache of pool regions lookups found, indexed by the
      * region's low bits; zero is empty. A few regions hold most references. */
     uintptr_t pool_hits[MYL_NATIVE_POOL_HITS];
+    /* Appended: existing generated GC/arena allocation offsets stay frozen. */
+    myl_rc_state *rc;
 } myl_native_heap;
 /* Frozen byte offsets of `inline_windows` and `arena_window`, read by generated
  * inline allocation; src/native_heap.c asserts them and src/qbe_alloc.zig
