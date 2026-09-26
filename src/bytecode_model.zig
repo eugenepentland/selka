@@ -32,7 +32,7 @@ pub const Instruction = struct {
         cast_integer: typed.Type,
         wrap_domain: typed.Type,
         make_variant: struct { ty: typed.Type, tag: usize },
-        switch_variant: struct { ty: typed.Type, arms: []const SwitchArm },
+        switch_variant: struct { ty: typed.Type, arms: []const SwitchArm, borrowed: bool = false },
         cmp_domain: struct { ty: typed.Type, predicate: Equality },
         cmp_enum: struct { ty: typed.Type, predicate: Equality },
         unwrap_domain: typed.Type,

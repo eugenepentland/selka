@@ -582,7 +582,7 @@ pub const Statement = struct {
         ret: NodeId,
         discard: NodeId,
         branch: struct { condition: NodeId, then_body: StatementId, else_body: ?StatementId },
-        match: struct { value: NodeId, arms: []const MatchArm },
+        match: struct { value: NodeId, arms: []const MatchArm, borrowed: bool = false },
         loop: struct { id: usize = 0, condition: NodeId, body: StatementId, step: ?StatementId = null },
         loop_exit: struct { target: usize, continuing: bool, arenas: []const LocalId = &.{} },
         initialize: Store,
