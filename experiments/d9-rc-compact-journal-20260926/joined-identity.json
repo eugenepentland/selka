@@ -1,0 +1,12 @@
+{
+  "source_commit": "ce8e5d2fbd2e53f709f7c28561ff05a9ca6e922b",
+  "parents": [
+    "2dd16bf66151afe7d592c80d748e1869054380da",
+    "2e359988417915d8c2096cb584478d2d68724725"
+  ],
+  "compiler_sha256": "6ff1ad57b9708af7e168519aff13b0eec7c0a4fe68cee050f0ecde8b13269ac2",
+  "guests_per_backend": 36,
+  "standalone_probes_per_backend": 6,
+  "unit_filter": "RC-DISJOINT-TAKE",
+  "unit_passed": 12
+}

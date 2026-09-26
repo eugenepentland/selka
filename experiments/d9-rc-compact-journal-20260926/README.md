@@ -36,3 +36,8 @@ actual emitted metadata and IL. The eight small `.qbe-manifest.json` receipts
 identify the compiled backend/mode. Recursive `make` uses four entries instead
 of six: table plus guards shrink from 240 to 160 bytes. Payload buffers and both
 transactional scratch entries remain.
+
+`joined-*` files record the separate real merge with the parent's disjoint
+transfer optimization, its Debug compiler identity, 36 focused assertions per
+backend, twelve count-balanced standalone outcomes, and focused unit/build logs.
+They do not change the isolated candidate measurement above.
