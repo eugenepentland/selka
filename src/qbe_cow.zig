@@ -78,7 +78,7 @@ pub fn Lower(comptime E: type) type {
     return struct {
         /// Plan the function under the ownership analysis already run.
         pub fn plan(self: *E, state: *State) Error!bool {
-            const analysis = self.ownership orelse return error.InternalError;
+            const analysis = try @import("qbe_rc_unique.zig").analysis(E, self);
             const input: cow_plan.Input = .{
                 .program = self.program,
                 .function = self.function,
@@ -119,7 +119,7 @@ pub fn Lower(comptime E: type) type {
             const beginning = state.captures[pc].begin;
             if (beginning != cow_plan.none) try beginScope(E, self, state.plan.places[beginning].?, stack);
             if (site.fill) try fillPlace(E, self, pc, stack);
-            for (site.shares) |depth| try share(E, self, stack, depth);
+            if (!@import("runtime_mode.zig").enabled()) for (site.shares) |depth| try share(E, self, stack, depth);
         }
         /// Whether this place retains temporary pins across an index callback.
         pub fn scoped(self: *const E, place: cow_plan.Place) bool {
@@ -377,6 +377,7 @@ fn copyCall(comptime E: type, self: *E, value: usize, container: ?usize, stack: 
 /// Make local `unique.local`'s payload unique: copy it when it is shared and
 /// store the copy into its slot and its alias's.
 fn uniqueLocal(comptime E: type, self: *E, unique: cow_plan.Unique, stack: []const typed.Type) Error!void {
+    if (@import("runtime_mode.zig").enabled()) return @import("qbe_rc_unique.zig").local(E, self, unique);
     const label = self.temp();
     const value = try self.load("l", unique.local);
     try testShared(E, self, value, label);

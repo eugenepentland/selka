@@ -29,3 +29,27 @@ public def test_repeated_local_replacement_preserves_retained_value() -> bool:
         values = [index]
         index += 1
     return len(retained) == 2 and retained[1] == 2 and values[0] == 999
+
+public def test_list_mutation_preserves_owned_snapshot() -> bool:
+    original = [1, 2]
+    changed = original
+    changed.append(3)
+    changed[0] = 9
+    return len(original) == 2 and original[0] == 1 and len(changed) == 3 and changed[0] == 9
+
+public def test_dictionary_mutation_preserves_owned_snapshot() -> bool:
+    original = {1: [1, 2]}
+    changed = original
+    changed[1] = [8]
+    changed[2] = [3]
+    return len(original) == 1 and len(original[1]) == 2 and changed[1][0] == 8
+
+public def test_loop_mutation_rechecks_new_snapshot_owners() -> bool:
+    values = [0]
+    retained = values
+    index = 0
+    while index < 10:
+        retained = values
+        values.append(index)
+        index += 1
+    return len(retained) == 10 and len(values) == 11
