@@ -427,6 +427,62 @@ static void reentrant_relocation_test(void) {
     assert(!heap.rc->dead.active && !heap.rc->dead.head && !state.live && state.retired == 4);
     finish(&heap, &state);
 }
+static void registering_retire(myl_native_heap *heap, void *payload) {
+    TestAllocator *state = myl_rc_allocator_context(heap);
+    if (!state->retired) {
+        static myl_native_type types[64];
+        const myl_native_type *old_type = ((const myl_native_object *)payload - 1)->element;
+        const myl_rc_descriptor *old = myl_rc_descriptor_find(heap, old_type);
+        size_t capacity = heap->rc->metadata.index.capacity;
+        for (size_t i = 0; i < 64; ++i) {
+            types[i] = scalar_type;
+            myl_rc_descriptor descriptor = {.type = &types[i], .shape = &scalar_shape};
+            assert(myl_rc_descriptor_import(heap, &descriptor) == MYL_RC_OK);
+        }
+        assert(heap->rc->metadata.index.capacity > capacity);
+        assert(myl_rc_descriptor_find(heap, old_type) == old);
+    }
+    retire(heap, payload);
+}
+// spec: RC-DRAIN-CACHE-1
+static void drain_cache_registration_test(void) {
+    static const myl_native_type pointer = {.size = 8, .alignment = 8, .kind = MYL_NATIVE_POINTER};
+    static const myl_native_field fields_a[] = {{.type = &scalar_type}, {.offset = 8, .type = &pointer}};
+    static const myl_native_field fields_b[] = {{.type = &pointer}, {.offset = 8, .type = &scalar_type}};
+    static const myl_native_type types[] = {
+        {.size = 16, .alignment = 8, .kind = MYL_NATIVE_RECORD, .fields = fields_a, .field_count = 2},
+        {.size = 16, .alignment = 8, .kind = MYL_NATIVE_RECORD, .fields = fields_b, .field_count = 2}};
+    static const myl_rc_field edges_a[] = {{.shape = &scalar_shape}, {.offset = 8, .shape = &pointer_shape}};
+    static const myl_rc_field edges_b[] = {{.shape = &pointer_shape}, {.offset = 8, .shape = &scalar_shape}};
+    static const myl_rc_shape shapes[] = {
+        {.size = 16, .kind = MYL_RC_SHAPE_RECORD, .as.record = {edges_a, 2}},
+        {.size = 16, .kind = MYL_RC_SHAPE_RECORD, .as.record = {edges_b, 2}}};
+    myl_native_heap heap;
+    TestAllocator state;
+    start(&heap, &state);
+    assert(myl_rc_module_register(&heap, &resource_module) == MYL_RC_OK);
+    for (unsigned i = 0; i < 2; ++i) {
+        myl_rc_descriptor descriptor = {.type = &types[i], .shape = &shapes[i]};
+        assert(myl_rc_descriptor_import(&heap, &descriptor) == MYL_RC_OK);
+        assert(((const myl_rc_binding *)myl_rc_descriptor_find(&heap, &types[i]))->flat.count == 1);
+    }
+    Node *last = new_value(&heap, &resource_type, 1);
+    last->next = new_value(&heap, &scalar_type, 1);
+    *(uint64_t *)last->next = 73;
+    void *head = last;
+    for (unsigned i = 0; i < 64; ++i) {
+        unsigned kind = (i / 2) % 2, edge = kind ? 0 : 8;
+        unsigned char *next = new_value(&heap, &types[kind], 1);
+        memset(next, 0xa5, 16);
+        memcpy(next + edge, &head, sizeof head);
+        head = next;
+    }
+    heap.rc->allocator.hooks.retire = registering_retire;
+    myl_rc_owner_release(&heap, head);
+    assert(state.retired == 67 && !state.live && state.max_finalizing == 1);
+    assert(!heap.rc->dead.active && !heap.rc->dead.head);
+    finish(&heap, &state);
+}
 // spec: RC-TRANSFER-1
 static void pointer_transfers_test(void) {
     myl_native_heap heap;
@@ -819,6 +875,7 @@ int myl_rc_contract_verify(void) {
     million_chain_test();
     reentrant_finalizer_test();
     reentrant_relocation_test();
+    drain_cache_registration_test();
     temporary_binding_test();
     pointer_transfers_test();
     transfer_failure_test();
@@ -831,12 +888,12 @@ int myl_rc_contract_verify(void) {
     deep_unique_test();
     local_transfer_frames_test();
     assert(!setrlimit(RLIMIT_STACK, &original));
-    return 21;
+    return 22;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
-    assert(myl_rc_contract_verify() == 21);
-    puts("native RC contract: 21 tests passed");
+    assert(myl_rc_contract_verify() == 22);
+    puts("native RC contract: 22 tests passed");
     return 0;
 }
 #endif

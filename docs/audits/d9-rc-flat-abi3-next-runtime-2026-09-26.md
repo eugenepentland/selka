@@ -97,8 +97,8 @@ The lifetime proof is stronger than the generation check alone:
   additions or in-place binding replacement.
 - Index growth/rehash relocates index entries, whose values still point at the
   same copied bindings. It cannot invalidate the proposed cached address.
-- Re-registering an existing type checks shape and all callbacks for equality;
-  it returns the original binding. New registrations publish a new batch head.
+- Re-registering an existing type returns its original binding; the registration
+  entry points validate callback identity and, where required, shape identity. New registrations publish a new batch head.
   Failed registration does neither.
 - Metadata batches are freed only during heap destruction. Destruction forbids
   an active drain, and the cache ends with that invocation. Reentrant metadata

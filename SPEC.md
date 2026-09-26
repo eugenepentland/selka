@@ -1407,3 +1407,4 @@ host failure in one worker leaves the units the other workers hold running.
 
 
 - [RC-FLAT-SINGLE-DESTRUCTION-1] A dying heap allocation with one element may traverse its prevalidated bounded ordinary-edge plan without the repeated-element extent loop. It preserves descriptor edge order, clears each edge before release, defers callbacks until parent traversal completes, retains O/H death and arena/immortal checks, and leaves custom finalizers, H shapes and zero/multiple elements on their existing paths.
+- [RC-DRAIN-CACHE-1] An iterative RC drain may reuse one admitted flat binding for the same native type while the metadata batch head is unchanged. Bindings remain immutable across index growth; generic callback paths invalidate this local cache and reacquire descriptors after finalizers. Metadata registration from retirement, mixed layouts, O/H death, edge order and nonallocating bounded-stack destruction preserve their existing behavior.
