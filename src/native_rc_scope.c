@@ -94,7 +94,7 @@ typedef struct {
     const myl_rc_shape *shape;
     unsigned char *address;
     size_t step, cursor;
-    unsigned region;
+    unsigned region, loan;
 } prepare_frame;
 static const myl_rc_shape *member(const myl_rc_shape *shape, const void *address, size_t offset) {
     myl_rc_invariant(shape->kind == MYL_RC_SHAPE_RECORD || shape->kind == MYL_RC_SHAPE_VARIANT);
@@ -108,10 +108,13 @@ static const myl_rc_shape *member(const myl_rc_shape *shape, const void *address
     myl_rc_invariant(0);
     return NULL;
 }
+static const myl_rc_shape loan_pointer = {.size=sizeof(void *),.kind=MYL_RC_SHAPE_HOLD_POINTER};
+static const myl_rc_shape *const loan_shapes[] = {&loan_pointer};
+static const myl_rc_module loan_module = {.abi=MYL_RC_ABI_VERSION,.shapes=loan_shapes,.shape_count=1};
 static myl_rc_status prepare_leaf(myl_rc_scope *scope, prepare_frame *frame) {
     if (frame->shape->kind == MYL_RC_SHAPE_NONE) return MYL_RC_OK;
     myl_rc_invariant(frame->shape->kind == MYL_RC_SHAPE_POINTER || frame->shape->kind == MYL_RC_SHAPE_HOLD_POINTER);
-    myl_rc_slot slot = {.shape = frame->shape, .address = frame->address, .region = frame->region};
+    myl_rc_slot slot = {.shape = frame->loan ? &loan_pointer : frame->shape, .address = frame->address, .region = frame->region};
     void *payload;
     memcpy(&payload, frame->address, sizeof payload);
     /* Inline paths have no managed container from which to recover their
@@ -119,7 +122,7 @@ static myl_rc_status prepare_leaf(myl_rc_scope *scope, prepare_frame *frame) {
      * instead of moving it into the arena of the call that prepares it. */
     unsigned origin = payload ? myl_native_header_region(payload) : 0;
     if (origin < slot.region) slot.region = origin;
-    myl_rc_status status = frame->shape->kind == MYL_RC_SHAPE_HOLD_POINTER ?
+    myl_rc_status status = slot.shape->kind == MYL_RC_SHAPE_HOLD_POINTER ?
         myl_rc_unique_held(scope->heap, &slot) : myl_rc_unique_owned(scope->heap, &slot);
     if (status != MYL_RC_OK) return status;
     memcpy(&payload, frame->address, sizeof payload);
@@ -127,17 +130,17 @@ static myl_rc_status prepare_leaf(myl_rc_scope *scope, prepare_frame *frame) {
 }
 static myl_rc_status prepare_box(myl_rc_scope *scope, prepare_frame *frame) {
     myl_rc_invariant(frame->shape->kind == MYL_RC_SHAPE_POINTER);
-    myl_rc_slot slot = {.shape=frame->shape,.address=frame->address,.region=frame->region};
-    myl_rc_status status = myl_rc_box_detach_owned(scope->heap, &slot);
+    myl_rc_slot slot = {.shape=frame->loan ? &loan_pointer : frame->shape,.address=frame->address,.region=frame->region};
+    myl_rc_status status = frame->loan ? myl_rc_box_detach_held(scope->heap, &slot) : myl_rc_box_detach_owned(scope->heap, &slot);
     if (status != MYL_RC_OK) return status;
     void *payload;
     memcpy(&payload, frame->address, sizeof payload);
     return myl_rc_scope_pin(scope, payload);
 }
-static myl_rc_status prepare_path(myl_rc_scope *scope, const myl_rc_place *place, prepare_frame *frames) {
+static myl_rc_status prepare_path(myl_rc_scope *scope, const myl_rc_place *place, prepare_frame *frames, unsigned loan) {
     const myl_rc_shape *shape = myl_rc_shape_resolve(scope->heap, place->receiver.shape);
     myl_rc_invariant(shape != NULL);
-    frames[0] = (prepare_frame){.shape = shape, .address = place->receiver.address, .region = place->receiver.region};
+    frames[0] = (prepare_frame){.shape = shape, .address = place->receiver.address, .region = place->receiver.region, .loan=loan};
     size_t used = 1;
     while (used) {
         prepare_frame *frame = &frames[used - 1];
@@ -154,12 +157,13 @@ static myl_rc_status prepare_path(myl_rc_scope *scope, const myl_rc_place *place
             if (frame->cursor == shape->as.array.count) { --used; continue; }
             frames[used++] = (prepare_frame){.shape = shape->as.array.element,
                 .address = frame->address + frame->cursor++ * shape->as.array.stride,
-                .step = frame->step + 1, .region = frame->region};
+                .step = frame->step + 1, .region = frame->region, .loan=frame->loan};
             continue;
         }
         if (frame->cursor++) { --used; continue; }
         unsigned char *address = frame->address;
         unsigned region = frame->region;
+        unsigned child_loan = frame->loan;
         if (shape->kind == MYL_RC_SHAPE_POINTER || shape->kind == MYL_RC_SHAPE_HOLD_POINTER) {
             myl_rc_status status = projection->immutable_box ? prepare_box(scope, frame) : prepare_leaf(scope, frame);
             if (status != MYL_RC_OK) return status;
@@ -172,15 +176,20 @@ static myl_rc_status prepare_path(myl_rc_scope *scope, const myl_rc_place *place
             address = payload;
             region = myl_native_header_region(payload);
             shape = descriptor->shape;
+            child_loan = 0;
         }
         const myl_rc_shape *child = member(shape, address, projection->offset);
         frames[used++] = (prepare_frame){.shape = child, .address = address + projection->offset,
-            .step = frame->step + 1, .region = region};
+            .step = frame->step + 1, .region = region, .loan=child_loan};
     }
     return MYL_RC_OK;
 }
-myl_rc_status myl_rc_scope_prepare(myl_rc_scope *scope, const myl_rc_place *place) {
+static myl_rc_status scope_prepare(myl_rc_scope *scope, const myl_rc_place *place, unsigned loan) {
     myl_rc_invariant(scope && scope->active && place && place->receiver.address && (!place->count || place->path));
+    if (loan) {
+        myl_rc_status status = myl_rc_module_register(scope->heap, &loan_module);
+        if (status != MYL_RC_OK) return status;
+    }
     size_t count, bytes;
     if (!myl_rc_size_add(place->count, 1, &count) || !myl_rc_size_mul(count, sizeof(prepare_frame), &bytes))
         return MYL_RC_ALLOCATION_REFUSED;
@@ -188,8 +197,15 @@ myl_rc_status myl_rc_scope_prepare(myl_rc_scope *scope, const myl_rc_place *plac
     if (!frames) return MYL_RC_ALLOCATION_REFUSED;
     scope_entry *boundary = scope->journal;
     myl_rc_status status = myl_rc_scope_hold(scope, place->receiver.container);
-    if (status == MYL_RC_OK) status = prepare_path(scope, place, frames);
+    if (status == MYL_RC_OK) status = prepare_path(scope, place, frames, loan);
     myl_rc_meta_free(scope->heap, frames, bytes);
     if (status != MYL_RC_OK) unwind(scope, boundary);
     return status;
+}
+
+myl_rc_status myl_rc_scope_prepare(myl_rc_scope *scope, const myl_rc_place *place) {
+    return scope_prepare(scope, place, 0);
+}
+myl_rc_status myl_rc_scope_prepare_loan(myl_rc_scope *scope, const myl_rc_place *place) {
+    return scope_prepare(scope, place, 1);
 }

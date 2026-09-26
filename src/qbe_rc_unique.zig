@@ -73,7 +73,7 @@ fn stableMutParameter(comptime E: type, self: *E, index: usize) bool {
 }
 
 /// One ordinary or held pointer edge in an already-owned containing value.
-pub const Field = struct { ty: @import("typed.zig").Type, address: usize, container: ?usize = null, held: bool = false };
+pub const Field = struct { ty: @import("typed.zig").Type, address: usize, container: ?usize = null, held: bool = false, loan: ?usize = null };
 
 /// Detach an ordinary or held field without changing its ownership role.
 pub fn field(comptime E: type, self: *E, target: Field) Error!void {
@@ -83,7 +83,13 @@ pub fn field(comptime E: type, self: *E, target: Field) Error!void {
     } else try self.print(" %v{d} =l copy 0\n", .{container});
     const done = self.temp();
     const helper: []const u8 = if (target.held) "myl_qbe_rc_unique_held" else "myl_qbe_rc_unique_field";
+    if (!target.held) if (target.loan) |loan| {
+        try self.print(" jnz %v{d}, @rcfieldloan{d}, @rcfieldowner{d}\n@rcfieldloan{d}\n", .{ loan, done, done, done });
+        try self.print(" %v{d} =w call $myl_qbe_rc_unique_held(l %ctx, l extern ${s}, l %v{d}, l %v{d})\n", .{ done, try self.descriptor(target.ty), target.address, container });
+        try self.print(" jmp @rcfieldjoined{d}\n@rcfieldowner{d}\n", .{ done, done });
+    };
     try self.print(" %v{d} =w call ${s}(l %ctx, l extern ${s}, l %v{d}, l %v{d})\n", .{ done, helper, try self.descriptor(target.ty), target.address, container });
+    if (!target.held and target.loan != null) try self.print("@rcfieldjoined{d}\n", .{done});
     try success(E, self, done);
 }
 

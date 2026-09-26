@@ -80,3 +80,21 @@ test "iteration detects alias growth including continue and final step" {
     defer compilation.deinit();
     try t.expectEqual(@as(i64, 42), (try native.run(&compilation)).value);
 }
+
+// spec-case: RC-PLACE-ROLE-1
+test "record field growth keeps the active iterator identity" {
+    var compilation = try language.Compilation.init(t.allocator, "field_iteration.my",
+        \\record Holder:
+        \\    items: list[int]
+        \\def main() -> int:
+        \\    holder = Holder([7])
+        \\    for value in holder.items:
+        \\        _ = value
+        \\        holder.items += [9]
+        \\    return 0
+    );
+    defer compilation.deinit();
+    const result = try native.runWithOptions(&compilation, .{ .gc_stress = true });
+    try t.expect(result.trapped());
+    try t.expectEqualStrings("R_LIST_ITERATION_MUTATION", result.trap.code);
+}

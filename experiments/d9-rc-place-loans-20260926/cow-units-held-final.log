@@ -1,0 +1,5 @@
+focused tests: units filter='COW'
+selected: 19 test(s)
+result: PASS - 19 passed, 0 failed, 0 skipped
+elapsed: 2.7s
+log: /home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.mylang-cache/focused-tests/units-COW-20260926-231555.log

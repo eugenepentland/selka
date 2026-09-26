@@ -30,6 +30,7 @@ const runtime_mode = @import("runtime_mode.zig");
 const rc_unique = @import("qbe_rc_unique.zig");
 const rc_frame = @import("qbe_rc_frame.zig");
 const rc_scope = @import("qbe_rc_scope.zig");
+const rc_local_roles = @import("qbe_rc_local_roles.zig");
 const inert_receiver = @import("qbe_rc_inert_receiver.zig");
 const semantics = @import("value_semantics.zig");
 const cow_keep_label = "@cowkeep{d}\n";
@@ -386,7 +387,7 @@ fn prepareMutArgumentRc(comptime E: type, self: *E, arg: *usize, source: @import
         };
         const cursor = try fieldChainRange(E, self, source.read + 1, end, try fieldBase(E, self, source.local), .published);
         const types = self.states[self.pc] orelse return error.InternalError;
-        try rc_unique.field(E, self, .{ .ty = types[slot], .address = cursor.address, .container = cursor.cell orelse cursor.holder, .held = cursor.held });
+        try rc_unique.field(E, self, .{ .ty = types[slot], .address = cursor.address, .container = cursor.cell orelse cursor.holder, .held = cursor.held, .loan = cursor.loan });
         try self.store(slot, try self.load("v", cursor.address));
     }
     arg.* = try self.load("s", slot);
@@ -505,10 +506,10 @@ fn uniqueLocal(comptime E: type, self: *E, unique: cow_plan.Unique, stack: []con
 /// Clone a dictionary stored through record fields before reading an entry
 /// for a nested write; the clone marks held values shared.
 fn uniqueField(comptime E: type, self: *E, place: cow_plan.Place, stack: []const typed.Type) Error!void {
-    const cursor = try fieldChainRange(E, self, place.base + 1, place.fields_end, try fieldBase(E, self, place.parent), .detach);
+    const cursor = try fieldChainRange(E, self, place.base + 1, place.fields_end, try mutableBase(E, self, place.parent), .detach);
     if (runtime_mode.enabled()) {
         const types = self.states[place.fields_end] orelse return error.InternalError;
-        return rc_unique.field(E, self, .{ .ty = types[types.len - 1], .address = cursor.address, .container = cursor.cell orelse cursor.holder, .held = cursor.held });
+        return rc_unique.field(E, self, .{ .ty = types[types.len - 1], .address = cursor.address, .container = cursor.cell orelse cursor.holder, .held = cursor.held, .loan = cursor.loan });
     }
     const value = try self.load("v", cursor.address);
     const label = self.temp();
@@ -579,7 +580,7 @@ fn filledPlace(comptime E: type, self: *E, pc: usize) Error!struct { local: u32,
 /// Where a place's value lives while its write-back address is computed: the
 /// temporary holding that address, the `class` or detached box body it lies
 /// in, and an outer list/dictionary keeping an element address alive.
-const Cursor = struct { address: usize, cell: ?usize, holder: ?usize = null, held: bool = false };
+const Cursor = struct { address: usize, cell: ?usize, holder: ?usize = null, held: bool = false, loan: ?usize = null };
 
 /// Make the value a place's fill stores unique: copy it when it is shared,
 /// write the copy back into the place it was read from, and store the copy.
@@ -612,18 +613,18 @@ fn fillPlace(comptime E: type, self: *E, pc: usize, stack: []const typed.Type) E
             break :entry .{ .address = slot, .cell = null, .holder = dictionary };
         },
         .entry_field => entry: {
-            const cursor_field = try fieldChainRange(E, self, place.base + 1, place.fields_end, try fieldBase(E, self, place.parent), .detach);
+            const cursor_field = try fieldChainRange(E, self, place.base + 1, place.fields_end, try mutableBase(E, self, place.parent), .detach);
             const dictionary = try self.load("v", cursor_field.address);
             container = dictionary;
             const slot = try entrySlot(E, self, place, dictionary);
             break :entry .{ .address = slot, .cell = null, .holder = dictionary };
         },
-        .field => try fieldBase(E, self, place.parent),
+        .field => try mutableBase(E, self, place.parent),
     };
     if (runtime_mode.enabled()) try rc_values.drop(E, self, top);
     cursor = try fieldChain(E, self, place, cursor);
     if (runtime_mode.enabled()) {
-        try rc_unique.field(E, self, .{ .ty = stack[top], .address = cursor.address, .container = cursor.cell orelse container, .held = cursor.held });
+        try rc_unique.field(E, self, .{ .ty = stack[top], .address = cursor.address, .container = cursor.cell orelse container, .held = cursor.held, .loan = cursor.loan });
         try reboxRcPlace(E, self, place);
         return self.store(top, try self.load("v", cursor.address));
     }
@@ -660,7 +661,7 @@ fn fillPlace(comptime E: type, self: *E, pc: usize, stack: []const typed.Type) E
 fn reboxRcPlace(comptime E: type, self: *E, place: cow_plan.Place) Error!void {
     const box = place.box orelse return;
     if ((try self.layout(self.function.scope.locals[box.owner].ty)).size != 8) return error.InternalError;
-    try @import("qbe_rc_local_roles.zig").owning(E, self, box.owner);
+    try rc_local_roles.owning(E, self, box.owner);
     const address = (try fieldBase(E, self, box.owner)).address;
     const body = (try fieldBase(E, self, place.parent)).address;
     const guard = try rc_frame.guard(E, self, box.owner);
@@ -904,12 +905,12 @@ fn beginScope(comptime E: type, self: *E, place: cow_plan.Place, stack: []const 
             break :entry .{ .address = try entrySlot(E, self, place, dictionary), .cell = null, .holder = dictionary };
         },
         .entry_field => entry: {
-            const field = try fieldChainRange(E, self, place.base + 1, place.fields_end, try fieldBase(E, self, place.parent), .published);
+            const field = try fieldChainRange(E, self, place.base + 1, place.fields_end, try mutableBase(E, self, place.parent), .published);
             const dictionary = try self.load("v", field.address);
             try scopePin(E, self, pins, dictionary);
             break :entry .{ .address = try entrySlot(E, self, place, dictionary), .cell = null, .holder = dictionary };
         },
-        .field => try fieldBase(E, self, place.parent),
+        .field => try mutableBase(E, self, place.parent),
     };
     if (place.step == .element) {
         const length = try self.load("v", cursor.holder.?);
@@ -921,7 +922,7 @@ fn beginScope(comptime E: type, self: *E, place: cow_plan.Place, stack: []const 
     const path = try scopePath(E, self, place);
     const done = self.temp();
     if (runtime_mode.enabled()) {
-        try rc_scope.prepare(E, self, .{ .scope = pins, .address = cursor.address, .container = cursor.cell orelse cursor.holder, .path = path.address, .count = path.count });
+        try rc_scope.prepare(E, self, .{ .scope = pins, .address = cursor.address, .container = cursor.cell orelse cursor.holder, .path = path.address, .count = path.count, .loan = cursor.loan });
     } else {
         try self.print(" %v{d} =w call $myl_native_cow_scope_prepare(l %heap, l %v{d}, l %v{d}, l %v{d}, l {d})\n", .{ done, pins, cursor.address, path.address, path.count });
         if (cursor.cell) |body| try qbe_alloc.barrier(*E, self, body);
@@ -964,7 +965,7 @@ fn pinAncestorBoxes(comptime E: type, self: *E, place: cow_plan.Place, pins: usi
             const dictionary = try self.load("v", field.address);
             break :entry .{ .address = try entrySlot(E, self, place, dictionary), .cell = null, .holder = dictionary };
         },
-        .field => try fieldBase(E, self, place.parent),
+        .field => try mutableBase(E, self, place.parent),
     };
     _ = try fieldChainRange(E, self, chainBegin(place), place.fill, cursor, .{ .pin = pins });
 }
@@ -1052,6 +1053,12 @@ fn fieldBase(comptime E: type, self: *E, parent: u32) Error!Cursor {
     return .{ .address = address, .cell = null };
 }
 
+fn mutableBase(comptime E: type, self: *E, parent: u32) Error!Cursor {
+    var cursor = try fieldBase(E, self, parent);
+    if (runtime_mode.enabled()) cursor.loan = try @import("qbe_rc_loans.zig").local(E, self, parent);
+    return cursor;
+}
+
 /// Follow the field reads between a place's base read and its fill: a field
 /// of an inline record lies inside the value, one of a `class` inside the
 /// body its reference names.
@@ -1115,9 +1122,13 @@ fn detachBox(comptime E: type, self: *E, ty: typed.Type, body: usize, cursor: Cu
             try self.print(" %v{d} =l copy %v{d}\n", .{ container, value });
         } else try self.print(" %v{d} =l copy 0\n", .{container});
         const done = self.temp();
-        try self.print(" %v{d} =w call $myl_qbe_rc_box_detach(l %ctx, l extern ${s}, l %v{d}, l %v{d})\n", .{
-            done, try self.descriptor(ty), cursor.address, container,
-        });
+        if (cursor.loan) |loan| {
+            try self.print(" jnz %v{d}, @rcboxloan{d}, @rcboxowner{d}\n@rcboxloan{d}\n", .{ loan, done, done, done });
+            try self.print(" %v{d} =w call $myl_qbe_rc_box_detach_held(l %ctx, l extern ${s}, l %v{d}, l %v{d})\n", .{ done, try self.descriptor(ty), cursor.address, container });
+            try self.print(" jmp @rcboxjoined{d}\n@rcboxowner{d}\n", .{ done, done });
+        }
+        try self.print(" %v{d} =w call $myl_qbe_rc_box_detach(l %ctx, l extern ${s}, l %v{d}, l %v{d})\n", .{ done, try self.descriptor(ty), cursor.address, container });
+        if (cursor.loan != null) try self.print("@rcboxjoined{d}\n", .{done});
         try rc_unique.success(E, self, done);
         return self.load("v", cursor.address);
     }
