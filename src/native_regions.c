@@ -4,6 +4,7 @@
    never references an object of a younger arena is kept by a store barrier, so
    bulk release at scope exit frees a whole depth without tracing survivors. */
 #include "native_regions.h"
+#include "native_rc_values.h"
 #include <stdlib.h>
 #include <string.h>
 static void reach(const myl_native_heap *heap, const myl_native_type *type,
@@ -201,6 +202,15 @@ static void fill(Copier *copier, Clone item) {
 }
 int myl_native_region_escape(myl_native_heap *heap, const myl_native_type *type,
                              const void *value, void *output) {
+    if (myl_rc_enabled(heap)) {
+        const myl_rc_shape *shape = myl_rc_native_shape(heap, type);
+        if (!shape) return 0;
+        myl_rc_slot source = {.shape = shape, .address = (void *)value};
+        myl_rc_slot destination = {.shape = shape, .address = output, .region = heap->region_depth ? heap->region_depth - 1 : 0};
+        myl_rc_status status = myl_rc_region_escape(heap, &destination, &source);
+        if (status != MYL_RC_OK) myl_rc_record_failure(heap, status);
+        return status == MYL_RC_OK;
+    }
     if (!heap->region_depth) {
         if (type->size) memcpy(output, value, type->size);
         return 1;
