@@ -1,0 +1,909 @@
+{
+  "compiler_sha256": "ceb38b6e1fb1a23f20d92580b3cd7f07f635f5752311f27d477f9792e388b7d5",
+  "source_sha256": {
+    "base": {
+      "ast.my": "e210fb35bf3125ba06ebb978bcb3592162020a77576542f2d049879a51479bf9",
+      "bench.json": "dbcc26195c024bc86d9e184284306f4849450f1042d1fe53092e7b52a3deea92",
+      "chunk.my": "b4f6e7ae6531b224f99e026f53fee3692c90d8f2b15d3c76ca5962f1803e4b66",
+      "compiler.my": "9d01166711fe40bf1054ff66dbedfbc4d6668ccd811163feda918a2f528b2886",
+      "compiler_test.my": "582fe817dbeffa709961b5124370ce200510adb3ac0d246572ca1c0dc19ec08a",
+      "driver.my": "fe831d2ec08833d11139e790ab741903b27a8e0fb43582cac11ca664b4595836",
+      "driver_cases.json": "0f5d302b89952c44510d690c59322af42cd9bb54f66f4049fb122a26d184ab2f",
+      "driver_tests.my": "32615edbfcbe21e8d550910df45d9bfcb199ee9c8171405d38566b98d78e00bd",
+      "heap.my": "7c6d1d7fdf48460bc3edc9bb6f037b8001c4b7ce006420d161de7e1d7f166f16",
+      "heap_test.my": "c951153991a8d5d13ca1df6ded7c6f26c7b43a08ed2095f72c6091637b29b53f",
+      "interpreter.my": "b25fe023ef9979a60626cabb063d93e5a39f18b54500ef99f5a87a8ad25f3a5d",
+      "lox_strings.my": "383900dda10b9218caf2087e12a2e20089e4d48b0ec5fc3e17e960a3d70d83df",
+      "lox_strings_test.my": "a44545c64e9f75cc5af761d6c703feec83c4fc0a14d2678a1b2fce28067bd0c0",
+      "main.my": "18c1f669b1683123e635256c9f66c6db2766383391371c3822e61df7d9732274",
+      "natives.my": "2ff45343fded6d303e6233e0f787e63c319e860903e2c0c81ccbb71c2749d665",
+      "object.my": "08c0d5c6ae304ef4d0e1f5929f52b5d1dd47cd46e6c409392c0b5b1df9567ad7",
+      "output.my": "cdc79c8a9a5eca0106fb139bca5492da201f027b0499e5e00a492368317d194c",
+      "parser.my": "e9bd5d9c37e307d060ce165dc4fa0f276c2ff9dbe7cb21bd27cbdd94644b4edd",
+      "parser_test.my": "ffe2658f030c75b40a7c54d8f0c64e848e6679e13fc69cbef9a131ed7b120e4b",
+      "resolver.my": "41d41b2a1ddb3f6ab3fb73ad9eff69415b0450d890554766bfee37eac8d0903d",
+      "resolver_test.my": "72c5176ff15db240d8ec8ff8073fcdb7736e8c60ab47410bb60fce934c179d31",
+      "scanner.my": "af4bc6a57859318051dc47d6e1f6344ee98fbfff037e9be93c0a103765cd3e83",
+      "scanner_test.my": "1d7fbb34b0de402657786641217e81c9ae286cab14baf2716de2db875ae39ad0",
+      "table.my": "c875ae493dbc0d6c1b70202746b0f1d2211190fa1276b9d492778455c0d0b2ca",
+      "table_test.my": "38279f9135e953484e6844994bc070c4156d1eb31ab4de0f295efbea17c19555",
+      "value.my": "3b2a444e77c6a703b1aedad3c89ef38cad70aa3bb6cba1716b623980ff9a76b0",
+      "value_test.my": "b766d22b25a8a8a090b4a059030cfc7462022fdacb66a0a91bf8a9e09a53fed4",
+      "vm.my": "a78ed5ac5b6f79bd1fac22c24322da1fb14238c096eac14249ad4a1abf2483a3"
+    },
+    "hoist-before": {
+      "ast.my": "e210fb35bf3125ba06ebb978bcb3592162020a77576542f2d049879a51479bf9",
+      "bench.json": "dbcc26195c024bc86d9e184284306f4849450f1042d1fe53092e7b52a3deea92",
+      "chunk.my": "b4f6e7ae6531b224f99e026f53fee3692c90d8f2b15d3c76ca5962f1803e4b66",
+      "compiler.my": "c550603195401ff6d9436b42d6fbf0c35051521da57e7b85281fc8fcf6ebe048",
+      "compiler_test.my": "582fe817dbeffa709961b5124370ce200510adb3ac0d246572ca1c0dc19ec08a",
+      "driver.my": "fe831d2ec08833d11139e790ab741903b27a8e0fb43582cac11ca664b4595836",
+      "driver_cases.json": "0f5d302b89952c44510d690c59322af42cd9bb54f66f4049fb122a26d184ab2f",
+      "driver_tests.my": "32615edbfcbe21e8d550910df45d9bfcb199ee9c8171405d38566b98d78e00bd",
+      "heap.my": "25709fc027efad66680e9ac292e877987fe00ae182af98838f5e1de70f125fe7",
+      "heap_test.my": "c951153991a8d5d13ca1df6ded7c6f26c7b43a08ed2095f72c6091637b29b53f",
+      "interpreter.my": "94d8b5472b997d5f875b575f0cf1b5cc7fb670ac57a293c1c6a8081151a19fcd",
+      "lox_strings.my": "383900dda10b9218caf2087e12a2e20089e4d48b0ec5fc3e17e960a3d70d83df",
+      "lox_strings_test.my": "a44545c64e9f75cc5af761d6c703feec83c4fc0a14d2678a1b2fce28067bd0c0",
+      "main.my": "18c1f669b1683123e635256c9f66c6db2766383391371c3822e61df7d9732274",
+      "natives.my": "2ff45343fded6d303e6233e0f787e63c319e860903e2c0c81ccbb71c2749d665",
+      "object.my": "08c0d5c6ae304ef4d0e1f5929f52b5d1dd47cd46e6c409392c0b5b1df9567ad7",
+      "output.my": "cdc79c8a9a5eca0106fb139bca5492da201f027b0499e5e00a492368317d194c",
+      "parser.my": "e9bd5d9c37e307d060ce165dc4fa0f276c2ff9dbe7cb21bd27cbdd94644b4edd",
+      "parser_test.my": "ffe2658f030c75b40a7c54d8f0c64e848e6679e13fc69cbef9a131ed7b120e4b",
+      "resolver.my": "41d41b2a1ddb3f6ab3fb73ad9eff69415b0450d890554766bfee37eac8d0903d",
+      "resolver_test.my": "72c5176ff15db240d8ec8ff8073fcdb7736e8c60ab47410bb60fce934c179d31",
+      "scanner.my": "af4bc6a57859318051dc47d6e1f6344ee98fbfff037e9be93c0a103765cd3e83",
+      "scanner_test.my": "1d7fbb34b0de402657786641217e81c9ae286cab14baf2716de2db875ae39ad0",
+      "table.my": "c875ae493dbc0d6c1b70202746b0f1d2211190fa1276b9d492778455c0d0b2ca",
+      "table_test.my": "38279f9135e953484e6844994bc070c4156d1eb31ab4de0f295efbea17c19555",
+      "value.my": "3b2a444e77c6a703b1aedad3c89ef38cad70aa3bb6cba1716b623980ff9a76b0",
+      "value_test.my": "b766d22b25a8a8a090b4a059030cfc7462022fdacb66a0a91bf8a9e09a53fed4",
+      "vm.my": "0e468a351887cfbb9e26b9669e1e7a3e1f6f473512bce56395bbc639b2bf25e4"
+    },
+    "hoist": {
+      "ast.my": "e210fb35bf3125ba06ebb978bcb3592162020a77576542f2d049879a51479bf9",
+      "bench.json": "dbcc26195c024bc86d9e184284306f4849450f1042d1fe53092e7b52a3deea92",
+      "chunk.my": "b4f6e7ae6531b224f99e026f53fee3692c90d8f2b15d3c76ca5962f1803e4b66",
+      "compiler.my": "c550603195401ff6d9436b42d6fbf0c35051521da57e7b85281fc8fcf6ebe048",
+      "compiler_test.my": "582fe817dbeffa709961b5124370ce200510adb3ac0d246572ca1c0dc19ec08a",
+      "driver.my": "fe831d2ec08833d11139e790ab741903b27a8e0fb43582cac11ca664b4595836",
+      "driver_cases.json": "0f5d302b89952c44510d690c59322af42cd9bb54f66f4049fb122a26d184ab2f",
+      "driver_tests.my": "32615edbfcbe21e8d550910df45d9bfcb199ee9c8171405d38566b98d78e00bd",
+      "heap.my": "ca6b9078355230bd2e31fc92e58794a02e73f333a0b9b8138897330f72c4d3d8",
+      "heap_test.my": "c951153991a8d5d13ca1df6ded7c6f26c7b43a08ed2095f72c6091637b29b53f",
+      "interpreter.my": "94d8b5472b997d5f875b575f0cf1b5cc7fb670ac57a293c1c6a8081151a19fcd",
+      "lox_strings.my": "383900dda10b9218caf2087e12a2e20089e4d48b0ec5fc3e17e960a3d70d83df",
+      "lox_strings_test.my": "a44545c64e9f75cc5af761d6c703feec83c4fc0a14d2678a1b2fce28067bd0c0",
+      "main.my": "18c1f669b1683123e635256c9f66c6db2766383391371c3822e61df7d9732274",
+      "natives.my": "2ff45343fded6d303e6233e0f787e63c319e860903e2c0c81ccbb71c2749d665",
+      "object.my": "08c0d5c6ae304ef4d0e1f5929f52b5d1dd47cd46e6c409392c0b5b1df9567ad7",
+      "output.my": "cdc79c8a9a5eca0106fb139bca5492da201f027b0499e5e00a492368317d194c",
+      "parser.my": "e9bd5d9c37e307d060ce165dc4fa0f276c2ff9dbe7cb21bd27cbdd94644b4edd",
+      "parser_test.my": "ffe2658f030c75b40a7c54d8f0c64e848e6679e13fc69cbef9a131ed7b120e4b",
+      "resolver.my": "41d41b2a1ddb3f6ab3fb73ad9eff69415b0450d890554766bfee37eac8d0903d",
+      "resolver_test.my": "72c5176ff15db240d8ec8ff8073fcdb7736e8c60ab47410bb60fce934c179d31",
+      "scanner.my": "af4bc6a57859318051dc47d6e1f6344ee98fbfff037e9be93c0a103765cd3e83",
+      "scanner_test.my": "1d7fbb34b0de402657786641217e81c9ae286cab14baf2716de2db875ae39ad0",
+      "table.my": "c875ae493dbc0d6c1b70202746b0f1d2211190fa1276b9d492778455c0d0b2ca",
+      "table_test.my": "38279f9135e953484e6844994bc070c4156d1eb31ab4de0f295efbea17c19555",
+      "value.my": "3b2a444e77c6a703b1aedad3c89ef38cad70aa3bb6cba1716b623980ff9a76b0",
+      "value_test.my": "b766d22b25a8a8a090b4a059030cfc7462022fdacb66a0a91bf8a9e09a53fed4",
+      "vm.my": "0e468a351887cfbb9e26b9669e1e7a3e1f6f473512bce56395bbc639b2bf25e4"
+    }
+  },
+  "llvm": {
+    "cpu": 11,
+    "builds": {
+      "hoist-before-llvm": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-performance43/.tmp-perf43/install/bin/mylang",
+          "build",
+          "main.my",
+          "--project",
+          "--mode",
+          "ReleaseFast",
+          "--backend",
+          "llvm",
+          "--llvm-opt",
+          "3",
+          "--lto",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-frame-return/.tmp-frame-return/guest-cache",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-frame-return/.tmp-frame-return/lox-hoist-before-llvm",
+          "--value-semantics"
+        ],
+        "status": 0,
+        "stderr": "",
+        "compiler_sha256": "ceb38b6e1fb1a23f20d92580b3cd7f07f635f5752311f27d477f9792e388b7d5",
+        "source_sha256": {
+          "ast.my": "e210fb35bf3125ba06ebb978bcb3592162020a77576542f2d049879a51479bf9",
+          "chunk.my": "b4f6e7ae6531b224f99e026f53fee3692c90d8f2b15d3c76ca5962f1803e4b66",
+          "compiler.my": "c550603195401ff6d9436b42d6fbf0c35051521da57e7b85281fc8fcf6ebe048",
+          "compiler_test.my": "582fe817dbeffa709961b5124370ce200510adb3ac0d246572ca1c0dc19ec08a",
+          "driver.my": "fe831d2ec08833d11139e790ab741903b27a8e0fb43582cac11ca664b4595836",
+          "driver_tests.my": "32615edbfcbe21e8d550910df45d9bfcb199ee9c8171405d38566b98d78e00bd",
+          "heap.my": "25709fc027efad66680e9ac292e877987fe00ae182af98838f5e1de70f125fe7",
+          "heap_test.my": "c951153991a8d5d13ca1df6ded7c6f26c7b43a08ed2095f72c6091637b29b53f",
+          "interpreter.my": "94d8b5472b997d5f875b575f0cf1b5cc7fb670ac57a293c1c6a8081151a19fcd",
+          "lox_strings.my": "383900dda10b9218caf2087e12a2e20089e4d48b0ec5fc3e17e960a3d70d83df",
+          "lox_strings_test.my": "a44545c64e9f75cc5af761d6c703feec83c4fc0a14d2678a1b2fce28067bd0c0",
+          "main.my": "18c1f669b1683123e635256c9f66c6db2766383391371c3822e61df7d9732274",
+          "natives.my": "2ff45343fded6d303e6233e0f787e63c319e860903e2c0c81ccbb71c2749d665",
+          "object.my": "08c0d5c6ae304ef4d0e1f5929f52b5d1dd47cd46e6c409392c0b5b1df9567ad7",
+          "output.my": "cdc79c8a9a5eca0106fb139bca5492da201f027b0499e5e00a492368317d194c",
+          "parser.my": "e9bd5d9c37e307d060ce165dc4fa0f276c2ff9dbe7cb21bd27cbdd94644b4edd",
+          "parser_test.my": "ffe2658f030c75b40a7c54d8f0c64e848e6679e13fc69cbef9a131ed7b120e4b",
+          "resolver.my": "41d41b2a1ddb3f6ab3fb73ad9eff69415b0450d890554766bfee37eac8d0903d",
+          "resolver_test.my": "72c5176ff15db240d8ec8ff8073fcdb7736e8c60ab47410bb60fce934c179d31",
+          "scanner.my": "af4bc6a57859318051dc47d6e1f6344ee98fbfff037e9be93c0a103765cd3e83",
+          "scanner_test.my": "1d7fbb34b0de402657786641217e81c9ae286cab14baf2716de2db875ae39ad0",
+          "table.my": "c875ae493dbc0d6c1b70202746b0f1d2211190fa1276b9d492778455c0d0b2ca",
+          "table_test.my": "38279f9135e953484e6844994bc070c4156d1eb31ab4de0f295efbea17c19555",
+          "value.my": "3b2a444e77c6a703b1aedad3c89ef38cad70aa3bb6cba1716b623980ff9a76b0",
+          "value_test.my": "b766d22b25a8a8a090b4a059030cfc7462022fdacb66a0a91bf8a9e09a53fed4",
+          "vm.my": "0e468a351887cfbb9e26b9669e1e7a3e1f6f473512bce56395bbc639b2bf25e4"
+        },
+        "binary_sha256": "7924f43ae9e53c207fcfc2a6a30beaca794da58251d07330d2415fba8ee908aa"
+      },
+      "hoist-llvm": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-performance43/.tmp-perf43/install/bin/mylang",
+          "build",
+          "main.my",
+          "--project",
+          "--mode",
+          "ReleaseFast",
+          "--backend",
+          "llvm",
+          "--llvm-opt",
+          "3",
+          "--lto",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-frame-return/.tmp-frame-return/guest-cache",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-frame-return/.tmp-frame-return/lox-hoist-llvm",
+          "--value-semantics"
+        ],
+        "status": 0,
+        "stderr": "",
+        "compiler_sha256": "ceb38b6e1fb1a23f20d92580b3cd7f07f635f5752311f27d477f9792e388b7d5",
+        "source_sha256": {
+          "ast.my": "e210fb35bf3125ba06ebb978bcb3592162020a77576542f2d049879a51479bf9",
+          "chunk.my": "b4f6e7ae6531b224f99e026f53fee3692c90d8f2b15d3c76ca5962f1803e4b66",
+          "compiler.my": "c550603195401ff6d9436b42d6fbf0c35051521da57e7b85281fc8fcf6ebe048",
+          "compiler_test.my": "582fe817dbeffa709961b5124370ce200510adb3ac0d246572ca1c0dc19ec08a",
+          "driver.my": "fe831d2ec08833d11139e790ab741903b27a8e0fb43582cac11ca664b4595836",
+          "driver_tests.my": "32615edbfcbe21e8d550910df45d9bfcb199ee9c8171405d38566b98d78e00bd",
+          "heap.my": "ca6b9078355230bd2e31fc92e58794a02e73f333a0b9b8138897330f72c4d3d8",
+          "heap_test.my": "c951153991a8d5d13ca1df6ded7c6f26c7b43a08ed2095f72c6091637b29b53f",
+          "interpreter.my": "94d8b5472b997d5f875b575f0cf1b5cc7fb670ac57a293c1c6a8081151a19fcd",
+          "lox_strings.my": "383900dda10b9218caf2087e12a2e20089e4d48b0ec5fc3e17e960a3d70d83df",
+          "lox_strings_test.my": "a44545c64e9f75cc5af761d6c703feec83c4fc0a14d2678a1b2fce28067bd0c0",
+          "main.my": "18c1f669b1683123e635256c9f66c6db2766383391371c3822e61df7d9732274",
+          "natives.my": "2ff45343fded6d303e6233e0f787e63c319e860903e2c0c81ccbb71c2749d665",
+          "object.my": "08c0d5c6ae304ef4d0e1f5929f52b5d1dd47cd46e6c409392c0b5b1df9567ad7",
+          "output.my": "cdc79c8a9a5eca0106fb139bca5492da201f027b0499e5e00a492368317d194c",
+          "parser.my": "e9bd5d9c37e307d060ce165dc4fa0f276c2ff9dbe7cb21bd27cbdd94644b4edd",
+          "parser_test.my": "ffe2658f030c75b40a7c54d8f0c64e848e6679e13fc69cbef9a131ed7b120e4b",
+          "resolver.my": "41d41b2a1ddb3f6ab3fb73ad9eff69415b0450d890554766bfee37eac8d0903d",
+          "resolver_test.my": "72c5176ff15db240d8ec8ff8073fcdb7736e8c60ab47410bb60fce934c179d31",
+          "scanner.my": "af4bc6a57859318051dc47d6e1f6344ee98fbfff037e9be93c0a103765cd3e83",
+          "scanner_test.my": "1d7fbb34b0de402657786641217e81c9ae286cab14baf2716de2db875ae39ad0",
+          "table.my": "c875ae493dbc0d6c1b70202746b0f1d2211190fa1276b9d492778455c0d0b2ca",
+          "table_test.my": "38279f9135e953484e6844994bc070c4156d1eb31ab4de0f295efbea17c19555",
+          "value.my": "3b2a444e77c6a703b1aedad3c89ef38cad70aa3bb6cba1716b623980ff9a76b0",
+          "value_test.my": "b766d22b25a8a8a090b4a059030cfc7462022fdacb66a0a91bf8a9e09a53fed4",
+          "vm.my": "0e468a351887cfbb9e26b9669e1e7a3e1f6f473512bce56395bbc639b2bf25e4"
+        },
+        "binary_sha256": "14048d48b2d096d9ddf2019acb52c5c194c0aeeaffcd1b8879d042f569147285"
+      }
+    },
+    "samples": {
+      "lox/vm/method_call": {
+        "checks": {
+          "hoist-before": {
+            "status": 0,
+            "stdout_sha256": "21d91041c5d1a59661f8936571ee5c87e96f6f0c7a532b52ec17c5b9bea8220b",
+            "stderr": "",
+            "ok": true
+          },
+          "hoist": {
+            "status": 0,
+            "stdout_sha256": "21d91041c5d1a59661f8936571ee5c87e96f6f0c7a532b52ec17c5b9bea8220b",
+            "stderr": "",
+            "ok": true
+          }
+        },
+        "counts": {
+          "hoist-before": [
+            {
+              "status": 0,
+              "instructions": 7590747300,
+              "cycles": 2083856100
+            },
+            {
+              "status": 0,
+              "instructions": 7590747228,
+              "cycles": 2086627880
+            },
+            {
+              "status": 0,
+              "instructions": 7590747270,
+              "cycles": 2104406935
+            }
+          ],
+          "hoist": [
+            {
+              "status": 0,
+              "instructions": 6803024957,
+              "cycles": 1905765680
+            },
+            {
+              "status": 0,
+              "instructions": 6803024960,
+              "cycles": 1900422211
+            },
+            {
+              "status": 0,
+              "instructions": 6803024968,
+              "cycles": 1899940629
+            }
+          ]
+        },
+        "size": 50000,
+        "medians": {
+          "hoist-before": 7590747270,
+          "hoist": 6803024960
+        },
+        "ratio": 0.8962259864567985
+      },
+      "lox/vm/closures": {
+        "checks": {
+          "hoist-before": {
+            "status": 0,
+            "stdout_sha256": "8dacb3b0327cbd368e9c06434c1dd66b88f2a69dba30a2f64fc0dd78570cf7f0",
+            "stderr": "",
+            "ok": true
+          },
+          "hoist": {
+            "status": 0,
+            "stdout_sha256": "8dacb3b0327cbd368e9c06434c1dd66b88f2a69dba30a2f64fc0dd78570cf7f0",
+            "stderr": "",
+            "ok": true
+          }
+        },
+        "counts": {
+          "hoist-before": [
+            {
+              "status": 0,
+              "instructions": 5488093873,
+              "cycles": 1521539000
+            },
+            {
+              "status": 0,
+              "instructions": 5488093923,
+              "cycles": 1519595165
+            },
+            {
+              "status": 0,
+              "instructions": 5488093901,
+              "cycles": 1510409930
+            }
+          ],
+          "hoist": [
+            {
+              "status": 0,
+              "instructions": 4451572272,
+              "cycles": 1291177455
+            },
+            {
+              "status": 0,
+              "instructions": 4451571742,
+              "cycles": 1287886677
+            },
+            {
+              "status": 0,
+              "instructions": 4451571761,
+              "cycles": 1292707815
+            }
+          ]
+        },
+        "size": 200000,
+        "medians": {
+          "hoist-before": 5488093901,
+          "hoist": 4451571761
+        },
+        "ratio": 0.8111325792346351
+      },
+      "lox/vm/binary_trees": {
+        "checks": {
+          "hoist-before": {
+            "status": 0,
+            "stdout_sha256": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056",
+            "stderr": "",
+            "ok": true
+          },
+          "hoist": {
+            "status": 0,
+            "stdout_sha256": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056",
+            "stderr": "",
+            "ok": true
+          }
+        },
+        "counts": {
+          "hoist-before": [
+            {
+              "status": 0,
+              "instructions": 4339037529,
+              "cycles": 1359803805
+            },
+            {
+              "status": 0,
+              "instructions": 4339035846,
+              "cycles": 1334395811
+            },
+            {
+              "status": 0,
+              "instructions": 4339034844,
+              "cycles": 1326108304
+            }
+          ],
+          "hoist": [
+            {
+              "status": 0,
+              "instructions": 4333199807,
+              "cycles": 1354617069
+            },
+            {
+              "status": 0,
+              "instructions": 4333199798,
+              "cycles": 1361826411
+            },
+            {
+              "status": 0,
+              "instructions": 4333199812,
+              "cycles": 1316797768
+            }
+          ]
+        },
+        "size": 10,
+        "medians": {
+          "hoist-before": 4339035846,
+          "hoist": 4333199807
+        },
+        "ratio": 0.9986549917522852
+      },
+      "lox/vm/fib": {
+        "checks": {
+          "hoist-before": {
+            "status": 0,
+            "stdout_sha256": "a2926b4c752026e4c4fb427a6c468ba4cd1a584ecc8f6ff23fa80c09fdfcb655",
+            "stderr": "",
+            "ok": true
+          },
+          "hoist": {
+            "status": 0,
+            "stdout_sha256": "a2926b4c752026e4c4fb427a6c468ba4cd1a584ecc8f6ff23fa80c09fdfcb655",
+            "stderr": "",
+            "ok": true
+          }
+        },
+        "counts": {
+          "hoist-before": [
+            {
+              "status": 0,
+              "instructions": 2111132399,
+              "cycles": 586195006
+            },
+            {
+              "status": 0,
+              "instructions": 2111132394,
+              "cycles": 585882895
+            },
+            {
+              "status": 0,
+              "instructions": 2111132383,
+              "cycles": 586744501
+            }
+          ],
+          "hoist": [
+            {
+              "status": 0,
+              "instructions": 2111131662,
+              "cycles": 587678087
+            },
+            {
+              "status": 0,
+              "instructions": 2111131659,
+              "cycles": 587927273
+            },
+            {
+              "status": 0,
+              "instructions": 2111131654,
+              "cycles": 588515567
+            }
+          ]
+        },
+        "size": 28,
+        "medians": {
+          "hoist-before": 2111132394,
+          "hoist": 2111131659
+        },
+        "ratio": 0.9999996518456151
+      },
+      "lox/vm/trees": {
+        "checks": {
+          "hoist-before": {
+            "status": 0,
+            "stdout_sha256": "17ab3b16ce7c5de5f4592400fb2b7e34eedbc57f86b65d948015ebfe1bd33ff5",
+            "stderr": "",
+            "ok": true
+          },
+          "hoist": {
+            "status": 0,
+            "stdout_sha256": "17ab3b16ce7c5de5f4592400fb2b7e34eedbc57f86b65d948015ebfe1bd33ff5",
+            "stderr": "",
+            "ok": true
+          }
+        },
+        "counts": {
+          "hoist-before": [
+            {
+              "status": 0,
+              "instructions": 2355365870,
+              "cycles": 904836336
+            },
+            {
+              "status": 0,
+              "instructions": 2355365760,
+              "cycles": 922768535
+            },
+            {
+              "status": 0,
+              "instructions": 2355365770,
+              "cycles": 925650234
+            }
+          ],
+          "hoist": [
+            {
+              "status": 0,
+              "instructions": 2355362144,
+              "cycles": 929317115
+            },
+            {
+              "status": 0,
+              "instructions": 2355362163,
+              "cycles": 910810356
+            },
+            {
+              "status": 0,
+              "instructions": 2355362225,
+              "cycles": 927180472
+            }
+          ]
+        },
+        "size": 5,
+        "medians": {
+          "hoist-before": 2355365770,
+          "hoist": 2355362163
+        },
+        "ratio": 0.9999984686030314
+      }
+    }
+  },
+  "qbe": {
+    "cpu": 11,
+    "builds": {
+      "hoist-before-value-qbe": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-performance43/.tmp-perf43/install/bin/mylang",
+          "build",
+          "main.my",
+          "--project",
+          "--mode",
+          "ReleaseFast",
+          "--backend",
+          "qbe",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-frame-return/.tmp-frame-return/validation-cache",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-frame-return/.tmp-frame-return/lox-hoist-before-value-qbe",
+          "--value-semantics"
+        ],
+        "status": 0,
+        "stderr": "",
+        "binary_sha256": "ca281a741bae8d0dab91921e21db3441e406a697ea20cbed2bbb4402ef08e831"
+      },
+      "hoist-value-qbe": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-performance43/.tmp-perf43/install/bin/mylang",
+          "build",
+          "main.my",
+          "--project",
+          "--mode",
+          "ReleaseFast",
+          "--backend",
+          "qbe",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-frame-return/.tmp-frame-return/validation-cache",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-frame-return/.tmp-frame-return/lox-hoist-value-qbe",
+          "--value-semantics"
+        ],
+        "status": 0,
+        "stderr": "",
+        "binary_sha256": "0c11db0d1ecd33c87c42be786232560f5a36936e1a4f063adaa646cec06a5779"
+      },
+      "hoist-legacy-qbe": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-performance43/.tmp-perf43/install/bin/mylang",
+          "build",
+          "main.my",
+          "--project",
+          "--mode",
+          "ReleaseFast",
+          "--backend",
+          "qbe",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-frame-return/.tmp-frame-return/validation-cache",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-frame-return/.tmp-frame-return/lox-hoist-legacy-qbe"
+        ],
+        "status": 0,
+        "stderr": "heap.my:119:9: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n          rt.objects[slot] = obj\n          ^\nheap.my:121:9: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n          rt.objects.append(obj)\n          ^\nheap.my:214:5: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n      klass = class_obj(rt, ref)\n      ^\nheap.my:223:13: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n              fields = instance.fields\n              ^\nheap.my:232:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      objects = rt.objects\n      ^\nheap.my:240:13: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n              updated = instance\n              ^\nheap.my:278:5: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n      env = env_obj(rt, ref)\n      ^\nheap.my:290:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_202 = rt.globals\n      ^\nheap.my:318:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      marker = rt.marker\n      ^\nheap.my:345:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      marker = rt.marker\n      ^\nheap.my:408:13: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n              __wb_313 = rt.strings\n              ^\ninterpreter.my:136:17: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n                  __wb_137 = it.rt\n                  ^\ninterpreter.my:138:17: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n                  it.rt = __wb_137\n                  ^\ninterpreter.my:142:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_141 = it.rt\n      ^\ninterpreter.my:154:17: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n                  __wb_151 = it.rt\n                  ^\ninterpreter.my:156:17: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n                  it.rt = __wb_151\n                  ^\ninterpreter.my:160:9: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n          __wb_155 = it.rt\n          ^\ninterpreter.my:187:17: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n                  __wb_180 = it.rt\n                  ^\ninterpreter.my:189:17: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n                  it.rt = __wb_180\n                  ^\ninterpreter.my:196:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_187 = it.rt\n      ^\ninterpreter.my:198:5: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      it.rt = __wb_187\n      ^\ninterpreter.my:199:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_188 = it.rt\n      ^\ninterpreter.my:227:9: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n          __wb_214 = it.rt\n          ^\ninterpreter.my:229:9: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n          it.rt = __wb_214\n          ^\ninterpreter.my:233:13: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n              __wb_218 = it.rt\n              ^\ninterpreter.my:249:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_232 = it.rt\n      ^\ninterpreter.my:281:21: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n                      __wb_262 = it.rt\n                      ^\ninterpreter.my:283:21: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n                      it.rt = __wb_262\n                      ^\ninterpreter.my:289:21: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n                      __wb_268 = it.rt\n                      ^\ninterpreter.my:291:21: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n                      it.rt = __wb_268\n                      ^\ninterpreter.my:292:21: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n                      __wb_269 = it.rt\n                      ^\ninterpreter.my:310:11: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n      match instance_of(it.rt, heap.peek(it.rt, 1)):\n            ^\ninterpreter.my:312:13: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n              fields = instance.fields\n              ^\ninterpreter.my:318:13: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n              __wb_285 = it.rt\n              ^\ninterpreter.my:320:13: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n              it.rt = __wb_285\n              ^\ninterpreter.my:321:13: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n              __wb_286 = it.rt\n              ^\ninterpreter.my:335:13: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n              __wb_298 = it.rt\n              ^\ninterpreter.my:345:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_318 = it.rt\n      ^\ninterpreter.my:352:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_327 = it.rt\n      ^\ninterpreter.my:395:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_344 = it.rt\n      ^\ninterpreter.my:397:5: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      it.rt = __wb_344\n      ^\ninterpreter.my:400:9: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n          __wb_347 = it.rt\n          ^\ninterpreter.my:420:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_365 = it.rt\n      ^\ninterpreter.my:422:5: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      it.rt = __wb_365\n      ^\ninterpreter.my:424:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_367 = it.rt\n      ^\ninterpreter.my:451:21: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n                      __wb_392 = it.rt\n                      ^\ninterpreter.my:453:21: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n                      it.rt = __wb_392\n                      ^\ninterpreter.my:460:21: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n                      __wb_399 = it.rt\n                      ^\ninterpreter.my:476:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_413 = it.rt\n      ^\ninterpreter.my:478:5: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      it.rt = __wb_413\n      ^\ninterpreter.my:484:13: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n              __wb_419 = it.rt\n              ^\ninterpreter.my:486:13: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n              it.rt = __wb_419\n              ^\ninterpreter.my:487:13: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n              __wb_420 = it.rt\n              ^\ninterpreter.my:489:13: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n              it.rt = __wb_420\n              ^\ninterpreter.my:490:13: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n              __wb_421 = it.rt\n              ^\ninterpreter.my:492:13: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n              it.rt = __wb_421\n              ^\ninterpreter.my:494:13: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n              __wb_423 = it.rt\n              ^\ninterpreter.my:496:13: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n              it.rt = __wb_423\n              ^\ninterpreter.my:501:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_428 = it.rt\n      ^\ninterpreter.my:511:9: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n          __wb_436 = it.rt\n          ^\ninterpreter.my:513:9: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n          it.rt = __wb_436\n          ^\ninterpreter.my:515:9: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n          __wb_438 = it.rt\n          ^\ninterpreter.my:557:9: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n          __wb_478 = it.rt\n          ^\ninterpreter.my:559:9: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n          it.rt = __wb_478\n          ^\ninterpreter.my:567:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_486 = it.rt\n      ^\ninterpreter.my:568:45: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n      heap.push(mut __wb_486, value.Value.obj(heap.allocate(mut __wb_486, object.Obj.klass(klass))))\n                                              ^\ninterpreter.my:569:5: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      it.rt = __wb_486\n      ^\ninterpreter.my:570:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      methods = klass.methods\n      ^\ninterpreter.my:574:9: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n          __wb_methods = it.rt\n          ^\ninterpreter.my:576:9: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n          it.rt = __wb_methods\n          ^\ninterpreter.my:577:9: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n          __wb_490 = it.rt\n          ^\ninterpreter.my:579:9: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n          it.rt = __wb_490\n          ^\ninterpreter.my:580:9: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n          __wb_491 = it.rt\n          ^\ninterpreter.my:582:9: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n          it.rt = __wb_491\n          ^\ninterpreter.my:583:9: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n          __wb_492 = it.rt\n          ^\ninterpreter.my:585:9: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n          it.rt = __wb_492\n          ^\ninterpreter.my:587:9: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n          decl = it.program.functions[method]\n          ^\ninterpreter.my:588:9: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n          __wb_495 = it.rt\n          ^\ninterpreter.my:590:9: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n          it.rt = __wb_495\n          ^\ninterpreter.my:592:9: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n          __wb_methods = it.rt\n          ^\ninterpreter.my:594:9: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n          it.rt = __wb_methods\n          ^\ninterpreter.my:596:9: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n          __wb_498 = it.rt\n          ^\ninterpreter.my:598:9: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n          it.rt = __wb_498\n          ^\ninterpreter.my:600:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_500 = it.rt\n      ^\ninterpreter.my:602:5: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      it.rt = __wb_500\n      ^\ninterpreter.my:604:9: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n          __wb_502 = it.rt\n          ^\ninterpreter.my:611:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_507 = it.rt\n      ^\ninterpreter.my:613:5: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      it.rt = __wb_507\n      ^\ninterpreter.my:615:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_509 = it.rt\n      ^\ninterpreter.my:623:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_521 = it.rt\n      ^\ninterpreter.my:630:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      decl = it.program.functions[index]\n      ^\ninterpreter.my:631:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_524 = it.rt\n      ^\ninterpreter.my:633:5: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      it.rt = __wb_524\n      ^\ninterpreter.my:634:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_525 = it.rt\n      ^\ninterpreter.my:636:5: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      it.rt = __wb_525\n      ^\ninterpreter.my:638:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_527 = it.rt\n      ^\ninterpreter.my:646:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_530 = it.rt\n      ^\ninterpreter.my:661:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_539 = it.out\n      ^\ninterpreter.my:663:5: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      it.out = __wb_539\n      ^\ninterpreter.my:664:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_540 = it.rt\n      ^\ninterpreter.my:675:13: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n              __wb_546 = it.rt\n              ^\ninterpreter.my:677:13: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n              it.rt = __wb_546\n              ^\ninterpreter.my:678:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_547 = it.rt\n      ^\ninterpreter.my:690:13: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n              __wb_554 = it.rt\n              ^\ninterpreter.my:692:13: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n              it.rt = __wb_554\n              ^\ninterpreter.my:694:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_556 = it.rt\n      ^\ninterpreter.my:703:9: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n          __wb_560 = it.rt\n          ^\ninterpreter.my:774:25: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n                          __wb_604 = it.out\n                          ^\ninterpreter.my:776:25: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n                          it.out = __wb_604\n                          ^\ninterpreter.my:777:25: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n                          __wb_605 = it.out\n                          ^\nlox_strings.my:44:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_44 = rt.strings\n      ^\nparser.my:38:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_38 = p.out\n      ^\nparser.my:56:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_54 = p.rt\n      ^\nparser.my:490:19: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      p = Parser(rt=rt, out=out, source=source, tokens=[], current=0, had_error=False, program=ast.new_program())\n                    ^\nparser.my:490:27: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      p = Parser(rt=rt, out=out, source=source, tokens=[], current=0, had_error=False, program=ast.new_program())\n                            ^\nresolver.my:62:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_62 = r.out\n      ^\nresolver.my:93:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      scope = r.scopes[len(r.scopes) - 1]\n      ^\nresolver.my:98:9: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n          r.scopes[len(r.scopes) - 1] = scope\n          ^\nresolver.my:109:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      scope = r.scopes[len(r.scopes) - 1]\n      ^\nresolver.my:116:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      scope = r.scopes[len(r.scopes) - 1]\n      ^\nvm.my:321:9: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n          __wb_282 = rt.globals\n          ^\nvm.my:445:5: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n      methods = heap.class_obj(rt, as_obj(heap.peek(rt, 0))).methods\n      ^\nvm.my:450:5: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n      subclass = heap.class_obj(rt, subclass_ref)\n      ^\nvm.my:459:5: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n      methods = heap.class_obj(rt, as_obj(heap.peek(rt, 1))).methods\n      ^\nvm.my:462:5: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n      klass = heap.class_obj(rt, class_ref)\n      ^\nvm.my:471:5: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n      frame = load_frame(rt, rt.frames[rt.frame_count - 1])\n      ^\nvm.my:473:23: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n          instruction = frame.code[frame.ip]\n                        ^\nvm.my:559:17: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n                  frame = load_frame(rt, rt.frames[rt.frame_count - 1])\n                  ^\nvm.my:566:17: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n                  frame = load_frame(rt, rt.frames[rt.frame_count - 1])\n                  ^\nvm.my:575:17: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n                  frame = load_frame(rt, rt.frames[rt.frame_count - 1])\n                  ^\nvm.my:592:13: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n              frame = load_frame(rt, rt.frames[rt.frame_count - 1])\n              ^\ncompiler.my:89:5: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      p.compilers[index] = updated\n      ^\ncompiler.my:110:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_103 = p.out\n      ^\ncompiler.my:155:5: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n      code = current_chunk(p)\n      ^\ncompiler.my:158:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      current = p.compilers[current_index]\n      ^\ncompiler.my:159:5: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      current.function.code = code\n      ^\ncompiler.my:194:5: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n      code = current_chunk(p)\n      ^\ncompiler.my:197:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      current = p.compilers[current_index]\n      ^\ncompiler.my:198:5: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      current.function.code = code\n      ^\ncompiler.my:212:5: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n      code = current_chunk(p)\n      ^\ncompiler.my:219:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      current = p.compilers[current_index]\n      ^\ncompiler.my:220:5: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      current.function.code = code\n      ^\ncompiler.my:228:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_201 = p.rt\n      ^\ncompiler.my:229:11: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n      ref = heap.allocate(mut __wb_201, object.Obj.function(function))\n            ^\ncompiler.my:230:5: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      p.rt = __wb_201\n      ^\ncompiler.my:232:39: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      fn_compiler = FnCompiler(function=function, function_ref=ref, kind=kind, locals=[], upvalues=[], scope_depth=0)\n                                        ^\ncompiler.my:233:5: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      p.compilers.append(fn_compiler)\n      ^\ncompiler.my:235:9: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n          __wb_206 = p.rt\n          ^\ncompiler.my:271:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_239 = p.rt\n      ^\ncompiler.my:291:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      target = p.compilers[level]\n      ^\ncompiler.my:314:9: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n          enclosing = p.compilers[level - 1]\n          ^\ncompiler.my:325:5: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n      current = current_compiler(p)\n      ^\ncompiler.my:358:5: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n      current = current_compiler(p)\n      ^\ncompiler.my:472:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_433 = p.rt\n      ^\ncompiler.my:653:5: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n      finished = end_compiler(mut p)\n      ^\ncompiler.my:665:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      target = p.compilers[index]\n      ^\ncompiler.my:667:5: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      p.compilers[index] = target\n      ^\n",
+        "binary_sha256": "13e508fa4777d885a0d75e3bc84af206f15c9e3c0647b6320058c45b9873651b"
+      },
+      "hoist-legacy-llvm": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-performance43/.tmp-perf43/install/bin/mylang",
+          "build",
+          "main.my",
+          "--project",
+          "--mode",
+          "ReleaseFast",
+          "--backend",
+          "llvm",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-frame-return/.tmp-frame-return/validation-cache",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-frame-return/.tmp-frame-return/lox-hoist-legacy-llvm",
+          "--llvm-opt",
+          "3",
+          "--lto"
+        ],
+        "status": 0,
+        "stderr": "heap.my:119:9: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n          rt.objects[slot] = obj\n          ^\nheap.my:121:9: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n          rt.objects.append(obj)\n          ^\nheap.my:214:5: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n      klass = class_obj(rt, ref)\n      ^\nheap.my:223:13: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n              fields = instance.fields\n              ^\nheap.my:232:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      objects = rt.objects\n      ^\nheap.my:240:13: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n              updated = instance\n              ^\nheap.my:278:5: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n      env = env_obj(rt, ref)\n      ^\nheap.my:290:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_202 = rt.globals\n      ^\nheap.my:318:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      marker = rt.marker\n      ^\nheap.my:345:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      marker = rt.marker\n      ^\nheap.my:408:13: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n              __wb_313 = rt.strings\n              ^\ninterpreter.my:136:17: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n                  __wb_137 = it.rt\n                  ^\ninterpreter.my:138:17: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n                  it.rt = __wb_137\n                  ^\ninterpreter.my:142:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_141 = it.rt\n      ^\ninterpreter.my:154:17: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n                  __wb_151 = it.rt\n                  ^\ninterpreter.my:156:17: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n                  it.rt = __wb_151\n                  ^\ninterpreter.my:160:9: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n          __wb_155 = it.rt\n          ^\ninterpreter.my:187:17: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n                  __wb_180 = it.rt\n                  ^\ninterpreter.my:189:17: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n                  it.rt = __wb_180\n                  ^\ninterpreter.my:196:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_187 = it.rt\n      ^\ninterpreter.my:198:5: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      it.rt = __wb_187\n      ^\ninterpreter.my:199:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_188 = it.rt\n      ^\ninterpreter.my:227:9: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n          __wb_214 = it.rt\n          ^\ninterpreter.my:229:9: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n          it.rt = __wb_214\n          ^\ninterpreter.my:233:13: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n              __wb_218 = it.rt\n              ^\ninterpreter.my:249:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_232 = it.rt\n      ^\ninterpreter.my:281:21: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n                      __wb_262 = it.rt\n                      ^\ninterpreter.my:283:21: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n                      it.rt = __wb_262\n                      ^\ninterpreter.my:289:21: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n                      __wb_268 = it.rt\n                      ^\ninterpreter.my:291:21: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n                      it.rt = __wb_268\n                      ^\ninterpreter.my:292:21: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n                      __wb_269 = it.rt\n                      ^\ninterpreter.my:310:11: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n      match instance_of(it.rt, heap.peek(it.rt, 1)):\n            ^\ninterpreter.my:312:13: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n              fields = instance.fields\n              ^\ninterpreter.my:318:13: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n              __wb_285 = it.rt\n              ^\ninterpreter.my:320:13: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n              it.rt = __wb_285\n              ^\ninterpreter.my:321:13: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n              __wb_286 = it.rt\n              ^\ninterpreter.my:335:13: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n              __wb_298 = it.rt\n              ^\ninterpreter.my:345:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_318 = it.rt\n      ^\ninterpreter.my:352:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_327 = it.rt\n      ^\ninterpreter.my:395:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_344 = it.rt\n      ^\ninterpreter.my:397:5: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      it.rt = __wb_344\n      ^\ninterpreter.my:400:9: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n          __wb_347 = it.rt\n          ^\ninterpreter.my:420:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_365 = it.rt\n      ^\ninterpreter.my:422:5: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      it.rt = __wb_365\n      ^\ninterpreter.my:424:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_367 = it.rt\n      ^\ninterpreter.my:451:21: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n                      __wb_392 = it.rt\n                      ^\ninterpreter.my:453:21: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n                      it.rt = __wb_392\n                      ^\ninterpreter.my:460:21: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n                      __wb_399 = it.rt\n                      ^\ninterpreter.my:476:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_413 = it.rt\n      ^\ninterpreter.my:478:5: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      it.rt = __wb_413\n      ^\ninterpreter.my:484:13: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n              __wb_419 = it.rt\n              ^\ninterpreter.my:486:13: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n              it.rt = __wb_419\n              ^\ninterpreter.my:487:13: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n              __wb_420 = it.rt\n              ^\ninterpreter.my:489:13: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n              it.rt = __wb_420\n              ^\ninterpreter.my:490:13: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n              __wb_421 = it.rt\n              ^\ninterpreter.my:492:13: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n              it.rt = __wb_421\n              ^\ninterpreter.my:494:13: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n              __wb_423 = it.rt\n              ^\ninterpreter.my:496:13: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n              it.rt = __wb_423\n              ^\ninterpreter.my:501:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_428 = it.rt\n      ^\ninterpreter.my:511:9: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n          __wb_436 = it.rt\n          ^\ninterpreter.my:513:9: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n          it.rt = __wb_436\n          ^\ninterpreter.my:515:9: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n          __wb_438 = it.rt\n          ^\ninterpreter.my:557:9: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n          __wb_478 = it.rt\n          ^\ninterpreter.my:559:9: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n          it.rt = __wb_478\n          ^\ninterpreter.my:567:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_486 = it.rt\n      ^\ninterpreter.my:568:45: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n      heap.push(mut __wb_486, value.Value.obj(heap.allocate(mut __wb_486, object.Obj.klass(klass))))\n                                              ^\ninterpreter.my:569:5: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      it.rt = __wb_486\n      ^\ninterpreter.my:570:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      methods = klass.methods\n      ^\ninterpreter.my:574:9: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n          __wb_methods = it.rt\n          ^\ninterpreter.my:576:9: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n          it.rt = __wb_methods\n          ^\ninterpreter.my:577:9: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n          __wb_490 = it.rt\n          ^\ninterpreter.my:579:9: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n          it.rt = __wb_490\n          ^\ninterpreter.my:580:9: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n          __wb_491 = it.rt\n          ^\ninterpreter.my:582:9: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n          it.rt = __wb_491\n          ^\ninterpreter.my:583:9: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n          __wb_492 = it.rt\n          ^\ninterpreter.my:585:9: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n          it.rt = __wb_492\n          ^\ninterpreter.my:587:9: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n          decl = it.program.functions[method]\n          ^\ninterpreter.my:588:9: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n          __wb_495 = it.rt\n          ^\ninterpreter.my:590:9: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n          it.rt = __wb_495\n          ^\ninterpreter.my:592:9: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n          __wb_methods = it.rt\n          ^\ninterpreter.my:594:9: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n          it.rt = __wb_methods\n          ^\ninterpreter.my:596:9: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n          __wb_498 = it.rt\n          ^\ninterpreter.my:598:9: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n          it.rt = __wb_498\n          ^\ninterpreter.my:600:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_500 = it.rt\n      ^\ninterpreter.my:602:5: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      it.rt = __wb_500\n      ^\ninterpreter.my:604:9: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n          __wb_502 = it.rt\n          ^\ninterpreter.my:611:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_507 = it.rt\n      ^\ninterpreter.my:613:5: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      it.rt = __wb_507\n      ^\ninterpreter.my:615:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_509 = it.rt\n      ^\ninterpreter.my:623:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_521 = it.rt\n      ^\ninterpreter.my:630:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      decl = it.program.functions[index]\n      ^\ninterpreter.my:631:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_524 = it.rt\n      ^\ninterpreter.my:633:5: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      it.rt = __wb_524\n      ^\ninterpreter.my:634:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_525 = it.rt\n      ^\ninterpreter.my:636:5: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      it.rt = __wb_525\n      ^\ninterpreter.my:638:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_527 = it.rt\n      ^\ninterpreter.my:646:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_530 = it.rt\n      ^\ninterpreter.my:661:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_539 = it.out\n      ^\ninterpreter.my:663:5: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      it.out = __wb_539\n      ^\ninterpreter.my:664:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_540 = it.rt\n      ^\ninterpreter.my:675:13: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n              __wb_546 = it.rt\n              ^\ninterpreter.my:677:13: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n              it.rt = __wb_546\n              ^\ninterpreter.my:678:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_547 = it.rt\n      ^\ninterpreter.my:690:13: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n              __wb_554 = it.rt\n              ^\ninterpreter.my:692:13: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n              it.rt = __wb_554\n              ^\ninterpreter.my:694:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_556 = it.rt\n      ^\ninterpreter.my:703:9: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n          __wb_560 = it.rt\n          ^\ninterpreter.my:774:25: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n                          __wb_604 = it.out\n                          ^\ninterpreter.my:776:25: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n                          it.out = __wb_604\n                          ^\ninterpreter.my:777:25: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n                          __wb_605 = it.out\n                          ^\nlox_strings.my:44:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_44 = rt.strings\n      ^\nparser.my:38:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_38 = p.out\n      ^\nparser.my:56:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_54 = p.rt\n      ^\nparser.my:490:19: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      p = Parser(rt=rt, out=out, source=source, tokens=[], current=0, had_error=False, program=ast.new_program())\n                    ^\nparser.my:490:27: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      p = Parser(rt=rt, out=out, source=source, tokens=[], current=0, had_error=False, program=ast.new_program())\n                            ^\nresolver.my:62:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_62 = r.out\n      ^\nresolver.my:93:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      scope = r.scopes[len(r.scopes) - 1]\n      ^\nresolver.my:98:9: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n          r.scopes[len(r.scopes) - 1] = scope\n          ^\nresolver.my:109:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      scope = r.scopes[len(r.scopes) - 1]\n      ^\nresolver.my:116:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      scope = r.scopes[len(r.scopes) - 1]\n      ^\nvm.my:321:9: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n          __wb_282 = rt.globals\n          ^\nvm.my:445:5: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n      methods = heap.class_obj(rt, as_obj(heap.peek(rt, 0))).methods\n      ^\nvm.my:450:5: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n      subclass = heap.class_obj(rt, subclass_ref)\n      ^\nvm.my:459:5: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n      methods = heap.class_obj(rt, as_obj(heap.peek(rt, 1))).methods\n      ^\nvm.my:462:5: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n      klass = heap.class_obj(rt, class_ref)\n      ^\nvm.my:471:5: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n      frame = load_frame(rt, rt.frames[rt.frame_count - 1])\n      ^\nvm.my:473:23: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n          instruction = frame.code[frame.ip]\n                        ^\nvm.my:559:17: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n                  frame = load_frame(rt, rt.frames[rt.frame_count - 1])\n                  ^\nvm.my:566:17: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n                  frame = load_frame(rt, rt.frames[rt.frame_count - 1])\n                  ^\nvm.my:575:17: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n                  frame = load_frame(rt, rt.frames[rt.frame_count - 1])\n                  ^\nvm.my:592:13: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n              frame = load_frame(rt, rt.frames[rt.frame_count - 1])\n              ^\ncompiler.my:89:5: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      p.compilers[index] = updated\n      ^\ncompiler.my:110:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_103 = p.out\n      ^\ncompiler.my:155:5: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n      code = current_chunk(p)\n      ^\ncompiler.my:158:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      current = p.compilers[current_index]\n      ^\ncompiler.my:159:5: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      current.function.code = code\n      ^\ncompiler.my:194:5: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n      code = current_chunk(p)\n      ^\ncompiler.my:197:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      current = p.compilers[current_index]\n      ^\ncompiler.my:198:5: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      current.function.code = code\n      ^\ncompiler.my:212:5: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n      code = current_chunk(p)\n      ^\ncompiler.my:219:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      current = p.compilers[current_index]\n      ^\ncompiler.my:220:5: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      current.function.code = code\n      ^\ncompiler.my:228:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_201 = p.rt\n      ^\ncompiler.my:229:11: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n      ref = heap.allocate(mut __wb_201, object.Obj.function(function))\n            ^\ncompiler.my:230:5: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      p.rt = __wb_201\n      ^\ncompiler.my:232:39: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      fn_compiler = FnCompiler(function=function, function_ref=ref, kind=kind, locals=[], upvalues=[], scope_depth=0)\n                                        ^\ncompiler.my:233:5: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      p.compilers.append(fn_compiler)\n      ^\ncompiler.my:235:9: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n          __wb_206 = p.rt\n          ^\ncompiler.my:271:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_239 = p.rt\n      ^\ncompiler.my:291:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      target = p.compilers[level]\n      ^\ncompiler.my:314:9: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n          enclosing = p.compilers[level - 1]\n          ^\ncompiler.my:325:5: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n      current = current_compiler(p)\n      ^\ncompiler.my:358:5: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n      current = current_compiler(p)\n      ^\ncompiler.my:472:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      __wb_433 = p.rt\n      ^\ncompiler.my:653:5: warning[W_ALIAS_DEPENDENT]: across a call: a returned or retained argument is later written through another path; return and store back the updated value or use a mut parameter\n      finished = end_compiler(mut p)\n      ^\ncompiler.my:665:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      target = p.compilers[index]\n      ^\ncompiler.my:667:5: warning[W_ALIAS_DEPENDENT]: store: this value is held in another collection, field or payload and later written through a different path; store the updated value back\n      p.compilers[index] = target\n      ^\n",
+        "binary_sha256": "4aab93c703e95c67093cc5bf0bb744e1670431a079d4fea97e73db43e3216afb"
+      }
+    },
+    "samples": {
+      "lox/vm/method_call": {
+        "checks": {
+          "hoist-before": {
+            "status": 0,
+            "stdout_sha256": "21d91041c5d1a59661f8936571ee5c87e96f6f0c7a532b52ec17c5b9bea8220b",
+            "stderr": "",
+            "ok": true
+          },
+          "hoist": {
+            "status": 0,
+            "stdout_sha256": "21d91041c5d1a59661f8936571ee5c87e96f6f0c7a532b52ec17c5b9bea8220b",
+            "stderr": "",
+            "ok": true
+          }
+        },
+        "counts": {
+          "hoist-before": [
+            {
+              "status": 0,
+              "instructions": 16372344282,
+              "cycles": 3911128706
+            },
+            {
+              "status": 0,
+              "instructions": 16372344282,
+              "cycles": 3898987215
+            },
+            {
+              "status": 0,
+              "instructions": 16372344245,
+              "cycles": 3892535373
+            }
+          ],
+          "hoist": [
+            {
+              "status": 0,
+              "instructions": 15456443840,
+              "cycles": 3644743391
+            },
+            {
+              "status": 0,
+              "instructions": 15456443824,
+              "cycles": 3655760083
+            },
+            {
+              "status": 0,
+              "instructions": 15456443860,
+              "cycles": 3643933440
+            }
+          ]
+        },
+        "size": 50000,
+        "medians": {
+          "hoist-before": 16372344282,
+          "hoist": 15456443840
+        },
+        "ratio": 0.9440580758488597
+      },
+      "lox/vm/closures": {
+        "checks": {
+          "hoist-before": {
+            "status": 0,
+            "stdout_sha256": "8dacb3b0327cbd368e9c06434c1dd66b88f2a69dba30a2f64fc0dd78570cf7f0",
+            "stderr": "",
+            "ok": true
+          },
+          "hoist": {
+            "status": 0,
+            "stdout_sha256": "8dacb3b0327cbd368e9c06434c1dd66b88f2a69dba30a2f64fc0dd78570cf7f0",
+            "stderr": "",
+            "ok": true
+          }
+        },
+        "counts": {
+          "hoist-before": [
+            {
+              "status": 0,
+              "instructions": 11297624576,
+              "cycles": 2663269679
+            },
+            {
+              "status": 0,
+              "instructions": 11297624534,
+              "cycles": 2656843890
+            },
+            {
+              "status": 0,
+              "instructions": 11297624554,
+              "cycles": 2659877903
+            }
+          ],
+          "hoist": [
+            {
+              "status": 0,
+              "instructions": 10203822560,
+              "cycles": 2363238629
+            },
+            {
+              "status": 0,
+              "instructions": 10203822536,
+              "cycles": 2360083359
+            },
+            {
+              "status": 0,
+              "instructions": 10203822569,
+              "cycles": 2358911601
+            }
+          ]
+        },
+        "size": 200000,
+        "medians": {
+          "hoist-before": 11297624554,
+          "hoist": 10203822560
+        },
+        "ratio": 0.9031830108380853
+      },
+      "lox/vm/binary_trees": {
+        "checks": {
+          "hoist-before": {
+            "status": 0,
+            "stdout_sha256": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056",
+            "stderr": "",
+            "ok": true
+          },
+          "hoist": {
+            "status": 0,
+            "stdout_sha256": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056",
+            "stderr": "",
+            "ok": true
+          }
+        },
+        "counts": {
+          "hoist-before": [
+            {
+              "status": 0,
+              "instructions": 8174461359,
+              "cycles": 2169297146
+            },
+            {
+              "status": 0,
+              "instructions": 8174457525,
+              "cycles": 2163559574
+            },
+            {
+              "status": 0,
+              "instructions": 8174457538,
+              "cycles": 2172041276
+            }
+          ],
+          "hoist": [
+            {
+              "status": 0,
+              "instructions": 8168579916,
+              "cycles": 2167370621
+            },
+            {
+              "status": 0,
+              "instructions": 8168584940,
+              "cycles": 2171813051
+            },
+            {
+              "status": 0,
+              "instructions": 8168580606,
+              "cycles": 2167176518
+            }
+          ]
+        },
+        "size": 10,
+        "medians": {
+          "hoist-before": 8174457538,
+          "hoist": 8168580606
+        },
+        "ratio": 0.9992810615294434
+      },
+      "lox/vm/fib": {
+        "checks": {
+          "hoist-before": {
+            "status": 0,
+            "stdout_sha256": "a2926b4c752026e4c4fb427a6c468ba4cd1a584ecc8f6ff23fa80c09fdfcb655",
+            "stderr": "",
+            "ok": true
+          },
+          "hoist": {
+            "status": 0,
+            "stdout_sha256": "a2926b4c752026e4c4fb427a6c468ba4cd1a584ecc8f6ff23fa80c09fdfcb655",
+            "stderr": "",
+            "ok": true
+          }
+        },
+        "counts": {
+          "hoist-before": [
+            {
+              "status": 0,
+              "instructions": 5329968804,
+              "cycles": 1176896713
+            },
+            {
+              "status": 0,
+              "instructions": 5329968822,
+              "cycles": 1178657294
+            },
+            {
+              "status": 0,
+              "instructions": 5329968829,
+              "cycles": 1175384576
+            }
+          ],
+          "hoist": [
+            {
+              "status": 0,
+              "instructions": 5329967891,
+              "cycles": 1170821903
+            },
+            {
+              "status": 0,
+              "instructions": 5329967912,
+              "cycles": 1169490481
+            },
+            {
+              "status": 0,
+              "instructions": 5329967890,
+              "cycles": 1168229844
+            }
+          ]
+        },
+        "size": 28,
+        "medians": {
+          "hoist-before": 5329968822,
+          "hoist": 5329967891
+        },
+        "ratio": 0.9999998253273085
+      },
+      "lox/vm/trees": {
+        "checks": {
+          "hoist-before": {
+            "status": 0,
+            "stdout_sha256": "17ab3b16ce7c5de5f4592400fb2b7e34eedbc57f86b65d948015ebfe1bd33ff5",
+            "stderr": "",
+            "ok": true
+          },
+          "hoist": {
+            "status": 0,
+            "stdout_sha256": "17ab3b16ce7c5de5f4592400fb2b7e34eedbc57f86b65d948015ebfe1bd33ff5",
+            "stderr": "",
+            "ok": true
+          }
+        },
+        "counts": {
+          "hoist-before": [
+            {
+              "status": 0,
+              "instructions": 5011029433,
+              "cycles": 1393565943
+            },
+            {
+              "status": 0,
+              "instructions": 5011029418,
+              "cycles": 1391978815
+            },
+            {
+              "status": 0,
+              "instructions": 5011029410,
+              "cycles": 1387636958
+            }
+          ],
+          "hoist": [
+            {
+              "status": 0,
+              "instructions": 5011025034,
+              "cycles": 1389994482
+            },
+            {
+              "status": 0,
+              "instructions": 5011025038,
+              "cycles": 1392635544
+            },
+            {
+              "status": 0,
+              "instructions": 5011025254,
+              "cycles": 1399367059
+            }
+          ]
+        },
+        "size": 5,
+        "medians": {
+          "hoist-before": 5011029418,
+          "hoist": 5011025038
+        },
+        "ratio": 0.9999991259281009
+      }
+    }
+  },
+  "ir": {
+    "hoist-before": {
+      "function": "heap::set_global",
+      "cow_transfer_calls": 2,
+      "il_lines": 458
+    },
+    "hoist": {
+      "function": "heap::set_global",
+      "cow_transfer_calls": 0,
+      "il_lines": 399
+    }
+  },
+  "ir_text": {
+    "hoist-before-set-global.il": "type :myl_slice = { l, l }\ntype :t521bf24a967e14727eaaec581081f48418bd372e2f25b737a26c39858cc8275b = align 8 { b 16 }\ntype :t6a1d8ee86e02e1cd0e838f29c02a4dfb0139420677ae32f87781933a6f0fe536 = align 8 { b 208 }\ntype :te758ef64fa5399816d2e36870457817f6d0c1707702a005752c112705a835446 = align 8 { b 16 }\nexport function l $myl_f_df854e8ed9ee42930d3ed44ab0cd662c7c2c4c4b0b98e3a3a182e1a6f7dcca63(l %ctx, l %a0, l %a1, l %a2) {\n@entry\n %trap =l add %ctx, 32\n %l0 =l alloc8 8\n %l1 =l alloc8 8\n %l2 =l alloc8 8\n %l3 =l alloc8 16\n %l4 =l alloc8 8\n %s0 =l alloc8 8\n %s1 =l alloc8 8\n %s2 =l alloc8 8\n %s3 =l alloc8 8\n %root0 =l alloc8 32\n %root1 =l alloc8 32\n %root2 =l alloc8 32\n %agg2 =l alloc8 16\n %agg20 =l alloc8 208\n %agg21 =l alloc8 208\n %v4 =l add %ctx, 8\n %v7 =l loadl %v4\n %v8 =l add %ctx, 56\n %v9 =l loadl %v8\n %v10 =l ceql %v7, %v9\n jnz %v10, @limitfail2, @frameadmit0\n@limitfail2\n call $myl_qbe_fail_frame(l %ctx)\n jmp @entry_failure\n@frameadmit0\n %v6 =l alloc8 32\n %v11 =l add %ctx, 64\n %v12 =l loadl %v11\n %v13 =l cultl %v6, %v12\n jnz %v13, @floorfail3, @stackadmit1\n@floorfail3\n call $myl_qbe_fail_frame(l %ctx)\n jmp @entry_failure\n@stackadmit1\n %v5 =l add %ctx, 48\n %v14 =l loadl %v5\n storel %v14, %v6\n %v15 =l add %v6, 8\n storel extern $myl_f_df854e8ed9ee42930d3ed44ab0cd662c7c2c4c4b0b98e3a3a182e1a6f7dcca63_meta, %v15\n %v16 =l add %v6, 16\n storel 0, %v16\n storel %v6, %v5\n %v17 =l add %v7, 1\n storel %v17, %v4\n %position =l add %v6, 16\n call $memset(l %l3, w 0, l 16)\n storel %a0, %l0\n storel %a1, %l1\n storel %a2, %l2\n %heap =l call $myl_qbe_heap(l %ctx)\n %root_mark =l call $myl_qbe_root_mark(l %ctx)\n %maxsteps =l add %ctx, 16\n jmp @i0\n@i0\n storel 0, %position\n %v18 =l loadl %ctx\n %v19 =l loadl %maxsteps\n %v20 =l ceql %v18, %v19\n jnz %v20, @step_limit, @step21\n@step21\n %v21 =l add %v18, 1\n storel %v21, %ctx\n %v22 =l loadl %l0\n storel %v22, %s0\n storel 1, %position\n %v23 =l loadl %ctx\n %v24 =l loadl %maxsteps\n %v25 =l ceql %v23, %v24\n jnz %v25, @step_limit, @step26\n@step26\n %v26 =l add %v23, 1\n storel %v26, %ctx\n %v27 =l loadl %s0\n %v28 =l add %v27, 48\n storel %v28, %s0\n storel 2, %position\n %v29 =l loadl %ctx\n %v30 =l loadl %maxsteps\n %v31 =l ceql %v29, %v30\n jnz %v31, @step_limit, @step32\n@step32\n %v32 =l add %v29, 1\n storel %v32, %ctx\n %v33 =l loadl %s0\n %v34 =l copy %agg2\n blit %v33, %v34, 16\n %v36 =l add %v34, 0\n %v37 =l loadl %v36\n jnz %v37, @vcpresent38, @vcslow35\n@vcpresent38\n %v39 =l sub %v37, 16\n %v40 =l loadl %v39\n %v41 =l and %v40, 1152921504606846978\n jnz %v41, @vcslow35, @vcnext42\n@vcnext42\n %v43 =l or %v40, 2305843009213693952\n storel %v43, %v39\n jmp @vcdone44\n@vcslow35\n %v45 =l add %heap, 16\n %v46 =l loadl %v45\n %v47 =l loadl %l0\n storel %v46, %root0\n %v48 =l add %root0, 8\n storel %v47, %v48\n %v49 =l add %root0, 16\n storel extern $myl_t_4e6c1584b61f68a69271c693e65be720323e6bcb8d28e2f694592eed5c4c3f28, %v49\n storel %root0, %v45\n %v50 =l loadl %s0\n storel %root0, %root1\n %v51 =l add %root1, 8\n storel %v50, %v51\n %v52 =l add %root1, 16\n storel extern $myl_t_81d71c98b196ce876b8748e8f5e1c439a764a7854aeb5e4ef7865d0716f2ecef, %v52\n storel %root1, %v45\n %v53 =w call $myl_qbe_cow_transfer(l %ctx, l extern $myl_t_81d71c98b196ce876b8748e8f5e1c439a764a7854aeb5e4ef7865d0716f2ecef, l %v34, l %v34, w 0)\n %v54 =l loadl %trap\n jnz %v54, @failure, @ok54\n@ok54\n %v55 =l add %heap, 16\n storel %root_mark, %v55\n@vcdone44\n storel %v34, %s0\n storel 3, %position\n %v56 =l loadl %ctx\n %v57 =l loadl %maxsteps\n %v58 =l ceql %v56, %v57\n jnz %v58, @step_limit, @step59\n@step59\n %v59 =l add %v56, 1\n storel %v59, %ctx\n %v60 =l loadl %s0\n blit %v60, %l3, 16\n storel 4, %position\n %v61 =l loadl %ctx\n %v62 =l loadl %maxsteps\n %v63 =l ceql %v61, %v62\n jnz %v63, @step_limit, @step64\n@step64\n %v64 =l add %v61, 1\n storel %v64, %ctx\n storel %l3, %s0\n storel 5, %position\n %v65 =l loadl %ctx\n %v66 =l loadl %maxsteps\n %v67 =l ceql %v65, %v66\n jnz %v67, @step_limit, @step68\n@step68\n %v68 =l add %v65, 1\n storel %v68, %ctx\n %v69 =l loadl %l1\n storel %v69, %s1\n storel 6, %position\n %v70 =l loadl %ctx\n %v71 =l loadl %maxsteps\n %v72 =l ceql %v70, %v71\n jnz %v72, @step_limit, @step73\n@step73\n %v73 =l add %v70, 1\n storel %v73, %ctx\n %v74 =l loadl %l0\n storel %v74, %s2\n storel 7, %position\n %v75 =l loadl %ctx\n %v76 =l loadl %maxsteps\n %v77 =l ceql %v75, %v76\n jnz %v77, @step_limit, @step78\n@step78\n %v78 =l add %v75, 1\n storel %v78, %ctx\n %v79 =l loadl %l1\n storel %v79, %s3\n storel 8, %position\n %v80 =l loadl %ctx\n %v81 =l loadl %maxsteps\n %v82 =l ceql %v80, %v81\n jnz %v82, @step_limit, @step83\n@step83\n %v83 =l add %v80, 1\n storel %v83, %ctx\n %v84 =l loadl %s2\n %v85 =l loadl %s3\n %v86 =l call $myl_f_a0ff172e9e450785632a25c55eafac31e4cfca2cc56a9728097332089f64b651(l %ctx, l %v84, l %v85)\n storel %v86, %s2\n %v87 =l loadl %trap\n jnz %v87, @failure, @ok87\n@ok87\n storel 9, %position\n %v88 =l loadl %ctx\n %v89 =l loadl %maxsteps\n %v90 =l ceql %v88, %v89\n jnz %v90, @step_limit, @step91\n@step91\n %v91 =l add %v88, 1\n storel %v91, %ctx\n %v92 =l loadl %l2\n storel %v92, %s3\n storel 10, %position\n %v93 =l loadl %ctx\n %v94 =l loadl %maxsteps\n %v95 =l ceql %v93, %v94\n jnz %v95, @step_limit, @step96\n@step96\n %v96 =l add %v93, 1\n storel %v96, %ctx\n %v102 =l add %heap, 16\n %v103 =l loadl %v102\n %v104 =l loadl %l0\n storel %v103, %root0\n %v105 =l add %root0, 8\n storel %v104, %v105\n %v106 =l add %root0, 16\n storel extern $myl_t_4e6c1584b61f68a69271c693e65be720323e6bcb8d28e2f694592eed5c4c3f28, %v106\n storel %root0, %v102\n storel %root0, %root1\n %v107 =l add %root1, 8\n storel %l3, %v107\n %v108 =l add %root1, 16\n storel extern $myl_t_81d71c98b196ce876b8748e8f5e1c439a764a7854aeb5e4ef7865d0716f2ecef, %v108\n storel %root1, %v102\n %v109 =l loadl %s0\n storel %root1, %root2\n %v110 =l add %root2, 8\n storel %v109, %v110\n %v111 =l add %root2, 16\n storel extern $myl_t_81d71c98b196ce876b8748e8f5e1c439a764a7854aeb5e4ef7865d0716f2ecef, %v111\n storel %root2, %v102\n %v97 =l loadl %s0\n %v98 =l loadl %s1\n %v99 =l loadl %s2\n %v100 =l loadl %s3\n %v101 =l call $myl_f_72cbd8b3ebb02b19d0384fb691061873bba08de6d559f9babec1767adabac444(l %ctx, l %v97, l %v98, l %v99, l %v100)\n storel %v101, %s0\n %v112 =l add %heap, 16\n storel %root_mark, %v112\n %v113 =l loadl %trap\n jnz %v113, @failure, @ok113\n@ok113\n storel 11, %position\n %v114 =l loadl %ctx\n %v115 =l loadl %maxsteps\n %v116 =l ceql %v114, %v115\n jnz %v116, @step_limit, @step117\n@step117\n %v117 =l add %v114, 1\n storel %v117, %ctx\n %v118 =l loadl %s0\n storel %v118, %l4\n storel 12, %position\n %v119 =l loadl %ctx\n %v120 =l loadl %maxsteps\n %v121 =l ceql %v119, %v120\n jnz %v121, @step_limit, @step122\n@step122\n %v122 =l add %v119, 1\n storel %v122, %ctx\n storel %l3, %s0\n storel 13, %position\n %v123 =l loadl %ctx\n %v124 =l loadl %maxsteps\n %v125 =l ceql %v123, %v124\n jnz %v125, @step_limit, @step126\n@step126\n %v126 =l add %v123, 1\n storel %v126, %ctx\n storel 14, %position\n %v127 =l loadl %ctx\n %v128 =l loadl %maxsteps\n %v129 =l ceql %v127, %v128\n jnz %v129, @step_limit, @step130\n@step130\n %v130 =l add %v127, 1\n storel %v130, %ctx\n %v131 =l loadl %l0\n storel %v131, %s0\n storel 15, %position\n %v132 =l loadl %ctx\n %v133 =l loadl %maxsteps\n %v134 =l ceql %v132, %v133\n jnz %v134, @step_limit, @step135\n@step135\n %v135 =l add %v132, 1\n storel %v135, %ctx\n storel 16, %position\n %v136 =l loadl %ctx\n %v137 =l loadl %maxsteps\n %v138 =l ceql %v136, %v137\n jnz %v138, @step_limit, @step139\n@step139\n %v139 =l add %v136, 1\n storel %v139, %ctx\n %v140 =l loadl %l0\n storel %v140, %s0\n storel 17, %position\n %v141 =l loadl %ctx\n %v142 =l loadl %maxsteps\n %v143 =l ceql %v141, %v142\n jnz %v143, @step_limit, @step144\n@step144\n %v144 =l add %v141, 1\n storel %v144, %ctx\n storel 18, %position\n %v145 =l loadl %ctx\n %v146 =l loadl %maxsteps\n %v147 =l ceql %v145, %v146\n jnz %v147, @step_limit, @step148\n@step148\n %v148 =l add %v145, 1\n storel %v148, %ctx\n %v149 =l loadl %l0\n storel %v149, %s0\n storel 19, %position\n %v150 =l loadl %ctx\n %v151 =l loadl %maxsteps\n %v152 =l ceql %v150, %v151\n jnz %v152, @step_limit, @step153\n@step153\n %v153 =l add %v150, 1\n storel %v153, %ctx\n storel %l3, %s1\n storel 20, %position\n %v154 =l loadl %ctx\n %v155 =l loadl %maxsteps\n %v156 =l ceql %v154, %v155\n jnz %v156, @step_limit, @step157\n@step157\n %v157 =l add %v154, 1\n storel %v157, %ctx\n %v158 =l loadl %s1\n %v159 =l copy %agg20\n blit %v158, %v159, 16\n %v161 =l add %v159, 0\n %v162 =l loadl %v161\n jnz %v162, @vcpresent163, @vcslow160\n@vcpresent163\n %v164 =l sub %v162, 16\n %v165 =l loadl %v164\n %v166 =l and %v165, 1152921504606846978\n jnz %v166, @vcslow160, @vcnext167\n@vcnext167\n %v168 =l or %v165, 2305843009213693952\n storel %v168, %v164\n jmp @vcdone169\n@vcslow160\n %v170 =l add %heap, 16\n %v171 =l loadl %v170\n %v172 =l loadl %s0\n storel %v171, %root0\n %v173 =l add %root0, 8\n storel %v172, %v173\n %v174 =l add %root0, 16\n storel extern $myl_t_4e6c1584b61f68a69271c693e65be720323e6bcb8d28e2f694592eed5c4c3f28, %v174\n storel %root0, %v170\n %v175 =l loadl %s1\n storel %root0, %root1\n %v176 =l add %root1, 8\n storel %v175, %v176\n %v177 =l add %root1, 16\n storel extern $myl_t_81d71c98b196ce876b8748e8f5e1c439a764a7854aeb5e4ef7865d0716f2ecef, %v177\n storel %root1, %v170\n %v178 =w call $myl_qbe_cow_transfer(l %ctx, l extern $myl_t_81d71c98b196ce876b8748e8f5e1c439a764a7854aeb5e4ef7865d0716f2ecef, l %v159, l %v159, w 0)\n %v179 =l loadl %trap\n jnz %v179, @failure, @ok179\n@ok179\n %v180 =l add %heap, 16\n storel %root_mark, %v180\n@vcdone169\n storel %v159, %s1\n storel 21, %position\n %v181 =l loadl %ctx\n %v182 =l loadl %maxsteps\n %v183 =l ceql %v181, %v182\n jnz %v183, @step_limit, @step184\n@step184\n %v184 =l add %v181, 1\n storel %v184, %ctx\n %v185 =l loadl %s0\n %v186 =l copy %agg21\n blit %v185, %v186, 208\n %v187 =l add %v186, 48\n %v188 =l loadl %s1\n blit %v188, %v187, 16\n storel %v186, %s0\n storel 22, %position\n %v189 =l loadl %ctx\n %v190 =l loadl %maxsteps\n %v191 =l ceql %v189, %v190\n jnz %v191, @step_limit, @step192\n@step192\n %v192 =l add %v189, 1\n storel %v192, %ctx\n %v193 =l loadl %l0\n %v194 =l loadl %s0\n blit %v194, %v193, 208\n storel 23, %position\n %v195 =l loadl %ctx\n %v196 =l loadl %maxsteps\n %v197 =l ceql %v195, %v196\n jnz %v197, @step_limit, @step198\n@step198\n %v198 =l add %v195, 1\n storel %v198, %ctx\n storel 0, %s0\n storel 24, %position\n %v199 =l loadl %ctx\n %v200 =l loadl %maxsteps\n %v201 =l ceql %v199, %v200\n jnz %v201, @step_limit, @step202\n@step202\n %v202 =l add %v199, 1\n storel %v202, %ctx\n storel 25, %position\n %v203 =l loadl %ctx\n %v204 =l loadl %maxsteps\n %v205 =l ceql %v203, %v204\n jnz %v205, @step_limit, @step206\n@step206\n %v206 =l add %v203, 1\n storel %v206, %ctx\n %v207 =l loadl %l4\n storel %v207, %s0\n storel 26, %position\n %v208 =l loadl %ctx\n %v209 =l loadl %maxsteps\n %v210 =l ceql %v208, %v209\n jnz %v210, @step_limit, @step211\n@step211\n %v211 =l add %v208, 1\n storel %v211, %ctx\n %v212 =l loadl %s0\n %v213 =l loadl %v6\n storel %v213, %v5\n %v214 =l loadl %v4\n %v215 =l sub %v214, 1\n storel %v215, %v4\n ret %v212\n@step_limit\n call $myl_qbe_fail_step(l %ctx)\n jmp @failure\n@failure\n %v216 =l add %heap, 16\n storel %root_mark, %v216\n %v217 =l loadl %v6\n storel %v217, %v5\n %v218 =l loadl %v4\n %v219 =l sub %v218, 1\n storel %v219, %v4\n ret 0\n@entry_failure\n ret 0\n}\n",
+    "hoist-set-global.il": "type :myl_slice = { l, l }\ntype :t521bf24a967e14727eaaec581081f48418bd372e2f25b737a26c39858cc8275b = align 8 { b 16 }\ntype :t6a1d8ee86e02e1cd0e838f29c02a4dfb0139420677ae32f87781933a6f0fe536 = align 8 { b 208 }\ntype :te758ef64fa5399816d2e36870457817f6d0c1707702a005752c112705a835446 = align 8 { b 16 }\nexport function l $myl_f_df854e8ed9ee42930d3ed44ab0cd662c7c2c4c4b0b98e3a3a182e1a6f7dcca63(l %ctx, l %a0, l %a1, l %a2) {\n@entry\n %trap =l add %ctx, 32\n %l0 =l alloc8 8\n %l1 =l alloc8 8\n %l2 =l alloc8 8\n %l3 =l alloc8 8\n %l4 =l alloc8 16\n %l5 =l alloc8 8\n %s0 =l alloc8 8\n %s1 =l alloc8 8\n %s2 =l alloc8 8\n %s3 =l alloc8 8\n %root0 =l alloc8 32\n %root1 =l alloc8 32\n %root2 =l alloc8 32\n %agg21 =l alloc8 208\n %agg23 =l alloc8 208\n %v4 =l add %ctx, 8\n %v7 =l loadl %v4\n %v8 =l add %ctx, 56\n %v9 =l loadl %v8\n %v10 =l ceql %v7, %v9\n jnz %v10, @limitfail2, @frameadmit0\n@limitfail2\n call $myl_qbe_fail_frame(l %ctx)\n jmp @entry_failure\n@frameadmit0\n %v6 =l alloc8 32\n %v11 =l add %ctx, 64\n %v12 =l loadl %v11\n %v13 =l cultl %v6, %v12\n jnz %v13, @floorfail3, @stackadmit1\n@floorfail3\n call $myl_qbe_fail_frame(l %ctx)\n jmp @entry_failure\n@stackadmit1\n %v5 =l add %ctx, 48\n %v14 =l loadl %v5\n storel %v14, %v6\n %v15 =l add %v6, 8\n storel extern $myl_f_df854e8ed9ee42930d3ed44ab0cd662c7c2c4c4b0b98e3a3a182e1a6f7dcca63_meta, %v15\n %v16 =l add %v6, 16\n storel 0, %v16\n storel %v6, %v5\n %v17 =l add %v7, 1\n storel %v17, %v4\n %position =l add %v6, 16\n call $memset(l %l4, w 0, l 16)\n storel %a0, %l0\n storel %a1, %l1\n storel %a2, %l2\n %heap =l call $myl_qbe_heap(l %ctx)\n %root_mark =l call $myl_qbe_root_mark(l %ctx)\n %maxsteps =l add %ctx, 16\n jmp @i0\n@i0\n storel 0, %position\n %v18 =l loadl %ctx\n %v19 =l loadl %maxsteps\n %v20 =l ceql %v18, %v19\n jnz %v20, @step_limit, @step21\n@step21\n %v21 =l add %v18, 1\n storel %v21, %ctx\n %v22 =l loadl %l0\n storel %v22, %s0\n storel 1, %position\n %v23 =l loadl %ctx\n %v24 =l loadl %maxsteps\n %v25 =l ceql %v23, %v24\n jnz %v25, @step_limit, @step26\n@step26\n %v26 =l add %v23, 1\n storel %v26, %ctx\n %v27 =l loadl %l1\n storel %v27, %s1\n storel 2, %position\n %v28 =l loadl %ctx\n %v29 =l loadl %maxsteps\n %v30 =l ceql %v28, %v29\n jnz %v30, @step_limit, @step31\n@step31\n %v31 =l add %v28, 1\n storel %v31, %ctx\n %v32 =l loadl %s0\n %v33 =l loadl %s1\n %v34 =l call $myl_f_a0ff172e9e450785632a25c55eafac31e4cfca2cc56a9728097332089f64b651(l %ctx, l %v32, l %v33)\n storel %v34, %s0\n %v35 =l loadl %trap\n jnz %v35, @failure, @ok35\n@ok35\n storel 3, %position\n %v36 =l loadl %ctx\n %v37 =l loadl %maxsteps\n %v38 =l ceql %v36, %v37\n jnz %v38, @step_limit, @step39\n@step39\n %v39 =l add %v36, 1\n storel %v39, %ctx\n %v40 =l loadl %s0\n storel %v40, %l3\n storel 4, %position\n %v41 =l loadl %ctx\n %v42 =l loadl %maxsteps\n %v43 =l ceql %v41, %v42\n jnz %v43, @step_limit, @step44\n@step44\n %v44 =l add %v41, 1\n storel %v44, %ctx\n %v45 =l loadl %l0\n storel %v45, %s0\n storel 5, %position\n %v46 =l loadl %ctx\n %v47 =l loadl %maxsteps\n %v48 =l ceql %v46, %v47\n jnz %v48, @step_limit, @step49\n@step49\n %v49 =l add %v46, 1\n storel %v49, %ctx\n %v50 =l loadl %s0\n %v51 =l add %v50, 48\n storel %v51, %s0\n storel 6, %position\n %v52 =l loadl %ctx\n %v53 =l loadl %maxsteps\n %v54 =l ceql %v52, %v53\n jnz %v54, @step_limit, @step55\n@step55\n %v55 =l add %v52, 1\n storel %v55, %ctx\n storel 7, %position\n %v56 =l loadl %ctx\n %v57 =l loadl %maxsteps\n %v58 =l ceql %v56, %v57\n jnz %v58, @step_limit, @step59\n@step59\n %v59 =l add %v56, 1\n storel %v59, %ctx\n %v60 =l loadl %s0\n blit %v60, %l4, 16\n storel 8, %position\n %v61 =l loadl %ctx\n %v62 =l loadl %maxsteps\n %v63 =l ceql %v61, %v62\n jnz %v63, @step_limit, @step64\n@step64\n %v64 =l add %v61, 1\n storel %v64, %ctx\n storel %l4, %s0\n storel 9, %position\n %v65 =l loadl %ctx\n %v66 =l loadl %maxsteps\n %v67 =l ceql %v65, %v66\n jnz %v67, @step_limit, @step68\n@step68\n %v68 =l add %v65, 1\n storel %v68, %ctx\n %v69 =l loadl %l1\n storel %v69, %s1\n storel 10, %position\n %v70 =l loadl %ctx\n %v71 =l loadl %maxsteps\n %v72 =l ceql %v70, %v71\n jnz %v72, @step_limit, @step73\n@step73\n %v73 =l add %v70, 1\n storel %v73, %ctx\n %v74 =l loadl %l3\n storel %v74, %s2\n storel 11, %position\n %v75 =l loadl %ctx\n %v76 =l loadl %maxsteps\n %v77 =l ceql %v75, %v76\n jnz %v77, @step_limit, @step78\n@step78\n %v78 =l add %v75, 1\n storel %v78, %ctx\n %v79 =l loadl %l2\n storel %v79, %s3\n storel 12, %position\n %v80 =l loadl %ctx\n %v81 =l loadl %maxsteps\n %v82 =l ceql %v80, %v81\n jnz %v82, @step_limit, @step83\n@step83\n %v83 =l add %v80, 1\n storel %v83, %ctx\n %v89 =l add %heap, 16\n %v90 =l loadl %v89\n %v91 =l loadl %l0\n storel %v90, %root0\n %v92 =l add %root0, 8\n storel %v91, %v92\n %v93 =l add %root0, 16\n storel extern $myl_t_4e6c1584b61f68a69271c693e65be720323e6bcb8d28e2f694592eed5c4c3f28, %v93\n storel %root0, %v89\n storel %root0, %root1\n %v94 =l add %root1, 8\n storel %l4, %v94\n %v95 =l add %root1, 16\n storel extern $myl_t_81d71c98b196ce876b8748e8f5e1c439a764a7854aeb5e4ef7865d0716f2ecef, %v95\n storel %root1, %v89\n %v96 =l loadl %s0\n storel %root1, %root2\n %v97 =l add %root2, 8\n storel %v96, %v97\n %v98 =l add %root2, 16\n storel extern $myl_t_81d71c98b196ce876b8748e8f5e1c439a764a7854aeb5e4ef7865d0716f2ecef, %v98\n storel %root2, %v89\n %v84 =l loadl %s0\n %v85 =l loadl %s1\n %v86 =l loadl %s2\n %v87 =l loadl %s3\n %v88 =l call $myl_f_72cbd8b3ebb02b19d0384fb691061873bba08de6d559f9babec1767adabac444(l %ctx, l %v84, l %v85, l %v86, l %v87)\n storel %v88, %s0\n %v99 =l add %heap, 16\n storel %root_mark, %v99\n %v100 =l loadl %trap\n jnz %v100, @failure, @ok100\n@ok100\n storel 13, %position\n %v101 =l loadl %ctx\n %v102 =l loadl %maxsteps\n %v103 =l ceql %v101, %v102\n jnz %v103, @step_limit, @step104\n@step104\n %v104 =l add %v101, 1\n storel %v104, %ctx\n %v105 =l loadl %s0\n storel %v105, %l5\n storel 14, %position\n %v106 =l loadl %ctx\n %v107 =l loadl %maxsteps\n %v108 =l ceql %v106, %v107\n jnz %v108, @step_limit, @step109\n@step109\n %v109 =l add %v106, 1\n storel %v109, %ctx\n storel %l4, %s0\n storel 15, %position\n %v110 =l loadl %ctx\n %v111 =l loadl %maxsteps\n %v112 =l ceql %v110, %v111\n jnz %v112, @step_limit, @step113\n@step113\n %v113 =l add %v110, 1\n storel %v113, %ctx\n storel 16, %position\n %v114 =l loadl %ctx\n %v115 =l loadl %maxsteps\n %v116 =l ceql %v114, %v115\n jnz %v116, @step_limit, @step117\n@step117\n %v117 =l add %v114, 1\n storel %v117, %ctx\n %v118 =l loadl %l0\n storel %v118, %s0\n storel 17, %position\n %v119 =l loadl %ctx\n %v120 =l loadl %maxsteps\n %v121 =l ceql %v119, %v120\n jnz %v121, @step_limit, @step122\n@step122\n %v122 =l add %v119, 1\n storel %v122, %ctx\n storel 18, %position\n %v123 =l loadl %ctx\n %v124 =l loadl %maxsteps\n %v125 =l ceql %v123, %v124\n jnz %v125, @step_limit, @step126\n@step126\n %v126 =l add %v123, 1\n storel %v126, %ctx\n %v127 =l loadl %l0\n storel %v127, %s0\n storel 19, %position\n %v128 =l loadl %ctx\n %v129 =l loadl %maxsteps\n %v130 =l ceql %v128, %v129\n jnz %v130, @step_limit, @step131\n@step131\n %v131 =l add %v128, 1\n storel %v131, %ctx\n storel 20, %position\n %v132 =l loadl %ctx\n %v133 =l loadl %maxsteps\n %v134 =l ceql %v132, %v133\n jnz %v134, @step_limit, @step135\n@step135\n %v135 =l add %v132, 1\n storel %v135, %ctx\n %v136 =l loadl %l0\n storel %v136, %s0\n storel 21, %position\n %v137 =l loadl %ctx\n %v138 =l loadl %maxsteps\n %v139 =l ceql %v137, %v138\n jnz %v139, @step_limit, @step140\n@step140\n %v140 =l add %v137, 1\n storel %v140, %ctx\n blit %l4, %agg21, 16\n storel %agg21, %s1\n storel 22, %position\n %v141 =l loadl %ctx\n %v142 =l loadl %maxsteps\n %v143 =l ceql %v141, %v142\n jnz %v143, @step_limit, @step144\n@step144\n %v144 =l add %v141, 1\n storel %v144, %ctx\n storel 23, %position\n %v145 =l loadl %ctx\n %v146 =l loadl %maxsteps\n %v147 =l ceql %v145, %v146\n jnz %v147, @step_limit, @step148\n@step148\n %v148 =l add %v145, 1\n storel %v148, %ctx\n %v149 =l loadl %s0\n %v150 =l copy %agg23\n blit %v149, %v150, 208\n %v151 =l add %v150, 48\n %v152 =l loadl %s1\n blit %v152, %v151, 16\n storel %v150, %s0\n storel 24, %position\n %v153 =l loadl %ctx\n %v154 =l loadl %maxsteps\n %v155 =l ceql %v153, %v154\n jnz %v155, @step_limit, @step156\n@step156\n %v156 =l add %v153, 1\n storel %v156, %ctx\n %v157 =l loadl %l0\n %v158 =l loadl %s0\n blit %v158, %v157, 208\n storel 25, %position\n %v159 =l loadl %ctx\n %v160 =l loadl %maxsteps\n %v161 =l ceql %v159, %v160\n jnz %v161, @step_limit, @step162\n@step162\n %v162 =l add %v159, 1\n storel %v162, %ctx\n storel 0, %s0\n storel 26, %position\n %v163 =l loadl %ctx\n %v164 =l loadl %maxsteps\n %v165 =l ceql %v163, %v164\n jnz %v165, @step_limit, @step166\n@step166\n %v166 =l add %v163, 1\n storel %v166, %ctx\n storel 27, %position\n %v167 =l loadl %ctx\n %v168 =l loadl %maxsteps\n %v169 =l ceql %v167, %v168\n jnz %v169, @step_limit, @step170\n@step170\n %v170 =l add %v167, 1\n storel %v170, %ctx\n %v171 =l loadl %l5\n storel %v171, %s0\n storel 28, %position\n %v172 =l loadl %ctx\n %v173 =l loadl %maxsteps\n %v174 =l ceql %v172, %v173\n jnz %v174, @step_limit, @step175\n@step175\n %v175 =l add %v172, 1\n storel %v175, %ctx\n %v176 =l loadl %s0\n %v177 =l loadl %v6\n storel %v177, %v5\n %v178 =l loadl %v4\n %v179 =l sub %v178, 1\n storel %v179, %v4\n ret %v176\n@step_limit\n call $myl_qbe_fail_step(l %ctx)\n jmp @failure\n@failure\n %v180 =l add %heap, 16\n storel %root_mark, %v180\n %v181 =l loadl %v6\n storel %v181, %v5\n %v182 =l loadl %v4\n %v183 =l sub %v182, 1\n storel %v183, %v4\n ret 0\n@entry_failure\n ret 0\n}\n"
+  },
+  "harness_sha256": "067f7396a1fc0cbbb4c1b2101847db836b7631452fdab0cc096085d71931e5a0",
+  "scripts": {
+    "build-hoist.py": {
+      "sha256": "fec4c8aa0ffd1bc6506497c7d88f3283e5f56ec9cb8f436f5b4324264f78c1ff",
+      "source": "from pathlib import Path\nimport subprocess,hashlib,os,json,time\nwork=Path(__file__).resolve().parent;root=work.parent\ncompiler=root.parent/'d9-performance43/.tmp-perf43/install/bin/mylang'\nenv={k:v for k,v in os.environ.items() if not k.startswith('MYLANG_')};env['TMPDIR']=str(work/'tmp')\nresult={}\nfor side in ['hoist-before','hoist']:\n for backend in ['llvm']:\n  source=work/side;binary=work/f'lox-{side}-{backend}'\n  cmd=[str(compiler),'build','main.my','--project','--mode','ReleaseFast','--backend',backend,'--llvm-opt','3','--lto','--cache-dir',str(work/'guest-cache'),'-o',str(binary),'--value-semantics']\n  print('BUILD',side,backend,flush=True)\n  done=subprocess.run(cmd,cwd=source,env=env,capture_output=True,text=True)\n  result[side+'-'+backend]={'command':cmd,'status':done.returncode,'stderr':done.stderr,'compiler_sha256':hashlib.sha256(compiler.read_bytes()).hexdigest(),'source_sha256':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(source.glob('*.my'))}}\n  if done.returncode: print(done.stderr,flush=True)\n  else:result[side+'-'+backend]['binary_sha256']=hashlib.sha256(binary.read_bytes()).hexdigest()\n  (work/'hoist-builds.json').write_text(json.dumps(result,indent=2)+'\\n')\n  if done.returncode:raise SystemExit(done.returncode)\n  print('PASS',side,backend,flush=True)\n"
+    },
+    "measure-hoist.py": {
+      "sha256": "ead79152d75f828ee5268aba95f69efd4fc3e4c508937596348e0fdc25eb2ca0",
+      "source": "from pathlib import Path\nimport importlib.util,json,os,statistics,hashlib\nwork=Path(__file__).resolve().parent;root=work.parent\nos.environ['PC_WORK']=str(work/'measure')\nspec=importlib.util.spec_from_file_location('pc',root/'experiments/perf-gc-dict-20260925/scripts/pc.py')\npc=importlib.util.module_from_spec(spec);spec.loader.exec_module(pc)\npc.LOX_BENCH=root.parent/'d9-stage3b/.tmp-cow/pc/lox/bench';pc.LOX_PORT=work/'port'\nids=['method_call','closures','binary_trees','fib','trees']\nprograms=[next(p for p in pc.programs() if p['id']=='lox/vm/'+name) for name in ids]\nresults={'cpu':11,'builds':json.loads((work/'hoist-builds.json').read_text()),'samples':{}}\nfor p in programs:\n runs={side:pc.run_spec(p,work/f'lox-{side}-llvm',side) for side in ['hoist-before','hoist']}\n row={'checks':{side:pc.check(p,run) for side,run in runs.items()},'counts':{side:[] for side in runs},'size':p['size']}\n assert all(c['ok'] for c in row['checks'].values()),row\n for rep in range(3):\n  for side in (['hoist-before','hoist'] if rep%2==0 else ['hoist','hoist-before']):\n   one=pc.perf_counts(runs[side],11)\n   assert one['status']==0 and 'instructions' in one,one\n   row['counts'][side].append(one)\n row['medians']={side:statistics.median(c['instructions'] for c in counts) for side,counts in row['counts'].items()}\n row['ratio']=row['medians']['hoist']/row['medians']['hoist-before']\n results['samples'][p['id']]=row\n (work/'hoist-results.json').write_text(json.dumps(results,indent=2)+'\\n')\n print(p['id'],row['ratio'],row['medians'],flush=True)\n"
+    },
+    "measure-hoist-qbe.py": {
+      "sha256": "c00ff3a3b69040758f37e4c7b1dccc8f460f047c1b1329ab3a2616061fefe6f3",
+      "source": "from pathlib import Path\nimport importlib.util,json,os,statistics,hashlib\nwork=Path(__file__).resolve().parent;root=work.parent\nos.environ['PC_WORK']=str(work/'measure')\nspec=importlib.util.spec_from_file_location('pc',root/'experiments/perf-gc-dict-20260925/scripts/pc.py')\npc=importlib.util.module_from_spec(spec);spec.loader.exec_module(pc)\npc.LOX_BENCH=root.parent/'d9-stage3b/.tmp-cow/pc/lox/bench';pc.LOX_PORT=work/'port'\nids=['method_call','closures','binary_trees','fib','trees']\nprograms=[next(p for p in pc.programs() if p['id']=='lox/vm/'+name) for name in ids]\nresults={'cpu':11,'builds':json.loads((work/'validation-builds.json').read_text()),'samples':{}}\nfor p in programs:\n runs={side:pc.run_spec(p,work/f'lox-{side}-value-qbe',side) for side in ['hoist-before','hoist']}\n row={'checks':{side:pc.check(p,run) for side,run in runs.items()},'counts':{side:[] for side in runs},'size':p['size']}\n assert all(c['ok'] for c in row['checks'].values()),row\n for rep in range(3):\n  for side in (['hoist-before','hoist'] if rep%2==0 else ['hoist','hoist-before']):\n   one=pc.perf_counts(runs[side],11)\n   assert one['status']==0 and 'instructions' in one,one\n   row['counts'][side].append(one)\n row['medians']={side:statistics.median(c['instructions'] for c in counts) for side,counts in row['counts'].items()}\n row['ratio']=row['medians']['hoist']/row['medians']['hoist-before']\n results['samples'][p['id']]=row\n (work/'hoist-qbe-results.json').write_text(json.dumps(results,indent=2)+'\\n')\n print(p['id'],row['ratio'],row['medians'],flush=True)\n"
+    },
+    "inspect-hoist.py": {
+      "sha256": "bf797b284f2fd5113da647709d27862453f718947ccf10607cf83226a6f1267a",
+      "source": "from pathlib import Path\nimport subprocess,json,os\nwork=Path(__file__).resolve().parent;root=work.parent\ncompiler=root.parent/'d9-performance43/.tmp-perf43/install/bin/mylang'\nenv={k:v for k,v in os.environ.items() if not k.startswith('MYLANG_')};env['MYLANG_VALUE_SEMANTICS']='1';env['TMPDIR']=str(work/'tmp')\nresult={}\nfor side in ['hoist-before','hoist']:\n done=subprocess.run([str(compiler),'emit-project-qbe','main.my','--no-cache'],cwd=work/side,env=env,capture_output=True)\n assert done.returncode==0,done.stderr.decode()\n doc=json.loads(done.stdout);function=next(f for f in doc['functions'] if f['name']=='heap::set_global')\n (work/f'{side}-set-global.il').write_text(function['il'])\n result[side]={'function':function['name'],'cow_transfer_calls':function['il'].count('call $myl_qbe_cow_transfer('),'il_lines':len(function['il'].splitlines())}\n print(side,result[side],flush=True)\n(work/'hoist-ir.json').write_text(json.dumps(result,indent=2)+'\\n')\n"
+    }
+  }
+}
