@@ -55,6 +55,7 @@ pub fn decide(ctx: *const Context) Error![]const bool {
     while (rounds <= ctx.locals.list.len + 1) : (rounds += 1) {
         if (!step.round(copies)) break;
     }
+    @import("ownership_field_return.zig").elide(ctx, owners, copies);
     return copies;
 }
 

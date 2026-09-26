@@ -15,7 +15,8 @@
 //!   runtime helper LLVM inlines has no debug information of its own, so its
 //!   calls carry the location — and the probe — of the call it replaced.
 //!
-//! `annotate` rewrites one assembly file: every positioned call is followed by
+//! `annotate` rewrites one assembly file: every positioned call that may enter
+//! the managed runtime is followed by
 //! a local label, the `.file`/`.loc`/`.pseudoprobe` directives and the probe
 //! descriptor sections are removed, and a table is appended with one entry per
 //! logical frame of each call site — innermost first, each naming the unit's
@@ -75,6 +76,21 @@ fn callInstruction(line: []const u8) bool {
     inline for (.{ "callq", "call" }) |mnemonic| {
         if (std.mem.startsWith(u8, trimmed, mnemonic) and trimmed.len > mnemonic.len and
             (trimmed[mnemonic.len] == ' ' or trimmed[mnemonic.len] == '\t')) return true;
+    }
+    return false;
+}
+
+/// LLVM may materialize an aggregate copy from an inlined guest body as a
+/// libc call after its pseudo probes were placed. Neither routine enters the
+/// managed runtime or can collect, so its return address needs no root or
+/// trap-frame entry; all other positioned calls still require a valid frame.
+fn plainMemoryCopyCall(line: []const u8) bool {
+    if (!callInstruction(line)) return false;
+    var words = std.mem.tokenizeAny(u8, line, " \t");
+    _ = words.next();
+    const target = words.next() orelse return false;
+    inline for (.{ "memcpy", "memcpy@PLT", "memmove", "memmove@PLT" }) |name| {
+        if (std.mem.eql(u8, target, name)) return true;
     }
     return false;
 }
@@ -226,9 +242,11 @@ const Scan = struct {
             }
             try self.kept.append(self.allocator, line);
             if (!instruction(line)) continue;
-            if (callInstruction(line) and (probe != null or (loc != null and loc.?.line != 0))) {
-                try self.calls.append(self.allocator, .{ .line = self.kept.items.len - 1, .function = function, .loc = loc, .probe = probe });
-                probe = null;
+            if (callInstruction(line) and !plainMemoryCopyCall(line)) {
+                if (probe != null or (loc != null and loc.?.line != 0)) {
+                    try self.calls.append(self.allocator, .{ .line = self.kept.items.len - 1, .function = function, .loc = loc, .probe = probe });
+                    probe = null;
+                }
             }
             if (probe) |pending| self.allocator.free(pending.callers);
             probe = null;
@@ -431,6 +449,43 @@ test "a call positioned in another unit's file without an inlining record fails 
     try std.testing.expectError(error.FrameMapMismatch, annotate(a, inlined));
     const unnamed = "main:\n\t.pseudoprobe\t999 3 2 0 main\n\tcallq\tfail\n";
     try std.testing.expectError(error.FrameMapMismatch, annotate(a, unnamed));
+}
+
+// spec-case: QBE-FRAMEMAP-ASM-1
+test "inlined aggregate copies are not safepoints and real calls still need a frame" {
+    const a = std.testing.allocator;
+    // Full LTO can synthesize these calls after pseudo probes were placed.
+    // The inline comment is informational only: without a probe a real
+    // managed call at this position still lacks a trustworthy caller frame.
+    const input = ".file 1 \"myl_f_caller\"\n.file 2 \"myl_f_callee\"\n" ++
+        "myl_f_caller:\n\t.cfi_startproc\n" ++
+        "\t.loc 2 5 0 # myl_f_callee:5 @[ myl_f_caller:8 ]\n\tcallq memmove@PLT\n" ++
+        "\t.loc 2 6 0 # myl_f_callee:6 @[ myl_f_caller:8 ]\n\tcallq memcpy@PLT\n" ++
+        "\t.loc 1 9 0\n\tcallq myl_qbe_fail_allocation\n\t.cfi_endproc\n";
+    const output = try annotate(a, input);
+    defer a.free(output);
+    try std.testing.expect(std.mem.indexOf(u8, output, "callq memmove@PLT\n.Lmyl_fm") == null);
+    try std.testing.expect(std.mem.indexOf(u8, output, "callq memcpy@PLT\n.Lmyl_fm") == null);
+    try std.testing.expect(std.mem.indexOf(u8, output, "callq myl_qbe_fail_allocation\n.Lmyl_fm_0:") != null);
+    try std.testing.expect(std.mem.indexOf(u8, output, "\t.long\t.Lmyl_fm_0-.\n\t.long\t536870920\n\t.long\tmyl_f_caller_meta-.\n") != null);
+    const probed = ".file 1 \"myl_f_caller\"\n.file 2 \"myl_f_callee\"\n" ++
+        "myl_f_caller:\n\t.cfi_startproc\n" ++
+        "\t.loc 2 5 0 # myl_f_callee:5 @[ myl_f_caller:8 ]\n\tcallq memcpy@PLT\n" ++
+        "\t.pseudoprobe 200 5 2 0 @ 100:9 myl_f_caller\n\tcallq myl_qbe_fail_allocation\n\t.cfi_endproc\n" ++
+        "\t.section .pseudo_probe_desc,\"G\",@progbits,.pseudo_probe_desc_a,comdat\n" ++
+        "\t.quad 100\n\t.quad 0\n\t.byte 12\n\t.ascii \"myl_f_caller\"\n" ++
+        "\t.section .pseudo_probe_desc,\"G\",@progbits,.pseudo_probe_desc_b,comdat\n" ++
+        "\t.quad 200\n\t.quad 0\n\t.byte 12\n\t.ascii \"myl_f_callee\"\n";
+    const probed_output = try annotate(a, probed);
+    defer a.free(probed_output);
+    try std.testing.expect(std.mem.indexOf(u8, probed_output, "callq memcpy@PLT\n.Lmyl_fm") == null);
+    try std.testing.expect(std.mem.indexOf(u8, probed_output, "\t.long\t.Lmyl_fm_0-.\n\t.long\t536870916\n\t.long\tmyl_f_callee_meta-.\n\t.long\t.Lmyl_fm_0-.\n\t.long\t1610612744\n\t.long\tmyl_f_caller_meta-.\n") != null);
+    const ambiguous = ".file 1 \"myl_f_caller\"\n.file 2 \"myl_f_callee\"\n" ++
+        "myl_f_caller:\n\t.loc 2 5 0 # myl_f_callee:5 @[ myl_f_caller:8 ]\n\tcallq myl_qbe_fail_allocation\n";
+    try std.testing.expectError(error.FrameMapMismatch, annotate(a, ambiguous));
+    try std.testing.expect(plainMemoryCopyCall("\tcallq memmove@PLT"));
+    try std.testing.expect(!plainMemoryCopyCall("\tcallq myl_native_cow_copy"));
+    try std.testing.expect(!plainMemoryCopyCall("\tcallq *%rax"));
 }
 
 // spec-case: QBE-FRAMEMAP-ASM-1

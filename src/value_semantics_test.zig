@@ -10,16 +10,43 @@ const fragments = @import("qbe_fragments.zig");
 
 const entry = "\n\ndef main() -> int:\n    return 0\n";
 
+// A type cycle with only scalar fields requires no COW transfer, while a
+// collection on another edge still does.
+// spec-case: VALUE-SEMANTICS-2
+test "recursive type reachability finds collections without treating a cycle as one" {
+    const sources = [_][]const u8{
+        "record Node:\n    value: int\n    next: Option[Node]\n\n" ++ entry,
+        "record Node:\n    items: list[int]\n    next: Option[Node]\n\n" ++ entry,
+    };
+    for (sources, 0..) |source, index| {
+        var compilation = try compiler.Compilation.init(t.allocator, "node.my", source);
+        defer compilation.deinit();
+        try compilation.check();
+        const records = compilation.program.?.records;
+        var found = false;
+        for (records) |record| {
+            if (!std.mem.eql(u8, record.name, "Node")) continue;
+            found = true;
+            try t.expectEqual(index == 1, values.needsCopy(records, record.id));
+            try t.expect(values.copiesAll(records, record.id));
+        }
+        try t.expect(found);
+    }
+}
+
 /// The switch as a test left it, restored when the test ends.
 const Saved = struct {
     previous: bool,
+    previous_counting: bool,
     fn set(on: bool) Saved {
-        const saved: Saved = .{ .previous = values.enabled() };
+        const saved: Saved = .{ .previous = values.enabled(), .previous_counting = values.counting() };
         values.setEnabled(on);
+        values.setCounting(false);
         return saved;
     }
     fn restore(self: Saved) void {
         values.setEnabled(self.previous);
+        values.setCounting(self.previous_counting);
     }
 };
 
@@ -86,6 +113,43 @@ const assignments =
     \\    return len(a) * 10 + len(c)
     \\
 ;
+
+fn fieldReturnSites(body: []const u8) !Sites {
+    const prefix =
+        \\record Box:
+        \\    items: list[int]
+        \\
+        \\record Owner:
+        \\    box: Box
+        \\    count: int
+        \\
+        \\def push(box: mut Box):
+        \\    box.items.append(2)
+        \\
+        \\def change(owner: mut Owner, stop: bool):
+        \\    work = owner.box
+        \\    push(mut work)
+        \\
+    ;
+    const source = try std.mem.concat(t.allocator, u8, &.{ prefix, body, entry });
+    defer t.allocator.free(source);
+    return sites(source, true);
+}
+
+// spec: COW-FIELD-RETURN-1
+test "record field return avoids copies only without observations or exits" {
+    const returned = try fieldReturnSites("    owner.box = work\n");
+    try t.expect(returned.placed >= 2);
+    try t.expectEqual(@as(usize, 0), returned.copies);
+    const sibling = try fieldReturnSites("    seen = owner.count\n    owner.box = work\n    assert seen == 7\n");
+    try t.expectEqual(@as(usize, 0), sibling.copies);
+    const observed = try fieldReturnSites("    seen = len(owner.box.items)\n    owner.box = work\n    assert seen == 1\n");
+    try t.expect(observed.copies >= 1);
+    const branched = try fieldReturnSites("    if stop:\n        return\n    owner.box = work\n");
+    try t.expect(branched.copies >= 1);
+    const retained = try fieldReturnSites("    owner.box = work\n    push(mut work)\n    assert len(work.items) == 3\n");
+    try t.expect(retained.copies >= 1);
+}
 
 // spec-case: VALUE-SEMANTICS-1
 test "value semantics off places no copy site at all" {
@@ -346,6 +410,19 @@ test "the switch changes the fragment record key and nothing without it" {
     try t.expect(values.environmentEnables("1"));
     try t.expect(!values.environmentEnables("0"));
     try t.expect(!values.environmentEnables(null));
+}
+
+// spec-case: COW-STATS-1
+test "counting emission has a distinct fragment key from ordinary value semantics" {
+    const identity: fragments.Digest = @splat(9);
+    const saved = Saved.set(true);
+    defer saved.restore();
+    const ordinary = fragments.recordKey(identity, false);
+    values.setCounting(true);
+    const counted = fragments.recordKey(identity, false);
+    try t.expect(!std.mem.eql(u8, &ordinary, &counted));
+    values.setCounting(false);
+    try t.expectEqualSlices(u8, &ordinary, &fragments.recordKey(identity, false));
 }
 
 /// How many diagnostics with `code` checking `body` reports with the switch at `on`.

@@ -808,6 +808,7 @@ pub fn build(b: *std.Build) void {
             "tests/error_trace_abi_test.c",
             "src/qbe_runtime.c",
             "src/qbe_stack.c",
+            "src/native_cow.c",
             "src/native_heap.c",
             "src/native_arena.c",
             "src/native_collections.c",

@@ -26,6 +26,20 @@ typedef struct { myl_native_list *items; } BoxBody;
 static const myl_native_field box_fields[] = {{.offset = offsetof(BoxBody, items), .type = &integers}};
 static const myl_native_type box_body = {.size = sizeof(BoxBody), .alignment = _Alignof(BoxBody), .kind = MYL_NATIVE_RECORD, .fields = box_fields, .field_count = 1};
 static const myl_native_type box_pointer = {.size = sizeof(void *), .alignment = _Alignof(void *), .kind = MYL_NATIVE_POINTER, .collection_kind = 5, .element = &box_body};
+typedef struct { int64_t value; void *next; } PureBody;
+static const myl_native_type pure_box;
+static const myl_native_field pure_fields[] = {
+    {.offset = offsetof(PureBody, value), .type = &number},
+    {.offset = offsetof(PureBody, next), .type = &pure_box}};
+static const myl_native_type pure_body = {.size = sizeof(PureBody), .alignment = _Alignof(PureBody), .kind = MYL_NATIVE_RECORD, .fields = pure_fields, .field_count = 2};
+static const myl_native_type pure_box = {.size = sizeof(void *), .alignment = _Alignof(void *), .kind = MYL_NATIVE_POINTER, .collection_kind = 5, .element = &pure_body};
+typedef struct { void *next; myl_native_list *items; } MixedBody;
+static const myl_native_type mixed_box;
+static const myl_native_field mixed_fields[] = {
+    {.offset = offsetof(MixedBody, next), .type = &mixed_box},
+    {.offset = offsetof(MixedBody, items), .type = &integers}};
+static const myl_native_type mixed_body = {.size = sizeof(MixedBody), .alignment = _Alignof(MixedBody), .kind = MYL_NATIVE_RECORD, .fields = mixed_fields, .field_count = 2};
+static const myl_native_type mixed_box = {.size = sizeof(void *), .alignment = _Alignof(void *), .kind = MYL_NATIVE_POINTER, .collection_kind = 5, .element = &mixed_body};
 typedef struct { uint32_t tag; myl_native_list *payload; } Choice;
 static const myl_native_field choice_fields[] = {{.offset = offsetof(Choice, payload), .type = &integers, .tag = 1}};
 static const myl_native_type choice = {.size = sizeof(Choice), .alignment = _Alignof(Choice), .kind = MYL_NATIVE_VARIANT, .fields = choice_fields, .field_count = 1};
@@ -397,6 +411,8 @@ static void deep_inline_descriptors(void) {
     assert(flags(list) == MYL_NATIVE_OBJECT_SHARED);
     ((myl_native_object *)list - 1)->mark &= ~MYL_NATIVE_OBJECT_SHARED;
     assert(!myl_native_cow_share_value(&heap, &types[0], &list));
+    assert(myl_native_cow_take_depth_failure());
+    assert(!myl_native_cow_take_depth_failure());
     assert(!flags(list));
     assert(myl_native_root_pop(&heap, &root));
     myl_native_heap_destroy(&heap);
@@ -478,6 +494,56 @@ static void boxed_children(void) {
     assert(myl_native_root_pop(&heap, &row_root) && myl_native_root_pop(&heap, &copy_root) && myl_native_root_pop(&heap, &source_root));
     myl_native_heap_destroy(&heap);
 }
+/* spec-case: COW-SHARED-1 -- a pure recursive descriptor does not require a
+   walk down a long immutable value, but a sibling list in a recursive body is
+   still discovered and marked. */
+static void recursive_descriptor_reachability(void) {
+    myl_native_heap heap;
+    myl_native_heap_init(&heap, 1 << 26);
+    heap.stress = 1;
+    PureBody *head = NULL, *taken = NULL;
+    myl_native_root head_root, taken_root;
+    myl_native_root_push(&heap, &head_root, &head, &pure_box);
+    myl_native_root_push(&heap, &taken_root, &taken, &pure_box);
+    for (int64_t i = 0; i < 1200; ++i) {
+        PureBody *next = myl_native_heap_alloc(&heap, &pure_body, 1);
+        assert(next);
+        next->value = i;
+        next->next = head;
+        head = next;
+    }
+    taken = head;
+    assert(myl_native_cow_share_value(&heap, &pure_box, &taken));
+    assert(taken == head && head->value == 1199 && !flags(head));
+    MixedBody *mixed = NULL, *mixed_copy = NULL;
+    myl_native_list *row = NULL;
+    myl_native_root mixed_root, mixed_copy_root, row_root;
+    myl_native_root_push(&heap, &mixed_root, &mixed, &mixed_box);
+    myl_native_root_push(&heap, &mixed_copy_root, &mixed_copy, &mixed_box);
+    myl_native_root_push(&heap, &row_root, &row, &pointer);
+    mixed = myl_native_heap_alloc(&heap, &mixed_body, 1);
+    assert(mixed);
+    row = numbers(&heap, 7, 1);
+    mixed->items = row;
+    mixed_copy = mixed;
+    assert(myl_native_cow_share_value(&heap, &mixed_box, &mixed_copy));
+    assert(mixed_copy == mixed && flags(row) == MYL_NATIVE_OBJECT_SHARED);
+    assert(!myl_native_cow_take_depth_failure());
+    heap.stress = 0;
+    for (int i = 0; i < 1100; ++i) {
+        MixedBody *next = myl_native_heap_alloc(&heap, &mixed_body, 1);
+        assert(next);
+        next->next = mixed;
+        mixed = next;
+    }
+    mixed_copy = mixed;
+    assert(!myl_native_cow_share_value(&heap, &mixed_box, &mixed_copy));
+    assert(myl_native_cow_take_depth_failure());
+    assert(!myl_native_cow_take_depth_failure());
+    assert(myl_native_root_pop(&heap, &row_root) && myl_native_root_pop(&heap, &mixed_copy_root) && myl_native_root_pop(&heap, &mixed_root));
+    assert(myl_native_root_pop(&heap, &taken_root) && myl_native_root_pop(&heap, &head_root));
+    myl_native_heap_destroy(&heap);
+}
 int main(void) {
     header_flags();
     share_marks();
@@ -493,6 +559,7 @@ int main(void) {
     fresh_children();
     bulk_source_children();
     boxed_children();
+    recursive_descriptor_reachability();
     puts("native cow tests passed");
     return 0;
 }
