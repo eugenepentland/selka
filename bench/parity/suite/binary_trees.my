@@ -1,9 +1,9 @@
-# binary_trees: perfect binary trees of `class` nodes on the collecting heap.
+# binary_trees: perfect binary trees of recursive value nodes on the collecting heap.
 # Every short-lived tree becomes garbage after its check; the tracing
 # collector reclaims it. See SUITE.md section 1.
 
 
-class Node:
+record Node:
     left: Option[Node]
     right: Option[Node]
 

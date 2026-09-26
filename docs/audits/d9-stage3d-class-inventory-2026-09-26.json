@@ -9,7 +9,7 @@
       "graph": true,
       "self_referential": true,
       "field_writes": 0,
-      "state": "pending"
+      "state": "migrated-in-3d"
     },
     {
       "corpus": "bench/parity",
@@ -27,7 +27,7 @@
       "graph": false,
       "self_referential": false,
       "field_writes": 12,
-      "state": "pending"
+      "state": "migrated-in-3d"
     },
     {
       "corpus": "sexpr-port",
@@ -225,7 +225,7 @@
       "graph": false,
       "self_referential": false,
       "field_writes": 6,
-      "state": "pending"
+      "state": "migrated-in-3d"
     },
     {
       "corpus": "src/stdlib",
