@@ -199,8 +199,10 @@ fresh. The ownership analysis of stage 2
 ([ownership](tooling/ownership.md)) then leaves out every copy it proves a move
 (the source is never read again) or a borrow (neither side is written while
 both are read); `mylang check --explain-ownership` lists each copy site with
-`"copy": true` or `false`. Every copy that remains goes through one rooted
-runtime transfer, which marks the collection payloads it reaches shared. A
+`"copy": true` or `false`. A remaining copy takes shallow private scratch and
+marks its held mutable collection payloads shared. Fixed flat records and
+arrays mark up to eight payloads inline; boxed, variant and larger values use
+a rooted runtime transfer, as does a pinned payload that must be cloned. A
 read-only argument is lent without a copy. Before a write, an inline check
 clones a shared payload and redirects the owning slot; nested writes repeat
 that step along their path. Checks proven stable across a loop are hoisted.
