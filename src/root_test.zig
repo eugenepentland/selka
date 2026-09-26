@@ -242,6 +242,7 @@ test {
     _ = @import("rc_borrow_certificate_test.zig");
     _ = @import("qbe_rc_borrow_test.zig");
     _ = @import("rc_readonly_body_test.zig");
+    _ = @import("qbe_rc_inert_receiver_test.zig");
     _ = @import("qbe_rc_admission_test.zig");
     _ = @import("qbe_rc_views_test.zig");
     _ = @import("cow_test.zig");
