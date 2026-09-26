@@ -1,0 +1,1008 @@
+[
+  {
+    "function": "main::main",
+    "pc": 38,
+    "kind": "assign",
+    "from": "move",
+    "to": "copy",
+    "source": {
+      "origin": "unknown"
+    }
+  },
+  {
+    "function": "sexpr::form",
+    "pc": 3,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 0,
+      "part": "element"
+    }
+  },
+  {
+    "function": "sexpr::form",
+    "pc": 28,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 0,
+      "part": "element"
+    }
+  },
+  {
+    "function": "circuit::title",
+    "pc": 15,
+    "kind": "return",
+    "from": "move",
+    "to": "copy",
+    "source": {
+      "origin": "local",
+      "local": 0,
+      "part": "element"
+    }
+  },
+  {
+    "function": "circuit::collectParts",
+    "pc": 42,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 1,
+      "part": "element"
+    }
+  },
+  {
+    "function": "circuit::collectParts",
+    "pc": 48,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 1,
+      "part": "element"
+    }
+  },
+  {
+    "function": "circuit::collectParts",
+    "pc": 146,
+    "kind": "assign",
+    "from": "copy",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 7,
+      "part": "field"
+    }
+  },
+  {
+    "function": "circuit::collectParts",
+    "pc": 160,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 1,
+      "part": "element"
+    }
+  },
+  {
+    "function": "circuit::collectParts",
+    "pc": 167,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 1,
+      "part": "element"
+    }
+  },
+  {
+    "function": "circuit::collectParts",
+    "pc": 292,
+    "kind": "construct",
+    "from": "move",
+    "to": "copy",
+    "source": {
+      "origin": "local",
+      "local": 6,
+      "part": "field"
+    }
+  },
+  {
+    "function": "circuit::label",
+    "pc": 19,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 0,
+      "part": "element"
+    }
+  },
+  {
+    "function": "circuit::label",
+    "pc": 87,
+    "kind": "return",
+    "from": "move",
+    "to": "copy",
+    "source": {
+      "origin": "local",
+      "local": 0,
+      "part": "element"
+    }
+  },
+  {
+    "function": "circuit::collectPins",
+    "pc": 117,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 1,
+      "part": "element"
+    }
+  },
+  {
+    "function": "circuit::collectPins",
+    "pc": 209,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 1,
+      "part": "element"
+    }
+  },
+  {
+    "function": "circuit::collectPins",
+    "pc": 285,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 3,
+      "part": "element"
+    }
+  },
+  {
+    "function": "circuit::group",
+    "pc": 30,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 0,
+      "part": "element"
+    }
+  },
+  {
+    "function": "circuit::group",
+    "pc": 89,
+    "kind": "return",
+    "from": "move",
+    "to": "copy",
+    "source": {
+      "origin": "local",
+      "local": 0,
+      "part": "element"
+    }
+  },
+  {
+    "function": "circuit::normalize",
+    "pc": 28,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 8,
+      "part": "element"
+    }
+  },
+  {
+    "function": "circuit::normalize",
+    "pc": 53,
+    "kind": "field",
+    "from": "move",
+    "to": "copy",
+    "source": {
+      "origin": "local",
+      "local": 10,
+      "part": "whole"
+    }
+  },
+  {
+    "function": "validate::source",
+    "pc": 26,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 1,
+      "part": "element"
+    }
+  },
+  {
+    "function": "validate::source",
+    "pc": 53,
+    "kind": "argument",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 1,
+      "part": "element"
+    }
+  },
+  {
+    "function": "validate::source",
+    "pc": 109,
+    "kind": "argument",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 1,
+      "part": "element"
+    }
+  },
+  {
+    "function": "validate::source",
+    "pc": 140,
+    "kind": "argument",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 1,
+      "part": "element"
+    }
+  },
+  {
+    "function": "validate::source",
+    "pc": 155,
+    "kind": "argument",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 1,
+      "part": "element"
+    }
+  },
+  {
+    "function": "validate::source",
+    "pc": 175,
+    "kind": "argument",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 1,
+      "part": "element"
+    }
+  },
+  {
+    "function": "validate::source",
+    "pc": 199,
+    "kind": "argument",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 1,
+      "part": "element"
+    }
+  },
+  {
+    "function": "validate::pinoutCheck",
+    "pc": 32,
+    "kind": "argument",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 1,
+      "part": "element"
+    }
+  },
+  {
+    "function": "validate::pinoutCheck",
+    "pc": 51,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 1,
+      "part": "element"
+    }
+  },
+  {
+    "function": "validate::pinoutCheck",
+    "pc": 156,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 1,
+      "part": "element"
+    }
+  },
+  {
+    "function": "validate::pinoutCheck",
+    "pc": 217,
+    "kind": "argument",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 1,
+      "part": "element"
+    }
+  },
+  {
+    "function": "validate::pinoutCheck",
+    "pc": 231,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 1,
+      "part": "element"
+    }
+  },
+  {
+    "function": "validate::pinoutCheck",
+    "pc": 297,
+    "kind": "argument",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 1,
+      "part": "element"
+    }
+  },
+  {
+    "function": "validate::pinoutCheck",
+    "pc": 325,
+    "kind": "argument",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 1,
+      "part": "element"
+    }
+  },
+  {
+    "function": "validate::fields",
+    "pc": 6,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 1,
+      "part": "element"
+    }
+  },
+  {
+    "function": "validate::fields",
+    "pc": 108,
+    "kind": "argument",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 1,
+      "part": "element"
+    }
+  },
+  {
+    "function": "validate::fields",
+    "pc": 127,
+    "kind": "argument",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 1,
+      "part": "element"
+    }
+  },
+  {
+    "function": "validate::fields",
+    "pc": 185,
+    "kind": "argument",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 1,
+      "part": "element"
+    }
+  },
+  {
+    "function": "validate::fields",
+    "pc": 216,
+    "kind": "argument",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 1,
+      "part": "element"
+    }
+  },
+  {
+    "function": "validate::fields",
+    "pc": 247,
+    "kind": "argument",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 1,
+      "part": "element"
+    }
+  },
+  {
+    "function": "validate::model",
+    "pc": 63,
+    "kind": "argument",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 4,
+      "part": "element"
+    }
+  },
+  {
+    "function": "validate::model",
+    "pc": 156,
+    "kind": "argument",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 1,
+      "part": "element"
+    }
+  },
+  {
+    "function": "ports::collect",
+    "pc": 28,
+    "kind": "argument",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 2,
+      "part": "element"
+    }
+  },
+  {
+    "function": "ports::collect",
+    "pc": 53,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 1,
+      "part": "element"
+    }
+  },
+  {
+    "function": "ports::collect",
+    "pc": 59,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 1,
+      "part": "element"
+    }
+  },
+  {
+    "function": "ports::collect",
+    "pc": 164,
+    "kind": "construct",
+    "from": "move",
+    "to": "copy",
+    "source": {
+      "origin": "local",
+      "local": 9,
+      "part": "field"
+    }
+  },
+  {
+    "function": "ports::collect",
+    "pc": 164,
+    "kind": "construct",
+    "from": "move",
+    "to": "copy",
+    "source": {
+      "origin": "local",
+      "local": 8,
+      "part": "field"
+    }
+  },
+  {
+    "function": "ports::collect",
+    "pc": 178,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 1,
+      "part": "element"
+    }
+  },
+  {
+    "function": "ports::collect",
+    "pc": 247,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 2,
+      "part": "element"
+    }
+  },
+  {
+    "function": "ports::collect",
+    "pc": 248,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 1,
+      "part": "element"
+    }
+  },
+  {
+    "function": "ports::collect",
+    "pc": 304,
+    "kind": "argument",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 11,
+      "part": "whole"
+    }
+  },
+  {
+    "function": "ports::collect",
+    "pc": 349,
+    "kind": "argument",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 1,
+      "part": "element"
+    }
+  },
+  {
+    "function": "ports::collect",
+    "pc": 374,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 2,
+      "part": "element"
+    }
+  },
+  {
+    "function": "ports::collect",
+    "pc": 375,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 1,
+      "part": "element"
+    }
+  },
+  {
+    "function": "ports::collect",
+    "pc": 446,
+    "kind": "argument",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 1,
+      "part": "element"
+    }
+  },
+  {
+    "function": "ports::collect",
+    "pc": 487,
+    "kind": "argument",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 2,
+      "part": "element"
+    }
+  },
+  {
+    "function": "ports::collect",
+    "pc": 495,
+    "kind": "argument",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 2,
+      "part": "element"
+    }
+  },
+  {
+    "function": "ports::collect",
+    "pc": 503,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 2,
+      "part": "element"
+    }
+  },
+  {
+    "function": "ports::collect",
+    "pc": 529,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 1,
+      "part": "element"
+    }
+  },
+  {
+    "function": "ports::collect",
+    "pc": 589,
+    "kind": "argument",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 1,
+      "part": "element"
+    }
+  },
+  {
+    "function": "ports::collect",
+    "pc": 599,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 1,
+      "part": "element"
+    }
+  },
+  {
+    "function": "ports::collect",
+    "pc": 685,
+    "kind": "construct",
+    "from": "move",
+    "to": "copy",
+    "source": {
+      "origin": "local",
+      "local": 2,
+      "part": "element"
+    }
+  },
+  {
+    "function": "svg::chip",
+    "pc": 182,
+    "kind": "argument",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 5,
+      "part": "element"
+    }
+  },
+  {
+    "function": "svg::render",
+    "pc": 157,
+    "kind": "argument",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 3,
+      "part": "element"
+    }
+  },
+  {
+    "function": "layout::innerPin",
+    "pc": 5,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 2,
+      "part": "element"
+    }
+  },
+  {
+    "function": "layout::innerPin",
+    "pc": 11,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 2,
+      "part": "element"
+    }
+  },
+  {
+    "function": "layout::innerPin",
+    "pc": 25,
+    "kind": "return",
+    "from": "move",
+    "to": "copy",
+    "source": {
+      "origin": "local",
+      "local": 6,
+      "part": "whole"
+    }
+  },
+  {
+    "function": "layout::innerPin",
+    "pc": 48,
+    "kind": "return",
+    "from": "move",
+    "to": "copy",
+    "source": {
+      "origin": "local",
+      "local": 6,
+      "part": "whole"
+    }
+  },
+  {
+    "function": "layout::innerPin",
+    "pc": 50,
+    "kind": "return",
+    "from": "move",
+    "to": "copy",
+    "source": {
+      "origin": "local",
+      "local": 5,
+      "part": "whole"
+    }
+  },
+  {
+    "function": "layout::bridge",
+    "pc": 5,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 2,
+      "part": "element"
+    }
+  },
+  {
+    "function": "layout::bridge",
+    "pc": 11,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 2,
+      "part": "element"
+    }
+  },
+  {
+    "function": "layout::bridge",
+    "pc": 48,
+    "kind": "argument",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 6,
+      "part": "whole"
+    }
+  },
+  {
+    "function": "layout::bridge",
+    "pc": 56,
+    "kind": "argument",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 7,
+      "part": "whole"
+    }
+  },
+  {
+    "function": "layout::groundBranch",
+    "pc": 6,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 2,
+      "part": "element"
+    }
+  },
+  {
+    "function": "layout::groundBranch",
+    "pc": 15,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 2,
+      "part": "element"
+    }
+  },
+  {
+    "function": "layout::groundBranch",
+    "pc": 71,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 2,
+      "part": "element"
+    }
+  },
+  {
+    "function": "layout::groundBranch",
+    "pc": 77,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 2,
+      "part": "element"
+    }
+  },
+  {
+    "function": "layout::branch",
+    "pc": 12,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 3,
+      "part": "element"
+    }
+  },
+  {
+    "function": "layout::branch",
+    "pc": 74,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 3,
+      "part": "element"
+    }
+  },
+  {
+    "function": "layout::branch",
+    "pc": 104,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 3,
+      "part": "element"
+    }
+  },
+  {
+    "function": "layout::branch",
+    "pc": 180,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 3,
+      "part": "element"
+    }
+  },
+  {
+    "function": "layout::branch",
+    "pc": 186,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 3,
+      "part": "element"
+    }
+  },
+  {
+    "function": "layout::branch",
+    "pc": 192,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 3,
+      "part": "element"
+    }
+  },
+  {
+    "function": "layout::endpoint",
+    "pc": 7,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 3,
+      "part": "element"
+    }
+  },
+  {
+    "function": "layout::endpoint",
+    "pc": 170,
+    "kind": "assign",
+    "from": "move",
+    "to": "borrow",
+    "source": {
+      "origin": "local",
+      "local": 3,
+      "part": "element"
+    }
+  }
+]
