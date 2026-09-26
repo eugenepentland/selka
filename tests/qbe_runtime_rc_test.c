@@ -1,5 +1,6 @@
 #include "qbe_runtime.h"
 #include "native_rc_collections.h"
+#include "native_rc_dictionary.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -185,6 +186,76 @@ static void unique_body_test(void) {
     myl_native_heap_destroy(&context.heap);
     assert(!context.heap.bytes);
 }
+static void scope_bridge_test(void) {
+    MylQbeContext context = {0};
+    myl_native_heap_init(&context.heap, 1u << 20);
+    if (!myl_rc_enabled(&context.heap)) assert(myl_rc_storage_init(&context.heap) == MYL_RC_OK);
+    static const myl_native_type number = {.size = 8, .alignment = 8, .kind = MYL_NATIVE_PLAIN};
+    myl_native_list *items[2] = {myl_native_list_new(&context.heap, &number, 0), myl_native_list_new(&context.heap, &number, 0)};
+    assert(items[0] && items[1]);
+    const myl_native_field field = {.type = &pointer_type};
+    const myl_native_type array = {.size = sizeof items, .alignment = _Alignof(void *), .kind = MYL_NATIVE_ARRAY,
+        .fields = &field, .field_count = 1, .count = 2, .stride = sizeof(void *)};
+    const myl_rc_shape shape = {.size = sizeof items, .kind = MYL_RC_SHAPE_ARRAY,
+        .as.array = {.element = &pointer, .count = 2, .stride = sizeof(void *)}};
+    const myl_rc_descriptor descriptor = {.type = &array, .shape = &shape};
+    assert(myl_rc_descriptor_import(&context.heap, &descriptor) == MYL_RC_OK);
+    const MylQbeRcPath path = {&array, 0};
+    MylQbeRcPlace place = {.address = items, .path = &path, .count = 1};
+    myl_rc_scope scope = {0};
+    myl_qbe_rc_scope_end(&context, &scope);
+    myl_qbe_rc_scope_begin(&context, &scope);
+    assert(myl_qbe_rc_scope_prepare(&context, &scope, &place));
+    for (size_t i = 0; i < 2; ++i) assert(((myl_rc_object *)items[i] - 1)->holds == 1);
+    myl_qbe_rc_scope_end(&context, &scope);
+    myl_qbe_rc_scope_begin(&context, &scope);
+    place = (MylQbeRcPlace){.address = &items[0]};
+    assert(myl_qbe_rc_scope_prepare(&context, &scope, &place));
+    assert(myl_qbe_rc_scope_hold(&context, &scope, items[1]));
+    assert(myl_qbe_rc_scope_pin(&context, &scope, items[1]));
+    for (size_t i = 0; i < 2; ++i) myl_rc_owner_release(&context.heap, items[i]);
+    myl_qbe_rc_scope_end(&context, &scope);
+    assert(!context.heap.objects_live);
+    myl_native_heap_destroy(&context.heap);
+    assert(!context.heap.bytes);
+}
+static void backing_bridge_test(void) {
+    MylQbeContext context = {0};
+    myl_native_heap_init(&context.heap, 4u << 20);
+    if (!myl_rc_enabled(&context.heap)) assert(myl_rc_storage_init(&context.heap) == MYL_RC_OK);
+    static const myl_native_type number = {.size = 8, .alignment = 8, .kind = MYL_NATIVE_PLAIN};
+    myl_native_list *list = myl_native_list_new(&context.heap, &number, 1);
+    uint64_t value = 17;
+    assert(list && myl_native_list_append(&context.heap, list, &value));
+    void *backing = list->storage;
+    myl_rc_scope scope;
+    myl_qbe_rc_scope_begin(&context, &scope);
+    ((myl_rc_object *)backing - 1)->holds = MYL_RC_COUNT_MAX;
+    size_t charged = context.heap.bytes;
+    assert(!myl_qbe_rc_scope_pin(&context, &scope, list));
+    assert(!scope.journal && context.heap.bytes == charged && !((myl_rc_object *)list - 1)->holds);
+    assert(!(((myl_native_object *)list - 1)->mark & MYL_NATIVE_OBJECT_PINNED));
+    context.trap = NULL;
+    ((myl_rc_object *)backing - 1)->holds = 0;
+    assert(myl_qbe_rc_scope_pin(&context, &scope, list));
+    assert(myl_native_list_append(&context.heap, list, &value));
+    assert(list->storage != backing && !((myl_rc_object *)backing - 1)->owners && *(uint64_t *)backing == value);
+    myl_qbe_rc_scope_end(&context, &scope);
+    myl_rc_owner_release(&context.heap, list);
+    myl_native_dictionary *dict = myl_native_dictionary_new(&context.heap, &number, &number, 0);
+    assert(dict);
+    for (uint64_t i = 0; i < 16; ++i) assert(myl_native_dictionary_write(&context.heap, dict, &i, &value));
+    void *entries = dict->entries->storage, *index = dict->index.slots;
+    myl_qbe_rc_scope_begin(&context, &scope);
+    assert(myl_qbe_rc_scope_pin(&context, &scope, dict));
+    for (uint64_t i = 16; i < 256; ++i) assert(myl_native_dictionary_write(&context.heap, dict, &i, &value));
+    assert(entries != dict->entries->storage && index != dict->index.slots);
+    assert(((myl_rc_object *)entries - 1)->holds == 1 && ((myl_rc_object *)index - 1)->holds == 1);
+    myl_qbe_rc_scope_end(&context, &scope);
+    myl_rc_owner_release(&context.heap, dict);
+    myl_native_heap_destroy(&context.heap);
+    assert(!context.heap.bytes);
+}
 int myl_qbe_rc_contract_verify(void) {
     MylQbeContext context = {0};
     context.heap.limit = 65536;
@@ -226,13 +297,15 @@ int myl_qbe_rc_frame_verify(void) {
     construction_guard_test();
     unique_bridge_test();
     unique_body_test();
-    return 6;
+    scope_bridge_test();
+    backing_bridge_test();
+    return 8;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
     assert(myl_qbe_rc_contract_verify() == 5);
-    assert(myl_qbe_rc_frame_verify() == 6);
-    puts("RC startup and frame unwind: 11 checks passed");
+    assert(myl_qbe_rc_frame_verify() == 8);
+    puts("RC startup and frame unwind: 13 checks passed");
     return 0;
 }
 #endif

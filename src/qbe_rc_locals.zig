@@ -41,7 +41,17 @@ fn store(comptime E: type, self: *E, index: usize, operand: usize) Error!void {
     if (@import("qbe_rc_unique.zig").receiverParent(E, self, index)) |parent| {
         try values.drop(E, self, operand);
         try frame.drop(E, self, index);
+        try @import("qbe_rc_unique.zig").local(E, self, .{ .local = parent });
         const value = try self.load("l", parent);
+        try @import("qbe_cow.zig").Lower(E).borrowReceiver(self, index, value);
+        try self.print(" storel %v{d}, %l{d}\n", .{ value, index });
+        return;
+    }
+    if (self.cow.?.plan.place(index) != null) {
+        const value = try self.load("s", operand);
+        try values.drop(E, self, operand);
+        try frame.drop(E, self, index);
+        try @import("qbe_cow.zig").Lower(E).borrowReceiver(self, index, value);
         try self.print(" storel %v{d}, %l{d}\n", .{ value, index });
         return;
     }
@@ -67,12 +77,8 @@ fn store(comptime E: type, self: *E, index: usize, operand: usize) Error!void {
 fn move(comptime E: type, self: *E, index: usize, operand_index: usize) Error!void {
     const ty = self.function.scope.locals[index].ty;
     const address = self.temp();
-    const region = self.temp();
-    const work = try values.workAddress(E, self);
-    try self.print(" %v{d} =l copy %l{d}\n %v{d} =l call $myl_qbe_region_mark(l %ctx)\n", .{ address, index, region });
-    try @import("qbe_rc_slots.zig").Lower(E).transfer(self, .{ .ty = ty, .destination = work, .source = address, .region = region, .mode = .take_empty });
-    try frame.initialized(E, self, index, false);
-    try frame.entry(E, self, frame.pending(E, self), ty, work);
-    try frame.initialized(E, self, frame.pending(E, self), true);
+    const operation: []const u8 = if (self.byReference(index) or self.callerStorage(index)) "loadl" else "copy";
+    try self.print(" %v{d} =l {s} %l{d}\n", .{ address, operation, index });
+    try values.prepareGuarded(E, self, ty, address, index);
     try values.publish(E, self, ty, operand_index);
 }

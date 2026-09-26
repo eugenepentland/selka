@@ -20,6 +20,9 @@ pub fn analysis(comptime E: type, self: *E) Error!ownership.Analysis {
 /// Make one guarded local unique, preserving a borrowed caller's owning edge.
 /// The helper sets the guard only when a borrowed input acquired a fresh clone.
 pub fn local(comptime E: type, self: *E, unique: cow.Unique) Error!void {
+    if (unique.alias != cow.none and receiverFilled(E, self, unique.alias)) {
+        return local(E, self, .{ .local = unique.alias });
+    }
     const ty = self.function.scope.locals[unique.local].ty;
     const address = self.temp();
     const guard = try frame.guard(E, self, unique.local);
@@ -32,6 +35,20 @@ pub fn local(comptime E: type, self: *E, unique: cow.Unique) Error!void {
         try frame.drop(E, self, unique.alias);
         try self.print(" storel %v{d}, %l{d}\n", .{ value, unique.alias });
     }
+}
+
+/// One pointer edge in an already-owned containing value.
+pub const Field = struct { ty: @import("typed.zig").Type, address: usize, container: ?usize = null };
+
+/// Detach an owned field transactionally before publishing the replacement edge.
+pub fn field(comptime E: type, self: *E, target: Field) Error!void {
+    const container = self.temp();
+    if (target.container) |value| {
+        try self.print(" %v{d} =l copy %v{d}\n", .{ container, value });
+    } else try self.print(" %v{d} =l copy 0\n", .{container});
+    const done = self.temp();
+    try self.print(" %v{d} =w call $myl_qbe_rc_unique_field(l %ctx, l extern ${s}, l %v{d}, l %v{d})\n", .{ done, try self.descriptor(target.ty), target.address, container });
+    try success(E, self, done);
 }
 
 /// A compiler-only receiver temporary aliases its prepared owning parent.
@@ -63,4 +80,12 @@ pub fn receiverParent(comptime E: type, self: *E, index: usize) ?u32 {
 pub fn success(comptime E: type, self: *E, done: usize) Error!void {
     const label = self.temp();
     try self.print(" jnz %v{d}, @rcunique{d}, @failure\n@rcunique{d}\n", .{ done, label, label });
+}
+
+fn receiverFilled(comptime E: type, self: *E, index: usize) bool {
+    if (receiverParent(E, self, index) == null) return false;
+    for (self.function.scope.instructions[0..self.pc]) |instruction| {
+        if (instruction.op == .store_local and @backingInt(instruction.op.store_local) == index) return true;
+    }
+    return false;
 }
