@@ -1,0 +1,159 @@
+{
+  "compiler_sha256": "26de8ef6b0b5e8b09a6cb483bb27e47124b241b685d9768bfa257de27321ff4d",
+  "source_sha256": {
+    "src/qbe_aggregate.zig": "f98ef89522a6ea51f80c76860402edfec86501d71654d1ccdfd9c44ae3a59529",
+    "src/qbe_frame.zig": "0ce623d96fd8429034667c56e7c0fc4188bcb9ff722eb644c52ef9292d229b1a",
+    "src/qbe_rc_aggregate_test.zig": "c357659117d5f0fdaf790055d1b3644ca090e2c92e4f5529602e4c9a75d93e7c",
+    "tests/lang/rc_contract_results.my": "ae563f4070893ff007d9ff4dc983bf75d3a06cfc9a75a9c856b625c728306296"
+  },
+  "backends": {
+    "qbe": {
+      "gc_stress_tests": {
+        "version": "native-tests-v1",
+        "tests": [
+          {
+            "name": "rc_contract_results::test_postcondition_keeps_the_managed_success_payload",
+            "status": "passed",
+            "actual": true,
+            "expected": true,
+            "reason": "",
+            "key": "d7c5cb4f4cd88b18be1f6b6c7fe3bd15d3855c76f18a05ab384ab3f4318dcb45",
+            "dependencies": [
+              "myl_f_01335875792ef70d0adba4c724c253463bca206b25cf20420477ee98d42858c1",
+              "myl_f_5ca7b319516a5f44f80d177e4bd11b382bafddceed43df6bf38abc3b31133d91",
+              "myl_f_cdb75d5f305b4c690ccac30963157c4355d650611fab56a23db62b51d9122e03"
+            ],
+            "cacheable": true,
+            "reasons": [],
+            "steps": 2808,
+            "contract": "2a399126185c55ecfd59f8f8af38e1350f8809f282d9ffb9fdfad175642bfca1",
+            "provider": "",
+            "source": "ab12c5c0afe9998c5f41a9885ca6bb13af9d7c47421c850930851a1e22ecb626"
+          },
+          {
+            "name": "rc_contract_results::test_postcondition_keeps_the_unique_file_payload",
+            "status": "passed",
+            "actual": true,
+            "expected": true,
+            "reason": "",
+            "key": "fdfac7b7052e92d57f4408a3b8e1319870673b9074800853a36dc8cebe7c46cb",
+            "dependencies": [
+              "myl_f_117b035cc325ff871b8532fde0d00e96fe0047d105d507257b5b4ad9acb83ebc",
+              "myl_f_3703e15f2280710d5ee746423f1f1ab0a9a7e4d82cbdd2cf7b374ce7cffb4016",
+              "myl_f_3deea4bfd0cf768b5cefd1fcc18e54147e27f025f59352ce37254b44361286fa",
+              "myl_f_7ad2a9c2e959e36662b9a9ab1b6dc4c9db3213238d0d86ff1cb4b9082e36a0ae"
+            ],
+            "cacheable": true,
+            "reasons": [],
+            "steps": 60,
+            "contract": "2a399126185c55ecfd59f8f8af38e1350f8809f282d9ffb9fdfad175642bfca1",
+            "provider": "",
+            "source": "ab12c5c0afe9998c5f41a9885ca6bb13af9d7c47421c850930851a1e22ecb626"
+          },
+          {
+            "name": "rc_contract_results::test_postcondition_preserves_the_propagated_error",
+            "status": "passed",
+            "actual": true,
+            "expected": true,
+            "reason": "",
+            "key": "acd3df60bba3061e561001d6f963b42940e33c14f3bfe0741c1708862f296124",
+            "dependencies": [
+              "myl_f_01335875792ef70d0adba4c724c253463bca206b25cf20420477ee98d42858c1",
+              "myl_f_56b458703b78f3a778a7212f1efec8c02e2228488a829737e21306a43b36a071",
+              "myl_f_cdb75d5f305b4c690ccac30963157c4355d650611fab56a23db62b51d9122e03"
+            ],
+            "cacheable": true,
+            "reasons": [],
+            "steps": 66,
+            "contract": "2a399126185c55ecfd59f8f8af38e1350f8809f282d9ffb9fdfad175642bfca1",
+            "provider": "",
+            "source": "ab12c5c0afe9998c5f41a9885ca6bb13af9d7c47421c850930851a1e22ecb626"
+          }
+        ],
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "cached": 0,
+        "executed": 3,
+        "modules": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/tests/lang/rc_contract_results.my"
+        ]
+      },
+      "rc_stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v2-counting\",\"saturated\":false,\"owner_acquire\":361,\"owner_release\":602,\"hold_acquire\":0,\"hold_release\":0,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":241,\"arena_allocate\":0,\"retire\":241,\"clone_shell\":0,\"unique_check\":160}\n"
+    },
+    "llvm": {
+      "gc_stress_tests": {
+        "version": "native-tests-v1",
+        "tests": [
+          {
+            "name": "rc_contract_results::test_postcondition_keeps_the_managed_success_payload",
+            "status": "passed",
+            "actual": true,
+            "expected": true,
+            "reason": "",
+            "key": "57c746000afa534fb5159e8d86756104d99bdf3279f3694c8a77e922e848126a",
+            "dependencies": [
+              "myl_f_01335875792ef70d0adba4c724c253463bca206b25cf20420477ee98d42858c1",
+              "myl_f_5ca7b319516a5f44f80d177e4bd11b382bafddceed43df6bf38abc3b31133d91",
+              "myl_f_cdb75d5f305b4c690ccac30963157c4355d650611fab56a23db62b51d9122e03"
+            ],
+            "cacheable": true,
+            "reasons": [],
+            "steps": 2808,
+            "contract": "2a399126185c55ecfd59f8f8af38e1350f8809f282d9ffb9fdfad175642bfca1",
+            "provider": "",
+            "source": "ab12c5c0afe9998c5f41a9885ca6bb13af9d7c47421c850930851a1e22ecb626"
+          },
+          {
+            "name": "rc_contract_results::test_postcondition_keeps_the_unique_file_payload",
+            "status": "passed",
+            "actual": true,
+            "expected": true,
+            "reason": "",
+            "key": "6234fdf062f601628cc4364d49d570ee3a299a8aee54a3274a256818d2e9af79",
+            "dependencies": [
+              "myl_f_117b035cc325ff871b8532fde0d00e96fe0047d105d507257b5b4ad9acb83ebc",
+              "myl_f_3703e15f2280710d5ee746423f1f1ab0a9a7e4d82cbdd2cf7b374ce7cffb4016",
+              "myl_f_3deea4bfd0cf768b5cefd1fcc18e54147e27f025f59352ce37254b44361286fa",
+              "myl_f_7ad2a9c2e959e36662b9a9ab1b6dc4c9db3213238d0d86ff1cb4b9082e36a0ae"
+            ],
+            "cacheable": true,
+            "reasons": [],
+            "steps": 60,
+            "contract": "2a399126185c55ecfd59f8f8af38e1350f8809f282d9ffb9fdfad175642bfca1",
+            "provider": "",
+            "source": "ab12c5c0afe9998c5f41a9885ca6bb13af9d7c47421c850930851a1e22ecb626"
+          },
+          {
+            "name": "rc_contract_results::test_postcondition_preserves_the_propagated_error",
+            "status": "passed",
+            "actual": true,
+            "expected": true,
+            "reason": "",
+            "key": "de88f89e39dded4cd6df1a5440c7b61542145700246f6b9c9674cc8f39d7ad2f",
+            "dependencies": [
+              "myl_f_01335875792ef70d0adba4c724c253463bca206b25cf20420477ee98d42858c1",
+              "myl_f_56b458703b78f3a778a7212f1efec8c02e2228488a829737e21306a43b36a071",
+              "myl_f_cdb75d5f305b4c690ccac30963157c4355d650611fab56a23db62b51d9122e03"
+            ],
+            "cacheable": true,
+            "reasons": [],
+            "steps": 66,
+            "contract": "2a399126185c55ecfd59f8f8af38e1350f8809f282d9ffb9fdfad175642bfca1",
+            "provider": "",
+            "source": "ab12c5c0afe9998c5f41a9885ca6bb13af9d7c47421c850930851a1e22ecb626"
+          }
+        ],
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "cached": 0,
+        "executed": 3,
+        "modules": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic/tests/lang/rc_contract_results.my"
+        ]
+      },
+      "rc_stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v2-counting\",\"saturated\":false,\"owner_acquire\":361,\"owner_release\":602,\"hold_acquire\":0,\"hold_release\":0,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":241,\"arena_allocate\":0,\"retire\":241,\"clone_shell\":0,\"unique_check\":160}\n"
+    }
+  }
+}

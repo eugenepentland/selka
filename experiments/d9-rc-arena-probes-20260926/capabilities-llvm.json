@@ -1,0 +1,85 @@
+{
+  "backend": "llvm",
+  "rows": [
+    {
+      "source": "tests/lang/rc_capability_values.my",
+      "sha256": "0c9f44d9b87533f9d5a6a3100237d4cb0519800398749c9558cb62e748a868c0",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/tests/lang/rc_capability_values.my",
+        "--backend",
+        "llvm",
+        "--mode",
+        "ReleaseFast",
+        "--rc-runtime=stats",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/.d9-rc-contract-tmp/cap-cache",
+        "--max-memory=512M",
+        "--run"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": "@stdlib/random.my:96:84: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def randint(generator: mut Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                     ^\nMYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v2-counting\",\"saturated\":false,\"owner_acquire\":232,\"owner_release\":592,\"hold_acquire\":0,\"hold_release\":0,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":360,\"arena_allocate\":0,\"retire\":360,\"clone_shell\":0,\"unique_check\":56}\n",
+      "counts": [
+        {
+          "version": 1,
+          "runtime": "rc-v2-counting",
+          "saturated": false,
+          "owner_acquire": 232,
+          "owner_release": 592,
+          "hold_acquire": 0,
+          "hold_release": 0,
+          "owner_limit": 0,
+          "hold_limit": 0,
+          "heap_allocate": 360,
+          "arena_allocate": 0,
+          "retire": 360,
+          "clone_shell": 0,
+          "unique_check": 56
+        }
+      ]
+    },
+    {
+      "source": "experiments/d9-rc-arena-probes-20260926/capability_trap.my",
+      "sha256": "3da6b4a92d6322feb66ec58bb141475275a462c0fe59c3763e89136198bc8b48",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/experiments/d9-rc-arena-probes-20260926/capability_trap.my",
+        "--backend",
+        "llvm",
+        "--mode",
+        "ReleaseFast",
+        "--rc-runtime=stats",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/.d9-rc-contract-tmp/cap-cache",
+        "--max-memory=512M",
+        "--run"
+      ],
+      "exit": 1,
+      "stdout": "",
+      "stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v2-counting\",\"saturated\":false,\"owner_acquire\":1,\"owner_release\":4,\"hold_acquire\":0,\"hold_release\":0,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":3,\"arena_allocate\":0,\"retire\":3,\"clone_shell\":0,\"unique_check\":0}\ncapability_trap.my:14:17: error[R_FILE]: native execution failed\n  in capability_trap::main at capability_trap.my:14:17\n",
+      "counts": [
+        {
+          "version": 1,
+          "runtime": "rc-v2-counting",
+          "saturated": false,
+          "owner_acquire": 1,
+          "owner_release": 4,
+          "hold_acquire": 0,
+          "hold_release": 0,
+          "owner_limit": 0,
+          "hold_limit": 0,
+          "heap_allocate": 3,
+          "arena_allocate": 0,
+          "retire": 3,
+          "clone_shell": 0,
+          "unique_check": 0
+        }
+      ]
+    }
+  ]
+}

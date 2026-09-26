@@ -28,7 +28,7 @@ int myl_qbe_rc_status(void *context, myl_rc_status status) {
 }
 int myl_qbe_rc_register(void *context, const myl_rc_module *module) {
     MylQbeContext *ctx = context;
-    if (!ctx->heap.rc || !module) { myl_qbe_fail(context, "R_INTERNAL"); return 0; }
+    if (!ctx->heap.rc || !module || module->abi != MYL_RC_ABI_VERSION) { myl_qbe_fail(context, "R_INTERNAL"); return 0; }
     return myl_qbe_rc_status(context, myl_rc_module_register(&ctx->heap, module));
 }
 int myl_qbe_rc_initialize(void *context) {
@@ -55,7 +55,15 @@ void myl_qbe_rc_slot_drop(void *context, MylQbeRcSlot *slot) {
     myl_rc_invariant(slot && slot->initialized);
     if (!*slot->initialized) return;
     *slot->initialized = 0;
-    myl_rc_invariant(slot->type && slot->address && !(slot->flags & ~7u));
+    myl_rc_invariant(slot->type && slot->address && !(slot->flags & ~15u));
+    if (slot->flags & MYL_QBE_RC_HOLD_POINTER) {
+        myl_rc_invariant(slot->flags == MYL_QBE_RC_HOLD_POINTER && slot->type->size == sizeof(void *));
+        myl_rc_hold hold;
+        memcpy(&hold.payload, slot->address, sizeof hold.payload);
+        memset(slot->address, 0, sizeof hold.payload);
+        myl_rc_hold_release(&ctx->heap, &hold);
+        return;
+    }
     if (slot->flags & MYL_QBE_RC_CONSTRUCTION) {
         myl_rc_invariant(slot->flags == MYL_QBE_RC_CONSTRUCTION && slot->type->size == sizeof(void *));
         void *payload;
@@ -101,6 +109,13 @@ void myl_qbe_rc_finish(void *context) {
         ctx->heap.text_scalars[i] = NULL;
         myl_rc_owner_release(&ctx->heap, text);
     }
+}
+void myl_qbe_rc_arena_prepare(void *context, MylQbeRcFrame *frame, size_t watermark) {
+    MylQbeContext *ctx = context;
+    myl_rc_invariant(ctx->rc_frames == frame && watermark <= frame->count && ctx->heap.region_depth);
+    myl_rc_scopes_close_region(&ctx->heap, ctx->heap.region_depth);
+    for (size_t i = frame->count; i > watermark; --i)
+        myl_qbe_rc_slot_drop(ctx, &frame->entries[i - 1]);
 }
 int myl_qbe_rc_unique_local(void *context, const myl_native_type *type, void *address, uint32_t *owned) {
     MylQbeContext *ctx = context;

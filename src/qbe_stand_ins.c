@@ -580,11 +580,22 @@ void *myl_qbe_stand_in_environment_names(void *context, uint64_t authority) {
     if (!list) { myl_qbe_fail_allocation(context); return NULL; }
     myl_native_root root;
     myl_native_root_push(heap, &root, &list, &pointer_type);
+    int failed = 0;
     for (size_t i = 0; i < count; ++i) {
         myl_native_text *text = myl_native_text_from_utf8(heap, names[i].bytes, names[i].length);
-        if (!text || !myl_native_list_append(heap, list, &text)) { myl_qbe_fail_allocation(context); list = NULL; break; }
+        int appended = text && myl_native_list_append(heap, list, &text);
+        if (myl_rc_enabled(heap)) {
+            if (appended) myl_rc_owner_release(heap, text);
+            else myl_rc_construction_abort(heap, text);
+        }
+        if (!appended) { failed = 1; break; }
     }
     myl_native_root_pop(heap, &root);
+    if (failed) {
+        if (myl_rc_enabled(heap)) myl_rc_construction_abort(heap, list);
+        myl_qbe_fail_allocation(context);
+        return NULL;
+    }
     return list;
 }
 const void *myl_qbe_stand_in_provider(void *context, uint64_t index, unsigned kind) {

@@ -677,16 +677,16 @@ test "RC runtime contract reaches generated C and each merged archive source gro
     const cache: Cache = .{ .context = context, .directory = "objects", .temporary = "work", .assets = "/assets", .environment = "env", .zig = "/zig", .mode = "ReleaseFast", .codegen = .{ .tool = "/qbe" } };
     const gc = try std.mem.join(a, " ", try cache.flags());
     try std.testing.expect(std.mem.indexOf(u8, gc, "MYL_NATIVE_RC") == null);
-    try environment.put(ownership_contract.variable, "rc-v1-counting");
+    try environment.put(ownership_contract.variable, "rc-v2-counting");
     const counted = try std.mem.join(a, " ", try cache.generatedFlags());
     try std.testing.expect(std.mem.indexOf(u8, counted, "-DMYL_NATIVE_RC=1") != null);
     try std.testing.expect(std.mem.indexOf(u8, counted, "-DMYL_NATIVE_RC_COUNTING=1") != null);
     const merged = try std.mem.join(a, " ", try cache.mergeCommand(&.{ "qbe_runtime.c", "native_heap.c" }, "out.o"));
     try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, merged, "-DMYL_NATIVE_RC=1"));
-    try environment.put(ownership_contract.variable, "rc-v1");
+    try environment.put(ownership_contract.variable, "rc-v2");
     const plain = try std.mem.join(a, " ", try cache.flags());
     try std.testing.expect(std.mem.indexOf(u8, plain, "-DMYL_NATIVE_RC=1") != null);
     try std.testing.expect(std.mem.indexOf(u8, plain, "MYL_NATIVE_RC_COUNTING") == null);
-    try environment.put(ownership_contract.variable, "rc-v2");
+    try environment.put(ownership_contract.variable, "rc-v1");
     try std.testing.expectError(error.InvalidRuntimeContract, cache.flags());
 }

@@ -1,0 +1,15 @@
+module capability_trap
+
+import filesystem
+
+
+def main() -> int:
+    fs = filesystem.memory()
+    match fs.write_file("bad.txt", b"first line\n\xff\n"):
+        case Ok(_):
+            pass
+        case Err(_):
+            return 2
+    with fs.open("bad.txt", "r") as file:
+        lines = file.readlines()
+        return len(lines)
