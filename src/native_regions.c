@@ -5,6 +5,7 @@
    bulk release at scope exit frees a whole depth without tracing survivors. */
 #include "native_regions.h"
 #include "native_rc_values.h"
+#include "native_rc_internal.h"
 #include <stdlib.h>
 #include <string.h>
 static void reach(const myl_native_heap *heap, const myl_native_type *type,
@@ -29,6 +30,17 @@ static void reach(const myl_native_heap *heap, const myl_native_type *type,
 }
 unsigned myl_native_region_reach(const myl_native_heap *heap,
                                  const myl_native_type *type, const void *value) {
+    if (myl_rc_enabled(heap)) {
+        if (type->kind == MYL_NATIVE_PLAIN || type->kind == MYL_NATIVE_FLOAT) return 0;
+        if (type->kind == MYL_NATIVE_POINTER) {
+            void *payload;
+            memcpy(&payload, value, sizeof payload);
+            return payload ? myl_native_header_region(payload) : 0;
+        }
+        const myl_rc_descriptor *descriptor = myl_rc_descriptor_find(heap, type);
+        myl_rc_invariant(descriptor != NULL);
+        return myl_rc_value_region((myl_native_heap *)heap, descriptor->shape, value);
+    }
     unsigned deepest = 0;
     reach(heap, type, value, &deepest);
     return deepest;

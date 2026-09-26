@@ -113,7 +113,19 @@ static void depth_reservation_refusal(void) {
     size_t before = heap.bytes;
     assert(!myl_rc_storage_bytes(&heap, 1, 1));
     assert(heap.bytes == before && !heap.arena_depth_capacity && !heap.arena.chunks_live);
-    myl_native_region_end(&heap);
+    heap.limit = before + 96;
+    assert(!myl_rc_storage_bytes(&heap, 64, 1));
+    assert(heap.bytes == before && !heap.arena_depth_capacity && !heap.arena.chunks_live);
+    heap.limit = 64u << 20;
+    assert(myl_rc_storage_bytes(&heap, 16, 1));
+    void *table = heap.arena_chunks;
+    size_t capacity = heap.arena_depth_capacity;
+    while (heap.region_depth < capacity) assert(myl_native_region_begin(&heap));
+    before = heap.bytes;
+    heap.limit = before + capacity * 2 * sizeof(void *) + 32;
+    assert(!myl_rc_storage_bytes(&heap, 64, heap.region_depth));
+    assert(heap.bytes == before && heap.arena_chunks == table && heap.arena_depth_capacity == capacity);
+    while (heap.region_depth) myl_native_region_end(&heap);
     finish(&heap);
 }
 static void inspect_arena_child(myl_native_heap *heap, void *payload) {
