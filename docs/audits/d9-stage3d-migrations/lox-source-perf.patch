@@ -511,7 +511,7 @@ diff --git a/interpreter.my b/interpreter.my
 
 
 diff --git a/vm.my b/vm.my
-index 450eb63..8dbdc07 100644
+index 450eb63e..aa4e76e8 100644
 --- a/vm.my
 +++ b/vm.my
 @@ -18,6 +18,36 @@ public enum InterpretResult:
@@ -571,6 +571,22 @@ index 450eb63..8dbdc07 100644
              _ = line.append_range(name, 0, len(name))
              _ = line.append_utf8("()")
          output.error_line(mut o, bytes(line))
+@@ -99,12 +130,12 @@ def is_class(rt: heap.Runtime, item: value.Value) -> bool:
+             return False
+
+
+-def instance_of(rt: heap.Runtime, item: value.Value) -> Option[object.InstanceObj]:
++def instance_of(rt: heap.Runtime, item: value.Value) -> Option[value.ObjRef]:
+     match item:
+         case value.Value.obj(ref):
+             match rt.objects[ref]:
+-                case object.Obj.instance(payload):
+-                    return Some(payload)
++                case object.Obj.instance(_):
++                    return Some(ref)
+                 case _:
+                     return None
+         case _:
 @@ -125,18 +156,15 @@ def arity_error(rt: mut heap.Runtime, o: mut output.Output, arity: int, count: i
 
  # Pushes a frame for the closure whose callee and arguments are on the stack.
@@ -593,7 +609,41 @@ index 450eb63..8dbdc07 100644
          ip=0,
          base=rt.stack_top - count - 1
      )
-@@ -249,26 +277,26 @@ def concatenate(rt: mut heap.Runtime):
+@@ -186,19 +214,26 @@ def invoke_from_class(rt: mut heap.Runtime, o: mut output.Output, klass: value.O
+
+ def invoke(rt: mut heap.Runtime, o: mut output.Output, name: value.ObjRef, count: int) -> bool:
+     match instance_of(rt, heap.peek(rt, count)):
+-        case Some(instance):
+-            match table.get(instance.fields, name, heap.string_hash(rt, name)):
+-                case Some(field):
+-                    rt.stack[rt.stack_top - count - 1] = field
+-                    return call_value(mut rt, mut o, field, count)
+-                case None:
+-                    return invoke_from_class(mut rt, mut o, instance.klass, name, count)
++        case Some(instance_ref):
++            match rt.objects[instance_ref]:
++                case object.Obj.instance(instance):
++                    match table.get(instance.fields, name, heap.string_hash(rt, name)):
++                        case Some(field):
++                            rt.stack[rt.stack_top - count - 1] = field
++                            return call_value(mut rt, mut o, field, count)
++                        case None:
++                            return invoke_from_class(mut rt, mut o, instance.klass, name, count)
++                case _:
++                    assert False, "object is not an instance"
++                    return False
+         case None:
+             return runtime_error(mut rt, mut o, b"Only instances have methods.")
+
+
+ # Replaces the receiver on top of the stack with a bound method. The
+ # receiver stays on the stack across the allocation.
++
++
+ def bind_method(rt: mut heap.Runtime, o: mut output.Output, klass: value.ObjRef, name: value.ObjRef) -> bool:
+     match table.get(heap.class_obj(rt, klass).methods, name, heap.string_hash(rt, name)):
+         case Some(method):
+@@ -249,26 +284,26 @@ def concatenate(rt: mut heap.Runtime):
      heap.push(mut rt, value.Value.obj(result))
 
 
@@ -626,7 +676,7 @@ index 450eb63..8dbdc07 100644
      name = read_string(mut frame)
      match table.get(rt.globals, name, heap.string_hash(rt, name)):
          case Some(found):
-@@ -280,7 +308,7 @@ def get_global(rt: mut heap.Runtime, o: mut output.Output, frame: mut heap.CallF
+@@ -280,7 +315,7 @@ def get_global(rt: mut heap.Runtime, o: mut output.Output, frame: mut heap.CallF
 
  # Assigning an undefined global is an error; the entry the failed `set`
  # just made is deleted again, leaving a tombstone as clox does.
@@ -635,7 +685,7 @@ index 450eb63..8dbdc07 100644
      name = read_string(mut frame)
      if heap.set_global(mut rt, name, heap.peek(rt, 0)):
          __wb_282 = rt.globals
-@@ -290,7 +318,7 @@ def set_global(rt: mut heap.Runtime, o: mut output.Output, frame: mut heap.CallF
+@@ -290,7 +325,7 @@ def set_global(rt: mut heap.Runtime, o: mut output.Output, frame: mut heap.CallF
      return True
 
 
@@ -644,7 +694,7 @@ index 450eb63..8dbdc07 100644
      upvalue = heap.upvalue_obj(rt, frame.upvalues[read_byte(mut frame)])
      if upvalue.slot != object.NO_SLOT:
          heap.push(mut rt, rt.stack[upvalue.slot])
-@@ -298,7 +326,7 @@ def get_upvalue(rt: mut heap.Runtime, frame: mut heap.CallFrame):
+@@ -298,7 +333,7 @@ def get_upvalue(rt: mut heap.Runtime, frame: mut heap.CallFrame):
          heap.push(mut rt, upvalue.closed)
 
 
@@ -653,25 +703,76 @@ index 450eb63..8dbdc07 100644
      ref = frame.upvalues[read_byte(mut frame)]
      upvalue = heap.upvalue_obj(rt, ref)
      if upvalue.slot != object.NO_SLOT:
-@@ -308,7 +336,7 @@ def set_upvalue(rt: mut heap.Runtime, frame: mut heap.CallFrame):
+@@ -308,32 +343,41 @@ def set_upvalue(rt: mut heap.Runtime, frame: mut heap.CallFrame):
          rt.objects[ref] = object.Obj.upvalue(upvalue)
 
 
 -def get_property(rt: mut heap.Runtime, o: mut output.Output, frame: mut heap.CallFrame) -> bool:
 +def get_property(rt: mut heap.Runtime, o: mut output.Output, frame: mut ExecFrame) -> bool:
      match instance_of(rt, heap.peek(rt, 0)):
-         case Some(instance):
+-        case Some(instance):
++        case Some(instance_ref):
              name = read_string(mut frame)
-@@ -323,7 +351,7 @@ def get_property(rt: mut heap.Runtime, o: mut output.Output, frame: mut heap.Cal
+-            match table.get(instance.fields, name, heap.string_hash(rt, name)):
+-                case Some(field):
+-                    _ = heap.pop(mut rt)
+-                    heap.push(mut rt, field)
+-                    return True
+-                case None:
+-                    return bind_method(mut rt, mut o, instance.klass, name)
++            match rt.objects[instance_ref]:
++                case object.Obj.instance(instance):
++                    match table.get(instance.fields, name, heap.string_hash(rt, name)):
++                        case Some(field):
++                            _ = heap.pop(mut rt)
++                            heap.push(mut rt, field)
++                            return True
++                        case None:
++                            return bind_method(mut rt, mut o, instance.klass, name)
++                case _:
++                    assert False, "object is not an instance"
++                    return False
+         case None:
              return runtime_error(mut rt, mut o, b"Only instances have properties.")
 
 
 -def set_property(rt: mut heap.Runtime, o: mut output.Output, frame: mut heap.CallFrame) -> bool:
 +def set_property(rt: mut heap.Runtime, o: mut output.Output, frame: mut ExecFrame) -> bool:
      match instance_of(rt, heap.peek(rt, 1)):
-         case Some(instance):
+-        case Some(instance):
++        case Some(instance_ref):
              name = read_string(mut frame)
-@@ -381,7 +409,7 @@ def negate(rt: mut heap.Runtime, o: mut output.Output) -> bool:
+-            fields = instance.fields
+-            _ = table.set(mut fields, name, heap.string_hash(rt, name), heap.peek(rt, 0))
+-            instance_ref = as_obj(heap.peek(rt, 1))
+-            updated_instance = instance
+-            updated_instance.fields = fields
+-            rt.objects[instance_ref] = object.Obj.instance(updated_instance)
+-            assigned = heap.pop(mut rt)
++            hash = heap.string_hash(rt, name)
++            assigned = heap.peek(rt, 0)
++            match rt.objects[instance_ref]:
++                case object.Obj.instance(instance):
++                    klass = instance.klass
++                    fields = instance.fields
++                    _ = table.set(mut fields, name, hash, assigned)
++                    rt.objects[instance_ref] = object.Obj.instance(object.InstanceObj(klass=klass, fields=fields))
++                case _:
++                    assert False, "object is not an instance"
++            _ = heap.pop(mut rt)
+             _ = heap.pop(mut rt)
+             heap.push(mut rt, assigned)
+             return True
+@@ -342,6 +386,8 @@ def set_property(rt: mut heap.Runtime, o: mut output.Output, frame: mut heap.Cal
+
+
+ # GREATER, LESS, SUBTRACT, MULTIPLY and DIVIDE: two numbers in, one out.
++
++
+ def numeric(rt: mut heap.Runtime, o: mut output.Output, instruction: int) -> bool:
+     if not is_number(heap.peek(rt, 0)) or not is_number(heap.peek(rt, 1)):
+         return runtime_error(mut rt, mut o, b"Operands must be numbers.")
+@@ -381,7 +427,7 @@ def negate(rt: mut heap.Runtime, o: mut output.Output) -> bool:
 
  # Allocates the closure, pushes it (rooting it while upvalues are
  # captured), then fills its upvalues from the (is_local, index) pairs.
@@ -680,7 +781,7 @@ index 450eb63..8dbdc07 100644
      function_ref = read_string(mut frame)
      function = heap.function_obj(rt, function_ref)
      closure = object.new_closure(function_ref, function.upvalue_count)
-@@ -418,7 +446,7 @@ def inherit(rt: mut heap.Runtime, o: mut output.Output) -> bool:
+@@ -418,7 +464,7 @@ def inherit(rt: mut heap.Runtime, o: mut output.Output) -> bool:
      return True
 
 
@@ -689,7 +790,7 @@ index 450eb63..8dbdc07 100644
      name = read_string(mut frame)
      methods = heap.class_obj(rt, as_obj(heap.peek(rt, 1))).methods
      _ = table.set(mut methods, name, heap.string_hash(rt, name), heap.peek(rt, 0))
-@@ -432,57 +460,79 @@ def define_method(rt: mut heap.Runtime, frame: mut heap.CallFrame):
+@@ -432,57 +478,79 @@ def define_method(rt: mut heap.Runtime, frame: mut heap.CallFrame):
  # The dispatch loop, one opcode per iteration of `frame`, the innermost
  # call frame. Handlers answer False after reporting a runtime error.
  def run(rt: mut heap.Runtime, o: mut output.Output) -> InterpretResult:
@@ -785,7 +886,7 @@ index 450eb63..8dbdc07 100644
          elif instruction == chunk.OP_JUMP:
              offset = read_short(mut frame)
              frame.ip = frame.ip + offset
-@@ -495,48 +545,53 @@ def run(rt: mut heap.Runtime, o: mut output.Output) -> InterpretResult:
+@@ -495,48 +563,53 @@ def run(rt: mut heap.Runtime, o: mut output.Output) -> InterpretResult:
              frame.ip = frame.ip - offset
          elif instruction == chunk.OP_CALL:
              count = read_byte(mut frame)
