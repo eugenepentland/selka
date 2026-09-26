@@ -1,0 +1,127 @@
+diff --git a/SPEC.md b/SPEC.md
+index 65febd01..d2ef8beb 100644
+--- a/SPEC.md
++++ b/SPEC.md
+@@ -206,6 +206,7 @@ The roadmap in `docs/experiments/roadmap.md` tracks unsupported and planned feat
+ - [RC-STARTUP-1] An RC native context initializes its counted heap and registers the generated ownership module before host initialization or guest entry. Missing RC state or missing generated metadata cannot continue as GC. Registration is idempotent, and status adapters preserve count-limit and region errors while distinguishing managed-budget refusal from host allocation failure through the ordinary located trap entry. Compiler-reserved frame journals link without allocation, restore receiver scopes before releasing reverse-order initialized slots, and clear each guard before unique-resource or counted drop. Normal cleanup is repeatable; trap cleanup runs before longjmp invalidates frame storage, and a nested landing pad may preserve an outer frame checkpoint. GC startup is unchanged.
+ - [RC-LAYOUT-1] Experimental RC-v1 heap allocations carry a 32-byte prefix with ordinary owners at payload minus 32, nonsharing holds at minus 24, common mark/count/flags at minus 16 and native descriptor at minus 8. Payloads remain 16-byte aligned. GC, arena and immortal allocations retain their 16-byte prefix, and generated GC/arena heap offsets remain unchanged.
+ - [RC-STORAGE-1] RC heap storage reuses retired slots immediately, initializes owner and hold words on reuse, charges allocator reservations and metadata to the heap budget, and permits relocating large backing only with one owner and no holds or pins. Checked extent overflow and allocation refusal preserve existing storage. A production small-object cache is per heap and admits a type only after successful metadata registration; it stores a size class rather than a reclaimable slab address. Generic counts, arenas and custom allocator hooks retain their allocation contracts. Retire advances a saturating reuse epoch; dictionary weak absence hints are disabled at saturation.
++- [RC-SLAB-RESET-1] RC slab reuse overwrites the complete owner/hold/common prefix and zeros the complete payload and size-class padding before publication, including zero-sized bodies.
+ - [RC-COLLECTION-1] RC list headers own their live logical elements and raw backing exactly once. Copy, replace, insertion and removal use pin-aware publication; backing growth and in-place ordering relocate existing edges. Constructors and clones undo initialized ownership on failure, and held retired backing has no duplicate element ownership.
+ - [RC-DICTIONARY-1] RC dictionaries own live keys and values, while private entry bookkeeping owns only stable raw backing. Removal immediately releases deleted logical edges; compaction uses stored non-owning hashes instead of released keys. Destruction enumerates live index slots without hashing, and held bookkeeping can outlive dictionary-embedded descriptors safely.
+ - [RC-VIEWS-1] RC byte views own their canonical backing allocation rather than interior addresses; text views own their canonical text. Published byte-buffer snapshots acquire one backing owner, while the buffer's duplicate snapshot marker owns none. Runtime text reuse returns one owned success result, and failed construction releases initialized view and split-list ownership.
+diff --git a/src/native_rc_alloc.c b/src/native_rc_alloc.c
+index 537c8f88..3df30e7e 100644
+--- a/src/native_rc_alloc.c
++++ b/src/native_rc_alloc.c
+@@ -43,6 +43,10 @@ _Static_assert(RC_SLAB_OFFSET == 80, "cached capacity fits the existing aligned
+ _Static_assert(sizeof(rc_large) % 16 == 0, "large allocator metadata preserves alignment");
+ _Static_assert(sizeof(myl_rc_object) == MYL_RC_PREFIX_BYTES, "RC prefix ABI");
+ _Static_assert(offsetof(myl_rc_object, common) == 16, "common header ABI");
++_Static_assert(offsetof(myl_rc_object, owners) == 0 && offsetof(myl_rc_object, holds) == 8 &&
++    sizeof(uintptr_t) == 8, "count initialization overwrites the free-list word and all count bytes");
++_Static_assert(offsetof(myl_native_object, mark) == 0 && offsetof(myl_native_object, element) == 8 &&
++    sizeof(myl_native_object) == 16, "common initialization overwrites every remaining prefix byte");
+ static const myl_native_type raw_type = {
+     .size=1, .alignment=1, .kind=MYL_NATIVE_PLAIN, .trace_mode=MYL_NATIVE_TRACE_NONE
+ };
+@@ -144,7 +148,10 @@ static myl_rc_object *slab_take(myl_native_heap *heap, size_t index) {
+     else slot=(unsigned char *)slab+RC_SLAB_OFFSET+slab->stride*slab->used++;
+     slab->live++;
+     if (!slab->free && slab->used==slots(slab)) available_remove(class,slab);
+-    memset(slot,0,slab->stride);
++    /* Both callers immediately initialize all prefix fields, without a callback,
++     * failure or publication between here and initialize. Preserve zeroed payload
++     * and class padding; the free-list word above has already been consumed. */
++    memset((unsigned char *)slot+MYL_RC_PREFIX_BYTES,0,slab->stride-MYL_RC_PREFIX_BYTES);
+     return slot;
+ }
+ static myl_rc_object *large_take(myl_native_heap *heap, size_t extent) {
+diff --git a/src/native_rc_collections_test.zig b/src/native_rc_collections_test.zig
+index 4e380884..e79e68f5 100644
+--- a/src/native_rc_collections_test.zig
++++ b/src/native_rc_collections_test.zig
+@@ -8,6 +8,7 @@ extern fn myl_rc_collections_verify() c_int;
+ // spec: RC-VIEWS-1
+ // spec-case: RC-TRANSFER-1
+ // spec: RC-FLAT-SINGLE-DESTRUCTION-1
++// spec: RC-SLAB-RESET-1
+ test "RC production storage and collection ownership" {
+-    try std.testing.expectEqual(@as(c_int, 32), myl_rc_collections_verify());
++    try std.testing.expectEqual(@as(c_int, 33), myl_rc_collections_verify());
+ }
+diff --git a/tests/native_rc_collections_test.c b/tests/native_rc_collections_test.c
+index 69a1712d..7bc12ece 100644
+--- a/tests/native_rc_collections_test.c
++++ b/tests/native_rc_collections_test.c
+@@ -122,6 +122,46 @@ static void native_allocation_cache(void) {
+         finish(&heap);
+     }
+ }
++/* spec-case: RC-SLAB-RESET-1. Retired slots can contain arbitrary stale counts,
++ * flags and types. Reuse resets all live prefix words and the full class body,
++ * including padding beyond the smaller new type and the zero-sized class. */
++static void slab_prefix_reset(void) {
++    static const size_t bodies[]={0,16,32,224,8160};
++    static const myl_native_type byte={.size=1,.alignment=1,.kind=MYL_NATIVE_PLAIN};
++    myl_native_type old_types[5], new_types[5];
++    myl_native_heap heap;
++    init(&heap);
++    for (size_t i=0;i<5;i++) {
++        old_types[i]=(myl_native_type){.size=bodies[i],.alignment=1,.kind=MYL_NATIVE_PLAIN};
++        new_types[i]=(myl_native_type){.size=bodies[i]?bodies[i]-15:0,.alignment=1,.kind=MYL_NATIVE_PLAIN};
++        void *anchor=myl_native_heap_alloc(&heap,&old_types[i],1);
++        void *old=myl_native_heap_alloc(&heap,&old_types[i],1);
++        assert(anchor && old);
++        myl_rc_owner_release(&heap,old);
++        myl_rc_object *header=(myl_rc_object *)old-1;
++        /* The anchor retains the slab. Only its first word is a live free-list
++         * link; preserve that link while poisoning every other retired byte. */
++        memset((unsigned char *)header+sizeof(void *),0xa5,
++            MYL_RC_PREFIX_BYTES+bodies[i]-sizeof(void *));
++        void *fresh=myl_native_heap_alloc(&heap,&new_types[i],1);
++        assert(fresh==old && owners(fresh)==1 && header->holds==0);
++        assert(header->common.mark==((uintptr_t)1<<MYL_NATIVE_OBJECT_COUNT_SHIFT));
++        assert(header->common.element==&new_types[i]);
++        for (size_t at=0;at<bodies[i];at++) assert(((unsigned char *)fresh)[at]==0);
++        myl_rc_owner_release(&heap,fresh);
++        memset((unsigned char *)header+sizeof(void *),0xa5,
++            MYL_RC_PREFIX_BYTES+bodies[i]-sizeof(void *));
++        size_t count=bodies[i]?bodies[i]-1:0;
++        fresh=myl_native_heap_alloc(&heap,&byte,count);
++        assert(fresh==old && owners(fresh)==1 && header->holds==0);
++        assert(header->common.mark==((uintptr_t)count<<MYL_NATIVE_OBJECT_COUNT_SHIFT));
++        assert(header->common.element==&byte);
++        for (size_t at=0;at<bodies[i];at++) assert(((unsigned char *)fresh)[at]==0);
++        myl_rc_owner_release(&heap,fresh);
++        myl_rc_owner_release(&heap,anchor);
++    }
++    finish(&heap);
++}
+ /* spec-case: RC-STORAGE-1. Cold metadata refusal is atomic; a full cached slab
+  * refuses before publication, and trimming cannot leave a cached slab pointer. */
+ static void native_allocation_budget(void) {
+@@ -1195,6 +1235,7 @@ int myl_rc_collections_verify(void) {
+     storage_reuse_and_holds();
+     storage_boundaries();
+     native_allocation_cache();
++    slab_prefix_reset();
+     native_allocation_budget();
+     native_allocation_regions_and_counts();
+     native_allocation_custom_hooks();
+@@ -1224,12 +1265,12 @@ int myl_rc_collections_verify(void) {
+     flat_drop_order();
+     flat_body_order();
+     flat_single_body_order();
+-    return 32;
++    return 33;
+ }
+ #ifndef MYL_RC_COLLECTIONS_LIBRARY
+ int main(void) {
+-    assert(myl_rc_collections_verify()==32);
+-    puts("native RC collections: 32 passed");
++    assert(myl_rc_collections_verify()==33);
++    puts("native RC collections: 33 passed");
+     return 0;
+ }
+ #endif

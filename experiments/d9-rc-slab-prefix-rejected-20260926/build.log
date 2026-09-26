@@ -1,0 +1,28 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 2 after 30s (all 3 build slot(s) busy)
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 1b6c13222675)
+guardian: diff-scoped vs b292660a09bc703d0ceab071636a73b643c52d34: 254/570 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 15 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 20 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 3895 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 8 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs b292660a09bc703d0ceab071636a73b643c52d34, 254 file(s) in scope
+Build Summary: 12/12 steps succeeded
+install success
++- install mylang success
+|  +- compile exe mylang debug native success 4s MaxRSS:505M
+|  |  +- run exe qbe-build-assets (qbe_build_assets) success 65ms
+|  |     +- compile exe qbe-build-assets debug native success 529ms MaxRSS:141M
+|  +- run ../guardian-zig/zig-out/bin/guardian-check success 3s
+|     +- guardian-selfcheck success
+|        +- run ../guardian-zig/zig-out/bin/guardian-check success 4ms
++- install qbe success
+|  +- compile exe qbe fast native success 1s MaxRSS:102M
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- install generated/ success
+|  +- run exe mylang (mylang-runtime) success 14s
+|     +- compile exe mylang debug native (+1 more reused dependencies)
+|     +- install mylang (+2 more reused dependencies)
+|     +- compile exe qbe fast native (reused)
++- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+
