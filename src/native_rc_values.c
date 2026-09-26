@@ -156,6 +156,17 @@ void myl_rc_native_drop(myl_native_heap *heap, const myl_native_type *type, void
     myl_rc_slot slot={.shape=descriptor->shape,.address=value};
     myl_rc_value_drop(heap,&slot);
 }
+int myl_rc_native_loan(myl_native_heap *heap, const myl_native_type *type, void *dst, const void *src) {
+    const myl_rc_shape *shape = myl_rc_native_shape(heap, type);
+    if (!shape) { memset(dst, 0, type->size); return 0; }
+    myl_rc_invariant(!myl_rc_native_has_unique(heap, type));
+    return publication_status(heap, myl_rc_loan_copy(heap, shape, dst, src));
+}
+void myl_rc_native_unloan(myl_native_heap *heap, const myl_native_type *type, void *value) {
+    const myl_rc_descriptor *descriptor = myl_rc_descriptor_find(heap, type);
+    myl_rc_invariant(descriptor != NULL);
+    myl_rc_loan_drop(heap, descriptor->shape, value);
+}
 void *myl_rc_native_storage(myl_native_heap *heap, const myl_native_type *type, size_t count, unsigned region) {
     if (type->size && count>SIZE_MAX/type->size) return NULL;
     return myl_rc_storage_bytes(heap,type->size*count,region);
