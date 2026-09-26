@@ -40,7 +40,10 @@ pub fn settle(process: std.process.Init, args: []const [:0]const u8) Error!Settl
     }
     const inherited: ?bool = if (environment) |value| values.environmentEnables(value) else null;
     const enabled = if (flag) |selected| selected.enabled else inherited orelse (try configuredOn(process, args));
-    if (inherited == null or inherited.? != enabled) return .{ .status = try replace(process, args, flag, enabled) };
+    if (inherited == null or inherited.? != enabled) {
+        const kept = if (flag) |selected| try without(process.arena.allocator(), args, selected.index) else args;
+        return .{ .status = try @import("main_mode_restart.zig").replace(process, kept, values.variable, if (enabled) "1" else "0") };
+    }
     values.setEnabled(enabled);
     return .{ .run = .{ .args = if (flag) |selected| try without(process.arena.allocator(), args, selected.index) else args, .enabled = enabled } };
 }
@@ -93,7 +96,8 @@ fn configuredOn(process: std.process.Init, args: []const [:0]const u8) std.mem.A
 
 /// Find the entry by using each command's parser where options may take a
 /// separate value before the path. A malformed command reports its own usage.
-fn firstPath(a: std.mem.Allocator, args: []const [:0]const u8) std.mem.Allocator.Error!?[]const u8 {
+fn firstPath(a: std.mem.Allocator, original: []const [:0]const u8) std.mem.Allocator.Error!?[]const u8 {
+    const args = try @import("main_runtime_mode.zig").discoveryArgs(a, original);
     if (args.len < 3) return null;
     if (std.mem.eql(u8, args[1], "test") or std.mem.eql(u8, args[1], "build") or std.mem.eql(u8, args[1], "invoke")) {
         const options = try a.alloc([]const u8, args.len - 2);
@@ -114,25 +118,4 @@ fn without(a: std.mem.Allocator, args: []const [:0]const u8, index: usize) Error
     @memcpy(kept[0..index], args[0..index]);
     @memcpy(kept[index..], args[index + 1 ..]);
     return kept;
-}
-
-/// Replace this process with the same command, its mode flag removed,
-/// and the resolved environment value. Returns only when the
-/// replacement fails.
-fn replace(process: std.process.Init, args: []const [:0]const u8, flag: ?Flag, enabled: bool) Error!u8 {
-    const a = process.arena.allocator();
-    try process.environ_map.put(values.variable, if (enabled) "1" else "0");
-    const self = std.Io.Dir.cwd().realPathFileAlloc(process.io, "/proc/self/exe", a) catch |err| return failed(process, err);
-    var argv: std.ArrayList([]const u8) = .empty;
-    try argv.append(a, self);
-    for (args[1..], 1..) |arg, index| if (flag == null or index != flag.?.index) try argv.append(a, arg);
-    const err = std.process.replace(process.io, .{ .argv = argv.items, .environ_map = process.environ_map });
-    return failed(process, err);
-}
-
-fn failed(process: std.process.Init, err: anyerror) Error!u8 {
-    var buffer: [160]u8 = undefined;
-    const message = std.fmt.bufPrint(&buffer, "mylang: --value-semantics: cannot restart the compiler ({s})\n", .{@errorName(err)}) catch "mylang: --value-semantics: cannot restart the compiler\n";
-    try std.Io.File.stderr().writeStreamingAll(process.io, message);
-    return 2;
 }

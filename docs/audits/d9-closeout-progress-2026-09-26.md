@@ -8,6 +8,17 @@ preserved across the handoff. The orchestrator works in separate worktrees and s
 full gates with `../.d9-closeout-gate.lock`. The original dirty checkout, `main`
 (`b292660a`), and the pending devspeed merge are untouched.
 
+Stage 3 and WP-4pre are accepted on the integration branch. The complete
+43-program-per-backend instruction sweep passes at 1.021851044× QBE and
+1.046853543× LLVM, with every output correct and no program above 1.3×.
+The final combined default/borrow gate at `f6bea5d9` passes all four steps:
+2,130 executed main tests, 429 QBE tests, native-build and formatting.
+WP-4 foundations are implemented behind an experimental runtime selector.
+The joined foundation at `3e0c1400` passes its full regression gate: 2,153 main
+tests, 436 QBE tests, native build and formatting. Compiler cleanup, complete
+runtime/arena/host ownership, and RC performance/RSS acceptance remain in progress;
+GC stays the default. See the [foundation report](d9-rc-foundation-gate-2026-09-26.md).
+
 ## Accepted work
 
 | Work | Code/evidence | Validation |
@@ -16,7 +27,9 @@ full gates with `../.d9-closeout-gate.lock`. The original dirty checkout, `main`
 | WP-3c recursive values | `67afc00a`, `2e4ac251`; [report](d9-stage3c-recursive-values-2026-09-26.md) | Full gate; million-node equality/hash and both-backend tree measurements; existing depth-bounded printing truncation documented as a plan deviation |
 | WP-3d class/Cell retirement | `19144c19`; [report](d9-stage3d-closeout-2026-09-26.md) | Full four-step gate at `f1265a0b`; S-expression 114/114 and Lox 63/63 in both modes; VM 13/13 scripts; historical/diagnostic class exceptions inventoried; formal VM performance remains a stage 3f blocker; tree timing is a supplemental audit |
 | WP-3e migration diagnostic/fix | `dd4ee663`; [report](d9-stage3e-closeout-2026-09-26.md) | 93/101 exact, 96/101 normalized census matches; 14 extras classified. Full four-step gate; Lox 63/63 tests and 13/13 VM scripts in both modes. Cyclic graph checker cost reduced from over 150 seconds to 0.30 seconds |
-| WP-4pre physical borrow inference | `450d151a`, refreshed at `ba4a1340`; report `86da9613` on branch `codex/d9-physical-borrow-after-astra` | Isolated prerequisite, integration after default switch. Refreshed full gate: 93/93 main steps, 2,119 executed tests; QBE 51/51, 429 tests; QBE build 29/29; formatting. Schematic: 72 added borrow classifications, 12 conservative copies. Four matched VM cases show approximately unchanged GC cost; actual RC traffic measurement remains WP-4 |
+| WP-3b COW | Compiler through `21fafaee`, Lox source through `617ce4dc`; [final performance](d9-performance43-final-2026-09-26.md) | Complete 43-key sweep passes both backends, all outputs, unchanged thresholds; 260 uncached Lox native-GC-stress runs and 44 identical legacy IL comparisons; full combined gate |
+| WP-3f default flip | `9ab98d5f`, joined at `698039c5`; [report](d9-stage3f-default-validation-2026-09-26.md) | Full gate: 2,125 main tests, 428 QBE, build/format; complete stage 3 performance passes. Legacy opt-out, 231 golden cases and explicit CPython divergences retained. Random snapshot migration has negative old-compiler controls |
+| WP-4pre physical borrow inference | `450d151a`, final combined gate `f6bea5d9`; [report](d9-physical-borrow-astra-2026-09-26.md) | Main 94/94 with 2,130 executed tests; QBE 429; build 29/29; formatting. Schematic: 72 added borrow classifications, 12 conservative copies. Independent mixed-result COW stress audit passes. Actual RC count reduction remains WP-4 |
 | T1 library checking | `ff10f2f1`, `f3f3a53f` | New `check-module`; three focused CLI tests; full gate: test 91/91 steps, 2,075 executed tests; QBE 49/49, 426 tests; QBE build 29/29; formatting green |
 | T2 formatting feedback and fixtures | `30948da9`, `df177cc2` | First-difference file/line/column; three focused CLI tests; 93 examples and nine copied pilot starters format clean; joined full gate |
 | T3 indexed empty-list inference | `8842ac60` | Seven guest tests and twelve selected Zig tests; original regression reproduced; joined full gate |
@@ -39,9 +52,7 @@ for every accepted package above.
 
 | Work | Branch/worktree | Remaining acceptance |
 |---|---|---|
-| WP-3b COW | Root-liveness fix `21fafaee`, joined at `8cb4f388`; Lox source through `617ce4dc` | The root fix passes all four gates, 260 uncached Lox native-GC-stress runs and 44 identical legacy IL comparisons. The final setter/hoist/corrected-default 43-key sweep is running. The previous pre-setter sweep passed QBE (1.02928×) and failed LLVM (1.07134×) |
-| WP-3f default flip | Preparation at `codex/d9-stage3f-prep` (`178d43dc`) | The preceding `75820f45` full gate passed. The corrected compiler's refresh passes 656 language guests but exposes two random-stream migration assertions (one doctest and one Zig fixture); 2,123 other main tests pass. The final performance sweep and these assertions remain open |
-| WP-4 reference counting | Not started | Requires 3f/4pre and the RC performance/RSS gate, including rewritten graph programs |
+| WP-4 reference counting | Shared interface and experimental selector work from `266d9d5a` | Prerequisites accepted. Freeze shared ownership/shape interfaces, implement allocator/collections/compiler/arenas/host support, then full correctness and RC performance/RSS acceptance including rewritten graph programs |
 | WP-5 concurrency | Not started | Design after WP-4, following the existing concurrency proposal |
 
 The plan's literal “on main” scheduling dependencies are being supplied by validated
@@ -58,7 +69,7 @@ Source-only Lox improvements join at `d7f4cf85`; compiler code is unchanged
 from `b6328bcd`. The isolated default candidate is refreshed to this source
 and remains separate pending its current gate and performance acceptance.
 
-## Performance work still blocking acceptance
+## Stage 3 performance evidence
 
 The closed-region ownership proof `9f42e5a9` permits field extraction and
 store-back across internal loops and match arms while preserving copies for
@@ -77,7 +88,7 @@ exact error-trace comparisons under native GC stress; a clean replay matches
 every `.my` module byte for byte:
 [direct-frame report](d9-lox-direct-frame-2026-09-26.md).
 These source measurements are isolated improvements, not baseline acceptance.
-The final combined compiler/source must satisfy the complete
+The final combined compiler/source was validated against the complete
 43-key-per-backend acceptance sweep: the historical 27 parity keys, three
 schematic cases and 13 Lox VM scripts. The newly added recursive-tree parity
 variant and Lox tree interpreter are supplemental, not extra formal thresholds.
@@ -116,8 +127,9 @@ but LLVM 1.07134× with binary trees, closures and method calls over 1.3×:
 precedes the setter. The subsequent global-table hash hoist `617ce4dc` removes
 two more COW transfers and improves matched closures by 9.7% QBE/18.9% LLVM
 and method calls by 5.6%/10.4%. Both proposed frame caches and the weak scalar
-upvalue-accessor experiment were rejected. The complete setter/hoist/default
-combination is being measured; individual gains are not final acceptance.
+upvalue-accessor experiment were rejected. The complete corrected setter/hoist/default combination subsequently passed
+the [final 43-key sweep](d9-performance43-final-2026-09-26.md); individual
+gains were never used as a substitute for that acceptance run.
 
 The expanded external Lox native-GC-stress failures are fixed by `21fafaee`:
 `ref_local` was missing from local liveness, allowing a record held for a later
@@ -134,21 +146,24 @@ and [history review](d9-mut-reference-history-2026-09-26.md).
 The corrected default compiler at `178d43dc` has SHA-256
 `52ddd1337b4998b2a22184cac58af5ae4b0f4bc465dd449cfae3271c7451575d`.
 The final 43-key sweep uses that actual default, source `4798d47f`, and private
-byte-verified copies of the historical baseline executables. Its refreshed
-full gate exposed a random-stream doctest returning 5 instead of 42 and the
-pinned-vector fixture returning 3 instead of 0. Both contain sharing-era
-assertions; their migration and compiler behavior are being checked before
-changing them. All 656 ordinary language guests passed uncached.
+byte-verified copies of the historical baseline executables. It passes both
+backends. The refreshed correctness gate exposed two sharing-era random-stream
+assertions; `9ab98d5f` migrates them to independent snapshots while preserving
+explicit legacy checks. The old compiler fails the corrected snapshot
+assertions, and the fixed compiler passes both backends under stress. Its full
+gate passes, including all 656 ordinary language guests uncached.
 
 The isolated physical-borrow prerequisite passed the full gate at `bd923864`
 (2,128 main tests, 429 QBE tests, native-build and formatting). Its corrected
-refresh `f74abcce` encounters those same two random assertions. The
+refresh `f74abcce` encountered those same two random assertions; the final
+`f6bea5d9` combined gate passes after their migration. The
 [RC readiness inventory](d9-rc-readiness-2026-09-26.md) and
 [allocator review](d9-rc-allocator-review-2026-09-26.md) set out lifetime holds,
 arena ownership, iterative destruction and legacy GC compatibility. A result's
 borrow origin is a provenance upper bound, not proof that every return edge is
 borrowed; RC call contracts must also distinguish fresh/mixed results.
-WP-4 implementation and WP-5 remain unstarted.
+The shared RC interface and selector implementation now begin from accepted
+integration `266d9d5a`; WP-5 remains dependent on completed WP-4.
 
 The tree interpreter's earlier matched 85.3× QBE regression is no longer
 attributed primarily to recursive-box walking: lazy projection alone did not

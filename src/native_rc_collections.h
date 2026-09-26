@@ -1,0 +1,23 @@
+#ifndef MYLANG_NATIVE_RC_COLLECTIONS_H
+#define MYLANG_NATIVE_RC_COLLECTIONS_H
+#include "native_collections.h"
+#include "native_rc_values.h"
+/* All mutators borrow their receiver and inputs. Successful destructive reads
+ * initialize one owned output; ordinary native get/index reads stay borrowed. */
+int myl_rc_list_append(myl_native_heap *, myl_native_list *, const void *);
+int myl_rc_list_insert(myl_native_heap *, myl_native_list *, int64_t, const void *);
+int myl_rc_list_set(myl_native_heap *, myl_native_list *, size_t, const void *);
+int myl_rc_list_pop(myl_native_heap *, myl_native_list *, void *);
+int myl_rc_list_pop_at(myl_native_heap *, myl_native_list *, int64_t, void *);
+int myl_rc_list_clear(myl_native_heap *, myl_native_list *);
+int myl_rc_list_remove(myl_native_heap *, myl_native_list *, const void *);
+/* Dictionary-private bookkeeping owns backing only; its embedded element
+ * descriptor is never consulted when the bookkeeping header is destroyed. */
+myl_native_list *myl_rc_list_storage_new(myl_native_heap *, const myl_native_type *, size_t, unsigned);
+int myl_rc_list_storage_reserve(myl_native_heap *, myl_native_list *, size_t);
+typedef struct {
+    myl_native_list *values, *source, *keys;
+    uint64_t shape, offsets, reverse;
+} myl_rc_sort_request;
+int myl_rc_list_sort_keyed(myl_native_heap *, const myl_rc_sort_request *);
+#endif

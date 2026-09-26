@@ -256,7 +256,7 @@ static uintptr_t entry_address(const int32_t *field) {
     return (uintptr_t)field + (uintptr_t)(intptr_t)*field;
 }
 static size_t raw_entry_count(void) {
-    if (!__start_mylang_frame_map || !__stop_mylang_frame_map || __stop_mylang_frame_map <= __start_mylang_frame_map) return 0;
+    if (!__start_mylang_frame_map || !__stop_mylang_frame_map || &__stop_mylang_frame_map[0] <= &__start_mylang_frame_map[0]) return 0;
     return (size_t)(__stop_mylang_frame_map - __start_mylang_frame_map) / 3;
 }
 /* The call site whose entries start at raw entry `index`, and how many there are. */
@@ -622,10 +622,11 @@ uint64_t myl_qbe_int_binary(void *context, uint64_t op, uint64_t is_signed, uint
     switch (op) {
         case 0: result = a + b; break;
         case 1: result = a - b; break;
-        case 2: if (__builtin_mul_overflow(a, b, &result))
-            return fail_detail(context, "R_OVERFLOW", operation_name(op),
-                MYL_QBE_TRAP_PRESENT_LEFT | MYL_QBE_TRAP_PRESENT_RIGHT | MYL_QBE_TRAP_PRESENT_WIDTH | unsigned_bit(is_signed),
-                0, 0, (int64_t)a, (int64_t)b, width);
+        case 2:
+            if (__builtin_mul_overflow(a, b, &result))
+                return fail_detail(context, "R_OVERFLOW", operation_name(op),
+                    MYL_QBE_TRAP_PRESENT_LEFT | MYL_QBE_TRAP_PRESENT_RIGHT | MYL_QBE_TRAP_PRESENT_WIDTH | unsigned_bit(is_signed),
+                    0, 0, (int64_t)a, (int64_t)b, width);
             break;
         case 3: case 4: case 5: case 6: {
             if (!b) return fail_detail(context, "R_DIVISION_BY_ZERO", operation_name(op),
@@ -968,6 +969,7 @@ static int execute_config_args(uint64_t (*entry)(void *), uint64_t steps, uint64
     result->reported = context->reported;
     result->trap_detail = context->trap_detail;
     memcpy(result->trace, context->trace, sizeof result->trace);
+    if (context->adapter_cleanup) context->adapter_cleanup(context);
     if (context->cleanup) context->cleanup(context);
     /* Stand-ins go after the resources, whose handles they may still own. */
     if (context->stand_in_cleanup) context->stand_in_cleanup(context);

@@ -7,7 +7,9 @@ static const myl_rc_shape *const shapes[] = {&pointer};
 const myl_rc_module myl_rc_generated_module = {.abi = MYL_RC_ABI_VERSION, .shapes = shapes, .shape_count = 1};
 /* Capture the same status delivered to the located native trap entry. These
  * tests exercise initialization before an active guest frame exists. */
-void myl_qbe_fail(void *context, const char *code) { ((MylQbeContext *)context)->trap = code; }
+#ifndef MYL_RC_CONTRACT_LIBRARY
+void myl_qbe_fail(void *context, const char *code) { MylQbeContext *ctx=context; if (!ctx->trap) ctx->trap=code; }
+#endif
 static myl_rc_status no_allocate(myl_native_heap *heap, const myl_rc_alloc_request *request, void **out) {
     (void)heap;
     (void)request;
@@ -33,10 +35,15 @@ int myl_qbe_rc_contract_verify(void) {
     assert(!myl_qbe_rc_status(&context, MYL_RC_COUNT_LIMIT));
     assert(!strcmp(context.trap, "R_REFERENCE_COUNT_LIMIT"));
     assert(!myl_qbe_rc_status(&context, MYL_RC_REGION_ERROR));
+    assert(!strcmp(context.trap, "R_REFERENCE_COUNT_LIMIT"));
+    context.trap = NULL;
+    assert(!myl_qbe_rc_status(&context, MYL_RC_REGION_ERROR));
     assert(!strcmp(context.trap, "R_ARENA_ESCAPE"));
+    context.trap = NULL;
     context.heap.exhausted = 0;
     assert(!myl_qbe_rc_status(&context, MYL_RC_ALLOCATION_REFUSED));
     assert(!strcmp(context.trap, "OutOfMemory"));
+    context.trap = NULL;
     context.heap.exhausted = 1;
     assert(!myl_qbe_rc_status(&context, MYL_RC_ALLOCATION_REFUSED));
     assert(!strcmp(context.trap, "R_MEMORY_BUDGET"));
@@ -47,12 +54,12 @@ int myl_qbe_rc_contract_verify(void) {
     assert(myl_rc_heap_init(&context.heap, &allocator, NULL) == MYL_RC_ALLOCATION_REFUSED);
     assert(!myl_qbe_rc_initialize(&context));
     assert(!strcmp(context.trap, "R_MEMORY_BUDGET") && !context.heap.rc);
-    return 4;
+    return 5;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
-    assert(myl_qbe_rc_contract_verify() == 4);
-    puts("RC startup: 4 checks passed");
+    assert(myl_qbe_rc_contract_verify() == 5);
+    puts("RC startup: 5 checks passed");
     return 0;
 }
 #endif

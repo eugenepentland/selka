@@ -1,6 +1,7 @@
 /* `memmem` is a GNU extension, so the feature macro has to precede <string.h>. */
 #define _GNU_SOURCE
 #include "native_bytes.h"
+#include "native_rc_collections.h"
 #include <stdlib.h>
 #include <string.h>
 static const myl_native_type byte_type = { .size=1,.alignment=1,.kind=MYL_NATIVE_PLAIN };
@@ -60,6 +61,35 @@ static const myl_native_type view_header_type = {
     .trace_fields=view_fields, .trace_field_count=1, .trace_mode=MYL_NATIVE_TRACE_FIELDS,
     .scan=view_scan, .scan_count=1
 };
+static void rc_view_edges(myl_native_heap *heap, void *payload, size_t count) {
+    (void)count;
+    myl_rc_edge_release(heap,((myl_native_bytes *)payload)->work.owner);
+}
+static const myl_rc_shape rc_view_shape={.size=sizeof(myl_native_bytes),.kind=MYL_RC_SHAPE_NONE};
+static myl_rc_status rc_bytes_clone_adapter(myl_native_heap *heap, const void *payload, unsigned region, void **out) {
+    const myl_native_bytes *source=payload;
+    unsigned saved=heap->region_depth;
+    heap->region_depth=region;
+    *out=myl_native_bytes_copy(heap,(myl_native_bytes *)source);
+    heap->region_depth=saved;
+    return myl_rc_native_result(heap,*out);
+}
+static const myl_rc_descriptor rc_view_descriptor={.type=&view_header_type,.shape=&rc_view_shape,.edges=rc_view_edges,.clone=rc_bytes_clone_adapter,.shell=rc_bytes_clone_adapter};
+static const myl_rc_module rc_view_module={.abi=MYL_RC_ABI_VERSION,.descriptors=&rc_view_descriptor,.descriptor_count=1};
+static int rc_view_prepare(myl_native_heap *heap) {
+    if (!myl_rc_enabled(heap)) return 1;
+    myl_rc_status status=myl_rc_module_register(heap,&rc_view_module);
+    if (status!=MYL_RC_OK) myl_rc_record_failure(heap,status);
+    return status==MYL_RC_OK;
+}
+static int rc_view_owner(myl_native_heap *heap, myl_native_bytes *view, void *owner) {
+    if (myl_rc_enabled(heap)) {
+        myl_rc_status status=myl_rc_owner_acquire(heap,owner);
+        if (status!=MYL_RC_OK) { myl_rc_record_failure(heap,status); return 0; }
+    }
+    view->work.owner=owner;
+    return 1;
+}
 /* The backing block a view of `source` must keep alive. A byte string owns the
    block its `storage` points into; a view already points into a block an
    earlier view recorded, so it hands that record on instead of deriving a
@@ -69,6 +99,7 @@ static void *view_backing(const myl_native_heap *heap, const myl_native_bytes *s
     return source->storage;
 }
 myl_native_bytes *myl_native_bytes_view(myl_native_heap *heap, myl_native_bytes *source, int64_t start, int64_t end) {
+    if (!rc_view_prepare(heap)) return NULL;
     size_t first=endpoint(source->length,start), last=endpoint(source->length,end);
     size_t count=last>first ? last-first : 0;
     myl_native_root root;
@@ -79,7 +110,9 @@ myl_native_bytes *myl_native_bytes_view(myl_native_heap *heap, myl_native_bytes 
         view->length=count;
         view->capacity=count;
         view->storage=count ? (unsigned char *)source->storage+first : source->storage;
-        view->work.owner=view_backing(heap,source);
+        if (!rc_view_owner(heap,view,view_backing(heap,source))) {
+            myl_rc_owner_release(heap,view); view=NULL;
+        }
     }
     myl_native_root_pop(heap,&root);
     return view;
@@ -93,6 +126,7 @@ myl_native_bytes *myl_native_bytes_view(myl_native_heap *heap, myl_native_bytes 
    moves the octets into a private block (see `buffer_ready`). That detach is
    what makes a published snapshot immutable. */
 myl_native_bytes *myl_native_bytes_buffer_snapshot(myl_native_heap *heap, myl_native_bytes *buffer) {
+    if (!rc_view_prepare(heap)) return NULL;
     myl_native_root root;
     myl_native_root_push(heap,&root,&buffer,&pointer_type);
     myl_native_bytes *snapshot=myl_native_heap_alloc(heap,&view_header_type,1);
@@ -102,9 +136,12 @@ myl_native_bytes *myl_native_bytes_buffer_snapshot(myl_native_heap *heap, myl_na
         snapshot->length=buffer->length;
         snapshot->capacity=buffer->length;
         snapshot->storage=buffer->storage;
-        snapshot->work.owner=backing;
-        buffer->work.owner=backing;
-        buffer->capacity=0;
+        if (!rc_view_owner(heap,snapshot,backing)) {
+            myl_rc_owner_release(heap,snapshot); snapshot=NULL;
+        } else {
+            buffer->work.owner=backing;
+            buffer->capacity=0;
+        }
     }
     myl_native_root_pop(heap,&root);
     return snapshot;
@@ -270,7 +307,7 @@ myl_native_list *myl_native_bytes_split(myl_native_heap *heap, myl_native_bytes 
             size_t hit=left>1 ? myl_native_octets_find((const unsigned char *)input->storage+start,input->length-start,separator->storage,width) : SIZE_MAX;
             size_t end=hit==SIZE_MAX ? input->length : start+hit;
             myl_native_bytes *piece=copy_range(heap,input,start,end-start);
-            if (!piece) { result=NULL; break; }
+            if (!piece) { if (myl_rc_enabled(heap)) myl_rc_native_abort(heap,result); result=NULL; break; }
             /* The reserved slot is written in place, as an append that finds
                room writes it; the collector traces the whole reservation. */
             ((myl_native_bytes **)result->storage)[result->length++]=piece;
@@ -304,7 +341,9 @@ myl_native_list *myl_native_bytes_split_whitespace(myl_native_heap *heap, myl_na
             while (cursor<input->length && !byte_space(octets[cursor])) cursor++;
             if (start==cursor) break;
             myl_native_bytes *piece=copy_range(heap,input,start,cursor-start);
-            if (!piece || !myl_native_list_append(heap,result,&piece)) { result=NULL; break; }
+            int appended=piece && myl_native_list_append(heap,result,&piece);
+            if (myl_rc_enabled(heap)) myl_rc_owner_release(heap,piece);
+            if (!appended) { if (myl_rc_enabled(heap)) myl_rc_native_abort(heap,result); result=NULL; break; }
         }
     }
     myl_native_root_pop(heap,&b); myl_native_root_pop(heap,&a);
@@ -483,8 +522,10 @@ static int buffer_grow(myl_native_heap *heap, myl_native_bytes *buffer, size_t n
     storage=myl_native_heap_alloc_at(heap,buffer->element,capacity,myl_native_object_region(heap,buffer));
     if (!storage) return 0;
     if (buffer->length) memcpy(storage,buffer->storage,buffer->length);
+    void *old=buffer->storage;
     buffer->storage=storage;
     buffer->capacity=capacity;
+    if (myl_rc_enabled(heap)) myl_rc_owner_release(heap,old);
     return 1;
 }
 /* Make the buffer's backing private and big enough for `needed` octets. A buffer
@@ -504,9 +545,11 @@ static int buffer_ready(myl_native_heap *heap, myl_native_bytes *buffer, size_t 
         void *storage=myl_native_heap_alloc_at(heap,buffer->element,capacity,myl_native_object_region(heap,buffer));
         if (!storage) return 0;
         if (buffer->length) memcpy(storage,buffer->storage,buffer->length);
+        void *old=buffer->storage;
         buffer->storage=storage;
         buffer->capacity=capacity;
         buffer->work.owner=NULL;
+        if (myl_rc_enabled(heap)) myl_rc_owner_release(heap,old);
     }
     return buffer_grow(heap,buffer,needed);
 }
@@ -589,7 +632,11 @@ int myl_native_bytes_buffer_append_raw(myl_native_heap *heap, myl_native_bytes *
     if (buffer_frozen(heap,buffer)) return MYL_BYTES_REFUSED;
     if (!count) return MYL_BYTES_WROTE;
     if (count>SIZE_MAX-buffer->length) return MYL_BYTES_FAILED;
+    uintptr_t source=(uintptr_t)data, start=(uintptr_t)buffer->storage;
+    int internal=buffer->storage && source>=start && source-start<buffer->length;
+    size_t offset=internal?(size_t)(source-start):0;
     if (!buffer_ready_rooted(heap,buffer,NULL,buffer->length+count)) return MYL_BYTES_FAILED;
+    if (internal) data=(const unsigned char *)buffer->storage+offset;
     memcpy((unsigned char *)buffer->storage+buffer->length,data,count);
     buffer->length+=count;
     return MYL_BYTES_WROTE;

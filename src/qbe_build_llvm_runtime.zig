@@ -177,8 +177,9 @@ fn hostBoundary(name: []const u8) bool {
     return true;
 }
 
-fn wanted(name: []const u8) bool {
-    return std.mem.startsWith(u8, name, "myl_native_") or std.mem.startsWith(u8, name, "myl_qbe_");
+/// A runtime helper must have a checked C signature; never infer one from IL.
+pub fn isHelper(name: []const u8) bool {
+    return std.mem.startsWith(u8, name, "myl_native_") or std.mem.startsWith(u8, name, "myl_qbe_") or std.mem.startsWith(u8, name, "myl_rc_");
 }
 
 // ---------------------------------------------------------------------------
@@ -230,7 +231,7 @@ fn readHeader(arena: Allocator, table: *std.StringHashMapUnmanaged(Signature), r
 }
 
 fn record(arena: Allocator, table: *std.StringHashMapUnmanaged(Signature), text: []const u8, found: Declaration) il.Error!void {
-    if (!wanted(found.name)) return;
+    if (!isHelper(found.name)) return;
     const result_words = try il.words(arena, text[found.start..found.name_start]);
     const result = cType(if (result_words.len == 0) "void" else result_words[result_words.len - 1], false) orelse return;
     const parameters = (try cParameters(arena, found.parameters)) orelse return;
@@ -287,7 +288,7 @@ fn cType(text: []const u8, pointer: bool) ?[]const u8 {
         .{ "unsigned long", i64_type }, .{ "long long", i64_type },      .{ "unsigned long long", i64_type },
         .{ "char", i32_type },          .{ "signed char", i32_type },    .{ "unsigned char", i32_type },
         .{ "short", i32_type },         .{ "unsigned short", i32_type }, .{ "int16_t", i32_type },
-        .{ "uint16_t", i32_type },
+        .{ "uint16_t", i32_type },      .{ "myl_rc_status", i32_type },  .{ "myl_rc_transfer", i32_type },
     };
     for (table) |row| if (std.mem.eql(u8, row[0], text)) return row[1];
     return null;
@@ -333,7 +334,7 @@ fn readZigExports(arena: Allocator, table: *std.StringHashMapUnmanaged(Signature
     while (std.mem.indexOfPos(u8, text, at, marker)) |found| {
         at = found + 1;
         const exported = exportAt(text, found + marker.len) orelse continue;
-        if (!wanted(exported.symbol)) continue;
+        if (!isHelper(exported.symbol)) continue;
         const declaration = zigDeclaration(text, exported.function) orelse continue;
         const parameters = (try zigParameters(arena, declaration.parameters)) orelse continue;
         const result = zigType(declaration.result) orelse continue;

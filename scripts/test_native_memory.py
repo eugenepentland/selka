@@ -11,7 +11,7 @@ import tempfile
 def main():
     root = Path(__file__).resolve().parents[1]
     compiler = shlex.split(os.environ.get("CC", "cc"))
-    flags = ["-std=c11", "-Wall", "-Wextra", "-Werror", "-fsanitize=undefined"]
+    flags = ["-std=c11", "-Wall", "-Wextra", "-Werror", "-fsanitize=undefined", "-ffunction-sections", "-fdata-sections", "-Wl,--gc-sections"]
     if os.environ.get("MYLANG_TEST_ASAN") == "1":
         flags.append("-fsanitize=address")
     with tempfile.TemporaryDirectory(prefix="mylang-native-memory-") as directory:
@@ -29,16 +29,22 @@ def run_suite(root, command, directory, suite, sources):
     executable = directory / suite
     if "native_heap.c" in sources:
         required = ("native_arena.c", "native_collections.c", "native_text.c",
-                    "native_dictionary.c", "native_equal.c")
+                    "native_dictionary.c", "native_equal.c", "native_bytes.c",
+                    "native_rc.c", "native_rc_shapes.c", "native_rc_walk.c",
+                    "native_rc_transfer.c", "native_rc_alloc.c", "native_rc_values.c")
         at = sources.index("native_heap.c") + 1
         for source in required:
             if source not in sources:
                 sources.insert(at, source)
                 at += 1
+    if "qbe_runtime.c" in sources and "native_cow.c" not in sources:
+        sources.append("native_cow.c")
     subprocess.run(
         command + ["-I", str(root / "src")]
         + [str(root / "src" / source) for source in sources]
-        + [str(root / "tests" / f"{suite}_test.c"), "-o", str(executable)],
+        + [str(root / "tests" / f"{suite}_test.c")]
+        + (["-lm"] if "qbe_runtime.c" in sources else [])
+        + ["-o", str(executable)],
         check=True,
     )
     subprocess.run([str(executable)], check=True)
@@ -54,6 +60,10 @@ def jobs():
 
 # Each C suite and the runtime sources it links.
 SUITES = (
+    ("native_rc_contract", ["native_rc.c", "native_rc_shapes.c", "native_rc_walk.c", "native_rc_transfer.c"]),
+    ("native_rc_collections", ["native_heap.c", "native_text_methods.c"]),
+    ("native_rc_codecs", ["native_heap.c", "qbe_runtime.c"]),
+    ("native_rc_host", ["native_heap.c", "qbe_runtime.c"]),
     ("native_heap", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c", "native_equal.c", "native_bytes.c"]),
     ("native_collections", ["native_heap.c", "native_collections.c"]),
     ("native_text_dictionary", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c"]),
