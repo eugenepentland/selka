@@ -77,6 +77,9 @@ test "copy on write: value-semantics copies use the rooted COW hook without dupl
     try std.testing.expectEqual(@as(usize, 1), count(il, "call $myl_qbe_cow_transfer("));
     try std.testing.expectEqual(@as(usize, 0), count(il, "call $myl_native_cow_share("));
     try std.testing.expectEqual(@as(usize, 1), count(il, "\n@vcpresent"));
+    const transfer = std.mem.indexOf(u8, il, "call $myl_qbe_cow_transfer(") orelse return error.TestUnexpectedResult;
+    const end = std.mem.indexOfScalarPos(u8, il, transfer, '\n') orelse return error.TestUnexpectedResult;
+    try std.testing.expect(std.mem.indexOf(u8, il[transfer..end], "%s") == null);
 }
 
 // spec-case: COW-SHARED-1
@@ -251,6 +254,11 @@ const pinned =
 
 // spec: COW-PIN-1
 test "copy on write: a mut argument is pinned for the call, so a callee's copy of it is a real one" {
+    const saved = value_semantics.enabled();
+    value_semantics.setEnabled(true);
+    defer value_semantics.setEnabled(saved);
+    try std.testing.expectEqual(@as(i64, 12), try run(std.testing.allocator, pinned, false));
+    try std.testing.expectEqual(@as(i64, 12), try run(std.testing.allocator, pinned, true));
     const a = std.testing.allocator;
     const il = try unitText(a, pinned, "main", checks);
     defer a.free(il);
