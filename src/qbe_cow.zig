@@ -111,7 +111,7 @@ pub fn Lower(comptime E: type) type {
                 const checked = for (loop.head..loop.back + 1) |pc| {
                     if (pc < state.plan.checked.len and state.plan.checked[pc]) break true;
                 } else false;
-                if (!checked) try kept.append(self.allocator, loop);
+                if (!checked and versionLifetime(E, self, loop.head, loop.back)) try kept.append(self.allocator, loop);
             }
             self.loop_plan.loops = try kept.toOwnedSlice(self.allocator);
         }
@@ -1159,4 +1159,9 @@ fn borrowReceiverImpl(comptime E: type, self: *E, local: usize, payload: usize) 
         if (plan.place(parent)) |place| try pinAncestors(E, self, place, scope);
     }
     try rc_scope.pin(E, self, scope, payload);
+}
+
+fn versionLifetime(comptime E: type, self: *E, head: usize, back: usize) bool {
+    if (!runtime_mode.enabled()) return true;
+    return @import("qbe_rc_hoist.zig").permitsVersion(E, self, head, back);
 }

@@ -1367,3 +1367,5 @@ host failure in one worker leaves the units the other workers hold running.
 - [RC-PLAIN-LIST-WRITE-1] RC writes of nonzero scalar list elements with no counted or unique edges use the native typed store after unchanged index normalization and bounds checks; managed and unique elements retain fallible ownership publication helpers.
 
 - [RC-INERT-PROJECTION-1] An immediate list-element read into a proved inert mutation receiver borrows from the live physical parent until fill detaches and refreshes it; named snapshots, callbacks, alternate fill entries and unproved paths retain ordinary ownership or scoped protection.
+
+- [RC-LOOP-VERSION-1] RC loop versions cache element storage only inside a proved physical no-publication interval, after entry uniqueness and with no residual COW checks or allocating lowered helpers. Failed range guards execute the original loop and preserve its traps.
