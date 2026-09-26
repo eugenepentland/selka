@@ -2,6 +2,7 @@
 /// Canonical project loader exposed to native-test snapshot identity.
 pub const snapshot_project = @import("project.zig");
 test {
+    _ = @import("native_rc_contract_test.zig");
     _ = @import("native_test_cli_test.zig");
     _ = @import("native_test_cases.zig");
     _ = @import("native_test_snapshot.zig");
