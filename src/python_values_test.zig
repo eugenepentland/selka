@@ -44,6 +44,8 @@ test "a dictionary reclaimed and replaced at its address is traced with the new 
 
 // spec: GC-SCAN-PLAN-2
 test "the collector traces every generated shape by the plan its descriptor carries" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
     // Under stress every allocation collects, and every plan the collector
     // follows is first checked against the runtime's own flattening of the
     // descriptor, so a record, union, fixed array, optional, class body or
