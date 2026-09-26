@@ -11,7 +11,7 @@ full gates with `../.d9-closeout-gate.lock`. The original dirty checkout, `main`
 | Work | Code/evidence | Validation |
 |---|---|---|
 | WP-3a switch and checker | `7c1fc1f8`; [report](d9-stage3a-closeout-2026-09-26.md) | Full gate; switch-off IL 44/44 identical and guest results 642/642 unchanged; switch-on failures and informational costs recorded |
-| WP-3c recursive values | `67afc00a`; [report](d9-stage3c-recursive-values-2026-09-26.md) | Full gate; million-node equality/hash and both-backend tree measurements; existing depth-bounded printing truncation documented as a plan deviation |
+| WP-3c recursive values | `67afc00a`, `2e4ac251`; [report](d9-stage3c-recursive-values-2026-09-26.md) | Full gate; million-node equality/hash and both-backend tree measurements; existing depth-bounded printing truncation documented as a plan deviation |
 | T1 library checking | `ff10f2f1` | New `check-module`; three focused CLI tests; full gate: test 91/91 steps, 2,075 executed tests; QBE 49/49, 426 tests; QBE build 29/29; formatting green |
 | T2 formatting feedback and fixtures | `30948da9`, `df177cc2` | First-difference file/line/column; three focused CLI tests; 93 examples and nine copied pilot starters format clean; joined full gate |
 | T3 indexed empty-list inference | `8842ac60` | Seven guest tests and twelve selected Zig tests; original regression reproduced; joined full gate |
@@ -32,10 +32,10 @@ for every accepted package above.
 
 | Work | Branch/worktree | Remaining acceptance |
 |---|---|---|
-| WP-3b COW | `d9/stage3b`, `../d9-stage3b` | Phase 1 passed its full gate; phase 2 is fixing joined recursive/GC-stress/call-order cases before performance measurement and the final gate |
-| WP-3d class/Cell retirement | `codex/d9-stage3d` | Design written first; switch errors implemented; 60 in-repo inventory entries and two external T2 entries migrated; Lox and sexpr still in progress; full gate pending |
-| WP-3e migration warnings/fix | `codex/d9-stage3e` | Minimal native fix-tool prerequisite ported; initial historical P1 agreement 63/101, below the required 95%; analysis improvements and Lox validation pending |
-| Q2 invariants | `codex/d9-invariant-closeout` | Cache relocation regression reproduced and focused fix passing; decoded-value enforcement and full gate pending |
+| WP-3b COW | `d9/stage3b`, `../d9-stage3b` | Phase 2 `a95dabb6` passes 37 value-semantics guest tests under GC stress and native heap tests; full gate exposed stale IL assertions and an independent staging race; performance gate pending |
+| WP-3d class/Cell retirement | `codex/d9-stage3d` | Active inventory migrated; S-expression 114/114 both modes; Lox 63/63 both modes and VM 13/13 pinned scripts with COW; full gate pending. Historical snapshots/rejection fixtures are explicitly inventoried exceptions; tree interpreter remains slow |
+| WP-3e migration warnings/fix | `codex/d9-stage3e` | Minimal native fix-tool prerequisite ported; historical P1 agreement now 80/101 exact, 83/101 after three proven line shifts, below the required 95%; 30 extras. Dual-mode explicit mut-record fix `18d66f92`; analysis and final gate pending |
+| Q2 invariants | `codex/d9-invariant-closeout` | Cache fix `16f23ed8`, native/JSON invariant validation `c03fc089`, checker-state fix `4a459262`; focused tests and whole-tree Guardian green. Full gate independently reproduced the staging race; fix and rerun pending |
 | WP-3f default flip | Not started | Waits for 3b/3d/3e; includes complete switch-on corpus migration and the stage 3 performance gate |
 | WP-4pre borrow inference | Not started | Requires explain output, invalidation tests and schematic transfer measurements |
 | WP-4 reference counting | Not started | Requires 3f/4pre and the RC performance/RSS gate, including rewritten graph programs |
