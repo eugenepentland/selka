@@ -65,6 +65,7 @@ const everyday_help =
     \\
     \\Everyday commands:
     \\  mylang check FILE.my              type-check without building
+    \\  mylang fix FILE.my [--check]     apply safe diagnostic repairs
     \\  mylang run FILE.my [-- ARGS...]   build natively and run; arguments after --
     \\  mylang build FILE.my -o OUT       native executable, built by QBE in about a second
     \\  mylang build FILE.my -o OUT --release   optimized (LLVM -O3 + LTO), for shipping or timing
@@ -280,6 +281,7 @@ fn dispatch(process: std.process.Init) !u8 {
         return 0;
     }
     if (args.len >= 2 and std.mem.eql(u8, args[1], "build")) return buildCommand(process, args[2..]);
+    if (args.len >= 2 and std.mem.eql(u8, args[1], "fix")) return @import("fix_command.zig").run(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "emit-runtime")) return @import("qbe_build.zig").emitRuntime(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "test")) return @import("native_test_command.zig").run(process, args[2..]) catch |err| switch (err) {
         // `run` already rendered the child compiler's located diagnostic; exit 1

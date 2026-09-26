@@ -7,6 +7,31 @@ const Value = std.json.Value;
 fn field(value: Value, name: []const u8) Value {
     return value.object.get(name).?;
 }
+// spec: DIAGNOSTIC-FIX-1
+test "structured fix maps exact original-file byte ranges and drops crossing edits" {
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const first = try language.source.Source.init(arena.allocator(), "first.my", "alias = value\n");
+    const second = try language.source.Source.init(arena.allocator(), "second.my", "main = 1\n");
+    const src = try language.source.Source.initMapped(arena.allocator(), &.{ first, second });
+    const mapped = try src.mappedSpan(0, .{ .start = 0, .end = 5 });
+    const diag: language.diagnostic.Diagnostic = .{ .code = "W_TEST", .severity = .warning, .span = mapped, .message = "replace", .provenance = .{ .fix = .{ .edit = .{ .span = mapped, .text = "copy" } } } };
+    const json = try output.render(t.allocator, diag, src, .json);
+    defer t.allocator.free(json);
+    var parsed = try std.json.parseFromSlice(Value, t.allocator, json, .{});
+    defer parsed.deinit();
+    const edit = field(field(field(parsed.value, "diagnostic"), "fix"), "edits").array.items[0];
+    try t.expectEqualStrings("first.my", field(edit, "path").string);
+    try t.expectEqual(@as(i64, 5), field(field(edit, "bytes"), "end").integer);
+    try t.expectEqualStrings("copy", field(edit, "text").string);
+    var crossing = diag;
+    crossing.provenance.fix = .{ .edit = .{ .span = .{ .start = mapped.start, .end = src.bytes.len }, .text = "" } };
+    const omitted = try output.render(t.allocator, crossing, src, .json);
+    defer t.allocator.free(omitted);
+    var other = try std.json.parseFromSlice(Value, t.allocator, omitted, .{});
+    defer other.deinit();
+    try t.expect(field(other.value, "diagnostic").object.get("fix") == null);
+}
 fn renderScenario(allocator: std.mem.Allocator) !void {
     var arena = std.heap.ArenaAllocator.init(allocator);
     defer arena.deinit();

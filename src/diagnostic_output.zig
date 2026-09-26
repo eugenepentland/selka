@@ -19,6 +19,17 @@ const Payload = struct {
     notes: []const Note,
     stack: struct { frames: []const Frame, omitted: usize },
 };
+const EditRecord = struct { path: []const u8, bytes: source.Span, text: []const u8 };
+const FixRecord = struct { edits: []const EditRecord };
+const FixedPayload = struct {
+    code: []const u8,
+    severity: []const u8,
+    message: []const u8,
+    location: Location,
+    notes: []const Note,
+    stack: @FieldType(Payload, "stack"),
+    fix: FixRecord,
+};
 const FactRecord = struct { text: []const u8, location: Location };
 const BindingRecord = struct { name: []const u8, type: []const u8, mutable: bool, location: Location };
 const RequirementRecord = struct { subject: []const u8, requirement: []const u8, location: Location };
@@ -86,7 +97,32 @@ pub fn render(allocator: std.mem.Allocator, diag: diagnostic.Diagnostic, src: so
     data.notes = notes[0..count];
     data.stack.frames = frames[0..diag.stack.len];
     if (diag.provenance.obligation) |obligation| return renderHole(allocator, data, obligation, src);
+    if (diag.provenance.fix) |fix| return renderFixed(allocator, data, fix, src);
     return encode(allocator, .{ .version = version, .kind = diagnostic_kind, .diagnostic = data });
+}
+fn editRecord(src: source.Source, edit: diagnostic.Edit) ?EditRecord {
+    if (edit.span.start > edit.span.end or edit.span.end > src.bytes.len) return null;
+    if (src.origins.len == 0) return .{ .path = src.path, .bytes = edit.span, .text = edit.text };
+    const mapped = src.originalSpan(edit.span) catch return null;
+    const original = src.origins[mapped.input].original;
+    if (mapped.span.end > original.bytes.len) return null;
+    return .{ .path = original.path, .bytes = mapped.span, .text = edit.text };
+}
+fn renderFixed(allocator: std.mem.Allocator, data: Payload, fix: diagnostic.Fix, src: source.Source) std.mem.Allocator.Error![]u8 {
+    const edits = try allocator.alloc(EditRecord, fix.count());
+    defer allocator.free(edits);
+    for (edits, 0..) |*record, index| record.* = editRecord(src, fix.at(index)) orelse
+        return encode(allocator, .{ .version = version, .kind = diagnostic_kind, .diagnostic = data });
+    const fixed: FixedPayload = .{
+        .code = data.code,
+        .severity = data.severity,
+        .message = data.message,
+        .location = data.location,
+        .notes = data.notes,
+        .stack = data.stack,
+        .fix = .{ .edits = edits },
+    };
+    return encode(allocator, .{ .version = version, .kind = diagnostic_kind, .diagnostic = fixed });
 }
 /// Serialize one diagnostic beside its structured typed-hole obligation. Only a
 /// diagnostic that actually carries an obligation takes this shape, so every
