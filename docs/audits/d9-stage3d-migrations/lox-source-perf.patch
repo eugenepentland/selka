@@ -14,7 +14,7 @@ index 287d5bb..1aaf569 100644
              return
          error_at_current(mut p, p.current.message)
 diff --git a/heap.my b/heap.my
-index f76a7814..2e2b52cd 100644
+index f76a7814..6625492a 100644
 --- a/heap.my
 +++ b/heap.my
 @@ -13,15 +13,11 @@ public const FRAMES_MAX: int = 64
@@ -72,7 +72,24 @@ index f76a7814..2e2b52cd 100644
  public def closure_obj(rt: Runtime, ref: value.ObjRef) -> object.ClosureObj:
      match rt.objects[ref]:
          case object.Obj.closure(payload):
-@@ -203,6 +217,25 @@ public def env_obj(rt: Runtime, ref: value.ObjRef) -> object.EnvObj:
+@@ -176,6 +190,16 @@ public def class_obj(rt: Runtime, ref: value.ObjRef) -> object.ClassObj:
+             return object.ClassObj(name=value.NO_OBJ, methods=table.new_table())
+
+
++# Looks up one method while the class table remains a read-only heap projection.
++public def class_method(rt: Runtime, ref: value.ObjRef, name: value.ObjRef) -> Option[value.Value]:
++    match rt.objects[ref]:
++        case object.Obj.klass(payload):
++            return table.get(payload.methods, name, string_hash(rt, name))
++        case _:
++            assert False, "object is not a class"
++            return None
++
++
+ # ObjRef, rather than a shared class payload, carries object identity. Every
+ # changed payload is written back into its object-table slot.
+ public def set_class_methods(rt: mut Runtime, ref: value.ObjRef, methods: table.Table):
+@@ -203,6 +227,25 @@ public def env_obj(rt: Runtime, ref: value.ObjRef) -> object.EnvObj:
              return object.new_env(value.NO_OBJ, 0)
 
 
@@ -98,7 +115,7 @@ index f76a7814..2e2b52cd 100644
  # P3 adaptation: write one environment slot and store the environment back,
  # so the write lands in the heap under value semantics as well.
  public def set_env_slot(rt: mut Runtime, ref: value.ObjRef, slot: int, item: value.Value):
-@@ -245,105 +278,63 @@ def mark_table(marker: mut Marker, source: table.Table):
+@@ -245,105 +288,63 @@ def mark_table(marker: mut Marker, source: table.Table):
 
 
  def mark_roots(rt: mut Runtime):
@@ -511,7 +528,7 @@ diff --git a/interpreter.my b/interpreter.my
 
 
 diff --git a/vm.my b/vm.my
-index 450eb63e..aa4e76e8 100644
+index 450eb63e..d3ae62b7 100644
 --- a/vm.my
 +++ b/vm.my
 @@ -18,6 +18,36 @@ public enum InterpretResult:
@@ -609,7 +626,29 @@ index 450eb63e..aa4e76e8 100644
          ip=0,
          base=rt.stack_top - count - 1
      )
-@@ -186,19 +214,26 @@ def invoke_from_class(rt: mut heap.Runtime, o: mut output.Output, klass: value.O
+@@ -150,10 +178,10 @@ def call_value(rt: mut heap.Runtime, o: mut output.Output, callee: value.Value,
+                 case object.Obj.bound_method(bound):
+                     rt.stack[rt.stack_top - count - 1] = bound.receiver
+                     return call(mut rt, mut o, bound.method, count)
+-                case object.Obj.klass(klass):
++                case object.Obj.klass(_):
+                     instance = heap.allocate(mut rt, object.Obj.instance(object.InstanceObj(klass=ref, fields=table.new_table())))
+                     rt.stack[rt.stack_top - count - 1] = value.Value.obj(instance)
+-                    match table.get(klass.methods, rt.init_string, heap.string_hash(rt, rt.init_string)):
++                    match heap.class_method(rt, ref, rt.init_string):
+                         case Some(initializer):
+                             return call(mut rt, mut o, as_obj(initializer), count)
+                         case None:
+@@ -177,7 +205,7 @@ def call_value(rt: mut heap.Runtime, o: mut output.Output, callee: value.Value,
+
+
+ def invoke_from_class(rt: mut heap.Runtime, o: mut output.Output, klass: value.ObjRef, name: value.ObjRef, count: int) -> bool:
+-    match table.get(heap.class_obj(rt, klass).methods, name, heap.string_hash(rt, name)):
++    match heap.class_method(rt, klass, name):
+         case Some(method):
+             return call(mut rt, mut o, as_obj(method), count)
+         case None:
+@@ -186,21 +214,28 @@ def invoke_from_class(rt: mut heap.Runtime, o: mut output.Output, klass: value.O
 
  def invoke(rt: mut heap.Runtime, o: mut output.Output, name: value.ObjRef, count: int) -> bool:
      match instance_of(rt, heap.peek(rt, count)):
@@ -641,8 +680,11 @@ index 450eb63e..aa4e76e8 100644
 +
 +
  def bind_method(rt: mut heap.Runtime, o: mut output.Output, klass: value.ObjRef, name: value.ObjRef) -> bool:
-     match table.get(heap.class_obj(rt, klass).methods, name, heap.string_hash(rt, name)):
+-    match table.get(heap.class_obj(rt, klass).methods, name, heap.string_hash(rt, name)):
++    match heap.class_method(rt, klass, name):
          case Some(method):
+             bound = heap.allocate(mut rt, object.Obj.bound_method(object.BoundMethodObj(receiver=heap.peek(rt, 0), method=as_obj(method))))
+             _ = heap.pop(mut rt)
 @@ -249,26 +284,26 @@ def concatenate(rt: mut heap.Runtime):
      heap.push(mut rt, value.Value.obj(result))
 
