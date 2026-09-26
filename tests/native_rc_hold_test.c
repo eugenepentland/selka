@@ -157,6 +157,118 @@ static void held_chain_release(void) {
     myl_rc_owner_release(&heap, head);
     finish(&heap);
 }
+static void held_unique_reuses_ownerless(void) {
+    myl_native_heap heap;
+    start(&heap);
+    void *view = myl_rc_storage_bytes(&heap, 8, 0);
+    myl_rc_hold hold = {0};
+    assert(view && myl_rc_hold_acquire(&heap, view, &hold) == MYL_RC_OK);
+    myl_rc_owner_release(&heap, view);
+    void *before = view;
+    myl_rc_slot value = slot(&held, &view, 0);
+    heap.limit = heap.bytes;
+    assert(myl_rc_unique_held(&heap, &value) == MYL_RC_OK && view == before);
+    assert(header(view)->owners == 0 && header(view)->holds == 1);
+    myl_rc_value_drop(&heap, &value);
+    finish(&heap);
+}
+static void held_unique_isolates_snapshot(void) {
+    myl_native_heap heap;
+    start(&heap);
+    myl_native_dictionary *dict = myl_native_dictionary_new(&heap, &number, &number, 0);
+    uint64_t key = 1, value = 7, found;
+    assert(dict && myl_native_dictionary_write(&heap, dict, &key, &value));
+    assert(myl_rc_owner_acquire(&heap, dict) == MYL_RC_OK);
+    myl_rc_hold hold = {0};
+    assert(myl_rc_hold_acquire(&heap, dict, &hold) == MYL_RC_OK);
+    void *view = dict;
+    myl_rc_slot target = slot(&held, &view, 0);
+    myl_rc_pin pin = {0};
+    assert(myl_rc_pin_acquire(&heap, dict, &pin) == MYL_RC_OK);
+    assert(myl_rc_unique_held(&heap, &target) == MYL_RC_OK && view != dict);
+    assert(header(dict)->owners == 2 && header(dict)->holds == 1);
+    assert(header(view)->owners == 0 && header(view)->holds == 1);
+    value = 9;
+    assert(myl_native_dictionary_write(&heap, view, &key, &value));
+    assert(myl_native_dictionary_read(dict, &key, &found) && found == 7);
+    assert(myl_native_dictionary_read(view, &key, &found) && found == 9);
+    myl_rc_pin_release(&heap, &pin);
+    myl_rc_value_drop(&heap, &target);
+    myl_rc_owner_release(&heap, dict);
+    myl_rc_owner_release(&heap, dict);
+    finish(&heap);
+}
+static void held_unique_rollback(unsigned region) {
+    myl_native_heap heap;
+    start(&heap);
+    void *leaf = myl_rc_storage_bytes(&heap, 8, 0), *limit = myl_rc_storage_bytes(&heap, 8, 0);
+    myl_native_list *source = myl_native_list_new(&heap, &pointer, 2);
+    assert(leaf && limit && source && myl_native_list_append(&heap, source, &leaf) && myl_native_list_append(&heap, source, &limit));
+    assert(myl_rc_owner_acquire(&heap, source) == MYL_RC_OK);
+    myl_rc_hold hold = {0};
+    assert(myl_rc_hold_acquire(&heap, source, &hold) == MYL_RC_OK);
+    void *view = source;
+    if (region) assert(myl_native_region_begin(&heap));
+    myl_rc_slot target = slot(&held, &view, region);
+    header(limit)->owners = MYL_RC_COUNT_MAX;
+    size_t live = heap.objects_live;
+    assert(myl_rc_unique_held(&heap, &target) == MYL_RC_COUNT_LIMIT);
+    assert(view == source && header(source)->owners == 2 && header(source)->holds == 1);
+    assert(header(leaf)->owners == 2);
+    assert(region ? heap.objects_live > live : heap.objects_live == live);
+    header(limit)->owners = 2;
+    if (region) myl_native_region_end(&heap);
+    assert(heap.objects_live == live);
+    myl_rc_value_drop(&heap, &target);
+    myl_rc_owner_release(&heap, source);
+    myl_rc_owner_release(&heap, source);
+    myl_rc_owner_release(&heap, leaf);
+    myl_rc_owner_release(&heap, limit);
+    finish(&heap);
+}
+static void held_scope_leaf(void) {
+    myl_native_heap heap;
+    start(&heap);
+    void *source = myl_rc_storage_bytes(&heap, 8, 0);
+    assert(source && myl_rc_owner_acquire(&heap, source) == MYL_RC_OK);
+    myl_rc_hold hold = {0};
+    assert(myl_rc_hold_acquire(&heap, source, &hold) == MYL_RC_OK);
+    void *views[2] = {source, NULL};
+    myl_rc_projection path = {.shape = &pair, .offset = 0};
+    myl_rc_place place = {.receiver = slot(&pair, views, 0), .path = &path, .count = 1};
+    myl_rc_scope scope;
+    myl_rc_scope_begin(&heap, &scope);
+    assert(myl_rc_scope_prepare(&scope, &place) == MYL_RC_OK && views[0] != source);
+    assert(header(views[0])->owners == 0 && header(views[0])->holds == 2);
+    assert(header(views[0])->common.mark & MYL_NATIVE_OBJECT_PINNED);
+    myl_rc_scope_end(&scope);
+    assert(header(views[0])->holds == 1 && !(header(views[0])->common.mark & MYL_NATIVE_OBJECT_PINNED));
+    myl_rc_value_drop(&heap, &place.receiver);
+    myl_rc_owner_release(&heap, source);
+    myl_rc_owner_release(&heap, source);
+    finish(&heap);
+}
+static void held_arena_snapshot(void) {
+    myl_native_heap heap;
+    start(&heap);
+    assert(myl_native_region_begin(&heap));
+    myl_native_dictionary *dict = myl_native_dictionary_new(&heap, &number, &number, 0);
+    uint64_t key = 1, value = 7, found;
+    assert(dict && myl_native_dictionary_write(&heap, dict, &key, &value));
+    void *snapshot = NULL, *view = dict;
+    myl_rc_slot from = slot(&owned, &dict, 1), to = slot(&owned, &snapshot, 1);
+    assert(myl_rc_value_copy(&heap, &to, &from) == MYL_RC_OK && snapshot == dict);
+    myl_rc_slot target = slot(&held, &view, 1);
+    assert(myl_rc_unique_held(&heap, &target) == MYL_RC_OK && view != dict);
+    assert(myl_native_header_region(view) == 1);
+    value = 9;
+    assert(myl_native_dictionary_write(&heap, view, &key, &value));
+    assert(myl_native_dictionary_read(dict, &key, &found) && found == 7);
+    assert(myl_native_dictionary_read(view, &key, &found) && found == 9);
+    myl_rc_value_drop(&heap, &target);
+    myl_native_region_end(&heap);
+    finish(&heap);
+}
 int myl_rc_hold_verify(void) {
     struct rlimit original, bounded;
     assert(!getrlimit(RLIMIT_STACK, &original));
@@ -168,13 +280,19 @@ int myl_rc_hold_verify(void) {
     arena_escape_and_memo();
     escaped_child_refusal();
     held_chain_release();
+    held_unique_reuses_ownerless();
+    held_unique_isolates_snapshot();
+    held_unique_rollback(0);
+    held_unique_rollback(1);
+    held_scope_leaf();
+    held_arena_snapshot();
     assert(!setrlimit(RLIMIT_STACK, &original));
-    return 6;
+    return 12;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
-    assert(myl_rc_hold_verify() == 6);
-    puts("native RC live holds: 6 tests passed");
+    assert(myl_rc_hold_verify() == 12);
+    puts("native RC live holds: 12 tests passed");
     return 0;
 }
 #endif

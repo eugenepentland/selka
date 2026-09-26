@@ -227,6 +227,9 @@ void myl_rc_scope_unwind(myl_native_heap *, myl_rc_scope *checkpoint);
 /* Uniqueness slots contain one managed payload pointer, never an inline
  * aggregate. The caller zero-initializes edit; failure leaves it empty. */
 myl_rc_status myl_rc_unique_owned(myl_native_heap *, myl_rc_slot *);
+/* An initialized HOLD_POINTER slot remains H after uniqueness detaches it.
+ * Refusal leaves the original token and slot intact. */
+myl_rc_status myl_rc_unique_held(myl_native_heap *, myl_rc_slot *);
 /* Reuse is a borrow; detach is an owned token. The parent edge is intact until
  * commit, which requires the closed edit's unchanged-place proof. Abort drops
  * only a detached token. A callback-replaced parent must never be resurrected. */

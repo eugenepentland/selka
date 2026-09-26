@@ -200,6 +200,7 @@ void myl_qbe_rc_finish(void *);
 void myl_qbe_rc_arena_prepare(void *, MylQbeRcFrame *, size_t local_watermark);
 int myl_qbe_rc_unique_local(void *, const myl_native_type *, void *, uint32_t *owned);
 int myl_qbe_rc_unique_field(void *, const myl_native_type *, void *, void *container);
+int myl_qbe_rc_unique_held(void *, const myl_native_type *, void *, void *container);
 /* Copy a prepared inline body into an owned replacement box. The owner slot
  * and guard change only on success; borrowed prior owners are not released. */
 int myl_qbe_rc_rebox_local(void *, const myl_native_type *, void *, const void *, uint32_t *owned);

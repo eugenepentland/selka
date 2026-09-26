@@ -412,12 +412,15 @@ myl_rc_status myl_rc_value_replace(myl_native_heap *heap, myl_rc_slot *destinati
     if (storage != local) myl_rc_meta_free(heap, storage, bytes);
     return status;
 }
-static void *slot_payload(myl_native_heap *heap, const myl_rc_slot *slot) {
+static void *slot_payload_kind(myl_native_heap *heap, const myl_rc_slot *slot, myl_rc_shape_kind kind) {
     myl_rc_invariant(slot && slot->address && myl_rc_shape_resolve(heap, slot->shape));
-    myl_rc_invariant(slot->shape->kind == MYL_RC_SHAPE_POINTER && slot->shape->size == sizeof(void *));
+    myl_rc_invariant(slot->shape->kind == kind && slot->shape->size == sizeof(void *));
     void *payload;
     memcpy(&payload, slot->address, sizeof payload);
     return payload;
+}
+static void *slot_payload(myl_native_heap *heap, const myl_rc_slot *slot) {
+    return slot_payload_kind(heap, slot, MYL_RC_SHAPE_POINTER);
 }
 myl_rc_status myl_rc_unique_owned(myl_native_heap *heap, myl_rc_slot *slot) {
     void *payload = slot_payload(heap, slot);
@@ -427,6 +430,23 @@ myl_rc_status myl_rc_unique_owned(myl_native_heap *heap, myl_rc_slot *slot) {
     if (status != MYL_RC_OK) return status;
     memcpy(slot->address, &copy, sizeof copy);
     myl_rc_owner_release(heap, payload);
+    return MYL_RC_OK;
+}
+myl_rc_status myl_rc_unique_held(myl_native_heap *heap, myl_rc_slot *slot) {
+    void *payload = slot_payload_kind(heap, slot, MYL_RC_SHAPE_HOLD_POINTER);
+    if (slot->region > heap->region_depth || (payload && myl_native_header_region(payload) > slot->region))
+        return MYL_RC_REGION_ERROR;
+    if (myl_rc_unique(heap, payload)) return MYL_RC_OK;
+    void *copy = NULL;
+    myl_rc_status status = clone_payload(heap, payload, slot->region, &copy);
+    if (status != MYL_RC_OK) return status;
+    myl_rc_hold replacement = {0};
+    status = myl_rc_hold_acquire(heap, copy, &replacement);
+    if (status != MYL_RC_OK) { myl_rc_construction_abort(heap, copy); return status; }
+    memcpy(slot->address, &copy, sizeof copy);
+    myl_rc_hold previous = {.payload = payload};
+    myl_rc_hold_release(heap, &previous);
+    myl_rc_owner_release(heap, copy);
     return MYL_RC_OK;
 }
 myl_rc_status myl_rc_unique_borrow(myl_native_heap *heap, const myl_rc_slot *slot,

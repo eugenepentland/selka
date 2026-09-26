@@ -23,13 +23,10 @@ pub fn local(comptime E: type, self: *E, unique: cow.Unique) Error!void {
     if (unique.alias != cow.none and receiverFilled(E, self, unique.alias)) {
         return local(E, self, .{ .local = unique.alias });
     }
-    const ty = self.function.scope.locals[unique.local].ty;
     const address = self.temp();
     const guard = try frame.guard(E, self, unique.local);
-    const done = self.temp();
     try self.print(" %v{d} =l copy %l{d}\n", .{ address, unique.local });
-    try self.print(" %v{d} =w call $myl_qbe_rc_unique_local(l %ctx, l extern ${s}, l %v{d}, l %v{d})\n", .{ done, try self.descriptor(ty), address, guard });
-    try success(E, self, done);
+    try localCall(E, self, unique.local, address, guard);
     if (unique.alias != cow.none) {
         const value = try self.load("l", unique.local);
         try frame.drop(E, self, unique.alias);
@@ -37,17 +34,35 @@ pub fn local(comptime E: type, self: *E, unique: cow.Unique) Error!void {
     }
 }
 
-/// One pointer edge in an already-owned containing value.
-pub const Field = struct { ty: @import("typed.zig").Type, address: usize, container: ?usize = null };
+fn localCall(comptime E: type, self: *E, index: usize, address: usize, guard: usize) Error!void {
+    const ty = self.function.scope.locals[index].ty;
+    const holds = @import("qbe_rc_holds.zig");
+    const label = self.temp();
+    const maybe_held = self.function.scope.locals[index].usage.temporary and holds.mayHold(E, self, ty);
+    if (maybe_held) {
+        const held = try holds.held(E, self, index);
+        try self.print(" jnz %v{d}, @rcuniqueheld{d}, @rcuniqueowner{d}\n@rcuniqueheld{d}\n", .{ held, label, label, label });
+        try field(E, self, .{ .ty = ty, .address = address, .held = true });
+        try self.print(" jmp @rcuniquelocal{d}\n@rcuniqueowner{d}\n", .{ label, label });
+    }
+    const done = self.temp();
+    try self.print(" %v{d} =w call $myl_qbe_rc_unique_local(l %ctx, l extern ${s}, l %v{d}, l %v{d})\n", .{ done, try self.descriptor(ty), address, guard });
+    try success(E, self, done);
+    if (maybe_held) try self.print("@rcuniquelocal{d}\n", .{label});
+}
 
-/// Detach an owned field transactionally before publishing the replacement edge.
+/// One ordinary or held pointer edge in an already-owned containing value.
+pub const Field = struct { ty: @import("typed.zig").Type, address: usize, container: ?usize = null, held: bool = false };
+
+/// Detach an ordinary or held field without changing its ownership role.
 pub fn field(comptime E: type, self: *E, target: Field) Error!void {
     const container = self.temp();
     if (target.container) |value| {
         try self.print(" %v{d} =l copy %v{d}\n", .{ container, value });
     } else try self.print(" %v{d} =l copy 0\n", .{container});
     const done = self.temp();
-    try self.print(" %v{d} =w call $myl_qbe_rc_unique_field(l %ctx, l extern ${s}, l %v{d}, l %v{d})\n", .{ done, try self.descriptor(target.ty), target.address, container });
+    const helper: []const u8 = if (target.held) "myl_qbe_rc_unique_held" else "myl_qbe_rc_unique_field";
+    try self.print(" %v{d} =w call ${s}(l %ctx, l extern ${s}, l %v{d}, l %v{d})\n", .{ done, helper, try self.descriptor(target.ty), target.address, container });
     try success(E, self, done);
 }
 
