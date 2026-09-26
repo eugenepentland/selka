@@ -376,6 +376,20 @@ still gets `E_RECURSIVE_RECORD`, because it has no finite value. Recursion throu
 recursive values compare, hash, print, cross typed JSON boundaries and escape
 arenas as values. Printing stops with `...` at the renderer's depth cap.
 
+A recursive box cannot own a resource, an unhandled result or a capability.
+This includes builtin `File` and `TextFile` fields, even when construction would
+pass a newly opened handle directly. The type is rejected before execution:
+
+```mylang
+# doc: expect-error E_RECURSIVE_RECORD
+record OpenChain:
+    file: TextFile
+    next: Option[OpenChain]
+
+def main() -> int:
+    return 0
+```
+
 Under the default value model, copying a recursive value carries its immutable
 box pointers without walking their bodies. Reading through a box makes a private
 shallow snapshot and shares its immediate mutable children; a nested write

@@ -1,0 +1,7 @@
+record Owner:
+    file: TextFile
+
+def main(fs: Filesystem) -> int:
+    with fs.open("data", "w") as file:
+        owner = Owner(file)
+    return 0
