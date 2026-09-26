@@ -19,7 +19,7 @@ fn certificate(source: []const u8) !?model.BorrowCertificate {
     var catalog = try shapes.Catalog.init(t.allocator, &layouts);
     defer catalog.deinit();
     for (program.functions) |function| if (std.mem.eql(u8, function.name, "selected")) {
-        return calls.borrowedIn(t.allocator, &catalog, program.functions, function, "rc-v2");
+        return calls.borrowedIn(t.allocator, &catalog, program.functions, function, "rc-v3");
     };
     return error.TestUnexpectedResult;
 }
@@ -28,19 +28,19 @@ fn certificate(source: []const u8) !?model.BorrowCertificate {
 test "RC-BORROW-ENTRY-1 public call contract certifies physical field and array anchors" {
     const field = (try certificate(
         \\record Child:
-        \\    items: list[int]
+        \\    items: bytes
         \\record Parent:
         \\    child: Child
-        \\    sibling: list[int]
-        \\def selected(value: Parent) -> list[int]:
+        \\    sibling: bytes
+        \\def selected(value: Parent) -> bytes:
         \\    return value.child.items
     )).?;
     const index = (try certificate(
-        \\def selected(values: [2]list[int]) -> list[int]:
+        \\def selected(values: [2]bytes) -> bytes:
         \\    return values[0]
     )).?;
     const identity = (try certificate(
-        \\def selected(values: list[int]) -> list[int]:
+        \\def selected(values: bytes) -> bytes:
         \\    return values
     )).?;
     try t.expectEqual(@as(u32, 0), field.parameter);
@@ -92,19 +92,19 @@ test "RC-BORROW-ENTRY-1 mutating and uncertified call returns stay owned" {
 // spec-case: RC-BORROW-ENTRY-1
 test "RC-BORROW-ENTRY-1 physical anchor and projection edits change certificate dependencies" {
     const first = (try certificate(
-        \\def selected(first: list[int], second: list[int]) -> list[int]:
+        \\def selected(first: bytes, second: bytes) -> bytes:
         \\    return first
     )).?;
     const second = (try certificate(
-        \\def selected(first: list[int], second: list[int]) -> list[int]:
+        \\def selected(first: bytes, second: bytes) -> bytes:
         \\    return second
     )).?;
     const at_zero = (try certificate(
-        \\def selected(values: [2]list[int]) -> list[int]:
+        \\def selected(values: [2]bytes) -> bytes:
         \\    return values[0]
     )).?;
     const at_one = (try certificate(
-        \\def selected(values: [2]list[int]) -> list[int]:
+        \\def selected(values: [2]bytes) -> bytes:
         \\    return values[1]
     )).?;
     try t.expectEqual(@as(u32, 1), second.parameter);
@@ -198,4 +198,18 @@ test "RC borrowed entry proof declines recursive and oversized queries" {
         \\    return other(values)
     ));
     try t.expectEqual(null, try oversizedProof());
+}
+
+// spec-case: RC-SEMANTIC-LOWERING-1
+test "RC semantic history prevents borrowed entries from erasing mutable return copies" {
+    try t.expectEqual(null, try certificate(
+        \\def selected(values: list[int]) -> list[int]:
+        \\    return values
+    ));
+    try t.expectEqual(null, try certificate(
+        \\record Row:
+        \\    items: list[int]
+        \\def selected(row: Row) -> list[int]:
+        \\    return row.items
+    ));
 }

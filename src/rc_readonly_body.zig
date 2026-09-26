@@ -12,7 +12,11 @@ pub fn certify(catalog: *shapes.Catalog, function: bytecode.Function) native.Err
     if (function.signature.mutates.len != 0 or function.signature.declared_mutates.len != 0) return false;
     const output = try catalog.get(function.signature.return_type);
     if (output.counted or output.unique_drop) return false;
-    for (function.scope.locals) |local| if ((try catalog.get(local.ty)).unique_drop) return false;
+    for (function.scope.locals) |local| {
+        if ((try catalog.get(local.ty)).unique_drop) return false;
+        if (local.ty.isAggregate() and catalog.native.records[local.ty.recordIndex()].collection.box and
+            @import("value_semantics.zig").needsCopy(catalog.native.records, local.ty)) return false;
+    }
     if (function.scope.instructions.len == 0) return false;
     for (function.scope.instructions) |instruction| if (!allowed(catalog, function, instruction.op)) return false;
     return true;
@@ -23,7 +27,6 @@ fn allowed(catalog: *shapes.Catalog, function: bytecode.Function, op: Op) bool {
         .load_local,
         .move_local,
         .drop_local,
-        .value_copy,
         .pop,
         .acknowledge,
         .push_i64,
@@ -51,6 +54,7 @@ fn allowed(catalog: *shapes.Catalog, function: bytecode.Function, op: Op) bool {
         .assert_true,
         .ret,
         => true,
+        .value_copy => |copy| !@import("value_semantics.zig").needsCopy(catalog.native.records, copy.ty),
         .store_local => |id| @backingInt(id) >= function.signature.parameter_count,
         .call => |id| id == function.id,
         .cast_integer, .neg_integer => |ty| ty.integer() != null,

@@ -1,0 +1,11 @@
+def clone(source: dict[int,dict[int,int]]) -> dict[int,dict[int,int]]:
+    return source.copy()
+def main(out: Stream) -> int:
+    fresh = {0:{1:7}}
+    copied = clone(fresh)
+    live = copied[0].values()
+    copied[0][1] = 13
+    out.print(list(live))
+    out.print(copied[0][1])
+    out.print(fresh[0][1])
+    return 0

@@ -1,0 +1,175 @@
+module mut_argument_places
+
+def change(target: mut dict[int, int], source: dict[int, dict[int, int]]) -> int:
+    target[1] = 13
+    return source[0][1]
+
+
+# spec: COW-MUT-ARGUMENT-1
+# spec-case: MUTATION-OVERLAP-1
+# spec-case: MUTATION-ENFORCE-1
+public def test_indexed_mut_argument_updates_its_place_and_preserves_readonly_snapshot() -> bool:
+    original = {0: {1: 7}}
+    before = change(mut original[0], original)
+    return before == 7 and original[0][1] == 13
+
+
+def change_reverse(source: dict[int, dict[int, int]], target: mut dict[int, int]) -> int:
+    target[1] = 13
+    return source[0][1]
+
+
+# spec-case: COW-MUT-ARGUMENT-1
+public def test_snapshot_evaluated_before_mut_argument_stays_independent() -> bool:
+    original = {0: {1: 7}}
+    before = change_reverse(original, mut original[0])
+    return before == 7 and original[0][1] == 13
+
+
+def append_row(target: mut list[int], source: list[list[int]]) -> int:
+    target.append(13)
+    return len(source[0])
+
+
+# spec-case: COW-MUT-ARGUMENT-1
+public def test_list_element_mut_argument_publishes_growth_into_its_parent() -> bool:
+    rows = [[7]]
+    before = append_row(mut rows[0], rows)
+    return before == 1 and rows == [[7, 13]]
+
+
+record Table:
+    mapping: dict[int, int]
+
+
+def change_field(target: mut dict[int, int], source: Table) -> int:
+    target[1] = 13
+    return source.mapping[1]
+
+
+# spec-case: COW-MUT-ARGUMENT-1
+public def test_field_mut_argument_keeps_the_record_snapshot_separate() -> bool:
+    table = Table({1: 7})
+    before = change_field(mut table.mapping, table)
+    return before == 7 and table.mapping[1] == 13
+
+
+def select(counter: mut list[int]) -> int:
+    counter[0] = counter[0] + 1
+    return 0
+
+
+# spec-case: COW-MUT-ARGUMENT-1
+public def test_mut_argument_key_is_evaluated_once() -> bool:
+    original = {0: {1: 7}}
+    count = [0]
+    before = change(mut original[select(mut count)], original)
+    return count == [1] and before == 7 and original[0][1] == 13
+
+
+def replace_and_copy(root: mut dict[int, dict[int, int]]) -> dict[int, dict[int, int]]:
+    root[0] = {1: 21}
+    return root
+
+
+def capture_change(target: mut dict[int, int], source: dict[int, dict[int, int]]) -> int:
+    target[1] = 13
+    return target[1] * 100 + source[0][1]
+
+
+# spec-case: COW-MUT-ARGUMENT-1
+public def test_later_callback_replacement_does_not_retarget_the_selected_argument() -> bool:
+    original = {0: {1: 7}}
+    observed = capture_change(mut original[0], replace_and_copy(mut original))
+    return observed == 1321 and original[0][1] == 21
+
+
+# spec-case: COW-MUT-ARGUMENT-1
+public def test_heap_mut_argument_retains_its_region_inside_an_arena() -> bool:
+    original = {0: {1: 7}}
+    with arena() as scratch:
+        before = change(mut original[0], original)
+        if before != 7:
+            return False
+    return original[0][1] == 13
+
+
+def write_twice(first: mut dict[int, int], second: mut dict[int, int]) -> int:
+    first[1] = 13
+    second[1] = 17
+    return first[1]
+
+
+# spec-case: COW-MUT-ARGUMENT-1
+public def test_repeated_mut_places_keep_one_selected_identity() -> bool:
+    original = {0: {1: 7}}
+    seen = write_twice(mut original[0], mut original[0])
+    return seen == 17 and original[0][1] == 17
+
+
+def change_pair(first: mut dict[int, int], second: mut dict[int, int], source: dict[int, dict[int, int]]) -> int:
+    first[1] = 13
+    second[1] = 17
+    return source[0][1] + source[2][1]
+
+
+# spec-case: COW-MUT-ARGUMENT-1
+public def test_multiple_mut_places_release_in_evaluation_order() -> bool:
+    original = {0: {1: 7}, 2: {1: 8}}
+    seen = change_pair(mut original[0], mut original[2], original)
+    return seen == 15 and original[0][1] == 13 and original[2][1] == 17
+
+
+# spec-case: COW-MUT-ARGUMENT-1
+public def test_reordered_named_mut_arguments_preserve_evaluation_order() -> bool:
+    original = {0: {1: 7}, 2: {1: 8}}
+    seen = change_pair(second=mut original[2], first=mut original[0], source=original)
+    return seen == 15 and original[0][1] == 13 and original[2][1] == 17
+
+
+# spec-case: COW-MUT-ARGUMENT-1
+public def test_indirect_mut_argument_preserves_place_and_snapshot() -> bool:
+    original = {0: {1: 7}}
+    action = change
+    before = action(mut original[0], original)
+    return before == 7 and original[0][1] == 13
+
+
+# spec-case: COW-MUT-ARGUMENT-1
+public def test_indirect_whole_mut_argument_keeps_readonly_snapshot() -> bool:
+    original = {1: 7}
+    action = write_twice
+    seen = action(mut original, mut original)
+    return seen == 17 and original[1] == 17
+
+
+# spec-case: COW-MUT-ARGUMENT-1
+public def test_indirect_later_callback_keeps_the_selected_place() -> bool:
+    original = {0: {1: 7}}
+    action = capture_change
+    seen = action(mut original[0], replace_and_copy(mut original))
+    return seen == 1321 and original[0][1] == 21
+
+
+def deep_change(target: mut list[int], source: dict[int, list[dict[int, list[int]]]]) -> int:
+    target.append(13)
+    return len(source[0][0][1])
+
+
+# spec-case: COW-MUT-ARGUMENT-1
+public def test_alternating_mut_path_keeps_all_ancestors_independent() -> bool:
+    original = {0: [{1: [7]}]}
+    before = deep_change(mut original[0][0][1], original)
+    return before == 1 and original[0][0][1] == [7, 13]
+
+
+def array_change(target: mut list[int], source: [1]list[int]) -> int:
+    target.append(13)
+    return len(source[0])
+
+
+# spec-case: COW-MUT-ARGUMENT-1
+public def test_fixed_array_mut_argument_updates_the_inline_slot() -> bool:
+    original: [1]list[int] = [[7]]
+    before = array_change(mut original[0], original)
+    return before == 1 and original[0] == [7, 13]

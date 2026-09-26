@@ -1,3 +1,5 @@
+#include "native_collections.h"
+#include "native_dictionary.h"
 #include "native_rc_values.h"
 #include "native_rc_internal.h"
 #include <stdlib.h>
@@ -155,6 +157,61 @@ void myl_rc_native_drop(myl_native_heap *heap, const myl_native_type *type, void
     }
     myl_rc_slot slot={.shape=descriptor->shape,.address=value};
     myl_rc_value_drop(heap,&slot);
+}
+int myl_rc_native_loan(myl_native_heap *heap, const myl_native_type *type, void *dst, const void *src) {
+    const myl_rc_shape *shape = myl_rc_native_shape(heap, type);
+    if (!shape) { memset(dst, 0, type->size); return 0; }
+    myl_rc_invariant(!myl_rc_native_has_unique(heap, type));
+    return publication_status(heap, myl_rc_loan_copy(heap, shape, dst, src));
+}
+void myl_rc_native_unloan(myl_native_heap *heap, const myl_native_type *type, void *value) {
+    const myl_rc_descriptor *descriptor = myl_rc_descriptor_find(heap, type);
+    myl_rc_invariant(descriptor != NULL);
+    myl_rc_loan_drop(heap, descriptor->shape, value);
+}
+int myl_rc_native_mutable(const void *payload) {
+    return myl_native_list_header(payload) || myl_native_dictionary_header(payload);
+}
+int myl_rc_native_publish(myl_native_heap *heap, const myl_native_type *type, void *dst,
+                          void *src, unsigned region, unsigned semantic_mode) {
+    myl_rc_invariant(!(semantic_mode & ~(MYL_RC_HISTORY_TAKE | 3u)) && (semantic_mode & 3u) != 3u);
+    const myl_rc_shape *shape = myl_rc_native_shape(heap, type);
+    if (!shape) { memset(dst, 0, type->size); return 0; }
+    myl_rc_invariant(!myl_rc_native_has_unique(heap, type));
+    myl_rc_slot destination = {.shape=shape,.address=dst,.region=region};
+    myl_rc_slot source = {.shape=shape,.address=src};
+    myl_rc_transfer mode = semantic_mode & MYL_RC_HISTORY_TAKE ? MYL_RC_TAKE : MYL_RC_COPY;
+    unsigned policy = 1;
+    if ((semantic_mode & 3u) && type->kind == MYL_NATIVE_POINTER)
+        policy = type->collection_kind == 1 || type->collection_kind == 3 || type->collection_kind == 4 ? 2 : 0;
+    return publication_status(heap, myl_rc_semantic_transfer(heap, &destination, &source, mode, policy));
+}
+int myl_rc_native_retain(myl_native_heap *heap, const myl_native_type *type, void *dst,
+                         const void *src, unsigned region) {
+    const myl_rc_shape *shape = myl_rc_native_shape(heap, type);
+    if (!shape) { memset(dst, 0, type->size); return 0; }
+    myl_rc_invariant(!myl_rc_native_has_unique(heap, type));
+    memset(dst, 0, type->size);
+    myl_rc_slot target = {.shape=shape,.address=dst,.region=region};
+    myl_rc_slot source = {.shape=shape,.address=(void *)src};
+    return publication_status(heap, myl_rc_value_retain_many(heap, &target, &source, 1));
+}
+int myl_rc_native_retain_replace(myl_native_heap *heap, const myl_native_type *type, void *dst,
+                                 const void *src, unsigned region) {
+    if (dst == src) return 1;
+    unsigned char local[128];
+    void *staged = type->size <= sizeof local ? local : myl_rc_storage_bytes(heap, type->size, 0);
+    if (!staged) return 0;
+    int ok = myl_rc_native_retain(heap, type, staged, src, region);
+    if (ok) {
+        /* The old slot is inaccessible to callbacks until the new value is
+         * installed. Cleanup walks only the separately staged former value. */
+        unsigned char *left=dst, *right=staged;
+        for (size_t i=0;i<type->size;i++) { unsigned char byte=left[i]; left[i]=right[i]; right[i]=byte; }
+        myl_rc_native_drop(heap, type, staged);
+    }
+    if (staged != local) myl_rc_owner_release(heap, staged);
+    return ok;
 }
 void *myl_rc_native_storage(myl_native_heap *heap, const myl_native_type *type, size_t count, unsigned region) {
     if (type->size && count>SIZE_MAX/type->size) return NULL;

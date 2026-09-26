@@ -1,0 +1,11 @@
+{
+  "before": "e96e7e5a99dc3289de88c1ab357e6b13f6a429b2f19ee18a1803a069e33c2a06",
+  "indirect": "b55eaf443d6147f154000dc03439081650cc2bf42d0d7441424211d26b2ad34a",
+  "final": "ab1990b50d228a7555db430bebeeaecdf9d7321e9b659477a81cd1d5eb60ee41",
+  "base": "3b5f54b0",
+  "compiler_mode": "Debug",
+  "before_source": "checker prerequisite",
+  "indirect_source": "production fix plus initial private-query test",
+  "final_source": "same production fix with test-only allocator injection",
+  "runtime": "ABI2, known corrected history fixture depends on ABI3"
+}

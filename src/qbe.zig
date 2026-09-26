@@ -2549,8 +2549,9 @@ const Emitter = struct {
         const packed_args = try self.packedCallback(signature);
         for (args, 0..) |*arg, i| {
             arg.* = try self.load("s", base + 1 + i);
-            if (packed_args) try self.packArgument(i, arg.*);
         }
+        const pins = try cow_lower.Lower(Emitter).pinIndirect(self, signature, args, base + 1);
+        if (packed_args) for (args, 0..) |arg, i| try self.packArgument(i, arg);
         const value = self.temp();
         const indirect = try self.largeValue(signature.return_type);
         try @import("qbe_rc_admission.zig").invoke(Emitter, self, signature.parameters, base + 1);
@@ -2562,6 +2563,7 @@ const Emitter = struct {
             for (args, signature.parameters) |arg, ty| try self.print(", {s} %v{d}", .{ try self.argumentType(ty), arg });
         }
         try self.print(")\n", .{});
+        try cow_lower.Lower(Emitter).unpin(self, pins);
         if (indirect) try self.print(" storel %aux{d}, %s{d}\n", .{ self.pc, base }) else try self.store(base, value);
     }
     fn acquireBuffer(self: *Emitter, ty: typed.Type, stack: []const typed.Type) GenerateError!void {

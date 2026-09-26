@@ -125,6 +125,15 @@ static myl_rc_status prepare_leaf(myl_rc_scope *scope, prepare_frame *frame) {
     memcpy(&payload, frame->address, sizeof payload);
     return myl_rc_scope_pin(scope, payload);
 }
+static myl_rc_status prepare_box(myl_rc_scope *scope, prepare_frame *frame) {
+    myl_rc_invariant(frame->shape->kind == MYL_RC_SHAPE_POINTER);
+    myl_rc_slot slot = {.shape=frame->shape,.address=frame->address,.region=frame->region};
+    myl_rc_status status = myl_rc_box_detach_owned(scope->heap, &slot);
+    if (status != MYL_RC_OK) return status;
+    void *payload;
+    memcpy(&payload, frame->address, sizeof payload);
+    return myl_rc_scope_pin(scope, payload);
+}
 static myl_rc_status prepare_path(myl_rc_scope *scope, const myl_rc_place *place, prepare_frame *frames) {
     const myl_rc_shape *shape = myl_rc_shape_resolve(scope->heap, place->receiver.shape);
     myl_rc_invariant(shape != NULL);
@@ -152,7 +161,7 @@ static myl_rc_status prepare_path(myl_rc_scope *scope, const myl_rc_place *place
         unsigned char *address = frame->address;
         unsigned region = frame->region;
         if (shape->kind == MYL_RC_SHAPE_POINTER || shape->kind == MYL_RC_SHAPE_HOLD_POINTER) {
-            myl_rc_status status = prepare_leaf(scope, frame);
+            myl_rc_status status = projection->immutable_box ? prepare_box(scope, frame) : prepare_leaf(scope, frame);
             if (status != MYL_RC_OK) return status;
             void *payload;
             memcpy(&payload, address, sizeof payload);

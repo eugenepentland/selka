@@ -43,9 +43,9 @@ test "RC-INERT-PROJECTION-1 mutation projections borrow while named snapshots ac
     runtime.set(.rc);
     var manifest = try emitted();
     defer manifest.deinit();
-    try t.expect(!contains(try named(manifest.value, "nested"), "myl_rc_native_copy"));
+    try t.expect(!contains(try named(manifest.value, "nested"), "myl_rc_native_publish"));
     try t.expect(contains(try named(manifest.value, "nested"), "myl_qbe_rc_unique_field"));
-    try t.expect(contains(try named(manifest.value, "named"), "myl_rc_native_copy"));
+    try t.expect(contains(try named(manifest.value, "named"), "myl_rc_native_publish"));
 }
 fn named(manifest: Manifest, name: []const u8) ![]const u8 {
     for (manifest.functions) |function| if (std.mem.eql(u8, function.name, name)) return function.il;

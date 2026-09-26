@@ -6,9 +6,15 @@ def clone_during(target: mut dict[int, int], source: dict[int, dict[int, int]]) 
 
 
 # spec-case: MUT-EXPRESSION-STACK-1
+# spec-case: COW-MUT-ARGUMENT-1
+# spec-case: COW-SHARED-1
+# spec-case: COW-UNIQUE-1
 public def test_dictionary_element_argument_keeps_pinned_copy_independent() -> bool:
     original = {0: {1: 7}}
     copied = clone_during(mut original[0], original)
     live = copied[0].values()
     copied[0][1] = 13
-    return list(live) == [13] and copied[0][1] == 13 and original[0][1] == 7
+    # Readonly argument publication clones the pinned child before the call.
+    # source.copy() then shares that unpinned child; its later mutation detaches,
+    # so the live view keeps the earlier child rather than following replacement.
+    return list(live) == [7] and copied[0][1] == 13 and original[0][1] == 7

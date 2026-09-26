@@ -474,6 +474,39 @@ static void rebox_bridge_test(void) {
     myl_native_heap_destroy(&context.heap);
     assert(!context.heap.bytes);
 }
+// spec-case: RC-BOX-WRITEBACK-1
+static void rebox_retention_test(unsigned arena) {
+    MylQbeContext context = {0};
+    myl_native_heap_init(&context.heap, 1u << 20);
+    if (!myl_rc_enabled(&context.heap)) assert(myl_rc_storage_init(&context.heap) == MYL_RC_OK);
+    static const myl_rc_field fields[] = {{.shape = &pointer}};
+    static const myl_rc_shape shape = {.size = sizeof(void *), .kind = MYL_RC_SHAPE_RECORD, .as.record = {fields, 1}};
+    static const myl_native_type body_type = {.size = sizeof(void *), .alignment = _Alignof(void *), .kind = MYL_NATIVE_RECORD};
+    static const myl_native_type box_type = {.size = sizeof(void *), .kind = MYL_NATIVE_POINTER, .collection_kind = 5, .element = &body_type};
+    const myl_rc_descriptor descriptor = {.type = &body_type, .shape = &shape};
+    assert(myl_rc_descriptor_import(&context.heap, &descriptor) == MYL_RC_OK);
+    if (arena) assert(myl_native_region_begin(&context.heap));
+    myl_rc_alloc_request request = {.element = &body_type, .count = 1, .region = arena};
+    void *old = NULL;
+    assert(myl_rc_new(&context.heap, &request, &old) == MYL_RC_OK);
+    void *body = myl_rc_storage_bytes(&context.heap, 8, arena);
+    assert(body);
+    myl_rc_pin pin = {0};
+    assert(myl_rc_pin_acquire(&context.heap, body, &pin) == MYL_RC_OK);
+    uint64_t flags = ((myl_rc_object *)body - 1)->common.mark;
+    void *owner = old;
+    uint32_t owned = 1;
+    assert(myl_qbe_rc_rebox_local(&context, &box_type, &owner, &body, &owned));
+    assert(owned && owner != old && *(void **)owner == body);
+    assert(myl_native_header_region(owner) == arena && ((myl_rc_object *)body - 1)->common.mark == flags);
+    myl_rc_pin_release(&context.heap, &pin);
+    myl_rc_owner_release(&context.heap, owner);
+    myl_rc_owner_release(&context.heap, body);
+    if (arena) myl_rc_arena_close(&context.heap, arena);
+    assert(!context.heap.objects_live);
+    myl_native_heap_destroy(&context.heap);
+    assert(!context.heap.bytes);
+}
 static void scope_bridge_test(void) {
     MylQbeContext context = {0};
     myl_native_heap_init(&context.heap, 1u << 20);
@@ -639,6 +672,34 @@ int myl_qbe_rc_contract_verify(void) {
     assert(!strcmp(context.trap, "R_MEMORY_BUDGET") && !context.heap.rc);
     return 5;
 }
+// spec: RC-SEMANTIC-HISTORY-1
+int myl_qbe_rc_loan_verify(void) {
+    MylQbeContext context={0};
+    myl_native_heap_init(&context.heap,64u<<20);
+    if (!myl_rc_enabled(&context.heap)) assert(myl_rc_storage_init(&context.heap)==MYL_RC_OK);
+    assert(myl_qbe_rc_initialize(&context));
+    assert(myl_rc_descriptor_register(&context.heap,&pointer_descriptor)==MYL_RC_OK);
+    void *owner=myl_rc_storage_bytes(&context.heap,8,0),*loan=NULL;
+    assert(owner);
+    uint32_t guard=0;
+    MylQbeRcSlot entry={&pointer_type,&loan,&guard,MYL_QBE_RC_LOAN};
+    MylQbeRcFrame frame;
+    myl_qbe_rc_frame_enter(&context,&frame,&entry,1);
+    myl_rc_scope scope={0};
+    myl_rc_scope_begin(&context.heap,&scope);
+    assert(myl_rc_scope_pin(&scope,owner)==MYL_RC_OK);
+    assert(myl_rc_native_loan(&context.heap,&pointer_type,&loan,&owner));
+    guard=1;
+    myl_rc_owner_release(&context.heap,owner);
+    context.heap.limit=context.heap.bytes;
+    myl_qbe_rc_frame_cleanup(&context,&frame);
+    assert(!scope.active && !guard && !loan && !context.heap.objects_live);
+    myl_qbe_rc_frame_cleanup(&context,&frame);
+    myl_qbe_rc_frame_leave(&context,&frame);
+    myl_native_heap_destroy(&context.heap);
+    assert(!context.heap.bytes);
+    return 1;
+}
 int myl_qbe_rc_frame_verify(void) {
     frame_cleanup_test(0);
     frame_cleanup_test(1);
@@ -651,19 +712,22 @@ int myl_qbe_rc_frame_verify(void) {
     unique_elements_arena_test();
     unique_body_test();
     rebox_bridge_test();
+    rebox_retention_test(0);
+    rebox_retention_test(1);
     partial_unique_body_test();
     arena_frame_boundary_test();
     scope_bridge_test();
     backing_bridge_test();
     held_slot_test();
     held_unique_bridge_test();
-    return 17;
+    assert(myl_qbe_rc_loan_verify() == 1);
+    return 20;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
     assert(myl_qbe_rc_contract_verify() == 5);
-    assert(myl_qbe_rc_frame_verify() == 17);
-    puts("RC startup and frame unwind: 22 checks passed");
+    assert(myl_qbe_rc_frame_verify() == 20);
+    puts("RC startup and frame unwind: 25 checks passed");
     return 0;
 }
 #endif

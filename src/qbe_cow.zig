@@ -28,6 +28,7 @@ const format = @import("qbe_format.zig");
 const qbe_alloc = @import("qbe_alloc.zig");
 const runtime_mode = @import("runtime_mode.zig");
 const rc_unique = @import("qbe_rc_unique.zig");
+const rc_frame = @import("qbe_rc_frame.zig");
 const rc_scope = @import("qbe_rc_scope.zig");
 const inert_receiver = @import("qbe_rc_inert_receiver.zig");
 const semantics = @import("value_semantics.zig");
@@ -127,7 +128,9 @@ pub fn Lower(comptime E: type) type {
             const beginning = state.captures[pc].begin;
             if (beginning != cow_plan.none) try beginScope(E, self, state.plan.places[beginning].?, stack);
             if (site.fill) try fillPlace(E, self, pc, stack);
-            if (!runtime_mode.enabled()) for (site.shares) |depth| try share(E, self, stack, depth);
+            for (site.shares) |depth| {
+                if (runtime_mode.enabled()) try readCapture(E, self, stack, depth) else try share(E, self, stack, depth);
+            }
         }
         /// Whether this place retains temporary pins across an index callback.
         pub fn scoped(self: *const E, place: cow_plan.Place) bool {
@@ -162,6 +165,7 @@ pub fn Lower(comptime E: type) type {
         }
         /// Release a GC receiver scope only after its consuming operation.
         pub fn after(self: *E, pc: usize) Error!void {
+            try finishCallReceivers(E, self, pc);
             return finishGcScopes(E, self, pc);
         }
         /// End receiver holds only after the mutator and its result publication.
@@ -202,7 +206,11 @@ pub fn Lower(comptime E: type) type {
         /// Pin every list or dictionary argument a `mut` parameter of
         /// `callee` receives, before the call.
         pub fn pin(self: *E, callee: bytecode.Function, args: []usize, base: usize) Error!Pins {
-            return pinCall(E, self, callee, args, base);
+            return pinCall(E, self, .{ .direct = callee }, args, base);
+        }
+        /// Prepare and pin the mutable parameters of an indirect call.
+        pub fn pinIndirect(self: *E, callee: typed.Callable, args: []usize, base: usize) Error!Pins {
+            return pinCall(E, self, .{ .indirect = callee }, args, base);
         }
         /// Undo `pins` after the call returned: a payload pinned by this call
         /// alone is unpinned; one an outer caller pinned stays pinned.
@@ -275,16 +283,46 @@ fn retainLocal(live: @import("qbe_liveness.zig").Solution, pc: usize, local: usi
     return changed;
 }
 
-fn pinCall(comptime E: type, self: *E, callee: bytecode.Function, args: []usize, base: usize) Error!Pins {
+const Callee = union(enum) {
+    direct: bytecode.Function,
+    indirect: typed.Callable,
+
+    fn count(self: Callee) usize {
+        return switch (self) {
+            .direct => |function| function.signature.parameter_count,
+            .indirect => |signature| signature.parameters.len,
+        };
+    }
+    fn valueCount(self: Callee) usize {
+        return switch (self) {
+            .direct => |function| bytecode.valueParameterCount(function),
+            .indirect => |signature| signature.valueCount(),
+        };
+    }
+    fn parameter(self: Callee, position: usize) typed.Type {
+        return switch (self) {
+            .direct => |function| function.scope.locals[position].ty,
+            .indirect => |signature| signature.parameters[position],
+        };
+    }
+    fn writes(self: Callee, position: usize) bool {
+        return switch (self) {
+            .direct => |function| writesParameter(function, position),
+            .indirect => |signature| std.mem.indexOfScalar(u16, signature.mutates, @intCast(position)) != null,
+        };
+    }
+};
+
+fn pinCall(comptime E: type, self: *E, callee: Callee, args: []usize, base: usize) Error!Pins {
     if (runtime_mode.enabled()) return pinCallRc(E, self, callee, args, base);
     var pins: Pins = .{};
     var owners: [8]u32 = @splat(cow_plan.none);
     var positions: [8]usize = undefined;
     const state = self.cow orelse return pins;
     for (args, 0..) |*arg, position| {
-        if (position >= callee.signature.parameter_count) break;
-        if (!writesParameter(callee, position)) continue;
-        if (!cow_plan.payloadType(self.program, callee.scope.locals[position].ty)) continue;
+        if (position >= callee.count()) break;
+        if (!callee.writes(position)) continue;
+        if (!cow_plan.payloadType(self.program, callee.parameter(position))) continue;
         // A later read-only argument can have shared this same root
         // after its earlier mut-argument load was checked. Resolve
         // that new sharing before pinning and calling the callee.
@@ -313,13 +351,13 @@ fn pinCall(comptime E: type, self: *E, callee: bytecode.Function, args: []usize,
     return pins;
 }
 
-fn pinCallRc(comptime E: type, self: *E, callee: bytecode.Function, args: []usize, base: usize) Error!Pins {
+fn pinCallRc(comptime E: type, self: *E, callee: Callee, args: []usize, base: usize) Error!Pins {
     var pins: Pins = .{};
     if (self.cow == null) return pins;
     for (args, 0..) |*arg, position| {
-        if (position >= callee.signature.parameter_count) break;
-        if (!writesParameter(callee, position)) continue;
-        if (!cow_plan.payloadType(self.program, callee.scope.locals[position].ty)) continue;
+        if (position >= callee.count()) break;
+        if (!callee.writes(position)) continue;
+        if (!cow_plan.payloadType(self.program, callee.parameter(position))) continue;
         if (pins.len == 0) {
             pins.headers[0] = try rc_scope.callAddress(E, self);
             try rc_scope.begin(E, self, pins.headers[0]);
@@ -586,6 +624,7 @@ fn fillPlace(comptime E: type, self: *E, pc: usize, stack: []const typed.Type) E
     cursor = try fieldChain(E, self, place, cursor);
     if (runtime_mode.enabled()) {
         try rc_unique.field(E, self, .{ .ty = stack[top], .address = cursor.address, .container = cursor.cell orelse container, .held = cursor.held });
+        try reboxRcPlace(E, self, place);
         return self.store(top, try self.load("v", cursor.address));
     }
     if (box_path) {
@@ -616,6 +655,19 @@ fn fillPlace(comptime E: type, self: *E, pc: usize, stack: []const typed.Type) E
     }
     try self.store(top, copy);
     try self.print(cow_keep_label, .{label});
+}
+
+fn reboxRcPlace(comptime E: type, self: *E, place: cow_plan.Place) Error!void {
+    const box = place.box orelse return;
+    if ((try self.layout(self.function.scope.locals[box.owner].ty)).size != 8) return error.InternalError;
+    try @import("qbe_rc_local_roles.zig").owning(E, self, box.owner);
+    const address = (try fieldBase(E, self, box.owner)).address;
+    const body = (try fieldBase(E, self, place.parent)).address;
+    const guard = try rc_frame.guard(E, self, box.owner);
+    const done = self.temp();
+    try rc_frame.entry(E, self, box.owner, self.function.scope.locals[box.owner].ty, address);
+    try self.print(" %v{d} =w call $myl_qbe_rc_rebox_local(l %ctx, l extern ${s}, l %v{d}, l %v{d}, l %v{d})\n", .{ done, try self.descriptor(box.ty), address, body, guard });
+    try rc_unique.success(E, self, done);
 }
 
 fn placeHasArray(comptime E: type, self: *const E, place: cow_plan.Place) bool {
@@ -705,6 +757,10 @@ fn scopePlace(comptime E: type, self: *const E, place: cow_plan.Place) bool {
 fn needsScope(comptime E: type, self: *const E, place: cow_plan.Place) bool {
     if (!self.cow.?.plan.at(place.fill).fill) return false;
     const end = scopeEnd(E, self, place);
+    if (end != place.fill) switch (self.function.scope.instructions[end].op) {
+        .call, .invoke => return true,
+        else => {},
+    };
     if (end == place.fill and !placeHasArray(E, self, place)) return false;
     for (scopeStart(place) + 1..end) |pc| switch (self.function.scope.instructions[pc].op) {
         .call, .invoke => return true,
@@ -724,6 +780,7 @@ fn scopeEnd(comptime E: type, self: *const E, place: cow_plan.Place) usize {
         else => return place.fill,
     };
     for (code[place.fill + 1 ..], place.fill + 1..) |instruction, pc| {
+        if (mutArgumentLocal(E, self, pc, @backingInt(target))) return pc;
         if (instruction.op != .buffer_operation) continue;
         const operation = instruction.op.buffer_operation;
         if (operation.owner == target and (operation.kind.writesReceiver() or
@@ -735,11 +792,11 @@ fn scopeEnd(comptime E: type, self: *const E, place: cow_plan.Place) usize {
 fn finishGcScopes(comptime E: type, self: *E, pc: usize) Error!void {
     if (runtime_mode.enabled()) return;
     const state = self.cow orelse return;
-    const operation = switch (self.function.scope.instructions[pc].op) {
-        .buffer_operation => |operation| operation,
+    switch (self.function.scope.instructions[pc].op) {
+        .call, .invoke => {},
+        .buffer_operation => |operation| if (!operation.kind.writesReceiver() and operation.kind != .set_add and operation.kind != .set_discard) return,
         else => return,
-    };
-    if (!operation.kind.writesReceiver() and operation.kind != .set_add and operation.kind != .set_discard) return;
+    }
     var next: ?usize = null;
     var closed = false;
     var at = @min(pc + 1, state.captures.len);
@@ -755,6 +812,42 @@ fn finishGcScopes(comptime E: type, self: *E, pc: usize) Error!void {
         } else if (end > pc and next == null) next = place.fill;
     }
     if (closed) try scopeRootStore(E, self, next);
+}
+
+/// A hidden argument place remains selected until its consuming call.
+fn mutArgumentLocal(comptime E: type, self: *const E, pc: usize, local: usize) bool {
+    const callee: Callee = switch (self.function.scope.instructions[pc].op) {
+        .call => |target| .{ .direct = self.program.functions[@backingInt(target)] },
+        .invoke => |ty| .{ .indirect = self.program.records[ty.recordIndex()].contract.callback.? },
+        else => return false,
+    };
+    const operands = self.ownership.?.operands[pc] orelse return false;
+    const base = operands.len - callee.valueCount();
+    for (0..callee.count()) |position| {
+        if (!callee.writes(position)) continue;
+        const source = operands[base + position];
+        if (source.origin == .local and source.part == .whole and source.local == local) return true;
+    }
+    return false;
+}
+
+/// Close the lifetime loan after the call's result has been published.
+fn finishCallReceivers(comptime E: type, self: *E, pc: usize) Error!void {
+    if (!runtime_mode.enabled()) return;
+    switch (self.function.scope.instructions[pc].op) {
+        .call, .invoke => {},
+        else => return,
+    }
+    const state = self.cow orelse return;
+    var at = pc;
+    while (at != 0) {
+        at -= 1;
+        const local = switch (self.function.scope.instructions[at].op) {
+            .store_local => |local| @backingInt(local),
+            else => continue,
+        };
+        if (state.plan.place(local) != null and mutArgumentLocal(E, self, pc, local)) try finishReceiverImpl(E, self, local);
+    }
 }
 
 fn scopeStart(place: cow_plan.Place) usize {
@@ -1016,7 +1109,16 @@ fn fieldChainRange(comptime E: type, self: *E, begin: usize, end: usize, start: 
 
 fn detachBox(comptime E: type, self: *E, ty: typed.Type, body: usize, cursor: Cursor, roots_published: bool) Error!usize {
     if (runtime_mode.enabled()) {
-        try rc_unique.field(E, self, .{ .ty = ty, .address = cursor.address, .container = cursor.cell orelse cursor.holder, .held = cursor.held });
+        if (cursor.held) return error.InternalError;
+        const container = self.temp();
+        if (cursor.cell orelse cursor.holder) |value| {
+            try self.print(" %v{d} =l copy %v{d}\n", .{ container, value });
+        } else try self.print(" %v{d} =l copy 0\n", .{container});
+        const done = self.temp();
+        try self.print(" %v{d} =w call $myl_qbe_rc_box_detach(l %ctx, l extern ${s}, l %v{d}, l %v{d})\n", .{
+            done, try self.descriptor(ty), cursor.address, container,
+        });
+        try rc_unique.success(E, self, done);
         return self.load("v", cursor.address);
     }
     const pushed = if (roots_published) false else try self.roots(self.states[self.pc] orelse return error.InternalError);
@@ -1040,7 +1142,12 @@ fn readCaptures(comptime E: type, self: *E, stack: []const typed.Type, depths: [
 fn readCapture(comptime E: type, self: *E, stack: []const typed.Type, depth: u8) Error!void {
     if (!runtime_mode.enabled()) return share(E, self, stack, depth);
     const slot = stack.len - 1 - depth;
-    try rc_values.prepareOperand(E, self, stack[slot], slot);
+    try @import("qbe_rc_history.zig").prepare(E, self, .{
+        .ty = stack[slot],
+        .source = try rc_values.source(E, self, slot, stack[slot]),
+        .journal = rc_values.journalIndex(E, self, slot),
+        .mode = 0,
+    });
     try rc_values.publish(E, self, stack[slot], slot);
 }
 

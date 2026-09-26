@@ -44,21 +44,23 @@ test "runtime mode keeps compiler selection separate from its ABI decoding" {
     try std.testing.expectEqualStrings("gc-v1", identity());
     set(.rc);
     try std.testing.expect(enabled() and !counting());
-    try std.testing.expectEqualStrings("rc-v2", identity());
+    try std.testing.expectEqualStrings("rc-v3", identity());
     set(.rc_counting);
     try std.testing.expect(enabled() and counting());
-    try std.testing.expectEqualStrings("rc-v2-counting", identity());
+    try std.testing.expectEqualStrings("rc-v3-counting", identity());
 }
 
 // spec: RC-RUNTIME-CONTRACT-1
 test "runtime contract versions reject unknown ABIs and preserve legacy GC" {
     try std.testing.expectEqual(Selection.gc, try contract.parse(null));
     try std.testing.expectEqual(Selection.gc, try contract.parse("gc-v1"));
-    try std.testing.expectEqual(Selection.rc, try contract.parse("rc-v2"));
-    try std.testing.expectEqual(Selection.rc_counting, try contract.parse("rc-v2-counting"));
+    try std.testing.expectEqual(Selection.rc, try contract.parse("rc-v3"));
+    try std.testing.expectEqual(Selection.rc_counting, try contract.parse("rc-v3-counting"));
     try std.testing.expectError(error.InvalidRuntimeContract, contract.parse("rc-v1"));
     try std.testing.expectError(error.InvalidRuntimeContract, contract.parse("rc-v1-counting"));
-    try std.testing.expectError(error.InvalidRuntimeContract, contract.parse("rc-v3"));
+    try std.testing.expectError(error.InvalidRuntimeContract, contract.parse("rc-v2"));
+    try std.testing.expectError(error.InvalidRuntimeContract, contract.parse("rc-v2-counting"));
+    try std.testing.expectError(error.InvalidRuntimeContract, contract.parse("rc-v4"));
     try std.testing.expectError(error.InvalidRuntimeContract, contract.parse(""));
     try std.testing.expectEqual(Selection.gc, try contract.resolve(.rc, false, false));
     try std.testing.expectError(error.IncompatibleRuntime, contract.resolve(.rc_counting, false, true));

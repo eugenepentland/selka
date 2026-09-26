@@ -16,7 +16,7 @@ fn copiesIn(source: []const u8, name: []const u8) !usize {
     var manifest = try std.json.parseFromSlice(Manifest, t.allocator, emitted, .{ .ignore_unknown_fields = true });
     defer manifest.deinit();
     for (manifest.value.functions) |function| {
-        if (std.mem.eql(u8, function.name, name)) return std.mem.count(u8, function.il, "call $myl_rc_native_copy");
+        if (std.mem.eql(u8, function.name, name)) return std.mem.count(u8, function.il, "call $myl_rc_native_publish") + std.mem.count(u8, function.il, "call $myl_rc_native_retain");
     }
     return error.TestUnexpectedResult;
 }

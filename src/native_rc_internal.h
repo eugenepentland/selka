@@ -68,4 +68,15 @@ void myl_rc_enqueue(myl_native_heap *, myl_rc_object *);
 void myl_rc_flat_edges_release(myl_native_heap *, const myl_rc_binding *, void *, size_t count);
 /* Internal native bridge: shape is an already registered ordinary pointer. */
 myl_rc_status myl_rc_pointer_transfer(myl_native_heap *, const myl_rc_shape *, void *, void *, unsigned, myl_rc_transfer);
+/* Physical loan primitives: ordinary and held leaves both contribute H.
+ * The native wrapper excludes every raw unique obligation first. */
+myl_rc_status myl_rc_loan_copy(myl_native_heap *, const myl_rc_shape *, void *, const void *);
+void myl_rc_loan_drop(myl_native_heap *, const myl_rc_shape *, void *);
+/* Nonmutating native inline-type walk; terminal managed payloads stay opaque. */
+int myl_rc_native_has_unique(myl_native_heap *, const myl_native_type *);
+/* Native mutable collection classification used only by semantic transfers. */
+int myl_rc_native_mutable(const void *);
+/* Acquire ordinary edges without semantic history or pinned snapshots. */
+myl_rc_status myl_rc_value_retain_many(myl_native_heap *, myl_rc_slot *, const myl_rc_slot *, size_t);
+myl_rc_status myl_rc_semantic_transfer(myl_native_heap *, myl_rc_slot *, const myl_rc_slot *, myl_rc_transfer, unsigned);
 #endif

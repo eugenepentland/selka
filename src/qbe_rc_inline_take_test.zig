@@ -15,6 +15,8 @@ fn emitted() !std.json.Parsed(Manifest) {
         \\    return made()
         \\def copied(items: list[int]) -> list[int]:
         \\    return items
+        \\def borrowed(data: bytes) -> bytes:
+        \\    return data
         \\def escaped() -> Pair:
         \\    with arena() as scratch:
         \\        value = made()
@@ -74,7 +76,7 @@ test "RC-PRODUCED-OWNER-1 fresh call results move without an initialization bran
     const forwarded = try named(manifest.value, "forwarded");
     try t.expect(contains(forwarded, "@rcmoveheader"));
     try t.expect(!contains(forwarded, "@rccopy"));
-    try t.expect(contains(try named(manifest.value, "copied"), "@rccopy"));
+    try t.expect(contains(try named(manifest.value, "borrowed"), "@rccopy"));
 }
 
 // spec: RC-DISJOINT-TAKE-1
@@ -88,7 +90,7 @@ test "RC-DISJOINT-TAKE-1 completed operand publications occupy separate pending 
     try t.expect(!contains(forwarded, "@rcmovecheck"));
     try t.expect(contains(forwarded, "@rcmoveheader"));
     try t.expect(contains(forwarded, "call $myl_rc_native_take"));
-    try t.expect(contains(try named(manifest.value, "copied"), "@rcmovecheck"));
+    try t.expect(contains(try named(manifest.value, "borrowed"), "@rcmovecheck"));
 }
 
 // spec: RC-FRAME-REGION-1
