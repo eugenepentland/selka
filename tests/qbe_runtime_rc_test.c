@@ -411,6 +411,32 @@ static void held_slot_test(void) {
     myl_native_heap_destroy(&context.heap);
     assert(!context.heap.bytes);
 }
+static void held_unique_bridge_test(void) {
+    MylQbeContext context = {0};
+    myl_native_heap_init(&context.heap, 1u << 20);
+    if (!myl_rc_enabled(&context.heap)) assert(myl_rc_storage_init(&context.heap) == MYL_RC_OK);
+    void *source = myl_rc_storage_bytes(&context.heap, 8, 0), *view = source;
+    assert(source && myl_rc_owner_acquire(&context.heap, source) == MYL_RC_OK);
+    myl_rc_hold hold = {0};
+    assert(myl_rc_hold_acquire(&context.heap, source, &hold) == MYL_RC_OK);
+    context.heap.limit = context.heap.bytes;
+    assert(!myl_qbe_rc_unique_held(&context, &pointer_type, &view, NULL));
+    assert(!strcmp(context.trap, "R_MEMORY_BUDGET") && view == source);
+    assert(((myl_rc_object *)source - 1)->owners == 2 && ((myl_rc_object *)source - 1)->holds == 1);
+    context.trap = NULL;
+    context.heap.exhausted = 0;
+    context.heap.limit = 1u << 20;
+    assert(myl_qbe_rc_unique_held(&context, &pointer_type, &view, NULL) && view != source);
+    assert(((myl_rc_object *)view - 1)->owners == 0 && ((myl_rc_object *)view - 1)->holds == 1);
+    uint32_t initialized = 1;
+    MylQbeRcSlot slot = {&pointer_type, &view, &initialized, MYL_QBE_RC_HOLD_POINTER};
+    myl_qbe_rc_slot_drop(&context, &slot);
+    myl_rc_owner_release(&context.heap, source);
+    myl_rc_owner_release(&context.heap, source);
+    assert(!view && !initialized && !context.heap.objects_live);
+    myl_native_heap_destroy(&context.heap);
+    assert(!context.heap.bytes);
+}
 int myl_qbe_rc_contract_verify(void) {
     MylQbeContext context = {0};
     context.heap.limit = 65536;
@@ -465,13 +491,14 @@ int myl_qbe_rc_frame_verify(void) {
     scope_bridge_test();
     backing_bridge_test();
     held_slot_test();
-    return 12;
+    held_unique_bridge_test();
+    return 13;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
     assert(myl_qbe_rc_contract_verify() == 5);
-    assert(myl_qbe_rc_frame_verify() == 12);
-    puts("RC startup and frame unwind: 17 checks passed");
+    assert(myl_qbe_rc_frame_verify() == 13);
+    puts("RC startup and frame unwind: 18 checks passed");
     return 0;
 }
 #endif
