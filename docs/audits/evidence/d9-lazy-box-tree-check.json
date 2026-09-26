@@ -1,0 +1,47 @@
+{
+  "baseline": {
+    "runs": [
+      58266094,
+      58266099,
+      58266095
+    ],
+    "median": 58266095
+  },
+  "lazy": {
+    "runs": [
+      5182252139,
+      5182250754,
+      5182251956
+    ],
+    "median": 5182251956
+  },
+  "ratio": 88.94112358138983,
+  "worktree": "/home/epentland/ai/canopy/mylang-worktrees/d9-box-path-fix",
+  "compiler_sha256_at_tree_build": "65142b1a90d798417425e87ef3f18651592d308e1b3aebb5304715ca27201856",
+  "source": "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-source-perf/.tmp-lox-perf/ip-deferred",
+  "source_commit": "b51cddc1",
+  "guest_flags": [
+    "--value-semantics",
+    "--mode",
+    "ReleaseFast"
+  ],
+  "cpu": 11,
+  "repetitions": 3,
+  "script_sha256": "071825eb80ef92318d27673950ee8ed4164c15d293f169d63978a3a096c484ee",
+  "candidate_binary_sha256": "4fc4a48c39226a3ad144e4cc6de6165c84572d5ea52bd844d9d114b707d0d1a9",
+  "baseline_binary_sha256": "6473a9596ed692049cd4a88b344f54030b46a15d591b36cca82cef64ae8cd59f",
+  "command": [
+    "taskset",
+    "-c",
+    "11",
+    "perf",
+    "stat",
+    "-x",
+    ";",
+    "-e",
+    "instructions:u",
+    "BINARY",
+    "--engine=tree",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-lox-source-perf/.tmp-lox-perf/tree4.lox"
+  ]
+}
