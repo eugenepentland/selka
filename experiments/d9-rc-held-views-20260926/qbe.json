@@ -1,0 +1,57 @@
+{
+  "backend": "qbe",
+  "guest_mode": "ReleaseFast",
+  "cases": [
+    "rc_probe_dictionary_views.test_bound_views_are_live_and_snapshots_are_explicit",
+    "rc_probe_dictionary_views.test_items_have_key_value_fields_in_every_context",
+    "rc_probe_dictionary_views.test_views_support_comprehensions_and_generic_helpers",
+    "rc_probe_dictionary_views.test_views_keep_mapping_alive_and_empty_views_work",
+    "rc_probe_dictionary_views.test_view_reads_observe_value_replacement_and_loop_control",
+    "rc_probe_dictionary_views.test_views_work_inside_arena_and_snapshots_stay_independent",
+    "rc_probe_rc_dictionary_views.test_mapping_projection_creates_named_snapshots",
+    "rc_probe_rc_dictionary_views.test_replacing_mapping_field_rebinds_live_identity",
+    "rc_probe_rc_dictionary_views.test_stored_and_returned_views_observe_growth_and_clear"
+  ],
+  "source_sha256": {
+    "tests/lang/dictionary_views.my": "68c8200b3ff12469f35efc2d48e4270a7d1e4211e8318e9cf9d95adb082703e9",
+    "tests/lang/rc_dictionary_views.my": "dce39b2c6037379cb289113fbfa0e4ae828643c7da8e84f1b82ae7a66064c0e9"
+  },
+  "compiler_sha256": "97b0e268a4b612c405f7a82655b250166aaa6a162821abddadaa51e2f5c9a868",
+  "source_commit": "8019d9b7c734b2295b009998ebfcb4c278498861",
+  "binary_sha256": "3800390a65fea532528a3badb6009d5698816e2c70c71ffeb6ec30b5223e6215",
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/scripts/build-slot.sh",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/.tmp/rc-held-views-final/install/bin/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/.tmp/rc-held-views-final/qbe/rc_probe_driver.my",
+    "--rc-runtime=stats",
+    "--backend",
+    "qbe",
+    "--mode",
+    "ReleaseFast",
+    "--qbe=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/.tmp/rc-held-views-final/install/bin/qbe",
+    "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/.tmp/rc-held-views-final/qbe/cache",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/.tmp/rc-held-views-final/qbe/held-views-qbe"
+  ],
+  "exit": 0,
+  "stdout": "0\n",
+  "stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v2-counting\",\"saturated\":false,\"owner_acquire\":4017,\"owner_release\":8130,\"hold_acquire\":473,\"hold_release\":473,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":4113,\"arena_allocate\":8,\"retire\":4113,\"clone_shell\":2,\"unique_check\":4261}\n",
+  "counts": {
+    "version": 1,
+    "runtime": "rc-v2-counting",
+    "saturated": false,
+    "owner_acquire": 4017,
+    "owner_release": 8130,
+    "hold_acquire": 473,
+    "hold_release": 473,
+    "owner_limit": 0,
+    "hold_limit": 0,
+    "heap_allocate": 4113,
+    "arena_allocate": 8,
+    "retire": 4113,
+    "clone_shell": 2,
+    "unique_check": 4261
+  }
+}

@@ -89,7 +89,12 @@ static size_t payload_count(const void *payload) {
 }
 static size_t memo_at(const clone_memo *entries, size_t capacity, const void *source, unsigned region) {
     uintptr_t hash = ((uintptr_t)source >> 4) ^ ((uintptr_t)region * UINT64_C(0x9e3779b97f4a7c15));
-    hash ^= hash >> 23;
+    /* Arena chunks and allocator size classes can align low address bits
+     * across long runs. Mix the complete address before masking a power-of-two
+     * table; a half-full table alone does not prevent quadratic clustering. */
+    hash = (hash ^ (hash >> 30)) * UINT64_C(0xbf58476d1ce4e5b9);
+    hash = (hash ^ (hash >> 27)) * UINT64_C(0x94d049bb133111eb);
+    hash ^= hash >> 31;
     size_t at = (size_t)hash & (capacity - 1);
     while (entries[at].source && (entries[at].source != source || entries[at].region != region))
         at = (at + 1) & (capacity - 1);
