@@ -74,6 +74,7 @@ const runtime_units = [_][]const u8{
     "native_cow.c",
     "qbe_cow_runtime.c",
     "native_value_copy.c",
+    "native_rc_scope.c",
     "native_rc_transfer.c",
     "native_rc_alloc.c",
     "native_rc_values.c",
