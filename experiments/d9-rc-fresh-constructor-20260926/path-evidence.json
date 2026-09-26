@@ -1,0 +1,30 @@
+{
+  "guests": {
+    "tree": {
+      "fast_handoffs": 8,
+      "sha256": "003567fbc70e8a3c2b5f0bf194ff43abefeadaef6df752bedfbfd879f3410462"
+    },
+    "reordered": {
+      "fast_handoffs": 8,
+      "sha256": "79efb35394bb081a3b58b4ef49822f46ea279b6725cd10ce3286be4ed38d06df"
+    },
+    "chain": {
+      "fast_handoffs": 3,
+      "sha256": "1b1b68b8d7ebd7487c4af0e84773f5dde51213f2236c10dcb1920aa532f1a41e"
+    },
+    "in_arena": {
+      "fast_handoffs": 0,
+      "sha256": "590090967e7750ab4a3eded997f3d13181f185e2f85cae382b66243765d2bea5"
+    },
+    "aliased": {
+      "fast_handoffs": 0,
+      "sha256": "846fac97fdcb16ec4a13b6403bca368cb86160875cc67c3513bb18cfc6f526dd"
+    }
+  },
+  "n12": {
+    "make": {
+      "fast_handoffs": 8,
+      "sha256": "1985a9d4741e589b47ccea8c67acee8bfc586f203f16252662ccddb9ae113d4b"
+    }
+  }
+}
