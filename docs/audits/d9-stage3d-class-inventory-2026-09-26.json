@@ -36,7 +36,7 @@
       "graph": false,
       "self_referential": false,
       "field_writes": 11,
-      "state": "pending"
+      "state": "migrated-in-3d"
     },
     {
       "corpus": "sexpr-port",
@@ -45,7 +45,7 @@
       "graph": true,
       "self_referential": false,
       "field_writes": 2,
-      "state": "pending"
+      "state": "migrated-in-3d"
     },
     {
       "corpus": "sexpr-port",
@@ -54,7 +54,7 @@
       "graph": false,
       "self_referential": false,
       "field_writes": 3,
-      "state": "pending"
+      "state": "migrated-in-3d"
     },
     {
       "corpus": "lox",
