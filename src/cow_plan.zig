@@ -531,9 +531,9 @@ fn stageTwoRoot(planner: *Planner, site: ownership.Cow) Error!void {
     if (planner.places[via] != null) return;
     const root = planner.resolve(via);
     if (planner.places[root] != null or !planner.payload(root)) return;
-    if (planner.role(root) == .mut_param) return;
+    if (planner.role(root) == .mut_param and ownership.uniqueParameter(planner.input.function, root)) return;
     switch (planner.code()[site.pc].op) {
-        .buffer_operation => |operation| if (!writes(operation.kind) and planner.input.analysis.roles[li(operation.owner)] != .owned) return,
+        .buffer_operation => |operation| if (!writes(operation.kind) and !rootNeedsCheck(planner, li(operation.owner))) return,
         else => {},
     }
     try planner.addUnique(site.pc, .{ .local = root, .alias = if (via != root) via else none });
@@ -570,7 +570,7 @@ fn placePlaces(planner: *Planner) Error!void {
         if (found.step == .field or found.step == .entry_field) continue;
         const root = planner.resolve(found.parent);
         if (planner.places[root] != null or !planner.payload(root)) continue;
-        if (planner.role(root) != .owned or rootCovered(planner, found, root)) continue;
+        if (!rootNeedsCheck(planner, root) or rootCovered(planner, found, root)) continue;
         try planner.addUnique(rootPc(planner, found), .{ .local = root, .alias = if (found.parent != root) found.parent else none });
     }
 }
@@ -703,4 +703,9 @@ fn writtenRead(planner: *const Planner, pc: usize) bool {
         if (place.base == pc or place.read == pc) return true;
     };
     return false;
+}
+
+fn rootNeedsCheck(planner: *const Planner, root: u32) bool {
+    return planner.role(root) == .owned or
+        (planner.role(root) == .mut_param and !ownership.uniqueParameter(planner.input.function, root));
 }

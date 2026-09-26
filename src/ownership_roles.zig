@@ -146,7 +146,11 @@ fn markPathEffects(ctx: *Context) void {
         if (origin.source.part == .element) {
             markElementRead(ctx, d);
         } else if (origin.source.read != none) {
-            if (ctx.role(ctx.locals.parents[i]) == .owned) ctx.marks.unique_load[origin.source.read] = true;
+            const parent = ctx.locals.parents[i];
+            const unique = ctx.role(parent) == .mut_param and model.uniqueParameter(ctx.code.function, parent);
+            if (ctx.role(parent) == .owned or (ctx.role(parent) == .mut_param and !unique)) {
+                ctx.marks.unique_load[origin.source.read] = true;
+            }
         }
     }
 }
