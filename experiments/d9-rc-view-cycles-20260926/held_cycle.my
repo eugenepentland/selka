@@ -1,0 +1,13 @@
+module held_cycle
+
+record Entry:
+    view: DictValues[int, Entry]
+
+
+def main() -> int:
+    mapping: dict[int, Entry] = {}
+    live = mapping.values()
+    mapping[0] = Entry(view=live)
+    assert len(live) == 1
+    assert len(mapping[0].view) == 1
+    return 0

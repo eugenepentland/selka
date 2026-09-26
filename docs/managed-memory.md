@@ -233,6 +233,18 @@ a dictionary allocated inside `with arena()` cannot escape that arena without an
 arena copy of the reachable dictionary. Reading and iterating the view inside the
 arena remain nonallocating.
 
+Stored recursive types cannot contain a cycle through a live view. For example,
+`record Entry` with a field `view: DictValues[int, Entry]` is rejected with
+`E_LIVE_VIEW_CYCLE`: inserting an entry holding that view into its own dictionary
+would keep the dictionary alive through itself. The check follows stored fields,
+variant payloads, nonempty arrays, and collection keys and elements, including
+generic instantiations. It conservatively rejects the recursive type even when
+particular instances would refer to separate dictionaries. Store a `list(view)`
+snapshot instead, or represent graph links with pool ids. Nonrecursive records
+may retain and return live views, and recursive types without stored views remain
+valid. This restriction closes a case that the earlier tracing runtime accepted;
+the diagnostic `--legacy-sharing` mode retains that earlier behavior.
+
 Creating a view does not freeze contents or size. Value replacement is visible
 when iteration reaches that key; changing the size during a loop traps under the
 same rule as direct dictionary iteration. Code that previously used a snapshot
