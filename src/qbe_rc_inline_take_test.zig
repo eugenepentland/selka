@@ -11,6 +11,10 @@ fn emitted() !std.json.Parsed(Manifest) {
         \\    right: list[int]
         \\def made() -> Pair:
         \\    return Pair([1], [2])
+        \\def forwarded() -> Pair:
+        \\    return made()
+        \\def copied(items: list[int]) -> list[int]:
+        \\    return items
         \\def held(view: DictValues[int, int]) -> DictValues[int, int]:
         \\    return view
         \\def main() -> int:
@@ -54,4 +58,17 @@ test "RC-INLINE-TAKE-1 counted artifacts share event-free token relocation" {
     defer manifest.deinit();
     try t.expect(contains(try named(manifest.value, "made"), "@rcmoveheader"));
     try t.expect(!contains(try named(manifest.value, "held"), "@rcmoveheader"));
+}
+
+// spec: RC-PRODUCED-OWNER-1
+test "RC-PRODUCED-OWNER-1 fresh call results move without an initialization branch" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    var manifest = try emitted();
+    defer manifest.deinit();
+    const forwarded = try named(manifest.value, "forwarded");
+    try t.expect(contains(forwarded, "@rcmoveheader"));
+    try t.expect(!contains(forwarded, "@rccopy"));
+    try t.expect(contains(try named(manifest.value, "copied"), "@rccopy"));
 }
