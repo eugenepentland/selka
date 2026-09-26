@@ -284,7 +284,7 @@ myl_rc_status myl_rc_descriptor_register(myl_native_heap *heap, const myl_rc_des
     myl_rc_invariant(shape && shape->size == descriptor->type->size);
     const myl_rc_descriptor *old = myl_rc_descriptor_find(heap, descriptor->type);
     if (old) {
-        myl_rc_invariant(old->shape == shape && old->edges == descriptor->edges && old->finalize == descriptor->finalize);
+        myl_rc_invariant(old->shape == shape && old->edges == descriptor->edges && old->finalize == descriptor->finalize && old->clone == descriptor->clone);
         return MYL_RC_OK;
     }
     size_t bytes = sizeof(myl_rc_batch) + sizeof(myl_rc_descriptor);
