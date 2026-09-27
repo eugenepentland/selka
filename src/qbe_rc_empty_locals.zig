@@ -16,12 +16,19 @@ pub fn finalize(comptime E: type, self: *E) frame.Error!void {
         if (self.byReference(index) or self.callerStorage(index)) continue;
         const shape = state.catalog.get(local.ty) catch return error.InternalError;
         if (!shape.counted or shape.unique_drop) continue;
-        if (@import("qbe_rc_holds.zig").mayHold(E, self, local.ty)) continue;
-        if (code.len > budget) break;
-        budget -= code.len;
+        const maybe_held = @import("qbe_rc_holds.zig").mayHold(E, self, local.ty);
+        const cost = code.len * @as(usize, if (maybe_held) 3 else 1);
+        if (cost > budget) break;
+        budget -= cost;
         const at = definition(E, self, index) orelse continue;
         if (!writers(self.cow.?.plan, index)) continue;
-        empty[index] = anchored(E, self, index, at) or inert.emptyLocal(E, self, index);
+        // Choose one lifetime proof, so the exact role scan runs at most once.
+        // The budget is a candidate-code allowance, not a count of every
+        // primitive visit inside the separately bounded lifetime/path proofs.
+        empty[index] = if (anchored(E, self, index, at))
+            !maybe_held or @import("qbe_rc_nonheld_capture.zig").proven(E, self, index, at)
+        else
+            inert.emptyLocal(E, self, index);
     };
     const previous = state.plan.journal;
     state.plan.journal = try previous.omitting(self.allocator, empty);

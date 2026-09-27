@@ -1,0 +1,31 @@
+{
+  "source_commit": "d1d8b3c46ac41e832410a03aad49a5a6a1a54b07",
+  "compiler_sha256": "12a3693929913d50385248a5938fcf57694de8a3538e65f150432c998936d268",
+  "harness_sha256": "067f7396a1fc0cbbb4c1b2101847db836b7631452fdab0cc096085d71931e5a0",
+  "timing_cpu": 10,
+  "production_samples": 12,
+  "instruction_counter_running_percent": 100,
+  "profile": {
+    "samples": 249,
+    "throttle_records": 249,
+    "unthrottle_records": 249,
+    "lost_records": 0,
+    "acceptance_use": false
+  },
+  "artifacts": {
+    "dict_count.expected": "4561c81a11a51b8dc19629f530cf4b4d5f27edb937a404d61e9c1ecea9ad7a04",
+    "dict_count.my": "227510603349ab558eed1a9a456bb6cf3c53b725de87a1436a41b35f58844324",
+    "measure.log.gz": "3e4526bcf023bd8f55c7a76e1d5da60f4a4af8b677ec34707d7cef94555cc089",
+    "measure.py": "10cdfa3c18e013e06545c2544cf51b4ed45ad38a611626d723f998a12253f45a",
+    "measurements.json.gz": "762a3c7ec13d9e4b5591263348694a975423c6e095fc1908246123aae1b6f710",
+    "qbe-profile.data.gz": "1346a1e31266d6eaa83219ae4f13b1619ffc36c023dc548751c77330801f9267",
+    "qbe-profile.header.gz": "9ed0d05bdf7eccd5f46794bb4865dae0ce5c82bddb4ff3494114723d3da39f7f",
+    "qbe-profile.raw.gz": "1aa2f2e09151032236c0b7907f638749e03c7684e884bea18511e9bd1baa51a8",
+    "qbe-profile.report.gz": "c0d7b7063357b1c01b463636bc9e10cf66cfe7e71faea91cf7a0b03500185d73",
+    "qbe-profile.samples.gz": "523efa2bc3b4b626b5d9cfecbba799cbbfea5cf8cd8b09f78cb7aa1f2e86fd13",
+    "qbe-profile.stderr.gz": "ab778730a0a458b98191ffdd6c80ee76190f2503eb877dcc77e607b5486537df",
+    "qbe-profile.stdout.gz": "f0d73e3ca50d810dfc6c26dda31277b807a4f0f84df71033e1724dd2b60358e7",
+    "rc-main.ssa.gz": "a956b2ca3cc56d8d6eeb88303acd1c35f50f019a2ee4510b649039c6798168b7",
+    "rc.json.gz": "0a46ebb7740f0470154793782fb89319fc6b90d0fb81f433da2c2531ea7d2432"
+  }
+}

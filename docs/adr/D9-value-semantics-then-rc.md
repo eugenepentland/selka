@@ -1,9 +1,12 @@
 # D9: Move to value semantics, then to a reference-counted runtime
 
-Status: accepted as the direction on 2026-09-24. Stages 1 and 2 and the
-value-model components of stage 3 are implemented. The stage 3 default flip
-is being validated against its full and performance gates; reference counting
-and concurrency remain planned. Each stage ships only after its gate passes.
+Status: accepted as the direction on 2026-09-24. Stages 1–3 and prerequisite
+borrow inference have passed their integration gates. Stage 4 is implemented
+behind an explicit experimental runtime selector; complete RC performance
+acceptance remains open, and GC remains the ordinary runtime default.
+Concurrency remains planned. The [integration ledger](../audits/d9-closeout-progress-2026-09-26.md)
+records exact accepted checkpoints and outstanding work. Each stage ships only
+after its gate passes.
 
 ## Rule
 

@@ -1,0 +1,43 @@
+{
+  "source_commit": "2ca89942c797df18af5856ec55a76c34cc372127",
+  "gate_exit_status": 0,
+  "guardian_exit_status": 0,
+  "main": {
+    "steps": 94,
+    "executed_tests": 2315,
+    "shard_exclusions": 23608
+  },
+  "qbe": {
+    "steps": 51,
+    "tests": 440
+  },
+  "native_build_steps": 29,
+  "format_steps": 2,
+  "guardian_checks": 88,
+  "rc_sweeps": "Not repeated for this documentation/example-only checkpoint; production source unchanged from 468bd8e5. Its 931-assertion sweeps remain archived separately.",
+  "artifacts": {
+    "test.log.gz": {
+      "sha256": "ff6d8228909ca21df414b524f532ce9cf69459b6bd7a99652e2598a0e5081451",
+      "raw_sha256": "ed88a1cfd8cca3b8b104cac2955765eeb5ae02f44f48d2eaf02ba33d87a6e532"
+    },
+    "test-qbe.log.gz": {
+      "sha256": "1948ef578d6de2655ddf09eeff2d04c379a1bb77088d5185f69dcf797b845c45",
+      "raw_sha256": "4dc57220abf6456181d76aaa20be8f258871b98d18f01b74c0d0878252c6fae0"
+    },
+    "test-qbe-build.log.gz": {
+      "sha256": "7393830c946dc0552ab2254fa821ae320c2215eb1287e146c6deaf1104c1655c",
+      "raw_sha256": "b06ac624cddf20d0c67c2c88d2e76bca32ec4e0b8fff36538318c5b59d52b2cc"
+    },
+    "fmt-check.log.gz": {
+      "sha256": "de01a91b7b313677fe046c287a2404a16ae2c7b1d6d2793c81737dda7bc60d14",
+      "raw_sha256": "727fe2e22c982638ef4d6d75a47d5f97e1bb81c8b5f3ec3c0c55f158df48d93f"
+    },
+    "guardian.log.gz": {
+      "sha256": "8501ecfe96257221ee9067ba2ca6625fb7840d1b535086dd446e518d376edb79",
+      "raw_sha256": "8b527edfafdf790550954fad98107520e0ca2c0733e27ae0aa092d14b2eabdb3"
+    },
+    "gate.sh": {
+      "sha256": "8b22c88b5df18423574d30633ba08d4c7e64a29d5ef48ed77e410fb91caada02"
+    }
+  }
+}
