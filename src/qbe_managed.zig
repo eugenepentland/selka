@@ -3,6 +3,7 @@ const std = @import("std");
 const bytecode = @import("bytecode.zig");
 const typed = @import("typed.zig");
 const rc_mode = @import("runtime_mode.zig");
+const rc_append = @import("qbe_rc_append.zig");
 const rc_collections = @import("qbe_rc_collections.zig");
 const rc_values = @import("qbe_rc_values.zig");
 /// Failures producing native managed collection instructions.
@@ -165,8 +166,10 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
             try arena_lower.Lower(E).barrier(self, list, element, value_pointer);
             if (op.kind == .append) {
                 if (rc_mode.enabled()) {
-                    try rc_collections.append(E, self, output, list, value_pointer);
-                    try self.require(output, allocation_failure);
+                    if (!try rc_append.emit(E, self, .{ .list = list, .element = element, .value = value_pointer, .output = output })) {
+                        try rc_collections.append(E, self, output, list, value_pointer);
+                        try self.require(output, allocation_failure);
+                    }
                 } else if (self.loopAppend()) |presized| {
                     try presizedAppend(E, self, .{ .list = list, .element = element, .value = value_pointer, .storage = presized.storage, .length = presized.state.length, .generation = presized.state.generation });
                 } else if (self.needsRootProtocol()) {

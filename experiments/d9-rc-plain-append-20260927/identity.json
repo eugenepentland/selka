@@ -1,0 +1,23 @@
+{
+  "base_source": "c16a1c6a5da4b642fcdbe039bbe409f3208570f8",
+  "files": {
+    "src/qbe_managed.zig": "6defac936de5a60b8c63b088ae535a5ece35fdec601d284ea93d3e75f735d0ba",
+    "src/qbe_rc_append.zig": "f584411759d60453224076c4baa39b519f0fed726ef1f281d9a617cc744b3e10",
+    "src/native_collections.c": "99bb7b55e49cd95ef1f61781eda2b9ffa18cf2a4ec478cbcd4780da9153c3fc2",
+    "src/native_rc_collections.h": "e0d3c0502d22bb41323840745e4ba513d8973a3643f093d4aff6739541c9658e"
+  },
+  "accepted": {
+    "gc_compiler": "/home/epentland/ai/canopy/mylang-worktrees/d9-physical-borrow-after-astra/.tmp-physical/install-accepted/bin/mylang",
+    "gc_compiler_sha256": "8c8134078fc56eeb468e65d229db2480d99c39458b044e976d604bf64de69478",
+    "gc_manifest_sha256": "7a82169b5acc35bc632aca978db99b7cefe4528620513f2b62396d1cf5f8b8d8",
+    "source_hashes": {
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/bench/parity/micro/alloc_churn.my": "d4a37e7fa38f210b45b9cc22c2fb8d88794c9380cdda43808222bf50c7dd78ee",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/bench/parity/suite/sieve.my": "c5840cc33a26b1e98f0d018f221a0dd2305f66bd3adb96432b4593372901d5d9",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/bench/parity/micro/list_append_sum.my": "88ca6385237fbddd80aa7857864d269e23517995b6a39b8917c8e44bb451d91e",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/bench/parity/suite/fannkuch_redux.my": "0a7441bd509f728d0b3db53ddfdf6a5c027fcb3468d467c42d00850839d9a8f4"
+    }
+  },
+  "compiler": "d048016b4b097c4a3ec1ab3d2b5a01fd404943c134207f88ff9bcbec00316637",
+  "cpu": 10,
+  "source_patch_sha256": "1a35ea5062e298d4d1eb04ecc4bbaf7f577b5b00ed3005242f6a96041a0b8746"
+}
