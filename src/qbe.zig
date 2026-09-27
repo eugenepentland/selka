@@ -2038,7 +2038,13 @@ const Emitter = struct {
             if (writtenLocal(f, index) and !self.callerStorage(index)) continue;
             flags[index] = .value;
         }
-        if (runtime_mode.enabled()) return flags;
+        // RC-ELEMENT-BORROW-1: RC claims only the element borrows its own
+        // anchoring rule admits (qbe_borrow.zig); every other slot keeps
+        // the value it owns or copies.
+        if (runtime_mode.enabled()) {
+            try borrow_lower.Lower(Emitter).claim(self, flags);
+            return flags;
+        }
         self.arm_addresses = try self.payloadAddresses(f, flags);
         // QBE-ELEMREF-2 and QBE-CALLREF-1: the ordinary locals one instruction
         // fills from storage this frame can name — a list element, a

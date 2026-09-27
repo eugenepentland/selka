@@ -22,7 +22,10 @@ fn certify(comptime E: type, self: *E) frame.Error!bool {
         !plain(E, self, self.function.signature.return_type)) return false;
     const root = parameter(E, self) orelse return false;
     for (self.function.scope.locals, 0..) |local, index| {
-        if (self.byReference(index) or self.callerStorage(index)) return false;
+        // An element-borrowed plain local (RC-ELEMENT-BORROW-1) stores an
+        // address and publishes nothing; the plain check below still applies.
+        if (self.byReference(index) and !self.borrowsElement(index)) return false;
+        if (self.callerStorage(index)) return false;
         if (index != root and !frame.emptyLocal(E, self, index)) {
             if (!plain(E, self, local.ty)) return false;
         }

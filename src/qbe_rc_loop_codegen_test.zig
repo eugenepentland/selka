@@ -260,3 +260,45 @@ test "RC-READONLY-LOOP-VERSION-1 a raw readonly body versions its loops like the
     const copy = fastCopy(dot) orelse return error.TestUnexpectedResult;
     try t.expect(std.mem.indexOf(u8, copy, "myl_qbe_fail_normalized_index_bounds") == null);
 }
+
+const element_borrows =
+    \\record Row:
+    \\    a: int
+    \\    b: int
+    \\    c: int
+    \\    d: int
+    \\def total(rows: list[Row]) -> int:
+    \\    result = 0
+    \\    for row in rows:
+    \\        result += row.c
+    \\    return result
+    \\def bump(rows: mut list[Row], i: int) -> None:
+    \\    rows[i].c = rows[i].c + 1
+    \\def fresh() -> int:
+    \\    row = [Row(1, 2, 3, 4)][0]
+    \\    return row.c
+    \\def main() -> int:
+    \\    rows = [Row(1, 2, 3, 4)]
+    \\    bump(mut rows, 0)
+    \\    return total(rows) + fresh()
+;
+
+/// Whether some local slot `%lN` holds a whole 32-byte record by value.
+fn recordSlot(il: []const u8) bool {
+    var lines = std.mem.splitScalar(u8, il, '\n');
+    while (lines.next()) |line| {
+        if (std.mem.startsWith(u8, line, " %l") and std.mem.endsWith(u8, line, "=l alloc8 32")) return true;
+    }
+    return false;
+}
+
+// spec: RC-ELEMENT-BORROW-1
+test "RC-ELEMENT-BORROW-1 anchored plain element reads lend their address like the collector" {
+    var rc = try emit(element_borrows, .rc);
+    defer rc.deinit();
+    // The loop variable and the field-update temporary hold element addresses.
+    try t.expect(!recordSlot(try named(rc.value, "total")));
+    try t.expect(!recordSlot(try named(rc.value, "bump")));
+    // An element of a temporary list may be freed by its release: it copies.
+    try t.expect(recordSlot(try named(rc.value, "fresh")));
+}

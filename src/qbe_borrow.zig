@@ -29,6 +29,7 @@ const std = @import("std");
 const bytecode = @import("bytecode.zig");
 const typed = @import("typed.zig");
 const arena_lower = @import("qbe_arena.zig");
+const runtime = @import("runtime_mode.zig");
 
 /// Failures raised while deciding which locals name their value in place.
 pub const Error = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
@@ -89,6 +90,7 @@ fn claimLocals(comptime E: type, self: *E, flags: []Borrow) Error!void {
 /// the receiver's backing storage, which is borrowed rather than owned.
 fn addressSource(comptime E: type, self: *E, pc: usize) Error!?Source {
     const code = self.function.scope.instructions;
+    if (runtime.enabled()) return rcElementSource(E, self, code[pc].op);
     switch (code[pc].op) {
         .call => |callee| {
             const ty = self.program.functions[@backingInt(callee)].signature.return_type;
@@ -118,6 +120,39 @@ fn projectedBase(comptime E: type, self: *E, pc: usize) Error!?Source {
     if (!base.ty.isAggregate()) return null;
     if (self.program.records[base.ty.recordIndex()].isManagedRecord()) return null;
     return base;
+}
+
+/// RC-ELEMENT-BORROW-1: under RC only a list element read through a local
+/// whose storage no release can reach while the frame runs may lend its
+/// address: a hidden iteration source (its hold spans the loop), a list
+/// parameter the function never rebinds (the caller owns it), or a
+/// temporary every store of which is an adjacent capture of one of those.
+/// The element must own nothing, so the slot needs no ownership of its own.
+fn rcElementSource(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "op")) Error!?Source {
+    if (op != .buffer_operation or op.buffer_operation.kind != .read) return null;
+    const owner = @backingInt(op.buffer_operation.owner);
+    if (!anchoredList(E, self, owner, 1)) return null;
+    const source = try elementSource(E, self, self.function.scope.locals[owner].ty) orelse return null;
+    const value = try self.layout(source.ty);
+    if (value.trace or value.drop) return null;
+    return source;
+}
+
+fn anchoredList(comptime E: type, self: *E, local: usize, depth: usize) bool {
+    const f = self.function;
+    if (local >= f.scope.locals.len) return false;
+    if (@import("cow_plan.zig").iterationOwner(f, local)) return true;
+    var source: ?usize = null;
+    for (f.scope.instructions, 0..) |_, at| if (writesLocalAt(f, at, local)) {
+        if (local < f.signature.parameter_count or depth == 0) return false;
+        const code = f.scope.instructions;
+        if (code[at].op != .store_local or at == 0 or code[at - 1].op != .load_local or branchTarget(E, self, at)) return false;
+        const from = @backingInt(code[at - 1].op.load_local);
+        if (source != null and source.? != from) return false;
+        source = from;
+    };
+    if (source) |from| return f.scope.locals[from].ty == f.scope.locals[local].ty and anchoredList(E, self, from, depth - 1);
+    return local < f.signature.parameter_count;
 }
 
 /// The element type a managed list's element read names in place. Only a list
@@ -487,6 +522,7 @@ fn epilogueKeepsBorrows(comptime E: type, self: *E) Error!bool {
 /// outside this set declines the address-holding form, so an opcode added later
 /// only costs the copy it already paid.
 fn inert(comptime E: type, self: *E, pc: usize, op: @FieldType(bytecode.Instruction, "op"), returns: bool) Error!bool {
+    if (runtime.enabled() and !try rcInert(E, self, pc, op)) return false;
     return switch (op) {
         .load_local,
         .push_i64,
@@ -553,6 +589,34 @@ fn inert(comptime E: type, self: *E, pc: usize, op: @FieldType(bytecode.Instruct
         },
         else => false,
     };
+}
+
+/// RC-ELEMENT-BORROW-1: under RC a release can free storage, so the run may
+/// not return (the epilogue drops), store, pop or build anything that owns,
+/// read an owning element, or call for an owning result.
+fn rcInert(comptime E: type, self: *E, pc: usize, op: @FieldType(bytecode.Instruction, "op")) Error!bool {
+    const locals = self.function.scope.locals;
+    const ty: typed.Type = switch (op) {
+        .ret => return false,
+        .store_local => |target| locals[@backingInt(target)].ty,
+        .make_record => |record| record.ty,
+        .update_record => |record| record.ty,
+        .make_variant => |variant| variant.ty,
+        .call => |callee| self.program.functions[@backingInt(callee)].signature.return_type,
+        .pop, .get_field => blk: {
+            const stack = self.states[pc] orelse return false;
+            if (stack.len == 0) return false;
+            break :blk stack[stack.len - 1];
+        },
+        .buffer_operation => |operation| if (operation.kind == .read) operation.output else return true,
+        .get_index => |access| blk: {
+            if (!access.ty.isAggregate()) return true;
+            break :blk self.program.records[access.ty.recordIndex()].shape.buffer orelse return true;
+        },
+        else => return true,
+    };
+    const value = try self.layout(ty);
+    return !value.trace and !value.drop;
 }
 
 /// Whether a direct call can neither collect nor name the receiver, so a borrow

@@ -263,7 +263,10 @@ fn allowed(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "op"
     return switch (op) {
         .load_local, .store_local => |id| blk: {
             const index = @backingInt(id);
-            break :blk !self.byReference(index) and !self.callerStorage(index) and plainValue(E, self, self.function.scope.locals[index].ty);
+            // An element-borrowed plain local (RC-ELEMENT-BORROW-1) holds an
+            // address into storage the loop's facts keep in place.
+            const direct = !self.byReference(index) or self.borrowsElement(index);
+            break :blk direct and !self.callerStorage(index) and plainValue(E, self, self.function.scope.locals[index].ty);
         },
         .push_integer => |value| plainWord(E, self, value.ty),
         .cast_integer, .neg_integer, .acknowledge, .wrap_domain, .unwrap_domain => |ty| plainWord(E, self, ty),
