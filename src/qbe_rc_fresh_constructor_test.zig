@@ -147,3 +147,78 @@ test "RC-FRESH-CONSTRUCTOR-1 managed incoming obligations refuse even when unuse
     defer t.allocator.free(output);
     try t.expect(std.mem.indexOf(u8, output, "@rcfresh") == null);
 }
+
+fn returnPath(a: std.mem.Allocator, source: []const u8) ![]const u8 {
+    const output = try text(a, source);
+    defer a.free(output);
+    const start = std.mem.indexOf(u8, output, "\n@rcfreshreturn") orelse return a.dupe(u8, "");
+    const rest = output[start + 1 ..];
+    const end = std.mem.indexOf(u8, rest, "\n@rcfreshreturnslow") orelse return error.TestUnexpectedResult;
+    return a.dupe(u8, rest[0..end]);
+}
+
+// spec: RC-FRESH-RETURN-1
+test "RC-FRESH-RETURN-1 completed linear result skips normal cleanup but keeps leave" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc_counting);
+    const output = try returnPath(t.allocator, fresh);
+    defer t.allocator.free(output);
+    try t.expect(std.mem.indexOf(u8, output, "blit ") != null);
+    try t.expect(std.mem.indexOf(u8, output, "call $myl_qbe_rc_frame_leave") != null);
+    try t.expect(std.mem.indexOf(u8, output, "call $myl_qbe_rc_frame_cleanup") == null);
+    try t.expect(std.mem.indexOf(u8, output, "call $myl_rc_native_take") == null);
+    try t.expect(std.mem.indexOf(u8, output, "call $memset") == null);
+}
+
+// spec-case: RC-FRESH-RETURN-1
+test "RC-FRESH-RETURN-1 aliases managed locals and uncertified calls retain generic return" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc_counting);
+    const alias = try returnPath(t.allocator, aliased);
+    defer t.allocator.free(alias);
+    const called = try returnPath(t.allocator, foreign);
+    defer t.allocator.free(called);
+    const branch = try returnPath(t.allocator, mixed);
+    defer t.allocator.free(branch);
+    try t.expectEqual(@as(usize, 0), alias.len);
+    try t.expectEqual(@as(usize, 0), called.len);
+    try t.expectEqual(@as(usize, 0), branch.len);
+}
+
+// spec-case: RC-FRESH-RETURN-1
+test "RC-FRESH-RETURN-1 trap journal and ordinary role fallback remain emitted" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc_counting);
+    const output = try text(t.allocator, fresh);
+    defer t.allocator.free(output);
+    try t.expect(std.mem.indexOf(u8, output, "call $myl_qbe_rc_frame_enter") != null);
+    try t.expect(std.mem.indexOf(u8, output, "@rcfreshreturnslow") != null);
+    try t.expect(std.mem.indexOf(u8, output, "call $myl_rc_native_take") != null);
+    try t.expect(std.mem.indexOf(u8, output, "call $myl_qbe_rc_frame_cleanup") != null);
+    try t.expect(std.mem.indexOf(u8, output, "call $myl_qbe_fail_frame") != null);
+}
+
+// spec-case: RC-FRESH-RETURN-1
+test "RC-FRESH-RETURN-1 wide owned results keep the generic ABI handoff" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc_counting);
+    const input = node ++
+        \\record Wide:
+        \\    child: Option[Node]
+        \\    padding: [32]int
+        \\def make(depth: int) -> Wide:
+        \\    return Wide(None, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        \\def main() -> int:
+        \\    result = make(0)
+        \\    return 0
+    ;
+    const output = try functionText(t.allocator, input);
+    defer t.allocator.free(output);
+    try t.expect(std.mem.indexOf(u8, output, "@rcfresh") != null);
+    try t.expect(std.mem.indexOf(u8, output, "@rcfreshreturn") == null);
+    try t.expect(std.mem.indexOf(u8, output, "call $myl_qbe_rc_frame_cleanup") != null);
+}
