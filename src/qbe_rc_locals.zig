@@ -5,6 +5,7 @@ const bytecode = @import("bytecode.zig");
 const typed = @import("typed.zig");
 const state_model = @import("qbe_rc_state.zig");
 const views = @import("qbe_rc_views.zig");
+const loans = @import("qbe_rc_loans.zig");
 /// Errors shared with the native emitter.
 pub const Error = values.Error;
 
@@ -32,7 +33,7 @@ fn ordinary(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "op
             if (!try state_model.owns(state, copy.ty)) return true;
             const base = stack.len - 1;
             if (!@import("qbe_value_copy.zig").Lower(E).copies(self, self.pc)) return true;
-            if (try @import("qbe_rc_loans.zig").eligible(E, self, copy.ty)) {
+            if (try loans.eligible(E, self, copy.ty)) {
                 const history = @import("qbe_rc_history.zig");
                 try history.prepare(E, self, .{
                     .ty = copy.ty,
@@ -47,6 +48,7 @@ fn ordinary(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "op
             const index = @backingInt(local);
             const ty = self.function.scope.locals[index].ty;
             if (!try state_model.owns(state, ty)) return false;
+            if (@import("qbe_value_copy.zig").Lower(E).selfStore(self, self.pc, index)) return selfStore(E, self, index, stack.len - 1);
             try store(E, self, index, stack.len - 1);
         },
         .drop_local => |local| try frame.drop(E, self, @backingInt(local)),
@@ -105,9 +107,22 @@ fn store(comptime E: type, self: *E, index: usize, operand: usize) Error!void {
         // This local may previously have held an H receiver token. The new
         // publication is an ordinary owning value, so restore its typed role.
         try frame.entry(E, self, index, ty, destination);
-        try @import("qbe_rc_loans.zig").copyRole(E, self, index, frame.pending(E, self));
+        try loans.copyRole(E, self, index, frame.pending(E, self));
         try frame.initialized(E, self, index, true);
     }
+}
+
+/// RC-SELF-STORE-1: `x = copy(x)` for a match binding whose payload copy the
+/// ownership analysis elided stores the same bits back into `x`. While `x`
+/// holds an ordinary owner the store is skipped; it used to retain the value
+/// again and release the owner it replaced. Any other role takes the store.
+fn selfStore(comptime E: type, self: *E, index: usize, operand: usize) Error!bool {
+    const owner = try loans.owner(E, self, index);
+    const label = self.temp();
+    try self.print(" # RC-SELF-STORE-1 local {d}\n jnz %v{d}, @rcselfkept{d}, @rcselfstore{d}\n@rcselfstore{d}\n", .{ index, owner, label, label, label });
+    try store(E, self, index, operand);
+    try self.print("@rcselfkept{d}\n", .{label});
+    return true;
 }
 
 fn receiverCleanup(comptime E: type, self: *E, index: usize, operand: usize) Error!void {

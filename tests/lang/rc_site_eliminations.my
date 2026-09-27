@@ -64,6 +64,60 @@ def local_machine(item: Value) -> list[Value]:
     return m.stack
 
 
+record Name:
+    chars: bytes
+    hash: u32
+
+
+record Code:
+    ops: list[int]
+
+
+record Callable:
+    arity: int
+    code: Code
+
+
+union Obj:
+    free,
+    name: Name,
+    callable: Callable
+
+
+def arity_of(objects: list[Obj], at: int) -> int:
+    match objects[at]:
+        case Obj.callable(payload):
+            return payload.arity + len(payload.code.ops)
+        case _:
+            return -1
+
+
+def name_of(objects: list[Obj], at: int) -> Name:
+    match objects[at]:
+        case Obj.name(payload):
+            return payload
+        case _:
+            return Name(b"", 0u32)
+
+
+def freed_arity(objects: mut list[Obj], at: int) -> int:
+    match objects[at]:
+        case Obj.callable(payload):
+            objects[at] = Obj.free
+            return payload.arity + len(payload.code.ops)
+        case _:
+            return -1
+
+
+def joined(left: bytes, right: bytes) -> Name:
+    made = Name(left + right, 3u32)
+    return made
+
+
+def same(value: Name) -> Name:
+    return value
+
+
 def pop(rt: mut Runtime) -> Value:
     rt.top = rt.top - 1
     return rt.stack[rt.top]
@@ -197,6 +251,41 @@ public def test_field_receivers_inside_arenas() -> bool:
     return count == 6
 
 
+# spec-case: RC-SELF-STORE-1
+public def test_payload_bindings_read_in_place_keep_their_owner() -> bool:
+    objects = [Obj.free, Obj.callable(Callable(2, Code([1, 2, 3])))]
+    saved = objects
+    total = 0
+    for i in range(4):
+        total += arity_of(objects, 1) + arity_of(objects, 0)
+    return total == 16 and saved == objects
+
+
+# spec-case: RC-SELF-STORE-1
+public def test_payload_bindings_outliving_a_scrutinee_write_keep_their_copy() -> bool:
+    objects = [Obj.callable(Callable(4, Code([9])))]
+    first = freed_arity(mut objects, 0)
+    second = freed_arity(mut objects, 0)
+    return first == 5 and second == -1 and objects == [Obj.free]
+
+
+# spec-case: RC-RETURN-MOVE-1
+public def test_returned_bindings_and_locals_move_their_owner() -> bool:
+    objects = [Obj.name(Name(b"ab" + b"c", 7u32)), Obj.free]
+    found = name_of(objects, 0)
+    objects[0] = Obj.free
+    made = joined(b"x", b"yz")
+    return found.chars == b"abc" and found.hash == 7u32 and made.chars == b"xyz" and name_of(objects, 1).chars == b""
+
+
+# spec-case: RC-RETURN-MOVE-1
+public def test_returned_parameters_keep_the_callers_value() -> bool:
+    original = Name(b"k" + b"eep", 1u32)
+    copy = same(original)
+    again = same(copy)
+    return copy.chars == b"keep" and again.chars == b"keep" and original.chars == b"keep"
+
+
 # Run every test once, so `mylang run --rc-runtime=stats` shows balanced counts
 # for the whole file; the result is the number of failures.
 def main() -> int:
@@ -213,6 +302,10 @@ def main() -> int:
         test_index_callback_replacing_the_field_list_keeps_scoped_receiver(),
         test_managed_element_field_stores_keep_their_scope(),
         test_field_receivers_inside_arenas(),
+        test_payload_bindings_read_in_place_keep_their_owner(),
+        test_payload_bindings_outliving_a_scrutinee_write_keep_their_copy(),
+        test_returned_bindings_and_locals_move_their_owner(),
+        test_returned_parameters_keep_the_callers_value(),
     ]:
         if not passed:
             failures += 1
