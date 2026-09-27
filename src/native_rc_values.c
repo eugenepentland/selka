@@ -234,12 +234,76 @@ void myl_rc_native_unloan(myl_native_heap *heap, const myl_native_type *type, vo
 int myl_rc_native_mutable(const void *payload) {
     return myl_native_list_header(payload) || myl_native_dictionary_header(payload);
 }
+/* Direct (policy 1) semantic publication of an admitted flat value: the
+ * general transaction's per-leaf transfer_pointer and deferred marks, with a
+ * preflight that proves every acquisition succeeds first. Pinned and
+ * younger-region leaves (snapshots, escapes) keep the general path. */
+static int flat_semantic(myl_native_heap *heap, const myl_rc_binding *binding,
+                         void *destination, void *source, unsigned region, myl_rc_transfer mode) {
+    const myl_rc_flat *flat = &binding->flat;
+    size_t bytes = flat->size;
+    if (flat->count > MYL_RC_FLAT_LEAVES || !bytes) return -1;
+    uintptr_t dst = (uintptr_t)destination, src = (uintptr_t)source;
+    if (dst > src ? dst - src < bytes : src - dst < bytes) return -1;
+    if (region > heap->region_depth) return MYL_RC_REGION_ERROR;
+    void *payloads[MYL_RC_FLAT_LEAVES];
+    unsigned live = myl_rc_flat_live(flat, source), counted = 0;
+    for (unsigned rest = live; rest; rest &= rest - 1) {
+        unsigned leaf = __builtin_ctz(rest);
+        void *payload;
+        memcpy(&payload, (const unsigned char *)source + flat->offsets[leaf], sizeof payload);
+        payloads[leaf] = payload;
+        if (!payload) continue;
+        uintptr_t mark = ((myl_native_object *)payload - 1)->mark;
+        if (mark & MYL_NATIVE_OBJECT_IMMORTAL) continue;
+        if (mark & MYL_NATIVE_OBJECT_PINNED) return -1;
+        if (mark & MYL_NATIVE_OBJECT_ARENA) {
+            if (myl_native_header_region(payload) > region) return -1;
+            continue;
+        }
+        const myl_rc_object *object = (const myl_rc_object *)payload - 1;
+        myl_rc_invariant(!(mark & MYL_RC_OBJECT_DYING) && (object->owners || object->holds));
+        counted |= 1u << leaf;
+        if (mode != MYL_RC_COPY) continue;
+        uintptr_t additions = 1;
+        for (unsigned prior = live & ((1u << leaf) - 1); prior; prior &= prior - 1)
+            if (payloads[__builtin_ctz(prior)] == payload) ++additions;
+        if (object->owners > MYL_RC_COUNT_MAX - additions) {
+            MYL_RC_STAT(heap, MYL_RC_STAT_OWNER_LIMIT);
+            memset(destination, 0, bytes);
+            myl_rc_drain_pending(heap);
+            return MYL_RC_COUNT_LIMIT;
+        }
+    }
+    for (unsigned rest = live; rest; rest &= rest - 1) {
+        unsigned leaf = __builtin_ctz(rest);
+        void *payload = payloads[leaf];
+        if (!payload) continue;
+        myl_native_object *common = (myl_native_object *)payload - 1;
+        if (common->mark & MYL_NATIVE_OBJECT_IMMORTAL) continue;
+        if (mode == MYL_RC_COPY && (counted & (1u << leaf))) {
+            ++((myl_rc_object *)payload - 1)->owners;
+            MYL_RC_STAT(heap, MYL_RC_STAT_OWNER_ACQUIRE);
+        }
+        if (!(common->mark & MYL_NATIVE_OBJECT_SHARED) && myl_rc_native_mutable(payload))
+            common->mark |= MYL_NATIVE_OBJECT_SHARED;
+    }
+    myl_rc_copy_bytes(destination, source, bytes);
+    if (mode == MYL_RC_TAKE) myl_rc_zero_bytes(source, bytes);
+    myl_rc_drain_pending(heap);
+    return MYL_RC_OK;
+}
 int myl_rc_native_publish(myl_native_heap *heap, const myl_native_type *type, void *dst,
                           void *src, unsigned region, unsigned semantic_mode) {
     myl_rc_invariant(!(semantic_mode & ~(MYL_RC_HISTORY_TAKE | 3u)) && (semantic_mode & 3u) != 3u);
     const myl_rc_shape *shape = myl_rc_native_shape(heap, type);
     if (!shape) { memset(dst, 0, type->size); return 0; }
     myl_rc_checked(!myl_rc_native_has_unique(heap, type));
+    if (type->kind != MYL_NATIVE_POINTER) {
+        int fast = flat_semantic(heap, myl_rc_binding_find(heap, type), dst, src, region,
+                                 semantic_mode & MYL_RC_HISTORY_TAKE ? MYL_RC_TAKE : MYL_RC_COPY);
+        if (fast >= 0) return publication_status(heap, (myl_rc_status)fast);
+    }
     myl_rc_slot destination = {.shape=shape,.address=dst,.region=region};
     myl_rc_slot source = {.shape=shape,.address=src};
     myl_rc_transfer mode = semantic_mode & MYL_RC_HISTORY_TAKE ? MYL_RC_TAKE : MYL_RC_COPY;
@@ -332,8 +396,15 @@ int myl_rc_native_retain_replace(myl_native_heap *heap, const myl_native_type *t
     if (ok) {
         /* The old slot is inaccessible to callbacks until the new value is
          * installed. Cleanup walks only the separately staged former value. */
-        unsigned char *left=dst, *right=staged;
-        for (size_t i=0;i<type->size;i++) { unsigned char byte=left[i]; left[i]=right[i]; right[i]=byte; }
+        if (staged == local) {
+            unsigned char previous[sizeof local];
+            myl_rc_copy_bytes(previous, dst, type->size);
+            myl_rc_copy_bytes(dst, staged, type->size);
+            myl_rc_copy_bytes(staged, previous, type->size);
+        } else {
+            unsigned char *left=dst, *right=staged;
+            for (size_t i=0;i<type->size;i++) { unsigned char byte=left[i]; left[i]=right[i]; right[i]=byte; }
+        }
         myl_rc_native_drop(heap, type, staged);
     }
     if (staged != local) myl_rc_owner_release(heap, staged);

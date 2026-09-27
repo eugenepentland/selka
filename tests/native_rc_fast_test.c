@@ -459,6 +459,44 @@ static void list_clone_spans(void) {
     myl_rc_owner_release(&heap, pinned);
     finish(&heap);
 }
+static int shared(const void *payload) { return (header((void *)payload)->common.mark & MYL_NATIVE_OBJECT_SHARED) != 0; }
+// spec: RC-SEMANTIC-FLAT-1
+static void flat_semantic_publication(void) {
+    myl_native_heap heap;
+    start(&heap);
+    assert(myl_rc_descriptor_import(&heap, &item_descriptor) == MYL_RC_OK);
+    myl_native_list *list = myl_native_list_new(&heap, &number, 0);
+    void *text = bytes8(&heap);
+    assert(list);
+    /* COPY acquires every leaf and marks a reused mutable payload SHARED. */
+    Item value = {list, 5}, copy = {0};
+    assert(myl_rc_native_publish(&heap, &first, &copy, &value, 0, MYL_RC_HISTORY_DIRECT));
+    assert(copy.text == list && copy.n == 5 && header(list)->owners == 2 && shared(list));
+    myl_rc_native_drop(&heap, &first, &copy);
+    /* A non-mutable payload is shared without a mark; TAKE moves the token. */
+    Item word = {text, 6}, moved = {0};
+    assert(myl_rc_native_publish(&heap, &first, &moved, &word, 0, MYL_RC_HISTORY_DIRECT | MYL_RC_HISTORY_TAKE));
+    assert(moved.text == text && !word.text && !word.n && header(text)->owners == 1 && !shared(text));
+    /* A refused acquisition commits no history and leaves the output empty. */
+    myl_native_list *fresh = myl_native_list_new(&heap, &number, 0);
+    assert(fresh);
+    header(fresh)->owners = MYL_RC_COUNT_MAX;
+    Item refused = {fresh, 7}, out = {0};
+    assert(!myl_rc_native_publish(&heap, &first, &out, &refused, 0, MYL_RC_HISTORY_DIRECT));
+    assert(myl_rc_take_failure(&heap) == MYL_RC_COUNT_LIMIT && !out.text && !out.n && !shared(fresh));
+    header(fresh)->owners = 1;
+    /* A pinned leaf keeps the general transaction, which snapshots it. */
+    myl_rc_pin pin = {0};
+    assert(myl_rc_pin_acquire(&heap, fresh, &pin) == MYL_RC_OK);
+    assert(myl_rc_native_publish(&heap, &first, &out, &refused, 0, MYL_RC_HISTORY_DIRECT));
+    assert(out.text && out.text != fresh && out.n == 7 && header(fresh)->owners == 1);
+    myl_rc_native_drop(&heap, &first, &out);
+    myl_rc_pin_release(&heap, &pin);
+    myl_rc_native_drop(&heap, &first, &moved);
+    myl_rc_owner_release(&heap, fresh);
+    myl_rc_owner_release(&heap, list);
+    finish(&heap);
+}
 int myl_rc_fast_verify(void) {
     variant_plan_layout();
     variant_plan_operations();
@@ -472,12 +510,13 @@ int myl_rc_fast_verify(void) {
     list_append_publishes_in_place();
     raw_bytes_and_blocks();
     list_clone_spans();
-    return 12;
+    flat_semantic_publication();
+    return 13;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
-    assert(myl_rc_fast_verify() == 12);
-    puts("native RC fast paths: 12 tests passed");
+    assert(myl_rc_fast_verify() == 13);
+    puts("native RC fast paths: 13 tests passed");
     return 0;
 }
 #endif

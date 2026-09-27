@@ -30,12 +30,12 @@ typedef struct {
  * u32 at tag_offset equals tag, exactly as the generic walker visits one
  * variant arm; unconditional leaves use MYL_RC_FLAT_ALWAYS. */
 typedef struct { uint32_t offset, tag_offset, tag; } myl_rc_leaf;
+#define MYL_RC_FLAT_ARMS 32
 /* Private plan, never part of emitted metadata. count > the bound means the
  * authoritative shape/native-kind pair requires generic traversal. Leaves are
  * in the generic walker's order; simultaneously live leaves never overlap one
- * another or any tag word. */
-#define MYL_RC_FLAT_ARMS 32
-/* Hot fields first: an operation reads the header, one live set and offsets. */
+ * another or any tag word. Hot fields come first: an operation reads the
+ * header, one live set and the offsets. */
 typedef struct {
     unsigned count;
     unsigned char loanable, native_unique, conditional;
@@ -128,7 +128,7 @@ struct myl_rc_state {
 #endif
 };
 __attribute__((cold, noreturn)) void myl_rc_invariant_failed(void);
-/* Keep every check in production, but only a violated invariant calls out. */
+/* Constant-time checks stay in production; only a violated one calls out. */
 static inline void myl_rc_invariant(int valid) {
     if (!valid) myl_rc_invariant_failed();
 }
