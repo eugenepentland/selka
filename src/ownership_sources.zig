@@ -185,6 +185,17 @@ pub fn branchTargets(op: Op, buffer: *[2]usize) []const usize {
     }
 }
 
+/// Check every explicit branch destination with a caller's edge authority.
+/// Fallthrough is deliberately excluded, as in `branchTargets`.
+pub fn targetsSatisfy(op: Op, from: usize, context: anytype, comptime accept: fn (usize, usize, @TypeOf(context)) bool) bool {
+    var buffer: [2]usize = undefined;
+    for (branchTargets(op, &buffer)) |target| if (!accept(from, target, context)) return false;
+    if (op == .switch_variant) for (op.switch_variant.arms) |arm| {
+        if (!accept(from, arm.target, context)) return false;
+    };
+    return true;
+}
+
 /// Whether control can fall from this instruction into the next one.
 pub fn fallsThrough(op: Op) bool {
     return switch (op) {
