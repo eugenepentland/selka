@@ -42,7 +42,7 @@ pub fn emit(comptime E: type, self: *E, append: Append) Error!bool {
     try self.print(" jnz %v{d}, @rcappend_fast{d}, @rcappend_slow{d}\n@rcappend_slow{d}\n", .{ admitted, label, label, label });
     // Never carry admission across allocation, cleanup or a reentrant callback.
     if (cached) |slot| try self.print(" storew 0, %rcappend{d}\n", .{slot});
-    try collections.append(E, self, append.output, append.list, append.value);
+    try collections.append(E, self, append.element, append.output, append.list, append.value);
     try self.require(append.output, format.allocation_failure);
     try self.print(" jmp @rcappend_done{d}\n@rcappend_fast{d}\n", .{ label, label });
     const storage = try word(E, self, append.list, format.list_storage_offset);

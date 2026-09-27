@@ -92,7 +92,7 @@ fn store(comptime E: type, self: *E, index: usize, operand: usize) Error!void {
         // that can be dropped through this frame's local ownership guard.
         const shape = frame.get(E, self).?.catalog.get(ty) catch return error.InternalError;
         if (shape.unique_drop) try self.print(" call $myl_native_owned_drop(l %heap, l extern ${s}, l %v{d})\n", .{ try self.descriptor(ty), destination });
-        if (shape.counted) try self.print(" call $myl_rc_native_drop(l %heap, l extern ${s}, l %v{d})\n", .{ try self.descriptor(ty), destination });
+        if (shape.counted) try @import("qbe_rc_glue.zig").drop(E, self, .{ .ty = ty, .address = destination });
     } else {
         try frame.drop(E, self, index);
         try self.print(" %v{d} =l copy %l{d}\n", .{ destination, index });

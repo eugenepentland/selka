@@ -35,10 +35,17 @@ pub fn prepare(comptime E: type, self: *E, event: Event) Error!void {
     const result = self.temp();
     const region = try frame.region(E, self);
     try self.print(" %v{d} =w mul %v{d}, 4\n %v{d} =w or %v{d}, {d}\n", .{ selected, take, mode_value, selected, event.mode });
-    try self.print(" %v{d} =w call $myl_rc_native_publish(l %heap, l extern ${s}, l %rcwork, l %v{d}, w %v{d}, w %v{d})\n", .{
-        result, try self.descriptor(event.ty), event.source, region, mode_value,
-    });
-    try slots.requireSuccess(E, self, result);
+    const glue = @import("qbe_rc_glue.zig");
+    if (try glue.routed(E, self, event.ty)) {
+        const work = self.temp();
+        try self.print(" %v{d} =l copy %rcwork\n", .{work});
+        try glue.publish(E, self, .{ .move = .{ .ty = event.ty, .destination = work, .source = event.source, .region = region }, .mode = mode_value });
+    } else {
+        try self.print(" %v{d} =w call $myl_rc_native_publish(l %heap, l extern ${s}, l %rcwork, l %v{d}, w %v{d}, w %v{d})\n", .{
+            result, try self.descriptor(event.ty), event.source, region, mode_value,
+        });
+        try slots.requireSuccess(E, self, result);
+    }
     const label = self.temp();
     try self.print(" jnz %v{d}, @rchtaken{d}, @rchcopied{d}\n@rchcopied{d}\n", .{ take, label, label, label });
     try frame.drop(E, self, event.journal);

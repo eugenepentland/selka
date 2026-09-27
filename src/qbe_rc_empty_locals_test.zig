@@ -72,8 +72,8 @@ test "RC empty local journals keep parameter operand scratch and native admissio
     try t.expect(contains(try named(manifest.value, "rebind"), "myl_qbe_rc_unique_local"));
     try t.expect(contains(try named(manifest.value, "callback"), "myl_qbe_rc_scope_pin"));
     try t.expect(contains(try named(manifest.value, "iterate"), "myl_rc_hold_acquire"));
-    try t.expect(contains(try named(manifest.value, "referenced"), "myl_rc_native_loan"));
-    try t.expect(contains(try named(manifest.value, "pattern"), "myl_rc_native_loan"));
+    try t.expect(contains(try named(manifest.value, "referenced"), "# RC-GLUE-1 loan"));
+    try t.expect(contains(try named(manifest.value, "pattern"), "# RC-GLUE-1 loan"));
 }
 
 // spec: RC-EMPTY-RECEIVER-STORAGE-1

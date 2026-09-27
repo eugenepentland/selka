@@ -105,7 +105,7 @@ test "RC-READONLY-BODY-1 only history-free inline union wrappers borrow" {
     defer manifest.deinit();
     try t.expect(!contains(try named(manifest.value, "plain_variant"), "myl_qbe_rc_frame_enter"));
     try t.expect(contains(try named(manifest.value, "variant"), "myl_qbe_rc_frame_enter"));
-    try t.expect(contains(try named(manifest.value, "variant"), "myl_rc_native_publish"));
+    try t.expect(contains(try named(manifest.value, "variant"), "# RC-GLUE-1 publish"));
     try t.expect(contains(try named(manifest.value, "recursive_variant"), "myl_qbe_rc_frame_enter"));
 }
 
@@ -137,7 +137,9 @@ test "RC scalar readonly body admits list lengths with managed element reads" {
     defer manifest.deinit();
     const il = try named(manifest.value, "scan");
     try t.expect(std.mem.indexOf(u8, il, "call $myl_rc_native_loan") == null);
+    try t.expect(std.mem.indexOf(u8, il, "# RC-GLUE-1 loan") == null);
     try t.expect(std.mem.indexOf(u8, il, "call $myl_rc_native_retain") == null);
+    try t.expect(std.mem.indexOf(u8, il, "# RC-GLUE-1 retain") == null);
     try t.expect(std.mem.indexOf(u8, il, "call $myl_qbe_rc_frame_enter") == null);
     try t.expect(std.mem.indexOf(u8, il, "call $myl_qbe_fail_normalized_index_bounds") != null);
 }

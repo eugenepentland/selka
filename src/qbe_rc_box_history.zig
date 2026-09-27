@@ -19,9 +19,16 @@ pub fn unbox(comptime E: type, self: *E, source: usize) Error!void {
     const body = (try self.field(stack[stack.len - 1], 0)).ty;
     const destination = try self.aggregatePointer();
     const done = self.temp();
-    try self.print(" %v{d} =w call $myl_rc_native_publish(l %heap, l extern ${s}, l %v{d}, l %v{d}, w %v{d}, w 0)\n", .{
-        done, try self.descriptor(body), destination, source, try frame.region(E, self),
-    });
-    try slots.requireSuccess(E, self, done);
+    const glue = @import("qbe_rc_glue.zig");
+    if (try glue.routed(E, self, body)) {
+        const mode = self.temp();
+        try self.print(" %v{d} =w copy 0\n", .{mode});
+        try glue.publish(E, self, .{ .move = .{ .ty = body, .destination = destination, .source = source, .region = try frame.region(E, self) }, .mode = mode });
+    } else {
+        try self.print(" %v{d} =w call $myl_rc_native_publish(l %heap, l extern ${s}, l %v{d}, l %v{d}, w %v{d}, w 0)\n", .{
+            done, try self.descriptor(body), destination, source, try frame.region(E, self),
+        });
+        try slots.requireSuccess(E, self, done);
+    }
     try self.store(stack.len - 1, destination);
 }

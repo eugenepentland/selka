@@ -85,11 +85,11 @@ test "RC adjacent variant read has a concrete guard and complete slow fallback" 
     const il = try body(result.value, "selected");
     try t.expectEqual(@as(usize, 1), std.mem.count(u8, il, marker));
     const at = std.mem.indexOf(u8, il, marker).?;
-    const fallback = std.mem.indexOf(u8, il[at..], "call $myl_rc_native_loan") orelse return error.TestUnexpectedResult;
+    const fallback = std.mem.indexOf(u8, il[at..], "# RC-GLUE-1 loan") orelse return error.TestUnexpectedResult;
     try t.expect(std.mem.indexOf(u8, il[at..][0..fallback], " =w loaduw ") != null);
     try t.expect(std.mem.indexOf(u8, il[at..][0..fallback], ", 16\n") != null);
     try t.expect(std.mem.indexOf(u8, il[at..][0..fallback], "@rcvariantslow") != null);
-    try t.expect(std.mem.indexOf(u8, il[at..], "call $myl_rc_native_retain") != null);
+    try t.expect(std.mem.indexOf(u8, il[at..], "# RC-GLUE-1 retain") != null);
     try t.expect(std.mem.indexOf(u8, il[0..at], "call $myl_qbe_fail_normalized_index_bounds") != null);
 }
 
@@ -107,7 +107,7 @@ test "RC adjacent variant read preserves the separate switch step boundary" {
     defer result.deinit();
     const il = try body(result.value, "selected");
     const at = std.mem.indexOf(u8, il, marker) orelse return error.TestUnexpectedResult;
-    const retain = std.mem.indexOf(u8, il[at..], "call $myl_rc_native_retain") orelse return error.TestUnexpectedResult;
+    const retain = std.mem.indexOf(u8, il[at..], "# RC-GLUE-1 retain") orelse return error.TestUnexpectedResult;
     try t.expect(std.mem.indexOf(u8, il[at..][0..retain], ", @step_limit,") != null);
     var gc = try emitted(.gc, true);
     defer gc.deinit();

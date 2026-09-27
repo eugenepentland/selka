@@ -1,6 +1,7 @@
 //! Typed RC slot operations and success/failure commit points.
 //! Addresses name physical values, never aggregate operand pointer cells.
 const typed = @import("typed.zig");
+const glue = @import("qbe_rc_glue.zig");
 
 /// Native emission failures shared with the main QBE emitter.
 pub const Error = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
@@ -37,6 +38,10 @@ pub fn Lower(comptime E: type) type {
 
         /// Emit the fallible runtime operation and branch before publishing guards.
         pub fn runtimeTransfer(self: *E, operation: Transfer) Error!void {
+            const routed = try glue.routed(E, self, operation.ty);
+            const move: glue.Transfer = .{ .ty = operation.ty, .destination = operation.destination, .source = operation.source, .region = operation.region };
+            if (routed and operation.mode == .retain_empty) return glue.retain(E, self, move);
+            if (routed and operation.mode == .take_empty) return glue.take(E, self, move);
             const helper = switch (operation.mode) {
                 .copy_empty => "myl_rc_native_copy",
                 .retain_empty => "myl_rc_native_retain",
@@ -66,7 +71,7 @@ pub fn Lower(comptime E: type) type {
             });
             try initialized(self, slot.guard, false);
             if (slot.unique_drop) try self.print(" call $myl_native_owned_drop(l %heap, l extern ${s}, l %v{d})\n", .{ try self.descriptor(slot.ty), slot.address });
-            if (slot.counted) try self.print(" call $myl_rc_native_drop(l %heap, l extern ${s}, l %v{d})\n", .{ try self.descriptor(slot.ty), slot.address });
+            if (slot.counted) try glue.drop(E, self, .{ .ty = slot.ty, .address = slot.address });
             try self.print("@rcreleased{d}\n", .{finish});
         }
     };
@@ -74,10 +79,5 @@ pub fn Lower(comptime E: type) type {
 
 /// Map a sticky RC refusal before any compiler ownership guard changes.
 pub fn requireSuccess(comptime E: type, self: *E, result: usize) Error!void {
-    const branch = self.temp();
-    const status = self.temp();
-    const checked = self.temp();
-    try self.print(" jnz %v{d}, @rcsuccess{d}, @rcfailure{d}\n@rcfailure{d}\n", .{ result, branch, branch, branch });
-    try self.print(" %v{d} =w call $myl_rc_take_failure(l %heap)\n %v{d} =w call $myl_qbe_rc_status(l %ctx, w %v{d})\n", .{ status, checked, status });
-    try self.print(" jmp @failure\n@rcsuccess{d}\n", .{branch});
+    return glue.requireSuccess(E, self, result);
 }

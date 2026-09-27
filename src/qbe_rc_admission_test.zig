@@ -48,13 +48,13 @@ test "RC-ADMISSION-1 cold guards drop unique and counted incoming edges before t
     const code = try named(manifest.value, "recurse");
     const fail = try location(code, "call $myl_qbe_fail_frame");
     try t.expect(try location(code, "call $myl_native_owned_drop") < fail);
-    try t.expect(try location(code, "call $myl_rc_native_drop") < fail);
+    try t.expect(try location(code, "# RC-GLUE-1 drop") < fail);
     try t.expect(try location(code, "call $myl_qbe_rc_frame_enter") > fail);
     const wide = try named(manifest.value, "wide");
     const allocation = try location(wide, "call $myl_qbe_frame_try_allocate");
     const refusal = wide[allocation..];
     try t.expect(try location(refusal, "call $myl_native_owned_drop") < try location(refusal, "call $myl_qbe_fail_frame_allocation"));
-    try t.expect(try location(refusal, "call $myl_rc_native_drop") < try location(refusal, "call $myl_qbe_fail_frame_allocation"));
+    try t.expect(try location(refusal, "# RC-GLUE-1 drop") < try location(refusal, "call $myl_qbe_fail_frame_allocation"));
     try t.expect(std.mem.indexOf(u8, refusal, "loadl") != null);
 }
 

@@ -4,7 +4,7 @@ const semantics = @import("value_semantics.zig");
 const frame = @import("qbe_rc_frame.zig");
 const Error = frame.Error;
 /// Exclusive terminal-pointer journal role, matching MYL_QBE_RC_HOLD_POINTER.
-pub const flag: u32 = 8;
+pub const flag: u32 = @import("qbe_rc_glue.zig").hold_role;
 
 /// Live views and managed iteration sources can create terminal H collection slots.
 pub fn mayHold(comptime E: type, self: *E, ty: typed.Type) bool {

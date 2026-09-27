@@ -44,8 +44,8 @@ test "RC aggregate partial construction journals fields before guarded takes or 
     // Pair has two pointer fields. Other token moves can clear an eight-byte
     // source before this constructor initializes its sixteen-byte body.
     const cleared = try location(text, "w 0, l 16)");
-    const taken = cleared + try location(text[cleared..], "call $myl_rc_native_take");
-    const copied = cleared + try location(text[cleared..], "call $myl_rc_native_retain");
+    const taken = cleared + try location(text[cleared..], "# RC-GLUE-1 take");
+    const copied = cleared + try location(text[cleared..], "# RC-GLUE-1 retain");
     try t.expect(cleared < taken and taken < copied);
     try t.expect(std.mem.indexOf(u8, text[cleared..taken], "storew 1") != null);
     try t.expect(std.mem.indexOf(u8, text[taken..copied], "storew 0") != null);
@@ -53,7 +53,7 @@ test "RC aggregate partial construction journals fields before guarded takes or 
     try t.expect(try location(text, "call $myl_qbe_rc_frame_cleanup") > copied);
     // A semantic publication can retire a private loan before construction.
     // The constructor still adopts its completed inputs before frame cleanup.
-    try t.expect(try location(text, "call $myl_rc_native_publish") < cleared);
+    try t.expect(try location(text, "# RC-GLUE-1 publish") < cleared);
 }
 
 // spec: RC-PLAIN-PROJECTION-1

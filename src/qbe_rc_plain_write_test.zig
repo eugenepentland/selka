@@ -35,7 +35,9 @@ test "RC-PLAIN-LIST-WRITE-1 scalar stores keep bounds and managed stores keep ow
     var manifest = try emitted();
     defer manifest.deinit();
     try t.expect(std.mem.indexOf(u8, try named(manifest.value, "scalar"), "myl_rc_list_set") == null);
+    try t.expect(std.mem.indexOf(u8, try named(manifest.value, "scalar"), "# RC-GLUE-1 list_set") == null);
     try t.expect(std.mem.indexOf(u8, try named(manifest.value, "floating"), "myl_rc_list_set") == null);
+    try t.expect(std.mem.indexOf(u8, try named(manifest.value, "floating"), "# RC-GLUE-1 list_set") == null);
     try t.expect(std.mem.indexOf(u8, try named(manifest.value, "scalar"), "myl_qbe_fail_normalized_index_bounds") != null);
-    try t.expect(std.mem.indexOf(u8, try named(manifest.value, "managed"), "myl_rc_list_set") != null);
+    try t.expect(std.mem.indexOf(u8, try named(manifest.value, "managed"), "# RC-GLUE-1 list_set") != null);
 }
