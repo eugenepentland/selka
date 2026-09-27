@@ -1,0 +1,22 @@
+record Item:
+    text: bytes
+    number: int
+
+def empty() -> Item:
+    return Item(b"fallback", 5)
+
+def pick(items: list[Item], index: int) -> Item:
+    if index < 0:
+        return empty()
+    return items[index]
+
+public def seed() -> list[Item]:
+    return [Item(b"left", 3), Item(b"right", 7)]
+
+public def visit(items: list[Item]) -> int:
+    saved = pick(items, -1)
+    current = pick(items, 1)
+    return saved.number + current.number + int(saved.text[0])
+
+def main() -> int:
+    return 0

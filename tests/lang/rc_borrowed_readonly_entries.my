@@ -1,0 +1,48 @@
+record Item:
+    text: bytes
+    number: int
+
+def empty() -> Item:
+    return Item(b"fallback", 5)
+
+def pick(items: list[Item], index: int) -> Item:
+    if index < 0:
+        return empty()
+    return items[index]
+
+def fold(items: list[Item], count: int) -> int:
+    saved = pick(items, -1)
+    total = 0
+    i = 0
+    while i < count:
+        current = pick(items, i % 2)
+        total += saved.number + current.number + int(saved.text[0])
+        i += 1
+    return total
+
+def indirect(callback: def() -> Item) -> Item:
+    return callback()
+
+# spec-case: RC-BORROWED-READONLY-ENTRY-1
+public def test_saved_borrowed_and_immortal_results_survive_repeated_calls() -> bool:
+    items = [Item(b"left", 3), Item(b"right", 7)]
+    saved = items
+    return fold(items, 4) == 448 and saved[1].text == b"right"
+
+# spec-case: RC-IMMORTAL-ENTRY-1
+public def test_immortal_fallback_and_borrowed_result_keep_caller_arena() -> bool:
+    with arena():
+        items = [Item(b"left", 3), Item(b"right", 7)]
+        return fold(items, 4) == 448
+
+# spec-case: RC-IMMORTAL-ENTRY-1
+public def test_canonical_function_value_keeps_ordinary_owned_result() -> bool:
+    first = indirect(empty)
+    second = indirect(empty)
+    return first.number == 5 and second.text == b"fallback"
+
+def main(out: Stream) -> int:
+    out.print(test_saved_borrowed_and_immortal_results_survive_repeated_calls())
+    out.print(test_immortal_fallback_and_borrowed_result_keep_caller_arena())
+    out.print(test_canonical_function_value_keeps_ordinary_owned_result())
+    return 0

@@ -40,3 +40,8 @@ pub fn borrowed(allocator: std.mem.Allocator, catalog: *shapes.Catalog, function
 pub fn borrowedIn(allocator: std.mem.Allocator, catalog: *shapes.Catalog, functions: []const bytecode.Function, function: bytecode.Function, abi: []const u8) native.Error!?model.BorrowCertificate {
     return @import("rc_borrow_certificate.zig").certifyIn(allocator, catalog, functions, function, abi);
 }
+
+/// Standalone constant-result authority, including its actual physical preflight.
+pub fn immortalIn(catalog: *shapes.Catalog, functions: []const bytecode.Function, function: bytecode.Function, abi: []const u8) native.Error!?model.ImmortalCertificate {
+    return @import("rc_immortal_certificate.zig").certify(catalog, functions, function, abi);
+}

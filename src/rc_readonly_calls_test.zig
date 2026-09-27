@@ -278,7 +278,7 @@ test "RC readonly managed queries share one root bound across plain descendants"
 }
 
 const RouteChange = enum { none, missing, target, shape };
-fn routed(change: RouteChange) !?@import("rc_model.zig").BorrowCertificate {
+fn routed(change: RouteChange) !?@import("rc_model.zig").EntryCertificate {
     const source = prefix ++
         \\
         \\def pick(items: list[Item]) -> Item:
@@ -296,10 +296,10 @@ fn routed(change: RouteChange) !?@import("rc_model.zig").BorrowCertificate {
     var catalog = try shapes.Catalog.init(t.allocator, &layouts);
     defer catalog.deinit();
     const certificate = (try @import("rc_calls.zig").borrowedIn(t.allocator, &catalog, program.functions, callee, "rc-v3")) orelse return error.TestUnexpectedResult;
-    var route = [_]calls.Route{.{ .pc = 0, .target = callee.id, .certificate = certificate }};
+    var route = [_]calls.Route{.{ .pc = 0, .target = callee.id, .certificate = .{ .borrowed = certificate } }};
     switch (change) {
         .target => route[0].target = @fromBackingInt(999),
-        .shape => route[0].certificate.shape_identity[0] ^= 1,
+        .shape => route[0].certificate.borrowed.shape_identity[0] ^= 1,
         else => {},
     }
     const State = struct { readonly: bool, catalog: *shapes.Catalog, plan: struct { readonly: ?calls.Certificate } };

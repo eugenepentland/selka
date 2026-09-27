@@ -16,10 +16,19 @@ pub fn certify(catalog: *shapes.Catalog, function: bytecode.Function) native.Err
 
 /// Shared activation boundary; all managed values must remain caller anchored.
 pub fn admissible(catalog: *shapes.Catalog, function: bytecode.Function) native.Error!bool {
+    return boundary(catalog, function, false);
+}
+
+/// Only an independently certified borrowed entry may widen its result boundary.
+pub fn borrowedBoundary(catalog: *shapes.Catalog, function: bytecode.Function) native.Error!bool {
+    return boundary(catalog, function, true);
+}
+
+fn boundary(catalog: *shapes.Catalog, function: bytecode.Function, borrowed: bool) native.Error!bool {
     if (function.policy.c_abi or function.policy.host != null) return false;
     if (function.signature.mutates.len != 0 or function.signature.declared_mutates.len != 0) return false;
     const output = try catalog.get(function.signature.return_type);
-    if (output.counted or output.unique_drop) return false;
+    if (output.unique_drop or (output.counted and !borrowed)) return false;
     for (function.scope.locals) |local| {
         if ((try catalog.get(local.ty)).unique_drop) return false;
         if (local.ty.isAggregate() and catalog.native.records[local.ty.recordIndex()].collection.box and
