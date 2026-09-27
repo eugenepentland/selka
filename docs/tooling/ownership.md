@@ -126,3 +126,9 @@ A sites build is for finding which operations to remove, not for timing: its
 glue always calls out (like `--rc-runtime=stats`), and every site bumps a
 counter. It works with `mylang run`, `mylang test` and `--release`. Guest code
 and the `--rc-runtime` and `--rc-runtime=stats` artifacts are unchanged.
+
+To rank sites across several programs, `experiments/rc-sites-20260927/summarize.py`
+groups one or more reports by operation, function, type or site, weighting each
+program equally, and `experiments/rc-perf-20260927/quick.py build --sites` plus
+`quick.py sites` produce one report per corpus program. Both are development
+aids; the report itself needs only the built program.
