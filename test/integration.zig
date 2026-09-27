@@ -11949,6 +11949,29 @@ test "CLI invariant boundary rejects invalid JSON collection elements before the
     try testing.expect(std.mem.indexOf(u8, again.stdout, "body ran") == null);
 }
 
+const iterated_write_back =
+    \\record Runtime:
+    \\    objects: list[int]
+    \\record Interp:
+    \\    rt: Runtime
+    \\def push(rt: mut Runtime, value: int) -> None:
+    \\    rt.objects.append(value)
+    \\def main() -> int:
+    \\    it = Interp(rt=Runtime(objects=[1, 2]))
+    \\    for x in it.rt.objects:
+    \\        wb = it.rt
+    \\        push(mut wb, x)
+    \\        it.rt = wb
+    \\    return len(it.rt.objects)
+;
+
+// spec-case: RC-ITERATION-HOLD-TRANSFER-1
+test "CLI RC growth written back through an iterated field traps like the collector" {
+    try invokeOptions("run", iterated_write_back, &.{}, 1, "", "R_LIST_ITERATION_MUTATION");
+    try invokeOptions("run", iterated_write_back, &.{"--rc-runtime"}, 1, "", "R_LIST_ITERATION_MUTATION");
+    try invokeOptions("run", iterated_write_back, &.{"--rc-runtime=stats"}, 1, "", "R_LIST_ITERATION_MUTATION");
+}
+
 // spec: RC-RUNTIME-CLI-1
 test "CLI RC runtime contract flags reject conflicts and preserve guest arguments" {
     try invokeOptions("check", value_program, &.{"--gc-runtime"}, 0, "", "");

@@ -86,8 +86,36 @@ public def test_fixed_array_iteration_keeps_its_value_copy() -> bool:
     return total == 3 and values[1] == 9
 
 
+record Runtime:
+    objects: list[int]
+
+
+record Interp:
+    rt: Runtime
+
+
+def bump(rt: mut Runtime, at: int) -> None:
+    if at < len(rt.objects):
+        rt.objects[at] = rt.objects[at] + 10
+
+
+# spec: RC-ITERATION-HOLD-TRANSFER-1
+public def test_write_back_through_a_field_keeps_the_iterated_list() -> bool:
+    it = Interp(rt=Runtime(objects=[1, 2, 3]))
+    seen: list[int] = []
+    at = 0
+    for x in it.rt.objects:
+        seen.append(x)
+        wb = it.rt
+        bump(mut wb, at + 1)
+        it.rt = wb
+        at += 1
+    return seen == [1, 12, 13] and it.rt.objects == [1, 12, 13]
+
+
 def main() -> int:
     assert test_nonstructural_dictionary_writes_remain_visible()
+    assert test_write_back_through_a_field_keeps_the_iterated_list()
     assert test_list_iteration_observes_later_element_writes()
     assert test_rebinding_source_preserves_original_iteration_storage()
     assert test_named_snapshot_remains_independent_of_iteration_writes()
