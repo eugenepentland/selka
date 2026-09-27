@@ -5,11 +5,18 @@ const std = @import("std");
 /// Carrier inherited by compiler children after command-line normalization.
 pub const variable = "MYLANG_RUNTIME";
 
+/// The C define every RC artifact compiles with, and the one counting adds.
+const rc_flag = "-DMYL_NATIVE_RC=1";
+const counting_flag = "-DMYL_NATIVE_RC_COUNTING=1";
+
 /// Memory implementations with distinct ownership and instrumentation identities.
 pub const Selection = enum {
     gc,
     rc,
     rc_counting,
+    /// Counting RC that also attributes every ownership event to the
+    /// emitted call site that caused it (`RC-SITES-1`).
+    rc_sites,
 
     /// Stable native ownership ABI tag; change its version when the ABI changes.
     pub fn identity(self: Selection) []const u8 {
@@ -17,6 +24,7 @@ pub const Selection = enum {
             .gc => "gc-v1",
             .rc => "rc-v3",
             .rc_counting => "rc-v3-counting",
+            .rc_sites => "rc-v3-sites",
         };
     }
 
@@ -24,8 +32,9 @@ pub const Selection = enum {
     pub fn cFlags(self: Selection) []const []const u8 {
         return switch (self) {
             .gc => &.{},
-            .rc => &.{"-DMYL_NATIVE_RC=1"},
-            .rc_counting => &.{ "-DMYL_NATIVE_RC=1", "-DMYL_NATIVE_RC_COUNTING=1" },
+            .rc => &.{rc_flag},
+            .rc_counting => &.{ rc_flag, counting_flag },
+            .rc_sites => &.{ rc_flag, counting_flag, "-DMYL_NATIVE_RC_SITES=1" },
         };
     }
 
@@ -36,7 +45,13 @@ pub const Selection = enum {
 
     /// Whether this artifact records RC ownership operations.
     pub fn counting(self: Selection) bool {
-        return self == .rc_counting;
+        return self == .rc_counting or self == .rc_sites;
+    }
+
+    /// Whether this artifact also attributes each ownership event to its
+    /// emission site (`RC-SITES-1`).
+    pub fn sites(self: Selection) bool {
+        return self == .rc_sites;
     }
 };
 

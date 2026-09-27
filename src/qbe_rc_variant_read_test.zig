@@ -1,4 +1,7 @@
 //! Adjacent matches keep the selected payload's ordinary snapshot publication.
+//! `selected` reads through an owned local root: a read-only or `mut`
+//! parameter root lends its elements without a list token instead
+//! (RC-READONLY-ANCHOR-1, RC-INTERVAL-ANCHOR-1).
 const std = @import("std");
 const compiler = @import("compiler.zig");
 const runtime = @import("runtime_mode.zig");
@@ -14,7 +17,9 @@ const source =
     \\    value: Payload
     \\record Pool:
     \\    items: list[Item]
-    \\def selected(pool: Pool, at: int) -> Payload:
+    \\    reads: int
+    \\def selected(at: int) -> Payload:
+    \\    pool = Pool([Item.value(Payload([3], [7]))], 0)
     \\    match pool.items[at]:
     \\        case Item.value(payload):
     \\            return payload
@@ -60,7 +65,7 @@ const source =
     \\        case _:
     \\            return Payload([], [])
     \\def main() -> int:
-    \\    return len(selected(Pool([Item.value(Payload([3], [7]))]), -1).items)
+    \\    return len(selected(-1).items)
 ;
 
 fn emitted(mode: runtime.Selection, steps: bool) !std.json.Parsed(Manifest) {

@@ -6,6 +6,11 @@ test {
     _ = @import("qbe_rc_fresh_constructor_test.zig");
     _ = @import("qbe_mut_argument_places_test.zig");
     _ = @import("qbe_rc_read_loans_test.zig");
+    _ = @import("qbe_rc_loan_relocate_test.zig");
+    _ = @import("qbe_rc_binding_moves_test.zig");
+    _ = @import("qbe_rc_transient_test.zig");
+    _ = @import("qbe_rc_readonly_anchor_test.zig");
+    _ = @import("rc_plain_updates_test.zig");
     _ = @import("qbe_rc_variant_read_test.zig");
     _ = @import("qbe_rc_aggregate_test.zig");
     _ = @import("qbe_rc_inline_take_test.zig");
@@ -261,6 +266,7 @@ test {
     _ = @import("rc_readonly_entry_test.zig");
     _ = @import("rc_immortal_certificate_test.zig");
     _ = @import("qbe_rc_inert_receiver_test.zig");
+    _ = @import("qbe_rc_inert_field_test.zig");
     _ = @import("qbe_rc_unique_test.zig");
     _ = @import("qbe_rc_hoist_test.zig");
     _ = @import("qbe_rc_fresh_root_test.zig");
@@ -274,6 +280,7 @@ test {
     _ = @import("qbe_rc_append_test.zig");
     _ = @import("qbe_rc_admission_test.zig");
     _ = @import("qbe_rc_views_test.zig");
+    _ = @import("qbe_rc_sites_test.zig");
     _ = @import("qbe_rc_journal_test.zig");
     _ = @import("qbe_rc_empty_locals_test.zig");
     _ = @import("qbe_rc_nonheld_capture_test.zig");

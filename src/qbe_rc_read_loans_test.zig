@@ -151,7 +151,8 @@ const field_source =
     \\    number = rows[at].left.number
     \\    output.append(number)
     \\    return number
-    \\def escaped(rows: list[Row], at: int, output: mut list[int]) -> int:
+    \\def escaped(at: int, output: mut list[int]) -> int:
+    \\    rows = [Row(Label(b"value", 3), 7)]
     \\    row = rows[at]
     \\    output.append(row.number)
     \\    return row.left.number
@@ -160,7 +161,9 @@ const field_source =
     \\    return 0
     \\def callback(rows: mut list[Row]) -> int:
     \\    return rows[change(mut rows)].left.number
-    \\def held(rows: list[HeldRow], output: mut list[int]) -> int:
+    \\def held(output: mut list[int]) -> int:
+    \\    table = {1: 2}
+    \\    rows = [HeldRow(table.values(), 5)]
     \\    number = rows[0].number
     \\    output.append(number)
     \\    return number
@@ -175,6 +178,8 @@ test "RC plain field chains retain only the stable list root" {
     try t.expectEqual(@as(usize, 0), try copiesIn(field_source, "selected"));
 }
 
+// The refused shapes read through owned local roots: a read-only parameter
+// root lends every such read without a token (RC-READONLY-ANCHOR-1).
 // spec-case: RC-PLAIN-FIELD-LOAN-1
 test "RC plain field chains refuse escaped records callbacks and live views" {
     try t.expect(try callsIn(field_source, "escaped", true) > 0);
@@ -208,7 +213,8 @@ test "RC plain field chains refuse more than eight adjacent projections" {
         \\    n = rows[0].next.next.next.next.next.next.next.value
         \\    output.append(n)
         \\    return n
-        \\def refused(rows: list[H], output: mut list[int]) -> int:
+        \\def refused(output: mut list[int]) -> int:
+        \\    rows: list[H] = []
         \\    n = rows[0].next.next.next.next.next.next.next.next.value
         \\    output.append(n)
         \\    return n

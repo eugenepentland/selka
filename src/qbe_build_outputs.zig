@@ -59,6 +59,7 @@ fn metadataUnit(allocator: std.mem.Allocator, manifest: std.json.Value, tables: 
     try w.print("#include \"qbe_runtime.h\"\n{s}\n{s}\n", .{ v.text(v.get(manifest, "runtime_data")), host_source });
     const functions = v.array(v.get(manifest, "functions"));
     try literalDefinitions(w, allocator, functions);
+    try @import("qbe_build_sites.zig").definitions(w, allocator, functions);
     // Every inline table names another unit's metadata, which may be defined
     // later in this file, so declare them all before the first definition.
     // QBE-FRAMEMAP-ROOTS-1: the roots exist for full LTO, which only the

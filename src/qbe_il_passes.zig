@@ -76,7 +76,7 @@ const position_address = " %position =l add ";
 /// The pc of a line that stores one instruction's frame position, or null when
 /// the line is anything else. Every emitted instruction opens with one, so these
 /// lines also delimit instruction bodies for `elideUnobservablePositions`.
-fn positionStore(line: []const u8) ?[]const u8 {
+pub fn positionStore(line: []const u8) ?[]const u8 {
     const prefix = " storel ";
     if (!std.mem.startsWith(u8, line, prefix)) return null;
     const rest = line[prefix.len..];
@@ -87,7 +87,7 @@ fn positionStore(line: []const u8) ?[]const u8 {
 /// Whether a line defines one of the function-level labels the epilogue owns.
 /// They end the last instruction's body: a `@failure` in the epilogue is not a
 /// reason for the instruction before it to store a position.
-fn functionLabel(line: []const u8) bool {
+pub fn functionLabel(line: []const u8) bool {
     inline for (.{ "@step_limit", "@failure", "@allocation_failure", "@entry_failure" }) |label| {
         if (std.mem.eql(u8, line, label)) return true;
     }

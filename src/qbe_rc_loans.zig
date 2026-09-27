@@ -47,6 +47,37 @@ pub fn owner(comptime E: type, self: *E, index: usize) Error!usize {
     return result;
 }
 
+/// Whether a guarded token is a live private loan, or null when the entry can
+/// never hold one.
+pub fn lent(comptime E: type, self: *E, index: usize) Error!?usize {
+    if (frame.emptyLocal(E, self, index)) return null;
+    const live = self.temp();
+    const flags = self.temp();
+    const loan = self.temp();
+    try self.print(" %v{d} =w loaduw %v{d}\n %v{d} =w loaduw %v{d}\n", .{
+        live, try frame.guard(E, self, index), flags, try frame.entryField(E, self, index, 24),
+    });
+    try self.print(" %v{d} =w ceqw %v{d}, {d}\n %v{d} =w and %v{d}, %v{d}\n", .{ loan, flags, flag, loan, loan, live });
+    return loan;
+}
+
+/// RC-LOAN-RELOCATE-1: move a live private loan's bytes and role into pending
+/// storage and clear its source. The hold it carries moves with it, so no
+/// count changes, where acquiring a second loan and dropping the first
+/// changed the count twice and back.
+pub fn relocate(comptime E: type, self: *E, ty: typed.Type, source: usize, index: usize) Error!void {
+    const work = self.temp();
+    const size = (try self.layout(ty)).size;
+    try self.print(" # RC-LOAN-RELOCATE-1\n %v{d} =l copy %rcwork\n blit %v{d}, %v{d}, {d}\n", .{ work, source, work, size });
+    if (size == 8) {
+        try self.print(" storel 0, %v{d}\n", .{source});
+    } else try self.print(" call $memset(l %v{d}, w 0, l {d})\n", .{ source, size });
+    try frame.stableEntry(E, self, frame.pending(E, self), ty);
+    try role(E, self, frame.pending(E, self), flag);
+    try frame.initialized(E, self, frame.pending(E, self), true);
+    try frame.initialized(E, self, index, false);
+}
+
 /// Copy stable bytes into pending storage and acquire only lifetime holds.
 pub fn prepare(comptime E: type, self: *E, ty: typed.Type, source: usize) Error!void {
     const glue = @import("qbe_rc_glue.zig");

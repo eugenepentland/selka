@@ -307,6 +307,11 @@
       "summary": "`mylang check FILE.my --explain-ownership=OUT.jsonl` writes the ownership analysis of every lowered function as JSON Lines: each local's role, every transfer classed move, borrow or copy, every copy-on-write check site with the loop header it is hoisted to, and the loads that move.",
       "doc": "docs/tooling/ownership.md#explain-ownership"
     },
+    "rc-ownership-sites": {
+      "kind": "tooling",
+      "summary": "`--rc-runtime=sites` builds a counting RC program that charges every physical ownership event (owner and hold acquire and release, allocation, retirement, clone, uniqueness check, receiver-scope and frame-journal operations) to the emitted runtime or glue call that caused it, and at exit prints the top sites by events with their function, source position, operation and static type, writing every site as JSON to the file `MYLANG_RC_SITES` names.",
+      "doc": "docs/tooling/ownership.md#ownership-sites"
+    },
     "aggregate-copy-elision": {
       "kind": "language",
       "summary": "A read-only aggregate parameter, a short-lived local and a match binding that owns nothing are read where they live, so field reads, tag tests and payload projections are loads rather than aggregate copies while record values keep snapshot semantics; a field write to a record whose old value is never read again updates it in place.",

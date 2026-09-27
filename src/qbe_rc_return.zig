@@ -13,7 +13,13 @@ pub fn emit(comptime E: type, self: *E, value: usize) Error!bool {
     if (owned) {
         try fresh(E, self, value);
         const stack = self.states[self.pc] orelse return error.InternalError;
-        try values.prepareOperand(E, self, ty, stack.len - 1);
+        if (returnedLocal(E, self, ty, stack.len)) |local| {
+            // RC-RETURN-MOVE-1: the returned local's own owner becomes the
+            // result; a local without one is still copied from its anchor.
+            const address = self.temp();
+            try self.print(" # RC-RETURN-MOVE-1 local {d}\n %v{d} =l copy %l{d}\n", .{ local, address, local });
+            try values.prepareGuarded(E, self, ty, address, local);
+        } else try values.prepareOperand(E, self, ty, stack.len - 1);
         source = try self.readValue(try values.workAddress(E, self), ty);
     }
     var output = source;
@@ -33,6 +39,22 @@ pub fn emit(comptime E: type, self: *E, value: usize) Error!bool {
     try self.leaveFrame();
     try self.print(" ret %v{d}\n", .{output});
     return true;
+}
+
+/// The named local `return local` reads, when the operand is that plain read
+/// and the local's own frame slot and journal entry hold its value.
+fn returnedLocal(comptime E: type, self: *E, ty: @import("typed.zig").Type, depth: usize) ?usize {
+    const code = self.function.scope.instructions;
+    if (depth != 1 or self.pc == 0 or self.isBranchTarget(self.pc)) return null;
+    const read = code[self.pc - 1].op;
+    if (read != .load_local) return null;
+    const local = @backingInt(read.load_local);
+    if (local < self.function.signature.parameter_count or self.function.scope.locals[local].ty != ty) return null;
+    if (self.byReference(local) or self.callerStorage(local) or frame.emptyLocal(E, self, local)) return null;
+    if (@import("qbe_rc_record_read.zig").empty(E, self, local)) return null;
+    const state = frame.get(E, self) orelse return null;
+    const slot = state.plan.journal.slot(local) catch return null;
+    return if (slot == null) null else local;
 }
 
 // The closed constructor grammar has only scalar locals and linear owned

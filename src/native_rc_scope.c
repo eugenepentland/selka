@@ -110,6 +110,7 @@ inline __attribute__((always_inline)) void myl_rc_scope_begin(myl_native_heap *h
     myl_rc_invariant(heap && heap->rc && scope);
     *scope = (myl_rc_scope){.heap = heap, .previous = heap->rc->scopes, .active = 1, .region = heap->region_depth};
     heap->rc->scopes = scope;
+    MYL_RC_SITE(MYL_RC_SITE_SCOPE_BEGIN);
 }
 /* A hold at its count limit: the node goes back and the capture is refused. */
 static __attribute__((noinline, cold)) myl_rc_status capture_refused(myl_native_heap *heap, scope_entry *entry) {
@@ -143,6 +144,7 @@ SCOPE_HOT myl_rc_status capture_in(myl_native_heap *heap, myl_rc_scope *scope, v
     entry->previous = scope->journal;
     entry->pinned = pinned;
     scope->journal = entry;
+    MYL_RC_SITE(pinned ? MYL_RC_SITE_SCOPE_PIN : MYL_RC_SITE_SCOPE_HOLD);
     return MYL_RC_OK;
 }
 SCOPE_HOT myl_rc_status capture(myl_rc_scope *scope, void *payload, unsigned pinned) {
@@ -209,6 +211,7 @@ inline __attribute__((always_inline)) myl_rc_status myl_rc_scope_capture_backed(
 inline __attribute__((always_inline)) void myl_rc_scope_end(myl_rc_scope *scope) {
     myl_rc_invariant(scope != NULL);
     if (!scope->active) return;
+    MYL_RC_SITE(MYL_RC_SITE_SCOPE_END);
     myl_native_heap *heap = scope->heap;
     myl_rc_invariant(heap && heap->rc && heap->rc->scopes == scope);
     heap->rc->scopes = scope->previous;

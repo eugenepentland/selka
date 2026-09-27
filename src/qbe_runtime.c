@@ -1006,6 +1006,9 @@ static int execute_config_args(uint64_t (*entry)(void *), uint64_t steps, uint64
 #if defined(MYL_NATIVE_RC_COUNTING) && MYL_NATIVE_RC_COUNTING
     myl_rc_stats_report(&context->heap);
 #endif
+#if defined(MYL_NATIVE_RC_SITES) && MYL_NATIVE_RC_SITES
+    myl_qbe_rc_sites_report();
+#endif
     while (context->frame_allocations) myl_qbe_frame_release(context,(NativeFrameAllocation *)context->frame_allocations+1);
     free(context->host_state);
     free(context->frame_data);

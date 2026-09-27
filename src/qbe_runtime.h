@@ -198,6 +198,10 @@ void myl_qbe_rc_trap(void *);
 /* After the resource registry and adapters have run: an execution that trapped
  * tears its heap down wholesale; a normal exit releases its arenas and caches. */
 void myl_qbe_rc_finish(void *);
+/* RC-SITES-1: a sites build's exit report, after cleanup and before heap
+ * destruction: the top sites by ownership events to stderr and, when
+ * MYLANG_RC_SITES names a file, every site that ran as JSON there. */
+void myl_qbe_rc_sites_report(void);
 int myl_qbe_rc_unique_local(void *, const myl_native_type *, void *, uint32_t *owned);
 int myl_qbe_rc_unique_field(void *, const myl_native_type *, void *, void *container);
 /* The compiler proves the list unique and each live element an ordinary owning

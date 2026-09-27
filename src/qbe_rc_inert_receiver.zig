@@ -8,8 +8,11 @@ const Path = struct { locals: [8]usize = undefined, len: usize = 0 };
 /// Lend an immediate list-element projection into its proved inert receiver.
 /// The parent remains the physical owner; fill detaches and refreshes the
 /// borrowed pointer before mutation, without an intermediate snapshot token.
+/// RC-INERT-FIELD-RECEIVER-1: a list field read straight out of a named
+/// record into its receiver is lent the same way.
 pub fn projection(comptime E: type, self: *E, pc: usize) bool {
     const code = self.function.scope.instructions;
+    if (pc + 1 < code.len and code[pc].op == .get_field) return fieldProjection(E, self, pc);
     if (pc + 1 >= code.len or code[pc].op != .buffer_operation) return false;
     const operation = code[pc].op.buffer_operation;
     if (operation.kind != .read or code[pc + 1].op != .store_local) return false;
@@ -19,6 +22,20 @@ pub fn projection(comptime E: type, self: *E, pc: usize) bool {
     if (place.step != .element or place.box != null) return false;
     if (place.base != pc or place.fill != pc + 1) return false;
     if (place.parent != @backingInt(operation.owner)) return false;
+    return proven(E, self, local);
+}
+
+// `load_local parent; get_field f; store_local receiver`: the one-field
+// place of a list the named parent record holds.
+fn fieldProjection(comptime E: type, self: *E, pc: usize) bool {
+    const code = self.function.scope.instructions;
+    if (pc == 0 or code[pc - 1].op != .load_local or code[pc + 1].op != .store_local) return false;
+    if (self.isBranchTarget(pc) or self.isBranchTarget(pc + 1)) return false;
+    const local = @backingInt(code[pc + 1].op.store_local);
+    const place = self.cow.?.plan.place(local) orelse return false;
+    if (place.step != .field or place.box != null) return false;
+    if (place.base != pc - 1 or place.fill != pc + 1) return false;
+    if (place.parent != @backingInt(code[pc - 1].op.load_local)) return false;
     return proven(E, self, local);
 }
 
@@ -91,7 +108,11 @@ pub fn proven(comptime E: type, self: *E, local: usize) bool {
     const stop = end orelse return false;
     if (stop <= start or stop - start > 256) return false;
     const root = path.locals[path.len - 1];
-    if (self.function.scope.locals[root].usage.temporary or !self.live.?.before(stop, root)) return false;
+    if (self.function.scope.locals[root].usage.temporary) return false;
+    // A `mut` record root is the caller's storage: no token of this frame can
+    // release it, so it stays anchored after its last read here.
+    const caller = plainRecord(E, self, root) and self.callerStorage(root);
+    if (!caller and !self.live.?.before(stop, root)) return false;
     const receiver = self.function.scope.locals[path.locals[0]].ty;
     const element = self.program.records[receiver.recordIndex()].shape.buffer orelse return false;
     if (!plain(E, self, element)) return false;
@@ -119,13 +140,36 @@ fn ancestors(comptime E: type, self: *E, first: usize) ?Path {
         path.locals[path.len] = at;
         path.len += 1;
         if (plan.place(at)) |place| {
-            if (place.step != .element or place.box != null) return null;
+            if (place.box != null) return null;
+            if (place.step == .field) return fieldRoot(E, self, path, place);
+            if (place.step != .element) return null;
             at = place.parent;
         } else if (at < plan.aliases.len and plan.aliases[at] != cow.none) {
             at = plan.aliases[at];
         } else return if (path.len > 1) path else null;
     }
     return null;
+}
+
+// RC-INERT-FIELD-RECEIVER-1: a one-field place ends the path at the plain
+// (non-class, non-collection) record holding the list; that record is the root.
+fn fieldRoot(comptime E: type, self: *E, path: Path, place: cow.Place) ?Path {
+    if (place.fill != place.base + 2 or path.len == path.locals.len) return null;
+    if (contains(path, place.parent) or !plainRecord(E, self, place.parent)) return null;
+    const plan = self.cow.?.plan;
+    if (plan.place(place.parent) != null) return null;
+    if (place.parent < plan.aliases.len and plan.aliases[place.parent] != cow.none) return null;
+    var rooted = path;
+    rooted.locals[rooted.len] = place.parent;
+    rooted.len += 1;
+    return rooted;
+}
+
+fn plainRecord(comptime E: type, self: *E, index: usize) bool {
+    const ty = self.function.scope.locals[index].ty;
+    if (!ty.isAggregate()) return false;
+    const found = self.program.records[ty.recordIndex()];
+    return found.isRecord() and !found.managed and !found.isCollection();
 }
 
 fn definition(comptime E: type, self: *E, local: usize) ?usize {
@@ -153,6 +197,7 @@ fn plain(comptime E: type, self: *E, ty: typed.Type) bool {
 fn inert(comptime E: type, self: *E, pc: usize, path: Path, local: usize) bool {
     const op = self.function.scope.instructions[pc].op;
     const inputs = self.states[pc] orelse return false;
+    if (fieldRead(E, self, pc)) return true;
     for (inputs) |ty| if (!plain(E, self, ty)) {
         if (inputs.len != 1 or op != .store_local or !contains(path, @backingInt(op.store_local))) return false;
     };
@@ -193,6 +238,25 @@ fn inert(comptime E: type, self: *E, pc: usize, path: Path, local: usize) bool {
         .binary_integer => |operation| operation.ty.integer() != null,
         else => false,
     };
+}
+
+/// RC-INERT-FIELD-RECEIVER-1: `load_local record; get_field f` with a plain
+/// result reads one field in place: the load publishes no token and the read
+/// copies plain bits, so neither can release, share or replace a receiver.
+fn fieldRead(comptime E: type, self: *E, pc: usize) bool {
+    const code = self.function.scope.instructions;
+    const at = switch (code[pc].op) {
+        .load_local => pc,
+        .get_field => if (pc == 0) return false else pc - 1,
+        else => return false,
+    };
+    if (at + 1 >= code.len or code[at].op != .load_local or code[at + 1].op != .get_field) return false;
+    if (self.isBranchTarget(at + 1)) return false;
+    if (!plainRecord(E, self, @backingInt(code[at].op.load_local))) return false;
+    const before = self.states[at] orelse return false;
+    for (before) |ty| if (!plain(E, self, ty)) return false;
+    const after = self.states[at + 2] orelse return false;
+    return after.len == before.len + 1 and plain(E, self, after[after.len - 1]);
 }
 
 fn store(comptime E: type, self: *E, pc: usize, index: usize, path: Path, local: usize) bool {

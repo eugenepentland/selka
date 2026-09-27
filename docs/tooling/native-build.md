@@ -21,13 +21,15 @@ the IR for inspection rather than for execution.
 
 Runtime choice is independent of the QBE/LLVM backend. `--gc-runtime` selects
 tracing GC, which is currently the default; `--rc-runtime` selects experimental
-reference counting; `--rc-runtime=stats` adds RC ownership counters. These flags
+reference counting; `--rc-runtime=stats` adds RC ownership counters, and
+`--rc-runtime=sites` also charges each count to the call site that caused it
+([ownership sites](ownership.md#ownership-sites)). These flags
 apply to program checking, emission, building and execution commands, including
 `run-project` and `test`. An explicit choice overrides the inherited one. Flags
 after the guest-argument separator `--` remain guest arguments.
 
 Compiler children inherit the resolved `MYLANG_RUNTIME` contract. The current
-tags are `gc-v1`, `rc-v3` and `rc-v3-counting`; unknown versions are rejected.
+tags are `gc-v1`, `rc-v3`, `rc-v3-counting` and `rc-v3-sites`; unknown versions are rejected.
 `--legacy-sharing` selects GC when RC was inherited, and refuses an explicit RC
 request. The [managed memory guide](../managed-memory.md#runtime-selection)
 describes the common value and arena behavior.
