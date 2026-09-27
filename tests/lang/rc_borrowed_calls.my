@@ -1,0 +1,108 @@
+record Node:
+    text: bytes
+    key: int
+
+
+def pick(nodes: list[Node], key: int) -> Node:
+    i = 0
+    while i < len(nodes):
+        node = nodes[i]
+        if node.key == key:
+            return node
+        i += 1
+    return Node(b"", -1)
+
+
+def rank(node: Node, nodes: list[Node]) -> int:
+    i = 0
+    score = node.key
+    while i < len(nodes):
+        candidate = nodes[i]
+        if candidate.key < node.key:
+            score += 1
+        i += 1
+    return score
+
+
+def choose(nodes: list[Node], first: int, second: int) -> Node:
+    a = pick(nodes, first)
+    b = pick(nodes, second)
+    if rank(a, nodes) < rank(b, nodes):
+        return a
+    return b
+
+
+def swapped(left: list[Node], right: list[Node]) -> Node:
+    return choose(right, 1, 2)
+
+
+def unchanged(value: bytes) -> bytes:
+    if len(value) == 0:
+        return b""
+    return value
+
+
+def late(first: bytes, second: bytes) -> bytes:
+    result = unchanged(first)
+    i = 0
+    while i < 2:
+        if i > 0:
+            return result
+        result = unchanged(second)
+        i += 1
+    return first
+
+
+# spec-case: RC-BORROW-COMPOSE-1
+public def test_nested_calls_preserve_results_after_parent_replacement() -> bool:
+    nodes = [Node(bytes([65]), 1), Node(bytes([66]), 2)]
+    result = choose(nodes, 1, 2)
+    fallback = choose(nodes, 3, 4)
+    snapshot = nodes
+    nodes[0] = Node(bytes([67]), 1)
+    nodes.clear()
+    return result.text == b"A" and snapshot[0].text == b"A" and fallback.text == b""
+
+
+# spec-case: RC-BORROW-COMPOSE-1
+public def test_reordered_arguments_map_to_the_actual_parent() -> bool:
+    left = [Node(bytes([76]), 1)]
+    right = [Node(bytes([82]), 1), Node(bytes([83]), 2)]
+    result = swapped(left, right)
+    left.clear()
+    right.clear()
+    return result.text == b"R"
+
+
+# spec-case: RC-BORROW-COMPOSE-1
+public def test_composed_result_escapes_caller_arena() -> bool:
+    result = Node(b"", -1)
+    with arena() as scratch:
+        nodes = [Node(bytes([88]), 1), Node(bytes([89]), 2)]
+        result = scratch.escape(choose(nodes, 1, 2))
+        nodes.clear()
+    return result.text == b"X"
+
+
+# spec-case: RC-BORROW-COMPOSE-1
+public def test_indirect_composed_entry_returns_owned_bits() -> bool:
+    selected = choose
+    nodes = [Node(bytes([81]), 1), Node(bytes([82]), 2)]
+    result = selected(nodes, 1, 2)
+    nodes.clear()
+    return result.text == b"Q"
+
+
+# spec-case: RC-BORROW-COMPOSE-1
+public def test_backedge_callee_mapping_remains_owned() -> bool:
+    result = late(bytes([65]), bytes([66]))
+    return result == b"B"
+
+
+def main(out: Stream) -> int:
+    out.print(test_nested_calls_preserve_results_after_parent_replacement())
+    out.print(test_reordered_arguments_map_to_the_actual_parent())
+    out.print(test_composed_result_escapes_caller_arena())
+    out.print(test_indirect_composed_entry_returns_owned_bits())
+    out.print(test_backedge_callee_mapping_remains_owned())
+    return 0
