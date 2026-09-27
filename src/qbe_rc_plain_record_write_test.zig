@@ -29,6 +29,33 @@ const source =
     \\    count: int
     \\def unique_field(state: mut ResourceState):
     \\    state.count = state.count + 1
+    \\def replace(state: mut State):
+    \\    state = State([11], 4)
+    \\def named_loop(times: int) -> int:
+    \\    state = State([7], 0)
+    \\    i = 0
+    \\    while i < times:
+    \\        state.count = state.count + 1
+    \\        replace(mut state)
+    \\        if i == 2:
+    \\            state = State([13], 6)
+    \\        i += 1
+    \\    return state.count
+    \\def named_held() -> int:
+    \\    mapping = {1: 7}
+    \\    state = Held(mapping.values(), 0)
+    \\    state.count = state.count + 1
+    \\    return state.count
+    \\record CallbackState:
+    \\    items: list[int]
+    \\    callback: def(int) -> int effects()
+    \\    count: int
+    \\def identity(x: int) -> int:
+    \\    return x
+    \\def named_callback() -> int:
+    \\    state = CallbackState([7], identity, 0)
+    \\    state.count = state.count + 1
+    \\    return state.count
     \\def main() -> int:
     \\    state = State([7], 0)
     \\    increment(mut state, 3)
@@ -40,6 +67,38 @@ fn emitted(steps: bool) !std.json.Parsed(Manifest) {
     const text = try compilation.emitQbeWithOptions(t.allocator, .{ .step_checks = steps });
     defer t.allocator.free(text);
     return std.json.parseFromSlice(Manifest, t.allocator, text, .{ .ignore_unknown_fields = true, .allocate = .alloc_always });
+}
+
+// spec: RC-NAMED-RECORD-WRITE-1
+test "RC named record home remains owning through rebind and typed mut call" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    var result = try emitted(false);
+    defer result.deinit();
+    const il = try body(result.value, "named_loop");
+    try t.expectEqual(@as(usize, 1), std.mem.count(u8, il, marker));
+    // The two list constructors retain their existing private-input fallback.
+    // Both whole-record capture loans in the loop have disappeared.
+    try t.expectEqual(@as(usize, 2), std.mem.count(u8, il, "call $myl_rc_native_loan"));
+    const publication = std.mem.indexOf(u8, il, marker) orelse return error.TestUnexpectedResult;
+    try t.expect(std.mem.lastIndexOf(u8, il[0..publication], " =l copy %l") != null);
+    try t.expect(std.mem.indexOf(u8, try body(result.value, "named_held"), marker) == null);
+    try t.expect(std.mem.indexOf(u8, try body(result.value, "named_callback"), marker) == null);
+}
+
+// spec-case: RC-NAMED-RECORD-WRITE-1
+test "RC named record scalar commit remains after the original store step check" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    var result = try emitted(true);
+    defer result.deinit();
+    const il = try body(result.value, "named_loop");
+    const publication = std.mem.indexOf(u8, il, marker) orelse return error.TestUnexpectedResult;
+    const position = std.mem.lastIndexOf(u8, il[0..publication], ", %position\n") orelse return error.TestUnexpectedResult;
+    try t.expect(std.mem.indexOf(u8, il[position..publication], ", @step_limit,") != null);
+    try t.expect(std.mem.indexOf(u8, il[position..publication], "call $myl_rc_") == null);
 }
 fn body(manifest: Manifest, name: []const u8) ![]const u8 {
     for (manifest.functions) |function| if (std.mem.eql(u8, function.name, name)) return function.il;

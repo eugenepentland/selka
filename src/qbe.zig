@@ -1658,6 +1658,7 @@ const Emitter = struct {
             .box_cow = self.cow != null and value_semantics.enabled(),
         });
         if (self.cow) |state| try cow_lower.Lower(Emitter).veto(self, state);
+        if (runtime_mode.enabled()) try @import("rc_plain_record_write.zig").named(Emitter, self);
         if (runtime_mode.enabled()) try @import("qbe_rc_dictionary_tail.zig").finalize(Emitter, self);
         if (runtime_mode.enabled()) try @import("qbe_rc_empty_locals.zig").finalize(Emitter, self);
         if (runtime_mode.enabled()) try @import("qbe_rc_empty_frame.zig").finalize(Emitter, self);

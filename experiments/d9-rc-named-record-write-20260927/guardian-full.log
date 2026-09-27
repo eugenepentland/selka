@@ -1,0 +1,6 @@
+guardian: run-all: whole-tree run — --full was requested
+guardian: file-size: 16 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 6950 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 8 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed

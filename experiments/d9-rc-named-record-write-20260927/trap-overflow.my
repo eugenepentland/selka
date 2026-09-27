@@ -1,0 +1,11 @@
+record State:
+    values: list[int]
+    code: list[int]
+    links: list[int]
+    count: int
+def main(out: Stream) -> int:
+    state = State([7], [8], [9], 9223372036854775807)
+    out.print("before")
+    state.count = state.count + 4
+    out.print(state.count)
+    return 0

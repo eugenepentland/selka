@@ -1,0 +1,8 @@
+BUILD before qbe False 8.79
+BUILD before qbe True 10.37
+BUILD before llvm False 17.71
+BUILD before llvm True 17.26
+BUILD after qbe False 10.06
+BUILD after qbe True 9.37
+BUILD after llvm False 17.33
+BUILD after llvm True 22.59
