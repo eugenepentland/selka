@@ -453,12 +453,8 @@ fn emitConstruct(comptime E: type, self: *E, record: MakeRecord, stack: []const 
 /// text shares one object whatever its scalar widths.
 fn frozenLiteral(comptime E: type, self: *E, record: MakeRecord, element: typed.Type, text: bool) Error!?Frozen {
     const count = record.fields;
-    if (record.order.len != 0 or self.pc < count) return null;
+    if (!@import("constant_literal.zig").frozen(self.function.scope.instructions, self.pc, record, element, text)) return null;
     const first = self.pc - count;
-    for (0..count) |i| switch (self.function.scope.instructions[first + i].op) {
-        .push_integer => |number| if (number.ty != element) return null,
-        else => return null,
-    };
     var frozen: Frozen = .{
         .name = undefined,
         .element = if (text) text_leaf else try self.descriptor(element),

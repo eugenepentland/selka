@@ -312,19 +312,8 @@ const Proof = struct {
 
     fn frozen(self: *Proof, record: @FieldType(@FieldType(bytecode.Instruction, "op"), "make_record"), schema: typed.Record) bool {
         if (schema.collection.kind != .bytes and schema.collection.kind != .string) return false;
-        if (record.order.len != 0 or self.pc < record.fields) return false;
         const element: typed.Type = if (schema.collection.kind == .string) .u32 else schema.shape.buffer.?;
-        for (self.function.scope.instructions[self.pc - record.fields .. self.pc]) |instruction| switch (instruction.op) {
-            .push_integer => |value| {
-                if (value.ty != element) return false;
-                if (schema.collection.kind == .string) {
-                    if (value.value < 0 or value.value > 0x10ffff) return false;
-                    if (value.value >= 0xd800 and value.value <= 0xdfff) return false;
-                }
-            },
-            else => return false,
-        };
-        return true;
+        return @import("constant_literal.zig").frozen(self.function.scope.instructions, self.pc, record, element, schema.collection.kind == .string);
     }
 
     fn variant(self: *Proof, allocator: std.mem.Allocator, value: @FieldType(@FieldType(bytecode.Instruction, "op"), "make_variant")) native.Error!bool {

@@ -57,8 +57,12 @@ pub const BorrowCertificate = struct {
     shape_identity: [32]u8,
     dependency_identity: [32]u8,
 };
+/// Complete public proof of a zero-argument result containing only immortal bits.
+pub const ImmortalCertificate = struct { shape_identity: [32]u8, dependency_identity: [32]u8 };
+/// Explicit internal entry authority; neither convention changes canonical calls.
+pub const EntryCertificate = union(enum) { borrowed: BorrowCertificate, immortal: ImmortalCertificate };
 /// Success result ownership; unknown or mixed provenance uses owned.
-pub const Result = union(enum) { plain, owned, borrowed: BorrowCertificate };
+pub const Result = union(enum) { plain, owned, borrowed: BorrowCertificate, immortal: ImmortalCertificate };
 /// Argument/result obligations when a call reports a runtime failure.
 pub const Failure = enum {
     /// No output token. Read/inout inputs stay with the caller; entry-consumed

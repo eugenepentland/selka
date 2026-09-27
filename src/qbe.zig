@@ -6,6 +6,7 @@ const zero_local = @import("qbe_format.zig").zero_local;
 const arena_lower = @import("qbe_arena.zig");
 const borrow_lower = @import("qbe_borrow.zig");
 const rc_borrow = @import("qbe_rc_borrow.zig");
+const rc_model = @import("rc_model.zig");
 const liveness = @import("qbe_liveness.zig");
 const ownership = @import("ownership.zig");
 const cow_lower = @import("qbe_cow.zig");
@@ -375,10 +376,16 @@ fn appendBorrowedUnits(pass: EmitPass, src: Source, canonical: []const Unit, req
     defer catalog.deinit();
     for (pass.program.functions, 0..) |function, index| {
         if (requested) |mask| if (!mask[index]) continue;
-        const proof = (@import("rc_calls.zig").borrowedIn(a, &catalog, pass.program.functions, function, runtime_mode.identity()) catch |err| return layoutError(err)) orelse continue;
+        const proof: rc_model.EntryCertificate = if (function.signature.parameter_count == 0) blk: {
+            const immortal = (@import("rc_calls.zig").immortalIn(&catalog, pass.program.functions, function, runtime_mode.identity()) catch |err| return layoutError(err)) orelse continue;
+            break :blk .{ .immortal = immortal };
+        } else blk: {
+            const borrowed = (@import("rc_calls.zig").borrowedIn(a, &catalog, pass.program.functions, function, runtime_mode.identity()) catch |err| return layoutError(err)) orelse continue;
+            break :blk .{ .borrowed = borrowed };
+        };
         const emitted = try emitEntry(pass, index, a, proof);
         var unit = pass.units[index];
-        unit.symbol = try rc_borrow.symbol(a, unit.symbol);
+        unit.symbol = try rc_borrow.entrySymbol(a, unit.symbol, proof);
         unit.il = emitted.text;
         unit.stored = null;
         unit.@"export" = null;
@@ -663,7 +670,7 @@ fn emitOne(pass: EmitPass, index: usize, scratch: std.mem.Allocator) GenerateErr
     return emitEntry(pass, index, scratch, null);
 }
 
-fn emitEntry(pass: EmitPass, index: usize, scratch: std.mem.Allocator, certificate: ?@import("rc_model.zig").BorrowCertificate) GenerateError!EmittedEntry {
+fn emitEntry(pass: EmitPass, index: usize, scratch: std.mem.Allocator, certificate: ?rc_model.EntryCertificate) GenerateError!EmittedEntry {
     var emitter = Emitter{
         .allocator = scratch,
         .program = pass.program,
@@ -680,7 +687,7 @@ fn emitEntry(pass: EmitPass, index: usize, scratch: std.mem.Allocator, certifica
         .pure = pass.pure,
         .cow = if (pass.cow == .off) null else try cow_lower.request(scratch, pass.cow == .counting),
     };
-    const name = if (certificate != null) try rc_borrow.symbol(scratch, pass.units[index].symbol) else pass.units[index].symbol;
+    const name = if (certificate) |proof| try rc_borrow.entrySymbol(scratch, pass.units[index].symbol, proof) else pass.units[index].symbol;
     const text = try emitter.emit(name, certificate);
     return .{ .text = text, .states = emitter.states };
 }
@@ -1621,7 +1628,7 @@ const Emitter = struct {
             else => null,
         };
     }
-    fn emit(self: *Emitter, name: []const u8, certificate: ?@import("rc_model.zig").BorrowCertificate) GenerateError![]const u8 {
+    fn emit(self: *Emitter, name: []const u8, certificate: ?rc_model.EntryCertificate) GenerateError![]const u8 {
         const f = self.function;
         if (f.policy.c_abi) return @import("qbe_c_abi.zig").emit(self, name);
         if (f.policy.host != null) return @import("qbe_host_lower.zig").emit(self, name);
@@ -1640,11 +1647,21 @@ const Emitter = struct {
             self.cow.?.rc = try @import("qbe_rc_state.zig").build(Emitter, self, ir.stack_capacity);
             const rc = self.cow.?.rc.?;
             if (certificate) |proof| {
-                rc.contract.result = .{ .borrowed = proof };
+                const readonly = @import("rc_readonly_calls.zig");
+                switch (proof) {
+                    .borrowed => |borrowed| {
+                        rc.contract.result = .{ .borrowed = borrowed };
+                        rc.plan.readonly = readonly.borrowedEntry(&rc.catalog, self.program.functions, f, runtime_mode.identity(), borrowed) catch |err| return layoutError(err);
+                    },
+                    .immortal => |immortal| {
+                        rc.contract.result = .{ .immortal = immortal };
+                        rc.plan.readonly = (readonly.immortalEntry(&rc.catalog, self.program.functions, f, runtime_mode.identity(), immortal) catch |err| return layoutError(err)) orelse return error.InternalError;
+                    },
+                }
             } else {
                 rc.plan.readonly = @import("rc_readonly_calls.zig").certify(&rc.catalog, self.program.functions, f, runtime_mode.identity()) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError;
-                @import("qbe_rc_readonly_calls.zig").activate(Emitter, self);
             }
+            @import("qbe_rc_readonly_calls.zig").activate(Emitter, self);
         }
         if (!runtime_mode.enabled()) self.range_keys = try self.planRangeKeys();
         // QBE-LOOP-VERSION-1: only a build whose value guards are on has
@@ -2610,7 +2627,7 @@ const Emitter = struct {
         try @import("qbe_rc_ops.zig").callEntry(Emitter, self, callee, h - count);
         const v = self.temp();
         const canonical = self.units[@backingInt(target)].symbol;
-        const callee_symbol = if (try rc_borrow.certificate(Emitter, self, callee) != null) try rc_borrow.symbol(self.allocator, canonical) else canonical;
+        const callee_symbol = try rc_borrow.calleeSymbol(Emitter, self, callee, canonical);
         try self.print(" %v{d} ={s} call ${s}(l %ctx", .{ v, try self.returnType(callee), callee_symbol });
         const indirect = try self.largeResult(callee);
         if (indirect) try self.print(", l %aux{d}", .{self.pc});

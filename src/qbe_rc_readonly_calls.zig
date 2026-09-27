@@ -23,6 +23,18 @@ pub fn verify(comptime E: type, self: *E) Error!void {
     const cow = self.cow.?;
     const state = cow.rc orelse return;
     if (!state.readonly) return;
+    const proof = state.plan.readonly orelse return error.InternalError;
+    if (proof.entry) |entry| {
+        switch (entry) {
+            .borrowed => |proof_entry| {
+                if (state.contract.result != .borrowed or !std.meta.eql(proof_entry, state.contract.result.borrowed)) return error.InternalError;
+            },
+            .immortal => |proof_entry| {
+                if (state.contract.result != .immortal or !std.meta.eql(proof_entry, state.contract.result.immortal)) return error.InternalError;
+            },
+        }
+        if (!@import("rc_readonly_plan.zig").quietReturns(self.program.records, self.function)) return error.InternalError;
+    } else if (state.contract.result == .borrowed or state.contract.result == .immortal) return error.InternalError;
     if (!@import("rc_readonly_plan.zig").quiet(cow.plan)) return error.InternalError;
     if (state.plan.records.transfers.len != 0 or state.plan.records.writes.len != 0 or state.plan.dictionary_tails.len != 0) return error.InternalError;
     const none = @import("cow_plan.zig").none;
@@ -33,10 +45,10 @@ pub fn verify(comptime E: type, self: *E) Error!void {
 
 /// A managed raw call must have the exact public certificate saved at this PC.
 /// Access state directly: readonly bodies deliberately make frame.get return null.
-pub fn route(comptime E: type, self: *E, callee: bytecode.Function) Error!?model.BorrowCertificate {
+pub fn route(comptime E: type, self: *E, callee: bytecode.Function) Error!?model.EntryCertificate {
     const state = self.cow.?.rc orelse return error.InternalError;
     if (!state.readonly) return error.InternalError;
-    const shape = state.catalog.get(callee.signature.return_type) catch return error.InternalError;
+    const shape = state.catalog.get(callee.signature.return_type) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError;
     if (shape.unique_drop) return error.InternalError;
     if (!shape.counted) return null;
     const proof = state.plan.readonly orelse return error.InternalError;
@@ -47,9 +59,19 @@ pub fn route(comptime E: type, self: *E, callee: bytecode.Function) Error!?model
         if (argument != parameter.ty) return error.InternalError;
     for (proof.calls) |call| {
         if (call.pc != self.pc) continue;
-        if (call.target != callee.id or call.certificate.parameter >= count) return error.InternalError;
-        const layout = state.catalog.native.layout(callee.signature.return_type) catch return error.InternalError;
-        if (!std.mem.eql(u8, &layout.hash, &call.certificate.shape_identity)) return error.InternalError;
+        if (call.target != callee.id) return error.InternalError;
+        const expected = switch (call.certificate) {
+            .borrowed => |certificate| blk: {
+                if (certificate.parameter >= count) return error.InternalError;
+                break :blk certificate.shape_identity;
+            },
+            .immortal => |certificate| blk: {
+                if (count != 0) return error.InternalError;
+                break :blk certificate.shape_identity;
+            },
+        };
+        const layout = state.catalog.native.layout(callee.signature.return_type) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError;
+        if (!std.mem.eql(u8, &layout.hash, &expected)) return error.InternalError;
         return call.certificate;
     }
     return error.InternalError;
