@@ -1,0 +1,2615 @@
+{
+  "source": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/corpus-e926d1e1/results.json",
+  "source_sha256": "66e36c36173aa4f475561059d60815c62902d0d36454e26cd10e77c6287a4531",
+  "baseline_manifest_sha256": "7a82169b5acc35bc632aca978db99b7cefe4528620513f2b62396d1cf5f8b8d8",
+  "samples": {
+    "parity/suite/sieve|qbe": {
+      "run": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-suite-sieve.qbe"
+        ],
+        "env": {
+          "MYLANG_MEMORY_LIMIT": "8G"
+        },
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/bench/parity/suite"
+      },
+      "checks": {
+        "status": 0,
+        "stdout_sha256": "cf9c0ad3d037bc30d279b430355c9cfab624c7b170305ceee94acb2d79a1be5e",
+        "stderr": "",
+        "ok": true
+      },
+      "observations": {
+        "perf": [
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-suite-sieve.qbe"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n822297245,,cpu_core/instructions/u,138330730,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n469915929,,cpu_core/cycles/u,138330730,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 822297245,
+                "enabled_percent": 100.0,
+                "run_time": "138330730"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 469915929,
+                "enabled_percent": 100.0,
+                "run_time": "138330730"
+              }
+            ],
+            "ok": true,
+            "instructions": 822297245
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-suite-sieve.qbe"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n822297227,,cpu_core/instructions/u,128905116,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n470803379,,cpu_core/cycles/u,128905116,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 822297227,
+                "enabled_percent": 100.0,
+                "run_time": "128905116"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 470803379,
+                "enabled_percent": 100.0,
+                "run_time": "128905116"
+              }
+            ],
+            "ok": true,
+            "instructions": 822297227
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-suite-sieve.qbe"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n822297237,,cpu_core/instructions/u,132493374,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n471261743,,cpu_core/cycles/u,132493374,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 822297237,
+                "enabled_percent": 100.0,
+                "run_time": "132493374"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 471261743,
+                "enabled_percent": 100.0,
+                "run_time": "132493374"
+              }
+            ],
+            "ok": true,
+            "instructions": 822297237
+          }
+        ],
+        "rss": [
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-suite-sieve.qbe"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=21956\n",
+            "ok": true,
+            "peak_rss_kb": 21956
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-suite-sieve.qbe"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=21936\n",
+            "ok": true,
+            "peak_rss_kb": 21936
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-suite-sieve.qbe"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=21940\n",
+            "ok": true,
+            "peak_rss_kb": 21940
+          }
+        ]
+      },
+      "medians": {
+        "instructions": 822297237,
+        "rss_kb": 21940
+      }
+    },
+    "parity/suite/sieve|llvm": {
+      "run": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-suite-sieve.llvm"
+        ],
+        "env": {
+          "MYLANG_MEMORY_LIMIT": "8G"
+        },
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/bench/parity/suite"
+      },
+      "checks": {
+        "status": 0,
+        "stdout_sha256": "cf9c0ad3d037bc30d279b430355c9cfab624c7b170305ceee94acb2d79a1be5e",
+        "stderr": "",
+        "ok": true
+      },
+      "observations": {
+        "perf": [
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-suite-sieve.llvm"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n222097781,,cpu_core/instructions/u,54379974,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n203093264,,cpu_core/cycles/u,54379974,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 222097781,
+                "enabled_percent": 100.0,
+                "run_time": "54379974"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 203093264,
+                "enabled_percent": 100.0,
+                "run_time": "54379974"
+              }
+            ],
+            "ok": true,
+            "instructions": 222097781
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-suite-sieve.llvm"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n222097811,,cpu_core/instructions/u,93260320,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n278812289,,cpu_core/cycles/u,93260320,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 222097811,
+                "enabled_percent": 100.0,
+                "run_time": "93260320"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 278812289,
+                "enabled_percent": 100.0,
+                "run_time": "93260320"
+              }
+            ],
+            "ok": true,
+            "instructions": 222097811
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-suite-sieve.llvm"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n222097779,,cpu_core/instructions/u,63391792,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n206938335,,cpu_core/cycles/u,63391792,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 222097779,
+                "enabled_percent": 100.0,
+                "run_time": "63391792"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 206938335,
+                "enabled_percent": 100.0,
+                "run_time": "63391792"
+              }
+            ],
+            "ok": true,
+            "instructions": 222097779
+          }
+        ],
+        "rss": [
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-suite-sieve.llvm"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=21972\n",
+            "ok": true,
+            "peak_rss_kb": 21972
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-suite-sieve.llvm"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=21952\n",
+            "ok": true,
+            "peak_rss_kb": 21952
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-suite-sieve.llvm"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=22088\n",
+            "ok": true,
+            "peak_rss_kb": 22088
+          }
+        ]
+      },
+      "medians": {
+        "instructions": 222097781,
+        "rss_kb": 21972
+      }
+    },
+    "parity/micro/alloc_churn|qbe": {
+      "run": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-alloc_churn.qbe"
+        ],
+        "env": {
+          "MYLANG_MEMORY_LIMIT": "8G"
+        },
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/bench/parity/micro"
+      },
+      "checks": {
+        "status": 0,
+        "stdout_sha256": "52b8ac479aedeaea1e9da11e3d85b1828bc0ca8b06c48875723325d749fb9f70",
+        "stderr": "",
+        "ok": true
+      },
+      "observations": {
+        "perf": [
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-alloc_churn.qbe"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n3060154857,,cpu_core/instructions/u,262336957,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n937346516,,cpu_core/cycles/u,262336957,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 3060154857,
+                "enabled_percent": 100.0,
+                "run_time": "262336957"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 937346516,
+                "enabled_percent": 100.0,
+                "run_time": "262336957"
+              }
+            ],
+            "ok": true,
+            "instructions": 3060154857
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-alloc_churn.qbe"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n3060154871,,cpu_core/instructions/u,271556472,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n933514453,,cpu_core/cycles/u,271556472,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 3060154871,
+                "enabled_percent": 100.0,
+                "run_time": "271556472"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 933514453,
+                "enabled_percent": 100.0,
+                "run_time": "271556472"
+              }
+            ],
+            "ok": true,
+            "instructions": 3060154871
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-alloc_churn.qbe"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n3060154837,,cpu_core/instructions/u,260172014,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n936413006,,cpu_core/cycles/u,260172014,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 3060154837,
+                "enabled_percent": 100.0,
+                "run_time": "260172014"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 936413006,
+                "enabled_percent": 100.0,
+                "run_time": "260172014"
+              }
+            ],
+            "ok": true,
+            "instructions": 3060154837
+          }
+        ],
+        "rss": [
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-alloc_churn.qbe"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=6728\n",
+            "ok": true,
+            "peak_rss_kb": 6728
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-alloc_churn.qbe"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=6708\n",
+            "ok": true,
+            "peak_rss_kb": 6708
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-alloc_churn.qbe"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=6740\n",
+            "ok": true,
+            "peak_rss_kb": 6740
+          }
+        ]
+      },
+      "medians": {
+        "instructions": 3060154857,
+        "rss_kb": 6728
+      }
+    },
+    "parity/micro/alloc_churn|llvm": {
+      "run": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-alloc_churn.llvm"
+        ],
+        "env": {
+          "MYLANG_MEMORY_LIMIT": "8G"
+        },
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/bench/parity/micro"
+      },
+      "checks": {
+        "status": 0,
+        "stdout_sha256": "52b8ac479aedeaea1e9da11e3d85b1828bc0ca8b06c48875723325d749fb9f70",
+        "stderr": "",
+        "ok": true
+      },
+      "observations": {
+        "perf": [
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-alloc_churn.llvm"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n1950411140,,cpu_core/instructions/u,156856487,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n516302678,,cpu_core/cycles/u,156856487,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 1950411140,
+                "enabled_percent": 100.0,
+                "run_time": "156856487"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 516302678,
+                "enabled_percent": 100.0,
+                "run_time": "156856487"
+              }
+            ],
+            "ok": true,
+            "instructions": 1950411140
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-alloc_churn.llvm"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n1950411148,,cpu_core/instructions/u,149818104,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n530729802,,cpu_core/cycles/u,149818104,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 1950411148,
+                "enabled_percent": 100.0,
+                "run_time": "149818104"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 530729802,
+                "enabled_percent": 100.0,
+                "run_time": "149818104"
+              }
+            ],
+            "ok": true,
+            "instructions": 1950411148
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-alloc_churn.llvm"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n1950411119,,cpu_core/instructions/u,148740554,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n514922201,,cpu_core/cycles/u,148740554,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 1950411119,
+                "enabled_percent": 100.0,
+                "run_time": "148740554"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 514922201,
+                "enabled_percent": 100.0,
+                "run_time": "148740554"
+              }
+            ],
+            "ok": true,
+            "instructions": 1950411119
+          }
+        ],
+        "rss": [
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-alloc_churn.llvm"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=6764\n",
+            "ok": true,
+            "peak_rss_kb": 6764
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-alloc_churn.llvm"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=6784\n",
+            "ok": true,
+            "peak_rss_kb": 6784
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-alloc_churn.llvm"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=6788\n",
+            "ok": true,
+            "peak_rss_kb": 6788
+          }
+        ]
+      },
+      "medians": {
+        "instructions": 1950411140,
+        "rss_kb": 6784
+      }
+    },
+    "parity/micro/list_append_sum|qbe": {
+      "run": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-list_append_sum.qbe"
+        ],
+        "env": {
+          "MYLANG_MEMORY_LIMIT": "8G"
+        },
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/bench/parity/micro"
+      },
+      "checks": {
+        "status": 0,
+        "stdout_sha256": "ecea822e423e436f316f3a4402edf9858cd7c64191481740276675bd6abacc71",
+        "stderr": "",
+        "ok": true
+      },
+      "observations": {
+        "perf": [
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-list_append_sum.qbe"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n592295064,,cpu_core/instructions/u,100213235,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n204317003,,cpu_core/cycles/u,100213235,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 592295064,
+                "enabled_percent": 100.0,
+                "run_time": "100213235"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 204317003,
+                "enabled_percent": 100.0,
+                "run_time": "100213235"
+              }
+            ],
+            "ok": true,
+            "instructions": 592295064
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-list_append_sum.qbe"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n592295019,,cpu_core/instructions/u,56323982,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n124666720,,cpu_core/cycles/u,56323982,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 592295019,
+                "enabled_percent": 100.0,
+                "run_time": "56323982"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 124666720,
+                "enabled_percent": 100.0,
+                "run_time": "56323982"
+              }
+            ],
+            "ok": true,
+            "instructions": 592295019
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-list_append_sum.qbe"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n592295027,,cpu_core/instructions/u,57718722,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n123830605,,cpu_core/cycles/u,57718722,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 592295027,
+                "enabled_percent": 100.0,
+                "run_time": "57718722"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 123830605,
+                "enabled_percent": 100.0,
+                "run_time": "57718722"
+              }
+            ],
+            "ok": true,
+            "instructions": 592295027
+          }
+        ],
+        "rss": [
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-list_append_sum.qbe"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=127828\n",
+            "ok": true,
+            "peak_rss_kb": 127828
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-list_append_sum.qbe"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=127828\n",
+            "ok": true,
+            "peak_rss_kb": 127828
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-list_append_sum.qbe"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=127740\n",
+            "ok": true,
+            "peak_rss_kb": 127740
+          }
+        ]
+      },
+      "medians": {
+        "instructions": 592295027,
+        "rss_kb": 127828
+      }
+    },
+    "parity/micro/list_append_sum|llvm": {
+      "run": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-list_append_sum.llvm"
+        ],
+        "env": {
+          "MYLANG_MEMORY_LIMIT": "8G"
+        },
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/bench/parity/micro"
+      },
+      "checks": {
+        "status": 0,
+        "stdout_sha256": "ecea822e423e436f316f3a4402edf9858cd7c64191481740276675bd6abacc71",
+        "stderr": "",
+        "ok": true
+      },
+      "observations": {
+        "perf": [
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-list_append_sum.llvm"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n246274720,,cpu_core/instructions/u,47000442,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n90810159,,cpu_core/cycles/u,47000442,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 246274720,
+                "enabled_percent": 100.0,
+                "run_time": "47000442"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 90810159,
+                "enabled_percent": 100.0,
+                "run_time": "47000442"
+              }
+            ],
+            "ok": true,
+            "instructions": 246274720
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-list_append_sum.llvm"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n246274723,,cpu_core/instructions/u,60308707,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n88697784,,cpu_core/cycles/u,60308707,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 246274723,
+                "enabled_percent": 100.0,
+                "run_time": "60308707"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 88697784,
+                "enabled_percent": 100.0,
+                "run_time": "60308707"
+              }
+            ],
+            "ok": true,
+            "instructions": 246274723
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-list_append_sum.llvm"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n246274722,,cpu_core/instructions/u,62503826,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n86664123,,cpu_core/cycles/u,62503826,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 246274722,
+                "enabled_percent": 100.0,
+                "run_time": "62503826"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 86664123,
+                "enabled_percent": 100.0,
+                "run_time": "62503826"
+              }
+            ],
+            "ok": true,
+            "instructions": 246274722
+          }
+        ],
+        "rss": [
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-list_append_sum.llvm"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=127744\n",
+            "ok": true,
+            "peak_rss_kb": 127744
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-list_append_sum.llvm"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=127844\n",
+            "ok": true,
+            "peak_rss_kb": 127844
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-list_append_sum.llvm"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=127748\n",
+            "ok": true,
+            "peak_rss_kb": 127748
+          }
+        ]
+      },
+      "medians": {
+        "instructions": 246274722,
+        "rss_kb": 127748
+      }
+    },
+    "schematic/fixture|qbe": {
+      "run": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.qbe",
+          "--print-result"
+        ],
+        "env": {
+          "MYLANG_MEMORY_LIMIT": "8G",
+          "MYLANG_SCHEMATIC_DECLARED": "io::circuit_input,io::pinout_input,io::interface_input,io::length,io::read_block,io::read_document,io::write_block,io::write_bytes,io::finish,io::output_limit,io::byte,io::put,io::issue",
+          "MYLANG_SCHEMATIC_OUTPUT": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/runs/fixture-corpus-gc-qbe.svg",
+          "MYLANG_SCHEMATIC_ISSUE": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/runs/fixture-corpus-gc-qbe.issue",
+          "MYLANG_SCHEMATIC_INPUT_0": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/projects/fixture/lib/modules/straps-synth-lmx2595.sexp",
+          "MYLANG_SCHEMATIC_INPUT_1": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/lmx2595rhar.sexp",
+          "MYLANG_SCHEMATIC_INPUT_2": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/projects/fixture/lib/interfaces/spi.sexp"
+        },
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance",
+        "svg": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/runs/fixture-corpus-gc-qbe.svg",
+        "issue": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/runs/fixture-corpus-gc-qbe.issue"
+      },
+      "checks": {
+        "status": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "",
+        "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "svg_bytes": 49617,
+        "ok": true
+      },
+      "observations": {
+        "perf": [
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.qbe",
+              "--print-result"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n18595773,,cpu_core/instructions/u,1739767,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n4713649,,cpu_core/cycles/u,1739767,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 18595773,
+                "enabled_percent": 100.0,
+                "run_time": "1739767"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 4713649,
+                "enabled_percent": 100.0,
+                "run_time": "1739767"
+              }
+            ],
+            "ok": true,
+            "instructions": 18595773
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.qbe",
+              "--print-result"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n18595818,,cpu_core/instructions/u,1693227,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n4390478,,cpu_core/cycles/u,1693227,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 18595818,
+                "enabled_percent": 100.0,
+                "run_time": "1693227"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 4390478,
+                "enabled_percent": 100.0,
+                "run_time": "1693227"
+              }
+            ],
+            "ok": true,
+            "instructions": 18595818
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.qbe",
+              "--print-result"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n18595873,,cpu_core/instructions/u,1731154,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n4374616,,cpu_core/cycles/u,1731154,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 18595873,
+                "enabled_percent": 100.0,
+                "run_time": "1731154"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 4374616,
+                "enabled_percent": 100.0,
+                "run_time": "1731154"
+              }
+            ],
+            "ok": true,
+            "instructions": 18595873
+          }
+        ],
+        "rss": [
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.qbe",
+              "--print-result"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=3600\n",
+            "ok": true,
+            "peak_rss_kb": 3600
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.qbe",
+              "--print-result"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=3472\n",
+            "ok": true,
+            "peak_rss_kb": 3472
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.qbe",
+              "--print-result"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=3504\n",
+            "ok": true,
+            "peak_rss_kb": 3504
+          }
+        ]
+      },
+      "medians": {
+        "instructions": 18595818,
+        "rss_kb": 3504
+      }
+    },
+    "schematic/fixture|llvm": {
+      "run": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.llvm",
+          "--print-result"
+        ],
+        "env": {
+          "MYLANG_MEMORY_LIMIT": "8G",
+          "MYLANG_SCHEMATIC_DECLARED": "io::circuit_input,io::pinout_input,io::interface_input,io::length,io::read_block,io::read_document,io::write_block,io::write_bytes,io::finish,io::output_limit,io::byte,io::put,io::issue",
+          "MYLANG_SCHEMATIC_OUTPUT": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/runs/fixture-corpus-gc-llvm.svg",
+          "MYLANG_SCHEMATIC_ISSUE": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/runs/fixture-corpus-gc-llvm.issue",
+          "MYLANG_SCHEMATIC_INPUT_0": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/projects/fixture/lib/modules/straps-synth-lmx2595.sexp",
+          "MYLANG_SCHEMATIC_INPUT_1": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/lmx2595rhar.sexp",
+          "MYLANG_SCHEMATIC_INPUT_2": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/projects/fixture/lib/interfaces/spi.sexp"
+        },
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance",
+        "svg": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/runs/fixture-corpus-gc-llvm.svg",
+        "issue": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/runs/fixture-corpus-gc-llvm.issue"
+      },
+      "checks": {
+        "status": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "",
+        "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "svg_bytes": 49617,
+        "ok": true
+      },
+      "observations": {
+        "perf": [
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.llvm",
+              "--print-result"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n9059095,,cpu_core/instructions/u,1418668,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n3276035,,cpu_core/cycles/u,1418668,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 9059095,
+                "enabled_percent": 100.0,
+                "run_time": "1418668"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 3276035,
+                "enabled_percent": 100.0,
+                "run_time": "1418668"
+              }
+            ],
+            "ok": true,
+            "instructions": 9059095
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.llvm",
+              "--print-result"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n9059148,,cpu_core/instructions/u,1416106,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n3291376,,cpu_core/cycles/u,1416106,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 9059148,
+                "enabled_percent": 100.0,
+                "run_time": "1416106"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 3291376,
+                "enabled_percent": 100.0,
+                "run_time": "1416106"
+              }
+            ],
+            "ok": true,
+            "instructions": 9059148
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.llvm",
+              "--print-result"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n9059039,,cpu_core/instructions/u,1421241,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n3273572,,cpu_core/cycles/u,1421241,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 9059039,
+                "enabled_percent": 100.0,
+                "run_time": "1421241"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 3273572,
+                "enabled_percent": 100.0,
+                "run_time": "1421241"
+              }
+            ],
+            "ok": true,
+            "instructions": 9059039
+          }
+        ],
+        "rss": [
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.llvm",
+              "--print-result"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=3440\n",
+            "ok": true,
+            "peak_rss_kb": 3440
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.llvm",
+              "--print-result"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=3440\n",
+            "ok": true,
+            "peak_rss_kb": 3440
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.llvm",
+              "--print-result"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=3440\n",
+            "ok": true,
+            "peak_rss_kb": 3440
+          }
+        ]
+      },
+      "medians": {
+        "instructions": 9059095,
+        "rss_kb": 3440
+      }
+    },
+    "schematic/changed-net|qbe": {
+      "run": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.qbe",
+          "--print-result"
+        ],
+        "env": {
+          "MYLANG_MEMORY_LIMIT": "8G",
+          "MYLANG_SCHEMATIC_DECLARED": "io::circuit_input,io::pinout_input,io::interface_input,io::length,io::read_block,io::read_document,io::write_block,io::write_bytes,io::finish,io::output_limit,io::byte,io::put,io::issue",
+          "MYLANG_SCHEMATIC_OUTPUT": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/runs/changed-net-corpus-gc-qbe.svg",
+          "MYLANG_SCHEMATIC_ISSUE": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/runs/changed-net-corpus-gc-qbe.issue",
+          "MYLANG_SCHEMATIC_INPUT_0": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/projects/changed-net/lib/modules/straps-synth-lmx2595.sexp",
+          "MYLANG_SCHEMATIC_INPUT_1": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/projects/changed-net/lib/pinouts/lmx2595rhar.sexp",
+          "MYLANG_SCHEMATIC_INPUT_2": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/projects/changed-net/lib/interfaces/spi.sexp"
+        },
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance",
+        "svg": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/runs/changed-net-corpus-gc-qbe.svg",
+        "issue": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/runs/changed-net-corpus-gc-qbe.issue"
+      },
+      "checks": {
+        "status": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "",
+        "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "svg_bytes": 49647,
+        "ok": true
+      },
+      "observations": {
+        "perf": [
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.qbe",
+              "--print-result"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n18604641,,cpu_core/instructions/u,1711404,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n4414458,,cpu_core/cycles/u,1711404,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 18604641,
+                "enabled_percent": 100.0,
+                "run_time": "1711404"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 4414458,
+                "enabled_percent": 100.0,
+                "run_time": "1711404"
+              }
+            ],
+            "ok": true,
+            "instructions": 18604641
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.qbe",
+              "--print-result"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n18604606,,cpu_core/instructions/u,1613220,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n4428597,,cpu_core/cycles/u,1613220,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 18604606,
+                "enabled_percent": 100.0,
+                "run_time": "1613220"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 4428597,
+                "enabled_percent": 100.0,
+                "run_time": "1613220"
+              }
+            ],
+            "ok": true,
+            "instructions": 18604606
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.qbe",
+              "--print-result"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n18604633,,cpu_core/instructions/u,1726703,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n4385922,,cpu_core/cycles/u,1726703,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 18604633,
+                "enabled_percent": 100.0,
+                "run_time": "1726703"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 4385922,
+                "enabled_percent": 100.0,
+                "run_time": "1726703"
+              }
+            ],
+            "ok": true,
+            "instructions": 18604633
+          }
+        ],
+        "rss": [
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.qbe",
+              "--print-result"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=3512\n",
+            "ok": true,
+            "peak_rss_kb": 3512
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.qbe",
+              "--print-result"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=3464\n",
+            "ok": true,
+            "peak_rss_kb": 3464
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.qbe",
+              "--print-result"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=3504\n",
+            "ok": true,
+            "peak_rss_kb": 3504
+          }
+        ]
+      },
+      "medians": {
+        "instructions": 18604633,
+        "rss_kb": 3504
+      }
+    },
+    "schematic/changed-net|llvm": {
+      "run": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.llvm",
+          "--print-result"
+        ],
+        "env": {
+          "MYLANG_MEMORY_LIMIT": "8G",
+          "MYLANG_SCHEMATIC_DECLARED": "io::circuit_input,io::pinout_input,io::interface_input,io::length,io::read_block,io::read_document,io::write_block,io::write_bytes,io::finish,io::output_limit,io::byte,io::put,io::issue",
+          "MYLANG_SCHEMATIC_OUTPUT": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/runs/changed-net-corpus-gc-llvm.svg",
+          "MYLANG_SCHEMATIC_ISSUE": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/runs/changed-net-corpus-gc-llvm.issue",
+          "MYLANG_SCHEMATIC_INPUT_0": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/projects/changed-net/lib/modules/straps-synth-lmx2595.sexp",
+          "MYLANG_SCHEMATIC_INPUT_1": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/projects/changed-net/lib/pinouts/lmx2595rhar.sexp",
+          "MYLANG_SCHEMATIC_INPUT_2": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/projects/changed-net/lib/interfaces/spi.sexp"
+        },
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance",
+        "svg": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/runs/changed-net-corpus-gc-llvm.svg",
+        "issue": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/runs/changed-net-corpus-gc-llvm.issue"
+      },
+      "checks": {
+        "status": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "",
+        "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "svg_bytes": 49647,
+        "ok": true
+      },
+      "observations": {
+        "perf": [
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.llvm",
+              "--print-result"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n9063605,,cpu_core/instructions/u,1471599,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n3229785,,cpu_core/cycles/u,1471599,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 9063605,
+                "enabled_percent": 100.0,
+                "run_time": "1471599"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 3229785,
+                "enabled_percent": 100.0,
+                "run_time": "1471599"
+              }
+            ],
+            "ok": true,
+            "instructions": 9063605
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.llvm",
+              "--print-result"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n9063534,,cpu_core/instructions/u,1582037,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n3516655,,cpu_core/cycles/u,1582037,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 9063534,
+                "enabled_percent": 100.0,
+                "run_time": "1582037"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 3516655,
+                "enabled_percent": 100.0,
+                "run_time": "1582037"
+              }
+            ],
+            "ok": true,
+            "instructions": 9063534
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.llvm",
+              "--print-result"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n9063642,,cpu_core/instructions/u,1366114,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n3191926,,cpu_core/cycles/u,1366114,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 9063642,
+                "enabled_percent": 100.0,
+                "run_time": "1366114"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 3191926,
+                "enabled_percent": 100.0,
+                "run_time": "1366114"
+              }
+            ],
+            "ok": true,
+            "instructions": 9063642
+          }
+        ],
+        "rss": [
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.llvm",
+              "--print-result"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=3472\n",
+            "ok": true,
+            "peak_rss_kb": 3472
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.llvm",
+              "--print-result"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=3416\n",
+            "ok": true,
+            "peak_rss_kb": 3416
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.llvm",
+              "--print-result"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=3480\n",
+            "ok": true,
+            "peak_rss_kb": 3480
+          }
+        ]
+      },
+      "medians": {
+        "instructions": 9063605,
+        "rss_kb": 3472
+      }
+    },
+    "schematic/changed-value|qbe": {
+      "run": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.qbe",
+          "--print-result"
+        ],
+        "env": {
+          "MYLANG_MEMORY_LIMIT": "8G",
+          "MYLANG_SCHEMATIC_DECLARED": "io::circuit_input,io::pinout_input,io::interface_input,io::length,io::read_block,io::read_document,io::write_block,io::write_bytes,io::finish,io::output_limit,io::byte,io::put,io::issue",
+          "MYLANG_SCHEMATIC_OUTPUT": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/runs/changed-value-corpus-gc-qbe.svg",
+          "MYLANG_SCHEMATIC_ISSUE": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/runs/changed-value-corpus-gc-qbe.issue",
+          "MYLANG_SCHEMATIC_INPUT_0": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/projects/changed-value/lib/modules/straps-synth-lmx2595.sexp",
+          "MYLANG_SCHEMATIC_INPUT_1": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/projects/changed-value/lib/pinouts/lmx2595rhar.sexp",
+          "MYLANG_SCHEMATIC_INPUT_2": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/projects/changed-value/lib/interfaces/spi.sexp"
+        },
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance",
+        "svg": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/runs/changed-value-corpus-gc-qbe.svg",
+        "issue": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/runs/changed-value-corpus-gc-qbe.issue"
+      },
+      "checks": {
+        "status": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "",
+        "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+        "svg_bytes": 49617,
+        "ok": true
+      },
+      "observations": {
+        "perf": [
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.qbe",
+              "--print-result"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n18594944,,cpu_core/instructions/u,1826294,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n4433969,,cpu_core/cycles/u,1826294,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 18594944,
+                "enabled_percent": 100.0,
+                "run_time": "1826294"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 4433969,
+                "enabled_percent": 100.0,
+                "run_time": "1826294"
+              }
+            ],
+            "ok": true,
+            "instructions": 18594944
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.qbe",
+              "--print-result"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n18594975,,cpu_core/instructions/u,1791658,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n4399954,,cpu_core/cycles/u,1791658,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 18594975,
+                "enabled_percent": 100.0,
+                "run_time": "1791658"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 4399954,
+                "enabled_percent": 100.0,
+                "run_time": "1791658"
+              }
+            ],
+            "ok": true,
+            "instructions": 18594975
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.qbe",
+              "--print-result"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n18594949,,cpu_core/instructions/u,1867115,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n4590278,,cpu_core/cycles/u,1867115,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 18594949,
+                "enabled_percent": 100.0,
+                "run_time": "1867115"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 4590278,
+                "enabled_percent": 100.0,
+                "run_time": "1867115"
+              }
+            ],
+            "ok": true,
+            "instructions": 18594949
+          }
+        ],
+        "rss": [
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.qbe",
+              "--print-result"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=3504\n",
+            "ok": true,
+            "peak_rss_kb": 3504
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.qbe",
+              "--print-result"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=3592\n",
+            "ok": true,
+            "peak_rss_kb": 3592
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.qbe",
+              "--print-result"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=3508\n",
+            "ok": true,
+            "peak_rss_kb": 3508
+          }
+        ]
+      },
+      "medians": {
+        "instructions": 18594949,
+        "rss_kb": 3508
+      }
+    },
+    "schematic/changed-value|llvm": {
+      "run": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.llvm",
+          "--print-result"
+        ],
+        "env": {
+          "MYLANG_MEMORY_LIMIT": "8G",
+          "MYLANG_SCHEMATIC_DECLARED": "io::circuit_input,io::pinout_input,io::interface_input,io::length,io::read_block,io::read_document,io::write_block,io::write_bytes,io::finish,io::output_limit,io::byte,io::put,io::issue",
+          "MYLANG_SCHEMATIC_OUTPUT": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/runs/changed-value-corpus-gc-llvm.svg",
+          "MYLANG_SCHEMATIC_ISSUE": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/runs/changed-value-corpus-gc-llvm.issue",
+          "MYLANG_SCHEMATIC_INPUT_0": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/projects/changed-value/lib/modules/straps-synth-lmx2595.sexp",
+          "MYLANG_SCHEMATIC_INPUT_1": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/projects/changed-value/lib/pinouts/lmx2595rhar.sexp",
+          "MYLANG_SCHEMATIC_INPUT_2": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/projects/changed-value/lib/interfaces/spi.sexp"
+        },
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance",
+        "svg": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/runs/changed-value-corpus-gc-llvm.svg",
+        "issue": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/runs/changed-value-corpus-gc-llvm.issue"
+      },
+      "checks": {
+        "status": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "",
+        "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+        "svg_bytes": 49617,
+        "ok": true
+      },
+      "observations": {
+        "perf": [
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.llvm",
+              "--print-result"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n9058193,,cpu_core/instructions/u,1546474,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n3451197,,cpu_core/cycles/u,1546474,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 9058193,
+                "enabled_percent": 100.0,
+                "run_time": "1546474"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 3451197,
+                "enabled_percent": 100.0,
+                "run_time": "1546474"
+              }
+            ],
+            "ok": true,
+            "instructions": 9058193
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.llvm",
+              "--print-result"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n9058221,,cpu_core/instructions/u,1477477,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n3295823,,cpu_core/cycles/u,1477477,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 9058221,
+                "enabled_percent": 100.0,
+                "run_time": "1477477"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 3295823,
+                "enabled_percent": 100.0,
+                "run_time": "1477477"
+              }
+            ],
+            "ok": true,
+            "instructions": 9058221
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.llvm",
+              "--print-result"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n9058219,,cpu_core/instructions/u,1471425,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n3205521,,cpu_core/cycles/u,1471425,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 9058219,
+                "enabled_percent": 100.0,
+                "run_time": "1471425"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 3205521,
+                "enabled_percent": 100.0,
+                "run_time": "1471425"
+              }
+            ],
+            "ok": true,
+            "instructions": 9058219
+          }
+        ],
+        "rss": [
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.llvm",
+              "--print-result"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=3464\n",
+            "ok": true,
+            "peak_rss_kb": 3464
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.llvm",
+              "--print-result"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=3472\n",
+            "ok": true,
+            "peak_rss_kb": 3472
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/schematic.llvm",
+              "--print-result"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=3460\n",
+            "ok": true,
+            "peak_rss_kb": 3460
+          }
+        ]
+      },
+      "medians": {
+        "instructions": 9058219,
+        "rss_kb": 3464
+      }
+    },
+    "lox/vm/binary_trees|qbe": {
+      "run": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/lox.qbe",
+          "--engine=vm",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/lox-scripts/binary_trees.tree.lox"
+        ],
+        "env": {
+          "MYLANG_MEMORY_LIMIT": "8G"
+        },
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance"
+      },
+      "checks": {
+        "status": 0,
+        "stdout_sha256": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056",
+        "stderr": "",
+        "ok": true
+      },
+      "observations": {
+        "perf": [
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/lox.qbe",
+              "--engine=vm",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/lox-scripts/binary_trees.tree.lox"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n7243226358,,cpu_core/instructions/u,541491361,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n1819817990,,cpu_core/cycles/u,541491361,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 7243226358,
+                "enabled_percent": 100.0,
+                "run_time": "541491361"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 1819817990,
+                "enabled_percent": 100.0,
+                "run_time": "541491361"
+              }
+            ],
+            "ok": true,
+            "instructions": 7243226358
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/lox.qbe",
+              "--engine=vm",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/lox-scripts/binary_trees.tree.lox"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n7243227886,,cpu_core/instructions/u,480449162,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n1783459148,,cpu_core/cycles/u,480449162,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 7243227886,
+                "enabled_percent": 100.0,
+                "run_time": "480449162"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 1783459148,
+                "enabled_percent": 100.0,
+                "run_time": "480449162"
+              }
+            ],
+            "ok": true,
+            "instructions": 7243227886
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/lox.qbe",
+              "--engine=vm",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/lox-scripts/binary_trees.tree.lox"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n7243228363,,cpu_core/instructions/u,481879325,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n1793620108,,cpu_core/cycles/u,481879325,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 7243228363,
+                "enabled_percent": 100.0,
+                "run_time": "481879325"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 1793620108,
+                "enabled_percent": 100.0,
+                "run_time": "481879325"
+              }
+            ],
+            "ok": true,
+            "instructions": 7243228363
+          }
+        ],
+        "rss": [
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/lox.qbe",
+              "--engine=vm",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/lox-scripts/binary_trees.tree.lox"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=53124\n",
+            "ok": true,
+            "peak_rss_kb": 53124
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/lox.qbe",
+              "--engine=vm",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/lox-scripts/binary_trees.tree.lox"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=53136\n",
+            "ok": true,
+            "peak_rss_kb": 53136
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/lox.qbe",
+              "--engine=vm",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/lox-scripts/binary_trees.tree.lox"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=53120\n",
+            "ok": true,
+            "peak_rss_kb": 53120
+          }
+        ]
+      },
+      "medians": {
+        "instructions": 7243227886,
+        "rss_kb": 53124
+      }
+    },
+    "lox/vm/binary_trees|llvm": {
+      "run": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/lox.llvm",
+          "--engine=vm",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/lox-scripts/binary_trees.tree.lox"
+        ],
+        "env": {
+          "MYLANG_MEMORY_LIMIT": "8G"
+        },
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance"
+      },
+      "checks": {
+        "status": 0,
+        "stdout_sha256": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056",
+        "stderr": "",
+        "ok": true
+      },
+      "observations": {
+        "perf": [
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/lox.llvm",
+              "--engine=vm",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/lox-scripts/binary_trees.tree.lox"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n3433158920,,cpu_core/instructions/u,306484248,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n1034389611,,cpu_core/cycles/u,306484248,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 3433158920,
+                "enabled_percent": 100.0,
+                "run_time": "306484248"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 1034389611,
+                "enabled_percent": 100.0,
+                "run_time": "306484248"
+              }
+            ],
+            "ok": true,
+            "instructions": 3433158920
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/lox.llvm",
+              "--engine=vm",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/lox-scripts/binary_trees.tree.lox"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n3433155721,,cpu_core/instructions/u,488525489,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n1128562969,,cpu_core/cycles/u,488525489,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 3433155721,
+                "enabled_percent": 100.0,
+                "run_time": "488525489"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 1128562969,
+                "enabled_percent": 100.0,
+                "run_time": "488525489"
+              }
+            ],
+            "ok": true,
+            "instructions": 3433155721
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/lox.llvm",
+              "--engine=vm",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/lox-scripts/binary_trees.tree.lox"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n3433157037,,cpu_core/instructions/u,486620285,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n1132682307,,cpu_core/cycles/u,486620285,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 3433157037,
+                "enabled_percent": 100.0,
+                "run_time": "486620285"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 1132682307,
+                "enabled_percent": 100.0,
+                "run_time": "486620285"
+              }
+            ],
+            "ok": true,
+            "instructions": 3433157037
+          }
+        ],
+        "rss": [
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/lox.llvm",
+              "--engine=vm",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/lox-scripts/binary_trees.tree.lox"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=53032\n",
+            "ok": true,
+            "peak_rss_kb": 53032
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/lox.llvm",
+              "--engine=vm",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/lox-scripts/binary_trees.tree.lox"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=53000\n",
+            "ok": true,
+            "peak_rss_kb": 53000
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/lox.llvm",
+              "--engine=vm",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/lox-scripts/binary_trees.tree.lox"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=53012\n",
+            "ok": true,
+            "peak_rss_kb": 53012
+          }
+        ]
+      },
+      "medians": {
+        "instructions": 3433157037,
+        "rss_kb": 53012
+      }
+    }
+  }
+}

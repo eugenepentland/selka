@@ -1,0 +1,110 @@
+{
+  "before": [
+    {
+      "name": "fold",
+      "marker_count": 0
+    },
+    {
+      "name": "fresh",
+      "marker_count": 0
+    },
+    {
+      "name": "owned",
+      "marker_count": 0
+    },
+    {
+      "name": "borrowed",
+      "marker_count": 0
+    },
+    {
+      "name": "test_owned_held_and_empty_read_loops",
+      "marker_count": 0
+    },
+    {
+      "name": "test_short_and_negative_index_fallbacks",
+      "marker_count": 0
+    },
+    {
+      "name": "test_snapshot_and_callback_after_fold_keep_original_owners",
+      "marker_count": 0
+    },
+    {
+      "name": "test_nested_dynamic_entries_retain_each_iterator",
+      "marker_count": 0
+    },
+    {
+      "name": "test_parent_and_nested_arenas_keep_held_storage",
+      "marker_count": 0
+    },
+    {
+      "name": "test_narrow_and_boolean_elements_keep_width_semantics",
+      "marker_count": 0
+    },
+    {
+      "name": "test_multiple_stable_sources_keep_each_owner",
+      "marker_count": 0
+    },
+    {
+      "name": "test_unrelated_managed_values_remain_journaled",
+      "marker_count": 0
+    },
+    {
+      "name": "main",
+      "marker_count": 0
+    }
+  ],
+  "after": [
+    {
+      "name": "fold",
+      "marker_count": 1
+    },
+    {
+      "name": "fresh",
+      "marker_count": 1
+    },
+    {
+      "name": "owned",
+      "marker_count": 0
+    },
+    {
+      "name": "borrowed",
+      "marker_count": 0
+    },
+    {
+      "name": "test_owned_held_and_empty_read_loops",
+      "marker_count": 0
+    },
+    {
+      "name": "test_short_and_negative_index_fallbacks",
+      "marker_count": 0
+    },
+    {
+      "name": "test_snapshot_and_callback_after_fold_keep_original_owners",
+      "marker_count": 0
+    },
+    {
+      "name": "test_nested_dynamic_entries_retain_each_iterator",
+      "marker_count": 1
+    },
+    {
+      "name": "test_parent_and_nested_arenas_keep_held_storage",
+      "marker_count": 0
+    },
+    {
+      "name": "test_narrow_and_boolean_elements_keep_width_semantics",
+      "marker_count": 2
+    },
+    {
+      "name": "test_multiple_stable_sources_keep_each_owner",
+      "marker_count": 0
+    },
+    {
+      "name": "test_unrelated_managed_values_remain_journaled",
+      "marker_count": 0
+    },
+    {
+      "name": "main",
+      "marker_count": 0
+    }
+  ]
+}

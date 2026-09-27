@@ -1,6 +1,8 @@
 # Read-only scalar-list loop versions
 
-Status: source audit and proposed implementation, not implemented or measured.
+Status: implemented and measured as a separate bounded slice. See
+`d9-rc-read-list-version-results-2026-09-27.md` for the full matched results,
+negative controls and remaining accepted-GC gaps.
 This is separate from the completed readiness slice `95121e70` and its
 comment-only follow-up `aadf9e80`. WP-4 performance acceptance remains open.
 
@@ -72,7 +74,11 @@ is admitted initially. At least one actual list read is required.
 
 Each owner must have direct private local storage and a retained physical
 journal entry: no by-reference/caller-storage slot, place alias, empty-local
-certificate, or raw borrowed slot. The new guard reads its initialized bit and
+certificate, or substituted physical storage. Hidden iteration locals can retain
+semantic ancestor aliases, but are admitted only when `iterationOwner` is true,
+`moves.resolve` remains identity and reads use their own physical `%lN` word.
+The exact dynamic guard below proves their private H token; it does not use the
+ancestor's journal. Other semantic aliases refuse. The new guard reads its initialized bit and
 actual exclusive role, accepting only ordinary counted O (2) or terminal H (8).
 LOAN16 and every other role go to the unchanged original loop. This guard does
 not acquire a token, change history, read a payload prefix, allocate, drain or
@@ -99,6 +105,11 @@ The source grammar alone is insufficient. At every reachable body PC reject:
   starting receiver scopes, and any loop-entry check inside the interval.
 - Field-transfer/projection commitments and every actually emitted local
   release, using `qbe_rc_edges.releasesAt` rather than nominal liveness alone.
+  This query intentionally matches actual emission: `qbe_rc_edges.after` emits
+  only straight-line `store_local` releases to PC+1. Planned branch/backedge
+  releases are not emitted. The separate dictionary proof conservatively vetoes
+  all planned releases; this proof additionally inspects the actual emitted copy
+  and refuses any cleanup call, including if future scheduling expands.
 - Independent alternate entries or unsupported inline origins.
 
 The root cannot be replaced, dropped, moved or expose a new address inside the
