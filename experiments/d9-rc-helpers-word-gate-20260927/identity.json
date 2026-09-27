@@ -1,0 +1,70 @@
+{
+  "source_commit": "c07016f308422b76cfe55607b26243efe0b4257e",
+  "compiler_mode": "Debug",
+  "compiler_path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-integration/.tmp-rc/install-helpers-word/bin/mylang",
+  "compiler_sha256": "db9d8791fb56a9c07e5db529b5abe54b2689966364095de89e2abcaca4409b2b",
+  "commands": {
+    "final-build": {
+      "exit_code": 0,
+      "summary": "Build Summary: 19/19 steps succeeded"
+    },
+    "test": {
+      "exit_code": 0,
+      "summary": "Build Summary: 94/94 steps succeeded; 2368/26559 tests passed (24191 skipped)"
+    },
+    "test-qbe": {
+      "exit_code": 0,
+      "summary": "Build Summary: 51/51 steps succeeded; 451/451 tests passed"
+    },
+    "test-qbe-build": {
+      "exit_code": 0,
+      "summary": "Build Summary: 29/29 steps succeeded"
+    },
+    "fmt-check": {
+      "exit_code": 0,
+      "summary": "Build Summary: 2/2 steps succeeded"
+    }
+  },
+  "sweeps": {
+    "qbe": {
+      "version": "native-tests-v1",
+      "passed": 1019,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 1019,
+      "programs": 173,
+      "dropped": 0,
+      "unloaded": 0
+    },
+    "llvm": {
+      "version": "native-tests-v1",
+      "passed": 1019,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 1019,
+      "programs": 173,
+      "dropped": 0,
+      "unloaded": 0
+    }
+  },
+  "guardian_checks": 88,
+  "artifacts": {
+    "README.md": "ab04601f0c5754b3c0910e37c2db21a7784cd222ce7b127b1edff9d63f3e9f82",
+    "final-build.log.gz": "f7003f5b77ab828e4c5654938fd9ae237f243b36e6045d1eaad2e84b9c2a93f3",
+    "fmt-check.log.gz": "de01a91b7b313677fe046c287a2404a16ae2c7b1d6d2793c81737dda7bc60d14",
+    "gate-status.log.gz": "8cb6c1106a59bc2dc387dd4274908f883e699b12dbeb215a35e92193cbf58205",
+    "gate.sh": "507d9d49ba0e4ccf5b54904855233ab33c48a0a8ee5d548d16292e8f53c2186c",
+    "guardian.log.gz": "a3f02af45413ac808fd110d99a2725bbc546203b4a037aeb5f700a1ec6e6b418",
+    "sweep-llvm.json.gz": "8ce97466ab1815188057b499cd4c6b14fd337f8b65c57b8e5beb9de7fd313a65",
+    "sweep-llvm.log.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "sweep-qbe.json.gz": "62132449954828a67637ce5ede40399ad6d014d665a48ccf5728209af5e544d5",
+    "sweep-qbe.log.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "sweep-status.log.gz": "f7c9542e2f2f6dcb8be4fe9c7d1eaada4d5e6eba7536bd0fcbbd8ff43f0153ad",
+    "sweep.sh": "76f215083990b63f9f6defc99b73dee7c768c3e5a15d006fc1c509276219c079",
+    "test-qbe-build.log.gz": "dd99c14b3db6946a4b4b33d4835115e5c100cff5d7fbfc31941615b925ac0c6e",
+    "test-qbe.log.gz": "ebba8fc48af98bd0450696b70c85a8146903ddf1b1d1be9053c1ec697d9d13c9",
+    "test.log.gz": "402a520ccbf32815a9eaa310b0efa8abaee001c74f715f4f9ab3b5f01ae2f14c"
+  }
+}
