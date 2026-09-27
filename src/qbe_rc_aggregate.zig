@@ -57,7 +57,8 @@ fn owns(comptime E: type, self: *E, ty: typed.Type) Error!bool {
 }
 
 fn zero(comptime E: type, self: *E, ty: typed.Type, address: usize) Error!void {
-    try self.print(" call $memset(l %v{d}, w 0, l {d})\n", .{ address, (try self.layout(ty)).size });
+    const layout = try self.layout(ty);
+    try @import("qbe_zero.zig").clear(*E, self, address, layout.size, layout.alignment);
 }
 
 const Field = struct { ty: typed.Type, source: usize, destination: usize, region: usize, operand: ?usize = null, infallible: bool = false };

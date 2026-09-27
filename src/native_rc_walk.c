@@ -115,49 +115,111 @@ void myl_rc_flat_edges_release(myl_native_heap *heap, const myl_rc_binding *bind
         cursor += binding->flat.size;
     }
 }
+/* Deferred counter updates of one drain's inline retirements: they are
+ * applied before any callback runs and when the drain ends, so a callback
+ * that allocates always sees a bumped reuse epoch. */
+typedef struct { size_t retired, pushed; } drain_tally;
+static void tally_apply(myl_native_heap *heap, drain_tally *tally) {
+    if (!tally->retired) return;
+    myl_rc_invariant(heap->objects_live >= tally->retired);
+    heap->objects_live -= tally->retired;
+    heap->collections = heap->collections > SIZE_MAX - tally->retired ? SIZE_MAX : heap->collections + tally->retired;
+    heap->rc_cache.pushed += tally->pushed;
+    *tally = (drain_tally){0};
+}
+/* Release every live leaf of one dying single flat value (RC-DRAIN-FLAT-1).
+ * Inside a drain a released last token queues its object directly behind
+ * `head`; the dying value's own edge words are not cleared, because its
+ * extent is retired right after and never read again. */
+static inline __attribute__((always_inline)) myl_rc_object *drain_flat(myl_native_heap *heap,
+        const myl_rc_flat *flat, const unsigned char *payload, myl_rc_object *head) {
+    (void)heap;
+    for (unsigned live = myl_rc_flat_live(flat, payload); live; live &= live - 1) {
+        void *child;
+        __builtin_memcpy(&child, payload + flat->offsets[__builtin_ctz(live)], sizeof child);
+        if (!myl_rc_counted(child)) continue;
+        myl_rc_object *object = (myl_rc_object *)child - 1;
+        myl_rc_invariant(object->owners != 0 && !(object->common.mark & MYL_RC_OBJECT_DYING));
+        MYL_RC_STAT(heap, MYL_RC_STAT_OWNER_RELEASE);
+        if (--object->owners || object->holds) continue;
+        object->common.mark |= MYL_RC_OBJECT_DYING;
+        object->owners = (uintptr_t)head;
+        head = object;
+    }
+    return head;
+}
 /* Bindings are immutable batch allocations published through the binding map
  * and never replaced. A generic callback may register metadata; the binding is
- * looked up again after it returns. */
+ * looked up again after it returns. The allocator hooks never change, so the
+ * production retirement is decided once. */
 void myl_rc_drain(myl_native_heap *heap) {
     myl_rc_invariant(heap && heap->rc);
     myl_rc_state *rc = heap->rc;
     if (!rc->dead.head || rc->dead.active || rc->walk.depth) return;
     rc->dead.active = 1;
+    const int cached = rc->allocator.hooks.retire == myl_rc_storage_retire;
+    drain_tally tally = {0};
     /* A type's binding never changes once published, so the previous death's
      * binding answers a repeated type without a probe. */
     const myl_native_type *last = NULL;
     const myl_rc_binding *binding = NULL;
-    while (rc->dead.head) {
-        myl_rc_object *object = rc->dead.head;
-        rc->dead.head = (myl_rc_object *)object->owners;
+    myl_rc_object *head = rc->dead.head;
+    while (head) {
+        myl_rc_object *object = head;
+        head = (myl_rc_object *)object->owners;
         void *payload = object + 1;
         if (object->common.element != last) {
             last = object->common.element;
             binding = myl_rc_binding_find(heap, last);
             myl_rc_invariant(binding != NULL);
         }
-        size_t count = (size_t)((object->common.mark & MYL_NATIVE_OBJECT_COUNT_BITS) >> MYL_NATIVE_OBJECT_COUNT_SHIFT);
-        if (binding->flat.count <= MYL_RC_FLAT_LEAVES) {
-            /* Admission excludes every custom hook. No callback can invalidate
-             * metadata here; ordered ordinary edges only enqueue more work. */
-            if (binding->flat.count) {
-                if (count == 1) myl_rc_flat_release_one(heap, &binding->flat, payload);
-                else myl_rc_flat_edges_release(heap, binding, payload, count);
-            }
+        uintptr_t mark = object->common.mark;
+        myl_rc_invariant((mark & (MYL_RC_OBJECT_DYING | MYL_NATIVE_OBJECT_IMMORTAL |
+            MYL_NATIVE_OBJECT_ARENA)) == MYL_RC_OBJECT_DYING);
+        size_t count = (size_t)((mark & MYL_NATIVE_OBJECT_COUNT_BITS) >> MYL_NATIVE_OBJECT_COUNT_SHIFT);
+        unsigned leaves = binding->flat.count;
+        if (!leaves || (leaves <= MYL_RC_FLAT_LEAVES && count == 1)) {
+            /* Admission excludes every custom hook: no callback runs and
+             * ordered ordinary edges only queue more deaths. An empty plan
+             * releases nothing at any element count. */
+            if (leaves) head = drain_flat(heap, &binding->flat, payload, head);
         } else {
-            /* A unique close hook can inspect its managed context. Run it while
-             * child tokens are intact, with no descriptor frame leased. Nested
-             * releases only enqueue. Reacquire metadata after a registering hook. */
-            void (*finalize)(myl_native_heap *, void *) = binding->descriptor.finalize;
-            if (finalize) finalize(heap, payload);
-            binding = myl_rc_binding_find(heap, object->common.element);
-            myl_rc_invariant(binding && !rc->walk.depth);
-            if (binding->descriptor.edges) binding->descriptor.edges(heap, payload, count);
-            else myl_rc_edges_release(heap, binding->descriptor.shape, payload, count);
+            rc->dead.head = head;
+            tally_apply(heap, &tally);
+            if (binding->flat.count <= MYL_RC_FLAT_LEAVES) {
+                myl_rc_flat_edges_release(heap, binding, payload, count);
+            } else {
+                /* A unique close hook can inspect its managed context. Run it
+                 * while child tokens are intact, with no descriptor frame
+                 * leased. Nested releases only enqueue. Reacquire metadata
+                 * after a registering hook. */
+                void (*finalize)(myl_native_heap *, void *) = binding->descriptor.finalize;
+                if (finalize) finalize(heap, payload);
+                binding = myl_rc_binding_find(heap, object->common.element);
+                myl_rc_invariant(binding && !rc->walk.depth);
+                if (binding->descriptor.edges) binding->descriptor.edges(heap, payload, count);
+                else myl_rc_edges_release(heap, binding->descriptor.shape, payload, count);
+            }
+            myl_rc_invariant(!rc->walk.depth);
+            head = rc->dead.head;
         }
-        myl_rc_invariant(!rc->walk.depth);
-        myl_rc_retire(heap, object);
+        MYL_RC_STAT(heap, MYL_RC_STAT_RETIRE);
+        if (cached && !(mark & MYL_NATIVE_OBJECT_LARGE)) {
+            const myl_rc_slab_class *slab = (const myl_rc_slab_class *)((uintptr_t)object & ~(uintptr_t)(MYL_RC_SLAB_BYTES - 1));
+            object->common.mark = MYL_RC_RETIRED_MARK;
+            object->owners = (uintptr_t)heap->rc_cache.free[slab->index];
+            heap->rc_cache.free[slab->index] = object;
+            tally.pushed += slab->stride;
+            tally.retired++;
+        } else {
+            rc->dead.head = head;
+            tally_apply(heap, &tally);
+            rc->allocator.hooks.retire(heap, payload);
+            head = rc->dead.head;
+        }
     }
+    rc->dead.head = NULL;
+    tally_apply(heap, &tally);
     rc->dead.active = 0;
 }
 void myl_rc_value_drop(myl_native_heap *heap, myl_rc_slot *slot) {

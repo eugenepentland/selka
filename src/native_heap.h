@@ -7,6 +7,18 @@
 typedef struct myl_native_type myl_native_type;
 /* RC-v1 owns its allocator/descriptor/worklist state behind this boundary. */
 typedef struct myl_rc_state myl_rc_state;
+/* Size classes of the production RC allocator's 64 KiB slabs. */
+#define MYL_RC_CACHE_CLASSES 32
+/* RC-ALLOC-CACHE-1: one singly linked list of free slab slots per size class,
+ * owned by the production RC allocator. A slot's first word (the owners count
+ * of a live object) links the next free slot and its mark is the retired
+ * mark. Retirement pushes a slot here; allocation, including generated code's
+ * inline path, pops one. `pushed` counts the bytes pushed since the allocator
+ * last returned every listed slot to its slab. Empty on a tracing heap. */
+typedef struct {
+    void *free[MYL_RC_CACHE_CLASSES];
+    size_t pushed;
+} myl_rc_cache;
 typedef struct {
     size_t offset;
     const myl_native_type *type;
@@ -413,12 +425,21 @@ typedef struct {
     uintptr_t pool_hits[MYL_NATIVE_POOL_HITS];
     /* Appended: existing generated GC/arena allocation offsets stay frozen. */
     myl_rc_state *rc;
+    /* The production RC allocator's per-class free slots (RC-ALLOC-CACHE-1),
+     * at the frozen offset `MYL_NATIVE_HEAP_RC_CACHE_OFFSET`. Appended. */
+    myl_rc_cache rc_cache;
 } myl_native_heap;
 /* Frozen byte offsets of `inline_windows` and `arena_window`, read by generated
  * inline allocation; src/native_heap.c asserts them and src/qbe_alloc.zig
  * mirrors them. */
 #define MYL_NATIVE_HEAP_INLINE_OFFSET 1280
 #define MYL_NATIVE_HEAP_ARENA_OFFSET 1472
+/* Frozen byte offsets generated RC inline allocation reads (RC-ALLOC-CACHE-1):
+ * `rc_cache.free`, `objects_live` and `region_depth`. src/native_heap.c asserts
+ * them and src/qbe_alloc.zig mirrors them. */
+#define MYL_NATIVE_HEAP_RC_CACHE_OFFSET 5648
+#define MYL_NATIVE_HEAP_OBJECTS_LIVE_OFFSET 64
+#define MYL_NATIVE_HEAP_REGION_DEPTH_OFFSET 112
 /* Address space granted to a guest process on top of its managed byte budget:
  * program text, the C library's own arenas and the test harness that loads it.
  * A trivial native guest needs about 64 MiB of address space before it holds

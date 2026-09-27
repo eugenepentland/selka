@@ -550,6 +550,85 @@ static void opaque_extension_keeps_prefix(void) {
     myl_rc_owner_release(&heap, text);
     finish(&heap);
 }
+// spec-case: RC-ALLOC-CACHE-1
+static void allocation_cache_reuse(void) {
+    myl_native_heap heap;
+    start(&heap);
+    /* An 8-byte payload behind the 32-byte prefix is the 48-byte class 2. */
+    void *first = bytes8(&heap);
+    size_t live = heap.objects_live;
+    myl_rc_edge_release(&heap, first);
+    assert(heap.objects_live == live - 1 && header(first)->common.mark == MYL_RC_RETIRED_MARK);
+    assert(heap.rc_cache.free[2] == header(first) && heap.rc_cache.pushed >= 48);
+    /* The next allocation of the class pops the same slot, zeroed. */
+    void *again = bytes8(&heap);
+    assert(again == first && header(again)->owners == 1 && !header(again)->holds && heap.objects_live == live);
+    assert(!*(uint64_t *)again);
+    myl_rc_owner_release(&heap, again);
+    /* A budget refusal gives every listed slot back to its slab and releases
+     * the slabs that empties before admitting the request again. */
+    void *values[64];
+    for (size_t i = 0; i < 64; ++i) values[i] = bytes8(&heap);
+    for (size_t i = 0; i < 64; ++i) myl_rc_owner_release(&heap, values[i]);
+    assert(heap.rc_cache.free[2]);
+    size_t reserved = myl_rc_storage_reserved(&heap);
+    heap.limit = heap.bytes + 1024;
+    void *large = myl_rc_storage_bytes(&heap, 16384, 0);
+    assert(large && !heap.rc_cache.free[2] && !heap.rc_cache.pushed);
+    assert(myl_rc_storage_reserved(&heap) < reserved + 16384);
+    myl_rc_owner_release(&heap, large);
+    heap.limit = 64u << 20;
+    /* The class refills from a fresh slab in address order. */
+    void *fresh = bytes8(&heap);
+    assert(fresh && !(((uintptr_t)fresh - MYL_RC_PREFIX_BYTES - 80) & 0xffff));
+    myl_rc_owner_release(&heap, fresh);
+    finish(&heap);
+}
+// spec-case: RC-DRAIN-FLAT-1
+static void drain_releases_trees_inline(void) {
+    myl_native_heap heap;
+    start(&heap);
+    myl_rc_counters before, after;
+    assert(myl_rc_stats_snapshot(&heap, &before));
+    size_t live = heap.objects_live;
+    /* A chain of bodies, each also holding an edge-free multi-element extent
+     * whose death is queued inside the drain. */
+    Outer *root = NULL;
+    for (size_t i = 0; i < 100; ++i) {
+        Outer *body = myl_native_heap_alloc(&heap, &outer, 1);
+        assert(body);
+        body->left = root;
+        body->right = myl_rc_storage_bytes(&heap, 100, 0);
+        assert(body->right && ((myl_native_object *)body->right - 1)->mark >> MYL_NATIVE_OBJECT_COUNT_SHIFT != 1);
+        root = body;
+    }
+    assert(heap.objects_live == live + 200);
+    myl_rc_owner_release(&heap, root);
+    assert(!heap.rc->dead.head && !heap.rc->dead.active && heap.objects_live == live);
+    assert(myl_rc_stats_snapshot(&heap, &after));
+    assert(after.events[MYL_RC_STAT_RETIRE] == before.events[MYL_RC_STAT_RETIRE] + 200);
+    assert(after.events[MYL_RC_STAT_OWNER_RELEASE] == before.events[MYL_RC_STAT_OWNER_RELEASE] + 200);
+    finish(&heap);
+}
+// spec-case: RC-PLAIN-TYPE-1
+static void plain_elements_copy_as_bytes(void) {
+    myl_native_heap heap;
+    start(&heap);
+    myl_native_list *list = myl_native_list_new(&heap, &number, 0);
+    assert(list);
+    for (uint64_t i = 0; i < 100; ++i) assert(myl_rc_list_append(&heap, list, &i));
+    assert(heap.rc->plain == &number && list->length == 100);
+    myl_rc_counters before, after;
+    assert(myl_rc_stats_snapshot(&heap, &before));
+    myl_native_list *copy = myl_native_list_copy(&heap, list);
+    assert(copy && copy != list && copy->length == 100 && copy->storage != list->storage);
+    for (uint64_t i = 0; i < 100; ++i) assert(((uint64_t *)copy->storage)[i] == i);
+    assert(myl_rc_stats_snapshot(&heap, &after));
+    assert(after.events[MYL_RC_STAT_OWNER_ACQUIRE] == before.events[MYL_RC_STAT_OWNER_ACQUIRE]);
+    myl_rc_owner_release(&heap, copy);
+    myl_rc_owner_release(&heap, list);
+    finish(&heap);
+}
 int myl_rc_fast_verify(void) {
     variant_plan_layout();
     variant_plan_operations();
@@ -566,12 +645,15 @@ int myl_rc_fast_verify(void) {
     flat_semantic_publication();
     flat_take_publishes_in_place();
     opaque_extension_keeps_prefix();
-    return 15;
+    allocation_cache_reuse();
+    drain_releases_trees_inline();
+    plain_elements_copy_as_bytes();
+    return 18;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
-    assert(myl_rc_fast_verify() == 15);
-    puts("native RC fast paths: 15 tests passed");
+    assert(myl_rc_fast_verify() == 18);
+    puts("native RC fast paths: 18 tests passed");
     return 0;
 }
 #endif

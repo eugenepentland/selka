@@ -156,13 +156,21 @@ myl_rc_status myl_rc_owner_acquire(myl_native_heap *heap, void *payload) {
  * through the queue; inside one (including finalizer reentry) it stays queued
  * behind its siblings, and the drain loop retires it without a walk. */
 void myl_rc_dead_outside(myl_native_heap *heap, myl_rc_object *object) {
-    const myl_rc_binding *binding = myl_rc_binding_find(heap, object->common.element);
-    if (binding && !binding->flat.count) {
-        myl_rc_retire(heap, object);
-        return;
+    const myl_native_type *element = object->common.element;
+    if (heap->rc->plain != element) {
+        const myl_rc_binding *binding = myl_rc_binding_find(heap, element);
+        if (!binding || binding->flat.count) {
+            object->owners = (uintptr_t)heap->rc->dead.head;
+            heap->rc->dead.head = object;
+            return;
+        }
     }
-    object->owners = (uintptr_t)heap->rc->dead.head;
-    heap->rc->dead.head = object;
+    /* The retire hook stays a call here, keeping this path compact where
+     * link-time optimization inlines the release paths into generated glue. */
+    myl_rc_invariant((object->common.mark & (MYL_RC_OBJECT_DYING | MYL_NATIVE_OBJECT_IMMORTAL |
+        MYL_NATIVE_OBJECT_ARENA)) == MYL_RC_OBJECT_DYING);
+    MYL_RC_STAT(heap, MYL_RC_STAT_RETIRE);
+    heap->rc->allocator.hooks.retire(heap, object + 1);
 }
 void myl_rc_enqueue(myl_native_heap *heap, myl_rc_object *object) {
     if (object->owners || object->holds) return;

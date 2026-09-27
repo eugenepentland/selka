@@ -33,6 +33,22 @@ fn location(text: []const u8, needle: []const u8) !usize {
     return std.mem.indexOf(u8, text, needle) orelse error.TestUnexpectedResult;
 }
 
+/// The first inline clear of a sixteen-byte aggregate (RC-INLINE-ZERO-1):
+/// ` storel 0, %vA`, then `%vB =l add %vA, 8` and ` storel 0, %vB`.
+fn clearedPair(text: []const u8) !usize {
+    var from: usize = 0;
+    while (std.mem.indexOfPos(u8, text, from, " storel 0, %v")) |at| : (from = at + 1) {
+        const line_end = std.mem.indexOfScalarPos(u8, text, at, '\n') orelse break;
+        const first = text[at + " storel 0, ".len .. line_end];
+        const next = try std.fmt.allocPrint(t.allocator, " =l add {s}, 8\n storel 0, %v", .{first});
+        defer t.allocator.free(next);
+        const second_end = std.mem.indexOfScalarPos(u8, text, line_end + 1, '\n') orelse break;
+        const third_end = std.mem.indexOfScalarPos(u8, text, second_end + 1, '\n') orelse break;
+        if (std.mem.indexOf(u8, text[line_end..third_end], next) != null) return at;
+    }
+    return error.TestUnexpectedResult;
+}
+
 // spec: RC-AGGREGATE-1
 test "RC aggregate partial construction journals fields before guarded takes or copies" {
     const saved = runtime.get();
@@ -43,7 +59,7 @@ test "RC aggregate partial construction journals fields before guarded takes or 
     const text = try findFunction(manifest.value, "pair");
     // Pair has two pointer fields. Other token moves can clear an eight-byte
     // source before this constructor initializes its sixteen-byte body.
-    const cleared = try location(text, "w 0, l 16)");
+    const cleared = try clearedPair(text);
     const taken = cleared + try location(text[cleared..], "# RC-GLUE-1 take");
     const copied = cleared + try location(text[cleared..], "# RC-GLUE-1 retain");
     try t.expect(cleared < taken and taken < copied);
