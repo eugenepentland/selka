@@ -86,8 +86,8 @@ pub fn publish(comptime E: type, self: *E, ty: typed.Type, index: usize) Error!v
     try self.store(index, try self.readValue(address, ty));
 }
 /// Publish a complete constructor whose input guards are already disarmed.
-/// The internal guard retains its partial body until this infallible handoff
-/// publishes the complete typed operand. No callback may split these stores.
+/// The caller retains an internal guard or proves its entire construction span
+/// infallible. No callback may split this complete typed operand handoff.
 pub fn constructed(comptime E: type, self: *E, ty: typed.Type, index: usize) Error!void {
     const state = frame.get(E, self) orelse return error.InternalError;
     if (try state_model.owns(state, ty)) {
