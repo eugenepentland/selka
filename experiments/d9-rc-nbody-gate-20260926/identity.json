@@ -1,0 +1,22 @@
+{
+  "source_commit": "685e26311935cea0697726614a3897baff4f286f",
+  "compiler_sha256": "ed3dc4a72024b855272981ada0c4ff46e36bc7a6d3e58fd784a9835dfb5326fd",
+  "compiler_mode": "Debug",
+  "full_gate_passed": false,
+  "main_steps_succeeded": 92,
+  "main_steps_total": 94,
+  "main_steps_failed": 1,
+  "executed_main_tests": 2272,
+  "shard_excluded": 23135,
+  "qbe_tests": 438,
+  "native_build_steps": 29,
+  "fmt_steps": 2,
+  "rc_sweeps": {
+    "passed_per_backend": 865,
+    "programs_per_backend": 148,
+    "dropped_per_backend": 1,
+    "dropped_path": "tests/lang/rc_plain_replacements.my",
+    "reason": "module_names.Names.reference rejects declared replace as a qualified callable keyword and returns InternalError"
+  },
+  "performance_acceptance": false
+}

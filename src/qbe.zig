@@ -1658,6 +1658,7 @@ const Emitter = struct {
             .box_cow = self.cow != null and value_semantics.enabled(),
         });
         if (self.cow) |state| try cow_lower.Lower(Emitter).veto(self, state);
+        if (runtime_mode.enabled()) try @import("qbe_rc_empty_locals.zig").finalize(Emitter, self);
         try self.findRoots();
         if (self.needsRootProtocol()) self.live_roots = try self.rootLiveness();
         const capacity = ir.stack_capacity;

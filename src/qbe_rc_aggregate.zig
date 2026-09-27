@@ -175,10 +175,17 @@ pub fn prepareBase(comptime E: type, self: *E, ty: typed.Type, base: usize) Erro
 }
 
 fn replace(comptime E: type, self: *E, field: Field) Error!void {
+    const shape = frame.get(E, self).?.catalog.get(field.ty) catch return error.InternalError;
+    if (!shape.counted and !shape.unique_drop) if (self.isScalar(field.ty) and (try self.layout(field.ty)).size != 0) {
+        // Pending is clear after base preparation and every preceding field.
+        // Load the complete scalar before writing, preserving even exact alias
+        // and the existing width/domain representation without a dead token.
+        try self.writeValue(field.destination, try self.readValue(field.source, field.ty), field.ty);
+        return;
+    };
     const work = try values.workAddress(E, self);
     try initialize(E, self, .{ .ty = field.ty, .source = field.source, .destination = work, .region = field.region, .operand = field.operand });
     try pending(E, self, field.ty, work);
-    const shape = frame.get(E, self).?.catalog.get(field.ty) catch return error.InternalError;
     if (shape.unique_drop) try self.print(" call $myl_native_owned_drop(l %heap, l extern ${s}, l %v{d})\n", .{ try self.descriptor(field.ty), field.destination });
     if (shape.counted) try self.print(" call $myl_rc_native_drop(l %heap, l extern ${s}, l %v{d})\n", .{ try self.descriptor(field.ty), field.destination });
     try self.print(blit_value, .{ work, field.destination, (try self.layout(field.ty)).size });

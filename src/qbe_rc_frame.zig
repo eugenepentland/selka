@@ -94,6 +94,11 @@ pub fn get(comptime E: type, self: *E) ?*state_model.State {
     const state = if (self.cow) |cow| cow.rc orelse return null else return null;
     return if (state.active) state else null;
 }
+/// A certified managed local never has O, H, loan or unique cleanup metadata.
+pub fn emptyLocal(comptime E: type, self: *E, index: usize) bool {
+    const state = get(E, self) orelse return false;
+    return state.plan.journal.emptyLocal(index);
+}
 /// The journal index of the pending result used for transactional replacement.
 pub fn pending(comptime E: type, self: *E) usize {
     return localCount(E, self) + get(E, self).?.operands.len;
@@ -175,6 +180,9 @@ fn alignedBytes(bytes_value: u64) u64 {
 }
 
 fn receiverStorage(comptime E: type, self: *E, index: usize) bool {
+    // Certified reads never enter receiver setup; certified mutation captures
+    // skip both scope begin and end. Neither can link a cleanup obligation.
+    if (emptyLocal(E, self, index)) return false;
     const plan = self.cow.?.plan;
     return plan.place(index) != null or (index < plan.aliases.len and plan.aliases[index] != @import("cow_plan.zig").none);
 }

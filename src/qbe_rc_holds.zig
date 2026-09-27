@@ -23,6 +23,11 @@ pub fn mayHold(comptime E: type, self: *E, ty: typed.Type) bool {
 
 /// Read one journal token's actual role, independent of its logical dict type.
 pub fn held(comptime E: type, self: *E, index: usize) Error!usize {
+    if (frame.emptyLocal(E, self, index)) {
+        const empty = self.temp();
+        try self.print(" %v{d} =w copy 0\n", .{empty});
+        return empty;
+    }
     const flag_address = try frame.entryField(E, self, index, 24);
     const role = self.temp();
     const matches = self.temp();

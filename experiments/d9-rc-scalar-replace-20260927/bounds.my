@@ -1,0 +1,8 @@
+record Item:
+    small: i8
+
+
+def main() -> int:
+    values = [Item(1i8)]
+    values[2].small = 7i8
+    return 0

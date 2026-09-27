@@ -1,0 +1,87 @@
+diff --git a/SPEC.md b/SPEC.md
+index 316f01e2..40293843 100644
+--- a/SPEC.md
++++ b/SPEC.md
+@@ -1054,7 +1054,7 @@ host failure in one worker leaves the units the other workers hold running.
+ - [AUGMENTED-FIELD-1] An augmented assignment writes through a field wherever plain assignment to that field is accepted: `counter.n += 1`, `h.inner.n -= 2`, `p.x *= 3` on a mutable record binding and `points[0].x += 5` evaluate the owner once, read the field, then evaluate the right-hand side, combine the pair with the operator's ordinary rules (integers, floats and `str` as for a binding, `/=` on an integer field is `E_TYPE`) and store the result, under the same mutability, `mut`-marker and arena rules as `target.field = value`. `+=` on a list field is Python's in-place extend, as it is for a list binding, so every alias of that list observes the new elements.
+ 
+ - [CANONICAL-LEN-1] `len(value)` returns `int` for lists, dictionaries, strings, bytes and fixed arrays. The removed `.len()` member spelling reports `E_REMOVED_SPELLING` at the member and names `len(value)` as its replacement.
+-- [PRELUDE-SHADOW-2] A user function declaration shadows a same-named prelude operation, including `len` and `replace`; its declared signature supplies the call arity and types.
++- [PRELUDE-SHADOW-2] A user function declaration shadows a same-named prelude operation, including `len` and `replace`; its declared signature supplies the call arity and types. Module-local and imported callable references resolve those two spellings through the same visibility checks as other names, while unrelated modules retain their builtin operations.
+ - [PRELUDE-TYPES-2] The nominal catalog always registers `str`, `dict`, `bytes` and `float` unless a program declares that type name. Registration depends on parsed declarations and AST use, never on scanning raw source words or comment-like operator text.
+ - [PRELUDE-TYPES-CATALOG-1] Unused user nominal templates remain deferred while the concrete `str`, `bytes` and `float` prelude schemas are materialized unconditionally.
+ - [REMOVED-SPELLING-1] Removed operation, type, capability, codec, raw-float and punctuation spellings report a located `E_REMOVED_SPELLING` diagnostic naming the canonical replacement, or state that dead punctuation has no replacement.
+diff --git a/src/dotted_modules_test.zig b/src/dotted_modules_test.zig
+index 2267715b..000ef1e2 100644
+--- a/src/dotted_modules_test.zig
++++ b/src/dotted_modules_test.zig
+@@ -40,6 +40,14 @@ const api =
+     \\    return 1
+     \\
+     \\
++    \\public def len(value: i64) -> i64 effects():
++    \\    return value + 1
++    \\
++    \\
++    \\public def replace(value: i64) -> i64 effects():
++    \\    return len(value) - 1
++    \\
++    \\
+     \\def hidden() -> i64:
+     \\    return 99
+     \\
+@@ -94,6 +102,26 @@ const dotted = header ++
+     \\    return api.Distance.number(distance) + api.extra()
+ ;
+ 
++// spec-case: PRELUDE-SHADOW-2
++test "module builtin callable shadows resolve locally and through imports" {
++    try scenario(t.allocator, header ++
++        \\def replace(value: i64) -> i64:
++        \\    return value + 1
++        \\
++        \\
++        \\def main() -> i64:
++        \\    return replace(api.replace(api.len(38))) + len([1, 2])
++    , null);
++    try scenario(t.allocator, header ++
++        \\def len(value: i64) -> i64:
++        \\    return value + 1
++        \\
++        \\
++        \\def main() -> i64:
++        \\    return api.replace(len(41))
++    , null);
++}
++
+ // spec: MODULE-DOT-1
+ test "dotted imports resolve calls types generic records and domains beside list methods" {
+     try scenario(t.allocator, dotted, null);
+diff --git a/src/module_names.zig b/src/module_names.zig
+index db8ff621..0edc6a8d 100644
+--- a/src/module_names.zig
++++ b/src/module_names.zig
+@@ -82,16 +82,19 @@ pub const Names = struct {
+         const id = unit.names.get(qualified.name) orelse return null;
+         return unit.symbols.items[id].kind;
+     }
+-    /// Normalize one reference spelling exactly as `lexer.qualifiedName` over its
+-    /// tokens does, lexing only a spelling the lexer-free path cannot decide.
++    /// Normalize references, including the two builtin spellings that the
++    /// parser admits as declared callable names. Qualifier segments stay names.
+     fn qualify(self: Names, text: []const u8) diagnostic.Error!?lexer.Qualified {
+         switch (lexer.quickQualifiedName(text)) {
+             .name => |qualified| return qualified,
+-            .none => return null,
+-            .slow => {},
++            .none, .slow => {},
+         }
+         var sink: diagnostic.Sink = .{ .allocator = self.allocator() };
+         const tokens = try lexer.lex(self.allocator(), text, &sink);
++        if (tokens.len >= 2) {
++            const last = &tokens[tokens.len - 2];
++            if (last.tag == .kw_len or last.tag == .kw_replace) last.tag = .ident;
++        }
+         return lexer.qualifiedName(text, tokens);
+     }
+     /// Check whether a name belongs to the originating module's declarations or import aliases.

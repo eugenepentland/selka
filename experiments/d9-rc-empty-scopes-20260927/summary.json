@@ -1,0 +1,31 @@
+{
+  "base": "597cdcf9",
+  "before_compiler_sha256": "078f6fa9af82b43f660a84525a11933c646ed75871c712c0dc198e88833e8944",
+  "after_compiler_sha256": "821b0e21c445559fbfb079735d18cbcc32dee594a41f33c3ff7303addfaf84fa",
+  "cpu": 10,
+  "scope_buffers": {
+    "before": 34,
+    "after": 0
+  },
+  "reserved_scope_bytes": {
+    "before": 1088,
+    "after": 0
+  },
+  "retained_journal_entries": 4,
+  "memset_calls": {
+    "before": 35,
+    "after": 1
+  },
+  "full": {
+    "before-qbe": 71840268228,
+    "after-qbe": 67510266974,
+    "before-llvm": 21595254557,
+    "after-llvm": 21595254793
+  },
+  "reduced": {
+    "before-qbe": 143931324,
+    "after-qbe": 135271219,
+    "before-llvm": 43435519,
+    "after-llvm": 43435547
+  }
+}

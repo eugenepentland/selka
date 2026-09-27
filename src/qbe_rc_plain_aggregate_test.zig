@@ -75,3 +75,51 @@ test "RC-PLAIN-AGGREGATE-1 zero sized aggregate elements keep established storag
     defer t.allocator.free(output);
     try t.expect(std.mem.indexOf(u8, output, "call $myl_rc_list_set") != null);
 }
+
+// spec: RC-SCALAR-REPLACE-1
+test "RC-SCALAR-REPLACE-1 scalar field stores do not publish a dead pending token" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc_counting);
+    const output = try edit(t.allocator,
+        \\record Body:
+        \\    x: float
+        \\    enabled: bool
+        \\    small: i8
+        \\def edit(values: mut list[Body]) -> None:
+        \\    values[0].x = 1.25
+        \\    values[0].enabled = True
+        \\    values[0].small = -7i8
+        \\def main() -> int:
+        \\    values = [Body(0.0, False, 1i8)]
+        \\    edit(mut values)
+        \\    return 0
+    );
+    defer t.allocator.free(output);
+    try t.expectEqual(@as(usize, 0), std.mem.count(u8, output, " storew 1,"));
+    try t.expect(std.mem.indexOf(u8, output, " storeb ") != null);
+    try t.expect(std.mem.indexOf(u8, output, "call $myl_qbe_fail_normalized_index_bounds") != null);
+}
+
+// spec-case: RC-SCALAR-REPLACE-1
+test "RC-SCALAR-REPLACE-1 aggregate and zero sized field replacements keep pending staging" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc_counting);
+    const output = try edit(t.allocator,
+        \\record Plain:
+        \\    row: [2]int
+        \\    empty: None
+        \\def edit(values: mut list[Plain], row: [2]int) -> None:
+        \\    values[0].row = row
+        \\    values[0].empty = None
+        \\def main() -> int:
+        \\    row: [2]int = [1, 2]
+        \\    values = [Plain(row, None)]
+        \\    edit(mut values, row)
+        \\    return 0
+    );
+    defer t.allocator.free(output);
+    try t.expectEqual(@as(usize, 2), std.mem.count(u8, output, " storew 1,"));
+    try t.expect(std.mem.indexOf(u8, output, "blit ") != null);
+}

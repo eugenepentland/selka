@@ -1,0 +1,21 @@
+{
+  "compiler_commit": "19e16e1d96112e9ccc741fa0c430ea97173a1032",
+  "compiler_sha256": "1b705d90e58c6b2b3799c5cbe79da9adbc57913e4c72ebbfa2b54dad044c1bbe",
+  "source_commit": "19e16e1d96112e9ccc741fa0c430ea97173a1032",
+  "total": 462,
+  "backends": {
+    "qbe": 231,
+    "llvm": 231
+  },
+  "runtime_rows": {
+    "gc-legacy": 10,
+    "rc-v3-counting": 440,
+    "no-RC-counter-record": 12
+  },
+  "mismatches": [],
+  "wrong_runtime": [],
+  "imbalanced": [],
+  "missing_required_counters": [],
+  "driver_sha256": "3e29b7d13c72cdb78ac767460ebf19cf97a5c19fc51db4ac5aab7b8b6435681c",
+  "inputs_rechecked_after_completion": true
+}
