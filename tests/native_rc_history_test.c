@@ -1,7 +1,13 @@
 #include "native_rc_dictionary.h"
 #include "native_regions.h"
+#include "native_rc_internal.h"
 #include <assert.h>
+#include <signal.h>
 #include <stdio.h>
+#include <string.h>
+#include <sys/resource.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 static const myl_native_type number={.size=8,.alignment=8,.kind=MYL_NATIVE_PLAIN};
 static const myl_native_type pointer={.size=8,.alignment=8,.kind=MYL_NATIVE_POINTER};
@@ -421,6 +427,196 @@ static void array_loan_box_path(void) {
     myl_rc_owner_release(&heap,box); finish(&heap);
 }
 
+/* spec: RC-PHYSICAL-RETAIN-1. Physical retention preserves padding and the
+ * successful acquisition prefix even when duplicate aliases hit the limit. */
+static const myl_native_field retained_fields[]={{.offset=8,.type=&pointer},{.offset=24,.type=&pointer}};
+static const myl_native_type retained={.size=32,.alignment=8,.kind=MYL_NATIVE_RECORD,.fields=retained_fields,.field_count=2};
+static const myl_rc_field retained_edges[]={{.offset=8,.shape=&owned},{.offset=24,.shape=&owned}};
+static const myl_rc_shape retained_shape={.size=32,.kind=MYL_RC_SHAPE_RECORD,.as.record={retained_edges,2}};
+static const myl_rc_descriptor retained_descriptor={.type=&retained,.shape=&retained_shape};
+static void retained_prefix_and_ownerless(void) {
+    myl_native_heap heap; start(&heap);
+    assert(myl_rc_descriptor_import(&heap,&retained_descriptor)==MYL_RC_OK);
+    void *value=myl_rc_storage_bytes(&heap,8,0); assert(value);
+    uint64_t source[]={71,(uintptr_t)value,93,(uintptr_t)value},output[4]={0};
+    header(value)->owners=MYL_RC_COUNT_MAX-1;
+#if defined(MYL_NATIVE_RC_COUNTING) && MYL_NATIVE_RC_COUNTING
+    myl_rc_counters before,after; assert(myl_rc_stats_snapshot(&heap,&before));
+#endif
+    assert(!myl_rc_native_retain(&heap,&retained,output,source,0));
+    assert(myl_rc_take_failure(&heap)==MYL_RC_COUNT_LIMIT && header(value)->owners==MYL_RC_COUNT_MAX-1);
+    assert(!output[0] && !output[1] && !output[2] && !output[3]);
+#if defined(MYL_NATIVE_RC_COUNTING) && MYL_NATIVE_RC_COUNTING
+    assert(myl_rc_stats_snapshot(&heap,&after));
+    assert(after.events[MYL_RC_STAT_OWNER_ACQUIRE]==before.events[MYL_RC_STAT_OWNER_ACQUIRE]+1);
+    assert(after.events[MYL_RC_STAT_OWNER_RELEASE]==before.events[MYL_RC_STAT_OWNER_RELEASE]+1);
+    assert(after.events[MYL_RC_STAT_OWNER_LIMIT]==before.events[MYL_RC_STAT_OWNER_LIMIT]+1);
+#endif
+    header(value)->owners=1;
+    myl_rc_pin pin={0}; assert(myl_rc_pin_acquire(&heap,value,&pin)==MYL_RC_OK);
+    myl_rc_owner_release(&heap,value); assert(!header(value)->owners && header(value)->holds==1);
+    uintptr_t mark=header(value)->common.mark; heap.limit=heap.bytes;
+    assert(myl_rc_native_retain(&heap,&retained,output,source,0));
+    assert(!memcmp(source,output,sizeof source) && header(value)->owners==2 && header(value)->holds==1);
+    assert(header(value)->common.mark==mark);
+    myl_rc_native_drop(&heap,&retained,output); assert(!header(value)->owners);
+    myl_rc_pin_release(&heap,&pin); finish(&heap);
+}
+static void retained_region_and_literals(void) {
+    myl_native_heap heap; start(&heap);
+    assert(myl_rc_descriptor_import(&heap,&retained_descriptor)==MYL_RC_OK);
+    void *value=myl_rc_storage_bytes(&heap,8,0); assert(value && myl_native_region_begin(&heap));
+    void *arena=myl_rc_storage_bytes(&heap,8,1); assert(arena);
+    uint64_t source[]={71,(uintptr_t)value,93,(uintptr_t)arena},output[4]={1,2,3,4};
+    uintptr_t mark=((myl_native_object *)arena-1)->mark;
+    assert(!myl_rc_native_retain(&heap,&retained,output,source,0));
+    assert(myl_rc_take_failure(&heap)==MYL_RC_REGION_ERROR && header(value)->owners==1);
+    assert(!output[0] && !output[1] && !output[2] && !output[3]);
+    assert(!myl_rc_native_retain(&heap,&retained,output,source,2));
+    assert(myl_rc_take_failure(&heap)==MYL_RC_REGION_ERROR && header(value)->owners==1);
+    assert(myl_rc_native_retain(&heap,&retained,output,source,1));
+    assert(!memcmp(source,output,sizeof source) && header(value)->owners==2);
+    assert(((myl_native_object *)arena-1)->mark==mark);
+    myl_rc_native_drop(&heap,&retained,output);
+    struct { myl_native_object common; uint64_t value; } literal={.common={.mark=MYL_NATIVE_OBJECT_IMMORTAL},.value=17};
+    source[1]=0; source[3]=(uintptr_t)&literal.value;
+    assert(myl_rc_native_retain(&heap,&retained,output,source,0) && !memcmp(source,output,sizeof source));
+    myl_rc_native_drop(&heap,&retained,output); myl_native_region_end(&heap);
+    myl_rc_owner_release(&heap,value); finish(&heap);
+}
+static uint64_t *retained_callback_output,*retained_callback_source;
+static uint64_t retained_callback_expected[4];
+static unsigned retained_callback_count,retained_callback_order[2];
+static void retained_finalizer(myl_native_heap *heap, void *payload) {
+    assert(!memcmp(retained_callback_output,retained_callback_expected,sizeof retained_callback_expected));
+    assert(retained_callback_count<2);
+    retained_callback_order[retained_callback_count++]=(unsigned)*(uint64_t *)payload;
+    retained_callback_source[0]=17;
+    static const myl_native_type extra={.size=8,.alignment=8,.kind=MYL_NATIVE_PLAIN};
+    static const myl_rc_shape none={.size=8,.kind=MYL_RC_SHAPE_NONE};
+    const myl_rc_descriptor descriptor={.type=&extra,.shape=&none};
+    assert(myl_rc_descriptor_import(heap,&descriptor)==MYL_RC_OK);
+    uint64_t input=7,output=9;
+    assert(!myl_rc_native_retain(heap,&extra,&output,&input,heap->region_depth+1) && !output);
+    void *temporary=myl_native_heap_alloc(heap,&extra,1); assert(temporary);
+    myl_rc_owner_release(heap,temporary);
+}
+/* Queued callbacks see only full publication or whole-value zeroing. Callback
+ * failures keep first-failure precedence over a later outer count refusal. */
+static void retained_callbacks(unsigned failure) {
+    static const myl_native_type finalized={.size=8,.alignment=8,.kind=MYL_NATIVE_PLAIN};
+    static const myl_rc_shape none={.size=8,.kind=MYL_RC_SHAPE_NONE};
+    static const myl_rc_descriptor descriptor={.type=&finalized,.shape=&none,.finalize=retained_finalizer};
+    myl_native_heap heap; start(&heap);
+    assert(myl_rc_descriptor_import(&heap,&retained_descriptor)==MYL_RC_OK);
+    assert(myl_rc_descriptor_import(&heap,&descriptor)==MYL_RC_OK);
+    void *value=myl_rc_storage_bytes(&heap,8,0); assert(value);
+    uint64_t source[]={71,(uintptr_t)value,93,(uintptr_t)value},output[4]={1,2,3,4};
+    retained_callback_output=output; retained_callback_source=source; retained_callback_count=0;
+    memcpy(retained_callback_expected,source,sizeof source);
+    if (failure) { memset(retained_callback_expected,0,sizeof retained_callback_expected); header(value)->owners=MYL_RC_COUNT_MAX-1; }
+    for (unsigned i=1;i<=2;i++) {
+        void *queued=myl_native_heap_alloc(&heap,&finalized,1); assert(queued);
+        *(uint64_t *)queued=i; myl_rc_edge_release(&heap,queued);
+    }
+    assert(myl_rc_native_retain(&heap,&retained,output,source,0)==!failure);
+    assert(retained_callback_count==2 && retained_callback_order[0]==2 && retained_callback_order[1]==1);
+    assert(source[0]==17 && !heap.rc->dead.head && myl_rc_take_failure(&heap)==MYL_RC_REGION_ERROR);
+    if (failure) { assert(header(value)->owners==MYL_RC_COUNT_MAX-1); header(value)->owners=1; }
+    else { assert(header(value)->owners==3); myl_rc_native_drop(&heap,&retained,output); }
+    retained_callback_output=retained_callback_source=NULL;
+    myl_rc_owner_release(&heap,value); finish(&heap);
+}
+static unsigned retained_opaque_closes;
+static void retained_opaque_finalizer(myl_native_heap *heap, void *payload) {
+    (void)heap; assert(*(uint64_t *)payload==73); ++retained_opaque_closes;
+}
+static void retained_opaque_finalized_pointer(void) {
+    static const myl_native_type finalized={.size=8,.alignment=8,.kind=MYL_NATIVE_PLAIN};
+    static const myl_rc_shape none={.size=8,.kind=MYL_RC_SHAPE_NONE};
+    static const myl_rc_descriptor descriptor={.type=&finalized,.shape=&none,.finalize=retained_opaque_finalizer};
+    myl_native_heap heap; start(&heap); assert(myl_rc_descriptor_import(&heap,&descriptor)==MYL_RC_OK);
+    void *value=myl_native_heap_alloc(&heap,&finalized,1),*out=NULL; assert(value);
+    *(uint64_t *)value=73; retained_opaque_closes=0;
+    assert(myl_rc_native_retain(&heap,&pointer,&out,&value,0) && out==value && header(value)->owners==2);
+    myl_rc_owner_release(&heap,value); assert(!retained_opaque_closes);
+    myl_rc_native_drop(&heap,&pointer,&out); assert(retained_opaque_closes==1); finish(&heap);
+}
+static void retained_rejects(myl_native_heap *heap, const myl_native_type *type, unsigned aliases) {
+    pid_t child=fork(); assert(child>=0);
+    if (!child) {
+        struct rlimit no_core={0,0}; assert(!setrlimit(RLIMIT_CORE,&no_core));
+        void *source=NULL,*output=NULL;
+        (void)myl_rc_native_retain(heap,type,aliases?&source:&output,&source,0); _exit(0);
+    }
+    int status=0; assert(waitpid(child,&status,0)==child && WIFSIGNALED(status) && WTERMSIG(status)==SIGABRT);
+}
+static void retained_static_unique_and_cold(void) {
+    static const myl_native_type resource={.size=8,.alignment=8,.kind=MYL_NATIVE_RESOURCE};
+    static const myl_rc_shape none={.size=8,.kind=MYL_RC_SHAPE_NONE};
+    static const myl_rc_descriptor unique={.type=&resource,.shape=&none,.finalize=myl_rc_finalize_unique};
+    static const myl_native_type box={.size=8,.alignment=8,.kind=MYL_NATIVE_POINTER,.collection_kind=5,.element=&resource};
+    static const myl_rc_descriptor boxed={.type=&box,.shape=&owned};
+    myl_native_heap heap; start(&heap);
+    assert(myl_rc_descriptor_import(&heap,&unique)==MYL_RC_OK && myl_rc_descriptor_import(&heap,&boxed)==MYL_RC_OK);
+    retained_rejects(&heap,&resource,0); retained_rejects(&heap,&box,0);
+    retained_rejects(&heap,&pointer,1); /* Source and empty destination must be distinct. */
+    static const myl_native_type cold={.size=8,.alignment=8,.kind=MYL_NATIVE_POINTER};
+    void *source=NULL,*output=(void *)(uintptr_t)71; heap.limit=heap.bytes;
+    assert(!myl_rc_native_retain(&heap,&cold,&output,&source,0));
+    assert(!output && myl_rc_take_failure(&heap)==MYL_RC_ALLOCATION_REFUSED && !myl_rc_descriptor_find(&heap,&cold));
+    heap.limit=0; assert(myl_rc_native_retain(&heap,&cold,&output,&source,0) && !output);
+    static const myl_native_type empty={.alignment=1,.kind=MYL_NATIVE_PLAIN};
+    uint64_t from=71,to=93;
+    assert(myl_rc_native_retain(&heap,&empty,&to,&from,0) && from==71 && to==93);
+    finish(&heap);
+}
+/* Deep metadata retains transfer-frame allocation refusal; wide metadata keeps
+ * the unbounded walker and rolls back eight acquired aliases before the ninth. */
+static void retained_depth_and_width_fallback(void) {
+    myl_native_heap heap; start(&heap);
+    myl_native_type types[9]={0}; myl_native_field fields[8]={0};
+    myl_rc_shape shapes[9]={0}; myl_rc_field edges[8]={0};
+    types[8]=pointer; shapes[8]=owned;
+    for (size_t i=8;i>0;i--) {
+        fields[i-1]=(myl_native_field){.type=&types[i]};
+        edges[i-1]=(myl_rc_field){.shape=&shapes[i]};
+        types[i-1]=(myl_native_type){.size=8,.alignment=8,.kind=MYL_NATIVE_RECORD,.fields=&fields[i-1],.field_count=1};
+        shapes[i-1]=(myl_rc_shape){.size=8,.kind=MYL_RC_SHAPE_RECORD,.as.record={&edges[i-1],1}};
+    }
+    const myl_rc_descriptor deep={.type=&types[0],.shape=&shapes[0]};
+    assert(myl_rc_descriptor_import(&heap,&deep)==MYL_RC_OK);
+    void *value=myl_rc_storage_bytes(&heap,8,0),*out=(void *)(uintptr_t)123; assert(value);
+    heap.limit=heap.bytes;
+    assert(!myl_rc_native_retain(&heap,&types[0],&out,&value,0));
+    assert(!out && myl_rc_take_failure(&heap)==MYL_RC_ALLOCATION_REFUSED && header(value)->owners==1);
+    heap.limit=0; assert(myl_rc_native_retain(&heap,&types[0],&out,&value,0));
+    myl_rc_native_drop(&heap,&types[0],&out);
+    myl_native_field wide_fields[9]; myl_rc_field wide_edges[9];
+    for (size_t i=0;i<9;i++) {
+        wide_fields[i]=(myl_native_field){.offset=i*8,.type=&pointer};
+        wide_edges[i]=(myl_rc_field){.offset=i*8,.shape=&owned};
+    }
+    const myl_native_type wide={.size=72,.alignment=8,.kind=MYL_NATIVE_RECORD,.fields=wide_fields,.field_count=9};
+    const myl_rc_shape wide_shape={.size=72,.kind=MYL_RC_SHAPE_RECORD,.as.record={wide_edges,9}};
+    const myl_rc_descriptor descriptor={.type=&wide,.shape=&wide_shape};
+    assert(myl_rc_descriptor_import(&heap,&descriptor)==MYL_RC_OK);
+    void *source[9],*output[9]; for (size_t i=0;i<9;i++) source[i]=value;
+    header(value)->owners=MYL_RC_COUNT_MAX-8;
+#if defined(MYL_NATIVE_RC_COUNTING) && MYL_NATIVE_RC_COUNTING
+    myl_rc_counters before,after; assert(myl_rc_stats_snapshot(&heap,&before));
+#endif
+    assert(!myl_rc_native_retain(&heap,&wide,output,source,0));
+    assert(myl_rc_take_failure(&heap)==MYL_RC_COUNT_LIMIT && header(value)->owners==MYL_RC_COUNT_MAX-8);
+    for (size_t i=0;i<9;i++) assert(!output[i]);
+#if defined(MYL_NATIVE_RC_COUNTING) && MYL_NATIVE_RC_COUNTING
+    assert(myl_rc_stats_snapshot(&heap,&after));
+    assert(after.events[MYL_RC_STAT_OWNER_ACQUIRE]==before.events[MYL_RC_STAT_OWNER_ACQUIRE]+8);
+    assert(after.events[MYL_RC_STAT_OWNER_RELEASE]==before.events[MYL_RC_STAT_OWNER_RELEASE]+8);
+#endif
+    header(value)->owners=1; myl_rc_owner_release(&heap,value); finish(&heap);
+}
+
 int myl_rc_history_verify(void) {
     both_mutation_orders(0); both_mutation_orders(1); loan_then_pinned_publication(); publication_then_pin();
     late_count_refusal(); semantic_clone_marks_reused_children(); pinned_snapshot_preserves_older_region();
@@ -435,8 +631,10 @@ int myl_rc_history_verify(void) {
     immutable_box_refusal_preserves_children();
     inline_loan_leaf_preserves_identity(0); inline_loan_leaf_preserves_identity(1);
     loan_box_path(0,0,0); loan_box_path(1,0,0); loan_box_path(0,1,0);
-    loan_box_path(0,0,1); loan_box_path(0,0,2); array_loan_box_path(); return 35;
+    loan_box_path(0,0,1); loan_box_path(0,0,2); array_loan_box_path();
+    retained_prefix_and_ownerless(); retained_region_and_literals(); retained_callbacks(0); retained_callbacks(1);
+    retained_opaque_finalized_pointer(); retained_static_unique_and_cold(); retained_depth_and_width_fallback(); return 42;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
-int main(void) { assert(myl_rc_history_verify()==35); puts("native rc semantic history: 35 passed"); }
+int main(void) { assert(myl_rc_history_verify()==42); puts("native rc semantic history: 42 passed"); }
 #endif

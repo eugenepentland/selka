@@ -235,6 +235,41 @@ int myl_rc_native_publish(myl_native_heap *heap, const myl_native_type *type, vo
         policy = type->collection_kind == 1 || type->collection_kind == 3 || type->collection_kind == 4 ? 2 : 0;
     return publication_status(heap, myl_rc_semantic_transfer(heap, &destination, &source, mode, policy));
 }
+/* Physical acquisition preserves pins, identity and arena history. Unlike
+ * semantic COPY, a later refusal must retain the exact acquired-prefix traffic.
+ * Loan admission also proves the native unique predicate and local stack bound;
+ * actual opaque pointee finalizers remain legal for ordinary owner retention. */
+static int flat_retain(myl_native_heap *heap, const myl_rc_binding *binding,
+                       void *destination, const void *source, unsigned region) {
+    size_t bytes = binding->descriptor.type->size;
+    if (!binding->flat.loanable || !bytes) return -1;
+    myl_rc_invariant(heap && heap->rc && !heap->rc->walk.depth && destination && source);
+    uintptr_t dst = (uintptr_t)destination, src = (uintptr_t)source;
+    if (dst > src ? dst - src < bytes : src - dst < bytes) return -1;
+    if (region > heap->region_depth) {
+        memset(destination, 0, bytes);
+        myl_rc_drain(heap);
+        return MYL_RC_REGION_ERROR;
+    }
+    memcpy(destination, source, bytes);
+    for (unsigned i = 0; i < binding->flat.count; ++i)
+        memset((unsigned char *)destination + binding->flat.offsets[i], 0, sizeof(void *));
+    myl_rc_status status = MYL_RC_OK;
+    for (unsigned i = 0; i < binding->flat.count; ++i) {
+        void *payload;
+        memcpy(&payload, (const unsigned char *)source + binding->flat.offsets[i], sizeof payload);
+        if (payload && myl_native_header_region(payload) > region) { status = MYL_RC_REGION_ERROR; break; }
+        status = myl_rc_owner_acquire(heap, payload);
+        if (status != MYL_RC_OK) break;
+        memcpy((unsigned char *)destination + binding->flat.offsets[i], &payload, sizeof payload);
+    }
+    if (status != MYL_RC_OK) {
+        myl_rc_flat_edges_release(heap, binding, destination, 1);
+        memset(destination, 0, bytes);
+    }
+    myl_rc_drain(heap);
+    return status;
+}
 int myl_rc_native_retain(myl_native_heap *heap, const myl_native_type *type, void *dst,
                          const void *src, unsigned region) {
     const myl_rc_descriptor *descriptor = myl_rc_descriptor_find(heap, type);
@@ -252,6 +287,10 @@ int myl_rc_native_retain(myl_native_heap *heap, const myl_native_type *type, voi
             memcpy(dst, src, bytes);
             return 1;
         }
+    }
+    if (descriptor) {
+        int flat = flat_retain(heap, (const myl_rc_binding *)descriptor, dst, src, region);
+        if (flat >= 0) return publication_status(heap, (myl_rc_status)flat);
     }
     const myl_rc_shape *shape = descriptor ? descriptor->shape : myl_rc_native_shape(heap, type);
     if (!shape) { memset(dst, 0, type->size); return 0; }
