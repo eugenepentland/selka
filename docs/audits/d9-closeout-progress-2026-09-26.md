@@ -8,6 +8,35 @@ preserved across the handoff. The orchestrator works in separate worktrees and s
 full gates with `../.d9-closeout-gate.lock`. The original dirty checkout, `main`
 (`b292660a`), and the pending devspeed merge are untouched.
 
+The active user goal is Stage 4 performance acceptance. The new
+[30-program joined diagnostic](d9-rc-joined-parity-2026-09-27.md), measured on
+fully gated `5b876012`, completes all 60 rows with correct output. Instruction
+geomeans are **2.831332× QBE / 3.283233× LLVM** against accepted GC; only 8/30
+and 9/30 programs meet the 1.3× cap. Median peak RSS is 0.755455× / 0.745243×
+GC for this subset. All 13 Lox programs per backend are excluded, so this does
+not establish the required complete-corpus acceptance.
+
+Dictionary-tail `3c4251e8`, native type-fact `c71d4046` (report correction
+`242439ec`) and adjacent variant read `4f60ff94` now pass the combined gate at
+`c90c84be`. The [five-program combined diagnostic](d9-rc-ownership-joined-2026-09-27.md)
+measures unchanged dictionary counting at **6.598428× QBE / 7.383473× LLVM** and
+Lox binary trees N10 at **27.911220× / 44.806239× GC**. Schematic cases remain
+17.51–17.58× / 26.23–26.76×. All outputs and four counted runs pass; all sixty
+instruction observations report 100% running. This diagnostic measures no RSS
+and does not replace complete-corpus acceptance.
+
+The [historical full corpus](d9-rc-corpus-2026-09-27.md) has also finished on its
+older immutable `e926d1e1` compiler: all 86 rows have correct output, with failing
+instruction geomeans **13.833063× / 20.538954×** and lower median peak RSS. These
+are predecessor results, not the current combined build. Lox accounts for 98.58%
+of its cumulative recorded instruction-counter time, excluding builds and RSS
+runs. Focused diagnostics guide development; the final accepted build still
+requires the unchanged full corpus.
+
+Current follow-on work targets anchored immutable dictionary keys, repeated
+scalar-loop readiness validation, and named owning-record scalar writes in Lox.
+GC remains the default; changing it is outside this active performance goal.
+
 Stage 3 and WP-4pre are accepted on the integration branch. The complete
 43-program-per-backend instruction sweep passes at 1.021851044× QBE and
 1.046853543× LLVM, with every output correct and no program above 1.3×.
@@ -15,10 +44,10 @@ The final combined default/borrow gate at `f6bea5d9` passes all four steps:
 2,130 executed main tests, 429 QBE tests, native-build and formatting.
 WP-4's compiler, runtime, collection, arena and host ownership paths are implemented
 behind an experimental runtime selector. The latest fully green checkpoint at
-`5b876012` passes 2,325 main tests, 442 QBE tests, native build and formatting.
-Both uncached RC sweeps pass **952/952 assertions across 163 programs**, with
+`c90c84be` passes 2,335 main tests, 445 QBE tests, native build and formatting.
+Both uncached RC sweeps pass **967/967 assertions across 165 programs**, with
 zero failures, skips, cached verdicts, dropped files or unloaded files. The
-[joined checkpoint](d9-rc-snapshot-joined-gate-2026-09-27.md) includes corrected
+[joined checkpoint](d9-rc-ownership-joined-gate-2026-09-27.md) includes corrected
 module callable resolution, argv ownership, empty-local journals and certified
 fresh returns, omitted empty receiver storage, direct plain scalar writes,
 empty-frame linkage omission, complete fresh constructors, closed field transfer,
@@ -65,9 +94,9 @@ The three Astra workers now address those paths and allocation/retirement costs.
 The next joined slices are green: plain retain `5237aebc`, plain projection
 `6ce92814` and fresh-root loop checks `4f7eeea9`. Their isolated full workloads
 improve substantially, but a separate combined four-program comparison still
-shows instruction ratios above the limits. The complete 43-program sweep runs
-against immutable predecessor `e926d1e1`; it has finished parity, schematic
-and both Lox binary-tree rows, with correct outputs and large remaining overhead.
+shows instruction ratios above the limits. The complete 43-program sweep against immutable predecessor `e926d1e1` has now
+finished all 86 rows, with correct outputs and large remaining overhead; the
+historical full-corpus report above preserves the exact results.
 Flat lifetime holds `c0a5904a`, borrowed loop returns `3b867d50`, plain appends
 `3bc671b7`, anchored helper composition `b2a251c3` and numeric loops `280ef314`
 now pass the joined full gate. Exact predecessor diagnostics still show Lox
@@ -124,7 +153,7 @@ for every accepted package above.
 
 | Work | Branch/worktree | Remaining acceptance |
 |---|---|---|
-| WP-4 reference counting | `codex/d9-rc-integration`; frozen full gate `5b876012`, both RC sweeps 952/952; historical golden replay complete | Validate further performance refinements; pass complete RC instruction/RSS acceptance including rewritten graph programs; transition the ordinary default to RC and update docs; rerun the final joined gate. GC remains default until acceptance |
+| WP-4 reference counting | `codex/d9-rc-integration`; frozen full gate `c90c84be`, both RC sweeps 967/967 on its byte-identical compiler; historical golden replay complete | Validate further performance refinements; pass complete RC instruction/RSS acceptance including rewritten graph programs; transition the ordinary default to RC and update docs; rerun the final joined gate. GC remains default until acceptance |
 | WP-5 concurrency | Design committed in `df482879`; [proposal](d9-wp5-concurrency-design-2026-09-26.md) | Resolve the documented Weft-source provenance gap and remaining design decisions; implement and validate after WP-4 acceptance |
 
 The plan's literal “on main” scheduling dependencies are being supplied by validated

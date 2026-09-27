@@ -1,0 +1,260 @@
+[
+  {
+    "function": "heap::blacken",
+    "pc": 19,
+    "line": 669,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/8e3c64be8484fa6f62baa0d0a16adbe4b2e18a7b739d3a746a2f98b7ed78c647"
+  },
+  {
+    "function": "heap::function_arity",
+    "pc": 15,
+    "line": 327,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/191a9307141f733d08bcdcc04cb7f487755b1df0424860c3c9594c58ecfbb53d"
+  },
+  {
+    "function": "vm::get_property",
+    "pc": 24,
+    "line": 503,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/189856a64b624f4794d78a425d186f2758a4b917745c7d2cd00de026ac327686"
+  },
+  {
+    "function": "vm::call_value",
+    "pc": 17,
+    "line": 509,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/b9a00d6fd8177a5700e5b3cfee35d518d70de016d1c810243530bddef6a5ccd0"
+  },
+  {
+    "function": "interpreter::set",
+    "pc": 119,
+    "line": 2982,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/b322783207598cedda49c5c33ce22313ff288b1fca534054f5d9ebd94ec52cfc"
+  },
+  {
+    "function": "heap::sweep",
+    "pc": 65,
+    "line": 1163,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/773fad8cd99cf42908b39d2a0c2e77435922b9ec3c854eb5b48393bd0e719efb"
+  },
+  {
+    "function": "heap::sweep",
+    "pc": 110,
+    "line": 1725,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/773fad8cd99cf42908b39d2a0c2e77435922b9ec3c854eb5b48393bd0e719efb"
+  },
+  {
+    "function": "heap::sweep",
+    "pc": 125,
+    "line": 1860,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/773fad8cd99cf42908b39d2a0c2e77435922b9ec3c854eb5b48393bd0e719efb"
+  },
+  {
+    "function": "heap::env_slot",
+    "pc": 15,
+    "line": 355,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/f2432e33480b3ce1a690d2730254cf08e51a1d38c2bdd80fdd6e4652bfc3db62"
+  },
+  {
+    "function": "heap::set_object_field",
+    "pc": 14,
+    "line": 359,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/7d39252a03bf676af81156e18fd1b7b4090346382a6930a5fb05efa10ef1829b"
+  },
+  {
+    "function": "heap::set_object_field",
+    "pc": 37,
+    "line": 1124,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/7d39252a03bf676af81156e18fd1b7b4090346382a6930a5fb05efa10ef1829b"
+  },
+  {
+    "function": "compiler::make_constant",
+    "pc": 75,
+    "line": 2570,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/75e3d73812c35777c662a25cdc552a061683f5c08dfad31235099161052ef9ab"
+  },
+  {
+    "function": "compiler::parameter",
+    "pc": 71,
+    "line": 2186,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/2f39e6c105a8b3737a6d36c4ea30f22544ab031ac13593d50824cd3431fc6af9"
+  },
+  {
+    "function": "heap::set_env_slot",
+    "pc": 27,
+    "line": 604,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/d97871ede69499f1dbfe8080eff2a2e02e0bcef9e71763398ca11faa13b0fef0"
+  },
+  {
+    "function": "vm::capture_upvalue",
+    "pc": 84,
+    "line": 537,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/bdf02a4496f7864b84c0b2eb926329aa701b2c2b633d3c7ba8534db771f9c059"
+  },
+  {
+    "function": "interpreter::instance_of",
+    "pc": 17,
+    "line": 390,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/b76f5804278e19d0d1326246a27033edcec507ee5de970bdc2d76c5a53203826"
+  },
+  {
+    "function": "interpreter::call_value",
+    "pc": 42,
+    "line": 990,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/b5a4312c33064acaea3c8edd9ca4040df4f2d8585481885357296e7c7914b97b"
+  },
+  {
+    "function": "vm::close_upvalues",
+    "pc": 62,
+    "line": 632,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/a9ed8c26a8c4812b46006c43efa7c1bfd3bcdd7851361d5d2561670bd6a9d757"
+  },
+  {
+    "function": "vm::set_upvalue",
+    "pc": 67,
+    "line": 768,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/f7c00920930bb17eb507286d058af2468caac943e599946a416bfbafbe63bffb"
+  },
+  {
+    "function": "interpreter::push_superclass",
+    "pc": 65,
+    "line": 1370,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/b2b5a21735305a5ce0a9181765e3211a7957e2c70c839ed6de524d7bd95eaaf9"
+  },
+  {
+    "function": "heap::closure_function",
+    "pc": 15,
+    "line": 327,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/86401bf0d73de95c984cad3504df00c4e8c1c44358b073a931a8baffb578c52b"
+  },
+  {
+    "function": "heap::env_enclosing",
+    "pc": 15,
+    "line": 327,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/06b8d2eb1556c334ac44dcc6c32d26ac05be29fc90851daa716c7da6694e74a3"
+  },
+  {
+    "function": "vm::load_frame",
+    "pc": 16,
+    "line": 424,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/7142698881cbf619b936c7e2330ad4d9a91d04d1cdd29d003ee3459dc5580c45"
+  },
+  {
+    "function": "vm::load_frame",
+    "pc": 37,
+    "line": 1005,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/7142698881cbf619b936c7e2330ad4d9a91d04d1cdd29d003ee3459dc5580c45"
+  },
+  {
+    "function": "compiler::add_upvalue",
+    "pc": 164,
+    "line": 2584,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/e2c5a4988873cdf4543f0539397da89d972a04de99fe736881f6d7dceb8e3a3a"
+  },
+  {
+    "function": "vm::inherit",
+    "pc": 92,
+    "line": 2255,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/1415290451818e44f917ec587c6e64d423f1fb14720680edd3c2195ad473bc4f"
+  },
+  {
+    "function": "compiler::store_compiler",
+    "pc": 25,
+    "line": 712,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/55bce6349d7b5258ba7bc8580b4ee3f95965b06bd98dd28b7822b1d969e89f0a"
+  },
+  {
+    "function": "heap::string_obj",
+    "pc": 15,
+    "line": 338,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/186432ec3555713a6b3e571612f03e3751151dc45d568aa0aead6bb33e3ba22a"
+  },
+  {
+    "function": "heap::class_method",
+    "pc": 15,
+    "line": 367,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/fa1e5d357d8fe9e79c4bd19b112e4aefe6c44d73e69d94b30f3733bb851013df"
+  },
+  {
+    "function": "compiler::patch_jump",
+    "pc": 164,
+    "line": 3274,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/e274449b54cff7cbe348a303a4250a3881c491759ac25edf4058bc6bfae22263"
+  },
+  {
+    "function": "heap::env_obj",
+    "pc": 15,
+    "line": 340,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/7223b7f9f3754233c799da72b9f78a2bcb3dba98fc44b312ec87b429973f4381"
+  },
+  {
+    "function": "heap::set_class_methods",
+    "pc": 20,
+    "line": 1161,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/16d5126a06135fed390cc91cb821c83f242da3c436985b8f22d9811389213e80"
+  },
+  {
+    "function": "compiler::emit_byte",
+    "pc": 78,
+    "line": 2598,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/50454f0f2401790107a883592f4a50d09dfd13a76266621f5dcb1df5f3725323"
+  },
+  {
+    "function": "heap::set_instance_fields",
+    "pc": 15,
+    "line": 419,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/b8600bc9c2945eab647b38e4b3ad7dfc799a4e1e62af6f3da2d52dd430b69328"
+  },
+  {
+    "function": "heap::set_instance_fields",
+    "pc": 39,
+    "line": 1750,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/b8600bc9c2945eab647b38e4b3ad7dfc799a4e1e62af6f3da2d52dd430b69328"
+  },
+  {
+    "function": "heap::function_upvalue_count",
+    "pc": 15,
+    "line": 327,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/dc60c1bcbd76e2d8fd7670cc4161687d08c89d933049b4290449410297cda665"
+  },
+  {
+    "function": "heap::closure_obj",
+    "pc": 15,
+    "line": 340,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/06e54b85cf3dfe62a87f65e9a3223807963a37cbe6d9f9b2d5d680aeee30a099"
+  },
+  {
+    "function": "vm::invoke",
+    "pc": 21,
+    "line": 493,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/20a62ec421e48da64a4400e608b97ca0593371038688e7580723fdb7ba380f88"
+  },
+  {
+    "function": "heap::class_obj",
+    "pc": 15,
+    "line": 362,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/8746892a56940a48ff181c44136c81ec69ff6f1fa16a58a8a8f9881cfefc0afc"
+  },
+  {
+    "function": "heap::function_obj",
+    "pc": 15,
+    "line": 340,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/461c6320fc31696c8423a732077ea26300a1f16616b63548dfa92a8ad35dcc25"
+  },
+  {
+    "function": "output::object_text",
+    "pc": 15,
+    "line": 413,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/431d509a469c69bb128bf7e2d7623981fb518befa09df7949758cc4bbabd6ddf"
+  },
+  {
+    "function": "vm::define_method",
+    "pc": 46,
+    "line": 1505,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/f4a681b2280780bb912d0c23c1baa1b2f7ce99426adcbd75b728f7f5fec3b1ff"
+  },
+  {
+    "function": "heap::allocate",
+    "pc": 50,
+    "line": 891,
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/338daf1f97880f2e914a06244504903b37df3d223ee638ac29f4e8b963eb5e11"
+  }
+]

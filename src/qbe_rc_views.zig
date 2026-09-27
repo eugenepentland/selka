@@ -99,6 +99,7 @@ fn publish(comptime E: type, self: *E, ty: typed.Type, index: usize) Error!void 
 /// On an H branch, this emits the complete operation and jumps past its normal
 /// lowering. The caller emits that normal lowering and then calls joined().
 pub fn local(comptime E: type, self: *E, op: Op, stack: []const typed.Type) Error!Local {
+    if (@import("rc_dictionary_tail.zig").rawCapture(self.cow.?.rc.?.plan.dictionary_tails, self.pc)) return .unhandled;
     switch (op) {
         .load_local => |id| {
             const index = @backingInt(id);

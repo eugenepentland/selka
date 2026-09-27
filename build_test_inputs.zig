@@ -33,6 +33,8 @@ const llvm_adapter = "experiments/llvm-backend/qbe_llvm.py";
 /// runtime sources the compiler embeds, which `src/` covers.
 pub const unit = [_][]const u8{
     "src/",
+    "bench/parity/micro/dict_count.my",
+    "tests/lang/rc_dictionary_keys.my",
     "tests/invoke/",
     "tests/native/",
     "test/fixtures/",

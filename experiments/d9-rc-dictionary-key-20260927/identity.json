@@ -1,0 +1,29 @@
+{
+  "base_merge": "aa452a04c686689e76701a0fa925ce264e7f3e4f",
+  "design_commit": "05e25c4c",
+  "prior_tail_commit": "3c4251e85e9085abdfa4e584565594b8642c645c",
+  "compilers": {
+    "before": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/install-dict-key-before/bin/mylang",
+      "sha256": "aaae8bf645d70343f44b5ea61ee7fa09b3f9637c9ce41ace7d605330f0d76adf"
+    },
+    "after": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/install-dict-key-prototype/bin/mylang",
+      "sha256": "106bd30f12bcedc96d040822039088adb46ce01ff1b648d83bf36c1c443a73b2"
+    }
+  },
+  "source_sha256": "227510603349ab558eed1a9a456bb6cf3c53b725de87a1436a41b35f58844324",
+  "expected_stdout": "779967\n",
+  "cpu": 11,
+  "candidate_production_files": {
+    "src/qbe_rc_dictionary_tail.zig": "eecbba446a2d30cd00af4a8c8ec2747fa455aa73c7f43ef372c4902aeb567614",
+    "src/qbe_rc_nonheld_capture.zig": "f46e4917887f1341ec1c336df49b5d76e9c90725385043df895e484fbd7e998f",
+    "src/qbe_rc_read_loans.zig": "a10c42f341ea2a677b7474abc9bd0e5a728728f213ebf027c5db5e241747dfbe",
+    "src/qbe_rc_views.zig": "2af4dbc47a7177102d0cb15ebdc3cf0dd004b7eeba6ad9dfe8fb3393d0ea0f6a",
+    "src/rc_dictionary_tail.zig": "7c75f75089e4105229ccc31b1cdfe7ebceff6f69af735aee7b38ad10b0f2b5e0",
+    "src/qbe_rc_dictionary_effects.zig": "20980b32d440a871daf18e873f880eecad1cadec59bf118a630ed86debc80612",
+    "src/qbe_rc_dictionary_key.zig": "4be2493615c743702b579b500efdc092f6d3029e04f5a78a347c85c74e7c7a86",
+    "src/rc_dictionary_key.zig": "8db0b0ddaa3d27d72af84c922e4019ef25c90a6d23b9b8dc966c02f787cc9df0"
+  },
+  "fixture_sha256": "9243bf942abcd4f0e0db914c0b60de171ef89bc4f872139d39b56739004456d3"
+}

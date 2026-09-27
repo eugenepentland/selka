@@ -4,12 +4,17 @@ const frame = @import("qbe_rc_frame.zig");
 /// Failures shared with the concrete native emitter.
 pub const Error = frame.Error;
 
+/// Shared refusal boundary for proofs that retain an interior pointer to the next PC.
+pub fn boundaryQuiet(op: @FieldType(bytecode.Instruction, "op")) bool {
+    return op != .store_local;
+}
+
 /// Discharge the conservative straight-line part of the finalized CFG plan.
 /// Nonparameter address borrowing is disabled in RC; captured receiver paths
 /// retain their own holds, and final COW liveness includes implicit parent uses.
 pub fn after(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "op")) Error!void {
     const state = frame.get(E, self) orelse return;
-    if (op != .store_local or @import("qbe_rc_borrow.zig").active(E, self)) return;
+    if (boundaryQuiet(op) or @import("qbe_rc_borrow.zig").active(E, self)) return;
     for (state.plan.locals.edges) |edge| {
         if (edge.from != self.pc or edge.to != self.pc + 1) continue;
         for (edge.releases) |release| {
