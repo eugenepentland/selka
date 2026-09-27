@@ -1,0 +1,28 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 3 after 15s (all 3 build slot(s) busy)
+test-units
++- run test w
+guardian/test: 20 test(s) selected by filter: "RC record field" — 9 match by name, 11 unnamed test block(s) run regardless
+guardian/test: test wall 0.33s; slowest over 50ms:
+guardian/test:   0.08s  qbe_rc_record_read_test.test.RC record field reads accept canonical incoming lifetime without asserting ordinary ownership
+guardian/test:   0.08s  qbe_rc_record_read_test.test.RC record field reads keep generated helper fallback and later ordinary publication
+guardian/test:   0.08s  qbe_rc_record_read_test.test.RC record field reads lend named homes but refuse callbacks and managed leaves
+guardian/test:   0.07s  qbe_rc_record_read_test.test.RC record field reads retain every original checked instruction and step boundary
+guardian/test: PASS — 20 passed
+guardian/test: RESULT {"passed":20,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig /home/epentland/ai/canopy/mylang-worktrees/.d9-rc-mut-argument-zig-cache/o/2d640eee18f1ea639b0bb4ba19436fad/test "--guardian-filter=RC record field" --cache-dir=/home/epentland/ai/canopy/mylang-worktrees/.d9-rc-mut-argument-zig-cache --seed=0xf10b64d2 --listen=-
+
+Build Summary: 10/10 steps succeeded; 20/20 tests passed
+test-units success
++- run test 20 pass (20 total) 348ms MaxRSS:23M
+   +- compile test debug native success 2s MaxRSS:362M
+   |  +- run exe qbe-build-assets (qbe_build_assets) success 56ms
+   |  |  +- compile exe qbe-build-assets debug native cached 8ms MaxRSS:33M
+   |  +- options cached
+   |     +- compile exe qbe fast native cached 16ms MaxRSS:33M
+   +- install generated to qbe cached
+   |  +- compile exe qbe fast native (reused)
+   +- install generated to mylang success
+      +- compile exe mylang debug native success 3s MaxRSS:486M
+         +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+

@@ -34,7 +34,7 @@ pub fn safe(catalog: *shapes.Catalog, ty: typed.Type) Error!bool {
         work.seen[work.visited] = current;
         work.visited += 1;
         if (current.capabilityIndex() != null or current.resourceKind() != null) return false;
-        const layout = catalog.native.layout(current) catch return error.InternalError;
+        const layout = catalog.native.layout(current) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError;
         if (layout.drop or layout.copy == .prohibited) return false;
         switch (layout.kind) {
             .callable, .resource, .handle, .pool_handle, .owned_buffer, .owned_pool => return false,
@@ -57,4 +57,41 @@ fn appendRecord(work: *Work, record: typed.Record) bool {
     };
     for (record.fields) |field| if (!work.append(field.ty)) return false;
     return true;
+}
+
+// spec-case: RC-CALLER-FIELD-READ-1
+test "RC record field safe-type admission propagates failed layout allocation and retries" {
+    const t = @import("std").testing;
+    const native = @import("native_types.zig");
+    const span: @import("source.zig").Span = .{ .start = 0, .end = 0 };
+    const ty: typed.Type = @fromBackingInt(typed.Type.record_base);
+    const records = [_]typed.Record{.{ .id = ty, .name = "Plain", .declaration = span, .fields = &.{.{ .name = "value", .declaration = span, .ty = .i64 }} }};
+    var layouts = try native.Catalog.initRecords(t.allocator, &records);
+    defer layouts.deinit();
+    var catalog = try shapes.Catalog.init(t.allocator, &layouts);
+    defer catalog.deinit();
+    var failing = t.FailingAllocator.init(t.allocator, .{ .fail_index = 0 });
+    layouts.allocator = failing.allocator();
+    try t.expectError(error.OutOfMemory, safe(&catalog, ty));
+    layouts.allocator = t.allocator;
+    try t.expect(try safe(&catalog, ty));
+}
+
+// spec-case: RC-CALLER-FIELD-READ-1
+test "RC record field safe-type authority independently refuses transitive live views" {
+    const t = @import("std").testing;
+    const native = @import("native_types.zig");
+    const span: @import("source.zig").Span = .{ .start = 0, .end = 0 };
+    const view: typed.Type = @fromBackingInt(typed.Type.record_base);
+    const wrapper: typed.Type = @fromBackingInt(typed.Type.record_base + 1);
+    const records = [_]typed.Record{
+        .{ .id = view, .name = "View", .declaration = span, .shape = .{ .builtin = .live_view }, .fields = &.{.{ .name = "mapping", .declaration = span, .ty = .i64 }} },
+        .{ .id = wrapper, .name = "Wrapper", .declaration = span, .fields = &.{.{ .name = "value", .declaration = span, .ty = view }} },
+    };
+    var layouts = try native.Catalog.initRecords(t.allocator, &records);
+    defer layouts.deinit();
+    var catalog = try shapes.Catalog.init(t.allocator, &layouts);
+    defer catalog.deinit();
+    try t.expect(!try safe(&catalog, wrapper));
+    try t.expect(!try safe(&catalog, view));
 }

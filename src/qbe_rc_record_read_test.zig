@@ -52,7 +52,7 @@ fn body(manifest: Manifest, name: []const u8) ![]const u8 {
 }
 
 // spec: RC-RECORD-FIELD-READ-1
-test "RC record field reads lend named homes but refuse caller storage callbacks and managed leaves" {
+test "RC record field reads lend named homes but refuse callbacks and managed leaves" {
     const saved = runtime.get();
     defer runtime.set(saved);
     runtime.set(.rc);
@@ -62,7 +62,7 @@ test "RC record field reads lend named homes but refuse caller storage callbacks
     try t.expect(std.mem.indexOf(u8, il, marker) != null);
     try t.expect(std.mem.indexOf(u8, il, "call $myl_qbe_fail_normalized_index_bounds") != null);
     try t.expect(std.mem.indexOf(u8, il, "call $myl_qbe_rc_frame_cleanup") != null);
-    for ([_][]const u8{ "external", "changed", "managed", "floating" }) |name| {
+    for ([_][]const u8{ "changed", "managed", "floating" }) |name| {
         try t.expect(std.mem.indexOf(u8, try body(manifest.value, name), marker) == null);
     }
 }
@@ -92,4 +92,21 @@ test "RC record field reads retain every original checked instruction and step b
     const at = std.mem.indexOf(u8, il, marker) orelse return error.TestUnexpectedResult;
     try t.expect(std.mem.indexOf(u8, il[at..], ", @step_limit,") != null);
     try t.expect(std.mem.indexOf(u8, il[at..], "call $myl_qbe_fail_normalized_index_bounds") != null);
+}
+
+// spec: RC-CALLER-FIELD-READ-1
+test "RC record field reads accept canonical incoming lifetime without asserting ordinary ownership" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    var manifest = try emitted(false);
+    defer manifest.deinit();
+    const il = try body(manifest.value, "external");
+    try t.expect(std.mem.indexOf(u8, il, "# RC-CALLER-FIELD-READ-1") != null);
+    try t.expect(std.mem.indexOf(u8, il, marker) == null);
+    const later_loan = std.mem.indexOf(u8, il, "call $myl_rc_native_loan") orelse return error.TestUnexpectedResult;
+    const checked_read = std.mem.indexOf(u8, il, "call $myl_qbe_fail_normalized_index_bounds") orelse return error.TestUnexpectedResult;
+    try t.expect(later_loan > checked_read);
+    try t.expect(std.mem.indexOf(u8, il, "call $myl_qbe_fail_normalized_index_bounds") != null);
+    try t.expect(std.mem.indexOf(u8, il, "call $myl_qbe_rc_frame_cleanup") != null);
 }

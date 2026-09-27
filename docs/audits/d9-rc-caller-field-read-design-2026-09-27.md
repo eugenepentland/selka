@@ -1,6 +1,7 @@
 # Incoming record lifetime for checked scalar-list reads
 
-Status: approved bounded follow-up design; no implementation yet. Base is
+Status: implemented and validated in the companion implementation report; the
+original bounded design and attribution receipts remain preserved. Base is
 `c1224f30`, with the immutable corrected Debug compiler and byte-identical N10
 executables from the named record-field-read archive. Its prior receipts remain
 unchanged. This is a separate branch and no new compiler cache/worktree.

@@ -1,0 +1,16 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/caller-field-read/install-proof-final/bin/mylang",
+  "compiler_sha256": "6c086dfa9a029ba36804da69ab6806a31a754a0ac9fc4d376477e2ff7a907f6c",
+  "patch_sha256": "12b5cf893be6f4069b49f3a6ff8419a24ab9720c0065b7d1688ffdff689a38f9",
+  "sources": {
+    "SPEC.md": "2c77683b56d442fcbcb71438f63a82cb699f2b44136f528c4395990dcf61e768",
+    "src/qbe_rc_record_read.zig": "74151756823295d07411ae73b64f8b73e2902052151b0abf01b9823db0077d5e",
+    "src/qbe_rc_record_read_plan.zig": "0c9c4bf990530e824c2ebee258827eafa9a2c2709852a40324d58be9f14a6f20",
+    "src/qbe_rc_record_read_test.zig": "b934f805fcf373de06011fb4ec4996b8959ec3ced118406023823b70bad182ec",
+    "src/qbe_rc_record_read_anchor.zig": "91ddb648b6f6ebfbef4c8f0eae1215feb8728a0bd2a0621b3e71a962dfe49f33",
+    "src/rc_field_authority.zig": "fa63f43458d0f4d826b49dea44c5f251cc183cb18928ef034d79a56dd7ce69ea",
+    "src/rc_record_read.zig": "b44ff0cded75f3a1a4a673655aa858f5e460b8b568763a7ad8bc816e64a03602",
+    "src/root_test.zig": "be329489512fd22bc79764e87a9575c843acdf4e036305570c9afacd09ec8f6c",
+    "tests/lang/rc_caller_field_reads.my": "73099c5789aed2d2b87b7fce7452c130b79afa47c2eabb61cb035963a756cfdc"
+  }
+}

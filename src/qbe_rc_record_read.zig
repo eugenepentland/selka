@@ -41,7 +41,8 @@ pub fn emit(comptime E: type, self: *E, pc: usize) Error!?usize {
         rc.plan.records.reads[index].active = true;
         trial.by_reference = try self.allocator.dupe(@TypeOf(trial.by_reference[0]), self.by_reference);
         defer self.allocator.free(trial.by_reference);
-        try trial.print(" # RC-RECORD-FIELD-READ-1 root {d} capture {d}\n", .{ proof.root, proof.capture });
+        const spec = if (proof.home == .incoming) "RC-CALLER-FIELD-READ-1" else "RC-RECORD-FIELD-READ-1";
+        try trial.print(" # {s} root {d} capture {d}\n", .{ spec, proof.root, proof.capture });
         for (proof.start..proof.end + 1) |at| try trial.emitAt(at);
         const text = trial.output.written();
         if (!@import("qbe_rc_closed_text.zig").quietCopy(text)) return null;
