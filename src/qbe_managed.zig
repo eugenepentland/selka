@@ -856,7 +856,7 @@ fn inlineIndexWrite(comptime E: type, self: *E, write: IndexRead, failure: []con
         const value = try operandPointer(E, self, write.element, write.slot);
         const result = self.temp();
         const glue = @import("qbe_rc_glue.zig");
-        if (try glue.routed(E, self, write.element)) {
+        if (try glue.listRouted(E, self, write.element, .list_set)) {
             try glue.listWrite(E, self, .{ .element = write.element, .result = result, .list = write.input, .index = write.at, .value = value });
         } else try self.print(" %v{d} =w call $myl_rc_list_set(l %heap, l %v{d}, l %v{d}, l %v{d})\n", .{ result, write.input, write.at, value });
         try self.require(result, allocation_failure);

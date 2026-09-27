@@ -28,11 +28,14 @@ const source =
     \\def make() -> Holder:
     \\    return Holder([[1], [2], [3]], Shape.points([4]), 3)
     \\
+    \\def pairs() -> list[Pair]:
+    \\    return [Pair([6], b"y")]
+    \\
     \\def main() -> int:
     \\    pair = Pair([5], b"x")
     \\    holder = make()
     \\    kept = keep(holder.rows[1])
-    \\    return first(pair) + kept[0] + holder.count
+    \\    return first(pair) + kept[0] + holder.count + len(pairs())
 ;
 
 const Manifest = struct { runtime_data: []const u8, functions: []const struct { name: []const u8, il: []const u8 } };
@@ -98,8 +101,26 @@ test "RC-GLUE-1 counted inline types get straight-line glue that compiles in bot
     try t.expect(!contains(entries, "COUNT_LIMIT"));
     try t.expect(!contains(entries, "myl_rc_descriptor_find"));
     try t.expect(contains(data, "if (died) myl_rc_drain(heap);"));
+    // List element glue exists only for types a collection stores.
+    const sets = std.mem.count(u8, data, "_rcg_list_set(myl_native_heap");
+    try t.expect(sets > 0 and sets < std.mem.count(u8, data, "_rcg_drop(myl_native_heap"));
     try t.expect(try compiles(data, &.{}));
     try t.expect(try compiles(data, &.{"-DMYL_NATIVE_RC_COUNTING=1"}));
+}
+
+/// Whether every inline glue branch tests a word computed at full width:
+/// QBE's jnz reads only the low word of a pointer or a high mark bit.
+fn fullWidthBranches(il: []const u8) bool {
+    var lines = std.mem.splitScalar(u8, il, '\n');
+    var previous: []const u8 = "";
+    while (lines.next()) |line| {
+        const inline_branch = std.mem.startsWith(u8, line, " jnz ") and std.mem.indexOf(u8, line, ", @rcg") != null;
+        const guarded = std.mem.indexOf(u8, previous, " =w cnel ") != null or std.mem.indexOf(u8, previous, " =w ceql ") != null or
+            std.mem.indexOf(u8, previous, " =w cultl ") != null;
+        if (inline_branch and !guarded) return false;
+        previous = line;
+    }
+    return true;
 }
 
 // spec-case: RC-GLUE-1
@@ -113,6 +134,7 @@ test "RC-GLUE-1 loans, retains and drops call glue instead of the runtime walker
     try t.expect(!contains(il, "call $myl_rc_native_drop"));
     // One-word values keep their fast path inline: no glue call on success.
     try t.expect(contains(il, "@rcginc"));
+    try t.expect(fullWidthBranches(il));
     try t.expect(contains(il, "_rcg_"));
 }
 

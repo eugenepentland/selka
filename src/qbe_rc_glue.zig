@@ -33,6 +33,7 @@ const mark_offset: u64 = 16;
 const status_call = " %v{d} =w call ${s}{s}(l %heap, l %v{d}, l %v{d}, w %v{d})\n";
 const load_below = " %v{d} =l sub %v{d}, {d}\n %v{d} =l loadl %v{d}\n";
 const mask = " %v{d} =l and %v{d}, {d}\n";
+const load_word = @import("qbe_format.zig").load_word;
 
 /// Journal roles (MYL_QBE_RC_*): a frame-private loan and a hold-pointer H
 /// token; the generated slot glue dispatches on the same values.
@@ -53,12 +54,14 @@ pub fn routed(comptime E: type, self: *E, ty: typed.Type) Error!bool {
     return glue.eligible(self.layouts, &state.catalog, ty) catch |err| translate(err);
 }
 
-/// Whether list appends of `ty` run through glue: every routed type, plus
-/// plain inline aggregates, whose room append is a byte copy.
-pub fn appendRouted(comptime E: type, self: *E, ty: typed.Type) Error!bool {
-    if (try routed(E, self, ty)) return true;
+/// Whether a list element write of `ty` runs through glue: the type must be
+/// some collection's element and routed; a room append also takes a plain
+/// inline aggregate, whose append is a byte copy.
+pub fn listRouted(comptime E: type, self: *E, ty: typed.Type, operation: glue.Operation) Error!bool {
     if (comptime !(@hasField(E, "cow") and @hasField(E, "layouts"))) return false;
-    if (!runtime.enabled()) return false;
+    if (!runtime.enabled() or !glue.listElement(self.layouts, ty)) return false;
+    if (try routed(E, self, ty)) return true;
+    if (operation != .list_append) return false;
     const cow = self.cow orelse return false;
     const state = cow.rc orelse return false;
     return glue.plainAggregate(self.layouts, &state.catalog, ty) catch |err| translate(err);
@@ -103,12 +106,13 @@ pub fn retain(comptime E: type, self: *E, operation: Transfer) Error!void {
     };
     const payload = self.temp();
     const label = self.temp();
-    try self.print(" %v{d} =l loadl %v{d}\n", .{ payload, operation.source });
+    try self.print(load_word, .{ payload, operation.source });
     const mark = try increment(E, self, .{ .payload = payload, .count = edge, .label = label, .on_null = "plain", .on_special = "special" });
     try self.print(" jmp @rcgplain{d}\n@rcgspecial{d}\n", .{ label, label });
     // Immortal edges need nothing; an arena edge needs its region checked.
     const arena = self.temp();
-    try self.print(" %v{d} =l and %v{d}, {d}\n jnz %v{d}, @rcgslow{d}, @rcgplain{d}\n@rcgslow{d}\n", .{ arena, mark, arena_mark, arena, label, label, label });
+    try self.print(mask, .{ arena, mark, arena_mark });
+    try self.print(" jnz %v{d}, @rcgslow{d}, @rcgplain{d}\n@rcgslow{d}\n", .{ try nonzero(E, self, arena), label, label, label });
     const result = self.temp();
     try self.print(status_call, .{ result, symbol, suffix, operation.destination, operation.source, operation.region });
     try requireSuccess(E, self, result);
@@ -179,9 +183,10 @@ pub fn uniqueFast(comptime E: type, self: *E, address: usize, label: usize) Erro
     const counter = self.temp();
     const owners = self.temp();
     const single = self.temp();
-    try self.print(" %v{d} =l loadl %v{d}\n jnz %v{d}, @rcguniquenn{d}, @rcgunique{d}\n@rcguniquenn{d}\n", .{ payload, address, payload, label, label, label });
+    try self.print(load_word, .{ payload, address });
+    try self.print(" jnz %v{d}, @rcguniquenn{d}, @rcgunique{d}\n@rcguniquenn{d}\n", .{ try nonzero(E, self, payload), label, label, label });
     try self.print(load_below ++ mask, .{ header, payload, mark_offset, mark, header, shared, mark, shared_marks });
-    try self.print(" jnz %v{d}, @rcguniqueslow{d}, @rcguniquecount{d}\n@rcguniquecount{d}\n", .{ shared, label, label, label });
+    try self.print(" jnz %v{d}, @rcguniqueslow{d}, @rcguniquecount{d}\n@rcguniquecount{d}\n", .{ try nonzero(E, self, shared), label, label, label });
     try self.print(load_below ++ " %v{d} =w cultl %v{d}, 2\n", .{ counter, payload, owners_offset, owners, counter, single, owners });
     try self.print(" jnz %v{d}, @rcgunique{d}, @rcguniqueslow{d}\n@rcguniqueslow{d}\n", .{ single, label, label, label });
 }
@@ -238,10 +243,10 @@ fn increment(comptime E: type, self: *E, step: Increment) Error!usize {
     const counter = self.temp();
     const old = self.temp();
     const new = self.temp();
-    try self.print(" jnz %v{d}, @rcgnn{d}, @rcg{s}{d}\n@rcgnn{d}\n", .{ step.payload, step.label, step.on_null, step.label, step.label });
+    try self.print(" jnz %v{d}, @rcgnn{d}, @rcg{s}{d}\n@rcgnn{d}\n", .{ try nonzero(E, self, step.payload), step.label, step.on_null, step.label, step.label });
     try self.print(load_below, .{ header, step.payload, mark_offset, mark, header });
     try self.print(mask, .{ special, mark, uncounted_marks });
-    try self.print(" jnz %v{d}, @rcg{s}{d}, @rcginc{d}\n@rcginc{d}\n", .{ special, step.on_special, step.label, step.label, step.label });
+    try self.print(" jnz %v{d}, @rcg{s}{d}, @rcginc{d}\n@rcginc{d}\n", .{ try nonzero(E, self, special), step.on_special, step.label, step.label, step.label });
     try self.print(load_below, .{ counter, step.payload, offset(step.count), old, counter });
     try self.print(" %v{d} =l add %v{d}, 1\n storel %v{d}, %v{d}\n", .{ new, old, new, counter });
     return mark;
@@ -275,17 +280,27 @@ fn release(comptime E: type, self: *E, operation: Release, operation_kind: glue.
     const other_value = self.temp();
     const reduced = self.temp();
     const label = self.temp();
-    try self.print(" %v{d} =l loadl %v{d}\n jnz %v{d}, @rcgnn{d}, @rcgdone{d}\n@rcgnn{d}\n", .{ payload, operation.address, payload, label, label, label });
+    try self.print(load_word, .{ payload, operation.address });
+    try self.print(" jnz %v{d}, @rcgnn{d}, @rcgdone{d}\n@rcgnn{d}\n", .{ try nonzero(E, self, payload), label, label, label });
     try self.print(load_below ++ mask, .{ header, payload, mark_offset, mark, header, special, mark, uncounted_marks });
-    try self.print(" jnz %v{d}, @rcgclear{d}, @rcgcounted{d}\n@rcgcounted{d}\n", .{ special, label, label, label });
+    try self.print(" jnz %v{d}, @rcgclear{d}, @rcgcounted{d}\n@rcgcounted{d}\n", .{ try nonzero(E, self, special), label, label, label });
     try self.print(load_below ++ " %v{d} =w ceql %v{d}, 1\n", .{ counter, payload, offset(count), value, counter, last, value });
     try self.print(" jnz %v{d}, @rcglast{d}, @rcgdec{d}\n@rcglast{d}\n", .{ last, label, label, label });
     try self.print(load_below, .{ other_counter, payload, offset(other), other_value, other_counter });
     // The last token of an otherwise unheld object dies: the glue clears the
     // slot, queues the death and drains.
-    try self.print(" jnz %v{d}, @rcgdec{d}, @rcgslow{d}\n@rcgslow{d}\n", .{ other_value, label, label, label });
+    try self.print(" jnz %v{d}, @rcgdec{d}, @rcgslow{d}\n@rcgslow{d}\n", .{ try nonzero(E, self, other_value), label, label, label });
     try self.print(" call ${s}{s}(l %v{d}, l %v{d})\n jmp @rcgdone{d}\n@rcgdec{d}\n", .{ symbol, suffix, heap, operation.address, label, label });
     try self.print(" %v{d} =l sub %v{d}, 1\n storel %v{d}, %v{d}\n@rcgclear{d}\n storel 0, %v{d}\n@rcgdone{d}\n", .{ reduced, value, reduced, counter, label, operation.address, label });
+}
+
+/// A word flag for a full-width l value. QBE's jnz reads only the low word,
+/// so a pointer or a high mark bit (arena, shared, pinned) is compared with
+/// zero at full width before branching.
+fn nonzero(comptime E: type, self: *E, value: usize) Error!usize {
+    const flag = self.temp();
+    try self.print(" %v{d} =w cnel %v{d}, 0\n", .{ flag, value });
+    return flag;
 }
 
 /// A comment naming the operation, so IL readers and tests can find every

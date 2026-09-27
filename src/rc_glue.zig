@@ -241,8 +241,10 @@ const Generator = struct {
         return std.fmt.allocPrint(self.allocator, "(unsigned char *)({s}) + {d}", .{ base, offset });
     }
 
-    /// The entries of one counted inline type.
-    fn functions(self: *Generator, ty: typed.Type, name: []const u8, size: u64) Error!void {
+    /// The entries of one counted inline type; list element glue only for a
+    /// type some collection stores.
+    fn functions(self: *Generator, ty: typed.Type, name: []const u8, element: bool) Error!void {
+        const size = (try self.catalog.layout(ty)).size;
         try self.print("void {s}_rcg_loan(myl_native_heap *heap, void *dst, const void *src) {{\n", .{name});
         try self.print("MYL_RCG_CHECK(!myl_rcg_overlap(dst, src, {d}));\nmemcpy(dst, src, {d});\n", .{ size, size });
         try self.edges(ty, "dst", .loan);
@@ -278,7 +280,7 @@ const Generator = struct {
         try self.print("memcpy(dst, src, {d});\nif (mode & MYL_RC_HISTORY_TAKE) {{ memset(src, 0, {d}); return 1; }}\n", .{ size, size });
         try self.edges(ty, "dst", .retain);
         try self.print("return 1;\n}}\n", .{});
-        try self.lists(name, size);
+        if (element) try self.lists(name, size);
         try self.slot(name, size);
     }
 
@@ -329,6 +331,15 @@ pub fn eligible(catalog: *native.Catalog, facts: *shapes.Catalog, ty: typed.Type
     return (try catalog.layout(ty)).size != 0;
 }
 
+/// Whether some managed collection stores `ty` as its element: only such a
+/// type gets (and is routed to) list element glue.
+pub fn listElement(catalog: *const native.Catalog, ty: typed.Type) bool {
+    for (catalog.records) |record| {
+        if (record.isCollection() and !record.collection.box and record.shape.buffer.? == ty) return true;
+    }
+    return false;
+}
+
 /// Whether `ty` is an inline aggregate without edges or unique resources:
 /// its list appends copy bytes through glue instead of the runtime walker.
 pub fn plainAggregate(catalog: *native.Catalog, facts: *shapes.Catalog, ty: typed.Type) Error!bool {
@@ -358,14 +369,13 @@ pub fn generate(allocator: std.mem.Allocator, catalog: *native.Catalog) Error![]
     try generator.print("{s}", .{prelude});
     for (0..typed.Type.record_base + catalog.records.len) |index| {
         const ty: typed.Type = @fromBackingInt(index);
+        const element = listElement(catalog, ty);
         if (try plainAggregate(catalog, &facts, ty)) {
-            try generator.append(try descriptors.symbol(a, catalog, ty), (try catalog.layout(ty)).size, false);
+            if (element) try generator.append(try descriptors.symbol(a, catalog, ty), (try catalog.layout(ty)).size, false);
             continue;
         }
-        if (!(try facts.get(ty)).counted) continue;
-        const layout = try catalog.layout(ty);
-        if (layout.size == 0) continue;
-        try generator.functions(ty, try descriptors.symbol(a, catalog, ty), layout.size);
+        if (!(try facts.get(ty)).counted or (try catalog.layout(ty)).size == 0) continue;
+        try generator.functions(ty, try descriptors.symbol(a, catalog, ty), element);
     }
     return output.toOwnedSlice();
 }
