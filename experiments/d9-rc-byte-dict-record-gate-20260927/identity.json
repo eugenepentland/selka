@@ -1,0 +1,72 @@
+{
+  "source_commit": "368f0357cd107895cc45863d379a6fdcd3dd3018",
+  "compiler_mode": "Debug",
+  "compiler_path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-integration/.tmp-rc/install-byte-dict-record/bin/mylang",
+  "compiler_sha256": "4545547e80d9b555e4084d4b2fcbac0fcf4be24c1033d160c58857fd7c208dd1",
+  "commands": {
+    "final-build": {
+      "exit_code": 0,
+      "summary": "Build Summary: 19/19 steps succeeded"
+    },
+    "test": {
+      "exit_code": 0,
+      "summary": "Build Summary: 94/94 steps succeeded; 2383/26739 tests passed (24356 skipped)"
+    },
+    "test-qbe": {
+      "exit_code": 0,
+      "summary": "Build Summary: 51/51 steps succeeded; 455/455 tests passed"
+    },
+    "test-qbe-build": {
+      "exit_code": 0,
+      "summary": "Build Summary: 29/29 steps succeeded"
+    },
+    "fmt-check": {
+      "exit_code": 0,
+      "summary": "Build Summary: 2/2 steps succeeded"
+    }
+  },
+  "sweeps": {
+    "qbe": {
+      "version": "native-tests-v1",
+      "passed": 1035,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 1035,
+      "programs": 176,
+      "dropped": 0,
+      "unloaded": 0
+    },
+    "llvm": {
+      "version": "native-tests-v1",
+      "passed": 1035,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 1035,
+      "programs": 176,
+      "dropped": 0,
+      "unloaded": 0
+    }
+  },
+  "guardian_checks": 88,
+  "artifacts": {
+    "README.md": "ce0b4aedc64b0b1f84223bce977badd0ed785806a7cf1a12cd74e9d08977e82a",
+    "archive.py": "b92f8c86fcad3a4291dc2c67ca8bf0b2833e58317b69b7b06bc94d78bfcf5419",
+    "final-build.log.gz": "0ed317e49c270c5cb2a76a93840c584fc13333eed831ec74c01ce92dc5322d8d",
+    "fmt-check.log.gz": "de01a91b7b313677fe046c287a2404a16ae2c7b1d6d2793c81737dda7bc60d14",
+    "gate-status.log.gz": "8cb6c1106a59bc2dc387dd4274908f883e699b12dbeb215a35e92193cbf58205",
+    "gate.sh": "671197d444c7e90f56cfc4622cdbe9f86e540b11842c387c14c792fd597201fc",
+    "guardian.log.gz": "1915af32bee08e3084c2dea4e969d9de826a5ed4121e4c9271c3026104ff2c6d",
+    "sweep-llvm.json.gz": "e728e71769f874bb768f10dd50b4cd7e47ae840b9b7da264f7c26555a5ad1b3f",
+    "sweep-llvm.log.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "sweep-qbe.json.gz": "c2b1215a468bd47b8f2a5f72d9edf529bc0136118065f26b4de4340fa4972652",
+    "sweep-qbe.log.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "sweep-status.log.gz": "f7c9542e2f2f6dcb8be4fe9c7d1eaada4d5e6eba7536bd0fcbbd8ff43f0153ad",
+    "sweep.sh": "295d73b12a58479f2d65e0fc9d4bb8735d17a5067b0d77a61cb4f7e49e8dd6fe",
+    "test-qbe-build.log.gz": "8fb003087c14d741300d975364792f44b62f5d8abfff4834cfca3f5cef81af79",
+    "test-qbe.log.gz": "d0a0963f6ae54d3229118d3f5fa7fb7bed5267786b6973f2b78c2e24e7f109a9",
+    "test.log.gz": "6e42243ac2a1446a5330602cd35dcc8728db0aaa5d46b452ed0d0755176a8636",
+    "verify.py": "6237276147963686676c02ebe694b44aa506981b776add4362a04685c715b280"
+  }
+}

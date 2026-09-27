@@ -9,8 +9,21 @@ full gates with `../.d9-closeout-gate.lock`. The original dirty checkout, `main`
 (`b292660a`), and the pending devspeed merge are untouched.
 
 The active user goal is Stage 4 performance acceptance. The latest joined
-source `c07016f3` passes the [full correctness checkpoint](d9-rc-helpers-word-gate-2026-09-27.md).
-Its [focused four-program measurement](d9-rc-helpers-word-joined-2026-09-27.md)
+source `368f0357` passes the [full correctness checkpoint](d9-rc-byte-dict-record-gate-2026-09-27.md):
+2,383 main tests, 455 QBE tests, native build, formatting, Guardian88 and
+1,035 forced RC assertions across 176 programs on each backend. It includes
+guarded byte loops, empty dictionary drops, named-record field reads and the
+loop-guard instruction-context fix. Its complete performance is not yet measured.
+
+The latest isolated results are byte scanning **2.109321× QBE / 1.081241× LLVM**,
+dictionary counting **1.311910× / 1.325051×**, and full Lox binary trees N10
+**21.372315× / 34.478071×** against accepted GC. Only the LLVM byte row meets
+the 1.3× cap. Each result uses its documented isolated base; they must not be
+multiplied into a combined result. The unchanged 43-program corpus and all
+instruction/RSS requirements remain open.
+
+The preceding `c07016f3`
+[focused four-program measurement](d9-rc-helpers-word-joined-2026-09-27.md)
 confirms dictionary counting at **1.381481× QBE / 1.388517× LLVM** against
 accepted GC and schematic at **12.08–12.17× / 17.57–17.64×**. These are fresh
 combined measurements, with 72 unscaled instruction observations, separate RSS
@@ -62,12 +75,16 @@ above confirms those costs on that combined source. Managed borrowed-helper
 composition `b6ff7788` and registered plain dictionary word overwrite `0efd82ad`
 now join the newer `c07016f3` checkpoint. Their measured combined improvements
 are 24–28% for schematic and 5–7% for dictionary counting against `49c6ca07`.
-The three current workers address named record-field list reads, immutable-byte
-fast loops and proved-empty dictionary cleanup guards. The byte scan still
-measures 3.554239× QBE / 12.666139× LLVM on `49c6ca07`; all follow-on work remains
-experimental until separately validated. Complete current combined performance
-has not been measured. GC remains the default; changing it is outside this
-active performance goal.
+The subsequent [byte-loop slice](d9-rc-immutable-byte-loop-2026-09-27.md),
+[dictionary-drop slice](d9-rc-dictionary-empty-drops-2026-09-27.md) and
+[named-record read slice](../../experiments/d9-rc-record-field-read-implementation-20260927/README.md)
+now join the `368f0357` checkpoint. Their isolated results appear above.
+The three current workers address fast-loop operand storage, scalar field reads
+through verified incoming `inout` authority, and raw borrowed/immortal helper
+entries. The latter requires a separate constant-result certificate for the
+actual `text::empty` fallback; the initial borrowed-only prototype correctly
+refuses it. Complete current combined performance has not been measured.
+GC remains the default; changing it is outside this active performance goal.
 
 Stage 3 and WP-4pre are accepted on the integration branch. The complete
 43-program-per-backend instruction sweep passes at 1.021851044× QBE and
@@ -76,10 +93,10 @@ The final combined default/borrow gate at `f6bea5d9` passes all four steps:
 2,130 executed main tests, 429 QBE tests, native-build and formatting.
 WP-4's compiler, runtime, collection, arena and host ownership paths are implemented
 behind an experimental runtime selector. The latest fully green checkpoint at
-`c07016f3` passes 2,368 main tests, 451 QBE tests, native build and formatting.
-Both uncached RC sweeps pass **1,019/1,019 assertions across 173 programs**, with
+`368f0357` passes 2,383 main tests, 455 QBE tests, native build and formatting.
+Both uncached RC sweeps pass **1,035/1,035 assertions across 176 programs**, with
 zero failures, skips, cached verdicts, dropped files or unloaded files. The
-[joined checkpoint](d9-rc-helpers-word-gate-2026-09-27.md) includes corrected
+[joined checkpoint](d9-rc-byte-dict-record-gate-2026-09-27.md) includes corrected
 module callable resolution, argv ownership, empty-local journals and certified
 fresh returns, omitted empty receiver storage, direct plain scalar writes,
 empty-frame linkage omission, complete fresh constructors, closed field transfer,
