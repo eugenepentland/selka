@@ -48,6 +48,7 @@ static int index_prepare(myl_native_heap *heap, size_t additional, myl_rc_index_
     if (!entries) return 0;
     for (size_t i = 0; i < heap->rc->metadata.index.capacity; ++i) {
         myl_rc_index_entry old = heap->rc->metadata.index.entries[i];
+        old.recent_descriptor = 0; /* Hints name slots in the previous table. */
         if (old.key) entries[index_slot(entries, *capacity, old.key, old.kind)] = old;
     }
     *out = entries;
@@ -406,6 +407,23 @@ size_t myl_rc_shape_depth(const myl_native_heap *heap, const myl_rc_shape *sourc
 }
 const myl_rc_descriptor *myl_rc_descriptor_find(const myl_native_heap *heap, const myl_native_type *type) {
     const myl_rc_index_entry *entry = index_find(heap, type, INDEX_DESCRIPTOR);
+    return entry ? entry->value : NULL;
+}
+/* Opt-in repeat identity for scalar room-append admission. General lookups
+ * retain the original path and neither pay for nor evict this hint. */
+const myl_rc_descriptor *myl_rc_descriptor_repeat(const myl_native_heap *heap, const myl_native_type *type) {
+    if (!heap || !heap->rc || !type || !heap->rc->metadata.index.capacity) return NULL;
+    myl_rc_index_entry *entries = heap->rc->metadata.index.entries;
+    unsigned recent = entries[0].recent_descriptor;
+    if (recent && (size_t)recent <= heap->rc->metadata.index.capacity) {
+        const myl_rc_index_entry *cached = &entries[recent - 1];
+        if (cached->key == type && cached->kind == INDEX_DESCRIPTOR) return cached->value;
+    }
+    const myl_rc_index_entry *entry = index_find(heap, type, INDEX_DESCRIPTOR);
+    if (entry) {
+        size_t slot = (size_t)(entry - entries);
+        entries[0].recent_descriptor = slot < UINT32_MAX ? (unsigned)(slot + 1) : 0;
+    }
     return entry ? entry->value : NULL;
 }
 

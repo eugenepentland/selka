@@ -1216,7 +1216,7 @@ int myl_rc_list_plain_ready(myl_native_heap *heap, const myl_native_list *list) 
     if (type->kind!=MYL_NATIVE_PLAIN && type->kind!=MYL_NATIVE_FLOAT) return 0;
     size_t size=type->size;
     if (size!=1 && size!=2 && size!=4 && size!=8) return 0;
-    const myl_rc_descriptor *descriptor=myl_rc_descriptor_find(heap,type);
+    const myl_rc_descriptor *descriptor=myl_rc_descriptor_repeat(heap,type);
     return descriptor && ((const myl_rc_binding *)descriptor)->flat.count==0;
 }
 int myl_rc_list_append(myl_native_heap *heap, myl_native_list *list, const void *value) {

@@ -1,0 +1,18 @@
+{
+  "before": {
+    "binary_sha256": "a07c3a4de0fdfb1b182cd97dc2d682095d98713537e5b773d9fee8b99c253c55",
+    "stdout": "index=40 kind=32 state=128 heap=5648 binding=128\n"
+  },
+  "after": {
+    "binary_sha256": "a07c3a4de0fdfb1b182cd97dc2d682095d98713537e5b773d9fee8b99c253c55",
+    "stdout": "index=40 kind=32 state=128 heap=5648 binding=128\n"
+  },
+  "counting-before": {
+    "binary_sha256": "5136afa48ef14420e6a30e41ff6ca319d0ec0457f26b01bd9fb483d9d2e9f8f3",
+    "stdout": "index=40 kind=32 state=224 heap=5648 binding=128\n"
+  },
+  "counting-after": {
+    "binary_sha256": "5136afa48ef14420e6a30e41ff6ca319d0ec0457f26b01bd9fb483d9d2e9f8f3",
+    "stdout": "index=40 kind=32 state=224 heap=5648 binding=128\n"
+  }
+}

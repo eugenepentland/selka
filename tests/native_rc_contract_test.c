@@ -432,7 +432,7 @@ static void registering_retire(myl_native_heap *heap, void *payload) {
     if (!state->retired) {
         static myl_native_type types[64];
         const myl_native_type *old_type = ((const myl_native_object *)payload - 1)->element;
-        const myl_rc_descriptor *old = myl_rc_descriptor_find(heap, old_type);
+        const myl_rc_descriptor *old = myl_rc_descriptor_repeat(heap, old_type);
         size_t capacity = heap->rc->metadata.index.capacity;
         for (size_t i = 0; i < 64; ++i) {
             types[i] = scalar_type;
@@ -440,7 +440,7 @@ static void registering_retire(myl_native_heap *heap, void *payload) {
             assert(myl_rc_descriptor_import(heap, &descriptor) == MYL_RC_OK);
         }
         assert(heap->rc->metadata.index.capacity > capacity);
-        assert(myl_rc_descriptor_find(heap, old_type) == old);
+        assert(myl_rc_descriptor_repeat(heap, old_type) == old);
     }
     retire(heap, payload);
 }
@@ -860,11 +860,140 @@ static void local_transfer_frames_test(void) {
     finish(&heap, &state);
     free(small); free(small_fields); free(large); free(large_fields);
 }
+/* Find deliberate collision keys for a tiny lookup fixture. This is only the
+ * current registry's placement function; returned identities are independent
+ * descriptor addresses and every cache hint is treated as untrusted. */
+static size_t lookup_bucket(const void *pointer, size_t capacity, unsigned kind) {
+    uintptr_t value = (uintptr_t)pointer >> 3;
+    value ^= value >> 30;
+    value *= UINT64_C(0xbf58476d1ce4e5b9);
+    value ^= value >> 27;
+    return ((size_t)value ^ kind) & (capacity - 1);
+}
+// spec: RC-REGISTER-1
+static void repeated_lookup_table_test(void) {
+    myl_native_heap heap = {0};
+    assert(!myl_rc_descriptor_repeat(NULL, &scalar_type));
+    assert(!myl_rc_descriptor_repeat(&heap, &scalar_type));
+    myl_rc_state state = {0};
+    heap.rc = &state;
+    assert(!myl_rc_descriptor_repeat(&heap, &scalar_type));
+    myl_rc_index_entry entries[8] = {0};
+    state.metadata.index.entries = entries;
+    state.metadata.index.capacity = 8;
+    assert(!myl_rc_descriptor_repeat(&heap, &scalar_type));
+    myl_native_type types[512] = {0};
+    const myl_native_type *keys[4];
+    size_t count = 0;
+    for (size_t i = 0; i < 512 && count < 4; ++i)
+        if (!lookup_bucket(&types[i], 8, 2)) keys[count++] = &types[i];
+    assert(count == 4);
+    myl_rc_descriptor descriptors[3] = {0};
+    for (unsigned i = 0; i < 3; ++i) {
+        descriptors[i] = (myl_rc_descriptor){.type = keys[i], .shape = &scalar_shape};
+        entries[i] = (myl_rc_index_entry){.key = keys[i], .value = &descriptors[i], .kind = 2};
+    }
+    /* The same key under another registry kind must never satisfy a hit. */
+    entries[3] = (myl_rc_index_entry){.key = keys[0], .value = &scalar_shape, .kind = 1};
+    for (unsigned i = 0; i < 32; ++i) {
+        assert(myl_rc_descriptor_repeat(&heap, keys[0]) == &descriptors[0]);
+        assert(myl_rc_descriptor_repeat(&heap, keys[0]) == &descriptors[0]);
+        assert(myl_rc_descriptor_repeat(&heap, keys[2]) == &descriptors[2]);
+        assert(!myl_rc_descriptor_repeat(&heap, keys[3]));
+        assert(!myl_rc_descriptor_repeat(&heap, NULL));
+        entries[0].recent_descriptor = 4;
+        assert(myl_rc_descriptor_repeat(&heap, keys[0]) == &descriptors[0]);
+        entries[0].recent_descriptor = UINT32_MAX;
+        assert(myl_rc_descriptor_repeat(&heap, keys[1]) == &descriptors[1]);
+    }
+    assert(state.metadata.index.count == 0 && state.metadata.bytes == 0);
+    assert(state.failure == MYL_RC_OK && !state.dead.head);
+    assert(sizeof(myl_rc_index_entry) == 40 && offsetof(myl_rc_index_entry, recent_descriptor) == 36);
+}
+// spec: RC-REGISTER-1
+static void repeated_lookup_growth_test(void) {
+    myl_native_heap heap;
+    TestAllocator state;
+    start(&heap, &state);
+    const myl_rc_descriptor *original = myl_rc_descriptor_repeat(&heap, &scalar_type);
+    const myl_rc_shape *shape = original->shape;
+    myl_native_type types[128];
+    const myl_rc_descriptor *bindings[128];
+    unsigned growths = 0;
+    for (size_t i = 0; i < 128; ++i) {
+        types[i] = scalar_type;
+        myl_rc_descriptor next = {.type = &types[i], .shape = shape};
+        size_t bytes = heap.bytes, capacity = heap.rc->metadata.index.capacity;
+        myl_rc_index_entry *old = heap.rc->metadata.index.entries;
+        assert(myl_rc_descriptor_repeat(&heap, &scalar_type) == original);
+        assert(!myl_rc_descriptor_repeat(&heap, &types[i]));
+        /* Allow the private binding, but no replacement index: exactly the
+         * registration transaction's last reservation must refuse on growth. */
+        heap.limit = bytes + sizeof(myl_rc_batch) + sizeof(myl_rc_binding);
+        myl_rc_status status = myl_rc_descriptor_register(&heap, &next);
+        if (status != MYL_RC_OK) {
+            assert(status == MYL_RC_ALLOCATION_REFUSED);
+            assert(heap.bytes == bytes && heap.rc->metadata.index.entries == old);
+            assert(heap.rc->metadata.index.capacity == capacity);
+            assert(!myl_rc_descriptor_repeat(&heap, &types[i]));
+            assert(myl_rc_descriptor_repeat(&heap, &scalar_type) == original);
+            heap.limit = ((size_t)256) << 20;
+            assert(myl_rc_descriptor_register(&heap, &next) == MYL_RC_OK);
+            assert(heap.rc->metadata.index.capacity > capacity);
+            ++growths;
+        }
+        heap.limit = ((size_t)256) << 20;
+        bindings[i] = myl_rc_descriptor_repeat(&heap, &types[i]);
+        for (size_t j = 0; j <= i; ++j)
+            assert(myl_rc_descriptor_repeat(&heap, &types[j]) == bindings[j]);
+        assert(myl_rc_descriptor_repeat(&heap, &scalar_type) == original);
+        assert(myl_rc_shape_resolve(&heap, &scalar_shape) == shape);
+        size_t stable = heap.bytes;
+        assert(myl_rc_module_register(&heap, &scalar_module) == MYL_RC_OK && heap.bytes == stable);
+    }
+    assert(growths >= 3 && heap.rc->failure == MYL_RC_OK);
+    finish(&heap, &state);
+}
+static void lookup_only_finalizer(myl_native_heap *heap, void *payload) {
+    (void)heap;
+    (void)payload;
+}
+// spec: RC-REGISTER-1
+static void repeated_lookup_lifetime_test(void) {
+    myl_native_heap first, second;
+    TestAllocator a, b;
+    start(&first, &a);
+    start(&second, &b);
+    static const myl_native_type local = {.size = 8, .alignment = 8, .kind = MYL_NATIVE_PLAIN};
+    myl_rc_descriptor descriptor = {.type = &local, .shape = &scalar_shape};
+    assert(myl_rc_descriptor_import(&first, &descriptor) == MYL_RC_OK);
+    descriptor.finalize = lookup_only_finalizer;
+    assert(myl_rc_descriptor_import(&second, &descriptor) == MYL_RC_OK);
+    const myl_rc_descriptor *plain = myl_rc_descriptor_repeat(&first, &local);
+    const myl_rc_descriptor *finalized = myl_rc_descriptor_repeat(&second, &local);
+    assert(plain != finalized && !plain->finalize && finalized->finalize == lookup_only_finalizer);
+    for (unsigned i = 0; i < 64; ++i) {
+        assert(myl_rc_descriptor_repeat(&first, &local) == plain);
+        assert(myl_rc_descriptor_repeat(&second, &local) == finalized);
+    }
+    finish(&first, &a);
+    start(&first, &a);
+    assert(!myl_rc_descriptor_repeat(&first, &local));
+    assert(myl_rc_descriptor_import(&first, &descriptor) == MYL_RC_OK);
+    assert(myl_rc_descriptor_repeat(&first, &local)->finalize == lookup_only_finalizer);
+    assert(myl_rc_descriptor_repeat(&second, &local) == finalized);
+    finish(&first, &a);
+    finish(&second, &b);
+}
+
 int myl_rc_contract_verify(void) {
     struct rlimit stack, original;
     assert(!getrlimit(RLIMIT_STACK, &stack));
     original = stack;
     if (stack.rlim_cur > 262144) { stack.rlim_cur = 262144; assert(!setrlimit(RLIMIT_STACK, &stack)); }
+    repeated_lookup_table_test();
+    repeated_lookup_growth_test();
+    repeated_lookup_lifetime_test();
     invariant_paths_test();
     layout_test();
     hold_and_pin_test();
@@ -888,12 +1017,12 @@ int myl_rc_contract_verify(void) {
     deep_unique_test();
     local_transfer_frames_test();
     assert(!setrlimit(RLIMIT_STACK, &original));
-    return 22;
+    return 25;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
-    assert(myl_rc_contract_verify() == 22);
-    puts("native RC contract: 22 tests passed");
+    assert(myl_rc_contract_verify() == 25);
+    puts("native RC contract: 25 tests passed");
     return 0;
 }
 #endif
