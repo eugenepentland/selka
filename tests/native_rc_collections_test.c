@@ -1478,6 +1478,7 @@ static void plain_append_pending_death(void) {
     assert(list && myl_rc_list_append(&heap,list,&value));
     void *queued=myl_native_heap_alloc(&heap,&finalized,1);
     assert(queued);
+    assert(myl_rc_list_plain_ready(&heap,list)); /* Warm identity before queueing. */
     append_observed=list;
     heap.rc->dead.active=1;
     myl_rc_owner_release(&heap,queued);
