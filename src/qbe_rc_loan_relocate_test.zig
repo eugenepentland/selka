@@ -52,3 +52,13 @@ test "RC loaned field read stored into its index temporary relocates the loan" {
 test "RC plain loop reads keep ordinary lowering without relocation" {
     try t.expectEqual(@as(usize, 0), try relocationsIn(program, "total"));
 }
+
+// spec-case: RC-LOAN-RELOCATE-1
+test "RC temporaries filled by a plain local read skip the relocation test" {
+    try t.expectEqual(@as(usize, 0), try relocationsIn(
+        \\def pick(names: list[str], at: int) -> str:
+        \\    return names[at]
+        \\def main() -> int:
+        \\    return len(pick(["a"], 0))
+    , "pick"));
+}
