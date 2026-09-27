@@ -214,6 +214,12 @@ pub fn preparePrivate(comptime E: type, self: *E, ty: typed.Type, address: usize
     try self.print(" jnz %v{d}, @rcprivateown{d}, @rcprivateloan{d}\n@rcprivateown{d}\n", .{ owner, label, label, label });
     try prepareOwned(E, self, ty, address, index, false);
     try self.print(" jmp @rcprivateprepared{d}\n@rcprivateloan{d}\n", .{ label, label });
+    // RC-LOAN-RELOCATE-1: a loan already held by the source moves along.
+    if (try loans.lent(E, self, index)) |lent| {
+        try self.print(" jnz %v{d}, @rcprivatemove{d}, @rcprivatenew{d}\n@rcprivatemove{d}\n", .{ lent, label, label, label });
+        try loans.relocate(E, self, ty, address, index);
+        try self.print(" jmp @rcprivateprepared{d}\n@rcprivatenew{d}\n", .{ label, label });
+    }
     try loans.prepare(E, self, ty, address);
     try frame.drop(E, self, index);
     try self.print("@rcprivateprepared{d}\n", .{label});

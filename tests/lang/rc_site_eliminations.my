@@ -1,0 +1,128 @@
+# Ownership operations `--rc-runtime=sites` showed the compiler could drop,
+# each with the near misses that must keep them. Every test checks values
+# only; the operation counts are asserted by the sites build test.
+union Value:
+    nil,
+    number: float,
+    text: str
+
+
+record Runtime:
+    stack: list[Value]
+    top: int
+
+
+record Chunk:
+    code: list[int]
+    names: list[str]
+
+
+record Frame:
+    chunk: Chunk
+    at: int
+
+
+def pop(rt: mut Runtime) -> Value:
+    rt.top = rt.top - 1
+    return rt.stack[rt.top]
+
+
+def peek(rt: Runtime, distance: int) -> Value:
+    return rt.stack[rt.top - 1 - distance]
+
+
+def number(item: Value) -> float:
+    match item:
+        case Value.number(x):
+            return x
+        case _:
+            return -1.0
+
+
+def swap_stack(rt: mut Runtime) -> int:
+    rt.stack = [Value.number(99.0)]
+    return 0
+
+
+def replaced_during_index(rt: mut Runtime) -> Value:
+    return rt.stack[swap_stack(mut rt)]
+
+
+def next_name(frame: mut Frame) -> str:
+    frame.at = frame.at + 1
+    return frame.chunk.names[frame.at - 1]
+
+
+def owned_rows(count: int) -> list[Value]:
+    rows: list[Value] = []
+    for i in range(count):
+        rows.append(Value.number(float(i)))
+    return rows
+
+
+def last_owned(count: int) -> Value:
+    return owned_rows(count)[-1]
+
+
+# spec-case: RC-LOAN-RELOCATE-1
+public def test_loaned_field_reads_keep_values_through_their_temporaries() -> bool:
+    rt = Runtime([Value.number(1.5), Value.nil, Value.number(2.5)], 3)
+    snapshot = rt
+    first = number(pop(mut rt))
+    second = pop(mut rt)
+    third = number(pop(mut rt))
+    return first == 2.5 and second == Value.nil and third == 1.5 and rt.top == 0 and snapshot.stack == rt.stack
+
+
+# spec-case: RC-LOAN-RELOCATE-1
+public def test_loaned_reads_through_negative_indices_and_readonly_parameters() -> bool:
+    rt = Runtime([Value.number(4.0), Value.text("x")], 0)
+    return pop(mut rt) == Value.text("x") and number(peek(rt, 0)) == 4.0 and rt.top == -1
+
+
+# spec-case: RC-LOAN-RELOCATE-1
+public def test_index_callback_replacing_the_list_keeps_the_loaned_original() -> bool:
+    rt = Runtime([Value.number(7.0), Value.number(8.0)], 2)
+    item = replaced_during_index(mut rt)
+    return number(item) == 7.0 and rt.stack == [Value.number(99.0)]
+
+
+# spec-case: RC-LOAN-RELOCATE-1
+public def test_managed_elements_and_nested_record_fields_relocate_whole_values() -> bool:
+    frame = Frame(Chunk([1, 2], ["alpha", "beta"]), 0)
+    saved = frame
+    names = next_name(mut frame) + next_name(mut frame)
+    return names == "alphabeta" and frame.at == 2 and saved.at == 0 and saved.chunk.names == ["alpha", "beta"]
+
+
+# spec-case: RC-LOAN-RELOCATE-1
+public def test_owned_temporaries_are_taken_not_relocated() -> bool:
+    return number(last_owned(5)) == 4.0 and number(last_owned(1)) == 0.0
+
+
+# spec-case: RC-LOAN-RELOCATE-1
+public def test_relocated_loans_inside_arenas() -> bool:
+    total = 0.0
+    with arena():
+        rt = Runtime([Value.number(3.0), Value.number(5.0)], 2)
+        total += number(pop(mut rt))
+        with arena():
+            total += number(pop(mut rt))
+    return total == 8.0
+
+
+# Run every test once, so `mylang run --rc-runtime=stats` shows balanced counts
+# for the whole file; the result is the number of failures.
+def main() -> int:
+    failures = 0
+    for passed in [
+        test_loaned_field_reads_keep_values_through_their_temporaries(),
+        test_loaned_reads_through_negative_indices_and_readonly_parameters(),
+        test_index_callback_replacing_the_list_keeps_the_loaned_original(),
+        test_managed_elements_and_nested_record_fields_relocate_whole_values(),
+        test_owned_temporaries_are_taken_not_relocated(),
+        test_relocated_loans_inside_arenas(),
+    ]:
+        if not passed:
+            failures += 1
+    return failures

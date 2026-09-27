@@ -21,9 +21,10 @@ sweep slow:
 
 usage:
   quick.py setup
-  quick.py build   --compiler PATH --tag NAME [--only a,b] [--arms qbe,llvm] [--jobs 3] [--stats]
+  quick.py build   --compiler PATH --tag NAME [--only a,b] [--arms qbe,llvm] [--jobs 3] [--stats | --sites]
   quick.py measure --tag NAME [--size full|dev] [--only a,b] [--arms qbe,llvm] [--jobs 8] [--out FILE]
   quick.py counts  --tag NAME [--size full|dev] [--only a,b]      (needs a --stats build)
+  quick.py sites   --tag NAME [--size full|dev] [--only a,b] [--top N]  (needs a --sites build; RC-SITES-1)
   quick.py compare A.json B.json                                   (per-row instruction change)
 
 WORK is <tree>/.tmp-rc-quick (override RC_QUICK_WORK). GC baselines come from the
@@ -137,7 +138,7 @@ def command_build(opts):
     compiler = str(Path(opts.compiler).resolve())
     progs = select(corpus(), opts.only)
     arms = opts.arms.split(',')
-    runtime = '--rc-runtime=stats' if opts.stats else '--rc-runtime'
+    runtime = '--rc-runtime=sites' if opts.sites else '--rc-runtime=stats' if opts.stats else '--rc-runtime'
     jobs = {}
     for prog in progs:
         for arm in arms:
@@ -298,6 +299,25 @@ def command_counts(opts):
     return 0
 
 
+def command_sites(opts):
+    """Run a --sites build once per program, keeping each MYLANG_RC_SITES report."""
+    progs = [sized(p, opts.size) for p in select(corpus(), opts.only)]
+    rc_declared = declared(opts.tag)
+    out_dir = WORK / f'sites-{opts.tag}-{opts.size}'
+    out_dir.mkdir(parents=True, exist_ok=True)
+    for prog in progs:
+        binary = binary_path(opts.tag, prog, 'qbe')
+        spec = run_spec(prog, binary, f"{opts.tag}-sites", rc_declared)
+        report = out_dir / f"{prog['id'].replace('/', '_')}.json"
+        env = dict(spec['env'], MYLANG_RC_SITES=str(report), MYLANG_RC_SITES_TOP=str(opts.top))
+        done = subprocess.run(spec['argv'], capture_output=True, env=env, cwd=spec['cwd'], timeout=pc.RUN_TIMEOUT)
+        doc = json.loads(report.read_text()) if report.exists() else {'events': 0, 'calls': 0}
+        print(f"{prog['id']:42} status={done.returncode} events={doc['events']:>12,} calls={doc['calls']:>12,} -> {report}")
+        if opts.top:
+            print(done.stderr.decode(errors='replace').split('MYLANG_RC_SITES ', 1)[-1])
+    return 0
+
+
 def command_compare(opts):
     a, b = (json.loads(Path(p).read_text()) for p in (opts.a, opts.b))
     ra = {(r['id'], r['arm']): r for r in a['rows']}
@@ -322,6 +342,7 @@ def main():
     b.add_argument('--arms', default='qbe,llvm')
     b.add_argument('--jobs', type=int, default=3)
     b.add_argument('--stats', action='store_true')
+    b.add_argument('--sites', action='store_true')
     m = sub.add_parser('measure')
     m.add_argument('--tag', required=True)
     m.add_argument('--size', choices=('full', 'dev', 'smoke'), default='dev')
@@ -333,12 +354,17 @@ def main():
     c.add_argument('--tag', required=True)
     c.add_argument('--size', choices=('full', 'dev', 'smoke'), default='dev')
     c.add_argument('--only')
+    t = sub.add_parser('sites')
+    t.add_argument('--tag', required=True)
+    t.add_argument('--size', choices=('full', 'dev', 'smoke'), default='dev')
+    t.add_argument('--only')
+    t.add_argument('--top', type=int, default=0)
     k = sub.add_parser('compare')
     k.add_argument('a')
     k.add_argument('b')
     opts = ap.parse_args()
     return {'setup': command_setup, 'build': command_build, 'measure': command_measure,
-            'counts': command_counts, 'compare': command_compare}[opts.cmd](opts)
+            'counts': command_counts, 'sites': command_sites, 'compare': command_compare}[opts.cmd](opts)
 
 
 if __name__ == '__main__':
