@@ -1641,7 +1641,7 @@ const Emitter = struct {
             const rc = self.cow.?.rc.?;
             if (certificate) |proof| {
                 rc.contract.result = .{ .borrowed = proof };
-            } else if (@import("rc_readonly_body.zig").certify(&rc.catalog, f) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError) {
+            } else if ((@import("rc_readonly_calls.zig").identity(&rc.catalog, self.program.functions, f, runtime_mode.identity()) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError) != null) {
                 rc.readonly = true;
                 rc.active = false;
             }
