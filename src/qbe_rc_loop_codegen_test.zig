@@ -121,3 +121,29 @@ test "RC-PRESIZED-APPEND-1 a certified comprehension appends into guarded room w
     defer counting.deinit();
     try t.expect(std.mem.indexOf(u8, try named(counting.value, "main"), "@fi") != null);
 }
+
+const appends =
+    \\def grown(n: int) -> int:
+    \\    items: list[int] = []
+    \\    for i in range(n):
+    \\        items.append(i)
+    \\    return len(items)
+    \\def parameter(items: mut list[int], n: int) -> int:
+    \\    for i in range(n):
+    \\        items.append(i)
+    \\    return len(items)
+    \\def main() -> int:
+    \\    return grown(3)
+;
+
+// spec: RC-FRESH-APPEND-GENERATION-1
+test "RC-FRESH-APPEND-GENERATION-1 a certified fresh append loop tests room without the frozen generation" {
+    var rc = try emit(appends, .rc);
+    defer rc.deinit();
+    const grown = try named(rc.value, "grown");
+    try t.expect(std.mem.indexOf(u8, grown, "%rcappend0") != null);
+    try t.expect(std.mem.indexOf(u8, grown, ", -1\n") == null);
+    const parameter = try named(rc.value, "parameter");
+    try t.expect(std.mem.indexOf(u8, parameter, "%rcappend0") == null);
+    try t.expect(std.mem.indexOf(u8, parameter, ", -1\n") != null);
+}

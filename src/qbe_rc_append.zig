@@ -27,11 +27,12 @@ pub fn emit(comptime E: type, self: *E, append: Append) Error!bool {
     const capacity = try word(E, self, append.list, 8);
     const generation = try word(E, self, append.list, 16);
     const room = self.temp();
-    const incrementable = self.temp();
-    const ready = self.temp();
-    try self.print(" %v{d} =w cultl %v{d}, %v{d}\n %v{d} =w cnel %v{d}, -1\n %v{d} =w and %v{d}, %v{d}\n", .{ room, length, capacity, incrementable, generation, ready, room, incrementable });
-    try self.print(" jnz %v{d}, @rcappend_check{d}, @rcappend_slow{d}\n@rcappend_check{d}\n", .{ ready, label, label, label });
     const cached = loops.at(E, self);
+    try self.print(" %v{d} =w cultl %v{d}, %v{d}\n", .{ room, length, capacity });
+    // RC-FRESH-APPEND-GENERATION-1: a certified loop's root is a fresh list,
+    // never the frozen generation, and no loop reaches it by counting.
+    const ready = if (cached != null) room else try incrementable(E, self, room, generation);
+    try self.print(" jnz %v{d}, @rcappend_check{d}, @rcappend_slow{d}\n@rcappend_check{d}\n", .{ ready, label, label, label });
     if (cached) |slot| {
         const known = self.temp();
         try self.print(" %v{d} =w loaduw %rcappend{d}\n jnz %v{d}, @rcappend_fast{d}, @rcappend_query{d}\n@rcappend_query{d}\n", .{ known, slot, known, label, label, label });
@@ -55,6 +56,14 @@ pub fn emit(comptime E: type, self: *E, append: Append) Error!bool {
     try bump(E, self, append.list, generation, 16);
     try self.print("@rcappend_done{d}\n", .{label});
     return true;
+}
+
+/// `room` and a generation below the frozen marker, as one word flag.
+fn incrementable(comptime E: type, self: *E, room: usize, generation: usize) Error!usize {
+    const below = self.temp();
+    const ready = self.temp();
+    try self.print(" %v{d} =w cnel %v{d}, -1\n %v{d} =w and %v{d}, %v{d}\n", .{ below, generation, ready, room, below });
+    return ready;
 }
 
 /// Read one fixed header word; no cached pointer survives the slow path.
