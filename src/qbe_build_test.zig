@@ -14,6 +14,7 @@ test {
     _ = @import("qbe_build_io.zig");
     _ = @import("qbe_build_options.zig");
     _ = @import("qbe_build_outputs.zig");
+    _ = @import("qbe_build_sites.zig");
     _ = @import("qbe_build_host.zig");
     _ = @import("qbe_build_embed.zig");
     _ = @import("qbe_build_shapes.zig");
@@ -785,4 +786,91 @@ fn recordTransferLifecycle(allocator: std.mem.Allocator) !usize {
 // spec-case: RC-CLOSED-FIELD-TRANSFER-2
 test "native RC record field transfers balance owned and caller traps, arenas and budgets" {
     try std.testing.expectEqual(@as(usize, 5), try recordTransferLifecycle(std.testing.allocator));
+}
+
+const sites_program =
+    \\record Node:
+    \\    value: int
+    \\    children: list[Node]
+    \\def build(depth: int) -> Node:
+    \\    kids: list[Node] = []
+    \\    if depth > 0:
+    \\        kids.append(build(depth - 1))
+    \\        kids.append(build(depth - 1))
+    \\    return Node(depth, kids)
+    \\def total(node: Node) -> int:
+    \\    sum = node.value
+    \\    for child in node.children:
+    \\        sum += total(child)
+    \\    return sum
+    \\def main(args: list[str], out: Stream) -> int:
+    \\    tree = build(4)
+    \\    out.print(total(tree))
+    \\    if len(args) != 0:
+    \\        empty: list[int] = []
+    \\        return empty[0]
+    \\    return 0
+;
+
+/// Run a sites build once and check its report: the JSON file parses, its
+/// sites' counts add up to the program's `MYLANG_RC_COUNTS` totals event by
+/// event, and the list allocation in `build` is one site at its source line.
+fn sitesRun(context: fs.Context, command: []const []const u8, environment: *std.process.Environ.Map, expected: u8, report: []const u8) !void {
+    const result = try std.process.run(context.allocator, context.io, .{ .argv = command, .environ_map = environment });
+    try std.testing.expectEqual(std.process.Child.Term{ .exited = expected }, result.term);
+    try std.testing.expectEqualStrings("26\n", result.stdout);
+    const marker = "MYLANG_RC_COUNTS ";
+    const start = std.mem.indexOf(u8, result.stderr, marker).? + marker.len;
+    const end = std.mem.indexOfScalarPos(u8, result.stderr, start, '\n').?;
+    const counts = try std.json.parseFromSlice(std.json.Value, context.allocator, result.stderr[start..end], .{});
+    try std.testing.expectEqualStrings("rc-v3-sites", v.text(v.get(counts.value, "runtime")));
+    try std.testing.expect(std.mem.indexOf(u8, result.stderr, "\nMYLANG_RC_SITES {\"version\":1,") != null);
+    const parsed = try std.json.parseFromSlice(std.json.Value, context.allocator, try context.read(report), .{});
+    const sites = v.array(v.get(parsed.value, "sites"));
+    var list_site: ?std.json.Value = null;
+    for (sites) |site| {
+        if (!std.mem.eql(u8, v.text(v.get(site, "operation")), "myl_native_list_new")) continue;
+        if (std.mem.eql(u8, v.text(v.get(site, "function")), "build")) list_site = site;
+    }
+    const found = list_site.?;
+    try std.testing.expectEqual(@as(u64, 5), v.number(v.get(found, "line")));
+    try std.testing.expectEqualStrings("Node", v.text(v.get(found, "type")));
+    const events = [_][]const u8{ "owner_acquire", "owner_release", "hold_acquire", "hold_release", "heap_allocate", "retire", "clone_shell", "unique_check" };
+    try std.testing.expectEqual(@as(u64, 31), v.number(v.get(v.get(found, "counts"), events[4])));
+    for (events) |event| {
+        var sum: u64 = 0;
+        for (sites) |site| {
+            const count = v.get(site, "counts").object.get(event) orelse continue;
+            sum += @intCast(count.integer);
+        }
+        try std.testing.expectEqual(v.number(v.get(counts.value, event)), sum);
+    }
+}
+
+fn sitesLifecycle(allocator: std.mem.Allocator) !usize {
+    var environment = try std.process.Environ.createMap(std.testing.environ, allocator);
+    defer environment.deinit();
+    try environment.put(counting_contract.variable, counting_contract.Selection.rc_sites.identity());
+    try environment.put(runtime_options_variable, "");
+    var context = try fs.Context.init(allocator, std.testing.io, &environment);
+    defer context.deinit();
+    const a = context.allocator;
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+    const source = try join(a, &.{ root, "sites.my" });
+    const binary = try join(a, &.{ root, "sites" });
+    const report = try join(a, &.{ root, "sites.json" });
+    try context.write(source, sites_program);
+    try buildOnly(context, .{ .tools = try tools(a), .source = source, .output = binary, .cache = try join(a, &.{ root, "cache" }), .environment = &environment });
+    try environment.put("MYLANG_RC_SITES", report);
+    try sitesRun(context, &.{binary}, &environment, 0, report);
+    // A trap unwinds the frames it leaves; their drops still land in sites.
+    try sitesRun(context, &.{ binary, "trap" }, &environment, 1, report);
+    return 2;
+}
+
+// spec-case: RC-SITES-1
+test "native RC sites build attributes every counted event to a source site" {
+    try std.testing.expectEqual(@as(usize, 2), try sitesLifecycle(std.testing.allocator));
 }

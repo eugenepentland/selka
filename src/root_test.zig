@@ -272,6 +272,7 @@ test {
     _ = @import("qbe_rc_append_test.zig");
     _ = @import("qbe_rc_admission_test.zig");
     _ = @import("qbe_rc_views_test.zig");
+    _ = @import("qbe_rc_sites_test.zig");
     _ = @import("qbe_rc_journal_test.zig");
     _ = @import("qbe_rc_empty_locals_test.zig");
     _ = @import("qbe_rc_nonheld_capture_test.zig");

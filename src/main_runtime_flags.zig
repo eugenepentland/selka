@@ -26,6 +26,7 @@ fn option(arg: []const u8) error{InvalidRuntimeOption}!?contract.Selection {
     if (std.mem.eql(u8, arg, "--gc-runtime")) return .gc;
     if (std.mem.eql(u8, arg, "--rc-runtime")) return .rc;
     if (std.mem.eql(u8, arg, "--rc-runtime=stats")) return .rc_counting;
+    if (std.mem.eql(u8, arg, "--rc-runtime=sites")) return .rc_sites;
     if (std.mem.startsWith(u8, arg, "--rc-runtime=") or std.mem.startsWith(u8, arg, "--gc-runtime=")) return error.InvalidRuntimeOption;
     return null;
 }
@@ -39,6 +40,9 @@ test "runtime options preserve guest flags and reject duplicate and invalid sele
     try std.testing.expectEqual(@as(usize, 5), parsed.args.len);
     try std.testing.expectEqualStrings("--gc-runtime", parsed.args[4]);
     try std.testing.expectError(error.InvalidRuntimeOption, parse(a, &.{ "mylang", "check", "main.my", "--rc-runtime", "--gc-runtime" }));
+    const sites = try parse(a, &.{ "mylang", "build", "main.my", "--rc-runtime=sites" });
+    defer a.free(sites.args);
+    try std.testing.expectEqual(contract.Selection.rc_sites, sites.explicit.?);
     try std.testing.expectError(error.InvalidRuntimeOption, parse(a, &.{ "mylang", "test", "--rc-runtime=unknown" }));
     try std.testing.expectError(error.InvalidRuntimeOption, parse(a, &.{ "mylang", "build", "--gc-runtime=stats" }));
 }

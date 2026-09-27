@@ -55,6 +55,7 @@ void myl_rc_scope_begin(myl_native_heap *heap, myl_rc_scope *scope) {
     myl_rc_invariant(heap && heap->rc && scope);
     *scope = (myl_rc_scope){.heap = heap, .previous = heap->rc->scopes, .active = 1, .region = heap->region_depth};
     heap->rc->scopes = scope;
+    MYL_RC_SITE(MYL_RC_SITE_SCOPE_BEGIN);
 }
 static myl_rc_status capture(myl_rc_scope *scope, void *payload, unsigned pinned) {
     myl_rc_invariant(scope && scope->active && scope->heap && scope->heap->rc);
@@ -86,6 +87,7 @@ static myl_rc_status capture(myl_rc_scope *scope, void *payload, unsigned pinned
     entry->previous = scope->journal;
     entry->pinned = pinned;
     scope->journal = entry;
+    MYL_RC_SITE(pinned ? MYL_RC_SITE_SCOPE_PIN : MYL_RC_SITE_SCOPE_HOLD);
     return MYL_RC_OK;
 }
 myl_rc_status myl_rc_scope_hold(myl_rc_scope *scope, void *payload) { return capture(scope, payload, 0); }
@@ -104,6 +106,7 @@ myl_rc_status myl_rc_scope_extend(myl_rc_scope *scope, void *boundary,
 void myl_rc_scope_end(myl_rc_scope *scope) {
     myl_rc_invariant(scope != NULL);
     if (!scope->active) return;
+    MYL_RC_SITE(MYL_RC_SITE_SCOPE_END);
     myl_native_heap *heap = scope->heap;
     myl_rc_invariant(heap && heap->rc && heap->rc->scopes == scope);
     heap->rc->scopes = scope->previous;

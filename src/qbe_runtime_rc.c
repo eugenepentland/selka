@@ -42,6 +42,7 @@ void myl_qbe_rc_frame_enter(void *context, MylQbeRcFrame *frame, MylQbeRcSlot *e
     *frame = (MylQbeRcFrame){.previous = ctx->rc_frames, .entries = entries, .count = count,
         .scope_checkpoint = myl_rc_scope_current(&ctx->heap)};
     ctx->rc_frames = frame;
+    MYL_RC_SITE(MYL_RC_SITE_FRAME_ENTER);
 }
 void myl_qbe_rc_frame_leave(void *context, MylQbeRcFrame *frame) {
     MylQbeContext *ctx = context;
@@ -49,12 +50,14 @@ void myl_qbe_rc_frame_leave(void *context, MylQbeRcFrame *frame) {
     myl_rc_invariant(myl_rc_scope_current(&ctx->heap) == frame->scope_checkpoint);
     ctx->rc_frames = frame->previous;
     *frame = (MylQbeRcFrame){0};
+    MYL_RC_SITE(MYL_RC_SITE_FRAME_LEAVE);
 }
 void myl_qbe_rc_slot_drop(void *context, MylQbeRcSlot *slot) {
     MylQbeContext *ctx = context;
     myl_rc_invariant(slot && slot->initialized);
     if (!*slot->initialized) return;
     *slot->initialized = 0;
+    MYL_RC_SITE(MYL_RC_SITE_SLOT_DROP);
     myl_rc_invariant(slot->type && slot->address && !(slot->flags & ~31u));
     if (slot->flags & MYL_QBE_RC_LOAN) {
         myl_rc_invariant(slot->flags == MYL_QBE_RC_LOAN);
@@ -110,6 +113,10 @@ void myl_qbe_rc_unwind(void *context) {
 }
 void myl_qbe_rc_finish(void *context) {
     MylQbeContext *ctx = context;
+#if defined(MYL_NATIVE_RC_SITES) && MYL_NATIVE_RC_SITES
+    /* Teardown belongs to no guest call site. */
+    myl_rc_site_current = NULL;
+#endif
     if (!ctx->heap.rc) return;
     myl_qbe_rc_unwind(ctx);
     myl_native_arena_release(&ctx->heap, 0);
@@ -148,7 +155,10 @@ static int unique_in_place(MylQbeContext *ctx, const myl_native_type *type, cons
     (void)type;
     void *payload;
     memcpy(&payload, address, sizeof payload);
-    if (!myl_rc_unique_payload(payload)) return 0;
+    if (!myl_rc_unique_payload(payload)) {
+        MYL_RC_SITE(MYL_RC_SITE_UNIQUE_SLOW);
+        return 0;
+    }
     MYL_RC_STAT(&ctx->heap, MYL_RC_STAT_UNIQUE_CHECK);
     return 1;
 }
@@ -302,6 +312,7 @@ static int scope_prepare(void *context, myl_rc_scope *scope, const MylQbeRcPlace
             .address = request->address, .container = request->container,
             .region = request->container ? myl_native_header_region(request->container) : ctx->heap.region_depth},
             .path = path, .count = request->count};
+        MYL_RC_SITE(MYL_RC_SITE_SCOPE_PREPARE);
         status = loan ? myl_rc_scope_prepare_loan(scope, &place) : myl_rc_scope_prepare(scope, &place);
         if (status == MYL_RC_OK) status = myl_rc_scope_extend(scope, boundary, capture_backing);
     }
@@ -313,6 +324,136 @@ int myl_qbe_rc_scope_prepare(void *context, myl_rc_scope *scope, const MylQbeRcP
 }
 int myl_qbe_rc_scope_prepare_loan(void *context, myl_rc_scope *scope, const MylQbeRcPlace *request) {
     return scope_prepare(context,scope,request,1);
+}
+#endif
+
+#if defined(MYL_NATIVE_RC_SITES) && MYL_NATIVE_RC_SITES
+#include <inttypes.h>
+#include <stdlib.h>
+/* RC-SITES-1: the build driver defines the table only when some unit named a
+ * site; a program with none still links. */
+extern myl_rc_site *const myl_rc_site_table[] __attribute__((weak));
+extern const size_t myl_rc_site_count __attribute__((weak));
+static uint64_t site_events(const myl_rc_site *site) {
+    uint64_t total = 0;
+    for (size_t i = 0; i < MYL_RC_SITE_EVENT_COUNT; ++i) total += site->events[i];
+    return total;
+}
+typedef struct { const char *function, *path; uint64_t line, column; } site_place;
+static site_place site_place_of(const myl_rc_site *site) {
+    site_place place = {"<runtime>", "", 0, 0};
+    const MylQbeFunction *function = site->function;
+    if (!function) return place;
+    place.function = function->name ? function->name : "?";
+    if (!function->count || !function->locations) return place;
+    uint64_t pc = site->pc == MYL_RC_SITE_ENTRY ? 0 : site->pc == MYL_RC_SITE_EXIT ? function->count - 1 : site->pc;
+    if (pc >= function->count) return place;
+    const MylQbeLocation *location = &function->locations[pc];
+    place.path = location->path ? location->path : "";
+    place.line = location->line;
+    place.column = location->column;
+    return place;
+}
+/* Most events first, then most calls; ties keep a deterministic order. */
+static int site_order(const void *left, const void *right) {
+    const myl_rc_site *a = *(myl_rc_site *const *)left, *b = *(myl_rc_site *const *)right;
+    uint64_t x = site_events(a), y = site_events(b);
+    if (x != y) return x < y ? 1 : -1;
+    if (a->calls != b->calls) return a->calls < b->calls ? 1 : -1;
+    site_place p = site_place_of(a), q = site_place_of(b);
+    int named = strcmp(p.function, q.function);
+    if (named) return named;
+    if (a->pc != b->pc) return a->pc < b->pc ? -1 : 1;
+    return strcmp(a->operation, b->operation);
+}
+static void site_json_string(FILE *out, const char *text) {
+    fputc('"', out);
+    for (const unsigned char *at = (const unsigned char *)text; *at; ++at) {
+        if (*at == '"' || *at == '\\') fprintf(out, "\\%c", *at);
+        else if (*at < 0x20) fprintf(out, "\\u%04x", *at);
+        else fputc(*at, out);
+    }
+    fputc('"', out);
+}
+static void site_pc(FILE *out, uint64_t pc, int quoted) {
+    const char *name = pc == MYL_RC_SITE_ENTRY ? "entry" : pc == MYL_RC_SITE_EXIT ? "exit" : NULL;
+    if (!name) fprintf(out, "%" PRIu64, pc);
+    else fprintf(out, quoted ? "\"%s\"" : "%s", name);
+}
+static void site_json(FILE *out, myl_rc_site *const *sites, size_t count, uint64_t events, uint64_t calls) {
+    fprintf(out, "{\"version\":1,\"runtime\":\"rc-v3-sites\",\"events\":%" PRIu64 ",\"calls\":%" PRIu64 ",\"sites\":[", events, calls);
+    for (size_t i = 0; i < count; ++i) {
+        const myl_rc_site *site = sites[i];
+        site_place place = site_place_of(site);
+        fputs(i ? ",\n{\"function\":" : "\n{\"function\":", out);
+        site_json_string(out, place.function);
+        fputs(",\"path\":", out);
+        site_json_string(out, place.path);
+        fprintf(out, ",\"line\":%" PRIu64 ",\"column\":%" PRIu64 ",\"pc\":", place.line, place.column);
+        site_pc(out, site->pc, 1);
+        fputs(",\"operation\":", out);
+        site_json_string(out, site->operation);
+        fputs(",\"type\":", out);
+        site_json_string(out, site->type);
+        fprintf(out, ",\"calls\":%" PRIu64 ",\"events\":%" PRIu64 ",\"counts\":{", site->calls, site_events(site));
+        int first = 1;
+        for (size_t e = 0; e < MYL_RC_SITE_EVENT_COUNT; ++e) {
+            if (!site->events[e]) continue;
+            fprintf(out, "%s\"%s\":%" PRIu64, first ? "" : ",", myl_rc_site_event_names[e], site->events[e]);
+            first = 0;
+        }
+        fputs("}}", out);
+    }
+    fputs("\n]}\n", out);
+}
+static void site_row(const myl_rc_site *site) {
+    site_place place = site_place_of(site);
+    const char *base = strrchr(place.path, '/');
+    base = base ? base + 1 : place.path;
+    fprintf(stderr, "%12" PRIu64 " %12" PRIu64 "  %-26s %-18s %-24s %s:%" PRIu64 ":%" PRIu64 " pc ",
+        site_events(site), site->calls, site->operation, site->type[0] ? site->type : "-", place.function,
+        base, place.line, place.column);
+    site_pc(stderr, site->pc, 0);
+    for (size_t e = 0; e < MYL_RC_SITE_EVENT_COUNT; ++e)
+        if (site->events[e]) fprintf(stderr, " %s=%" PRIu64, myl_rc_site_event_names[e], site->events[e]);
+    fputc('\n', stderr);
+}
+void myl_qbe_rc_sites_report(void) {
+    size_t declared = &myl_rc_site_count ? myl_rc_site_count : 0;
+    myl_rc_site **sites = malloc((declared + 1) * sizeof *sites);
+    if (!sites) return;
+    size_t used = 0;
+    uint64_t events = 0, calls = 0;
+    myl_rc_site *runtime = myl_rc_site_runtime();
+    if (site_events(runtime)) sites[used++] = runtime;
+    for (size_t i = 0; i < declared; ++i) {
+        myl_rc_site *site = myl_rc_site_table[i];
+        if (site->calls || site_events(site)) sites[used++] = site;
+    }
+    for (size_t i = 0; i < used; ++i) {
+        events += site_events(sites[i]);
+        calls += sites[i]->calls;
+    }
+    qsort(sites, used, sizeof *sites, site_order);
+    const char *path = getenv("MYLANG_RC_SITES");
+    int written = 0;
+    if (path && *path) {
+        FILE *out = fopen(path, "w");
+        if (out) {
+            site_json(out, sites, used, events, calls);
+            written = fclose(out) == 0;
+        }
+    }
+    const char *limit = getenv("MYLANG_RC_SITES_TOP");
+    size_t top = limit && *limit ? (size_t)strtoull(limit, NULL, 10) : 20;
+    if (top > used) top = used;
+    fprintf(stderr, "MYLANG_RC_SITES {\"version\":1,\"runtime\":\"rc-v3-sites\",\"sites\":%zu,\"events\":%" PRIu64 ",\"calls\":%" PRIu64 ",\"shown\":%zu,\"report\":", used, events, calls, top);
+    if (written) site_json_string(stderr, path);
+    else fputs(path && *path ? "\"unwritable\"" : "null", stderr);
+    fputs("}\n", stderr);
+    if (top) fprintf(stderr, "%12s %12s  %-26s %-18s %-24s %s\n", "events", "calls", "operation", "type", "function", "position pc counts");
+    for (size_t i = 0; i < top; ++i) site_row(sites[i]);
+    free(sites);
 }
 #endif
 

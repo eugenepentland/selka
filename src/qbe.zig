@@ -12,6 +12,7 @@ const ownership = @import("ownership.zig");
 const cow_lower = @import("qbe_cow.zig");
 const value_semantics = @import("value_semantics.zig");
 const runtime_mode = @import("runtime_mode.zig");
+const rc_sites = @import("qbe_rc_sites.zig");
 const rc_frame = @import("qbe_rc_frame.zig");
 const moves_module = @import("qbe_moves.zig");
 const range_keys = @import("qbe_range_keys.zig");
@@ -1797,6 +1798,10 @@ const Emitter = struct {
         try self.print(" ret {s}\n}}\n", .{if (return_bytes == 0) "0" else "%empty"});
         var text = try self.output.toOwnedSlice();
         text = try @import("qbe_loop_operands.zig").finish(Emitter, self, text);
+        // RC-SITES-1: name every runtime call's site while each instruction
+        // still opens with its position store; the markers go last.
+        const sited = try rc_sites.instrumentSelected(self.allocator, text, .{ .unit = name, .layouts = self.layouts });
+        text = sited.text;
         // With no step check, the only reason to store a position is a trap trace
         // or an `assert` message, and both are emitted by a body that mentions a
         // failure path. With a step check, every instruction can fail, so every
@@ -1812,7 +1817,8 @@ const Emitter = struct {
         text = try dropUnusedHeap(self.allocator, text);
         text = try dropUnusedSlots(self.allocator, text);
         if (!self.stickyFlagTest()) text = try haltFailurePaths(self.allocator, text);
-        return stripUnreferencedLabels(self.allocator, text);
+        text = try stripUnreferencedLabels(self.allocator, text);
+        return rc_sites.append(self.allocator, text, sited.markers);
     }
     /// Forget a lowering whose frame turned out too big for the native stack so
     /// the same analysis can be lowered again heap-backed: the temporary

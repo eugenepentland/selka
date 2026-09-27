@@ -68,6 +68,7 @@ still open. Choose one runtime on commands that check, build or execute a progra
 | `--gc-runtime` | Tracing collector; the current default |
 | `--rc-runtime` | Experimental reference counting with copy-on-write |
 | `--rc-runtime=stats` | The same RC runtime with ownership-operation counters |
+| `--rc-runtime=sites` | The counted RC runtime, with every count charged to the call site that caused it ([ownership sites](tooling/ownership.md#ownership-sites)) |
 
 For example, `mylang run-project examples/gc-default/main.my --rc-runtime
 --print-result` prints `142`. `mylang test tests/lang --rc-runtime=stats` exercises

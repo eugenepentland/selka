@@ -198,6 +198,10 @@ void myl_qbe_rc_frame_leave(void *, MylQbeRcFrame *);
 void myl_qbe_rc_unwind_to(void *, MylQbeRcFrame *checkpoint);
 void myl_qbe_rc_unwind(void *);
 void myl_qbe_rc_finish(void *);
+/* RC-SITES-1: a sites build's exit report, after cleanup and before heap
+ * destruction: the top sites by ownership events to stderr and, when
+ * MYLANG_RC_SITES names a file, every site that ran as JSON there. */
+void myl_qbe_rc_sites_report(void);
 /* An arena statement ends with no live operand stack. Restore scopes born in
  * its region, then drop inner locals and scratch owners while chunks live. */
 void myl_qbe_rc_arena_prepare(void *, MylQbeRcFrame *, size_t local_watermark);
