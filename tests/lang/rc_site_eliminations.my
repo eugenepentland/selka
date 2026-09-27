@@ -257,6 +257,14 @@ def wiped_value(vm: mut Vm) -> Value:
     return entry_at(vm.globals, wipe(mut vm))
 
 
+def table_name_hash(table: Table, at: int) -> u32:
+    return table_name(table, at).hash
+
+
+def table_name_chars(table: Table, at: int) -> bytes:
+    return table_name(table, at).chars
+
+
 def pop(rt: mut Runtime) -> Value:
     rt.top = rt.top - 1
     return rt.stack[rt.top]
@@ -534,6 +542,16 @@ public def test_mut_root_fields_keep_the_value_a_later_mut_call_replaces() -> bo
     return (number(item) == 6.0 or item == Value.text("wiped")) and vm.globals.entries == [Value.text("wiped")]
 
 
+# spec-case: RC-BORROW-MATCH-1
+public def test_borrowed_match_accessors_read_in_place_and_copy_when_kept() -> bool:
+    table = Table([Obj.name(Name(b"ke" + b"y", 11u32)), Obj.free], 2)
+    hash = table_name_hash(table, 0) + table_name_hash(table, 1)
+    chars = table_name_chars(table, 0)
+    kept = table_name(table, 0)
+    table.objects[0] = Obj.free
+    return hash == 11u32 and chars == b"key" and kept.chars == b"key" and table_name_hash(table, 0) == 0u32
+
+
 # Run every test once, so `mylang run --rc-runtime=stats` shows balanced counts
 # for the whole file; the result is the number of failures.
 def main() -> int:
@@ -566,6 +584,7 @@ def main() -> int:
         test_mut_root_list_reads_inside_arenas(),
         test_mut_root_fields_passed_to_calls_read_the_current_value(),
         test_mut_root_fields_keep_the_value_a_later_mut_call_replaces(),
+        test_borrowed_match_accessors_read_in_place_and_copy_when_kept(),
     ]:
         if not passed:
             failures += 1

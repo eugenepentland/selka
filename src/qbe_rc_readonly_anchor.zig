@@ -126,8 +126,50 @@ fn pushed(comptime E: type, self: *E, view: anytype, pc: usize, remaining: usize
             !semantics.isLiveView(self.program.records, operation.output) and view.local(E, self, @backingInt(operation.owner)),
         .value_copy => pc != 0 and !self.isBranchTarget(pc) and !copies(E, self, pc) and
             pushed(E, self, view, pc - 1, remaining - 1),
+        .call => |target| @TypeOf(view) == Emitted and borrowedCall(E, self, view, pc, target, remaining - 1),
         else => false,
     };
+}
+
+/// RC-BORROW-MATCH-1: a direct call whose callee returns a value borrowed
+/// from one argument (its borrowed-entry certificate) yields an anchored
+/// value when that argument is anchored.
+fn borrowedCall(comptime E: type, self: *E, view: anytype, pc: usize, target: typed.FunctionId, remaining: usize) bool {
+    const state = self.cow.?.rc orelse return false;
+    if (state.readonly) return false;
+    const callee = self.program.functions[@backingInt(target)];
+    const proof = @import("rc_calls.zig").borrowedIn(self.allocator, &state.catalog, self.program.functions, callee, @import("runtime_mode.zig").identity()) catch return false;
+    const certificate = proof orelse return false;
+    const count = callee.signature.parameter_count;
+    const stack = self.states[pc] orelse return false;
+    if (certificate.parameter >= count or stack.len < count) return false;
+    const pusher = argumentPusher(E, self, pc, stack.len - count + certificate.parameter) orelse return false;
+    return pushed(E, self, view, pusher, remaining);
+}
+
+// The instruction that pushed stack index `index` as seen at `pc`, when no
+// instruction in between could have replaced it.
+fn argumentPusher(comptime E: type, self: *E, pc: usize, index: usize) ?usize {
+    const code = self.function.scope.instructions;
+    var at = pc;
+    var remaining: usize = 64;
+    while (at != 0 and remaining != 0) : (remaining -= 1) {
+        const previous = at - 1;
+        if (self.isBranchTarget(at)) return null;
+        const before = self.states[previous] orelse return null;
+        const after = self.states[at] orelse return null;
+        if (before.len == index and after.len == index + 1) return previous;
+        // An instruction pushes at most one value, so one that leaves two
+        // values above `index`'s floor never consumed it.
+        if (after.len < index + 2 or before.len < index + 1) return null;
+        // With `index` on top, only a plain push leaves it in place.
+        if (before.len == index + 1) switch (code[previous].op) {
+            .load_local, .push_i64, .push_integer, .push_bool, .push_unit => {},
+            else => return null,
+        };
+        at = previous;
+    }
+    return null;
 }
 
 // Whether every definition stores an anchored value: a pointer-sized store or

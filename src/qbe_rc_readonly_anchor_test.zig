@@ -55,6 +55,30 @@ const operand =
     \\    rt = Runtime(Table([1, 2]), ["a", "b"], 0)
     \\    return global(mut rt, 1) + reset_global(mut rt)
 ;
+const accessor =
+    \\record Text:
+    \\    chars: bytes
+    \\    hash: u32
+    \\union Obj:
+    \\    free,
+    \\    text: Text
+    \\record Runtime:
+    \\    objects: list[Obj]
+    \\def text_obj(rt: Runtime, at: int) -> Text:
+    \\    match rt.objects[at]:
+    \\        case Obj.text(payload):
+    \\            return payload
+    \\        case _:
+    \\            return Text(chars=b"", hash=0u32)
+    \\def text_hash(rt: Runtime, at: int) -> u32:
+    \\    return text_obj(rt, at).hash
+    \\def kept(rt: Runtime, at: int) -> Text:
+    \\    found = text_obj(rt, at)
+    \\    return found
+    \\def main() -> int:
+    \\    rt = Runtime([Obj.text(Text(b"a" + b"b", 3u32))])
+    \\    return int(text_hash(rt, 0)) + len(kept(rt, 0).chars)
+;
 const source =
     \\record Chunk:
     \\    code: list[int]
@@ -156,4 +180,10 @@ test "RC field reads of a mut root passed straight to a call take no loan" {
 // spec-case: RC-OPERAND-ANCHOR-1
 test "RC field reads keep their loan when the root is passed mut before the call" {
     try t.expect(try operationsIn(operand, "reset_global") > 0);
+}
+
+// spec-case: RC-BORROW-MATCH-1
+test "RC borrowed match accessor results read in place take no owner" {
+    try t.expectEqual(@as(usize, 0), try operationsIn(accessor, "text_hash"));
+    try t.expect(try operationsIn(accessor, "kept") > 0);
 }

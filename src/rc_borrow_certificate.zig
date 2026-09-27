@@ -8,7 +8,7 @@ const shapes = @import("rc_shape.zig");
 const model = @import("rc_model.zig");
 const Hash = std.crypto.hash.Blake3;
 /// Changing the accepted physical grammar changes every certificate identity.
-pub const version = "mylang-rc-borrowed-entry-v6";
+pub const version = "mylang-rc-borrowed-entry-v7";
 const cfg = @import("rc_borrow_flow.zig");
 const Value = cfg.Value;
 
@@ -114,6 +114,12 @@ fn flow(input: Input) native.Error!?Answer {
             .jump_if_false => |target| {
                 if (!proof.condition() or !try graph.publish(target, proof.state())) return null;
             },
+            // RC-BORROW-MATCH-1: every arm binds its payload with the
+            // scrutinee's anchor; a match never falls through.
+            .switch_variant => |dispatch| {
+                if (!try proof.arms(&graph, dispatch)) return null;
+                continue;
+            },
             else => if (!try proof.step(a, op)) return null,
         }
         if (!try graph.publish(pc + 1, proof.state())) return null;
@@ -144,6 +150,7 @@ fn flow(input: Input) native.Error!?Answer {
             },
             .jump => {},
             .jump_if_false => if (!proof.condition()) return null,
+            .switch_variant => |dispatch| if (try proof.scrutinee(dispatch) == null) return null,
             else => if (!try proof.step(a, instruction.op)) return null,
         }
     }
@@ -237,6 +244,40 @@ const Proof = struct {
             .make_variant => |value| return self.variant(allocator, value),
             .call => |target| return self.call(allocator, target),
             else => return false,
+        }
+        return true;
+    }
+
+    // Pop a match's scrutinee, which must be the matched variant value.
+    fn scrutinee(self: *Proof, dispatch: @FieldType(@FieldType(bytecode.Instruction, "op"), "switch_variant")) native.Error!?Value {
+        const value = self.stack.pop() orelse return null;
+        if (value.ty != dispatch.ty or !value.ty.isAggregate()) return null;
+        if (self.catalog.native.records[value.ty.recordIndex()].shape.variants == null) return null;
+        return value;
+    }
+
+    // Publish each arm with its slot bound to the selected payload, anchored
+    // like the scrutinee when the payload holds counted edges.
+    fn arms(self: *Proof, graph: *cfg.Graph, dispatch: @FieldType(@FieldType(bytecode.Instruction, "op"), "switch_variant")) native.Error!bool {
+        const value = (try self.scrutinee(dispatch)) orelse return false;
+        const cases = self.catalog.native.records[value.ty.recordIndex()].shape.variants.?.cases;
+        if (dispatch.arms.len > cases.len) return false;
+        for (dispatch.arms, 0..) |arm, index| {
+            const slot = arm.slot orelse {
+                if (!try graph.publish(arm.target, self.state())) return false;
+                continue;
+            };
+            const local = @backingInt(slot);
+            const payload = cases[index].payload orelse return false;
+            if (local < self.function.signature.parameter_count or local >= self.locals.len) return false;
+            if (self.function.scope.locals[local].ty != payload) return false;
+            const shape = try self.catalog.get(payload);
+            if (shape.unique_drop) return false;
+            const saved = self.locals[local];
+            self.locals[local] = .{ .ty = payload, .anchor = if (shape.counted) value.anchor else null };
+            const published = try graph.publish(arm.target, self.state());
+            self.locals[local] = saved;
+            if (!published) return false;
         }
         return true;
     }

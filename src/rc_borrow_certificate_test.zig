@@ -386,3 +386,41 @@ test "RC-BORROW-COMPOSE-1 different callee parameters may name the same caller a
     )).?;
     try t.expectEqual(@as(u32, 0), answer.parameter);
 }
+
+// spec: RC-BORROW-MATCH-1
+test "RC-BORROW-MATCH-1 match arms bind payloads with the scrutinee's anchor" {
+    const matched = (try certificate(
+        \\record Text:
+        \\    chars: bytes
+        \\    hash: u32
+        \\union Obj:
+        \\    free,
+        \\    text: Text
+        \\record Table:
+        \\    objects: list[Obj]
+        \\def selected(table: Table, at: int) -> Text:
+        \\    match table.objects[at]:
+        \\        case Obj.text(payload):
+        \\            return payload
+        \\        case _:
+        \\            return Text(chars=b"", hash=0u32)
+    )).?;
+    try t.expectEqual(@as(u32, 0), matched.parameter);
+}
+
+// spec-case: RC-BORROW-MATCH-1
+test "RC-BORROW-MATCH-1 fresh arm values still decline" {
+    try t.expectEqual(null, try certificate(
+        \\record Text:
+        \\    chars: bytes
+        \\union Obj:
+        \\    free,
+        \\    text: Text
+        \\def selected(objects: list[Obj], at: int, extra: bytes) -> Text:
+        \\    match objects[at]:
+        \\        case Obj.text(payload):
+        \\            return payload
+        \\        case _:
+        \\            return Text(extra + b"!")
+    ));
+}
