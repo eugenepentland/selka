@@ -1,0 +1,7 @@
+def main(out: Stream) -> int:
+    counts: dict[str, int] = {}
+    out.print("before")
+    for i in range(1000000):
+        key = "key" + str(i)
+        counts[key] = i
+    return 0

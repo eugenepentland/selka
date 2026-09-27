@@ -1,0 +1,21 @@
+{
+  "base": "a6a0e00739e44ddbf09b90b5161aa18dd66b4586",
+  "files": {
+    "src/qbe.zig": "57c7a4ba3ca9826377884f144d358aaef6849cd14442c0ea9bfaf511b4879981",
+    "src/qbe_cow.zig": "a6e38975743a086441b5f8750de5e51fba52693fde83dd07400a0d3bfc732cb4",
+    "src/qbe_rc_locals.zig": "533164cb46f5d3217c70a9a7fe3bb9d37b9f41ab5a9c6c816affd299c68e7d54",
+    "src/qbe_rc_state.zig": "d818fee35c0493acdd801f80d0c290b57e86832c8d95862ab59101173a4eb0f1",
+    "src/qbe_rc_dictionary_tail.zig": "b12aa74ef3fb5b0c1fb97185d7ade16d2e296548b612df1c042a35acd51bf078",
+    "src/rc_dictionary_tail.zig": "218fadaa83ea0788858dd5641f411af224ca94b885515d4dc2358ecce1bb62fc"
+  },
+  "expected_stdout": "779967\n",
+  "source_sha256": "227510603349ab558eed1a9a456bb6cf3c53b725de87a1436a41b35f58844324",
+  "final_compiler_sha256": "e88d13f4d873a19b05c672c01c22219eb0bd2a730f149e4e370062b3dd682ee4",
+  "validation_commands": {
+    "focused": "TMPDIR=\"$PWD/.tmp-rc/tmp\" scripts/build-slot.sh build zig build test-units -Doptimize=Debug \"-Dtest-filter=RC dictionary tail\" --cache-dir .cache-rc",
+    "broad_rc": "TMPDIR=\"$PWD/.tmp-rc/tmp\" scripts/build-slot.sh build zig build test-units -Doptimize=Debug \"-Dtest-filter=RC \" --cache-dir .cache-rc",
+    "guardian": "guardian-check all . --full",
+    "fmt": "zig fmt --check src/rc_dictionary_tail.zig src/qbe_rc_dictionary_tail.zig src/qbe_rc_dictionary_tail_test.zig src/qbe.zig src/qbe_cow.zig src/qbe_rc_locals.zig src/qbe_rc_state.zig src/root_test.zig",
+    "source_patch": "gzip -cd experiments/d9-rc-dictionary-tail-20260927/source.patch.gz | git apply --reverse --check"
+  }
+}
