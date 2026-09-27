@@ -22,8 +22,8 @@ pub const Release = struct { ty: typed.Type, address: usize, heap: ?usize = null
 // carry the counted prefix; an arena edge still needs its region checked.
 const uncounted_marks: u64 = (@as(u64, 1) << 62) | 2;
 const arena_mark: u64 = @as(u64, 1) << 62;
-// Immortal or copy-on-write shared payloads are never unique.
-const shared_marks: u64 = (@as(u64, 1) << 61) | 2;
+// Immortal, copy-on-write shared or arena payloads keep the runtime helper.
+const shared_marks: u64 = (@as(u64, 1) << 62) | (@as(u64, 1) << 61) | 2;
 // Prefix words below the payload (native_rc.h): owners, holds, mark.
 const owners_offset: u64 = 32;
 const holds_offset: u64 = 24;
@@ -164,9 +164,10 @@ pub fn unloan(comptime E: type, self: *E, operation: Release) Error!void {
     return release(E, self, operation, .unloan, edge);
 }
 
-/// Skip a uniqueness helper whose payload is already unique, exactly as
-/// myl_rc_unique decides: null and arena payloads are unique; immortal and
-/// shared ones are not; otherwise at most one owner. Branches to
+/// Skip a uniqueness helper whose payload is already unique, as myl_rc_unique
+/// decides: a null payload is unique and a counted unshared one with at most
+/// one owner is too. Immortal, shared and arena payloads (whose held slots
+/// also check regions) keep the helper. Branches to
 /// @rcgunique{label} when nothing needs to change and falls through to the
 /// caller's runtime helper otherwise. Counting builds always call the helper.
 pub fn uniqueFast(comptime E: type, self: *E, address: usize, label: usize) Error!void {
@@ -175,14 +176,12 @@ pub fn uniqueFast(comptime E: type, self: *E, address: usize, label: usize) Erro
     const header = self.temp();
     const mark = self.temp();
     const shared = self.temp();
-    const arena = self.temp();
     const counter = self.temp();
     const owners = self.temp();
     const single = self.temp();
     try self.print(" %v{d} =l loadl %v{d}\n jnz %v{d}, @rcguniquenn{d}, @rcgunique{d}\n@rcguniquenn{d}\n", .{ payload, address, payload, label, label, label });
     try self.print(load_below ++ mask, .{ header, payload, mark_offset, mark, header, shared, mark, shared_marks });
-    try self.print(" jnz %v{d}, @rcguniqueslow{d}, @rcguniquemark{d}\n@rcguniquemark{d}\n", .{ shared, label, label, label });
-    try self.print(" %v{d} =l and %v{d}, {d}\n jnz %v{d}, @rcgunique{d}, @rcguniquecount{d}\n@rcguniquecount{d}\n", .{ arena, mark, arena_mark, arena, label, label, label });
+    try self.print(" jnz %v{d}, @rcguniqueslow{d}, @rcguniquecount{d}\n@rcguniquecount{d}\n", .{ shared, label, label, label });
     try self.print(load_below ++ " %v{d} =w cultl %v{d}, 2\n", .{ counter, payload, owners_offset, owners, counter, single, owners });
     try self.print(" jnz %v{d}, @rcgunique{d}, @rcguniqueslow{d}\n@rcguniqueslow{d}\n", .{ single, label, label, label });
 }

@@ -136,3 +136,25 @@ test "RC-GLUE-1 the traced runtime carries no glue" {
     defer t.allocator.free(il);
     try t.expect(!contains(il, "_rcg_"));
 }
+
+// spec-case: RC-GLUE-1
+test "RC-GLUE-1 uniqueness checks skip their helper only for counted unshared payloads" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    var compilation = try compiler.Compilation.init(t.allocator, "rc_glue_unique.my",
+        \\def grow(items: mut list[list[int]]) -> None:
+        \\    items[0].append(1)
+        \\def main() -> int:
+        \\    rows = [[0]]
+        \\    grow(mut rows)
+        \\    return len(rows[0])
+    );
+    defer compilation.deinit();
+    const text = try compilation.emitQbe(t.allocator);
+    defer t.allocator.free(text);
+    // Immortal, shared and arena marks (bits 1, 61 and 62) all keep the helper.
+    try t.expect(contains(text, "@rcguniquecount"));
+    try t.expect(contains(text, ", 6917529027641081858\\n"));
+    try t.expect(contains(text, "myl_qbe_rc_unique_"));
+}
