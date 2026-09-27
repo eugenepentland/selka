@@ -8,6 +8,7 @@ pub const Operand = struct { bytes: u64 = 8, may_own: bool = false };
 pub const Layout = struct {
     prefix: []const usize,
     empty_locals: []const bool = &.{},
+    unlinked: bool = false,
 
     /// Only explicitly certified managed locals can synthesize empty role reads.
     pub fn emptyLocal(self: Layout, logical: usize) bool {

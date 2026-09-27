@@ -1,0 +1,35 @@
+{
+  "source_commit": "7d68202d59cf834bf9649fd77df2000f548ffec9",
+  "compiler_sha256": "7decd168a86694b21d9c69eda88f7097a351e161b033c18c8270225129460b48",
+  "full_gate_passed": true,
+  "gates": {
+    "test": "Build Summary: 94/94 steps succeeded; 2285/25563 tests passed (23278 skipped)",
+    "test-qbe": "Build Summary: 51/51 steps succeeded; 439/439 tests passed",
+    "test-qbe-build": "Build Summary: 29/29 steps succeeded",
+    "fmt-check": "Build Summary: 2/2 steps succeeded"
+  },
+  "rc_sweeps": {
+    "qbe": {
+      "version": "native-tests-v1",
+      "passed": 875,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 875,
+      "programs": 150,
+      "dropped": 0,
+      "unloaded": 0
+    },
+    "llvm": {
+      "version": "native-tests-v1",
+      "passed": 875,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 875,
+      "programs": 150,
+      "dropped": 0,
+      "unloaded": 0
+    }
+  }
+}

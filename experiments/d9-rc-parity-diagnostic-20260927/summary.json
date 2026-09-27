@@ -1,0 +1,20 @@
+{
+  "qbe": {
+    "programs": 30,
+    "instruction_geomean": 4.806047132965845,
+    "over_1_3": 23,
+    "median_peak_rss_kb": {
+      "gc": 6994.0,
+      "rc": 5410.0
+    }
+  },
+  "llvm": {
+    "programs": 30,
+    "instruction_geomean": 6.291448714248995,
+    "over_1_3": 22,
+    "median_peak_rss_kb": {
+      "gc": 7052.0,
+      "rc": 5260.0
+    }
+  }
+}

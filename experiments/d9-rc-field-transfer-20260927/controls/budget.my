@@ -1,0 +1,18 @@
+record Holder:
+    items: list[int]
+def enlarge(items: mut list[int], amount: int):
+    i = 0
+    while i < amount:
+        items.append(i)
+        i += 1
+def change(holder: mut Holder, amount: int):
+    work = holder.items
+    enlarge(mut work, amount)
+    holder.items = work
+def main(out: Stream) -> int:
+    holder = Holder([1])
+    saved = holder
+    out.print("entered")
+    change(mut holder, 1000000)
+    out.print(saved.items[0])
+    return 0

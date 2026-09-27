@@ -1,0 +1,14 @@
+{
+  "method": "read-only ELF64 little-endian section table parsing; no binary mutation",
+  "original": ".tmp-rc-performance/diagnostic-7d68202d/bin/parity-suite-fannkuch_redux.qbe",
+  "profile": ".tmp-rc-performance/fannkuch-7d68202d/production",
+  "original_sha256": "581eb89f423e122cf7d72506ec0a99e85f504bf458c85f7573c6ce41b722aa4f",
+  "profile_sha256": "4e4b0a743ab2b34dc278840e6c58d29bf46febb3f258ea02c257f2e88ecea356",
+  "original_text_sha256": "6bd93a8e3ce3bfabd56f257d1a5b980613749f988ff3953eac2cfb5d87e5be26",
+  "profile_text_sha256": "6bd93a8e3ce3bfabd56f257d1a5b980613749f988ff3953eac2cfb5d87e5be26",
+  "text_identical": true,
+  "sample_records": 1580,
+  "throttle_records": 1580,
+  "unthrottle_records": 1580,
+  "record_report_stderr": ""
+}
