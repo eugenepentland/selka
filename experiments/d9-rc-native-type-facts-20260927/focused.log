@@ -1,0 +1,24 @@
+test-units
++- run test w
+guardian/test: 12 test(s) selected by filter: "RC loans preserve pinned identity" — 1 match by name, 11 unnamed test block(s) run regardless
+guardian/test: SLOW  18.55s  qbe_runtime_rc_test.test.RC loans preserve pinned identity and roll back aggregate lifetime holds
+guardian/test: test wall 18.55s; slowest over 50ms:
+guardian/test:   18.55s  qbe_runtime_rc_test.test.RC loans preserve pinned identity and roll back aggregate lifetime holds
+guardian/test: PASS — 12 passed
+guardian/test: RESULT {"passed":12,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig /home/epentland/ai/canopy/mylang-worktrees/.d9-rc-mut-argument-zig-cache/o/3739c0b2a875de15ece20dc4d80c3c48/test "--guardian-filter=RC loans preserve pinned identity" --cache-dir=/home/epentland/ai/canopy/mylang-worktrees/.d9-rc-mut-argument-zig-cache --seed=0xb583f2f1 --listen=-
+
+Build Summary: 10/10 steps succeeded; 12/12 tests passed
+test-units success
++- run test 12 pass (12 total) 18s MaxRSS:7M
+   +- compile test debug native success 1s MaxRSS:199M
+   |  +- run exe qbe-build-assets (qbe_build_assets) cached
+   |  |  +- compile exe qbe-build-assets debug native cached 8ms MaxRSS:35M
+   |  +- options cached
+   |     +- compile exe qbe fast native cached 16ms MaxRSS:34M
+   +- install generated to qbe cached
+   |  +- compile exe qbe fast native (reused)
+   +- install generated to mylang success
+      +- compile exe mylang debug native cached 9ms MaxRSS:38M
+         +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+

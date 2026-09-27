@@ -1,0 +1,534 @@
+{
+  "command": [
+    "taskset",
+    "-c",
+    "2",
+    "perf",
+    "record",
+    "-e",
+    "cpu_core/instructions/u",
+    "-F",
+    "99",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/type-facts/qbe-after.data",
+    "--",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/type-facts/measure/qbe-production",
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/lox-scripts/binary_trees.tree.lox"
+  ],
+  "exit": 0,
+  "stdout": "stretch tree of depth:\n11\ncheck:\n-1\nnum trees:\n2048\ndepth:\n4\ncheck:\n-2048\nnum trees:\n512\ndepth:\n6\ncheck:\n-512\nnum trees:\n128\ndepth:\n8\ncheck:\n-128\nnum trees:\n32\ndepth:\n10\ncheck:\n-32\nlong lived tree of depth:\n10\ncheck:\n-1\n",
+  "stderr": "[ perf record: Woken up 2 times to write data ]\n[ perf record: Captured and wrote 0.254 MB /home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/type-facts/qbe-after.data (1648 samples) ]\n",
+  "binary_sha256": "2635d7639ec0a97026974f37b04414f17b20bc6c958efd41185a3ea997999582",
+  "sample_weight": 216429111124,
+  "symbols": [
+    {
+      "symbol": "myl_rc_descriptor_find",
+      "weight": 29919779484,
+      "percent": 13.824286080839599
+    },
+    {
+      "symbol": "walk",
+      "weight": 23077618532,
+      "percent": 10.662899464932888
+    },
+    {
+      "symbol": "myl_rc_native_loan",
+      "weight": 19825013326,
+      "percent": 9.160049321942434
+    },
+    {
+      "symbol": "visit",
+      "weight": 13668032925,
+      "percent": 6.315246989657086
+    },
+    {
+      "symbol": "myl_f_a0e96f299197f34d601c1a9da1cbd514090305d2a21036d06ba179b733ea6e29",
+      "weight": 12277824809,
+      "percent": 5.6729082077898445
+    },
+    {
+      "symbol": "myl_rc_hold_edge_release",
+      "weight": 8867833628,
+      "percent": 4.0973386537263465
+    },
+    {
+      "symbol": "myl_rc_native_unloan",
+      "weight": 8807231701,
+      "percent": 4.0693378331873395
+    },
+    {
+      "symbol": "myl_rc_drain",
+      "weight": 7690058192,
+      "percent": 3.553153340630822
+    },
+    {
+      "symbol": "compiler_rt.memcpy.memcpyFast",
+      "weight": 7298777444,
+      "percent": 3.3723640069002863
+    },
+    {
+      "symbol": "myl_rc_native_retain",
+      "weight": 5882771955,
+      "percent": 2.7181056764723066
+    },
+    {
+      "symbol": "myl_qbe_rc_slot_drop",
+      "weight": 5049807195,
+      "percent": 2.333238430252936
+    },
+    {
+      "symbol": "myl_rc_hold_acquire",
+      "weight": 4761088218,
+      "percent": 2.1998372553829886
+    },
+    {
+      "symbol": "myl_qbe_rc_frame_cleanup",
+      "weight": 4636369922,
+      "percent": 2.1422117837667676
+    },
+    {
+      "symbol": "myl_rc_shape_resolve",
+      "weight": 3944214422,
+      "percent": 1.8224047594688952
+    },
+    {
+      "symbol": "__libc_calloc",
+      "weight": 3426975100,
+      "percent": 1.5834168898085816
+    },
+    {
+      "symbol": "myl_rc_native_drop",
+      "weight": 3067638275,
+      "percent": 1.417387087655893
+    },
+    {
+      "symbol": "loan_pointer",
+      "weight": 2930326265,
+      "percent": 1.3539427527940597
+    },
+    {
+      "symbol": "compiler_rt.fastMemset",
+      "weight": 2653134100,
+      "percent": 1.2258674843791806
+    },
+    {
+      "symbol": "myl_qbe_rc_frame_enter",
+      "weight": 2523574190,
+      "percent": 1.166004968968409
+    },
+    {
+      "symbol": "myl_rc_meta_free",
+      "weight": 1974471886,
+      "percent": 0.9122949661188389
+    },
+    {
+      "symbol": "myl_f_bf0431d3d9e553eacefcb10ebb00251bb8b43354cc87fd12c99ceb5644f705d6",
+      "weight": 1846639965,
+      "percent": 0.8532308594761976
+    },
+    {
+      "symbol": "myl_qbe_rc_unique_field",
+      "weight": 1840022057,
+      "percent": 0.8501730878272588
+    },
+    {
+      "symbol": "myl_rc_scope_current",
+      "weight": 1823512710,
+      "percent": 0.8425450257268045
+    },
+    {
+      "symbol": "cfree",
+      "weight": 1715740530,
+      "percent": 0.7927494231665493
+    },
+    {
+      "symbol": "myl_rc_value_seed",
+      "weight": 1715198130,
+      "percent": 0.7924988099301029
+    },
+    {
+      "symbol": "myl_rc_meta_alloc",
+      "weight": 1457956341,
+      "percent": 0.6736415140404493
+    },
+    {
+      "symbol": "capture",
+      "weight": 1351605515,
+      "percent": 0.6245026410636676
+    },
+    {
+      "symbol": "myl_f_72cbd8b3ebb02b19d0384fb691061873bba08de6d559f9babec1767adabac444",
+      "weight": 1292491860,
+      "percent": 0.5971894692389533
+    },
+    {
+      "symbol": "myl_rc_loan_copy",
+      "weight": 1184552962,
+      "percent": 0.5473168354516446
+    },
+    {
+      "symbol": "myl_rc_flat_edges_release",
+      "weight": 1182044533,
+      "percent": 0.546157828242784
+    },
+    {
+      "symbol": "myl_f_339494ddd89a48d13094d9f5c6b4b55320c4f6128bc80d7aba97a84a17838cc1",
+      "weight": 1063656000,
+      "percent": 0.49145699230386497
+    },
+    {
+      "symbol": "myl_rc_scope_end",
+      "weight": 1060683167,
+      "percent": 0.49008340952446855
+    },
+    {
+      "symbol": "myl_f_fa0a495025828a635f8203a4c546663c235c2574b972f1294569bb6fadb2fcc2",
+      "weight": 937042943,
+      "percent": 0.43295605574202745
+    },
+    {
+      "symbol": "myl_rc_native_retain_replace",
+      "weight": 881778218,
+      "percent": 0.4074212629810218
+    },
+    {
+      "symbol": "myl_rc_edge_release",
+      "weight": 802604506,
+      "percent": 0.3708394410676848
+    },
+    {
+      "symbol": "capture_backing",
+      "weight": 801412274,
+      "percent": 0.3702885761707177
+    },
+    {
+      "symbol": "myl_rc_loan_drop",
+      "weight": 796573431,
+      "percent": 0.36805281270300766
+    },
+    {
+      "symbol": "myl_rc_scope_unwind",
+      "weight": 795777565,
+      "percent": 0.36768508675529815
+    },
+    {
+      "symbol": "copy_many",
+      "weight": 795010561,
+      "percent": 0.3673306963518923
+    },
+    {
+      "symbol": "myl_f_b54eeed03870b797a96d1738a2f42781bb5db72dae7d2f57e436551c3d0172dd",
+      "weight": 669628915,
+      "percent": 0.30939872715013167
+    },
+    {
+      "symbol": "myl_rc_size_mul",
+      "weight": 666926792,
+      "percent": 0.30815022458688274
+    },
+    {
+      "symbol": "myl_f_1c0bd1b7bb117cc78f49bded6cea445b0f0085cd72c106cf259efd77a43b555f",
+      "weight": 666547889,
+      "percent": 0.30797515433037603
+    },
+    {
+      "symbol": "myl_qbe_rc_frame_leave",
+      "weight": 662612686,
+      "percent": 0.30615691325385774
+    },
+    {
+      "symbol": "allocate",
+      "weight": 660544605,
+      "percent": 0.3052013666597514
+    },
+    {
+      "symbol": "myl_f_9997f25fb78e8fa6d0d7377b866a60fc0115d73452e18cfb6fc361c19bf67784",
+      "weight": 660468625,
+      "percent": 0.30516626047666656
+    },
+    {
+      "symbol": "myl_native_list_header",
+      "weight": 656030976,
+      "percent": 0.3031158667117273
+    },
+    {
+      "symbol": "myl_f_851eb64c403b25f3166dffdb17dfc9e3c924451c20caa5851a74e0f4081ba50f",
+      "weight": 655809426,
+      "percent": 0.30301350063035803
+    },
+    {
+      "symbol": "dispose_walk",
+      "weight": 653157587,
+      "percent": 0.30178823154052625
+    },
+    {
+      "symbol": "transfer_pointer",
+      "weight": 534915345,
+      "percent": 0.24715498863437452
+    },
+    {
+      "symbol": "myl_f_9cfccc291a0516b23c50da008b59b8f2c8a2e23f61575966d1d2f1cfb2a4be4b",
+      "weight": 532893456,
+      "percent": 0.24622078482533075
+    },
+    {
+      "symbol": "slab_take",
+      "weight": 531794807,
+      "percent": 0.24571315949050665
+    },
+    {
+      "symbol": "myl_f_cb51e0dd7840af78b8d3f65cd883ca525c8c73ff445227a508c4c557b220dad4",
+      "weight": 531577549,
+      "percent": 0.24561277650650248
+    },
+    {
+      "symbol": "myl_f_1e099eb74b6fcbebc692a37dfef561df04e37fcd789b3166f766bf5c788dbb7d",
+      "weight": 530790033,
+      "percent": 0.2452489086349809
+    },
+    {
+      "symbol": "myl_rc_hold_release",
+      "weight": 527738235,
+      "percent": 0.2438388404680181
+    },
+    {
+      "symbol": "myl_f_05c0395f99e3d95f11848a23036537b613947380b701bcd66a0fa57cf17796f3",
+      "weight": 527311630,
+      "percent": 0.24364172973841963
+    },
+    {
+      "symbol": "myl_f_f9596c0ae80ae31480fb911cf78c48a39c632b6cf68d532231bbaef0695efd77",
+      "weight": 525237747,
+      "percent": 0.24268350235891903
+    },
+    {
+      "symbol": "myl_qbe_region_mark",
+      "weight": 524602281,
+      "percent": 0.24238988843762174
+    },
+    {
+      "symbol": "myl_rc_scope_extend",
+      "weight": 523020693,
+      "percent": 0.24165912352721472
+    },
+    {
+      "symbol": "myl_rc_edges_release",
+      "weight": 519708743,
+      "percent": 0.2401288534157682
+    },
+    {
+      "symbol": "myl_rc_unique_owned",
+      "weight": 405997048,
+      "percent": 0.1875889273358378
+    },
+    {
+      "symbol": "myl_f_0b5b0c24ddddb193a115c6cacf83410e46d60453431effc245241a64d30eed3b",
+      "weight": 402374335,
+      "percent": 0.18591507071775817
+    },
+    {
+      "symbol": "myl_rc_owner_acquire",
+      "weight": 398577402,
+      "percent": 0.18416071661064148
+    },
+    {
+      "symbol": "myl_qbe_rc_unique_local",
+      "weight": 397458210,
+      "percent": 0.18364359948430503
+    },
+    {
+      "symbol": "transfer",
+      "weight": 394027948,
+      "percent": 0.18205866389861355
+    },
+    {
+      "symbol": "rc_list_next",
+      "weight": 391717590,
+      "percent": 0.1809911744153359
+    },
+    {
+      "symbol": "myl_f_6993cfd5bc46d9d696adcc139c626f2b677f81bea8031cc740fa79e8da2d676e",
+      "weight": 383574105,
+      "percent": 0.17722851746142257
+    },
+    {
+      "symbol": "myl_f_a0ff172e9e450785632a25c55eafac31e4cfca2cc56a9728097332089f64b651",
+      "weight": 382252359,
+      "percent": 0.1766178112615331
+    },
+    {
+      "symbol": "myl_rc_native_shape",
+      "weight": 276077555,
+      "percent": 0.12756026837897294
+    },
+    {
+      "symbol": "myl_f_2ebfe2cc969f1c1a5ba88011b86a1472451e4fef31738ad491da1fd5ef2c2cc0",
+      "weight": 272419026,
+      "percent": 0.12586986315529494
+    },
+    {
+      "symbol": "myl_rc_list_append",
+      "weight": 268598373,
+      "percent": 0.12410454933953426
+    },
+    {
+      "symbol": "myl_rc_native_publish",
+      "weight": 268376417,
+      "percent": 0.12400199566787368
+    },
+    {
+      "symbol": "myl_rc_owner_release",
+      "weight": 268118997,
+      "percent": 0.12388305603047318
+    },
+    {
+      "symbol": "myl_rc_scope_begin",
+      "weight": 268095701,
+      "percent": 0.12387229222893142
+    },
+    {
+      "symbol": "myl_qbe_rc_scope_pin",
+      "weight": 266454781,
+      "percent": 0.12311411326147272
+    },
+    {
+      "symbol": "compiler_rt.memmove.memmoveFast",
+      "weight": 265097562,
+      "percent": 0.12248701693743783
+    },
+    {
+      "symbol": "myl_f_e6dd1a9167d6b59c9752b8305d109d76520bac8300dd423db9728be656322e7c",
+      "weight": 264141070,
+      "percent": 0.12204507454113421
+    },
+    {
+      "symbol": "prepare_frames",
+      "weight": 262580921,
+      "percent": 0.12132421541460657
+    },
+    {
+      "symbol": "myl_rc_list_set",
+      "weight": 261580176,
+      "percent": 0.1208618261385971
+    },
+    {
+      "symbol": "myl_qbe_heap",
+      "weight": 256380844,
+      "percent": 0.11845950051197605
+    },
+    {
+      "symbol": "retain_pointer",
+      "weight": 143247654,
+      "percent": 0.06618686980511058
+    },
+    {
+      "symbol": "myl_f_8bc987cd8d73e85833672ca9fc6ae7f39c86d782cf8553d5c88364ca472ade1f",
+      "weight": 138220149,
+      "percent": 0.06386393599371608
+    },
+    {
+      "symbol": "myl_f_94484f74f9fdfe749fe3bbd5703ff3b6b2a0ee43d3569a1125fbe02c5095250d",
+      "weight": 137946195,
+      "percent": 0.06373735690341845
+    },
+    {
+      "symbol": "myl_rc_shape_depth",
+      "weight": 137497178,
+      "percent": 0.06352989082010457
+    },
+    {
+      "symbol": "myl_f_d68035f037267c89f90770d7a0cb039e1c6cb185811c1f08f091959f77a86644",
+      "weight": 137072978,
+      "percent": 0.06333389130885723
+    },
+    {
+      "symbol": "myl_f_690c75f45428516b3ec0bdb8ee8a81e39a36557931bad6d619ef1296aa9a4a4d",
+      "weight": 136957031,
+      "percent": 0.06328031857116134
+    },
+    {
+      "symbol": "myl_native_list_new",
+      "weight": 135818380,
+      "percent": 0.06275421051014934
+    },
+    {
+      "symbol": "myl_rc_native_take",
+      "weight": 135655978,
+      "percent": 0.0626791734695421
+    },
+    {
+      "symbol": "myl_f_38b1eb8969d1be311bbb44d1b412311bcad6afc3cbe33e5e0c18ebf16300ae5f",
+      "weight": 135049404,
+      "percent": 0.06239890895390009
+    },
+    {
+      "symbol": "myl_rc_value_drop",
+      "weight": 134812179,
+      "percent": 0.06228930031633372
+    },
+    {
+      "symbol": "finish_clones",
+      "weight": 133626951,
+      "percent": 0.061741671582913965
+    },
+    {
+      "symbol": "queue_mark",
+      "weight": 133169280,
+      "percent": 0.06153020696171623
+    },
+    {
+      "symbol": "myl_rc_semantic_transfer",
+      "weight": 132992240,
+      "percent": 0.0614484065056313
+    },
+    {
+      "symbol": "myl_rc_unique",
+      "weight": 132689251,
+      "percent": 0.061308411937235914
+    },
+    {
+      "symbol": "myl_f_c28ff85418a4edd60227eaf4b2eeb029759b161e853d026f71e32d48fffb6dc6",
+      "weight": 131921963,
+      "percent": 0.06095389031303519
+    },
+    {
+      "symbol": "myl_f_644193575e7ca3819ff8cca0770f7088b7303a9d14824bb71a025502ece87239",
+      "weight": 131715810,
+      "percent": 0.06085863833933841
+    },
+    {
+      "symbol": "myl_f_548c7924fb70947e5821a6480ca42591925741aed8a343767696180a416dee48",
+      "weight": 130579935,
+      "percent": 0.06033381291539199
+    },
+    {
+      "symbol": "calloc@plt",
+      "weight": 129621405,
+      "percent": 0.0598909288712715
+    },
+    {
+      "symbol": "rc_list_new",
+      "weight": 129499450,
+      "percent": 0.059834580166900526
+    },
+    {
+      "symbol": "myl_f_aae7e3f63f242f091f741298468821884e7473697b1d7153432e9386d8e0579c",
+      "weight": 128949266,
+      "percent": 0.0595803703717659
+    },
+    {
+      "symbol": "[unknown]",
+      "weight": 2585,
+      "percent": 1.1943864605713603e-06
+    },
+    {
+      "symbol": "rc_list_insert_at",
+      "weight": 2585,
+      "percent": 1.1943864605713603e-06
+    }
+  ],
+  "throttle": 1648,
+  "unthrottle": 1648,
+  "lost": 0
+}
