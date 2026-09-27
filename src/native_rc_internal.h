@@ -231,6 +231,7 @@ static inline void myl_rc_dies(myl_native_heap *heap, myl_rc_object *object) {
 }
 /* myl_rc_owner_acquire for runtime-internal callers (heap is live). */
 static inline myl_rc_status myl_rc_owner_take(myl_native_heap *heap, void *payload) {
+    (void)heap;
     if (!myl_rc_counted(payload)) return MYL_RC_OK;
     myl_rc_object *object = myl_rc_live(payload);
     if (object->owners == MYL_RC_COUNT_MAX) {
