@@ -15,10 +15,10 @@ The final combined default/borrow gate at `f6bea5d9` passes all four steps:
 2,130 executed main tests, 429 QBE tests, native-build and formatting.
 WP-4's compiler, runtime, collection, arena and host ownership paths are implemented
 behind an experimental runtime selector. The latest fully green checkpoint at
-`468bd8e5` passes 2,315 main tests, 440 QBE tests, native build and formatting.
+`d1d8b3c4` passes 2,315 main tests, 440 QBE tests, native build and formatting.
 Both uncached RC sweeps pass **931/931 assertions across 160 programs**, with
 zero failures, skips, cached verdicts, dropped files or unloaded files. The
-[joined checkpoint](d9-rc-append-compose-scalar-gate-2026-09-27.md) includes corrected
+[joined checkpoint](d9-rc-flat-retain-joined-gate-2026-09-27.md) includes corrected
 module callable resolution, argv ownership, empty-local journals and certified
 fresh returns, omitted empty receiver storage, direct plain scalar writes,
 empty-frame linkage omission, complete fresh constructors, closed field transfer,
@@ -73,7 +73,10 @@ Flat lifetime holds `c0a5904a`, borrowed loop returns `3b867d50`, plain appends
 now pass the joined full gate. Exact predecessor diagnostics still show Lox
 binary trees at 117.54× QBE and 207.36× LLVM against accepted GC. The next
 candidates address broad inline record publication, conservative lifetime-hold
-propagation and bounded physical retain traversal. Each preserves its existing
+propagation and descriptor lookup. Bounded physical retain `c2357ae4` now joins
+the fully green checkpoint, with its isolated 48-sample archive independently
+verified. The managed-memory guides and repaired example also pass their joined
+gate; final RC-default wording remains conditional. Each slice preserves its existing
 callback, trap and refusal behavior.
 The complete RC instruction/RSS acceptance remains open, followed by the
 ordinary runtime default transition, documentation and final combined validation.
@@ -114,7 +117,7 @@ for every accepted package above.
 
 | Work | Branch/worktree | Remaining acceptance |
 |---|---|---|
-| WP-4 reference counting | `codex/d9-rc-integration`; frozen full gate `468bd8e5`, both RC sweeps 931/931; historical golden replay complete | Validate further performance refinements; pass complete RC instruction/RSS acceptance including rewritten graph programs; transition the ordinary default to RC and update docs; rerun the final joined gate. GC remains default until acceptance |
+| WP-4 reference counting | `codex/d9-rc-integration`; frozen full gate `d1d8b3c4`, both RC sweeps 931/931; historical golden replay complete | Validate further performance refinements; pass complete RC instruction/RSS acceptance including rewritten graph programs; transition the ordinary default to RC and update docs; rerun the final joined gate. GC remains default until acceptance |
 | WP-5 concurrency | Design committed in `df482879`; [proposal](d9-wp5-concurrency-design-2026-09-26.md) | Resolve the documented Weft-source provenance gap and remaining design decisions; implement and validate after WP-4 acceptance |
 
 The plan's literal “on main” scheduling dependencies are being supplied by validated
