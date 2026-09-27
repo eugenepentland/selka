@@ -1,0 +1,63 @@
+record Runtime type#19
+  field 0: items: List<i64>
+  field 1: stack_top: i64
+  field 2: frame_count: i64
+list List<i64> type#20
+  element i64 (managed)
+list str type#21
+  element u32 (managed)
+list bytes type#22
+  element u8 (managed)
+domain float type#23
+  backing u64 (private)
+function update(rt: Runtime, count: i64) -> unit
+  effects {mutation}
+  0000  PUSH_I64 0  ; 7:9
+  0001  STORE_LOCAL 2  ; 7:5
+  0002  LOAD_LOCAL 2  ; 8:11
+  0003  LOAD_LOCAL 1  ; 8:15
+  0004  CMP_I64 lt  ; 8:13
+  0005  JUMP_IF_FALSE 26  ; 8:11
+  0006  LOAD_LOCAL 0  ; 9:24
+  0007  GET_FIELD 1  ; 9:24
+  0008  PUSH_I64 1  ; 9:39
+  0009  ADD_I64_CHECKED  ; 9:37
+  0010  STORE_LOCAL 4  ; 9:9
+  0011  LOAD_LOCAL 0  ; 9:9
+  0012  STORE_LOCAL 3  ; 9:9
+  0013  LOAD_LOCAL 0  ; 9:9
+  0014  STORE_LOCAL 3  ; 9:9
+  0015  LOAD_LOCAL 3  ; 9:9
+  0016  LOAD_LOCAL 4  ; 9:9
+  0017  UPDATE_RECORD type#19 fields={ 1 }  ; 9:9
+  0018  STORE_LOCAL 0  ; 9:9
+  0019  PUSH_UNIT  ; 9:9
+  0020  POP  ; 9:9
+  0021  LOAD_LOCAL 2  ; 10:9
+  0022  PUSH_I64 1  ; 10:14
+  0023  ADD_I64_CHECKED  ; 10:11
+  0024  STORE_LOCAL 2  ; 10:9
+  0025  JUMP 2  ; 8:5
+  0026  PUSH_UNIT  ; 6:5
+  0027  RET  ; 6:5
+function main() -> i64
+  effects {managed_allocation}
+  0000  PUSH_I64 1  ; 13:18
+  0001  ACQUIRE_BUFFER type#20  ; 13:18
+  0002  STORE_LOCAL 0  ; 13:18
+  0003  PUSH_I64 1  ; 13:19
+  0004  BUFFER_append local=0 -> unit  ; 13:18
+  0005  POP  ; 13:18
+  0006  LOAD_LOCAL 0  ; 13:18
+  0007  VALUE_COPY List<i64> store  ; 13:18
+  0008  PUSH_I64 0  ; 13:23
+  0009  PUSH_I64 0  ; 13:26
+  0010  MAKE_RECORD type#19 fields=3 order={ 0, 1, 2 }  ; 13:10
+  0011  STORE_LOCAL 1  ; 13:5
+  0012  REF_LOCAL 1  ; 14:12
+  0013  PUSH_I64 3  ; 14:20
+  0014  CALL 0 (update)  ; 14:5
+  0015  POP  ; 14:5
+  0016  LOAD_LOCAL 1  ; 15:12
+  0017  GET_FIELD 1  ; 15:12
+  0018  RET  ; 15:5

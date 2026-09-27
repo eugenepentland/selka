@@ -11,7 +11,12 @@ const journal = @import("qbe_rc_journal.zig");
 /// A stack position's stable owned-value storage; its type can change at joins.
 pub const Operand = journal.Operand;
 /// Semantic obligations paired with independent emission-only journal indices.
-pub const EmissionPlan = struct { locals: plan.Plan, journal: journal.Layout, field_transfers: []const @import("rc_field_transfer.zig").Certificate = &.{} };
+pub const EmissionPlan = struct {
+    locals: plan.Plan,
+    journal: journal.Layout,
+    field_transfers: []const @import("rc_field_transfer.zig").Certificate = &.{},
+    plain_writes: []const @import("rc_plain_record_write.zig").Certificate = &.{},
+};
 /// Final immutable plan and reusable lowering scratch, owned by the function arena.
 pub const State = struct {
     catalog: shape.Catalog,
@@ -58,6 +63,7 @@ pub fn build(comptime E: type, self: *E, capacity: usize) Error!*State {
     };
     state.plan.journal = try journal.build(a, state.plan.locals.storage, state.operands);
     state.plan.field_transfers = try @import("rc_field_transfer.zig").build(E, self, &state.catalog);
+    state.plan.plain_writes = try @import("rc_plain_record_write.zig").build(E, self, &state.catalog, state.plan.locals);
     return state;
 }
 

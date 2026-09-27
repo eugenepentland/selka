@@ -104,6 +104,16 @@ pub fn local(comptime E: type, self: *E, op: Op, stack: []const typed.Type) Erro
             const index = @backingInt(id);
             const ty = self.function.scope.locals[index].ty;
             if (!holds.mayHold(E, self, ty)) return .unhandled;
+            // Finalized empty-local admission proved both the raw input and
+            // every target writer. Do not manufacture H on this exact pair.
+            const code = self.function.scope.instructions;
+            if (self.pc + 1 < code.len and code[self.pc + 1].op == .store_local) {
+                const target = @backingInt(code[self.pc + 1].op.store_local);
+                if (frame.emptyLocal(E, self, target)) {
+                    try self.print(" # RC-NONHELD-CAPTURE-1 local {d}\n", .{target});
+                    return .unhandled;
+                }
+            }
             try load(E, self, ty, index, stack.len);
             return .handled;
         },
@@ -120,6 +130,7 @@ pub fn local(comptime E: type, self: *E, op: Op, stack: []const typed.Type) Erro
             const index = @backingInt(id);
             const target = self.function.scope.locals[index];
             if (!target.usage.temporary or !holds.mayHold(E, self, target.ty)) return .unhandled;
+            if (frame.emptyLocal(E, self, index)) return .unhandled;
             const operand = stack.len - 1;
             if (@import("cow_plan.zig").iterationOwner(self.function, index)) {
                 // Acquire before releasing either input or prior iteration source:

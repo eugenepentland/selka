@@ -1,0 +1,12 @@
+def main(out: Stream) -> int:
+    with arena():
+        flags = [True, True]
+        out.print("entered")
+        for at in range(4):
+            flags[at] = False
+        count = 0
+        for flag in flags:
+            if flag:
+                count += 1
+        out.print(count)
+    return 0

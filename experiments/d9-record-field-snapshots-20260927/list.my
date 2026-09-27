@@ -1,0 +1,8 @@
+def main(out: Stream) -> int:
+    with arena():
+        values = [12]
+        saved = values
+        values.append(14)
+        out.print(saved)
+        out.print(values)
+    return 0

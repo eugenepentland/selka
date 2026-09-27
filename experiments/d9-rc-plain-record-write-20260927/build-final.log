@@ -1,0 +1,7 @@
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 1b6c13222675)
+guardian: diff-scoped vs b292660a09bc703d0ceab071636a73b643c52d34: 281/594 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 16 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 20 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 4049 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 8 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs b292660a09bc703d0ceab071636a73b643c52d34, 281 file(s) in scope

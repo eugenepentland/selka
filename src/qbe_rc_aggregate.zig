@@ -224,6 +224,7 @@ fn replace(comptime E: type, self: *E, field: Field) Error!void {
 }
 
 fn updateValue(comptime E: type, self: *E, update: @FieldType(Op, "update_record"), height: usize) Error!void {
+    if (try @import("qbe_rc_plain_record_write.zig").update(E, self, height)) return;
     if (try @import("qbe_rc_views.zig").update(E, self, update, height)) return;
     const base = height - update.indices.len - 1;
     const pointer = try prepareBase(E, self, update.ty, base);

@@ -40,7 +40,7 @@ SHA256 `32e272cf75968d2fe913f636739d4b11d83701448e515f057dfa87f1ed8cba46`.
 Candidate Debug compiler SHA256 is
 `7f82f5c30b52ebedfdecec95747d619116d29e89396202aec7f4950ae506bd9f`.
 The candidate's only production source change is `native_rc_values.c`.
-All 127 emitted schematic functions and the entire emitted metadata JSON match
+All 128 emitted schematic functions and the entire emitted metadata JSON match
 the control exactly. The admitted helper changes runtime work, not token traffic.
 
 Actual QBE and LLVM O3/full-LTO binaries run on CPU2, alternating before/after
