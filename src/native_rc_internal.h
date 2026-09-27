@@ -34,7 +34,11 @@ typedef struct {
     size_t depth;
     size_t inline_depth;
     unsigned kind;
+    /* Only index.entries[0] uses this former padding: descriptor slot + 1. */
+    unsigned recent_descriptor;
 } myl_rc_index_entry;
+_Static_assert(sizeof(myl_rc_index_entry) == 40, "repeat lookup preserves every metadata reservation");
+_Static_assert(offsetof(myl_rc_index_entry, recent_descriptor) == 36, "repeat lookup uses private amd64 padding");
 struct myl_rc_state {
     struct { myl_rc_allocator hooks; void *context; } allocator;
     struct {
@@ -61,6 +65,8 @@ int myl_rc_size_add(size_t, size_t, size_t *);
 int myl_rc_size_mul(size_t, size_t, size_t *);
 int myl_rc_is_counted(const void *);
 size_t myl_rc_shape_depth(const myl_native_heap *, const myl_rc_shape *);
+/* Private identity hint only; clients must repeat all operation admission. */
+const myl_rc_descriptor *myl_rc_descriptor_repeat(const myl_native_heap *, const myl_native_type *);
 void myl_rc_scopes_close_region(myl_native_heap *, unsigned);
 myl_rc_status myl_rc_scope_extend(myl_rc_scope *, void *boundary, myl_rc_status (*)(myl_rc_scope *, void *));
 void myl_rc_enqueue(myl_native_heap *, myl_rc_object *);
