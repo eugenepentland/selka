@@ -1822,18 +1822,21 @@ const Emitter = struct {
             text = try sinkPositions(self.allocator, text);
         }
         text = try dropUnusedRoots(self.allocator, text);
-        text = try dropUnusedHeap(self.allocator, text);
+        // After the RC flag passes: a dead drop may have held the only read.
         text = try rcFlagPasses(self.allocator, text);
+        text = try dropUnusedHeap(self.allocator, text);
         text = try dropUnusedSlots(self.allocator, text);
         if (!self.stickyFlagTest()) text = try haltFailurePaths(self.allocator, text);
         return stripUnreferencedLabels(self.allocator, text);
     }
     /// RC-FLAG-PROMOTE-1 and RC-DEAD-DROPS-1: address guard and role words
-    /// directly, then remove what a never-set guard protects.
+    /// directly, then remove what a never-set guard protects and the entry
+    /// arena depth read nothing is left to use (RC-UNUSED-ENTRY-READS-1).
     fn rcFlagPasses(allocator: std.mem.Allocator, text: []u8) GenerateError![]u8 {
         if (!runtime_mode.enabled()) return text;
         const forwarded = try il_passes.forwardFlagCopies(allocator, text);
-        return il_passes.elideDeadRcDrops(allocator, forwarded);
+        const elided = try il_passes.elideDeadRcDrops(allocator, forwarded);
+        return il_passes.dropUnusedRegionMark(allocator, elided);
     }
     /// Forget a lowering whose frame turned out too big for the native stack so
     /// the same analysis can be lowered again heap-backed: the temporary

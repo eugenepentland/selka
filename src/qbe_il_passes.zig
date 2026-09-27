@@ -10,6 +10,8 @@ pub const GenerateError = error{ InternalError, OutOfMemory, SourceError, WriteF
 
 /// The prologue call that computes the shared heap pointer.
 const heap_call = " %heap =l call $myl_qbe_heap(l %ctx)";
+/// The RC frame prologue call that reads the entry arena depth.
+const region_call = " %rcregion =l call $myl_qbe_region_mark(l %ctx)";
 
 /// The length of the instruction-label name starting at `text[0]`: `i`, or
 /// the versioned loop's `fi` and `oi` (`QBE-LOOP-VERSION-1`), then at least one
@@ -798,15 +800,60 @@ test "a recorded unit is counted and rewritten exactly as the per-name scan did"
 /// cannot remove a call by itself, because a call may have effects, and this one
 /// only computes `&ctx->heap`.
 pub fn dropUnusedHeap(a: std.mem.Allocator, text: []const u8) GenerateError![]u8 {
-    if (std.mem.count(u8, text, "%heap") != 1) return a.dupe(u8, text);
+    return dropUnusedRead(a, text, "%heap", heap_call);
+}
+
+/// RC-UNUSED-ENTRY-READS-1: drop the RC frame's `%rcregion` prologue call when
+/// nothing in the function reads it. It only reads the arena depth, and the
+/// transfers that would have read it may all have been proved unnecessary or
+/// removed with a dead drop.
+pub fn dropUnusedRegionMark(a: std.mem.Allocator, text: []const u8) GenerateError![]u8 {
+    return dropUnusedRead(a, text, "%rcregion", region_call);
+}
+
+/// Drop the effect-free prologue `call` defining `name` when that definition
+/// is the name's only occurrence.
+fn dropUnusedRead(a: std.mem.Allocator, text: []const u8, name: []const u8, call: []const u8) GenerateError![]u8 {
+    if (std.mem.count(u8, text, name) != 1) return a.dupe(u8, text);
     var kept: std.ArrayList([]const u8) = .empty;
     defer kept.deinit(a);
     var scan = std.mem.splitScalar(u8, text, '\n');
     while (scan.next()) |line| {
-        if (std.mem.eql(u8, line, heap_call)) continue;
+        if (std.mem.eql(u8, line, call)) continue;
         try kept.append(a, line);
     }
     return std.mem.join(a, "\n", kept.items);
+}
+
+// spec: RC-UNUSED-ENTRY-READS-1
+test "RC prologue reads that only dead drops used are dropped after the drops go" {
+    const a = std.testing.allocator;
+    const text =
+        \\ %rcg0 =l alloc8 8
+        \\ %heap =l call $myl_qbe_heap(l %ctx)
+        \\ %rcregion =l call $myl_qbe_region_mark(l %ctx)
+        \\ storew 0, %rcg0
+        \\ %v1 =w loaduw %rcg0
+        \\ jnz %v1, @rcslotdrop2, @rcslotdone2
+        \\@rcslotdrop2
+        \\ storew 0, %rcg0
+        \\ %v3 =l copy %heap
+        \\ call $f(l %v3)
+        \\@rcslotdone2
+        \\ ret 0
+    ;
+    const elided = try elideDeadRcDrops(a, text);
+    defer a.free(elided);
+    const heap = try dropUnusedHeap(a, elided);
+    defer a.free(heap);
+    const region = try dropUnusedRegionMark(a, heap);
+    defer a.free(region);
+    try std.testing.expectEqualStrings(" %rcg0 =l alloc8 8\n ret 0", region);
+    // A read the function still uses stays.
+    const used = " %rcregion =l call $myl_qbe_region_mark(l %ctx)\n %v1 =l copy %rcregion\n ret %v1";
+    const kept = try dropUnusedRegionMark(a, used);
+    defer a.free(kept);
+    try std.testing.expectEqualStrings(used, kept);
 }
 
 // spec: RC-FLAG-PROMOTE-1
