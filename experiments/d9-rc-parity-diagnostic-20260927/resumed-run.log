@@ -1,0 +1,6 @@
+measure schematic/fixture|qbe 73.21130060174092
+measure schematic/fixture|llvm 125.74323127069486
+measure schematic/changed-net|qbe 73.28750608988128
+measure schematic/changed-net|llvm 126.11130970743231
+measure schematic/changed-value|qbe 73.27625438038855
+measure schematic/changed-value|llvm 126.12544845838944

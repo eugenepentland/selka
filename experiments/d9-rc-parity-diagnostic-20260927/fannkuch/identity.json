@@ -1,0 +1,79 @@
+{
+  "source_sha256": "0a7441bd509f728d0b3db53ddfdf6a5c027fcb3468d467c42d00850839d9a8f4",
+  "compiler_sha256": "7decd168a86694b21d9c69eda88f7097a351e161b033c18c8270225129460b48",
+  "commands": [
+    {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-integration/.tmp-rc/install-scope-scalar/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/bench/parity/suite/fannkuch_redux.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/fannkuch-7d68202d/production",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/fannkuch-7d68202d/cache",
+        "--keep-symbols",
+        "--rc-runtime"
+      ],
+      "status": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-integration/.tmp-rc/install-scope-scalar/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/bench/parity/suite/fannkuch_redux.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/fannkuch-7d68202d/stats",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/fannkuch-7d68202d/cache",
+        "--keep-symbols",
+        "--rc-runtime=stats"
+      ],
+      "status": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "perf",
+        "record",
+        "-e",
+        "instructions:u",
+        "-c",
+        "50000000",
+        "-g",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/fannkuch-7d68202d/profile.data",
+        "--",
+        "taskset",
+        "-c",
+        "1",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/fannkuch-7d68202d/production"
+      ],
+      "status": 0,
+      "stderr": "[ perf record: Woken up 2 times to write data ]\n[ perf record: Captured and wrote 0.395 MB /home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/fannkuch-7d68202d/profile.data (1580 samples) ]\n"
+    }
+  ],
+  "profile_is_qualitative": true,
+  "production_sha256": "4e4b0a743ab2b34dc278840e6c58d29bf46febb3f258ea02c257f2e88ecea356",
+  "stats_sha256": "690bd4eedd0a8bbfa425c69eab9bf2369942581c4c2fefc188aa6dc9ea18d6ac",
+  "counters": [
+    {
+      "version": 1,
+      "runtime": "rc-v3-counting",
+      "saturated": false,
+      "owner_acquire": 5,
+      "owner_release": 16,
+      "hold_acquire": 0,
+      "hold_release": 0,
+      "owner_limit": 0,
+      "hold_limit": 0,
+      "heap_allocate": 11,
+      "arena_allocate": 0,
+      "retire": 11,
+      "clone_shell": 0,
+      "unique_check": 354444268
+    }
+  ]
+}

@@ -1,0 +1,136 @@
+build parity-suite-binary_trees.qbe True
+build parity-suite-binary_trees.llvm True
+build parity-suite-fannkuch_redux.qbe True
+build parity-suite-fannkuch_redux.llvm True
+build parity-suite-knucleotide.qbe True
+build parity-suite-knucleotide.llvm True
+build parity-suite-mandelbrot.qbe True
+build parity-suite-mandelbrot.llvm True
+build parity-suite-matmul.qbe True
+build parity-suite-matmul.llvm True
+build parity-suite-nbody.qbe True
+build parity-suite-nbody.llvm True
+build parity-suite-raytrace.qbe True
+build parity-suite-raytrace.llvm True
+build parity-suite-sieve.qbe True
+build parity-suite-sieve.llvm True
+build parity-suite-sort_builtin.qbe True
+build parity-suite-sort_builtin.llvm True
+build parity-suite-sort_quick.llvm True
+build parity-suite-sort_quick.qbe True
+build parity-suite-sort_records.qbe True
+build parity-suite-sort_records.llvm True
+build parity-suite-spectral_norm.qbe True
+build parity-suite-spectral_norm.llvm True
+build parity-suite-text_ops.llvm True
+build parity-suite-text_ops.qbe True
+build parity-lib-scan_count.qbe True
+build parity-lib-scan_count.llvm True
+build parity-lib-scan_replace.qbe True
+build parity-lib-scan_replace.llvm True
+build parity-lib-scan_split.qbe True
+build parity-lib-scan_split.llvm True
+build parity-micro-alloc_churn.qbe True
+build parity-micro-alloc_churn.llvm True
+build parity-micro-bytes_scan.qbe True
+build parity-micro-bytes_scan.llvm True
+build parity-micro-calls.llvm True
+build parity-micro-calls.qbe True
+build parity-micro-dict_count.qbe True
+build parity-micro-dict_count.llvm True
+build parity-micro-fib.qbe True
+build parity-micro-fib.llvm True
+build parity-micro-float_loop.qbe True
+build parity-micro-float_loop.llvm True
+build parity-micro-intloop.qbe True
+build parity-micro-intloop.llvm True
+build parity-micro-list_append_sum.qbe True
+build parity-micro-list_append_sum.llvm True
+build parity-micro-list_records.qbe True
+build parity-micro-list_records.llvm True
+build parity-micro-records.qbe True
+build parity-micro-records.llvm True
+build parity-micro-str_build.qbe True
+build parity-micro-str_build.llvm True
+build schematic.qbe True
+build schematic.llvm True
+measure parity/suite/binary_trees|qbe 3.6652449785129435
+measure parity/suite/binary_trees|llvm 3.7880922190585316
+measure parity/suite/fannkuch_redux|qbe 15.132060711735665
+measure parity/suite/fannkuch_redux|llvm 24.94963911998032
+measure parity/suite/knucleotide|qbe 11.455935554095191
+measure parity/suite/knucleotide|llvm 13.574701736701332
+measure parity/suite/mandelbrot|qbe 1.0000097164861885
+measure parity/suite/mandelbrot|llvm 0.9572633581464026
+measure parity/suite/matmul|qbe 3.2024749455412103
+measure parity/suite/matmul|llvm 5.161819100201489
+measure parity/suite/nbody|qbe 1.9146668255087862
+measure parity/suite/nbody|llvm 4.611764274438728
+measure parity/suite/raytrace|qbe 1.4297534446234594
+measure parity/suite/raytrace|llvm 1.9545423874062904
+measure parity/suite/sieve|qbe 30.65915962995808
+measure parity/suite/sieve|llvm 78.2963660003264
+measure parity/suite/sort_builtin|qbe 3.301943232374349
+measure parity/suite/sort_builtin|llvm 3.006572254650181
+measure parity/suite/sort_quick|qbe 2.30677665916325
+measure parity/suite/sort_quick|llvm 3.419215907272483
+measure parity/suite/sort_records|qbe 11.241408049054817
+measure parity/suite/sort_records|llvm 16.434231240769467
+measure parity/suite/spectral_norm|qbe 2.019751451812071
+measure parity/suite/spectral_norm|llvm 2.2889702465643187
+measure parity/suite/text_ops|qbe 5.229155780050897
+measure parity/suite/text_ops|llvm 4.6716472349258975
+measure parity/lib/scan_count|qbe 1.0262942700173958
+measure parity/lib/scan_count|llvm 1.0197341589436641
+measure parity/lib/scan_replace|qbe 1.0396628432356463
+measure parity/lib/scan_replace|llvm 1.0303868790031632
+measure parity/lib/scan_split|qbe 3.4007542395218264
+measure parity/lib/scan_split|llvm 2.9401126998781186
+measure parity/micro/alloc_churn|qbe 7.53433568005476
+measure parity/micro/alloc_churn|llvm 8.056370261019104
+measure parity/micro/bytes_scan|qbe 3.5542390389693597
+measure parity/micro/bytes_scan|llvm 12.666140491500434
+measure parity/micro/calls|qbe 1.000016134959212
+measure parity/micro/calls|llvm 1.0000475581477215
+measure parity/micro/dict_count|qbe 17.33452124408312
+measure parity/micro/dict_count|llvm 20.42929852514264
+measure parity/micro/fib|qbe 1.000017348385906
+measure parity/micro/fib|llvm 1.0000273654352818
+measure parity/micro/float_loop|qbe 1.079374487374779
+measure parity/micro/float_loop|llvm 1.0001517755442741
+measure parity/micro/intloop|qbe 1.857029099080071
+measure parity/micro/intloop|llvm 1.0000395523319516
+measure parity/micro/list_append_sum|qbe 30.02317125843271
+measure parity/micro/list_append_sum|llvm 47.58386756870539
+measure parity/micro/list_records|qbe 7.683647300444134
+measure parity/micro/list_records|llvm 20.731975239859224
+measure parity/micro/records|qbe 1.000014982149135
+measure parity/micro/records|llvm 1.000043505194249
+measure parity/micro/str_build|qbe 6.009368522020236
+measure parity/micro/str_build|llvm 8.928822588215375
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/experiments/d9-rc-parity-diagnostic-20260927/run.py", line 125, in <module>
+    main()
+    ~~~~^^
+  File "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/experiments/d9-rc-parity-diagnostic-20260927/run.py", line 116, in main
+    A.write(output, state)
+    ~~~~~~~^^^^^^^^^^^^^^^
+  File "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/experiments/d9-rc-acceptance-20260926/compare.py", line 38, in write
+    temporary.write_text(json.dumps(value, indent=2) + '\n')
+                         ~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/json/__init__.py", line 242, in dumps
+    **kw).encode(obj)
+          ~~~~~~^^^^^
+  File "/usr/lib/python3.14/json/encoder.py", line 202, in encode
+    chunks = self.iterencode(o, _one_shot=True)
+  File "/usr/lib/python3.14/json/encoder.py", line 263, in iterencode
+    return _iterencode(o, 0)
+  File "/usr/lib/python3.14/json/encoder.py", line 182, in default
+    raise TypeError(f'Object of type {o.__class__.__name__} '
+                    f'is not JSON serializable')
+TypeError: Object of type PosixPath is not JSON serializable
+when serializing dict item 'svg'
+when serializing dict item 'gc'
+when serializing dict item 'runs'
+when serializing dict item 'schematic/fixture|qbe'
+when serializing dict item 'samples'

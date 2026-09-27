@@ -15,12 +15,13 @@ The final combined default/borrow gate at `f6bea5d9` passes all four steps:
 2,130 executed main tests, 429 QBE tests, native-build and formatting.
 WP-4's compiler, runtime, collection, arena and host ownership paths are implemented
 behind an experimental runtime selector. The latest fully green checkpoint at
-`89e79524` passes 2,281 main tests, 439 QBE tests, native build and formatting.
-Both uncached RC sweeps pass **871/871 assertions across 149 programs**, with
+`7d68202d` passes 2,285 main tests, 439 QBE tests, native build and formatting.
+Both uncached RC sweeps pass **875/875 assertions across 150 programs**, with
 zero failures, skips, cached verdicts, dropped files or unloaded files. The
-[joined checkpoint](d9-rc-argv-return-gate-2026-09-27.md) includes corrected
+[joined checkpoint](d9-rc-scope-scalar-gate-2026-09-27.md) includes corrected
 module callable resolution, argv ownership, empty-local journals and certified
-fresh returns. Earlier augmented-field and iterator failures remain preserved
+fresh returns, omitted empty receiver storage and direct plain scalar writes.
+Earlier augmented-field and iterator failures remain preserved
 as negative controls. The intermediate `685e2631` gate was **not green**: the
 resolver dropped the declared-`replace` guest file despite 865 passing executed
 assertions. The [failed receipts](d9-rc-nbody-gate-2026-09-26.md) remain unchanged;
@@ -40,8 +41,23 @@ LLVM instructions against accepted GC (median of three). A further validated
 empty-local journal refinement is integrated: isolated full-size instructions
 fall another 6.3% on QBE and 18.0% on LLVM with identical counts and output.
 The argv lifetime fix closes the four-object/six-owner Lox shutdown gap on both
-backends. Further scope-storage, scalar-update and clone-cost investigations
-remain separate. The complete RC instruction/RSS acceptance remains open.
+backends. Scope-storage and scalar-update refinements are now joined and gated.
+The Lox audit attributes excessive object-table copies to an extra temporary
+owner; explicit field-transfer work is in final isolated validation. The bounded
+empty-frame proof `57a26e87` and complete fresh-constructor preflight `cdec9ff5`
+are integrated after the green checkpoint and await the next combined gate.
+Their matched measurements improve full-size nbody and the tree diagnostic,
+respectively, without changing successful-run ownership counts.
+
+The frozen `7d68202d` [30-program diagnostic](d9-rc-parity-diagnostic-2026-09-27.md)
+completes all 60 actual-backend rows with correct output. Its instruction
+geomeans remain 4.806047× QBE and 6.291449× LLVM against accepted GC, with 23
+and 22 programs above 1.3×. Median RSS is lower for this subset, but the 13 Lox
+VM cases per backend are excluded. Exact counters identify repeated uniqueness
+checks in fannkuch and broad loan/value traversal in schematic as priorities.
+The three Astra workers now address those paths and allocation/retirement costs.
+The complete RC instruction/RSS acceptance remains open, followed by the
+ordinary runtime default transition, documentation and final combined validation.
 GC stays the default.
 WP-5 has a [committed design](d9-wp5-concurrency-design-2026-09-26.md), with
 implementation dependent on WP-4 acceptance.
@@ -79,7 +95,7 @@ for every accepted package above.
 
 | Work | Branch/worktree | Remaining acceptance |
 |---|---|---|
-| WP-4 reference counting | `codex/d9-rc-integration`; frozen full gate `89e79524`, both RC sweeps 871/871; historical golden replay complete | Validate further performance refinements; pass complete RC instruction/RSS acceptance including rewritten graph programs; rerun the final joined gate. GC remains default |
+| WP-4 reference counting | `codex/d9-rc-integration`; frozen full gate `7d68202d`, both RC sweeps 875/875; historical golden replay complete | Validate further performance refinements; pass complete RC instruction/RSS acceptance including rewritten graph programs; transition the ordinary default to RC and update docs; rerun the final joined gate. GC remains default until acceptance |
 | WP-5 concurrency | Design committed in `df482879`; [proposal](d9-wp5-concurrency-design-2026-09-26.md) | Resolve the documented Weft-source provenance gap and remaining design decisions; implement and validate after WP-4 acceptance |
 
 The plan's literal “on main” scheduling dependencies are being supplied by validated

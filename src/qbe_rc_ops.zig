@@ -10,6 +10,8 @@ pub const Error = values.Error;
 /// Branch payloads and local transfers publish at their explicit commit sites.
 pub fn after(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "op"), stack: []const typed.Type) Error!void {
     if (frame.get(E, self) == null or @import("qbe_rc_borrow.zig").active(E, self)) return;
+    if (op == .get_field and try @import("qbe_rc_field_transfer.zig").project(E, self)) return;
+    if (op == .store_local) try @import("qbe_rc_field_transfer.zig").committed(E, self);
     if (try @import("qbe_rc_views.zig").after(E, self, op, stack)) return;
     if (@import("qbe_rc_read_loans.zig").borrowedResult(E, self, op)) return;
     if (@import("qbe_rc_aggregate.zig").handles(self.program.records, op)) return;

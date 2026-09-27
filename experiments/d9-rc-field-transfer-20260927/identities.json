@@ -1,0 +1,30 @@
+{
+  "base": "19232b8a2a6246939e318b4ba830b9273fd88980",
+  "baseline_source": "7d68202d59cf834bf9649fd77df2000f548ffec9",
+  "candidate_patch_sha256": "e3029759f3f42d63b6269495212756208fdd41da8f7db9d87fd4a0966e8a34f0",
+  "compiler_sha256": "50e8fce3df6ef293d933a75f338eca4dd7d49c3a9038d7fbbefc83a33a564d69",
+  "archive_sha256": {
+    "README.md": "da04687ca9d5ef334a2bc1c50ebbdcd58cd239ede124a25c159ac5aadf722d55",
+    "build-final.log": "e86db251921b28dac17a42dafc6cbbc98e49116247af94724c19a6123fd68050",
+    "clone-failure.json.gz": "8ad2b55ad17c0d75ff798c4e6687fdf3075f0bb6962d8cf32005fd1092935a1f",
+    "clone-failure.py": "cba7023d2f2e9e2672363c2215e2b2f878fcc642d836f1649d296a00c6acd556",
+    "controls/arena_trap.my": "96553cab044363f7c07bd67bd89fe637d60fc606075eb3e5231810cede3e5b4e",
+    "controls/budget.my": "278672d78c90d2b41cc96cf436102a925c774a279e910df2d89dbfc8f2707852",
+    "controls/clone_budget.my": "ee193460072e92f3b35b858bc127395d06d8260833f97d204e05b2527b172239",
+    "controls/trap.my": "0b1a6880bd6d4aea69ed25f9f723fff9011dfcddefaa70c1a3d52ea2b78bad2e",
+    "failures-final.json.gz": "d2664a5a8ccb8b1a99fac3d1970b0316812b73763352ef78afd66c954118e156",
+    "failures-final.py": "16f3353c71f97975c4889eaae33122f01c6432983305b8bf9cbe2b382ebeaed6",
+    "guests-final.json.gz": "1e56bea71b68ebc4f0e2d5f5657c1ac95f00f383ee88996f55398bd05eb11472",
+    "guests-final.py": "5fc308a2ad033ced8795758155735a63a837b31e6cda88c30a6d3d370bb4773f",
+    "inputs/binary_trees.tree.lox": "fa3e536c73bc273bc8cd5ca4f4c81a6edd0c224e18aa764b34043b794f4850e4",
+    "inputs/binary_trees.tree.out": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056",
+    "lox-final.json.gz": "71d8ad290c12a5413346ff58f287b28542a11e4976bfe33f07edf213d1177769",
+    "lox-final.py": "477cd1a754338c82042b37b9c866acc4b7c398b31a9d5214ec468a58664f0970",
+    "lox.json.gz": "48bf38face4e5072b6bc88db4830700e01c1a4bcfe773033b21e80f8fbbc65d7",
+    "lox.py": "621f2204003b47445397f265cb12485446221d6f3b3b8d31eb3e15919bc06ba5",
+    "setter-final.il.gz": "331e4da22b7967130354ca0efd67493edb676cc641660860793bd2d46abcc1ed",
+    "source.patch.gz": "e3029759f3f42d63b6269495212756208fdd41da8f7db9d87fd4a0966e8a34f0",
+    "units-final.log.gz": "8ac0a5926e3dc42eaf23946928057575e5f3119ddf8fc9ad574dc00c480e3780",
+    "verify.py": "0cb2ad66790a0359f15859f0bd1daa443401ed99f8f790ba42f8b3f51dd1c8ab"
+  }
+}
