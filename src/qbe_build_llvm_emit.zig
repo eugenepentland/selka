@@ -108,8 +108,20 @@ pub const Facts = struct {
     overflow: classes.OverflowChecks = .{},
     memory: ?classes.MemoryClasses = null,
     single: StringSet = .empty,
-    phi_stores: std.StringHashMapUnmanaged(std.ArrayList(PhiStore)) = .empty,
+    rewrites: Rewrites = .{},
 };
+
+/// What emission renders differently from the instruction it reads: the
+/// stores a phi needs on each incoming edge, and every marked RC prefix
+/// address by the payload and constant offset it was computed from
+/// (LLVM-RC-PREFIX-1).
+pub const Rewrites = struct {
+    phi_stores: std.StringHashMapUnmanaged(std.ArrayList(PhiStore)) = .empty,
+    prefix_bases: std.StringHashMapUnmanaged(PrefixBase) = .empty,
+};
+
+/// A singly-defined `sub`/`add` of a singly-defined payload and a constant.
+pub const PrefixBase = struct { payload: Operand, offset: i64 };
 
 /// The block being emitted: where each temporary it defined so far was
 /// defined, and the position of the instruction being emitted.
@@ -129,6 +141,10 @@ pub const Names = struct {
     block: BlockState = .{},
 };
 
+/// Which alias metadata the module must define: any memory class at all, and
+/// the RC prefix scope (LLVM-RC-PREFIX-1).
+pub const MetadataUse = struct { alias: bool = false, prefix: bool = false };
+
 /// A scope list a two-class copy names, by its sorted members.
 pub const ScopeList = struct { members: []const u64, number: u64 };
 
@@ -137,7 +153,7 @@ pub const Module = struct {
     globals: std.array_hash_map.String(void) = .empty,
     declarations: std.array_hash_map.String(Declaration) = .empty,
     attributes: std.array_hash_map.String(void) = .empty,
-    alias_metadata: bool = false,
+    metadata: MetadataUse = .{},
     element_kinds: std.ArrayList([]const u8) = .empty,
     scope_lists: std.ArrayList(ScopeList) = .empty,
     frame_map: classes.FrameMap = .{ .file = null, .active = false, .unprobed = false },
@@ -147,6 +163,9 @@ pub const Module = struct {
 pub const element_base: u64 = 11;
 /// The object scope.
 pub const object_scope: u64 = 5;
+/// The RC prefix scope (LLVM-RC-PREFIX-1): `!8`, its list `!9`, and `!10`
+/// listing every scope a prefix word never aliases.
+pub const prefix_scope: u64 = 8;
 /// Element kinds beyond this many stay plainly foreign.
 const max_element_kinds = 29;
 /// Scope lists a copy between two classes names are numbered from here.
@@ -188,7 +207,32 @@ pub const Emitter = struct {
         self.module.frame_map = classes.FrameMap.of(unit);
         var names = counts.iterator();
         while (names.next()) |entry| if (entry.value_ptr.* == 1) try self.facts.single.put(arena, entry.key_ptr.*, {});
+        try self.findPrefixBases();
         return self;
+    }
+
+    /// LLVM-RC-PREFIX-1: each marked prefix address that is a constant offset
+    /// from a payload whose value never changes, so every access through it
+    /// can be a `getelementptr` from that payload.
+    fn findPrefixBases(self: *Emitter) Error!void {
+        const function = &self.unit.function;
+        if (function.hints.prefixes.count() == 0) return;
+        for (function.blocks.items) |block| for (block.instructions.items) |instruction| {
+            const dest = instruction.dest orelse continue;
+            if (!function.hints.prefixes.contains(dest) or !self.facts.single.contains(dest)) continue;
+            if ((instruction.opcode != .sub and instruction.opcode != .add) or instruction.args.len != 2) continue;
+            const payload = instruction.args[0];
+            const name = payload.tempName() orelse continue;
+            if (!self.facts.single.contains(name)) continue;
+            const literal = switch (instruction.args[1]) {
+                .constant => |value| value,
+                else => continue,
+            };
+            const magnitude = std.fmt.parseInt(i64, literal.text, 10) catch continue;
+            if (magnitude < 0 or magnitude > 64) continue;
+            const offset = if (instruction.opcode == .sub) -magnitude else magnitude;
+            try self.facts.rewrites.prefix_bases.put(self.arena, dest, .{ .payload = payload, .offset = offset });
+        };
     }
 
     /// Record a refusal and return `TranslationFailed`.
@@ -361,7 +405,7 @@ pub const Emitter = struct {
             if (instruction.opcode != .phi) continue;
             for (instruction.extra.phi) |input| {
                 if (!known.contains(input.label)) return self.fail(try self.print("phi in {s} names `{s}`, which is not a block of ${s}", .{ block.label, input.label, function.name }));
-                const entry = try self.facts.phi_stores.getOrPut(self.arena, input.label);
+                const entry = try self.facts.rewrites.phi_stores.getOrPut(self.arena, input.label);
                 if (!entry.found_existing) entry.value_ptr.* = .empty;
                 try entry.value_ptr.append(self.arena, .{ .instruction = instruction, .value = input.value });
             }
@@ -461,7 +505,7 @@ pub const Emitter = struct {
     pub fn aliasOf(self: *Emitter, argument: Operand) Error![]const u8 {
         const memory = if (self.facts.memory) |*known| known else return "";
         const suffix = try self.classSuffix(memory.accessClass(argument));
-        if (suffix.len != 0) self.module.alias_metadata = true;
+        if (suffix.len != 0) self.module.metadata.alias = true;
         return suffix;
     }
 
@@ -471,6 +515,10 @@ pub const Emitter = struct {
             .frame => ", !alias.scope !3, !noalias !4",
             .foreign => ", !alias.scope !4, !noalias !3",
             .object => ", !alias.scope !6, !noalias !7",
+            .prefix => {
+                self.module.metadata.prefix = true;
+                return ", !alias.scope !9, !noalias !10";
+            },
             .element => |kind| {
                 const index = (try self.elementIndex(kind)) orelse return ", !alias.scope !4, !noalias !3";
                 const scope = element_base + 3 * index;
@@ -503,6 +551,13 @@ pub const Emitter = struct {
             try apart.appendSlice(self.arena, kinds.items);
             return .{ try self.arena.dupe(u64, &.{object_scope}), apart.items };
         }
+        if (class == .prefix) {
+            self.module.metadata.prefix = true;
+            var apart: std.ArrayList(u64) = .empty;
+            try apart.appendSlice(self.arena, &.{ 1, object_scope });
+            try apart.appendSlice(self.arena, kinds.items);
+            return .{ try self.arena.dupe(u64, &.{prefix_scope}), apart.items };
+        }
         const index = (try self.elementIndex(class.element)) orelse return .{ &.{2}, &.{1} };
         const own = element_base + 3 * index;
         var apart: std.ArrayList(u64) = .empty;
@@ -528,12 +583,12 @@ pub const Emitter = struct {
         const right = memory.accessClass(second) orelse return "";
         if (left.eql(right)) {
             const suffix = try self.classSuffix(left);
-            if (suffix.len != 0) self.module.alias_metadata = true;
+            if (suffix.len != 0) self.module.metadata.alias = true;
             return suffix;
         }
         const left_scopes = try self.classScopes(left);
         const right_scopes = try self.classScopes(right);
-        self.module.alias_metadata = true;
+        self.module.metadata.alias = true;
         const own = try union64(self.arena, left_scopes[0], right_scopes[0]);
         var suffix = try self.print(", !alias.scope !{d}", .{try self.scopeList(own)});
         const apart = try intersection64(self.arena, left_scopes[1], right_scopes[1]);

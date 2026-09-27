@@ -324,11 +324,13 @@ pub const Block = struct {
 /// One declared parameter: its type letter or aggregate name, and its temporary.
 pub const Parameter = struct { letter: []const u8, name: []const u8 };
 
-/// What the frontend marked about addresses: `# myl-obj` temporaries, and
-/// `# myl-elem` storage words with their element kind.
+/// What the frontend marked about addresses: `# myl-obj` temporaries,
+/// `# myl-elem` storage words with their element kind, and `# myl-rc`
+/// addresses of a counted prefix word (LLVM-RC-PREFIX-1).
 pub const Hints = struct {
     objects: std.array_hash_map.String(void) = .empty,
     elements: std.StringHashMapUnmanaged([]const u8) = .empty,
+    prefixes: std.array_hash_map.String(void) = .empty,
 };
 
 /// The unit's one function.
@@ -645,6 +647,9 @@ fn prepare(arena: std.mem.Allocator, text: []const u8, unit: ?*Unit, diagnostic:
 const object_marker = "# myl-obj ";
 /// Marker line for a managed container's storage word (`# myl-elem %temp KIND`).
 const element_marker = "# myl-elem ";
+/// Marker line for the address of one word of the RC prefix below a managed
+/// payload: its owner or hold count or its common-header mark (`# myl-rc %temp`).
+const prefix_marker = "# myl-rc ";
 
 /// A cursor over one unit's lines.
 const Reader = struct {
@@ -693,6 +698,11 @@ const Reader = struct {
             }
             if (std.mem.startsWith(u8, stripped, element_marker)) {
                 try self.elementMarker(function, stripped[element_marker.len..]);
+                continue;
+            }
+            if (std.mem.startsWith(u8, stripped, prefix_marker)) {
+                const marked = strip(stripped[prefix_marker.len..]);
+                if (marked.len != 0 and marked[0] == '%') try function.hints.prefixes.put(self.arena, marked[1..], {});
                 continue;
             }
             const line = stripComment(raw);

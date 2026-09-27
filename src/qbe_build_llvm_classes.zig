@@ -20,14 +20,16 @@ const Operand = il.Operand;
 // ---------------------------------------------------------------------------
 
 /// One memory class: this activation's own stack storage (`frame`), storage
-/// some other allocation owns (`foreign`), and the two refinements of a
-/// foreign address the frontend marked: an object, or a container's element
-/// storage of one element kind (LLVM-ELEMENT-CLASS-1).
+/// some other allocation owns (`foreign`), and the refinements of a foreign
+/// address the frontend marked: an object, a container's element storage of
+/// one element kind (LLVM-ELEMENT-CLASS-1), or a word of the RC prefix below a
+/// managed payload (LLVM-RC-PREFIX-1).
 pub const Class = union(enum) {
     frame,
     foreign,
     object,
     element: []const u8,
+    prefix,
 
     /// Whether two classes are the same (an element class by its kind).
     pub fn eql(self: Class, other: Class) bool {
@@ -157,6 +159,7 @@ pub const MemoryClasses = struct {
             }
         };
         for (self.function.hints.objects.keys()) |name| _ = try self.note(name, .foreign);
+        for (self.function.hints.prefixes.keys()) |name| _ = try self.note(name, .foreign);
         for (0..8) |_| {
             var changed = try self.derive();
             changed = (try self.throughSlots()) or changed;
@@ -270,6 +273,13 @@ pub const MemoryClasses = struct {
         for (hints.objects.keys()) |name| try self.seed(&refined, name);
         var elements = hints.elements.keyIterator();
         while (elements.next()) |name| try self.seed(&refined, name.*);
+        // A prefix address is never an object or element address, and no
+        // `copy` or `add` carries the refinement on to another temporary.
+        for (hints.prefixes.keys()) |name| {
+            if (hints.objects.contains(name)) continue;
+            if (!self.single(name) or !self.isForeign(name)) continue;
+            try refined.put(self.arena, name, .prefix);
+        }
         self.refined = refined;
         for (0..8) |_| {
             const changed = (try self.refineRound()) orelse return .empty;
@@ -301,6 +311,7 @@ pub const MemoryClasses = struct {
             for (instruction.args) |argument| {
                 const name = argument.tempName() orelse continue;
                 const class = self.refined.get(name) orelse continue;
+                if (class == .prefix) return null;
                 if (seen) |existing| {
                     if (!existing.eql(class)) return null;
                 } else seen = class;

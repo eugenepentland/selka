@@ -301,3 +301,50 @@ test "an LLVM callback may name the function currently being defined" {
     try std.testing.expect(std.mem.indexOf(u8, translated, "declare i64 @recurse") == null);
     try std.testing.expect(std.mem.indexOf(u8, translated, "declare i64 @through(i64, i64)") != null);
 }
+
+const prefix_unit =
+    \\export function l $myl_f_prefix(l %ctx, l %a0) {
+    \\@start
+    \\ %p =l loadl %a0
+    \\ %h =l sub %p, 24
+    \\ # myl-rc %h
+    \\ %c =l loadl %h
+    \\ %n =l add %c, 1
+    \\ storel %n, %h
+    \\ %m =l sub %p, 16
+    \\ # myl-rc %m
+    \\ %k =l loadl %m
+    \\ %q =l sub %p, 16
+    \\ %j =l loadl %q
+    \\ %r =l add %k, %j
+    \\ ret %r
+    \\}
+;
+
+// spec: LLVM-RC-PREFIX-1
+test "a marked RC prefix word is a getelementptr from its payload in a scope apart from frame, objects and elements" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const signatures: llvm.Signatures = .empty;
+    const table: llvm.RuntimeTable = .{};
+    var diagnostic: llvm.Diagnostic = .{ .unit = "prefix-unit" };
+    const ir = try llvm.translate(a, prefix_unit, .{ .signatures = &signatures, .runtime = &table }, &diagnostic);
+    // Each access through a marked word is a constant offset from the payload.
+    try std.testing.expect(std.mem.indexOf(u8, ir, "i64 -24") != null);
+    try std.testing.expect(std.mem.indexOf(u8, ir, "i64 -16") != null);
+    try std.testing.expectEqual(@as(usize, 3), std.mem.count(u8, ir, "= getelementptr i8, ptr"));
+    // The count load and store and the mark load carry the prefix scope.
+    try std.testing.expectEqual(@as(usize, 3), std.mem.count(u8, ir, "!alias.scope !9, !noalias !10"));
+    try std.testing.expect(std.mem.indexOf(u8, ir, "!8 = distinct !{!8, !0, !\"rc prefix\"}") != null);
+    try std.testing.expect(std.mem.indexOf(u8, ir, "!10 = !{!1, !5}") != null);
+    // Every `sub` still computes its integer; the unmarked header read keeps
+    // an `inttoptr` of it (as do the parameter and each payload base).
+    try std.testing.expectEqual(@as(usize, 3), std.mem.count(u8, ir, " = sub i64 "));
+    try std.testing.expectEqual(@as(usize, 5), std.mem.count(u8, ir, " = inttoptr i64 "));
+    // Without GEPs and alias metadata the marker changes nothing.
+    diagnostic = .{ .unit = "prefix-unit" };
+    const plain = try llvm.translate(a, prefix_unit, .{ .signatures = &signatures, .runtime = &table, .alias = false, .element_gep = false }, &diagnostic);
+    try std.testing.expect(std.mem.indexOf(u8, plain, "getelementptr") == null);
+    try std.testing.expect(std.mem.indexOf(u8, plain, "rc prefix") == null);
+}

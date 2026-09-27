@@ -18,6 +18,8 @@ const Lines = emit.Lines;
 const ret_void = "  ret void";
 /// `!N = !{...}`: one metadata list.
 const list_line = "!{d} = !{{{s}}}";
+/// One scope's single-member list, `!(scope + 1) = !{!scope}`.
+const member_line = "!{d} = !{{!{d}}}";
 
 /// Render one translated unit as a self-contained LLVM module.
 pub fn module(e: *Emitter) Error![]const u8 {
@@ -33,7 +35,7 @@ pub fn module(e: *Emitter) Error![]const u8 {
         try out.append(e.arena, "");
         try e.line(&out, "attributes #0 = {{ {s} }}", .{try std.mem.join(e.arena, " ", sorted)});
     }
-    if (e.module.alias_metadata) {
+    if (e.module.metadata.alias) {
         try out.append(e.arena, "\n!0 = distinct !{!0, !\"mylang memory classes\"}\n!1 = distinct !{!1, !0, !\"frame\"}\n!2 = distinct !{!2, !0, !\"foreign\"}\n!3 = !{!1}\n!4 = !{!2}");
         try elementMetadata(e, &out);
     }
@@ -123,15 +125,18 @@ fn elementMetadata(e: *Emitter, out: *Lines) Error!void {
     for (0..kinds.len) |index| try scopes.append(e.arena, try e.print("!{d}", .{emit.element_base + 3 * index}));
     const base = emit.object_scope;
     try e.line(out, "!{d} = distinct !{{!{d}, !0, !\"object\"}}", .{ base, base });
-    try e.line(out, "!{d} = !{{!{d}}}", .{ base + 1, base });
+    try e.line(out, member_line, .{ base + 1, base });
     try e.line(out, list_line, .{ base + 2, try joinWith(e, "!1", scopes.items) });
+    // LLVM-RC-PREFIX-1: a prefix word is apart from the frame, every object
+    // and every element storage block.
+    if (e.module.metadata.prefix) try prefixMetadata(e, out, scopes.items);
     for (kinds, 0..) |kind, index| {
         const scope = emit.element_base + 3 * index;
         var others: Lines = .empty;
         try others.append(e.arena, try e.print("!{d}", .{base}));
         for (scopes.items, 0..) |other, position| if (position != index) try others.append(e.arena, other);
         try e.line(out, "!{d} = distinct !{{!{d}, !0, !\"element {s}\"}}", .{ scope, scope, kind });
-        try e.line(out, "!{d} = !{{!{d}}}", .{ scope + 1, scope });
+        try e.line(out, member_line, .{ scope + 1, scope });
         try e.line(out, list_line, .{ scope + 2, try joinWith(e, "!1", others.items) });
     }
     for (e.module.scope_lists.items) |list| {
@@ -139,6 +144,17 @@ fn elementMetadata(e: *Emitter, out: *Lines) Error!void {
         for (list.members) |member| try members.append(e.arena, try e.print("!{d}", .{member}));
         try e.line(out, list_line, .{ list.number, try std.mem.join(e.arena, ", ", members.items) });
     }
+}
+
+/// The RC prefix scope, its list, and the list of every scope it never aliases.
+fn prefixMetadata(e: *Emitter, out: *Lines, elements: []const []const u8) Error!void {
+    const prefix = emit.prefix_scope;
+    var apart: Lines = .empty;
+    try apart.append(e.arena, try e.print("!{d}", .{emit.object_scope}));
+    try apart.appendSlice(e.arena, elements);
+    try e.line(out, "!{d} = distinct !{{!{d}, !0, !\"rc prefix\"}}", .{ prefix, prefix });
+    try e.line(out, member_line, .{ prefix + 1, prefix });
+    try e.line(out, list_line, .{ prefix + 2, try joinWith(e, "!1", apart.items) });
 }
 
 fn joinWith(e: *Emitter, first: []const u8, rest: []const []const u8) Error![]const u8 {
@@ -262,7 +278,7 @@ fn emitBlock(e: *Emitter, out: *Lines, block: *const il.Block, following: ?[]con
         }
     }
     e.names.block.position = body.len;
-    if (e.facts.phi_stores.get(block.label)) |pending| for (pending.items) |store| {
+    if (e.facts.rewrites.phi_stores.get(block.label)) |pending| for (pending.items) |store| {
         const name = store.instruction.dest.?;
         const value = try e.render(out, store.value, e.llvmOf(name));
         try e.storeSlot(out, name, value);
@@ -385,6 +401,7 @@ fn onStore(e: *Emitter, lines: *Lines, instruction: *const Instruction) Error!vo
 /// word in this block becomes a `getelementptr i8` from that word
 /// (LLVM-ELEMENT-GEP-1), anything else an `inttoptr` of the integer.
 fn accessPointer(e: *Emitter, lines: *Lines, argument: Operand) Error![]const u8 {
+    if (try prefixPointer(e, lines, argument)) |pointer| return pointer;
     const chain = (try elementChain(e, argument)) orelse return e.address(lines, try e.render(lines, argument, "i64"));
     var pointer = try e.address(lines, try e.loadSlot(lines, chain.base));
     for (chain.offsets) |offset| {
@@ -393,6 +410,20 @@ fn accessPointer(e: *Emitter, lines: *Lines, argument: Operand) Error![]const u8
         try e.line(lines, "  %{s} = getelementptr i8, ptr {s}, i64 {s}", .{ gep, pointer, value });
         pointer = try e.print("%{s}", .{gep});
     }
+    return pointer;
+}
+
+/// LLVM-RC-PREFIX-1: a marked RC prefix address as a `getelementptr i8`
+/// from its payload, so LLVM tells the owner, hold and mark words of one
+/// payload apart and forwards a count it just stored.
+fn prefixPointer(e: *Emitter, lines: *Lines, argument: Operand) Error!?[]const u8 {
+    if (!e.options.element_gep) return null;
+    const name = argument.tempName() orelse return null;
+    const base = e.facts.rewrites.prefix_bases.get(name) orelse return null;
+    const payload = try e.address(lines, try e.render(lines, base.payload, "i64"));
+    const gep = try e.fresh("rgep");
+    try e.line(lines, "  %{s} = getelementptr i8, ptr {s}, i64 {d}", .{ gep, payload, base.offset });
+    const pointer = try e.print("%{s}", .{gep});
     return pointer;
 }
 

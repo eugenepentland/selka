@@ -77,7 +77,8 @@ fn pointer(comptime E: type, self: *E, source: usize, offset: u64, slow: usize) 
     const mark = self.temp();
     const special = self.temp();
     const slow_path = self.temp();
-    try self.print(" %v{d} =l sub %v{d}, 16\n %v{d} =l loadl %v{d}\n %v{d} =l and %v{d}, {d}\n", .{ header, payload, mark, header, special, mark, slow_marks });
+    // LLVM-RC-PREFIX-1: the mark word is a prefix word of a non-null payload.
+    try self.print(" %v{d} =l sub %v{d}, 16\n # myl-rc %v{d}\n %v{d} =l loadl %v{d}\n %v{d} =l and %v{d}, {d}\n", .{ header, payload, header, mark, header, special, mark, slow_marks });
     try self.print(" %v{d} =w cnel %v{d}, 0\n jnz %v{d}, @rcmoveslow{d}, @rcmovenext{d}\n@rcmovenext{d}\n", .{ slow_path, special, slow_path, slow, label, label });
 }
 

@@ -31,7 +31,10 @@ const mark_offset: u64 = 16;
 
 // A fallible glue entry returning its w status; a word loaded below a payload.
 const status_call = " %v{d} =w call ${s}{s}(l %heap, l %v{d}, l %v{d}, w %v{d})\n";
-const load_below = " %v{d} =l sub %v{d}, {d}\n %v{d} =l loadl %v{d}\n";
+// LLVM-RC-PREFIX-1: the marker names the address as a word of the counted
+// prefix, which the LLVM translator keeps apart from frame, object and
+// element memory; QBE reads it as a comment.
+const load_below = " %v{d} =l sub %v{d}, {d}\n # myl-rc %v{d}\n %v{d} =l loadl %v{d}\n";
 const mask = " %v{d} =l and %v{d}, {d}\n";
 const load_word = @import("qbe_format.zig").load_word;
 
@@ -185,9 +188,9 @@ pub fn uniqueFast(comptime E: type, self: *E, address: usize, label: usize) Erro
     const single = self.temp();
     try self.print(load_word, .{ payload, address });
     try self.print(" jnz %v{d}, @rcguniquenn{d}, @rcgunique{d}\n@rcguniquenn{d}\n", .{ try nonzero(E, self, payload), label, label, label });
-    try self.print(load_below ++ mask, .{ header, payload, mark_offset, mark, header, shared, mark, shared_marks });
+    try self.print(load_below ++ mask, .{ header, payload, mark_offset, header, mark, header, shared, mark, shared_marks });
     try self.print(" jnz %v{d}, @rcguniqueslow{d}, @rcguniquecount{d}\n@rcguniquecount{d}\n", .{ try nonzero(E, self, shared), label, label, label });
-    try self.print(load_below ++ " %v{d} =w cultl %v{d}, 2\n", .{ counter, payload, owners_offset, owners, counter, single, owners });
+    try self.print(load_below ++ " %v{d} =w cultl %v{d}, 2\n", .{ counter, payload, owners_offset, counter, owners, counter, single, owners });
     try self.print(" jnz %v{d}, @rcgunique{d}, @rcguniqueslow{d}\n@rcguniqueslow{d}\n", .{ single, label, label, label });
 }
 
@@ -236,10 +239,10 @@ fn increment(comptime E: type, self: *E, step: Increment) Error!usize {
     const old = self.temp();
     const new = self.temp();
     try self.print(" jnz %v{d}, @rcgnn{d}, @rcg{s}{d}\n@rcgnn{d}\n", .{ try nonzero(E, self, step.payload), step.label, step.on_null, step.label, step.label });
-    try self.print(load_below, .{ header, step.payload, mark_offset, mark, header });
+    try self.print(load_below, .{ header, step.payload, mark_offset, header, mark, header });
     try self.print(mask, .{ special, mark, uncounted_marks });
     try self.print(" jnz %v{d}, @rcg{s}{d}, @rcginc{d}\n@rcginc{d}\n", .{ try nonzero(E, self, special), step.on_special, step.label, step.label, step.label });
-    try self.print(load_below, .{ counter, step.payload, offset(step.count), old, counter });
+    try self.print(load_below, .{ counter, step.payload, offset(step.count), counter, old, counter });
     try self.print(" %v{d} =l add %v{d}, 1\n storel %v{d}, %v{d}\n", .{ new, old, new, counter });
     return mark;
 }
@@ -274,11 +277,11 @@ fn release(comptime E: type, self: *E, operation: Release, operation_kind: glue.
     const label = self.temp();
     try self.print(load_word, .{ payload, operation.address });
     try self.print(" jnz %v{d}, @rcgnn{d}, @rcgdone{d}\n@rcgnn{d}\n", .{ try nonzero(E, self, payload), label, label, label });
-    try self.print(load_below ++ mask, .{ header, payload, mark_offset, mark, header, special, mark, uncounted_marks });
+    try self.print(load_below ++ mask, .{ header, payload, mark_offset, header, mark, header, special, mark, uncounted_marks });
     try self.print(" jnz %v{d}, @rcgclear{d}, @rcgcounted{d}\n@rcgcounted{d}\n", .{ try nonzero(E, self, special), label, label, label });
-    try self.print(load_below ++ " %v{d} =w ceql %v{d}, 1\n", .{ counter, payload, offset(count), value, counter, last, value });
+    try self.print(load_below ++ " %v{d} =w ceql %v{d}, 1\n", .{ counter, payload, offset(count), counter, value, counter, last, value });
     try self.print(" jnz %v{d}, @rcglast{d}, @rcgdec{d}\n@rcglast{d}\n", .{ last, label, label, label });
-    try self.print(load_below, .{ other_counter, payload, offset(other), other_value, other_counter });
+    try self.print(load_below, .{ other_counter, payload, offset(other), other_counter, other_value, other_counter });
     // The last token of an otherwise unheld object dies: the glue clears the
     // slot, queues the death and drains.
     try self.print(" jnz %v{d}, @rcgdec{d}, @rcgslow{d}\n@rcgslow{d}\n", .{ try nonzero(E, self, other_value), label, label, label });
