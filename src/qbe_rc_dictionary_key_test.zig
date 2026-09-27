@@ -25,6 +25,9 @@ test "RC dictionary key admits exact benchmark and preserves real iterator holds
     try t.expect(std.mem.indexOf(u8, il, "call $myl_rc_hold_acquire") != null);
     try t.expect(std.mem.indexOf(u8, il, "call $myl_qbe_rc_frame_enter") != null);
     try t.expect(std.mem.indexOf(u8, il, "call $myl_native_dictionary_write") != null);
+    // Semantic pc64 -> head34 is physically certified only after the key tail.
+    try t.expect(std.mem.indexOf(u8, il, "\n@ce34\n") != null);
+    try t.expect(std.mem.indexOf(u8, il, "@fi34") == null);
 }
 fn body(manifest: Manifest, name: []const u8) ![]const u8 {
     for (manifest.functions) |function| if (std.mem.eql(u8, function.name, name)) return function.il;
