@@ -548,8 +548,8 @@ pub fn build(b: *std.Build) void {
     });
     unit.root_module.addCSourceFiles(.{
         .root = b.path("."),
-        .files = &.{ "tests/qbe_runtime_rc_test.c", "src/qbe_runtime_rc.c" },
-        .flags = &.{ "-std=c11", "-Wall", "-Wextra", "-Werror", "-UNDEBUG", "-DMYL_NATIVE_RC=1", "-DMYL_RC_CONTRACT_LIBRARY", "-DMYL_NATIVE_RC_COUNTING=1", "-DMYL_RC_STATS_LIBRARY", "-ffunction-sections", "-fdata-sections" },
+        .files = &.{ "tests/qbe_runtime_rc_test.c", "tests/native_argv_test.c", "src/qbe_runtime_rc.c" },
+        .flags = &.{ "-std=c11", "-Wall", "-Wextra", "-Werror", "-UNDEBUG", "-DMYL_NATIVE_RC=1", "-DMYL_NATIVE_ARGV_LIBRARY", "-DMYL_RC_CONTRACT_LIBRARY", "-DMYL_NATIVE_RC_COUNTING=1", "-DMYL_RC_STATS_LIBRARY", "-ffunction-sections", "-fdata-sections" },
     });
     unit.root_module.addImport("runtime_contract", runtime_contract);
     unit.root_module.addImport("native_test_root", unit.root_module);

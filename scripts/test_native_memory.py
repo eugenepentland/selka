@@ -28,9 +28,9 @@ def main():
 def run_suite(root, command, directory, suite, sources):
     """Compile one C suite against the runtime sources it needs and run it."""
     executable = directory / suite
-    if suite in ("native_rc_stats", "native_rc_execution"):
+    if suite in ("native_rc_stats", "native_rc_execution", "native_argv"):
         command = command + ["-DMYL_NATIVE_RC_COUNTING=1"]
-    if suite == "native_rc_execution":
+    if suite in ("native_rc_execution", "native_argv"):
         command = command + ["-DMYL_NATIVE_RC=1"]
     if "native_heap.c" in sources:
         required = ("native_arena.c", "native_collections.c", "native_text.c",
@@ -92,6 +92,7 @@ def jobs():
 
 # Each C suite and the runtime sources it links.
 SUITES = (
+    ("native_argv", ["native_heap.c", "qbe_runtime.c", "qbe_runtime_rc.c", "qbe_stack.c"]),
     ("native_rc_loan", ["native_heap.c", "native_regions.c"]),
     ("native_rc_history", ["native_heap.c", "native_regions.c"]),
     ("native_rc_hold", ["native_heap.c", "native_regions.c"]),

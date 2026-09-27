@@ -6,6 +6,27 @@ const frame_map = @import("qbe_frame_map.zig");
 const lean = @import("qbe_build_units.zig");
 /// One packed-argument cleanup shared by every early grant exit.
 const free_arguments = "free(arguments);";
+// The argv owner surrounds capability grants and the borrowed guest call. Its
+// construction flag needs only a pointer-sized type, not a registered list
+// slot descriptor, and also works when a trap unwinds past this C entry.
+const argv_frame =
+    \\#if defined(MYL_NATIVE_RC) && MYL_NATIVE_RC
+    \\static const myl_native_type argv_pointer={.size=sizeof(void *)};
+    \\void *argv_owner=NULL; uint32_t argv_initialized=1;
+    \\MylQbeRcSlot argv_slot={&argv_pointer,&argv_owner,&argv_initialized,MYL_QBE_RC_CONSTRUCTION};
+    \\MylQbeRcFrame argv_frame;
+    \\myl_qbe_rc_frame_enter(ctx,&argv_frame,&argv_slot,1);
+    \\#endif
+    \\
+;
+const argv_cleanup =
+    \\
+    \\#if defined(MYL_NATIVE_RC) && MYL_NATIVE_RC
+    \\myl_qbe_rc_frame_cleanup(ctx,&argv_frame);
+    \\myl_qbe_rc_frame_leave(ctx,&argv_frame);
+    \\#endif
+    \\
+;
 /// Marker the managed lowering writes into a unit's IL for each frozen
 /// `str`/`bytes` literal. QBE reads it as a comment; this unit turns it into the
 /// C data object the IL loads. The line is `# ` followed by this word and
@@ -373,10 +394,14 @@ pub fn entry(allocator: std.mem.Allocator, manifest: std.json.Value, provider: b
     if (uses_packed) try w.writeAll(",uint64_t *") else for (parameters) |_| try w.writeAll(",uint64_t");
     try w.writeAll(");\nstatic uint64_t entry_run(void *ctx) {\n myl_qbe_host_begin(ctx); if(myl_qbe_failed(ctx))return 0;\n");
     if (uses_packed) try w.print("uint64_t *arguments=calloc({d},sizeof *arguments);if(!arguments){{myl_qbe_fail_allocation(ctx);return 0;}}\n", .{parameters.len});
+    if (argv_element.len != 0) try w.writeAll(argv_frame);
     for (parameters, 0..) |parameter, index| {
         if (uses_packed) try w.print("arguments[{d}]=", .{index}) else try w.print("uint64_t arg{d}=", .{index});
         if (index == 0 and argv_element.len != 0) {
             try w.print("(uint64_t)myl_qbe_argv_list(ctx,&{s});\n", .{argv_element});
+            try w.writeAll("#if defined(MYL_NATIVE_RC) && MYL_NATIVE_RC\nargv_owner=(void *)");
+            try w.writeAll(if (uses_packed) "arguments[0]" else "arg0");
+            try w.writeAll(";\n#endif\n");
         } else if (std.mem.eql(u8, v.text(parameter), "stream_cap")) {
             const parameter_name = if (index < parameter_names.len) v.text(parameter_names[index]) else "";
             const sentinel: u64 = if (std.mem.eql(u8, parameter_name, "err")) 2 else 1;
@@ -385,14 +410,17 @@ pub fn entry(allocator: std.mem.Allocator, manifest: std.json.Value, provider: b
             try w.print("{s};\n", .{try grant(v.text(parameter))});
         }
         try w.writeAll("if(myl_qbe_failed(ctx)){");
+        if (argv_element.len != 0) try w.writeAll(argv_cleanup);
         if (uses_packed) try w.writeAll(free_arguments);
         try w.writeAll("return 0;}\n");
     }
     try w.writeAll("if(myl_qbe_failed(ctx)){");
+    if (argv_element.len != 0) try w.writeAll(argv_cleanup);
     if (uses_packed) try w.writeAll(free_arguments);
     try w.print("return 0;}} uint64_t answer={s}(ctx", .{name});
     if (uses_packed) try w.writeAll(",arguments") else for (parameters, 0..) |_, index| try w.print(",arg{d}", .{index});
     try w.writeAll(");");
+    if (argv_element.len != 0) try w.writeAll(argv_cleanup);
     if (uses_packed) try w.writeAll(free_arguments);
     try w.writeAll("return answer;}\nint main(int argc,char **argv){");
     // A final run is the whole process: the OS releases the heap, so the runner
@@ -422,7 +450,8 @@ fn grant(name: []const u8) Error![]const u8 {
 test "entry metadata rejects ordinary values as implicit capability grants" {
     try std.testing.expectError(error.UnsupportedNativeEntry, grant("i64"));
 }
-test "entry metadata builds the optional argv list before calling the guest" {
+// spec-case: RC-ARGV-OWNERSHIP-1
+test "entry metadata guards optional argv ownership before calling the borrowed guest" {
     const parsed = try std.json.parseFromSlice(std.json.Value, std.testing.allocator,
         \\{"entry":"main_native","entry_parameters":["str_list"],"entry_argv_element":"myl_t_str","functions":[{"symbol":"main_native","name":"main","locations":[]}]}
     , .{});
@@ -430,6 +459,13 @@ test "entry metadata builds the optional argv list before calling the guest" {
     const generated = try entry(std.testing.allocator, parsed.value, false, false);
     defer std.testing.allocator.free(generated);
     try std.testing.expect(std.mem.indexOf(u8, generated, "myl_qbe_argv_list(ctx,&myl_t_str)") != null);
+    try std.testing.expect(std.mem.indexOf(u8, generated, "MYL_QBE_RC_CONSTRUCTION") != null);
+    const guard = std.mem.indexOf(u8, generated, "myl_qbe_rc_frame_enter(ctx,&argv_frame,&argv_slot,1)").?;
+    const allocate = std.mem.indexOf(u8, generated, "myl_qbe_argv_list(ctx,&myl_t_str)").?;
+    const publish = std.mem.indexOf(u8, generated, "argv_owner=(void *)arg0;").?;
+    const call = std.mem.indexOf(u8, generated, "uint64_t answer=main_native(ctx,arg0);").?;
+    try std.testing.expect(guard < allocate and allocate < publish and publish < call);
+    try std.testing.expect(std.mem.indexOf(u8, generated[call..], "myl_qbe_rc_frame_cleanup(ctx,&argv_frame)") != null);
 }
 test "entry and location metadata retain provider setup and byte-escaped source paths" {
     const parsed = try std.json.parseFromSlice(std.json.Value, std.testing.allocator,
@@ -440,6 +476,7 @@ test "entry and location metadata retain provider setup and byte-escaped source 
     defer std.testing.allocator.free(generated);
     try std.testing.expect(std.mem.indexOf(u8, generated, "myl_qbe_grant_external_checked(ctx,0,\"--allow-clock\")") != null);
     try std.testing.expect(std.mem.indexOf(u8, generated, "mylang_qbe_run_grants(entry_run,argc,argv,&providers)") != null);
+    try std.testing.expect(std.mem.indexOf(u8, generated, "argv_frame") == null);
     const locations = try metadata(std.testing.allocator, parsed.value);
     defer std.testing.allocator.free(locations);
     try std.testing.expect(std.mem.indexOf(u8, locations, "main_native_meta_locations,1") != null);
