@@ -4,6 +4,9 @@
 #include "native_rc_values.h"
 /* All mutators borrow their receiver and inputs. Successful destructive reads
  * initialize one owned output; ordinary native get/index reads stay borrowed. */
+/* Nonmutating, nonallocating admission for one immediate scalar room append.
+ * False preserves the original registration/drain/publication path. */
+int myl_rc_list_plain_ready(myl_native_heap *, const myl_native_list *);
 int myl_rc_list_append(myl_native_heap *, myl_native_list *, const void *);
 int myl_rc_list_insert(myl_native_heap *, myl_native_list *, int64_t, const void *);
 int myl_rc_list_set(myl_native_heap *, myl_native_list *, size_t, const void *);

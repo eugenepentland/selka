@@ -1,0 +1,8 @@
+def main(out: Stream) -> int:
+    items = [1, 2, 3]
+    items.append(4)
+    items.pop()
+    out.print("entered")
+    for at in items:
+        items.append(at)
+    return 0

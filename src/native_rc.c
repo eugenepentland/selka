@@ -189,10 +189,7 @@ myl_rc_status myl_rc_hold_acquire(myl_native_heap *heap, void *payload, myl_rc_h
     hold->payload = payload;
     return MYL_RC_OK;
 }
-void myl_rc_hold_release(myl_native_heap *heap, myl_rc_hold *hold) {
-    myl_rc_invariant(hold != NULL);
-    void *payload = hold->payload;
-    hold->payload = NULL;
+void myl_rc_hold_edge_release(myl_native_heap *heap, void *payload) {
     if (myl_rc_is_counted(payload)) {
         myl_rc_object *object = live_object(heap, payload);
         myl_rc_invariant(object->holds != 0);
@@ -200,6 +197,12 @@ void myl_rc_hold_release(myl_native_heap *heap, myl_rc_hold *hold) {
         MYL_RC_STAT(heap, MYL_RC_STAT_HOLD_RELEASE);
         myl_rc_enqueue(heap, object);
     }
+}
+void myl_rc_hold_release(myl_native_heap *heap, myl_rc_hold *hold) {
+    myl_rc_invariant(hold != NULL);
+    void *payload = hold->payload;
+    hold->payload = NULL;
+    myl_rc_hold_edge_release(heap, payload);
     myl_rc_drain(heap);
 }
 myl_rc_status myl_rc_pin_acquire(myl_native_heap *heap, void *payload, myl_rc_pin *pin) {

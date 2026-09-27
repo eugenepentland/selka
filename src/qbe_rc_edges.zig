@@ -14,33 +14,50 @@ pub fn after(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "o
         if (edge.from != self.pc or edge.to != self.pc + 1) continue;
         for (edge.releases) |release| {
             const index = @backingInt(release.storage);
-            if (index < self.function.signature.parameter_count) continue;
-            const local = self.function.scope.locals[index];
-            if (!local.usage.temporary or self.byReference(index) or self.callerStorage(index)) continue;
-            const shape = state.catalog.get(local.ty) catch return error.InternalError;
-            if (!shape.counted or shape.unique_drop) continue;
-            if (!self.isScalar(local.ty) or !local.ty.isAggregate()) continue;
-            // Recursive boxes and inline aggregate loans need their physical
-            // anchors represented before general edge cleanup is enabled.
-            const record = self.program.records[local.ty.recordIndex()];
-            if (!record.isCollection() or record.collection.box) continue;
-            if (neededByReceiver(E, self, index)) continue;
-            if (@import("qbe_rc_inert_receiver.zig").emptyLocal(E, self, index)) continue;
+            if (!try eligible(E, self, self.pc, index)) continue;
             try frame.drop(E, self, index);
         }
     }
 }
 
-fn neededByReceiver(comptime E: type, self: *E, owner: usize) bool {
+/// Whether an exact straight-line store edge really drops this physical local.
+/// This includes emitter-only parent anchors omitted from semantic liveness.
+pub fn releasesAt(comptime E: type, self: *E, pc: usize, index: usize) Error!bool {
+    const state = frame.get(E, self) orelse return false;
+    if (@import("qbe_rc_borrow.zig").active(E, self)) return false;
+    if (self.function.scope.instructions[pc].op != .store_local) return false;
+    if (!try eligible(E, self, pc, index)) return false;
+    for (state.plan.locals.edges) |edge| {
+        if (edge.from != pc or edge.to != pc + 1) continue;
+        for (edge.releases) |release| if (@backingInt(release.storage) == index) return true;
+    }
+    return false;
+}
+
+fn eligible(comptime E: type, self: *E, pc: usize, index: usize) Error!bool {
+    if (index < self.function.signature.parameter_count) return false;
+    const local = self.function.scope.locals[index];
+    if (!local.usage.temporary or self.byReference(index) or self.callerStorage(index)) return false;
+    const shape = self.cow.?.rc.?.catalog.get(local.ty) catch return error.InternalError;
+    if (!shape.counted or shape.unique_drop) return false;
+    if (!self.isScalar(local.ty) or !local.ty.isAggregate()) return false;
+    // Recursive boxes and inline loans still require their physical anchors.
+    const record = self.program.records[local.ty.recordIndex()];
+    if (!record.isCollection() or record.collection.box) return false;
+    if (neededByReceiver(E, self, pc, index)) return false;
+    return !@import("qbe_rc_inert_receiver.zig").emptyLocal(E, self, index);
+}
+
+fn neededByReceiver(comptime E: type, self: *E, pc: usize, owner: usize) bool {
     const plan = self.cow.?.plan;
     for (self.function.scope.locals, 0..) |_, index| {
-        if (!self.live.?.after(self.pc, index)) continue;
+        if (!self.live.?.after(pc, index)) continue;
         var at = index;
         var remaining = self.function.scope.locals.len;
         while (remaining != 0) : (remaining -= 1) {
             // A receiver can be read after its mutation scope ends. Its H
             // then no longer keeps the payload alive; the owning parent must.
-            const parent = if (plan.place(at)) |place| place.parent else @import("qbe_rc_unique.zig").receiverParent(E, self, at) orelse break;
+            const parent = if (plan.place(at)) |place| place.parent else @import("qbe_rc_receivers.zig").receiverParent(E, self, at) orelse break;
             if (parent == owner) return true;
             at = parent;
         }

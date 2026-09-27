@@ -1298,6 +1298,232 @@ static void plain_replace_excludes_ownership(void) {
     assert(waitpid(child,&status,0)==child && WIFSIGNALED(status) && WTERMSIG(status)==SIGABRT);
     finish(&heap);
 }
+/* spec-case: RC-PLAIN-RETAIN-1. Adjacent slots in either direction are disjoint;
+ * region refusal clears only the output, including an overlapping refusal. */
+static void plain_retain_regions(void) {
+    static const myl_native_field wide_field={.type=&plain_pair};
+    static const myl_native_type wide={.size=256,.alignment=8,.kind=MYL_NATIVE_ARRAY,
+        .fields=&wide_field,.field_count=1,.element=&plain_pair,.count=16,.stride=16};
+    static const myl_rc_shape wide_shape={.size=256,.kind=MYL_RC_SHAPE_ARRAY,
+        .as.array={.element=&plain_pair_shape,.count=16,.stride=16}};
+    myl_native_heap heap;
+    init(&heap);
+    assert(flat_count(&heap,&plain_pair,&plain_pair_shape)==0);
+    assert(flat_count(&heap,&wide,&wide_shape)==0);
+    uint64_t bits[]={7,8,0,0};
+    assert(myl_rc_native_retain(&heap,&plain_pair,bits+2,bits,0));
+    assert(bits[0]==7 && bits[1]==8 && bits[2]==7 && bits[3]==8);
+    bits[0]=bits[1]=0;
+    assert(myl_rc_native_retain(&heap,&plain_pair,bits,bits+2,0));
+    assert(bits[0]==7 && bits[1]==8 && bits[2]==7 && bits[3]==8);
+    assert(!myl_rc_native_retain(&heap,&plain_pair,bits+2,bits,1));
+    assert(bits[0]==7 && bits[1]==8 && !bits[2] && !bits[3]);
+    assert(myl_rc_take_failure(&heap)==MYL_RC_REGION_ERROR);
+    assert(!myl_rc_native_retain(&heap,&plain_pair,bits+1,bits,1));
+    assert(bits[0]==7 && !bits[1] && !bits[2] && !bits[3]);
+    assert(myl_rc_take_failure(&heap)==MYL_RC_REGION_ERROR);
+    assert(myl_native_region_begin(&heap));
+    assert(myl_rc_native_retain(&heap,&plain_pair,bits+2,bits,1));
+    assert(bits[2]==7 && !bits[3]);
+    myl_native_region_end(&heap);
+    unsigned char source[256], target[256];
+    for (size_t i=0;i<sizeof source;i++) source[i]=(unsigned char)i;
+    size_t bytes=heap.bytes, allocations=heap.allocations;
+    heap.limit=bytes;
+    assert(myl_rc_native_retain(&heap,&wide,target,source,0));
+    assert(!memcmp(source,target,sizeof source) && heap.bytes==bytes && heap.allocations==allocations);
+    static const myl_native_type cold={.size=16,.alignment=8,.kind=MYL_NATIVE_PLAIN};
+    memset(target,0x5a,sizeof target);
+    assert(!myl_rc_native_retain(&heap,&cold,target,source,0));
+    assert(myl_rc_take_failure(&heap)==MYL_RC_ALLOCATION_REFUSED);
+    for (size_t i=0;i<sizeof target;i++) assert(target[i]==(i<16?0:0x5a));
+    finish(&heap);
+}
+/* spec-case: RC-PLAIN-RETAIN-1. Empty layouts keep region validation without
+ * touching neighboring bytes; a same-address retain remains an invariant. */
+static void plain_retain_empty_and_alias(void) {
+    static const myl_native_type empty={.alignment=1,.kind=MYL_NATIVE_PLAIN};
+    static const myl_rc_shape empty_shape={.kind=MYL_RC_SHAPE_NONE};
+    myl_native_heap heap;
+    init(&heap);
+    assert(flat_count(&heap,&empty,&empty_shape)==0);
+    assert(flat_count(&heap,&plain_pair,&plain_pair_shape)==0);
+    uint64_t source=7, target=8;
+    assert(myl_rc_native_retain(&heap,&empty,&target,&source,0));
+    assert(source==7 && target==8);
+    assert(!myl_rc_native_retain(&heap,&empty,&target,&source,1));
+    assert(source==7 && target==8 && myl_rc_take_failure(&heap)==MYL_RC_REGION_ERROR);
+    pid_t child=fork();
+    assert(child>=0);
+    if (!child) {
+        struct rlimit no_core={0,0};
+        assert(!setrlimit(RLIMIT_CORE,&no_core));
+        uint64_t bits[]={7,8};
+        (void)myl_rc_native_retain(&heap,&plain_pair,bits,bits,0);
+        _exit(0);
+    }
+    int status=0;
+    assert(waitpid(child,&status,0)==child && WIFSIGNALED(status) && WTERMSIG(status)==SIGABRT);
+    finish(&heap);
+}
+/* spec-case: RC-PLAIN-RETAIN-1. The original copy completes before a queued
+ * finalizer mutates its source; admission cannot remove this drain boundary. */
+static void plain_retain_pending_death(void) {
+    static const myl_native_type finalized={.size=8,.alignment=8,.kind=MYL_NATIVE_PLAIN};
+    static const myl_rc_descriptor descriptor={.type=&finalized,.shape=&flat_scalar,.finalize=replace_source_finalizer};
+    myl_native_heap heap;
+    init(&heap);
+    assert(flat_count(&heap,&plain_pair,&plain_pair_shape)==0);
+    assert(myl_rc_descriptor_import(&heap,&descriptor)==MYL_RC_OK);
+    assert(((const myl_rc_binding *)myl_rc_descriptor_find(&heap,&finalized))->flat.count>MYL_RC_FLAT_LEAVES);
+    void *queued=myl_native_heap_alloc(&heap,&finalized,1);
+    assert(queued);
+    uint64_t source[]={7,8}, target[2]={0};
+    plain_callback_source=source;
+    heap.rc->dead.active=1;
+    myl_rc_owner_release(&heap,queued);
+    heap.rc->dead.active=0;
+    assert(heap.rc->dead.head);
+    assert(myl_rc_native_retain(&heap,&plain_pair,target,source,0));
+    assert(source[0]==99 && source[1]==8 && target[0]==7 && target[1]==8 && !heap.rc->dead.head);
+    plain_callback_source=NULL;
+    finish(&heap);
+}
+/* spec-case: RC-PLAIN-RETAIN-1. Physical managed and held tokens keep their
+ * distinct counters and transactional count-limit refusal with empty output. */
+static void plain_retain_excludes_tokens(void) {
+    static const myl_rc_shape held_shape={.size=8,.kind=MYL_RC_SHAPE_HOLD_POINTER};
+    static const myl_native_type held_type={.size=8,.alignment=8,.kind=MYL_NATIVE_POINTER};
+    myl_native_heap heap;
+    init(&heap);
+    assert(flat_count(&heap,&pointer,&flat_pointer)==1);
+    assert(flat_count(&heap,&held_type,&held_shape)>MYL_RC_FLAT_LEAVES);
+    void *source=myl_rc_storage_bytes(&heap,8,0), *target=NULL;
+    assert(source);
+    myl_rc_object *object=(myl_rc_object *)source-1;
+    object->owners=MYL_RC_COUNT_MAX;
+    target=(void *)(uintptr_t)0xfeed;
+    assert(!myl_rc_native_retain(&heap,&pointer,&target,&source,0));
+    assert(!target && object->owners==MYL_RC_COUNT_MAX && myl_rc_take_failure(&heap)==MYL_RC_COUNT_LIMIT);
+    object->owners=1;
+    myl_rc_hold source_hold={0}, target_hold={0};
+    assert(myl_rc_hold_acquire(&heap,source,&source_hold)==MYL_RC_OK);
+    myl_rc_owner_release(&heap,source);
+    assert(myl_rc_native_retain(&heap,&held_type,&target_hold.payload,&source_hold.payload,0));
+    assert(target_hold.payload==source && !owners(source) && object->holds==2);
+    myl_rc_hold_release(&heap,&target_hold);
+    object->holds=MYL_RC_COUNT_MAX;
+    target=(void *)(uintptr_t)0xfeed;
+    assert(!myl_rc_native_retain(&heap,&held_type,&target,&source_hold.payload,0));
+    assert(!target && object->holds==MYL_RC_COUNT_MAX && myl_rc_take_failure(&heap)==MYL_RC_COUNT_LIMIT);
+    object->holds=1;
+    myl_rc_hold_release(&heap,&source_hold);
+    finish(&heap);
+}
+/* spec-case: RC-PLAIN-APPEND-1. Admission neither registers cold metadata nor
+ * allocates, and excludes empty/aggregate/managed/held/unique/finalized types. */
+static void plain_append_admission(void) {
+    static const myl_native_type scalar[]={
+        {.size=1,.alignment=1,.kind=MYL_NATIVE_PLAIN},
+        {.size=2,.alignment=2,.kind=MYL_NATIVE_PLAIN},
+        {.size=4,.alignment=4,.kind=MYL_NATIVE_PLAIN},
+        {.size=8,.alignment=8,.kind=MYL_NATIVE_FLOAT}
+    };
+    static const myl_native_type empty={.alignment=1,.kind=MYL_NATIVE_PLAIN};
+    static const myl_native_type held={.size=8,.alignment=8,.kind=MYL_NATIVE_POINTER};
+    static const myl_native_type unique={.size=8,.alignment=8,.kind=MYL_NATIVE_RESOURCE};
+    static const myl_native_type finalized={.size=8,.alignment=8,.kind=MYL_NATIVE_PLAIN};
+    static const myl_rc_shape held_shape={.size=8,.kind=MYL_RC_SHAPE_HOLD_POINTER};
+    static const myl_rc_descriptor final_descriptor={.type=&finalized,.shape=&flat_scalar,.finalize=replace_source_finalizer};
+    myl_native_heap heap;
+    init(&heap);
+    myl_native_list probe={0};
+    assert(!myl_rc_list_plain_ready(NULL,&probe) && !myl_rc_list_plain_ready(&heap,NULL));
+    for (size_t i=0;i<4;i++) {
+        probe.element=&scalar[i];
+        size_t bytes=heap.bytes, allocations=heap.allocations;
+        assert(!myl_rc_list_plain_ready(&heap,&probe));
+        assert(!myl_rc_descriptor_find(&heap,probe.element));
+        assert(heap.bytes==bytes && heap.allocations==allocations);
+        myl_native_list *list=myl_native_list_new(&heap,probe.element,4);
+        assert(list && myl_rc_list_plain_ready(&heap,list));
+        myl_rc_owner_release(&heap,list);
+    }
+    assert(flat_count(&heap,&plain_pair,&plain_pair_shape)==0);
+    assert(flat_count(&heap,&held,&held_shape)>MYL_RC_FLAT_LEAVES);
+    assert(myl_rc_descriptor_import(&heap,&final_descriptor)==MYL_RC_OK);
+    const myl_native_type *refused[]={&empty,&plain_pair,&pointer,&held,&unique,&finalized};
+    for (size_t i=0;i<sizeof refused/sizeof refused[0];i++) {
+        probe.element=refused[i];
+        assert(!myl_rc_list_plain_ready(&heap,&probe));
+    }
+    finish(&heap);
+}
+static myl_native_list *append_observed;
+static void append_observer(myl_native_heap *heap, void *payload) {
+    (void)heap; (void)payload;
+    assert(append_observed->length==1 && append_observed->generation==1);
+    *(uint64_t *)append_observed->storage=99;
+}
+/* spec-case: RC-PLAIN-APPEND-1. A queued finalizer observes the old length;
+ * generic append stages an aliased scalar before the callback changes it. */
+static void plain_append_pending_death(void) {
+    static const myl_native_type finalized={.size=8,.alignment=8,.kind=MYL_NATIVE_PLAIN};
+    static const myl_rc_descriptor descriptor={.type=&finalized,.shape=&flat_scalar,.finalize=append_observer};
+    myl_native_heap heap;
+    init(&heap);
+    assert(myl_rc_descriptor_import(&heap,&descriptor)==MYL_RC_OK);
+    myl_native_list *list=myl_native_list_new(&heap,&number,4);
+    uint64_t value=7;
+    assert(list && myl_rc_list_append(&heap,list,&value));
+    void *queued=myl_native_heap_alloc(&heap,&finalized,1);
+    assert(queued);
+    append_observed=list;
+    heap.rc->dead.active=1;
+    myl_rc_owner_release(&heap,queued);
+    heap.rc->dead.active=0;
+    assert(heap.rc->dead.head && !myl_rc_list_plain_ready(&heap,list));
+    assert(list->length==1 && *(uint64_t *)list->storage==7 && heap.rc->dead.head);
+    assert(myl_rc_list_append(&heap,list,list->storage));
+    assert(list->length==2 && list->generation==2 && !heap.rc->dead.head);
+    assert(((uint64_t *)list->storage)[0]==99 && ((uint64_t *)list->storage)[1]==7);
+    assert(myl_rc_list_plain_ready(&heap,list));
+    append_observed=NULL;
+    myl_rc_owner_release(&heap,list);
+    finish(&heap);
+}
+/* spec-case: RC-PLAIN-APPEND-1. Full capacity and generation overflow keep the
+ * original helper. Aliased growth and an older receiver in an arena preserve
+ * the element bits, receiver region and unchanged state on budget refusal. */
+static void plain_append_fallback(void) {
+    myl_native_heap heap;
+    init(&heap);
+    myl_native_list *list=myl_native_list_new(&heap,&number,1);
+    uint64_t value=7;
+    assert(list && myl_rc_list_append(&heap,list,&value));
+    assert(myl_rc_list_plain_ready(&heap,list));
+    assert(myl_native_region_begin(&heap));
+    assert(myl_rc_list_append(&heap,list,list->storage));
+    assert(list->length==2 && !myl_native_header_region(list->storage));
+    assert(((uint64_t *)list->storage)[0]==7 && ((uint64_t *)list->storage)[1]==7);
+    myl_native_region_end(&heap);
+    list->generation=UINT64_MAX;
+    assert(!myl_rc_list_append(&heap,list,&value) && list->length==2 && list->generation==UINT64_MAX);
+    list->generation=2;
+    myl_rc_owner_release(&heap,list);
+    list=myl_native_list_new(&heap,&number,1024);
+    assert(list);
+    while (list->length<list->capacity) assert(myl_rc_list_append(&heap,list,&value));
+    size_t length=list->length, generation=list->generation;
+    void *storage=list->storage;
+    heap.limit=1;
+    assert(!myl_rc_list_append(&heap,list,&value));
+    assert(list->length==length && list->generation==generation && list->storage==storage);
+    assert(myl_rc_take_failure(&heap)==MYL_RC_ALLOCATION_REFUSED);
+    myl_rc_owner_release(&heap,list);
+    finish(&heap);
+}
+
 int myl_rc_collections_verify(void) {
     storage_reuse_and_holds();
     storage_boundaries();
@@ -1334,12 +1560,19 @@ int myl_rc_collections_verify(void) {
     plain_retain_replace();
     plain_replace_pending_death();
     plain_replace_excludes_ownership();
-    return 35;
+    plain_retain_regions();
+    plain_retain_empty_and_alias();
+    plain_retain_pending_death();
+    plain_retain_excludes_tokens();
+    plain_append_admission();
+    plain_append_pending_death();
+    plain_append_fallback();
+    return 42;
 }
 #ifndef MYL_RC_COLLECTIONS_LIBRARY
 int main(void) {
-    assert(myl_rc_collections_verify()==35);
-    puts("native RC collections: 35 passed");
+    assert(myl_rc_collections_verify()==42);
+    puts("native RC collections: 42 passed");
     return 0;
 }
 #endif

@@ -1,0 +1,8 @@
+{
+  "src/native_rc.c": "2d7da6fb1fb79e147d6a12d042f522d479b3ae1f62300a9ed7b322bf0d5a3491",
+  "src/native_rc_shapes.c": "ab81c85e5c5069a6c9af75368c6023e0dc8cd1842fc31fb30f134e6922cf79df",
+  "src/native_rc_internal.h": "8048adf06fcd19bbcbf7a2d3f16214e802718012351113c926017e305ffaffb6",
+  "src/native_rc_values.c": "a67e813f2c81841a3b8adab3125ed41565aa6ac24607909608ccdbe627f8315b",
+  "src/qbe_runtime_rc_test.zig": "f25c5d3c9b34f8665710049747e79468a6ba849132cb13047df11aa1eed73d36",
+  "tests/native_rc_loan_test.c": "e86e492acf026f526c1de8ebac84a511bb646573368f70fa3a467afe08ce02f1"
+}
