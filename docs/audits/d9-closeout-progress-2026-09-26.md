@@ -8,6 +8,26 @@ preserved across the handoff. The orchestrator works in separate worktrees and s
 full gates with `../.d9-closeout-gate.lock`. The original dirty checkout, `main`
 (`b292660a`), and the pending devspeed merge are untouched.
 
+The active user goal is Stage 4 performance acceptance. The new
+[30-program joined diagnostic](d9-rc-joined-parity-2026-09-27.md), measured on
+fully gated `5b876012`, completes all 60 rows with correct output. Instruction
+geomeans are **2.831332× QBE / 3.283233× LLVM** against accepted GC; only 8/30
+and 9/30 programs meet the 1.3× cap. Median peak RSS is 0.755455× / 0.745243×
+GC for this subset. All 13 Lox programs per backend are excluded, so this does
+not establish the required complete-corpus acceptance.
+
+Dictionary-tail `3c4251e8` and native type-fact `c71d4046` (report correction
+`242439ec`) are now integrated in the isolated branch. Their independent
+archives verify, but the next combined gate is pending the adjacent variant-read
+candidate. Full-size isolated dictionary cost is **6.574182× / 7.379133× GC**;
+isolated type-fact Lox binary-trees cost is **31.227270× / 51.204583× GC**.
+Those gains are not combined arithmetically or presented as final-build results.
+The earlier complete-corpus diagnostic continues against its own immutable
+`e926d1e1` compiler. Current follow-on work targets anchored immutable dictionary
+keys, repeated scalar-loop readiness validation, and the remaining Lox ownership
+traffic. GC remains the default; changing it is outside this active performance
+goal.
+
 Stage 3 and WP-4pre are accepted on the integration branch. The complete
 43-program-per-backend instruction sweep passes at 1.021851044× QBE and
 1.046853543× LLVM, with every output correct and no program above 1.3×.
