@@ -1,0 +1,38 @@
+{
+  "extracted_from_sha256": "5f65b2424f4f5b17bc5ee840f732d89024adc1cc689465619243a8f5f6d31ed8",
+  "offset": 40,
+  "runs": [
+    {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-bytes-read/.tmp-bytes/install-after/bin/qbe",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-bytes-read/.tmp-bytes/guard-probe.s",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-bytes-read/.tmp-bytes/guard-probe.ssa"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "cc",
+        "-O2",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-bytes-read/.tmp-bytes/guard-probe",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-bytes-read/.tmp-bytes/guard-probe.s",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-bytes-read/.tmp-bytes/guard-probe.c"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-bytes-read/.tmp-bytes/guard-probe"
+      ],
+      "exit": 0,
+      "stdout": "0 1 0\n1 0 1\n8 0 8\n16 0 16\n65536 0 65536\n2147483648 0 2147483648\n4294967295 0 4294967295\n",
+      "stderr": ""
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+PASS: 12 full instruction samples at 100%, 12 direct guest RSS samples, 4 identical count controls, 50 guest assertions, 24 traps/12 successes, final guest identity, Guardian 88

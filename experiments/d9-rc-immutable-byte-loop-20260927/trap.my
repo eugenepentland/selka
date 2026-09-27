@@ -1,0 +1,20 @@
+def main(args: list[str], out: Stream) -> int:
+    data = bytes([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20])
+    start = 0
+    stop = 20
+    total = 0
+    if args[0] == "upper":
+        stop = 21
+    if args[0] == "lower":
+        start = -21
+        stop = 0
+    if args[0] == "negative":
+        start = -20
+        stop = 0
+    if args[0] == "overflow":
+        total = 9223372036854775807
+    out.print("before")
+    for i in range(start, stop):
+        total += int(data[i])
+    out.print(total)
+    return 0

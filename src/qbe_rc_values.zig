@@ -34,6 +34,7 @@ pub fn drop(comptime E: type, self: *E, index: usize) Error!void {
     // Every instruction consumes the prior owners before publishing its typed
     // result. A plain input therefore has no live obligation in this slot.
     if (!try state_model.owns(state, stack[index])) return;
+    if (@import("qbe_rc_byte_version.zig").emptyOperand(E, self, index)) return;
     try frame.drop(E, self, journalIndex(E, self, index));
 }
 /// Prepare a borrowed publication before releasing any consumed owners.

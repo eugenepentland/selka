@@ -1,0 +1,39 @@
+{
+  "rc": {
+    "command": [
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-bytes-read/scripts/build-slot.sh",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-integration/.tmp-rc/install-loops-fixed/bin/mylang",
+      "emit-qbe",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-bytes-read/bench/parity/micro/bytes_scan.my",
+      "--no-cache",
+      "--drop-step-checks",
+      "--drop-frame-checks",
+      "--drop-debug",
+      "--rc-runtime"
+    ],
+    "cwd": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-bytes-read",
+    "compiler_sha256": "49a8df2d575b65b16d3e7b455a8b0d6a3aa11ac4eccc13ad34dc3eeb8b54ebd5",
+    "source_sha256": "582f9f12677fbe00b0a3085d15ecc8368f853375d39494652290febb5fdd6c8f",
+    "status": 0,
+    "emission_sha256": "741afbcad748fe1869681549053d7d28bc3e8adbf6eef4eba21dcee705f15c05"
+  },
+  "gc": {
+    "command": [
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-bytes-read/scripts/build-slot.sh",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-physical-borrow-after-astra/.tmp-physical/install-accepted/bin/mylang",
+      "emit-qbe",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-bytes-read/bench/parity/micro/bytes_scan.my",
+      "--no-cache",
+      "--drop-step-checks",
+      "--drop-frame-checks",
+      "--drop-debug"
+    ],
+    "cwd": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-bytes-read",
+    "compiler_sha256": "8c8134078fc56eeb468e65d229db2480d99c39458b044e976d604bf64de69478",
+    "source_sha256": "582f9f12677fbe00b0a3085d15ecc8368f853375d39494652290febb5fdd6c8f",
+    "status": 0,
+    "emission_sha256": "53a7c455c6a94b7a8b5c63f0ff28f8b7ce903fb2c0ba36fa6d8b872ac5d071be"
+  }
+}
