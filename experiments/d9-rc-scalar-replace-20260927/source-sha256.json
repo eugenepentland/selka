@@ -1,0 +1,6 @@
+{
+  "src/qbe_rc_aggregate.zig": "e5ce88a36edc01611ddf55026b80c1ccaac58993f84e7b95085942d9769b6a0f",
+  "src/qbe_rc_plain_aggregate_test.zig": "012b90f91a67d5039d795f94e70a529ed7a0f552d6ebba642158ed8a8f46cfaa",
+  "tests/lang/rc_scalar_replacements.my": "4d6c3c74861704c46e003c0632dc267717d6df514ba0dbf130ac9dadc0aa671a",
+  "bench/parity/suite/nbody.my": "5884c8d579c9e0fac2465192a167988c41f06843f4a1bd81ccea05063024c896"
+}
