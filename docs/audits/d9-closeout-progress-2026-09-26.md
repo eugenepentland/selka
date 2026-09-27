@@ -14,22 +14,22 @@ Stage 3 and WP-4pre are accepted on the integration branch. The complete
 The final combined default/borrow gate at `f6bea5d9` passes all four steps:
 2,130 executed main tests, 429 QBE tests, native-build and formatting.
 WP-4's compiler, runtime, collection, arena and host ownership paths are implemented
-behind an experimental runtime selector. The last fully green checkpoint at `2b42a543`
-passes 2,266 main tests, 438 QBE tests, native build and formatting. ABI3 semantic
-history, private-loan mutable paths, certified fresh constructors and measured
-runtime/journal refinements are integrated. Both uncached RC sweeps pass **851/851
-assertions across 146 programs**, with no failures, skips or cached results. The
-original augmented-field abort and rejected iterator behavior are preserved as
-negative controls. The [joined checkpoint](d9-rc-place-constructor-gate-2026-09-26.md)
-records exact identities and receipts. The newer frozen checkpoint `685e2631`
-is **not green**: its ordinary guest runner and both RC sweeps drop one file
-because the module resolver rejects a declared `replace` callable. Each RC sweep
-passes its 865 executed assertions, but that does not make the sweep complete.
-The [failed gate receipts](d9-rc-nbody-gate-2026-09-26.md) preserve this result.
-The accepted GC compiler reproduces the resolver failure; its focused fix is
-validated separately and still needs the combined gate.
+behind an experimental runtime selector. The latest fully green checkpoint at
+`89e79524` passes 2,281 main tests, 439 QBE tests, native build and formatting.
+Both uncached RC sweeps pass **871/871 assertions across 149 programs**, with
+zero failures, skips, cached verdicts, dropped files or unloaded files. The
+[joined checkpoint](d9-rc-argv-return-gate-2026-09-27.md) includes corrected
+module callable resolution, argv ownership, empty-local journals and certified
+fresh returns. Earlier augmented-field and iterator failures remain preserved
+as negative controls. The intermediate `685e2631` gate was **not green**: the
+resolver dropped the declared-`replace` guest file despite 865 passing executed
+assertions. The [failed receipts](d9-rc-nbody-gate-2026-09-26.md) remain unchanged;
+the accepted GC compiler reproduced that old resolver bug before its correction.
 
-The supplemental golden replay remains in progress on immutable `19e16e1d`.
+The supplemental [golden replay](d9-rc-history-flat-goldens-2026-09-27.md)
+completes **462/462 matching outcomes** on immutable `19e16e1d`, including 440
+balanced counted RC executions, ten explicit legacy GC cases and twelve CLI
+refusals before guest startup.
 That compiler builds the complete performance corpus and passes all 60 parity
 and schematic output checks, but Lox QBE binary trees times out at 600 seconds;
 the remaining checks were stopped and archived. Nbody profiles motivated further
@@ -37,9 +37,12 @@ plain-record/read-loan work in `codex/d9-rc-nbody-integration`. Those changes ar
 now integrated at `685e2631`. The unchanged five-million-step nbody produces
 correct output and balanced counts but still uses 2.324486× QBE and 7.325101×
 LLVM instructions against accepted GC (median of three). A further validated
-empty-local journal refinement is ready to integrate. The argv ownership gap
-in Lox has a candidate fix undergoing final checks. The complete RC instruction/
-RSS acceptance remains open. GC stays the default.
+empty-local journal refinement is integrated: isolated full-size instructions
+fall another 6.3% on QBE and 18.0% on LLVM with identical counts and output.
+The argv lifetime fix closes the four-object/six-owner Lox shutdown gap on both
+backends. Further scope-storage, scalar-update and clone-cost investigations
+remain separate. The complete RC instruction/RSS acceptance remains open.
+GC stays the default.
 WP-5 has a [committed design](d9-wp5-concurrency-design-2026-09-26.md), with
 implementation dependent on WP-4 acceptance.
 
@@ -76,7 +79,7 @@ for every accepted package above.
 
 | Work | Branch/worktree | Remaining acceptance |
 |---|---|---|
-| WP-4 reference counting | `codex/d9-rc-integration`; frozen full gate `2b42a543`, both RC sweeps851/851; nbody refinements on `codex/d9-rc-nbody-integration` | Finish supplemental replay; join and validate remaining refinements; pass complete RC instruction/RSS acceptance including rewritten graph programs. GC remains default |
+| WP-4 reference counting | `codex/d9-rc-integration`; frozen full gate `89e79524`, both RC sweeps 871/871; historical golden replay complete | Validate further performance refinements; pass complete RC instruction/RSS acceptance including rewritten graph programs; rerun the final joined gate. GC remains default |
 | WP-5 concurrency | Design committed in `df482879`; [proposal](d9-wp5-concurrency-design-2026-09-26.md) | Resolve the documented Weft-source provenance gap and remaining design decisions; implement and validate after WP-4 acceptance |
 
 The plan's literal “on main” scheduling dependencies are being supplied by validated
