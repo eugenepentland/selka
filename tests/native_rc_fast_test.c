@@ -588,6 +588,9 @@ static void scope_backing_shares_the_pin_entry(void) {
     assert(!(((myl_native_object *)list - 1)->mark & MYL_NATIVE_OBJECT_PINNED));
     myl_rc_scope_end(&scope);
     assert(!header(list)->holds && heap.bytes == idle);
+    myl_rc_owner_release(&heap, list);
+    finish(&heap);
+}
 // spec-case: RC-ALLOC-CACHE-1
 static void allocation_cache_reuse(void) {
     myl_native_heap heap;
