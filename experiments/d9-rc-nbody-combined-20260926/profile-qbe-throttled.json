@@ -1,0 +1,20 @@
+{
+  "command": [
+    "perf",
+    "record",
+    "-e",
+    "instructions:u",
+    "-c1000000",
+    "-g",
+    "-o",
+    ".tmp-nbody/profile-qbe.data",
+    "--",
+    "taskset",
+    "-c",
+    "11",
+    ".tmp-nbody/nbody-qbe-rc"
+  ],
+  "status": 0,
+  "stdout": "-169075163\n-169083133\n",
+  "stderr": "[ perf record: Woken up 6 times to write data ]\n[ perf record: Captured and wrote 1.355 MB .tmp-nbody/profile-qbe.data (5689 samples) ]\n"
+}

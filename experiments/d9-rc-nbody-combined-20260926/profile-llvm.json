@@ -1,0 +1,20 @@
+{
+  "command": [
+    "perf",
+    "record",
+    "-e",
+    "instructions:u",
+    "-c1000000",
+    "-g",
+    "-o",
+    ".tmp-nbody/profile-llvm.data",
+    "--",
+    "taskset",
+    "-c",
+    "11",
+    ".tmp-nbody/nbody-llvm-rc"
+  ],
+  "status": 0,
+  "stdout": "-169075163\n-169083133\n",
+  "stderr": "[ perf record: Woken up 3 times to write data ]\n[ perf record: Captured and wrote 0.668 MB .tmp-nbody/profile-llvm.data (3601 samples) ]\n"
+}

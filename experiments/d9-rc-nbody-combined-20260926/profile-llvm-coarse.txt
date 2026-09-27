@@ -1,0 +1,90 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 129  of event 'cpu_core/instructions/u'
+# Event count (approx.): 25800000000
+#
+# Overhead  Symbol                                                                      IPC   [IPC Coverage]
+# ........  ..........................................................................  ....................
+#
+    66.67%  [.] myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605  -      -            
+            |
+            ---0
+               0
+
+     8.53%  [.] myl_qbe_rc_frame_cleanup                                                -      -            
+            |
+            ---myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605
+               0
+               0
+
+     7.75%  [.] myl_qbe_rc_unique_local                                                 -      -            
+            |          
+            |--6.98%--myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605
+            |          0
+            |          0
+            |          
+             --0.78%--0
+                       0
+
+     4.65%  [.] myl_qbe_rc_scope_pin                                                    -      -            
+            |
+            ---myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605
+               0
+               0
+
+     3.88%  [.] capture                                                                 -      -            
+            |
+            ---myl_qbe_rc_scope_pin
+               myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605
+               0
+               0
+
+     2.33%  [.] myl_rc_scope_end                                                        -      -            
+            |
+            ---myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605
+               0
+               0
+
+     1.55%  [.] __libc_calloc                                                           -      -            
+            |
+            ---myl_qbe_rc_scope_pin
+               myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605
+               0
+               0
+
+     1.55%  [.] cfree                                                                   -      -            
+            |
+            ---myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605
+               0
+               0
+
+     1.55%  [.] myl_rc_drain                                                            -      -            
+            |          
+            |--0.78%--myl_rc_scope_end
+            |          myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605
+            |          0
+            |          0
+            |          
+             --0.78%--myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605
+                       0
+                       0
+
+     1.55%  [.] myl_rc_hold_release                                                     -      -            
+            |          
+            |--0.78%--myl_rc_scope_end
+            |          myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605
+            |          0
+            |          0
+            |          
+             --0.78%--myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605
+                       0
+                       0
+
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#
