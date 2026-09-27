@@ -1525,6 +1525,200 @@ static void plain_append_fallback(void) {
     finish(&heap);
 }
 
+/* spec-case: RC-DICTIONARY-WORD-1. A hit captures all source bytes before the
+ * store, including unaligned and overlapping ranges in its own live backing. */
+static void dictionary_word_overlap(void) {
+    myl_native_heap heap;
+    init(&heap);
+    myl_native_dictionary *dict=myl_native_dictionary_new(&heap,&number,&number,0);
+    uint64_t key=1, other=2, value=0x123456789abcdef0, output;
+    assert(dict && myl_native_dictionary_write(&heap,dict,&key,&value));
+    assert(myl_native_dictionary_write(&heap,dict,&other,&other));
+    unsigned char *slot=(unsigned char *)dict->entries->storage+dict->value_offset;
+    unsigned char *second=slot+dict->entry_type.size;
+    size_t bytes=heap.bytes, allocations=heap.allocations;
+    uint64_t generation=dict->entries->generation;
+    heap.limit=bytes;
+    const void *sources[]={slot,slot-1,slot+1,second};
+    for (size_t i=0;i<sizeof sources/sizeof sources[0];i++) {
+        memcpy(&value,sources[i],8);
+        assert(myl_native_dictionary_write(&heap,dict,&key,sources[i]));
+        assert(myl_native_dictionary_read(dict,&key,&output) && output==value);
+        assert(myl_native_dictionary_read(dict,&other,&output) && output==other);
+    }
+    assert(myl_native_dictionary_length(dict)==2 && dict->entries->generation==generation);
+    assert(heap.bytes==bytes && heap.allocations==allocations);
+    myl_rc_record_failure(&heap,MYL_RC_COUNT_LIMIT);
+    assert(myl_native_dictionary_write(&heap,dict,&key,&value));
+    assert(myl_rc_take_failure(&heap)==MYL_RC_COUNT_LIMIT);
+    myl_rc_owner_release(&heap,dict);
+    finish(&heap);
+}
+/* spec-case: RC-DICTIONARY-WORD-1. Actual destination regions remain checked;
+ * same-address replacement keeps its earlier no-op even in injected bad state. */
+static void dictionary_word_regions(void) {
+    myl_native_heap heap;
+    init(&heap);
+    uint64_t key=1, value=7, output=0;
+    myl_native_dictionary *older=myl_native_dictionary_new(&heap,&number,&number,0);
+    assert(older && myl_native_dictionary_write(&heap,older,&key,&value));
+    assert(myl_native_region_begin(&heap));
+    myl_native_dictionary *inner=myl_native_dictionary_new(&heap,&number,&number,0);
+    assert(inner && myl_native_dictionary_write(&heap,inner,&key,&value));
+    value=13;
+    assert(myl_native_dictionary_write(&heap,older,&key,&value));
+    assert(myl_native_dictionary_write(&heap,inner,&key,&value));
+    assert(!myl_native_header_region(older) && myl_native_header_region(inner)==1);
+    void *slot=(unsigned char *)inner->entries->storage+inner->value_offset;
+    heap.region_depth=0; /* Fault injection, restored before arena teardown. */
+    assert(myl_native_dictionary_write(&heap,inner,&key,slot));
+    assert(myl_rc_take_failure(&heap)==MYL_RC_OK);
+    value=99;
+    assert(!myl_native_dictionary_write(&heap,inner,&key,&value));
+    assert(myl_rc_take_failure(&heap)==MYL_RC_REGION_ERROR && value==99);
+    assert(myl_native_dictionary_read(inner,&key,&output) && output==13);
+    heap.region_depth=1;
+    assert(myl_native_dictionary_write(&heap,inner,&key,&value));
+    myl_native_region_end(&heap);
+    assert(myl_native_dictionary_read(older,&key,&output) && output==13);
+    myl_rc_owner_release(&heap,older);
+    finish(&heap);
+}
+static myl_native_dictionary *word_observed, *word_reentrant;
+static uint64_t word_source, word_phase;
+static myl_native_type word_registered[96];
+static void dictionary_word_observer(myl_native_heap *heap, void *payload) {
+    uint64_t id=*(uint64_t *)payload, key=1, output=0, value=17;
+    assert(myl_native_dictionary_read(word_observed,&key,&output) && output==3);
+    assert(++word_phase==id);
+    if (id==2) return;
+    word_source=99;
+    size_t capacity=heap->rc->metadata.index.capacity;
+    for (size_t i=0;i<96;i++) {
+        word_registered[i]=(myl_native_type){.size=8,.alignment=8,.kind=MYL_NATIVE_PLAIN};
+        assert(myl_rc_native_shape(heap,&word_registered[i]));
+    }
+    assert(heap->rc->metadata.index.capacity>capacity);
+    /* The sibling is queued, but an active outer drain defers it across this
+     * nested dictionary replacement and unrelated backing growth. */
+    assert(heap->rc->dead.head && heap->rc->dead.active);
+    assert(myl_native_dictionary_write(heap,word_reentrant,&key,&value));
+    for (key=2;key<64;key++) assert(myl_native_dictionary_write(heap,word_reentrant,&key,&value));
+    assert(word_phase==1 && heap->rc->dead.head);
+}
+/* spec-case: RC-DICTIONARY-WORD-1. Queued callbacks see old destination bytes;
+ * publication uses the pre-callback source despite reentrant metadata growth. */
+static void dictionary_word_queue(void) {
+    static const myl_native_type finalized={.size=8,.alignment=8,.kind=MYL_NATIVE_PLAIN};
+    static const myl_rc_descriptor descriptor={.type=&finalized,.shape=&flat_scalar,.finalize=dictionary_word_observer};
+    myl_native_heap heap;
+    init(&heap);
+    assert(myl_rc_descriptor_import(&heap,&descriptor)==MYL_RC_OK);
+    word_observed=myl_native_dictionary_new(&heap,&number,&number,0);
+    word_reentrant=myl_native_dictionary_new(&heap,&number,&number,0);
+    uint64_t key=1, old=3, output=0;
+    assert(word_observed && word_reentrant);
+    assert(myl_native_dictionary_write(&heap,word_observed,&key,&old));
+    assert(myl_native_dictionary_write(&heap,word_reentrant,&key,&old));
+    assert(myl_native_dictionary_write(&heap,word_observed,&key,&old)); /* Warm hit before queueing. */
+    uint64_t *first=myl_native_heap_alloc(&heap,&finalized,1);
+    uint64_t *second=myl_native_heap_alloc(&heap,&finalized,1);
+    assert(first && second);
+    *first=1; *second=2;
+    word_source=7; word_phase=0;
+    heap.rc->dead.active=1;
+    myl_rc_owner_release(&heap,second);
+    myl_rc_owner_release(&heap,first); /* The death worklist is LIFO. */
+    heap.rc->dead.active=0;
+    void *slot=(unsigned char *)word_observed->entries->storage+word_observed->value_offset;
+    assert(heap.rc->dead.head && myl_native_dictionary_write(&heap,word_observed,&key,slot));
+    assert(!word_phase && heap.rc->dead.head);
+    assert(myl_native_dictionary_write(&heap,word_observed,&key,&word_source));
+    assert(word_phase==2 && word_source==99 && !heap.rc->dead.head);
+    assert(myl_native_dictionary_read(word_observed,&key,&output) && output==7);
+    assert(myl_native_dictionary_write(&heap,word_observed,&key,&word_source));
+    assert(myl_native_dictionary_read(word_observed,&key,&output) && output==99);
+    myl_rc_owner_release(&heap,word_reentrant);
+    myl_rc_owner_release(&heap,word_observed);
+    word_reentrant=NULL; word_observed=NULL;
+    finish(&heap);
+}
+/* spec-case: RC-DICTIONARY-WORD-1. Native kind/width alone cannot bypass a
+ * registered ownership shape; other plain widths/records keep full copies. */
+static void dictionary_word_fallback(void) {
+    static const myl_native_type opaque={.size=8,.alignment=8,.kind=MYL_NATIVE_PLAIN};
+    static const myl_rc_descriptor descriptor={.type=&opaque,.shape=&flat_pointer};
+    static const myl_native_type widths[]={
+        {.size=1,.alignment=1,.kind=MYL_NATIVE_PLAIN},
+        {.size=2,.alignment=2,.kind=MYL_NATIVE_PLAIN},
+        {.size=4,.alignment=4,.kind=MYL_NATIVE_PLAIN},
+        {.size=8,.alignment=8,.kind=MYL_NATIVE_FLOAT}
+    };
+    myl_native_heap heap;
+    init(&heap);
+    assert(myl_rc_descriptor_import(&heap,&descriptor)==MYL_RC_OK);
+    assert(((const myl_rc_binding *)myl_rc_descriptor_find(&heap,&opaque))->flat.count>MYL_RC_FLAT_LEAVES);
+    myl_native_dictionary *dict=myl_native_dictionary_new(&heap,&number,&opaque,0);
+    void *first=myl_rc_storage_bytes(&heap,8,0), *second=myl_rc_storage_bytes(&heap,8,0), *output=NULL;
+    uint64_t key=1;
+    assert(dict && first && second && myl_native_dictionary_write(&heap,dict,&key,&first));
+    ((myl_rc_object *)second-1)->owners=MYL_RC_COUNT_MAX;
+    assert(!myl_native_dictionary_write(&heap,dict,&key,&second));
+    assert(myl_rc_take_failure(&heap)==MYL_RC_COUNT_LIMIT && owners(first)==2);
+    assert(myl_native_dictionary_read(dict,&key,&output) && output==first);
+    ((myl_rc_object *)second-1)->owners=1;
+    assert(myl_native_dictionary_write(&heap,dict,&key,&second));
+    assert(owners(first)==1 && owners(second)==2);
+    myl_rc_owner_release(&heap,dict);
+    myl_rc_owner_release(&heap,first);
+    myl_rc_owner_release(&heap,second);
+    assert(flat_count(&heap,&plain_pair,&plain_pair_shape)==0);
+    const myl_native_type *types[]={&widths[0],&widths[1],&widths[2],&widths[3],&plain_pair};
+    for (size_t i=0;i<sizeof types/sizeof types[0];i++) {
+        uint64_t source[]={7,8}, old[]={1,2}, result[2]={0};
+        dict=myl_native_dictionary_new(&heap,&number,types[i],0);
+        assert(dict && myl_native_dictionary_write(&heap,dict,&key,old));
+        assert(myl_native_dictionary_write(&heap,dict,&key,source));
+        assert(myl_native_dictionary_read(dict,&key,result) && !memcmp(source,result,types[i]->size));
+        myl_rc_owner_release(&heap,dict);
+    }
+    finish(&heap);
+}
+/* spec-case: RC-DICTIONARY-WORD-1. Ordinary construction must establish the
+ * exact value binding; cold admission keeps registration/budget failure. */
+static void dictionary_word_registration(void) {
+    static const myl_native_type cold={.size=8,.alignment=8,.kind=MYL_NATIVE_PLAIN};
+    static const myl_native_type floating={.size=8,.alignment=8,.kind=MYL_NATIVE_FLOAT};
+    myl_native_heap heap;
+    init(&heap);
+    assert(myl_rc_native_shape(&heap,&number));
+    size_t bytes=heap.bytes;
+    assert(!myl_rc_descriptor_repeat(&heap,&cold));
+    heap.limit=bytes;
+    assert(!myl_native_dictionary_new(&heap,&number,&cold,0));
+    assert(myl_rc_take_failure(&heap)==MYL_RC_ALLOCATION_REFUSED);
+    assert(!myl_rc_descriptor_find(&heap,&cold) && heap.bytes==bytes);
+    heap.limit=0; heap.exhausted=0;
+    myl_native_dictionary *dict=myl_native_dictionary_new(&heap,&number,&cold,0);
+    uint64_t key=1, value=7, output=0;
+    assert(dict && myl_rc_descriptor_repeat(&heap,&cold));
+    assert(myl_native_dictionary_write(&heap,dict,&key,&value));
+    value=13;
+    assert(myl_native_dictionary_write(&heap,dict,&key,&value));
+    assert(myl_native_dictionary_read(dict,&key,&output) && output==13);
+    myl_native_list *list=myl_native_list_new(&heap,&floating,4);
+    assert(list);
+    for (value=14;value<18;value++) {
+        assert(myl_rc_list_plain_ready(&heap,list));
+        assert(myl_native_dictionary_write(&heap,dict,&key,&value));
+        assert(myl_rc_list_plain_ready(&heap,list));
+        assert(myl_native_dictionary_read(dict,&key,&output) && output==value);
+    }
+    myl_rc_owner_release(&heap,list);
+    myl_rc_owner_release(&heap,dict);
+    finish(&heap);
+}
+
 int myl_rc_collections_verify(void) {
     storage_reuse_and_holds();
     storage_boundaries();
@@ -1568,12 +1762,17 @@ int myl_rc_collections_verify(void) {
     plain_append_admission();
     plain_append_pending_death();
     plain_append_fallback();
-    return 42;
+    dictionary_word_overlap();
+    dictionary_word_regions();
+    dictionary_word_queue();
+    dictionary_word_fallback();
+    dictionary_word_registration();
+    return 47;
 }
 #ifndef MYL_RC_COLLECTIONS_LIBRARY
 int main(void) {
-    assert(myl_rc_collections_verify()==42);
-    puts("native RC collections: 42 passed");
+    assert(myl_rc_collections_verify()==47);
+    puts("native RC collections: 47 passed");
     return 0;
 }
 #endif
