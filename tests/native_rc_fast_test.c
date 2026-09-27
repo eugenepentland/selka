@@ -625,6 +625,21 @@ static void plain_elements_copy_as_bytes(void) {
     for (uint64_t i = 0; i < 100; ++i) assert(((uint64_t *)copy->storage)[i] == i);
     assert(myl_rc_stats_snapshot(&heap, &after));
     assert(after.events[MYL_RC_STAT_OWNER_ACQUIRE] == before.events[MYL_RC_STAT_OWNER_ACQUIRE]);
+    /* A keyed sorted copy of plain elements gathers straight into its result:
+     * keys 99..0 reverse the elements. */
+    myl_native_list *keys = myl_native_list_new(&heap, &number, 100);
+    myl_native_list *sorted = myl_native_list_new(&heap, &number, 100);
+    assert(keys && sorted);
+    for (uint64_t i = 0; i < 100; ++i) {
+        uint64_t key = 99 - i;
+        assert(myl_rc_list_append(&heap, keys, &key));
+    }
+    size_t live = heap.objects_live;
+    myl_rc_sort_request request = {.values = sorted, .source = list, .keys = keys, .shape = 1};
+    assert(myl_rc_list_sort_keyed(&heap, &request) && sorted->length == 100 && heap.objects_live == live);
+    for (uint64_t i = 0; i < 100; ++i) assert(((uint64_t *)sorted->storage)[i] == 99 - i);
+    myl_rc_owner_release(&heap, sorted);
+    myl_rc_owner_release(&heap, keys);
     myl_rc_owner_release(&heap, copy);
     myl_rc_owner_release(&heap, list);
     finish(&heap);

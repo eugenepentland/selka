@@ -1349,6 +1349,10 @@ static myl_native_list *rc_list_clone(myl_native_heap *heap, const myl_native_li
 int myl_rc_list_sort_keyed(myl_native_heap *heap, const myl_rc_sort_request *request) {
     myl_native_list *source=request->source;
     myl_native_list *temporary=NULL;
+    /* RC-PLAIN-TYPE-1: elements that own nothing gather straight into the
+     * result, exactly as the collector's sorted copy does. */
+    if (request->values!=source && source->element->size && myl_rc_plain_type(heap,source->element))
+        return myl_native_list_sort_keyed(request->values,source,request->keys,request->shape,request->offsets,request->reverse);
     if (request->values!=source) {
         temporary=rc_list_clone(heap,source,source->element,myl_native_header_region(request->values));
         if (!temporary) return 0;
