@@ -1,0 +1,31 @@
+{
+  "base": "685e2631",
+  "compiler_after_sha256": "078f6fa9af82b43f660a84525a11933c646ed75871c712c0dc198e88833e8944",
+  "compiler_before_sha256": "ed3dc4a72024b855272981ada0c4ff46e36bc7a6d3e58fd784a9835dfb5326fd",
+  "cpu": 10,
+  "entries": {
+    "before": 38,
+    "after": 4
+  },
+  "table_bytes": {
+    "before": 1216,
+    "after": 128
+  },
+  "guard_bytes": {
+    "before": 304,
+    "after": 32
+  },
+  "full": {
+    "before-qbe": 76685257976,
+    "after-qbe": 71840257670,
+    "before-llvm": 26335250633,
+    "after-llvm": 21595250058
+  },
+  "reduced": {
+    "before-qbe": 153781707,
+    "after-qbe": 143931346,
+    "before-llvm": 52915728,
+    "after-llvm": 43435616
+  },
+  "passed_guest_assertions": 436
+}
