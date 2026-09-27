@@ -41,9 +41,13 @@ schematic workloads but remain above the performance cap; those comparisons
 use different recorded bases and must not be multiplied into a combined result.
 The separate dictionary-loop candidate `88f4e477` reaches **1.481235× QBE /
 1.461035× LLVM** against accepted GC, requiring another 12.2% / 11.0% reduction
-to reach 1.3×. It is not part of this combined gate. Current follow-on work
-addresses scalar-list read loops, managed borrowed-helper composition and the
-remaining plain dictionary overwrite cost. Full current combined performance
+to reach 1.3×. The subsequent [combined loop checkpoint](d9-rc-loops-joined-gate-2026-09-27.md)
+at `49c6ca07` now includes that dictionary proof and guarded read-list versions
+`be0cba69`. The latter's isolated append ratios are 1.902061× QBE / 2.301125×
+LLVM; sieve remains 2.963575× / 3.513822×. A fresh 30-program non-Lox diagnostic
+is measuring the combined source. Current follow-on work addresses Lox's
+anchored record-field list reads, managed borrowed-helper composition and the
+remaining plain dictionary overwrite cost. Complete current combined performance
 has not been measured. GC remains the default; changing it is outside this
 active performance goal.
 
@@ -54,10 +58,10 @@ The final combined default/borrow gate at `f6bea5d9` passes all four steps:
 2,130 executed main tests, 429 QBE tests, native-build and formatting.
 WP-4's compiler, runtime, collection, arena and host ownership paths are implemented
 behind an experimental runtime selector. The latest fully green checkpoint at
-`c47058f5` passes 2,351 main tests, 448 QBE tests, native build and formatting.
-Both uncached RC sweeps pass **998/998 assertions across 169 programs**, with
+`49c6ca07` passes 2,359 main tests, 451 QBE tests, native build and formatting.
+Both uncached RC sweeps pass **1,013/1,013 assertions across 171 programs**, with
 zero failures, skips, cached verdicts, dropped files or unloaded files. The
-[joined checkpoint](d9-rc-readers-joined-gate-2026-09-27.md) includes corrected
+[joined checkpoint](d9-rc-loops-joined-gate-2026-09-27.md) includes corrected
 module callable resolution, argv ownership, empty-local journals and certified
 fresh returns, omitted empty receiver storage, direct plain scalar writes,
 empty-frame linkage omission, complete fresh constructors, closed field transfer,
@@ -163,7 +167,7 @@ for every accepted package above.
 
 | Work | Branch/worktree | Remaining acceptance |
 |---|---|---|
-| WP-4 reference counting | `codex/d9-rc-integration`; frozen full gate `c47058f5`, both forced RC sweeps 998/998 across 169 programs; historical golden replay complete | Validate further performance refinements; pass complete RC instruction/RSS acceptance including rewritten graph programs; transition the ordinary default to RC and update docs; rerun the final joined gate. GC remains default until acceptance |
+| WP-4 reference counting | `codex/d9-rc-integration`; frozen full gate `49c6ca07`, both forced RC sweeps 1,013/1,013 across 171 programs; historical golden replay complete | Validate further performance refinements; pass complete RC instruction/RSS acceptance including rewritten graph programs; transition the ordinary default to RC and update docs; rerun the final joined gate. GC remains default until acceptance |
 | WP-5 concurrency | Design committed in `df482879`; [proposal](d9-wp5-concurrency-design-2026-09-26.md) | Resolve the documented Weft-source provenance gap and remaining design decisions; implement and validate after WP-4 acceptance |
 
 The plan's literal “on main” scheduling dependencies are being supplied by validated
