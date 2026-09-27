@@ -27,6 +27,49 @@ pub fn begin(comptime E: type, self: *E, ty: typed.Type, operand: usize, source:
     return label;
 }
 
+/// Preflight an entire bounded constructor before allocation or guard changes.
+/// The closed grammar proves one inherited region; dynamic role refusal enters
+/// the original complete constructor, including its partial-body journal.
+pub fn beginSpan(comptime E: type, self: *E, ty: typed.Type, base: usize, count: usize) Error!?usize {
+    if (count == 0 or count > limit or !try certify(E, self)) return null;
+    if (try self.largeResult(self.function)) return null;
+    if ((try self.layout(ty)).size > 256) return null;
+    const state = frame.get(E, self).?;
+    const result = state.catalog.get(ty) catch return error.InternalError;
+    if (!result.counted or result.unique_drop) return null;
+    const stack = self.states[self.pc] orelse return error.InternalError;
+    if (base > stack.len or count > stack.len - base) return error.InternalError;
+    for (stack[base..][0..count]) |input| {
+        const shape = state.catalog.get(input) catch return error.InternalError;
+        if (shape.unique_drop or (try self.layout(input)).size > 256) return null;
+    }
+    var ready: ?usize = null;
+    for (stack[base..][0..count], base..) |input, operand| {
+        const shape = state.catalog.get(input) catch return error.InternalError;
+        if (!shape.counted) continue;
+        const owner = try ordinaryRole(E, self, values.journalIndex(E, self, operand));
+        if (ready) |previous| {
+            const combined = self.temp();
+            try self.print(" %v{d} =w and %v{d}, %v{d}\n", .{ combined, previous, owner });
+            ready = combined;
+        } else ready = owner;
+    }
+    const label = self.temp();
+    if (ready) |condition| try self.print(" jnz %v{d}, @rcspan{d}, @rcspanslow{d}\n", .{ condition, label, label }) else try self.print(" jmp @rcspan{d}\n", .{label});
+    try self.print("@rcspan{d}\n", .{label});
+    return label;
+}
+
+fn ordinaryRole(comptime E: type, self: *E, index: usize) Error!usize {
+    const live = self.temp();
+    const flags = self.temp();
+    const accepted = self.temp();
+    const result = self.temp();
+    try self.print(" %v{d} =w loaduw %v{d}\n %v{d} =w loaduw %v{d}\n", .{ live, try frame.guard(E, self, index), flags, try frame.entryField(E, self, index, 24) });
+    try self.print(" %v{d} =w ceqw %v{d}, 2\n %v{d} =w and %v{d}, %v{d}\n", .{ accepted, flags, result, live, accepted });
+    return result;
+}
+
 /// A closed scalar-input body creates only linearly consumed fresh bundles.
 /// Self recursion is inductive over successful returns; all other calls refuse.
 pub fn certify(comptime E: type, self: *E) Error!bool {
