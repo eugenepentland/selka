@@ -8,6 +8,13 @@ const Op = @FieldType(bytecode.Instruction, "op");
 /// This linear closed grammar permits self recursion, but no other calls,
 /// allocation, mutation, unique resource, arena, callback or owning result.
 pub fn certify(catalog: *shapes.Catalog, function: bytecode.Function) native.Error!bool {
+    if (!try admissible(catalog, function)) return false;
+    for (function.scope.instructions) |instruction| if (!allowed(catalog, function, instruction.op)) return false;
+    return true;
+}
+
+/// Shared activation boundary; all managed values must remain caller anchored.
+pub fn admissible(catalog: *shapes.Catalog, function: bytecode.Function) native.Error!bool {
     if (function.policy.c_abi or function.policy.host != null) return false;
     if (function.signature.mutates.len != 0 or function.signature.declared_mutates.len != 0) return false;
     const output = try catalog.get(function.signature.return_type);
@@ -17,12 +24,11 @@ pub fn certify(catalog: *shapes.Catalog, function: bytecode.Function) native.Err
         if (local.ty.isAggregate() and catalog.native.records[local.ty.recordIndex()].collection.box and
             @import("value_semantics.zig").needsCopy(catalog.native.records, local.ty)) return false;
     }
-    if (function.scope.instructions.len == 0) return false;
-    for (function.scope.instructions) |instruction| if (!allowed(catalog, function, instruction.op)) return false;
-    return true;
+    return function.scope.instructions.len != 0;
 }
 
-fn allowed(catalog: *shapes.Catalog, function: bytecode.Function, op: Op) bool {
+/// Closed local grammar. Non-self calls require an independent callee proof.
+pub fn allowed(catalog: *shapes.Catalog, function: bytecode.Function, op: Op) bool {
     return switch (op) {
         .load_local,
         .move_local,

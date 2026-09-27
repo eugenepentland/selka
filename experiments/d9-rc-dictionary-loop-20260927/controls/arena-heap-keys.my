@@ -1,0 +1,17 @@
+def work(source: list[str]) -> int:
+    keys = source
+    counts: dict[str, int] = {}
+    for i in range(1000):
+        key = keys[i]
+        counts[key] = counts.get(key, 0) + 1
+    assert len(keys) == 1000
+    return len(counts)
+
+def main(out: Stream) -> int:
+    keys: list[str] = []
+    for i in range(1000):
+        keys.append("key" + str(i))
+    out.print("before")
+    with arena():
+        out.print(work(keys))
+    return 0

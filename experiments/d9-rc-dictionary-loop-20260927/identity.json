@@ -1,0 +1,26 @@
+{
+  "before_source": "a8f852b9784a40c048df9a7d9b6a33066b413269",
+  "compilers": {
+    "before": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/install-dict-key-prototype/bin/mylang",
+      "sha256": "106bd30f12bcedc96d040822039088adb46ce01ff1b648d83bf36c1c443a73b2"
+    },
+    "after": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/install-dict-loop/bin/mylang",
+      "sha256": "25dad5001d2ddbf91c266ed19f4272849131adaedf70bb113f9c0864c2025625"
+    }
+  },
+  "source_sha256": "227510603349ab558eed1a9a456bb6cf3c53b725de87a1436a41b35f58844324",
+  "expected_stdout": "779967\n",
+  "cpu": 11,
+  "candidate_production_files": {
+    "src/qbe_rc_dictionary_loop.zig": "91964e5ff0d396a68784c5b39a585dbd16551b43b6fe063ca1ff39e94f826de0",
+    "src/qbe_rc_hoist.zig": "55eb4e7fb4c60d9913a486e8a8795ce094cc48c5369d531e58ce6de7f48c0598",
+    "src/qbe.zig": "5c98ee5d0bedaebe1d846407dbe9288314ed7534feb7911fc4d24b7010bb6540"
+  },
+  "fixtures": {
+    "rc_dictionary_loops": "ea5e1d29e21de78a5a9957ef77adeb4e5a60c9ef21df6a8d27556bb861123628",
+    "rc_dictionary_keys": "9243bf942abcd4f0e0db914c0b60de171ef89bc4f872139d39b56739004456d3",
+    "rc_dictionary_tails": "bd7052c38325998362a0a7c98c84382aad97db96d532ef562b442634ba2cd81d"
+  }
+}

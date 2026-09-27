@@ -15,6 +15,10 @@ pub fn key(allocator: std.mem.Allocator, program: bytecode.Program, layouts: *na
     hash.update("rc-borrow-callers-v1");
     hash.update(runtime.identity());
     hash.update(&base);
+    hash.update(@import("rc_readonly_calls.zig").version);
+    const readonly = try @import("rc_readonly_calls.zig").identity(&catalog, program.functions, program.functions[index], runtime.identity());
+    hash.update(&.{@intFromBool(readonly != null)});
+    if (readonly) |identity| hash.update(&identity);
     for (program.functions[index].scope.instructions) |instruction| {
         if (instruction.op != .call) continue;
         const callee = program.functions[@backingInt(instruction.op.call)];

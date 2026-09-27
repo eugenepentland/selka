@@ -1,0 +1,13 @@
+def work() -> int:
+    keys = ["a" + "-key", "b-key"]
+    counts: dict[str, int] = {}
+    for i in range(10):
+        key = keys[i % 2]
+        counts[key] = counts.get(key, 0) + 1
+    assert len(keys) == 2
+    return counts.get("a-key", 0)
+
+def main(out: Stream) -> int:
+    out.print("before")
+    out.print(work())
+    return 0

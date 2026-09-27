@@ -1,0 +1,29 @@
+{
+  "before_compiler_sha256": "1f3bca2c62180a58fcc54782f9414a2b272e8447f996096a6883dc330774e3c7",
+  "after_compiler_sha256": "b8d91d1731b47d60d6d11ee17b1c400db5655860a0c305ae833324f0aa029f28",
+  "changes": [
+    {
+      "name": "compiler::init_compiler",
+      "before": 0,
+      "after": 1
+    },
+    {
+      "name": "vm::run",
+      "before": 18,
+      "after": 22
+    }
+  ],
+  "vm_before": {
+    "myl_t_a76886878581aa149dcc111e15b8fc4762d047b1328eba92f48178c36cc2bfb0": 22,
+    "myl_t_1535267fc5a418ed8053a9a6290354ebfcee0a92538bece7aa6b84967f8fb527": 2,
+    "myl_t_c000f22f7ee44dea31e81b0a933c1dec3a560f42212434ae24333c6a58c466f9": 8,
+    "myl_t_a1fa53db408c85388cfd14badb361c2a89e74ce2a863fa83774cb6942b74317a": 26
+  },
+  "vm_after": {
+    "myl_t_a76886878581aa149dcc111e15b8fc4762d047b1328eba92f48178c36cc2bfb0": 22,
+    "myl_t_1535267fc5a418ed8053a9a6290354ebfcee0a92538bece7aa6b84967f8fb527": 2,
+    "myl_t_a1fa53db408c85388cfd14badb361c2a89e74ce2a863fa83774cb6942b74317a": 26
+  },
+  "vm_tail_before": 18,
+  "vm_tail_after": 22
+}
