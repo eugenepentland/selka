@@ -12,7 +12,7 @@ pub fn key(allocator: std.mem.Allocator, program: bytecode.Program, layouts: *na
     var catalog = try @import("rc_shape.zig").Catalog.init(allocator, layouts);
     defer catalog.deinit();
     var hash = std.crypto.hash.Blake3.init(.{});
-    hash.update("rc-borrow-callers-v1");
+    hash.update("rc-borrow-callers-v2");
     hash.update(runtime.identity());
     hash.update(&base);
     hash.update(@import("rc_readonly_calls.zig").version);
