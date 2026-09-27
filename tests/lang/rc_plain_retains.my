@@ -1,0 +1,49 @@
+record PlainSample:
+    count: int
+    ratio: float
+    enabled: bool
+
+
+# spec-case: RC-PLAIN-RETAIN-1
+public def test_plain_appends_keep_mixed_bits_after_growth() -> bool:
+    values: list[PlainSample] = []
+    for i in range(40):
+        values.append(PlainSample(i, float(i) + 0.5, i % 2 == 0))
+    return values[0].count == 0 and values[39].ratio == 39.5 and values[38].enabled and not values[39].enabled
+
+
+# spec-case: RC-PLAIN-RETAIN-1
+public def test_append_of_an_existing_element_survives_backing_growth() -> bool:
+    values = [PlainSample(7, 1.5, True)]
+    for i in range(80):
+        values.append(values[0])
+    values[0].count = 99
+    return values[80].count == 7 and values[80].ratio == 1.5 and values[80].enabled
+
+
+# spec-case: RC-PLAIN-RETAIN-1
+public def test_plain_array_append_uses_the_older_receivers_region() -> bool:
+    values: list[[3]int] = []
+    with arena():
+        with arena():
+            for i in range(40):
+                row: [3]int = [i, i + 1, i + 2]
+                values.append(row)
+    return len(values) == 40 and values[39][0] == 39 and values[39][2] == 41
+
+
+# spec-case: RC-PLAIN-RETAIN-1
+public def test_zero_sized_array_appends_keep_logical_length() -> bool:
+    values: list[[0]int] = []
+    row: [0]int = []
+    for i in range(40):
+        values.append(row)
+    return len(values) == 40 and len(values[39]) == 0
+
+
+def main() -> int:
+    assert test_plain_appends_keep_mixed_bits_after_growth()
+    assert test_append_of_an_existing_element_survives_backing_growth()
+    assert test_plain_array_append_uses_the_older_receivers_region()
+    assert test_zero_sized_array_appends_keep_logical_length()
+    return 0
