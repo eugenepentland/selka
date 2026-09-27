@@ -14,8 +14,22 @@ source `4e5c0cd6` passes the [full correctness checkpoint](d9-rc-entry-loops-gat
 1,049 forced RC assertions across 179 programs on each backend. It adds
 incoming record-field reads, raw borrowed/immortal helper entries and fast-loop
 operand isolation to the preceding byte/dictionary/record checkpoint. Its
-complete performance is not yet measured. A fresh 31-program diagnostic
-(30 non-Lox plus full Lox binary trees N10) is in progress.
+complete 43-program performance is not yet measured. The fresh
+[31-program diagnostic](d9-rc-entry-loops-diagnostic-2026-09-27.md)
+(30 non-Lox plus full Lox binary trees N10) is complete: instruction geomeans
+are **2.417467× QBE / 2.693842× LLVM**, with **9/31 / 10/31** rows meeting 1.3×.
+All outputs and balanced counted runs pass. Median peak RSS is lower for this
+subset: GC 7,224/7,388 KiB versus RC 6,552/6,616 KiB. The other twelve Lox
+programs remain excluded; this is not complete-corpus acceptance.
+
+The comparable current 30-program subset is **2.252288× / 2.478538×**, versus
+the prior **2.433636× / 2.800243×**. Full Lox binary trees is now measured on
+the combined compiler at **20.205200× / 32.784654×** accepted GC. Byte scanning
+meets the 1.3× cap on both backends; dictionary counting remains just above it
+at **1.312029× / 1.325034×**. Current str_build is **6.009368× / 8.435394×**,
+list_records **3.870787× / 8.857745×**, and schematic about **11.12× / 16.54×**.
+All 372 instruction observations ran at 100%; the archive separately verifies
+372 RSS observations and 62 counted executions.
 
 The latest isolated results are byte scanning **1.105132× QBE / 1.075882× LLVM**,
 dictionary counting **1.311910× / 1.325051×**, and full Lox binary trees N10
@@ -34,7 +48,7 @@ observations and sixteen balanced counted runs. All eight rows have correct
 output but remain above the 1.3× instruction cap. No current complete corpus
 or new 30-program geomean is claimed.
 
-The most recent
+The preceding
 [30-program combined loop diagnostic](d9-rc-loops-joined-parity-2026-09-27.md),
 measured on fully gated `49c6ca07`, completes all 60 rows with correct output.
 Instruction geomeans are **2.433636× QBE / 2.800243× LLVM** against accepted GC;
@@ -85,10 +99,15 @@ now join the `368f0357` checkpoint. Their isolated results appear above.
 Those three subsequent slices are now merged at `4e5c0cd6` and pass the full
 correctness checkpoint. Borrowed entries use a separate constant-result
 certificate for the actual `text::empty` fallback; the initial borrowed-only
-prototype's refusal remains archived. The three current workers measure the
-fresh combined 31-program diagnostic, investigate complete-body empty journals
-for incoming-record helpers, and specialize exact native pointer loan/unloan
-operations. Complete current combined performance has not been measured.
+prototype's refusal remains archived. The exact-pointer runtime experiment and
+complete-body empty-journal experiment measured gains of roughly 1.5% or less
+and are being preserved without retaining their production complexity. Current
+work investigates repeated byte-buffer uniqueness and capacity appends,
+selected-field lifetime authority in Lox, and larger runtime costs in native
+trees, knucleotide and schematic. A separate plain-record read-loop prototype
+reduces list_records instructions by 12.4% QBE / 8.7% LLVM; its integration
+gate and remaining append-cost work are pending. Complete current combined
+43-program performance has not been measured.
 GC remains the default; changing it is outside this active performance goal.
 
 Stage 3 and WP-4pre are accepted on the integration branch. The complete
