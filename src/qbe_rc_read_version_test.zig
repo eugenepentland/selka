@@ -56,7 +56,7 @@ fn guarded(text: []const u8) !void {
     try t.expect(std.mem.indexOf(u8, tail, "@rcreadloop") != null);
     try t.expect(std.mem.indexOf(u8, tail, "@oi") != null);
     try t.expect(std.mem.indexOf(u8, tail, "\n@fi") != null);
-    try t.expect(std.mem.indexOf(u8, text, "call $myl_rc_hold_acquire") != null);
+    try t.expect(std.mem.indexOf(u8, text, "# RC-GLUE-1 hold") != null);
     try t.expect(std.mem.indexOf(u8, text, "call $myl_qbe_rc_frame_cleanup") != null);
 }
 

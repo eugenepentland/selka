@@ -99,7 +99,7 @@ test "RC-FRESH-CONSTRUCTOR-1 linear recursive owners relocate into the guarded b
     const output = try text(t.allocator, fresh);
     defer t.allocator.free(output);
     try t.expect(std.mem.indexOf(u8, output, "@rcfresh") != null);
-    try t.expect(std.mem.indexOf(u8, output, "call $myl_rc_native_take") != null);
+    try t.expect(std.mem.indexOf(u8, output, "# RC-GLUE-1 take") != null);
     try t.expect(std.mem.indexOf(u8, output, "call $myl_qbe_rc_frame_enter") != null);
     try t.expect(std.mem.indexOf(u8, output, "call $myl_qbe_fail_allocation") != null);
 }
@@ -168,6 +168,7 @@ test "RC-FRESH-RETURN-1 completed linear result skips normal cleanup but keeps l
     try t.expect(std.mem.indexOf(u8, output, "call $myl_qbe_rc_frame_leave") != null);
     try t.expect(std.mem.indexOf(u8, output, "call $myl_qbe_rc_frame_cleanup") == null);
     try t.expect(std.mem.indexOf(u8, output, "call $myl_rc_native_take") == null);
+    try t.expect(std.mem.indexOf(u8, output, "# RC-GLUE-1 take") == null);
     try t.expect(std.mem.indexOf(u8, output, "call $memset") == null);
 }
 
@@ -196,7 +197,7 @@ test "RC-FRESH-RETURN-1 trap journal and ordinary role fallback remain emitted" 
     defer t.allocator.free(output);
     try t.expect(std.mem.indexOf(u8, output, "call $myl_qbe_rc_frame_enter") != null);
     try t.expect(std.mem.indexOf(u8, output, "@rcfreshreturnslow") != null);
-    try t.expect(std.mem.indexOf(u8, output, "call $myl_rc_native_take") != null);
+    try t.expect(std.mem.indexOf(u8, output, "# RC-GLUE-1 take") != null);
     try t.expect(std.mem.indexOf(u8, output, "call $myl_qbe_rc_frame_cleanup") != null);
     try t.expect(std.mem.indexOf(u8, output, "call $myl_qbe_fail_frame") != null);
 }
@@ -263,7 +264,7 @@ test "RC-FRESH-SPAN-1 whole ordinary fallback retains construction and transfer 
     defer t.allocator.free(output);
     try t.expect(std.mem.indexOf(u8, output, "@rcspanslow") != null);
     try t.expect(std.mem.indexOf(u8, output, "storew 4,") != null);
-    try t.expect(std.mem.indexOf(u8, output, "call $myl_rc_native_take") != null);
+    try t.expect(std.mem.indexOf(u8, output, "# RC-GLUE-1 take") != null);
     try t.expect(std.mem.indexOf(u8, output, "call $myl_qbe_rc_frame_enter") != null);
 }
 

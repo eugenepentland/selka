@@ -283,8 +283,9 @@ fn metadata() !std.json.Parsed(Metadata) {
 fn metadataCompiles(data: []const u8) !bool {
     var temporary = t.tmpDir(.{});
     defer temporary.cleanup();
-    try temporary.dir.writeFile(t.io, .{ .sub_path = "native_heap.h", .data = @embedFile("native_heap.h") });
-    try temporary.dir.writeFile(t.io, .{ .sub_path = "native_rc.h", .data = @embedFile("native_rc.h") });
+    inline for (.{ "native_heap.h", "native_rc.h", "native_rc_internal.h", "native_rc_stats.h", "native_rc_values.h", "native_rc_alloc.h", "native_collections.h", "native_rc_collections.h", "qbe_runtime.h" }) |header| {
+        try temporary.dir.writeFile(t.io, .{ .sub_path = header, .data = @embedFile(header) });
+    }
     try temporary.dir.writeFile(t.io, .{ .sub_path = "ownership.c", .data = data });
     const zig = @import("native_test_options").zig_path;
     const result = try std.process.run(t.allocator, t.io, .{
@@ -579,6 +580,7 @@ test "RC-OWNERSHIP-PLAN-1 raw resource slot cleanup clears its guard before clos
     const text = emitter.output.written();
     try t.expect(try at(text, "storew 0, %v2") < try at(text, "call $myl_native_owned_drop"));
     try t.expect(std.mem.indexOf(u8, text, "call $myl_rc_native_drop") == null);
+    try t.expect(std.mem.indexOf(u8, text, "# RC-GLUE-1 drop") == null);
     try t.expect(std.mem.indexOf(u8, text, "@rcreleased") != null);
 }
 
@@ -613,8 +615,8 @@ test "RC-OWNERSHIP-PLAN-1 borrowed parameter result publishes before frame clean
     );
     defer result.deinit();
     const text = try functionText(result.value, "selected");
-    try t.expect(try at(text, "myl_qbe_rc_frame_enter") < try at(text, "myl_rc_native_publish"));
-    try t.expect(try at(text, "myl_rc_native_publish") < try at(text, "myl_qbe_rc_frame_cleanup"));
+    try t.expect(try at(text, "myl_qbe_rc_frame_enter") < try at(text, "# RC-GLUE-1 publish"));
+    try t.expect(try at(text, "# RC-GLUE-1 publish") < try at(text, "myl_qbe_rc_frame_cleanup"));
     try t.expect(try at(text, "myl_qbe_rc_frame_cleanup") < try at(text, "myl_qbe_rc_frame_leave"));
     try t.expect(std.mem.indexOf(u8, text, "myl_qbe_cow_transfer") == null);
 }
@@ -634,9 +636,9 @@ test "RC-OWNERSHIP-PLAN-1 compiler journals owned runtime results and transactio
     );
     defer result.deinit();
     const text = try functionText(result.value, "main");
-    try t.expect(try at(text, "call $myl_native_list_new") < try at(text, "call $myl_rc_native_take"));
+    try t.expect(try at(text, "call $myl_native_list_new") < try at(text, "# RC-GLUE-1 take"));
     try t.expect(std.mem.indexOf(u8, text, "%rcwork") != null);
-    try t.expect(std.mem.indexOf(u8, text, "call $myl_qbe_rc_slot_drop") != null);
+    try t.expect(std.mem.indexOf(u8, text, "slot_drop(l %ctx") != null);
     try t.expect(std.mem.indexOf(u8, text, "call $myl_qbe_rc_frame_leave") != null);
 }
 
@@ -733,7 +735,7 @@ test "RC-OWNERSHIP-PLAN-1 semantic move from readonly parameter checks physical 
     const text = try functionText(result.value, "selected");
     try t.expect(std.mem.indexOf(u8, text, "=w loaduw") != null);
     try t.expect(std.mem.indexOf(u8, text, "@rccopy") != null);
-    try t.expect(std.mem.indexOf(u8, text, "call $myl_rc_native_retain") != null);
+    try t.expect(std.mem.indexOf(u8, text, "# RC-GLUE-1 retain") != null);
 }
 
 // spec: RC-NARROWED-MUTATION-1
@@ -775,7 +777,7 @@ test "RC augmented list field publishes the captured extended value" {
     defer result.deinit();
     const text = try functionText(result.value, "main");
     try t.expect(std.mem.indexOf(u8, text, "call $myl_native_list_extend") != null);
-    try t.expect(std.mem.indexOf(u8, text, "call $myl_rc_native_take") != null);
+    try t.expect(std.mem.indexOf(u8, text, "# RC-GLUE-1 take") != null);
 }
 
 // spec: RC-SEMANTIC-LOWERING-1
@@ -795,7 +797,7 @@ test "RC-SEMANTIC-LOWERING-1 borrowed fields loan before semantic publication" {
     );
     defer result.deinit();
     const text = try functionText(result.value, "main");
-    try t.expect(std.mem.indexOf(u8, text, "call $myl_rc_native_loan") != null);
-    try t.expect(std.mem.indexOf(u8, text, "call $myl_rc_native_publish") != null);
-    try t.expect(try at(text, "call $myl_rc_native_loan") < try at(text, "call $myl_rc_native_publish"));
+    try t.expect(std.mem.indexOf(u8, text, "# RC-GLUE-1 loan") != null);
+    try t.expect(std.mem.indexOf(u8, text, "# RC-GLUE-1 publish") != null);
+    try t.expect(try at(text, "# RC-GLUE-1 loan") < try at(text, "# RC-GLUE-1 publish"));
 }

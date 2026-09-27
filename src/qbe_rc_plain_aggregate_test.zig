@@ -35,6 +35,7 @@ test "RC-PLAIN-AGGREGATE-1 plain record field updates retain bounds without owni
     defer t.allocator.free(output);
     try t.expect(std.mem.indexOf(u8, output, "call $myl_rc_native_copy") == null);
     try t.expect(std.mem.indexOf(u8, output, "call $myl_rc_list_set") == null);
+    try t.expect(std.mem.indexOf(u8, output, "# RC-GLUE-1 list_set") == null);
     try t.expect(std.mem.indexOf(u8, output, "call $myl_qbe_fail_normalized_index_bounds") != null);
 }
 
@@ -54,8 +55,9 @@ test "RC-PLAIN-AGGREGATE-1 managed aggregate fields retain transactional publica
         \\    return 0
     );
     defer t.allocator.free(output);
-    try t.expect(std.mem.indexOf(u8, output, "call $myl_rc_list_set") != null);
-    try t.expect(std.mem.indexOf(u8, output, "call $myl_rc_native_retain") != null);
+    // The element replacement stages, retains and drops inside its glue.
+    try t.expect(std.mem.indexOf(u8, output, "# RC-GLUE-1 list_set") != null);
+    try t.expect(std.mem.indexOf(u8, output, "# RC-GLUE-1 retain") != null);
 }
 
 // spec-case: RC-PLAIN-AGGREGATE-1

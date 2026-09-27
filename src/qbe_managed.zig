@@ -167,7 +167,7 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
             if (op.kind == .append) {
                 if (rc_mode.enabled()) {
                     if (!try rc_append.emit(E, self, .{ .list = list, .element = element, .value = value_pointer, .output = output })) {
-                        try rc_collections.append(E, self, output, list, value_pointer);
+                        try rc_collections.append(E, self, element, output, list, value_pointer);
                         try self.require(output, allocation_failure);
                     }
                 } else if (self.loopAppend()) |presized| {
@@ -175,7 +175,7 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
                 } else if (self.needsRootProtocol()) {
                     try inlineAppend(E, self, list, element, value_pointer, output, stack);
                 } else {
-                    try rc_collections.append(E, self, output, list, value_pointer);
+                    try rc_collections.append(E, self, element, output, list, value_pointer);
                     try self.require(output, allocation_failure);
                 }
             } else {
@@ -424,7 +424,7 @@ fn emitConstruct(comptime E: type, self: *E, record: MakeRecord, stack: []const 
         for (0..record.fields) |i| {
             const ok = self.temp();
             const value_pointer = try operandPointer(E, self, element, base + i);
-            try rc_collections.append(E, self, ok, result, value_pointer);
+            try rc_collections.append(E, self, element, ok, result, value_pointer);
             try self.require(ok, allocation_failure);
         }
         // A text whose elements were not all constants is assembled scalar by
@@ -586,7 +586,7 @@ fn inlineAppend(comptime E: type, self: *E, list: usize, element: typed.Type, va
     if (scalar) {
         try self.print(" %v{d} =w call $myl_native_list_append_scalar(l %heap, l %v{d}, l %v{d})\n", .{ output, list, held });
     } else {
-        try rc_collections.append(E, self, output, list, value_pointer);
+        try rc_collections.append(E, self, element, output, list, value_pointer);
     }
     try self.require(output, allocation_failure);
     if (pushed) try self.restoreRoots();
@@ -855,7 +855,10 @@ fn inlineIndexWrite(comptime E: type, self: *E, write: IndexRead, failure: []con
     if (rc_mode.enabled() and !try plainElement(E, self, write.element)) {
         const value = try operandPointer(E, self, write.element, write.slot);
         const result = self.temp();
-        try self.print(" %v{d} =w call $myl_rc_list_set(l %heap, l %v{d}, l %v{d}, l %v{d})\n", .{ result, write.input, write.at, value });
+        const glue = @import("qbe_rc_glue.zig");
+        if (try glue.listRouted(E, self, write.element, .list_set)) {
+            try glue.listWrite(E, self, .{ .element = write.element, .result = result, .list = write.input, .index = write.at, .value = value });
+        } else try self.print(" %v{d} =w call $myl_rc_list_set(l %heap, l %v{d}, l %v{d}, l %v{d})\n", .{ result, write.input, write.at, value });
         try self.require(result, allocation_failure);
         return;
     }

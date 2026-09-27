@@ -3,6 +3,7 @@ const ownership = @import("ownership.zig");
 const cow = @import("cow_plan.zig");
 const frame = @import("qbe_rc_frame.zig");
 const runtime = @import("runtime_mode.zig");
+const glue_module = @import("qbe_rc_glue.zig");
 /// Native emitter failures.
 pub const Error = frame.Error;
 
@@ -52,8 +53,10 @@ fn localCall(comptime E: type, self: *E, index: usize, address: usize, guard: us
     // A prior borrowed receiver can leave a cleared guard with an H/LOAN
     // descriptor. This helper may publish a fresh O even from that empty slot.
     try frame.entry(E, self, index, ty, address);
+    try glue_module.uniqueFast(E, self, address, done);
     try self.print(" %v{d} =w call $myl_qbe_rc_unique_local(l %ctx, l extern ${s}, l %v{d}, l %v{d})\n", .{ done, try self.descriptor(ty), address, guard });
     try success(E, self, done);
+    try glue_module.uniqueJoin(E, self, done);
     if (maybe_held) try self.print("@rcuniquelocal{d}\n", .{label});
 }
 
@@ -85,6 +88,7 @@ pub fn field(comptime E: type, self: *E, target: Field) Error!void {
         try self.print(" %v{d} =l copy %v{d}\n", .{ container, value });
     } else try self.print(" %v{d} =l copy 0\n", .{container});
     const done = self.temp();
+    try glue_module.uniqueFast(E, self, target.address, done);
     const helper: []const u8 = if (target.held) "myl_qbe_rc_unique_held" else "myl_qbe_rc_unique_field";
     if (!target.held) if (target.loan) |loan| {
         try self.print(" jnz %v{d}, @rcfieldloan{d}, @rcfieldowner{d}\n@rcfieldloan{d}\n", .{ loan, done, done, done });
@@ -94,6 +98,7 @@ pub fn field(comptime E: type, self: *E, target: Field) Error!void {
     try self.print(" %v{d} =w call ${s}(l %ctx, l extern ${s}, l %v{d}, l %v{d})\n", .{ done, helper, try self.descriptor(target.ty), target.address, container });
     if (!target.held and target.loan != null) try self.print("@rcfieldjoined{d}\n", .{done});
     try success(E, self, done);
+    try glue_module.uniqueJoin(E, self, done);
 }
 
 /// A compiler-only receiver temporary aliases its prepared owning parent.

@@ -199,8 +199,11 @@ pub fn prepareBase(comptime E: type, self: *E, ty: typed.Type, base: usize) Erro
     if (managed) {
         const guard = try frame.guard(E, self, frame.pending(E, self) + 1);
         const unique = self.temp();
+        const glue = @import("qbe_rc_glue.zig");
+        try glue.uniqueFast(E, self, storage, unique);
         try self.print(" %v{d} =w call $myl_qbe_rc_unique_local(l %ctx, l extern ${s}, l %v{d}, l %v{d})\n", .{ unique, try self.descriptor(ty), storage, guard });
         try @import("qbe_rc_unique.zig").success(E, self, unique);
+        try glue.uniqueJoin(E, self, unique);
     }
     return if (managed) self.readValue(storage, ty) else storage;
 }
@@ -218,7 +221,7 @@ fn replace(comptime E: type, self: *E, field: Field) Error!void {
     try initialize(E, self, .{ .ty = field.ty, .source = field.source, .destination = work, .region = field.region, .operand = field.operand });
     try pending(E, self, field.ty, work);
     if (shape.unique_drop) try self.print(" call $myl_native_owned_drop(l %heap, l extern ${s}, l %v{d})\n", .{ try self.descriptor(field.ty), field.destination });
-    if (shape.counted) try self.print(" call $myl_rc_native_drop(l %heap, l extern ${s}, l %v{d})\n", .{ try self.descriptor(field.ty), field.destination });
+    if (shape.counted) try @import("qbe_rc_glue.zig").drop(E, self, .{ .ty = field.ty, .address = field.destination });
     try self.print(blit_value, .{ work, field.destination, (try self.layout(field.ty)).size });
     try frame.initialized(E, self, frame.pending(E, self), false);
 }

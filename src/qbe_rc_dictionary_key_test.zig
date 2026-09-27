@@ -22,7 +22,7 @@ test "RC dictionary key admits exact benchmark and preserves real iterator holds
     const il = try body(result.value, "main");
     try t.expectEqual(@as(usize, 2), std.mem.count(u8, il, marker));
     try t.expectEqual(@as(usize, 1), std.mem.count(u8, il, "# RC-DICTIONARY-TAIL-1"));
-    try t.expect(std.mem.indexOf(u8, il, "call $myl_rc_hold_acquire") != null);
+    try t.expect(std.mem.indexOf(u8, il, "# RC-GLUE-1 hold") != null);
     try t.expect(std.mem.indexOf(u8, il, "call $myl_qbe_rc_frame_enter") != null);
     try t.expect(std.mem.indexOf(u8, il, "call $myl_native_dictionary_write") != null);
     // Semantic pc64 -> head34 is physically certified only after the key tail.

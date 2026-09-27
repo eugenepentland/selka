@@ -20,8 +20,11 @@ fn callsIn(source: []const u8, name: []const u8, loans: bool) !usize {
     var manifest = try std.json.parseFromSlice(Manifest, t.allocator, emitted, .{ .ignore_unknown_fields = true });
     defer manifest.deinit();
     for (manifest.value.functions) |function| {
-        if (loans and std.mem.eql(u8, function.name, name)) return std.mem.count(u8, function.il, "call $myl_rc_native_loan");
-        if (std.mem.eql(u8, function.name, name)) return std.mem.count(u8, function.il, "call $myl_rc_native_publish") + std.mem.count(u8, function.il, "call $myl_rc_native_retain");
+        // RC-GLUE-1 routes counted operations through marked glue sites.
+        const il = function.il;
+        if (loans and std.mem.eql(u8, function.name, name)) return std.mem.count(u8, il, "call $myl_rc_native_loan") + std.mem.count(u8, il, "# RC-GLUE-1 loan");
+        if (std.mem.eql(u8, function.name, name)) return std.mem.count(u8, il, "call $myl_rc_native_publish") + std.mem.count(u8, il, "call $myl_rc_native_retain") +
+            std.mem.count(u8, il, "# RC-GLUE-1 publish") + std.mem.count(u8, il, "# RC-GLUE-1 retain");
     }
     return error.TestUnexpectedResult;
 }

@@ -101,7 +101,7 @@ test "RC nonheld captures retain actual iterator holds and owner frames" {
     defer manifest.deinit();
     const literal = try named(manifest.value, "literal");
     try t.expect(contains(literal, marker));
-    try t.expect(contains(literal, "myl_rc_hold_acquire"));
+    try t.expect(contains(literal, "# RC-GLUE-1 hold"));
     try t.expect(contains(literal, "myl_qbe_rc_frame_enter"));
     try t.expect(contains(literal, "myl_qbe_rc_unique_local"));
     try t.expect(contains(try named(manifest.value, "returned"), marker));

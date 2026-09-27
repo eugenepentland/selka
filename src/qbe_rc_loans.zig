@@ -3,7 +3,7 @@ const typed = @import("typed.zig");
 const frame = @import("qbe_rc_frame.zig");
 const slots = @import("qbe_rc_slots.zig");
 /// Exclusive private lifetime role, matching MYL_QBE_RC_LOAN.
-pub const flag: u32 = 16;
+pub const flag: u32 = @import("qbe_rc_glue.zig").loan_role;
 /// Native emitter failures shared with typed slot operations.
 pub const Error = slots.Error;
 
@@ -49,11 +49,18 @@ pub fn owner(comptime E: type, self: *E, index: usize) Error!usize {
 
 /// Copy stable bytes into pending storage and acquire only lifetime holds.
 pub fn prepare(comptime E: type, self: *E, ty: typed.Type, source: usize) Error!void {
-    const result = self.temp();
-    try self.print(" %v{d} =w call $myl_rc_native_loan(l %heap, l extern ${s}, l %rcwork, l %v{d})\n", .{
-        result, try self.descriptor(ty), source,
-    });
-    try slots.requireSuccess(E, self, result);
+    const glue = @import("qbe_rc_glue.zig");
+    if (try glue.routed(E, self, ty)) {
+        const work = self.temp();
+        try self.print(" %v{d} =l copy %rcwork\n", .{work});
+        try glue.loan(E, self, .{ .ty = ty, .destination = work, .source = source });
+    } else {
+        const result = self.temp();
+        try self.print(" %v{d} =w call $myl_rc_native_loan(l %heap, l extern ${s}, l %rcwork, l %v{d})\n", .{
+            result, try self.descriptor(ty), source,
+        });
+        try slots.requireSuccess(E, self, result);
+    }
     try frame.stableEntry(E, self, frame.pending(E, self), ty);
     try role(E, self, frame.pending(E, self), flag);
     try frame.initialized(E, self, frame.pending(E, self), true);

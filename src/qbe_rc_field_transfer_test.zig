@@ -103,6 +103,8 @@ test "RC closed field owner moves only with complete physical source and commit 
     const moved = std.mem.indexOf(u8, il, marker) orelse return error.TestUnexpectedResult;
     try t.expect(!contains(il[0..moved], "call $myl_rc_native_loan"));
     try t.expect(!contains(il[0..moved], "call $myl_rc_native_retain"));
+    try t.expect(!contains(il[0..moved], "# RC-GLUE-1 loan"));
+    try t.expect(!contains(il[0..moved], "# RC-GLUE-1 retain"));
     try t.expect(contains(il, "myl_qbe_rc_unique_local"));
     try t.expect(contains(il, "myl_qbe_rc_frame_enter"));
     try t.expect(!contains(try named(manifest.value, "observed"), marker));

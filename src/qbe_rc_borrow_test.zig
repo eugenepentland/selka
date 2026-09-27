@@ -42,7 +42,7 @@ test "RC-BORROW-ENTRY-1 native alternate owns a separate source map and no inter
     defer t.allocator.free(own_map);
     try t.expect(std.mem.indexOf(u8, borrowed.il, own_map) != null);
     try t.expect(std.mem.indexOf(u8, borrowed.il, "call $myl_rc_native_copy") == null);
-    try t.expect(std.mem.indexOf(u8, ordinary.il, "call $myl_rc_native_retain") != null);
+    try t.expect(std.mem.indexOf(u8, ordinary.il, "# RC-GLUE-1 retain") != null);
 }
 
 const Pair = struct { canonical: ?Function, alternate: ?Function };
@@ -89,8 +89,10 @@ test "RC-BORROW-LOOP-1 loop alternate keeps its source map and canonical entry" 
     const borrowed = pair.alternate orelse return error.TestUnexpectedResult;
     try t.expectEqual(ordinary.locations.len, borrowed.locations.len);
     try t.expect(std.mem.indexOf(u8, borrowed.il, "call $myl_rc_native_loan") == null);
+    try t.expect(std.mem.indexOf(u8, borrowed.il, "# RC-GLUE-1 loan") == null);
     try t.expect(std.mem.indexOf(u8, borrowed.il, "call $myl_rc_native_retain") == null);
-    try t.expect(std.mem.indexOf(u8, ordinary.il, "call $myl_rc_native_retain") != null);
+    try t.expect(std.mem.indexOf(u8, borrowed.il, "# RC-GLUE-1 retain") == null);
+    try t.expect(std.mem.indexOf(u8, ordinary.il, "# RC-GLUE-1 retain") != null);
     const map = try std.fmt.allocPrint(t.allocator, "${s}_meta", .{borrowed.symbol});
     defer t.allocator.free(map);
     try t.expect(std.mem.indexOf(u8, borrowed.il, map) != null);

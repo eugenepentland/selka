@@ -48,7 +48,9 @@ fn refused(manifest: Manifest) !void {
     for ([_][]const u8{ "managed", "aggregate" }) |name| {
         const il = try named(manifest, name);
         try t.expect(std.mem.indexOf(u8, il, "myl_rc_list_plain_ready") == null);
-        try t.expect(std.mem.indexOf(u8, il, "myl_rc_list_append") != null);
+        // Counted and plain aggregate elements append through their
+        // generated glue (RC-GLUE-1), which keeps the helper for growth.
+        try t.expect(std.mem.indexOf(u8, il, "# RC-GLUE-1 list_append") != null);
     }
 }
 

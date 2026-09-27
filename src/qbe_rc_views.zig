@@ -78,10 +78,12 @@ fn acquire(comptime E: type, self: *E, ty: typed.Type, payload: usize) Error!voi
     const work = try values.workAddress(E, self);
     const status = self.temp();
     const ok = self.temp();
-    try self.print(" storel 0, %v{d}\n", .{work});
-    try self.print(" %v{d} =w call $myl_rc_hold_acquire(l %heap, l %v{d}, l %v{d})\n", .{ status, payload, work });
-    try self.print(" %v{d} =w call $myl_qbe_rc_status(l %ctx, w %v{d})\n", .{ ok, status });
-    try @import("qbe_rc_unique.zig").success(E, self, ok);
+    if (!try @import("qbe_rc_glue.zig").holdAcquire(E, self, ty, payload, work)) {
+        try self.print(" storel 0, %v{d}\n", .{work});
+        try self.print(" %v{d} =w call $myl_rc_hold_acquire(l %heap, l %v{d}, l %v{d})\n", .{ status, payload, work });
+        try self.print(" %v{d} =w call $myl_qbe_rc_status(l %ctx, w %v{d})\n", .{ ok, status });
+        try @import("qbe_rc_unique.zig").success(E, self, ok);
+    }
     try entry(E, self, ty, frame.pending(E, self), work);
 }
 

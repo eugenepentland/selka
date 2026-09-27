@@ -77,7 +77,7 @@ test "RC record field reads keep generated helper fallback and later ordinary pu
     const il = try body(manifest.value, "floating");
     try t.expect(std.mem.indexOf(u8, il, marker) == null);
     try t.expect(std.mem.indexOf(u8, il, "call $myl_qbe_float_unary") != null);
-    try t.expect(std.mem.indexOf(u8, il, "call $myl_rc_native_loan") != null);
+    try t.expect(std.mem.indexOf(u8, il, "# RC-GLUE-1 loan") != null);
     try t.expect(std.mem.indexOf(u8, il, "call $myl_qbe_fail_normalized_index_bounds") != null);
 }
 
@@ -104,7 +104,7 @@ test "RC record field reads accept canonical incoming lifetime without asserting
     const il = try body(manifest.value, "external");
     try t.expect(std.mem.indexOf(u8, il, "# RC-CALLER-FIELD-READ-1") != null);
     try t.expect(std.mem.indexOf(u8, il, marker) == null);
-    const later_loan = std.mem.indexOf(u8, il, "call $myl_rc_native_loan") orelse return error.TestUnexpectedResult;
+    const later_loan = std.mem.indexOf(u8, il, "# RC-GLUE-1 loan") orelse return error.TestUnexpectedResult;
     const checked_read = std.mem.indexOf(u8, il, "call $myl_qbe_fail_normalized_index_bounds") orelse return error.TestUnexpectedResult;
     try t.expect(later_loan > checked_read);
     try t.expect(std.mem.indexOf(u8, il, "call $myl_qbe_fail_normalized_index_bounds") != null);

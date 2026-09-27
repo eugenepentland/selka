@@ -28,7 +28,7 @@ pub fn drop(comptime E: type, self: *E) Error!void {
         const descriptor = try self.descriptor(ty);
         try self.print(" call $myl_native_owned_drop(l %v{d}, l extern ${s}, l %v{d})\n", .{ heap, descriptor, address });
         if ((state.catalog.get(ty) catch return error.InternalError).counted) {
-            try self.print(" call $myl_rc_native_drop(l %v{d}, l extern ${s}, l %v{d})\n", .{ heap, descriptor, address });
+            try @import("qbe_rc_glue.zig").drop(E, self, .{ .ty = ty, .address = address, .heap = heap });
         }
     }
 }

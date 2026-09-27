@@ -3,6 +3,7 @@ const typed = @import("typed.zig");
 const runtime = @import("runtime_mode.zig");
 const state_model = @import("qbe_rc_state.zig");
 const dictionary = @import("rc_dictionary_tail.zig");
+const glue = @import("qbe_rc_glue.zig");
 /// Errors shared with the native emitter.
 pub const Error = state_model.Error;
 /// Frozen C journal entry/frame sizes, verified against the runtime header.
@@ -199,9 +200,27 @@ pub fn drop(comptime E: type, self: *E, index: usize) Error!void {
     const flag = try guard(E, self, index);
     try self.print(" %v{d} =w loaduw %v{d}\n jnz %v{d}, @rcslotdrop{d}, @rcslotdone{d}\n@rcslotdrop{d}\n", .{ live, flag, live, label, label, label });
     const pointer = try entryField(E, self, index, 0);
+    // RC-GLUE-1: a statically typed entry drops through its type's glue,
+    // which confirms the entry's type and role before its fast path.
+    if (staticType(E, self, index)) |ty| if (try glue.routed(E, self, ty)) {
+        try glue.slotDrop(E, self, ty, pointer);
+        try self.print("@rcslotdone{d}\n", .{label});
+        return;
+    };
     try self.print(" call $myl_qbe_rc_slot_drop(l %ctx, l %v{d})\n", .{pointer});
     try self.print("@rcslotdone{d}\n", .{label});
 }
+
+/// The type an entry is expected to carry at this pc: a local's declared type
+/// or the current operand stack's type. The drop checks it at run time.
+fn staticType(comptime E: type, self: *E, index: usize) ?typed.Type {
+    if (index < localCount(E, self)) return self.function.scope.locals[index].ty;
+    if (index >= pending(E, self)) return null;
+    const stack = self.states[self.pc] orelse return null;
+    const operand = index - localCount(E, self);
+    return if (operand < stack.len) stack[operand] else null;
+}
+
 fn localCount(comptime E: type, self: *E) usize {
     return self.function.scope.locals.len;
 }

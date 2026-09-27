@@ -80,7 +80,7 @@ test "RC named record home remains owning through rebind and typed mut call" {
     try t.expectEqual(@as(usize, 1), std.mem.count(u8, il, marker));
     // The two list constructors retain their existing private-input fallback.
     // Both whole-record capture loans in the loop have disappeared.
-    try t.expectEqual(@as(usize, 2), std.mem.count(u8, il, "call $myl_rc_native_loan"));
+    try t.expectEqual(@as(usize, 2), std.mem.count(u8, il, "# RC-GLUE-1 loan"));
     const publication = std.mem.indexOf(u8, il, marker) orelse return error.TestUnexpectedResult;
     try t.expect(std.mem.lastIndexOf(u8, il[0..publication], " =l copy %l") != null);
     try t.expect(std.mem.indexOf(u8, try body(result.value, "named_held"), marker) == null);
@@ -115,7 +115,9 @@ test "RC-PLAIN-RECORD-WRITE-1 exact counter loop leaves managed siblings untouch
     const il = try body(result.value, "increment");
     try t.expectEqual(@as(usize, 1), std.mem.count(u8, il, marker));
     try t.expect(std.mem.indexOf(u8, il, "call $myl_rc_native_loan") == null);
+    try t.expect(std.mem.indexOf(u8, il, "# RC-GLUE-1 loan") == null);
     try t.expect(std.mem.indexOf(u8, il, "call $myl_rc_native_retain") == null);
+    try t.expect(std.mem.indexOf(u8, il, "# RC-GLUE-1 retain") == null);
     try t.expect(std.mem.indexOf(u8, il, "call $myl_rc_native_drop") == null);
     try t.expect(std.mem.indexOf(u8, il, "call $myl_qbe_fail_overflow_op") != null);
 }

@@ -44,8 +44,8 @@ test "RC aggregate partial construction journals fields before guarded takes or 
     // Pair has two pointer fields. Other token moves can clear an eight-byte
     // source before this constructor initializes its sixteen-byte body.
     const cleared = try location(text, "w 0, l 16)");
-    const taken = cleared + try location(text[cleared..], "call $myl_rc_native_take");
-    const copied = cleared + try location(text[cleared..], "call $myl_rc_native_retain");
+    const taken = cleared + try location(text[cleared..], "# RC-GLUE-1 take");
+    const copied = cleared + try location(text[cleared..], "# RC-GLUE-1 retain");
     try t.expect(cleared < taken and taken < copied);
     try t.expect(std.mem.indexOf(u8, text[cleared..taken], "storew 1") != null);
     try t.expect(std.mem.indexOf(u8, text[taken..copied], "storew 0") != null);
@@ -53,7 +53,7 @@ test "RC aggregate partial construction journals fields before guarded takes or 
     try t.expect(try location(text, "call $myl_qbe_rc_frame_cleanup") > copied);
     // A semantic publication can retire a private loan before construction.
     // The constructor still adopts its completed inputs before frame cleanup.
-    try t.expect(try location(text, "call $myl_rc_native_publish") < cleared);
+    try t.expect(try location(text, "# RC-GLUE-1 publish") < cleared);
 }
 
 // spec: RC-PLAIN-PROJECTION-1
@@ -87,7 +87,7 @@ test "RC plain inline fields survive the release of their owning parent" {
     var manifest = try std.json.parseFromSlice(Manifest, t.allocator, emitted, .{ .ignore_unknown_fields = true });
     defer manifest.deinit();
     const text = try findFunction(manifest.value, "selected");
-    const release = try location(text, "call $myl_qbe_rc_slot_drop");
+    const release = try location(text, "slot_drop(l %ctx");
     try t.expect(hasPlainSnapshot(text[0..release]));
 }
 
@@ -183,7 +183,7 @@ test "RC scalar arithmetic with a receiver loan emits no owned input drops" {
     var manifest = try std.json.parseFromSlice(Manifest, t.allocator, emitted, .{ .ignore_unknown_fields = true });
     defer manifest.deinit();
     const text = try findFunction(manifest.value, "total");
-    try t.expectEqual(@as(usize, 0), std.mem.count(u8, text, "call $myl_qbe_rc_slot_drop"));
+    try t.expectEqual(@as(usize, 0), std.mem.count(u8, text, "slot_drop(l %ctx"));
 }
 
 // spec-case: RC-FRAME-1
@@ -196,7 +196,7 @@ test "RC empty slot releases branch around native cleanup" {
     // main still releases its original list after the call owns Pair's fields;
     // pair itself directly publishes inputs already consumed by its fields.
     const text = try findFunction(manifest.value, "main");
-    const release = try location(text, "call $myl_qbe_rc_slot_drop");
+    const release = try location(text, "slot_drop(l %ctx");
     try t.expect(std.mem.indexOf(u8, text[0..release], "@rcslotdrop") != null);
     try t.expect(std.mem.indexOf(u8, text[release..], "@rcslotdone") != null);
 }

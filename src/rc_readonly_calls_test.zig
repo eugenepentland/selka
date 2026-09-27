@@ -104,6 +104,8 @@ fn rawReader(il: []const u8) bool {
     return std.mem.indexOf(u8, il, "call $myl_qbe_rc_frame_enter") == null and
         std.mem.indexOf(u8, il, "call $myl_rc_native_loan") == null and
         std.mem.indexOf(u8, il, "call $myl_rc_native_retain") == null and
+        std.mem.indexOf(u8, il, "# RC-GLUE-1 loan") == null and
+        std.mem.indexOf(u8, il, "# RC-GLUE-1 retain") == null and
         std.mem.indexOf(u8, il, "call $myl_qbe_fail_frame") != null;
 }
 

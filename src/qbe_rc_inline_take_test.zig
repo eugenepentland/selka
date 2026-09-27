@@ -51,7 +51,7 @@ test "RC-INLINE-TAKE-1 ordinary moves preflight headers and preserve fallible fa
     try t.expect(contains(made, "@rcmoveheader"));
     try t.expect(contains(made, "@rcmoveslow"));
     try t.expect(contains(made, "=w cnel"));
-    try t.expect(contains(made, "call $myl_rc_native_take"));
+    try t.expect(contains(made, "# RC-GLUE-1 take"));
     try t.expect(!contains(try named(manifest.value, "held"), "@rcmoveheader"));
 }
 
@@ -89,7 +89,7 @@ test "RC-DISJOINT-TAKE-1 completed operand publications occupy separate pending 
     const forwarded = try named(manifest.value, "forwarded");
     try t.expect(!contains(forwarded, "@rcmovecheck"));
     try t.expect(contains(forwarded, "@rcmoveheader"));
-    try t.expect(contains(forwarded, "call $myl_rc_native_take"));
+    try t.expect(contains(forwarded, "# RC-GLUE-1 take"));
     try t.expect(contains(try named(manifest.value, "borrowed"), "@rcmovecheck"));
 }
 
