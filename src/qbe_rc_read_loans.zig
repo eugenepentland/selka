@@ -98,7 +98,8 @@ fn valid(comptime E: type, self: *E, target: usize, check: *Check, catalog: *sha
             if (@backingInt(operation.owner) != target) return false;
             if (operation.kind != .length and operation.kind != .read) return false;
             if (!try terminal(E, self, operation.output, catalog)) {
-                if (operation.kind != .read or !child(E, self, pc, check)) return false;
+                if (operation.kind != .read) return false;
+                if (try @import("qbe_rc_plain_projection.zig").end(E, self, pc, catalog) == null and !child(E, self, pc, check)) return false;
             }
             read = true;
         } else if (!try scalar(E, self, op, catalog)) return false;
@@ -132,7 +133,8 @@ fn child(comptime E: type, self: *E, pc: usize, check: *Check) bool {
 
 /// The next store adopts this managed read as an anchored compiler loan.
 /// Its consumed index is plain, so the result's operand guard stays clear.
-pub fn borrowedResult(comptime E: type, self: *E, op: Op) bool {
+pub fn borrowedResult(comptime E: type, self: *E, op: Op) Error!bool {
+    if (try @import("qbe_rc_plain_projection.zig").borrowed(E, self, op)) return true;
     if (op != .buffer_operation or op.buffer_operation.kind != .read) return false;
     const code = self.function.scope.instructions;
     if (self.pc + 1 >= code.len or code[self.pc + 1].op != .store_local) return false;
