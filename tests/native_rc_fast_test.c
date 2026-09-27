@@ -497,6 +497,28 @@ static void flat_semantic_publication(void) {
     myl_rc_owner_release(&heap, list);
     finish(&heap);
 }
+// spec: RC-FLAT-TAKE-1
+static void flat_take_publishes_in_place(void) {
+    myl_native_heap heap;
+    start(&heap);
+    assert(myl_rc_descriptor_import(&heap, &item_descriptor) == MYL_RC_OK);
+    void *text = bytes8(&heap);
+    Item value = {text, 9}, out = {0};
+    assert(myl_rc_native_take(&heap, &first, &out, &value, 0));
+    assert(out.text == text && out.n == 9 && !value.text && !value.n && header(text)->owners == 1);
+    /* Taking a slot onto itself keeps the value. */
+    assert(myl_rc_native_take(&heap, &first, &out, &out, 0));
+    assert(out.text == text && out.n == 9 && header(text)->owners == 1);
+    /* With a queued death the staged path still publishes the same value. */
+    Outer *body = myl_native_heap_alloc(&heap, &outer, 1);
+    assert(body);
+    myl_rc_edge_release(&heap, body);
+    Item again = {0};
+    assert(myl_rc_native_take(&heap, &first, &again, &out, 0));
+    assert(again.text == text && !out.text && !heap.rc->dead.head && header(text)->owners == 1);
+    myl_rc_native_drop(&heap, &first, &again);
+    finish(&heap);
+}
 int myl_rc_fast_verify(void) {
     variant_plan_layout();
     variant_plan_operations();
@@ -511,12 +533,13 @@ int myl_rc_fast_verify(void) {
     raw_bytes_and_blocks();
     list_clone_spans();
     flat_semantic_publication();
-    return 13;
+    flat_take_publishes_in_place();
+    return 14;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
-    assert(myl_rc_fast_verify() == 13);
-    puts("native RC fast paths: 13 tests passed");
+    assert(myl_rc_fast_verify() == 14);
+    puts("native RC fast paths: 14 tests passed");
     return 0;
 }
 #endif

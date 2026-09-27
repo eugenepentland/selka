@@ -259,10 +259,10 @@ static int ranges_overlap(size_t a, size_t a_size, size_t b, size_t b_size) {
 }
 /* Plan-wide layout proof: coexisting leaves are disjoint pointer words and no
  * leaf covers a tag word, so clearing one edge never changes which arms live. */
-static int flat_disjoint(const myl_rc_flat *flat, unsigned count) {
+static int flat_disjoint(const myl_rc_leaf *leaves, unsigned count) {
     for (unsigned i = 0; i < count; ++i)
         for (unsigned j = 0; j < count; ++j) {
-            const myl_rc_leaf *a = &flat->leaves[i], *b = &flat->leaves[j];
+            const myl_rc_leaf *a = &leaves[i], *b = &leaves[j];
             if (i < j && leaves_coexist(a, b) && ranges_overlap(a->offset, sizeof(void *), b->offset, sizeof(void *)))
                 return 0;
             if (b->tag_offset != MYL_RC_FLAT_ALWAYS &&
@@ -270,26 +270,28 @@ static int flat_disjoint(const myl_rc_flat *flat, unsigned count) {
         }
     return 1;
 }
-/* Precompute live-leaf sets; one tag word with small tags gets a per-arm table. */
-static void flat_masks(myl_rc_flat *flat) {
-    for (unsigned i = 0; i < flat->count; ++i) flat->offsets[i] = flat->leaves[i].offset;
-    flat->all = (uint16_t)((1u << flat->count) - 1);
-    flat->always = 0;
-    flat->arm_offset = MYL_RC_FLAT_ALWAYS;
+/* Publish offsets and live-leaf sets. Every conditional leaf must test the
+ * same tag word with a tag below MYL_RC_FLAT_ARMS (one variant per plan), so
+ * any live set is one table load; other layouts keep the general walker. */
+static int flat_masks(myl_rc_flat *flat, const myl_rc_leaf *leaves, unsigned count) {
     uint32_t word = MYL_RC_FLAT_ALWAYS;
-    int table = 1;
-    for (unsigned i = 0; i < flat->count; ++i) {
-        const myl_rc_leaf *leaf = &flat->leaves[i];
-        if (leaf->tag_offset == MYL_RC_FLAT_ALWAYS) { flat->always |= (uint16_t)(1u << i); continue; }
-        if (word == MYL_RC_FLAT_ALWAYS) word = leaf->tag_offset;
-        if (leaf->tag_offset != word || leaf->tag >= MYL_RC_FLAT_ARMS) table = 0;
+    uint16_t always = 0;
+    for (unsigned i = 0; i < count; ++i) {
+        if (leaves[i].tag_offset == MYL_RC_FLAT_ALWAYS) { always |= (uint16_t)(1u << i); continue; }
+        if (word == MYL_RC_FLAT_ALWAYS) word = leaves[i].tag_offset;
+        if (leaves[i].tag_offset != word || leaves[i].tag >= MYL_RC_FLAT_ARMS) return 0;
     }
-    for (unsigned tag = 0; tag < MYL_RC_FLAT_ARMS; ++tag) flat->arms[tag] = flat->always;
-    if (!table || word == MYL_RC_FLAT_ALWAYS) return;
-    for (unsigned i = 0; i < flat->count; ++i)
-        if (flat->leaves[i].tag_offset != MYL_RC_FLAT_ALWAYS)
-            flat->arms[flat->leaves[i].tag] |= (uint16_t)(1u << i);
+    for (unsigned i = 0; i < count; ++i) {
+        if (leaves[i].offset > UINT16_MAX - sizeof(void *)) return 0;
+        flat->offsets[i] = (uint16_t)leaves[i].offset;
+    }
+    flat->all = (uint16_t)((1u << count) - 1);
+    flat->always = always;
     flat->arm_offset = word;
+    for (unsigned tag = 0; tag < MYL_RC_FLAT_ARMS; ++tag) flat->arms[tag] = always;
+    for (unsigned i = 0; i < count; ++i)
+        if (leaves[i].tag_offset != MYL_RC_FLAT_ALWAYS) flat->arms[leaves[i].tag] |= (uint16_t)(1u << i);
+    return 1;
 }
 /* This is admission to an optional optimization, not a type-depth limit.
  * Bounded inspection refuses deep/wide metadata and keeps the general walker.
@@ -309,6 +311,7 @@ static void flat_build(myl_rc_binding *binding) {
         .tag_offset = MYL_RC_FLAT_ALWAYS}};
     size_t depth = 1, inspected = 0;
     unsigned count = 0, loanable = 1, conditional = 0;
+    myl_rc_leaf leaves[MYL_RC_FLAT_LEAVES];
     while (depth) {
         /* Root counts as a frame. Stay within the generic loan visitor's
          * eight local frames; deeper loans retain its allocation/refusal. */
@@ -330,7 +333,7 @@ static void flat_build(myl_rc_binding *binding) {
             if (type->collection_kind == 5 && type->element) loanable = 0;
             if (kind != MYL_RC_SHAPE_POINTER || type->size != sizeof(void *) || count == MYL_RC_FLAT_LEAVES ||
                 frame->offset > UINT32_MAX - sizeof(void *)) return;
-            flat->leaves[count++] = (myl_rc_leaf){.offset = (uint32_t)frame->offset,
+            leaves[count++] = (myl_rc_leaf){.offset = (uint32_t)frame->offset,
                 .tag_offset = frame->tag_offset, .tag = frame->tag};
             --depth;
             continue;
@@ -383,11 +386,10 @@ static void flat_build(myl_rc_binding *binding) {
         frames[depth++] = (flat_frame){.type = child, .shape = child_shape, .offset = offset,
             .tag_offset = tag_offset, .tag = tag};
     }
-    if (!flat_disjoint(flat, count)) return;
+    if (!flat_disjoint(leaves, count) || !flat_masks(flat, leaves, count)) return;
     flat->count = count;
     flat->loanable = loanable;
     flat->conditional = conditional;
-    flat_masks(flat);
 }
 /* One reservation keeps all copied metadata addresses stable until teardown. */
 static myl_rc_batch *build_batch(shape_builder *builder, const myl_rc_module *module, int persistent) {

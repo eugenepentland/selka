@@ -42,38 +42,25 @@ typedef struct {
     uint32_t arm_offset;
     /* The native element size, copied so flat paths never load the type. */
     size_t size;
-    /* Live-leaf bit sets, bit i for leaf i. `all` is every leaf. When every
+    /* Live-leaf bit sets, bit i for offsets[i]. `all` is every leaf. Every
      * conditional leaf tests the one tag word at arm_offset with a tag below
-     * MYL_RC_FLAT_ARMS, arms[tag] is that arm's live set and `always` (the
-     * unconditional leaves) serves every other tag; otherwise arm_offset is
-     * MYL_RC_FLAT_ALWAYS and each conditional leaf is tested on its own. */
+     * MYL_RC_FLAT_ARMS: arms[tag] is that arm's live set and `always` (the
+     * unconditional leaves) serves every other tag. */
     uint16_t all, always, arms[MYL_RC_FLAT_ARMS];
-    uint32_t offsets[MYL_RC_FLAT_LEAVES];
-    myl_rc_leaf leaves[MYL_RC_FLAT_LEAVES];
+    /* Leaf byte offsets; plans with a leaf beyond 64 KiB keep the walker. */
+    uint16_t offsets[MYL_RC_FLAT_LEAVES];
 } myl_rc_flat;
 _Static_assert(MYL_RC_FLAT_LEAVES <= 16, "live-leaf sets are 16 bits");
 /* alloc_class caches the production allocator's size class for a single
  * element (class + 1; 0 unknown or not slab-sized). */
 typedef struct { myl_rc_descriptor descriptor; myl_rc_flat flat; unsigned alloc_class; } myl_rc_binding;
 _Static_assert(offsetof(myl_rc_binding, descriptor) == 0, "indexed descriptor is its private binding prefix");
-static inline int myl_rc_leaf_live(const myl_rc_leaf *leaf, const unsigned char *base) {
-    if (leaf->tag_offset == MYL_RC_FLAT_ALWAYS) return 1;
-    uint32_t tag;
-    __builtin_memcpy(&tag, base + leaf->tag_offset, sizeof tag);
-    return tag == leaf->tag;
-}
 /* The leaves live in the value at base, read before any edge is changed. */
 static inline unsigned myl_rc_flat_live(const myl_rc_flat *flat, const unsigned char *base) {
     if (!flat->conditional) return flat->all;
-    if (flat->arm_offset != MYL_RC_FLAT_ALWAYS) {
-        uint32_t tag;
-        __builtin_memcpy(&tag, base + flat->arm_offset, sizeof tag);
-        return tag < MYL_RC_FLAT_ARMS ? flat->arms[tag] : flat->always;
-    }
-    unsigned live = 0;
-    for (unsigned i = 0; i < flat->count; ++i)
-        if (myl_rc_leaf_live(&flat->leaves[i], base)) live |= 1u << i;
-    return live;
+    uint32_t tag;
+    __builtin_memcpy(&tag, base + flat->arm_offset, sizeof tag);
+    return tag < MYL_RC_FLAT_ARMS ? flat->arms[tag] : flat->always;
 }
 typedef struct myl_rc_batch {
     struct myl_rc_batch *next;

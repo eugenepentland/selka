@@ -125,6 +125,12 @@ int myl_rc_native_take(myl_native_heap *heap, const myl_native_type *type, void 
         if (status==MYL_RC_OK) memcpy(dst,&staged,sizeof staged);
         return publication_status(heap,status);
     }
+    /* A flat TAKE either refuses before writing or completes; with no queued
+     * death it cannot drain, so it may publish straight into the output. */
+    if (!heap->rc->dead.head && dst!=src) {
+        int direct=flat_transfer(heap,binding,dst,src,region,MYL_RC_TAKE);
+        if (direct>=0) return publication_status(heap,(myl_rc_status)direct);
+    }
     unsigned char local[128];
     void *staged=type->size<=sizeof local?local:myl_rc_storage_bytes(heap,type->size,0);
     if (!staged) return 0;
