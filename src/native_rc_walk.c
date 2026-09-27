@@ -52,7 +52,8 @@ static unsigned walk(myl_native_heap *heap, unsigned action) {
  * each edge, then drop its O or H token, enqueueing any death. `unloan`
  * drops H for every leaf. The caller drains. */
 static void shallow_release(myl_native_heap *heap, const myl_rc_shape *shape, unsigned char *address, int unloan) {
-    myl_rc_shallow leaves = {.shape = shape, .tags = address};
+    myl_rc_shallow leaves;
+    myl_rc_shallow_begin(&leaves, shape, address);
     size_t offset;
     myl_rc_shape_kind kind;
     while (myl_rc_shallow_next(&leaves, &offset, &kind)) {
@@ -68,7 +69,8 @@ unsigned myl_rc_value_region(myl_native_heap *heap, const myl_rc_shape *source, 
     const myl_rc_shape *shape = myl_rc_shape_find(heap, source);
     myl_rc_invariant(shape && (!shape->size || address));
     if (myl_rc_shallow_admits(shape)) {
-        myl_rc_shallow leaves = {.shape = shape, .tags = address};
+        myl_rc_shallow leaves;
+        myl_rc_shallow_begin(&leaves, shape, address);
         size_t offset;
         myl_rc_shape_kind kind;
         unsigned region = 0;
@@ -241,7 +243,8 @@ void myl_rc_value_seed(myl_native_heap *heap, const myl_rc_shape *source_shape,
     int shallow = myl_rc_shallow_admits(shape);
     for (size_t i = 0; i < count; ++i) {
         if (shallow) {
-            myl_rc_shallow leaves = {.shape = shape, .tags = cursor};
+            myl_rc_shallow leaves;
+            myl_rc_shallow_begin(&leaves, shape, cursor);
             size_t offset;
             myl_rc_shape_kind kind;
             while (myl_rc_shallow_next(&leaves, &offset, &kind)) memset(cursor + offset, 0, sizeof(void *));

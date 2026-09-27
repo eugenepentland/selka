@@ -72,9 +72,11 @@ typedef struct {
      * Without it a descriptor with no custom edges uses the generic body copy. */
     myl_rc_status (*clone)(myl_native_heap *, const void *, unsigned, void **);
     /* Iterative clone protocol: shell owns private backing but initializes no
-     * logical value edges. next yields one empty destination/source slot pair
-     * without allocation or hashing, returning 1 for a pair and 0 at the end.
-     * A terminal shell with no remaining logical edges leaves next NULL. */
+     * logical value edges; it seeds every value next will yield (source bytes
+     * copied, edges cleared, as myl_rc_value_seed). next yields one such empty
+     * destination/source slot pair without allocation or hashing, returning 1
+     * for a pair and 0 at the end. A terminal shell with no remaining logical
+     * edges leaves next NULL. */
     myl_rc_status (*shell)(myl_native_heap *, const void *, unsigned, void **);
     int (*next)(myl_native_heap *, const void *, void *, size_t *, myl_rc_slot *, myl_rc_slot *);
 } myl_rc_descriptor;

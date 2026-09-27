@@ -154,8 +154,9 @@ static void cloned_prefix_refusal_discards_marks(void) {
     header(right)->owners=2; myl_rc_pin_release(&heap,&pin);
     myl_rc_owner_release(&heap,left); myl_rc_owner_release(&heap,right); myl_rc_owner_release(&heap,parent); finish(&heap);
 }
-/* A refused direct publication commits no history. The direct pointer path
- * needs no metadata, so it also publishes at the budget ceiling. */
+/* spec-case: RC-SEMANTIC-POINTER-1. A refused direct publication commits no
+ * history. The direct pointer path needs no metadata, so it also publishes at
+ * the budget ceiling. */
 static void metadata_refusal_preserves_history(void) {
     myl_native_heap heap; start(&heap);
     void *source=mapping(&heap),*out=NULL;

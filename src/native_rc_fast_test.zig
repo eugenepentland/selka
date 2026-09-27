@@ -9,6 +9,9 @@ extern fn myl_rc_fast_verify() c_int;
 // spec: RC-STORAGE-TEARDOWN-1
 // spec: RC-SCOPE-SPARE-1
 // spec: RC-CHECKED-1
+// spec: RC-SHALLOW-WALK-1
+// spec: RC-LIST-DIRECT-APPEND-1
+// spec: RC-RAW-BLOCK-1
 test "RC runtime fast paths keep ownership, accounting and teardown exact" {
-    try std.testing.expectEqual(@as(c_int, 8), myl_rc_fast_verify());
+    try std.testing.expectEqual(@as(c_int, 11), myl_rc_fast_verify());
 }

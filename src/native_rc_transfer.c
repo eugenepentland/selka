@@ -51,7 +51,8 @@ static myl_rc_status visit(transfer_walk *walk, const myl_rc_shape *shape, void 
     if (shape->kind == MYL_RC_SHAPE_POINTER || shape->kind == MYL_RC_SHAPE_HOLD_POINTER)
         return action(walk, destination, source, shape->kind);
     if (myl_rc_shallow_admits(shape)) {
-        myl_rc_shallow leaves = {.shape = shape, .tags = source};
+        myl_rc_shallow leaves;
+        myl_rc_shallow_begin(&leaves, shape, source);
         size_t offset;
         myl_rc_shape_kind kind;
         while (myl_rc_shallow_next(&leaves, &offset, &kind)) {
@@ -102,9 +103,10 @@ static void *reserve_items(myl_native_heap *heap, void *old, size_t *capacity, s
 /* No mark is visible before all ownership acquisitions and clone filling
  * succeed. A failed transfer discards this journal before any cleanup callback. */
 static myl_rc_status queue_mark(transfer_walk *walk, void *payload) {
-    if (!walk->clones->memo.semantic || !myl_rc_native_mutable(payload)) return MYL_RC_OK;
+    if (!walk->clones->memo.semantic || !payload) return MYL_RC_OK;
     myl_native_object *header = (myl_native_object *)payload - 1;
     if (header->mark & (MYL_NATIVE_OBJECT_IMMORTAL | MYL_NATIVE_OBJECT_SHARED)) return MYL_RC_OK;
+    if (!myl_rc_native_mutable(payload)) return MYL_RC_OK;
     myl_rc_invariant(!(header->mark & MYL_NATIVE_OBJECT_PINNED));
     clone_work *work = walk->clones;
     void **items = reserve_items(walk->heap, work->memo.marks.items, &work->memo.marks.capacity,
@@ -379,7 +381,9 @@ static myl_rc_status transfer_children(transfer_walk *walk, void *destination, c
     return MYL_RC_OK;
 }
 /* A clone frame finishes one direct value before resuming its next cursor.
- * New pinned children append frames; no clone calls copy recursively. */
+ * New pinned children append frames; no clone calls copy recursively. Every
+ * shell (and the generic body copy) seeds its destination, so each yielded
+ * pair already holds the source bytes with empty edges. */
 static myl_rc_status finish_clones(transfer_walk *walk) {
     clone_work *work = walk->clones;
     walk->mode = MYL_RC_COPY;
@@ -392,7 +396,6 @@ static myl_rc_status finish_clones(transfer_walk *walk) {
         myl_rc_status status = prepare_frames(walk, shape);
         if (status != MYL_RC_OK) return status;
         walk->region = to.region;
-        myl_rc_value_seed(walk->heap, shape, to.address, from.address, 1);
         status = visit(walk, shape, to.address, from.address, transfer_pointer);
         if (status != MYL_RC_OK) return status;
     }

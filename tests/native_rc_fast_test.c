@@ -1,9 +1,12 @@
 /* Evidence for the RC runtime's internal fast paths: probe-based metadata,
  * conditional (variant) flat plans, immediate retirement of edge-free objects,
  * recycled scope journal nodes and the allocator's heap-wide teardown API. */
+#include "native_collections.h"
 #include "native_rc_alloc.h"
+#include "native_rc_collections.h"
 #include "native_rc_internal.h"
 #include "native_rc_values.h"
+#include "native_regions.h"
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -299,6 +302,126 @@ static void checked_mode_in_counting_builds(void) {
     finish(&heap);
 }
 
+/* A record {O ptr, int, H ptr} and the choice variant are shallow (depth 2). */
+static const myl_rc_shape held = {.size = 8, .kind = MYL_RC_SHAPE_HOLD_POINTER};
+static const myl_rc_field mixed_edges[] = {{.shape = &owned}, {.offset = 8, .shape = &scalar}, {.offset = 16, .shape = &held}};
+static const myl_rc_shape mixed_shape = {.size = 24, .kind = MYL_RC_SHAPE_RECORD, .as.record = {mixed_edges, 3}};
+static const myl_rc_field pick_edges[] = {{.offset = 8, .shape = &owned, .tag = 0}, {.offset = 8, .shape = &scalar, .tag = 1}};
+static const myl_rc_shape pick_shape = {.size = 16, .kind = MYL_RC_SHAPE_VARIANT, .as.variant = {pick_edges, 2, 0}};
+static const myl_rc_shape *const shallow_shapes[] = {&mixed_shape, &pick_shape};
+static const myl_rc_module shallow_module = {.abi = MYL_RC_ABI_VERSION, .shapes = shallow_shapes, .shape_count = 2};
+typedef struct { uint64_t tag; void *value; } Pick;
+typedef struct { void *owner; uint64_t word; void *view; } Mixed;
+// spec: RC-SHALLOW-WALK-1
+static void shallow_shapes_skip_the_walker(void) {
+    myl_native_heap heap;
+    start(&heap);
+    assert(myl_rc_module_register(&heap, &shallow_module) == MYL_RC_OK);
+    const myl_rc_shape *mixed = myl_rc_shape_find(&heap, &mixed_shape);
+    assert(mixed && myl_rc_shallow_admits(mixed) && myl_rc_shallow_admits(myl_rc_shape_find(&heap, &pick_shape)));
+    assert(!myl_rc_shallow_admits(myl_rc_shape_find(&heap, &choice_shape)));
+    void *owner = bytes8(&heap), *view = bytes8(&heap);
+    Mixed value = {owner, 99, view}, seeded = {0};
+    /* Seeding copies scalars and clears O and H leaves alike. */
+    myl_rc_value_seed(&heap, &mixed_shape, &seeded, &value, 1);
+    assert(!seeded.owner && seeded.word == 99 && !seeded.view && !heap.rc->walk.depth);
+    /* Copy acquires O for the owner leaf and H for the view leaf. */
+    myl_rc_slot to = {.shape = &mixed_shape, .address = &seeded}, from = {.shape = &mixed_shape, .address = &value};
+    assert(myl_rc_value_copy(&heap, &to, &from) == MYL_RC_OK);
+    assert(seeded.owner == owner && seeded.view == view && header(owner)->owners == 2 && header(view)->holds == 1);
+    assert(!myl_rc_value_region(&heap, &mixed_shape, &seeded));
+    /* Release drops O and H, clearing both edges before any death. */
+    myl_rc_edges_release(&heap, &mixed_shape, &seeded, 1);
+    myl_rc_drain(&heap);
+    assert(!seeded.owner && !seeded.view && seeded.word == 99);
+    assert(header(owner)->owners == 1 && !header(view)->holds && header(view)->owners == 1);
+    /* A loan of the shallow shape holds every leaf; unloan drops H only. */
+    Mixed loan = {0};
+    assert(myl_rc_loan_copy(&heap, &mixed_shape, &loan, &value) == MYL_RC_OK);
+    assert(header(owner)->holds == 1 && header(view)->holds == 1 && header(owner)->owners == 1);
+    myl_rc_loan_drop(&heap, &mixed_shape, &loan);
+    assert(!loan.owner && !loan.view && !loan.word && !header(owner)->holds && !header(view)->holds);
+    /* A variant's inactive arm is neither cleared nor released. */
+    Pick arm = {.tag = 1, .value = (void *)(uintptr_t)6}, copy = {0};
+    myl_rc_value_seed(&heap, &pick_shape, &copy, &arm, 1);
+    assert(copy.tag == 1 && copy.value == arm.value);
+    myl_rc_edges_release(&heap, &pick_shape, &copy, 1);
+    assert(copy.value == arm.value);
+    arm = (Pick){.tag = 0, .value = owner};
+    myl_rc_value_seed(&heap, &pick_shape, &copy, &arm, 1);
+    assert(!copy.tag && !copy.value);
+    myl_rc_owner_release(&heap, owner);
+    myl_rc_owner_release(&heap, view);
+    finish(&heap);
+}
+static const myl_rc_descriptor item_descriptor = {.type = &first, .shape = &first_shape};
+typedef struct { void *text; uint64_t n; } Item;
+// spec: RC-LIST-DIRECT-APPEND-1
+static void list_append_publishes_in_place(void) {
+    myl_native_heap heap;
+    start(&heap);
+    assert(myl_rc_descriptor_import(&heap, &item_descriptor) == MYL_RC_OK);
+    myl_native_list *list = myl_native_list_new(&heap, &first, 0);
+    assert(list);
+    void *text = bytes8(&heap);
+    Item value = {text, 1};
+    for (uint64_t i = 0; i < 40; ++i) {
+        value.n = i;
+        assert(myl_rc_list_append(&heap, list, &value));
+    }
+    assert(list->length == 40 && header(text)->owners == 41);
+    /* A borrowed element of the list itself survives the growth it causes. */
+    while (list->length < list->capacity) assert(myl_rc_list_append(&heap, list, &value));
+    size_t length = list->length;
+    assert(myl_rc_list_append(&heap, list, (Item *)list->storage + 3));
+    assert(list->length == length + 1 && ((Item *)list->storage)[length].n == 3 && header(text)->owners == length + 2);
+    /* An input inside the spare capacity takes the staged path. */
+    Item *spare = (Item *)list->storage + list->length + 1;
+    assert(list->length + 1 < list->capacity);
+    *spare = (Item){text, 77};
+    assert(myl_rc_list_append(&heap, list, spare));
+    assert(((Item *)list->storage)[length + 1].n == 77 && header(text)->owners == length + 3);
+    memset(spare, 0, sizeof *spare);
+    /* A queued death keeps the staged path (its drain may run callbacks). */
+    Outer *body = myl_native_heap_alloc(&heap, &outer, 1);
+    assert(body);
+    myl_rc_edge_release(&heap, body);
+    assert(heap.rc->dead.head);
+    assert(myl_rc_list_append(&heap, list, &value) && !heap.rc->dead.head);
+    myl_rc_owner_release(&heap, list);
+    assert(header(text)->owners == 1);
+    myl_rc_owner_release(&heap, text);
+    finish(&heap);
+}
+// spec: RC-RAW-BLOCK-1
+static void raw_bytes_and_blocks(void) {
+    myl_native_heap heap;
+    start(&heap);
+    unsigned char *dirty = myl_rc_storage_bytes(&heap, 40, 0);
+    assert(dirty && header(dirty)->owners == 1 && header(dirty)->common.element);
+    memset(dirty, 0xab, 40);
+    myl_rc_owner_release(&heap, dirty);
+    /* The zero-filled contract holds on a reused slot. */
+    unsigned char *clean = myl_rc_storage_bytes(&heap, 40, 0);
+    assert(clean == dirty);
+    for (size_t i = 0; i < 40; ++i) assert(!clean[i]);
+    memset(clean, 0xcd, 40);
+    myl_rc_owner_release(&heap, clean);
+    /* A block keeps an exact header but leaves its payload to the caller. */
+    unsigned char *block = myl_rc_storage_block(&heap, 40, 0);
+    assert(block == dirty && header(block)->owners == 1 && !header(block)->holds);
+    assert(((header(block)->common.mark & MYL_NATIVE_OBJECT_COUNT_BITS) >> MYL_NATIVE_OBJECT_COUNT_SHIFT) == 40);
+    myl_rc_owner_release(&heap, block);
+    /* Large and arena requests keep the generic path. */
+    void *large = myl_rc_storage_block(&heap, 100000, 0);
+    assert(large && (header(large)->common.mark & MYL_NATIVE_OBJECT_LARGE));
+    myl_rc_owner_release(&heap, large);
+    assert(myl_native_region_begin(&heap));
+    unsigned char *arena = myl_rc_storage_bytes(&heap, 16, 1);
+    assert(arena && myl_native_header_region(arena) == 1 && !arena[0]);
+    myl_rc_arena_close(&heap, 1);
+    finish(&heap);
+}
 int myl_rc_fast_verify(void) {
     variant_plan_layout();
     variant_plan_operations();
@@ -308,12 +431,15 @@ int myl_rc_fast_verify(void) {
     storage_visit_and_release_all();
     scope_journal_nodes_recycle();
     checked_mode_in_counting_builds();
-    return 8;
+    shallow_shapes_skip_the_walker();
+    list_append_publishes_in_place();
+    raw_bytes_and_blocks();
+    return 11;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
-    assert(myl_rc_fast_verify() == 8);
-    puts("native RC fast paths: 8 tests passed");
+    assert(myl_rc_fast_verify() == 11);
+    puts("native RC fast paths: 11 tests passed");
     return 0;
 }
 #endif

@@ -158,47 +158,58 @@ static inline size_t myl_rc_registered_depth(const myl_rc_shape *registered) {
  * a variant tag is read from `tags` when its field is reached, as the walker
  * does. Deeper shapes keep the walker. */
 typedef struct {
-    const myl_rc_shape *shape;
-    const unsigned char *tags;
-    size_t cursor;
+    const myl_rc_field *fields;
+    size_t count, cursor, stride;
+    const unsigned char *tag;
+    myl_rc_shape_kind kind;
 } myl_rc_shallow;
 static inline int myl_rc_shallow_admits(const myl_rc_shape *registered) {
     return myl_rc_registered_depth(registered) <= 2;
 }
-static inline int myl_rc_shallow_next(myl_rc_shallow *walk, size_t *offset, myl_rc_shape_kind *kind) {
-    const myl_rc_shape *shape = walk->shape;
+static inline void myl_rc_shallow_begin(myl_rc_shallow *walk, const myl_rc_shape *shape, const void *tags) {
+    *walk = (myl_rc_shallow){.kind = shape->kind};
     switch (shape->kind) {
         case MYL_RC_SHAPE_POINTER: case MYL_RC_SHAPE_HOLD_POINTER:
-            if (walk->cursor++) return 0;
-            *offset = 0;
-            *kind = shape->kind;
-            return 1;
+            walk->count = 1;
+            break;
         case MYL_RC_SHAPE_ARRAY:
-            if (walk->cursor == shape->as.array.count) return 0;
-            *offset = walk->cursor++ * shape->as.array.stride;
-            *kind = shape->as.array.element->kind;
-            return 1;
-        case MYL_RC_SHAPE_RECORD: case MYL_RC_SHAPE_VARIANT: {
-            int variant = shape->kind == MYL_RC_SHAPE_VARIANT;
-            const myl_rc_field *fields = variant ? shape->as.variant.fields : shape->as.record.fields;
-            size_t count = variant ? shape->as.variant.count : shape->as.record.count;
-            while (walk->cursor < count) {
-                const myl_rc_field *field = &fields[walk->cursor++];
-                if (field->shape->kind == MYL_RC_SHAPE_NONE) continue;
-                if (variant) {
-                    uint32_t tag;
-                    __builtin_memcpy(&tag, walk->tags + shape->as.variant.tag_offset, sizeof tag);
-                    if (field->tag != tag) continue;
-                }
-                *offset = field->offset;
-                *kind = field->shape->kind;
-                return 1;
-            }
-            return 0;
-        }
+            walk->count = shape->as.array.count;
+            walk->stride = shape->as.array.stride;
+            walk->kind = shape->as.array.element->kind;
+            break;
+        case MYL_RC_SHAPE_RECORD:
+            walk->fields = shape->as.record.fields;
+            walk->count = shape->as.record.count;
+            break;
+        case MYL_RC_SHAPE_VARIANT:
+            walk->fields = shape->as.variant.fields;
+            walk->count = shape->as.variant.count;
+            walk->tag = (const unsigned char *)tags + shape->as.variant.tag_offset;
+            break;
         default:
-            return 0;
+            break;
     }
+}
+static inline int myl_rc_shallow_next(myl_rc_shallow *walk, size_t *offset, myl_rc_shape_kind *kind) {
+    if (!walk->fields) {
+        if (walk->cursor == walk->count) return 0;
+        *offset = walk->cursor++ * walk->stride;
+        *kind = walk->kind;
+        return 1;
+    }
+    while (walk->cursor < walk->count) {
+        const myl_rc_field *field = &walk->fields[walk->cursor++];
+        if (field->shape->kind == MYL_RC_SHAPE_NONE) continue;
+        if (walk->tag) {
+            uint32_t tag;
+            __builtin_memcpy(&tag, walk->tag, sizeof tag);
+            if (field->tag != tag) continue;
+        }
+        *offset = field->offset;
+        *kind = field->shape->kind;
+        return 1;
+    }
+    return 0;
 }
 /* Inline forms of the count primitives for runtime-internal hot paths. They
  * perform exactly the public functions' checks, counts and statistics. */
