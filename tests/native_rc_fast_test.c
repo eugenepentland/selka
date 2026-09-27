@@ -2,6 +2,7 @@
  * conditional (variant) flat plans, immediate retirement of edge-free objects,
  * recycled scope journal nodes and the allocator's heap-wide teardown API. */
 #include "native_collections.h"
+#include "native_dictionary.h"
 #include "native_rc_alloc.h"
 #include "native_rc_collections.h"
 #include "native_rc_internal.h"
@@ -642,6 +643,15 @@ static void plain_elements_copy_as_bytes(void) {
     myl_rc_sort_request request = {.values = sorted, .source = list, .keys = keys, .shape = 1};
     assert(myl_rc_list_sort_keyed(&heap, &request) && sorted->length == 100 && heap.objects_live == live);
     for (uint64_t i = 0; i < 100; ++i) assert(((uint64_t *)sorted->storage)[i] == 99 - i);
+    /* spec-case: RC-DICT-FAST-1. A text-keyed dictionary of plain values
+     * holds one owner per key and gives every one back when it dies. */
+    myl_native_dictionary *dict = myl_native_dictionary_new(&heap, &pointer, &number, 0);
+    void *key = bytes8(&heap);
+    uint64_t one = 1;
+    assert(dict && myl_native_dictionary_write(&heap, dict, &key, &one) && header(key)->owners == 2);
+    myl_rc_owner_release(&heap, dict);
+    assert(header(key)->owners == 1);
+    myl_rc_owner_release(&heap, key);
     myl_rc_owner_release(&heap, sorted);
     myl_rc_owner_release(&heap, keys);
     myl_rc_owner_release(&heap, copy);

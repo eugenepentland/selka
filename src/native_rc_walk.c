@@ -94,6 +94,16 @@ void myl_rc_edges_release(myl_native_heap *heap, const myl_rc_shape *source, voi
     myl_rc_invariant(!bytes || address);
     if (shape->kind == MYL_RC_SHAPE_NONE) return;
     unsigned char *cursor = address;
+    if (shape->kind == MYL_RC_SHAPE_POINTER) {
+        /* RC-DICT-FAST-1: a run of ordinary pointers, each cleared and released. */
+        for (size_t i = 0; i < count; ++i, cursor += sizeof(void *)) {
+            void *payload;
+            memcpy(&payload, cursor, sizeof payload);
+            memset(cursor, 0, sizeof payload);
+            myl_rc_owner_drop(heap, payload);
+        }
+        return;
+    }
     int shallow = myl_rc_shallow_admits(shape);
     for (size_t i = 0; i < count; ++i) {
         if (shallow) shallow_release(heap, shape, cursor, 0);
