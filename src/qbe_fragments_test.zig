@@ -620,3 +620,32 @@ test "RC-BORROW-CACHE-1 stand-ins lower complete proofs and preserve alternate m
     const restored = try expectStandInMatches(a, root, reference, &rc_original);
     try t.expectEqual(cold.lowered, restored.lowered);
 }
+
+const rc_loop_helper = replaced(
+    rc_helper,
+    "    if index < 0 or index >= len(nodes):\n        return empty()\n    return nodes[index]",
+    "    i = 0\n    while i < len(nodes):\n        node = nodes[i]\n        if node.start == index:\n            return node\n        i += 1\n    return empty()",
+);
+
+const rc_loop_fresh = replaced(rc_loop_helper, "b\"\"", "bytes([7])");
+
+// spec-case: RC-BORROW-LOOP-1
+test "RC-BORROW-LOOP-1 warm callers follow loop certificates and fresh fallback refusal" {
+    const runtime = @import("runtime_mode.zig");
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    var directory = t.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    const looping: Files = .{ .main = rc_main, .helper = rc_loop_helper };
+    const fresh: Files = .{ .main = rc_main, .helper = rc_loop_fresh };
+    const cold = try expectReusedEqualsFresh(root, &looping);
+    const warm = try expectReusedEqualsFresh(root, &looping);
+    try t.expectEqual(cold.misses, warm.hits);
+    try t.expectEqual(@as(usize, 0), warm.misses);
+    const refused = try expectReusedEqualsFresh(root, &fresh);
+    try t.expect(refused.misses >= 2);
+    _ = try expectReusedEqualsFresh(root, &looping);
+}
