@@ -4,6 +4,7 @@ const typed = @import("typed.zig");
 const cow = @import("cow_plan.zig");
 const model = @import("rc_dictionary_tail.zig");
 const Certificate = model.Certificate;
+const effects = @import("qbe_rc_dictionary_effects.zig");
 /// Optional proof refusals keep ordinary emission; allocation errors propagate.
 pub const Error = error{ InternalError, OutOfMemory };
 
@@ -19,10 +20,12 @@ pub fn finalize(comptime E: type, self: *E) Error!void {
     var found: std.ArrayList(Certificate) = .empty;
     for (code, 0..) |instruction, pc| {
         if (instruction.op != .buffer_operation or instruction.op.buffer_operation.kind != .write or pc < 4) continue;
-        const proof = tail(E, self, pc - 4) orelse continue;
+        var proof = tail(E, self, pc - 4) orelse continue;
         if (code.len > budget) break;
         budget -= code.len;
         if (!writers(E, self, proof) or !quiet(E, self, proof)) continue;
+        if (@import("qbe_rc_dictionary_key.zig").certify(E, self, proof)) |key|
+            proof.key_authority = .{ .anchored = key };
         try found.append(self.allocator, proof);
     }
     state.plan.dictionary_tails = try found.toOwnedSlice(self.allocator);
@@ -135,42 +138,15 @@ fn scalar(comptime E: type, self: *E, ty: typed.Type) bool {
 // and stays zero through the terminal write, so every backedge repeats zero.
 fn writers(comptime E: type, self: *E, proof: Certificate) bool {
     if (!model.writers(self.function.scope.instructions, proof)) return false;
-    const plan = self.cow.?.plan;
-    for (plan.sites) |site| {
-        for (site.unique) |unique| if (unique.local == proof.receiver or unique.alias == proof.receiver) return false;
-        if (site.unique_field) |place| if (place.parent == proof.receiver) return false;
-    }
-    for (plan.loops.entries) |entries| for (entries) |entry| if (entry.local == proof.receiver) return false;
-    for (plan.aliases) |parent| if (parent == proof.receiver) return false;
-    for (plan.places) |maybe| if (maybe) |place| {
-        if (place.parent == proof.receiver) return false;
-        if (place.box) |box| if (box.owner == proof.receiver) return false;
-    };
-    return true;
+    return effects.unwritten(E, self, proof.receiver);
 }
 
 // The only effect admitted before the write is exactly the existing first
 // root check. Raw loads neither publish nor clean up; backing cannot relocate
 // until the original terminal runtime call, whose arguments are private slots.
 fn quiet(comptime E: type, self: *E, proof: Certificate) bool {
-    const state = self.cow.?;
-    const plan = state.plan;
     for (proof.start..proof.start + 5) |pc| {
-        const site = plan.at(pc);
-        if (site.capture or site.fill or site.unique_field != null) return false;
-        if (site.shares.len != 0 or site.read_captures.len != 0 or plan.entry(pc).len != 0) return false;
-        if (state.captures[pc].begin != cow.none or state.captures[pc].active != cow.none) return false;
-        if (pc == proof.start) {
-            if (site.unique.len != 1 or site.unique[0].local != proof.root or site.unique[0].alias != cow.none) return false;
-        } else if (site.unique.len != 0) return false;
-        for (state.rc.?.plan.locals.edges) |edge| {
-            if (edge.from != pc or edge.to != pc + 1) continue;
-            for (edge.releases) |release| {
-                const at = @backingInt(release.storage);
-                if (@import("qbe_rc_edges.zig").releasesAt(E, self, pc, at) catch true) return false;
-            }
-        }
-        for (state.rc.?.plan.field_transfers) |transfer| if (transfer.projection == pc or transfer.commit == pc) return false;
+        if (!effects.quiet(E, self, proof, pc) or effects.releases(E, self, pc, &.{})) return false;
     }
     return true;
 }

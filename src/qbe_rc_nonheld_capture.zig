@@ -6,6 +6,13 @@ const Op = @FieldType(bytecode.Instruction, "op");
 /// Prove only that this immediate capture cannot receive a terminal H token.
 /// The caller must separately prove the target's complete empty-token lifetime.
 pub fn proven(comptime E: type, self: *E, target: usize, at: usize) bool {
+    if (self.cow.?.rc == null or !scalarList(E, self, target)) return false;
+    return ordinaryInput(E, self, target, at);
+}
+
+/// Prove the immediate named source uses only canonical ordinary publication.
+/// This proves its role, never the target's lifetime or absence of tokens.
+pub fn ordinaryInput(comptime E: type, self: *E, target: usize, at: usize) bool {
     const state = self.cow.?.rc orelse return false;
     if (!canonical(state)) return false;
     const code = self.function.scope.instructions;
@@ -16,7 +23,7 @@ pub fn proven(comptime E: type, self: *E, target: usize, at: usize) bool {
     if (source < self.function.signature.parameter_count or locals[source].usage.temporary) return false;
     if (locals[source].origin != .local) return false;
     if (referenced(E, self, target) or referenced(E, self, source)) return false;
-    if (!scalarList(E, self, target) or locals[source].ty != locals[target].ty) return false;
+    if (locals[source].ty != locals[target].ty) return false;
     const plan = self.cow.?.plan;
     if (plan.place(source) != null or plan.place(target) != null) return false;
     if (source < plan.aliases.len and plan.aliases[source] != cow.none) return false;

@@ -264,6 +264,7 @@ test {
     _ = @import("qbe_rc_empty_locals_test.zig");
     _ = @import("qbe_rc_nonheld_capture_test.zig");
     _ = @import("qbe_rc_dictionary_tail_test.zig");
+    _ = @import("qbe_rc_dictionary_key_test.zig");
     _ = @import("qbe_rc_empty_frame_test.zig");
     _ = @import("qbe_rc_field_transfer_test.zig");
     _ = @import("qbe_rc_plain_record_write_test.zig");

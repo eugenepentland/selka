@@ -1,0 +1,9 @@
+def main(out: Stream) -> int:
+    keys = ["a" + "-key", "b-key"]
+    counts: dict[str, int] = {}
+    out.print("before")
+    for i in range(10):
+        key = keys[i % 2]
+        counts[key] = counts.get(key, 0) + 1
+    out.print(counts["a-key"])
+    return 0
