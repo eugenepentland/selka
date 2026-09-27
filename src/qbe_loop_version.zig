@@ -61,6 +61,7 @@ pub fn Lower(comptime E: type) type {
         fn emitHere(self: *E, loop: *const facts.Loop) Error!bool {
             // Existing hoist/scalar admissions keep their original protocol.
             const previous = !@import("runtime_mode.zig").enabled() or
+                @import("qbe_rc_readonly_calls.zig").body(E, self) or
                 @import("qbe_rc_hoist.zig").permitsVersion(E, self, loop.head, loop.back) or
                 @import("qbe_rc_scalar_version.zig").proven(E, self, loop.head, loop.back);
             const read_proof = if (previous) null else read_version.certify(E, self, loop.head, loop.back);

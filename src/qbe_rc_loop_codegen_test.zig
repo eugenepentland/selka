@@ -193,3 +193,58 @@ test "RC-PLAIN-READ-IN-PLACE-1 a plain element read with no owning input is not 
     try t.expect(std.mem.indexOf(u8, rc_sum, "copy %agg") == null);
     try t.expect(std.mem.count(u8, rc_sum, " blit ") <= std.mem.count(u8, gc_sum, " blit ") + 2);
 }
+
+const parameter_reads =
+    \\def weight(i: int, j: int) -> float:
+    \\    return 1.0 / float((i + j) * (i + j + 1) // 2 + i + 1)
+    \\def dot(v: list[float], i: int) -> float:
+    \\    s = 0.0
+    \\    for j in range(len(v)):
+    \\        s = s + weight(i, j) * v[j]
+    \\    return s
+    \\def mul(v: list[float], out: mut list[float]) -> None:
+    \\    n = len(v)
+    \\    for i in range(n):
+    \\        s = 0.0
+    \\        for j in range(n):
+    \\            s = s + weight(i, j) * v[j]
+    \\        out[i] = s
+    \\def rebound(v: list[float], out: mut list[float]) -> None:
+    \\    s = 0.0
+    \\    for j in range(len(v)):
+    \\        s = s + v[j]
+    \\    v = [1.0]
+    \\    out[0] = s + v[0]
+    \\def main() -> int:
+    \\    out = [0.0, 0.0]
+    \\    mul([1.0, 2.0], mut out)
+    \\    rebound([3.0], mut out)
+    \\    return int(dot([1.0, 2.0], 1) + out[0])
+;
+
+// spec: RC-READ-LIST-VERSION-2
+test "RC-READ-LIST-VERSION-2 read-only parameter lists version float loops through receiver captures" {
+    var rc = try emit(parameter_reads, .rc);
+    defer rc.deinit();
+    const mul = try named(rc.value, "mul");
+    const guard = std.mem.indexOf(u8, mul, "# RC-READ-LIST-VERSION-1") orelse return error.TestUnexpectedResult;
+    const copy = fastCopy(mul[guard..]) orelse return error.TestUnexpectedResult;
+    try t.expect(std.mem.indexOf(u8, copy, "myl_qbe_fail_normalized_index_bounds") == null);
+    // The caller anchors `v`, so no journal guard precedes the range guard.
+    try t.expect(std.mem.indexOf(u8, mul[guard..], "@rcreadloop") == null);
+    // A rebound parameter is no caller anchor; only its live token may admit.
+    const rebound = try named(rc.value, "rebound");
+    const tested = std.mem.indexOf(u8, rebound, "# RC-READ-LIST-VERSION-1") orelse return error.TestUnexpectedResult;
+    try t.expect(std.mem.indexOf(u8, rebound[tested..], "@rcreadloop") != null);
+    try t.expect(!operandEscapes(mul));
+}
+
+// spec: RC-READONLY-LOOP-VERSION-1
+test "RC-READONLY-LOOP-VERSION-1 a raw readonly body versions its loops like the collector" {
+    var rc = try emit(parameter_reads, .rc);
+    defer rc.deinit();
+    const dot = try named(rc.value, "dot");
+    try t.expect(std.mem.indexOf(u8, dot, "%rcframe") == null);
+    const copy = fastCopy(dot) orelse return error.TestUnexpectedResult;
+    try t.expect(std.mem.indexOf(u8, copy, "myl_qbe_fail_normalized_index_bounds") == null);
+}
