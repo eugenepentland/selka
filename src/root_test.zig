@@ -8,6 +8,7 @@ test {
     _ = @import("qbe_rc_read_loans_test.zig");
     _ = @import("qbe_rc_loan_relocate_test.zig");
     _ = @import("qbe_rc_binding_moves_test.zig");
+    _ = @import("qbe_rc_transient_test.zig");
     _ = @import("qbe_rc_variant_read_test.zig");
     _ = @import("qbe_rc_aggregate_test.zig");
     _ = @import("qbe_rc_inline_take_test.zig");

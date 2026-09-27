@@ -118,6 +118,35 @@ def same(value: Name) -> Name:
     return value
 
 
+record Unit:
+    arity: int
+    chunk: Chunk
+
+
+record Loaded:
+    code: list[int]
+    names: list[str]
+    at: int
+
+
+def load(unit: Unit, at: int) -> Loaded:
+    return Loaded(code=unit.chunk.code, names=unit.chunk.names, at=at)
+
+
+def load_mut(unit: mut Unit) -> Loaded:
+    loaded = Loaded(code=unit.chunk.code, names=unit.chunk.names, at=unit.arity)
+    unit.chunk.code.append(99)
+    return loaded
+
+
+def made_unit() -> Unit:
+    return Unit(3, Chunk([4, 5], ["made"]))
+
+
+def load_made() -> Loaded:
+    return Loaded(code=made_unit().chunk.code, names=made_unit().chunk.names, at=0)
+
+
 def pop(rt: mut Runtime) -> Value:
     rt.top = rt.top - 1
     return rt.stack[rt.top]
@@ -286,6 +315,34 @@ public def test_returned_parameters_keep_the_callers_value() -> bool:
     return copy.chars == b"keep" and again.chars == b"keep" and original.chars == b"keep"
 
 
+# spec-case: RC-TRANSIENT-FIELD-1
+public def test_nested_field_copies_into_constructors_stay_independent() -> bool:
+    unit = Unit(1, Chunk([1, 2], ["a", "b"]))
+    loaded = load(unit, 7)
+    loaded.code.append(3)
+    loaded.names[0] = "z"
+    return loaded.code == [1, 2, 3] and loaded.names == ["z", "b"] and unit.chunk.code == [1, 2] and unit.chunk.names == ["a", "b"] and loaded.at == 7
+
+
+# spec-case: RC-TRANSIENT-FIELD-1
+public def test_nested_field_copies_from_mut_parameters_and_call_results() -> bool:
+    unit = Unit(2, Chunk([8], ["m"]))
+    loaded = load_mut(mut unit)
+    made = load_made()
+    return loaded.code == [8] and unit.chunk.code == [8, 99] and loaded.at == 2 and made.code == [4, 5] and made.names == ["made"]
+
+
+# spec-case: RC-TRANSIENT-FIELD-1
+public def test_nested_field_copies_inside_arenas() -> bool:
+    total = 0
+    with arena():
+        unit = Unit(1, Chunk([1, 2, 3], ["q"]))
+        with arena():
+            loaded = load(unit, 1)
+            total = len(loaded.code) + len(loaded.names)
+    return total == 4
+
+
 # Run every test once, so `mylang run --rc-runtime=stats` shows balanced counts
 # for the whole file; the result is the number of failures.
 def main() -> int:
@@ -306,6 +363,9 @@ def main() -> int:
         test_payload_bindings_outliving_a_scrutinee_write_keep_their_copy(),
         test_returned_bindings_and_locals_move_their_owner(),
         test_returned_parameters_keep_the_callers_value(),
+        test_nested_field_copies_into_constructors_stay_independent(),
+        test_nested_field_copies_from_mut_parameters_and_call_results(),
+        test_nested_field_copies_inside_arenas(),
     ]:
         if not passed:
             failures += 1

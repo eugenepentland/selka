@@ -44,7 +44,9 @@ pub fn after(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "o
     const base = next.len - 1;
     if (base > stack.len) return error.InternalError;
     const cow = @import("qbe_cow.zig").Lower(E);
-    if (cow.scopedProjection(self, self.pc) or @import("qbe_rc_inert_receiver.zig").projection(E, self, self.pc)) {
+    if (cow.scopedProjection(self, self.pc) or @import("qbe_rc_inert_receiver.zig").projection(E, self, self.pc) or
+        @import("qbe_rc_transient.zig").projection(E, self, op))
+    {
         // A prepared scope or proved stable owner keeps this receiver alive.
         // It is a physical projection, so no snapshot token is published.
         for (base..stack.len) |index| try values.drop(E, self, index);
