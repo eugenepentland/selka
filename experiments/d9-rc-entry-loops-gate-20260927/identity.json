@@ -1,0 +1,81 @@
+{
+  "source_commit": "4e5c0cd638e55b86ef0d99112872e02ae41dbe89",
+  "compiler_mode": "Debug",
+  "compiler_path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-integration/.tmp-rc/install-entry-loops/bin/mylang",
+  "compiler_sha256": "52bff2acf09f3d0ef3739c707ea7e570c789d26cbc938b6a0a5615fed5133738",
+  "commands": {
+    "final-build": {
+      "exit_code": 0,
+      "summary": "Build Summary: 19/19 steps succeeded"
+    },
+    "test": {
+      "exit_code": 0,
+      "summary": "Build Summary: 94/94 steps succeeded; 2404/26991 tests passed (24587 skipped)"
+    },
+    "test-qbe": {
+      "exit_code": 0,
+      "summary": "Build Summary: 51/51 steps succeeded; 458/458 tests passed"
+    },
+    "test-qbe-build": {
+      "exit_code": 0,
+      "summary": "Build Summary: 29/29 steps succeeded"
+    },
+    "fmt-check": {
+      "exit_code": 0,
+      "summary": "Build Summary: 2/2 steps succeeded"
+    }
+  },
+  "sweeps": {
+    "qbe": {
+      "version": "native-tests-v1",
+      "passed": 1049,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 1049,
+      "programs": 179,
+      "dropped": 0,
+      "unloaded": 0
+    },
+    "llvm": {
+      "version": "native-tests-v1",
+      "passed": 1049,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 1049,
+      "programs": 179,
+      "dropped": 0,
+      "unloaded": 0
+    }
+  },
+  "guardian_checks": 88,
+  "prior_install_failure": {
+    "source": "4e5c0cd638e55b86ef0d99112872e02ae41dbe89",
+    "exit_code": 1,
+    "failure": "Partial root Zig object-cache removal left local hash metadata caching missing qbe and qbe-build-assets files. Entire remaining inactive local cache cleared before retry. No compiler/source change.",
+    "at": 1790508393.91309
+  },
+  "artifacts": {
+    "README.md": "f29edaa788f38e2349a91f846e9b3084c09d29576f0f5b72aa2e630985f96c88",
+    "archive.py": "2eea11aa07d67cda6a745ec0e172d5d14dffcc453e258d446b5c86a74a0faa5c",
+    "failed-cache-explanation.json.gz": "958430767810b45e548270a1658fcb370ab6dc69128424c73171e1ed6f29ecdb",
+    "failed-cache-install.log.gz": "30c063ef8b261a3d580fa42ebc8d146c24c7e04227135790b73c9e330d3028c5",
+    "failed-cache-status.log.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "final-build.log.gz": "93dd5f547a147c6a4194a108e6c0d729861998e19b6f396d701b845dac86c397",
+    "fmt-check.log.gz": "de01a91b7b313677fe046c287a2404a16ae2c7b1d6d2793c81737dda7bc60d14",
+    "gate-status.log.gz": "8cb6c1106a59bc2dc387dd4274908f883e699b12dbeb215a35e92193cbf58205",
+    "gate.sh": "8bb9a999520eafe03c3ae0a6a43b29bd31ff97fb0522551bf709e4b1c31fbca8",
+    "guardian.log.gz": "ce0c9718553f56e587b522e65c5817e4934bd2c2207b0d74e54e0d3963b6d10b",
+    "sweep-llvm.json.gz": "dae881ebea207a42a0efe7f9d4ef24127baca1a3602f39fce7fb7992269c6b6c",
+    "sweep-llvm.log.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "sweep-qbe.json.gz": "f6e512ae901758fd8a96e2814186858d4d7aa4806e198ace66880c50b9db0a61",
+    "sweep-qbe.log.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "sweep-status.log.gz": "f7c9542e2f2f6dcb8be4fe9c7d1eaada4d5e6eba7536bd0fcbbd8ff43f0153ad",
+    "sweep.sh": "8652b45da9399ecc818d81fba98847b61eb54794870b294f3c10ba99f31d5f21",
+    "test-qbe-build.log.gz": "c9d566dabfd91d0bc67c8c8315f9fff6ff97e2416dffc06aba86241945b41039",
+    "test-qbe.log.gz": "c42b31873fd16bb7949af1781dd9b19d60ec25b72204818554b55bb57fcfcaa1",
+    "test.log.gz": "d22bade0ce180d099dc190134d3a250a2d79b7244807b1d5394b9526f89383c6",
+    "verify.py": "fa98e4b9e7cd05a61d7575a7cd7495e6b7f02496e6115e47e82262bf996afde8"
+  }
+}
