@@ -1,0 +1,65 @@
+def from_parameter(flags: mut list[bool]) -> int:
+    flags[0] = False
+    count = 0
+    for flag in flags:
+        if flag:
+            count += 1
+    return count
+
+def from_read_parameter(flags: list[bool]) -> int:
+    count = 0
+    for index in range(len(flags)):
+        if flags[index]:
+            count += 1
+    for flag in flags:
+        if flag:
+            count += 1
+    return count
+
+def from_loop(groups: list[list[bool]]) -> int:
+    count = 0
+    for element in groups:
+        flags = element
+        flags[0] = False
+        for flag in flags:
+            if flag:
+                count += 1
+    return count
+
+def make_flags() -> list[bool]:
+    return [True, True]
+
+def from_return() -> int:
+    flags = make_flags()
+    flags[0] = False
+    count = 0
+    for flag in flags:
+        if flag:
+            count += 1
+    return count
+
+def from_literal() -> int:
+    flags = [True, True]
+    flags[0] = False
+    count = 0
+    for flag in flags:
+        if flag:
+            count += 1
+    return count
+
+def borrowed(groups: list[list[bool]]) -> list[bool]:
+    return groups[0]
+
+def main() -> int:
+    items = [True, True]
+    if from_read_parameter(items) != 4:
+        return 5
+    if from_parameter(mut items) != 1:
+        return 1
+    if from_loop([[True, True], [True, True]]) != 2:
+        return 2
+    if from_return() != 1 or from_literal() != 1:
+        return 3
+    if len(borrowed([[True]])) != 1:
+        return 4
+    return 0
