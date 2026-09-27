@@ -1,0 +1,14 @@
+record State:
+    values: list[int]
+    code: list[int]
+    links: list[int]
+    count: int
+def replace(state: mut State):
+    state = State([17] * 1000000, [18], [19], 40)
+def main(out: Stream) -> int:
+    state = State([7], [8], [9], 2)
+    out.print("before")
+    replace(mut state)
+    state.count = state.count + 4
+    out.print(state.count)
+    return 0
