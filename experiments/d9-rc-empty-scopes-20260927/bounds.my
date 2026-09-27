@@ -1,0 +1,7 @@
+record Point:
+    x: int
+    y: int
+def main() -> int:
+    points = [Point(3, 7)]
+    points[-2].x = 9
+    return 0

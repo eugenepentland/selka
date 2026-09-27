@@ -19,6 +19,8 @@ pub fn receiverAddress(comptime E: type, self: *E, fill: usize) Error!usize {
 }
 /// Address a receiver loan's own lifetime scope, separate from path preparation.
 pub fn borrowAddress(comptime E: type, self: *E, local: usize) Error!usize {
+    // Keep missed lifetime uses a compiler error, never an undeclared pointer.
+    if (@import("qbe_rc_frame.zig").emptyLocal(E, self, local)) return error.InternalError;
     const result = self.temp();
     try self.print(" %v{d} =l copy %rcborrow{d}\n", .{ result, local });
     return result;
