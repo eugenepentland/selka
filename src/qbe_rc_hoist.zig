@@ -74,7 +74,10 @@ pub fn permitsVersion(comptime E: type, self: *E, head: usize, back: usize) bool
     if (frame.get(E, self) == null) return false;
     const plan = self.cow.?.plan;
     for (plan.loops.entries, 0..) |entries, outer| {
-        if (entries.len != 0 and head >= outer and back <= plan.loops.back[outer]) return true;
+        if (head < outer or back > plan.loops.back[outer]) continue;
+        // Late dictionary entries cover uniqueness only. They never authorize
+        // cached-storage fast loops, even if this query is reused after veto.
+        for (entries) |entry| if (listElement(E, self, self.function.scope.locals[entry.local].ty) != null) return true;
     }
     return false;
 }

@@ -35,6 +35,7 @@ pub const unit = [_][]const u8{
     "src/",
     "bench/parity/micro/dict_count.my",
     "tests/lang/rc_dictionary_keys.my",
+    "tests/lang/rc_dictionary_loops.my",
     "tests/invoke/",
     "tests/native/",
     "test/fixtures/",
