@@ -14,14 +14,16 @@ typedef struct {
     size_t depth;
     size_t inline_depth;
 } myl_rc_shape_entry;
-/* Checked mode keeps invariants that need a metadata lookup or a value walk
- * (stats/counting builds and the C contract tests). Production keeps only the
+/* Checked mode keeps invariants that need a metadata lookup or a value walk.
+ * Only a production RC artifact (MYL_NATIVE_RC without the counting runtime)
+ * leaves them out; stats artifacts, the GC artifact's copy of this library and
+ * the standalone C runtime tests keep them. Every build keeps the
  * constant-time checks; a checked invariant must never have side effects. */
 #ifndef MYL_RC_CHECKED
-#if defined(MYL_NATIVE_RC_COUNTING) && MYL_NATIVE_RC_COUNTING
-#define MYL_RC_CHECKED 1
-#else
+#if (defined(MYL_NATIVE_RC) && MYL_NATIVE_RC) && !(defined(MYL_NATIVE_RC_COUNTING) && MYL_NATIVE_RC_COUNTING)
 #define MYL_RC_CHECKED 0
+#else
+#define MYL_RC_CHECKED 1
 #endif
 #endif
 #define MYL_RC_FLAT_LEAVES 16

@@ -291,6 +291,7 @@ static void scope_journal_nodes_recycle(void) {
 }
 // spec: RC-CHECKED-1
 static void checked_mode_in_counting_builds(void) {
+    /* Only a production RC artifact (MYL_NATIVE_RC without counting) is unchecked. */
     assert(MYL_RC_CHECKED == 1);
     myl_native_heap heap;
     start(&heap);
