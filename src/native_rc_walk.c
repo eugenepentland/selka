@@ -156,12 +156,15 @@ static inline __attribute__((always_inline)) myl_rc_object *drain_leaves(myl_nat
             continue;
         }
         uintptr_t owners = object->owners;
-        myl_rc_invariant(owners != 0);
         MYL_RC_STAT(heap, MYL_RC_STAT_OWNER_RELEASE);
-        if (--owners || object->holds) { object->owners = owners; continue; }
-        object->common.mark = mark | MYL_RC_OBJECT_DYING;
-        object->owners = (uintptr_t)head;
-        head = object;
+        if (owners == 1 && !object->holds) {
+            object->common.mark = mark | MYL_RC_OBJECT_DYING;
+            object->owners = (uintptr_t)head;
+            head = object;
+            continue;
+        }
+        myl_rc_invariant(owners != 0);
+        object->owners = owners - 1;
     }
     return head;
 }
