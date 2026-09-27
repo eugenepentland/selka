@@ -312,7 +312,7 @@ static void release_pass(myl_native_heap *heap, myl_native_arena_chunk *chunk, u
         size_t count = (header->mark >> MYL_NATIVE_OBJECT_COUNT_SHIFT) & MYL_NATIVE_ARENA_COUNT_MAX;
         offset = (offset + sizeof *header + payload_bytes(header->element, count) + mask) & ~mask;
         if (finalizing && (header->mark & MYL_RC_OBJECT_DYING)) continue;
-        const myl_rc_descriptor *descriptor = myl_rc_descriptor_find(heap, header->element);
+        const myl_rc_descriptor *descriptor = myl_rc_descriptor_of(heap, header->element);
         myl_rc_invariant(descriptor != NULL);
         if (finalizing) {
             header->mark |= MYL_RC_OBJECT_DYING;

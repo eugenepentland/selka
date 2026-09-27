@@ -1593,12 +1593,12 @@ static void dictionary_word_observer(myl_native_heap *heap, void *payload) {
     assert(++word_phase==id);
     if (id==2) return;
     word_source=99;
-    size_t capacity=heap->rc->metadata.index.capacity;
+    size_t capacity=heap->rc->metadata.bindings.mask;
     for (size_t i=0;i<96;i++) {
         word_registered[i]=(myl_native_type){.size=8,.alignment=8,.kind=MYL_NATIVE_PLAIN};
         assert(myl_rc_native_shape(heap,&word_registered[i]));
     }
-    assert(heap->rc->metadata.index.capacity>capacity);
+    assert(heap->rc->metadata.bindings.mask>capacity);
     /* The sibling is queued, but an active outer drain defers it across this
      * nested dictionary replacement and unrelated backing growth. */
     assert(heap->rc->dead.head && heap->rc->dead.active);

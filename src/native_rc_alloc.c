@@ -27,11 +27,14 @@ struct rc_large {
 typedef struct {
     rc_slab *all, *available;
 } rc_class;
+/* Size classes for extents up to the largest stride, one byte per 16-byte step. */
+#define RC_CLASS_STEPS (8192 / 16 + 1)
 typedef struct {
     rc_class classes[RC_SLAB_CLASSES];
     rc_large *large;
     size_t reserved;
     struct { const myl_native_type *type; size_t index; } single;
+    unsigned char class_of[RC_CLASS_STEPS];
 } rc_storage;
 static const size_t strides[RC_SLAB_CLASSES] = {
     16,32,48,64,80,96,112,128,160,192,224,256,320,384,448,512,
@@ -108,7 +111,7 @@ static int reserve(myl_native_heap *heap, size_t bytes) {
     trim_empty(heap);
     return budget(heap,bytes);
 }
-static rc_slab *slab_new(myl_native_heap *heap, size_t index) {
+static __attribute__((noinline)) rc_slab *slab_new(myl_native_heap *heap, size_t index) {
     if (!reserve(heap,RC_SLAB_BYTES)) return NULL;
     rc_slab *slab=aligned_alloc(RC_SLAB_BYTES,RC_SLAB_BYTES);
     if (!slab) { trim_empty(heap); slab=aligned_alloc(RC_SLAB_BYTES,RC_SLAB_BYTES); }
@@ -125,7 +128,7 @@ static rc_slab *slab_new(myl_native_heap *heap, size_t index) {
     charge(heap,RC_SLAB_BYTES);
     return slab;
 }
-static size_t class_for(size_t extent) {
+static size_t class_search(size_t extent) {
     size_t low=0, high=RC_SLAB_CLASSES;
     while (low<high) {
         size_t middle=low+(high-low)/2;
@@ -134,7 +137,11 @@ static size_t class_for(size_t extent) {
     }
     return low;
 }
-static myl_rc_object *slab_take(myl_native_heap *heap, size_t index) {
+/* One table load for every slab-sized extent; larger extents are LARGE. */
+static size_t class_for(const rc_storage *storage, size_t extent) {
+    return extent<=strides[RC_SLAB_CLASSES-1]?storage->class_of[(extent+15)/16]:RC_SLAB_CLASSES;
+}
+static inline __attribute__((always_inline)) myl_rc_object *slab_take(myl_native_heap *heap, size_t index) {
     rc_class *class=&storage_of(heap)->classes[index];
     rc_slab *slab=class->available;
     if (!slab) slab=slab_new(heap,index);
@@ -144,7 +151,6 @@ static myl_rc_object *slab_take(myl_native_heap *heap, size_t index) {
     else slot=(unsigned char *)slab+RC_SLAB_OFFSET+slab->stride*slab->used++;
     slab->live++;
     if (!slab->free && slab->used==slots(slab)) available_remove(class,slab);
-    memset(slot,0,slab->stride);
     return slot;
 }
 static myl_rc_object *large_take(myl_native_heap *heap, size_t extent) {
@@ -161,8 +167,35 @@ static myl_rc_object *large_take(myl_native_heap *heap, size_t extent) {
     charge(heap,bytes);
     return (myl_rc_object *)(large+1);
 }
+/* A retired slab slot keeps this mark until reuse. DYING|IMMORTAL never
+ * describes a counted object, so it separates free slots from allocated ones
+ * (live, or queued for death) without a side table. */
+#define RC_RETIRED_MARK (MYL_RC_OBJECT_DYING|(uintptr_t)MYL_NATIVE_OBJECT_IMMORTAL)
+/* Zero a slab payload in whole 16-byte units: the slot is 16-byte aligned and
+ * its stride covers the rounded payload, so the tail is slot padding. Small
+ * payloads use straight-line vector stores instead of a memset call. */
+typedef unsigned char rc_zero_unit __attribute__((vector_size(16), aligned(16), may_alias));
+static inline void zero_payload(unsigned char *payload, size_t bytes) {
+    rc_zero_unit *unit=(rc_zero_unit *)payload;
+    const rc_zero_unit zero={0};
+    switch ((bytes+15)/16) {
+        case 8: unit[7]=zero; /* fall through */
+        case 7: unit[6]=zero; /* fall through */
+        case 6: unit[5]=zero; /* fall through */
+        case 5: unit[4]=zero; /* fall through */
+        case 4: unit[3]=zero; /* fall through */
+        case 3: unit[2]=zero; /* fall through */
+        case 2: unit[1]=zero; /* fall through */
+        case 1: unit[0]=zero; /* fall through */
+        case 0: return;
+        default: memset(payload,0,bytes); return;
+    }
+}
+/* Only the payload needs zero bytes: the prefix is written here, and bytes
+ * past the payload in a slab slot are never read. */
 static void *initialize(myl_native_heap *heap, myl_rc_object *object,
                         const myl_native_type *element, size_t count, uintptr_t flags) {
+    if (!(flags&MYL_NATIVE_OBJECT_LARGE)) zero_payload((unsigned char *)(object+1),count*element->size);
     object->owners=1;
     object->holds=0;
     object->common=(myl_native_object){.mark=((uintptr_t)count<<MYL_NATIVE_OBJECT_COUNT_SHIFT)|flags,
@@ -182,7 +215,7 @@ static myl_rc_status allocate(myl_native_heap *heap, const myl_rc_alloc_request 
         (request->element->size && request->count>(SIZE_MAX-MYL_RC_PREFIX_BYTES)/request->element->size))
         return MYL_RC_ALLOCATION_REFUSED;
     size_t extent=MYL_RC_PREFIX_BYTES+request->count*request->element->size;
-    size_t index=class_for(extent);
+    size_t index=class_for(storage_of(heap),extent);
     myl_rc_object *object=index<RC_SLAB_CLASSES?slab_take(heap,index):large_take(heap,extent);
     if (!object) return MYL_RC_ALLOCATION_REFUSED;
     *out=initialize(heap,object,request->element,request->count,
@@ -200,10 +233,18 @@ void *myl_rc_storage_alloc(myl_native_heap *heap, const myl_native_type *element
         size_t index;
         if (storage->single.type==element) index=storage->single.index;
         else {
-            if (!myl_rc_native_shape(heap,element)) return NULL;
-            if (element->alignment>16 || element->size>strides[RC_SLAB_CLASSES-1]-MYL_RC_PREFIX_BYTES)
-                goto registered;
-            index=class_for(MYL_RC_PREFIX_BYTES+element->size);
+            /* The binding carries its type's class; the one-entry cache then
+             * follows the most recent type. */
+            myl_rc_binding *binding=(myl_rc_binding *)myl_rc_binding_find(heap,element);
+            if (binding && binding->alloc_class) index=binding->alloc_class-1;
+            else {
+                if (!myl_rc_native_shape(heap,element)) return NULL;
+                if (element->alignment>16 || element->size>strides[RC_SLAB_CLASSES-1]-MYL_RC_PREFIX_BYTES)
+                    goto registered;
+                index=class_for(storage,MYL_RC_PREFIX_BYTES+element->size);
+                binding=(myl_rc_binding *)myl_rc_binding_find(heap,element);
+                binding->alloc_class=(unsigned)index+1;
+            }
             storage->single.type=element;
             storage->single.index=index;
         }
@@ -244,6 +285,7 @@ static void retire(myl_native_heap *heap, void *payload) {
     rc_slab *slab=(rc_slab *)((uintptr_t)object&~(uintptr_t)(RC_SLAB_BYTES-1));
     rc_class *class=&storage_of(heap)->classes[slab->class.index];
     int full=!slab->free && slab->used==slots(slab);
+    object->common.mark=RC_RETIRED_MARK;
     memcpy(object,&slab->free,sizeof slab->free);
     slab->free=object;
     assert(slab->live);
@@ -267,12 +309,51 @@ static void destroy(myl_native_heap *heap) {
     free(storage);
 }
 static const myl_rc_allocator allocator={allocate,retire,destroy};
+void myl_rc_storage_visit(myl_native_heap *heap, myl_rc_extent_visitor visit, void *context) {
+    myl_rc_invariant(heap && heap->rc && heap->rc->allocator.hooks.allocate==allocate && visit);
+    rc_storage *storage=storage_of(heap);
+    for (size_t i=0;i<RC_SLAB_CLASSES;i++)
+        for (rc_slab *slab=storage->classes[i].all;slab;slab=slab->all.next) {
+            unsigned char *slot=(unsigned char *)slab+RC_SLAB_OFFSET;
+            for (size_t used=slab->used;used;--used,slot+=slab->stride) {
+                myl_rc_object *object=(myl_rc_object *)slot;
+                if (object->common.mark!=RC_RETIRED_MARK) visit(heap,object+1,context);
+            }
+        }
+    for (rc_large *large=storage->large;large;large=large->next)
+        visit(heap,(myl_rc_object *)(large+1)+1,context);
+}
+void myl_rc_storage_release_all(myl_native_heap *heap) {
+    myl_rc_invariant(heap && heap->rc && heap->rc->allocator.hooks.allocate==allocate);
+    myl_rc_invariant(!heap->rc->dead.active && !heap->rc->walk.depth);
+    rc_storage *storage=storage_of(heap);
+    size_t released=0;
+    while (storage->large) {
+        rc_large *large=storage->large;
+        storage->large=large->next;
+        discharge(heap,large->charge);
+        free(large);
+        ++released;
+    }
+    for (size_t i=0;i<RC_SLAB_CLASSES;i++)
+        while (storage->classes[i].all) {
+            rc_slab *slab=storage->classes[i].all;
+            released+=slab->live;
+            slab->live=0;
+            slab_free(heap,slab);
+        }
+    myl_rc_invariant(heap->objects_live>=released && storage->reserved==sizeof *storage);
+    heap->objects_live-=released;
+    heap->rc->dead.head=NULL;
+    reuse_epoch(heap);
+}
 myl_rc_status myl_rc_storage_init(myl_native_heap *heap) {
     if (!budget(heap,sizeof(rc_storage))) return MYL_RC_ALLOCATION_REFUSED;
     rc_storage *storage=calloc(1,sizeof *storage);
     if (!storage) return MYL_RC_ALLOCATION_REFUSED;
     heap->bytes+=sizeof *storage;
     storage->reserved=sizeof *storage;
+    for (size_t step=0;step<RC_CLASS_STEPS;step++) storage->class_of[step]=(unsigned char)class_search(step*16);
     myl_rc_status status=myl_rc_heap_init(heap,&allocator,storage);
     if (status!=MYL_RC_OK) { heap->bytes-=sizeof *storage; free(storage); return status; }
     status=myl_rc_module_register(heap,&raw_module);

@@ -1079,7 +1079,9 @@ void *myl_native_heap_extend(myl_native_heap *heap, void *payload, size_t count)
 }
 void *myl_native_heap_alloc_at(myl_native_heap *heap, const myl_native_type *element, size_t count, unsigned region) {
 #if defined(MYL_NATIVE_RC) && MYL_NATIVE_RC
-    if (!myl_rc_enabled(heap)) return NULL;
+    /* An RC artifact never falls back to the tracing heap. */
+    if (!heap || !heap->rc) return NULL;
+    return myl_rc_storage_alloc(heap,element,count,region);
 #endif
     if (myl_rc_enabled(heap)) return myl_rc_storage_alloc(heap,element,count,region);
     return alloc_object(heap, element, count, region, 1);

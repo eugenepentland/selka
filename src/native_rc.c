@@ -26,24 +26,34 @@ int myl_rc_size_mul(size_t a, size_t b, size_t *out) {
     *out = a * b;
     return 1;
 }
-void *myl_rc_meta_alloc(myl_native_heap *heap, size_t bytes) {
+int myl_rc_meta_admit(myl_native_heap *heap, size_t bytes) {
     size_t total;
     myl_rc_invariant(heap && heap->rc && bytes);
     if (!myl_rc_size_add(heap->bytes, bytes, &total) || (heap->limit && total > heap->limit)) {
         heap->exhausted = 1;
-        return NULL;
+        return 0;
     }
+    return 1;
+}
+void myl_rc_meta_charge(myl_native_heap *heap, size_t bytes) {
+    heap->bytes += bytes;
+    heap->rc->metadata.bytes += bytes;
+}
+void myl_rc_meta_discharge(myl_native_heap *heap, size_t bytes) {
+    myl_rc_invariant(heap->bytes >= bytes && heap->rc->metadata.bytes >= bytes);
+    heap->bytes -= bytes;
+    heap->rc->metadata.bytes -= bytes;
+}
+void *myl_rc_meta_alloc(myl_native_heap *heap, size_t bytes) {
+    if (!myl_rc_meta_admit(heap, bytes)) return NULL;
     void *memory = calloc(1, bytes);
     if (!memory) return NULL;
-    heap->bytes = total;
-    heap->rc->metadata.bytes += bytes;
+    myl_rc_meta_charge(heap, bytes);
     return memory;
 }
 void myl_rc_meta_free(myl_native_heap *heap, void *memory, size_t bytes) {
     if (!memory) return;
-    myl_rc_invariant(heap->bytes >= bytes && heap->rc->metadata.bytes >= bytes);
-    heap->bytes -= bytes;
-    heap->rc->metadata.bytes -= bytes;
+    myl_rc_meta_discharge(heap, bytes);
     free(memory);
 }
 const char *myl_rc_status_code(myl_rc_status status) {
@@ -78,6 +88,7 @@ myl_rc_status myl_rc_heap_init(myl_native_heap *heap, const myl_rc_allocator *al
     state->allocator.hooks = *allocator;
     state->allocator.context = context;
     state->metadata.bytes = sizeof *state;
+    myl_rc_metadata_init(state);
     heap->bytes = total;
     heap->rc = state;
     return MYL_RC_OK;
@@ -100,7 +111,12 @@ void myl_rc_heap_destroy(myl_native_heap *heap) {
         myl_rc_meta_free(heap, batch, batch->bytes);
     }
     myl_rc_meta_free(heap, state->walk.frames, state->walk.capacity * sizeof(myl_rc_frame));
-    myl_rc_meta_free(heap, state->metadata.index.entries, state->metadata.index.capacity * sizeof(myl_rc_index_entry));
+    myl_rc_metadata_release(heap);
+    while (state->spare.entries) {
+        myl_rc_spare *spare = state->spare.entries;
+        state->spare.entries = spare->next;
+        free(spare);
+    }
     myl_rc_invariant(state->metadata.bytes == sizeof *state);
     heap->bytes -= sizeof *state;
     free(state);
@@ -110,7 +126,8 @@ myl_rc_status myl_rc_new(myl_native_heap *heap, const myl_rc_alloc_request *requ
     size_t bytes;
     myl_rc_invariant(heap && heap->rc && request && out);
     *out = NULL;
-    myl_rc_invariant(request->element && myl_rc_descriptor_find(heap, request->element));
+    myl_rc_invariant(request->element != NULL);
+    myl_rc_checked(myl_rc_binding_find(heap, request->element) != NULL);
     if (!myl_rc_size_mul(request->element->size, request->count, &bytes) ||
         !myl_rc_size_add(bytes, request->region ? sizeof(myl_native_object) : MYL_RC_PREFIX_BYTES, &bytes) ||
         request->count > (request->region ? MYL_NATIVE_ARENA_COUNT_MAX : MYL_NATIVE_OBJECT_COUNT_MAX))
@@ -128,17 +145,10 @@ void myl_rc_allocator_retire(myl_native_heap *heap, void *payload) {
     MYL_RC_STAT(heap, MYL_RC_STAT_RETIRE);
     heap->rc->allocator.hooks.retire(heap, payload);
 }
-int myl_rc_is_counted(const void *payload) {
-    if (!payload) return 0;
-    const myl_native_object *common = (const myl_native_object *)payload - 1;
-    return !(common->mark & (MYL_NATIVE_OBJECT_IMMORTAL | MYL_NATIVE_OBJECT_ARENA));
-}
+int myl_rc_is_counted(const void *payload) { return myl_rc_counted(payload); }
 static myl_rc_object *live_object(myl_native_heap *heap, void *payload) {
     myl_rc_invariant(heap && heap->rc);
-    myl_rc_object *object = (myl_rc_object *)payload - 1;
-    myl_rc_invariant(!(object->common.mark & MYL_RC_OBJECT_DYING));
-    myl_rc_invariant(object->owners || object->holds);
-    return object;
+    return myl_rc_live(payload);
 }
 myl_rc_status myl_rc_owner_acquire(myl_native_heap *heap, void *payload) {
     if (!myl_rc_is_counted(payload)) return MYL_RC_OK;
@@ -148,35 +158,37 @@ myl_rc_status myl_rc_owner_acquire(myl_native_heap *heap, void *payload) {
     MYL_RC_STAT(heap, MYL_RC_STAT_OWNER_ACQUIRE);
     return MYL_RC_OK;
 }
-void myl_rc_enqueue(myl_native_heap *heap, myl_rc_object *object) {
-    if (object->owners || object->holds) return;
-    myl_rc_invariant(!(object->common.mark & MYL_RC_OBJECT_DYING));
-    object->common.mark |= MYL_RC_OBJECT_DYING;
+/* An object whose admitted flat plan has no leaf has no edge, hook or
+ * finalizer. Outside an active drain it retires at once instead of passing
+ * through the queue; inside one (including finalizer reentry) it stays queued
+ * behind its siblings, and the drain loop retires it without a walk. */
+void myl_rc_dead_outside(myl_native_heap *heap, myl_rc_object *object) {
+    const myl_rc_binding *binding = myl_rc_binding_find(heap, object->common.element);
+    if (binding && !binding->flat.count) {
+        myl_rc_retire(heap, object);
+        return;
+    }
     object->owners = (uintptr_t)heap->rc->dead.head;
     heap->rc->dead.head = object;
 }
+void myl_rc_enqueue(myl_native_heap *heap, myl_rc_object *object) {
+    if (object->owners || object->holds) return;
+    myl_rc_dies(heap, object);
+}
 void myl_rc_edge_release(myl_native_heap *heap, void *payload) {
-    if (!myl_rc_is_counted(payload)) return;
-    myl_rc_object *object = live_object(heap, payload);
-    myl_rc_invariant(object->owners != 0);
-    --object->owners;
-    MYL_RC_STAT(heap, MYL_RC_STAT_OWNER_RELEASE);
-    myl_rc_enqueue(heap, object);
+    if (myl_rc_counted(payload)) myl_rc_invariant(heap && heap->rc);
+    myl_rc_owner_drop(heap, payload);
 }
 void myl_rc_owner_release(myl_native_heap *heap, void *payload) {
     myl_rc_edge_release(heap, payload);
-    myl_rc_drain(heap);
+    if (heap && heap->rc) myl_rc_drain_pending(heap);
 }
 int myl_rc_unique(const myl_native_heap *heap, const void *payload) {
     MYL_RC_STAT(heap, MYL_RC_STAT_UNIQUE_CHECK);
-    if (!payload) return 1;
-    uintptr_t mark = ((const myl_native_object *)payload - 1)->mark;
-    if (mark & (MYL_NATIVE_OBJECT_IMMORTAL | MYL_NATIVE_OBJECT_SHARED)) return 0;
-    if (mark & MYL_NATIVE_OBJECT_ARENA) return 1;
-    myl_rc_invariant(heap && heap->rc && !(mark & MYL_RC_OBJECT_DYING));
-    const myl_rc_object *object = (const myl_rc_object *)payload - 1;
-    myl_rc_invariant(object->owners || object->holds);
-    return object->owners <= 1;
+    if (payload && !(((const myl_native_object *)payload - 1)->mark &
+        (MYL_NATIVE_OBJECT_IMMORTAL | MYL_NATIVE_OBJECT_SHARED | MYL_NATIVE_OBJECT_ARENA)))
+        myl_rc_invariant(heap && heap->rc);
+    return myl_rc_unique_payload(payload);
 }
 myl_rc_status myl_rc_hold_acquire(myl_native_heap *heap, void *payload, myl_rc_hold *hold) {
     myl_rc_invariant(hold && !hold->payload);
@@ -190,20 +202,15 @@ myl_rc_status myl_rc_hold_acquire(myl_native_heap *heap, void *payload, myl_rc_h
     return MYL_RC_OK;
 }
 void myl_rc_hold_edge_release(myl_native_heap *heap, void *payload) {
-    if (myl_rc_is_counted(payload)) {
-        myl_rc_object *object = live_object(heap, payload);
-        myl_rc_invariant(object->holds != 0);
-        --object->holds;
-        MYL_RC_STAT(heap, MYL_RC_STAT_HOLD_RELEASE);
-        myl_rc_enqueue(heap, object);
-    }
+    if (myl_rc_counted(payload)) myl_rc_invariant(heap && heap->rc);
+    myl_rc_hold_drop(heap, payload);
 }
 void myl_rc_hold_release(myl_native_heap *heap, myl_rc_hold *hold) {
     myl_rc_invariant(hold != NULL);
     void *payload = hold->payload;
     hold->payload = NULL;
     myl_rc_hold_edge_release(heap, payload);
-    myl_rc_drain(heap);
+    if (heap && heap->rc) myl_rc_drain_pending(heap);
 }
 myl_rc_status myl_rc_pin_acquire(myl_native_heap *heap, void *payload, myl_rc_pin *pin) {
     myl_rc_invariant(pin && !pin->hold.payload);

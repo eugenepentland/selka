@@ -181,8 +181,9 @@ static myl_rc_status schedule_clone(transfer_walk *walk, const void *payload, un
         if (reserved != MYL_RC_OK) return reserved;
     }
     const myl_native_object *common = (const myl_native_object *)payload - 1;
-    const myl_rc_descriptor *descriptor = myl_rc_descriptor_find(walk->heap, common->element);
-    myl_rc_invariant(descriptor && !descriptor->finalize);
+    const myl_rc_binding *binding = myl_rc_binding_find(walk->heap, common->element);
+    myl_rc_invariant(binding && !binding->descriptor.finalize);
+    const myl_rc_descriptor *descriptor = &binding->descriptor;
     myl_rc_invariant(descriptor->shell || descriptor->edges == NULL);
     int pending = descriptor->next || (!descriptor->shell && descriptor->shape->kind != MYL_RC_SHAPE_NONE);
     if (pending) {
@@ -293,7 +294,8 @@ static myl_rc_status commit_take(transfer_walk *walk, unsigned char *destination
  * deeper shapes own charged heap storage; capacity distinguishes the two.
  * There is no maximum depth, and callbacks retain independent frame storage. */
 static myl_rc_status prepare_frames(transfer_walk *walk, const myl_rc_shape *shape) {
-    size_t needed = myl_rc_shape_depth(walk->heap, shape), bytes;
+    myl_rc_checked(myl_rc_shape_find(walk->heap, shape) == shape);
+    size_t needed = myl_rc_registered_depth(shape), bytes;
     if (needed <= 1 || needed <= walk->capacity) return MYL_RC_OK;
     myl_rc_invariant(!walk->depth);
     myl_rc_invariant(myl_rc_size_mul(needed, sizeof(transfer_frame), &bytes));
@@ -339,12 +341,14 @@ static myl_rc_status transfer_children(transfer_walk *walk, void *destination, c
         unsigned region = myl_native_header_region(payload);
         if (region > walk->region) return MYL_RC_REGION_ERROR;
         const myl_native_object *header = (const myl_native_object *)payload - 1;
-        const myl_rc_descriptor *descriptor = myl_rc_descriptor_find(walk->heap, header->element);
-        myl_rc_invariant(descriptor && !descriptor->finalize);
+        const myl_rc_binding *binding = myl_rc_binding_find(walk->heap, header->element);
+        myl_rc_invariant(binding && !binding->descriptor.finalize);
+        const myl_rc_descriptor *descriptor = &binding->descriptor;
         clone_frame frame = {.source=payload,.destination=payload,.descriptor=descriptor,.region=region};
         myl_rc_slot to, from;
         while (descriptor->next && clone_next(walk, &frame, &to, &from)) {
-            const myl_rc_shape *shape = myl_rc_shape_resolve(walk->heap, from.shape);
+            const myl_rc_shape *shape = myl_rc_shape_find(walk->heap, from.shape);
+            myl_rc_invariant(shape != NULL);
             myl_rc_status status = prepare_frames(walk, shape);
             if (status != MYL_RC_OK) return status;
             status = visit(walk, shape, from.address, from.address, inspect_child);
@@ -372,7 +376,7 @@ static myl_rc_status finish_clones(transfer_walk *walk) {
         myl_rc_slot to, from;
         clone_frame *frame = &work->items[work->count - 1];
         if (!clone_next(walk, frame, &to, &from)) { --work->count; continue; }
-        const myl_rc_shape *shape = myl_rc_shape_resolve(walk->heap, from.shape);
+        const myl_rc_shape *shape = myl_rc_shape_find(walk->heap, from.shape);
         myl_rc_invariant(shape && to.shape && to.shape->size == shape->size);
         myl_rc_status status = prepare_frames(walk, shape);
         if (status != MYL_RC_OK) return status;
@@ -447,8 +451,8 @@ static int pointer_fast(myl_native_heap *heap, void *destination, void *source,
 static myl_rc_status transfer(myl_native_heap *heap, myl_rc_slot *destination,
                               const myl_rc_slot *source, myl_rc_transfer mode, unsigned escaping, unsigned semantic) {
     myl_rc_invariant(heap && heap->rc && destination && source && destination->address && source->address);
-    const myl_rc_shape *shape = myl_rc_shape_resolve(heap, source->shape);
-    const myl_rc_shape *target = myl_rc_shape_resolve(heap, destination->shape);
+    const myl_rc_shape *shape = myl_rc_shape_find(heap, source->shape);
+    const myl_rc_shape *target = myl_rc_shape_find(heap, destination->shape);
     myl_rc_invariant(shape && target && shape->size == target->size && source->address != destination->address);
     if (destination->region > heap->region_depth) return MYL_RC_REGION_ERROR;
     if (!semantic && shape->kind == MYL_RC_SHAPE_POINTER) {
@@ -499,9 +503,9 @@ static myl_rc_status loan_pointer(transfer_walk *walk, unsigned char *destinatio
     (void)kind;
     void *payload;
     memcpy(&payload, source, sizeof payload);
-    if (payload) {
+    if (MYL_RC_CHECKED && payload) {
         const myl_native_object *header = (const myl_native_object *)payload - 1;
-        const myl_rc_descriptor *descriptor = myl_rc_descriptor_find(walk->heap, header->element);
+        const myl_rc_descriptor *descriptor = myl_rc_descriptor_of(walk->heap, header->element);
         myl_rc_invariant((header->mark & MYL_NATIVE_OBJECT_IMMORTAL) || (descriptor && !descriptor->finalize));
     }
     myl_rc_hold hold = {0};
@@ -512,7 +516,7 @@ static myl_rc_status loan_pointer(transfer_walk *walk, unsigned char *destinatio
 myl_rc_status myl_rc_loan_copy(myl_native_heap *heap, const myl_rc_shape *source_shape,
                                void *destination, const void *source) {
     myl_rc_invariant(heap && heap->rc && destination && source && destination != source);
-    const myl_rc_shape *shape = myl_rc_shape_resolve(heap, source_shape);
+    const myl_rc_shape *shape = myl_rc_shape_find(heap, source_shape);
     myl_rc_invariant(shape != NULL);
     uintptr_t dst = (uintptr_t)destination, src = (uintptr_t)source;
     myl_rc_invariant(dst > src ? dst - src >= shape->size : src - dst >= shape->size);
@@ -558,8 +562,8 @@ static myl_rc_status copy_many(myl_native_heap *heap, myl_rc_slot *destinations,
     size_t initialized = 0;
     myl_rc_status status = MYL_RC_OK;
     for (size_t i = 0; i < count; ++i) {
-        const myl_rc_shape *shape = myl_rc_shape_resolve(heap, sources[i].shape);
-        const myl_rc_shape *target = myl_rc_shape_resolve(heap, destinations[i].shape);
+        const myl_rc_shape *shape = myl_rc_shape_find(heap, sources[i].shape);
+        const myl_rc_shape *target = myl_rc_shape_find(heap, destinations[i].shape);
         myl_rc_invariant(shape && target && shape->size == target->size && sources[i].address != destinations[i].address);
         if (destinations[i].region > heap->region_depth) { status = MYL_RC_REGION_ERROR; break; }
         status = prepare_frames(&walk, shape);
@@ -596,7 +600,7 @@ myl_rc_status myl_rc_value_replace(myl_native_heap *heap, myl_rc_slot *destinati
     if (destination->address == source->address) return MYL_RC_OK;
     size_t size = destination->shape->size, bytes;
     myl_rc_invariant(size == source->shape->size);
-    const myl_rc_shape *shape = myl_rc_shape_resolve(heap, destination->shape);
+    const myl_rc_shape *shape = myl_rc_shape_find(heap, destination->shape);
     myl_rc_invariant(shape != NULL);
     if (shape->kind == MYL_RC_SHAPE_NONE) {
         memmove(destination->address, source->address, size);
@@ -622,7 +626,8 @@ myl_rc_status myl_rc_value_replace(myl_native_heap *heap, myl_rc_slot *destinati
     return status;
 }
 static void *slot_payload_kind(myl_native_heap *heap, const myl_rc_slot *slot, myl_rc_shape_kind kind) {
-    myl_rc_invariant(slot && slot->address && myl_rc_shape_resolve(heap, slot->shape));
+    myl_rc_invariant(slot && slot->address && slot->shape);
+    myl_rc_checked(myl_rc_shape_resolve(heap, slot->shape) != NULL);
     myl_rc_invariant(slot->shape->kind == kind && slot->shape->size == sizeof(void *));
     void *payload;
     memcpy(&payload, slot->address, sizeof payload);
@@ -645,8 +650,8 @@ static myl_rc_status box_detach(myl_native_heap *heap, myl_rc_slot *slot, unsign
     void *payload = slot_payload_kind(heap, slot, held ? MYL_RC_SHAPE_HOLD_POINTER : MYL_RC_SHAPE_POINTER);
     if (!payload) return MYL_RC_OK;
     const myl_native_object *header = (const myl_native_object *)payload - 1;
-    const myl_rc_descriptor *descriptor = myl_rc_descriptor_find(heap, header->element);
-    myl_rc_invariant(descriptor && !descriptor->finalize && !descriptor->next);
+    const myl_rc_binding *binding = myl_rc_binding_find(heap, header->element);
+    myl_rc_invariant(binding && !binding->descriptor.finalize && !binding->descriptor.next);
     unsigned region = myl_native_header_region(payload);
     if (region > slot->region) return MYL_RC_REGION_ERROR;
     void *copy = NULL;

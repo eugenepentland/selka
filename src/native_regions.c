@@ -37,7 +37,7 @@ unsigned myl_native_region_reach(const myl_native_heap *heap,
             memcpy(&payload, value, sizeof payload);
             return payload ? myl_native_header_region(payload) : 0;
         }
-        const myl_rc_descriptor *descriptor = myl_rc_descriptor_find(heap, type);
+        const myl_rc_descriptor *descriptor = myl_rc_descriptor_of(heap, type);
         myl_rc_invariant(descriptor != NULL);
         return myl_rc_value_region((myl_native_heap *)heap, descriptor->shape, value);
     }
