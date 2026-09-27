@@ -649,3 +649,28 @@ test "RC-BORROW-LOOP-1 warm callers follow loop certificates and fresh fallback 
     try t.expect(refused.misses >= 2);
     _ = try expectReusedEqualsFresh(root, &looping);
 }
+
+const rc_composed_helper = replaced(rc_loop_helper, "public def at(", "def picked(") ++
+    "\npublic def at(nodes: list[Span], index: int) -> Span:\n    a = picked(nodes, index)\n    b = picked(nodes, index + 1)\n    if a.start < b.start:\n        return a\n    return b\n";
+const rc_composed_fresh = replaced(rc_composed_helper, "b\"\"", "bytes([7])");
+
+// spec-case: RC-BORROW-COMPOSE-1
+test "RC-BORROW-COMPOSE-1 caller cache follows transitive callee certificate loss" {
+    const runtime = @import("runtime_mode.zig");
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    var directory = t.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    const composed: Files = .{ .main = rc_main, .helper = rc_composed_helper };
+    const lost: Files = .{ .main = rc_main, .helper = rc_composed_fresh };
+    const cold = try expectReusedEqualsFresh(root, &composed);
+    const warm = try expectReusedEqualsFresh(root, &composed);
+    try t.expectEqual(cold.misses, warm.hits);
+    try t.expectEqual(@as(usize, 0), warm.misses);
+    const refused = try expectReusedEqualsFresh(root, &lost);
+    try t.expect(refused.misses >= 3);
+    _ = try expectReusedEqualsFresh(root, &composed);
+}

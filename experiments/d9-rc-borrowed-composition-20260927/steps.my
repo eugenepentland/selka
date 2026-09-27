@@ -1,0 +1,19 @@
+record Node:
+    text: bytes
+    id: int
+def leaf(nodes: list[Node], key: int) -> Node:
+    i = 0
+    while i < 100000:
+        if i == key:
+            return nodes[i]
+        i += 1
+    return nodes[0]
+def selected(nodes: list[Node], key: int) -> Node:
+    return leaf(nodes, key)
+def main(out: Stream) -> int:
+    with arena():
+        nodes = [Node(bytes([65]), 7)]
+        out.print("before")
+        result = selected(nodes, -1)
+        out.print(result.id)
+    return 0

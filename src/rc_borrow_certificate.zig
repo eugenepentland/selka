@@ -8,7 +8,7 @@ const shapes = @import("rc_shape.zig");
 const model = @import("rc_model.zig");
 const Hash = std.crypto.hash.Blake3;
 /// Changing the accepted physical grammar changes every certificate identity.
-pub const version = "mylang-rc-borrowed-entry-v5";
+pub const version = "mylang-rc-borrowed-entry-v6";
 const cfg = @import("rc_borrow_flow.zig");
 const Value = cfg.Value;
 
@@ -19,8 +19,10 @@ pub fn certify(allocator: std.mem.Allocator, catalog: *shapes.Catalog, function:
 
 /// Every reachable return must contain only one parameter's edges or immortals.
 /// Monotone CFG joins converge before any physical return is accepted. Unknown
-/// operations and fresh heap objects decline; calls must prove immortal-only.
+/// operations and fresh heap objects decline; callees need complete proofs.
 pub fn certifyIn(allocator: std.mem.Allocator, catalog: *shapes.Catalog, functions: []const bytecode.Function, function: bytecode.Function, abi: []const u8) native.Error!?model.BorrowCertificate {
+    // Scalar proofs are internal call dependencies, never alternate entries.
+    if (!(try catalog.get(function.signature.return_type)).counted) return null;
     var traversal: Traversal = .{};
     const answer = (try analyze(.{ .allocator = allocator, .catalog = catalog, .functions = functions, .function = function, .abi = abi, .traversal = &traversal })) orelse return null;
     const parameter = answer.value.anchor orelse return null;
@@ -31,7 +33,19 @@ const Answer = struct { value: Value, identity: [32]u8 };
 const State = cfg.State;
 // One root query has a bounded call depth and total state-copy work. Active
 // instruction slices identify recursion without allocating another graph.
-const Traversal = struct { active: [16]?[*]const bytecode.Instruction = @splat(null), depth: usize = 0, remaining: usize = 65536, work: usize = 524288 };
+const Traversal = struct {
+    active: [16]?[*]const bytecode.Instruction = @splat(null),
+    depth: usize = 0,
+    remaining: usize = 65536,
+    work: usize = 524288,
+    memo: Memo = .{},
+};
+// Retain every completed dependency: eviction could let a caller rely on a
+// differently budgeted proof than the callee's independent emission query.
+const Memo = struct {
+    entries: [16]struct { target: usize, answer: ?Answer } = undefined,
+    count: usize = 0,
+};
 const Input = struct { allocator: std.mem.Allocator, catalog: *shapes.Catalog, functions: []const bytecode.Function, function: bytecode.Function, abi: []const u8, traversal: *Traversal };
 fn analyze(input: Input) native.Error!?Answer {
     const traversal = input.traversal;
@@ -60,7 +74,11 @@ fn admissible(catalog: *shapes.Catalog, function: bytecode.Function) native.Erro
     if (function.policy.c_abi or function.policy.host != null) return false;
     if (signature.mutates.len != 0 or signature.declared_mutates.len != 0) return false;
     const shape = try catalog.get(signature.return_type);
-    if (!shape.counted) return false;
+    // Internal scalar helpers use the same closed grammar. Public alternate
+    // entries still require a managed parameter anchor in certifyIn.
+    const result = signature.return_type;
+    const scalar = result.isInteger() or result == .bool or result == .unit;
+    if (!shape.counted and !scalar) return false;
     if (shape.unique_drop or !shape.copyable) return false;
     if (signature.parameter_count > function.scope.locals.len) return false;
     for (function.scope.locals) |local| if ((try catalog.get(local.ty)).unique_drop) return false;
@@ -239,16 +257,35 @@ const Proof = struct {
         const index = @backingInt(target);
         if (index >= self.functions.len) return false;
         const callee = self.functions[index];
-        const answer = (try analyze(.{ .allocator = allocator, .catalog = self.catalog, .functions = self.functions, .function = callee, .abi = self.abi, .traversal = self.traversal })) orelse return false;
-        // Only immortal factories are admitted as calls, so a canonical owned
-        // result cannot create an unjournaled runtime ownership obligation.
-        if (answer.value.anchor != null) return false;
         const count = callee.signature.parameter_count;
-        if (self.stack.items.len < count) return false;
-        self.stack.items.len -= count;
+        if (self.stack.items.len < count or count > callee.scope.locals.len) return false;
+        const base = self.stack.items.len - count;
+        for (self.stack.items[base..], callee.scope.locals[0..count]) |argument, parameter|
+            if (argument.ty != parameter.ty) return false;
+        const answer = (try self.calleeProof(allocator, index)) orelse return false;
+        var value = answer.value;
+        if (value.anchor) |parameter| {
+            if (parameter >= count) return false;
+            value.anchor = self.stack.items[base + parameter].anchor;
+            number(&self.hash, parameter);
+            number(&self.hash, if (value.anchor) |anchor| @as(u64, anchor) + 1 else 0);
+        }
+        self.stack.items.len = base;
         self.hash.update(&answer.identity);
-        try self.stack.append(allocator, answer.value);
+        try self.stack.append(allocator, value);
         return true;
+    }
+
+    fn calleeProof(self: *Proof, allocator: std.mem.Allocator, index: usize) native.Error!?Answer {
+        const memo = &self.traversal.memo;
+        for (memo.entries[0..memo.count]) |entry| if (entry.target == index) return entry.answer;
+        if (memo.count == memo.entries.len) return null;
+        const slot = memo.count;
+        memo.count += 1;
+        memo.entries[slot] = .{ .target = index, .answer = null };
+        const answer = try analyze(.{ .allocator = allocator, .catalog = self.catalog, .functions = self.functions, .function = self.functions[index], .abi = self.abi, .traversal = self.traversal });
+        memo.entries[slot].answer = answer;
+        return answer;
     }
 
     fn construct(self: *Proof, allocator: std.mem.Allocator, record: @FieldType(@FieldType(bytecode.Instruction, "op"), "make_record")) native.Error!bool {
