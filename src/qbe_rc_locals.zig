@@ -12,6 +12,7 @@ pub const Error = values.Error;
 pub fn emit(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "op"), stack: []const typed.Type) Error!bool {
     if (try @import("qbe_rc_borrow.zig").local(E, self, op, stack)) |handled| return handled;
     if (frame.get(E, self) == null) return false;
+    if (try @import("qbe_rc_plain_record_write.zig").local(E, self, op, stack)) return true;
     switch (try views.local(E, self, op, stack)) {
         .handled => return true,
         .unhandled => return ordinary(E, self, op, stack),
