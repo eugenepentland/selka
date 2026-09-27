@@ -2,6 +2,7 @@
 const bytecode = @import("bytecode.zig");
 const shapes = @import("rc_shape.zig");
 const native = @import("native_types.zig");
+const typed = @import("typed.zig");
 const Op = @FieldType(bytecode.Instruction, "op");
 
 /// Prove that every managed bit remains anchored by the read-only caller inputs.
@@ -67,10 +68,16 @@ pub fn allowed(catalog: *shapes.Catalog, function: bytecode.Function, op: Op) bo
         .binary_integer => |operation| operation.ty.integer() != null,
         .make_record => |record| !catalog.native.records[record.ty.recordIndex()].managed,
         .make_variant => true,
-        .get_index => |access| !catalog.native.records[access.ty.recordIndex()].managed,
+        .get_index => |access| indexable(catalog.native.records[access.ty.recordIndex()]),
         .buffer_operation => |operation| readList(catalog, function, operation),
         else => false,
     };
+}
+
+// Immutable octets use the existing normalized, bounds-checked scalar load.
+// Mutable buffers, dictionaries and allocating text indexing stay excluded.
+fn indexable(record: typed.Record) bool {
+    return !record.managed or (typed.isByteString(record) and record.shape.buffer == .u8);
 }
 
 fn readList(catalog: *shapes.Catalog, function: bytecode.Function, operation: @FieldType(Op, "buffer_operation")) bool {

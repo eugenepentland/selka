@@ -1,6 +1,8 @@
 //! Scalar helper composition binds proof and caller-cache identities together.
 const std = @import("std");
 const compiler = @import("compiler.zig");
+const bytecode = @import("bytecode.zig");
+const filename = "readonly_calls.my";
 const native = @import("native_types.zig");
 const shapes = @import("rc_shape.zig");
 const calls = @import("rc_readonly_calls.zig");
@@ -35,7 +37,7 @@ fn witness(allocator: std.mem.Allocator, leaf: []const u8) !Witness {
 }
 
 fn witnessSource(allocator: std.mem.Allocator, source: []const u8) !Witness {
-    var compilation = try compiler.Compilation.init(allocator, "readonly_calls.my", source);
+    var compilation = try compiler.Compilation.init(allocator, filename, source);
     defer compilation.deinit();
     try compilation.emit();
     const program = compilation.code.?;
@@ -88,7 +90,7 @@ const Manifest = struct { functions: []const struct { name: []const u8, il: []co
 fn emitted() !std.json.Parsed(Manifest) {
     const source = try dependencySource(t.allocator, 2, true);
     defer t.allocator.free(source);
-    var compilation = try compiler.Compilation.init(t.allocator, "readonly_calls.my", source);
+    var compilation = try compiler.Compilation.init(t.allocator, filename, source);
     defer compilation.deinit();
     const text = try compilation.emitQbe(t.allocator);
     defer t.allocator.free(text);
@@ -124,7 +126,7 @@ test "RC readonly calls compose scalar helpers and hash transitive body changes"
 }
 
 // spec-case: RC-READONLY-CALLS-1
-test "RC readonly calls refuse transitive allocation and managed return helpers" {
+test "RC readonly calls refuse transitive allocation and admit certified managed helpers" {
     const saved = runtime.get();
     defer runtime.set(saved);
     runtime.set(.rc);
@@ -140,7 +142,7 @@ test "RC readonly calls refuse transitive allocation and managed return helpers"
         \\    return returned(items, i).number
     );
     try t.expect(!allocated.admitted);
-    try t.expect(!managed.admitted);
+    try t.expect(managed.admitted);
 }
 
 // spec-case: RC-READONLY-CALLS-1
@@ -190,4 +192,296 @@ test "RC readonly calls emit raw caller and transitive helpers with checked boun
     try t.expect(rawReader(try named(manifest.value, "helper0")));
     try t.expect(rawReader(try named(manifest.value, "helper1")));
     try t.expect(std.mem.indexOf(u8, try named(manifest.value, "helper1"), "call $myl_qbe_fail_normalized_index_bounds") != null);
+}
+
+fn managedEmission() !std.json.Parsed(Manifest) {
+    const source = prefix ++
+        \\
+        \\def pick(items: list[Item], index: int) -> Item:
+        \\    return items[index]
+        \\def selected(items: list[Item]) -> int:
+        \\    first = pick(items, 0)
+        \\    second = pick(items, 1)
+        \\    return first.number + second.number
+        \\def main() -> int:
+        \\    return selected([Item(b"a", 3), Item(b"b", 7)])
+    ;
+    var compilation = try compiler.Compilation.init(t.allocator, "managed_readonly.my", source);
+    defer compilation.deinit();
+    const text = try compilation.emitQbe(t.allocator);
+    defer t.allocator.free(text);
+    return std.json.parseFromSlice(Manifest, t.allocator, text, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
+}
+
+// spec: RC-READONLY-MANAGED-CALLS-1
+test "RC readonly managed calls select public alternates without ownership journals" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    var output = try managedEmission();
+    defer output.deinit();
+    const selected = try named(output.value, "selected");
+    try t.expect(rawReader(selected));
+    try t.expectEqual(@as(usize, 2), std.mem.count(u8, selected, "_rc_borrow(l %ctx"));
+    // The canonical managed helper remains independently owned.
+    try t.expect(std.mem.indexOf(u8, try named(output.value, "pick"), "call $myl_qbe_rc_frame_enter") != null);
+}
+
+// spec-case: RC-READONLY-MANAGED-CALLS-1
+test "RC readonly managed calls invalidate unchanged callers when public certificates disappear" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    const before = try witness(t.allocator,
+        \\def returned(items: list[Item], i: int) -> Item:
+        \\    return items[i]
+        \\def leaf(items: list[Item], i: int) -> int:
+        \\    return returned(items, i).number
+    );
+    const after = try witness(t.allocator,
+        \\def returned(items: list[Item], i: int) -> Item:
+        \\    if i < 0:
+        \\        return Item(b"x", 11)
+        \\    other = [items[i]]
+        \\    return other[0]
+        \\def leaf(items: list[Item], i: int) -> int:
+        \\    return returned(items, i).number
+    );
+    try t.expect(before.admitted);
+    try t.expect(!after.admitted);
+    try t.expect(!std.mem.eql(u8, &before.key, &after.key));
+}
+
+fn managedDependencies(count: usize) !Witness {
+    var source: std.ArrayList(u8) = .empty;
+    defer source.deinit(t.allocator);
+    try source.appendSlice(t.allocator, prefix ++ "\ndef selected(items: list[Item]) -> int:\n    return left(items) + right(items)\n");
+    for ([_][]const u8{ "left", "right" }, 0..) |name, side| {
+        try source.print(t.allocator, "def {s}(items: list[Item]) -> int:\n    total = 0\n", .{name});
+        for (0..count) |i| if (i % 2 == side) {
+            try source.print(t.allocator, "    total += pick{d}(items).number\n", .{i});
+        };
+        try source.appendSlice(t.allocator, "    return total\n");
+    }
+    for (0..count) |i| try source.print(t.allocator, "def pick{d}(items: list[Item]) -> Item:\n    return items[0]\n", .{i});
+    try source.appendSlice(t.allocator, "def main() -> int:\n    return selected([Item(b\"a\", 3)])\n");
+    return witnessSource(t.allocator, source.items);
+}
+
+// spec-case: RC-READONLY-MANAGED-CALLS-1
+test "RC readonly managed queries share one root bound across plain descendants" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    try t.expect((try managedDependencies(16)).admitted);
+    try t.expect(!(try managedDependencies(17)).admitted);
+}
+
+const RouteChange = enum { none, missing, target, shape };
+fn routed(change: RouteChange) !?@import("rc_model.zig").BorrowCertificate {
+    const source = prefix ++
+        \\
+        \\def pick(items: list[Item]) -> Item:
+        \\    return items[0]
+        \\def main() -> int:
+        \\    return pick([Item(b"a", 3)]).number
+    ;
+    var compilation = try compiler.Compilation.init(t.allocator, "route.my", source);
+    defer compilation.deinit();
+    try compilation.emit();
+    const program = compilation.code.?;
+    const callee = program.functions[0];
+    var layouts = try native.Catalog.initRecords(t.allocator, program.records);
+    defer layouts.deinit();
+    var catalog = try shapes.Catalog.init(t.allocator, &layouts);
+    defer catalog.deinit();
+    const certificate = (try @import("rc_calls.zig").borrowedIn(t.allocator, &catalog, program.functions, callee, "rc-v3")) orelse return error.TestUnexpectedResult;
+    var route = [_]calls.Route{.{ .pc = 0, .target = callee.id, .certificate = certificate }};
+    switch (change) {
+        .target => route[0].target = @fromBackingInt(999),
+        .shape => route[0].certificate.shape_identity[0] ^= 1,
+        else => {},
+    }
+    const State = struct { readonly: bool, catalog: *shapes.Catalog, plan: struct { readonly: ?calls.Certificate } };
+    const Cow = struct { rc: ?*State };
+    const E = struct { cow: ?*Cow, pc: usize, states: []const ?[]const @import("typed.zig").Type };
+    var state: State = .{ .readonly = true, .catalog = &catalog, .plan = .{ .readonly = .{ .identity = @splat(0), .calls = if (change == .missing) &.{} else &route } } };
+    var cow: Cow = .{ .rc = &state };
+    var emitter: E = .{ .cow = &cow, .pc = 0, .states = &.{&.{callee.scope.locals[0].ty}} };
+    return @import("qbe_rc_readonly_calls.zig").route(E, &emitter, callee);
+}
+
+// spec-case: RC-READONLY-MANAGED-CALLS-1
+test "RC readonly managed routes never fall back on missing target or layout proof" {
+    try t.expect((try routed(.none)) != null);
+    try t.expectError(error.InternalError, routed(.missing));
+    try t.expectError(error.InternalError, routed(.target));
+    try t.expectError(error.InternalError, routed(.shape));
+}
+
+fn sourceEmission(source: []const u8) !std.json.Parsed(Manifest) {
+    var compilation = try compiler.Compilation.init(t.allocator, filename, source);
+    defer compilation.deinit();
+    const text = try compilation.emitQbe(t.allocator);
+    defer t.allocator.free(text);
+    return std.json.parseFromSlice(Manifest, t.allocator, text, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
+}
+
+// spec-case: RC-READONLY-MANAGED-CALLS-1
+test "RC readonly composition keeps pure conditional collection captures raw" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    const source =
+        \\def selected(first: list[int], second: list[int], choice: bool) -> int:
+        \\    return len(first if choice else second)
+        \\def main() -> int:
+        \\    return selected([1], [2, 3], True)
+    ;
+    try t.expect((try witnessSource(t.allocator, source)).admitted);
+    var output = try sourceEmission(source);
+    defer output.deinit();
+    try t.expect(rawReader(try named(output.value, "selected")));
+}
+
+fn conservativeCapture() !bool {
+    const source =
+        \\def leaf(first: list[int], second: list[int], choice: bool) -> int:
+        \\    return len(first if choice else second)
+        \\def selected(first: list[int], second: list[int], choice: bool) -> int:
+        \\    return leaf(first, second, choice)
+        \\def main() -> int:
+        \\    return selected([1], [2, 3], True)
+    ;
+    var compilation = try compiler.Compilation.init(t.allocator, "capture.my", source);
+    defer compilation.deinit();
+    try compilation.emit();
+    var program = compilation.code.?;
+    const functions = try t.allocator.dupe(bytecode.Function, program.functions);
+    defer t.allocator.free(functions);
+    program.functions = functions;
+    // Keep the conditional value on the operand stack instead of materializing
+    // its two arms through a local. This is valid pure bytecode; the general
+    // ownership planner conservatively loses its exact root at the join.
+    const old = functions[0].scope.instructions;
+    var code = [_]bytecode.Instruction{ old[0], old[1], old[2], old[4], old[5], old[8], old[9], old[10], old[11] };
+    code[1].op = .{ .jump_if_false = 4 };
+    code[3].op = .{ .jump = 5 };
+    functions[0].scope.instructions = &code;
+    try bytecode.validate(t.allocator, program);
+    var layouts = try native.Catalog.initRecords(t.allocator, program.records);
+    defer layouts.deinit();
+    var catalog = try shapes.Catalog.init(t.allocator, &layouts);
+    defer catalog.deinit();
+    var budget: @import("rc_readonly_plan.zig").Budget = .{};
+    const grammar = try @import("rc_readonly_body.zig").certify(&catalog, functions[0]);
+    const physical = try @import("rc_readonly_plan.zig").certify(&catalog, functions, functions[0], &budget);
+    const leaf = try calls.identity(&catalog, functions, functions[0], "rc-v3");
+    const root = try calls.identity(&catalog, functions, functions[1], "rc-v3");
+    return grammar and !physical and leaf == null and root == null;
+}
+
+// spec-case: RC-READONLY-MANAGED-CALLS-1
+test "RC readonly conservative capture refusal propagates through plain callers" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    try t.expect(try conservativeCapture());
+}
+
+// spec-case: RC-READONLY-MANAGED-CALLS-1
+test "RC readonly byte indexing admits immutable octets and refuses mutable buffers" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    const source =
+        \\def octets(values: list[bytes], index: int) -> bytes:
+        \\    return values[index]
+        \\def selected(values: list[bytes], index: int) -> int:
+        \\    saved = octets(values, 0)
+        \\    return int(saved[index])
+        \\def main() -> int:
+        \\    return selected([b"abc"], -1)
+    ;
+    try t.expect((try witnessSource(t.allocator, source)).admitted);
+    var output = try sourceEmission(source);
+    defer output.deinit();
+    const il = try named(output.value, "selected");
+    try t.expect(rawReader(il));
+    try t.expect(std.mem.indexOf(u8, il, "_rc_borrow(l %ctx") != null);
+    try t.expect(std.mem.indexOf(u8, il, "call $myl_qbe_fail_index_bounds") != null);
+    try t.expect(!(try witnessSource(t.allocator,
+        \\def selected(value: byte_buffer, index: int) -> int:
+        \\    return int(value[index])
+        \\def main() -> int:
+        \\    return 0
+    )).admitted);
+    try t.expect(!(try witnessSource(t.allocator,
+        \\def selected(value: str, index: int) -> int:
+        \\    return len(value[index])
+        \\def main() -> int:
+        \\    return 0
+    )).admitted);
+    try t.expect(!(try witnessSource(t.allocator,
+        \\def selected(value: dict[int, int], index: int) -> int:
+        \\    return value[index]
+        \\def main() -> int:
+        \\    return 0
+    )).admitted);
+}
+
+// spec-case: RC-READONLY-MANAGED-CALLS-1
+test "RC readonly plain descendants select their own managed alternate routes" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    var output = try sourceEmission(prefix ++
+        \\
+        \\def pick(items: list[Item], index: int) -> Item:
+        \\    return items[index]
+        \\def middle(items: list[Item]) -> int:
+        \\    saved = pick(items, 0)
+        \\    current = pick(items, 1)
+        \\    return saved.number + current.number
+        \\def selected(items: list[Item]) -> int:
+        \\    return middle(items) + 1
+        \\def main() -> int:
+        \\    return selected([Item(b"a", 3), Item(b"b", 7)])
+    );
+    defer output.deinit();
+    try t.expect(rawReader(try named(output.value, "selected")));
+    const middle = try named(output.value, "middle");
+    try t.expect(rawReader(middle));
+    try t.expectEqual(@as(usize, 2), std.mem.count(u8, middle, "_rc_borrow(l %ctx"));
+}
+
+// spec-case: RC-READONLY-MANAGED-CALLS-1
+test "RC readonly large helper results materialize saved bits before repeated calls" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    var output = try sourceEmission(
+        \\record Big:
+        \\    text: bytes
+        \\    padding: [600]int
+        \\    number: int
+        \\def pick(items: list[Big], index: int) -> Big:
+        \\    return items[index]
+        \\def selected(items: list[Big]) -> int:
+        \\    saved = pick(items, 0)
+        \\    total = 0
+        \\    i = 0
+        \\    while i < 2:
+        \\        current = pick(items, i)
+        \\        total += saved.number + current.number + int(saved.text[0])
+        \\        i += 1
+        \\    return total
+        \\def main() -> int:
+        \\    return 0
+    );
+    defer output.deinit();
+    const selected = try named(output.value, "selected");
+    try t.expect(rawReader(selected));
+    try t.expectEqual(@as(usize, 2), std.mem.count(u8, selected, "_rc_borrow(l %ctx, l %aux"));
+    try t.expect(std.mem.count(u8, selected, ", 4816\n") >= 2);
 }

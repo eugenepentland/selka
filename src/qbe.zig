@@ -1641,9 +1641,9 @@ const Emitter = struct {
             const rc = self.cow.?.rc.?;
             if (certificate) |proof| {
                 rc.contract.result = .{ .borrowed = proof };
-            } else if ((@import("rc_readonly_calls.zig").identity(&rc.catalog, self.program.functions, f, runtime_mode.identity()) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError) != null) {
-                rc.readonly = true;
-                rc.active = false;
+            } else {
+                rc.plan.readonly = @import("rc_readonly_calls.zig").certify(&rc.catalog, self.program.functions, f, runtime_mode.identity()) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError;
+                @import("qbe_rc_readonly_calls.zig").activate(Emitter, self);
             }
         }
         if (!runtime_mode.enabled()) self.range_keys = try self.planRangeKeys();
@@ -1662,6 +1662,7 @@ const Emitter = struct {
         if (runtime_mode.enabled()) try @import("qbe_rc_dictionary_tail.zig").finalize(Emitter, self);
         if (runtime_mode.enabled()) try @import("qbe_rc_empty_locals.zig").finalize(Emitter, self);
         if (runtime_mode.enabled()) try @import("qbe_rc_empty_frame.zig").finalize(Emitter, self);
+        try @import("qbe_rc_readonly_calls.zig").verify(Emitter, self);
         try self.findRoots();
         if (self.needsRootProtocol()) self.live_roots = try self.rootLiveness();
         const capacity = ir.stack_capacity;

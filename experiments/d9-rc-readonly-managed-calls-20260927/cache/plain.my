@@ -1,0 +1,12 @@
+record Item:
+    text: bytes
+    number: int
+def leaf(items: list[Item], index: int) -> Item:
+    return items[index]
+def middle(items: list[Item], index: int) -> int:
+    saved = leaf(items, index)
+    return saved.number + int(saved.text[0])
+def selected(items: list[Item]) -> int:
+    return middle(items, 0)
+def main() -> int:
+    return selected([Item(b"a", 3)])

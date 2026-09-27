@@ -1,0 +1,43 @@
+list str type#19
+  element u32 (managed)
+list bytes type#20
+  element u8 (managed)
+domain float type#21
+  backing u64 (private)
+list List<i64> type#22
+  element i64 (managed)
+function selected(first: List<i64>, second: List<i64>, choice: bool) -> i64
+  0000  LOAD_LOCAL 2  ; 2:25
+  0001  JUMP_IF_FALSE 5  ; 2:25
+  0002  LOAD_LOCAL 0  ; 2:16
+  0003  STORE_LOCAL 3  ; 2:16
+  0004  JUMP 7  ; 2:16
+  0005  LOAD_LOCAL 1  ; 2:37
+  0006  STORE_LOCAL 3  ; 2:37
+  0007  LOAD_LOCAL 3  ; 2:16
+  0008  STORE_LOCAL 4  ; 2:12
+  0009  BUFFER_length local=4 -> u64  ; 2:12
+  0010  CAST_INT i64  ; 2:12
+  0011  RET  ; 2:5
+function main() -> i64
+  effects {managed_allocation}
+  0000  PUSH_I64 1  ; 4:21
+  0001  ACQUIRE_BUFFER type#22  ; 4:21
+  0002  STORE_LOCAL 0  ; 4:21
+  0003  PUSH_I64 1  ; 4:22
+  0004  BUFFER_append local=0 -> unit  ; 4:21
+  0005  POP  ; 4:21
+  0006  LOAD_LOCAL 0  ; 4:21
+  0007  PUSH_I64 2  ; 4:26
+  0008  ACQUIRE_BUFFER type#22  ; 4:26
+  0009  STORE_LOCAL 1  ; 4:26
+  0010  PUSH_I64 2  ; 4:27
+  0011  BUFFER_append local=1 -> unit  ; 4:26
+  0012  POP  ; 4:26
+  0013  PUSH_I64 3  ; 4:30
+  0014  BUFFER_append local=1 -> unit  ; 4:26
+  0015  POP  ; 4:26
+  0016  LOAD_LOCAL 1  ; 4:26
+  0017  PUSH_BOOL true  ; 4:34
+  0018  CALL 0 (selected)  ; 4:12
+  0019  RET  ; 4:5

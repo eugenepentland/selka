@@ -17,6 +17,9 @@ pub fn active(comptime E: type, self: *E) bool {
 
 /// Resolve a direct callee's every-return proof in the current physical catalog.
 pub fn certificate(comptime E: type, self: *E, function: bytecode.Function) Error!?model.BorrowCertificate {
+    if (runtime.enabled()) if (self.cow) |cow| if (cow.rc) |state| {
+        if (state.readonly) return @import("qbe_rc_readonly_calls.zig").route(E, self, function);
+    };
     const state = frame.get(E, self) orelse return null;
     return @import("rc_calls.zig").borrowedIn(self.allocator, &state.catalog, self.program.functions, function, runtime.identity()) catch |err| {
         return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError;
