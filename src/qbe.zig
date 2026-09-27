@@ -1663,7 +1663,7 @@ const Emitter = struct {
             }
             @import("qbe_rc_readonly_calls.zig").activate(Emitter, self);
         }
-        if (!runtime_mode.enabled()) self.range_keys = try self.planRangeKeys();
+        self.range_keys = try self.planRangeKeys();
         // QBE-LOOP-VERSION-1: only a build whose value guards are on has
         // anything to prove, and step accounting counts every instruction the
         // original executes, so a counted build keeps one copy.
@@ -2708,7 +2708,12 @@ const Emitter = struct {
     }
     fn emitOp(self: *Emitter, op: @FieldType(bytecode.Instruction, "op"), stack: []const typed.Type) GenerateError!void {
         const h = stack.len;
-        if (try @import("qbe_rc_locals.zig").emit(Emitter, self, op, stack)) return;
+        if (try @import("qbe_rc_locals.zig").emit(Emitter, self, op, stack)) {
+            // RC-RANGE-KEY-1: a range local's span travels with its counted store.
+            if (op == .store_local and self.range_keys.role(self.pc) == .store and !self.moves.aliased(@backingInt(op.store_local)))
+                try range_keys.Lower(Emitter).store(self, @backingInt(op.store_local), h - 1);
+            return;
+        }
         switch (op) {
             .acquire_resource, .complete_resource, .resource_io, .restrict_resource, .dir_resource, .host_resource => try @import("qbe_resources.zig").Lower(Emitter).emit(self, op, stack),
             .external_read, .stand_in, .environment_get, .environment_only, .environment_names => try @import("qbe_boundaries.zig").emit(self, op, stack),

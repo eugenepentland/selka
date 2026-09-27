@@ -112,8 +112,10 @@ struct myl_rc_state {
     myl_rc_scope *scopes;
     /* Released scope journal nodes kept for the next capture (RC-SCOPE-SPARE-1). */
     struct { myl_rc_spare *entries; size_t count; } spare;
-    /* The last type myl_rc_plain_type proved owns nothing (RC-PLAIN-TYPE-1). */
-    const myl_native_type *plain;
+    /* The last type myl_rc_plain_type proved owns nothing, and the last such
+     * type that is also a one-, two-, four- or eight-byte scalar a list room
+     * append stores directly (RC-PLAIN-TYPE-1). */
+    const myl_native_type *plain, *plain_word;
     myl_rc_status failure;
 #if defined(MYL_NATIVE_RC_COUNTING) && MYL_NATIVE_RC_COUNTING
     myl_rc_counters stats;

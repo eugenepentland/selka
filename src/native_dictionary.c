@@ -732,9 +732,7 @@ static inline int rc_replace(myl_native_heap *heap, const myl_native_type *type,
                              void *target, const void *source, unsigned region) {
     if (target==source) return 1;
     if (type->kind==MYL_NATIVE_PLAIN && type->size==8) {
-        const myl_rc_descriptor *descriptor=myl_rc_descriptor_of(heap,type);
-        if (descriptor && !((const myl_rc_binding *)descriptor)->flat.count &&
-            !heap->rc->dead.head && region<=heap->region_depth) {
+        if (!heap->rc->dead.head && region<=heap->region_depth && myl_rc_plain_type(heap,type)) {
             uint64_t word;
             memcpy(&word,source,8);
             memcpy(target,&word,8);
@@ -889,7 +887,7 @@ static __attribute__((noinline)) int insert_span(myl_native_heap *heap, myl_nati
 int myl_native_dictionary_write_range(myl_native_heap *heap, myl_native_dictionary *dict, myl_native_text *text, const myl_native_text_span *span, const void *value) {
     located at=find_span(heap,dict,span_of(text,span));
     if (myl_rc_enabled(heap)) {
-        if (at.entry!=NO_ENTRY) return myl_rc_native_retain_replace(heap,dict->value,entry_at(dict,at.entry)+dict->value_offset,value,myl_native_header_region(dict));
+        if (at.entry!=NO_ENTRY) return rc_replace(heap,dict->value,entry_at(dict,at.entry)+dict->value_offset,value,myl_native_header_region(dict));
         myl_native_text *owned=myl_native_text_piece_at(heap,text,span,myl_native_header_region(dict));
         if (!owned) return 0;
         int ok=rc_insert(heap,dict,&owned,value);

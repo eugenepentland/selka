@@ -118,3 +118,28 @@ test "RC-ALLOC-CACHE-1 counting builds and arena programs keep the runtime's cou
     try t.expect(std.mem.indexOf(u8, arena, ", 112\n") != null);
     try t.expect(std.mem.indexOf(u8, arena, "\n@rccell_fast") != null);
 }
+
+// spec: RC-RANGE-KEY-1
+test "RC-RANGE-KEY-1 a counted dictionary key slice borrows its text instead of building one" {
+    const il = try countedIl(
+        \\def frequencies(seq: str, k: int) -> dict[str, int]:
+        \\    counts: dict[str, int] = {}
+        \\    for i in range(len(seq) - k + 1):
+        \\        key = seq[i:i + k]
+        \\        counts[key] = counts.get(key, 0) + 1
+        \\    return counts
+        \\
+        \\
+        \\def main() -> int:
+        \\    return len(frequencies("ACGTACGT", 2))
+    , "frequencies");
+    defer t.allocator.free(il);
+    try t.expect(std.mem.indexOf(u8, il, "call $myl_native_text_range(") != null);
+    try t.expect(std.mem.indexOf(u8, il, "call $myl_native_dictionary_read_range(") != null);
+    try t.expect(std.mem.indexOf(u8, il, "call $myl_native_dictionary_write_range(") != null);
+    try t.expectEqual(@as(usize, 0), std.mem.count(u8, il, "call $myl_native_text_slice("));
+    try t.expectEqual(@as(usize, 0), std.mem.count(u8, il, "call $myl_native_dictionary_write(l"));
+    // The range local's span is stored with its counted value and read back.
+    try t.expect(std.mem.indexOf(u8, il, " blit %rs") != null and std.mem.indexOf(u8, il, ", %rl") != null);
+    try t.expect(std.mem.indexOf(u8, il, " blit %rl") != null);
+}
