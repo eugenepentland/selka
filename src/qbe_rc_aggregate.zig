@@ -51,6 +51,11 @@ fn pending(comptime E: type, self: *E, ty: typed.Type, address: usize) Error!voi
     try frame.initialized(E, self, index, true);
 }
 
+fn owns(comptime E: type, self: *E, ty: typed.Type) Error!bool {
+    const shape = frame.get(E, self).?.catalog.get(ty) catch return error.InternalError;
+    return shape.counted or shape.unique_drop;
+}
+
 fn zero(comptime E: type, self: *E, ty: typed.Type, address: usize) Error!void {
     try self.print(" call $memset(l %v{d}, w 0, l {d})\n", .{ address, (try self.layout(ty)).size });
 }
@@ -106,10 +111,13 @@ fn recordBody(comptime E: type, self: *E, record: @FieldType(Op, "make_record"),
         try self.aggregatePointer();
     if (managed) {
         if (!infallible) try values.holdRuntime(E, self, record.ty, pointer);
-    } else {
+    } else if (try owns(E, self, record.ty)) {
         try zero(E, self, record.ty, pointer);
         if (!infallible) try internal(E, self, record.ty, pointer);
     }
+    // RC-PLAIN-CONSTRUCT-1: a plain inline record owns nothing; each field is
+    // written below without a fallible step, so it needs neither zero bytes
+    // nor a cleanup entry for a partial value, exactly as the collector.
     const depth = try region(E, self);
     const base = height - record.fields;
     for (0..record.fields) |i| {

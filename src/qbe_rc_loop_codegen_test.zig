@@ -147,3 +147,49 @@ test "RC-FRESH-APPEND-GENERATION-1 a certified fresh append loop tests room with
     try t.expect(std.mem.indexOf(u8, parameter, "%rcappend0") == null);
     try t.expect(std.mem.indexOf(u8, parameter, ", -1\n") != null);
 }
+
+const records =
+    \\record Row:
+    \\    a: int
+    \\    b: int
+    \\    c: int
+    \\    d: int
+    \\record Named:
+    \\    label: str
+    \\    size: int
+    \\def build(n: int) -> list[Row]:
+    \\    rows: list[Row] = []
+    \\    for i in range(n):
+    \\        rows.append(Row(a=i, b=i + 1, c=i + 2, d=i + 3))
+    \\    return rows
+    \\def sum_c(rows: list[Row]) -> int:
+    \\    total = 0
+    \\    for row in rows:
+    \\        total += row.c
+    \\    return total
+    \\def named(n: int) -> Named:
+    \\    return Named(label="x", size=n)
+    \\def main() -> int:
+    \\    return sum_c(build(3)) + named(2).size
+;
+
+// spec: RC-PLAIN-CONSTRUCT-1
+test "RC-PLAIN-CONSTRUCT-1 a plain record is built without zeroing or a cleanup entry" {
+    var rc = try emit(records, .rc);
+    defer rc.deinit();
+    const build = try named(rc.value, "build");
+    try t.expect(std.mem.indexOf(u8, build, "w 0, l 32)") == null);
+    try t.expect(std.mem.indexOf(u8, try named(rc.value, "named"), "w 0, l 16)") != null);
+}
+
+// spec: RC-PLAIN-READ-IN-PLACE-1
+test "RC-PLAIN-READ-IN-PLACE-1 a plain element read with no owning input is not snapshotted twice" {
+    var rc = try emit(records, .rc);
+    defer rc.deinit();
+    var gc = try emit(records, .gc);
+    defer gc.deinit();
+    const rc_sum = try named(rc.value, "sum_c");
+    const gc_sum = try named(gc.value, "sum_c");
+    try t.expect(std.mem.indexOf(u8, rc_sum, "copy %agg") == null);
+    try t.expect(std.mem.count(u8, rc_sum, " blit ") <= std.mem.count(u8, gc_sum, " blit ") + 2);
+}
