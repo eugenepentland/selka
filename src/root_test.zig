@@ -191,6 +191,7 @@ test {
     _ = @import("arrays_test.zig");
     _ = @import("array_places_test.zig");
     _ = @import("qbe_loop_facts_test.zig");
+    _ = @import("qbe_loop_version.zig");
     _ = @import("domains_test.zig");
     _ = @import("variants_test.zig");
     _ = @import("tables_test.zig");

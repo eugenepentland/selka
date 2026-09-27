@@ -125,6 +125,7 @@ const GuardEmitter = struct {
     function: struct { scope: struct { locals: []const u8 } },
     output: std.Io.Writer.Allocating,
     next: usize = 0,
+    pc: usize = 3,
 
     /// Allocate a deterministic SSA name for the isolated guard.
     pub fn temp(self: *@This()) usize {
@@ -139,6 +140,7 @@ const GuardEmitter = struct {
 fn guardText(retained: bool) ![]u8 {
     var state: @import("qbe_rc_state.zig").State = undefined;
     state.active = true;
+    state.plan.dictionary_tails = &.{};
     state.plan.journal = .{ .prefix = if (retained) &.{ 0, 1 } else &.{ 0, 0 } };
     var emitter: GuardEmitter = .{
         .cow = .{ .rc = &state },
