@@ -253,6 +253,7 @@ test {
     _ = @import("qbe_rc_inert_receiver_test.zig");
     _ = @import("qbe_rc_unique_test.zig");
     _ = @import("qbe_rc_hoist_test.zig");
+    _ = @import("qbe_rc_fresh_root_test.zig");
     _ = @import("qbe_rc_loop_version_test.zig");
     _ = @import("qbe_rc_plain_write_test.zig");
     _ = @import("qbe_rc_admission_test.zig");

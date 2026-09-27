@@ -1,0 +1,91 @@
+record Span:
+    text: bytes
+    start: int
+
+
+record Node:
+    span: Span
+    id: int
+
+
+def empty() -> Node:
+    return Node(Span(b"", 0), -1)
+
+
+def find(nodes: list[Node], key: int) -> Node:
+    i = 0
+    while i < len(nodes):
+        node = nodes[i]
+        if node.id == key:
+            return node
+        i += 1
+    return empty()
+
+
+def late(first: bytes, second: bytes) -> bytes:
+    answer = first
+    i = 0
+    while i < 2:
+        if i > 0:
+            return answer
+        answer = second
+        i += 1
+    return first
+
+
+# spec-case: RC-BORROW-LOOP-1
+public def test_search_first_late_missing_and_empty() -> bool:
+    nodes = [Node(Span(bytes([65, 66]), 1), 4), Node(Span(bytes([67, 68]), 2), 9)]
+    first = find(nodes, 4)
+    last = find(nodes, 9)
+    absent = find(nodes, 12)
+    none = find([], 0)
+    nodes.clear()
+    return first.span.text == b"AB" and last.span.text == b"CD" and absent.id == -1 and none.span.text == b""
+
+
+# spec-case: RC-BORROW-LOOP-1
+public def test_return_bits_outlive_arena_and_parent_replacement() -> bool:
+    result = empty()
+    with arena() as scratch:
+        nodes = [Node(Span(bytes([88]), 5), 1), Node(Span(bytes([89]), 6), 2)]
+        result = scratch.escape(find(nodes, 2))
+        nodes[1] = Node(Span(bytes([90]), 7), 2)
+    return result.span.text == b"Y" and result.span.start == 6
+
+
+# spec-case: RC-BORROW-LOOP-1
+public def test_callers_snapshots_keep_ordinary_ownership() -> bool:
+    nodes = [Node(Span(bytes([65]), 3), 1)]
+    snapshot = nodes
+    result = find(nodes, 1)
+    nodes[0] = Node(Span(bytes([66]), 4), 2)
+    return snapshot[0].span.text == b"A" and result.span.text == b"A" and nodes[0].span.text == b"B"
+
+
+# spec-case: RC-BORROW-LOOP-1
+public def test_indirect_entry_stays_owned() -> bool:
+    selected = find
+    nodes = [Node(Span(bytes([81]), 8), 2)]
+    result = selected(nodes, 2)
+    nodes.clear()
+    return result.span.text == b"Q" and result.span.start == 8
+
+
+# spec-case: RC-BORROW-LOOP-1
+public def test_loop_backedge_returns_the_second_live_argument() -> bool:
+    first = bytes([65])
+    second = bytes([66])
+    result = late(first, second)
+    first = bytes([67])
+    second = bytes([68])
+    return result == b"B" and first == b"C" and second == b"D"
+
+
+def main(out: Stream) -> int:
+    out.print(test_search_first_late_missing_and_empty())
+    out.print(test_return_bits_outlive_arena_and_parent_replacement())
+    out.print(test_callers_snapshots_keep_ordinary_ownership())
+    out.print(test_indirect_entry_stays_owned())
+    out.print(test_loop_backedge_returns_the_second_live_argument())
+    return 0

@@ -54,3 +54,44 @@ fn find(manifest: Manifest) Pair {
     };
     return .{ .canonical = canonical, .alternate = alternate };
 }
+
+// spec-case: RC-BORROW-LOOP-1
+test "RC-BORROW-LOOP-1 loop alternate keeps its source map and canonical entry" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    var compilation = try compiler.Compilation.init(t.allocator, "rc_borrow_loop.my",
+        \\record Node:
+        \\    source: bytes
+        \\    key: int
+        \\def at(nodes: list[Node], key: int) -> Node:
+        \\    i = 0
+        \\    while i < len(nodes):
+        \\        node = nodes[i]
+        \\        if node.key == key:
+        \\            return node
+        \\        i += 1
+        \\    return Node(b"", -1)
+        \\def main() -> int:
+        \\    nodes = [Node(bytes([65]), 7)]
+        \\    value = at(nodes, 7)
+        \\    selected = at
+        \\    other = selected(nodes, 8)
+        \\    return value.key + other.key
+    );
+    defer compilation.deinit();
+    const text = try compilation.emitQbe(t.allocator);
+    defer t.allocator.free(text);
+    var manifest = try std.json.parseFromSlice(Manifest, t.allocator, text, .{ .ignore_unknown_fields = true });
+    defer manifest.deinit();
+    const pair = find(manifest.value);
+    const ordinary = pair.canonical orelse return error.TestUnexpectedResult;
+    const borrowed = pair.alternate orelse return error.TestUnexpectedResult;
+    try t.expectEqual(ordinary.locations.len, borrowed.locations.len);
+    try t.expect(std.mem.indexOf(u8, borrowed.il, "call $myl_rc_native_loan") == null);
+    try t.expect(std.mem.indexOf(u8, borrowed.il, "call $myl_rc_native_retain") == null);
+    try t.expect(std.mem.indexOf(u8, ordinary.il, "call $myl_rc_native_retain") != null);
+    const map = try std.fmt.allocPrint(t.allocator, "${s}_meta", .{borrowed.symbol});
+    defer t.allocator.free(map);
+    try t.expect(std.mem.indexOf(u8, borrowed.il, map) != null);
+}

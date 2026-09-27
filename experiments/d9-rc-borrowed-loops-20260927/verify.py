@@ -1,0 +1,61 @@
+"""Validate archived identities, full output checks and ownership balances."""
+from pathlib import Path
+import gzip
+import hashlib
+import json
+import statistics
+
+ROOT = Path(__file__).resolve().parent
+
+
+def read(name):
+    p = ROOT / name
+    return json.loads(gzip.decompress(p.read_bytes()) if name.endswith('.gz') else p.read_bytes())
+
+
+def balanced(c):
+    assert not c['saturated'] and not c['owner_limit'] and not c['hold_limit']
+    assert c['heap_allocate'] == c['retire']
+    assert c['owner_acquire'] + c['heap_allocate'] == c['owner_release']
+    assert c['hold_acquire'] == c['hold_release']
+
+
+def main():
+    for name, digest in read('identities.json')['archive_sha256'].items():
+        assert hashlib.sha256((ROOT / name).read_bytes()).hexdigest() == digest, name
+    data = read('measure.json.gz')
+    assert len(data['builds']) == 8 and len(data['checks']) == 24 and len(data['runs']) == 36
+    for b in data['builds']:
+        assert b['exit'] == 0 and b['manifest']['backend'] == b['backend']
+    for check in data['checks']:
+        assert check['ok'] and check['status'] == 0
+        if check['counted']:
+            balanced(check['counts'])
+    for run in data['runs']:
+        assert run['exit'] == 0 and run['percent_running'] == 100
+        assert run['event_runtime_ns'] > 0 and run['instructions'] > 0
+        assert run['svg_sha256'] == next(c['svg_sha256'] for c in data['checks'] if c['case'] == run['case'])
+    for case in ('fixture', 'changed-net', 'changed-value'):
+        for arm in ('before', 'after'):
+            counts = [r['counts'] for r in data['checks'] if r['arm'] == arm and r['case'] == case and r['counted']]
+            assert len(counts) == 2 and counts[0] == counts[1]
+        for backend in ('qbe', 'llvm'):
+            medians = {arm: statistics.median(r['instructions'] for r in data['runs'] if r['arm'] == arm and r['backend'] == backend and r['case'] == case) for arm in ('before', 'after')}
+            print(case, backend, medians, medians['after'] / medians['before'])
+    guests = read('guests-final.json.gz')['runs']
+    assert len(guests) == 4
+    for run in guests:
+        assert run['exit'] == 0 and run['stdout'] == 'True\n' * 5
+        if run['mode'] == 'rc':
+            balanced(run['counts'])
+    traps = read('traps.json.gz')['runs']
+    assert len(traps) == 12
+    for run in traps:
+        assert run['exit'] == 1 and run['stdout'] == 'before\n' and {'bounds':'R_LIST_BOUNDS','steps':'R_STEP_LIMIT','frames':'R_FRAME_LIMIT'}[run['case']] in run['stderr']
+        if run['mode'] == 'rc':
+            balanced(run['counts'])
+    print('Verified 24 exact schematic output checks, 36 unscaled instruction samples, 20 assertions and 12 bounds/step/frame traps.')
+
+
+if __name__ == '__main__':
+    main()

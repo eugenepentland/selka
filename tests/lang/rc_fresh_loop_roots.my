@@ -1,0 +1,109 @@
+def build(count: int) -> list[int]:
+    items: list[int] = []
+    for at in range(count):
+        items.append(at)
+    return items
+
+
+# spec-case: RC-FRESH-ROOT-HOIST-1
+public def test_fresh_growth_and_post_loop_publication_keep_real_owners() -> bool:
+    items = build(257)
+    before = items
+    items[-1] = 999
+    return len(items) == 257 and items[256] == 999 and before[256] == 256
+
+
+# spec-case: RC-FRESH-ROOT-HOIST-1
+public def test_comprehension_handoff_and_plain_terminal_return() -> bool:
+    items = [at for at in range(7)]
+    at = 0
+    while True:
+        if at == 10:
+            return items[0] == 9 and items[-1] == 6
+        items[0] = at
+        at += 1
+
+
+# spec-case: RC-FRESH-ROOT-HOIST-1
+public def test_preexisting_snapshot_refuses_fresh_loop_assumption() -> bool:
+    items = [1]
+    before = items
+    for at in range(5):
+        items.append(at)
+    return before == [1] and items == [1, 0, 1, 2, 3, 4]
+
+
+# spec-case: RC-FRESH-ROOT-HOIST-1
+public def test_snapshot_created_inside_loop_stays_independent() -> bool:
+    items = [1]
+    before: list[int] = []
+    for at in range(5):
+        before = items
+        items.append(at)
+    return before == [1, 0, 1, 2, 3] and items == [1, 0, 1, 2, 3, 4]
+
+
+# spec-case: RC-FRESH-ROOT-HOIST-1
+public def test_prior_enclosing_iteration_publication_refuses_freshness() -> bool:
+    items = [1]
+    saved: list[list[int]] = []
+    for outer in range(3):
+        for at in range(2):
+            items.append(at)
+        saved.append(items)
+    return saved == [[1, 0, 1], [1, 0, 1, 0, 1], [1, 0, 1, 0, 1, 0, 1]]
+
+
+def change(items: mut list[int]) -> int:
+    items.append(9)
+    return 3
+
+
+# spec-case: RC-FRESH-ROOT-HOIST-1
+public def test_callback_retains_pending_receiver_protocol() -> bool:
+    items = [1]
+    for at in range(3):
+        items.append(change(mut items))
+    return items == [1, 9, 3, 9, 3, 9, 3]
+
+
+# spec-case: RC-FRESH-ROOT-HOIST-1
+public def test_zero_iterations_preserve_shared_receiver_and_order() -> bool:
+    items = [7]
+    before = items
+    for at in range(0):
+        items[100] = 9
+    return items == [7] and before == [7]
+
+
+# spec-case: RC-FRESH-ROOT-HOIST-1
+public def test_sorted_hidden_parent_and_named_alias_survive_handoff() -> bool:
+    items = sorted([3, 1, 2])
+    before = items
+    for at in range(3):
+        items[at] = at + 10
+    return before == [1, 2, 3] and items == [10, 11, 12]
+
+
+# spec-case: RC-FRESH-ROOT-HOIST-1
+public def test_inherited_arena_and_escaped_result_keep_region_rules() -> bool:
+    result = 0
+    with arena():
+        items = build(33)
+        saved = items
+        items[0] = 19
+        result = items[0] + saved[0] + len(items)
+    return result == 52
+
+
+def main() -> int:
+    assert test_fresh_growth_and_post_loop_publication_keep_real_owners()
+    assert test_comprehension_handoff_and_plain_terminal_return()
+    assert test_preexisting_snapshot_refuses_fresh_loop_assumption()
+    assert test_snapshot_created_inside_loop_stays_independent()
+    assert test_prior_enclosing_iteration_publication_refuses_freshness()
+    assert test_callback_retains_pending_receiver_protocol()
+    assert test_zero_iterations_preserve_shared_receiver_and_order()
+    assert test_sorted_hidden_parent_and_named_alias_survive_handoff()
+    assert test_inherited_arena_and_escaped_result_keep_region_rules()
+    return 0

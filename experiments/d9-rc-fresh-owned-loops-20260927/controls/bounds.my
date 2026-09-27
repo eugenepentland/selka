@@ -1,0 +1,6 @@
+def main(out: Stream) -> int:
+    items = [1, 2]
+    out.print("entered")
+    for at in range(4):
+        items[at] = at
+    return 0

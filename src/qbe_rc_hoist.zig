@@ -22,7 +22,9 @@ pub fn refine(comptime E: type, self: *E) Error!bool {
         check.hoisted = cow.none;
         if (site.needed and site.hoisted != cow.none and budget >= self.function.scope.instructions.len) {
             budget -= self.function.scope.instructions.len;
-            if (proven(E, self, site, stores)) {
+            const classic = proven(E, self, site, stores, false);
+            const extended = !classic and try @import("qbe_rc_fresh_root.zig").proven(E, self, site.local, site.hoisted);
+            if (classic or (extended and proven(E, self, site, stores, true))) {
                 check.hoisted = site.hoisted;
                 accepted = true;
                 // Element detachment requires an already unique outer list.
@@ -77,14 +79,15 @@ pub fn permitsVersion(comptime E: type, self: *E, head: usize, back: usize) bool
     return false;
 }
 
-fn proven(comptime E: type, self: *E, site: ownership.Cow, stores: []const bool) bool {
+fn proven(comptime E: type, self: *E, site: ownership.Cow, stores: []const bool, extended: bool) bool {
     const code = self.function.scope.instructions;
     const head = site.hoisted;
     const back = self.cow.?.plan.loops.back[head];
     if (code.len > 4096 or back == cow.none or back < head or back - head > 1024) return false;
     if (site.pc < head or site.pc > back) return false;
     const root = self.function.scope.locals[site.local];
-    if (root.usage.temporary or self.byReference(site.local) or self.callerStorage(site.local)) return false;
+    if (root.usage.temporary and !extended) return false;
+    if (self.byReference(site.local) or self.callerStorage(site.local)) return false;
     if (!self.live.?.before(head, site.local) or self.cow.?.plan.place(site.local) != null) return false;
     const element = listElement(E, self, root.ty) orelse return false;
     if (site.elements) {
@@ -94,7 +97,7 @@ fn proven(comptime E: type, self: *E, site: ownership.Cow, stores: []const bool)
     for (code, 0..) |instruction, pc| {
         if (invalidEdge(instruction.op, pc, head, back)) return false;
         if (pc < head or pc > back or self.states[pc] == null) continue;
-        if (!allowed(E, self, pc, site.local, stores)) return false;
+        if (!allowed(E, self, pc, site.local, stores, extended)) return false;
     }
     return true;
 }
@@ -135,7 +138,7 @@ fn borrowedStore(stores: []const bool, pc: usize) bool {
     return pc < stores.len and stores[pc];
 }
 
-fn allowed(comptime E: type, self: *E, pc: usize, root: usize, stores: []const bool) bool {
+fn allowed(comptime E: type, self: *E, pc: usize, root: usize, stores: []const bool, extended: bool) bool {
     const code = self.function.scope.instructions;
     const op = code[pc].op;
     const inputs = self.states[pc].?;
@@ -146,7 +149,10 @@ fn allowed(comptime E: type, self: *E, pc: usize, root: usize, stores: []const b
         .load_local => |id| plain(E, self, self.function.scope.locals[@backingInt(id)].ty) or borrowedStore(stores, pc + 1),
         .store_local => |id| @backingInt(id) != root and (plain(E, self, self.function.scope.locals[@backingInt(id)].ty) or borrowedStore(stores, pc)),
         .value_copy => |copy| plain(E, self, copy.ty),
-        .buffer_operation => |operation| operationAllowed(E, self, pc, operation, stores),
+        .buffer_operation => |operation| operationAllowed(E, self, pc, operation, stores, extended),
+        .make_record => |record| extended and plain(E, self, record.ty) and
+            !self.program.records[record.ty.recordIndex()].isManagedRecord(),
+        .ret => extended and plain(E, self, self.function.signature.return_type),
         .push_i64,
         .push_bool,
         .push_unit,
@@ -174,12 +180,13 @@ fn allowed(comptime E: type, self: *E, pc: usize, root: usize, stores: []const b
     };
 }
 
-fn operationAllowed(comptime E: type, self: *E, pc: usize, operation: anytype, stores: []const bool) bool {
+fn operationAllowed(comptime E: type, self: *E, pc: usize, operation: anytype, stores: []const bool, extended: bool) bool {
     const element = listElement(E, self, self.function.scope.locals[@backingInt(operation.owner)].ty) orelse return false;
     return switch (operation.kind) {
         .length, .capacity => plain(E, self, operation.output),
         .read => plain(E, self, operation.output) or borrowedStore(stores, pc + 1),
         .write => plain(E, self, element) and plain(E, self, operation.output),
+        .append => extended and plain(E, self, element) and plain(E, self, operation.output),
         else => false,
     };
 }

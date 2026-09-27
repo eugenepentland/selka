@@ -1,0 +1,32 @@
+{
+  "base_source": "e926d1e13bf61ae3125102b46309225ca963a38d",
+  "joined_parent": "766b8f44063775a303a4730b6e8b05af6a70e702",
+  "compilers": {
+    "before": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-integration/.tmp-rc/install-field-frame-span/bin/mylang",
+      "sha256": "aee67f9abfe65b61a960eaf3390082d9c338553e5b086ad1cfc7723b933ab475"
+    },
+    "after": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/install-owned-hoist/bin/mylang",
+      "sha256": "7e5f02708fde642dc5b9583a661f5b65e432e0e58d0b2c5d43e5216f66bc3386"
+    }
+  },
+  "final_compiler": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/install-owned-hoist-final/bin/mylang",
+    "sha256": "b40af87109be68b0b5144c548ad4a26f1d9d9e3964cf7e2a9a42a5d92412fe8f"
+  },
+  "sources": {
+    "fannkuch": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/bench/parity/suite/fannkuch_redux.my",
+      "sha256": "0a7441bd509f728d0b3db53ddfdf6a5c027fcb3468d467c42d00850839d9a8f4"
+    },
+    "sieve": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/bench/parity/suite/sieve.my",
+      "sha256": "c5840cc33a26b1e98f0d018f221a0dd2305f66bd3adb96432b4593372901d5d9"
+    },
+    "append": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/bench/parity/micro/list_append_sum.my",
+      "sha256": "88ca6385237fbddd80aa7857864d269e23517995b6a39b8917c8e44bb451d91e"
+    }
+  }
+}
