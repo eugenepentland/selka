@@ -1,0 +1,66 @@
+{
+  "schematic-qbe.data": {
+    "sha256": "8d986d36e8b70dcf6566f834143ab12cfc5d5a4f0c4efe455d4587e596a0fc96",
+    "bytes": 35844,
+    "throttle": 38,
+    "unthrottle": 38,
+    "lost": 0,
+    "private_path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/joined-flat-measure/schematic-qbe.data"
+  },
+  "schematic-llvm.data": {
+    "sha256": "01aa233ab6a6d76cd2c8ba3a369495cb83f566ce843a5a6f393244ea779daa63",
+    "bytes": 35036,
+    "throttle": 33,
+    "unthrottle": 32,
+    "lost": 0,
+    "private_path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/joined-flat-measure/schematic-llvm.data"
+  },
+  "schematic-llvm-lowrate.data": {
+    "sha256": "5d5f2fce49b6ac40351b002c40693d6b36d0ffda27e03cc48edc86b44bb61adb",
+    "bytes": 348980,
+    "throttle": 1503,
+    "unthrottle": 1464,
+    "lost": 0,
+    "private_path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/joined-flat-measure/schematic-llvm-lowrate.data"
+  },
+  "lox-qbe-lowrate.data": {
+    "sha256": "75905302bf776b795ff9129de7f5fab7db965c9a4dc1419a82926cf6eac4a6fc",
+    "bytes": 5441372,
+    "throttle": 35600,
+    "unthrottle": 35599,
+    "lost": 0,
+    "private_path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/joined-flat-measure/lox-qbe-lowrate.data"
+  },
+  "lox-llvm.data": {
+    "sha256": "ac0323defb8ce8fba65bd81fa61816a72425e768d0fa39b462980532a5ec4cc4",
+    "bytes": 9334356,
+    "throttle": 61211,
+    "unthrottle": 61210,
+    "lost": 0,
+    "private_path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/joined-flat-measure/lox-llvm.data"
+  },
+  "schematic-qbe-lowrate.data": {
+    "sha256": "a54ec70f2f7ff9a369097fe75430a9f1f82990b044116cdb5d9b05bce8f30ba8",
+    "bytes": 409460,
+    "throttle": 1898,
+    "unthrottle": 1867,
+    "lost": 0,
+    "private_path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/joined-flat-measure/schematic-qbe-lowrate.data"
+  },
+  "lox-qbe.data": {
+    "sha256": "f0651ed1e2b40183a304d0c20a86a70a959f2b405444cbb756ca46dc6eb2302a",
+    "bytes": 11226660,
+    "throttle": 73660,
+    "unthrottle": 73659,
+    "lost": 0,
+    "private_path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/joined-flat-measure/lox-qbe.data"
+  },
+  "lox-llvm-lowrate.data": {
+    "sha256": "c8128fe72ebebf907dd35de98694b32974753760cffee16ac7a05c13cf45e40a",
+    "bytes": 4561268,
+    "throttle": 29810,
+    "unthrottle": 29809,
+    "lost": 0,
+    "private_path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/joined-flat-measure/lox-llvm-lowrate.data"
+  }
+}
