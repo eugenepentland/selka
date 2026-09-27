@@ -1,0 +1,10 @@
+def main(out: Stream) -> int:
+    counts = {1: 7}
+    saved = counts
+    with arena():
+        key = 1
+        counts[key] = 13
+        out.print(saved[key])
+        values: list[int] = []
+        counts[key] = values[0]
+    return 0

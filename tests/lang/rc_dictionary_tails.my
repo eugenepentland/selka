@@ -1,0 +1,86 @@
+# RC-DICTIONARY-TAIL-1
+def test_repeated_string_key_insert_and_overwrite() -> bool:
+    counts: dict[str, int] = {}
+    for i in range(300):
+        key = "key" + str(i % 40)
+        counts[key] = counts.get(key, 0) + 1
+    assert len(counts) == 40
+    assert counts["key0"] == 8
+    assert counts["key39"] == 7
+    return True
+
+# RC-DICTIONARY-TAIL-1 control
+def test_preexisting_snapshot_keeps_first_uniqueness() -> bool:
+    counts = {1: 7}
+    saved = counts
+    key = 1
+    counts[key] = 13
+    assert saved[key] == 7
+    assert counts[key] == 13
+    return True
+
+def callback(counts: mut dict[int, int], seen: mut list[int], tag: int) -> int:
+    seen.append(tag)
+    counts[2] = tag
+    return 1
+
+# RC-DICTIONARY-TAIL-1 control
+def test_completed_key_and_rhs_callbacks_keep_order() -> bool:
+    counts = {1: 7}
+    seen: list[int] = []
+    key = callback(mut counts, mut seen, 11)
+    value = callback(mut counts, mut seen, 13)
+    counts[key] = value
+    assert seen == [11, 13]
+    assert counts[1] == 1
+    assert counts[2] == 13
+    return True
+
+# RC-DICTIONARY-TAIL-1 control
+def test_pending_callback_remains_scoped() -> bool:
+    counts = {1: 7}
+    seen: list[int] = []
+    counts[callback(mut counts, mut seen, 11)] = 13
+    assert seen == [11]
+    assert counts[1] == 13
+    assert counts[2] == 11
+    return True
+
+# RC-DICTIONARY-TAIL-1 control
+def test_live_view_and_managed_value_keep_general_paths() -> bool:
+    counts = {1: 7}
+    view = counts.values()
+    key = 1
+    counts[key] = 13
+    assert list(view) == [13]
+    nested = {1: [7]}
+    saved = nested
+    nested[key] = [13]
+    assert saved[key] == [7]
+    assert nested[key] == [13]
+    return True
+
+# RC-DICTIONARY-TAIL-1 control
+def test_arena_growth_and_heap_root_inside_arena() -> bool:
+    older = {1: 7}
+    with arena():
+        counts: dict[str, int] = {}
+        for i in range(80):
+            key = "key" + str(i)
+            counts[key] = i
+        assert counts["key79"] == 79
+        integer_key = 1
+        older[integer_key] = 13
+    assert older[1] == 13
+    return True
+
+# RC-DICTIONARY-TAIL-1 control
+def test_function_wide_string_iteration_keeps_key_load_roles() -> bool:
+    counts: dict[str, int] = {}
+    key = "key"
+    letters = 0
+    for letter in key:
+        letters += len(letter)
+    counts[key] = letters
+    assert counts[key] == 3
+    return True

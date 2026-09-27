@@ -66,7 +66,9 @@ fn store(comptime E: type, self: *E, index: usize, operand: usize) Error!void {
     const ty = self.function.scope.locals[index].ty;
     if (@import("qbe_rc_unique.zig").receiverParent(E, self, index)) |parent| {
         try receiverCleanup(E, self, index, operand);
-        try @import("qbe_rc_unique.zig").local(E, self, .{ .local = parent });
+        if (@import("qbe_rc_dictionary_tail.zig").store(E, self, index)) {
+            try self.print(" # RC-DICTIONARY-TAIL-1 local {d} root {d}\n", .{ index, parent });
+        } else try @import("qbe_rc_unique.zig").local(E, self, .{ .local = parent });
         const value = try self.load("l", parent);
         try @import("qbe_cow.zig").Lower(E).borrowReceiver(self, index, value);
         try self.print(" storel %v{d}, %l{d}\n", .{ value, index });
