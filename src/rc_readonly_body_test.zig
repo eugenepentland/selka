@@ -108,3 +108,36 @@ test "RC-READONLY-BODY-1 only history-free inline union wrappers borrow" {
     try t.expect(contains(try named(manifest.value, "variant"), "myl_rc_native_publish"));
     try t.expect(contains(try named(manifest.value, "recursive_variant"), "myl_qbe_rc_frame_enter"));
 }
+
+// spec: RC-SCALAR-LENGTH-BODY-1
+test "RC scalar readonly body admits list lengths with managed element reads" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    const text =
+        \\record Item:
+        \\    data: bytes
+        \\    number: int
+        \\def scan(items: list[Item]) -> int:
+        \\    i = 0
+        \\    total = 0
+        \\    while i < len(items):
+        \\        item = items[i]
+        \\        total += item.number
+        \\        i += 1
+        \\    return total
+        \\def main() -> int:
+        \\    return scan([Item(b"label", 7)])
+    ;
+    var compilation = try compiler.Compilation.init(t.allocator, "rc_length_body.my", text);
+    defer compilation.deinit();
+    const generated = try compilation.emitQbe(t.allocator);
+    defer t.allocator.free(generated);
+    var manifest = try std.json.parseFromSlice(Manifest, t.allocator, generated, .{ .ignore_unknown_fields = true });
+    defer manifest.deinit();
+    const il = try named(manifest.value, "scan");
+    try t.expect(std.mem.indexOf(u8, il, "call $myl_rc_native_loan") == null);
+    try t.expect(std.mem.indexOf(u8, il, "call $myl_rc_native_retain") == null);
+    try t.expect(std.mem.indexOf(u8, il, "call $myl_qbe_rc_frame_enter") == null);
+    try t.expect(std.mem.indexOf(u8, il, "call $myl_qbe_fail_normalized_index_bounds") != null);
+}

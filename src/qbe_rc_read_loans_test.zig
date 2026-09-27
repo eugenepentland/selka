@@ -133,3 +133,85 @@ test "RC nested receiver loans retain ownership for named rows" {
         \\    return selected([[1]], mut output)
     , "selected") > 0);
 }
+
+const field_source =
+    \\record Label:
+    \\    data: bytes
+    \\    number: int
+    \\record Row:
+    \\    left: Label
+    \\    number: int
+    \\record HeldRow:
+    \\    view: DictValues[int, int]
+    \\    number: int
+    \\def selected(rows: list[Row], at: int, output: mut list[int]) -> int:
+    \\    number = rows[at].left.number
+    \\    output.append(number)
+    \\    return number
+    \\def escaped(rows: list[Row], at: int, output: mut list[int]) -> int:
+    \\    row = rows[at]
+    \\    output.append(row.number)
+    \\    return row.left.number
+    \\def change(rows: mut list[Row]) -> int:
+    \\    rows[0] = Row(Label(b"new", 9), 11)
+    \\    return 0
+    \\def callback(rows: mut list[Row]) -> int:
+    \\    return rows[change(mut rows)].left.number
+    \\def held(rows: list[HeldRow], output: mut list[int]) -> int:
+    \\    number = rows[0].number
+    \\    output.append(number)
+    \\    return number
+    \\def main() -> int:
+    \\    output: list[int] = []
+    \\    return selected([Row(Label(b"value", 3), 7)], -1, mut output)
+;
+
+// spec: RC-PLAIN-FIELD-LOAN-1
+test "RC plain field chains retain only the stable list root" {
+    try t.expectEqual(@as(usize, 0), try callsIn(field_source, "selected", true));
+    try t.expectEqual(@as(usize, 0), try copiesIn(field_source, "selected"));
+}
+
+// spec-case: RC-PLAIN-FIELD-LOAN-1
+test "RC plain field chains refuse escaped records callbacks and live views" {
+    try t.expect(try callsIn(field_source, "escaped", true) > 0);
+    try t.expect(try callsIn(field_source, "callback", true) > 0);
+    try t.expect(try callsIn(field_source, "held", true) > 0);
+}
+
+// spec-case: RC-PLAIN-FIELD-LOAN-1
+test "RC plain field chains refuse more than eight adjacent projections" {
+    const text =
+        \\record Base:
+        \\    text: bytes
+        \\    value: int
+        \\record A:
+        \\    next: Base
+        \\record B:
+        \\    next: A
+        \\record C:
+        \\    next: B
+        \\record D:
+        \\    next: C
+        \\record E:
+        \\    next: D
+        \\record F:
+        \\    next: E
+        \\record G:
+        \\    next: F
+        \\record H:
+        \\    next: G
+        \\def admitted(rows: list[G], output: mut list[int]) -> int:
+        \\    n = rows[0].next.next.next.next.next.next.next.value
+        \\    output.append(n)
+        \\    return n
+        \\def refused(rows: list[H], output: mut list[int]) -> int:
+        \\    n = rows[0].next.next.next.next.next.next.next.next.value
+        \\    output.append(n)
+        \\    return n
+        \\def main() -> int:
+        \\    return 0
+    ;
+    try t.expectEqual(@as(usize, 0), try callsIn(text, "admitted", true));
+    try t.expect(try callsIn(text, "refused", true) > 0);
+}
