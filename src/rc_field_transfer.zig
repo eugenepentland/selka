@@ -21,6 +21,13 @@ pub const Certificate = struct {
     store: usize,
     writeback: usize,
     commit: usize,
+
+    /// Whether the lowering of the instruction at `pc` belongs to this
+    /// certificate: the extraction's projection, copy and target store, or
+    /// any step of the complete store-back sequence.
+    pub fn intercepts(self: Certificate, pc: usize) bool {
+        return (pc >= self.projection and pc <= self.store) or (pc >= self.writeback and pc <= self.commit);
+    }
 };
 /// Proof refusal is ordinary lowering; malformed native layouts are compiler errors.
 pub const Error = error{ InternalError, OutOfMemory };
@@ -132,6 +139,8 @@ fn returned(comptime E: type, self: *E, proof: Certificate, catalog: *shapes.Cat
         if (writeback(E, self, proof, pc)) {
             if (!@import("ownership_field_return.zig").closedInterval(code, proof.store + 1, pc)) return null;
             for (proof.projection - 1..pc + 11) |at| if (captured(E, self, at)) return null;
+            for (proof.projection..proof.store + 1) |at| if (!quiet(E, self, at)) return null;
+            for (pc..pc + 11) |at| if (!quiet(E, self, at)) return null;
             return pc;
         }
         if (self.states[pc] == null or !try permitted(E, self, proof, derived, pc, catalog)) return null;
@@ -154,6 +163,20 @@ fn captured(comptime E: type, self: *E, pc: usize) bool {
     return captures[pc].begin != none or captures[pc].active != none;
 }
 
+// The lowering of the extraction and store-back sequences is replaced
+// wholesale, so no copy-on-write check, fill, share or loop entry may be
+// planned on them.
+fn quiet(comptime E: type, self: *E, pc: usize) bool {
+    const plan = self.cow.?.plan;
+    const site = plan.at(pc);
+    if (site.unique.len != 0 or site.unique_field != null or site.fill or site.capture) return false;
+    if (site.shares.len != 0 or site.read_captures.len != 0 or plan.entry(pc).len != 0) return false;
+    return switch (self.function.scope.instructions[pc].op) {
+        .store_local, .load_local => |id| plan.place(@backingInt(id)) == null,
+        else => true,
+    };
+}
+
 // Every interval instruction leaves the source alone, reads a distinct sibling
 // field, or uses the target and values independent of the source.
 fn permitted(comptime E: type, self: *E, proof: Certificate, derived: []const bool, pc: usize, catalog: *shapes.Catalog) Error!bool {
@@ -163,7 +186,8 @@ fn permitted(comptime E: type, self: *E, proof: Certificate, derived: []const bo
         .begin_arena, .end_arena, .ret, .try_result, .invoke => false,
         .call => |id| direct(self.program.functions[@backingInt(id)]),
         .load_local => |id| if (@backingInt(id) == proof.source.local) sibling(E, self, proof, pc) else use.independent(E, self, @backingInt(id)),
-        .ref_local, .move_local, .store_local, .drop_local => |id| use.independent(E, self, @backingInt(id)),
+        .move_local, .drop_local => |id| @backingInt(id) != proof.target and try use.independent(E, self, @backingInt(id)),
+        .ref_local, .store_local => |id| use.independent(E, self, @backingInt(id)),
         .buffer_operation => |operation| use.independent(E, self, @backingInt(operation.owner)),
         .resource_io => |operation| use.independent(E, self, @backingInt(operation.owner)),
         .file_method => |method| use.independent(E, self, @backingInt(method.owner)),

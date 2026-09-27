@@ -228,6 +228,9 @@ test "RC closed field transfer moves record fields of owned locals across closed
     try t.expect(!contains(owned[projection..moved], "call $myl_rc_native_loan"));
     try t.expect(!contains(owned[projection..moved], "call $myl_rc_native_retain"));
     try t.expect(contains(owned[moved..], "call $memset"));
+    const restored = std.mem.indexOf(u8, owned, "# RC-CLOSED-FIELD-TRANSFER-2 store-back") orelse return error.TestUnexpectedResult;
+    try t.expect(!contains(owned[moved..restored], "call $myl_rc_native_take"));
+    try t.expect(!contains(owned[moved..restored], "call $myl_rc_native_retain"));
     const expected = [_]struct { []const u8, bool }{
         .{ "caller_record", true }, .{ "branched", true },      .{ "looped", true },   .{ "sibling_read", true },
         .{ "field_read", false },   .{ "whole_passed", false }, .{ "partial", false }, .{ "breaking", false },

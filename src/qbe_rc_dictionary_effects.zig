@@ -18,7 +18,7 @@ pub fn quiet(comptime E: type, self: *E, proof: model.Certificate, pc: usize) bo
 /// Separate lowering certificates may redirect a store or projection.
 pub fn intercepted(comptime E: type, self: *E, pc: usize) bool {
     const plan = self.cow.?.rc.?.plan;
-    for (plan.records.transfers) |transfer| if (transfer.projection == pc or transfer.commit == pc) return true;
+    for (plan.records.transfers) |transfer| if (transfer.intercepts(pc)) return true;
     for (plan.records.writes) |write| if (pc >= write.start and pc < write.start + 8) return true;
     return false;
 }
