@@ -195,9 +195,26 @@ this form lets it see `data[i]` advance by one element per iteration, load a
 whole vector instead of gathering one element at a time, and compute
 dependence distances.
 
-The `# myl-obj` and `# myl-elem` markers are comment lines of their own. QBE's
-lexer drops a `#` comment to end of line, so the QBE backend's assembly is
-byte-identical with and without them.
+An RC build marks one more kind of address (`LLVM-RC-PREFIX-1`): the owner
+count, hold count or common-header mark word below a managed payload that the
+inline ownership fast paths read or write, `sub PAYLOAD, 32|24|16` of a payload
+already tested non-null, is marked `# myl-rc %temp`. Such an access gets an RC
+prefix scope that is apart from the frame, from every object and from every
+element storage block: in an RC build no object or element access reaches below
+a payload, and the runtime's own count updates, which LLVM may inline, carry no
+metadata and so still alias everything. A marked address that is a constant
+offset from a singly-defined payload is also addressed as a `getelementptr i8`
+from that payload, so LLVM tells the three words of one payload apart, forwards
+a count it just stored, and folds a loan and the unloan that follows it into a
+single count update. Under full LTO the RC runtime and the generated per-type
+glue are bitcode in the same module as the guest, and the receiver scope's
+begin, pin and end entries are `always_inline` (`RC-SCOPE-FAST-1`), so their
+fast paths are compiled into the guest function; under ThinLTO the glue stays
+machine code, like the rest of the metadata unit.
+
+The `# myl-obj`, `# myl-elem` and `# myl-rc` markers are comment lines of their
+own. QBE's lexer drops a `#` comment to end of line, so the QBE backend's
+assembly is byte-identical with and without them.
 
 The translator does lower one kind of check differently, without assuming anything
 about it: a checked 64-bit `+`, `-` or `*` becomes
