@@ -1,0 +1,41 @@
+{
+  "source_commit": "49c6ca07bbba8b35cda4436b831327ac40c8fc87",
+  "compiler_sha256": "49a8df2d575b65b16d3e7b455a8b0d6a3aa11ac4eccc13ad34dc3eeb8b54ebd5",
+  "driver_sha256": "455cf96eeb46c0db3c4408201b86ee211aee760e3c3523c2628626b9de1f7c1b",
+  "full_corpus_acceptance": false,
+  "summary": {
+    "qbe": {
+      "complete_diagnostic": true,
+      "programs": 30,
+      "instruction_geomean": 2.4336359072711113,
+      "maximum_instruction_ratio": 15.954548999585535,
+      "median_peak_rss_kb": {
+        "gc": 6996.0,
+        "rc": 5334.0
+      },
+      "subset_thresholds_pass": false
+    },
+    "llvm": {
+      "complete_diagnostic": true,
+      "programs": 30,
+      "instruction_geomean": 2.800243401895156,
+      "maximum_instruction_ratio": 23.923112229894354,
+      "median_peak_rss_kb": {
+        "gc": 6996.0,
+        "rc": 5204.0
+      },
+      "subset_thresholds_pass": false
+    }
+  },
+  "artifacts": {
+    "README.md": "066da384d500dcf92ff08e6c774f7115059d1aa0cda09e32af2d81a6dfc8b2c5",
+    "doc.log.gz": "2b29e39249222586c2b67b318a0ce8033db2a30ac60969d94f6eef41933d1185",
+    "gc-builds.json.gz": "e4b8939cd562d4271d4c8f695ce09b8dbfca7394df55fb488883777fc0925d81",
+    "guardian.log.gz": "5149af0b0b7d5f7b1988541245013108d3333964b9755b36d4e5604c6a561257",
+    "native-manifests.json.gz": "fc51b7a5812869338551f7a2c35dc7c1a74aa40ce46846ede71d2251ac39a51a",
+    "results.json.gz": "d35d0865b6f7c5d591fe3f473a2fbe8817486801ee1b2208c74304d718dd4915",
+    "run.log.gz": "da345e6823d3e12db3510c1590167e3afde69bdc4a19d22973933a7244c7a9ee",
+    "run.py": "455cf96eeb46c0db3c4408201b86ee211aee760e3c3523c2628626b9de1f7c1b",
+    "verify.py": "8b4a6104ae4b276e7f18877075a1da2f3f971b757f0860fcea793fd1bbe232d1"
+  }
+}
