@@ -1,0 +1,96 @@
+{
+  "base": "88f4e47728b1ad33058e847009cbaa2be91fd45f",
+  "compilers": [
+    {
+      "side": "before",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/install-dict-loop/bin/mylang",
+      "sha256": "25dad5001d2ddbf91c266ed19f4272849131adaedf70bb113f9c0864c2025625"
+    },
+    {
+      "side": "find",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/install-dict-word-find/bin/mylang",
+      "sha256": "4e98e65f77af32f58316c8f7524f84daef02bdd62604025548bc2db6160d4a25"
+    },
+    {
+      "side": "repeat",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/install-dict-word-repeat/bin/mylang",
+      "sha256": "a07f5fad8c7ce6904303f531de0b720cc6106df2f4aca765203d8227463e5875"
+    }
+  ],
+  "binaries": [
+    {
+      "side": "gc",
+      "backend": "qbe",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-dict_count.qbe",
+      "sha256": "4d96d97c7fc76633b0a7de63095796d6fc48c1b80d86ee9efc6940355c7b09e9"
+    },
+    {
+      "side": "before",
+      "backend": "qbe",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/dict-loop/full/after-qbe-rc",
+      "sha256": "5380f7e1c1b697a607c5cb681af0ca139b95ed95078c9448ed6abe482dd505c7"
+    },
+    {
+      "side": "find",
+      "backend": "qbe",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/dict-word/find/qbe-rc",
+      "sha256": "365e1c8a4fd94af0b9f7b78ae4b96b94b0b7a470b08a64a39c4497e44adae927"
+    },
+    {
+      "side": "repeat",
+      "backend": "qbe",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/dict-word/repeat/qbe-rc",
+      "sha256": "d3a62d5441ac93cf3f24ce45ae1673e077747fd66c98abf6e370f3e3f34c148b"
+    },
+    {
+      "side": "gc",
+      "backend": "llvm",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-dict_count.llvm",
+      "sha256": "d96cd8740e9dd29fe82dc6972f01a80dab16e2debde8fb28eb4b5980bb1bdc83"
+    },
+    {
+      "side": "before",
+      "backend": "llvm",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/dict-loop/full/after-llvm-rc",
+      "sha256": "2e940d3839e87988c1cb36d99cfe0658a7d66b8ff2f754460bded9e0931e2d2c"
+    },
+    {
+      "side": "find",
+      "backend": "llvm",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/dict-word/find/llvm-rc",
+      "sha256": "b9e983b542a57795eed91ea12cd02311d014ffaf0c49279bbc4fea00581a7778"
+    },
+    {
+      "side": "repeat",
+      "backend": "llvm",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/dict-word/repeat/llvm-rc",
+      "sha256": "a9d931e685a1266191c8abcac52393107bb1b578d785fa4052e02b50248d231d"
+    }
+  ],
+  "guest_objects": [
+    {
+      "backend": "qbe",
+      "name": "main",
+      "before": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/dict-loop/final-cache-after/objects/2bf63249fba1d8b9e398b4a12822e113ff38194df83360e73e694167545517e3/82a45d9dd6eaa937a8ce5209854d0f5e8247931fb096daaa380c555dca0e08c6.o",
+        "sha256": "402b3447ae2251f5ede45c4616180cc3f1cdcf2330398a0e0fbc7dd446e522dd"
+      },
+      "after": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/dict-word/cache-find/objects/55dcd3475721945ce718b0f3fe7cb421f41096776952bc5548bb244d977582d0/6ea7b92bf5308b51f2d2cfa1a2ab9f4dfcce07af20f720c70531b61e1501abae.o",
+        "sha256": "402b3447ae2251f5ede45c4616180cc3f1cdcf2330398a0e0fbc7dd446e522dd"
+      }
+    },
+    {
+      "backend": "llvm",
+      "name": "main",
+      "before": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/dict-loop/final-cache-after/objects/2bf63249fba1d8b9e398b4a12822e113ff38194df83360e73e694167545517e3/c7e1fd0fb49ae170267bd9e2620cbd0ab40de521659bb83bcd65416961dcba40.o",
+        "sha256": "e2d50e43bcd5e11bb31623ec46995fe4c37683660f1e7b2f61ff3ea2074b5ca4"
+      },
+      "after": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/dict-word/cache-find/objects/55dcd3475721945ce718b0f3fe7cb421f41096776952bc5548bb244d977582d0/16894b9c629ee4b418d361a53ab427a7c850648910ad7e567fd71a0d9f7adf60.o",
+        "sha256": "d6d471ccd59a1e3abbc7950df27d49aab504343e9c43eb39970e5120b4261a91"
+      }
+    }
+  ]
+}

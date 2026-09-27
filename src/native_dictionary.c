@@ -725,11 +725,29 @@ static __attribute__((noinline)) int write_walk(myl_native_heap *heap, myl_nativ
     copy_value(dict,entry_at(dict,at.entry)+dict->value_offset,value);
     return 1;
 }
+/* A registered plain word has no old or new ownership obligation. Keep the
+ * generic staged-source path whenever a callback, cold binding or invalid
+ * region can affect publication. The word temporary also permits overlap. */
+static inline int rc_replace(myl_native_heap *heap, const myl_native_type *type,
+                             void *target, const void *source, unsigned region) {
+    if (target==source) return 1;
+    if (type->kind==MYL_NATIVE_PLAIN && type->size==8) {
+        const myl_rc_descriptor *descriptor=myl_rc_descriptor_find(heap,type);
+        if (descriptor && !((const myl_rc_binding *)descriptor)->flat.count &&
+            !heap->rc->dead.head && region<=heap->region_depth) {
+            uint64_t word;
+            memcpy(&word,source,8);
+            memcpy(target,&word,8);
+            return 1;
+        }
+    }
+    return myl_rc_native_retain_replace(heap,type,target,source,region);
+}
 int myl_native_dictionary_write(myl_native_heap *heap, myl_native_dictionary *dict, const void *key, const void *value) {
     if (myl_rc_enabled(heap)) {
         size_t at=find(dict,key).entry;
         if (at==NO_ENTRY) return rc_insert(heap,dict,key,value);
-        return myl_rc_native_retain_replace(heap,dict->value,entry_at(dict,at)+dict->value_offset,value,myl_native_header_region(dict));
+        return rc_replace(heap,dict->value,entry_at(dict,at)+dict->value_offset,value,myl_native_header_region(dict));
     }
     size_t index=recall(dict,key);
     if (index==NO_ENTRY) return write_walk(heap,dict,key,value);
