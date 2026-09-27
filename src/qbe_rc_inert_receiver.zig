@@ -29,10 +29,11 @@ pub fn emptyLocal(comptime E: type, self: *E, local: usize) bool {
     const code = self.function.scope.instructions;
     if (local < self.function.signature.parameter_count or !list(E, self, local)) return false;
     if (self.byReference(local) or self.callerStorage(local)) return false;
-    if (@import("qbe_rc_holds.zig").mayHold(E, self, self.function.scope.locals[local].ty)) return false;
     if (!proven(E, self, local)) return false;
     const at = definition(E, self, local) orelse return false;
     if (at == 0 or self.isBranchTarget(at)) return false;
+    if (@import("qbe_rc_holds.zig").mayHold(E, self, self.function.scope.locals[local].ty) and
+        !@import("qbe_rc_nonheld_capture.zig").proven(E, self, local, at)) return false;
     const plan = self.cow.?.plan;
     if (!borrowedInput(E, self, local, at)) return false;
     for (code) |instruction| switch (instruction.op) {

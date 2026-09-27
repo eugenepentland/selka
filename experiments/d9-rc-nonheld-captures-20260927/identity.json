@@ -1,0 +1,26 @@
+{
+  "baseline_source": "468bd8e536b0e088ff71291cb9a3c92db8ebf448",
+  "candidate_parent": "ef3266792d72bbe1cd1112d42e31c417bebe8e28",
+  "files": {
+    "SPEC.md": "4674a9b80f079efb439d757cb7861a2755d69fa7949590b522b4b346f9bb6d36",
+    "src/qbe_rc_empty_locals.zig": "3e4335fbd6ce206ae61ab843985b9d4c4514e836189454d5e428c7c705a3f516",
+    "src/qbe_rc_inert_receiver.zig": "d015abf6b268f099907d60a4065a48edededd09a710cf4a0596adecbd6edd1c4",
+    "src/qbe_rc_loop_version_test.zig": "40d7b45a43e35cd1be3ee37568a1370133fbc39d501135de83904d756b116087",
+    "src/qbe_rc_views.zig": "c475360328b2a17bfc5f26a8a8ada571e88633e15900f6738414a5caf3764645",
+    "src/root_test.zig": "ad37e358b6151ac622a136a289a906d029ca3edc624cf8399968f66362b33d58",
+    "src/qbe_rc_nonheld_capture.zig": "141a2276e74f7ed291aea60c0c6d15bbb54507522ab56f60d3113d38b145fad9",
+    "src/qbe_rc_nonheld_capture_test.zig": "0590ce73dd838012f5da5dc6bc2b55e2f47fedef17163aa974526e1cf4e8196b",
+    "tests/lang/rc_nonheld_captures.my": "173e69e93c195fd24ddc888aaae35adf44031f23678d7c19056a234cbc8fa49f"
+  },
+  "compilers": {
+    "before": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-integration/.tmp-rc/install-append-compose-scalar/bin/mylang",
+      "sha256": "082edf36c3b1370debeccb4bdcbf3069fbf7829ad1852e8a7d0d5d7f2a34c67e"
+    },
+    "after": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/install-nonheld-final/bin/mylang",
+      "sha256": "6418ad2dc5a15540288a783c9222c141055e0ea36af38fa75e94d6ecd825f9a9"
+    }
+  },
+  "note": "Final production compiler frozen before test-only correction of the old loop expectation. Production code unchanged during measurements."
+}

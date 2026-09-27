@@ -62,7 +62,10 @@ test "RC-LOOP-VERSION-1 callback publication and step accounting keep original l
     // No physical entry interval was certified for this read-only loop.
     try t.expect(std.mem.indexOf(u8, try named(fast.value, "readonly"), "\n@fi") == null);
     const held = try named(fast.value, "held");
-    try t.expect(std.mem.indexOf(u8, held, "\n@fi") == null);
+    // The earlier real H iterator remains; its later inert capture is proved
+    // non-H independently, so that separate write loop can use its fast arm.
+    try t.expect(std.mem.indexOf(u8, held, "# RC-NONHELD-CAPTURE-1") != null);
+    try t.expect(std.mem.indexOf(u8, held, "\n@fi") != null);
     try t.expect(std.mem.indexOf(u8, held, "myl_rc_hold_acquire") != null);
     try t.expect(std.mem.indexOf(u8, held, "myl_qbe_rc_slot_drop") != null);
     var counted = try emitted(true);

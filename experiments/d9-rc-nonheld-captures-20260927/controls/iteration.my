@@ -1,0 +1,7 @@
+def main(out: Stream) -> int:
+    flags = [True, True]
+    flags[0] = False
+    out.print("entered")
+    for flag in flags:
+        flags.append(flag)
+    return 0

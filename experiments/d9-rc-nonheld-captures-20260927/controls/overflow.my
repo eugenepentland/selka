@@ -1,0 +1,11 @@
+def main(out: Stream) -> int:
+    flags = [True, True]
+    out.print("entered")
+    for at in range(1, 4):
+        flags[9223372036854775807 + at] = False
+    count = 0
+    for flag in flags:
+        if flag:
+            count += 1
+    out.print(count)
+    return 0
