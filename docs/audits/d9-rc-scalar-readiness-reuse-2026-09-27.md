@@ -42,8 +42,8 @@ The flag uses normal frame sizing and allocation, never operand scratch. One
 wide fixture moves its first local by 8 bytes and increases its heap reservation
 787584→787600: the existing frame estimator retains its 2× spill reserve. Trap
 journals, logical steps, frame admission and physical floor checks are unchanged.
-The native query's older comment saying admission is never cached describes
-runtime behavior; a comment-only follow-up will clarify this compiler proof
+The measured source retains the native query's older comment saying admission
+is never cached. A separate comment-only follow-up clarifies this compiler proof
 without invalidating the frozen measured compiler.
 
 ## Matched production evidence
