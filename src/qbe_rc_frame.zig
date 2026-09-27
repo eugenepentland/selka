@@ -2,6 +2,7 @@
 const typed = @import("typed.zig");
 const runtime = @import("runtime_mode.zig");
 const state_model = @import("qbe_rc_state.zig");
+const dictionary = @import("rc_dictionary_tail.zig");
 /// Errors shared with the native emitter.
 pub const Error = state_model.Error;
 /// Frozen C journal entry/frame sizes, verified against the runtime header.
@@ -116,12 +117,24 @@ pub fn pending(comptime E: type, self: *E) usize {
 /// Set a guard only when its represented ownership token has committed.
 pub fn initialized(comptime E: type, self: *E, index: usize, live: bool) Error!void {
     if (live) try requireLinked(E, self);
+    if (live and dictionary.forbidsPublication(
+        get(E, self).?.plan.dictionary_tails,
+        self.pc,
+        index,
+        localCount(E, self),
+    )) return error.InternalError;
     if (!live and try get(E, self).?.plan.journal.slot(index) == null) return;
     const pointer = try guard(E, self, index);
     try self.print(" storew {d}, %v{d}\n", .{ @intFromBool(live), pointer });
 }
 /// Address the stable guard word for one journal entry.
 pub fn guard(comptime E: type, self: *E, index: usize) Error!usize {
+    if (dictionary.closedOperand(
+        get(E, self).?.plan.dictionary_tails,
+        self.pc,
+        index,
+        localCount(E, self),
+    )) return error.InternalError;
     const physical = try get(E, self).?.plan.journal.require(index);
     const result = self.temp();
     try self.print(" %v{d} =l add %rcguards, {d}\n", .{ result, physical * 8 });
@@ -171,6 +184,15 @@ fn typedEntry(comptime E: type, self: *E, index: usize, ty: typed.Type) Error!us
 
 /// Clear/drop one dynamic typed entry using the runtime's unique/count ordering.
 pub fn drop(comptime E: type, self: *E, index: usize) Error!void {
+    if (dictionary.emptyDrop(
+        get(E, self).?.plan.dictionary_tails,
+        self.pc,
+        index,
+        localCount(E, self),
+    )) {
+        try self.print(" # RC-DICTIONARY-EMPTY-DROPS-1 slot {d}\n", .{index});
+        return;
+    }
     if (try get(E, self).?.plan.journal.slot(index) == null) return;
     const live = self.temp();
     const label = self.temp();

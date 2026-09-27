@@ -1,5 +1,16 @@
 //! Emission-independent dictionary capture lifetime and certificate data.
 const bytecode = @import("bytecode.zig");
+/// Shared late-proof scan allowance; metadata/stack rows consume one unit each.
+pub const Budget = struct {
+    left: usize = 262144,
+
+    /// Refuse before visiting work beyond the remaining candidate allowance.
+    pub fn take(self: *Budget, amount: usize) bool {
+        if (amount > self.left) return false;
+        self.left -= amount;
+        return true;
+    }
+};
 /// A closed five-op tail; only start + 1 stores its borrowed receiver.
 pub const Certificate = struct {
     start: usize,
@@ -8,7 +19,10 @@ pub const Certificate = struct {
     key: usize,
     value: usize,
     key_authority: union(enum) { canonical, anchored: Key } = .canonical,
+    empty_drops: ?EmptyDrops = null,
 };
+/// A canonical store resets operand zero before a closed, nonpublishing loop.
+pub const EmptyDrops = struct { reset: usize, back: usize, get: usize };
 /// Whole-local zero-token key and capture, anchored by one real list owner.
 pub const Key = struct {
     anchor: @import("rc_model.zig").Anchor,
@@ -37,6 +51,35 @@ pub fn rawCapture(proofs: []const Certificate, pc: usize) bool {
     for (proofs) |proof| if (proof.key_authority == .anchored) {
         const at = proof.key_authority.anchored.capture;
         if (pc == at - 1 or pc == at) return true;
+    };
+    return false;
+}
+
+/// Exact physical consumers only; setup and later owning uses keep their guards.
+pub fn emptyDrop(proofs: []const Certificate, pc: usize, journal: usize, locals: usize) bool {
+    for (proofs) |proof| if (proof.empty_drops) |empty| {
+        const key = proof.key_authority.anchored;
+        if (journal == locals and (pc == empty.get or pc == proof.start + 1 or pc == proof.start + 4)) return true;
+        if (journal == key.receiver and pc == key.projection + 1) return true;
+        if (journal == proof.receiver and pc == proof.start + 1) return true;
+    };
+    return false;
+}
+
+/// No admitted operation can pass this operand guard to a runtime publisher.
+pub fn closedOperand(proofs: []const Certificate, pc: usize, journal: usize, locals: usize) bool {
+    if (journal != locals) return false;
+    for (proofs) |proof| if (proof.empty_drops) |empty| {
+        if (pc > empty.reset and pc <= empty.back) return true;
+    };
+    return false;
+}
+
+/// Raw locals never publish; the shared operand may own before and after the loop.
+pub fn forbidsPublication(proofs: []const Certificate, pc: usize, journal: usize, locals: usize) bool {
+    if (closedOperand(proofs, pc, journal, locals)) return true;
+    for (proofs) |proof| if (proof.empty_drops != null) {
+        if (journal == proof.receiver or journal == proof.key or journal == proof.key_authority.anchored.receiver) return true;
     };
     return false;
 }

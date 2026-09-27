@@ -5,10 +5,10 @@ const runtime = @import("runtime_mode.zig");
 const t = std.testing;
 const Manifest = struct { functions: []const struct { name: []const u8, il: []const u8 } };
 
-fn emitted(path: []const u8) !std.json.Parsed(Manifest) {
+fn emitted(path: []const u8, add_main: bool) !std.json.Parsed(Manifest) {
     const library = try std.Io.Dir.cwd().readFileAlloc(t.io, path, t.allocator, .limited(65536));
     defer t.allocator.free(library);
-    const source = try std.fmt.allocPrint(t.allocator, "{s}\ndef main() -> int:\n    return 0\n", .{library});
+    const source = try std.fmt.allocPrint(t.allocator, "{s}{s}", .{ library, if (add_main) "\ndef main() -> int:\n    return 0\n" else "" });
     defer t.allocator.free(source);
     var compilation = try compiler.Compilation.init(t.allocator, "dictionary_loops.my", source);
     defer compilation.deinit();
@@ -25,7 +25,7 @@ test "RC dictionary loop only hoists direct fresh unexposed roots" {
     const saved = runtime.get();
     defer runtime.set(saved);
     runtime.set(.rc);
-    var result = try emitted("tests/lang/rc_dictionary_loops.my");
+    var result = try emitted("tests/lang/rc_dictionary_loops.my", true);
     defer result.deinit();
     const il = try body(result.value, "fresh");
     try t.expectEqual(@as(usize, 1), std.mem.count(u8, il, "\n@ce"));
@@ -36,6 +36,26 @@ test "RC dictionary loop only hoists direct fresh unexposed roots" {
     try t.expect(std.mem.indexOf(u8, il, "call $myl_qbe_rc_frame_enter") != null);
     try t.expect(std.mem.indexOf(u8, il, "call $myl_native_dictionary_write") != null);
     try t.expect(std.mem.indexOf(u8, il, "@fi") == null);
+    try t.expectEqual(@as(usize, 5), std.mem.count(u8, il, "# RC-DICTIONARY-EMPTY-DROPS-1"));
     for ([_][]const u8{ "shared_empty", "during", "calls", "rebound", "enclosing" }) |name|
         try t.expectEqual(@as(usize, 0), std.mem.count(u8, try body(result.value, name), "\n@ce"));
+}
+
+// spec: RC-DICTIONARY-EMPTY-DROPS-1
+test "RC dictionary empty drops retain exact benchmark setup later H iteration and journal layout" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    var result = try emitted("bench/parity/micro/dict_count.my", false);
+    defer result.deinit();
+    const il = try body(result.value, "main");
+    try t.expectEqual(@as(usize, 5), std.mem.count(u8, il, "# RC-DICTIONARY-EMPTY-DROPS-1"));
+    try t.expect(std.mem.indexOf(u8, il, "%rcentries =l alloc8 416") != null);
+    try t.expect(std.mem.indexOf(u8, il, "%rcguards =l alloc8 104") != null);
+    try t.expect(std.mem.indexOf(u8, il, "call $myl_qbe_rc_frame_enter") != null);
+    const entry = std.mem.indexOf(u8, il, "\n@ce") orelse return error.TestUnexpectedResult;
+    const last = std.mem.lastIndexOf(u8, il, "# RC-DICTIONARY-EMPTY-DROPS-1") orelse return error.TestUnexpectedResult;
+    try t.expect(std.mem.indexOf(u8, il[0..entry], "call $myl_qbe_rc_slot_drop") != null);
+    try t.expect(std.mem.indexOf(u8, il[last..], "call $myl_rc_hold_acquire") != null);
+    try t.expect(std.mem.indexOf(u8, il[last..], "call $myl_qbe_rc_slot_drop") != null);
 }

@@ -90,6 +90,8 @@ test "RC empty frame preserves private storage admission and all uncertain frame
 
 const RefusalEmitter = struct {
     cow: ?struct { rc: ?*@import("qbe_rc_state.zig").State },
+    function: @import("bytecode.zig").Function = .{ .id = @fromBackingInt(0), .name = "guard_probe", .scope = .{ .instructions = &.{} } },
+    pc: usize = 0,
     touched: bool = false,
 
     /// Report unexpected instruction generation in an empty-frame assertion.
@@ -124,6 +126,7 @@ test "RC empty frame refuses publication and scope before emitting instructions"
     runtime.set(.rc);
     var state: @import("qbe_rc_state.zig").State = undefined;
     state.active = true;
+    state.plan.dictionary_tails = &.{};
     state.plan.journal = .{ .prefix = &.{ 0, 1 }, .unlinked = true };
     var emitter: RefusalEmitter = .{ .cow = .{ .rc = &state } };
     try t.expectError(error.InternalError, frame.initialized(RefusalEmitter, &emitter, 0, true));
@@ -132,6 +135,35 @@ test "RC empty frame refuses publication and scope before emitting instructions"
     try t.expect(!emitter.touched);
     try t.expectError(error.InternalError, @import("qbe_rc_unique.zig").field(RefusalEmitter, &emitter, .{ .ty = .unit, .address = 0 }));
     try t.expect(!emitter.touched);
+    try frame.initialized(RefusalEmitter, &emitter, 0, false);
+    try t.expect(emitter.touched);
+}
+
+// spec-case: RC-DICTIONARY-EMPTY-DROPS-1
+test "RC dictionary empty drops reject unproved live publication and direct runtime guard access" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    const proof: @import("rc_dictionary_tail.zig").Certificate = .{
+        .start = 8,
+        .root = 2,
+        .receiver = 3,
+        .key = 4,
+        .value = 5,
+        .key_authority = .{ .anchored = .{ .anchor = .{ .storage = @fromBackingInt(1) }, .receiver = 6, .capture = 5, .projection = 6 } },
+        .empty_drops = .{ .reset = 2, .back = 14, .get = 7 },
+    };
+    var state: @import("qbe_rc_state.zig").State = undefined;
+    state.active = true;
+    state.plan.dictionary_tails = &.{proof};
+    state.plan.journal = .{ .prefix = &.{ 0, 1 } };
+    var emitter: RefusalEmitter = .{ .cow = .{ .rc = &state }, .pc = 7 };
+    // No locals in this probe makes logical slot0 the actual operand0 guard.
+    try t.expectError(error.InternalError, frame.initialized(RefusalEmitter, &emitter, 0, true));
+    try t.expect(!emitter.touched);
+    try t.expectError(error.InternalError, frame.guard(RefusalEmitter, &emitter, 0));
+    try t.expect(!emitter.touched);
+    emitter.pc = 2; // The canonical reset still has its real source guard.
     try frame.initialized(RefusalEmitter, &emitter, 0, false);
     try t.expect(emitter.touched);
 }
