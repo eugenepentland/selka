@@ -2,12 +2,20 @@
 const bytecode = @import("bytecode.zig");
 const shapes = @import("rc_shape.zig");
 const native = @import("native_types.zig");
+const typed = @import("typed.zig");
 const Op = @FieldType(bytecode.Instruction, "op");
 
 /// Prove that every managed bit remains anchored by the read-only caller inputs.
 /// This linear closed grammar permits self recursion, but no other calls,
 /// allocation, mutation, unique resource, arena, callback or owning result.
 pub fn certify(catalog: *shapes.Catalog, function: bytecode.Function) native.Error!bool {
+    if (!try admissible(catalog, function)) return false;
+    for (function.scope.instructions) |instruction| if (!allowed(catalog, function, instruction.op)) return false;
+    return true;
+}
+
+/// Shared activation boundary; all managed values must remain caller anchored.
+pub fn admissible(catalog: *shapes.Catalog, function: bytecode.Function) native.Error!bool {
     if (function.policy.c_abi or function.policy.host != null) return false;
     if (function.signature.mutates.len != 0 or function.signature.declared_mutates.len != 0) return false;
     const output = try catalog.get(function.signature.return_type);
@@ -17,12 +25,11 @@ pub fn certify(catalog: *shapes.Catalog, function: bytecode.Function) native.Err
         if (local.ty.isAggregate() and catalog.native.records[local.ty.recordIndex()].collection.box and
             @import("value_semantics.zig").needsCopy(catalog.native.records, local.ty)) return false;
     }
-    if (function.scope.instructions.len == 0) return false;
-    for (function.scope.instructions) |instruction| if (!allowed(catalog, function, instruction.op)) return false;
-    return true;
+    return function.scope.instructions.len != 0;
 }
 
-fn allowed(catalog: *shapes.Catalog, function: bytecode.Function, op: Op) bool {
+/// Closed local grammar. Non-self calls require an independent callee proof.
+pub fn allowed(catalog: *shapes.Catalog, function: bytecode.Function, op: Op) bool {
     return switch (op) {
         .load_local,
         .move_local,
@@ -61,10 +68,16 @@ fn allowed(catalog: *shapes.Catalog, function: bytecode.Function, op: Op) bool {
         .binary_integer => |operation| operation.ty.integer() != null,
         .make_record => |record| !catalog.native.records[record.ty.recordIndex()].managed,
         .make_variant => true,
-        .get_index => |access| !catalog.native.records[access.ty.recordIndex()].managed,
+        .get_index => |access| indexable(catalog.native.records[access.ty.recordIndex()]),
         .buffer_operation => |operation| readList(catalog, function, operation),
         else => false,
     };
+}
+
+// Immutable octets use the existing normalized, bounds-checked scalar load.
+// Mutable buffers, dictionaries and allocating text indexing stay excluded.
+fn indexable(record: typed.Record) bool {
+    return !record.managed or (typed.isByteString(record) and record.shape.buffer == .u8);
 }
 
 fn readList(catalog: *shapes.Catalog, function: bytecode.Function, operation: @FieldType(Op, "buffer_operation")) bool {

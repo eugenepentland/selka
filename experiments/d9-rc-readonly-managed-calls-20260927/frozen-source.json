@@ -1,0 +1,20 @@
+{
+  "base": "6edbe2ed77fc0aaa0e06cdc06dd09b33d731923c",
+  "compiler": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-lox-probe-astra/.tmp-managed-readonly/install-bytes/bin/mylang",
+  "compiler_sha256": "1beaacb9b76240dd563f5620a5ff391fb835684935671c84da43375c3ac98d54",
+  "patch_sha256": "3ab08a8aa915aaf709abef06a46e7cbac65ba14ac4c35ed9f13e1c9cdb50dab9",
+  "files": {
+    "SPEC.md": "3c69a0417d319553fd051cc4b2e6c12185955453b8f01b5000a0686b35c1a766",
+    "src/qbe.zig": "0a2d798fe301b662edd310a76246b57d58c8af9b991a6d6d6154daab261fa61b",
+    "src/qbe_rc_borrow.zig": "1d2183a8b1e1a9df11992b48d2ae214a42b74474cd25263f8ef6f8a896af9e97",
+    "src/qbe_rc_cache.zig": "25c720edc227a4dc2b29e7989f2af3c6cbd6fe3336ec20c77081b2dc67098b25",
+    "src/qbe_rc_readonly_calls.zig": "bb8a4a77a16c188f417812a0d32d2bc38920a7cfec62d7825cdfbafdea341fcb",
+    "src/qbe_rc_state.zig": "f7f030c618edfcd38b2b19da42f60d039e97e36fc3fb1a422bda8c42bba81dda",
+    "src/rc_readonly_body.zig": "963ad273ba3c7fd1ff442a789b796e38b5e988b320090f6084bfe313237eb4f6",
+    "src/rc_readonly_calls.zig": "1271dd47ab224328a9d20c6787e36b3effd1fce3a53ee9d6f6b4efb60cbb8e31",
+    "src/rc_readonly_calls_test.zig": "a353b64dfe13bbf6fc6f0134a502d23a3f0d71cccdd8c6c27e896a7ef37363db",
+    "src/rc_readonly_plan.zig": "454150d85b4fcaac4bd3ca782018bd6606e84d20f03a9d378fab56a8d0b8edf9",
+    "tests/lang/rc_readonly_bytes.my": "552cb1c95310535bdfd5debba431a8a70e32ac703fb4ae7aea4b9c0cd41161c2",
+    "tests/lang/rc_readonly_managed_calls.my": "e86fc09c672c80bf39c82b96171796503032aca61e42e0e697c6ff39e71479a7"
+  }
+}

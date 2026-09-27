@@ -117,6 +117,7 @@ pub fn Lower(comptime E: type) type {
                 if (!checked and versionLifetime(E, self, loop.head, loop.back)) try kept.append(self.allocator, loop);
             }
             self.loop_plan.loops = try kept.toOwnedSlice(self.allocator);
+            try @import("qbe_rc_append_loop.zig").finalize(E, self);
         }
         /// Emit what runs before instruction `pc`: captures, root checks,
         /// place fills and shares.
@@ -198,6 +199,7 @@ pub fn Lower(comptime E: type) type {
                 if (state.counting) try tally(E, self, .hoisted);
                 if (check.elements) try uniqueElements(E, self, check.local, stack) else try uniqueLocal(E, self, .{ .local = check.local }, stack);
             }
+            try @import("qbe_rc_append_loop.zig").entry(E, self, head);
         }
         /// Whether a jump from the current instruction to `target` enters a
         /// loop with entry checks, and so lands on its `@ce` block.
@@ -1287,5 +1289,6 @@ fn borrowReceiverImpl(comptime E: type, self: *E, local: usize, payload: usize) 
 fn versionLifetime(comptime E: type, self: *E, head: usize, back: usize) bool {
     if (!runtime_mode.enabled()) return true;
     return @import("qbe_rc_hoist.zig").permitsVersion(E, self, head, back) or
-        @import("qbe_rc_scalar_version.zig").proven(E, self, head, back);
+        @import("qbe_rc_scalar_version.zig").proven(E, self, head, back) or
+        @import("qbe_rc_read_version.zig").certify(E, self, head, back) != null;
 }

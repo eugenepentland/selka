@@ -1,0 +1,11 @@
+[
+  {
+    "side": "after",
+    "backend": "qbe",
+    "range": [
+      "0x1007b90",
+      "0x1007c08"
+    ],
+    "instructions": 31
+  }
+]

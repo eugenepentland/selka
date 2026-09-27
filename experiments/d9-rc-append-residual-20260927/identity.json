@@ -1,0 +1,167 @@
+{
+  "source": "aadf9e80",
+  "method": "Read-only static disassembly of exact measured binaries. Common successful loop paths; no new measurements or modified binaries.",
+  "loops": [
+    {
+      "mode": "rc",
+      "backend": "qbe",
+      "loop": "append",
+      "ranges": [
+        [
+          "0x10075b0",
+          "0x1007602"
+        ],
+        [
+          "0x100763a",
+          "0x1007683"
+        ]
+      ],
+      "instructions": 39,
+      "elements_per_iteration": 1,
+      "per_element": 39.0,
+      "file": "rc-qbe-append.asm"
+    },
+    {
+      "mode": "rc",
+      "backend": "qbe",
+      "loop": "fold",
+      "ranges": [
+        [
+          "0x10079e0",
+          "0x1007a8f"
+        ]
+      ],
+      "instructions": 44,
+      "elements_per_iteration": 1,
+      "per_element": 44.0,
+      "file": "rc-qbe-fold.asm"
+    },
+    {
+      "mode": "gc",
+      "backend": "qbe",
+      "loop": "append",
+      "ranges": [
+        [
+          "0x1004ff0",
+          "0x1005013"
+        ],
+        [
+          "0x100505f",
+          "0x1005091"
+        ]
+      ],
+      "instructions": 20,
+      "elements_per_iteration": 1,
+      "per_element": 20.0,
+      "file": "gc-qbe-append.asm"
+    },
+    {
+      "mode": "gc",
+      "backend": "qbe",
+      "loop": "fold",
+      "ranges": [
+        [
+          "0x1005260",
+          "0x1005298"
+        ]
+      ],
+      "instructions": 17,
+      "elements_per_iteration": 1,
+      "per_element": 17.0,
+      "file": "gc-qbe-fold.asm"
+    },
+    {
+      "mode": "rc",
+      "backend": "llvm",
+      "loop": "append",
+      "ranges": [
+        [
+          "0x100ab58",
+          "0x100abbd"
+        ]
+      ],
+      "instructions": 28,
+      "elements_per_iteration": 1,
+      "per_element": 28.0,
+      "file": "rc-llvm-append.asm"
+    },
+    {
+      "mode": "rc",
+      "backend": "llvm",
+      "loop": "fold",
+      "ranges": [
+        [
+          "0x100af90",
+          "0x100afa6"
+        ]
+      ],
+      "instructions": 7,
+      "elements_per_iteration": 1,
+      "per_element": 7.0,
+      "file": "rc-llvm-fold.asm"
+    },
+    {
+      "mode": "gc",
+      "backend": "llvm",
+      "loop": "append",
+      "ranges": [
+        [
+          "0x1008660",
+          "0x1008690"
+        ]
+      ],
+      "instructions": 13,
+      "elements_per_iteration": 1,
+      "per_element": 13.0,
+      "file": "gc-llvm-append.asm"
+    },
+    {
+      "mode": "gc",
+      "backend": "llvm",
+      "loop": "fold",
+      "ranges": [
+        [
+          "0x1008e50",
+          "0x1008ea6"
+        ]
+      ],
+      "instructions": 19,
+      "elements_per_iteration": 8,
+      "per_element": 2.375,
+      "file": "gc-llvm-fold.asm"
+    }
+  ],
+  "binaries": {
+    "rc-qbe": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/scalar-readiness-prototype/controls/parity-micro-list_append_sum-after-qbe-production",
+      "sha256": "798956dd8c373576445111747000f724ea019bd8b0053f94f41c2cb06b956d33",
+      "manifest_sha256": "f8b9e9f0de89743c7c34a1926edefb908130e264e9a85a50c1fc3e3630715194"
+    },
+    "rc-llvm": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/scalar-readiness-prototype/controls/parity-micro-list_append_sum-after-llvm-production",
+      "sha256": "957e7f30b34c0ccce2cf877057141d1ac40833c7b202251f630b56de94e0bd92",
+      "manifest_sha256": "967754316e7a816c24f874d1a43f9c81073bae5d39999155f2d075b33cbf016c"
+    },
+    "gc-qbe": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-list_append_sum.qbe",
+      "sha256": "a9927e6163d099f9539ad5e0bae0f08229b3f15d77f56aeb4d57b741e92356dd",
+      "manifest_sha256": "eb7d3ff410a1391416afd1befd6ddd804a9f70bdac5b8b3b93ec1266a0851c09"
+    },
+    "gc-llvm": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-list_append_sum.llvm",
+      "sha256": "f9b5750754dc217e33c64a11243b6aaf7156ddeeca189ae4622f5927468ef3ab",
+      "manifest_sha256": "1665386e6ca85f58e4b0c67a4855d31b39b84fcef6013cff9c43f83fc2a5391f"
+    }
+  },
+  "measured_instruction_medians": {
+    "rc-qbe": 1334581018,
+    "gc-qbe": 592295027,
+    "rc-llvm": 566708819,
+    "gc-llvm": 246274722
+  },
+  "input": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/bench/parity/micro/list_append_sum.my",
+    "sha256": "88ca6385237fbddd80aa7857864d269e23517995b6a39b8917c8e44bb451d91e",
+    "elements": 16000000
+  }
+}

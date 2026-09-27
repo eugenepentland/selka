@@ -1,0 +1,4 @@
+PASS after gc qbe
+PASS after rc qbe
+PASS after gc llvm
+PASS after rc llvm

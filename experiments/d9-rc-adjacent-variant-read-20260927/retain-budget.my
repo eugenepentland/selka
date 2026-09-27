@@ -1,0 +1,40 @@
+record Deep0:
+    values: list[int]
+record Deep1:
+    inner: Deep0
+record Deep2:
+    inner: Deep1
+record Deep3:
+    inner: Deep2
+record Deep4:
+    inner: Deep3
+record Deep5:
+    inner: Deep4
+record Deep6:
+    inner: Deep5
+record Deep7:
+    inner: Deep6
+record Deep8:
+    inner: Deep7
+record Deep9:
+    inner: Deep8
+record Deep10:
+    inner: Deep9
+record Deep11:
+    inner: Deep10
+record Deep12:
+    inner: Deep11
+union Item:
+    empty,
+    value: Deep12
+public def make() -> list[Item]:
+    return [Item.value(Deep12(Deep11(Deep10(Deep9(Deep8(Deep7(Deep6(Deep5(Deep4(Deep3(Deep2(Deep1(Deep0([7]))))))))))))))]
+public def probe(rows: list[Item]) -> int:
+    match rows[0]:
+        case Item.value(payload):
+            result = [len(payload.inner.inner.inner.inner.inner.inner.inner.inner.inner.inner.inner.inner.values)]
+            return result[0]
+        case _:
+            return 0
+def main() -> int:
+    return probe(make())

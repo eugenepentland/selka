@@ -1,0 +1,8 @@
+def fold(items: list[int]) -> int:
+    total = 0
+    for value in items:
+        total += value
+    return total
+
+def main() -> int:
+    return fold([index for index in range(65)])

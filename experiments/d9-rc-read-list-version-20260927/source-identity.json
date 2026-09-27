@@ -1,0 +1,12 @@
+{
+  "head": "e130e87ff3df525da7f1e39d0dee9890da8dff91",
+  "production": {
+    "src/qbe_rc_read_version.zig": "2fdbeb8a49e79c554b43d2475067402f9793e250a4bf41560d179a5aa6948dbd",
+    "src/qbe_cow.zig": "69320786ceabb9c69da9eced6a1f6377cb075336ba0618e44e45179e1ad58cd1",
+    "src/qbe_loop_version.zig": "42b1f6063d4b81e16d5594d54cbf88160fbb76d8c76f916e5da7e77f5a601afb"
+  },
+  "compiler": {
+    "before": "1ca7c30bc906e314613698d402a1fc01dfbd0340869dd0d85575385760b886e2",
+    "after": "f5115e2aa7179bd468dea4fee5ebaffdab9a103572a9569bcb9adbe330ac2126"
+  }
+}

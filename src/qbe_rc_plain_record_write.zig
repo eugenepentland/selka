@@ -12,13 +12,13 @@ pub fn local(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "o
     for (state.plan.plain_writes) |proof| {
         if (self.pc == proof.start + 1 or self.pc == proof.start + 3) return true;
         if (self.pc == proof.start + 4) {
-            try self.store(stack.len, try self.load("l", proof.root));
+            try self.store(stack.len, try address(E, self, proof));
             return true;
         }
         if (self.pc != proof.start + 7) continue;
         const member = try self.field(self.function.scope.locals[proof.root].ty, proof.field);
         const value = try self.load("l", proof.value);
-        const root = try self.load("l", proof.root);
+        const root = try address(E, self, proof);
         try self.print(" # RC-PLAIN-RECORD-WRITE-1 root {d} field {d} capture {d}\n", .{ proof.root, proof.field, proof.capture });
         try self.writeValue(try self.address(root, member.offset), value, member.ty);
         return true;
@@ -30,8 +30,15 @@ pub fn local(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "o
 pub fn update(comptime E: type, self: *E, height: usize) Error!bool {
     const state = frame.get(E, self) orelse return false;
     for (state.plan.plain_writes) |proof| if (self.pc == proof.start + 6) {
-        try self.store(height - 2, try self.load("l", proof.root));
+        try self.store(height - 2, try address(E, self, proof));
         return true;
     };
     return false;
+}
+
+fn address(comptime E: type, self: *E, proof: @import("rc_plain_record_write.zig").Certificate) Error!usize {
+    if (proof.home == .caller) return self.load("l", proof.root);
+    const result = self.temp();
+    try self.print(" %v{d} =l copy %l{d}\n", .{ result, proof.root });
+    return result;
 }

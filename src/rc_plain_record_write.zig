@@ -7,7 +7,7 @@ const plans = @import("rc_plan.zig");
 const cow_plan = @import("cow_plan.zig");
 const Op = @FieldType(bytecode.Instruction, "op");
 /// The complete inert tail; update and commit are start + 6 and start + 7.
-pub const Certificate = struct { root: usize, capture: usize, value: usize, field: usize, start: usize };
+pub const Certificate = struct { root: usize, capture: usize, value: usize, field: usize, start: usize, home: enum { caller, local } = .caller };
 /// Optional refusal preserves general lowering; allocation failures propagate.
 pub const Error = error{ InternalError, OutOfMemory };
 
@@ -19,7 +19,7 @@ pub fn build(comptime E: type, self: *E, catalog: *shapes.Catalog, plan: plans.P
     var remaining: usize = 262144;
     for (code, 0..) |instruction, pc| {
         if (instruction.op != .update_record or pc < 7 or pc + 1 >= code.len) continue;
-        const proof = try tail(E, self, pc - 6, catalog) orelse continue;
+        const proof = try tail(E, self, pc - 6, catalog, false) orelse continue;
         if (code.len > remaining) break;
         remaining -= code.len;
         if (!captureUses(E, self, proof) or !try quiet(E, self, proof, catalog, plan)) continue;
@@ -28,7 +28,37 @@ pub fn build(comptime E: type, self: *E, catalog: *shapes.Catalog, plan: plans.P
     return found.toOwnedSlice(self.allocator);
 }
 
-fn tail(comptime E: type, self: *E, start: usize, catalog: *shapes.Catalog) Error!?Certificate {
+/// Extend only canonical emission after loop, storage and alternate facts settle.
+pub fn named(comptime E: type, self: *E) Error!void {
+    const state = self.cow.?.rc orelse return;
+    if (!state.active or state.readonly or state.contract.result == .borrowed) return;
+    const code = self.function.scope.instructions;
+    if (code.len > 4096 or self.function.policy.c_abi or self.function.policy.host != null) return;
+    const homes = @import("rc_record_home.zig");
+    var budget: homes.Budget = .{};
+    const Cached = struct { root: usize, facts: ?[]const u8 };
+    var cache: std.ArrayList(Cached) = .empty;
+    var found: std.ArrayList(Certificate) = .empty;
+    try found.appendSlice(self.allocator, state.plan.plain_writes);
+    var remaining: usize = 262144;
+    for (code, 0..) |instruction, pc| {
+        if (instruction.op != .update_record or pc < 7 or pc + 1 >= code.len) continue;
+        const proof = try tail(E, self, pc - 6, &state.catalog, true) orelse continue;
+        if (code.len > remaining) break;
+        remaining -= code.len;
+        if (!captureUses(E, self, proof) or !try quiet(E, self, proof, &state.catalog, state.plan.locals)) continue;
+        const facts = cached: {
+            for (cache.items) |entry| if (entry.root == proof.root) break :cached entry.facts;
+            const facts = try homes.analyze(E, self, proof.root, &budget);
+            try cache.append(self.allocator, .{ .root = proof.root, .facts = facts });
+            break :cached facts;
+        };
+        if (facts) |rows| if (rows[proof.start] == homes.owned) try found.append(self.allocator, proof);
+    }
+    state.plan.plain_writes = try found.toOwnedSlice(self.allocator);
+}
+
+fn tail(comptime E: type, self: *E, start: usize, catalog: *shapes.Catalog, named_home: bool) Error!?Certificate {
     const code = self.function.scope.instructions;
     const ops = code[start..][0..8];
     if (ops[0].op != .load_local or ops[1].op != .store_local or ops[5].op != .load_local) return null;
@@ -40,7 +70,7 @@ fn tail(comptime E: type, self: *E, start: usize, catalog: *shapes.Catalog) Erro
     if (!localIs(ops[4].op, .load_local, capture) or !localIs(ops[7].op, .store_local, root)) return null;
     if (!localIs(code[start - 1].op, .store_local, value)) return null;
     const update = ops[6].op.update_record;
-    if (update.indices.len != 1 or !self.callerStorage(root) or self.moves.resolve(root) != root) return null;
+    if (update.indices.len != 1 or self.callerStorage(root) == named_home or self.moves.resolve(root) != root) return null;
     const locals = self.function.scope.locals;
     const ty = locals[root].ty;
     if (ty != update.ty or locals[capture].ty != ty or !ty.isAggregate()) return null;
@@ -61,7 +91,7 @@ fn tail(comptime E: type, self: *E, start: usize, catalog: *shapes.Catalog) Erro
         if (pc != start and self.isBranchTarget(pc)) return null;
     }
     if (self.live.?.after(start + 7, capture)) return null;
-    return .{ .root = root, .capture = capture, .value = value, .field = update.indices[0], .start = start };
+    return .{ .root = root, .capture = capture, .value = value, .field = update.indices[0], .start = start, .home = if (named_home) .local else .caller };
 }
 
 // The capture starts empty at function entry, and only these two suppressed

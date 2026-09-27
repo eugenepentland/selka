@@ -1,0 +1,13 @@
+def returned(values: list[bytes], index: int) -> bytes:
+    return values[index]
+def selected(values: list[bytes], index: int) -> int:
+    saved = returned(values, 0)
+    return int(saved[index])
+def main(args: list[str]) -> int:
+    index = 0
+    if len(args) == 1:
+        index = 3
+    elif len(args) == 2:
+        index = -4
+    values = [bytes([97, 98, 99])]
+    return selected(values, index)

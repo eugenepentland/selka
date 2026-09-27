@@ -1,0 +1,27 @@
+{
+  "before_source": "fbcd7978d81de78fd8c8d4112d36edeeafc898fd",
+  "compilers": {
+    "before": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-readiness-before-astra/.tmp-readiness/install/bin/mylang",
+      "sha256": "39f0f752c8ffeb9957fc5024bc2c11582ecb48701ca87a7ee99b614fd066ba6e"
+    },
+    "after": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/scalar-readiness-prototype/install/bin/mylang",
+      "sha256": "4763ab94baf190fa99a4e08fc59fc7887110931d8041a0cc48116dbb09efad07"
+    }
+  },
+  "production_files": {
+    "src/qbe_cow.zig": "ffe23a110329c1bd253bc70c804e46af5b05368d7853d43c8cfe7695672e88ad",
+    "src/qbe_rc_append.zig": "609325b926221d63fd8360ae5af1a5226755798b21ff85166ba77eb2672bdc77",
+    "src/qbe_rc_append_test.zig": "9fedac7a4b0bd9a639d686093f40a7b8f1cc40e454687793e859b7fcbce94b55",
+    "src/qbe_rc_frame.zig": "4638a673351bdf8184956edef3e3368d1dfb21eaeaeb8771a9c32fba1ab0a576",
+    "src/qbe_rc_nonheld_capture.zig": "ba9115816c1126d8cd7e8f9a7b0a99e79f1e5a500037eece4eac737550f2d372",
+    "src/qbe_rc_state.zig": "8554f779ca66280375677a6741ae54d2b1b48a6e942daa59dc41ef4c8a09eedb",
+    "src/qbe_rc_append_loop.zig": "3efeef4c0102b935a3a9cacb2d2f743a7cf27412736ebe469f6a002c5a91d32c",
+    "src/rc_append_loop.zig": "24d1bf43fbc06cb73598222134970b360635d3a0996cbc0565c682455d90e664"
+  },
+  "patch_sha256": "74a8e0f0b2fce365bee95119526cf532209c99e96e9aaaa8745abef1db6bcf3b",
+  "cpu": 3,
+  "harness_sha256": "246090f58babdf0609416446c87f55ed6c9e52c1ab1d9c660330b5d64ecb234d",
+  "harness_header_sha256": "eb84554e2791a4f517fc1ba8928aa997bbad62f50f9b7bfcee75f2f915503d24"
+}

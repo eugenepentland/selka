@@ -18,6 +18,7 @@
 //! back edge and a failing guard name.
 const std = @import("std");
 const facts = @import("qbe_loop_facts.zig");
+const read_version = @import("qbe_rc_read_version.zig");
 
 /// Errors reported while emitting native operations.
 pub const Error = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
@@ -50,6 +51,12 @@ pub fn Lower(comptime E: type) type {
         /// out to allocate after all, so the caller lowers the loop once, as
         /// before.
         pub fn emit(self: *E, loop: *const facts.Loop) Error!bool {
+            // Existing hoist/scalar admissions keep their original protocol.
+            const previous = !@import("runtime_mode.zig").enabled() or
+                @import("qbe_rc_hoist.zig").permitsVersion(E, self, loop.head, loop.back) or
+                @import("qbe_rc_scalar_version.zig").proven(E, self, loop.head, loop.back);
+            const read_proof = if (previous) null else read_version.certify(E, self, loop.head, loop.back);
+            if (!previous and read_proof == null) return false;
             const nodes = self.loop_plan.nodes;
             const values = try self.allocator.alloc(?usize, nodes.len);
             @memset(values, null);
@@ -66,6 +73,7 @@ pub fn Lower(comptime E: type) type {
                 self.output = main;
             };
             try self.headerLabel(loop.head, "i");
+            if (read_proof) |proof| try read_version.guard(E, self, proof, loop.head);
             for (loop.guard) |step| try guardStep(self, &active, step);
             // Everything the copy reads from the guard is computed once the
             // whole guard has held, so an element is read only after the step
@@ -85,6 +93,7 @@ pub fn Lower(comptime E: type) type {
             }
             const text = self.output.writer.buffer[0..self.output.writer.end];
             if (self.copyAllocates(text[guard_end..])) return false;
+            if (read_proof != null and !read_version.quietCopy(text[guard_end..])) return false;
             keep = true;
             var copy = self.output;
             self.output = main;

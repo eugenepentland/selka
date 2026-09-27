@@ -1,0 +1,38 @@
+{
+  "driver_sha256": "71cd8cc28d3b7c5f1bb31c758fbd0cca3f5fcd52223771ad9955c1f7cc2a1c31",
+  "sample": {
+    "command": [
+      "taskset",
+      "-c",
+      "11",
+      "perf",
+      "stat",
+      "--no-big-num",
+      "-x,",
+      "-e",
+      "instructions:u,cycles:u",
+      "--",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-fib.qbe"
+    ],
+    "status": 0,
+    "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n1594615275,,cpu_core/instructions/u,145549103,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n378853951,,cpu_core/cycles/u,145549103,100.00,,\n",
+    "events": [
+      {
+        "metric": "instructions",
+        "event": "cpu_core/instructions/u",
+        "count": 1594615275,
+        "enabled_percent": 100.0,
+        "run_time": "145549103"
+      },
+      {
+        "metric": "cycles",
+        "event": "cpu_core/cycles/u",
+        "count": 378853951,
+        "enabled_percent": 100.0,
+        "run_time": "145549103"
+      }
+    ],
+    "ok": true,
+    "instructions": 1594615275
+  }
+}

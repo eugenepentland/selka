@@ -1,0 +1,113 @@
+def fold(items: list[int]) -> int:
+    total = 0
+    for value in items:
+        total += value
+    return total
+
+
+def fresh() -> int:
+    total = 0
+    for value in [1, 2, 3, 4, 5, 6, 7, 8, 9]:
+        total += value
+    return total
+
+
+def owned(count: int, offset: int) -> int:
+    items = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    total = 0
+    for index in range(count):
+        total += items[index + offset]
+    return total
+
+
+def borrowed(items: list[int], count: int) -> int:
+    noise = [7]
+    total = 0
+    for index in range(count):
+        total += items[index]
+    return total + noise[0]
+
+
+# spec-case: RC-READ-LIST-VERSION-1
+public def test_owned_held_and_empty_read_loops() -> bool:
+    return owned(9, 0) == 45 and owned(0, 999) == 0 and owned(-1, 999) == 0 and fold([]) == 0 and fresh() == 45
+
+
+# spec-case: RC-READ-LIST-VERSION-1
+public def test_short_and_negative_index_fallbacks() -> bool:
+    return owned(4, -9) == 10 and owned(1, -1) == 9 and borrowed([2, 4, 6], 3) == 19
+
+
+# spec-case: RC-READ-LIST-VERSION-1
+public def test_snapshot_and_callback_after_fold_keep_original_owners() -> bool:
+    items = [3, 9, 17]
+    snapshot = items
+    total = fold(items)
+    items.append(total)
+    return total == 29 and snapshot == [3, 9, 17] and items == [3, 9, 17, 29]
+
+
+# spec-case: RC-READ-LIST-VERSION-1
+public def test_nested_dynamic_entries_retain_each_iterator() -> bool:
+    total = 0
+    for outer in range(4):
+        for item in [outer, outer + 1, outer + 2]:
+            total += item
+    return total == 30
+
+
+# spec-case: RC-READ-LIST-VERSION-1
+public def test_parent_and_nested_arenas_keep_held_storage() -> bool:
+    older = [5, 7]
+    answer = 0
+    with arena():
+        local = [11, 13]
+        answer = fold(older) + fold(local) + fresh()
+        with arena():
+            answer += fold(local) + owned(3, 0)
+    return answer == 111 and older == [5, 7]
+
+
+# spec-case: RC-READ-LIST-VERSION-1
+public def test_narrow_and_boolean_elements_keep_width_semantics() -> bool:
+    values = [u8(1), u8(127), u8(255)]
+    total = 0
+    for value in values:
+        total += int(value)
+    flags = [True, False, True, True]
+    count = 0
+    for flag in flags:
+        if flag:
+            count += 1
+    return total == 383 and count == 3
+
+
+# spec-case: RC-READ-LIST-VERSION-1
+public def test_multiple_stable_sources_keep_each_owner() -> bool:
+    left = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    right = [9, 8, 7, 6, 5, 4, 3, 2, 1]
+    total = 0
+    for index in range(9):
+        total += left[index] * right[index]
+    return total == 165
+
+
+# spec-case: RC-READ-LIST-VERSION-1
+public def test_unrelated_managed_values_remain_journaled() -> bool:
+    values = [[1, 2], [3, 4]]
+    total = fresh()
+    for item in values:
+        total += fold(item)
+    return total == 55 and values == [[1, 2], [3, 4]]
+
+
+def main() -> int:
+    assert test_owned_held_and_empty_read_loops()
+    assert test_short_and_negative_index_fallbacks()
+    assert test_snapshot_and_callback_after_fold_keep_original_owners()
+    assert test_nested_dynamic_entries_retain_each_iterator()
+    assert test_parent_and_nested_arenas_keep_held_storage()
+    assert test_narrow_and_boolean_elements_keep_width_semantics()
+    assert test_multiple_stable_sources_keep_each_owner()
+    assert test_unrelated_managed_values_remain_journaled()
+    return 0

@@ -1,0 +1,28 @@
+def fold(items: list[int]) -> int:
+    total = 0
+    for value in items:
+        total += value
+    return total
+
+def fresh(n: int) -> int:
+    total = 0
+    for value in [index for index in range(n)]:
+        total += value
+    return total
+
+def indexed(items: list[int], count: int, offset: int, seed: int) -> int:
+    noise = [7]
+    total = seed
+    for index in range(count):
+        total += items[index + offset]
+    return total + noise[0]
+
+def heap_frame(values: [4096]int, items: list[int]) -> int:
+    padding = replace(values, 0, 7)
+    total = 0
+    for value in items:
+        total += value
+    return total + padding[0]
+
+def main() -> int:
+    return 0

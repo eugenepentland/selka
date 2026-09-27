@@ -1,0 +1,184 @@
+{
+  "origin": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/experiments/d9-rc-flat-borrow-joined-20260927/results.json.gz",
+  "origin_sha256": "036a9792a1006f238334d563edaa22cc713c13d0df047be0e2a9fcdcc541982a",
+  "samples": {
+    "qbe": {
+      "run": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/lox.qbe",
+          "--engine=vm",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/joined-flat-measure/lox-scripts/binary_trees.tree.lox"
+        ],
+        "env": {
+          "MYLANG_MEMORY_LIMIT": "8G"
+        },
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/joined-flat-measure"
+      },
+      "samples": [
+        {
+          "arm": "gc",
+          "repetition": 0,
+          "command": [
+            "taskset",
+            "-c",
+            "2",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/lox.qbe",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/joined-flat-measure/lox-scripts/binary_trees.tree.lox"
+          ],
+          "stdout": "stretch tree of depth:\n11\ncheck:\n-1\nnum trees:\n2048\ndepth:\n4\ncheck:\n-2048\nnum trees:\n512\ndepth:\n6\ncheck:\n-512\nnum trees:\n128\ndepth:\n8\ncheck:\n-128\nnum trees:\n32\ndepth:\n10\ncheck:\n-32\nlong lived tree of depth:\n10\ncheck:\n-1\n",
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n7243231888,,cpu_core/instructions/u,685673794,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n1876147104,,cpu_core/cycles/u,685673794,100.00,,\n",
+          "counters": {
+            "cpu_core/instructions/u": 7243231888,
+            "cpu_core/cycles/u": 1876147104
+          }
+        },
+        {
+          "arm": "gc",
+          "repetition": 1,
+          "command": [
+            "taskset",
+            "-c",
+            "2",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/lox.qbe",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/joined-flat-measure/lox-scripts/binary_trees.tree.lox"
+          ],
+          "stdout": "stretch tree of depth:\n11\ncheck:\n-1\nnum trees:\n2048\ndepth:\n4\ncheck:\n-2048\nnum trees:\n512\ndepth:\n6\ncheck:\n-512\nnum trees:\n128\ndepth:\n8\ncheck:\n-128\nnum trees:\n32\ndepth:\n10\ncheck:\n-32\nlong lived tree of depth:\n10\ncheck:\n-1\n",
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n7243232285,,cpu_core/instructions/u,588289522,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n1837946251,,cpu_core/cycles/u,588289522,100.00,,\n",
+          "counters": {
+            "cpu_core/instructions/u": 7243232285,
+            "cpu_core/cycles/u": 1837946251
+          }
+        },
+        {
+          "arm": "gc",
+          "repetition": 2,
+          "command": [
+            "taskset",
+            "-c",
+            "2",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/lox.qbe",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/joined-flat-measure/lox-scripts/binary_trees.tree.lox"
+          ],
+          "stdout": "stretch tree of depth:\n11\ncheck:\n-1\nnum trees:\n2048\ndepth:\n4\ncheck:\n-2048\nnum trees:\n512\ndepth:\n6\ncheck:\n-512\nnum trees:\n128\ndepth:\n8\ncheck:\n-128\nnum trees:\n32\ndepth:\n10\ncheck:\n-32\nlong lived tree of depth:\n10\ncheck:\n-1\n",
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n7243231730,,cpu_core/instructions/u,575907377,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n1795290111,,cpu_core/cycles/u,575907377,100.00,,\n",
+          "counters": {
+            "cpu_core/instructions/u": 7243231730,
+            "cpu_core/cycles/u": 1795290111
+          }
+        }
+      ],
+      "median": 7243231888,
+      "binary_sha256_at_archive": "11890ca1713981322d67ce9bb534d772a552d7b330982703f55261a11133d3df"
+    },
+    "llvm": {
+      "run": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/lox.llvm",
+          "--engine=vm",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/joined-flat-measure/lox-scripts/binary_trees.tree.lox"
+        ],
+        "env": {
+          "MYLANG_MEMORY_LIMIT": "8G"
+        },
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/joined-flat-measure"
+      },
+      "samples": [
+        {
+          "arm": "gc",
+          "repetition": 0,
+          "command": [
+            "taskset",
+            "-c",
+            "2",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/lox.llvm",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/joined-flat-measure/lox-scripts/binary_trees.tree.lox"
+          ],
+          "stdout": "stretch tree of depth:\n11\ncheck:\n-1\nnum trees:\n2048\ndepth:\n4\ncheck:\n-2048\nnum trees:\n512\ndepth:\n6\ncheck:\n-512\nnum trees:\n128\ndepth:\n8\ncheck:\n-128\nnum trees:\n32\ndepth:\n10\ncheck:\n-32\nlong lived tree of depth:\n10\ncheck:\n-1\n",
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n3433166455,,cpu_core/instructions/u,343155985,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n1031902938,,cpu_core/cycles/u,343155985,100.00,,\n",
+          "counters": {
+            "cpu_core/instructions/u": 3433166455,
+            "cpu_core/cycles/u": 1031902938
+          }
+        },
+        {
+          "arm": "gc",
+          "repetition": 1,
+          "command": [
+            "taskset",
+            "-c",
+            "2",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/lox.llvm",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/joined-flat-measure/lox-scripts/binary_trees.tree.lox"
+          ],
+          "stdout": "stretch tree of depth:\n11\ncheck:\n-1\nnum trees:\n2048\ndepth:\n4\ncheck:\n-2048\nnum trees:\n512\ndepth:\n6\ncheck:\n-512\nnum trees:\n128\ndepth:\n8\ncheck:\n-128\nnum trees:\n32\ndepth:\n10\ncheck:\n-32\nlong lived tree of depth:\n10\ncheck:\n-1\n",
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n3433161665,,cpu_core/instructions/u,325997928,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n1011229330,,cpu_core/cycles/u,325997928,100.00,,\n",
+          "counters": {
+            "cpu_core/instructions/u": 3433161665,
+            "cpu_core/cycles/u": 1011229330
+          }
+        },
+        {
+          "arm": "gc",
+          "repetition": 2,
+          "command": [
+            "taskset",
+            "-c",
+            "2",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/lox.llvm",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/joined-flat-measure/lox-scripts/binary_trees.tree.lox"
+          ],
+          "stdout": "stretch tree of depth:\n11\ncheck:\n-1\nnum trees:\n2048\ndepth:\n4\ncheck:\n-2048\nnum trees:\n512\ndepth:\n6\ncheck:\n-512\nnum trees:\n128\ndepth:\n8\ncheck:\n-128\nnum trees:\n32\ndepth:\n10\ncheck:\n-32\nlong lived tree of depth:\n10\ncheck:\n-1\n",
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n3433163639,,cpu_core/instructions/u,332787887,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n1022427283,,cpu_core/cycles/u,332787887,100.00,,\n",
+          "counters": {
+            "cpu_core/instructions/u": 3433163639,
+            "cpu_core/cycles/u": 1022427283
+          }
+        }
+      ],
+      "median": 3433163639,
+      "binary_sha256_at_archive": "83a0aecef7d9530aec11ebff83cc1149d91afa2495ecab63349c1a9452692c1f"
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "source_path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/corpus-e926d1e1/results.json",
+  "source_file_sha256": "66e36c36173aa4f475561059d60815c62902d0d36454e26cd10e77c6287a4531",
+  "baseline_manifest_sha256": "7a82169b5acc35bc632aca978db99b7cefe4528620513f2b62396d1cf5f8b8d8",
+  "medians": {
+    "parity/suite/sieve|qbe": 822297237,
+    "parity/suite/sieve|llvm": 222097781,
+    "parity/micro/alloc_churn|qbe": 3060154857,
+    "parity/micro/alloc_churn|llvm": 1950411140,
+    "parity/micro/list_append_sum|qbe": 592295027,
+    "parity/micro/list_append_sum|llvm": 246274722,
+    "schematic/fixture|qbe": 18595818,
+    "schematic/fixture|llvm": 9059095,
+    "schematic/changed-net|qbe": 18604633,
+    "schematic/changed-net|llvm": 9063605,
+    "schematic/changed-value|qbe": 18594949,
+    "schematic/changed-value|llvm": 9058219,
+    "lox/vm/binary_trees|qbe": 7243227886,
+    "lox/vm/binary_trees|llvm": 3433157037
+  },
+  "reference": "Archival accepted GC median3; not interleaved with this candidate"
+}

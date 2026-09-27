@@ -1,0 +1,52 @@
+[
+  {
+    "name": "vm::get_property",
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/189856a64b624f4794d78a425d186f2758a4b917745c7d2cd00de026ac327686",
+    "sha256": "3d082b5dba8ca3f1b648be6d7975459d738e8532a6685436e2c1e0b0aae7745f"
+  },
+  {
+    "name": "heap::set_instance_field",
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/86b6d2fa49a252587c86bb1981fef4b6a64d44a8c6d7a3c44c244903b8c7f16c",
+    "sha256": "1631a706c7856c9c2514f9dbb0edfd630b03401751dab153aeb36ee43d9a36b7"
+  },
+  {
+    "name": "heap::set_object_field",
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/7d39252a03bf676af81156e18fd1b7b4090346382a6930a5fb05efa10ef1829b",
+    "sha256": "9d7c9a968638950f5cfdf8eb8173119f0c7d6dfc0e3dddfb248a67b7a714a7e5"
+  },
+  {
+    "name": "vm::load_frame",
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/7142698881cbf619b936c7e2330ad4d9a91d04d1cdd29d003ee3459dc5580c45",
+    "sha256": "fa9b1dbe2c5359f5516f2a9637958863498f131f92619e9bf5ba79045bd3bc6d"
+  },
+  {
+    "name": "heap::string_obj",
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/4ffc0e0f5d632f795076727e9f15326def13515392ba6e4dcf7089174c576546/il/186432ec3555713a6b3e571612f03e3751151dc45d568aa0aead6bb33e3ba22a",
+    "sha256": "67bc9276a204a989f00d92c8badc071f02623358d742587d372ad71790954219"
+  },
+  {
+    "name": "vm::get_property",
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/be9b659c6628f98b06261b3a6720c44ca5364ca5bf55137a96fba2c8f533a6d4/il/189856a64b624f4794d78a425d186f2758a4b917745c7d2cd00de026ac327686",
+    "sha256": "3d082b5dba8ca3f1b648be6d7975459d738e8532a6685436e2c1e0b0aae7745f"
+  },
+  {
+    "name": "heap::set_instance_field",
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/be9b659c6628f98b06261b3a6720c44ca5364ca5bf55137a96fba2c8f533a6d4/il/86b6d2fa49a252587c86bb1981fef4b6a64d44a8c6d7a3c44c244903b8c7f16c",
+    "sha256": "1631a706c7856c9c2514f9dbb0edfd630b03401751dab153aeb36ee43d9a36b7"
+  },
+  {
+    "name": "heap::set_object_field",
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/be9b659c6628f98b06261b3a6720c44ca5364ca5bf55137a96fba2c8f533a6d4/il/7d39252a03bf676af81156e18fd1b7b4090346382a6930a5fb05efa10ef1829b",
+    "sha256": "9d7c9a968638950f5cfdf8eb8173119f0c7d6dfc0e3dddfb248a67b7a714a7e5"
+  },
+  {
+    "name": "vm::load_frame",
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/be9b659c6628f98b06261b3a6720c44ca5364ca5bf55137a96fba2c8f533a6d4/il/7142698881cbf619b936c7e2330ad4d9a91d04d1cdd29d003ee3459dc5580c45",
+    "sha256": "fa9b1dbe2c5359f5516f2a9637958863498f131f92619e9bf5ba79045bd3bc6d"
+  },
+  {
+    "name": "heap::string_obj",
+    "il": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/cache/frontend/fragments/be9b659c6628f98b06261b3a6720c44ca5364ca5bf55137a96fba2c8f533a6d4/il/186432ec3555713a6b3e571612f03e3751151dc45d568aa0aead6bb33e3ba22a",
+    "sha256": "67bc9276a204a989f00d92c8badc071f02623358d742587d372ad71790954219"
+  }
+]

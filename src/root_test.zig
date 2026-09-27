@@ -6,6 +6,7 @@ test {
     _ = @import("qbe_rc_fresh_constructor_test.zig");
     _ = @import("qbe_mut_argument_places_test.zig");
     _ = @import("qbe_rc_read_loans_test.zig");
+    _ = @import("qbe_rc_variant_read_test.zig");
     _ = @import("qbe_rc_aggregate_test.zig");
     _ = @import("qbe_rc_inline_take_test.zig");
     _ = @import("qbe_rc_inert_return_test.zig");
@@ -250,12 +251,14 @@ test {
     _ = @import("rc_borrow_certificate_test.zig");
     _ = @import("qbe_rc_borrow_test.zig");
     _ = @import("rc_readonly_body_test.zig");
+    _ = @import("rc_readonly_calls_test.zig");
     _ = @import("qbe_rc_inert_receiver_test.zig");
     _ = @import("qbe_rc_unique_test.zig");
     _ = @import("qbe_rc_hoist_test.zig");
     _ = @import("qbe_rc_fresh_root_test.zig");
     _ = @import("qbe_rc_loop_version_test.zig");
     _ = @import("qbe_rc_scalar_version_test.zig");
+    _ = @import("qbe_rc_read_version_test.zig");
     _ = @import("qbe_rc_plain_write_test.zig");
     _ = @import("qbe_rc_append_test.zig");
     _ = @import("qbe_rc_admission_test.zig");

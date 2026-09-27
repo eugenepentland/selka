@@ -55,7 +55,8 @@ fn referenced(comptime E: type, self: *E, local: usize) bool {
     return self.byReference(local) or self.callerStorage(local);
 }
 
-fn scalarList(comptime E: type, self: *E, local: usize) bool {
+/// Shared scalar-list admission; role and lifetime proofs remain with callers.
+pub fn scalarList(comptime E: type, self: *E, local: usize) bool {
     const ty = self.function.scope.locals[local].ty;
     if (!ty.isAggregate()) return false;
     const record = self.program.records[ty.recordIndex()];
