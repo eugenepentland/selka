@@ -1,0 +1,7 @@
+guest qbe byte-identical and executed
+guest qbe byte-identical and executed
+guest llvm byte-identical and executed
+guest llvm byte-identical and executed
+embedding qbe byte-identical and executed
+embedding llvm byte-identical and executed
+six byte-identical controls,36 exact executed runs,two exact full emissions

@@ -1,0 +1,14 @@
+record State:
+    values: list[int]
+    code: list[int]
+    links: list[int]
+    count: int
+
+def main(args: list[str], out: Stream) -> int:
+    state = State([7], [8], [9], 0)
+    i = 0
+    while i < len(args):
+        state.count = state.count + 1
+        i += 1
+    out.print(state.count)
+    return 0

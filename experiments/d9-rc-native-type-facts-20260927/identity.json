@@ -1,0 +1,28 @@
+{
+  "base": "5b87601297f01810968b9f7ac554c484d5848cca",
+  "worktree": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra",
+  "source_patch_sha256": "d01e517838899f04815da2e9016c514551bcfbd7e76299314b7d4fabf665ece5",
+  "sources": {
+    "src/native_rc_internal.h": "eb84554e2791a4f517fc1ba8928aa997bbad62f50f9b7bfcee75f2f915503d24",
+    "src/native_rc_shapes.c": "59189888de811a2043ca05e868d68109315c00fe32de6381a42653eb6a259762",
+    "src/native_rc_values.c": "da1d50df977c7b5bdc926f542bca83e86dd0e6525f2532351a515335fa838577",
+    "src/native_rc_walk.c": "a8ae6dd034bacc7da2b2e95579faf871ec243a68090ed490838e1d9fda9da51c",
+    "src/qbe_runtime_rc_test.zig": "b8305cc3faf8a4485c59f92c55ba861382248a28c130cff678d0e8540356eaad",
+    "tests/native_rc_loan_test.c": "f133daff1772193330df71eedf9d7dcd20323671c7b26d3a1d3c2f10623eff98"
+  },
+  "compilers": {
+    "before": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-integration/.tmp-rc/install-snapshot-joined/bin/mylang",
+      "sha256": "f87393b249f45699d63a1f5a81dc47fb59faa41d1396fc8035131d7b2533b120"
+    },
+    "after": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/type-facts/install/bin/mylang",
+      "sha256": "2db0563ac88bfacebbe5b7c7c599069b8b80b1e7c8acc9e1cdb3d53f9fe0f54a"
+    }
+  },
+  "cpu": 2,
+  "explicit_runtime_overrides": {
+    "MYLANG_MEMORY_LIMIT": "8G"
+  },
+  "environment_policy": "Only explicit MYLANG overrides are recorded; inherited host environment is not archived."
+}

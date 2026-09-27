@@ -1,6 +1,7 @@
 /* `memmem` is a GNU extension, so the feature macro has to precede <string.h>. */
 #define _GNU_SOURCE
 #include "native_text.h"
+#include "native_rc_collections.h"
 #include <stdlib.h>
 #include <string.h>
 /* A text object's payload is UTF-8 octets, so the collector has nothing to walk;
@@ -195,6 +196,24 @@ const myl_native_type myl_native_text_view_type={
     .scan=view_scan, .scan_count=1
 };
 _Static_assert(sizeof(myl_native_text_view)==32, "a text view is four words");
+static void rc_text_view_edges(myl_native_heap *heap, void *payload, size_t count) {
+    (void)count;
+    myl_rc_edge_release(heap,(void *)((myl_native_text_view *)payload)->owner);
+}
+static const myl_rc_shape rc_text_view_shape={.size=sizeof(myl_native_text_view),.kind=MYL_RC_SHAPE_NONE};
+static myl_rc_status rc_text_clone_adapter(myl_native_heap *heap, const void *payload, unsigned region, void **out) {
+    *out=myl_native_text_own_at(heap,(myl_native_text *)payload,region);
+    return myl_rc_native_result(heap,*out);
+}
+static const myl_rc_descriptor rc_text_view_descriptor={.type=&myl_native_text_view_type,.shape=&rc_text_view_shape,.edges=rc_text_view_edges,.clone=rc_text_clone_adapter,.shell=rc_text_clone_adapter};
+static const myl_rc_module rc_text_view_module={.abi=MYL_RC_ABI_VERSION,.descriptors=&rc_text_view_descriptor,.descriptor_count=1};
+static myl_native_text *rc_text_result(myl_native_heap *heap, myl_native_text *text) {
+    if (myl_rc_enabled(heap)) {
+        myl_rc_status status=myl_rc_owner_acquire(heap,text);
+        if (status!=MYL_RC_OK) { myl_rc_record_failure(heap,status); return NULL; }
+    }
+    return text;
+}
 /* Whether a piece of `count` octets at octet `offset` of `owner` is shared as a
  * view rather than copied; see MYL_TEXT_VIEW_MIN and MYL_TEXT_VIEW_RATIO. A
  * view's offset lives in the header's 32-bit hash word, so a piece that starts
@@ -212,6 +231,10 @@ static int shares(const myl_native_heap *heap, const myl_native_text *owner, siz
  * is rooted across the allocation because it is what keeps the owner alive
  * until the view records it. */
 static myl_native_text *view(myl_native_heap *heap, myl_native_text *input, size_t offset, size_t count, size_t scalars, int plain) {
+    if (myl_rc_enabled(heap)) {
+        myl_rc_status status=myl_rc_module_register(heap,&rc_text_view_module);
+        if (status!=MYL_RC_OK) { myl_rc_record_failure(heap,status); return NULL; }
+    }
     myl_native_root root;
     myl_native_root_push(heap,&root,&input,&pointer_type);
     myl_native_text_view *result=myl_native_heap_alloc(heap,&myl_native_text_view_type,1);
@@ -221,7 +244,9 @@ static myl_native_text *view(myl_native_heap *heap, myl_native_text *input, size
     result->text.bytes=count;
     result->text.flags=MYL_TEXT_VIEW|(plain ? MYL_TEXT_ASCII : 0);
     result->text.hash=(uint32_t)offset;
-    result->owner=myl_native_text_owner(input);
+    myl_native_text *owner=(myl_native_text *)myl_native_text_owner(input);
+    if (myl_rc_enabled(heap) && !rc_text_result(heap,owner)) { myl_rc_owner_release(heap,result); return NULL; }
+    result->owner=owner;
     return &result->text;
 }
 /* A copied piece: the `count` octets at `bytes`, which lie inside a receiver
@@ -246,7 +271,7 @@ static inline size_t share_threshold(const myl_native_text *input) {
  * stays small enough to inline into the loops that cut a text into many short
  * pieces. */
 static __attribute__((noinline)) myl_native_text *long_piece(myl_native_heap *heap, myl_native_text *input, size_t from, size_t count) {
-    if (count==input->bytes && myl_native_header_region(input)==heap->region_depth) return input;
+    if (count==input->bytes && myl_native_header_region(input)==heap->region_depth) return rc_text_result(heap,input);
     const myl_native_text *owner=myl_native_text_owner(input);
     const unsigned char *bytes=myl_native_text_storage(input);
     size_t offset=(size_t)(bytes+from-(const unsigned char *)(owner+1));
@@ -295,7 +320,7 @@ myl_native_text *myl_native_text_copy(myl_native_heap *heap, myl_native_text *in
  * is charged and traced exactly as one built at the current depth. */
 static const myl_native_type octet_type = { .size=1,.alignment=1,.kind=MYL_NATIVE_PLAIN };
 myl_native_text *myl_native_text_own_at(myl_native_heap *heap, myl_native_text *input, unsigned region) {
-    if (!(input->flags&MYL_TEXT_VIEW)) return input;
+    if (!(input->flags&MYL_TEXT_VIEW)) return rc_text_result(heap,input);
     myl_native_root root;
     myl_native_root_push(heap,&root,&input,&pointer_type);
     myl_native_text *text=myl_native_heap_alloc_at(heap,&octet_type,sizeof(myl_native_text)+input->bytes,region);
@@ -437,7 +462,7 @@ myl_native_text *myl_native_text_at(myl_native_heap *heap, myl_native_text *inpu
     (void)decode(myl_native_text_storage(input),input->bytes,&cursor,&point);
     if (point<128) {
         myl_native_text *scalar=ascii_scalar(heap,point);
-        if (scalar) return scalar;
+        if (scalar) return rc_text_result(heap,scalar);
     }
     return myl_native_text_substring(heap,input,at,cursor);
 }
@@ -563,7 +588,7 @@ myl_native_list *myl_native_text_split(myl_native_heap *heap, myl_native_text *i
             size_t end=hit==SIZE_MAX ? input->bytes : start+hit;
             myl_native_text *piece=end-start>=threshold ? long_piece(heap,input,start,end-start)
                                                          : copy_piece(heap,haystack+start,end-start,ascii);
-            if (!piece) { result=NULL; break; }
+            if (!piece) { if (myl_rc_enabled(heap)) myl_rc_list_abort_parts(heap,result,input); result=NULL; break; }
             /* The reserved slot is written in place, exactly as an append that
                finds room writes it: the collector traces the whole reservation,
                so the piece is reachable from here on. */

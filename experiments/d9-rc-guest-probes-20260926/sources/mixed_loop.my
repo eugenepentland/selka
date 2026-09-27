@@ -1,0 +1,16 @@
+def mixed(items: list[int], fresh: bool) -> list[int]:
+    if fresh:
+        return [8, 9]
+    return items
+
+def main() -> int:
+    original = [4, 5]
+    current = [0]
+    i = 0
+    while i < 1000:
+        current = mixed(original, i % 2 == 0)
+        assert len(current) == 2
+        i += 1
+    original = [6]
+    assert current[0] == 4
+    return 0

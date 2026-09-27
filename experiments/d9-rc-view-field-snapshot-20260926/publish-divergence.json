@@ -1,0 +1,151 @@
+{
+  "source_sha256": "a0216576799cb1f22850b93f6eea7b2a16f07d5a186d6ac0d869372f953d072f",
+  "before_revision": "6f7a3a94",
+  "cases": {
+    "publish-before/qbe/gc": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/install-publish-before/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/live-view-divergence.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/divergence-publish-before-qbe-gc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cache-divergence-qbe"
+      ],
+      "compiler_sha256": "cac0e5890ccbda5bea02b11b971ecffff142aa7201ad6c770b71718735e20772",
+      "exit": 0,
+      "stdout": "[13] 13 13\n",
+      "stderr": "",
+      "binary_sha256": "1c20ca5cb37bddf45f345688a0069b07246bfd0ae36ed359f9dd29e380b137ce",
+      "backend": "qbe",
+      "run_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/divergence-publish-before-qbe-gc"
+      ]
+    },
+    "publish-before/qbe/stats": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/install-publish-before/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/live-view-divergence.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/divergence-publish-before-qbe-stats",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cache-divergence-qbe",
+        "--rc-runtime=stats"
+      ],
+      "compiler_sha256": "cac0e5890ccbda5bea02b11b971ecffff142aa7201ad6c770b71718735e20772",
+      "exit": 0,
+      "stdout": "[13] 11 13\n",
+      "stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v2-counting\",\"saturated\":false,\"owner_acquire\":6,\"owner_release\":22,\"hold_acquire\":13,\"hold_release\":13,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":16,\"arena_allocate\":0,\"retire\":16,\"clone_shell\":1,\"unique_check\":9}\n",
+      "binary_sha256": "3e30b54278ce21d08a8d78bb0076e7aa1e037802be3380d3730a8aaa3b499ee9",
+      "backend": "qbe",
+      "run_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/divergence-publish-before-qbe-stats"
+      ]
+    },
+    "publish/qbe/stats": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/install-publish/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/live-view-divergence.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/divergence-publish-qbe-stats",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cache-divergence-qbe",
+        "--rc-runtime=stats"
+      ],
+      "compiler_sha256": "86dc0048dc3aeb03ae33aea2c7972a95f262e42eb08dc2b9c80aade1dbfef362",
+      "exit": 0,
+      "stdout": "[13] 11 13\n",
+      "stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v2-counting\",\"saturated\":false,\"owner_acquire\":6,\"owner_release\":22,\"hold_acquire\":13,\"hold_release\":13,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":16,\"arena_allocate\":0,\"retire\":16,\"clone_shell\":1,\"unique_check\":9}\n",
+      "binary_sha256": "0192eaad8754380f1b22660db7f3621f72c2cf7912f3d6b476e72eeeff87de18",
+      "backend": "qbe",
+      "run_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/divergence-publish-qbe-stats"
+      ]
+    },
+    "publish-before/llvm/gc": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/install-publish-before/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/live-view-divergence.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/divergence-publish-before-llvm-gc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cache-divergence-llvm",
+        "--backend=llvm",
+        "--llvm-opt=3",
+        "--lto"
+      ],
+      "compiler_sha256": "cac0e5890ccbda5bea02b11b971ecffff142aa7201ad6c770b71718735e20772",
+      "exit": 0,
+      "stdout": "[13] 13 13\n",
+      "stderr": "",
+      "binary_sha256": "c6c75920e9c40c5a8e0998876ec843739f08894351f96e81bf9c565bfaeaa447",
+      "backend": "llvm",
+      "run_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/divergence-publish-before-llvm-gc"
+      ]
+    },
+    "publish-before/llvm/stats": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/install-publish-before/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/live-view-divergence.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/divergence-publish-before-llvm-stats",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cache-divergence-llvm",
+        "--rc-runtime=stats",
+        "--backend=llvm",
+        "--llvm-opt=3",
+        "--lto"
+      ],
+      "compiler_sha256": "cac0e5890ccbda5bea02b11b971ecffff142aa7201ad6c770b71718735e20772",
+      "exit": 0,
+      "stdout": "[13] 11 13\n",
+      "stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v2-counting\",\"saturated\":false,\"owner_acquire\":6,\"owner_release\":22,\"hold_acquire\":13,\"hold_release\":13,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":16,\"arena_allocate\":0,\"retire\":16,\"clone_shell\":1,\"unique_check\":9}\n",
+      "binary_sha256": "570f0ea42f61ea882c248393bf04ee1204bd4ddd54d7043ba1405750b313a3e5",
+      "backend": "llvm",
+      "run_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/divergence-publish-before-llvm-stats"
+      ]
+    },
+    "publish/llvm/stats": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/install-publish/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/live-view-divergence.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/divergence-publish-llvm-stats",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cache-divergence-llvm",
+        "--rc-runtime=stats",
+        "--backend=llvm",
+        "--llvm-opt=3",
+        "--lto"
+      ],
+      "compiler_sha256": "86dc0048dc3aeb03ae33aea2c7972a95f262e42eb08dc2b9c80aade1dbfef362",
+      "exit": 0,
+      "stdout": "[13] 11 13\n",
+      "stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v2-counting\",\"saturated\":false,\"owner_acquire\":6,\"owner_release\":22,\"hold_acquire\":13,\"hold_release\":13,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":16,\"arena_allocate\":0,\"retire\":16,\"clone_shell\":1,\"unique_check\":9}\n",
+      "binary_sha256": "3f4f9d75785f3de9fdef8cf28128db7619f694a25fa628c1d8389462602f9449",
+      "backend": "llvm",
+      "run_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/divergence-publish-llvm-stats"
+      ]
+    }
+  }
+}

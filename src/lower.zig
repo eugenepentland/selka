@@ -18,7 +18,7 @@ const Work = union(enum) {
     mark: Label,
     jump: struct { target: Label, conditional: bool = false, span: Span },
     propagate: struct { input: typed.Type, output: typed.Type, target: Label, span: Span },
-    dispatch: struct { ty: typed.Type, targets: []const Label, slots: []const ?typed.LocalId, span: Span },
+    dispatch: struct { ty: typed.Type, targets: []const Label, slots: []const ?typed.LocalId, span: Span, borrowed: bool },
 };
 const Fixup = struct { instruction: usize, label: Label, arm: ?usize = null, propagation: bool = false };
 const Emitter = struct {
@@ -73,7 +73,7 @@ const Emitter = struct {
                 if (argument.data != .local) return error.InternalError;
                 try self.instruction(argument.span, .{ .ref_local = argument.data.local });
             } else if (declaredMutable(callee.signature.declared_mutates, i)) {
-                try self.push(.{ .expression = call.arguments[i] });
+                try self.mutableArgument(call.arguments[i]);
             } else try self.readOnlyArgument(call.arguments[i], writable);
         }
         if (call.evaluation) |evaluation| try self.push(.{ .statement = evaluation.body });
@@ -92,6 +92,16 @@ const Emitter = struct {
     fn declaredMutable(positions: []const u16, position: usize) bool {
         for (positions) |declared| if (declared == position) return true;
         return false;
+    }
+    /// A nested mutable argument is a writing place, not an owned read result.
+    fn mutableArgument(self: *Emitter, id: typed.NodeId) !void {
+        const node = self.program.nodes[@backingInt(id)];
+        if (self.values != null and node.data != .local) {
+            const owner = try self.hiddenLocal(node.ty, node.span, "<mut-argument>");
+            try self.instruction(node.span, .{ .load_local = owner });
+            try self.instruction(node.span, .{ .store_local = owner });
+        }
+        try self.push(.{ .expression = id });
     }
     /// The arguments bound to `mut` positions, which the callee may write
     /// while it reads the others; empty with value semantics off.
@@ -268,7 +278,7 @@ const Emitter = struct {
                     slots[arm.tag] = arm.slot;
                     if (!self.program.statements[@backingInt(arm.body)].terminates) try self.push(.{ .jump = .{ .target = end, .span = stmt.span } });
                     try self.push(.{ .statement = arm.body });
-                    if (arm.slot) |slot| try self.payloadCopy(stmt.span, match.value, slot);
+                    if (!match.borrowed) if (arm.slot) |slot| try self.payloadCopy(stmt.span, match.value, slot);
                     const case = self.variantCase(matched, arm.tag);
                     if (case.boxed) if (arm.slot) |slot| {
                         // The arm's box lands in a hidden local; the binding the
@@ -281,8 +291,12 @@ const Emitter = struct {
                     };
                     try self.push(.{ .mark = targets[arm.tag] });
                 }
-                try self.push(.{ .dispatch = .{ .ty = self.program.nodes[@backingInt(match.value)].ty, .targets = targets, .slots = slots, .span = stmt.span } });
-                try self.push(.{ .expression = match.value });
+                try self.push(.{ .dispatch = .{ .ty = self.program.nodes[@backingInt(match.value)].ty, .targets = targets, .slots = slots, .span = stmt.span, .borrowed = match.borrowed } });
+                if (match.borrowed) {
+                    const node = self.program.nodes[@backingInt(match.value)];
+                    if (node.data != .local) return error.InternalError;
+                    try self.instruction(node.span, .{ .load_local = node.data.local });
+                } else try self.push(.{ .expression = match.value });
             },
             .branch => |branch| {
                 const otherwise = try self.label();
@@ -519,7 +533,7 @@ const Emitter = struct {
                 var i = call.arguments.len;
                 while (i > 0) {
                     i -= 1;
-                    if (declaredMutable(positions, i)) try self.push(.{ .expression = call.arguments[i] }) else try self.readOnlyArgument(call.arguments[i], writable);
+                    if (declaredMutable(positions, i)) try self.mutableArgument(call.arguments[i]) else try self.readOnlyArgument(call.arguments[i], writable);
                 }
                 try self.push(.{ .expression = call.callee });
             },
@@ -658,7 +672,7 @@ const Emitter = struct {
                     arm.* = .{ .target = 0, .slot = slot };
                     try self.fixups.append(self.scratch, .{ .instruction = self.code.items.len, .label = target, .arm = i });
                 }
-                try self.code.append(self.scratch, .{ .span = dispatch.span, .op = .{ .switch_variant = .{ .ty = dispatch.ty, .arms = arms } } });
+                try self.code.append(self.scratch, .{ .span = dispatch.span, .op = .{ .switch_variant = .{ .ty = dispatch.ty, .arms = arms, .borrowed = dispatch.borrowed } } });
             },
             .mark => |id| self.labels.items[@backingInt(id)] = self.code.items.len,
             .jump => |jump| {

@@ -3,6 +3,7 @@ const std = @import("std");
 const builtin = @import("builtin");
 const bundled = @import("qbe_build_assets");
 const fs = @import("qbe_build_io.zig");
+const contract = @import("runtime_contract");
 const options = @import("qbe_build_options.zig");
 const backend = @import("qbe_build_backend.zig");
 const cache_api = @import("qbe_build_cache.zig");
@@ -41,14 +42,43 @@ pub const Error = fs.Error || std.json.ParseError(std.json.Scanner) || outputs.E
 /// `qbe_build` module. `src/aggref_abi_test.zig` is the join: a bump on either
 /// side alone fails there rather than letting the driver accept a manifest the
 /// core would not emit.
-pub const native_abi = "mylang-qbe-native-v8";
+pub const native_abi = "mylang-qbe-native-v9";
 const Record = struct { name: []const u8, symbol: []const u8, key: []const u8, object: []const u8, reused: bool };
 /// Fixed runtime translation units archived together once per build environment.
 const runtime_units = [_][]const u8{
-    "qbe_runtime.c",    "native_heap.c",         "native_arena.c",  "native_collections.c", "native_text.c",     "native_dictionary.c",
-    "qbe_stack.c",      "qbe_providers.c",       "qbe_resources.c", "native_equal.c",       "native_bytes.c",    "qbe_bytes.c",
-    "native_regions.c", "qbe_arena.c",           "native_print.c",  "qbe_io.c",             "native_scoped.c",   "qbe_grants.c",
-    "qbe_files.c",      "native_text_methods.c", "qbe_stand_ins.c", "native_cow.c",         "qbe_cow_runtime.c", "native_value_copy.c",
+    "qbe_runtime_rc.c",
+    "qbe_runtime.c",
+    "native_heap.c",
+    "native_arena.c",
+    "native_collections.c",
+    "native_text.c",
+    "native_dictionary.c",
+    "qbe_stack.c",
+    "qbe_providers.c",
+    "qbe_resources.c",
+    "native_equal.c",
+    "native_bytes.c",
+    "qbe_bytes.c",
+    "native_rc.c",
+    "native_rc_stats.c",
+    "native_rc_shapes.c",
+    "native_rc_walk.c",
+    "native_regions.c",
+    "qbe_arena.c",
+    "native_print.c",
+    "qbe_io.c",
+    "native_scoped.c",
+    "qbe_grants.c",
+    "qbe_files.c",
+    "native_text_methods.c",
+    "qbe_stand_ins.c",
+    "native_cow.c",
+    "qbe_cow_runtime.c",
+    "native_value_copy.c",
+    "native_rc_scope.c",
+    "native_rc_transfer.c",
+    "native_rc_alloc.c",
+    "native_rc_values.c",
 };
 /// Execute a native build using process-owned allocation and I/O policy.
 pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
@@ -133,7 +163,7 @@ pub fn prepare(context: fs.Context, parsed: options.Options) Error!Prepared {
         .target = parsed.target,
         .target_cpu = selected.target_cpu,
         .target_features = selected.target_features,
-    });
+    }, try contract.parse(context.environ.get(contract.variable)));
     // Objects live in this driver's generation; opening it evicts every other
     // one no process still leases.
     const objects = try generation(context, directory, "objects", generation_identity);
@@ -172,10 +202,11 @@ const Environment = struct {
 /// are covered by `runtime`, the tools by their stamps and the link flags by the
 /// cache contract, so an edit to a compiler source that cannot change how IL
 /// becomes an object must not evict every cached object and executable.
-fn environmentJson(allocator: std.mem.Allocator, per_build: Environment) Error![]const u8 {
+fn environmentJson(allocator: std.mem.Allocator, per_build: Environment, runtime: contract.Selection) Error![]const u8 {
     return std.json.Stringify.valueAlloc(allocator, .{
         .version = "zig-native-build-v3",
         .abi = native_abi,
+        .runtime_contract = runtime.identity(),
         .driver = bundled.driver_identity,
         .runtime = bundled.content_hash,
         .zig = per_build.zig,
@@ -192,7 +223,7 @@ fn environmentJson(allocator: std.mem.Allocator, per_build: Environment) Error![
 }
 /// Validate one emitted manifest and link it into `output`, reporting whether the file changed.
 pub fn assemble(cache: cache_api.Cache, parsed: options.Options, manifest: std.json.Value, output: []const u8) Error!bool {
-    try validate(cache.context.allocator, manifest);
+    try validate(cache.context.allocator, manifest, try contract.parse(cache.context.environ.get(contract.variable)));
     var state = State{ .context = cache.context, .cache = cache, .manifest = manifest };
     try state.compile(parsed);
     return state.link(parsed, output);
@@ -275,7 +306,7 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
     const receipt = receipts.Receipt.init(context, parsed, try receiptIdentity(a, cache), manifest_bytes, output);
     if (unchanged(receipt, phases, frontend)) return 0;
     const manifest = (try std.json.parseFromSlice(std.json.Value, a, manifest_bytes, .{ .allocate = .alloc_always })).value;
-    try validate(a, manifest);
+    try validate(a, manifest, try contract.parse(context.environ.get(contract.variable)));
     var state = State{ .context = context, .cache = cache, .manifest = manifest };
     const codegen_start = std.Io.Timestamp.now(context.io, .awake);
     try state.compile(parsed);
@@ -560,8 +591,8 @@ fn materializeRuntime(context: fs.Context, parsed: options.Options, directory: [
 /// installed at build time still matches a later build that resolved its tools from a
 /// different path. The flavor keeps a QBE archive from ever being linked into an
 /// LLVM build (or an LTO archive into a non-LTO one).
-fn runtimeInstalledHash(a: std.mem.Allocator, kind: []const u8, mode: []const u8, flavor: []const u8) fs.Error![]const u8 {
-    const encoded = try std.json.Stringify.valueAlloc(a, .{ "mylang-runtime-installed-v1", kind, flavor, bundled.content_hash, bundled.zig_version, mode, "amd64_sysv" }, .{});
+fn runtimeInstalledHash(a: std.mem.Allocator, kind: []const u8, mode: []const u8, flavor: []const u8, runtime: contract.Selection) fs.Error![]const u8 {
+    const encoded = try std.json.Stringify.valueAlloc(a, .{ "mylang-runtime-installed-v2", native_abi, runtime.identity(), kind, flavor, bundled.content_hash, bundled.zig_version, mode, "amd64_sysv" }, .{});
     return fs.hash(a, encoded);
 }
 /// The LTO optimization flags `zig cc` passes LLD for one `-O` level, so the
@@ -586,11 +617,11 @@ fn runtimeFlavor(lo: bool, lto: options.Lto) []const u8 {
 /// Resolve a prebuilt runtime artifact installed under `<compiler>/../lib/mylang-runtime`.
 /// Returns it only when the file exists and its stored fingerprint still matches, so a
 /// removed, cross-target or corrupted install falls back to compiling from source.
-fn installedRuntime(context: fs.Context, mode: []const u8, kind: []const u8, flavor: []const u8, extension: []const u8) fs.Error!?cache_api.Object {
+fn installedRuntime(context: fs.Context, mode: []const u8, kind: []const u8, flavor: []const u8, extension: []const u8) Error!?cache_api.Object {
     const a = context.allocator;
     if (context.self_directory.len == 0) return null;
     const parent = std.fs.path.dirname(context.self_directory) orelse return null;
-    const hash = try runtimeInstalledHash(a, kind, mode, flavor);
+    const hash = try runtimeInstalledHash(a, kind, mode, flavor, try contract.parse(context.environ.get(contract.variable)));
     const path = try std.fmt.allocPrint(a, "{s}/lib/mylang-runtime/{s}{s}", .{ parent, hash, extension });
     if (!validInstalled(context, path)) return null;
     return .{ .key = hash, .path = path, .reused = true };
@@ -664,9 +695,9 @@ pub fn emitRuntime(process: std.process.Init, args: []const []const u8) Error!u8
         };
         defer context.remove(prepared.cache.temporary);
         const archive = try prepared.cache.library("runtime", &runtime_units);
-        try publishInstalled(context, archive.path, out, try runtimeInstalledHash(a, "archive", flavor.mode, flavor.flavor), ".a");
+        try publishInstalled(context, archive.path, out, try runtimeInstalledHash(a, "archive", flavor.mode, flavor.flavor, try contract.parse(context.environ.get(contract.variable))), ".a");
         const format = try prepared.cache.object("format", "native_format.zig", .zig_file);
-        try publishInstalled(context, format.path, out, try runtimeInstalledHash(a, "format", flavor.mode, ""), ".o");
+        try publishInstalled(context, format.path, out, try runtimeInstalledHash(a, "format", flavor.mode, "", try contract.parse(context.environ.get(contract.variable))), ".o");
     }
     return 0;
 }
@@ -685,9 +716,15 @@ fn seconds(context: fs.Context, start: std.Io.Timestamp) f64 {
 /// Refuse a manifest with the wrong version or ABI, a malformed or repeated
 /// unit symbol, or an executable entry no unit defines. Repeats are found with
 /// a set, so a manifest of thousands of units costs one pass, not a quadratic scan.
-fn validate(allocator: std.mem.Allocator, manifest: std.json.Value) !void {
+fn validate(allocator: std.mem.Allocator, manifest: std.json.Value, runtime: contract.Selection) !void {
     if (!std.mem.eql(u8, v.text(v.get(manifest, "version")), "qbe-units-v1")) return error.InvalidNativeManifest;
     if (!std.mem.eql(u8, v.text(v.get(manifest, "abi")), native_abi)) return error.InvalidNativeManifest;
+    // A missing ownership tag is only the historical tracing contract. Unknown,
+    // malformed and mismatched tags must never link against another runtime.
+    // Historical artifact decoding must not inherit a future process default.
+    const tag = v.get(manifest, "runtime_contract");
+    const selected: contract.Selection = if (tag == .null) .gc else contract.parse(v.text(tag)) catch return error.InvalidNativeManifest;
+    if (selected != runtime) return error.InvalidNativeManifest;
     const units = v.array(v.get(manifest, manifest_functions));
     const entry = v.text(v.get(manifest, "entry"));
     // A selective library manifest has no executable entry; `build --library`
@@ -1258,12 +1295,12 @@ test "build --run forwards a wall-clock timeout and stops at the guest delimiter
 test "native build rejects incompatible tools targets and malformed manifests" {
     try std.testing.expectError(error.UnsupportedNativeHost, checkHost(.linux, .aarch64));
     try std.testing.expectError(error.ZigVersionMismatch, checkVersion("unrelated-version"));
-    try std.testing.expectError(error.InvalidNativeManifest, validate(std.testing.allocator, .null));
+    try std.testing.expectError(error.InvalidNativeManifest, validate(std.testing.allocator, .null, .gc));
     var buffer: [512]u8 = undefined;
     const encoded = try std.fmt.bufPrint(&buffer, "{{\"version\":\"qbe-units-v1\",\"abi\":\"{s}\",\"entry\":\"1bad\",\"functions\":[{{\"symbol\":\"1bad\",\"il\":\"\"}}]}}", .{native_abi});
     const value = try std.json.parseFromSlice(std.json.Value, std.testing.allocator, encoded, .{});
     defer value.deinit();
-    try std.testing.expectError(error.InvalidNativeManifest, validate(std.testing.allocator, value.value));
+    try std.testing.expectError(error.InvalidNativeManifest, validate(std.testing.allocator, value.value, .gc));
 }
 
 // spec: QBE-AGGREF-6
@@ -1276,10 +1313,10 @@ test "a pre-v7 manifest whose IL already crossed by address is refused, not re-r
         \\{"version":"qbe-units-v1","abi":"mylang-qbe-native-v6","entry":"e","functions":[{"symbol":"e","il":""}]}
     , .{});
     defer value.deinit();
-    try std.testing.expectError(error.InvalidNativeManifest, validate(std.testing.allocator, value.value));
+    try std.testing.expectError(error.InvalidNativeManifest, validate(std.testing.allocator, value.value, .gc));
     const accepted = try std.json.parseFromSlice(std.json.Value, std.testing.allocator, "{\"version\":\"qbe-units-v1\",\"abi\":\"" ++ native_abi ++ "\",\"entry\":\"e\",\"functions\":[{\"symbol\":\"e\",\"il\":\"\"}]}", .{});
     defer accepted.deinit();
-    try validate(std.testing.allocator, accepted.value);
+    try validate(std.testing.allocator, accepted.value, .gc);
 }
 
 // spec: QBE-AGGREF-8
@@ -1414,7 +1451,7 @@ test "a link failure with every input still present is reported, never retried" 
 // spec: QBE-DRIVER-IDENTITY-1
 test "the object environment names the native driver, never the whole compiler" {
     const a = std.testing.allocator;
-    const text = try environmentJson(a, .{ .zig = "zig-stamp", .backend = "qbe", .backend_tool = "qbe-stamp", .optimization = "default", .lto = .off, .zig_version = bundled.zig_version, .mode = "Debug", .target = "native" });
+    const text = try environmentJson(a, .{ .zig = "zig-stamp", .backend = "qbe", .backend_tool = "qbe-stamp", .optimization = "default", .lto = .off, .zig_version = bundled.zig_version, .mode = "Debug", .target = "native" }, .gc);
     defer a.free(text);
     try std.testing.expect(!std.mem.eql(u8, bundled.driver_identity, bundled.compiler_identity));
     try std.testing.expect(std.mem.indexOf(u8, text, bundled.driver_identity) != null);
@@ -1423,7 +1460,7 @@ test "the object environment names the native driver, never the whole compiler" 
     // `compiler_identity`, which this environment does not name, so every cached
     // object and executable whose IL is unchanged still keys the same.
     try std.testing.expect(std.mem.indexOf(u8, text, bundled.compiler_identity) == null);
-    const same = try environmentJson(a, .{ .zig = "zig-stamp", .backend = "qbe", .backend_tool = "qbe-stamp", .optimization = "default", .lto = .off, .zig_version = bundled.zig_version, .mode = "Debug", .target = "native" });
+    const same = try environmentJson(a, .{ .zig = "zig-stamp", .backend = "qbe", .backend_tool = "qbe-stamp", .optimization = "default", .lto = .off, .zig_version = bundled.zig_version, .mode = "Debug", .target = "native" }, .gc);
     defer a.free(same);
     try std.testing.expectEqualStrings(text, same);
 }
@@ -1431,27 +1468,27 @@ test "the object environment names the native driver, never the whole compiler" 
 test "LLVM optimization LTO and target policy change native object identity" {
     const a = std.testing.allocator;
     const base: Environment = .{ .zig = "zig-stamp", .backend = "llvm", .backend_tool = "mylang-llvm-translator-v1", .optimization = "3", .lto = .off, .zig_version = bundled.zig_version, .mode = "ReleaseFast", .target = "amd64_sysv" };
-    const o3 = try environmentJson(a, base);
+    const o3 = try environmentJson(a, base, .gc);
     defer a.free(o3);
     var changed = base;
     changed.optimization = "2";
-    const o2 = try environmentJson(a, changed);
+    const o2 = try environmentJson(a, changed, .gc);
     defer a.free(o2);
     changed = base;
     changed.lto = .full;
-    const lto = try environmentJson(a, changed);
+    const lto = try environmentJson(a, changed, .gc);
     defer a.free(lto);
     changed = base;
     changed.lto = .thin;
-    const thin = try environmentJson(a, changed);
+    const thin = try environmentJson(a, changed, .gc);
     defer a.free(thin);
     changed = base;
     changed.target_cpu = "x86-64-v3";
-    const cpu = try environmentJson(a, changed);
+    const cpu = try environmentJson(a, changed, .gc);
     defer a.free(cpu);
     changed = base;
     changed.target_features = "+avx,+avx2,-avx512f";
-    const features = try environmentJson(a, changed);
+    const features = try environmentJson(a, changed, .gc);
     defer a.free(features);
     try std.testing.expect(!std.mem.eql(u8, o3, o2));
     try std.testing.expect(!std.mem.eql(u8, o3, lto));
@@ -1501,17 +1538,17 @@ test "prebuilt runtime hashes separate kind, mode and backend flavor, and misses
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();
-    const archive_debug = try runtimeInstalledHash(a, "archive", "Debug", "qbe");
-    const archive_release = try runtimeInstalledHash(a, "archive", "ReleaseFast", "qbe");
-    const archive_llvm = try runtimeInstalledHash(a, "archive", "ReleaseFast", "llvm");
-    const archive_lto = try runtimeInstalledHash(a, "archive", "ReleaseFast", "llvm-lto");
-    const format_debug = try runtimeInstalledHash(a, "format", "Debug", "");
+    const archive_debug = try runtimeInstalledHash(a, "archive", "Debug", "qbe", .gc);
+    const archive_release = try runtimeInstalledHash(a, "archive", "ReleaseFast", "qbe", .gc);
+    const archive_llvm = try runtimeInstalledHash(a, "archive", "ReleaseFast", "llvm", .gc);
+    const archive_lto = try runtimeInstalledHash(a, "archive", "ReleaseFast", "llvm-lto", .gc);
+    const format_debug = try runtimeInstalledHash(a, "format", "Debug", "", .gc);
     try std.testing.expectEqual(@as(usize, 64), archive_debug.len);
     try std.testing.expect(!std.mem.eql(u8, archive_debug, archive_release));
     try std.testing.expect(!std.mem.eql(u8, archive_release, archive_llvm));
     try std.testing.expect(!std.mem.eql(u8, archive_llvm, archive_lto));
     try std.testing.expect(!std.mem.eql(u8, archive_debug, format_debug));
-    try std.testing.expectEqualStrings(archive_debug, try runtimeInstalledHash(a, "archive", "Debug", "qbe"));
+    try std.testing.expectEqualStrings(archive_debug, try runtimeInstalledHash(a, "archive", "Debug", "qbe", .gc));
     var environment: std.process.Environ.Map = .init(std.testing.allocator);
     defer environment.deinit();
     var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
@@ -1564,4 +1601,33 @@ test "an unchanged executable is reused only while its link identity holds" {
     try std.testing.expect(!std.mem.eql(u8, first, try state.linkIdentity(.{ .mode = "ReleaseFast", .link_arguments = &.{"--keep-symbols"} })));
     try state.objects.append(context.allocator, "/objects/b.o");
     try std.testing.expect(!std.mem.eql(u8, first, try state.linkIdentity(.{ .mode = "ReleaseFast" })));
+}
+
+// spec-case: RC-RUNTIME-CONTRACT-1
+test "RC runtime contract partitions native objects archives and manifest replay" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const environment: Environment = .{ .zig = "zig", .backend = "qbe", .backend_tool = "qbe", .optimization = "default", .lto = .off, .zig_version = bundled.zig_version, .mode = "Debug", .target = "native" };
+    const gc = try environmentJson(a, environment, .gc);
+    const rc = try environmentJson(a, environment, .rc);
+    const stats = try environmentJson(a, environment, .rc_counting);
+    try std.testing.expect(!std.mem.eql(u8, gc, rc));
+    try std.testing.expect(!std.mem.eql(u8, rc, stats));
+    const gc_archive = try runtimeInstalledHash(a, "archive", "Debug", "qbe", .gc);
+    const rc_archive = try runtimeInstalledHash(a, "archive", "Debug", "qbe", .rc);
+    try std.testing.expect(!std.mem.eql(u8, gc_archive, rc_archive));
+    try std.testing.expect(!std.mem.eql(u8, rc_archive, try runtimeInstalledHash(a, "archive", "Debug", "qbe", .rc_counting)));
+    const manifest = try std.json.parseFromSlice(std.json.Value, a, "{\"version\":\"qbe-units-v1\",\"abi\":\"" ++ native_abi ++ "\",\"entry\":\"\",\"functions\":[],\"runtime_contract\":\"rc-v3\"}", .{});
+    try validate(a, manifest.value, .rc);
+    try std.testing.expectError(error.InvalidNativeManifest, validate(a, manifest.value, .gc));
+    try std.testing.expectError(error.InvalidNativeManifest, validate(a, manifest.value, .rc_counting));
+    const retired = try std.json.parseFromSlice(std.json.Value, a, "{\"version\":\"qbe-units-v1\",\"abi\":\"" ++ native_abi ++ "\",\"entry\":\"\",\"functions\":[],\"runtime_contract\":\"rc-v2\"}", .{});
+    try std.testing.expectError(error.InvalidNativeManifest, validate(a, retired.value, .rc));
+    const historical = try std.json.parseFromSlice(std.json.Value, a, "{\"version\":\"qbe-units-v1\",\"abi\":\"" ++ native_abi ++ "\",\"entry\":\"\",\"functions\":[]}", .{});
+    try validate(a, historical.value, .gc);
+    try std.testing.expectError(error.InvalidNativeManifest, validate(a, historical.value, .rc));
+    try std.testing.expectError(error.InvalidNativeManifest, validate(a, historical.value, .rc_counting));
+    const old_abi = try std.json.parseFromSlice(std.json.Value, a, "{\"version\":\"qbe-units-v1\",\"abi\":\"mylang-qbe-native-v8\",\"entry\":\"\",\"functions\":[]}", .{});
+    try std.testing.expectError(error.InvalidNativeManifest, validate(a, old_abi.value, .gc));
 }

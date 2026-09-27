@@ -1,0 +1,19 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-bytes-read/scripts/build-slot.sh",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-bytes-read/.tmp-bytes/install-refusal-probe/bin/mylang",
+    "emit-qbe",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-bytes-read/bench/parity/micro/bytes_scan.my",
+    "--no-cache",
+    "--drop-step-checks",
+    "--drop-frame-checks",
+    "--drop-debug",
+    "--rc-runtime"
+  ],
+  "compiler_sha256": "99e1f4eacba47df1520e46ac8a50acd25d302ebfaecf39397552b4cbf6b1fa4b",
+  "patch_sha256": "ebaab6133a9fef32a6b40b262010ff7c5cd3e45b048d46061f2033bf18575201",
+  "source_restored": true,
+  "fast_copy_discarded": true,
+  "fallback_bounds_and_drop_present": true
+}

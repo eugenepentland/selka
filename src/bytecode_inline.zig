@@ -386,7 +386,7 @@ fn remapCallee(allocator: std.mem.Allocator, op: @FieldType(bytecode.Instruction
                 .target = body_base + arm.target,
                 .slot = if (arm.slot) |slot| shift(slot, fresh) else null,
             };
-            break :blk .{ .switch_variant = .{ .ty = dispatch.ty, .arms = arms } };
+            break :blk .{ .switch_variant = .{ .ty = dispatch.ty, .arms = arms, .borrowed = dispatch.borrowed } };
         },
         else => op,
     };
@@ -402,7 +402,7 @@ fn remapCaller(allocator: std.mem.Allocator, op: @FieldType(bytecode.Instruction
         .switch_variant => |dispatch| blk: {
             const arms = try allocator.alloc(bytecode.SwitchArm, dispatch.arms.len);
             for (dispatch.arms, arms) |arm, *out| out.* = .{ .target = base[arm.target], .slot = arm.slot };
-            break :blk .{ .switch_variant = .{ .ty = dispatch.ty, .arms = arms } };
+            break :blk .{ .switch_variant = .{ .ty = dispatch.ty, .arms = arms, .borrowed = dispatch.borrowed } };
         },
         else => op,
     };

@@ -1,0 +1,18 @@
+record State:
+    items: list[int]
+    count: int
+def recursive(n: int) -> int:
+    if n == 0:
+        return 42
+    return recursive(n - 1)
+def change(state: mut State):
+    state.count = recursive(10)
+def main(out: Stream) -> int:
+    items = [7]
+    with arena():
+        state = State(items, 41)
+        saved = state
+        out.print("before")
+        change(mut state)
+        out.print(saved.count)
+    return 0

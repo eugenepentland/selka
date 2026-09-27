@@ -1,0 +1,62 @@
+[
+  {
+    "backend": "qbe",
+    "compiler_sha256": "6a6f47f01e0f6ec6f67d0d54b73d797ad80364ddddafb2dea946554774fe5280",
+    "source_sha256": "8690a6ffd71d40a116e4170c73eddafd9f307fe2655e637dd744abf8d5676107",
+    "command": [
+      "scripts/build-slot.sh",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/.tmp/rc-edge-audit/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/experiments/d9-rc-read-loans-20260926/callback.my",
+      "--backend",
+      "qbe",
+      "--mode",
+      "ReleaseFast",
+      "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/.tmp/rc-read-loans/gc-callback/cache",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/.tmp/rc-read-loans/gc-callback/qbe",
+      "--qbe=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/.tmp/rc-edge-audit/install/bin/qbe"
+    ],
+    "build_exit": 0,
+    "build_log": "",
+    "exit": 1,
+    "stdout": "91\n",
+    "stderr": "callback.my:14:12: error[R_ASSERT]: native execution failed: selected == 7\n  in callback::main at callback.my:14:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"selected == 7\"}\n",
+    "binary_sha256": "2dfb6a364c02caae971900b5745564e92636380229c69c375749a5fc9b2b0989",
+    "environment": {
+      "MYLANG_OPTIONS": "--gc-stress"
+    }
+  },
+  {
+    "backend": "llvm",
+    "compiler_sha256": "6a6f47f01e0f6ec6f67d0d54b73d797ad80364ddddafb2dea946554774fe5280",
+    "source_sha256": "8690a6ffd71d40a116e4170c73eddafd9f307fe2655e637dd744abf8d5676107",
+    "command": [
+      "scripts/build-slot.sh",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/.tmp/rc-edge-audit/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/experiments/d9-rc-read-loans-20260926/callback.my",
+      "--backend",
+      "llvm",
+      "--mode",
+      "ReleaseFast",
+      "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/.tmp/rc-read-loans/gc-callback/cache",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/.tmp/rc-read-loans/gc-callback/llvm",
+      "--llvm-opt",
+      "3",
+      "--lto"
+    ],
+    "build_exit": 0,
+    "build_log": "",
+    "exit": 1,
+    "stdout": "91\n",
+    "stderr": "callback.my:14:12: error[R_ASSERT]: native execution failed: selected == 7\n  in callback::main at callback.my:14:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"selected == 7\"}\n",
+    "binary_sha256": "a54dcf6fc30b44324830da590e885c48cfa3c80e64a9a426e2a9d570482da852",
+    "environment": {
+      "MYLANG_OPTIONS": "--gc-stress"
+    }
+  }
+]

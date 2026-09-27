@@ -1,0 +1,7 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 2 after 6s (all 3 build slot(s) busy)
+focused tests: units filter='RC inert plain'
+selected: 12 test(s)
+result: PASS - 12 passed, 0 failed, 0 skipped
+elapsed: 4.1s
+log: /home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.mylang-cache/focused-tests/units-RC_inert_plain-20260926-233018.log

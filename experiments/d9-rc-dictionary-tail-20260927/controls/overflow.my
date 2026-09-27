@@ -1,0 +1,8 @@
+def main(out: Stream) -> int:
+    counts = {1: 7}
+    saved = counts
+    key = 1
+    counts[key] = 9223372036854775807
+    out.print(saved[key])
+    counts[key] = counts[key] + 1
+    return 0

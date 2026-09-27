@@ -1,0 +1,12 @@
+before qbe rc passed 8
+before llvm rc passed 8
+before emitted []
+before emitted []
+after qbe rc passed 8
+after qbe gc passed 8
+after llvm rc passed 8
+after llvm gc passed 8
+after emitted [('advance', 1), ('read_only_inout', 1), ('replace_after', 1), ('cross', 1), ('overflow_after', 1), ('heap_frame', 1)]
+after emitted [('advance', 1), ('read_only_inout', 1), ('replace_after', 1), ('cross', 1), ('overflow_after', 1), ('heap_frame', 1)]
+plain exact fallback IL identical
+accounted exact fallback IL identical

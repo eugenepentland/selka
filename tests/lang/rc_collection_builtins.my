@@ -1,0 +1,103 @@
+module rc_collection_builtins
+
+# spec-case: RC-COLLECTION-1
+public def test_nested_list_mutators_publish_owned_results() -> bool:
+    values = [[1], [2]]
+    first = values.pop(0)
+    values.insert(0, [3])
+    values.append(first)
+    values[1] = [4]
+    if values != [[3], [4], [1]] or first != [1]:
+        return False
+    values.clear()
+    return len(values) == 0 and first == [1]
+
+
+# spec-case: RC-DICTIONARY-1
+public def test_dictionary_results_survive_receiver_clear() -> bool:
+    mapping = {"a": [10], "b": [20]}
+    existing = mapping.setdefault("a", [99])
+    inserted = mapping.setdefault("c", [30])
+    removed = mapping.pop("b")
+    fallback = mapping.pop("missing", [42])
+    if existing != [10] or inserted != [30] or removed != [20] or fallback != [42]:
+        return False
+    copied = mapping.copy()
+    copied.update({"d": [40]})
+    values = list(mapping.values())
+    keys = list(mapping.keys())
+    mapping.clear()
+    return values == [[10], [30]] and keys == ["a", "c"] and len(copied) == 3
+
+
+def word_length(word: str) -> int:
+    return len(word)
+
+
+def word_fold(word: str) -> str:
+    return word.lower()
+
+
+# spec-case: RC-COLLECTION-1
+public def test_keyed_sort_owns_its_managed_elements() -> bool:
+    words = ["pear", "apple", "fig"]
+    ordered = sorted(words, key=word_length)
+    if ordered != ["fig", "pear", "apple"] or words != ["pear", "apple", "fig"]:
+        return False
+    folded = sorted(["ZED", "alpha", "BEE"], key=word_fold)
+    return folded == ["alpha", "BEE", "ZED"]
+
+
+# spec-case: RC-DICTIONARY-1
+public def test_set_pop_owns_the_removed_key() -> bool:
+    selected = {"first", "second"}
+    last = selected.pop()
+    selected.clear()
+    return last == "second" and len(selected) == 0
+
+
+# spec-case: RC-COLLECTION-1
+public def test_identity_text_conversion_retains_its_input() -> bool:
+    parts = ("head" + "-tail").split("-")
+    converted = str(parts[0])
+    parts.clear()
+    return converted == "head"
+
+
+def detached_octets() -> bytes:
+    source = b"alpha" + b"-bravo-tail"
+    return source.view(0, 11).view(6, 11)
+
+
+def detached_text() -> str:
+    source = "0123456789"
+    for index in range(6):
+        source = source + source
+    return source[100:500][10:310]
+
+
+# spec-case: RC-VIEWS-1
+public def test_detached_views_keep_their_canonical_storage() -> bool:
+    octets = detached_octets()
+    text = detached_text()
+    total = 0
+    for index in range(100):
+        scratch = f"churn {index}"
+        total += len(scratch)
+    return total > 0 and octets == b"bravo" and len(text) == 300 and text[:10] == "0123456789" and text[-10:] == "0123456789"
+
+
+def main() -> int:
+    if not test_nested_list_mutators_publish_owned_results():
+        return 1
+    if not test_dictionary_results_survive_receiver_clear():
+        return 2
+    if not test_keyed_sort_owns_its_managed_elements():
+        return 3
+    if not test_set_pop_owns_the_removed_key():
+        return 4
+    if not test_identity_text_conversion_retains_its_input():
+        return 5
+    if not test_detached_views_keep_their_canonical_storage():
+        return 6
+    return 0

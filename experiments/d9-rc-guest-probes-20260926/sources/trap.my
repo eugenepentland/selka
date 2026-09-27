@@ -1,0 +1,9 @@
+def fail(items: list[int]) -> int:
+    other = items
+    owned = [3, 4, 5]
+    assert len(other) + len(owned) == 0, "intentional RC cleanup probe"
+    return 0
+
+def main() -> int:
+    items = [1, 2]
+    return fail(items)

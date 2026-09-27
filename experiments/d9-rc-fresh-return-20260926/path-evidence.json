@@ -1,0 +1,58 @@
+[
+  {
+    "command": [
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/scripts/build-slot.sh",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/return-candidate/bin/mylang",
+      "emit-qbe",
+      "tests/lang/rc_fresh_returns.my",
+      "--rc-runtime",
+      "--drop-step-checks",
+      "--drop-frame-checks"
+    ],
+    "function": "optional",
+    "fresh_return_blocks": 2
+  },
+  {
+    "command": [
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/scripts/build-slot.sh",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/return-candidate/bin/mylang",
+      "emit-qbe",
+      "tests/lang/rc_fresh_returns.my",
+      "--rc-runtime",
+      "--drop-step-checks",
+      "--drop-frame-checks"
+    ],
+    "function": "caller_arena",
+    "fresh_return_blocks": 0
+  },
+  {
+    "command": [
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/scripts/build-slot.sh",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/return-candidate/bin/mylang",
+      "emit-qbe",
+      "tests/lang/rc_fresh_returns.my",
+      "--rc-runtime",
+      "--drop-step-checks",
+      "--drop-frame-checks"
+    ],
+    "function": "aliased",
+    "fresh_return_blocks": 0
+  },
+  {
+    "command": [
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/scripts/build-slot.sh",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/return-candidate/bin/mylang",
+      "emit-qbe",
+      "experiments/d9-rc-flat-destruction-20260926/binary_trees_n12.my",
+      "--rc-runtime",
+      "--drop-step-checks",
+      "--drop-frame-checks"
+    ],
+    "function": "make",
+    "fresh_return_blocks": 2
+  }
+]

@@ -82,16 +82,19 @@ pub const Names = struct {
         const id = unit.names.get(qualified.name) orelse return null;
         return unit.symbols.items[id].kind;
     }
-    /// Normalize one reference spelling exactly as `lexer.qualifiedName` over its
-    /// tokens does, lexing only a spelling the lexer-free path cannot decide.
+    /// Normalize references, including the two builtin spellings that the
+    /// parser admits as declared callable names. Qualifier segments stay names.
     fn qualify(self: Names, text: []const u8) diagnostic.Error!?lexer.Qualified {
         switch (lexer.quickQualifiedName(text)) {
             .name => |qualified| return qualified,
-            .none => return null,
-            .slow => {},
+            .none, .slow => {},
         }
         var sink: diagnostic.Sink = .{ .allocator = self.allocator() };
         const tokens = try lexer.lex(self.allocator(), text, &sink);
+        if (tokens.len >= 2) {
+            const last = &tokens[tokens.len - 2];
+            if (last.tag == .kw_len or last.tag == .kw_replace) last.tag = .ident;
+        }
         return lexer.qualifiedName(text, tokens);
     }
     /// Check whether a name belongs to the originating module's declarations or import aliases.

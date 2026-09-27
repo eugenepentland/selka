@@ -1,0 +1,47 @@
+{
+  "base_source": "7d68202d59cf834bf9649fd77df2000f548ffec9",
+  "candidate_base_same": true,
+  "compilers": {
+    "before": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-integration/.tmp-rc/install-scope-scalar/bin/mylang",
+      "sha256": "7decd168a86694b21d9c69eda88f7097a351e161b033c18c8270225129460b48"
+    },
+    "after": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/install-empty-frame/bin/mylang",
+      "sha256": "c165923d2a5c5fe974f8849fe3ee3cf10607206c734c1b003f00f876115ba043"
+    }
+  },
+  "validation": {
+    "focused_final": 16,
+    "broader_RC": 65,
+    "guest_assertions": 320,
+    "expected_guest_traps": 4,
+    "paired_builds": 28,
+    "paired_executions": 32,
+    "Guardian": 88,
+    "fmt": "pass",
+    "paired_trace_status_stdout": "exact",
+    "paired_counters": "exact except LLVM physical-floor balanced H activations",
+    "physical_floor_llvm_holds_before": 149562,
+    "physical_floor_llvm_holds_after": 261732,
+    "physical_floor_llvm_stack_sub_before": 504,
+    "physical_floor_llvm_stack_sub_after": 264
+  },
+  "performance": {
+    "qbe": {
+      "before": 63085261939,
+      "after": 62150260991,
+      "ratio": 0.985178773626967
+    },
+    "llvm": {
+      "before": 16660251024,
+      "after": 13710248694,
+      "ratio": 0.822931699783493
+    },
+    "cpu": 10,
+    "samples": 3,
+    "full_unchanged_nbody_steps": 5000000,
+    "stdout": "exact",
+    "physical_counts": "identical across all four executions"
+  }
+}

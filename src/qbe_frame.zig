@@ -8,7 +8,10 @@
 const zero_local = @import("qbe_format.zig").zero_local;
 const cow_lower = @import("qbe_cow.zig");
 const arena_lower = @import("qbe_arena.zig");
+const rc_frame = @import("qbe_rc_frame.zig");
+const rc_admission = @import("qbe_rc_admission.zig");
 const std = @import("std");
+const runtime = @import("runtime_mode.zig");
 const bytecode = @import("bytecode.zig");
 const typed = @import("typed.zig");
 const qbe_wire = @import("qbe_wire.zig");
@@ -31,6 +34,14 @@ pub fn Lower(comptime Emitter: type) type {
         /// reserve plus the exact argument, argument-vector and result copies.
         pub fn abiStackBytes(self: *Emitter) GenerateError!u64 {
             return impl.abiStackBytes(Emitter, self);
+        }
+        /// Reserve one named physical buffer within the selected frame.
+        pub fn allocateSlot(self: *Emitter, name: []const u8, size: u64) GenerateError!void {
+            return impl.allocateSlot(Emitter, self, name, size);
+        }
+        /// Reserve one indexed physical buffer within the selected frame.
+        pub fn allocateIndex(self: *Emitter, name: []const u8, index: usize, size: u64) GenerateError!void {
+            return impl.allocateIndex(Emitter, self, name, index, size);
         }
         /// Allocate the aggregate temporaries that live outside the entry block, unless
         /// the frame is heap-allocated.
@@ -150,6 +161,7 @@ pub fn Lower(comptime Emitter: type) type {
 /// its slots from `%frame_memory`, so they follow that allocation instead.
 fn allocateStorage(comptime Emitter: type, self: *Emitter, capacity: usize) GenerateError!void {
     const f = self.function;
+    try rc_frame.Lower(Emitter).allocate(self);
     if (self.cow) |state| for (state.plan.places) |maybe| {
         const place = maybe orelse continue;
         if (!cow_lower.Lower(Emitter).scoped(self, place)) continue;
@@ -167,7 +179,7 @@ fn allocateStorage(comptime Emitter: type, self: *Emitter, capacity: usize) Gene
     for (0..capacity) |i| try allocateIndex(Emitter, self, "s", i, 8);
     for (self.range_keys.locals, 0..) |used, i| if (used) try allocateIndex(Emitter, self, "rl", i, 16);
     for (self.range_keys.heights, 0..) |used, i| if (used) try allocateIndex(Emitter, self, "rs", i, 16);
-    if (self.has_roots) for (0..f.scope.locals.len + capacity) |i| try allocateIndex(Emitter, self, "root", i, 32);
+    if (self.has_roots and !runtime.enabled()) for (0..f.scope.locals.len + capacity) |i| try allocateIndex(Emitter, self, "root", i, 32);
 }
 fn allocateNativeStorage(comptime Emitter: type, self: *Emitter, capacity: usize) GenerateError!void {
     // A heap frame cannot derive slot addresses until its allocation has
@@ -297,11 +309,15 @@ fn enterFrame(comptime Emitter: type, self: *Emitter, name: []const u8) Generate
     const function_slot = self.temp();
     const position_slot = self.temp();
     const next = self.temp();
-    if (self.frame_checks) try self.print(
-        " %v{d} =l add %ctx, 8\n %v{d} =l loadl %v{d}\n %v{d} =l add %ctx, 56\n %v{d} =l loadl %v{d}\n %v{d} =l ceql %v{d}, %v{d}\n" ++
-            " jnz %v{d}, @limitfail{d}, @frameadmit{d}\n@limitfail{d}\n call $myl_qbe_fail_frame(l %ctx)\n jmp @entry_failure\n@frameadmit{d}\n",
-        .{ self.frame_frames, frames, self.frame_frames, limit_slot, limit, limit_slot, at_limit, frames, limit, at_limit, limit_fail, admit, limit_fail, admit },
-    );
+    if (self.frame_checks) {
+        try self.print(
+            " %v{d} =l add %ctx, 8\n %v{d} =l loadl %v{d}\n %v{d} =l add %ctx, 56\n %v{d} =l loadl %v{d}\n %v{d} =l ceql %v{d}, %v{d}\n" ++
+                " jnz %v{d}, @limitfail{d}, @frameadmit{d}\n@limitfail{d}\n",
+            .{ self.frame_frames, frames, self.frame_frames, limit_slot, limit, limit_slot, at_limit, frames, limit, at_limit, limit_fail, admit, limit_fail },
+        );
+        try rc_admission.drop(Emitter, self);
+        try self.print(" call $myl_qbe_fail_frame(l %ctx)\n jmp @entry_failure\n@frameadmit{d}\n", .{admit});
+    }
     // A leaf's own frame is bounded at compile time, and its caller already
     // proved the frame pointer sits a whole headroom above the guard page, so a
     // leaf that stays well inside that headroom cannot reach it. The guard is
@@ -314,11 +330,15 @@ fn enterFrame(comptime Emitter: type, self: *Emitter, name: []const u8) Generate
     // frame and its register saves. The latter address is the conservative
     // physical stack position the floor comparison requires.
     if (guarded and !self.frame_checks) try self.print(" jmp @frameadmit{d}\n@frameadmit{d}\n", .{ admit, admit });
-    if (guarded) try self.print(
-        " %v{d} =l alloc8 32\n %v{d} =l add %ctx, 64\n %v{d} =l loadl %v{d}\n %v{d} =l cultl %v{d}, %v{d}\n" ++
-            " jnz %v{d}, @floorfail{d}, @stackadmit{d}\n@floorfail{d}\n call $myl_qbe_fail_frame(l %ctx)\n jmp @entry_failure\n@stackadmit{d}\n",
-        .{ self.record, floor_slot, floor, floor_slot, below, self.record, floor, below, floor_fail, stack, floor_fail, stack },
-    ) else try self.print(" %v{d} =l alloc8 32\n", .{self.record});
+    if (guarded) {
+        try self.print(
+            " %v{d} =l alloc8 32\n %v{d} =l add %ctx, 64\n %v{d} =l loadl %v{d}\n %v{d} =l cultl %v{d}, %v{d}\n" ++
+                " jnz %v{d}, @floorfail{d}, @stackadmit{d}\n@floorfail{d}\n",
+            .{ self.record, floor_slot, floor, floor_slot, below, self.record, floor, below, floor_fail, stack, floor_fail },
+        );
+        try rc_admission.drop(Emitter, self);
+        try self.print(" call $myl_qbe_fail_frame(l %ctx)\n jmp @entry_failure\n@stackadmit{d}\n", .{stack});
+    } else try self.print(" %v{d} =l alloc8 32\n", .{self.record});
     try self.print(
         " %v{d} =l add %ctx, 48\n %v{d} =l loadl %v{d}\n storel %v{d}, %v{d}\n %v{d} =l add %v{d}, 8\n storel extern ${s}_meta, %v{d}\n",
         .{ self.frame_active, previous, self.frame_active, previous, self.record, function_slot, self.record, name, function_slot },
@@ -350,9 +370,11 @@ fn guardFrame(comptime Emitter: type, self: *Emitter) GenerateError!void {
     const below = self.temp();
     try self.print(
         " jmp @frameadmit{d}\n@frameadmit{d}\n %v{d} =l alloc8 8\n %v{d} =l add %ctx, 64\n %v{d} =l loadl %v{d}\n %v{d} =l cultl %v{d}, %v{d}\n" ++
-            " jnz %v{d}, @floorfail{d}, @stackadmit{d}\n@floorfail{d}\n dbgloc 1, {d}\n call $myl_qbe_fail_frame(l %ctx)\n jmp @entry_failure\n@stackadmit{d}\n",
-        .{ admit, admit, probe, floor_slot, floor, floor_slot, below, probe, floor, below, floor_fail, stack, floor_fail, frame_map_guard_column, stack },
+            " jnz %v{d}, @floorfail{d}, @stackadmit{d}\n@floorfail{d}\n",
+        .{ admit, admit, probe, floor_slot, floor, floor_slot, below, probe, floor, below, floor_fail, stack, floor_fail },
     );
+    try rc_admission.drop(Emitter, self);
+    try self.print(" dbgloc 1, {d}\n call $myl_qbe_fail_frame(l %ctx)\n jmp @entry_failure\n@stackadmit{d}\n", .{ frame_map_guard_column, stack });
 }
 /// Unlink this function's frame record and drop the frame count.
 /// Refuse, once at the entry point, any runtime ceiling this build omitted
@@ -395,6 +417,7 @@ fn allocateSlot(comptime Emitter: type, self: *Emitter, name: []const u8, size: 
 }
 /// Return a value after releasing heap-backed execution storage safely.
 fn returnValue(comptime Emitter: type, self: *Emitter, value: usize) GenerateError!void {
+    if (try @import("qbe_rc_return.zig").emit(Emitter, self, value)) return;
     try cow_lower.Lower(Emitter).clearScopes(self);
     try cleanupLocals(Emitter, self);
     try arena_lower.Lower(Emitter).restore(self);
@@ -434,6 +457,7 @@ fn cleanupLocals(comptime Emitter: type, self: *Emitter) GenerateError!void {
         if (self.byReference(index)) continue;
         const local = self.function.scope.locals[index];
         if (!(try self.layout(local.ty)).drop) continue;
+        if (@import("qbe_aggregate.zig").borrowedPayload(self.function, index)) continue;
         try self.print(drop_local, .{ try self.descriptor(local.ty), index });
     }
 }
@@ -660,9 +684,10 @@ fn frameBytes(comptime Emitter: type, self: *Emitter, capacity: usize, temporari
         size = try addFrame(size, try placeholderBytes(Emitter, self, i, local.ty));
     }
     size = try addFrame(size, cow_lower.Lower(Emitter).scopeBytes(self));
+    size = try addFrame(size, try rc_frame.Lower(Emitter).bytes(self));
     size = try addFrame(size, temporaries);
     size = try addFrame(size, self.range_keys.frameBytes());
-    if (self.has_roots) size = try addFrame(size, @as(u64, self.function.scope.locals.len + capacity) * 32);
+    if (self.has_roots and !runtime.enabled()) size = try addFrame(size, @as(u64, self.function.scope.locals.len + capacity) * 32);
     // A result that crosses through the caller's storage occupies nothing
     // here; any other aggregate result has its zeroed copy and, in a heap
     // frame, the copy the return path hands back.

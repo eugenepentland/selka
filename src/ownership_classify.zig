@@ -26,6 +26,7 @@ pub fn classify(ctx: *const model.Context, question: Question, owners: ?[]const 
         .unknown => return .copy,
         .local => {},
     }
+    if (independentHome(ctx, question) and projection(ctx, source, null, false)) return .copy;
     const local = source.local;
     const moved = movable(ctx, local, owners) and source.read != none and !ctx.live.after(source.read, local);
     if (question.kind == .argument) return if (moved and source.part == .whole) .move else .borrow;
@@ -39,6 +40,15 @@ pub fn classify(ctx: *const model.Context, question: Question, owners: ?[]const 
         else => {},
     }
     return .copy;
+}
+
+// Compiler receiver temporaries are loans, not semantic publications. Their
+// existing lifetime/callback planning decides whether a capture needs sharing;
+// forcing all view projections to copy would snapshot list(view)'s receiver.
+fn independentHome(ctx: *const model.Context, question: Question) bool {
+    if (question.kind == .argument) return false;
+    if (question.kind != .assign or question.target == none) return true;
+    return !ctx.temporary(question.target);
 }
 
 /// Whether a local or match binding may share its source's payload: it is
@@ -75,4 +85,34 @@ fn immutable(ctx: *const model.Context, ty: typed.Type) bool {
     // written in place, so only `str` and `bytes` are immutable.
     if (schema.managed) return schema.collection.kind == .string or typed.isByteString(schema);
     return !ctx.managedType(ty);
+}
+
+/// Whether a projection crosses externally held identity, or an untracked
+/// raw alias when that table is supplied. A last read cannot move a live view
+/// mapping; alias steps preserve this boundary through materialized paths.
+pub fn sharedProjection(ctx: *const model.Context, source: sources.Source, raw: ?[]const bool) bool {
+    return projection(ctx, source, raw, true);
+}
+
+// Legacy class/Cell reads may be explained as read-only borrows. Explicit
+// semantic copies still cross their shared-storage boundary; only live views
+// force an independent publication here before ordinary borrow classification.
+fn projection(ctx: *const model.Context, source: sources.Source, raw: ?[]const bool, identities: bool) bool {
+    if (source.origin != .local) return false;
+    var at = source.local;
+    var part = source.part != .whole;
+    var guard: usize = 0;
+    while (guard <= ctx.locals.list.len) : (guard += 1) {
+        if (at >= ctx.locals.list.len) return true;
+        const values = @import("value_semantics.zig");
+        const ty = ctx.locals.list[at].ty;
+        if (part and values.containsLiveView(ctx.code.program.records, ty)) return true;
+        if (part and identities and values.sharedFields(ctx.code.program.records, ty)) return true;
+        if (raw) |table| if (table[at] and !ctx.alias(at)) return true;
+        if (!ctx.alias(at)) return false;
+        part = part or ctx.locals.step[at];
+        at = ctx.locals.parents[at];
+        if (at == none) return false;
+    }
+    return true;
 }

@@ -1,0 +1,31 @@
+{
+  "compiler_commit": "78ac051c1e20e2580c2f5b2a8fae18abe6b46e85",
+  "compiler_sha256": "428052c91fa5f31f8992de456b259e546034f3e4d3d4952d3807f28c0553737a",
+  "main_executed": 2246,
+  "main_shard_excluded": 22849,
+  "qbe_executed": 437,
+  "build_steps": 29,
+  "format_steps": 2,
+  "rc": {
+    "qbe": {
+      "passed": 804,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 804,
+      "dropped": 0,
+      "unloaded": 0,
+      "programs": 141
+    },
+    "llvm": {
+      "passed": 804,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 804,
+      "dropped": 0,
+      "unloaded": 0,
+      "programs": 141
+    }
+  }
+}

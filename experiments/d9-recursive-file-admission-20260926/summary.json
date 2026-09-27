@@ -1,0 +1,10 @@
+{
+  "base_commit": "3b5f54b0",
+  "compiler_sha256": "bb9b5114dfdbcd937b9139bc5ac9904a814c3e1dd80e0630cb06fa31b6d68245",
+  "new_units_passed": 15,
+  "control_units_passed": 14,
+  "guest_assertions": 52,
+  "illegal_source_diagnostic_modes": 4,
+  "acyclic_cleanup_runs": 4,
+  "doctest_blocks": 16
+}

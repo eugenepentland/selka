@@ -1,0 +1,90 @@
+{
+  "qbe_make_pc_ranges": {
+    "entry": [
+      "0x1013680",
+      "0x10138d8"
+    ],
+    "nonleaf": [
+      "0x10138d8",
+      "0x1014cd9"
+    ],
+    "leaf": [
+      "0x1014cd9",
+      "0x10155af"
+    ]
+  },
+  "sample_count": {
+    "leaf": 731,
+    "nonleaf": 2034,
+    "entry": 592
+  },
+  "sample_period": {
+    "leaf": 14620000000,
+    "nonleaf": 40680000000,
+    "stack-journal-or-value-store": 13260000000,
+    "entry": 11840000000,
+    "call-instruction": 760000000
+  },
+  "total_sample_period": 202720000000,
+  "shares": {
+    "leaf": 0.07211917916337805,
+    "nonleaf": 0.20067087608524073,
+    "stack-journal-or-value-store": 0.0654104183109708,
+    "entry": 0.05840568271507498,
+    "call-instruction": 0.003749013417521705
+  },
+  "code_bytes": {
+    "qbe": {
+      "rc_make": 7983,
+      "gc_make": 739,
+      "rc_check": 455,
+      "gc_check": 455
+    },
+    "llvm": {
+      "rc_make": 5212,
+      "gc_make": 518,
+      "rc_check": 152,
+      "gc_check": 152
+    }
+  },
+  "make_calls_derived": 674518,
+  "heap_allocations_exact_stats": 669060,
+  "top_level_make_calls_derived": 5458,
+  "leaf_calls_derived": 339988,
+  "nonleaf_calls_derived": 334530,
+  "entry_instructions_static": 109,
+  "entry_zero_bytes": 240,
+  "entry_metadata_bytes_written": 168,
+  "profile_repeat": {
+    "period_sums": {
+      "nonleaf": 56564955380,
+      "leaf": 20963141122,
+      "entry": 14365888855
+    },
+    "samples": {
+      "nonleaf": 784,
+      "leaf": 281,
+      "entry": 198
+    },
+    "total_period": 279063829642,
+    "shares": {
+      "nonleaf": 0.2026954028853003,
+      "leaf": 0.07511952068060124,
+      "entry": 0.05147886371884681
+    },
+    "offsets": {
+      "entry": [
+        0,
+        600
+      ],
+      "nonleaf": [
+        600,
+        5721
+      ],
+      "leaf": [
+        5721,
+        7983
+      ]
+    }
+  }
+}

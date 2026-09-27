@@ -354,12 +354,15 @@ static void qbe_host_invoke(void *context,size_t declaration_index,const void *c
     size_t capacity=qbe_host_nodes(declaration->result,1,state->value_limit-count,state->depth_limit);
     if (capacity>SIZE_MAX-count) { qbe_host_error(ctx,"OutOfMemory"); return; }
     size_t needed=count+capacity?count+capacity:1;
+    if (needed>SIZE_MAX/sizeof(MylangHostNode)) { qbe_host_error(ctx,"OutOfMemory"); return; }
     MylangHostNode local_nodes[8]={0};
-    MylangHostNode *nodes=needed<=8?local_nodes:calloc(needed,sizeof(*nodes));
+    /* The context retires frame scratch even when a contract failure jumps
+       out of this C adapter before its ordinary epilogue. */
+    MylangHostNode *nodes=needed<=8?local_nodes:myl_qbe_frame_allocate(ctx,needed*sizeof(*nodes));
     if (!nodes) { qbe_host_error(ctx,"OutOfMemory"); return; }
     size_t cursor=0;
     for (size_t i=0;i<declaration->count;i++) if (!qbe_host_write(ctx,state,declaration->parameters[i],arguments[i],nodes,&cursor,1)) {
-        if (nodes!=local_nodes) free(nodes);
+        if (nodes!=local_nodes) myl_qbe_frame_release(ctx,nodes);
         return;
     }
     state->calls++; state->work--;
@@ -377,5 +380,5 @@ static void qbe_host_invoke(void *context,size_t declaration_index,const void *c
             if (qbe_host_read(ctx,state,declaration->result,output,nodes+count,call.output_nodes,&cursor,1) && cursor!=call.output_nodes) qbe_host_error(ctx,"InvalidDataValue");
         }
     }
-    if (nodes!=local_nodes) free(nodes);
+    if (nodes!=local_nodes) myl_qbe_frame_release(ctx,nodes);
 }

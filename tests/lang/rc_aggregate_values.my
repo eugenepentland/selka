@@ -1,0 +1,227 @@
+# Aggregates own their initialized managed fields across construction and matching.
+record Pair:
+    left: list[int]
+    right: list[int]
+
+
+union Choice:
+    both: Pair,
+    single: list[int],
+    empty
+
+
+def pair(items: list[int]) -> Pair:
+    return Pair(items, items)
+
+
+def selected(value: Choice) -> list[int]:
+    match value:
+        case Choice.both(fields):
+            return fields.right
+        case Choice.single(items):
+            return items
+        case Choice.empty:
+            return []
+
+
+public def test_record_fields_survive_original_and_sibling_replacement() -> bool:
+    original = [1, 2]
+    value = pair(original)
+    original = [9]
+    value.left = [4]
+    return value.right[1] == 2 and value.left[0] == 4 and original[0] == 9
+
+
+public def test_record_update_preserves_prior_aggregate_snapshot() -> bool:
+    value = Pair([1], [2])
+    before = value
+    value.right = [3, 4]
+    return before.right[0] == 2 and len(value.right) == 2
+
+
+public def test_variant_payload_binding_owns_values_after_scrutinee_replacement() -> bool:
+    original = Choice.both(Pair([5], [6, 7]))
+    result = selected(original)
+    original = Choice.empty
+    return len(result) == 2 and result[1] == 7
+
+
+public def test_repeated_variants_replace_prior_payload_owners() -> bool:
+    choice = Choice.empty
+    index = 0
+    while index < 100:
+        if index % 2 == 0:
+            choice = Choice.both(Pair([index], [index + 1]))
+        else:
+            choice = Choice.single([index])
+        index += 1
+    return selected(choice)[0] == 99
+
+
+public def test_fixed_array_constructor_owns_its_managed_elements() -> bool:
+    first = [11]
+    values: [2]list[int] = [first, [22]]
+    first = [33]
+    return values[0][0] == 11 and values[1][0] == 22
+
+
+public def test_fixed_array_replace_retires_only_the_replaced_snapshot() -> bool:
+    values: [2]list[int] = [[1], [2]]
+    before = values
+    values[0] = [3]
+    return before[0][0] == 1 and values[0][0] == 3 and values[1][0] == 2
+
+
+def unwrapped(candidate: Option[list[int]]) -> Option[list[int]]:
+    items = candidate?
+    return Some(items)
+
+
+def propagated(candidate: Result[list[int], list[int]]) -> Result[list[int], list[int]]:
+    items = candidate?
+    return Ok(items)
+
+
+union Failure:
+    details: list[int],
+    unavailable
+
+
+def wrapped(candidate: Result[list[int], list[int]]) -> Result[bool, Failure]:
+    items = candidate?
+    return Ok(len(items) > 0)
+
+
+public def test_option_propagation_owns_success_and_releases_none() -> bool:
+    original: Option[list[int]] = Some([8, 9])
+    kept = unwrapped(original)
+    original = None
+    match kept:
+        case Some(items):
+            return items[1] == 9 and unwrapped(None) is None
+        case None:
+            return False
+
+
+public def test_result_propagation_owns_success_and_error_payloads() -> bool:
+    successful = 0
+    failed = 0
+    match propagated(Ok([4])):
+        case Ok(items):
+            successful = items[0]
+        case Err(_):
+            pass
+    match propagated(Err([7])):
+        case Ok(_):
+            pass
+        case Err(items):
+            failed = items[0]
+    return successful == 4 and failed == 7
+
+
+public def test_propagation_wraps_an_owned_error_in_the_enclosing_union() -> bool:
+    match wrapped(Err([21, 22])):
+        case Ok(_):
+            return False
+        case Err(failure):
+            match failure:
+                case Failure.details(items):
+                    return items[1] == 22
+                case Failure.unavailable:
+                    return False
+
+
+record Node:
+    values: list[int]
+    next: Option[Node]
+
+
+public def test_boxed_record_update_preserves_an_earlier_snapshot() -> bool:
+    node = Node([1], None)
+    before = node
+    node.values = [2, 3]
+    return before.values[0] == 1 and len(node.values) == 2
+
+
+def error_after_prior_operand() -> Result[Pair, list[int]]:
+    return Ok(Pair([41], propagated(Err([19]))?))
+
+
+def none_after_prior_operand() -> Option[Pair]:
+    return Some(Pair([41], unwrapped(None)?))
+
+
+public def test_propagating_error_releases_preceding_constructor_operands() -> bool:
+    match error_after_prior_operand():
+        case Ok(_):
+            return False
+        case Err(items):
+            return items[0] == 19
+
+
+public def test_propagating_none_releases_preceding_constructor_operands() -> bool:
+    return none_after_prior_operand() is None
+
+
+# spec-case: RC-AGGREGATE-1
+public def test_reordered_constructor_fields_preserve_aliased_input_snapshots() -> bool:
+    source = [17, 23]
+    result = Pair(right=source, left=source)
+    source.append(99)
+    result.left.append(31)
+    return result.right == [17, 23] and result.left == [17, 23, 31] and source == [17, 23, 99]
+
+
+record HeldFields:
+    live: DictValues[int, int]
+    snapshot: dict[int, int]
+
+
+# spec-case: RC-AGGREGATE-1
+public def test_constructor_publishes_nested_holds_and_converts_held_mapping_inputs() -> bool:
+    mapping = {1: 7}
+    live = mapping.values()
+    mapping[1] = 13
+    prior = live.mapping
+    result = HeldFields(live=live, snapshot=live.mapping)
+    result.snapshot[1] = 11
+    return list(result.live) == [13] and result.snapshot[1] == 11 and prior[1] == 13
+
+
+def pinned_pair(items: mut list[int]) -> Pair:
+    result = Pair(items, items)
+    items.append(29)
+    return result
+
+
+def arena_pinned_pair() -> Pair:
+    with arena() as scratch:
+        items = [17, 23]
+        result = pinned_pair(mut items)
+        assert items == [17, 23, 29]
+        return scratch.escape(result)
+
+
+# spec-case: RC-AGGREGATE-1
+public def test_constructor_publication_keeps_pinned_copies_through_arena_escape() -> bool:
+    escaped = arena_pinned_pair()
+    return escaped.left == [17, 23] and escaped.right == [17, 23]
+
+
+def main() -> int:
+    assert test_record_fields_survive_original_and_sibling_replacement()
+    assert test_record_update_preserves_prior_aggregate_snapshot()
+    assert test_variant_payload_binding_owns_values_after_scrutinee_replacement()
+    assert test_repeated_variants_replace_prior_payload_owners()
+    assert test_fixed_array_constructor_owns_its_managed_elements()
+    assert test_fixed_array_replace_retires_only_the_replaced_snapshot()
+    assert test_option_propagation_owns_success_and_releases_none()
+    assert test_result_propagation_owns_success_and_error_payloads()
+    assert test_propagation_wraps_an_owned_error_in_the_enclosing_union()
+    assert test_boxed_record_update_preserves_an_earlier_snapshot()
+    assert test_propagating_error_releases_preceding_constructor_operands()
+    assert test_propagating_none_releases_preceding_constructor_operands()
+    assert test_reordered_constructor_fields_preserve_aliased_input_snapshots()
+    assert test_constructor_publishes_nested_holds_and_converts_held_mapping_inputs()
+    assert test_constructor_publication_keeps_pinned_copies_through_arena_escape()
+    return 0

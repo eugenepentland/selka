@@ -1,0 +1,13 @@
+record Point:
+    x: int
+    y: int
+
+
+def edit(values: mut list[Point], divisor: int) -> None:
+    values[0].x = values[0].y // divisor
+
+
+def main() -> int:
+    values = [Point(1, 2)]
+    edit(mut values, 0)
+    return 0

@@ -1,0 +1,66 @@
+module driver
+import rc_inert_returns
+import rc_aggregate_values
+import rc_arena_values
+import rc_temporary_lifetimes
+import rc_capability_values
+import rc_contract_results
+import rc_read_loans
+import iteration_identity
+
+def main() -> int:
+    assert rc_inert_returns.test_null_return_preserves_both_scalar_comparison_paths()
+    assert rc_inert_returns.test_boolean_null_branch_and_nonempty_fallback_stay_distinct()
+    assert rc_inert_returns.test_wide_zero_return_preserves_every_inline_field()
+    assert rc_inert_returns.test_incoming_managed_owner_retains_ordinary_cleanup()
+    assert rc_inert_returns.test_nonzero_plain_fields_are_not_replaced_by_zero()
+    assert rc_inert_returns.test_unique_incoming_resource_is_closed_on_null_return()
+    assert rc_inert_returns.test_null_result_inside_an_arena_keeps_outer_values_alive()
+    assert rc_aggregate_values.test_record_fields_survive_original_and_sibling_replacement()
+    assert rc_aggregate_values.test_record_update_preserves_prior_aggregate_snapshot()
+    assert rc_aggregate_values.test_variant_payload_binding_owns_values_after_scrutinee_replacement()
+    assert rc_aggregate_values.test_repeated_variants_replace_prior_payload_owners()
+    assert rc_aggregate_values.test_fixed_array_constructor_owns_its_managed_elements()
+    assert rc_aggregate_values.test_fixed_array_replace_retires_only_the_replaced_snapshot()
+    assert rc_aggregate_values.test_option_propagation_owns_success_and_releases_none()
+    assert rc_aggregate_values.test_result_propagation_owns_success_and_error_payloads()
+    assert rc_aggregate_values.test_propagation_wraps_an_owned_error_in_the_enclosing_union()
+    assert rc_aggregate_values.test_boxed_record_update_preserves_an_earlier_snapshot()
+    assert rc_aggregate_values.test_propagating_error_releases_preceding_constructor_operands()
+    assert rc_aggregate_values.test_propagating_none_releases_preceding_constructor_operands()
+    assert rc_aggregate_values.test_reordered_constructor_fields_preserve_aliased_input_snapshots()
+    assert rc_aggregate_values.test_constructor_publishes_nested_holds_and_converts_held_mapping_inputs()
+    assert rc_aggregate_values.test_constructor_publication_keeps_pinned_copies_through_arena_escape()
+    assert rc_arena_values.test_an_inner_binding_releases_its_older_heap_owner()
+    assert rc_arena_values.test_inline_owners_close_before_nested_chunks_are_reused()
+    assert rc_arena_values.test_break_and_continue_drop_inner_heap_aliases()
+    assert rc_arena_values.test_escape_return_preserves_shared_children_and_source_owners()
+    assert rc_arena_values.test_result_propagation_releases_nested_arena_frame_owners()
+    assert rc_arena_values.test_heap_receivers_grow_through_helpers_inside_an_arena()
+    assert rc_arena_values.test_outer_arena_receivers_survive_inner_detachment_and_growth()
+    assert rc_arena_values.test_inline_field_detachment_preserves_its_older_allocation()
+    assert rc_temporary_lifetimes.test_nested_write_releases_only_finished_read_temporaries()
+    assert rc_temporary_lifetimes.test_derived_value_survives_finished_parent_temporary()
+    assert rc_temporary_lifetimes.test_pending_receiver_holds_survive_temporary_releases()
+    assert rc_temporary_lifetimes.test_zero_iteration_and_branch_paths_keep_snapshot_owners()
+    assert rc_temporary_lifetimes.test_sorted_empty_receiver_survives_its_mutation_scope()
+    assert rc_temporary_lifetimes.test_sorted_text_receiver_survives_its_mutation_scope()
+    assert rc_temporary_lifetimes.test_sorted_method_result_keeps_its_physical_anchor()
+    assert rc_capability_values.test_repeated_capability_lists_preserve_their_owned_results()
+    assert rc_contract_results.test_postcondition_keeps_the_managed_success_payload()
+    assert rc_contract_results.test_postcondition_preserves_the_propagated_error()
+    assert rc_contract_results.test_postcondition_keeps_the_unique_file_payload()
+    assert rc_read_loans.test_scalar_receivers_read_both_index_directions_and_empty_loops()
+    assert rc_read_loans.test_index_callback_keeps_an_explicit_receiver_snapshot()
+    assert rc_read_loans.test_scalar_loan_roots_survive_loop_reassignment_and_branches()
+    assert rc_read_loans.test_scalar_reads_keep_pending_pins_and_named_snapshots()
+    assert rc_read_loans.test_scalar_reads_inside_an_arena_escape_only_their_result()
+    assert iteration_identity.test_nonstructural_dictionary_writes_remain_visible()
+    assert iteration_identity.test_list_iteration_observes_later_element_writes()
+    assert iteration_identity.test_rebinding_source_preserves_original_iteration_storage()
+    assert iteration_identity.test_named_snapshot_remains_independent_of_iteration_writes()
+    assert iteration_identity.test_fresh_managed_sources_survive_without_an_owner_local()
+    assert iteration_identity.test_arena_iteration_and_nested_sources_keep_balanced_holds()
+    assert iteration_identity.test_fixed_array_iteration_keeps_its_value_copy()
+    assert rc_inert_returns.test_zero_tagged_union_and_nonempty_case_preserve_their_layout()
+    return 0

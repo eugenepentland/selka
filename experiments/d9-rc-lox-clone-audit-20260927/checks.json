@@ -1,0 +1,7 @@
+{
+  "archive_verifier": "passed",
+  "doc_coverage": "199 documented features; 14 modules, 176 named exports; 0 failures",
+  "probe_guardian": "88 checks passed during Debug diagnostic compiler build; diff-scoped against b292660a",
+  "production_source_restored": true,
+  "probe_is_diagnostic_only": true
+}

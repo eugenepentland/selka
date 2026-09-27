@@ -1,0 +1,27 @@
+{
+  "compiler_mode": "Debug",
+  "source_sha256": "7586434f76ef78264b1d7816125edd24cfd0ce992c37b61186276b183df08a4c",
+  "checks": [
+    {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/zig-out/focus/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/experiments/d9-rc-view-cycles-20260926/held_cycle.my"
+      ],
+      "exit": 1,
+      "stdout": "",
+      "stderr": "held_cycle.my:4:5: error[E_LIVE_VIEW_CYCLE]: recursive stored values cannot contain a live dictionary view cycle; store list(view) snapshots or pool ids instead\n      view: DictValues[int, Entry]\n      ^\n"
+    },
+    {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/zig-out/focus/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/experiments/d9-rc-view-cycles-20260926/held_cycle.my",
+        "--legacy-sharing"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": "held_cycle.my:9:5: warning[W_ALIAS_DEPENDENT]: local alias: this shared collection is written after another name takes it; value semantics gives each name an independent value\n      live = mapping.values()\n      ^\n"
+    }
+  ]
+}

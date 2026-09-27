@@ -1,0 +1,10 @@
+def selected(items: list[int]) -> list[int]:
+    return items
+
+def main() -> int:
+    items = [1, 2, 3]
+    value = len(selected(items)) == 3 and len(selected([4])) == 1
+    assert value
+    value = len(selected(items)) == 0 or len(selected([5, 6])) == 2
+    assert value
+    return 0

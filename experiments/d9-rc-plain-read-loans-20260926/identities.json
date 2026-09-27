@@ -1,0 +1,17 @@
+{
+  "parent": "32aa30cf",
+  "steps": 10000,
+  "guest_source_sha256": "32f2aa44dd28aa52b7fed916bb057dccf38b53e5bcb0af2b7d8c7b5d2c1fdce7",
+  "source_changes": {
+    "src/qbe_rc_read_loans.zig": "85e9783d174d2eb38451e94b6971594dd2393e666a3281c2e139995d7c665358",
+    "src/qbe_rc_read_loans_test.zig": "0a79231b16d502cb5c929879fed0f40fb4b3e9fe151122c41983b753619d6fb1",
+    "tests/lang/rc_read_loans.my": "310ab1d93778e1ff1c9db237d778a84bed77394993e1e7850991d442729ab4e4"
+  },
+  "compiler_before": {
+    "sha256": "26ea2be612a3fcd1041e02fc51f402843847cbd8a8850663a2b59be7fb21427c"
+  },
+  "compiler_after": {
+    "sha256": "11d7a1936e91503c4d84259ff00bd0ded643aa974a6afff5b514b898effab044"
+  },
+  "scope": "Isolated terminal read proof; excludes concurrent plain aggregate stores/updates and C retain_replace changes."
+}

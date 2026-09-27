@@ -3,6 +3,7 @@ const std = @import("std");
 const fs = @import("qbe_build_io.zig");
 const v = @import("qbe_build_value.zig");
 const bundled = @import("qbe_build_assets");
+const runtime_options_variable = "MYLANG_OPTIONS";
 
 test {
     _ = @import("qbe_build.zig");
@@ -111,7 +112,7 @@ fn buildAndRun(context: fs.Context, spec: Spec) !BuildReport {
     // A built program reads its runtime options from the environment, never
     // from its own arguments.
     var reporting = if (spec.environment) |environment| try environment.clone(context.allocator) else try std.process.Environ.createMap(std.testing.environ, context.allocator);
-    try reporting.put("MYLANG_OPTIONS", "--print-result");
+    try reporting.put(runtime_options_variable, "--print-result");
     const output = try runOutput(context, &.{spec.output}, &reporting);
     return .{
         .installed = v.boolean(v.get(parsed.value, "runtime_installed")),
@@ -555,4 +556,144 @@ test "the native driver identity names the build driver and link policy only" {
     try std.testing.expect(!driverNames("compiler.zig"));
     try std.testing.expect(!driverNames("native_format.zig"));
     try std.testing.expect(bundled.driver_inputs.len < bundled.identity_inputs.len);
+}
+
+const argv_program =
+    \\def main(args: list[str], fs: Filesystem, out: Stream) -> int:
+    \\    out.print(len(args))
+    \\    if len(args) == 0:
+    \\        return 0
+    \\    if args[0] == "trap":
+    \\        empty: list[int] = []
+    \\        return empty[0]
+    \\    if args[0] == "file":
+    \\        match fs.read_file(args[1]):
+    \\            case Ok(data):
+    \\                return len(data)
+    \\            case Err(_):
+    \\                return 23
+    \\    return 7
+    \\
+;
+
+fn argvRun(context: fs.Context, command: []const []const u8, environment: *std.process.Environ.Map, expected: u8, output: []const u8) !void {
+    const result = try std.process.run(context.allocator, context.io, .{ .argv = command, .environ_map = environment });
+    try std.testing.expectEqual(std.process.Child.Term{ .exited = expected }, result.term);
+    try std.testing.expectEqualStrings(output, result.stdout);
+    const marker = "MYLANG_RC_COUNTS ";
+    const marker_at = std.mem.indexOf(u8, result.stderr, marker);
+    try std.testing.expect(marker_at != null);
+    const start = marker_at.?;
+    const rest = result.stderr[start + marker.len ..];
+    const end = std.mem.indexOfScalar(u8, rest, '\n') orelse rest.len;
+    const parsed = try std.json.parseFromSlice(std.json.Value, context.allocator, rest[0..end], .{});
+    const counts = parsed.value;
+    const allocated = v.number(v.get(counts, "heap_allocate"));
+    try std.testing.expect(!v.boolean(v.get(counts, "saturated")));
+    try std.testing.expectEqual(allocated, v.number(v.get(counts, "retire")));
+    try std.testing.expectEqual(allocated + v.number(v.get(counts, "owner_acquire")), v.number(v.get(counts, "owner_release")));
+    try std.testing.expectEqual(v.number(v.get(counts, "hold_acquire")), v.number(v.get(counts, "hold_release")));
+}
+
+fn argvLifecycle(allocator: std.mem.Allocator) !usize {
+    var environment = try std.process.Environ.createMap(std.testing.environ, allocator);
+    defer environment.deinit();
+    const contract = @import("runtime_contract");
+    try environment.put(contract.variable, contract.Selection.rc_counting.identity());
+    try environment.put(runtime_options_variable, "");
+    var context = try fs.Context.init(allocator, std.testing.io, &environment);
+    defer context.deinit();
+    const a = context.allocator;
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+    const source = try join(a, &.{ root, "argv.my" });
+    const binary = try join(a, &.{ root, "argv" });
+    try context.write(source, argv_program);
+    try buildOnly(context, .{ .tools = try tools(a), .source = source, .output = binary, .cache = try join(a, &.{ root, "cache" }), .environment = &environment });
+    try argvRun(context, &.{binary}, &environment, 0, "0\n");
+    try argvRun(context, &.{ binary, "return" }, &environment, 7, "1\n");
+    try argvRun(context, &.{ binary, "trap" }, &environment, 1, "1\n");
+    try argvRun(context, &.{ binary, "file", try join(a, &.{ root, "absent" }) }, &environment, 23, "2\n");
+    const many = try a.alloc([]const u8, 258);
+    many[0] = binary;
+    @memset(many[1..], "héllo");
+    try argvRun(context, many, &environment, 7, "257\n");
+    try environment.put(runtime_options_variable, "--restrict");
+    try argvRun(context, &.{ binary, "return" }, &environment, 2, "");
+    return 6;
+}
+
+// spec-case: RC-ARGV-OWNERSHIP-1
+test "native RC argv owner balances borrowed entry returns capability refusal and traps" {
+    try std.testing.expectEqual(@as(usize, 6), try argvLifecycle(std.testing.allocator));
+}
+
+const closed_field_program =
+    \\record Holder:
+    \\    items: list[int]
+    \\def grow(items: mut list[int], amount: int, index: int):
+    \\    i = 0
+    \\    while i < amount:
+    \\        items.append(i)
+    \\        i += 1
+    \\    assert items[index] == 1
+    \\def change(holder: mut Holder, amount: int, index: int):
+    \\    work = holder.items
+    \\    grow(mut work, amount, index)
+    \\    holder.items = work
+    \\def heap_case(out: Stream, amount: int, index: int):
+    \\    holder = Holder([1])
+    \\    saved = holder
+    \\    out.print(len(saved.items))
+    \\    change(mut holder, amount, index)
+    \\    out.print(len(holder.items))
+    \\    assert saved.items == [1]
+    \\def arena_case(out: Stream):
+    \\    with arena():
+    \\        holder = Holder([1])
+    \\        saved = holder
+    \\        out.print(len(saved.items))
+    \\        change(mut holder, 1, 100)
+    \\        assert saved.items == [1]
+    \\def main(args: list[str], out: Stream) -> int:
+    \\    if len(args) == 0:
+    \\        heap_case(out, 1, 0)
+    \\    elif args[0] == "trap":
+    \\        heap_case(out, 1, 100)
+    \\    elif args[0] == "arena":
+    \\        arena_case(out)
+    \\    else:
+    \\        heap_case(out, 1000000, 0)
+    \\    return 0
+;
+
+fn closedFieldLifecycle(allocator: std.mem.Allocator) !usize {
+    var environment = try std.process.Environ.createMap(std.testing.environ, allocator);
+    defer environment.deinit();
+    const contract = @import("runtime_contract");
+    try environment.put(contract.variable, contract.Selection.rc_counting.identity());
+    try environment.put(runtime_options_variable, "");
+    try environment.put("MYLANG_MEMORY_LIMIT", "128M");
+    var context = try fs.Context.init(allocator, std.testing.io, &environment);
+    defer context.deinit();
+    const a = context.allocator;
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+    const source = try join(a, &.{ root, "field.my" });
+    const binary = try join(a, &.{ root, "field" });
+    try context.write(source, closed_field_program);
+    try buildOnly(context, .{ .tools = try tools(a), .source = source, .output = binary, .cache = try join(a, &.{ root, "cache" }), .environment = &environment });
+    try argvRun(context, &.{binary}, &environment, 0, "1\n2\n");
+    try argvRun(context, &.{ binary, "trap" }, &environment, 1, "1\n");
+    try argvRun(context, &.{ binary, "arena" }, &environment, 1, "1\n");
+    try environment.put("MYLANG_MEMORY_LIMIT", "1M");
+    try argvRun(context, &.{ binary, "budget" }, &environment, 1, "1\n");
+    return 4;
+}
+
+// spec-case: RC-CLOSED-FIELD-TRANSFER-1
+test "native RC closed field owner balances storeback snapshot traps and arena refusal" {
+    try std.testing.expectEqual(@as(usize, 4), try closedFieldLifecycle(std.testing.allocator));
 }

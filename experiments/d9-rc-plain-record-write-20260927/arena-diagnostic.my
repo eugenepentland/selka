@@ -1,0 +1,27 @@
+record State:
+    values: list[int]
+    count: int
+    ready: bool
+
+def add(state: mut State, amount: int):
+    state.count = state.count + amount
+
+def toggled(state: mut State):
+    state.ready = False
+    state.ready = True
+    state.ready = False
+
+def main(out: Stream) -> int:
+    with arena():
+        state = State([12], 8, True)
+        saved = state
+        add(mut state, 3)
+        toggled(mut state)
+        state.values.append(14)
+        out.print(state.count)
+        out.print(state.ready)
+        out.print(saved.count)
+        out.print(saved.ready)
+        out.print(saved.values)
+        out.print(state.values)
+    return 0

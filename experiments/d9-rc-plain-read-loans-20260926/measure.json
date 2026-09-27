@@ -1,0 +1,290 @@
+{
+  "runs": [
+    {
+      "side": "before",
+      "backend": "qbe",
+      "repeat": 0,
+      "instructions": 4643036938,
+      "command": [
+        "taskset",
+        "-c",
+        "10",
+        "perf",
+        "stat",
+        "-x,",
+        "-e",
+        "instructions:u",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/nbody-loans/before-qbe-0.stat",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/nbody-loans/before-qbe"
+      ],
+      "stdout": "-169075163\n-169016441\n",
+      "stderr": "",
+      "perf": "# started on Sat Sep 26 23:24:59 2026\n\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n4643036938,,cpu_core/instructions/u,436510569,100.00,,\n",
+      "binary_sha256": "a1fdf92e4a01a48670ecaa79df7c379b74c87aebe91c838137de17dbbd519dd6"
+    },
+    {
+      "side": "before",
+      "backend": "qbe",
+      "repeat": 1,
+      "instructions": 4643037016,
+      "command": [
+        "taskset",
+        "-c",
+        "10",
+        "perf",
+        "stat",
+        "-x,",
+        "-e",
+        "instructions:u",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/nbody-loans/before-qbe-1.stat",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/nbody-loans/before-qbe"
+      ],
+      "stdout": "-169075163\n-169016441\n",
+      "stderr": "",
+      "perf": "# started on Sat Sep 26 23:25:00 2026\n\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n4643037016,,cpu_core/instructions/u,443916289,100.00,,\n",
+      "binary_sha256": "a1fdf92e4a01a48670ecaa79df7c379b74c87aebe91c838137de17dbbd519dd6"
+    },
+    {
+      "side": "before",
+      "backend": "qbe",
+      "repeat": 2,
+      "instructions": 4643037088,
+      "command": [
+        "taskset",
+        "-c",
+        "10",
+        "perf",
+        "stat",
+        "-x,",
+        "-e",
+        "instructions:u",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/nbody-loans/before-qbe-2.stat",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/nbody-loans/before-qbe"
+      ],
+      "stdout": "-169075163\n-169016441\n",
+      "stderr": "",
+      "perf": "# started on Sat Sep 26 23:25:00 2026\n\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n4643037088,,cpu_core/instructions/u,432116901,100.00,,\n",
+      "binary_sha256": "a1fdf92e4a01a48670ecaa79df7c379b74c87aebe91c838137de17dbbd519dd6"
+    },
+    {
+      "side": "after",
+      "backend": "qbe",
+      "repeat": 0,
+      "instructions": 2154458982,
+      "command": [
+        "taskset",
+        "-c",
+        "10",
+        "perf",
+        "stat",
+        "-x,",
+        "-e",
+        "instructions:u",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/nbody-loans/after-qbe-0.stat",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/nbody-loans/after-qbe"
+      ],
+      "stdout": "-169075163\n-169016441\n",
+      "stderr": "",
+      "perf": "# started on Sat Sep 26 23:25:01 2026\n\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n2154458982,,cpu_core/instructions/u,198545756,100.00,,\n",
+      "binary_sha256": "fe309f1d98e5e77f9ebc8ba6b0bd55bf7b5284b2e707de7527418bd2f003d3bc"
+    },
+    {
+      "side": "after",
+      "backend": "qbe",
+      "repeat": 1,
+      "instructions": 2154459021,
+      "command": [
+        "taskset",
+        "-c",
+        "10",
+        "perf",
+        "stat",
+        "-x,",
+        "-e",
+        "instructions:u",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/nbody-loans/after-qbe-1.stat",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/nbody-loans/after-qbe"
+      ],
+      "stdout": "-169075163\n-169016441\n",
+      "stderr": "",
+      "perf": "# started on Sat Sep 26 23:25:01 2026\n\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n2154459021,,cpu_core/instructions/u,203477119,100.00,,\n",
+      "binary_sha256": "fe309f1d98e5e77f9ebc8ba6b0bd55bf7b5284b2e707de7527418bd2f003d3bc"
+    },
+    {
+      "side": "after",
+      "backend": "qbe",
+      "repeat": 2,
+      "instructions": 2154619138,
+      "command": [
+        "taskset",
+        "-c",
+        "10",
+        "perf",
+        "stat",
+        "-x,",
+        "-e",
+        "instructions:u",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/nbody-loans/after-qbe-2.stat",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/nbody-loans/after-qbe"
+      ],
+      "stdout": "-169075163\n-169016441\n",
+      "stderr": "",
+      "perf": "# started on Sat Sep 26 23:25:01 2026\n\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n2154619138,,cpu_core/instructions/u,208529133,100.00,,\n",
+      "binary_sha256": "fe309f1d98e5e77f9ebc8ba6b0bd55bf7b5284b2e707de7527418bd2f003d3bc"
+    },
+    {
+      "side": "before",
+      "backend": "llvm",
+      "repeat": 0,
+      "instructions": 3714721205,
+      "command": [
+        "taskset",
+        "-c",
+        "10",
+        "perf",
+        "stat",
+        "-x,",
+        "-e",
+        "instructions:u",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/nbody-loans/before-llvm-0.stat",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/nbody-loans/before-llvm"
+      ],
+      "stdout": "-169075163\n-169016441\n",
+      "stderr": "",
+      "perf": "# started on Sat Sep 26 23:25:01 2026\n\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n3714721205,,cpu_core/instructions/u,308011729,100.00,,\n",
+      "binary_sha256": "0216e336c0bf90627372cb616ce95c6133f6ba92f0e596a65fde14f6e37ec499"
+    },
+    {
+      "side": "before",
+      "backend": "llvm",
+      "repeat": 1,
+      "instructions": 3783282125,
+      "command": [
+        "taskset",
+        "-c",
+        "10",
+        "perf",
+        "stat",
+        "-x,",
+        "-e",
+        "instructions:u",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/nbody-loans/before-llvm-1.stat",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/nbody-loans/before-llvm"
+      ],
+      "stdout": "-169075163\n-169016441\n",
+      "stderr": "",
+      "perf": "# started on Sat Sep 26 23:25:02 2026\n\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n3783282125,,cpu_core/instructions/u,304910693,100.00,,\n",
+      "binary_sha256": "0216e336c0bf90627372cb616ce95c6133f6ba92f0e596a65fde14f6e37ec499"
+    },
+    {
+      "side": "before",
+      "backend": "llvm",
+      "repeat": 2,
+      "instructions": 3697920876,
+      "command": [
+        "taskset",
+        "-c",
+        "10",
+        "perf",
+        "stat",
+        "-x,",
+        "-e",
+        "instructions:u",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/nbody-loans/before-llvm-2.stat",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/nbody-loans/before-llvm"
+      ],
+      "stdout": "-169075163\n-169016441\n",
+      "stderr": "",
+      "perf": "# started on Sat Sep 26 23:25:02 2026\n\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n3697920876,,cpu_core/instructions/u,296201982,100.00,,\n",
+      "binary_sha256": "0216e336c0bf90627372cb616ce95c6133f6ba92f0e596a65fde14f6e37ec499"
+    },
+    {
+      "side": "after",
+      "backend": "llvm",
+      "repeat": 0,
+      "instructions": 1647551163,
+      "command": [
+        "taskset",
+        "-c",
+        "10",
+        "perf",
+        "stat",
+        "-x,",
+        "-e",
+        "instructions:u",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/nbody-loans/after-llvm-0.stat",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/nbody-loans/after-llvm"
+      ],
+      "stdout": "-169075163\n-169016441\n",
+      "stderr": "",
+      "perf": "# started on Sat Sep 26 23:25:02 2026\n\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n1647551163,,cpu_core/instructions/u,126003610,100.00,,\n",
+      "binary_sha256": "e1536c9d78c53a3aea78826312be61de170079fdfca89024f372fe72c5886d8d"
+    },
+    {
+      "side": "after",
+      "backend": "llvm",
+      "repeat": 1,
+      "instructions": 1647551109,
+      "command": [
+        "taskset",
+        "-c",
+        "10",
+        "perf",
+        "stat",
+        "-x,",
+        "-e",
+        "instructions:u",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/nbody-loans/after-llvm-1.stat",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/nbody-loans/after-llvm"
+      ],
+      "stdout": "-169075163\n-169016441\n",
+      "stderr": "",
+      "perf": "# started on Sat Sep 26 23:25:02 2026\n\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n1647551109,,cpu_core/instructions/u,124586854,100.00,,\n",
+      "binary_sha256": "e1536c9d78c53a3aea78826312be61de170079fdfca89024f372fe72c5886d8d"
+    },
+    {
+      "side": "after",
+      "backend": "llvm",
+      "repeat": 2,
+      "instructions": 1647711293,
+      "command": [
+        "taskset",
+        "-c",
+        "10",
+        "perf",
+        "stat",
+        "-x,",
+        "-e",
+        "instructions:u",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/nbody-loans/after-llvm-2.stat",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/nbody-loans/after-llvm"
+      ],
+      "stdout": "-169075163\n-169016441\n",
+      "stderr": "",
+      "perf": "# started on Sat Sep 26 23:25:03 2026\n\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n1647711293,,cpu_core/instructions/u,130508437,100.00,,\n",
+      "binary_sha256": "e1536c9d78c53a3aea78826312be61de170079fdfca89024f372fe72c5886d8d"
+    }
+  ],
+  "summary": {
+    "qbe": {
+      "before": 4643037016,
+      "after": 2154459021
+    },
+    "llvm": {
+      "before": 3714721205,
+      "after": 1647551163
+    }
+  }
+}

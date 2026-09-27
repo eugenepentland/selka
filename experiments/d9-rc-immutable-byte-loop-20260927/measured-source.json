@@ -1,0 +1,10 @@
+{
+  "src/qbe_rc_byte_version.zig": "737af8fc587793451a4d91794e63ec9add6702d31033d63e22e2e3ed787db8b7",
+  "src/qbe_rc_byte_version_test.zig": "a62228dc210a4097494f643704f737a4ab5d790b8a95454bff78a9eed0f54039",
+  "src/qbe_rc_read_version.zig": "b4f804e64ef64fbcb84706e4f483bb87136a98b1b2de8450a5ddea601c7da102",
+  "src/qbe_loop_version.zig": "e3c78145c1daae0958a8fa749caa4fda0b792dfe5fcf3ad06d6ca58804f1c721",
+  "src/qbe_rc_values.zig": "ac7ea80535815f241addfd9f03f7ec0a5b667ddf46c48696068b527abd10b4e7",
+  "src/root_test.zig": "c8a660f072a79bbce76664aba8f4104b27eb1b91907bdf7eb4abb838da627c64",
+  "SPEC.md": "84ba9f329f85a72489e9ea9136f6a42d2400b05ecef784780cff356993d6fa48",
+  "tests/lang/rc_byte_loop_versions.my": "e664e15cda5bd7e2aec549f7ee6e1aeef3f539db54c97d48dc671d5aa3323471"
+}

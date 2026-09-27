@@ -1,0 +1,124 @@
+diff --git a/src/native_rc_internal.h b/src/native_rc_internal.h
+index e536fa4d..602a53ef 100644
+--- a/src/native_rc_internal.h
++++ b/src/native_rc_internal.h
+@@ -53,4 +53,6 @@ size_t myl_rc_shape_depth(const myl_native_heap *, const myl_rc_shape *);
+ void myl_rc_scopes_close_region(myl_native_heap *, unsigned);
+ myl_rc_status myl_rc_scope_extend(myl_rc_scope *, void *boundary, myl_rc_status (*)(myl_rc_scope *, void *));
+ void myl_rc_enqueue(myl_native_heap *, myl_rc_object *);
++/* Internal native bridge: shape is an already registered ordinary pointer. */
++myl_rc_status myl_rc_pointer_transfer(myl_native_heap *, const myl_rc_shape *, void *, void *, unsigned, myl_rc_transfer);
+ #endif
+diff --git a/src/native_rc_transfer.c b/src/native_rc_transfer.c
+index 09ded9bd..bd8f1e12 100644
+--- a/src/native_rc_transfer.c
++++ b/src/native_rc_transfer.c
+@@ -315,6 +315,36 @@ static myl_rc_status clone_payload(myl_native_heap *heap, const void *payload, u
+     *out = status == MYL_RC_OK ? copy : NULL;
+     return status;
+ }
++/* A single unpinned edge cannot create a clone journal or partially acquired
++ * aggregate. Validate before publishing; only pinned/escaping values need the
++ * general transaction. The negative result is private, never a runtime status. */
++static int pointer_fast(myl_native_heap *heap, void *destination, void *source,
++                        unsigned region, myl_rc_transfer mode) {
++    myl_rc_invariant(heap && heap->rc && destination && source && destination != source);
++    if (region > heap->region_depth) return MYL_RC_REGION_ERROR;
++    myl_rc_status status = MYL_RC_OK;
++    void *payload;
++    memcpy(&payload, source, sizeof payload);
++    if (status == MYL_RC_OK && payload) {
++        myl_native_object *common = (myl_native_object *)payload - 1;
++        uintptr_t mark = common->mark;
++        if (!(mark & MYL_NATIVE_OBJECT_IMMORTAL)) {
++            unsigned origin = mark & MYL_NATIVE_OBJECT_ARENA ? myl_native_header_region(payload) : 0;
++            if (origin > region) return -1;
++            if (mark & MYL_NATIVE_OBJECT_PINNED) return -1;
++            if (mode == MYL_RC_COPY) {
++                if (origin) common->mark |= MYL_NATIVE_OBJECT_SHARED;
++                else status = myl_rc_owner_acquire(heap, payload);
++            }
++        }
++    }
++    if (status == MYL_RC_OK) {
++        memcpy(destination, &payload, sizeof payload);
++        if (mode == MYL_RC_TAKE) memset(source, 0, sizeof payload);
++    } else if (mode == MYL_RC_COPY) memset(destination, 0, sizeof payload);
++    if (heap->rc->dead.head) myl_rc_drain(heap);
++    return (int)status;
++}
+ static myl_rc_status transfer(myl_native_heap *heap, myl_rc_slot *destination,
+                               const myl_rc_slot *source, myl_rc_transfer mode, unsigned escaping) {
+     myl_rc_invariant(heap && heap->rc && destination && source && destination->address && source->address);
+@@ -322,6 +352,10 @@ static myl_rc_status transfer(myl_native_heap *heap, myl_rc_slot *destination,
+     const myl_rc_shape *target = myl_rc_shape_resolve(heap, destination->shape);
+     myl_rc_invariant(shape && target && shape->size == target->size && source->address != destination->address);
+     if (destination->region > heap->region_depth) return MYL_RC_REGION_ERROR;
++    if (shape->kind == MYL_RC_SHAPE_POINTER) {
++        int fast = pointer_fast(heap, destination->address, source->address, destination->region, mode);
++        if (fast >= 0) return (myl_rc_status)fast;
++    }
+     clone_work work = {0};
+     work.memo.escaping = escaping;
+     transfer_walk walk = {.heap = heap, .region = destination->region, .mode = mode, .clones = &work};
+@@ -343,6 +377,14 @@ static myl_rc_status transfer(myl_native_heap *heap, myl_rc_slot *destination,
+     dispose_walk(&walk, status != MYL_RC_OK);
+     return status;
+ }
++myl_rc_status myl_rc_pointer_transfer(myl_native_heap *heap, const myl_rc_shape *shape,
++                                       void *destination, void *source, unsigned region, myl_rc_transfer mode) {
++    int fast = pointer_fast(heap, destination, source, region, mode);
++    if (fast >= 0) return (myl_rc_status)fast;
++    myl_rc_slot target = {.shape = shape, .address = destination, .region = region};
++    myl_rc_slot origin = {.shape = shape, .address = source};
++    return transfer(heap, &target, &origin, mode, 0);
++}
+ myl_rc_status myl_rc_value_copy(myl_native_heap *heap, myl_rc_slot *destination, const myl_rc_slot *source) {
+     return transfer(heap, destination, source, MYL_RC_COPY, 0);
+ }
+diff --git a/src/native_rc_values.c b/src/native_rc_values.c
+index abb52c27..f3664f90 100644
+--- a/src/native_rc_values.c
++++ b/src/native_rc_values.c
+@@ -1,4 +1,5 @@
+ #include "native_rc_values.h"
++#include "native_rc_internal.h"
+ #include <stdlib.h>
+ #include <string.h>
+ const myl_rc_shape *myl_rc_native_shape(myl_native_heap *heap, const myl_native_type *type) {
+@@ -24,6 +25,8 @@ int myl_rc_native_copy(myl_native_heap *heap, const myl_native_type *type, void
+     }
+     const myl_rc_shape *shape=myl_rc_native_shape(heap,type);
+     if (!shape) return 0;
++    if (shape->kind==MYL_RC_SHAPE_POINTER)
++        return publication_status(heap,myl_rc_pointer_transfer(heap,shape,dst,(void *)src,region,MYL_RC_COPY));
+     myl_rc_slot target={.shape=shape,.address=dst,.region=region};
+     myl_rc_slot source={.shape=shape,.address=(void *)src,.region=region};
+     return publication_status(heap,myl_rc_value_copy(heap,&target,&source));
+@@ -47,6 +50,12 @@ int myl_rc_native_take(myl_native_heap *heap, const myl_native_type *type, void
+     }
+     const myl_rc_shape *shape=myl_rc_native_shape(heap,type);
+     if (!shape) return 0;
++    if (shape->kind==MYL_RC_SHAPE_POINTER) {
++        void *staged=NULL;
++        myl_rc_status status=myl_rc_pointer_transfer(heap,shape,&staged,src,region,MYL_RC_TAKE);
++        if (status==MYL_RC_OK) memcpy(dst,&staged,sizeof staged);
++        return publication_status(heap,status);
++    }
+     unsigned char local[128];
+     void *staged=type->size<=sizeof local?local:myl_rc_storage_bytes(heap,type->size,0);
+     if (!staged) return 0;
+@@ -60,6 +69,13 @@ int myl_rc_native_take(myl_native_heap *heap, const myl_native_type *type, void
+ void myl_rc_native_drop(myl_native_heap *heap, const myl_native_type *type, void *value) {
+     const myl_rc_descriptor *descriptor=myl_rc_descriptor_find(heap,type);
+     if (!descriptor) abort();
++    if (descriptor->shape->kind==MYL_RC_SHAPE_POINTER) {
++        void *payload;
++        memcpy(&payload,value,sizeof payload);
++        memset(value,0,sizeof payload);
++        myl_rc_owner_release(heap,payload);
++        return;
++    }
+     myl_rc_slot slot={.shape=descriptor->shape,.address=value};
+     myl_rc_value_drop(heap,&slot);
+ }

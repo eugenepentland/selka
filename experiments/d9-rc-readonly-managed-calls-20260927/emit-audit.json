@@ -1,0 +1,143 @@
+{
+  "compiler_sha256": {
+    "before": "d575a79e33ec9a87272ccc083e0dfd343c89978ed3ffe4fabf64a9bf02f7215d",
+    "after": "cf1467b0ecda308df426d4bf360acba0433d73aacc91f9a2d002774f602b8261"
+  },
+  "emissions": [
+    {
+      "side": "before",
+      "kind": "schematic",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-lox-probe-astra/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-lox-probe-astra/.tmp-managed-readonly/install-before/bin/mylang",
+        "emit-project-qbe",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/src/schematic/guest/main.my",
+        "--no-cache",
+        "--rc-runtime"
+      ],
+      "status": 0,
+      "stderr": "layout.my:223:25: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def nearest(pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], rows: list[Row], nets: list[g.Net], lookup: list[int]) -> int:\n                          ^\nlayout.my:274:23: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def depth(pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net], lookup: list[int]) -> int:\n                        ^\nlayout.my:274:44: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def depth(pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net], lookup: list[int]) -> int:\n                                             ^\nlayout_routes.my:42:50: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def blocked(a: l.Point, b: l.Point, net_id: int, parts: list[c.Part], pins: list[c.Pin], points: list[l.Point]) -> bool:\n                                                   ^\n",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-lox-probe-astra/.tmp-managed-readonly/schematic-before-emitted.json",
+      "sha256": "abe845d6d2ad855baca394747ff66988c0adc191dfd7e4a16db55801b2066d03"
+    },
+    {
+      "side": "after",
+      "kind": "schematic",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-lox-probe-astra/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-lox-probe-astra/.tmp-managed-readonly/install-draft/bin/mylang",
+        "emit-project-qbe",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/src/schematic/guest/main.my",
+        "--no-cache",
+        "--rc-runtime"
+      ],
+      "status": 0,
+      "stderr": "layout.my:223:25: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def nearest(pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], rows: list[Row], nets: list[g.Net], lookup: list[int]) -> int:\n                          ^\nlayout.my:274:23: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def depth(pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net], lookup: list[int]) -> int:\n                        ^\nlayout.my:274:44: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def depth(pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net], lookup: list[int]) -> int:\n                                             ^\nlayout_routes.my:42:50: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def blocked(a: l.Point, b: l.Point, net_id: int, parts: list[c.Part], pins: list[c.Pin], points: list[l.Point]) -> bool:\n                                                   ^\n",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-lox-probe-astra/.tmp-managed-readonly/schematic-after-emitted.json",
+      "sha256": "b31dac412e5217e3d17dac6090f75ff54d8aad8105c80f349e3d96d67b2c7da5"
+    },
+    {
+      "side": "before",
+      "kind": "lox",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-lox-probe-astra/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-lox-probe-astra/.tmp-managed-readonly/install-before/bin/mylang",
+        "emit-project-qbe",
+        "main.my",
+        "--no-cache",
+        "--rc-runtime"
+      ],
+      "status": 0,
+      "stderr": "",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-lox-probe-astra/.tmp-managed-readonly/lox-before-emitted.json",
+      "sha256": "dd85fde22ca3cc701730f24179c8dffb76789edaed495c7ad68b018823fe7259"
+    },
+    {
+      "side": "after",
+      "kind": "lox",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-lox-probe-astra/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-lox-probe-astra/.tmp-managed-readonly/install-draft/bin/mylang",
+        "emit-project-qbe",
+        "main.my",
+        "--no-cache",
+        "--rc-runtime"
+      ],
+      "status": 0,
+      "stderr": "",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-lox-probe-astra/.tmp-managed-readonly/lox-after-emitted.json",
+      "sha256": "f25edff89e7a18726f03112d81a561a22463d26d780d21a168beca8430092b49"
+    }
+  ],
+  "changed": {
+    "schematic": [
+      {
+        "name": "layout::bridge",
+        "symbol": "myl_f_d55ed2c1fabbb716423d58fa43a03a9e272df8042127651d114444204a3b37cc",
+        "before_il_sha256": "a1fff0eb2c234d98cb8a1337c9f673999213a0490216daef5eedf23a66dd0e89",
+        "after_il_sha256": "921367a8f5e3b64136be8e2817ec12e1224127bcea2280728e1a864fe1ddc00c",
+        "calls": {
+          "call $myl_rc_native_loan": {
+            "before": 2,
+            "after": 0
+          },
+          "call $myl_rc_native_retain": {
+            "before": 2,
+            "after": 0
+          },
+          "call $myl_qbe_rc_frame_enter": {
+            "before": 1,
+            "after": 0
+          }
+        }
+      },
+      {
+        "name": "layout::groundBranch",
+        "symbol": "myl_f_6102492c12c6d1588d3abba1f6d33586ccf6be91626784d898935dfd4e488d86",
+        "before_il_sha256": "8ca32030389cb01f471b07782921fa6ade9192684755ff160b2f6182ac53437c",
+        "after_il_sha256": "bdce41889f98eea4c99663e69c4b3a58e0e18becd102c760e065d5ba5674f7ba",
+        "calls": {
+          "call $myl_rc_native_loan": {
+            "before": 4,
+            "after": 0
+          },
+          "call $myl_rc_native_retain": {
+            "before": 4,
+            "after": 0
+          },
+          "call $myl_qbe_rc_frame_enter": {
+            "before": 1,
+            "after": 0
+          }
+        }
+      }
+    ],
+    "lox": [
+      {
+        "name": "interpreter::arithmetic",
+        "symbol": "myl_f_549c194dd59052d6a584a91a45f8e27a465f53a107227cc684c6aadde33da3a0",
+        "before_il_sha256": "463af8f14949b50c2ec1dc76a9e85694dcac592c1eb0d26fb13c50f036f71af0",
+        "after_il_sha256": "e6efacec3b0f0c5d8f8b6239b099c6570fb7a15103c312e22c0c1f20c85580b9",
+        "calls": {
+          "call $myl_rc_native_loan": {
+            "before": 0,
+            "after": 0
+          },
+          "call $myl_rc_native_retain": {
+            "before": 0,
+            "after": 0
+          },
+          "call $myl_qbe_rc_frame_enter": {
+            "before": 0,
+            "after": 0
+          }
+        }
+      }
+    ]
+  },
+  "complete": true
+}

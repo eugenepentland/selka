@@ -1,0 +1,48 @@
+{
+  "revision": "3e0c140075e4c7e34c815bba8a0d7a3422fbba87",
+  "compiler_mode": "Debug",
+  "compiler_sha256": "88a52a9595a2d86980ae0a2e39fce1f466de9a70830a057f12a041774d3071c4",
+  "default_runtime": "gc-v1",
+  "full_gate": {
+    "test": {
+      "steps": 94,
+      "executed": 2153,
+      "total": 23979,
+      "skipped": 21826
+    },
+    "test-qbe": {
+      "steps": 51,
+      "executed": 436
+    },
+    "test-qbe-build": {
+      "steps": 29
+    },
+    "fmt-check": {
+      "exit": 0
+    }
+  },
+  "logs": [
+    {
+      "source": ".tmp-rc/foundation-test.log",
+      "artifact": "docs/audits/evidence/d9-rc-foundation-test.log.gz",
+      "raw_sha256": "38175a355b1a72ba4cdffa4643f2c803f691b8afc2cf163b3286df858fd63a22"
+    },
+    {
+      "source": ".tmp-rc/foundation-test-qbe.log",
+      "artifact": "docs/audits/evidence/d9-rc-foundation-test-qbe.log.gz",
+      "raw_sha256": "00b0142d4956c53227c2ffca24b46f5cae7a8ec4ec78486a063027ffdc48b0ba"
+    },
+    {
+      "source": ".tmp-rc/foundation-test-qbe-build.log",
+      "artifact": "docs/audits/evidence/d9-rc-foundation-test-qbe-build.log.gz",
+      "raw_sha256": "c1189203967b1262b588cbcd32bf98aa54148f1cc3c55a5eabbd31639dc65c3f"
+    },
+    {
+      "source": ".tmp-rc/foundation-fmt-check.log",
+      "artifact": "docs/audits/evidence/d9-rc-foundation-fmt-check.log.gz",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "rc_guest_acceptance": false,
+  "main_untouched": "b292660a09bc703d0ceab071636a73b643c52d34"
+}

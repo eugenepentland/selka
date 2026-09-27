@@ -1,0 +1,16 @@
+record Holder:
+    items: list[str]
+def crash(items: mut list[str], index: int):
+    items.append("new")
+    assert items[index] == "start"
+def change(holder: mut Holder, index: int):
+    work = holder.items
+    crash(mut work, index)
+    holder.items = work
+def main(out: Stream) -> int:
+    holder = Holder(["start"])
+    saved = holder
+    out.print(saved.items[0])
+    change(mut holder, 100)
+    out.print(saved.items[0])
+    return 0

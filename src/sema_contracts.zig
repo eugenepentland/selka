@@ -274,7 +274,7 @@ fn contractReturn(comptime Checker: type, self: *Checker, value: typed.NodeId, s
         arms[0] = .{ .tag = shape.ok_tag, .slot = payload, .body = checks };
         arms[1] = .{ .tag = shape.error_tag, .slot = null, .body = try b.stmt(.{ .block = &.{} }) };
         const initialize = try b.stmt(.{ .initialize = .{ .slot = held, .value = value } });
-        const dispatch = try b.stmt(.{ .match = .{ .value = try b.read(held), .arms = arms } });
+        const dispatch = try b.stmt(.{ .match = .{ .value = try b.read(held), .arms = arms, .borrowed = true } });
         return .{ .block = try self.allocator.dupe(typed.StatementId, &.{ initialize, dispatch, try returnLocal(Checker, self, held, span) }) };
     }
     const named = value_type != .unit;
@@ -576,7 +576,7 @@ fn harnessCases(comptime Checker: type, self: *Checker, walk: Walk, slot: typed.
         };
         arm.* = .{ .tag = tag, .slot = payload, .body = try b.stmt(.{ .block = try body.toOwnedSlice(self.allocator) }) };
     }
-    return b.stmt(.{ .match = .{ .value = try b.read(slot), .arms = arms } });
+    return b.stmt(.{ .match = .{ .value = try b.read(slot), .arms = arms, .borrowed = true } });
 }
 /// One invariant clause checked on a harness-supplied value, as a
 /// precondition of the test that names the parameter holding it.

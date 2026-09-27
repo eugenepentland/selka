@@ -1,0 +1,98 @@
+{
+  "logs/guardian-final.log": {
+    "sha256": "7effa23c3b103cc33bac7eba76fb945d531e29c81acb56d3ece7681f6751d739",
+    "bytes": 403
+  },
+  "logs/fmt.log": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "logs/guardian.log": {
+    "sha256": "7effa23c3b103cc33bac7eba76fb945d531e29c81acb56d3ece7681f6751d739",
+    "bytes": 403
+  },
+  "logs/focused-bytes.log": {
+    "sha256": "1ca2c93bb012ebe2cdddbd3372f94cd41618c461cc279a270b766a2c8ce75011",
+    "bytes": 4279
+  },
+  "logs/focused-2.log": {
+    "sha256": "019c9725c4863735be28d1082e3ced3490c98fcb5a1ae386ce167fbc610a0cfa",
+    "bytes": 944
+  },
+  "logs/validation.log": {
+    "sha256": "f8b2df7526ed3d308c625a578aba478af4964c418d3aee3f7ef97486f3d973ce",
+    "bytes": 182
+  },
+  "logs/build.log": {
+    "sha256": "ad2efba44af3aa397f18792195642361aaadb60cc56513200872ffd5ed8f8747",
+    "bytes": 766
+  },
+  "logs/focused-bytes-2.log": {
+    "sha256": "e93795ea322e2772aea4fecf261fba323e863b69b880d7f5654803a6c1712388",
+    "bytes": 1208
+  },
+  "logs/focused-1.log": {
+    "sha256": "59d360b10fa1c3fe07cbe4582c0942cd65635b0a65c2776c297efd43944baf95",
+    "bytes": 1621
+  },
+  "results.json": {
+    "sha256": "bc8cbadf0bfc22bf51d51738f3a48536b0e4951c2808e2e438a58f66c96cd028",
+    "bytes": 21740
+  },
+  "validate.py": {
+    "sha256": "e714fd8b1fd9277cdca5a91b89f570c71d77797bf185699e9e39f73e3fcf8a34",
+    "bytes": 3516
+  },
+  "dict_count-before.ssa": {
+    "sha256": "e0ea65ef605305512890168ee50bea2156b162d0db346f0ccba1ad481a4b10c0",
+    "bytes": 44678
+  },
+  "dict_count-after.ssa": {
+    "sha256": "e0ea65ef605305512890168ee50bea2156b162d0db346f0ccba1ad481a4b10c0",
+    "bytes": 44678
+  },
+  "bytes_scan-before.ssa": {
+    "sha256": "5f65b2424f4f5b17bc5ee840f732d89024adc1cc689465619243a8f5f6d31ed8",
+    "bytes": 33792
+  },
+  "bytes_scan-after.ssa": {
+    "sha256": "5f65b2424f4f5b17bc5ee840f732d89024adc1cc689465619243a8f5f6d31ed8",
+    "bytes": 33792
+  },
+  "adjacent-emission.json": {
+    "sha256": "156efd41c9ad5be04b18c2b753ab273341427701fc86d76b322ffac24ad692c2",
+    "bytes": 185033
+  },
+  "adjacent.ssa": {
+    "sha256": "810d0c8f32aa8d6fe5261c1f3d8e768fdfc599803fc11e4784576736fab006fb",
+    "bytes": 112465
+  },
+  "source/qbe_loop_version.zig": {
+    "sha256": "330b89079be9a27bb1f04e343b6806f9c1560dbe86044517b2098199346583b5",
+    "bytes": 15455
+  },
+  "source/qbe_rc_byte_version_test.zig": {
+    "sha256": "a02b74d2d0f634801f5ce91efebb3f131fb2cd7ff96c603317ebb5a4be586c7a",
+    "bytes": 8658
+  },
+  "source/root_test.zig": {
+    "sha256": "817df86ee1df2e2ea67351bc1463f8f2a88dfb0a30308af87697299116e755f0",
+    "bytes": 12499
+  },
+  "rc_loop_guard_context.my": {
+    "sha256": "0e8fc4441d830d3151ac1cef5add1bf0fa2d3256c9b44b6fffe1f8e688bbed96",
+    "bytes": 1131
+  },
+  "negative/while-adjacent.my": {
+    "sha256": "261d4bf1f869d14a206d474715e6da696a8b46427a921a90a14628ae46374361",
+    "bytes": 423
+  },
+  "negative/dictionary-adjacent-fast.ssa": {
+    "sha256": "ad0998206e256e80d52077e3ef7084bb13fa6090e9eef03a0192e4039d69117e",
+    "bytes": 107612
+  },
+  "negative/bytes-adjacent-fast.ssa": {
+    "sha256": "7b1318a75f4530eb86fe4f13479d3e78c76216b0e5ee67bc56b888e627f8de44",
+    "bytes": 109769
+  }
+}

@@ -1,0 +1,5 @@
+def main() -> int:
+    values = {1:10}
+    for key in values:
+        values[2] = key
+    return 0

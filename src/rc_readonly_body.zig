@@ -1,0 +1,97 @@
+//! Whole-activation loans for scalar-result bodies with no escaping effects.
+const bytecode = @import("bytecode.zig");
+const shapes = @import("rc_shape.zig");
+const native = @import("native_types.zig");
+const typed = @import("typed.zig");
+const Op = @FieldType(bytecode.Instruction, "op");
+
+/// Prove that every managed bit remains anchored by the read-only caller inputs.
+/// This linear closed grammar permits self recursion, but no other calls,
+/// allocation, mutation, unique resource, arena, callback or owning result.
+pub fn certify(catalog: *shapes.Catalog, function: bytecode.Function) native.Error!bool {
+    if (!try admissible(catalog, function)) return false;
+    for (function.scope.instructions) |instruction| if (!allowed(catalog, function, instruction.op)) return false;
+    return true;
+}
+
+/// Shared activation boundary; all managed values must remain caller anchored.
+pub fn admissible(catalog: *shapes.Catalog, function: bytecode.Function) native.Error!bool {
+    return boundary(catalog, function, false);
+}
+
+/// Only an independently certified borrowed entry may widen its result boundary.
+pub fn borrowedBoundary(catalog: *shapes.Catalog, function: bytecode.Function) native.Error!bool {
+    return boundary(catalog, function, true);
+}
+
+fn boundary(catalog: *shapes.Catalog, function: bytecode.Function, borrowed: bool) native.Error!bool {
+    if (function.policy.c_abi or function.policy.host != null) return false;
+    if (function.signature.mutates.len != 0 or function.signature.declared_mutates.len != 0) return false;
+    const output = try catalog.get(function.signature.return_type);
+    if (output.unique_drop or (output.counted and !borrowed)) return false;
+    for (function.scope.locals) |local| {
+        if ((try catalog.get(local.ty)).unique_drop) return false;
+        if (local.ty.isAggregate() and catalog.native.records[local.ty.recordIndex()].collection.box and
+            @import("value_semantics.zig").needsCopy(catalog.native.records, local.ty)) return false;
+    }
+    return function.scope.instructions.len != 0;
+}
+
+/// Closed local grammar. Non-self calls require an independent callee proof.
+pub fn allowed(catalog: *shapes.Catalog, function: bytecode.Function, op: Op) bool {
+    return switch (op) {
+        .load_local,
+        .move_local,
+        .drop_local,
+        .pop,
+        .acknowledge,
+        .push_i64,
+        .push_integer,
+        .push_bool,
+        .push_unit,
+        .get_field,
+        .switch_variant,
+        .wrap_domain,
+        .unwrap_domain,
+        .array_length,
+        .cmp_i64,
+        .cmp_bool,
+        .cmp_enum,
+        .not_bool,
+        .add_i64_checked,
+        .sub_i64_checked,
+        .mul_i64_checked,
+        .div_i64_checked,
+        .rem_i64_checked,
+        .neg_i64_checked,
+        .unary_float,
+        .jump,
+        .jump_if_false,
+        .assert_true,
+        .ret,
+        => true,
+        .value_copy => |copy| !@import("value_semantics.zig").needsCopy(catalog.native.records, copy.ty),
+        .store_local => |id| @backingInt(id) >= function.signature.parameter_count,
+        .call => |id| id == function.id,
+        .cast_integer, .neg_integer => |ty| ty.integer() != null,
+        .binary_integer => |operation| operation.ty.integer() != null,
+        .make_record => |record| !catalog.native.records[record.ty.recordIndex()].managed,
+        .make_variant => true,
+        .get_index => |access| indexable(catalog.native.records[access.ty.recordIndex()]),
+        .buffer_operation => |operation| readList(catalog, function, operation),
+        else => false,
+    };
+}
+
+// Immutable octets use the existing normalized, bounds-checked scalar load.
+// Mutable buffers, dictionaries and allocating text indexing stay excluded.
+fn indexable(record: typed.Record) bool {
+    return !record.managed or (typed.isByteString(record) and record.shape.buffer == .u8);
+}
+
+fn readList(catalog: *shapes.Catalog, function: bytecode.Function, operation: @FieldType(Op, "buffer_operation")) bool {
+    if (operation.kind != .read and operation.kind != .length) return false;
+    const ty = function.scope.locals[@backingInt(operation.owner)].ty;
+    const record = catalog.native.records[ty.recordIndex()];
+    return record.isCollection() and record.collection.kind == .list;
+}

@@ -1,0 +1,29 @@
+{
+  "source_commit": "39f75f3f",
+  "compiler_sha256": "a57ea3b5e2fd86630ba9711e81e2b0d1a83de22088c7f33dd48b1efa69d3646a",
+  "gate": {
+    "test": {
+      "steps": 94,
+      "executed": 2209,
+      "shard_exclusions": 22442
+    },
+    "test-qbe": {
+      "steps": 51,
+      "executed": 437
+    },
+    "test-qbe-build": {
+      "steps": 29
+    },
+    "fmt-check": {
+      "steps": 2
+    }
+  },
+  "rc_sweep_qbe": {
+    "executed": 713,
+    "passed": 705,
+    "failed": 8,
+    "cached": 0,
+    "dropped": 0
+  },
+  "wp4_accepted": false
+}

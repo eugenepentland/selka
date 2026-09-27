@@ -1,0 +1,89 @@
+list str type#19
+  element u32 (managed)
+list bytes type#20
+  element u8 (managed)
+domain float type#21
+  backing u64 (private)
+list List<bytes> type#22
+  element bytes (managed)
+list List<str> type#23
+  element str (managed)
+list List<i64> type#24
+  element i64 (managed)
+function returned(values: List<bytes>, index: i64) -> bytes
+  0000  LOAD_LOCAL 0  ; 2:12
+  0001  STORE_LOCAL 2  ; 2:12
+  0002  LOAD_LOCAL 1  ; 2:19
+  0003  STORE_LOCAL 3  ; 2:12
+  0004  LOAD_LOCAL 3  ; 2:12
+  0005  PUSH_I64 0  ; 2:12
+  0006  CMP_I64 lt  ; 2:12
+  0007  JUMP_IF_FALSE 13  ; 2:12
+  0008  BUFFER_length local=2 -> u64  ; 2:12
+  0009  CAST_INT i64  ; 2:12
+  0010  LOAD_LOCAL 3  ; 2:12
+  0011  ADD_I64_CHECKED  ; 2:12
+  0012  STORE_LOCAL 3  ; 2:12
+  0013  LOAD_LOCAL 3  ; 2:12
+  0014  BUFFER_read local=2 -> bytes  ; 2:12
+  0015  RET  ; 2:5
+function selected(values: List<bytes>, index: i64) -> i64
+  0000  LOAD_LOCAL 0  ; 4:22
+  0001  PUSH_I64 0  ; 4:30
+  0002  CALL 0 (returned)  ; 4:13
+  0003  STORE_LOCAL 2  ; 4:5
+  0004  LOAD_LOCAL 2  ; 5:16
+  0005  LOAD_LOCAL 1  ; 5:22
+  0006  GET_INDEX bytes  ; 5:16
+  0007  CAST_INT i64  ; 5:16
+  0008  CAST_INT i64  ; 5:12
+  0009  RET  ; 5:5
+function main(args: List<str>) -> i64
+  effects {managed_allocation}
+  0000  PUSH_I64 0  ; 7:13
+  0001  STORE_LOCAL 1  ; 7:5
+  0002  LOAD_LOCAL 0  ; 8:12
+  0003  STORE_LOCAL 2  ; 8:8
+  0004  BUFFER_length local=2 -> u64  ; 8:8
+  0005  CAST_INT i64  ; 8:8
+  0006  PUSH_I64 1  ; 8:21
+  0007  CMP_I64 eq  ; 8:18
+  0008  JUMP_IF_FALSE 12  ; 8:8
+  0009  PUSH_I64 3  ; 9:17
+  0010  STORE_LOCAL 1  ; 9:9
+  0011  JUMP 21  ; 8:5
+  0012  LOAD_LOCAL 0  ; 10:14
+  0013  STORE_LOCAL 3  ; 10:10
+  0014  BUFFER_length local=3 -> u64  ; 10:10
+  0015  CAST_INT i64  ; 10:10
+  0016  PUSH_I64 2  ; 10:23
+  0017  CMP_I64 eq  ; 10:20
+  0018  JUMP_IF_FALSE 21  ; 10:10
+  0019  PUSH_I64 -4  ; 11:17
+  0020  STORE_LOCAL 1  ; 11:9
+  0021  PUSH_I64 1  ; 12:14
+  0022  ACQUIRE_BUFFER type#22  ; 12:14
+  0023  STORE_LOCAL 5  ; 12:14
+  0024  PUSH_I64 3  ; 12:21
+  0025  ACQUIRE_BUFFER type#24  ; 12:21
+  0026  STORE_LOCAL 4  ; 12:21
+  0027  PUSH_I64 97  ; 12:22
+  0028  BUFFER_append local=4 -> unit  ; 12:21
+  0029  POP  ; 12:21
+  0030  PUSH_I64 98  ; 12:26
+  0031  BUFFER_append local=4 -> unit  ; 12:21
+  0032  POP  ; 12:21
+  0033  PUSH_I64 99  ; 12:30
+  0034  BUFFER_append local=4 -> unit  ; 12:21
+  0035  POP  ; 12:21
+  0036  LOAD_LOCAL 4  ; 12:21
+  0037  CAST_INT type#20  ; 12:15
+  0038  BUFFER_append local=5 -> unit  ; 12:14
+  0039  POP  ; 12:14
+  0040  LOAD_LOCAL 5  ; 12:14
+  0041  VALUE_COPY List<bytes> assign  ; 12:14
+  0042  STORE_LOCAL 6  ; 12:5
+  0043  LOAD_LOCAL 6  ; 13:21
+  0044  LOAD_LOCAL 1  ; 13:29
+  0045  CALL 1 (selected)  ; 13:12
+  0046  RET  ; 13:5

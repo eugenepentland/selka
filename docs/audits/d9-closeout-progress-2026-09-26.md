@@ -8,13 +8,166 @@ preserved across the handoff. The orchestrator works in separate worktrees and s
 full gates with `../.d9-closeout-gate.lock`. The original dirty checkout, `main`
 (`b292660a`), and the pending devspeed merge are untouched.
 
+The active user goal is Stage 4 performance acceptance. The latest joined
+source `368f0357` passes the [full correctness checkpoint](d9-rc-byte-dict-record-gate-2026-09-27.md):
+2,383 main tests, 455 QBE tests, native build, formatting, Guardian88 and
+1,035 forced RC assertions across 176 programs on each backend. It includes
+guarded byte loops, empty dictionary drops, named-record field reads and the
+loop-guard instruction-context fix. Its complete performance is not yet measured.
+
+The latest isolated results are byte scanning **2.109321× QBE / 1.081241× LLVM**,
+dictionary counting **1.311910× / 1.325051×**, and full Lox binary trees N10
+**21.372315× / 34.478071×** against accepted GC. Only the LLVM byte row meets
+the 1.3× cap. Each result uses its documented isolated base; they must not be
+multiplied into a combined result. The unchanged 43-program corpus and all
+instruction/RSS requirements remain open.
+
+The preceding `c07016f3`
+[focused four-program measurement](d9-rc-helpers-word-joined-2026-09-27.md)
+confirms dictionary counting at **1.381481× QBE / 1.388517× LLVM** against
+accepted GC and schematic at **12.08–12.17× / 17.57–17.64×**. These are fresh
+combined measurements, with 72 unscaled instruction observations, separate RSS
+observations and sixteen balanced counted runs. All eight rows have correct
+output but remain above the 1.3× instruction cap. No current complete corpus
+or new 30-program geomean is claimed.
+
+The most recent
+[30-program combined loop diagnostic](d9-rc-loops-joined-parity-2026-09-27.md),
+measured on fully gated `49c6ca07`, completes all 60 rows with correct output.
+Instruction geomeans are **2.433636× QBE / 2.800243× LLVM** against accepted GC;
+only 8/30 and 9/30 programs meet the 1.3× cap. Median peak RSS is 0.762436× /
+0.743854× GC for this subset. This improves the earlier `5b876012` geomeans
+of 2.831332× / 3.283233×, but still fails the instruction requirements.
+All 13 Lox programs per backend are excluded, so it does not establish the
+required complete-corpus acceptance. All 360 instruction observations ran at
+100%; the verifier also checks 360 RSS observations and 112 native manifests.
+
+Earlier dictionary-tail `3c4251e8`, native type-fact `c71d4046` (report correction
+`242439ec`) and adjacent variant read `4f60ff94` passed the combined gate at
+`c90c84be`. The [five-program combined diagnostic](d9-rc-ownership-joined-2026-09-27.md)
+measures unchanged dictionary counting at **6.598428× QBE / 7.383473× LLVM** and
+Lox binary trees N10 at **27.911220× / 44.806239× GC**. Schematic cases remain
+17.51–17.58× / 26.23–26.76×. All outputs and four counted runs pass; all sixty
+instruction observations report 100% running. This diagnostic measures no RSS
+and does not replace complete-corpus acceptance.
+
+The [historical full corpus](d9-rc-corpus-2026-09-27.md) has also finished on its
+older immutable `e926d1e1` compiler: all 86 rows have correct output, with failing
+instruction geomeans **13.833063× / 20.538954×** and lower median peak RSS. These
+are predecessor results, not the current combined build. Lox accounts for 98.58%
+of its cumulative recorded instruction-counter time, excluding builds and RSS
+runs. Focused diagnostics guide development; the final accepted build still
+requires the unchanged full corpus.
+
+Anchored immutable dictionary keys, repeated scalar-loop readiness validation,
+named owning-record scalar writes and plain-result read-only helper composition
+now pass the [combined correctness checkpoint](d9-rc-readers-joined-gate-2026-09-27.md)
+at `c47058f5`. Their isolated measurements improve dictionary, append, Lox and
+schematic workloads but remain above the performance cap; those comparisons
+use different recorded bases and must not be multiplied into a combined result.
+The separate dictionary-loop candidate `88f4e477` reaches **1.481235× QBE /
+1.461035× LLVM** against accepted GC, requiring another 12.2% / 11.0% reduction
+to reach 1.3×. The subsequent [combined loop checkpoint](d9-rc-loops-joined-gate-2026-09-27.md)
+at `49c6ca07` now includes that dictionary proof and guarded read-list versions
+`be0cba69`. The latter's isolated append ratios are 1.902061× QBE / 2.301125×
+LLVM; sieve remains 2.963575× / 3.513822×. The completed 30-program diagnostic
+above confirms those costs on that combined source. Managed borrowed-helper
+composition `b6ff7788` and registered plain dictionary word overwrite `0efd82ad`
+now join the newer `c07016f3` checkpoint. Their measured combined improvements
+are 24–28% for schematic and 5–7% for dictionary counting against `49c6ca07`.
+The subsequent [byte-loop slice](d9-rc-immutable-byte-loop-2026-09-27.md),
+[dictionary-drop slice](d9-rc-dictionary-empty-drops-2026-09-27.md) and
+[named-record read slice](../../experiments/d9-rc-record-field-read-implementation-20260927/README.md)
+now join the `368f0357` checkpoint. Their isolated results appear above.
+The three current workers address fast-loop operand storage, scalar field reads
+through verified incoming `inout` authority, and raw borrowed/immortal helper
+entries. The latter requires a separate constant-result certificate for the
+actual `text::empty` fallback; the initial borrowed-only prototype correctly
+refuses it. Complete current combined performance has not been measured.
+GC remains the default; changing it is outside this active performance goal.
+
 Stage 3 and WP-4pre are accepted on the integration branch. The complete
 43-program-per-backend instruction sweep passes at 1.021851044× QBE and
 1.046853543× LLVM, with every output correct and no program above 1.3×.
 The final combined default/borrow gate at `f6bea5d9` passes all four steps:
 2,130 executed main tests, 429 QBE tests, native-build and formatting.
-WP-4 implementation is beginning behind an experimental runtime selector;
-GC remains the default until RC's own correctness/performance/RSS acceptance.
+WP-4's compiler, runtime, collection, arena and host ownership paths are implemented
+behind an experimental runtime selector. The latest fully green checkpoint at
+`368f0357` passes 2,383 main tests, 455 QBE tests, native build and formatting.
+Both uncached RC sweeps pass **1,035/1,035 assertions across 176 programs**, with
+zero failures, skips, cached verdicts, dropped files or unloaded files. The
+[joined checkpoint](d9-rc-byte-dict-record-gate-2026-09-27.md) includes corrected
+module callable resolution, argv ownership, empty-local journals and certified
+fresh returns, omitted empty receiver storage, direct plain scalar writes,
+empty-frame linkage omission, complete fresh constructors, closed field transfer,
+plain retain, immediate scalar field borrowing, physically fresh loop roots,
+bounded physical loans, borrowed returns through read-only loops and helper
+composition, scalar appends with spare capacity, and ownership-free numeric loops.
+Historical untagged native manifests now explicitly remain GC independently of
+the future process default.
+Earlier augmented-field and iterator failures remain preserved
+as negative controls. The intermediate `685e2631` gate was **not green**: the
+resolver dropped the declared-`replace` guest file despite 865 passing executed
+assertions. The [failed receipts](d9-rc-nbody-gate-2026-09-26.md) remain unchanged;
+the accepted GC compiler reproduced that old resolver bug before its correction.
+
+The supplemental [golden replay](d9-rc-history-flat-goldens-2026-09-27.md)
+completes **462/462 matching outcomes** on immutable `19e16e1d`, including 440
+balanced counted RC executions, ten explicit legacy GC cases and twelve CLI
+refusals before guest startup.
+That compiler builds the complete performance corpus and passes all 60 parity
+and schematic output checks, but Lox QBE binary trees times out at 600 seconds;
+the remaining checks were stopped and archived. Nbody profiles motivated further
+plain-record/read-loan work in `codex/d9-rc-nbody-integration`. Those changes are
+now integrated at `685e2631`. The unchanged five-million-step nbody produces
+correct output and balanced counts but still uses 2.324486× QBE and 7.325101×
+LLVM instructions against accepted GC (median of three). A further validated
+empty-local journal refinement is integrated: isolated full-size instructions
+fall another 6.3% on QBE and 18.0% on LLVM with identical counts and output.
+The argv lifetime fix closes the four-object/six-owner Lox shutdown gap on both
+backends. Scope-storage and scalar-update refinements are now joined and gated.
+The Lox audit attributes excessive object-table copies to an extra temporary
+owner; explicit field-transfer `d4bff2a1` is now integrated. The bounded
+empty-frame proof `57a26e87` and complete fresh-constructor preflight `cdec9ff5`
+join it in the latest green checkpoint.
+Their matched measurements improve full-size nbody and the tree diagnostic,
+respectively, without changing successful-run ownership counts.
+
+The frozen `7d68202d` [30-program diagnostic](d9-rc-parity-diagnostic-2026-09-27.md)
+completes all 60 actual-backend rows with correct output. Its instruction
+geomeans remain 4.806047× QBE and 6.291449× LLVM against accepted GC, with 23
+and 22 programs above 1.3×. Median RSS is lower for this subset, but the 13 Lox
+VM cases per backend are excluded. Exact counters identify repeated uniqueness
+checks in fannkuch and broad loan/value traversal in schematic as priorities.
+The three Astra workers now address those paths and allocation/retirement costs.
+The next joined slices are green: plain retain `5237aebc`, plain projection
+`6ce92814` and fresh-root loop checks `4f7eeea9`. Their isolated full workloads
+improve substantially, but a separate combined four-program comparison still
+shows instruction ratios above the limits. The complete 43-program sweep against immutable predecessor `e926d1e1` has now
+finished all 86 rows, with correct outputs and large remaining overhead; the
+historical full-corpus report above preserves the exact results.
+Flat lifetime holds `c0a5904a`, borrowed loop returns `3b867d50`, plain appends
+`3bc671b7`, anchored helper composition `b2a251c3` and numeric loops `280ef314`
+now pass the joined full gate. Exact predecessor diagnostics still show Lox
+binary trees at 117.54× QBE and 207.36× LLVM against accepted GC. The next
+candidates address broad inline record publication, conservative lifetime-hold
+propagation and descriptor lookup. Bounded physical retain `c2357ae4` now joins
+the fully green checkpoint, with its isolated 48-sample archive independently
+verified. The managed-memory guides and repaired example also pass their joined
+gate; final RC-default wording remains conditional. Each slice preserves its existing
+callback, trap and refusal behavior.
+Exact nonheld scalar-list capture `aca67a7a` now passes the combined gate.
+Scalar record publication `6a75eb2a`, private scalar descriptor identity
+`45567840`, and record-field snapshot correction `2631a44f` now pass the combined
+gate. The snapshot correction connects owned compiler field receivers to their
+source record during borrow analysis. Permanent heap/arena, nested-path and
+independent-home controls pass; historical negatives remain archived with the
+precise GC/RC applicability. Full RC instruction/RSS acceptance remains open,
+followed by the ordinary runtime default transition, documentation and final
+combined validation.
+GC stays the default.
+WP-5 has a [committed design](d9-wp5-concurrency-design-2026-09-26.md), with
+implementation dependent on WP-4 acceptance.
 
 ## Accepted work
 
@@ -49,8 +202,8 @@ for every accepted package above.
 
 | Work | Branch/worktree | Remaining acceptance |
 |---|---|---|
-| WP-4 reference counting | Shared interface and experimental selector work from `266d9d5a` | Prerequisites accepted. Freeze shared ownership/shape interfaces, implement allocator/collections/compiler/arenas/host support, then full correctness and RC performance/RSS acceptance including rewritten graph programs |
-| WP-5 concurrency | Not started | Design after WP-4, following the existing concurrency proposal |
+| WP-4 reference counting | `codex/d9-rc-integration`; frozen full gate `49c6ca07`, both forced RC sweeps 1,013/1,013 across 171 programs; historical golden replay complete | Validate further performance refinements; pass complete RC instruction/RSS acceptance including rewritten graph programs; transition the ordinary default to RC and update docs; rerun the final joined gate. GC remains default until acceptance |
+| WP-5 concurrency | Design committed in `df482879`; [proposal](d9-wp5-concurrency-design-2026-09-26.md) | Resolve the documented Weft-source provenance gap and remaining design decisions; implement and validate after WP-4 acceptance |
 
 The plan's literal “on main” scheduling dependencies are being supplied by validated
 integration commits so downstream development can continue without prematurely
@@ -205,3 +358,93 @@ fix and pass in both base and optimized ports. The composed source includes
 this fix, scalar instance/class readers and late closure publication. Each
 component has port tests, both-backend smoke/stress validation and exact patch
 replay; the current composition is included in the fresh performance sweep.
+
+## Joined RC host and staged-clone regression checkpoint
+
+The experimental branch passes a new frozen four-command gate at `d0178601`:
+94 main steps and 2,162 executed tests, QBE 51 steps/436 tests, native build
+29 steps, and formatting 2 steps. The [checkpoint report](d9-rc-host-staged-gate-2026-09-26.md)
+retains exact evidence for startup registration, iterative pinned snapshots,
+production collection ownership and copied-codec/host trap cleanup. GC remains
+the default. Compiler lowering, scopes/arena escape, actual borrow count
+traffic and WP-4 performance acceptance are still underway with Astra agents
+at extra-high reasoning; WP-5 remains dependent on completing WP-4.
+
+## Joined RC scopes, arenas and statistics regression checkpoint
+
+Frozen `a9361b46` passes the full gate: 94 main steps with 2,167 executed tests,
+QBE 51 steps/436 tests, native build 29 steps, and formatting 2 steps. The
+[checkpoint report](d9-rc-arena-stats-gate-2026-09-26.md) records scope-first
+trap cleanup, transactional collection transfers, stable pinned dictionary
+reads, charged arena cleanup, and optional physical counters. It also records
+the arena finalizer-ordering follow-up found during review. Compiler lowering
+now runs a first basic RC CLI guest on its own branch; full RC semantics,
+borrow traffic, performance/RSS and WP-5 remain outstanding. The accepted GC
+baseline has 58 private binaries and all 86 output checks pass.
+
+
+## Joined RC bounded-proof checkpoint
+
+Frozen `39f75f3f` passes all four gates: main 94/94 with 2,209 executed tests,
+QBE 437, native-build 29/29, formatting 2/2. The
+[checkpoint report](d9-rc-bounded-gate-2026-09-26.md) records held views,
+acyclicity admission, callback/frame failure cleanup and bounded borrow proofs.
+The separate RC sweep executes all 713 assertions but has eight text/sorting
+failures after earlier temporary cleanup. Exposed view-mapping mutation and
+copied-view codec fixes are being completed. The first matched binary-tree
+measurements remain far outside the RC performance threshold. WP-4 remains
+experimental and incomplete; GC remains the default, and WP-5 awaits WP-4.
+
+
+## Joined RC receiver correctness checkpoint
+
+Frozen `a49441c1` passes all four gates (main 94/94 and 2,209 executed tests,
+QBE 437, native-build 29/29, formatting 2/2) and the actual uncached RC language
+sweeps: **723/723 tests on each backend**, 125 programs and no dropped/unloaded
+programs. The [report and evidence](d9-rc-receivers-gate-2026-09-26.md) include
+copied held-view codecs, H mapping mutation, and sorted receiver-owner lifetime.
+Verified LLVM O3/full LTO also produces all three exact schematic SVG hashes.
+Historical mislabeled LLVM runner evidence is explicitly corrected and rerun.
+The measured RC instruction gap is still substantial; WP-4 performance and
+its default transition remain open, and WP-5 is not complete.
+
+
+## RC borrowing and constructors checkpoint
+
+Integration `3f300771` passes all four gate commands: 94 main steps with 2,215
+executed tests, 51 QBE steps with 437 tests, 29 native-build steps and 2 formatting
+steps. Actual uncached RC sweeps pass 731/731 tests on each backend, across 127
+programs. See [the joined gate report](d9-rc-loans-gate-2026-09-26.md).
+The receiver loans, recursive read-only bodies, pointer fast paths and constructor
+ownership transfers are integrated. Private n12 constructor owner acquisitions
+fall from 1,996,163 to 19, with all 669,060 allocations retired. This is focused
+evidence; complete performance/RSS acceptance and the default transition remain
+open. The superseded exact-workload diagnostic is preserved in
+[the early performance report](d9-rc-early-performance-2026-09-26.md).
+
+## RC identity and supplemental replay checkpoint
+
+Frozen `d57fef03` passes all four gate commands: main 94/94 steps with 2,232
+executed tests, QBE 51/51 with 437 tests, native build 29/29, and formatting 2/2.
+Its uncached counted-runtime sweeps pass 774/774 assertions per backend, across
+136 programs with none dropped or unloaded. Exact compiler hashes, logs and
+backend selection are retained in the [identity report](d9-rc-identity-gate-2026-09-26.md).
+
+An additional immutable-compiler replay covers 231 authoritative native goldens
+per backend: 226 RC cases and five explicit legacy-sharing GC fallbacks.
+This replay is still running. It has reproduced two older-receiver arena traps
+and two failed-file error-text leaks. The receiver-region correction `1e708148`,
+joined at `e2667d56`, passes the two exact cases and 83 RC guests per backend,
+eight GC guests per backend, 45 focused tests and 92 sanitizer scenarios:
+[receiver-region evidence](d9-rc-receiver-regions-2026-09-26.md).
+The failed-file correction and a distinct live-view mapping snapshot/history
+correction remain in progress. A scheduling-wrapper diagnostic prefix caused
+one harness classification error; the guest refusal itself was unchanged.
+
+Later integrated optimizations include physical loop versioning (`a9b60357`),
+completed-constructor publication (`03a0cf08`) and omission of tracing roots
+from counted frames (`10f122a6`). Each has focused both-backend evidence, but
+the combined source still needs a fresh full gate and complete performance/RSS
+acceptance. The frame-template experiment was rejected after an LLVM regression;
+its evidence remains committed. Specialized allocation and compact journal
+indices are being measured next. No partial timing establishes WP-4 acceptance.

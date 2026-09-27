@@ -1,0 +1,76 @@
+record Span:
+    source: bytes
+    start: int
+
+record Node:
+    span: Span
+    next: int
+
+
+def empty() -> Span:
+    return Span(b"", 0)
+
+
+def at(nodes: list[Node], index: int) -> Node:
+    if index < 0 or index >= len(nodes):
+        return Node(empty(), len(nodes))
+    return nodes[index]
+
+
+def octets(node: Node) -> bytes:
+    return node.span.source
+
+
+def invoke(reader: def(list[Node], int) -> Node, nodes: list[Node], index: int) -> Node:
+    return reader(nodes, index)
+
+
+# spec-case: RC-BORROW-ENTRY-1
+public def test_borrowed_projection_survives_anchor_clear() -> bool:
+    source = b"alpha" + b"-tail"
+    nodes = [Node(Span(source, 2), 1)]
+    selected = at(nodes, 0)
+    retained = octets(selected)
+    nodes.clear()
+    selected = Node(empty(), 0)
+    source = b"replacement"
+    return retained == b"alpha-tail"
+
+
+# spec-case: RC-BORROW-ENTRY-1
+public def test_immortal_fallback_copies_inline_result_bits() -> bool:
+    nodes = [Node(Span(b"allocated" + b"-source", 3), 1)]
+    negative = at(nodes, -1)
+    past = at(nodes, 1)
+    nodes.clear()
+    return negative.span.source == b"" and past.span.source == b"" and negative.next == 1 and past.next == 1
+
+
+# spec-case: RC-BORROW-ENTRY-1
+public def test_indirect_accessor_keeps_canonical_owned_result() -> bool:
+    nodes = [Node(Span(b"owned" + b"-result", 4), 1)]
+    selected = invoke(at, nodes, 0)
+    nodes.clear()
+    return selected.span.source == b"owned-result" and selected.span.start == 4
+
+
+# spec-case: RC-BORROW-ENTRY-1
+public def test_repeated_borrowed_projection_keeps_source_live() -> bool:
+    nodes = [Node(Span(b"repeat" + b"-me", 2), 1)]
+    total = 0
+    for index in range(300):
+        selected = at(nodes, 0)
+        total += len(octets(selected))
+    return total == 2700 and nodes[0].span.source == b"repeat-me"
+
+
+def main() -> int:
+    if not test_borrowed_projection_survives_anchor_clear():
+        return 1
+    if not test_immortal_fallback_copies_inline_result_bits():
+        return 2
+    if not test_indirect_accessor_keeps_canonical_owned_result():
+        return 3
+    if not test_repeated_borrowed_projection_keeps_source_live():
+        return 4
+    return 0

@@ -1,0 +1,16 @@
+resource File: filesystem
+result Open:
+    ok: File,
+    err: i64
+record Owned:
+    file: File
+    values: list[int]
+def recurse(value: Owned) -> int:
+    return recurse(value)
+def main(fs: Filesystem) -> int:
+    request: [9]u8 = [114u8,58u8,83u8,80u8,69u8,67u8,46u8,109u8,100u8]
+    match acquire_resource[Open](fs, request):
+        case Open.ok(file):
+            return recurse(Owned(file, [1,2,3]))
+        case Open.err(_):
+            return 2

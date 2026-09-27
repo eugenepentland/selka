@@ -1,0 +1,99 @@
+diff --git a/SPEC.md b/SPEC.md
+index c774f84e..4e5cbf17 100644
+--- a/SPEC.md
++++ b/SPEC.md
+@@ -202,6 +202,7 @@ The roadmap in `docs/experiments/roadmap.md` tracks unsupported and planned feat
+ - [RC-CONTRACT-RESULT-1] Contract-generated variant inspection borrows its hidden owner and payload until the clause finishes. Inspecting a Result for postconditions never consumes or clears the value subsequently returned, including managed and unique payloads; ordinary source match bindings retain their existing transfer rules.
+ - [RC-PLAIN-OPERAND-1] RC operand cleanup emits no runtime drop for an input whose physical type contains neither counted edges nor unique resources. Every instruction still retires consumed owning inputs before publishing a plain result, so reuse of an operand position cannot suppress an earlier value's release.
+ - [RC-AGGREGATE-1] RC aggregate construction journals zero-initialized inline values and fresh managed bodies before any fallible child transfer. Copyable children acquire independent owners; unique children transfer their tokens. Updates prepare replacement ownership before releasing old fields. Variant payload bindings own their active values before the consumed scrutinee is released. Managed bodies with unique resources install their finalizer, and all partial ownership is cleaned on a trap.
++- [RC-EMPTY-FRAME-1] Initially empty RC journal entries contain a valid clear guard; their type, value address and cleanup role are published before the guard becomes live. Plain locals and empty operand/work entries need no speculative unit descriptor, and normal/trap cleanup skips them safely.
+ - [RC-FRAME-1] RC frames journal initialized owning slots and unique resources while generated stack storage is live. Normal and trap cleanup restore receiver scopes before guarded releases; guards clear before reentrant cleanup. Unpublished pointer constructors have a distinct abort flag that immediately drops arena child edges. Borrowed local uniqueness adopts only a fresh clone, preserving the caller's owner; an owned field replacement releases its former edge after cloning. Box write-back copies its prepared inline body atomically, publishes the replacement owner before releasing the former owned edge, and preserves borrowed owners and all input guards on refusal. A noncopyable managed body's unique adapter closes raw resource fields before counted child release. Prefix unwinding preserves the caller checkpoint, while a native long jump unwinds every departing frame before leaving its stack.
+ - [RC-STARTUP-1] An RC native context initializes its counted heap and registers the generated ownership module before host initialization or guest entry. Missing RC state or missing generated metadata cannot continue as GC. Registration is idempotent, and status adapters preserve count-limit and region errors while distinguishing managed-budget refusal from host allocation failure through the ordinary located trap entry. Compiler-reserved frame journals link without allocation, restore receiver scopes before releasing reverse-order initialized slots, and clear each guard before unique-resource or counted drop. Normal cleanup is repeatable; trap cleanup runs before longjmp invalidates frame storage, and a nested landing pad may preserve an outer frame checkpoint. GC startup is unchanged.
+ - [RC-LAYOUT-1] Experimental RC-v1 heap allocations carry a 32-byte prefix with ordinary owners at payload minus 32, nonsharing holds at minus 24, common mark/count/flags at minus 16 and native descriptor at minus 8. Payloads remain 16-byte aligned. GC, arena and immortal allocations retain their 16-byte prefix, and generated GC/arena heap offsets remain unchanged.
+diff --git a/src/qbe_rc_aggregate_test.zig b/src/qbe_rc_aggregate_test.zig
+index 51010799..6298d64e 100644
+--- a/src/qbe_rc_aggregate_test.zig
++++ b/src/qbe_rc_aggregate_test.zig
+@@ -178,3 +178,31 @@ test "RC scalar arithmetic in an owning frame emits only the managed input drop"
+     const text = try findFunction(manifest.value, "total");
+     try t.expectEqual(@as(usize, 1), std.mem.count(u8, text, "call $myl_qbe_rc_slot_drop"));
+ }
++
++// spec: RC-EMPTY-FRAME-1
++test "RC empty frame slots omit speculative descriptors until publication" {
++    const saved = runtime.get();
++    defer runtime.set(saved);
++    runtime.set(.rc);
++    var compilation = try compiler.Compilation.init(t.allocator, "rc_empty_frame.my",
++        \\def append_count(values: mut list[int], item: int) -> int:
++        \\    values.append(item)
++        \\    return len(values)
++        \\def main() -> int:
++        \\    values: list[int] = []
++        \\    return append_count(mut values, 7)
++    );
++    defer compilation.deinit();
++    const emitted = try compilation.emitQbe(t.allocator);
++    defer t.allocator.free(emitted);
++    var manifest = try std.json.parseFromSlice(Manifest, t.allocator, emitted, .{ .ignore_unknown_fields = true });
++    defer manifest.deinit();
++    const text = try findFunction(manifest.value, "append_count");
++    var layouts = try @import("native_types.zig").Catalog.initRecords(t.allocator, compilation.program.?.records);
++    defer layouts.deinit();
++    const unit = try @import("native_descriptors.zig").symbol(t.allocator, &layouts, .unit);
++    defer t.allocator.free(unit);
++    try t.expect(std.mem.indexOf(u8, text, unit) == null);
++    try t.expect(std.mem.indexOf(u8, text, "call $myl_qbe_rc_frame_enter") != null);
++    try t.expect(std.mem.indexOf(u8, text, "call $myl_qbe_rc_frame_cleanup") != null);
++}
+diff --git a/src/qbe_rc_frame.zig b/src/qbe_rc_frame.zig
+index 77485a68..da0a232e 100644
+--- a/src/qbe_rc_frame.zig
++++ b/src/qbe_rc_frame.zig
+@@ -45,6 +45,10 @@ pub fn Lower(comptime E: type) type {
+             const size = count(E, self, state);
+             try self.print(" call $memset(l %rcguards, w 0, l {d})\n call $memset(l %rcentries, w 0, l {d})\n", .{ size * 8, size * entry_bytes });
+             for (state.locals.storage, 0..) |slot, index| {
++                if (!slot.shape.counted and !slot.shape.unique_drop) {
++                    try emptyEntry(E, self, index);
++                    continue;
++                }
+                 const address = self.temp();
+                 if (self.byReference(index)) {
+                     try self.print(" %v{d} =l loadl %l{d}\n", .{ address, index });
+@@ -52,17 +56,9 @@ pub fn Lower(comptime E: type) type {
+                 try entry(E, self, index, slot.ty, address);
+                 if (slot.initial == .owned) try initialized(E, self, index, true);
+             }
+-            for (state.operands, 0..) |_, index| {
+-                const address = self.temp();
+-                try self.print(" %v{d} =l copy %rcs{d}\n", .{ address, index });
+-                try entry(E, self, localCount(E, self) + index, .unit, address);
+-            }
+-            const work = self.temp();
+-            try self.print(" %v{d} =l copy %rcwork\n", .{work});
+-            try entry(E, self, size - 2, .unit, work);
+-            const internal = self.temp();
+-            try self.print(" %v{d} =l copy %rcinternal\n", .{internal});
+-            try entry(E, self, size - 1, .unit, internal);
++            for (state.operands, 0..) |_, index| try emptyEntry(E, self, localCount(E, self) + index);
++            try emptyEntry(E, self, size - 2);
++            try emptyEntry(E, self, size - 1);
+             try self.print(" call $myl_qbe_rc_frame_enter(l %ctx, l %rcframe, l %rcentries, l {d})\n", .{size});
+         }
+         /// Release live obligations through the same order used by runtime traps.
+@@ -104,6 +100,14 @@ pub fn guard(comptime E: type, self: *E, index: usize) Error!usize {
+     try self.print(" %v{d} =l add %rcguards, {d}\n", .{ result, index * 8 });
+     return result;
+ }
++// Uninitialized entries need only a readable guard. Publication writes their
++// complete type/address/role before setting that guard, so empty frame cleanup
++// never consults speculative unit metadata or operand addresses.
++fn emptyEntry(comptime E: type, self: *E, index: usize) Error!void {
++    const at_guard = self.temp();
++    try self.print(" %v{d} =l add %rcentries, {d}\n", .{ at_guard, index * entry_bytes + 16 });
++    try self.print(" storel %v{d}, %v{d}\n", .{ try guard(E, self, index), at_guard });
++}
+ /// Publish metadata while the entry has no initialized token.
+ pub fn entry(comptime E: type, self: *E, index: usize, ty: typed.Type, address: usize) Error!void {
+     const state = get(E, self) orelse return error.InternalError;

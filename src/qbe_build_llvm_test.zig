@@ -183,6 +183,18 @@ test "a trace recorder call goes to its preserve_most twin under preserve_mostcc
 }
 
 // spec-case: LLVM-ZIG-1
+test "network host narrowing translates with the checked capability ABI" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const table = try bundledTable(arena.allocator());
+    const signatures: llvm.Signatures = .empty;
+    var diagnostic: llvm.Diagnostic = .{ .unit = "network-host" };
+    const unit = "export function l $f(l %ctx, l %cap, l %host) {\n@start\n %v =l call $myl_qbe_host_resource(l %ctx, l %cap, l %host, l 4)\n ret %v\n}\n";
+    const translated = try llvm.translate(arena.allocator(), unit, .{ .signatures = &signatures, .runtime = &table }, &diagnostic);
+    try std.testing.expect(std.mem.indexOf(u8, translated, "declare i64 @myl_qbe_host_resource(ptr, i64, ptr, i64)") != null);
+}
+
+// spec-case: LLVM-ZIG-1
 test "the runtime registry reads helpers from headers and Zig exports and refuses unknown types" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
@@ -257,4 +269,35 @@ test "a unit built without LTO writes its assembly where the -S command's -o say
     try std.testing.expectEqualStrings("/dev/null", argv[at]);
     try std.testing.expectEqualStrings("-o", argv[at - 1]);
     try std.testing.expectEqual(@as(?usize, null), compile.outputPosition(&.{ "zig", "clang", "-o" }, "/w/unit.s"));
+}
+
+// spec-case: RC-RUNTIME-CONTRACT-1
+test "RC runtime helpers use checked C status and transfer signatures" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const table = try bundledTable(arena.allocator());
+    try std.testing.expectEqualStrings("i32", table.signature("myl_rc_owner_acquire").?.result);
+    try std.testing.expectEqualStrings("void", table.signature("myl_rc_owner_release").?.result);
+    try std.testing.expectEqualDeep(@as([]const []const u8, &.{ "ptr", "ptr" }), table.signature("myl_rc_owner_acquire").?.parameters);
+    try std.testing.expectEqualDeep(@as([]const []const u8, &.{ "ptr", "ptr", "ptr", "i32" }), table.signature("myl_rc_value_replace").?.parameters);
+    try std.testing.expectEqualDeep(@as([]const []const u8, &.{ "ptr", "ptr", "i64", "ptr" }), table.signature("myl_rc_list_set").?.parameters);
+    try std.testing.expectEqualStrings("i32", table.signature("myl_rc_dictionary_pop").?.result);
+    try std.testing.expect(@import("qbe_build_llvm_runtime.zig").isHelper("myl_rc_unknown"));
+    try std.testing.expectEqual(@as(?llvm.RuntimeSignature, null), table.signature("myl_rc_unknown"));
+}
+
+// spec: LLVM-SELF-ADDRESS-1
+test "an LLVM callback may name the function currently being defined" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var signatures: llvm.Signatures = .empty;
+    try signatures.put(a, "through", .{ .parameters = &.{ "l", "l" }, .result = "l" });
+    const table: llvm.RuntimeTable = .{};
+    const options: llvm.Options = .{ .signatures = &signatures, .runtime = &table };
+    var diagnostic: llvm.Diagnostic = .{ .unit = "self-callback" };
+    const translated = try llvm.translate(a, "export function l $recurse(l %ctx) {\n@start\n %v =l call $through(l $recurse, l %ctx)\n ret %v\n}\n", options, &diagnostic);
+    try std.testing.expect(std.mem.indexOf(u8, translated, "ptrtoint (ptr @recurse to i64)") != null);
+    try std.testing.expect(std.mem.indexOf(u8, translated, "declare i64 @recurse") == null);
+    try std.testing.expect(std.mem.indexOf(u8, translated, "declare i64 @through(i64, i64)") != null);
 }

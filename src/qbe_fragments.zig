@@ -47,6 +47,8 @@ pub const Flags = struct {
     /// The copy-on-write code the unit carries (`COW-UNIQUE-1`). Folded into
     /// a key only when it is on, so every other key is unchanged.
     cow: @import("cow_plan.zig").Mode = .off,
+    /// Ownership ABI and instrumentation policy carried by emitted calls.
+    runtime: @import("runtime_contract").Selection = .gc,
 };
 
 /// One memoized canonical digest and the ordinals it named, in first-mention order.
@@ -250,6 +252,7 @@ pub const Keys = struct {
         try canon.text(format_version);
         try canon.put(.{ .step_checks = flags.step_checks, .frame_checks = flags.frame_checks, .arenas = flags.arenas, .entry = flags.entry });
         if (flags.cow != .off) try canon.text(@tagName(flags.cow));
+        try canon.text(flags.runtime.identity());
         try canon.raw(&own.digest);
         var reached: std.ArrayList(u32) = .empty;
         defer reached.deinit(self.allocator);
@@ -708,6 +711,7 @@ pub fn recordKey(source_identity: Digest, drop_debug: bool) Digest {
     // VALUE-SEMANTICS-1: value semantics changes every lowered body.
     if (@import("value_semantics.zig").enabled()) hash.update("value-semantics");
     if (@import("value_semantics.zig").counting()) hash.update("cow-counting");
+    hash.update(@import("runtime_mode.zig").identity());
     return digestOf(&hash);
 }
 /// Old entries a pack keeps beyond the ones the latest build used, as a

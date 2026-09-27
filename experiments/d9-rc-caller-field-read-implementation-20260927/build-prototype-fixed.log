@@ -1,0 +1,42 @@
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 1b6c13222675)
+guardian: diff-scoped vs b292660a09bc703d0ceab071636a73b643c52d34: 308/620 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 16 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 4148 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 8 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs b292660a09bc703d0ceab071636a73b643c52d34, 308 file(s) in scope
+Build Summary: 19/19 steps succeeded
+install success
++- install mylang success
+|  +- compile exe mylang debug native cached 7ms MaxRSS:38M
+|  |  +- run exe qbe-build-assets (qbe_build_assets) cached
+|  |     +- compile exe qbe-build-assets debug native cached 7ms MaxRSS:34M
+|  +- run ../guardian-zig/zig-out/bin/guardian-check success 2s
+|     +- guardian-selfcheck success
+|        +- run ../guardian-zig/zig-out/bin/guardian-check success 4ms
++- install qbe success
+|  +- compile exe qbe fast native cached 14ms MaxRSS:34M
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- install generated/ success
+|  +- run exe mylang (mylang-runtime) success 12s
+|     +- compile exe mylang debug native (+1 more reused dependencies)
+|     +- install mylang (+2 more reused dependencies)
+|     +- compile exe qbe fast native (reused)
++- install board-trial success
+|  +- compile exe board-trial debug native success 4s MaxRSS:383M
+|  |  +- options cached
+|  |  |  +- compile exe qbe fast native (reused)
+|  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- install schematic-svg success
+|  +- compile exe schematic-svg debug native success 3s MaxRSS:383M
+|  |  +- options (+1 more reused dependencies)
+|  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- install mylang-io success
+|  +- compile exe mylang-io debug native success 3s MaxRSS:387M
+|  |  +- options (+1 more reused dependencies)
+|  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+

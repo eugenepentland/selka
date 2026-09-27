@@ -1,0 +1,108 @@
+diff --git a/src/qbe_rc_record_read_plan.zig b/src/qbe_rc_record_read_plan.zig
+index 22d4ce6e..420faa2e 100644
+--- a/src/qbe_rc_record_read_plan.zig
++++ b/src/qbe_rc_record_read_plan.zig
+@@ -48,7 +48,7 @@ fn candidate(comptime E: type, self: *E, pc: usize, budget: *Budget) Error!?Cert
+     if (root == capture or !try list(E, self, capture)) return null;
+     const stack = self.states[pc] orelse return null;
+     if (stack.len != 1 or stack[0] != self.function.scope.locals[root].ty) return null;
+-    const member = self.field(stack[0], code[pc].op.get_field) catch return null;
++    const member = self.field(stack[0], code[pc].op.get_field) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else null;
+     if (member.ty != self.function.scope.locals[capture].ty) return null;
+     const end = uses(E, self, capture, pc + 1, budget) orelse return null;
+     if (end < pc + 2 or end - (pc - 1) > 64 or end + 1 >= code.len) return null;
+@@ -116,7 +116,7 @@ fn interval(comptime E: type, self: *E, proof: Certificate, facts: []const u8, b
+         if (!sources.targetsSatisfy(instruction.op, pc, proof, edge)) return false;
+         if (pc < proof.start or pc > proof.end) continue;
+         if (self.states[pc] == null or instruction.inline_origin != null or facts[pc] != homes.owned) return false;
+-        if (!try allowed(E, self, proof, pc) or !try quiet(E, self, proof, pc, budget)) return false;
++        if (!try allowed(E, self, proof, pc, budget) or !try quiet(E, self, proof, pc, budget)) return false;
+     }
+     for (self.loop_plan.loops) |loop| {
+         if (!budget.take(1)) return false;
+@@ -130,7 +130,7 @@ fn edge(pc: usize, target: usize, proof: Certificate) bool {
+     return target > pc and target <= proof.end;
+ }
+ 
+-fn allowed(comptime E: type, self: *E, proof: Certificate, pc: usize) Error!bool {
++fn allowed(comptime E: type, self: *E, proof: Certificate, pc: usize, budget: *Budget) Error!bool {
+     const code = self.function.scope.instructions;
+     const op = code[pc].op;
+     if (pc <= proof.start + 2) return true;
+@@ -139,7 +139,7 @@ fn allowed(comptime E: type, self: *E, proof: Certificate, pc: usize) Error!bool
+     }
+     if (op == .get_field) {
+         if (code[pc - 1].op != .load_local or @backingInt(code[pc - 1].op.load_local) != proof.root) return false;
+-        const member = self.field(self.function.scope.locals[proof.root].ty, op.get_field) catch return false;
++        const member = self.field(self.function.scope.locals[proof.root].ty, op.get_field) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else false;
+         return scalar(E, self, member.ty);
+     }
+     if (op == .buffer_operation) {
+@@ -148,16 +148,21 @@ fn allowed(comptime E: type, self: *E, proof: Certificate, pc: usize) Error!bool
+         return scalar(E, self, access.output);
+     }
+     if (!try @import("qbe_rc_read_loans.zig").scalar(E, self, op, &self.cow.?.rc.?.catalog)) return false;
+-    for (self.states[pc].?) |ty| if (!try scalar(E, self, ty)) return false;
++    return plainStack(E, self, self.states[pc].?, budget);
++}
++
++fn plainStack(comptime E: type, self: *E, stack: []const typed.Type, budget: *Budget) Error!bool {
++    if (!budget.take(stack.len)) return false;
++    for (stack) |ty| if (!try scalar(E, self, ty)) return false;
+     return true;
+ }
+ 
+ fn scalar(comptime E: type, self: *E, ty: typed.Type) Error!bool {
+     if (!self.isScalar(ty)) return false;
+     const state = self.cow.?.rc.?;
+-    const shape = state.catalog.get(ty) catch return error.InternalError;
++    const shape = state.catalog.get(ty) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError;
+     if (shape.counted or shape.unique_drop) return false;
+-    const size = (self.layout(ty) catch return error.InternalError).size;
++    const size = (self.layout(ty) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError).size;
+     return size == 1 or size == 2 or size == 4 or size == 8;
+ }
+ 
+@@ -229,3 +234,42 @@ test "RC record field reads scan unreachable writers implicit aliases and exhaus
+     budget = .{ .remaining = 1 };
+     try t.expectEqual(@as(?usize, null), uses(WriterProbe, &probe, 1, 0, &budget));
+ }
++
++const ScalarProbe = struct {
++    cow: ?struct { rc: ?*State },
++    fail_layout: bool = false,
++    const State = struct { catalog: Catalog };
++    const Catalog = struct {
++        fail: bool = false,
++        calls: usize = 0,
++        fn get(self: *@This(), _: typed.Type) error{OutOfMemory}!struct { counted: bool = false, unique_drop: bool = false } {
++            self.calls += 1;
++            if (self.fail) return error.OutOfMemory;
++            return .{};
++        }
++    };
++    fn isScalar(_: *@This(), _: typed.Type) bool {
++        return true;
++    }
++    fn layout(self: *@This(), _: typed.Type) error{OutOfMemory}!struct { size: u64 = 8 } {
++        if (self.fail_layout) return error.OutOfMemory;
++        return .{};
++    }
++};
++// spec-case: RC-RECORD-FIELD-READ-1
++test "RC record field reads charge every scalar stack entry and propagate allocation failures" {
++    var state: ScalarProbe.State = .{ .catalog = .{} };
++    var probe: ScalarProbe = .{ .cow = .{ .rc = &state } };
++    var budget: Budget = .{ .remaining = 2 };
++    try t.expect(!try plainStack(ScalarProbe, &probe, &.{ .i64, .i64, .i64 }, &budget));
++    try t.expectEqual(@as(usize, 0), probe.cow.?.rc.?.catalog.calls);
++    try t.expect(try plainStack(ScalarProbe, &probe, &.{ .i64, .i64 }, &budget));
++    try t.expectEqual(@as(usize, 0), budget.remaining);
++    try t.expectEqual(@as(usize, 2), probe.cow.?.rc.?.catalog.calls);
++    probe.cow.?.rc.?.catalog.fail = true;
++    budget = .{};
++    try t.expectError(error.OutOfMemory, plainStack(ScalarProbe, &probe, &.{.i64}, &budget));
++    probe.cow.?.rc.?.catalog.fail = false;
++    probe.fail_layout = true;
++    try t.expectError(error.OutOfMemory, plainStack(ScalarProbe, &probe, &.{.i64}, &budget));
++}

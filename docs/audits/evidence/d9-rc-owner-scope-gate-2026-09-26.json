@@ -1,0 +1,37 @@
+{
+  "source_commit": "3f48de262ca4d73fae70baca89005c28b739daf1",
+  "compiler_mode": "Debug",
+  "compiler_sha256": "c769fc46547f246fcd02a2ef1e8542675f2499c38b0a953a7054b862fc24941f",
+  "runtime_default": "gc",
+  "gate_serialized": true,
+  "steps": {
+    "test": {
+      "command": "zig build test --summary all",
+      "exit": 0,
+      "summary": "94/94 steps succeeded; 2177/24267 tests passed (22090 skipped)",
+      "log": "d9-rc-owner-scope-test-2026-09-26.log.gz",
+      "raw_sha256": "370be9eb0ac272b1964fd5e935f33c64ef115910a48785e1048bd19cf4242061"
+    },
+    "test-qbe": {
+      "command": "zig build test-qbe --summary all",
+      "exit": 0,
+      "summary": "51/51 steps succeeded; 437/437 tests passed",
+      "log": "d9-rc-owner-scope-test-qbe-2026-09-26.log.gz",
+      "raw_sha256": "868aeba4b24cfca92d0aa6e7d98ee843c6595761bb95a1c7f157589659a98548"
+    },
+    "test-qbe-build": {
+      "command": "zig build test-qbe-build --summary all",
+      "exit": 0,
+      "summary": "29/29 steps succeeded",
+      "log": "d9-rc-owner-scope-test-qbe-build-2026-09-26.log.gz",
+      "raw_sha256": "d203bc2eebb2927e8048778c42844e9b90bfbe52ba0f06e03c78c8b0f6cf0acf"
+    },
+    "fmt-check": {
+      "command": "zig build fmt-check --summary all",
+      "exit": 0,
+      "summary": "2/2 steps succeeded",
+      "log": "d9-rc-owner-scope-fmt-check-2026-09-26.log.gz",
+      "raw_sha256": "727fe2e22c982638ef4d6d75a47d5f97e1bb81c8b5f3ec3c0c55f158df48d93f"
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/field-list-read/install-proof-final/bin/mylang",
+  "compiler_sha256": "eecc37fec9cdacfe3d9ba52067e40400235287450ac5444c4ccfcc1ce3d1b59e",
+  "patch_sha256": "e715dcf360a2b9e82228dd7f42fcd97d94fb90ee2aed006d3cc352b5f4849ec0",
+  "sources": {
+    "src/qbe_rc_record_read_plan.zig": "bb72d36679e6bd291a7f6a6317fc2b1e8c07669fc0de543b6b3178221d74754c"
+  },
+  "note": "This proof-budget/OOM/test correction follows the measured immutable candidate. Full guest and control byte identities are recorded separately."
+}

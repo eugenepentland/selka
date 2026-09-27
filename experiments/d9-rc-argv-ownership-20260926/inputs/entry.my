@@ -1,0 +1,18 @@
+def main(args: list[str], fs: Filesystem, out: Stream) -> int:
+    out.print(len(args))
+    if len(args) == 0:
+        return 0
+    if args[0] == "trap":
+        empty: list[int] = []
+        return empty[0]
+    if args[0] == "file":
+        match fs.read_file(args[1]):
+            case Ok(data):
+                return len(data)
+            case Err(_):
+                return 23
+    snapshot = args.copy()
+    local = args
+    local.append("local")
+    out.print(len(snapshot), len(local))
+    return 7

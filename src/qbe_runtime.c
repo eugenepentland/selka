@@ -4,6 +4,9 @@
 #include "native_collections.h"
 #include "native_cow.h"
 #include "native_text.h"
+#if defined(MYL_NATIVE_RC_COUNTING) && MYL_NATIVE_RC_COUNTING
+#include "native_rc_stats.h"
+#endif
 #include <inttypes.h>
 #include <setjmp.h>
 #include <signal.h>
@@ -256,7 +259,7 @@ static uintptr_t entry_address(const int32_t *field) {
     return (uintptr_t)field + (uintptr_t)(intptr_t)*field;
 }
 static size_t raw_entry_count(void) {
-    if (!__start_mylang_frame_map || !__stop_mylang_frame_map || __stop_mylang_frame_map <= __start_mylang_frame_map) return 0;
+    if (!__start_mylang_frame_map || !__stop_mylang_frame_map || &__stop_mylang_frame_map[0] <= &__start_mylang_frame_map[0]) return 0;
     return (size_t)(__stop_mylang_frame_map - __start_mylang_frame_map) / 3;
 }
 /* The call site whose entries start at raw entry `index`, and how many there are. */
@@ -394,7 +397,12 @@ static __attribute__((noinline)) uint64_t fail(void *context, const char *code) 
            sticky flag after a call; the trampoline armed this jump while the
            entry ran. A context without one (the direct C entry points and
            budget parsing) keeps the sticky behavior. */
-        if (ctx->unwind) longjmp(*(jmp_buf *)ctx->unwind, 1);
+        if (ctx->unwind) {
+#if (defined(MYL_NATIVE_RC) && MYL_NATIVE_RC) || defined(MYL_RC_CONTRACT_LIBRARY)
+            myl_qbe_rc_unwind(ctx);
+#endif
+            longjmp(*(jmp_buf *)ctx->unwind, 1);
+        }
     }
     return 0;
 }
@@ -449,8 +457,16 @@ void *myl_qbe_argv_list(void *context, const myl_native_type *element) {
     for (int i = 0; i < ctx->guest_argc; ++i) {
         const char *argument = ctx->guest_argv[i];
         myl_native_text *text = myl_native_text_from_utf8(&ctx->heap, (const unsigned char *)argument, strlen(argument));
-        if (!text) { myl_qbe_fail_allocation(context); myl_native_root_pop(&ctx->heap, &root); return NULL; }
-        if (!myl_native_list_append(&ctx->heap, list, &text)) { myl_qbe_fail_allocation(context); myl_native_root_pop(&ctx->heap, &root); return NULL; }
+        int appended = text && myl_native_list_append(&ctx->heap, list, &text);
+        /* Append owns its stored edge. The fresh text token stays here, and
+         * failure must abandon the partial list before fail can longjmp. */
+        if (myl_rc_enabled(&ctx->heap)) myl_rc_owner_release(&ctx->heap, text);
+        if (!appended) {
+            myl_native_root_pop(&ctx->heap, &root);
+            if (myl_rc_enabled(&ctx->heap)) myl_rc_owner_release(&ctx->heap, list);
+            myl_qbe_fail_allocation(context);
+            return NULL;
+        }
     }
     myl_native_root_pop(&ctx->heap, &root);
     return list;
@@ -477,6 +493,13 @@ void myl_qbe_fail_list_value(void *context) { fail(context, "R_LIST_VALUE"); }
 /* A refused managed allocation names the budget when the heap declined it and
    the host only when the process itself could not produce the bytes. */
 void myl_qbe_fail_allocation(void *context) {
+#if defined(MYL_NATIVE_RC) && MYL_NATIVE_RC
+    Context *ctx = context;
+    if (ctx->heap.rc) {
+        myl_rc_status status = myl_rc_take_failure(&ctx->heap);
+        if (status != MYL_RC_OK) { (void)myl_qbe_rc_status(context, status); return; }
+    }
+#endif
     if (myl_native_cow_take_depth_failure()) { fail(context, "R_COW_DEPTH"); return; }
     fail(context, ((Context *)context)->heap.exhausted ? memory_budget_code : "OutOfMemory");
 }
@@ -615,10 +638,11 @@ uint64_t myl_qbe_int_binary(void *context, uint64_t op, uint64_t is_signed, uint
     switch (op) {
         case 0: result = a + b; break;
         case 1: result = a - b; break;
-        case 2: if (__builtin_mul_overflow(a, b, &result))
-            return fail_detail(context, "R_OVERFLOW", operation_name(op),
-                MYL_QBE_TRAP_PRESENT_LEFT | MYL_QBE_TRAP_PRESENT_RIGHT | MYL_QBE_TRAP_PRESENT_WIDTH | unsigned_bit(is_signed),
-                0, 0, (int64_t)a, (int64_t)b, width);
+        case 2:
+            if (__builtin_mul_overflow(a, b, &result))
+                return fail_detail(context, "R_OVERFLOW", operation_name(op),
+                    MYL_QBE_TRAP_PRESENT_LEFT | MYL_QBE_TRAP_PRESENT_RIGHT | MYL_QBE_TRAP_PRESENT_WIDTH | unsigned_bit(is_signed),
+                    0, 0, (int64_t)a, (int64_t)b, width);
             break;
         case 3: case 4: case 5: case 6: {
             if (!b) return fail_detail(context, "R_DIVISION_BY_ZERO", operation_name(op),
@@ -725,15 +749,21 @@ typedef struct NativeFrameAllocation {
     struct NativeFrameAllocation *previous, *next;
     max_align_t alignment;
 } NativeFrameAllocation;
-void *myl_qbe_frame_allocate(void *context, uint64_t bytes) {
+void *myl_qbe_frame_try_allocate(void *context, uint64_t bytes) {
     Context *ctx=context;
-    if (bytes>SIZE_MAX-sizeof(NativeFrameAllocation)) { fail(context,"OutOfMemory");return NULL; }
+    if (bytes>SIZE_MAX-sizeof(NativeFrameAllocation)) return NULL;
     NativeFrameAllocation *allocation=calloc(1,sizeof *allocation+(size_t)bytes);
-    if (!allocation) { fail(context,"OutOfMemory");return NULL; }
+    if (!allocation) return NULL;
     allocation->next=ctx->frame_allocations;
     if (allocation->next) allocation->next->previous=allocation;
     ctx->frame_allocations=allocation;
     return allocation+1;
+}
+void myl_qbe_fail_frame_allocation(void *context) { fail(context, "OutOfMemory"); }
+void *myl_qbe_frame_allocate(void *context, uint64_t bytes) {
+    void *payload = myl_qbe_frame_try_allocate(context, bytes);
+    if (!payload) myl_qbe_fail_frame_allocation(context);
+    return payload;
 }
 void myl_qbe_frame_release(void *context, void *payload) {
     if (!payload) return;
@@ -939,8 +969,11 @@ static int execute_config_args(uint64_t (*entry)(void *), uint64_t steps, uint64
     context->guest_argc=guest_argc;context->guest_argv=guest_argv;
     myl_native_heap_init(&context->heap, budget ? budget : SIZE_MAX);
     context->heap.stress = stress;
-    context->frame_data = calloc((size_t)capacity, sizeof(MylQbeActiveFrame));
-    if (!context->frame_data) context->trap = "OutOfMemory";
+#if defined(MYL_NATIVE_RC) && MYL_NATIVE_RC
+    (void)myl_qbe_rc_initialize(context);
+#endif
+    if (!context->trap) context->frame_data = calloc((size_t)capacity, sizeof(MylQbeActiveFrame));
+    if (!context->trap && !context->frame_data) context->trap = "OutOfMemory";
     /* QBE-FLOAT-ENV-1: verify the process floating-point environment exactly
        once, before any guest or host code runs. The per-operation checks are
        gone, so this is what preserves R_FLOAT_ENVIRONMENT for a process that
@@ -958,9 +991,16 @@ static int execute_config_args(uint64_t (*entry)(void *), uint64_t steps, uint64
     result->reported = context->reported;
     result->trap_detail = context->trap_detail;
     memcpy(result->trace, context->trace, sizeof result->trace);
+    if (context->adapter_cleanup) context->adapter_cleanup(context);
     if (context->cleanup) context->cleanup(context);
     /* Stand-ins go after the resources, whose handles they may still own. */
     if (context->stand_in_cleanup) context->stand_in_cleanup(context);
+#if defined(MYL_NATIVE_RC) && MYL_NATIVE_RC
+    myl_qbe_rc_finish(context);
+#endif
+#if defined(MYL_NATIVE_RC_COUNTING) && MYL_NATIVE_RC_COUNTING
+    myl_rc_stats_report(&context->heap);
+#endif
     while (context->frame_allocations) myl_qbe_frame_release(context,(NativeFrameAllocation *)context->frame_allocations+1);
     free(context->host_state);
     free(context->frame_data);

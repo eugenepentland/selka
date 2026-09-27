@@ -16,7 +16,11 @@ bounded representation or phase is optimized.
 
 ## Compatibility consequence
 
-Ordinary code keeps tracing-GC and value semantics. Escape-hatch APIs remain
+Ordinary code currently keeps tracing-GC and value semantics. [D9](D9-value-semantics-then-rc.md)
+replaces only the tracing-GC clause after the reference-counting stage passes its
+gate; the experimental RC selector does not yet change that default. Managed
+allocation, independent values and arenas remain part of the same model.
+Escape-hatch APIs remain
 available but do not enter `bootstrap-v1` merely because they exist. A future
 systems feature needs its own evidence and does not silently widen the compiler
 subset.

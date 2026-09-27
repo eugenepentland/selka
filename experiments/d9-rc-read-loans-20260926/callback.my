@@ -1,0 +1,16 @@
+module callback
+
+
+def change_index(values: mut list[int]) -> int:
+    values.clear()
+    values.append(91)
+    return 0
+
+
+def main(out: Stream) -> int:
+    values = [7, 8]
+    selected = values[change_index(mut values)]
+    out.print(selected)
+    assert selected == 7
+    assert values == [91]
+    return 0

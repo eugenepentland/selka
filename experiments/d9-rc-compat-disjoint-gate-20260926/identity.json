@@ -1,0 +1,18 @@
+{
+  "source": "17750e3615feb57d6fbb8c5eefaa5615a92dc025",
+  "compiler_sha256": "c2c1b171a2248fcb8b942b623388da61424bb8add2b78125c595c17fa74cd084",
+  "full_gate_passed": true,
+  "main_gate": {
+    "steps": 94,
+    "tests_passed": 2239,
+    "failed": 0,
+    "shard_excluded": 22772
+  },
+  "qbe_gate": {
+    "steps": 51,
+    "tests_passed": 437
+  },
+  "native_build_steps": 29,
+  "fmt_steps": 2,
+  "full_rc_sweep_note": "792 actual assertions/backend belongs to earlier dab80d84. Disjoint transfer separately passed131/backend on its source; no combined17750 sweep yet."
+}

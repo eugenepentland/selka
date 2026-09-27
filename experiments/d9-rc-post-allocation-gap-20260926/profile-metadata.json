@@ -1,0 +1,186 @@
+{
+  "gap-allocator-qbe-rc-repeat": {
+    "sha256": "7bfc7d1cb28cc447584cdeee0173d227fcbfc1583d6dffd2933ab08b6d5353e3",
+    "manifest": {
+      "link_identity": "0557fffd03f6462705458f2f4e1ea2dd0e4e13e15d2a3d3e07b9ea2a218b9198",
+      "version": "qbe-manifest-v1",
+      "abi": "mylang-qbe-native-v9",
+      "entry": "myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605",
+      "backend": "qbe",
+      "optimization": "default",
+      "lto": false,
+      "thin_lto": false,
+      "functions": [
+        {
+          "name": "main",
+          "symbol": "myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605",
+          "key": "cd4f2f723c0d6105c7c44ef5094a4e6f1d1a539e785056b40fcc99205ed58b71",
+          "object": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cache-gap-allocator-qbe-rc/objects/8429f1ef99f8017daac73e50e97a46bdcdee6c9791f8ff6ea3442c3c0b8bcc58/14655ec778e918fb39c6c1a93817a0573a5ce5c8d293fb30578d5d24568ee1a1.o",
+          "reused": false
+        },
+        {
+          "name": "check",
+          "symbol": "myl_f_20f65c28671b40937c5bf23acc7c6f37e5a5ec0622e347b57685725df5ba9e50",
+          "key": "8e021c39af2edbd9ee0853c27d50778c21fbacb85ffa067e7a39c210da907132",
+          "object": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cache-gap-allocator-qbe-rc/objects/8429f1ef99f8017daac73e50e97a46bdcdee6c9791f8ff6ea3442c3c0b8bcc58/14655ec778e918fb39c6c1a93817a0573a5ce5c8d293fb30578d5d24568ee1a1.o",
+          "reused": false
+        },
+        {
+          "name": "workload",
+          "symbol": "myl_f_7f6c7360bf24fccf4b59cf9e9a9dfc99fd6a3b085fb2260ef707a34067bb911e",
+          "key": "1f6d5dbf22aff5f7b0d49959588fd18dd374bf3baf56a9c1fff0c39ed421eb19",
+          "object": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cache-gap-allocator-qbe-rc/objects/8429f1ef99f8017daac73e50e97a46bdcdee6c9791f8ff6ea3442c3c0b8bcc58/14655ec778e918fb39c6c1a93817a0573a5ce5c8d293fb30578d5d24568ee1a1.o",
+          "reused": false
+        },
+        {
+          "name": "make",
+          "symbol": "myl_f_d05aa2a15fb3c40efeeb03bec445393f00074484cf01c8fb2da90ca6695a5531",
+          "key": "18830ba2523df43384339ea4f5e5c7e71a8892859ae57eabd9e67c94d143637d",
+          "object": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cache-gap-allocator-qbe-rc/objects/8429f1ef99f8017daac73e50e97a46bdcdee6c9791f8ff6ea3442c3c0b8bcc58/14655ec778e918fb39c6c1a93817a0573a5ce5c8d293fb30578d5d24568ee1a1.o",
+          "reused": false
+        }
+      ],
+      "runtime_object": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cache-gap-allocator-qbe-rc/objects/8429f1ef99f8017daac73e50e97a46bdcdee6c9791f8ff6ea3442c3c0b8bcc58/2969317dff2ef7ab21d47bf69f9d17593b6280e69022f9688ae20ce4d62bda65.a"
+    },
+    "perf_stats": "Aggregated stats:\n               TOTAL events:       7375\n                COMM events:          3  ( 0.0%)\n                EXIT events:          1  ( 0.0%)\n            THROTTLE events:       2451  (33.2%)\n          UNTHROTTLE events:       2451  (33.2%)\n              SAMPLE events:       2451  (33.2%)\n               MMAP2 events:          9  ( 0.1%)\n      FINISHED_ROUND events:          2  ( 0.0%)\n            ID_INDEX events:          1  ( 0.0%)\n          THREAD_MAP events:          1  ( 0.0%)\n             CPU_MAP events:          1  ( 0.0%)\n        EVENT_UPDATE events:          2  ( 0.0%)\n           TIME_CONV events:          1  ( 0.0%)\n       FINISHED_INIT events:          1  ( 0.0%)\ncpu_core/instructions/u stats:\n              SAMPLE events:       2451\n",
+    "stderr": ""
+  },
+  "gap-allocator-qbe-gc-repeat": {
+    "sha256": "6dab095c37b16439703d4ec7048ac41f9229376a8155f312a1c4ea5d2dcffd9f",
+    "manifest": {
+      "link_identity": "4031b6043397dcdad2657ceb2fe3877e6efc59fe2047c1a52528a4d7a2efd2e5",
+      "version": "qbe-manifest-v1",
+      "abi": "mylang-qbe-native-v8",
+      "entry": "myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605",
+      "backend": "qbe",
+      "optimization": "default",
+      "lto": false,
+      "thin_lto": false,
+      "functions": [
+        {
+          "name": "main",
+          "symbol": "myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605",
+          "key": "33e03d767fe12c57e74c2559632fef33687a4b3f7ceb5c4424710ae7221110b8",
+          "object": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cache-gap-allocator-qbe-gc/objects/29bb9f6b13a89880cf426f0504c25e1f796c2c4ba2ce073ca54b0b4cf1071e6e/51e0dc1f4f2b9ffa4179f2d870d2071d8a72a33be9f9ca1a628fb4cb82f2e5a9.o",
+          "reused": false
+        },
+        {
+          "name": "check",
+          "symbol": "myl_f_20f65c28671b40937c5bf23acc7c6f37e5a5ec0622e347b57685725df5ba9e50",
+          "key": "a886271f02c3f2cd933aa5800f7af275f038febebd95124ee11a7d9d5b8f083e",
+          "object": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cache-gap-allocator-qbe-gc/objects/29bb9f6b13a89880cf426f0504c25e1f796c2c4ba2ce073ca54b0b4cf1071e6e/51e0dc1f4f2b9ffa4179f2d870d2071d8a72a33be9f9ca1a628fb4cb82f2e5a9.o",
+          "reused": false
+        },
+        {
+          "name": "workload",
+          "symbol": "myl_f_7f6c7360bf24fccf4b59cf9e9a9dfc99fd6a3b085fb2260ef707a34067bb911e",
+          "key": "0c5c5f2ea3f28880362db41768c1f0d274ffafcc0575c204b2d793eb98fd183d",
+          "object": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cache-gap-allocator-qbe-gc/objects/29bb9f6b13a89880cf426f0504c25e1f796c2c4ba2ce073ca54b0b4cf1071e6e/51e0dc1f4f2b9ffa4179f2d870d2071d8a72a33be9f9ca1a628fb4cb82f2e5a9.o",
+          "reused": false
+        },
+        {
+          "name": "make",
+          "symbol": "myl_f_d05aa2a15fb3c40efeeb03bec445393f00074484cf01c8fb2da90ca6695a5531",
+          "key": "455cf7cf3c0e427aaf694a9d95e8d65f1201f7cc468843eecf869653bd4457fa",
+          "object": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cache-gap-allocator-qbe-gc/objects/29bb9f6b13a89880cf426f0504c25e1f796c2c4ba2ce073ca54b0b4cf1071e6e/51e0dc1f4f2b9ffa4179f2d870d2071d8a72a33be9f9ca1a628fb4cb82f2e5a9.o",
+          "reused": false
+        }
+      ],
+      "runtime_object": "/home/epentland/ai/canopy/mylang-worktrees/d9-physical-borrow-after-astra/.tmp-physical/install-accepted/lib/mylang-runtime/0306022517434d7db30e89d0421508b555aa41ec579b046bff979c84e586a6d3.a"
+    },
+    "perf_stats": "Aggregated stats:\n               TOTAL events:        980\n                COMM events:          3  ( 0.3%)\n                EXIT events:          1  ( 0.1%)\n            THROTTLE events:        320  (32.7%)\n          UNTHROTTLE events:        319  (32.6%)\n              SAMPLE events:        320  (32.7%)\n               MMAP2 events:          9  ( 0.9%)\n      FINISHED_ROUND events:          1  ( 0.1%)\n            ID_INDEX events:          1  ( 0.1%)\n          THREAD_MAP events:          1  ( 0.1%)\n             CPU_MAP events:          1  ( 0.1%)\n        EVENT_UPDATE events:          2  ( 0.2%)\n           TIME_CONV events:          1  ( 0.1%)\n       FINISHED_INIT events:          1  ( 0.1%)\ncpu_core/instructions/u stats:\n              SAMPLE events:        320\n",
+    "stderr": ""
+  },
+  "gap-allocator-llvm-rc-repeat": {
+    "sha256": "ddb66d5334f9698096a177b417b950208325a40ec124bbbc2c7ce3742c6d1240",
+    "manifest": {
+      "link_identity": "d5090d9e6e6e7086e0ab7038fcb99e15caaa9da79e4edbbae23ef997d292670a",
+      "version": "qbe-manifest-v1",
+      "abi": "mylang-qbe-native-v9",
+      "entry": "myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605",
+      "backend": "llvm",
+      "optimization": "3",
+      "lto": true,
+      "thin_lto": false,
+      "functions": [
+        {
+          "name": "main",
+          "symbol": "myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605",
+          "key": "21992d0997676aded36858e71e8a99f60a9de63e42b35b307121a5d0c837a0c2",
+          "object": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cache-gap-allocator-llvm-rc/objects/8429f1ef99f8017daac73e50e97a46bdcdee6c9791f8ff6ea3442c3c0b8bcc58/21992d0997676aded36858e71e8a99f60a9de63e42b35b307121a5d0c837a0c2.o",
+          "reused": false
+        },
+        {
+          "name": "check",
+          "symbol": "myl_f_20f65c28671b40937c5bf23acc7c6f37e5a5ec0622e347b57685725df5ba9e50",
+          "key": "9769dd0db841926a529aa32304d796006e78f6bc12dc6815add4af43eb5db043",
+          "object": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cache-gap-allocator-llvm-rc/objects/8429f1ef99f8017daac73e50e97a46bdcdee6c9791f8ff6ea3442c3c0b8bcc58/9769dd0db841926a529aa32304d796006e78f6bc12dc6815add4af43eb5db043.o",
+          "reused": true
+        },
+        {
+          "name": "workload",
+          "symbol": "myl_f_7f6c7360bf24fccf4b59cf9e9a9dfc99fd6a3b085fb2260ef707a34067bb911e",
+          "key": "915416e1e8ae242f318c78761370b7fc7ad3a00eb2f547dbd062bc9bcceb7dbf",
+          "object": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cache-gap-allocator-llvm-rc/objects/8429f1ef99f8017daac73e50e97a46bdcdee6c9791f8ff6ea3442c3c0b8bcc58/915416e1e8ae242f318c78761370b7fc7ad3a00eb2f547dbd062bc9bcceb7dbf.o",
+          "reused": false
+        },
+        {
+          "name": "make",
+          "symbol": "myl_f_d05aa2a15fb3c40efeeb03bec445393f00074484cf01c8fb2da90ca6695a5531",
+          "key": "01694e5d5a6e2945214f3a78275d0a21b382cbcb71ddef765a152d4983fda431",
+          "object": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cache-gap-allocator-llvm-rc/objects/8429f1ef99f8017daac73e50e97a46bdcdee6c9791f8ff6ea3442c3c0b8bcc58/01694e5d5a6e2945214f3a78275d0a21b382cbcb71ddef765a152d4983fda431.o",
+          "reused": true
+        }
+      ],
+      "runtime_object": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cache-gap-allocator-llvm-rc/objects/8429f1ef99f8017daac73e50e97a46bdcdee6c9791f8ff6ea3442c3c0b8bcc58/10b3e8edd52f813d9c1230d8b0a67cf13ea3ded3a02aff3fdb7a345afca763c1.a"
+    },
+    "perf_stats": "Aggregated stats:\n               TOTAL events:       3972\n                COMM events:          3  ( 0.1%)\n                EXIT events:          1  ( 0.0%)\n            THROTTLE events:       1317  (33.2%)\n          UNTHROTTLE events:       1317  (33.2%)\n              SAMPLE events:       1317  (33.2%)\n               MMAP2 events:          9  ( 0.2%)\n      FINISHED_ROUND events:          1  ( 0.0%)\n            ID_INDEX events:          1  ( 0.0%)\n          THREAD_MAP events:          1  ( 0.0%)\n             CPU_MAP events:          1  ( 0.0%)\n        EVENT_UPDATE events:          2  ( 0.1%)\n           TIME_CONV events:          1  ( 0.0%)\n       FINISHED_INIT events:          1  ( 0.0%)\ncpu_core/instructions/u stats:\n              SAMPLE events:       1317\n",
+    "stderr": ""
+  },
+  "gap-allocator-llvm-gc-repeat": {
+    "sha256": "72a1a0f69ed0f270ed9f60d266b774489d72bcf8b474be7f7db3ff5f26758948",
+    "manifest": {
+      "link_identity": "9f637b679b477e3c95d4ad88ef0d264ee31a69580a44bb068dbd36f12349e679",
+      "version": "qbe-manifest-v1",
+      "abi": "mylang-qbe-native-v8",
+      "entry": "myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605",
+      "backend": "llvm",
+      "optimization": "3",
+      "lto": true,
+      "thin_lto": false,
+      "functions": [
+        {
+          "name": "main",
+          "symbol": "myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605",
+          "key": "77f243872ca7f619d32c7c3d68b4bd2a406ad987869f132e6573b81f5cdc83c1",
+          "object": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cache-gap-allocator-llvm-gc/objects/29bb9f6b13a89880cf426f0504c25e1f796c2c4ba2ce073ca54b0b4cf1071e6e/77f243872ca7f619d32c7c3d68b4bd2a406ad987869f132e6573b81f5cdc83c1.o",
+          "reused": false
+        },
+        {
+          "name": "check",
+          "symbol": "myl_f_20f65c28671b40937c5bf23acc7c6f37e5a5ec0622e347b57685725df5ba9e50",
+          "key": "aea1a241a5d26cf69f9505c42f17f4f3ed4348955e027a9138cd747f2e01b96e",
+          "object": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cache-gap-allocator-llvm-gc/objects/29bb9f6b13a89880cf426f0504c25e1f796c2c4ba2ce073ca54b0b4cf1071e6e/aea1a241a5d26cf69f9505c42f17f4f3ed4348955e027a9138cd747f2e01b96e.o",
+          "reused": true
+        },
+        {
+          "name": "workload",
+          "symbol": "myl_f_7f6c7360bf24fccf4b59cf9e9a9dfc99fd6a3b085fb2260ef707a34067bb911e",
+          "key": "76d7a78ec8b21e6f884613308b11033d173287e929f61ec74718e8604059293a",
+          "object": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cache-gap-allocator-llvm-gc/objects/29bb9f6b13a89880cf426f0504c25e1f796c2c4ba2ce073ca54b0b4cf1071e6e/76d7a78ec8b21e6f884613308b11033d173287e929f61ec74718e8604059293a.o",
+          "reused": false
+        },
+        {
+          "name": "make",
+          "symbol": "myl_f_d05aa2a15fb3c40efeeb03bec445393f00074484cf01c8fb2da90ca6695a5531",
+          "key": "298586c7325941683e7e9449d2e21195bed3745e75a0f345a389b472ee4b461b",
+          "object": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/cache-gap-allocator-llvm-gc/objects/29bb9f6b13a89880cf426f0504c25e1f796c2c4ba2ce073ca54b0b4cf1071e6e/298586c7325941683e7e9449d2e21195bed3745e75a0f345a389b472ee4b461b.o",
+          "reused": true
+        }
+      ],
+      "runtime_object": "/home/epentland/ai/canopy/mylang-worktrees/d9-physical-borrow-after-astra/.tmp-physical/install-accepted/lib/mylang-runtime/51fbe7a7c6d3ae90296d7174cc317f22b80b36f40ffcec0091061aeb9907780f.a"
+    },
+    "perf_stats": "Aggregated stats:\n               TOTAL events:        840\n                COMM events:          3  ( 0.4%)\n                EXIT events:          1  ( 0.1%)\n            THROTTLE events:        273  (32.5%)\n          UNTHROTTLE events:        273  (32.5%)\n              SAMPLE events:        273  (32.5%)\n               MMAP2 events:          9  ( 1.1%)\n      FINISHED_ROUND events:          1  ( 0.1%)\n            ID_INDEX events:          1  ( 0.1%)\n          THREAD_MAP events:          1  ( 0.1%)\n             CPU_MAP events:          1  ( 0.1%)\n        EVENT_UPDATE events:          2  ( 0.2%)\n           TIME_CONV events:          1  ( 0.1%)\n       FINISHED_INIT events:          1  ( 0.1%)\ncpu_core/instructions/u stats:\n              SAMPLE events:        273\n",
+    "stderr": ""
+  }
+}

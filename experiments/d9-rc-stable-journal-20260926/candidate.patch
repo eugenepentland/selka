@@ -1,0 +1,142 @@
+diff --git a/SPEC.md b/SPEC.md
+index b32062a2..4838116f 100644
+--- a/SPEC.md
++++ b/SPEC.md
+@@ -1358,3 +1358,5 @@ host failure in one worker leaves the units the other workers hold running.
+ - [RC-NESTED-READ-LOAN-1] A managed collection read may lend its result directly into a single-definition compiler receiver when the complete projected chain is anchored by one stable named root and every receiver interval contains only scalar operations and further certified reads. Named rows, published results, callbacks, mutation, arena changes and dictionary hold roles retain owned publication. The physical plan keeps the root until the final scalar read; bounded or cyclic proof refusal retains ordinary ownership.
+ 
+ - [RC-PRODUCED-OWNER-1] An immediately preceding unconditional ordinary-owner producer may skip its operand initialization test. Branch entries, held mappings, borrowed entries and other producers keep guarded transfers; pin, arena and failure behavior stays on the existing typed TAKE path.
++
++- [RC-STABLE-JOURNAL-1] Operand and pending RC journal entries retain their entry-time storage and guard addresses across typed publications. Type and ownership-role flags still change before initialization, so reused stack positions and held/ordinary transitions clean up their current values.
+diff --git a/src/qbe_rc_frame.zig b/src/qbe_rc_frame.zig
+index 576d58dc..41933325 100644
+--- a/src/qbe_rc_frame.zig
++++ b/src/qbe_rc_frame.zig
+@@ -106,18 +106,30 @@ pub fn guard(comptime E: type, self: *E, index: usize) Error!usize {
+ }
+ /// Publish metadata while the entry has no initialized token.
+ pub fn entry(comptime E: type, self: *E, index: usize, ty: typed.Type, address: usize) Error!void {
+-    const state = get(E, self) orelse return error.InternalError;
+-    const shape = state.catalog.get(ty) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError;
+-    const pointer = self.temp();
++    const pointer = try typedEntry(E, self, index, ty);
+     const field = self.temp();
+-    const flag = @as(u32, @intFromBool(shape.unique_drop)) | (@as(u32, @intFromBool(shape.counted)) << 1);
+-    try self.print(" %v{d} =l add %rcentries, {d}\n storel extern ${s}, %v{d}\n", .{ pointer, index * entry_bytes, try self.descriptor(ty), pointer });
+     try self.print(" %v{d} =l add %v{d}, 8\n storel %v{d}, %v{d}\n", .{ field, pointer, address, field });
+     const at_guard = try self.address(pointer, 16);
+     const guard_pointer = try guard(E, self, index);
+     try self.print(" storel %v{d}, %v{d}\n", .{ guard_pointer, at_guard });
++}
++/// Change an operand or pending value's type while preserving its fixed addresses.
++/// Entry initialized these address/guard pointers before linking the frame; all
++/// later publications in these slots use the same physical operand/work storage.
++pub fn stableEntry(comptime E: type, self: *E, index: usize, ty: typed.Type) Error!void {
++    if (index < localCount(E, self) or index > pending(E, self)) return error.InternalError;
++    _ = try typedEntry(E, self, index, ty);
++}
++fn typedEntry(comptime E: type, self: *E, index: usize, ty: typed.Type) Error!usize {
++    const state = get(E, self) orelse return error.InternalError;
++    const shape = state.catalog.get(ty) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError;
++    const pointer = self.temp();
++    const flag = @as(u32, @intFromBool(shape.unique_drop)) | (@as(u32, @intFromBool(shape.counted)) << 1);
++    try self.print(" %v{d} =l add %rcentries, {d}\n storel extern ${s}, %v{d}\n", .{ pointer, index * entry_bytes, try self.descriptor(ty), pointer });
+     try self.print(" storew {d}, %v{d}\n", .{ flag, try self.address(pointer, 24) });
++    return pointer;
+ }
++
+ /// Clear/drop one dynamic typed entry using the runtime's unique/count ordering.
+ pub fn drop(comptime E: type, self: *E, index: usize) Error!void {
+     const live = self.temp();
+diff --git a/src/qbe_rc_values.zig b/src/qbe_rc_values.zig
+index f799e6ba..86a4f6d9 100644
+--- a/src/qbe_rc_values.zig
++++ b/src/qbe_rc_values.zig
+@@ -41,13 +41,13 @@ pub fn copied(comptime E: type, self: *E, ty: typed.Type, address: usize) Error!
+     const region = self.temp();
+     try self.print(region_mark, .{region});
+     try slots.Lower(E).transfer(self, .{ .ty = ty, .destination = work, .source = address, .region = region, .mode = .copy_empty });
+-    try markWork(E, self, ty, work);
++    try markWork(E, self, ty);
+ }
+ /// Adopt the one edge returned by a runtime producer without another acquire.
+ pub fn adopted(comptime E: type, self: *E, ty: typed.Type, address: usize) Error!void {
+     const work = try workAddress(E, self);
+     try self.print(blit_value, .{ address, work, (try self.layout(ty)).size });
+-    try markWork(E, self, ty, work);
++    try markWork(E, self, ty);
+ }
+ /// Materialize a result, drop its inputs, then relocate its obligation to the stack.
+ pub fn finish(comptime E: type, self: *E, result: Result) Error!void {
+@@ -76,7 +76,7 @@ pub fn publish(comptime E: type, self: *E, ty: typed.Type, index: usize) Error!v
+     const address = try operand(E, self, index);
+     const work = try workAddress(E, self);
+     try self.print(blit_value, .{ work, address, (try self.layout(ty)).size });
+-    try frame.entry(E, self, journalIndex(E, self, index), ty, address);
++    try frame.stableEntry(E, self, journalIndex(E, self, index), ty);
+     try frame.initialized(E, self, frame.pending(E, self), false);
+     try frame.initialized(E, self, journalIndex(E, self, index), true);
+     try self.store(index, try self.readValue(address, ty));
+@@ -91,8 +91,8 @@ pub fn workAddress(comptime E: type, self: *E) Error!usize {
+     try self.print(" %v{d} =l copy %rcwork\n", .{work});
+     return work;
+ }
+-fn markWork(comptime E: type, self: *E, ty: typed.Type, work: usize) Error!void {
+-    try frame.entry(E, self, frame.pending(E, self), ty, work);
++fn markWork(comptime E: type, self: *E, ty: typed.Type) Error!void {
++    try frame.stableEntry(E, self, frame.pending(E, self), ty);
+     try frame.initialized(E, self, frame.pending(E, self), true);
+ }
+ 
+@@ -150,7 +150,7 @@ fn prepareOwned(comptime E: type, self: *E, ty: typed.Type, address: usize, jour
+     try self.print(region_mark, .{region});
+     try slots.Lower(E).transfer(self, .{ .ty = ty, .destination = work, .source = address, .region = region, .mode = .take_empty });
+     try frame.initialized(E, self, journal_index, false);
+-    try markWork(E, self, ty, work);
++    try markWork(E, self, ty);
+ }
+ 
+ /// Physical moves consume only an initialized owner; a borrowed local or operand
+diff --git a/tests/lang/rc_journal_types.my b/tests/lang/rc_journal_types.my
+new file mode 100644
+index 00000000..6cc542b3
+--- /dev/null
++++ b/tests/lang/rc_journal_types.my
+@@ -0,0 +1,37 @@
++module rc_journal_types
++
++record Mixed:
++    values: list[int]
++    view: DictValues[int, list[int]]
++
++
++def rebuilt(mapping: dict[int, list[int]], count: int) -> Mixed:
++    result = Mixed([0], mapping.values())
++    for index in range(count):
++        if index % 2 == 0:
++            result = Mixed([index, index + 1], mapping.values())
++        else:
++            saved = result
++            result = Mixed(list(saved.view)[0], mapping.values())
++    return result
++
++
++# spec: RC-STABLE-JOURNAL-1
++public def test_reused_constructor_values_keep_their_current_cleanup_roles() -> bool:
++    mapping = {1: [7, 8]}
++    result = rebuilt(mapping, 6)
++    mapping[1] = [9]
++    return result.values == [7, 8] and list(result.view) == [[9]]
++
++
++def escaped() -> Mixed:
++    with arena() as scratch:
++        mapping = {1: [3, 4]}
++        value = rebuilt(mapping, 5)
++        return scratch.escape(value)
++
++
++# spec-case: RC-STABLE-JOURNAL-1
++public def test_reused_owners_and_held_values_escape_with_valid_storage() -> bool:
++    result = escaped()
++    return result.values == [4, 5] and list(result.view) == [[3, 4]]

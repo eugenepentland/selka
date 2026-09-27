@@ -18,6 +18,8 @@
 //! back edge and a failing guard name.
 const std = @import("std");
 const facts = @import("qbe_loop_facts.zig");
+const read_version = @import("qbe_rc_read_version.zig");
+const operands = @import("qbe_loop_operands.zig");
 
 /// Errors reported while emitting native operations.
 pub const Error = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
@@ -37,6 +39,8 @@ pub const Active = struct {
     /// For a loop with a presized append, the temporaries carrying its list's
     /// length and generation from one iteration to the next.
     appending: ?Appending = null,
+    /// Exact RC read effects admitted only while emitting this guarded copy.
+    read: ?read_version.Certificate = null,
 };
 
 /// The mutable temporaries a presized append advances.
@@ -50,12 +54,22 @@ pub fn Lower(comptime E: type) type {
         /// out to allocate after all, so the caller lowers the loop once, as
         /// before.
         pub fn emit(self: *E, loop: *const facts.Loop) Error!bool {
+            return atHead(E, self, loop, emitHere);
+        }
+
+        fn emitHere(self: *E, loop: *const facts.Loop) Error!bool {
+            // Existing hoist/scalar admissions keep their original protocol.
+            const previous = !@import("runtime_mode.zig").enabled() or
+                @import("qbe_rc_hoist.zig").permitsVersion(E, self, loop.head, loop.back) or
+                @import("qbe_rc_scalar_version.zig").proven(E, self, loop.head, loop.back);
+            const read_proof = if (previous) null else read_version.certify(E, self, loop.head, loop.back);
+            if (!previous and read_proof == null) return false;
             const nodes = self.loop_plan.nodes;
             const values = try self.allocator.alloc(?usize, nodes.len);
             @memset(values, null);
             const storages = try self.allocator.alloc(?usize, nodes.len);
             @memset(storages, null);
-            var active: Active = .{ .loop = loop, .values = values, .storages = storages };
+            var active: Active = .{ .loop = loop, .values = values, .storages = storages, .read = read_proof };
             const main = self.output;
             self.output = .init(self.allocator);
             const fused = self.fused;
@@ -66,6 +80,7 @@ pub fn Lower(comptime E: type) type {
                 self.output = main;
             };
             try self.headerLabel(loop.head, "i");
+            if (read_proof) |proof| try read_version.guard(E, self, proof, loop.head);
             for (loop.guard) |step| try guardStep(self, &active, step);
             // Everything the copy reads from the guard is computed once the
             // whole guard has held, so an element is read only after the step
@@ -85,10 +100,15 @@ pub fn Lower(comptime E: type) type {
             }
             const text = self.output.writer.buffer[0..self.output.writer.end];
             if (self.copyAllocates(text[guard_end..])) return false;
+            if (read_proof != null and !read_version.quietCopy(text[guard_end..])) return false;
+            const isolated = operands.certify(E, self, loop, read_proof, text[guard_end..]);
             keep = true;
             var copy = self.output;
             self.output = main;
-            try self.print("{s}", .{copy.writer.buffer[0..copy.writer.end]});
+            try self.print("{s}", .{copy.writer.buffer[0..guard_end]});
+            if (isolated) try operands.begin(E, self, loop);
+            try self.print("{s}", .{copy.writer.buffer[guard_end..copy.writer.end]});
+            if (isolated) try operands.end(E, self, loop);
             copy.deinit();
             return true;
         }
@@ -228,4 +248,49 @@ pub fn Lower(comptime E: type) type {
             return self.program.records[collection.recordIndex()].shape.buffer orelse error.InternalError;
         }
     };
+}
+
+// Guard queries use the header's physical proof context, never the preceding
+// instruction's PC. Trial emission may advance it; restore on every outcome.
+fn atHead(comptime E: type, self: *E, loop: *const facts.Loop, comptime body: fn (*E, *const facts.Loop) Error!bool) Error!bool {
+    const saved = self.pc;
+    self.pc = loop.head;
+    defer self.pc = saved;
+    return body(self, loop);
+}
+
+const PcProbe = struct {
+    pc: usize,
+    observed: ?usize = null,
+    outcome: enum { accepted, refused, failed },
+
+    fn guard(self: *PcProbe, loop: *const facts.Loop) Error!bool {
+        self.observed = self.pc;
+        // Model a speculative body reaching its final operation before return.
+        self.pc = loop.back;
+        return switch (self.outcome) {
+            .accepted => true,
+            .refused => false,
+            .failed => error.OutOfMemory,
+        };
+    }
+};
+
+// spec-case: QBE-LOOP-VERSION-1
+// spec-case: RC-DICTIONARY-EMPTY-DROPS-1
+test "RC loop guard PC observes head and restores after success refusal and error" {
+    const t = std.testing;
+    const loop: facts.Loop = .{ .head = 40, .back = 60, .bits = 8, .guard = &.{}, .actions = &.{} };
+    var probe: PcProbe = .{ .pc = 39, .outcome = .accepted };
+    try t.expect(try atHead(PcProbe, &probe, &loop, PcProbe.guard));
+    try t.expectEqual(@as(?usize, 40), probe.observed);
+    try t.expectEqual(@as(usize, 39), probe.pc);
+    probe.outcome = .refused;
+    try t.expect(!try atHead(PcProbe, &probe, &loop, PcProbe.guard));
+    try t.expectEqual(@as(?usize, 40), probe.observed);
+    try t.expectEqual(@as(usize, 39), probe.pc);
+    probe.outcome = .failed;
+    try t.expectError(error.OutOfMemory, atHead(PcProbe, &probe, &loop, PcProbe.guard));
+    try t.expectEqual(@as(?usize, 40), probe.observed);
+    try t.expectEqual(@as(usize, 39), probe.pc);
 }

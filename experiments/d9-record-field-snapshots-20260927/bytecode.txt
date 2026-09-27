@@ -1,0 +1,45 @@
+record State type#19
+  field 0: values: List<i64>
+list List<i64> type#20
+  element i64 (managed)
+list str type#21
+  element u32 (managed)
+list bytes type#22
+  element u8 (managed)
+domain float type#23
+  backing u64 (private)
+function main(out: stream_cap) -> i64
+  effects {managed_allocation, output}
+  0000  BEGIN_ARENA locals=1  ; 5:5
+  0001  PUSH_I64 1  ; 6:23
+  0002  ACQUIRE_BUFFER type#20  ; 6:23
+  0003  STORE_LOCAL 1  ; 6:23
+  0004  PUSH_I64 12  ; 6:24
+  0005  BUFFER_append local=1 -> unit  ; 6:23
+  0006  POP  ; 6:23
+  0007  LOAD_LOCAL 1  ; 6:23
+  0008  VALUE_COPY List<i64> store  ; 6:23
+  0009  MAKE_RECORD type#19 fields=1 order={ 0 }  ; 6:17
+  0010  STORE_LOCAL 2  ; 6:9
+  0011  LOAD_LOCAL 2  ; 7:17
+  0012  VALUE_COPY State assign  ; 7:17
+  0013  STORE_LOCAL 3  ; 7:9
+  0014  LOAD_LOCAL 2  ; 8:9
+  0015  GET_FIELD 0  ; 8:9
+  0016  STORE_LOCAL 4  ; 8:9
+  0017  PUSH_I64 14  ; 8:29
+  0018  BUFFER_append local=4 -> unit  ; 8:9
+  0019  POP  ; 8:9
+  0020  LOAD_LOCAL 0  ; 9:9
+  0021  LOAD_LOCAL 3  ; 9:19
+  0022  GET_FIELD 0  ; 9:19
+  0023  PRINT 1 sep=false end=false stream=true debug=false  ; 9:9
+  0024  POP  ; 9:9
+  0025  LOAD_LOCAL 0  ; 10:9
+  0026  LOAD_LOCAL 2  ; 10:19
+  0027  GET_FIELD 0  ; 10:19
+  0028  PRINT 1 sep=false end=false stream=true debug=false  ; 10:9
+  0029  POP  ; 10:9
+  0030  END_ARENA locals=1  ; 5:5
+  0031  PUSH_I64 0  ; 11:12
+  0032  RET  ; 11:5

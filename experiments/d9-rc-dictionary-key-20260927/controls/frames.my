@@ -1,0 +1,12 @@
+def descend(depth: int) -> int:
+    keys = ["a" + "-key"]
+    counts: dict[str, int] = {}
+    key = keys[0]
+    counts[key] = 7
+    if depth > 0:
+        return descend(depth - 1) + counts["a-key"]
+    return counts["a-key"]
+def main(out: Stream) -> int:
+    out.print("before")
+    out.print(descend(100000))
+    return 0

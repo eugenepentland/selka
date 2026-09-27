@@ -1,0 +1,341 @@
+{
+  "note": "Exact joined5b876 IL. Source location hints cross-referenced with earlier identical guest source emission; its IL is not claimed byte-identical. Type declarations use identical hashed native identities.",
+  "sites": [
+    {
+      "function": "heap::set_object_field",
+      "pc": 1,
+      "il_line": 235,
+      "type": "myl_t_10ba51025942802e98cbdad911475b594471021f660d3c2b48989b42d51368d2",
+      "native_type": "const myl_native_type myl_t_10ba51025942802e98cbdad911475b594471021f660d3c2b48989b42d51368d2 = {.size=8,.alignment=8,.fields=NULL,.field_count=0,.count=1,.stride=0,.kind=MYL_NATIVE_POINTER,.collection_kind=1,.element=&myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14,.key=NULL,.trace_fields=NULL,.trace_field_count=0,.trace_mode=MYL_NATIVE_TRACE_FIELDS,.cell=0,.scan=NULL,.scan_count=0};",
+      "source_location_hint": {
+        "path": "heap.my",
+        "line": 220,
+        "column": 11
+      }
+    },
+    {
+      "function": "heap::set_object_field",
+      "pc": 14,
+      "il_line": 359,
+      "type": "myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14",
+      "native_type": "const myl_native_type myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14 = {.size=56,.alignment=8,.fields=myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_fields,.field_count=10,.count=1,.stride=0,.kind=MYL_NATIVE_VARIANT,.collection_kind=0,.element=NULL,.key=NULL,.trace_fields=myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_trace_fields,.trace_field_count=6,.trace_mode=MYL_NATIVE_TRACE_FIELDS,.cell=0,.scan=myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_scan,.scan_count=8};",
+      "source_location_hint": {
+        "path": "heap.my",
+        "line": 220,
+        "column": 11
+      }
+    },
+    {
+      "function": "heap::set_object_field",
+      "pc": 23,
+      "il_line": 719,
+      "type": "myl_t_81d71c98b196ce876b8748e8f5e1c439a764a7854aeb5e4ef7865d0716f2ecef",
+      "native_type": "const myl_native_type myl_t_81d71c98b196ce876b8748e8f5e1c439a764a7854aeb5e4ef7865d0716f2ecef = {.size=16,.alignment=8,.fields=myl_t_81d71c98b196ce876b8748e8f5e1c439a764a7854aeb5e4ef7865d0716f2ecef_fields,.field_count=2,.count=1,.stride=0,.kind=MYL_NATIVE_RECORD,.collection_kind=0,.element=NULL,.key=NULL,.trace_fields=myl_t_81d71c98b196ce876b8748e8f5e1c439a764a7854aeb5e4ef7865d0716f2ecef_trace_fields,.trace_field_count=1,.trace_mode=MYL_NATIVE_TRACE_FIELDS,.cell=0,.scan=myl_t_81d71c98b196ce876b8748e8f5e1c439a764a7854aeb5e4ef7865d0716f2ecef_scan,.scan_count=1};",
+      "source_location_hint": {
+        "path": "heap.my",
+        "line": 223,
+        "column": 22
+      }
+    },
+    {
+      "function": "heap::set_object_field",
+      "pc": 37,
+      "il_line": 1124,
+      "type": "myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14",
+      "native_type": "const myl_native_type myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14 = {.size=56,.alignment=8,.fields=myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_fields,.field_count=10,.count=1,.stride=0,.kind=MYL_NATIVE_VARIANT,.collection_kind=0,.element=NULL,.key=NULL,.trace_fields=myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_trace_fields,.trace_field_count=6,.trace_mode=MYL_NATIVE_TRACE_FIELDS,.cell=0,.scan=myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_scan,.scan_count=8};",
+      "source_location_hint": {
+        "path": "heap.my",
+        "line": 225,
+        "column": 13
+      }
+    },
+    {
+      "function": "vm::get_property",
+      "pc": 10,
+      "il_line": 280,
+      "type": "myl_t_10ba51025942802e98cbdad911475b594471021f660d3c2b48989b42d51368d2",
+      "native_type": "const myl_native_type myl_t_10ba51025942802e98cbdad911475b594471021f660d3c2b48989b42d51368d2 = {.size=8,.alignment=8,.fields=NULL,.field_count=0,.count=1,.stride=0,.kind=MYL_NATIVE_POINTER,.collection_kind=1,.element=&myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14,.key=NULL,.trace_fields=NULL,.trace_field_count=0,.trace_mode=MYL_NATIVE_TRACE_FIELDS,.cell=0,.scan=NULL,.scan_count=0};",
+      "source_location_hint": {
+        "path": "vm.my",
+        "line": 350,
+        "column": 19
+      }
+    },
+    {
+      "function": "vm::get_property",
+      "pc": 11,
+      "il_line": 379,
+      "type": "myl_t_10ba51025942802e98cbdad911475b594471021f660d3c2b48989b42d51368d2",
+      "native_type": "const myl_native_type myl_t_10ba51025942802e98cbdad911475b594471021f660d3c2b48989b42d51368d2 = {.size=8,.alignment=8,.fields=NULL,.field_count=0,.count=1,.stride=0,.kind=MYL_NATIVE_POINTER,.collection_kind=1,.element=&myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14,.key=NULL,.trace_fields=NULL,.trace_field_count=0,.trace_mode=MYL_NATIVE_TRACE_FIELDS,.cell=0,.scan=NULL,.scan_count=0};",
+      "source_location_hint": {
+        "path": "vm.my",
+        "line": 350,
+        "column": 19
+      }
+    },
+    {
+      "function": "vm::get_property",
+      "pc": 24,
+      "il_line": 503,
+      "type": "myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14",
+      "native_type": "const myl_native_type myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14 = {.size=56,.alignment=8,.fields=myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_fields,.field_count=10,.count=1,.stride=0,.kind=MYL_NATIVE_VARIANT,.collection_kind=0,.element=NULL,.key=NULL,.trace_fields=myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_trace_fields,.trace_field_count=6,.trace_mode=MYL_NATIVE_TRACE_FIELDS,.cell=0,.scan=myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_scan,.scan_count=8};",
+      "source_location_hint": {
+        "path": "vm.my",
+        "line": 350,
+        "column": 19
+      }
+    },
+    {
+      "function": "vm::get_property",
+      "pc": 30,
+      "il_line": 848,
+      "type": "myl_t_81d71c98b196ce876b8748e8f5e1c439a764a7854aeb5e4ef7865d0716f2ecef",
+      "native_type": "const myl_native_type myl_t_81d71c98b196ce876b8748e8f5e1c439a764a7854aeb5e4ef7865d0716f2ecef = {.size=16,.alignment=8,.fields=myl_t_81d71c98b196ce876b8748e8f5e1c439a764a7854aeb5e4ef7865d0716f2ecef_fields,.field_count=2,.count=1,.stride=0,.kind=MYL_NATIVE_RECORD,.collection_kind=0,.element=NULL,.key=NULL,.trace_fields=myl_t_81d71c98b196ce876b8748e8f5e1c439a764a7854aeb5e4ef7865d0716f2ecef_trace_fields,.trace_field_count=1,.trace_mode=MYL_NATIVE_TRACE_FIELDS,.cell=0,.scan=myl_t_81d71c98b196ce876b8748e8f5e1c439a764a7854aeb5e4ef7865d0716f2ecef_scan,.scan_count=1};",
+      "source_location_hint": {
+        "path": "vm.my",
+        "line": 352,
+        "column": 37
+      }
+    },
+    {
+      "function": "heap::string_obj",
+      "pc": 1,
+      "il_line": 115,
+      "type": "myl_t_10ba51025942802e98cbdad911475b594471021f660d3c2b48989b42d51368d2",
+      "native_type": "const myl_native_type myl_t_10ba51025942802e98cbdad911475b594471021f660d3c2b48989b42d51368d2 = {.size=8,.alignment=8,.fields=NULL,.field_count=0,.count=1,.stride=0,.kind=MYL_NATIVE_POINTER,.collection_kind=1,.element=&myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14,.key=NULL,.trace_fields=NULL,.trace_field_count=0,.trace_mode=MYL_NATIVE_TRACE_FIELDS,.cell=0,.scan=NULL,.scan_count=0};",
+      "source_location_hint": {
+        "path": "heap.my",
+        "line": 130,
+        "column": 11
+      }
+    },
+    {
+      "function": "heap::string_obj",
+      "pc": 2,
+      "il_line": 214,
+      "type": "myl_t_10ba51025942802e98cbdad911475b594471021f660d3c2b48989b42d51368d2",
+      "native_type": "const myl_native_type myl_t_10ba51025942802e98cbdad911475b594471021f660d3c2b48989b42d51368d2 = {.size=8,.alignment=8,.fields=NULL,.field_count=0,.count=1,.stride=0,.kind=MYL_NATIVE_POINTER,.collection_kind=1,.element=&myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14,.key=NULL,.trace_fields=NULL,.trace_field_count=0,.trace_mode=MYL_NATIVE_TRACE_FIELDS,.cell=0,.scan=NULL,.scan_count=0};",
+      "source_location_hint": {
+        "path": "heap.my",
+        "line": 130,
+        "column": 11
+      }
+    },
+    {
+      "function": "heap::string_obj",
+      "pc": 15,
+      "il_line": 338,
+      "type": "myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14",
+      "native_type": "const myl_native_type myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14 = {.size=56,.alignment=8,.fields=myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_fields,.field_count=10,.count=1,.stride=0,.kind=MYL_NATIVE_VARIANT,.collection_kind=0,.element=NULL,.key=NULL,.trace_fields=myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_trace_fields,.trace_field_count=6,.trace_mode=MYL_NATIVE_TRACE_FIELDS,.cell=0,.scan=myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_scan,.scan_count=8};",
+      "source_location_hint": {
+        "path": "heap.my",
+        "line": 130,
+        "column": 11
+      }
+    },
+    {
+      "function": "heap::set_instance_field",
+      "pc": 12,
+      "il_line": 408,
+      "type": "myl_t_10ba51025942802e98cbdad911475b594471021f660d3c2b48989b42d51368d2",
+      "native_type": "const myl_native_type myl_t_10ba51025942802e98cbdad911475b594471021f660d3c2b48989b42d51368d2 = {.size=8,.alignment=8,.fields=NULL,.field_count=0,.count=1,.stride=0,.kind=MYL_NATIVE_POINTER,.collection_kind=1,.element=&myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14,.key=NULL,.trace_fields=NULL,.trace_field_count=0,.trace_mode=MYL_NATIVE_TRACE_FIELDS,.cell=0,.scan=NULL,.scan_count=0};",
+      "source_location_hint": {
+        "path": "heap.my",
+        "line": 234,
+        "column": 5
+      }
+    },
+    {
+      "function": "heap::set_instance_field",
+      "pc": 14,
+      "il_line": 497,
+      "type": "myl_t_4e6c1584b61f68a69271c693e65be720323e6bcb8d28e2f694592eed5c4c3f28",
+      "native_type": "const myl_native_type myl_t_4e6c1584b61f68a69271c693e65be720323e6bcb8d28e2f694592eed5c4c3f28 = {.size=208,.alignment=8,.fields=myl_t_4e6c1584b61f68a69271c693e65be720323e6bcb8d28e2f694592eed5c4c3f28_fields,.field_count=22,.count=1,.stride=0,.kind=MYL_NATIVE_RECORD,.collection_kind=0,.element=NULL,.key=NULL,.trace_fields=myl_t_4e6c1584b61f68a69271c693e65be720323e6bcb8d28e2f694592eed5c4c3f28_trace_fields,.trace_field_count=10,.trace_mode=MYL_NATIVE_TRACE_FIELDS,.cell=0,.scan=NULL,.scan_count=0};",
+      "source_location_hint": {
+        "path": "heap.my",
+        "line": 234,
+        "column": 5
+      }
+    },
+    {
+      "function": "heap::set_instance_field",
+      "pc": 16,
+      "il_line": 586,
+      "type": "myl_t_4e6c1584b61f68a69271c693e65be720323e6bcb8d28e2f694592eed5c4c3f28",
+      "native_type": "const myl_native_type myl_t_4e6c1584b61f68a69271c693e65be720323e6bcb8d28e2f694592eed5c4c3f28 = {.size=208,.alignment=8,.fields=myl_t_4e6c1584b61f68a69271c693e65be720323e6bcb8d28e2f694592eed5c4c3f28_fields,.field_count=22,.count=1,.stride=0,.kind=MYL_NATIVE_RECORD,.collection_kind=0,.element=NULL,.key=NULL,.trace_fields=myl_t_4e6c1584b61f68a69271c693e65be720323e6bcb8d28e2f694592eed5c4c3f28_trace_fields,.trace_field_count=10,.trace_mode=MYL_NATIVE_TRACE_FIELDS,.cell=0,.scan=NULL,.scan_count=0};",
+      "source_location_hint": {
+        "path": "heap.my",
+        "line": 234,
+        "column": 5
+      }
+    },
+    {
+      "function": "vm::load_frame",
+      "pc": 1,
+      "il_line": 197,
+      "type": "myl_t_10ba51025942802e98cbdad911475b594471021f660d3c2b48989b42d51368d2",
+      "native_type": "const myl_native_type myl_t_10ba51025942802e98cbdad911475b594471021f660d3c2b48989b42d51368d2 = {.size=8,.alignment=8,.fields=NULL,.field_count=0,.count=1,.stride=0,.kind=MYL_NATIVE_POINTER,.collection_kind=1,.element=&myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14,.key=NULL,.trace_fields=NULL,.trace_field_count=0,.trace_mode=MYL_NATIVE_TRACE_FIELDS,.cell=0,.scan=NULL,.scan_count=0};",
+      "source_location_hint": {
+        "path": "vm.my",
+        "line": 32,
+        "column": 11
+      }
+    },
+    {
+      "function": "vm::load_frame",
+      "pc": 2,
+      "il_line": 296,
+      "type": "myl_t_10ba51025942802e98cbdad911475b594471021f660d3c2b48989b42d51368d2",
+      "native_type": "const myl_native_type myl_t_10ba51025942802e98cbdad911475b594471021f660d3c2b48989b42d51368d2 = {.size=8,.alignment=8,.fields=NULL,.field_count=0,.count=1,.stride=0,.kind=MYL_NATIVE_POINTER,.collection_kind=1,.element=&myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14,.key=NULL,.trace_fields=NULL,.trace_field_count=0,.trace_mode=MYL_NATIVE_TRACE_FIELDS,.cell=0,.scan=NULL,.scan_count=0};",
+      "source_location_hint": {
+        "path": "vm.my",
+        "line": 32,
+        "column": 11
+      }
+    },
+    {
+      "function": "vm::load_frame",
+      "pc": 16,
+      "il_line": 424,
+      "type": "myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14",
+      "native_type": "const myl_native_type myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14 = {.size=56,.alignment=8,.fields=myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_fields,.field_count=10,.count=1,.stride=0,.kind=MYL_NATIVE_VARIANT,.collection_kind=0,.element=NULL,.key=NULL,.trace_fields=myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_trace_fields,.trace_field_count=6,.trace_mode=MYL_NATIVE_TRACE_FIELDS,.cell=0,.scan=myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_scan,.scan_count=8};",
+      "source_location_hint": {
+        "path": "vm.my",
+        "line": 32,
+        "column": 11
+      }
+    },
+    {
+      "function": "vm::load_frame",
+      "pc": 22,
+      "il_line": 771,
+      "type": "myl_t_10ba51025942802e98cbdad911475b594471021f660d3c2b48989b42d51368d2",
+      "native_type": "const myl_native_type myl_t_10ba51025942802e98cbdad911475b594471021f660d3c2b48989b42d51368d2 = {.size=8,.alignment=8,.fields=NULL,.field_count=0,.count=1,.stride=0,.kind=MYL_NATIVE_POINTER,.collection_kind=1,.element=&myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14,.key=NULL,.trace_fields=NULL,.trace_field_count=0,.trace_mode=MYL_NATIVE_TRACE_FIELDS,.cell=0,.scan=NULL,.scan_count=0};",
+      "source_location_hint": {
+        "path": "vm.my",
+        "line": 34,
+        "column": 19
+      }
+    },
+    {
+      "function": "vm::load_frame",
+      "pc": 23,
+      "il_line": 870,
+      "type": "myl_t_10ba51025942802e98cbdad911475b594471021f660d3c2b48989b42d51368d2",
+      "native_type": "const myl_native_type myl_t_10ba51025942802e98cbdad911475b594471021f660d3c2b48989b42d51368d2 = {.size=8,.alignment=8,.fields=NULL,.field_count=0,.count=1,.stride=0,.kind=MYL_NATIVE_POINTER,.collection_kind=1,.element=&myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14,.key=NULL,.trace_fields=NULL,.trace_field_count=0,.trace_mode=MYL_NATIVE_TRACE_FIELDS,.cell=0,.scan=NULL,.scan_count=0};",
+      "source_location_hint": {
+        "path": "vm.my",
+        "line": 34,
+        "column": 19
+      }
+    },
+    {
+      "function": "vm::load_frame",
+      "pc": 37,
+      "il_line": 1005,
+      "type": "myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14",
+      "native_type": "const myl_native_type myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14 = {.size=56,.alignment=8,.fields=myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_fields,.field_count=10,.count=1,.stride=0,.kind=MYL_NATIVE_VARIANT,.collection_kind=0,.element=NULL,.key=NULL,.trace_fields=myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_trace_fields,.trace_field_count=6,.trace_mode=MYL_NATIVE_TRACE_FIELDS,.cell=0,.scan=myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_scan,.scan_count=8};",
+      "source_location_hint": {
+        "path": "vm.my",
+        "line": 34,
+        "column": 19
+      }
+    },
+    {
+      "function": "vm::load_frame",
+      "pc": 43,
+      "il_line": 1372,
+      "type": "myl_t_d0874b46aa914472a0c31ec6a69c7d5999c1d36bc3d75aa56e5d28c3c2eda5b8",
+      "native_type": "const myl_native_type myl_t_d0874b46aa914472a0c31ec6a69c7d5999c1d36bc3d75aa56e5d28c3c2eda5b8 = {.size=24,.alignment=8,.fields=myl_t_d0874b46aa914472a0c31ec6a69c7d5999c1d36bc3d75aa56e5d28c3c2eda5b8_fields,.field_count=3,.count=1,.stride=0,.kind=MYL_NATIVE_RECORD,.collection_kind=0,.element=NULL,.key=NULL,.trace_fields=myl_t_d0874b46aa914472a0c31ec6a69c7d5999c1d36bc3d75aa56e5d28c3c2eda5b8_trace_fields,.trace_field_count=3,.trace_mode=MYL_NATIVE_TRACE_FIELDS,.cell=0,.scan=myl_t_d0874b46aa914472a0c31ec6a69c7d5999c1d36bc3d75aa56e5d28c3c2eda5b8_scan,.scan_count=3};",
+      "source_location_hint": {
+        "path": "vm.my",
+        "line": 37,
+        "column": 35
+      }
+    },
+    {
+      "function": "vm::load_frame",
+      "pc": 44,
+      "il_line": 1419,
+      "type": "myl_t_a1fa53db408c85388cfd14badb361c2a89e74ce2a863fa83774cb6942b74317a",
+      "native_type": "const myl_native_type myl_t_a1fa53db408c85388cfd14badb361c2a89e74ce2a863fa83774cb6942b74317a = {.size=8,.alignment=8,.fields=NULL,.field_count=0,.count=1,.stride=0,.kind=MYL_NATIVE_POINTER,.collection_kind=1,.element=&myl_t_db15a47f73854f7ebc4f4ae65ec67e894512211a55599ebe8bbfe5cf82a0ab47,.key=NULL,.trace_fields=NULL,.trace_field_count=0,.trace_mode=MYL_NATIVE_TRACE_FIELDS,.cell=0,.scan=NULL,.scan_count=0};",
+      "source_location_hint": {
+        "path": "vm.my",
+        "line": 37,
+        "column": 35
+      }
+    },
+    {
+      "function": "vm::load_frame",
+      "pc": 47,
+      "il_line": 1526,
+      "type": "myl_t_d0874b46aa914472a0c31ec6a69c7d5999c1d36bc3d75aa56e5d28c3c2eda5b8",
+      "native_type": "const myl_native_type myl_t_d0874b46aa914472a0c31ec6a69c7d5999c1d36bc3d75aa56e5d28c3c2eda5b8 = {.size=24,.alignment=8,.fields=myl_t_d0874b46aa914472a0c31ec6a69c7d5999c1d36bc3d75aa56e5d28c3c2eda5b8_fields,.field_count=3,.count=1,.stride=0,.kind=MYL_NATIVE_RECORD,.collection_kind=0,.element=NULL,.key=NULL,.trace_fields=myl_t_d0874b46aa914472a0c31ec6a69c7d5999c1d36bc3d75aa56e5d28c3c2eda5b8_trace_fields,.trace_field_count=3,.trace_mode=MYL_NATIVE_TRACE_FIELDS,.cell=0,.scan=myl_t_d0874b46aa914472a0c31ec6a69c7d5999c1d36bc3d75aa56e5d28c3c2eda5b8_scan,.scan_count=3};",
+      "source_location_hint": {
+        "path": "vm.my",
+        "line": 38,
+        "column": 30
+      }
+    },
+    {
+      "function": "vm::load_frame",
+      "pc": 48,
+      "il_line": 1573,
+      "type": "myl_t_1535267fc5a418ed8053a9a6290354ebfcee0a92538bece7aa6b84967f8fb527",
+      "native_type": "const myl_native_type myl_t_1535267fc5a418ed8053a9a6290354ebfcee0a92538bece7aa6b84967f8fb527 = {.size=8,.alignment=8,.fields=NULL,.field_count=0,.count=1,.stride=0,.kind=MYL_NATIVE_POINTER,.collection_kind=1,.element=&myl_t_1a91deb3742283487d66c3b500f6effd7ef1170e6d4b4368fe9ec3c3f0354fda,.key=NULL,.trace_fields=NULL,.trace_field_count=0,.trace_mode=MYL_NATIVE_TRACE_FIELDS,.cell=0,.scan=NULL,.scan_count=0};",
+      "source_location_hint": {
+        "path": "vm.my",
+        "line": 38,
+        "column": 30
+      }
+    },
+    {
+      "function": "vm::load_frame",
+      "pc": 51,
+      "il_line": 1681,
+      "type": "myl_t_1535267fc5a418ed8053a9a6290354ebfcee0a92538bece7aa6b84967f8fb527",
+      "native_type": "const myl_native_type myl_t_1535267fc5a418ed8053a9a6290354ebfcee0a92538bece7aa6b84967f8fb527 = {.size=8,.alignment=8,.fields=NULL,.field_count=0,.count=1,.stride=0,.kind=MYL_NATIVE_POINTER,.collection_kind=1,.element=&myl_t_1a91deb3742283487d66c3b500f6effd7ef1170e6d4b4368fe9ec3c3f0354fda,.key=NULL,.trace_fields=NULL,.trace_field_count=0,.trace_mode=MYL_NATIVE_TRACE_FIELDS,.cell=0,.scan=NULL,.scan_count=0};",
+      "source_location_hint": {
+        "path": "vm.my",
+        "line": 39,
+        "column": 34
+      }
+    },
+    {
+      "function": "vm::load_frame",
+      "pc": 123,
+      "il_line": 2478,
+      "type": "myl_t_a1fa53db408c85388cfd14badb361c2a89e74ce2a863fa83774cb6942b74317a",
+      "native_type": "const myl_native_type myl_t_a1fa53db408c85388cfd14badb361c2a89e74ce2a863fa83774cb6942b74317a = {.size=8,.alignment=8,.fields=NULL,.field_count=0,.count=1,.stride=0,.kind=MYL_NATIVE_POINTER,.collection_kind=1,.element=&myl_t_db15a47f73854f7ebc4f4ae65ec67e894512211a55599ebe8bbfe5cf82a0ab47,.key=NULL,.trace_fields=NULL,.trace_field_count=0,.trace_mode=MYL_NATIVE_TRACE_FIELDS,.cell=0,.scan=NULL,.scan_count=0};",
+      "source_location_hint": {
+        "path": "vm.my",
+        "line": 47,
+        "column": 32
+      }
+    },
+    {
+      "function": "vm::load_frame",
+      "pc": 128,
+      "il_line": 2635,
+      "type": "myl_t_1535267fc5a418ed8053a9a6290354ebfcee0a92538bece7aa6b84967f8fb527",
+      "native_type": "const myl_native_type myl_t_1535267fc5a418ed8053a9a6290354ebfcee0a92538bece7aa6b84967f8fb527 = {.size=8,.alignment=8,.fields=NULL,.field_count=0,.count=1,.stride=0,.kind=MYL_NATIVE_POINTER,.collection_kind=1,.element=&myl_t_1a91deb3742283487d66c3b500f6effd7ef1170e6d4b4368fe9ec3c3f0354fda,.key=NULL,.trace_fields=NULL,.trace_field_count=0,.trace_mode=MYL_NATIVE_TRACE_FIELDS,.cell=0,.scan=NULL,.scan_count=0};",
+      "source_location_hint": {
+        "path": "vm.my",
+        "line": 47,
+        "column": 41
+      }
+    },
+    {
+      "function": "vm::load_frame",
+      "pc": 133,
+      "il_line": 2792,
+      "type": "myl_t_1535267fc5a418ed8053a9a6290354ebfcee0a92538bece7aa6b84967f8fb527",
+      "native_type": "const myl_native_type myl_t_1535267fc5a418ed8053a9a6290354ebfcee0a92538bece7aa6b84967f8fb527 = {.size=8,.alignment=8,.fields=NULL,.field_count=0,.count=1,.stride=0,.kind=MYL_NATIVE_POINTER,.collection_kind=1,.element=&myl_t_1a91deb3742283487d66c3b500f6effd7ef1170e6d4b4368fe9ec3c3f0354fda,.key=NULL,.trace_fields=NULL,.trace_field_count=0,.trace_mode=MYL_NATIVE_TRACE_FIELDS,.cell=0,.scan=NULL,.scan_count=0};",
+      "source_location_hint": {
+        "path": "vm.my",
+        "line": 47,
+        "column": 54
+      }
+    }
+  ]
+}

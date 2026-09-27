@@ -40,6 +40,14 @@ const api =
     \\    return 1
     \\
     \\
+    \\public def len(value: i64) -> i64 effects():
+    \\    return value + 1
+    \\
+    \\
+    \\public def replace(value: i64) -> i64 effects():
+    \\    return len(value) - 1
+    \\
+    \\
     \\def hidden() -> i64:
     \\    return 99
     \\
@@ -93,6 +101,26 @@ const dotted = header ++
     \\    distance = api.Distance.make(api.parse(copy))
     \\    return api.Distance.number(distance) + api.extra()
 ;
+
+// spec-case: PRELUDE-SHADOW-2
+test "module builtin callable shadows resolve locally and through imports" {
+    try scenario(t.allocator, header ++
+        \\def replace(value: i64) -> i64:
+        \\    return value + 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return replace(api.replace(api.len(38))) + len([1, 2])
+    , null);
+    try scenario(t.allocator, header ++
+        \\def len(value: i64) -> i64:
+        \\    return value + 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return api.replace(len(41))
+    , null);
+}
 
 // spec: MODULE-DOT-1
 test "dotted imports resolve calls types generic records and domains beside list methods" {

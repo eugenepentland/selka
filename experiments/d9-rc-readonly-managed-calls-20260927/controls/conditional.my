@@ -1,0 +1,4 @@
+def selected(first: list[int], second: list[int], choice: bool) -> int:
+    return len(first if choice else second)
+def main() -> int:
+    return selected([1], [2, 3], True)

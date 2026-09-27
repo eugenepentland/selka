@@ -1,0 +1,10 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 2 after 5s (all 3 build slot(s) busy)
+test-units
++- run test w
+guardian/test: 14 test(s) selected by filter: "argv" — 3 match by name, 11 unnamed test block(s) run regardless
+guardian/test: test wall 1.23s; slowest over 50ms:
+guardian/test:   1.23s  qbe_build_test.test.native RC argv owner balances borrowed entry returns capability refusal and traps
+guardian/test: PASS — 14 passed
+guardian/test: RESULT {"passed":14,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-argv-astra/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.tmp-argv/zig-cache/o/009052f22e081f36da87864318eb68c4/test --guardian-filter=argv --cache-dir=./.tmp-argv/zig-cache --seed=0xdf532f48 --listen=-

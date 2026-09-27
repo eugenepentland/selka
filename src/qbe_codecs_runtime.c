@@ -2,6 +2,7 @@
 #include "native_text.h"
 #include "native_bytes.h"
 #include "native_dictionary.h"
+#include "native_rc_collections.h"
 /* `myl_qbe_heap` returns a pointer. Without this declaration the call is an
    implicit `int` and the heap address is truncated to 32 bits, so every text
    argument or result faulted on a wild pointer; `qbe_bytes.h` includes the same
@@ -17,6 +18,7 @@ static const myl_native_type *const co_native_types[];
 static const MylangWireNode *co_input;
 static size_t co_count,co_cursor,co_needed,co_result_type,co_argument_count;
 static const size_t *co_parameter_types;
+static const unsigned char *co_injected;
 static void *co_arguments[QBE_CODEC_ARGUMENTS],*co_return;
 static MylangWireNode *co_prepared;
 static const char *co_error,*co_domain;
@@ -54,9 +56,16 @@ static int co_charge(void){if(co_calls==co_max_calls)return co_bad("CodecCallLim
 static int co_method(size_t,void *,const void *,void *);
 static int co_write(size_t,const void *,size_t);
 static int co_root(void *value){
+    if(myl_rc_enabled(myl_qbe_heap(co_context)))return 1;
     if(co_root_count==QBE_CODEC_ROOTS)return 0;
     co_root_values[co_root_count]=value;
     myl_native_root_push(myl_qbe_heap(co_context),&co_root_slots[co_root_count],&co_root_values[co_root_count],&co_pointer_type);
+    ++co_root_count;return 1;
+}
+static int co_root_value(size_t index,void *value){
+    if(myl_rc_enabled(myl_qbe_heap(co_context)))return 1;
+    if(co_root_count==QBE_CODEC_ROOTS)return co_bad("OutOfMemory");
+    myl_native_root_push(myl_qbe_heap(co_context),&co_root_slots[co_root_count],value,co_native_types[index]);
     ++co_root_count;return 1;
 }
 static void co_unroot_to(size_t mark){
@@ -74,6 +83,51 @@ static uint64_t co_word(const void *input,size_t index){
     if(*type->name=='i' && type->size<8 && (bits&(UINT64_C(1)<<(type->size*8-1))))bits|=UINT64_MAX<<(type->size*8);
     return bits;
 }
+/* Codec storage owns complete initialized values. Decoding only writes empty
+   slots; failures clear their initialized edges before returning to the parent. */
+static void co_drop(size_t index,void *value){
+    if(value && myl_rc_enabled(myl_qbe_heap(co_context)))
+        myl_rc_native_drop(myl_qbe_heap(co_context),co_native_types[index],value);
+}
+static void co_abort(void *value){
+    if(value && myl_rc_enabled(myl_qbe_heap(co_context)))myl_rc_native_abort(myl_qbe_heap(co_context),value);
+}
+/* Guest callbacks may leave by longjmp. Keep every temporary host allocation
+   in a heap-independent journal so teardown can drop its initialized value
+   and free the raw buffer without following a departed C stack frame. */
+typedef struct CoTemporary {
+    struct CoTemporary *previous;
+    size_t type;
+    _Alignas(max_align_t) unsigned char value[];
+} CoTemporary;
+static CoTemporary *co_temporaries;
+static void *co_temporary(size_t index,int owned){
+    size_t size=co_types[index].size;
+    if(size>SIZE_MAX-sizeof(CoTemporary))return NULL;
+    CoTemporary *temporary=calloc(1,sizeof *temporary+(size?size:1));
+    if(!temporary)return NULL;
+    temporary->type=owned?index:SIZE_MAX;
+    temporary->previous=co_temporaries;co_temporaries=temporary;
+    return temporary->value;
+}
+static void co_temporary_free(void *value){
+    if(!value)return;
+    CoTemporary *temporary=(CoTemporary *)((unsigned char *)value - offsetof(CoTemporary,value));
+    CoTemporary **link=&co_temporaries;
+    while(*link && *link!=temporary)link=&(*link)->previous;
+    if(!*link)abort();
+    *link=temporary->previous;
+    if(temporary->type!=SIZE_MAX)co_drop(temporary->type,value);
+    free(temporary);
+}
+static void co_cleanup(void *ctx){
+    co_unroot();
+    while(co_temporaries)co_temporary_free(co_temporaries->value);
+    co_drop(co_result_type,co_return);
+    for(size_t i=co_argument_count;i;i--)
+        if(!co_injected || !co_injected[i-1])co_drop(co_parameter_types[i-1],co_arguments[i-1]);
+    ((MylQbeContext *)ctx)->adapter_cleanup=NULL;co_context=NULL;
+}
 static int co_read(size_t,void *,size_t);
 static int co_validate_one(void *,size_t,const void *);
 /* A dictionary or a set: one key subtree per entry, followed for a dictionary
@@ -84,21 +138,22 @@ static int co_validate_one(void *,size_t,const void *);
 static int co_read_dictionary(const CoType *type,const MylangWireNode *node,void *output,size_t depth){
     if(node->bits || node->children>co_count-co_cursor || (type->count!=1 && type->count!=2))return co_bad("InvalidArgument");
     size_t key_index=type->children[0],value_index=type->children[1];
-    const CoType *key=&co_types[key_index],*value=&co_types[value_index];
+    const CoType *key=&co_types[key_index];
     myl_native_dictionary *dict=myl_native_dictionary_new(myl_qbe_heap(co_context),co_native_types[key_index],co_native_types[value_index],key->kind==5);
     if(!dict)return co_bad("OutOfMemory");
+    memcpy(output,&dict,sizeof dict);
     if(!co_root(dict))return co_bad("OutOfMemory");
-    void *key_scratch=calloc(key->size?key->size:1,1),*value_scratch=calloc(value->size?value->size:1,1);
+    void *key_scratch=co_temporary(key_index,1),*value_scratch=co_temporary(value_index,1);
     int ok=key_scratch && value_scratch ? 1 : co_bad("OutOfMemory");
     for(size_t i=0;ok && i<node->children;++i){
         size_t mark=co_root_count;
         ok=co_read(key_index,key_scratch,depth+1) && (type->count==1 || co_read(value_index,value_scratch,depth+1));
         if(ok && myl_native_dictionary_contains(dict,key_scratch))ok=co_bad("InvalidArgument");
         if(ok && !myl_native_dictionary_write(myl_qbe_heap(co_context),dict,key_scratch,value_scratch))ok=co_bad("OutOfMemory");
+        co_drop(value_index,value_scratch);co_drop(key_index,key_scratch);
         co_unroot_to(mark);
     }
-    free(key_scratch);free(value_scratch);
-    if(ok)memcpy(output,&dict,sizeof dict);
+    co_temporary_free(value_scratch);co_temporary_free(key_scratch);
     return ok;
 }
 /* A recursive value's box (RECURSIVE-VALUES-3) has no node: the value it
@@ -106,25 +161,60 @@ static int co_read_dictionary(const CoType *type,const MylangWireNode *node,void
    rooted as they are read, and only then copied into a fresh box, which takes
    over the root. A box is never written after this, like one the guest built. */
 static int co_read_box(size_t index,void *output,size_t depth){
-    const CoType *content=&co_types[co_types[index].children[0]];
+    size_t content_index=co_types[index].children[0];
+    const CoType *content=&co_types[content_index];
     size_t mark=co_root_count;
-    void *scratch=calloc(content->size?content->size:1,1);
+    void *scratch=co_temporary(content_index,1);
     if(!scratch)return co_bad("OutOfMemory");
-    if(!co_read(co_types[index].children[0],scratch,depth+1)){free(scratch);return 0;}
+    if(!co_read(content_index,scratch,depth+1)){co_temporary_free(scratch);return 0;}
     void *box=myl_native_heap_alloc(myl_qbe_heap(co_context),co_native_types[index]->element,1);
-    if(box)memcpy(box,scratch,content->size);
-    free(scratch);
+    if(box){memcpy(box,scratch,content->size);memset(scratch,0,content->size);} /* Relocate the owned body. */
+    co_temporary_free(scratch);
     if(!box)return co_bad("OutOfMemory");
     co_unroot_to(mark);
-    if(!co_root(box))return co_bad("OutOfMemory");
+    if(!co_root(box)){co_abort(box);return co_bad("OutOfMemory");}
     memcpy(output,&box,sizeof box);return 1;
 }
+/* A live view has a held dictionary edge. Decode its mapping into an ordinary
+   owning temporary first, then convert O to H before publishing the record.
+   This keeps partially decoded dictionaries out of an H-shaped cleanup slot. */
+static int co_read_held(size_t index,const MylangWireNode *node,void *output,size_t depth){
+    const CoType *type=&co_types[index];
+    if(type->kind!=1 || type->count!=1 || type->size!=sizeof(void *) ||
+       type->offsets[0] || node->bits || node->children!=1)return co_bad("InvalidArgument");
+    size_t child=type->children[0];
+    if(co_types[child].kind!=9)return co_bad("InternalError");
+    void *mapping=co_temporary(child,1);
+    if(!mapping)return co_bad("OutOfMemory");
+    int ok=co_read(child,mapping,depth+1);
+    if(ok){
+        myl_rc_hold hold={0};
+        myl_rc_status status=myl_rc_hold_acquire(myl_qbe_heap(co_context),*(void **)mapping,&hold);
+        if(status==MYL_RC_OK)memcpy(output,&hold.payload,sizeof hold.payload);
+        else ok=co_bad(myl_rc_status_code(status));
+    }
+    co_temporary_free(mapping);
+    return ok && co_validate_one(co_context,index,output);
+}
+static int co_read_inner(size_t,void *,size_t);
 static int co_read(size_t index,void *output,size_t depth){
+    memset(output,0,co_types[index].size);
+    size_t mark=co_root_count;
+    int ok=co_read_inner(index,output,depth);
+    if(!ok){co_drop(index,output);co_unroot_to(mark);}
+    return ok;
+}
+static int co_read_inner(size_t index,void *output,size_t depth){
     if(depth>=QBE_CODEC_DEPTH)return co_bad("WireLimit");
     if(co_types[index].kind==10)return co_read_box(index,output,depth);
     if(co_cursor>=co_count)return co_bad("InvalidArgument");
     const CoType *type=&co_types[index];const MylangWireNode *node=&co_input[co_cursor++];
     if(!node->type || strcmp(node->type,type->name))return co_bad("InvalidArgument");
+    if(type->kind==1 && myl_rc_enabled(myl_qbe_heap(co_context))){
+        const myl_rc_descriptor *ownership=myl_rc_descriptor_find(myl_qbe_heap(co_context),co_native_types[index]);
+        if(ownership && ownership->shape->kind==MYL_RC_SHAPE_HOLD_POINTER)
+            return co_read_held(index,node,output,depth);
+    }
     if(type->kind==0){
         if(node->children || !valid_scalar((MylangScalar){node->type,node->bits},type->name))return co_bad("InvalidArgument");
         memcpy(output,&node->bits,type->size);return 1;
@@ -150,7 +240,7 @@ static int co_read(size_t index,void *output,size_t depth){
         myl_native_text *text=myl_native_text_from_scalars(myl_qbe_heap(co_context),scalars,node->children);
         free(scalars);
         if(!text)return co_bad("OutOfMemory");
-        if(!co_root(text))return co_bad("OutOfMemory");
+        if(!co_root(text)){co_abort(text);return co_bad("OutOfMemory");}
         memcpy(output,&text,sizeof text);return 1;
     }
     if(type->kind==6){
@@ -158,21 +248,22 @@ static int co_read(size_t index,void *output,size_t depth){
            the request's own node count, so the length is bounded by the input
            rather than by anything the request claims. */
         if(node->bits || node->children>co_count-co_cursor)return co_bad("InvalidArgument");
-        const CoType *element=&co_types[type->children[0]];
         myl_native_list *list=myl_native_list_new(myl_qbe_heap(co_context),co_native_types[type->children[0]],node->children);
         if(!list)return co_bad("OutOfMemory");
+        memcpy(output,&list,sizeof list);
         if(!co_root(list))return co_bad("OutOfMemory");
-        void *scratch=calloc(element->size ? element->size : 1,1);
+        void *scratch=co_temporary(type->children[0],1);
         if(!scratch)return co_bad("OutOfMemory");
-        list->length=node->children;
-        for(size_t i=0;i<node->children;++i){
+        int ok=1;
+        for(size_t i=0;ok && i<node->children;++i){
             size_t mark=co_root_count;
-            if(!co_read(type->children[0],scratch,depth+1)){free(scratch);return 0;}
-            if(!myl_native_list_set(list,i,scratch)){free(scratch);return co_bad("InternalError");}
+            ok=co_read(type->children[0],scratch,depth+1);
+            if(ok && !myl_native_list_append(myl_qbe_heap(co_context),list,scratch))ok=co_bad("OutOfMemory");
+            co_drop(type->children[0],scratch);
             co_unroot_to(mark);
         }
-        free(scratch);
-        memcpy(output,&list,sizeof list);return 1;
+        co_temporary_free(scratch);
+        return ok;
     }
     if(type->kind==8){
         /* One `u8` node per octet, copied into a fresh guest `bytes`. */
@@ -188,25 +279,29 @@ static int co_read(size_t index,void *output,size_t depth){
         myl_native_bytes *bytes=myl_native_bytes_new(myl_qbe_heap(co_context),raw,node->children);
         free(raw);
         if(!bytes)return co_bad("OutOfMemory");
-        if(!co_root(bytes))return co_bad("OutOfMemory");
+        if(!co_root(bytes)){co_abort(bytes);return co_bad("OutOfMemory");}
         memcpy(output,&bytes,sizeof bytes);return 1;
     }
     if(type->kind==9)return co_read_dictionary(type,node,output,depth);
     if(type->kind==4){
         if(!type->codec || node->bits || node->children!=1)return co_bad("InvalidArgument");
-        const CoCodec *codec=type->codec;int ok=0;
-        void *wire=calloc(co_types[codec->wire].size ? co_types[codec->wire].size : 1,1);
-        void *result=calloc(co_types[codec->result].size ? co_types[codec->result].size : 1,1);
+        const CoCodec *codec=type->codec;int ok=0;size_t mark=co_root_count;
+        void *wire=co_temporary(codec->wire,1);
+        void *result=co_temporary(codec->result,1);
         if(!wire || !result){co_bad("OutOfMemory");goto domain_done;}
         if(!co_read(codec->wire,wire,depth+1))goto domain_done;
+        if(!co_root_value(codec->result,result))goto domain_done;
         const char *previous=co_domain;co_domain=type->name;
         if(!co_charge() || !co_method(codec->decode,co_context,wire,result))goto domain_done;
         uint32_t tag;memcpy(&tag,result,4);
         if(tag!=codec->ok && tag!=codec->err){co_bad("InternalError");goto domain_done;}
         const void *payload=(const unsigned char *)result+co_types[codec->result].offsets[tag];
-        if(tag==codec->ok){memcpy(output,payload,type->size);co_domain=previous;ok=1;}
+        if(tag==codec->ok){memcpy(output,payload,type->size);memset((void *)payload,0,type->size);co_domain=previous;ok=1;}
         else{co_rejected=1;co_needed=0;if(co_write(codec->error_type,payload,0))co_bad("DomainCodecRejected");}
-    domain_done:free(wire);free(result);return ok && co_validate_one(co_context,index,output);
+    domain_done:
+        co_unroot_to(mark);
+        co_temporary_free(result);co_temporary_free(wire);
+        return ok && co_root_value(index,output) && co_validate_one(co_context,index,output);
     }
     if(type->kind==3){
         if(node->bits>=type->count)return co_bad("InvalidArgument");
@@ -238,15 +333,15 @@ static int co_write_dictionary(const CoType *type,MylangWireNode *node,const voi
     size_t length=myl_native_dictionary_length(dict);
     if(length>100000-co_needed)return co_bad("WireLimit");
     node->children=length;
-    void *key_scratch=calloc(co_types[key_index].size?co_types[key_index].size:1,1);
-    void *value_scratch=calloc(co_types[value_index].size?co_types[value_index].size:1,1);
+    void *key_scratch=co_temporary(key_index,0);
+    void *value_scratch=co_temporary(value_index,0);
     int ok=key_scratch && value_scratch ? 1 : co_bad("OutOfMemory");
     for(size_t i=0;ok && i<length;++i){
         if(!myl_native_dictionary_key_at(dict,i,key_scratch))ok=co_bad("InternalError");
         ok=ok && co_write(key_index,key_scratch,depth+1);
         if(ok && type->count==2)ok=myl_native_dictionary_value_at(dict,i,value_scratch) ? co_write(value_index,value_scratch,depth+1) : co_bad("InternalError");
     }
-    free(key_scratch);free(value_scratch);
+    co_temporary_free(value_scratch);co_temporary_free(key_scratch);
     return ok;
 }
 static int co_write(size_t index,const void *input,size_t depth){
@@ -283,19 +378,18 @@ static int co_write(size_t index,const void *input,size_t depth){
     if(type->kind==6){
         const myl_native_list *list=*(const myl_native_list *const *)input;
         if(!list)return co_bad("InternalError");
-        const CoType *element=&co_types[type->children[0]];
         /* Bounded by the staging array alone, exactly as text is: a result that
            does not fit the caller's buffer is still measured so the epilogue
            reports OutputTooSmall with the required count, never WireLimit. */
         if(list->length>100000-co_needed)return co_bad("WireLimit");
         node->children=list->length;
-        void *scratch=calloc(element->size ? element->size : 1,1);
+        void *scratch=co_temporary(type->children[0],0);
         if(!scratch)return co_bad("OutOfMemory");
         for(size_t i=0;i<list->length;++i){
-            if(!myl_native_list_get(list,i,scratch)){free(scratch);return co_bad("InternalError");}
-            if(!co_write(type->children[0],scratch,depth+1)){free(scratch);return 0;}
+            if(!myl_native_list_get(list,i,scratch)){co_temporary_free(scratch);return co_bad("InternalError");}
+            if(!co_write(type->children[0],scratch,depth+1)){co_temporary_free(scratch);return 0;}
         }
-        free(scratch);
+        co_temporary_free(scratch);
         return 1;
     }
     if(type->kind==8){
@@ -313,11 +407,13 @@ static int co_write(size_t index,const void *input,size_t depth){
     if(type->kind==4){
         if(!type->codec)return co_bad("UnsupportedSignature");
         node->children=1;const CoCodec *codec=type->codec;
-        void *wire=calloc(co_types[codec->wire].size ? co_types[codec->wire].size : 1,1);
+        void *wire=co_temporary(codec->wire,1);
         if(!wire)return co_bad("OutOfMemory");
         const char *previous=co_domain;co_domain=type->name;
-        int ok=co_charge() && co_method(codec->encode,co_context,input,wire) && co_write(codec->wire,wire,depth+1);
-        if(ok)co_domain=previous;free(wire);return ok;
+        size_t mark=co_root_count;
+        int ok=co_root_value(codec->wire,wire) && co_charge() && co_method(codec->encode,co_context,input,wire) && co_write(codec->wire,wire,depth+1);
+        if(ok)co_domain=previous;
+        co_unroot_to(mark);co_temporary_free(wire);return ok;
     }
     if(type->kind==3){
         uint32_t tag;memcpy(&tag,input,4);if(tag>=type->count)return co_bad("InternalError");

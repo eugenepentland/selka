@@ -10,6 +10,27 @@ const fragments = @import("qbe_fragments.zig");
 
 const entry = "\n\ndef main() -> int:\n    return 0\n";
 
+// spec-case: DICT-VIEWS-1
+test "live dictionary view transfer policy follows builtin declaration identity" {
+    const sources = [_][]const u8{
+        "def saved(value: DictValues[int, int]) -> DictValues[int, int]:\n    return value\n" ++ entry,
+        "record DictValues[K, V]:\n    values: list[V]\n\ndef saved(value: DictValues[int, int]) -> DictValues[int, int]:\n    return value\n" ++ entry,
+    };
+    for (sources, 0..) |source, index| {
+        var compilation = try compiler.Compilation.init(t.allocator, "views.my", source);
+        defer compilation.deinit();
+        try compilation.check();
+        const records = compilation.program.?.records;
+        var found = false;
+        for (records) |record| {
+            if (!std.mem.startsWith(u8, record.name, "DictValues<")) continue;
+            found = true;
+            try t.expectEqual(index == 0, values.isLiveView(records, record.id));
+        }
+        try t.expect(found);
+    }
+}
+
 // spec-case: VALUE-SEMANTICS-1
 test "legacy test fixtures explicitly restore the default value model" {
     try t.expect(values.enabled());
@@ -552,4 +573,29 @@ test "rebinding a mut record parameter is a use that reaches the caller" {
     const reset = "record Counter:\n    n: int\n    items: list[int]\n\ndef reset(c: mut Counter) -> None:\n    c = Counter(n=0, items=[])\n";
     try t.expectEqual(@as(usize, 0), try countCode(reset, "W_UNUSED_BINDING", true));
     try t.expectEqual(@as(usize, 0), try countCode(reset, "E_MUTATION_MARKER", true));
+}
+
+// spec: LIVE-VIEW-SNAPSHOT-1
+test "live view reachability covers nested and recursive projections" {
+    const source =
+        \\record Plain:
+        \\    next: Option[Plain]
+        \\
+        \\record Viewed:
+        \\    next: Option[Viewed]
+        \\    views: [1]list[DictValues[int, int]]
+        \\
+    ++ entry;
+    var compilation = try compiler.Compilation.init(t.allocator, "reach.my", source);
+    defer compilation.deinit();
+    try compilation.check();
+    const records = compilation.program.?.records;
+    var found: usize = 0;
+    for (records) |record| {
+        if (!std.mem.eql(u8, record.name, "Plain") and !std.mem.eql(u8, record.name, "Viewed")) continue;
+        found += 1;
+        try t.expectEqual(std.mem.eql(u8, record.name, "Viewed"), values.containsLiveView(records, record.id));
+        try t.expectEqual(std.mem.eql(u8, record.name, "Plain"), values.copiesAll(records, record.id));
+    }
+    try t.expectEqual(@as(usize, 2), found);
 }

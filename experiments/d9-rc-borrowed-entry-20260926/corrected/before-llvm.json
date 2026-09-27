@@ -1,0 +1,108 @@
+{
+  "compiler_sha256": "28d576e8195b9d2d0f574b24620251b1472b424271005302c8802691f70e5c4b",
+  "qbe_sha256": "bd629f445ac54e5763835f5c5593f6d4277f3b2f5d6f8c68c1bfa5e2f9b8f6b1",
+  "build": {
+    "cmd": [
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/scripts/build-slot.sh",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/.tmp/rc-borrow-valid-before/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/src/schematic/guest/main.my",
+      "--project",
+      "--provider",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/src/schematic/native_schematic.c",
+      "--zig",
+      "/home/epentland/.local/bin/zig",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/.tmp/rc-backend-corrections/borrow/before/schematic.llvm",
+      "--max-frames=1024",
+      "--backend",
+      "llvm",
+      "--llvm-opt",
+      "3",
+      "--lto",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/.tmp/rc-backend-corrections/borrow/before/cache-llvm",
+      "--rc-runtime=stats"
+    ],
+    "ok": true,
+    "seconds": 84.64,
+    "sha256": "06dbabe6fb28ebcf31c0e7f450b62cd66af7ab17288259b553258f6659848e86",
+    "size": 1608888,
+    "stderr": "build-slot: all 3 build slot(s) busy; waiting (0s so far)\nbuild-slot: build slot 3 after 25s (all 3 build slot(s) busy)\nlayout.my:223:25: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def nearest(pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], rows: list[Row], nets: list[g.Net], lookup: list[int]) -> int:\n                          ^\nlayout.my:274:23: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def depth(pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net], lookup: list[int]) -> int:\n                        ^\nlayout.my:274:44: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def depth(pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net], lookup: list[int]) -> int:\n                                             ^\nlayout_routes.my:42:50: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def blocked(a: l.Point, b: l.Point, net_id: int, parts: list[c.Part], pins: list[c.Pin], points: list[l.Point]) -> bool:\n                                                   ^\n"
+  },
+  "checks": {
+    "schematic/fixture": {
+      "status": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v1-counting\",\"saturated\":false,\"owner_acquire\":6434873,\"owner_release\":6491187,\"hold_acquire\":26139,\"hold_release\":26139,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":56314,\"arena_allocate\":0,\"retire\":56314,\"clone_shell\":28091,\"unique_check\":16850}\n",
+      "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+      "svg_bytes": 49617,
+      "ok": true,
+      "counts": {
+        "version": 1,
+        "runtime": "rc-v1-counting",
+        "saturated": false,
+        "owner_acquire": 6434873,
+        "owner_release": 6491187,
+        "hold_acquire": 26139,
+        "hold_release": 26139,
+        "owner_limit": 0,
+        "hold_limit": 0,
+        "heap_allocate": 56314,
+        "arena_allocate": 0,
+        "retire": 56314,
+        "clone_shell": 28091,
+        "unique_check": 16850
+      }
+    },
+    "schematic/changed-net": {
+      "status": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v1-counting\",\"saturated\":false,\"owner_acquire\":6435027,\"owner_release\":6491341,\"hold_acquire\":26199,\"hold_release\":26199,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":56314,\"arena_allocate\":0,\"retire\":56314,\"clone_shell\":28091,\"unique_check\":16880}\n",
+      "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+      "svg_bytes": 49647,
+      "ok": true,
+      "counts": {
+        "version": 1,
+        "runtime": "rc-v1-counting",
+        "saturated": false,
+        "owner_acquire": 6435027,
+        "owner_release": 6491341,
+        "hold_acquire": 26199,
+        "hold_release": 26199,
+        "owner_limit": 0,
+        "hold_limit": 0,
+        "heap_allocate": 56314,
+        "arena_allocate": 0,
+        "retire": 56314,
+        "clone_shell": 28091,
+        "unique_check": 16880
+      }
+    },
+    "schematic/changed-value": {
+      "status": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v1-counting\",\"saturated\":false,\"owner_acquire\":6434873,\"owner_release\":6491187,\"hold_acquire\":26139,\"hold_release\":26139,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":56314,\"arena_allocate\":0,\"retire\":56314,\"clone_shell\":28091,\"unique_check\":16850}\n",
+      "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+      "svg_bytes": 49617,
+      "ok": true,
+      "counts": {
+        "version": 1,
+        "runtime": "rc-v1-counting",
+        "saturated": false,
+        "owner_acquire": 6434873,
+        "owner_release": 6491187,
+        "hold_acquire": 26139,
+        "hold_release": 26139,
+        "owner_limit": 0,
+        "hold_limit": 0,
+        "heap_allocate": 56314,
+        "arena_allocate": 0,
+        "retire": 56314,
+        "clone_shell": 28091,
+        "unique_check": 16850
+      }
+    }
+  }
+}

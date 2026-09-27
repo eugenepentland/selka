@@ -1,0 +1,26 @@
+import filesystem
+
+record Owner:
+    mapping: dict[int, int]
+    file: TextFile
+    next: Option[Owner]
+
+def opened(fs: Filesystem) -> Result[Option[Owner], str]:
+    return Ok(Some(Owner({1: 7}, fs.open("data", "w")?, None)))
+
+def exercise(fs: Filesystem, out: Stream) -> Result[int, str]:
+    original = opened(fs)?
+    if original is not None:
+        original.mapping[1] = 13
+        out.print(original.mapping[1])
+        return Ok(0)
+    return Ok(1)
+
+def main(out: Stream) -> int:
+    fs = filesystem.memory()
+    match exercise(fs, out):
+        case Ok(value):
+            return value
+        case Err(message):
+            out.print(message)
+            return 2

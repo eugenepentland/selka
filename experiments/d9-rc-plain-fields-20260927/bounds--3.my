@@ -1,0 +1,13 @@
+record Row:
+    label: bytes
+    number: int
+def selected(rows: list[Row], at: int, output: mut list[int]) -> int:
+    value = rows[at].number
+    output.append(value)
+    return value
+def main(out: Stream) -> int:
+    with arena():
+        rows = [Row(b"a" + bytes([49]), 7)]
+        output: list[int] = []
+        out.print("before")
+        return selected(rows, -3, mut output)

@@ -11948,3 +11948,46 @@ test "CLI invariant boundary rejects invalid JSON collection elements before the
     try testing.expect(std.mem.indexOf(u8, again.stdout, "R_INVARIANT") != null);
     try testing.expect(std.mem.indexOf(u8, again.stdout, "body ran") == null);
 }
+
+// spec: RC-RUNTIME-CLI-1
+test "CLI RC runtime contract flags reject conflicts and preserve guest arguments" {
+    try invokeOptions("check", value_program, &.{"--gc-runtime"}, 0, "", "");
+    try invokeOptions("check", value_program, &.{"--rc-runtime"}, 0, "", "");
+    try invokeOptions("check", value_program, &.{"--rc-runtime=stats"}, 0, "", "");
+    try invokeOptions("check", value_program, &.{ "--rc-runtime", "--gc-runtime" }, 2, "", "choose exactly one");
+    try invokeOptions("check", value_program, &.{"--rc-runtime=invalid"}, 2, "", "choose exactly one");
+    try invokeOptions("check", value_program, &.{ "--rc-runtime", "--legacy-sharing" }, 2, "", "explicit RC requires value semantics");
+    try invokeOptions("fmt", value_program, &.{"--rc-runtime"}, 2, "", "runtime selection applies");
+    try invokeOptions("run", value_program, &.{ "--gc-runtime", "--", "--rc-runtime" }, 0, "12\n", "");
+}
+
+// spec-case: RC-RUNTIME-CLI-1
+test "CLI RC runtime contract inheritance respects project discovery and explicit GC" {
+    var project = try PropertyProject.init(value_program);
+    defer project.deinit();
+    try project.temporary.dir.writeFile(testing.io, .{ .sub_path = "mylang.json", .data = "{\"version\":1,\"value_semantics\":false}" });
+    var environment = try std.process.Environ.createMap(testing.environ, testing.allocator);
+    defer environment.deinit();
+    _ = environment.swapRemove("MYLANG_VALUE_SEMANTICS");
+    try environment.put("MYLANG_RUNTIME", "rc-v3");
+    const inherited = try semanticModeRun(project.path, &environment, &.{});
+    defer freeRun(inherited);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 22 }, inherited.term);
+    try testing.expectEqualStrings("22\n", inherited.stdout);
+    const refused = try std.process.run(testing.allocator, testing.io, .{
+        .argv = &.{ compiler_path, "build", "-o", "unused-output", "--rc-runtime", project.path },
+        .environ_map = &environment,
+    });
+    defer freeRun(refused);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, refused.term);
+    try testing.expect(std.mem.indexOf(u8, refused.stderr, "explicit RC requires value semantics") != null);
+    try environment.put("MYLANG_RUNTIME", "rc-v2");
+    const invalid = try semanticModeRun(project.path, &environment, &.{});
+    defer freeRun(invalid);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, invalid.term);
+    try testing.expect(std.mem.indexOf(u8, invalid.stderr, "MYLANG_RUNTIME must be") != null);
+    const override = try semanticModeRun(project.path, &environment, &.{"--gc-runtime"});
+    defer freeRun(override);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 22 }, override.term);
+    try testing.expectEqualStrings("22\n", override.stdout);
+}

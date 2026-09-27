@@ -2,10 +2,13 @@
 const managed_lower = @import("qbe_managed.zig");
 const bytecode = @import("bytecode.zig");
 const typed = @import("typed.zig");
+const rc_aggregate = @import("qbe_rc_aggregate.zig");
+const runtime_mode = @import("runtime_mode.zig");
 /// Errors reported while emitting native operations.
 pub const Error = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
 /// Emit aggregate operations using native layouts and independent value snapshots.
 pub fn emit(self: anytype, op: @FieldType(bytecode.Instruction, "op"), stack: []const typed.Type) Error!void {
+    if (try rc_aggregate.emit(@TypeOf(self.*), self, op, stack)) return;
     const h = stack.len;
     switch (op) {
         .make_record => |record| {
@@ -67,28 +70,7 @@ pub fn emit(self: anytype, op: @FieldType(bytecode.Instruction, "op"), stack: []
             if (self.program.records[ty.recordIndex()].managed) return managed_lower.Lower(@TypeOf(self.*)).length(self, ty, stack);
             try self.print(" storel {d}, %s{d}\n", .{ (try self.layout(ty)).count, h - 1 });
         },
-        .get_index, .replace_index => |access| {
-            const ty = access.ty;
-            if (self.program.records[ty.recordIndex()].managed) return managed_lower.Lower(@TypeOf(self.*)).index(self, ty, stack);
-            const layout_value = try self.layout(ty);
-            const replacing = op == .replace_index;
-            const base = h - @as(usize, if (replacing) 3 else 2);
-            // QBE-ARRAYWRITE-1: a replace whose array is a local's own storage
-            // and whose result the next instruction stores back into that local
-            // writes the element where it already lives.
-            const destination = if (replacing) try replaceDestination(@TypeOf(self), self, self.pc) else null;
-            var source = if (destination) |target| try localPointer(@TypeOf(self), self, target) else try self.load("s", base);
-            // QBE-ARRAYWRITE-2: through a record field the operand already
-            // names the field inside the record's own storage.
-            const in_field = replacing and try fieldWriteReplacing(@TypeOf(self), self, self.pc) != null;
-            if (replacing and destination == null and !in_field) {
-                const copy = try self.aggregatePointer();
-                try self.print(" blit %v{d}, %v{d}, {d}\n", .{ source, copy, layout_value.size });
-                source = copy;
-            }
-            const element: Element = .{ .source = source, .result = base, .stride = layout_value.stride, .ty = layout_value.fields[0].ty, .value = if (replacing) h - 1 else null };
-            try indexedElement(@TypeOf(self), self, access, stack[base + 1], .{ .slot = base + 1, .count = layout_value.count }, element);
-        },
+        .get_index, .replace_index => try arrayAccess(self, op, stack),
         .make_variant => |variant| {
             const pointer = try self.aggregatePointer();
             const layout_value = try self.layout(variant.ty);
@@ -107,7 +89,7 @@ pub fn emit(self: anytype, op: @FieldType(bytecode.Instruction, "op"), stack: []
             for (dispatch.arms, 0..) |arm, i| {
                 const matches = self.temp();
                 try self.print(" %v{d} =l ceql %v{d}, {d}\n jnz %v{d}, @arm{d}, @armnext{d}\n@arm{d}\n", .{ matches, tag, i, matches, matches, matches, matches });
-                try armPayload(@TypeOf(self), self, dispatch.ty, arm.slot, i, pointer);
+                try armPayload(@TypeOf(self), self, dispatch, arm.slot, i, pointer);
                 try self.print(" jmp @{s}{d}\n@armnext{d}\n", .{ self.labelPrefix(arm.target), arm.target, matches });
             }
             try self.print(" jmp @failure\n", .{});
@@ -116,9 +98,42 @@ pub fn emit(self: anytype, op: @FieldType(bytecode.Instruction, "op"), stack: []
     }
 }
 
+fn arrayAccess(self: anytype, op: @FieldType(bytecode.Instruction, "op"), stack: []const typed.Type) Error!void {
+    const access = if (op == .replace_index) op.replace_index else op.get_index;
+    const h = stack.len;
+    const ty = access.ty;
+    if (self.program.records[ty.recordIndex()].managed) return managed_lower.Lower(@TypeOf(self.*)).index(self, ty, stack);
+    const layout_value = try self.layout(ty);
+    const replacing = op == .replace_index;
+    const base = h - @as(usize, if (replacing) 3 else 2);
+    // QBE-ARRAYWRITE-1: a replace whose array is a local's own storage
+    // and whose result the next instruction stores back into that local
+    // writes the element where it already lives.
+    const destination = if (replacing) try replaceDestination(@TypeOf(self), self, self.pc) else null;
+    const rc_replace = replacing and @import("qbe_rc_frame.zig").get(@TypeOf(self.*), self) != null;
+    var source = if (rc_replace) try rc_aggregate.prepareBase(@TypeOf(self.*), self, ty, base) else if (destination) |target| try localPointer(@TypeOf(self), self, target) else try self.load("s", base);
+    // QBE-ARRAYWRITE-2: through a record field the operand already
+    // names the field inside the record's own storage.
+    const in_field = replacing and try fieldWriteReplacing(@TypeOf(self), self, self.pc) != null;
+    const legacy_copy = replacing and !rc_replace;
+    if (legacy_copy and destination == null and !in_field) {
+        const copy = try self.aggregatePointer();
+        try self.print(" blit %v{d}, %v{d}, {d}\n", .{ source, copy, layout_value.size });
+        source = copy;
+    }
+    const element: Element = .{ .source = source, .result = base, .stride = layout_value.stride, .ty = layout_value.fields[0].ty, .value = if (replacing) h - 1 else null, .container = if (rc_replace) ty else null };
+    try indexedElement(@TypeOf(self), self, access, stack[base + 1], .{ .slot = base + 1, .count = layout_value.count }, element);
+}
+
 /// A box reaching mutable collections needs a private shallow COW snapshot;
 /// pure boxes use ordinary field lowering and its private-copy lifetime rules.
 fn boxRead(comptime E: type, self: E, stack: []const typed.Type, source: usize) Error!bool {
+    if (runtime_mode.enabled()) {
+        const history = @import("qbe_rc_box_history.zig");
+        if (!history.boxMaterialization(@TypeOf(self.*), self)) return false;
+        try history.unbox(@TypeOf(self.*), self, source);
+        return true;
+    }
     if (self.cow == null or !@import("value_semantics.zig").enabled()) return false;
     if (!self.program.records[stack[stack.len - 1].recordIndex()].collection.box) return false;
     if (!@import("value_semantics.zig").needsCopy(self.program.records, stack[stack.len - 1])) return false;
@@ -137,7 +152,7 @@ const IndexOperand = struct { slot: usize, count: usize };
 /// One fixed-array element access: the array's storage, the operand slot the
 /// result lands in, the element stride and type, and for a `replace` the slot
 /// holding the value written.
-const Element = struct { source: usize, result: usize, stride: usize, ty: typed.Type, value: ?usize };
+const Element = struct { source: usize, result: usize, stride: usize, ty: typed.Type, value: ?usize, container: ?typed.Type = null };
 
 /// Load a fixed-array index, check it and read or write the element it names.
 ///
@@ -198,6 +213,7 @@ fn elementAddress(comptime E: type, self: E, element: Element, index: usize) Err
 /// Read or write the element at a checked address.
 fn useElement(comptime E: type, self: E, element: Element, address_value: usize) Error!void {
     if (element.value) |slot| {
+        if (element.container) |array| return rc_aggregate.arrayElement(@TypeOf(self.*), self, .{ .array = array, .element = element.ty, .address = address_value, .source = element.source, .base = element.result, .input = slot });
         try self.writeValue(address_value, try self.load("s", slot), element.ty);
         try self.store(element.result, element.source);
     } else try self.store(element.result, try self.readValue(address_value, element.ty));
@@ -261,6 +277,7 @@ const FieldWrite = struct { read: usize, replace: usize, slot: usize, managed: b
 ///  - the `replace` is followed by an update of exactly that field of exactly
 ///    that record type and a store into the same local.
 fn fieldWriteAt(comptime E: type, self: E, pc: usize) Error!?FieldWrite {
+    if (runtime_mode.enabled()) return null;
     const code = self.function.scope.instructions;
     if (pc < 2 or pc + 1 >= code.len) return null;
     const field_index = switch (code[pc].op) {
@@ -452,6 +469,7 @@ fn fieldWriteRead(comptime E: type, self: E, write: FieldWrite, h: usize) Error!
 /// element-aligned region of the same stride, so the two are the same region or
 /// disjoint, exactly as they were when the write went to the scratch copy.
 fn replaceDestination(comptime E: type, self: E, pc: usize) Error!?usize {
+    if (runtime_mode.enabled()) return null;
     const code = self.function.scope.instructions;
     const ty = switch (code[pc].op) {
         .replace_index => |access| access.ty,
@@ -542,6 +560,7 @@ fn writesLocal(op: @FieldType(bytecode.Instruction, "op"), slot: usize) bool {
 ///    operand can name the destination's storage and be read back half
 ///    overwritten (`p = Pair(a=p.b, b=p.a)`).
 fn constructorDestination(comptime E: type, self: E, pc: usize) Error!?usize {
+    if (runtime_mode.enabled()) return null;
     const code = self.function.scope.instructions;
     const record = switch (code[pc].op) {
         .make_record => |record| record,
@@ -644,7 +663,19 @@ fn storesReference(comptime E: type, self: E, ty: typed.Type, indices: []const u
     return false;
 }
 
-fn armPayload(comptime E: type, self: E, ty_value: typed.Type, slot_value: ?typed.LocalId, i: usize, pointer: usize) Error!void {
+/// Whether this local only borrows a payload for contract inspection.
+pub fn borrowedPayload(function: bytecode.Function, index: usize) bool {
+    for (function.scope.instructions) |instruction| {
+        if (instruction.op != .switch_variant or !instruction.op.switch_variant.borrowed) continue;
+        for (instruction.op.switch_variant.arms) |arm| if (arm.slot) |slot| {
+            if (@backingInt(slot) == index) return true;
+        };
+    }
+    return false;
+}
+
+fn armPayload(comptime E: type, self: E, dispatch: @FieldType(@FieldType(bytecode.Instruction, "op"), "switch_variant"), slot_value: ?typed.LocalId, i: usize, pointer: usize) Error!void {
+    const ty_value = dispatch.ty;
     if (slot_value) |slot| {
         // QBE-MATCHPROJ-1: a projected binding already names the payload where it
         // lives — `initializeStorage` stored that address once at entry — so the
@@ -653,10 +684,10 @@ fn armPayload(comptime E: type, self: E, ty_value: typed.Type, slot_value: ?type
         const ty = self.function.scope.locals[@backingInt(slot)].ty;
         const payload = try self.readValue(try self.address(pointer, (try self.layout(ty_value)).payload_offset), ty);
         if (self.isScalar(ty)) try self.print(" storel %v{d}, %l{d}\n", .{ payload, @backingInt(slot) }) else try self.print(" blit %v{d}, %l{d}, {d}\n", .{ payload, @backingInt(slot), (try self.layout(ty)).size });
-    } else if (self.program.records[ty_value.recordIndex()].shape.variants.?.cases[i].payload) |payload_ty| {
+    } else if (!dispatch.borrowed) if (self.program.records[ty_value.recordIndex()].shape.variants.?.cases[i].payload) |payload_ty| {
         if ((try self.layout(payload_ty)).drop) {
             const payload = try self.address(pointer, (try self.layout(ty_value)).payload_offset);
             try self.print(" call $myl_native_owned_drop(l %heap, l extern ${s}, l %v{d})\n", .{ try self.descriptor(payload_ty), payload });
         }
-    }
+    };
 }

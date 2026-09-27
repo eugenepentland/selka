@@ -94,6 +94,8 @@ pub const Site = struct {
     /// The operand depths whose payloads a transfer here shares (the stage
     /// 3a copy hook's sites, until that hook lands).
     shares: []const u8 = &.{},
+    /// Pending dictionary reads captured before a key can run guest code.
+    read_captures: []const u8 = &.{},
 };
 
 /// The loops checks moved to: per instruction, the checks its entry edges run
@@ -158,7 +160,7 @@ pub const Plan = struct {
     /// Whether any check or share needs the root protocol.
     pub fn active(self: Plan) bool {
         for (self.checked) |flag| if (flag) return true;
-        for (self.sites) |site| if (site.shares.len != 0) return true;
+        for (self.sites) |site| if (site.shares.len != 0 or site.read_captures.len != 0) return true;
         return false;
     }
 };
@@ -268,10 +270,11 @@ pub fn plan(a: std.mem.Allocator, input: Input) Error!Plan {
     @memset(planner.sites, .{});
     @memset(planner.marks.checked, false);
     for (0..count) |index| try findPlace(&planner, @intCast(index));
-    try keepWritten(&planner);
+    const written = try keepWritten(&planner);
     const loops = try placeStageTwo(&planner);
     try placePlaces(&planner);
-    if (input.shares) try placeShares(&planner);
+    try placeShares(&planner, written);
+    try placeReadOperands(&planner);
     for (planner.sites, planner.unique) |*site, *list| site.unique = try list.toOwnedSlice(a);
     return .{ .places = planner.places, .aliases = planner.aliases, .sites = planner.sites, .loops = loops, .checked = planner.marks.checked };
 }
@@ -285,16 +288,34 @@ fn temporary(function: bytecode.Function, index: u32) bool {
     return local.name.len == 0 or local.name[0] == '<';
 }
 
-/// The one reachable store into `index`, or null.
+/// A hidden managed iteration source preserves header identity, unlike a value snapshot.
+pub fn iterationOwner(function: bytecode.Function, index: usize) bool {
+    if (index >= function.scope.locals.len or !temporary(function, @intCast(index))) return false;
+    for (function.scope.instructions) |instruction| {
+        if (instruction.op != .buffer_operation) continue;
+        const operation = instruction.op.buffer_operation;
+        if (operation.kind == .iteration_check and li(operation.owner) == index) return true;
+    }
+    return false;
+}
+
+/// The one reachable store into `index`, or null. A terminal drop only ends
+/// the place lifetime; named-argument evaluation emits that cleanup explicitly.
 fn singleStore(planner: *const Planner, index: u32) ?usize {
     var found: ?usize = null;
+    var ended = false;
     for (planner.code(), 0..) |instruction, pc| {
         if (!planner.reachable(pc)) continue;
         switch (instruction.op) {
-            .store_local, .move_local, .drop_local => |slot| if (li(slot) == index) {
+            .store_local, .move_local => |slot| if (li(slot) == index) {
                 if (instruction.op != .store_local or found != null) return null;
                 found = pc;
             },
+            .drop_local => |slot| if (li(slot) == index) {
+                if (found == null) return null;
+                ended = true;
+            },
+            .load_local => |slot| if (li(slot) == index and ended) return null,
             .switch_variant => |dispatch| for (dispatch.arms) |arm| if (arm.slot) |slot| if (li(slot) == index) return null,
             .ref_local => |slot| if (li(slot) == index) return null,
             else => {},
@@ -456,7 +477,7 @@ fn arrayType(program: bytecode.Program, ty: typed.Type) bool {
 
 /// Keep only the places a write goes through: the receiver of a writing
 /// operation, and every place or alias another written place is read out of.
-fn keepWritten(planner: *Planner) Error!void {
+fn keepWritten(planner: *Planner) Error![]const bool {
     const written = try planner.a.alloc(bool, planner.places.len);
     @memset(written, false);
     for (planner.code(), 0..) |instruction, pc| {
@@ -468,6 +489,9 @@ fn keepWritten(planner: *Planner) Error!void {
             else => {},
         }
     }
+    // Spliced mut parameters may write only through a later call. They are
+    // writing aliases too, even without a buffer operation in this body.
+    for (planner.input.analysis.cows) |site| written[site.via] = true;
     var changed = true;
     while (changed) {
         changed = false;
@@ -482,6 +506,7 @@ fn keepWritten(planner: *Planner) Error!void {
     for (planner.places, written) |*found, flag| if (!flag) {
         found.* = null;
     };
+    return written;
 }
 
 /// Whether a buffer operation changes the collection it is called on.
@@ -524,9 +549,9 @@ fn stageTwoRoot(planner: *Planner, site: ownership.Cow) Error!void {
     if (planner.places[via] != null) return;
     const root = planner.resolve(via);
     if (planner.places[root] != null or !planner.payload(root)) return;
-    if (planner.role(root) == .mut_param) return;
+    if (planner.role(root) == .mut_param and ownership.uniqueParameter(planner.input.function, root)) return;
     switch (planner.code()[site.pc].op) {
-        .buffer_operation => |operation| if (!writes(operation.kind) and planner.input.analysis.roles[li(operation.owner)] != .owned) return,
+        .buffer_operation => |operation| if (!writes(operation.kind) and !rootNeedsCheck(planner, li(operation.owner))) return,
         else => {},
     }
     try planner.addUnique(site.pc, .{ .local = root, .alias = if (via != root) via else none });
@@ -563,7 +588,7 @@ fn placePlaces(planner: *Planner) Error!void {
         if (found.step == .field or found.step == .entry_field) continue;
         const root = planner.resolve(found.parent);
         if (planner.places[root] != null or !planner.payload(root)) continue;
-        if (planner.role(root) != .owned or rootCovered(planner, found, root)) continue;
+        if (!rootNeedsCheck(planner, root) or rootCovered(planner, found, root)) continue;
         try planner.addUnique(rootPc(planner, found), .{ .local = root, .alias = if (found.parent != root) found.parent else none });
     }
 }
@@ -612,16 +637,26 @@ fn aliasFill(planner: *const Planner, index: u32) ?usize {
 /// copy shares its payloads, except a store into a compiler temporary, which
 /// names a place or is only read. A match binding shares the payload of the
 /// scrutinee it binds.
-fn placeShares(planner: *Planner) Error!void {
+fn placeShares(planner: *Planner, written: []const bool) Error!void {
     const a = planner.a;
     const lists = try a.alloc(std.ArrayList(u8), planner.sites.len);
     for (lists) |*list| list.* = .empty;
     for (planner.input.analysis.transfers) |transfer| {
         if (transfer.class != .copy) continue;
+        if (!planner.input.shares) {
+            const op = planner.code()[transfer.pc].op;
+            if (op != .store_local) continue;
+            const local = li(op.store_local);
+            // A read capture can outlive a callback that mutates its source.
+            // Unlike a pending writing place, it needs an independent value.
+            if (!temporary(planner.input.function, local)) continue;
+            if (written[local] or !planner.payload(local)) continue;
+            if (iterationOwner(planner.input.function, local)) continue;
+        }
         const operands = planner.input.analysis.operands[transfer.pc] orelse continue;
         const types = planner.input.states[transfer.pc] orelse continue;
         switch (planner.code()[transfer.pc].op) {
-            .store_local => |slot| if (temporary(planner.input.function, li(slot))) continue,
+            .store_local => |slot| if (planner.input.shares and temporary(planner.input.function, li(slot))) continue,
             .call, .invoke => continue,
             .switch_variant => {
                 try addDepth(a, &lists[transfer.pc], 0);
@@ -640,4 +675,81 @@ fn placeShares(planner: *Planner) Error!void {
 fn addDepth(a: std.mem.Allocator, list: *std.ArrayList(u8), depth: u8) Error!void {
     for (list.items) |existing| if (existing == depth) return;
     try list.append(a, depth);
+}
+
+/// Dictionary reads keep their receiver on the operand stack. Capture
+/// it before a key callback, at the first state holding that dictionary value.
+fn placeReadOperands(planner: *Planner) Error!void {
+    if (planner.input.shares) return;
+    const a = planner.a;
+    const lists = try a.alloc(std.ArrayList(u8), planner.sites.len);
+    for (lists) |*list| list.* = .empty;
+    for (planner.code(), 0..) |instruction, pc| {
+        if (!planner.reachable(pc) or instruction.op != .get_index) continue;
+        const ty = instruction.op.get_index.ty;
+        if (!dictionaryType(planner.input.program, ty)) continue;
+        if (writtenRead(planner, pc)) continue;
+        const operands = planner.input.analysis.operands[pc] orelse continue;
+        if (operands.len < 2) return error.InternalError;
+        const position = operands.len - 2;
+        const source = operands[position];
+        if (source.origin != .local or source.read == none) continue;
+        var capture: ?usize = null;
+        var callback = false;
+        for (source.read + 1..pc) |at| {
+            const stack = planner.input.states[at] orelse continue;
+            if (capture == null and position < stack.len and stack[position] == ty) capture = at;
+            switch (planner.code()[at].op) {
+                .call, .invoke => callback = true,
+                .buffer_operation => |operation| if (writes(operation.kind)) {
+                    callback = true;
+                },
+                else => {},
+            }
+        }
+        if (callback) if (capture) |at| {
+            const stack = planner.input.states[at].?;
+            try addDepth(a, &lists[at], @intCast(stack.len - 1 - position));
+        };
+    }
+    for (lists, planner.sites) |*list, *site| site.read_captures = try list.toOwnedSlice(a);
+}
+
+/// A dictionary lookup selecting a pending writing path retains that path's
+/// identity protocol instead of making an independent read snapshot.
+fn writtenRead(planner: *const Planner, pc: usize) bool {
+    for (planner.places) |maybe| if (maybe) |place| {
+        if (place.base == pc or place.read == pc) return true;
+    };
+    return false;
+}
+
+fn rootNeedsCheck(planner: *const Planner, root: u32) bool {
+    return planner.role(root) == .owned or
+        (planner.role(root) == .mut_param and !ownership.uniqueParameter(planner.input.function, root));
+}
+
+fn testSingleStore(a: std.mem.Allocator, ops: []const Op) !?usize {
+    const code = try a.alloc(bytecode.Instruction, ops.len);
+    defer a.free(code);
+    const states = try a.alloc(?[]const typed.Type, ops.len);
+    defer a.free(states);
+    for (code, ops, states) |*instruction, op, *state| {
+        instruction.* = .{ .span = .{ .start = 0, .end = 0 }, .op = op };
+        state.* = &.{};
+    }
+    // This query reads only the instruction stream and reachability table.
+    var planner: Planner = undefined;
+    planner.input.function.scope.instructions = code;
+    planner.input.states = states;
+    return singleStore(&planner, 0);
+}
+
+// spec-case: COW-MUT-ARGUMENT-1
+test "COW-MUT-ARGUMENT-1 named place permits terminal cleanup but rejects a later read" {
+    const local: typed.LocalId = @fromBackingInt(@intCast(0));
+    try std.testing.expectEqual(@as(?usize, 0), try testSingleStore(std.testing.allocator, &.{ .{ .store_local = local }, .{ .load_local = local }, .{ .drop_local = local } }));
+    try std.testing.expectEqual(@as(?usize, null), try testSingleStore(std.testing.allocator, &.{ .{ .store_local = local }, .{ .drop_local = local }, .{ .load_local = local } }));
+    try std.testing.expectEqual(@as(?usize, null), try testSingleStore(std.testing.allocator, &.{ .{ .drop_local = local }, .{ .store_local = local } }));
+    try std.testing.expectEqual(@as(?usize, null), try testSingleStore(std.testing.allocator, &.{ .{ .store_local = local }, .{ .drop_local = local }, .{ .store_local = local } }));
 }

@@ -1,0 +1,403 @@
+{
+  "compiler_sha256": {
+    "before": "d575a79e33ec9a87272ccc083e0dfd343c89978ed3ffe4fabf64a9bf02f7215d",
+    "after": "1beaacb9b76240dd563f5620a5ff391fb835684935671c84da43375c3ac98d54"
+  },
+  "emissions": [
+    {
+      "side": "before",
+      "kind": "schematic",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-lox-probe-astra/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-lox-probe-astra/.tmp-managed-readonly/install-before/bin/mylang",
+        "emit-project-qbe",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/src/schematic/guest/main.my",
+        "--no-cache",
+        "--rc-runtime"
+      ],
+      "status": 0,
+      "stderr": "build-slot: all 3 build slot(s) busy; waiting (0s so far)\nbuild-slot: build slot 2 after 15s (all 3 build slot(s) busy)\nlayout.my:223:25: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def nearest(pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], rows: list[Row], nets: list[g.Net], lookup: list[int]) -> int:\n                          ^\nlayout.my:274:23: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def depth(pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net], lookup: list[int]) -> int:\n                        ^\nlayout.my:274:44: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def depth(pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net], lookup: list[int]) -> int:\n                                             ^\nlayout_routes.my:42:50: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def blocked(a: l.Point, b: l.Point, net_id: int, parts: list[c.Part], pins: list[c.Pin], points: list[l.Point]) -> bool:\n                                                   ^\n",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-lox-probe-astra/.tmp-managed-readonly/schematic-bytes-before-emitted.json",
+      "sha256": "abe845d6d2ad855baca394747ff66988c0adc191dfd7e4a16db55801b2066d03"
+    },
+    {
+      "side": "after",
+      "kind": "schematic",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-lox-probe-astra/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-lox-probe-astra/.tmp-managed-readonly/install-bytes/bin/mylang",
+        "emit-project-qbe",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/src/schematic/guest/main.my",
+        "--no-cache",
+        "--rc-runtime"
+      ],
+      "status": 0,
+      "stderr": "build-slot: all 3 build slot(s) busy; waiting (0s so far)\nbuild-slot: all 3 build slot(s) busy; waiting (60s so far)\nbuild-slot: build slot 1 after 70s (all 3 build slot(s) busy)\nlayout.my:223:25: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def nearest(pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], rows: list[Row], nets: list[g.Net], lookup: list[int]) -> int:\n                          ^\nlayout.my:274:23: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def depth(pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net], lookup: list[int]) -> int:\n                        ^\nlayout.my:274:44: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def depth(pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net], lookup: list[int]) -> int:\n                                             ^\nlayout_routes.my:42:50: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def blocked(a: l.Point, b: l.Point, net_id: int, parts: list[c.Part], pins: list[c.Pin], points: list[l.Point]) -> bool:\n                                                   ^\n",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-lox-probe-astra/.tmp-managed-readonly/schematic-bytes-after-emitted.json",
+      "sha256": "ecf5f7639f82d6bd790a2748a01a9f9882b6fdd05d99b9920122f88af8a8f339"
+    },
+    {
+      "side": "before",
+      "kind": "lox",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-lox-probe-astra/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-lox-probe-astra/.tmp-managed-readonly/install-before/bin/mylang",
+        "emit-project-qbe",
+        "main.my",
+        "--no-cache",
+        "--rc-runtime"
+      ],
+      "status": 0,
+      "stderr": "build-slot: all 3 build slot(s) busy; waiting (0s so far)\nbuild-slot: all 3 build slot(s) busy; waiting (60s so far)\nbuild-slot: all 3 build slot(s) busy; waiting (121s so far)\nbuild-slot: build slot 3 after 146s (all 3 build slot(s) busy)\n",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-lox-probe-astra/.tmp-managed-readonly/lox-bytes-before-emitted.json",
+      "sha256": "dd85fde22ca3cc701730f24179c8dffb76789edaed495c7ad68b018823fe7259"
+    },
+    {
+      "side": "after",
+      "kind": "lox",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-lox-probe-astra/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-lox-probe-astra/.tmp-managed-readonly/install-bytes/bin/mylang",
+        "emit-project-qbe",
+        "main.my",
+        "--no-cache",
+        "--rc-runtime"
+      ],
+      "status": 0,
+      "stderr": "",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-lox-probe-astra/.tmp-managed-readonly/lox-bytes-after-emitted.json",
+      "sha256": "e6fcfee1c057bc71b5b25f59eb9863fbeddb35d20141092c817f4a927074bc85"
+    }
+  ],
+  "changed": {
+    "schematic": [
+      {
+        "name": "sexpr::form",
+        "symbol": "myl_f_73437c137e535cfbb2d0f6f939f618867acfbba85a2ad1fc0b7208f300152ff4",
+        "before_il_sha256": "f018795e2a3f19e451f94bd02d63db7e74869d11c3a4c04f5bfce210ab01d1e3",
+        "after_il_sha256": "6ffdb017c807df8582e0a22c10329f4c990ecbfbd11b60c30840e46821014256",
+        "calls": {
+          "call $myl_rc_native_loan": {
+            "before": 4,
+            "after": 0
+          },
+          "call $myl_rc_native_retain": {
+            "before": 3,
+            "after": 0
+          },
+          "call $myl_qbe_rc_frame_enter": {
+            "before": 1,
+            "after": 0
+          }
+        }
+      },
+      {
+        "name": "text::equal",
+        "symbol": "myl_f_85091dc1e53cde54c43a775714b5b74a5234f3d8b1bb10e06182208de850c902",
+        "before_il_sha256": "a59eab57d1665a0e24162a20105eeade03519b6273cc7f8aa0c4467a1e35ed2b",
+        "after_il_sha256": "124346f3e3194a02380ec8b7b5c7c2afac924667f0f9a6b663f24bbda4d4cd30",
+        "calls": {
+          "call $myl_rc_native_loan": {
+            "before": 2,
+            "after": 0
+          },
+          "call $myl_rc_native_retain": {
+            "before": 0,
+            "after": 0
+          },
+          "call $myl_qbe_rc_frame_enter": {
+            "before": 1,
+            "after": 0
+          }
+        }
+      },
+      {
+        "name": "text::matches",
+        "symbol": "myl_f_70507ebd1e23b87cc572ee057dc935bbc41e89b445f03a07b67a955a553428d8",
+        "before_il_sha256": "717aeb6ff44584b7a91af2b1f02aed275c8fc75dc2085ee839f08a05199a62fe",
+        "after_il_sha256": "b0e02c2a8bef53eb7acab62f6ec4259a87c9afb6db0a416bca6418d0e430de48",
+        "calls": {
+          "call $myl_rc_native_loan": {
+            "before": 1,
+            "after": 0
+          },
+          "call $myl_rc_native_retain": {
+            "before": 0,
+            "after": 0
+          },
+          "call $myl_qbe_rc_frame_enter": {
+            "before": 1,
+            "after": 0
+          }
+        }
+      },
+      {
+        "name": "text::number",
+        "symbol": "myl_f_2c28b2841eb8f2ade03a5fa960dd3d2bce1e6c448217cb4f4781bc6779f27d96",
+        "before_il_sha256": "6b6f26329c43cfe92faa2b9fe2669a196c7134668062136a35dd4aca378dd1dc",
+        "after_il_sha256": "6e292b93f323a6bdbe5851f48784b60dcbb8018753646f52ffcee764ac7b494e",
+        "calls": {
+          "call $myl_rc_native_loan": {
+            "before": 1,
+            "after": 0
+          },
+          "call $myl_rc_native_retain": {
+            "before": 0,
+            "after": 0
+          },
+          "call $myl_qbe_rc_frame_enter": {
+            "before": 1,
+            "after": 0
+          }
+        }
+      },
+      {
+        "name": "text::identifier",
+        "symbol": "myl_f_a7ea5ff55f032cf48ed8fbf2c8588026c0e1e62d70559da071bc8ee4d4fb9117",
+        "before_il_sha256": "49372e047f6c3707ae46b8f4c0e53c5cebdb357428abd2ef849071bdaac27d86",
+        "after_il_sha256": "aac4d7baafaba68cbda3de0b9d2d092e8fdf61c0a3ba1a38ac1389ad329e41f3",
+        "calls": {
+          "call $myl_rc_native_loan": {
+            "before": 1,
+            "after": 0
+          },
+          "call $myl_rc_native_retain": {
+            "before": 0,
+            "after": 0
+          },
+          "call $myl_qbe_rc_frame_enter": {
+            "before": 1,
+            "after": 0
+          }
+        }
+      },
+      {
+        "name": "text::folded",
+        "symbol": "myl_f_0c8bb239024ef4bd4754ef1c487e7e034fb301ca7e5cdad91893eb39a77d81c5",
+        "before_il_sha256": "eea8d268dc306047766f8dc1356dc6b202db519cda87e6a30a951f70f854fadf",
+        "after_il_sha256": "a4376b556a6c229580e392f176b9e590822e7c9a4c56a62bc4e0f06b402e1bdd",
+        "calls": {
+          "call $myl_rc_native_loan": {
+            "before": 2,
+            "after": 0
+          },
+          "call $myl_rc_native_retain": {
+            "before": 0,
+            "after": 0
+          },
+          "call $myl_qbe_rc_frame_enter": {
+            "before": 1,
+            "after": 0
+          }
+        }
+      },
+      {
+        "name": "ports::byteAt",
+        "symbol": "myl_f_afaa14d960f0417cb04984a0aa6660c3351790a1e7b45de042eb1513d99112d5",
+        "before_il_sha256": "0d29c7da873b4bcdfaa9c4b682607dccef0d283d7b1f3925dd233ac525e7b573",
+        "after_il_sha256": "530654bb49e62b62c2c82227af0b165e1fb0efa3f74817a6998dfc7da2a7d3cd",
+        "calls": {
+          "call $myl_rc_native_loan": {
+            "before": 11,
+            "after": 0
+          },
+          "call $myl_rc_native_retain": {
+            "before": 0,
+            "after": 0
+          },
+          "call $myl_qbe_rc_frame_enter": {
+            "before": 1,
+            "after": 0
+          }
+        }
+      },
+      {
+        "name": "ports::equal",
+        "symbol": "myl_f_cac83966c3a1f3b02454cb5ff2e960badcf08583277698a70329ae66fb9037cf",
+        "before_il_sha256": "4706f0aafe70b5f0f6fc219ebb85c041ff3be573e5c5d8b1fea66927028feb8e",
+        "after_il_sha256": "49984a5b883d33b26dcc457ed9eee487dc658e8b293a14225c07307755bdd10f",
+        "calls": {
+          "call $myl_rc_native_loan": {
+            "before": 40,
+            "after": 0
+          },
+          "call $myl_rc_native_retain": {
+            "before": 5,
+            "after": 0
+          },
+          "call $myl_qbe_rc_frame_enter": {
+            "before": 1,
+            "after": 0
+          }
+        }
+      },
+      {
+        "name": "layout::bridge",
+        "symbol": "myl_f_d55ed2c1fabbb716423d58fa43a03a9e272df8042127651d114444204a3b37cc",
+        "before_il_sha256": "a1fff0eb2c234d98cb8a1337c9f673999213a0490216daef5eedf23a66dd0e89",
+        "after_il_sha256": "921367a8f5e3b64136be8e2817ec12e1224127bcea2280728e1a864fe1ddc00c",
+        "calls": {
+          "call $myl_rc_native_loan": {
+            "before": 2,
+            "after": 0
+          },
+          "call $myl_rc_native_retain": {
+            "before": 2,
+            "after": 0
+          },
+          "call $myl_qbe_rc_frame_enter": {
+            "before": 1,
+            "after": 0
+          }
+        }
+      },
+      {
+        "name": "layout::groundBranch",
+        "symbol": "myl_f_6102492c12c6d1588d3abba1f6d33586ccf6be91626784d898935dfd4e488d86",
+        "before_il_sha256": "8ca32030389cb01f471b07782921fa6ade9192684755ff160b2f6182ac53437c",
+        "after_il_sha256": "bdce41889f98eea4c99663e69c4b3a58e0e18becd102c760e065d5ba5674f7ba",
+        "calls": {
+          "call $myl_rc_native_loan": {
+            "before": 4,
+            "after": 0
+          },
+          "call $myl_rc_native_retain": {
+            "before": 4,
+            "after": 0
+          },
+          "call $myl_qbe_rc_frame_enter": {
+            "before": 1,
+            "after": 0
+          }
+        }
+      },
+      {
+        "name": "layout_graph::find",
+        "symbol": "myl_f_c8ca72a8c805729626b8fe0ecc39bbde59b6ac766655ab3671a408eaac464d15",
+        "before_il_sha256": "56caf2d4ac66d174a416adaf9068ad270e03e2070ef4cc3022afb1ad31625df2",
+        "after_il_sha256": "d35eac7c8d89ae17a086d242190a92fee85285bd8a90e287d11eb830a02c66c0",
+        "calls": {
+          "call $myl_rc_native_loan": {
+            "before": 5,
+            "after": 0
+          },
+          "call $myl_rc_native_retain": {
+            "before": 2,
+            "after": 0
+          },
+          "call $myl_qbe_rc_frame_enter": {
+            "before": 1,
+            "after": 0
+          }
+        }
+      }
+    ],
+    "lox": [
+      {
+        "name": "interpreter::arithmetic",
+        "symbol": "myl_f_549c194dd59052d6a584a91a45f8e27a465f53a107227cc684c6aadde33da3a0",
+        "before_il_sha256": "463af8f14949b50c2ec1dc76a9e85694dcac592c1eb0d26fb13c50f036f71af0",
+        "after_il_sha256": "e6efacec3b0f0c5d8f8b6239b099c6570fb7a15103c312e22c0c1f20c85580b9",
+        "calls": {
+          "call $myl_rc_native_loan": {
+            "before": 0,
+            "after": 0
+          },
+          "call $myl_rc_native_retain": {
+            "before": 0,
+            "after": 0
+          },
+          "call $myl_qbe_rc_frame_enter": {
+            "before": 0,
+            "after": 0
+          }
+        }
+      },
+      {
+        "name": "scanner::token_is",
+        "symbol": "myl_f_efd475ff0f0f73fb47523cac8746d351c8707bc38616c1156063f8bc42bb9947",
+        "before_il_sha256": "6aecbadc7881bc24baceaafaf61b43921cb81ec600fae619f30c9c0c6bee11f7",
+        "after_il_sha256": "617b525ed7d11abe382965e9e4dc2bde1b71ad0524800fc254f24c8adde3ec58",
+        "calls": {
+          "call $myl_rc_native_loan": {
+            "before": 0,
+            "after": 0
+          },
+          "call $myl_rc_native_retain": {
+            "before": 0,
+            "after": 0
+          },
+          "call $myl_qbe_rc_frame_enter": {
+            "before": 1,
+            "after": 0
+          }
+        }
+      },
+      {
+        "name": "scanner::peek",
+        "symbol": "myl_f_27a3542393b8217ef7be2c940ab8ef189833f24bc415b497a3e940f6e2a55c7c",
+        "before_il_sha256": "cab59b8a66e323a0522090f09b0d595873074fd797eb1040a0faa2b884a144d3",
+        "after_il_sha256": "1a12faa8dc1630559483129ba4f00b7a2977e6608c58cc6bfc1d5ba5d03d618a",
+        "calls": {
+          "call $myl_rc_native_loan": {
+            "before": 2,
+            "after": 0
+          },
+          "call $myl_rc_native_retain": {
+            "before": 1,
+            "after": 0
+          },
+          "call $myl_qbe_rc_frame_enter": {
+            "before": 1,
+            "after": 0
+          }
+        }
+      },
+      {
+        "name": "scanner::peek_next",
+        "symbol": "myl_f_821e62f92daeb123b67a8cfb36317f9fa3b76e40fb02264db2f17254a1416ab1",
+        "before_il_sha256": "e740fb5abaac0588cd04e630a9a8b09761002472a15f03106e1475f6004abac6",
+        "after_il_sha256": "3553fb1856354069f4213cb7899c2bf1b5676f56349e053945e2a90e802febf6",
+        "calls": {
+          "call $myl_rc_native_loan": {
+            "before": 2,
+            "after": 0
+          },
+          "call $myl_rc_native_retain": {
+            "before": 0,
+            "after": 0
+          },
+          "call $myl_qbe_rc_frame_enter": {
+            "before": 1,
+            "after": 0
+          }
+        }
+      },
+      {
+        "name": "scanner::check_keyword",
+        "symbol": "myl_f_96ae5795e772e369cd7167cab19ea1baba09fac3b8f4b63fa55efde8e8e96b5b",
+        "before_il_sha256": "cf7d4260a4cfa2e340da4bba1e864e8b40e6d784c304b52020ad564be740c164",
+        "after_il_sha256": "4b0fc6919be422c2bab1c589ffc083d553f41712eb54daaca6e2281bba5ea36a",
+        "calls": {
+          "call $myl_rc_native_loan": {
+            "before": 1,
+            "after": 0
+          },
+          "call $myl_rc_native_retain": {
+            "before": 0,
+            "after": 0
+          },
+          "call $myl_qbe_rc_frame_enter": {
+            "before": 1,
+            "after": 0
+          }
+        }
+      }
+    ]
+  },
+  "complete": true
+}

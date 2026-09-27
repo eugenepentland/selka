@@ -1,0 +1,22 @@
+{
+  "command": [
+    "perf",
+    "record",
+    "-e",
+    "instructions:u",
+    "-c200000000",
+    "-g",
+    "-o",
+    ".tmp-nbody/profile-llvm-coarse.data",
+    "--",
+    "taskset",
+    "-c",
+    "11",
+    ".tmp-nbody/nbody-llvm-rc"
+  ],
+  "status": 0,
+  "stdout": "-169075163\n-169083133\n",
+  "stderr": "[ perf record: Woken up 1 times to write data ]\n[ perf record: Captured and wrote 0.028 MB .tmp-nbody/profile-llvm-coarse.data (129 samples) ]\n",
+  "throttle_records": 129,
+  "max_sample_rate": 1000
+}

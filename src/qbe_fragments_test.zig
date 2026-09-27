@@ -441,6 +441,8 @@ fn expectSameBuild(allocator: std.mem.Allocator, expected: []const u8, actual: [
 /// A lean unit's name, symbol, text digest, facts and metadata digest.
 fn unitShape(allocator: std.mem.Allocator, unit: std.json.Value) ![]const u8 {
     const fields = unit.object;
+    // Borrowed alternates are regenerated from the complete physical proof.
+    if (fields.get("il") != null) return std.json.Stringify.valueAlloc(allocator, unit, .{});
     return std.fmt.allocPrint(allocator, "{s} {s} {s} {s} {s}", .{
         fields.get("name").?.string,
         fields.get("symbol").?.string,
@@ -548,4 +550,127 @@ test "a body edit in one module stands in every function of the modules it did n
     try t.expectEqual(@as(usize, 2), back.reused);
     const again = try expectStandInMatches(a, root, reference, &three);
     try t.expectEqual(@as(usize, 4), again.reused);
+}
+
+const rc_main =
+    \\module main
+    \\import helper
+    \\def main() -> int:
+    \\    nodes = [helper.Span(b"abc", 2)]
+    \\    selected = helper.at(nodes, 0)
+    \\    return selected.start
+;
+const rc_helper =
+    \\module helper
+    \\public record Span:
+    \\    source: bytes
+    \\    start: int
+    \\def empty() -> Span:
+    \\    return Span(b"", 0)
+    \\public def at(nodes: list[Span], index: int) -> Span:
+    \\    if index < 0 or index >= len(nodes):
+    \\        return empty()
+    \\    return nodes[index]
+;
+const rc_original: Files = .{ .main = rc_main, .helper = rc_helper };
+const rc_transitive: Files = .{ .main = rc_main, .helper = replaced(rc_helper, "return Span(b\"\", 0)", "return Span(b\"\", 7)") };
+const rc_fresh: Files = .{ .main = rc_main, .helper = replaced(rc_helper, "return Span(b\"\", 0)", "return Span(bytes([7]), 0)") };
+
+// spec: RC-BORROW-CACHE-1
+test "RC-BORROW-CACHE-1 caller fragments follow transitive proof edits and refusal" {
+    const runtime = @import("runtime_mode.zig");
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    var directory = t.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    const cold = try expectReusedEqualsFresh(root, &rc_original);
+    const warm = try expectReusedEqualsFresh(root, &rc_original);
+    try t.expectEqual(cold.misses, warm.hits);
+    try t.expectEqual(@as(usize, 0), warm.misses);
+    const transitive = try expectReusedEqualsFresh(root, &rc_transitive);
+    try t.expect(transitive.misses >= 2);
+    const fresh = try expectReusedEqualsFresh(root, &rc_fresh);
+    try t.expect(fresh.misses >= 2);
+    _ = try expectReusedEqualsFresh(root, &rc_original);
+}
+
+// spec-case: RC-BORROW-CACHE-1
+test "RC-BORROW-CACHE-1 stand-ins lower complete proofs and preserve alternate metadata" {
+    const runtime = @import("runtime_mode.zig");
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    var directory = t.tmpDir(.{});
+    defer directory.cleanup();
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const base = try directory.dir.realPathFileAlloc(t.io, ".", a);
+    const root = try std.fs.path.join(a, &.{ base, "standin" });
+    const reference = try std.fs.path.join(a, &.{ base, "full" });
+    const cold = try expectStandInMatches(a, root, reference, &rc_original);
+    const warm = try expectStandInMatches(a, root, reference, &rc_original);
+    try t.expectEqual(cold.lowered, warm.lowered);
+    try t.expectEqual(@as(usize, 0), warm.reused);
+    _ = try expectStandInMatches(a, root, reference, &rc_transitive);
+    _ = try expectStandInMatches(a, root, reference, &rc_fresh);
+    const restored = try expectStandInMatches(a, root, reference, &rc_original);
+    try t.expectEqual(cold.lowered, restored.lowered);
+}
+
+const rc_loop_helper = replaced(
+    rc_helper,
+    "    if index < 0 or index >= len(nodes):\n        return empty()\n    return nodes[index]",
+    "    i = 0\n    while i < len(nodes):\n        node = nodes[i]\n        if node.start == index:\n            return node\n        i += 1\n    return empty()",
+);
+
+const rc_loop_fresh = replaced(rc_loop_helper, "b\"\"", "bytes([7])");
+
+// spec-case: RC-BORROW-LOOP-1
+test "RC-BORROW-LOOP-1 warm callers follow loop certificates and fresh fallback refusal" {
+    const runtime = @import("runtime_mode.zig");
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    var directory = t.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    const looping: Files = .{ .main = rc_main, .helper = rc_loop_helper };
+    const fresh: Files = .{ .main = rc_main, .helper = rc_loop_fresh };
+    const cold = try expectReusedEqualsFresh(root, &looping);
+    const warm = try expectReusedEqualsFresh(root, &looping);
+    try t.expectEqual(cold.misses, warm.hits);
+    try t.expectEqual(@as(usize, 0), warm.misses);
+    const refused = try expectReusedEqualsFresh(root, &fresh);
+    try t.expect(refused.misses >= 2);
+    _ = try expectReusedEqualsFresh(root, &looping);
+}
+
+const rc_composed_helper = replaced(rc_loop_helper, "public def at(", "def picked(") ++
+    "\npublic def at(nodes: list[Span], index: int) -> Span:\n    a = picked(nodes, index)\n    b = picked(nodes, index + 1)\n    if a.start < b.start:\n        return a\n    return b\n";
+const rc_composed_fresh = replaced(rc_composed_helper, "b\"\"", "bytes([7])");
+
+// spec-case: RC-BORROW-COMPOSE-1
+test "RC-BORROW-COMPOSE-1 caller cache follows transitive callee certificate loss" {
+    const runtime = @import("runtime_mode.zig");
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    var directory = t.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    const composed: Files = .{ .main = rc_main, .helper = rc_composed_helper };
+    const lost: Files = .{ .main = rc_main, .helper = rc_composed_fresh };
+    const cold = try expectReusedEqualsFresh(root, &composed);
+    const warm = try expectReusedEqualsFresh(root, &composed);
+    try t.expectEqual(cold.misses, warm.hits);
+    try t.expectEqual(@as(usize, 0), warm.misses);
+    const refused = try expectReusedEqualsFresh(root, &lost);
+    try t.expect(refused.misses >= 3);
+    _ = try expectReusedEqualsFresh(root, &composed);
 }

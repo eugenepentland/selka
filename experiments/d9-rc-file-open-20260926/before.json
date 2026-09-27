@@ -1,0 +1,13 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-integration/.tmp-rc/install-identity/bin/mylang",
+    "run",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/.tmp/file-open-leak/missing.my",
+    "--print-result",
+    "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/.tmp/file-open-leak/before-cache"
+  ],
+  "compiler_sha256": "4e3cc120f065f63ecb3e8b75ce22c37582c1c4ba623a70853898d8063fd1aedb",
+  "returncode": 1,
+  "stdout": "",
+  "stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v2-counting\",\"saturated\":false,\"owner_acquire\":0,\"owner_release\":0,\"hold_acquire\":0,\"hold_release\":0,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":1,\"arena_allocate\":0,\"retire\":0,\"clone_shell\":0,\"unique_check\":0}\n/home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/.tmp/file-open-leak/missing.my:2:10: error[R_FILE]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang-worktrees/d9-rc-collections-astra/.tmp/file-open-leak/missing.my:2:10\n"
+}

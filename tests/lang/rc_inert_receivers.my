@@ -1,0 +1,115 @@
+def write(items: mut list[list[int]], row: int, column: int, value: int) -> unit:
+    items[row][column] = value
+
+
+# spec-case: RC-INERT-RECEIVER-1
+public def test_nested_scalar_writes_keep_the_original_snapshot() -> bool:
+    rows = [[1, 2], [3, 4]]
+    before = rows
+    for index in range(20):
+        write(mut rows, -1, -1, index)
+        rows[0][-1] = rows[-1][-1] + 2
+    return rows == [[1, 21], [3, 19]] and before == [[1, 2], [3, 4]]
+
+
+def save(rows: list[list[int]], snapshots: mut list[list[list[int]]]) -> int:
+    snapshots.append(rows)
+    return 7
+
+
+# spec-case: RC-INERT-RECEIVER-1
+public def test_callback_publication_keeps_full_pending_receiver_pins() -> bool:
+    rows = [[1]]
+    snapshots: list[list[list[int]]] = []
+    rows[0].append(save(rows, mut snapshots))
+    return rows == [[1, 7]] and snapshots == [[[1]]]
+
+
+# spec-case: RC-INERT-RECEIVER-1
+public def test_managed_publication_still_establishes_independent_values() -> bool:
+    rows = [[1], [2]]
+    before = rows
+    rows[0] = rows[1]
+    rows[0].append(3)
+    return rows == [[2, 3], [2]] and before == [[1], [2]]
+
+
+# spec-case: RC-INERT-RECEIVER-1
+public def test_conditional_indices_and_zero_iterations_preserve_owners() -> bool:
+    rows = [[1, 2]]
+    before = rows
+    for index in range(0):
+        rows[0][index] = 7
+    for index in range(10):
+        rows[0][-1 if index < 5 else 0] = index
+    return rows == [[9, 4]] and before == [[1, 2]]
+
+
+def main() -> int:
+    assert test_nested_scalar_writes_keep_the_original_snapshot()
+    assert test_callback_publication_keeps_full_pending_receiver_pins()
+    assert test_managed_publication_still_establishes_independent_values()
+    assert test_conditional_indices_and_zero_iterations_preserve_owners()
+    assert test_three_level_shared_projection_keeps_named_row_and_outer_snapshot()
+    assert test_plain_record_writes_keep_snapshot_and_negative_index()
+    assert test_plain_record_index_callback_keeps_pending_snapshot()
+    assert test_nested_plain_record_writes_preserve_arena_values()
+    return 0
+
+
+# spec-case: RC-INERT-PROJECTION-1
+public def test_three_level_shared_projection_keeps_named_row_and_outer_snapshot() -> bool:
+    row = [1, 2]
+    rows = [row, row]
+    cube = [rows, rows]
+    before = cube
+    saved = cube[0][1]
+    cube[0][1][-1] = 7
+    cube[1][0][0 if len(saved) == 2 else 1] = 9
+    return cube == [[[1, 2], [1, 7]], [[9, 2], [1, 2]]] and before == [[[1, 2], [1, 2]], [[1, 2], [1, 2]]] and saved == [1, 2] and row == [1, 2]
+
+
+record Point:
+    x: int
+    y: int
+
+
+def write_point(points: mut list[Point], index: int, value: int) -> unit:
+    points[index].x = value
+
+
+def save_points(points: mut list[Point], snapshots: mut list[list[Point]]) -> int:
+    snapshots.append(points)
+    points[0].y = 9
+    return -1
+
+
+# spec-case: RC-INERT-PLAIN-UPDATE-1
+public def test_plain_record_writes_keep_snapshot_and_negative_index() -> bool:
+    points = [Point(3, 7)]
+    before = points
+    for index in range(4):
+        write_point(mut points, -1, index)
+        points[0].y = points[0].x + 10
+    return points == [Point(3, 13)] and before == [Point(3, 7)]
+
+
+# spec-case: RC-INERT-PLAIN-UPDATE-1
+public def test_plain_record_index_callback_keeps_pending_snapshot() -> bool:
+    points = [Point(3, 7)]
+    snapshots: list[list[Point]] = []
+    points[save_points(mut points, mut snapshots)].x = 13
+    return points == [Point(13, 9)] and snapshots == [[Point(3, 7)]]
+
+
+# spec-case: RC-INERT-PLAIN-UPDATE-1
+public def test_nested_plain_record_writes_preserve_arena_values() -> bool:
+    result = 0
+    with arena():
+        rows = [[Point(3, 7)]]
+        before = rows
+        for index in range(4):
+            rows[0][-1].x = index
+            rows[0][0].y = index + 10
+        result = rows[0][0].y + before[0][0].y
+    return result == 20

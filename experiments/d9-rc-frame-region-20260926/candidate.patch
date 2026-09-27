@@ -1,0 +1,135 @@
+diff --git a/SPEC.md b/SPEC.md
+index 4838116f..f8c1cda8 100644
+--- a/SPEC.md
++++ b/SPEC.md
+@@ -1360,3 +1360,5 @@ host failure in one worker leaves the units the other workers hold running.
+ - [RC-PRODUCED-OWNER-1] An immediately preceding unconditional ordinary-owner producer may skip its operand initialization test. Branch entries, held mappings, borrowed entries and other producers keep guarded transfers; pin, arena and failure behavior stays on the existing typed TAKE path.
+ 
+ - [RC-STABLE-JOURNAL-1] Operand and pending RC journal entries retain their entry-time storage and guard addresses across typed publications. Type and ownership-role flags still change before initialization, so reused stack positions and held/ordinary transitions clean up their current values.
++
++- [RC-FRAME-REGION-1] RC functions without arena boundary instructions reuse their entry region depth for typed transfers. Functions that open or close arenas read the current depth at each transfer; callees restore their own scopes before returning.
+diff --git a/src/qbe_rc_aggregate.zig b/src/qbe_rc_aggregate.zig
+index 1cf40077..22e26962 100644
+--- a/src/qbe_rc_aggregate.zig
++++ b/src/qbe_rc_aggregate.zig
+@@ -35,9 +35,7 @@ pub fn emit(comptime E: type, self: *E, op: Op, stack: []const typed.Type) Error
+ }
+ 
+ fn region(comptime E: type, self: *E) Error!usize {
+-    const result = self.temp();
+-    try self.print(" %v{d} =l call $myl_qbe_region_mark(l %ctx)\n", .{result});
+-    return result;
++    return frame.region(E, self);
+ }
+ 
+ fn internal(comptime E: type, self: *E, ty: typed.Type, address: usize) Error!void {
+diff --git a/src/qbe_rc_frame.zig b/src/qbe_rc_frame.zig
+index 41933325..1be17037 100644
+--- a/src/qbe_rc_frame.zig
++++ b/src/qbe_rc_frame.zig
+@@ -42,6 +42,7 @@ pub fn Lower(comptime E: type) type {
+         /// Link only after every guard is initialized and every parameter is stored.
+         pub fn enter(self: *E) Error!void {
+             const state = get(E, self) orelse return;
++            if (fixedRegion(E, self)) try self.print(" %rcregion =l call $myl_qbe_region_mark(l %ctx)\n", .{});
+             const size = count(E, self, state);
+             try self.print(" call $memset(l %rcguards, w 0, l {d})\n call $memset(l %rcentries, w 0, l {d})\n", .{ size * 8, size * entry_bytes });
+             for (state.locals.storage, 0..) |slot, index| {
+@@ -104,6 +105,22 @@ pub fn guard(comptime E: type, self: *E, index: usize) Error!usize {
+     try self.print(" %v{d} =l add %rcguards, {d}\n", .{ result, index * 8 });
+     return result;
+ }
++/// Read this transfer's arena depth, reusing the entry value in stable frames.
++/// Callees restore their own scopes before returning, including on failure.
++pub fn region(comptime E: type, self: *E) Error!usize {
++    const result = self.temp();
++    if (fixedRegion(E, self)) {
++        try self.print(" %v{d} =l copy %rcregion\n", .{result});
++    } else try self.print(" %v{d} =l call $myl_qbe_region_mark(l %ctx)\n", .{result});
++    return result;
++}
++fn fixedRegion(comptime E: type, self: *E) bool {
++    for (self.function.scope.instructions) |instruction| switch (instruction.op) {
++        .begin_arena, .end_arena => return false,
++        else => {},
++    };
++    return true;
++}
+ /// Publish metadata while the entry has no initialized token.
+ pub fn entry(comptime E: type, self: *E, index: usize, ty: typed.Type, address: usize) Error!void {
+     const pointer = try typedEntry(E, self, index, ty);
+diff --git a/src/qbe_rc_inline_take_test.zig b/src/qbe_rc_inline_take_test.zig
+index c8ea1d97..4b0a3f79 100644
+--- a/src/qbe_rc_inline_take_test.zig
++++ b/src/qbe_rc_inline_take_test.zig
+@@ -15,6 +15,10 @@ fn emitted() !std.json.Parsed(Manifest) {
+         \\    return made()
+         \\def copied(items: list[int]) -> list[int]:
+         \\    return items
++        \\def escaped() -> Pair:
++        \\    with arena() as scratch:
++        \\        value = made()
++        \\        return scratch.escape(value)
+         \\def held(view: DictValues[int, int]) -> DictValues[int, int]:
+         \\    return view
+         \\def main() -> int:
+@@ -72,3 +76,18 @@ test "RC-PRODUCED-OWNER-1 fresh call results move without an initialization bran
+     try t.expect(!contains(forwarded, "@rccopy"));
+     try t.expect(contains(try named(manifest.value, "copied"), "@rccopy"));
+ }
++
++// spec: RC-FRAME-REGION-1
++test "RC-FRAME-REGION-1 stable frames read depth once while arena bodies stay dynamic" {
++    const saved = runtime.get();
++    defer runtime.set(saved);
++    runtime.set(.rc);
++    var manifest = try emitted();
++    defer manifest.deinit();
++    const made = try named(manifest.value, "made");
++    const escaped = try named(manifest.value, "escaped");
++    try t.expectEqual(@as(usize, 1), std.mem.count(u8, made, "call $myl_qbe_region_mark"));
++    try t.expect(contains(made, "copy %rcregion"));
++    try t.expect(!contains(escaped, "copy %rcregion"));
++    try t.expect(std.mem.count(u8, escaped, "call $myl_qbe_region_mark") > 1);
++}
+diff --git a/src/qbe_rc_values.zig b/src/qbe_rc_values.zig
+index 86a4f6d9..c4dbd5eb 100644
+--- a/src/qbe_rc_values.zig
++++ b/src/qbe_rc_values.zig
+@@ -5,7 +5,6 @@ const slots = @import("qbe_rc_slots.zig");
+ const holds = @import("qbe_rc_holds.zig");
+ /// QBE byte relocation shared by transactional value and aggregate publication.
+ pub const blit_value = " blit %v{d}, %v{d}, {d}\n";
+-const region_mark = " %v{d} =l call $myl_qbe_region_mark(l %ctx)\n";
+ /// Errors shared with the native emitter.
+ pub const Error = slots.Error;
+ /// An already-owned runtime result is adopted; a read establishes a snapshot.
+@@ -38,8 +37,7 @@ pub fn drop(comptime E: type, self: *E, index: usize) Error!void {
+ /// Prepare a borrowed publication before releasing any consumed owners.
+ pub fn copied(comptime E: type, self: *E, ty: typed.Type, address: usize) Error!void {
+     const work = try workAddress(E, self);
+-    const region = self.temp();
+-    try self.print(region_mark, .{region});
++    const region = try frame.region(E, self);
+     try slots.Lower(E).transfer(self, .{ .ty = ty, .destination = work, .source = address, .region = region, .mode = .copy_empty });
+     try markWork(E, self, ty);
+ }
+@@ -146,8 +144,7 @@ fn producedOwner(comptime E: type, self: *E, ty: typed.Type, index: usize) Error
+ 
+ fn prepareOwned(comptime E: type, self: *E, ty: typed.Type, address: usize, journal_index: usize) Error!void {
+     const work = try workAddress(E, self);
+-    const region = self.temp();
+-    try self.print(region_mark, .{region});
++    const region = try frame.region(E, self);
+     try slots.Lower(E).transfer(self, .{ .ty = ty, .destination = work, .source = address, .region = region, .mode = .take_empty });
+     try frame.initialized(E, self, journal_index, false);
+     try markWork(E, self, ty);
+@@ -181,7 +178,6 @@ pub fn prepareGuarded(comptime E: type, self: *E, ty: typed.Type, address: usize
+ /// Initialize an empty runtime output using pin-aware copy and mapped failure.
+ /// Its caller must immediately journal the successful result or commit it.
+ pub fn copyRuntime(comptime E: type, self: *E, ty: typed.Type, destination: usize, input: usize) Error!void {
+-    const region = self.temp();
+-    try self.print(region_mark, .{region});
++    const region = try frame.region(E, self);
+     try slots.Lower(E).transfer(self, .{ .ty = ty, .destination = destination, .source = input, .region = region, .mode = .copy_empty });
+ }

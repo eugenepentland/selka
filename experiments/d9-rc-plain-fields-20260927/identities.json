@@ -1,0 +1,23 @@
+{
+  "base": "a1fd4043147982c46d5db9aacabef75691f26f63",
+  "integration": "e926d1e13bf61ae3125102b46309225ca963a38d",
+  "compiler_sha256": "dedb995e15316f70b472faa4d80c7d3dd1ce35c1ddc552feaef567811acd2cc5",
+  "archive_sha256": {
+    "README.md": "7280636225dd2f3e3a093760450fdbeb3a6786082ac3151577b5d87016ae99d9",
+    "after-emitted.json.gz": "9afee9ee588179b40f1c8b973dde8217564c9ef772a6942e607f6e0537348f4c",
+    "before-emitted.json.gz": "c0698f1337043ab29066858cb42282ea69de263fcfdd9426d31d4cec5abeae81",
+    "bounds--3.my": "6a299f0554969b3633250472bc8d62114da5d6848765c7a0055faf678546bba8",
+    "bounds-4.my": "5204d6a8d019dfb3ccc0b02582df5a6ddec3432d93e9b0bae9c990731f8a42cc",
+    "build-final.log.gz": "f1afc9cfeafaea39725d17404b8a3fae87a1de4202e87f6131f17049f7eca489",
+    "field-units-final.log.gz": "6969f8076c4d9f21f644a4c6f8377ef9e13a29d15a11b638af090149410ea642",
+    "guests-final.json.gz": "93662a2d5582cebc99a92b17094862e580ded2fabae175fd7e8c44576935887d",
+    "guests.py": "433b0e7a93055e13ec6546359b3fef43eca6a064ab1921b8da2c49fe11d0873c",
+    "length-units.log.gz": "1539fea78976d60910f5266f9d55747bdf791aa763056b70603540104f3644ec",
+    "measure.json.gz": "8933763c3b87428171aa7203e512008ace53c808483ee3d05c2a2cb579af5a00",
+    "measure.py": "6f5ae30f87defd9808f49876a260738c92ffa446e5f996fea3e70c1f3a8eaf85",
+    "source.patch.gz": "db2505277286897fa55cd2df571768a640c90ec7a99e6916a98cfe74ad2b12ad",
+    "traps.json.gz": "1af30358d0c020f2528be99e1b6ddfb9f369b24a40dec844d546a55bbaed0ad2",
+    "traps.py": "8cae007781c7efc07f51e60e87db452bb44bc62d1a4cf535eb2ef3ffa78ec490",
+    "verify.py": "3d7c3c4189a86064c3a6238cb527d503ee354c3463cbcb9acdcd8e957e4a6f1e"
+  }
+}

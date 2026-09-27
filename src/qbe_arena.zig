@@ -62,7 +62,10 @@ pub fn Lower(comptime E: type) type {
                     try self.print(" %v{d} =w call $myl_qbe_region_begin(l %ctx)\n", .{opened});
                     try self.checkFailure("failure");
                 },
-                .end_arena => |watermark| try emitEnd(E, self, @backingInt(watermark)),
+                .end_arena => |watermark| {
+                    if (stack.len != 0) return error.InternalError;
+                    try emitEnd(E, self, @backingInt(watermark));
+                },
                 .arena_escape => |ty| try emitEscape(E, self, ty, stack),
                 else => return error.InternalError,
             }
@@ -87,6 +90,10 @@ fn emitEnd(comptime E: type, self: *E, watermark: usize) Error!void {
         const label = self.temp();
         try self.print(" jnz %v{d}, @outlives{d}, @kept{d}\n@outlives{d}\n call ${s}(l %ctx)\n jmp @failure\n@kept{d}\n", .{ retained, label, label, label, escape_failure, label });
     }
+    // Restore this region's receiver pins and release inner owned tokens before
+    // either clearing their physical slots or returning arena chunks for reuse.
+    if (@import("qbe_rc_frame.zig").get(E, self) != null)
+        try self.print(" call $myl_qbe_rc_arena_prepare(l %ctx, l %rcframe, l {d})\n", .{try @import("qbe_rc_frame.zig").watermark(E, self, scanned)});
     // Bindings introduced inside the block die with it; clearing their slots keeps
     // a released arena object out of the next frame-root scan.
     var index = locals.len;

@@ -39,6 +39,7 @@ fn readArm(ctx: *const Context, pc: usize, payload: u32, start: usize) ?Arm {
     if (load != .load_local or !localIs(code[index.start - 1].op, .store_local, parent)) return null;
     const owner = li(load.load_local);
     if (!firstUse(ctx, owner, index.start - 2)) return null;
+    if (!model.uniqueParameter(ctx.code.function, owner)) return null;
     if (!ctx.temporary(parent) or ctx.defs.count[parent] != 1) return null;
     if (ctx.role(owner) != .mut_param or ctx.record(ctx.locals.list[owner].ty).collection.kind != .list) return null;
     for (0..ctx.locals.params) |other| {
@@ -52,6 +53,7 @@ fn readArm(ctx: *const Context, pc: usize, payload: u32, start: usize) ?Arm {
     if (ctx.flow.targets[start + 1] or ctx.flow.targets[start + 2]) return null;
     const ty = ctx.locals.list[payload].ty;
     if (!ty.isAggregate()) return null;
+    if (values.containsLiveView(ctx.code.program.records, ty)) return null;
     if (ctx.record(ty).managed or !ctx.record(ty).isRecord()) return null;
     return .{ .owner = owner, .index = index, .payload = payload, .start = start + 3 };
 }

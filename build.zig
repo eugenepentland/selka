@@ -409,11 +409,17 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
+    const runtime_contract = b.addModule("runtime_contract", .{
+        .root_source_file = b.path("src/runtime_contract.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
     const core = b.addModule("mylang", .{
         .root_source_file = b.path("src/compiler.zig"),
         .target = target,
         .optimize = optimize,
     });
+    core.addImport("runtime_contract", runtime_contract);
     const exe = b.addExecutable(.{
         .max_rss = rss.compile,
         .name = "mylang",
@@ -426,6 +432,7 @@ pub fn build(b: *std.Build) void {
     });
     // Snapshot identity needs the actual application/test root rather than the
     // generated Zig or Guardian test-runner root exposed by `@import("root")`.
+    exe.root_module.addImport("runtime_contract", runtime_contract);
     exe.root_module.addImport("native_test_root", exe.root_module);
     addUserDocs(b, exe.root_module);
     const build_assets = @import("build_qbe_assets.zig").module(b, target, optimize, .{ .compile = rss.compile, .run = rss.driver });
@@ -485,6 +492,7 @@ pub fn build(b: *std.Build) void {
     // Host applications build their own guests natively, so they carry the same
     // native build driver the compiler does rather than shelling out to it.
     const native_build = b.createModule(.{ .root_source_file = b.path("src/qbe_build.zig"), .target = target, .optimize = optimize });
+    native_build.addImport("runtime_contract", runtime_contract);
     native_build.addImport("qbe_build_assets", build_assets);
     native_build.addImport("memory_budget", budget);
     // A host application links guest executables, so it falls back to the tools
@@ -526,6 +534,24 @@ pub fn build(b: *std.Build) void {
             .link_libc = true,
         }),
     });
+    unit.link_gc_sections = true;
+    unit.root_module.addIncludePath(b.path("src"));
+    unit.root_module.addCSourceFiles(.{
+        .root = b.path("."),
+        .files = &.{ "src/native_regions.c", "tests/native_rc_arena_test.c", "tests/native_rc_hold_test.c", "tests/native_rc_loan_test.c", "tests/native_rc_history_test.c", "tests/native_rc_stats_test.c", "tests/native_rc_contract_test.c", "tests/native_rc_collections_test.c", "tests/native_rc_codecs_test.c", "tests/native_rc_host_test.c", "src/native_print.c", "src/qbe_runtime.c", "src/native_cow.c", "src/native_rc.c", "src/native_rc_stats.c", "src/native_rc_shapes.c", "src/native_rc_walk.c", "src/native_rc_scope.c", "src/native_rc_transfer.c", "src/native_rc_alloc.c", "src/native_rc_values.c", "src/native_heap.c", "src/native_arena.c", "src/native_collections.c", "src/native_text.c", "src/native_text_methods.c", "src/native_dictionary.c", "src/native_equal.c", "src/native_bytes.c" },
+        .flags = &.{ "-std=c11", "-Wall", "-Wextra", "-Werror", "-UNDEBUG", "-DMYL_RC_CONTRACT_LIBRARY", "-DMYL_NATIVE_RC_COUNTING=1", "-DMYL_RC_STATS_LIBRARY", "-DMYL_RC_COLLECTIONS_LIBRARY", "-DMYL_RC_CODECS_LIBRARY", "-DMYL_RC_HOST_LIBRARY", "-ffunction-sections", "-fdata-sections" },
+    });
+    unit.root_module.addCSourceFiles(.{
+        .root = b.path("."),
+        .files = &.{ "tests/native_file_cleanup_test.c", "src/qbe_files.c", "src/qbe_resources.c", "src/qbe_stand_ins.c" },
+        .flags = &.{ "-std=c11", "-Wall", "-Wextra", "-Werror", "-UNDEBUG", "-DMYL_FILE_CLEANUP_LIBRARY", "-ffunction-sections", "-fdata-sections" },
+    });
+    unit.root_module.addCSourceFiles(.{
+        .root = b.path("."),
+        .files = &.{ "tests/qbe_runtime_rc_test.c", "tests/native_argv_test.c", "src/qbe_runtime_rc.c" },
+        .flags = &.{ "-std=c11", "-Wall", "-Wextra", "-Werror", "-UNDEBUG", "-DMYL_NATIVE_RC=1", "-DMYL_NATIVE_ARGV_LIBRARY", "-DMYL_RC_CONTRACT_LIBRARY", "-DMYL_NATIVE_RC_COUNTING=1", "-DMYL_RC_STATS_LIBRARY", "-ffunction-sections", "-fdata-sections" },
+    });
+    unit.root_module.addImport("runtime_contract", runtime_contract);
     unit.root_module.addImport("native_test_root", unit.root_module);
     unit.root_module.addImport("qbe_build_assets", build_assets);
     unit.root_module.addImport("memory_budget", budget);
@@ -700,6 +726,15 @@ pub fn build(b: *std.Build) void {
         .files = &.{
             "tests/native_heap_test.c",
             "src/native_heap.c",
+            "src/native_rc.c",
+            "src/native_rc_stats.c",
+            "src/native_rc_shapes.c",
+            "src/native_rc_walk.c",
+            "src/native_rc_scope.c",
+            "src/native_rc_transfer.c",
+            "src/native_rc_alloc.c",
+            "src/native_rc_values.c",
+
             "src/native_arena.c",
             // Structural equality looks dictionary keys up through the table.
             "src/native_dictionary.c",
@@ -732,6 +767,15 @@ pub fn build(b: *std.Build) void {
         .files = &.{
             "tests/native_arena_chunks_test.c",
             "src/native_heap.c",
+            "src/native_rc.c",
+            "src/native_rc_stats.c",
+            "src/native_rc_shapes.c",
+            "src/native_rc_walk.c",
+            "src/native_rc_scope.c",
+            "src/native_rc_transfer.c",
+            "src/native_rc_alloc.c",
+            "src/native_rc_values.c",
+
             "src/native_arena.c",
             "src/native_collections.c",
             "src/native_text.c",
@@ -763,6 +807,15 @@ pub fn build(b: *std.Build) void {
             "tests/native_cow_test.c",
             "src/native_cow.c",
             "src/native_heap.c",
+            "src/native_rc.c",
+            "src/native_rc_stats.c",
+            "src/native_rc_shapes.c",
+            "src/native_rc_walk.c",
+            "src/native_rc_scope.c",
+            "src/native_rc_transfer.c",
+            "src/native_rc_alloc.c",
+            "src/native_rc_values.c",
+
             "src/native_arena.c",
             "src/native_collections.c",
             "src/native_text.c",
@@ -810,6 +863,15 @@ pub fn build(b: *std.Build) void {
             "src/qbe_stack.c",
             "src/native_cow.c",
             "src/native_heap.c",
+            "src/native_rc.c",
+            "src/native_rc_stats.c",
+            "src/native_rc_shapes.c",
+            "src/native_rc_walk.c",
+            "src/native_rc_scope.c",
+            "src/native_rc_transfer.c",
+            "src/native_rc_alloc.c",
+            "src/native_rc_values.c",
+
             "src/native_arena.c",
             "src/native_collections.c",
             "src/native_text.c",
@@ -839,6 +901,7 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     }) });
+    native_test_unit.root_module.addImport("runtime_contract", runtime_contract);
     native_test_unit.root_module.addImport("native_test_root", native_test_unit.root_module);
     native_test_unit.root_module.addImport("qbe_build_assets", build_assets);
     native_test_unit.root_module.addImport("memory_budget", budget);
@@ -856,6 +919,7 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     }) });
+    ffi_unit.root_module.addImport("runtime_contract", runtime_contract);
     guardian.enableTestDiagnostics(ffi_unit.root_module);
     const run_ffi_unit = bounded(b.addRunArtifact(ffi_unit), rss.suite);
     cached(run_ffi_unit, "native_roots");
@@ -881,6 +945,7 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     }) });
+    qbe_build_unit.root_module.addImport("runtime_contract", runtime_contract);
     qbe_build_unit.root_module.addImport("qbe_build_assets", build_assets);
     qbe_build_unit.root_module.addImport("memory_budget", budget);
     guardian.enableTestDiagnostics(qbe_build_unit.root_module);

@@ -1,0 +1,103 @@
+#ifndef MYLANG_NATIVE_RC_INTERNAL_H
+#define MYLANG_NATIVE_RC_INTERNAL_H
+#include "native_rc.h"
+#include "native_rc_stats.h"
+/* Private state: generated code sees only the frozen object/common prefixes. */
+typedef struct {
+    union { const myl_rc_shape *shape; const myl_native_type *type; };
+    unsigned char *address;
+    size_t cursor;
+} myl_rc_frame;
+typedef struct {
+    const myl_rc_shape *source;
+    myl_rc_shape shape;
+    size_t depth;
+    size_t inline_depth;
+} myl_rc_shape_entry;
+#define MYL_RC_FLAT_LEAVES 8
+/* Private plan, never part of emitted metadata. count > the bound means the
+ * authoritative shape/native-kind pair requires generic traversal. */
+typedef struct {
+    size_t offsets[MYL_RC_FLAT_LEAVES];
+    unsigned count;
+    unsigned char loanable, native_unique;
+} myl_rc_flat;
+_Static_assert(sizeof(myl_rc_flat) == 72, "native facts preserve plan reservations");
+_Static_assert(offsetof(myl_rc_flat, count) == 64 && offsetof(myl_rc_flat, loanable) == 68,
+               "existing flat fields retain their offsets");
+_Static_assert(offsetof(myl_rc_flat, native_unique) == 69, "type fact occupies private padding");
+typedef struct { myl_rc_descriptor descriptor; myl_rc_flat flat; } myl_rc_binding;
+_Static_assert(sizeof(myl_rc_binding) == 128, "native facts preserve binding reservations");
+_Static_assert(offsetof(myl_rc_binding, descriptor) == 0, "indexed descriptor is its private binding prefix");
+typedef struct myl_rc_batch {
+    struct myl_rc_batch *next;
+    const myl_rc_module *module;
+    myl_rc_shape_entry *shapes;
+    myl_rc_binding *bindings;
+    struct { size_t shapes, descriptors; } count;
+    size_t bytes;
+} myl_rc_batch;
+typedef struct {
+    const void *key, *value;
+    size_t depth;
+    size_t inline_depth;
+    unsigned kind;
+    /* Only index.entries[0] uses this former padding: descriptor slot + 1. */
+    unsigned recent_descriptor;
+} myl_rc_index_entry;
+_Static_assert(sizeof(myl_rc_index_entry) == 40, "repeat lookup preserves every metadata reservation");
+_Static_assert(offsetof(myl_rc_index_entry, recent_descriptor) == 36, "repeat lookup uses private amd64 padding");
+struct myl_rc_state {
+    struct { myl_rc_allocator hooks; void *context; } allocator;
+    struct {
+        myl_rc_batch *batches;
+        size_t bytes;
+        struct { myl_rc_index_entry *entries; size_t count, capacity; } index;
+    } metadata;
+    struct { myl_rc_frame *frames; size_t capacity, depth; } walk;
+    struct { myl_rc_object *head; int active; } dead;
+    myl_rc_scope *scopes;
+    myl_rc_status failure;
+#if defined(MYL_NATIVE_RC_COUNTING) && MYL_NATIVE_RC_COUNTING
+    myl_rc_counters stats;
+#endif
+};
+__attribute__((cold, noreturn)) void myl_rc_invariant_failed(void);
+/* Keep every check in production, but only a violated invariant calls out. */
+static inline void myl_rc_invariant(int valid) {
+    if (!valid) myl_rc_invariant_failed();
+}
+void *myl_rc_meta_alloc(myl_native_heap *, size_t);
+void myl_rc_meta_free(myl_native_heap *, void *, size_t);
+int myl_rc_size_add(size_t, size_t, size_t *);
+int myl_rc_size_mul(size_t, size_t, size_t *);
+int myl_rc_is_counted(const void *);
+size_t myl_rc_shape_depth(const myl_native_heap *, const myl_rc_shape *);
+/* Private identity hint only; clients must repeat all operation admission. */
+const myl_rc_descriptor *myl_rc_descriptor_repeat(const myl_native_heap *, const myl_native_type *);
+void myl_rc_scopes_close_region(myl_native_heap *, unsigned);
+myl_rc_status myl_rc_scope_extend(myl_rc_scope *, void *boundary, myl_rc_status (*)(myl_rc_scope *, void *));
+void myl_rc_enqueue(myl_native_heap *, myl_rc_object *);
+/* Release one H token and enqueue death without callbacks; caller drains. */
+void myl_rc_hold_edge_release(myl_native_heap *, void *);
+/* Admitted ordinary leaves only, in the authoritative walker's order. Clears
+ * and enqueues each edge without callbacks or allocation; caller drains. */
+void myl_rc_flat_edges_release(myl_native_heap *, const myl_rc_binding *, void *, size_t count);
+/* Internal native bridge: shape is an already registered ordinary pointer. */
+myl_rc_status myl_rc_pointer_transfer(myl_native_heap *, const myl_rc_shape *, void *, void *, unsigned, myl_rc_transfer);
+/* Physical loan primitives: ordinary and held leaves both contribute H.
+ * The native wrapper excludes every raw unique obligation first. */
+myl_rc_status myl_rc_loan_copy(myl_native_heap *, const myl_rc_shape *, void *, const void *);
+void myl_rc_loan_drop(myl_native_heap *, const myl_rc_shape *, void *);
+/* Nonmutating native inline-type walk; terminal managed payloads stay opaque. */
+int myl_rc_native_has_unique(myl_native_heap *, const myl_native_type *);
+/* Heap-local memo of the completed native predicate: 0 unknown, 1 no, 2 yes.
+ * The binding/type and consulted body finalizers are immutable through teardown.
+ * This never replaces the loan's separate actual-payload finalizer check. */
+int myl_rc_binding_has_unique(myl_native_heap *, const myl_rc_binding *);
+/* Native mutable collection classification used only by semantic transfers. */
+int myl_rc_native_mutable(const void *);
+/* Acquire ordinary edges without semantic history or pinned snapshots. */
+myl_rc_status myl_rc_value_retain_many(myl_native_heap *, myl_rc_slot *, const myl_rc_slot *, size_t);
+myl_rc_status myl_rc_semantic_transfer(myl_native_heap *, myl_rc_slot *, const myl_rc_slot *, myl_rc_transfer, unsigned);
+#endif

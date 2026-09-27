@@ -1,0 +1,202 @@
+{
+  "compiler_sha256": "9eb8605f57f6effbac6119efe7b8f76df1231428df836cf8c1ea7fa6e8f0a132",
+  "compiler_mode": "Debug",
+  "compiler_source": "018d4e0bb5096ee2e234aad990a3ad9950a37b2c",
+  "backend": "qbe",
+  "guest_mode": "ReleaseFast",
+  "groups": {
+    "arenas": {
+      "cases": [
+        "rc_arena_values.test_an_inner_binding_releases_its_older_heap_owner",
+        "rc_arena_values.test_inline_owners_close_before_nested_chunks_are_reused",
+        "rc_arena_values.test_break_and_continue_drop_inner_heap_aliases",
+        "rc_arena_values.test_escape_return_preserves_shared_children_and_source_owners",
+        "rc_arena_values.test_result_propagation_releases_nested_arena_frame_owners",
+        "arena_managed.test_nested_arenas_redirect_helper_allocation_and_release_each_scope_in_bulk",
+        "arena_managed.test_an_anonymous_arena_scope_still_bulk_releases_its_allocations",
+        "arena_managed.test_escape_copies_a_shared_subgraph_once_into_the_enclosing_region",
+        "arena_managed.test_escape_preserves_nested_record_children",
+        "arena_managed.test_an_escaped_copy_may_be_returned_from_the_outermost_arena_scope",
+        "arena_managed.test_escape_keeps_an_independent_outer_region_snapshot",
+        "arena_managed.test_result_propagation_out_of_an_arena_releases_its_storage_in_bulk",
+        "arena_managed.test_break_and_continue_out_of_an_arena_close_the_scope_exactly_once",
+        "arena_managed.test_stress_collection_inside_an_arena_preserves_its_values_until_bulk_release",
+        "arena_scopes.test_a_loop_of_arena_scopes_folds_every_batch_correctly",
+        "arena_scopes.test_nested_arena_scopes_reuse_chunks_without_disturbing_the_outer_one",
+        "arena_scopes.test_an_escaped_list_survives_the_scopes_that_reuse_its_chunk",
+        "arena_scopes.test_a_reused_chunk_hands_out_no_bytes_of_the_previous_scope",
+        "arena_regions.test_arena_values_fill_an_arena_list_spanning_many_chunks",
+        "arena_regions.test_collected_values_store_into_arena_lists_and_dictionaries",
+        "arena_regions.test_a_younger_arena_container_accepts_values_of_the_older_arena",
+        "arena_regions.test_records_holding_arena_text_store_into_an_arena_list",
+        "arena_regions.test_escape_copies_a_list_that_spans_many_chunks",
+        "arena_class_escape.test_escape_copies_a_record_and_the_values_it_reaches",
+        "arena_class_escape.test_escape_copies_a_finite_recursive_record",
+        "arena_class_escape.test_escape_copies_records_inside_lists_and_lists_inside_records",
+        "arena_class_escape.test_escape_keeps_an_older_value_independent",
+        "arena_class_escape.test_an_escaped_record_keeps_a_young_value_stored_after_promotion",
+        "arena_class_escape.test_escape_into_an_enclosing_arena_copies_the_record_there",
+        "arena_class_escape.test_escape_copies_a_record_with_no_fields",
+        "option_niche.test_an_escaped_graph_keeps_its_optional_links",
+        "text_views.test_pieces_in_arenas_read_and_escape"
+      ],
+      "source_sha256": {
+        "tests/lang/rc_arena_values.my": "db8772abbda7c4bd07f9bad919c70b8dad384e01c8048f98fb88ee8ced9b5519",
+        "tests/lang/arena_managed.my": "9b29eb2047c7d76da1ddc1ab08ecff09719211aef5ff8d562695217f66199a6e",
+        "tests/lang/arena_scopes.my": "1c6014ee8f220691fb54bf40a97795444ffc6ea458dd7d3991b355ebc6b02c74",
+        "tests/lang/arena_regions.my": "43d103d992ac90aca93f1fb86db9b464615357a4bad759c0807c34e4dccf8b66",
+        "tests/lang/arena_class_escape.my": "1829247cae61125a3d390307efc669c5b0fa5f78d12598e4cbefc1f30214be66",
+        "tests/lang/option_niche.my": "26343a6aa88943cb9c8b780ffb07f27518066c35469d9a48db31f97f0a37ac45",
+        "tests/lang/text_views.my": "4d9a82d9f4a9dad2b96bd1a1e9b8d4bf3667faa8cc5730fcb654a43aa82ed21a"
+      },
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/.d9-rc-contract-tmp/arena-qbe/arena_driver.my",
+        "--backend",
+        "qbe",
+        "--mode",
+        "ReleaseFast",
+        "--rc-runtime=stats",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/.d9-rc-contract-tmp/arena-qbe/cache",
+        "--max-memory=512M",
+        "--run"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v1-counting\",\"saturated\":false,\"owner_acquire\":1329,\"owner_release\":4926,\"hold_acquire\":10,\"hold_release\":10,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":3597,\"arena_allocate\":61475,\"retire\":3597,\"clone_shell\":4761,\"unique_check\":80784}\n",
+      "counts": [
+        {
+          "version": 1,
+          "runtime": "rc-v1-counting",
+          "saturated": false,
+          "owner_acquire": 1329,
+          "owner_release": 4926,
+          "hold_acquire": 10,
+          "hold_release": 10,
+          "owner_limit": 0,
+          "hold_limit": 0,
+          "heap_allocate": 3597,
+          "arena_allocate": 61475,
+          "retire": 3597,
+          "clone_shell": 4761,
+          "unique_check": 80784
+        }
+      ]
+    },
+    "receivers": {
+      "cases": [
+        "nested_array_callbacks.test_equal_replacements_are_indistinguishable",
+        "nested_array_callbacks.test_reinserting_the_same_value_replaces_the_pending_entry",
+        "nested_array_callbacks.test_deletion_and_equal_reinsertion_replaces_the_pending_entry",
+        "nested_array_callbacks.test_replacing_another_entry_keeps_the_pending_write",
+        "nested_array_callbacks.test_mutating_the_pending_leaf_keeps_both_writes",
+        "nested_array_callbacks.test_a_callback_can_snapshot_the_whole_parent",
+        "nested_array_callbacks.test_a_callback_can_snapshot_an_outer_ancestor",
+        "nested_array_callbacks.test_equal_list_element_replacement_detaches_the_receiver",
+        "nested_array_callbacks.test_reordering_list_elements_preserves_the_selected_receiver",
+        "nested_array_callbacks.test_removing_an_earlier_element_preserves_the_selected_receiver",
+        "nested_array_callbacks.test_nested_pending_receivers_restore_outer_pins",
+        "nested_array_callbacks.test_option_propagation_releases_a_pending_receiver",
+        "nested_array_callbacks.test_colliding_keys_do_not_invalidate_the_other_receiver",
+        "nested_array_callbacks.test_a_callback_can_snapshot_a_box_on_the_pending_path",
+        "nested_array_callbacks.test_deep_recursive_siblings_are_outside_the_pending_path",
+        "nested_array_callbacks.test_a_pending_receiver_inside_an_arena_can_escape_afterward",
+        "nested_array_callbacks.test_a_callback_can_snapshot_a_box_above_the_dictionary_owner",
+        "nested_array_callbacks.test_a_negative_list_index_retains_its_pending_array",
+        "nested_array_callbacks.test_a_last_use_key_borrow_survives_its_list_being_cleared"
+      ],
+      "source_sha256": {
+        "tests/value_semantics/nested_array_callbacks.my": "c4e26c43c74761579c9c8aceae30f680025d064b7ec969d5376f63e594828c5b"
+      },
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/.d9-rc-contract-tmp/arena-qbe/receiver_driver.my",
+        "--backend",
+        "qbe",
+        "--mode",
+        "ReleaseFast",
+        "--rc-runtime=stats",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/.d9-rc-contract-tmp/arena-qbe/cache",
+        "--max-memory=512M",
+        "--run"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v1-counting\",\"saturated\":false,\"owner_acquire\":9973,\"owner_release\":14014,\"hold_acquire\":413,\"hold_release\":413,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":4041,\"arena_allocate\":17,\"retire\":4041,\"clone_shell\":76,\"unique_check\":1422}\n",
+      "counts": [
+        {
+          "version": 1,
+          "runtime": "rc-v1-counting",
+          "saturated": false,
+          "owner_acquire": 9973,
+          "owner_release": 14014,
+          "hold_acquire": 413,
+          "hold_release": 413,
+          "owner_limit": 0,
+          "hold_limit": 0,
+          "heap_allocate": 4041,
+          "arena_allocate": 17,
+          "retire": 4041,
+          "clone_shell": 76,
+          "unique_check": 1422
+        }
+      ]
+    },
+    "trap": {
+      "cases": [
+        "nested arena failure unwind"
+      ],
+      "source_sha256": {
+        "experiments/d9-rc-arena-probes-20260926/trap.my": "32dea09f8ec638b9a646c3eff2a2ef77975e2ce1e93a3e400ae9c40c7db4e90c"
+      },
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/experiments/d9-rc-arena-probes-20260926/trap.my",
+        "--backend",
+        "qbe",
+        "--mode",
+        "ReleaseFast",
+        "--rc-runtime=stats",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/.d9-rc-contract-tmp/arena-qbe/cache",
+        "--max-memory=512M",
+        "--run"
+      ],
+      "exit": 1,
+      "stdout": "",
+      "stderr": "MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"rc-v1-counting\",\"saturated\":false,\"owner_acquire\":46,\"owner_release\":48,\"hold_acquire\":0,\"hold_release\":0,\"owner_limit\":0,\"hold_limit\":0,\"heap_allocate\":2,\"arena_allocate\":18,\"retire\":2,\"clone_shell\":0,\"unique_check\":19}\ntrap.my:9:20: error[R_ASSERT]: native execution failed: arena unwind probe\n  in trap::descend at trap.my:9:20\n  in trap::descend at trap.my:10:31\n  in trap::descend at trap.my:10:31\n  in trap::descend at trap.my:10:31\n  in trap::descend at trap.my:10:31\n  in trap::descend at trap.my:10:31\n  in trap::descend at trap.my:10:31\n  in trap::descend at trap.my:10:31\n  in trap::descend at trap.my:10:31\n  in trap::main at trap.my:15:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"arena unwind probe\"}\n",
+      "counts": [
+        {
+          "version": 1,
+          "runtime": "rc-v1-counting",
+          "saturated": false,
+          "owner_acquire": 46,
+          "owner_release": 48,
+          "hold_acquire": 0,
+          "hold_release": 0,
+          "owner_limit": 0,
+          "hold_limit": 0,
+          "heap_allocate": 2,
+          "arena_allocate": 18,
+          "retire": 2,
+          "clone_shell": 0,
+          "unique_check": 19
+        }
+      ]
+    }
+  },
+  "implementation_commit": "ab3bf7f1",
+  "changed_source_sha256": {
+    "src/qbe_arena.zig": "c5d8cca38d7a7e44a6df51a76e9ac016abb6090c029a3f433a39aa843efbd797",
+    "src/qbe_runtime.h": "6546af4f00b431fe55dec6951642c2a23c92a96cdcbfb3ac67c43e3f95824c0b",
+    "src/qbe_runtime_rc.c": "4eee31e1f81ab77b5620104b7748179113a6ef915fa9ed3745959f5e679fc21f"
+  }
+}

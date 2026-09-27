@@ -1,0 +1,39 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 1 after 10s (all 3 build slot(s) busy)
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 1b6c13222675)
+guardian: diff-scoped vs b292660a09bc703d0ceab071636a73b643c52d34: 260/574 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 15 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 20 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 3979 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 8 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs b292660a09bc703d0ceab071636a73b643c52d34, 260 file(s) in scope
+guardian: diff-scoped vs b292660a09bc703d0ceab071636a73b643c52d34: 260/574 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 15 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 20 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 3979 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 8 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs b292660a09bc703d0ceab071636a73b643c52d34, 260 file(s) in scope
+test-qbe-build
++- run test w
+guardian/test: 3 test(s) selected
+guardian/test: test wall 0.00s
+guardian/test: PASS — 3 passed
+guardian/test: RESULT {"passed":3,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-argv-astra/zig-out/bin/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.tmp-argv/zig-cache/o/d673ee6e7c1a0c2469fb3e31f3c765a1/test --cache-dir=./.tmp-argv/zig-cache --seed=0xb6b09bad --listen=-
+
+test-qbe-build
++- run test w
+guardian/test: 125 test(s) selected
+guardian/test: SLOW  14.84s  qbe_build_test.test.a prebuilt runtime installed beside the compiler links directly, and damage falls back to source
+guardian/test: test wall 22.99s; slowest over 50ms:
+guardian/test:   14.84s  qbe_build_test.test.a prebuilt runtime installed beside the compiler links directly, and damage falls back to source
+guardian/test:   2.34s  qbe_build_io.test.concurrent staging in one destination never loses a child to another build's reclaim
+guardian/test:   1.36s  qbe_build_test.test.native RC argv owner balances borrowed entry returns capability refusal and traps
+guardian/test:   1.16s  qbe_build_test.test.a batched build and an unbatched build of one program behave identically
+guardian/test:   1.00s  qbe_build_spawn.test.a pool hears first from the tool that finishes first, whatever order they started in
+guardian/test:   0.92s  qbe_build_link.test.a link naming more object bytes than one execve can carry links through a response file, recorded and direct
+guardian/test:   0.72s  qbe_build_test.test.a default build shares its runtime tree under XDG while an explicit cache-dir stays hermetic
+guardian/test:   0.48s  qbe_build_test.test.a native executable exits with its entry int result truncated to a byte
+guardian/test: PASS — 125 passed
+guardian/test: RESULT {"passed":125,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-argv-astra/zig-out/bin/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.tmp-argv/zig-cache/o/8117700a9a6dd44595ff936703fbaddc/test --cache-dir=./.tmp-argv/zig-cache --seed=0xb6b09bad --listen=-

@@ -1,0 +1,5 @@
+focused tests: units filter='RC plain aggregate'
+selected: 13 test(s)
+result: PASS - 13 passed, 0 failed, 0 skipped
+elapsed: 5.3s
+log: /home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.mylang-cache/focused-tests/units-RC_plain_aggregate-20260926-232138.log

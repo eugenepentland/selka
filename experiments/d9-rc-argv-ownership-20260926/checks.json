@@ -1,0 +1,28 @@
+{
+  "constructor": {
+    "cases": 15,
+    "sanitizers": [
+      "address",
+      "undefined"
+    ],
+    "exit": 0
+  },
+  "argv_focus": {
+    "passed": 14,
+    "failed": 0,
+    "exit": 0
+  },
+  "native_build_driver": {
+    "passed": 128,
+    "failed": 0,
+    "exit": 0
+  },
+  "guardian": {
+    "passed": 88,
+    "baseline_waivers": false
+  },
+  "format": {
+    "exit": 0
+  },
+  "full_gate": "Parent owns the joined full gate; not duplicated here."
+}

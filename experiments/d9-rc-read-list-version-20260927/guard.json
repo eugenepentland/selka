@@ -1,0 +1,131 @@
+{
+  "emission_sha256": "f8c10d86cb39a0962d4b259f28eb8b428e7ac78ae5e42703bd6f419c516072f5",
+  "source_sha256": "399d4ce8d506755ce59c2100db0841d09333b25abad930aa3e4ffb8d021d1c54",
+  "library_sha256": "f8cc435c4f2539fbba224bee07f92e4bc64168a8b692657b83e95fe7cba287be",
+  "qbe_command": [
+    ".tmp-mut-argument/read-version/install/bin/qbe",
+    "-o",
+    ".tmp-mut-argument/read-version/guard.s",
+    ".tmp-mut-argument/read-version/guard.ssa"
+  ],
+  "link_command": [
+    "cc",
+    "-shared",
+    "-fPIC",
+    ".tmp-mut-argument/read-version/guard.s",
+    "-o",
+    ".tmp-mut-argument/read-version/guard.so"
+  ],
+  "rows": [
+    {
+      "live": 0,
+      "role": 0,
+      "fast": 0
+    },
+    {
+      "live": 0,
+      "role": 1,
+      "fast": 0
+    },
+    {
+      "live": 0,
+      "role": 2,
+      "fast": 0
+    },
+    {
+      "live": 0,
+      "role": 3,
+      "fast": 0
+    },
+    {
+      "live": 0,
+      "role": 4,
+      "fast": 0
+    },
+    {
+      "live": 0,
+      "role": 8,
+      "fast": 0
+    },
+    {
+      "live": 0,
+      "role": 10,
+      "fast": 0
+    },
+    {
+      "live": 0,
+      "role": 16,
+      "fast": 0
+    },
+    {
+      "live": 0,
+      "role": 18,
+      "fast": 0
+    },
+    {
+      "live": 0,
+      "role": 31,
+      "fast": 0
+    },
+    {
+      "live": 0,
+      "role": 4294967295,
+      "fast": 0
+    },
+    {
+      "live": 1,
+      "role": 0,
+      "fast": 0
+    },
+    {
+      "live": 1,
+      "role": 1,
+      "fast": 0
+    },
+    {
+      "live": 1,
+      "role": 2,
+      "fast": 1
+    },
+    {
+      "live": 1,
+      "role": 3,
+      "fast": 0
+    },
+    {
+      "live": 1,
+      "role": 4,
+      "fast": 0
+    },
+    {
+      "live": 1,
+      "role": 8,
+      "fast": 1
+    },
+    {
+      "live": 1,
+      "role": 10,
+      "fast": 0
+    },
+    {
+      "live": 1,
+      "role": 16,
+      "fast": 0
+    },
+    {
+      "live": 1,
+      "role": 18,
+      "fast": 0
+    },
+    {
+      "live": 1,
+      "role": 31,
+      "fast": 0
+    },
+    {
+      "live": 1,
+      "role": 4294967295,
+      "fast": 0
+    }
+  ]
+}

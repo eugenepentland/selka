@@ -1,0 +1,138 @@
+record Cursor:
+    code: list[int]
+    index: int
+
+
+def advance(cursor: mut Cursor) -> int:
+    item = cursor.code[cursor.index]
+    cursor.index = cursor.index + 1
+    return item
+
+
+def forward(cursor: mut Cursor) -> int:
+    return advance(mut cursor)
+
+
+def replace_after(cursor: mut Cursor) -> int:
+    item = cursor.code[cursor.index]
+    cursor.code = [29]
+    cursor.index = 0
+    return item
+
+
+def cross(left: mut Cursor, right: mut Cursor) -> int:
+    item = left.code[left.index]
+    right.code = [31]
+    right.index = 0
+    return item
+
+
+def change(cursor: mut Cursor) -> int:
+    cursor.code = [41]
+    return 0
+
+
+def callback(cursor: mut Cursor) -> int:
+    item = cursor.code[change(mut cursor)]
+    return item
+
+
+def readonly(cursor: Cursor) -> int:
+    item = cursor.code[cursor.index]
+    return item
+
+
+def overflow_after(cursor: mut Cursor, addend: int) -> int:
+    item = cursor.code[cursor.index]
+    cursor.index = cursor.index + 1
+    return item + addend
+
+
+def heap_frame(cursor: mut Cursor, values: [4096]int) -> int:
+    padding = replace(values, 0, 3)
+    item = cursor.code[cursor.index]
+    cursor.index = cursor.index + 1
+    return item + padding[0]
+
+
+# spec-case: RC-CALLER-FIELD-READ-1
+public def test_direct_and_forwarded_references_keep_callers_value() -> bool:
+    cursor = Cursor([7, 11, 13], 0)
+    first = advance(mut cursor)
+    second = forward(mut cursor)
+    return first == 7 and second == 11 and cursor.index == 2 and cursor.code == [7, 11, 13]
+
+
+# spec-case: RC-CALLER-FIELD-READ-1
+public def test_negative_index_and_later_replacement_keep_scalar_snapshot() -> bool:
+    cursor = Cursor([7, 11, 13], -1)
+    snapshot = cursor
+    item = replace_after(mut cursor)
+    return item == 13 and cursor.code == [29] and snapshot.code == [7, 11, 13]
+
+
+# spec-case: RC-CALLER-FIELD-READ-1
+public def test_repeated_entry_and_rebinding_keep_anchor_current() -> bool:
+    cursor = Cursor([7], 0)
+    total = 0
+    count = 0
+    while count < 4:
+        total += advance(mut cursor)
+        cursor = Cursor([11], 0)
+        count += 1
+    return total == 40 and cursor.index == 0
+
+
+# spec-case: RC-CALLER-FIELD-READ-1
+public def test_distinct_and_aliased_inout_homes() -> bool:
+    cursor = Cursor([7], 0)
+    second = Cursor([11], 0)
+    first = cross(mut cursor, mut second)
+    alias = cross(mut cursor, mut cursor)
+    return first == 7 and alias == 7 and second.code == [31] and cursor.code == [31]
+
+
+# spec-case: RC-CALLER-FIELD-READ-1
+public def test_callback_capture_retains_original_field_value() -> bool:
+    cursor = Cursor([7], 0)
+    item = callback(mut cursor)
+    return item == 7 and cursor.code == [41]
+
+
+# spec-case: RC-CALLER-FIELD-READ-1
+public def test_heap_and_parent_arena_authority_survives_forwarding() -> bool:
+    old = Cursor([7, 11], 0)
+    answer = 0
+    with arena():
+        answer += forward(mut old)
+        local = Cursor([13, 17], 0)
+        with arena():
+            answer += forward(mut local)
+        answer += advance(mut local)
+    return answer == 37 and old.index == 1
+
+
+# spec-case: RC-CALLER-FIELD-READ-1
+public def test_readonly_parameter_retains_its_separate_convention() -> bool:
+    cursor = Cursor([7, 11], 1)
+    return readonly(cursor) == 11 and cursor.index == 1
+
+
+# spec-case: RC-CALLER-FIELD-READ-1
+public def test_live_leaf_reached_through_parent_field() -> bool:
+    rows = [Cursor([7, 11], 0)]
+    snapshot = rows
+    first = advance(mut rows[0])
+    return first == 7 and rows[0].index == 1 and snapshot[0].index == 0
+
+
+def main() -> int:
+    assert test_direct_and_forwarded_references_keep_callers_value()
+    assert test_negative_index_and_later_replacement_keep_scalar_snapshot()
+    assert test_repeated_entry_and_rebinding_keep_anchor_current()
+    assert test_distinct_and_aliased_inout_homes()
+    assert test_callback_capture_retains_original_field_value()
+    assert test_heap_and_parent_arena_authority_survives_forwarding()
+    assert test_readonly_parameter_retains_its_separate_convention()
+    assert test_live_leaf_reached_through_parent_field()
+    return 0

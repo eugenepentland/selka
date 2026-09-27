@@ -1,0 +1,101 @@
+record Item:
+    text: bytes
+    number: int
+
+
+def leaf(items: list[Item], index: int) -> int:
+    return items[index].number
+
+
+def middle(items: list[Item], index: int) -> int:
+    return leaf(items, index)
+
+
+def total(items: list[Item]) -> int:
+    result = 0
+    index = 0
+    while index < len(items):
+        item = items[index]
+        result += middle(items, index) + item.number
+        index += 1
+    return result
+
+
+def recursive(items: list[Item], depth: int) -> int:
+    if depth == 0:
+        return middle(items, 0)
+    return recursive(items, depth - 1)
+
+
+def returned(items: list[Item]) -> Item:
+    return items[0]
+
+
+def through_owned_result(items: list[Item]) -> int:
+    return returned(items).number
+
+
+def changed(items: mut list[Item]) -> int:
+    items.append(Item(b"new", 11))
+    return total(items)
+
+
+# spec-case: RC-READONLY-CALLS-1
+public def test_composed_reader_preserves_snapshot_and_later_mutation() -> bool:
+    items = [Item(b"first", 3), Item(b"second", 7)]
+    snapshot = items
+    before = total(items)
+    items.append(Item(b"third", 9))
+    return before == 20 and total(items) == 38 and total(snapshot) == 20
+
+
+# spec-case: RC-READONLY-CALLS-1
+public def test_composed_reader_handles_empty_and_repeated_inputs() -> bool:
+    empty: list[Item] = []
+    items = [Item(b"first", 3)]
+    result = 0
+    for index in range(8):
+        result += total(items)
+    return result == 48 and total(empty) == 0 and items[0].text == b"first"
+
+
+# spec-case: RC-READONLY-CALLS-1
+public def test_composed_reader_accepts_inherited_arena_values() -> bool:
+    result = 0
+    with arena():
+        items = [Item(b"first", 3), Item(b"second", 7)]
+        result = total(items)
+    return result == 20
+
+
+# spec-case: RC-READONLY-CALLS-1
+public def test_composed_helper_preserves_self_recursion() -> bool:
+    items = [Item(b"first", 3)]
+    return recursive(items, 64) == 3 and items[0].text == b"first"
+
+
+# spec-case: RC-READONLY-CALLS-1
+public def test_managed_result_helper_keeps_owned_fallback() -> bool:
+    items = [Item(b"first", 3)]
+    saved = returned(items)
+    result = through_owned_result(items)
+    items.clear()
+    return result == 3 and saved.text == b"first" and saved.number == 3
+
+
+# spec-case: RC-READONLY-CALLS-1
+public def test_mutating_helper_keeps_snapshot_and_ordinary_cleanup() -> bool:
+    items = [Item(b"first", 3)]
+    snapshot = items
+    result = changed(mut items)
+    return result == 28 and total(items) == 28 and total(snapshot) == 6
+
+
+def main() -> int:
+    assert test_composed_reader_preserves_snapshot_and_later_mutation()
+    assert test_composed_reader_handles_empty_and_repeated_inputs()
+    assert test_composed_reader_accepts_inherited_arena_values()
+    assert test_composed_helper_preserves_self_recursion()
+    assert test_managed_result_helper_keeps_owned_fallback()
+    assert test_mutating_helper_keeps_snapshot_and_ordinary_cleanup()
+    return 0

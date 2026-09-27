@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include "native_heap.h"
+#include "native_rc.h"
 
 struct MylangNativeProvidersTag;
 /* Native ABI v3: execution context and sticky structured traps.
@@ -84,6 +85,38 @@ typedef struct {
 #define MYL_QBE_ENVIRONMENT_NAMES 16
 #define MYL_QBE_ENVIRONMENT_NAME_LIMIT 128
 typedef struct { const unsigned char *names; size_t length; } MylQbeEnvironmentScope;
+/* Compiler-reserved storage; registration and failure cleanup allocate nothing.
+ * The initialized word is cleared before either drop can call foreign code. */
+#define MYL_QBE_RC_SLOT_BYTES 32
+#define MYL_QBE_RC_SLOT_TYPE_OFFSET 0
+#define MYL_QBE_RC_SLOT_ADDRESS_OFFSET 8
+#define MYL_QBE_RC_SLOT_INITIALIZED_OFFSET 16
+#define MYL_QBE_RC_SLOT_FLAGS_OFFSET 24
+#define MYL_QBE_RC_FRAME_BYTES 32
+#define MYL_QBE_RC_FRAME_PREVIOUS_OFFSET 0
+#define MYL_QBE_RC_FRAME_ENTRIES_OFFSET 8
+#define MYL_QBE_RC_FRAME_COUNT_OFFSET 16
+#define MYL_QBE_RC_FRAME_SCOPE_OFFSET 24
+#define MYL_QBE_RC_UNIQUE_DROP 1u
+#define MYL_QBE_RC_COUNTED 2u
+#define MYL_QBE_RC_CONSTRUCTION 4u
+/* Exclusive journal token for a hidden live-view receiver (one pointer). */
+#define MYL_QBE_RC_HOLD_POINTER 8u
+/* Exclusive frame-private copyable value: one H per managed edge, including
+ * ordinary O-shaped leaves. Never a heap field, provider value or unique drop. */
+#define MYL_QBE_RC_LOAN 16u
+typedef struct {
+    const myl_native_type *type;
+    void *address;
+    uint32_t *initialized;
+    unsigned flags;
+} MylQbeRcSlot;
+typedef struct MylQbeRcFrame {
+    struct MylQbeRcFrame *previous;
+    MylQbeRcSlot *entries;
+    size_t count;
+    myl_rc_scope *scope_checkpoint;
+} MylQbeRcFrame;
 typedef struct {
     uint64_t steps, frames, max_steps, max_frames;
     const char *trap;
@@ -141,6 +174,10 @@ typedef struct {
        Appended after the frozen ABI prefix. */
     void *stand_ins;
     void (*stand_in_cleanup)(void *);
+    /* Copied-value adapter temporaries survive guest longjmp and are retired
+       while the context, managed heap and provider resources are still live. */
+    void (*adapter_cleanup)(void *);
+    MylQbeRcFrame *rc_frames;
 } MylQbeContext;
 typedef struct {
     uint64_t value, steps;
@@ -151,8 +188,52 @@ typedef struct {
     MylQbeTrapDetail trap_detail;
 } MylQbeResult;
 void myl_qbe_fail_capability(void *);
+void myl_qbe_rc_frame_enter(void *, MylQbeRcFrame *, MylQbeRcSlot *, size_t);
+void myl_qbe_rc_slot_drop(void *, MylQbeRcSlot *);
+/* Restore this frame's scopes and drop initialized entries, keeping it linked. */
+void myl_qbe_rc_frame_cleanup(void *, MylQbeRcFrame *);
+/* Normal exit already released its owners and closed its receiver scopes. */
+void myl_qbe_rc_frame_leave(void *, MylQbeRcFrame *);
+/* Nested landing pads may unwind a prefix; the checkpoint frame remains live. */
+void myl_qbe_rc_unwind_to(void *, MylQbeRcFrame *checkpoint);
+void myl_qbe_rc_unwind(void *);
+void myl_qbe_rc_finish(void *);
+/* An arena statement ends with no live operand stack. Restore scopes born in
+ * its region, then drop inner locals and scratch owners while chunks live. */
+void myl_qbe_rc_arena_prepare(void *, MylQbeRcFrame *, size_t local_watermark);
+int myl_qbe_rc_unique_local(void *, const myl_native_type *, void *, uint32_t *owned);
+int myl_qbe_rc_unique_field(void *, const myl_native_type *, void *, void *container);
+/* The compiler proves the list unique and each live element an ordinary owning
+ * pointer. Detach shared children at the list's region; refusal may leave an
+ * equivalent detached prefix. This does not establish the loop's alias proof. */
+int myl_qbe_rc_unique_elements(void *, const myl_native_type *list_type, void *list);
+/* Immutable write paths detach their owned box edge even in an arena. */
+int myl_qbe_rc_box_detach(void *context, const myl_native_type *type, void *address, void *container);
+int myl_qbe_rc_box_detach_held(void *context, const myl_native_type *type, void *address, void *container);
+int myl_qbe_rc_unique_held(void *, const myl_native_type *, void *, void *container);
+/* Copy a prepared inline body into an owned replacement box. The owner slot
+ * and guard change only on success; borrowed prior owners are not released. */
+int myl_qbe_rc_rebox_local(void *, const myl_native_type *, void *, const void *, uint32_t *owned);
+typedef struct { const myl_native_type *type; size_t offset; } MylQbeRcPath;
+typedef struct {
+    void *address, *container;
+    const MylQbeRcPath *path;
+    size_t count;
+} MylQbeRcPlace;
+#define MYL_QBE_RC_SCOPE_BYTES 32
+#define MYL_QBE_RC_PATH_BYTES 16
+#define MYL_QBE_RC_PLACE_BYTES 32
+void myl_qbe_rc_scope_begin(void *, myl_rc_scope *);
+void myl_qbe_rc_scope_end(void *, myl_rc_scope *);
+int myl_qbe_rc_scope_pin(void *, myl_rc_scope *, void *payload);
+int myl_qbe_rc_scope_hold(void *, myl_rc_scope *, void *payload);
+int myl_qbe_rc_scope_prepare(void *, myl_rc_scope *, const MylQbeRcPlace *);
+int myl_qbe_rc_scope_prepare_loan(void *, myl_rc_scope *, const MylQbeRcPlace *);
 void myl_qbe_fail_missing_capability(void *, const char *flag);
 uint64_t myl_qbe_on_stack(uint64_t (*entry)(void *), MylQbeContext *);
+/* Admission must release consumed ABI arguments before raising an OOM trap. */
+void *myl_qbe_frame_try_allocate(void *, uint64_t bytes);
+void myl_qbe_fail_frame_allocation(void *);
 void *myl_qbe_frame_allocate(void *, uint64_t bytes);
 void myl_qbe_frame_release(void *, void *);
 void myl_qbe_enter_at_sized(void *, const MylQbeFunction *, uint64_t bytes);
@@ -179,6 +260,11 @@ void myl_qbe_fail_list_bounds(void *context);
 void myl_qbe_fail_list_capacity(void *context);
 void myl_qbe_fail_list_value(void *context);
 void myl_qbe_fail_allocation(void *context);
+/* RC-v1 adapters preserve active-frame locations for status failures. Module
+ * registration runs before host initialize and before any owned guest value. */
+int myl_qbe_rc_initialize(void *context);
+int myl_qbe_rc_register(void *context, const myl_rc_module *module);
+int myl_qbe_rc_status(void *context, myl_rc_status status);
 void myl_qbe_fail_iteration(void *context);
 void myl_qbe_fail_assert(void *context);
 void myl_qbe_fail_requires(void *context);

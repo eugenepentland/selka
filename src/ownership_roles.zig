@@ -146,7 +146,11 @@ fn markPathEffects(ctx: *Context) void {
         if (origin.source.part == .element) {
             markElementRead(ctx, d);
         } else if (origin.source.read != none) {
-            if (ctx.role(ctx.locals.parents[i]) == .owned) ctx.marks.unique_load[origin.source.read] = true;
+            const parent = ctx.locals.parents[i];
+            const unique = ctx.role(parent) == .mut_param and model.uniqueParameter(ctx.code.function, parent);
+            if (ctx.role(parent) == .owned or (ctx.role(parent) == .mut_param and !unique)) {
+                ctx.marks.unique_load[origin.source.read] = true;
+            }
         }
     }
 }
@@ -213,6 +217,18 @@ fn uniqueLoads(ctx: *Context) Error!void {
                     if (!model.writesParameter(callee, position)) continue;
                     if (!ctx.managedType(callee.scope.locals[position].ty)) continue;
                     const operand = stack[stack.len - count + position];
+                    if (operand.origin != .local or operand.part != .whole or operand.read == none) continue;
+                    if (ctx.instructions()[operand.read].op != .load_local) continue;
+                    ctx.marks.unique_load[operand.read] = true;
+                }
+            },
+            .invoke => |ty| {
+                const signature = ctx.record(ty).contract.callback.?;
+                if (signature.valueCount() + 1 > stack.len) return error.InternalError;
+                const base = stack.len - signature.valueCount();
+                for (signature.mutates) |position| {
+                    if (!ctx.managedType(signature.parameters[position])) continue;
+                    const operand = stack[base + position];
                     if (operand.origin != .local or operand.part != .whole or operand.read == none) continue;
                     if (ctx.instructions()[operand.read].op != .load_local) continue;
                     ctx.marks.unique_load[operand.read] = true;

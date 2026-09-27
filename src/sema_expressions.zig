@@ -820,6 +820,18 @@ fn checkLambdaValue(comptime Checker: type, self: *Checker, index: usize, node: 
     out.data = .{ .function_value = @fromBackingInt(self.lambda_start + index) };
 }
 fn consumedTemporaries(comptime Checker: type, self: *Checker, node: ast.Node, out: typed.Node) Error!usize {
+    switch (node.data) {
+        // The transparent marker reuses its target's typed data, but that target
+        // has already consumed its own operands and left exactly one temporary.
+        .mut_argument => return 1,
+        .bytes, .text, .integer => return 0,
+        // These forms check their contents in place; dictionary literals queue
+        // every key and value, whether they construct a dictionary or a table.
+        .list_literal, .set_literal, .format, .comprehension => return 0,
+        .dictionary_literal => |literal| return literal.len,
+        .binary => return 2,
+        else => {},
+    }
     if (node.data == .unary and node.data.unary.op == .is_none) return 1;
     // An intrinsic `Option` method is checked in place: its receiver and its
     // one argument are the call's own and never reached this stack, so
@@ -831,12 +843,6 @@ fn consumedTemporaries(comptime Checker: type, self: *Checker, node: ast.Node, o
     if (node.data == .method_call and (out.data == .print or out.data == .stream_write)) return 0;
     if (node.data == .index and out.data == .block_value) return 2;
     if (node.data == .length and out.data == .block_value) return 1;
-    if (node.data == .bytes or node.data == .text or node.data == .integer) return 0;
-    // A list literal checks its own elements, so none of them reach the caller's stack;
-    // a dict literal queues every key and value, whether it builds a dict or a table.
-    if (node.data == .list_literal or node.data == .set_literal or node.data == .format or node.data == .comprehension) return 0;
-    if (node.data == .dictionary_literal) return node.data.dictionary_literal.len;
-    if (node.data == .binary) return 2;
     // `fs.read_only()` is a narrowing method whose receiver is a local, not a
     // queued sub-expression, so it leaves no temporary for the caller to pop.
     if (node.data == .call and out.data == .restrict_resource) return 0;

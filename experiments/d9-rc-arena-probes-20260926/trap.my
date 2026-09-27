@@ -1,0 +1,15 @@
+module trap
+
+
+def descend(older: list[int], depth: int) -> int:
+    with arena():
+        alias = older
+        younger: list[list[int]] = [alias, alias]
+        if depth == 0:
+            assert False, "arena unwind probe"
+        return len(younger) + descend(alias, depth - 1)
+
+
+def main() -> int:
+    older: list[int] = [19]
+    return descend(older, 8)

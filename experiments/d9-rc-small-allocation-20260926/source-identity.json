@@ -1,0 +1,6 @@
+{
+  "before_source": "801ea1115155e4eac2b51109bb9991b3f72d1820",
+  "merged_cumulative": "e2667d56ed6a35e1117ba65daba4e4a87e65f050",
+  "compiler_mode": "Debug",
+  "after_source": "before source plus candidate.patch; tests and documentation accompany commit"
+}

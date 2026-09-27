@@ -209,6 +209,7 @@ fn buildEnvironment(context: fs.Context, settings: options.Options) Error![]cons
     return std.json.Stringify.valueAlloc(context.allocator, .{
         .driver = bundled.driver_identity,
         .runtime = bundled.content_hash,
+        .runtime_contract = (try @import("runtime_contract").parse(context.environ.get("MYLANG_RUNTIME"))).identity(),
         .zig = try context.stamp(try context.executable(settings.zig)),
         .codegen = try codegenIdentity(context, settings),
         .mode = settings.mode,

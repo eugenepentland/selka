@@ -1,0 +1,12 @@
+record Holder:
+    items: list[int]
+
+def main(out: Stream) -> int:
+    holder = Holder([7, 8])
+    for value in holder.items:
+        out.print(value)
+        if value == 7:
+            holder.items += [9]
+            holder.items[1] = 13
+    out.print(holder.items)
+    return 0

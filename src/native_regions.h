@@ -14,7 +14,8 @@ int myl_native_region_check(myl_native_heap *heap, const void *container,
 int myl_native_region_retains(myl_native_heap *heap, const myl_native_type *type, const void *value);
 /* Deep-copy the innermost arena's part of the graph reachable from value into
  * the enclosing region, sharing objects that already live there and preserving
- * sharing and cycles inside the copy. Zero on allocation failure. */
+ * sharing (and legacy GC cycles) inside the copy. RC returns one owned output
+ * without consuming source; refusal leaves output empty and source usable. */
 int myl_native_region_escape(myl_native_heap *heap, const myl_native_type *type,
                              const void *value, void *output);
 #endif

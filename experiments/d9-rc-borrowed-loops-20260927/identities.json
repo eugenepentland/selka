@@ -1,0 +1,23 @@
+{
+  "base": "6ce92814ed72df7021af720bbea10d1250e43ab4",
+  "compiler_sha256": "54f19f6b7d0229727d21e8474dadba7a2aaacc4366568223105e614210765518",
+  "archive_sha256": {
+    "README.md": "71c98cdb70f081258e7cd134840773c80025693702508910a13ab42f6f4c9287",
+    "after-emitted.json.gz": "c44ee4d0d45dfba41b5da98dea9552367c205b7330a5ce24bed6a058e748c243",
+    "before-emitted.json.gz": "9afee9ee588179b40f1c8b973dde8217564c9ef772a6942e607f6e0537348f4c",
+    "bounds.my": "c5ab599a8d9a80f74928ad687bdc4362526ee45e5b66e9ce2e51d904301e3ab4",
+    "build-final.log.gz": "312cf5c0b23e8af62df01c9e6b7d87f3d6645208f55a608d8e56a60d3c338113",
+    "frames.my": "c5ab599a8d9a80f74928ad687bdc4362526ee45e5b66e9ce2e51d904301e3ab4",
+    "guests-final.json.gz": "6b8eb3439f3607af9108ada703e34cb3f5236bac4e6f77bd41b8a979233867b0",
+    "guests.py": "ba5b443e762216c8a993f3c3f2c57346202925db389352a10b7948a00afe964d",
+    "measure.json.gz": "bf81b88a66e8e442cb8a41d428ed8acaf27d3c42d80a96ca590d73114fc6f18d",
+    "measure.py": "908ef2a9ea4368acbe7715a34de7c6e843508cb3e340d1acfbf3cdab8a56140e",
+    "source.patch.gz": "7c9ae10d507011ca6d1e7ce7705b43e9c35030c00a23a0a6be4eff1aad9b55f3",
+    "steps.my": "5b8a87e81617e6cdb39e76fe689984aa659243462add486942fc3aba862fd31f",
+    "traps-missing-runtime-options.json.gz": "5eb54db275b3d0232cb204a4462fb35d5ba871c178aae00b10217db35fb0c5e5",
+    "traps.json.gz": "dac32340a82b3afc4ce207afab5d10954e4878aa4bec5fa2136bffc26c0c8a32",
+    "traps.py": "d69ffb3a0a95957dc1489f2b08186067a9d65708f0c19799f5a701b7f3d42e23",
+    "units-final.log.gz": "0668e16008e597ab478c34d262f118a98a0ae8d103d1335e9a6ed91c61893a87",
+    "verify.py": "834acafea78a7e352102bd7f2a9bbff9b66e725e20cf94e19e05d7398ec94597"
+  }
+}

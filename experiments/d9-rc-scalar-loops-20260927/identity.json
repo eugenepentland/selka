@@ -1,0 +1,27 @@
+{
+  "source_commit": "280ef314d9c7eceae23b98be20d38e0b467604fe",
+  "base_commit": "636524b81562e30285b15e297078fac24ffccb58",
+  "compiler_mode": "Debug",
+  "compiler_sha256": "d945395b87a630783f36e41d27aad37cd9727635db778e3435a93e5c9af8a879",
+  "benchmark": "unchanged parity/micro/intloop, 30000000 iterations",
+  "benchmark_stdout": "28665\n",
+  "artifacts": {
+    "build-candidate.log.gz": "c7ee7dcb489fc2cc3919b3b32e9b2c707c965ff5dc2e106cfeace5ad2ca1b817",
+    "controls.json.gz": "03eca86dd244d005a4030b25434a3cf803cc64811d26dc44cdc24166bef44ee9",
+    "controls.log.gz": "92a1a7cad2386be4847d844e546e7a7bdc3f3ac3d9211689fedbd1162caff086",
+    "controls.py": "a0001f8613191cfcf7c14febd7db5fc2b8c5ba72ca280b687ad1c3b700fc5a42",
+    "fmt-check.log.gz": "de01a91b7b313677fe046c287a2404a16ae2c7b1d6d2793c81737dda7bc60d14",
+    "focused-initial.log.gz": "9a7417fa836ebbcc123277ce8b37e9efb094b135b60022bc0b50720b93691155",
+    "focused-rc.log.gz": "6fd71d27d00a4579ab52200f70667b4a3677d04b8a885b8724e7023f117db5d1",
+    "gc-builds.json.gz": "e4b8939cd562d4271d4c8f695ce09b8dbfca7394df55fb488883777fc0925d81",
+    "guardian.log.gz": "5a6860f7a105250ef71714bd2a098b58d063ba91c4e044d638d7e46ba41a1433",
+    "limits.my": "82b5c1871de5f53bd5fe8ea35a2ab02712085036bd8d8b1c156093c7c7e90f94",
+    "measure.log.gz": "0be9e839ddbb9e79f364569e4f25b2373d58ca202dc5eddb94fae0feda409aa3",
+    "measure.py": "11870a8503ef608c2f6ae35e73fd1a5639e68cafbe5d0845bac2dd90df90827f",
+    "measurement.json.gz": "f8166ae62a4ed20bde2137a14896f7e81f99f081aad8f6d439651f15112e872b",
+    "overflow.my": "703f1899bf308b5b5f0ac45da5b7ba0488d7b95e64bf3c9f0163f7886ec333e4",
+    "rc_scalar_loops.my": "591696610b0bffe32726ad36bbfa53c0cb58a6cc8d025d07329c9539143385ec",
+    "source.patch.gz": "0dea0e1c478b376b220bbb5515c7b4e75639e44fe7103ab4455cf3863b4232e6",
+    "verify.py": "2849fad2fee7e1f62bd3b14d637b1764f25b1206689d304df1a3115891dd4e7e"
+  }
+}

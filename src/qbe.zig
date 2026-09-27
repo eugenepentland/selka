@@ -5,10 +5,14 @@ const scalar_lower = @import("qbe_scalar.zig");
 const zero_local = @import("qbe_format.zig").zero_local;
 const arena_lower = @import("qbe_arena.zig");
 const borrow_lower = @import("qbe_borrow.zig");
+const rc_borrow = @import("qbe_rc_borrow.zig");
+const rc_model = @import("rc_model.zig");
 const liveness = @import("qbe_liveness.zig");
 const ownership = @import("ownership.zig");
 const cow_lower = @import("qbe_cow.zig");
 const value_semantics = @import("value_semantics.zig");
+const runtime_mode = @import("runtime_mode.zig");
+const rc_frame = @import("qbe_rc_frame.zig");
 const moves_module = @import("qbe_moves.zig");
 const range_keys = @import("qbe_range_keys.zig");
 const loop_facts = @import("qbe_loop_facts.zig");
@@ -278,6 +282,8 @@ fn generateImpl(allocator: std.mem.Allocator, program_in: bytecode.Program, src:
     };
     var reuse: Reuse = try .init(a, pass, interface.reuse);
     try runPasses(&pass, &reuse, src, standins, shape.lean);
+    const canonical = if (requested) |mask| try selectedUnits(a, units, mask) else units;
+    const emitted = try appendBorrowedUnits(pass, src, canonical, requested);
     const entry_function = program.functions[@backingInt(program.main)];
     const entry_parameters = try a.alloc([]const u8, entry_function.signature.parameter_count);
     const entry_parameter_names = try a.alloc([]const u8, entry_function.signature.parameter_count);
@@ -286,16 +292,19 @@ fn generateImpl(allocator: std.mem.Allocator, program_in: bytecode.Program, src:
     const entry_argv_element = if (entry_function.signature.parameter_count != 0) entry_adapter.argvElement(entry_function.scope.locals[0].ty, program.records) else null;
     const entry_argv = if (entry_argv_element) |element| native_descriptors.symbol(a, &layouts, element) catch |err| return layoutError(err) else null;
     const descriptors = native_descriptors.generate(a, &layouts) catch |err| return layoutError(err);
+    const owners = if (runtime_mode.enabled())
+        @import("rc_descriptors.zig").generate(a, &layouts) catch |err| return layoutError(err)
+    else
+        "";
     const renderers = @import("native_render.zig").generate(a, &layouts, program, states) catch |err| return layoutError(err);
     // A program that neither prints nor renders a value into text carries no
     // renderers, and copies nothing.
-    const runtime_data = if (renderers.len == 0) descriptors else try std.mem.concat(a, u8, &.{ descriptors, renderers });
+    const runtime_data = if (renderers.len == 0 and owners.len == 0) descriptors else try std.mem.concat(a, u8, &.{ descriptors, renderers, owners });
     // Wire types and codecs serve only a library's embedding API.
     const wire_types = if (shape.executable) null else (qbe_wire.describe(a, &layouts) catch |err| return layoutError(err)).types;
     const codecs = if (shape.executable) null else @import("qbe_codecs.zig").describe(a, program, &layouts) catch |err| return layoutError(err);
     const text_format = textFormat(program, &reuse);
     const host = @import("qbe_host.zig").describe(a, program, &layouts) catch |err| return layoutError(err);
-    const emitted = if (requested) |mask| try selectedUnits(a, units, mask) else units;
     return std.json.Stringify.valueAlloc(allocator, .{
         .host = host,
         .text_format = text_format,
@@ -308,6 +317,7 @@ fn generateImpl(allocator: std.mem.Allocator, program_in: bytecode.Program, src:
         .runtime_data = runtime_data,
         .version = "qbe-units-v1",
         .abi = test_dependencies.abi,
+        .runtime_contract = runtime_mode.identity(),
         // Where a lean manifest's stored texts and metadata live, by digest.
         .store = if (shape.lean) try interface.reuse.?.store.textRoot() else null,
         .functions = emitted,
@@ -323,6 +333,14 @@ fn generateImpl(allocator: std.mem.Allocator, program_in: bytecode.Program, src:
 fn runPasses(pass: *EmitPass, reuse: *Reuse, src: Source, standins: ?*fragments.Standins, lean: bool) GenerateError!void {
     const allocates = if (standins) |state| stood: {
         reuse.standin = try StandIn.init(pass.allocator, pass.program, state, src);
+        if (runtime_mode.enabled()) {
+            // RC certificates require every physical body, including transitive
+            // immortal helpers. Stored semantic summaries are not certificates.
+            @memset(state.selected, true);
+            try state.lower.run(state.lower.context, state);
+            try reinline(pass.*, &reuse.standin.?);
+            try reuse.forget(pass.allocator, pass.program);
+        }
         pass.arenas = arenasPresent(pass.program, reuse);
         break :stood try standInPasses(pass, reuse);
     } else plain: {
@@ -346,6 +364,35 @@ fn selectedUnits(allocator: std.mem.Allocator, units: []const Unit, selected: []
         index += 1;
     };
     return result;
+}
+
+/// Alternate entries have their own symbol and frame map; pass indices stay canonical.
+fn appendBorrowedUnits(pass: EmitPass, src: Source, canonical: []const Unit, requested: ?[]const bool) GenerateError![]const Unit {
+    if (!runtime_mode.enabled()) return canonical;
+    const a = pass.allocator;
+    var result: std.ArrayList(Unit) = .empty;
+    try result.appendSlice(a, canonical);
+    var catalog = try @import("rc_shape.zig").Catalog.init(a, pass.layouts);
+    defer catalog.deinit();
+    for (pass.program.functions, 0..) |function, index| {
+        if (requested) |mask| if (!mask[index]) continue;
+        const proof: rc_model.EntryCertificate = if (function.signature.parameter_count == 0) blk: {
+            const immortal = (@import("rc_calls.zig").immortalIn(&catalog, pass.program.functions, function, runtime_mode.identity()) catch |err| return layoutError(err)) orelse continue;
+            break :blk .{ .immortal = immortal };
+        } else blk: {
+            const borrowed = (@import("rc_calls.zig").borrowedIn(a, &catalog, pass.program.functions, function, runtime_mode.identity()) catch |err| return layoutError(err)) orelse continue;
+            break :blk .{ .borrowed = borrowed };
+        };
+        const emitted = try emitEntry(pass, index, a, proof);
+        var unit = pass.units[index];
+        unit.symbol = try rc_borrow.entrySymbol(a, unit.symbol, proof);
+        unit.il = emitted.text;
+        unit.stored = null;
+        unit.@"export" = null;
+        try fillPositions(a, pass.program, src, index, &unit);
+        try result.append(a, unit);
+    }
+    return result.toOwnedSlice(a);
 }
 
 fn validateSelection(allocator: std.mem.Allocator, program: bytecode.Program, selected: []const bool) GenerateError!void {
@@ -618,7 +665,12 @@ const EmitPass = struct {
 
 /// Lower one function into text allocated from `scratch`, with the pass's
 /// current allocation analysis. Its operand stacks are returned beside it.
-fn emitOne(pass: EmitPass, index: usize, scratch: std.mem.Allocator) GenerateError!struct { text: []const u8, states: []?[]const typed.Type } {
+const EmittedEntry = struct { text: []const u8, states: []?[]const typed.Type };
+fn emitOne(pass: EmitPass, index: usize, scratch: std.mem.Allocator) GenerateError!EmittedEntry {
+    return emitEntry(pass, index, scratch, null);
+}
+
+fn emitEntry(pass: EmitPass, index: usize, scratch: std.mem.Allocator, certificate: ?rc_model.EntryCertificate) GenerateError!EmittedEntry {
     var emitter = Emitter{
         .allocator = scratch,
         .program = pass.program,
@@ -635,7 +687,8 @@ fn emitOne(pass: EmitPass, index: usize, scratch: std.mem.Allocator) GenerateErr
         .pure = pass.pure,
         .cow = if (pass.cow == .off) null else try cow_lower.request(scratch, pass.cow == .counting),
     };
-    const text = try emitter.emit(pass.units[index].symbol);
+    const name = if (certificate) |proof| try rc_borrow.entrySymbol(scratch, pass.units[index].symbol, proof) else pass.units[index].symbol;
+    const text = try emitter.emit(name, certificate);
     return .{ .text = text, .states = emitter.states };
 }
 
@@ -1036,7 +1089,8 @@ fn firstPass(pass: EmitPass, reuse: *Reuse) GenerateError![]bool {
             continue;
         }
         if (reuse.configured) |configured| {
-            reuse.local[index] = try reuse.keys.?.local(index, flagsOf(pass, index));
+            const body_key = try reuse.keys.?.local(index, flagsOf(pass, index));
+            reuse.local[index] = @import("qbe_rc_cache.zig").key(pass.allocator, pass.program, pass.layouts, index, body_key) catch |err| return layoutError(err);
             if (try configured.store.first(reuse.local[index])) |answer| {
                 allocates[index] = answer;
                 continue;
@@ -1100,6 +1154,7 @@ fn flagsOf(pass: EmitPass, index: usize) fragments.Flags {
         .arenas = pass.arenas,
         .entry = index == @backingInt(pass.program.main),
         .cow = pass.cow,
+        .runtime = runtime_mode.get(),
     };
 }
 
@@ -1573,7 +1628,7 @@ const Emitter = struct {
             else => null,
         };
     }
-    fn emit(self: *Emitter, name: []const u8) GenerateError![]const u8 {
+    fn emit(self: *Emitter, name: []const u8, certificate: ?rc_model.EntryCertificate) GenerateError![]const u8 {
         const f = self.function;
         if (f.policy.c_abi) return @import("qbe_c_abi.zig").emit(self, name);
         if (f.policy.host != null) return @import("qbe_host_lower.zig").emit(self, name);
@@ -1588,19 +1643,47 @@ const Emitter = struct {
         self.branch_targets = try self.collectBranchTargets();
         self.by_reference = try self.addressLocals();
         try self.planOwnership();
-        self.range_keys = try self.planRangeKeys();
+        if (runtime_mode.enabled()) {
+            self.cow.?.rc = try @import("qbe_rc_state.zig").build(Emitter, self, ir.stack_capacity);
+            const rc = self.cow.?.rc.?;
+            if (certificate) |proof| {
+                const readonly = @import("rc_readonly_calls.zig");
+                switch (proof) {
+                    .borrowed => |borrowed| {
+                        rc.contract.result = .{ .borrowed = borrowed };
+                        rc.plan.readonly = readonly.borrowedEntry(&rc.catalog, self.program.functions, f, runtime_mode.identity(), borrowed) catch |err| return layoutError(err);
+                    },
+                    .immortal => |immortal| {
+                        rc.contract.result = .{ .immortal = immortal };
+                        rc.plan.readonly = (readonly.immortalEntry(&rc.catalog, self.program.functions, f, runtime_mode.identity(), immortal) catch |err| return layoutError(err)) orelse return error.InternalError;
+                    },
+                }
+            } else {
+                rc.plan.readonly = @import("rc_readonly_calls.zig").certify(&rc.catalog, self.program.functions, f, runtime_mode.identity()) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError;
+            }
+            @import("qbe_rc_readonly_calls.zig").activate(Emitter, self);
+        }
+        if (!runtime_mode.enabled()) self.range_keys = try self.planRangeKeys();
         // QBE-LOOP-VERSION-1: only a build whose value guards are on has
         // anything to prove, and step accounting counts every instruction the
         // original executes, so a counted build keeps one copy.
-        if (self.checks and !self.step_checks) self.loop_plan = try loop_facts.plan(self.allocator, .{
+        const version_loops = self.checks and !self.step_checks;
+        if (version_loops) self.loop_plan = try loop_facts.plan(self.allocator, .{
             .program = self.program,
             .function = f,
             .states = self.states,
             .box_cow = self.cow != null and value_semantics.enabled(),
         });
         if (self.cow) |state| try cow_lower.Lower(Emitter).veto(self, state);
+        if (runtime_mode.enabled()) try @import("rc_plain_record_write.zig").named(Emitter, self);
+        if (runtime_mode.enabled()) try @import("qbe_rc_dictionary_tail.zig").finalize(Emitter, self);
+        if (runtime_mode.enabled()) try @import("qbe_rc_dictionary_loop.zig").finalize(Emitter, self);
+        if (runtime_mode.enabled()) try @import("qbe_rc_empty_locals.zig").finalize(Emitter, self);
+        if (runtime_mode.enabled()) try @import("qbe_rc_empty_frame.zig").finalize(Emitter, self);
+        if (runtime_mode.enabled()) try @import("qbe_rc_record_read_plan.zig").finalize(Emitter, self);
+        try @import("qbe_rc_readonly_calls.zig").verify(Emitter, self);
         try self.findRoots();
-        if (self.has_roots and self.has_safepoints) self.live_roots = try self.rootLiveness();
+        if (self.needsRootProtocol()) self.live_roots = try self.rootLiveness();
         const capacity = ir.stack_capacity;
         // QBE-FRAMEFIT-1: before the body exists, the only bound on the per-pc
         // aggregate scratch counts every buffer the lowering might declare, and
@@ -1641,7 +1724,7 @@ const Emitter = struct {
             }
             break;
         }
-        self.moves = try moves_module.Lower(Emitter).plan(self);
+        if (!runtime_mode.enabled()) self.moves = try moves_module.Lower(Emitter).plan(self);
         self.coverage = try @import("qbe_cover.zig").Lower(Emitter).plan(self);
     }
     /// Lower the analysed function with its frame placed as `frame` says.
@@ -1677,25 +1760,32 @@ const Emitter = struct {
         try self.enterFrame(name);
         // A build without instruction-budget accounting cannot honor a runtime
         // step ceiling; refuse it once, before any guest instruction runs.
-        if (self.entry) try self.requireAccounting();
+        if (self.entry and !runtime_mode.enabled()) try self.requireAccounting();
+        const inert_resume = try @import("qbe_rc_inert_return.zig").emit(Emitter, self);
         try arena_lower.Lower(Emitter).mark(self);
         if (self.heap_frame) {
-            try self.print(" %frame_memory =l call $myl_qbe_frame_allocate(l %ctx, l {d})\n", .{frame.heap});
-            try self.checkFailure("allocation_failure");
+            if (!try @import("qbe_rc_admission.zig").allocate(Emitter, self, frame.heap)) {
+                try self.print(" %frame_memory =l call $myl_qbe_frame_allocate(l %ctx, l {d})\n", .{frame.heap});
+                try self.checkFailure("allocation_failure");
+            }
             try self.allocateStorage(capacity);
             try self.allocateTemporaries(.all);
         }
         try self.allocateDynamicTemporaries();
         try self.initializeStorage();
         if (self.has_roots) try self.print(" %heap =l call $myl_qbe_heap(l %ctx)\n", .{});
-        if (self.has_roots and self.has_safepoints) try self.print(" %root_mark =l call $myl_qbe_root_mark(l %ctx)\n", .{});
+        try rc_frame.Lower(Emitter).enter(self);
+        if (self.entry and runtime_mode.enabled()) try self.requireAccounting();
+        if (self.needsRootProtocol()) try self.print(" %root_mark =l call $myl_qbe_root_mark(l %ctx)\n", .{});
         if (self.step_checks) try self.print(" %maxsteps =l add %ctx, 16\n", .{});
-        try self.print(" jmp @i0\n", .{});
+        try @import("qbe_rc_inert_return.zig").enterBody(Emitter, self, inert_resume);
         try self.emitInstructions();
         if (self.step_checks) try self.print("@step_limit\n call $myl_qbe_fail_step(l %ctx)\n jmp @failure\n@failure\n", .{}) else try self.print("@failure\n", .{});
         try cow_lower.Lower(Emitter).clearScopes(self);
+        try rc_frame.Lower(Emitter).cleanup(self);
+        try rc_frame.Lower(Emitter).leave(self);
         try arena_lower.Lower(Emitter).restore(self);
-        if (self.has_roots and self.has_safepoints) try root_lower.restoreFrameRoots(self);
+        if (self.needsRootProtocol()) try root_lower.restoreFrameRoots(self);
         if (self.heap_frame) try self.print(" call $myl_qbe_frame_release(l %ctx, l %frame_memory)\n jmp @allocation_failure\n@allocation_failure\n", .{});
         try self.leaveFrame();
         // QBE-COLD-FAILRET-1: only failed paths return `%empty`. Initializing
@@ -1706,6 +1796,7 @@ const Emitter = struct {
         if (return_bytes != 0 and self.cow != null) try self.print(zero_failure_result, .{@max(8, return_bytes)});
         try self.print(" ret {s}\n}}\n", .{if (return_bytes == 0) "0" else "%empty"});
         var text = try self.output.toOwnedSlice();
+        text = try @import("qbe_loop_operands.zig").finish(Emitter, self, text);
         // With no step check, the only reason to store a position is a trap trace
         // or an `assert` message, and both are emitted by a body that mentions a
         // failure path. With a step check, every instruction can fail, so every
@@ -1776,6 +1867,8 @@ const Emitter = struct {
     }
     const frame_lower = frame_module.Lower(Emitter);
     pub const abiStackBytes = frame_lower.abiStackBytes;
+    pub const allocateSlot = frame_lower.allocateSlot;
+    pub const allocateIndex = frame_lower.allocateIndex;
     pub const allocateDynamicTemporaries = frame_lower.allocateDynamicTemporaries;
     pub const allocateNativeStorage = frame_lower.allocateNativeStorage;
     pub const allocateStorage = frame_lower.allocateStorage;
@@ -1945,6 +2038,7 @@ const Emitter = struct {
             if (writtenLocal(f, index) and !self.callerStorage(index)) continue;
             flags[index] = .value;
         }
+        if (runtime_mode.enabled()) return flags;
         self.arm_addresses = try self.payloadAddresses(f, flags);
         // QBE-ELEMREF-2 and QBE-CALLREF-1: the ordinary locals one instruction
         // fills from storage this frame can name — a list element, a
@@ -2039,7 +2133,8 @@ const Emitter = struct {
         };
     }
     fn emitInstructions(self: *Emitter) GenerateError!void {
-        for (0..self.function.scope.instructions.len) |pc| {
+        var pc: usize = 0;
+        while (pc < self.function.scope.instructions.len) : (pc += 1) {
             if (self.states[pc] == null) continue;
             // COW-HOIST-1: the checks a loop's entry edges run come first.
             try cow_lower.Lower(Emitter).entry(self, pc);
@@ -2047,6 +2142,10 @@ const Emitter = struct {
             // go in front of its header; the original follows unchanged.
             if (self.loop_plan.at(pc)) |loop| {
                 if (try loop_version.Lower(Emitter).emit(self, loop)) self.original = loop;
+            }
+            if (try @import("qbe_rc_record_read.zig").emit(Emitter, self, pc)) |end| {
+                pc = end;
+                continue;
             }
             try self.emitAt(pc);
             if (self.original) |loop| if (pc == loop.back) {
@@ -2193,6 +2292,9 @@ const Emitter = struct {
                 => if (sticky_text == null or stickyTrap(sticky_text.?)) try self.checkFailure("failure"),
                 else => {},
             }
+            try @import("qbe_rc_ops.zig").after(Emitter, self, instruction.op, stack);
+            try cow_lower.Lower(Emitter).after(self, pc);
+            try @import("qbe_rc_edges.zig").after(Emitter, self, instruction.op);
             // An instruction whose successor has a body falls through into it;
             // only a real terminator (or a successor that emits nothing) jumps.
             const falls = pc + 1 < self.states.len and self.states[pc + 1] != null;
@@ -2477,10 +2579,12 @@ const Emitter = struct {
         const packed_args = try self.packedCallback(signature);
         for (args, 0..) |*arg, i| {
             arg.* = try self.load("s", base + 1 + i);
-            if (packed_args) try self.packArgument(i, arg.*);
         }
+        const pins = try cow_lower.Lower(Emitter).pinIndirect(self, signature, args, base + 1);
+        if (packed_args) for (args, 0..) |arg, i| try self.packArgument(i, arg);
         const value = self.temp();
         const indirect = try self.largeValue(signature.return_type);
+        try @import("qbe_rc_admission.zig").invoke(Emitter, self, signature.parameters, base + 1);
         try self.print(" %v{d} ={s} call %v{d}(l %ctx", .{ value, if (indirect) "l" else try self.abiType(signature.return_type), function_pointer });
         if (indirect) try self.print(", l %aux{d}", .{self.pc});
         if (packed_args) {
@@ -2489,6 +2593,7 @@ const Emitter = struct {
             for (args, signature.parameters) |arg, ty| try self.print(", {s} %v{d}", .{ try self.argumentType(ty), arg });
         }
         try self.print(")\n", .{});
+        try cow_lower.Lower(Emitter).unpin(self, pins);
         if (indirect) try self.print(" storel %aux{d}, %s{d}\n", .{ self.pc, base }) else try self.store(base, value);
     }
     fn acquireBuffer(self: *Emitter, ty: typed.Type, stack: []const typed.Type) GenerateError!void {
@@ -2520,8 +2625,11 @@ const Emitter = struct {
         // unshared until the call returns.
         const pins = try cow_lower.Lower(Emitter).pin(self, callee, args, h - count);
         if (packed_args) for (args, 0..) |arg, i| try self.packArgument(i, arg);
+        try @import("qbe_rc_ops.zig").callEntry(Emitter, self, callee, h - count);
         const v = self.temp();
-        try self.print(" %v{d} ={s} call ${s}(l %ctx", .{ v, try self.returnType(callee), self.units[@backingInt(target)].symbol });
+        const canonical = self.units[@backingInt(target)].symbol;
+        const callee_symbol = try rc_borrow.calleeSymbol(Emitter, self, callee, canonical);
+        try self.print(" %v{d} ={s} call ${s}(l %ctx", .{ v, try self.returnType(callee), callee_symbol });
         const indirect = try self.largeResult(callee);
         if (indirect) try self.print(", l %aux{d}", .{self.pc});
         if (packed_args) {
@@ -2570,6 +2678,7 @@ const Emitter = struct {
     }
     fn emitOp(self: *Emitter, op: @FieldType(bytecode.Instruction, "op"), stack: []const typed.Type) GenerateError!void {
         const h = stack.len;
+        if (try @import("qbe_rc_locals.zig").emit(Emitter, self, op, stack)) return;
         switch (op) {
             .acquire_resource, .complete_resource, .resource_io, .restrict_resource, .dir_resource, .host_resource => try @import("qbe_resources.zig").Lower(Emitter).emit(self, op, stack),
             .external_read, .stand_in, .environment_get, .environment_only, .environment_names => try @import("qbe_boundaries.zig").emit(self, op, stack),
@@ -2579,6 +2688,7 @@ const Emitter = struct {
             .file_access => |call| try @import("qbe_files.zig").Lower(Emitter).access(self, call, stack),
             .file_method => |call| try @import("qbe_files.zig").Lower(Emitter).method(self, call, stack),
             .try_result => |propagate| {
+                if (try @import("qbe_rc_aggregate.zig").propagation(Emitter, self, propagate, stack)) return;
                 const source = try self.load("s", h - 1);
                 const input_offset = (try self.layout(propagate.input)).payload_offset;
                 if (typed.resultShape(propagate.input, self.program.records)) |input| {
