@@ -1,6 +1,6 @@
 module main
 
-# Assignment shares a managed list; helpers can grow it without borrowing.
+# Assignment preserves a list value; a marked call changes only its receiver.
 def add_pin(pins: mut list[int], pin: int):
     pins.append(pin)
 
@@ -11,4 +11,5 @@ def main() -> int:
     for pin in range(100):
         add_pin(mut alias, pin)
     alias[0] = 42
-    return pins[0] + len(pins)
+    assert len(pins) == 0
+    return alias[0] + len(alias)
