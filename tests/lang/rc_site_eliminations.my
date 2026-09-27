@@ -22,6 +22,48 @@ record Frame:
     at: int
 
 
+record CallFrame:
+    ip: int
+    base: int
+
+
+record Machine:
+    stack: list[Value]
+    frames: list[CallFrame]
+    names: list[str]
+    top: int
+    count: int
+
+
+def push(m: mut Machine, item: Value):
+    m.stack[m.top] = item
+    m.top = m.top + 1
+
+
+def step(m: mut Machine, ip: int):
+    m.frames[m.count - 1].ip = ip
+
+
+def grow_stack(m: mut Machine) -> int:
+    m.stack = [Value.nil, Value.nil, Value.nil]
+    return 1
+
+
+def replaced_receiver(m: mut Machine, item: Value):
+    m.stack[grow_stack(mut m)] = item
+
+
+def rename(m: mut Machine, name: str):
+    m.names[0] = name
+
+
+def local_machine(item: Value) -> list[Value]:
+    m = Machine([Value.nil, Value.nil], [], [], 0, 0)
+    m.stack[m.top] = item
+    m.stack[-1] = item
+    return m.stack
+
+
 def pop(rt: mut Runtime) -> Value:
     rt.top = rt.top - 1
     return rt.stack[rt.top]
@@ -111,6 +153,50 @@ public def test_relocated_loans_inside_arenas() -> bool:
     return total == 8.0
 
 
+# spec-case: RC-INERT-FIELD-RECEIVER-1
+public def test_field_receivers_write_through_mut_records_and_keep_snapshots() -> bool:
+    m = Machine([Value.nil, Value.nil, Value.nil], [CallFrame(0, 0), CallFrame(5, 1)], ["a"], 0, 2)
+    before = m
+    push(mut m, Value.number(1.0))
+    push(mut m, Value.text("two"))
+    step(mut m, 9)
+    step(mut m, 11)
+    return m.stack == [Value.number(1.0), Value.text("two"), Value.nil] and m.top == 2 and m.frames[1].ip == 11 and m.frames[0].ip == 0 and before.stack == [Value.nil, Value.nil, Value.nil] and before.frames[1].ip == 5
+
+
+# spec-case: RC-INERT-FIELD-RECEIVER-1
+public def test_field_receivers_of_local_records_and_negative_indices() -> bool:
+    return local_machine(Value.number(3.0)) == [Value.number(3.0), Value.number(3.0)]
+
+
+# spec-case: RC-INERT-FIELD-RECEIVER-1
+public def test_index_callback_replacing_the_field_list_keeps_scoped_receiver() -> bool:
+    m = Machine([Value.nil, Value.nil], [], [], 0, 0)
+    replaced_receiver(mut m, Value.number(4.0))
+    return m.stack == [Value.nil, Value.nil, Value.nil]
+
+
+# spec-case: RC-INERT-FIELD-RECEIVER-1
+public def test_managed_element_field_stores_keep_their_scope() -> bool:
+    m = Machine([], [], ["a", "b"], 0, 0)
+    saved = m
+    rename(mut m, "c")
+    return m.names == ["c", "b"] and saved.names == ["a", "b"]
+
+
+# spec-case: RC-INERT-FIELD-RECEIVER-1
+public def test_field_receivers_inside_arenas() -> bool:
+    count = 0
+    with arena():
+        m = Machine([Value.nil, Value.nil], [CallFrame(0, 0)], [], 0, 1)
+        push(mut m, Value.number(2.0))
+        with arena():
+            step(mut m, 4)
+            push(mut m, Value.text("inner"))
+        count = m.top + m.frames[0].ip
+    return count == 6
+
+
 # Run every test once, so `mylang run --rc-runtime=stats` shows balanced counts
 # for the whole file; the result is the number of failures.
 def main() -> int:
@@ -122,6 +208,11 @@ def main() -> int:
         test_managed_elements_and_nested_record_fields_relocate_whole_values(),
         test_owned_temporaries_are_taken_not_relocated(),
         test_relocated_loans_inside_arenas(),
+        test_field_receivers_write_through_mut_records_and_keep_snapshots(),
+        test_field_receivers_of_local_records_and_negative_indices(),
+        test_index_callback_replacing_the_field_list_keeps_scoped_receiver(),
+        test_managed_element_field_stores_keep_their_scope(),
+        test_field_receivers_inside_arenas(),
     ]:
         if not passed:
             failures += 1

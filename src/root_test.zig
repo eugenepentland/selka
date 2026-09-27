@@ -260,6 +260,7 @@ test {
     _ = @import("rc_readonly_entry_test.zig");
     _ = @import("rc_immortal_certificate_test.zig");
     _ = @import("qbe_rc_inert_receiver_test.zig");
+    _ = @import("qbe_rc_inert_field_test.zig");
     _ = @import("qbe_rc_unique_test.zig");
     _ = @import("qbe_rc_hoist_test.zig");
     _ = @import("qbe_rc_fresh_root_test.zig");
