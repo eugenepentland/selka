@@ -34,7 +34,7 @@ pub fn ordinaryInput(comptime E: type, self: *E, target: usize, at: usize) bool 
     for (at - 1..at + 1) |pc| {
         const site = plan.at(pc);
         if (site.read_captures.len != 0 or site.shares.len != 0) return false;
-        for (state.plan.records.transfers) |transfer| if (transfer.projection == pc or transfer.commit == pc) return false;
+        for (state.plan.records.transfers) |transfer| if (transfer.intercepts(pc)) return false;
     }
     const definition = sourceStore(E, self, source, target, at) orelse return false;
     for (code, 0..) |instruction, pc| if (encloses(instruction.op, pc, definition)) return false;
