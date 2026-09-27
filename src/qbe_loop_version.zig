@@ -53,6 +53,10 @@ pub fn Lower(comptime E: type) type {
         /// out to allocate after all, so the caller lowers the loop once, as
         /// before.
         pub fn emit(self: *E, loop: *const facts.Loop) Error!bool {
+            return atHead(E, self, loop, emitHere);
+        }
+
+        fn emitHere(self: *E, loop: *const facts.Loop) Error!bool {
             // Existing hoist/scalar admissions keep their original protocol.
             const previous = !@import("runtime_mode.zig").enabled() or
                 @import("qbe_rc_hoist.zig").permitsVersion(E, self, loop.head, loop.back) or
@@ -239,4 +243,49 @@ pub fn Lower(comptime E: type) type {
             return self.program.records[collection.recordIndex()].shape.buffer orelse error.InternalError;
         }
     };
+}
+
+// Guard queries use the header's physical proof context, never the preceding
+// instruction's PC. Trial emission may advance it; restore on every outcome.
+fn atHead(comptime E: type, self: *E, loop: *const facts.Loop, comptime body: fn (*E, *const facts.Loop) Error!bool) Error!bool {
+    const saved = self.pc;
+    self.pc = loop.head;
+    defer self.pc = saved;
+    return body(self, loop);
+}
+
+const PcProbe = struct {
+    pc: usize,
+    observed: ?usize = null,
+    outcome: enum { accepted, refused, failed },
+
+    fn guard(self: *PcProbe, loop: *const facts.Loop) Error!bool {
+        self.observed = self.pc;
+        // Model a speculative body reaching its final operation before return.
+        self.pc = loop.back;
+        return switch (self.outcome) {
+            .accepted => true,
+            .refused => false,
+            .failed => error.OutOfMemory,
+        };
+    }
+};
+
+// spec-case: QBE-LOOP-VERSION-1
+// spec-case: RC-DICTIONARY-EMPTY-DROPS-1
+test "RC loop guard PC observes head and restores after success refusal and error" {
+    const t = std.testing;
+    const loop: facts.Loop = .{ .head = 40, .back = 60, .bits = 8, .guard = &.{}, .actions = &.{} };
+    var probe: PcProbe = .{ .pc = 39, .outcome = .accepted };
+    try t.expect(try atHead(PcProbe, &probe, &loop, PcProbe.guard));
+    try t.expectEqual(@as(?usize, 40), probe.observed);
+    try t.expectEqual(@as(usize, 39), probe.pc);
+    probe.outcome = .refused;
+    try t.expect(!try atHead(PcProbe, &probe, &loop, PcProbe.guard));
+    try t.expectEqual(@as(?usize, 40), probe.observed);
+    try t.expectEqual(@as(usize, 39), probe.pc);
+    probe.outcome = .failed;
+    try t.expectError(error.OutOfMemory, atHead(PcProbe, &probe, &loop, PcProbe.guard));
+    try t.expectEqual(@as(?usize, 40), probe.observed);
+    try t.expectEqual(@as(usize, 39), probe.pc);
 }
