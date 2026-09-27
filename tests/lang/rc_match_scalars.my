@@ -1,0 +1,143 @@
+# RC match bindings of narrow scalar payloads read the value, not stale slot bytes.
+#
+# A match binding's local slot is one machine word. Under `--rc-runtime` a
+# payload narrower than a word (a bool, `u8`, `i16`) was once copied at its
+# packed width, so the slot kept whatever bytes an earlier call left on the
+# stack: the Lox benchmark printed `true` for `false`. `stain` fills a deep
+# stack region with a chosen byte pattern first, so each check starts on stale
+# ones (all bits set) or stale zeros instead of on whatever happened to be there.
+union Payload:
+    empty,
+    flag: bool,
+    tiny: i8,
+    short: i16,
+    word: i32,
+    octet: u8,
+    wide: u16,
+    text: str
+
+
+union Value:
+    nil,
+    boolean: bool,
+    number: float,
+    obj: int
+
+
+def stain(seed: int) -> int:
+    values: [64]int = [seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed]
+    total = 0
+    for item in values:
+        total += item
+    return total
+
+
+def flag_text(item: Payload) -> str:
+    result = "other"
+    match item:
+        case Payload.flag(value):
+            if value:
+                result = "true"
+            else:
+                result = "false"
+        case _:
+            result = "other"
+    return result
+
+
+def flag_checks(item: Payload) -> list[bool]:
+    result = [False]
+    match item:
+        case Payload.flag(value):
+            result = [not value, value == False, value != True]
+        case _:
+            result = [False]
+    return result
+
+
+def signed_checks(item: Payload) -> list[bool]:
+    result = [False]
+    match item:
+        case Payload.tiny(number):
+            result = [number == -1, number < 0, int(number) == -1, str(number) == "-1"]
+        case Payload.short(number):
+            result = [number == -2, number < 0, int(number) == -2, str(number) == "-2"]
+        case Payload.word(number):
+            result = [number == -3, number < 0, int(number) == -3, str(number) == "-3"]
+        case _:
+            result = [False]
+    return result
+
+
+def unsigned_checks(item: Payload) -> list[bool]:
+    result = [False]
+    match item:
+        case Payload.octet(number):
+            result = [number == 200, int(number) == 200, str(number) == "200"]
+        case Payload.wide(number):
+            result = [number == 60000, int(number) == 60000, str(number) == "60000"]
+        case _:
+            result = [False]
+    return result
+
+
+# The Lox port's `value_text`: an early return from inside the bool arm.
+def value_text(item: Value) -> bytes:
+    match item:
+        case Value.nil:
+            return b"nil"
+        case Value.boolean(flag):
+            if flag:
+                return b"true"
+            return b"false"
+        case Value.number(_):
+            return b"number"
+        case Value.obj(_):
+            return b"object"
+
+
+def all_true(checks: list[bool]) -> bool:
+    for check in checks:
+        if not check:
+            return False
+    return len(checks) > 1
+
+
+# spec-case: RC-MATCH-SCALAR-1
+public def test_bool_payload_binding_ignores_stale_slot_bytes() -> bool:
+    _ = stain(-1)
+    text_false = flag_text(Payload.flag(False))
+    _ = stain(-1)
+    checks = flag_checks(Payload.flag(False))
+    _ = stain(0)
+    text_true = flag_text(Payload.flag(True))
+    return text_false == "false" and all_true(checks) and text_true == "true"
+
+
+# spec-case: RC-MATCH-SCALAR-1
+public def test_signed_payload_bindings_are_sign_extended() -> bool:
+    _ = stain(0)
+    tiny = signed_checks(Payload.tiny(-1))
+    _ = stain(0)
+    short = signed_checks(Payload.short(-2))
+    _ = stain(0)
+    word = signed_checks(Payload.word(-3))
+    return all_true(tiny) and all_true(short) and all_true(word)
+
+
+# spec-case: RC-MATCH-SCALAR-1
+public def test_unsigned_payload_bindings_are_zero_extended() -> bool:
+    _ = stain(-1)
+    octet = unsigned_checks(Payload.octet(200))
+    _ = stain(-1)
+    wide = unsigned_checks(Payload.wide(60000))
+    return all_true(octet) and all_true(wide)
+
+
+# spec-case: RC-MATCH-SCALAR-1
+public def test_lox_value_text_prints_false() -> bool:
+    _ = stain(-1)
+    falsy = value_text(Value.boolean(False))
+    _ = stain(-1)
+    truthy = value_text(Value.boolean(True))
+    return falsy == b"false" and truthy == b"true" and value_text(Value.nil) == b"nil"

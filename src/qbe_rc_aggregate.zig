@@ -256,7 +256,7 @@ fn dispatchValue(comptime E: type, self: *E, dispatch: @FieldType(Op, "switch_va
             try initialize(E, self, .{ .ty = ty, .source = try self.address(pointer, (try self.layout(dispatch.ty)).payload_offset), .destination = work, .region = try region(E, self) });
             try pending(E, self, ty, work);
             try frame.drop(E, self, index);
-            try self.print(" blit %v{d}, %l{d}, {d}\n", .{ work, index, (try self.layout(ty)).size });
+            try bindLocal(E, self, work, index, ty);
             try frame.initialized(E, self, frame.pending(E, self), false);
             if (try state.owns(frame.get(E, self).?, ty)) {
                 const address = self.temp();
@@ -277,8 +277,17 @@ fn borrowPayload(comptime E: type, self: *E, parent: typed.Type, pointer: usize,
     const ty = self.function.scope.locals[index].ty;
     const selected = try self.address(pointer, (try self.layout(parent)).payload_offset);
     try frame.drop(E, self, index);
-    try self.print(" blit %v{d}, %l{d}, {d}\n", .{ selected, index, (try self.layout(ty)).size });
+    try bindLocal(E, self, selected, index, ty);
     try frame.initialized(E, self, index, false);
+}
+
+// RC-MATCH-SCALAR-1: a local's scalar slot is one canonical machine word that
+// every read loads whole (`loadl`). A payload's packed layout can be narrower
+// (a bool or `u8` is one byte), so a width-sized copy would leave the slot's
+// upper bytes stale; load the payload with its own extension and store a word.
+fn bindLocal(comptime E: type, self: *E, source: usize, index: usize, ty: typed.Type) Error!void {
+    if (self.isScalar(ty)) return self.print(" storel %v{d}, %l{d}\n", .{ try self.readValue(source, ty), index });
+    try self.print(" blit %v{d}, %l{d}, {d}\n", .{ source, index, (try self.layout(ty)).size });
 }
 
 /// One checked fixed-array update and the instruction's consumed operand range.

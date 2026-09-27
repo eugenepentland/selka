@@ -200,3 +200,75 @@ test "RC empty slot releases branch around native cleanup" {
     try t.expect(std.mem.indexOf(u8, text[0..release], "@rcslotdrop") != null);
     try t.expect(std.mem.indexOf(u8, text[release..], "@rcslotdone") != null);
 }
+
+/// Whether a width-sized copy lands in a local slot: ` blit %vA, %lB, N` with
+/// N narrower than the slot's word.
+fn narrowLocalCopy(text: []const u8) bool {
+    var lines = std.mem.splitScalar(u8, text, '\n');
+    while (lines.next()) |line| {
+        if (!std.mem.startsWith(u8, line, " blit ") or std.mem.indexOf(u8, line, ", %l") == null) continue;
+        if (std.mem.endsWith(u8, line, ", 1") or std.mem.endsWith(u8, line, ", 2") or std.mem.endsWith(u8, line, ", 4")) return true;
+    }
+    return false;
+}
+
+/// Whether a one-byte payload is loaded zero-extended and stored whole into a local.
+fn widenedByteBinding(text: []const u8) bool {
+    var lines = std.mem.splitScalar(u8, text, '\n');
+    var loaded = false;
+    while (lines.next()) |line| {
+        if (loaded and std.mem.startsWith(u8, line, " storel ") and std.mem.indexOf(u8, line, ", %l") != null) return true;
+        loaded = std.mem.indexOf(u8, line, "=l loadub ") != null;
+    }
+    return false;
+}
+
+// spec: RC-MATCH-SCALAR-1
+test "RC match bindings store narrow scalar payloads as whole local words" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    var compilation = try compiler.Compilation.init(t.allocator, "rc_match_scalars.my",
+        \\union Payload:
+        \\    empty,
+        \\    flag: bool,
+        \\    short: i16,
+        \\    word: u32,
+        \\    text: str
+        \\def rendered(item: Payload) -> str:
+        \\    result = "other"
+        \\    match item:
+        \\        case Payload.flag(value):
+        \\            if value:
+        \\                result = "true"
+        \\            else:
+        \\                result = "false"
+        \\        case Payload.short(number):
+        \\            result = str(number)
+        \\        case Payload.word(number):
+        \\            result = str(number)
+        \\        case _:
+        \\            result = "other"
+        \\    return result
+        \\@ensures(not result)
+        \\def checked(flag: bool) -> Result[bool, str]:
+        \\    return Ok(flag)
+        \\def main() -> int:
+        \\    _ = checked(False)
+        \\    return len(rendered(Payload.flag(False)))
+    );
+    defer compilation.deinit();
+    const emitted = try compilation.emitQbe(t.allocator);
+    defer t.allocator.free(emitted);
+    var manifest = try std.json.parseFromSlice(Manifest, t.allocator, emitted, .{ .ignore_unknown_fields = true });
+    defer manifest.deinit();
+    // An owned source match binding (the ordinary transfer path).
+    const rendered = try findFunction(manifest.value, "rendered");
+    try t.expect(std.mem.indexOf(u8, rendered, "@rcarm") != null);
+    try t.expect(!narrowLocalCopy(rendered));
+    try t.expect(widenedByteBinding(rendered));
+    // A contract-borrowed Result payload (RC-CONTRACT-RESULT-1's inspection).
+    const checked = try findFunction(manifest.value, "checked");
+    try t.expect(!narrowLocalCopy(checked));
+    try t.expect(widenedByteBinding(checked));
+}
