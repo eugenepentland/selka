@@ -12,6 +12,7 @@ pub fn after(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "o
     if (frame.get(E, self) == null or @import("qbe_rc_borrow.zig").active(E, self)) return;
     if (op == .get_field and @import("qbe_rc_record_read.zig").projection(E, self)) return;
     if (op == .get_field and try @import("qbe_rc_field_transfer.zig").project(E, self)) return;
+    if (try readonlyRead(E, self, op, stack)) return;
     if (op == .store_local) try @import("qbe_rc_field_transfer.zig").committed(E, self);
     if (try @import("qbe_rc_views.zig").after(E, self, op, stack)) return;
     if (try @import("qbe_rc_variant_read.zig").after(E, self, op, stack)) return;
@@ -56,6 +57,17 @@ pub fn after(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "o
     {
         try cow.finishReceiver(self, @backingInt(op.buffer_operation.owner));
     }
+}
+
+/// RC-READONLY-ANCHOR-1: a field or list element read out of a read-only
+/// parameter's value publishes no token; the caller keeps it alive.
+fn readonlyRead(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "op"), stack: []const typed.Type) Error!bool {
+    const read = op == .get_field or (op == .buffer_operation and op.buffer_operation.kind == .read);
+    if (!read or !@import("qbe_rc_readonly_anchor.zig").value(E, self, self.pc)) return false;
+    const next = self.states[self.pc + 1] orelse return error.InternalError;
+    if (next.len == 0 or next.len - 1 > stack.len) return error.InternalError;
+    for (next.len - 1..stack.len) |index| try values.drop(E, self, index);
+    return true;
 }
 
 /// Consumed unique arguments belong to the callee even when admission fails.

@@ -147,6 +147,60 @@ def load_made() -> Loaded:
     return Loaded(code=made_unit().chunk.code, names=made_unit().chunk.names, at=0)
 
 
+record Table:
+    objects: list[Obj]
+    count: int
+
+
+def table_arity(table: Table, at: int) -> int:
+    match table.objects[at]:
+        case Obj.callable(payload):
+            return payload.arity + len(payload.code.ops)
+        case _:
+            return -1
+
+
+def table_name(table: Table, at: int) -> Name:
+    match table.objects[at]:
+        case Obj.name(payload):
+            return payload
+        case _:
+            return Name(b"", 0u32)
+
+
+def table_ops(table: Table, at: int) -> list[int]:
+    match table.objects[at]:
+        case Obj.callable(payload):
+            return payload.code.ops
+        case _:
+            return []
+
+
+def nested_anchor(table: Table) -> int:
+    total = 0
+    for i in range(len(table.objects)):
+        match table.objects[i]:
+            case Obj.callable(outer):
+                match table.objects[outer.arity]:
+                    case Obj.name(inner):
+                        total += len(inner.chars)
+                    case _:
+                        total += 100
+            case _:
+                total += 1
+    return total
+
+
+def replaced_table(table: mut Table, at: int) -> int:
+    table.count = table.count + 1
+    match table.objects[at]:
+        case Obj.callable(payload):
+            table.objects[at] = Obj.free
+            return payload.arity + len(payload.code.ops)
+        case _:
+            return -1
+
+
 def pop(rt: mut Runtime) -> Value:
     rt.top = rt.top - 1
     return rt.stack[rt.top]
@@ -343,6 +397,41 @@ public def test_nested_field_copies_inside_arenas() -> bool:
     return total == 4
 
 
+# spec-case: RC-READONLY-ANCHOR-1
+public def test_readonly_table_reads_borrow_payloads_in_place() -> bool:
+    table = Table([Obj.callable(Callable(1, Code([4, 5]))), Obj.name(Name(b"n" + b"ame", 9u32))], 2)
+    saved = table
+    arity = table_arity(table, 0) + table_arity(table, 1)
+    name = table_name(table, 1)
+    ops = table_ops(table, 0)
+    ops.append(6)
+    table.objects[1] = Obj.free
+    return arity == 2 and name.chars == b"name" and ops == [4, 5, 6] and saved.objects[1] == Obj.name(Name(b"name", 9u32)) and table_ops(saved, 0) == [4, 5]
+
+
+# spec-case: RC-READONLY-ANCHOR-1
+public def test_nested_readonly_matches_in_loops() -> bool:
+    table = Table([Obj.callable(Callable(1, Code([]))), Obj.name(Name(b"abc", 1u32)), Obj.free], 3)
+    return nested_anchor(table) == 5
+
+
+# spec-case: RC-READONLY-ANCHOR-1
+public def test_mut_roots_keep_owned_bindings() -> bool:
+    table = Table([Obj.callable(Callable(3, Code([1])))], 0)
+    first = replaced_table(mut table, 0)
+    return first == 4 and table.count == 1 and table.objects == [Obj.free]
+
+
+# spec-case: RC-READONLY-ANCHOR-1
+public def test_readonly_reads_inside_arenas() -> bool:
+    total = 0
+    table = Table([Obj.name(Name(b"ar" + b"ena", 2u32))], 1)
+    with arena():
+        inner = Table([Obj.callable(Callable(5, Code([1, 2])))], 1)
+        total = table_arity(inner, 0) + len(table_name(table, 0).chars)
+    return total == 12
+
+
 # Run every test once, so `mylang run --rc-runtime=stats` shows balanced counts
 # for the whole file; the result is the number of failures.
 def main() -> int:
@@ -366,6 +455,10 @@ def main() -> int:
         test_nested_field_copies_into_constructors_stay_independent(),
         test_nested_field_copies_from_mut_parameters_and_call_results(),
         test_nested_field_copies_inside_arenas(),
+        test_readonly_table_reads_borrow_payloads_in_place(),
+        test_nested_readonly_matches_in_loops(),
+        test_mut_roots_keep_owned_bindings(),
+        test_readonly_reads_inside_arenas(),
     ]:
         if not passed:
             failures += 1

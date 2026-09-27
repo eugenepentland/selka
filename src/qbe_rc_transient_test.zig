@@ -16,16 +16,17 @@ const source =
     \\    names: list[str]
     \\def frame(function: Function) -> Frame:
     \\    return Frame(code=function.chunk.code, names=function.chunk.names)
-    \\def chunk(function: Function) -> Chunk:
+    \\def chunk(at: int) -> int:
+    \\    function = Function(at, Chunk([at], ["c"]))
     \\    saved = function.chunk
-    \\    return saved
+    \\    return len(saved.code) + function.arity
     \\def made() -> Function:
     \\    return Function(1, Chunk([1], ["a"]))
     \\def fresh() -> Frame:
     \\    return Frame(code=made().chunk.code, names=[])
     \\def main() -> int:
     \\    value = Function(2, Chunk([7], ["x"]))
-    \\    return len(frame(value).code) + len(chunk(value).names) + len(fresh().code)
+    \\    return len(frame(value).code) + chunk(3) + len(fresh().code)
 ;
 
 fn loans(name: []const u8) !usize {

@@ -117,6 +117,8 @@ fn store(comptime E: type, self: *E, index: usize, operand: usize) Error!void {
 /// holds an ordinary owner the store is skipped; it used to retain the value
 /// again and release the owner it replaced. Any other role takes the store.
 fn selfStore(comptime E: type, self: *E, index: usize, operand: usize) Error!bool {
+    // RC-READONLY-ANCHOR-1: a binding borrowed in place already holds the bits.
+    if (@import("qbe_rc_readonly_anchor.zig").anchoredLocal(E, self, index)) return true;
     const owner = try loans.owner(E, self, index);
     const label = self.temp();
     try self.print(" # RC-SELF-STORE-1 local {d}\n jnz %v{d}, @rcselfkept{d}, @rcselfstore{d}\n@rcselfstore{d}\n", .{ index, owner, label, label, label });

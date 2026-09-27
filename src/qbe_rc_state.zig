@@ -47,6 +47,7 @@ pub fn build(comptime E: type, self: *E, capacity: usize) Error!*State {
     const locals = try a.alloc(@import("rc_input.zig").Binding, self.function.scope.locals.len);
     for (locals, 0..) |*binding, index| binding.* = .{ .storage = @fromBackingInt(@intCast(index)) };
     try @import("qbe_rc_read_loans.zig").bind(E, self, locals, &state.catalog);
+    try @import("qbe_rc_readonly_anchor.zig").bind(E, self, locals, &state.catalog, state.contract);
     state.plan.locals = plan.build(a, .{
         .code = .{ .program = self.program, .function = self.function, .states = self.states },
         .flow = .{ .live = self.live.?, .ownership = self.ownership.? },

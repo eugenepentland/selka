@@ -250,7 +250,7 @@ fn dispatchValue(comptime E: type, self: *E, dispatch: @FieldType(Op, "switch_va
     for (dispatch.arms, 0..) |arm, i| {
         const matches = self.temp();
         try self.print(" %v{d} =l ceql %v{d}, {d}\n jnz %v{d}, @rcarm{d}, @rcarmnext{d}\n@rcarm{d}\n", .{ matches, tag, i, matches, matches, matches, matches });
-        if (arm.slot) |slot| if (dispatch.borrowed) {
+        if (arm.slot) |slot| if (dispatch.borrowed or @import("qbe_rc_readonly_anchor.zig").payload(E, self, self.pc, @backingInt(slot))) {
             try borrowPayload(E, self, dispatch.ty, pointer, @backingInt(slot));
         } else if (!try @import("qbe_rc_narrowing.zig").bind(E, self, dispatch, @backingInt(slot))) {
             const index = @backingInt(slot);
