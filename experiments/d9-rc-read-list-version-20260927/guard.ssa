@@ -1,0 +1,17 @@
+export function w $guard(l %rcguards, l %rcentries) {
+@start
+ # RC-READ-LIST-VERSION-1 head 9
+ %v126 =l add %rcguards, 8
+ %v127 =l add %rcentries, 56
+ %v120 =w loaduw %v126
+ %v121 =w loaduw %v127
+ %v122 =w ceqw %v121, 2
+ %v123 =w ceqw %v121, 8
+ %v124 =w or %v122, %v123
+ %v124 =w and %v124, %v120
+ jnz %v124, @rcreadloop125, @oi9
+@rcreadloop125
+ ret 1
+@oi9
+ ret 0
+}
