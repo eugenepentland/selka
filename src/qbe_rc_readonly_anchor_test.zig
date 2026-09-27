@@ -187,3 +187,19 @@ test "RC borrowed match accessor results read in place take no owner" {
     try t.expectEqual(@as(usize, 0), try operationsIn(accessor, "text_hash"));
     try t.expect(try operationsIn(accessor, "kept") > 0);
 }
+
+// spec-case: RC-INTERVAL-ANCHOR-1
+test "RC list temporaries of a mut root borrow while their counted elements take loans" {
+    const counted =
+        \\record Runtime:
+        \\    names: list[str]
+        \\    top: int
+        \\def name(rt: mut Runtime, at: int) -> int:
+        \\    rt.top = rt.top + 1
+        \\    return len(rt.names[at])
+        \\def main() -> int:
+        \\    rt = Runtime(["a", "bc"], 0)
+        \\    return name(mut rt, 1)
+    ;
+    try t.expectEqual(@as(usize, 1), try operationsIn(counted, "name"));
+}

@@ -265,6 +265,32 @@ def table_name_chars(table: Table, at: int) -> bytes:
     return table_name(table, at).chars
 
 
+record Bytecode:
+    constants: list[Value]
+    code: list[int]
+    ip: int
+
+
+def read_op(frame: mut Bytecode) -> int:
+    byte = frame.code[frame.ip]
+    frame.ip = frame.ip + 1
+    return byte
+
+
+def read_value(frame: mut Bytecode) -> Value:
+    return frame.constants[read_op(mut frame)]
+
+
+def reload_constants(frame: mut Bytecode) -> int:
+    frame.constants = [Value.text("reloaded")]
+    frame.ip = 0
+    return 0
+
+
+def read_reloaded(frame: mut Bytecode) -> Value:
+    return frame.constants[reload_constants(mut frame)]
+
+
 def pop(rt: mut Runtime) -> Value:
     rt.top = rt.top - 1
     return rt.stack[rt.top]
@@ -552,6 +578,22 @@ public def test_borrowed_match_accessors_read_in_place_and_copy_when_kept() -> b
     return hash == 11u32 and chars == b"key" and kept.chars == b"key" and table_name_hash(table, 0) == 0u32
 
 
+# spec-case: RC-PLAIN-UPDATE-CALL-1
+public def test_borrowed_fields_across_calls_that_only_advance_the_root() -> bool:
+    frame = Bytecode([Value.number(1.0), Value.text("b"), Value.nil], [2, 0, 1], 0)
+    first = read_value(mut frame)
+    second = read_value(mut frame)
+    third = read_value(mut frame)
+    return first == Value.nil and number(second) == 1.0 and third == Value.text("b") and frame.ip == 3
+
+
+# spec-case: RC-PLAIN-UPDATE-CALL-1
+public def test_borrowed_fields_across_calls_that_replace_them() -> bool:
+    frame = Bytecode([Value.number(5.0)], [0], 0)
+    item = read_reloaded(mut frame)
+    return (number(item) == 5.0 or item == Value.text("reloaded")) and frame.constants == [Value.text("reloaded")]
+
+
 # Run every test once, so `mylang run --rc-runtime=stats` shows balanced counts
 # for the whole file; the result is the number of failures.
 def main() -> int:
@@ -585,6 +627,8 @@ def main() -> int:
         test_mut_root_fields_passed_to_calls_read_the_current_value(),
         test_mut_root_fields_keep_the_value_a_later_mut_call_replaces(),
         test_borrowed_match_accessors_read_in_place_and_copy_when_kept(),
+        test_borrowed_fields_across_calls_that_only_advance_the_root(),
+        test_borrowed_fields_across_calls_that_replace_them(),
     ]:
         if not passed:
             failures += 1

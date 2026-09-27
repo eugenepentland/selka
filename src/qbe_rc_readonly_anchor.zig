@@ -18,6 +18,7 @@ const model = @import("rc_model.zig");
 const shapes = @import("rc_shape.zig");
 const cow = @import("cow_plan.zig");
 const semantics = @import("value_semantics.zig");
+const plain = @import("rc_plain_updates.zig");
 const Op = @FieldType(bytecode.Instruction, "op");
 /// Analysis failures shared with the RC emitter.
 pub const Error = error{ InternalError, OutOfMemory, WriteFailed, SourceError };
@@ -277,7 +278,7 @@ fn list(comptime E: type, self: *E, local: usize) bool {
 
 /// RC-INTERVAL-ANCHOR-1: a list temporary filled straight from a field chain
 /// of a `mut` record parameter (`load_local r; get_field...; store_local t`)
-/// and used only for its length and plain element reads is borrowed from
+/// and used only for its length and element reads is borrowed from
 /// that parameter's storage when no instruction in its live range writes the
 /// parameter: no store, move, reference (`mut` argument) or place write
 /// rooted in it, and no arena boundary. The caller owns the parameter, so a
@@ -298,7 +299,7 @@ pub fn bindIntervals(comptime E: type, self: *E, bindings: []input.Binding, cata
         if (!try counted(catalog, self.function.scope.locals[root_local].ty)) continue;
         if (!try candidate(E, self, bindings, catalog, local) or !list(E, self, local)) continue;
         if (!try intervalUses(E, self, catalog, local, pc)) continue;
-        if (!intervalQuiet(E, self, local, root_local)) continue;
+        if (!intervalQuiet(E, self, catalog, local, root_local)) continue;
         bindings[local].anchor = .{ .storage = bindings[root_local].storage };
     }
 }
@@ -337,8 +338,8 @@ fn chainRoot(comptime E: type, self: *E, pc: usize) ?usize {
     return @backingInt(code[at].op.load_local);
 }
 
-// The one store fills the temporary; every other use reads its length or a
-// plain element that owns nothing.
+// The one store fills the temporary; every other use reads its length or an
+// element.
 fn intervalUses(comptime E: type, self: *E, catalog: *shapes.Catalog, local: usize, store: usize) Error!bool {
     for (self.function.scope.instructions, 0..) |instruction, pc| switch (instruction.op) {
         .store_local, .load_local => |id| if (@backingInt(id) == local and pc != store) return false,
@@ -348,8 +349,10 @@ fn intervalUses(comptime E: type, self: *E, catalog: *shapes.Catalog, local: usi
         .buffer_operation => |operation| if (@backingInt(operation.owner) == local) {
             if (operation.kind == .length) continue;
             if (operation.kind != .read) return false;
+            // A counted element takes its own loan as it is read, before
+            // anything else runs, so only unique resources are refused.
             const shape = catalog.get(operation.output) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError;
-            if (shape.counted or shape.unique_drop) return false;
+            if (shape.unique_drop) return false;
         },
         else => {},
     };
@@ -358,12 +361,11 @@ fn intervalUses(comptime E: type, self: *E, catalog: *shapes.Catalog, local: usi
 
 // No instruction while the temporary is live writes the root or crosses an
 // arena boundary.
-fn intervalQuiet(comptime E: type, self: *E, local: usize, root_local: usize) bool {
-    const plan = self.cow.?.plan;
+fn intervalQuiet(comptime E: type, self: *E, catalog: *shapes.Catalog, local: usize, root_local: usize) bool {
     for (self.function.scope.instructions, 0..) |instruction, pc| {
         if (!self.live.?.before(pc, local) and !self.live.?.after(pc, local)) continue;
         if (instruction.op == .begin_arena or instruction.op == .end_arena) return false;
-        if (writes(plan, instruction.op, pc, root_local)) return false;
+        if (writes(E, self, catalog, pc, root_local)) return false;
     }
     return true;
 }
@@ -397,7 +399,6 @@ pub fn operandInterval(comptime E: type, self: *E, pc: usize) bool {
     const root_local = chainRoot(E, self, pc) orelse return false;
     if (root_local >= state.contract.parameters.len or state.contract.parameters[root_local] != .caller_storage) return false;
     const pushed_depth = (self.states[pc] orelse return false).len - 1;
-    const plan = self.cow.?.plan;
     var at = pc + 1;
     var remaining: usize = 256;
     while (at < code.len and remaining != 0) : ({
@@ -409,7 +410,7 @@ pub fn operandInterval(comptime E: type, self: *E, pc: usize) bool {
         if (before.len <= pushed_depth) return false;
         const after = if (at + 1 < self.states.len) self.states[at + 1] else null;
         const consumed = if (after) |stack| stack.len <= pushed_depth else true;
-        if (writes(plan, code[at].op, at, root_local)) return false;
+        if (writes(E, self, &state.catalog, at, root_local)) return false;
         switch (code[at].op) {
             .jump, .jump_if_false, .switch_variant, .try_result, .begin_arena, .end_arena => return false,
             else => {},
@@ -419,10 +420,17 @@ pub fn operandInterval(comptime E: type, self: *E, pc: usize) bool {
     return false;
 }
 
-// Whether the instruction at `pc` can write the root's storage.
-fn writes(plan: cow.Plan, op: Op, pc: usize, root_local: usize) bool {
+// Whether the instruction at `pc` can write the root's storage. Storing back
+// an update of count-free fields of the root, or passing it `mut` to a call
+// that only does that, changes no counted field (RC-PLAIN-UPDATE-CALL-1).
+fn writes(comptime E: type, self: *E, catalog: *shapes.Catalog, pc: usize, root_local: usize) bool {
+    const plan = self.cow.?.plan;
+    const op = self.function.scope.instructions[pc].op;
+    const program: plain.Program = .{ .catalog = catalog, .functions = self.program.functions };
     switch (op) {
-        .store_local, .ref_local, .move_local => |id| if (@backingInt(id) == root_local) return true,
+        .store_local => |id| if (@backingInt(id) == root_local and !plain.plainStore(program, self.function, pc)) return true,
+        .ref_local => |id| if (@backingInt(id) == root_local and !plain.plainCall(program, self.function, pc)) return true,
+        .move_local => |id| if (@backingInt(id) == root_local) return true,
         .switch_variant => |dispatch| for (dispatch.arms) |arm| {
             if (arm.slot) |id| if (@backingInt(id) == root_local) return true;
         },

@@ -30,7 +30,8 @@ const program =
     \\    stack: list[Value]
     \\    names: list[str]
     \\    top: int
-    \\def pop(rt: mut Runtime) -> str:
+    \\def pop(at: int) -> str:
+    \\    rt = Runtime([Value.nil], ["a", "b"], at)
     \\    rt.top = rt.top - 1
     \\    return rt.names[rt.top]
     \\def total(values: list[float]) -> float:
@@ -39,8 +40,7 @@ const program =
     \\        sum += value
     \\    return sum
     \\def main() -> int:
-    \\    rt = Runtime([Value.nil, Value.number(2.0)], ["a", "b"], 2)
-    \\    return len(pop(mut rt)) + int(total([1.0]))
+    \\    return len(pop(2)) + int(total([1.0]))
 ;
 
 // spec: RC-LOAN-RELOCATE-1
