@@ -384,7 +384,19 @@ void *myl_rc_storage_alloc(myl_native_heap *heap, const myl_native_type *element
         MYL_RC_STAT(heap,MYL_RC_STAT_HEAP_ALLOCATE);
         return payload;
     }
-    if (!myl_rc_native_shape(heap,element)) return NULL;
+    if (heap->rc->plain!=element && !myl_rc_native_shape(heap,element)) return NULL;
+    /* RC-ALLOC-CACHE-1: a registered slab-sized run of elements (a text's or
+     * list backing's octets, say) takes its class's free list directly. */
+    if (!region && count>1 && element->size && element->alignment<=16 && heap->rc->allocator.hooks.allocate==allocate &&
+        count<=(strides[RC_SLAB_CLASSES-1]-MYL_RC_PREFIX_BYTES)/element->size) {
+        size_t bytes=count*element->size;
+        myl_rc_object *object=slab_take(heap,class_for(storage_of(heap),MYL_RC_PREFIX_BYTES+bytes));
+        if (!object) { myl_rc_record_failure(heap,MYL_RC_ALLOCATION_REFUSED); return NULL; }
+        zero_payload((unsigned char *)(object+1),bytes);
+        void *payload=initialize(heap,object,element,count,0);
+        MYL_RC_STAT(heap,MYL_RC_STAT_HEAP_ALLOCATE);
+        return payload;
+    }
 registered:;
     myl_rc_alloc_request request={element,count,region};
     void *result=NULL;
