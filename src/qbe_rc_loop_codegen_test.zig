@@ -194,6 +194,18 @@ test "RC-PLAIN-READ-IN-PLACE-1 a plain element read with no owning input is not 
     try t.expect(std.mem.count(u8, rc_sum, " blit ") <= std.mem.count(u8, gc_sum, " blit ") + 2);
 }
 
+// spec: RC-READ-RECORD-VERSION-1
+test "RC-READ-RECORD-VERSION-1 a read-only loop over plain records keeps its guarded version" {
+    var rc = try emit(records, .rc);
+    defer rc.deinit();
+    const sum = try named(rc.value, "sum_c");
+    const guard = std.mem.indexOf(u8, sum, "# RC-READ-LIST-VERSION-1") orelse return error.TestUnexpectedResult;
+    const copy = fastCopy(sum[guard..]) orelse return error.TestUnexpectedResult;
+    try t.expect(std.mem.indexOf(u8, copy, "myl_qbe_fail_iteration") == null);
+    try t.expect(std.mem.indexOf(u8, copy, "myl_qbe_fail_normalized_index_bounds") == null);
+    try t.expect(std.mem.indexOf(u8, copy, "slot_drop") == null);
+}
+
 const parameter_reads =
     \\def weight(i: int, j: int) -> float:
     \\    return 1.0 / float((i + j) * (i + j + 1) // 2 + i + 1)

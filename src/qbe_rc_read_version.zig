@@ -35,7 +35,7 @@ pub fn certify(comptime E: type, self: *E, head: usize, back: usize) ?Certificat
         if (!charge(&budget, stack.len + rc.plan.locals.edges.len + rc.plan.records.transfers.len + rc.plan.records.writes.len)) return null;
         const captured = captureAt(E, self, pc) orelse captureAt(E, self, pc -| 1);
         for (stack, 0..) |ty, index| {
-            if (plainWord(E, self, ty) or result.bytes.borrowed(pc, index)) continue;
+            if (plainValue(E, self, ty) or result.bytes.borrowed(pc, index)) continue;
             if (!capturedList(E, self, captured, pc != head and index + 1 == stack.len, ty)) return null;
         }
         if (!quiet(E, self, pc, &budget)) return null;
@@ -43,7 +43,7 @@ pub fn certify(comptime E: type, self: *E, head: usize, back: usize) ?Certificat
         if (op == .buffer_operation) {
             const access = op.buffer_operation;
             if (access.kind != .read and access.kind != .length and access.kind != .iteration_check) return null;
-            if (!plainWord(E, self, access.output)) return null;
+            if (!plainValue(E, self, access.output)) return null;
             switch (anchor(E, self, @backingInt(access.owner), head, back, &budget) orelse return null) {
                 .journal => |owner| if (!addOwner(&result, owner)) return null,
                 .caller => {},
@@ -151,13 +151,25 @@ fn plainWord(comptime E: type, self: *E, ty: typed.Type) bool {
     return !shape.counted and !shape.unique_drop;
 }
 
-/// A non-box list whose elements are plain words.
+/// A plain word, or an inline record, tuple or variant that owns nothing and
+/// names no live view: its bytes are copied or projected, never published.
+fn plainValue(comptime E: type, self: *E, ty: typed.Type) bool {
+    if (plainWord(E, self, ty)) return true;
+    if (!ty.isAggregate()) return false;
+    const record = self.program.records[ty.recordIndex()];
+    if (record.managed or record.isCollection() or record.isManagedRecord()) return false;
+    if (@import("value_semantics.zig").containsLiveView(self.program.records, ty)) return false;
+    const shape = self.cow.?.rc.?.catalog.get(ty) catch return false;
+    return !shape.counted and !shape.unique_drop;
+}
+
+/// A non-box list whose elements are plain values.
 fn plainList(comptime E: type, self: *E, ty: typed.Type) bool {
     if (!ty.isAggregate()) return false;
     const record = self.program.records[ty.recordIndex()];
     if (!record.isCollection() or record.collection.kind != .list or record.collection.box) return false;
     const element = record.shape.buffer orelse return false;
-    return element != .unit and plainWord(E, self, element);
+    return element != .unit and plainValue(E, self, element);
 }
 
 /// Test only initialized metadata before the existing range/payload guards.
@@ -219,7 +231,7 @@ fn concrete(comptime E: type, self: *E, owner: usize) bool {
     const record = self.program.records[ty.recordIndex()];
     if (!record.isCollection() or record.collection.kind != .list or record.collection.box) return false;
     const element = record.shape.buffer orelse return false;
-    return element != .unit and plainWord(E, self, element);
+    return element != .unit and plainValue(E, self, element);
 }
 
 fn quiet(comptime E: type, self: *E, pc: usize, budget: *usize) bool {
@@ -251,7 +263,7 @@ fn allowed(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "op"
     return switch (op) {
         .load_local, .store_local => |id| blk: {
             const index = @backingInt(id);
-            break :blk !self.byReference(index) and !self.callerStorage(index) and plainWord(E, self, self.function.scope.locals[index].ty);
+            break :blk !self.byReference(index) and !self.callerStorage(index) and plainValue(E, self, self.function.scope.locals[index].ty);
         },
         .push_integer => |value| plainWord(E, self, value.ty),
         .cast_integer, .neg_integer, .acknowledge, .wrap_domain, .unwrap_domain => |ty| plainWord(E, self, ty),
@@ -260,6 +272,9 @@ fn allowed(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "op"
         .push_i64, .push_bool, .push_unit, .pop, .jump, .jump_if_false, .cmp_i64, .cmp_bool, .not_bool => true,
         .add_i64_checked, .sub_i64_checked, .mul_i64_checked, .div_i64_checked, .rem_i64_checked, .neg_i64_checked => true,
         .assert_true, .unary_float => true,
+        // Every stack state in the interval, including each projection's
+        // result, is separately required to be a plain value.
+        .get_field => true,
         else => false,
     };
 }
