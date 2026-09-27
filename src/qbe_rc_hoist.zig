@@ -22,9 +22,9 @@ pub fn refine(comptime E: type, self: *E) Error!bool {
         check.hoisted = cow.none;
         if (site.needed and site.hoisted != cow.none and budget >= self.function.scope.instructions.len) {
             budget -= self.function.scope.instructions.len;
-            const classic = proven(E, self, site, stores, false);
+            const classic = try proven(E, self, site, stores, false);
             const extended = !classic and try @import("qbe_rc_fresh_root.zig").proven(E, self, site.local, site.hoisted);
-            if (classic or (extended and proven(E, self, site, stores, true))) {
+            if (classic or (extended and try proven(E, self, site, stores, true))) {
                 check.hoisted = site.hoisted;
                 accepted = true;
                 // Element detachment requires an already unique outer list.
@@ -82,7 +82,12 @@ pub fn permitsVersion(comptime E: type, self: *E, head: usize, back: usize) bool
     return false;
 }
 
-fn proven(comptime E: type, self: *E, site: ownership.Cow, stores: []const bool, extended: bool) bool {
+/// What one loop proof admits: its root, the receiver stores certified
+/// borrowed, whether the fresh-root extension applies, and per instruction the
+/// operand height of a pending octet-append source (`none` elsewhere).
+const Proof = struct { root: usize, stores: []const bool, extended: bool, sources: []const u32 = &.{} };
+
+fn proven(comptime E: type, self: *E, site: ownership.Cow, stores: []const bool, extended: bool) Error!bool {
     const code = self.function.scope.instructions;
     const head = site.hoisted;
     const back = self.cow.?.plan.loops.back[head];
@@ -92,17 +97,72 @@ fn proven(comptime E: type, self: *E, site: ownership.Cow, stores: []const bool,
     if (root.usage.temporary and !extended) return false;
     if (self.byReference(site.local) or self.callerStorage(site.local)) return false;
     if (!self.live.?.before(head, site.local) or self.cow.?.plan.place(site.local) != null) return false;
-    const element = listElement(E, self, root.ty) orelse return false;
-    if (site.elements) {
-        const leaf = listElement(E, self, element) orelse return false;
-        if (!plain(E, self, leaf)) return false;
-    } else if (!plain(E, self, element) and listElement(E, self, element) == null) return false;
+    var proof: Proof = .{ .root = site.local, .stores = stores, .extended = extended };
+    if (octetBuffer(E, self, root.ty)) |octet| {
+        if (site.elements or !plain(E, self, octet)) return false;
+        proof.sources = try octetSources(E, self, site.local, head, back) orelse return false;
+    } else {
+        const element = listElement(E, self, root.ty) orelse return false;
+        if (site.elements) {
+            const leaf = listElement(E, self, element) orelse return false;
+            if (!plain(E, self, leaf)) return false;
+        } else if (!plain(E, self, element) and listElement(E, self, element) == null) return false;
+    }
     for (code, 0..) |instruction, pc| {
         if (invalidEdge(instruction.op, pc, head, back)) return false;
         if (pc < head or pc > back or self.states[pc] == null) continue;
-        if (!allowed(E, self, pc, site.local, stores, extended)) return false;
+        if (!allowed(E, self, pc, proof)) return false;
     }
     return true;
+}
+
+/// RC-BUFFER-HOIST-1: the octet element of the mutable `byte_buffer`, whose
+/// in-place appends only ever write octets into the receiver's own storage.
+fn octetBuffer(comptime E: type, self: *E, ty: typed.Type) ?typed.Type {
+    if (!ty.isAggregate()) return null;
+    const record = self.program.records[ty.recordIndex()];
+    if (!record.managed or !record.isCollection()) return null;
+    if (record.collection.kind != .bytes or !std.mem.eql(u8, record.name, @import("nominal_templates.zig").byte_buffer_name)) return null;
+    return record.shape.buffer;
+}
+
+/// Per instruction of the loop, the operand height holding the source an
+/// append of the octet-buffer root reads (`append_range`'s data, or
+/// `append_utf8`'s text), or `none`. Each such source must be exactly the
+/// value one `load_local` of another local pushed, carried unconsumed by the
+/// ownership analysis's operand flow to the append with no branch entering in
+/// between: it is only ever a borrowed read of a local the loop cannot store.
+/// Null when an append's source is anything else, which keeps its checks.
+fn octetSources(comptime E: type, self: *E, root: usize, head: usize, back: usize) Error!?[]u32 {
+    const code = self.function.scope.instructions;
+    const flow = (self.ownership orelse return null).operands;
+    const sources = try self.allocator.alloc(u32, code.len);
+    @memset(sources, cow.none);
+    for (head..back + 1) |pc| {
+        const operation = switch (code[pc].op) {
+            .buffer_operation => |operation| operation,
+            else => continue,
+        };
+        if (@backingInt(operation.owner) != root) continue;
+        if (operation.kind != .buffer_append_range and operation.kind != .buffer_append_utf8) continue;
+        const stack = flow[pc] orelse return null;
+        if (stack.len < operation.kind.arity()) return null;
+        const height = stack.len - operation.kind.arity();
+        const source = stack[height];
+        if (source.origin != .local or source.part != .whole or source.local == root) return null;
+        if (source.read == cow.none or source.read < head or source.read >= pc) return null;
+        switch (code[source.read].op) {
+            .load_local => |slot| if (@backingInt(slot) != source.local) return null,
+            else => return null,
+        }
+        for (source.read + 1..pc + 1) |at| {
+            if (self.isBranchTarget(at)) return null;
+            const carried = flow[at] orelse return null;
+            if (carried.len <= height or !carried[height].eql(source)) return null;
+            sources[at] = @intCast(height);
+        }
+    }
+    return sources;
 }
 
 fn plain(comptime E: type, self: *E, ty: typed.Type) bool {
@@ -141,21 +201,23 @@ fn borrowedStore(stores: []const bool, pc: usize) bool {
     return pc < stores.len and stores[pc];
 }
 
-fn allowed(comptime E: type, self: *E, pc: usize, root: usize, stores: []const bool, extended: bool) bool {
+fn allowed(comptime E: type, self: *E, pc: usize, proof: Proof) bool {
     const code = self.function.scope.instructions;
     const op = code[pc].op;
     const inputs = self.states[pc].?;
-    for (inputs) |ty| if (!plain(E, self, ty)) {
-        if (inputs.len != 1 or !borrowedStore(stores, pc)) return false;
+    for (inputs, 0..) |ty, height| if (!plain(E, self, ty)) {
+        if (pendingSource(proof, pc) == height) continue;
+        if (inputs.len != 1 or !borrowedStore(proof.stores, pc)) return false;
     };
     return switch (op) {
-        .load_local => |id| plain(E, self, self.function.scope.locals[@backingInt(id)].ty) or borrowedStore(stores, pc + 1),
-        .store_local => |id| @backingInt(id) != root and (plain(E, self, self.function.scope.locals[@backingInt(id)].ty) or borrowedStore(stores, pc)),
+        .load_local => |id| plain(E, self, self.function.scope.locals[@backingInt(id)].ty) or borrowedStore(proof.stores, pc + 1) or
+            pendingSource(proof, pc + 1) == inputs.len,
+        .store_local => |id| @backingInt(id) != proof.root and (plain(E, self, self.function.scope.locals[@backingInt(id)].ty) or borrowedStore(proof.stores, pc)),
         .value_copy => |copy| plain(E, self, copy.ty),
-        .buffer_operation => |operation| operationAllowed(E, self, pc, operation, stores, extended),
-        .make_record => |record| extended and plain(E, self, record.ty) and
+        .buffer_operation => |operation| operationAllowed(E, self, pc, operation, proof),
+        .make_record => |record| proof.extended and plain(E, self, record.ty) and
             !self.program.records[record.ty.recordIndex()].isManagedRecord(),
-        .ret => extended and plain(E, self, self.function.signature.return_type),
+        .ret => proof.extended and plain(E, self, self.function.signature.return_type),
         .push_i64,
         .push_bool,
         .push_unit,
@@ -183,15 +245,30 @@ fn allowed(comptime E: type, self: *E, pc: usize, root: usize, stores: []const b
     };
 }
 
-fn operationAllowed(comptime E: type, self: *E, pc: usize, operation: anytype, stores: []const bool, extended: bool) bool {
-    const element = listElement(E, self, self.function.scope.locals[@backingInt(operation.owner)].ty) orelse return false;
+fn operationAllowed(comptime E: type, self: *E, pc: usize, operation: anytype, proof: Proof) bool {
+    const owner = @backingInt(operation.owner);
+    if (owner == proof.root and octetBuffer(E, self, self.function.scope.locals[owner].ty) != null) {
+        if (!plain(E, self, operation.output)) return false;
+        return switch (operation.kind) {
+            .buffer_append_byte, .buffer_append_int, .buffer_append_float, .buffer_reserve => true,
+            .buffer_append_range, .buffer_append_utf8 => pendingSource(proof, pc) == self.states[pc].?.len - operation.kind.arity(),
+            else => false,
+        };
+    }
+    const element = listElement(E, self, self.function.scope.locals[owner].ty) orelse return false;
     return switch (operation.kind) {
         .length, .capacity => plain(E, self, operation.output),
-        .read => plain(E, self, operation.output) or borrowedStore(stores, pc + 1),
+        .read => plain(E, self, operation.output) or borrowedStore(proof.stores, pc + 1),
         .write => plain(E, self, element) and plain(E, self, operation.output),
-        .append => extended and plain(E, self, element) and plain(E, self, operation.output),
+        .append => proof.extended and plain(E, self, element) and plain(E, self, operation.output),
         else => false,
     };
+}
+
+/// The operand height of the certified octet-append source pending before
+/// instruction `pc`, or `none`.
+fn pendingSource(proof: Proof, pc: usize) usize {
+    return if (pc < proof.sources.len and proof.sources[pc] != cow.none) proof.sources[pc] else cow.none;
 }
 
 fn invalidEdge(op: @FieldType(@import("bytecode.zig").Instruction, "op"), pc: usize, head: usize, back: usize) bool {
