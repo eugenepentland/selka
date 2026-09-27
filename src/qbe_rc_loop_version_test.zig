@@ -66,7 +66,7 @@ test "RC-LOOP-VERSION-1 callback publication and step accounting keep original l
     // non-H independently, so that separate write loop can use its fast arm.
     try t.expect(std.mem.indexOf(u8, held, "# RC-NONHELD-CAPTURE-1") != null);
     try t.expect(std.mem.indexOf(u8, held, "\n@fi") != null);
-    try t.expect(std.mem.indexOf(u8, held, "myl_rc_hold_acquire") != null);
+    try t.expect(std.mem.indexOf(u8, held, "# RC-GLUE-1 hold") != null);
     try t.expect(std.mem.indexOf(u8, held, "myl_qbe_rc_slot_drop") != null);
     var counted = try emitted(true);
     defer counted.deinit();

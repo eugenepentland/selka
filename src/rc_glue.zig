@@ -286,11 +286,20 @@ const Generator = struct {
         try self.print("unsigned char *slot = (unsigned char *)list->storage + index * {d};\nif ((const void *)slot == value) return 1;\n", .{size});
         try self.print("unsigned char staged[{d}], old[{d}];\nif (!{s}_rcg_retain(heap, staged, value, myl_native_header_region(list))) return 0;\n", .{ size, size, name });
         try self.print("memcpy(old, slot, {d});\nmemcpy(slot, staged, {d});\n{s}_rcg_drop(heap, old);\nreturn 1;\n}}\n", .{ size, size, name });
+        try self.append(name, size, true);
+    }
+
+    /// Room append: retain (or, for a plain value, copy) straight into spare
+    /// capacity; growth, an exhausted generation and a value that lives in
+    /// the list's own storage keep the runtime helper.
+    fn append(self: *Generator, name: []const u8, size: u64, counted: bool) Error!void {
         try self.print("int {s}_rcg_list_append(myl_native_heap *heap, myl_native_list *list, const void *value) {{\n", .{name});
         try self.print("size_t length = list->length;\nunsigned char *storage = list->storage;\n", .{});
         try self.print("if (length >= list->capacity || list->generation == UINT64_MAX || (uintptr_t)value - (uintptr_t)storage < length * {d})\n", .{size});
         try self.print("return myl_rc_list_append(heap, list, value);\nMYL_RCG_CHECK(list->element && list->element->size == {d});\n", .{size});
-        try self.print("if (!{s}_rcg_retain(heap, storage + length * {d}, value, myl_native_header_region(list))) return 0;\n", .{ name, size });
+        if (counted) {
+            try self.print("if (!{s}_rcg_retain(heap, storage + length * {d}, value, myl_native_header_region(list))) return 0;\n", .{ name, size });
+        } else try self.print("memcpy(storage + length * {d}, value, {d});\n", .{ size, size });
         try self.print("list->length = length + 1;\n++list->generation;\nreturn 1;\n}}\n", .{});
     }
 };
@@ -301,6 +310,21 @@ pub fn eligible(catalog: *native.Catalog, facts: *shapes.Catalog, ty: typed.Type
     const shape = try facts.get(ty);
     if (!shape.counted or shape.unique_drop) return false;
     return (try catalog.layout(ty)).size != 0;
+}
+
+/// Whether `ty` is an inline aggregate without edges or unique resources:
+/// its list appends copy bytes through glue instead of the runtime walker.
+pub fn plainAggregate(catalog: *native.Catalog, facts: *shapes.Catalog, ty: typed.Type) Error!bool {
+    if (!ty.isAggregate() or semantics.isLiveView(catalog.records, ty)) return false;
+    const shape = try facts.get(ty);
+    if (shape.counted or shape.unique_drop) return false;
+    const layout = try catalog.layout(ty);
+    if (layout.size == 0) return false;
+    // Scalar-like domains keep the compiler's inline scalar room append.
+    return switch (layout.kind) {
+        .record, .array, .variant => true,
+        else => false,
+    };
 }
 
 /// Emit glue for every counted inline type. Unused entries cost nothing at
@@ -317,6 +341,10 @@ pub fn generate(allocator: std.mem.Allocator, catalog: *native.Catalog) Error![]
     try generator.print("{s}", .{prelude});
     for (0..typed.Type.record_base + catalog.records.len) |index| {
         const ty: typed.Type = @fromBackingInt(index);
+        if (try plainAggregate(catalog, &facts, ty)) {
+            try generator.append(try descriptors.symbol(a, catalog, ty), (try catalog.layout(ty)).size, false);
+            continue;
+        }
         if (!(try facts.get(ty)).counted) continue;
         const layout = try catalog.layout(ty);
         if (layout.size == 0) continue;

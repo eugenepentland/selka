@@ -19,7 +19,7 @@ pub fn removalStatus(comptime E: type, self: *E, status: usize) Error!void {
 pub fn append(comptime E: type, self: *E, element: typed.Type, result: usize, list: usize, value: usize) Error!void {
     if (mode.enabled()) {
         const glue = @import("qbe_rc_glue.zig");
-        if (try glue.routed(E, self, element)) return glue.listWrite(E, self, .{ .element = element, .result = result, .list = list, .value = value });
+        if (try glue.appendRouted(E, self, element)) return glue.listWrite(E, self, .{ .element = element, .result = result, .list = list, .value = value });
     }
     const symbol = if (mode.enabled()) "myl_rc_list_append" else "myl_native_list_append";
     try self.print(" %v{d} =w call ${s}(l %heap, l %v{d}, l %v{d})\n", .{ result, symbol, list, value });

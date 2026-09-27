@@ -12,7 +12,7 @@ fn iterationHeld(source: []const u8) !void {
     defer compilation.deinit();
     const text = try compilation.emitQbe(t.allocator);
     defer t.allocator.free(text);
-    try t.expect(std.mem.indexOf(u8, text, "call $myl_rc_hold_acquire") != null);
+    try t.expect(std.mem.indexOf(u8, text, "# RC-GLUE-1 hold") != null);
     try t.expect(std.mem.indexOf(u8, text, "storew 8") != null);
     try t.expect(std.mem.indexOf(u8, text, "call $myl_qbe_fail_iteration") != null);
 }
@@ -61,7 +61,7 @@ test "RC live dictionary views use hold shapes and guarded receiver holds" {
     const text = try compilation.emitQbe(t.allocator);
     defer t.allocator.free(text);
     try t.expect(std.mem.indexOf(u8, text, "MYL_RC_SHAPE_HOLD_POINTER") != null);
-    try t.expect(std.mem.indexOf(u8, text, "call $myl_rc_hold_acquire") != null);
+    try t.expect(std.mem.indexOf(u8, text, "# RC-GLUE-1 hold") != null);
     try t.expect(std.mem.indexOf(u8, text, "storew 8") != null);
 }
 
@@ -84,4 +84,5 @@ test "RC live dictionary views leave user shadow records with ordinary owner sha
     defer t.allocator.free(text);
     try t.expect(std.mem.indexOf(u8, text, "MYL_RC_SHAPE_HOLD_POINTER") == null);
     try t.expect(std.mem.indexOf(u8, text, "call $myl_rc_hold_acquire") == null);
+    try t.expect(std.mem.indexOf(u8, text, "# RC-GLUE-1 hold") == null);
 }

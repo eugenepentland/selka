@@ -56,6 +56,6 @@ test "RC dictionary empty drops retain exact benchmark setup later H iteration a
     const entry = std.mem.indexOf(u8, il, "\n@ce") orelse return error.TestUnexpectedResult;
     const last = std.mem.lastIndexOf(u8, il, "# RC-DICTIONARY-EMPTY-DROPS-1") orelse return error.TestUnexpectedResult;
     try t.expect(std.mem.indexOf(u8, il[0..entry], "call $myl_qbe_rc_slot_drop") != null);
-    try t.expect(std.mem.indexOf(u8, il[last..], "call $myl_rc_hold_acquire") != null);
+    try t.expect(std.mem.indexOf(u8, il[last..], "# RC-GLUE-1 hold") != null);
     try t.expect(std.mem.indexOf(u8, il[last..], "call $myl_qbe_rc_slot_drop") != null);
 }

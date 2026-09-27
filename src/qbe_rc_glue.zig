@@ -55,6 +55,17 @@ pub fn routed(comptime E: type, self: *E, ty: typed.Type) Error!bool {
     return glue.eligible(self.layouts, &state.catalog, ty) catch |err| translate(err);
 }
 
+/// Whether list appends of `ty` run through glue: every routed type, plus
+/// plain inline aggregates, whose room append is a byte copy.
+pub fn appendRouted(comptime E: type, self: *E, ty: typed.Type) Error!bool {
+    if (try routed(E, self, ty)) return true;
+    if (comptime !(@hasField(E, "cow") and @hasField(E, "layouts"))) return false;
+    if (!runtime.enabled()) return false;
+    const cow = self.cow orelse return false;
+    const state = cow.rc orelse return false;
+    return glue.plainAggregate(self.layouts, &state.catalog, ty) catch |err| translate(err);
+}
+
 /// Copy the value and acquire one hold per edge. A loan cannot fail or kill.
 pub fn loan(comptime E: type, self: *E, operation: Transfer) Error!void {
     try marker(E, self, .loan);
@@ -67,6 +78,18 @@ pub fn loan(comptime E: type, self: *E, operation: Transfer) Error!void {
         return;
     }
     try self.print(" call ${s}{s}(l %heap, l %v{d}, l %v{d})\n", .{ try self.descriptor(operation.ty), glue.Operation.loan.suffix(), operation.destination, operation.source });
+}
+
+/// Take one H token on the payload in %v{payload} into the empty hold slot at
+/// %v{slot}, inline, when `ty` is a one-word counted value; returns false when
+/// the caller must use the runtime's counting hold acquisition instead.
+pub fn holdAcquire(comptime E: type, self: *E, ty: typed.Type, payload: usize, slot: usize) Error!bool {
+    if (try pointerEdge(E, self, ty) == null) return false;
+    try self.print(" # RC-GLUE-1 hold\n storel %v{d}, %v{d}\n", .{ payload, slot });
+    const label = self.temp();
+    _ = try increment(E, self, .{ .payload = payload, .count = .holds, .label = label, .on_null = "done", .on_special = "done" });
+    try self.print("@rcgdone{d}\n", .{label});
+    return true;
 }
 
 /// Copy the value and acquire each edge's own token; only an arena edge can
