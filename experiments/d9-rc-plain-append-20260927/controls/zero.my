@@ -1,0 +1,10 @@
+def zero(count: int) -> int:
+    items = [1, 2, 3]
+    before = items
+    for at in range(count):
+        items.append(at)
+    return len(items) + before[0]
+def main(out: Stream) -> int:
+    out.print("entered")
+    out.print(zero(0))
+    return 0

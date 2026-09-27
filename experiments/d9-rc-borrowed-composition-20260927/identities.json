@@ -1,0 +1,32 @@
+{
+  "base": "3b867d50ce41ab6ba78560d87d055ba179aafdd9",
+  "compiler_sha256": "504d4d0643cbbad8b9fc527554b0b9bfcb53e8e1553c3db39ca0c6ab69aa7679",
+  "initial_compiler_sha256": "d48afc2ffbc3e7ae6631bf0c1c5f473b385c365ef8ec3240f138394adb0367cf",
+  "archive_sha256": {
+    "README.md": "68b3fda2ccdfadd4087dc68f4b27beed45969a4edf361cd72877ddbb664670c3",
+    "after-emitted.json.gz": "1a11465a600f2977838ad3ccf6ba8730a3f05757b6c259b3503533993d825bf3",
+    "before-emitted.json.gz": "c44ee4d0d45dfba41b5da98dea9552367c205b7330a5ce24bed6a058e748c243",
+    "bounds.my": "8861ca84b27a355422b5e2304aef380457e5b510f2aefb7ad1bb197f532f161f",
+    "build-final.log.gz": "29cd23a4f7aa98c9b39a4823ae657a3c18c5177332ca8b00bcbd5fec42b076f8",
+    "doc-coverage.log.gz": "2b29e39249222586c2b67b318a0ce8033db2a30ac60969d94f6eef41933d1185",
+    "frames.my": "8861ca84b27a355422b5e2304aef380457e5b510f2aefb7ad1bb197f532f161f",
+    "guests-final-initial.json.gz": "e9a49ea5d83b9426a19cb0028ef1b5c9e5fa8345a34e69a2283d40b47bc7c12f",
+    "guests-final.json.gz": "08b2e327a64f570f9ca43d4d94d5fbde0b488fccb0ba6b32ce7edd1095d6d6fe",
+    "guests-initial.log.gz": "08608f351f77efc057bf24ab7de5db919d6e7c131a25b3a3a04e80c702860748",
+    "guests.log.gz": "08608f351f77efc057bf24ab7de5db919d6e7c131a25b3a3a04e80c702860748",
+    "guests.py": "769dda5b92c1d262aa5bf1e1e66a52e82927f8b35ea1221194d5a7d8e2fb3e1d",
+    "measure.json.gz": "f9f12d5e40766ca1d4ac81ab722c47ad8d940da6f5d96be258f3e7d51197caa9",
+    "measure.log.gz": "c9234a385e2ddababce46f0b43c2077175c50bcf299e503b296c229a9134db53",
+    "measure.py": "18e31159cdab06c0cf660f35cc2fae0f82feacf928cbef9fdecb5657a2815a7e",
+    "source.patch.gz": "69f565abc2984affe7d4d5d4bdb63e864183632a5d2d093bc391bd1a3ab85bbe",
+    "steps.my": "e2ad76ea41aedfc31573e6e9fde454d1122601d077099b2d0e08e10d65a6b2b7",
+    "traps-initial.json.gz": "4fcd973ed21d92c8b01e64ef1236aaf06c71cf8ba03adb1753f7e2635ca6f42f",
+    "traps-initial.log.gz": "9cb3ce2c11bb79dfd62b26f21ac730c2ddb4f1729f9452e174d10265f2f6207e",
+    "traps.json.gz": "76e4b6c8704d5fdd8dd5af2a11817c6e16d517de8d779e4e508f678c97acaedd",
+    "traps.log.gz": "9cb3ce2c11bb79dfd62b26f21ac730c2ddb4f1729f9452e174d10265f2f6207e",
+    "traps.py": "dcbae53ee857535d17a8ae4ebf857712e92dcfa00df8f20fc3b7db00ac98a82b",
+    "units-final-initial.log.gz": "81d1d87010783d074a53a5ee5760fa4fddc1a2ede17709c56fd040c7c26fe473",
+    "units-final.log.gz": "bb883412b956b9690778669967eb6cffe4ce704105863b9fd971142ce6e05ab9",
+    "verify.py": "b8ef4aefdfed1e31e795bb08d63723421359c043993bf0d451d9d1c79638d906"
+  }
+}

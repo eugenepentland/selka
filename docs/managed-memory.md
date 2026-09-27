@@ -1,6 +1,8 @@
 # Managed application collections
 
-Ordinary dynamic lists allocate on a tracing heap. There are no allocator
+Ordinary dynamic lists use managed storage. The default runtime currently uses a
+tracing heap; an experimental reference-counted runtime uses the same collection
+API and value semantics. There are no allocator
 parameters, no move operations and no collection borrow scopes: managed memory is
 the only way application code allocates. [Managed arenas](arenas.md) are the one
 escape hatch, and they change *when* managed objects are freed rather than how
@@ -56,22 +58,56 @@ lists. There are no interior pointers into managed storage. Host invocation, JSO
 of managed graphs, and QBE native emission reject unsupported managed boundaries;
 ordinary scalar host calls from managed applications still work.
 
+## Runtime selection
+
+Reference counting is available explicitly while its full performance gate is
+still open. Choose one runtime on commands that check, build or execute a program:
+
+| Option | Runtime |
+| --- | --- |
+| `--gc-runtime` | Tracing collector; the current default |
+| `--rc-runtime` | Experimental reference counting with copy-on-write |
+| `--rc-runtime=stats` | The same RC runtime with ownership-operation counters |
+
+For example, `mylang run-project examples/gc-default/main.my --rc-runtime
+--print-result` prints `142`. `mylang test tests/lang --rc-runtime=stats` exercises
+the language tests with counted RC. Either backend supports the same selectors;
+add `--release` for LLVM O3 with full LTO. Choose the uninstrumented `--rc-runtime`
+when measuring production performance.
+
+RC keeps managed objects alive while an owner or a compiler-maintained lifetime
+hold still needs them. Releasing the last such reference retires the object and
+releases its child references. The runtime does not trace cycles. Ordinary value
+programs use independent values and pool ids for graphs, and cannot store a
+recursive live view that would create a retained cycle. These rules are checked
+by the value model, independently of the runtime selector.
+
+Arenas remain available with RC: the same `with arena()` syntax groups managed
+allocations for bulk release, with the existing escape checks and copy rules.
+RC does not introduce allocator parameters, explicit free operations or new
+ownership syntax. Memory limits and trap cleanup apply to both runtimes.
+
+`--legacy-sharing` uses tracing GC. Combining it with an explicit RC selector is
+a usage error; an inherited RC selection is normalized to GC for legacy code.
+Runtime selection is a build property, so changing a running binary's environment
+cannot turn a GC binary into an RC binary. See
+[native runtime contracts](tooling/native-build.md#runtime-contracts) for artifact
+and cache compatibility.
+
 ## Collection and allocation contracts
 
-Each execution owns a single-threaded, nonmoving tracing heap. Managed objects
-have stable identities. Locals, operands, intermediate values, and retained
-aggregate snapshots maintain reference counts used for root discovery. Collection
-subtracts edges internal to the managed graph (including aggregate wrappers),
-marks reachable objects, and reclaims unreachable cycles. Dead edges are released
-before any dead object header is freed. These counts protect temporary roots;
-reference counting alone is not the reclamation algorithm.
+With the GC runtime, each execution owns a single-threaded, nonmoving tracing
+heap. The compiler registers typed roots for live locals, operands and
+intermediate values. Collection follows these roots and managed edges to keep
+reachable objects; unreachable objects, including cycles in legacy programs,
+can be reclaimed. Minor collections also account for edges from older objects
+into younger storage.
 
-Automatic collection runs at managed allocation safepoints according to a simple
-object-count threshold. This prototype is not a tuned latency or byte-budget
-policy. Host allocators still determine total memory availability.
-`memory.gc.statistics` reports
-created, reclaimed-during-collection, live/peak objects, live capacity slots, and
-collection counts; final teardown zeroes live counts separately from reclamation.
+Automatic collection runs at managed allocation safepoints according to byte
+thresholds and memory-budget pressure. Budget pressure requests a full collection
+before an allocation is refused. Collection timing is an implementation detail,
+not a guest-visible reclamation guarantee. Both runtimes enforce the documented
+[execution memory ceilings](tooling/runtime-budgets.md).
 
 Managed construction and append carry the transitive `managed_allocation` effect.
 `noalloc` excludes it, meaning "performs no managed allocation". It does not
@@ -81,7 +117,8 @@ Reads and fixed-slot writes are permitted under that bound. Inside a
 its release point moves. Managed mutation is not a promise of purity or exclusive
 access.
 
-`mylang run-project examples/gc-default/main.my --gc-stress` collects at every
+`mylang run-project examples/gc-default/main.my --gc-runtime --gc-stress
+--print-result` collects at every
 managed construction/append safepoint. It should print `142`. Stress mode is a
 rooting correctness check, not a performance mode. See the
 [schematic instructions](../experiments/schematic/README.md) for the real migrated
@@ -89,8 +126,9 @@ application and normal/stress SVG comparison.
 
 ## Managed lists
 
-`list[T]` is the growable sequence application code reaches for. Its storage lives
-on the tracing heap, so there is no allocator argument to thread and no free to
+`list[T]` is the growable sequence application code reaches for. Its storage is
+managed by the selected runtime, so there is no allocator argument to thread and
+no free to
 write. Assignment and argument passing preserve the value independently, with
 copy-on-write backing where possible. Elements must be
 copyable storable values — scalars, records, strings, byte strings and other
@@ -471,12 +509,10 @@ def main() -> int:
 
 ## The tracing collector
 
-Each execution owns one single-threaded, nonmoving tracing heap, so a managed
-object keeps a stable identity for its whole lifetime and no address ever moves
-under a running program. Collection runs at managed allocation safepoints on a
-simple object-count threshold; this is a prototype policy rather than a tuned
-latency or byte budget, and the host allocator still decides how much memory
-exists at all. Nothing in the surface language frees an object:
+With `--gc-runtime`, each execution owns one single-threaded, nonmoving tracing
+heap, so a live managed object's address does not move during collection.
+Collection runs at managed allocation safepoints according to allocation pressure
+and the execution memory budget. Nothing in the surface language frees an object:
 [`with arena() as name:`](arenas.md) changes only *when* a region's objects are
 released, not how they are written. `mylang run --gc-stress` collects at every
 safepoint, which is a rooting correctness check rather than a performance mode.
@@ -510,14 +546,12 @@ or container stores. Identity-bearing graphs use explicit pool handles. The
 tracing collector still handles cycles made by programs run with
 `--legacy-sharing` during the migration release.
 
-Reference counts on execution values exist to protect temporary roots — operands,
-intermediate results and retained aggregate snapshots — across an allocation that
-might collect. They are not the reclamation algorithm. Collection subtracts the
-edges internal to the managed graph, marks what the remaining roots reach and
-sweeps the rest, so a cycle nothing outside points at is reclaimed like any other
-garbage, and sweeping releases every dead edge before freeing a single object
-header. In compatibility mode, records can hold collections whose shared
-references form a cycle.
+The tracing collector starts from registered live roots and follows managed
+edges, then reclaims unreachable objects. Edges within an unreachable cycle do
+not make it reachable from a root, so the collector can reclaim the whole cycle.
+In compatibility mode, records can hold collections whose shared references form
+such a cycle. This legacy behavior requires GC; the RC runtime relies on the
+ordinary value model's cycle restrictions instead.
 
 ```mylang
 # doc: legacy-sharing

@@ -1,0 +1,25 @@
+{
+  "base_commit": "468bd8e536b0e088ff71291cb9a3c92db8ebf448",
+  "compiler_sha256": "082edf36c3b1370debeccb4bdcbf3069fbf7829ad1852e8a7d0d5d7f2a34c67e",
+  "validation": {
+    "example_before": "Both QBE GC and counted RC reproduce R_LIST_BOUNDS at original line14",
+    "example_after": "GC stress and counted RC on actual QBE and LLVM:stdout142 newline,exit142; RC counters balanced",
+    "doctest_gc": "13 run,0 failed",
+    "doctest_rc": "13 run,0 failed; legacy-sharing block normalizes to GC",
+    "doc_coverage": "0 failures",
+    "example_fmt_check_exit": 0,
+    "guardian": "whole-tree88 passed"
+  },
+  "artifacts": {
+    "doc-coverage.log.gz": "2b29e39249222586c2b67b318a0ce8033db2a30ac60969d94f6eef41933d1185",
+    "doctest-gc.json.gz": "726929bf9817d0f3e11d60658effa6780682b75da86a6d3fa9d0a62ce15d59e1",
+    "doctest-gc.log.gz": "f2cb122d708536c478a354faaf8acc726bbe43ba1778689e4adffc112a4b35c3",
+    "doctest-rc.json.gz": "0bd35a81f47bf183eb47d8d5a318f1c17d1fbfbe7e60fc7dead45fb5e2db5f75",
+    "doctest-rc.log.gz": "f2cb122d708536c478a354faaf8acc726bbe43ba1778689e4adffc112a4b35c3",
+    "example-after.json.gz": "fd357fbba49497c611c2c96a54bf1af4cd5127a7692d450e419d27a1529ec665",
+    "example-after.my": "3335e6a2e4bf42093b91aef9eff2ad38bf02690bad0d97cdb40a69ea08094646",
+    "example-before.json.gz": "a3e9859c3d1e450be93c12c931b0b49312cfb564d3bc55958499fb81f22c0cdb",
+    "example-before.my": "0fd61531eb11f2ff2a66c490ca565242e8dc515090fc5ceeab76dffb564df657",
+    "guardian.log.gz": "66fc6128de6d59b8913b505419ade39400d01b1f137209d53533aa8efaf96160"
+  }
+}

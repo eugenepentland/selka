@@ -280,3 +280,109 @@ test "RC-BORROW-LOOP-1 unavailable joins never regain immortal or parameter fact
     work = 0;
     try t.expect(!try graph.publish(2, .{ .stack = &.{}, .locals = &present }));
 }
+
+// spec: RC-BORROW-COMPOSE-1
+test "RC-BORROW-COMPOSE-1 direct and scalar callees map exact actual argument anchors" {
+    const answer = (try certificate(
+        \\record Node:
+        \\    text: bytes
+        \\    key: int
+        \\def first(nodes: list[Node]) -> Node:
+        \\    if len(nodes) == 0:
+        \\        return Node(b"", -1)
+        \\    return nodes[0]
+        \\def depth(node: Node) -> int:
+        \\    return node.key
+        \\def swapped(left: list[Node], right: list[Node]) -> Node:
+        \\    a = first(right)
+        \\    b = first(right)
+        \\    if depth(a) < depth(b):
+        \\        return a
+        \\    return b
+        \\def selected(left: list[Node], right: list[Node]) -> Node:
+        \\    return swapped(right, left)
+    )).?;
+    try t.expectEqual(@as(u32, 0), answer.parameter);
+}
+
+// spec-case: RC-BORROW-COMPOSE-1
+test "RC-BORROW-COMPOSE-1 callee mapping conflicts and allocating scalar bodies refuse" {
+    try t.expectEqual(null, try certificate(
+        \\def same(value: bytes) -> bytes:
+        \\    return value
+        \\def selected(first: bytes, second: bytes) -> bytes:
+        \\    answer = same(first)
+        \\    i = 0
+        \\    while i < 2:
+        \\        if i > 0:
+        \\            return answer
+        \\        answer = same(second)
+        \\        i += 1
+        \\    return first
+    ));
+    try t.expectEqual(null, try certificate(
+        \\def hidden() -> int:
+        \\    unused = [7]
+        \\    return 0
+        \\def selected(nodes: list[bytes]) -> bytes:
+        \\    return nodes[hidden()]
+    ));
+}
+
+// spec-case: RC-BORROW-COMPOSE-1
+test "RC-BORROW-COMPOSE-1 completed memo preserves independent callee admission" {
+    var source: std.Io.Writer.Allocating = .init(t.allocator);
+    defer source.deinit();
+    try source.writer.writeAll("def selected(nodes: list[bytes], index: int) -> bytes:\n    i = index\n");
+    for (0..30) |_| try source.writer.writeAll("    i += 1\n");
+    try source.writer.writeAll("    if i < len(nodes):\n        return nodes[i]\n    return nodes[0]\n");
+    const standalone = (try certificate(source.written())).?;
+    const helper = try std.mem.replaceOwned(u8, t.allocator, source.written(), "def selected(", "def picked(");
+    defer t.allocator.free(helper);
+    source.clearRetainingCapacity();
+    try source.writer.writeAll(helper);
+    try source.writer.writeAll("\ndef selected(nodes: list[bytes], index: int) -> bytes:\n    a = picked(nodes, index)\n    b = picked(nodes, index + 1)\n    if index < 0:\n        return a\n    return b\n");
+    const composed = (try certificate(source.written())).?;
+    try t.expectEqual(standalone.parameter, composed.parameter);
+}
+
+fn dependencySource() ![]u8 {
+    var source: std.Io.Writer.Allocating = .init(t.allocator);
+    defer source.deinit();
+    for (0..17) |i| try source.writer.print("def helper{d}(value: bytes) -> bytes:\n    if len(value) == {d}:\n        return b\"\"\n    return value\n\n", .{ i, i });
+    try source.writer.writeAll("def selected(value: bytes) -> bytes:\n    result = value\n");
+    for (0..16) |i| try source.writer.print("    result = helper{d}(result)\n", .{i});
+    try source.writer.writeAll("    return result\n");
+    return t.allocator.dupe(u8, source.written());
+}
+
+// spec-case: RC-BORROW-COMPOSE-1
+test "RC-BORROW-COMPOSE-1 dependency count is bounded without memo eviction" {
+    const source = try dependencySource();
+    defer t.allocator.free(source);
+    try t.expect((try certificate(source)) != null);
+    const seventeenth = try std.mem.replaceOwned(u8, t.allocator, source, "    return result\n", "    result = helper16(result)\n    return result\n");
+    defer t.allocator.free(seventeenth);
+    try t.expectEqual(null, try certificate(seventeenth));
+}
+
+// spec-case: RC-BORROW-COMPOSE-1
+test "RC-BORROW-COMPOSE-1 different callee parameters may name the same caller anchor" {
+    const answer = (try certificate(
+        \\def left(first: bytes, second: bytes) -> bytes:
+        \\    if len(second) == 0:
+        \\        return b""
+        \\    return first
+        \\def right(first: bytes, second: bytes) -> bytes:
+        \\    if len(first) == 0:
+        \\        return b""
+        \\    return second
+        \\def selected(value: bytes, choice: bool) -> bytes:
+        \\    a = left(value, value)
+        \\    b = right(value, value)
+        \\    if choice:
+        \\        return a
+        \\    return b
+    )).?;
+    try t.expectEqual(@as(u32, 0), answer.parameter);
+}

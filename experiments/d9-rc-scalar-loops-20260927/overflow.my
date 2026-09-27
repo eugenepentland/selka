@@ -1,0 +1,15 @@
+def calculate(count: int, seed: int) -> int:
+    total = seed
+    for at in range(count):
+        total = total + at * 7
+    return total
+
+
+def main(out: Stream) -> int:
+    with arena():
+        items = [13, 29]
+        out.print("before")
+        result = calculate(64, 9223372036854775807 - items[0] + 13)
+        out.print(result)
+        out.print(items[1])
+    return 0
