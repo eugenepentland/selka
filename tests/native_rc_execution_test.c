@@ -13,17 +13,18 @@ static uint64_t entry(void *context) {
     assert(leaf);
     uint32_t initialized = 1;
     MylQbeRcSlot slot = {&pointer, &leaf, &initialized, MYL_QBE_RC_COUNTED};
-    MylQbeRcFrame frame;
-    myl_qbe_rc_frame_enter(ctx, &frame, &slot, 1);
     assert(myl_native_region_begin(&ctx->heap));
     myl_native_list *outer = myl_native_list_new(&ctx->heap, &pointer, 1);
     assert(outer && myl_native_list_append(&ctx->heap, outer, &leaf));
     myl_rc_scope scope;
     myl_rc_scope_begin(&ctx->heap, &scope);
     assert(myl_rc_scope_pin(&scope, leaf) == MYL_RC_OK);
+    /* A trap leaves the scope, the slot and the arena to heap teardown; a
+     * normal return closes its scope and drops its slot statically. */
     if (trapping) myl_qbe_fail(ctx, "R_REFERENCE_COUNT_LIMIT");
-    myl_qbe_rc_frame_cleanup(ctx, &frame);
-    myl_qbe_rc_frame_leave(ctx, &frame);
+    myl_rc_scope *const mine[] = {&scope};
+    myl_qbe_rc_scopes_close(ctx, mine, 1);
+    myl_qbe_rc_slot_drop(ctx, &slot);
     return 42;
 }
 int main(int argc, char **argv) {

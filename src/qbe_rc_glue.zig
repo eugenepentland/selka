@@ -35,8 +35,8 @@ const load_below = " %v{d} =l sub %v{d}, {d}\n %v{d} =l loadl %v{d}\n";
 const mask = " %v{d} =l and %v{d}, {d}\n";
 const load_word = @import("qbe_format.zig").load_word;
 
-/// Journal roles (MYL_QBE_RC_*): a frame-private loan and a hold-pointer H
-/// token; the generated slot glue dispatches on the same values.
+/// Frame role words (MYL_QBE_RC_*): a frame-private loan and a hold-pointer H
+/// token; a static drop of either returns its holds through unloan glue.
 pub const loan_role: u32 = 16;
 /// The H-token role of a one-word hold-pointer slot.
 pub const hold_role: u32 = 8;
@@ -194,14 +194,6 @@ pub fn uniqueFast(comptime E: type, self: *E, address: usize, label: usize) Erro
 /// Close a uniqueFast region after the caller's helper and its success check.
 pub fn uniqueJoin(comptime E: type, self: *E, label: usize) Error!void {
     if (!runtime.counting()) try self.print("@rcgunique{d}\n", .{label});
-}
-
-/// Release one live frame journal entry (its guard already tested) through
-/// the glue of the type it is expected to hold; the glue falls back to the
-/// runtime's generic slot drop for any other type or role.
-pub fn slotDrop(comptime E: type, self: *E, ty: typed.Type, entry: usize) Error!void {
-    try marker(E, self, .slot_drop);
-    try self.print(" call ${s}{s}(l %ctx, l %v{d})\n", .{ try self.descriptor(ty), glue.Operation.slot_drop.suffix(), entry });
 }
 
 /// Map a sticky RC refusal before any compiler ownership guard changes.

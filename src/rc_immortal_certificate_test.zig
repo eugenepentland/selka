@@ -100,12 +100,12 @@ test "RC immortal calls target separate raw unit while canonical stays owned" {
     defer manifest.deinit();
     const constant = try named(manifest.value, "empty", "_rc_immortal");
     const anchored = try named(manifest.value, "pick", "_rc_borrow");
-    try t.expect(std.mem.indexOf(u8, constant, "call $myl_qbe_rc_frame_enter") == null);
+    try t.expect(std.mem.indexOf(u8, constant, "# rc-frame") == null);
     try t.expect(std.mem.indexOf(u8, constant, "# myl-lit ") != null);
     try t.expect(std.mem.indexOf(u8, constant, "call $myl_qbe_fail_frame") != null);
-    try t.expect(std.mem.indexOf(u8, anchored, "call $myl_qbe_rc_frame_enter") == null);
+    try t.expect(std.mem.indexOf(u8, anchored, "# rc-frame") == null);
     try t.expect(std.mem.indexOf(u8, anchored, "_rc_immortal(l %ctx") != null);
-    try t.expect(std.mem.indexOf(u8, try named(manifest.value, "empty", ""), "call $myl_qbe_rc_frame_enter") != null);
+    try t.expect(std.mem.indexOf(u8, try named(manifest.value, "empty", ""), "# rc-frame") != null);
 }
 
 const Change = enum { none, shape, dependency, unavailable, traced };

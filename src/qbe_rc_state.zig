@@ -24,6 +24,8 @@ pub const EmissionPlan = struct {
     dictionary_tails: []const @import("rc_dictionary_tail.zig").Certificate = &.{},
     append_loops: []const @import("rc_append_loop.zig").Certificate = &.{},
     readonly: ?@import("rc_readonly_calls.zig").Certificate = null,
+    /// Fills of the receiver place scopes whose records this frame owns.
+    scope_records: []const usize = &.{},
 };
 /// Final immutable plan and reusable lowering scratch, owned by the function arena.
 pub const State = struct {
@@ -73,6 +75,7 @@ pub fn build(comptime E: type, self: *E, capacity: usize) Error!*State {
     state.plan.append_loops = &.{};
     state.plan.readonly = null;
     state.plan.records = .{};
+    state.plan.scope_records = &.{};
     state.plan.journal = try journal.build(a, state.plan.locals.storage, state.operands);
     state.plan.records.transfers = try @import("rc_field_transfer.zig").build(E, self, &state.catalog);
     state.plan.records.writes = try @import("rc_plain_record_write.zig").build(E, self, &state.catalog, state.plan.locals);

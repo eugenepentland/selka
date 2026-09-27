@@ -94,6 +94,7 @@ void myl_rc_heap_destroy(myl_native_heap *heap) {
     myl_rc_drain(heap);
     myl_rc_state *state = heap->rc;
     myl_rc_invariant(!state->scopes && !state->walk.depth && !state->dead.active);
+    myl_rc_scope_spares_release(heap);
     if (state->allocator.hooks.destroy) state->allocator.hooks.destroy(heap);
     while (state->metadata.batches) {
         myl_rc_batch *batch = state->metadata.batches;
@@ -102,15 +103,21 @@ void myl_rc_heap_destroy(myl_native_heap *heap) {
     }
     myl_rc_meta_free(heap, state->walk.frames, state->walk.capacity * sizeof(myl_rc_frame));
     myl_rc_metadata_release(heap);
-    while (state->spare.entries) {
-        myl_rc_spare *spare = state->spare.entries;
-        state->spare.entries = spare->next;
-        free(spare);
-    }
     myl_rc_invariant(state->metadata.bytes == sizeof *state);
     heap->bytes -= sizeof *state;
     free(state);
     heap->rc = NULL;
+}
+void myl_rc_heap_teardown(myl_native_heap *heap) {
+    if (!heap->rc) return;
+    myl_rc_state *state = heap->rc;
+    myl_rc_scopes_abandon(heap);
+    state->dead.head = NULL;
+    state->dead.active = 0;
+    state->walk.depth = 0;
+    state->failure = MYL_RC_OK;
+    myl_rc_invariant(state->allocator.hooks.teardown != NULL);
+    state->allocator.hooks.teardown(heap);
 }
 myl_rc_status myl_rc_new(myl_native_heap *heap, const myl_rc_alloc_request *request, void **out) {
     size_t bytes;

@@ -84,7 +84,7 @@ test "RC fresh loop roots retain entry checks and real owner journals" {
     defer manifest.deinit();
     const grow = try named(manifest.value, "grow");
     try t.expect(std.mem.indexOf(u8, grow, "@ce") != null);
-    try t.expect(std.mem.indexOf(u8, grow, "myl_qbe_rc_frame_enter") != null);
+    try t.expect(std.mem.indexOf(u8, grow, "# rc-frame") != null);
     try t.expect(std.mem.indexOf(u8, grow, "myl_qbe_rc_unique_local") != null);
     const literal = try named(manifest.value, "literal");
     try t.expect(std.mem.indexOf(u8, literal, "myl_native_list_new") != null);

@@ -380,9 +380,12 @@ static void destroy(myl_native_heap *heap) {
     discharge(heap,sizeof *storage);
     free(storage);
 }
-static const myl_rc_allocator allocator={allocate,retire,destroy};
-void myl_rc_storage_visit(myl_native_heap *heap, myl_rc_extent_visitor visit, void *context) {
-    myl_rc_invariant(heap && heap->rc && heap->rc->allocator.hooks.allocate==allocate && visit);
+static void teardown(myl_native_heap *);
+static const myl_rc_allocator allocator={allocate,retire,destroy,teardown};
+/* The storage walks behind the public teardown API. The allocator's own
+ * teardown hook calls them directly: reaching it proves the storage is this
+ * allocator's even while a fault-injection probe wraps the allocate hook. */
+static void visit_extents(myl_native_heap *heap, myl_rc_extent_visitor visit, void *context) {
     rc_storage *storage=storage_of(heap);
     for (size_t i=0;i<RC_SLAB_CLASSES;i++)
         for (rc_slab *slab=storage->classes[i].all;slab;slab=slab->all.next) {
@@ -395,8 +398,11 @@ void myl_rc_storage_visit(myl_native_heap *heap, myl_rc_extent_visitor visit, vo
     for (rc_large *large=storage->large;large;large=large->next)
         visit(heap,(myl_rc_object *)(large+1)+1,context);
 }
-void myl_rc_storage_release_all(myl_native_heap *heap) {
-    myl_rc_invariant(heap && heap->rc && heap->rc->allocator.hooks.allocate==allocate);
+void myl_rc_storage_visit(myl_native_heap *heap, myl_rc_extent_visitor visit, void *context) {
+    myl_rc_invariant(heap && heap->rc && heap->rc->allocator.hooks.allocate==allocate && visit);
+    visit_extents(heap,visit,context);
+}
+static void release_extents(myl_native_heap *heap) {
     myl_rc_invariant(!heap->rc->dead.active && !heap->rc->walk.depth);
     rc_storage *storage=storage_of(heap);
     size_t released=0;
@@ -419,6 +425,31 @@ void myl_rc_storage_release_all(myl_native_heap *heap) {
     heap->objects_live-=released;
     heap->rc->dead.head=NULL;
     reuse_epoch(heap);
+}
+void myl_rc_storage_release_all(myl_native_heap *heap) {
+    myl_rc_invariant(heap && heap->rc && heap->rc->allocator.hooks.allocate==allocate);
+    release_extents(heap);
+}
+#if defined(MYL_NATIVE_RC_COUNTING) && MYL_NATIVE_RC_COUNTING
+/* A counting build retires each remaining object during trap teardown and
+ * releases its outstanding owners and holds, so a trapping run balances. A
+ * dying object's counts were already released when it was queued. */
+static void teardown_count(myl_native_heap *heap, void *payload, void *context) {
+    (void)context;
+    const myl_rc_object *object=(const myl_rc_object *)payload-1;
+    MYL_RC_STAT(heap,MYL_RC_STAT_RETIRE);
+    if (object->common.mark&MYL_RC_OBJECT_DYING) return;
+    MYL_RC_STAT_MANY(heap,MYL_RC_STAT_OWNER_RELEASE,object->owners);
+    MYL_RC_STAT_MANY(heap,MYL_RC_STAT_HOLD_RELEASE,object->holds);
+}
+#endif
+/* Trap teardown (see myl_rc_allocator.teardown): every slab, pool range and
+ * large extent goes back at once; nothing is walked, finalized or drained. */
+static void teardown(myl_native_heap *heap) {
+#if defined(MYL_NATIVE_RC_COUNTING) && MYL_NATIVE_RC_COUNTING
+    visit_extents(heap,teardown_count,NULL);
+#endif
+    release_extents(heap);
 }
 myl_rc_status myl_rc_storage_init(myl_native_heap *heap) {
     if (!budget(heap,sizeof(rc_storage))) return MYL_RC_ALLOCATION_REFUSED;

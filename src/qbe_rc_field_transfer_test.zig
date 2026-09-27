@@ -106,7 +106,7 @@ test "RC closed field owner moves only with complete physical source and commit 
     try t.expect(!contains(il[0..moved], "# RC-GLUE-1 loan"));
     try t.expect(!contains(il[0..moved], "# RC-GLUE-1 retain"));
     try t.expect(contains(il, "myl_qbe_rc_unique_local"));
-    try t.expect(contains(il, "myl_qbe_rc_frame_enter"));
+    try t.expect(contains(il, "# rc-frame"));
     try t.expect(!contains(try named(manifest.value, "observed"), marker));
     try t.expect(!contains(try named(manifest.value, "surviving"), marker));
     try t.expect(!contains(try named(manifest.value, "two_roots"), marker));
@@ -127,5 +127,5 @@ test "GC closed field shares keep their existing physical lowering" {
     var manifest = try emitted();
     defer manifest.deinit();
     try t.expect(!contains(try named(manifest.value, "closed"), marker));
-    try t.expect(!contains(try named(manifest.value, "closed"), "myl_qbe_rc_frame_enter"));
+    try t.expect(!contains(try named(manifest.value, "closed"), "# rc-frame"));
 }

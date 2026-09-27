@@ -101,7 +101,7 @@ fn named(manifest: Manifest, name: []const u8) ![]const u8 {
     return error.TestUnexpectedResult;
 }
 fn rawReader(il: []const u8) bool {
-    return std.mem.indexOf(u8, il, "call $myl_qbe_rc_frame_enter") == null and
+    return std.mem.indexOf(u8, il, "# rc-frame") == null and
         std.mem.indexOf(u8, il, "call $myl_rc_native_loan") == null and
         std.mem.indexOf(u8, il, "call $myl_rc_native_retain") == null and
         std.mem.indexOf(u8, il, "# RC-GLUE-1 loan") == null and
@@ -226,7 +226,7 @@ test "RC readonly managed calls select public alternates without ownership journ
     try t.expect(rawReader(selected));
     try t.expectEqual(@as(usize, 2), std.mem.count(u8, selected, "_rc_borrow(l %ctx"));
     // The canonical managed helper remains independently owned.
-    try t.expect(std.mem.indexOf(u8, try named(output.value, "pick"), "call $myl_qbe_rc_frame_enter") != null);
+    try t.expect(std.mem.indexOf(u8, try named(output.value, "pick"), "# rc-frame") != null);
 }
 
 // spec-case: RC-READONLY-MANAGED-CALLS-1

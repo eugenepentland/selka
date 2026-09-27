@@ -20,4 +20,9 @@ void myl_native_arena_sync(myl_native_heap *);
  * the runtime can give back without losing a live allocation. */
 void myl_native_arena_reclaim(myl_native_heap *);
 void myl_native_arena_destroy(myl_native_heap *);
+/* Trap teardown for the RC heap: close every open region at once without
+ * finalizing an object or releasing an edge. The resource registry closes
+ * what those objects held, and the RC heap's own teardown retires what they
+ * pointed at, so nothing a region held is visited here. */
+void myl_native_arena_discard(myl_native_heap *);
 #endif

@@ -49,7 +49,7 @@ test "RC-ADMISSION-1 cold guards drop unique and counted incoming edges before t
     const fail = try location(code, "call $myl_qbe_fail_frame");
     try t.expect(try location(code, "call $myl_native_owned_drop") < fail);
     try t.expect(try location(code, "# RC-GLUE-1 drop") < fail);
-    try t.expect(try location(code, "call $myl_qbe_rc_frame_enter") > fail);
+    try t.expect(try location(code, "# rc-frame") > fail);
     const wide = try named(manifest.value, "wide");
     const allocation = try location(wide, "call $myl_qbe_frame_try_allocate");
     const refusal = wide[allocation..];
@@ -69,7 +69,7 @@ test "RC-ADMISSION-1 indirect calls disarm consumed operand ownership before inv
     const call = try location(code, " call %v");
     const prefix = code[0..call];
     const guard = std.mem.lastIndexOf(u8, prefix, " storew 0,") orelse return error.TestUnexpectedResult;
-    try t.expect(guard > try location(code, "call $myl_qbe_rc_frame_enter"));
+    try t.expect(guard > try location(code, "# rc-frame"));
     try t.expect(call - guard < 100);
 }
 

@@ -21,6 +21,7 @@ test {
     _ = @import("native_argv_test.zig");
     _ = @import("view_cycles_test.zig");
     _ = @import("qbe_runtime_rc_test.zig");
+    _ = @import("rc_trap_teardown_test.zig");
     _ = @import("native_rc_codecs_test.zig");
     _ = @import("native_rc_host_test.zig");
     _ = @import("native_test_cli_test.zig");

@@ -110,6 +110,7 @@ struct myl_rc_state {
     struct { myl_rc_frame *frames; size_t capacity, depth; } walk;
     struct { myl_rc_object *head; int active; } dead;
     myl_rc_scope *scopes;
+    /* Released scope journal nodes kept for the next capture (RC-SCOPE-SPARE-1). */
     struct { myl_rc_spare *entries; size_t count; } spare;
     myl_rc_status failure;
 #if defined(MYL_NATIVE_RC_COUNTING) && MYL_NATIVE_RC_COUNTING
@@ -364,6 +365,13 @@ void myl_rc_metadata_release(myl_native_heap *);
 /* Private identity hint only; clients must repeat all operation admission. */
 const myl_rc_descriptor *myl_rc_descriptor_repeat(const myl_native_heap *, const myl_native_type *);
 void myl_rc_scopes_close_region(myl_native_heap *, unsigned);
+/* Trap teardown: unlink every active scope and free its journal while the
+ * frames holding the scope records are still live, without restoring a pin
+ * or releasing a hold. Heap teardown retires what the scopes held; a later
+ * scope end on an abandoned record is a no-op. */
+void myl_rc_scopes_abandon(myl_native_heap *);
+/* Free the retained (uncharged) scope journal spares; heap destroy calls it. */
+void myl_rc_scope_spares_release(myl_native_heap *);
 myl_rc_status myl_rc_scope_extend(myl_rc_scope *, void *boundary, myl_rc_status (*)(myl_rc_scope *, void *));
 /* Release one H token and enqueue death without callbacks; caller drains. */
 void myl_rc_hold_edge_release(myl_native_heap *, void *);

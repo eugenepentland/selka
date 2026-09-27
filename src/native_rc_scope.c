@@ -1,4 +1,5 @@
 #include "native_rc_internal.h"
+#include <stdlib.h>
 #include <string.h>
 
 typedef struct scope_entry {
@@ -6,8 +7,10 @@ typedef struct scope_entry {
     myl_rc_pin pin;
     unsigned pinned;
 } scope_entry;
-/* Journal nodes are recycled through a bounded, uncharged spare list; see
- * myl_rc_spare. A recycled node is admitted and charged like a fresh one. */
+/* RC-SCOPE-SPARE-1: journal nodes are recycled through a bounded, uncharged
+ * spare list (see myl_rc_spare), so a receiver statement in a loop reaches the
+ * host allocator only on its first iteration. A recycled node is admitted and
+ * charged like a fresh one, and giving one back discharges it. */
 static scope_entry *entry_take(myl_native_heap *heap) {
     myl_rc_spare *spare = heap->rc->spare.entries;
     if (!spare) return myl_rc_meta_alloc(heap, sizeof(scope_entry));
@@ -31,6 +34,14 @@ static void entry_give(myl_native_heap *heap, scope_entry *entry) {
     ++heap->rc->spare.count;
 }
 _Static_assert(sizeof(scope_entry) >= sizeof(myl_rc_spare), "spare link fits a journal node");
+void myl_rc_scope_spares_release(myl_native_heap *heap) {
+    while (heap->rc->spare.entries) {
+        myl_rc_spare *spare = heap->rc->spare.entries;
+        heap->rc->spare.entries = spare->next;
+        free(spare);
+    }
+    heap->rc->spare.count = 0;
+}
 static void restore(scope_entry *entry) {
     if (!entry->pinned || !entry->pin.hold.payload) return;
     myl_native_object *header = (myl_native_object *)entry->pin.hold.payload - 1;
@@ -111,6 +122,24 @@ void myl_rc_scope_end(myl_rc_scope *scope) {
     scope->previous = NULL;
     unwind(scope, NULL);
     myl_rc_drain(heap);
+}
+void myl_rc_scopes_abandon(myl_native_heap *heap) {
+    if (!heap || !heap->rc) return;
+    myl_rc_scope *scope = heap->rc->scopes;
+    heap->rc->scopes = NULL;
+    while (scope) {
+        myl_rc_scope *previous = scope->previous;
+        scope_entry *entry = scope->journal;
+        while (entry) {
+            scope_entry *older = entry->previous;
+            entry_give(heap, entry);
+            entry = older;
+        }
+        scope->journal = NULL;
+        scope->previous = NULL;
+        scope->active = 0;
+        scope = previous;
+    }
 }
 void myl_rc_scopes_close_region(myl_native_heap *heap, unsigned region) {
     myl_rc_scope *boundary = heap->rc->scopes;
@@ -234,6 +263,7 @@ static myl_rc_status scope_prepare(myl_rc_scope *scope, const myl_rc_place *plac
     size_t count, bytes;
     if (!myl_rc_size_add(place->count, 1, &count) || !myl_rc_size_mul(count, sizeof(prepare_frame), &bytes))
         return MYL_RC_ALLOCATION_REFUSED;
+    /* A short path walks in local frames; only a long one charges metadata. */
     prepare_frame local[8];
     prepare_frame *frames = count <= sizeof local / sizeof *local ? local : myl_rc_meta_alloc(scope->heap, bytes);
     if (!frames) return MYL_RC_ALLOCATION_REFUSED;

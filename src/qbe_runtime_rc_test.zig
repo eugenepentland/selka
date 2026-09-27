@@ -10,7 +10,8 @@ test "RC startup registers metadata and preserves count region and budget failur
 
 // spec: RC-FRAME-1
 // spec: RC-UNIQUE-IN-PLACE-1
-test "RC frame unwind restores scopes before releasing guarded owners and resources" {
+// spec-case: RC-SCOPE-SPARE-1
+test "RC frame exits restore scopes before guarded releases and traps tear the heap down" {
     try std.testing.expectEqual(@as(c_int, 20), myl_qbe_rc_frame_verify());
 }
 

@@ -63,9 +63,9 @@ test "RC read bytes versions suppress only the guarded fast operand drop" {
     try t.expect(std.mem.indexOf(u8, text[mark..fast], ", 0\n") != null);
     try t.expect(std.mem.indexOf(u8, text[mark..fast], "storew") == null);
     try t.expect(std.mem.indexOf(u8, text[mark..fast], "@oi") != null);
-    try t.expect(std.mem.indexOf(u8, text[fast..original], "slot_drop(l %ctx") == null);
+    try t.expect(std.mem.indexOf(u8, text[fast..original], "@rcslotdrop") == null);
     try t.expect(std.mem.indexOf(u8, text[fast..original], "myl_qbe_fail_index_bounds") == null);
-    try t.expect(std.mem.indexOf(u8, text[original..], "slot_drop(l %ctx") != null);
+    try t.expect(std.mem.indexOf(u8, text[original..], "@rcslotdrop") != null);
     try t.expect(std.mem.indexOf(u8, text[original..], "myl_qbe_fail_index_bounds") != null);
 }
 

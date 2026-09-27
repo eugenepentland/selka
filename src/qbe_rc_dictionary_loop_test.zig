@@ -33,7 +33,7 @@ test "RC dictionary loop only hoists direct fresh unexposed roots" {
     try t.expectEqual(@as(usize, 1), std.mem.count(u8, il[entry..], "call $myl_qbe_rc_unique_local"));
     try t.expectEqual(@as(usize, 1), std.mem.count(u8, il, "# RC-DICTIONARY-TAIL-1"));
     try t.expectEqual(@as(usize, 2), std.mem.count(u8, il, "# RC-DICTIONARY-KEY-1"));
-    try t.expect(std.mem.indexOf(u8, il, "call $myl_qbe_rc_frame_enter") != null);
+    try t.expect(std.mem.indexOf(u8, il, "# rc-frame") != null);
     try t.expect(std.mem.indexOf(u8, il, "call $myl_native_dictionary_write") != null);
     try t.expect(std.mem.indexOf(u8, il, "@fi") == null);
     try t.expectEqual(@as(usize, 5), std.mem.count(u8, il, "# RC-DICTIONARY-EMPTY-DROPS-1"));
@@ -50,12 +50,10 @@ test "RC dictionary empty drops retain exact benchmark setup later H iteration a
     defer result.deinit();
     const il = try body(result.value, "main");
     try t.expectEqual(@as(usize, 5), std.mem.count(u8, il, "# RC-DICTIONARY-EMPTY-DROPS-1"));
-    try t.expect(std.mem.indexOf(u8, il, "%rcentries =l alloc8 416") != null);
-    try t.expect(std.mem.indexOf(u8, il, "%rcguards =l alloc8 104") != null);
-    try t.expect(std.mem.indexOf(u8, il, "call $myl_qbe_rc_frame_enter") != null);
+    try t.expect(std.mem.indexOf(u8, il, "# rc-frame 13\n") != null);
     const entry = std.mem.indexOf(u8, il, "\n@ce") orelse return error.TestUnexpectedResult;
     const last = std.mem.lastIndexOf(u8, il, "# RC-DICTIONARY-EMPTY-DROPS-1") orelse return error.TestUnexpectedResult;
-    try t.expect(std.mem.indexOf(u8, il[0..entry], "slot_drop(l %ctx") != null);
+    try t.expect(std.mem.indexOf(u8, il[0..entry], "@rcslotdrop") != null);
     try t.expect(std.mem.indexOf(u8, il[last..], "# RC-GLUE-1 hold") != null);
-    try t.expect(std.mem.indexOf(u8, il[last..], "slot_drop(l %ctx") != null);
+    try t.expect(std.mem.indexOf(u8, il[last..], "@rcslotdrop") != null);
 }

@@ -18,11 +18,15 @@ typedef struct {
 } myl_rc_counters;
 #if defined(MYL_NATIVE_RC_COUNTING) && MYL_NATIVE_RC_COUNTING
 void myl_rc_stats_record(const myl_native_heap *, myl_rc_stat_event);
+/* Record `count` events at once (trap teardown's bulk retire and release). */
+void myl_rc_stats_record_many(const myl_native_heap *, myl_rc_stat_event, uint64_t count);
 #define MYL_RC_STAT(heap,event) myl_rc_stats_record((heap),(event))
+#define MYL_RC_STAT_MANY(heap,event,count) myl_rc_stats_record_many((heap),(event),(count))
 #define MYL_RC_STAT_WHEN(heap,event,condition) do { if (condition) MYL_RC_STAT(heap,event); } while (0)
 #else
 /* Disabled artifacts have neither counter storage nor event calls/branches. */
 #define MYL_RC_STAT(heap,event) ((void)0)
+#define MYL_RC_STAT_MANY(heap,event,count) ((void)0)
 #define MYL_RC_STAT_WHEN(heap,event,condition) ((void)0)
 #endif
 /* Disabled or non-RC heaps return zero and an all-zero snapshot. */

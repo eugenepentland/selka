@@ -153,7 +153,7 @@ test "RC-BORROW-COMPOSE-1 raw caller invokes borrowed managed and canonical scal
     try t.expectEqual(@as(usize, 2), std.mem.count(u8, borrowed.il, scalar_call));
     try t.expect(std.mem.indexOf(u8, borrowed.il, "call $myl_rc_native_") == null);
     try t.expect(std.mem.indexOf(u8, rank.il, "call $myl_rc_native_") == null);
-    try t.expect(std.mem.indexOf(u8, rank.il, "call $myl_qbe_rc_frame_enter") == null);
+    try t.expect(std.mem.indexOf(u8, rank.il, "# rc-frame") == null);
     try t.expectError(error.TestUnexpectedResult, namedEntry(manifest.value, "rank", true));
 }
 

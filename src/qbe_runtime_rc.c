@@ -10,11 +10,7 @@ _Static_assert(offsetof(MylQbeRcSlot, type) == MYL_QBE_RC_SLOT_TYPE_OFFSET, "RC 
 _Static_assert(offsetof(MylQbeRcSlot, address) == MYL_QBE_RC_SLOT_ADDRESS_OFFSET, "RC slot address");
 _Static_assert(offsetof(MylQbeRcSlot, initialized) == MYL_QBE_RC_SLOT_INITIALIZED_OFFSET, "RC slot guard");
 _Static_assert(offsetof(MylQbeRcSlot, flags) == MYL_QBE_RC_SLOT_FLAGS_OFFSET, "RC slot flags");
-_Static_assert(sizeof(MylQbeRcFrame) == MYL_QBE_RC_FRAME_BYTES, "RC frame journal size");
-_Static_assert(offsetof(MylQbeRcFrame, previous) == MYL_QBE_RC_FRAME_PREVIOUS_OFFSET, "RC frame previous");
-_Static_assert(offsetof(MylQbeRcFrame, entries) == MYL_QBE_RC_FRAME_ENTRIES_OFFSET, "RC frame entries");
-_Static_assert(offsetof(MylQbeRcFrame, count) == MYL_QBE_RC_FRAME_COUNT_OFFSET, "RC frame count");
-_Static_assert(offsetof(MylQbeRcFrame, scope_checkpoint) == MYL_QBE_RC_FRAME_SCOPE_OFFSET, "RC frame scope");
+_Static_assert(offsetof(myl_rc_scope, active) == MYL_QBE_RC_SCOPE_ACTIVE_OFFSET, "RC scope active word");
 /* The compiler emits exactly one externally visible module in runtime_data.
  * A foreign/old artifact cannot enter RC with missing ownership metadata. */
 extern const myl_rc_module myl_rc_generated_module __attribute__((weak));
@@ -36,82 +32,76 @@ int myl_qbe_rc_initialize(void *context) {
     if (!ctx->heap.rc) return myl_qbe_rc_status(context, MYL_RC_ALLOCATION_REFUSED);
     return myl_qbe_rc_register(context, &myl_rc_generated_module);
 }
-void myl_qbe_rc_frame_enter(void *context, MylQbeRcFrame *frame, MylQbeRcSlot *entries, size_t count) {
+void myl_qbe_rc_drop_role(void *context, const myl_native_type *type, void *address, unsigned flags) {
     MylQbeContext *ctx = context;
-    myl_rc_invariant(ctx && ctx->heap.rc && frame && (!count || entries));
-    *frame = (MylQbeRcFrame){.previous = ctx->rc_frames, .entries = entries, .count = count,
-        .scope_checkpoint = myl_rc_scope_current(&ctx->heap)};
-    ctx->rc_frames = frame;
-}
-void myl_qbe_rc_frame_leave(void *context, MylQbeRcFrame *frame) {
-    MylQbeContext *ctx = context;
-    myl_rc_invariant(ctx && frame && ctx->rc_frames == frame);
-    myl_rc_invariant(myl_rc_scope_current(&ctx->heap) == frame->scope_checkpoint);
-    ctx->rc_frames = frame->previous;
-    *frame = (MylQbeRcFrame){0};
-}
-void myl_qbe_rc_slot_drop(void *context, MylQbeRcSlot *slot) {
-    MylQbeContext *ctx = context;
-    myl_rc_invariant(slot && slot->initialized);
-    if (!*slot->initialized) return;
-    *slot->initialized = 0;
-    myl_rc_invariant(slot->type && slot->address && !(slot->flags & ~31u));
-    if (slot->flags & MYL_QBE_RC_LOAN) {
-        myl_rc_invariant(slot->flags == MYL_QBE_RC_LOAN);
-        myl_rc_native_unloan(&ctx->heap, slot->type, slot->address);
+    myl_rc_invariant(type && address && !(flags & ~31u));
+    if (flags & MYL_QBE_RC_LOAN) {
+        myl_rc_invariant(flags == MYL_QBE_RC_LOAN);
+        myl_rc_native_unloan(&ctx->heap, type, address);
         return;
     }
-    if (slot->flags & MYL_QBE_RC_HOLD_POINTER) {
-        myl_rc_invariant(slot->flags == MYL_QBE_RC_HOLD_POINTER && slot->type->size == sizeof(void *));
+    if (flags & MYL_QBE_RC_HOLD_POINTER) {
+        myl_rc_invariant(flags == MYL_QBE_RC_HOLD_POINTER && type->size == sizeof(void *));
         myl_rc_hold hold;
-        memcpy(&hold.payload, slot->address, sizeof hold.payload);
-        memset(slot->address, 0, sizeof hold.payload);
+        memcpy(&hold.payload, address, sizeof hold.payload);
+        memset(address, 0, sizeof hold.payload);
         myl_rc_hold_release(&ctx->heap, &hold);
         return;
     }
-    if (slot->flags & MYL_QBE_RC_CONSTRUCTION) {
-        myl_rc_invariant(slot->flags == MYL_QBE_RC_CONSTRUCTION && slot->type->size == sizeof(void *));
+    if (flags & MYL_QBE_RC_CONSTRUCTION) {
+        myl_rc_invariant(flags == MYL_QBE_RC_CONSTRUCTION && type->size == sizeof(void *));
         void *payload;
-        memcpy(&payload, slot->address, sizeof payload);
-        memset(slot->address, 0, sizeof payload);
+        memcpy(&payload, address, sizeof payload);
+        memset(address, 0, sizeof payload);
         myl_rc_construction_abort(&ctx->heap, payload);
         return;
     }
-    if (slot->flags & MYL_QBE_RC_UNIQUE_DROP) myl_native_owned_drop(&ctx->heap, slot->type, slot->address);
-    if (slot->flags & MYL_QBE_RC_COUNTED) myl_rc_native_drop(&ctx->heap, slot->type, slot->address);
+    if (flags & MYL_QBE_RC_UNIQUE_DROP) myl_native_owned_drop(&ctx->heap, type, address);
+    if (flags & MYL_QBE_RC_COUNTED) myl_rc_native_drop(&ctx->heap, type, address);
 }
-void myl_qbe_rc_frame_cleanup(void *context, MylQbeRcFrame *frame) {
+void myl_qbe_rc_slot_drop(void *context, MylQbeRcSlot *slot) {
+    myl_rc_invariant(slot && slot->initialized);
+    if (!*slot->initialized) return;
+    *slot->initialized = 0;
+    myl_qbe_rc_drop_role(context, slot->type, slot->address, slot->flags);
+}
+void myl_qbe_rc_scopes_close(void *context, myl_rc_scope *const *mine, size_t count) {
     MylQbeContext *ctx = context;
-    myl_rc_invariant(ctx && frame && ctx->rc_frames == frame);
-    myl_rc_scope_unwind(&ctx->heap, frame->scope_checkpoint);
-    for (size_t i = frame->count; i; --i) {
-        MylQbeRcSlot *slot = &frame->entries[i - 1];
-        /* Most normal exits have transferred these tokens already. Preserve
-         * invalid-metadata diagnosis, but skip the full helper for empty slots. */
-        if (!slot->initialized || *slot->initialized) myl_qbe_rc_slot_drop(ctx, slot);
+    myl_rc_invariant(!count || mine);
+    myl_rc_scope *checkpoint = myl_rc_scope_current(&ctx->heap);
+    for (;;) {
+        size_t i = 0;
+        while (i < count && mine[i] != checkpoint) ++i;
+        if (!checkpoint || i == count) break;
+        checkpoint = checkpoint->previous;
     }
+    myl_rc_scope_unwind(&ctx->heap, checkpoint);
 }
-void myl_qbe_rc_unwind_to(void *context, MylQbeRcFrame *checkpoint) {
+void myl_qbe_rc_arena_scopes(void *context) {
     MylQbeContext *ctx = context;
-    while (ctx->rc_frames != checkpoint) {
-        MylQbeRcFrame *frame = ctx->rc_frames;
-        myl_rc_invariant(frame != NULL);
-        myl_rc_scope_unwind(&ctx->heap, frame->scope_checkpoint);
-        /* Unlink first: a resource callback may reenter guest execution. */
-        ctx->rc_frames = frame->previous;
-        for (size_t i = frame->count; i; --i) myl_qbe_rc_slot_drop(ctx, &frame->entries[i - 1]);
-        *frame = (MylQbeRcFrame){0};
-    }
+    myl_rc_invariant(ctx->heap.region_depth);
+    myl_rc_scopes_close_region(&ctx->heap, ctx->heap.region_depth);
 }
-void myl_qbe_rc_unwind(void *context) {
+void myl_qbe_rc_trap(void *context) {
     MylQbeContext *ctx = context;
-    myl_qbe_rc_unwind_to(ctx, NULL);
-    myl_rc_scope_unwind(&ctx->heap, NULL);
+    if (!ctx->heap.rc) return;
+    /* Guest frames are still live here; after the non-local exit they are not. */
+    myl_rc_scopes_abandon(&ctx->heap);
+}
+/* Nothing guest-visible remains after a trap: the registry has already closed
+ * every resource, so the heap is released wholesale instead of object by object. */
+static void teardown(MylQbeContext *ctx) {
+    myl_qbe_rc_trap(ctx);
+    myl_native_arena_discard(&ctx->heap);
+    ctx->heap.region_depth = 0;
+    memset(ctx->heap.text_scalars, 0, sizeof ctx->heap.text_scalars);
+    myl_rc_heap_teardown(&ctx->heap);
 }
 void myl_qbe_rc_finish(void *context) {
     MylQbeContext *ctx = context;
     if (!ctx->heap.rc) return;
-    myl_qbe_rc_unwind(ctx);
+    if (ctx->trap) { teardown(ctx); return; }
+    myl_rc_scope_unwind(&ctx->heap, NULL);
     myl_native_arena_release(&ctx->heap, 0);
     ctx->heap.region_depth = 0;
     for (size_t i = 0; i < 128; ++i) {
@@ -119,13 +109,6 @@ void myl_qbe_rc_finish(void *context) {
         ctx->heap.text_scalars[i] = NULL;
         myl_rc_owner_release(&ctx->heap, text);
     }
-}
-void myl_qbe_rc_arena_prepare(void *context, MylQbeRcFrame *frame, size_t watermark) {
-    MylQbeContext *ctx = context;
-    myl_rc_invariant(ctx->rc_frames == frame && watermark <= frame->count && ctx->heap.region_depth);
-    myl_rc_scopes_close_region(&ctx->heap, ctx->heap.region_depth);
-    for (size_t i = frame->count; i > watermark; --i)
-        myl_qbe_rc_slot_drop(ctx, &frame->entries[i - 1]);
 }
 /* Detachment replaces an existing value, so it must not shorten that value's
  * allocation lifetime merely because the mutation runs inside a younger arena.

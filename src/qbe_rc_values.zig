@@ -116,23 +116,17 @@ fn markWork(comptime E: type, self: *E, ty: typed.Type) Error!void {
     try frame.initialized(E, self, frame.pending(E, self), true);
 }
 
-/// Register a fresh pointer producer before any later fallible constructor step.
-/// One internal producer may be active; its children are owned by that producer.
+/// A fresh pointer producer before later fallible constructor steps. Only a
+/// trap can interrupt the construction, and a trap tears the whole heap down,
+/// so the partial value needs no frame registration (RC-TRAP-TEARDOWN-1).
 pub fn holdRuntime(comptime E: type, self: *E, ty: typed.Type, value: usize) Error!void {
-    if (frame.get(E, self) == null) return;
-    const address = self.temp();
-    try self.print(" storel %v{d}, %rcinternal\n %v{d} =l copy %rcinternal\n", .{ value, address });
-    const index = frame.pending(E, self) + 1;
-    try frame.entry(E, self, index, ty, address);
-    const flag = try frame.entryField(E, self, index, 24);
-    try self.print(" storew 4, %v{d}\n", .{flag});
-    try frame.initialized(E, self, frame.pending(E, self) + 1, true);
+    _ = self;
+    _ = ty;
+    _ = value;
 }
 /// Hand the internal producer to the generic post-operation result adoption.
-/// No fallible operation may intervene before that owned result is journaled.
 pub fn commitRuntime(comptime E: type, self: *E) Error!void {
-    if (frame.get(E, self) == null) return;
-    try frame.initialized(E, self, frame.pending(E, self) + 1, false);
+    _ = self;
 }
 
 /// Consume an owned operand token, or copy a borrowed operand, into pending storage.

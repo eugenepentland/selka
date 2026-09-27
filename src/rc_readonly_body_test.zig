@@ -77,7 +77,7 @@ test "RC-READONLY-BODY-1 recursive scalar reader has no ownership journal but re
     defer manifest.deinit();
     const count = try named(manifest.value, "count");
     try t.expect(!contains(count, "myl_rc_native_copy"));
-    try t.expect(!contains(count, "myl_qbe_rc_frame_enter"));
+    try t.expect(!contains(count, "# rc-frame"));
     try t.expect(!contains(count, " storeb "));
     try t.expect(contains(count, "myl_qbe_fail_frame"));
     try t.expect(contains(count, "call $"));
@@ -90,10 +90,10 @@ test "RC-READONLY-BODY-1 mutation allocation callback and owned result retain jo
     runtime.set(.rc);
     var manifest = try emitted();
     defer manifest.deinit();
-    try t.expect(contains(try named(manifest.value, "change"), "myl_qbe_rc_frame_enter"));
-    try t.expect(contains(try named(manifest.value, "allocated"), "myl_qbe_rc_frame_enter"));
-    try t.expect(contains(try named(manifest.value, "callback"), "myl_qbe_rc_frame_enter"));
-    try t.expect(contains(try named(manifest.value, "returned"), "myl_qbe_rc_frame_enter"));
+    try t.expect(contains(try named(manifest.value, "change"), "# rc-frame"));
+    try t.expect(contains(try named(manifest.value, "allocated"), "# rc-frame"));
+    try t.expect(contains(try named(manifest.value, "callback"), "# rc-frame"));
+    try t.expect(contains(try named(manifest.value, "returned"), "# rc-frame"));
 }
 
 // spec-case: RC-READONLY-BODY-1
@@ -103,10 +103,10 @@ test "RC-READONLY-BODY-1 only history-free inline union wrappers borrow" {
     runtime.set(.rc);
     var manifest = try emitted();
     defer manifest.deinit();
-    try t.expect(!contains(try named(manifest.value, "plain_variant"), "myl_qbe_rc_frame_enter"));
-    try t.expect(contains(try named(manifest.value, "variant"), "myl_qbe_rc_frame_enter"));
+    try t.expect(!contains(try named(manifest.value, "plain_variant"), "# rc-frame"));
+    try t.expect(contains(try named(manifest.value, "variant"), "# rc-frame"));
     try t.expect(contains(try named(manifest.value, "variant"), "# RC-GLUE-1 publish"));
-    try t.expect(contains(try named(manifest.value, "recursive_variant"), "myl_qbe_rc_frame_enter"));
+    try t.expect(contains(try named(manifest.value, "recursive_variant"), "# rc-frame"));
 }
 
 // spec: RC-SCALAR-LENGTH-BODY-1
@@ -140,6 +140,6 @@ test "RC scalar readonly body admits list lengths with managed element reads" {
     try t.expect(std.mem.indexOf(u8, il, "# RC-GLUE-1 loan") == null);
     try t.expect(std.mem.indexOf(u8, il, "call $myl_rc_native_retain") == null);
     try t.expect(std.mem.indexOf(u8, il, "# RC-GLUE-1 retain") == null);
-    try t.expect(std.mem.indexOf(u8, il, "call $myl_qbe_rc_frame_enter") == null);
+    try t.expect(std.mem.indexOf(u8, il, "# rc-frame") == null);
     try t.expect(std.mem.indexOf(u8, il, "call $myl_qbe_fail_normalized_index_bounds") != null);
 }

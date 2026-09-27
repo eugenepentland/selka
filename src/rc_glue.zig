@@ -40,8 +40,6 @@ pub const Operation = enum {
     list_set,
     /// Append one retained element (myl_rc_list_append's contract).
     list_append,
-    /// Release one live frame journal entry expected to hold this type.
-    slot_drop,
 
     /// The suffix a glue symbol carries after its type's descriptor symbol.
     pub fn suffix(self: Operation) []const u8 {
@@ -54,7 +52,6 @@ pub const Operation = enum {
             .publish => "_rcg_publish",
             .list_set => "_rcg_list_set",
             .list_append => "_rcg_list_append",
-            .slot_drop => "_rcg_slot_drop",
         };
     }
 };
@@ -68,7 +65,7 @@ const prelude =
     \\#include <string.h>
     \\/* RC-GLUE-1 generated ownership glue. Owner and hold counts are uintptr_t,
     \\ * and every token is a distinct stored pointer-sized word (a slot, field,
-    \\ * element, journal entry or loan copy) in the address space. Fewer than
+    \\ * element, frame slot or loan copy) in the address space. Fewer than
     \\ * 2^61 such words fit in a 64-bit address space, so a count can never reach
     \\ * UINTPTR_MAX and the fast paths carry no count-limit check or status. The
     \\ * invariants the runtime asserts on every operation (live object, no
@@ -283,19 +280,6 @@ const Generator = struct {
         try self.edges(ty, "dst", .retain);
         try self.print("return 1;\n}}\n", .{});
         if (element) try self.lists(name, size);
-        try self.slot(name, size);
-    }
-
-    /// A frame journal entry of this exact type: a loan (or a one-word H
-    /// token) unloans, an ordinary owner drops, and any other role or type
-    /// keeps the runtime's generic slot drop. The caller tested the guard.
-    fn slot(self: *Generator, name: []const u8, size: u64) Error!void {
-        try self.print("void {s}_rcg_slot_drop(void *context, MylQbeRcSlot *slot) {{\n", .{name});
-        try self.print("if (slot->type == &{s}) {{\nmyl_native_heap *heap = &((MylQbeContext *)context)->heap;\n", .{name});
-        const held: []const u8 = if (size == 8) " || slot->flags == MYL_QBE_RC_HOLD_POINTER" else "";
-        try self.print("if (slot->flags == MYL_QBE_RC_LOAN{s}) {{ *slot->initialized = 0; {s}_rcg_unloan(heap, slot->address); return; }}\n", .{ held, name });
-        try self.print("if (slot->flags == MYL_QBE_RC_COUNTED) {{ *slot->initialized = 0; {s}_rcg_drop(heap, slot->address); return; }}\n}}\n", .{name});
-        try self.print("myl_qbe_rc_slot_drop(context, slot);\n}}\n", .{});
     }
 
     /// List element writes with the runtime's contracts: set stages the new
