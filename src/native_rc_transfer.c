@@ -50,6 +50,17 @@ static myl_rc_status visit(transfer_walk *walk, const myl_rc_shape *shape, void 
     walk->depth = 0;
     if (shape->kind == MYL_RC_SHAPE_POINTER || shape->kind == MYL_RC_SHAPE_HOLD_POINTER)
         return action(walk, destination, source, shape->kind);
+    if (myl_rc_shallow_admits(shape)) {
+        myl_rc_shallow leaves = {.shape = shape, .tags = source};
+        size_t offset;
+        myl_rc_shape_kind kind;
+        while (myl_rc_shallow_next(&leaves, &offset, &kind)) {
+            myl_rc_status status = action(walk, (unsigned char *)destination + offset,
+                                          (const unsigned char *)source + offset, kind);
+            if (status != MYL_RC_OK) return status;
+        }
+        return MYL_RC_OK;
+    }
     push(walk, shape, destination, source);
     while (walk->depth) {
         transfer_frame *frame = &walk->frames[walk->depth - 1];
@@ -448,6 +459,40 @@ static int pointer_fast(myl_native_heap *heap, void *destination, void *source,
     if (heap->rc->dead.head) myl_rc_drain(heap);
     return (int)status;
 }
+/* Semantic (direct-payload) publication of one ordinary pointer: the general
+ * transaction's queue_mark/finish_marks commit reduces to marking a reused
+ * mutable payload SHARED once its owner acquisition has succeeded. Pinned or
+ * younger-region payloads keep the general path; the negative result is
+ * private, never a runtime status. */
+static int pointer_semantic_fast(myl_native_heap *heap, void *destination, void *source,
+                                 unsigned region, myl_rc_transfer mode) {
+    myl_rc_invariant(heap && heap->rc && destination && source && destination != source);
+    if (region > heap->region_depth) return MYL_RC_REGION_ERROR;
+    void *payload;
+    memcpy(&payload, source, sizeof payload);
+    if (payload) {
+        myl_native_object *common = (myl_native_object *)payload - 1;
+        uintptr_t mark = common->mark;
+        if (!(mark & MYL_NATIVE_OBJECT_IMMORTAL)) {
+            unsigned origin = mark & MYL_NATIVE_OBJECT_ARENA ? myl_native_header_region(payload) : 0;
+            if (origin > region || (mark & MYL_NATIVE_OBJECT_PINNED)) return -1;
+            if (mode == MYL_RC_COPY && !origin) {
+                myl_rc_status status = myl_rc_owner_acquire(heap, payload);
+                if (status != MYL_RC_OK) {
+                    memset(destination, 0, sizeof payload);
+                    myl_rc_drain_pending(heap);
+                    return (int)status;
+                }
+            }
+            if (!(mark & MYL_NATIVE_OBJECT_SHARED) && myl_rc_native_mutable(payload))
+                common->mark |= MYL_NATIVE_OBJECT_SHARED;
+        }
+    }
+    memcpy(destination, &payload, sizeof payload);
+    if (mode == MYL_RC_TAKE) memset(source, 0, sizeof payload);
+    myl_rc_drain_pending(heap);
+    return MYL_RC_OK;
+}
 static myl_rc_status transfer(myl_native_heap *heap, myl_rc_slot *destination,
                               const myl_rc_slot *source, myl_rc_transfer mode, unsigned escaping, unsigned semantic) {
     myl_rc_invariant(heap && heap->rc && destination && source && destination->address && source->address);
@@ -457,6 +502,10 @@ static myl_rc_status transfer(myl_native_heap *heap, myl_rc_slot *destination,
     if (destination->region > heap->region_depth) return MYL_RC_REGION_ERROR;
     if (!semantic && shape->kind == MYL_RC_SHAPE_POINTER) {
         int fast = pointer_fast(heap, destination->address, source->address, destination->region, mode);
+        if (fast >= 0) return (myl_rc_status)fast;
+    }
+    if (semantic == 1 && !escaping && shape->kind == MYL_RC_SHAPE_POINTER) {
+        int fast = pointer_semantic_fast(heap, destination->address, source->address, destination->region, mode);
         if (fast >= 0) return (myl_rc_status)fast;
     }
     clone_work work = {0};

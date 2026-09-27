@@ -85,15 +85,17 @@ typedef struct myl_rc_batch {
 } myl_rc_batch;
 /* Open-addressed pointer map with a power-of-two capacity kept at most half
  * full. An empty map points at a shared one-slot sentinel, so a lookup is a
- * multiply, a mask and a probe with no emptiness branch. Keys are never NULL. */
+ * multiply, a shift and a probe with no emptiness branch. The home slot is
+ * the product's top bits (Fibonacci hashing): shift is 64 - log2(capacity),
+ * or 63 with mask 0 for the sentinel. Keys are never NULL. */
 typedef struct { const void *key, *value; } myl_rc_map_entry;
-typedef struct { const myl_rc_map_entry *entries; size_t mask, count; } myl_rc_map;
+typedef struct { const myl_rc_map_entry *entries; size_t mask, count; unsigned shift; } myl_rc_map;
 extern const myl_rc_map_entry myl_rc_map_sentinel[1];
-static inline size_t myl_rc_map_home(const void *key, size_t mask) {
-    return (size_t)(((uintptr_t)key * UINT64_C(0x9e3779b97f4a7c15)) >> 32) & mask;
+static inline size_t myl_rc_map_home(const void *key, unsigned shift, size_t mask) {
+    return (size_t)(((uintptr_t)key * UINT64_C(0x9e3779b97f4a7c15)) >> shift) & mask;
 }
 static inline const void *myl_rc_map_get(const myl_rc_map *map, const void *key) {
-    size_t mask = map->mask, slot = myl_rc_map_home(key, mask);
+    size_t mask = map->mask, slot = myl_rc_map_home(key, map->shift, mask);
     for (;;) {
         const myl_rc_map_entry *entry = &map->entries[slot];
         if (entry->key == key) return entry->value;
@@ -149,6 +151,54 @@ static inline const myl_rc_shape *myl_rc_shape_find(const myl_native_heap *heap,
 static inline size_t myl_rc_registered_depth(const myl_rc_shape *registered) {
     return ((const myl_rc_shape_entry *)((const unsigned char *)registered -
         offsetof(myl_rc_shape_entry, shape)))->depth;
+}
+/* Frame-free traversal of a registered shape of depth <= 2: a pointer, or a
+ * record, variant or array whose direct children are pointers or pointer-free.
+ * Yields each live POINTER/HOLD_POINTER leaf in the generic walker's order;
+ * a variant tag is read from `tags` when its field is reached, as the walker
+ * does. Deeper shapes keep the walker. */
+typedef struct {
+    const myl_rc_shape *shape;
+    const unsigned char *tags;
+    size_t cursor;
+} myl_rc_shallow;
+static inline int myl_rc_shallow_admits(const myl_rc_shape *registered) {
+    return myl_rc_registered_depth(registered) <= 2;
+}
+static inline int myl_rc_shallow_next(myl_rc_shallow *walk, size_t *offset, myl_rc_shape_kind *kind) {
+    const myl_rc_shape *shape = walk->shape;
+    switch (shape->kind) {
+        case MYL_RC_SHAPE_POINTER: case MYL_RC_SHAPE_HOLD_POINTER:
+            if (walk->cursor++) return 0;
+            *offset = 0;
+            *kind = shape->kind;
+            return 1;
+        case MYL_RC_SHAPE_ARRAY:
+            if (walk->cursor == shape->as.array.count) return 0;
+            *offset = walk->cursor++ * shape->as.array.stride;
+            *kind = shape->as.array.element->kind;
+            return 1;
+        case MYL_RC_SHAPE_RECORD: case MYL_RC_SHAPE_VARIANT: {
+            int variant = shape->kind == MYL_RC_SHAPE_VARIANT;
+            const myl_rc_field *fields = variant ? shape->as.variant.fields : shape->as.record.fields;
+            size_t count = variant ? shape->as.variant.count : shape->as.record.count;
+            while (walk->cursor < count) {
+                const myl_rc_field *field = &fields[walk->cursor++];
+                if (field->shape->kind == MYL_RC_SHAPE_NONE) continue;
+                if (variant) {
+                    uint32_t tag;
+                    __builtin_memcpy(&tag, walk->tags + shape->as.variant.tag_offset, sizeof tag);
+                    if (field->tag != tag) continue;
+                }
+                *offset = field->offset;
+                *kind = field->shape->kind;
+                return 1;
+            }
+            return 0;
+        }
+        default:
+            return 0;
+    }
 }
 /* Inline forms of the count primitives for runtime-internal hot paths. They
  * perform exactly the public functions' checks, counts and statistics. */
@@ -212,6 +262,66 @@ static inline int myl_rc_unique_payload(const void *payload) {
     myl_rc_invariant(object->owners || object->holds);
     return object->owners <= 1;
 }
+/* Clear and release (enqueue only) every live leaf of one admitted flat
+ * value. Each tag is read before its edge is cleared: admission proved no
+ * leaf covers a tag word. The caller drains. */
+static inline __attribute__((always_inline)) void myl_rc_flat_release_one(myl_native_heap *heap,
+        const myl_rc_flat *flat, void *value) {
+    unsigned char *address = value;
+    for (unsigned live = myl_rc_flat_live(flat, address); live; live &= live - 1) {
+        void *payload;
+        void *edge = address + flat->offsets[__builtin_ctz(live)];
+        __builtin_memcpy(&payload, edge, sizeof payload);
+        __builtin_memset(edge, 0, sizeof payload);
+        myl_rc_owner_drop(heap, payload);
+    }
+}
+/* Value-sized copies and clears on the flat paths: word-multiple values up to
+ * 96 bytes use straight-line word moves instead of a library call. */
+static inline __attribute__((always_inline)) void myl_rc_copy_bytes(void *destination, const void *source, size_t bytes) {
+    if (bytes <= 96 && !(bytes & 7)) {
+        unsigned char *d = destination;
+        const unsigned char *s = source;
+        switch (bytes >> 3) {
+        case 12: __builtin_memcpy(d + 88, s + 88, 8); /* fall through */
+        case 11: __builtin_memcpy(d + 80, s + 80, 8); /* fall through */
+        case 10: __builtin_memcpy(d + 72, s + 72, 8); /* fall through */
+        case 9: __builtin_memcpy(d + 64, s + 64, 8); /* fall through */
+        case 8: __builtin_memcpy(d + 56, s + 56, 8); /* fall through */
+        case 7: __builtin_memcpy(d + 48, s + 48, 8); /* fall through */
+        case 6: __builtin_memcpy(d + 40, s + 40, 8); /* fall through */
+        case 5: __builtin_memcpy(d + 32, s + 32, 8); /* fall through */
+        case 4: __builtin_memcpy(d + 24, s + 24, 8); /* fall through */
+        case 3: __builtin_memcpy(d + 16, s + 16, 8); /* fall through */
+        case 2: __builtin_memcpy(d + 8, s + 8, 8); /* fall through */
+        case 1: __builtin_memcpy(d + 0, s + 0, 8); /* fall through */
+        default: return;
+        }
+    }
+    __builtin_memcpy(destination, source, bytes);
+}
+static inline __attribute__((always_inline)) void myl_rc_zero_bytes(void *destination, size_t bytes) {
+    if (bytes <= 96 && !(bytes & 7)) {
+        unsigned char *d = destination;
+        const uint64_t zero = 0;
+        switch (bytes >> 3) {
+        case 12: __builtin_memcpy(d + 88, &zero, 8); /* fall through */
+        case 11: __builtin_memcpy(d + 80, &zero, 8); /* fall through */
+        case 10: __builtin_memcpy(d + 72, &zero, 8); /* fall through */
+        case 9: __builtin_memcpy(d + 64, &zero, 8); /* fall through */
+        case 8: __builtin_memcpy(d + 56, &zero, 8); /* fall through */
+        case 7: __builtin_memcpy(d + 48, &zero, 8); /* fall through */
+        case 6: __builtin_memcpy(d + 40, &zero, 8); /* fall through */
+        case 5: __builtin_memcpy(d + 32, &zero, 8); /* fall through */
+        case 4: __builtin_memcpy(d + 24, &zero, 8); /* fall through */
+        case 3: __builtin_memcpy(d + 16, &zero, 8); /* fall through */
+        case 2: __builtin_memcpy(d + 8, &zero, 8); /* fall through */
+        case 1: __builtin_memcpy(d + 0, &zero, 8); /* fall through */
+        default: return;
+        }
+    }
+    __builtin_memset(destination, 0, bytes);
+}
 /* Drain only when a death is queued; myl_rc_drain repeats its own admission. */
 static inline void myl_rc_drain_pending(myl_native_heap *heap) {
     if (heap->rc->dead.head) myl_rc_drain(heap);
@@ -219,12 +329,20 @@ static inline void myl_rc_drain_pending(myl_native_heap *heap) {
 /* Metadata budget: admit checks the limit (marking exhaustion on refusal),
  * charge/discharge move heap->bytes and the metadata total together. */
 int myl_rc_meta_admit(myl_native_heap *, size_t);
+/* myl_rc_meta_admit's limit test without its exhaustion side effect. */
+static inline int myl_rc_meta_fits(const myl_native_heap *heap, size_t bytes) {
+    return bytes <= SIZE_MAX - heap->bytes && (!heap->limit || heap->bytes + bytes <= heap->limit);
+}
 void myl_rc_meta_charge(myl_native_heap *, size_t);
 void myl_rc_meta_discharge(myl_native_heap *, size_t);
 void *myl_rc_meta_alloc(myl_native_heap *, size_t);
 void myl_rc_meta_free(myl_native_heap *, void *, size_t);
-int myl_rc_size_add(size_t, size_t, size_t *);
-int myl_rc_size_mul(size_t, size_t, size_t *);
+static inline int myl_rc_size_add(size_t a, size_t b, size_t *out) {
+    return !__builtin_add_overflow(a, b, out);
+}
+static inline int myl_rc_size_mul(size_t a, size_t b, size_t *out) {
+    return !__builtin_mul_overflow(a, b, out);
+}
 int myl_rc_is_counted(const void *);
 size_t myl_rc_shape_depth(const myl_native_heap *, const myl_rc_shape *);
 /* Point every metadata map at the empty sentinel / free every map table. */

@@ -872,14 +872,14 @@ static void repeated_lookup_table_test(void) {
     heap.rc = &state;
     assert(!myl_rc_descriptor_repeat(&heap, &scalar_type) && !myl_rc_descriptor_find(&heap, NULL));
     myl_rc_map_entry bindings[8] = {{0}}, shapes[8] = {{0}};
-    state.metadata.bindings = (myl_rc_map){.entries = bindings, .mask = 7};
-    state.metadata.shapes = (myl_rc_map){.entries = shapes, .mask = 7};
+    state.metadata.bindings = (myl_rc_map){.entries = bindings, .mask = 7, .shift = 61};
+    state.metadata.shapes = (myl_rc_map){.entries = shapes, .mask = 7, .shift = 61};
     assert(!myl_rc_descriptor_repeat(&heap, &scalar_type));
     myl_native_type types[512] = {0};
     const myl_native_type *keys[4];
     size_t count = 0;
     for (size_t i = 0; i < 512 && count < 4; ++i)
-        if (!myl_rc_map_home(&types[i], 7)) keys[count++] = &types[i];
+        if (!myl_rc_map_home(&types[i], 61, 7)) keys[count++] = &types[i];
     assert(count == 4);
     myl_rc_binding descriptors[3] = {0};
     for (unsigned i = 0; i < 3; ++i) {

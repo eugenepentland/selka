@@ -1179,8 +1179,31 @@ int myl_rc_list_storage_reserve(myl_native_heap *heap, myl_native_list *list, si
     list->capacity=capacity;
     return 1;
 }
+/* An append whose retain cannot run a callback (empty death queue: retaining
+ * creates no deaths) publishes straight into the reserved slot past the live
+ * prefix. A borrowed input inside the live prefix is re-addressed after
+ * growth; one inside the spare capacity keeps the staged path below, so the
+ * slot and the input never overlap. */
+static int rc_list_append_direct(myl_native_heap *heap, myl_native_list *list, const void *value, int *ok) {
+    size_t size=list->element->size;
+    if (!size || heap->rc->dead.head) return 0;
+    uintptr_t input=(uintptr_t)value, old=(uintptr_t)list->storage;
+    size_t extent=list->length*size, reserved=list->capacity*size;
+    if (old && input>=old && input-old<reserved && input-old>=extent) return 0;
+    int aliases=old && input>=old && input-old<extent;
+    size_t offset=aliases?(size_t)(input-old):0;
+    if (!myl_rc_list_storage_reserve(heap,list,list->length+1)) { *ok=0; return 1; }
+    if (aliases) value=(const unsigned char *)list->storage+offset;
+    unsigned char *slot=(unsigned char *)list->storage+extent;
+    myl_rc_invariant((uintptr_t)value+size<=(uintptr_t)slot || (uintptr_t)slot+size<=(uintptr_t)value);
+    *ok=myl_rc_native_retain(heap,list->element,slot,value,myl_native_header_region(list));
+    if (*ok) { list->length++; list->generation++; }
+    return 1;
+}
 static int rc_list_insert_at(myl_native_heap *heap, myl_native_list *list, size_t at, const void *value) {
     if (list->generation==UINT64_MAX || list->length==SIZE_MAX) return 0;
+    int direct=0;
+    if (at==list->length && rc_list_append_direct(heap,list,value,&direct)) return direct;
     size_t size=list->element->size;
     unsigned char local[128];
     void *staged=size<=sizeof local?local:myl_rc_storage_bytes(heap,size,0);

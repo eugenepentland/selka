@@ -24,8 +24,13 @@ const myl_rc_map_entry myl_rc_map_sentinel[1] = {{0}};
 static size_t map_capacity(const myl_rc_map *map) {
     return map->entries == myl_rc_map_sentinel ? 0 : map->mask + 1;
 }
+static unsigned map_shift(size_t capacity) {
+    unsigned shift = 64;
+    while (capacity > 1) { capacity >>= 1; --shift; }
+    return shift > 63 ? 63 : shift;
+}
 static size_t map_probe(const myl_rc_map_entry *entries, size_t mask, const void *key) {
-    size_t slot = myl_rc_map_home(key, mask);
+    size_t slot = myl_rc_map_home(key, map_shift(mask + 1), mask);
     while (entries[slot].key && entries[slot].key != key) slot = (slot + 1) & mask;
     return slot;
 }
@@ -58,13 +63,14 @@ static void map_discard(myl_native_heap *heap, map_growth *growth) {
 static void map_release(myl_native_heap *heap, myl_rc_map *map) {
     if (map_capacity(map))
         myl_rc_meta_free(heap, (void *)map->entries, map_capacity(map) * sizeof(myl_rc_map_entry));
-    *map = (myl_rc_map){.entries = myl_rc_map_sentinel};
+    *map = (myl_rc_map){.entries = myl_rc_map_sentinel, .shift = 63};
 }
 static void map_commit(myl_native_heap *heap, myl_rc_map *map, map_growth *growth) {
     if (!growth->entries) return;
     size_t count = map->count;
     map_release(heap, map);
-    *map = (myl_rc_map){.entries = growth->entries, .mask = growth->mask, .count = count};
+    *map = (myl_rc_map){.entries = growth->entries, .mask = growth->mask, .count = count,
+        .shift = map_shift(growth->mask + 1)};
     *growth = (map_growth){0};
 }
 /* The first registration of a key wins; a later identical key is ignored. */
@@ -78,7 +84,7 @@ static void map_insert(myl_rc_map *map, const void *key, const void *value) {
 }
 void myl_rc_metadata_init(myl_rc_state *state) {
     state->metadata.modules = state->metadata.shapes = state->metadata.bindings =
-        (myl_rc_map){.entries = myl_rc_map_sentinel};
+        (myl_rc_map){.entries = myl_rc_map_sentinel, .shift = 63};
 }
 void myl_rc_metadata_release(myl_native_heap *heap) {
     map_release(heap, &heap->rc->metadata.modules);

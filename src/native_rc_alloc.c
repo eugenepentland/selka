@@ -191,11 +191,11 @@ static inline void zero_payload(unsigned char *payload, size_t bytes) {
         default: memset(payload,0,bytes); return;
     }
 }
-/* Only the payload needs zero bytes: the prefix is written here, and bytes
- * past the payload in a slab slot are never read. */
+/* Write the prefix of a fresh allocation. Only the payload needs zero bytes
+ * (large extents arrive zeroed; slab callers zero first), and bytes past the
+ * payload in a slab slot are never read. */
 static void *initialize(myl_native_heap *heap, myl_rc_object *object,
                         const myl_native_type *element, size_t count, uintptr_t flags) {
-    if (!(flags&MYL_NATIVE_OBJECT_LARGE)) zero_payload((unsigned char *)(object+1),count*element->size);
     object->owners=1;
     object->holds=0;
     object->common=(myl_native_object){.mark=((uintptr_t)count<<MYL_NATIVE_OBJECT_COUNT_SHIFT)|flags,
@@ -218,6 +218,7 @@ static myl_rc_status allocate(myl_native_heap *heap, const myl_rc_alloc_request 
     size_t index=class_for(storage_of(heap),extent);
     myl_rc_object *object=index<RC_SLAB_CLASSES?slab_take(heap,index):large_take(heap,extent);
     if (!object) return MYL_RC_ALLOCATION_REFUSED;
+    if (index<RC_SLAB_CLASSES) zero_payload((unsigned char *)(object+1),extent-MYL_RC_PREFIX_BYTES);
     *out=initialize(heap,object,request->element,request->count,
         index==RC_SLAB_CLASSES?MYL_NATIVE_OBJECT_LARGE:0);
     return MYL_RC_OK;
@@ -250,6 +251,7 @@ void *myl_rc_storage_alloc(myl_native_heap *heap, const myl_native_type *element
         }
         myl_rc_object *object=slab_take(heap,index);
         if (!object) { myl_rc_record_failure(heap,MYL_RC_ALLOCATION_REFUSED); return NULL; }
+        zero_payload((unsigned char *)(object+1),element->size);
         void *payload=initialize(heap,object,element,1,0);
         MYL_RC_STAT(heap,MYL_RC_STAT_HEAP_ALLOCATE);
         return payload;
@@ -360,12 +362,31 @@ myl_rc_status myl_rc_storage_init(myl_native_heap *heap) {
     if (status!=MYL_RC_OK) myl_rc_heap_destroy(heap);
     return status;
 }
-void *myl_rc_storage_bytes(myl_native_heap *heap, size_t bytes, unsigned region) {
+/* Raw bytes are registered at initialization and own no edges, so a slab-sized
+ * heap request needs none of myl_rc_new's metadata or region admission. A
+ * block (zero == 0) leaves its payload unwritten: its caller writes every octet
+ * it reads (GC-NOZERO-1). Everything else takes the generic hook. */
+static void *raw_bytes(myl_native_heap *heap, size_t bytes, unsigned region, int zero) {
+    myl_rc_invariant(heap && heap->rc);
+    if (!region && heap->rc->allocator.hooks.allocate==allocate && bytes<=strides[RC_SLAB_CLASSES-1]-MYL_RC_PREFIX_BYTES) {
+        myl_rc_object *object=slab_take(heap,class_for(storage_of(heap),MYL_RC_PREFIX_BYTES+bytes));
+        if (!object) { myl_rc_record_failure(heap,MYL_RC_ALLOCATION_REFUSED); return NULL; }
+        if (zero) zero_payload((unsigned char *)(object+1),bytes);
+        void *payload=initialize(heap,object,&raw_type,bytes,0);
+        MYL_RC_STAT(heap,MYL_RC_STAT_HEAP_ALLOCATE);
+        return payload;
+    }
     void *result=NULL;
     myl_rc_alloc_request request={&raw_type,bytes,region};
     myl_rc_status status=myl_rc_new(heap,&request,&result);
     if (status!=MYL_RC_OK) myl_rc_record_failure(heap,status);
     return result;
+}
+void *myl_rc_storage_bytes(myl_native_heap *heap, size_t bytes, unsigned region) {
+    return raw_bytes(heap,bytes,region,1);
+}
+void *myl_rc_storage_block(myl_native_heap *heap, size_t bytes, unsigned region) {
+    return raw_bytes(heap,bytes,region,0);
 }
 void *myl_rc_storage_extend(myl_native_heap *heap, void *payload, size_t count) {
     if (!payload) return NULL;

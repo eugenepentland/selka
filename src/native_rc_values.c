@@ -73,8 +73,8 @@ static int flat_transfer(myl_native_heap *heap, const myl_rc_binding *binding,
             MYL_RC_STAT(heap,MYL_RC_STAT_OWNER_ACQUIRE);
         }
     }
-    memcpy(destination,source,bytes);
-    if (mode==MYL_RC_TAKE) memset(source,0,bytes);
+    myl_rc_copy_bytes(destination,source,bytes);
+    if (mode==MYL_RC_TAKE) myl_rc_zero_bytes(source,bytes);
     myl_rc_drain_pending(heap);
     return MYL_RC_OK;
 }
@@ -149,8 +149,8 @@ void myl_rc_native_drop(myl_native_heap *heap, const myl_native_type *type, void
         return;
     }
     if (binding->flat.count<=MYL_RC_FLAT_LEAVES) {
-        myl_rc_flat_edges_release(heap,binding,value,1);
-        memset(value,0,type->size);
+        myl_rc_flat_release_one(heap,&binding->flat,value);
+        myl_rc_zero_bytes(value,binding->flat.size);
         myl_rc_drain_pending(heap);
         return;
     }
@@ -169,7 +169,7 @@ static void flat_unloan(myl_native_heap *heap, const myl_rc_binding *binding, vo
         memset(edge, 0, sizeof payload);
         myl_rc_hold_drop(heap, payload);
     }
-    memset(value, 0, binding->flat.size);
+    myl_rc_zero_bytes(value, binding->flat.size);
     myl_rc_drain_pending(heap);
 }
 /* A loaned payload's own descriptor must have no finalizer. That needs a probe
@@ -193,7 +193,7 @@ static int flat_loan(myl_native_heap *heap, const myl_rc_binding *binding,
     if (dst > src ? dst - src < bytes : src - dst < bytes) return -1;
     /* One pass: the copied bytes already hold every leaf. A refusal clears the
      * leaves not yet acquired, so the unloan releases exactly the prefix. */
-    memcpy(destination, source, bytes);
+    myl_rc_copy_bytes(destination, source, bytes);
     const myl_rc_flat *flat = &binding->flat;
     for (unsigned rest = myl_rc_flat_live(flat, source); rest; rest &= rest - 1) {
         void *payload;
@@ -264,7 +264,7 @@ static int flat_retain(myl_native_heap *heap, const myl_rc_binding *binding,
         myl_rc_drain_pending(heap);
         return MYL_RC_REGION_ERROR;
     }
-    memcpy(destination, source, bytes);
+    myl_rc_copy_bytes(destination, source, bytes);
     const myl_rc_flat *flat = &binding->flat;
     myl_rc_status status = MYL_RC_OK;
     for (unsigned rest = myl_rc_flat_live(flat, source); rest; rest &= rest - 1) {
@@ -297,7 +297,7 @@ int myl_rc_native_retain(myl_native_heap *heap, const myl_native_type *type, voi
                 memset(dst, 0, bytes);
                 return publication_status(heap, MYL_RC_REGION_ERROR);
             }
-            memcpy(dst, src, bytes);
+            myl_rc_copy_bytes(dst, src, bytes);
             return 1;
         }
     }

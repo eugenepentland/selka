@@ -1006,7 +1006,7 @@ void *myl_native_heap_alloc_block(myl_native_heap *heap, size_t prefix, size_t e
     if (!myl_rc_enabled(heap)) return NULL;
 #endif
     if (prefix > SIZE_MAX - extra) return NULL;
-    if (myl_rc_enabled(heap)) return myl_rc_storage_bytes(heap,prefix+extra,heap->region_depth);
+    if (myl_rc_enabled(heap)) return myl_rc_storage_block(heap,prefix+extra,heap->region_depth);
     return alloc_object(heap, &block_type, prefix + extra, heap->region_depth, 0);
 }
 /* The list slot naming the one-slot segment whose whole payload is `payload`, or

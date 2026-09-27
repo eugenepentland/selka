@@ -11,17 +11,20 @@ typedef struct scope_entry {
 static scope_entry *entry_take(myl_native_heap *heap) {
     myl_rc_spare *spare = heap->rc->spare.entries;
     if (!spare) return myl_rc_meta_alloc(heap, sizeof(scope_entry));
-    if (!myl_rc_meta_admit(heap, sizeof(scope_entry))) return NULL;
+    if (!myl_rc_meta_fits(heap, sizeof(scope_entry))) { heap->exhausted = 1; return NULL; }
     heap->rc->spare.entries = spare->next;
     --heap->rc->spare.count;
-    myl_rc_meta_charge(heap, sizeof(scope_entry));
+    heap->bytes += sizeof(scope_entry);
+    heap->rc->metadata.bytes += sizeof(scope_entry);
     scope_entry *entry = (scope_entry *)spare;
     *entry = (scope_entry){0};
     return entry;
 }
 static void entry_give(myl_native_heap *heap, scope_entry *entry) {
     if (heap->rc->spare.count == MYL_RC_SPARE_ENTRIES) { myl_rc_meta_free(heap, entry, sizeof *entry); return; }
-    myl_rc_meta_discharge(heap, sizeof *entry);
+    myl_rc_invariant(heap->bytes >= sizeof *entry && heap->rc->metadata.bytes >= sizeof *entry);
+    heap->bytes -= sizeof *entry;
+    heap->rc->metadata.bytes -= sizeof *entry;
     myl_rc_spare *spare = (myl_rc_spare *)entry;
     spare->next = heap->rc->spare.entries;
     heap->rc->spare.entries = spare;
@@ -42,9 +45,10 @@ static void unwind(myl_rc_scope *scope, scope_entry *boundary) {
     while (head != boundary) {
         scope_entry *entry = head;
         head = entry->previous;
-        myl_rc_hold release = entry->pin.hold;
+        void *payload = entry->pin.hold.payload;
         entry_give(scope->heap, entry);
-        myl_rc_hold_release(scope->heap, &release);
+        myl_rc_hold_drop(scope->heap, payload);
+        myl_rc_drain_pending(scope->heap);
     }
 }
 void myl_rc_scope_begin(myl_native_heap *heap, myl_rc_scope *scope) {
@@ -62,9 +66,23 @@ static myl_rc_status capture(myl_rc_scope *scope, void *payload, unsigned pinned
     if (myl_native_header_region(payload) > scope->region) return MYL_RC_REGION_ERROR;
     scope_entry *entry = entry_take(scope->heap);
     if (!entry) return MYL_RC_ALLOCATION_REFUSED;
-    myl_rc_status status = pinned ? myl_rc_pin_acquire(scope->heap, payload, &entry->pin) :
-        myl_rc_hold_acquire(scope->heap, payload, &entry->pin.hold);
-    if (status != MYL_RC_OK) { entry_give(scope->heap, entry); return status; }
+    /* The pin/hold acquisition of myl_rc_pin_acquire/myl_rc_hold_acquire;
+     * immortal payloads were excluded above. */
+    if (myl_rc_counted(payload)) {
+        myl_rc_object *object = myl_rc_live(payload);
+        if (object->holds == MYL_RC_COUNT_MAX) {
+            MYL_RC_STAT(scope->heap, MYL_RC_STAT_HOLD_LIMIT);
+            entry_give(scope->heap, entry);
+            return MYL_RC_COUNT_LIMIT;
+        }
+        ++object->holds;
+        MYL_RC_STAT(scope->heap, MYL_RC_STAT_HOLD_ACQUIRE);
+    }
+    entry->pin.hold.payload = payload;
+    if (pinned) {
+        entry->pin.previous = header->mark & MYL_NATIVE_OBJECT_PINNED;
+        header->mark |= MYL_NATIVE_OBJECT_PINNED;
+    }
     entry->previous = scope->journal;
     entry->pinned = pinned;
     scope->journal = entry;

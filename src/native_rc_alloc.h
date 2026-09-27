@@ -8,6 +8,9 @@ myl_rc_status myl_rc_storage_init(myl_native_heap *);
 void *myl_rc_storage_alloc(myl_native_heap *, const myl_native_type *, size_t count, unsigned region);
 /* A raw backing has a stable byte descriptor, never a container's metadata. */
 void *myl_rc_storage_bytes(myl_native_heap *, size_t bytes, unsigned region);
+/* Raw bytes whose heap payload is left unwritten (arena payloads stay zero):
+ * the caller writes every octet it will read, as for a GC block. */
+void *myl_rc_storage_block(myl_native_heap *, size_t bytes, unsigned region);
 /* Grow exclusively owned, unheld backing. Refusal preserves the old block. */
 void *myl_rc_storage_extend(myl_native_heap *, void *, size_t count);
 /* Reserved storage, including allocator metadata; excludes RC core metadata. */

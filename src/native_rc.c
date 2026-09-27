@@ -16,16 +16,6 @@ _Static_assert(offsetof(myl_native_heap, arena_window) == MYL_NATIVE_HEAP_ARENA_
 void myl_rc_invariant_failed(void) {
     abort();
 }
-int myl_rc_size_add(size_t a, size_t b, size_t *out) {
-    if (a > SIZE_MAX - b) return 0;
-    *out = a + b;
-    return 1;
-}
-int myl_rc_size_mul(size_t a, size_t b, size_t *out) {
-    if (a && b > SIZE_MAX / a) return 0;
-    *out = a * b;
-    return 1;
-}
 int myl_rc_meta_admit(myl_native_heap *heap, size_t bytes) {
     size_t total;
     myl_rc_invariant(heap && heap->rc && bytes);
