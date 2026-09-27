@@ -1,0 +1,7 @@
+{
+  "base": "685e26311935cea0697726614a3897baff4f286f",
+  "compiler_sha256": "e6200732a5a4fccb315abc3e06091d0c2c909f60d2a3e31df76bf15247eb2c2f",
+  "fixture_sha256": "be52cae5a129f55d469512a77bd95f8e653b22116754369582cbda6136c91902",
+  "source_patch_sha256": "1d1d754bfc05ea27ab0374aebb36f1b37dd8344e28ff7aaad7ac95e170d8bdab",
+  "full_gate_pending": true
+}
