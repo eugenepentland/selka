@@ -15,6 +15,7 @@ test {
     _ = @import("native_rc_collections_test.zig");
     _ = @import("native_rc_arena_test.zig");
     _ = @import("native_rc_hold_test.zig");
+    _ = @import("native_rc_fast_test.zig");
     _ = @import("native_file_cleanup_test.zig");
     _ = @import("native_argv_test.zig");
     _ = @import("view_cycles_test.zig");
