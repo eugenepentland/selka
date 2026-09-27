@@ -1,0 +1,11 @@
+def work(out: Stream) -> int:
+    keys = ["a" + "-key"]
+    counts: dict[str, int] = {}
+    out.print("before")
+    for i in range(2):
+        key = keys[i]
+        counts[key] = counts.get(key, 0) + 1
+    return 0
+def main(out: Stream) -> int:
+    with arena():
+        return work(out)

@@ -1,0 +1,9 @@
+def update(times: int) -> int:
+    keys = ("key0" + ",key1,key2").split(",")
+    counts: dict[str, int] = {}
+    for i in range(times):
+        key = keys[i % 3]
+        counts[key] = counts.get(key, 0) + 1
+    return counts.get("key0", 0)
+def main() -> int:
+    return 0

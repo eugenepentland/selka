@@ -134,6 +134,7 @@ fn child(comptime E: type, self: *E, pc: usize, check: *Check) bool {
 /// The next store adopts this managed read as an anchored compiler loan.
 /// Its consumed index is plain, so the result's operand guard stays clear.
 pub fn borrowedResult(comptime E: type, self: *E, op: Op) Error!bool {
+    if (@import("rc_dictionary_tail.zig").borrowedRead(self.cow.?.rc.?.plan.dictionary_tails, self.pc)) return true;
     if (try @import("qbe_rc_plain_projection.zig").borrowed(E, self, op)) return true;
     if (op != .buffer_operation or op.buffer_operation.kind != .read) return false;
     const code = self.function.scope.instructions;
@@ -158,7 +159,8 @@ fn terminal(comptime E: type, self: *E, ty: typed.Type, catalog: *shapes.Catalog
     return !shape.counted and !shape.unique_drop;
 }
 
-fn scalar(comptime E: type, self: *E, op: Op, catalog: *shapes.Catalog) Error!bool {
+/// Closed scalar instruction grammar, shared by anchored read certificates.
+pub fn scalar(comptime E: type, self: *E, op: Op, catalog: *shapes.Catalog) Error!bool {
     return switch (op) {
         .push_i64,
         .push_bool,
@@ -191,7 +193,9 @@ fn scalar(comptime E: type, self: *E, op: Op, catalog: *shapes.Catalog) Error!bo
 pub fn store(comptime E: type, self: *E, index: usize, operand: usize) Error!bool {
     const state = self.cow.?.rc orelse return false;
     const ownership = state.plan.locals.entry[index].ownership;
-    if (ownership != .borrowed or ownership.borrowed != .storage) return false;
+    const key = @import("rc_dictionary_tail.zig").borrowedStore(state.plan.dictionary_tails, self.pc, index);
+    if (!key and (ownership != .borrowed or ownership.borrowed != .storage)) return false;
+    if (key) try self.print(" # RC-DICTIONARY-KEY-1 local {d}\n", .{index});
     const payload = try self.load("s", operand);
     try self.print(" storel %v{d}, %l{d}\n", .{ payload, index });
     return true;

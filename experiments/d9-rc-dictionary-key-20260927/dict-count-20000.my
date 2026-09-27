@@ -1,0 +1,16 @@
+# dict_count: dict[str, int] read-modify-write over 1000 distinct short keys.
+
+
+def main(out: Stream) -> int:
+    keys: list[str] = []
+    for i in range(1000):
+        keys.append("key" + str(i))
+    counts: dict[str, int] = {}
+    for i in range(20000):
+        key = keys[(i * 7919) % 1000]
+        counts[key] = counts.get(key, 0) + 1
+    total = 0
+    for name in keys:
+        total = (total + counts[name] * len(name)) % 1000003
+    out.print(total)
+    return 0

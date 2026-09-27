@@ -1,0 +1,7 @@
+def main(out: Stream) -> int:
+    keys = ["a" + "-key"]
+    counts = {"a-key": 9223372036854775807}
+    out.print("before")
+    key = keys[0]
+    counts[key] = counts.get(key, 0) + 1
+    return 0

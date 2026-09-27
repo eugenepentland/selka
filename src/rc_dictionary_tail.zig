@@ -1,7 +1,45 @@
 //! Emission-independent dictionary capture lifetime and certificate data.
 const bytecode = @import("bytecode.zig");
 /// A closed five-op tail; only start + 1 stores its borrowed receiver.
-pub const Certificate = struct { start: usize, root: usize, receiver: usize, key: usize, value: usize };
+pub const Certificate = struct {
+    start: usize,
+    root: usize,
+    receiver: usize,
+    key: usize,
+    value: usize,
+    key_authority: union(enum) { canonical, anchored: Key } = .canonical,
+};
+/// Whole-local zero-token key and capture, anchored by one real list owner.
+pub const Key = struct {
+    anchor: @import("rc_model.zig").Anchor,
+    receiver: usize,
+    capture: usize,
+    projection: usize,
+};
+
+/// The two raw stores are authorized together; all other stores keep ownership.
+pub fn borrowedStore(proofs: []const Certificate, pc: usize, local: usize) bool {
+    for (proofs) |proof| if (proof.key_authority == .anchored) {
+        const key = proof.key_authority.anchored;
+        if ((pc == key.capture and local == key.receiver) or
+            (pc == key.projection + 1 and local == proof.key)) return true;
+    };
+    return false;
+}
+/// Only the exact read's pointer result bypasses ordinary LOAN publication.
+pub fn borrowedRead(proofs: []const Certificate, pc: usize) bool {
+    for (proofs) |proof| if (proof.key_authority == .anchored and
+        proof.key_authority.anchored.projection == pc) return true;
+    return false;
+}
+/// Bypass type-wide H handling only for the proven raw list input and store.
+pub fn rawCapture(proofs: []const Certificate, pc: usize) bool {
+    for (proofs) |proof| if (proof.key_authority == .anchored) {
+        const at = proof.key_authority.anchored.capture;
+        if (pc == at - 1 or pc == at) return true;
+    };
+    return false;
+}
 
 /// Reject every explicit capture publisher/use outside its one raw store/write.
 pub fn writers(code: []const bytecode.Instruction, proof: Certificate) bool {
