@@ -233,10 +233,12 @@ int myl_qbe_rc_rebox_local(void *context, const myl_native_type *type, void *add
 _Static_assert(sizeof(myl_rc_scope) == MYL_QBE_RC_SCOPE_BYTES, "RC scope size");
 _Static_assert(sizeof(MylQbeRcPath) == MYL_QBE_RC_PATH_BYTES, "RC native projection size");
 _Static_assert(sizeof(MylQbeRcPlace) == MYL_QBE_RC_PLACE_BYTES, "RC native place size");
-void myl_qbe_rc_scope_begin(void *context, myl_rc_scope *scope) {
+/* RC-SCOPE-FAST-1: the receiver protocol's public entries are forced inline,
+ * so full LTO carries their straight-line fast paths into guest code. */
+inline __attribute__((always_inline)) void myl_qbe_rc_scope_begin(void *context, myl_rc_scope *scope) {
     myl_rc_scope_begin(&((MylQbeContext *)context)->heap, scope);
 }
-void myl_qbe_rc_scope_end(void *context, myl_rc_scope *scope) {
+inline __attribute__((always_inline)) void myl_qbe_rc_scope_end(void *context, myl_rc_scope *scope) {
     myl_rc_invariant(scope && (!scope->active || scope->heap == &((MylQbeContext *)context)->heap));
     myl_rc_scope_end(scope);
 }
@@ -249,17 +251,32 @@ static myl_rc_status capture_backing(myl_rc_scope *scope, void *payload) {
     if (status == MYL_RC_OK) status = myl_rc_scope_hold(scope, dictionary->index.slots);
     return status;
 }
-int myl_qbe_rc_scope_pin(void *context, myl_rc_scope *scope, void *payload) {
-    void *boundary = scope->journal;
-    myl_rc_status status = myl_rc_scope_pin(scope, payload);
-    if (status == MYL_RC_OK) status = myl_rc_scope_extend(scope, boundary, capture_backing);
+/* A dictionary's backing blocks in capture_backing's order; holding them
+ * only changes counts and pin bits, never these pointers. */
+static __attribute__((noinline)) myl_rc_status scope_capture_dictionary(myl_rc_scope *scope, myl_native_dictionary *dictionary, unsigned pinned) {
+    void *blocks[3];
+    size_t count = 0;
+    blocks[count++] = dictionary->entries;
+    if (dictionary->entries) blocks[count++] = dictionary->entries->storage;
+    blocks[count++] = dictionary->index.slots;
+    return myl_rc_scope_capture_backed(scope, dictionary, pinned, blocks, count);
+}
+static inline __attribute__((always_inline)) int scope_capture(void *context, myl_rc_scope *scope, void *payload, unsigned pinned) {
+    myl_rc_status status;
+    if (myl_native_list_header(payload)) {
+        void *storage = ((myl_native_list *)payload)->storage;
+        status = myl_rc_scope_capture_backed(scope, payload, pinned, &storage, 1);
+    } else if (__builtin_expect(myl_native_dictionary_header(payload), 0)) {
+        status = scope_capture_dictionary(scope, payload, pinned);
+    } else status = myl_rc_scope_capture_backed(scope, payload, pinned, NULL, 0);
+    if (__builtin_expect(status == MYL_RC_OK, 1)) return 1;
     return myl_qbe_rc_status(context, status);
 }
-int myl_qbe_rc_scope_hold(void *context, myl_rc_scope *scope, void *payload) {
-    void *boundary = scope->journal;
-    myl_rc_status status = myl_rc_scope_hold(scope, payload);
-    if (status == MYL_RC_OK) status = myl_rc_scope_extend(scope, boundary, capture_backing);
-    return myl_qbe_rc_status(context, status);
+inline __attribute__((always_inline)) int myl_qbe_rc_scope_pin(void *context, myl_rc_scope *scope, void *payload) {
+    return scope_capture(context, scope, payload, 1);
+}
+inline __attribute__((always_inline)) int myl_qbe_rc_scope_hold(void *context, myl_rc_scope *scope, void *payload) {
+    return scope_capture(context, scope, payload, 0);
 }
 static const myl_rc_shape scope_pointer = {.size = sizeof(void *), .kind = MYL_RC_SHAPE_POINTER};
 static const myl_rc_shape *const scope_shapes[] = {&scope_pointer};

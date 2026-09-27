@@ -550,6 +550,46 @@ static void opaque_extension_keeps_prefix(void) {
     myl_rc_owner_release(&heap, text);
     finish(&heap);
 }
+// spec: RC-SCOPE-FAST-1
+static void scope_backing_shares_the_pin_entry(void) {
+    myl_native_heap heap;
+    start(&heap);
+    myl_native_list *list = myl_native_list_new(&heap, &number, 1);
+    uint64_t value = 5;
+    assert(list && myl_native_list_append(&heap, list, &value));
+    void *storage = list->storage;
+    size_t idle = heap.bytes;
+    for (unsigned round = 0; round < 2; ++round) {
+        myl_rc_scope scope;
+        myl_rc_scope_begin(&heap, &scope);
+        assert(myl_rc_scope_capture_backed(&scope, list, 1, &storage, 1) == MYL_RC_OK);
+        /* One journal entry holds the list, pins it and holds its storage. */
+        assert(scope.journal && !*(void **)scope.journal && heap.bytes > idle);
+        assert(header(list)->holds == 1 && header(storage)->holds == 1);
+        assert(((myl_native_object *)list - 1)->mark & MYL_NATIVE_OBJECT_PINNED);
+        myl_rc_scope_end(&scope);
+        assert(!header(list)->holds && !header(storage)->holds && heap.bytes == idle);
+        assert(!(((myl_native_object *)list - 1)->mark & MYL_NATIVE_OBJECT_PINNED));
+        /* The one released node waits on the spare list for the next round. */
+        assert(heap.rc->spare.count == 1);
+    }
+    /* A refused backing hold rolls the payload's pin and hold back too. */
+    header(storage)->holds = MYL_RC_COUNT_MAX;
+    myl_rc_scope scope;
+    myl_rc_scope_begin(&heap, &scope);
+    assert(myl_rc_scope_capture_backed(&scope, list, 1, &storage, 1) == MYL_RC_COUNT_LIMIT);
+    assert(!scope.journal && heap.bytes == idle && !header(list)->holds);
+    assert(!(((myl_native_object *)list - 1)->mark & MYL_NATIVE_OBJECT_PINNED));
+    header(storage)->holds = 0;
+    /* A held-only payload with no backing records one plain entry. */
+    assert(myl_rc_scope_capture_backed(&scope, list, 0, NULL, 0) == MYL_RC_OK);
+    assert(header(list)->holds == 1 && !header(storage)->holds);
+    assert(!(((myl_native_object *)list - 1)->mark & MYL_NATIVE_OBJECT_PINNED));
+    myl_rc_scope_end(&scope);
+    assert(!header(list)->holds && heap.bytes == idle);
+    myl_rc_owner_release(&heap, list);
+    finish(&heap);
+}
 int myl_rc_fast_verify(void) {
     variant_plan_layout();
     variant_plan_operations();
@@ -566,12 +606,13 @@ int myl_rc_fast_verify(void) {
     flat_semantic_publication();
     flat_take_publishes_in_place();
     opaque_extension_keeps_prefix();
-    return 15;
+    scope_backing_shares_the_pin_entry();
+    return 16;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
-    assert(myl_rc_fast_verify() == 15);
-    puts("native RC fast paths: 15 tests passed");
+    assert(myl_rc_fast_verify() == 16);
+    puts("native RC fast paths: 16 tests passed");
     return 0;
 }
 #endif

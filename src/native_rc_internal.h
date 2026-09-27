@@ -373,6 +373,11 @@ void myl_rc_scopes_abandon(myl_native_heap *);
 /* Free the retained (uncharged) scope journal spares; heap destroy calls it. */
 void myl_rc_scope_spares_release(myl_native_heap *);
 myl_rc_status myl_rc_scope_extend(myl_rc_scope *, void *boundary, myl_rc_status (*)(myl_rc_scope *, void *));
+/* RC-SCOPE-FAST-1: capture `payload` (pinned or held) and, when that records
+ * an entry, hold each of `count` backing blocks after it: exactly the capture
+ * followed by myl_rc_scope_extend with an adapter answering those blocks, and
+ * the same rollback of the whole capture on refusal. */
+myl_rc_status myl_rc_scope_capture_backed(myl_rc_scope *, void *payload, unsigned pinned, void *const *backing, size_t count);
 /* Release one H token and enqueue death without callbacks; caller drains. */
 void myl_rc_hold_edge_release(myl_native_heap *, void *);
 /* Admitted ordinary leaves only, in the authoritative walker's order. Clears

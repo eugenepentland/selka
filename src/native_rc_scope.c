@@ -6,32 +6,46 @@ typedef struct scope_entry {
     struct scope_entry *previous;
     myl_rc_pin pin;
     unsigned pinned;
+    /* RC-SCOPE-FAST-1: the one backing block (a list's storage) held right
+     * after the payload, released right before it; NULL when there is none. */
+    void *backing;
 } scope_entry;
 /* RC-SCOPE-SPARE-1: journal nodes are recycled through a bounded, uncharged
  * spare list (see myl_rc_spare), so a receiver statement in a loop reaches the
  * host allocator only on its first iteration. A recycled node is admitted and
- * charged like a fresh one, and giving one back discharges it. */
-static scope_entry *entry_take(myl_native_heap *heap) {
-    myl_rc_spare *spare = heap->rc->spare.entries;
-    if (!spare) return myl_rc_meta_alloc(heap, sizeof(scope_entry));
-    if (!myl_rc_meta_fits(heap, sizeof(scope_entry))) { heap->exhausted = 1; return NULL; }
-    heap->rc->spare.entries = spare->next;
-    --heap->rc->spare.count;
-    heap->bytes += sizeof(scope_entry);
-    heap->rc->metadata.bytes += sizeof(scope_entry);
-    scope_entry *entry = (scope_entry *)spare;
-    *entry = (scope_entry){0};
-    return entry;
+ * charged like a fresh one, and giving one back discharges it.
+ * RC-SCOPE-FAST-1: the receiver protocol (begin, pin with backing, end) is
+ * forced inline into its public entries, so full LTO carries it into guest
+ * code; only a fresh node, a full spare list and a failure leave the line.
+ * The caller initializes every field of a taken node. */
+#define SCOPE_HOT static inline __attribute__((always_inline))
+static __attribute__((noinline, cold)) scope_entry *entry_fresh(myl_native_heap *heap) {
+    return myl_rc_meta_alloc(heap, sizeof(scope_entry));
 }
-static void entry_give(myl_native_heap *heap, scope_entry *entry) {
-    if (heap->rc->spare.count == MYL_RC_SPARE_ENTRIES) { myl_rc_meta_free(heap, entry, sizeof *entry); return; }
-    myl_rc_invariant(heap->bytes >= sizeof *entry && heap->rc->metadata.bytes >= sizeof *entry);
+static __attribute__((noinline, cold)) void entry_release(myl_native_heap *heap, scope_entry *entry) {
+    myl_rc_meta_free(heap, entry, sizeof *entry);
+}
+SCOPE_HOT scope_entry *entry_take(myl_native_heap *heap) {
+    myl_rc_state *rc = heap->rc;
+    myl_rc_spare *spare = rc->spare.entries;
+    if (__builtin_expect(!spare, 0)) return entry_fresh(heap);
+    if (__builtin_expect(!myl_rc_meta_fits(heap, sizeof(scope_entry)), 0)) { heap->exhausted = 1; return NULL; }
+    rc->spare.entries = spare->next;
+    --rc->spare.count;
+    heap->bytes += sizeof(scope_entry);
+    rc->metadata.bytes += sizeof(scope_entry);
+    return (scope_entry *)spare;
+}
+SCOPE_HOT void entry_give(myl_native_heap *heap, scope_entry *entry) {
+    myl_rc_state *rc = heap->rc;
+    if (__builtin_expect(rc->spare.count == MYL_RC_SPARE_ENTRIES, 0)) { entry_release(heap, entry); return; }
+    myl_rc_invariant(heap->bytes >= sizeof *entry && rc->metadata.bytes >= sizeof *entry);
     heap->bytes -= sizeof *entry;
-    heap->rc->metadata.bytes -= sizeof *entry;
+    rc->metadata.bytes -= sizeof *entry;
     myl_rc_spare *spare = (myl_rc_spare *)entry;
-    spare->next = heap->rc->spare.entries;
-    heap->rc->spare.entries = spare;
-    ++heap->rc->spare.count;
+    spare->next = rc->spare.entries;
+    rc->spare.entries = spare;
+    ++rc->spare.count;
 }
 _Static_assert(sizeof(scope_entry) >= sizeof(myl_rc_spare), "spare link fits a journal node");
 void myl_rc_scope_spares_release(myl_native_heap *heap) {
@@ -42,62 +56,84 @@ void myl_rc_scope_spares_release(myl_native_heap *heap) {
     }
     heap->rc->spare.count = 0;
 }
-static void restore(scope_entry *entry) {
+SCOPE_HOT void restore(scope_entry *entry) {
     if (!entry->pinned || !entry->pin.hold.payload) return;
     myl_native_object *header = (myl_native_object *)entry->pin.hold.payload - 1;
     if (!(header->mark & MYL_NATIVE_OBJECT_IMMORTAL))
         header->mark = (header->mark & ~MYL_NATIVE_OBJECT_PINNED) | entry->pin.previous;
 }
+/* A returned hold that was the last token: queue the death and drain it. */
+static __attribute__((noinline, cold)) void hold_death(myl_native_heap *heap, myl_rc_object *object) {
+    myl_rc_dies(heap, object);
+    myl_rc_drain_pending(heap);
+}
+/* myl_rc_hold_drop followed by myl_rc_drain_pending, with the death out of line. */
+SCOPE_HOT void hold_return(myl_native_heap *heap, void *payload) {
+    if (myl_rc_counted(payload)) {
+        myl_rc_object *object = (myl_rc_object *)payload - 1;
+        myl_rc_invariant(object->holds != 0 && !(object->common.mark & MYL_RC_OBJECT_DYING));
+        uintptr_t holds = --object->holds;
+        MYL_RC_STAT(heap, MYL_RC_STAT_HOLD_RELEASE);
+        if (__builtin_expect(!holds && !object->owners, 0)) { hold_death(heap, object); return; }
+    }
+    myl_rc_drain_pending(heap);
+}
 /* Restore every bit before any final hold can run a destructor or callback. */
-static void unwind(myl_rc_scope *scope, scope_entry *boundary) {
+SCOPE_HOT void unwind(myl_rc_scope *scope, scope_entry *boundary) {
     scope_entry *head = scope->journal;
+    if (head == boundary) return;
     for (scope_entry *entry = head; entry != boundary; entry = entry->previous) restore(entry);
     scope->journal = boundary;
-    while (head != boundary) {
+    myl_native_heap *heap = scope->heap;
+    do {
         scope_entry *entry = head;
         head = entry->previous;
-        void *payload = entry->pin.hold.payload;
-        entry_give(scope->heap, entry);
-        myl_rc_hold_drop(scope->heap, payload);
-        myl_rc_drain_pending(scope->heap);
-    }
+        void *payload = entry->pin.hold.payload, *backing = entry->backing;
+        entry_give(heap, entry);
+        if (backing) hold_return(heap, backing);
+        hold_return(heap, payload);
+    } while (head != boundary);
 }
-void myl_rc_scope_begin(myl_native_heap *heap, myl_rc_scope *scope) {
+inline __attribute__((always_inline)) void myl_rc_scope_begin(myl_native_heap *heap, myl_rc_scope *scope) {
     myl_rc_invariant(heap && heap->rc && scope);
     *scope = (myl_rc_scope){.heap = heap, .previous = heap->rc->scopes, .active = 1, .region = heap->region_depth};
     heap->rc->scopes = scope;
 }
-static myl_rc_status capture(myl_rc_scope *scope, void *payload, unsigned pinned) {
-    myl_rc_invariant(scope && scope->active && scope->heap && scope->heap->rc);
+/* One journal capture on an active scope of `heap`, which the caller checked. */
+SCOPE_HOT myl_rc_status capture_in(myl_native_heap *heap, myl_rc_scope *scope, void *payload, unsigned pinned) {
     if (!payload) return MYL_RC_OK;
     myl_native_object *header = (myl_native_object *)payload - 1;
-    if (header->mark & MYL_NATIVE_OBJECT_IMMORTAL) return MYL_RC_OK;
+    uintptr_t mark = header->mark;
+    if (mark & MYL_NATIVE_OBJECT_IMMORTAL) return MYL_RC_OK;
     /* An outer receiver may span younger callbacks, but it cannot acquire a
      * hold that pretends to extend a younger arena's chunk lifetime. */
-    if (myl_native_header_region(payload) > scope->region) return MYL_RC_REGION_ERROR;
-    scope_entry *entry = entry_take(scope->heap);
-    if (!entry) return MYL_RC_ALLOCATION_REFUSED;
+    if (__builtin_expect(myl_native_header_region(payload) > scope->region, 0)) return MYL_RC_REGION_ERROR;
+    scope_entry *entry = entry_take(heap);
+    if (__builtin_expect(!entry, 0)) return MYL_RC_ALLOCATION_REFUSED;
     /* The pin/hold acquisition of myl_rc_pin_acquire/myl_rc_hold_acquire;
-     * immortal payloads were excluded above. */
-    if (myl_rc_counted(payload)) {
+     * immortal payloads were excluded above, so only an arena one is uncounted. */
+    if (!(mark & MYL_NATIVE_OBJECT_ARENA)) {
         myl_rc_object *object = myl_rc_live(payload);
-        if (object->holds == MYL_RC_COUNT_MAX) {
-            MYL_RC_STAT(scope->heap, MYL_RC_STAT_HOLD_LIMIT);
-            entry_give(scope->heap, entry);
+        if (__builtin_expect(object->holds == MYL_RC_COUNT_MAX, 0)) {
+            MYL_RC_STAT(heap, MYL_RC_STAT_HOLD_LIMIT);
+            entry_give(heap, entry);
             return MYL_RC_COUNT_LIMIT;
         }
         ++object->holds;
-        MYL_RC_STAT(scope->heap, MYL_RC_STAT_HOLD_ACQUIRE);
+        MYL_RC_STAT(heap, MYL_RC_STAT_HOLD_ACQUIRE);
     }
     entry->pin.hold.payload = payload;
-    if (pinned) {
-        entry->pin.previous = header->mark & MYL_NATIVE_OBJECT_PINNED;
-        header->mark |= MYL_NATIVE_OBJECT_PINNED;
-    }
+    entry->backing = NULL;
+    entry->pin.previous = pinned ? mark & MYL_NATIVE_OBJECT_PINNED : 0;
+    if (pinned) header->mark = mark | MYL_NATIVE_OBJECT_PINNED;
     entry->previous = scope->journal;
     entry->pinned = pinned;
     scope->journal = entry;
     return MYL_RC_OK;
+}
+SCOPE_HOT myl_rc_status capture(myl_rc_scope *scope, void *payload, unsigned pinned) {
+    myl_rc_invariant(scope && scope->active && scope->heap && scope->heap->rc);
+    return capture_in(scope->heap, scope, payload, pinned);
 }
 myl_rc_status myl_rc_scope_hold(myl_rc_scope *scope, void *payload) { return capture(scope, payload, 0); }
 myl_rc_status myl_rc_scope_pin(myl_rc_scope *scope, void *payload) { return capture(scope, payload, 1); }
@@ -112,7 +148,51 @@ myl_rc_status myl_rc_scope_extend(myl_rc_scope *scope, void *boundary,
     }
     return MYL_RC_OK;
 }
-void myl_rc_scope_end(myl_rc_scope *scope) {
+static __attribute__((noinline, cold)) myl_rc_status backing_refused(myl_rc_scope *scope, scope_entry *boundary, myl_rc_status status) {
+    unwind(scope, boundary);
+    return status;
+}
+/* A backing block's hold, recorded in the entry that captured its payload:
+ * what capturing it as an entry of its own would acquire, and the same
+ * refusals. A null or immortal block records nothing and an arena block needs
+ * no count, exactly as their own entries would release nothing. */
+SCOPE_HOT myl_rc_status backing_hold(myl_native_heap *heap, myl_rc_scope *scope, scope_entry *entry, void *block) {
+    (void)heap;
+    if (!block) return MYL_RC_OK;
+    uintptr_t mark = ((const myl_native_object *)block - 1)->mark;
+    if (mark & MYL_NATIVE_OBJECT_IMMORTAL) return MYL_RC_OK;
+    if (__builtin_expect(myl_native_header_region(block) > scope->region, 0)) return MYL_RC_REGION_ERROR;
+    if (mark & MYL_NATIVE_OBJECT_ARENA) return MYL_RC_OK;
+    myl_rc_object *object = myl_rc_live(block);
+    if (__builtin_expect(object->holds == MYL_RC_COUNT_MAX, 0)) {
+        MYL_RC_STAT(heap, MYL_RC_STAT_HOLD_LIMIT);
+        return MYL_RC_COUNT_LIMIT;
+    }
+    ++object->holds;
+    MYL_RC_STAT(heap, MYL_RC_STAT_HOLD_ACQUIRE);
+    entry->backing = block;
+    return MYL_RC_OK;
+}
+inline __attribute__((always_inline)) myl_rc_status myl_rc_scope_capture_backed(myl_rc_scope *scope, void *payload, unsigned pinned,
+                                                                         void *const *backing, size_t count) {
+    myl_rc_invariant(scope && scope->active && scope->heap && scope->heap->rc);
+    myl_native_heap *heap = scope->heap;
+    scope_entry *boundary = scope->journal;
+    myl_rc_status status = capture_in(heap, scope, payload, pinned);
+    /* A null or immortal payload records nothing, so it has no backing to extend. */
+    if (status != MYL_RC_OK || scope->journal == boundary) return status;
+    if (count == 1) {
+        status = backing_hold(heap, scope, scope->journal, backing[0]);
+        if (__builtin_expect(status != MYL_RC_OK, 0)) return backing_refused(scope, boundary, status);
+        return MYL_RC_OK;
+    }
+    for (size_t i = 0; i < count; ++i) {
+        status = capture_in(heap, scope, backing[i], 0);
+        if (__builtin_expect(status != MYL_RC_OK, 0)) return backing_refused(scope, boundary, status);
+    }
+    return MYL_RC_OK;
+}
+inline __attribute__((always_inline)) void myl_rc_scope_end(myl_rc_scope *scope) {
     myl_rc_invariant(scope != NULL);
     if (!scope->active) return;
     myl_native_heap *heap = scope->heap;
@@ -121,7 +201,7 @@ void myl_rc_scope_end(myl_rc_scope *scope) {
     scope->active = 0;
     scope->previous = NULL;
     unwind(scope, NULL);
-    myl_rc_drain(heap);
+    myl_rc_drain_pending(heap);
 }
 void myl_rc_scopes_abandon(myl_native_heap *heap) {
     if (!heap || !heap->rc) return;
