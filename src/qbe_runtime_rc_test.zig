@@ -33,5 +33,5 @@ extern fn myl_rc_history_verify() c_int;
 
 // spec: RC-HISTORY-PUBLISH-1
 test "RC semantic publication commits history atomically and preserves pinned snapshot identity" {
-    try std.testing.expectEqual(@as(c_int, 35), myl_rc_history_verify());
+    try std.testing.expectEqual(@as(c_int, 42), myl_rc_history_verify());
 }

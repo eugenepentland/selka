@@ -1,0 +1,9 @@
+{
+  "base": "636524b81562e30285b15e297078fac24ffccb58",
+  "candidate_compiler_sha256": "7f82f5c30b52ebedfdecec95747d619116d29e89396202aec7f4950ae506bd9f",
+  "files": {
+    "src/native_rc_values.c": "054f92e7d11322f7815ee9a95cdf49ea38043f5fcbdeae9046ae841bc7b030ea",
+    "src/qbe_runtime_rc_test.zig": "31a117be7e20442d2834392bfce3fc9b718ff627926842aab43f3181d41afb3a",
+    "tests/native_rc_history_test.c": "7a10dbe7b3c72498d58806eb440a0c80b7aaebc371b9618c0140476581d4f4a3"
+  }
+}
