@@ -1,0 +1,13 @@
+record Link:
+    next: Option[Link]
+
+
+def descend(depth: int) -> Option[Link]:
+    if depth == 0:
+        return None
+    return Some(Link(descend(depth - 1)))
+
+
+def main() -> int:
+    value = descend(1000000)
+    return 0

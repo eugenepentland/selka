@@ -11,6 +11,7 @@ pub fn emit(comptime E: type, self: *E, value: usize) Error!bool {
     const owned = !@import("qbe_rc_borrow.zig").active(E, self) and try @import("qbe_rc_state.zig").owns(state, ty);
     var source = value;
     if (owned) {
+        try fresh(E, self, value);
         const stack = self.states[self.pc] orelse return error.InternalError;
         try values.prepareOperand(E, self, ty, stack.len - 1);
         source = try self.readValue(try values.workAddress(E, self), ty);
@@ -33,4 +34,35 @@ pub fn emit(comptime E: type, self: *E, value: usize) Error!bool {
     try self.leaveFrame();
     try self.print(" ret %v{d}\n", .{output});
     return true;
+}
+
+// The closed constructor grammar has only scalar locals and linear owned
+// operands. Every producer consumes its inputs and clears pending/internal
+// guards; empty-stack branch edges preserve that fact. At ret, the sole live
+// token is the ordinary result. The full journal remains linked until here,
+// so allocation/arithmetic/frame/step failures keep their existing unwind.
+fn fresh(comptime E: type, self: *E, value: usize) Error!void {
+    const ty = self.function.signature.return_type;
+    if ((try self.layout(ty)).size > 256) return;
+    if (try self.largeResult(self.function)) return;
+    if (!try @import("qbe_rc_fresh_constructor.zig").certify(E, self)) return;
+    const index = values.journalIndex(E, self, 0);
+    const owner = try @import("qbe_rc_loans.zig").owner(E, self, index);
+    const label = self.temp();
+    try self.print(" jnz %v{d}, @rcfreshreturn{d}, @rcfreshreturnslow{d}\n@rcfreshreturn{d}\n", .{ owner, label, label, label });
+    var output = value;
+    if (!self.isScalar(ty)) {
+        // The existing return work buffer is disjoint from stable operands.
+        // Materialize the complete ABI result before disarming its source;
+        // this successful path needs no pending token or source zeroing.
+        output = try values.workAddress(E, self);
+        try self.print(values.blit_value, .{ value, output, (try self.layout(ty)).size });
+    }
+    try frame.initialized(E, self, index, false);
+    // No scope/arena instruction or external call is admitted. Self callees
+    // preserve the entry region and scope checkpoint, including inside arenas.
+    // Leave only validates/unlinks; no cleanup callback can split this handoff.
+    try frame.Lower(E).leave(self);
+    try self.leaveFrame();
+    try self.print(" ret %v{d}\n@rcfreshreturnslow{d}\n", .{ output, label });
 }
