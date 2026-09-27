@@ -32,6 +32,29 @@ const interval =
     \\    second = replaced(mut rt)
     \\    return rt.top + len(rt.stack)
 ;
+const operand =
+    \\record Table:
+    \\    entries: list[int]
+    \\record Runtime:
+    \\    globals: Table
+    \\    names: list[str]
+    \\    top: int
+    \\def lookup(t: Table, at: int) -> int:
+    \\    return t.entries[at]
+    \\def hash_of(rt: Runtime, at: int) -> int:
+    \\    return len(rt.names[at])
+    \\def global(rt: mut Runtime, at: int) -> int:
+    \\    rt.top = rt.top + 1
+    \\    return lookup(rt.globals, hash_of(rt, at))
+    \\def reset(rt: mut Runtime) -> int:
+    \\    rt.globals = Table([5])
+    \\    return 0
+    \\def reset_global(rt: mut Runtime) -> int:
+    \\    return lookup(rt.globals, reset(mut rt))
+    \\def main() -> int:
+    \\    rt = Runtime(Table([1, 2]), ["a", "b"], 0)
+    \\    return global(mut rt, 1) + reset_global(mut rt)
+;
 const source =
     \\record Chunk:
     \\    code: list[int]
@@ -123,4 +146,14 @@ test "RC interval anchors cover every list temporary of a long function" {
     try w.writeAll("    return total\n");
     try w.writeAll("def main() -> int:\n    rt = Runtime([Value.nil], 0)\n    frame = Frame([0], 0)\n    return long(mut rt, mut frame)\n");
     try t.expectEqual(@as(usize, 0), try operationsIn(text.written(), "long"));
+}
+
+// spec: RC-OPERAND-ANCHOR-1
+test "RC field reads of a mut root passed straight to a call take no loan" {
+    try t.expectEqual(@as(usize, 0), try operationsIn(operand, "global"));
+}
+
+// spec-case: RC-OPERAND-ANCHOR-1
+test "RC field reads keep their loan when the root is passed mut before the call" {
+    try t.expect(try operationsIn(operand, "reset_global") > 0);
 }

@@ -225,6 +225,38 @@ def fetch_reset(rt: mut Runtime) -> Value:
     return rt.stack[reset_stack(mut rt)]
 
 
+record Globals:
+    entries: list[Value]
+
+
+record Vm:
+    globals: Globals
+    names: list[str]
+    top: int
+
+
+def entry_at(globals: Globals, at: int) -> Value:
+    return globals.entries[at]
+
+
+def name_length(vm: Vm, at: int) -> int:
+    return len(vm.names[at])
+
+
+def global_value(vm: mut Vm, at: int) -> Value:
+    vm.top = vm.top + 1
+    return entry_at(vm.globals, name_length(vm, at))
+
+
+def wipe(vm: mut Vm) -> int:
+    vm.globals = Globals([Value.text("wiped")])
+    return 0
+
+
+def wiped_value(vm: mut Vm) -> Value:
+    return entry_at(vm.globals, wipe(mut vm))
+
+
 def pop(rt: mut Runtime) -> Value:
     rt.top = rt.top - 1
     return rt.stack[rt.top]
@@ -484,6 +516,24 @@ public def test_mut_root_list_reads_inside_arenas() -> bool:
     return total == 5.0
 
 
+# spec-case: RC-OPERAND-ANCHOR-1
+public def test_mut_root_fields_passed_to_calls_read_the_current_value() -> bool:
+    vm = Vm(Globals([Value.nil, Value.number(1.0), Value.text("two")]), ["a", "bb"], 0)
+    first = global_value(mut vm, 0)
+    second = global_value(mut vm, 1)
+    return number(first) == 1.0 and second == Value.text("two") and vm.top == 2
+
+
+# The collector lends the argument's field in place, so it reads the list the
+# later `mut` call installed; RC keeps its loan on the list read first. Both
+# must survive the replacement; the counted build checks nothing leaks.
+# spec-case: RC-OPERAND-ANCHOR-1
+public def test_mut_root_fields_keep_the_value_a_later_mut_call_replaces() -> bool:
+    vm = Vm(Globals([Value.number(6.0)]), [], 0)
+    item = wiped_value(mut vm)
+    return (number(item) == 6.0 or item == Value.text("wiped")) and vm.globals.entries == [Value.text("wiped")]
+
+
 # Run every test once, so `mylang run --rc-runtime=stats` shows balanced counts
 # for the whole file; the result is the number of failures.
 def main() -> int:
@@ -514,6 +564,8 @@ def main() -> int:
         test_mut_root_list_reads_across_unrelated_calls(),
         test_mut_root_list_reads_keep_the_list_a_call_replaces(),
         test_mut_root_list_reads_inside_arenas(),
+        test_mut_root_fields_passed_to_calls_read_the_current_value(),
+        test_mut_root_fields_keep_the_value_a_later_mut_call_replaces(),
     ]:
         if not passed:
             failures += 1

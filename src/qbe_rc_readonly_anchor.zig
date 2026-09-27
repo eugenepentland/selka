@@ -320,21 +320,8 @@ fn intervalQuiet(comptime E: type, self: *E, local: usize, root_local: usize) bo
     const plan = self.cow.?.plan;
     for (self.function.scope.instructions, 0..) |instruction, pc| {
         if (!self.live.?.before(pc, local) and !self.live.?.after(pc, local)) continue;
-        switch (instruction.op) {
-            .store_local, .ref_local, .move_local => |id| if (@backingInt(id) == root_local) return false,
-            .switch_variant => |dispatch| for (dispatch.arms) |arm| {
-                if (arm.slot) |id| if (@backingInt(id) == root_local) return false;
-            },
-            .begin_arena, .end_arena => return false,
-            else => {},
-        }
-        const site = plan.at(pc);
-        for (site.unique) |unique| {
-            if (rooted(plan, unique.local, root_local)) return false;
-            if (unique.alias != cow.none and rooted(plan, unique.alias, root_local)) return false;
-        }
-        if (site.unique_field) |place| if (rooted(plan, place.parent, root_local)) return false;
-        if (site.fill and instruction.op == .store_local and rooted(plan, @backingInt(instruction.op.store_local), root_local)) return false;
+        if (instruction.op == .begin_arena or instruction.op == .end_arena) return false;
+        if (writes(plan, instruction.op, pc, root_local)) return false;
     }
     return true;
 }
@@ -352,4 +339,59 @@ fn rooted(plan: cow.Plan, local: usize, root_local: usize) bool {
         } else return false;
     }
     return true;
+}
+
+/// RC-OPERAND-ANCHOR-1: a field read out of a `mut` record parameter
+/// (`load_local r; get_field...`) publishes no loan when straight-line code
+/// consumes it before anything could write the parameter: no store, move,
+/// reference (`mut` argument), binding or place write rooted in it, no arena
+/// boundary and no branch between the read and its consumer. A consumer
+/// that needs an owner copies from the bits; a call that receives the value
+/// borrows it while the caller keeps the parameter unchanged.
+pub fn operandInterval(comptime E: type, self: *E, pc: usize) bool {
+    const code = self.function.scope.instructions;
+    if (code[pc].op != .get_field) return false;
+    const state = self.cow.?.rc orelse return false;
+    const root_local = chainRoot(E, self, pc) orelse return false;
+    if (root_local >= state.contract.parameters.len or state.contract.parameters[root_local] != .caller_storage) return false;
+    const pushed_depth = (self.states[pc] orelse return false).len - 1;
+    const plan = self.cow.?.plan;
+    var at = pc + 1;
+    var remaining: usize = 256;
+    while (at < code.len and remaining != 0) : ({
+        at += 1;
+        remaining -= 1;
+    }) {
+        if (self.isBranchTarget(at)) return false;
+        const before = self.states[at] orelse return false;
+        if (before.len <= pushed_depth) return false;
+        const after = if (at + 1 < self.states.len) self.states[at + 1] else null;
+        const consumed = if (after) |stack| stack.len <= pushed_depth else true;
+        if (writes(plan, code[at].op, at, root_local)) return false;
+        switch (code[at].op) {
+            .jump, .jump_if_false, .switch_variant, .try_result, .begin_arena, .end_arena => return false,
+            else => {},
+        }
+        if (consumed) return true;
+    }
+    return false;
+}
+
+// Whether the instruction at `pc` can write the root's storage.
+fn writes(plan: cow.Plan, op: Op, pc: usize, root_local: usize) bool {
+    switch (op) {
+        .store_local, .ref_local, .move_local => |id| if (@backingInt(id) == root_local) return true,
+        .switch_variant => |dispatch| for (dispatch.arms) |arm| {
+            if (arm.slot) |id| if (@backingInt(id) == root_local) return true;
+        },
+        else => {},
+    }
+    const site = plan.at(pc);
+    for (site.unique) |unique| {
+        if (rooted(plan, unique.local, root_local)) return true;
+        if (unique.alias != cow.none and rooted(plan, unique.alias, root_local)) return true;
+    }
+    if (site.unique_field) |place| if (rooted(plan, place.parent, root_local)) return true;
+    if (site.fill and op == .store_local and rooted(plan, @backingInt(op.store_local), root_local)) return true;
+    return false;
 }
