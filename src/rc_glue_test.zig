@@ -63,7 +63,7 @@ fn allIl(manifest: Manifest) ![]u8 {
 fn compiles(data: []const u8, defines: []const []const u8) !bool {
     var temporary = t.tmpDir(.{});
     defer temporary.cleanup();
-    inline for (.{ "native_heap.h", "native_rc.h", "native_rc_internal.h", "native_rc_stats.h", "native_rc_values.h", "native_rc_alloc.h", "native_collections.h", "native_rc_collections.h" }) |header| {
+    inline for (.{ "native_heap.h", "native_rc.h", "native_rc_internal.h", "native_rc_stats.h", "native_rc_values.h", "native_rc_alloc.h", "native_collections.h", "native_rc_collections.h", "qbe_runtime.h" }) |header| {
         try temporary.dir.writeFile(t.io, .{ .sub_path = header, .data = @embedFile(header) });
     }
     try temporary.dir.writeFile(t.io, .{ .sub_path = "glue.c", .data = data });

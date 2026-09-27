@@ -4,7 +4,6 @@ const runtime = @import("runtime_mode.zig");
 const state_model = @import("qbe_rc_state.zig");
 const dictionary = @import("rc_dictionary_tail.zig");
 const glue = @import("qbe_rc_glue.zig");
-const std = @import("std");
 /// Errors shared with the native emitter.
 pub const Error = state_model.Error;
 /// Frozen C journal entry/frame sizes, verified against the runtime header.
@@ -201,7 +200,13 @@ pub fn drop(comptime E: type, self: *E, index: usize) Error!void {
     const flag = try guard(E, self, index);
     try self.print(" %v{d} =w loaduw %v{d}\n jnz %v{d}, @rcslotdrop{d}, @rcslotdone{d}\n@rcslotdrop{d}\n", .{ live, flag, live, label, label, label });
     const pointer = try entryField(E, self, index, 0);
-    if (staticType(E, self, index)) |ty| if (try glue.routed(E, self, ty)) try typedDrop(E, self, .{ .ty = ty, .entry = pointer, .guard = flag, .label = label });
+    // RC-GLUE-1: a statically typed entry drops through its type's glue,
+    // which confirms the entry's type and role before its fast path.
+    if (staticType(E, self, index)) |ty| if (try glue.routed(E, self, ty)) {
+        try glue.slotDrop(E, self, ty, pointer);
+        try self.print("@rcslotdone{d}\n", .{label});
+        return;
+    };
     try self.print(" call $myl_qbe_rc_slot_drop(l %ctx, l %v{d})\n", .{pointer});
     try self.print("@rcslotdone{d}\n", .{label});
 }
@@ -216,42 +221,6 @@ fn staticType(comptime E: type, self: *E, index: usize) ?typed.Type {
     return if (operand < stack.len) stack[operand] else null;
 }
 
-/// One live journal entry whose static type is known at the drop site.
-const Typed = struct { ty: typed.Type, entry: usize, guard: usize, label: usize };
-
-/// RC-GLUE-1: release a live entry of the expected type through its glue:
-/// a loan (or a pointer's H token) unloans, an ordinary owner drops. Any other
-/// role or type falls through to the runtime's generic slot drop.
-fn typedDrop(comptime E: type, self: *E, slot: Typed) Error!void {
-    const kind = self.temp();
-    const same = self.temp();
-    const role_at = self.temp();
-    const role = self.temp();
-    const loan = self.temp();
-    const owned = self.temp();
-    try self.print(" %v{d} =l loadl %v{d}\n %v{d} =w ceql %v{d}, extern ${s}\n", .{ kind, slot.entry, same, kind, try self.descriptor(slot.ty) });
-    try self.print(" jnz %v{d}, @rcslottyped{d}, @rcslotgeneric{d}\n@rcslottyped{d}\n", .{ same, slot.label, slot.label, slot.label });
-    try self.print(" %v{d} =l add %v{d}, 24\n %v{d} =w loaduw %v{d}\n", .{ role_at, slot.entry, role, role_at });
-    // Only a one-word value can carry a hold-pointer role.
-    const pointer = (try self.layout(slot.ty)).size == 8;
-    try self.print(" %v{d} =w ceqw %v{d}, {d}\n", .{ loan, role, glue.loan_role });
-    if (pointer) {
-        const held = self.temp();
-        try self.print(" %v{d} =w ceqw %v{d}, {d}\n %v{d} =w or %v{d}, %v{d}\n", .{ held, role, glue.hold_role, loan, loan, held });
-    }
-    try self.print(" jnz %v{d}, @rcslotunloan{d}, @rcslotowner{d}\n@rcslotowner{d}\n", .{ loan, slot.label, slot.label, slot.label });
-    try self.print(" %v{d} =w ceqw %v{d}, {d}\n jnz %v{d}, @rcslotdrops{d}, @rcslotgeneric{d}\n", .{ owned, role, glue.owner_role, owned, slot.label, slot.label });
-    inline for (.{ "unloan", "drops" }) |name| {
-        try self.print("@rcslot{s}{d}\n storew 0, %v{d}\n", .{ name, slot.label, slot.guard });
-        const address_at = try self.address(slot.entry, 8);
-        const address = self.temp();
-        try self.print(" %v{d} =l loadl %v{d}\n", .{ address, address_at });
-        const release: glue.Release = .{ .ty = slot.ty, .address = address };
-        if (comptime std.mem.eql(u8, name, "unloan")) try glue.unloan(E, self, release) else try glue.drop(E, self, release);
-        try self.print(" jmp @rcslotdone{d}\n", .{slot.label});
-    }
-    try self.print("@rcslotgeneric{d}\n", .{slot.label});
-}
 fn localCount(comptime E: type, self: *E) usize {
     return self.function.scope.locals.len;
 }

@@ -283,7 +283,7 @@ fn metadata() !std.json.Parsed(Metadata) {
 fn metadataCompiles(data: []const u8) !bool {
     var temporary = t.tmpDir(.{});
     defer temporary.cleanup();
-    inline for (.{ "native_heap.h", "native_rc.h", "native_rc_internal.h", "native_rc_stats.h", "native_rc_values.h", "native_rc_alloc.h", "native_collections.h", "native_rc_collections.h" }) |header| {
+    inline for (.{ "native_heap.h", "native_rc.h", "native_rc_internal.h", "native_rc_stats.h", "native_rc_values.h", "native_rc_alloc.h", "native_collections.h", "native_rc_collections.h", "qbe_runtime.h" }) |header| {
         try temporary.dir.writeFile(t.io, .{ .sub_path = header, .data = @embedFile(header) });
     }
     try temporary.dir.writeFile(t.io, .{ .sub_path = "ownership.c", .data = data });
@@ -638,7 +638,7 @@ test "RC-OWNERSHIP-PLAN-1 compiler journals owned runtime results and transactio
     const text = try functionText(result.value, "main");
     try t.expect(try at(text, "call $myl_native_list_new") < try at(text, "# RC-GLUE-1 take"));
     try t.expect(std.mem.indexOf(u8, text, "%rcwork") != null);
-    try t.expect(std.mem.indexOf(u8, text, "call $myl_qbe_rc_slot_drop") != null);
+    try t.expect(std.mem.indexOf(u8, text, "slot_drop(l %ctx") != null);
     try t.expect(std.mem.indexOf(u8, text, "call $myl_qbe_rc_frame_leave") != null);
 }
 
