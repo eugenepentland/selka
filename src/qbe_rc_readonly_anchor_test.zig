@@ -203,3 +203,32 @@ test "RC list temporaries of a mut root borrow while their counted elements take
     ;
     try t.expectEqual(@as(usize, 1), try operationsIn(counted, "name"));
 }
+
+// spec-case: RC-OPERAND-ANCHOR-1
+test "RC field reads of a mut root consumed by a call whose result is matched take no loan" {
+    const matched =
+        \\record Table:
+        \\    entries: list[int]
+        \\record Runtime:
+        \\    globals: Table
+        \\    names: list[str]
+        \\    top: int
+        \\def find(t: Table, at: int) -> Option[int]:
+        \\    if at < len(t.entries):
+        \\        return Some(t.entries[at])
+        \\    return None
+        \\def hash_of(rt: Runtime, at: int) -> int:
+        \\    return len(rt.names[at])
+        \\def global(rt: mut Runtime, at: int) -> int:
+        \\    rt.top = rt.top + 1
+        \\    match find(rt.globals, hash_of(rt, at)):
+        \\        case Some(found):
+        \\            return found
+        \\        case None:
+        \\            return -1
+        \\def main() -> int:
+        \\    rt = Runtime(Table([1, 2]), ["a", "b"], 0)
+        \\    return global(mut rt, 1)
+    ;
+    try t.expectEqual(@as(usize, 0), try operationsIn(matched, "global"));
+}

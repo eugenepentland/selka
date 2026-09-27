@@ -248,6 +248,21 @@ def global_value(vm: mut Vm, at: int) -> Value:
     return entry_at(vm.globals, name_length(vm, at))
 
 
+def find_entry(globals: Globals, at: int) -> Option[Value]:
+    if at < len(globals.entries):
+        return Some(globals.entries[at])
+    return None
+
+
+def matched_global(vm: mut Vm, at: int) -> Value:
+    vm.top = vm.top + 1
+    match find_entry(vm.globals, name_length(vm, at)):
+        case Some(found):
+            return found
+        case None:
+            return Value.nil
+
+
 def wipe(vm: mut Vm) -> int:
     vm.globals = Globals([Value.text("wiped")])
     return 0
@@ -558,6 +573,14 @@ public def test_mut_root_fields_passed_to_calls_read_the_current_value() -> bool
     return number(first) == 1.0 and second == Value.text("two") and vm.top == 2
 
 
+# spec-case: RC-OPERAND-ANCHOR-1
+public def test_mut_root_fields_passed_to_calls_whose_results_are_matched() -> bool:
+    vm = Vm(Globals([Value.nil, Value.text("one")]), ["a", "bbb"], 0)
+    first = matched_global(mut vm, 0)
+    second = matched_global(mut vm, 1)
+    return first == Value.text("one") and second == Value.nil and vm.top == 2
+
+
 # The collector lends the argument's field in place, so it reads the list the
 # later `mut` call installed; RC keeps its loan on the list read first. Both
 # must survive the replacement; the counted build checks nothing leaks.
@@ -626,6 +649,7 @@ def main() -> int:
         test_mut_root_list_reads_inside_arenas(),
         test_mut_root_fields_passed_to_calls_read_the_current_value(),
         test_mut_root_fields_keep_the_value_a_later_mut_call_replaces(),
+        test_mut_root_fields_passed_to_calls_whose_results_are_matched(),
         test_borrowed_match_accessors_read_in_place_and_copy_when_kept(),
         test_borrowed_fields_across_calls_that_only_advance_the_root(),
         test_borrowed_fields_across_calls_that_replace_them(),

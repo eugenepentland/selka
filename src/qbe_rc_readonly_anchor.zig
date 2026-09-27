@@ -409,7 +409,12 @@ pub fn operandInterval(comptime E: type, self: *E, pc: usize) bool {
         const before = self.states[at] orelse return false;
         if (before.len <= pushed_depth) return false;
         const after = if (at + 1 < self.states.len) self.states[at + 1] else null;
-        const consumed = if (after) |stack| stack.len <= pushed_depth else true;
+        var consumed = if (after) |stack| stack.len <= pushed_depth else true;
+        // A direct call consumes its arguments and pushes a new result.
+        if (code[at].op == .call) {
+            const count = self.program.functions[@backingInt(code[at].op.call)].signature.parameter_count;
+            if (before.len - pushed_depth <= count) consumed = true;
+        }
         if (writes(E, self, &state.catalog, at, root_local)) return false;
         switch (code[at].op) {
             .jump, .jump_if_false, .switch_variant, .try_result, .begin_arena, .end_arena => return false,
