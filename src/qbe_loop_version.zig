@@ -19,6 +19,7 @@
 const std = @import("std");
 const facts = @import("qbe_loop_facts.zig");
 const read_version = @import("qbe_rc_read_version.zig");
+const operands = @import("qbe_loop_operands.zig");
 
 /// Errors reported while emitting native operations.
 pub const Error = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
@@ -100,10 +101,14 @@ pub fn Lower(comptime E: type) type {
             const text = self.output.writer.buffer[0..self.output.writer.end];
             if (self.copyAllocates(text[guard_end..])) return false;
             if (read_proof != null and !read_version.quietCopy(text[guard_end..])) return false;
+            const isolated = operands.certify(E, self, loop, read_proof, text[guard_end..]);
             keep = true;
             var copy = self.output;
             self.output = main;
-            try self.print("{s}", .{copy.writer.buffer[0..copy.writer.end]});
+            try self.print("{s}", .{copy.writer.buffer[0..guard_end]});
+            if (isolated) try operands.begin(E, self, loop);
+            try self.print("{s}", .{copy.writer.buffer[guard_end..copy.writer.end]});
+            if (isolated) try operands.end(E, self, loop);
             copy.deinit();
             return true;
         }
