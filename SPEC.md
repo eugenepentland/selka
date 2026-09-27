@@ -1386,6 +1386,8 @@ host failure in one worker leaves the units the other workers hold running.
 
 - [RC-LOOP-VERSION-1] RC loop versions cache element storage only inside a proved physical no-publication interval, after entry uniqueness and with no residual COW checks or allocating lowered helpers. Failed range guards execute the original loop and preserve its traps.
 
+- [RC-SCALAR-LOOP-VERSION-1] RC integer-only loops may reuse the existing guarded arithmetic version when bounded inspection proves that every touched value is an integer, Boolean or unit and no explicit or implicit ownership action occurs in the interval. Managed values, callbacks, region transitions, by-reference locals and uncertain paths retain their previous admission rules. The original checked loop remains the fallback, and step-accounted builds keep one original copy.
+
 - [RC-FILE-OPEN-TRAP-1] A trapping file open releases the provider's unpublished owned error text before reporting R_FILE, including inside an arena. Fallible open publishes that text in Result.Err; successful handles retain their unique resource cleanup.
 
 - [RC-NO-TRACING-ROOTS-1] Counted native functions retain guarded ownership journals and arena/callback scope cleanup without publishing tracing-GC roots; GC artifacts retain their existing traced root chains.

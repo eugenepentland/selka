@@ -1285,5 +1285,6 @@ fn borrowReceiverImpl(comptime E: type, self: *E, local: usize, payload: usize) 
 
 fn versionLifetime(comptime E: type, self: *E, head: usize, back: usize) bool {
     if (!runtime_mode.enabled()) return true;
-    return @import("qbe_rc_hoist.zig").permitsVersion(E, self, head, back);
+    return @import("qbe_rc_hoist.zig").permitsVersion(E, self, head, back) or
+        @import("qbe_rc_scalar_version.zig").proven(E, self, head, back);
 }
