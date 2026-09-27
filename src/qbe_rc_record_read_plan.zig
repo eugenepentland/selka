@@ -12,6 +12,8 @@ pub const Error = @import("qbe_rc_frame.zig").Error;
 const Budget = struct {
     remaining: usize = 262144,
     homes: homes.Budget = .{},
+    incoming: [16]struct { root: usize, valid: bool } = undefined,
+    incoming_count: usize = 0,
 
     fn take(self: *Budget, amount: usize) bool {
         if (amount > self.remaining) return false;
@@ -32,7 +34,7 @@ pub fn finalize(comptime E: type, self: *E) Error!void {
     for (code, 0..) |instruction, pc| {
         if (instruction.op != .get_field or pc == 0 or pc + 1 >= code.len) continue;
         const proof = try candidate(E, self, pc, &budget) orelse continue;
-        const facts = try homes.analyze(E, self, proof.root, &budget.homes) orelse continue;
+        const facts = if (proof.home == .named) try homes.analyze(E, self, proof.root, &budget.homes) orelse continue else null;
         if (!try interval(E, self, proof, facts, &budget)) continue;
         try found.append(self.allocator, proof);
     }
@@ -44,8 +46,9 @@ fn candidate(comptime E: type, self: *E, pc: usize, budget: *Budget) Error!?Cert
     if (code[pc - 1].op != .load_local or code[pc + 1].op != .store_local) return null;
     const root = @backingInt(code[pc - 1].op.load_local);
     const capture = @backingInt(code[pc + 1].op.store_local);
-    if (!private(E, self, root, false) or !private(E, self, capture, true)) return null;
+    if (!private(E, self, capture, true)) return null;
     if (root == capture or !try list(E, self, capture)) return null;
+    const home: @FieldType(Certificate, "home") = if (private(E, self, root, false)) .named else if (try incoming(E, self, root, budget)) .incoming else return null;
     const stack = self.states[pc] orelse return null;
     if (stack.len != 1 or stack[0] != self.function.scope.locals[root].ty) return null;
     const member = self.field(stack[0], code[pc].op.get_field) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else null;
@@ -55,7 +58,21 @@ fn candidate(comptime E: type, self: *E, pc: usize, budget: *Budget) Error!?Cert
     if (code[end + 1].op != .store_local) return null;
     const target = @backingInt(code[end + 1].op.store_local);
     if (!try scalar(E, self, self.function.scope.locals[target].ty)) return null;
-    return .{ .start = pc - 1, .end = end + 1, .root = root, .capture = capture };
+    return .{ .start = pc - 1, .end = end + 1, .root = root, .capture = capture, .home = home };
+}
+
+// Safe-type traversal has <=256 nodes and a <=256-slot pending/seen set.
+// Charge the full quadratic bound once per root; memo only completed answers.
+fn incoming(comptime E: type, self: *E, root: usize, budget: *Budget) Error!bool {
+    for (budget.incoming[0..budget.incoming_count]) |entry| {
+        if (!budget.take(1)) return false;
+        if (entry.root == root) return entry.valid;
+    }
+    if (budget.incoming_count == budget.incoming.len or !budget.take(256 * 256)) return false;
+    const valid = try @import("qbe_rc_record_read_anchor.zig").incoming(E, self, root);
+    budget.incoming[budget.incoming_count] = .{ .root = root, .valid = valid };
+    budget.incoming_count += 1;
+    return valid;
 }
 
 fn private(comptime E: type, self: *E, local: usize, temporary: bool) bool {
@@ -102,7 +119,7 @@ fn uses(comptime E: type, self: *E, local: usize, store: usize, budget: *Budget)
     return end;
 }
 
-fn interval(comptime E: type, self: *E, proof: Certificate, facts: []const u8, budget: *Budget) Error!bool {
+fn interval(comptime E: type, self: *E, proof: Certificate, facts: ?[]const u8, budget: *Budget) Error!bool {
     const code = self.function.scope.instructions;
     if ((self.states[proof.start] orelse return false).len != 0) return false;
     const projected = self.states[proof.start + 2] orelse return false;
@@ -115,7 +132,8 @@ fn interval(comptime E: type, self: *E, proof: Certificate, facts: []const u8, b
         if (instruction.op == .switch_variant and !budget.take(instruction.op.switch_variant.arms.len)) return false;
         if (!sources.targetsSatisfy(instruction.op, pc, proof, edge)) return false;
         if (pc < proof.start or pc > proof.end) continue;
-        if (self.states[pc] == null or instruction.inline_origin != null or facts[pc] != homes.owned) return false;
+        if (self.states[pc] == null or instruction.inline_origin != null) return false;
+        if (facts) |rows| if (rows[pc] != homes.owned) return false;
         if (!try allowed(E, self, proof, pc, budget) or !try quiet(E, self, proof, pc, budget)) return false;
     }
     for (self.loop_plan.loops) |loop| {

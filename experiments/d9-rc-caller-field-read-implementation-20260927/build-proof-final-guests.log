@@ -1,0 +1,9 @@
+START qbe False
+DONE qbe False 7.93
+START qbe True
+DONE qbe True 8.12
+START llvm False
+DONE llvm False 10.39
+START llvm True
+DONE llvm True 10.45
+four full N10 binaries byte-identical to measured originals

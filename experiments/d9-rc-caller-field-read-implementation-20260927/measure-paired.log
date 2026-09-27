@@ -1,0 +1,18 @@
+before qbe 0 154847125432
+after qbe 0 146516025789
+after qbe 1 146597270007
+before qbe 1 154720263628
+before qbe 2 155156619596
+after qbe 2 147172757583
+before qbe counts {'version': 1, 'runtime': 'rc-v3-counting', 'saturated': False, 'owner_acquire': 44407747, 'owner_release': 48758355, 'hold_acquire': 160905294, 'hold_release': 160905294, 'owner_limit': 0, 'hold_limit': 0, 'heap_allocate': 4350608, 'arena_allocate': 0, 'retire': 4350608, 'clone_shell': 1095889, 'unique_check': 20836904}
+after qbe counts {'version': 1, 'runtime': 'rc-v3-counting', 'saturated': False, 'owner_acquire': 44407747, 'owner_release': 48758355, 'hold_acquire': 146041398, 'hold_release': 146041398, 'owner_limit': 0, 'hold_limit': 0, 'heap_allocate': 4350608, 'arena_allocate': 0, 'retire': 4350608, 'clone_shell': 1095889, 'unique_check': 20836904}
+SUMMARY qbe {'samples': {'before': [154847125432, 154720263628, 155156619596], 'after': [146516025789, 146597270007, 147172757583]}, 'medians': {'before': 154847125432, 'after': 146597270007}, 'after_before': 0.9467225794344961, 'accepted_gc_archival_median': 7243227886, 'before_gc': 21.378193240515696, 'after_gc': 20.23921824831013}
+before llvm 0 118761080254
+after llvm 0 112536573744
+after llvm 1 112083174454
+before llvm 1 119078715725
+before llvm 2 118295165145
+after llvm 2 112890405246
+before llvm counts {'version': 1, 'runtime': 'rc-v3-counting', 'saturated': False, 'owner_acquire': 44407747, 'owner_release': 48758355, 'hold_acquire': 160905294, 'hold_release': 160905294, 'owner_limit': 0, 'hold_limit': 0, 'heap_allocate': 4350608, 'arena_allocate': 0, 'retire': 4350608, 'clone_shell': 1095889, 'unique_check': 20836904}
+after llvm counts {'version': 1, 'runtime': 'rc-v3-counting', 'saturated': False, 'owner_acquire': 44407747, 'owner_release': 48758355, 'hold_acquire': 146041398, 'hold_release': 146041398, 'owner_limit': 0, 'hold_limit': 0, 'heap_allocate': 4350608, 'arena_allocate': 0, 'retire': 4350608, 'clone_shell': 1095889, 'unique_check': 20836904}
+SUMMARY llvm {'samples': {'before': [118761080254, 119078715725, 118295165145], 'after': [112536573744, 112083174454, 112890405246]}, 'medians': {'before': 118761080254, 'after': 112536573744}, 'after_before': 0.9475879935018496, 'accepted_gc_archival_median': 3433157037, 'before_gc': 34.5923821643117, 'after_gc': 32.77932600552929}

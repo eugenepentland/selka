@@ -1,0 +1,408 @@
+diff --git a/SPEC.md b/SPEC.md
+index 3169bf1b..18e93bf6 100644
+--- a/SPEC.md
++++ b/SPEC.md
+@@ -1464,3 +1464,4 @@ host failure in one worker leaves the units the other workers hold running.
+ - [RC-READ-LIST-VERSION-1] A bounded read-only scalar-list loop may reuse the existing guarded range/storage version only with initialized ordinary O or terminal H journal anchors and no mutation, callback, ownership cleanup, capture or arena transition; refusal retains the checked original loop, step accounting remains unversioned, and trap cleanup retains the original tokens.
+ 
+ - [RC-RECORD-FIELD-READ-1] A bounded closed scalar-list field read may borrow from a proved initialized private named record home. Prove every explicit and implicit capture writer, incoming CFG edge and physical ownership effect; retain frame storage and mandatory step, bounds, arithmetic and arena failures. Unknown homes, aliases, callbacks, managed results and non-failure emitted calls retain complete ordinary publication. Temporary loan counts and their implementation-only hold-limit admission may disappear; all retained owners and their limits remain unchanged.
++- [RC-CALLER-FIELD-READ-1] A canonical inline-record inout parameter may lend an ordinary scalar-list field through a proved closed checked-read interval. Its suspended caller provides lifetime, not ordinary ownership or uniqueness. Keep bounds/frame/step traps and all storage; refuse callbacks, mutations, independent cleanup, arena changes and unproved parameter authority. Removed temporary holds need not retain their former implementation count-limit admission.
+diff --git a/src/qbe_rc_record_read.zig b/src/qbe_rc_record_read.zig
+index a05fecc3..a1172484 100644
+--- a/src/qbe_rc_record_read.zig
++++ b/src/qbe_rc_record_read.zig
+@@ -41,7 +41,8 @@ pub fn emit(comptime E: type, self: *E, pc: usize) Error!?usize {
+         rc.plan.records.reads[index].active = true;
+         trial.by_reference = try self.allocator.dupe(@TypeOf(trial.by_reference[0]), self.by_reference);
+         defer self.allocator.free(trial.by_reference);
+-        try trial.print(" # RC-RECORD-FIELD-READ-1 root {d} capture {d}\n", .{ proof.root, proof.capture });
++        const spec = if (proof.home == .incoming) "RC-CALLER-FIELD-READ-1" else "RC-RECORD-FIELD-READ-1";
++        try trial.print(" # {s} root {d} capture {d}\n", .{ spec, proof.root, proof.capture });
+         for (proof.start..proof.end + 1) |at| try trial.emitAt(at);
+         const text = trial.output.written();
+         if (!@import("qbe_rc_closed_text.zig").quietCopy(text)) return null;
+diff --git a/src/qbe_rc_record_read_anchor.zig b/src/qbe_rc_record_read_anchor.zig
+new file mode 100644
+index 00000000..61031932
+--- /dev/null
++++ b/src/qbe_rc_record_read_anchor.zig
+@@ -0,0 +1,41 @@
++//! Incoming record lifetime is distinct from a private named home's O token.
++const model = @import("rc_model.zig");
++const cow = @import("cow_plan.zig");
++/// Optional type refusal retains ordinary lowering; allocator failures propagate.
++pub const Error = error{ InternalError, OutOfMemory };
++
++/// A canonical inout slot remains anchored by its suspended caller. No count,
++/// uniqueness, mutation or escaping-result authority follows from this query.
++pub fn incoming(comptime E: type, self: *E, root: usize) Error!bool {
++    const state = self.cow.?.rc orelse return false;
++    if (root >= self.function.signature.parameter_count or root >= state.contract.parameters.len) return false;
++    if (!self.callerStorage(root) or self.borrowsElement(root) or self.moves.resolve(root) != root) return false;
++    const entry = state.plan.locals.entry[root];
++    if (@backingInt(entry.storage) != root or !matches(root, state.contract.parameters[root], entry.ownership)) return false;
++    const local = self.function.scope.locals[root];
++    if (local.usage.temporary or !local.ty.isAggregate()) return false;
++    const record = self.program.records[local.ty.recordIndex()];
++    if (!record.isRecord() or record.managed or record.isCollection()) return false;
++    if (!entry.shape.counted or entry.shape.unique_drop) return false;
++    const plan = self.cow.?.plan;
++    if (plan.place(root) != null or (root < plan.aliases.len and plan.aliases[root] != cow.none)) return false;
++    // safe visits every native child and refuses all builtins, including live views.
++    return @import("rc_field_authority.zig").safe(&state.catalog, local.ty);
++}
++
++fn matches(root: usize, parameter: model.Parameter, authority: model.Ownership) bool {
++    if (parameter != .caller_storage or authority != .inout) return false;
++    return authority.inout == .parameter and authority.inout.parameter == root;
++}
++
++// spec-case: RC-CALLER-FIELD-READ-1
++test "RC incoming record anchor requires exact inout parameter not an owner or generic borrow" {
++    const t = @import("std").testing;
++    try t.expect(matches(2, .caller_storage, .{ .inout = .{ .parameter = 2 } }));
++    try t.expect(!matches(2, .read, .{ .inout = .{ .parameter = 2 } }));
++    try t.expect(!matches(2, .mutable_payload, .{ .inout = .{ .parameter = 2 } }));
++    try t.expect(!matches(2, .caller_storage, .{ .inout = .{ .parameter = 1 } }));
++    try t.expect(!matches(2, .caller_storage, .{ .inout = .{ .storage = @fromBackingInt(2) } }));
++    try t.expect(!matches(2, .caller_storage, .{ .borrowed = .{ .parameter = 2 } }));
++    try t.expect(!matches(2, .caller_storage, .{ .owned = .{ .token = @fromBackingInt(2) } }));
++}
+diff --git a/src/qbe_rc_record_read_plan.zig b/src/qbe_rc_record_read_plan.zig
+index 420faa2e..819becdc 100644
+--- a/src/qbe_rc_record_read_plan.zig
++++ b/src/qbe_rc_record_read_plan.zig
+@@ -12,6 +12,8 @@ pub const Error = @import("qbe_rc_frame.zig").Error;
+ const Budget = struct {
+     remaining: usize = 262144,
+     homes: homes.Budget = .{},
++    incoming: [16]struct { root: usize, valid: bool } = undefined,
++    incoming_count: usize = 0,
+ 
+     fn take(self: *Budget, amount: usize) bool {
+         if (amount > self.remaining) return false;
+@@ -32,7 +34,7 @@ pub fn finalize(comptime E: type, self: *E) Error!void {
+     for (code, 0..) |instruction, pc| {
+         if (instruction.op != .get_field or pc == 0 or pc + 1 >= code.len) continue;
+         const proof = try candidate(E, self, pc, &budget) orelse continue;
+-        const facts = try homes.analyze(E, self, proof.root, &budget.homes) orelse continue;
++        const facts = if (proof.home == .named) try homes.analyze(E, self, proof.root, &budget.homes) orelse continue else null;
+         if (!try interval(E, self, proof, facts, &budget)) continue;
+         try found.append(self.allocator, proof);
+     }
+@@ -44,8 +46,9 @@ fn candidate(comptime E: type, self: *E, pc: usize, budget: *Budget) Error!?Cert
+     if (code[pc - 1].op != .load_local or code[pc + 1].op != .store_local) return null;
+     const root = @backingInt(code[pc - 1].op.load_local);
+     const capture = @backingInt(code[pc + 1].op.store_local);
+-    if (!private(E, self, root, false) or !private(E, self, capture, true)) return null;
++    if (!private(E, self, capture, true)) return null;
+     if (root == capture or !try list(E, self, capture)) return null;
++    const home: @FieldType(Certificate, "home") = if (private(E, self, root, false)) .named else if (try incoming(E, self, root, budget)) .incoming else return null;
+     const stack = self.states[pc] orelse return null;
+     if (stack.len != 1 or stack[0] != self.function.scope.locals[root].ty) return null;
+     const member = self.field(stack[0], code[pc].op.get_field) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else null;
+@@ -55,7 +58,21 @@ fn candidate(comptime E: type, self: *E, pc: usize, budget: *Budget) Error!?Cert
+     if (code[end + 1].op != .store_local) return null;
+     const target = @backingInt(code[end + 1].op.store_local);
+     if (!try scalar(E, self, self.function.scope.locals[target].ty)) return null;
+-    return .{ .start = pc - 1, .end = end + 1, .root = root, .capture = capture };
++    return .{ .start = pc - 1, .end = end + 1, .root = root, .capture = capture, .home = home };
++}
++
++// Safe-type traversal has <=256 nodes and a <=256-slot pending/seen set.
++// Charge the full quadratic bound once per root; memo only completed answers.
++fn incoming(comptime E: type, self: *E, root: usize, budget: *Budget) Error!bool {
++    for (budget.incoming[0..budget.incoming_count]) |entry| {
++        if (!budget.take(1)) return false;
++        if (entry.root == root) return entry.valid;
++    }
++    if (budget.incoming_count == budget.incoming.len or !budget.take(256 * 256)) return false;
++    const valid = try @import("qbe_rc_record_read_anchor.zig").incoming(E, self, root);
++    budget.incoming[budget.incoming_count] = .{ .root = root, .valid = valid };
++    budget.incoming_count += 1;
++    return valid;
+ }
+ 
+ fn private(comptime E: type, self: *E, local: usize, temporary: bool) bool {
+@@ -102,7 +119,7 @@ fn uses(comptime E: type, self: *E, local: usize, store: usize, budget: *Budget)
+     return end;
+ }
+ 
+-fn interval(comptime E: type, self: *E, proof: Certificate, facts: []const u8, budget: *Budget) Error!bool {
++fn interval(comptime E: type, self: *E, proof: Certificate, facts: ?[]const u8, budget: *Budget) Error!bool {
+     const code = self.function.scope.instructions;
+     if ((self.states[proof.start] orelse return false).len != 0) return false;
+     const projected = self.states[proof.start + 2] orelse return false;
+@@ -115,7 +132,8 @@ fn interval(comptime E: type, self: *E, proof: Certificate, facts: []const u8, b
+         if (instruction.op == .switch_variant and !budget.take(instruction.op.switch_variant.arms.len)) return false;
+         if (!sources.targetsSatisfy(instruction.op, pc, proof, edge)) return false;
+         if (pc < proof.start or pc > proof.end) continue;
+-        if (self.states[pc] == null or instruction.inline_origin != null or facts[pc] != homes.owned) return false;
++        if (self.states[pc] == null or instruction.inline_origin != null) return false;
++        if (facts) |rows| if (rows[pc] != homes.owned) return false;
+         if (!try allowed(E, self, proof, pc, budget) or !try quiet(E, self, proof, pc, budget)) return false;
+     }
+     for (self.loop_plan.loops) |loop| {
+diff --git a/src/qbe_rc_record_read_test.zig b/src/qbe_rc_record_read_test.zig
+index 18f60aad..f58df474 100644
+--- a/src/qbe_rc_record_read_test.zig
++++ b/src/qbe_rc_record_read_test.zig
+@@ -52,7 +52,7 @@ fn body(manifest: Manifest, name: []const u8) ![]const u8 {
+ }
+ 
+ // spec: RC-RECORD-FIELD-READ-1
+-test "RC record field reads lend named homes but refuse caller storage callbacks and managed leaves" {
++test "RC record field reads lend named homes but refuse callbacks and managed leaves" {
+     const saved = runtime.get();
+     defer runtime.set(saved);
+     runtime.set(.rc);
+@@ -62,7 +62,7 @@ test "RC record field reads lend named homes but refuse caller storage callbacks
+     try t.expect(std.mem.indexOf(u8, il, marker) != null);
+     try t.expect(std.mem.indexOf(u8, il, "call $myl_qbe_fail_normalized_index_bounds") != null);
+     try t.expect(std.mem.indexOf(u8, il, "call $myl_qbe_rc_frame_cleanup") != null);
+-    for ([_][]const u8{ "external", "changed", "managed", "floating" }) |name| {
++    for ([_][]const u8{ "changed", "managed", "floating" }) |name| {
+         try t.expect(std.mem.indexOf(u8, try body(manifest.value, name), marker) == null);
+     }
+ }
+@@ -93,3 +93,20 @@ test "RC record field reads retain every original checked instruction and step b
+     try t.expect(std.mem.indexOf(u8, il[at..], ", @step_limit,") != null);
+     try t.expect(std.mem.indexOf(u8, il[at..], "call $myl_qbe_fail_normalized_index_bounds") != null);
+ }
++
++// spec: RC-CALLER-FIELD-READ-1
++test "RC record field reads accept canonical incoming lifetime without asserting ordinary ownership" {
++    const saved = runtime.get();
++    defer runtime.set(saved);
++    runtime.set(.rc);
++    var manifest = try emitted(false);
++    defer manifest.deinit();
++    const il = try body(manifest.value, "external");
++    try t.expect(std.mem.indexOf(u8, il, "# RC-CALLER-FIELD-READ-1") != null);
++    try t.expect(std.mem.indexOf(u8, il, marker) == null);
++    const later_loan = std.mem.indexOf(u8, il, "call $myl_rc_native_loan") orelse return error.TestUnexpectedResult;
++    const checked_read = std.mem.indexOf(u8, il, "call $myl_qbe_fail_normalized_index_bounds") orelse return error.TestUnexpectedResult;
++    try t.expect(later_loan > checked_read);
++    try t.expect(std.mem.indexOf(u8, il, "call $myl_qbe_fail_normalized_index_bounds") != null);
++    try t.expect(std.mem.indexOf(u8, il, "call $myl_qbe_rc_frame_cleanup") != null);
++}
+diff --git a/src/rc_field_authority.zig b/src/rc_field_authority.zig
+index 0d1f0689..551dc0a6 100644
+--- a/src/rc_field_authority.zig
++++ b/src/rc_field_authority.zig
+@@ -34,7 +34,7 @@ pub fn safe(catalog: *shapes.Catalog, ty: typed.Type) Error!bool {
+         work.seen[work.visited] = current;
+         work.visited += 1;
+         if (current.capabilityIndex() != null or current.resourceKind() != null) return false;
+-        const layout = catalog.native.layout(current) catch return error.InternalError;
++        const layout = catalog.native.layout(current) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError;
+         if (layout.drop or layout.copy == .prohibited) return false;
+         switch (layout.kind) {
+             .callable, .resource, .handle, .pool_handle, .owned_buffer, .owned_pool => return false,
+@@ -58,3 +58,40 @@ fn appendRecord(work: *Work, record: typed.Record) bool {
+     for (record.fields) |field| if (!work.append(field.ty)) return false;
+     return true;
+ }
++
++// spec-case: RC-CALLER-FIELD-READ-1
++test "RC record field safe-type admission propagates failed layout allocation and retries" {
++    const t = @import("std").testing;
++    const native = @import("native_types.zig");
++    const span: @import("source.zig").Span = .{ .start = 0, .end = 0 };
++    const ty: typed.Type = @fromBackingInt(typed.Type.record_base);
++    const records = [_]typed.Record{.{ .id = ty, .name = "Plain", .declaration = span, .fields = &.{.{ .name = "value", .declaration = span, .ty = .i64 }} }};
++    var layouts = try native.Catalog.initRecords(t.allocator, &records);
++    defer layouts.deinit();
++    var catalog = try shapes.Catalog.init(t.allocator, &layouts);
++    defer catalog.deinit();
++    var failing = t.FailingAllocator.init(t.allocator, .{ .fail_index = 0 });
++    layouts.allocator = failing.allocator();
++    try t.expectError(error.OutOfMemory, safe(&catalog, ty));
++    layouts.allocator = t.allocator;
++    try t.expect(try safe(&catalog, ty));
++}
++
++// spec-case: RC-CALLER-FIELD-READ-1
++test "RC record field safe-type authority independently refuses transitive live views" {
++    const t = @import("std").testing;
++    const native = @import("native_types.zig");
++    const span: @import("source.zig").Span = .{ .start = 0, .end = 0 };
++    const view: typed.Type = @fromBackingInt(typed.Type.record_base);
++    const wrapper: typed.Type = @fromBackingInt(typed.Type.record_base + 1);
++    const records = [_]typed.Record{
++        .{ .id = view, .name = "View", .declaration = span, .shape = .{ .builtin = .live_view }, .fields = &.{.{ .name = "mapping", .declaration = span, .ty = .i64 }} },
++        .{ .id = wrapper, .name = "Wrapper", .declaration = span, .fields = &.{.{ .name = "value", .declaration = span, .ty = view }} },
++    };
++    var layouts = try native.Catalog.initRecords(t.allocator, &records);
++    defer layouts.deinit();
++    var catalog = try shapes.Catalog.init(t.allocator, &layouts);
++    defer catalog.deinit();
++    try t.expect(!try safe(&catalog, wrapper));
++    try t.expect(!try safe(&catalog, view));
++}
+diff --git a/src/rc_record_read.zig b/src/rc_record_read.zig
+index 980f2c8a..15bcd4f0 100644
+--- a/src/rc_record_read.zig
++++ b/src/rc_record_read.zig
+@@ -1,3 +1,3 @@
+ //! Physical interval identity shared without importing concrete emission.
+ /// Entry load, inclusive scalar publication end, and the sole raw capture.
+-pub const Certificate = struct { start: usize, end: usize, root: usize, capture: usize, active: bool = false };
++pub const Certificate = struct { start: usize, end: usize, root: usize, capture: usize, active: bool = false, home: enum { named, incoming } = .named };
+diff --git a/src/root_test.zig b/src/root_test.zig
+index 1c1af310..d8402278 100644
+--- a/src/root_test.zig
++++ b/src/root_test.zig
+@@ -260,6 +260,7 @@ test {
+     _ = @import("qbe_rc_scalar_version_test.zig");
+     _ = @import("qbe_rc_read_version_test.zig");
+     _ = @import("qbe_rc_record_read_test.zig");
++    _ = @import("qbe_rc_record_read_anchor.zig");
+     _ = @import("qbe_rc_plain_write_test.zig");
+     _ = @import("qbe_rc_append_test.zig");
+     _ = @import("qbe_rc_admission_test.zig");
+diff --git a/tests/lang/rc_caller_field_reads.my b/tests/lang/rc_caller_field_reads.my
+new file mode 100644
+index 00000000..06f25d93
+--- /dev/null
++++ b/tests/lang/rc_caller_field_reads.my
+@@ -0,0 +1,139 @@
++record Cursor:
++    code: list[int]
++    index: int
++
++
++def advance(cursor: mut Cursor) -> int:
++    item = cursor.code[cursor.index]
++    cursor.index = cursor.index + 1
++    return item
++
++
++def read_only_inout(cursor: mut Cursor) -> int:
++    cursor.index = 0
++    item = cursor.code[cursor.index]
++    return item
++
++
++def forward(cursor: mut Cursor) -> int:
++    return advance(mut cursor)
++
++
++def replace_after(cursor: mut Cursor) -> int:
++    item = cursor.code[cursor.index]
++    cursor.code = [29]
++    cursor.index = 0
++    return item
++
++
++def cross(left: mut Cursor, right: mut Cursor) -> int:
++    item = left.code[left.index]
++    left.index = 0
++    right.code = [31]
++    right.index = 0
++    return item
++
++
++def change(cursor: mut Cursor) -> int:
++    cursor.code = [41]
++    return 0
++
++
++def callback(cursor: mut Cursor) -> int:
++    item = cursor.code[change(mut cursor)]
++    return item
++
++
++def readonly(cursor: Cursor) -> int:
++    item = cursor.code[cursor.index]
++    return item
++
++
++def overflow_after(cursor: mut Cursor, addend: int) -> int:
++    item = cursor.code[cursor.index]
++    cursor.index = cursor.index + 1
++    return item + addend
++
++
++def heap_frame(cursor: mut Cursor, values: [4096]int) -> int:
++    padding = replace(values, 0, 3)
++    item = cursor.code[cursor.index]
++    cursor.index = cursor.index + 1
++    return item + padding[0]
++
++
++# spec-case: RC-CALLER-FIELD-READ-1
++public def test_direct_and_forwarded_references_keep_callers_value() -> bool:
++    cursor = Cursor([7, 11, 13], 0)
++    first = advance(mut cursor)
++    second = forward(mut cursor)
++    return first == 7 and second == 11 and cursor.index == 2 and cursor.code == [7, 11, 13]
++
++
++# spec-case: RC-CALLER-FIELD-READ-1
++public def test_negative_index_and_later_replacement_keep_scalar_snapshot() -> bool:
++    cursor = Cursor([7, 11, 13], -1)
++    snapshot = cursor
++    item = replace_after(mut cursor)
++    return item == 13 and cursor.code == [29] and snapshot.code == [7, 11, 13]
++
++
++# spec-case: RC-CALLER-FIELD-READ-1
++public def test_repeated_entry_and_rebinding_keep_anchor_current() -> bool:
++    cursor = Cursor([7], 0)
++    total = 0
++    count = 0
++    while count < 4:
++        total += advance(mut cursor)
++        cursor = Cursor([11], 0)
++        count += 1
++    return total == 40 and cursor.index == 0
++
++
++# spec-case: RC-CALLER-FIELD-READ-1
++public def test_distinct_and_aliased_inout_homes() -> bool:
++    cursor = Cursor([7], 0)
++    second = Cursor([11], 0)
++    first = cross(mut cursor, mut second)
++    alias = cross(mut cursor, mut cursor)
++    return first == 7 and alias == 7 and second.code == [31] and cursor.code == [31]
++
++
++# spec-case: RC-CALLER-FIELD-READ-1
++public def test_callback_capture_retains_original_field_value() -> bool:
++    cursor = Cursor([7], 0)
++    item = callback(mut cursor)
++    return item == 7 and cursor.code == [41]
++
++
++# spec-case: RC-CALLER-FIELD-READ-1
++public def test_heap_and_parent_arena_authority_survives_forwarding() -> bool:
++    old = Cursor([7, 11], 0)
++    answer = 0
++    with arena():
++        answer += forward(mut old)
++        local = Cursor([13, 17], 0)
++        with arena():
++            answer += forward(mut local)
++        answer += advance(mut local)
++    return answer == 37 and old.index == 1
++
++
++# spec-case: RC-CALLER-FIELD-READ-1
++public def test_readonly_parameter_retains_its_separate_convention() -> bool:
++    cursor = Cursor([7, 11], 1)
++    return readonly(cursor) == 11 and cursor.index == 1
++
++
++# spec-case: RC-CALLER-FIELD-READ-1
++public def test_live_leaf_reached_through_parent_field() -> bool:
++    rows = [Cursor([7, 11], 0)]
++    snapshot = rows
++    local = rows[0]
++    first = advance(mut local)
++    rows[0] = local
++    return first == 7 and rows[0].index == 1 and snapshot[0].index == 0
++
++
++def main() -> int:
++    return 0
