@@ -1,0 +1,196 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 372  of event 'cpu_core/instructions/u'
+# Event count (approx.): 74400000000
+#
+# Overhead  Symbol                                                                      IPC   [IPC Coverage]
+# ........  ..........................................................................  ....................
+#
+    83.60%  [.] myl_f_e40dfff1a71eb7baf65ea49495977ddd33d81611a9c59c5573fc42205baa7e85  -      -            
+            |
+            ---myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605
+               launch
+               0x702e8cc62ea0
+               execute_config_args
+               mylang_qbe_run_process
+               mylang_qbe_run_grants
+               0x702e8cc2a601
+               __libc_start_main
+               _start
+
+     4.03%  [.] compiler_rt.fastMemset                                                  -      -            
+            |          
+            |--2.15%--fastMemset (inlined)
+            |          myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605
+            |          launch
+            |          0x702e8cc62ea0
+            |          execute_config_args
+            |          mylang_qbe_run_process
+            |          mylang_qbe_run_grants
+            |          0x702e8cc2a601
+            |          __libc_start_main
+            |          _start
+            |          
+             --1.88%--shortMemset__anon_603981794 (inlined)
+                       shortMemset__anon_603981758 (inlined)
+                       shortMemset__anon_603981736 (inlined)
+                       fastMemset (inlined)
+                       myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605
+                       launch
+                       0x702e8cc62ea0
+                       execute_config_args
+                       mylang_qbe_run_process
+                       mylang_qbe_run_grants
+                       0x702e8cc2a601
+                       __libc_start_main
+                       _start
+
+     1.88%  [.] myl_qbe_float_unary                                                     -      -            
+            |
+            ---myl_f_e40dfff1a71eb7baf65ea49495977ddd33d81611a9c59c5573fc42205baa7e85
+               myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605
+               launch
+               0x702e8cc62ea0
+               execute_config_args
+               mylang_qbe_run_process
+               mylang_qbe_run_grants
+               0x702e8cc2a601
+               __libc_start_main
+               _start
+
+     1.61%  [.] myl_qbe_rc_frame_cleanup                                                -      -            
+            |
+            ---myl_f_e40dfff1a71eb7baf65ea49495977ddd33d81611a9c59c5573fc42205baa7e85
+               myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605
+               launch
+               0x702e8cc62ea0
+               execute_config_args
+               mylang_qbe_run_process
+               mylang_qbe_run_grants
+               0x702e8cc2a601
+               __libc_start_main
+               _start
+
+     1.34%  [.] __libc_calloc                                                           -      -            
+            |
+            ---capture
+               myl_rc_scope_extend
+               myl_qbe_rc_scope_pin
+               myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605
+               launch
+               0x702e8cc62ea0
+               execute_config_args
+               mylang_qbe_run_process
+               mylang_qbe_run_grants
+               0x702e8cc2a601
+               __libc_start_main
+               _start
+
+     1.08%  [.] myl_rc_scope_end                                                        -      -            
+            |
+            ---myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605
+               launch
+               0x702e8cc62ea0
+               execute_config_args
+               mylang_qbe_run_process
+               mylang_qbe_run_grants
+               0x702e8cc2a601
+               __libc_start_main
+               _start
+
+     0.81%  [.] myl_qbe_rc_frame_enter                                                  -      -            
+            |          
+             --0.54%--myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605
+                       launch
+                       0x702e8cc62ea0
+                       execute_config_args
+                       mylang_qbe_run_process
+                       mylang_qbe_run_grants
+                       0x702e8cc2a601
+                       __libc_start_main
+                       _start
+
+     0.81%  [.] myl_qbe_rc_unique_local                                                 -      -            
+            |
+            ---myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605
+               launch
+               0x702e8cc62ea0
+               execute_config_args
+               mylang_qbe_run_process
+               mylang_qbe_run_grants
+               0x702e8cc2a601
+               __libc_start_main
+               _start
+
+     0.81%  [.] myl_rc_descriptor_find                                                  -      -            
+            |          
+             --0.54%--myl_qbe_rc_unique_local
+                       myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605
+                       launch
+                       0x702e8cc62ea0
+                       execute_config_args
+                       mylang_qbe_run_process
+                       mylang_qbe_run_grants
+                       0x702e8cc2a601
+                       __libc_start_main
+                       _start
+
+     0.81%  [.] myl_rc_hold_acquire                                                     -      -            
+     0.54%  [.] capture                                                                 -      -            
+            |
+            ---myl_qbe_rc_scope_pin
+               myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605
+               launch
+               0x702e8cc62ea0
+               execute_config_args
+               mylang_qbe_run_process
+               mylang_qbe_run_grants
+               0x702e8cc2a601
+               __libc_start_main
+               _start
+
+     0.54%  [.] cfree                                                                   -      -            
+            |
+            ---myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605
+               launch
+               0x702e8cc62ea0
+               execute_config_args
+               mylang_qbe_run_process
+               mylang_qbe_run_grants
+               0x702e8cc2a601
+               __libc_start_main
+               _start
+
+     0.54%  [.] myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605  -      -            
+            |
+            ---launch
+               0x702e8cc62ea0
+               execute_config_args
+               mylang_qbe_run_process
+               mylang_qbe_run_grants
+               0x702e8cc2a601
+               __libc_start_main
+               _start
+
+     0.54%  [.] myl_rc_meta_alloc                                                       -      -            
+            |
+            ---capture
+               myl_qbe_rc_scope_pin
+               myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605
+               launch
+               0x702e8cc62ea0
+               execute_config_args
+               mylang_qbe_run_process
+               mylang_qbe_run_grants
+               0x702e8cc2a601
+               __libc_start_main
+               _start
+
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

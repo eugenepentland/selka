@@ -15,6 +15,7 @@ test {
     _ = @import("native_rc_arena_test.zig");
     _ = @import("native_rc_hold_test.zig");
     _ = @import("native_file_cleanup_test.zig");
+    _ = @import("native_argv_test.zig");
     _ = @import("view_cycles_test.zig");
     _ = @import("qbe_runtime_rc_test.zig");
     _ = @import("native_rc_codecs_test.zig");
@@ -257,6 +258,7 @@ test {
     _ = @import("qbe_rc_admission_test.zig");
     _ = @import("qbe_rc_views_test.zig");
     _ = @import("qbe_rc_journal_test.zig");
+    _ = @import("qbe_rc_empty_locals_test.zig");
     _ = @import("cow_test.zig");
     _ = @import("cow_rebox_roots_test.zig");
     _ = @import("qbe_text_test.zig");

@@ -1,0 +1,923 @@
+{
+  "compiler_sha256": "53de33d937ebc3c21cabfade1fb825ad09b9938552449e979b75e01c66e1739d",
+  "source_sha256": "97137bff09108d9560736833ae682733abd5d728ca8066edb5cda4caede62a7c",
+  "production_sha256": "9fa0da118f08c21a9c4e5c55435343598e5f003d118d6505f0825e91a95f300a",
+  "builds": [
+    {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/experiments/d9-rc-flat-abi3-20260926/binary_trees_n12.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/prefix-qbe-rc-n12",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/prefix-prefix-qbe",
+        "--keep-symbols",
+        "--rc-runtime"
+      ],
+      "stdout": "",
+      "stderr": "",
+      "sha256": "296637fc3192ab766301773767643a31172d37a7c5f85c65f735825b33db1db6",
+      "manifest": {
+        "link_identity": "e1ec41050dbdf3198fa73a345defd9e9dcf33d044d4ea200c526854c1590045d",
+        "version": "qbe-manifest-v1",
+        "abi": "mylang-qbe-native-v9",
+        "entry": "myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605",
+        "backend": "qbe",
+        "optimization": "default",
+        "lto": false,
+        "thin_lto": false,
+        "functions": [
+          {
+            "name": "main",
+            "symbol": "myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605",
+            "key": "294c72931ee22f3ee59f0f5e5e98518b3497c67edd78ca4bd4b3b638c59ef221",
+            "object": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/prefix-prefix-qbe/objects/701e433a2b55ba157e85b0c59a75460446280ea495b57cdefc882ec818f905b6/79472f579ce0119e4b4a48572c8d96fe41cf04173a5406f1b092336482beb929.o",
+            "reused": false
+          },
+          {
+            "name": "check",
+            "symbol": "myl_f_20f65c28671b40937c5bf23acc7c6f37e5a5ec0622e347b57685725df5ba9e50",
+            "key": "b23f115ba9a515f6ba3ba5fedfcc695ff06682ba7f79f61f7d06a47759ce2dcc",
+            "object": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/prefix-prefix-qbe/objects/701e433a2b55ba157e85b0c59a75460446280ea495b57cdefc882ec818f905b6/79472f579ce0119e4b4a48572c8d96fe41cf04173a5406f1b092336482beb929.o",
+            "reused": false
+          },
+          {
+            "name": "make",
+            "symbol": "myl_f_d05aa2a15fb3c40efeeb03bec445393f00074484cf01c8fb2da90ca6695a5531",
+            "key": "15317a753678c16eccbe56dd5c0da42ff01fc2516b9749fd6478a963aa97cf0c",
+            "object": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/prefix-prefix-qbe/objects/701e433a2b55ba157e85b0c59a75460446280ea495b57cdefc882ec818f905b6/79472f579ce0119e4b4a48572c8d96fe41cf04173a5406f1b092336482beb929.o",
+            "reused": false
+          }
+        ],
+        "runtime_object": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/prefix-prefix-qbe/objects/701e433a2b55ba157e85b0c59a75460446280ea495b57cdefc882ec818f905b6/c7f9db9a4aebe9d1f04fd7cefdc1283a7edf4489d060426cfb8199dac0b8ff63.a"
+      }
+    },
+    {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/experiments/d9-rc-flat-abi3-20260926/binary_trees_n12.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/prefix-qbe-stats-n12",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/prefix-prefix-qbe",
+        "--keep-symbols",
+        "--rc-runtime=stats"
+      ],
+      "stdout": "",
+      "stderr": "build-slot: all 3 build slot(s) busy; waiting (0s so far)\nbuild-slot: build slot 1 after 10s (all 3 build slot(s) busy)\n",
+      "sha256": "5b8d08a73b7144615afdbd0ab976b21126bfa99335a32f228f47ab7087b375d4",
+      "manifest": {
+        "link_identity": "7f694e260367962017be7f6635a5a1f4df3d166e1c70d05f0e14229ffc0d364d",
+        "version": "qbe-manifest-v1",
+        "abi": "mylang-qbe-native-v9",
+        "entry": "myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605",
+        "backend": "qbe",
+        "optimization": "default",
+        "lto": false,
+        "thin_lto": false,
+        "functions": [
+          {
+            "name": "main",
+            "symbol": "myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605",
+            "key": "d174e1d4b7c6d402dced2bdddf004b9502fcce5af42fccfc2617178c9fc6fcb4",
+            "object": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/prefix-prefix-qbe/objects/701e433a2b55ba157e85b0c59a75460446280ea495b57cdefc882ec818f905b6/794eab912a569214297a886de5dc6dc60961c67724d842e09234588e452cd0d3.o",
+            "reused": false
+          },
+          {
+            "name": "check",
+            "symbol": "myl_f_20f65c28671b40937c5bf23acc7c6f37e5a5ec0622e347b57685725df5ba9e50",
+            "key": "48574eb8f19bf162944a7c64f890999674346d954686ef262aa796c0a367bd6f",
+            "object": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/prefix-prefix-qbe/objects/701e433a2b55ba157e85b0c59a75460446280ea495b57cdefc882ec818f905b6/794eab912a569214297a886de5dc6dc60961c67724d842e09234588e452cd0d3.o",
+            "reused": false
+          },
+          {
+            "name": "make",
+            "symbol": "myl_f_d05aa2a15fb3c40efeeb03bec445393f00074484cf01c8fb2da90ca6695a5531",
+            "key": "4c8716b9b9bb3efeda721666f2bcb711f6648e96247a9b0b2ad1a5a0a6e26f17",
+            "object": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/prefix-prefix-qbe/objects/701e433a2b55ba157e85b0c59a75460446280ea495b57cdefc882ec818f905b6/794eab912a569214297a886de5dc6dc60961c67724d842e09234588e452cd0d3.o",
+            "reused": false
+          }
+        ],
+        "runtime_object": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/prefix-prefix-qbe/objects/701e433a2b55ba157e85b0c59a75460446280ea495b57cdefc882ec818f905b6/853f872130ab5bf21ae45a92030ee84efd35e9e3319a3afbd990ea4d5c2f8bce.a"
+      }
+    },
+    {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/experiments/d9-rc-flat-abi3-20260926/binary_trees_n12.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/prefix-llvm-rc-n12",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/prefix-prefix-llvm",
+        "--keep-symbols",
+        "--rc-runtime",
+        "--backend=llvm",
+        "--llvm-opt=3",
+        "--lto"
+      ],
+      "stdout": "",
+      "stderr": "build-slot: all 3 build slot(s) busy; waiting (0s so far)\nbuild-slot: build slot 3 after 15s (all 3 build slot(s) busy)\n",
+      "sha256": "83342028300018587def18bb34c73a99c4b1f7d6c5419ebd61fcf2002bcab490",
+      "manifest": {
+        "link_identity": "2ae4be0095120c3c019974d5160c711cc776fcb293d35287bb128084462b6a0b",
+        "version": "qbe-manifest-v1",
+        "abi": "mylang-qbe-native-v9",
+        "entry": "myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605",
+        "backend": "llvm",
+        "optimization": "3",
+        "lto": true,
+        "thin_lto": false,
+        "functions": [
+          {
+            "name": "main",
+            "symbol": "myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605",
+            "key": "01320707951f89801c269f68e26b0aad0f7d49118f81a76d64a18543ea0a2552",
+            "object": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/prefix-prefix-llvm/objects/701e433a2b55ba157e85b0c59a75460446280ea495b57cdefc882ec818f905b6/01320707951f89801c269f68e26b0aad0f7d49118f81a76d64a18543ea0a2552.o",
+            "reused": false
+          },
+          {
+            "name": "check",
+            "symbol": "myl_f_20f65c28671b40937c5bf23acc7c6f37e5a5ec0622e347b57685725df5ba9e50",
+            "key": "fb275d081f2c9941fee9b4779d98c947db167b53654233bceb6432958114cf1a",
+            "object": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/prefix-prefix-llvm/objects/701e433a2b55ba157e85b0c59a75460446280ea495b57cdefc882ec818f905b6/fb275d081f2c9941fee9b4779d98c947db167b53654233bceb6432958114cf1a.o",
+            "reused": false
+          },
+          {
+            "name": "make",
+            "symbol": "myl_f_d05aa2a15fb3c40efeeb03bec445393f00074484cf01c8fb2da90ca6695a5531",
+            "key": "c5225e705855606a3d9bdcfbd9a345d889c18e1b67428bda153c16d079f96cfb",
+            "object": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/prefix-prefix-llvm/objects/701e433a2b55ba157e85b0c59a75460446280ea495b57cdefc882ec818f905b6/c5225e705855606a3d9bdcfbd9a345d889c18e1b67428bda153c16d079f96cfb.o",
+            "reused": false
+          }
+        ],
+        "runtime_object": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/prefix-prefix-llvm/objects/701e433a2b55ba157e85b0c59a75460446280ea495b57cdefc882ec818f905b6/3e779316acbd517c903a038e7ef5a0ca52f5a166861c56ee8c85bc591b840264.a"
+      }
+    },
+    {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/experiments/d9-rc-flat-abi3-20260926/binary_trees_n12.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/prefix-llvm-stats-n12",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/prefix-prefix-llvm",
+        "--keep-symbols",
+        "--rc-runtime=stats",
+        "--backend=llvm",
+        "--llvm-opt=3",
+        "--lto"
+      ],
+      "stdout": "",
+      "stderr": "",
+      "sha256": "df8459b1b07a5bbf843c1ffdd5bb8539ce14585d52d01a898025ffa65d801a48",
+      "manifest": {
+        "link_identity": "0a17259e2cdcf2e98c88cfd60f75cfeaeca8baeffb73fa2ddc619cbe9cb0a76d",
+        "version": "qbe-manifest-v1",
+        "abi": "mylang-qbe-native-v9",
+        "entry": "myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605",
+        "backend": "llvm",
+        "optimization": "3",
+        "lto": true,
+        "thin_lto": false,
+        "functions": [
+          {
+            "name": "main",
+            "symbol": "myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605",
+            "key": "6537b369cef5cfb76ca4994c15dcf6318d3e863d7acd1d5451f6a243de7d6bce",
+            "object": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/prefix-prefix-llvm/objects/701e433a2b55ba157e85b0c59a75460446280ea495b57cdefc882ec818f905b6/6537b369cef5cfb76ca4994c15dcf6318d3e863d7acd1d5451f6a243de7d6bce.o",
+            "reused": false
+          },
+          {
+            "name": "check",
+            "symbol": "myl_f_20f65c28671b40937c5bf23acc7c6f37e5a5ec0622e347b57685725df5ba9e50",
+            "key": "b4d7c95574dbcfa20d9d6c4646fcee8935b6e1d42df9fe0269e7549a1b4f6644",
+            "object": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/prefix-prefix-llvm/objects/701e433a2b55ba157e85b0c59a75460446280ea495b57cdefc882ec818f905b6/b4d7c95574dbcfa20d9d6c4646fcee8935b6e1d42df9fe0269e7549a1b4f6644.o",
+            "reused": false
+          },
+          {
+            "name": "make",
+            "symbol": "myl_f_d05aa2a15fb3c40efeeb03bec445393f00074484cf01c8fb2da90ca6695a5531",
+            "key": "5ffb99d2c8a2015415f9ce30735185861a49dafdf3de8bbcf311f032e5602dbf",
+            "object": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/prefix-prefix-llvm/objects/701e433a2b55ba157e85b0c59a75460446280ea495b57cdefc882ec818f905b6/5ffb99d2c8a2015415f9ce30735185861a49dafdf3de8bbcf311f032e5602dbf.o",
+            "reused": false
+          }
+        ],
+        "runtime_object": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/prefix-prefix-llvm/objects/701e433a2b55ba157e85b0c59a75460446280ea495b57cdefc882ec818f905b6/62125150ae6eab9bfecf971016db9723fb650c05c559331c4223fd1f4257aa10.a"
+      }
+    }
+  ],
+  "backends": {
+    "qbe": {
+      "samples": [
+        {
+          "arm": "before",
+          "command": [
+            "taskset",
+            "-c",
+            "3",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-flat-destruction-astra/.tmp-flat/cumulative-19e/qbe-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 599762466,
+            "cpu_core/cycles/u": 119996547
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n599762466,,cpu_core/instructions/u,36544417,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n119996547,,cpu_core/cycles/u,36544417,100.00,,\n"
+        },
+        {
+          "arm": "after",
+          "command": [
+            "taskset",
+            "-c",
+            "3",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/prefix-qbe-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 600477283,
+            "cpu_core/cycles/u": 132973591
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n600477283,,cpu_core/instructions/u,40838053,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n132973591,,cpu_core/cycles/u,40838053,100.00,,\n"
+        },
+        {
+          "arm": "gc",
+          "command": [
+            "taskset",
+            "-c",
+            "3",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-allocator-qbe-gc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 105803345,
+            "cpu_core/cycles/u": 24435539
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n105803345,,cpu_core/instructions/u,8944061,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n24435539,,cpu_core/cycles/u,8944061,100.00,,\n"
+        },
+        {
+          "arm": "gc",
+          "command": [
+            "taskset",
+            "-c",
+            "3",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-allocator-qbe-gc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 105803346,
+            "cpu_core/cycles/u": 24261075
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n105803346,,cpu_core/instructions/u,8961723,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n24261075,,cpu_core/cycles/u,8961723,100.00,,\n"
+        },
+        {
+          "arm": "after",
+          "command": [
+            "taskset",
+            "-c",
+            "3",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/prefix-qbe-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 600478384,
+            "cpu_core/cycles/u": 148584723
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n600478384,,cpu_core/instructions/u,45668274,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n148584723,,cpu_core/cycles/u,45668274,100.00,,\n"
+        },
+        {
+          "arm": "before",
+          "command": [
+            "taskset",
+            "-c",
+            "3",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-flat-destruction-astra/.tmp-flat/cumulative-19e/qbe-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 600155623,
+            "cpu_core/cycles/u": 119618307
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n600155623,,cpu_core/instructions/u,37521139,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n119618307,,cpu_core/cycles/u,37521139,100.00,,\n"
+        },
+        {
+          "arm": "before",
+          "command": [
+            "taskset",
+            "-c",
+            "3",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-flat-destruction-astra/.tmp-flat/cumulative-19e/qbe-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 600024527,
+            "cpu_core/cycles/u": 120335464
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n600024527,,cpu_core/instructions/u,37405261,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n120335464,,cpu_core/cycles/u,37405261,100.00,,\n"
+        },
+        {
+          "arm": "after",
+          "command": [
+            "taskset",
+            "-c",
+            "3",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/prefix-qbe-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 605830434,
+            "cpu_core/cycles/u": 137158483
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n605830434,,cpu_core/instructions/u,42521463,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n137158483,,cpu_core/cycles/u,42521463,100.00,,\n"
+        },
+        {
+          "arm": "gc",
+          "command": [
+            "taskset",
+            "-c",
+            "3",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-allocator-qbe-gc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 105803341,
+            "cpu_core/cycles/u": 24420883
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n105803341,,cpu_core/instructions/u,9009136,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n24420883,,cpu_core/cycles/u,9009136,100.00,,\n"
+        },
+        {
+          "arm": "gc",
+          "command": [
+            "taskset",
+            "-c",
+            "3",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-allocator-qbe-gc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 105803348,
+            "cpu_core/cycles/u": 25260838
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n105803348,,cpu_core/instructions/u,10540722,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n25260838,,cpu_core/cycles/u,10540722,100.00,,\n"
+        },
+        {
+          "arm": "after",
+          "command": [
+            "taskset",
+            "-c",
+            "3",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/prefix-qbe-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 605829745,
+            "cpu_core/cycles/u": 142555649
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n605829745,,cpu_core/instructions/u,52286239,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n142555649,,cpu_core/cycles/u,52286239,100.00,,\n"
+        },
+        {
+          "arm": "before",
+          "command": [
+            "taskset",
+            "-c",
+            "3",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-flat-destruction-astra/.tmp-flat/cumulative-19e/qbe-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 599762386,
+            "cpu_core/cycles/u": 122476917
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n599762386,,cpu_core/instructions/u,43394725,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n122476917,,cpu_core/cycles/u,43394725,100.00,,\n"
+        },
+        {
+          "arm": "before",
+          "command": [
+            "taskset",
+            "-c",
+            "3",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-flat-destruction-astra/.tmp-flat/cumulative-19e/qbe-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 600068173,
+            "cpu_core/cycles/u": 121022329
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n600068173,,cpu_core/instructions/u,43847415,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n121022329,,cpu_core/cycles/u,43847415,100.00,,\n"
+        },
+        {
+          "arm": "after",
+          "command": [
+            "taskset",
+            "-c",
+            "3",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/prefix-qbe-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 600477535,
+            "cpu_core/cycles/u": 136357682
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n600477535,,cpu_core/instructions/u,49441664,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n136357682,,cpu_core/cycles/u,49441664,100.00,,\n"
+        },
+        {
+          "arm": "gc",
+          "command": [
+            "taskset",
+            "-c",
+            "3",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-allocator-qbe-gc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 105803350,
+            "cpu_core/cycles/u": 24635646
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n105803350,,cpu_core/instructions/u,10586173,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n24635646,,cpu_core/cycles/u,10586173,100.00,,\n"
+        }
+      ],
+      "medians": {
+        "before": 600024527,
+        "after": 600478384,
+        "gc": 105803346
+      },
+      "counts": {
+        "before": {
+          "version": 1,
+          "runtime": "rc-v3-counting",
+          "saturated": false,
+          "owner_acquire": 19,
+          "owner_release": 669079,
+          "hold_acquire": 0,
+          "hold_release": 0,
+          "owner_limit": 0,
+          "hold_limit": 0,
+          "heap_allocate": 669060,
+          "arena_allocate": 0,
+          "retire": 669060,
+          "clone_shell": 0,
+          "unique_check": 33
+        },
+        "after": {
+          "version": 1,
+          "runtime": "rc-v3-counting",
+          "saturated": false,
+          "owner_acquire": 19,
+          "owner_release": 669079,
+          "hold_acquire": 0,
+          "hold_release": 0,
+          "owner_limit": 0,
+          "hold_limit": 0,
+          "heap_allocate": 669060,
+          "arena_allocate": 0,
+          "retire": 669060,
+          "clone_shell": 0,
+          "unique_check": 33
+        }
+      },
+      "after_over_before": 1.0007563974130678,
+      "after_over_gc": 5.675419603459422,
+      "binary_sha256": {
+        "before": "c89d5d04275e6a2d435a01f90812230000dbc64b1f716bdd75e43e6040312022",
+        "after": "296637fc3192ab766301773767643a31172d37a7c5f85c65f735825b33db1db6",
+        "gc": "2be73697a0e98540c784cdb87925cf4c81133d697175b140c2c8de4d5af46b70"
+      }
+    },
+    "llvm": {
+      "samples": [
+        {
+          "arm": "before",
+          "command": [
+            "taskset",
+            "-c",
+            "3",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-flat-destruction-astra/.tmp-flat/cumulative-19e/llvm-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 329482667,
+            "cpu_core/cycles/u": 82436508
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n329482667,,cpu_core/instructions/u,25774332,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n82436508,,cpu_core/cycles/u,25774332,100.00,,\n"
+        },
+        {
+          "arm": "after",
+          "command": [
+            "taskset",
+            "-c",
+            "3",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/prefix-llvm-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 331534234,
+            "cpu_core/cycles/u": 83757992
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n331534234,,cpu_core/instructions/u,25324973,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n83757992,,cpu_core/cycles/u,25324973,100.00,,\n"
+        },
+        {
+          "arm": "gc",
+          "command": [
+            "taskset",
+            "-c",
+            "3",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-allocator-llvm-gc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 50532268,
+            "cpu_core/cycles/u": 22340218
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n50532268,,cpu_core/instructions/u,8061492,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n22340218,,cpu_core/cycles/u,8061492,100.00,,\n"
+        },
+        {
+          "arm": "gc",
+          "command": [
+            "taskset",
+            "-c",
+            "3",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-allocator-llvm-gc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 50532273,
+            "cpu_core/cycles/u": 22447727
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n50532273,,cpu_core/instructions/u,7975699,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n22447727,,cpu_core/cycles/u,7975699,100.00,,\n"
+        },
+        {
+          "arm": "after",
+          "command": [
+            "taskset",
+            "-c",
+            "3",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/prefix-llvm-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 331488310,
+            "cpu_core/cycles/u": 82715391
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n331488310,,cpu_core/instructions/u,25643255,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n82715391,,cpu_core/cycles/u,25643255,100.00,,\n"
+        },
+        {
+          "arm": "before",
+          "command": [
+            "taskset",
+            "-c",
+            "3",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-flat-destruction-astra/.tmp-flat/cumulative-19e/llvm-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 329526400,
+            "cpu_core/cycles/u": 82226307
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n329526400,,cpu_core/instructions/u,25332720,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n82226307,,cpu_core/cycles/u,25332720,100.00,,\n"
+        },
+        {
+          "arm": "before",
+          "command": [
+            "taskset",
+            "-c",
+            "3",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-flat-destruction-astra/.tmp-flat/cumulative-19e/llvm-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 334834919,
+            "cpu_core/cycles/u": 85532505
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n334834919,,cpu_core/instructions/u,25424181,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n85532505,,cpu_core/cycles/u,25424181,100.00,,\n"
+        },
+        {
+          "arm": "after",
+          "command": [
+            "taskset",
+            "-c",
+            "3",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/prefix-llvm-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 331488267,
+            "cpu_core/cycles/u": 83031580
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n331488267,,cpu_core/instructions/u,23702272,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n83031580,,cpu_core/cycles/u,23702272,100.00,,\n"
+        },
+        {
+          "arm": "gc",
+          "command": [
+            "taskset",
+            "-c",
+            "3",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-allocator-llvm-gc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 50532263,
+            "cpu_core/cycles/u": 22503608
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n50532263,,cpu_core/instructions/u,7742409,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n22503608,,cpu_core/cycles/u,7742409,100.00,,\n"
+        },
+        {
+          "arm": "gc",
+          "command": [
+            "taskset",
+            "-c",
+            "3",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-allocator-llvm-gc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 50532270,
+            "cpu_core/cycles/u": 22421888
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n50532270,,cpu_core/instructions/u,7969368,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n22421888,,cpu_core/cycles/u,7969368,100.00,,\n"
+        },
+        {
+          "arm": "after",
+          "command": [
+            "taskset",
+            "-c",
+            "3",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/prefix-llvm-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 331489481,
+            "cpu_core/cycles/u": 82285202
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n331489481,,cpu_core/instructions/u,23961157,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n82285202,,cpu_core/cycles/u,23961157,100.00,,\n"
+        },
+        {
+          "arm": "before",
+          "command": [
+            "taskset",
+            "-c",
+            "3",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-flat-destruction-astra/.tmp-flat/cumulative-19e/llvm-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 334833455,
+            "cpu_core/cycles/u": 86337723
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n334833455,,cpu_core/instructions/u,24153067,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n86337723,,cpu_core/cycles/u,24153067,100.00,,\n"
+        },
+        {
+          "arm": "before",
+          "command": [
+            "taskset",
+            "-c",
+            "3",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-flat-destruction-astra/.tmp-flat/cumulative-19e/llvm-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 329483261,
+            "cpu_core/cycles/u": 82003498
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n329483261,,cpu_core/instructions/u,22973426,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n82003498,,cpu_core/cycles/u,22973426,100.00,,\n"
+        },
+        {
+          "arm": "after",
+          "command": [
+            "taskset",
+            "-c",
+            "3",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/.tmp-prefix/prefix-llvm-rc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 331488669,
+            "cpu_core/cycles/u": 82110697
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n331488669,,cpu_core/instructions/u,23065350,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n82110697,,cpu_core/cycles/u,23065350,100.00,,\n"
+        },
+        {
+          "arm": "gc",
+          "command": [
+            "taskset",
+            "-c",
+            "3",
+            "perf",
+            "stat",
+            "-x,",
+            "-e",
+            "instructions:u,cycles:u",
+            "--",
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra/.tmp-rc/profile/gap-allocator-llvm-gc-n12"
+          ],
+          "counters": {
+            "cpu_core/instructions/u": 50532270,
+            "cpu_core/cycles/u": 22382523
+          },
+          "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n50532270,,cpu_core/instructions/u,7407814,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n22382523,,cpu_core/cycles/u,7407814,100.00,,\n"
+        }
+      ],
+      "medians": {
+        "before": 329526400,
+        "after": 331488669,
+        "gc": 50532270
+      },
+      "counts": {
+        "before": {
+          "version": 1,
+          "runtime": "rc-v3-counting",
+          "saturated": false,
+          "owner_acquire": 19,
+          "owner_release": 669079,
+          "hold_acquire": 0,
+          "hold_release": 0,
+          "owner_limit": 0,
+          "hold_limit": 0,
+          "heap_allocate": 669060,
+          "arena_allocate": 0,
+          "retire": 669060,
+          "clone_shell": 0,
+          "unique_check": 33
+        },
+        "after": {
+          "version": 1,
+          "runtime": "rc-v3-counting",
+          "saturated": false,
+          "owner_acquire": 19,
+          "owner_release": 669079,
+          "hold_acquire": 0,
+          "hold_release": 0,
+          "owner_limit": 0,
+          "hold_limit": 0,
+          "heap_allocate": 669060,
+          "arena_allocate": 0,
+          "retire": 669060,
+          "clone_shell": 0,
+          "unique_check": 33
+        }
+      },
+      "after_over_before": 1.00595481575983,
+      "after_over_gc": 6.5599401926729195,
+      "binary_sha256": {
+        "before": "53d5482cfd4f8203f1f248432457fc6224da88f402c4a7ebc8f0c90ad0d0562d",
+        "after": "83342028300018587def18bb34c73a99c4b1f7d6c5419ebd61fcf2002bcab490",
+        "gc": "c59e838b8bbd0ef6214577db34e32053f89c29a69077a2ea278354c393c90450"
+      }
+    }
+  }
+}

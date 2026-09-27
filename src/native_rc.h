@@ -225,6 +225,9 @@ myl_rc_status myl_rc_scope_pin(myl_rc_scope *, void *);
 /* Receiver detachment never moves an existing leaf into a younger region.
  * The place's destination region remains the maximum allocation depth. */
 myl_rc_status myl_rc_scope_prepare(myl_rc_scope *, const myl_rc_place *);
+/* The inline receiver contains loan H tokens. A heap-body dereference resumes
+ * ordinary child ownership; successful replacements preserve the loan role. */
+myl_rc_status myl_rc_scope_prepare_loan(myl_rc_scope *, const myl_rc_place *);
 /* Close even empty/partly prepared scopes: unlink, restore pins in reverse
  * order, release holds/journal exactly once, then drain. Escape first. */
 void myl_rc_scope_end(myl_rc_scope *);
@@ -238,6 +241,8 @@ myl_rc_status myl_rc_unique_owned(myl_native_heap *, myl_rc_slot *);
 /* Immutable body writes always detach, preserving older region and committing
  * semantic history on reused mutable children, even without ordinary aliases. */
 myl_rc_status myl_rc_box_detach_owned(myl_native_heap *, myl_rc_slot *);
+/* The same immutable-body transaction through an initialized H token. */
+myl_rc_status myl_rc_box_detach_held(myl_native_heap *, myl_rc_slot *);
 /* An initialized HOLD_POINTER slot remains H after uniqueness detaches it.
  * Refusal leaves the original token and slot intact. */
 myl_rc_status myl_rc_unique_held(myl_native_heap *, myl_rc_slot *);

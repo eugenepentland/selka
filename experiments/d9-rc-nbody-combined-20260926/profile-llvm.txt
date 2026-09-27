@@ -1,0 +1,57 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 3K of event 'cpu_core/instructions/u'
+# Event count (approx.): 3601000000
+#
+# Overhead  Symbol                                                                      IPC   [IPC Coverage]
+# ........  ..........................................................................  ....................
+#
+    85.06%  [.] myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605  -      -            
+            |
+            ---0
+               0
+
+     4.69%  [.] myl_qbe_rc_unique_local                                                 -      -            
+            |          
+             --4.58%--myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605
+                       0
+                       0
+
+     3.75%  [.] capture                                                                 -      -            
+            |          
+            |--3.22%--myl_qbe_rc_scope_pin
+            |          myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605
+            |          0
+            |          0
+            |          
+             --0.53%--myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605
+                       0
+                       0
+
+     2.33%  [.] myl_qbe_rc_frame_cleanup                                                -      -            
+            |
+            ---myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605
+               0
+               0
+
+     1.36%  [.] __libc_calloc                                                           -      -            
+            |
+            ---myl_qbe_rc_scope_pin
+               myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605
+               0
+               0
+
+     1.17%  [.] myl_qbe_rc_scope_pin                                                    -      -            
+            |          
+             --1.00%--myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605
+                       0
+                       0
+
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

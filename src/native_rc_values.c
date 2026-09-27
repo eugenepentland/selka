@@ -199,6 +199,15 @@ int myl_rc_native_retain(myl_native_heap *heap, const myl_native_type *type, voi
 int myl_rc_native_retain_replace(myl_native_heap *heap, const myl_native_type *type, void *dst,
                                  const void *src, unsigned region) {
     if (dst == src) return 1;
+    const myl_rc_descriptor *descriptor = myl_rc_descriptor_find(heap, type);
+    /* Native flat admission excludes raw unique contents and every hook, not
+     * just counted edges. Pending deaths retain the staged-source callback
+     * order below. Cold metadata keeps its existing allocation/failure order. */
+    if (descriptor && !((const myl_rc_binding *)descriptor)->flat.count && !heap->rc->dead.head) {
+        if (region > heap->region_depth) return publication_status(heap, MYL_RC_REGION_ERROR);
+        memmove(dst, src, type->size);
+        return 1;
+    }
     unsigned char local[128];
     void *staged = type->size <= sizeof local ? local : myl_rc_storage_bytes(heap, type->size, 0);
     if (!staged) return 0;

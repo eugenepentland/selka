@@ -1,0 +1,10 @@
+record Holder:
+    items: list[int]
+
+def main(out: Stream) -> int:
+    holder = Holder([7])
+    for value in holder.items:
+        holder.items += [9]
+        out.print(value)
+    out.print(holder.items)
+    return 0

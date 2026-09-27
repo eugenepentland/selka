@@ -1,0 +1,22 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 2 after 5s (all 3 build slot(s) busy)
+native rc loans: 7 passed
+native rc semantic history: 35 passed
+native RC live holds: 12 tests passed
+native file cleanup: 40 passed
+native RC arena: 10 passed
+MYLANG_RC_COUNTS {"version":1,"runtime":"rc-v3-counting","saturated":false,"owner_acquire":1,"owner_release":2,"hold_acquire":1,"hold_release":1,"owner_limit":0,"hold_limit":0,"heap_allocate":1,"arena_allocate":0,"retire":1,"clone_shell":0,"unique_check":2}
+native RC collections: 32 passed
+native RC contract: 21 tests passed
+native heap tests passed
+native collections tests passed
+native text and dictionary tests passed
+native structural equality tests passed
+native byte string tests passed
+native region tests passed
+native print tests passed
+native text method tests passed
+native scoped provider tests passed
+native text view tests passed
+cow-stats {"marks":297,"checks":1,"hoisted":0,"copies":34,"copied_bytes":2868,"pinned_copies":5,"pins":0}
+native cow tests passed

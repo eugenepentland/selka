@@ -25,12 +25,12 @@ extern fn myl_rc_loan_verify() c_int;
 
 // spec-case: RC-SEMANTIC-HISTORY-1
 test "RC loans preserve pinned identity and roll back aggregate lifetime holds" {
-    try std.testing.expectEqual(@as(c_int, 7), myl_rc_loan_verify());
+    try std.testing.expectEqual(@as(c_int, 9), myl_rc_loan_verify());
 }
 
 extern fn myl_rc_history_verify() c_int;
 
 // spec: RC-HISTORY-PUBLISH-1
 test "RC semantic publication commits history atomically and preserves pinned snapshot identity" {
-    try std.testing.expectEqual(@as(c_int, 27), myl_rc_history_verify());
+    try std.testing.expectEqual(@as(c_int, 35), myl_rc_history_verify());
 }

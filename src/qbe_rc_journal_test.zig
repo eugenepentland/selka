@@ -39,3 +39,22 @@ test "RC compact journal keeps both scratch entries when all typed positions are
     try t.expectEqual(@as(usize, 1), try layout.require(3));
     try t.expectError(error.InternalError, layout.watermark(5));
 }
+
+// spec: RC-EMPTY-LOCAL-JOURNAL-1
+test "RC certified empty locals keep distinct omission facts and reject publication" {
+    const locals = [_]plan.Storage{ storage(.{ .counted = true }), storage(.{ .counted = true }), storage(.{}) };
+    const operands = [_]journal.Operand{.{ .may_own = true }};
+    const original = try journal.build(t.allocator, &locals, &operands);
+    defer t.allocator.free(original.prefix);
+    const layout = try original.omitting(t.allocator, &.{ false, true, false });
+    defer t.allocator.free(layout.prefix);
+    try t.expectEqualSlices(usize, &.{ 0, 1, 1, 1, 2, 3, 4 }, layout.prefix);
+    try t.expect(layout.emptyLocal(1));
+    try t.expect(!layout.emptyLocal(2));
+    try t.expect(!layout.emptyLocal(3));
+    try t.expectError(error.InternalError, layout.require(1));
+    try t.expectEqual(@as(usize, 1), try layout.watermark(3));
+    try t.expectEqual(@as(usize, 1), try layout.require(3));
+    try t.expectEqual(@as(usize, 2), try layout.require(4));
+    try t.expectEqual(@as(usize, 3), try layout.require(5));
+}

@@ -1,0 +1,52 @@
+{
+  "before": {
+    "advance_calls": {
+      "compiler_rt.fastMemset": 60,
+      "myl_qbe_heap": 1,
+      "myl_qbe_region_mark": 1,
+      "myl_qbe_rc_frame_enter": 1,
+      "myl_rc_native_loan": 24,
+      "myl_qbe_rc_slot_drop": 90,
+      "myl_rc_take_failure": 57,
+      "myl_qbe_rc_status": 57,
+      "myl_rc_native_take": 24,
+      "myl_qbe_float_unary": 1,
+      "myl_qbe_rc_scope_begin": 9,
+      "myl_qbe_rc_scope_pin": 9,
+      "myl_rc_native_copy": 9,
+      "myl_rc_list_set": 9,
+      "myl_qbe_rc_scope_end": 9,
+      "myl_qbe_fail_overflow_op": 36,
+      "myl_qbe_fail_allocation": 9,
+      "myl_qbe_fail_normalized_index_bounds": 51,
+      "myl_qbe_fail_cast": 34,
+      "myl_qbe_rc_frame_cleanup": 2,
+      "myl_qbe_rc_frame_leave": 2
+    }
+  },
+  "after": {
+    "advance_calls": {
+      "compiler_rt.fastMemset": 60,
+      "myl_qbe_heap": 1,
+      "myl_qbe_region_mark": 1,
+      "myl_qbe_rc_frame_enter": 1,
+      "myl_rc_native_loan": 24,
+      "myl_qbe_rc_slot_drop": 90,
+      "myl_rc_take_failure": 57,
+      "myl_qbe_rc_status": 57,
+      "myl_rc_native_take": 24,
+      "myl_qbe_float_unary": 1,
+      "myl_qbe_rc_scope_begin": 9,
+      "myl_qbe_rc_scope_pin": 9,
+      "myl_rc_native_copy": 9,
+      "myl_rc_list_set": 9,
+      "myl_qbe_rc_scope_end": 9,
+      "myl_qbe_fail_overflow_op": 36,
+      "myl_qbe_fail_allocation": 9,
+      "myl_qbe_fail_normalized_index_bounds": 51,
+      "myl_qbe_fail_cast": 34,
+      "myl_qbe_rc_frame_cleanup": 2,
+      "myl_qbe_rc_frame_leave": 2
+    }
+  }
+}

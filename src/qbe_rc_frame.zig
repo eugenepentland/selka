@@ -44,7 +44,9 @@ pub fn Lower(comptime E: type) type {
             const state = get(E, self) orelse return;
             if (fixedRegion(E, self)) try self.print(" %rcregion =l call $myl_qbe_region_mark(l %ctx)\n", .{});
             const size = count(state);
-            try self.print(" call $memset(l %rcguards, w 0, l {d})\n call $memset(l %rcentries, w 0, l {d})\n", .{ size * 8, size * entry_bytes });
+            // Every retained entry gets all semantic fields below before linking.
+            // Guard words alone need clearing; the C slot's padding is unread.
+            try self.print(" call $memset(l %rcguards, w 0, l {d})\n", .{size * 8});
             for (state.plan.locals.storage, 0..) |slot, index| {
                 if (try state.plan.journal.slot(index) == null) continue;
                 const address = self.temp();
@@ -91,6 +93,11 @@ pub fn get(comptime E: type, self: *E) ?*state_model.State {
     if (!runtime.enabled()) return null;
     const state = if (self.cow) |cow| cow.rc orelse return null else return null;
     return if (state.active) state else null;
+}
+/// A certified managed local never has O, H, loan or unique cleanup metadata.
+pub fn emptyLocal(comptime E: type, self: *E, index: usize) bool {
+    const state = get(E, self) orelse return false;
+    return state.plan.journal.emptyLocal(index);
 }
 /// The journal index of the pending result used for transactional replacement.
 pub fn pending(comptime E: type, self: *E) usize {

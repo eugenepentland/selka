@@ -1,0 +1,6 @@
+record Point:
+    x: int
+    y: int
+def main() -> int:
+    rows = [Point(3, 7)]
+    return rows[-2].x

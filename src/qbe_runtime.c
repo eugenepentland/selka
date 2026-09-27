@@ -457,8 +457,16 @@ void *myl_qbe_argv_list(void *context, const myl_native_type *element) {
     for (int i = 0; i < ctx->guest_argc; ++i) {
         const char *argument = ctx->guest_argv[i];
         myl_native_text *text = myl_native_text_from_utf8(&ctx->heap, (const unsigned char *)argument, strlen(argument));
-        if (!text) { myl_qbe_fail_allocation(context); myl_native_root_pop(&ctx->heap, &root); return NULL; }
-        if (!myl_native_list_append(&ctx->heap, list, &text)) { myl_qbe_fail_allocation(context); myl_native_root_pop(&ctx->heap, &root); return NULL; }
+        int appended = text && myl_native_list_append(&ctx->heap, list, &text);
+        /* Append owns its stored edge. The fresh text token stays here, and
+         * failure must abandon the partial list before fail can longjmp. */
+        if (myl_rc_enabled(&ctx->heap)) myl_rc_owner_release(&ctx->heap, text);
+        if (!appended) {
+            myl_native_root_pop(&ctx->heap, &root);
+            if (myl_rc_enabled(&ctx->heap)) myl_rc_owner_release(&ctx->heap, list);
+            myl_qbe_fail_allocation(context);
+            return NULL;
+        }
     }
     myl_native_root_pop(&ctx->heap, &root);
     return list;

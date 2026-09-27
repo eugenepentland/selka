@@ -29,6 +29,11 @@ pub fn copyRole(comptime E: type, self: *E, destination: usize, source: usize) E
 
 /// Whether a guarded token is an ordinary owner rather than an H or loan token.
 pub fn owner(comptime E: type, self: *E, index: usize) Error!usize {
+    if (frame.emptyLocal(E, self, index)) {
+        const empty = self.temp();
+        try self.print(" %v{d} =w copy 0\n", .{empty});
+        return empty;
+    }
     const live = self.temp();
     const flags = self.temp();
     const ordinary = self.temp();
@@ -52,4 +57,23 @@ pub fn prepare(comptime E: type, self: *E, ty: typed.Type, source: usize) Error!
     try frame.stableEntry(E, self, frame.pending(E, self), ty);
     try role(E, self, frame.pending(E, self), flag);
     try frame.initialized(E, self, frame.pending(E, self), true);
+}
+
+/// Test the live role of a mutable path's private inline containing local.
+/// A null answer means its representation can never be a private loan.
+pub fn local(comptime E: type, self: *E, index: usize) Error!?usize {
+    if (frame.emptyLocal(E, self, index)) return null;
+    if (!self.function.scope.locals[index].usage.temporary) return null;
+    if (self.byReference(index) or self.callerStorage(index)) return null;
+    if (!try eligible(E, self, self.function.scope.locals[index].ty)) return null;
+    const flags = self.temp();
+    const live = self.temp();
+    const loan = self.temp();
+    try self.print(" %v{d} =w loaduw %v{d}\n %v{d} =w ceqw %v{d}, {d}\n", .{
+        flags, try frame.entryField(E, self, index, 24), loan, flags, flag,
+    });
+    try self.print(" %v{d} =w loaduw %v{d}\n %v{d} =w and %v{d}, %v{d}\n", .{
+        live, try frame.guard(E, self, index), loan, loan, live,
+    });
+    return loan;
 }

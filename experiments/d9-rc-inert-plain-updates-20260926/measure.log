@@ -1,0 +1,14 @@
+before qbe 0 2154458955
+before qbe 1 2173099497
+before qbe 2 2172779312
+after qbe 0 1512597252
+after qbe 1 1512597280
+after qbe 2 1512597249
+qbe {'before': 2172779312, 'after': 1512597252, 'ratio': 0.6961577936820856}
+before llvm 0 1665551214
+before llvm 1 1665711318
+before llvm 2 1647551084
+after llvm 0 1145239817
+after llvm 1 1163079901
+after llvm 2 1145079717
+llvm {'before': 1665551214, 'after': 1145239817, 'ratio': 0.6876040840855224}

@@ -1,0 +1,7 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 1 after 20s (all 3 build slot(s) busy)
+focused tests: units filter='RC '
+selected: 56 test(s)
+result: PASS - 56 passed, 0 failed, 0 skipped
+elapsed: 14.8s
+log: /home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.mylang-cache/focused-tests/units-RC_-20260926-232420.log

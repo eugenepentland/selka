@@ -8,6 +8,7 @@ pub const Error = values.Error;
 /// Convert only an initialized LOAN slot, retaining its exact payload identity.
 /// Ordinary owners and unguarded caller borrows keep their existing convention.
 pub fn owning(comptime E: type, self: *E, index: usize) Error!void {
+    if (frame.emptyLocal(E, self, index)) return;
     if (!self.function.scope.locals[index].usage.temporary) return;
     const ty = self.function.scope.locals[index].ty;
     if (!try loans.eligible(E, self, ty)) return;

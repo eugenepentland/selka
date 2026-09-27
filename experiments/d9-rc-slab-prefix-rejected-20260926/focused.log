@@ -1,0 +1,25 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 1 after 16s (all 3 build slot(s) busy)
+test-units
++- run test w
+guardian/test: 12 test(s) selected by filter: "RC production storage" — 1 match by name, 11 unnamed test block(s) run regardless
+guardian/test: test wall 0.45s; slowest over 50ms:
+guardian/test:   0.45s  native_rc_collections_test.test.RC production storage and collection ownership
+guardian/test: PASS — 12 passed
+guardian/test: RESULT {"passed":12,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache-slab-prefix/o/dcc0964ff1b3e633ed6de8161aee4a56/test "--guardian-filter=RC production storage" --cache-dir=./.zig-cache-slab-prefix --seed=0xef10fae --listen=-
+
+Build Summary: 10/10 steps succeeded; 12/12 tests passed
+test-units success
++- run test 12 pass (12 total) 464ms MaxRSS:61M
+   +- compile test debug native success 1s MaxRSS:209M
+   |  +- run exe qbe-build-assets (qbe_build_assets) cached
+   |  |  +- compile exe qbe-build-assets debug native cached 8ms MaxRSS:33M
+   |  +- options success
+   |     +- compile exe qbe fast native cached 16ms MaxRSS:33M
+   +- install generated to qbe success
+   |  +- compile exe qbe fast native (reused)
+   +- install generated to mylang success
+      +- compile exe mylang debug native cached 9ms MaxRSS:37M
+         +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+

@@ -8,6 +8,7 @@ extern fn myl_rc_contract_verify() c_int;
 // spec: RC-RELEASE-1
 // spec: RC-TRANSFER-1
 // spec: RC-SCOPES-1
+// spec: RC-DRAIN-CACHE-1
 test "RC contract layout counts reservation failure and iterative teardown" {
-    try std.testing.expectEqual(@as(c_int, 21), myl_rc_contract_verify());
+    try std.testing.expectEqual(@as(c_int, 22), myl_rc_contract_verify());
 }
