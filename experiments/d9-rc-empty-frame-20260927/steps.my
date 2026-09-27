@@ -1,0 +1,16 @@
+record Point:
+    x: int
+    y: int
+def loop(points: mut list[Point], count: int) -> int:
+    i = 0
+    while i < count:
+        old = points[0]
+        points[0].x = old.x + 1
+        i += 1
+    return points[0].x
+def main() -> int:
+    points = [Point(3, 5)]
+    before = points
+    with arena():
+        _ = loop(mut points, 1000000)
+    return before[0].x
