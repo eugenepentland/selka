@@ -17,6 +17,40 @@ asks for the qualified LLVM backend at `-O3` with full LTO. `mylang run` is this
 same pipeline followed by running the result, and `dump-bytecode` disassembles
 the IR for inspection rather than for execution.
 
+## Runtime contracts
+
+Runtime choice is independent of the QBE/LLVM backend. `--gc-runtime` selects
+tracing GC, which is currently the default; `--rc-runtime` selects experimental
+reference counting; `--rc-runtime=stats` adds RC ownership counters. These flags
+apply to program checking, emission, building and execution commands, including
+`run-project` and `test`. An explicit choice overrides the inherited one. Flags
+after the guest-argument separator `--` remain guest arguments.
+
+Compiler children inherit the resolved `MYLANG_RUNTIME` contract. The current
+tags are `gc-v1`, `rc-v3` and `rc-v3-counting`; unknown versions are rejected.
+`--legacy-sharing` selects GC when RC was inherited, and refuses an explicit RC
+request. The [managed memory guide](../managed-memory.md#runtime-selection)
+describes the common value and arena behavior.
+
+Native manifests, reusable compiler facts, test results, generated adapters and
+runtime archives distinguish the runtime ABI and instrumentation mode. Reusing
+one cache directory for GC, RC and counted RC builds preserves those boundaries.
+A manifest or guest library with the wrong contract is refused instead of being
+linked as the requested runtime. Historical native manifests without a runtime
+tag mean GC; they never acquire the process default's meaning.
+
+The runtime is fixed when the artifact is built. `MYLANG_OPTIONS` controls an
+already built guest's execution limits and other launch options; it cannot change
+that guest's memory implementation. `--gc-stress` exercises tracing collection
+when running a GC artifact and does not select tracing GC for an RC artifact.
+Build again with the desired runtime selector when comparing implementations.
+
+Counted RC guests report a `MYLANG_RC_COUNTS` JSON line on standard error during
+teardown. It includes owner/hold acquisitions and releases, allocations,
+retirements, clone shells, uniqueness checks and saturation status. These are
+diagnostic operation counts, not timings or peak-memory measurements. Use the
+uninstrumented RC artifact for performance comparisons.
+
 ## Backends
 
 A native build that names no backend uses QBE, in `--mode ReleaseFast` (the
