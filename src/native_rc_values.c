@@ -188,7 +188,23 @@ int myl_rc_native_publish(myl_native_heap *heap, const myl_native_type *type, vo
 }
 int myl_rc_native_retain(myl_native_heap *heap, const myl_native_type *type, void *dst,
                          const void *src, unsigned region) {
-    const myl_rc_shape *shape = myl_rc_native_shape(heap, type);
+    const myl_rc_descriptor *descriptor = myl_rc_descriptor_find(heap, type);
+    /* Flat admission excludes unique contents and hooks as well as O/H leaves.
+     * Keep cold registration, zero-size/overlapping slots and queued callbacks
+     * on the original path; retain's empty output differs from replacement. */
+    if (descriptor && !((const myl_rc_binding *)descriptor)->flat.count && !heap->rc->dead.head) {
+        uintptr_t target = (uintptr_t)dst, source = (uintptr_t)src;
+        size_t bytes = type->size;
+        if (bytes && (target > source ? target - source >= bytes : source - target >= bytes)) {
+            if (region > heap->region_depth) {
+                memset(dst, 0, bytes);
+                return publication_status(heap, MYL_RC_REGION_ERROR);
+            }
+            memcpy(dst, src, bytes);
+            return 1;
+        }
+    }
+    const myl_rc_shape *shape = descriptor ? descriptor->shape : myl_rc_native_shape(heap, type);
     if (!shape) { memset(dst, 0, type->size); return 0; }
     myl_rc_invariant(!myl_rc_native_has_unique(heap, type));
     memset(dst, 0, type->size);
