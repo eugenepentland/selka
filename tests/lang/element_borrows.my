@@ -1,0 +1,60 @@
+module element_borrows
+
+
+record Entry:
+    key: int
+    hash: u32
+    weight: float
+
+
+record Row:
+    a: int
+    b: int
+    c: int
+    d: int
+
+
+def is_empty(entry: Entry) -> bool:
+    return entry.key == -1
+
+
+# A readonly probe loop: the element local lends its address across the call.
+def find(entries: list[Entry], key: int) -> int:
+    index = 0
+    while index < len(entries):
+        entry = entries[index]
+        if is_empty(entry):
+            return -1
+        if entry.key == key:
+            return index
+        index += 1
+    return -2
+
+
+# spec: RC-ELEMENT-BORROW-2
+public def test_readonly_probe_reads_borrowed_elements() -> bool:
+    entries = [Entry(key=3, hash=1u32, weight=0.5), Entry(key=7, hash=2u32, weight=1.5), Entry(key=-1, hash=0u32, weight=0.0)]
+    return find(entries, 7) == 1 and find(entries, 9) == -1 and find(entries, 3) == 0
+
+
+def total(rows: list[Row]) -> int:
+    result = 0
+    for row in rows:
+        result += row.c * 10 + row.a
+    return result
+
+
+def bump(rows: mut list[Row]) -> None:
+    for i in range(len(rows)):
+        rows[i].c = rows[i].c + rows[i].a
+        rows[i].d = rows[i].d * 2
+
+
+# spec-case: RC-ELEMENT-BORROW-1
+public def test_iterated_and_updated_elements_keep_value_semantics() -> bool:
+    rows = [Row(a=1, b=2, c=3, d=4), Row(a=5, b=6, c=7, d=8)]
+    before = rows
+    bump(mut rows)
+    snapshot = rows[1]
+    rows[1].c = 0
+    return total(rows) == 46 and total(before) == 106 and snapshot.c == 12 and rows[0].d == 8
