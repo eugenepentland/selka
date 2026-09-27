@@ -1,0 +1,9 @@
+PASS bounds before gc qbe
+PASS bounds before rc qbe
+PASS bounds before gc llvm
+PASS bounds before rc llvm
+PASS bounds after gc qbe
+PASS bounds after rc qbe
+PASS bounds after gc llvm
+PASS bounds after rc llvm
+MATCHED ALL TRAP BOUNDARIES

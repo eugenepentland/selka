@@ -1,0 +1,8 @@
+BUILD qbe False
+BUILD qbe True
+BUILD llvm False
+BUILD llvm True
+ADMITTED heap::string_obj 1
+ADMITTED heap::set_object_field 1
+ADMITTED vm::load_frame 2
+ADMITTED vm::get_property 1
