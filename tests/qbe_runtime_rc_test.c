@@ -176,6 +176,27 @@ static void trap_teardown_test(void) {
     assert(!ctx->heap.bytes);
     free(ctx);
 }
+/* Released journal entries are reused without changing the budget charge a
+ * live entry carries, and heap destroy frees the spares. */
+static void scope_spares_test(void) {
+    MylQbeContext context = {0};
+    myl_native_heap_init(&context.heap, 1u << 20);
+    if (!myl_rc_enabled(&context.heap)) assert(myl_rc_storage_init(&context.heap) == MYL_RC_OK);
+    void *payload = myl_rc_storage_bytes(&context.heap, 8, 0);
+    assert(payload);
+    size_t idle = context.heap.bytes;
+    myl_rc_scope scope;
+    for (unsigned round = 0; round < 3; ++round) {
+        myl_rc_scope_begin(&context.heap, &scope);
+        assert(myl_rc_scope_pin(&scope, payload) == MYL_RC_OK);
+        assert(context.heap.bytes > idle && context.heap.rc->scope_spares.count == 0);
+        myl_rc_scope_end(&scope);
+        assert(context.heap.bytes == idle && context.heap.rc->scope_spares.count == 1);
+    }
+    myl_rc_owner_release(&context.heap, payload);
+    myl_native_heap_destroy(&context.heap);
+    assert(!context.heap.bytes);
+}
 static void construction_guard_test(void) {
     FrameFixture *fixture = frame_fixture();
     struct { myl_native_object header; void *child; } arena = {
@@ -766,6 +787,7 @@ int myl_qbe_rc_loan_verify(void) {
 int myl_qbe_rc_frame_verify(void) {
     frame_exit_test();
     trap_teardown_test();
+    scope_spares_test();
     frame_trap_test();
     construction_guard_test();
     unique_bridge_test();

@@ -93,6 +93,7 @@ void myl_rc_heap_destroy(myl_native_heap *heap) {
     myl_rc_drain(heap);
     myl_rc_state *state = heap->rc;
     myl_rc_invariant(!state->scopes && !state->walk.depth && !state->dead.active);
+    myl_rc_scope_spares_release(heap);
     if (state->allocator.hooks.destroy) state->allocator.hooks.destroy(heap);
     while (state->metadata.batches) {
         myl_rc_batch *batch = state->metadata.batches;

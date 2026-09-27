@@ -50,7 +50,9 @@ pub fn Lower(comptime E: type) type {
             for (state.plan.append_loops, 0..) |_, index| try self.allocateIndex("rcappend", index, 8);
             for (self.function.scope.locals, 0..) |_, index| if (receiverStorage(E, self, index)) {
                 try self.allocateIndex("rcborrow", index, 32);
-                try self.print(" call $memset(l %rcborrow{d}, w 0, l 32)\n", .{index});
+                // Only the active word is read before a scope begins (RC-EXIT-SCOPES-1).
+                const active = self.temp();
+                try self.print(" %v{d} =l add %rcborrow{d}, {d}\n storel 0, %v{d}\n", .{ active, index, scope_active_offset, active });
             };
             const scopes = scopeCount(E, self);
             if (scopes != 0) try self.allocateSlot("rcscopes", 8 * @as(u64, scopes));

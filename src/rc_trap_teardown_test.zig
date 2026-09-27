@@ -130,4 +130,7 @@ test "RC-EXIT-SCOPES-1 a frame with receiver scopes tests them at every return" 
     defer t.allocator.free(text);
     try t.expect(std.mem.indexOf(u8, text, "call $myl_qbe_rc_scopes_close(") != null);
     try t.expect(std.mem.indexOf(u8, text, "@rcscopesopen") != null);
+    // A receiver record starts inactive with one store, not a zero-fill call.
+    try t.expect(std.mem.indexOf(u8, text, "memset(l %rcborrow") == null);
+    try t.expect(std.mem.indexOf(u8, text, "%rcborrow") != null);
 }

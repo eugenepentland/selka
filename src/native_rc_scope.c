@@ -1,4 +1,5 @@
 #include "native_rc_internal.h"
+#include <stdlib.h>
 #include <string.h>
 
 typedef struct scope_entry {
@@ -6,6 +7,45 @@ typedef struct scope_entry {
     myl_rc_pin pin;
     unsigned pinned;
 } scope_entry;
+/* RC-SCOPE-SPARES-1: a pin or hold journal entry is taken from a bounded
+ * per-heap list of released entries before the metadata allocator, and
+ * returned to it on release, so a receiver statement in a loop reaches the
+ * host allocator only on its first iteration. The charge follows the live
+ * entry exactly as before: taking a spare charges the budget, giving one back
+ * discharges it, and the retained host memory is uncharged. */
+#define SCOPE_SPARES 64
+static scope_entry *entry_take(myl_native_heap *heap) {
+    scope_entry *entry = heap->rc->scope_spares.head;
+    if (!entry) return myl_rc_meta_alloc(heap, sizeof *entry);
+    size_t total;
+    if (!myl_rc_size_add(heap->bytes, sizeof *entry, &total) || (heap->limit && total > heap->limit)) {
+        heap->exhausted = 1;
+        return NULL;
+    }
+    heap->rc->scope_spares.head = entry->previous;
+    heap->rc->scope_spares.count--;
+    heap->bytes = total;
+    heap->rc->metadata.bytes += sizeof *entry;
+    memset(entry, 0, sizeof *entry);
+    return entry;
+}
+static void entry_give(myl_native_heap *heap, scope_entry *entry) {
+    if (heap->rc->scope_spares.count == SCOPE_SPARES) { myl_rc_meta_free(heap, entry, sizeof *entry); return; }
+    myl_rc_invariant(heap->bytes >= sizeof *entry && heap->rc->metadata.bytes >= sizeof *entry);
+    heap->bytes -= sizeof *entry;
+    heap->rc->metadata.bytes -= sizeof *entry;
+    entry->previous = heap->rc->scope_spares.head;
+    heap->rc->scope_spares.head = entry;
+    heap->rc->scope_spares.count++;
+}
+void myl_rc_scope_spares_release(myl_native_heap *heap) {
+    while (heap->rc->scope_spares.head) {
+        scope_entry *entry = heap->rc->scope_spares.head;
+        heap->rc->scope_spares.head = entry->previous;
+        free(entry);
+    }
+    heap->rc->scope_spares.count = 0;
+}
 static void restore(scope_entry *entry) {
     if (!entry->pinned || !entry->pin.hold.payload) return;
     myl_native_object *header = (myl_native_object *)entry->pin.hold.payload - 1;
@@ -21,7 +61,7 @@ static void unwind(myl_rc_scope *scope, scope_entry *boundary) {
         scope_entry *entry = head;
         head = entry->previous;
         myl_rc_hold_release(scope->heap, &entry->pin.hold);
-        myl_rc_meta_free(scope->heap, entry, sizeof *entry);
+        entry_give(scope->heap, entry);
     }
 }
 void myl_rc_scope_begin(myl_native_heap *heap, myl_rc_scope *scope) {
@@ -37,11 +77,11 @@ static myl_rc_status capture(myl_rc_scope *scope, void *payload, unsigned pinned
     /* An outer receiver may span younger callbacks, but it cannot acquire a
      * hold that pretends to extend a younger arena's chunk lifetime. */
     if (myl_native_header_region(payload) > scope->region) return MYL_RC_REGION_ERROR;
-    scope_entry *entry = myl_rc_meta_alloc(scope->heap, sizeof *entry);
+    scope_entry *entry = entry_take(scope->heap);
     if (!entry) return MYL_RC_ALLOCATION_REFUSED;
     myl_rc_status status = pinned ? myl_rc_pin_acquire(scope->heap, payload, &entry->pin) :
         myl_rc_hold_acquire(scope->heap, payload, &entry->pin.hold);
-    if (status != MYL_RC_OK) { myl_rc_meta_free(scope->heap, entry, sizeof *entry); return status; }
+    if (status != MYL_RC_OK) { entry_give(scope->heap, entry); return status; }
     entry->previous = scope->journal;
     entry->pinned = pinned;
     scope->journal = entry;
@@ -80,7 +120,7 @@ void myl_rc_scopes_abandon(myl_native_heap *heap) {
         scope_entry *entry = scope->journal;
         while (entry) {
             scope_entry *older = entry->previous;
-            myl_rc_meta_free(heap, entry, sizeof *entry);
+            entry_give(heap, entry);
             entry = older;
         }
         scope->journal = NULL;
@@ -211,12 +251,14 @@ static myl_rc_status scope_prepare(myl_rc_scope *scope, const myl_rc_place *plac
     size_t count, bytes;
     if (!myl_rc_size_add(place->count, 1, &count) || !myl_rc_size_mul(count, sizeof(prepare_frame), &bytes))
         return MYL_RC_ALLOCATION_REFUSED;
-    prepare_frame *frames = myl_rc_meta_alloc(scope->heap, bytes);
+    /* A short path walks in local frames; only a long one charges metadata. */
+    prepare_frame local[8];
+    prepare_frame *frames = count <= 8 ? local : myl_rc_meta_alloc(scope->heap, bytes);
     if (!frames) return MYL_RC_ALLOCATION_REFUSED;
     scope_entry *boundary = scope->journal;
     myl_rc_status status = myl_rc_scope_hold(scope, place->receiver.container);
     if (status == MYL_RC_OK) status = prepare_path(scope, place, frames, loan);
-    myl_rc_meta_free(scope->heap, frames, bytes);
+    if (frames != local) myl_rc_meta_free(scope->heap, frames, bytes);
     if (status != MYL_RC_OK) unwind(scope, boundary);
     return status;
 }
