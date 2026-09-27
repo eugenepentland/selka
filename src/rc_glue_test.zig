@@ -101,6 +101,7 @@ test "RC-GLUE-1 counted inline types get straight-line glue that compiles in bot
     try t.expect(!contains(entries, "COUNT_LIMIT"));
     try t.expect(!contains(entries, "myl_rc_descriptor_find"));
     try t.expect(contains(data, "if (died) myl_rc_drain(heap);"));
+    try t.expect(contains(data, "#define MYL_RCG_INLINE static inline\n"));
     // List element glue exists only for types a collection stores.
     const sets = std.mem.count(u8, data, "_rcg_list_set(myl_native_heap");
     try t.expect(sets > 0 and sets < std.mem.count(u8, data, "_rcg_drop(myl_native_heap"));

@@ -82,7 +82,9 @@ const prelude =
     \\#define MYL_RCG_CHECKED 0
     \\#endif
     \\#define MYL_RCG_UNCOUNTED (MYL_NATIVE_OBJECT_IMMORTAL | MYL_NATIVE_OBJECT_ARENA)
-    \\#define MYL_RCG_INLINE static inline __attribute__((always_inline))
+    \\/* Helpers stay plain inline: clang inlines them at -O2 anyway, and
+    \\ * forcing it costs a third of the unit's compile time. */
+    \\#define MYL_RCG_INLINE static inline
     \\MYL_RCG_INLINE void *myl_rcg_load(const unsigned char *at) { void *p; memcpy(&p, at, sizeof p); return p; }
     \\MYL_RCG_INLINE void *myl_rcg_clear(unsigned char *at) { void *p; memcpy(&p, at, sizeof p); memset(at, 0, sizeof p); return p; }
     \\MYL_RCG_INLINE uint32_t myl_rcg_tag(const unsigned char *at) { uint32_t tag; memcpy(&tag, at, sizeof tag); return tag; }
