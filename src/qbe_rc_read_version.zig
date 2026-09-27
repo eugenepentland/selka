@@ -33,19 +33,143 @@ pub fn certify(comptime E: type, self: *E, head: usize, back: usize) ?Certificat
     for (head..back + 1) |pc| {
         const stack = self.states[pc] orelse return null;
         if (!charge(&budget, stack.len + rc.plan.locals.edges.len + rc.plan.records.transfers.len + rc.plan.records.writes.len)) return null;
-        for (stack, 0..) |ty, index| if (!scalar(ty) and !result.bytes.borrowed(pc, index)) return null;
+        const captured = captureAt(E, self, pc) orelse captureAt(E, self, pc -| 1);
+        for (stack, 0..) |ty, index| {
+            if (plainValue(E, self, ty) or result.bytes.borrowed(pc, index)) continue;
+            if (!capturedList(E, self, captured, pc != head and index + 1 == stack.len, ty)) return null;
+        }
         if (!quiet(E, self, pc, &budget)) return null;
         const op = code[pc].op;
         if (op == .buffer_operation) {
             const access = op.buffer_operation;
             if (access.kind != .read and access.kind != .length and access.kind != .iteration_check) return null;
-            const owner = @backingInt(access.owner);
-            if (!concrete(E, self, owner) or !scalar(access.output)) return null;
-            if (!addOwner(&result, owner)) return null;
+            if (!plainValue(E, self, access.output)) return null;
+            switch (anchor(E, self, @backingInt(access.owner), head, back, &budget) orelse return null) {
+                .journal => |owner| if (!addOwner(&result, owner)) return null,
+                .caller => {},
+            }
             read = read or access.kind == .read;
-        } else if (!result.bytes.operation(pc) and !allowed(E, self, op)) return null;
+        } else if (captured == null) {
+            if (!result.bytes.operation(pc) and !allowed(E, self, op)) return null;
+        }
     }
     return if (read) result else null;
+}
+
+/// The list a capture pair holds on top of the stack between its two steps.
+fn capturedList(comptime E: type, self: *E, captured: ?usize, top: bool, ty: typed.Type) bool {
+    const target = captured orelse return false;
+    return top and ty == self.function.scope.locals[target].ty;
+}
+
+/// What keeps a read list's storage alive across the loop: an initialized O
+/// or H journal token the guard tests, or the caller, for an unwritten
+/// read-only parameter (RC-READ-LIST-VERSION-2).
+const Anchor = union(enum) { journal: usize, caller };
+
+/// Resolve a buffer owner to its anchor. A compiler temporary every store of
+/// which is an adjacent capture `load_local P; store_local T` of one list P
+/// the loop never writes reads exactly P's list, so it takes P's anchor.
+fn anchor(comptime E: type, self: *E, owner: usize, head: usize, back: usize, budget: *usize) ?Anchor {
+    if (callerAnchored(E, self, owner)) return .caller;
+    if (concrete(E, self, owner)) return .{ .journal = owner };
+    const locals = self.function.scope.locals;
+    if (owner >= locals.len or owner < self.function.signature.parameter_count or !locals[owner].usage.temporary) return null;
+    if (self.byReference(owner) or self.callerStorage(owner) or !plainList(E, self, locals[owner].ty)) return null;
+    const code = self.function.scope.instructions;
+    if (!charge(budget, code.len)) return null;
+    var source: ?usize = null;
+    for (code, 0..) |instruction, pc| switch (instruction.op) {
+        .store_local => |id| if (@backingInt(id) == owner) {
+            const from = captureSource(E, self, pc) orelse return null;
+            if (source != null and source.? != from) return null;
+            source = from;
+        },
+        .move_local, .ref_local, .drop_local => |id| if (@backingInt(id) == owner) return null,
+        .switch_variant => |dispatch| for (dispatch.arms) |arm| {
+            if (arm.slot) |slot| if (@backingInt(slot) == owner) return null;
+        },
+        else => {},
+    };
+    const from = source orelse return null;
+    for (code[head .. back + 1]) |instruction| switch (instruction.op) {
+        .store_local, .move_local, .ref_local, .drop_local => |id| if (@backingInt(id) == from) return null,
+        else => {},
+    };
+    if (callerAnchored(E, self, from)) return .caller;
+    if (concrete(E, self, from)) return .{ .journal = from };
+    return null;
+}
+
+/// The list local an adjacent capture at `pc` (a `store_local`) reads.
+fn captureSource(comptime E: type, self: *E, pc: usize) ?usize {
+    const code = self.function.scope.instructions;
+    if (pc == 0 or self.isBranchTarget(pc) or code[pc - 1].op != .load_local) return null;
+    const from = @backingInt(code[pc - 1].op.load_local);
+    const locals = self.function.scope.locals;
+    if (from >= locals.len or locals[from].ty != locals[@backingInt(code[pc].op.store_local)].ty) return null;
+    if (self.byReference(from)) return null;
+    return from;
+}
+
+/// The capture target when `pc` loads a plain list that the next instruction
+/// stores into a temporary with no other kind of definition.
+fn captureAt(comptime E: type, self: *E, pc: usize) ?usize {
+    const code = self.function.scope.instructions;
+    if (pc + 1 >= code.len or code[pc].op != .load_local or code[pc + 1].op != .store_local) return null;
+    const target = @backingInt(code[pc + 1].op.store_local);
+    if (captureSource(E, self, pc + 1) == null) return null;
+    const local = self.function.scope.locals[target];
+    if (target < self.function.signature.parameter_count or !local.usage.temporary) return null;
+    if (!plainList(E, self, local.ty)) return null;
+    if (self.byReference(target) or self.callerStorage(target)) return null;
+    return target;
+}
+
+/// A read-only list parameter the function never rebinds: the caller owns it
+/// for the whole activation, and a quiet loop can neither release nor resize it.
+fn callerAnchored(comptime E: type, self: *E, local: usize) bool {
+    if (local >= self.function.signature.parameter_count or self.byReference(local) or self.callerStorage(local)) return false;
+    if (@import("ownership_model.zig").writesParameter(self.function, local)) return false;
+    if (!plainList(E, self, self.function.scope.locals[local].ty)) return false;
+    for (self.function.scope.instructions) |instruction| switch (instruction.op) {
+        .store_local, .move_local, .ref_local, .drop_local => |id| if (@backingInt(id) == local) return false,
+        .switch_variant => |dispatch| for (dispatch.arms) |arm| {
+            if (arm.slot) |slot| if (@backingInt(slot) == local) return false;
+        },
+        else => {},
+    };
+    return true;
+}
+
+/// A one-word value that owns nothing: an integer, `bool`, unit or a plain
+/// domain such as `float`.
+fn plainWord(comptime E: type, self: *E, ty: typed.Type) bool {
+    if (scalar(ty)) return true;
+    if (!self.isScalar(ty)) return false;
+    const shape = self.cow.?.rc.?.catalog.get(ty) catch return false;
+    return !shape.counted and !shape.unique_drop;
+}
+
+/// A plain word, or an inline record, tuple or variant that owns nothing and
+/// names no live view: its bytes are copied or projected, never published.
+fn plainValue(comptime E: type, self: *E, ty: typed.Type) bool {
+    if (plainWord(E, self, ty)) return true;
+    if (!ty.isAggregate()) return false;
+    const record = self.program.records[ty.recordIndex()];
+    if (record.managed or record.isCollection() or record.isManagedRecord()) return false;
+    if (@import("value_semantics.zig").containsLiveView(self.program.records, ty)) return false;
+    const shape = self.cow.?.rc.?.catalog.get(ty) catch return false;
+    return !shape.counted and !shape.unique_drop;
+}
+
+/// A non-box list whose elements are plain values.
+fn plainList(comptime E: type, self: *E, ty: typed.Type) bool {
+    if (!ty.isAggregate()) return false;
+    const record = self.program.records[ty.recordIndex()];
+    if (!record.isCollection() or record.collection.kind != .list or record.collection.box) return false;
+    const element = record.shape.buffer orelse return false;
+    return element != .unit and plainValue(E, self, element);
 }
 
 /// Test only initialized metadata before the existing range/payload guards.
@@ -75,9 +199,23 @@ pub fn guard(comptime E: type, self: *E, proof: Certificate, head: usize) Error!
     try bytes.guard(E, self, proof.bytes, head);
 }
 
-/// A copied body may call only cold trap helpers; even old pure drop calls refuse.
-/// Bound generated-text scanning independently of the source-instruction budget.
-pub const quietCopy = @import("qbe_rc_closed_text.zig").quietCopy;
+/// A copied body may call only cold trap helpers and the heap-free scalar
+/// float and integer helpers; even old pure drop calls refuse. Bound
+/// generated-text scanning independently of the source-instruction budget.
+pub fn quietCopy(text: []const u8) bool {
+    if (text.len > 1024 * 1024) return false;
+    var lines = std.mem.splitScalar(u8, text, '\n');
+    while (lines.next()) |line| {
+        if (std.mem.indexOf(u8, line, "call %") != null) return false;
+        const at = std.mem.indexOf(u8, line, "call $") orelse continue;
+        const callee = line[at + "call $".len ..];
+        if (std.mem.startsWith(u8, callee, "myl_qbe_fail_")) continue;
+        if (std.mem.startsWith(u8, callee, "myl_qbe_float_unary(") or std.mem.startsWith(u8, callee, "myl_qbe_float_check(")) continue;
+        if (std.mem.startsWith(u8, callee, "myl_qbe_int_")) continue;
+        return false;
+    }
+    return true;
+}
 
 fn concrete(comptime E: type, self: *E, owner: usize) bool {
     if (owner >= self.function.scope.locals.len or self.byReference(owner) or self.callerStorage(owner)) return false;
@@ -93,12 +231,11 @@ fn concrete(comptime E: type, self: *E, owner: usize) bool {
     const record = self.program.records[ty.recordIndex()];
     if (!record.isCollection() or record.collection.kind != .list or record.collection.box) return false;
     const element = record.shape.buffer orelse return false;
-    return element != .unit and scalar(element);
+    return element != .unit and plainValue(E, self, element);
 }
 
 fn quiet(comptime E: type, self: *E, pc: usize, budget: *usize) bool {
     const state = self.cow.?;
-    if (self.function.scope.instructions[pc].inline_origin != null) return false;
     const site = state.plan.at(pc);
     if (site.unique.len != 0 or site.unique_field != null or site.capture or site.fill) return false;
     if (site.shares.len != 0 or site.read_captures.len != 0 or state.plan.entry(pc).len != 0) return false;
@@ -126,12 +263,21 @@ fn allowed(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "op"
     return switch (op) {
         .load_local, .store_local => |id| blk: {
             const index = @backingInt(id);
-            break :blk !self.byReference(index) and !self.callerStorage(index) and scalar(self.function.scope.locals[index].ty);
+            // An element-borrowed plain local (RC-ELEMENT-BORROW-1) holds an
+            // address into storage the loop's facts keep in place.
+            const direct = !self.byReference(index) or self.borrowsElement(index);
+            break :blk direct and !self.callerStorage(index) and plainValue(E, self, self.function.scope.locals[index].ty);
         },
-        .push_integer => |value| scalar(value.ty),
-        .cast_integer, .neg_integer, .acknowledge, .wrap_domain, .unwrap_domain => |ty| scalar(ty),
-        .binary_integer => |binary| scalar(binary.ty),
-        .push_i64, .push_bool, .push_unit, .pop, .jump, .jump_if_false, .cmp_i64, .cmp_bool, .not_bool, .add_i64_checked, .sub_i64_checked, .mul_i64_checked, .div_i64_checked, .rem_i64_checked, .neg_i64_checked, .assert_true => true,
+        .push_integer => |value| plainWord(E, self, value.ty),
+        .cast_integer, .neg_integer, .acknowledge, .wrap_domain, .unwrap_domain => |ty| plainWord(E, self, ty),
+        .binary_integer => |binary| plainWord(E, self, binary.ty),
+        .cmp_domain => |comparison| plainWord(E, self, comparison.ty),
+        .push_i64, .push_bool, .push_unit, .pop, .jump, .jump_if_false, .cmp_i64, .cmp_bool, .not_bool => true,
+        .add_i64_checked, .sub_i64_checked, .mul_i64_checked, .div_i64_checked, .rem_i64_checked, .neg_i64_checked => true,
+        .assert_true, .unary_float => true,
+        // Every stack state in the interval, including each projection's
+        // result, is separately required to be a plain value.
+        .get_field => true,
         else => false,
     };
 }

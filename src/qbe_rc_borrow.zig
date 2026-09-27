@@ -65,9 +65,14 @@ pub fn local(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "o
         .store_local => |local_id| {
             const index = @backingInt(local_id);
             const ty = self.function.scope.locals[index].ty;
+            const value = try self.load("s", stack.len - 1);
+            // RC-ELEMENT-BORROW-1: an element-borrowed slot keeps the address.
+            if (self.borrowsElement(index)) {
+                try self.print(" storel %v{d}, %l{d}\n", .{ value, index });
+                return true;
+            }
             const destination = self.temp();
             try self.print(" %v{d} =l copy %l{d}\n", .{ destination, index });
-            const value = try self.load("s", stack.len - 1);
             // Local scalar slots are canonical machine words even when their
             // packed field layout is a byte (for example a branch's bool).
             if (self.isScalar(ty)) try self.print(" storel %v{d}, %v{d}\n", .{ value, destination }) else try self.writeValue(destination, value, ty);

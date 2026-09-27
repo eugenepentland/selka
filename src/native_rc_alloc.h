@@ -13,6 +13,9 @@ void *myl_rc_storage_bytes(myl_native_heap *, size_t bytes, unsigned region);
 void *myl_rc_storage_block(myl_native_heap *, size_t bytes, unsigned region);
 /* Grow exclusively owned, unheld backing. Refusal preserves the old block. */
 void *myl_rc_storage_extend(myl_native_heap *, void *, size_t count);
+/* The same in-place growth, leaving the new bytes unwritten: only for storage
+ * whose bytes no release or drop walks as owning slots (RC-OPAQUE-EXTEND-1). */
+void *myl_rc_storage_extend_opaque(myl_native_heap *, void *, size_t count);
 /* Reserved storage, including allocator metadata; excludes RC core metadata. */
 size_t myl_rc_storage_reserved(const myl_native_heap *);
 /* Heap-wide teardown support for the production allocator. */

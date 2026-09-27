@@ -59,8 +59,9 @@ test "RC-LOOP-VERSION-1 callback publication and step accounting keep original l
     try t.expect(std.mem.indexOf(u8, flat[copy..original], "@rcslotdrop") == null);
     try t.expect(std.mem.indexOf(u8, flat[copy..original], "myl_qbe_fail_normalized_index_bounds") == null);
     try t.expect(std.mem.indexOf(u8, try named(fast.value, "callback"), "\n@fi") == null);
-    // No physical entry interval was certified for this read-only loop.
-    try t.expect(std.mem.indexOf(u8, try named(fast.value, "readonly"), "\n@fi") == null);
+    // The caller anchors a read-only parameter for the whole activation
+    // (RC-READ-LIST-VERSION-2, RC-READONLY-LOOP-VERSION-1).
+    try t.expect(std.mem.indexOf(u8, try named(fast.value, "readonly"), "\n@fi") != null);
     const held = try named(fast.value, "held");
     // The earlier real H iterator remains; its later inert capture is proved
     // non-H independently, so that separate write loop can use its fast arm.

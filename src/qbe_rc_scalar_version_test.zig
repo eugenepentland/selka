@@ -50,7 +50,8 @@ test "RC scalar loop versions retain original checked and step-accounted paths" 
     try t.expect(std.mem.indexOf(u8, calculation, "\n@fi") != null);
     try t.expect(std.mem.indexOf(u8, calculation, "\n@oi") != null);
     try t.expect(std.mem.indexOf(u8, calculation, "myl_qbe_fail") != null);
-    try t.expect(std.mem.indexOf(u8, try named(fast.value, "read_items"), "\n@fi") == null);
+    // A read-only parameter list versions through RC-READ-LIST-VERSION-2.
+    try t.expect(std.mem.indexOf(u8, try named(fast.value, "read_items"), "\n@fi") != null);
     try t.expect(std.mem.indexOf(u8, try named(fast.value, "callback"), "\n@fi") == null);
     var counted = try emitted(true);
     defer counted.deinit();

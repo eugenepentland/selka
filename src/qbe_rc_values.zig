@@ -21,10 +21,29 @@ pub fn operand(comptime E: type, self: *E, index: usize) Error!usize {
     return address;
 }
 /// Address the current logical value; scalar operands live in the stack word.
+/// An owned one-word value is first staged in its private `%rcstageN` cell
+/// (RC-OPERAND-STAGE-1): ownership helpers and relocation checks receive that
+/// cell's address, so the operand word itself never escapes and QBE and LLVM
+/// keep every `%sN` in registers, as they do for the collector.
 pub fn source(comptime E: type, self: *E, index: usize, ty: typed.Type) Error!usize {
     const address = self.temp();
+    if (self.isScalar(ty)) if (frame.get(E, self)) |state| if (index < state.operands.len and state.operands[index].may_own and try state_model.owns(state, ty)) {
+        const bits = self.temp();
+        try self.print(" %v{d} =l loadl %s{d}\n storel %v{d}, %rcstage{d}\n %v{d} =l copy %rcstage{d}\n", .{ bits, index, bits, index, address, index });
+        return address;
+    };
     try self.print(" %v{d} =l {s} %s{d}\n", .{ address, if (self.isScalar(ty)) "copy" else "loadl", index });
     return address;
+}
+/// A runtime helper that only reads a one-word scalar operand through its
+/// address receives a private `%rcarg` copy of it (RC-OPERAND-STAGE-1), so the
+/// operand word stays promotable. Any other value keeps its own address.
+pub fn argument(comptime E: type, self: *E, address: usize, ty: typed.Type) Error!usize {
+    if (frame.get(E, self) == null or !self.isScalar(ty)) return address;
+    const bits = self.temp();
+    const staged = self.temp();
+    try self.print(" %v{d} =l loadl %v{d}\n storel %v{d}, %rcarg\n %v{d} =l copy %rcarg\n", .{ bits, address, bits, staged });
+    return staged;
 }
 /// Drop the stable owned token without consulting an overwritten operand word.
 pub fn drop(comptime E: type, self: *E, index: usize) Error!void {
@@ -63,10 +82,12 @@ pub fn finish(comptime E: type, self: *E, result: Result) Error!void {
                 try copied(E, self, result.ty, address),
             .owned => try adopted(E, self, result.ty, address),
         }
-    } else if (result.origin == .borrowed and !self.isScalar(result.ty)) {
+    } else if (result.origin == .borrowed and !self.isScalar(result.ty) and try consumesOwner(E, self, result)) {
         // A plain inline field can still live inside an owning operand. Its
         // parent cleanup clears that storage, so preserve the physical bytes
         // before dropping the parent even though the field owns no edges.
+        // RC-PLAIN-READ-IN-PLACE-1: with no owning input, nothing is dropped
+        // and the borrowed bytes stay where they are, as in the collector.
         const input = try self.load("s", result.base);
         const saved = try self.aggregatePointer();
         try self.print(blit_value, .{ input, saved, (try self.layout(result.ty)).size });
@@ -74,6 +95,15 @@ pub fn finish(comptime E: type, self: *E, result: Result) Error!void {
     }
     for (result.base..result.base + result.consumed) |index| try drop(E, self, index);
     if (owned) try publish(E, self, result.ty, result.base);
+}
+/// Whether the instruction consumes an operand that can own storage, whose
+/// cleanup could clear the bytes a borrowed plain result points into.
+fn consumesOwner(comptime E: type, self: *E, result: Result) Error!bool {
+    const state = frame.get(E, self) orelse return true;
+    const stack = self.states[self.pc] orelse return true;
+    if (result.base + result.consumed > stack.len) return true;
+    for (stack[result.base..][0..result.consumed]) |ty| if (try state_model.owns(state, ty)) return true;
+    return false;
 }
 /// Relocate a fully prepared pending result into an empty operand position.
 pub fn publish(comptime E: type, self: *E, ty: typed.Type, index: usize) Error!void {

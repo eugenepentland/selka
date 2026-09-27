@@ -523,6 +523,33 @@ static void flat_take_publishes_in_place(void) {
     myl_rc_native_drop(&heap, &first, &again);
     finish(&heap);
 }
+static const myl_rc_descriptor number_descriptor = {.type = &number, .shape = &scalar};
+// spec: RC-OPAQUE-EXTEND-1
+static void opaque_extension_keeps_prefix(void) {
+    myl_native_heap heap;
+    start(&heap);
+    assert(myl_rc_descriptor_import(&heap, &number_descriptor) == MYL_RC_OK);
+    assert(plan(&heap, &number)->count == 0 && plan(&heap, &pointer)->count == 1);
+    /* A plain list grows in place far past the slab classes, and every
+     * element it ever stored survives each extension. */
+    myl_native_list *list = myl_native_list_new(&heap, &number, 0);
+    assert(list);
+    for (uint64_t i = 0; i < 100000; ++i) assert(myl_rc_list_append(&heap, list, &i));
+    assert(list->length == 100000 && list->capacity >= 100000);
+    for (uint64_t i = 0; i < 100000; ++i) assert(((uint64_t *)list->storage)[i] == i);
+    /* A pointer list's new capacity is still zero: its drop walks slots. */
+    myl_native_list *pointers = myl_native_list_new(&heap, &pointer, 0);
+    assert(pointers);
+    void *text = bytes8(&heap);
+    for (size_t i = 0; i < 5000; ++i) assert(myl_rc_list_append(&heap, pointers, &text));
+    for (size_t i = pointers->length; i < pointers->capacity; ++i) assert(!((void **)pointers->storage)[i]);
+    assert(header(text)->owners == 5001);
+    myl_rc_owner_release(&heap, pointers);
+    myl_rc_owner_release(&heap, list);
+    assert(header(text)->owners == 1);
+    myl_rc_owner_release(&heap, text);
+    finish(&heap);
+}
 int myl_rc_fast_verify(void) {
     variant_plan_layout();
     variant_plan_operations();
@@ -538,12 +565,13 @@ int myl_rc_fast_verify(void) {
     list_clone_spans();
     flat_semantic_publication();
     flat_take_publishes_in_place();
-    return 14;
+    opaque_extension_keeps_prefix();
+    return 15;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
-    assert(myl_rc_fast_verify() == 14);
-    puts("native RC fast paths: 14 tests passed");
+    assert(myl_rc_fast_verify() == 15);
+    puts("native RC fast paths: 15 tests passed");
     return 0;
 }
 #endif

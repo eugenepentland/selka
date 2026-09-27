@@ -1177,7 +1177,12 @@ int myl_rc_list_storage_reserve(myl_native_heap *heap, myl_native_list *list, si
     }
     if (list->element->size && capacity>SIZE_MAX/list->element->size) return 0;
     void *old=list->storage;
-    void *storage=myl_rc_storage_extend(heap,old,capacity*list->element->size);
+    /* RC-OPAQUE-EXTEND-1: plain elements (an empty flat plan) are never
+     * walked as owning slots, so their new capacity needs no zero bytes. */
+    const myl_rc_binding *binding=myl_rc_binding_find(heap,list->element);
+    int opaque=binding && !binding->flat.count && !binding->flat.native_unique;
+    void *storage=opaque?myl_rc_storage_extend_opaque(heap,old,capacity*list->element->size):
+        myl_rc_storage_extend(heap,old,capacity*list->element->size);
     if (!storage) {
         storage=myl_rc_native_storage(heap,list->element,capacity,myl_native_header_region(list));
         if (!storage) return 0;

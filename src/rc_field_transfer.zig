@@ -231,7 +231,30 @@ fn sibling(comptime E: type, self: *E, proof: Certificate, pc: usize) bool {
 // Plain bits in the local's own slot cannot name or share a counted payload.
 fn harmless(comptime E: type, self: *E, local: usize, catalog: *shapes.Catalog) Error!bool {
     if (self.byReference(local) or self.moves.aliased(local)) return false;
+    if (iterationHold(E, self, local)) return true;
     return plain(catalog, self.function.scope.locals[local].ty);
+}
+
+// RC-ITERATION-HOLD-TRANSFER-1: a hidden iteration source holds the header
+// it iterates, never the field slot that owns it, and is read only through
+// its own length, element and iteration-check operations. Moving the owner
+// token between slots leaves that hold, and so the loop, on the same header:
+// a size change through the moved owner then fails the next iteration check,
+// as it does for the collector, instead of detaching a silent snapshot.
+fn iterationHold(comptime E: type, self: *E, local: usize) bool {
+    if (!@import("cow_plan.zig").iterationOwner(self.function, local)) return false;
+    for (self.function.scope.instructions) |instruction| switch (instruction.op) {
+        .load_local, .move_local, .ref_local, .drop_local => |id| if (@backingInt(id) == local) return false,
+        .buffer_operation => |operation| if (@backingInt(operation.owner) == local) switch (operation.kind) {
+            .length, .read, .iteration_check => {},
+            else => return false,
+        },
+        .switch_variant => |dispatch| for (dispatch.arms) |arm| {
+            if (arm.slot) |slot| if (@backingInt(slot) == local) return false;
+        },
+        else => {},
+    };
+    return true;
 }
 
 // Locals that may name, borrow or lend from the moved field: the source's

@@ -16,6 +16,16 @@ pub fn activate(comptime E: type, self: *E) void {
     state.active = false;
 }
 
+/// Whether this RC activation is a raw readonly body: it emits no token,
+/// journal or count traffic, so its loops version exactly as the collector's
+/// (RC-READONLY-LOOP-VERSION-1). The copy's emitted-call audit still applies.
+pub fn body(comptime E: type, self: *E) bool {
+    if (!runtime.enabled()) return false;
+    const cow = self.cow orelse return false;
+    const state = cow.rc orelse return false;
+    return state.readonly;
+}
+
 /// Preflight already refused nonquiet plans; later refinements are inactive.
 /// A mismatch is an emitter invariant failure, never a second optional choice.
 pub fn verify(comptime E: type, self: *E) Error!void {

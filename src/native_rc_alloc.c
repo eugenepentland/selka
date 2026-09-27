@@ -490,7 +490,18 @@ void *myl_rc_storage_bytes(myl_native_heap *heap, size_t bytes, unsigned region)
 void *myl_rc_storage_block(myl_native_heap *heap, size_t bytes, unsigned region) {
     return raw_bytes(heap,bytes,region,0);
 }
+static void *storage_extend(myl_native_heap *heap, void *payload, size_t count, int zero);
 void *myl_rc_storage_extend(myl_native_heap *heap, void *payload, size_t count) {
+    return storage_extend(heap,payload,count,1);
+}
+/* RC-OPAQUE-EXTEND-1: the caller proved no release or drop ever walks the
+ * block's bytes as owning slots (a plain element with an empty flat plan), so
+ * the new capacity is left unwritten, exactly as the collector's opaque
+ * extension: every element is written before a reader can reach it. */
+void *myl_rc_storage_extend_opaque(myl_native_heap *heap, void *payload, size_t count) {
+    return storage_extend(heap,payload,count,0);
+}
+static void *storage_extend(myl_native_heap *heap, void *payload, size_t count, int zero) {
     if (!payload) return NULL;
     myl_native_object *common=(myl_native_object *)payload-1;
     if (common->mark&(MYL_NATIVE_OBJECT_IMMORTAL|MYL_NATIVE_OBJECT_ARENA|MYL_RC_OBJECT_DYING)) return NULL;
@@ -507,7 +518,7 @@ void *myl_rc_storage_extend(myl_native_heap *heap, void *payload, size_t count) 
     size_t previous=large->charge;
     rc_large *grown=realloc(large,bytes);
     if (!grown) return NULL;
-    memset((unsigned char *)grown+previous,0,growth);
+    if (zero) memset((unsigned char *)grown+previous,0,growth);
     if (grown->previous) grown->previous->next=grown;
     else storage_of(heap)->large=grown;
     if (grown->next) grown->next->previous=grown;

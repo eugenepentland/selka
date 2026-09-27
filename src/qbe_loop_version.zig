@@ -20,6 +20,7 @@ const std = @import("std");
 const facts = @import("qbe_loop_facts.zig");
 const read_version = @import("qbe_rc_read_version.zig");
 const operands = @import("qbe_loop_operands.zig");
+const rc_append_loop = @import("qbe_rc_append_loop.zig");
 
 /// Errors reported while emitting native operations.
 pub const Error = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
@@ -60,6 +61,7 @@ pub fn Lower(comptime E: type) type {
         fn emitHere(self: *E, loop: *const facts.Loop) Error!bool {
             // Existing hoist/scalar admissions keep their original protocol.
             const previous = !@import("runtime_mode.zig").enabled() or
+                @import("qbe_rc_readonly_calls.zig").body(E, self) or
                 @import("qbe_rc_hoist.zig").permitsVersion(E, self, loop.head, loop.back) or
                 @import("qbe_rc_scalar_version.zig").proven(E, self, loop.head, loop.back);
             const read_proof = if (previous) null else read_version.certify(E, self, loop.head, loop.back);
@@ -175,6 +177,9 @@ pub fn Lower(comptime E: type) type {
             const generation = self.temp();
             try self.markObject(header);
             try self.print(" %v{d} =l loadl %v{d}\n %v{d} =l add %v{d}, {d}\n %v{d} =l loadl %v{d}\n", .{ length, header, generation_field, header, generation_offset, generation, generation_field });
+            // RC-PRESIZED-APPEND-1: an RC copy may presize only a certified
+            // quiet scalar append loop, after the runtime admits the list once.
+            if (!try rc_append_loop.presized(E, self, .{ .head = active.loop.head, .header = header, .generation = generation, .root = self.loop_plan.nodes[list] })) return;
             active.appending = .{ .length = length, .generation = generation };
         }
 

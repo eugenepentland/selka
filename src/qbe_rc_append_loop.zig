@@ -41,6 +41,30 @@ pub fn entry(comptime E: type, self: *E, head: usize) Error!void {
         try self.print(" storew 0, %rcappend{d}\n", .{index});
 }
 
+/// The header of the list a versioned loop's presized append extends.
+pub const Presized = struct { head: usize, header: usize, generation: usize, root: @import("qbe_loop_facts.zig").Node };
+
+/// RC-PRESIZED-APPEND-1: admit a guard's presized append for a certified
+/// quiet scalar append loop. The guard asks the runtime once whether the list
+/// may take room writes (the answer the certificate already reuses across the
+/// loop) and bounds the generation so no append can reach the frozen marker;
+/// either refusal enters the original loop. False emits nothing.
+/// A collector build presizes every planned append; it always admits.
+pub fn presized(comptime E: type, self: *E, append: Presized) Error!bool {
+    if (!@import("runtime_mode.zig").enabled()) return true;
+    const state = frame.get(E, self) orelse return false;
+    if (append.root != .leaf or append.root.leaf.kind != .local) return false;
+    const certified = for (state.plan.append_loops) |proof| {
+        if (proof.head == append.head and proof.root == append.root.leaf.slot) break true;
+    } else false;
+    if (!certified) return false;
+    const ready = self.temp();
+    const young = self.temp();
+    try self.print(" %v{d} =w call $myl_rc_list_plain_ready(l %heap, l %v{d})\n jnz %v{d}, @rcpresized{d}, @oi{d}\n@rcpresized{d}\n", .{ ready, append.header, ready, ready, append.head, ready });
+    try self.print(" %v{d} =l cultl %v{d}, {d}\n jnz %v{d}, @rcpresized{d}, @oi{d}\n@rcpresized{d}\n", .{ young, append.generation, @as(u64, 1) << 62, young, young, append.head, young });
+    return true;
+}
+
 /// Only the certified root's actual append may use its private admission word.
 pub fn at(comptime E: type, self: *E) ?usize {
     const state = frame.get(E, self) orelse return null;
