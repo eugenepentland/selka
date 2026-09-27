@@ -62,7 +62,13 @@ fn returnSite(ctx: *const Context, transfer: Transfer) ?usize {
 // edge may enter after extraction, including at the store-back itself.
 /// Whether every continuing edge commits at end, with no outside entry.
 pub fn closedFlow(ctx: *const Context, start: usize, end: usize) bool {
-    for (ctx.instructions(), 0..) |instruction, pc| {
+    return closedInterval(ctx.instructions(), start, end);
+}
+
+/// `closedFlow` over a bare instruction stream, for the physical RC transfer
+/// certificate that reuses this region shape (`RC-CLOSED-FIELD-TRANSFER-1`).
+pub fn closedInterval(code: []const @import("bytecode.zig").Instruction, start: usize, end: usize) bool {
+    for (code, 0..) |instruction, pc| {
         const inside = pc >= start and pc < end;
         const op = instruction.op;
         if (inside) {

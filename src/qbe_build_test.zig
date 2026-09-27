@@ -4,6 +4,8 @@ const fs = @import("qbe_build_io.zig");
 const v = @import("qbe_build_value.zig");
 const bundled = @import("qbe_build_assets");
 const runtime_options_variable = "MYLANG_OPTIONS";
+const memory_limit_variable = "MYLANG_MEMORY_LIMIT";
+const counting_contract = @import("runtime_contract");
 
 test {
     _ = @import("qbe_build.zig");
@@ -671,10 +673,9 @@ const closed_field_program =
 fn closedFieldLifecycle(allocator: std.mem.Allocator) !usize {
     var environment = try std.process.Environ.createMap(std.testing.environ, allocator);
     defer environment.deinit();
-    const contract = @import("runtime_contract");
-    try environment.put(contract.variable, contract.Selection.rc_counting.identity());
+    try environment.put(counting_contract.variable, counting_contract.Selection.rc_counting.identity());
     try environment.put(runtime_options_variable, "");
-    try environment.put("MYLANG_MEMORY_LIMIT", "128M");
+    try environment.put(memory_limit_variable, "128M");
     var context = try fs.Context.init(allocator, std.testing.io, &environment);
     defer context.deinit();
     const a = context.allocator;
@@ -688,7 +689,7 @@ fn closedFieldLifecycle(allocator: std.mem.Allocator) !usize {
     try argvRun(context, &.{binary}, &environment, 0, "1\n2\n");
     try argvRun(context, &.{ binary, "trap" }, &environment, 1, "1\n");
     try argvRun(context, &.{ binary, "arena" }, &environment, 1, "1\n");
-    try environment.put("MYLANG_MEMORY_LIMIT", "1M");
+    try environment.put(memory_limit_variable, "1M");
     try argvRun(context, &.{ binary, "budget" }, &environment, 1, "1\n");
     return 4;
 }
@@ -696,4 +697,92 @@ fn closedFieldLifecycle(allocator: std.mem.Allocator) !usize {
 // spec-case: RC-CLOSED-FIELD-TRANSFER-1
 test "native RC closed field owner balances storeback snapshot traps and arena refusal" {
     try std.testing.expectEqual(@as(usize, 4), try closedFieldLifecycle(std.testing.allocator));
+}
+
+const record_transfer_program =
+    \\record Rt:
+    \\    objects: list[int]
+    \\    names: dict[str, int]
+    \\    last: Option[list[int]]
+    \\record It:
+    \\    rt: Rt
+    \\    tag: str
+    \\def grow(rt: mut Rt, amount: int, index: int):
+    \\    i = 0
+    \\    while i < amount:
+    \\        rt.objects.append(i)
+    \\        i += 1
+    \\    rt.names["k"] = amount
+    \\    rt.last = Some([amount])
+    \\    assert rt.objects[index] >= 0
+    \\def change(it: mut It, amount: int, index: int):
+    \\    wb = it.rt
+    \\    grow(mut wb, amount, index)
+    \\    it.rt = wb
+    \\def owned_case(out: Stream, amount: int, index: int):
+    \\    it = It(Rt([1], {}, None), "t")
+    \\    saved = it
+    \\    i = 0
+    \\    while i < 3:
+    \\        wb = it.rt
+    \\        grow(mut wb, amount, index)
+    \\        it.rt = wb
+    \\        i += 1
+    \\    out.print(len(it.rt.objects))
+    \\    assert saved.rt.objects == [1]
+    \\def caller_case(out: Stream, amount: int, index: int):
+    \\    it = It(Rt([1], {}, None), "t")
+    \\    saved = it
+    \\    change(mut it, amount, index)
+    \\    out.print(len(it.rt.objects))
+    \\    assert saved.rt.objects == [1] and saved.rt.last is None
+    \\def arena_case(out: Stream):
+    \\    with arena():
+    \\        it = It(Rt([1], {}, None), "t")
+    \\        saved = it
+    \\        out.print(len(saved.rt.objects))
+    \\        change(mut it, 1, 100)
+    \\def main(args: list[str], out: Stream) -> int:
+    \\    if len(args) == 0:
+    \\        owned_case(out, 1, 0)
+    \\        caller_case(out, 1, 0)
+    \\    elif args[0] == "trap-owned":
+    \\        owned_case(out, 1, 100)
+    \\    elif args[0] == "trap-caller":
+    \\        caller_case(out, 1, 100)
+    \\    elif args[0] == "arena":
+    \\        arena_case(out)
+    \\    else:
+    \\        owned_case(out, 1000000, 0)
+    \\    return 0
+;
+
+fn recordTransferLifecycle(allocator: std.mem.Allocator) !usize {
+    var environment = try std.process.Environ.createMap(std.testing.environ, allocator);
+    defer environment.deinit();
+    try environment.put(counting_contract.variable, counting_contract.Selection.rc_counting.identity());
+    try environment.put(runtime_options_variable, "");
+    try environment.put(memory_limit_variable, "128M");
+    var context = try fs.Context.init(allocator, std.testing.io, &environment);
+    defer context.deinit();
+    const a = context.allocator;
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+    const source = try join(a, &.{ root, "record.my" });
+    const binary = try join(a, &.{ root, "record" });
+    try context.write(source, record_transfer_program);
+    try buildOnly(context, .{ .tools = try tools(a), .source = source, .output = binary, .cache = try join(a, &.{ root, "cache" }), .environment = &environment });
+    try argvRun(context, &.{binary}, &environment, 0, "4\n2\n");
+    try argvRun(context, &.{ binary, "trap-owned" }, &environment, 1, "");
+    try argvRun(context, &.{ binary, "trap-caller" }, &environment, 1, "");
+    try argvRun(context, &.{ binary, "arena" }, &environment, 1, "1\n");
+    try environment.put(memory_limit_variable, "1M");
+    try argvRun(context, &.{ binary, "budget" }, &environment, 1, "");
+    return 5;
+}
+
+// spec-case: RC-CLOSED-FIELD-TRANSFER-2
+test "native RC record field transfers balance owned and caller traps, arenas and budgets" {
+    try std.testing.expectEqual(@as(usize, 5), try recordTransferLifecycle(std.testing.allocator));
 }

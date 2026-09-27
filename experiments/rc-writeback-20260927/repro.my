@@ -1,0 +1,22 @@
+record Rt:
+    objects: list[int]
+
+
+record It:
+    rt: Rt
+
+
+def push(rt: mut Rt, v: int):
+    rt.objects.append(v)
+
+
+def main(args: list[str]) -> int:
+    n = len(args[0]) * 5000
+    it = It(rt=Rt(objects=[]))
+    i = 0
+    while i < n:
+        wb = it.rt
+        push(mut wb, i)
+        it.rt = wb
+        i += 1
+    return len(it.rt.objects) % 256
