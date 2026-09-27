@@ -8,16 +8,19 @@ preserved across the handoff. The orchestrator works in separate worktrees and s
 full gates with `../.d9-closeout-gate.lock`. The original dirty checkout, `main`
 (`b292660a`), and the pending devspeed merge are untouched.
 
-The active user goal is Stage 4 performance acceptance. The earlier
-[30-program joined diagnostic](d9-rc-joined-parity-2026-09-27.md), measured on
-fully gated `5b876012`, completes all 60 rows with correct output. Instruction
-geomeans are **2.831332× QBE / 3.283233× LLVM** against accepted GC; only 8/30
-and 9/30 programs meet the 1.3× cap. Median peak RSS is 0.755455× / 0.745243×
-GC for this subset. All 13 Lox programs per backend are excluded, so this does
-not establish the required complete-corpus acceptance.
+The active user goal is Stage 4 performance acceptance. The current
+[30-program combined loop diagnostic](d9-rc-loops-joined-parity-2026-09-27.md),
+measured on fully gated `49c6ca07`, completes all 60 rows with correct output.
+Instruction geomeans are **2.433636× QBE / 2.800243× LLVM** against accepted GC;
+only 8/30 and 9/30 programs meet the 1.3× cap. Median peak RSS is 0.762436× /
+0.743854× GC for this subset. This improves the earlier `5b876012` geomeans
+of 2.831332× / 3.283233×, but still fails the instruction requirements.
+All 13 Lox programs per backend are excluded, so it does not establish the
+required complete-corpus acceptance. All 360 instruction observations ran at
+100%; the verifier also checks 360 RSS observations and 112 native manifests.
 
-Dictionary-tail `3c4251e8`, native type-fact `c71d4046` (report correction
-`242439ec`) and adjacent variant read `4f60ff94` now pass the combined gate at
+Earlier dictionary-tail `3c4251e8`, native type-fact `c71d4046` (report correction
+`242439ec`) and adjacent variant read `4f60ff94` passed the combined gate at
 `c90c84be`. The [five-program combined diagnostic](d9-rc-ownership-joined-2026-09-27.md)
 measures unchanged dictionary counting at **6.598428× QBE / 7.383473× LLVM** and
 Lox binary trees N10 at **27.911220× / 44.806239× GC**. Schematic cases remain
@@ -44,8 +47,8 @@ The separate dictionary-loop candidate `88f4e477` reaches **1.481235× QBE /
 to reach 1.3×. The subsequent [combined loop checkpoint](d9-rc-loops-joined-gate-2026-09-27.md)
 at `49c6ca07` now includes that dictionary proof and guarded read-list versions
 `be0cba69`. The latter's isolated append ratios are 1.902061× QBE / 2.301125×
-LLVM; sieve remains 2.963575× / 3.513822×. A fresh 30-program non-Lox diagnostic
-is measuring the combined source. Current follow-on work addresses Lox's
+LLVM; sieve remains 2.963575× / 3.513822×. The completed 30-program diagnostic
+above confirms those costs on the combined source. Current follow-on work addresses Lox's
 anchored record-field list reads, managed borrowed-helper composition and the
 remaining plain dictionary overwrite cost. Complete current combined performance
 has not been measured. GC remains the default; changing it is outside this
