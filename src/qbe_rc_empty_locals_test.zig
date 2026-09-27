@@ -59,7 +59,7 @@ fn contains(text: []const u8, needle: []const u8) bool {
 }
 
 // spec-case: RC-EMPTY-LOCAL-JOURNAL-1
-test "RC empty local journals keep parameter operand scratch and trap linkage" {
+test "RC empty local journals keep parameter operand scratch and native admission" {
     const saved = runtime.get();
     defer runtime.set(saved);
     runtime.set(.rc);
@@ -67,8 +67,8 @@ test "RC empty local journals keep parameter operand scratch and trap linkage" {
     defer manifest.deinit();
     const il = try named(manifest.value, "advance");
     try t.expect(contains(il, "%rcentries =l alloc8 128"));
-    try t.expect(contains(il, "myl_qbe_rc_frame_enter"));
-    try t.expect(contains(il, "myl_qbe_rc_frame_cleanup"));
+    try t.expect(!contains(il, "myl_qbe_rc_frame_enter"));
+    try t.expect(!contains(il, "myl_qbe_rc_frame_cleanup"));
     try t.expect(contains(try named(manifest.value, "rebind"), "myl_qbe_rc_unique_local"));
     try t.expect(contains(try named(manifest.value, "callback"), "myl_qbe_rc_scope_pin"));
     try t.expect(contains(try named(manifest.value, "iterate"), "myl_rc_hold_acquire"));
@@ -86,7 +86,7 @@ test "RC empty receiver scopes omit unused storage while callbacks retain it" {
     const il = try named(manifest.value, "advance");
     try t.expect(!contains(il, "%rcborrow"));
     try t.expect(contains(il, "%rcentries =l alloc8 128"));
-    try t.expect(contains(il, "myl_qbe_rc_frame_enter"));
+    try t.expect(!contains(il, "myl_qbe_rc_frame_enter"));
     try t.expect(contains(il, "myl_qbe_fail_frame"));
     try t.expect(contains(try named(manifest.value, "callback"), "%rcborrow"));
     try t.expect(contains(try named(manifest.value, "callback"), "myl_qbe_rc_scope_pin"));

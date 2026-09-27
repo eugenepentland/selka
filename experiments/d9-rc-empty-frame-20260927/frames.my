@@ -1,0 +1,19 @@
+record Point:
+    x: int
+    y: int
+
+def advance(points: mut list[Point], index: int, delta: int) -> int:
+    old = points[index]
+    points[index].x = old.x + delta
+    return points[index].x
+
+def dive(points: mut list[Point], depth: int) -> int:
+    if depth == 0:
+        return advance(mut points, 0, 1)
+    return dive(mut points, depth - 1)
+def main() -> int:
+    points = [Point(3, 5)]
+    before = points
+    with arena():
+        _ = dive(mut points, 1000000)
+    return before[0].x

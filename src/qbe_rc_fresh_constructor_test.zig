@@ -220,5 +220,103 @@ test "RC-FRESH-RETURN-1 wide owned results keep the generic ABI handoff" {
     defer t.allocator.free(output);
     try t.expect(std.mem.indexOf(u8, output, "@rcfresh") != null);
     try t.expect(std.mem.indexOf(u8, output, "@rcfreshreturn") == null);
+    try t.expect(std.mem.indexOf(u8, output, "@rcspan") == null);
+    try t.expect(std.mem.indexOf(u8, output, "call $myl_qbe_rc_frame_cleanup") != null);
+}
+
+fn spanPath(a: std.mem.Allocator, body: []const u8, needle: []const u8) ![]const u8 {
+    const output = try text(a, body);
+    defer a.free(output);
+    var rest = output;
+    while (std.mem.indexOf(u8, rest, "\n@rcspan")) |start| {
+        rest = rest[start + 1 ..];
+        if (!std.ascii.isDigit(rest[7])) continue;
+        const end = std.mem.indexOf(u8, rest, "\n@rcspanslow") orelse return error.TestUnexpectedResult;
+        const candidate = rest[0..end];
+        if (std.mem.indexOf(u8, candidate, needle) != null) return a.dupe(u8, candidate);
+        rest = rest[end + 1 ..];
+    }
+    return a.dupe(u8, "");
+}
+
+// spec: RC-FRESH-SPAN-1
+test "RC-FRESH-SPAN-1 allocation retains inputs then publishes one complete owner" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc_counting);
+    const span = try spanPath(t.allocator, fresh, "call $myl_native_heap_alloc");
+    defer t.allocator.free(span);
+    const allocation = std.mem.indexOf(u8, span, "call $myl_native_heap_alloc") orelse return error.TestUnexpectedResult;
+    try t.expect(std.mem.indexOf(u8, span[0..allocation], "storew 0,") == null);
+    try t.expect(std.mem.indexOf(u8, span, "call $myl_qbe_fail_allocation") != null);
+    try t.expect(std.mem.indexOf(u8, span, "call $myl_rc_native_") == null);
+    try t.expect(std.mem.indexOf(u8, span, "storew 4,") == null);
+    try t.expectEqual(@as(usize, 1), std.mem.count(u8, span, " storew 1,"));
+}
+
+// spec-case: RC-FRESH-SPAN-1
+test "RC-FRESH-SPAN-1 whole ordinary fallback retains construction and transfer guards" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc_counting);
+    const output = try text(t.allocator, fresh);
+    defer t.allocator.free(output);
+    try t.expect(std.mem.indexOf(u8, output, "@rcspanslow") != null);
+    try t.expect(std.mem.indexOf(u8, output, "storew 4,") != null);
+    try t.expect(std.mem.indexOf(u8, output, "call $myl_rc_native_take") != null);
+    try t.expect(std.mem.indexOf(u8, output, "call $myl_qbe_rc_frame_enter") != null);
+}
+
+// spec-case: RC-FRESH-SPAN-1
+test "RC-FRESH-SPAN-1 aliases callbacks holds and arena transitions refuse the span" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc_counting);
+    const alias = try text(t.allocator, aliased);
+    defer t.allocator.free(alias);
+    const callback = try text(t.allocator, indirect);
+    defer t.allocator.free(callback);
+    const view = try text(t.allocator, held);
+    defer t.allocator.free(view);
+    const region = try text(t.allocator, arena);
+    defer t.allocator.free(region);
+    try t.expect(std.mem.indexOf(u8, alias, "@rcspan") == null);
+    try t.expect(std.mem.indexOf(u8, callback, "@rcspan") == null);
+    try t.expect(std.mem.indexOf(u8, view, "@rcspan") == null);
+    try t.expect(std.mem.indexOf(u8, region, "@rcspan") == null);
+}
+
+// spec-case: RC-FRESH-SPAN-1
+test "RC-FRESH-SPAN-1 fallible result metadata keeps the ordinary constructor" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc_counting);
+    const output = try functionText(t.allocator, node ++
+        \\def make(depth: int) -> Result[Node, int]:
+        \\    return Ok(Node(None, None))
+        \\def main() -> int:
+        \\    match make(0):
+        \\        case Ok(value):
+        \\            return 0
+        \\        case Err(code):
+        \\            return code
+    );
+    defer t.allocator.free(output);
+    try t.expect(std.mem.indexOf(u8, output, "@rcspan") == null);
+}
+
+// spec-case: RC-FRESH-SPAN-1
+test "RC-FRESH-SPAN-1 incoming unique finalizers retain the complete journal" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc_counting);
+    const output = try functionText(t.allocator, node ++
+        \\def make(depth: int, input: TextFile) -> Node:
+        \\    return Node(None, None)
+        \\def main() -> int:
+        \\    return 0
+    );
+    defer t.allocator.free(output);
+    try t.expect(std.mem.indexOf(u8, output, "@rcspan") == null);
     try t.expect(std.mem.indexOf(u8, output, "call $myl_qbe_rc_frame_cleanup") != null);
 }

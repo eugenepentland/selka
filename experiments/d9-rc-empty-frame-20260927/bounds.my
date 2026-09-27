@@ -1,0 +1,15 @@
+record Point:
+    x: int
+    y: int
+
+def advance(points: mut list[Point], index: int, delta: int) -> int:
+    old = points[index]
+    points[index].x = old.x + delta
+    return points[index].x
+
+def main() -> int:
+    points = [Point(3, 5)]
+    before = points
+    with arena():
+        _ = advance(mut points, 3, 1)
+    return before[0].x

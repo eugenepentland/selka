@@ -5,6 +5,7 @@ const frame = @import("qbe_rc_frame.zig");
 const values = @import("qbe_rc_values.zig");
 const slots = @import("qbe_rc_slots.zig");
 const state = @import("qbe_rc_state.zig");
+const fresh = @import("qbe_rc_fresh_constructor.zig");
 const Op = @FieldType(bytecode.Instruction, "op");
 const blit_value = values.blit_value;
 /// Native emitter failures shared by aggregate publication helpers.
@@ -54,11 +55,18 @@ fn zero(comptime E: type, self: *E, ty: typed.Type, address: usize) Error!void {
     try self.print(" call $memset(l %v{d}, w 0, l {d})\n", .{ address, (try self.layout(ty)).size });
 }
 
-const Field = struct { ty: typed.Type, source: usize, destination: usize, region: usize, operand: ?usize = null };
+const Field = struct { ty: typed.Type, source: usize, destination: usize, region: usize, operand: ?usize = null, infallible: bool = false };
 fn initialize(comptime E: type, self: *E, field: Field) Error!void {
     const shape = frame.get(E, self).?.catalog.get(field.ty) catch return error.InternalError;
     if (!shape.counted and !shape.unique_drop) {
         try self.writeValue(field.destination, try self.readValue(field.source, field.ty), field.ty);
+        return;
+    }
+    if (field.infallible) {
+        // Whole-constructor preflight already proved the exact ordinary role.
+        // No fallible work follows allocation until complete result publication.
+        try self.print(blit_value, .{ field.source, field.destination, (try self.layout(field.ty)).size });
+        try frame.initialized(E, self, values.journalIndex(E, self, field.operand.?), false);
         return;
     }
     if (!shape.unique_drop) if (field.operand) |index| {
@@ -66,12 +74,12 @@ fn initialize(comptime E: type, self: *E, field: Field) Error!void {
         // move into the already-journaled partial aggregate; borrowed or held
         // inputs still acquire an independent value through prepareOperand.
         // No fallible operation separates this publication and guard handoff.
-        const fresh = try @import("qbe_rc_fresh_constructor.zig").begin(E, self, field.ty, index, field.source, field.destination);
+        const label = try fresh.begin(E, self, field.ty, index, field.source, field.destination);
         try values.prepareOperand(E, self, field.ty, index);
         const work = try values.workAddress(E, self);
         try self.print(blit_value, .{ work, field.destination, (try self.layout(field.ty)).size });
         try frame.initialized(E, self, frame.pending(E, self), false);
-        if (fresh) |label| try self.print("@rcfreshdone{d}\n", .{label});
+        if (label) |id| try self.print("@rcfreshdone{d}\n", .{id});
         return;
     };
     try slots.Lower(E).transfer(self, .{ .ty = field.ty, .source = field.source, .destination = field.destination, .region = field.region, .mode = if (shape.unique_drop) .take_empty else .retain_empty });
@@ -81,23 +89,33 @@ fn initialize(comptime E: type, self: *E, field: Field) Error!void {
 
 fn construct(comptime E: type, self: *E, record: @FieldType(Op, "make_record"), height: usize) Error!void {
     if (try @import("qbe_rc_views.zig").construct(E, self, record, height)) return;
+    const span = try fresh.beginSpan(E, self, record.ty, height - record.fields, record.fields);
+    if (span) |label| {
+        try recordBody(E, self, record, height, true);
+        try self.print(" jmp @rcspandone{d}\n@rcspanslow{d}\n", .{ label, label });
+    }
+    try recordBody(E, self, record, height, false);
+    if (span) |label| try self.print("@rcspandone{d}\n", .{label});
+}
+
+fn recordBody(comptime E: type, self: *E, record: @FieldType(Op, "make_record"), height: usize, infallible: bool) Error!void {
     const managed = self.program.records[record.ty.recordIndex()].isManagedRecord();
     const pointer = if (managed)
         try @import("qbe_alloc.zig").cell(*E, self, record.ty, self.states[self.pc].?)
     else
         try self.aggregatePointer();
     if (managed) {
-        try values.holdRuntime(E, self, record.ty, pointer);
+        if (!infallible) try values.holdRuntime(E, self, record.ty, pointer);
     } else {
         try zero(E, self, record.ty, pointer);
-        try internal(E, self, record.ty, pointer);
+        if (!infallible) try internal(E, self, record.ty, pointer);
     }
     const depth = try region(E, self);
     const base = height - record.fields;
     for (0..record.fields) |i| {
         const index = if (record.order.len == 0) i else record.order[i];
         const member = try self.field(record.ty, index);
-        try initialize(E, self, .{ .ty = member.ty, .source = try values.source(E, self, base + i, member.ty), .destination = try self.address(pointer, member.offset), .region = depth, .operand = base + i });
+        try initialize(E, self, .{ .ty = member.ty, .source = try values.source(E, self, base + i, member.ty), .destination = try self.address(pointer, member.offset), .region = depth, .operand = base + i, .infallible = infallible });
     }
     try self.store(base, pointer);
     try finishConstructor(E, self, record.ty, base, record.fields);
@@ -105,11 +123,23 @@ fn construct(comptime E: type, self: *E, record: @FieldType(Op, "make_record"), 
 
 fn variantValue(comptime E: type, self: *E, variant: @FieldType(Op, "make_variant"), height: usize) Error!void {
     const payload = self.program.records[variant.ty.recordIndex()].shape.variants.?.cases[variant.tag].payload;
+    const count = @intFromBool(payload != null);
+    const span = try fresh.beginSpan(E, self, variant.ty, height - count, count);
+    if (span) |label| {
+        try variantBody(E, self, variant, height, true);
+        try self.print(" jmp @rcspandone{d}\n@rcspanslow{d}\n", .{ label, label });
+    }
+    try variantBody(E, self, variant, height, false);
+    if (span) |label| try self.print("@rcspandone{d}\n", .{label});
+}
+
+fn variantBody(comptime E: type, self: *E, variant: @FieldType(Op, "make_variant"), height: usize, infallible: bool) Error!void {
+    const payload = self.program.records[variant.ty.recordIndex()].shape.variants.?.cases[variant.tag].payload;
     const direct_empty = payload == null and !typed.moveOnly(variant.ty, self.program.records);
     const pointer = try self.aggregatePointer();
     try zero(E, self, variant.ty, pointer);
     try self.writeTag(variant.ty, variant.tag, pointer);
-    if (!direct_empty) try internal(E, self, variant.ty, pointer);
+    if (!direct_empty and !infallible) try internal(E, self, variant.ty, pointer);
     const base = height - @intFromBool(payload != null);
     if (payload) |ty| try initialize(E, self, .{
         .ty = ty,
@@ -117,6 +147,7 @@ fn variantValue(comptime E: type, self: *E, variant: @FieldType(Op, "make_varian
         .destination = try self.address(pointer, (try self.layout(variant.ty)).payload_offset),
         .region = try region(E, self),
         .operand = base,
+        .infallible = infallible,
     });
     try self.store(base, pointer);
     try @import("qbe_error_trace.zig").Lower(E).construction(self, variant.ty, variant.tag);

@@ -1,0 +1,66 @@
+# Frozen 7d68202d diagnostic measurements
+
+Three measurements per side and metric; RSS in KiB. This 30-program subset excludes Lox and is not acceptance.
+
+| Program | Backend | GC instructions | RC instructions | RC / GC | GC RSS | RC RSS |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| parity/suite/binary_trees | qbe | 2,633,115,420 | 9,651,013,071 | 3.665245 | 14,360 | 16,344 |
+| parity/suite/binary_trees | llvm | 1,404,609,178 | 5,320,789,098 | 3.788092 | 14,292 | 16,384 |
+| parity/suite/fannkuch_redux | qbe | 5,755,839,924 | 87,097,719,177 | 15.132061 | 2,484 | 2,572 |
+| parity/suite/fannkuch_redux | llvm | 1,985,384,230 | 49,534,620,053 | 24.949639 | 2,456 | 2,640 |
+| parity/suite/knucleotide | qbe | 2,984,431,060 | 34,189,449,889 | 11.455936 | 28,548 | 47,388 |
+| parity/suite/knucleotide | llvm | 1,931,471,715 | 26,219,152,444 | 13.574702 | 28,560 | 47,460 |
+| parity/suite/mandelbrot | qbe | 3,978,701,688 | 3,978,740,347 | 1.000010 | 2,516 | 2,596 |
+| parity/suite/mandelbrot | llvm | 794,663,210 | 760,701,973 | 0.957263 | 2,616 | 2,600 |
+| parity/suite/matmul | qbe | 3,206,533,343 | 10,268,842,693 | 3.202475 | 10,628 | 11,072 |
+| parity/suite/matmul | llvm | 148,591,155 | 767,000,662 | 5.161819 | 10,648 | 11,164 |
+| parity/suite/nbody | qbe | 32,990,208,659 | 63,165,258,086 | 1.914667 | 2,448 | 2,616 |
+| parity/suite/nbody | llvm | 3,595,207,628 | 16,580,250,098 | 4.611764 | 2,596 | 2,588 |
+| parity/suite/raytrace | qbe | 6,231,729,608 | 8,909,836,873 | 1.429753 | 2,468 | 2,580 |
+| parity/suite/raytrace | llvm | 1,197,340,223 | 2,340,252,218 | 1.954542 | 2,456 | 2,640 |
+| parity/suite/sieve | qbe | 822,297,209 | 25,210,941,394 | 30.659160 | 21,956 | 22,032 |
+| parity/suite/sieve | llvm | 222,097,791 | 17,389,449,932 | 78.296366 | 21,948 | 21,976 |
+| parity/suite/sort_builtin | qbe | 919,565,217 | 3,036,352,145 | 3.301943 | 26,080 | 26,536 |
+| parity/suite/sort_builtin | llvm | 734,452,978 | 2,208,185,946 | 3.006572 | 26,076 | 26,648 |
+| parity/suite/sort_quick | qbe | 2,804,350,808 | 6,469,010,988 | 2.306777 | 18,432 | 18,948 |
+| parity/suite/sort_quick | llvm | 1,181,716,100 | 4,040,542,487 | 3.419216 | 18,564 | 18,924 |
+| parity/suite/sort_records | qbe | 312,648,113 | 3,514,605,014 | 11.241408 | 41,812 | 57,996 |
+| parity/suite/sort_records | llvm | 152,627,982 | 2,508,323,550 | 16.434231 | 41,968 | 57,848 |
+| parity/suite/spectral_norm | qbe | 11,523,630,423 | 23,274,869,277 | 2.019751 | 3,088 | 2,468 |
+| parity/suite/spectral_norm | llvm | 1,841,811,063 | 4,215,850,723 | 2.288970 | 3,096 | 2,552 |
+| parity/suite/text_ops | qbe | 1,601,704,901 | 8,375,564,441 | 5.229156 | 39,500 | 29,264 |
+| parity/suite/text_ops | llvm | 1,401,477,630 | 6,547,209,095 | 4.671647 | 39,460 | 29,088 |
+| parity/lib/scan_count | qbe | 1,091,191,236 | 1,119,883,313 | 1.026294 | 7,240 | 6,584 |
+| parity/lib/scan_count | llvm | 1,083,295,876 | 1,104,673,809 | 1.019734 | 7,360 | 6,608 |
+| parity/lib/scan_replace | qbe | 721,560,727 | 750,179,877 | 1.039663 | 11,684 | 14,280 |
+| parity/lib/scan_replace | llvm | 698,697,158 | 719,928,384 | 1.030387 | 11,552 | 14,388 |
+| parity/lib/scan_split | qbe | 1,521,427,301 | 5,174,000,344 | 3.400754 | 66,488 | 92,192 |
+| parity/lib/scan_split | llvm | 1,441,433,857 | 4,237,977,989 | 2.940113 | 66,612 | 92,228 |
+| parity/micro/alloc_churn | qbe | 3,060,154,869 | 23,056,234,016 | 7.534336 | 6,748 | 2,488 |
+| parity/micro/alloc_churn | llvm | 1,950,411,139 | 15,713,234,297 | 8.056370 | 6,744 | 2,460 |
+| parity/micro/bytes_scan | qbe | 1,503,649,706 | 5,344,330,486 | 3.554239 | 10,936 | 10,800 |
+| parity/micro/bytes_scan | llvm | 195,529,309 | 2,476,601,698 | 12.666140 | 11,040 | 10,836 |
+| parity/micro/calls | qbe | 1,710,199,551 | 1,710,227,145 | 1.000016 | 2,452 | 2,444 |
+| parity/micro/calls | llvm | 540,201,863 | 540,227,554 | 1.000048 | 2,404 | 2,444 |
+| parity/micro/dict_count | qbe | 661,306,135 | 11,463,425,246 | 17.334521 | 2,676 | 2,940 |
+| parity/micro/dict_count | llvm | 441,035,736 | 9,010,050,711 | 20.429299 | 2,740 | 2,984 |
+| parity/micro/fib | qbe | 1,594,615,208 | 1,594,642,872 | 1.000017 | 2,436 | 2,436 |
+| parity/micro/fib | llvm | 942,356,653 | 942,382,441 | 1.000027 | 2,404 | 2,436 |
+| parity/micro/float_loop | qbe | 1,260,199,408 | 1,360,227,090 | 1.079374 | 2,420 | 2,428 |
+| parity/micro/float_loop | llvm | 164,203,002 | 164,227,924 | 1.000152 | 2,420 | 2,460 |
+| parity/micro/intloop | qbe | 1,260,199,529 | 2,340,227,196 | 1.857029 | 2,428 | 2,428 |
+| parity/micro/intloop | llvm | 650,201,865 | 650,227,582 | 1.000040 | 2,420 | 2,456 |
+| parity/micro/list_append_sum | qbe | 592,295,021 | 17,782,574,851 | 30.023171 | 127,712 | 133,692 |
+| parity/micro/list_append_sum | llvm | 246,274,720 | 11,718,703,662 | 47.583868 | 127,744 | 133,660 |
+| parity/micro/list_records | qbe | 508,272,293 | 3,905,385,032 | 7.683647 | 65,312 | 68,068 |
+| parity/micro/list_records | llvm | 103,753,045 | 2,151,005,560 | 20.731975 | 65,356 | 68,100 |
+| parity/micro/records | qbe | 1,960,199,417 | 1,960,228,785 | 1.000015 | 2,424 | 2,560 |
+| parity/micro/records | llvm | 620,201,805 | 620,228,787 | 1.000044 | 2,404 | 2,432 |
+| parity/micro/str_build | qbe | 983,068,832 | 5,907,622,894 | 6.009369 | 127,736 | 133,656 |
+| parity/micro/str_build | llvm | 259,410,135 | 2,316,227,073 | 8.928823 | 127,876 | 133,692 |
+| schematic/fixture | qbe | 18,595,877 | 1,361,428,341 | 73.211301 | 3,476 | 4,236 |
+| schematic/fixture | llvm | 9,059,012 | 1,139,109,441 | 125.743231 | 3,436 | 3,784 |
+| schematic/changed-net | qbe | 18,604,632 | 1,363,487,081 | 73.287506 | 3,464 | 4,128 |
+| schematic/changed-net | llvm | 9,063,612 | 1,143,023,980 | 126.111310 | 3,448 | 3,912 |
+| schematic/changed-value | qbe | 18,595,097 | 1,362,579,058 | 73.276254 | 3,516 | 4,196 |
+| schematic/changed-value | llvm | 9,058,254 | 1,142,476,348 | 126.125448 | 3,472 | 3,800 |

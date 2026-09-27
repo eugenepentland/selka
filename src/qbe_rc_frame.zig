@@ -68,16 +68,16 @@ pub fn Lower(comptime E: type) type {
             const internal = self.temp();
             try self.print(" %v{d} =l copy %rcinternal\n", .{internal});
             try entry(E, self, pending(E, self) + 1, .unit, internal);
-            try self.print(" call $myl_qbe_rc_frame_enter(l %ctx, l %rcframe, l %rcentries, l {d})\n", .{size});
+            if (linked(E, self)) try self.print(" call $myl_qbe_rc_frame_enter(l %ctx, l %rcframe, l %rcentries, l {d})\n", .{size});
         }
         /// Release live obligations through the same order used by runtime traps.
         pub fn cleanup(self: *E) Error!void {
-            if (get(E, self) == null) return;
+            if (!linked(E, self)) return;
             try self.print(" call $myl_qbe_rc_frame_cleanup(l %ctx, l %rcframe)\n", .{});
         }
         /// Unlink after the result has been published and all owners released.
         pub fn leave(self: *E) Error!void {
-            if (get(E, self) == null) return;
+            if (!linked(E, self)) return;
             try self.print(" call $myl_qbe_rc_frame_leave(l %ctx, l %rcframe)\n", .{});
         }
         /// Drop an initialized local; borrowed parameters keep a clear guard.
@@ -99,12 +99,22 @@ pub fn emptyLocal(comptime E: type, self: *E, index: usize) bool {
     const state = get(E, self) orelse return false;
     return state.plan.journal.emptyLocal(index);
 }
+/// Only the bounded no-obligation certificate may omit runtime frame linkage.
+pub fn linked(comptime E: type, self: *E) bool {
+    const state = get(E, self) orelse return false;
+    return !state.plan.journal.unlinked;
+}
+/// Refuse an unexpected ownership or scope publication in a certified body.
+pub fn requireLinked(comptime E: type, self: *E) Error!void {
+    if (!linked(E, self)) return error.InternalError;
+}
 /// The journal index of the pending result used for transactional replacement.
 pub fn pending(comptime E: type, self: *E) usize {
     return localCount(E, self) + get(E, self).?.operands.len;
 }
 /// Set a guard only when its represented ownership token has committed.
 pub fn initialized(comptime E: type, self: *E, index: usize, live: bool) Error!void {
+    if (live) try requireLinked(E, self);
     if (!live and try get(E, self).?.plan.journal.slot(index) == null) return;
     const pointer = try guard(E, self, index);
     try self.print(" storew {d}, %v{d}\n", .{ @intFromBool(live), pointer });
