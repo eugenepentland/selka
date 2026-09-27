@@ -191,29 +191,33 @@ static __attribute__((noinline)) myl_rc_object *drain_one(myl_native_heap *heap,
     myl_rc_retire(heap, object);
     return rc->dead.head;
 }
-/* Bindings are immutable batch allocations published through the binding map
- * and never replaced, and the allocator hooks never change. The fast loop
- * handles, without any call, a dying object of the production allocator that
- * is slab-sized and, unless its plan has no leaf, a single element of an
- * unconditional flat plan: its leaves are released, its deaths queued on the
- * loop's own list and its slot pushed on its class's free list. The previous
- * death's type answers a repeated type without a probe. Every other object
- * takes drain_one. */
-void myl_rc_drain(myl_native_heap *heap) {
-    myl_rc_invariant(heap && heap->rc);
-    myl_rc_state *rc = heap->rc;
-    if (!rc->dead.head || rc->dead.active || rc->walk.depth) return;
-    rc->dead.active = 1;
-    const int cached = rc->allocator.hooks.retire == myl_rc_storage_retire;
-    drain_tally tally = {0};
-    const myl_native_type *last = NULL;
-    const myl_rc_flat *flat = NULL;
-    /* The fast test for `last`: every flag and count bit that must match,
-     * and their expected value; an all-ones value never matches. */
-    const uintptr_t never = ~(uintptr_t)0;
-    uintptr_t mask = 0, want = never;
-    unsigned all = 0;
-    myl_rc_object *head = rc->dead.head;
+/* The fast loop's state between calls: its list head, the previous death's
+ * type with that type's plan, the fast test for it (every flag and count bit
+ * that must match, and their expected value; all ones never matches), the
+ * type's unconditional live set, and the deferred counters. */
+typedef struct {
+    myl_rc_object *head;
+    const myl_native_type *last;
+    const myl_rc_flat *flat;
+    uintptr_t mask, want;
+    unsigned all;
+    drain_tally tally;
+} drain_cursor;
+#define DRAIN_NEVER (~(uintptr_t)0)
+/* Run the call-free fast loop until the list is empty (NULL) or the next
+ * death needs drain_one (returned, already popped). It admits a dying object
+ * of the production allocator that is slab-sized and, unless its plan has no
+ * leaf, a single element of an unconditional flat plan: its leaves are
+ * released, its deaths queued on the loop's own list and its slot pushed on
+ * its class's free list. */
+static __attribute__((noinline)) myl_rc_object *drain_fast(myl_native_heap *heap, drain_cursor *cursor, int cached) {
+    myl_rc_object *head = cursor->head;
+    const myl_native_type *last = cursor->last;
+    const myl_rc_flat *flat = cursor->flat;
+    uintptr_t mask = cursor->mask, want = cursor->want;
+    unsigned all = cursor->all;
+    size_t retired = cursor->tally.retired, pushed = cursor->tally.pushed;
+    myl_rc_object *slow = NULL;
     while (head) {
         myl_rc_object *object = head;
         head = (myl_rc_object *)object->owners;
@@ -231,13 +235,9 @@ void myl_rc_drain(myl_native_heap *heap) {
                 mask |= MYL_NATIVE_OBJECT_COUNT_BITS;
                 want |= (uintptr_t)1 << MYL_NATIVE_OBJECT_COUNT_SHIFT;
             }
-            if (!cached || leaves > MYL_RC_FLAT_LEAVES || flat->conditional) want = never;
+            if (!cached || leaves > MYL_RC_FLAT_LEAVES || flat->conditional) want = DRAIN_NEVER;
         }
-        uintptr_t mark = object->common.mark;
-        if ((mark & mask) != want) {
-            head = drain_one(heap, object, head, &tally);
-            continue;
-        }
+        if ((object->common.mark & mask) != want) { slow = object; break; }
         head = drain_leaves(heap, flat, all, (const unsigned char *)(object + 1), head);
         MYL_RC_STAT(heap, MYL_RC_STAT_RETIRE);
         const myl_rc_slab_class *slab = (const myl_rc_slab_class *)((uintptr_t)object & ~(uintptr_t)(MYL_RC_SLAB_BYTES - 1));
@@ -245,11 +245,30 @@ void myl_rc_drain(myl_native_heap *heap) {
         object->common.mark = MYL_RC_RETIRED_MARK;
         object->owners = (uintptr_t)heap->rc_cache.free[index];
         heap->rc_cache.free[index] = object;
-        tally.pushed += slab->stride;
-        tally.retired++;
+        pushed += slab->stride;
+        ++retired;
+    }
+    *cursor = (drain_cursor){.head = head, .last = last, .flat = flat, .mask = mask, .want = want, .all = all,
+        .tally = {.retired = retired, .pushed = pushed}};
+    return slow;
+}
+/* Bindings are immutable batch allocations published through the binding map
+ * and never replaced, and the allocator hooks never change. The previous
+ * death's type answers a repeated type without a probe. */
+void myl_rc_drain(myl_native_heap *heap) {
+    myl_rc_invariant(heap && heap->rc);
+    myl_rc_state *rc = heap->rc;
+    if (!rc->dead.head || rc->dead.active || rc->walk.depth) return;
+    rc->dead.active = 1;
+    const int cached = rc->allocator.hooks.retire == myl_rc_storage_retire;
+    drain_cursor cursor = {.head = rc->dead.head, .want = DRAIN_NEVER};
+    for (;;) {
+        myl_rc_object *object = drain_fast(heap, &cursor, cached);
+        if (!object) break;
+        cursor.head = drain_one(heap, object, cursor.head, &cursor.tally);
     }
     rc->dead.head = NULL;
-    tally_apply(heap, &tally);
+    tally_apply(heap, &cursor.tally);
     rc->dead.active = 0;
 }
 void myl_rc_value_drop(myl_native_heap *heap, myl_rc_slot *slot) {
