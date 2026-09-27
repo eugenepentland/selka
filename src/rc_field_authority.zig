@@ -24,6 +24,17 @@ const Work = struct {
 /// No reachable callable, opaque handle, capability, live view or unique resource
 /// may grant a callee authority over the temporarily cleared source storage.
 pub fn safe(catalog: *shapes.Catalog, ty: typed.Type) Error!bool {
+    return walk(catalog, ty, false);
+}
+
+/// `safe` for a whole moved field value, which may carry a sealed capability:
+/// capability bits are host authority with no path to guest storage, and the
+/// walk does not look inside them. Everything else `safe` refuses stays refused.
+pub fn movable(catalog: *shapes.Catalog, ty: typed.Type) Error!bool {
+    return walk(catalog, ty, true);
+}
+
+fn walk(catalog: *shapes.Catalog, ty: typed.Type, capabilities: bool) Error!bool {
     var work: Work = .{};
     _ = work.append(ty);
     while (work.count != 0) {
@@ -33,6 +44,7 @@ pub fn safe(catalog: *shapes.Catalog, ty: typed.Type) Error!bool {
         if (work.visited == work.seen.len) return false;
         work.seen[work.visited] = current;
         work.visited += 1;
+        if (capabilities and current.capabilityIndex() != null) continue;
         if (current.capabilityIndex() != null or current.resourceKind() != null) return false;
         const layout = catalog.native.layout(current) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError;
         if (layout.drop or layout.copy == .prohibited) return false;

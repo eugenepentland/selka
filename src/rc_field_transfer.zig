@@ -1,10 +1,17 @@
 //! Closed direct-field ownership movement, independent of semantic copy bits.
+//!
+//! `wb = owner.f; mutate(mut wb); owner.f = wb` moves `owner.f`'s token into
+//! `wb` when nothing can observe the emptied field before the store-back, so
+//! the mutation finds one owner instead of cloning a shared payload.
 const std = @import("std");
 const typed = @import("typed.zig");
 const bytecode = @import("bytecode.zig");
 const shapes = @import("rc_shape.zig");
+const sources = @import("ownership_sources.zig");
+const semantics = @import("value_semantics.zig");
 const Op = @FieldType(bytecode.Instruction, "op");
-/// An initialized caller-owned inline record field that may be temporarily empty.
+/// An initialized inline record field that may be temporarily empty: a field
+/// of writable caller-owned storage or of a frame-owned local's own slot.
 pub const Source = struct { local: usize, field: usize, ty: typed.Type };
 /// Exact extraction and unconditional return positions for one physical owner.
 pub const Certificate = struct {
@@ -18,7 +25,7 @@ pub const Certificate = struct {
 /// Proof refusal is ordinary lowering; malformed native layouts are compiler errors.
 pub const Error = error{ InternalError, OutOfMemory };
 
-/// Certify bounded straight-line intervals with no authority to observe the hole.
+/// Certify bounded closed intervals with no way to observe the empty field.
 /// Semantic SHARE decisions alone never authorize physical ownership movement.
 pub fn build(comptime E: type, self: *E, catalog: *shapes.Catalog) Error![]const Certificate {
     const code = self.function.scope.instructions;
@@ -49,38 +56,85 @@ fn extraction(comptime E: type, self: *E, pc: usize, catalog: *shapes.Catalog) E
     const target = @backingInt(code[pc + 2].op.store_local);
     if (self.moves.resolve(source) != source) return null;
     const locals = self.function.scope.locals;
-    if (!self.callerStorage(source) or target < self.function.signature.parameter_count or locals[target].usage.temporary) return null;
+    if (!self.callerStorage(source) and !ownedHome(E, self, source)) return null;
+    if (target < self.function.signature.parameter_count or locals[target].usage.temporary) return null;
     if (self.byReference(target) or self.callerStorage(target) or source == target) return null;
     if (self.cow.?.plan.place(target) != null) return null;
     const owner_ty = locals[source].ty;
     const owner = self.program.records[owner_ty.recordIndex()];
     if (!owner.isRecord() or owner.managed or (try shape(catalog, owner_ty)).unique_drop) return null;
-    if (@import("value_semantics.zig").containsLiveView(self.program.records, owner_ty)) return null;
+    if (semantics.containsLiveView(self.program.records, owner_ty)) return null;
     const ty = locals[target].ty;
-    if (!ty.isAggregate()) return null;
-    const record = self.program.records[ty.recordIndex()];
-    if (!record.isCollection() or record.collection.kind != .list or record.collection.box) return null;
-    if (!try @import("rc_field_authority.zig").safe(catalog, ty)) return null;
-    if ((try shape(catalog, ty)).unique_drop or (catalog.native.layout(ty) catch return error.InternalError).size != 8) return null;
-    for (locals[0..self.function.signature.parameter_count], 0..) |local, index| {
-        if (index != source and !try plain(catalog, local.ty)) return null;
+    const field = code[pc].op.get_field;
+    if (field >= owner.fields.len or owner.fields[field].ty != ty) return null;
+    if (!try movable(E, self, ty, catalog)) return null;
+    // A second writable parameter may name the same caller storage. Read-only
+    // parameters are values: a call passes a copy wherever one could share
+    // storage with a `mut` argument (`VALUE-SEMANTICS-2` argument copies).
+    for (0..self.function.signature.parameter_count) |index| {
         if (index != source and @import("ownership_model.zig").writesParameter(self.function, index)) return null;
     }
+    // A live view elsewhere in the frame could observe a payload the moved
+    // owner then changes in place instead of detaching.
+    for (locals) |local| if (semantics.containsLiveView(self.program.records, local.ty)) return null;
     for (pc..pc + 3) |at| if (!straight(E, self, at)) return null;
     if ((self.states[pc - 1] orelse return null).len != 0) return null;
     const analysis = self.ownership orelse return null;
     if (analysis.roles[target] != .owned or code[pc + 1].op.value_copy.ty != ty) return null;
-    for (locals, 0..) |_, index| {
-        if (index != source and analysis.rootOf(@intCast(index)) == source and self.live.?.before(pc - 1, index)) return null;
-    }
-    return .{ .source = .{ .local = source, .field = code[pc].op.get_field, .ty = ty }, .target = target, .projection = pc, .store = pc + 2, .writeback = 0, .commit = 0 };
+    return .{ .source = .{ .local = source, .field = field, .ty = ty }, .target = target, .projection = pc, .store = pc + 2, .writeback = 0, .commit = 0 };
+}
+
+// A frame-owned named local whose own slot holds its value inline. Match
+// payload bindings and address-holding slots may name another value's storage.
+fn ownedHome(comptime E: type, self: *E, source: usize) bool {
+    const local = self.function.scope.locals[source];
+    if (source < self.function.signature.parameter_count or local.usage.temporary) return false;
+    if (self.byReference(source)) return false;
+    const analysis = self.ownership orelse return false;
+    if (source >= analysis.roles.len or analysis.roles[source] != .owned) return false;
+    for (self.function.scope.instructions) |instruction| switch (instruction.op) {
+        .switch_variant => |dispatch| for (dispatch.arms) |arm| {
+            if (arm.slot) |slot| if (@backingInt(slot) == source) return false;
+        },
+        else => {},
+    };
+    return true;
+}
+
+// Zeroed bytes are every RC value's empty cleanup representation. Unique
+// finalizers, prohibited copies and live views keep their existing paths.
+// A value carried in the operand word itself must be one managed pointer.
+fn movable(comptime E: type, self: *E, ty: typed.Type, catalog: *shapes.Catalog) Error!bool {
+    if (!ty.isAggregate()) return false;
+    const record = self.program.records[ty.recordIndex()];
+    if (record.isCollection() and record.collection.box) return false;
+    if (semantics.containsLiveView(self.program.records, ty)) return false;
+    const value = try shape(catalog, ty);
+    if (!value.counted or value.unique_drop) return false;
+    const layout = catalog.native.layout(ty) catch return error.InternalError;
+    if (layout.drop or layout.copy == .prohibited or layout.size == 0) return false;
+    if (self.isScalar(ty) and layout.size != 8) return false;
+    return @import("rc_field_authority.zig").movable(catalog, ty);
 }
 
 fn returned(comptime E: type, self: *E, proof: Certificate, catalog: *shapes.Catalog) Error!?usize {
     const code = self.function.scope.instructions;
+    const derived = try derivedLocals(E, self, proof.source);
+    defer self.allocator.free(derived);
+    // No value that may still hold, borrow or name the source's storage
+    // survives into the interval: its reads would see the empty field or an
+    // in-place change the copy would have hidden.
+    for (derived, 0..) |linked, index| {
+        if (!linked or index == proof.source.local or index == proof.target) continue;
+        if (self.live.?.before(proof.projection - 1, index) and !try harmless(E, self, index, catalog)) return null;
+    }
     for (proof.store + 1..code.len) |pc| {
-        if (writeback(E, self, proof, pc)) return pc;
-        if (!straight(E, self, pc) or !try permitted(E, self, proof, pc, catalog)) return null;
+        if (writeback(E, self, proof, pc)) {
+            if (!@import("ownership_field_return.zig").closedInterval(code, proof.store + 1, pc)) return null;
+            for (proof.projection - 1..pc + 11) |at| if (captured(E, self, at)) return null;
+            return pc;
+        }
+        if (self.states[pc] == null or !try permitted(E, self, proof, derived, pc, catalog)) return null;
     }
     return null;
 }
@@ -89,39 +143,167 @@ fn straight(comptime E: type, self: *E, pc: usize) bool {
     if (self.states[pc] == null or self.isBranchTarget(pc)) return false;
     const op = self.function.scope.instructions[pc].op;
     var buffer: [2]usize = undefined;
-    return @import("ownership_sources.zig").fallsThrough(op) and
-        @import("ownership_sources.zig").branchTargets(op, &buffer).len == 0 and op != .switch_variant;
+    return sources.fallsThrough(op) and sources.branchTargets(op, &buffer).len == 0 and op != .switch_variant;
 }
 
-fn permitted(comptime E: type, self: *E, proof: Certificate, pc: usize, catalog: *shapes.Catalog) Error!bool {
-    const op = self.function.scope.instructions[pc].op;
-    return switch (op) {
-        .load_local => |id| @backingInt(id) == proof.target or try plain(catalog, self.function.scope.locals[@backingInt(id)].ty),
-        .store_local, .move_local, .drop_local => |id| try plain(catalog, self.function.scope.locals[@backingInt(id)].ty),
-        .value_copy => |copy| try plain(catalog, copy.ty),
-        .call => |id| call(E, self, proof, pc, self.program.functions[@backingInt(id)], catalog),
-        .push_i64, .push_integer, .push_bool, .push_unit => true,
-        .pop, .acknowledge => blk: {
-            const stack = self.states[pc].?;
-            break :blk stack.len != 0 and try plain(catalog, stack[stack.len - 1]);
+// A pending receiver scope would hold a payload across the interval.
+fn captured(comptime E: type, self: *E, pc: usize) bool {
+    const captures = self.cow.?.captures;
+    if (pc >= captures.len) return false;
+    const none = @import("cow_plan.zig").none;
+    return captures[pc].begin != none or captures[pc].active != none;
+}
+
+// Every interval instruction leaves the source alone, reads a distinct sibling
+// field, or uses the target and values independent of the source.
+fn permitted(comptime E: type, self: *E, proof: Certificate, derived: []const bool, pc: usize, catalog: *shapes.Catalog) Error!bool {
+    const code = self.function.scope.instructions;
+    const use: Use = .{ .proof = proof, .derived = derived, .catalog = catalog };
+    return switch (code[pc].op) {
+        .begin_arena, .end_arena, .ret, .try_result, .invoke => false,
+        .call => |id| direct(self.program.functions[@backingInt(id)]),
+        .load_local => |id| if (@backingInt(id) == proof.source.local) sibling(E, self, proof, pc) else use.independent(E, self, @backingInt(id)),
+        .ref_local, .move_local, .store_local, .drop_local => |id| use.independent(E, self, @backingInt(id)),
+        .buffer_operation => |operation| use.independent(E, self, @backingInt(operation.owner)),
+        .resource_io => |operation| use.independent(E, self, @backingInt(operation.owner)),
+        .file_method => |method| use.independent(E, self, @backingInt(method.owner)),
+        .switch_variant => |dispatch| {
+            for (dispatch.arms) |arm| if (arm.slot) |slot| {
+                if (!try use.independent(E, self, @backingInt(slot))) return false;
+            };
+            return true;
         },
-        else => false,
+        else => true,
     };
 }
 
-fn call(comptime E: type, self: *E, proof: Certificate, pc: usize, callee: bytecode.Function, catalog: *shapes.Catalog) Error!bool {
-    if (callee.policy.c_abi or callee.policy.host != null or !try plain(catalog, callee.signature.return_type)) return false;
-    const operands = self.ownership.?.operands[pc] orelse return false;
-    if (operands.len != callee.signature.parameter_count) return false;
-    var mutable_target = false;
-    for (callee.scope.locals[0..callee.signature.parameter_count], operands, 0..) |parameter, operand, index| {
-        if (try plain(catalog, parameter.ty)) continue;
-        if (parameter.ty != proof.source.ty or operand.origin != .local) return false;
-        if (operand.part != .whole or operand.local != proof.target) return false;
-        if (!@import("ownership_model.zig").writesParameter(callee, index) or mutable_target) return false;
-        mutable_target = true;
+// A guest callee sees only its operands, and none of them names the empty
+// field. Host and C-ABI entries stay outside the certificate.
+fn direct(callee: bytecode.Function) bool {
+    return !callee.policy.c_abi and callee.policy.host == null;
+}
+
+const Use = struct {
+    proof: Certificate,
+    derived: []const bool,
+    catalog: *shapes.Catalog,
+
+    fn independent(use: Use, comptime E: type, self: *E, local: usize) Error!bool {
+        if (local == use.proof.target) return true;
+        if (local == use.proof.source.local) return false;
+        return !use.derived[local] or try harmless(E, self, local, use.catalog);
     }
-    return mutable_target;
+};
+
+// `owner.g` with g distinct from the moved field reads storage the move left
+// intact; the ordinary projection lends or copies it as before.
+fn sibling(comptime E: type, self: *E, proof: Certificate, pc: usize) bool {
+    const code = self.function.scope.instructions;
+    if (pc + 1 >= code.len or self.isBranchTarget(pc + 1)) return false;
+    const next = code[pc + 1].op;
+    return next == .get_field and next.get_field != proof.source.field;
+}
+
+// Plain bits in the local's own slot cannot name or share a counted payload.
+fn harmless(comptime E: type, self: *E, local: usize, catalog: *shapes.Catalog) Error!bool {
+    if (self.byReference(local) or self.moves.aliased(local)) return false;
+    return plain(catalog, self.function.scope.locals[local].ty);
+}
+
+// Locals that may name, borrow or lend from the moved field: the source's
+// alias chains and any local stored from the source (other than through a
+// distinct sibling field), from such a local, or from an unknown origin,
+// without an intervening value copy. A value copy publishes an independent
+// RC owner, and an object a sibling field shares with the moved field carries
+// an owner token for each edge, so moving one token cannot make it unique.
+fn derivedLocals(comptime E: type, self: *E, source: Source) Error![]bool {
+    const locals = self.function.scope.locals;
+    const code = self.function.scope.instructions;
+    const analysis = self.ownership.?;
+    const marks = try self.allocator.alloc(bool, locals.len);
+    @memset(marks, false);
+    marks[source.local] = true;
+    const siblings = try siblingOnly(E, self, source);
+    defer self.allocator.free(siblings);
+    var changed = true;
+    var rounds: usize = 0;
+    while (changed and rounds <= locals.len) : (rounds += 1) {
+        changed = false;
+        for (marks, 0..) |*linked, index| {
+            if (linked.* or siblings[index] or index >= analysis.roles.len) continue;
+            const role = analysis.roles[index];
+            const parent = analysis.parents[index];
+            const aliased = (role == .borrowed or role == .path) and parent < marks.len and marks[parent];
+            if (aliased or marks[self.moves.resolve(index)]) {
+                linked.* = true;
+                changed = true;
+            }
+        }
+        for (code, 0..) |instruction, pc| {
+            const stack = analysis.operands[pc] orelse continue;
+            if (stack.len == 0 or !fromMarked(marks, stack[stack.len - 1]) or siblingPart(E, self, source, stack[stack.len - 1])) continue;
+            switch (instruction.op) {
+                .store_local => |id| {
+                    if (pc != 0 and code[pc - 1].op == .value_copy) continue;
+                    changed = mark(marks, @backingInt(id)) or changed;
+                },
+                .switch_variant => |dispatch| for (dispatch.arms) |arm| if (arm.slot) |slot| {
+                    changed = mark(marks, @backingInt(slot)) or changed;
+                },
+                else => {},
+            }
+        }
+    }
+    return marks;
+}
+
+// Locals every definition of which projects a distinct sibling field of the
+// source: their alias parent is the source, but not the moved field.
+fn siblingOnly(comptime E: type, self: *E, source: Source) Error![]bool {
+    const code = self.function.scope.instructions;
+    const analysis = self.ownership.?;
+    const defined = try self.allocator.alloc(u8, self.function.scope.locals.len);
+    defer self.allocator.free(defined);
+    @memset(defined, 0);
+    const other = 1;
+    const sibling_field = 2;
+    for (code, 0..) |instruction, pc| {
+        const stack = analysis.operands[pc] orelse continue;
+        const kind: u8 = if (stack.len != 0 and siblingPart(E, self, source, stack[stack.len - 1])) sibling_field else other;
+        switch (instruction.op) {
+            .store_local => |id| defined[@backingInt(id)] |= kind,
+            .switch_variant => |dispatch| for (dispatch.arms) |arm| if (arm.slot) |slot| {
+                defined[@backingInt(slot)] |= kind;
+            },
+            else => {},
+        }
+    }
+    const result = try self.allocator.alloc(bool, defined.len);
+    for (defined, result) |bits, *only| only.* = bits == sibling_field;
+    return result;
+}
+
+fn mark(marks: []bool, local: usize) bool {
+    if (local >= marks.len or marks[local]) return false;
+    marks[local] = true;
+    return true;
+}
+
+fn fromMarked(marks: []const bool, operand: sources.Source) bool {
+    return switch (operand.origin) {
+        .fresh => false,
+        .unknown => true,
+        .local => operand.local >= marks.len or marks[operand.local],
+    };
+}
+
+// A part the source's load projects through a distinct field.
+fn siblingPart(comptime E: type, self: *E, source: Source, operand: sources.Source) bool {
+    const code = self.function.scope.instructions;
+    if (operand.origin != .local or operand.local != source.local or operand.part != .field or operand.read + 1 >= code.len) return false;
+    if (code[operand.read].op != .load_local) return false;
+    const next = code[operand.read + 1].op;
+    return next == .get_field and next.get_field != source.field;
 }
 
 fn writeback(comptime E: type, self: *E, proof: Certificate, pc: usize) bool {
@@ -142,7 +324,10 @@ fn writeback(comptime E: type, self: *E, proof: Certificate, pc: usize) bool {
     const update = ops[9].op.update_record;
     if (update.ty != locals[proof.source.local].ty or update.indices.len != 1 or update.indices[0] != proof.source.field) return false;
     if (!localIs(ops[10].op, .store_local, proof.source.local)) return false;
-    for (pc..pc + 11) |at| if (!straight(E, self, at)) return false;
+    // The first load may be the closed region's join; every later step is
+    // straight, and the region check refuses any outside entry.
+    if (self.states[pc] == null) return false;
+    for (pc + 1..pc + 11) |at| if (!straight(E, self, at)) return false;
     for ([_]usize{ proof.target, value, parent }) |local| if (self.live.?.after(pc + 10, local)) return false;
     return true;
 }
@@ -155,8 +340,8 @@ fn shape(catalog: *shapes.Catalog, ty: typed.Type) Error!shapes.Shape {
     return catalog.get(ty) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError;
 }
 
-// Plain numeric aggregates can cross a call; callable/capability/handle bits
-// cannot. Both workspace and visited-node work are bounded for shared schemas.
+// Plain numeric aggregates hold no counted payload or address; callable,
+// capability and handle bits are not plain. Workspace and work are bounded.
 fn plain(catalog: *shapes.Catalog, ty: typed.Type) Error!bool {
     var pending: [64]typed.Type = undefined;
     pending[0] = ty;

@@ -127,3 +127,121 @@ test "GC closed field shares keep their existing physical lowering" {
     try t.expect(!contains(try named(manifest.value, "closed"), marker));
     try t.expect(!contains(try named(manifest.value, "closed"), "myl_qbe_rc_frame_enter"));
 }
+
+const writeback_source =
+    \\record Rt:
+    \\    objects: list[int]
+    \\    count: int
+    \\record Outer:
+    \\    rt: Rt
+    \\    tag: str
+    \\record Note:
+    \\    words: list[str]
+    \\def push(rt: mut Rt, value: int):
+    \\    rt.objects.append(value)
+    \\def peek(rt: Rt) -> int:
+    \\    return len(rt.objects)
+    \\def inspect(holder: Outer) -> int:
+    \\    return len(holder.rt.objects)
+    \\def owned_local(n: int) -> int:
+    \\    it = Outer(Rt([], 0), "t")
+    \\    i = 0
+    \\    while i < n:
+    \\        wb = it.rt
+    \\        push(mut wb, i)
+    \\        it.rt = wb
+    \\        i += 1
+    \\    return len(it.rt.objects)
+    \\def caller_record(holder: mut Outer, note: Note, value: int):
+    \\    wb = holder.rt
+    \\    push(mut wb, value + len(note.words) + peek(wb))
+    \\    holder.rt = wb
+    \\def branched(holder: mut Outer, flag: bool):
+    \\    wb = holder.rt
+    \\    if flag:
+    \\        push(mut wb, 1)
+    \\    else:
+    \\        push(mut wb, 2)
+    \\    holder.rt = wb
+    \\def looped(holder: mut Outer, n: int):
+    \\    wb = holder.rt
+    \\    i = 0
+    \\    while i < n:
+    \\        push(mut wb, i)
+    \\        i += 1
+    \\    holder.rt = wb
+    \\def sibling_read(holder: mut Outer):
+    \\    wb = holder.rt
+    \\    push(mut wb, len(holder.tag))
+    \\    holder.rt = wb
+    \\def field_read(holder: mut Outer):
+    \\    wb = holder.rt
+    \\    push(mut wb, len(holder.rt.objects))
+    \\    holder.rt = wb
+    \\def whole_passed(holder: mut Outer):
+    \\    wb = holder.rt
+    \\    push(mut wb, inspect(holder))
+    \\    holder.rt = wb
+    \\def partial(holder: mut Outer, flag: bool):
+    \\    wb = holder.rt
+    \\    push(mut wb, 1)
+    \\    if flag:
+    \\        holder.rt = wb
+    \\def breaking(holder: mut Outer, n: int):
+    \\    i = 0
+    \\    while i < n:
+    \\        wb = holder.rt
+    \\        push(mut wb, i)
+    \\        if i == 3:
+    \\            break
+    \\        holder.rt = wb
+    \\        i += 1
+    \\def iterated(holder: mut Outer):
+    \\    for x in holder.rt.objects:
+    \\        wb = holder.rt
+    \\        push(mut wb, x)
+    \\        holder.rt = wb
+    \\def main() -> int:
+    \\    holder = Outer(Rt([1], 0), "t")
+    \\    caller_record(mut holder, Note(["a"]), 2)
+    \\    return owned_local(3) + len(holder.rt.objects)
+;
+
+fn emittedWriteback() !std.json.Parsed(Manifest) {
+    var compilation = try compiler.Compilation.init(t.allocator, "rc_writeback.my", writeback_source);
+    defer compilation.deinit();
+    const text = try compilation.emitQbe(t.allocator);
+    defer t.allocator.free(text);
+    return std.json.parseFromSlice(Manifest, t.allocator, text, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
+}
+
+// spec: RC-CLOSED-FIELD-TRANSFER-2
+test "RC closed field transfer moves record fields of owned locals across closed regions" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    var manifest = try emittedWriteback();
+    defer manifest.deinit();
+    const owned = try named(manifest.value, "owned_local");
+    const moved = std.mem.indexOf(u8, owned, marker) orelse return error.TestUnexpectedResult;
+    const projection = std.mem.lastIndexOf(u8, owned[0..moved], "@step") orelse return error.TestUnexpectedResult;
+    try t.expect(!contains(owned[projection..moved], "call $myl_rc_native_loan"));
+    try t.expect(!contains(owned[projection..moved], "call $myl_rc_native_retain"));
+    try t.expect(contains(owned[moved..], "call $memset"));
+    const expected = [_]struct { []const u8, bool }{
+        .{ "caller_record", true }, .{ "branched", true },      .{ "looped", true },   .{ "sibling_read", true },
+        .{ "field_read", false },   .{ "whole_passed", false }, .{ "partial", false }, .{ "breaking", false },
+        .{ "iterated", false },
+    };
+    for (expected) |case| try t.expectEqual(case[1], contains(try named(manifest.value, case[0]), marker));
+}
+
+// spec-case: RC-CLOSED-FIELD-TRANSFER-2
+test "GC lowering of generalized closed field transfers is unchanged" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.gc);
+    var manifest = try emittedWriteback();
+    defer manifest.deinit();
+    for (manifest.value.functions) |function| try t.expect(!contains(function.il, marker));
+}

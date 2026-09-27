@@ -1,0 +1,307 @@
+module rc_writeback_moves
+
+# `wb = owner.f; change(mut wb); owner.f = wb` is a move of `owner.f` under
+# RC when nothing can observe the emptied field before the store-back
+# (RC-CLOSED-FIELD-TRANSFER-2). Every test here also runs under GC and
+# `--gc-stress`; the near misses must keep plain value semantics.
+
+record Note:
+    words: list[str]
+
+
+record Rt:
+    objects: list[int]
+    names: dict[str, int]
+    label: str
+    last: Option[Note]
+    count: int
+
+
+record Interp:
+    rt: Rt
+    label: str
+    depth: int
+
+
+record Nested:
+    inner: Interp
+    extra: list[int]
+
+
+record Bag:
+    items: list[int]
+    size: int
+
+
+def fresh() -> Interp:
+    return Interp(Rt([], {}, "rt", None, 0), "it", 0)
+
+
+def push(rt: mut Rt, value: int):
+    rt.objects.append(value)
+    rt.count += 1
+
+
+def name(rt: mut Rt, key: str, value: int):
+    rt.names[key] = value
+    rt.last = Some(Note([key]))
+
+
+def push_measured(rt: mut Rt, owner: Interp):
+    rt.objects.append(len(owner.rt.objects))
+
+
+def total(rt: Rt) -> int:
+    sum = 0
+    for item in rt.objects:
+        sum += item
+    return sum
+
+
+# spec-case: RC-CLOSED-FIELD-TRANSFER-2
+public def test_owned_local_writeback_loop_appends_in_place() -> bool:
+    it = fresh()
+    i = 0
+    while i < 200:
+        wb = it.rt
+        push(mut wb, i)
+        it.rt = wb
+        i += 1
+    return len(it.rt.objects) == 200 and it.rt.count == 200 and total(it.rt) == 19900 and it.label == "it"
+
+
+public def test_snapshots_taken_before_the_moves_keep_their_values() -> bool:
+    it = fresh()
+    first = it.rt
+    push(mut first, 1)
+    it.rt = first
+    saved = it
+    saved_rt = it.rt
+    for i in range(50):
+        wb = it.rt
+        push(mut wb, i)
+        it.rt = wb
+    return saved.rt.objects == [1] and saved_rt.objects == [1] and len(it.rt.objects) == 51 and saved_rt.count == 1
+
+
+def step(it: mut Interp, note: Note, value: int):
+    wb = it.rt
+    push(mut wb, value + len(note.words) + len(it.label))
+    it.rt = wb
+    names = it.rt
+    name(mut names, it.label, value)
+    it.rt = names
+
+
+public def test_mut_parameter_writeback_with_read_only_record_argument() -> bool:
+    it = fresh()
+    note = Note(["a", "b"])
+    saved = it
+    for i in range(20):
+        step(mut it, note, i)
+    last = it.rt.last
+    return len(it.rt.objects) == 20 and it.rt.objects[0] == 4 and it.rt.names["it"] == 19 and len(saved.rt.objects) == 0 and note.words == ["a", "b"] and last is not None and last.words == ["it"]
+
+
+def step_alias(it: mut Interp, other: Interp) -> int:
+    wb = it.rt
+    push(mut wb, len(other.rt.objects))
+    it.rt = wb
+    return len(other.rt.objects)
+
+
+public def test_read_only_alias_of_the_owner_sees_the_original() -> bool:
+    it = fresh()
+    first = step_alias(mut it, it)
+    second = step_alias(mut it, it)
+    return first == 0 and second == 1 and it.rt.objects == [0, 1]
+
+
+def read_between(it: mut Interp):
+    wb = it.rt
+    push(mut wb, 7)
+    push(mut wb, len(it.rt.objects))
+    it.rt = wb
+
+
+public def test_place_read_between_take_and_writeback_sees_the_original() -> bool:
+    it = fresh()
+    read_between(mut it)
+    read_between(mut it)
+    return it.rt.objects == [7, 0, 7, 2]
+
+
+def maybe(it: mut Interp, keep: bool):
+    wb = it.rt
+    push(mut wb, 5)
+    if keep:
+        it.rt = wb
+
+
+public def test_writeback_on_some_paths_keeps_the_original_elsewhere() -> bool:
+    it = fresh()
+    maybe(mut it, False)
+    maybe(mut it, True)
+    maybe(mut it, False)
+    local = fresh()
+    for i in range(6):
+        wb = local.rt
+        push(mut wb, i)
+        if i % 2 == 0:
+            local.rt = wb
+    return it.rt.objects == [5] and local.rt.objects == [0, 2, 4]
+
+
+def early(it: mut Interp, stop: bool) -> int:
+    wb = it.rt
+    push(mut wb, 9)
+    if stop:
+        return len(wb.objects)
+    it.rt = wb
+    return 0
+
+
+def owned_early(stop: bool) -> int:
+    it = fresh()
+    wb = it.rt
+    push(mut wb, 4)
+    if stop:
+        return len(wb.objects) + len(it.rt.objects) * 10
+    it.rt = wb
+    return len(it.rt.objects) * 100
+
+
+public def test_early_return_between_take_and_writeback() -> bool:
+    it = fresh()
+    stopped = early(mut it, True)
+    unchanged = len(it.rt.objects)
+    finished = early(mut it, False)
+    return stopped == 1 and unchanged == 0 and finished == 0 and it.rt.objects == [9] and owned_early(True) == 1 and owned_early(False) == 100
+
+
+public def test_break_and_continue_between_take_and_writeback() -> bool:
+    broken = fresh()
+    i = 0
+    while i < 10:
+        wb = broken.rt
+        push(mut wb, i)
+        if i == 3:
+            break
+        broken.rt = wb
+        i += 1
+    skipped = fresh()
+    for j in range(6):
+        wb2 = skipped.rt
+        push(mut wb2, j)
+        if j == 2:
+            continue
+        skipped.rt = wb2
+    return broken.rt.objects == [0, 1, 2] and skipped.rt.objects == [0, 1, 3, 4, 5]
+
+
+def pass_owner(it: mut Interp):
+    wb = it.rt
+    push(mut wb, 1)
+    push_measured(mut wb, it)
+    it.rt = wb
+
+
+public def test_owner_passed_to_the_callee_sees_the_original() -> bool:
+    it = fresh()
+    pass_owner(mut it)
+    local = fresh()
+    wb = local.rt
+    push(mut wb, 1)
+    push_measured(mut wb, local)
+    local.rt = wb
+    return it.rt.objects == [1, 0] and local.rt.objects == [1, 0]
+
+
+public def test_nested_field_writebacks() -> bool:
+    n = Nested(fresh(), [3])
+    saved = n
+    for i in range(5):
+        wb = n.inner.rt
+        push(mut wb, i)
+        n.inner.rt = wb
+    for k in range(3):
+        inner = n.inner
+        rt = inner.rt
+        push(mut rt, 10 + k)
+        inner.rt = rt
+        n.inner = inner
+    objects = n.inner.rt.objects
+    objects.append(99)
+    n.inner.rt.objects = objects
+    return n.inner.rt.objects == [0, 1, 2, 3, 4, 10, 11, 12, 99] and saved.inner.rt.objects == [] and n.extra == [3]
+
+
+public def test_list_element_writebacks() -> bool:
+    rts = [Rt([], {}, "a", None, 0), Rt([1], {}, "b", None, 0)]
+    saved = rts
+    for i in range(4):
+        wb = rts[1]
+        push(mut wb, i)
+        rts[1] = wb
+    holders = [fresh(), fresh()]
+    for j in range(3):
+        h = holders[0]
+        rt = h.rt
+        push(mut rt, j)
+        h.rt = rt
+        holders[0] = h
+    return rts[1].objects == [1, 0, 1, 2, 3] and saved[1].objects == [1] and rts[0].objects == [] and holders[0].rt.objects == [0, 1, 2] and holders[1].rt.objects == []
+
+
+def fill(it: mut Interp, n: int, flag: bool):
+    wb = it.rt
+    i = 0
+    while i < n:
+        if flag:
+            push(mut wb, i)
+        else:
+            name(mut wb, "k", i)
+        i += 1
+    it.rt = wb
+
+
+public def test_loops_and_branches_inside_the_window() -> bool:
+    it = fresh()
+    fill(mut it, 0, True)
+    empty = len(it.rt.objects)
+    fill(mut it, 4, True)
+    fill(mut it, 3, False)
+    return empty == 0 and it.rt.objects == [0, 1, 2, 3] and it.rt.names["k"] == 2 and it.rt.count == 4
+
+
+public def test_target_rebound_inside_the_window_stores_the_new_value() -> bool:
+    it = fresh()
+    other = Rt([7], {}, "o", None, 0)
+    wb = it.rt
+    push(mut wb, 1)
+    wb = other
+    it.rt = wb
+    return it.rt.objects == [7] and other.objects == [7] and it.rt.label == "o"
+
+
+public def test_owned_list_field_writeback() -> bool:
+    bag = Bag([], 0)
+    saved = bag
+    for i in range(100):
+        items = bag.items
+        items.append(i)
+        bag.items = items
+        bag.size += 1
+    return len(bag.items) == 100 and bag.size == 100 and bag.items[99] == 99 and saved.items == []
+
+
+public def test_repeated_moves_inside_arena() -> bool:
+    with arena():
+        it = fresh()
+        saved = it
+        for i in range(10):
+            wb = it.rt
+            push(mut wb, i)
+            it.rt = wb
+        ok = len(it.rt.objects) == 10 and saved.rt.objects == []
+    return ok
