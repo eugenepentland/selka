@@ -1,0 +1,26 @@
+{
+  "results.json": {
+    "bytes": 2801564,
+    "sha256": "f80572926acb56206119c3abcab78367c0c321cc642a4be6b27a6c54c7bf2175"
+  },
+  "gc-builds.json": {
+    "bytes": 126564,
+    "sha256": "7a82169b5acc35bc632aca978db99b7cefe4528620513f2b62396d1cf5f8b8d8"
+  },
+  "prior-joined30.json": {
+    "bytes": 919574,
+    "sha256": "401948152c09260552b00e91d4953b3b9b902b10d932926b6f31b75ff4b75a98"
+  },
+  "build.log": {
+    "bytes": 4762,
+    "sha256": "18363741e9e6cefe507d77e8461aeee6daecc774774e0150a872bc83ff497d16"
+  },
+  "measure.log": {
+    "bytes": 7887,
+    "sha256": "7b987627447055ed17c4c2fd0440e894df8626e2591884139b12b7103c14e42a"
+  },
+  "binary_trees.tree.lox": {
+    "bytes": 1275,
+    "sha256": "fa3e536c73bc273bc8cd5ca4f4c81a6edd0c224e18aa764b34043b794f4850e4"
+  }
+}
