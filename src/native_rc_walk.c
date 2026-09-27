@@ -127,31 +127,78 @@ static void tally_apply(myl_native_heap *heap, drain_tally *tally) {
     heap->rc_cache.pushed += tally->pushed;
     *tally = (drain_tally){0};
 }
-/* Release every live leaf of one dying single flat value (RC-DRAIN-FLAT-1).
- * Inside a drain a released last token queues its object directly behind
- * `head`; the dying value's own edge words are not cleared, because its
- * extent is retired right after and never read again. */
-static inline __attribute__((always_inline)) myl_rc_object *drain_flat(myl_native_heap *heap,
-        const myl_rc_flat *flat, const unsigned char *payload, myl_rc_object *head) {
+/* Release every live leaf of one dying flat value (RC-DRAIN-FLAT-1). Inside
+ * a drain a released last token queues its object directly behind `head`;
+ * the dying value's own edge words are not cleared, because its extent is
+ * retired right after and never read again. A counted child is live and not
+ * dying (checked as one mark test: an immortal or arena child is skipped). */
+static inline __attribute__((always_inline)) myl_rc_object *drain_leaves(myl_native_heap *heap,
+        const myl_rc_flat *flat, unsigned live, const unsigned char *payload, myl_rc_object *head) {
     (void)heap;
-    for (unsigned live = myl_rc_flat_live(flat, payload); live; live &= live - 1) {
+    for (; live; live &= live - 1) {
         void *child;
         __builtin_memcpy(&child, payload + flat->offsets[__builtin_ctz(live)], sizeof child);
-        if (!myl_rc_counted(child)) continue;
+        if (!child) continue;
         myl_rc_object *object = (myl_rc_object *)child - 1;
-        myl_rc_invariant(object->owners != 0 && !(object->common.mark & MYL_RC_OBJECT_DYING));
+        uintptr_t mark = object->common.mark;
+        if (mark & (MYL_NATIVE_OBJECT_IMMORTAL | MYL_NATIVE_OBJECT_ARENA | MYL_RC_OBJECT_DYING)) {
+            myl_rc_invariant(!(mark & MYL_RC_OBJECT_DYING));
+            continue;
+        }
+        uintptr_t owners = object->owners;
+        myl_rc_invariant(owners != 0);
         MYL_RC_STAT(heap, MYL_RC_STAT_OWNER_RELEASE);
-        if (--object->owners || object->holds) continue;
-        object->common.mark |= MYL_RC_OBJECT_DYING;
+        if (--owners || object->holds) { object->owners = owners; continue; }
+        object->common.mark = mark | MYL_RC_OBJECT_DYING;
         object->owners = (uintptr_t)head;
         head = object;
     }
     return head;
 }
+/* One dying object outside the fast loop: any allocator, a large extent, an
+ * element count other than one, a conditional or generic plan, or a hook. The
+ * drain's list and tally are published first, because any of these may run a
+ * callback; the new list head is returned. */
+static __attribute__((noinline)) myl_rc_object *drain_one(myl_native_heap *heap, myl_rc_object *object,
+        myl_rc_object *head, drain_tally *tally) {
+    myl_rc_state *rc = heap->rc;
+    rc->dead.head = head;
+    tally_apply(heap, tally);
+    void *payload = object + 1;
+    const myl_rc_binding *binding = myl_rc_binding_find(heap, object->common.element);
+    myl_rc_invariant(binding != NULL);
+    uintptr_t mark = object->common.mark;
+    myl_rc_invariant((mark & (MYL_RC_OBJECT_DYING | MYL_NATIVE_OBJECT_IMMORTAL |
+        MYL_NATIVE_OBJECT_ARENA)) == MYL_RC_OBJECT_DYING);
+    size_t count = (size_t)((mark & MYL_NATIVE_OBJECT_COUNT_BITS) >> MYL_NATIVE_OBJECT_COUNT_SHIFT);
+    if (binding->flat.count <= MYL_RC_FLAT_LEAVES) {
+        /* Admission excludes every custom hook: no callback runs and ordered
+         * ordinary edges only queue more deaths. */
+        if (count == 1) rc->dead.head = drain_leaves(heap, &binding->flat, myl_rc_flat_live(&binding->flat, payload), payload, rc->dead.head);
+        else myl_rc_flat_edges_release(heap, binding, payload, count);
+    } else {
+        /* A unique close hook can inspect its managed context. Run it while
+         * child tokens are intact, with no descriptor frame leased. Nested
+         * releases only enqueue. Reacquire metadata after a registering hook. */
+        void (*finalize)(myl_native_heap *, void *) = binding->descriptor.finalize;
+        if (finalize) finalize(heap, payload);
+        binding = myl_rc_binding_find(heap, object->common.element);
+        myl_rc_invariant(binding && !rc->walk.depth);
+        if (binding->descriptor.edges) binding->descriptor.edges(heap, payload, count);
+        else myl_rc_edges_release(heap, binding->descriptor.shape, payload, count);
+    }
+    myl_rc_invariant(!rc->walk.depth);
+    myl_rc_retire(heap, object);
+    return rc->dead.head;
+}
 /* Bindings are immutable batch allocations published through the binding map
- * and never replaced. A generic callback may register metadata; the binding is
- * looked up again after it returns. The allocator hooks never change, so the
- * production retirement is decided once. */
+ * and never replaced, and the allocator hooks never change. The fast loop
+ * handles, without any call, a dying object of the production allocator that
+ * is slab-sized and, unless its plan has no leaf, a single element of an
+ * unconditional flat plan: its leaves are released, its deaths queued on the
+ * loop's own list and its slot pushed on its class's free list. The previous
+ * death's type answers a repeated type without a probe. Every other object
+ * takes drain_one. */
 void myl_rc_drain(myl_native_heap *heap) {
     myl_rc_invariant(heap && heap->rc);
     myl_rc_state *rc = heap->rc;
@@ -159,64 +206,47 @@ void myl_rc_drain(myl_native_heap *heap) {
     rc->dead.active = 1;
     const int cached = rc->allocator.hooks.retire == myl_rc_storage_retire;
     drain_tally tally = {0};
-    /* A type's binding never changes once published, so the previous death's
-     * binding answers a repeated type without a probe. */
     const myl_native_type *last = NULL;
-    const myl_rc_binding *binding = NULL;
+    const myl_rc_flat *flat = NULL;
+    /* The fast test for `last`: every flag and count bit that must match,
+     * and their expected value; an all-ones value never matches. */
+    const uintptr_t never = ~(uintptr_t)0;
+    uintptr_t mask = 0, want = never;
+    unsigned all = 0;
     myl_rc_object *head = rc->dead.head;
     while (head) {
         myl_rc_object *object = head;
         head = (myl_rc_object *)object->owners;
-        void *payload = object + 1;
-        if (object->common.element != last) {
-            last = object->common.element;
-            binding = myl_rc_binding_find(heap, last);
+        const myl_native_type *element = object->common.element;
+        if (element != last) {
+            last = element;
+            const myl_rc_binding *binding = myl_rc_binding_find(heap, element);
             myl_rc_invariant(binding != NULL);
+            flat = &binding->flat;
+            unsigned leaves = flat->count;
+            all = leaves ? flat->all : 0;
+            mask = MYL_RC_OBJECT_DYING | MYL_NATIVE_OBJECT_IMMORTAL | MYL_NATIVE_OBJECT_ARENA | MYL_NATIVE_OBJECT_LARGE;
+            want = MYL_RC_OBJECT_DYING;
+            if (leaves) {
+                mask |= MYL_NATIVE_OBJECT_COUNT_BITS;
+                want |= (uintptr_t)1 << MYL_NATIVE_OBJECT_COUNT_SHIFT;
+            }
+            if (!cached || leaves > MYL_RC_FLAT_LEAVES || flat->conditional) want = never;
         }
         uintptr_t mark = object->common.mark;
-        myl_rc_invariant((mark & (MYL_RC_OBJECT_DYING | MYL_NATIVE_OBJECT_IMMORTAL |
-            MYL_NATIVE_OBJECT_ARENA)) == MYL_RC_OBJECT_DYING);
-        size_t count = (size_t)((mark & MYL_NATIVE_OBJECT_COUNT_BITS) >> MYL_NATIVE_OBJECT_COUNT_SHIFT);
-        unsigned leaves = binding->flat.count;
-        if (!leaves || (leaves <= MYL_RC_FLAT_LEAVES && count == 1)) {
-            /* Admission excludes every custom hook: no callback runs and
-             * ordered ordinary edges only queue more deaths. An empty plan
-             * releases nothing at any element count. */
-            if (leaves) head = drain_flat(heap, &binding->flat, payload, head);
-        } else {
-            rc->dead.head = head;
-            tally_apply(heap, &tally);
-            if (binding->flat.count <= MYL_RC_FLAT_LEAVES) {
-                myl_rc_flat_edges_release(heap, binding, payload, count);
-            } else {
-                /* A unique close hook can inspect its managed context. Run it
-                 * while child tokens are intact, with no descriptor frame
-                 * leased. Nested releases only enqueue. Reacquire metadata
-                 * after a registering hook. */
-                void (*finalize)(myl_native_heap *, void *) = binding->descriptor.finalize;
-                if (finalize) finalize(heap, payload);
-                binding = myl_rc_binding_find(heap, object->common.element);
-                myl_rc_invariant(binding && !rc->walk.depth);
-                if (binding->descriptor.edges) binding->descriptor.edges(heap, payload, count);
-                else myl_rc_edges_release(heap, binding->descriptor.shape, payload, count);
-            }
-            myl_rc_invariant(!rc->walk.depth);
-            head = rc->dead.head;
+        if ((mark & mask) != want) {
+            head = drain_one(heap, object, head, &tally);
+            continue;
         }
+        head = drain_leaves(heap, flat, all, (const unsigned char *)(object + 1), head);
         MYL_RC_STAT(heap, MYL_RC_STAT_RETIRE);
-        if (cached && !(mark & MYL_NATIVE_OBJECT_LARGE)) {
-            const myl_rc_slab_class *slab = (const myl_rc_slab_class *)((uintptr_t)object & ~(uintptr_t)(MYL_RC_SLAB_BYTES - 1));
-            object->common.mark = MYL_RC_RETIRED_MARK;
-            object->owners = (uintptr_t)heap->rc_cache.free[slab->index];
-            heap->rc_cache.free[slab->index] = object;
-            tally.pushed += slab->stride;
-            tally.retired++;
-        } else {
-            rc->dead.head = head;
-            tally_apply(heap, &tally);
-            rc->allocator.hooks.retire(heap, payload);
-            head = rc->dead.head;
-        }
+        const myl_rc_slab_class *slab = (const myl_rc_slab_class *)((uintptr_t)object & ~(uintptr_t)(MYL_RC_SLAB_BYTES - 1));
+        size_t index = slab->index;
+        object->common.mark = MYL_RC_RETIRED_MARK;
+        object->owners = (uintptr_t)heap->rc_cache.free[index];
+        heap->rc_cache.free[index] = object;
+        tally.pushed += slab->stride;
+        tally.retired++;
     }
     rc->dead.head = NULL;
     tally_apply(heap, &tally);
