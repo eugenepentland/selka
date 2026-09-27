@@ -15,6 +15,7 @@ pub const EmissionPlan = struct {
     locals: plan.Plan,
     journal: journal.Layout,
     field_transfers: []const @import("rc_field_transfer.zig").Certificate = &.{},
+    dictionary_tails: []const @import("rc_dictionary_tail.zig").Certificate = &.{},
     plain_writes: []const @import("rc_plain_record_write.zig").Certificate = &.{},
 };
 /// Final immutable plan and reusable lowering scratch, owned by the function arena.
@@ -61,6 +62,7 @@ pub fn build(comptime E: type, self: *E, capacity: usize) Error!*State {
         state.operands[index].bytes = @max(state.operands[index].bytes, bytes);
         state.pending = @max(state.pending, bytes);
     };
+    state.plan.dictionary_tails = &.{};
     state.plan.journal = try journal.build(a, state.plan.locals.storage, state.operands);
     state.plan.field_transfers = try @import("rc_field_transfer.zig").build(E, self, &state.catalog);
     state.plan.plain_writes = try @import("rc_plain_record_write.zig").build(E, self, &state.catalog, state.plan.locals);
