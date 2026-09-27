@@ -1,0 +1,38 @@
+{
+  "compiler_mode": "Debug",
+  "before_source": "e5d47d20 (compiler identical to c90c84be)",
+  "candidate_base": "f9a895c8899d4f72bb0fbad84c875e8332a3df2a",
+  "candidate_patch_sha256": "3f500128bdf57409d430917715542ef5ee6d5686b753c6b7573a9effbf871165",
+  "live_files": {
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-readonly-compose/src/qbe.zig": "6ef75276217f117272bda7b16a17743e9fd3a634fdba98e091b4a231295f6b75",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-readonly-compose/src/qbe_rc_cache.zig": "cdc740bce8f436f65a03cc873476ac7d900a08cdae2ca7e5f9cde3d77b413a97",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-readonly-compose/src/rc_readonly_body.zig": "16d072151c4c2f951081c4c80c214bbef76e116415da29cb57ae3f725d77c31b",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-readonly-compose/src/rc_readonly_calls.zig": "3147dfadb46aeaac8b46d5fdb3886868d49f203d5343db637dfd02b39a17a826",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-integration/.tmp-rc/install-ownership-joined-fixed/bin/mylang": "1f3bca2c62180a58fcc54782f9414a2b272e8447f996096a6883dc330774e3c7",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-readonly-compose/.tmp-readonly/install-after/bin/mylang": "9e1e8c27db108a23c144a88e913f76f381831609ac7f3bee9e5d5d6e9267b1a5",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-readonly-compose/.tmp-readonly/performance/before.qbe": "d63dd93455de8d1bba60d4ac5a7d96fce3061626c01bd192bed288a8fc56dd39",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-readonly-compose/.tmp-readonly/performance/before.qbe.stats": "56671dade892afd497ad6f5b5285e07f0d215a5bef2cbdece004536f414c50d2",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-readonly-compose/.tmp-readonly/performance/before.llvm": "05cc840b9dd8c2a2564bc85b336df6930f401f06bd3c8b128fc3f8e702f405ae",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-readonly-compose/.tmp-readonly/performance/before.llvm.stats": "4768b08c618c595c17253e22488ad49bf8edaa9d0d79d7202e5457e53382ae99",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-readonly-compose/.tmp-readonly/performance/after.qbe": "d6476e10fbcd4b547a8a96e3b846b1964e6dc895961425fa1afbb923cb18c072",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-readonly-compose/.tmp-readonly/performance/after.qbe.stats": "8803aabfcb5aba45533e4f31395f25d7d1a7d8f3bde368085ae9d1a15e46ce8d",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-readonly-compose/.tmp-readonly/performance/after.llvm": "35c8e63344259633a92c9dd2a097457a067ba4b5b7ed2d7c69519587ca0084f0",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-readonly-compose/.tmp-readonly/performance/after.llvm.stats": "a065a4c645a06e9eaa2d97b1e0731d1e351a6d975b954b27f9316c03573a74f9",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-readonly-compose/.tmp-readonly/lox-control/qbe.stats": "f64f02b5f16c25da98c0894956766e55973e075b8ca6e686e2f196da66abe98a",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-readonly-compose/.tmp-readonly/lox-control/qbe": "713674efee8472a950661c8707ae61e2bb1837c58f63822dee3fe12b0229c7ac",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-readonly-compose/.tmp-readonly/lox-control/llvm.stats": "7dbf766601289f92d1b20e3dc69f50a8348020567c6d9271bd84d5cdddaf0413",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-readonly-compose/.tmp-readonly/lox-control/llvm": "aabd0bea545cea51e3de0fb0ef578d1ceb1e5f8b8a839a13ae2fdbb98b271b19",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/ownership-joined-e5d47d20/bin/lox.qbe.stats": "e7f29cdedeac491d3b5d3d8a34431892244266c574a6fade285c170bebff536d",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/ownership-joined-e5d47d20/bin/lox.llvm.stats": "a0e1a3392da4d1d0eee297b2227b6f3f5be1e479093986aae5bcc795749658fa",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/ownership-joined-e5d47d20/bin/lox.qbe": "766e21ae8712436daaaa42dc7bdc892669dda3dea1e8d89b4276bd3bd39ecd41",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/ownership-joined-e5d47d20/bin/lox.llvm": "b92bb5b708dbbb41322664fe6d325c262f9c8d7bd282c3f73d96608cab803b04"
+  },
+  "source_files": {
+    "src/qbe.zig": "6ef75276217f117272bda7b16a17743e9fd3a634fdba98e091b4a231295f6b75",
+    "src/qbe_rc_cache.zig": "cdc740bce8f436f65a03cc873476ac7d900a08cdae2ca7e5f9cde3d77b413a97",
+    "src/rc_readonly_body.zig": "16d072151c4c2f951081c4c80c214bbef76e116415da29cb57ae3f725d77c31b",
+    "src/rc_readonly_calls.zig": "3147dfadb46aeaac8b46d5fdb3886868d49f203d5343db637dfd02b39a17a826"
+  },
+  "gc_reference": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/ownership-joined-e5d47d20/results.json",
+  "gc_reference_sha256": "37c083465377807aa12785c59c222e3b1fa868af0c7196d7b8acf887f4f82468"
+}

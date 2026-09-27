@@ -1,0 +1,75 @@
+{
+  "source_commit": "c90c84beb39952df05941fa00775e7a71cf15e7d",
+  "prior_source_commit": "e5d47d20f7978e788e9e4a7ad158c80d703db041",
+  "compiler_mode": "Debug",
+  "compiler_sha256": "1f3bca2c62180a58fcc54782f9414a2b272e8447f996096a6883dc330774e3c7",
+  "commands": {
+    "final-build": {
+      "exit_code": 0,
+      "summary": "Build Summary: 19/19 steps succeeded"
+    },
+    "test": {
+      "exit_code": 0,
+      "summary": "Build Summary: 94/94 steps succeeded; 2335/26163 tests passed (23828 skipped)"
+    },
+    "test-qbe": {
+      "exit_code": 0,
+      "summary": "Build Summary: 51/51 steps succeeded; 445/445 tests passed"
+    },
+    "test-qbe-build": {
+      "exit_code": 0,
+      "summary": "Build Summary: 29/29 steps succeeded"
+    },
+    "fmt-check": {
+      "exit_code": 0,
+      "summary": "Build Summary: 2/2 steps succeeded"
+    }
+  },
+  "sweeps": {
+    "qbe": {
+      "source_commit": "e5d47d20f7978e788e9e4a7ad158c80d703db041",
+      "passed": 967,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 967,
+      "programs": 165,
+      "dropped": 0,
+      "unloaded": 0
+    },
+    "llvm": {
+      "source_commit": "e5d47d20f7978e788e9e4a7ad158c80d703db041",
+      "passed": 967,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 967,
+      "programs": 165,
+      "dropped": 0,
+      "unloaded": 0
+    }
+  },
+  "guardian_checks": 88,
+  "initial_failure": "test-inputs-coverage: dictionary-tail unit test reads undeclared bench/parity/micro/dict_count.my",
+  "artifacts": {
+    "README.md": "aadac9322aec2123f95e75dd3bdcdd2506e3472fac9d37ed595d42d333c3ac4b",
+    "final-build.log.gz": "17422c27f9aca0ae17e2c4b817ff1facfcaff104fc150811d6c5c542ed400a1a",
+    "fmt-check.log.gz": "de01a91b7b313677fe046c287a2404a16ae2c7b1d6d2793c81737dda7bc60d14",
+    "gate.sh": "1f4cfce27ac5ca324d67269f0cae9b83ca389314a31b5059ed89a827253969f8",
+    "guardian.log.gz": "969d776c9aeafa14ab3a63458d8c24dc19b565455f8d9c3748288ef586b823f6",
+    "initial-final-build.log.gz": "679b7e164646e96d698fb5768d985441b19c08427d527618ae6f12b08de2d185",
+    "initial-fmt-check.log.gz": "de01a91b7b313677fe046c287a2404a16ae2c7b1d6d2793c81737dda7bc60d14",
+    "initial-gate.sh": "49b3e5cb955f4ae002418d34d87e6de652af56f83b8df3847fbbe16d79985b0c",
+    "initial-test-qbe-build.log.gz": "72fde70b91bab25d119b05bffd607ff59c1ab7807c50c0fc50c43a2eb51a2ebf",
+    "initial-test-qbe.log.gz": "014d0a135e39c216096c881c5139199223041efa526088d765d6be96fc37cce5",
+    "initial-test.log.gz": "5e3482de0a87618d5807f672db969af02487f3962d671312b3e5000094fa1bb1",
+    "sweep-llvm.json.gz": "3dd642cca333df91015abd28c1444ea2ab4539744abeb82171440b15647bc357",
+    "sweep-llvm.log.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "sweep-qbe.json.gz": "440fe9b33be19f1f05b58eae82adb692f71600dd1a089875186c3900852a7925",
+    "sweep-qbe.log.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "sweep.sh": "48b7d171a145720ff0557d444e5272ad40ea9945af3ff5040a732446d415c1a7",
+    "test-qbe-build.log.gz": "e1f28da275a7afb9b156b13c167b822c3803eb7b4febe846aaa5bd076a590a2c",
+    "test-qbe.log.gz": "e4efa257472f23d93954f9f2ac58e047283a7617662e9690ecacfdf99b3a2f0a",
+    "test.log.gz": "2c5672dabffb6b4ad87f8042222a5f5c1de33c2584973d022c1b8e9d636d690e"
+  }
+}
