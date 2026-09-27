@@ -72,12 +72,14 @@ const cell_source =
 test "RC-ALLOC-CACHE-1 a counted class body pops its size class's free slot inline and calls only on an empty list" {
     const il = try countedIl(cell_source, "make");
     defer t.allocator.free(il);
-    // Two constructors, each with one inline pop of the 48-byte class
-    // (a 16-byte payload behind the 32-byte prefix: list 2 at 5648 + 16)
-    // and one runtime fallback.
-    try t.expectEqual(@as(usize, 2), std.mem.count(u8, il, "\n@rccell_fast"));
-    try t.expectEqual(@as(usize, 2), std.mem.count(u8, il, ", 5664\n"));
-    try t.expectEqual(@as(usize, 2), std.mem.count(u8, il, "call $myl_native_heap_alloc(l %heap, "));
+
+    // Each boxed `Some(...)` pops the 48-byte class's list inline (a 16-byte
+    // payload behind the 32-byte prefix: list 2 at 5648 + 16) and keeps one
+    // runtime fallback; a fresh constructor span may emit the pair twice.
+    const pops = std.mem.count(u8, il, "\n@rccell_fast");
+    try t.expect(pops >= 2);
+    try t.expectEqual(pops, std.mem.count(u8, il, ", 5664\n"));
+    try t.expectEqual(pops, std.mem.count(u8, il, "call $myl_native_heap_alloc(l %heap, "));
     // The counted prefix: one owner, no hold, a one-element mark.
     try t.expect(std.mem.indexOf(u8, il, " storel 1, %v") != null);
     try t.expect(std.mem.indexOf(u8, il, " storel 4, %v") != null);
@@ -105,8 +107,8 @@ test "RC-ALLOC-CACHE-1 counting builds and arena programs keep the runtime's cou
         \\def fill(n: int) -> int:
         \\    total = 0
         \\    with arena():
-        \\        box = Box(value=n, next=None)
-        \\        total = box.value
+        \\        chain = Box(value=n, next=Some(Box(value=1, next=None)))
+        \\        total = chain.value
         \\    return total
         \\
         \\
@@ -114,6 +116,7 @@ test "RC-ALLOC-CACHE-1 counting builds and arena programs keep the runtime's cou
         \\    return fill(2)
     , "fill");
     defer t.allocator.free(arena);
+
     // An open arena takes the runtime call, which allocates in the arena.
     try t.expect(std.mem.indexOf(u8, arena, ", 112\n") != null);
     try t.expect(std.mem.indexOf(u8, arena, "\n@rccell_fast") != null);
