@@ -1,0 +1,167 @@
+record Payload:
+    left: list[int]
+    right: list[int]
+
+
+union Item:
+    empty,
+    value: Payload,
+    number: int
+
+
+record Pool:
+    items: list[Item]
+
+
+def selected(pool: Pool, at: int) -> Payload:
+    match pool.items[at]:
+        case Item.value(payload):
+            return payload
+        case _:
+            return Payload([], [])
+
+
+def replace_and_grow(pool: mut Pool):
+    pool.items = []
+    i = 0
+    while i < 300:
+        pool.items.append(Item.number(i))
+        i += 1
+
+
+def through_callback(pool: mut Pool, at: int) -> Payload:
+    match pool.items[at]:
+        case Item.value(payload):
+            replace_and_grow(mut pool)
+            result = payload
+            result.left.append(11)
+            return result
+        case _:
+            return Payload([], [])
+
+
+# spec-case: RC-ADJACENT-VARIANT-READ-1
+public def test_returned_payload_outlives_rebound_and_grown_pool() -> bool:
+    pool = Pool([Item.value(Payload([3], [7]))])
+    result = selected(pool, -1)
+    replace_and_grow(mut pool)
+    result.left.append(9)
+    return result.left == [3, 9] and result.right == [7] and len(pool.items) == 300
+
+
+# spec-case: RC-ADJACENT-VARIANT-READ-1
+public def test_arm_callback_keeps_snapshot_and_duplicate_children() -> bool:
+    values = [5]
+    pool = Pool([Item.value(Payload(values, values))])
+    saved = pool
+    result = through_callback(mut pool, 0)
+    old = selected(saved, 0)
+    return result.left == [5, 11] and result.right == [5] and old.left == [5] and old.right == [5] and values == [5]
+
+
+# spec-case: RC-ADJACENT-VARIANT-READ-1
+public def test_arena_match_keeps_heap_children_during_arm_growth() -> bool:
+    values = [13]
+    answer = False
+    with arena():
+        pool = Pool([Item.value(Payload(values, values))])
+        result = through_callback(mut pool, -1)
+        answer = result.left == [13, 11] and result.right == [13] and len(pool.items) == 300
+    return answer and values == [13]
+
+
+# spec-case: RC-ADJACENT-VARIANT-READ-1
+public def test_arena_children_preserve_an_independent_snapshot() -> bool:
+    with arena():
+        pool = Pool([Item.value(Payload([17], [19]))])
+        saved = pool
+        result = through_callback(mut pool, 0)
+        old = selected(saved, 0)
+        return result.left == [17, 11] and old.left == [17] and old.right == [19]
+
+
+def repeated(pool: Pool) -> int:
+    total = 0
+    i = 0
+    while i < len(pool.items):
+        match pool.items[i]:
+            case Item.value(payload):
+                total = total + payload.left[0] + payload.right[0]
+            case Item.number(number):
+                total = total + number
+            case Item.empty:
+                total += 1
+        i += 1
+    return total
+
+
+# spec-case: RC-ADJACENT-VARIANT-READ-1
+public def test_repeated_pattern_slots_switch_between_owned_and_plain_arms() -> bool:
+    pool = Pool([Item.value(Payload([2], [3])), Item.empty, Item.number(7), Item.value(Payload([11], [13]))])
+    return repeated(pool) == 37
+
+
+union Outer:
+    empty,
+    values: list[Item]
+
+
+def nested(rows: list[Outer]) -> Payload:
+    match rows[0]:
+        case Outer.values(inner):
+            match inner[-1]:
+                case Item.value(payload):
+                    return payload
+                case _:
+                    return Payload([], [])
+        case _:
+            return Payload([], [])
+
+
+# spec-case: RC-ADJACENT-VARIANT-READ-1
+public def test_nested_matches_publish_the_selected_payload() -> bool:
+    rows = [Outer.values([Item.value(Payload([23], [29]))])]
+    result = nested(rows)
+    rows.clear()
+    result.right.append(31)
+    return result.left == [23] and result.right == [29, 31]
+
+
+def changing_index(pool: mut Pool) -> int:
+    pool.items = [Item.value(Payload([41], [43]))]
+    return 0
+
+
+def index_callback(pool: mut Pool) -> Payload:
+    match pool.items[changing_index(mut pool)]:
+        case Item.value(payload):
+            return payload
+        case _:
+            return Payload([], [])
+
+
+# spec-case: RC-ADJACENT-VARIANT-READ-1
+public def test_index_callback_keeps_the_original_receiver_snapshot() -> bool:
+    pool = Pool([Item.value(Payload([37], [39]))])
+    result = index_callback(mut pool)
+    return result.left == [37] and selected(pool, 0).left == [41]
+
+
+# spec-case: RC-ADJACENT-VARIANT-READ-1
+public def test_payload_free_arm_and_empty_return_keep_clean_guards() -> bool:
+    pool = Pool([Item.empty, Item.number(53)])
+    first = selected(pool, 0)
+    second = selected(pool, -1)
+    return len(first.left) == 0 and len(second.right) == 0
+
+
+def main(out: Stream) -> int:
+    out.print(test_returned_payload_outlives_rebound_and_grown_pool())
+    out.print(test_arm_callback_keeps_snapshot_and_duplicate_children())
+    out.print(test_arena_match_keeps_heap_children_during_arm_growth())
+    out.print(test_arena_children_preserve_an_independent_snapshot())
+    out.print(test_repeated_pattern_slots_switch_between_owned_and_plain_arms())
+    out.print(test_nested_matches_publish_the_selected_payload())
+    out.print(test_index_callback_keeps_the_original_receiver_snapshot())
+    out.print(test_payload_free_arm_and_empty_return_keep_clean_guards())
+    return 0

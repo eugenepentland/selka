@@ -1,0 +1,4 @@
+PASS before qbe 1 R_MEMORY_BUDGET made=1 guard=0 rows=(nil)
+PASS before llvm 1 R_MEMORY_BUDGET made=1 guard=0 rows=(nil)
+PASS after qbe 1 R_MEMORY_BUDGET made=1 guard=0 rows=(nil)
+PASS after llvm 1 R_MEMORY_BUDGET made=1 guard=0 rows=(nil)

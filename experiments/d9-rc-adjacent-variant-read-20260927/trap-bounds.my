@@ -1,0 +1,22 @@
+record Payload:
+    left: list[int]
+    right: list[int]
+union Item:
+    empty,
+    value: Payload
+record Pool:
+    items: list[Item]
+def selected(pool: Pool, at: int) -> Payload:
+    match pool.items[at]:
+        case Item.value(payload):
+            return payload
+        case _:
+            return Payload([], [])
+def main(out: Stream) -> int:
+    values = [3]
+    pool = Pool([Item.value(Payload(values, values))])
+    out.print("before")
+    result = selected(pool, 1)
+    pool.items.clear()
+    out.print(result.left[0] + result.right[0])
+    return 0
