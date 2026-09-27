@@ -9,6 +9,7 @@ test "RC startup registers metadata and preserves count region and budget failur
 }
 
 // spec: RC-FRAME-1
+// spec: RC-UNIQUE-IN-PLACE-1
 test "RC frame unwind restores scopes before releasing guarded owners and resources" {
     try std.testing.expectEqual(@as(c_int, 20), myl_qbe_rc_frame_verify());
 }
@@ -32,6 +33,7 @@ test "RC loans preserve pinned identity and roll back aggregate lifetime holds" 
 extern fn myl_rc_history_verify() c_int;
 
 // spec: RC-HISTORY-PUBLISH-1
+// spec: RC-SEMANTIC-POINTER-1
 test "RC semantic publication commits history atomically and preserves pinned snapshot identity" {
     try std.testing.expectEqual(@as(c_int, 42), myl_rc_history_verify());
 }

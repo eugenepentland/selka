@@ -154,14 +154,21 @@ static void cloned_prefix_refusal_discards_marks(void) {
     header(right)->owners=2; myl_rc_pin_release(&heap,&pin);
     myl_rc_owner_release(&heap,left); myl_rc_owner_release(&heap,right); myl_rc_owner_release(&heap,parent); finish(&heap);
 }
+/* spec-case: RC-SEMANTIC-POINTER-1. A refused direct publication commits no
+ * history. The direct pointer path needs no metadata, so it also publishes at
+ * the budget ceiling. */
 static void metadata_refusal_preserves_history(void) {
     myl_native_heap heap; start(&heap);
-    void *source=mapping(&heap),*out=NULL; size_t limit=heap.limit; heap.limit=heap.bytes;
+    void *source=mapping(&heap),*out=NULL;
+    header(source)->owners=MYL_RC_COUNT_MAX;
     assert(!myl_rc_native_publish(&heap,&pointer,&out,&source,0,MYL_RC_HISTORY_DIRECT));
-    assert(myl_rc_take_failure(&heap)==MYL_RC_ALLOCATION_REFUSED);
-    assert(!out && !shared(source) && header(source)->owners==1);
-    heap.limit=limit; heap.exhausted=0;
+    assert(myl_rc_take_failure(&heap)==MYL_RC_COUNT_LIMIT);
+    assert(!out && !shared(source) && header(source)->owners==MYL_RC_COUNT_MAX);
+    header(source)->owners=1;
+    size_t limit=heap.limit,bytes=heap.bytes; heap.limit=heap.bytes;
     assert(myl_rc_native_publish(&heap,&pointer,&out,&source,0,MYL_RC_HISTORY_DIRECT));
+    assert(out==source && shared(source) && header(source)->owners==2 && heap.bytes==bytes && !heap.exhausted);
+    heap.limit=limit;
     myl_rc_owner_release(&heap,out); myl_rc_owner_release(&heap,source); finish(&heap);
 }
 static void ownerless_view_publication(void) {

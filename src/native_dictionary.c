@@ -732,7 +732,7 @@ static inline int rc_replace(myl_native_heap *heap, const myl_native_type *type,
                              void *target, const void *source, unsigned region) {
     if (target==source) return 1;
     if (type->kind==MYL_NATIVE_PLAIN && type->size==8) {
-        const myl_rc_descriptor *descriptor=myl_rc_descriptor_find(heap,type);
+        const myl_rc_descriptor *descriptor=myl_rc_descriptor_of(heap,type);
         if (descriptor && !((const myl_rc_binding *)descriptor)->flat.count &&
             !heap->rc->dead.head && region<=heap->region_depth) {
             uint64_t word;
@@ -1142,8 +1142,8 @@ myl_native_dictionary *myl_native_dictionary_copy(myl_native_heap *heap, const m
 }
 static void rc_entry_release(myl_native_heap *heap, myl_native_dictionary *dict, size_t index) {
     unsigned char *entry=entry_at(dict,index);
-    const myl_rc_descriptor *key=myl_rc_descriptor_find(heap,dict->key);
-    const myl_rc_descriptor *value=myl_rc_descriptor_find(heap,dict->value);
+    const myl_rc_descriptor *key=myl_rc_descriptor_of(heap,dict->key);
+    const myl_rc_descriptor *value=myl_rc_descriptor_of(heap,dict->value);
     if (!key || !value) abort();
     myl_rc_edges_release(heap,key->shape,entry,1);
     myl_rc_edges_release(heap,value->shape,entry+dict->value_offset,1);
@@ -1203,8 +1203,8 @@ static int rc_insert_result(myl_native_heap *heap, myl_native_dictionary *dict, 
         if (!owned) goto done;
         memcpy(scratch,&owned,sizeof owned);
     }
-    const myl_rc_descriptor *key_shape=myl_rc_descriptor_find(heap,dict->key);
-    const myl_rc_descriptor *value_shape=myl_rc_descriptor_find(heap,dict->value);
+    const myl_rc_descriptor *key_shape=myl_rc_descriptor_of(heap,dict->key);
+    const myl_rc_descriptor *value_shape=myl_rc_descriptor_of(heap,dict->value);
     if (!key_shape || !value_shape) abort();
     myl_rc_slot targets[]={
         {.shape=key_shape->shape,.address=entry,.region=region},
@@ -1249,7 +1249,7 @@ static int rc_pop_entry(myl_native_heap *heap, myl_native_dictionary *dict, loca
     void *source=entry+(key_result?0:dict->value_offset);
     if (!myl_rc_native_take(heap,result,output,source,heap->region_depth)) return -1;
     if (dict->index.capacity) index_remove(&dict->index,at.slot!=NO_SLOT?at.slot:slot_of(dict,at.entry));
-    const myl_rc_descriptor *discard=myl_rc_descriptor_find(heap,key_result?dict->value:dict->key);
+    const myl_rc_descriptor *discard=myl_rc_descriptor_of(heap,key_result?dict->value:dict->key);
     if (!discard) abort();
     myl_rc_edges_release(heap,discard->shape,entry+(key_result?dict->value_offset:0),1);
     memset(entry,0,dict->entry_type.size);
@@ -1310,8 +1310,8 @@ static myl_rc_status rc_dict_shell(myl_native_heap *heap, const void *payload, u
         slots=myl_native_heap_alloc_at(heap,&slot_type,source->index.capacity,region);
         if (!slots) goto failed;
     }
-    const myl_rc_descriptor *key=myl_rc_descriptor_find(heap,source->key);
-    const myl_rc_descriptor *value=myl_rc_descriptor_find(heap,source->value);
+    const myl_rc_descriptor *key=myl_rc_descriptor_of(heap,source->key);
+    const myl_rc_descriptor *value=myl_rc_descriptor_of(heap,source->value);
     if (!key || !value) abort();
     for (size_t i=0;i<source->entries->length;i++) {
         const unsigned char *entry=entry_at(source,i);
@@ -1345,7 +1345,7 @@ static int rc_dict_next(myl_native_heap *heap, const void *payload, void *target
         uint64_t marker;
         memcpy(&marker,entry+source->entry_type.size-8,8);
         if (!(uint32_t)marker) continue;
-        const myl_rc_descriptor *descriptor=myl_rc_descriptor_find(heap,is_value?source->value:source->key);
+        const myl_rc_descriptor *descriptor=myl_rc_descriptor_of(heap,is_value?source->value:source->key);
         if (!descriptor) abort();
         if (descriptor->shape->kind==MYL_RC_SHAPE_NONE) continue;
         size_t offset=is_value?source->value_offset:0;

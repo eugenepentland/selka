@@ -2,6 +2,7 @@
 #include "native_rc_collections.h"
 #include "native_rc_dictionary.h"
 #include "native_rc_values.h"
+#include "native_rc_stats.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -135,6 +136,13 @@ static void construction_guard_test(void) {
     myl_rc_heap_destroy(&fixture->context.heap);
     free(fixture);
 }
+static uint64_t unique_checks(const myl_native_heap *heap) {
+    myl_rc_counters counters;
+    assert(myl_rc_stats_snapshot(heap, &counters));
+    return counters.events[MYL_RC_STAT_UNIQUE_CHECK];
+}
+/* spec-case: RC-UNIQUE-IN-PLACE-1. An already unique payload returns before
+ * any slot or edit; every call records exactly one uniqueness check. */
 static void unique_bridge_test(void) {
     MylQbeContext context = {0};
     myl_native_heap_init(&context.heap, 1u << 20);
@@ -144,11 +152,19 @@ static void unique_bridge_test(void) {
     static const myl_native_type number = {.size = 8, .alignment = 8, .kind = MYL_NATIVE_PLAIN};
     myl_native_list *source = myl_native_list_new(&context.heap, &number, 0), *local = source;
     uint32_t owned = 0;
+    uint64_t checks = unique_checks(&context.heap);
     assert(source && myl_qbe_rc_unique_local(&context, &pointer_type, &local, &owned));
-    assert(!owned && local == source);
+    assert(!owned && local == source && unique_checks(&context.heap) == checks + 1);
+    owned = 1;
+    assert(myl_qbe_rc_unique_local(&context, &pointer_type, &local, &owned));
+    assert(owned && local == source && unique_checks(&context.heap) == checks + 2);
+    assert(myl_qbe_rc_unique_field(&context, &pointer_type, &local, NULL));
+    assert(local == source && unique_checks(&context.heap) == checks + 3);
+    owned = 0;
     assert(myl_rc_owner_acquire(&context.heap, source) == MYL_RC_OK);
     assert(myl_qbe_rc_unique_local(&context, &pointer_type, &local, &owned));
     assert(owned && local != source && ((myl_rc_object *)source - 1)->owners == 2);
+    assert(unique_checks(&context.heap) == checks + 4);
     MylQbeRcSlot slot = {&pointer_type, &local, &owned, MYL_QBE_RC_COUNTED};
     myl_qbe_rc_slot_drop(&context, &slot);
     myl_rc_owner_release(&context.heap, source);

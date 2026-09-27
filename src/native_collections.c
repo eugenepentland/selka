@@ -1093,7 +1093,7 @@ static void rc_list_edges(myl_native_heap *heap, void *payload, size_t count) {
     (void)count;
     myl_native_list *list=payload;
     if (list->length) {
-        const myl_rc_descriptor *element=myl_rc_descriptor_find(heap,list->element);
+        const myl_rc_descriptor *element=myl_rc_descriptor_of(heap,list->element);
         if (!element) abort();
         myl_rc_edges_release(heap,element->shape,list->storage,list->length);
     }
@@ -1118,7 +1118,7 @@ static myl_rc_status rc_list_shell(myl_native_heap *heap, const void *payload, u
     myl_native_list *copy=rc_list_new(heap,source->element,capacity,region,0);
     *out=copy;
     if (!copy) return myl_rc_native_result(heap,NULL);
-    const myl_rc_descriptor *element=myl_rc_descriptor_find(heap,source->element);
+    const myl_rc_descriptor *element=myl_rc_descriptor_of(heap,source->element);
     if (!element) abort();
     if (source->length) myl_rc_value_seed(heap,element->shape,copy->storage,source->storage,source->length);
     copy->length=source->length;
@@ -1127,7 +1127,7 @@ static myl_rc_status rc_list_shell(myl_native_heap *heap, const void *payload, u
 static int rc_list_next(myl_native_heap *heap, const void *payload, void *target, size_t *cursor, myl_rc_slot *to, myl_rc_slot *from) {
     const myl_native_list *source=payload;
     myl_native_list *copy=target;
-    const myl_rc_descriptor *element=myl_rc_descriptor_find(heap,source->element);
+    const myl_rc_descriptor *element=myl_rc_descriptor_of(heap,source->element);
     if (!element) abort();
     if (*cursor>=source->length || element->shape->kind==MYL_RC_SHAPE_NONE) return 0;
     size_t offset=(*cursor)++*source->element->size;
@@ -1135,8 +1135,17 @@ static int rc_list_next(myl_native_heap *heap, const void *payload, void *target
     *from=(myl_rc_slot){.shape=element->shape,.address=(unsigned char *)source->storage+offset,.container=(void *)source,.region=myl_native_header_region(source)};
     return 1;
 }
+/* Every remaining element as one seeded run (see myl_rc_descriptor.span). */
+static int rc_list_span(myl_native_heap *heap, const void *payload, void *target, size_t *cursor, myl_rc_slot *to, myl_rc_slot *from, size_t *count) {
+    const myl_native_list *source=payload;
+    size_t first=*cursor;
+    if (!rc_list_next(heap,payload,target,cursor,to,from)) return 0;
+    *count=source->length-first;
+    *cursor=source->length;
+    return 1;
+}
 static const myl_rc_descriptor rc_list_descriptors[]={
-    {.type=&list_type,.shape=&rc_list_shape,.edges=rc_list_edges,.clone=rc_list_clone_adapter,.shell=rc_list_shell,.next=rc_list_next},
+    {.type=&list_type,.shape=&rc_list_shape,.edges=rc_list_edges,.clone=rc_list_clone_adapter,.shell=rc_list_shell,.next=rc_list_next,.span=rc_list_span},
     {.type=&rc_storage_type,.shape=&rc_list_shape,.edges=rc_storage_edges}
 };
 static const myl_rc_module rc_list_module={
@@ -1179,8 +1188,31 @@ int myl_rc_list_storage_reserve(myl_native_heap *heap, myl_native_list *list, si
     list->capacity=capacity;
     return 1;
 }
+/* An append whose retain cannot run a callback (empty death queue: retaining
+ * creates no deaths) publishes straight into the reserved slot past the live
+ * prefix. A borrowed input inside the live prefix is re-addressed after
+ * growth; one inside the spare capacity keeps the staged path below, so the
+ * slot and the input never overlap. */
+static int rc_list_append_direct(myl_native_heap *heap, myl_native_list *list, const void *value, int *ok) {
+    size_t size=list->element->size;
+    if (!size || heap->rc->dead.head) return 0;
+    uintptr_t input=(uintptr_t)value, old=(uintptr_t)list->storage;
+    size_t extent=list->length*size, reserved=list->capacity*size;
+    if (old && input>=old && input-old<reserved && input-old>=extent) return 0;
+    int aliases=old && input>=old && input-old<extent;
+    size_t offset=aliases?(size_t)(input-old):0;
+    if (!myl_rc_list_storage_reserve(heap,list,list->length+1)) { *ok=0; return 1; }
+    if (aliases) value=(const unsigned char *)list->storage+offset;
+    unsigned char *slot=(unsigned char *)list->storage+extent;
+    myl_rc_invariant((uintptr_t)value+size<=(uintptr_t)slot || (uintptr_t)slot+size<=(uintptr_t)value);
+    *ok=myl_rc_native_retain(heap,list->element,slot,value,myl_native_header_region(list));
+    if (*ok) { list->length++; list->generation++; }
+    return 1;
+}
 static int rc_list_insert_at(myl_native_heap *heap, myl_native_list *list, size_t at, const void *value) {
     if (list->generation==UINT64_MAX || list->length==SIZE_MAX) return 0;
+    int direct=0;
+    if (at==list->length && rc_list_append_direct(heap,list,value,&direct)) return direct;
     size_t size=list->element->size;
     unsigned char local[128];
     void *staged=size<=sizeof local?local:myl_rc_storage_bytes(heap,size,0);
@@ -1218,7 +1250,7 @@ int myl_rc_list_plain_ready(myl_native_heap *heap, const myl_native_list *list) 
     if (type->kind!=MYL_NATIVE_PLAIN && type->kind!=MYL_NATIVE_FLOAT) return 0;
     size_t size=type->size;
     if (size!=1 && size!=2 && size!=4 && size!=8) return 0;
-    const myl_rc_descriptor *descriptor=myl_rc_descriptor_repeat(heap,type);
+    const myl_rc_descriptor *descriptor=myl_rc_descriptor_of(heap,type);
     return descriptor && ((const myl_rc_binding *)descriptor)->flat.count==0;
 }
 int myl_rc_list_append(myl_native_heap *heap, myl_native_list *list, const void *value) {
@@ -1243,7 +1275,7 @@ static int rc_list_remove_at(myl_native_heap *heap, myl_native_list *list, size_
     if (output) {
         if (!myl_rc_native_take(heap,list->element,output,slot,heap->region_depth)) return -1;
     } else {
-        const myl_rc_descriptor *descriptor=myl_rc_descriptor_find(heap,list->element);
+        const myl_rc_descriptor *descriptor=myl_rc_descriptor_of(heap,list->element);
         if (!descriptor) abort();
         myl_rc_edges_release(heap,descriptor->shape,slot,1);
     }
@@ -1270,7 +1302,7 @@ int myl_rc_list_pop_at(myl_native_heap *heap, myl_native_list *list, int64_t ind
 int myl_rc_list_clear(myl_native_heap *heap, myl_native_list *list) {
     if (!list->length) return 1;
     if (list->generation==UINT64_MAX) return 0;
-    const myl_rc_descriptor *descriptor=myl_rc_descriptor_find(heap,list->element);
+    const myl_rc_descriptor *descriptor=myl_rc_descriptor_of(heap,list->element);
     if (!descriptor) abort();
     size_t length=list->length;
     list->length=0;

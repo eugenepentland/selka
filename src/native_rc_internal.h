@@ -14,21 +14,56 @@ typedef struct {
     size_t depth;
     size_t inline_depth;
 } myl_rc_shape_entry;
-#define MYL_RC_FLAT_LEAVES 8
+/* Checked mode keeps invariants that need a metadata lookup or a value walk.
+ * Only a production RC artifact (MYL_NATIVE_RC without the counting runtime)
+ * leaves them out; stats artifacts, the GC artifact's copy of this library and
+ * the standalone C runtime tests keep them. Every build keeps the
+ * constant-time checks; a checked invariant must never have side effects. */
+#ifndef MYL_RC_CHECKED
+#if (defined(MYL_NATIVE_RC) && MYL_NATIVE_RC) && !(defined(MYL_NATIVE_RC_COUNTING) && MYL_NATIVE_RC_COUNTING)
+#define MYL_RC_CHECKED 0
+#else
+#define MYL_RC_CHECKED 1
+#endif
+#endif
+#define MYL_RC_FLAT_LEAVES 16
+#define MYL_RC_FLAT_ALWAYS UINT32_MAX
+/* One owning leaf of a flat plan. A conditional leaf is live only while the
+ * u32 at tag_offset equals tag, exactly as the generic walker visits one
+ * variant arm; unconditional leaves use MYL_RC_FLAT_ALWAYS. */
+typedef struct { uint32_t offset, tag_offset, tag; } myl_rc_leaf;
+#define MYL_RC_FLAT_ARMS 32
 /* Private plan, never part of emitted metadata. count > the bound means the
- * authoritative shape/native-kind pair requires generic traversal. */
+ * authoritative shape/native-kind pair requires generic traversal. Leaves are
+ * in the generic walker's order; simultaneously live leaves never overlap one
+ * another or any tag word. Hot fields come first: an operation reads the
+ * header, one live set and the offsets. */
 typedef struct {
-    size_t offsets[MYL_RC_FLAT_LEAVES];
     unsigned count;
-    unsigned char loanable, native_unique;
+    unsigned char loanable, native_unique, conditional;
+    uint32_t arm_offset;
+    /* The native element size, copied so flat paths never load the type. */
+    size_t size;
+    /* Live-leaf bit sets, bit i for offsets[i]. `all` is every leaf. Every
+     * conditional leaf tests the one tag word at arm_offset with a tag below
+     * MYL_RC_FLAT_ARMS: arms[tag] is that arm's live set and `always` (the
+     * unconditional leaves) serves every other tag. */
+    uint16_t all, always, arms[MYL_RC_FLAT_ARMS];
+    /* Leaf byte offsets; plans with a leaf beyond 64 KiB keep the walker. */
+    uint16_t offsets[MYL_RC_FLAT_LEAVES];
 } myl_rc_flat;
-_Static_assert(sizeof(myl_rc_flat) == 72, "native facts preserve plan reservations");
-_Static_assert(offsetof(myl_rc_flat, count) == 64 && offsetof(myl_rc_flat, loanable) == 68,
-               "existing flat fields retain their offsets");
-_Static_assert(offsetof(myl_rc_flat, native_unique) == 69, "type fact occupies private padding");
-typedef struct { myl_rc_descriptor descriptor; myl_rc_flat flat; } myl_rc_binding;
-_Static_assert(sizeof(myl_rc_binding) == 128, "native facts preserve binding reservations");
+_Static_assert(MYL_RC_FLAT_LEAVES <= 16, "live-leaf sets are 16 bits");
+/* alloc_class caches the production allocator's size class for a single
+ * element (class + 1; 0 unknown or not slab-sized). */
+typedef struct { myl_rc_descriptor descriptor; myl_rc_flat flat; unsigned alloc_class; } myl_rc_binding;
 _Static_assert(offsetof(myl_rc_binding, descriptor) == 0, "indexed descriptor is its private binding prefix");
+/* The leaves live in the value at base, read before any edge is changed. */
+static inline unsigned myl_rc_flat_live(const myl_rc_flat *flat, const unsigned char *base) {
+    if (!flat->conditional) return flat->all;
+    uint32_t tag;
+    __builtin_memcpy(&tag, base + flat->arm_offset, sizeof tag);
+    return tag < MYL_RC_FLAT_ARMS ? flat->arms[tag] : flat->always;
+}
 typedef struct myl_rc_batch {
     struct myl_rc_batch *next;
     const myl_rc_module *module;
@@ -37,47 +72,299 @@ typedef struct myl_rc_batch {
     struct { size_t shapes, descriptors; } count;
     size_t bytes;
 } myl_rc_batch;
-typedef struct {
-    const void *key, *value;
-    size_t depth;
-    size_t inline_depth;
-    unsigned kind;
-    /* Only index.entries[0] uses this former padding: descriptor slot + 1. */
-    unsigned recent_descriptor;
-} myl_rc_index_entry;
-_Static_assert(sizeof(myl_rc_index_entry) == 40, "repeat lookup preserves every metadata reservation");
-_Static_assert(offsetof(myl_rc_index_entry, recent_descriptor) == 36, "repeat lookup uses private amd64 padding");
+/* Open-addressed pointer map with a power-of-two capacity kept at most half
+ * full. An empty map points at a shared one-slot sentinel, so a lookup is a
+ * multiply, a shift and a probe with no emptiness branch. The home slot is
+ * the product's top bits (Fibonacci hashing): shift is 64 - log2(capacity),
+ * or 63 with mask 0 for the sentinel. Keys are never NULL. */
+typedef struct { const void *key, *value; } myl_rc_map_entry;
+typedef struct { const myl_rc_map_entry *entries; size_t mask, count; unsigned shift; } myl_rc_map;
+extern const myl_rc_map_entry myl_rc_map_sentinel[1];
+static inline size_t myl_rc_map_home(const void *key, unsigned shift, size_t mask) {
+    return (size_t)(((uintptr_t)key * UINT64_C(0x9e3779b97f4a7c15)) >> shift) & mask;
+}
+static inline const void *myl_rc_map_get(const myl_rc_map *map, const void *key) {
+    size_t mask = map->mask, slot = myl_rc_map_home(key, map->shift, mask);
+    for (;;) {
+        const myl_rc_map_entry *entry = &map->entries[slot];
+        if (entry->key == key) return entry->value;
+        if (!entry->key) return NULL;
+        slot = (slot + 1) & mask;
+    }
+}
+/* A released scope journal node waits here for the next capture. Spare nodes
+ * are uncharged (at most MYL_RC_SPARE_ENTRIES of them); taking one repeats
+ * the metadata budget admission and charge, so accounting matches a fresh
+ * allocation exactly. Heap teardown frees them. */
+typedef struct myl_rc_spare { struct myl_rc_spare *next; } myl_rc_spare;
+#define MYL_RC_SPARE_ENTRIES 32
 struct myl_rc_state {
     struct { myl_rc_allocator hooks; void *context; } allocator;
     struct {
         myl_rc_batch *batches;
         size_t bytes;
-        struct { myl_rc_index_entry *entries; size_t count, capacity; } index;
+        /* Modules, shape identities (registered copies and persistent sources)
+         * and native_type bindings. All three commit together. */
+        myl_rc_map modules, shapes, bindings;
     } metadata;
     struct { myl_rc_frame *frames; size_t capacity, depth; } walk;
     struct { myl_rc_object *head; int active; } dead;
     myl_rc_scope *scopes;
+    struct { myl_rc_spare *entries; size_t count; } spare;
     myl_rc_status failure;
 #if defined(MYL_NATIVE_RC_COUNTING) && MYL_NATIVE_RC_COUNTING
     myl_rc_counters stats;
 #endif
 };
 __attribute__((cold, noreturn)) void myl_rc_invariant_failed(void);
-/* Keep every check in production, but only a violated invariant calls out. */
+/* Constant-time checks stay in production; only a violated one calls out. */
 static inline void myl_rc_invariant(int valid) {
     if (!valid) myl_rc_invariant_failed();
 }
+/* An invariant whose evaluation needs a lookup or a walk; see MYL_RC_CHECKED. */
+#define myl_rc_checked(valid) do { if (MYL_RC_CHECKED) myl_rc_invariant(valid); } while (0)
+/* The registered binding of a native type, or NULL: one inline probe. */
+static inline const myl_rc_binding *myl_rc_binding_find(const myl_native_heap *heap, const myl_native_type *type) {
+    return (const myl_rc_binding *)myl_rc_map_get(&heap->rc->metadata.bindings, type);
+}
+/* Descriptor view of the same probe for RC-enabled runtime-internal callers. */
+static inline const myl_rc_descriptor *myl_rc_descriptor_of(const myl_native_heap *heap, const myl_native_type *type) {
+    const myl_rc_binding *binding = myl_rc_binding_find(heap, type);
+    return binding ? &binding->descriptor : NULL;
+}
+/* The registered copy of a shape identity (itself or a persistent source). */
+static inline const myl_rc_shape *myl_rc_shape_find(const myl_native_heap *heap, const myl_rc_shape *shape) {
+    return (const myl_rc_shape *)myl_rc_map_get(&heap->rc->metadata.shapes, shape);
+}
+/* Pointer-owning depth of a shape already returned by a registry lookup. */
+static inline size_t myl_rc_registered_depth(const myl_rc_shape *registered) {
+    return ((const myl_rc_shape_entry *)((const unsigned char *)registered -
+        offsetof(myl_rc_shape_entry, shape)))->depth;
+}
+/* Frame-free traversal of a registered shape of depth <= 2: a pointer, or a
+ * record, variant or array whose direct children are pointers or pointer-free.
+ * Yields each live POINTER/HOLD_POINTER leaf in the generic walker's order;
+ * a variant tag is read from `tags` when its field is reached, as the walker
+ * does. Deeper shapes keep the walker. */
+typedef struct {
+    const myl_rc_field *fields;
+    size_t count, cursor, stride;
+    const unsigned char *tag;
+    myl_rc_shape_kind kind;
+} myl_rc_shallow;
+static inline int myl_rc_shallow_admits(const myl_rc_shape *registered) {
+    return myl_rc_registered_depth(registered) <= 2;
+}
+static inline void myl_rc_shallow_begin(myl_rc_shallow *walk, const myl_rc_shape *shape, const void *tags) {
+    *walk = (myl_rc_shallow){.kind = shape->kind};
+    switch (shape->kind) {
+        case MYL_RC_SHAPE_POINTER: case MYL_RC_SHAPE_HOLD_POINTER:
+            walk->count = 1;
+            break;
+        case MYL_RC_SHAPE_ARRAY:
+            walk->count = shape->as.array.count;
+            walk->stride = shape->as.array.stride;
+            walk->kind = shape->as.array.element->kind;
+            break;
+        case MYL_RC_SHAPE_RECORD:
+            walk->fields = shape->as.record.fields;
+            walk->count = shape->as.record.count;
+            break;
+        case MYL_RC_SHAPE_VARIANT:
+            walk->fields = shape->as.variant.fields;
+            walk->count = shape->as.variant.count;
+            walk->tag = (const unsigned char *)tags + shape->as.variant.tag_offset;
+            break;
+        default:
+            break;
+    }
+}
+static inline int myl_rc_shallow_next(myl_rc_shallow *walk, size_t *offset, myl_rc_shape_kind *kind) {
+    if (!walk->fields) {
+        if (walk->cursor == walk->count) return 0;
+        *offset = walk->cursor++ * walk->stride;
+        *kind = walk->kind;
+        return 1;
+    }
+    while (walk->cursor < walk->count) {
+        const myl_rc_field *field = &walk->fields[walk->cursor++];
+        if (field->shape->kind == MYL_RC_SHAPE_NONE) continue;
+        if (walk->tag) {
+            uint32_t tag;
+            __builtin_memcpy(&tag, walk->tag, sizeof tag);
+            if (field->tag != tag) continue;
+        }
+        *offset = field->offset;
+        *kind = field->shape->kind;
+        return 1;
+    }
+    return 0;
+}
+/* Inline forms of the count primitives for runtime-internal hot paths. They
+ * perform exactly the public functions' checks, counts and statistics. */
+static inline int myl_rc_counted(const void *payload) {
+    return payload && !(((const myl_native_object *)payload - 1)->mark &
+        (MYL_NATIVE_OBJECT_IMMORTAL | MYL_NATIVE_OBJECT_ARENA));
+}
+static inline myl_rc_object *myl_rc_live(void *payload) {
+    myl_rc_object *object = (myl_rc_object *)payload - 1;
+    myl_rc_invariant(!(object->common.mark & MYL_RC_OBJECT_DYING) && (object->owners || object->holds));
+    return object;
+}
+/* myl_rc_allocator_retire for a DYING counted object known to runtime code. */
+static inline void myl_rc_retire(myl_native_heap *heap, myl_rc_object *object) {
+    myl_rc_invariant((object->common.mark & (MYL_RC_OBJECT_DYING | MYL_NATIVE_OBJECT_IMMORTAL |
+        MYL_NATIVE_OBJECT_ARENA)) == MYL_RC_OBJECT_DYING);
+    MYL_RC_STAT(heap, MYL_RC_STAT_RETIRE);
+    heap->rc->allocator.hooks.retire(heap, object + 1);
+}
+void myl_rc_enqueue(myl_native_heap *, myl_rc_object *);
+/* Out-of-line half of a death outside any drain: retire an edge-free object
+ * at once, or queue it. The object is already DYING. */
+void myl_rc_dead_outside(myl_native_heap *, myl_rc_object *);
+/* O=H=0: mark DYING exactly once. Inside an active drain (or finalizer
+ * reentry) the object is queued inline behind its siblings. */
+static inline void myl_rc_dies(myl_native_heap *heap, myl_rc_object *object) {
+    myl_rc_invariant(!(object->common.mark & MYL_RC_OBJECT_DYING));
+    object->common.mark |= MYL_RC_OBJECT_DYING;
+    if (!heap->rc->dead.active) { myl_rc_dead_outside(heap, object); return; }
+    object->owners = (uintptr_t)heap->rc->dead.head;
+    heap->rc->dead.head = object;
+}
+/* myl_rc_owner_acquire for runtime-internal callers (heap is live). */
+static inline myl_rc_status myl_rc_owner_take(myl_native_heap *heap, void *payload) {
+    (void)heap;
+    if (!myl_rc_counted(payload)) return MYL_RC_OK;
+    myl_rc_object *object = myl_rc_live(payload);
+    if (object->owners == MYL_RC_COUNT_MAX) {
+        MYL_RC_STAT(heap, MYL_RC_STAT_OWNER_LIMIT);
+        return MYL_RC_COUNT_LIMIT;
+    }
+    ++object->owners;
+    MYL_RC_STAT(heap, MYL_RC_STAT_OWNER_ACQUIRE);
+    return MYL_RC_OK;
+}
+/* Release one counted O edge and enqueue its death; the caller drains. */
+static inline void myl_rc_owner_drop(myl_native_heap *heap, void *payload) {
+    if (!myl_rc_counted(payload)) return;
+    myl_rc_object *object = (myl_rc_object *)payload - 1;
+    myl_rc_invariant(object->owners != 0 && !(object->common.mark & MYL_RC_OBJECT_DYING));
+    --object->owners;
+    MYL_RC_STAT(heap, MYL_RC_STAT_OWNER_RELEASE);
+    if (!object->owners && !object->holds) myl_rc_dies(heap, object);
+}
+/* Release one counted H token and enqueue its death; the caller drains. */
+static inline void myl_rc_hold_drop(myl_native_heap *heap, void *payload) {
+    if (!myl_rc_counted(payload)) return;
+    myl_rc_object *object = (myl_rc_object *)payload - 1;
+    myl_rc_invariant(object->holds != 0 && !(object->common.mark & MYL_RC_OBJECT_DYING));
+    --object->holds;
+    MYL_RC_STAT(heap, MYL_RC_STAT_HOLD_RELEASE);
+    if (!object->owners && !object->holds) myl_rc_dies(heap, object);
+}
+/* myl_rc_unique's predicate without its statistics event: a caller that
+ * returns on a positive answer records UNIQUE_CHECK itself, and a caller that
+ * falls back to a counting slow path records nothing. */
+static inline int myl_rc_unique_payload(const void *payload) {
+    if (!payload) return 1;
+    uintptr_t mark = ((const myl_native_object *)payload - 1)->mark;
+    if (mark & (MYL_NATIVE_OBJECT_IMMORTAL | MYL_NATIVE_OBJECT_SHARED)) return 0;
+    if (mark & MYL_NATIVE_OBJECT_ARENA) return 1;
+    myl_rc_invariant(!(mark & MYL_RC_OBJECT_DYING));
+    const myl_rc_object *object = (const myl_rc_object *)payload - 1;
+    myl_rc_invariant(object->owners || object->holds);
+    return object->owners <= 1;
+}
+/* Clear and release (enqueue only) every live leaf of one admitted flat
+ * value. Each tag is read before its edge is cleared: admission proved no
+ * leaf covers a tag word. The caller drains. */
+static inline __attribute__((always_inline)) void myl_rc_flat_release_one(myl_native_heap *heap,
+        const myl_rc_flat *flat, void *value) {
+    unsigned char *address = value;
+    for (unsigned live = myl_rc_flat_live(flat, address); live; live &= live - 1) {
+        void *payload;
+        void *edge = address + flat->offsets[__builtin_ctz(live)];
+        __builtin_memcpy(&payload, edge, sizeof payload);
+        __builtin_memset(edge, 0, sizeof payload);
+        myl_rc_owner_drop(heap, payload);
+    }
+}
+/* Value-sized copies and clears on the flat paths: word-multiple values up to
+ * 96 bytes use straight-line word moves instead of a library call. */
+static inline __attribute__((always_inline)) void myl_rc_copy_bytes(void *destination, const void *source, size_t bytes) {
+    if (bytes <= 96 && !(bytes & 7)) {
+        unsigned char *d = destination;
+        const unsigned char *s = source;
+        switch (bytes >> 3) {
+        case 12: __builtin_memcpy(d + 88, s + 88, 8); /* fall through */
+        case 11: __builtin_memcpy(d + 80, s + 80, 8); /* fall through */
+        case 10: __builtin_memcpy(d + 72, s + 72, 8); /* fall through */
+        case 9: __builtin_memcpy(d + 64, s + 64, 8); /* fall through */
+        case 8: __builtin_memcpy(d + 56, s + 56, 8); /* fall through */
+        case 7: __builtin_memcpy(d + 48, s + 48, 8); /* fall through */
+        case 6: __builtin_memcpy(d + 40, s + 40, 8); /* fall through */
+        case 5: __builtin_memcpy(d + 32, s + 32, 8); /* fall through */
+        case 4: __builtin_memcpy(d + 24, s + 24, 8); /* fall through */
+        case 3: __builtin_memcpy(d + 16, s + 16, 8); /* fall through */
+        case 2: __builtin_memcpy(d + 8, s + 8, 8); /* fall through */
+        case 1: __builtin_memcpy(d + 0, s + 0, 8); /* fall through */
+        default: return;
+        }
+    }
+    __builtin_memcpy(destination, source, bytes);
+}
+static inline __attribute__((always_inline)) void myl_rc_zero_bytes(void *destination, size_t bytes) {
+    if (bytes <= 96 && !(bytes & 7)) {
+        unsigned char *d = destination;
+        const uint64_t zero = 0;
+        switch (bytes >> 3) {
+        case 12: __builtin_memcpy(d + 88, &zero, 8); /* fall through */
+        case 11: __builtin_memcpy(d + 80, &zero, 8); /* fall through */
+        case 10: __builtin_memcpy(d + 72, &zero, 8); /* fall through */
+        case 9: __builtin_memcpy(d + 64, &zero, 8); /* fall through */
+        case 8: __builtin_memcpy(d + 56, &zero, 8); /* fall through */
+        case 7: __builtin_memcpy(d + 48, &zero, 8); /* fall through */
+        case 6: __builtin_memcpy(d + 40, &zero, 8); /* fall through */
+        case 5: __builtin_memcpy(d + 32, &zero, 8); /* fall through */
+        case 4: __builtin_memcpy(d + 24, &zero, 8); /* fall through */
+        case 3: __builtin_memcpy(d + 16, &zero, 8); /* fall through */
+        case 2: __builtin_memcpy(d + 8, &zero, 8); /* fall through */
+        case 1: __builtin_memcpy(d + 0, &zero, 8); /* fall through */
+        default: return;
+        }
+    }
+    __builtin_memset(destination, 0, bytes);
+}
+/* Drain only when a death is queued; myl_rc_drain repeats its own admission. */
+static inline void myl_rc_drain_pending(myl_native_heap *heap) {
+    if (heap->rc->dead.head) myl_rc_drain(heap);
+}
+/* Metadata budget: admit checks the limit (marking exhaustion on refusal),
+ * charge/discharge move heap->bytes and the metadata total together. */
+int myl_rc_meta_admit(myl_native_heap *, size_t);
+/* myl_rc_meta_admit's limit test without its exhaustion side effect. */
+static inline int myl_rc_meta_fits(const myl_native_heap *heap, size_t bytes) {
+    return bytes <= SIZE_MAX - heap->bytes && (!heap->limit || heap->bytes + bytes <= heap->limit);
+}
+void myl_rc_meta_charge(myl_native_heap *, size_t);
+void myl_rc_meta_discharge(myl_native_heap *, size_t);
 void *myl_rc_meta_alloc(myl_native_heap *, size_t);
 void myl_rc_meta_free(myl_native_heap *, void *, size_t);
-int myl_rc_size_add(size_t, size_t, size_t *);
-int myl_rc_size_mul(size_t, size_t, size_t *);
+static inline int myl_rc_size_add(size_t a, size_t b, size_t *out) {
+    return !__builtin_add_overflow(a, b, out);
+}
+static inline int myl_rc_size_mul(size_t a, size_t b, size_t *out) {
+    return !__builtin_mul_overflow(a, b, out);
+}
 int myl_rc_is_counted(const void *);
 size_t myl_rc_shape_depth(const myl_native_heap *, const myl_rc_shape *);
+/* Point every metadata map at the empty sentinel / free every map table. */
+void myl_rc_metadata_init(myl_rc_state *);
+void myl_rc_metadata_release(myl_native_heap *);
 /* Private identity hint only; clients must repeat all operation admission. */
 const myl_rc_descriptor *myl_rc_descriptor_repeat(const myl_native_heap *, const myl_native_type *);
 void myl_rc_scopes_close_region(myl_native_heap *, unsigned);
 myl_rc_status myl_rc_scope_extend(myl_rc_scope *, void *boundary, myl_rc_status (*)(myl_rc_scope *, void *));
-void myl_rc_enqueue(myl_native_heap *, myl_rc_object *);
 /* Release one H token and enqueue death without callbacks; caller drains. */
 void myl_rc_hold_edge_release(myl_native_heap *, void *);
 /* Admitted ordinary leaves only, in the authoritative walker's order. Clears

@@ -48,107 +48,117 @@ static unsigned walk(myl_native_heap *heap, unsigned action) {
     }
     return region;
 }
+/* Release every live leaf of one shallow value (see myl_rc_shallow): clear
+ * each edge, then drop its O or H token, enqueueing any death. `unloan`
+ * drops H for every leaf. The caller drains. */
+static void shallow_release(myl_native_heap *heap, const myl_rc_shape *shape, unsigned char *address, int unloan) {
+    myl_rc_shallow leaves;
+    myl_rc_shallow_begin(&leaves, shape, address);
+    size_t offset;
+    myl_rc_shape_kind kind;
+    while (myl_rc_shallow_next(&leaves, &offset, &kind)) {
+        void *payload;
+        memcpy(&payload, address + offset, sizeof payload);
+        memset(address + offset, 0, sizeof payload);
+        if (unloan || kind == MYL_RC_SHAPE_HOLD_POINTER) myl_rc_hold_drop(heap, payload);
+        else myl_rc_owner_drop(heap, payload);
+    }
+}
 unsigned myl_rc_value_region(myl_native_heap *heap, const myl_rc_shape *source, const void *address) {
     myl_rc_invariant(heap && heap->rc && !heap->rc->walk.depth);
-    const myl_rc_shape *shape = myl_rc_shape_resolve(heap, source);
+    const myl_rc_shape *shape = myl_rc_shape_find(heap, source);
     myl_rc_invariant(shape && (!shape->size || address));
+    if (myl_rc_shallow_admits(shape)) {
+        myl_rc_shallow leaves;
+        myl_rc_shallow_begin(&leaves, shape, address);
+        size_t offset;
+        myl_rc_shape_kind kind;
+        unsigned region = 0;
+        while (myl_rc_shallow_next(&leaves, &offset, &kind)) {
+            void *payload;
+            memcpy(&payload, (const unsigned char *)address + offset, sizeof payload);
+            unsigned found = payload ? myl_native_header_region(payload) : 0;
+            if (found > region) region = found;
+        }
+        return region;
+    }
     push(heap, shape, (unsigned char *)address);
     return walk(heap, WALK_REGION);
 }
 void myl_rc_edges_release(myl_native_heap *heap, const myl_rc_shape *source, void *address, size_t count) {
     myl_rc_invariant(heap && heap->rc && !heap->rc->walk.depth);
-    const myl_rc_shape *shape = myl_rc_shape_resolve(heap, source);
+    const myl_rc_shape *shape = myl_rc_shape_find(heap, source);
     myl_rc_invariant(shape != NULL);
     size_t bytes;
     myl_rc_invariant(myl_rc_size_mul(shape->size, count, &bytes));
     myl_rc_invariant(!bytes || address);
     if (shape->kind == MYL_RC_SHAPE_NONE) return;
     unsigned char *cursor = address;
+    int shallow = myl_rc_shallow_admits(shape);
     for (size_t i = 0; i < count; ++i) {
-        push(heap, shape, cursor);
-        walk(heap, WALK_RELEASE);
+        if (shallow) shallow_release(heap, shape, cursor, 0);
+        else {
+            push(heap, shape, cursor);
+            walk(heap, WALK_RELEASE);
+        }
         cursor += shape->size;
     }
 }
 void myl_rc_flat_edges_release(myl_native_heap *heap, const myl_rc_binding *binding, void *address, size_t count) {
     myl_rc_invariant(heap && heap->rc && !heap->rc->walk.depth && binding->flat.count <= MYL_RC_FLAT_LEAVES);
     size_t bytes;
-    myl_rc_invariant(myl_rc_size_mul(binding->descriptor.type->size, count, &bytes) && (!bytes || address));
+    myl_rc_invariant(myl_rc_size_mul(binding->flat.size, count, &bytes) && (!bytes || address));
     if (!binding->flat.count) return;
     unsigned char *cursor = address;
     for (size_t i = 0; i < count; ++i) {
-        for (unsigned j = 0; j < binding->flat.count; ++j) {
-            void *payload;
-            void *edge = cursor + binding->flat.offsets[j];
-            memcpy(&payload, edge, sizeof payload);
-            memset(edge, 0, sizeof payload);
-            myl_rc_edge_release(heap, payload);
-        }
-        cursor += binding->descriptor.type->size;
+        myl_rc_flat_release_one(heap, &binding->flat, cursor);
+        cursor += binding->flat.size;
     }
 }
-/* Drain has already checked the heap/walker and admitted the complete binding.
- * A single allocated element has no extent multiplication or outer loop. Edge
- * release only enqueues, so the binding stays valid through this whole body. */
-static void flat_object_release(myl_native_heap *heap, const myl_rc_flat *flat, unsigned char *address) {
-    for (unsigned i = 0; i < flat->count; ++i) {
-        void *payload;
-        void *edge = address + flat->offsets[i];
-        memcpy(&payload, edge, sizeof payload);
-        memset(edge, 0, sizeof payload);
-        myl_rc_edge_release(heap, payload);
-    }
-}
-typedef struct {
-    const myl_native_type *type;
-    const myl_rc_binding *binding;
-    const myl_rc_batch *generation;
-} drain_cache;
-/* Bindings are immutable batch allocations, not entries in the replaceable
- * hash table. Registration changes the batch head; generic callbacks discard
- * this conservative invocation-local cache before they can reenter. */
-static const myl_rc_binding *drain_binding(myl_native_heap *heap, drain_cache *cache, const myl_native_type *type) {
-    const myl_rc_batch *generation = heap->rc->metadata.batches;
-    if (cache->type == type && cache->generation == generation) return cache->binding;
-    const myl_rc_descriptor *descriptor = myl_rc_descriptor_find(heap, type);
-    myl_rc_invariant(descriptor != NULL);
-    const myl_rc_binding *binding = (const myl_rc_binding *)descriptor;
-    if (binding->flat.count <= MYL_RC_FLAT_LEAVES) *cache = (drain_cache){type, binding, generation};
-    else *cache = (drain_cache){0};
-    return binding;
-}
+/* Bindings are immutable batch allocations published through the binding map
+ * and never replaced. A generic callback may register metadata; the binding is
+ * looked up again after it returns. */
 void myl_rc_drain(myl_native_heap *heap) {
     myl_rc_invariant(heap && heap->rc);
-    if (heap->rc->dead.active || heap->rc->walk.depth) return;
-    heap->rc->dead.active = 1;
-    drain_cache cache = {0};
-    while (heap->rc->dead.head) {
-        myl_rc_object *object = heap->rc->dead.head;
-        heap->rc->dead.head = (myl_rc_object *)object->owners;
+    myl_rc_state *rc = heap->rc;
+    if (!rc->dead.head || rc->dead.active || rc->walk.depth) return;
+    rc->dead.active = 1;
+    /* A type's binding never changes once published, so the previous death's
+     * binding answers a repeated type without a probe. */
+    const myl_native_type *last = NULL;
+    const myl_rc_binding *binding = NULL;
+    while (rc->dead.head) {
+        myl_rc_object *object = rc->dead.head;
+        rc->dead.head = (myl_rc_object *)object->owners;
         void *payload = object + 1;
-        const myl_rc_binding *binding = drain_binding(heap, &cache, object->common.element);
-        const myl_rc_descriptor *descriptor = &binding->descriptor;
+        if (object->common.element != last) {
+            last = object->common.element;
+            binding = myl_rc_binding_find(heap, last);
+            myl_rc_invariant(binding != NULL);
+        }
         size_t count = (size_t)((object->common.mark & MYL_NATIVE_OBJECT_COUNT_BITS) >> MYL_NATIVE_OBJECT_COUNT_SHIFT);
         if (binding->flat.count <= MYL_RC_FLAT_LEAVES) {
             /* Admission excludes every custom hook. No callback can invalidate
              * metadata here; ordered ordinary edges only enqueue more work. */
-            if (count == 1) flat_object_release(heap, &binding->flat, payload);
-            else myl_rc_flat_edges_release(heap, binding, payload, count);
+            if (binding->flat.count) {
+                if (count == 1) myl_rc_flat_release_one(heap, &binding->flat, payload);
+                else myl_rc_flat_edges_release(heap, binding, payload, count);
+            }
         } else {
             /* A unique close hook can inspect its managed context. Run it while
              * child tokens are intact, with no descriptor frame leased. Nested
              * releases only enqueue. Reacquire metadata after a registering hook. */
-            void (*finalize)(myl_native_heap *, void *) = descriptor->finalize;
+            void (*finalize)(myl_native_heap *, void *) = binding->descriptor.finalize;
             if (finalize) finalize(heap, payload);
-            descriptor = myl_rc_descriptor_find(heap, object->common.element);
-            myl_rc_invariant(descriptor && !heap->rc->walk.depth);
-            if (descriptor->edges) descriptor->edges(heap, payload, count);
-            else myl_rc_edges_release(heap, descriptor->shape, payload, count);
+            binding = myl_rc_binding_find(heap, object->common.element);
+            myl_rc_invariant(binding && !rc->walk.depth);
+            if (binding->descriptor.edges) binding->descriptor.edges(heap, payload, count);
+            else myl_rc_edges_release(heap, binding->descriptor.shape, payload, count);
         }
-        myl_rc_invariant(!heap->rc->walk.depth);
-        myl_rc_allocator_retire(heap, payload);
+        myl_rc_invariant(!rc->walk.depth);
+        myl_rc_retire(heap, object);
     }
-    heap->rc->dead.active = 0;
+    rc->dead.active = 0;
 }
 void myl_rc_value_drop(myl_native_heap *heap, myl_rc_slot *slot) {
     myl_rc_invariant(slot && slot->shape && slot->address);
@@ -158,10 +168,13 @@ void myl_rc_value_drop(myl_native_heap *heap, myl_rc_slot *slot) {
 }
 void myl_rc_loan_drop(myl_native_heap *heap, const myl_rc_shape *source, void *address) {
     myl_rc_invariant(heap && heap->rc && !heap->rc->walk.depth);
-    const myl_rc_shape *shape = myl_rc_shape_resolve(heap, source);
+    const myl_rc_shape *shape = myl_rc_shape_find(heap, source);
     myl_rc_invariant(shape && (!shape->size || address));
-    push(heap, shape, address);
-    walk(heap, WALK_UNLOAN);
+    if (myl_rc_shallow_admits(shape)) shallow_release(heap, shape, address, 1);
+    else {
+        push(heap, shape, address);
+        walk(heap, WALK_UNLOAN);
+    }
     memset(address, 0, shape->size);
     myl_rc_drain(heap);
 }
@@ -171,7 +184,7 @@ int myl_rc_native_has_unique(myl_native_heap *heap, const myl_native_type *type)
     myl_rc_invariant(heap && heap->rc && !heap->rc->walk.depth);
     for (;;) {
         if (type->kind == MYL_NATIVE_POINTER && type->collection_kind == 5 && type->element) {
-            const myl_rc_descriptor *body = myl_rc_descriptor_find(heap, type->element);
+            const myl_rc_descriptor *body = myl_rc_descriptor_of(heap, type->element);
             myl_rc_invariant(body != NULL);
             if (body->finalize) { heap->rc->walk.depth = 0; return 1; }
         }
@@ -216,16 +229,29 @@ void myl_rc_value_relocate(myl_rc_slot *destination, myl_rc_slot *source) {
 void myl_rc_value_seed(myl_native_heap *heap, const myl_rc_shape *source_shape,
                         void *destination, const void *source, size_t count) {
     myl_rc_invariant(heap && heap->rc && !heap->rc->walk.depth && destination != source);
-    const myl_rc_shape *shape = myl_rc_shape_resolve(heap, source_shape);
+    const myl_rc_shape *shape = myl_rc_shape_find(heap, source_shape);
     size_t bytes;
     myl_rc_invariant(shape != NULL);
     myl_rc_invariant(myl_rc_size_mul(shape->size, count, &bytes));
+    if (shape->kind == MYL_RC_SHAPE_POINTER || shape->kind == MYL_RC_SHAPE_HOLD_POINTER) {
+        memset(destination, 0, bytes);
+        return;
+    }
     memcpy(destination, source, bytes);
     if (shape->kind == MYL_RC_SHAPE_NONE) return;
     unsigned char *cursor = destination;
+    int shallow = myl_rc_shallow_admits(shape);
     for (size_t i = 0; i < count; ++i) {
-        push(heap, shape, cursor);
-        walk(heap, WALK_CLEAR);
+        if (shallow) {
+            myl_rc_shallow leaves;
+            myl_rc_shallow_begin(&leaves, shape, cursor);
+            size_t offset;
+            myl_rc_shape_kind kind;
+            while (myl_rc_shallow_next(&leaves, &offset, &kind)) memset(cursor + offset, 0, sizeof(void *));
+        } else {
+            push(heap, shape, cursor);
+            walk(heap, WALK_CLEAR);
+        }
         cursor += shape->size;
     }
 }
@@ -236,11 +262,11 @@ void myl_rc_construction_abort(myl_native_heap *heap, void *payload) {
     if (!(header->mark & MYL_NATIVE_OBJECT_ARENA)) { myl_rc_owner_release(heap, payload); return; }
     if (header->mark & MYL_RC_OBJECT_DYING) return;
     header->mark |= MYL_RC_OBJECT_DYING;
-    const myl_rc_descriptor *descriptor = myl_rc_descriptor_find(heap, header->element);
+    const myl_rc_descriptor *descriptor = myl_rc_descriptor_of(heap, header->element);
     myl_rc_invariant(descriptor != NULL);
     size_t count = (header->mark >> MYL_NATIVE_OBJECT_COUNT_SHIFT) & MYL_NATIVE_ARENA_COUNT_MAX;
     if (descriptor->finalize) descriptor->finalize(heap, payload);
-    descriptor = myl_rc_descriptor_find(heap, header->element);
+    descriptor = myl_rc_descriptor_of(heap, header->element);
     if (descriptor->edges) descriptor->edges(heap, payload, count);
     else myl_rc_edges_release(heap, descriptor->shape, payload, count);
     size_t bytes;
