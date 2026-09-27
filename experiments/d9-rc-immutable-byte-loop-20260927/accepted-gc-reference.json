@@ -1,0 +1,728 @@
+{
+  "source_path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/joined-parity-49c6ca07/results.json",
+  "source_sha256": "401948152c09260552b00e91d4953b3b9b902b10d932926b6f31b75ff4b75a98",
+  "samples": {
+    "parity/micro/bytes_scan|qbe": {
+      "checks": {
+        "gc": {
+          "status": 0,
+          "stdout_sha256": "6bad0207281a4d36c465d56f11f4cb248fa0b9c7dedba4591d717f815e861c7a",
+          "stderr": "",
+          "ok": true
+        },
+        "rc": {
+          "status": 0,
+          "stdout_sha256": "6bad0207281a4d36c465d56f11f4cb248fa0b9c7dedba4591d717f815e861c7a",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "runs": {
+        "gc": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-bytes_scan.qbe"
+          ],
+          "env": {
+            "MYLANG_MEMORY_LIMIT": "8G"
+          },
+          "cwd": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/bench/parity/micro"
+        },
+        "rc": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/joined-parity-49c6ca07/bin/parity-micro-bytes_scan.qbe"
+          ],
+          "env": {
+            "MYLANG_MEMORY_LIMIT": "8G"
+          },
+          "cwd": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/bench/parity/micro"
+        }
+      },
+      "observations": {
+        "gc": {
+          "perf": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "2",
+                "perf",
+                "stat",
+                "--no-big-num",
+                "-x,",
+                "-e",
+                "instructions:u,cycles:u",
+                "--",
+                "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-bytes_scan.qbe"
+              ],
+              "status": 0,
+              "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n1503649695,,cpu_core/instructions/u,83305575,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n326431603,,cpu_core/cycles/u,83305575,100.00,,\n",
+              "events": [
+                {
+                  "metric": "instructions",
+                  "event": "cpu_core/instructions/u",
+                  "count": 1503649695,
+                  "enabled_percent": 100.0,
+                  "run_time": "83305575"
+                },
+                {
+                  "metric": "cycles",
+                  "event": "cpu_core/cycles/u",
+                  "count": 326431603,
+                  "enabled_percent": 100.0,
+                  "run_time": "83305575"
+                }
+              ],
+              "ok": true,
+              "instructions": 1503649695
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "2",
+                "perf",
+                "stat",
+                "--no-big-num",
+                "-x,",
+                "-e",
+                "instructions:u,cycles:u",
+                "--",
+                "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-bytes_scan.qbe"
+              ],
+              "status": 0,
+              "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n1503649719,,cpu_core/instructions/u,88277672,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n335260427,,cpu_core/cycles/u,88277672,100.00,,\n",
+              "events": [
+                {
+                  "metric": "instructions",
+                  "event": "cpu_core/instructions/u",
+                  "count": 1503649719,
+                  "enabled_percent": 100.0,
+                  "run_time": "88277672"
+                },
+                {
+                  "metric": "cycles",
+                  "event": "cpu_core/cycles/u",
+                  "count": 335260427,
+                  "enabled_percent": 100.0,
+                  "run_time": "88277672"
+                }
+              ],
+              "ok": true,
+              "instructions": 1503649719
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "2",
+                "perf",
+                "stat",
+                "--no-big-num",
+                "-x,",
+                "-e",
+                "instructions:u,cycles:u",
+                "--",
+                "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-bytes_scan.qbe"
+              ],
+              "status": 0,
+              "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n1503649715,,cpu_core/instructions/u,88918628,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n334798355,,cpu_core/cycles/u,88918628,100.00,,\n",
+              "events": [
+                {
+                  "metric": "instructions",
+                  "event": "cpu_core/instructions/u",
+                  "count": 1503649715,
+                  "enabled_percent": 100.0,
+                  "run_time": "88918628"
+                },
+                {
+                  "metric": "cycles",
+                  "event": "cpu_core/cycles/u",
+                  "count": 334798355,
+                  "enabled_percent": 100.0,
+                  "run_time": "88918628"
+                }
+              ],
+              "ok": true,
+              "instructions": 1503649715
+            }
+          ],
+          "rss": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "2",
+                "/usr/bin/time",
+                "-f",
+                "D9_RSS_KB=%M",
+                "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-bytes_scan.qbe"
+              ],
+              "status": 0,
+              "stderr": "D9_RSS_KB=10940\n",
+              "ok": true,
+              "peak_rss_kb": 10940
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "2",
+                "/usr/bin/time",
+                "-f",
+                "D9_RSS_KB=%M",
+                "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-bytes_scan.qbe"
+              ],
+              "status": 0,
+              "stderr": "D9_RSS_KB=10900\n",
+              "ok": true,
+              "peak_rss_kb": 10900
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "2",
+                "/usr/bin/time",
+                "-f",
+                "D9_RSS_KB=%M",
+                "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-bytes_scan.qbe"
+              ],
+              "status": 0,
+              "stderr": "D9_RSS_KB=10944\n",
+              "ok": true,
+              "peak_rss_kb": 10944
+            }
+          ]
+        },
+        "rc": {
+          "perf": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "2",
+                "perf",
+                "stat",
+                "--no-big-num",
+                "-x,",
+                "-e",
+                "instructions:u,cycles:u",
+                "--",
+                "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/joined-parity-49c6ca07/bin/parity-micro-bytes_scan.qbe"
+              ],
+              "status": 0,
+              "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n5344330103,,cpu_core/instructions/u,270273484,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n956155738,,cpu_core/cycles/u,270273484,100.00,,\n",
+              "events": [
+                {
+                  "metric": "instructions",
+                  "event": "cpu_core/instructions/u",
+                  "count": 5344330103,
+                  "enabled_percent": 100.0,
+                  "run_time": "270273484"
+                },
+                {
+                  "metric": "cycles",
+                  "event": "cpu_core/cycles/u",
+                  "count": 956155738,
+                  "enabled_percent": 100.0,
+                  "run_time": "270273484"
+                }
+              ],
+              "ok": true,
+              "instructions": 5344330103
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "2",
+                "perf",
+                "stat",
+                "--no-big-num",
+                "-x,",
+                "-e",
+                "instructions:u,cycles:u",
+                "--",
+                "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/joined-parity-49c6ca07/bin/parity-micro-bytes_scan.qbe"
+              ],
+              "status": 0,
+              "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n5344330177,,cpu_core/instructions/u,268640039,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n953656046,,cpu_core/cycles/u,268640039,100.00,,\n",
+              "events": [
+                {
+                  "metric": "instructions",
+                  "event": "cpu_core/instructions/u",
+                  "count": 5344330177,
+                  "enabled_percent": 100.0,
+                  "run_time": "268640039"
+                },
+                {
+                  "metric": "cycles",
+                  "event": "cpu_core/cycles/u",
+                  "count": 953656046,
+                  "enabled_percent": 100.0,
+                  "run_time": "268640039"
+                }
+              ],
+              "ok": true,
+              "instructions": 5344330177
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "2",
+                "perf",
+                "stat",
+                "--no-big-num",
+                "-x,",
+                "-e",
+                "instructions:u,cycles:u",
+                "--",
+                "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/joined-parity-49c6ca07/bin/parity-micro-bytes_scan.qbe"
+              ],
+              "status": 0,
+              "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n5344329984,,cpu_core/instructions/u,268774615,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n955632886,,cpu_core/cycles/u,268774615,100.00,,\n",
+              "events": [
+                {
+                  "metric": "instructions",
+                  "event": "cpu_core/instructions/u",
+                  "count": 5344329984,
+                  "enabled_percent": 100.0,
+                  "run_time": "268774615"
+                },
+                {
+                  "metric": "cycles",
+                  "event": "cpu_core/cycles/u",
+                  "count": 955632886,
+                  "enabled_percent": 100.0,
+                  "run_time": "268774615"
+                }
+              ],
+              "ok": true,
+              "instructions": 5344329984
+            }
+          ],
+          "rss": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "2",
+                "/usr/bin/time",
+                "-f",
+                "D9_RSS_KB=%M",
+                "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/joined-parity-49c6ca07/bin/parity-micro-bytes_scan.qbe"
+              ],
+              "status": 0,
+              "stderr": "D9_RSS_KB=10828\n",
+              "ok": true,
+              "peak_rss_kb": 10828
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "2",
+                "/usr/bin/time",
+                "-f",
+                "D9_RSS_KB=%M",
+                "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/joined-parity-49c6ca07/bin/parity-micro-bytes_scan.qbe"
+              ],
+              "status": 0,
+              "stderr": "D9_RSS_KB=10780\n",
+              "ok": true,
+              "peak_rss_kb": 10780
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "2",
+                "/usr/bin/time",
+                "-f",
+                "D9_RSS_KB=%M",
+                "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/joined-parity-49c6ca07/bin/parity-micro-bytes_scan.qbe"
+              ],
+              "status": 0,
+              "stderr": "D9_RSS_KB=10780\n",
+              "ok": true,
+              "peak_rss_kb": 10780
+            }
+          ]
+        }
+      },
+      "medians": {
+        "gc": {
+          "instructions": 1503649715,
+          "rss_kb": 10940
+        },
+        "rc": {
+          "instructions": 5344330103,
+          "rss_kb": 10780
+        }
+      },
+      "instruction_ratio": 3.5542387629821084
+    },
+    "parity/micro/bytes_scan|llvm": {
+      "checks": {
+        "gc": {
+          "status": 0,
+          "stdout_sha256": "6bad0207281a4d36c465d56f11f4cb248fa0b9c7dedba4591d717f815e861c7a",
+          "stderr": "",
+          "ok": true
+        },
+        "rc": {
+          "status": 0,
+          "stdout_sha256": "6bad0207281a4d36c465d56f11f4cb248fa0b9c7dedba4591d717f815e861c7a",
+          "stderr": "",
+          "ok": true
+        }
+      },
+      "runs": {
+        "gc": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-bytes_scan.llvm"
+          ],
+          "env": {
+            "MYLANG_MEMORY_LIMIT": "8G"
+          },
+          "cwd": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/bench/parity/micro"
+        },
+        "rc": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/joined-parity-49c6ca07/bin/parity-micro-bytes_scan.llvm"
+          ],
+          "env": {
+            "MYLANG_MEMORY_LIMIT": "8G"
+          },
+          "cwd": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/bench/parity/micro"
+        }
+      },
+      "observations": {
+        "gc": {
+          "perf": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "2",
+                "perf",
+                "stat",
+                "--no-big-num",
+                "-x,",
+                "-e",
+                "instructions:u,cycles:u",
+                "--",
+                "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-bytes_scan.llvm"
+              ],
+              "status": 0,
+              "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n195529307,,cpu_core/instructions/u,13580367,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n48388796,,cpu_core/cycles/u,13580367,100.00,,\n",
+              "events": [
+                {
+                  "metric": "instructions",
+                  "event": "cpu_core/instructions/u",
+                  "count": 195529307,
+                  "enabled_percent": 100.0,
+                  "run_time": "13580367"
+                },
+                {
+                  "metric": "cycles",
+                  "event": "cpu_core/cycles/u",
+                  "count": 48388796,
+                  "enabled_percent": 100.0,
+                  "run_time": "13580367"
+                }
+              ],
+              "ok": true,
+              "instructions": 195529307
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "2",
+                "perf",
+                "stat",
+                "--no-big-num",
+                "-x,",
+                "-e",
+                "instructions:u,cycles:u",
+                "--",
+                "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-bytes_scan.llvm"
+              ],
+              "status": 0,
+              "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n195529306,,cpu_core/instructions/u,14977939,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n48446190,,cpu_core/cycles/u,14977939,100.00,,\n",
+              "events": [
+                {
+                  "metric": "instructions",
+                  "event": "cpu_core/instructions/u",
+                  "count": 195529306,
+                  "enabled_percent": 100.0,
+                  "run_time": "14977939"
+                },
+                {
+                  "metric": "cycles",
+                  "event": "cpu_core/cycles/u",
+                  "count": 48446190,
+                  "enabled_percent": 100.0,
+                  "run_time": "14977939"
+                }
+              ],
+              "ok": true,
+              "instructions": 195529306
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "2",
+                "perf",
+                "stat",
+                "--no-big-num",
+                "-x,",
+                "-e",
+                "instructions:u,cycles:u",
+                "--",
+                "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-bytes_scan.llvm"
+              ],
+              "status": 0,
+              "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n195529314,,cpu_core/instructions/u,15062238,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n48697772,,cpu_core/cycles/u,15062238,100.00,,\n",
+              "events": [
+                {
+                  "metric": "instructions",
+                  "event": "cpu_core/instructions/u",
+                  "count": 195529314,
+                  "enabled_percent": 100.0,
+                  "run_time": "15062238"
+                },
+                {
+                  "metric": "cycles",
+                  "event": "cpu_core/cycles/u",
+                  "count": 48697772,
+                  "enabled_percent": 100.0,
+                  "run_time": "15062238"
+                }
+              ],
+              "ok": true,
+              "instructions": 195529314
+            }
+          ],
+          "rss": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "2",
+                "/usr/bin/time",
+                "-f",
+                "D9_RSS_KB=%M",
+                "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-bytes_scan.llvm"
+              ],
+              "status": 0,
+              "stderr": "D9_RSS_KB=10908\n",
+              "ok": true,
+              "peak_rss_kb": 10908
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "2",
+                "/usr/bin/time",
+                "-f",
+                "D9_RSS_KB=%M",
+                "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-bytes_scan.llvm"
+              ],
+              "status": 0,
+              "stderr": "D9_RSS_KB=10952\n",
+              "ok": true,
+              "peak_rss_kb": 10952
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "2",
+                "/usr/bin/time",
+                "-f",
+                "D9_RSS_KB=%M",
+                "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-bytes_scan.llvm"
+              ],
+              "status": 0,
+              "stderr": "D9_RSS_KB=10932\n",
+              "ok": true,
+              "peak_rss_kb": 10932
+            }
+          ]
+        },
+        "rc": {
+          "perf": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "2",
+                "perf",
+                "stat",
+                "--no-big-num",
+                "-x,",
+                "-e",
+                "instructions:u,cycles:u",
+                "--",
+                "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/joined-parity-49c6ca07/bin/parity-micro-bytes_scan.llvm"
+              ],
+              "status": 0,
+              "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n2476601373,,cpu_core/instructions/u,123531943,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n429642269,,cpu_core/cycles/u,123531943,100.00,,\n",
+              "events": [
+                {
+                  "metric": "instructions",
+                  "event": "cpu_core/instructions/u",
+                  "count": 2476601373,
+                  "enabled_percent": 100.0,
+                  "run_time": "123531943"
+                },
+                {
+                  "metric": "cycles",
+                  "event": "cpu_core/cycles/u",
+                  "count": 429642269,
+                  "enabled_percent": 100.0,
+                  "run_time": "123531943"
+                }
+              ],
+              "ok": true,
+              "instructions": 2476601373
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "2",
+                "perf",
+                "stat",
+                "--no-big-num",
+                "-x,",
+                "-e",
+                "instructions:u,cycles:u",
+                "--",
+                "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/joined-parity-49c6ca07/bin/parity-micro-bytes_scan.llvm"
+              ],
+              "status": 0,
+              "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n2476601339,,cpu_core/instructions/u,126824589,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n428456449,,cpu_core/cycles/u,126824589,100.00,,\n",
+              "events": [
+                {
+                  "metric": "instructions",
+                  "event": "cpu_core/instructions/u",
+                  "count": 2476601339,
+                  "enabled_percent": 100.0,
+                  "run_time": "126824589"
+                },
+                {
+                  "metric": "cycles",
+                  "event": "cpu_core/cycles/u",
+                  "count": 428456449,
+                  "enabled_percent": 100.0,
+                  "run_time": "126824589"
+                }
+              ],
+              "ok": true,
+              "instructions": 2476601339
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "2",
+                "perf",
+                "stat",
+                "--no-big-num",
+                "-x,",
+                "-e",
+                "instructions:u,cycles:u",
+                "--",
+                "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/joined-parity-49c6ca07/bin/parity-micro-bytes_scan.llvm"
+              ],
+              "status": 0,
+              "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n2476601230,,cpu_core/instructions/u,128538367,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n431234460,,cpu_core/cycles/u,128538367,100.00,,\n",
+              "events": [
+                {
+                  "metric": "instructions",
+                  "event": "cpu_core/instructions/u",
+                  "count": 2476601230,
+                  "enabled_percent": 100.0,
+                  "run_time": "128538367"
+                },
+                {
+                  "metric": "cycles",
+                  "event": "cpu_core/cycles/u",
+                  "count": 431234460,
+                  "enabled_percent": 100.0,
+                  "run_time": "128538367"
+                }
+              ],
+              "ok": true,
+              "instructions": 2476601230
+            }
+          ],
+          "rss": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "2",
+                "/usr/bin/time",
+                "-f",
+                "D9_RSS_KB=%M",
+                "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/joined-parity-49c6ca07/bin/parity-micro-bytes_scan.llvm"
+              ],
+              "status": 0,
+              "stderr": "D9_RSS_KB=10780\n",
+              "ok": true,
+              "peak_rss_kb": 10780
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "2",
+                "/usr/bin/time",
+                "-f",
+                "D9_RSS_KB=%M",
+                "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/joined-parity-49c6ca07/bin/parity-micro-bytes_scan.llvm"
+              ],
+              "status": 0,
+              "stderr": "D9_RSS_KB=10784\n",
+              "ok": true,
+              "peak_rss_kb": 10784
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "2",
+                "/usr/bin/time",
+                "-f",
+                "D9_RSS_KB=%M",
+                "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/joined-parity-49c6ca07/bin/parity-micro-bytes_scan.llvm"
+              ],
+              "status": 0,
+              "stderr": "D9_RSS_KB=10800\n",
+              "ok": true,
+              "peak_rss_kb": 10800
+            }
+          ]
+        }
+      },
+      "medians": {
+        "gc": {
+          "instructions": 195529307,
+          "rss_kb": 10932
+        },
+        "rc": {
+          "instructions": 2476601339,
+          "rss_kb": 10784
+        }
+      },
+      "instruction_ratio": 12.666138785015997
+    }
+  }
+}

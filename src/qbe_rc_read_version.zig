@@ -5,8 +5,9 @@ const bytecode = @import("bytecode.zig");
 const cow = @import("cow_plan.zig");
 const frame = @import("qbe_rc_frame.zig");
 const facts = @import("qbe_loop_facts.zig");
+const bytes = @import("qbe_rc_byte_version.zig");
 /// A fixed bounded owner set; proof construction allocates no scratch arrays.
-pub const Certificate = struct { owners: [8]usize = undefined, count: usize = 0 };
+pub const Certificate = struct { owners: [8]usize = undefined, count: usize = 0, bytes: bytes.Certificate = .{} };
 /// Errors shared by journal metadata and guarded loop emission.
 pub const Error = frame.Error;
 
@@ -21,9 +22,18 @@ pub fn certify(comptime E: type, self: *E, head: usize, back: usize) ?Certificat
     var read = false;
     var budget: usize = 262144;
     for (head..back + 1) |pc| {
+        if (!charge(&budget, 1)) return null;
+        if (code[pc].op != .get_index) continue;
+        const found = bytes.find(E, self, pc, head, &budget) orelse return null;
+        if (result.bytes.count == result.bytes.reads.len or !addOwner(&result, found.owner)) return null;
+        result.bytes.reads[result.bytes.count] = found;
+        result.bytes.count += 1;
+        read = true;
+    }
+    for (head..back + 1) |pc| {
         const stack = self.states[pc] orelse return null;
         if (!charge(&budget, stack.len + rc.plan.locals.edges.len + rc.plan.field_transfers.len + rc.plan.plain_writes.len)) return null;
-        for (stack) |ty| if (!scalar(ty)) return null;
+        for (stack, 0..) |ty, index| if (!scalar(ty) and !result.bytes.borrowed(pc, index)) return null;
         if (!quiet(E, self, pc, &budget)) return null;
         const op = code[pc].op;
         if (op == .buffer_operation) {
@@ -31,13 +41,9 @@ pub fn certify(comptime E: type, self: *E, head: usize, back: usize) ?Certificat
             if (access.kind != .read and access.kind != .length and access.kind != .iteration_check) return null;
             const owner = @backingInt(access.owner);
             if (!concrete(E, self, owner) or !scalar(access.output)) return null;
-            if (std.mem.indexOfScalar(usize, result.owners[0..result.count], owner) == null) {
-                if (result.count == result.owners.len) return null;
-                result.owners[result.count] = owner;
-                result.count += 1;
-            }
+            if (!addOwner(&result, owner)) return null;
             read = read or access.kind == .read;
-        } else if (!allowed(E, self, op)) return null;
+        } else if (!result.bytes.operation(pc) and !allowed(E, self, op)) return null;
     }
     return if (read) result else null;
 }
@@ -56,13 +62,17 @@ pub fn guard(comptime E: type, self: *E, proof: Certificate, head: usize) Error!
         try self.print(" %v{d} =w loaduw %v{d}\n %v{d} =w loaduw %v{d}\n", .{
             live, try frame.guard(E, self, owner), role, try frame.entryField(E, self, owner, 24),
         });
-        try self.print(" %v{d} =w ceqw %v{d}, 2\n %v{d} =w ceqw %v{d}, 8\n %v{d} =w or %v{d}, %v{d}\n", .{
-            ordinary, role, held, role, ready, ordinary, held,
-        });
+        try self.print(" %v{d} =w ceqw %v{d}, 2\n", .{ ordinary, role });
+        if (proof.bytes.owns(owner)) {
+            try self.print(" %v{d} =w copy %v{d}\n", .{ ready, ordinary });
+        } else {
+            try self.print(" %v{d} =w ceqw %v{d}, 8\n %v{d} =w or %v{d}, %v{d}\n", .{ held, role, ready, ordinary, held });
+        }
         try self.print(" %v{d} =w and %v{d}, %v{d}\n jnz %v{d}, @rcreadloop{d}, @oi{d}\n@rcreadloop{d}\n", .{
             ready, ready, live, ready, label, head, label,
         });
     }
+    try bytes.guard(E, self, proof.bytes, head);
 }
 
 /// A copied body may call only cold trap helpers; even old pure drop calls refuse.
@@ -136,7 +146,13 @@ fn allowed(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "op"
 }
 
 fn charge(budget: *usize, cost: usize) bool {
-    if (cost > budget.*) return false;
-    budget.* -= cost;
+    return bytes.charge(budget, cost);
+}
+
+fn addOwner(proof: *Certificate, owner: usize) bool {
+    if (std.mem.indexOfScalar(usize, proof.owners[0..proof.count], owner) != null) return true;
+    if (proof.count == proof.owners.len) return false;
+    proof.owners[proof.count] = owner;
+    proof.count += 1;
     return true;
 }

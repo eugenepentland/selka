@@ -38,6 +38,8 @@ pub const Active = struct {
     /// For a loop with a presized append, the temporaries carrying its list's
     /// length and generation from one iteration to the next.
     appending: ?Appending = null,
+    /// Exact RC read effects admitted only while emitting this guarded copy.
+    read: ?read_version.Certificate = null,
 };
 
 /// The mutable temporaries a presized append advances.
@@ -62,7 +64,7 @@ pub fn Lower(comptime E: type) type {
             @memset(values, null);
             const storages = try self.allocator.alloc(?usize, nodes.len);
             @memset(storages, null);
-            var active: Active = .{ .loop = loop, .values = values, .storages = storages };
+            var active: Active = .{ .loop = loop, .values = values, .storages = storages, .read = read_proof };
             const main = self.output;
             self.output = .init(self.allocator);
             const fused = self.fused;
