@@ -1,8 +1,8 @@
-# D9 WP-4: bounded flat-loan plan (review draft)
+# D9 WP-4: bounded flat-loan plan
 
 This is a separate proposed runtime optimization after plain retain `5237aebc`.
-No implementation is included in this draft. The parent requested review by the
-collections agent before implementation. The aim is to remove generic native
+The collections agent and parent reviewed this proof before implementation and
+found no blocker. Both then independently reviewed the production diff. The aim is to remove generic native
 unique-type, shape, seed and value walkers from small physical loans; semantic
 SHARE/publication, pins, clone history and compiler loan elimination are unchanged.
 
@@ -82,4 +82,5 @@ Proposed implementation ownership is `native_rc_values.c`, the narrow flat-plan
 builder in `native_rc_shapes.c`, the private plan/helper declarations in
 `native_rc_internal.h`, the extracted H decrement/enqueue helper in `native_rc.c`
 and the production loan fixture. No compiler or generic transfer walker edits are
-needed. Peer review and parent agreement are pending.
+needed. Peer review and parent agreement are complete; measured implementation evidence
+is in [the result report](d9-rc-flat-loan-2026-09-27.md).

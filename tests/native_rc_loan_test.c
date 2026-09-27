@@ -4,6 +4,10 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+#include <signal.h>
+#include <sys/resource.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 static const myl_native_type number = {.size=8,.alignment=8,.kind=MYL_NATIVE_PLAIN};
 static const myl_native_type pointer = {.size=8,.alignment=8,.kind=MYL_NATIVE_POINTER};
@@ -171,12 +175,172 @@ static void raw_unique_type_detection(void) {
     const myl_native_type box={.size=8,.alignment=8,.kind=MYL_NATIVE_POINTER,.collection_kind=5,.element=&resource};
     assert(myl_rc_native_has_unique(&heap,&box)); assert(!myl_rc_native_has_unique(&heap,&pair)); finish(&heap);
 }
+/* spec-case: RC-FLAT-LOAN-1. Padding is copied, duplicate leaves acquire distinct
+ * H tokens, and a late limit failure preserves the generic prefix counters. */
+static const myl_native_field padded_fields[]={{.offset=8,.type=&pointer},{.offset=24,.type=&pointer}};
+static const myl_native_type padded={.size=32,.alignment=8,.kind=MYL_NATIVE_RECORD,.fields=padded_fields,.field_count=2};
+static const myl_rc_field padded_edges[]={{.offset=8,.shape=&owned},{.offset=24,.shape=&owned}};
+static const myl_rc_shape padded_shape={.size=32,.kind=MYL_RC_SHAPE_RECORD,.as.record={padded_edges,2}};
+static const myl_rc_descriptor padded_descriptor={.type=&padded,.shape=&padded_shape};
+static void flat_padding_and_duplicate_limit(void) {
+    myl_native_heap heap; start(&heap);
+    assert(myl_rc_descriptor_import(&heap,&padded_descriptor)==MYL_RC_OK);
+    void *value=myl_rc_storage_bytes(&heap,8,0); assert(value);
+    uint64_t source[]={UINT64_C(0x123456789abcdef), (uintptr_t)value, UINT64_C(0xfedcba987654321), (uintptr_t)value};
+    uint64_t loan[4]={0};
+    header(value)->holds=MYL_RC_COUNT_MAX-1;
+#if defined(MYL_NATIVE_RC_COUNTING) && MYL_NATIVE_RC_COUNTING
+    myl_rc_counters before,after; assert(myl_rc_stats_snapshot(&heap,&before));
+#endif
+    assert(!myl_rc_native_loan(&heap,&padded,loan,source));
+    assert(myl_rc_take_failure(&heap)==MYL_RC_COUNT_LIMIT);
+    assert(header(value)->holds==MYL_RC_COUNT_MAX-1 && header(value)->owners==1);
+    assert(!loan[0] && !loan[1] && !loan[2] && !loan[3]);
+#if defined(MYL_NATIVE_RC_COUNTING) && MYL_NATIVE_RC_COUNTING
+    assert(myl_rc_stats_snapshot(&heap,&after));
+    assert(after.events[MYL_RC_STAT_HOLD_ACQUIRE]==before.events[MYL_RC_STAT_HOLD_ACQUIRE]+1);
+    assert(after.events[MYL_RC_STAT_HOLD_RELEASE]==before.events[MYL_RC_STAT_HOLD_RELEASE]+1);
+    assert(after.events[MYL_RC_STAT_HOLD_LIMIT]==before.events[MYL_RC_STAT_HOLD_LIMIT]+1);
+#endif
+    header(value)->holds=0;
+    header(value)->common.mark|=MYL_NATIVE_OBJECT_PINNED;
+    uintptr_t mark=header(value)->common.mark;
+    heap.limit=heap.bytes;
+    assert(myl_rc_native_loan(&heap,&padded,loan,source));
+    assert(!memcmp(source,loan,sizeof source) && header(value)->holds==2 && header(value)->common.mark==mark);
+    myl_rc_owner_release(&heap,value);
+    myl_rc_native_unloan(&heap,&padded,loan);
+    assert(!loan[0] && !loan[1] && !loan[2] && !loan[3]);
+    heap.limit=0; assert(myl_native_region_begin(&heap));
+    void *arena=myl_rc_storage_bytes(&heap,8,1); assert(arena);
+    struct { myl_native_object common; uint64_t value; } literal={.common={.mark=MYL_NATIVE_OBJECT_IMMORTAL},.value=17};
+    source[1]=(uintptr_t)arena; source[3]=(uintptr_t)&literal.value;
+    uintptr_t arena_mark=((myl_native_object *)arena-1)->mark;
+    assert(myl_rc_native_loan(&heap,&padded,loan,source));
+    assert(!memcmp(source,loan,sizeof source) && ((myl_native_object *)arena-1)->mark==arena_mark);
+    myl_rc_native_unloan(&heap,&padded,loan); myl_native_region_end(&heap); finish(&heap);
+}
+static void reject_loan(myl_native_heap *heap, const myl_native_type *type, void *source) {
+    pid_t child=fork(); assert(child>=0);
+    if (!child) {
+        struct rlimit no_core={0,0}; assert(!setrlimit(RLIMIT_CORE,&no_core));
+        uint64_t output[4]={0}; (void)myl_rc_native_loan(heap,type,output,source); _exit(0);
+    }
+    int status=0; assert(waitpid(child,&status,0)==child && WIFSIGNALED(status) && WTERMSIG(status)==SIGABRT);
+}
+/* spec-case: RC-FLAT-LOAN-1. NULL typed boxes still carry unique obligations;
+ * opaque pointers still validate the actual terminal payload descriptor. */
+static void flat_loan_unique_refusals(void) {
+    static const myl_native_type resource={.size=8,.alignment=8,.kind=MYL_NATIVE_RESOURCE};
+    static const myl_rc_shape none={.size=8,.kind=MYL_RC_SHAPE_NONE};
+    static const myl_rc_descriptor body={.type=&resource,.shape=&none,.finalize=myl_rc_finalize_unique};
+    static const myl_native_type box={.size=8,.alignment=8,.kind=MYL_NATIVE_POINTER,.collection_kind=5,.element=&resource};
+    static const myl_rc_descriptor box_descriptor={.type=&box,.shape=&owned};
+    myl_native_heap heap; start(&heap);
+    assert(myl_rc_descriptor_import(&heap,&body)==MYL_RC_OK);
+    assert(myl_rc_descriptor_import(&heap,&box_descriptor)==MYL_RC_OK);
+    void *nil=NULL; reject_loan(&heap,&box,&nil); reject_loan(&heap,&resource,&nil);
+    void *value=myl_native_heap_alloc(&heap,&resource,1); assert(value);
+    reject_loan(&heap,&pointer,&value);
+    myl_rc_owner_release(&heap,value); finish(&heap);
+}
+static uint64_t *flat_callback_loan;
+static unsigned flat_callback_count,flat_callback_order[2];
+static void flat_loan_finalizer(myl_native_heap *heap, void *payload) {
+    for (size_t i=0;i<4;i++) assert(!flat_callback_loan[i]);
+    assert(flat_callback_count<2); flat_callback_order[flat_callback_count++]=(unsigned)*(uint64_t *)payload;
+    static const myl_native_type extra={.size=8,.alignment=8,.kind=MYL_NATIVE_PLAIN};
+    static const myl_rc_shape none={.size=8,.kind=MYL_RC_SHAPE_NONE};
+    static const myl_rc_descriptor descriptor={.type=&extra,.shape=&none};
+    assert(myl_rc_descriptor_import(heap,&descriptor)==MYL_RC_OK);
+    void *temporary=myl_native_heap_alloc(heap,&extra,1); assert(temporary);
+    myl_rc_owner_release(heap,temporary);
+}
+/* spec-case: RC-FLAT-LOAN-1. Both dying siblings must be cleared/enqueued before
+ * LIFO finalization, including callbacks that register and release new objects. */
+static void flat_loan_sibling_callbacks(void) {
+    static const myl_native_type finalized={.size=8,.alignment=8,.kind=MYL_NATIVE_PLAIN};
+    static const myl_rc_shape none={.size=8,.kind=MYL_RC_SHAPE_NONE};
+    static const myl_rc_descriptor descriptor={.type=&finalized,.shape=&none,.finalize=flat_loan_finalizer};
+    myl_native_heap heap; start(&heap);
+    assert(myl_rc_descriptor_import(&heap,&descriptor)==MYL_RC_OK);
+    assert(myl_rc_descriptor_import(&heap,&padded_descriptor)==MYL_RC_OK);
+    void *a=myl_native_heap_alloc(&heap,&pointer,1),*b=myl_native_heap_alloc(&heap,&pointer,1);
+    assert(a && b);
+    *(void **)a=myl_native_heap_alloc(&heap,&finalized,1); *(void **)b=myl_native_heap_alloc(&heap,&finalized,1);
+    assert(*(void **)a && *(void **)b);
+    **(uint64_t **)a=1; **(uint64_t **)b=2;
+    uint64_t source[]={71,(uintptr_t)a,93,(uintptr_t)b},loan[4]={0};
+    assert(myl_rc_native_loan(&heap,&padded,loan,source));
+    myl_rc_owner_release(&heap,a); myl_rc_owner_release(&heap,b);
+    flat_callback_loan=loan; flat_callback_count=0;
+    myl_rc_native_unloan(&heap,&padded,loan);
+    assert(flat_callback_count==2 && flat_callback_order[0]==2 && flat_callback_order[1]==1);
+    flat_callback_loan=NULL; finish(&heap);
+}
+static void **flat_copy_source,**flat_copy_loan;
+static void flat_copy_finalizer(myl_native_heap *heap, void *payload) {
+    (void)heap; (void)payload;
+    assert(flat_copy_loan[0]==flat_copy_source[0] && header(flat_copy_loan[0])->holds==1);
+    flat_copy_source[0]=NULL;
+}
+/* spec-case: RC-FLAT-LOAN-1. Success retains dispose_walk's final drain after
+ * loan acquisition, so a queued source-changing callback sees completed output. */
+static void flat_loan_queued_copy(void) {
+    static const myl_native_type finalized={.size=8,.alignment=8,.kind=MYL_NATIVE_PLAIN};
+    static const myl_rc_shape none={.size=8,.kind=MYL_RC_SHAPE_NONE};
+    static const myl_rc_descriptor descriptor={.type=&finalized,.shape=&none,.finalize=flat_copy_finalizer};
+    myl_native_heap heap; start(&heap);
+    assert(myl_rc_descriptor_import(&heap,&descriptor)==MYL_RC_OK);
+    void *value=myl_rc_storage_bytes(&heap,8,0),*queued=myl_native_heap_alloc(&heap,&finalized,1);
+    assert(value && queued); void *source=value,*loan=NULL;
+    flat_copy_source=&source; flat_copy_loan=&loan;
+    heap.rc->dead.active=1; myl_rc_owner_release(&heap,queued); heap.rc->dead.active=0;
+    assert(myl_rc_native_loan(&heap,&pointer,&loan,&source));
+    assert(!source && loan==value && !heap.rc->dead.head);
+    myl_rc_owner_release(&heap,value); myl_rc_native_unloan(&heap,&pointer,&loan);
+    flat_copy_source=flat_copy_loan=NULL; finish(&heap);
+}
+/* spec-case: RC-FLAT-LOAN-1. Deeper shapes retain transfer-frame allocation and
+ * its refusal; cold metadata and empty values retain their exact output rules. */
+static void flat_loan_depth_and_cold(void) {
+    myl_native_heap heap; start(&heap);
+    myl_native_type types[10]={0}; myl_native_field fields[9]={0};
+    myl_rc_shape shapes[10]={0}; myl_rc_field edges[9]={0};
+    types[9]=pointer; shapes[9]=owned;
+    for (size_t i=9;i>0;i--) {
+        fields[i-1]=(myl_native_field){.type=&types[i]};
+        edges[i-1]=(myl_rc_field){.shape=&shapes[i]};
+        types[i-1]=(myl_native_type){.size=8,.alignment=8,.kind=MYL_NATIVE_RECORD,.fields=&fields[i-1],.field_count=1};
+        shapes[i-1]=(myl_rc_shape){.size=8,.kind=MYL_RC_SHAPE_RECORD,.as.record={&edges[i-1],1}};
+    }
+    const myl_rc_descriptor descriptor={.type=&types[0],.shape=&shapes[0]};
+    assert(myl_rc_descriptor_import(&heap,&descriptor)==MYL_RC_OK);
+    void *source=myl_rc_storage_bytes(&heap,8,0),*loan=(void *)(uintptr_t)123; assert(source);
+    heap.limit=heap.bytes;
+    assert(!myl_rc_native_loan(&heap,&types[0],&loan,&source));
+    assert(!loan && myl_rc_take_failure(&heap)==MYL_RC_ALLOCATION_REFUSED && !header(source)->holds);
+    static const myl_native_type cold={.size=8,.alignment=8,.kind=MYL_NATIVE_PLAIN};
+    loan=(void *)(uintptr_t)123;
+    assert(!myl_rc_native_loan(&heap,&cold,&loan,&source));
+    assert(!loan && myl_rc_take_failure(&heap)==MYL_RC_ALLOCATION_REFUSED);
+    heap.limit=0;
+    assert(myl_rc_native_loan(&heap,&types[0],&loan,&source));
+    myl_rc_native_unloan(&heap,&types[0],&loan); myl_rc_owner_release(&heap,source);
+    static const myl_native_type empty={.alignment=1,.kind=MYL_NATIVE_PLAIN};
+    uint64_t bits=71,other=93;
+    assert(myl_rc_native_loan(&heap,&empty,&other,&bits) && bits==71 && other==93);
+    myl_rc_native_unloan(&heap,&empty,&other); assert(other==93); finish(&heap);
+}
+
 int myl_rc_loan_verify(void) {
     pinned_projection_does_not_publish(); ownerless_loan_survives(); repeated_mixed_leaves();
     late_hold_refusal_rolls_back(); array_and_variant(); arena_loan_closes_before_region(); raw_unique_type_detection();
     flat_body_survives_ownerless_loan(); held_body_loan_uses_generic_drop();
-    return 9;
+    flat_padding_and_duplicate_limit(); flat_loan_unique_refusals(); flat_loan_sibling_callbacks();
+    flat_loan_queued_copy(); flat_loan_depth_and_cold();
+    return 14;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
-int main(void) { assert(myl_rc_loan_verify()==9); puts("native rc loans: 9 passed"); }
+int main(void) { assert(myl_rc_loan_verify()==14); puts("native rc loans: 14 passed"); }
 #endif

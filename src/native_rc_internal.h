@@ -17,7 +17,8 @@ typedef struct {
 #define MYL_RC_FLAT_LEAVES 8
 /* Private plan, never part of emitted metadata. count > the bound means the
  * authoritative shape/native-kind pair requires generic traversal. */
-typedef struct { size_t offsets[MYL_RC_FLAT_LEAVES]; unsigned count; } myl_rc_flat;
+typedef struct { size_t offsets[MYL_RC_FLAT_LEAVES]; unsigned count, loanable; } myl_rc_flat;
+_Static_assert(sizeof(myl_rc_flat) == 72, "loan admission occupies existing amd64 plan padding");
 typedef struct { myl_rc_descriptor descriptor; myl_rc_flat flat; } myl_rc_binding;
 _Static_assert(offsetof(myl_rc_binding, descriptor) == 0, "indexed descriptor is its private binding prefix");
 typedef struct myl_rc_batch {
@@ -63,6 +64,8 @@ size_t myl_rc_shape_depth(const myl_native_heap *, const myl_rc_shape *);
 void myl_rc_scopes_close_region(myl_native_heap *, unsigned);
 myl_rc_status myl_rc_scope_extend(myl_rc_scope *, void *boundary, myl_rc_status (*)(myl_rc_scope *, void *));
 void myl_rc_enqueue(myl_native_heap *, myl_rc_object *);
+/* Release one H token and enqueue death without callbacks; caller drains. */
+void myl_rc_hold_edge_release(myl_native_heap *, void *);
 /* Admitted ordinary leaves only, in the authoritative walker's order. Clears
  * and enqueues each edge without callbacks or allocation; caller drains. */
 void myl_rc_flat_edges_release(myl_native_heap *, const myl_rc_binding *, void *, size_t count);

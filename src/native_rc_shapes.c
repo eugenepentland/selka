@@ -212,11 +212,15 @@ static void flat_build(myl_rc_binding *binding) {
     const myl_rc_descriptor *descriptor = &binding->descriptor;
     myl_rc_flat *flat = &binding->flat;
     flat->count = MYL_RC_FLAT_LEAVES + 1;
+    flat->loanable = 0;
     if (descriptor->edges || descriptor->finalize || descriptor->clone || descriptor->shell || descriptor->next) return;
     flat_frame frames[16] = {{.type = descriptor->type, .shape = descriptor->shape}};
     size_t depth = 1, inspected = 0;
-    unsigned count = 0;
+    unsigned count = 0, loanable = 1;
     while (depth) {
+        /* Root counts as a frame. Stay within the generic loan visitor's
+         * eight local frames; deeper loans retain its allocation/refusal. */
+        if (depth > 8) loanable = 0;
         if (++inspected > 128) return;
         flat_frame *frame = &frames[depth - 1];
         const myl_native_type *type = frame->type;
@@ -229,6 +233,9 @@ static void flat_build(myl_rc_binding *binding) {
             continue;
         }
         if (type->kind == MYL_NATIVE_POINTER) {
+            /* Even NULL boxes can carry a native unique-body obligation.
+             * Refuse every typed box rather than depend on module order. */
+            if (type->collection_kind == 5 && type->element) loanable = 0;
             if (kind != MYL_RC_SHAPE_POINTER || type->size != sizeof(void *) || count == MYL_RC_FLAT_LEAVES) return;
             for (unsigned i = 0; i < count; ++i) {
                 size_t old = flat->offsets[i], next = frame->offset;
@@ -266,6 +273,7 @@ static void flat_build(myl_rc_binding *binding) {
         frames[depth++] = (flat_frame){.type = child, .shape = child_shape, .offset = offset};
     }
     flat->count = count;
+    flat->loanable = loanable;
 }
 /* One reservation keeps all copied metadata addresses stable until teardown. */
 static myl_rc_batch *build_batch(shape_builder *builder, const myl_rc_module *module, int persistent) {
