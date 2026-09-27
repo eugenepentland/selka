@@ -267,16 +267,43 @@ pub const Context = struct {
     fn bufferWritesTree(self: *const Context, pc: usize, write: Write, root: u32, through: ?u32) bool {
         const unique_read = self.marks.path_read[pc] and !self.marks.plain_read[pc];
         if (!write.writes and !unique_read) return false;
-        if (write.owner != root and self.rootOf(write.owner) != root) return false;
+        if (!self.writeDescends(write.owner, root)) return false;
         const path = through orelse return true;
         return !(self.descends(write.owner, path) or self.feedsPath(pc, path));
     }
 
     fn loadWritesTree(self: *const Context, pc: usize, loaded: u32, root: u32, through: ?u32) bool {
         if (!self.marks.unique_load[pc] or self.marks.suppressed[pc]) return false;
-        if (loaded != root and self.rootOf(loaded) != root) return false;
+        if (!self.writeDescends(loaded, root)) return false;
         const path = through orelse return true;
         return !self.feedsPath(pc, path);
+    }
+
+    // A field receiver can own its temporary value while COW writes it back
+    // into its source record. Its owning role must not hide that mutation
+    // from another local's borrow proof. Follow only compiler temporaries
+    // with one known source; named homes and fresh results stop the walk.
+    fn writeDescends(self: *const Context, local: u32, ancestor: u32) bool {
+        var at = local;
+        for (0..self.locals.list.len + 1) |_| {
+            if (at == ancestor) return true;
+            if (self.alias(at)) {
+                at = self.locals.parents[at];
+                if (at == none) return false;
+                continue;
+            }
+            if (!self.temporary(at)) return false;
+            if (self.defs.count[at] != 1) return true;
+            const pc = self.defs.pc[at];
+            if (pc == none) return true;
+            const stack = self.flow.at[pc] orelse return true;
+            if (stack.len == 0) return true;
+            const source = stack[stack.len - 1];
+            if (source.origin != .local) return source.origin != .fresh;
+            at = source.local;
+        }
+        // An unresolved cycle cannot justify eliding a semantic copy.
+        return true;
     }
 
     /// Whether the value instruction `pc` pushes is stored straight into a

@@ -69,7 +69,6 @@ public def test_arena_caller_and_heap_child_keep_their_lifetimes() -> bool:
     return answer == 7 and children == [11]
 
 
-
 def count_for_append(state: mut State) -> int:
     state.count = state.count + 1
     return state.count
@@ -93,10 +92,22 @@ public def test_same_call_snapshot_and_pinned_parent_keep_distinct_scalar_bits()
     return first and state.count == 4 and state.values == [5, 4] and states[0].count == 7 and saved[0].count == 3
 
 
+# spec-case: RC-PLAIN-RECORD-WRITE-1
+public def test_arena_owned_children_keep_real_snapshot_marks() -> bool:
+    with arena():
+        state = State([12], 8, True)
+        saved = state
+        add(mut state, 3)
+        toggled(mut state)
+        state.values.append(14)
+        return state.count == 11 and not state.ready and saved.count == 8 and saved.ready and saved.values == [12] and state.values == [12, 14]
+
+
 def main(out: Stream) -> int:
     out.print(test_saved_record_and_child_snapshots_survive_scalar_publication())
     out.print(test_rhs_observation_and_mutation_complete_before_final_store())
     out.print(test_loop_reuse_and_boolean_width_preserve_siblings())
     out.print(test_arena_caller_and_heap_child_keep_their_lifetimes())
     out.print(test_same_call_snapshot_and_pinned_parent_keep_distinct_scalar_bits())
+    out.print(test_arena_owned_children_keep_real_snapshot_marks())
     return 0

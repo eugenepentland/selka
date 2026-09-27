@@ -1,0 +1,15 @@
+record State:
+    items: list[int]
+    count: int
+
+def change(state: mut State):
+    state.items.append(state.count + 1)
+def main(out: Stream) -> int:
+    items = [7]
+    with arena():
+        state = State(items, 9223372036854775807)
+        saved = state
+        out.print("before")
+        change(mut state)
+        out.print(saved.count)
+    return 0
