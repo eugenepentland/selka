@@ -1,0 +1,22 @@
+def grow(n: int) -> int:
+    values: list[int] = []
+    for index in range(n):
+        values.append(index)
+    return len(values)
+
+def written(n: int) -> int:
+    values = [0]
+    for index in range(n):
+        values[0] = index
+        values.append(index)
+    return len(values) + values[0]
+
+def heap_frame(values: [4096]int, n: int) -> int:
+    padding = replace(values, 0, 7)
+    items: list[int] = []
+    for index in range(n):
+        items.append(index)
+    return len(items) + padding[0]
+
+def main() -> int:
+    return 0

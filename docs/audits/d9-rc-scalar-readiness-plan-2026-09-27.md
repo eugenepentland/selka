@@ -1,10 +1,10 @@
-# Stage 4 scalar-loop readiness reuse: read-only proposal
+# Stage 4 scalar-loop readiness reuse: reviewed proof and implementation
 
-This proposes a bounded compiler change, not an implemented optimization. The
+The bounded compiler implementation follows this reviewed proof. The
 runtime query remains unchanged. A deliberately unchecked private QBE diagnostic
 shows that repeated readiness validation is a material remaining cost even when
-actual RC traffic is nearly absent. Root approved that diagnostic only; production
-implementation requires review of the boundary below.
+actual RC traffic is nearly absent. Root and compiler peers separately reviewed the production boundary below;
+the unchecked diagnostic itself remains evidence of attribution only.
 
 ## Attribution and limit of the evidence
 
@@ -114,8 +114,21 @@ Bounds, arithmetic, logical steps, source locations, trap cleanup and partial
 allocation behavior remain. A small cache word, if emitted, must use the existing
 accounted frame-storage machinery for both stack and heap frames. It may not be
 an unaccounted `alloc` or overlap live operand, pending, scope or journal storage.
-Exact hook/storage choice is a review item, not justification to change the
-ownership-frame ABI or ratchet.
+The implementation finalizes certificates after physical COW refinement,
+then adds exactly eight physical bytes per certificate to frame sizing and
+allocation. The existing whole-frame estimate retains its 2× spill reserve, so
+the wide-frame control reserves 16 additional bytes for that 8-byte slot.
+External entry uses the existing `@ce` routing after hoisted uniqueness; ordinary
+backedges target the instruction label below the reset. Heap frames use offsets
+inside their accounted allocation. No ownership-frame ABI or ratchet changes.
+
+Same-root `.write` deserves an explicit qualification: once the cache is true,
+its actual element binding is registered with `flat.count == 0` and the death
+queue is empty. `native_retain_replace` then takes its no-allocation, no-drain
+memmove/region branch. Before cached admission, an ordinary write may perform
+its original cleanup, but the flag is still invalid. Source-level indexed writes
+with remaining capture/COW hooks conservatively fail the certificate; their
+ordinary behavior remains a negative control.
 
 ## Decisive controls before retention
 

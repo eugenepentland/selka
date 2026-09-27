@@ -1208,8 +1208,10 @@ static int rc_list_insert_at(myl_native_heap *heap, myl_native_list *list, size_
     return ok;
 }
 /* A compiler room append may bypass publication only when that publication
- * cannot register metadata or drain a queued finalizer. Bindings are immutable;
- * this read-only admission is never cached across another operation. */
+ * cannot register metadata or drain a queued finalizer. This query caches no
+ * admission result. A bounded compiler proof may reuse a successful result only
+ * while the header, structural binding and empty queue remain authoritative,
+ * invalidating that result before every slow call. */
 int myl_rc_list_plain_ready(myl_native_heap *heap, const myl_native_list *list) {
     if (!heap || !heap->rc || heap->rc->dead.head || !list || !list->element) return 0;
     const myl_native_type *type=list->element;

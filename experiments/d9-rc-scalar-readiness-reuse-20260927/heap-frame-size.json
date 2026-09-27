@@ -1,0 +1,9 @@
+{
+  "before": 787584,
+  "after": 787600,
+  "added_physical_slot": 8,
+  "added_reservation": 16,
+  "reason": "Unchanged qbe_frame.frameBytes doubles accounted storage for conservative spill reserve",
+  "first_local_before": 98688,
+  "first_local_after": 98696
+}

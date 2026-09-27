@@ -20,7 +20,7 @@ pub fn Lower(comptime E: type) type {
             for (self.function.scope.locals, 0..) |_, index| if (receiverStorage(E, self, index)) {
                 total += 32;
             };
-            return total + alignedBytes(state.pending) + 120;
+            return total + alignedBytes(state.pending) + 120 + state.plan.append_loops.len * 8;
         }
         /// Reserve table, guards and stable operand/pending-value buffers.
         pub fn allocate(self: *E) Error!void {
@@ -34,6 +34,7 @@ pub fn Lower(comptime E: type) type {
             try self.allocateSlot("rcsort", 48);
             try self.allocateSlot("rccall", 32);
             try self.allocateSlot("rcplace", 32);
+            for (state.plan.append_loops, 0..) |_, index| try self.allocateIndex("rcappend", index, 8);
             for (self.function.scope.locals, 0..) |_, index| if (receiverStorage(E, self, index)) {
                 try self.allocateIndex("rcborrow", index, 32);
                 try self.print(" call $memset(l %rcborrow{d}, w 0, l 32)\n", .{index});
