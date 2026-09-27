@@ -15,15 +15,16 @@ The final combined default/borrow gate at `f6bea5d9` passes all four steps:
 2,130 executed main tests, 429 QBE tests, native-build and formatting.
 WP-4's compiler, runtime, collection, arena and host ownership paths are implemented
 behind an experimental runtime selector. The latest fully green checkpoint at
-`636524b8` passes 2,305 main tests, 440 QBE tests, native build and formatting.
-Both uncached RC sweeps pass **916/916 assertions across 157 programs**, with
+`468bd8e5` passes 2,315 main tests, 440 QBE tests, native build and formatting.
+Both uncached RC sweeps pass **931/931 assertions across 160 programs**, with
 zero failures, skips, cached verdicts, dropped files or unloaded files. The
-[joined checkpoint](d9-rc-flat-borrow-loops-gate-2026-09-27.md) includes corrected
+[joined checkpoint](d9-rc-append-compose-scalar-gate-2026-09-27.md) includes corrected
 module callable resolution, argv ownership, empty-local journals and certified
 fresh returns, omitted empty receiver storage, direct plain scalar writes,
 empty-frame linkage omission, complete fresh constructors, closed field transfer,
 plain retain, immediate scalar field borrowing, physically fresh loop roots,
-bounded physical loans and borrowed returns through read-only loops.
+bounded physical loans, borrowed returns through read-only loops and helper
+composition, scalar appends with spare capacity, and ownership-free numeric loops.
 Historical untagged native manifests now explicitly remain GC independently of
 the future process default.
 Earlier augmented-field and iterator failures remain preserved
@@ -67,10 +68,13 @@ improve substantially, but a separate combined four-program comparison still
 shows instruction ratios above the limits. The complete 43-program sweep runs
 against immutable predecessor `e926d1e1`; it has finished parity, schematic
 and both Lox binary-tree rows, with correct outputs and large remaining overhead.
-Flat lifetime holds `c0a5904a` and borrowed loop returns `3b867d50` now pass the
-joined full gate. The next candidates target capacity-sufficient plain appends,
-anchored borrowed helper composition, and ownership-free integer loop versions.
-Each preserves its existing callback, trap and refusal behavior.
+Flat lifetime holds `c0a5904a`, borrowed loop returns `3b867d50`, plain appends
+`3bc671b7`, anchored helper composition `b2a251c3` and numeric loops `280ef314`
+now pass the joined full gate. Exact predecessor diagnostics still show Lox
+binary trees at 117.54× QBE and 207.36× LLVM against accepted GC. The next
+candidates address broad inline record publication, conservative lifetime-hold
+propagation and bounded physical retain traversal. Each preserves its existing
+callback, trap and refusal behavior.
 The complete RC instruction/RSS acceptance remains open, followed by the
 ordinary runtime default transition, documentation and final combined validation.
 GC stays the default.
@@ -110,7 +114,7 @@ for every accepted package above.
 
 | Work | Branch/worktree | Remaining acceptance |
 |---|---|---|
-| WP-4 reference counting | `codex/d9-rc-integration`; frozen full gate `636524b8`, both RC sweeps 916/916; historical golden replay complete | Validate further performance refinements; pass complete RC instruction/RSS acceptance including rewritten graph programs; transition the ordinary default to RC and update docs; rerun the final joined gate. GC remains default until acceptance |
+| WP-4 reference counting | `codex/d9-rc-integration`; frozen full gate `468bd8e5`, both RC sweeps 931/931; historical golden replay complete | Validate further performance refinements; pass complete RC instruction/RSS acceptance including rewritten graph programs; transition the ordinary default to RC and update docs; rerun the final joined gate. GC remains default until acceptance |
 | WP-5 concurrency | Design committed in `df482879`; [proposal](d9-wp5-concurrency-design-2026-09-26.md) | Resolve the documented Weft-source provenance gap and remaining design decisions; implement and validate after WP-4 acceptance |
 
 The plan's literal “on main” scheduling dependencies are being supplied by validated
