@@ -102,7 +102,7 @@ fn lifetime(comptime E: type, self: *E, proof: model.Certificate, entry: Entry, 
 fn quiet(comptime E: type, self: *E, proof: model.Certificate, pc: usize, budget: *Budget) bool {
     const plan = self.cow.?.rc.?.plan;
     // Charge every metadata row inspected by the shared veto and this scan.
-    if (!budget.take(plan.field_transfers.len + plan.plain_writes.len + 1)) return false;
+    if (!budget.take(plan.records.transfers.len + plan.records.writes.len + 1)) return false;
     if (!effects.quiet(E, self, proof, pc)) return false;
     return releasesQuiet(plan.locals.edges, proof, pc, budget);
 }

@@ -10,13 +10,18 @@ const journal = @import("qbe_rc_journal.zig");
 
 /// A stack position's stable owned-value storage; its type can change at joins.
 pub const Operand = journal.Operand;
+/// Independent record emission certificates; none changes journal storage.
+pub const Records = struct {
+    transfers: []const @import("rc_field_transfer.zig").Certificate = &.{},
+    writes: []const @import("rc_plain_record_write.zig").Certificate = &.{},
+    reads: []@import("rc_record_read.zig").Certificate = &.{},
+};
 /// Semantic obligations paired with independent emission-only journal indices.
 pub const EmissionPlan = struct {
     locals: plan.Plan,
     journal: journal.Layout,
-    field_transfers: []const @import("rc_field_transfer.zig").Certificate = &.{},
+    records: Records = .{},
     dictionary_tails: []const @import("rc_dictionary_tail.zig").Certificate = &.{},
-    plain_writes: []const @import("rc_plain_record_write.zig").Certificate = &.{},
     append_loops: []const @import("rc_append_loop.zig").Certificate = &.{},
 };
 /// Final immutable plan and reusable lowering scratch, owned by the function arena.
@@ -65,9 +70,10 @@ pub fn build(comptime E: type, self: *E, capacity: usize) Error!*State {
     };
     state.plan.dictionary_tails = &.{};
     state.plan.append_loops = &.{};
+    state.plan.records = .{};
     state.plan.journal = try journal.build(a, state.plan.locals.storage, state.operands);
-    state.plan.field_transfers = try @import("rc_field_transfer.zig").build(E, self, &state.catalog);
-    state.plan.plain_writes = try @import("rc_plain_record_write.zig").build(E, self, &state.catalog, state.plan.locals);
+    state.plan.records.transfers = try @import("rc_field_transfer.zig").build(E, self, &state.catalog);
+    state.plan.records.writes = try @import("rc_plain_record_write.zig").build(E, self, &state.catalog, state.plan.locals);
     return state;
 }
 

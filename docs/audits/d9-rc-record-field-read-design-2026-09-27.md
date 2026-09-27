@@ -1,6 +1,6 @@
 # D9: retained named-record field reads
 
-Status: measured attribution and proposed bounded proof. No production change.
+Status: approved named-home prototype implemented and measured; Stage 4 acceptance remains open.
 Scope is Stage 4 performance acceptance; no default transition or WP-5 work.
 
 ## Current evidence
@@ -93,7 +93,8 @@ text construction, managed elements, nested collection reads or boxed paths.
 The field result must go immediately to one private compiler receiver. Require
 exact stack types and empty stack before the root load and after that store.
 
-For the capture, prove exactly one reachable STORE in the entire function, no
+For the capture, prove exactly one static STORE in the entire function (refusing
+every other writer even in a currently unreachable block), no
 parameter/pattern/ref/move/publication/alias/place/inout writer, and no other
 physical spelling through `moves.resolve`. Every use must be a checked read or
 length inside the closed interval; the scalar result is copied before it ends.
@@ -203,3 +204,95 @@ After peer review, implement the named-home-only certificate and exact field/sto
 hooks, then compare unchanged N10 and non-target controls against these immutable
 receipts. No speedup is claimed before that experiment. Caller-storage field reads
 such as `read_byte(mut frame)` remain a separate possible follow-up.
+
+
+## Implemented boundary and isolated result
+
+The late `qbe_rc_record_read_plan` pass builds the certificate after physical
+ownership, COW, dictionary and empty-journal facts settle. It reuses
+`rc_record_home` without widening that authority. The compiler keeps every
+journal slot and frame allocation. `EmissionPlan.records` groups independent
+transfer, write and read certificates; this is compiler-only metadata, not a
+runtime or journal ABI change. The existing final-text call predicate moved to
+`qbe_rc_closed_text` to keep imports acyclic; `read_version.quietCopy` is unchanged.
+
+The whole interval lowers using an Emitter value copy and private output and
+scratch buffers. It copies mutable COW captures, by-reference flags, certificate
+activation, native layout/state arrays (at most 4096 entries), native builtin-hash
+state and RC shape memo entries. Catalogs contain no mutable map internals.
+Existing completed layout field slices and source/ownership/frame plans are
+shared read-only; the admitted operations never mutate them. Any newly resolved
+trial layout fields are freed separately. All instruction/frame/aggregate storage
+was already declared before lowering. There are no new auxiliary declarations.
+An active version/original/fused context refuses. Rejection discards every trial
+scalar and memo write, including pc, serial, fused/check/root flags. Success copies
+only complete text and the final serial counter. Subsequent ordinary lowering
+starts with its original scratch and plans and assigns its own pc normally.
+Both joins and all original position/step/failure blocks remain in the copied text.
+
+Only exact active GET_FIELD projections, the sole capture STORE and that empty
+capture's actual early-release edge change. The scalar value is read before the
+interval ends. Whole-function writer checks include unreachable explicit stores,
+pattern/ref/move/load uses, implicit COW publications and aliases. Forward branches
+must stay inside, and all outside entries must reach the start. Static budgets
+and actual emitted non-failure calls refuse rather than partially enabling a path.
+The admitted current VM interval remains PC 22..39: one marker, 50→48 native-loan
+calls. Thirteen caller-storage field-read pairs remain outside this proof.
+
+Full unchanged Lox N10, interleaved median-three on CPU3, immutable Debug compilers:
+
+| Backend | Before instructions | After instructions | After / before | After / accepted GC |
+|---|---:|---:|---:|---:|
+| QBE | 170,218,083,305 | 154,804,551,022 | 0.909448 | 21.372315 |
+| LLVM O3/full LTO | 128,350,769,417 | 118,368,631,962 | 0.922228 | 34.478071 |
+
+Every one of the 12 raw hardware observations ran at 100%, with the exact expected
+output. These are isolated before/after results against 49c, not a measurement of
+later joined branches. Accepted-GC denominators are archival completed rows of
+the original corpus, not fresh interleaved GC measurements. All samples remain.
+Both backends reduce H pairs 184,812,386→160,905,294. Every other counter is exact:
+44,407,747 O acquires, 48,758,355 releases, 4,350,608 allocations/retirements,
+1,095,889 clone shells and 20,836,904 uniqueness checks. No limit or saturation.
+The large remaining GC ratios explicitly fail Stage 4 performance acceptance.
+
+The implementation archive is
+`experiments/d9-rc-record-field-read-implementation-20260927/`; its live verifier
+checks compilers, inputs, binaries, raw events, counts, original controls and
+emitted spans. The original attribution archive remains unchanged.
+
+## Validation and limitations
+
+The measured candidate passed 208/208 focused RC checks; the corrected proof
+passes 209/209, including six new proof/emission tests;
+Guardian 88 passed on install, with no ratchet change. Actual QBE/LLVM RC before
+and after, plus after-GC stress, execute the dedicated guest controls. The
+floating-index source passes through ordinary runtime float helpers; both its
+accounted and unaccounted complete body remain byte-identical across compilers.
+The callback fallback body also remains byte-identical. Successful intervals
+followed by ordinary constructors/writes and a real heap frame execute correctly.
+
+There are 26 matched embedding pairs across backends, preserving value, status,
+source line and allocator-hook count: normal entry, active-drain queued sibling,
+successful/refused callback metadata registration, parent/nested regions,
+physical/logical frame limits, allocation/budget refusal, steps, bounds and
+post-read overflow. All 56 embedding runs balance owned/H events and allocations.
+A distinct near-H-limit pair intentionally differs: the original temporary loan
+traps at the field read, while the certified no-H path returns the scalar. Its
+root ownership and final cleanup still balance. This is the explicit temporary
+admission removal described above, not claimed count-limit exception equivalence.
+
+Two preliminary harness assumptions are preserved as negative evidence. A tiny
+leaf does not perform its own native-floor check, so that probe was replaced
+with an actual heap-frame reader. A zero configured frame budget is invalid,
+so the logical-depth probe now sets an already active depth under a valid budget.
+Neither observation was a runtime regression, and neither is counted as proof
+of the corrected controls.
+
+The final review correction charges every scalar stack entry before its type
+walk and preserves OutOfMemory through optional field and scalar metadata
+queries. Exhaustion declines before any stack metadata work. The measured
+compiler remains immutable. A separately identified corrected Debug compiler
+produces byte-identical production/counted N10 and control binaries, with exact
+re-executed control outputs/counters and accounted/unaccounted emission. The
+archive records this source correction and identity chain separately; hardware
+samples continue to identify the original measured executables.

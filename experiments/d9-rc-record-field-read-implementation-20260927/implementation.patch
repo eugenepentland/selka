@@ -1,0 +1,896 @@
+diff --git a/SPEC.md b/SPEC.md
+index e6202cf7..3169bf1b 100644
+--- a/SPEC.md
++++ b/SPEC.md
+@@ -1462,3 +1462,5 @@ host failure in one worker leaves the units the other workers hold running.
+ - [RC-DICTIONARY-LOOP-1] A direct fresh empty dictionary may reuse one real loop-entry uniqueness check only with a bounded whole-root lifetime and CFG proof composed with an anchored immutable key tail. Preserve owner journals, original body site metadata, terminal write/growth/refusal behavior and loop-version eligibility. Shared or uncertain entries, snapshots, rebinding, calls, retained views, arena transitions and interior entries retain per-write uniqueness.
+ 
+ - [RC-READ-LIST-VERSION-1] A bounded read-only scalar-list loop may reuse the existing guarded range/storage version only with initialized ordinary O or terminal H journal anchors and no mutation, callback, ownership cleanup, capture or arena transition; refusal retains the checked original loop, step accounting remains unversioned, and trap cleanup retains the original tokens.
++
++- [RC-RECORD-FIELD-READ-1] A bounded closed scalar-list field read may borrow from a proved initialized private named record home. Prove every explicit and implicit capture writer, incoming CFG edge and physical ownership effect; retain frame storage and mandatory step, bounds, arithmetic and arena failures. Unknown homes, aliases, callbacks, managed results and non-failure emitted calls retain complete ordinary publication. Temporary loan counts and their implementation-only hold-limit admission may disappear; all retained owners and their limits remain unchanged.
+diff --git a/src/qbe.zig b/src/qbe.zig
+index fff6b756..e949195c 100644
+--- a/src/qbe.zig
++++ b/src/qbe.zig
+@@ -1663,6 +1663,7 @@ const Emitter = struct {
+         if (runtime_mode.enabled()) try @import("qbe_rc_dictionary_loop.zig").finalize(Emitter, self);
+         if (runtime_mode.enabled()) try @import("qbe_rc_empty_locals.zig").finalize(Emitter, self);
+         if (runtime_mode.enabled()) try @import("qbe_rc_empty_frame.zig").finalize(Emitter, self);
++        if (runtime_mode.enabled()) try @import("qbe_rc_record_read_plan.zig").finalize(Emitter, self);
+         try self.findRoots();
+         if (self.needsRootProtocol()) self.live_roots = try self.rootLiveness();
+         const capacity = ir.stack_capacity;
+@@ -2113,7 +2114,8 @@ const Emitter = struct {
+         };
+     }
+     fn emitInstructions(self: *Emitter) GenerateError!void {
+-        for (0..self.function.scope.instructions.len) |pc| {
++        var pc: usize = 0;
++        while (pc < self.function.scope.instructions.len) : (pc += 1) {
+             if (self.states[pc] == null) continue;
+             // COW-HOIST-1: the checks a loop's entry edges run come first.
+             try cow_lower.Lower(Emitter).entry(self, pc);
+@@ -2122,6 +2124,10 @@ const Emitter = struct {
+             if (self.loop_plan.at(pc)) |loop| {
+                 if (try loop_version.Lower(Emitter).emit(self, loop)) self.original = loop;
+             }
++            if (try @import("qbe_rc_record_read.zig").emit(Emitter, self, pc)) |end| {
++                pc = end;
++                continue;
++            }
+             try self.emitAt(pc);
+             if (self.original) |loop| if (pc == loop.back) {
+                 self.original = null;
+diff --git a/src/qbe_rc_append_loop.zig b/src/qbe_rc_append_loop.zig
+index 1e9e623d..b55d371b 100644
+--- a/src/qbe_rc_append_loop.zig
++++ b/src/qbe_rc_append_loop.zig
+@@ -72,7 +72,7 @@ fn quiet(comptime E: type, self: *E, proof: Certificate) Error!bool {
+         if (site.unique.len != 0 or site.unique_field != null or site.capture or site.fill) return false;
+         if (site.shares.len != 0 or site.read_captures.len != 0) return false;
+         if (state.captures[pc].begin != cow.none or state.captures[pc].active != cow.none) return false;
+-        for (state.rc.?.plan.field_transfers) |transfer| if (transfer.projection == pc or transfer.commit == pc) return false;
++        for (state.rc.?.plan.records.transfers) |transfer| if (transfer.projection == pc or transfer.commit == pc) return false;
+         for (state.rc.?.plan.locals.edges) |edge| {
+             if (edge.from != pc) continue;
+             for (edge.releases) |release| if (try edges.releasesAt(E, self, pc, @backingInt(release.storage))) return false;
+diff --git a/src/qbe_rc_closed_text.zig b/src/qbe_rc_closed_text.zig
+new file mode 100644
+index 00000000..fae31b58
+--- /dev/null
++++ b/src/qbe_rc_closed_text.zig
+@@ -0,0 +1,13 @@
++//! Final emitted-call veto shared by closed ownership-borrow certificates.
++const std = @import("std");
++/// Only cold failing calls may cross a proved raw-borrow interval.
++pub fn quietCopy(text: []const u8) bool {
++    if (text.len > 1024 * 1024) return false;
++    var lines = std.mem.splitScalar(u8, text, '\n');
++    while (lines.next()) |line| {
++        if (std.mem.indexOf(u8, line, "call %") != null) return false;
++        const at = std.mem.indexOf(u8, line, "call $") orelse continue;
++        if (!std.mem.startsWith(u8, line[at..], "call $myl_qbe_fail_")) return false;
++    }
++    return true;
++}
+diff --git a/src/qbe_rc_dictionary_effects.zig b/src/qbe_rc_dictionary_effects.zig
+index d74d2cd3..38e37b05 100644
+--- a/src/qbe_rc_dictionary_effects.zig
++++ b/src/qbe_rc_dictionary_effects.zig
+@@ -18,8 +18,8 @@ pub fn quiet(comptime E: type, self: *E, proof: model.Certificate, pc: usize) bo
+ /// Separate lowering certificates may redirect a store or projection.
+ pub fn intercepted(comptime E: type, self: *E, pc: usize) bool {
+     const plan = self.cow.?.rc.?.plan;
+-    for (plan.field_transfers) |transfer| if (transfer.projection == pc or transfer.commit == pc) return true;
+-    for (plan.plain_writes) |write| if (pc >= write.start and pc < write.start + 8) return true;
++    for (plan.records.transfers) |transfer| if (transfer.projection == pc or transfer.commit == pc) return true;
++    for (plan.records.writes) |write| if (pc >= write.start and pc < write.start + 8) return true;
+     return false;
+ }
+ 
+diff --git a/src/qbe_rc_dictionary_loop.zig b/src/qbe_rc_dictionary_loop.zig
+index 6162485c..669ebcdb 100644
+--- a/src/qbe_rc_dictionary_loop.zig
++++ b/src/qbe_rc_dictionary_loop.zig
+@@ -102,7 +102,7 @@ fn lifetime(comptime E: type, self: *E, proof: model.Certificate, entry: Entry,
+ fn quiet(comptime E: type, self: *E, proof: model.Certificate, pc: usize, budget: *Budget) bool {
+     const plan = self.cow.?.rc.?.plan;
+     // Charge every metadata row inspected by the shared veto and this scan.
+-    if (!budget.take(plan.field_transfers.len + plan.plain_writes.len + 1)) return false;
++    if (!budget.take(plan.records.transfers.len + plan.records.writes.len + 1)) return false;
+     if (!effects.quiet(E, self, proof, pc)) return false;
+     return releasesQuiet(plan.locals.edges, proof, pc, budget);
+ }
+diff --git a/src/qbe_rc_edges.zig b/src/qbe_rc_edges.zig
+index a9ccdfce..2a8b21b4 100644
+--- a/src/qbe_rc_edges.zig
++++ b/src/qbe_rc_edges.zig
+@@ -40,6 +40,7 @@ pub fn releasesAt(comptime E: type, self: *E, pc: usize, index: usize) Error!boo
+ }
+ 
+ fn eligible(comptime E: type, self: *E, pc: usize, index: usize) Error!bool {
++    if (@import("qbe_rc_record_read.zig").empty(E, self, index)) return false;
+     if (index < self.function.signature.parameter_count) return false;
+     const local = self.function.scope.locals[index];
+     if (!local.usage.temporary or self.byReference(index) or self.callerStorage(index)) return false;
+diff --git a/src/qbe_rc_field_transfer.zig b/src/qbe_rc_field_transfer.zig
+index e4ce543b..9c0a72ad 100644
+--- a/src/qbe_rc_field_transfer.zig
++++ b/src/qbe_rc_field_transfer.zig
+@@ -8,7 +8,7 @@ pub const Error = values.Error;
+ /// Clearing its owning field and publishing the same token cannot call or trap.
+ pub fn project(comptime E: type, self: *E) Error!bool {
+     const state = frame.get(E, self) orelse return false;
+-    for (state.plan.field_transfers) |proof| {
++    for (state.plan.records.transfers) |proof| {
+         if (proof.projection != self.pc) continue;
+         const member = try self.field(self.function.scope.locals[proof.source.local].ty, proof.source.field);
+         const root = try self.load("l", proof.source.local);
+@@ -29,7 +29,7 @@ pub fn project(comptime E: type, self: *E) Error!bool {
+ /// Failed preparation never reaches this point and leaves its existing guard live.
+ pub fn committed(comptime E: type, self: *E) Error!void {
+     const state = frame.get(E, self) orelse return;
+-    for (state.plan.field_transfers) |proof| {
++    for (state.plan.records.transfers) |proof| {
+         if (proof.commit == self.pc) try frame.drop(E, self, proof.target);
+     }
+ }
+diff --git a/src/qbe_rc_locals.zig b/src/qbe_rc_locals.zig
+index e01b09e5..55548df1 100644
+--- a/src/qbe_rc_locals.zig
++++ b/src/qbe_rc_locals.zig
+@@ -62,6 +62,7 @@ fn ordinary(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "op
+ }
+ 
+ fn store(comptime E: type, self: *E, index: usize, operand: usize) Error!void {
++    if (try @import("qbe_rc_record_read.zig").store(E, self, index, operand)) return;
+     if (try @import("qbe_rc_read_loans.zig").store(E, self, index, operand)) return;
+     const ty = self.function.scope.locals[index].ty;
+     if (@import("qbe_rc_unique.zig").receiverParent(E, self, index)) |parent| {
+diff --git a/src/qbe_rc_nonheld_capture.zig b/src/qbe_rc_nonheld_capture.zig
+index 79029c70..05e2b708 100644
+--- a/src/qbe_rc_nonheld_capture.zig
++++ b/src/qbe_rc_nonheld_capture.zig
+@@ -34,7 +34,7 @@ pub fn ordinaryInput(comptime E: type, self: *E, target: usize, at: usize) bool
+     for (at - 1..at + 1) |pc| {
+         const site = plan.at(pc);
+         if (site.read_captures.len != 0 or site.shares.len != 0) return false;
+-        for (state.plan.field_transfers) |transfer| if (transfer.projection == pc or transfer.commit == pc) return false;
++        for (state.plan.records.transfers) |transfer| if (transfer.projection == pc or transfer.commit == pc) return false;
+     }
+     const definition = sourceStore(E, self, source, target, at) orelse return false;
+     for (code, 0..) |instruction, pc| if (encloses(instruction.op, pc, definition)) return false;
+diff --git a/src/qbe_rc_ops.zig b/src/qbe_rc_ops.zig
+index 6526f1a0..10fe0a94 100644
+--- a/src/qbe_rc_ops.zig
++++ b/src/qbe_rc_ops.zig
+@@ -10,6 +10,7 @@ pub const Error = values.Error;
+ /// Branch payloads and local transfers publish at their explicit commit sites.
+ pub fn after(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "op"), stack: []const typed.Type) Error!void {
+     if (frame.get(E, self) == null or @import("qbe_rc_borrow.zig").active(E, self)) return;
++    if (op == .get_field and @import("qbe_rc_record_read.zig").projection(E, self)) return;
+     if (op == .get_field and try @import("qbe_rc_field_transfer.zig").project(E, self)) return;
+     if (op == .store_local) try @import("qbe_rc_field_transfer.zig").committed(E, self);
+     if (try @import("qbe_rc_views.zig").after(E, self, op, stack)) return;
+diff --git a/src/qbe_rc_plain_record_write.zig b/src/qbe_rc_plain_record_write.zig
+index 6c9dfc6f..0f89d497 100644
+--- a/src/qbe_rc_plain_record_write.zig
++++ b/src/qbe_rc_plain_record_write.zig
+@@ -9,7 +9,7 @@ pub const Error = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
+ pub fn local(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "op"), stack: []const typed.Type) Error!bool {
+     if (op != .load_local and op != .store_local) return false;
+     const state = frame.get(E, self) orelse return false;
+-    for (state.plan.plain_writes) |proof| {
++    for (state.plan.records.writes) |proof| {
+         if (self.pc == proof.start + 1 or self.pc == proof.start + 3) return true;
+         if (self.pc == proof.start + 4) {
+             try self.store(stack.len, try address(E, self, proof));
+@@ -29,7 +29,7 @@ pub fn local(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "o
+ /// Delay the scalar write until STORE_LOCAL, preserving an intervening step trap.
+ pub fn update(comptime E: type, self: *E, height: usize) Error!bool {
+     const state = frame.get(E, self) orelse return false;
+-    for (state.plan.plain_writes) |proof| if (self.pc == proof.start + 6) {
++    for (state.plan.records.writes) |proof| if (self.pc == proof.start + 6) {
+         try self.store(height - 2, try address(E, self, proof));
+         return true;
+     };
+diff --git a/src/qbe_rc_read_version.zig b/src/qbe_rc_read_version.zig
+index 20dfcf2e..a57ebff4 100644
+--- a/src/qbe_rc_read_version.zig
++++ b/src/qbe_rc_read_version.zig
+@@ -22,7 +22,7 @@ pub fn certify(comptime E: type, self: *E, head: usize, back: usize) ?Certificat
+     var budget: usize = 262144;
+     for (head..back + 1) |pc| {
+         const stack = self.states[pc] orelse return null;
+-        if (!charge(&budget, stack.len + rc.plan.locals.edges.len + rc.plan.field_transfers.len + rc.plan.plain_writes.len)) return null;
++        if (!charge(&budget, stack.len + rc.plan.locals.edges.len + rc.plan.records.transfers.len + rc.plan.records.writes.len)) return null;
+         for (stack) |ty| if (!scalar(ty)) return null;
+         if (!quiet(E, self, pc, &budget)) return null;
+         const op = code[pc].op;
+@@ -67,16 +67,7 @@ pub fn guard(comptime E: type, self: *E, proof: Certificate, head: usize) Error!
+ 
+ /// A copied body may call only cold trap helpers; even old pure drop calls refuse.
+ /// Bound generated-text scanning independently of the source-instruction budget.
+-pub fn quietCopy(text: []const u8) bool {
+-    if (text.len > 1024 * 1024) return false;
+-    var lines = std.mem.splitScalar(u8, text, '\n');
+-    while (lines.next()) |line| {
+-        if (std.mem.indexOf(u8, line, "call %") != null) return false;
+-        const at = std.mem.indexOf(u8, line, "call $") orelse continue;
+-        if (!std.mem.startsWith(u8, line[at..], "call $myl_qbe_fail_")) return false;
+-    }
+-    return true;
+-}
++pub const quietCopy = @import("qbe_rc_closed_text.zig").quietCopy;
+ 
+ fn concrete(comptime E: type, self: *E, owner: usize) bool {
+     if (owner >= self.function.scope.locals.len or self.byReference(owner) or self.callerStorage(owner)) return false;
+diff --git a/src/qbe_rc_record_read.zig b/src/qbe_rc_record_read.zig
+new file mode 100644
+index 00000000..a05fecc3
+--- /dev/null
++++ b/src/qbe_rc_record_read.zig
+@@ -0,0 +1,83 @@
++//! Retained record homes lend scalar-list fields across a closed checked read.
++const std = @import("std");
++const frame = @import("qbe_rc_frame.zig");
++const model = @import("rc_record_read.zig");
++/// Errors shared by ordinary lowering and speculative text buffers.
++pub const Error = frame.Error;
++
++/// Lower in isolated state; a refused generated call keeps ordinary lowering.
++pub fn emit(comptime E: type, self: *E, pc: usize) Error!?usize {
++    const state = frame.get(E, self) orelse return null;
++    if (self.version != null or self.original != null or self.fused != null) return null;
++    if (self.layouts.states.len > 4096) return null;
++    for (state.plan.records.reads, 0..) |proof, index| {
++        if (proof.start != pc) continue;
++        var trial = self.*;
++        trial.output = .init(self.allocator);
++        defer trial.output.deinit();
++        trial.scratch = .init(self.allocator);
++        defer trial.scratch.deinit();
++        // Layout/shape lookups are lazy; even their memo writes stay private.
++        var layouts = self.layouts.*;
++        layouts.layouts = try self.allocator.dupe(@TypeOf(layouts.layouts[0]), layouts.layouts);
++        defer self.allocator.free(layouts.layouts);
++        layouts.states = try self.allocator.dupe(@TypeOf(layouts.states[0]), layouts.states);
++        defer self.allocator.free(layouts.states);
++        defer for (self.layouts.states, layouts.states, layouts.layouts) |before, after, value| {
++            if (before != .done and after == .done) layouts.releaseLayout(value);
++        };
++        trial.layouts = &layouts;
++        var cow = self.cow.?.*;
++        cow.captures = try self.allocator.dupe(@TypeOf(cow.captures[0]), cow.captures);
++        defer self.allocator.free(cow.captures);
++        trial.cow = &cow;
++        var rc = state.*;
++        rc.catalog.native = &layouts;
++        rc.catalog.shapes = try self.allocator.dupe(@TypeOf(rc.catalog.shapes[0]), rc.catalog.shapes);
++        defer self.allocator.free(rc.catalog.shapes);
++        cow.rc = &rc;
++        rc.plan.records.reads = try self.allocator.dupe(model.Certificate, rc.plan.records.reads);
++        defer self.allocator.free(rc.plan.records.reads);
++        rc.plan.records.reads[index].active = true;
++        trial.by_reference = try self.allocator.dupe(@TypeOf(trial.by_reference[0]), self.by_reference);
++        defer self.allocator.free(trial.by_reference);
++        try trial.print(" # RC-RECORD-FIELD-READ-1 root {d} capture {d}\n", .{ proof.root, proof.capture });
++        for (proof.start..proof.end + 1) |at| try trial.emitAt(at);
++        const text = trial.output.written();
++        if (!@import("qbe_rc_closed_text.zig").quietCopy(text)) return null;
++        // No admitted operation changes frame maps, aggregate storage, plans,
++        // version contexts or publication flags. Only SSA IDs escape the trial.
++        try self.print("{s}", .{text});
++        self.serial = trial.serial;
++        return proof.end;
++    }
++    return null;
++}
++
++fn active(comptime E: type, self: *E) ?model.Certificate {
++    const state = frame.get(E, self) orelse return null;
++    for (state.plan.records.reads) |proof| {
++        if (proof.active and self.pc >= proof.start and self.pc <= proof.end) return proof;
++    }
++    return null;
++}
++
++/// Both the list and subsequent scalar field projections consume a raw root.
++/// Their operand guard is empty throughout this isolated interval.
++pub fn projection(comptime E: type, self: *E) bool {
++    return active(E, self) != null;
++}
++
++/// The sole capture writer transfers raw bits while its retained slot stays empty.
++pub fn store(comptime E: type, self: *E, local: usize, operand: usize) Error!bool {
++    const proof = active(E, self) orelse return false;
++    if (self.pc != proof.start + 2 or local != proof.capture or operand != 0) return false;
++    try self.print(" storel %v{d}, %l{d}\n", .{ try self.load("s", operand), local });
++    return true;
++}
++
++/// The unchanged frame journal still contains this provably empty capture.
++pub fn empty(comptime E: type, self: *E, local: usize) bool {
++    const proof = active(E, self) orelse return false;
++    return local == proof.capture;
++}
+diff --git a/src/qbe_rc_record_read_plan.zig b/src/qbe_rc_record_read_plan.zig
+new file mode 100644
+index 00000000..22d4ce6e
+--- /dev/null
++++ b/src/qbe_rc_record_read_plan.zig
+@@ -0,0 +1,231 @@
++//! Closed scalar list reads anchored by an initialized private record home.
++const std = @import("std");
++const bytecode = @import("bytecode.zig");
++const typed = @import("typed.zig");
++const homes = @import("rc_record_home.zig");
++const cow = @import("cow_plan.zig");
++const sources = @import("ownership_sources.zig");
++const Op = @FieldType(bytecode.Instruction, "op");
++const Certificate = @import("rc_record_read.zig").Certificate;
++/// Proof refusal preserves complete ordinary publication.
++pub const Error = @import("qbe_rc_frame.zig").Error;
++const Budget = struct {
++    remaining: usize = 262144,
++    homes: homes.Budget = .{},
++
++    fn take(self: *Budget, amount: usize) bool {
++        if (amount > self.remaining) return false;
++        self.remaining -= amount;
++        return true;
++    }
++};
++
++/// Run only after physical storage, COW entries and other certificates settle.
++pub fn finalize(comptime E: type, self: *E) Error!void {
++    const state = self.cow.?.rc orelse return;
++    if (!state.active or state.readonly or state.contract.result == .borrowed) return;
++    const code = self.function.scope.instructions;
++    if (code.len > 4096 or self.function.scope.locals.len > 256) return;
++    if (self.function.policy.c_abi or self.function.policy.host != null) return;
++    var budget: Budget = .{};
++    var found: std.ArrayList(Certificate) = .empty;
++    for (code, 0..) |instruction, pc| {
++        if (instruction.op != .get_field or pc == 0 or pc + 1 >= code.len) continue;
++        const proof = try candidate(E, self, pc, &budget) orelse continue;
++        const facts = try homes.analyze(E, self, proof.root, &budget.homes) orelse continue;
++        if (!try interval(E, self, proof, facts, &budget)) continue;
++        try found.append(self.allocator, proof);
++    }
++    state.plan.records.reads = try found.toOwnedSlice(self.allocator);
++}
++
++fn candidate(comptime E: type, self: *E, pc: usize, budget: *Budget) Error!?Certificate {
++    const code = self.function.scope.instructions;
++    if (code[pc - 1].op != .load_local or code[pc + 1].op != .store_local) return null;
++    const root = @backingInt(code[pc - 1].op.load_local);
++    const capture = @backingInt(code[pc + 1].op.store_local);
++    if (!private(E, self, root, false) or !private(E, self, capture, true)) return null;
++    if (root == capture or !try list(E, self, capture)) return null;
++    const stack = self.states[pc] orelse return null;
++    if (stack.len != 1 or stack[0] != self.function.scope.locals[root].ty) return null;
++    const member = self.field(stack[0], code[pc].op.get_field) catch return null;
++    if (member.ty != self.function.scope.locals[capture].ty) return null;
++    const end = uses(E, self, capture, pc + 1, budget) orelse return null;
++    if (end < pc + 2 or end - (pc - 1) > 64 or end + 1 >= code.len) return null;
++    if (code[end + 1].op != .store_local) return null;
++    const target = @backingInt(code[end + 1].op.store_local);
++    if (!try scalar(E, self, self.function.scope.locals[target].ty)) return null;
++    return .{ .start = pc - 1, .end = end + 1, .root = root, .capture = capture };
++}
++
++fn private(comptime E: type, self: *E, local: usize, temporary: bool) bool {
++    if (local < self.function.signature.parameter_count) return false;
++    if (self.function.scope.locals[local].usage.temporary != temporary) return false;
++    if (self.byReference(local) or self.callerStorage(local) or self.moves.resolve(local) != local) return false;
++    const plan = self.cow.?.plan;
++    if (plan.place(local) != null or (local < plan.aliases.len and plan.aliases[local] != cow.none)) return false;
++    const entry = self.cow.?.rc.?.plan.locals.entry[local];
++    return @backingInt(entry.storage) == local and entry.ownership == .empty;
++}
++
++fn list(comptime E: type, self: *E, local: usize) Error!bool {
++    const ty = self.function.scope.locals[local].ty;
++    if (!ty.isAggregate()) return false;
++    const record = self.program.records[ty.recordIndex()];
++    if (!record.isCollection() or record.collection.box or record.collection.kind != .list) return false;
++    if (!try scalar(E, self, record.shape.buffer orelse return false)) return false;
++    return !self.cow.?.rc.?.plan.journal.emptyLocal(local);
++}
++
++// Examine every static writer, including currently unreachable blocks.
++fn uses(comptime E: type, self: *E, local: usize, store: usize, budget: *Budget) ?usize {
++    var end: ?usize = null;
++    for (self.function.scope.instructions, 0..) |instruction, pc| {
++        if (!budget.take(1)) return null;
++        switch (instruction.op) {
++            .store_local => |id| if (@backingInt(id) == local and pc != store) return null,
++            .load_local, .move_local, .ref_local => |id| if (@backingInt(id) == local) return null,
++            .switch_variant => |dispatch| for (dispatch.arms) |arm| {
++                if (!budget.take(1)) return null;
++                if (arm.slot) |id| if (@backingInt(id) == local) return null;
++            },
++            .buffer_operation => |operation| if (@backingInt(operation.owner) == local) {
++                if (pc <= store or (operation.kind != .read and operation.kind != .length)) return null;
++                end = pc;
++            },
++            else => {},
++        }
++    }
++    if (!budget.take(self.function.scope.instructions.len * 4 + self.function.scope.locals.len * 4)) return null;
++    if (!@import("qbe_rc_dictionary_effects.zig").unwritten(E, self, local)) return null;
++    if (cow.iterationOwner(self.function, local)) return null;
++    return end;
++}
++
++fn interval(comptime E: type, self: *E, proof: Certificate, facts: []const u8, budget: *Budget) Error!bool {
++    const code = self.function.scope.instructions;
++    if ((self.states[proof.start] orelse return false).len != 0) return false;
++    const projected = self.states[proof.start + 2] orelse return false;
++    if (projected.len != 1 or projected[0] != self.function.scope.locals[proof.capture].ty) return false;
++    if ((self.states[proof.start + 3] orelse return false).len != 0) return false;
++    if ((self.states[proof.end + 1] orelse return false).len != 0) return false;
++    if (self.live.?.after(proof.end, proof.capture)) return false;
++    for (code, 0..) |instruction, pc| {
++        if (!budget.take(1)) return false;
++        if (instruction.op == .switch_variant and !budget.take(instruction.op.switch_variant.arms.len)) return false;
++        if (!sources.targetsSatisfy(instruction.op, pc, proof, edge)) return false;
++        if (pc < proof.start or pc > proof.end) continue;
++        if (self.states[pc] == null or instruction.inline_origin != null or facts[pc] != homes.owned) return false;
++        if (!try allowed(E, self, proof, pc) or !try quiet(E, self, proof, pc, budget)) return false;
++    }
++    for (self.loop_plan.loops) |loop| {
++        if (!budget.take(1)) return false;
++        if (loop.head <= proof.end and loop.back >= proof.start) return false;
++    }
++    return true;
++}
++
++fn edge(pc: usize, target: usize, proof: Certificate) bool {
++    if (pc < proof.start or pc > proof.end) return target <= proof.start or target > proof.end;
++    return target > pc and target <= proof.end;
++}
++
++fn allowed(comptime E: type, self: *E, proof: Certificate, pc: usize) Error!bool {
++    const code = self.function.scope.instructions;
++    const op = code[pc].op;
++    if (pc <= proof.start + 2) return true;
++    if (op == .load_local and @backingInt(op.load_local) == proof.root) {
++        return pc < proof.end and code[pc + 1].op == .get_field;
++    }
++    if (op == .get_field) {
++        if (code[pc - 1].op != .load_local or @backingInt(code[pc - 1].op.load_local) != proof.root) return false;
++        const member = self.field(self.function.scope.locals[proof.root].ty, op.get_field) catch return false;
++        return scalar(E, self, member.ty);
++    }
++    if (op == .buffer_operation) {
++        const access = op.buffer_operation;
++        if (@backingInt(access.owner) != proof.capture or (access.kind != .read and access.kind != .length)) return false;
++        return scalar(E, self, access.output);
++    }
++    if (!try @import("qbe_rc_read_loans.zig").scalar(E, self, op, &self.cow.?.rc.?.catalog)) return false;
++    for (self.states[pc].?) |ty| if (!try scalar(E, self, ty)) return false;
++    return true;
++}
++
++fn scalar(comptime E: type, self: *E, ty: typed.Type) Error!bool {
++    if (!self.isScalar(ty)) return false;
++    const state = self.cow.?.rc.?;
++    const shape = state.catalog.get(ty) catch return error.InternalError;
++    if (shape.counted or shape.unique_drop) return false;
++    const size = (self.layout(ty) catch return error.InternalError).size;
++    return size == 1 or size == 2 or size == 4 or size == 8;
++}
++
++fn quiet(comptime E: type, self: *E, proof: Certificate, pc: usize, budget: *Budget) Error!bool {
++    const state = self.cow.?;
++    const site = state.plan.at(pc);
++    if (site.unique.len != 0 or site.unique_field != null or site.capture or site.fill) return false;
++    if (site.shares.len != 0 or site.read_captures.len != 0 or state.plan.entry(pc).len != 0) return false;
++    if (state.captures[pc].begin != cow.none or state.captures[pc].active != cow.none) return false;
++    const plan = state.rc.?.plan;
++    if (!budget.take(plan.records.transfers.len + plan.records.writes.len + plan.dictionary_tails.len)) return false;
++    if (@import("qbe_rc_dictionary_effects.zig").intercepted(E, self, pc)) return false;
++    for (plan.dictionary_tails) |tail| if (pc >= tail.start and pc <= tail.start + 4) return false;
++    for (plan.locals.edges) |release_edge| {
++        if (!budget.take(1)) return false;
++        if (release_edge.from != pc) continue;
++        for (release_edge.releases) |release| {
++            if (!budget.take(1)) return false;
++            const local = @backingInt(release.storage);
++            if (local == proof.capture) continue;
++            if (local == proof.root) return false;
++            const locals = self.function.scope.locals.len;
++            if (!budget.take(locals * locals + plan.locals.edges.len)) return false;
++            if (try @import("qbe_rc_edges.zig").releasesAt(E, self, pc, local)) return false;
++        }
++    }
++    return true;
++}
++
++const t = std.testing;
++// spec-case: RC-RECORD-FIELD-READ-1
++test "RC record field reads exclude middle entries exits and internal backedges" {
++    const proof: Certificate = .{ .start = 4, .end = 12, .root = 0, .capture = 1 };
++    try t.expect(edge(2, 4, proof));
++    try t.expect(edge(15, 4, proof));
++    try t.expect(edge(7, 10, proof));
++    try t.expect(!edge(2, 5, proof));
++    try t.expect(!edge(15, 12, proof));
++    try t.expect(!edge(8, 7, proof));
++    try t.expect(!edge(7, 13, proof));
++}
++
++const WriterProbe = struct { function: bytecode.Function, cow: ?struct { plan: cow.Plan } };
++// spec-case: RC-RECORD-FIELD-READ-1
++test "RC record field reads scan unreachable writers implicit aliases and exhausted budgets" {
++    const span: @import("source.zig").Span = .{ .start = 0, .end = 0 };
++    var code = [_]bytecode.Instruction{
++        .{ .span = span, .op = .{ .store_local = @fromBackingInt(1) } },
++        .{ .span = span, .op = .{ .buffer_operation = .{ .owner = @fromBackingInt(1), .kind = .length, .output = .i64 } } },
++        .{ .span = span, .op = .ret },
++        .{ .span = span, .op = .{ .drop_local = @fromBackingInt(1) } },
++    };
++    var probe: WriterProbe = .{ .function = .{ .id = @fromBackingInt(0), .name = "capture", .scope = .{ .instructions = &code } }, .cow = .{ .plan = .{} } };
++    var budget: Budget = .{};
++    try t.expectEqual(@as(?usize, 1), uses(WriterProbe, &probe, 1, 0, &budget));
++    for ([_]Op{ .{ .store_local = @fromBackingInt(1) }, .{ .load_local = @fromBackingInt(1) }, .{ .move_local = @fromBackingInt(1) }, .{ .ref_local = @fromBackingInt(1) } }) |writer| {
++        code[3].op = writer;
++        budget = .{};
++        try t.expectEqual(@as(?usize, null), uses(WriterProbe, &probe, 1, 0, &budget));
++    }
++    code[3].op = .{ .drop_local = @fromBackingInt(1) };
++    probe.cow.?.plan.aliases = &.{1};
++    budget = .{};
++    try t.expectEqual(@as(?usize, null), uses(WriterProbe, &probe, 1, 0, &budget));
++    probe.cow.?.plan = .{ .sites = &.{.{ .unique = &.{.{ .local = 1 }} }} };
++    budget = .{};
++    try t.expectEqual(@as(?usize, null), uses(WriterProbe, &probe, 1, 0, &budget));
++    probe.cow.?.plan = .{};
++    budget = .{ .remaining = 1 };
++    try t.expectEqual(@as(?usize, null), uses(WriterProbe, &probe, 1, 0, &budget));
++}
+diff --git a/src/qbe_rc_record_read_test.zig b/src/qbe_rc_record_read_test.zig
+new file mode 100644
+index 00000000..18f60aad
+--- /dev/null
++++ b/src/qbe_rc_record_read_test.zig
+@@ -0,0 +1,95 @@
++//! A private owning record lends a list field only through a closed scalar read.
++const std = @import("std");
++const compiler = @import("compiler.zig");
++const runtime = @import("runtime_mode.zig");
++const t = std.testing;
++const marker = "# RC-RECORD-FIELD-READ-1";
++const Manifest = struct { functions: []const struct { name: []const u8, il: []const u8 } };
++const source =
++    \\record State:
++    \\    items: list[int]
++    \\    index: int
++    \\def read(index: int) -> int:
++    \\    state = State([7, 11, 13], index)
++    \\    value = state.items[state.index]
++    \\    return value + state.index
++    \\def external(state: mut State) -> int:
++    \\    value = state.items[state.index]
++    \\    state.index += 1
++    \\    return value + state.index
++    \\def callback(state: mut State) -> int:
++    \\    state.items = [17]
++    \\    return 0
++    \\def changed() -> int:
++    \\    state = State([7], 0)
++    \\    value = state.items[callback(mut state)]
++    \\    return value + state.index
++    \\record Nested:
++    \\    items: list[list[int]]
++    \\    index: int
++    \\def managed() -> int:
++    \\    state = Nested([[7]], 0)
++    \\    value = state.items[state.index]
++    \\    return len(value) + state.index
++    \\def floating(number: float) -> int:
++    \\    state = State([7, 11, 13], 0)
++    \\    value = state.items[int(sqrt(number))]
++    \\    return value + state.index
++    \\def main() -> int:
++    \\    return read(1)
++;
++
++fn emitted(steps: bool) !std.json.Parsed(Manifest) {
++    var compilation = try compiler.Compilation.init(t.allocator, "record_read.my", source);
++    defer compilation.deinit();
++    const text = try compilation.emitQbeWithOptions(t.allocator, .{ .step_checks = steps });
++    defer t.allocator.free(text);
++    return std.json.parseFromSlice(Manifest, t.allocator, text, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
++}
++fn body(manifest: Manifest, name: []const u8) ![]const u8 {
++    for (manifest.functions) |function| if (std.mem.eql(u8, function.name, name)) return function.il;
++    return error.TestUnexpectedResult;
++}
++
++// spec: RC-RECORD-FIELD-READ-1
++test "RC record field reads lend named homes but refuse caller storage callbacks and managed leaves" {
++    const saved = runtime.get();
++    defer runtime.set(saved);
++    runtime.set(.rc);
++    var manifest = try emitted(false);
++    defer manifest.deinit();
++    const il = try body(manifest.value, "read");
++    try t.expect(std.mem.indexOf(u8, il, marker) != null);
++    try t.expect(std.mem.indexOf(u8, il, "call $myl_qbe_fail_normalized_index_bounds") != null);
++    try t.expect(std.mem.indexOf(u8, il, "call $myl_qbe_rc_frame_cleanup") != null);
++    for ([_][]const u8{ "external", "changed", "managed", "floating" }) |name| {
++        try t.expect(std.mem.indexOf(u8, try body(manifest.value, name), marker) == null);
++    }
++}
++
++// spec-case: RC-RECORD-FIELD-READ-1
++test "RC record field reads keep generated helper fallback and later ordinary publication" {
++    const saved = runtime.get();
++    defer runtime.set(saved);
++    runtime.set(.rc);
++    var manifest = try emitted(false);
++    defer manifest.deinit();
++    const il = try body(manifest.value, "floating");
++    try t.expect(std.mem.indexOf(u8, il, marker) == null);
++    try t.expect(std.mem.indexOf(u8, il, "call $myl_qbe_float_unary") != null);
++    try t.expect(std.mem.indexOf(u8, il, "call $myl_rc_native_loan") != null);
++    try t.expect(std.mem.indexOf(u8, il, "call $myl_qbe_fail_normalized_index_bounds") != null);
++}
++
++// spec-case: RC-RECORD-FIELD-READ-1
++test "RC record field reads retain every original checked instruction and step boundary" {
++    const saved = runtime.get();
++    defer runtime.set(saved);
++    runtime.set(.rc);
++    var manifest = try emitted(true);
++    defer manifest.deinit();
++    const il = try body(manifest.value, "read");
++    const at = std.mem.indexOf(u8, il, marker) orelse return error.TestUnexpectedResult;
++    try t.expect(std.mem.indexOf(u8, il[at..], ", @step_limit,") != null);
++    try t.expect(std.mem.indexOf(u8, il[at..], "call $myl_qbe_fail_normalized_index_bounds") != null);
++}
+diff --git a/src/qbe_rc_state.zig b/src/qbe_rc_state.zig
+index ae61d3bf..6d41ebce 100644
+--- a/src/qbe_rc_state.zig
++++ b/src/qbe_rc_state.zig
+@@ -10,13 +10,18 @@ const journal = @import("qbe_rc_journal.zig");
+ 
+ /// A stack position's stable owned-value storage; its type can change at joins.
+ pub const Operand = journal.Operand;
++/// Independent record emission certificates; none changes journal storage.
++pub const Records = struct {
++    transfers: []const @import("rc_field_transfer.zig").Certificate = &.{},
++    writes: []const @import("rc_plain_record_write.zig").Certificate = &.{},
++    reads: []@import("rc_record_read.zig").Certificate = &.{},
++};
+ /// Semantic obligations paired with independent emission-only journal indices.
+ pub const EmissionPlan = struct {
+     locals: plan.Plan,
+     journal: journal.Layout,
+-    field_transfers: []const @import("rc_field_transfer.zig").Certificate = &.{},
++    records: Records = .{},
+     dictionary_tails: []const @import("rc_dictionary_tail.zig").Certificate = &.{},
+-    plain_writes: []const @import("rc_plain_record_write.zig").Certificate = &.{},
+     append_loops: []const @import("rc_append_loop.zig").Certificate = &.{},
+ };
+ /// Final immutable plan and reusable lowering scratch, owned by the function arena.
+@@ -65,9 +70,10 @@ pub fn build(comptime E: type, self: *E, capacity: usize) Error!*State {
+     };
+     state.plan.dictionary_tails = &.{};
+     state.plan.append_loops = &.{};
++    state.plan.records = .{};
+     state.plan.journal = try journal.build(a, state.plan.locals.storage, state.operands);
+-    state.plan.field_transfers = try @import("rc_field_transfer.zig").build(E, self, &state.catalog);
+-    state.plan.plain_writes = try @import("rc_plain_record_write.zig").build(E, self, &state.catalog, state.plan.locals);
++    state.plan.records.transfers = try @import("rc_field_transfer.zig").build(E, self, &state.catalog);
++    state.plan.records.writes = try @import("rc_plain_record_write.zig").build(E, self, &state.catalog, state.plan.locals);
+     return state;
+ }
+ 
+diff --git a/src/rc_plain_record_write.zig b/src/rc_plain_record_write.zig
+index eb75d1da..82ac740e 100644
+--- a/src/rc_plain_record_write.zig
++++ b/src/rc_plain_record_write.zig
+@@ -39,7 +39,7 @@ pub fn named(comptime E: type, self: *E) Error!void {
+     const Cached = struct { root: usize, facts: ?[]const u8 };
+     var cache: std.ArrayList(Cached) = .empty;
+     var found: std.ArrayList(Certificate) = .empty;
+-    try found.appendSlice(self.allocator, state.plan.plain_writes);
++    try found.appendSlice(self.allocator, state.plan.records.writes);
+     var remaining: usize = 262144;
+     for (code, 0..) |instruction, pc| {
+         if (instruction.op != .update_record or pc < 7 or pc + 1 >= code.len) continue;
+@@ -55,7 +55,7 @@ pub fn named(comptime E: type, self: *E) Error!void {
+         };
+         if (facts) |rows| if (rows[proof.start] == homes.owned) try found.append(self.allocator, proof);
+     }
+-    state.plan.plain_writes = try found.toOwnedSlice(self.allocator);
++    state.plan.records.writes = try found.toOwnedSlice(self.allocator);
+ }
+ 
+ fn tail(comptime E: type, self: *E, start: usize, catalog: *shapes.Catalog, named_home: bool) Error!?Certificate {
+diff --git a/src/rc_record_home.zig b/src/rc_record_home.zig
+index 43d63e6a..651d24c0 100644
+--- a/src/rc_record_home.zig
++++ b/src/rc_record_home.zig
+@@ -86,7 +86,7 @@ fn writers(comptime E: type, self: *E, root: usize, budget: *Budget) bool {
+ }
+ 
+ fn intercepted(comptime E: type, self: *E, pc: usize, budget: *Budget) bool {
+-    for (self.cow.?.rc.?.plan.field_transfers) |proof| if (!budget.visit() or proof.projection == pc or proof.commit == pc) return true;
++    for (self.cow.?.rc.?.plan.records.transfers) |proof| if (!budget.visit() or proof.projection == pc or proof.commit == pc) return true;
+     return self.function.scope.instructions[pc].inline_origin != null;
+ }
+ 
+diff --git a/src/rc_record_read.zig b/src/rc_record_read.zig
+new file mode 100644
+index 00000000..980f2c8a
+--- /dev/null
++++ b/src/rc_record_read.zig
+@@ -0,0 +1,3 @@
++//! Physical interval identity shared without importing concrete emission.
++/// Entry load, inclusive scalar publication end, and the sole raw capture.
++pub const Certificate = struct { start: usize, end: usize, root: usize, capture: usize, active: bool = false };
+diff --git a/src/root_test.zig b/src/root_test.zig
+index 7fbe82aa..1c1af310 100644
+--- a/src/root_test.zig
++++ b/src/root_test.zig
+@@ -259,6 +259,7 @@ test {
+     _ = @import("qbe_rc_loop_version_test.zig");
+     _ = @import("qbe_rc_scalar_version_test.zig");
+     _ = @import("qbe_rc_read_version_test.zig");
++    _ = @import("qbe_rc_record_read_test.zig");
+     _ = @import("qbe_rc_plain_write_test.zig");
+     _ = @import("qbe_rc_append_test.zig");
+     _ = @import("qbe_rc_admission_test.zig");
+diff --git a/tests/lang/rc_record_field_reads.my b/tests/lang/rc_record_field_reads.my
+new file mode 100644
+index 00000000..eff375c7
+--- /dev/null
++++ b/tests/lang/rc_record_field_reads.my
+@@ -0,0 +1,142 @@
++record Cursor:
++    code: list[int]
++    index: int
++
++
++def read(index: int) -> int:
++    cursor = Cursor([7, 11, 13], index)
++    value = cursor.code[cursor.index]
++    return value + cursor.index
++
++
++def read_from(items: list[int], index: int) -> int:
++    cursor = Cursor(items, index)
++    value = cursor.code[cursor.index]
++    return value + cursor.index
++
++
++def adjacent(index: int) -> int:
++    cursor = Cursor([7, 11, 13], index)
++    first = cursor.code[cursor.index]
++    second = cursor.code[-1]
++    ordinary = [first, second]
++    ordinary.append(cursor.index)
++    return ordinary[0] + ordinary[1] + ordinary[2]
++
++
++def rebind(times: int) -> int:
++    cursor = Cursor([7, 11, 13], 0)
++    total = 0
++    count = 0
++    while count < times:
++        value = cursor.code[cursor.index]
++        total += value
++        cursor = Cursor([17, 19], count % 2)
++        count += 1
++    return total + cursor.index
++
++
++def change(cursor: mut Cursor) -> int:
++    cursor.code = [29]
++    return 0
++
++
++def captured_callback() -> int:
++    cursor = Cursor([7], 0)
++    value = cursor.code[change(mut cursor)]
++    return value + cursor.code[0]
++
++
++def floating(number: float) -> int:
++    cursor = Cursor([7, 11, 13], 0)
++    value = cursor.code[int(sqrt(number))]
++    return value + cursor.index
++
++
++def arithmetic(seed: int) -> int:
++    cursor = Cursor([7, 11, 13], 0)
++    value = cursor.code[cursor.index]
++    return value + seed + cursor.index
++
++
++def heap_frame(values: [4096]int, index: int) -> int:
++    padding = replace(values, 0, 3)
++    cursor = Cursor([7, 11, 13], index)
++    value = cursor.code[cursor.index]
++    return value + padding[0] + cursor.index
++
++
++# spec-case: RC-RECORD-FIELD-READ-1
++public def test_checked_positive_and_negative_indices() -> bool:
++    return read(0) == 7 and read(1) == 12 and read(-1) == 12 and read(-3) == 4
++
++
++# spec-case: RC-RECORD-FIELD-READ-1
++public def test_successful_interval_then_ordinary_publication() -> bool:
++    return adjacent(0) == 20 and adjacent(1) == 25 and adjacent(-1) == 25
++
++
++# spec-case: RC-RECORD-FIELD-READ-1
++public def test_dynamic_reentry_replaces_retained_home() -> bool:
++    return rebind(0) == 0 and rebind(1) == 7 and rebind(4) == 61
++
++
++# spec-case: RC-RECORD-FIELD-READ-1
++public def test_captured_callback_keeps_selected_snapshot() -> bool:
++    return captured_callback() == 36
++
++
++# spec-case: RC-RECORD-FIELD-READ-1
++public def test_generated_float_call_keeps_ordinary_fallback() -> bool:
++    return floating(0.0) == 7 and floating(1.0) == 11 and floating(4.0) == 13
++
++
++# spec-case: RC-RECORD-FIELD-READ-1
++public def test_parent_and_nested_arenas_keep_roots() -> bool:
++    result = read(1)
++    with arena():
++        result += read(-1)
++        with arena():
++            result += adjacent(0)
++    return result == 44
++
++
++# spec-case: RC-RECORD-FIELD-READ-1
++public def test_older_heap_home_inside_inner_region() -> bool:
++    cursor = Cursor([17, 19], 1)
++    result = 0
++    with arena():
++        result = cursor.code[cursor.index]
++    return result + cursor.index == 20
++
++
++# spec-case: RC-RECORD-FIELD-READ-1
++public def test_named_snapshot_survives_replacement_after_read() -> bool:
++    cursor = Cursor([7, 11], 1)
++    snapshot = cursor
++    value = cursor.code[cursor.index]
++    cursor = Cursor([13], 0)
++    return value + snapshot.code[1] + cursor.code[0] == 35
++
++
++record Flags:
++    code: list[bool]
++    index: int
++
++
++record Octets:
++    code: list[u8]
++    index: int
++
++
++# spec-case: RC-RECORD-FIELD-READ-1
++public def test_boolean_and_narrow_elements_preserve_width() -> bool:
++    flags = Flags([False, True], 1)
++    flag = flags.code[flags.index]
++    octets = Octets([u8(255), u8(128)], 0)
++    octet = octets.code[octets.index]
++    return flag and octet == u8(255) and flags.index == 1 and octets.index == 0
++
++
++def main() -> int:
++    return 0

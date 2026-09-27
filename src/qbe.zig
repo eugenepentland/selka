@@ -1663,6 +1663,7 @@ const Emitter = struct {
         if (runtime_mode.enabled()) try @import("qbe_rc_dictionary_loop.zig").finalize(Emitter, self);
         if (runtime_mode.enabled()) try @import("qbe_rc_empty_locals.zig").finalize(Emitter, self);
         if (runtime_mode.enabled()) try @import("qbe_rc_empty_frame.zig").finalize(Emitter, self);
+        if (runtime_mode.enabled()) try @import("qbe_rc_record_read_plan.zig").finalize(Emitter, self);
         try self.findRoots();
         if (self.needsRootProtocol()) self.live_roots = try self.rootLiveness();
         const capacity = ir.stack_capacity;
@@ -2113,7 +2114,8 @@ const Emitter = struct {
         };
     }
     fn emitInstructions(self: *Emitter) GenerateError!void {
-        for (0..self.function.scope.instructions.len) |pc| {
+        var pc: usize = 0;
+        while (pc < self.function.scope.instructions.len) : (pc += 1) {
             if (self.states[pc] == null) continue;
             // COW-HOIST-1: the checks a loop's entry edges run come first.
             try cow_lower.Lower(Emitter).entry(self, pc);
@@ -2121,6 +2123,10 @@ const Emitter = struct {
             // go in front of its header; the original follows unchanged.
             if (self.loop_plan.at(pc)) |loop| {
                 if (try loop_version.Lower(Emitter).emit(self, loop)) self.original = loop;
+            }
+            if (try @import("qbe_rc_record_read.zig").emit(Emitter, self, pc)) |end| {
+                pc = end;
+                continue;
             }
             try self.emitAt(pc);
             if (self.original) |loop| if (pc == loop.back) {

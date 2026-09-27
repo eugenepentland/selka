@@ -1,0 +1,16 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/scripts/build-slot.sh",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/field-list-read/install-final/bin/mylang",
+    "emit-project-qbe",
+    "main.my",
+    "--rc-runtime",
+    "--drop-step-checks",
+    "--drop-frame-checks",
+    "--drop-debug"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/lox-post-record/current/guest",
+  "exit": 0,
+  "stderr": ""
+}

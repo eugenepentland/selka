@@ -40,6 +40,7 @@ pub fn releasesAt(comptime E: type, self: *E, pc: usize, index: usize) Error!boo
 }
 
 fn eligible(comptime E: type, self: *E, pc: usize, index: usize) Error!bool {
+    if (@import("qbe_rc_record_read.zig").empty(E, self, index)) return false;
     if (index < self.function.signature.parameter_count) return false;
     const local = self.function.scope.locals[index];
     if (!local.usage.temporary or self.byReference(index) or self.callerStorage(index)) return false;
