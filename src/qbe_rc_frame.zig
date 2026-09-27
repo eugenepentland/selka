@@ -180,6 +180,9 @@ fn alignedBytes(bytes_value: u64) u64 {
 }
 
 fn receiverStorage(comptime E: type, self: *E, index: usize) bool {
+    // Certified reads never enter receiver setup; certified mutation captures
+    // skip both scope begin and end. Neither can link a cleanup obligation.
+    if (emptyLocal(E, self, index)) return false;
     const plan = self.cow.?.plan;
     return plan.place(index) != null or (index < plan.aliases.len and plan.aliases[index] != @import("cow_plan.zig").none);
 }

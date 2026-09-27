@@ -75,3 +75,51 @@ test "RC empty local journals keep parameter operand scratch and trap linkage" {
     try t.expect(contains(try named(manifest.value, "referenced"), "myl_rc_native_loan"));
     try t.expect(contains(try named(manifest.value, "pattern"), "myl_rc_native_loan"));
 }
+
+// spec: RC-EMPTY-RECEIVER-STORAGE-1
+test "RC empty receiver scopes omit unused storage while callbacks retain it" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    var manifest = try emitted();
+    defer manifest.deinit();
+    const il = try named(manifest.value, "advance");
+    try t.expect(!contains(il, "%rcborrow"));
+    try t.expect(contains(il, "%rcentries =l alloc8 128"));
+    try t.expect(contains(il, "myl_qbe_rc_frame_enter"));
+    try t.expect(contains(il, "myl_qbe_fail_frame"));
+    try t.expect(contains(try named(manifest.value, "callback"), "%rcborrow"));
+    try t.expect(contains(try named(manifest.value, "callback"), "myl_qbe_rc_scope_pin"));
+}
+
+const ScopeEmitter = struct {
+    cow: ?struct { rc: ?*@import("qbe_rc_state.zig").State },
+    touched: bool = false,
+
+    /// Detect whether an address request started emitting an instruction.
+    pub fn temp(self: *ScopeEmitter) usize {
+        self.touched = true;
+        return 0;
+    }
+    /// Accept the retained-address instruction for this narrow emitter probe.
+    pub fn print(self: *ScopeEmitter, comptime text: []const u8, args: anytype) @import("qbe_rc_frame.zig").Error!void {
+        _ = text;
+        _ = args;
+        self.touched = true;
+    }
+};
+
+// spec-case: RC-EMPTY-RECEIVER-STORAGE-1
+test "RC omitted receiver address refuses before emitting undefined storage" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    var state: @import("qbe_rc_state.zig").State = undefined;
+    state.active = true;
+    state.plan.journal = .{ .prefix = &.{ 0, 1, 1 }, .empty_locals = &.{ false, true } };
+    var emitter: ScopeEmitter = .{ .cow = .{ .rc = &state } };
+    try t.expectError(error.InternalError, @import("qbe_rc_scope.zig").borrowAddress(ScopeEmitter, &emitter, 1));
+    try t.expect(!emitter.touched);
+    try t.expectEqual(@as(usize, 0), try @import("qbe_rc_scope.zig").borrowAddress(ScopeEmitter, &emitter, 0));
+    try t.expect(emitter.touched);
+}
