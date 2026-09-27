@@ -92,3 +92,32 @@ test "RC-OPERAND-STAGE-1 ownership helpers receive staged cells, never operand w
     try t.expect(std.mem.indexOf(u8, try named(gc.value, "main"), "%rcstage") == null);
 }
 
+/// The text of the first check-free loop copy: from its `@fi` label to the
+/// original loop's `@oi` label.
+fn fastCopy(il: []const u8) ?[]const u8 {
+    const start = std.mem.indexOf(u8, il, "\n@fi") orelse return null;
+    const end = std.mem.indexOfPos(u8, il, start, "\n@oi") orelse return null;
+    return il[start..end];
+}
+
+const comprehension =
+    \\def main() -> int:
+    \\    n = 1000
+    \\    flags = [True for _ in range(n + 1)]
+    \\    squares = [i * i for i in range(n)]
+    \\    return len(flags) + squares[3]
+;
+
+// spec: RC-PRESIZED-APPEND-1
+test "RC-PRESIZED-APPEND-1 a certified comprehension appends into guarded room without calls" {
+    var rc = try emit(comprehension, .rc);
+    defer rc.deinit();
+    const main = try named(rc.value, "main");
+    const guard = std.mem.indexOf(u8, main, "call $myl_rc_list_plain_ready") orelse return error.TestUnexpectedResult;
+    const copy = fastCopy(main[guard..]) orelse return error.TestUnexpectedResult;
+    try t.expect(std.mem.indexOf(u8, copy, "call") == null);
+    try t.expect(std.mem.indexOf(u8, copy, "%rcappend") == null);
+    var counting = try emit(comprehension, .rc_counting);
+    defer counting.deinit();
+    try t.expect(std.mem.indexOf(u8, try named(counting.value, "main"), "@fi") != null);
+}

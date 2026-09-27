@@ -166,10 +166,7 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
             try arena_lower.Lower(E).barrier(self, list, element, value_pointer);
             if (op.kind == .append) {
                 if (rc_mode.enabled()) {
-                    if (!try rc_append.emit(E, self, .{ .list = list, .element = element, .value = value_pointer, .output = output })) {
-                        try rc_collections.append(E, self, element, output, list, value_pointer);
-                        try self.require(output, allocation_failure);
-                    }
+                    try rcAppend(E, self, .{ .list = list, .element = element, .value = value_pointer, .output = output });
                 } else if (self.loopAppend()) |presized| {
                     try presizedAppend(E, self, .{ .list = list, .element = element, .value = value_pointer, .storage = presized.storage, .length = presized.state.length, .generation = presized.state.generation });
                 } else if (self.needsRootProtocol()) {
@@ -530,6 +527,16 @@ fn pushedValue(comptime E: type, self: *E, at: usize) i128 {
 fn elementBytes(width: usize, value: i128, scratch: *[8]u8) []const u8 {
     std.mem.writeInt(u64, scratch, @truncate(@as(u128, @bitCast(value))), .little);
     return scratch[0..width];
+}
+/// An RC append: the room write a loop guard presized (RC-PRESIZED-APPEND-1),
+/// the admitted scalar room path, or the runtime publication.
+fn rcAppend(comptime E: type, self: *E, append: rc_append.Append) Error!void {
+    if (self.loopAppend()) |presized| {
+        return presizedAppend(E, self, .{ .list = append.list, .element = append.element, .value = append.value, .storage = presized.storage, .length = presized.state.length, .generation = presized.state.generation });
+    }
+    if (try rc_append.emit(E, self, append)) return;
+    try rc_collections.append(E, self, append.element, append.output, append.list, append.value);
+    try self.require(append.output, allocation_failure);
 }
 /// One append the loop's guard proved fits the list's spare capacity: the
 /// list, the element type and value, the storage the guard loaded, and the
