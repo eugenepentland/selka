@@ -1,0 +1,15 @@
+record Runtime:
+    items: list[int]
+    stack_top: int
+    frame_count: int
+
+def update(rt: mut Runtime, count: int):
+    i = 0
+    while i < count:
+        rt.stack_top = rt.stack_top + 1
+        i += 1
+
+def main() -> int:
+    rt = Runtime([1], 0, 0)
+    update(mut rt, 3)
+    return rt.stack_top
