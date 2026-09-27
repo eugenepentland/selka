@@ -9,7 +9,7 @@ pub const Error = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
 pub fn local(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "op"), stack: []const typed.Type) Error!bool {
     if (op != .load_local and op != .store_local) return false;
     const state = frame.get(E, self) orelse return false;
-    for (state.plan.plain_writes) |proof| {
+    for (state.plan.records.writes) |proof| {
         if (self.pc == proof.start + 1 or self.pc == proof.start + 3) return true;
         if (self.pc == proof.start + 4) {
             try self.store(stack.len, try address(E, self, proof));
@@ -29,7 +29,7 @@ pub fn local(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "o
 /// Delay the scalar write until STORE_LOCAL, preserving an intervening step trap.
 pub fn update(comptime E: type, self: *E, height: usize) Error!bool {
     const state = frame.get(E, self) orelse return false;
-    for (state.plan.plain_writes) |proof| if (self.pc == proof.start + 6) {
+    for (state.plan.records.writes) |proof| if (self.pc == proof.start + 6) {
         try self.store(height - 2, try address(E, self, proof));
         return true;
     };

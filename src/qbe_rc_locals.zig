@@ -62,6 +62,7 @@ fn ordinary(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "op
 }
 
 fn store(comptime E: type, self: *E, index: usize, operand: usize) Error!void {
+    if (try @import("qbe_rc_record_read.zig").store(E, self, index, operand)) return;
     if (try @import("qbe_rc_read_loans.zig").store(E, self, index, operand)) return;
     const ty = self.function.scope.locals[index].ty;
     if (@import("qbe_rc_unique.zig").receiverParent(E, self, index)) |parent| {

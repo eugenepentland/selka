@@ -32,7 +32,7 @@ pub fn certify(comptime E: type, self: *E, head: usize, back: usize) ?Certificat
     }
     for (head..back + 1) |pc| {
         const stack = self.states[pc] orelse return null;
-        if (!charge(&budget, stack.len + rc.plan.locals.edges.len + rc.plan.field_transfers.len + rc.plan.plain_writes.len)) return null;
+        if (!charge(&budget, stack.len + rc.plan.locals.edges.len + rc.plan.records.transfers.len + rc.plan.records.writes.len)) return null;
         for (stack, 0..) |ty, index| if (!scalar(ty) and !result.bytes.borrowed(pc, index)) return null;
         if (!quiet(E, self, pc, &budget)) return null;
         const op = code[pc].op;
@@ -77,16 +77,7 @@ pub fn guard(comptime E: type, self: *E, proof: Certificate, head: usize) Error!
 
 /// A copied body may call only cold trap helpers; even old pure drop calls refuse.
 /// Bound generated-text scanning independently of the source-instruction budget.
-pub fn quietCopy(text: []const u8) bool {
-    if (text.len > 1024 * 1024) return false;
-    var lines = std.mem.splitScalar(u8, text, '\n');
-    while (lines.next()) |line| {
-        if (std.mem.indexOf(u8, line, "call %") != null) return false;
-        const at = std.mem.indexOf(u8, line, "call $") orelse continue;
-        if (!std.mem.startsWith(u8, line[at..], "call $myl_qbe_fail_")) return false;
-    }
-    return true;
-}
+pub const quietCopy = @import("qbe_rc_closed_text.zig").quietCopy;
 
 fn concrete(comptime E: type, self: *E, owner: usize) bool {
     if (owner >= self.function.scope.locals.len or self.byReference(owner) or self.callerStorage(owner)) return false;

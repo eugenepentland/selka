@@ -39,7 +39,7 @@ pub fn named(comptime E: type, self: *E) Error!void {
     const Cached = struct { root: usize, facts: ?[]const u8 };
     var cache: std.ArrayList(Cached) = .empty;
     var found: std.ArrayList(Certificate) = .empty;
-    try found.appendSlice(self.allocator, state.plan.plain_writes);
+    try found.appendSlice(self.allocator, state.plan.records.writes);
     var remaining: usize = 262144;
     for (code, 0..) |instruction, pc| {
         if (instruction.op != .update_record or pc < 7 or pc + 1 >= code.len) continue;
@@ -55,7 +55,7 @@ pub fn named(comptime E: type, self: *E) Error!void {
         };
         if (facts) |rows| if (rows[proof.start] == homes.owned) try found.append(self.allocator, proof);
     }
-    state.plan.plain_writes = try found.toOwnedSlice(self.allocator);
+    state.plan.records.writes = try found.toOwnedSlice(self.allocator);
 }
 
 fn tail(comptime E: type, self: *E, start: usize, catalog: *shapes.Catalog, named_home: bool) Error!?Certificate {

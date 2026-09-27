@@ -1,0 +1,12 @@
+before qbe rc passed 9
+before llvm rc passed 9
+before emitted []
+before emitted []
+after qbe rc passed 9
+after qbe gc passed 9
+after llvm rc passed 9
+after llvm gc passed 9
+after emitted [('read', 1), ('read_from', 1), ('adjacent', 1), ('arithmetic', 1), ('heap_frame', 1), ('test_older_heap_home_inside_inner_region', 1), ('test_boolean_and_narrow_elements_preserve_width', 2)]
+after emitted [('read', 1), ('read_from', 1), ('adjacent', 1), ('arithmetic', 1), ('heap_frame', 1), ('test_older_heap_home_inside_inner_region', 1), ('test_boolean_and_narrow_elements_preserve_width', 2)]
+plain exact fallback IL identical
+accounted exact fallback IL identical

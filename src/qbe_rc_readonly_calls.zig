@@ -24,7 +24,7 @@ pub fn verify(comptime E: type, self: *E) Error!void {
     const state = cow.rc orelse return;
     if (!state.readonly) return;
     if (!@import("rc_readonly_plan.zig").quiet(cow.plan)) return error.InternalError;
-    if (state.plan.field_transfers.len != 0 or state.plan.plain_writes.len != 0 or state.plan.dictionary_tails.len != 0) return error.InternalError;
+    if (state.plan.records.transfers.len != 0 or state.plan.records.writes.len != 0 or state.plan.dictionary_tails.len != 0) return error.InternalError;
     const none = @import("cow_plan.zig").none;
     for (cow.captures) |capture| {
         if (capture.begin != none or capture.active != none) return error.InternalError;

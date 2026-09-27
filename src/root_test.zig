@@ -260,6 +260,7 @@ test {
     _ = @import("qbe_rc_scalar_version_test.zig");
     _ = @import("qbe_rc_read_version_test.zig");
     _ = @import("qbe_rc_byte_version_test.zig");
+    _ = @import("qbe_rc_record_read_test.zig");
     _ = @import("qbe_rc_plain_write_test.zig");
     _ = @import("qbe_rc_append_test.zig");
     _ = @import("qbe_rc_admission_test.zig");

@@ -8,7 +8,7 @@ pub const Error = values.Error;
 /// Clearing its owning field and publishing the same token cannot call or trap.
 pub fn project(comptime E: type, self: *E) Error!bool {
     const state = frame.get(E, self) orelse return false;
-    for (state.plan.field_transfers) |proof| {
+    for (state.plan.records.transfers) |proof| {
         if (proof.projection != self.pc) continue;
         const member = try self.field(self.function.scope.locals[proof.source.local].ty, proof.source.field);
         const root = try self.load("l", proof.source.local);
@@ -29,7 +29,7 @@ pub fn project(comptime E: type, self: *E) Error!bool {
 /// Failed preparation never reaches this point and leaves its existing guard live.
 pub fn committed(comptime E: type, self: *E) Error!void {
     const state = frame.get(E, self) orelse return;
-    for (state.plan.field_transfers) |proof| {
+    for (state.plan.records.transfers) |proof| {
         if (proof.commit == self.pc) try frame.drop(E, self, proof.target);
     }
 }

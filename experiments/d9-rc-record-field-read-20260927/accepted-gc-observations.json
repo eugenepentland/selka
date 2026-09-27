@@ -1,0 +1,389 @@
+{
+  "source": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/corpus-e926d1e1/results.json",
+  "source_sha256": "66e36c36173aa4f475561059d60815c62902d0d36454e26cd10e77c6287a4531",
+  "baseline_manifest_sha256": "7a82169b5acc35bc632aca978db99b7cefe4528620513f2b62396d1cf5f8b8d8",
+  "samples": {
+    "lox/vm/binary_trees|qbe": {
+      "run": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/lox.qbe",
+          "--engine=vm",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/lox-scripts/binary_trees.tree.lox"
+        ],
+        "env": {
+          "MYLANG_MEMORY_LIMIT": "8G"
+        },
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance"
+      },
+      "checks": {
+        "status": 0,
+        "stdout_sha256": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056",
+        "stderr": "",
+        "ok": true
+      },
+      "observations": {
+        "perf": [
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/lox.qbe",
+              "--engine=vm",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/lox-scripts/binary_trees.tree.lox"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n7243226358,,cpu_core/instructions/u,541491361,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n1819817990,,cpu_core/cycles/u,541491361,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 7243226358,
+                "enabled_percent": 100.0,
+                "run_time": "541491361"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 1819817990,
+                "enabled_percent": 100.0,
+                "run_time": "541491361"
+              }
+            ],
+            "ok": true,
+            "instructions": 7243226358
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/lox.qbe",
+              "--engine=vm",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/lox-scripts/binary_trees.tree.lox"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n7243227886,,cpu_core/instructions/u,480449162,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n1783459148,,cpu_core/cycles/u,480449162,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 7243227886,
+                "enabled_percent": 100.0,
+                "run_time": "480449162"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 1783459148,
+                "enabled_percent": 100.0,
+                "run_time": "480449162"
+              }
+            ],
+            "ok": true,
+            "instructions": 7243227886
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/lox.qbe",
+              "--engine=vm",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/lox-scripts/binary_trees.tree.lox"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n7243228363,,cpu_core/instructions/u,481879325,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n1793620108,,cpu_core/cycles/u,481879325,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 7243228363,
+                "enabled_percent": 100.0,
+                "run_time": "481879325"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 1793620108,
+                "enabled_percent": 100.0,
+                "run_time": "481879325"
+              }
+            ],
+            "ok": true,
+            "instructions": 7243228363
+          }
+        ],
+        "rss": [
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/lox.qbe",
+              "--engine=vm",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/lox-scripts/binary_trees.tree.lox"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=53124\n",
+            "ok": true,
+            "peak_rss_kb": 53124
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/lox.qbe",
+              "--engine=vm",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/lox-scripts/binary_trees.tree.lox"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=53136\n",
+            "ok": true,
+            "peak_rss_kb": 53136
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/lox.qbe",
+              "--engine=vm",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/lox-scripts/binary_trees.tree.lox"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=53120\n",
+            "ok": true,
+            "peak_rss_kb": 53120
+          }
+        ]
+      },
+      "medians": {
+        "instructions": 7243227886,
+        "rss_kb": 53124
+      }
+    },
+    "lox/vm/binary_trees|llvm": {
+      "run": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/lox.llvm",
+          "--engine=vm",
+          "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/lox-scripts/binary_trees.tree.lox"
+        ],
+        "env": {
+          "MYLANG_MEMORY_LIMIT": "8G"
+        },
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance"
+      },
+      "checks": {
+        "status": 0,
+        "stdout_sha256": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056",
+        "stderr": "",
+        "ok": true
+      },
+      "observations": {
+        "perf": [
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/lox.llvm",
+              "--engine=vm",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/lox-scripts/binary_trees.tree.lox"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n3433158920,,cpu_core/instructions/u,306484248,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n1034389611,,cpu_core/cycles/u,306484248,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 3433158920,
+                "enabled_percent": 100.0,
+                "run_time": "306484248"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 1034389611,
+                "enabled_percent": 100.0,
+                "run_time": "306484248"
+              }
+            ],
+            "ok": true,
+            "instructions": 3433158920
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/lox.llvm",
+              "--engine=vm",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/lox-scripts/binary_trees.tree.lox"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n3433155721,,cpu_core/instructions/u,488525489,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n1128562969,,cpu_core/cycles/u,488525489,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 3433155721,
+                "enabled_percent": 100.0,
+                "run_time": "488525489"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 1128562969,
+                "enabled_percent": 100.0,
+                "run_time": "488525489"
+              }
+            ],
+            "ok": true,
+            "instructions": 3433155721
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "perf",
+              "stat",
+              "--no-big-num",
+              "-x,",
+              "-e",
+              "instructions:u,cycles:u",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/lox.llvm",
+              "--engine=vm",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/lox-scripts/binary_trees.tree.lox"
+            ],
+            "status": 0,
+            "stderr": "<not counted>,,cpu_atom/instructions/u,0,0.00,,\n3433157037,,cpu_core/instructions/u,486620285,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n1132682307,,cpu_core/cycles/u,486620285,100.00,,\n",
+            "events": [
+              {
+                "metric": "instructions",
+                "event": "cpu_core/instructions/u",
+                "count": 3433157037,
+                "enabled_percent": 100.0,
+                "run_time": "486620285"
+              },
+              {
+                "metric": "cycles",
+                "event": "cpu_core/cycles/u",
+                "count": 1132682307,
+                "enabled_percent": 100.0,
+                "run_time": "486620285"
+              }
+            ],
+            "ok": true,
+            "instructions": 3433157037
+          }
+        ],
+        "rss": [
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/lox.llvm",
+              "--engine=vm",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/lox-scripts/binary_trees.tree.lox"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=53032\n",
+            "ok": true,
+            "peak_rss_kb": 53032
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/lox.llvm",
+              "--engine=vm",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/lox-scripts/binary_trees.tree.lox"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=53000\n",
+            "ok": true,
+            "peak_rss_kb": 53000
+          },
+          {
+            "command": [
+              "taskset",
+              "-c",
+              "11",
+              "/usr/bin/time",
+              "-f",
+              "D9_RSS_KB=%M",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/lox.llvm",
+              "--engine=vm",
+              "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/lox-scripts/binary_trees.tree.lox"
+            ],
+            "status": 0,
+            "stderr": "D9_RSS_KB=53012\n",
+            "ok": true,
+            "peak_rss_kb": 53012
+          }
+        ]
+      },
+      "medians": {
+        "instructions": 3433157037,
+        "rss_kb": 53012
+      }
+    }
+  }
+}

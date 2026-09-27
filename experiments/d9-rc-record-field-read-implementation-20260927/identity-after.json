@@ -1,0 +1,36 @@
+{
+  "base": "49c6ca07bbba8b35cda4436b831327ac40c8fc87",
+  "head_before_patch": "0ad2316b3b98aa5d29dfea90c1e1742396c52f04",
+  "patch_sha256": "cf918b7248a70025876ee9c27c0fc0fba353e09b6b4d9e57535279446c9d98a5",
+  "compiler": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/field-list-read/install-final/bin/mylang",
+  "compiler_sha256": "6f83d9e54b2ad207d6360cc6c8ea9daf83b9da582e53f804258619e1a4d516c1",
+  "production_and_test_sources": {
+    "src/qbe.zig": "2a84245c716e419aad2d2469e82caacd4b3ff87353dc79f9e9318edc7b930433",
+    "src/qbe_rc_append_loop.zig": "d9d6f9cb7931f901caacd091c8e78a8e5504f15eca4cca0408a36f78ca574f45",
+    "src/qbe_rc_closed_text.zig": "dc405deb12c24e82adc7679ae5c8351d9ebbd871e3d4547426db10dbaa6cde65",
+    "src/qbe_rc_dictionary_effects.zig": "93839a43fa6bbec9b04ec61f72c12a964f06a98a13dc43805bdee4c747f91b5e",
+    "src/qbe_rc_dictionary_loop.zig": "8647b4d49efb9849e30059a5c5f98c28b440a4d292a3c4442a92dc01b301678c",
+    "src/qbe_rc_edges.zig": "ba3d4ea55d4fb33f488228d0bb24f26b78ce924827253fcdd3c003b20808bce4",
+    "src/qbe_rc_field_transfer.zig": "72d99be46a01bc2b533b9f275a0d118f80296de99b71114cc787234277082f2b",
+    "src/qbe_rc_locals.zig": "b11e783982102e3b366aadf9610dc358b5a56b8c5edc01e01fd01c63b3d2d1fb",
+    "src/qbe_rc_nonheld_capture.zig": "e353e538f162335875d3292f4db1dc98b82800a4f7e0eed2486aa574c70f914b",
+    "src/qbe_rc_ops.zig": "64a34b01a46697aef62eacafbc279a52e59f578eac831a48e6b96786f1a10f0a",
+    "src/qbe_rc_plain_record_write.zig": "1b83119d1238fd8f8f19e5e4ed15c8547a72381eab56e0a59b91cff28ba9e6fe",
+    "src/qbe_rc_read_version.zig": "22dc1ec9d65ccad4e2212ae692975bbb1101fac33913186c3cb5fc6611033e11",
+    "src/qbe_rc_record_read.zig": "76131c495ef6a70fcf09cd8ea79ad7c50dd14b12d882c7fe65bc7d120d0e51a1",
+    "src/qbe_rc_record_read_plan.zig": "b147a24af160298478c33d55167f3909d1e6d07b84c382a1252daed55af33a5c",
+    "src/qbe_rc_record_read_test.zig": "0a91647a5d31e155cea41774cb7f0a6b16ebe81ff04ac0b547dc8705720e29f9",
+    "src/qbe_rc_state.zig": "41c8ce510bbd3067d91c2e18305971d98b2127b93fa544bc0dafa8a46cc21850",
+    "src/rc_plain_record_write.zig": "e14e46dc893101630e93311e40e815cecaa05f4b1ae3c2a350d8802a4085a9fe",
+    "src/rc_record_home.zig": "89ad1eb52bfc6453abe8e7a4f10117ebb982f6d4d73a4f3ea34c81997af78aa3",
+    "src/rc_record_read.zig": "ee21dc0a8b39862c1d714ea184cd72ada244dc9eb592513139412b8c764bb212",
+    "src/root_test.zig": "6cfb52bf48f8b3579573db44624988e1046d46cd89b4ff3b518198de48acd902"
+  },
+  "control_sources": {
+    "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/tests/lang/rc_record_field_reads.my": "1d9e98f057566ecc3b51727d5984b499773b3b38235967581c0f514b2e8ec244"
+  },
+  "embedding_driver": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/field-list-read/controls/embedding",
+    "sha256": "4677b5a91cc6d75713aaac801da23bdcf7499d2335539ec63b8b5d6ca8d1131a"
+  }
+}

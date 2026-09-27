@@ -1,0 +1,18 @@
+before qbe 0 171766996925
+after qbe 0 154804551022
+after qbe 1 154922003617
+before qbe 1 170209985960
+before qbe 2 170218083305
+after qbe 2 154720486284
+before qbe counts {'version': 1, 'runtime': 'rc-v3-counting', 'saturated': False, 'owner_acquire': 44407747, 'owner_release': 48758355, 'hold_acquire': 184812386, 'hold_release': 184812386, 'owner_limit': 0, 'hold_limit': 0, 'heap_allocate': 4350608, 'arena_allocate': 0, 'retire': 4350608, 'clone_shell': 1095889, 'unique_check': 20836904}
+after qbe counts {'version': 1, 'runtime': 'rc-v3-counting', 'saturated': False, 'owner_acquire': 44407747, 'owner_release': 48758355, 'hold_acquire': 160905294, 'hold_release': 160905294, 'owner_limit': 0, 'hold_limit': 0, 'heap_allocate': 4350608, 'arena_allocate': 0, 'retire': 4350608, 'clone_shell': 1095889, 'unique_check': 20836904}
+SUMMARY qbe {'samples': {'before': [171766996925, 170209985960, 170218083305], 'after': [154804551022, 154922003617, 154720486284]}, 'medians': {'before': 170218083305, 'after': 154804551022}, 'after_before': 0.9094483266188484, 'accepted_gc_archival_median': 7243227886, 'before_gc': 23.50030759545814, 'after_gc': 21.37231541771762}
+before llvm 0 130356074911
+after llvm 0 118368631962
+after llvm 1 118295526878
+before llvm 1 128232137623
+before llvm 2 128350769417
+after llvm 2 118383505458
+before llvm counts {'version': 1, 'runtime': 'rc-v3-counting', 'saturated': False, 'owner_acquire': 44407747, 'owner_release': 48758355, 'hold_acquire': 184812386, 'hold_release': 184812386, 'owner_limit': 0, 'hold_limit': 0, 'heap_allocate': 4350608, 'arena_allocate': 0, 'retire': 4350608, 'clone_shell': 1095889, 'unique_check': 20836904}
+after llvm counts {'version': 1, 'runtime': 'rc-v3-counting', 'saturated': False, 'owner_acquire': 44407747, 'owner_release': 48758355, 'hold_acquire': 160905294, 'hold_release': 160905294, 'owner_limit': 0, 'hold_limit': 0, 'heap_allocate': 4350608, 'arena_allocate': 0, 'retire': 4350608, 'clone_shell': 1095889, 'unique_check': 20836904}
+SUMMARY llvm {'samples': {'before': [130356074911, 128232137623, 128350769417], 'after': [118368631962, 118295526878, 118383505458]}, 'medians': {'before': 128350769417, 'after': 118368631962}, 'after_before': 0.9222276773225336, 'accepted_gc_archival_median': 3433157037, 'before_gc': 37.385638942154806, 'after_gc': 34.47807096684229}

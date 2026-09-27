@@ -1,0 +1,124 @@
+record Cursor:
+    code: list[int]
+    index: int
+
+
+def read(index: int) -> int:
+    cursor = Cursor([7, 11, 13], index)
+    value = cursor.code[cursor.index]
+    return value + cursor.index
+
+
+def read_from(items: list[int], index: int) -> int:
+    cursor = Cursor(items, index)
+    value = cursor.code[cursor.index]
+    return value + cursor.index
+
+
+def adjacent(index: int) -> int:
+    cursor = Cursor([7, 11, 13], index)
+    first = cursor.code[cursor.index]
+    second = cursor.code[-1]
+    ordinary = [first, second]
+    ordinary.append(cursor.index)
+    return ordinary[0] + ordinary[1] + ordinary[2]
+
+
+def rebind(times: int) -> int:
+    cursor = Cursor([7, 11, 13], 0)
+    total = 0
+    count = 0
+    while count < times:
+        value = cursor.code[cursor.index]
+        total += value
+        cursor = Cursor([17, 19], count % 2)
+        count += 1
+    return total + cursor.index
+
+
+def change(cursor: mut Cursor) -> int:
+    cursor.code = [29]
+    return 0
+
+
+def captured_callback() -> int:
+    cursor = Cursor([7], 0)
+    value = cursor.code[change(mut cursor)]
+    return value + cursor.code[0]
+
+
+def floating(number: float) -> int:
+    cursor = Cursor([7, 11, 13], 0)
+    value = cursor.code[int(sqrt(number))]
+    return value + cursor.index
+
+
+def arithmetic(seed: int) -> int:
+    cursor = Cursor([7, 11, 13], 0)
+    value = cursor.code[cursor.index]
+    return value + seed + cursor.index
+
+
+def heap_frame(values: [4096]int, index: int) -> int:
+    padding = replace(values, 0, 3)
+    cursor = Cursor([7, 11, 13], index)
+    value = cursor.code[cursor.index]
+    return value + padding[0] + cursor.index
+
+
+# spec-case: RC-RECORD-FIELD-READ-1
+public def test_checked_positive_and_negative_indices() -> bool:
+    return read(0) == 7 and read(1) == 12 and read(-1) == 12 and read(-3) == 4
+
+
+# spec-case: RC-RECORD-FIELD-READ-1
+public def test_successful_interval_then_ordinary_publication() -> bool:
+    return adjacent(0) == 20 and adjacent(1) == 25 and adjacent(-1) == 25
+
+
+# spec-case: RC-RECORD-FIELD-READ-1
+public def test_dynamic_reentry_replaces_retained_home() -> bool:
+    return rebind(0) == 0 and rebind(1) == 7 and rebind(4) == 61
+
+
+# spec-case: RC-RECORD-FIELD-READ-1
+public def test_captured_callback_keeps_selected_snapshot() -> bool:
+    return captured_callback() == 36
+
+
+# spec-case: RC-RECORD-FIELD-READ-1
+public def test_generated_float_call_keeps_ordinary_fallback() -> bool:
+    return floating(0.0) == 7 and floating(1.0) == 11 and floating(4.0) == 13
+
+
+# spec-case: RC-RECORD-FIELD-READ-1
+public def test_parent_and_nested_arenas_keep_roots() -> bool:
+    result = read(1)
+    with arena():
+        result += read(-1)
+        with arena():
+            result += adjacent(0)
+    return result == 44
+
+
+record Flags:
+    code: list[bool]
+    index: int
+
+
+record Octets:
+    code: list[u8]
+    index: int
+
+
+# spec-case: RC-RECORD-FIELD-READ-1
+public def test_boolean_and_narrow_elements_preserve_width() -> bool:
+    flags = Flags([False, True], 1)
+    flag = flags.code[flags.index]
+    octets = Octets([u8(255), u8(128)], 0)
+    octet = octets.code[octets.index]
+    return flag and octet == u8(255) and flags.index == 1 and octets.index == 0
+
+
+def main() -> int:
+    return 0

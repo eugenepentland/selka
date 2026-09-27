@@ -1,0 +1,66 @@
+{
+  "qbe": {
+    "samples": [
+      170830570344,
+      170090220980,
+      171589171529
+    ],
+    "median": 170830570344,
+    "archival_accepted_gc": 7243227886,
+    "over_gc": 23.584867552515938,
+    "counts": {
+      "version": 1,
+      "runtime": "rc-v3-counting",
+      "saturated": false,
+      "owner_acquire": 44407747,
+      "owner_release": 48758355,
+      "hold_acquire": 184812386,
+      "hold_release": 184812386,
+      "owner_limit": 0,
+      "hold_limit": 0,
+      "heap_allocate": 4350608,
+      "arena_allocate": 0,
+      "retire": 4350608,
+      "clone_shell": 1095889,
+      "unique_check": 20836904
+    },
+    "profile": {
+      "throttle": 335,
+      "unthrottle": 335,
+      "lost": 0,
+      "attribution": "qualitative only"
+    }
+  },
+  "llvm": {
+    "samples": [
+      128194652889,
+      128311807042,
+      128390165006
+    ],
+    "median": 128311807042,
+    "archival_accepted_gc": 3433157037,
+    "over_gc": 37.37429009484602,
+    "counts": {
+      "version": 1,
+      "runtime": "rc-v3-counting",
+      "saturated": false,
+      "owner_acquire": 44407747,
+      "owner_release": 48758355,
+      "hold_acquire": 184812386,
+      "hold_release": 184812386,
+      "owner_limit": 0,
+      "hold_limit": 0,
+      "heap_allocate": 4350608,
+      "arena_allocate": 0,
+      "retire": 4350608,
+      "clone_shell": 1095889,
+      "unique_check": 20836904
+    },
+    "profile": {
+      "throttle": 253,
+      "unthrottle": 253,
+      "lost": 0,
+      "attribution": "qualitative only"
+    }
+  }
+}

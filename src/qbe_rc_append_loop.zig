@@ -72,7 +72,7 @@ fn quiet(comptime E: type, self: *E, proof: Certificate) Error!bool {
         if (site.unique.len != 0 or site.unique_field != null or site.capture or site.fill) return false;
         if (site.shares.len != 0 or site.read_captures.len != 0) return false;
         if (state.captures[pc].begin != cow.none or state.captures[pc].active != cow.none) return false;
-        for (state.rc.?.plan.field_transfers) |transfer| if (transfer.projection == pc or transfer.commit == pc) return false;
+        for (state.rc.?.plan.records.transfers) |transfer| if (transfer.projection == pc or transfer.commit == pc) return false;
         for (state.rc.?.plan.locals.edges) |edge| {
             if (edge.from != pc) continue;
             for (edge.releases) |release| if (try edges.releasesAt(E, self, pc, @backingInt(release.storage))) return false;

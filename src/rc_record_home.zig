@@ -86,7 +86,7 @@ fn writers(comptime E: type, self: *E, root: usize, budget: *Budget) bool {
 }
 
 fn intercepted(comptime E: type, self: *E, pc: usize, budget: *Budget) bool {
-    for (self.cow.?.rc.?.plan.field_transfers) |proof| if (!budget.visit() or proof.projection == pc or proof.commit == pc) return true;
+    for (self.cow.?.rc.?.plan.records.transfers) |proof| if (!budget.visit() or proof.projection == pc or proof.commit == pc) return true;
     return self.function.scope.instructions[pc].inline_origin != null;
 }
 

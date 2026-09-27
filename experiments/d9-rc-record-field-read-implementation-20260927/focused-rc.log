@@ -1,0 +1,20 @@
+test-units
++- run test w
+guardian/test: 208 test(s) selected by filter: "RC" — 197 match by name, 11 unnamed test block(s) run regardless
+MYLANG_RC_COUNTS {"version":1,"runtime":"rc-v3-counting","saturated":false,"owner_acquire":1,"owner_release":2,"hold_acquire":1,"hold_release":1,"owner_limit":0,"hold_limit":0,"heap_allocate":1,"arena_allocate":0,"retire":1,"clone_shell":0,"unique_check":2}
+guardian/test: SLOW  10.92s  qbe_runtime_rc_test.test.RC loans preserve pinned identity and roll back aggregate lifetime holds
+guardian/test: test wall 30.09s; slowest over 50ms:
+guardian/test:   10.92s  qbe_runtime_rc_test.test.RC loans preserve pinned identity and roll back aggregate lifetime holds
+guardian/test:   3.28s  qbe_runtime_rc_test.test.RC semantic publication commits history atomically and preserves pinned snapshot identity
+guardian/test:   2.52s  native_rc_collections_test.test.RC production storage and collection ownership
+guardian/test:   1.89s  native_rc_contract_test.test.RC contract layout counts reservation failure and iterative teardown
+guardian/test:   1.57s  native_rc_arena_test.test.RC arenas release logical edges before chunks and charge retained storage
+guardian/test:   1.40s  qbe_build_test.test.native RC closed field owner balances storeback snapshot traps and arena refusal
+guardian/test:   1.36s  qbe_build_test.test.native RC argv owner balances borrowed entry returns capability refusal and traps
+guardian/test:   0.29s  qbe_rc_plain_record_write_test.test.RC-PLAIN-RECORD-WRITE-1 entered tails wrong commits and earlier capture uses refuse
+guardian/test:   0.27s  qbe_rc_dictionary_key_test.test.RC dictionary key whole-local lifetime and role controls
+guardian/test:   0.27s  qbe_fragments_test.test.RC-BORROW-COMPOSE-1 caller cache follows transitive callee certificate loss
+guardian/test: PASS — 208 passed
+guardian/test: RESULT {"passed":208,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig /home/epentland/ai/canopy/mylang-worktrees/.d9-rc-mut-argument-zig-cache/o/3d76cc3d493c422f116edbae1a63445f/test --guardian-filter=RC --cache-dir=/home/epentland/ai/canopy/mylang-worktrees/.d9-rc-mut-argument-zig-cache --seed=0x27ed4a5b --listen=-
+
