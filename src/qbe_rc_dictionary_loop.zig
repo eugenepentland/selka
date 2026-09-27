@@ -127,14 +127,7 @@ fn emptyRelease(proof: model.Certificate, local: usize) bool {
 }
 
 fn edges(op: @FieldType(@import("bytecode.zig").Instruction, "op"), pc: usize, entry: Entry) bool {
-    return switch (op) {
-        .jump, .jump_if_false => |target| edge(pc, target, entry),
-        .switch_variant => |dispatch| for (dispatch.arms) |arm| {
-            if (!edge(pc, arm.target, entry)) break false;
-        } else true,
-        .try_result => |propagate| edge(pc, propagate.error_target, entry),
-        else => true,
-    };
+    return @import("ownership_sources.zig").targetsSatisfy(op, pc, entry, edge);
 }
 fn edge(pc: usize, target: usize, entry: Entry) bool {
     const producer = entry.definition - 1;
@@ -148,6 +141,7 @@ const t = @import("std").testing;
 // spec-case: RC-DICTIONARY-LOOP-1
 test "RC dictionary loop rejects middle entry and stale enclosing iteration" {
     const entry: Entry = .{ .definition = 4, .head = 8, .back = 20 };
+    const arms = [_]@import("bytecode.zig").SwitchArm{ .{ .target = 3, .slot = null }, .{ .target = 8, .slot = null } };
     try t.expect(edge(20, 8, entry));
     try t.expect(edge(7, 8, entry));
     try t.expect(edge(25, 3, entry)); // An outer iteration recreates the root.
@@ -155,6 +149,9 @@ test "RC dictionary loop rejects middle entry and stale enclosing iteration" {
     try t.expect(!edge(2, 4, entry)); // Skip the fresh producer.
     try t.expect(!edge(7, 12, entry)); // Skip the entry check.
     try t.expect(!edge(18, 5, entry)); // Inner backedge before the header.
+    try t.expect(edges(.{ .switch_variant = .{ .ty = .unit, .arms = arms[0..1] } }, 25, entry));
+    try t.expect(!edges(.{ .switch_variant = .{ .ty = .unit, .arms = &arms } }, 25, entry));
+    try t.expect(!edges(.{ .try_result = .{ .input = .unit, .output = .unit, .error_target = 4 } }, 2, entry));
 }
 // spec-case: RC-DICTIONARY-LOOP-1
 test "RC dictionary loop scan exhaustion never accepts a partial candidate" {
