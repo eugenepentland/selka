@@ -14,21 +14,32 @@ Stage 3 and WP-4pre are accepted on the integration branch. The complete
 The final combined default/borrow gate at `f6bea5d9` passes all four steps:
 2,130 executed main tests, 429 QBE tests, native-build and formatting.
 WP-4's compiler, runtime, collection, arena and host ownership paths are implemented
-behind an experimental runtime selector. The latest frozen full gate at `2b42a543`
+behind an experimental runtime selector. The last fully green checkpoint at `2b42a543`
 passes 2,266 main tests, 438 QBE tests, native build and formatting. ABI3 semantic
 history, private-loan mutable paths, certified fresh constructors and measured
 runtime/journal refinements are integrated. Both uncached RC sweeps pass **851/851
 assertions across 146 programs**, with no failures, skips or cached results. The
 original augmented-field abort and rejected iterator behavior are preserved as
 negative controls. The [joined checkpoint](d9-rc-place-constructor-gate-2026-09-26.md)
-records exact identities and receipts.
+records exact identities and receipts. The newer frozen checkpoint `685e2631`
+is **not green**: its ordinary guest runner and both RC sweeps drop one file
+because the module resolver rejects a declared `replace` callable. Each RC sweep
+passes its 865 executed assertions, but that does not make the sweep complete.
+The [failed gate receipts](d9-rc-nbody-gate-2026-09-26.md) preserve this result.
+The accepted GC compiler reproduces the resolver failure; its focused fix is
+validated separately and still needs the combined gate.
 
 The supplemental golden replay remains in progress on immutable `19e16e1d`.
 That compiler builds the complete performance corpus and passes all 60 parity
 and schematic output checks, but Lox QBE binary trees times out at 600 seconds;
 the remaining checks were stopped and archived. Nbody profiles motivated further
-plain-record/read-loan work in `codex/d9-rc-nbody-integration`. The complete RC
-instruction/RSS acceptance remains open. GC stays the default.
+plain-record/read-loan work in `codex/d9-rc-nbody-integration`. Those changes are
+now integrated at `685e2631`. The unchanged five-million-step nbody produces
+correct output and balanced counts but still uses 2.324486× QBE and 7.325101×
+LLVM instructions against accepted GC (median of three). A further validated
+empty-local journal refinement is ready to integrate. The argv ownership gap
+in Lox has a candidate fix undergoing final checks. The complete RC instruction/
+RSS acceptance remains open. GC stays the default.
 WP-5 has a [committed design](d9-wp5-concurrency-design-2026-09-26.md), with
 implementation dependent on WP-4 acceptance.
 
