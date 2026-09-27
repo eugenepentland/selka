@@ -141,12 +141,8 @@ static myl_rc_object *live_object(myl_native_heap *heap, void *payload) {
     return myl_rc_live(payload);
 }
 myl_rc_status myl_rc_owner_acquire(myl_native_heap *heap, void *payload) {
-    if (!myl_rc_is_counted(payload)) return MYL_RC_OK;
-    myl_rc_object *object = live_object(heap, payload);
-    if (object->owners == MYL_RC_COUNT_MAX) { MYL_RC_STAT(heap, MYL_RC_STAT_OWNER_LIMIT); return MYL_RC_COUNT_LIMIT; }
-    ++object->owners;
-    MYL_RC_STAT(heap, MYL_RC_STAT_OWNER_ACQUIRE);
-    return MYL_RC_OK;
+    if (myl_rc_counted(payload)) myl_rc_invariant(heap && heap->rc);
+    return myl_rc_owner_take(heap, payload);
 }
 /* An object whose admitted flat plan has no leaf has no edge, hook or
  * finalizer. Outside an active drain it retires at once instead of passing

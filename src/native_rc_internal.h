@@ -242,6 +242,18 @@ static inline void myl_rc_dies(myl_native_heap *heap, myl_rc_object *object) {
     object->owners = (uintptr_t)heap->rc->dead.head;
     heap->rc->dead.head = object;
 }
+/* myl_rc_owner_acquire for runtime-internal callers (heap is live). */
+static inline myl_rc_status myl_rc_owner_take(myl_native_heap *heap, void *payload) {
+    if (!myl_rc_counted(payload)) return MYL_RC_OK;
+    myl_rc_object *object = myl_rc_live(payload);
+    if (object->owners == MYL_RC_COUNT_MAX) {
+        MYL_RC_STAT(heap, MYL_RC_STAT_OWNER_LIMIT);
+        return MYL_RC_COUNT_LIMIT;
+    }
+    ++object->owners;
+    MYL_RC_STAT(heap, MYL_RC_STAT_OWNER_ACQUIRE);
+    return MYL_RC_OK;
+}
 /* Release one counted O edge and enqueue its death; the caller drains. */
 static inline void myl_rc_owner_drop(myl_native_heap *heap, void *payload) {
     if (!myl_rc_counted(payload)) return;

@@ -422,6 +422,43 @@ static void raw_bytes_and_blocks(void) {
     myl_rc_arena_close(&heap, 1);
     finish(&heap);
 }
+// spec: RC-CLONE-SPAN-1
+static void list_clone_spans(void) {
+    myl_native_heap heap;
+    start(&heap);
+    assert(myl_rc_descriptor_import(&heap, &item_descriptor) == MYL_RC_OK);
+    myl_native_list *list = myl_native_list_new(&heap, &first, 0);
+    assert(list);
+    void *text = bytes8(&heap), *pinned = bytes8(&heap);
+    for (uint64_t i = 0; i < 300; ++i) {
+        Item value = {i == 150 ? pinned : text, i};
+        assert(myl_rc_list_append(&heap, list, &value));
+    }
+    /* A pinned element payload is snapshotted; every other leaf is shared. */
+    myl_rc_pin pin = {0};
+    assert(myl_rc_pin_acquire(&heap, pinned, &pin) == MYL_RC_OK);
+    assert(myl_rc_owner_acquire(&heap, list) == MYL_RC_OK);
+    myl_rc_counters before, after;
+    assert(myl_rc_stats_snapshot(&heap, &before));
+    void *slot = list;
+    myl_rc_slot unique = {.shape = &owned, .address = &slot};
+    assert(myl_rc_unique_owned(&heap, &unique) == MYL_RC_OK);
+    myl_native_list *copy = slot;
+    assert(copy != list && copy->length == 300 && header(list)->owners == 1);
+    assert(myl_rc_stats_snapshot(&heap, &after));
+    assert(after.events[MYL_RC_STAT_CLONE] == before.events[MYL_RC_STAT_CLONE] + 2);
+    assert(header(text)->owners == 1 + 2 * 299 && header(pinned)->owners == 2);
+    Item *items = copy->storage;
+    assert(items[150].text != pinned && items[150].n == 150 && header(items[150].text)->owners == 1);
+    for (size_t i = 0; i < 300; ++i) assert(items[i].n == i && (i == 150 || items[i].text == text));
+    myl_rc_pin_release(&heap, &pin);
+    myl_rc_owner_release(&heap, copy);
+    myl_rc_owner_release(&heap, list);
+    assert(header(text)->owners == 1 && header(pinned)->owners == 1);
+    myl_rc_owner_release(&heap, text);
+    myl_rc_owner_release(&heap, pinned);
+    finish(&heap);
+}
 int myl_rc_fast_verify(void) {
     variant_plan_layout();
     variant_plan_operations();
@@ -434,12 +471,13 @@ int myl_rc_fast_verify(void) {
     shallow_shapes_skip_the_walker();
     list_append_publishes_in_place();
     raw_bytes_and_blocks();
-    return 11;
+    list_clone_spans();
+    return 12;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
-    assert(myl_rc_fast_verify() == 11);
-    puts("native RC fast paths: 11 tests passed");
+    assert(myl_rc_fast_verify() == 12);
+    puts("native RC fast paths: 12 tests passed");
     return 0;
 }
 #endif

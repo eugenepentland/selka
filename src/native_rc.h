@@ -79,6 +79,11 @@ typedef struct {
      * edges leaves next NULL. */
     myl_rc_status (*shell)(myl_native_heap *, const void *, unsigned, void **);
     int (*next)(myl_native_heap *, const void *, void *, size_t *, myl_rc_slot *, myl_rc_slot *);
+    /* Optional contiguous form of next for cloning: yields every remaining
+     * pair as one run of *count values of the first pair's shape at that
+     * shape's size, seeded like next's pairs, advancing the same cursor; 0 at
+     * the end. Descriptors with span still provide next. */
+    int (*span)(myl_native_heap *, const void *, void *, size_t *, myl_rc_slot *, myl_rc_slot *, size_t *count);
 } myl_rc_descriptor;
 typedef struct {
     unsigned abi;

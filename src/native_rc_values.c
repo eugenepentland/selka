@@ -271,7 +271,7 @@ static int flat_retain(myl_native_heap *heap, const myl_rc_binding *binding,
         void *payload;
         memcpy(&payload, (const unsigned char *)source + flat->offsets[__builtin_ctz(rest)], sizeof payload);
         if (payload && myl_native_header_region(payload) > region) status = MYL_RC_REGION_ERROR;
-        else status = myl_rc_owner_acquire(heap, payload);
+        else status = myl_rc_owner_take(heap, payload);
         if (status == MYL_RC_OK) continue;
         /* Clear the leaves not yet acquired; release exactly the prefix. */
         for (; rest; rest &= rest - 1)

@@ -1135,8 +1135,17 @@ static int rc_list_next(myl_native_heap *heap, const void *payload, void *target
     *from=(myl_rc_slot){.shape=element->shape,.address=(unsigned char *)source->storage+offset,.container=(void *)source,.region=myl_native_header_region(source)};
     return 1;
 }
+/* Every remaining element as one seeded run (see myl_rc_descriptor.span). */
+static int rc_list_span(myl_native_heap *heap, const void *payload, void *target, size_t *cursor, myl_rc_slot *to, myl_rc_slot *from, size_t *count) {
+    const myl_native_list *source=payload;
+    size_t first=*cursor;
+    if (!rc_list_next(heap,payload,target,cursor,to,from)) return 0;
+    *count=source->length-first;
+    *cursor=source->length;
+    return 1;
+}
 static const myl_rc_descriptor rc_list_descriptors[]={
-    {.type=&list_type,.shape=&rc_list_shape,.edges=rc_list_edges,.clone=rc_list_clone_adapter,.shell=rc_list_shell,.next=rc_list_next},
+    {.type=&list_type,.shape=&rc_list_shape,.edges=rc_list_edges,.clone=rc_list_clone_adapter,.shell=rc_list_shell,.next=rc_list_next,.span=rc_list_span},
     {.type=&rc_storage_type,.shape=&rc_list_shape,.edges=rc_storage_edges}
 };
 static const myl_rc_module rc_list_module={

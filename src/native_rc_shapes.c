@@ -304,7 +304,7 @@ static void flat_build(myl_rc_binding *binding) {
     flat->native_unique = 0;
     flat->conditional = 0;
     flat->size = descriptor->type->size;
-    if (descriptor->edges || descriptor->finalize || descriptor->clone || descriptor->shell || descriptor->next) return;
+    if (descriptor->edges || descriptor->finalize || descriptor->clone || descriptor->shell || descriptor->next || descriptor->span) return;
     flat_frame frames[16] = {{.type = descriptor->type, .shape = descriptor->shape,
         .tag_offset = MYL_RC_FLAT_ALWAYS}};
     size_t depth = 1, inspected = 0;
@@ -533,7 +533,7 @@ myl_rc_status myl_rc_descriptor_register(myl_native_heap *heap, const myl_rc_des
     myl_rc_invariant(shape && shape->size == descriptor->type->size);
     const myl_rc_descriptor *old = myl_rc_descriptor_find(heap, descriptor->type);
     if (old) {
-        myl_rc_invariant(old->shape == shape && old->edges == descriptor->edges && old->finalize == descriptor->finalize && old->clone == descriptor->clone && old->shell == descriptor->shell && old->next == descriptor->next);
+        myl_rc_invariant(old->shape == shape && old->edges == descriptor->edges && old->finalize == descriptor->finalize && old->clone == descriptor->clone && old->shell == descriptor->shell && old->next == descriptor->next && old->span == descriptor->span);
         return MYL_RC_OK;
     }
     size_t bytes = sizeof(myl_rc_batch) + sizeof(myl_rc_binding);
@@ -561,7 +561,7 @@ myl_rc_status myl_rc_descriptor_import(myl_native_heap *heap, const myl_rc_descr
     myl_rc_invariant(descriptor->shape->size == descriptor->type->size);
     const myl_rc_descriptor *old = myl_rc_descriptor_find(heap, descriptor->type);
     if (old) {
-        myl_rc_invariant(old->edges == descriptor->edges && old->finalize == descriptor->finalize && old->clone == descriptor->clone && old->shell == descriptor->shell && old->next == descriptor->next);
+        myl_rc_invariant(old->edges == descriptor->edges && old->finalize == descriptor->finalize && old->clone == descriptor->clone && old->shell == descriptor->shell && old->next == descriptor->next && old->span == descriptor->span);
         return MYL_RC_OK;
     }
     const myl_rc_module module = {.abi = MYL_RC_ABI_VERSION, .descriptors = descriptor, .descriptor_count = 1};
