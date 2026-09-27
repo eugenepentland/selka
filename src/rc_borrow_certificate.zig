@@ -8,8 +8,9 @@ const shapes = @import("rc_shape.zig");
 const model = @import("rc_model.zig");
 const Hash = std.crypto.hash.Blake3;
 /// Changing the accepted physical grammar changes every certificate identity.
-pub const version = "mylang-rc-borrowed-entry-v4";
-const Value = struct { ty: typed.Type, anchor: ?u32 = null };
+pub const version = "mylang-rc-borrowed-entry-v6";
+const cfg = @import("rc_borrow_flow.zig");
+const Value = cfg.Value;
 
 /// Certify a standalone function; direct calls require the program-aware entry.
 pub fn certify(allocator: std.mem.Allocator, catalog: *shapes.Catalog, function: bytecode.Function, abi: []const u8) native.Error!?model.BorrowCertificate {
@@ -17,9 +18,11 @@ pub fn certify(allocator: std.mem.Allocator, catalog: *shapes.Catalog, function:
 }
 
 /// Every reachable return must contain only one parameter's edges or immortals.
-/// Forward branch joins are exact; unknown operations, backedges and fresh heap
-/// objects decline certification. Calls must independently prove immortal-only.
+/// Monotone CFG joins converge before any physical return is accepted. Unknown
+/// operations and fresh heap objects decline; callees need complete proofs.
 pub fn certifyIn(allocator: std.mem.Allocator, catalog: *shapes.Catalog, functions: []const bytecode.Function, function: bytecode.Function, abi: []const u8) native.Error!?model.BorrowCertificate {
+    // Scalar proofs are internal call dependencies, never alternate entries.
+    if (!(try catalog.get(function.signature.return_type)).counted) return null;
     var traversal: Traversal = .{};
     const answer = (try analyze(.{ .allocator = allocator, .catalog = catalog, .functions = functions, .function = function, .abi = abi, .traversal = &traversal })) orelse return null;
     const parameter = answer.value.anchor orelse return null;
@@ -27,10 +30,22 @@ pub fn certifyIn(allocator: std.mem.Allocator, catalog: *shapes.Catalog, functio
 }
 
 const Answer = struct { value: Value, identity: [32]u8 };
-const State = struct { stack: []Value, locals: []?Value };
+const State = cfg.State;
 // One root query has a bounded call depth and total state-copy work. Active
 // instruction slices identify recursion without allocating another graph.
-const Traversal = struct { active: [16]?[*]const bytecode.Instruction = @splat(null), depth: usize = 0, remaining: usize = 65536 };
+const Traversal = struct {
+    active: [16]?[*]const bytecode.Instruction = @splat(null),
+    depth: usize = 0,
+    remaining: usize = 65536,
+    work: usize = 524288,
+    memo: Memo = .{},
+};
+// Retain every completed dependency: eviction could let a caller rely on a
+// differently budgeted proof than the callee's independent emission query.
+const Memo = struct {
+    entries: [16]struct { target: usize, answer: ?Answer } = undefined,
+    count: usize = 0,
+};
 const Input = struct { allocator: std.mem.Allocator, catalog: *shapes.Catalog, functions: []const bytecode.Function, function: bytecode.Function, abi: []const u8, traversal: *Traversal };
 fn analyze(input: Input) native.Error!?Answer {
     const traversal = input.traversal;
@@ -59,7 +74,11 @@ fn admissible(catalog: *shapes.Catalog, function: bytecode.Function) native.Erro
     if (function.policy.c_abi or function.policy.host != null) return false;
     if (signature.mutates.len != 0 or signature.declared_mutates.len != 0) return false;
     const shape = try catalog.get(signature.return_type);
-    if (!shape.counted) return false;
+    // Internal scalar helpers use the same closed grammar. Public alternate
+    // entries still require a managed parameter anchor in certifyIn.
+    const result = signature.return_type;
+    const scalar = result.isInteger() or result == .bool or result == .unit;
+    if (!shape.counted and !scalar) return false;
     if (shape.unique_drop or !shape.copyable) return false;
     if (signature.parameter_count > function.scope.locals.len) return false;
     for (function.scope.locals) |local| if ((try catalog.get(local.ty)).unique_drop) return false;
@@ -69,16 +88,39 @@ fn admissible(catalog: *shapes.Catalog, function: bytecode.Function) native.Erro
 fn flow(input: Input) native.Error!?Answer {
     const a = input.allocator;
     const code = input.function.scope.instructions;
-    const incoming = try a.alloc(?State, code.len);
-    @memset(incoming, null);
+    var graph = try cfg.Graph.init(a, code.len, input.function.scope.locals.len, &input.traversal.work);
+    defer graph.deinit();
     const locals = try a.alloc(?Value, input.function.scope.locals.len);
     @memset(locals, null);
     for (0..input.function.signature.parameter_count) |index| {
         const ty = input.function.scope.locals[index].ty;
         locals[index] = .{ .ty = ty, .anchor = if ((try input.catalog.get(ty)).counted) @intCast(index) else null };
     }
-    incoming[0] = .{ .stack = &.{}, .locals = locals };
+    if (!try graph.publish(0, .{ .stack = &.{}, .locals = locals })) return null;
     var proof: Proof = .{ .catalog = input.catalog, .function = input.function, .functions = input.functions, .abi = input.abi, .traversal = input.traversal, .locals = locals };
+    // Reuse one scratch state. Incoming arrays are allocated once per reachable
+    // instruction and joined in place; backedges never allocate state copies.
+    try proof.stack.ensureTotalCapacity(a, code.len + 1);
+    while (graph.take()) |pc| {
+        if (!graph.charge()) return null;
+        proof.restore(graph.incoming[pc].?, pc);
+        const op = code[pc].op;
+        switch (op) {
+            .ret => continue, // Inspect only the final converged incoming state.
+            .jump => |target| {
+                if (!try graph.publish(target, proof.state())) return null;
+                continue;
+            },
+            .jump_if_false => |target| {
+                if (!proof.condition() or !try graph.publish(target, proof.state())) return null;
+            },
+            else => if (!try proof.step(a, op)) return null,
+        }
+        if (!try graph.publish(pc + 1, proof.state())) return null;
+    }
+    // Hash in source order after convergence. Queue order and repeated visits
+    // cannot change dependency identity; helper work shares the same bounds.
+    proof.hash = .init(.{});
     part(&proof.hash, version);
     part(&proof.hash, input.abi);
     part(&proof.hash, input.function.name);
@@ -86,11 +128,9 @@ fn flow(input: Input) native.Error!?Answer {
     for (input.function.scope.locals[0..input.function.signature.parameter_count]) |local| proof.hash.update(&(try input.catalog.native.layout(local.ty)).hash);
     var result: ?Value = null;
     for (code, 0..) |instruction, pc| {
-        const state = incoming[pc] orelse continue;
-        proof.locals = try a.dupe(?Value, state.locals);
-        proof.stack = .empty;
-        try proof.stack.appendSlice(a, state.stack);
-        proof.pc = pc;
+        const state = graph.incoming[pc] orelse continue;
+        if (!graph.charge()) return null;
+        proof.restore(state, pc);
         number(&proof.hash, pc);
         std.hash.autoHashStrat(&proof.hash, instruction.op, .Deep);
         switch (instruction.op) {
@@ -99,51 +139,19 @@ fn flow(input: Input) native.Error!?Answer {
                 const value = proof.stack.items[0];
                 if (value.ty != input.function.signature.return_type) return null;
                 if (result) |*prior| {
-                    if (!mergeValue(prior, value)) return null;
+                    if (!cfg.merge(prior, value)) return null;
                 } else result = value;
-                continue;
             },
-            .jump => |target| {
-                if (target <= pc or !try publish(a, incoming, target, proof)) return null;
-                continue;
-            },
-            .jump_if_false => |target| {
-                const condition = proof.stack.pop() orelse return null;
-                if (condition.ty != .bool or target <= pc) return null;
-                if (!try publish(a, incoming, target, proof)) return null;
-            },
+            .jump => {},
+            .jump_if_false => if (!proof.condition()) return null,
             else => if (!try proof.step(a, instruction.op)) return null,
         }
-        if (!try publish(a, incoming, pc + 1, proof)) return null;
     }
     const value = result orelse return null;
     proof.hash.update(&(try input.catalog.native.layout(value.ty)).hash);
     var identity: [32]u8 = undefined;
     proof.hash.final(&identity);
     return .{ .value = value, .identity = identity };
-}
-
-fn mergeValue(destination: *Value, source: Value) bool {
-    if (destination.ty != source.ty) return false;
-    if (destination.anchor) |anchor| {
-        if (source.anchor) |other| if (anchor != other) return false;
-    } else destination.anchor = source.anchor;
-    return true;
-}
-
-fn publish(a: std.mem.Allocator, incoming: []?State, target: usize, proof: Proof) native.Error!bool {
-    if (target >= incoming.len) return false;
-    const stack = proof.stack.items;
-    if (incoming[target]) |state| {
-        if (state.stack.len != stack.len) return false;
-        for (state.stack, stack) |*destination, source| if (!mergeValue(destination, source)) return false;
-        for (state.locals, proof.locals) |*destination, source| {
-            if (destination.* != null and source != null) {
-                if (!mergeValue(&destination.*.?, source.?)) return false;
-            } else destination.* = null;
-        }
-    } else incoming[target] = .{ .stack = try a.dupe(Value, stack), .locals = try a.dupe(?Value, proof.locals) };
-    return true;
 }
 
 const Proof = struct {
@@ -156,6 +164,19 @@ const Proof = struct {
     stack: std.ArrayList(Value) = .empty,
     locals: []?Value,
     hash: Hash = .init(.{}),
+
+    fn restore(self: *Proof, incoming: State, pc: usize) void {
+        @memcpy(self.locals, incoming.locals);
+        self.stack.clearRetainingCapacity();
+        self.stack.appendSliceAssumeCapacity(incoming.stack);
+        self.pc = pc;
+    }
+    fn state(self: *Proof) State {
+        return .{ .stack = self.stack.items, .locals = self.locals };
+    }
+    fn condition(self: *Proof) bool {
+        return (self.stack.pop() orelse return false).ty == .bool;
+    }
 
     fn step(self: *Proof, allocator: std.mem.Allocator, op: @FieldType(bytecode.Instruction, "op")) native.Error!bool {
         switch (op) {
@@ -236,16 +257,35 @@ const Proof = struct {
         const index = @backingInt(target);
         if (index >= self.functions.len) return false;
         const callee = self.functions[index];
-        const answer = (try analyze(.{ .allocator = allocator, .catalog = self.catalog, .functions = self.functions, .function = callee, .abi = self.abi, .traversal = self.traversal })) orelse return false;
-        // Only immortal factories are admitted as calls, so a canonical owned
-        // result cannot create an unjournaled runtime ownership obligation.
-        if (answer.value.anchor != null) return false;
         const count = callee.signature.parameter_count;
-        if (self.stack.items.len < count) return false;
-        self.stack.items.len -= count;
+        if (self.stack.items.len < count or count > callee.scope.locals.len) return false;
+        const base = self.stack.items.len - count;
+        for (self.stack.items[base..], callee.scope.locals[0..count]) |argument, parameter|
+            if (argument.ty != parameter.ty) return false;
+        const answer = (try self.calleeProof(allocator, index)) orelse return false;
+        var value = answer.value;
+        if (value.anchor) |parameter| {
+            if (parameter >= count) return false;
+            value.anchor = self.stack.items[base + parameter].anchor;
+            number(&self.hash, parameter);
+            number(&self.hash, if (value.anchor) |anchor| @as(u64, anchor) + 1 else 0);
+        }
+        self.stack.items.len = base;
         self.hash.update(&answer.identity);
-        try self.stack.append(allocator, answer.value);
+        try self.stack.append(allocator, value);
         return true;
+    }
+
+    fn calleeProof(self: *Proof, allocator: std.mem.Allocator, index: usize) native.Error!?Answer {
+        const memo = &self.traversal.memo;
+        for (memo.entries[0..memo.count]) |entry| if (entry.target == index) return entry.answer;
+        if (memo.count == memo.entries.len) return null;
+        const slot = memo.count;
+        memo.count += 1;
+        memo.entries[slot] = .{ .target = index, .answer = null };
+        const answer = try analyze(.{ .allocator = allocator, .catalog = self.catalog, .functions = self.functions, .function = self.functions[index], .abi = self.abi, .traversal = self.traversal });
+        memo.entries[slot].answer = answer;
+        return answer;
     }
 
     fn construct(self: *Proof, allocator: std.mem.Allocator, record: @FieldType(@FieldType(bytecode.Instruction, "op"), "make_record")) native.Error!bool {

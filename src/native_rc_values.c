@@ -158,8 +158,55 @@ void myl_rc_native_drop(myl_native_heap *heap, const myl_native_type *type, void
     myl_rc_slot slot={.shape=descriptor->shape,.address=value};
     myl_rc_value_drop(heap,&slot);
 }
+/* Clear every sibling before callbacks. The generic compound walker defers
+ * H-release drains until its frames are empty; a flat loop must do the same. */
+static void flat_unloan(myl_native_heap *heap, const myl_rc_binding *binding, void *value) {
+    myl_rc_invariant(heap && heap->rc && !heap->rc->walk.depth && value);
+    for (unsigned i = 0; i < binding->flat.count; ++i) {
+        void *edge = (unsigned char *)value + binding->flat.offsets[i], *payload;
+        memcpy(&payload, edge, sizeof payload);
+        memset(edge, 0, sizeof payload);
+        myl_rc_hold_edge_release(heap, payload);
+    }
+    memset(value, 0, binding->descriptor.type->size);
+    myl_rc_drain(heap);
+}
+/* Native admission proves no inline unique field, including a NULL typed box.
+ * Actual opaque payloads still need their own finalizer check. Acquisition in
+ * shape order preserves duplicate-limit refusal and exact prefix rollback. */
+static int flat_loan(myl_native_heap *heap, const myl_rc_binding *binding,
+                      void *destination, const void *source) {
+    if (!binding->flat.loanable || !binding->descriptor.type->size) return -1;
+    myl_rc_invariant(heap && heap->rc && !heap->rc->walk.depth && destination && source && destination != source);
+    uintptr_t dst = (uintptr_t)destination, src = (uintptr_t)source;
+    size_t bytes = binding->descriptor.type->size;
+    if (dst > src ? dst - src < bytes : src - dst < bytes) return -1;
+    memcpy(destination, source, bytes);
+    for (unsigned i = 0; i < binding->flat.count; ++i)
+        memset((unsigned char *)destination + binding->flat.offsets[i], 0, sizeof(void *));
+    for (unsigned i = 0; i < binding->flat.count; ++i) {
+        void *payload;
+        memcpy(&payload, (const unsigned char *)source + binding->flat.offsets[i], sizeof payload);
+        if (payload) {
+            const myl_native_object *header = (const myl_native_object *)payload - 1;
+            const myl_rc_descriptor *descriptor = myl_rc_descriptor_find(heap, header->element);
+            myl_rc_invariant((header->mark & MYL_NATIVE_OBJECT_IMMORTAL) || (descriptor && !descriptor->finalize));
+        }
+        myl_rc_hold hold = {0};
+        myl_rc_status status = myl_rc_hold_acquire(heap, payload, &hold);
+        if (status != MYL_RC_OK) { flat_unloan(heap, binding, destination); return status; }
+        memcpy((unsigned char *)destination + binding->flat.offsets[i], &payload, sizeof payload);
+    }
+    myl_rc_drain(heap);
+    return MYL_RC_OK;
+}
 int myl_rc_native_loan(myl_native_heap *heap, const myl_native_type *type, void *dst, const void *src) {
-    const myl_rc_shape *shape = myl_rc_native_shape(heap, type);
+    const myl_rc_descriptor *descriptor = myl_rc_descriptor_find(heap, type);
+    if (descriptor) {
+        int flat = flat_loan(heap, (const myl_rc_binding *)descriptor, dst, src);
+        if (flat >= 0) return publication_status(heap, (myl_rc_status)flat);
+    }
+    const myl_rc_shape *shape = descriptor ? descriptor->shape : myl_rc_native_shape(heap, type);
     if (!shape) { memset(dst, 0, type->size); return 0; }
     myl_rc_invariant(!myl_rc_native_has_unique(heap, type));
     return publication_status(heap, myl_rc_loan_copy(heap, shape, dst, src));
@@ -167,6 +214,8 @@ int myl_rc_native_loan(myl_native_heap *heap, const myl_native_type *type, void 
 void myl_rc_native_unloan(myl_native_heap *heap, const myl_native_type *type, void *value) {
     const myl_rc_descriptor *descriptor = myl_rc_descriptor_find(heap, type);
     myl_rc_invariant(descriptor != NULL);
+    const myl_rc_binding *binding = (const myl_rc_binding *)descriptor;
+    if (binding->flat.loanable && type->size) { flat_unloan(heap, binding, value); return; }
     myl_rc_loan_drop(heap, descriptor->shape, value);
 }
 int myl_rc_native_mutable(const void *payload) {
