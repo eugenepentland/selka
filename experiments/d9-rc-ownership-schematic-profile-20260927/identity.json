@@ -1,0 +1,58 @@
+{
+  "source_commit": "e5d47d20f7978e788e9e4a7ad158c80d703db041",
+  "compiler_sha256": "1f3bca2c62180a58fcc54782f9414a2b272e8447f996096a6883dc330774e3c7",
+  "qualitative_only": true,
+  "text": {
+    "qbe": {
+      "original_binary_sha256": "d63dd93455de8d1bba60d4ac5a7d96fce3061626c01bd192bed288a8fc56dd39",
+      "symbols_binary_sha256": "4cb03ccd155dd357a258d27c03892f3daa96ba7928b9276fc9dcd06a6be467f3",
+      "original": {
+        "size": 979478,
+        "vma": 16814640,
+        "sha256": "bb832cce969aaa7d5c8817bcf6355128d8cfdd515ef1fd33a0f83f2d7cc0afd2"
+      },
+      "symbols": {
+        "size": 979478,
+        "vma": 16814640,
+        "sha256": "bb832cce969aaa7d5c8817bcf6355128d8cfdd515ef1fd33a0f83f2d7cc0afd2"
+      }
+    },
+    "llvm": {
+      "original_binary_sha256": "05cc840b9dd8c2a2564bc85b336df6930f401f06bd3c8b128fc3f8e702f405ae",
+      "symbols_binary_sha256": "b9112ebf5ef4ff802e38626d1674f156bbb9f034c3e0850713cb0d6726a10d77",
+      "original": {
+        "size": 589087,
+        "vma": 17213056,
+        "sha256": "08ac3364ca439336edabf2c23165d02c133134d851e9f9e8c957f5b80e647d0e"
+      },
+      "symbols": {
+        "size": 589087,
+        "vma": 17213056,
+        "sha256": "08ac3364ca439336edabf2c23165d02c133134d851e9f9e8c957f5b80e647d0e"
+      }
+    }
+  },
+  "artifacts": {
+    "README.md": "60046050ec541e87373ec748d9b4c4af0e7b06de3e462cca944add7046fb7e93",
+    "llvm.data.gz": "f5188b4fbdb6992af8bb0d3cf8a51666ce5ef0bd99cf260c1fff61dcf75ecc7c",
+    "llvm.mapped.json.gz": "39e6d2e44e2926c4b15b0ee0f322a7d35f80a54c80c0ad0ab729ab03e5aefcaa",
+    "llvm.nm.txt.gz": "0186398a92988775d71362317db3ee1e9b0937a26e31e6183502d5864a8d54eb",
+    "llvm.raw.txt.gz": "d967a3866e5a8760549645d6802ceada2d74de1246d8ef8386b191cbdc20ae34",
+    "llvm.report.txt.gz": "0a1cfa4117395a140fd45bb58b38ea470959edda51c44dce1edbc0b56f91d4d1",
+    "llvm.samples.txt.gz": "6538087e0a5dcc7eba65423907860843007f3e2c6a1b3392957cc0d191dbdadf",
+    "profile.py": "68114becf334d252986e1d661825ea4d4001d992da9a70790bfb088ac1b8fb91",
+    "qbe.data.gz": "6316bf127919354d7584810688e5990cbfa3ed6a1f493b4b5d798b82a7c7b41b",
+    "qbe.mapped.json.gz": "395974b650f998253e98fe36c89d77d87bfbdbc7d53188c397b3aed35ceca896",
+    "qbe.nm.txt.gz": "ae0fb030311f7aa33ea2b759c97defc24597475490be8ac8c2b73288e231a5c4",
+    "qbe.raw.txt.gz": "059fd9720d8857419deb2bbfbfe5fd7025cf50b670be03682d5585bc750b6f1b",
+    "qbe.report.txt.gz": "4e4f9882394acdf6f215b3e5d0d4cfa0ebe876c8856a7d420f7a0e90efc1f46e",
+    "qbe.samples.txt.gz": "1dab1459eb42080c9943ef095208eda6e86c6132b35a92e446b85a0a6d796336",
+    "results.json.gz": "af15cdec976ffc8d6f2ddee933edeaed3463d21a781511686f00b228b882be3a",
+    "run.log.gz": "077de2e154ef0d814d815e2a52bda90736375e99eea3041c6db02d8881f48780",
+    "schematic.llvm.symbols.qbe-manifest.json.gz": "528af8552572d9ccc5250790855f57b6a4ba56483596cd99e4ae1683396edeab",
+    "schematic.qbe.symbols.qbe-manifest.json.gz": "5aef3af4bb3a136895842c5d65b5676d6d3b55e948a4013df584c6c734a6d8cd",
+    "symbol-builds.json.gz": "5e87870617738515604265231dbae87c2ccd562c1a0a5ac08c24abe5a3a4ac49",
+    "symbols.log.gz": "7cf5a3bb48838d72f833b2c4fc821a1b72bb5703db084eabda91066dfdb65385",
+    "symbols.py": "eedca72f49d91423214e27d7dc906a5ce73d7321304228fa934f4513c9e2dd3a"
+  }
+}
