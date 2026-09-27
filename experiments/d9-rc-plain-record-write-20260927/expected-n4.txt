@@ -1,0 +1,14 @@
+stretch tree of depth:
+5
+check:
+-1
+num trees:
+32
+depth:
+4
+check:
+-32
+long lived tree of depth:
+4
+check:
+-1
