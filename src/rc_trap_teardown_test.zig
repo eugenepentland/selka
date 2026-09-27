@@ -117,6 +117,13 @@ test "RC-STATIC-DROPS-1 RC frames link nothing and drop through static types" {
     try t.expect(std.mem.indexOf(u8, text, "myl_qbe_rc_frame") == null);
     try t.expect(std.mem.indexOf(u8, text, "rcentries") == null);
     try t.expect(std.mem.indexOf(u8, text, "slot_drop") == null);
+    // A copyable counted slot routes a loan or held role apart from its owner
+    // release; both release points name the slot's static descriptor.
+    // The manifest is JSON, so a label line starts after an escaped newline.
+    const role = std.mem.indexOf(u8, text, "\\n@rcslotrole") orelse return error.TestUnexpectedResult;
+    const owner = std.mem.indexOf(u8, text[role..], "\\n@rcslotowner") orelse return error.TestUnexpectedResult;
+    try t.expect(std.mem.indexOf(u8, text[role .. role + owner], "call $myl_qbe_rc_drop_role(l %ctx, l extern $") != null);
+    try t.expect(std.mem.indexOf(u8, text[role + owner ..], "call $myl_rc_native_drop(l %heap, l extern $") != null);
 }
 
 // spec-case: RC-EXIT-SCOPES-1

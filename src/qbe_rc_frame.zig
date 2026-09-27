@@ -232,18 +232,30 @@ fn dropTyped(comptime E: type, self: *E, index: usize, ty: typed.Type) Error!voi
     try self.print(" storew 0, %v{d}\n", .{flag});
     if (shape.counted or shape.unique_drop) {
         const address = try slotAddress(E, self, index);
-        const descriptor = try self.descriptor(ty);
         if (shape.counted and !shape.unique_drop) {
             const role = self.temp();
             const special = self.temp();
             try self.print(" %v{d} =w loaduw %v{d}\n %v{d} =w and %v{d}, {d}\n", .{ role, try entryField(E, self, index, 24), special, role, special_roles });
             try self.print(" jnz %v{d}, @rcslotrole{d}, @rcslotowner{d}\n@rcslotrole{d}\n", .{ special, label, label, label });
-            try self.print(" call $myl_qbe_rc_drop_role(l %ctx, l extern ${s}, l %v{d}, w %v{d})\n jmp @rcslotdone{d}\n@rcslotowner{d}\n", .{ descriptor, address, role, label, label });
+            try roleRelease(E, self, ty, address, role);
+            try self.print(" jmp @rcslotdone{d}\n@rcslotowner{d}\n", .{ label, label });
         }
-        if (shape.unique_drop) try self.print(" call $myl_native_owned_drop(l %heap, l extern ${s}, l %v{d})\n", .{ descriptor, address });
-        if (shape.counted) try self.print(" call $myl_rc_native_drop(l %heap, l extern ${s}, l %v{d})\n", .{ descriptor, address });
+        try ownerRelease(E, self, ty, shape, address);
     }
     try self.print("@rcslotdone{d}\n", .{label});
+}
+/// Release an ordinary owner of a static type: unique resources close through
+/// their scheduler before any counted child is released. This is the one
+/// emission point for an owner's static drop (per-type glue composes here).
+fn ownerRelease(comptime E: type, self: *E, ty: typed.Type, shape: @import("rc_shape.zig").Shape, address: usize) Error!void {
+    const descriptor = try self.descriptor(ty);
+    if (shape.unique_drop) try self.print(" call $myl_native_owned_drop(l %heap, l extern ${s}, l %v{d})\n", .{ descriptor, address });
+    if (shape.counted) try self.print(" call $myl_rc_native_drop(l %heap, l extern ${s}, l %v{d})\n", .{ descriptor, address });
+}
+/// Release a loan, held pointer or partial construction by its role word.
+/// This is the one emission point for a non-owner role's static drop.
+fn roleRelease(comptime E: type, self: *E, ty: typed.Type, address: usize, role: usize) Error!void {
+    try self.print(" call $myl_qbe_rc_drop_role(l %ctx, l extern ${s}, l %v{d}, w %v{d})\n", .{ try self.descriptor(ty), address, role });
 }
 /// The fixed storage a slot's value lives in.
 fn slotAddress(comptime E: type, self: *E, index: usize) Error!usize {
