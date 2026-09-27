@@ -1,0 +1,63 @@
+{
+  "source_commit": "636524b81562e30285b15e297078fac24ffccb58",
+  "compiler_mode": "Debug",
+  "compiler_sha256": "32e272cf75968d2fe913f636739d4b11d83701448e515f057dfa87f1ed8cba46",
+  "commands": {
+    "final-build": {
+      "exit_code": 0,
+      "summary": "Build Summary: 19/19 steps succeeded"
+    },
+    "test": {
+      "exit_code": 0,
+      "summary": "Build Summary: 94/94 steps succeeded; 2305/25803 tests passed (23498 skipped)"
+    },
+    "test-qbe": {
+      "exit_code": 0,
+      "summary": "Build Summary: 51/51 steps succeeded; 440/440 tests passed"
+    },
+    "test-qbe-build": {
+      "exit_code": 0,
+      "summary": "Build Summary: 29/29 steps succeeded"
+    },
+    "fmt-check": {
+      "exit_code": 0,
+      "summary": "Build Summary: 2/2 steps succeeded"
+    }
+  },
+  "sweeps": {
+    "qbe": {
+      "passed": 916,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 916,
+      "programs": 157,
+      "dropped": 0,
+      "unloaded": 0
+    },
+    "llvm": {
+      "passed": 916,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 916,
+      "programs": 157,
+      "dropped": 0,
+      "unloaded": 0
+    }
+  },
+  "artifacts": {
+    "final-build.log.gz": "1592022f027370ecdd72f9d6b5b806841dd0d1f2a685607181f09952cc8fbece",
+    "fmt-check.log.gz": "de01a91b7b313677fe046c287a2404a16ae2c7b1d6d2793c81737dda7bc60d14",
+    "gate.sh": "b8bb9631d1ec625801be91dae0cb6edcff070870b32c7c5654932dc3e0d64e2d",
+    "guardian.log.gz": "9b7b121d598229c7b80a0fa042a0fb86274b03fc745d7b2d6d192e9026cc947f",
+    "sweep-llvm.json.gz": "e8fd908f09e3a37dc68bb6b1a7a01fdebc6af7af8ea6c26e6696d9c4eb2b313f",
+    "sweep-llvm.log.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "sweep-qbe.json.gz": "bfbf68331c8774f8680c291c4f05e617002280b3b06a3f4c1e8fa7c5443a1487",
+    "sweep-qbe.log.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "sweep.sh": "4d23a1ac6635ab7b307312d53d1cd328d04de10230c5df392365402f0922a66c",
+    "test-qbe-build.log.gz": "de7c6fddbda13d1eeea6f3d266c811ca298b2ace38bc37ffdd5d2157cafa0016",
+    "test-qbe.log.gz": "f31cc84e1fbb92d6ee3fee3d9245967e6d6fb9bafc7124de06f2199a65adfff4",
+    "test.log.gz": "786c38c48f6be5407b57ecb07c388acff1d48954808d0846dfea2c3a9670987c"
+  }
+}
