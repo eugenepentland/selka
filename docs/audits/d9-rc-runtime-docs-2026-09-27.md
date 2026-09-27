@@ -33,6 +33,11 @@ Using immutable Debug compiler `468bd8e5`, SHA256
 
 The [archive](../../experiments/d9-rc-runtime-docs-20260927/README.md) retains both
 original failures, both source versions, all corrected outcomes and documentation
-reports. Complete four-command validation follows integration with the current
-compiler checkpoint. The full RC instruction/RSS gate and final default transition
-remain open.
+reports. Frozen joined source `2ca89942` passes the complete four-command gate:
+2,315 executed main tests, 440 QBE tests, 29 native-build steps and two formatting
+steps, plus all 88 whole-tree Guardian checks. The main gate reports 23,608 shard
+exclusions separately from executed tests. The [joined receipts](../../experiments/d9-rc-runtime-docs-20260927/joined-gate/README.md)
+record exact source and artifact identities. Production compiler/runtime source is
+unchanged from `468bd8e5`, whose 931-assertion RC sweeps on each backend remain
+valid for that source. The full RC instruction/RSS gate and final default
+transition remain open.
