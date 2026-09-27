@@ -76,6 +76,11 @@ size_t myl_rc_shape_depth(const myl_native_heap *, const myl_rc_shape *);
 /* Private identity hint only; clients must repeat all operation admission. */
 const myl_rc_descriptor *myl_rc_descriptor_repeat(const myl_native_heap *, const myl_native_type *);
 void myl_rc_scopes_close_region(myl_native_heap *, unsigned);
+/* Trap teardown: unlink every active scope and free its journal while the
+ * frames holding the scope records are still live, without restoring a pin
+ * or releasing a hold. Heap teardown retires what the scopes held; a later
+ * scope end on an abandoned record is a no-op. */
+void myl_rc_scopes_abandon(myl_native_heap *);
 myl_rc_status myl_rc_scope_extend(myl_rc_scope *, void *boundary, myl_rc_status (*)(myl_rc_scope *, void *));
 void myl_rc_enqueue(myl_native_heap *, myl_rc_object *);
 /* Release one H token and enqueue death without callbacks; caller drains. */

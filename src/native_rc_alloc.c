@@ -266,7 +266,57 @@ static void destroy(myl_native_heap *heap) {
     discharge(heap,sizeof *storage);
     free(storage);
 }
-static const myl_rc_allocator allocator={allocate,retire,destroy};
+/* Trap teardown (see myl_rc_allocator.teardown). A dying object's counts were
+ * already released when it was queued, so only its retirement remains. */
+static void teardown_object(myl_native_heap *heap, const myl_rc_object *object) {
+    (void)heap;(void)object;
+    MYL_RC_STAT(heap,MYL_RC_STAT_RETIRE);
+    if (object->common.mark&MYL_RC_OBJECT_DYING) return;
+    MYL_RC_STAT_MANY(heap,MYL_RC_STAT_OWNER_RELEASE,object->owners);
+    MYL_RC_STAT_MANY(heap,MYL_RC_STAT_HOLD_RELEASE,object->holds);
+}
+/* Every slot below the bump index is allocated unless the free list names it. */
+static void teardown_slab(myl_native_heap *heap, const rc_slab *slab) {
+#if defined(MYL_NATIVE_RC_COUNTING) && MYL_NATIVE_RC_COUNTING
+    uint64_t released[(RC_SLAB_BYTES/16+63)/64]={0};
+    const unsigned char *first=(const unsigned char *)slab+RC_SLAB_OFFSET;
+    for (void *slot=slab->free;slot;memcpy(&slot,slot,sizeof slot)) {
+        size_t index=(size_t)((unsigned char *)slot-first)/slab->stride;
+        released[index/64]|=UINT64_C(1)<<(index%64);
+    }
+    for (size_t i=0;i<slab->used;i++)
+        if (!(released[i/64]>>(i%64)&1)) teardown_object(heap,(const myl_rc_object *)(first+i*slab->stride));
+#else
+    (void)heap;(void)slab;
+#endif
+}
+static void teardown(myl_native_heap *heap) {
+    rc_storage *storage=storage_of(heap);
+    for (size_t i=0;i<RC_SLAB_CLASSES;i++) {
+        rc_class *class=&storage->classes[i];
+        while (class->all) {
+            rc_slab *slab=class->all;
+            class->all=slab->all.next;
+            teardown_slab(heap,slab);
+            assert(heap->objects_live>=slab->live);
+            heap->objects_live-=slab->live;
+            discharge(heap,RC_SLAB_BYTES);
+            free(slab);
+        }
+        class->available=NULL;
+    }
+    while (storage->large) {
+        rc_large *large=storage->large;
+        storage->large=large->next;
+        teardown_object(heap,(const myl_rc_object *)(large+1));
+        assert(heap->objects_live);
+        heap->objects_live--;
+        discharge(heap,large->charge);
+        free(large);
+    }
+    reuse_epoch(heap);
+}
+static const myl_rc_allocator allocator={allocate,retire,destroy,teardown};
 myl_rc_status myl_rc_storage_init(myl_native_heap *heap) {
     if (!budget(heap,sizeof(rc_storage))) return MYL_RC_ALLOCATION_REFUSED;
     rc_storage *storage=calloc(1,sizeof *storage);

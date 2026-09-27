@@ -314,6 +314,205 @@ fn isLocalZero(line: []const u8) bool {
     return std.mem.indexOf(u8, line, ", w 0, l ") != null;
 }
 
+/// RC-FLAG-PROMOTE-1: forward each `%vN =l copy %rcgP` or `%rcrP` address
+/// copy into its uses. Every RC guard and role word is then loaded and stored
+/// through its own frame slot, so QBE promotes each one no call can see to a
+/// temporary and folds the drops a path has already decided.
+pub fn forwardFlagCopies(a: std.mem.Allocator, text: []const u8) GenerateError![]u8 {
+    var names: std.StringHashMapUnmanaged([]const u8) = .empty;
+    defer names.deinit(a);
+    var scan = std.mem.splitScalar(u8, text, '\n');
+    while (scan.next()) |line| if (flagCopy(line)) |copy| try names.put(a, copy.temp, copy.slot);
+    if (names.count() == 0) return a.dupe(u8, text);
+    var out: std.ArrayList(u8) = .empty;
+    errdefer out.deinit(a);
+    scan = std.mem.splitScalar(u8, text, '\n');
+    var first = true;
+    while (scan.next()) |line| {
+        if (flagCopy(line) != null) continue;
+        if (!first) try out.append(a, '\n');
+        first = false;
+        var rest = line;
+        while (std.mem.indexOf(u8, rest, "%v")) |at| {
+            var end = at + 2;
+            while (end < rest.len and std.ascii.isDigit(rest[end])) end += 1;
+            try out.appendSlice(a, rest[0..at]);
+            const slot = if (end > at + 2) names.get(rest[at + 1 .. end]) else null;
+            if (slot) |name| {
+                try out.append(a, '%');
+                try out.appendSlice(a, name);
+            } else try out.appendSlice(a, rest[at..end]);
+            rest = rest[end..];
+        }
+        try out.appendSlice(a, rest);
+    }
+    return out.toOwnedSlice(a);
+}
+const FlagCopy = struct { temp: []const u8, slot: []const u8 };
+/// A whole line ` %vN =l copy %rcgP` (guard) or ` %vN =l copy %rcrP` (role).
+fn flagCopy(line: []const u8) ?FlagCopy {
+    if (!std.mem.startsWith(u8, line, " %v")) return null;
+    const marker = " =l copy %rc";
+    const equals = std.mem.indexOf(u8, line, marker) orelse return null;
+    const temp = line[2..equals];
+    if (temp.len < 2 or !allDigits(temp[1..])) return null;
+    const slot = line[equals + marker.len - 2 ..];
+    if (!flagSlot(slot, 'g') and !flagSlot(slot, 'r')) return null;
+    return .{ .temp = temp, .slot = slot };
+}
+fn allDigits(text: []const u8) bool {
+    for (text) |byte| if (!std.ascii.isDigit(byte)) return false;
+    return true;
+}
+
+/// RC-DEAD-DROPS-1: a guard word that nothing sets reads zero everywhere, so
+/// the drops it guards are dead. A guard is live once any line stores a
+/// nonzero or unknown value into it or hands its address to a call; every
+/// other guard sees only `storew 0` and `loaduw`. A dead guard's drop sequences
+/// (its load, branch, drop block and join label) are removed, its remaining
+/// loads become `copy 0` and its stores go, so the slot itself is dropped
+/// later. Role words that no remaining line reads lose their stores too.
+pub fn elideDeadRcDrops(a: std.mem.Allocator, text: []const u8) GenerateError![]u8 {
+    var dead: std.StringHashMapUnmanaged(void) = .empty;
+    defer dead.deinit(a);
+    var live: std.StringHashMapUnmanaged(void) = .empty;
+    defer live.deinit(a);
+    var scan = std.mem.splitScalar(u8, text, '\n');
+    while (scan.next()) |line| {
+        if (slotDefinition(line)) |name| {
+            if (flagSlot(name, 'g')) try dead.put(a, name, {});
+            continue;
+        }
+        var rest = line;
+        while (std.mem.indexOf(u8, rest, "%rcg")) |at| {
+            const name = flagName(rest[at + 1 ..]);
+            rest = rest[at + 1 + name.len ..];
+            if (!flagSlot(name, 'g')) continue;
+            if (!zeroOrLoad(line, name)) try live.put(a, name, {});
+        }
+    }
+    var names = live.keyIterator();
+    while (names.next()) |name| _ = dead.remove(name.*);
+    const folded = try foldDeadGuards(a, text, &dead);
+    defer a.free(folded);
+    return dropUnreadRoles(a, folded);
+}
+/// `%rcgN` / `%rcrN` exactly (`kind` 'g' or 'r').
+fn flagSlot(name: []const u8, kind: u8) bool {
+    return name.len > 3 and std.mem.startsWith(u8, name, "rc") and name[2] == kind and allDigits(name[3..]);
+}
+fn flagName(text: []const u8) []const u8 {
+    var end: usize = 0;
+    while (end < text.len and (std.ascii.isAlphanumeric(text[end]) or text[end] == '_')) end += 1;
+    return text[0..end];
+}
+/// ` storew 0, %name` or ` %vN =w loaduw %name`.
+fn zeroOrLoad(line: []const u8, name: []const u8) bool {
+    if (std.mem.startsWith(u8, line, zero_store) and std.mem.eql(u8, line[zero_store.len..], name)) return true;
+    return loadOf(line, name) != null;
+}
+/// The prefix of a store that clears a guard word.
+const zero_store = " storew 0, %";
+/// The temporary a ` %vN =w loaduw %name` line defines, or null.
+fn loadOf(line: []const u8, name: []const u8) ?[]const u8 {
+    if (!std.mem.startsWith(u8, line, " %v")) return null;
+    const marker = " =w loaduw %";
+    const at = std.mem.indexOf(u8, line, marker) orelse return null;
+    if (!std.mem.eql(u8, line[at + marker.len ..], name)) return null;
+    return line[1..at];
+}
+fn foldDeadGuards(a: std.mem.Allocator, text: []const u8, dead: *const std.StringHashMapUnmanaged(void)) GenerateError![]u8 {
+    var lines: std.ArrayList([]const u8) = .empty;
+    defer lines.deinit(a);
+    var scan = std.mem.splitScalar(u8, text, '\n');
+    while (scan.next()) |line| try lines.append(a, line);
+    var kept: std.ArrayList(u8) = .empty;
+    errdefer kept.deinit(a);
+    var index: usize = 0;
+    while (index < lines.items.len) : (index += 1) {
+        const line = lines.items[index];
+        const guard = deadGuard(line, dead);
+        if (guard) |name| {
+            if (std.mem.startsWith(u8, line, zero_store)) continue;
+            const temp = loadOf(line, name).?;
+            if (dropSequence(lines.items, index, temp)) |end| {
+                index = end;
+                continue;
+            }
+            try kept.print(a, " {s} =w copy 0\n", .{temp});
+            continue;
+        }
+        try kept.appendSlice(a, line);
+        try kept.append(a, '\n');
+    }
+    if (kept.items.len != 0) _ = kept.pop();
+    return kept.toOwnedSlice(a);
+}
+/// The dead guard a zero store or load line names, or null.
+fn deadGuard(line: []const u8, dead: *const std.StringHashMapUnmanaged(void)) ?[]const u8 {
+    const at = std.mem.indexOf(u8, line, "%rcg") orelse return null;
+    const name = flagName(line[at + 1 ..]);
+    if (!dead.contains(name) or !zeroOrLoad(line, name)) return null;
+    return name;
+}
+/// The index of the join label closing the drop that begins with this load:
+/// ` jnz %vN, @rcslotdropL, @rcslotdoneL`, `@rcslotdropL`, ..., `@rcslotdoneL`.
+fn dropSequence(lines: []const []const u8, index: usize, temp: []const u8) ?usize {
+    if (index + 2 >= lines.len) return null;
+    const branch = lines[index + 1];
+    const prefix = " jnz ";
+    if (!std.mem.startsWith(u8, branch, prefix) or !std.mem.startsWith(u8, branch[prefix.len..], temp)) return null;
+    const targets = branch[prefix.len + temp.len ..];
+    const drop = ", @rcslotdrop";
+    if (!std.mem.startsWith(u8, targets, drop)) return null;
+    const comma = std.mem.indexOfPos(u8, targets, drop.len, ", @rcslotdone") orelse return null;
+    const label = targets[drop.len..comma];
+    if (!allDigits(label) or !std.mem.eql(u8, targets[comma + ", @rcslotdone".len ..], label)) return null;
+    const opened = lines[index + 2];
+    if (!std.mem.startsWith(u8, opened, "@rcslotdrop") or !std.mem.eql(u8, opened["@rcslotdrop".len..], label)) return null;
+    var end = index + 3;
+    while (end < lines.len) : (end += 1) {
+        const line = lines[end];
+        if (std.mem.startsWith(u8, line, "@rcslotdone") and std.mem.eql(u8, line["@rcslotdone".len..], label)) return end;
+    }
+    return null;
+}
+/// Drop every store into a role word that no remaining line reads or escapes.
+fn dropUnreadRoles(a: std.mem.Allocator, text: []const u8) GenerateError![]u8 {
+    var read: std.StringHashMapUnmanaged(void) = .empty;
+    defer read.deinit(a);
+    var scan = std.mem.splitScalar(u8, text, '\n');
+    while (scan.next()) |line| {
+        if (slotDefinition(line) != null) continue;
+        var rest = line;
+        while (std.mem.indexOf(u8, rest, "%rcr")) |at| {
+            const name = flagName(rest[at + 1 ..]);
+            rest = rest[at + 1 + name.len ..];
+            if (flagSlot(name, 'r') and roleStore(line, name) == null) try read.put(a, name, {});
+        }
+    }
+    var kept: std.ArrayList([]const u8) = .empty;
+    defer kept.deinit(a);
+    scan = std.mem.splitScalar(u8, text, '\n');
+    while (scan.next()) |line| {
+        if (std.mem.indexOf(u8, line, "%rcr")) |at| {
+            const name = flagName(line[at + 1 ..]);
+            if (flagSlot(name, 'r') and roleStore(line, name) != null and !read.contains(name)) continue;
+        }
+        try kept.append(a, line);
+    }
+    return std.mem.join(a, "\n", kept.items);
+}
+/// A ` storew VALUE, %name` line whose value is a constant or temporary.
+fn roleStore(line: []const u8, name: []const u8) ?[]const u8 {
+    if (!std.mem.startsWith(u8, line, " storew ")) return null;
+    const comma = std.mem.indexOf(u8, line, ", %") orelse return null;
+    if (!std.mem.eql(u8, line[comma + 3 ..], name)) return null;
+    const value = line[" storew ".len..comma];
+    if (std.mem.indexOfScalar(u8, value, ' ') != null or std.mem.indexOf(u8, value, "%rc") != null) return null;
+    return value;
+}
+
 /// Drop a slot definition no instruction reads. Every `%scratch`, `%arguments`,
 /// `%l{i}`, `%s{i}` and `%agg{pc}`/`%aux{pc}` temporary is declared in the entry
 /// block, and QBE cannot remove an unused `alloc8` by itself: it lowers each one
@@ -608,4 +807,68 @@ pub fn dropUnusedHeap(a: std.mem.Allocator, text: []const u8) GenerateError![]u8
         try kept.append(a, line);
     }
     return std.mem.join(a, "\n", kept.items);
+}
+
+// spec: RC-FLAG-PROMOTE-1
+test "RC flag address copies are forwarded into their loads and stores" {
+    const a = std.testing.allocator;
+    const text = " %rcg0 =l alloc8 8\n %v1 =l copy %rcg0\n storew 1, %v1\n %v12 =l copy %rcr0\n %v2 =w loaduw %v12\n %v123 =l copy %rcwork\n call $f(l %v1, l %v123)";
+    const out = try forwardFlagCopies(a, text);
+    defer a.free(out);
+    try std.testing.expectEqualStrings(" %rcg0 =l alloc8 8\n storew 1, %rcg0\n %v2 =w loaduw %rcr0\n %v123 =l copy %rcwork\n call $f(l %rcg0, l %v123)", out);
+    const plain = try forwardFlagCopies(a, " %v1 =l copy %rcregion\n ret %v1");
+    defer a.free(plain);
+    try std.testing.expectEqualStrings(" %v1 =l copy %rcregion\n ret %v1", plain);
+}
+
+// spec: RC-DEAD-DROPS-1
+test "RC dead guards lose their drops loads and stores while live guards keep theirs" {
+    const a = std.testing.allocator;
+    const text =
+        \\ %rcg0 =l alloc8 8
+        \\ %rcr0 =l alloc8 8
+        \\ %rcg1 =l alloc8 8
+        \\ storew 0, %rcg0
+        \\ storew 2, %rcr0
+        \\ storew 0, %rcg1
+        \\ storew 1, %rcg1
+        \\ %v1 =w loaduw %rcg0
+        \\ jnz %v1, @rcslotdrop2, @rcslotdone2
+        \\@rcslotdrop2
+        \\ storew 0, %rcg0
+        \\ %v3 =w loaduw %rcr0
+        \\ call $f(l %ctx)
+        \\@rcslotdone2
+        \\ %v4 =w loaduw %rcg0
+        \\ %v5 =w loaduw %rcg1
+        \\ ret %v5
+    ;
+    const out = try elideDeadRcDrops(a, text);
+    defer a.free(out);
+    try std.testing.expectEqualStrings(
+        \\ %rcg0 =l alloc8 8
+        \\ %rcr0 =l alloc8 8
+        \\ %rcg1 =l alloc8 8
+        \\ storew 0, %rcg1
+        \\ storew 1, %rcg1
+        \\ %v4 =w copy 0
+        \\ %v5 =w loaduw %rcg1
+        \\ ret %v5
+    , out);
+}
+
+// spec-case: RC-DEAD-DROPS-1
+test "RC flag passes report allocation failure without leaking a partial rewrite" {
+    const text = " %rcg0 =l alloc8 8\n storew 0, %rcg0\n %v1 =w loaduw %rcg0\n jnz %v1, @rcslotdrop2, @rcslotdone2\n@rcslotdrop2\n storew 0, %rcg0\n@rcslotdone2\n %v3 =w loaduw %rcg0\n ret %v3";
+    var failing = std.testing.FailingAllocator.init(std.testing.allocator, .{ .fail_index = 0 });
+    try std.testing.expectError(error.OutOfMemory, foldDeadGuards(failing.allocator(), text, &dead_zero));
+    try std.testing.checkAllAllocationFailures(std.testing.allocator, rewriteAndFree, .{text});
+    try std.testing.checkAllAllocationFailures(std.testing.allocator, forwardAndFree, .{" %v1 =l copy %rcg0\n storew 1, %v1"});
+}
+const dead_zero: std.StringHashMapUnmanaged(void) = .empty;
+fn rewriteAndFree(a: std.mem.Allocator, text: []const u8) !void {
+    a.free(try elideDeadRcDrops(a, text));
+}
+fn forwardAndFree(a: std.mem.Allocator, text: []const u8) !void {
+    a.free(try forwardFlagCopies(a, text));
 }

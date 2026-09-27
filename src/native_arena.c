@@ -321,6 +321,18 @@ static void release_pass(myl_native_heap *heap, myl_native_arena_chunk *chunk, u
         else myl_rc_edges_release(heap, descriptor->shape, header + 1, count);
     }
 }
+/* Return detached chunks to the retention cache or the host. */
+static void rc_retire_chunks(myl_native_heap *heap, myl_native_arena_chunk *chunks) {
+    while (chunks) {
+        myl_native_arena_chunk *chunk = chunks;
+        chunks = chunk->next;
+        heap->objects_live -= chunk->count;
+        heap->arena.released += chunk->count;
+        heap->arena.reserved_bytes -= chunk->bytes;
+        heap->arena.chunks_live--;
+        if (!cache(heap, chunk)) { heap->bytes -= chunk->bytes; free(chunk); }
+    }
+}
 static void rc_release(myl_native_heap *heap, unsigned region) {
     myl_native_arena_chunk *chunks = detach(heap, region);
     unsigned saved = heap->region_depth;
@@ -333,15 +345,12 @@ static void rc_release(myl_native_heap *heap, unsigned region) {
     myl_rc_drain(heap);
     myl_rc_invariant(heap->region_depth == (region ? region - 1 : 0));
     heap->region_depth = saved;
-    while (chunks) {
-        myl_native_arena_chunk *chunk = chunks;
-        chunks = chunk->next;
-        heap->objects_live -= chunk->count;
-        heap->arena.released += chunk->count;
-        heap->arena.reserved_bytes -= chunk->bytes;
-        heap->arena.chunks_live--;
-        if (!cache(heap, chunk)) { heap->bytes -= chunk->bytes; free(chunk); }
-    }
+    rc_retire_chunks(heap, chunks);
+}
+void myl_native_arena_discard(myl_native_heap *heap) {
+    myl_rc_invariant(heap && heap->rc);
+    myl_native_arena_sync(heap);
+    rc_retire_chunks(heap, detach(heap, 0));
 }
 void myl_native_arena_release(myl_native_heap *heap, unsigned region) {
     /* A reused chunk is zeroed up to `used`, which must cover what generated

@@ -27,8 +27,7 @@ pub fn emit(comptime E: type, self: *E, value: usize) Error!bool {
         try self.print(" %v{d} =l copy %return_storage\n", .{output});
     }
     if (owned) try frame.initialized(E, self, frame.pending(E, self), false);
-    try frame.Lower(E).cleanup(self);
-    try frame.Lower(E).leave(self);
+    try frame.Lower(E).exit(self);
     try @import("qbe_arena.zig").Lower(E).restore(self);
     if (self.heap_frame) try self.print(" call $myl_qbe_frame_release(l %ctx, l %frame_memory)\n", .{});
     try self.leaveFrame();
@@ -39,8 +38,7 @@ pub fn emit(comptime E: type, self: *E, value: usize) Error!bool {
 // The closed constructor grammar has only scalar locals and linear owned
 // operands. Every producer consumes its inputs and clears pending/internal
 // guards; empty-stack branch edges preserve that fact. At ret, the sole live
-// token is the ordinary result. The full journal remains linked until here,
-// so allocation/arithmetic/frame/step failures keep their existing unwind.
+// token is the ordinary result, so this path emits no frame drop at all.
 fn fresh(comptime E: type, self: *E, value: usize) Error!void {
     const ty = self.function.signature.return_type;
     if ((try self.layout(ty)).size > 256) return;
@@ -60,9 +58,7 @@ fn fresh(comptime E: type, self: *E, value: usize) Error!void {
     }
     try frame.initialized(E, self, index, false);
     // No scope/arena instruction or external call is admitted. Self callees
-    // preserve the entry region and scope checkpoint, including inside arenas.
-    // Leave only validates/unlinks; no cleanup callback can split this handoff.
-    try frame.Lower(E).leave(self);
+    // preserve the entry region and scope chain, including inside arenas.
     try self.leaveFrame();
     try self.print(" ret %v{d}\n@rcfreshreturnslow{d}\n", .{ output, label });
 }

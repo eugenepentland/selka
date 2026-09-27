@@ -149,7 +149,7 @@ test "RC isolated operands preserve byte metadata guards checked fallback and st
     try t.expect(std.mem.indexOf(u8, il, "RC-READ-BYTES-VERSION-1") != null);
     const original = std.mem.indexOf(u8, il, "\n@oi") orelse return error.TestUnexpectedResult;
     try t.expect(std.mem.indexOf(u8, il[original..], "myl_qbe_fail_index_bounds") != null);
-    try t.expect(std.mem.indexOf(u8, il[original..], "myl_qbe_rc_slot_drop") != null);
+    try t.expect(std.mem.indexOf(u8, il[original..], "@rcslotdrop") != null);
     const heap = try functionOf(output.value, "heap");
     try t.expect(std.mem.indexOf(u8, heap, "myl_qbe_frame_allocate") != null);
     try t.expect(std.mem.indexOf(u8, heap, "RC-LOOP-OPERANDS-ISOLATED") == null);

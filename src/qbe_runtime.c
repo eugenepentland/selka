@@ -398,8 +398,13 @@ static __attribute__((noinline)) uint64_t fail(void *context, const char *code) 
            entry ran. A context without one (the direct C entry points and
            budget parsing) keeps the sticky behavior. */
         if (ctx->unwind) {
+            /* Traps are fatal: no guest frame runs again, so an RC heap keeps
+               no per-frame cleanup journal. Only the scope records on the
+               departing stack are detached here; the execution tears the heap
+               down after the resource registry has closed every resource
+               (myl_qbe_rc_finish). */
 #if (defined(MYL_NATIVE_RC) && MYL_NATIVE_RC) || defined(MYL_RC_CONTRACT_LIBRARY)
-            myl_qbe_rc_unwind(ctx);
+            myl_qbe_rc_trap(ctx);
 #endif
             longjmp(*(jmp_buf *)ctx->unwind, 1);
         }

@@ -125,14 +125,25 @@ typedef struct {
     size_t count;
     unsigned region;
 } myl_rc_alloc_request;
+/* teardown releases every remaining extent at once after a trap: it runs no
+ * finalizer, edge release or drain, and in a counting build it retires each
+ * remaining object and releases its outstanding owner and hold counts. */
 typedef struct {
     myl_rc_status (*allocate)(myl_native_heap *, const myl_rc_alloc_request *, void **);
     void (*retire)(myl_native_heap *, void *);
     void (*destroy)(myl_native_heap *);
+    void (*teardown)(myl_native_heap *);
 } myl_rc_allocator;
 myl_rc_status myl_rc_heap_init(myl_native_heap *, const myl_rc_allocator *, void *allocator_context);
 void *myl_rc_allocator_context(const myl_native_heap *);
 void myl_rc_heap_destroy(myl_native_heap *);
+/* Trap teardown of the whole RC heap. Traps are fatal, so no guest code runs
+ * again: open scopes are abandoned, queued and live objects are released
+ * wholesale through the allocator's teardown hook, and the heap is left empty
+ * and consistent for destroy. Unique resources are not closed here; the
+ * execution's resource registry closes each one exactly once, as it does for
+ * the tracing collector. Arena regions must be discarded first. */
+void myl_rc_heap_teardown(myl_native_heap *);
 myl_rc_status myl_rc_new(myl_native_heap *, const myl_rc_alloc_request *, void **out);
 void myl_rc_allocator_retire(myl_native_heap *, void *);
 

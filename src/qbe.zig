@@ -1681,6 +1681,7 @@ const Emitter = struct {
         if (runtime_mode.enabled()) try @import("qbe_rc_empty_locals.zig").finalize(Emitter, self);
         if (runtime_mode.enabled()) try @import("qbe_rc_empty_frame.zig").finalize(Emitter, self);
         if (runtime_mode.enabled()) try @import("qbe_rc_record_read_plan.zig").finalize(Emitter, self);
+        if (runtime_mode.enabled()) try self.planRcScopeRecords();
         try @import("qbe_rc_readonly_calls.zig").verify(Emitter, self);
         try self.findRoots();
         if (self.needsRootProtocol()) self.live_roots = try self.rootLiveness();
@@ -1698,6 +1699,18 @@ const Emitter = struct {
         if (try self.frameBytes(capacity, try declaredTemporaryBytes(text)) <= native_frame_limit) return text;
         self.restart(serial);
         return self.lower(name, capacity, .{ .heap = possible });
+    }
+    /// RC-EXIT-SCOPES-1: name the receiver place scope records this frame
+    /// allocates, so a return can close any of them still open.
+    fn planRcScopeRecords(self: *Emitter) GenerateError!void {
+        const state = rc_frame.get(Emitter, self) orelse return;
+        const cow = self.cow orelse return;
+        var fills: std.ArrayList(usize) = .empty;
+        for (cow.plan.places) |maybe| {
+            const place = maybe orelse continue;
+            if (cow_lower.Lower(Emitter).scoped(self, place)) try fills.append(self.allocator, place.fill);
+        }
+        state.plan.scope_records = try fills.toOwnedSlice(self.allocator);
     }
     /// Solve liveness once, run the ownership analysis over it and plan the
     /// aggregate copies it proves unnecessary (`OWNERSHIP-ANALYSIS-1`,
@@ -1782,8 +1795,8 @@ const Emitter = struct {
         try self.emitInstructions();
         if (self.step_checks) try self.print("@step_limit\n call $myl_qbe_fail_step(l %ctx)\n jmp @failure\n@failure\n", .{}) else try self.print("@failure\n", .{});
         try cow_lower.Lower(Emitter).clearScopes(self);
-        try rc_frame.Lower(Emitter).cleanup(self);
-        try rc_frame.Lower(Emitter).leave(self);
+        // An RC frame drops nothing here: a trap is fatal and tears the whole
+        // heap down after the resource registry has run (RC-TRAP-TEARDOWN-1).
         try arena_lower.Lower(Emitter).restore(self);
         if (self.needsRootProtocol()) try root_lower.restoreFrameRoots(self);
         if (self.heap_frame) try self.print(" call $myl_qbe_frame_release(l %ctx, l %frame_memory)\n jmp @allocation_failure\n@allocation_failure\n", .{});
@@ -1810,9 +1823,17 @@ const Emitter = struct {
         }
         text = try dropUnusedRoots(self.allocator, text);
         text = try dropUnusedHeap(self.allocator, text);
+        text = try rcFlagPasses(self.allocator, text);
         text = try dropUnusedSlots(self.allocator, text);
         if (!self.stickyFlagTest()) text = try haltFailurePaths(self.allocator, text);
         return stripUnreferencedLabels(self.allocator, text);
+    }
+    /// RC-FLAG-PROMOTE-1 and RC-DEAD-DROPS-1: address guard and role words
+    /// directly, then remove what a never-set guard protects.
+    fn rcFlagPasses(allocator: std.mem.Allocator, text: []u8) GenerateError![]u8 {
+        if (!runtime_mode.enabled()) return text;
+        const forwarded = try il_passes.forwardFlagCopies(allocator, text);
+        return il_passes.elideDeadRcDrops(allocator, forwarded);
     }
     /// Forget a lowering whose frame turned out too big for the native stack so
     /// the same analysis can be lowered again heap-backed: the temporary

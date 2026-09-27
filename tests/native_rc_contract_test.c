@@ -42,7 +42,7 @@ static void destroy(myl_native_heap *heap) {
     TestAllocator *state = myl_rc_allocator_context(heap);
     assert(state->live == 0);
 }
-static const myl_rc_allocator allocator = {allocate, retire, destroy};
+static const myl_rc_allocator allocator = {allocate, retire, destroy, NULL};
 static const myl_rc_shape pointer_shape = {.size = sizeof(void *), .kind = MYL_RC_SHAPE_POINTER};
 static const myl_rc_shape scalar_shape = {.size = sizeof(uint64_t), .kind = MYL_RC_SHAPE_NONE};
 static const myl_native_type scalar_type = {.size = sizeof(uint64_t), .alignment = _Alignof(uint64_t), .kind = MYL_NATIVE_PLAIN};

@@ -89,7 +89,7 @@ test "RC dictionary tail retains first uniqueness and frame through repeated cap
     try t.expectEqual(@as(usize, 1), std.mem.count(u8, il, marker));
     try t.expectEqual(@as(usize, 1), std.mem.count(u8, il, "call $myl_qbe_rc_unique_local"));
     try t.expectEqual(@as(usize, 0), std.mem.count(u8, il, "call $myl_qbe_rc_scope_begin"));
-    try t.expect(std.mem.indexOf(u8, il, "call $myl_qbe_rc_frame_enter") != null);
+    try t.expect(std.mem.indexOf(u8, il, "# rc-frame") != null);
     try t.expect(std.mem.indexOf(u8, il, "call $myl_native_dictionary_write") != null);
     try t.expect(std.mem.indexOf(u8, try body(result.value, "snapshot"), marker) != null);
 }

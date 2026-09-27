@@ -95,12 +95,12 @@ test "RC-INERT-RETURN-1 null constructors return after admission before journal 
         const text = try named(manifest.value, name);
         const start = std.mem.indexOf(u8, text, "\n@rcinertreturn") orelse return error.TestUnexpectedResult;
         const end = std.mem.indexOf(u8, text, "\n@rcinertfallback") orelse return error.TestUnexpectedResult;
-        const enter = std.mem.indexOf(u8, text, "call $myl_qbe_rc_frame_enter") orelse return error.TestUnexpectedResult;
+        const enter = std.mem.indexOf(u8, text, "# rc-frame") orelse return error.TestUnexpectedResult;
         const floor = std.mem.indexOf(u8, text, "call $myl_qbe_fail_frame") orelse return error.TestUnexpectedResult;
         try t.expect(floor < start and end < enter);
         try t.expect(contains(text[start..end], " ret %v"));
-        try t.expect(!contains(text[start..end], "call $") and !contains(text[start..end], "%rcguards"));
-        try t.expect(contains(text[enter..], "call $myl_qbe_rc_frame_cleanup"));
+        try t.expect(!contains(text[start..end], "call $") and !contains(text[start..end], "%rcg"));
+        try t.expect(contains(text[enter..], "# rc-exit"));
     }
 }
 

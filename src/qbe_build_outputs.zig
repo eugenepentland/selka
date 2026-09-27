@@ -8,22 +8,19 @@ const lean = @import("qbe_build_units.zig");
 const free_arguments = "free(arguments);";
 // The argv owner surrounds capability grants and the borrowed guest call. Its
 // construction flag needs only a pointer-sized type, not a registered list
-// slot descriptor, and also works when a trap unwinds past this C entry.
+// slot descriptor. A trap never returns here: heap teardown releases it.
 const argv_frame =
     \\#if defined(MYL_NATIVE_RC) && MYL_NATIVE_RC
     \\static const myl_native_type argv_pointer={.size=sizeof(void *)};
     \\void *argv_owner=NULL; uint32_t argv_initialized=1;
     \\MylQbeRcSlot argv_slot={&argv_pointer,&argv_owner,&argv_initialized,MYL_QBE_RC_CONSTRUCTION};
-    \\MylQbeRcFrame argv_frame;
-    \\myl_qbe_rc_frame_enter(ctx,&argv_frame,&argv_slot,1);
     \\#endif
     \\
 ;
 const argv_cleanup =
     \\
     \\#if defined(MYL_NATIVE_RC) && MYL_NATIVE_RC
-    \\myl_qbe_rc_frame_cleanup(ctx,&argv_frame);
-    \\myl_qbe_rc_frame_leave(ctx,&argv_frame);
+    \\myl_qbe_rc_slot_drop(ctx,&argv_slot);
     \\#endif
     \\
 ;
@@ -460,12 +457,12 @@ test "entry metadata guards optional argv ownership before calling the borrowed 
     defer std.testing.allocator.free(generated);
     try std.testing.expect(std.mem.indexOf(u8, generated, "myl_qbe_argv_list(ctx,&myl_t_str)") != null);
     try std.testing.expect(std.mem.indexOf(u8, generated, "MYL_QBE_RC_CONSTRUCTION") != null);
-    const guard = std.mem.indexOf(u8, generated, "myl_qbe_rc_frame_enter(ctx,&argv_frame,&argv_slot,1)").?;
+    const guard = std.mem.indexOf(u8, generated, "MylQbeRcSlot argv_slot=").?;
     const allocate = std.mem.indexOf(u8, generated, "myl_qbe_argv_list(ctx,&myl_t_str)").?;
     const publish = std.mem.indexOf(u8, generated, "argv_owner=(void *)arg0;").?;
     const call = std.mem.indexOf(u8, generated, "uint64_t answer=main_native(ctx,arg0);").?;
     try std.testing.expect(guard < allocate and allocate < publish and publish < call);
-    try std.testing.expect(std.mem.indexOf(u8, generated[call..], "myl_qbe_rc_frame_cleanup(ctx,&argv_frame)") != null);
+    try std.testing.expect(std.mem.indexOf(u8, generated[call..], "myl_qbe_rc_slot_drop(ctx,&argv_slot)") != null);
 }
 test "entry and location metadata retain provider setup and byte-escaped source paths" {
     const parsed = try std.json.parseFromSlice(std.json.Value, std.testing.allocator,
@@ -476,7 +473,7 @@ test "entry and location metadata retain provider setup and byte-escaped source 
     defer std.testing.allocator.free(generated);
     try std.testing.expect(std.mem.indexOf(u8, generated, "myl_qbe_grant_external_checked(ctx,0,\"--allow-clock\")") != null);
     try std.testing.expect(std.mem.indexOf(u8, generated, "mylang_qbe_run_grants(entry_run,argc,argv,&providers)") != null);
-    try std.testing.expect(std.mem.indexOf(u8, generated, "argv_frame") == null);
+    try std.testing.expect(std.mem.indexOf(u8, generated, "argv_slot") == null);
     const locations = try metadata(std.testing.allocator, parsed.value);
     defer std.testing.allocator.free(locations);
     try std.testing.expect(std.mem.indexOf(u8, locations, "main_native_meta_locations,1") != null);

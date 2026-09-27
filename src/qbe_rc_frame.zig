@@ -1,14 +1,24 @@
-//! Allocation-free native frame journal over guarded physical RC slots.
+//! Stack-local RC drop flags and statically elaborated frame drops.
+//!
+//! Traps are fatal (the runtime tears the whole heap down), so a frame keeps no
+//! runtime journal and links nothing into the context. Each physical slot that
+//! can hold an obligation has two frame words: its initialization guard and its
+//! role (ordinary owner flags, a private loan, a held pointer or a partial
+//! construction). Both are private to the frame, so the backend can forward and
+//! fold them. Every drop names the slot's static type and address; only the
+//! guard and, for copyable counted values, the role are read at run time.
 const typed = @import("typed.zig");
 const runtime = @import("runtime_mode.zig");
 const state_model = @import("qbe_rc_state.zig");
 const dictionary = @import("rc_dictionary_tail.zig");
 /// Errors shared with the native emitter.
 pub const Error = state_model.Error;
-/// Frozen C journal entry/frame sizes, verified against the runtime header.
-pub const entry_bytes: u64 = 32;
-/// The frame stores a previous link, table, count and scope checkpoint.
-pub const frame_bytes: u64 = 32;
+/// Frame bytes one physical slot's guard and role words reserve.
+const flag_bytes: u64 = 16;
+/// Byte offset of `myl_rc_scope.active`, checked against the runtime header.
+pub const scope_active_offset: u64 = 24;
+/// Role bits that are not an ordinary owner: construction, held pointer, loan.
+const special_roles: u32 = 4 | 8 | 16;
 
 /// Bind frame storage emission without introducing a main-emitter import cycle.
 pub fn Lower(comptime E: type) type {
@@ -16,19 +26,21 @@ pub fn Lower(comptime E: type) type {
         /// Additional storage included in both native-stack and heap-frame bounds.
         pub fn bytes(self: *E) Error!u64 {
             const state = get(E, self) orelse return 0;
-            var total = frame_bytes + count(state) * (entry_bytes + 8);
+            var total = count(state) * flag_bytes;
             for (state.operands) |operand| total += alignedBytes(operand.bytes);
             for (self.function.scope.locals, 0..) |_, index| if (receiverStorage(E, self, index)) {
                 total += 32;
             };
+            total += 8 * @as(u64, scopeCount(E, self));
             return total + alignedBytes(state.pending) + 120 + state.plan.append_loops.len * 8;
         }
-        /// Reserve table, guards and stable operand/pending-value buffers.
+        /// Reserve guards, roles and stable operand/pending-value buffers.
         pub fn allocate(self: *E) Error!void {
             const state = get(E, self) orelse return;
-            try self.allocateSlot("rcframe", frame_bytes);
-            try self.allocateSlot("rcentries", count(state) * entry_bytes);
-            try self.allocateSlot("rcguards", count(state) * 8);
+            for (0..count(state)) |physical| {
+                try self.allocateIndex("rcg", physical, 4);
+                try self.allocateIndex("rcr", physical, 4);
+            }
             for (state.operands, 0..) |operand, index| try self.allocateIndex("rcs", index, operand.bytes);
             try self.allocateSlot("rcwork", state.pending);
             try self.allocateSlot("rcinternal", 8);
@@ -40,52 +52,57 @@ pub fn Lower(comptime E: type) type {
                 try self.allocateIndex("rcborrow", index, 32);
                 try self.print(" call $memset(l %rcborrow{d}, w 0, l 32)\n", .{index});
             };
+            const scopes = scopeCount(E, self);
+            if (scopes != 0) try self.allocateSlot("rcscopes", 8 * @as(u64, scopes));
         }
-        /// Link only after every guard is initialized and every parameter is stored.
+        /// Clear every guard and give each local its ordinary owner role.
         pub fn enter(self: *E) Error!void {
             const state = get(E, self) orelse return;
+            // A linked frame carries obligations; tests and readers find it here.
+            if (linked(E, self)) try self.print(" # rc-frame {d}\n", .{count(state)});
             if (fixedRegion(E, self)) try self.print(" %rcregion =l call $myl_qbe_region_mark(l %ctx)\n", .{});
-            const size = count(state);
-            // Every retained entry gets all semantic fields below before linking.
-            // Guard words alone need clearing; the C slot's padding is unread.
-            try self.print(" call $memset(l %rcguards, w 0, l {d})\n", .{size * 8});
+            for (0..count(state)) |physical| try self.print(" storew 0, %rcg{d}\n storew 0, %rcr{d}\n", .{ physical, physical });
             for (state.plan.locals.storage, 0..) |slot, index| {
                 if (try state.plan.journal.slot(index) == null) continue;
-                const address = self.temp();
-                if (self.byReference(index)) {
-                    try self.print(" %v{d} =l loadl %l{d}\n", .{ address, index });
-                } else try self.print(" %v{d} =l copy %l{d}\n", .{ address, index });
-                try entry(E, self, index, slot.ty, address);
+                try typedRole(E, self, index, slot.ty);
                 if (slot.initial == .owned) try initialized(E, self, index, true);
             }
-            for (state.operands, 0..) |_, index| {
-                if (try state.plan.journal.slot(localCount(E, self) + index) == null) continue;
-                const address = self.temp();
-                try self.print(" %v{d} =l copy %rcs{d}\n", .{ address, index });
-                try entry(E, self, localCount(E, self) + index, .unit, address);
+        }
+        /// Close this frame's open receiver scopes, then drop every live operand
+        /// below and including the result and every live local, newest first.
+        /// The result's own token has already been handed to the caller.
+        pub fn exit(self: *E) Error!void {
+            if (!linked(E, self)) return;
+            try self.print(" # rc-exit\n", .{});
+            try closeScopes(E, self);
+            const stack = self.states[self.pc] orelse return error.InternalError;
+            var operand = stack.len;
+            while (operand != 0) {
+                operand -= 1;
+                try dropTyped(E, self, localCount(E, self) + operand, stack[operand]);
             }
-            const work = self.temp();
-            try self.print(" %v{d} =l copy %rcwork\n", .{work});
-            try entry(E, self, pending(E, self), .unit, work);
-            const internal = self.temp();
-            try self.print(" %v{d} =l copy %rcinternal\n", .{internal});
-            try entry(E, self, pending(E, self) + 1, .unit, internal);
-            if (linked(E, self)) try self.print(" call $myl_qbe_rc_frame_enter(l %ctx, l %rcframe, l %rcentries, l {d})\n", .{size});
-        }
-        /// Release live obligations through the same order used by runtime traps.
-        pub fn cleanup(self: *E) Error!void {
-            if (!linked(E, self)) return;
-            try self.print(" call $myl_qbe_rc_frame_cleanup(l %ctx, l %rcframe)\n", .{});
-        }
-        /// Unlink after the result has been published and all owners released.
-        pub fn leave(self: *E) Error!void {
-            if (!linked(E, self)) return;
-            try self.print(" call $myl_qbe_rc_frame_leave(l %ctx, l %rcframe)\n", .{});
+            var local = localCount(E, self);
+            while (local != 0) {
+                local -= 1;
+                try drop(E, self, local);
+            }
         }
         /// Drop an initialized local; borrowed parameters keep a clear guard.
         pub fn dropLocal(self: *E, index: usize) Error!void {
             if (get(E, self) == null) return;
             try drop(E, self, index);
+        }
+        /// An arena statement ends with no live operand stack. Restore scopes
+        /// born in its region, then drop the locals declared inside it while
+        /// its chunks still live.
+        pub fn arenaEnd(self: *E, scanned: usize) Error!void {
+            if (get(E, self) == null) return;
+            try self.print(" call $myl_qbe_rc_arena_scopes(l %ctx)\n", .{});
+            var local = localCount(E, self);
+            while (local > scanned) {
+                local -= 1;
+                try drop(E, self, local);
+            }
         }
     };
 }
@@ -101,7 +118,7 @@ pub fn emptyLocal(comptime E: type, self: *E, index: usize) bool {
     const state = get(E, self) orelse return false;
     return state.plan.journal.emptyLocal(index);
 }
-/// Only the bounded no-obligation certificate may omit runtime frame linkage.
+/// Only a frame without the bounded no-obligation certificate drops on exit.
 pub fn linked(comptime E: type, self: *E) bool {
     const state = get(E, self) orelse return false;
     return !state.plan.journal.unlinked;
@@ -110,7 +127,7 @@ pub fn linked(comptime E: type, self: *E) bool {
 pub fn requireLinked(comptime E: type, self: *E) Error!void {
     if (!linked(E, self)) return error.InternalError;
 }
-/// The journal index of the pending result used for transactional replacement.
+/// The slot index of the pending result used for transactional replacement.
 pub fn pending(comptime E: type, self: *E) usize {
     return localCount(E, self) + get(E, self).?.operands.len;
 }
@@ -127,7 +144,7 @@ pub fn initialized(comptime E: type, self: *E, index: usize, live: bool) Error!v
     const pointer = try guard(E, self, index);
     try self.print(" storew {d}, %v{d}\n", .{ @intFromBool(live), pointer });
 }
-/// Address the stable guard word for one journal entry.
+/// Address the stable guard word for one slot.
 pub fn guard(comptime E: type, self: *E, index: usize) Error!usize {
     if (dictionary.closedOperand(
         get(E, self).?.plan.dictionary_tails,
@@ -137,7 +154,7 @@ pub fn guard(comptime E: type, self: *E, index: usize) Error!usize {
     )) return error.InternalError;
     const physical = try get(E, self).?.plan.journal.require(index);
     const result = self.temp();
-    try self.print(" %v{d} =l add %rcguards, {d}\n", .{ result, physical * 8 });
+    try self.print(" %v{d} =l copy %rcg{d}\n", .{ result, physical });
     return result;
 }
 /// Read this transfer's arena depth, reusing the entry value in stable frames.
@@ -156,33 +173,28 @@ fn fixedRegion(comptime E: type, self: *E) bool {
     };
     return true;
 }
-/// Publish metadata while the entry has no initialized token.
+/// Give a slot the ordinary owner role of its newly published type. The
+/// address is static (the slot's own storage), so only the role is recorded.
 pub fn entry(comptime E: type, self: *E, index: usize, ty: typed.Type, address: usize) Error!void {
-    const pointer = try typedEntry(E, self, index, ty);
-    const field = self.temp();
-    try self.print(" %v{d} =l add %v{d}, 8\n storel %v{d}, %v{d}\n", .{ field, pointer, address, field });
-    const at_guard = try self.address(pointer, 16);
-    const guard_pointer = try guard(E, self, index);
-    try self.print(" storel %v{d}, %v{d}\n", .{ guard_pointer, at_guard });
+    _ = address;
+    try typedRole(E, self, index, ty);
 }
 /// Change an operand or pending value's type while preserving its fixed addresses.
-/// Entry initialized these address/guard pointers before linking the frame; all
-/// later publications in these slots use the same physical operand/work storage.
 pub fn stableEntry(comptime E: type, self: *E, index: usize, ty: typed.Type) Error!void {
     if (index < localCount(E, self) or index > pending(E, self)) return error.InternalError;
-    _ = try typedEntry(E, self, index, ty);
+    try typedRole(E, self, index, ty);
 }
-fn typedEntry(comptime E: type, self: *E, index: usize, ty: typed.Type) Error!usize {
-    const state = get(E, self) orelse return error.InternalError;
-    const shape = state.catalog.get(ty) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError;
-    const pointer = try entryField(E, self, index, 0);
+fn typedRole(comptime E: type, self: *E, index: usize, ty: typed.Type) Error!void {
+    const shape = try shapeOf(E, self, ty);
     const flag = @as(u32, @intFromBool(shape.unique_drop)) | (@as(u32, @intFromBool(shape.counted)) << 1);
-    try self.print(" storel extern ${s}, %v{d}\n", .{ try self.descriptor(ty), pointer });
-    try self.print(" storew {d}, %v{d}\n", .{ flag, try self.address(pointer, 24) });
-    return pointer;
+    try self.print(" storew {d}, %v{d}\n", .{ flag, try entryField(E, self, index, 24) });
+}
+fn shapeOf(comptime E: type, self: *E, ty: typed.Type) Error!@import("rc_shape.zig").Shape {
+    const state = get(E, self) orelse return error.InternalError;
+    return state.catalog.get(ty) catch |err| if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError;
 }
 
-/// Clear/drop one dynamic typed entry using the runtime's unique/count ordering.
+/// Clear/drop one guarded slot using the runtime's unique/count ordering.
 pub fn drop(comptime E: type, self: *E, index: usize) Error!void {
     if (dictionary.emptyDrop(
         get(E, self).?.plan.dictionary_tails,
@@ -194,13 +206,54 @@ pub fn drop(comptime E: type, self: *E, index: usize) Error!void {
         return;
     }
     if (try get(E, self).?.plan.journal.slot(index) == null) return;
+    try dropTyped(E, self, index, try slotType(E, self, index));
+}
+/// The static type of a slot's value at the current instruction: a local's
+/// declared type, or the operand stack's type at this position.
+fn slotType(comptime E: type, self: *E, index: usize) Error!typed.Type {
+    const locals = localCount(E, self);
+    if (index < locals) return self.function.scope.locals[index].ty;
+    const stack = self.states[self.pc] orelse return error.InternalError;
+    if (index - locals >= stack.len) return error.InternalError;
+    return stack[index - locals];
+}
+/// RC-STATIC-DROPS-1: a guarded drop with the slot's static type and address.
+/// Only a copyable counted value can hold a loan or held-pointer role, so only
+/// its drop reads the role word; every other drop is the owner's release.
+fn dropTyped(comptime E: type, self: *E, index: usize, ty: typed.Type) Error!void {
+    if (try get(E, self).?.plan.journal.slot(index) == null) return;
+    const shape = try shapeOf(E, self, ty);
+    const flag = try guard(E, self, index);
     const live = self.temp();
     const label = self.temp();
-    const flag = try guard(E, self, index);
     try self.print(" %v{d} =w loaduw %v{d}\n jnz %v{d}, @rcslotdrop{d}, @rcslotdone{d}\n@rcslotdrop{d}\n", .{ live, flag, live, label, label, label });
-    const pointer = try entryField(E, self, index, 0);
-    try self.print(" call $myl_qbe_rc_slot_drop(l %ctx, l %v{d})\n", .{pointer});
+    try self.print(" storew 0, %v{d}\n", .{flag});
+    if (shape.counted or shape.unique_drop) {
+        const address = try slotAddress(E, self, index);
+        const descriptor = try self.descriptor(ty);
+        if (shape.counted and !shape.unique_drop) {
+            const role = self.temp();
+            const special = self.temp();
+            try self.print(" %v{d} =w loaduw %v{d}\n %v{d} =w and %v{d}, {d}\n", .{ role, try entryField(E, self, index, 24), special, role, special_roles });
+            try self.print(" jnz %v{d}, @rcslotrole{d}, @rcslotowner{d}\n@rcslotrole{d}\n", .{ special, label, label, label });
+            try self.print(" call $myl_qbe_rc_drop_role(l %ctx, l extern ${s}, l %v{d}, w %v{d})\n jmp @rcslotdone{d}\n@rcslotowner{d}\n", .{ descriptor, address, role, label, label });
+        }
+        if (shape.unique_drop) try self.print(" call $myl_native_owned_drop(l %heap, l extern ${s}, l %v{d})\n", .{ descriptor, address });
+        if (shape.counted) try self.print(" call $myl_rc_native_drop(l %heap, l extern ${s}, l %v{d})\n", .{ descriptor, address });
+    }
     try self.print("@rcslotdone{d}\n", .{label});
+}
+/// The fixed storage a slot's value lives in.
+fn slotAddress(comptime E: type, self: *E, index: usize) Error!usize {
+    const locals = localCount(E, self);
+    const result = self.temp();
+    if (index < locals) {
+        const operation: []const u8 = if (self.byReference(index)) "loadl" else "copy";
+        try self.print(" %v{d} =l {s} %l{d}\n", .{ result, operation, index });
+    } else if (index < pending(E, self)) {
+        try self.print(" %v{d} =l copy %rcs{d}\n", .{ result, index - locals });
+    } else return error.InternalError;
+    return result;
 }
 fn localCount(comptime E: type, self: *E) usize {
     return self.function.scope.locals.len;
@@ -220,16 +273,81 @@ fn receiverStorage(comptime E: type, self: *E, index: usize) bool {
     return plan.place(index) != null or (index < plan.aliases.len and plan.aliases[index] != @import("cow_plan.zig").none);
 }
 
-/// Address a field in a retained logical entry without exposing dense indices.
-pub fn entryField(comptime E: type, self: *E, index: usize, offset: u64) Error!usize {
-    const physical = try get(E, self).?.plan.journal.require(index);
-    const pointer = self.temp();
-    try self.print(" %v{d} =l add %rcentries, {d}\n", .{ pointer, physical * entry_bytes + offset });
-    return pointer;
+/// Receiver scope records a return can leave open: `?` inside a receiver
+/// statement returns between the scope's begin and its write-back.
+fn scopeCount(comptime E: type, self: *E) usize {
+    var total: usize = 0;
+    for (scope_kinds) |kind| {
+        var iterator = scopeRecords(E, self, kind);
+        while (iterator.next()) |_| total += 1;
+    }
+    return total;
+}
+const scope_kinds = [_][]const u8{ "rcborrow", "cowscope" };
+/// RC-EXIT-SCOPES-1: test each scope record's active word; only when one is
+/// open does the frame pass its records to the runtime, which closes exactly
+/// the open ones at the head of the chain with the ordinary scope unwind.
+fn closeScopes(comptime E: type, self: *E) Error!void {
+    var any: ?usize = null;
+    for (scope_kinds) |kind| {
+        var iterator = scopeRecords(E, self, kind);
+        while (iterator.next()) |number| {
+            const at = self.temp();
+            const active = self.temp();
+            try self.print(" %v{d} =l add %{s}{d}, {d}\n %v{d} =w loaduw %v{d}\n", .{ at, kind, number, scope_active_offset, active, at });
+            if (any) |previous| {
+                const joined = self.temp();
+                try self.print(" %v{d} =w or %v{d}, %v{d}\n", .{ joined, previous, active });
+                any = joined;
+            } else any = active;
+        }
+    }
+    const open = any orelse return;
+    const label = self.temp();
+    try self.print(" jnz %v{d}, @rcscopesopen{d}, @rcscopesclosed{d}\n@rcscopesopen{d}\n", .{ open, label, label, label });
+    var listed: usize = 0;
+    for (scope_kinds) |kind| {
+        var iterator = scopeRecords(E, self, kind);
+        while (iterator.next()) |number| {
+            const at = self.temp();
+            try self.print(" %v{d} =l add %rcscopes, {d}\n storel %{s}{d}, %v{d}\n", .{ at, listed * 8, kind, number, at });
+            listed += 1;
+        }
+    }
+    try self.print(" call $myl_qbe_rc_scopes_close(l %ctx, l %rcscopes, l {d})\n@rcscopesclosed{d}\n", .{ listed, label });
+}
+fn ScopeRecords(comptime E: type) type {
+    return struct {
+        self: *E,
+        kind: []const u8,
+        cursor: usize = 0,
+        fn next(iterator: *@This()) ?usize {
+            const self = iterator.self;
+            if (iterator.kind.ptr == scope_kinds[0].ptr) {
+                while (iterator.cursor < self.function.scope.locals.len) {
+                    const index = iterator.cursor;
+                    iterator.cursor += 1;
+                    if (receiverStorage(E, self, index)) return index;
+                }
+                return null;
+            }
+            const records = (get(E, self) orelse return null).plan.scope_records;
+            if (iterator.cursor >= records.len) return null;
+            iterator.cursor += 1;
+            return records[iterator.cursor - 1];
+        }
+    };
+}
+fn scopeRecords(comptime E: type, self: *E, kind: []const u8) ScopeRecords(E) {
+    return .{ .self = self, .kind = kind };
 }
 
-/// Preserve the local-prefix boundary when arena cleanup scans a compact table.
-pub fn watermark(comptime E: type, self: *E, logical: usize) Error!usize {
-    if (logical > localCount(E, self)) return error.InternalError;
-    return get(E, self).?.plan.journal.watermark(logical);
+/// Address the role word of a retained slot (offset 24 of the former journal
+/// entry, kept as the one field callers name).
+pub fn entryField(comptime E: type, self: *E, index: usize, offset: u64) Error!usize {
+    if (offset != 24) return error.InternalError;
+    const physical = try get(E, self).?.plan.journal.require(index);
+    const pointer = self.temp();
+    try self.print(" %v{d} =l copy %rcr{d}\n", .{ pointer, physical });
+    return pointer;
 }

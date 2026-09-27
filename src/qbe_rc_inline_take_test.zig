@@ -123,8 +123,8 @@ test "RC-NO-TRACING-ROOTS-1 counted frames use journals while GC retains traced 
     try t.expect(!contains(made, "%root0"));
     try t.expect(!contains(made, "%root_mark"));
     try t.expect(!contains(made, "=l add %heap, 16"));
-    try t.expect(contains(made, "call $myl_qbe_rc_frame_enter"));
-    try t.expect(contains(made, "call $myl_qbe_rc_frame_cleanup"));
+    try t.expect(contains(made, "# rc-frame"));
+    try t.expect(contains(made, "# rc-exit"));
     try t.expect(contains(made, "%heap =l call $myl_qbe_heap"));
     try t.expect(!contains(try named(rc.value, "escaped"), "%root_mark"));
 }

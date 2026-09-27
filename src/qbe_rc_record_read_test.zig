@@ -61,7 +61,7 @@ test "RC record field reads lend named homes but refuse callbacks and managed le
     const il = try body(manifest.value, "read");
     try t.expect(std.mem.indexOf(u8, il, marker) != null);
     try t.expect(std.mem.indexOf(u8, il, "call $myl_qbe_fail_normalized_index_bounds") != null);
-    try t.expect(std.mem.indexOf(u8, il, "call $myl_qbe_rc_frame_cleanup") != null);
+    try t.expect(std.mem.indexOf(u8, il, "# rc-exit") != null);
     for ([_][]const u8{ "changed", "managed", "floating" }) |name| {
         try t.expect(std.mem.indexOf(u8, try body(manifest.value, name), marker) == null);
     }
@@ -108,5 +108,5 @@ test "RC record field reads accept canonical incoming lifetime without asserting
     const checked_read = std.mem.indexOf(u8, il, "call $myl_qbe_fail_normalized_index_bounds") orelse return error.TestUnexpectedResult;
     try t.expect(later_loan > checked_read);
     try t.expect(std.mem.indexOf(u8, il, "call $myl_qbe_fail_normalized_index_bounds") != null);
-    try t.expect(std.mem.indexOf(u8, il, "call $myl_qbe_rc_frame_cleanup") != null);
+    try t.expect(std.mem.indexOf(u8, il, "# rc-exit") != null);
 }

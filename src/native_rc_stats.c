@@ -10,6 +10,13 @@ void myl_rc_stats_record(const myl_native_heap *heap, myl_rc_stat_event event) {
     if (stats->events[event]==UINT64_MAX) stats->saturated=1;
     else ++stats->events[event];
 }
+void myl_rc_stats_record_many(const myl_native_heap *heap, myl_rc_stat_event event, uint64_t count) {
+    if (!heap || !heap->rc) return;
+    myl_rc_invariant((unsigned)event < MYL_RC_STAT_COUNT);
+    myl_rc_counters *stats=&heap->rc->stats;
+    if (count>UINT64_MAX-stats->events[event]) { stats->events[event]=UINT64_MAX; stats->saturated=1; }
+    else stats->events[event]+=count;
+}
 #endif
 int myl_rc_stats_snapshot(const myl_native_heap *heap, myl_rc_counters *out) {
     myl_rc_invariant(out!=NULL);

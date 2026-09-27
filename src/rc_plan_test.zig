@@ -598,7 +598,7 @@ fn functionText(program: Emitted, name: []const u8) ![]const u8 {
 }
 
 // spec-case: RC-OWNERSHIP-PLAN-1
-test "RC-OWNERSHIP-PLAN-1 borrowed parameter result publishes before frame cleanup" {
+test "RC-OWNERSHIP-PLAN-1 borrowed parameter result publishes before exit drops" {
     const mode = @import("runtime_mode.zig");
     const saved = mode.get();
     defer mode.set(saved);
@@ -613,9 +613,9 @@ test "RC-OWNERSHIP-PLAN-1 borrowed parameter result publishes before frame clean
     );
     defer result.deinit();
     const text = try functionText(result.value, "selected");
-    try t.expect(try at(text, "myl_qbe_rc_frame_enter") < try at(text, "myl_rc_native_publish"));
-    try t.expect(try at(text, "myl_rc_native_publish") < try at(text, "myl_qbe_rc_frame_cleanup"));
-    try t.expect(try at(text, "myl_qbe_rc_frame_cleanup") < try at(text, "myl_qbe_rc_frame_leave"));
+    try t.expect(try at(text, "# rc-frame") < try at(text, "myl_rc_native_publish"));
+    try t.expect(try at(text, "myl_rc_native_publish") < try at(text, "# rc-exit"));
+    try t.expect(try at(text, "# rc-exit") < try at(text, "\n ret "));
     try t.expect(std.mem.indexOf(u8, text, "myl_qbe_cow_transfer") == null);
 }
 
@@ -636,8 +636,8 @@ test "RC-OWNERSHIP-PLAN-1 compiler journals owned runtime results and transactio
     const text = try functionText(result.value, "main");
     try t.expect(try at(text, "call $myl_native_list_new") < try at(text, "call $myl_rc_native_take"));
     try t.expect(std.mem.indexOf(u8, text, "%rcwork") != null);
-    try t.expect(std.mem.indexOf(u8, text, "call $myl_qbe_rc_slot_drop") != null);
-    try t.expect(std.mem.indexOf(u8, text, "call $myl_qbe_rc_frame_leave") != null);
+    try t.expect(std.mem.indexOf(u8, text, "@rcslotdrop") != null);
+    try t.expect(std.mem.indexOf(u8, text, "# rc-exit") != null);
 }
 
 // spec: RC-UNIQUE-LOWER-1

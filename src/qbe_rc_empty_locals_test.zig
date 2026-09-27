@@ -66,9 +66,9 @@ test "RC empty local journals keep parameter operand scratch and native admissio
     var manifest = try emitted();
     defer manifest.deinit();
     const il = try named(manifest.value, "advance");
-    try t.expect(contains(il, "%rcentries =l alloc8 128"));
-    try t.expect(!contains(il, "myl_qbe_rc_frame_enter"));
-    try t.expect(!contains(il, "myl_qbe_rc_frame_cleanup"));
+    try t.expect(!contains(il, "%rcg"));
+    try t.expect(!contains(il, "# rc-frame"));
+    try t.expect(!contains(il, "# rc-exit"));
     try t.expect(contains(try named(manifest.value, "rebind"), "myl_qbe_rc_unique_local"));
     try t.expect(contains(try named(manifest.value, "callback"), "myl_qbe_rc_scope_pin"));
     try t.expect(contains(try named(manifest.value, "iterate"), "myl_rc_hold_acquire"));
@@ -85,8 +85,8 @@ test "RC empty receiver scopes omit unused storage while callbacks retain it" {
     defer manifest.deinit();
     const il = try named(manifest.value, "advance");
     try t.expect(!contains(il, "%rcborrow"));
-    try t.expect(contains(il, "%rcentries =l alloc8 128"));
-    try t.expect(!contains(il, "myl_qbe_rc_frame_enter"));
+    try t.expect(!contains(il, "%rcg"));
+    try t.expect(!contains(il, "# rc-frame"));
     try t.expect(contains(il, "myl_qbe_fail_frame"));
     try t.expect(contains(try named(manifest.value, "callback"), "%rcborrow"));
     try t.expect(contains(try named(manifest.value, "callback"), "myl_qbe_rc_scope_pin"));

@@ -71,6 +71,24 @@ void myl_rc_scope_end(myl_rc_scope *scope) {
     unwind(scope, NULL);
     myl_rc_drain(heap);
 }
+void myl_rc_scopes_abandon(myl_native_heap *heap) {
+    if (!heap || !heap->rc) return;
+    myl_rc_scope *scope = heap->rc->scopes;
+    heap->rc->scopes = NULL;
+    while (scope) {
+        myl_rc_scope *previous = scope->previous;
+        scope_entry *entry = scope->journal;
+        while (entry) {
+            scope_entry *older = entry->previous;
+            myl_rc_meta_free(heap, entry, sizeof *entry);
+            entry = older;
+        }
+        scope->journal = NULL;
+        scope->previous = NULL;
+        scope->active = 0;
+        scope = previous;
+    }
+}
 void myl_rc_scopes_close_region(myl_native_heap *heap, unsigned region) {
     myl_rc_scope *boundary = heap->rc->scopes;
     while (boundary && boundary->region >= region) boundary = boundary->previous;

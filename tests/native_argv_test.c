@@ -48,8 +48,6 @@ static void scenario(unsigned count,unsigned refused,int append_refused,int jump
     probe=state;ctx->heap.rc->allocator.hooks.allocate=allocate;
     void *owner=NULL;uint32_t initialized=1;
     MylQbeRcSlot slot={&text_pointer,&owner,&initialized,MYL_QBE_RC_CONSTRUCTION};
-    MylQbeRcFrame frame;
-    myl_qbe_rc_frame_enter(ctx,&frame,&slot,1);
     jmp_buf unwind;
     if (jumping) ctx->unwind=&unwind;
     if (!setjmp(unwind)) {
@@ -66,11 +64,12 @@ static void scenario(unsigned count,unsigned refused,int append_refused,int jump
                 assert(((myl_rc_object *)text-1)->owners==1);
             }
         }
-        myl_qbe_rc_frame_cleanup(ctx,&frame);
-        myl_qbe_rc_frame_leave(ctx,&frame);
+        myl_qbe_rc_slot_drop(ctx,&slot);
     } else assert(jumping && (refused || append_refused) && ctx->trap);
     ctx->unwind=NULL;
-    assert(!ctx->heap.roots && !ctx->rc_frames);
+    assert(!ctx->heap.roots);
+    /* A trap is released by heap teardown, exactly as an execution does. */
+    myl_qbe_rc_finish(ctx);
     if (refused) assert(state->calls==refused);
     if (append_refused) assert(state->calls==4);
     ctx->heap.rc->allocator.hooks.allocate=state->allocate;probe=NULL;

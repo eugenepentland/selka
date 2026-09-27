@@ -7599,6 +7599,9 @@ test "named constraints fake-only entry ignores an absent or invalid production 
 }
 
 const named_probes = @import("named_constraints_probes.zig");
+test {
+    _ = @import("rc_teardown_test.zig");
+}
 
 fn runNamedConstraintProbe(allocator: std.mem.Allocator, probe: named_probes.Probe) !void {
     var temp = testing.tmpDir(.{});

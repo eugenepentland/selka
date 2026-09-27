@@ -56,7 +56,7 @@ test "RC-LOOP-VERSION-1 callback publication and step accounting keep original l
     const flat = try named(fast.value, "flat");
     const copy = std.mem.indexOf(u8, flat, "\n@fi") orelse return error.TestUnexpectedResult;
     const original = std.mem.indexOf(u8, flat, "\n@oi") orelse return error.TestUnexpectedResult;
-    try t.expect(std.mem.indexOf(u8, flat[copy..original], "myl_qbe_rc_slot_drop") == null);
+    try t.expect(std.mem.indexOf(u8, flat[copy..original], "@rcslotdrop") == null);
     try t.expect(std.mem.indexOf(u8, flat[copy..original], "myl_qbe_fail_normalized_index_bounds") == null);
     try t.expect(std.mem.indexOf(u8, try named(fast.value, "callback"), "\n@fi") == null);
     // No physical entry interval was certified for this read-only loop.
@@ -67,7 +67,7 @@ test "RC-LOOP-VERSION-1 callback publication and step accounting keep original l
     try t.expect(std.mem.indexOf(u8, held, "# RC-NONHELD-CAPTURE-1") != null);
     try t.expect(std.mem.indexOf(u8, held, "\n@fi") != null);
     try t.expect(std.mem.indexOf(u8, held, "myl_rc_hold_acquire") != null);
-    try t.expect(std.mem.indexOf(u8, held, "myl_qbe_rc_slot_drop") != null);
+    try t.expect(std.mem.indexOf(u8, held, "@rcslotdrop") != null);
     var counted = try emitted(true);
     defer counted.deinit();
     try t.expect(std.mem.indexOf(u8, try named(counted.value, "flat"), "\n@fi") == null);

@@ -71,21 +71,21 @@ test "RC empty frame preserves private storage admission and all uncertain frame
     var manifest = try emitted();
     defer manifest.deinit();
     const il = try named(manifest.value, "advance");
-    try t.expect(!contains(il, "myl_qbe_rc_frame_enter"));
-    try t.expect(!contains(il, "myl_qbe_rc_frame_cleanup"));
-    try t.expect(!contains(il, "myl_qbe_rc_frame_leave"));
-    try t.expect(contains(il, "%rcentries =l alloc8 128"));
-    try t.expect(contains(il, "%rcguards =l alloc8 32"));
+    try t.expect(!contains(il, "# rc-frame"));
+    try t.expect(!contains(il, "# rc-exit"));
+    try t.expect(!contains(il, "@rcslotdrop"));
+    // No guard is ever set in a certified frame, so its words fold away.
+    try t.expect(!contains(il, "%rcg") and !contains(il, "%rcr0"));
     try t.expect(contains(il, "myl_qbe_fail_frame"));
     try t.expect(contains(il, "myl_qbe_fail_normalized_index_bounds"));
-    try t.expect(contains(try named(manifest.value, "rebind"), "myl_qbe_rc_frame_enter"));
-    try t.expect(contains(try named(manifest.value, "region"), "myl_qbe_rc_frame_enter"));
-    try t.expect(contains(try named(manifest.value, "callback"), "myl_qbe_rc_frame_enter"));
-    try t.expect(contains(try named(manifest.value, "managed"), "myl_qbe_rc_frame_enter"));
-    try t.expect(contains(try named(manifest.value, "referenced"), "myl_qbe_rc_frame_enter"));
-    try t.expect(contains(try named(manifest.value, "pattern"), "myl_qbe_rc_frame_enter"));
-    try t.expect(contains(try named(manifest.value, "iterator"), "myl_qbe_rc_frame_enter"));
-    try t.expect(contains(try named(manifest.value, "resource"), "myl_qbe_rc_frame_enter"));
+    try t.expect(contains(try named(manifest.value, "rebind"), "# rc-frame"));
+    try t.expect(contains(try named(manifest.value, "region"), "# rc-frame"));
+    try t.expect(contains(try named(manifest.value, "callback"), "# rc-frame"));
+    try t.expect(contains(try named(manifest.value, "managed"), "# rc-frame"));
+    try t.expect(contains(try named(manifest.value, "referenced"), "# rc-frame"));
+    try t.expect(contains(try named(manifest.value, "pattern"), "# rc-frame"));
+    try t.expect(contains(try named(manifest.value, "iterator"), "# rc-frame"));
+    try t.expect(contains(try named(manifest.value, "resource"), "# rc-frame"));
 }
 
 const RefusalEmitter = struct {

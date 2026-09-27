@@ -106,6 +106,17 @@ void myl_rc_heap_destroy(myl_native_heap *heap) {
     free(state);
     heap->rc = NULL;
 }
+void myl_rc_heap_teardown(myl_native_heap *heap) {
+    if (!heap->rc) return;
+    myl_rc_state *state = heap->rc;
+    myl_rc_scopes_abandon(heap);
+    state->dead.head = NULL;
+    state->dead.active = 0;
+    state->walk.depth = 0;
+    state->failure = MYL_RC_OK;
+    myl_rc_invariant(state->allocator.hooks.teardown != NULL);
+    state->allocator.hooks.teardown(heap);
+}
 myl_rc_status myl_rc_new(myl_native_heap *heap, const myl_rc_alloc_request *request, void **out) {
     size_t bytes;
     myl_rc_invariant(heap && heap->rc && request && out);

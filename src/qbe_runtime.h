@@ -85,18 +85,16 @@ typedef struct {
 #define MYL_QBE_ENVIRONMENT_NAMES 16
 #define MYL_QBE_ENVIRONMENT_NAME_LIMIT 128
 typedef struct { const unsigned char *names; size_t length; } MylQbeEnvironmentScope;
-/* Compiler-reserved storage; registration and failure cleanup allocate nothing.
- * The initialized word is cleared before either drop can call foreign code. */
+/* One guarded C-side value (the argv owner): its static type, address, guard
+ * word and role. The guard is cleared before the drop can call foreign code.
+ * Generated frames keep only the guard and role words and drop statically. */
 #define MYL_QBE_RC_SLOT_BYTES 32
 #define MYL_QBE_RC_SLOT_TYPE_OFFSET 0
 #define MYL_QBE_RC_SLOT_ADDRESS_OFFSET 8
 #define MYL_QBE_RC_SLOT_INITIALIZED_OFFSET 16
 #define MYL_QBE_RC_SLOT_FLAGS_OFFSET 24
-#define MYL_QBE_RC_FRAME_BYTES 32
-#define MYL_QBE_RC_FRAME_PREVIOUS_OFFSET 0
-#define MYL_QBE_RC_FRAME_ENTRIES_OFFSET 8
-#define MYL_QBE_RC_FRAME_COUNT_OFFSET 16
-#define MYL_QBE_RC_FRAME_SCOPE_OFFSET 24
+/* Generated returns test this word of each receiver scope record they own. */
+#define MYL_QBE_RC_SCOPE_ACTIVE_OFFSET 24
 #define MYL_QBE_RC_UNIQUE_DROP 1u
 #define MYL_QBE_RC_COUNTED 2u
 #define MYL_QBE_RC_CONSTRUCTION 4u
@@ -111,12 +109,6 @@ typedef struct {
     uint32_t *initialized;
     unsigned flags;
 } MylQbeRcSlot;
-typedef struct MylQbeRcFrame {
-    struct MylQbeRcFrame *previous;
-    MylQbeRcSlot *entries;
-    size_t count;
-    myl_rc_scope *scope_checkpoint;
-} MylQbeRcFrame;
 typedef struct {
     uint64_t steps, frames, max_steps, max_frames;
     const char *trap;
@@ -177,7 +169,6 @@ typedef struct {
     /* Copied-value adapter temporaries survive guest longjmp and are retired
        while the context, managed heap and provider resources are still live. */
     void (*adapter_cleanup)(void *);
-    MylQbeRcFrame *rc_frames;
 } MylQbeContext;
 typedef struct {
     uint64_t value, steps;
@@ -188,19 +179,25 @@ typedef struct {
     MylQbeTrapDetail trap_detail;
 } MylQbeResult;
 void myl_qbe_fail_capability(void *);
-void myl_qbe_rc_frame_enter(void *, MylQbeRcFrame *, MylQbeRcSlot *, size_t);
+/* Drop one initialized value by its static type and dynamic role word: an
+ * ordinary owner's unique/counted flags, a private loan, a held pointer or a
+ * partial construction. The caller has already cleared its guard. */
+void myl_qbe_rc_drop_role(void *, const myl_native_type *, void *address, unsigned flags);
+/* Clear an initialized C-side slot's guard, then drop it by its role. */
 void myl_qbe_rc_slot_drop(void *, MylQbeRcSlot *);
-/* Restore this frame's scopes and drop initialized entries, keeping it linked. */
-void myl_qbe_rc_frame_cleanup(void *, MylQbeRcFrame *);
-/* Normal exit already released its owners and closed its receiver scopes. */
-void myl_qbe_rc_frame_leave(void *, MylQbeRcFrame *);
-/* Nested landing pads may unwind a prefix; the checkpoint frame remains live. */
-void myl_qbe_rc_unwind_to(void *, MylQbeRcFrame *checkpoint);
-void myl_qbe_rc_unwind(void *);
+/* A returning frame's open receiver scopes are the newest links of the scope
+ * chain; `mine` lists every scope record the frame owns. Close exactly those,
+ * restoring all their pins before any hold is released. */
+void myl_qbe_rc_scopes_close(void *, myl_rc_scope *const *mine, size_t count);
+/* An arena statement ends: close the scopes born in its region before the
+ * frame drops the locals declared inside it. */
+void myl_qbe_rc_arena_scopes(void *);
+/* The first trap, while the failing guest frames are still live: abandon the
+ * scope records those frames hold. Nothing is released or finalized. */
+void myl_qbe_rc_trap(void *);
+/* After the resource registry and adapters have run: an execution that trapped
+ * tears its heap down wholesale; a normal exit releases its arenas and caches. */
 void myl_qbe_rc_finish(void *);
-/* An arena statement ends with no live operand stack. Restore scopes born in
- * its region, then drop inner locals and scratch owners while chunks live. */
-void myl_qbe_rc_arena_prepare(void *, MylQbeRcFrame *, size_t local_watermark);
 int myl_qbe_rc_unique_local(void *, const myl_native_type *, void *, uint32_t *owned);
 int myl_qbe_rc_unique_field(void *, const myl_native_type *, void *, void *container);
 /* The compiler proves the list unique and each live element an ordinary owning

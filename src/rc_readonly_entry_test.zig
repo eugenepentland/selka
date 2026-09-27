@@ -110,9 +110,9 @@ test "RC raw borrowed entry removes only alternate journal and retains checked A
     const owned = try named(output.value, "pick", false);
     const borrowed = try named(output.value, "pick", true);
     const caller = try named(output.value, "selected", false);
-    try t.expect(std.mem.indexOf(u8, owned, "myl_qbe_rc_frame_enter") != null);
-    try t.expect(std.mem.indexOf(u8, borrowed, "myl_qbe_rc_frame_enter") == null);
-    try t.expect(std.mem.indexOf(u8, borrowed, "%rcentries") == null);
+    try t.expect(std.mem.indexOf(u8, owned, "# rc-frame") != null);
+    try t.expect(std.mem.indexOf(u8, borrowed, "# rc-frame") == null);
+    try t.expect(std.mem.indexOf(u8, borrowed, "%rcg0") == null);
     try t.expect(std.mem.indexOf(u8, borrowed, "myl_qbe_fail_normalized_index_bounds") != null);
     try t.expect(std.mem.indexOf(u8, borrowed, "myl_qbe_fail_frame") != null);
     try t.expectEqual(@as(usize, 2), std.mem.count(u8, caller, "_rc_borrow(l %ctx"));
@@ -153,9 +153,9 @@ test "RC raw borrowed entry copies hidden and small heap-frame results before re
     const large = try named(output.value, "pick", true);
     const small = try named(output.value, "small_heap", true);
     const caller = try named(output.value, "selected", false);
-    try t.expect(std.mem.indexOf(u8, large, "myl_qbe_rc_frame_enter") == null);
+    try t.expect(std.mem.indexOf(u8, large, "# rc-frame") == null);
     try t.expect(std.mem.indexOf(u8, large, ", %out, 4816\n") != null);
-    try t.expect(std.mem.indexOf(u8, small, "myl_qbe_rc_frame_enter") == null);
+    try t.expect(std.mem.indexOf(u8, small, "# rc-frame") == null);
     const copied = std.mem.indexOf(u8, small, ", %return_storage, 16\n") orelse return error.TestUnexpectedResult;
     const released = std.mem.indexOf(u8, small, "call $myl_qbe_frame_release") orelse return error.TestUnexpectedResult;
     try t.expect(copied < released);

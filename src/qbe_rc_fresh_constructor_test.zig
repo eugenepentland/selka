@@ -100,7 +100,7 @@ test "RC-FRESH-CONSTRUCTOR-1 linear recursive owners relocate into the guarded b
     defer t.allocator.free(output);
     try t.expect(std.mem.indexOf(u8, output, "@rcfresh") != null);
     try t.expect(std.mem.indexOf(u8, output, "call $myl_rc_native_take") != null);
-    try t.expect(std.mem.indexOf(u8, output, "call $myl_qbe_rc_frame_enter") != null);
+    try t.expect(std.mem.indexOf(u8, output, "# rc-frame") != null);
     try t.expect(std.mem.indexOf(u8, output, "call $myl_qbe_fail_allocation") != null);
 }
 
@@ -158,15 +158,16 @@ fn returnPath(a: std.mem.Allocator, source: []const u8) ![]const u8 {
 }
 
 // spec: RC-FRESH-RETURN-1
-test "RC-FRESH-RETURN-1 completed linear result skips normal cleanup but keeps leave" {
+test "RC-FRESH-RETURN-1 completed linear result returns without exit drops" {
     const saved = runtime.get();
     defer runtime.set(saved);
     runtime.set(.rc_counting);
     const output = try returnPath(t.allocator, fresh);
     defer t.allocator.free(output);
     try t.expect(std.mem.indexOf(u8, output, "blit ") != null);
-    try t.expect(std.mem.indexOf(u8, output, "call $myl_qbe_rc_frame_leave") != null);
-    try t.expect(std.mem.indexOf(u8, output, "call $myl_qbe_rc_frame_cleanup") == null);
+    try t.expect(std.mem.indexOf(u8, output, "\n ret ") != null);
+    try t.expect(std.mem.indexOf(u8, output, "# rc-exit") == null);
+    try t.expect(std.mem.indexOf(u8, output, "@rcslotdrop") == null);
     try t.expect(std.mem.indexOf(u8, output, "call $myl_rc_native_take") == null);
     try t.expect(std.mem.indexOf(u8, output, "call $memset") == null);
 }
@@ -194,10 +195,10 @@ test "RC-FRESH-RETURN-1 trap journal and ordinary role fallback remain emitted" 
     runtime.set(.rc_counting);
     const output = try text(t.allocator, fresh);
     defer t.allocator.free(output);
-    try t.expect(std.mem.indexOf(u8, output, "call $myl_qbe_rc_frame_enter") != null);
+    try t.expect(std.mem.indexOf(u8, output, "# rc-frame") != null);
     try t.expect(std.mem.indexOf(u8, output, "@rcfreshreturnslow") != null);
     try t.expect(std.mem.indexOf(u8, output, "call $myl_rc_native_take") != null);
-    try t.expect(std.mem.indexOf(u8, output, "call $myl_qbe_rc_frame_cleanup") != null);
+    try t.expect(std.mem.indexOf(u8, output, "# rc-exit") != null);
     try t.expect(std.mem.indexOf(u8, output, "call $myl_qbe_fail_frame") != null);
 }
 
@@ -221,7 +222,7 @@ test "RC-FRESH-RETURN-1 wide owned results keep the generic ABI handoff" {
     try t.expect(std.mem.indexOf(u8, output, "@rcfresh") != null);
     try t.expect(std.mem.indexOf(u8, output, "@rcfreshreturn") == null);
     try t.expect(std.mem.indexOf(u8, output, "@rcspan") == null);
-    try t.expect(std.mem.indexOf(u8, output, "call $myl_qbe_rc_frame_cleanup") != null);
+    try t.expect(std.mem.indexOf(u8, output, "# rc-exit") != null);
 }
 
 fn spanPath(a: std.mem.Allocator, body: []const u8, needle: []const u8) ![]const u8 {
@@ -255,16 +256,18 @@ test "RC-FRESH-SPAN-1 allocation retains inputs then publishes one complete owne
 }
 
 // spec-case: RC-FRESH-SPAN-1
-test "RC-FRESH-SPAN-1 whole ordinary fallback retains construction and transfer guards" {
+test "RC-FRESH-SPAN-1 whole ordinary fallback retains transfer guards without trap registration" {
     const saved = runtime.get();
     defer runtime.set(saved);
     runtime.set(.rc_counting);
     const output = try text(t.allocator, fresh);
     defer t.allocator.free(output);
     try t.expect(std.mem.indexOf(u8, output, "@rcspanslow") != null);
-    try t.expect(std.mem.indexOf(u8, output, "storew 4,") != null);
+    // A partial construction needs no frame registration: a trap tears the
+    // heap down (RC-TRAP-TEARDOWN-1).
+    try t.expect(std.mem.indexOf(u8, output, "storew 4,") == null);
     try t.expect(std.mem.indexOf(u8, output, "call $myl_rc_native_take") != null);
-    try t.expect(std.mem.indexOf(u8, output, "call $myl_qbe_rc_frame_enter") != null);
+    try t.expect(std.mem.indexOf(u8, output, "# rc-frame") != null);
 }
 
 // spec-case: RC-FRESH-SPAN-1
@@ -318,5 +321,5 @@ test "RC-FRESH-SPAN-1 incoming unique finalizers retain the complete journal" {
     );
     defer t.allocator.free(output);
     try t.expect(std.mem.indexOf(u8, output, "@rcspan") == null);
-    try t.expect(std.mem.indexOf(u8, output, "call $myl_qbe_rc_frame_cleanup") != null);
+    try t.expect(std.mem.indexOf(u8, output, "# rc-exit") != null);
 }

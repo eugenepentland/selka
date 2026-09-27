@@ -2,6 +2,8 @@
 #include "native_rc_collections.h"
 #include "native_rc_dictionary.h"
 #include "native_rc_values.h"
+#include "native_rc_alloc.h"
+#include "native_rc_internal.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,9 +44,6 @@ static void close_resource(myl_native_resource *base) {
     assert(!*resource->guard && !resource->object->holds);
     assert(!(resource->object->common.mark & MYL_NATIVE_OBJECT_PINNED));
     assert(resource->object->owners == 2);
-    MylQbeRcFrame nested;
-    myl_qbe_rc_frame_enter(resource->context, &nested, NULL, 0);
-    myl_qbe_rc_frame_leave(resource->context, &nested);
     ++resource->closed;
 }
 typedef struct {
@@ -54,7 +53,6 @@ typedef struct {
     void *slots[2];
     uint32_t guards[2];
     MylQbeRcSlot entries[2];
-    MylQbeRcFrame outer, inner;
     myl_rc_scope scope;
 } FrameFixture;
 static FrameFixture *frame_fixture(void) {
@@ -72,8 +70,6 @@ static FrameFixture *frame_fixture(void) {
     fixture->guards[0] = fixture->guards[1] = 1;
     fixture->entries[0] = (MylQbeRcSlot){&pointer_type, &fixture->slots[0], &fixture->guards[0], MYL_QBE_RC_COUNTED};
     fixture->entries[1] = (MylQbeRcSlot){&resource_type, &fixture->slots[1], &fixture->guards[1], MYL_QBE_RC_UNIQUE_DROP};
-    myl_qbe_rc_frame_enter(&fixture->context, &fixture->outer, NULL, 0);
-    myl_qbe_rc_frame_enter(&fixture->context, &fixture->inner, fixture->entries, 2);
     myl_rc_scope_begin(&fixture->context.heap, &fixture->scope);
     assert(myl_rc_scope_pin(&fixture->scope, fixture->slots[0]) == MYL_RC_OK);
     return fixture;
@@ -83,21 +79,26 @@ static void frame_check(FrameFixture *fixture) {
     assert(!fixture->slots[0] && !fixture->slots[1] && !fixture->guards[0] && !fixture->guards[1]);
     assert(!fixture->scope.active);
 }
-static void frame_cleanup_test(unsigned prefix) {
+/* A normal return closes the frame's open scopes (restoring every pin before
+ * a hold drops), then drops its slots newest first; repeating either is a no-op. */
+// spec-case: RC-STATIC-DROPS-1
+static void frame_exit_test(void) {
     FrameFixture *fixture = frame_fixture();
-    if (prefix) myl_qbe_rc_unwind_to(&fixture->context, &fixture->outer);
-    else {
-        myl_qbe_rc_frame_cleanup(&fixture->context, &fixture->inner);
-        myl_qbe_rc_frame_cleanup(&fixture->context, &fixture->inner);
-        assert(fixture->context.rc_frames == &fixture->inner);
-        myl_qbe_rc_frame_leave(&fixture->context, &fixture->inner);
+    myl_rc_scope *const mine[] = {&fixture->scope};
+    for (unsigned repeat = 0; repeat < 2; ++repeat) {
+        myl_qbe_rc_scopes_close(&fixture->context, mine, 1);
+        myl_qbe_rc_slot_drop(&fixture->context, &fixture->entries[1]);
+        myl_qbe_rc_slot_drop(&fixture->context, &fixture->entries[0]);
     }
     frame_check(fixture);
-    assert(fixture->context.rc_frames == &fixture->outer);
-    myl_qbe_rc_frame_leave(&fixture->context, &fixture->outer);
+    assert(!myl_rc_scope_current(&fixture->context.heap));
     myl_rc_heap_destroy(&fixture->context.heap);
     free(fixture);
 }
+/* A trap runs no frame cleanup: it abandons the open scope records while the
+ * failing frames are live and leaves every slot, pin, hold and resource to the
+ * registry and heap teardown, which follow the non-local exit. */
+// spec-case: RC-TRAP-TEARDOWN-1
 static void frame_trap_test(void) {
     FrameFixture *fixture = frame_fixture();
 #ifdef MYL_RC_CONTRACT_LIBRARY
@@ -105,16 +106,75 @@ static void frame_trap_test(void) {
     fixture->context.unwind = &landing;
     if (!setjmp(landing)) {
         myl_qbe_fail(&fixture->context, "R_REFERENCE_COUNT_LIMIT");
-        assert(0 && "runtime must jump after cleaning live frame storage");
+        assert(0 && "runtime must jump without unwinding guest frames");
     }
     assert(!strcmp(fixture->context.trap, "R_REFERENCE_COUNT_LIMIT"));
 #else
-    myl_qbe_rc_unwind(&fixture->context);
+    myl_qbe_rc_trap(&fixture->context);
 #endif
-    frame_check(fixture);
-    assert(!fixture->context.rc_frames);
+    assert(!fixture->resource.closed && fixture->guards[0] && fixture->guards[1]);
+    assert(fixture->slots[0] && fixture->slots[1] && fixture->value.header.owners == 2);
+    assert(fixture->value.header.holds == 1 && (fixture->value.header.common.mark & MYL_NATIVE_OBJECT_PINNED));
+    assert(!fixture->scope.active && !fixture->scope.journal && !myl_rc_scope_current(&fixture->context.heap));
+    myl_rc_scope_end(&fixture->scope);
     myl_rc_heap_destroy(&fixture->context.heap);
     free(fixture);
+}
+/* Heap teardown after a trap releases everything wholesale: live objects,
+ * extra owners, holds, a pinned scope, a slot already on a free list, an
+ * object queued by an interrupted drain, and an arena region holding an edge
+ * into the heap. No finalizer or edge release runs, the counts still balance
+ * and the heap is empty for destroy. */
+static void trap_teardown_test(void) {
+    MylQbeContext *ctx = calloc(1, sizeof *ctx);
+    assert(ctx);
+    myl_native_heap_init(&ctx->heap, 8u << 20);
+    if (!myl_rc_enabled(&ctx->heap)) assert(myl_rc_storage_init(&ctx->heap) == MYL_RC_OK);
+    assert(myl_rc_descriptor_import(&ctx->heap, &pointer_descriptor) == MYL_RC_OK);
+    void *small = myl_rc_storage_bytes(&ctx->heap, 8, 0), *spare = myl_rc_storage_bytes(&ctx->heap, 8, 0);
+    void *large = myl_rc_storage_bytes(&ctx->heap, 16384, 0), *queued = myl_rc_storage_bytes(&ctx->heap, 8, 0);
+    assert(small && spare && large && queued);
+    myl_rc_owner_release(&ctx->heap, spare);
+    assert(myl_rc_owner_acquire(&ctx->heap, small) == MYL_RC_OK);
+    myl_rc_hold hold = {0};
+    assert(myl_rc_hold_acquire(&ctx->heap, large, &hold) == MYL_RC_OK);
+    myl_rc_scope scope;
+    myl_rc_scope_begin(&ctx->heap, &scope);
+    assert(myl_rc_scope_pin(&scope, small) == MYL_RC_OK);
+    assert(myl_native_region_begin(&ctx->heap));
+    myl_rc_alloc_request request = {.element = &pointer_type, .count = 1, .region = 1};
+    void **cell = NULL;
+    assert(myl_rc_new(&ctx->heap, &request, (void **)&cell) == MYL_RC_OK && cell);
+    assert(myl_rc_owner_acquire(&ctx->heap, large) == MYL_RC_OK);
+    *cell = large;
+    ctx->heap.rc->dead.active = 1;
+    myl_rc_owner_release(&ctx->heap, queued);
+    assert(ctx->heap.rc->dead.head);
+#ifdef MYL_RC_CONTRACT_LIBRARY
+    jmp_buf landing;
+    ctx->unwind = &landing;
+    if (!setjmp(landing)) {
+        myl_qbe_fail(ctx, "R_ASSERT");
+        assert(0 && "runtime must jump");
+    }
+    ctx->unwind = NULL;
+#else
+    ctx->trap = "R_ASSERT";
+    myl_qbe_rc_trap(ctx);
+#endif
+    assert(!scope.active && !myl_rc_scope_current(&ctx->heap));
+    myl_qbe_rc_finish(ctx);
+    assert(!ctx->heap.objects_live && !ctx->heap.region_depth && !ctx->heap.arena_depths);
+    assert(myl_rc_storage_reserved(&ctx->heap) < 65536);
+    myl_rc_counters counts;
+    assert(myl_rc_stats_snapshot(&ctx->heap, &counts) && !counts.saturated);
+    const uint64_t *event = counts.events;
+    assert(event[MYL_RC_STAT_HEAP_ALLOCATE] == 4 && event[MYL_RC_STAT_RETIRE] == 4);
+    assert(event[MYL_RC_STAT_HEAP_ALLOCATE] + event[MYL_RC_STAT_OWNER_ACQUIRE] == event[MYL_RC_STAT_OWNER_RELEASE]);
+    assert(event[MYL_RC_STAT_HOLD_ACQUIRE] == 2 && event[MYL_RC_STAT_HOLD_RELEASE] == 2);
+    myl_native_heap_destroy(&ctx->heap);
+    assert(!ctx->heap.bytes);
+    free(ctx);
 }
 static void construction_guard_test(void) {
     FrameFixture *fixture = frame_fixture();
@@ -126,12 +186,13 @@ static void construction_guard_test(void) {
     fixture->slots[1] = &arena.child;
     fixture->entries[1].type = &pointer_type;
     fixture->entries[1].flags = MYL_QBE_RC_CONSTRUCTION;
-    myl_qbe_rc_frame_cleanup(&fixture->context, &fixture->inner);
+    myl_rc_scope *const mine[] = {&fixture->scope};
+    myl_qbe_rc_scopes_close(&fixture->context, mine, 1);
+    myl_qbe_rc_slot_drop(&fixture->context, &fixture->entries[1]);
+    myl_qbe_rc_slot_drop(&fixture->context, &fixture->entries[0]);
     assert(!arena.child && !fixture->slots[1] && !fixture->guards[1]);
     assert(fixture->value.header.owners == 1 && !fixture->value.header.holds);
     myl_rc_construction_abort(&fixture->context.heap, &arena.child);
-    myl_qbe_rc_frame_leave(&fixture->context, &fixture->inner);
-    myl_qbe_rc_frame_leave(&fixture->context, &fixture->outer);
     myl_rc_heap_destroy(&fixture->context.heap);
     free(fixture);
 }
@@ -408,8 +469,6 @@ static void arena_frame_boundary_test(void) {
     uint32_t guards[3] = {1, 1, 1};
     MylQbeRcSlot entries[3];
     for (size_t i = 0; i < 3; ++i) entries[i] = (MylQbeRcSlot){&pointer_type, &values[i], &guards[i], MYL_QBE_RC_COUNTED};
-    MylQbeRcFrame frame;
-    myl_qbe_rc_frame_enter(&context, &frame, entries, 3);
     myl_rc_scope outer, inner;
     myl_rc_scope_begin(&context.heap, &outer);
     assert(myl_rc_scope_pin(&outer, values[0]) == MYL_RC_OK);
@@ -418,15 +477,21 @@ static void arena_frame_boundary_test(void) {
     assert(values[2]);
     myl_rc_scope_begin(&context.heap, &inner);
     assert(myl_rc_scope_pin(&inner, values[0]) == MYL_RC_OK);
-    myl_qbe_rc_arena_prepare(&context, &frame, 1);
-    assert(guards[0] && !guards[1] && !guards[2] && !values[1] && !values[2]);
-    assert(outer.active && !inner.active && ((myl_rc_object *)values[0] - 1)->owners == 1);
-    assert(((myl_rc_object *)values[0] - 1)->holds == 1);
-    assert(((myl_native_object *)values[0] - 1)->mark & MYL_NATIVE_OBJECT_PINNED);
-    myl_qbe_rc_arena_prepare(&context, &frame, 1);
+    /* The arena end closes the region's scopes, then drops the locals declared
+     * inside it (here slots 1 and 2) while its chunks still live. */
+    for (unsigned repeat = 0; repeat < 2; ++repeat) {
+        myl_qbe_rc_arena_scopes(&context);
+        myl_qbe_rc_slot_drop(&context, &entries[2]);
+        myl_qbe_rc_slot_drop(&context, &entries[1]);
+        assert(guards[0] && !guards[1] && !guards[2] && !values[1] && !values[2]);
+        assert(outer.active && !inner.active && ((myl_rc_object *)values[0] - 1)->owners == 1);
+        assert(((myl_rc_object *)values[0] - 1)->holds == 1);
+        assert(((myl_native_object *)values[0] - 1)->mark & MYL_NATIVE_OBJECT_PINNED);
+    }
     myl_rc_arena_close(&context.heap, 1);
-    myl_qbe_rc_frame_cleanup(&context, &frame);
-    myl_qbe_rc_frame_leave(&context, &frame);
+    myl_rc_scope *const mine[] = {&outer};
+    myl_qbe_rc_scopes_close(&context, mine, 1);
+    myl_qbe_rc_slot_drop(&context, &entries[0]);
     assert(!context.heap.objects_live && !outer.active);
     myl_native_heap_destroy(&context.heap);
     assert(!context.heap.bytes);
@@ -597,10 +662,8 @@ static void held_slot_test(void) {
     myl_rc_owner_release(&context.heap, payload);
     uint32_t initialized = 1;
     MylQbeRcSlot slot = {&pointer_type, &payload, &initialized, MYL_QBE_RC_HOLD_POINTER};
-    MylQbeRcFrame frame;
-    myl_qbe_rc_frame_enter(&context, &frame, &slot, 1);
-    myl_qbe_rc_unwind(&context);
-    assert(!payload && !initialized && !context.rc_frames && !context.heap.objects_live);
+    myl_qbe_rc_slot_drop(&context, &slot);
+    assert(!payload && !initialized && !context.heap.objects_live);
     myl_qbe_rc_slot_drop(&context, &slot);
     myl_native_heap_destroy(&context.heap);
     assert(!context.heap.bytes);
@@ -683,8 +746,6 @@ int myl_qbe_rc_loan_verify(void) {
     assert(owner);
     uint32_t guard=0;
     MylQbeRcSlot entry={&pointer_type,&loan,&guard,MYL_QBE_RC_LOAN};
-    MylQbeRcFrame frame;
-    myl_qbe_rc_frame_enter(&context,&frame,&entry,1);
     myl_rc_scope scope={0};
     myl_rc_scope_begin(&context.heap,&scope);
     assert(myl_rc_scope_pin(&scope,owner)==MYL_RC_OK);
@@ -692,17 +753,19 @@ int myl_qbe_rc_loan_verify(void) {
     guard=1;
     myl_rc_owner_release(&context.heap,owner);
     context.heap.limit=context.heap.bytes;
-    myl_qbe_rc_frame_cleanup(&context,&frame);
-    assert(!scope.active && !guard && !loan && !context.heap.objects_live);
-    myl_qbe_rc_frame_cleanup(&context,&frame);
-    myl_qbe_rc_frame_leave(&context,&frame);
+    myl_rc_scope *const mine[]={&scope};
+    for (unsigned repeat=0;repeat<2;++repeat) {
+        myl_qbe_rc_scopes_close(&context,mine,1);
+        myl_qbe_rc_slot_drop(&context,&entry);
+        assert(!scope.active && !guard && !loan && !context.heap.objects_live);
+    }
     myl_native_heap_destroy(&context.heap);
     assert(!context.heap.bytes);
     return 1;
 }
 int myl_qbe_rc_frame_verify(void) {
-    frame_cleanup_test(0);
-    frame_cleanup_test(1);
+    frame_exit_test();
+    trap_teardown_test();
     frame_trap_test();
     construction_guard_test();
     unique_bridge_test();
@@ -727,7 +790,7 @@ int myl_qbe_rc_frame_verify(void) {
 int main(void) {
     assert(myl_qbe_rc_contract_verify() == 5);
     assert(myl_qbe_rc_frame_verify() == 20);
-    puts("RC startup and frame unwind: 25 checks passed");
+    puts("RC startup, frame drops and trap teardown: 25 checks passed");
     return 0;
 }
 #endif
