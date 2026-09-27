@@ -1,0 +1,34 @@
+[
+  {
+    "backend": "qbe",
+    "counted": false,
+    "measured": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-bytes-read/.tmp-bytes/bytes-scan-after-qbe-0",
+    "final": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-bytes-read/.tmp-bytes/bytes-scan-final-qbe-0",
+    "sha256": "ec36c6fe15c03570bcd8cbb3fea4ef8157ad90177f4df987c522aef76455d4a2",
+    "identical": true
+  },
+  {
+    "backend": "qbe",
+    "counted": true,
+    "measured": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-bytes-read/.tmp-bytes/bytes-scan-after-qbe-1",
+    "final": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-bytes-read/.tmp-bytes/bytes-scan-final-qbe-1",
+    "sha256": "3c0d9984549f2d1a2f79322da71e798e11d59383350df9232304beeb00aa6c1f",
+    "identical": true
+  },
+  {
+    "backend": "llvm",
+    "counted": false,
+    "measured": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-bytes-read/.tmp-bytes/bytes-scan-after-llvm-0",
+    "final": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-bytes-read/.tmp-bytes/bytes-scan-final-llvm-0",
+    "sha256": "4058234ba01a6c6a2a926cb4c83fabd7cf65ebda34ed4ac3cdd3cd98db1ff903",
+    "identical": true
+  },
+  {
+    "backend": "llvm",
+    "counted": true,
+    "measured": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-bytes-read/.tmp-bytes/bytes-scan-after-llvm-1",
+    "final": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-bytes-read/.tmp-bytes/bytes-scan-final-llvm-1",
+    "sha256": "34cffa6dfa25348be98f5940e6d9e0d46604a95be8e87e515ee8fa0b2e57d90d",
+    "identical": true
+  }
+]

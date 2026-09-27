@@ -1,0 +1,28 @@
+{
+  "qbe": {
+    "before": {
+      "instructions": 5344329541,
+      "guest_rss_kib": 10768
+    },
+    "after": {
+      "instructions": 3171680414,
+      "guest_rss_kib": 10788
+    },
+    "accepted_gc_instructions": 1503649715,
+    "after_over_before": 0.5934664750120431,
+    "after_over_accepted_gc": 2.109321328205752
+  },
+  "llvm": {
+    "before": {
+      "instructions": 2476600655,
+      "guest_rss_kib": 10828
+    },
+    "after": {
+      "instructions": 211414364,
+      "guest_rss_kib": 10812
+    },
+    "accepted_gc_instructions": 195529307,
+    "after_over_before": 0.08536473717439116,
+    "after_over_accepted_gc": 1.0812413097746008
+  }
+}

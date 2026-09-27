@@ -1,0 +1,15 @@
+{
+  "source_commit": "c07016f308422b76cfe55607b26243efe0b4257e",
+  "diagnostic_only": true,
+  "artifacts": {
+    "README.md": "91cf042d84993cf78d1d83706d56506924168bc064c7d7875ad80816d53ad740",
+    "doc-coverage.log.gz": "2b29e39249222586c2b67b318a0ce8033db2a30ac60969d94f6eef41933d1185",
+    "gc-builds.json.gz": "e4b8939cd562d4271d4c8f695ce09b8dbfca7394df55fb488883777fc0925d81",
+    "guardian.log.gz": "5149af0b0b7d5f7b1988541245013108d3333964b9755b36d4e5604c6a561257",
+    "prior-results.json.gz": "d35d0865b6f7c5d591fe3f473a2fbe8817486801ee1b2208c74304d718dd4915",
+    "results.json.gz": "f5e2c0178fabfce1455079fb0aaefa999f8466aebc0e071b855c3d547eb1d930",
+    "run.log.gz": "7108b4a74da14df89abbbbe3d92743714e98649199946305aa71d8afa25c8144",
+    "run.py": "7d5435f4137ed5a63b727a28b7ba25478800f13063cb1c468df566ba1c0996d8",
+    "verify.py": "d802c679ad764bf344e26c2c4ace60368ba20b7d2c174a105c9ce886b59c5253"
+  }
+}

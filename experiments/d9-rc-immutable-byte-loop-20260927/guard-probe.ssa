@@ -1,0 +1,11 @@
+export function w $byte_guard(l %rcguards) {
+@start
+ %v501 =l add %rcguards, 40
+ %v499 =w loaduw %v501
+ %v500 =w ceqw %v499, 0
+ jnz %v500, @rcbyteempty500, @fallback
+@rcbyteempty500
+ ret 1
+@fallback
+ ret 0
+}

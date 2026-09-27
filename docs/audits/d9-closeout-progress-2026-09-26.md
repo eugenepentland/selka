@@ -8,7 +8,17 @@ preserved across the handoff. The orchestrator works in separate worktrees and s
 full gates with `../.d9-closeout-gate.lock`. The original dirty checkout, `main`
 (`b292660a`), and the pending devspeed merge are untouched.
 
-The active user goal is Stage 4 performance acceptance. The current
+The active user goal is Stage 4 performance acceptance. The latest joined
+source `c07016f3` passes the [full correctness checkpoint](d9-rc-helpers-word-gate-2026-09-27.md).
+Its [focused four-program measurement](d9-rc-helpers-word-joined-2026-09-27.md)
+confirms dictionary counting at **1.381481× QBE / 1.388517× LLVM** against
+accepted GC and schematic at **12.08–12.17× / 17.57–17.64×**. These are fresh
+combined measurements, with 72 unscaled instruction observations, separate RSS
+observations and sixteen balanced counted runs. All eight rows have correct
+output but remain above the 1.3× instruction cap. No current complete corpus
+or new 30-program geomean is claimed.
+
+The most recent
 [30-program combined loop diagnostic](d9-rc-loops-joined-parity-2026-09-27.md),
 measured on fully gated `49c6ca07`, completes all 60 rows with correct output.
 Instruction geomeans are **2.433636× QBE / 2.800243× LLVM** against accepted GC;
@@ -48,9 +58,14 @@ to reach 1.3×. The subsequent [combined loop checkpoint](d9-rc-loops-joined-gat
 at `49c6ca07` now includes that dictionary proof and guarded read-list versions
 `be0cba69`. The latter's isolated append ratios are 1.902061× QBE / 2.301125×
 LLVM; sieve remains 2.963575× / 3.513822×. The completed 30-program diagnostic
-above confirms those costs on the combined source. Current follow-on work addresses Lox's
-anchored record-field list reads, managed borrowed-helper composition and the
-remaining plain dictionary overwrite cost. Complete current combined performance
+above confirms those costs on that combined source. Managed borrowed-helper
+composition `b6ff7788` and registered plain dictionary word overwrite `0efd82ad`
+now join the newer `c07016f3` checkpoint. Their measured combined improvements
+are 24–28% for schematic and 5–7% for dictionary counting against `49c6ca07`.
+The three current workers address named record-field list reads, immutable-byte
+fast loops and proved-empty dictionary cleanup guards. The byte scan still
+measures 3.554239× QBE / 12.666139× LLVM on `49c6ca07`; all follow-on work remains
+experimental until separately validated. Complete current combined performance
 has not been measured. GC remains the default; changing it is outside this
 active performance goal.
 
@@ -61,10 +76,10 @@ The final combined default/borrow gate at `f6bea5d9` passes all four steps:
 2,130 executed main tests, 429 QBE tests, native-build and formatting.
 WP-4's compiler, runtime, collection, arena and host ownership paths are implemented
 behind an experimental runtime selector. The latest fully green checkpoint at
-`49c6ca07` passes 2,359 main tests, 451 QBE tests, native build and formatting.
-Both uncached RC sweeps pass **1,013/1,013 assertions across 171 programs**, with
+`c07016f3` passes 2,368 main tests, 451 QBE tests, native build and formatting.
+Both uncached RC sweeps pass **1,019/1,019 assertions across 173 programs**, with
 zero failures, skips, cached verdicts, dropped files or unloaded files. The
-[joined checkpoint](d9-rc-loops-joined-gate-2026-09-27.md) includes corrected
+[joined checkpoint](d9-rc-helpers-word-gate-2026-09-27.md) includes corrected
 module callable resolution, argv ownership, empty-local journals and certified
 fresh returns, omitted empty receiver storage, direct plain scalar writes,
 empty-frame linkage omission, complete fresh constructors, closed field transfer,
