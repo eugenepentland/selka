@@ -38,7 +38,6 @@ pub const unit = [_][]const u8{
     "tests/invoke/",
     "tests/native/",
     "test/fixtures/",
-    "bench/parity/micro/dict_count.my",
     "docs/reference.md",
     "docs/standard-library.md",
     "velocity/friction/",
