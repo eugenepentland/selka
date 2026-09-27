@@ -1,0 +1,6 @@
+def main(out: Stream) -> int:
+    items: list[int] = []
+    out.print("entered")
+    for at in range(3):
+        items.append(9223372036854775807 + at)
+    return 0

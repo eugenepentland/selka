@@ -2,6 +2,7 @@
 #include "native_equal.h"
 #include "native_text.h"
 #include "native_rc_collections.h"
+#include "native_rc_internal.h"
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1205,6 +1206,18 @@ static int rc_list_insert_at(myl_native_heap *heap, myl_native_list *list, size_
     }
     if (staged!=local) myl_rc_owner_release(heap,staged);
     return ok;
+}
+/* A compiler room append may bypass publication only when that publication
+ * cannot register metadata or drain a queued finalizer. Bindings are immutable;
+ * this read-only admission is never cached across another operation. */
+int myl_rc_list_plain_ready(myl_native_heap *heap, const myl_native_list *list) {
+    if (!heap || !heap->rc || heap->rc->dead.head || !list || !list->element) return 0;
+    const myl_native_type *type=list->element;
+    if (type->kind!=MYL_NATIVE_PLAIN && type->kind!=MYL_NATIVE_FLOAT) return 0;
+    size_t size=type->size;
+    if (size!=1 && size!=2 && size!=4 && size!=8) return 0;
+    const myl_rc_descriptor *descriptor=myl_rc_descriptor_find(heap,type);
+    return descriptor && ((const myl_rc_binding *)descriptor)->flat.count==0;
 }
 int myl_rc_list_append(myl_native_heap *heap, myl_native_list *list, const void *value) {
     return rc_list_insert_at(heap,list,list->length,value);
