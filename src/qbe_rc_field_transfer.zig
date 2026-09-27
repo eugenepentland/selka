@@ -23,7 +23,7 @@ pub fn project(comptime E: type, self: *E) Error!bool {
             const field = try self.address(try home(E, self, proof.source.local), member.offset);
             const slot = try home(E, self, proof.target);
             try marker(E, self, proof);
-            try relocate(E, self, field, slot, (try self.layout(member.ty)).size);
+            try relocate(E, self, field, slot, try self.layout(member.ty));
             try frame.initialized(E, self, proof.target, true);
             return true;
         }
@@ -40,7 +40,7 @@ pub fn project(comptime E: type, self: *E) Error!bool {
             // owner); relocate the inline value and name the stable copy.
             const destination = try values.operand(E, self, 0);
             try marker(E, self, proof);
-            try relocate(E, self, field, destination, (try self.layout(member.ty)).size);
+            try relocate(E, self, field, destination, try self.layout(member.ty));
             try self.store(0, destination);
         }
         const journal = values.journalIndex(E, self, 0);
@@ -66,7 +66,7 @@ pub fn local(comptime E: type, self: *E) Error!bool {
         const field = try self.address(try home(E, self, proof.source.local), member.offset);
         const slot = try home(E, self, proof.target);
         try self.print(" # RC-CLOSED-FIELD-TRANSFER-2 store-back source {d} field {d} target {d}\n", .{ proof.source.local, proof.source.field, proof.target });
-        try relocate(E, self, slot, field, (try self.layout(member.ty)).size);
+        try relocate(E, self, slot, field, try self.layout(member.ty));
         try frame.initialized(E, self, proof.target, false);
         return true;
     }
@@ -101,9 +101,9 @@ fn home(comptime E: type, self: *E, index: usize) Error!usize {
     return address;
 }
 
-fn relocate(comptime E: type, self: *E, from: usize, to: usize, size: u64) Error!void {
-    try self.print(values.blit_value, .{ from, to, size });
-    try self.print(" call $memset(l %v{d}, w 0, l {d})\n", .{ from, size });
+fn relocate(comptime E: type, self: *E, from: usize, to: usize, layout: @import("native_types.zig").Layout) Error!void {
+    try self.print(values.blit_value, .{ from, to, layout.size });
+    try @import("qbe_zero.zig").clear(*E, self, from, layout.size, layout.alignment);
 }
 
 fn marker(comptime E: type, self: *E, proof: Certificate) Error!void {

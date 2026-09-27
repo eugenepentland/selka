@@ -10,17 +10,32 @@
 #include <sys/mman.h>
 
 /* Slab addresses recover their metadata with one mask. Large reservations put
- * their metadata before (not inside) the frozen 32-byte RC object prefix. */
-#define RC_SLAB_BYTES ((size_t)65536)
-#define RC_SLAB_CLASSES 32
+ * their metadata before (not inside) the frozen 32-byte RC object prefix.
+ *
+ * RC-ALLOC-CACHE-1: free slots live on per-class lists in the heap
+ * (`heap->rc_cache.free`), which retirement pushes and every allocation,
+ * including generated code's inline path, pops. A slab's own `free` list and
+ * bump range hold the slots no class list holds; `live` counts the slots that
+ * are allocated, queued for death or on a class list. A class list refills
+ * from one slab at a time (its whole free list, or a run of bump slots), and
+ * returns its slots to their slabs only when the budget refuses a reservation,
+ * when fresh pool memory is needed while many bytes sit on the lists, or at
+ * teardown, so empty slabs are still found and released. */
+#define RC_SLAB_BYTES MYL_RC_SLAB_BYTES
+#define RC_SLAB_CLASSES MYL_RC_CACHE_CLASSES
 typedef struct rc_slab rc_slab;
 typedef struct { rc_slab *previous, *next; } rc_slab_links;
 struct rc_slab {
+    myl_rc_slab_class class;
     rc_slab_links all, available;
-    size_t stride, used, live;
+    size_t used, live, capacity;
     void *free;
-    struct { size_t index, capacity; } class;
 };
+/* A refill threads at most this many bump bytes onto a class list at once. */
+#define RC_REFILL_BYTES ((size_t)4096)
+/* Listed bytes that make a fresh pool reservation return every listed slot to
+ * its slab first: at least RC_TRIM_BYTES and a quarter of the reservation. */
+#define RC_TRIM_BYTES ((size_t)1 << 20)
 typedef struct rc_large rc_large;
 struct rc_large {
     rc_large *previous, *next;
@@ -65,6 +80,7 @@ static const size_t strides[RC_SLAB_CLASSES] = {
 };
 #define RC_SLAB_OFFSET ((sizeof(rc_slab) + 15) & ~(size_t)15)
 _Static_assert(RC_SLAB_OFFSET == 80, "cached capacity fits the existing aligned slab metadata extent");
+_Static_assert(offsetof(rc_slab, class) == 0, "a slab starts with its class words");
 _Static_assert(sizeof(rc_large) % 16 == 0, "large allocator metadata preserves alignment");
 _Static_assert(sizeof(myl_rc_object) == MYL_RC_PREFIX_BYTES, "RC prefix ABI");
 _Static_assert(offsetof(myl_rc_object, common) == 16, "common header ABI");
@@ -107,8 +123,8 @@ static void available_remove(rc_class *class, rc_slab *slab) {
     if (slab->available.next) slab->available.next->available.previous=slab->available.previous;
     slab->available=(rc_slab_links){0};
 }
-static size_t slots(const rc_slab *slab) {
-    return slab->class.capacity;
+static int slab_full(const rc_slab *slab) {
+    return !slab->free && slab->used == slab->capacity;
 }
 /* One 64 KiB-aligned slab range: a spare first, else the current mapping. */
 static void *range_take(myl_native_heap *heap) {
@@ -154,38 +170,62 @@ static void range_give(myl_native_heap *heap, void *range) {
     pools->spare=spare;
     ++pools->spare_count;
 }
+/* A slab is on its class's available list exactly while it has a free slot
+ * or bump room of its own. */
 static void slab_free(myl_native_heap *heap, rc_slab *slab) {
     rc_class *class=&storage_of(heap)->classes[slab->class.index];
     assert(!slab->live);
-    available_remove(class,slab);
+    if (!slab_full(slab)) available_remove(class,slab);
     if (slab->all.previous) slab->all.previous->all.next=slab->all.next;
     else class->all=slab->all.next;
     if (slab->all.next) slab->all.next->all.previous=slab->all.previous;
     discharge(heap,RC_SLAB_BYTES);
     range_give(heap,slab);
 }
-/* At most one empty slab is retained per class, at its available-list head.
- * Reclaiming those heads is bounded independently of the allocation count. */
-static void trim_empty(myl_native_heap *heap) {
-    for (size_t i=0;i<RC_SLAB_CLASSES;i++) {
-        rc_slab *slab=storage_of(heap)->classes[i].available;
-        if (slab && !slab->live) slab_free(heap,slab);
+/* Return every slot on one class list to its slab, releasing each slab the
+ * return empties. Only a return empties a slab: a slab's own free slots never
+ * count as live, and a fresh slab is refilled from at once. */
+static void cache_return(myl_native_heap *heap, size_t index) {
+    rc_class *class=&storage_of(heap)->classes[index];
+    myl_rc_object *object=heap->rc_cache.free[index];
+    heap->rc_cache.free[index]=NULL;
+    while (object) {
+        myl_rc_object *next=(myl_rc_object *)object->owners;
+        rc_slab *slab=(rc_slab *)((uintptr_t)object&~(uintptr_t)(RC_SLAB_BYTES-1));
+        if (slab_full(slab)) available_add(class,slab);
+        memcpy(object,&slab->free,sizeof slab->free);
+        slab->free=object;
+        assert(slab->live);
+        if (!--slab->live) slab_free(heap,slab);
+        object=next;
     }
+}
+/* Return every listed slot to its slab and release the slabs that empties;
+ * the cost is the listed slots, bounded by the bytes retired since the last
+ * trim. */
+static void trim_empty(myl_native_heap *heap) {
+    for (size_t i=0;i<RC_SLAB_CLASSES;i++) cache_return(heap,i);
+    heap->rc_cache.pushed=0;
 }
 static int reserve(myl_native_heap *heap, size_t bytes) {
     if (bytes<=SIZE_MAX-heap->bytes && (!heap->limit || (heap->bytes<=heap->limit && bytes<=heap->limit-heap->bytes))) return 1;
     trim_empty(heap);
     return budget(heap,bytes);
 }
-static __attribute__((noinline)) rc_slab *slab_new(myl_native_heap *heap, size_t index) {
+static rc_slab *slab_new(myl_native_heap *heap, size_t index) {
+    rc_pools *pools=&storage_of(heap)->pools;
+    /* Fresh pool memory while many listed bytes wait: give them back first,
+     * so a slab another class emptied is reused before new pages are touched. */
+    if (!pools->spare && heap->rc_cache.pushed>=RC_TRIM_BYTES && heap->rc_cache.pushed>=storage_of(heap)->reserved/4)
+        trim_empty(heap);
     if (!reserve(heap,RC_SLAB_BYTES)) return NULL;
     rc_slab *slab=range_take(heap);
     if (!slab) { trim_empty(heap); slab=range_take(heap); }
     if (!slab) return NULL;
     memset(slab,0,sizeof *slab);
-    slab->stride=strides[index];
+    slab->class.stride=strides[index];
     slab->class.index=index;
-    slab->class.capacity=(RC_SLAB_BYTES-RC_SLAB_OFFSET)/slab->stride;
+    slab->capacity=(RC_SLAB_BYTES-RC_SLAB_OFFSET)/slab->class.stride;
     rc_class *class=&storage_of(heap)->classes[index];
     slab->all.next=class->all;
     if (class->all) class->all->all.previous=slab;
@@ -207,17 +247,43 @@ static size_t class_search(size_t extent) {
 static size_t class_for(const rc_storage *storage, size_t extent) {
     return extent<=strides[RC_SLAB_CLASSES-1]?storage->class_of[(extent+15)/16]:RC_SLAB_CLASSES;
 }
-static inline __attribute__((always_inline)) myl_rc_object *slab_take(myl_native_heap *heap, size_t index) {
+/* An empty class list takes one slab's slots: its whole free list, or else a
+ * run of bump slots threaded in address order, each marked free. */
+static __attribute__((noinline)) myl_rc_object *slab_refill(myl_native_heap *heap, size_t index) {
     rc_class *class=&storage_of(heap)->classes[index];
     rc_slab *slab=class->available;
     if (!slab) slab=slab_new(heap,index);
     if (!slab) return NULL;
-    void *slot=slab->free;
-    if (slot) memcpy(&slab->free,slot,sizeof slab->free);
-    else slot=(unsigned char *)slab+RC_SLAB_OFFSET+slab->stride*slab->used++;
-    slab->live++;
-    if (!slab->free && slab->used==slots(slab)) available_remove(class,slab);
-    return slot;
+    myl_rc_object *head;
+    if (slab->free) {
+        head=slab->free;
+        slab->free=NULL;
+        slab->live=slab->used;
+    } else {
+        size_t stride=slab->class.stride, room=slab->capacity-slab->used;
+        size_t run=RC_REFILL_BYTES/stride;
+        if (!run) run=1;
+        if (run>room) run=room;
+        unsigned char *first=(unsigned char *)slab+RC_SLAB_OFFSET+stride*slab->used;
+        head=(myl_rc_object *)first;
+        for (size_t i=0;i<run;i++) {
+            myl_rc_object *slot=(myl_rc_object *)(first+i*stride);
+            slot->owners=i+1<run?(uintptr_t)(first+(i+1)*stride):0;
+            slot->common.mark=MYL_RC_RETIRED_MARK;
+        }
+        slab->used+=run;
+        slab->live+=run;
+    }
+    if (slab_full(slab)) available_remove(class,slab);
+    heap->rc_cache.free[index]=(void *)head->owners;
+    return head;
+}
+/* One free slot of a slab class: pop its class list, refilling it when empty. */
+static inline __attribute__((always_inline)) myl_rc_object *slab_take(myl_native_heap *heap, size_t index) {
+    myl_rc_object *object=heap->rc_cache.free[index];
+    if (!object) return slab_refill(heap,index);
+    heap->rc_cache.free[index]=(void *)object->owners;
+    return object;
 }
 static myl_rc_object *large_take(myl_native_heap *heap, size_t extent) {
     if (extent>SIZE_MAX-sizeof(rc_large)) return NULL;
@@ -233,10 +299,6 @@ static myl_rc_object *large_take(myl_native_heap *heap, size_t extent) {
     charge(heap,bytes);
     return (myl_rc_object *)(large+1);
 }
-/* A retired slab slot keeps this mark until reuse. DYING|IMMORTAL never
- * describes a counted object, so it separates free slots from allocated ones
- * (live, or queued for death) without a side table. */
-#define RC_RETIRED_MARK (MYL_RC_OBJECT_DYING|(uintptr_t)MYL_NATIVE_OBJECT_IMMORTAL)
 /* Zero a slab payload in whole 16-byte units: the slot is 16-byte aligned and
  * its stride covers the rounded payload, so the tail is slot padding. Small
  * payloads use straight-line vector stores instead of a memset call. */
@@ -322,7 +384,19 @@ void *myl_rc_storage_alloc(myl_native_heap *heap, const myl_native_type *element
         MYL_RC_STAT(heap,MYL_RC_STAT_HEAP_ALLOCATE);
         return payload;
     }
-    if (!myl_rc_native_shape(heap,element)) return NULL;
+    if (heap->rc->plain!=element && !myl_rc_native_shape(heap,element)) return NULL;
+    /* RC-ALLOC-CACHE-1: a registered slab-sized run of elements (a text's or
+     * list backing's octets, say) takes its class's free list directly. */
+    if (!region && count>1 && element->size && element->alignment<=16 && heap->rc->allocator.hooks.allocate==allocate &&
+        count<=(strides[RC_SLAB_CLASSES-1]-MYL_RC_PREFIX_BYTES)/element->size) {
+        size_t bytes=count*element->size;
+        myl_rc_object *object=slab_take(heap,class_for(storage_of(heap),MYL_RC_PREFIX_BYTES+bytes));
+        if (!object) { myl_rc_record_failure(heap,MYL_RC_ALLOCATION_REFUSED); return NULL; }
+        zero_payload((unsigned char *)(object+1),bytes);
+        void *payload=initialize(heap,object,element,count,0);
+        MYL_RC_STAT(heap,MYL_RC_STAT_HEAP_ALLOCATE);
+        return payload;
+    }
 registered:;
     myl_rc_alloc_request request={element,count,region};
     void *result=NULL;
@@ -335,40 +409,38 @@ registered:;
 static void reuse_epoch(myl_native_heap *heap) {
     if (heap->collections!=SIZE_MAX) heap->collections++;
 }
-static void retire(myl_native_heap *heap, void *payload) {
+/* The retire hook: a slab slot goes on its class list; a large extent is freed. */
+void myl_rc_storage_retire(myl_native_heap *heap, void *payload) {
     myl_rc_object *object=(myl_rc_object *)payload-1;
     assert(object->common.mark&MYL_RC_OBJECT_DYING);
+    if (!(object->common.mark&MYL_NATIVE_OBJECT_LARGE)) { myl_rc_cache_push(heap,object); return; }
     reuse_epoch(heap);
     assert(heap->objects_live);
     heap->objects_live--;
-    if (object->common.mark&MYL_NATIVE_OBJECT_LARGE) {
-        rc_large *large=(rc_large *)object-1;
-        if (large->previous) large->previous->next=large->next;
-        else storage_of(heap)->large=large->next;
-        if (large->next) large->next->previous=large->previous;
-        discharge(heap,large->charge);
-        free(large);
-        return;
+    rc_large *large=(rc_large *)object-1;
+    if (large->previous) large->previous->next=large->next;
+    else storage_of(heap)->large=large->next;
+    if (large->next) large->next->previous=large->previous;
+    discharge(heap,large->charge);
+    free(large);
+}
+/* Give every listed slot back to its slab's live count, emptying the lists,
+ * before the slabs themselves are released wholesale. */
+static void cache_discard(myl_native_heap *heap) {
+    for (size_t i=0;i<RC_SLAB_CLASSES;i++) {
+        for (myl_rc_object *object=heap->rc_cache.free[i];object;object=(myl_rc_object *)object->owners) {
+            rc_slab *slab=(rc_slab *)((uintptr_t)object&~(uintptr_t)(RC_SLAB_BYTES-1));
+            assert(slab->live);
+            slab->live--;
+        }
+        heap->rc_cache.free[i]=NULL;
     }
-    rc_slab *slab=(rc_slab *)((uintptr_t)object&~(uintptr_t)(RC_SLAB_BYTES-1));
-    rc_class *class=&storage_of(heap)->classes[slab->class.index];
-    int full=!slab->free && slab->used==slots(slab);
-    object->common.mark=RC_RETIRED_MARK;
-    memcpy(object,&slab->free,sizeof slab->free);
-    slab->free=object;
-    assert(slab->live);
-    slab->live--;
-    if (full) available_add(class,slab);
-    if (!slab->live) {
-        rc_slab *empty=class->available;
-        if (empty!=slab && empty && !empty->live) slab_free(heap,empty);
-        available_remove(class,slab);
-        available_add(class,slab);
-    }
+    heap->rc_cache.pushed=0;
 }
 static void destroy(myl_native_heap *heap) {
     rc_storage *storage=storage_of(heap);
     assert(!storage->large);
+    cache_discard(heap);
     for (size_t i=0;i<RC_SLAB_CLASSES;i++) {
         while (storage->classes[i].all) slab_free(heap,storage->classes[i].all);
     }
@@ -381,7 +453,7 @@ static void destroy(myl_native_heap *heap) {
     free(storage);
 }
 static void teardown(myl_native_heap *);
-static const myl_rc_allocator allocator={allocate,retire,destroy,teardown};
+static const myl_rc_allocator allocator={allocate,myl_rc_storage_retire,destroy,teardown};
 /* The storage walks behind the public teardown API. The allocator's own
  * teardown hook calls them directly: reaching it proves the storage is this
  * allocator's even while a fault-injection probe wraps the allocate hook. */
@@ -390,9 +462,9 @@ static void visit_extents(myl_native_heap *heap, myl_rc_extent_visitor visit, vo
     for (size_t i=0;i<RC_SLAB_CLASSES;i++)
         for (rc_slab *slab=storage->classes[i].all;slab;slab=slab->all.next) {
             unsigned char *slot=(unsigned char *)slab+RC_SLAB_OFFSET;
-            for (size_t used=slab->used;used;--used,slot+=slab->stride) {
+            for (size_t used=slab->used;used;--used,slot+=slab->class.stride) {
                 myl_rc_object *object=(myl_rc_object *)slot;
-                if (object->common.mark!=RC_RETIRED_MARK) visit(heap,object+1,context);
+                if (object->common.mark!=MYL_RC_RETIRED_MARK) visit(heap,object+1,context);
             }
         }
     for (rc_large *large=storage->large;large;large=large->next)
@@ -405,6 +477,7 @@ void myl_rc_storage_visit(myl_native_heap *heap, myl_rc_extent_visitor visit, vo
 static void release_extents(myl_native_heap *heap) {
     myl_rc_invariant(!heap->rc->dead.active && !heap->rc->walk.depth);
     rc_storage *storage=storage_of(heap);
+    cache_discard(heap);
     size_t released=0;
     while (storage->large) {
         rc_large *large=storage->large;

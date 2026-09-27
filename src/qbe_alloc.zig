@@ -55,7 +55,14 @@ pub fn cell(comptime E: type, self: E, ty: typed.Type, stack: []const typed.Type
     self.layouts.releaseLayout(body);
     const descriptor = try self.descriptor(ty);
     const pointer = self.temp();
-    const class_index = (if (aligned and !@import("runtime_mode.zig").enabled()) inlineClass(size) else null) orelse {
+    const runtime = @import("runtime_mode.zig");
+    if (aligned and runtime.enabled() and !runtime.counting()) {
+        if (rcCacheClass(size)) |index| {
+            try rcCell(E, self, .{ .pointer = pointer, .index = index, .size = size, .descriptor = descriptor });
+            return pointer;
+        }
+    }
+    const class_index = (if (aligned and !runtime.enabled()) inlineClass(size) else null) orelse {
         try self.print(" %v{d} =l call $myl_native_heap_alloc(l %heap, l extern ${s}_body, l 1)\n", .{ pointer, descriptor });
         try self.require(pointer, allocation_failure);
         return pointer;
@@ -87,6 +94,74 @@ pub fn cell(comptime E: type, self: E, ty: typed.Type, stack: []const typed.Type
     try self.markObject(pointer);
     self.inline_roots = true;
     return pointer;
+}
+
+/// Strides of the production RC allocator's slab classes: `strides` in
+/// `src/native_rc_alloc.c`, which a test below reads.
+pub const rc_class_strides = [_]u64{
+    16,  32,  48,  64,   80,   96,   112,  128,  160,  192,  224,  256,  320,  384,  448,  512,
+    640, 768, 896, 1024, 1280, 1536, 1792, 2048, 2560, 3072, 3584, 4096, 5120, 6144, 7168, 8192,
+};
+/// Frozen byte offset of `myl_native_heap.rc_cache.free`, one free-slot list
+/// head per RC slab class (`MYL_NATIVE_HEAP_RC_CACHE_OFFSET`).
+pub const heap_rc_cache_offset: u64 = 5648;
+/// Frozen byte offset of `myl_native_heap.objects_live`.
+pub const heap_objects_live_offset: u64 = 64;
+/// Frozen byte offset of the 32-bit `myl_native_heap.region_depth`.
+pub const heap_region_depth_offset: u64 = 112;
+/// The 32-byte counted object prefix: owners, holds, mark, element.
+const rc_prefix_bytes: u64 = 32;
+
+/// The RC slab class holding one object of `payload` bytes behind its counted
+/// prefix, rounded to 16 bytes as the runtime's class table does, or null
+/// when the object is too large for a slab.
+pub fn rcCacheClass(payload: u64) ?usize {
+    if (payload > rc_class_strides[rc_class_strides.len - 1] - rc_prefix_bytes) return null;
+    const extent = (rc_prefix_bytes + payload + 15) & ~@as(u64, 15);
+    for (rc_class_strides, 0..) |stride, index| if (stride >= extent) return index;
+    return null;
+}
+
+/// One counted class body the RC inline path allocates.
+const RcBody = struct { pointer: usize, index: usize, size: u64, descriptor: []const u8 };
+
+/// RC-ALLOC-CACHE-1: pop a free slot off the class's list in the heap, write
+/// the counted prefix (one owner, no hold, a one-element mark, the body
+/// descriptor), zero the payload and count the object live. An empty list,
+/// or any open arena in a program that opens one, calls the runtime, which
+/// refills the list or allocates in the arena. Counting builds always call.
+fn rcCell(comptime E: type, self: E, body: RcBody) Error!void {
+    const label = self.temp();
+    const base = self.temp();
+    try self.print(" %v{d} =l copy %heap\n", .{base});
+    if (self.arenas) {
+        const depth_slot = self.temp();
+        const depth = self.temp();
+        try self.print(" %v{d} =l add %v{d}, {d}\n %v{d} =w loaduw %v{d}\n", .{ depth_slot, base, heap_region_depth_offset, depth, depth_slot });
+        try self.print(" jnz %v{d}, @rccell_slow{d}, @rccell_try{d}\n@rccell_try{d}\n", .{ depth, label, label, label });
+    }
+    const head = self.temp();
+    const slot = self.temp();
+    try self.print(" %v{d} =l add %v{d}, {d}\n %v{d} =l loadl %v{d}\n", .{ head, base, heap_rc_cache_offset + 8 * body.index, slot, head });
+    try self.print(" jnz %v{d}, @rccell_fast{d}, @rccell_slow{d}\n@rccell_slow{d}\n", .{ slot, label, label, label });
+    try self.print(" %v{d} =l call $myl_native_heap_alloc(l %heap, l extern ${s}_body, l 1)\n", .{ body.pointer, body.descriptor });
+    try self.require(body.pointer, allocation_failure);
+    try self.print(" jmp @rccell_done{d}\n@rccell_fast{d}\n", .{ label, label });
+    const next = self.temp();
+    const holds = self.temp();
+    const mark = self.temp();
+    const element = self.temp();
+    try self.print(" %v{d} =l loadl %v{d}\n storel %v{d}, %v{d}\n storel 1, %v{d}\n", .{ next, slot, next, head, slot });
+    try self.print(" %v{d} =l add %v{d}, 8\n storel 0, %v{d}\n", .{ holds, slot, holds });
+    try self.print(" %v{d} =l add %v{d}, 16\n storel {d}, %v{d}\n", .{ mark, slot, one_element_mark, mark });
+    try self.print(" %v{d} =l add %v{d}, 24\n storel extern ${s}_body, %v{d}\n", .{ element, slot, body.descriptor, element });
+    try self.print(" %v{d} =l add %v{d}, {d}\n", .{ body.pointer, slot, rc_prefix_bytes });
+    try zeroPayload(E, self, body.pointer, body.size);
+    const live_slot = self.temp();
+    const live = self.temp();
+    const counted = self.temp();
+    try self.print(" %v{d} =l add %v{d}, {d}\n %v{d} =l loadl %v{d}\n", .{ live_slot, base, heap_objects_live_offset, live, live_slot });
+    try self.print(" %v{d} =l add %v{d}, 1\n storel %v{d}, %v{d}\n@rccell_done{d}\n", .{ counted, live, counted, live_slot, label });
 }
 
 /// Compute the address of the heap field at `offset` into `%v{target}`. The
@@ -184,6 +259,30 @@ fn runtimeStrides() ?[inline_class_strides.len]u64 {
     var runtime: [inline_class_strides.len]u64 = undefined;
     for (&runtime) |*stride| stride.* = std.fmt.parseInt(u64, numbers.next() orelse return null, 10) catch return null;
     return runtime;
+}
+
+test "RC slab classes round a payload and its counted prefix up to a stride" {
+    // spec-case: RC-ALLOC-CACHE-1
+    try std.testing.expectEqual(@as(?usize, 1), rcCacheClass(0));
+    try std.testing.expectEqual(@as(?usize, 2), rcCacheClass(16));
+    try std.testing.expectEqual(@as(?usize, 3), rcCacheClass(32));
+    try std.testing.expectEqual(@as(?usize, 3), rcCacheClass(17));
+    try std.testing.expectEqual(@as(?usize, 31), rcCacheClass(8192 - 32));
+    try std.testing.expectEqual(@as(?usize, null), rcCacheClass(8192 - 31));
+}
+
+test "RC slab classes and heap offsets match the runtime" {
+    // spec-case: RC-ALLOC-CACHE-1
+    const source = @embedFile("native_rc_alloc.c");
+    const opening = "static const size_t strides[RC_SLAB_CLASSES] = {";
+    const start = std.mem.indexOf(u8, source, opening) orelse return error.TestUnexpectedResult;
+    var numbers = std.mem.tokenizeAny(u8, source[start + opening.len ..], ", \n");
+    for (rc_class_strides) |stride| try std.testing.expectEqual(stride, try std.fmt.parseInt(u64, numbers.next() orelse return error.TestUnexpectedResult, 10));
+    const header = @embedFile("native_heap.h");
+    try std.testing.expect(std.mem.indexOf(u8, header, "#define MYL_RC_CACHE_CLASSES 32\n") != null);
+    try std.testing.expect(std.mem.indexOf(u8, header, "#define MYL_NATIVE_HEAP_RC_CACHE_OFFSET 5648\n") != null);
+    try std.testing.expect(std.mem.indexOf(u8, header, "#define MYL_NATIVE_HEAP_OBJECTS_LIVE_OFFSET 64\n") != null);
+    try std.testing.expect(std.mem.indexOf(u8, header, "#define MYL_NATIVE_HEAP_REGION_DEPTH_OFFSET 112\n") != null);
 }
 
 test "inline size classes match the runtime's class table" {

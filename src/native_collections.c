@@ -3,6 +3,7 @@
 #include "native_text.h"
 #include "native_rc_collections.h"
 #include "native_rc_internal.h"
+#include "native_rc_alloc.h"
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1151,14 +1152,18 @@ static const myl_rc_descriptor rc_list_descriptors[]={
 static const myl_rc_module rc_list_module={
     .abi=MYL_RC_ABI_VERSION,.descriptors=rc_list_descriptors,.descriptor_count=2
 };
+/* RC-LIST-HEADER-1: the header module is registered once per heap and a
+ * header is allocated through the storage adapter's cached single-type path;
+ * an element type already proved plain is known to be registered. */
 static myl_native_list *rc_list_new(myl_native_heap *heap, const myl_native_type *element, size_t capacity, unsigned region, int raw) {
-    if (!raw && !myl_rc_native_shape(heap,element)) return NULL;
-    myl_rc_status status=myl_rc_module_register(heap,&rc_list_module);
-    if (status!=MYL_RC_OK) { myl_rc_record_failure(heap,status); return NULL; }
-    myl_rc_alloc_request request={raw?&rc_storage_type:&list_type,1,region};
-    myl_native_list *list=NULL;
-    status=myl_rc_new(heap,&request,(void **)&list);
-    if (status!=MYL_RC_OK) { myl_rc_record_failure(heap,status); return NULL; }
+    if (!raw && heap->rc->plain!=element && !myl_rc_native_shape(heap,element)) return NULL;
+    if (!heap->rc->lists) {
+        myl_rc_status status=myl_rc_module_register(heap,&rc_list_module);
+        if (status!=MYL_RC_OK) { myl_rc_record_failure(heap,status); return NULL; }
+        heap->rc->lists=1;
+    }
+    myl_native_list *list=myl_rc_storage_alloc(heap,raw?&rc_storage_type:&list_type,1,region);
+    if (!list) return NULL;
     list->element=element;
     if (capacity) list->storage=myl_rc_native_storage(heap,element,capacity,region);
     if (capacity && !list->storage) { myl_rc_native_abort(heap,list); return NULL; }
@@ -1179,12 +1184,14 @@ int myl_rc_list_storage_reserve(myl_native_heap *heap, myl_native_list *list, si
     void *old=list->storage;
     /* RC-OPAQUE-EXTEND-1: plain elements (an empty flat plan) are never
      * walked as owning slots, so their new capacity needs no zero bytes. */
-    const myl_rc_binding *binding=myl_rc_binding_find(heap,list->element);
-    int opaque=binding && !binding->flat.count && !binding->flat.native_unique;
+    int opaque=myl_rc_plain_type(heap,list->element);
     void *storage=opaque?myl_rc_storage_extend_opaque(heap,old,capacity*list->element->size):
         myl_rc_storage_extend(heap,old,capacity*list->element->size);
     if (!storage) {
-        storage=myl_rc_native_storage(heap,list->element,capacity,myl_native_header_region(list));
+        /* RC-OPAQUE-EXTEND-1: a moved plain backing leaves its new capacity
+         * unwritten too; only the live prefix is copied below. */
+        storage=opaque?myl_rc_storage_block(heap,capacity*list->element->size,myl_native_header_region(list)):
+            myl_rc_native_storage(heap,list->element,capacity,myl_native_header_region(list));
         if (!storage) return 0;
         if (list->length) memcpy(storage,old,list->length*list->element->size);
         list->storage=storage;
@@ -1210,7 +1217,9 @@ static int rc_list_append_direct(myl_native_heap *heap, myl_native_list *list, c
     if (aliases) value=(const unsigned char *)list->storage+offset;
     unsigned char *slot=(unsigned char *)list->storage+extent;
     myl_rc_invariant((uintptr_t)value+size<=(uintptr_t)slot || (uintptr_t)slot+size<=(uintptr_t)value);
-    *ok=myl_rc_native_retain(heap,list->element,slot,value,myl_native_header_region(list));
+    /* RC-PLAIN-TYPE-1: a value that owns nothing is published as its bytes. */
+    if (myl_rc_plain_type(heap,list->element)) { memcpy(slot,value,size); *ok=1; }
+    else *ok=myl_rc_native_retain(heap,list->element,slot,value,myl_native_header_region(list));
     if (*ok) { list->length++; list->generation++; }
     return 1;
 }
@@ -1252,11 +1261,14 @@ static int rc_list_insert_at(myl_native_heap *heap, myl_native_list *list, size_
 int myl_rc_list_plain_ready(myl_native_heap *heap, const myl_native_list *list) {
     if (!heap || !heap->rc || heap->rc->dead.head || !list || !list->element) return 0;
     const myl_native_type *type=list->element;
+    /* RC-PLAIN-TYPE-1: the last scalar answer is kept beside the plain type. */
+    if (type==heap->rc->plain_word) return 1;
     if (type->kind!=MYL_NATIVE_PLAIN && type->kind!=MYL_NATIVE_FLOAT) return 0;
     size_t size=type->size;
     if (size!=1 && size!=2 && size!=4 && size!=8) return 0;
-    const myl_rc_descriptor *descriptor=myl_rc_descriptor_of(heap,type);
-    return descriptor && ((const myl_rc_binding *)descriptor)->flat.count==0;
+    if (!myl_rc_plain_type(heap,type)) return 0;
+    heap->rc->plain_word=type;
+    return 1;
 }
 int myl_rc_list_append(myl_native_heap *heap, myl_native_list *list, const void *value) {
     return rc_list_insert_at(heap,list,list->length,value);
@@ -1326,6 +1338,13 @@ static myl_native_list *rc_list_clone(myl_native_heap *heap, const myl_native_li
     size_t capacity=input->capacity>input->length?input->capacity:input->length;
     myl_native_list *clone=rc_list_new(heap,element,capacity,region,0);
     if (!clone) return NULL;
+    /* RC-PLAIN-TYPE-1: elements that own nothing are cloned as one copy. */
+    if (input->length && element->size && myl_rc_plain_type(heap,element)) {
+        memcpy(clone->storage,input->storage,input->length*element->size);
+        clone->length=input->length;
+        clone->generation=0;
+        return clone;
+    }
     for (size_t i=0;i<input->length;i++) {
         if (!myl_rc_list_append(heap,clone,(const unsigned char *)input->storage+i*element->size)) {
             myl_rc_native_abort(heap,clone);
@@ -1338,6 +1357,10 @@ static myl_native_list *rc_list_clone(myl_native_heap *heap, const myl_native_li
 int myl_rc_list_sort_keyed(myl_native_heap *heap, const myl_rc_sort_request *request) {
     myl_native_list *source=request->source;
     myl_native_list *temporary=NULL;
+    /* RC-PLAIN-TYPE-1: elements that own nothing gather straight into the
+     * result, exactly as the collector's sorted copy does. */
+    if (request->values!=source && source->element->size && myl_rc_plain_type(heap,source->element))
+        return myl_native_list_sort_keyed(request->values,source,request->keys,request->shape,request->offsets,request->reverse);
     if (request->values!=source) {
         temporary=rc_list_clone(heap,source,source->element,myl_native_header_region(request->values));
         if (!temporary) return 0;

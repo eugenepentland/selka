@@ -91,9 +91,16 @@ fn origin(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "op")
         .get_index => |access| if (self.program.records[access.ty.recordIndex()].collection.kind == .string) .owned else .borrowed,
         .make_record => |record| if (self.program.records[record.ty.recordIndex()].managed) .owned else .borrowed,
         .make_variant, .update_record, .replace_index => .borrowed,
-        .buffer_operation => |operation| @import("qbe_rc_collections.zig").resultOrigin(self.program.records[self.function.scope.locals[@backingInt(operation.owner)].ty.recordIndex()].collection.kind, operation.kind),
+        // RC-RANGE-KEY-1: a described slice leaves its receiver text in the
+        // operand, which then borrows that text instead of owning a copy.
+        .buffer_operation => |operation| if (self.range_keys.role(self.pc) == .slice) .borrowed else collectionOrigin(E, self, operation),
         else => .owned,
     };
+}
+
+fn collectionOrigin(comptime E: type, self: *E, operation: @FieldType(@FieldType(bytecode.Instruction, "op"), "buffer_operation")) values.Origin {
+    const owner = self.function.scope.locals[@backingInt(operation.owner)].ty;
+    return @import("qbe_rc_collections.zig").resultOrigin(self.program.records[owner.recordIndex()].collection.kind, operation.kind);
 }
 
 fn identityCast(comptime E: type, self: *E, ty: typed.Type) values.Origin {

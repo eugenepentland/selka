@@ -278,6 +278,8 @@ test {
     _ = @import("qbe_rc_record_read_anchor.zig");
     _ = @import("qbe_rc_plain_write_test.zig");
     _ = @import("qbe_rc_append_test.zig");
+    _ = @import("qbe_rc_alloc_test.zig");
+    _ = @import("qbe_zero.zig");
     _ = @import("qbe_rc_admission_test.zig");
     _ = @import("qbe_rc_views_test.zig");
     _ = @import("qbe_rc_sites_test.zig");

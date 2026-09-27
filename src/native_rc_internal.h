@@ -112,6 +112,12 @@ struct myl_rc_state {
     myl_rc_scope *scopes;
     /* Released scope journal nodes kept for the next capture (RC-SCOPE-SPARE-1). */
     struct { myl_rc_spare *entries; size_t count; } spare;
+    /* The last type myl_rc_plain_type proved owns nothing, and the last such
+     * type that is also a one-, two-, four- or eight-byte scalar a list room
+     * append stores directly (RC-PLAIN-TYPE-1). */
+    const myl_native_type *plain, *plain_word;
+    /* Whether the runtime list header module is registered (RC-LIST-HEADER-1). */
+    unsigned char lists;
     myl_rc_status failure;
 #if defined(MYL_NATIVE_RC_COUNTING) && MYL_NATIVE_RC_COUNTING
     myl_rc_counters stats;
@@ -130,6 +136,17 @@ static inline __attribute__((always_inline)) void myl_rc_invariant(int valid) {
 /* The registered binding of a native type, or NULL: one inline probe. */
 static inline const myl_rc_binding *myl_rc_binding_find(const myl_native_heap *heap, const myl_native_type *type) {
     return (const myl_rc_binding *)myl_rc_map_get(&heap->rc->metadata.bindings, type);
+}
+/* RC-PLAIN-TYPE-1: whether a registered type owns nothing — an admitted flat
+ * plan with no leaf and no native unique obligation, so its values are copied,
+ * moved and dropped as bytes. Bindings never change once published, so the
+ * last positive answer is kept and a repeated type needs no probe. */
+static inline int myl_rc_plain_type(myl_native_heap *heap, const myl_native_type *type) {
+    if (heap->rc->plain == type) return 1;
+    const myl_rc_binding *binding = myl_rc_binding_find(heap, type);
+    if (!binding || binding->flat.count || binding->flat.native_unique) return 0;
+    heap->rc->plain = type;
+    return 1;
 }
 /* Descriptor view of the same probe for RC-enabled runtime-internal callers. */
 static inline const myl_rc_descriptor *myl_rc_descriptor_of(const myl_native_heap *heap, const myl_native_type *type) {
@@ -215,11 +232,41 @@ static inline __attribute__((always_inline)) myl_rc_object *myl_rc_live(void *pa
     myl_rc_invariant(!(object->common.mark & MYL_RC_OBJECT_DYING) && (object->owners || object->holds));
     return object;
 }
-/* myl_rc_allocator_retire for a DYING counted object known to runtime code. */
+/* Production slabs (RC-ALLOC-CACHE-1) are 64 KiB aligned; their first two
+ * words name the slab's size class and stride, so a slot's class is one mask
+ * and one load away. */
+#define MYL_RC_SLAB_BYTES ((size_t)65536)
+typedef struct { size_t index, stride; } myl_rc_slab_class;
+/* A free slab slot keeps this mark until reuse. DYING|IMMORTAL never
+ * describes a counted object, so it separates free slots from allocated ones
+ * (live, or queued for death) without a side table. */
+#define MYL_RC_RETIRED_MARK (MYL_RC_OBJECT_DYING | (uintptr_t)MYL_NATIVE_OBJECT_IMMORTAL)
+/* The production allocator's retire hook (native_rc_alloc.c). */
+void myl_rc_storage_retire(myl_native_heap *, void *payload);
+/* Retire one slab-sized DYING object of the production allocator: mark it
+ * free and push it on its class's free slot list. Saturation of the reuse
+ * epoch disables weak absence caching permanently; it never wraps back to a
+ * cached epoch that could name a previous allocation at the same address. */
+static inline void myl_rc_cache_push(myl_native_heap *heap, myl_rc_object *object) {
+    const myl_rc_slab_class *slab = (const myl_rc_slab_class *)((uintptr_t)object & ~(uintptr_t)(MYL_RC_SLAB_BYTES - 1));
+    myl_rc_invariant(heap->objects_live != 0);
+    if (heap->collections != SIZE_MAX) heap->collections++;
+    heap->objects_live--;
+    object->common.mark = MYL_RC_RETIRED_MARK;
+    object->owners = (uintptr_t)heap->rc_cache.free[slab->index];
+    heap->rc_cache.free[slab->index] = object;
+    heap->rc_cache.pushed += slab->stride;
+}
+/* myl_rc_allocator_retire for a DYING counted object known to runtime code.
+ * A slab-sized object of the production allocator takes the inline push. */
 static inline void myl_rc_retire(myl_native_heap *heap, myl_rc_object *object) {
     myl_rc_invariant((object->common.mark & (MYL_RC_OBJECT_DYING | MYL_NATIVE_OBJECT_IMMORTAL |
         MYL_NATIVE_OBJECT_ARENA)) == MYL_RC_OBJECT_DYING);
     MYL_RC_STAT(heap, MYL_RC_STAT_RETIRE);
+    if (!(object->common.mark & MYL_NATIVE_OBJECT_LARGE) && heap->rc->allocator.hooks.retire == myl_rc_storage_retire) {
+        myl_rc_cache_push(heap, object);
+        return;
+    }
     heap->rc->allocator.hooks.retire(heap, object + 1);
 }
 void myl_rc_enqueue(myl_native_heap *, myl_rc_object *);

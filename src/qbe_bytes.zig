@@ -303,9 +303,11 @@ fn emitBufferStatus(comptime E: type, self: *E, status: usize, base: usize) Erro
 }
 
 /// Lower one octet-buffer method with its capacity-sufficient case inline, or
-/// answer false when this method has no inlined case.
+/// answer false when this method has no inlined case. A counted artifact takes
+/// the same path (RC-BUFFER-APPEND-1): the receiver was made unique before this
+/// load, storage is never shared between buffer headers, and a snapshot leaves
+/// its buffer no spare capacity, so the room test alone keeps the write private.
 fn inlineBufferAppend(comptime E: type, self: *E, op: BufferOperation, stack: []const typed.Type, input: usize) Error!bool {
-    if (rc_mode.enabled()) return false;
     const element = (try mutableOctetBuffer(E, self, op)) orelse return false;
     try self.markObject(input);
     const append: BufferAppend = .{ .input = input, .element = element, .base = stack.len - op.kind.arity() };

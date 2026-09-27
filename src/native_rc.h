@@ -22,7 +22,8 @@ typedef enum {
  * The located adapter upgrades OutOfMemory to R_MEMORY_BUDGET when the heap
  * reports exhaustion; metadata/host allocation refusal need not be budgeted. */
 const char *myl_rc_status_code(myl_rc_status status);
-int myl_rc_enabled(const myl_native_heap *);
+/* Whether this heap is counted: one inline test at every runtime call site. */
+static inline int myl_rc_enabled(const myl_native_heap *heap) { return heap && heap->rc; }
 /* NULL/int legacy helpers preserve their first failure until the located
  * compiler adapter consumes it; ownership-aware helpers return status directly. */
 void myl_rc_record_failure(myl_native_heap *, myl_rc_status);

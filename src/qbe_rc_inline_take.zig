@@ -21,14 +21,16 @@ pub fn begin(comptime E: type, self: *E, operation: anytype) Error!?usize {
     if (!shape.counted or shape.unique_drop) return null;
     var flat: Flat = .{};
     if (!try flatten(self.layouts, operation.ty, 0, &flat) or flat.len == 0) return null;
-    const size = (try self.layout(operation.ty)).size;
+    const layout = try self.layout(operation.ty);
+    const size = layout.size;
     const label = self.temp();
     if (!operation.disjoint) try overlap(E, self, operation, size, label);
     for (flat.offsets[0..flat.len]) |offset| try pointer(E, self, operation.source, offset, label);
     // All pointer/header checks precede publication. Generated callers supply
     // the current valid region and an owning source guard; no count changes,
     // allocation, callback or recoverable failure remains on this path.
-    try self.print(" blit %v{d}, %v{d}, {d}\n call $memset(l %v{d}, w 0, l {d})\n", .{ operation.source, operation.destination, size, operation.source, size });
+    try self.print(" blit %v{d}, %v{d}, {d}\n", .{ operation.source, operation.destination, size });
+    try @import("qbe_zero.zig").clear(*E, self, operation.source, size, layout.alignment);
     try self.print(" jmp @rcmoved{d}\n@rcmoveslow{d}\n", .{ label, label });
     return label;
 }

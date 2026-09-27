@@ -30,6 +30,12 @@ _Static_assert(sizeof(myl_native_object) % _Alignof(max_align_t) == 0, "managed 
 _Static_assert(offsetof(myl_native_heap, inline_windows) == MYL_NATIVE_HEAP_INLINE_OFFSET, "inline allocation windows ABI");
 _Static_assert(offsetof(myl_native_heap, arena_window) == MYL_NATIVE_HEAP_ARENA_OFFSET, "inline arena window ABI");
 _Static_assert(offsetof(myl_native_heap, arena_mark) == MYL_NATIVE_HEAP_ARENA_OFFSET + 16, "inline arena mark ABI");
+/* Generated RC inline allocation (RC-ALLOC-CACHE-1) reads these. */
+_Static_assert(offsetof(myl_native_heap, rc_cache) == MYL_NATIVE_HEAP_RC_CACHE_OFFSET, "RC free slot cache ABI");
+_Static_assert(offsetof(myl_rc_cache, free) == 0, "RC free slot heads ABI");
+_Static_assert(offsetof(myl_native_heap, objects_live) == MYL_NATIVE_HEAP_OBJECTS_LIVE_OFFSET, "live object count ABI");
+_Static_assert(offsetof(myl_native_heap, region_depth) == MYL_NATIVE_HEAP_REGION_DEPTH_OFFSET, "region depth ABI");
+_Static_assert(sizeof(((myl_native_heap *)0)->region_depth) == 4, "region depth is one word");
 int myl_native_budget_parse(const char *text, size_t *out) {
     size_t value = 0, scale = 1;
     const char *cursor = text;

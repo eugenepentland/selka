@@ -732,9 +732,7 @@ static inline int rc_replace(myl_native_heap *heap, const myl_native_type *type,
                              void *target, const void *source, unsigned region) {
     if (target==source) return 1;
     if (type->kind==MYL_NATIVE_PLAIN && type->size==8) {
-        const myl_rc_descriptor *descriptor=myl_rc_descriptor_of(heap,type);
-        if (descriptor && !((const myl_rc_binding *)descriptor)->flat.count &&
-            !heap->rc->dead.head && region<=heap->region_depth) {
+        if (!heap->rc->dead.head && region<=heap->region_depth && myl_rc_plain_type(heap,type)) {
             uint64_t word;
             memcpy(&word,source,8);
             memcpy(target,&word,8);
@@ -889,9 +887,14 @@ static __attribute__((noinline)) int insert_span(myl_native_heap *heap, myl_nati
 int myl_native_dictionary_write_range(myl_native_heap *heap, myl_native_dictionary *dict, myl_native_text *text, const myl_native_text_span *span, const void *value) {
     located at=find_span(heap,dict,span_of(text,span));
     if (myl_rc_enabled(heap)) {
-        if (at.entry!=NO_ENTRY) return myl_rc_native_retain_replace(heap,dict->value,entry_at(dict,at.entry)+dict->value_offset,value,myl_native_header_region(dict));
+        if (at.entry!=NO_ENTRY) return rc_replace(heap,dict->value,entry_at(dict,at.entry)+dict->value_offset,value,myl_native_header_region(dict));
         myl_native_text *owned=myl_native_text_piece_at(heap,text,span,myl_native_header_region(dict));
         if (!owned) return 0;
+        /* RC-DICT-FAST-1: the key carries the hash the walk computed. */
+        if (at.slot!=NO_SLOT) {
+            owned->hash=at.hash;
+            owned->flags|=MYL_TEXT_HASHED;
+        }
         int ok=rc_insert(heap,dict,&owned,value);
         myl_rc_owner_release(heap,owned);
         return ok;
@@ -1148,18 +1151,31 @@ static void rc_entry_release(myl_native_heap *heap, myl_native_dictionary *dict,
     myl_rc_edges_release(heap,key->shape,entry,1);
     myl_rc_edges_release(heap,value->shape,entry+dict->value_offset,1);
 }
+/* RC-DICT-FAST-1: one live entry's release with the key and value bindings
+ * looked up once per dictionary: an admitted flat plan releases its leaves
+ * inline (a plain value has none) and any other shape keeps the walker. */
+typedef struct { const myl_rc_binding *key, *value; } rc_entry_plan;
+static void rc_entry_drop(myl_native_heap *heap, const myl_native_dictionary *dict, rc_entry_plan plan, size_t index) {
+    unsigned char *entry=entry_at(dict,index);
+    if (plan.key->flat.count<=MYL_RC_FLAT_LEAVES) myl_rc_flat_release_one(heap,&plan.key->flat,entry);
+    else myl_rc_edges_release(heap,plan.key->descriptor.shape,entry,1);
+    if (plan.value->flat.count<=MYL_RC_FLAT_LEAVES) myl_rc_flat_release_one(heap,&plan.value->flat,entry+dict->value_offset);
+    else myl_rc_edges_release(heap,plan.value->descriptor.shape,entry+dict->value_offset,1);
+}
 /* The index already identifies every live entry exactly once. Destruction
  * neither hashes dead keys nor consults dictionary-owned entry descriptors. */
 static void rc_dictionary_edges(myl_native_heap *heap, void *payload, size_t count) {
     (void)count;
     myl_native_dictionary *dict=payload;
     if (dict->entries) {
+        rc_entry_plan plan={myl_rc_binding_find(heap,dict->key),myl_rc_binding_find(heap,dict->value)};
+        if (!plan.key || !plan.value) abort();
         if (dict->index.capacity) {
             for (size_t i=0;i<dict->index.capacity;i++)
-                if (dict->index.slots[i]) rc_entry_release(heap,dict,MYL_NATIVE_DICTIONARY_SLOT_ENTRY(dict->index.slots[i])-1);
+                if (dict->index.slots[i]) rc_entry_drop(heap,dict,plan,MYL_NATIVE_DICTIONARY_SLOT_ENTRY(dict->index.slots[i])-1);
         } else {
             if (dict->dead) abort();
-            for (size_t i=0;i<dict->entries->length;i++) rc_entry_release(heap,dict,i);
+            for (size_t i=0;i<dict->entries->length;i++) rc_entry_drop(heap,dict,plan,i);
         }
     }
     myl_rc_edge_release(heap,dict->entries);
@@ -1216,8 +1232,20 @@ static int rc_insert_result(myl_native_heap *heap, myl_native_dictionary *dict, 
         {.shape=value_shape->shape,.address=scratch+dict->value_offset},
         {.shape=value_shape->shape,.address=scratch+dict->value_offset}
     };
-    myl_rc_status status=myl_rc_value_retain_many(heap,targets,sources,output?3:2);
-    if (status!=MYL_RC_OK) { myl_rc_record_failure(heap,status); goto done; }
+    void *key_payload;
+    memcpy(&key_payload,scratch,sizeof key_payload);
+    if (key_shape->shape->kind==MYL_RC_SHAPE_POINTER && myl_rc_plain_type(heap,dict->value) &&
+        (!key_payload || !(((myl_native_object *)key_payload-1)->mark&MYL_NATIVE_OBJECT_ARENA)) && region<=heap->region_depth) {
+        /* RC-DICT-FAST-1: an ordinary pointer key and a plain value retain
+         * without the generic walker: one owner for the key, bytes for the value. */
+        myl_rc_status status=myl_rc_owner_take(heap,key_payload);
+        if (status!=MYL_RC_OK) { myl_rc_record_failure(heap,status); goto done; }
+        memcpy(entry,scratch,width);
+        if (output) memcpy(result,scratch+dict->value_offset,dict->value->size);
+    } else {
+        myl_rc_status status=myl_rc_value_retain_many(heap,targets,sources,output?3:2);
+        if (status!=MYL_RC_OK) { myl_rc_record_failure(heap,status); goto done; }
+    }
     uint32_t hash=hash_key(dict,entry);
     uint64_t marker=((uint64_t)hash<<32)|1;
     memcpy(entry+width-8,&marker,8);
