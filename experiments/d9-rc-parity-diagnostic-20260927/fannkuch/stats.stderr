@@ -1,0 +1,1 @@
+MYLANG_RC_COUNTS {"version":1,"runtime":"rc-v3-counting","saturated":false,"owner_acquire":5,"owner_release":16,"hold_acquire":0,"hold_release":0,"owner_limit":0,"hold_limit":0,"heap_allocate":11,"arena_allocate":0,"retire":11,"clone_shell":0,"unique_check":354444268}

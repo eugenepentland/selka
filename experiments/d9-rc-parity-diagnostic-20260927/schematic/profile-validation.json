@@ -1,0 +1,14 @@
+{
+  "method": "read-only ELF64 little-endian section table parsing; no binary mutation",
+  "original": ".tmp-rc-performance/diagnostic-7d68202d/bin/schematic.qbe",
+  "profile": ".tmp-rc-performance/schematic-7d68202d/production",
+  "original_sha256": "3d9635e4bda8d59d07e52c76a8e3c49a86451b40850f288134771eb23b168bd7",
+  "profile_sha256": "378000e4ec2acdede9910fb43aa854e43ac35975d5902cb45553eb4474d730c9",
+  "original_text_sha256": "8ddacc1d3702fbd806b1ff4ec58f21dbcf2b1db82655e94bb63b07a914807a4a",
+  "profile_text_sha256": "8ddacc1d3702fbd806b1ff4ec58f21dbcf2b1db82655e94bb63b07a914807a4a",
+  "text_identical": true,
+  "sample_records": 96,
+  "throttle_records": 96,
+  "unthrottle_records": 95,
+  "record_report_stderr": ""
+}
