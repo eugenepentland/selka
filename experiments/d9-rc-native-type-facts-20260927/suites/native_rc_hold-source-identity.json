@@ -1,0 +1,18 @@
+{
+  "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/src/native_heap.c": "d40b9f521450b9ce859b53a0a8c694e62207c1b6702917dc8cb7d20c369b158f",
+  "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/src/native_regions.c": "e2ff1df059a6da51747a92ee0c4345480d053ec66e0dac3b9496b93e8c524627",
+  "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/src/native_arena.c": "88f4d57c4ad50fb58b03f60973701b7da08113cc44e695a5a757ea1b95635a3c",
+  "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/src/native_collections.c": "6bf7f1e62502e4972d39d24b67e9248f4d59c00f87d8807ea3df1e50142043c9",
+  "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/src/native_text.c": "10c8e44d05b674ecfc380ee0645b058a1f1cea087665beb1b67e764888545dec",
+  "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/src/native_dictionary.c": "c73a2a53924d30eb832f7605160e048a2dbf24b5f0b024ff7a84479fe0a07014",
+  "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/src/native_equal.c": "b67d38ed40878403d99a4d36183acdb6b0ae6132f1e87892c51bbb74d81abf76",
+  "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/src/native_bytes.c": "61fce53e4fede54adb6395e2ff0dd0504445624e4df677b12e4fbf8c47b18df8",
+  "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/src/native_rc.c": "2d7da6fb1fb79e147d6a12d042f522d479b3ae1f62300a9ed7b322bf0d5a3491",
+  "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/src/native_rc_stats.c": "875d105c1dcc4df0774d304632d24565f8d8cfc1727a62f8ab23de3ee6e30db9",
+  "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/src/native_rc_shapes.c": "59189888de811a2043ca05e868d68109315c00fe32de6381a42653eb6a259762",
+  "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/src/native_rc_walk.c": "a8ae6dd034bacc7da2b2e95579faf871ec243a68090ed490838e1d9fda9da51c",
+  "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/src/native_rc_scope.c": "3b826de475d5598c643833bc9a96a2228f790a4d79ea5bb88221e6e867511bd7",
+  "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/src/native_rc_transfer.c": "6e9c67fca1d04e77571e8e7ba5d4e5608488a311fc38665aa9597324eeda4da4",
+  "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/src/native_rc_alloc.c": "17591ae114f404889c729483a1dd4ee85ba1bc915603f80b7bb28a42406008ae",
+  "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/src/native_rc_values.c": "da1d50df977c7b5bdc926f542bca83e86dd0e6525f2532351a515335fa838577"
+}

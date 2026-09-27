@@ -27,6 +27,7 @@ const cow_plan = @import("cow_plan.zig");
 const format = @import("qbe_format.zig");
 const qbe_alloc = @import("qbe_alloc.zig");
 const runtime_mode = @import("runtime_mode.zig");
+const dictionary_tail = @import("qbe_rc_dictionary_tail.zig");
 const rc_unique = @import("qbe_rc_unique.zig");
 const rc_frame = @import("qbe_rc_frame.zig");
 const rc_scope = @import("qbe_rc_scope.zig");
@@ -1260,18 +1261,18 @@ fn finishReceiverImpl(comptime E: type, self: *E, owner: usize) Error!void {
     var remaining = state.plan.places.len;
     while (remaining != 0) : (remaining -= 1) {
         if (state.plan.place(local)) |place| {
-            if (!inert_receiver.proven(E, self, local)) try rc_scope.end(E, self, try rc_scope.borrowAddress(E, self, local));
+            if (!inert_receiver.proven(E, self, local) and !dictionary_tail.receiver(E, self, local)) try rc_scope.end(E, self, try rc_scope.borrowAddress(E, self, local));
             if (scopePlace(E, self, place)) try releaseScope(E, self, place);
             local = place.parent;
         } else if (local < state.plan.aliases.len and state.plan.aliases[local] != cow_plan.none) {
-            if (!inert_receiver.proven(E, self, local)) try rc_scope.end(E, self, try rc_scope.borrowAddress(E, self, local));
+            if (!inert_receiver.proven(E, self, local) and !dictionary_tail.receiver(E, self, local)) try rc_scope.end(E, self, try rc_scope.borrowAddress(E, self, local));
             local = state.plan.aliases[local];
         } else break;
     }
 }
 
 fn borrowReceiverImpl(comptime E: type, self: *E, local: usize, payload: usize) Error!void {
-    if (inert_receiver.proven(E, self, local)) return;
+    if (inert_receiver.proven(E, self, local) or dictionary_tail.receiver(E, self, local)) return;
     const scope = try rc_scope.borrowAddress(E, self, local);
     try rc_scope.begin(E, self, scope);
     const plan = self.cow.?.plan;

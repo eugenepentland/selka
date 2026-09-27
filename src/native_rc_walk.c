@@ -190,6 +190,18 @@ int myl_rc_native_has_unique(myl_native_heap *heap, const myl_native_type *type)
         }
     }
 }
+int myl_rc_binding_has_unique(myl_native_heap *heap, const myl_rc_binding *binding) {
+    myl_rc_invariant(heap && heap->rc && !heap->rc->walk.depth && binding);
+    unsigned fact = binding->flat.native_unique;
+    if (!fact) {
+        /* No callback or registration occurs in this walk. In particular, a
+         * missing typed-box body must fail before a negative fact is published. */
+        fact = myl_rc_native_has_unique(heap, binding->descriptor.type) ? 2 : 1;
+        ((myl_rc_binding *)binding)->flat.native_unique = (unsigned char)fact;
+    }
+    myl_rc_invariant(fact <= 2);
+    return fact == 2;
+}
 void myl_rc_value_relocate(myl_rc_slot *destination, myl_rc_slot *source) {
     myl_rc_invariant(destination && source && destination->shape && source->shape);
     myl_rc_invariant(destination->shape->size == source->shape->size);

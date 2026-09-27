@@ -1,0 +1,38 @@
+{
+  "source_commit": "5b87601297f01810968b9f7ac554c484d5848cca",
+  "compiler_sha256": "f87393b249f45699d63a1f5a81dc47fb59faa41d1396fc8035131d7b2533b120",
+  "driver_sha256": "5ae34a4f5a0d3ed34592a12212be8609582fd1882b8928b077e11d6499018db8",
+  "full_corpus_acceptance": false,
+  "summary": {
+    "qbe": {
+      "complete_diagnostic": true,
+      "programs": 30,
+      "instruction_geomean": 2.831331568575135,
+      "maximum_instruction_ratio": 18.707279370818252,
+      "median_peak_rss_kb": {
+        "gc": 7058.0,
+        "rc": 5332.0
+      },
+      "subset_thresholds_pass": false
+    },
+    "llvm": {
+      "complete_diagnostic": true,
+      "programs": 30,
+      "instruction_geomean": 3.2832327572046967,
+      "maximum_instruction_ratio": 27.160196192442932,
+      "median_peak_rss_kb": {
+        "gc": 7042.0,
+        "rc": 5248.0
+      },
+      "subset_thresholds_pass": false
+    }
+  },
+  "artifacts": {
+    "README.md": "421c7af8f995e37db39d60ab69a8a543f42d3e412f4c6871bbf9decbc4d8a710",
+    "gc-builds.json.gz": "e4b8939cd562d4271d4c8f695ce09b8dbfca7394df55fb488883777fc0925d81",
+    "results.json.gz": "640a96c27a9a94ffa70ca7fbcc51f2efccad37831f653861e0749603591c69d9",
+    "run.log.gz": "a466e3ef202b985325e5692e4b21fa577efcba672ac29d65977c817a73f22817",
+    "run.py": "5ae34a4f5a0d3ed34592a12212be8609582fd1882b8928b077e11d6499018db8",
+    "verify.py": "9274a6896519f1d6a4e6e99a058f168c1ce3f71add8d6e6ff168362d7032660d"
+  }
+}

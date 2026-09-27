@@ -17,9 +17,17 @@ typedef struct {
 #define MYL_RC_FLAT_LEAVES 8
 /* Private plan, never part of emitted metadata. count > the bound means the
  * authoritative shape/native-kind pair requires generic traversal. */
-typedef struct { size_t offsets[MYL_RC_FLAT_LEAVES]; unsigned count, loanable; } myl_rc_flat;
-_Static_assert(sizeof(myl_rc_flat) == 72, "loan admission occupies existing amd64 plan padding");
+typedef struct {
+    size_t offsets[MYL_RC_FLAT_LEAVES];
+    unsigned count;
+    unsigned char loanable, native_unique;
+} myl_rc_flat;
+_Static_assert(sizeof(myl_rc_flat) == 72, "native facts preserve plan reservations");
+_Static_assert(offsetof(myl_rc_flat, count) == 64 && offsetof(myl_rc_flat, loanable) == 68,
+               "existing flat fields retain their offsets");
+_Static_assert(offsetof(myl_rc_flat, native_unique) == 69, "type fact occupies private padding");
 typedef struct { myl_rc_descriptor descriptor; myl_rc_flat flat; } myl_rc_binding;
+_Static_assert(sizeof(myl_rc_binding) == 128, "native facts preserve binding reservations");
 _Static_assert(offsetof(myl_rc_binding, descriptor) == 0, "indexed descriptor is its private binding prefix");
 typedef struct myl_rc_batch {
     struct myl_rc_batch *next;
@@ -83,6 +91,10 @@ myl_rc_status myl_rc_loan_copy(myl_native_heap *, const myl_rc_shape *, void *, 
 void myl_rc_loan_drop(myl_native_heap *, const myl_rc_shape *, void *);
 /* Nonmutating native inline-type walk; terminal managed payloads stay opaque. */
 int myl_rc_native_has_unique(myl_native_heap *, const myl_native_type *);
+/* Heap-local memo of the completed native predicate: 0 unknown, 1 no, 2 yes.
+ * The binding/type and consulted body finalizers are immutable through teardown.
+ * This never replaces the loan's separate actual-payload finalizer check. */
+int myl_rc_binding_has_unique(myl_native_heap *, const myl_rc_binding *);
 /* Native mutable collection classification used only by semantic transfers. */
 int myl_rc_native_mutable(const void *);
 /* Acquire ordinary edges without semantic history or pinned snapshots. */

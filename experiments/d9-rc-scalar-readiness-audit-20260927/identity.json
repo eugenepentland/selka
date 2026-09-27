@@ -1,0 +1,14 @@
+{
+  "source": "c71d4046",
+  "original_compiler": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/type-facts/install/bin/mylang",
+  "compiler_sha256": "2db0563ac88bfacebbe5b7c7c599069b8b80b1e7c8acc9e1cdb3d53f9fe0f54a",
+  "llvm_binary": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/type-facts/controls/parity-micro-list_append_sum-after-llvm-production",
+  "llvm_binary_sha256": "424f11d3a1e61e3ff7f56a95d02ca69e403d35442043e358fa1e8407603362d5",
+  "cpu": 3,
+  "explicit_environment_overrides": {},
+  "gc_reference": {
+    "list_append_sum_qbe": 592295027,
+    "sieve_qbe": 822297237
+  },
+  "note": "Differential code patch deliberately omits all readiness validation. Not a production or correctness candidate."
+}

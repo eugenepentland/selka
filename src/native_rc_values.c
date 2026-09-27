@@ -208,7 +208,8 @@ int myl_rc_native_loan(myl_native_heap *heap, const myl_native_type *type, void 
     }
     const myl_rc_shape *shape = descriptor ? descriptor->shape : myl_rc_native_shape(heap, type);
     if (!shape) { memset(dst, 0, type->size); return 0; }
-    myl_rc_invariant(!myl_rc_native_has_unique(heap, type));
+    myl_rc_invariant(!(descriptor ? myl_rc_binding_has_unique(heap, (const myl_rc_binding *)descriptor)
+                                 : myl_rc_native_has_unique(heap, type)));
     return publication_status(heap, myl_rc_loan_copy(heap, shape, dst, src));
 }
 void myl_rc_native_unloan(myl_native_heap *heap, const myl_native_type *type, void *value) {
@@ -294,7 +295,8 @@ int myl_rc_native_retain(myl_native_heap *heap, const myl_native_type *type, voi
     }
     const myl_rc_shape *shape = descriptor ? descriptor->shape : myl_rc_native_shape(heap, type);
     if (!shape) { memset(dst, 0, type->size); return 0; }
-    myl_rc_invariant(!myl_rc_native_has_unique(heap, type));
+    myl_rc_invariant(!(descriptor ? myl_rc_binding_has_unique(heap, (const myl_rc_binding *)descriptor)
+                                 : myl_rc_native_has_unique(heap, type)));
     memset(dst, 0, type->size);
     myl_rc_slot target = {.shape=shape,.address=dst,.region=region};
     myl_rc_slot source = {.shape=shape,.address=(void *)src};

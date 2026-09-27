@@ -1,0 +1,12 @@
+median parity/suite/sieve|qbe {'before': 4180751883, 'after': 4180751819} 0.9999999846917488
+median parity/suite/sieve|llvm {'before': 1671745440, 'after': 1671745473} 1.0000000197398475
+median parity/micro/alloc_churn|qbe {'before': 8014233062, 'after': 7972232944} 0.994759309134751
+median parity/micro/alloc_churn|llvm {'before': 5320233640, 'after': 5297233677} 0.9956768885435641
+median parity/micro/list_append_sum|qbe {'before': 2518577597, 'after': 2518577785} 1.0000000746453077
+median parity/micro/list_append_sum|llvm {'before': 1222706883, 'after': 1222706901} 1.0000000147214352
+median schematic/fixture|qbe {'before': 349813882, 'after': 325554267} 0.9306499362995548
+median schematic/fixture|llvm {'before': 245971748, 'after': 237622749} 0.9660570814823822
+median schematic/changed-net|qbe {'before': 347943521, 'after': 325697966} 0.9360656150858461
+median schematic/changed-net|llvm {'before': 245483810, 'after': 237764181} 0.9685534088785733
+median schematic/changed-value|qbe {'before': 345939686, 'after': 325620552} 0.9412639404430748
+median schematic/changed-value|llvm {'before': 245857567, 'after': 237591770} 0.9663797331891761

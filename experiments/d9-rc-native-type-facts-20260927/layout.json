@@ -1,0 +1,96 @@
+{
+  "before0": {
+    "command": [
+      "cc",
+      "-std=c11",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-I",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/type-facts/layout-before",
+      "-I",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/src",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/type-facts/layout.c",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/type-facts/layout-before0"
+    ],
+    "layout": {
+      "flat": 72,
+      "binding": 128,
+      "count": 64,
+      "loanable": 68,
+      "state": 128,
+      "heap": 5648
+    }
+  },
+  "before1": {
+    "command": [
+      "cc",
+      "-std=c11",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-DMYL_NATIVE_RC_COUNTING=1",
+      "-I",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/type-facts/layout-before",
+      "-I",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/src",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/type-facts/layout.c",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/type-facts/layout-before1"
+    ],
+    "layout": {
+      "flat": 72,
+      "binding": 128,
+      "count": 64,
+      "loanable": 68,
+      "state": 224,
+      "heap": 5648
+    }
+  },
+  "after0": {
+    "command": [
+      "cc",
+      "-std=c11",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-I",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/src",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/type-facts/layout.c",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/type-facts/layout-after0"
+    ],
+    "layout": {
+      "flat": 72,
+      "binding": 128,
+      "count": 64,
+      "loanable": 68,
+      "state": 128,
+      "heap": 5648
+    }
+  },
+  "after1": {
+    "command": [
+      "cc",
+      "-std=c11",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-DMYL_NATIVE_RC_COUNTING=1",
+      "-I",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/src",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/type-facts/layout.c",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/type-facts/layout-after1"
+    ],
+    "layout": {
+      "flat": 72,
+      "binding": 128,
+      "count": 64,
+      "loanable": 68,
+      "state": 224,
+      "heap": 5648
+    }
+  }
+}
