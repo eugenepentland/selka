@@ -43,7 +43,19 @@ fall another 6.3% on QBE and 18.0% on LLVM with identical counts and output.
 The argv lifetime fix closes the four-object/six-owner Lox shutdown gap on both
 backends. Scope-storage and scalar-update refinements are now joined and gated.
 The Lox audit attributes excessive object-table copies to an extra temporary
-owner; explicit field-transfer, empty-frame and constructor work is in progress.
+owner; explicit field-transfer work is in final isolated validation. The bounded
+empty-frame proof `57a26e87` and complete fresh-constructor preflight `cdec9ff5`
+are integrated after the green checkpoint and await the next combined gate.
+Their matched measurements improve full-size nbody and the tree diagnostic,
+respectively, without changing successful-run ownership counts.
+
+The frozen `7d68202d` [30-program diagnostic](d9-rc-parity-diagnostic-2026-09-27.md)
+completes all 60 actual-backend rows with correct output. Its instruction
+geomeans remain 4.806047× QBE and 6.291449× LLVM against accepted GC, with 23
+and 22 programs above 1.3×. Median RSS is lower for this subset, but the 13 Lox
+VM cases per backend are excluded. Exact counters identify repeated uniqueness
+checks in fannkuch and broad loan/value traversal in schematic as priorities.
+The three Astra workers now address those paths and allocation/retirement costs.
 The complete RC instruction/RSS acceptance remains open, followed by the
 ordinary runtime default transition, documentation and final combined validation.
 GC stays the default.
