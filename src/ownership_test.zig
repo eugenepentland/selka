@@ -373,3 +373,92 @@ test "live view mapping projection is a copy even on its owner's last read" {
     defer parsed.deinit();
     try std.testing.expectEqualStrings("copy", try classInto(parsed.value, "assign", "snapshot"));
 }
+
+// spec: OWNERSHIP-FIELD-WRITE-1
+test "record field writes invalidate a saved record borrow" {
+    var direct = try explained(std.testing.allocator,
+        \\record State:
+        \\    values: list[int]
+        \\def main() -> int:
+        \\    with arena():
+        \\        state = State([12])
+        \\        saved = state
+        \\        state.values.append(14)
+        \\        return len(saved.values) + len(state.values)
+    , "main");
+    defer direct.deinit();
+    var nested = try explained(std.testing.allocator,
+        \\record State:
+        \\    values: list[int]
+        \\record Outer:
+        \\    state: State
+        \\def push(values: mut list[int]):
+        \\    values.append(14)
+        \\def main() -> int:
+        \\    state = Outer(State([12]))
+        \\    saved = state
+        \\    push(mut state.state.values)
+        \\    return len(saved.state.values) + len(state.state.values)
+    , "main");
+    defer nested.deinit();
+    try std.testing.expectEqualStrings("copy", try classInto(direct.value, "assign", "saved"));
+    try std.testing.expectEqualStrings("owned", try role(direct.value, "saved"));
+    try std.testing.expectEqualStrings("copy", try classInto(nested.value, "assign", "saved"));
+}
+
+// spec-case: OWNERSHIP-FIELD-WRITE-1
+test "record field reads and writes to independent named homes preserve borrows" {
+    var parsed = try explained(std.testing.allocator,
+        \\record State:
+        \\    values: list[int]
+        \\def main() -> int:
+        \\    state = State([12])
+        \\    saved = state
+        \\    copied = state.values
+        \\    copied.append(14)
+        \\    return len(saved.values) + len(state.values) + len(copied)
+    , "main");
+    defer parsed.deinit();
+    try std.testing.expectEqualStrings("borrow", try classInto(parsed.value, "assign", "saved"));
+    try std.testing.expectEqualStrings("copy", try classInto(parsed.value, "assign", "copied"));
+    try std.testing.expectEqualStrings("borrowed", try role(parsed.value, "saved"));
+}
+
+// spec-case: OWNERSHIP-FIELD-WRITE-1
+test "unknown temporary write ancestry cannot justify a borrow" {
+    try std.testing.expect(uncertainFieldWrite(std.testing.allocator, 2, .{ .origin = .local, .local = 0 }, true));
+    try std.testing.expect(uncertainFieldWrite(std.testing.allocator, 1, .{}, true));
+    try std.testing.expect(uncertainFieldWrite(std.testing.allocator, 1, .{ .origin = .local, .local = 1 }, true));
+    try std.testing.expect(!uncertainFieldWrite(std.testing.allocator, 1, .{ .origin = .fresh }, true));
+    try std.testing.expect(!uncertainFieldWrite(std.testing.allocator, 1, .{ .origin = .local, .local = 0 }, false));
+}
+
+fn uncertainFieldWrite(a: std.mem.Allocator, count: u32, source: @import("ownership_model.zig").Source, temporary: bool) bool {
+    const model = @import("ownership_model.zig");
+    const span = @import("source.zig").Span{ .start = 0, .end = 0 };
+    const locals = [_]typed.Local{
+        .{ .name = "root", .declaration = span, .ty = .i64, .mutable = true },
+        .{ .name = if (temporary) "<receiver>" else "copied", .declaration = span, .ty = .i64, .mutable = true },
+    };
+    const code = [_]bytecode.Instruction{
+        .{ .span = span, .op = .{ .store_local = @fromBackingInt(1) } },
+        .{ .span = span, .op = .{ .buffer_operation = .{ .kind = .append, .owner = @fromBackingInt(1), .output = .unit } } },
+    };
+    var flags = [_]bool{ false, false };
+    var roles = [_]model.Role{ .owned, .owned };
+    var parents = [_]u32{ model.none, model.none };
+    var counts = [_]u32{ 0, count };
+    var pcs = [_]u32{ model.none, 0 };
+    const stack = [_]model.Source{source};
+    const flow = [_]?[]const model.Source{ &stack, &.{} };
+    const context: model.Context = .{
+        .allocator = a,
+        .code = .{ .program = .{ .functions = &.{} }, .function = .{ .scope = .{ .instructions = &code, .locals = &locals }, .id = @fromBackingInt(0), .name = "probe" }, .states = &.{} },
+        .live = .{ .words = 0, .live_in = &.{}, .live_out = &.{} },
+        .flow = .{ .at = &flow, .pops = &.{}, .targets = &.{} },
+        .locals = .{ .list = &locals, .params = 0, .value = &flags, .managed = &flags, .roles = &roles, .parents = &parents, .step = &flags },
+        .defs = .{ .count = &counts, .pc = &pcs, .mutated = &flags },
+        .marks = .{ .unique_load = &flags, .path_read = &flags, .suppressed = &flags, .plain_read = &flags },
+    };
+    return context.writesTree(1, 0, null);
+}

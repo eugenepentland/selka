@@ -1,0 +1,11 @@
+record State:
+    values: list[int]
+
+def main(out: Stream) -> int:
+    with arena():
+        state = State([12])
+        saved = state
+        state.values.append(14)
+        out.print(saved.values)
+        out.print(state.values)
+    return 0
