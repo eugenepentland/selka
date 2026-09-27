@@ -363,3 +363,28 @@ public def test_nested_transfer_inside_an_outer_window() -> bool:
         wb.count += 1
         it.rt = wb
     return it.rt.objects == [0, 1, 2, 3] and it.rt.count == 4 and saved.rt.objects == []
+
+
+def repeated_writeback(it: mut Interp, n: int):
+    wb = it.rt
+    i = 0
+    while i < n:
+        push(mut wb, i)
+        it.rt = wb
+        i += 1
+
+
+public def test_writeback_inside_a_loop_that_starts_after_the_take() -> bool:
+    it = fresh()
+    repeated_writeback(mut it, 3)
+    local = fresh()
+    first = local.rt
+    push(mut first, 9)
+    local.rt = first
+    wb = local.rt
+    j = 0
+    while j < 3:
+        push(mut wb, j)
+        local.rt = wb
+        j += 1
+    return it.rt.objects == [0, 1, 2] and it.rt.count == 3 and local.rt.objects == [9, 0, 1, 2]

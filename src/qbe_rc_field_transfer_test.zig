@@ -196,6 +196,13 @@ const writeback_source =
     \\            break
     \\        holder.rt = wb
     \\        i += 1
+    \\def looped_back(holder: mut Outer, n: int):
+    \\    wb = holder.rt
+    \\    i = 0
+    \\    while i < n:
+    \\        push(mut wb, i)
+    \\        holder.rt = wb
+    \\        i += 1
     \\def iterated(holder: mut Outer):
     \\    for x in holder.rt.objects:
     \\        wb = holder.rt
@@ -234,7 +241,7 @@ test "RC closed field transfer moves record fields of owned locals across closed
     const expected = [_]struct { []const u8, bool }{
         .{ "caller_record", true }, .{ "branched", true },      .{ "looped", true },   .{ "sibling_read", true },
         .{ "field_read", false },   .{ "whole_passed", false }, .{ "partial", false }, .{ "breaking", false },
-        .{ "iterated", false },
+        .{ "iterated", false },     .{ "looped_back", false },
     };
     for (expected) |case| try t.expectEqual(case[1], contains(try named(manifest.value, case[0]), marker));
 }
