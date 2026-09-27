@@ -18,11 +18,11 @@ pub fn Lower(comptime E: type) type {
         pub fn bytes(self: *E) Error!u64 {
             const state = get(E, self) orelse return 0;
             var total = frame_bytes + count(state) * (entry_bytes + 8);
-            for (state.operands) |operand| total += alignedBytes(operand.bytes);
+            for (state.operands) |operand| total += alignedBytes(operand.bytes) + @as(u64, if (operand.may_own) 8 else 0);
             for (self.function.scope.locals, 0..) |_, index| if (receiverStorage(E, self, index)) {
                 total += 32;
             };
-            return total + alignedBytes(state.pending) + 120 + state.plan.append_loops.len * 8;
+            return total + alignedBytes(state.pending) + 128 + state.plan.append_loops.len * 8;
         }
         /// Reserve table, guards and stable operand/pending-value buffers.
         pub fn allocate(self: *E) Error!void {
@@ -31,11 +31,14 @@ pub fn Lower(comptime E: type) type {
             try self.allocateSlot("rcentries", count(state) * entry_bytes);
             try self.allocateSlot("rcguards", count(state) * 8);
             for (state.operands, 0..) |operand, index| try self.allocateIndex("rcs", index, operand.bytes);
+            // RC-OPERAND-STAGE-1: the address-taken copy of an owned one-word operand.
+            for (state.operands, 0..) |operand, index| if (operand.may_own) try self.allocateIndex("rcstage", index, 8);
             try self.allocateSlot("rcwork", state.pending);
             try self.allocateSlot("rcinternal", 8);
             try self.allocateSlot("rcsort", 48);
             try self.allocateSlot("rccall", 32);
             try self.allocateSlot("rcplace", 32);
+            try self.allocateSlot("rcarg", 8);
             for (state.plan.append_loops, 0..) |_, index| try self.allocateIndex("rcappend", index, 8);
             for (self.function.scope.locals, 0..) |_, index| if (receiverStorage(E, self, index)) {
                 try self.allocateIndex("rcborrow", index, 32);

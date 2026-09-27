@@ -16,7 +16,8 @@ pub fn removalStatus(comptime E: type, self: *E, status: usize) Error!void {
 
 /// Owned element append; the receiver and source slot remain borrowed.
 /// A counted element type appends through its glue (RC-GLUE-1).
-pub fn append(comptime E: type, self: *E, element: typed.Type, result: usize, list: usize, value: usize) Error!void {
+pub fn append(comptime E: type, self: *E, element: typed.Type, result: usize, list: usize, operand: usize) Error!void {
+    const value = if (mode.enabled()) try values.argument(E, self, operand, element) else operand;
     if (mode.enabled()) {
         const glue = @import("qbe_rc_glue.zig");
         if (try glue.listRouted(E, self, element, .list_append)) return glue.listWrite(E, self, .{ .element = element, .result = result, .list = list, .value = value });
