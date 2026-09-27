@@ -68,7 +68,7 @@ fn allowed(catalog: *shapes.Catalog, function: bytecode.Function, op: Op) bool {
 }
 
 fn readList(catalog: *shapes.Catalog, function: bytecode.Function, operation: @FieldType(Op, "buffer_operation")) bool {
-    if (operation.kind != .read) return false;
+    if (operation.kind != .read and operation.kind != .length) return false;
     const ty = function.scope.locals[@backingInt(operation.owner)].ty;
     const record = catalog.native.records[ty.recordIndex()];
     return record.isCollection() and record.collection.kind == .list;

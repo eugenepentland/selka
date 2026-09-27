@@ -721,8 +721,9 @@ fn validate(allocator: std.mem.Allocator, manifest: std.json.Value, runtime: con
     if (!std.mem.eql(u8, v.text(v.get(manifest, "abi")), native_abi)) return error.InvalidNativeManifest;
     // A missing ownership tag is only the historical tracing contract. Unknown,
     // malformed and mismatched tags must never link against another runtime.
+    // Historical artifact decoding must not inherit a future process default.
     const tag = v.get(manifest, "runtime_contract");
-    const selected = contract.parse(if (tag == .null) null else v.text(tag)) catch return error.InvalidNativeManifest;
+    const selected: contract.Selection = if (tag == .null) .gc else contract.parse(v.text(tag)) catch return error.InvalidNativeManifest;
     if (selected != runtime) return error.InvalidNativeManifest;
     const units = v.array(v.get(manifest, manifest_functions));
     const entry = v.text(v.get(manifest, "entry"));
@@ -1626,6 +1627,7 @@ test "RC runtime contract partitions native objects archives and manifest replay
     const historical = try std.json.parseFromSlice(std.json.Value, a, "{\"version\":\"qbe-units-v1\",\"abi\":\"" ++ native_abi ++ "\",\"entry\":\"\",\"functions\":[]}", .{});
     try validate(a, historical.value, .gc);
     try std.testing.expectError(error.InvalidNativeManifest, validate(a, historical.value, .rc));
+    try std.testing.expectError(error.InvalidNativeManifest, validate(a, historical.value, .rc_counting));
     const old_abi = try std.json.parseFromSlice(std.json.Value, a, "{\"version\":\"qbe-units-v1\",\"abi\":\"mylang-qbe-native-v8\",\"entry\":\"\",\"functions\":[]}", .{});
     try std.testing.expectError(error.InvalidNativeManifest, validate(a, old_abi.value, .gc));
 }

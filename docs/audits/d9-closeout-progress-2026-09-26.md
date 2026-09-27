@@ -15,12 +15,13 @@ The final combined default/borrow gate at `f6bea5d9` passes all four steps:
 2,130 executed main tests, 429 QBE tests, native-build and formatting.
 WP-4's compiler, runtime, collection, arena and host ownership paths are implemented
 behind an experimental runtime selector. The latest fully green checkpoint at
-`7d68202d` passes 2,285 main tests, 439 QBE tests, native build and formatting.
-Both uncached RC sweeps pass **875/875 assertions across 150 programs**, with
+`e926d1e1` passes 2,295 main tests, 440 QBE tests, native build and formatting.
+Both uncached RC sweeps pass **892/892 assertions across 153 programs**, with
 zero failures, skips, cached verdicts, dropped files or unloaded files. The
-[joined checkpoint](d9-rc-scope-scalar-gate-2026-09-27.md) includes corrected
+[joined checkpoint](d9-rc-field-frame-span-gate-2026-09-27.md) includes corrected
 module callable resolution, argv ownership, empty-local journals and certified
-fresh returns, omitted empty receiver storage and direct plain scalar writes.
+fresh returns, omitted empty receiver storage, direct plain scalar writes,
+empty-frame linkage omission, complete fresh constructors and closed field transfer.
 Earlier augmented-field and iterator failures remain preserved
 as negative controls. The intermediate `685e2631` gate was **not green**: the
 resolver dropped the declared-`replace` guest file despite 865 passing executed
@@ -43,9 +44,9 @@ fall another 6.3% on QBE and 18.0% on LLVM with identical counts and output.
 The argv lifetime fix closes the four-object/six-owner Lox shutdown gap on both
 backends. Scope-storage and scalar-update refinements are now joined and gated.
 The Lox audit attributes excessive object-table copies to an extra temporary
-owner; explicit field-transfer work is in final isolated validation. The bounded
+owner; explicit field-transfer `d4bff2a1` is now integrated. The bounded
 empty-frame proof `57a26e87` and complete fresh-constructor preflight `cdec9ff5`
-are integrated after the green checkpoint and await the next combined gate.
+join it in the latest green checkpoint.
 Their matched measurements improve full-size nbody and the tree diagnostic,
 respectively, without changing successful-run ownership counts.
 
@@ -95,7 +96,7 @@ for every accepted package above.
 
 | Work | Branch/worktree | Remaining acceptance |
 |---|---|---|
-| WP-4 reference counting | `codex/d9-rc-integration`; frozen full gate `7d68202d`, both RC sweeps 875/875; historical golden replay complete | Validate further performance refinements; pass complete RC instruction/RSS acceptance including rewritten graph programs; transition the ordinary default to RC and update docs; rerun the final joined gate. GC remains default until acceptance |
+| WP-4 reference counting | `codex/d9-rc-integration`; frozen full gate `e926d1e1`, both RC sweeps 892/892; historical golden replay complete | Validate further performance refinements; pass complete RC instruction/RSS acceptance including rewritten graph programs; transition the ordinary default to RC and update docs; rerun the final joined gate. GC remains default until acceptance |
 | WP-5 concurrency | Design committed in `df482879`; [proposal](d9-wp5-concurrency-design-2026-09-26.md) | Resolve the documented Weft-source provenance gap and remaining design decisions; implement and validate after WP-4 acceptance |
 
 The plan's literal “on main” scheduling dependencies are being supplied by validated
