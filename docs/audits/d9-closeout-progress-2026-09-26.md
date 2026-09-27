@@ -15,10 +15,10 @@ The final combined default/borrow gate at `f6bea5d9` passes all four steps:
 2,130 executed main tests, 429 QBE tests, native-build and formatting.
 WP-4's compiler, runtime, collection, arena and host ownership paths are implemented
 behind an experimental runtime selector. The latest fully green checkpoint at
-`6983288b` passes 2,318 main tests, 442 QBE tests, native build and formatting.
-Both uncached RC sweeps pass **938/938 assertions across 161 programs**, with
+`5b876012` passes 2,325 main tests, 442 QBE tests, native build and formatting.
+Both uncached RC sweeps pass **952/952 assertions across 163 programs**, with
 zero failures, skips, cached verdicts, dropped files or unloaded files. The
-[joined checkpoint](d9-rc-nonheld-joined-gate-2026-09-27.md) includes corrected
+[joined checkpoint](d9-rc-snapshot-joined-gate-2026-09-27.md) includes corrected
 module callable resolution, argv ownership, empty-local journals and certified
 fresh returns, omitted empty receiver storage, direct plain scalar writes,
 empty-frame linkage omission, complete fresh constructors, closed field transfer,
@@ -79,12 +79,14 @@ verified. The managed-memory guides and repaired example also pass their joined
 gate; final RC-default wording remains conditional. Each slice preserves its existing
 callback, trap and refusal behavior.
 Exact nonheld scalar-list capture `aca67a7a` now passes the combined gate.
-A new isolated record-field snapshot control also exposes a preexisting ownership
-analysis defect on heap and arena records: mutating a child can change a saved
-record copy. Its negative receipts are preserved in `6a75eb2a`; the dedicated
-correction is in progress. This correctness requirement and the complete RC
-instruction/RSS acceptance remain open, followed by the ordinary runtime default
-transition, documentation and final combined validation.
+Scalar record publication `6a75eb2a`, private scalar descriptor identity
+`45567840`, and record-field snapshot correction `2631a44f` now pass the combined
+gate. The snapshot correction connects owned compiler field receivers to their
+source record during borrow analysis. Permanent heap/arena, nested-path and
+independent-home controls pass; historical negatives remain archived with the
+precise GC/RC applicability. Full RC instruction/RSS acceptance remains open,
+followed by the ordinary runtime default transition, documentation and final
+combined validation.
 GC stays the default.
 WP-5 has a [committed design](d9-wp5-concurrency-design-2026-09-26.md), with
 implementation dependent on WP-4 acceptance.
@@ -122,7 +124,7 @@ for every accepted package above.
 
 | Work | Branch/worktree | Remaining acceptance |
 |---|---|---|
-| WP-4 reference counting | `codex/d9-rc-integration`; frozen full gate `6983288b`, both RC sweeps 938/938; historical golden replay complete | Fix the newly reproduced record-field snapshot defect; validate further performance refinements; pass complete RC instruction/RSS acceptance including rewritten graph programs; transition the ordinary default to RC and update docs; rerun the final joined gate. GC remains default until acceptance |
+| WP-4 reference counting | `codex/d9-rc-integration`; frozen full gate `5b876012`, both RC sweeps 952/952; historical golden replay complete | Validate further performance refinements; pass complete RC instruction/RSS acceptance including rewritten graph programs; transition the ordinary default to RC and update docs; rerun the final joined gate. GC remains default until acceptance |
 | WP-5 concurrency | Design committed in `df482879`; [proposal](d9-wp5-concurrency-design-2026-09-26.md) | Resolve the documented Weft-source provenance gap and remaining design decisions; implement and validate after WP-4 acceptance |
 
 The plan's literal “on main” scheduling dependencies are being supplied by validated
