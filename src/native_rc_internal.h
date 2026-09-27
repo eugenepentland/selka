@@ -118,8 +118,11 @@ struct myl_rc_state {
 #endif
 };
 __attribute__((cold, noreturn)) void myl_rc_invariant_failed(void);
+/* RC-SCOPE-FAST-1: the constant-time checks and tests below are forced
+ * inline, so a fast path LTO carries into a large guest function keeps them
+ * straight-line instead of calling out for each. */
 /* Constant-time checks stay in production; only a violated one calls out. */
-static inline void myl_rc_invariant(int valid) {
+static inline __attribute__((always_inline)) void myl_rc_invariant(int valid) {
     if (!valid) myl_rc_invariant_failed();
 }
 /* An invariant whose evaluation needs a lookup or a walk; see MYL_RC_CHECKED. */
@@ -203,11 +206,11 @@ static inline int myl_rc_shallow_next(myl_rc_shallow *walk, size_t *offset, myl_
 }
 /* Inline forms of the count primitives for runtime-internal hot paths. They
  * perform exactly the public functions' checks, counts and statistics. */
-static inline int myl_rc_counted(const void *payload) {
+static inline __attribute__((always_inline)) int myl_rc_counted(const void *payload) {
     return payload && !(((const myl_native_object *)payload - 1)->mark &
         (MYL_NATIVE_OBJECT_IMMORTAL | MYL_NATIVE_OBJECT_ARENA));
 }
-static inline myl_rc_object *myl_rc_live(void *payload) {
+static inline __attribute__((always_inline)) myl_rc_object *myl_rc_live(void *payload) {
     myl_rc_object *object = (myl_rc_object *)payload - 1;
     myl_rc_invariant(!(object->common.mark & MYL_RC_OBJECT_DYING) && (object->owners || object->holds));
     return object;
@@ -337,14 +340,14 @@ static inline __attribute__((always_inline)) void myl_rc_zero_bytes(void *destin
     __builtin_memset(destination, 0, bytes);
 }
 /* Drain only when a death is queued; myl_rc_drain repeats its own admission. */
-static inline void myl_rc_drain_pending(myl_native_heap *heap) {
+static inline __attribute__((always_inline)) void myl_rc_drain_pending(myl_native_heap *heap) {
     if (heap->rc->dead.head) myl_rc_drain(heap);
 }
 /* Metadata budget: admit checks the limit (marking exhaustion on refusal),
  * charge/discharge move heap->bytes and the metadata total together. */
 int myl_rc_meta_admit(myl_native_heap *, size_t);
 /* myl_rc_meta_admit's limit test without its exhaustion side effect. */
-static inline int myl_rc_meta_fits(const myl_native_heap *heap, size_t bytes) {
+static inline __attribute__((always_inline)) int myl_rc_meta_fits(const myl_native_heap *heap, size_t bytes) {
     return bytes <= SIZE_MAX - heap->bytes && (!heap->limit || heap->bytes + bytes <= heap->limit);
 }
 void myl_rc_meta_charge(myl_native_heap *, size_t);

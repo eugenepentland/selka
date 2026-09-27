@@ -79,12 +79,11 @@ SCOPE_HOT void hold_return(myl_native_heap *heap, void *payload) {
     myl_rc_drain_pending(heap);
 }
 /* Restore every bit before any final hold can run a destructor or callback. */
-SCOPE_HOT void unwind(myl_rc_scope *scope, scope_entry *boundary) {
+static __attribute__((noinline)) void unwind_many(myl_rc_scope *scope, scope_entry *boundary) {
+    myl_native_heap *heap = scope->heap;
     scope_entry *head = scope->journal;
-    if (head == boundary) return;
     for (scope_entry *entry = head; entry != boundary; entry = entry->previous) restore(entry);
     scope->journal = boundary;
-    myl_native_heap *heap = scope->heap;
     do {
         scope_entry *entry = head;
         head = entry->previous;
@@ -94,10 +93,29 @@ SCOPE_HOT void unwind(myl_rc_scope *scope, scope_entry *boundary) {
         hold_return(heap, payload);
     } while (head != boundary);
 }
+/* The receiver statement's usual journal is one entry: straight-line. */
+SCOPE_HOT void unwind(myl_rc_scope *scope, scope_entry *boundary) {
+    scope_entry *head = scope->journal;
+    if (head == boundary) return;
+    if (__builtin_expect(head->previous != boundary, 0)) { unwind_many(scope, boundary); return; }
+    myl_native_heap *heap = scope->heap;
+    restore(head);
+    scope->journal = boundary;
+    void *payload = head->pin.hold.payload, *backing = head->backing;
+    entry_give(heap, head);
+    if (backing) hold_return(heap, backing);
+    hold_return(heap, payload);
+}
 inline __attribute__((always_inline)) void myl_rc_scope_begin(myl_native_heap *heap, myl_rc_scope *scope) {
     myl_rc_invariant(heap && heap->rc && scope);
     *scope = (myl_rc_scope){.heap = heap, .previous = heap->rc->scopes, .active = 1, .region = heap->region_depth};
     heap->rc->scopes = scope;
+}
+/* A hold at its count limit: the node goes back and the capture is refused. */
+static __attribute__((noinline, cold)) myl_rc_status capture_refused(myl_native_heap *heap, scope_entry *entry) {
+    MYL_RC_STAT(heap, MYL_RC_STAT_HOLD_LIMIT);
+    entry_give(heap, entry);
+    return MYL_RC_COUNT_LIMIT;
 }
 /* One journal capture on an active scope of `heap`, which the caller checked. */
 SCOPE_HOT myl_rc_status capture_in(myl_native_heap *heap, myl_rc_scope *scope, void *payload, unsigned pinned) {
@@ -114,11 +132,7 @@ SCOPE_HOT myl_rc_status capture_in(myl_native_heap *heap, myl_rc_scope *scope, v
      * immortal payloads were excluded above, so only an arena one is uncounted. */
     if (!(mark & MYL_NATIVE_OBJECT_ARENA)) {
         myl_rc_object *object = myl_rc_live(payload);
-        if (__builtin_expect(object->holds == MYL_RC_COUNT_MAX, 0)) {
-            MYL_RC_STAT(heap, MYL_RC_STAT_HOLD_LIMIT);
-            entry_give(heap, entry);
-            return MYL_RC_COUNT_LIMIT;
-        }
+        if (__builtin_expect(object->holds == MYL_RC_COUNT_MAX, 0)) return capture_refused(heap, entry);
         ++object->holds;
         MYL_RC_STAT(heap, MYL_RC_STAT_HOLD_ACQUIRE);
     }
