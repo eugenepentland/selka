@@ -55,7 +55,6 @@ const char *myl_rc_status_code(myl_rc_status status) {
     }
     abort();
 }
-int myl_rc_enabled(const myl_native_heap *heap) { return heap && heap->rc; }
 void myl_rc_record_failure(myl_native_heap *heap, myl_rc_status status) {
     myl_rc_invariant(heap && heap->rc);
     if (heap->rc->failure == MYL_RC_OK) heap->rc->failure = status;

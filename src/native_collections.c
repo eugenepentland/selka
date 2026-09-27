@@ -3,6 +3,7 @@
 #include "native_text.h"
 #include "native_rc_collections.h"
 #include "native_rc_internal.h"
+#include "native_rc_alloc.h"
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1151,14 +1152,18 @@ static const myl_rc_descriptor rc_list_descriptors[]={
 static const myl_rc_module rc_list_module={
     .abi=MYL_RC_ABI_VERSION,.descriptors=rc_list_descriptors,.descriptor_count=2
 };
+/* RC-LIST-HEADER-1: the header module is registered once per heap and a
+ * header is allocated through the storage adapter's cached single-type path;
+ * an element type already proved plain is known to be registered. */
 static myl_native_list *rc_list_new(myl_native_heap *heap, const myl_native_type *element, size_t capacity, unsigned region, int raw) {
-    if (!raw && !myl_rc_native_shape(heap,element)) return NULL;
-    myl_rc_status status=myl_rc_module_register(heap,&rc_list_module);
-    if (status!=MYL_RC_OK) { myl_rc_record_failure(heap,status); return NULL; }
-    myl_rc_alloc_request request={raw?&rc_storage_type:&list_type,1,region};
-    myl_native_list *list=NULL;
-    status=myl_rc_new(heap,&request,(void **)&list);
-    if (status!=MYL_RC_OK) { myl_rc_record_failure(heap,status); return NULL; }
+    if (!raw && heap->rc->plain!=element && !myl_rc_native_shape(heap,element)) return NULL;
+    if (!heap->rc->lists) {
+        myl_rc_status status=myl_rc_module_register(heap,&rc_list_module);
+        if (status!=MYL_RC_OK) { myl_rc_record_failure(heap,status); return NULL; }
+        heap->rc->lists=1;
+    }
+    myl_native_list *list=myl_rc_storage_alloc(heap,raw?&rc_storage_type:&list_type,1,region);
+    if (!list) return NULL;
     list->element=element;
     if (capacity) list->storage=myl_rc_native_storage(heap,element,capacity,region);
     if (capacity && !list->storage) { myl_rc_native_abort(heap,list); return NULL; }
@@ -1183,7 +1188,10 @@ int myl_rc_list_storage_reserve(myl_native_heap *heap, myl_native_list *list, si
     void *storage=opaque?myl_rc_storage_extend_opaque(heap,old,capacity*list->element->size):
         myl_rc_storage_extend(heap,old,capacity*list->element->size);
     if (!storage) {
-        storage=myl_rc_native_storage(heap,list->element,capacity,myl_native_header_region(list));
+        /* RC-OPAQUE-EXTEND-1: a moved plain backing leaves its new capacity
+         * unwritten too; only the live prefix is copied below. */
+        storage=opaque?myl_rc_storage_block(heap,capacity*list->element->size,myl_native_header_region(list)):
+            myl_rc_native_storage(heap,list->element,capacity,myl_native_header_region(list));
         if (!storage) return 0;
         if (list->length) memcpy(storage,old,list->length*list->element->size);
         list->storage=storage;

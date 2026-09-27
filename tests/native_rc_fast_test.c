@@ -618,6 +618,10 @@ static void plain_elements_copy_as_bytes(void) {
     assert(list);
     for (uint64_t i = 0; i < 100; ++i) assert(myl_rc_list_append(&heap, list, &i));
     assert(heap.rc->plain == &number && list->length == 100);
+    /* spec-case: RC-LIST-HEADER-1. The header module is registered once and
+     * grown plain backings keep every live element. */
+    assert(heap.rc->lists && list->capacity >= 100);
+    for (uint64_t i = 0; i < 100; ++i) assert(((uint64_t *)list->storage)[i] == i);
     myl_rc_counters before, after;
     assert(myl_rc_stats_snapshot(&heap, &before));
     myl_native_list *copy = myl_native_list_copy(&heap, list);

@@ -116,6 +116,8 @@ struct myl_rc_state {
      * type that is also a one-, two-, four- or eight-byte scalar a list room
      * append stores directly (RC-PLAIN-TYPE-1). */
     const myl_native_type *plain, *plain_word;
+    /* Whether the runtime list header module is registered (RC-LIST-HEADER-1). */
+    unsigned char lists;
     myl_rc_status failure;
 #if defined(MYL_NATIVE_RC_COUNTING) && MYL_NATIVE_RC_COUNTING
     myl_rc_counters stats;

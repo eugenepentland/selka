@@ -19,6 +19,7 @@ extern fn myl_rc_fast_verify() c_int;
 // spec: RC-OPAQUE-EXTEND-1
 // spec: RC-DRAIN-FLAT-1
 // spec: RC-PLAIN-TYPE-1
+// spec: RC-LIST-HEADER-1
 test "RC runtime fast paths keep ownership, accounting and teardown exact" {
     try std.testing.expectEqual(@as(c_int, 18), myl_rc_fast_verify());
 }
