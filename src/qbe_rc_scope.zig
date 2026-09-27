@@ -27,6 +27,7 @@ pub fn borrowAddress(comptime E: type, self: *E, local: usize) Error!usize {
 }
 /// Link before the first fallible pin; frame unwind owns every partial journal.
 pub fn begin(comptime E: type, self: *E, scope: usize) Error!void {
+    try @import("qbe_rc_frame.zig").requireLinked(E, self);
     try self.print(" call $myl_qbe_rc_scope_begin(l %ctx, l %v{d})\n", .{scope});
 }
 /// Restore prior pin bits before releasing this scope's lifetime holds.

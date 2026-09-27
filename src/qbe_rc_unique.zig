@@ -37,6 +37,7 @@ pub fn local(comptime E: type, self: *E, unique: cow.Unique) Error!void {
 
 fn localCall(comptime E: type, self: *E, index: usize, address: usize, guard: usize) Error!void {
     if (stableMutParameter(E, self, index) or @import("qbe_rc_hoist.zig").covers(E, self, index)) return;
+    try frame.requireLinked(E, self);
     const ty = self.function.scope.locals[index].ty;
     const holds = @import("qbe_rc_holds.zig");
     const label = self.temp();
@@ -60,7 +61,8 @@ fn localCall(comptime E: type, self: *E, index: usize, address: usize, guard: us
 // activation. Pin-aware publications cannot introduce a second snapshot owner.
 // A source-level rebind instead installs an ordinary value in the parameter
 // slot, so any instruction that can replace that slot declines this shortcut.
-fn stableMutParameter(comptime E: type, self: *E, index: usize) bool {
+/// A caller-pinned plain-element list parameter never needs a local clone.
+pub fn stableMutParameter(comptime E: type, self: *E, index: usize) bool {
     const state = frame.get(E, self) orelse return false;
     if (index >= state.contract.parameters.len or state.contract.parameters[index] != .mutable_payload) return false;
     const ty = self.function.scope.locals[index].ty;
@@ -77,6 +79,7 @@ pub const Field = struct { ty: @import("typed.zig").Type, address: usize, contai
 
 /// Detach an ordinary or held field without changing its ownership role.
 pub fn field(comptime E: type, self: *E, target: Field) Error!void {
+    try frame.requireLinked(E, self);
     const container = self.temp();
     if (target.container) |value| {
         try self.print(" %v{d} =l copy %v{d}\n", .{ container, value });
