@@ -26,7 +26,7 @@ extern fn myl_rc_loan_verify() c_int;
 // spec-case: RC-SEMANTIC-HISTORY-1
 // spec: RC-FLAT-LOAN-1
 test "RC loans preserve pinned identity and roll back aggregate lifetime holds" {
-    try std.testing.expectEqual(@as(c_int, 14), myl_rc_loan_verify());
+    try std.testing.expectEqual(@as(c_int, 19), myl_rc_loan_verify());
 }
 
 extern fn myl_rc_history_verify() c_int;

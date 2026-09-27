@@ -333,14 +333,145 @@ static void flat_loan_depth_and_cold(void) {
     myl_rc_native_unloan(&heap,&empty,&other); assert(other==93); finish(&heap);
 }
 
+static int binding_unique(myl_native_heap *heap, const myl_native_type *type) {
+    const myl_rc_binding *binding=(const myl_rc_binding *)myl_rc_descriptor_find(heap,type);
+    assert(binding);
+    return myl_rc_binding_has_unique(heap,binding);
+}
+/* spec-case: RC-SEMANTIC-HISTORY-1. A type fact covers all variant arms and
+ * native unique kinds, independently of which value happens to be active. */
+static void type_facts_all_arms(void) {
+    myl_native_heap heap; start(&heap);
+    myl_native_type raw[]={
+        {.size=8,.alignment=8,.kind=MYL_NATIVE_RESOURCE},
+        {.size=8,.alignment=8,.kind=MYL_NATIVE_OWNED_BUFFER},
+        {.size=8,.alignment=8,.kind=MYL_NATIVE_OWNED_POOL}};
+    const myl_rc_shape none={.size=8,.kind=MYL_RC_SHAPE_NONE};
+    for (size_t i=0;i<3;i++) {
+        const myl_native_field fields[]={{.offset=8,.tag=0,.type=&number},{.offset=8,.tag=1,.type=&raw[i]}};
+        const myl_native_type type={.size=16,.alignment=8,.kind=MYL_NATIVE_VARIANT,.fields=fields,.field_count=2};
+        const myl_rc_field edges[]={{.offset=8,.tag=0,.shape=&none},{.offset=8,.tag=1,.shape=&none}};
+        const myl_rc_shape shape={.size=16,.kind=MYL_RC_SHAPE_VARIANT,.as.variant={edges,2,0}};
+        const myl_rc_descriptor descriptor={.type=&type,.shape=&shape};
+        assert(myl_rc_descriptor_import(&heap,&descriptor)==MYL_RC_OK);
+        assert(myl_rc_native_has_unique(&heap,&type) && binding_unique(&heap,&type));
+        uint64_t plain_arm[]={0,73}; reject_loan(&heap,&type,plain_arm);
+        assert(binding_unique(&heap,&type));
+        const myl_native_field element={.type=&raw[i]};
+        const myl_native_type sequence={.size=16,.alignment=8,.kind=MYL_NATIVE_ARRAY,
+            .fields=&element,.field_count=1,.element=&raw[i],.count=2,.stride=8};
+        const myl_rc_shape sequence_shape={.size=16,.kind=MYL_RC_SHAPE_ARRAY,.as.array={&none,2,8}};
+        const myl_rc_descriptor sequence_descriptor={.type=&sequence,.shape=&sequence_shape};
+        assert(myl_rc_descriptor_import(&heap,&sequence_descriptor)==MYL_RC_OK);
+        assert(binding_unique(&heap,&sequence) && binding_unique(&heap,&sequence));
+        /* Each temporary native identity stays alive through its heap. */
+        finish(&heap); if (i+1<3) start(&heap);
+    }
+}
+static void type_facts_deep_generic_values(void) {
+    myl_native_heap heap; start(&heap);
+    myl_native_type types[12]={0}; myl_native_field fields[11]={0};
+    myl_rc_shape shapes[12]={0}; myl_rc_field edges[11]={0};
+    types[11]=pointer; shapes[11]=owned;
+    for (size_t i=11;i>0;i--) {
+        fields[i-1]=(myl_native_field){.type=&types[i]};
+        edges[i-1]=(myl_rc_field){.shape=&shapes[i]};
+        types[i-1]=(myl_native_type){.size=8,.alignment=8,.kind=MYL_NATIVE_RECORD,.fields=&fields[i-1],.field_count=1};
+        shapes[i-1]=(myl_rc_shape){.size=8,.kind=MYL_RC_SHAPE_RECORD,.as.record={&edges[i-1],1}};
+    }
+    const myl_rc_descriptor descriptor={.type=&types[0],.shape=&shapes[0]};
+    assert(myl_rc_descriptor_import(&heap,&descriptor)==MYL_RC_OK);
+    size_t bytes=heap.bytes; heap.limit=bytes;
+    for (unsigned i=0;i<2;i++) assert(!binding_unique(&heap,&types[0]) && heap.bytes==bytes);
+    void *nil=NULL,*output=(void *)(uintptr_t)91;
+    assert(!myl_rc_native_loan(&heap,&types[0],&output,&nil));
+    assert(!output && myl_rc_take_failure(&heap)==MYL_RC_ALLOCATION_REFUSED);
+    heap.limit=0;
+    assert(myl_rc_native_loan(&heap,&types[0],&output,&nil));
+    myl_rc_native_unloan(&heap,&types[0],&output);
+    assert(!binding_unique(&heap,&variant) && !binding_unique(&heap,&array));
+    finish(&heap);
+}
+static void type_fact_finalizer(myl_native_heap *heap, void *payload) { (void)heap; (void)payload; }
+/* The root can precede its typed-box body. Heap-local bindings of the same
+ * native identities can have different finalizers, including after reinit. */
+static void type_facts_late_body_and_heap_lifetime(void) {
+    static const myl_native_type body={.size=8,.alignment=8,.kind=MYL_NATIVE_PLAIN};
+    static const myl_native_type box={.size=8,.alignment=8,.kind=MYL_NATIVE_POINTER,.collection_kind=5,.element=&body};
+    static const myl_rc_shape none={.size=8,.kind=MYL_RC_SHAPE_NONE};
+    static const myl_rc_descriptor box_descriptor={.type=&box,.shape=&owned};
+    const myl_rc_descriptor plain={.type=&body,.shape=&none};
+    const myl_rc_descriptor finalized={.type=&body,.shape=&none,.finalize=type_fact_finalizer};
+    myl_native_heap a,b; start(&a); start(&b);
+    assert(myl_rc_descriptor_import(&a,&box_descriptor)==MYL_RC_OK);
+    void *nil=NULL; reject_loan(&a,&box,&nil);
+    assert(myl_rc_descriptor_import(&a,&finalized)==MYL_RC_OK);
+    assert(myl_rc_descriptor_import(&b,&box_descriptor)==MYL_RC_OK);
+    assert(myl_rc_descriptor_import(&b,&plain)==MYL_RC_OK);
+    for (unsigned i=0;i<2;i++) assert(binding_unique(&a,&box) && !binding_unique(&b,&box));
+    reject_loan(&a,&box,&nil); finish(&a);
+    start(&a); assert(myl_rc_descriptor_import(&a,&box_descriptor)==MYL_RC_OK);
+    assert(myl_rc_descriptor_import(&a,&plain)==MYL_RC_OK);
+    assert(!binding_unique(&a,&box)); finish(&a); finish(&b);
+}
+static void type_facts_keep_dynamic_payload_admission(void) {
+    static const myl_native_type finalized={.size=8,.alignment=8,.kind=MYL_NATIVE_PLAIN};
+    static const myl_rc_shape none={.size=8,.kind=MYL_RC_SHAPE_NONE};
+    static const myl_rc_descriptor descriptor={.type=&finalized,.shape=&none,.finalize=type_fact_finalizer};
+    myl_native_heap heap; start(&heap);
+    assert(!binding_unique(&heap,&variant));
+    assert(myl_rc_descriptor_import(&heap,&descriptor)==MYL_RC_OK);
+    void *payload=myl_native_heap_alloc(&heap,&finalized,1); assert(payload);
+    struct { uint64_t tag; void *value; } source={0,payload},copy={0};
+    reject_loan(&heap,&variant,&source);
+    assert(myl_rc_native_retain(&heap,&variant,&copy,&source,0));
+    assert(copy.value==payload && header(payload)->owners==2);
+    myl_rc_native_drop(&heap,&variant,&copy); myl_rc_owner_release(&heap,payload); finish(&heap);
+}
+static myl_native_type fact_extra_types[128];
+static void type_fact_registering_finalizer(myl_native_heap *heap, void *payload) {
+    (void)payload;
+    const myl_rc_binding *binding=(const myl_rc_binding *)myl_rc_descriptor_find(heap,&variant);
+    assert(!myl_rc_binding_has_unique(heap,binding));
+    const myl_rc_shape none={.size=8,.kind=MYL_RC_SHAPE_NONE};
+    const myl_rc_descriptor first={.type=&fact_extra_types[0],.shape=&none};
+    size_t bytes=heap->bytes,limit=heap->limit; heap->limit=bytes;
+    assert(myl_rc_descriptor_import(heap,&first)==MYL_RC_ALLOCATION_REFUSED);
+    assert(heap->bytes==bytes && !myl_rc_binding_has_unique(heap,binding)); heap->limit=limit;
+    for (size_t i=0;i<128;i++) {
+        const myl_rc_descriptor descriptor={.type=&fact_extra_types[i],.shape=&none};
+        assert(myl_rc_descriptor_import(heap,&descriptor)==MYL_RC_OK);
+    }
+    assert(binding==(const myl_rc_binding *)myl_rc_descriptor_find(heap,&variant));
+    assert(!myl_rc_binding_has_unique(heap,binding) && !heap->rc->walk.depth);
+}
+static void type_facts_registration_and_idle_invariant(void) {
+    static const myl_native_type final_type={.size=8,.alignment=8,.kind=MYL_NATIVE_PLAIN};
+    static const myl_rc_shape none={.size=8,.kind=MYL_RC_SHAPE_NONE};
+    static const myl_rc_descriptor descriptor={.type=&final_type,.shape=&none,.finalize=type_fact_registering_finalizer};
+    for (size_t i=0;i<128;i++) fact_extra_types[i]=number;
+    myl_native_heap heap; start(&heap); assert(!binding_unique(&heap,&variant));
+    pid_t child=fork(); assert(child>=0);
+    if (!child) {
+        struct rlimit no_core={0,0}; assert(!setrlimit(RLIMIT_CORE,&no_core));
+        heap.rc->walk.depth=1; (void)binding_unique(&heap,&variant); _exit(0);
+    }
+    int status=0; assert(waitpid(child,&status,0)==child && WIFSIGNALED(status) && WTERMSIG(status)==SIGABRT);
+    assert(myl_rc_descriptor_import(&heap,&descriptor)==MYL_RC_OK);
+    void *value=myl_native_heap_alloc(&heap,&final_type,1); assert(value);
+    myl_rc_owner_release(&heap,value); assert(!binding_unique(&heap,&variant)); finish(&heap);
+}
+
 int myl_rc_loan_verify(void) {
     pinned_projection_does_not_publish(); ownerless_loan_survives(); repeated_mixed_leaves();
     late_hold_refusal_rolls_back(); array_and_variant(); arena_loan_closes_before_region(); raw_unique_type_detection();
     flat_body_survives_ownerless_loan(); held_body_loan_uses_generic_drop();
     flat_padding_and_duplicate_limit(); flat_loan_unique_refusals(); flat_loan_sibling_callbacks();
     flat_loan_queued_copy(); flat_loan_depth_and_cold();
-    return 14;
+    type_facts_all_arms(); type_facts_deep_generic_values(); type_facts_late_body_and_heap_lifetime();
+    type_facts_keep_dynamic_payload_admission(); type_facts_registration_and_idle_invariant();
+    return 19;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
-int main(void) { assert(myl_rc_loan_verify()==14); puts("native rc loans: 14 passed"); }
+int main(void) { assert(myl_rc_loan_verify()==19); puts("native rc loans: 19 passed"); }
 #endif

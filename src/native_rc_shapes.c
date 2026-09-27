@@ -214,6 +214,7 @@ static void flat_build(myl_rc_binding *binding) {
     myl_rc_flat *flat = &binding->flat;
     flat->count = MYL_RC_FLAT_LEAVES + 1;
     flat->loanable = 0;
+    flat->native_unique = 0;
     if (descriptor->edges || descriptor->finalize || descriptor->clone || descriptor->shell || descriptor->next) return;
     flat_frame frames[16] = {{.type = descriptor->type, .shape = descriptor->shape}};
     size_t depth = 1, inspected = 0;

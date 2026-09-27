@@ -1,0 +1,6 @@
+native rc loans: 19 passed
+native rc semantic history: 42 passed
+native RC live holds: 12 tests passed
+native RC arena: 10 passed
+native RC contract: 25 tests passed
+native RC collections: 42 passed
