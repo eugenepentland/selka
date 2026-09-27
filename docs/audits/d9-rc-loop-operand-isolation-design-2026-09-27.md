@@ -1,8 +1,10 @@
 # Isolate word operands of an already accepted fast loop
 
-Status: design only, on `d9/rc-loop-operand-isolation-astra` after PC fix
-`238db806` and evidence `d4933f53`. No production changes or timing. This does
-not broaden loop admission or alter the immutable dictionary measurements.
+Status: approved design, implemented and measured in
+[d9-rc-loop-operand-isolation-2026-09-27.md](d9-rc-loop-operand-isolation-2026-09-27.md).
+The proposal below records the pre-implementation reasoning after PC fix
+`238db806` and evidence `d4933f53`; its initial static evidence is distinguished
+from the later production measurements.
 
 ## Evidence and expected mechanism
 
