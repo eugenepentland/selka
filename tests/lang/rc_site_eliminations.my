@@ -306,6 +306,30 @@ def read_reloaded(frame: mut Bytecode) -> Value:
     return frame.constants[reload_constants(mut frame)]
 
 
+record Wire:
+    net: Name
+    part: int
+    open: bool
+
+
+def matching_wires(wires: list[Wire], wanted: int) -> int:
+    total = 0
+    j = 0
+    while j < len(wires):
+        other = wires[j]
+        if j == 2:
+            other = wires[0]
+        if not other.open and other.part == wanted:
+            total += len(other.net.chars)
+        j += 1
+    return total
+
+
+def first_wire(wires: list[Wire]) -> Wire:
+    other = wires[0]
+    return other
+
+
 def pop(rt: mut Runtime) -> Value:
     rt.top = rt.top - 1
     return rt.stack[rt.top]
@@ -617,6 +641,14 @@ public def test_borrowed_fields_across_calls_that_replace_them() -> bool:
     return (number(item) == 5.0 or item == Value.text("reloaded")) and frame.constants == [Value.text("reloaded")]
 
 
+# spec-case: RC-READONLY-ANCHOR-1
+public def test_records_copied_out_of_readonly_lists_into_named_locals() -> bool:
+    wires = [Wire(Name(b"ab" + b"c", 1u32), 1, False), Wire(Name(b"d", 2u32), 2, False), Wire(Name(b"e", 3u32), 1, True)]
+    kept = first_wire(wires)
+    wires[0] = Wire(Name(b"", 0u32), 9, True)
+    return matching_wires(wires, 1) == 0 and matching_wires([kept, kept], 1) == 6 and kept.net.chars == b"abc"
+
+
 # Run every test once, so `mylang run --rc-runtime=stats` shows balanced counts
 # for the whole file; the result is the number of failures.
 def main() -> int:
@@ -650,6 +682,7 @@ def main() -> int:
         test_mut_root_fields_passed_to_calls_read_the_current_value(),
         test_mut_root_fields_keep_the_value_a_later_mut_call_replaces(),
         test_mut_root_fields_passed_to_calls_whose_results_are_matched(),
+        test_records_copied_out_of_readonly_lists_into_named_locals(),
         test_borrowed_match_accessors_read_in_place_and_copy_when_kept(),
         test_borrowed_fields_across_calls_that_only_advance_the_root(),
         test_borrowed_fields_across_calls_that_replace_them(),

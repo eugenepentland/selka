@@ -18,12 +18,15 @@ const source =
     \\    free,
     \\    function: Function,
     \\    name: Name
-    \\def arity(objects: list[Obj], at: int) -> int:
+    \\def arity(objects: mut list[Obj], at: int) -> int:
+    \\    count = 0
     \\    match objects[at]:
     \\        case Obj.function(payload):
-    \\            return payload.arity
+    \\            count = payload.arity
     \\        case _:
-    \\            return -1
+    \\            count = -1
+    \\    objects.append(Obj.free)
+    \\    return count
     \\def function(objects: list[Obj], at: int) -> Function:
     \\    match objects[at]:
     \\        case Obj.function(payload):
@@ -55,7 +58,7 @@ const source =
     \\    return value
     \\def main() -> int:
     \\    objects = [Obj.function(Function(2, Chunk([7])))]
-    \\    return arity(objects, 0) + function(objects, 0).arity + len(kept(objects, 0)) + forward(function(objects, 0)).arity + replaced(mut objects, 0) + int(name(objects, 0).hash)
+    \\    return arity(mut objects, 0) + function(objects, 0).arity + len(kept(objects, 0)) + forward(function(objects, 0)).arity + replaced(mut objects, 0) + int(name(objects, 0).hash)
 ;
 
 fn count(name: []const u8, marker: []const u8) !usize {
@@ -74,6 +77,8 @@ fn count(name: []const u8, marker: []const u8) !usize {
     return error.TestUnexpectedResult;
 }
 
+// `arity` matches a `mut` list: a read-only parameter root would bind the
+// payload in place instead (RC-READONLY-ANCHOR-1).
 // spec: RC-SELF-STORE-1
 test "RC elided payload copies keep the binding's owner without a second retain" {
     try t.expect(try count("arity", "# RC-SELF-STORE-1") > 0);

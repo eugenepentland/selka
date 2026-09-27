@@ -232,3 +232,30 @@ test "RC field reads of a mut root consumed by a call whose result is matched ta
     ;
     try t.expectEqual(@as(usize, 0), try operationsIn(matched, "global"));
 }
+
+// spec-case: RC-READONLY-ANCHOR-1
+test "RC records copied out of a read-only list into a named local take no token" {
+    const records =
+        \\record Span:
+        \\    source: bytes
+        \\    start: int
+        \\record Pin:
+        \\    part: int
+        \\    net: Span
+        \\    nc: bool
+        \\def count(pins: list[Pin], wanted: int) -> int:
+        \\    total = 0
+        \\    j = 0
+        \\    while j < len(pins):
+        \\        other = pins[j]
+        \\        if j % 2 == 0:
+        \\            other = pins[0]
+        \\        if not other.nc and other.part == wanted:
+        \\            total += other.net.start
+        \\        j += 1
+        \\    return total
+        \\def main() -> int:
+        \\    return count([Pin(1, Span(b"a" + b"b", 2), False)], 1)
+    ;
+    try t.expectEqual(@as(usize, 0), try operationsIn(records, "count"));
+}

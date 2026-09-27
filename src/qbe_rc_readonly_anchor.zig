@@ -25,6 +25,9 @@ pub const Error = error{ InternalError, OutOfMemory, WriteFailed, SourceError };
 
 /// The deepest read chain one value looks back through.
 const depth_limit = 16;
+/// The largest body and local table the anchor analyses consider.
+const code_limit = 16384;
+const local_limit = 4096;
 /// Instruction visits one function's anchor analysis may spend before it
 /// stops and keeps ordinary ownership for what it has not proved.
 const analysis_budget: usize = 1 << 22;
@@ -36,7 +39,7 @@ const analysis_budget: usize = 1 << 22;
 pub fn bind(comptime E: type, self: *E, bindings: []input.Binding, catalog: *shapes.Catalog, contract: model.CallContract) Error!void {
     const code = self.function.scope.instructions;
     const count = self.function.scope.locals.len;
-    if (code.len > 4096 or count > 1024) return;
+    if (code.len > code_limit or count > local_limit) return;
     const roots = try self.allocator.alloc(bool, count);
     defer self.allocator.free(roots);
     @memset(roots, false);
@@ -51,7 +54,7 @@ pub fn bind(comptime E: type, self: *E, bindings: []input.Binding, catalog: *sha
     // Optimistic start: every candidate is anchored until a definition says otherwise.
     const anchored = try self.allocator.alloc(bool, count);
     defer self.allocator.free(anchored);
-    for (anchored, 0..) |*flag, index| flag.* = roots[index] or try candidate(E, self, bindings, catalog, index);
+    for (anchored, 0..) |*flag, index| flag.* = roots[index] or try candidate(E, self, bindings, catalog, roots, index);
     var changed = true;
     var budget: usize = analysis_budget;
     while (changed) {
@@ -80,6 +83,18 @@ pub fn anchoredLocal(comptime E: type, self: *E, local: usize) bool {
     if (ownership != .borrowed or ownership.borrowed != .storage) return false;
     const anchor = @backingInt(ownership.borrowed.storage);
     return anchor < state.contract.parameters.len and root(E, self, anchor);
+}
+
+/// Store an anchored value wider than one word into its anchored local by
+/// its bits, with no token; a one-word value takes the borrowed store of
+/// `qbe_rc_read_loans.zig`. Returns false for any other store.
+pub fn store(comptime E: type, self: *E, local: usize, operand: usize) Error!bool {
+    const ty = self.function.scope.locals[local].ty;
+    if (self.isScalar(ty) or !anchoredLocal(E, self, local) or local < self.function.signature.parameter_count) return false;
+    const source = try self.load("s", operand);
+    const size = (self.layout(ty) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError).size;
+    try self.print(" # RC-READONLY-ANCHOR-1 local {d}\n blit %v{d}, %l{d}, {d}\n", .{ local, source, local, size });
+    return true;
 }
 
 /// Whether the value instruction `pc` pushes is anchored, as emitted.
@@ -173,8 +188,9 @@ fn argumentPusher(comptime E: type, self: *E, pc: usize, index: usize) ?usize {
     return null;
 }
 
-// Whether every definition stores an anchored value: a pointer-sized store or
-// an arm binding out of an anchored scrutinee. An elided self copy is none.
+// Whether every definition stores an anchored value: a store (a wider value
+// is copied in by its bits, `store` below) or an arm binding out of an
+// anchored scrutinee. An elided self copy is none.
 fn definitions(comptime E: type, self: *E, view: Working, local: usize) bool {
     const code = self.function.scope.instructions;
     var seen = false;
@@ -183,7 +199,6 @@ fn definitions(comptime E: type, self: *E, view: Working, local: usize) bool {
         switch (instruction.op) {
             .store_local => |id| {
                 if (@backingInt(id) != local or selfStore(E, self, pc, local)) continue;
-                if (!self.isScalar(self.function.scope.locals[local].ty)) return false;
             },
             .switch_variant => |dispatch| {
                 var binds = false;
@@ -218,24 +233,13 @@ fn selfStore(comptime E: type, self: *E, pc: usize, local: usize) bool {
 }
 
 // A temporary whose storage no other operation can write or own.
-fn candidate(comptime E: type, self: *E, bindings: []const input.Binding, catalog: *shapes.Catalog, index: usize) Error!bool {
+fn candidate(comptime E: type, self: *E, bindings: []const input.Binding, catalog: *shapes.Catalog, roots: []const bool, index: usize) Error!bool {
     if (index < self.function.signature.parameter_count or bindings[index].anchor != null) return false;
     if (@backingInt(bindings[index].storage) != index) return false;
     const ty = self.function.scope.locals[index].ty;
     if (!try counted(catalog, ty) or semantics.isLiveView(self.program.records, ty)) return false;
     if (self.byReference(index) or self.callerStorage(index)) return false;
-    const plan = self.cow.?.plan;
-    if (plan.place(index) != null or (index < plan.aliases.len and plan.aliases[index] != cow.none)) return false;
-    for (plan.places) |maybe| if (maybe) |found| {
-        if (found.parent == index) return false;
-        if (found.box) |box| if (box.owner == index) return false;
-    };
-    for (plan.aliases) |parent| if (parent == index) return false;
-    for (plan.sites) |site| {
-        for (site.unique) |unique| if (unique.local == index or unique.alias == index) return false;
-        if (site.unique_field) |found| if (found.parent == index) return false;
-    }
-    for (plan.loops.entries) |entries| for (entries) |entry| if (entry.local == index) return false;
+    if (planned(self.cow.?.plan, roots, index)) return false;
     if (cow.iterationOwner(self.function, index)) return false;
     for (self.function.scope.instructions) |instruction| switch (instruction.op) {
         .ref_local, .move_local => |id| if (@backingInt(id) == index) return false,
@@ -243,6 +247,28 @@ fn candidate(comptime E: type, self: *E, bindings: []const input.Binding, catalo
         else => {},
     };
     return true;
+}
+
+// Whether the copy-on-write plan can write or detach `index`: a place, a
+// place's parent or box owner, an alias parent, a uniqueness or loop-entry
+// target. A copy recorded as an alias of a read-only root is only read.
+fn planned(plan: cow.Plan, roots: []const bool, index: usize) bool {
+    if (plan.place(index) != null) return true;
+    if (index < plan.aliases.len and plan.aliases[index] != cow.none) {
+        const parent = plan.aliases[index];
+        if (parent >= roots.len or !roots[parent]) return true;
+    }
+    for (plan.places) |maybe| if (maybe) |found| {
+        if (found.parent == index) return true;
+        if (found.box) |box| if (box.owner == index) return true;
+    };
+    for (plan.aliases) |parent| if (parent == index) return true;
+    for (plan.sites) |site| {
+        for (site.unique) |unique| if (unique.local == index or unique.alias == index) return true;
+        if (site.unique_field) |found| if (found.parent == index) return true;
+    }
+    for (plan.loops.entries) |entries| for (entries) |entry| if (entry.local == index) return true;
+    return false;
 }
 
 // Stores, moves, references and pattern bindings all write a local's storage.
@@ -286,7 +312,7 @@ fn list(comptime E: type, self: *E, local: usize) bool {
 pub fn bindIntervals(comptime E: type, self: *E, bindings: []input.Binding, catalog: *shapes.Catalog, contract: model.CallContract) Error!void {
     const code = self.function.scope.instructions;
     const count = self.function.scope.locals.len;
-    if (code.len > 4096 or count > 1024) return;
+    if (code.len > code_limit or count > local_limit) return;
     var budget: usize = analysis_budget;
     for (code, 0..) |instruction, pc| {
         if (instruction.op != .store_local or pc == 0 or self.states[pc] == null) continue;
@@ -297,7 +323,7 @@ pub fn bindIntervals(comptime E: type, self: *E, bindings: []input.Binding, cata
         if (budget < 4 * code.len) return;
         budget -= 4 * code.len;
         if (!try counted(catalog, self.function.scope.locals[root_local].ty)) continue;
-        if (!try candidate(E, self, bindings, catalog, local) or !list(E, self, local)) continue;
+        if (!try candidate(E, self, bindings, catalog, &.{}, local) or !list(E, self, local)) continue;
         if (!try intervalUses(E, self, catalog, local, pc)) continue;
         if (!intervalQuiet(E, self, catalog, local, root_local)) continue;
         bindings[local].anchor = .{ .storage = bindings[root_local].storage };
@@ -340,9 +366,9 @@ fn chainRoot(comptime E: type, self: *E, pc: usize) ?usize {
 
 // The one store fills the temporary; every other use reads its length or an
 // element.
-fn intervalUses(comptime E: type, self: *E, catalog: *shapes.Catalog, local: usize, store: usize) Error!bool {
+fn intervalUses(comptime E: type, self: *E, catalog: *shapes.Catalog, local: usize, fill: usize) Error!bool {
     for (self.function.scope.instructions, 0..) |instruction, pc| switch (instruction.op) {
-        .store_local, .load_local => |id| if (@backingInt(id) == local and pc != store) return false,
+        .store_local, .load_local => |id| if (@backingInt(id) == local and pc != fill) return false,
         .switch_variant => |dispatch| for (dispatch.arms) |arm| {
             if (arm.slot) |id| if (@backingInt(id) == local) return false;
         },
