@@ -28,22 +28,19 @@ const program =
     \\    number: float
     \\record Runtime:
     \\    stack: list[Value]
+    \\    names: list[str]
     \\    top: int
-    \\def pop(rt: mut Runtime) -> Value:
+    \\def pop(rt: mut Runtime) -> str:
     \\    rt.top = rt.top - 1
-    \\    return rt.stack[rt.top]
+    \\    return rt.names[rt.top]
     \\def total(values: list[float]) -> float:
     \\    sum = 0.0
     \\    for value in values:
     \\        sum += value
     \\    return sum
     \\def main() -> int:
-    \\    rt = Runtime([Value.nil, Value.number(2.0)], 2)
-    \\    match pop(mut rt):
-    \\        case Value.number(x):
-    \\            return int(x + total([1.0]))
-    \\        case _:
-    \\            return 0
+    \\    rt = Runtime([Value.nil, Value.number(2.0)], ["a", "b"], 2)
+    \\    return len(pop(mut rt)) + int(total([1.0]))
 ;
 
 // spec: RC-LOAN-RELOCATE-1

@@ -201,6 +201,30 @@ def replaced_table(table: mut Table, at: int) -> int:
             return -1
 
 
+record Cursor:
+    code: list[int]
+    ip: int
+
+
+def advance(cursor: mut Cursor) -> int:
+    cursor.ip = cursor.ip + 1
+    return cursor.code[cursor.ip - 1]
+
+
+def fetch(rt: mut Runtime, cursor: mut Cursor) -> Value:
+    rt.top = rt.top + 1
+    return rt.stack[advance(mut cursor)]
+
+
+def reset_stack(rt: mut Runtime) -> int:
+    rt.stack = [Value.text("fresh")]
+    return 0
+
+
+def fetch_reset(rt: mut Runtime) -> Value:
+    return rt.stack[reset_stack(mut rt)]
+
+
 def pop(rt: mut Runtime) -> Value:
     rt.top = rt.top - 1
     return rt.stack[rt.top]
@@ -432,6 +456,34 @@ public def test_readonly_reads_inside_arenas() -> bool:
     return total == 12
 
 
+# spec-case: RC-INTERVAL-ANCHOR-1
+public def test_mut_root_list_reads_across_unrelated_calls() -> bool:
+    rt = Runtime([Value.number(1.0), Value.text("b"), Value.nil], 0)
+    cursor = Cursor([2, 0, 1], 0)
+    first = fetch(mut rt, mut cursor)
+    second = fetch(mut rt, mut cursor)
+    third = fetch(mut rt, mut cursor)
+    return first == Value.nil and number(second) == 1.0 and third == Value.text("b") and rt.top == 3 and cursor.ip == 3
+
+
+# spec-case: RC-INTERVAL-ANCHOR-1
+public def test_mut_root_list_reads_keep_the_list_a_call_replaces() -> bool:
+    rt = Runtime([Value.number(8.0), Value.nil], 0)
+    item = fetch_reset(mut rt)
+    return number(item) == 8.0 and rt.stack == [Value.text("fresh")]
+
+
+# spec-case: RC-INTERVAL-ANCHOR-1
+public def test_mut_root_list_reads_inside_arenas() -> bool:
+    total = 0.0
+    with arena():
+        rt = Runtime([Value.number(2.0), Value.number(3.0)], 0)
+        cursor = Cursor([1, 0], 0)
+        with arena():
+            total = number(fetch(mut rt, mut cursor)) + number(fetch(mut rt, mut cursor))
+    return total == 5.0
+
+
 # Run every test once, so `mylang run --rc-runtime=stats` shows balanced counts
 # for the whole file; the result is the number of failures.
 def main() -> int:
@@ -459,6 +511,9 @@ def main() -> int:
         test_nested_readonly_matches_in_loops(),
         test_mut_roots_keep_owned_bindings(),
         test_readonly_reads_inside_arenas(),
+        test_mut_root_list_reads_across_unrelated_calls(),
+        test_mut_root_list_reads_keep_the_list_a_call_replaces(),
+        test_mut_root_list_reads_inside_arenas(),
     ]:
         if not passed:
             failures += 1

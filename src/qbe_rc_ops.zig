@@ -63,7 +63,10 @@ pub fn after(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "o
 /// parameter's value publishes no token; the caller keeps it alive.
 fn readonlyRead(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "op"), stack: []const typed.Type) Error!bool {
     const read = op == .get_field or (op == .buffer_operation and op.buffer_operation.kind == .read);
-    if (!read or !@import("qbe_rc_readonly_anchor.zig").value(E, self, self.pc)) return false;
+    if (!read) return false;
+    const anchor = @import("qbe_rc_readonly_anchor.zig");
+    const lent = anchor.value(E, self, self.pc) or anchor.intervalChain(E, self, self.pc);
+    if (!lent) return false;
     const next = self.states[self.pc + 1] orelse return error.InternalError;
     if (next.len == 0 or next.len - 1 > stack.len) return error.InternalError;
     for (next.len - 1..stack.len) |index| try values.drop(E, self, index);

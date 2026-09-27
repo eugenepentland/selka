@@ -4,6 +4,34 @@ const compiler = @import("compiler.zig");
 const runtime = @import("runtime_mode.zig");
 const t = std.testing;
 const Manifest = struct { functions: []const struct { name: []const u8, il: []const u8 } };
+const interval =
+    \\union Value:
+    \\    nil,
+    \\    number: float
+    \\record Frame:
+    \\    code: list[int]
+    \\    ip: int
+    \\record Runtime:
+    \\    stack: list[Value]
+    \\    top: int
+    \\def next(frame: mut Frame) -> int:
+    \\    frame.ip = frame.ip + 1
+    \\    return frame.code[frame.ip - 1]
+    \\def fetch(rt: mut Runtime, frame: mut Frame) -> Value:
+    \\    rt.top = rt.top + 1
+    \\    return rt.stack[next(mut frame)]
+    \\def shrink(rt: mut Runtime) -> int:
+    \\    rt.stack = [Value.nil]
+    \\    return 0
+    \\def replaced(rt: mut Runtime) -> Value:
+    \\    return rt.stack[shrink(mut rt)]
+    \\def main() -> int:
+    \\    rt = Runtime([Value.nil, Value.number(1.0)], 0)
+    \\    frame = Frame([1, 0], 0)
+    \\    first = fetch(mut rt, mut frame)
+    \\    second = replaced(mut rt)
+    \\    return rt.top + len(rt.stack)
+;
 const source =
     \\record Chunk:
     \\    code: list[int]
@@ -41,10 +69,14 @@ const source =
 ;
 
 fn operations(name: []const u8) !usize {
+    return operationsIn(source, name);
+}
+
+fn operationsIn(program: []const u8, name: []const u8) !usize {
     const saved = runtime.get();
     defer runtime.set(saved);
     runtime.set(.rc);
-    var compilation = try compiler.Compilation.init(t.allocator, "rc_readonly_anchor.my", source);
+    var compilation = try compiler.Compilation.init(t.allocator, "rc_readonly_anchor.my", program);
     defer compilation.deinit();
     const text = try compilation.emitQbe(t.allocator);
     defer t.allocator.free(text);
@@ -67,4 +99,14 @@ test "RC reads out of a read-only parameter take no loan or payload retain" {
 test "RC anchored reads still copy into returned owners and mut roots keep tokens" {
     try t.expect(try operations("code") > 0);
     try t.expect(try operations("mutated") > 0);
+}
+
+// spec: RC-INTERVAL-ANCHOR-1
+test "RC list temporaries of a mut record root borrow across calls that do not receive it" {
+    try t.expectEqual(@as(usize, 0), try operationsIn(interval, "fetch"));
+}
+
+// spec-case: RC-INTERVAL-ANCHOR-1
+test "RC list temporaries keep their loan across a call that receives the root" {
+    try t.expect(try operationsIn(interval, "replaced") > 0);
 }

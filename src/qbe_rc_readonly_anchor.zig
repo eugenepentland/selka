@@ -229,3 +229,123 @@ fn list(comptime E: type, self: *E, local: usize) bool {
     const record = self.program.records[ty.recordIndex()];
     return record.isCollection() and record.collection.kind == .list and !record.collection.box;
 }
+
+/// RC-INTERVAL-ANCHOR-1: a list temporary filled straight from a field chain
+/// of a `mut` record parameter (`load_local r; get_field...; store_local t`)
+/// and used only for its length and plain element reads is borrowed from
+/// that parameter's storage when no instruction in its live range writes the
+/// parameter: no store, move, reference (`mut` argument) or place write
+/// rooted in it, and no arena boundary. The caller owns the parameter, so a
+/// call that does not receive it can neither replace nor release the list.
+pub fn bindIntervals(comptime E: type, self: *E, bindings: []input.Binding, catalog: *shapes.Catalog, contract: model.CallContract) Error!void {
+    const code = self.function.scope.instructions;
+    const count = self.function.scope.locals.len;
+    if (code.len > 4096 or count > 1024) return;
+    var budget: usize = 64 * code.len;
+    for (code, 0..) |instruction, pc| {
+        if (instruction.op != .store_local or pc == 0 or self.states[pc] == null) continue;
+        const local = @backingInt(instruction.op.store_local);
+        if (budget < 4 * code.len) return;
+        budget -= 4 * code.len;
+        const root_local = chainRoot(E, self, pc - 1) orelse continue;
+        if (root_local >= contract.parameters.len or contract.parameters[root_local] != .caller_storage) continue;
+        if (!try counted(catalog, self.function.scope.locals[root_local].ty)) continue;
+        if (!try candidate(E, self, bindings, catalog, local) or !list(E, self, local)) continue;
+        if (!try intervalUses(E, self, catalog, local, pc)) continue;
+        if (!intervalQuiet(E, self, local, root_local)) continue;
+        bindings[local].anchor = .{ .storage = bindings[root_local].storage };
+    }
+}
+
+/// Whether the `get_field` at `pc` belongs to the field chain that fills an
+/// interval-anchored temporary, so it publishes no token.
+pub fn intervalChain(comptime E: type, self: *E, pc: usize) bool {
+    const code = self.function.scope.instructions;
+    if (code[pc].op != .get_field) return false;
+    var at = pc + 1;
+    while (at < code.len and code[at].op == .get_field) : (at += 1) {
+        if (self.isBranchTarget(at)) return false;
+    }
+    if (at >= code.len or code[at].op != .store_local or self.isBranchTarget(at)) return false;
+    const local = @backingInt(code[at].op.store_local);
+    const state = self.cow.?.rc orelse return false;
+    const ownership = state.plan.locals.entry[local].ownership;
+    if (ownership != .borrowed or ownership.borrowed != .storage) return false;
+    const root_local = chainRoot(E, self, at - 1) orelse return false;
+    if (@backingInt(ownership.borrowed.storage) != root_local) return false;
+    return root_local < state.contract.parameters.len and state.contract.parameters[root_local] == .caller_storage;
+}
+
+// The local a `load_local r; get_field...` chain ending at `pc` starts from.
+fn chainRoot(comptime E: type, self: *E, pc: usize) ?usize {
+    const code = self.function.scope.instructions;
+    var at = pc;
+    var steps: usize = 0;
+    while (code[at].op == .get_field) : (steps += 1) {
+        if (at == 0 or steps == depth_limit or self.isBranchTarget(at)) return null;
+        const stack = self.states[at] orelse return null;
+        if (stack.len == 0 or !plainRecord(E, self, stack[stack.len - 1])) return null;
+        at -= 1;
+    }
+    if (steps == 0 or code[at].op != .load_local) return null;
+    return @backingInt(code[at].op.load_local);
+}
+
+// The one store fills the temporary; every other use reads its length or a
+// plain element that owns nothing.
+fn intervalUses(comptime E: type, self: *E, catalog: *shapes.Catalog, local: usize, store: usize) Error!bool {
+    for (self.function.scope.instructions, 0..) |instruction, pc| switch (instruction.op) {
+        .store_local, .load_local => |id| if (@backingInt(id) == local and pc != store) return false,
+        .switch_variant => |dispatch| for (dispatch.arms) |arm| {
+            if (arm.slot) |id| if (@backingInt(id) == local) return false;
+        },
+        .buffer_operation => |operation| if (@backingInt(operation.owner) == local) {
+            if (operation.kind == .length) continue;
+            if (operation.kind != .read) return false;
+            const shape = catalog.get(operation.output) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError;
+            if (shape.counted or shape.unique_drop) return false;
+        },
+        else => {},
+    };
+    return true;
+}
+
+// No instruction while the temporary is live writes the root or crosses an
+// arena boundary.
+fn intervalQuiet(comptime E: type, self: *E, local: usize, root_local: usize) bool {
+    const plan = self.cow.?.plan;
+    for (self.function.scope.instructions, 0..) |instruction, pc| {
+        if (!self.live.?.before(pc, local) and !self.live.?.after(pc, local)) continue;
+        switch (instruction.op) {
+            .store_local, .ref_local, .move_local => |id| if (@backingInt(id) == root_local) return false,
+            .switch_variant => |dispatch| for (dispatch.arms) |arm| {
+                if (arm.slot) |id| if (@backingInt(id) == root_local) return false;
+            },
+            .begin_arena, .end_arena => return false,
+            else => {},
+        }
+        const site = plan.at(pc);
+        for (site.unique) |unique| {
+            if (rooted(plan, unique.local, root_local)) return false;
+            if (unique.alias != cow.none and rooted(plan, unique.alias, root_local)) return false;
+        }
+        if (site.unique_field) |place| if (rooted(plan, place.parent, root_local)) return false;
+        if (site.fill and instruction.op == .store_local and rooted(plan, @backingInt(instruction.op.store_local), root_local)) return false;
+    }
+    return true;
+}
+
+// Whether a place or alias chain starting at `local` reaches `root_local`.
+fn rooted(plan: cow.Plan, local: usize, root_local: usize) bool {
+    var at = local;
+    var remaining = plan.aliases.len + plan.places.len + 1;
+    while (remaining != 0) : (remaining -= 1) {
+        if (at == root_local) return true;
+        if (plan.place(at)) |place| {
+            at = place.parent;
+        } else if (at < plan.aliases.len and plan.aliases[at] != cow.none) {
+            at = plan.aliases[at];
+        } else return false;
+    }
+    return true;
+}
