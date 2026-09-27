@@ -7,6 +7,7 @@ extern fn myl_rc_fast_verify() c_int;
 // spec: RC-METADATA-MAP-1
 // spec: RC-LEAF-RETIRE-1
 // spec: RC-STORAGE-TEARDOWN-1
+// spec: RC-SLAB-POOLS-1
 // spec: RC-SCOPE-SPARE-1
 // spec: RC-CHECKED-1
 // spec: RC-SHALLOW-WALK-1

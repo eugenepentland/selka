@@ -229,6 +229,7 @@ static void count_visit(myl_native_heap *heap, void *payload, void *context) {
     ++*seen;
 }
 // spec: RC-STORAGE-TEARDOWN-1
+// spec-case: RC-SLAB-POOLS-1
 static void storage_visit_and_release_all(void) {
     myl_native_heap heap;
     start(&heap);
@@ -255,9 +256,11 @@ static void storage_visit_and_release_all(void) {
     seen = 0;
     myl_rc_storage_visit(&heap, count_visit, &seen);
     assert(!seen && myl_rc_storage_reserved(&heap) < reserved);
-    /* The heap stays usable: metadata survives and new objects allocate. */
+    /* The heap stays usable: metadata survives and new objects allocate,
+     * reusing a released slab range (64 KiB aligned) from the spare list. */
     void *again = myl_native_heap_alloc(&heap, &outer, 1);
     assert(again && myl_rc_binding_find(&heap, &outer));
+    assert(!(((uintptr_t)again - MYL_RC_PREFIX_BYTES - 80) & 0xffff));
     myl_rc_owner_release(&heap, again);
     finish(&heap);
 }

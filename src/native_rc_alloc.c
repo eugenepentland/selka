@@ -1,4 +1,5 @@
 #define _POSIX_C_SOURCE 200809L
+#define _DEFAULT_SOURCE
 #include "native_rc_alloc.h"
 #include "native_rc_internal.h"
 #include "native_rc_values.h"
@@ -6,6 +7,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/mman.h>
 
 /* Slab addresses recover their metadata with one mask. Large reservations put
  * their metadata before (not inside) the frozen 32-byte RC object prefix. */
@@ -29,11 +31,31 @@ typedef struct {
 } rc_class;
 /* Size classes for extents up to the largest stride, one byte per 16-byte step. */
 #define RC_CLASS_STEPS (8192 / 16 + 1)
+/* Slabs are carved from 2 MiB anonymous mappings, independent of malloc's
+ * heap layout, so peak residency depends only on slab use. A freed slab keeps
+ * its address range on the spare list; only the first RC_SPARE_RESIDENT stay
+ * resident, the rest return their pages to the host. Mappings are released at
+ * heap destruction. Slab budget charges are unchanged. */
+#define RC_POOL_BYTES ((size_t)2 << 20)
+#define RC_SPARE_RESIDENT 16
+typedef struct rc_spare { struct rc_spare *next; } rc_spare;
+/* The first RC_POOL_INLINE mappings are recorded inside the (charged) storage
+ * record; a larger heap records the rest in a charged overflow array. */
+#define RC_POOL_INLINE 64
+typedef struct {
+    unsigned char *next, *end;
+    void *inline_mappings[RC_POOL_INLINE];
+    void **overflow;
+    size_t count, capacity;
+    rc_spare *spare;
+    size_t spare_count;
+} rc_pools;
 typedef struct {
     rc_class classes[RC_SLAB_CLASSES];
     rc_large *large;
     size_t reserved;
     struct { const myl_native_type *type; size_t index; } single;
+    rc_pools pools;
     unsigned char class_of[RC_CLASS_STEPS];
 } rc_storage;
 static const size_t strides[RC_SLAB_CLASSES] = {
@@ -88,6 +110,50 @@ static void available_remove(rc_class *class, rc_slab *slab) {
 static size_t slots(const rc_slab *slab) {
     return slab->class.capacity;
 }
+/* One 64 KiB-aligned slab range: a spare first, else the current mapping. */
+static void *range_take(myl_native_heap *heap) {
+    rc_pools *pools=&storage_of(heap)->pools;
+    if (pools->spare) {
+        rc_spare *spare=pools->spare;
+        pools->spare=spare->next;
+        --pools->spare_count;
+        return spare;
+    }
+    if (pools->next==pools->end) {
+        if (pools->count>=RC_POOL_INLINE && pools->count-RC_POOL_INLINE==pools->capacity) {
+            size_t capacity=pools->capacity?pools->capacity*2:RC_POOL_INLINE, bytes=capacity*sizeof(void *);
+            if (!budget(heap,bytes-pools->capacity*sizeof(void *))) return NULL;
+            void **grown=realloc(pools->overflow,bytes);
+            if (!grown) return NULL;
+            charge(heap,bytes-pools->capacity*sizeof(void *));
+            pools->overflow=grown;
+            pools->capacity=capacity;
+        }
+        unsigned char *raw=mmap(NULL,RC_POOL_BYTES+RC_SLAB_BYTES,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS,-1,0);
+        if (raw==MAP_FAILED) return NULL;
+        unsigned char *start=(unsigned char *)(((uintptr_t)raw+RC_SLAB_BYTES-1)&~(uintptr_t)(RC_SLAB_BYTES-1));
+        if (start!=raw) munmap(raw,(size_t)(start-raw));
+        if (start+RC_POOL_BYTES!=raw+RC_POOL_BYTES+RC_SLAB_BYTES)
+            munmap(start+RC_POOL_BYTES,(size_t)(raw+RC_POOL_BYTES+RC_SLAB_BYTES-(start+RC_POOL_BYTES)));
+        if (pools->count<RC_POOL_INLINE) pools->inline_mappings[pools->count]=start;
+        else pools->overflow[pools->count-RC_POOL_INLINE]=start;
+        ++pools->count;
+        pools->next=start;
+        pools->end=start+RC_POOL_BYTES;
+    }
+    void *range=pools->next;
+    pools->next+=RC_SLAB_BYTES;
+    return range;
+}
+static void range_give(myl_native_heap *heap, void *range) {
+    rc_pools *pools=&storage_of(heap)->pools;
+    if (pools->spare_count>=RC_SPARE_RESIDENT)
+        (void)madvise((unsigned char *)range+4096,RC_SLAB_BYTES-4096,MADV_DONTNEED);
+    rc_spare *spare=range;
+    spare->next=pools->spare;
+    pools->spare=spare;
+    ++pools->spare_count;
+}
 static void slab_free(myl_native_heap *heap, rc_slab *slab) {
     rc_class *class=&storage_of(heap)->classes[slab->class.index];
     assert(!slab->live);
@@ -96,7 +162,7 @@ static void slab_free(myl_native_heap *heap, rc_slab *slab) {
     else class->all=slab->all.next;
     if (slab->all.next) slab->all.next->all.previous=slab->all.previous;
     discharge(heap,RC_SLAB_BYTES);
-    free(slab);
+    range_give(heap,slab);
 }
 /* At most one empty slab is retained per class, at its available-list head.
  * Reclaiming those heads is bounded independently of the allocation count. */
@@ -113,8 +179,8 @@ static int reserve(myl_native_heap *heap, size_t bytes) {
 }
 static __attribute__((noinline)) rc_slab *slab_new(myl_native_heap *heap, size_t index) {
     if (!reserve(heap,RC_SLAB_BYTES)) return NULL;
-    rc_slab *slab=aligned_alloc(RC_SLAB_BYTES,RC_SLAB_BYTES);
-    if (!slab) { trim_empty(heap); slab=aligned_alloc(RC_SLAB_BYTES,RC_SLAB_BYTES); }
+    rc_slab *slab=range_take(heap);
+    if (!slab) { trim_empty(heap); slab=range_take(heap); }
     if (!slab) return NULL;
     memset(slab,0,sizeof *slab);
     slab->stride=strides[index];
@@ -306,6 +372,10 @@ static void destroy(myl_native_heap *heap) {
     for (size_t i=0;i<RC_SLAB_CLASSES;i++) {
         while (storage->classes[i].all) slab_free(heap,storage->classes[i].all);
     }
+    for (size_t i=0;i<storage->pools.count;i++)
+        munmap(i<RC_POOL_INLINE?storage->pools.inline_mappings[i]:storage->pools.overflow[i-RC_POOL_INLINE],RC_POOL_BYTES);
+    discharge(heap,storage->pools.capacity*sizeof(void *));
+    free(storage->pools.overflow);
     assert(storage->reserved==sizeof *storage);
     discharge(heap,sizeof *storage);
     free(storage);
@@ -344,7 +414,8 @@ void myl_rc_storage_release_all(myl_native_heap *heap) {
             slab->live=0;
             slab_free(heap,slab);
         }
-    myl_rc_invariant(heap->objects_live>=released && storage->reserved==sizeof *storage);
+    myl_rc_invariant(heap->objects_live>=released &&
+        storage->reserved==sizeof *storage+storage->pools.capacity*sizeof(void *));
     heap->objects_live-=released;
     heap->rc->dead.head=NULL;
     reuse_epoch(heap);
