@@ -7,15 +7,7 @@ const reads = @import("qbe_rc_read_loans.zig");
 /// Optional proof refusal retains original sites and ownership publication.
 pub const Error = @import("qbe_rc_frame.zig").Error;
 const Entry = struct { head: usize, back: usize, definition: usize };
-const Budget = struct {
-    left: usize = 262144,
-
-    fn take(self: *Budget, amount: usize) bool {
-        if (amount > self.left) return false;
-        self.left -= amount;
-        return true;
-    }
-};
+const Budget = model.Budget;
 
 /// Runs after loop-version veto and tail finalization. Only entry lists change:
 /// sites, checked flags, captures, aliases, places and fast-loop plans stay put.
@@ -24,14 +16,16 @@ pub fn finalize(comptime E: type, self: *E) Error!void {
     if (!state.active or state.readonly or state.contract.result == .borrowed) return;
     if (self.function.scope.instructions.len > 4096) return;
     var budget: Budget = .{};
-    for (state.plan.dictionary_tails) |proof| {
+    for (state.plan.dictionary_tails, 0..) |proof, index| {
         const entry = try certify(E, self, proof, &budget) orelse continue;
+        const empty = try @import("qbe_rc_dictionary_empty.zig").certify(E, self, proof, entry.definition, entry.back, &budget);
         const plan = &self.cow.?.plan;
         const previous = plan.loops.entries[entry.head];
         const entries = try self.allocator.alloc(cow.Hoisted, previous.len + 1);
         @memcpy(entries[0..previous.len], previous);
         entries[previous.len] = .{ .local = @intCast(proof.root), .elements = false };
         @constCast(plan.loops.entries)[entry.head] = entries;
+        @constCast(state.plan.dictionary_tails)[index].empty_drops = empty;
     }
 }
 

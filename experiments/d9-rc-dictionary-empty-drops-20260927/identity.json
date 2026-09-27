@@ -1,0 +1,52 @@
+{
+  "base": "0f5e4d0f9b68bfb21b18cf1f0a0c286d5fbe2411",
+  "before_source": "c07016f308422b76cfe55607b26243efe0b4257e",
+  "compilers": {
+    "before": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-integration/.tmp-rc/install-helpers-word/bin/mylang",
+      "sha256": "db9d8791fb56a9c07e5db529b5abe54b2689966364095de89e2abcaca4409b2b"
+    },
+    "after": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/install-dict-empty-final/bin/mylang",
+      "sha256": "c5728347215d670d510ecbe198986d4373f4da5bfd31f9b414f603a638f5f10d"
+    }
+  },
+  "binaries": [
+    {
+      "side": "gc",
+      "backend": "qbe",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-dict_count.qbe",
+      "sha256": "4d96d97c7fc76633b0a7de63095796d6fc48c1b80d86ee9efc6940355c7b09e9"
+    },
+    {
+      "side": "before",
+      "backend": "qbe",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/dict-empty/before-qbe-rc",
+      "sha256": "f91d07404ba108d9e104e9124be20475ea7d35bf951909bccb9396908954a82c"
+    },
+    {
+      "side": "after",
+      "backend": "qbe",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/dict-empty/after-qbe-rc",
+      "sha256": "f9d488400074257027c377e165689a5243742121027b570248c69dc6e1d8c51f"
+    },
+    {
+      "side": "gc",
+      "backend": "llvm",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance/.tmp-rc-performance/bin/gc/parity-micro-dict_count.llvm",
+      "sha256": "d96cd8740e9dd29fe82dc6972f01a80dab16e2debde8fb28eb4b5980bb1bdc83"
+    },
+    {
+      "side": "before",
+      "backend": "llvm",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/dict-empty/before-llvm-rc",
+      "sha256": "af8d07388654cf34c441d58f0ea6ec0d84478d0e6e748be891b4c2819e65adc8"
+    },
+    {
+      "side": "after",
+      "backend": "llvm",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra/.tmp-rc/dict-empty/after-llvm-rc",
+      "sha256": "3bea55fd8880953a2dc5c1995a9f8aa9841e5e75097d225fb21872e00f028040"
+    }
+  ]
+}
