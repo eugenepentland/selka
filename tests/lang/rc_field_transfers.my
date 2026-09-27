@@ -1,0 +1,133 @@
+record Holder:
+    items: list[int]
+    marker: int
+
+record Nested:
+    inner: Holder
+
+def push(items: mut list[int], value: int):
+    items.append(value)
+
+def change(holder: mut Holder, value: int):
+    work = holder.items
+    push(mut work, value)
+    holder.items = work
+
+def twice(holder: mut Holder):
+    first = holder.items
+    push(mut first, 2)
+    holder.items = first
+    second = holder.items
+    push(mut second, 3)
+    holder.items = second
+
+def observe(holder: mut Holder):
+    work = holder.items
+    push(mut work, 2)
+    assert holder.items == [1]
+    holder.items = work
+
+def optional(holder: mut Holder, stop: bool):
+    work = holder.items
+    push(mut work, 2)
+    if stop:
+        return
+    holder.items = work
+
+def alias_argument(holder: mut Holder, other: Holder):
+    work = holder.items
+    push(mut work, 2)
+    assert other.items == [1]
+    holder.items = work
+
+def nested(holder: mut Nested):
+    work = holder.inner.items
+    push(mut work, 2)
+    holder.inner.items = work
+
+# spec-case: RC-CLOSED-FIELD-TRANSFER-1
+public def test_closed_field_restores_empty_and_nonempty_source() -> bool:
+    empty = Holder([], 7)
+    change(mut empty, 4)
+    full = Holder([1], 9)
+    change(mut full, 2)
+    return empty.items == [4] and empty.marker == 7 and full.items == [1, 2] and full.marker == 9
+
+public def test_closed_field_repeated_extractions_return_each_owner() -> bool:
+    holder = Holder([1], 7)
+    twice(mut holder)
+    change(mut holder, 4)
+    return holder.items == [1, 2, 3, 4] and holder.marker == 7
+
+public def test_closed_field_preserves_caller_snapshot() -> bool:
+    holder = Holder([1], 7)
+    saved = holder
+    twice(mut holder)
+    saved.items.append(9)
+    return holder.items == [1, 2, 3] and saved.items == [1, 9]
+
+public def test_observed_field_keeps_an_independent_local_value() -> bool:
+    holder = Holder([1], 7)
+    observe(mut holder)
+    return holder.items == [1, 2]
+
+public def test_closed_field_refuses_early_exit_and_alias_argument() -> bool:
+    holder = Holder([1], 7)
+    optional(mut holder, True)
+    assert holder.items == [1]
+    alias_argument(mut holder, holder)
+    return holder.items == [1, 2]
+
+public def test_closed_field_works_inside_caller_arena() -> bool:
+    with arena():
+        holder = Holder([1], 7)
+        saved = holder
+        twice(mut holder)
+        assert holder.items == [1, 2, 3]
+        assert saved.items == [1]
+    return True
+
+public def test_nested_field_uses_existing_path_behavior() -> bool:
+    holder = Nested(Holder([1], 7))
+    saved = holder
+    nested(mut holder)
+    return holder.inner.items == [1, 2] and saved.inner.items == [1]
+
+def initialized(holder: mut Holder):
+    work = [8, 9]
+    work = holder.items
+    push(mut work, 2)
+    holder.items = work
+
+public def test_closed_field_releases_the_previous_target_once() -> bool:
+    holder = Holder([1], 7)
+    initialized(mut holder)
+    return holder.items == [1, 2]
+
+record ObservedHolder:
+    items: list[int]
+    view: DictValues[int, int]
+
+def observed_root(holder: mut ObservedHolder):
+    work = holder.items
+    push(mut work, 2)
+    holder.items = work
+
+public def test_live_view_root_keeps_existing_transfer_rules() -> bool:
+    mapping = {0: 7}
+    holder = ObservedHolder([1], mapping.values())
+    observed_root(mut holder)
+    mapping[0] = 9
+    return holder.items == [1, 2] and list(holder.view) == [9]
+
+def main(out: Stream) -> int:
+    out.print(test_closed_field_restores_empty_and_nonempty_source())
+    out.print(test_closed_field_repeated_extractions_return_each_owner())
+    out.print(test_closed_field_preserves_caller_snapshot())
+    out.print(test_observed_field_keeps_an_independent_local_value())
+    out.print(test_closed_field_refuses_early_exit_and_alias_argument())
+    out.print(test_closed_field_works_inside_caller_arena())
+    out.print(test_nested_field_uses_existing_path_behavior())
+    out.print(test_closed_field_releases_the_previous_target_once())
+    out.print(test_live_view_root_keeps_existing_transfer_rules())
+    return 0
