@@ -25,7 +25,7 @@ All matched production measurements run on CPU2, alternate control/candidate
 order, and use the median of three unscaled retired-instruction observations.
 Counts run separately from production timing. The complete mandated N10 script
 and expected output are unchanged. The GC denominators are archival accepted-GC
-median-three observations from the completed original corpus experiment, built
+median-three observations from completed rows of the original corpus experiment, built
 with immutable accepted Debug compiler `8c813407…` / source `f6bea5d9`; they are
 not fresh interleaved GC measurements. Their exact identities and selected raw
 reference medians are included without inherited host environment data.
