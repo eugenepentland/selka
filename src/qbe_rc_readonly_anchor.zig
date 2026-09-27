@@ -24,6 +24,9 @@ pub const Error = error{ InternalError, OutOfMemory, WriteFailed, SourceError };
 
 /// The deepest read chain one value looks back through.
 const depth_limit = 16;
+/// Instruction visits one function's anchor analysis may spend before it
+/// stops and keeps ordinary ownership for what it has not proved.
+const analysis_budget: usize = 1 << 22;
 
 /// Bind every temporary whose definitions all store a value anchored in a
 /// never-written read-only parameter as borrowed from that parameter's
@@ -49,7 +52,7 @@ pub fn bind(comptime E: type, self: *E, bindings: []input.Binding, catalog: *sha
     defer self.allocator.free(anchored);
     for (anchored, 0..) |*flag, index| flag.* = roots[index] or try candidate(E, self, bindings, catalog, index);
     var changed = true;
-    var budget: usize = 64 * code.len;
+    var budget: usize = analysis_budget;
     while (changed) {
         changed = false;
         for (anchored, 0..) |*flag, index| {
@@ -241,14 +244,15 @@ pub fn bindIntervals(comptime E: type, self: *E, bindings: []input.Binding, cata
     const code = self.function.scope.instructions;
     const count = self.function.scope.locals.len;
     if (code.len > 4096 or count > 1024) return;
-    var budget: usize = 64 * code.len;
+    var budget: usize = analysis_budget;
     for (code, 0..) |instruction, pc| {
         if (instruction.op != .store_local or pc == 0 or self.states[pc] == null) continue;
         const local = @backingInt(instruction.op.store_local);
-        if (budget < 4 * code.len) return;
-        budget -= 4 * code.len;
         const root_local = chainRoot(E, self, pc - 1) orelse continue;
         if (root_local >= contract.parameters.len or contract.parameters[root_local] != .caller_storage) continue;
+        // Each candidate scans the function a few times.
+        if (budget < 4 * code.len) return;
+        budget -= 4 * code.len;
         if (!try counted(catalog, self.function.scope.locals[root_local].ty)) continue;
         if (!try candidate(E, self, bindings, catalog, local) or !list(E, self, local)) continue;
         if (!try intervalUses(E, self, catalog, local, pc)) continue;

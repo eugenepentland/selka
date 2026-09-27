@@ -110,3 +110,17 @@ test "RC list temporaries of a mut record root borrow across calls that do not r
 test "RC list temporaries keep their loan across a call that receives the root" {
     try t.expect(try operationsIn(interval, "replaced") > 0);
 }
+
+// spec-case: RC-INTERVAL-ANCHOR-1
+test "RC interval anchors cover every list temporary of a long function" {
+    var text: std.Io.Writer.Allocating = .init(t.allocator);
+    defer text.deinit();
+    const w = &text.writer;
+    try w.writeAll("union Value:\n    nil,\n    number: float\nrecord Frame:\n    code: list[int]\n    ip: int\nrecord Runtime:\n    stack: list[Value]\n    top: int\n");
+    try w.writeAll("def next(frame: mut Frame) -> int:\n    frame.ip = frame.ip + 1\n    return frame.code[0]\n");
+    try w.writeAll("def long(rt: mut Runtime, frame: mut Frame) -> int:\n    rt.top = 0\n    total = 0\n");
+    for (0..40) |_| try w.writeAll("    match rt.stack[next(mut frame)]:\n        case Value.nil:\n            total += 1\n        case _:\n            total += 2\n");
+    try w.writeAll("    return total\n");
+    try w.writeAll("def main() -> int:\n    rt = Runtime([Value.nil], 0)\n    frame = Frame([0], 0)\n    return long(mut rt, mut frame)\n");
+    try t.expectEqual(@as(usize, 0), try operationsIn(text.written(), "long"));
+}
