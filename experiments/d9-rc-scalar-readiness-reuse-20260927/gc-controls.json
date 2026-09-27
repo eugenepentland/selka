@@ -1,0 +1,76 @@
+[
+  {
+    "backend": "qbe",
+    "case": "rc_append_loops",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/scripts/build-slot.sh",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/scalar-readiness-prototype/install/bin/mylang",
+      "run",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/tests/lang/rc_append_loops.my",
+      "--gc-stress",
+      "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/scalar-readiness-prototype/gc-cache"
+    ],
+    "compiler_sha256": "4763ab94baf190fa99a4e08fc59fc7887110931d8041a0cc48116dbb09efad07",
+    "source_sha256": "a8331edcd06cfe305f52f553f3f99fe07719c938501e8896355b8de475b0ff92",
+    "status": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "backend": "qbe",
+    "case": "rc_plain_appends",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/scripts/build-slot.sh",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/scalar-readiness-prototype/install/bin/mylang",
+      "run",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/tests/lang/rc_plain_appends.my",
+      "--gc-stress",
+      "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/scalar-readiness-prototype/gc-cache"
+    ],
+    "compiler_sha256": "4763ab94baf190fa99a4e08fc59fc7887110931d8041a0cc48116dbb09efad07",
+    "source_sha256": "deea08f63b58a68a3e5653d07598447654f58078fef7fb2680dfe159df5fb0f0",
+    "status": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "backend": "llvm",
+    "case": "rc_append_loops",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/scripts/build-slot.sh",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/scalar-readiness-prototype/install/bin/mylang",
+      "run",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/tests/lang/rc_append_loops.my",
+      "--gc-stress",
+      "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/scalar-readiness-prototype/gc-cache",
+      "--release"
+    ],
+    "compiler_sha256": "4763ab94baf190fa99a4e08fc59fc7887110931d8041a0cc48116dbb09efad07",
+    "source_sha256": "a8331edcd06cfe305f52f553f3f99fe07719c938501e8896355b8de475b0ff92",
+    "status": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "backend": "llvm",
+    "case": "rc_plain_appends",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/scripts/build-slot.sh",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/scalar-readiness-prototype/install/bin/mylang",
+      "run",
+      "/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/tests/lang/rc_plain_appends.my",
+      "--gc-stress",
+      "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra/.tmp-mut-argument/scalar-readiness-prototype/gc-cache",
+      "--release"
+    ],
+    "compiler_sha256": "4763ab94baf190fa99a4e08fc59fc7887110931d8041a0cc48116dbb09efad07",
+    "source_sha256": "deea08f63b58a68a3e5653d07598447654f58078fef7fb2680dfe159df5fb0f0",
+    "status": 0,
+    "stdout": "",
+    "stderr": "build-slot: all 3 build slot(s) busy; waiting (0s so far)\nbuild-slot: build slot 1 after 5s (all 3 build slot(s) busy)\n"
+  }
+]

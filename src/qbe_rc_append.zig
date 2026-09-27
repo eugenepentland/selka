@@ -3,6 +3,7 @@ const typed = @import("typed.zig");
 const format = @import("qbe_format.zig");
 const collections = @import("qbe_rc_collections.zig");
 const Error = @import("qbe_rc_slots.zig").Error;
+const loops = @import("qbe_rc_append_loop.zig");
 
 /// An already-evaluated receiver and source; the surrounding COW and journals
 /// remain responsible for uniqueness, lifetime and every fallback failure.
@@ -30,9 +31,17 @@ pub fn emit(comptime E: type, self: *E, append: Append) Error!bool {
     const ready = self.temp();
     try self.print(" %v{d} =w cultl %v{d}, %v{d}\n %v{d} =w cnel %v{d}, -1\n %v{d} =w and %v{d}, %v{d}\n", .{ room, length, capacity, incrementable, generation, ready, room, incrementable });
     try self.print(" jnz %v{d}, @rcappend_check{d}, @rcappend_slow{d}\n@rcappend_check{d}\n", .{ ready, label, label, label });
+    const cached = loops.at(E, self);
+    if (cached) |slot| {
+        const known = self.temp();
+        try self.print(" %v{d} =w loaduw %rcappend{d}\n jnz %v{d}, @rcappend_fast{d}, @rcappend_query{d}\n@rcappend_query{d}\n", .{ known, slot, known, label, label, label });
+    }
     const admitted = self.temp();
     try self.print(" %v{d} =w call $myl_rc_list_plain_ready(l %heap, l %v{d})\n", .{ admitted, append.list });
+    if (cached) |slot| try self.print(" storew %v{d}, %rcappend{d}\n", .{ admitted, slot });
     try self.print(" jnz %v{d}, @rcappend_fast{d}, @rcappend_slow{d}\n@rcappend_slow{d}\n", .{ admitted, label, label, label });
+    // Never carry admission across allocation, cleanup or a reentrant callback.
+    if (cached) |slot| try self.print(" storew 0, %rcappend{d}\n", .{slot});
     try collections.append(E, self, append.output, append.list, append.value);
     try self.require(append.output, format.allocation_failure);
     try self.print(" jmp @rcappend_done{d}\n@rcappend_fast{d}\n", .{ label, label });

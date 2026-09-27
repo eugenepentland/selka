@@ -117,6 +117,7 @@ pub fn Lower(comptime E: type) type {
                 if (!checked and versionLifetime(E, self, loop.head, loop.back)) try kept.append(self.allocator, loop);
             }
             self.loop_plan.loops = try kept.toOwnedSlice(self.allocator);
+            try @import("qbe_rc_append_loop.zig").finalize(E, self);
         }
         /// Emit what runs before instruction `pc`: captures, root checks,
         /// place fills and shares.
@@ -198,6 +199,7 @@ pub fn Lower(comptime E: type) type {
                 if (state.counting) try tally(E, self, .hoisted);
                 if (check.elements) try uniqueElements(E, self, check.local, stack) else try uniqueLocal(E, self, .{ .local = check.local }, stack);
             }
+            try @import("qbe_rc_append_loop.zig").entry(E, self, head);
         }
         /// Whether a jump from the current instruction to `target` enters a
         /// loop with entry checks, and so lands on its `@ce` block.
