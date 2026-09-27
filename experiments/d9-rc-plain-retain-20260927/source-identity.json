@@ -1,0 +1,6 @@
+{
+  "src/native_rc_values.c": "3ec6fa6e68211de2d967e0b3ef5324110de18eacb2f671405500f4a422bb6eca",
+  "tests/native_rc_collections_test.c": "5a7c59dc8298f9072a8895c51f296714371e1a6ab861f15efe3a73512bdecc9c",
+  "src/native_rc_collections_test.zig": "f41456c8c88cb931bd0392b5d5eaf93afc7a20f0570958c2279f85080f1df9e6",
+  "tests/lang/rc_plain_retains.my": "0e5ef1d15d9f7edc3f23fd9165f132a172fb66afe5b9409602e1c6ceb6e0c1ef"
+}
