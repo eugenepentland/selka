@@ -716,6 +716,40 @@ static void drain_pairs_keep_counts_exact(void) {
     assert(heap.objects_live == live);
     finish(&heap);
 }
+// spec-case: RC-LARGE-MAP-1
+static void large_extents_map_and_unmap(void) {
+    myl_native_heap heap;
+    start(&heap);
+    size_t idle = heap.bytes, size = (size_t)256 << 10;
+    /* An extent from 128 KiB up is its own page-aligned zeroed mapping (its
+     * 48-byte record precedes the prefix), charged and discharged exactly. */
+    unsigned char *block = myl_rc_storage_bytes(&heap, size, 0);
+    assert(block && (header(block)->common.mark & MYL_NATIVE_OBJECT_LARGE));
+    assert(!(((uintptr_t)block - MYL_RC_PREFIX_BYTES - 48) & 4095));
+    for (size_t i = 0; i < size; i += 4096) assert(!block[i]);
+    block[0] = 1;
+    block[size - 1] = 2;
+    assert(heap.bytes > idle + size);
+    myl_rc_owner_release(&heap, block);
+    assert(heap.bytes == idle);
+    /* A pointer list's backing grows from a calloc block across the threshold
+     * into a mapping and on through mremap: every stored pointer survives and
+     * the new capacity still reads zero, since its drop walks every slot. */
+    myl_native_list *pointers = myl_native_list_new(&heap, &pointer, 0);
+    assert(pointers);
+    void *text = bytes8(&heap);
+    for (size_t i = 0; i < 50000; ++i) assert(myl_rc_list_append(&heap, pointers, &text));
+    assert(header(pointers->storage)->common.mark & MYL_NATIVE_OBJECT_LARGE);
+    for (size_t i = 0; i < pointers->length; ++i) assert(((void **)pointers->storage)[i] == text);
+    for (size_t i = pointers->length; i < pointers->capacity; ++i) assert(!((void **)pointers->storage)[i]);
+    assert(header(text)->owners == 50001);
+    /* Releasing the list discharges its whole mapped backing at once. */
+    size_t peak = heap.bytes;
+    myl_rc_owner_release(&heap, pointers);
+    assert(header(text)->owners == 1 && heap.bytes + 50000 * sizeof(void *) <= peak);
+    myl_rc_owner_release(&heap, text);
+    finish(&heap);
+}
 // spec-case: RC-PLAIN-TYPE-1
 static void plain_elements_copy_as_bytes(void) {
     myl_native_heap heap;
@@ -783,13 +817,14 @@ int myl_rc_fast_verify(void) {
     allocation_cache_reuse();
     drain_releases_trees_inline();
     drain_pairs_keep_counts_exact();
+    large_extents_map_and_unmap();
     plain_elements_copy_as_bytes();
-    return 20;
+    return 21;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
-    assert(myl_rc_fast_verify() == 20);
-    puts("native RC fast paths: 20 tests passed");
+    assert(myl_rc_fast_verify() == 21);
+    puts("native RC fast paths: 21 tests passed");
     return 0;
 }
 #endif

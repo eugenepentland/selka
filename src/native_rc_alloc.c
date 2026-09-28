@@ -1,5 +1,6 @@
 #define _POSIX_C_SOURCE 200809L
 #define _DEFAULT_SOURCE
+#define _GNU_SOURCE
 #include "native_rc_alloc.h"
 #include "native_rc_internal.h"
 #include "native_rc_values.h"
@@ -36,10 +37,18 @@ struct rc_slab {
 /* Listed bytes that make a fresh pool reservation return every listed slot to
  * its slab first: at least RC_TRIM_BYTES and a quarter of the reservation. */
 #define RC_TRIM_BYTES ((size_t)1 << 20)
+/* RC-LARGE-MAP-1: a large extent of at least RC_MAP_BYTES has an anonymous
+ * mapping of its own, unmapped as soon as the extent is released. glibc would
+ * raise its own mapping threshold to the largest block freed so far and then
+ * keep freed blocks of that size resident in its heap. Smaller large extents
+ * stay with calloc. `mapped` is the mapping's length, 0 for a calloc block. */
+#define RC_MAP_BYTES ((size_t)128 << 10)
+#define RC_MAP_PAGE ((size_t)4096)
 typedef struct rc_large rc_large;
 struct rc_large {
     rc_large *previous, *next;
     size_t charge, extent;
+    size_t mapped, spare;
 };
 typedef struct {
     rc_slab *all, *available;
@@ -285,15 +294,52 @@ static inline __attribute__((always_inline)) myl_rc_object *slab_take(myl_native
     heap->rc_cache.free[index]=(void *)object->owners;
     return object;
 }
+/* One zeroed large block of `bytes`: its own mapping from RC_MAP_BYTES up. */
+static __attribute__((noinline)) rc_large *large_block(size_t bytes) {
+    if (bytes<RC_MAP_BYTES) return calloc(1,bytes);
+    if (bytes>SIZE_MAX-RC_MAP_PAGE) return NULL;
+    size_t length=(bytes+RC_MAP_PAGE-1)&~(RC_MAP_PAGE-1);
+    void *mapping=mmap(NULL,length,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS,-1,0);
+    if (mapping==MAP_FAILED) return NULL;
+    rc_large *large=mapping;
+    large->mapped=length;
+    return large;
+}
+static __attribute__((noinline)) void large_release(rc_large *large) {
+    if (large->mapped) munmap(large,large->mapped);
+    else free(large);
+}
+/* Grow a block to `bytes`, of which the first `previous` are in use. A mapping
+ * grows in place or moves with mremap, and a calloc block that reaches
+ * RC_MAP_BYTES moves into a mapping; the new tail of a mapping is zero. */
+static __attribute__((noinline)) rc_large *large_grow(rc_large *large, size_t previous, size_t bytes) {
+    if (!large->mapped && bytes<RC_MAP_BYTES) return realloc(large,bytes);
+    if (!large->mapped) {
+        rc_large *moved=large_block(bytes);
+        if (!moved) return NULL;
+        size_t length=moved->mapped;
+        memcpy(moved,large,previous);
+        moved->mapped=length;
+        free(large);
+        return moved;
+    }
+    if (bytes>SIZE_MAX-RC_MAP_PAGE) return NULL;
+    size_t length=(bytes+RC_MAP_PAGE-1)&~(RC_MAP_PAGE-1);
+    if (length<=large->mapped) return large;
+    void *moved=mremap(large,large->mapped,length,MREMAP_MAYMOVE);
+    if (moved==MAP_FAILED) return NULL;
+    ((rc_large *)moved)->mapped=length;
+    return moved;
+}
 static myl_rc_object *large_take(myl_native_heap *heap, size_t extent) {
     if (extent>SIZE_MAX-sizeof(rc_large)) return NULL;
     size_t bytes=sizeof(rc_large)+extent;
     if (!reserve(heap,bytes)) return NULL;
-    rc_large *large=calloc(1,bytes);
-    if (!large) { trim_empty(heap); large=calloc(1,bytes); }
+    rc_large *large=large_block(bytes);
+    if (!large) { trim_empty(heap); large=large_block(bytes); }
     if (!large) return NULL;
     rc_storage *storage=storage_of(heap);
-    *large=(rc_large){.next=storage->large,.charge=bytes,.extent=extent};
+    *large=(rc_large){.next=storage->large,.charge=bytes,.extent=extent,.mapped=large->mapped};
     if (large->next) large->next->previous=large;
     storage->large=large;
     charge(heap,bytes);
@@ -422,7 +468,7 @@ void myl_rc_storage_retire(myl_native_heap *heap, void *payload) {
     else storage_of(heap)->large=large->next;
     if (large->next) large->next->previous=large->previous;
     discharge(heap,large->charge);
-    free(large);
+    large_release(large);
 }
 /* Give every listed slot back to its slab's live count, emptying the lists,
  * before the slabs themselves are released wholesale. */
@@ -483,7 +529,7 @@ static void release_extents(myl_native_heap *heap) {
         rc_large *large=storage->large;
         storage->large=large->next;
         discharge(heap,large->charge);
-        free(large);
+        large_release(large);
         ++released;
     }
     for (size_t i=0;i<RC_SLAB_CLASSES;i++)
@@ -589,9 +635,9 @@ static void *storage_extend(myl_native_heap *heap, void *payload, size_t count, 
     size_t bytes=sizeof *large+extent, growth=bytes-large->charge;
     if (!reserve(heap,growth)) return NULL;
     size_t previous=large->charge;
-    rc_large *grown=realloc(large,bytes);
+    rc_large *grown=large_grow(large,previous,bytes);
     if (!grown) return NULL;
-    if (zero) memset((unsigned char *)grown+previous,0,growth);
+    if (zero && !grown->mapped) memset((unsigned char *)grown+previous,0,growth);
     if (grown->previous) grown->previous->next=grown;
     else storage_of(heap)->large=grown;
     if (grown->next) grown->next->previous=grown;
