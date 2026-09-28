@@ -97,8 +97,9 @@ static size_t index_octets(size_t scalars) {
 /* Whether a text of `bytes` octets holding `scalars` scalars is given an index:
  * it is not ASCII, it is long enough to repay one, and its octet offsets fit
  * the table's 32-bit entries. */
-static int indexable(size_t bytes, size_t scalars) {
-    return scalars!=bytes && bytes>=MYL_TEXT_INDEX_MIN && bytes<=UINT32_MAX;
+static inline int indexable(size_t bytes, size_t scalars) {
+    /* ASCII text, the common case, is decided by one compare and one branch. */
+    return __builtin_expect(scalars!=bytes,0) && bytes>=MYL_TEXT_INDEX_MIN && bytes<=UINT32_MAX;
 }
 /* The index of an indexed text: the block's tail, eight-aligned behind the
  * payload. */
@@ -116,11 +117,13 @@ myl_native_text *myl_native_text_build_scalars(myl_native_heap *heap, size_t byt
     text->hash=0;
     return text;
 }
-/* Publish a text that is not ASCII: a block built with an index keeps it only
- * when it is published as the non-ASCII text it was sized for. */
+/* Publish a text its constructor did not flag as ASCII: one whose scalar count
+ * is its octet count is ASCII all the same, and a block built with an index keeps
+ * it only when it is published as the non-ASCII text it was sized for. */
 static __attribute__((noinline)) void publish_wide(myl_native_text *text, size_t scalars) {
     const int indexed=(text->flags&MYL_TEXT_INDEXED) && text->length==scalars;
     text->length=scalars;
+    if (scalars==text->bytes) { text->flags=MYL_TEXT_ASCII; return; }
     text->flags=indexed ? MYL_TEXT_INDEXED : 0;
     if (indexed) {
         text_index *index=index_of(text);
@@ -130,14 +133,10 @@ static __attribute__((noinline)) void publish_wide(myl_native_text *text, size_t
 }
 void myl_native_text_publish(myl_native_text *text, size_t scalars, int plain) {
     /* Publishing replaces the flag word, so a hash cached before the payload was
-     * written can never survive into the published value. A text whose scalar
-     * count is its octet count is ASCII, whoever built it. */
-    if (plain || scalars==text->bytes) {
-        text->length=scalars;
-        text->flags=MYL_TEXT_ASCII;
-        return;
-    }
-    publish_wide(text,scalars);
+     * written can never survive into the published value. */
+    if (__builtin_expect(!plain,0)) { publish_wide(text,scalars); return; }
+    text->length=scalars;
+    text->flags=MYL_TEXT_ASCII;
 }
 /* A text's hash is cached in its header, because a dictionary hashes the same
  * key text once per lookup and a text can never change under it. */
@@ -151,11 +150,9 @@ uint32_t myl_native_text_hash(const myl_native_text *input) {
     text->flags|=MYL_TEXT_HASHED;
     return folded;
 }
-/* Scalars in `bytes` and whether all of them are below 0x80, or -1 for a
- * malformed payload. Octets of a continuation byte never begin a scalar, so the
- * count is one per octet that is not `10xxxxxx`. */
-static int measure(const unsigned char *bytes, size_t length, size_t *scalars, int *plain) {
-    if (ascii(bytes,length)) { *scalars=length; *plain=1; return 1; }
+/* The scalars in a payload that holds a non-ASCII octet, or -1 for a malformed
+ * one. Out of line, so `measure`'s ASCII answer costs the frame it always did. */
+static __attribute__((noinline)) int measure_wide(const unsigned char *bytes, size_t length, size_t *scalars) {
     size_t offset=0, count=0;
     uint32_t point;
     int status;
@@ -173,8 +170,16 @@ static int measure(const unsigned char *bytes, size_t length, size_t *scalars, i
         count++;
     }
     if (status<0) return -1;
-    *scalars=count; *plain=0;
+    *scalars=count;
     return 1;
+}
+/* Scalars in `bytes` and whether all of them are below 0x80, or -1 for a
+ * malformed payload. Octets of a continuation byte never begin a scalar, so the
+ * count is one per octet that is not `10xxxxxx`. */
+static int measure(const unsigned char *bytes, size_t length, size_t *scalars, int *plain) {
+    if (ascii(bytes,length)) { *scalars=length; *plain=1; return 1; }
+    *plain=0;
+    return measure_wide(bytes,length,scalars);
 }
 /* Fresh text holding the `length` octets at `bytes`, already known to be valid
  * UTF-8 with `scalars` scalar values, that is not ASCII: given the position
@@ -656,21 +661,32 @@ myl_native_text *myl_native_text_slice_step(myl_native_heap *heap, myl_native_te
     myl_native_root_pop(heap,&root);
     return result;
 }
-myl_native_text *myl_native_text_concat(myl_native_heap *heap, myl_native_text *left, myl_native_text *right) {
+/* One concatenation. `wide` is 0 when both operands are flagged ASCII, so the
+ * result is ASCII and needs no index, and the body is inlined into the entry
+ * point with that constant; otherwise it is the out-of-line copy below, which
+ * sizes and publishes the result as `myl_native_text_build_scalars` describes. */
+static inline __attribute__((always_inline)) myl_native_text *concat_body(myl_native_heap *heap, myl_native_text *left, myl_native_text *right, int wide) {
     if (left->bytes>SIZE_MAX-right->bytes) return NULL;
     size_t bytes=left->bytes+right->bytes;
     myl_native_root a,b;
     myl_native_root_push(heap,&a,&left,&pointer_type);
     myl_native_root_push(heap,&b,&right,&pointer_type);
-    myl_native_text *result=myl_native_text_build_scalars(heap,bytes,left->length+right->length);
+    myl_native_text *result=wide ? myl_native_text_build_scalars(heap,bytes,left->length+right->length) : myl_native_text_build(heap,bytes);
     if (result) {
         unsigned char *output=(unsigned char *)myl_native_text_storage(result);
         if (left->bytes) memcpy(output,myl_native_text_storage(left),left->bytes);
         if (right->bytes) memcpy(output+left->bytes,myl_native_text_storage(right),right->bytes);
-        myl_native_text_publish(result,left->length+right->length,left->flags&right->flags&MYL_TEXT_ASCII);
+        myl_native_text_publish(result,left->length+right->length,!wide);
     }
     myl_native_root_pop(heap,&b); myl_native_root_pop(heap,&a);
     return result;
+}
+static __attribute__((noinline)) myl_native_text *concat_wide(myl_native_heap *heap, myl_native_text *left, myl_native_text *right) {
+    return concat_body(heap,left,right,1);
+}
+myl_native_text *myl_native_text_concat(myl_native_heap *heap, myl_native_text *left, myl_native_text *right) {
+    if (__builtin_expect(!(left->flags&right->flags&MYL_TEXT_ASCII),0)) return concat_wide(heap,left,right);
+    return concat_body(heap,left,right,0);
 }
 static size_t endpoint(size_t length, int64_t value) {
     if (value>=0) return (uint64_t)value>length ? length : (size_t)value;
@@ -851,27 +867,26 @@ myl_native_list *myl_native_text_split(myl_native_heap *heap, myl_native_text *i
     return result;
 }
 myl_native_text *myl_native_text_join(myl_native_heap *heap, myl_native_text *separator, myl_native_list *list) {
-    size_t count=0, joined=0;
+    size_t count=0, scalars=0;
+    int plain=separator->flags&MYL_TEXT_ASCII;
     myl_native_text **items=list->storage;
     for (size_t i=0;i<list->length;i++) {
         if (items[i]->bytes>SIZE_MAX-count) return NULL;
         count+=items[i]->bytes;
-        joined+=items[i]->length;
-        if (i) { if (separator->bytes>SIZE_MAX-count) return NULL; count+=separator->bytes; joined+=separator->length; }
+        scalars+=items[i]->length;
+        plain&=items[i]->flags&MYL_TEXT_ASCII;
+        if (i) { if (separator->bytes>SIZE_MAX-count) return NULL; count+=separator->bytes; scalars+=separator->length; }
     }
     myl_native_root a,b;
     myl_native_root_push(heap,&a,&separator,&pointer_type); myl_native_root_push(heap,&b,&list,&pointer_type);
-    myl_native_text *result=myl_native_text_build_scalars(heap,count,joined);
+    myl_native_text *result=myl_native_text_build_scalars(heap,count,scalars);
     if (result) {
         unsigned char *output=(unsigned char *)myl_native_text_storage(result);
-        int plain=separator->flags&MYL_TEXT_ASCII;
-        size_t at=0, scalars=0;
+        size_t at=0;
         for (size_t i=0;i<list->length;i++) {
-            if (i && separator->bytes) { memcpy(output+at,myl_native_text_storage(separator),separator->bytes); at+=separator->bytes; scalars+=separator->length; }
+            if (i && separator->bytes) { memcpy(output+at,myl_native_text_storage(separator),separator->bytes); at+=separator->bytes; }
             if (items[i]->bytes) memcpy(output+at,myl_native_text_storage(items[i]),items[i]->bytes);
             at+=items[i]->bytes;
-            scalars+=items[i]->length;
-            plain&=items[i]->flags&MYL_TEXT_ASCII;
         }
         myl_native_text_publish(result,scalars,plain);
     }
