@@ -33,6 +33,21 @@ typedef MylQbeContext Context;
  * about to release the whole address space skips it. */
 static int exit_without_sweep;
 void myl_qbe_exit_without_sweep(void) { exit_without_sweep = 1; }
+/* RC-EXIT-SKIP-1: whether the program's normal exit may leave every remaining
+ * object alone. Only a production RC artifact can (the counting runtime balances
+ * every allocation and the checked runtime reports leaks, so both keep the full
+ * release walk), only a process that is the whole program (`final`), never a
+ * stress run (its exit release is a heap check), and only while no registered
+ * file, socket or host handle is open, because releasing an owner is where such
+ * a handle is flushed and closed. Objects have no other finalizer. */
+#if defined(MYL_NATIVE_RC) && MYL_NATIVE_RC && !(defined(MYL_NATIVE_RC_COUNTING) && MYL_NATIVE_RC_COUNTING)
+int myl_qbe_exit_skip(void *context) {
+    const Context *ctx = context;
+    return exit_without_sweep && !ctx->heap.stress && !ctx->resource_live[0] && !ctx->resource_live[1];
+}
+#else
+int myl_qbe_exit_skip(void *context) { (void)context; return 0; }
+#endif
 static int execute_config_args(uint64_t (*entry)(void *), uint64_t steps, uint64_t frames, int stress, const struct MylangNativeProvidersTag *providers, void (*initialize)(void *), int guest_argc, char **guest_argv, MylQbeResult *result);
 _Static_assert(offsetof(Context, steps) == 0, "QBE context steps ABI");
 _Static_assert(offsetof(Context, frames) == 8, "QBE context frame count ABI");
@@ -1015,7 +1030,8 @@ static int execute_config_args(uint64_t (*entry)(void *), uint64_t steps, uint64
     /* Stand-ins go after the resources, whose handles they may still own. */
     if (context->stand_in_cleanup) context->stand_in_cleanup(context);
 #if defined(MYL_NATIVE_RC) && MYL_NATIVE_RC
-    myl_qbe_rc_finish(context);
+    /* RC-EXIT-SKIP-1: a clean production exit leaves the caches and arenas to the process. */
+    if (context->trap || !myl_qbe_exit_skip(context)) myl_qbe_rc_finish(context);
 #endif
 #if defined(MYL_NATIVE_RC_COUNTING) && MYL_NATIVE_RC_COUNTING
     myl_rc_stats_report(&context->heap);

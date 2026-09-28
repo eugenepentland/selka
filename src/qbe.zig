@@ -27,6 +27,7 @@ const native_types = @import("native_types.zig");
 const diagnostic = @import("diagnostic.zig");
 const Source = @import("source.zig").Source;
 const entry_adapter = @import("entry_adapter.zig");
+const exit_skip = @import("qbe_exit_skip.zig");
 const native_descriptors = @import("native_descriptors.zig");
 const test_dependencies = @import("native_test_dependencies.zig");
 const native_interface = @import("native_interface.zig");
@@ -685,6 +686,7 @@ fn emitEntry(pass: EmitPass, index: usize, scratch: std.mem.Allocator, certifica
         .step_checks = pass.step_checks,
         .frame_checks = pass.frame_checks,
         .entry = index == @backingInt(pass.program.main),
+        .exit_skip = runtime_mode.enabled() and exit_skip.last(pass.program, index),
         .pure = pass.pure,
         .cow = if (pass.cow == .off) null else try cow_lower.request(scratch, pass.cow == .counting),
     };
@@ -1154,6 +1156,7 @@ fn flagsOf(pass: EmitPass, index: usize) fragments.Flags {
         .frame_checks = pass.frame_checks,
         .arenas = pass.arenas,
         .entry = index == @backingInt(pass.program.main),
+        .exit_skip = runtime_mode.enabled() and exit_skip.last(pass.program, index),
         .cow = pass.cow,
         .runtime = runtime_mode.lowered(),
     };
@@ -1451,6 +1454,10 @@ const Emitter = struct {
     /// True for the function the runtime calls first, the only place the
     /// missing-accounting guard has to run.
     entry: bool = false,
+    /// True for a function that runs once and returns last (`qbe_exit_skip.zig`):
+    /// an RC return asks the runtime whether to keep its owners instead of
+    /// releasing them (RC-EXIT-SKIP-1).
+    exit_skip: bool = false,
     /// Per program function, whether it can allocate or reach a call that can.
     /// A `.call` to a function whose entry is false needs no root push at its
     /// call site, because no collection can run while it executes.

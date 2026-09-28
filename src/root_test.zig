@@ -293,6 +293,7 @@ test {
     _ = @import("qbe_rc_dictionary_key_test.zig");
     _ = @import("qbe_rc_dictionary_loop_test.zig");
     _ = @import("qbe_rc_empty_frame_test.zig");
+    _ = @import("qbe_exit_skip_test.zig");
     _ = @import("qbe_rc_field_transfer_test.zig");
     _ = @import("qbe_rc_dead_field_move_test.zig");
     _ = @import("qbe_rc_element_take_test.zig");

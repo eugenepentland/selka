@@ -44,6 +44,9 @@ pub const Flags = struct {
     arenas: bool,
     /// This function is the program's entry.
     entry: bool,
+    /// This function runs once and returns last (RC-EXIT-SKIP-1). Folded into a
+    /// key only when it is on, so every other key is unchanged.
+    exit_skip: bool = false,
     /// The copy-on-write code the unit carries (`COW-UNIQUE-1`). Folded into
     /// a key only when it is on, so every other key is unchanged.
     cow: @import("cow_plan.zig").Mode = .off,
@@ -252,6 +255,7 @@ pub const Keys = struct {
         try canon.text(format_version);
         try canon.put(.{ .step_checks = flags.step_checks, .frame_checks = flags.frame_checks, .arenas = flags.arenas, .entry = flags.entry });
         if (flags.cow != .off) try canon.text(@tagName(flags.cow));
+        if (flags.exit_skip) try canon.text("exit-skip");
         try canon.text(flags.runtime.identity());
         try canon.raw(&own.digest);
         var reached: std.ArrayList(u32) = .empty;

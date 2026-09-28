@@ -76,22 +76,17 @@ pub fn Lower(comptime E: type) type {
         }
         /// Close this frame's open receiver scopes, then drop every live operand
         /// below and including the result and every live local, newest first.
-        /// The result's own token has already been handed to the caller.
+        /// The result's own token has already been handed to the caller. The
+        /// function that returns last (RC-EXIT-SKIP-1) first asks the runtime
+        /// whether the process is about to exit, and if so keeps its owners.
         pub fn exit(self: *E) Error!void {
             if (!linked(E, self)) return;
             try self.print(" # rc-exit\n", .{});
             try closeScopes(E, self);
-            const stack = self.states[self.pc] orelse return error.InternalError;
-            var operand = stack.len;
-            while (operand != 0) {
-                operand -= 1;
-                try dropTyped(E, self, localCount(E, self) + operand, stack[operand]);
-            }
-            var local = localCount(E, self);
-            while (local != 0) {
-                local -= 1;
-                try drop(E, self, local);
-            }
+            if (!self.exit_skip) return dropAll(E, self);
+            const label = try beginSkip(E, self);
+            try dropAll(E, self);
+            try self.print("@{s}{d}\n", .{ skip_done, label });
         }
         /// Drop an initialized local; borrowed parameters keep a clear guard.
         pub fn dropLocal(self: *E, index: usize) Error!void {
@@ -198,6 +193,36 @@ fn typedRole(comptime E: type, self: *E, index: usize, ty: typed.Type) Error!voi
 fn shapeOf(comptime E: type, self: *E, ty: typed.Type) Error!@import("rc_shape.zig").Shape {
     const state = get(E, self) orelse return error.InternalError;
     return state.catalog.get(ty) catch |err| if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError;
+}
+
+/// Drop every live operand, then every live local, newest first.
+fn dropAll(comptime E: type, self: *E) Error!void {
+    const stack = self.states[self.pc] orelse return error.InternalError;
+    var operand = stack.len;
+    while (operand != 0) {
+        operand -= 1;
+        try dropTyped(E, self, localCount(E, self) + operand, stack[operand]);
+    }
+    var local = localCount(E, self);
+    while (local != 0) {
+        local -= 1;
+        try drop(E, self, local);
+    }
+}
+/// The label prefixes that bracket the drops an exit may skip (RC-EXIT-SKIP-1);
+/// `qbe_il_passes.zig` removes a bracket whose drops were all proven dead.
+pub const skip_drop = "rcexitdrop";
+/// See `skip_drop`.
+pub const skip_done = "rcexitdone";
+/// The comment that opens the skip test, which the dead-drop pass looks for.
+pub const skip_mark = " # RC-EXIT-SKIP-1";
+/// Open the branch around an exit's drops and return its label number.
+fn beginSkip(comptime E: type, self: *E) Error!usize {
+    const answer = self.temp();
+    const label = self.temp();
+    try self.print("{s}\n %v{d} =w call $myl_qbe_exit_skip(l %ctx)\n", .{ skip_mark, answer });
+    try self.print(" jnz %v{d}, @{s}{d}, @{s}{d}\n@{s}{d}\n", .{ answer, skip_done, label, skip_drop, label, skip_drop, label });
+    return label;
 }
 
 /// Clear/drop one guarded slot using the runtime's unique/count ordering.

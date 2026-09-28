@@ -369,3 +369,77 @@ test "RC-STATIC-DROPS-1 conditionally initialized locals drop exactly once on ev
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, observed.term);
     try testing.expectEqualStrings("1 3 1 2\n1 -1\npositive1one positive2 other\n", observed.stdout);
 }
+
+/// A production RC exit that keeps its owners must leave what a full teardown
+/// leaves: the same streams, files and status as the counting runtime, which
+/// releases every owner, and as the tracing collector.
+fn matchesEveryRuntime(a: std.mem.Allocator, text: []const u8) !Observed {
+    const counted = try matchesCollector(a, text);
+    const traced = try observe(a, &.{"--gc-runtime"}, text);
+    try testing.expectEqualStrings(traced.stdout, counted.stdout);
+    try testing.expectEqualStrings(traced.stderr, counted.stderr);
+    try testing.expectEqual(traced.term, counted.term);
+    try testing.expectEqualStrings(traced.files, counted.files);
+    return counted;
+}
+
+const exit_open =
+    \\def main(fs: Filesystem, out: Stream) -> int:
+    \\    names = ["alpha", "beta"]
+    \\    with fs.open("live.txt", "w") as f:
+    \\        _ = f.write("live " + str(len(names)) + "\n")
+    \\        out.print("inside")
+    \\        return len(names)
+;
+
+const exit_closed =
+    \\def main(fs: Filesystem, out: Stream) -> int:
+    \\    names = ["alpha", "beta"]
+    \\    with fs.open("done.txt", "w") as f:
+    \\        _ = f.write("done " + str(len(names)) + "\n")
+    \\    out.print("after")
+    \\    return len(names)
+;
+
+const exit_wrapped =
+    \\def note(names: list[str]) -> list[str]:
+    \\    more = names
+    \\    more.append("gamma")
+    \\    return more
+    \\
+    \\def main(fs: Filesystem, out: Stream):
+    \\    names = note(["alpha", "beta"])
+    \\    with fs.open("wrapped.txt", "w") as f:
+    \\        _ = f.write("wrapped " + str(len(names)) + "\n")
+    \\    out.print("done")
+;
+
+// spec: RC-EXIT-SKIP-1
+test "RC-EXIT-SKIP-1 a file the entry returns from inside is complete at exit and matches every runtime" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const observed = try matchesEveryRuntime(arena.allocator(), exit_open);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, observed.term);
+    try testing.expectEqualStrings("inside\n", observed.stdout);
+    try testing.expectEqualStrings("live.txt=live 2\n;", observed.files);
+}
+
+// spec-case: RC-EXIT-SKIP-1
+test "RC-EXIT-SKIP-1 an entry that closed its file before returning keeps the file and balances when counted" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const observed = try matchesEveryRuntime(arena.allocator(), exit_closed);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, observed.term);
+    try testing.expectEqualStrings("after\n", observed.stdout);
+    try testing.expectEqualStrings("done.txt=done 2\n;", observed.files);
+}
+
+// spec-case: RC-EXIT-SKIP-1
+test "RC-EXIT-SKIP-1 the function behind the synthesized entry wrapper keeps its file and matches every runtime" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const observed = try matchesEveryRuntime(arena.allocator(), exit_wrapped);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, observed.term);
+    try testing.expectEqualStrings("done\n", observed.stdout);
+    try testing.expectEqualStrings("wrapped.txt=wrapped 3\n;", observed.files);
+}

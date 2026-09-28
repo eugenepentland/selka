@@ -30,7 +30,7 @@ def run_suite(root, command, directory, suite, sources):
     executable = directory / suite
     if suite in ("native_rc_stats", "native_rc_fast", "native_rc_execution", "native_argv"):
         command = command + ["-DMYL_NATIVE_RC_COUNTING=1"]
-    if suite in ("native_rc_execution", "native_argv"):
+    if suite in ("native_rc_execution", "native_argv", "native_rc_exit_skip"):
         command = command + ["-DMYL_NATIVE_RC=1"]
     if "native_heap.c" in sources:
         required = ("native_arena.c", "native_collections.c", "native_text.c",
@@ -54,6 +54,8 @@ def run_suite(root, command, directory, suite, sources):
     )
     if suite == "native_rc_execution":
         verify_execution(executable)
+    elif suite == "native_rc_exit_skip":
+        verify_exit_skip(executable)
     else:
         subprocess.run([str(executable)], check=True)
 
@@ -82,6 +84,15 @@ def verify_execution(executable):
         expected = counts
 
 
+def verify_exit_skip(executable):
+    """RC-EXIT-SKIP-1: a production RC runtime skips the exit release only when final."""
+    environment = dict(os.environ)
+    # A final run deliberately leaves its heap to the process, which a leak check reports.
+    environment["ASAN_OPTIONS"] = environment.get("ASAN_OPTIONS", "") + ":detect_leaks=0"
+    for mode in ("normal", "final", "final-handle"):
+        subprocess.run([str(executable), mode], check=True, env=environment)
+
+
 def jobs():
     """Suites built at once: `MYLANG_JOBS` when set, else every core."""
     try:
@@ -99,6 +110,7 @@ SUITES = (
     ("native_rc_fast", ["native_heap.c", "native_regions.c"]),
     ("native_file_cleanup", ["native_heap.c", "qbe_runtime.c", "qbe_files.c", "qbe_resources.c", "qbe_stand_ins.c"]),
     ("native_rc_execution", ["native_heap.c", "qbe_runtime.c", "qbe_runtime_rc.c", "qbe_stack.c"]),
+    ("native_rc_exit_skip", ["native_heap.c", "qbe_runtime.c", "qbe_runtime_rc.c", "qbe_stack.c"]),
     ("native_rc_arena", ["native_heap.c", "native_regions.c"]),
     ("native_rc_stats", ["native_heap.c"]),
     ("native_rc_contract", ["native_heap.c", "native_rc.c", "native_rc_stats.c", "native_rc_shapes.c", "native_rc_walk.c", "native_rc_scope.c", "native_rc_transfer.c"]),
