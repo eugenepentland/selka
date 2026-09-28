@@ -406,6 +406,38 @@ test "record field writes invalidate a saved record borrow" {
     try std.testing.expectEqualStrings("copy", try classInto(nested.value, "assign", "saved"));
 }
 
+// spec: OWNERSHIP-MUT-RECORD-WRITE-1
+test "a mut record argument invalidates a saved borrow of the record or its field" {
+    var whole = try explained(std.testing.allocator,
+        \\record Output:
+        \\    buffer: list[int]
+        \\def append(out: mut Output, value: int):
+        \\    out.buffer.append(value)
+        \\def main() -> int:
+        \\    o = Output([1])
+        \\    before = o
+        \\    append(mut o, 2)
+        \\    return len(before.buffer) * 10 + len(o.buffer)
+    , "main");
+    defer whole.deinit();
+    var field = try explained(std.testing.allocator,
+        \\record Output:
+        \\    buffer: list[int]
+        \\def append(out: mut Output, value: int):
+        \\    out.buffer.append(value)
+        \\def main() -> int:
+        \\    o = Output([1])
+        \\    before = o.buffer
+        \\    append(mut o, 2)
+        \\    return len(before) * 10 + len(o.buffer)
+    , "main");
+    defer field.deinit();
+    try std.testing.expectEqualStrings("copy", try classInto(whole.value, "assign", "before"));
+    try std.testing.expectEqualStrings("owned", try role(whole.value, "before"));
+    try std.testing.expectEqualStrings("copy", try classInto(field.value, "assign", "before"));
+    try std.testing.expectEqualStrings("owned", try role(field.value, "before"));
+}
+
 // spec-case: OWNERSHIP-FIELD-WRITE-1
 test "record field reads and writes to independent named homes preserve borrows" {
     var parsed = try explained(std.testing.allocator,
