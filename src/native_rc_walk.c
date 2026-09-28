@@ -170,6 +170,30 @@ static inline __attribute__((always_inline)) myl_rc_object *drain_leaves(myl_nat
     for (; live; live &= live - 1) head = drain_leaf(heap, payload + flat->offsets[__builtin_ctz(live)], head);
     return head;
 }
+/* RC-DRAIN-TYPES-1: the plan of a death's type from the drain's two most
+ * recent types, most recent first, or from one binding probe that makes it
+ * the most recent. */
+static inline __attribute__((always_inline)) const myl_rc_flat *drain_plan(myl_native_heap *heap, const myl_native_type *type) {
+    myl_rc_state *rc = heap->rc;
+    if (rc->dead.types[0] == type) return rc->dead.flats[0];
+    const myl_rc_flat *flat;
+    if (rc->dead.types[1] == type) flat = rc->dead.flats[1];
+    else {
+        const myl_rc_binding *binding = myl_rc_binding_find(heap, type);
+        myl_rc_invariant(binding != NULL);
+        flat = &binding->flat;
+    }
+    rc->dead.types[1] = rc->dead.types[0];
+    rc->dead.flats[1] = rc->dead.flats[0];
+    rc->dead.types[0] = type;
+    rc->dead.flats[0] = flat;
+    return flat;
+}
+/* The binding a drain plan belongs to. */
+static inline __attribute__((always_inline)) const myl_rc_binding *drain_binding(myl_native_heap *heap, const myl_native_type *type) {
+    const myl_rc_flat *flat = drain_plan(heap, type);
+    return (const myl_rc_binding *)(const void *)((const unsigned char *)flat - offsetof(myl_rc_binding, flat));
+}
 /* One dying object outside the fast loop: any allocator, a large extent, an
  * element count other than one, a conditional or generic plan, or a hook. The
  * drain's list and tally are published first, because any of these may run a
@@ -180,8 +204,7 @@ static __attribute__((noinline)) myl_rc_object *drain_one(myl_native_heap *heap,
     rc->dead.head = head;
     tally_apply(heap, tally);
     void *payload = object + 1;
-    const myl_rc_binding *binding = myl_rc_binding_find(heap, object->common.element);
-    myl_rc_invariant(binding != NULL);
+    const myl_rc_binding *binding = drain_binding(heap, object->common.element);
     uintptr_t mark = object->common.mark;
     myl_rc_invariant((mark & (MYL_RC_OBJECT_DYING | MYL_NATIVE_OBJECT_IMMORTAL |
         MYL_NATIVE_OBJECT_ARENA)) == MYL_RC_OBJECT_DYING);
@@ -196,8 +219,10 @@ static __attribute__((noinline)) myl_rc_object *drain_one(myl_native_heap *heap,
          * child tokens are intact, with no descriptor frame leased. Nested
          * releases only enqueue. Reacquire metadata after a registering hook. */
         void (*finalize)(myl_native_heap *, void *) = binding->descriptor.finalize;
-        if (finalize) finalize(heap, payload);
-        binding = myl_rc_binding_find(heap, object->common.element);
+        if (finalize) {
+            finalize(heap, payload);
+            binding = myl_rc_binding_find(heap, object->common.element);
+        }
         myl_rc_invariant(binding && !rc->walk.depth);
         if (binding->descriptor.edges) binding->descriptor.edges(heap, payload, count);
         else myl_rc_edges_release(heap, binding->descriptor.shape, payload, count);
@@ -227,25 +252,6 @@ typedef struct {
 #define DRAIN_ONE_MASK (MYL_RC_OBJECT_DYING | MYL_NATIVE_OBJECT_IMMORTAL | MYL_NATIVE_OBJECT_ARENA | \
     MYL_NATIVE_OBJECT_LARGE | MYL_NATIVE_OBJECT_COUNT_BITS)
 #define DRAIN_ONE_WANT (MYL_RC_OBJECT_DYING | ((uintptr_t)1 << MYL_NATIVE_OBJECT_COUNT_SHIFT))
-/* RC-DRAIN-TYPES-1: the plan of a death's type from the drain's two most
- * recent types, most recent first, or from one binding probe that makes it
- * the most recent. */
-static inline __attribute__((always_inline)) const myl_rc_flat *drain_plan(myl_native_heap *heap, const myl_native_type *type) {
-    myl_rc_state *rc = heap->rc;
-    if (rc->dead.types[0] == type) return rc->dead.flats[0];
-    const myl_rc_flat *flat;
-    if (rc->dead.types[1] == type) flat = rc->dead.flats[1];
-    else {
-        const myl_rc_binding *binding = myl_rc_binding_find(heap, type);
-        myl_rc_invariant(binding != NULL);
-        flat = &binding->flat;
-    }
-    rc->dead.types[1] = rc->dead.types[0];
-    rc->dead.flats[1] = rc->dead.flats[0];
-    rc->dead.types[0] = type;
-    rc->dead.flats[0] = flat;
-    return flat;
-}
 /* RC-DRAIN-PAIR-1: one run of consecutive deaths of a two-leaf type, from
  * `object` (already popped; `head` is the rest of the list). Each death's two
  * leaves are released at the plan's offsets, in the plan's order, and its slot

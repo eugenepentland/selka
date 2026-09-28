@@ -1093,7 +1093,8 @@ myl_native_list *myl_native_list_slice_step(myl_native_heap *heap, myl_native_li
 static void rc_list_edges(myl_native_heap *heap, void *payload, size_t count) {
     (void)count;
     myl_native_list *list=payload;
-    if (list->length) {
+    /* RC-DRAIN-TYPES-1: elements that own nothing release nothing. */
+    if (list->length && !myl_rc_plain_type(heap,list->element)) {
         const myl_rc_descriptor *element=myl_rc_descriptor_of(heap,list->element);
         if (!element) abort();
         myl_rc_edges_release(heap,element->shape,list->storage,list->length);

@@ -690,7 +690,7 @@ static void drain_pairs_keep_counts_exact(void) {
     Node *kept = ((Node *)root->left)->right;
     Node *held = ((Node *)root->right)->left;
     assert(myl_rc_owner_acquire(&heap, kept) == MYL_RC_OK);
-    myl_rc_hold hold;
+    myl_rc_hold hold = {0};
     assert(myl_rc_hold_acquire(&heap, held, &hold) == MYL_RC_OK);
     myl_rc_counters before, after;
     assert(myl_rc_stats_snapshot(&heap, &before));
