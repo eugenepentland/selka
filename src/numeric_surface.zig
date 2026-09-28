@@ -4,6 +4,7 @@ const typed = @import("typed.zig");
 const ast = @import("ast.zig");
 const Span = @import("source.zig").Span;
 const diagnostic = @import("diagnostic.zig");
+const number_literal = @import("number_literal.zig");
 
 /// Ordinary float is a compiler-created binary64 domain, independent of user domains.
 pub fn isFloat(ty: typed.Type, records: []const typed.Record) bool {
@@ -37,7 +38,13 @@ pub const Builder = struct {
     }
     /// Preserve IEEE binary64 literal rounding and reject overflowing decimal constants.
     pub fn literal(self: Builder, text: []const u8, sink: *diagnostic.Sink) diagnostic.Error!typed.Node {
-        const value = std.fmt.parseFloat(f64, text) catch return sink.fail("E_FLOAT_LITERAL", self.span, "invalid decimal floating-point literal");
+        // Source tokens are unsigned; a leading `-` comes from compiler-written constants.
+        const negative = text.len != 0 and text[0] == '-';
+        const magnitude = switch (try number_literal.float(self.arena, if (negative) text[1..] else text)) {
+            .ok => |value| value,
+            .bad => |problem| return sink.fail(problem.code, self.span, problem.message),
+        };
+        const value = if (negative) -magnitude else magnitude;
         if (!std.math.isFinite(value)) return sink.fail("E_FLOAT_RANGE", self.span, "floating-point literal overflows binary64");
         const encoded: u64 = @bitCast(value);
         const input = try self.append(self.node(.u64, .{ .integer = encoded }));

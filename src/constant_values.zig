@@ -8,6 +8,7 @@ const diagnostic = @import("diagnostic.zig");
 const Names = @import("module_names.zig").Names;
 const Error = diagnostic.Error;
 const integers = @import("integers.zig");
+const integer_literal = @import("integer_literal.zig");
 const eLimit = "E_CONSTANT_LIMIT";
 const eType = "E_CONSTANT_TYPE";
 const eEffect = "E_CONSTANT_EFFECT";
@@ -46,6 +47,10 @@ pub const Context = struct {
         }
         return null;
     }
+    /// The declared type of the constant at `index`, resolved without evaluating it.
+    pub fn declaredType(self: Context, index: usize) Error!typed.Type {
+        return self.resolveType(self.program.functions[index].signature.return_type);
+    }
     /// Validate a str/bytes literal getter, leaving scalar declarations to evaluation.
     pub fn literalType(self: Context, index: usize) Error!?typed.Type {
         const function = self.program.functions[index];
@@ -83,7 +88,7 @@ const Evaluator = struct {
     values: []?typed.Value,
     visiting: []bool,
     work: usize = 0,
-    frame: struct { locals: std.ArrayList(Local) = .empty, base: usize = 0 } = .{},
+    frame: struct { locals: std.ArrayList(Local) = .empty, base: usize = 0, result: ?typed.Type = null } = .{},
     const Local = struct { name: source.Span, value: ?typed.Value, mutable: bool };
     const Flow = union(enum) { next, returned: typed.Value, break_loop, continue_loop };
     fn take(self: *Evaluator, span: source.Span, depth: usize) Error!void {
@@ -196,15 +201,19 @@ const Evaluator = struct {
             const argument = invocation.arguments[position];
             const parameter = function.signature.parameters[position];
             const value = &arguments[position];
-            value.* = try self.expression(argument, depth + 1);
-            if (value.typeOf() != try self.scalar(parameter.ty)) return self.context.sink.fail("E_TYPE", parameter.ty, "compile-time argument type differs from parameter");
+            const parameter_type = try self.scalar(parameter.ty);
+            value.* = try self.expressionAs(argument, parameter_type, depth + 1);
+            if (value.typeOf() != parameter_type) return self.context.sink.fail("E_TYPE", parameter.ty, "compile-time argument type differs from parameter");
         }
         const before = self.frame.locals.items.len;
         const base = self.frame.base;
+        const outer_result = self.frame.result;
         self.frame.base = before;
+        self.frame.result = try self.scalar(function.signature.return_type);
         defer {
             self.frame.locals.shrinkRetainingCapacity(before);
             self.frame.base = base;
+            self.frame.result = outer_result;
         }
         for (function.signature.parameters, arguments) |parameter, value| try self.bind(parameter.name, value, false);
         const result = try self.statement(function.body, depth + 1);
@@ -221,7 +230,7 @@ const Evaluator = struct {
         const stmt = self.context.program.statements.items[@backingInt(id)];
         try self.take(stmt.span, depth);
         switch (stmt.data) {
-            .ret => |value| return .{ .returned = try self.expression(value, depth + 1) },
+            .ret => |value| return .{ .returned = try self.expressionAs(value, self.frame.result, depth + 1) },
             .discard => |value| {
                 _ = try self.expression(value, depth + 1);
             },
@@ -235,9 +244,10 @@ const Evaluator = struct {
                 }
             },
             .binding => |binding| {
-                const value = try self.expression(binding.value, depth + 1);
+                const declared: ?typed.Type = if (binding.annotation) |annotation| try self.scalar(annotation) else null;
+                const value = try self.expressionAs(binding.value, declared, depth + 1);
                 if (binding.annotation) |annotation| {
-                    if (value.typeOf() != try self.scalar(annotation)) return self.context.sink.fail("E_TYPE", annotation, "compile-time binding annotation differs from initializer");
+                    if (value.typeOf() != declared.?) return self.context.sink.fail("E_TYPE", annotation, "compile-time binding annotation differs from initializer");
                 }
                 try self.bind(binding.name, value, binding.mutable);
             },
@@ -266,7 +276,7 @@ const Evaluator = struct {
         }
         const index = existing orelse return self.context.sink.fail(eName, assignment.name, "compile-time compound assignment requires an existing local");
         const previous = self.frame.locals.items[index];
-        var value = try self.expression(assignment.value, depth + 1);
+        var value = try self.expressionAs(assignment.value, previous.value.?.typeOf(), depth + 1);
         if (value.typeOf() != previous.value.?.typeOf()) return self.context.sink.fail("E_TYPE", assignment.op_span, "compile-time assignment types differ");
         if (assignment.op != .set) {
             if (!value.typeOf().isInteger()) return self.context.sink.fail("E_TYPE", assignment.op_span, "compound assignment requires integers");
@@ -347,7 +357,7 @@ const Evaluator = struct {
         if (!result_type.isInteger() and result_type != .bool) return self.context.sink.fail(eType, function.signature.return_type, "constant types currently require builtin integers or bool");
         const body = self.context.program.statements.items[@backingInt(function.body)].data.block[0];
         const initializer = self.context.program.statements.items[@backingInt(body)].data.ret;
-        const value = try self.expression(initializer, depth + 1);
+        const value = try self.expressionAs(initializer, result_type, depth + 1);
         if (value.typeOf() != result_type) return self.context.sink.fail("E_TYPE", function.signature.return_type, "constant initializer type differs from its declared type");
         self.values[index] = value;
         return value;
@@ -362,11 +372,24 @@ const Evaluator = struct {
         });
     }
     fn expression(self: *Evaluator, id: ast.NodeId, depth: usize) Error!typed.Value {
+        return self.expressionAs(id, null, depth);
+    }
+    /// Whether the node is an unsuffixed integer literal, possibly negated: the one
+    /// expression whose type comes from its context rather than from its spelling.
+    fn adoptsType(self: *Evaluator, id: ast.NodeId) bool {
+        var node = self.context.program.nodes.items[@backingInt(id)];
+        if (node.data == .unary and node.data.unary.op == .neg) node = self.context.program.nodes.items[@backingInt(node.data.unary.operand)];
+        if (node.data != .integer) return false;
+        return integer_literal.unsuffixed(self.context.src.text(node.data.integer));
+    }
+    /// Evaluate with an expected integer type, so an unsuffixed literal (and the operands
+    /// of arithmetic around one) takes the declared type, as it does in checked code.
+    fn expressionAs(self: *Evaluator, id: ast.NodeId, expected: ?typed.Type, depth: usize) Error!typed.Value {
         const node = self.context.program.nodes.items[@backingInt(id)];
         try self.take(node.span, depth);
         switch (node.data) {
             .integer => |span| {
-                const literal = try @import("integer_literal.zig").parse(self.context.src, span, false, self.context.sink);
+                const literal = try integer_literal.parseExpected(self.context.src, span, false, expected, self.context.sink);
                 return typed.Value.number(literal.ty, literal.value);
             },
             .boolean => |value| return .{ .bool = value },
@@ -388,10 +411,10 @@ const Evaluator = struct {
                 if (unary.op == .is_none) return self.context.sink.fail("E_OPTION_TEST", node.span, "is None requires an Option value");
                 const operand = self.context.program.nodes.items[@backingInt(unary.operand)];
                 if (unary.op == .neg and operand.data == .integer) {
-                    const literal = try @import("integer_literal.zig").parse(self.context.src, operand.data.integer, true, self.context.sink);
+                    const literal = try integer_literal.parseExpected(self.context.src, operand.data.integer, true, expected, self.context.sink);
                     return integers.cast(literal.ty, -literal.value) catch |err| return self.failure(node.span, err);
                 }
-                const value = try self.expression(unary.operand, depth + 1);
+                const value = try self.expressionAs(unary.operand, if (unary.op == .neg) expected else null, depth + 1);
                 if (unary.op != .neg and unary.op != .not) {
                     if (value.typeOf() != .u64) return self.context.sink.fail("E_TYPE", node.span, "floating representation requires u64");
                     const converted = @import("floats.zig").unary(std.meta.stringToEnum(typed.UnaryOp, @tagName(unary.op)).?, @intCast(integer(value))) catch |err| return self.failure(node.span, err);
@@ -402,12 +425,22 @@ const Evaluator = struct {
                 return self.context.sink.fail("E_TYPE", node.span, "invalid constant unary operand");
             },
             .binary => |binary| {
-                const left = try self.expression(binary.left, depth + 1);
-                if (left.typeOf() == .bool) {
-                    if (binary.op == .logical_and and !left.bool) return left;
-                    if (binary.op == .logical_or and left.bool) return left;
+                const inherited = if (typesResult(binary.op)) expected else null;
+                // A literal operand takes its sibling's type, so the typed side goes first.
+                const literal_first = self.adoptsType(binary.left) and !self.adoptsType(binary.right);
+                var left: typed.Value = undefined;
+                var right: typed.Value = undefined;
+                if (literal_first) {
+                    right = try self.expressionAs(binary.right, inherited, depth + 1);
+                    left = try self.expressionAs(binary.left, siblingType(right, inherited), depth + 1);
+                } else {
+                    left = try self.expressionAs(binary.left, inherited, depth + 1);
+                    if (left.typeOf() == .bool) {
+                        if (binary.op == .logical_and and !left.bool) return left;
+                        if (binary.op == .logical_or and left.bool) return left;
+                    }
+                    right = try self.expressionAs(binary.right, siblingType(left, inherited), depth + 1);
                 }
-                const right = try self.expression(binary.right, depth + 1);
                 if (left.typeOf() != right.typeOf()) return self.context.sink.fail("E_TYPE", node.span, "constant binary operands must have the same type");
                 if (left.typeOf() == .bool) return switch (binary.op) {
                     .logical_and => .{ .bool = left.bool and right.bool },
@@ -422,6 +455,19 @@ const Evaluator = struct {
         }
     }
 };
+/// Whether a binary operator's result has its operands' type, so the expected type
+/// flows into them; comparisons and logical operators produce `bool` instead.
+fn typesResult(op: ast.BinaryOp) bool {
+    return switch (op) {
+        .eq, .ne, .lt, .le, .gt, .ge, .logical_and, .logical_or => false,
+        else => true,
+    };
+}
+/// The type a literal takes from its already evaluated sibling operand, or the
+/// inherited expectation when that operand is not an integer.
+fn siblingType(sibling: typed.Value, inherited: ?typed.Type) ?typed.Type {
+    return if (sibling.typeOf().isInteger()) sibling.typeOf() else inherited;
+}
 fn integer(value: typed.Value) i128 {
     return if (value == .i64) value.i64 else value.integer.value;
 }

@@ -20,6 +20,26 @@ def main() -> int:
     return int(21.0 * 2.0)
 ```
 
+Float literals are Python's: `1.5`, a leading dot `.5`, a trailing dot `5.`,
+exponents `1e10` and `2.5E-3`, and single underscores between digits in the mantissa
+and the exponent (`1_000.5`, `1e1_0`); leading zeros are allowed (`007.5`). `.5` is a
+float wherever an operand does not end directly before the dot, so `x.5` and `f().5`
+stay member access, and `5.name` keeps the `5` apart from `.name`. A float takes no
+integer suffix, a hexadecimal, octal or binary spelling is always an integer, and an
+imaginary literal such as `1.5j` is rejected because there are no complex numbers.
+A malformed spelling (`1_.5`, `1e`, `1.5_`) is an `E_FLOAT_LITERAL` error at the
+literal.
+
+```mylang
+# doc: expect 42
+def main() -> int:
+    if .5 + .25 != 0.75 or 5. != 5.0:
+        return 1
+    if 1_000.5 != 1000.5 or 1e1_0 != 10000000000.0 or 1.e2 != 100.0:
+        return 2
+    return int(84.0 * .5)
+```
+
 ## Semantics
 
 `+`, `-`, `*` and `/` are separate IEEE binary64 operations; no fused contraction

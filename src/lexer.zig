@@ -4,6 +4,7 @@ const Span = @import("source.zig").Span;
 const diagnostic = @import("diagnostic.zig");
 const removed_names = @import("removed_names.zig");
 const byte_literal = @import("byte_literal.zig");
+const number_literal = @import("number_literal.zig");
 /// Lexical token categories, including keywords, punctuation, literals, and end of input.
 pub const Tag = enum {
     eof,
@@ -378,6 +379,18 @@ fn quotedEnd(bytes: []const u8, start: usize, limit: usize, byte_prefix: bool, s
     return byte_literal.end(bytes, start + @as(usize, @intFromBool(byte_prefix)), sink);
 }
 
+/// Whether the previous token is an operand ending exactly at `start`, so a `.` there is
+/// member-access punctuation (`x.5`, `f().5`) rather than the start of a `.5` float.
+fn followsOperand(tokens: []const Token, start: usize) bool {
+    if (tokens.len == 0) return false;
+    const previous = tokens[tokens.len - 1];
+    if (previous.span.end != start) return false;
+    return switch (previous.tag) {
+        .ident, .integer, .bytes, .format, .rparen, .rbracket, .rbrace, .kw_true, .kw_false, .kw_none => true,
+        else => false,
+    };
+}
+
 fn tokenize(allocator: std.mem.Allocator, bytes: []const u8, span: Span, sink: *diagnostic.Sink) diagnostic.Error![]Token {
     var tokens: std.ArrayList(Token) = .empty;
     errdefer tokens.deinit(allocator);
@@ -417,8 +430,10 @@ fn tokenize(allocator: std.mem.Allocator, bytes: []const u8, span: Span, sink: *
                 try rejectRemovedWord(sink, bytes, start, i);
                 break :blk keyword(bytes[start..i]);
             }
-            if (std.ascii.isDigit(ch)) {
-                i = @import("float_syntax.zig").end(bytes, start);
+            // A number is one token whatever its spelling: `0xFF`, `1_000`, `.5`, `5.`,
+            // `1e10`, `0xFFu8`. `number_literal` validates it where the type is known.
+            if (std.ascii.isDigit(ch) or (ch == '.' and number_literal.leadingDot(bytes, start, followsOperand(tokens.items, start)))) {
+                i = number_literal.end(bytes, start);
                 break :blk .integer;
             }
             i += 1;

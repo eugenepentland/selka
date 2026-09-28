@@ -197,6 +197,7 @@ test {
     _ = @import("value_test.zig");
     _ = @import("records_test.zig");
     _ = @import("integers_test.zig");
+    _ = @import("number_literal_test.zig");
     _ = @import("arrays_test.zig");
     _ = @import("array_places_test.zig");
     _ = @import("qbe_loop_facts_test.zig");
