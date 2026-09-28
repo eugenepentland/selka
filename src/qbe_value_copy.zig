@@ -21,7 +21,7 @@ pub fn Lower(comptime E: type) type {
         /// ownership answer for it, it does.
         pub fn copies(self: *const E, pc: usize) bool {
             const analysis = self.ownership orelse return true;
-            return pc >= analysis.copies.len or analysis.copies[pc];
+            return pc >= analysis.copies.len or analysis.copies[pc] or @import("qbe_rc_mut_snapshot.zig").at(E, self, pc);
         }
         /// Whether a store only restores the same match binding after an
         /// ownership-elided payload copy, with no alternate control entry.

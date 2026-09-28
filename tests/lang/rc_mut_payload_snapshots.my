@@ -1,0 +1,52 @@
+# A snapshot of a whole `mut` collection parameter is the callee's own value,
+# and a later write through the parameter still reaches the caller
+# (RC-MUT-PAYLOAD-SNAPSHOT-1). The key of the write below reads the snapshot
+# after the receiver is captured. Answers match the collector; RC counting
+# builds balance.
+def keyed(table: mut dict[str, int]) -> int:
+    snapshot = table
+    table["k" + str(len(snapshot))] = 7
+    return 0
+
+
+def keyed_in_loop(table: mut dict[str, list[int]]) -> int:
+    round = 0
+    while round < 2:
+        round = round + 1
+        snapshot = table
+        table["k" + str(len(snapshot))] = [len(snapshot)]
+    return round
+
+
+def kept(table: mut dict[str, int]) -> int:
+    snapshot = table
+    table["k" + str(len(snapshot))] = 7
+    return len(snapshot)
+
+
+# spec: RC-MUT-PAYLOAD-SNAPSHOT-1
+public def test_a_dead_snapshot_does_not_detach_the_mut_parameter() -> bool:
+    table = {"a": 1, "b": 2}
+    _ = keyed(mut table)
+    return table == {"a": 1, "b": 2, "k2": 7}
+
+
+# spec-case: RC-MUT-PAYLOAD-SNAPSHOT-1
+public def test_snapshots_in_a_loop_do_not_detach_the_mut_parameter() -> bool:
+    table = {"a": [1], "b": [2, 2]}
+    rounds = keyed_in_loop(mut table)
+    return rounds == 2 and table == {"a": [1], "b": [2, 2], "k2": [2], "k3": [3]}
+
+
+# spec-case: RC-MUT-PAYLOAD-SNAPSHOT-1
+public def test_a_live_snapshot_keeps_its_own_value() -> bool:
+    table = {"a": 1}
+    seen = kept(mut table)
+    return seen == 1 and table == {"a": 1, "k1": 7}
+
+
+def main(out: Stream) -> int:
+    out.print(test_a_dead_snapshot_does_not_detach_the_mut_parameter())
+    out.print(test_snapshots_in_a_loop_do_not_detach_the_mut_parameter())
+    out.print(test_a_live_snapshot_keeps_its_own_value())
+    return 0
