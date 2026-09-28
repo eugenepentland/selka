@@ -34,6 +34,7 @@ const rc_scope = @import("qbe_rc_scope.zig");
 const rc_local_roles = @import("qbe_rc_local_roles.zig");
 const inert_receiver = @import("qbe_rc_inert_receiver.zig");
 const semantics = @import("value_semantics.zig");
+const Source = @import("ownership.zig").Source;
 const cow_keep_label = "@cowkeep{d}\n";
 const store_pointer = " storel %v{d}, %v{d}\n";
 const store_local = " storel %v{d}, %l{d}\n";
@@ -360,19 +361,37 @@ fn pinCallRc(comptime E: type, self: *E, callee: Callee, args: []usize, base: us
         if (position >= callee.count()) break;
         if (!callee.writes(position)) continue;
         if (!cow_plan.payloadType(self.program, callee.parameter(position))) continue;
+        const operands = self.ownership.?.operands[self.pc] orelse return error.InternalError;
+        const source = operands[base + position];
+        // COW-PIN-ELIDE-1: a callee that never shares the parameter cannot
+        // observe the pin, so only the uniqueness detach the pin follows runs.
+        if (elidesPin(E, self, callee, position, source)) {
+            try prepareMutArgument(E, self, arg, source, base + position);
+            continue;
+        }
         if (pins.len == 0) {
             pins.headers[0] = try rc_scope.callAddress(E, self);
             try rc_scope.begin(E, self, pins.headers[0]);
             pins.len = 1;
         }
-        const operands = self.ownership.?.operands[self.pc] orelse return error.InternalError;
-        try prepareMutArgument(E, self, arg, operands[base + position], base + position);
+        try prepareMutArgument(E, self, arg, source, base + position);
         try rc_scope.pin(E, self, pins.headers[0], arg.*);
     }
     return pins;
 }
 
-fn prepareMutArgumentRc(comptime E: type, self: *E, arg: *usize, source: @import("ownership.zig").Source, slot: usize) Error!void {
+/// COW-PIN-ELIDE-1: whether argument `position` of a direct call is a whole
+/// local list its callee's summary says is never shared, so no pin is needed.
+fn elidesPin(comptime E: type, self: *const E, callee: Callee, position: usize, source: Source) bool {
+    const function = switch (callee) {
+        .direct => |function| function,
+        .indirect => return false,
+    };
+    if (source.origin != .local or source.part != .whole) return false;
+    return self.stable.parameter(@intCast(@backingInt(function.id)), position);
+}
+
+fn prepareMutArgumentRc(comptime E: type, self: *E, arg: *usize, source: Source, slot: usize) Error!void {
     try rc_values.drop(E, self, slot);
     if (source.part == .whole) {
         const root = rc_unique.receiverParent(E, self, source.local) orelse source.local;
@@ -402,7 +421,7 @@ fn reuseMutArgument(comptime E: type, self: *E, arg: *usize, previous: usize, sl
 /// A later snapshot can share a mut operand after the load's first uniqueness
 /// check. The call already published roots, so this copy must use them rather
 /// than pushing the same frames again and making their next links cyclic.
-fn prepareMutArgument(comptime E: type, self: *E, arg: *usize, source: @import("ownership.zig").Source, slot: usize) Error!void {
+fn prepareMutArgument(comptime E: type, self: *E, arg: *usize, source: Source, slot: usize) Error!void {
     if (source.origin != .local or source.local >= self.function.scope.locals.len or
         (source.part != .whole and source.part != .field)) return;
     if (runtime_mode.enabled()) return prepareMutArgumentRc(E, self, arg, source, slot);

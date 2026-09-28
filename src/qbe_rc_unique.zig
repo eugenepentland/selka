@@ -68,13 +68,7 @@ fn localCall(comptime E: type, self: *E, index: usize, address: usize, guard: us
 pub fn stableMutParameter(comptime E: type, self: *E, index: usize) bool {
     const state = frame.get(E, self) orelse return false;
     if (index >= state.contract.parameters.len or state.contract.parameters[index] != .mutable_payload) return false;
-    const ty = self.function.scope.locals[index].ty;
-    if (!ty.isAggregate()) return false;
-    const record = self.program.records[ty.recordIndex()];
-    if (!record.isCollection() or record.collection.kind != .list or record.collection.box) return false;
-    const shape = state.catalog.get(record.shape.buffer orelse return false) catch return false;
-    if (shape.counted or shape.unique_drop) return false;
-    return ownership.uniqueParameter(self.function, index);
+    return @import("rc_pin_summary.zig").plainMutList(self.program, &state.catalog, self.function, index);
 }
 
 /// One ordinary or held pointer edge in an already-owned containing value.

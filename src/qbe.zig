@@ -7,6 +7,7 @@ const arena_lower = @import("qbe_arena.zig");
 const borrow_lower = @import("qbe_borrow.zig");
 const rc_borrow = @import("qbe_rc_borrow.zig");
 const rc_model = @import("rc_model.zig");
+const rc_pin_summary = @import("rc_pin_summary.zig");
 const liveness = @import("qbe_liveness.zig");
 const ownership = @import("ownership.zig");
 const cow_lower = @import("qbe_cow.zig");
@@ -350,6 +351,7 @@ fn runPasses(pass: *EmitPass, reuse: *Reuse, src: Source, standins: ?*fragments.
         pass.pure = try allocateAnalysis(pass.allocator, pass.program, own, reuse);
         break :plain own;
     };
+    pass.stable = try rc_pin_summary.compute(pass.allocator, pass.program, pass.layouts);
     try secondPass(pass.*, reuse);
     if (lean) try metaPass(pass.*, reuse, src);
     if (reuse.standin != null) try recordStandIns(pass.*, reuse, allocates);
@@ -663,6 +665,9 @@ const EmitPass = struct {
     pure: []const bool,
     /// The copy-on-write code every unit carries (`COW-UNIQUE-1`).
     cow: @import("native_interface.zig").Cow = .off,
+    /// COW-PIN-ELIDE-1: the `mut` list parameters no callee shares. Empty during
+    /// the first pass, so a stored first-pass answer never depends on it.
+    stable: rc_pin_summary.Summary = .{},
 };
 
 /// Lower one function into text allocated from `scratch`, with the pass's
@@ -688,6 +693,7 @@ fn emitEntry(pass: EmitPass, index: usize, scratch: std.mem.Allocator, certifica
         .entry = index == @backingInt(pass.program.main),
         .exit_skip = runtime_mode.enabled() and exit_skip.last(pass.program, index),
         .pure = pass.pure,
+        .stable = pass.stable,
         .cow = if (pass.cow == .off) null else try cow_lower.request(scratch, pass.cow == .counting),
     };
     const name = if (certificate) |proof| try rc_borrow.entrySymbol(scratch, pass.units[index].symbol, proof) else pass.units[index].symbol;
@@ -779,9 +785,12 @@ const Reuse = struct {
         return self.targets.?;
     }
     /// The second-pass key of function `index` under allocation analysis `pure`.
-    fn final(self: *Reuse, a: std.mem.Allocator, program: bytecode.Program, index: usize, pure: []const bool) GenerateError!fragments.Digest {
+    fn final(self: *Reuse, a: std.mem.Allocator, program: bytecode.Program, index: usize, pass: EmitPass) GenerateError!fragments.Digest {
         var key: fragments.Final = .init(self.local[index]);
-        for (try self.keys.?.callees(index)) |callee| key.callee(callee < pure.len and pure[callee], try self.parameterWrites(a, program, callee));
+        for (try self.keys.?.callees(index)) |callee| {
+            key.callee(callee < pass.pure.len and pass.pure[callee], try self.parameterWrites(a, program, callee));
+            key.stable(pass.stable.of(callee));
+        }
         if (invokes(program.functions[index])) key.targets(try self.valueTargets(a, program));
         return key.finish();
     }
@@ -1118,7 +1127,7 @@ fn secondPass(pass: EmitPass, reuse: *Reuse) GenerateError!void {
     for (program.functions, pass.units, pass.states, 0..) |function, *unit, *stacks, index| {
         if (pass.selected != null and !pass.selected.?[index]) continue;
         defer _ = scratch.reset(.retain_capacity);
-        const key = if (reuse.configured != null) try reuse.final(a, program, index, pass.pure) else undefined;
+        const key = if (reuse.configured != null) try reuse.final(a, program, index, pass) else undefined;
         reuse.finals[index] = key;
         if (reuse.configured) |configured| if (try configured.store.unit(key)) |answer| {
             unit.test_dependencies = answer.dependencies;
@@ -1462,6 +1471,8 @@ const Emitter = struct {
     /// A `.call` to a function whose entry is false needs no root push at its
     /// call site, because no collection can run while it executes.
     pure: []const bool = &.{},
+    /// COW-PIN-ELIDE-1: which `mut` list parameters of each function no callee shares.
+    stable: rc_pin_summary.Summary = .{},
     /// Temps naming the native-stack frame record, `ctx->active_frame` and
     /// `ctx->frames` while a function with a linked record is being emitted.
     record: usize = 0,
