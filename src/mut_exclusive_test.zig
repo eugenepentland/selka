@@ -135,6 +135,7 @@ test "two mut indices that are not two different constants may name one element"
     try rejects(main("    xs = [[1], [2], [3]]\n    i = 0\n    j = 1\n    two(mut xs[i], mut xs[j])\n"), "mut xs[j]", "mut xs[i]", "`i` and `j` are not");
     try rejects(main("    xs = [[1], [2], [3]]\n    i = 0\n    two(mut xs[i], mut xs[0])\n"), "mut xs[0]", "mut xs[i]", "may name one element");
     try rejects(main("    xs = [[1], [2], [3]]\n    two(mut xs[-1], mut xs[2])\n"), "mut xs[2]", "mut xs[-1]", "a negative index counts back from the end");
+    try rejects(main("    xs = [[1], [2], [3]]\n    two(mut xs[1 + 1], mut xs[0])\n"), "mut xs[0]", "mut xs[1 + 1]", "`1 + 1` and `0` are not");
     try rejects(main("    d = {1: [1], 2: [2]}\n    k = 1\n    two(mut d[k], mut d[2])\n"), "mut d[2]", "mut d[k]", "may name one entry");
     try rejects(main("    rows = [S([1], [2]), S([3], [4])]\n    i = 0\n    j = 1\n    two(mut rows[i].a, mut rows[j].a)\n"), "mut rows[j].a", "mut rows[i].a", "`i` and `j` are not");
     const table = "    t: [Status]list[int] = {Status.ok: [1], Status.failed: [2]}\n    two(mut t[Status.ok], mut t[Status.ok])\n";
@@ -151,6 +152,7 @@ test "mut arguments naming provably disjoint places stay legal" {
     try accepts(main("    rows = [S([1], [2]), S([3], [4])]\n    i = 0\n    j = 1\n    two(mut rows[i].a, mut rows[j].b)\n"));
     try accepts(main("    t: [Status]list[int] = {Status.ok: [1], Status.failed: [2]}\n    two(mut t[Status.ok], mut t[Status.failed])\n"));
     try accepts(main("    a = [1]\n    b = [2]\n    two(mut a, mut b)\n"));
+    try accepts("const LAST: int = 2\n\n" ++ comptime main("    xs = [[1], [2], [3]]\n    two(mut xs[0], mut xs[LAST])\n"));
     try accepts(main("    s = S([1], [2])\n    o = S([3], [4])\n    records(mut s, mut o)\n"));
 }
 
