@@ -9,6 +9,7 @@ const std = @import("std");
 const typed = @import("typed.zig");
 const bc = @import("bytecode.zig");
 const value_semantics = @import("value_semantics.zig");
+const evaluation_order = @import("value_semantics_order.zig");
 const Span = @import("source.zig").Span;
 const Label = enum(usize) { _ };
 const Work = union(enum) {
@@ -40,6 +41,10 @@ const Emitter = struct {
     /// VALUE-SEMANTICS-2: this function's lowering facts under value
     /// semantics, or null with the switch off (no copy is ever placed).
     values: ?*const value_semantics.Facts = null,
+    /// VALUE-SEMANTICS-14: the lent operands and read receivers a later
+    /// operand of the same expression may write, which lowering copies when
+    /// they are read; null with value semantics off.
+    snapshots: ?*const evaluation_order.Snapshots = null,
     /// Hidden locals lowering adds after the checked ones: boxed match
     /// payloads and dictionary receivers that a nested write can replace.
     extra_locals: std.ArrayList(typed.Local) = .empty,
@@ -116,6 +121,8 @@ const Emitter = struct {
     /// it: then it is a real copy taken before the call.
     fn readOnlyArgument(self: *Emitter, id: typed.NodeId, writable: []const typed.NodeId) !void {
         const values = self.values orelse return self.push(.{ .expression = id });
+        // An operand VALUE-SEMANTICS-14 snapshots is already a copy of its own.
+        if (self.snapshot(id)) return self.push(.{ .expression = id });
         if (writable.len == 0 or !value_semantics.argumentConflicts(values, id, writable)) return self.push(.{ .expression = id });
         try self.copyAfter(id, .argument);
         try self.push(.{ .expression = id });
@@ -130,6 +137,22 @@ const Emitter = struct {
             if (value_semantics.needsCopy(self.program.records, ty) and values.classify(id, target) == .place) try self.copyAfter(id, site);
         }
         try self.push(.{ .expression = id });
+    }
+    /// Whether `id` is a lent operand a later operand of the same expression
+    /// may write, so it is copied when read (VALUE-SEMANTICS-14).
+    fn snapshot(self: *const Emitter, id: typed.NodeId) bool {
+        const found = self.snapshots orelse return false;
+        return found.operand(id);
+    }
+    /// VALUE-SEMANTICS-14: a read-only collection operation whose arguments
+    /// may write its receiver reads a copy of the receiver taken before them.
+    /// Returns the local the operation reads: that copy, or its own owner.
+    fn capturedReceiver(self: *Emitter, id: typed.NodeId, owner: typed.LocalId) !typed.LocalId {
+        const found = self.snapshots orelse return owner;
+        if (!found.receiver(id)) return owner;
+        const node = self.program.nodes[@backingInt(id)];
+        const ty = self.values.?.function.scope.locals[@backingInt(owner)].ty;
+        return self.hiddenLocal(ty, node.span, "<receiver>");
     }
     /// Queue the one `value_copy` of `id`'s value, to run after it.
     fn copyAfter(self: *Emitter, id: typed.NodeId, site: bc.CopySite) !void {
@@ -427,16 +450,7 @@ const Emitter = struct {
             },
             .boolean => |value| try self.instruction(node.span, .{ .push_bool = value }),
             .unit => try self.instruction(node.span, .push_unit),
-            .buffer_operation => |operation| {
-                if (value_semantics.shallowResult(operation.kind)) try self.childrenCopy(id);
-                try self.instruction(node.span, .{ .buffer_operation = .{ .kind = operation.kind, .owner = operation.owner, .output = node.ty } });
-                const stored = self.storedArgument(operation);
-                var i = operation.arguments.len;
-                while (i > 0) {
-                    i -= 1;
-                    if (stored == i) try self.transfer(operation.arguments[i], .store, null) else try self.push(.{ .expression = operation.arguments[i] });
-                }
-            },
+            .buffer_operation => |operation| try self.emitBufferOperation(id, operation),
             .arena_escape => |value| {
                 try self.instruction(node.span, .{ .arena_escape = node.ty });
                 try self.push(.{ .expression = value });
@@ -562,6 +576,27 @@ const Emitter = struct {
             },
         }
     }
+    /// A collection operation on its owner local: the arguments evaluate in
+    /// order, a stored one as a transfer, then the operation runs.
+    fn emitBufferOperation(self: *Emitter, id: typed.NodeId, operation: @FieldType(@FieldType(typed.Node, "data"), "buffer_operation")) !void {
+        const node = self.program.nodes[@backingInt(id)];
+        if (value_semantics.shallowResult(operation.kind)) try self.childrenCopy(id);
+        const receiver = try self.capturedReceiver(id, operation.owner);
+        try self.instruction(node.span, .{ .buffer_operation = .{ .kind = operation.kind, .owner = receiver, .output = node.ty } });
+        const stored = self.storedArgument(operation);
+        var i = operation.arguments.len;
+        while (i > 0) {
+            i -= 1;
+            if (stored == i) try self.transfer(operation.arguments[i], .store, null) else try self.push(.{ .expression = operation.arguments[i] });
+        }
+        if (receiver == operation.owner) return;
+        // VALUE-SEMANTICS-14: the captured receiver is copied before the
+        // arguments evaluate.
+        const ty = self.values.?.function.scope.locals[@backingInt(operation.owner)].ty;
+        try self.instruction(node.span, .{ .store_local = receiver });
+        try self.instruction(node.span, .{ .value_copy = .{ .ty = ty, .site = .argument } });
+        try self.instruction(node.span, .{ .load_local = operation.owner });
+    }
     // A variant receives its independent payload before a recursive edge boxes it.
     fn emitVariant(self: *Emitter, node: typed.Node) !void {
         const variant = node.data.variant;
@@ -661,7 +696,11 @@ const Emitter = struct {
         while (self.work.pop()) |task| switch (task) {
             .instruction => |inst| try self.code.append(self.scratch, inst),
             .statement => |id| try self.emitStatement(id),
-            .expression => |id| try self.emitExpression(id),
+            .expression => |id| {
+                // Pushed first, so it runs once the whole operand is evaluated.
+                if (self.snapshot(id)) try self.copyAfter(id, .argument);
+                try self.emitExpression(id);
+            },
             .propagate => |propagate| {
                 try self.fixups.append(self.scratch, .{ .instruction = self.code.items.len, .label = propagate.target, .propagation = true });
                 try self.code.append(self.scratch, .{ .span = propagate.span, .op = .{ .try_result = .{ .input = propagate.input, .output = propagate.output, .error_target = 0 } } });
@@ -807,9 +846,12 @@ fn lowerFunction(allocators: Allocators, program: typed.Program, function: typed
     var emitter: Emitter = .{ .allocator = allocators.output, .scratch = allocators.scratch, .program = program, .drop_debug = drop_debug, .declared_locals = function.scope.locals.len };
     defer emitter.loops.deinit(allocators.scratch);
     var facts: value_semantics.Facts = undefined;
+    var snapshots: evaluation_order.Snapshots = undefined;
     if (value_semantics.enabled() and with_body and function.policy.host == null) {
         facts = try value_semantics.Facts.collect(allocators.scratch, program, function);
         emitter.values = &facts;
+        snapshots = try evaluation_order.find(allocators.scratch, &facts);
+        emitter.snapshots = &snapshots;
     }
     defer emitter.extra_locals.deinit(allocators.scratch);
     const instructions = if (with_body and function.policy.host == null) try emitter.finish(function.scope.body) else &.{};

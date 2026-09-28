@@ -191,8 +191,10 @@ fn validBorrow(ctx: *const Context, local: u32, d: u32) bool {
     for (ctx.instructions(), 0..) |instruction, pc| {
         if (!ctx.reachable(pc) or pc == d) continue;
         const live = ctx.live.before(pc, local);
-        // A `mut` record argument also ends a borrow whose value it passes.
-        if (!live and instruction.op != .ref_local) continue;
+        // A `mut` record argument also ends a borrow whose value it passes,
+        // and any write ends one whose value is still on the operand stack.
+        const passes = instruction.op == .ref_local or ctx.heldOnStack(pc, local);
+        if (!live and !passes) continue;
         const released = !stable and !ctx.live.before(pc, root);
         if (live and released) return false;
         if (ctx.writesTree(pc, root, through) and ctx.observesWrite(pc, local)) return false;

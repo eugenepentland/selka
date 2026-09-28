@@ -269,22 +269,27 @@ pub const Context = struct {
     /// Whether borrow `local` can observe the write of its root's tree that
     /// `writesTree` found at `pc`: `local` is live on entry to `pc`, unless the
     /// write is a `mut` record argument the callee performs only after every
-    /// read of `local` (OWNERSHIP-MUT-RECORD-WRITE-2); or the write is a `mut`
-    /// record argument and a value sharing `local`'s storage is already on the
-    /// operand stack, where the callee receives it (`hold(box.names, mut
-    /// state)`) or it outlives the call.
+    /// read of `local` (OWNERSHIP-MUT-RECORD-WRITE-2); or a value sharing
+    /// `local`'s storage is already on the operand stack and outlives the
+    /// write, where a consumer reads it afterwards (`hold(box.names, mut
+    /// state)`, `hold(box.names, mut state.boxes)`, `lst(ys, push(mut xs))`
+    /// with `ys = xs`; OWNERSHIP-MUT-RECORD-WRITE-3).
     pub fn observesWrite(self: *const Context, pc: usize, local: u32) bool {
-        if (self.instructions()[pc].op == .ref_local and self.heldOnStack(pc, local)) return true;
+        if (self.heldOnStack(pc, local)) return true;
         return self.live.before(pc, local) and !self.deferredRefWrite(pc, local);
     }
 
-    // Whether a managed value read out of `local` (the local itself, or a
-    // field or element of it) is on the operand stack on entry to `pc`.
-    fn heldOnStack(self: *const Context, pc: usize, local: u32) bool {
+    /// Whether a managed value read out of `local` (the local itself, or a
+    /// field or element of it) is on the operand stack on entry to `pc` and
+    /// stays there past it: the operands `pc` itself consumes are read
+    /// there, not after it.
+    pub fn heldOnStack(self: *const Context, pc: usize, local: u32) bool {
         const stack = self.flow.at[pc] orelse return false;
         const types = self.code.states[pc] orelse return false;
         if (stack.len != types.len) return true;
-        for (stack, types) |operand, ty| {
+        const pops = @min(self.flow.pops[pc], stack.len);
+        const kept = stack.len - pops;
+        for (stack[0..kept], types[0..kept]) |operand, ty| {
             if (operand.origin == .local and operand.local == local and self.managedType(ty)) return true;
         }
         return false;

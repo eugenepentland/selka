@@ -63,8 +63,10 @@ fn readOnlyShare(ctx: *const model.Context, target: u32, local: u32) bool {
     for (ctx.instructions(), 0..) |instruction, pc| {
         if (!ctx.reachable(pc)) continue;
         const live = ctx.live.before(pc, target);
-        // A `mut` record argument also ends a share whose value it passes.
-        if (!live and instruction.op != .ref_local) continue;
+        // A `mut` record argument also ends a share whose value it passes,
+        // and any write ends one whose value is still on the operand stack.
+        const passes = instruction.op == .ref_local or ctx.heldOnStack(pc, target);
+        if (!live and !passes) continue;
         const released = !stable and !ctx.live.before(pc, root);
         if (live and released) return false;
         if (ctx.writesTree(pc, root, null) and ctx.observesWrite(pc, target)) return false;
