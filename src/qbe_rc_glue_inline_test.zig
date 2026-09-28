@@ -105,3 +105,19 @@ test "RC flat records of a few list leaves drop inline and other shapes call the
     defer counted.deinit();
     try t.expect(!contains(try named(counted.value, "swap"), "# RC-FLAT-DROP-1"));
 }
+
+// spec-case: RC-FLAT-DROP-1
+test "RC flat drops inline only a local's replaced value" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    var manifest = try emitted();
+    defer manifest.deinit();
+    // The stores into `current` replace a frame inline; the return's exit
+    // drops of the same type keep their glue calls.
+    const il = try named(manifest.value, "swap");
+    const exit = std.mem.indexOf(u8, il, "# rc-exit") orelse return error.TestUnexpectedResult;
+    try t.expect(contains(il[0..exit], "# RC-FLAT-DROP-1"));
+    try t.expect(!contains(il[exit..], "# RC-FLAT-DROP-1"));
+    try t.expect(contains(il[exit..], "_rcg_drop("));
+}

@@ -148,6 +148,7 @@ pub fn publish(comptime E: type, self: *E, operation: Publish) Error!void {
 // Whether `ty` is one pointer to a list or dictionary: a payload the glue's
 // share step always marks when it is not already shared or immortal.
 fn mutablePointer(comptime E: type, self: *E, ty: typed.Type) Error!bool {
+    if (comptime !@hasField(E, "layouts")) return false;
     if (try pointerEdge(E, self, ty) != .owners) return false;
     if (!ty.isAggregate()) return false;
     const record = self.layouts.records[ty.recordIndex()];
@@ -225,7 +226,9 @@ pub fn take(comptime E: type, self: *E, operation: Transfer) Error!void {
 /// Clear the value and release each edge's own token.
 pub fn drop(comptime E: type, self: *E, operation: Release) Error!void {
     const edge = try pointerEdge(E, self, operation.ty);
-    if (edge == null and hotSite(E, self)) if (try flatOwners(E, self, operation.ty)) |flat| return dropFlat(E, self, operation, flat);
+    if (comptime @hasField(E, "layouts") and @hasField(E, "function")) {
+        if (edge == null and hotSite(E, self)) if (try flatOwners(E, self, operation.ty)) |flat| return dropFlat(E, self, operation, flat);
+    }
     return release(E, self, operation, .drop, edge);
 }
 
