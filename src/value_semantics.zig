@@ -282,7 +282,11 @@ pub const Facts = struct {
             .index => |access| self.classify(access.base, null),
             .block_value => |block| self.classify(block.value, target),
             .propagate => |propagate| self.classify(propagate.value, null),
-            .unwrap, .wrap, .cast => |value| self.classify(value, null),
+            .unwrap, .wrap => |value| self.classify(value, null),
+            // `byte_buffer(values)` widens a `list[int]` into octet storage of its
+            // own, so it reads nothing the list keeps. Any other conversion is
+            // read through to its source.
+            .cast => |value| if (isByteBuffer(self.program.records, node.ty)) .fresh else self.classify(value, null),
             .update => |update| if (self.rootedAt(update.base, target)) .fresh else self.classify(update.base, null),
             .replace => |replace| if (self.rootedAt(replace.base, target)) .fresh else self.classify(replace.base, null),
             .buffer_operation => |operation| bufferSource(operation.kind),
@@ -290,6 +294,14 @@ pub const Facts = struct {
         };
     }
 };
+
+/// Whether `ty` is the mutable `byte_buffer`, the one byte kind a conversion
+/// builds from a list rather than snapshotting an existing byte string.
+fn isByteBuffer(records: []const typed.Record, ty: typed.Type) bool {
+    if (!ty.isAggregate() or ty.recordIndex() >= records.len) return false;
+    const record = records[ty.recordIndex()];
+    return record.managed and record.collection.kind == .bytes and !typed.isByteString(record);
+}
 
 /// Whether a collection operation's result reads storage the receiver keeps:
 /// an element or value read, or `setdefault`'s stored value. A `pop` takes its

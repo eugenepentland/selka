@@ -340,6 +340,37 @@ test "a transfer neither side writes is a borrow and copies nothing" {
     try t.expectEqual(@as(usize, 0), on.copies);
 }
 
+// spec: VALUE-BUFFER-FRESH-1
+test "a byte_buffer built from a list is fresh and copies nothing" {
+    const built =
+        \\def main() -> int:
+        \\    values: list[int] = [1, 2]
+        \\    buffer = byte_buffer(values)
+        \\    _ = buffer.append_byte(3)
+        \\    return len(buffer) + len(values)
+        \\
+    ;
+    // Only the list literal's transfer into `values` is a site. Before the rule
+    // the conversion into `buffer` was a second site and a copy.
+    const on = try sites(built, true);
+    try t.expectEqual(@as(usize, 1), on.placed);
+    try t.expectEqual(@as(usize, 0), on.copies);
+    // Only the conversion is fresh: naming the buffer again still transfers a
+    // place.
+    const renamed =
+        \\def main() -> int:
+        \\    values: list[int] = [1, 2]
+        \\    buffer = byte_buffer(values)
+        \\    other = buffer
+        \\    _ = other.append_byte(3)
+        \\    return len(buffer) + len(other)
+        \\
+    ;
+    const again = try sites(renamed, true);
+    try t.expect(again.placed >= 1);
+    try t.expect(again.copies >= 1);
+}
+
 // spec-case: VALUE-SEMANTICS-2
 test "a read-only list taken from a record borrows until a write" {
     const through_class =
