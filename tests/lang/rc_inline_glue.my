@@ -1,0 +1,66 @@
+module rc_inline_glue
+
+# Inline list publication (RC-PUBLISH-FAST-1) and inline drops of flat
+# records of list fields (RC-FLAT-DROP-1) keep value semantics and counts.
+# Every test also runs under GC and `--gc-stress`.
+record Frame:
+    constants: list[int]
+    code: list[int]
+    names: list[str]
+    ip: int
+
+
+record Holder:
+    frame: Frame
+    items: list[int]
+
+
+record Wide:
+    a: list[int]
+    b: list[int]
+    c: list[int]
+    d: list[int]
+    e: list[int]
+
+
+def load(holder: Holder) -> Frame:
+    return Frame(holder.frame.constants, holder.items, holder.frame.names, holder.frame.ip + 1)
+
+
+# spec-case: RC-PUBLISH-FAST-1
+public def test_published_lists_are_independent_values() -> bool:
+    holder = Holder(Frame([1], [2], ["a"], 0), [3])
+    frame = load(holder)
+    frame.constants.append(4)
+    frame.code.append(5)
+    return holder.frame.constants == [1] and holder.items == [3] and frame.constants == [1, 4] and frame.code == [3, 5]
+
+
+# spec-case: RC-FLAT-DROP-1
+public def test_replaced_frames_release_their_lists() -> bool:
+    holder = Holder(Frame([1], [2], ["a"], 0), [3])
+    frame = load(holder)
+    total = 0
+    i = 0
+    while i < 50:
+        frame = load(holder)
+        total += frame.ip + len(frame.code)
+        i += 1
+    return total == 100 and holder.frame.ip == 0
+
+
+public def test_frames_sharing_lists_keep_them_alive() -> bool:
+    shared = [7, 8]
+    first = Frame(shared, shared, ["x"], 0)
+    second = first
+    first = Frame([], [], [], 1)
+    second.code.append(9)
+    return second.constants == [7, 8] and second.code == [7, 8, 9] and shared == [7, 8] and first.ip == 1
+
+
+public def test_wide_records_keep_their_glue_drop() -> bool:
+    wide = Wide([1], [2], [3], [4], [5])
+    other = wide
+    wide = Wide([], [], [], [], [6])
+    other.e.append(7)
+    return other.e == [5, 7] and wide.e == [6] and other.a == [1]
