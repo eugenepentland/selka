@@ -59,7 +59,10 @@ fn writeInstruction(writer: *std.Io.Writer, program: bc.Program, src: Source, in
     switch (instruction.op) {
         .unary_float => |op| try writer.print("unary_float {s}", .{@tagName(op)}),
         .push_i64 => |value| try writer.print("PUSH_I64 {d}", .{value}),
-        .make_record => |record| try writer.print("MAKE_RECORD type#{d} fields={d} order={any}", .{ @backingInt(record.ty), record.fields, record.order }),
+        .make_record => |record| {
+            try writer.print("MAKE_RECORD type#{d} fields={d} order={any}", .{ @backingInt(record.ty), record.fields, record.order });
+            if (record.payload.len != 0) try writer.print(" payload={d}", .{record.payload.len});
+        },
         .update_record => |update| try writer.print("UPDATE_RECORD type#{d} fields={any}", .{ @backingInt(update.ty), update.indices }),
         .get_index => |access| try writer.print("GET_INDEX {s}{s}", .{ typed.typeName(access.ty, program.records), fromEnd(access) }),
         .replace_index => |access| try writer.print("REPLACE_INDEX {s}{s}", .{ typed.typeName(access.ty, program.records), fromEnd(access) }),

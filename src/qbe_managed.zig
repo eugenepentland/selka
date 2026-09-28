@@ -64,6 +64,9 @@ const Frozen = struct {
     scalars: usize,
     ascii: bool,
     digest: [32]u8,
+    /// The literal's octets when its constructor carries them (`LITERAL-PAYLOAD-1`),
+    /// empty when they are spelled by the constant pushes before it.
+    payload: []const u8 = &.{},
 };
 /// The element descriptor a frozen text literal's object header stores: a text's
 /// payload is octets and holds no traced pointer, so the collector never walks it.
@@ -460,10 +463,12 @@ fn frozenLiteral(comptime E: type, self: *E, record: MakeRecord, element: typed.
         .scalars = count,
         .ascii = true,
         .digest = undefined,
+        .payload = record.payload,
     };
     var hasher = std.crypto.hash.sha2.Sha256.init(.{});
     hasher.update(frozen.element);
     hasher.update(&[_]u8{0});
+    if (record.payload.len != 0) return payloadLiteral(&frozen, &hasher, text);
     var scratch: [8]u8 = undefined;
     var octets: usize = 0;
     for (0..count) |i| {
@@ -482,6 +487,21 @@ fn frozenLiteral(comptime E: type, self: *E, record: MakeRecord, element: typed.
     hasher.final(&frozen.digest);
     _ = std.fmt.bufPrint(&frozen.name, "myl_lit_{s}", .{std.fmt.bytesToHex(frozen.digest, .lower)}) catch return error.InternalError;
     return frozen;
+}
+/// Finish a frozen literal whose constructor carries its octets. The digest
+/// covers the same bytes the constant pushes would have hashed one by one, so
+/// a literal has one symbol however its bytecode spelled it.
+fn payloadLiteral(frozen: *Frozen, hasher: *std.crypto.hash.sha2.Sha256, text: bool) Error!?Frozen {
+    const payload = frozen.payload;
+    hasher.update(payload);
+    frozen.count = payload.len;
+    if (text) {
+        frozen.scalars = std.unicode.utf8CountCodepoints(payload) catch return error.InternalError;
+        frozen.ascii = frozen.scalars == payload.len;
+    } else frozen.scalars = payload.len;
+    hasher.final(&frozen.digest);
+    _ = std.fmt.bufPrint(&frozen.name, "myl_lit_{s}", .{std.fmt.bytesToHex(frozen.digest, .lower)}) catch return error.InternalError;
+    return frozen.*;
 }
 /// The UTF-8 encoding of one pushed scalar, or null when the value is not a
 /// Unicode scalar value and so could not be part of a text.
@@ -502,6 +522,11 @@ fn emitFrozen(comptime E: type, self: *E, frozen: Frozen, base: usize) Error!voi
     try self.print("{s}{s} {s} {d} {d} ", .{ literal_marker, frozen.name[0..], frozen.element, frozen.width, frozen.count });
     const pushes = if (frozen.width == 0) frozen.scalars else frozen.count;
     if (frozen.width == 0) try self.print("{d} {d} ", .{ frozen.scalars, @intFromBool(frozen.ascii) });
+    if (frozen.payload.len != 0) {
+        try self.print("{x}\n", .{frozen.payload});
+        try self.store(base, result);
+        return;
+    }
     const first = self.pc - pushes;
     var scratch: [8]u8 = undefined;
     for (0..pushes) |i| {

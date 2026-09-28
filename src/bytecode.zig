@@ -533,6 +533,7 @@ fn validateOpAcquireBuffer(program: Program, ty: @FieldType(@FieldType(Instructi
 fn validateOpMakeRecord(allocator: std.mem.Allocator, program: Program, record: @FieldType(@FieldType(Instruction, "op"), "make_record")) Error!void {
     if (!record.ty.isAggregate() or !validType(record.ty, program)) return error.InternalError;
     if (program.records[record.ty.recordIndex()].shape.resource != null) return error.InternalError;
+    if (record.payload.len != 0) return validateLiteralPayload(program.records[record.ty.recordIndex()], record);
     if (program.records[record.ty.recordIndex()].managed and program.records[record.ty.recordIndex()].collection.kind != .list) {
         if (record.order.len != 0) return error.InternalError;
         if (program.records[record.ty.recordIndex()].collection.kind == .dictionary and record.fields % 2 != 0) return error.InternalError;
@@ -546,6 +547,15 @@ fn validateOpMakeRecord(allocator: std.mem.Allocator, program: Program, record: 
         if (record.order.len != record.fields) return error.InternalError;
         try validateIndices(allocator, record.order, record.fields);
     }
+}
+
+/// `LITERAL-PAYLOAD-1`: a constructor carrying a payload is a `str` literal of
+/// valid UTF-8 or a `bytes` literal, pops nothing and has no field order.
+fn validateLiteralPayload(schema: typed.Record, record: @FieldType(@FieldType(Instruction, "op"), "make_record")) Error!void {
+    if (record.fields != 0 or record.order.len != 0 or !schema.managed) return error.InternalError;
+    if (schema.collection.kind == .string) {
+        if (!std.unicode.utf8ValidateSlice(record.payload)) return error.InternalError;
+    } else if (!typed.isByteString(schema) or schema.shape.buffer != .u8) return error.InternalError;
 }
 
 fn validateOpUpdateRecord(allocator: std.mem.Allocator, program: Program, update: @FieldType(@FieldType(Instruction, "op"), "update_record")) Error!void {

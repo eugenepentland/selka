@@ -373,6 +373,18 @@ const Emitter = struct {
         try self.instruction(span, .{ .value_copy = .{ .ty = ty, .site = .payload } });
         try self.instruction(span, if (handled) .{ .move_local = slot } else .{ .load_local = slot });
     }
+    /// LITERAL-PAYLOAD-1: the content of a `str`/`bytes` literal whose every
+    /// element is a constant, or null for any other array. Such a literal is one
+    /// instruction carrying its octets, not one push per element.
+    fn literalPayload(self: *Emitter, node: typed.Node, values: []const typed.NodeId) !?[]const u8 {
+        if (!node.ty.isAggregate() or node.ty.recordIndex() >= self.program.records.len) return null;
+        const schema = self.program.records[node.ty.recordIndex()];
+        const text = schema.managed and schema.collection.kind == .string;
+        const octets = typed.isByteString(schema) and schema.shape.buffer == .u8;
+        if (!text and !octets) return null;
+        const content = try @import("constant_literal.zig").payload(self.allocator, self.program.nodes, values, text);
+        return content;
+    }
     fn emitExpression(self: *Emitter, id: typed.NodeId) !void {
         const node = self.program.nodes[@backingInt(id)];
         switch (node.data) {
@@ -394,6 +406,10 @@ const Emitter = struct {
             },
             .variant => try self.emitVariant(node),
             .array => |values| {
+                if (try self.literalPayload(node, values)) |octets| {
+                    try self.instruction(node.span, .{ .make_record = .{ .ty = node.ty, .fields = 0, .payload = octets } });
+                    return;
+                }
                 try self.instruction(node.span, .{ .make_record = .{ .ty = node.ty, .fields = values.len } });
                 var i = values.len;
                 while (i > 0) {
