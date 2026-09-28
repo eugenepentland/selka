@@ -212,8 +212,10 @@ test "RC field reads of a mut root passed straight to a call take no loan" {
 }
 
 // spec-case: RC-OPERAND-ANCHOR-1
-test "RC field reads keep their loan when the root is passed mut before the call" {
-    try t.expect(try operationsIn(operand, "reset_global") > 0);
+test "RC field reads stay protected when the root is passed mut before the call" {
+    // VALUE-SEMANTICS-14 copies the lent read, since `reset(mut rt)` may
+    // write it: the copy publishes an owner where the read took a loan.
+    try t.expect(try markersIn(operand, "reset_global", "# RC-GLUE-1 publish") > 0);
 }
 
 // spec-case: RC-BORROW-MATCH-1
