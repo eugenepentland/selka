@@ -1,0 +1,94 @@
+module rc_byte_receivers
+# RC-INERT-BYTES-RECEIVER-1 and RC-OPERAND-ANCHOR-2: a byte buffer held in a
+# `mut` record is appended to and measured in place, with value semantics kept.
+
+
+record Output:
+    buffer: byte_buffer
+    failed: bool
+
+
+def output() -> Output:
+    values: list[int] = []
+    return Output(buffer=byte_buffer(values), failed=False)
+
+
+def append(out: mut Output, value: bytes):
+    if out.failed:
+        return
+    if len(out.buffer) > 64 - len(value):
+        out.failed = True
+        return
+    if not out.buffer.append_range(value, 0, len(value)):
+        out.failed = True
+    return
+
+
+def append_byte(out: mut Output, value: u8):
+    if len(out.buffer) == 64:
+        out.failed = True
+        return
+    if not out.buffer.append_byte(int(value)):
+        out.failed = True
+
+
+def append_int(out: mut Output, value: int):
+    if not out.buffer.append_int(value):
+        out.failed = True
+
+
+def append_text(out: mut Output, value: str):
+    if not out.buffer.append_utf8(value):
+        out.failed = True
+
+
+# Near misses: a computed or rebound input keeps the receiver scope.
+def append_twice(out: mut Output, value: bytes):
+    if not out.buffer.append_range(value + value, 0, 2 * len(value)):
+        out.failed = True
+
+
+def append_rebound(out: mut Output, value: bytes):
+    copy = value
+    copy = copy + b"!"
+    if not out.buffer.append_range(copy, 1, len(copy)):
+        out.failed = True
+
+
+# spec-case: RC-INERT-BYTES-RECEIVER-1
+public def test_appends_through_a_mut_record_field_write_in_place() -> bool:
+    out = output()
+    append(mut out, b"ab")
+    append_byte(mut out, 67u8)
+    append_int(mut out, -12)
+    append_text(mut out, "λ")
+    return bytes(out.buffer) == b"abC-12\xce\xbb" and not out.failed
+
+
+# spec-case: RC-INERT-BYTES-RECEIVER-1
+public def test_appending_a_snapshot_of_the_same_buffer_reads_the_old_octets() -> bool:
+    out = output()
+    append(mut out, b"abc")
+    snapshot = bytes(out.buffer)
+    append(mut out, snapshot)
+    append(mut out, bytes(out.buffer))
+    return bytes(out.buffer) == b"abcabcabcabc" and snapshot == b"abc"
+
+
+# spec-case: RC-INERT-BYTES-RECEIVER-1
+public def test_computed_and_rebound_inputs_keep_their_scopes() -> bool:
+    out = output()
+    append_twice(mut out, b"ab")
+    append_rebound(mut out, b"cd")
+    return bytes(out.buffer) == b"ababd!"
+
+
+# spec-case: RC-OPERAND-ANCHOR-2
+public def test_length_limits_read_the_field_in_place() -> bool:
+    out = output()
+    i = 0
+    while i < 40:
+        append(mut out, b"0123")
+        i += 1
+    append_byte(mut out, 48u8)
+    return out.failed and len(out.buffer) == 64

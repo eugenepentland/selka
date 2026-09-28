@@ -259,3 +259,30 @@ test "RC records copied out of a read-only list into a named local take no token
     ;
     try t.expectEqual(@as(usize, 0), try operationsIn(records, "count"));
 }
+
+// spec: RC-OPERAND-ANCHOR-2
+test "RC length reads of a mut record's field take no loan" {
+    const lengths =
+        \\record Output:
+        \\    buffer: byte_buffer
+        \\    items: list[str]
+        \\    failed: bool
+        \\def full(out: mut Output, limit: int) -> bool:
+        \\    if len(out.buffer) > limit or len(out.items) > limit:
+        \\        out.failed = True
+        \\    return out.failed
+        \\def kept(out: mut Output, limit: int) -> int:
+        \\    items = out.items
+        \\    out.items = ["b"]
+        \\    return len(items) + limit
+        \\def main() -> int:
+        \\    values: list[int] = []
+        \\    out = Output(byte_buffer(values), ["a"], False)
+        \\    if full(mut out, 3):
+        \\        return 1
+        \\    return kept(mut out, 3)
+    ;
+    try t.expectEqual(@as(usize, 0), try operationsIn(lengths, "full"));
+    // A named copy that outlives a write of the record keeps its owner.
+    try t.expect(try operationsIn(lengths, "kept") > 0);
+}
