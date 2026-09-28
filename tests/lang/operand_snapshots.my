@@ -473,3 +473,44 @@ public def test_fixed_array_index_base() -> bool:
     arr: [2]list[int] = [[1], [2]]
     v = len(arr[arr_touch(mut arr)])
     return v == 1 and len(arr[0]) == 2
+
+
+def first[T](a: list[T], b: int) -> int:
+    return len(a) * 100 + b
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_generic_call() -> bool:
+    xs = [1, 2, 3]
+    v = first(xs, push(mut xs))
+    return v == 301
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_builtin_in_later_operand() -> bool:
+    xs = [3, 1, 2]
+    v = lst(xs, len(sorted(pushed_copy(mut xs))))
+    return v == 304
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_call_inside_arena() -> bool:
+    xs = [1, 2, 3]
+    v = 0
+    with arena():
+        v = lst(xs, push(mut xs))
+    return v == 301 and len(xs) == 4
+
+
+# spec: PRELUDE-EXTREME-2
+public def test_max_of_two_evaluates_each_argument_once() -> bool:
+    xs = [1, 2, 3]
+    v = max(len(xs), push(mut xs) + len(xs))
+    return v == 5 and len(xs) == 4
+
+
+# spec-case: PRELUDE-EXTREME-2
+public def test_min_of_two_evaluates_each_argument_once() -> bool:
+    xs = [1, 2, 3]
+    v = min(10, push(mut xs) + len(xs))
+    return v == 5 and len(xs) == 4
