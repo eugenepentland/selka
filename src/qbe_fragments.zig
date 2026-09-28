@@ -438,6 +438,15 @@ pub const Final = struct {
         self.hash.update(&length);
         for (writes) |flag| self.hash.update(&.{@intFromBool(flag)});
     }
+    /// Add which `mut` list parameters of the last named callee no callee shares
+    /// (COW-PIN-ELIDE-1), which decides whether a call site pins them.
+    pub fn stable(self: *Final, flags: []const bool) void {
+        self.hash.update("pins");
+        var length: [8]u8 = undefined;
+        std.mem.writeInt(u64, &length, flags.len, .little);
+        self.hash.update(&length);
+        for (flags) |flag| self.hash.update(&.{@intFromBool(flag)});
+    }
     /// Add the function-value target set an indirect call depends on.
     pub fn targets(self: *Final, digest: Digest) void {
         self.hash.update(&digest);

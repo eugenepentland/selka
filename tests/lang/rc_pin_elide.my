@@ -1,0 +1,381 @@
+module rc_pin_elide
+
+# A `mut` list argument is not pinned when the callee provably never shares it
+# (COW-PIN-ELIDE-1). Every test here calls a function whose parameter is, or is
+# not, in that summary and then tries to observe a difference from the pinned
+# call: a snapshot taken before, during or after, a value that escaped the
+# callee, a write during iteration. Both runtimes must agree with the answers
+# written down.
+
+record Body:
+    x: float
+    v: float
+
+
+record Holder:
+    items: list[int]
+
+
+record Frame:
+    rows: list[list[int]]
+
+
+# ---- callees the summary accepts (element reads and writes, passing on) ----
+
+
+def bump(xs: mut list[int], i: int) -> int:
+    xs[i] = xs[i] + 1
+    return len(xs)
+
+
+def swap(xs: mut list[int], i: int, j: int):
+    tmp = xs[i]
+    xs[i] = xs[j]
+    xs[j] = tmp
+
+
+def sort(xs: mut list[int], lo: int, hi: int):
+    if lo >= hi:
+        return
+    if xs[lo] > xs[hi]:
+        swap(mut xs, lo, hi)
+    sort(mut xs, lo + 1, hi)
+    sort(mut xs, lo, hi - 1)
+
+
+def ping(xs: mut list[int], n: int) -> int:
+    if n <= 0:
+        return len(xs)
+    xs[0] = xs[0] + 1
+    return pong(mut xs, n - 1)
+
+
+def pong(xs: mut list[int], n: int) -> int:
+    if n <= 0:
+        return len(xs)
+    xs[1] = xs[1] + 10
+    return ping(mut xs, n - 1)
+
+
+def step(bodies: mut list[Body], dt: float):
+    for i in range(len(bodies)):
+        b = bodies[i]
+        bodies[i].x = b.x + b.v * dt
+        bodies[i].v = b.v * 0.5
+
+
+def relay(xs: mut list[int]) -> int:
+    xs[0] = xs[0] + 100
+    return bump(mut xs, 1)
+
+
+# ---- callees the summary must reject (each shares, grows or iterates) ----
+
+
+def snap(xs: mut list[int]) -> int:
+    copy = xs
+    xs[0] = 9
+    return copy[0]
+
+
+def keep(xs: mut list[int]) -> Holder:
+    xs[0] = 9
+    return Holder(xs)
+
+
+def stash(xs: mut list[int], into: mut Frame):
+    xs[0] = 9
+    into.rows.append(xs)
+
+
+def index(xs: mut list[int], table: mut dict[int, list[int]]):
+    xs[0] = 9
+    table[1] = xs
+
+
+def give(xs: mut list[int]) -> list[int]:
+    xs[0] = 9
+    return xs
+
+
+def peek(xs: list[int]) -> Holder:
+    return Holder(xs)
+
+
+def look(xs: mut list[int]) -> Holder:
+    xs[0] = 9
+    holder = peek(xs)
+    xs[1] = 8
+    return holder
+
+
+def grow(xs: mut list[int]) -> int:
+    xs[0] = 9
+    xs.append(7)
+    return len(xs)
+
+
+def walk(xs: mut list[int]) -> int:
+    total = 0
+    for x in xs:
+        xs[0] = x + 1
+        total = total + x
+    return total
+
+
+def relay_snap(xs: mut list[int]) -> int:
+    xs[0] = xs[0] + 100
+    return snap(mut xs)
+
+
+def relay_grow(xs: mut list[int]) -> int:
+    xs[0] = xs[0] + 100
+    return grow(mut xs)
+
+
+def descend(xs: mut list[int], n: int) -> int:
+    if n == 0:
+        xs.append(1)
+        return len(xs)
+    xs[0] = xs[0] + 1
+    return descend(mut xs, n - 1)
+
+
+def apply(f: def(mut list[int]) -> int, xs: mut list[int]) -> int:
+    return f(mut xs)
+
+
+def poke(xs: mut list[int]) -> int:
+    xs[0] = xs[0] + 5
+    return len(xs)
+
+
+# ---- writes through the parameter reach the caller ----
+
+
+# spec-case: COW-PIN-ELIDE-1
+public def test_a_write_through_an_unpinned_parameter_reaches_the_caller() -> bool:
+    xs = [1, 2, 3]
+    n = bump(mut xs, 2)
+    return n == 3 and xs[0] == 1 and xs[2] == 4
+
+
+# spec-case: COW-PIN-ELIDE-1
+public def test_recursive_sort_and_swap_sort_in_place() -> bool:
+    xs = [5, 3, 4, 1, 2]
+    sort(mut xs, 0, 4)
+    return xs == [1, 2, 3, 4, 5]
+
+
+# spec-case: COW-PIN-ELIDE-1
+public def test_mutual_recursion_writes_every_level() -> bool:
+    xs = [0, 0]
+    n = ping(mut xs, 5)
+    return n == 2 and xs[0] == 3 and xs[1] == 20
+
+
+# spec-case: COW-PIN-ELIDE-1
+public def test_an_element_record_write_through_an_unpinned_call_reaches_the_caller() -> bool:
+    bodies = [Body(0.0, 4.0), Body(1.0, 2.0)]
+    step(mut bodies, 0.5)
+    step(mut bodies, 0.5)
+    return bodies[0].x == 3.0 and bodies[0].v == 1.0 and bodies[1].x == 2.5 and bodies[1].v == 0.5
+
+
+# spec-case: COW-PIN-ELIDE-1
+public def test_passing_the_parameter_on_reaches_the_callee_in_place() -> bool:
+    xs = [1, 1]
+    n = relay(mut xs)
+    return n == 2 and xs[0] == 101 and xs[1] == 2
+
+
+# ---- snapshots and shares taken before, during and after the call ----
+
+
+# spec-case: COW-PIN-ELIDE-1
+public def test_a_snapshot_taken_before_an_unpinned_call_keeps_its_value() -> bool:
+    xs = [1, 2, 3]
+    before = xs
+    _ = bump(mut xs, 0)
+    _ = bump(mut xs, 0)
+    return before == [1, 2, 3] and xs == [3, 2, 3]
+
+
+# spec-case: COW-PIN-ELIDE-1
+public def test_a_snapshot_taken_in_a_loop_between_unpinned_calls_keeps_each_value() -> bool:
+    xs = [0, 0]
+    seen: list[list[int]] = []
+    for i in range(4):
+        _ = bump(mut xs, i % 2)
+        seen.append(xs)
+    return seen[0] == [1, 0] and seen[1] == [1, 1] and seen[2] == [2, 1] and seen[3] == [2, 2]
+
+
+# spec-case: COW-PIN-ELIDE-1
+public def test_a_shared_field_list_is_copied_before_an_unpinned_call_writes() -> bool:
+    holder = Holder([1, 2])
+    local = holder.items
+    _ = bump(mut local, 0)
+    return holder.items == [1, 2] and local == [2, 2]
+
+
+# spec-case: COW-PIN-ELIDE-1
+public def test_a_list_held_in_a_list_is_copied_before_an_unpinned_call_writes() -> bool:
+    xs = [1, 2]
+    rows = [xs, xs]
+    _ = bump(mut xs, 0)
+    return rows[0] == [1, 2] and rows[1] == [1, 2] and xs == [2, 2]
+
+
+# spec-case: COW-PIN-ELIDE-1
+public def test_a_read_only_argument_naming_the_same_list_is_a_snapshot() -> bool:
+    xs = [1, 2]
+    n = bump_and_count(mut xs, xs)
+    return n == 2 and xs == [2, 2]
+
+
+def bump_and_count(xs: mut list[int], view: list[int]) -> int:
+    xs[0] = xs[0] + 1
+    return view[0] + 1
+
+
+# spec-case: COW-PIN-ELIDE-1
+public def test_two_lists_passed_to_one_call_are_written_independently() -> bool:
+    a = [1, 2]
+    b = [10, 20]
+    swap_across(mut a, mut b)
+    return a == [10, 2] and b == [1, 20]
+
+
+def swap_across(a: mut list[int], b: mut list[int]):
+    tmp = a[0]
+    a[0] = b[0]
+    b[0] = tmp
+
+
+# spec-case: COW-PIN-ELIDE-1
+public def test_a_call_in_the_body_of_a_loop_over_the_same_list_iterates_a_snapshot() -> bool:
+    xs = [1, 2, 3]
+    seen = 0
+    for x in xs:
+        _ = bump(mut xs, 0)
+        seen = seen + x
+    return seen == 6 and xs == [4, 2, 3]
+
+
+# ---- callees that share, grow or iterate keep their pin and their answers ----
+
+
+# spec-case: COW-PIN-ELIDE-1
+public def test_a_callee_that_snapshots_its_parameter_sees_the_old_value() -> bool:
+    xs = [1, 2]
+    old = snap(mut xs)
+    return old == 1 and xs == [9, 2]
+
+
+# spec-case: COW-PIN-ELIDE-1
+public def test_a_callee_that_stores_the_list_in_a_record_keeps_it_apart_from_later_writes() -> bool:
+    xs = [1, 2]
+    holder = keep(mut xs)
+    xs[0] = 5
+    holder.items[1] = 6
+    return holder.items == [9, 6] and xs == [5, 2]
+
+
+# spec-case: COW-PIN-ELIDE-1
+public def test_a_callee_that_stores_the_list_in_a_list_keeps_it_apart_from_later_writes() -> bool:
+    xs = [1, 2]
+    frame = Frame([])
+    stash(mut xs, mut frame)
+    xs[1] = 5
+    frame.rows[0][0] = 6
+    return frame.rows[0] == [6, 2] and xs == [9, 5]
+
+
+# spec-case: COW-PIN-ELIDE-1
+public def test_a_callee_that_stores_the_list_in_a_dictionary_keeps_it_apart_from_later_writes() -> bool:
+    xs = [1, 2]
+    table: dict[int, list[int]] = {}
+    index(mut xs, mut table)
+    xs[1] = 5
+    return table[1] == [9, 2] and xs == [9, 5]
+
+
+# spec-case: COW-PIN-ELIDE-1
+public def test_a_callee_that_returns_the_list_returns_a_value_of_its_own() -> bool:
+    xs = [1, 2]
+    ys = give(mut xs)
+    ys[1] = 7
+    xs[0] = 3
+    return ys == [9, 7] and xs == [3, 2]
+
+
+# spec-case: COW-PIN-ELIDE-1
+public def test_a_read_only_parameter_that_retains_the_list_keeps_the_value_it_was_given() -> bool:
+    xs = [1, 2]
+    holder = look(mut xs)
+    return holder.items == [9, 2] and xs == [9, 8]
+
+
+# spec-case: COW-PIN-ELIDE-1
+public def test_a_callee_that_grows_the_list_grows_the_callers_list() -> bool:
+    xs = [1, 2]
+    n = grow(mut xs)
+    m = grow(mut xs)
+    return n == 3 and m == 4 and xs == [9, 2, 7, 7]
+
+
+# spec-case: COW-PIN-ELIDE-1
+public def test_a_callee_that_writes_while_iterating_its_parameter_iterates_a_snapshot() -> bool:
+    xs = [1, 2, 3]
+    total = walk(mut xs)
+    return total == 6 and xs == [4, 2, 3]
+
+
+# spec-case: COW-PIN-ELIDE-1
+public def test_a_callee_that_passes_the_list_to_a_sharing_callee_keeps_the_sharing_answers() -> bool:
+    xs = [1, 2]
+    old = relay_snap(mut xs)
+    return old == 101 and xs == [9, 2]
+
+
+# spec-case: COW-PIN-ELIDE-1
+public def test_a_callee_that_passes_the_list_to_a_growing_callee_grows_the_callers_list() -> bool:
+    xs = [1, 2]
+    n = relay_grow(mut xs)
+    return n == 3 and xs == [9, 2, 7]
+
+
+# spec-case: COW-PIN-ELIDE-1
+public def test_a_recursion_that_grows_at_the_bottom_grows_the_callers_list() -> bool:
+    xs = [0]
+    n = descend(mut xs, 3)
+    return n == 2 and xs == [3, 1]
+
+
+# ---- callbacks and function values ----
+
+
+# spec-case: COW-PIN-ELIDE-1
+public def test_an_unpinned_callee_reached_through_a_function_value_writes_the_callers_list() -> bool:
+    xs = [1, 2]
+    before = xs
+    n = apply(poke, mut xs)
+    m = apply(poke, mut xs)
+    return n == 2 and m == 2 and xs == [11, 2] and before == [1, 2]
+
+
+# spec-case: COW-PIN-ELIDE-1
+public def test_a_sharing_callee_reached_through_a_function_value_keeps_its_answers() -> bool:
+    xs = [1, 2]
+    old = apply(snap, mut xs)
+    return old == 1 and xs == [9, 2]
+
+
+# spec-case: COW-PIN-ELIDE-1
+public def test_a_direct_and_an_indirect_call_of_one_function_agree() -> bool:
+    a = [3, 4]
+    b = [3, 4]
+    _ = poke(mut a)
+    _ = apply(poke, mut b)
+    return a == b and a == [8, 4]

@@ -281,7 +281,7 @@ pub fn plan(a: std.mem.Allocator, input: Input) Error!Plan {
 
 /// Whether local `index` is one the compiler made to name a place, not a
 /// binding the program spelled or a loop variable.
-fn temporary(function: bytecode.Function, index: u32) bool {
+pub fn temporary(function: bytecode.Function, index: u32) bool {
     if (index < function.signature.parameter_count) return false;
     const local = function.scope.locals[index];
     if (local.origin == .iteration) return false;
