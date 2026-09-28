@@ -4,7 +4,8 @@ Round 1 goal (user): the experimental reference-counting runtime (`--rc-runtime`
 D9 WP-4) at a **geomean of at most 1.3x the GC's retired instructions** on the
 43-program corpus, on both backends. Round 2 goal (user, 2026-09-28): close out
 the remaining rows, so **every row is at or below 1.3x** on both backends. GC
-stays the default.
+stayed the default through both rounds; the user then made RC the default
+([Default flip](#default-flip-2026-09-28)).
 Branch `claude/rc-perf` (validated tip `d5804e40`), merged into `main` by fast-forward
 at the user's request; it sits on `codex/d9-rc-integration` `fdf73b30`.
 
@@ -74,6 +75,64 @@ D+A 2.89/3.40; +C 2.59/3.04; +E 2.57/3.01; +B 2.09/2.21; +F 1.77/1.98; +I
 - All 86 rows print the GC's output at full, dev and smoke size.
 - Round 1's validated tip `d5804e40` passed the same gate (logs m1-m8); round 2
   intermediate merges m9 (`a08c4b5c`) and m10 (`af5a3487`) passed as well.
+
+## Default flip (2026-09-28)
+
+After round 2 the user approved "make RC the default" (every row at or below
+1.3x on both backends, geomean about 1.08x, lower median peak RSS). Branch
+`claude/rc-default`, from `c499f8b1`; spec tag `RC-DEFAULT-1`.
+
+- **Resolution.** An absent `MYLANG_RUNTIME` now means `rc-v3`, in the compiler,
+  the native build driver, host applications and in-process test sessions
+  (`runtime_contract.default`). `--gc-runtime` or `MYLANG_RUNTIME=gc-v1` opts out
+  to the collector; `--rc-runtime=stats`/`=sites` are unchanged; legacy sharing
+  still normalizes a default or inherited RC to GC (in-process lowering does the
+  same through `runtime_mode.lowered()`). Historical untagged native manifests
+  still mean GC.
+- **`--gc-stress`** among a command's own options selects the collector over the
+  default and the carrier; next to an explicit `--rc-runtime` flag it is a usage
+  error (exit 2). An RC-built program refuses `MYLANG_OPTIONS=--gc-stress` (exit 2,
+  message naming `--gc-runtime`) instead of running unstressed. Stressed
+  in-process test runs and `schematic-svg --gc-stress` build for the collector.
+- **Caches** were already keyed by the resolved contract, never by "the default",
+  so no GC artifact is reused for RC or the reverse; tests pin that an empty
+  carrier keys exactly as `rc-v3`. The build driver now names its contract to
+  the frontend child explicitly, since a host's environment map need not match
+  the process environment. The prebuilt archives `zig build` installs are the
+  default's; the first `--gc-runtime` build compiles its runtime once.
+- **Gate lanes.** `test-lang` and `test-value-semantics` each run under the RC
+  default and again under `--gc-runtime --gc-stress` (`test-lang-gc`). Zig tests
+  that read the collector's own lowering pin it with
+  `runtime_mode.pinCollector()`: 40 tests individually (30 in `qbe_test.zig`:
+  roots, safepoints, barriers, inline allocation and the collector's IL shapes;
+  3 array-place, 2 loop-fact, 2 stand-in reuse, 1 range-key root, 1 error-trace
+  IL and 1 arena bookkeeping test) and all 21 of `cow_test.zig` (copy on write
+  over the collector) through its helpers. No language-behaviour test was pinned.
+- **RC bugs found by the flip** (every source-resource program that completed a
+  handle crashed under RC): `complete_resource` left its operand guard armed and
+  dropped the closed handle again (`RC-RESOURCE-COMPLETE-1`), and a unique field
+  read out of a consumed record (`failure.resource`) was copied rather than
+  moved (`RC-UNIQUE-FIELD-TAKE-1`). Both are fixed with regression tests.
+- **Differential fuzzer** (`experiments/rc-fuzz`, opt-in
+  `zig build test-rc-fuzz -Dfuzz-seeds=N`): seeds 1-200 gave 0 RC divergences
+  (default, `--rc-runtime=stats` with balanced counts, `--release` every eighth
+  seed). Three seeds diverge only under `--gc-stress` (19 and 199: "a
+  descriptor's scan plan disagrees with its fields"; 87: SIGSEGV), collector
+  findings like the round-2 review's.
+- **Validation of `941ec7fc`:** `zig build test` 96/96 steps, 2,510 executed
+  tests (including 1,194/1,194 language guests under RC and again under stressed
+  GC, and 145/145 value-semantics guests in both lanes); `test-qbe` 51/51 steps,
+  471 tests; `test-qbe-build` 29/29; `fmt-check` 2/2; `test-native-memory` 23/23;
+  `test-native-heap` 10/10. `mylang test tests/lang --force` passed 1,194/1,194
+  across 200 programs with no failure, skip or dropped file under the default,
+  `--release`, `--gc-runtime`, `--gc-runtime --release`,
+  `--gc-runtime --gc-stress`, `--rc-runtime=stats` and `--rc-runtime=stats
+  --release`. Lox port tests 65/65 and driver cases 13/13 under the default and
+  `--gc-runtime`, each with and without `--release`.
+- **Cost to note:** stand-in emission reuse (`EMIT-STANDIN-1`) applies only to
+  the collector, because RC certificates need every physical body. A one-body
+  edit rebuild of the 5.5k-line Lox port took 0.94 s under RC against 0.86 s
+  under GC (single run, Debug compiler).
 
 ## Measuring and finding the next operations
 

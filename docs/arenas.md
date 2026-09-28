@@ -222,6 +222,12 @@ a younger arena allocates its replacement backing in the collection's own region
 
 ## Interaction with collection
 
+Under the default reference-counting runtime, an arena allocation is not
+counted on its own: closing the block runs every finalizer, then releases the
+references its objects hold to older counted values, and only then frees the
+chunks in bulk. The rest of this section describes the tracing collector
+(`--gc-runtime`).
+
 Arenas do not turn collection off. Ordinary GC allocations still use the tracing
 heap, and `--gc-stress` still collects at allocation safepoints inside an arena.
 Arena allocations remain alive until scope exit, including old collection backing
