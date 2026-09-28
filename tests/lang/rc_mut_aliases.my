@@ -1,0 +1,52 @@
+# Two `mut` arguments may name one caller variable (VALUE-SEMANTICS-5). A
+# write through one of them replaces a field the other is still reading, so
+# RC keeps the reader's loan (RC-INTERVAL-ANCHOR-3). Answers match the
+# collector; RC counting builds balance.
+record Frame:
+    rows: list[list[int]]
+    n: int
+
+
+def reset(other: mut Frame) -> int:
+    other.rows = [[7, 7, 7]]
+    junk: list[list[list[int]]] = []
+    for i in range(40):
+        junk.append([[i], [i, i]])
+    return 0
+
+
+def count(rows: list[list[int]], k: int) -> int:
+    total = 0
+    for row in rows:
+        total = total * 10 + len(row)
+    return total * 10 + k
+
+
+def interval(frame: mut Frame, other: mut Frame) -> int:
+    frame.n = frame.n + 1
+    return len(frame.rows[reset(mut other)])
+
+
+def operand(frame: mut Frame, other: mut Frame) -> int:
+    frame.n = frame.n + 1
+    return count(frame.rows, reset(mut other))
+
+
+# spec-case: RC-INTERVAL-ANCHOR-3
+public def test_a_receiver_read_survives_a_write_through_an_aliasing_mut_argument() -> bool:
+    frame = Frame([[1, 2], [3]], 0)
+    seen = interval(mut frame, mut frame)
+    return seen == 2 and frame.rows == [[7, 7, 7]] and frame.n == 1
+
+
+# spec-case: RC-INTERVAL-ANCHOR-3
+public def test_an_argument_read_survives_a_write_through_an_aliasing_mut_argument() -> bool:
+    frame = Frame([[1, 2], [3]], 0)
+    seen = operand(mut frame, mut frame)
+    return seen == 210 and frame.rows == [[7, 7, 7]] and frame.n == 1
+
+
+def main(out: Stream) -> int:
+    out.print(test_a_receiver_read_survives_a_write_through_an_aliasing_mut_argument())
+    out.print(test_an_argument_read_survives_a_write_through_an_aliasing_mut_argument())
+    return 0

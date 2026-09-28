@@ -258,6 +258,10 @@ pub const Context = struct {
             .store_local, .drop_local, .move_local => |slot| li(slot) == root,
             .buffer_operation => |operation| self.bufferWritesTree(pc, .{ .owner = li(operation.owner), .writes = writesReceiver(operation.kind) }, root, through),
             .load_local => |slot| self.loadWritesTree(pc, li(slot), root, through),
+            // OWNERSHIP-MUT-RECORD-WRITE-1: a `mut` record argument hands the
+            // callee the caller's variable, which may write anywhere in its
+            // tree, so a borrow of the record or of a part of it ends here.
+            .ref_local => |slot| through == null and self.writeDescends(li(slot), root),
             else => false,
         };
     }

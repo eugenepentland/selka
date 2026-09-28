@@ -187,6 +187,7 @@ fn producedOwner(comptime E: type, self: *E, ty: typed.Type, index: usize) Error
             .value_copy => {
                 const analysis = self.ownership orelse return true;
                 if (pc >= analysis.copies.len or analysis.copies[pc]) return true;
+                if (@import("qbe_rc_mut_snapshot.zig").at(E, self, pc)) return true;
             },
             .call => |target| {
                 const certificate = try @import("qbe_rc_borrow.zig").certificate(E, self, self.program.functions[@backingInt(target)]);

@@ -43,10 +43,14 @@ const source =
 ;
 
 fn loans(name: []const u8) !usize {
+    return loansIn(source, name);
+}
+
+fn loansIn(program: []const u8, name: []const u8) !usize {
     const saved = runtime.get();
     defer runtime.set(saved);
     runtime.set(.rc);
-    var compilation = try compiler.Compilation.init(t.allocator, "rc_plain_updates.my", source);
+    var compilation = try compiler.Compilation.init(t.allocator, "rc_plain_updates.my", program);
     defer compilation.deinit();
     const text = try compilation.emitQbe(t.allocator);
     defer t.allocator.free(text);
@@ -68,4 +72,46 @@ test "RC borrows of a mut root survive calls that only update its count-free fie
 test "RC borrows keep their loan across calls that replace or mutate a counted field" {
     try t.expect(try loans("read_reloaded") > 0);
     try t.expect(try loans("read_grown") > 0);
+}
+
+const paths =
+    \\record Frame:
+    \\    rows: list[list[int]]
+    \\    ip: int
+    \\def push(values: mut list[int]):
+    \\    values.append(7)
+    \\def replace_first(rows: mut list[list[int]]):
+    \\    rows[0] = [42]
+    \\def nested(frame: mut Frame) -> int:
+    \\    frame.rows[0].append(5)
+    \\    return 0
+    \\def field_argument(frame: mut Frame) -> int:
+    \\    replace_first(mut frame.rows)
+    \\    return 0
+    \\def element_argument(frame: mut Frame) -> int:
+    \\    push(mut frame.rows[0])
+    \\    return 0
+    \\def step(frame: mut Frame) -> int:
+    \\    frame.ip = frame.ip + 1
+    \\    return 0
+    \\def read_step(frame: mut Frame) -> int:
+    \\    return len(frame.rows[step(mut frame)])
+    \\def read_nested(frame: mut Frame) -> int:
+    \\    return len(frame.rows[nested(mut frame)])
+    \\def read_field_argument(frame: mut Frame) -> int:
+    \\    return len(frame.rows[field_argument(mut frame)])
+    \\def read_element_argument(frame: mut Frame) -> int:
+    \\    return len(frame.rows[element_argument(mut frame)])
+    \\def main() -> int:
+    \\    frame = Frame([[1, 2], [3]], 0)
+    \\    return read_step(mut frame) + read_nested(mut frame) + read_field_argument(mut frame) + read_element_argument(mut frame)
+;
+
+// spec: RC-PLAIN-UPDATE-CALL-2
+test "RC borrows keep their loan across calls that write through a field path or a mut field argument" {
+    // The count-free step lends the receiver; each path writer keeps its loan.
+    const lent = try loansIn(paths, "read_step");
+    try t.expect(try loansIn(paths, "read_nested") > lent);
+    try t.expect(try loansIn(paths, "read_field_argument") > lent);
+    try t.expect(try loansIn(paths, "read_element_argument") > lent);
 }

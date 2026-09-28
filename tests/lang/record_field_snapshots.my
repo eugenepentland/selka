@@ -88,6 +88,87 @@ public def test_loop_field_receivers_preserve_prior_snapshots() -> bool:
         return saved.values == [12] and state.values == [12, 0, 1, 2, 3]
 
 
+record Output:
+    buffer: list[int]
+    count: int
+
+
+record Wrapped:
+    inner: Output
+
+
+def append_output(out: mut Output, value: int):
+    out.buffer.append(value)
+
+
+def append_through(out: mut Output, value: int):
+    append_output(mut out, value)
+
+
+def append_wrapped(wrapped: mut Wrapped, value: int):
+    wrapped.inner.buffer.append(value)
+
+
+# spec-case: OWNERSHIP-MUT-RECORD-WRITE-1
+public def test_mut_record_argument_preserves_a_record_snapshot() -> bool:
+    output = Output([1], 0)
+    before = output
+    append_output(mut output, 2)
+    return before.buffer == [1] and output.buffer == [1, 2]
+
+
+# spec-case: OWNERSHIP-MUT-RECORD-WRITE-1
+public def test_mut_record_argument_preserves_a_field_snapshot() -> bool:
+    output = Output([1], 0)
+    before = output.buffer
+    append_through(mut output, 2)
+    return before == [1] and output.buffer == [1, 2]
+
+
+# spec-case: OWNERSHIP-MUT-RECORD-WRITE-1
+public def test_mut_record_argument_preserves_nested_snapshots() -> bool:
+    wrapped = Wrapped(Output([1], 0))
+    whole = wrapped
+    inner = wrapped.inner
+    append_wrapped(mut wrapped, 2)
+    return whole.inner.buffer == [1] and inner.buffer == [1] and wrapped.inner.buffer == [1, 2]
+
+
+# spec-case: OWNERSHIP-MUT-RECORD-WRITE-1
+public def test_mut_record_argument_preserves_a_byte_buffer_snapshot() -> bool:
+    values: list[int] = []
+    sink = Sink(byte_buffer(values))
+    fill_sink(mut sink, b"xy")
+    before = sink
+    fill_sink(mut sink, b"z")
+    return bytes(before.buffer) == b"xy" and bytes(sink.buffer) == b"xyz"
+
+
+record Sink:
+    buffer: byte_buffer
+
+
+def fill_sink(sink: mut Sink, value: bytes):
+    _ = sink.buffer.append_range(value, 0, len(value))
+
+
+record Table:
+    rows: list[list[int]]
+    count: int
+
+
+def store_row(table: mut Table, index: int, row: list[int]):
+    table.rows[index] = row
+
+
+# spec-case: OWNERSHIP-MUT-RECORD-WRITE-1
+public def test_mut_record_element_store_preserves_a_field_snapshot() -> bool:
+    table = Table([[1], [2, 3]], 0)
+    before = table.rows
+    store_row(mut table, 1, [4])
+    return before == [[1], [2, 3]] and table.rows == [[1], [4]]
+
+
 # Run the same assertions without test-harness accounting or result wrapping.
 def main(out: Stream) -> int:
     out.print(test_heap_record_field_mutation_preserves_snapshot())
@@ -98,4 +179,9 @@ def main(out: Stream) -> int:
     out.print(test_list_element_and_record_field_path_preserves_snapshot())
     out.print(test_dictionary_and_record_field_path_preserves_snapshot())
     out.print(test_loop_field_receivers_preserve_prior_snapshots())
+    out.print(test_mut_record_argument_preserves_a_record_snapshot())
+    out.print(test_mut_record_argument_preserves_a_field_snapshot())
+    out.print(test_mut_record_argument_preserves_nested_snapshots())
+    out.print(test_mut_record_argument_preserves_a_byte_buffer_snapshot())
+    out.print(test_mut_record_element_store_preserves_a_field_snapshot())
     return 0

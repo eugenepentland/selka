@@ -131,9 +131,7 @@ pub fn Lower(comptime E: type) type {
             const beginning = state.captures[pc].begin;
             if (beginning != cow_plan.none) try beginScope(E, self, state.plan.places[beginning].?, stack);
             if (site.fill) try fillPlace(E, self, pc, stack);
-            for (site.shares) |depth| {
-                if (runtime_mode.enabled()) try readCapture(E, self, stack, depth) else try share(E, self, stack, depth);
-            }
+            try shares(E, self, pc, stack, site.shares);
         }
         /// Whether this place retains temporary pins across an index callback.
         pub fn scoped(self: *const E, place: cow_plan.Place) bool {
@@ -1146,6 +1144,31 @@ fn detachBox(comptime E: type, self: *E, ty: typed.Type, body: usize, cursor: Cu
     if (cursor.cell) |parent| try qbe_alloc.barrier(*E, self, parent);
     try self.print(store_pointer, .{ copy, cursor.address });
     return copy;
+}
+
+/// Share the copy transfers planned at `pc`; under RC each publishes an owner.
+fn shares(comptime E: type, self: *E, pc: usize, stack: []const typed.Type, depths: []const u8) Error!void {
+    for (depths) |depth| {
+        if (!runtime_mode.enabled()) {
+            try share(E, self, stack, depth);
+        } else if (!anchoredStore(E, self, pc, depth)) try readCapture(E, self, stack, depth);
+    }
+}
+
+/// RC-ANCHORED-SHARE-1: a copy transfer the next instruction stores into a
+/// local the RC plan binds as borrowed from a physical anchor needs no owner
+/// of its own. Every anchor proof (RC-READONLY-ANCHOR-1, RC-INTERVAL-ANCHOR-1,
+/// the read-loan chains) shows nothing writes the anchor's value while the
+/// local is live and the local itself is never written, so a copy is
+/// unobservable; publishing one would leave an owner in the operand journal
+/// that the anchored store, which keeps only the bits, never takes over.
+fn anchoredStore(comptime E: type, self: *E, pc: usize, depth: u8) bool {
+    if (depth != 0) return false;
+    const op = self.function.scope.instructions[pc].op;
+    if (op != .store_local) return false;
+    const state = self.cow.?.rc orelse return false;
+    const ownership = state.plan.locals.entry[@backingInt(op.store_local)].ownership;
+    return ownership == .borrowed and ownership.borrowed == .storage;
 }
 
 fn readCaptures(comptime E: type, self: *E, stack: []const typed.Type, depths: []const u8) Error!void {

@@ -383,6 +383,7 @@ pub fn bindIntervals(comptime E: type, self: *E, bindings: []input.Binding, cata
         const local = @backingInt(instruction.op.store_local);
         const root_local = chainRoot(E, self, pc - 1) orelse continue;
         if (root_local >= contract.parameters.len or contract.parameters[root_local] != .caller_storage) continue;
+        if (aliasable(E, self, contract, root_local)) continue;
         // Each candidate scans the function a few times.
         if (budget < 4 * code.len) return;
         budget -= 4 * code.len;
@@ -488,6 +489,7 @@ pub fn operandInterval(comptime E: type, self: *E, pc: usize) bool {
     const state = self.cow.?.rc orelse return false;
     const root_local = chainRoot(E, self, pc) orelse return false;
     if (root_local >= state.contract.parameters.len or state.contract.parameters[root_local] != .caller_storage) return false;
+    if (aliasable(E, self, state.contract, root_local)) return false;
     const pushed_depth = (self.states[pc] orelse return false).len - 1;
     var at = pc + 1;
     var remaining: usize = 256;
@@ -514,6 +516,19 @@ pub fn operandInterval(comptime E: type, self: *E, pc: usize) bool {
             else => {},
         }
         if (consumed) return true;
+    }
+    return false;
+}
+
+/// RC-INTERVAL-ANCHOR-3: two `mut` arguments may name one caller variable
+/// (`f(mut r, mut r)`, VALUE-SEMANTICS-5), so a write through another
+/// caller-storage parameter of the root's type can replace or release a field
+/// of the root. Such a root anchors nothing.
+fn aliasable(comptime E: type, self: *E, contract: model.CallContract, root_local: usize) bool {
+    const ty = self.function.scope.locals[root_local].ty;
+    for (contract.parameters, 0..) |mode, index| {
+        if (index == root_local or mode != .caller_storage) continue;
+        if (self.function.scope.locals[index].ty == ty) return true;
     }
     return false;
 }
