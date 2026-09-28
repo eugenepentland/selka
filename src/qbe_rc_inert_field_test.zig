@@ -80,3 +80,70 @@ test "RC field receivers keep scopes across callbacks and managed element stores
     try t.expect(try scopes("callback") > 0);
     try t.expect(try scopes("managed") > 0);
 }
+
+const buffers =
+    \\record Output:
+    \\    buffer: byte_buffer
+    \\    failed: bool
+    \\def append(out: mut Output, value: bytes):
+    \\    if not out.buffer.append_range(value, 0, len(value)):
+    \\        out.failed = True
+    \\def append_byte(out: mut Output, value: u8):
+    \\    if not out.buffer.append_byte(int(value)):
+    \\        out.failed = True
+    \\def append_int(out: mut Output, value: int):
+    \\    if not out.buffer.append_int(value):
+    \\        out.failed = True
+    \\def append_text(out: mut Output, value: str):
+    \\    if not out.buffer.append_utf8(value):
+    \\        out.failed = True
+    \\def append_joined(out: mut Output, value: bytes):
+    \\    if not out.buffer.append_range(value + value, 0, len(value)):
+    \\        out.failed = True
+    \\def append_local(out: mut Output, value: bytes):
+    \\    copy = value
+    \\    copy = copy + b"!"
+    \\    if not out.buffer.append_range(copy, 0, len(copy)):
+    \\        out.failed = True
+    \\def main() -> int:
+    \\    values: list[int] = []
+    \\    out = Output(byte_buffer(values), False)
+    \\    append(mut out, b"ab")
+    \\    append_byte(mut out, 65u8)
+    \\    append_int(mut out, 12)
+    \\    append_text(mut out, "cd")
+    \\    append_joined(mut out, b"e")
+    \\    append_local(mut out, b"f")
+    \\    return len(out.buffer)
+;
+
+fn bufferOperations(name: []const u8) !usize {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    var compilation = try compiler.Compilation.init(t.allocator, "rc_inert_bytes.my", buffers);
+    defer compilation.deinit();
+    const text = try compilation.emitQbe(t.allocator);
+    defer t.allocator.free(text);
+    var manifest = try std.json.parseFromSlice(Manifest, t.allocator, text, .{ .ignore_unknown_fields = true });
+    defer manifest.deinit();
+    for (manifest.value.functions) |function| {
+        if (!std.mem.eql(u8, function.name, name)) continue;
+        return std.mem.count(u8, function.il, "call $myl_qbe_rc_scope_begin") + std.mem.count(u8, function.il, "# RC-GLUE-1 loan");
+    }
+    return error.TestUnexpectedResult;
+}
+
+// spec: RC-INERT-BYTES-RECEIVER-1
+test "RC byte buffer receivers of a named record need no loan or receiver scope" {
+    try t.expectEqual(@as(usize, 0), try bufferOperations("append"));
+    try t.expectEqual(@as(usize, 0), try bufferOperations("append_byte"));
+    try t.expectEqual(@as(usize, 0), try bufferOperations("append_int"));
+    try t.expectEqual(@as(usize, 0), try bufferOperations("append_text"));
+}
+
+// spec-case: RC-INERT-BYTES-RECEIVER-1
+test "RC byte buffer receivers keep their scope for computed or local text" {
+    try t.expect(try bufferOperations("append_joined") > 0);
+    try t.expect(try bufferOperations("append_local") > 0);
+}

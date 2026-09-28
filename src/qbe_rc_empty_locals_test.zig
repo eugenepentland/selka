@@ -73,7 +73,9 @@ test "RC empty local journals keep parameter operand scratch and native admissio
     try t.expect(contains(try named(manifest.value, "callback"), "myl_qbe_rc_scope_pin"));
     try t.expect(contains(try named(manifest.value, "iterate"), "# RC-GLUE-1 hold"));
     try t.expect(contains(try named(manifest.value, "referenced"), "# RC-GLUE-1 loan"));
-    try t.expect(contains(try named(manifest.value, "pattern"), "# RC-GLUE-1 loan"));
+    // The pattern binding keeps its journal; the receiver it lends to reads it
+    // in place while nothing writes it (RC-INTERVAL-ANCHOR-2).
+    try t.expect(contains(try named(manifest.value, "pattern"), "# rc-frame"));
 }
 
 // spec: RC-EMPTY-RECEIVER-STORAGE-1

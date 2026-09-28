@@ -284,3 +284,197 @@ test "RC range keys sliced from a never-written read-only parameter take no loan
     try t.expectEqual(@as(usize, 1), try operationsIn(range_keys, "frequencies"));
     try t.expect(try operationsIn(range_keys, "rebound") > 1);
 }
+
+// spec: RC-OPERAND-ANCHOR-2
+test "RC length reads of a mut record's field take no loan" {
+    const lengths =
+        \\record Output:
+        \\    buffer: byte_buffer
+        \\    items: list[str]
+        \\    failed: bool
+        \\def full(out: mut Output, limit: int) -> bool:
+        \\    if len(out.buffer) > limit or len(out.items) > limit:
+        \\        out.failed = True
+        \\    return out.failed
+        \\def kept(out: mut Output, limit: int) -> int:
+        \\    items = out.items
+        \\    out.items = ["b"]
+        \\    return len(items) + limit
+        \\def main() -> int:
+        \\    values: list[int] = []
+        \\    out = Output(byte_buffer(values), ["a"], False)
+        \\    if full(mut out, 3):
+        \\        return 1
+        \\    return kept(mut out, 3)
+    ;
+    try t.expectEqual(@as(usize, 0), try operationsIn(lengths, "full"));
+    // A named copy that outlives a write of the record keeps its owner.
+    try t.expect(try operationsIn(lengths, "kept") > 0);
+}
+
+const intervals =
+    \\record Span:
+    \\    source: bytes
+    \\    start: int
+    \\    end: int
+    \\record Pin:
+    \\    part: int
+    \\    net: Span
+    \\    display: Span
+    \\    net_id: int
+    \\def equal(a: Span, b: Span) -> bool:
+    \\    if a.end - a.start != b.end - b.start:
+    \\        return False
+    \\    i = 0
+    \\    while i < a.end - a.start:
+    \\        if a.source[a.start + i] != b.source[b.start + i]:
+    \\            return False
+    \\        i += 1
+    \\    return True
+    \\def normalize(pins: mut list[Pin]):
+    \\    i = 0
+    \\    while i < len(pins):
+    \\        raw_id = -1
+    \\        j = 0
+    \\        while j < i:
+    \\            if raw_id < 0 and equal(pins[j].net, pins[i].net):
+    \\                raw_id = pins[j].net_id
+    \\            j += 1
+    \\        if raw_id < 0:
+    \\            raw_id = i
+    \\        pins[i].net_id = raw_id
+    \\        i += 1
+    \\def collect(count: int) -> int:
+    \\    out: list[Pin] = []
+    \\    k = 0
+    \\    while k < count:
+    \\        j = 0
+    \\        found = False
+    \\        while j < len(out):
+    \\            previous = out[j]
+    \\            if previous.part == k % 3:
+    \\                found = True
+    \\            j += 1
+    \\        if not found:
+    \\            out.append(Pin(k % 3, Span(b"ab" + b"c", 0, 3), Span(b"d", 0, 1), k))
+    \\        k += 1
+    \\    return len(out)
+    \\def stale(pins: mut list[Pin]) -> int:
+    \\    first = pins[0]
+    \\    pins[0].net = Span(b"xy" + b"z", 0, 3)
+    \\    return first.net.end + first.part
+    \\def main() -> int:
+    \\    pins = [Pin(0, Span(b"a" + b"b", 0, 2), Span(b"c", 0, 1), 0), Pin(1, Span(b"ab", 0, 2), Span(b"c", 0, 1), 0)]
+    \\    normalize(mut pins)
+    \\    return pins[1].net_id + collect(5) + stale(mut pins)
+;
+
+fn markersIn(program: []const u8, name: []const u8, marker: []const u8) !usize {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    var compilation = try compiler.Compilation.init(t.allocator, "rc_interval_anchor.my", program);
+    defer compilation.deinit();
+    const text = try compilation.emitQbe(t.allocator);
+    defer t.allocator.free(text);
+    var manifest = try std.json.parseFromSlice(Manifest, t.allocator, text, .{ .ignore_unknown_fields = true });
+    defer manifest.deinit();
+    for (manifest.value.functions) |function| if (std.mem.eql(u8, function.name, name)) return std.mem.count(u8, function.il, marker);
+    return error.TestUnexpectedResult;
+}
+
+// spec: RC-INTERVAL-ANCHOR-2
+test "RC reads out of a mut or local list that nothing writes meanwhile take no token" {
+    // The inlined `equal` parameters and the element local are bound in place.
+    try t.expectEqual(@as(usize, 2), try markersIn(intervals, "normalize", "# RC-READONLY-ANCHOR-1 local"));
+    try t.expectEqual(@as(usize, 1), try markersIn(intervals, "collect", "# RC-READONLY-ANCHOR-1 local"));
+}
+
+// spec-case: RC-INTERVAL-ANCHOR-2
+test "RC a value read out of a list that is written while it is live keeps its token" {
+    try t.expectEqual(@as(usize, 0), try markersIn(intervals, "stale", "# RC-READONLY-ANCHOR-1 local"));
+    try t.expect(try operationsIn(intervals, "stale") > 0);
+}
+
+const calls =
+    \\record Span:
+    \\    source: bytes
+    \\    end: int
+    \\record Pin:
+    \\    part: int
+    \\    net: Span
+    \\def pick(pins: list[Pin], part: int) -> Pin:
+    \\    i = 0
+    \\    while i < len(pins):
+    \\        if pins[i].part == part:
+    \\            return pins[i]
+    \\        i += 1
+    \\    return pins[0]
+    \\def count(pins: list[Pin], parts: int) -> list[int]:
+    \\    out: list[int] = []
+    \\    j = 0
+    \\    while j < parts:
+    \\        found = pick(pins, j)
+    \\        out.append(found.net.end + found.part)
+    \\        j += 1
+    \\    return out
+    \\def local_pick(parts: int) -> int:
+    \\    pins = [Pin(0, Span(b"a" + b"b", 2)), Pin(1, Span(b"c", 1))]
+    \\    found = pick(pins, parts)
+    \\    pins[0] = Pin(5, Span(b"d", 1))
+    \\    return found.net.end + pins[0].part
+    \\def main() -> int:
+    \\    pins = [Pin(0, Span(b"a" + b"b", 2)), Pin(1, Span(b"c", 1))]
+    \\    return len(count(pins, 2)) + local_pick(1)
+;
+
+// spec: RC-BORROW-CALL-ANCHOR-1
+test "RC a local filled by a borrowed call out of a read-only parameter takes no owner" {
+    try t.expectEqual(@as(usize, 1), try markersIn(calls, "count", "# RC-READONLY-ANCHOR-1 local"));
+}
+
+// spec-case: RC-BORROW-CALL-ANCHOR-1
+test "RC a borrowed call out of a local list keeps its owner" {
+    try t.expectEqual(@as(usize, 0), try markersIn(calls, "local_pick", "# RC-READONLY-ANCHOR-1 local"));
+}
+
+const carried =
+    \\record Span:
+    \\    source: bytes
+    \\    start: int
+    \\    end: int
+    \\record Pin:
+    \\    part: int
+    \\    net: Span
+    \\def equal(a: Span, b: Span) -> bool:
+    \\    if a.end - a.start != b.end - b.start:
+    \\        return False
+    \\    i = 0
+    \\    while i < a.end - a.start:
+    \\        if a.source[a.start + i] != b.source[b.start + i]:
+    \\            return False
+    \\        i += 1
+    \\    return True
+    \\def matches(pins: list[Pin], net: Span) -> list[int]:
+    \\    base = net
+    \\    base.end = net.end - 1
+    \\    out: list[int] = []
+    \\    i = 0
+    \\    while i < len(pins):
+    \\        pin = pins[i]
+    \\        if equal(pin.net, base):
+    \\            out.append(pin.part)
+    \\        i += 1
+    \\    return out
+    \\def main() -> int:
+    \\    pins = [Pin(0, Span(b"a" + b"b", 0, 1)), Pin(1, Span(b"ab", 0, 2))]
+    \\    return len(matches(pins, Span(b"ab", 0, 2)))
+;
+
+// spec: RC-READONLY-ANCHOR-2
+test "RC an inlined call's first argument read out of an anchored local is bound in place" {
+    // `pin` (the element) and the inlined `a` (its field) are bound; `b` is
+    // filled from the owned local `base` and keeps its copy.
+    try t.expectEqual(@as(usize, 1), try markersIn(carried, "matches", "# RC-READONLY-ANCHOR-1 local"));
+    try t.expectEqual(@as(usize, 1), try markersIn(carried, "matches", "# RC-ELEMENT-BORROW-3 local"));
+}

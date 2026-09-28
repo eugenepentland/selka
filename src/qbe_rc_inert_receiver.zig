@@ -117,7 +117,7 @@ pub fn proven(comptime E: type, self: *E, local: usize) bool {
     const element = self.program.records[receiver.recordIndex()].shape.buffer orelse return false;
     if (!plain(E, self, element)) return false;
     const inputs = self.states[stop] orelse return false;
-    for (inputs) |ty| if (!plain(E, self, ty)) return false;
+    for (inputs) |ty| if (!plain(E, self, ty) and !lentText(E, self, path, ty)) return false;
     if (!plain(E, self, code[stop].op.buffer_operation.output)) return false;
     for (code, 0..) |instruction, pc| {
         if (externalEntry(instruction.op, pc, start, stop)) return false;
@@ -136,13 +136,16 @@ fn ancestors(comptime E: type, self: *E, first: usize) ?Path {
     var at = first;
     const plan = self.cow.?.plan;
     while (path.len < path.locals.len) {
-        if (!list(E, self, at) or contains(path, at)) return null;
+        // RC-INERT-BYTES-RECEIVER-1: a byte buffer is a receiver only as the
+        // path's own leaf, filled from one field of a plain record.
+        const buffer = path.len == 0 and byteBuffer(E, self, at);
+        if (!(list(E, self, at) or buffer) or contains(path, at)) return null;
         path.locals[path.len] = at;
         path.len += 1;
         if (plan.place(at)) |place| {
             if (place.box != null) return null;
             if (place.step == .field) return fieldRoot(E, self, path, place);
-            if (place.step != .element) return null;
+            if (place.step != .element or buffer) return null;
             at = place.parent;
         } else if (at < plan.aliases.len and plan.aliases[at] != cow.none) {
             at = plan.aliases[at];
@@ -189,6 +192,37 @@ fn list(comptime E: type, self: *E, index: usize) bool {
     return record.isCollection() and record.collection.kind == .list and !record.collection.box;
 }
 
+fn byteBuffer(comptime E: type, self: *E, index: usize) bool {
+    const ty = self.function.scope.locals[index].ty;
+    if (!ty.isAggregate()) return false;
+    const record = self.program.records[ty.recordIndex()];
+    return record.managed and record.collection.kind == .bytes and !typed.isByteString(record);
+}
+
+/// RC-INERT-BYTES-RECEIVER-1: in a byte buffer receiver's interval, an
+/// immutable byte string or text value may sit on the stack when it is a
+/// never-written read-only parameter's tokenless value: the caller keeps it,
+/// nothing in the interval can release it, and the append only reads it.
+fn lentText(comptime E: type, self: *E, path: Path, ty: typed.Type) bool {
+    if (!byteBuffer(E, self, path.locals[0]) or !ty.isAggregate()) return false;
+    const record = self.program.records[ty.recordIndex()];
+    return typed.isByteString(record) or (record.managed and record.collection.kind == .string);
+}
+
+fn readOnlyParameter(comptime E: type, self: *E, index: usize) bool {
+    const f = self.function;
+    if (index >= f.signature.parameter_count) return false;
+    if (@import("ownership_model.zig").writesParameter(f, index)) return false;
+    for (f.scope.instructions) |instruction| switch (instruction.op) {
+        .store_local, .ref_local, .move_local, .drop_local => |id| if (@backingInt(id) == index) return false,
+        .switch_variant => |dispatch| for (dispatch.arms) |arm| {
+            if (arm.slot) |id| if (@backingInt(id) == index) return false;
+        },
+        else => {},
+    };
+    return true;
+}
+
 fn plain(comptime E: type, self: *E, ty: typed.Type) bool {
     const shape = self.cow.?.rc.?.catalog.get(ty) catch return false;
     return !shape.counted and !shape.unique_drop;
@@ -198,11 +232,14 @@ fn inert(comptime E: type, self: *E, pc: usize, path: Path, local: usize) bool {
     const op = self.function.scope.instructions[pc].op;
     const inputs = self.states[pc] orelse return false;
     if (fieldRead(E, self, pc)) return true;
-    for (inputs) |ty| if (!plain(E, self, ty)) {
+    for (inputs) |ty| if (!plain(E, self, ty) and !lentText(E, self, path, ty)) {
         if (inputs.len != 1 or op != .store_local or !contains(path, @backingInt(op.store_local))) return false;
     };
     return switch (op) {
-        .load_local => |id| plain(E, self, self.function.scope.locals[@backingInt(id)].ty),
+        .load_local => |id| plain(E, self, self.function.scope.locals[@backingInt(id)].ty) or
+            (lentText(E, self, path, self.function.scope.locals[@backingInt(id)].ty) and readOnlyParameter(E, self, @backingInt(id))),
+        // RC-INERT-BYTES-RECEIVER-1: the length of a lent text only reads it.
+        .array_length => inputs.len != 0 and (lentText(E, self, path, inputs[inputs.len - 1]) or plain(E, self, inputs[inputs.len - 1])),
         .store_local => |id| store(E, self, pc, @backingInt(id), path, local),
         .value_copy => |copy| plain(E, self, copy.ty),
         // All inputs were checked above. An inline plain update writes only

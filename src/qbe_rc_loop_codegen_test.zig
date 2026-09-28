@@ -302,3 +302,69 @@ test "RC-ELEMENT-BORROW-1 anchored plain element reads lend their address like t
     // An element of a temporary list may be freed by its release: it copies.
     try t.expect(recordSlot(try named(rc.value, "fresh")));
 }
+
+const owning_elements =
+    \\record Tag:
+    \\    id: int
+    \\    name: bytes
+    \\def names(tags: list[Tag], wanted: int) -> list[bytes]:
+    \\    out: list[bytes] = []
+    \\    i = 0
+    \\    while i < len(tags):
+    \\        tag = tags[i]
+    \\        if tag.id == wanted:
+    \\            out.append(tag.name)
+    \\        i += 1
+    \\    return out
+    \\def first(tags: list[Tag], wanted: int) -> Tag:
+    \\    kept: list[int] = []
+    \\    i = 0
+    \\    while i < len(tags):
+    \\        tag = tags[i]
+    \\        kept.append(tag.id)
+    \\        if tag.id == wanted:
+    \\            return tag
+    \\        i += 1
+    \\    return Tag(id=len(kept), name=b"")
+    \\def rename(tags: mut list[Tag]) -> int:
+    \\    tag = tags[0]
+    \\    tags[0].name = b"x"
+    \\    return len(tag.name)
+    \\def looped(tags: list[Tag]) -> int:
+    \\    total = 0
+    \\    for tag in tags:
+    \\        total += len(tag.name)
+    \\    return total
+    \\def main() -> int:
+    \\    tags = [Tag(id=1, name=b"ab"), Tag(id=2, name=b"cde")]
+    \\    return len(names(tags, 2)) + first(tags, 1).id + rename(mut tags) + looped(tags)
+;
+
+/// Whether some local slot `%lN` holds a whole value of `bytes` bytes.
+fn slotOf(il: []const u8, comptime bytes: usize) bool {
+    const suffix = std.fmt.comptimePrint("=l alloc8 {d}", .{bytes});
+    var lines = std.mem.splitScalar(u8, il, '\n');
+    while (lines.next()) |line| {
+        if (std.mem.startsWith(u8, line, " %l") and std.mem.endsWith(u8, line, suffix)) return true;
+    }
+    return false;
+}
+
+// spec: RC-ELEMENT-BORROW-3
+test "RC-ELEMENT-BORROW-3 owning elements of a read-only list parameter lend their address" {
+    var rc = try emit(owning_elements, .rc);
+    defer rc.deinit();
+    // Allocation, a call and a return run while the borrow is live.
+    const names = try named(rc.value, "names");
+    try t.expect(std.mem.indexOf(u8, names, "RC-ELEMENT-BORROW-3") != null);
+    try t.expect(!slotOf(names, 16));
+    try t.expect(!slotOf(try named(rc.value, "first"), 16));
+    // A `mut` list and a hidden iteration source keep their copies.
+    try t.expect(slotOf(try named(rc.value, "rename"), 16));
+    try t.expect(std.mem.indexOf(u8, try named(rc.value, "rename"), "RC-ELEMENT-BORROW-3") == null);
+    try t.expect(std.mem.indexOf(u8, try named(rc.value, "looped"), "RC-ELEMENT-BORROW-3") == null);
+    // The rule is RC's own: the collector's lowering carries no such store.
+    var gc = try emit(owning_elements, .gc);
+    defer gc.deinit();
+    try t.expect(std.mem.indexOf(u8, try named(gc.value, "names"), "RC-ELEMENT-BORROW-3") == null);
+}
