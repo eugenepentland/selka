@@ -1,0 +1,320 @@
+module text_index
+
+# Scalar lookup in a long text that is not ASCII (SPEC.md TEXT-INDEX-1..3). Such
+# a text finds a scalar by walking from the nearest known place instead of from
+# the start of its payload, and none of that is observable: every answer below is
+# the one a text with no index gives. The texts are built from the block
+# "aé中😀b", whose five scalars take one, two, three, four and one octets, so
+# every scalar has a known place in every text made of whole blocks, and a text of
+# 30 blocks or more holds the 256 octets an index needs. The runner collects at
+# every allocation (`--gc-stress`) and runs the suite under both runtimes.
+
+
+const BLOCK: str = "aé中😀b"
+
+
+# `times` copies of `piece` by doubling, so a long input costs a logarithmic
+# number of guest steps.
+def repeated(piece: str, times: int) -> str:
+    out = ""
+    chunk = piece
+    remaining = times
+    while remaining > 0:
+        if remaining % 2 == 1:
+            out = out + chunk
+        remaining = remaining // 2
+        if remaining > 0:
+            chunk = chunk + chunk
+    return out
+
+
+# The scalar at position `at` of a text made of whole blocks.
+def scalar_at(at: int) -> str:
+    return BLOCK[at % 5]
+
+
+# The `[start:stop]` piece of a text made of whole blocks, one scalar at a time.
+def piece_of(start: int, stop: int) -> str:
+    out = ""
+    for at in range(start, stop):
+        out = out + scalar_at(at)
+    return out
+
+
+# Ends of the range where every lookup is checked in one order: front, middle, end.
+def first_mismatch_in_order(text: str) -> int:
+    for at in range(len(text)):
+        if text[at] != scalar_at(at):
+            return at
+    return -1
+
+
+def first_mismatch_reversed(text: str) -> int:
+    for step in range(len(text)):
+        at = len(text) - 1 - step
+        if text[at] != scalar_at(at):
+            return at
+        if text[-1 - step] != scalar_at(at):
+            return at
+    return -1
+
+
+# A stride coprime to the length visits every place once in an order with no
+# locality, so nearly every lookup is far from the last one.
+def first_mismatch_scattered(text: str) -> int:
+    length = len(text)
+    place = 0
+    for _ in range(length):
+        if text[place] != scalar_at(place):
+            return place
+        place = (place + 1237) % length
+    return -1
+
+
+# Two positions moving toward each other, so consecutive lookups are far apart
+# and the last one is never near the next.
+def first_mismatch_from_both_ends(text: str) -> int:
+    low = 0
+    high = len(text) - 1
+    while low <= high:
+        if text[low] != scalar_at(low):
+            return low
+        if text[high] != scalar_at(high):
+            return high
+        low += 1
+        high -= 1
+    return -1
+
+
+# spec: TEXT-INDEX-1
+public def test_every_scalar_of_a_long_text_is_found_in_every_order() -> bool:
+    text = repeated(BLOCK, 400)
+    ok = len(text) == 2000
+    ok = ok and first_mismatch_in_order(text) == -1
+    ok = ok and first_mismatch_reversed(text) == -1
+    ok = ok and first_mismatch_scattered(text) == -1
+    return ok and first_mismatch_from_both_ends(text) == -1
+
+
+# spec-case: TEXT-INDEX-1
+public def test_iteration_visits_each_scalar_once_in_order() -> bool:
+    text = repeated(BLOCK, 300)
+    at = 0
+    wide = 0
+    for ch in text:
+        if ch != scalar_at(at):
+            return False
+        if ord(ch) > 65535:
+            wide += 1
+        at += 1
+    ok = at == 1500 and wide == 300
+    for position, ch in enumerate(text):
+        if ch != scalar_at(position):
+            return False
+    total = 0
+    for ch in text:
+        total += ord(ch)
+    return ok and total == 300 * (97 + 233 + 20013 + 128512 + 98)
+
+
+# The sizes an index is built for and just below them: 255 octets of text hold no
+# index and 256 do, and a text of one non-ASCII scalar among ASCII ones is the
+# smallest shape that needs it.
+# spec-case: TEXT-INDEX-1
+public def test_lookups_agree_on_both_sides_of_the_index_threshold() -> bool:
+    ok = True
+    for blocks in [1, 2, 29, 30, 31, 64, 65, 90, 250]:
+        text = repeated(BLOCK, blocks)
+        ok = ok and len(text) == blocks * 5
+        ok = ok and first_mismatch_in_order(text) == -1
+        ok = ok and first_mismatch_reversed(text) == -1
+        ok = ok and first_mismatch_from_both_ends(text) == -1
+    padded = repeated("x", 253) + "é"
+    ok = ok and len(padded) == 254 and padded[253] == "é" and padded[252] == "x" and padded[-1] == "é"
+    exact = padded + "y"
+    ok = ok and len(exact) == 255 and exact[253] == "é" and exact[254] == "y" and exact[-2] == "é"
+    return ok
+
+
+# One non-ASCII scalar at the front, in the middle and at the end of a long ASCII
+# text, the shape of a source file with a single accented name.
+# spec-case: TEXT-INDEX-1
+public def test_one_non_ascii_scalar_in_ascii_text() -> bool:
+    plain = repeated("(pin 12 ", 1000)
+    for cut in [0, 1, 4000, 7998, 7999, 8000]:
+        text = plain[:cut] + "é" + plain[cut:]
+        if len(text) != 8001 or text[cut] != "é" or text.find("é") != cut:
+            return False
+        if cut > 0 and (text[0] != "(" or text[cut - 1] != plain[cut - 1]):
+            return False
+        if cut < 8000 and (text[-1] != " " or text[cut + 1] != plain[cut]):
+            return False
+        count = 0
+        for at in range(len(text)):
+            if text[at] == "(":
+                count += 1
+        if count != 1000 or text.count("(") != 1000:
+            return False
+    return True
+
+
+# 4-byte scalars only, so scalar and octet positions differ by a factor of four.
+# spec-case: TEXT-INDEX-1
+public def test_a_text_of_four_octet_scalars() -> bool:
+    text = repeated("😀", 3000)
+    ok = len(text) == 3000 and text[0] == "😀" and text[2999] == "😀" and text[-1500] == "😀"
+    for at in range(len(text)):
+        if text[at] != "😀":
+            return False
+    mixed = repeated("😀é", 1500)
+    ok = ok and len(mixed) == 3000 and mixed[2999] == "é" and mixed[2998] == "😀" and mixed[1501] == "é"
+    return ok and mixed[1000:1004] == "😀é😀é" and text[10:2990] == repeated("😀", 2980)
+
+
+# spec: TEXT-INDEX-2
+public def test_slices_of_a_long_text_read_the_scalars_they_name() -> bool:
+    text = repeated(BLOCK, 400)
+    ok = True
+    for start in [0, 1, 2, 3, 4, 5, 127, 128, 129, 255, 256, 257, 999, 1000, 1500, 1995, 1999]:
+        for width in [0, 1, 2, 7, 8, 9, 100, 128, 129, 500, 1000]:
+            stop = start + width
+            if stop > 2000:
+                stop = 2000
+            ok = ok and text[start:stop] == piece_of(start, stop)
+            ok = ok and len(text[start:stop]) == stop - start
+    return ok
+
+
+# Endpoints past the ends clamp, a reversed interval is empty, and negative
+# endpoints count from the end, exactly as on a short text.
+# spec-case: TEXT-INDEX-2
+public def test_slice_endpoints_clamp_and_count_from_the_end() -> bool:
+    text = repeated(BLOCK, 100)
+    ok = len(text) == 500
+    ok = ok and text[:] == text and text[0:500] == text and text[0:9999] == text
+    ok = ok and text[-9999:3] == "aé中" and text[498:9999] == "😀b" and text[500:600] == ""
+    ok = ok and text[300:100] == "" and text[250:250] == "" and text[-1:] == "b"
+    ok = ok and text[-2:] == "😀b" and text[-3:-1] == "中😀" and text[:-499] == "a"
+    ok = ok and text[-500:-499] == "a" and text[-100:] == piece_of(400, 500)
+    ok = ok and text[123:-77] == piece_of(123, 423) and text[-77:123] == ""
+    return ok and text[499:500] == "b" and text[499:499] == "" and text[:0] == ""
+
+
+# A parser that keeps the rest of its input and cuts pieces off the front: each
+# step's slice and each lookup in it read the right scalar.
+# spec-case: TEXT-INDEX-2
+public def test_the_rest_of_a_text_after_each_cut() -> bool:
+    text = repeated(BLOCK, 400)
+    pos = 0
+    step = 0
+    while pos < 1900:
+        rest = text[pos:]
+        if len(rest) != 2000 - pos:
+            return False
+        if rest[0] != scalar_at(pos) or rest[-1] != "b" or rest[len(rest) // 2] != scalar_at(pos + len(rest) // 2):
+            return False
+        if rest[3:9] != piece_of(pos + 3, pos + 9):
+            return False
+        pos += 37 + step % 5
+        step += 1
+    return True
+
+
+# A text cut in two halves, each of them a view of the whole or a copy, read from
+# both ends inward: the positions of a view are the view's own.
+# spec-case: TEXT-INDEX-2
+public def test_views_of_a_long_text_have_positions_of_their_own() -> bool:
+    text = repeated(BLOCK, 600)
+    left = text[:2000]
+    right = text[1000:]
+    inner = right[700:1800]
+    ok = len(left) == 2000 and len(right) == 2000 and len(inner) == 1100
+    ok = ok and first_mismatch_from_both_ends(left) == -1
+    for at in range(len(inner)):
+        if inner[at] != scalar_at(1700 + at):
+            return False
+    for at in range(len(right)):
+        if right[at] != scalar_at(1000 + at):
+            return False
+    scattered = 0
+    place = 0
+    for _ in range(len(right)):
+        if right[place] != scalar_at(1000 + place):
+            scattered += 1
+        place = (place + 611) % len(right)
+    return ok and scattered == 0 and right[-1] == scalar_at(2999) and inner[-1] == scalar_at(2799)
+
+
+# The scalar `find` reports is a scalar position, whatever octets precede it, and
+# `count`, `split` and the prefix and suffix tests read the same text.
+# spec: TEXT-INDEX-3
+public def test_search_reports_scalar_positions_in_a_long_text() -> bool:
+    text = repeated(BLOCK, 400) + "TAIL"
+    ok = text.find("TAIL") == 2000 and text.find("😀b") == 3 and text.find("b") == 4
+    ok = ok and text.find("aé中😀bTAIL") == 1995 and text.find("missing") == -1
+    ok = ok and text.count("😀") == 400 and text.count("aé") == 400 and text.count("TAIL") == 1
+    tail = text[1000:]
+    ok = ok and tail.find("TAIL") == 1000 and tail.find("é") == 1 and tail.find("é中😀bTAIL") == 996
+    parts = text.split("b")
+    ok = ok and len(parts) == 401 and parts[0] == "aé中😀" and parts[399] == "aé中😀" and parts[400] == "TAIL"
+    ok = ok and parts[200][2] == "中" and parts[200][-1] == "😀" and text.startswith("aé中") and text.endswith("bTAIL")
+    return ok
+
+
+# strip, replace, join, case mapping and padding produce texts that are indexed
+# as well: each answer is read at scalar positions after the operation.
+# spec-case: TEXT-INDEX-3
+public def test_texts_built_by_methods_are_indexed_correctly() -> bool:
+    text = repeated(BLOCK, 200)
+    padded = "   " + text + "\n\t "
+    stripped = padded.strip()
+    ok = stripped == text and len(stripped) == 1000 and stripped[-1] == "b" and stripped[500] == "a"
+    ok = ok and padded.lstrip()[0] == "a" and padded.rstrip()[-1] == "b" and padded.rstrip()[3] == "a"
+    replaced = text.replace("中", "ZZ")
+    ok = ok and len(replaced) == 1200 and replaced[2] == "Z" and replaced[3] == "Z" and replaced[4] == "😀"
+    ok = ok and replaced[-1] == "b" and replaced[-2] == "😀" and replaced.count("ZZ") == 200
+    flat = text.replace("é", "e").replace("中", "c").replace("😀", "d")
+    ok = ok and len(flat) == 1000 and flat[3] == "d" and flat[1] == "e" and flat[-1] == "b" and flat.isalpha()
+    joined = "-".join([text[:100], text[100:200], text[200:]])
+    ok = ok and len(joined) == 1002 and joined[100] == "-" and joined[201] == "-" and joined[-1] == "b"
+    ok = ok and joined[101] == scalar_at(100) and joined[202] == scalar_at(200)
+    upper = text.upper()
+    ok = ok and len(upper) == 1000 and upper[0] == "A" and upper[1] == "é" and upper[4] == "B" and upper[-1] == "B"
+    lower = ("B" + text).lower()
+    ok = ok and lower[0] == "b" and lower[1] == "a" and lower[-1] == "b"
+    zero = ("é" + text).zfill(1100)
+    ok = ok and len(zero) == 1100 and zero[0] == "0" and zero[98] == "0" and zero[99] == "é" and zero[100] == "a" and zero[-1] == "b"
+    both = text + text
+    return ok and len(both) == 2000 and both[1000] == "a" and both[999] == "b" and both[1999] == "b"
+
+
+# A text made of ASCII and mixed pieces answers the same at every place, and an
+# empty text, a one-scalar text and the last valid index behave as before.
+# spec-case: TEXT-INDEX-3
+public def test_short_empty_and_ascii_texts_are_unchanged() -> bool:
+    empty = ""
+    ok = len(empty) == 0 and empty[0:0] == "" and empty[:] == "" and empty.find("a") == -1
+    one = "😀"
+    ok = ok and len(one) == 1 and one[0] == "😀" and one[-1] == "😀" and one[0:1] == one and one[1:] == ""
+    ascii_text = repeated("abcdefghij", 500)
+    ok = ok and ascii_text[4999] == "j" and ascii_text[-5000] == "a" and ascii_text[123:127] == "defg"
+    small = "héllo wörld — ✓"
+    ok = ok and len(small) == 15 and small[1] == "é" and small[7] == "ö" and small[-1] == "✓" and small[-3] == "—"
+    return ok and small[6:11] == "wörld" and small.find("—") == 12 and small.find("wörld") == 6
+
+
+# Values do not share the position a lookup recorded: copies and aliases of a
+# text read independently, and a text is unchanged by being read.
+# spec-case: TEXT-INDEX-1
+public def test_aliases_and_copies_read_independently() -> bool:
+    text = repeated(BLOCK, 300)
+    alias = text
+    copy = text + ""
+    other = repeated(BLOCK, 300)
+    ok = text[1400] == scalar_at(1400) and alias[3] == scalar_at(3) and copy[1499] == "b" and other[0] == "a"
+    ok = ok and alias[1400] == scalar_at(1400) and other[1400] == scalar_at(1400) and text[3] == scalar_at(3)
+    reversed_walk = ""
+    for step in range(10):
+        reversed_walk = reversed_walk + copy[len(copy) - 1 - step]
+    ok = ok and reversed_walk == "b😀中éab😀中éa"
+    return ok and text == alias and text == copy and text == other and len(text) == 1500

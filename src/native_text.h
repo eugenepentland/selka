@@ -29,6 +29,21 @@ typedef struct myl_native_text {
 /* `flags` bit 2: the text is a view. It owns no octets: its payload is `bytes`
  * octets of `owner`'s payload starting at octet `hash`. */
 #define MYL_TEXT_VIEW 4u
+/* `flags` bit 3: the block holds a position index behind its payload
+ * (TEXT-INDEX-1). Only an owned, non-ASCII text of at least MYL_TEXT_INDEX_MIN
+ * octets carries one; every other text finds a scalar by walking its payload
+ * from an end. */
+#define MYL_TEXT_INDEXED 8u
+/* `flags` bit 4: the indexed text's sample table has been filled. */
+#define MYL_TEXT_SAMPLED 16u
+/* The shortest payload, in octets, that carries a position index. Below it a
+ * walk from an end is at most this many octets, cheaper than the index's 16
+ * bytes and its bookkeeping. */
+#define MYL_TEXT_INDEX_MIN ((size_t)256)
+/* Scalars between two entries of an indexed text's sample table. One four-byte
+ * entry per stride keeps the table at about 3 % of the scalar count, and a
+ * lookup that reaches it walks at most half a stride of scalars. */
+#define MYL_TEXT_SAMPLE_STRIDE ((size_t)128)
 /* A view: a text header whose payload is a range of another text's. `owner` is
  * always an owned text (a view of a view points at the first view's owner), so
  * reading a view's octets is one hop, and the collector keeps the owner alive
@@ -143,13 +158,28 @@ const unsigned char *myl_native_text_payload(const myl_native_text *);
  * zeroed, and the value is not a valid text until it is published, so it must
  * not reach generated code in between. NULL once the budget is exhausted. */
 myl_native_text *myl_native_text_build(myl_native_heap *, size_t bytes);
+/* `myl_native_text_build` for a constructor that already knows the payload's
+ * scalar count: a non-ASCII text of at least MYL_TEXT_INDEX_MIN octets is
+ * allocated with the position index behind its payload (TEXT-INDEX-1), which
+ * `myl_native_text_publish` then initializes. `scalars` must be the count the
+ * text is published with. NULL once the budget is exhausted. */
+myl_native_text *myl_native_text_build_scalars(myl_native_heap *, size_t bytes, size_t scalars);
 /* Publish a built text as `scalars` Unicode scalar values whose payload was
  * written, with `plain` set when every one of them is below 0x80. */
 void myl_native_text_publish(myl_native_text *, size_t scalars, int plain);
-/* Byte offset of scalar `index`, which is `index` itself for ASCII text. */
+/* Byte offset of scalar `index`, which is `index` itself for ASCII text and the
+ * payload's octet count for an index at or past the end. A non-ASCII text
+ * answers from the nearest of its ends, its last answer and its sample table
+ * (TEXT-INDEX-1), so a loop over the scalars, or over slices of them, costs
+ * time linear in the text however it is ordered. */
 size_t myl_native_text_offset(const myl_native_text *, size_t index);
 /* Scalar index of byte offset `at`, the inverse of myl_native_text_offset. */
 size_t myl_native_text_index(const myl_native_text *, size_t at);
+#ifdef MYL_TEXT_STEPS
+/* Octets the position machinery has examined, counted only in a test build so
+ * a test can assert a complexity bound without reading a clock. */
+extern size_t myl_native_text_steps;
+#endif
 /* The Unicode scalar value at scalar `index`, which must be in range. */
 uint32_t myl_native_text_point_at(const myl_native_text *, size_t index);
 /* Fresh text holding the octets of `input` in `[from, to)`, both of which must

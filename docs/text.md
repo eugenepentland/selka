@@ -98,6 +98,46 @@ Inside `with arena()` every piece still belongs to the arena, as a copy would, s
 the arena's store barrier traps where it always did, and `escape` copies a view
 into a string of its own octets.
 
+## Indexing long text that is not ASCII
+
+A string is stored as UTF-8 and indexed by scalar value, so `text[i]` has to turn
+a scalar position into an octet offset. On ASCII text they are the same number and
+the lookup is free. A string that holds any non-ASCII scalar and at least 256
+octets carries a small position index inside its own block (about 3 % of its
+scalar count): the octet offset of the last scalar looked up, and a table with the
+offset of every 128th scalar. A lookup walks, a word of eight octets at a time,
+from whichever of the two ends, the last lookup or the table entry is nearest, and
+the table is built by the first lookup that is far from all of them, so text that
+is only scanned in order never builds it.
+
+You do not have to choose between `str` and `bytes` for speed on account of one
+`é`. `for ch in text`, `text[i]` in any order, `text[a:b]`, `enumerate`, `find`,
+`strip` and `text[pos:]` in a parser loop are all linear in the text, on a
+megabyte of source with one accented name or a megabyte of mostly non-ASCII text.
+Reach for `bytes` when the data is bytes, or when you want one octet per element
+rather than one scalar, not to avoid a quadratic cliff:
+
+```mylang
+# doc: expect 42
+def main() -> int:
+    text = "".join(["(pin 12 " for _ in range(20000)]) + "é" + "".join(["(pin 12 " for _ in range(20000)])
+    opens = 0
+    for i in range(len(text)):
+        if text[i] == "(":
+            opens += 1
+    rest = text
+    pins = 0
+    while len(rest) > 0:
+        at = rest.find("(pin")
+        if at < 0:
+            break
+        pins += 1
+        rest = rest[at + 4:]
+    if opens != 40000 or pins != 40000 or text.find("é") != 160000:
+        return 1
+    return 42
+```
+
 ## String methods
 
 `str` answers `strip`, `lstrip`, `rstrip`, `upper`, `lower`, `zfill(width)`,
