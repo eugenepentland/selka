@@ -152,6 +152,23 @@ def fill_sink(sink: mut Sink, value: bytes):
     _ = sink.buffer.append_range(value, 0, len(value))
 
 
+record Table:
+    rows: list[list[int]]
+    count: int
+
+
+def store_row(table: mut Table, index: int, row: list[int]):
+    table.rows[index] = row
+
+
+# spec-case: OWNERSHIP-MUT-RECORD-WRITE-1
+public def test_mut_record_element_store_preserves_a_field_snapshot() -> bool:
+    table = Table([[1], [2, 3]], 0)
+    before = table.rows
+    store_row(mut table, 1, [4])
+    return before == [[1], [2, 3]] and table.rows == [[1], [4]]
+
+
 # Run the same assertions without test-harness accounting or result wrapping.
 def main(out: Stream) -> int:
     out.print(test_heap_record_field_mutation_preserves_snapshot())
@@ -166,4 +183,5 @@ def main(out: Stream) -> int:
     out.print(test_mut_record_argument_preserves_a_field_snapshot())
     out.print(test_mut_record_argument_preserves_nested_snapshots())
     out.print(test_mut_record_argument_preserves_a_byte_buffer_snapshot())
+    out.print(test_mut_record_element_store_preserves_a_field_snapshot())
     return 0
