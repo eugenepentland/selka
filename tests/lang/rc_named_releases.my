@@ -1,0 +1,68 @@
+# Named locals the program only reads and rebinds whole are released after
+# their last use (RC-NAMED-RELEASE-1). Each answer is the same under the
+# collector and RC; RC counting builds balance.
+
+
+def counted(seed: int, size: int) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for index in range(size):
+        key = "k" + str((seed * index) % 7)
+        counts[key] = counts.get(key, 0) + 1
+    return counts
+
+
+# spec: RC-NAMED-RELEASE-1
+public def test_a_rebound_dictionary_is_released_before_the_next_value() -> bool:
+    total = 0
+    counts = counted(1, 3)
+    for seed in [2, 3, 5]:
+        counts = counted(seed, 20)
+        total = total + len(counts)
+    return total == 21 and counts["k0"] == 3
+
+
+# spec-case: RC-NAMED-RELEASE-1
+public def test_values_read_out_of_a_dead_local_stay_alive() -> bool:
+    rows = [[1, 2], [3, 4]]
+    first = rows[0]
+    word = "alpha" + "beta"
+    piece = word[1:4]
+    total = 0
+    for index in range(3):
+        total = total + first[index % 2] + len(piece)
+    return total == 1 + 2 + 1 + 9 and piece == "lph"
+
+
+# spec-case: RC-NAMED-RELEASE-1
+public def test_a_local_read_again_on_a_later_iteration_is_kept() -> bool:
+    names = ["a", "b"]
+    seen: list[str] = []
+    marker = 0
+    for index in range(4):
+        if index % 2 == 0:
+            seen.append(names[index // 2])
+        marker = index
+    return seen == ["a", "b"] and marker == 3
+
+
+def fill(values: mut list[int]) -> int:
+    values.append(len(values))
+    return len(values)
+
+
+# spec-case: RC-NAMED-RELEASE-1
+public def test_written_and_snapshot_locals_keep_their_owners() -> bool:
+    values = [1]
+    before = values
+    count = fill(mut values)
+    after = values
+    values = [9]
+    return count == 2 and before == [1] and after == [1, 1] and values == [9]
+
+
+def main() -> int:
+    assert test_a_rebound_dictionary_is_released_before_the_next_value()
+    assert test_values_read_out_of_a_dead_local_stay_alive()
+    assert test_a_local_read_again_on_a_later_iteration_is_kept()
+    assert test_written_and_snapshot_locals_keep_their_owners()
+    return 0

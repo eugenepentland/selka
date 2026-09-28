@@ -40,16 +40,5 @@ pub fn releases(comptime E: type, self: *E, pc: usize, empty: []const usize) boo
 
 /// No implicit clone installation or recovered place may publish this local.
 pub fn unwritten(comptime E: type, self: *E, local: usize) bool {
-    const plan = self.cow.?.plan;
-    for (plan.sites) |site| {
-        for (site.unique) |unique| if (unique.local == local or unique.alias == local) return false;
-        if (site.unique_field) |place| if (place.parent == local) return false;
-    }
-    for (plan.loops.entries) |entries| for (entries) |entry| if (entry.local == local) return false;
-    for (plan.aliases) |parent| if (parent == local) return false;
-    for (plan.places) |maybe| if (maybe) |place| {
-        if (place.parent == local) return false;
-        if (place.box) |box| if (box.owner == local) return false;
-    };
-    return true;
+    return @import("qbe_rc_edges.zig").unwritten(self.cow.?.plan, local);
 }

@@ -398,6 +398,15 @@ test "RC-OWNERSHIP-PLAN-1 final ref_local liveness delays edge release until the
     try t.expect(input.flow.live.before(reference, data));
 }
 
+fn storeEdgeDrops(input: plans.Input, plan: plans.Plan, local: usize, stored: usize) bool {
+    for (plan.edges) |edge| {
+        const op = input.code.function.scope.instructions[edge.from].op;
+        if (op != .store_local or @backingInt(op.store_local) != stored or edge.to != edge.from + 1) continue;
+        for (edge.releases) |release| if (release.storage == input.physical.locals[local].storage) return true;
+    }
+    return false;
+}
+
 fn falseEdgeDrops(input: plans.Input, plan: plans.Plan, local: usize) bool {
     for (input.code.function.scope.instructions, 0..) |instruction, pc| {
         if (instruction.op != .jump_if_false) continue;
@@ -410,13 +419,15 @@ fn falseEdgeDrops(input: plans.Input, plan: plans.Plan, local: usize) bool {
 }
 
 // spec-case: RC-OWNERSHIP-PLAN-1
+// spec-case: RC-NAMED-RELEASE-1
 test "RC-OWNERSHIP-PLAN-1 branch cleanup belongs to the actual unused successor edge" {
     var fixture = try ShapeFixture.init(
         \\def choose(use: bool) -> int:
         \\    values = [1, 2]
         \\    if use:
         \\        return len(values)
-        \\    return 0
+        \\    other = 0
+        \\    return other
         \\
         \\def main() -> int:
         \\    return choose(False)
@@ -426,7 +437,11 @@ test "RC-OWNERSHIP-PLAN-1 branch cleanup belongs to the actual unused successor 
     defer facts.deinit();
     var input = try planInput(&fixture, &facts, "choose");
     const plan = try plans.build(fixture.arena.allocator(), input);
-    try t.expect(falseEdgeDrops(input, plan, try localIndex(input, "values")));
+    // A named local waits for the unused successor's first straight-line
+    // store edge, the only edge emission discharges a release on.
+    const values = try localIndex(input, "values");
+    try t.expect(!falseEdgeDrops(input, plan, values));
+    try t.expect(storeEdgeDrops(input, plan, values, try localIndex(input, "other")));
     input.policy.abi = "rc-v1";
     try t.expectError(error.AbiMismatch, plans.build(fixture.arena.allocator(), input));
 }

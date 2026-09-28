@@ -43,7 +43,8 @@ fn eligible(comptime E: type, self: *E, pc: usize, index: usize) Error!bool {
     if (@import("qbe_rc_record_read.zig").empty(E, self, index)) return false;
     if (index < self.function.signature.parameter_count) return false;
     const local = self.function.scope.locals[index];
-    if (!local.usage.temporary or self.byReference(index) or self.callerStorage(index)) return false;
+    if (!local.usage.temporary and !named(E, self, index)) return false;
+    if (self.byReference(index) or self.callerStorage(index)) return false;
     const shape = self.cow.?.rc.?.catalog.get(local.ty) catch return error.InternalError;
     if (!shape.counted or shape.unique_drop) return false;
     if (!self.isScalar(local.ty) or !local.ty.isAggregate()) return false;
@@ -52,6 +53,45 @@ fn eligible(comptime E: type, self: *E, pc: usize, index: usize) Error!bool {
     if (!record.isCollection() or record.collection.box) return false;
     if (neededByReceiver(E, self, pc, index)) return false;
     return !@import("qbe_rc_inert_receiver.zig").emptyLocal(E, self, index);
+}
+
+/// RC-NAMED-RELEASE-1: a named local the program only ever reads and
+/// rebinds whole is released on the first straight-line store edge after its
+/// last use, as a finished temporary is, instead of when its next value is
+/// stored or the frame exits: an owning slot no move shares, no loop iterates,
+/// no other local is filled from, and no copy-on-write site, place, alias or
+/// loop entry names. A local another slot captured would only trade its
+/// owner for that slot's hold, which then retires the value.
+fn named(comptime E: type, self: *E, index: usize) bool {
+    if (self.function.scope.locals[index].origin != .local) return false;
+    if (self.moves.aliased(index) or @import("cow_plan.zig").iterationOwner(self.function, index)) return false;
+    for (0..self.function.scope.locals.len) |other| if (other != index and self.moves.resolve(other) == index) return false;
+    const code = self.function.scope.instructions;
+    for (code, 0..) |instruction, pc| {
+        if (instruction.op != .load_local or @backingInt(instruction.op.load_local) != index) continue;
+        var next = pc + 1;
+        if (next < code.len and code[next].op == .value_copy) next += 1;
+        if (next < code.len and code[next].op == .store_local and @backingInt(code[next].op.store_local) != index) return false;
+    }
+    const entry = self.cow.?.rc.?.plan.locals.entry[index];
+    if (@backingInt(entry.storage) != index or entry.ownership != .empty) return false;
+    return unwritten(self.cow.?.plan, index);
+}
+
+/// No copy-on-write site, place, alias or loop entry names `local`: no
+/// implicit clone installation or recovered place may publish it.
+pub fn unwritten(plan: @import("cow_plan.zig").Plan, local: usize) bool {
+    for (plan.sites) |site| {
+        for (site.unique) |unique| if (unique.local == local or unique.alias == local) return false;
+        if (site.unique_field) |place| if (place.parent == local) return false;
+    }
+    for (plan.loops.entries) |entries| for (entries) |entry| if (entry.local == local) return false;
+    for (plan.aliases) |parent| if (parent == local) return false;
+    for (plan.places) |maybe| if (maybe) |place| {
+        if (place.parent == local) return false;
+        if (place.box) |box| if (box.owner == local) return false;
+    };
+    return true;
 }
 
 fn neededByReceiver(comptime E: type, self: *E, pc: usize, owner: usize) bool {

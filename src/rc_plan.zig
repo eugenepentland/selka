@@ -156,6 +156,8 @@ const EdgeBuilder = struct {
             else => {},
         }
         if (bound) |local| try self.set(local, true);
+        const code = self.input.code.function.scope.instructions;
+        const store_edge = to == from + 1 and code[from].op == .store_local;
         var releases: std.ArrayList(Release) = .empty;
         for (self.storage, self.scratch) |slot, *initialized| {
             const guard = slot.guard orelse continue;
@@ -163,6 +165,9 @@ const EdgeBuilder = struct {
             // the consuming operation's successors have an empty stack.
             if (!initialized.* or stack.len != 0) continue;
             if (slot.shape.unique_drop or self.needed(to, slot.id)) continue;
+            // RC-NAMED-RELEASE-1: a named slot waits for the first straight-line
+            // store edge, the only edge emission discharges a release on.
+            if (!store_edge and !self.temporary(slot.id)) continue;
             initialized.* = false;
             if (emit) try releases.append(self.a, .{ .storage = slot.id, .guard = guard });
         }
@@ -181,6 +186,12 @@ const EdgeBuilder = struct {
         if (index >= self.input.physical.locals.len) return error.InvalidState;
         const slot = find(self.storage, self.input.physical.locals[index].storage) orelse return error.InvalidState;
         if (self.storage[slot].guard != null) self.scratch[slot] = initialized;
+    }
+
+    fn temporary(self: *const EdgeBuilder, id: model.StorageId) bool {
+        const locals = self.input.code.function.scope.locals;
+        const index = @backingInt(id);
+        return index >= locals.len or locals[index].usage.temporary;
     }
 
     fn needed(self: *const EdgeBuilder, pc: usize, id: model.StorageId) bool {
