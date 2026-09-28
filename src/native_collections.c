@@ -1090,13 +1090,18 @@ myl_native_list *myl_native_list_slice_step(myl_native_heap *heap, myl_native_li
 }
 /* The list header owns logical elements. Its backing owns only raw bytes, so
  * a held retired block remains valid without duplicating the elements' edges. */
-/* RC-LIST-FLAT-RELEASE-1: elements whose type admits a flat leaf plan (only
- * owner pointers, no hook) release leaf by leaf through it, exactly as the
- * shape walker would, without walking the shape once per element. */
+/* RC-LIST-FLAT-RELEASE-1: elements the shape walker would visit one by one
+ * (a nested shape that is neither a bare pointer nor shallow) release leaf by
+ * leaf through their type's flat plan when it admits one (only owner
+ * pointers, no hook), exactly as the walker would release them. */
 static void rc_elements_release(myl_native_heap *heap, const myl_native_type *type, void *storage, size_t length) {
     const myl_rc_binding *binding=myl_rc_binding_find(heap,type);
     if (!binding) abort();
-    if (binding->flat.count<=MYL_RC_FLAT_LEAVES) myl_rc_flat_edges_release(heap,binding,storage,length);
+    const myl_rc_flat *flat=&binding->flat;
+    /* An admitted plan without a leaf owns nothing (RC-PLAIN-TYPE-1). */
+    if (!flat->count && !flat->native_unique) return;
+    /* A binding's shape is its registered copy, so its depth needs no probe. */
+    if (flat->count<=MYL_RC_FLAT_LEAVES && !myl_rc_shallow_admits(binding->descriptor.shape)) myl_rc_flat_edges_release(heap,binding,storage,length);
     else myl_rc_edges_release(heap,binding->descriptor.shape,storage,length);
 }
 static void rc_list_edges(myl_native_heap *heap, void *payload, size_t count) {
