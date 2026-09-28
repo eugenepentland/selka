@@ -16,6 +16,13 @@ pub fn at(comptime E: type, self: *const E, pc: usize) bool {
     const local = @backingInt(read.load_local);
     const cow_state = self.cow orelse return false;
     const state = cow_state.rc orelse return false;
-    if (local >= state.contract.parameters.len) return false;
-    return state.contract.parameters[local] == .mutable_payload;
+    if (local >= state.contract.parameters.len or state.contract.parameters[local] != .mutable_payload) return false;
+    // A store the RC plan binds as borrowed from a physical anchor keeps only
+    // the bits and takes no owner, so an elided copy stays elided there
+    // (RC-ANCHORED-SHARE-1); a published copy would strand its owner.
+    if (pc + 1 < code.len and code[pc + 1].op == .store_local) {
+        const ownership = state.plan.locals.entry[@backingInt(code[pc + 1].op.store_local)].ownership;
+        if (ownership == .borrowed and ownership.borrowed == .storage) return false;
+    }
+    return true;
 }
