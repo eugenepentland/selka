@@ -1,0 +1,13 @@
+record Output:
+    buffer: list[int]
+
+def append(out: mut Output, value: int):
+    out.buffer.append(value)
+
+def main(out: Stream) -> int:
+    o = Output(buffer=[1])
+    before = o
+    append(mut o, 2)
+    out.print(before.buffer)
+    out.print(o.buffer)
+    return 0

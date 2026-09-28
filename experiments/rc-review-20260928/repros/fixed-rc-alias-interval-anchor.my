@@ -1,0 +1,19 @@
+record R:
+    rows: list[list[int]]
+    n: int
+
+def reset(b: mut R) -> int:
+    b.rows = [[7, 7, 7]]
+    junk: list[list[list[int]]] = []
+    for i in range(40):
+        junk.append([[i], [i, i]])
+    return 0
+
+def interval(a: mut R, b: mut R) -> int:
+    a.n = a.n + 1
+    return len(a.rows[reset(mut b)])
+
+def main(out: Stream) -> int:
+    r = R([[1, 2], [3]], 0)
+    out.print(interval(mut r, mut r), r.rows)
+    return 0

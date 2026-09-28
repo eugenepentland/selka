@@ -1,0 +1,335 @@
+record P:
+    xs: list[int]
+    k: int
+
+record Q:
+    a: int
+    b: int
+
+union U:
+    empty,
+    one: list[int],
+    two: P
+
+record R:
+    items: list[int]
+    rows: list[list[int]]
+    name: str
+    n: int
+    inner: P
+
+def make(n: int) -> list[int]:
+    out: list[int] = []
+    for i in range(n):
+        out.append(i * 3 + 1)
+    return out
+
+def total(xs: list[int]) -> int:
+    t = 0
+    for x in xs:
+        t = t + x
+    return t
+
+def total2(xss: list[list[int]]) -> int:
+    t = 0
+    for xs in xss:
+        t = t * 3 + total(xs) + len(xs)
+    return t
+
+def rsum(r: R) -> int:
+    return total(r.items) * 7 + total2(r.rows) * 5 + len(r.name) * 3 + r.n + total(r.inner.xs) * 11 + r.inner.k
+
+def psum(ps: list[P]) -> int:
+    t = 0
+    for p in ps:
+        t = t * 3 + total(p.xs) + p.k
+    return t
+
+def qsum(qs: list[Q]) -> int:
+    t = 0
+    for q in qs:
+        t = t * 3 + q.a * 2 + q.b
+    return t
+
+def usum(u: U) -> int:
+    match u:
+        case U.one(xs):
+            return total(xs) + 1
+        case U.two(p):
+            return total(p.xs) * 2 + p.k
+        case _:
+            return 5
+
+def keycount(text: str, k: int) -> int:
+    counts: dict[str, int] = {}
+    i = 0
+    while i + k <= len(text):
+        key = text[i:i + k]
+        counts[key] = counts.get(key, 0) + 1
+        i = i + 1
+    t = 0
+    for seen, v in counts.items():
+        t = t * 7 + v + len(seen)
+    return t
+
+def dsum(d: dict[str, list[int]]) -> int:
+    t = 0
+    for k, v in d.items():
+        t = t * 5 + len(k) + total(v)
+    return t
+
+def push_list(xs: mut list[int], v: int):
+    xs.append(v)
+
+def bump_rows(rows: mut list[list[int]], v: int) -> int:
+    if len(rows) > 0:
+        rows[0].append(v)
+    rows.append([v])
+    return len(rows)
+
+def touch(r: mut R, v: int) -> int:
+    r.n = r.n + v
+    return 0
+
+def grow(r: mut R, v: int) -> int:
+    r.items.append(v)
+    return 1
+
+def swap_items(r: mut R, v: int) -> int:
+    r.items = [v, v]
+    return 0
+
+def deep(r: mut R, v: int) -> int:
+    push_list(mut r.inner.xs, v)
+    if len(r.rows) > 0:
+        r.rows[0].append(v)
+    return 0
+
+def replace_rows(r: mut R, v: int) -> int:
+    _ = bump_rows(mut r.rows, v)
+    return 0
+
+
+def f0(p0: mut list[list[int]], p1: mut list[Q]) -> int:
+    acc = 0
+    p0.append([1])
+    p1.append(Q(1, 1))
+    acc = acc + 1
+    v0 = U.one(make(2))
+    if 2 > 0:
+        v1 = p1
+        if len(v1) > 1:
+            e1 = v1[1]
+            v1[1] = Q(7, 7)
+            v1.append(Q(8, 8))
+            acc = acc + e1.a * 3 + e1.b
+        if len(p0) > 0:
+            p0[0] = (p0[0] if len(p0) > 0 else [5])
+    else:
+        v0 = U.one(make(3))
+    v0 = v0
+    c2 = 0
+    while c2 < 3:
+        c2 = c2 + 1
+        acc = acc * 3 + total2(p0)
+        v3 = p1
+        v4 = {"a": [1], "b": [2, 2]}
+        if acc % 2 == 0:
+            break
+    p0.append([4, 9])
+    acc = acc * 3 + qsum(p1)
+    if len(p1) > 1:
+        e5 = p1[1]
+        p1[1] = Q(7, 7)
+        p1.append(Q(8, 8))
+        acc = acc + e5.a * 3 + e5.b
+    return acc * 7 + total2(p0) + qsum(p1) + usum(v0)
+
+def f1(p0: list[int], p1: str, p2: mut R) -> int:
+    acc = 0
+    p2.n = p2.n + 1
+    acc = acc * 3 + rsum(p2)
+    c0 = 0
+    while c0 < 3:
+        c0 = c0 + 1
+        acc = acc * 3 + keycount(p1, 2)
+        if 3 > 0:
+            v1 = p1
+            acc = acc + deep(mut p2, p2.n)
+        else:
+            acc = acc * 3 + total(p0)
+            p2.items = p2.inner.xs
+        if acc % 2 == 0:
+            break
+    if len(p2.rows) > 0:
+        p2.rows[0].append(6)
+    v2 = p0
+    v2 = [9, 1]
+    v3 = v2
+    return acc * 7 + total(p0) + keycount(p1, 2) + rsum(p2) + total(v2) + total(v3)
+
+def f2(p0: R, p1: list[Q], p2: list[Q]) -> int:
+    acc = 0
+    v0 = p0
+    v1 = v0.rows
+    with arena():
+        tmp2 = (v1[0] if len(v1) > 0 else [5])
+        acc = acc + total(tmp2)
+        acc = acc + qsum(p2)
+    c3 = 0
+    while c3 < 2:
+        c3 = c3 + 1
+        v4 = U.two(v0.inner)
+        for x5 in v1:
+            acc = acc + total(x5)
+            acc = acc + 0
+    return acc * 7 + rsum(p0) + qsum(p1) + qsum(p2) + rsum(v0) + total2(v1)
+
+def f3(p0: str, p1: mut list[P]) -> int:
+    acc = 0
+    p1.append(P([1], 1))
+    c0 = 0
+    while c0 < 3:
+        c0 = c0 + 1
+        if 9 > 1:
+            v1 = p1
+            if len(p1) > 0:
+                p1[0].k = len(p0)
+            v2 = v1
+        acc = acc + f2(R(make(2), [[1], [2, 3]], "nm2", 0, P([4], 1)), [Q(0, 1), Q(2, 7)], [Q(6, 1), Q(2, 2)])
+        v3 = p1
+    if 3 > 3:
+        v4 = U.two(P([3, 4], 2))
+    with arena():
+        tmp5 = [7, 2]
+        acc = acc + total(tmp5)
+        acc = acc + keycount(p0, 2)
+    if 2 > 0:
+        if len(p1) > 0:
+            push_list(mut p1[0].xs, len(p0))
+    else:
+        if len(p1) > 0:
+            p1[0] = P([3], 3)
+        if 9 > 3:
+            acc = acc + f2(R(make(0), [[1], [2, 3]], "nm4", 1, P([4], 1)), [Q(0, 1), Q(2, 2)], [Q(3, 1), Q(2, 9)])
+            v6 = p1
+            v6.append(P(make(2), len(p0)))
+        else:
+            if len(p1) > 0:
+                p1[0].k = 4
+            v7 = p0
+    v8 = p0 + "q"
+    if len(p1) > 0:
+        p1[0].xs.append(len(p0))
+    acc = acc * 3 + keycount(p0, 2)
+    p1.append(P(make(3), 0))
+    c9 = 0
+    while c9 < 2:
+        c9 = c9 + 1
+        if len(p1) > 0:
+            p1[0] = P([1], 3)
+        v10 = R(make(0), [[1], [2, 3]], "nm5", 9, P([4], 1))
+    return acc * 7 + keycount(p0, 2) + psum(p1) + keycount(v8, 2)
+
+def f4(p0: U, p1: mut list[Q]) -> int:
+    acc = 0
+    p1.append(Q(1, 1))
+    p1.append(Q(2, 1))
+    with arena():
+        tmp0 = [3, 7]
+        acc = acc + total(tmp0)
+        acc = acc + qsum(p1)
+    v1 = [Q(7, 1), Q(2, 2)]
+    if len(p1) > 0:
+        p1[0].a = 4
+    v2 = p1
+    acc = acc * 3 + qsum(p1)
+    v3 = [8, 5]
+    if len(v2) > 0:
+        v2[0].a = 7
+    if len(p1) > 1:
+        e20 = p1[1]
+        p1[1] = Q(7, 7)
+        p1.append(Q(8, 8))
+        acc = acc + e20.a * 3 + e20.b
+    return acc * 7 + usum(p0) + qsum(p1) + qsum(v1) + qsum(v2) + total(v3)
+
+def f5(p0: R, p1: str, p2: mut list[P]) -> int:
+    acc = 0
+    p2.append(P([1], 1))
+    if len(p2) > 0:
+        p2[0] = P([p0.n], 3)
+    c0 = 0
+    while c0 < 2:
+        c0 = c0 + 1
+        if len(p2) > 0:
+            push_list(mut p2[0].xs, 2)
+        acc = acc * 3 + psum(p2)
+        v1 = p0.rows
+    if 5 > 4:
+        if 4 > 3:
+            if len(p2) > 0:
+                p2[0].xs.append(p0.n)
+            v2 = p1[0:2]
+        else:
+            if len(p2) > 1:
+                e24 = p2[1]
+                p2[1] = P([7], 7)
+                acc = acc + total(e24.xs) + e24.k
+            acc = acc + f2(p0, [Q(2, 1), Q(2, 6)], [Q(2, 1), Q(2, 8)])
+            if len(p2) > 0:
+                push_list(mut p2[0].xs, 3)
+        c3 = 0
+        while c3 < 1:
+            c3 = c3 + 1
+            if len(p2) > 0:
+                p2[0].k = 6
+            if len(p2) > 0:
+                push_list(mut p2[0].xs, 0)
+            v4 = p1
+        if 3 > 1:
+            if len(p2) > 1:
+                e28 = p2[1]
+                p2[1] = P([7], 7)
+                acc = acc + total(e28.xs) + e28.k
+    v5 = p0
+    v6 = [1, 4]
+    return acc * 7 + rsum(p0) + keycount(p1, 2) + psum(p2) + rsum(v5) + total(v6)
+
+def main(out: Stream) -> int:
+    m0 = make(3)
+    m1 = [[1, 2], [3]]
+    m2 = R(make(2), [[1], [2, 3]], "nm", 1, P([4], 1))
+    m3 = {"a": [1], "b": [2, 2]}
+    m4 = "hello" + "lo"
+    m5 = [P([1, 2], 3), P([4], 5)]
+    m6 = [Q(1, 2), Q(3, 4), Q(5, 6)]
+    m7 = U.one([1, 2])
+    m8 = make(3)
+    m9 = [[1, 2], [3]]
+    m10 = R(make(2), [[1], [2, 3]], "nm", 1, P([4], 1))
+    m11 = {"a": [1], "b": [2, 2]}
+    m12 = "hello" + "lo"
+    m13 = [P([1, 2], 3), P([4], 5)]
+    m14 = [Q(1, 2), Q(3, 4), Q(5, 6)]
+    m15 = U.one([1, 2])
+    acc = 0
+    c16 = 0
+    while c16 < 1:
+        c16 = c16 + 1
+        acc = acc + f3(m4 + "q", mut m5)
+    out.print(acc, total(m0), total2(m1), rsum(m2), dsum(m3), keycount(m4, 2), psum(m5), qsum(m6), usum(m7), total(m8), total2(m9), rsum(m10), dsum(m11), keycount(m12, 2), psum(m13), qsum(m14), usum(m15))
+    acc = acc + f3(m4, mut m13)
+    out.print(acc, total(m0), total2(m1), rsum(m2), dsum(m3), keycount(m4, 2), psum(m5), qsum(m6), usum(m7), total(m8), total2(m9), rsum(m10), dsum(m11), keycount(m12, 2), psum(m13), qsum(m14), usum(m15))
+    if len(m14) > 0:
+        m14[0].a = len(m11)
+    out.print(acc, total(m0), total2(m1), rsum(m2), dsum(m3), keycount(m4, 2), psum(m5), qsum(m6), usum(m7), total(m8), total2(m9), rsum(m10), dsum(m11), keycount(m12, 2), psum(m13), qsum(m14), usum(m15))
+    acc = acc + f3(m10.name, mut m13)
+    out.print(acc, total(m0), total2(m1), rsum(m2), dsum(m3), keycount(m4, 2), psum(m5), qsum(m6), usum(m7), total(m8), total2(m9), rsum(m10), dsum(m11), keycount(m12, 2), psum(m13), qsum(m14), usum(m15))
+    m3["k" + str(4)] = [4]
+    if len(m4) > 1:
+        m3[m4[0:2]] = [len(m4)]
+        acc = acc + len(m3.get(m4[1:2], [1, 1]))
+    out.print(acc, total(m0), total2(m1), rsum(m2), dsum(m3), keycount(m4, 2), psum(m5), qsum(m6), usum(m7), total(m8), total2(m9), rsum(m10), dsum(m11), keycount(m12, 2), psum(m13), qsum(m14), usum(m15))
+    return 0
+

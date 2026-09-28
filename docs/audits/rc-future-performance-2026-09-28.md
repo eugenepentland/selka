@@ -135,8 +135,8 @@ updated atomically, which is another argument for collapsing first.
 ## Correctness items that bear on performance work
 
 Found by the adversarial review, fuzzing and the default flip; each needs
-fixing or a proof before more aggressive elision is safe (repros in the review
-branch's `.tmp-review/repros/`):
+fixing or a proof before more aggressive elision is safe (repros in
+`experiments/rc-review-20260928/repros/`):
 
 - Language-level, both runtimes: collection-typed arguments are lent and see
   later in-place changes (`lst(xs, xs.pop())`); two `mut` arguments naming one

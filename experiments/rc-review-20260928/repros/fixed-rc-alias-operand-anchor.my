@@ -1,0 +1,25 @@
+record R:
+    rows: list[list[int]]
+    n: int
+
+def reset(b: mut R) -> int:
+    b.rows = [[7, 7, 7]]
+    junk: list[list[list[int]]] = []
+    for i in range(40):
+        junk.append([[i], [i, i]])
+    return 0
+
+def count(rows: list[list[int]], k: int) -> int:
+    t = 0
+    for row in rows:
+        t = t * 10 + len(row)
+    return t * 10 + k
+
+def operand(a: mut R, b: mut R) -> int:
+    a.n = a.n + 1
+    return count(a.rows, reset(mut b))
+
+def main(out: Stream) -> int:
+    r = R([[1, 2], [3]], 0)
+    out.print(operand(mut r, mut r), r.rows)
+    return 0

@@ -1,0 +1,15 @@
+def lst(a: list[int], b: int) -> int:
+    return len(a) * 100 + b
+
+def push(xs: mut list[int]) -> int:
+    xs.append(9)
+    return 1
+
+def main(out: Stream) -> int:
+    xs = [1, 2, 3]
+    out.print("pop", lst(xs, xs.pop()), xs)
+    ys = [1, 2, 3]
+    out.print("push", lst(ys, push(mut ys)), ys)
+    zs = [1, 2, 3]
+    out.print("print", zs, push(mut zs))
+    return 0

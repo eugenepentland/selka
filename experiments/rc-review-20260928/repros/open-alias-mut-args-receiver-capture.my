@@ -1,0 +1,31 @@
+record R:
+    rows: list[list[int]]
+    n: int
+
+def churn() -> int:
+    junk: list[list[int]] = []
+    for i in range(40):
+        junk.append([i, i, i, i, i])
+    return len(junk)
+
+def wipe(xs: mut list[list[int]]) -> int:
+    xs[0] = [42]
+    xs.clear()
+    return churn() * 0
+
+def f(a: mut R, xs: mut list[list[int]]) -> int:
+    a.n = a.n + 1
+    return len(a.rows[wipe(mut xs)])
+
+def g(a: mut R, xs: mut list[list[int]]) -> int:
+    a.n = a.n + 1
+    row = a.rows[0]
+    _ = wipe(mut xs)
+    return len(row) * 10 + row[1]
+
+def main(out: Stream) -> int:
+    r = R([[1, 2], [3]], 0)
+    out.print(f(mut r, mut r.rows), r.rows)
+    s = R([[1, 2], [3]], 0)
+    out.print(g(mut s, mut s.rows), s.rows)
+    return 0

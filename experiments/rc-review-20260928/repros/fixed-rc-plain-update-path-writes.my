@@ -1,0 +1,27 @@
+record R:
+    items: list[list[int]]
+    n: int
+
+def push(xs: mut list[int]):
+    xs.append(7)
+
+def bump_nested(r: mut R) -> int:
+    r.items[0].append(5)
+    return 0
+
+def bump_elem_arg(r: mut R) -> int:
+    push(mut r.items[0])
+    return 0
+
+def read_nested(r: mut R) -> int:
+    return len(r.items[bump_nested(mut r)])
+
+def read_elem_arg(r: mut R) -> int:
+    return len(r.items[bump_elem_arg(mut r)])
+
+def main(out: Stream) -> int:
+    a = R([[1, 2], [3]], 0)
+    out.print(read_nested(mut a), a.items)
+    b = R([[1, 2], [3]], 0)
+    out.print(read_elem_arg(mut b), b.items)
+    return 0

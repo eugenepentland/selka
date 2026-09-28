@@ -1,0 +1,16 @@
+record R:
+    items: list[int]
+    name: str
+    n: int
+
+def touch(r: mut R, v: int) -> int:
+    r.n = r.n + v
+    return 0
+
+def f4(p0: mut R) -> int:
+    return p0.items[touch(mut p0, 7) % len(p0.items)]
+
+def main(out: Stream) -> int:
+    m10 = R([1, 2], "nm", 1)
+    out.print(f4(mut m10), m10.items, m10.n)
+    return 0

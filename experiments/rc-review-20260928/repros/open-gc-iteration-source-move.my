@@ -1,0 +1,35 @@
+record S:
+    items: list[int]
+    n: int
+
+def make() -> S:
+    return S([1, 2, 3], 1)
+
+def borrow_then_move() -> int:
+    s = make()
+    view = s.items
+    t = s.items
+    t.append(9)
+    return len(view) * 10 + len(t)
+
+def whole_then_move() -> int:
+    s = make()
+    view = s
+    t = s.items
+    t.append(9)
+    return len(view.items) * 10 + len(t)
+
+def iterate_then_move() -> int:
+    s = make()
+    total = 0
+    for x in s.items:
+        t = s.items
+        t.append(x)
+        total = total + len(t)
+        s = make()
+    return total
+
+def main(out: Stream) -> int:
+    out.print(borrow_then_move(), whole_then_move())
+    out.print(iterate_then_move())
+    return 0

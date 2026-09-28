@@ -1,0 +1,16 @@
+record Table:
+    rows: list[list[int]]
+    count: int
+
+
+def store(table: mut Table, index: int, row: list[int]):
+    table.rows[index] = row
+
+
+def main(out: Stream) -> int:
+    table = Table([[1], [2, 3]], 0)
+    before = table.rows
+    store(mut table, 1, [4])
+    out.print(before)
+    out.print(table.rows)
+    return 0

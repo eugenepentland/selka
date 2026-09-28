@@ -1,0 +1,19 @@
+record P:
+    xs: list[int]
+    k: int
+
+def f2(p0: mut list[P]) -> int:
+    p0.append(P([], 1))
+    return len(p0)
+
+def f3(p1: mut list[P]) -> int:
+    c1 = 0
+    while c1 < 3:
+        c1 = c1 + 1
+        v3 = p1
+    return f2(mut p1)
+
+def main(out: Stream) -> int:
+    m5 = [P([1, 2], 3), P([4], 5)]
+    out.print(f3(mut m5), len(m5))
+    return 0

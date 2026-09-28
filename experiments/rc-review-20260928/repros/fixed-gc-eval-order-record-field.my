@@ -1,0 +1,63 @@
+record P:
+    x: int
+    y: int
+
+record Q:
+    p: P
+    items: list[int]
+
+record R:
+    p: P
+    q: Q
+    items: list[int]
+    n: int
+
+def g(r: mut R) -> int:
+    r.p.x = 100
+    r.q.p.y = 200
+    r.q.items.append(9)
+    r.n = 50
+    return 5
+
+def g2(r: mut R) -> int:
+    r.p = P(7, 7)
+    r.q = Q(P(8, 8), [1, 1, 1, 1, 1])
+    return 6
+
+def fp(p: P, k: int) -> int:
+    return p.x * 1000 + p.y * 10 + k
+
+def fq(q: Q, k: int) -> int:
+    return q.p.x * 1000 + q.p.y * 10 + len(q.items) * 100000 + k
+
+def fr(r: R, k: int) -> int:
+    return r.p.x * 1000 + r.n * 10 + k
+
+def pparam(r: mut R) -> int:
+    return fp(r.p, g(mut r)) * 10 + 1
+
+def qparam(r: mut R) -> int:
+    return fq(r.q, g(mut r))
+
+def qparam2(r: mut R) -> int:
+    return fq(r.q, g2(mut r))
+
+def make() -> R:
+    return R(P(1, 2), Q(P(3, 4), [1, 2]), [5], 0)
+
+def main(out: Stream) -> int:
+    r = make()
+    out.print("local p", fp(r.p, g(mut r)))
+    r = make()
+    out.print("local q", fq(r.q, g(mut r)))
+    r = make()
+    out.print("local q2", fq(r.q, g2(mut r)))
+    r = make()
+    out.print("local r", fr(r, g(mut r)))
+    r = make()
+    out.print("param p", pparam(mut r))
+    r = make()
+    out.print("param q", qparam(mut r))
+    r = make()
+    out.print("param q2", qparam2(mut r))
+    return 0

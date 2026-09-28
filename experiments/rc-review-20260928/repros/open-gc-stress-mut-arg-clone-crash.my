@@ -1,0 +1,12 @@
+record R:
+    items: list[list[int]]
+    other: list[int]
+
+def wreck(xs: mut list[list[int]]) -> int:
+    xs[0] = [42]
+    return 0
+
+def main(out: Stream) -> int:
+    a = R([[1, 2], [3]], [])
+    out.print(len(a.items[wreck(mut a.items)]), a.items)
+    return 0

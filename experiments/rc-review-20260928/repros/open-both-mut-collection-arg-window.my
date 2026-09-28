@@ -1,0 +1,24 @@
+record Box:
+    tag: int
+    names: list[int]
+
+
+record State:
+    boxes: list[Box]
+
+
+def hold(names: list[int], boxes: mut list[Box]) -> int:
+    boxes[0].names.append(7)
+    return len(names)
+
+
+def probe(state: mut State) -> int:
+    box = state.boxes[0]
+    return hold(box.names, mut state.boxes)
+
+
+def main(out: Stream) -> int:
+    state = State([Box(1, [1])])
+    out.print(probe(mut state))
+    out.print(len(state.boxes[0].names))
+    return 0

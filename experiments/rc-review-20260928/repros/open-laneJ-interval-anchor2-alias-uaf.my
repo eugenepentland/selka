@@ -1,0 +1,42 @@
+record Span:
+    source: bytes
+    start: int
+    end: int
+
+record Pin:
+    part: int
+    net: Span
+    net_id: int
+
+def span(text: bytes) -> Span:
+    return Span(source=text, start=0, end=len(text))
+
+def pin(part: int, net: bytes) -> Pin:
+    return Pin(part=part, net=span(net), net_id=-1)
+
+def churn() -> int:
+    junk: list[bytes] = []
+    for i in range(60):
+        junk.append(b"zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz" + b"yyyyyyyyyyyyyyyyyyyyyyyyyy")
+    return len(junk)
+
+def attack(pins: mut list[Pin], other: mut list[Pin]) -> int:
+    pins.append(pin(9, b"x"))
+    first = pins[0]
+    other[0] = pin(1, b"qq" + b"qq")
+    n = churn()
+    return first.part * 1000 + len(first.net.source) * 10 + int(first.net.source[0]) + n * 0
+
+def attack_clear(pins: mut list[Pin], other: mut list[Pin]) -> int:
+    pins.append(pin(9, b"x"))
+    first = pins[0]
+    other.clear()
+    n = churn()
+    return first.part * 1000 + len(first.net.source) * 10 + int(first.net.source[0]) + n * 0
+
+def main(out: Stream) -> int:
+    a = [pin(3, b"abc" + b"def"), pin(4, b"de")]
+    out.print(attack(mut a, mut a), len(a))
+    b = [pin(3, b"abc" + b"def"), pin(4, b"de")]
+    out.print(attack_clear(mut b, mut b), len(b))
+    return 0
