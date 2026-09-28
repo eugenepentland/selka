@@ -277,6 +277,35 @@ test "record field return rejects an external branch into its store back" {
     try t.expect(counted.copies >= 1);
 }
 
+fn handoverSites(body: []const u8) !Sites {
+    const prefix =
+        \\record Holder:
+        \\    items: list[int]
+        \\    count: int
+        \\
+        \\def fill(h: mut Holder, other: list[int]):
+        \\
+    ;
+    const source = try std.mem.concat(t.allocator, u8, &.{ prefix, body, entry });
+    defer t.allocator.free(source);
+    return sites(source, true);
+}
+
+// spec: VALUE-SEMANTICS-13
+test "a field store of a local's last read hands the value over" {
+    const moved = try handoverSites("    items = [1, 2]\n    items.append(3)\n    h.items = items\n");
+    try t.expect(moved.placed >= 1);
+    try t.expectEqual(@as(usize, 0), moved.copies);
+    const read_after = try handoverSites("    items = [1, 2]\n    h.items = items\n    items.append(3)\n    h.count = len(items)\n");
+    try t.expect(read_after.copies >= 1);
+    const parameter = try handoverSites("    h.items = other\n");
+    try t.expect(parameter.copies >= 1);
+    const place = try handoverSites("    items = h.items\n    h.items = items\n    h.count = len(h.items)\n");
+    try t.expect(place.placed >= 1);
+    const looped = try handoverSites("    items = [1]\n    for i in range(3):\n        h.items = items\n        items.append(i)\n");
+    try t.expect(looped.copies >= 1);
+}
+
 // spec-case: VALUE-SEMANTICS-1
 test "value semantics off places no copy site at all" {
     const off = try sites(assignments, false);

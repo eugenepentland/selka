@@ -59,6 +59,22 @@ pub const Input = struct {
 /// arena: the result borrows from it and nothing is freed on its own.
 pub fn analyze(a: std.mem.Allocator, input: Input) Error!Analysis {
     const code = input.function.scope.instructions;
+    var ctx = try context(a, input);
+    const moves = try zeroed(bool, a, code.len, false);
+    for (0..code.len) |pc| if (ctx.reachable(pc)) {
+        moves[pc] = cow.movedAt(&ctx, pc) != null;
+    };
+    const transfers = try collectTransfers(&ctx);
+    const cows = try cow.place(&ctx);
+    const copies = try values.decide(&ctx);
+    return .{ .roles = ctx.locals.roles, .parents = ctx.locals.parents, .transfers = transfers, .cows = cows, .moves = moves, .operands = ctx.flow.at, .copies = copies };
+}
+
+/// The classified context `analyze` reasons over: operand sources, local
+/// roles and definitions, before any transfer, copy-on-write or copy decision.
+/// Physical RC certificates that reuse a semantic proof's shape rebuild it.
+pub fn context(a: std.mem.Allocator, input: Input) Error!model.Context {
+    const code = input.function.scope.instructions;
     const count = input.function.scope.locals.len;
     var ctx: model.Context = .{
         .allocator = a,
@@ -75,14 +91,7 @@ pub fn analyze(a: std.mem.Allocator, input: Input) Error!Analysis {
         },
     };
     try roles.classify(&ctx);
-    const moves = try zeroed(bool, a, code.len, false);
-    for (0..code.len) |pc| if (ctx.reachable(pc)) {
-        moves[pc] = cow.movedAt(&ctx, pc) != null;
-    };
-    const transfers = try collectTransfers(&ctx);
-    const cows = try cow.place(&ctx);
-    const copies = try values.decide(&ctx);
-    return .{ .roles = ctx.locals.roles, .parents = ctx.locals.parents, .transfers = transfers, .cows = cows, .moves = moves, .operands = ctx.flow.at, .copies = copies };
+    return ctx;
 }
 
 fn zeroed(comptime T: type, a: std.mem.Allocator, count: usize, value: T) Error![]T {

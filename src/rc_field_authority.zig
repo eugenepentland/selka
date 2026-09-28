@@ -24,17 +24,24 @@ const Work = struct {
 /// No reachable callable, opaque handle, capability, live view or unique resource
 /// may grant a callee authority over the temporarily cleared source storage.
 pub fn safe(catalog: *shapes.Catalog, ty: typed.Type) Error!bool {
-    return walk(catalog, ty, false);
+    return walk(catalog, ty, false, null);
 }
 
 /// `safe` for a whole moved field value, which may carry a sealed capability:
 /// capability bits are host authority with no path to guest storage, and the
 /// walk does not look inside them. Everything else `safe` refuses stays refused.
 pub fn movable(catalog: *shapes.Catalog, ty: typed.Type) Error!bool {
-    return walk(catalog, ty, true);
+    return walk(catalog, ty, true, null);
 }
 
-fn walk(catalog: *shapes.Catalog, ty: typed.Type, capabilities: bool) Error!bool {
+/// `safe`, and no value of `ty` can reach a value of type `excluded` through
+/// its owned edges: dropping or publishing one can never touch such a value
+/// (RC-INERT-COUNTED-RECEIVER-1).
+pub fn apart(catalog: *shapes.Catalog, ty: typed.Type, excluded: typed.Type) Error!bool {
+    return walk(catalog, ty, false, excluded);
+}
+
+fn walk(catalog: *shapes.Catalog, ty: typed.Type, capabilities: bool, excluded: ?typed.Type) Error!bool {
     var work: Work = .{};
     _ = work.append(ty);
     while (work.count != 0) {
@@ -44,6 +51,7 @@ fn walk(catalog: *shapes.Catalog, ty: typed.Type, capabilities: bool) Error!bool
         if (work.visited == work.seen.len) return false;
         work.seen[work.visited] = current;
         work.visited += 1;
+        if (excluded) |other| if (current == other) return false;
         if (capabilities and current.capabilityIndex() != null) continue;
         if (current.capabilityIndex() != null or current.resourceKind() != null) return false;
         const layout = catalog.native.layout(current) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError;

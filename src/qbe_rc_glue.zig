@@ -24,6 +24,11 @@ const uncounted_marks: u64 = (@as(u64, 1) << 62) | 2;
 const arena_mark: u64 = @as(u64, 1) << 62;
 // Immortal, copy-on-write shared or arena payloads keep the runtime helper.
 const shared_marks: u64 = (@as(u64, 1) << 62) | (@as(u64, 1) << 61) | 2;
+// Publication marks (RC-PUBLISH-FAST-1): pinned or arena payloads need the
+// runtime transaction; shared or immortal ones are not marked again.
+const pinned_or_arena: u64 = (@as(u64, 1) << 62) | (@as(u64, 1) << 60);
+const shared_or_immortal: u64 = (@as(u64, 1) << 61) | 2;
+const shared_mark: u64 = @as(u64, 1) << 61;
 // Prefix words below the payload (native_rc.h): owners, holds, mark.
 const owners_offset: u64 = 32;
 const holds_offset: u64 = 24;
@@ -130,10 +135,70 @@ pub const Publish = struct { move: Transfer, mode: usize };
 /// and arenas on the runtime's semantic transaction.
 pub fn publish(comptime E: type, self: *E, operation: Publish) Error!void {
     try marker(E, self, .publish);
+    const label = self.temp();
+    const inline_path = try mutablePointer(E, self, operation.move.ty);
+    if (inline_path) try publishFast(E, self, operation, label);
     const result = self.temp();
     const move = operation.move;
     try self.print(" %v{d} =w call ${s}{s}(l %heap, l %v{d}, l %v{d}, w %v{d}, w %v{d})\n", .{ result, try self.descriptor(move.ty), glue.Operation.publish.suffix(), move.destination, move.source, move.region, operation.mode });
     try requireSuccess(E, self, result);
+    if (inline_path) try self.print("@rcgpublished{d}\n", .{label});
+}
+
+// Whether `ty` is one pointer to a list or dictionary: a payload the glue's
+// share step always marks when it is not already shared or immortal.
+fn mutablePointer(comptime E: type, self: *E, ty: typed.Type) Error!bool {
+    if (comptime !@hasField(E, "layouts")) return false;
+    if (try pointerEdge(E, self, ty) != .owners) return false;
+    if (!ty.isAggregate()) return false;
+    const record = self.layouts.records[ty.recordIndex()];
+    if (!record.isCollection() or record.collection.box) return false;
+    return record.collection.kind == .list or record.collection.kind == .dictionary;
+}
+
+/// RC-PUBLISH-FAST-1: the direct publication of one list or dictionary
+/// pointer runs inline exactly as its glue does: a null copies through; a
+/// payload neither pinned nor in an arena is marked shared unless it already
+/// is (or is immortal), its pointer is stored, and then either the source is
+/// cleared (a take) or one owner is acquired (immortal payloads count none).
+/// Child-history modes, pinned and arena payloads fall through to the glue.
+fn publishFast(comptime E: type, self: *E, operation: Publish, label: usize) Error!void {
+    const move = operation.move;
+    const child = self.temp();
+    const payload = self.temp();
+    const header = self.temp();
+    const mark = self.temp();
+    const special = self.temp();
+    const already = self.temp();
+    const marked = self.temp();
+    const taken = self.temp();
+    const immortal = self.temp();
+    const counter = self.temp();
+    const old = self.temp();
+    const new = self.temp();
+    // Every emitted publication targets private work or aggregate scratch,
+    // never its own source, so the glue's overlap test cannot fire here.
+    try self.print(" %v{d} =w and %v{d}, 3\n", .{ child, operation.mode });
+    try self.print(" jnz %v{d}, @rcgpublishslow{d}, @rcgpublishmode{d}\n@rcgpublishmode{d}\n", .{ try wordFlag(E, self, child), label, label, label });
+    try self.print(load_word, .{ payload, move.source });
+    try self.print(" jnz %v{d}, @rcgpublishnn{d}, @rcgpublishstore{d}\n@rcgpublishnn{d}\n", .{ try nonzero(E, self, payload), label, label, label });
+    try self.print(load_below ++ mask, .{ header, payload, mark_offset, header, mark, header, special, mark, pinned_or_arena });
+    try self.print(" jnz %v{d}, @rcgpublishslow{d}, @rcgpublishshare{d}\n@rcgpublishshare{d}\n", .{ try nonzero(E, self, special), label, label, label });
+    try self.print(mask, .{ already, mark, shared_or_immortal });
+    try self.print(" jnz %v{d}, @rcgpublishstore{d}, @rcgpublishmark{d}\n@rcgpublishmark{d}\n", .{ try nonzero(E, self, already), label, label, label });
+    try self.print(" %v{d} =l or %v{d}, {d}\n storel %v{d}, %v{d}\n", .{ marked, mark, shared_mark, marked, header });
+    try self.print("@rcgpublishstore{d}\n storel %v{d}, %v{d}\n %v{d} =w and %v{d}, 4\n", .{ label, payload, move.destination, taken, operation.mode });
+    const moves = try wordFlag(E, self, taken);
+    try self.print(" jnz %v{d}, @rcgpublishtake{d}, @rcgpublishnull{d}\n@rcgpublishtake{d}\n storel 0, %v{d}\n jmp @rcgpublished{d}\n", .{ moves, label, label, label, move.source, label });
+    // A null payload acquires nothing; an immortal one counts no owners.
+    try self.print("@rcgpublishnull{d}\n", .{label});
+    const present = try nonzero(E, self, payload);
+    try self.print(" jnz %v{d}, @rcgpublishcount{d}, @rcgpublished{d}\n@rcgpublishcount{d}\n", .{ present, label, label, label });
+    try self.print(" %v{d} =l and %v{d}, 2\n", .{ immortal, mark });
+    const uncounted = try nonzero(E, self, immortal);
+    try self.print(" jnz %v{d}, @rcgpublished{d}, @rcgpublishinc{d}\n@rcgpublishinc{d}\n", .{ uncounted, label, label, label });
+    try self.print(load_below, .{ counter, payload, owners_offset, counter, old, counter });
+    try self.print(" %v{d} =l add %v{d}, 1\n storel %v{d}, %v{d}\n jmp @rcgpublished{d}\n@rcgpublishslow{d}\n", .{ new, old, new, counter, label, label });
 }
 
 /// One list element write: the list payload, the element index (set only)
@@ -161,7 +226,79 @@ pub fn take(comptime E: type, self: *E, operation: Transfer) Error!void {
 /// Clear the value and release each edge's own token.
 pub fn drop(comptime E: type, self: *E, operation: Release) Error!void {
     const edge = try pointerEdge(E, self, operation.ty);
+    if (comptime @hasField(E, "layouts") and @hasField(E, "function")) {
+        if (edge == null and hotSite(E, self)) if (try flatOwners(E, self, operation.ty)) |flat| return dropFlat(E, self, operation, flat);
+    }
     return release(E, self, operation, .drop, edge);
+}
+
+// Only a local's replacement (`store_local`) or explicit release
+// (`drop_local`) is worth its inline size: an operand consumed by a
+// projection usually holds no token, and a return's exit drops run once.
+fn hotSite(comptime E: type, self: *E) bool {
+    if (comptime !@hasField(E, "function")) return false;
+    const code = self.function.scope.instructions;
+    if (self.pc >= code.len) return false;
+    return switch (code[self.pc].op) {
+        .store_local, .drop_local => true,
+        else => false,
+    };
+}
+
+/// The one-word owner leaves of an inline record: at most four, each a
+/// routed type released through its own inline fast path.
+const Leaves = struct { offsets: [4]u64 = undefined, types: [4]typed.Type = undefined, len: usize = 0 };
+
+// A plain inline record (no variant, array, view or unique resource) whose
+// counted leaves are all one-word owner pointers, found through nested
+// records; anything else keeps the type's own glue call.
+fn flatOwners(comptime E: type, self: *E, ty: typed.Type) Error!?Leaves {
+    if (comptime !@hasField(E, "layouts")) return null;
+    if (runtime.counting() or !ty.isAggregate()) return null;
+    if (!try routed(E, self, ty)) return null;
+    // A wider value's inline clear costs more than the glue's vector memset.
+    const layout = self.layouts.layout(ty) catch |err| return translate(err);
+    if (layout.size > 64) return null;
+    var leaves: Leaves = .{};
+    if (!try collect(E, self, ty, 0, &leaves, 4) or leaves.len == 0) return null;
+    return leaves;
+}
+
+fn collect(comptime E: type, self: *E, ty: typed.Type, base: u64, leaves: *Leaves, depth: usize) Error!bool {
+    if (depth == 0 or semantics.isLiveView(self.layouts.records, ty)) return false;
+    const layout = self.layouts.layout(ty) catch |err| return translate(err);
+    if (layout.drop) return false;
+    switch (layout.kind) {
+        .scalar => return true,
+        .managed => {
+            if (try pointerEdge(E, self, ty) != .owners or leaves.len == leaves.offsets.len) return false;
+            leaves.offsets[leaves.len] = base;
+            leaves.types[leaves.len] = ty;
+            leaves.len += 1;
+            return true;
+        },
+        .record => {
+            if (self.layouts.records[ty.recordIndex()].isManagedRecord()) return false;
+            for (layout.fields) |field| if (!try collect(E, self, field.ty, base + field.offset, leaves, depth - 1)) return false;
+            return true;
+        },
+        else => return false,
+    }
+}
+
+/// RC-FLAT-DROP-1: drop a plain record of at most four one-word owner leaves
+/// as one inline owner release per leaf (the leaf's own glue takes the last
+/// token and drains), then clear the whole value, as the record's glue does
+/// edge by edge, where a local's previous value is replaced or released.
+fn dropFlat(comptime E: type, self: *E, operation: Release, leaves: Leaves) Error!void {
+    try self.print(" # RC-FLAT-DROP-1\n", .{});
+    for (leaves.offsets[0..leaves.len], leaves.types[0..leaves.len]) |at, leaf| {
+        const address = self.temp();
+        try self.print(" %v{d} =l add %v{d}, {d}\n", .{ address, operation.address, at });
+        try release(E, self, .{ .ty = leaf, .address = address, .heap = operation.heap }, .drop, .owners);
+    }
+    const layout = self.layouts.layout(operation.ty) catch |err| return translate(err);
+    try @import("qbe_zero.zig").clear(*E, self, operation.address, layout.size, layout.alignment);
 }
 
 /// Clear the value and release the hold each edge carries as a loan (or as
@@ -287,6 +424,14 @@ fn release(comptime E: type, self: *E, operation: Release, operation_kind: glue.
     try self.print(" jnz %v{d}, @rcgdec{d}, @rcgslow{d}\n@rcgslow{d}\n", .{ try nonzero(E, self, other_value), label, label, label });
     try self.print(" call ${s}{s}(l %v{d}, l %v{d})\n jmp @rcgdone{d}\n@rcgdec{d}\n", .{ symbol, suffix, heap, operation.address, label, label });
     try self.print(" %v{d} =l sub %v{d}, 1\n storel %v{d}, %v{d}\n@rcgclear{d}\n storel 0, %v{d}\n@rcgdone{d}\n", .{ reduced, value, reduced, counter, label, operation.address, label });
+}
+
+/// A word flag for a w value, compared at full width like every inline
+/// glue branch.
+fn wordFlag(comptime E: type, self: *E, value: usize) Error!usize {
+    const wide = self.temp();
+    try self.print(" %v{d} =l extuw %v{d}\n", .{ wide, value });
+    return nonzero(E, self, wide);
 }
 
 /// A word flag for a full-width l value. QBE's jnz reads only the low word,

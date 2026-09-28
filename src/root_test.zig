@@ -266,6 +266,8 @@ test {
     _ = @import("rc_readonly_entry_test.zig");
     _ = @import("rc_immortal_certificate_test.zig");
     _ = @import("qbe_rc_inert_receiver_test.zig");
+    _ = @import("qbe_rc_inert_counted_test.zig");
+    _ = @import("qbe_rc_glue_inline_test.zig");
     _ = @import("qbe_rc_inert_field_test.zig");
     _ = @import("qbe_rc_unique_test.zig");
     _ = @import("qbe_rc_hoist_test.zig");
@@ -291,6 +293,8 @@ test {
     _ = @import("qbe_rc_dictionary_loop_test.zig");
     _ = @import("qbe_rc_empty_frame_test.zig");
     _ = @import("qbe_rc_field_transfer_test.zig");
+    _ = @import("qbe_rc_dead_field_move_test.zig");
+    _ = @import("qbe_rc_element_take_test.zig");
     _ = @import("qbe_rc_plain_record_write_test.zig");
     _ = @import("cow_test.zig");
     _ = @import("cow_rebox_roots_test.zig");

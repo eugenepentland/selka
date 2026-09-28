@@ -1,0 +1,258 @@
+module rc_element_moves
+
+# A field read out of a dead record local moves its owner under RC
+# (RC-DEAD-FIELD-MOVE-1), and a same-slot return arm moves its element's
+# payload into the binding (RC-ELEMENT-TAKE-1), so the extracted collection is
+# changed in place instead of cloned. Every test here also runs under GC and
+# `--gc-stress`; the near misses must keep plain value semantics.
+record Box:
+    tag: int
+    items: list[int]
+
+
+union Slot:
+    empty,
+    full: Box
+
+
+record Table:
+    entries: list[int]
+    count: int
+
+
+record Instance:
+    klass: int
+    fields: Table
+
+
+union Obj:
+    free,
+    instance: Instance
+
+
+def fresh(n: int) -> Box:
+    return Box(n, [0, 0, 0])
+
+
+def put(t: mut Table, value: int):
+    t.entries.append(value)
+    t.count += 1
+
+
+def returned(objects: mut list[Obj], ref: int, value: int):
+    match objects[ref]:
+        case Obj.instance(instance):
+            klass = instance.klass
+            fields = instance.fields
+            put(mut fields, value)
+            objects[ref] = Obj.instance(Instance(klass=klass, fields=fields))
+        case _:
+            assert False, "not an instance"
+
+
+def observed(objects: mut list[Obj], ref: int, value: int):
+    match objects[ref]:
+        case Obj.instance(instance):
+            klass = instance.klass
+            fields = instance.fields
+            put(mut fields, value + len(objects))
+            objects[ref] = Obj.instance(Instance(klass=klass, fields=fields))
+        case _:
+            assert False, "not an instance"
+
+
+def elsewhere(objects: mut list[Obj], ref: int, value: int):
+    match objects[ref]:
+        case Obj.instance(instance):
+            klass = instance.klass
+            fields = instance.fields
+            put(mut fields, value)
+            objects[0] = Obj.instance(Instance(klass=klass, fields=fields))
+        case _:
+            assert False, "not an instance"
+
+
+def early(objects: mut list[Obj], ref: int, value: int):
+    match objects[ref]:
+        case Obj.instance(instance):
+            klass = instance.klass
+            fields = instance.fields
+            put(mut fields, value)
+            if value < 0:
+                return
+            objects[ref] = Obj.instance(Instance(klass=klass, fields=fields))
+        case _:
+            assert False, "not an instance"
+
+
+def make_instance(klass: int, entries: list[int]) -> Obj:
+    return Obj.instance(Instance(klass=klass, fields=Table(entries=entries, count=len(entries))))
+
+
+def entries_of(obj: Obj) -> list[int]:
+    match obj:
+        case Obj.instance(found):
+            return found.fields.entries
+        case _:
+            return []
+
+
+def klass_of(obj: Obj) -> int:
+    match obj:
+        case Obj.instance(found):
+            return found.klass
+        case _:
+            return -1
+
+
+# spec-case: RC-DEAD-FIELD-MOVE-1
+public def test_field_moved_out_of_a_dead_local_changes_in_place() -> bool:
+    box = fresh(4)
+    items = box.items
+    items[0] = 7
+    items.append(8)
+    return items == [7, 0, 0, 8]
+
+
+public def test_snapshot_taken_before_the_move_keeps_its_values() -> bool:
+    box = fresh(4)
+    saved = box.items
+    items = box.items
+    items[0] = 9
+    return saved == [0, 0, 0] and items == [9, 0, 0]
+
+
+public def test_match_binding_field_move() -> bool:
+    slot = Slot.full(fresh(3))
+    total = 0
+    match slot:
+        case Slot.full(box):
+            tag = box.tag
+            items = box.items
+            items[1] = 5
+            total = items[1] + tag
+        case _:
+            total = -1
+    after = 0
+    match slot:
+        case Slot.full(again):
+            after = again.items[1]
+        case _:
+            after = -1
+    return total == 8 and after == 0
+
+
+public def test_source_read_after_the_extraction_keeps_its_field() -> bool:
+    box = fresh(2)
+    items = box.items
+    items[0] = 6
+    return box.items == [0, 0, 0] and items == [6, 0, 0]
+
+
+public def test_source_reused_in_a_loop_keeps_its_field() -> bool:
+    box = fresh(2)
+    total = 0
+    i = 0
+    while i < 3:
+        items = box.items
+        items[0] = i + 1
+        total += items[0] + box.items[0]
+        i += 1
+    return total == 6 and box.items == [0, 0, 0]
+
+
+def rename(box: mut Box, tag: int):
+    box.tag = tag
+
+
+public def test_source_passed_mut_keeps_its_field() -> bool:
+    box = fresh(2)
+    rename(mut box, 5)
+    items = box.items
+    items[2] = 1
+    return box.tag == 5 and items == [0, 0, 1]
+
+
+# spec-case: RC-ELEMENT-TAKE-1
+public def test_same_slot_return_updates_the_element() -> bool:
+    objects = [make_instance(1, []), make_instance(2, [5])]
+    i = 0
+    while i < 20:
+        returned(mut objects, i % 2, i)
+        i += 1
+    first = entries_of(objects[0])
+    second = entries_of(objects[1])
+    return len(first) == 10 and first[9] == 18 and len(second) == 11 and second[0] == 5 and second[10] == 19 and klass_of(objects[1]) == 2
+
+
+public def test_list_snapshot_before_the_return_keeps_the_old_payload() -> bool:
+    objects = [make_instance(1, [1, 2])]
+    before = objects
+    returned(mut objects, 0, 3)
+    return entries_of(before[0]) == [1, 2] and entries_of(objects[0]) == [1, 2, 3]
+
+
+public def test_element_snapshot_before_the_return_keeps_the_old_payload() -> bool:
+    objects = [make_instance(1, [1])]
+    held = objects[0]
+    returned(mut objects, 0, 4)
+    return entries_of(held) == [1] and entries_of(objects[0]) == [1, 4]
+
+
+public def test_elements_sharing_one_table_stay_independent() -> bool:
+    shared = Table(entries=[7], count=1)
+    objects = [Obj.instance(Instance(klass=1, fields=shared)), Obj.instance(Instance(klass=2, fields=shared))]
+    returned(mut objects, 0, 8)
+    return entries_of(objects[0]) == [7, 8] and entries_of(objects[1]) == [7] and shared.entries == [7]
+
+
+public def test_negative_index_returns_to_the_same_element() -> bool:
+    objects = [make_instance(1, []), make_instance(2, [])]
+    returned(mut objects, -1, 6)
+    returned(mut objects, -2, 5)
+    return entries_of(objects[0]) == [5] and entries_of(objects[1]) == [6]
+
+
+public def test_near_miss_arms_keep_value_semantics() -> bool:
+    objects = [make_instance(1, [1]), make_instance(2, [2])]
+    observed(mut objects, 1, 10)
+    elsewhere(mut objects, 1, 3)
+    early(mut objects, 0, -1)
+    early(mut objects, 1, 4)
+    return entries_of(objects[0]) == [2, 12, 3] and entries_of(objects[1]) == [2, 12, 4] and klass_of(objects[0]) == 2
+
+
+record Holder:
+    items: list[int]
+    count: int
+
+
+def fill(h: mut Holder):
+    items = [1, 2]
+    items.append(3)
+    h.items = items
+
+
+# spec-case: VALUE-SEMANTICS-13
+public def test_field_store_of_a_dead_local_hands_the_value_over() -> bool:
+    h = Holder([], 0)
+    fill(mut h)
+    h.items.append(4)
+    return h.items == [1, 2, 3, 4]
+
+
+public def test_field_store_then_a_local_read_keeps_a_copy() -> bool:
+    h = Holder([], 0)
+    items = [1]
+    h.items = items
+    items.append(2)
+    return h.items == [1] and items == [1, 2]
+
+
+public def test_field_store_in_a_loop_copies_each_time() -> bool:
+    h = Holder([], 0)
+    items = [0]
+    for i in range(3):
+        h.items = items
+        items.append(i)
+    return h.items == [0, 0, 1] and items == [0, 0, 1, 2]

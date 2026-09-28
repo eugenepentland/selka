@@ -19,6 +19,8 @@ pub const Records = struct {
     /// RC-INTERVAL-ANCHOR-2: per local, the list root it is bound to (the
     /// root's own index for an accepted root), or `cow_plan.none`.
     intervals: []const u32 = &.{},
+    /// Match arms that move their element's payload (RC-ELEMENT-TAKE-1).
+    takes: []const @import("rc_element_take.zig").Take = &.{},
 };
 /// Semantic obligations paired with independent emission-only journal indices.
 pub const EmissionPlan = struct {
@@ -86,6 +88,7 @@ pub fn build(comptime E: type, self: *E, capacity: usize) Error!*State {
     state.plan.scope_records = &.{};
     state.plan.journal = try journal.build(a, state.plan.locals.storage, state.operands);
     state.plan.records.transfers = try @import("rc_field_transfer.zig").build(E, self, &state.catalog);
+    state.plan.records.takes = try @import("rc_element_take.zig").build(E, self, &state.catalog);
     state.plan.records.writes = try @import("rc_plain_record_write.zig").build(E, self, &state.catalog, state.plan.locals);
     return state;
 }

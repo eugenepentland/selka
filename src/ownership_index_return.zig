@@ -10,6 +10,11 @@ const li = model.li;
 const Index = struct { source: u32, start: usize };
 const Arm = struct { owner: u32, index: Index, payload: u32, start: usize };
 const Field = struct { arm: Arm, target: u32, copy: usize };
+/// One proved same-slot return, for the physical certificate that moves the
+/// element's payload into its binding (`RC-ELEMENT-TAKE-1`): the dispatch
+/// reading the element, its payload binding, the extraction's copy site and
+/// the final element write.
+pub const Return = struct { dispatch: usize, payload: u32, copy: usize, write: usize };
 
 /// Elide only the field transfer inside a closed same-slot replacement. The
 /// first parent read has no older local borrow, and the ordinary mut-list
@@ -21,10 +26,27 @@ pub fn elide(ctx: *const Context, copies: []bool) void {
         for (instruction.op.switch_variant.arms) |arm| {
             const slot = arm.slot orelse continue;
             const found = readArm(ctx, pc, li(slot), arm.target) orelse continue;
-            const field = fieldCopy(ctx, found, copies) orelse continue;
-            if (committed(ctx, field)) copies[field.copy] = false;
+            const field = fieldCopy(ctx, found, copies, true) orelse continue;
+            if (committed(ctx, field) != null) copies[field.copy] = false;
         }
     }
+}
+
+/// Every same-slot return this proof established, recognized again in a
+/// finished analysis whose `copies` already elided the extraction's copy.
+pub fn proven(ctx: *const Context, copies: []const bool) model.Error![]const Return {
+    var found: @import("std").ArrayList(Return) = .empty;
+    for (ctx.instructions(), 0..) |instruction, pc| {
+        if (instruction.op != .switch_variant or pc == 0) continue;
+        for (instruction.op.switch_variant.arms) |arm| {
+            const slot = arm.slot orelse continue;
+            const read = readArm(ctx, pc, li(slot), arm.target) orelse continue;
+            const field = fieldCopy(ctx, read, copies, false) orelse continue;
+            const write = committed(ctx, field) orelse continue;
+            try found.append(ctx.allocator, .{ .dispatch = pc, .payload = read.payload, .copy = field.copy, .write = write });
+        }
+    }
+    return found.toOwnedSlice(ctx.allocator);
 }
 
 fn readArm(ctx: *const Context, pc: usize, payload: u32, start: usize) ?Arm {
@@ -139,7 +161,7 @@ fn normalizedIndex(ctx: *const Context, end: usize, parent: u32) ?Index {
 
 // Before extraction the payload may supply scalar/immutable fields only.
 // A second mutable projection could be an unmarked alias of the chosen field.
-fn fieldCopy(ctx: *const Context, arm: Arm, copies: []const bool) ?Field {
+fn fieldCopy(ctx: *const Context, arm: Arm, copies: []const bool, copied: bool) ?Field {
     const code = ctx.instructions();
     if (copies[arm.start - 2]) return null;
     var pc = arm.start;
@@ -148,7 +170,7 @@ fn fieldCopy(ctx: *const Context, arm: Arm, copies: []const bool) ?Field {
         const field = code[pc + 1].op.get_field;
         const ty = ctx.record(ctx.locals.list[arm.payload].ty).fields[field].ty;
         if (values.needsCopy(ctx.code.program.records, ty)) {
-            if (code[pc + 2].op != .value_copy or !copies[pc + 2]) return null;
+            if (code[pc + 2].op != .value_copy or copies[pc + 2] != copied) return null;
             if (code[pc + 2].op.value_copy.site != .assign or code[pc + 3].op != .store_local) return null;
             const target = li(code[pc + 3].op.store_local);
             if (ctx.role(target) != .owned or ctx.defs.count[target] != 1) return null;
@@ -163,16 +185,17 @@ fn fieldCopy(ctx: *const Context, arm: Arm, copies: []const bool) ?Field {
     return null;
 }
 
-fn committed(ctx: *const Context, field: Field) bool {
+// The final element write that commits the return, or null.
+fn committed(ctx: *const Context, field: Field) ?usize {
     const code = ctx.instructions();
     for (field.copy + 2..code.len) |pc| {
         if (writeback(ctx, field, pc)) |end| {
-            if (ctx.live.after(end, field.target) or ctx.live.after(end, field.arm.payload)) return false;
-            return @import("ownership_field_return.zig").closedFlow(ctx, field.arm.start, end);
+            if (ctx.live.after(end, field.target) or ctx.live.after(end, field.arm.payload)) return null;
+            return if (@import("ownership_field_return.zig").closedFlow(ctx, field.arm.start, end)) end else null;
         }
-        if (!ctx.reachable(pc) or observes(ctx, code[pc].op, field)) return false;
+        if (!ctx.reachable(pc) or observes(ctx, code[pc].op, field)) return null;
     }
-    return false;
+    return null;
 }
 
 fn observes(ctx: *const Context, op: Op, field: Field) bool {

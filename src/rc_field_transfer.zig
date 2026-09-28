@@ -21,6 +21,9 @@ pub const Certificate = struct {
     store: usize,
     writeback: usize,
     commit: usize,
+    /// False for RC-DEAD-FIELD-MOVE-1: the source is never read again, so the
+    /// field is not stored back; `writeback` and `commit` then equal `store`.
+    returns: bool = true,
 
     /// Whether the lowering of the instruction at `pc` belongs to this
     /// certificate: the extraction's projection, copy and target store, or
@@ -43,15 +46,89 @@ pub fn build(comptime E: type, self: *E, catalog: *shapes.Catalog) Error![]const
         if (instruction.op != .get_field or self.states[pc] == null) continue;
         if (code.len > remaining) break;
         remaining -= code.len;
-        const proof = try extraction(E, self, pc, catalog) orelse continue;
-        const end = try returned(E, self, proof, catalog) orelse continue;
+        const complete = try closed(E, self, pc, catalog) orelse try dead(E, self, pc, catalog) orelse continue;
         if (found.items.len != 0 and found.items[found.items.len - 1].commit >= pc - 1) continue;
-        var complete = proof;
-        complete.writeback = end;
-        complete.commit = end + 10;
         try found.append(self.allocator, complete);
     }
     return found.toOwnedSlice(self.allocator);
+}
+
+fn closed(comptime E: type, self: *E, pc: usize, catalog: *shapes.Catalog) Error!?Certificate {
+    const proof = try extraction(E, self, pc, catalog) orelse return null;
+    const end = try returned(E, self, proof, catalog) orelse return null;
+    var complete = proof;
+    complete.writeback = end;
+    complete.commit = end + 10;
+    return complete;
+}
+
+/// RC-DEAD-FIELD-MOVE-1: `t = s.f`, where value semantics already proved the
+/// copy a move and the frame-owned inline record `s` is never read again,
+/// moves the field's tokens into `t` instead of copying them, so a mutation of
+/// `t` finds one owner rather than cloning. `s` keeps its other fields and its
+/// later drop finds the moved field empty. Only a local whose every
+/// definition leaves its own storage in its slot qualifies (a match binding
+/// does: its arm copies the payload in); whether it holds an ordinary owner
+/// is tested when the move runs, and anything else still copies.
+fn dead(comptime E: type, self: *E, pc: usize, catalog: *shapes.Catalog) Error!?Certificate {
+    const proof = try deadExtraction(E, self, pc, catalog) orelse return null;
+    return if (try deadSource(E, self, proof, catalog)) proof else null;
+}
+
+// `load_local s; get_field f; value_copy assign; store_local t` whose copy
+// value semantics elided, between a frame-owned inline record and a named
+// owned target that both keep their values in their own slots.
+fn deadExtraction(comptime E: type, self: *E, pc: usize, catalog: *shapes.Catalog) Error!?Certificate {
+    const code = self.function.scope.instructions;
+    const analysis = self.ownership orelse return null;
+    if (pc == 0 or pc + 2 >= code.len or pc + 1 >= analysis.copies.len) return null;
+    if (code[pc - 1].op != .load_local or code[pc + 1].op != .value_copy or code[pc + 2].op != .store_local) return null;
+    const copy = code[pc + 1].op.value_copy;
+    if (copy.site != .assign or analysis.copies[pc + 1]) return null;
+    const source = @backingInt(code[pc - 1].op.load_local);
+    const target = @backingInt(code[pc + 2].op.store_local);
+    const locals = self.function.scope.locals;
+    const parameters = self.function.signature.parameter_count;
+    if (source < parameters or target < parameters or source == target or locals[target].usage.temporary) return null;
+    if (analysis.roles[source] != .owned or analysis.roles[target] != .owned) return null;
+    if (self.byReference(source) or self.callerStorage(source) or self.moves.resolve(source) != source) return null;
+    if (self.borrowsElement(source) or self.byReference(target) or self.callerStorage(target)) return null;
+    const places = self.cow.?.plan;
+    if (places.place(target) != null or places.place(source) != null) return null;
+    const owner_ty = locals[source].ty;
+    if (!owner_ty.isAggregate()) return null;
+    const owner = self.program.records[owner_ty.recordIndex()];
+    if (!owner.isRecord() or owner.managed or (try shape(catalog, owner_ty)).unique_drop) return null;
+    const ty = locals[target].ty;
+    const field = code[pc].op.get_field;
+    if (field >= owner.fields.len or owner.fields[field].ty != ty or copy.ty != ty) return null;
+    if (!try movable(E, self, ty, catalog)) return null;
+    return .{ .source = .{ .local = source, .field = field, .ty = ty }, .target = target, .projection = pc, .store = pc + 2, .writeback = pc + 2, .commit = pc + 2, .returns = false };
+}
+
+// No later instruction reads the source before overwriting it, nothing can
+// reach its slot by reference, and no other local that may hold, borrow or
+// name it is live; the extraction itself is straight, quiet and unscoped.
+fn deadSource(comptime E: type, self: *E, proof: Certificate, catalog: *shapes.Catalog) Error!bool {
+    const code = self.function.scope.instructions;
+    const pc = proof.projection;
+    const source = proof.source.local;
+    for (self.function.scope.locals) |local| if (semantics.containsLiveView(self.program.records, local.ty)) return false;
+    if ((self.states[pc - 1] orelse return false).len != 0) return false;
+    for (pc..pc + 3) |at| if (!straight(E, self, at) or !quiet(E, self, at)) return false;
+    for (pc - 1..pc + 3) |at| if (captured(E, self, at)) return false;
+    if (self.live.?.after(pc - 1, source)) return false;
+    for (code) |instruction| switch (instruction.op) {
+        .ref_local => |id| if (@backingInt(id) == source) return false,
+        else => {},
+    };
+    const derived = try derivedLocals(E, self, proof.source);
+    defer self.allocator.free(derived);
+    for (derived, 0..) |linked, index| {
+        if (!linked or index == source or index == proof.target) continue;
+        if (self.live.?.before(pc - 1, index) and !try harmless(E, self, index, catalog)) return false;
+    }
+    return true;
 }
 
 fn extraction(comptime E: type, self: *E, pc: usize, catalog: *shapes.Catalog) Error!?Certificate {
