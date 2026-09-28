@@ -92,6 +92,12 @@ pub fn store(comptime E: type, self: *E, local: usize, operand: usize) Error!boo
     const ty = self.function.scope.locals[local].ty;
     if (self.isScalar(ty) or !anchoredLocal(E, self, local) or local < self.function.signature.parameter_count) return false;
     const source = try self.load("s", operand);
+    // RC-ELEMENT-BORROW-3: an element-borrowed slot keeps the element's
+    // address, which stays valid while the caller keeps the parameter.
+    if (self.borrowsElement(local)) {
+        try self.print(" # RC-ELEMENT-BORROW-3 local {d}\n storel %v{d}, %l{d}\n", .{ local, source, local });
+        return true;
+    }
     const size = (self.layout(ty) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError).size;
     try self.print(" # RC-READONLY-ANCHOR-1 local {d}\n blit %v{d}, %l{d}, {d}\n", .{ local, source, local, size });
     return true;
@@ -238,7 +244,9 @@ fn candidate(comptime E: type, self: *E, bindings: []const input.Binding, catalo
     if (@backingInt(bindings[index].storage) != index) return false;
     const ty = self.function.scope.locals[index].ty;
     if (!try counted(catalog, ty) or semantics.isLiveView(self.program.records, ty)) return false;
-    if (self.byReference(index) or self.callerStorage(index)) return false;
+    // An element-borrowed local (RC-ELEMENT-BORROW-3) holds an address, which
+    // this binding is what makes sound; every other address slot is refused.
+    if ((self.byReference(index) and !self.borrowsElement(index)) or self.callerStorage(index)) return false;
     if (planned(self.cow.?.plan, roots, index)) return false;
     if (cow.iterationOwner(self.function, index)) return false;
     for (self.function.scope.instructions) |instruction| switch (instruction.op) {
@@ -441,6 +449,9 @@ pub fn operandInterval(comptime E: type, self: *E, pc: usize) bool {
             const count = self.program.functions[@backingInt(code[at].op.call)].signature.parameter_count;
             if (before.len - pushed_depth <= count) consumed = true;
         }
+        // RC-OPERAND-ANCHOR-2: a length read replaces the value on top with
+        // its scalar length, consuming it at the same stack height.
+        if (code[at].op == .array_length and before.len == pushed_depth + 1) consumed = true;
         if (writes(E, self, &state.catalog, at, root_local)) return false;
         switch (code[at].op) {
             .jump, .jump_if_false, .switch_variant, .try_result, .begin_arena, .end_arena => return false,

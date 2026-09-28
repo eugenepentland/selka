@@ -68,6 +68,11 @@ const Source = struct {
     /// Whether the storage is this frame's own — a call's result buffer — so
     /// nothing outside the producing instruction can invalidate it.
     stable: bool,
+    /// RC-ELEMENT-BORROW-3: an element of a never-written read-only list
+    /// parameter, which the caller keeps alive and unchanged for the whole
+    /// activation, so the address needs no inert live range and the element
+    /// may own references (the slot is bound as borrowed, never an owner).
+    anchored: bool = false,
 };
 
 /// One claim in flight: the emitter's flag table, the pc of the instruction
@@ -134,8 +139,40 @@ fn rcElementSource(comptime E: type, self: *E, op: @FieldType(bytecode.Instructi
     if (!anchoredList(E, self, owner, 1)) return null;
     const source = try elementSource(E, self, self.function.scope.locals[owner].ty) orelse return null;
     const value = try self.layout(source.ty);
-    if (value.trace or value.drop) return null;
+    if (value.trace or value.drop) {
+        // RC-ELEMENT-BORROW-3: an owning element may lend its address only
+        // out of a read-only parameter. The RC plan must also bind the slot
+        // as borrowed from that parameter (RC-READONLY-ANCHOR-1), or the
+        // claim is withdrawn before any ownership is planned (qbe_rc_state.zig).
+        if (!readOnlyList(E, self, owner, 1)) return null;
+        return .{ .ty = source.ty, .stable = false, .anchored = true };
+    }
     return source;
+}
+
+/// Whether list local `local` is a parameter the function never writes and
+/// never mutates in place, or a temporary every store of which is an
+/// adjacent capture of one. A hidden iteration source is not: its hold ends
+/// with its loop, and the anchor analysis never binds through it.
+fn readOnlyList(comptime E: type, self: *E, local: usize, depth: usize) bool {
+    const f = self.function;
+    if (local >= f.scope.locals.len) return false;
+    if (local < f.signature.parameter_count) {
+        if (@import("ownership_model.zig").writesParameter(f, local)) return false;
+        for (f.scope.instructions, 0..) |_, at| if (writesLocalAt(f, at, local)) return false;
+        return true;
+    }
+    if (depth == 0 or @import("cow_plan.zig").iterationOwner(f, local)) return false;
+    var source: ?usize = null;
+    for (f.scope.instructions, 0..) |_, at| if (writesLocalAt(f, at, local)) {
+        const code = f.scope.instructions;
+        if (code[at].op != .store_local or at == 0 or code[at - 1].op != .load_local or branchTarget(E, self, at)) return false;
+        const from = @backingInt(code[at - 1].op.load_local);
+        if (source != null and source.? != from) return false;
+        source = from;
+    };
+    const from = source orelse return false;
+    return f.scope.locals[from].ty == f.scope.locals[local].ty and readOnlyList(E, self, from, depth - 1);
 }
 
 fn anchoredList(comptime E: type, self: *E, local: usize, depth: usize) bool {
@@ -204,8 +241,9 @@ fn claimOne(comptime E: type, self: *E, candidate: Candidate) Error!void {
     const value = try self.layout(candidate.source.ty);
     // A value that owns something would have to be released through this slot,
     // and a zero-length aggregate keeps the scratch that stops QBE folding a
-    // null-like address into the load.
-    if (value.drop or value.size == 0) return;
+    // null-like address into the load. An anchored owning element
+    // (RC-ELEMENT-BORROW-3) is bound as borrowed, so nothing releases it.
+    if ((value.drop and !candidate.source.anchored) or value.size == 0) return;
     // Closing an arena scope scans every local declared before it through its
     // slot. A borrowed element's slot is meaningful only inside its own inert
     // run, so a frame that can reach that scan keeps the copy.
@@ -213,7 +251,7 @@ fn claimOne(comptime E: type, self: *E, candidate: Candidate) Error!void {
     const writes = try collectWrites(E, self, slot);
     defer self.allocator.free(writes);
     for (writes) |at| if (at == 0 or !try writesAddress(E, self, .{ .flags = candidate.flags, .pc = at - 1, .source = candidate.source })) return;
-    if (!candidate.source.stable) {
+    if (!candidate.source.stable and !candidate.source.anchored) {
         for (writes) |at| if (!try inertWhileLive(E, self, .{ .store = at, .slot = slot, .writes = writes })) return;
     }
     candidate.flags[slot] = if (candidate.source.stable) .value else .element;
@@ -253,7 +291,7 @@ fn writesAddress(comptime E: type, self: *E, candidate: Candidate) Error!bool {
     if (branchTarget(E, self, at_store)) return false;
     if (code[at_store].op != .store_local) return false;
     const source = try addressSource(E, self, candidate.pc) orelse return false;
-    return source.ty == candidate.source.ty and source.stable == candidate.source.stable;
+    return source.ty == candidate.source.ty and source.stable == candidate.source.stable and source.anchored == candidate.source.anchored;
 }
 
 /// One borrow's live range: the write that creates it, the local it fills and

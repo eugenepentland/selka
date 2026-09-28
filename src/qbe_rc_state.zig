@@ -51,6 +51,7 @@ pub fn build(comptime E: type, self: *E, capacity: usize) Error!*State {
     try @import("qbe_rc_read_loans.zig").bind(E, self, locals, &state.catalog);
     try @import("qbe_rc_readonly_anchor.zig").bind(E, self, locals, &state.catalog, state.contract);
     try @import("qbe_rc_readonly_anchor.zig").bindIntervals(E, self, locals, &state.catalog, state.contract);
+    try settleElements(E, self, locals);
     state.plan.locals = plan.build(a, .{
         .code = .{ .program = self.program, .function = self.function, .states = self.states },
         .flow = .{ .live = self.live.?, .ownership = self.ownership.? },
@@ -82,6 +83,19 @@ pub fn build(comptime E: type, self: *E, capacity: usize) Error!*State {
     state.plan.records.transfers = try @import("rc_field_transfer.zig").build(E, self, &state.catalog);
     state.plan.records.writes = try @import("rc_plain_record_write.zig").build(E, self, &state.catalog, state.plan.locals);
     return state;
+}
+
+/// RC-ELEMENT-BORROW-3: an owning element borrow stands only where its slot
+/// is bound as borrowed from a parameter's storage. Any other is withdrawn
+/// here, before the plan reads the bindings, so it keeps an ordinary owner.
+fn settleElements(comptime E: type, self: *E, locals: []const @import("rc_input.zig").Binding) Error!void {
+    for (self.function.scope.locals, locals, 0..) |local, binding, index| {
+        if (!self.borrowsElement(index)) continue;
+        const value = self.layout(local.ty) catch |err| return translate(err);
+        if (!value.trace and !value.drop) continue;
+        if (binding.anchor) |anchor| if (anchor == .storage and @backingInt(anchor.storage) < self.function.signature.parameter_count) continue;
+        @constCast(self.by_reference)[index] = .none;
+    }
 }
 
 /// A physical value can require cleanup even when semantic COW sees no leaves.

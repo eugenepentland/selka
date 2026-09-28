@@ -132,8 +132,10 @@ const large_source =
     \\    number: int
     \\def pick(items: list[Big], index: int) -> Big:
     \\    return items[index]
-    \\def small_heap(items: list[Huge], index: int) -> Item:
-    \\    current = items[index]
+    \\record Holder:
+    \\    huge: Huge
+    \\def small_heap(items: list[Holder], index: int) -> Item:
+    \\    current = items[index].huge
     \\    return Item(current.text, current.number)
     \\def selected(items: list[Big]) -> int:
     \\    saved = pick(items, 0)
@@ -143,6 +145,9 @@ const large_source =
     \\    return 0
 ;
 
+// `small_heap` copies a field of an element, which keeps the frame copy that
+// makes the frame heap-backed (an element read straight into a local would
+// lend its address instead, RC-ELEMENT-BORROW-3).
 // spec-case: RC-BORROWED-READONLY-ENTRY-1
 test "RC raw borrowed entry copies hidden and small heap-frame results before release" {
     const saved = runtime.get();
