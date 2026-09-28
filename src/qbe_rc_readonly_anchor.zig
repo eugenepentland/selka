@@ -520,12 +520,13 @@ pub fn operandInterval(comptime E: type, self: *E, pc: usize) bool {
     return false;
 }
 
-/// RC-INTERVAL-ANCHOR-3: two `mut` arguments may name one caller value, or
-/// one may sit inside the other (`f(mut r, mut r)`, `f(mut r, mut r.items)`,
-/// `f(mut xs, mut xs[0])`; VALUE-SEMANTICS-5). A write through another
-/// writable parameter whose type equals, holds or is held by the root's can
-/// then replace or release what a read out of the root borrowed, so such a
-/// root anchors nothing (RC-INTERVAL-ANCHOR-4 adds the containment cases).
+/// RC-INTERVAL-ANCHOR-3: were two `mut` arguments to name one caller value, or
+/// one to sit inside the other (`f(mut r, mut r)`, `f(mut r, mut r.items)`,
+/// `f(mut xs, mut xs[0])`), a write through another writable parameter whose
+/// type equals, holds or is held by the root's could replace or release what
+/// a read out of the root borrowed, so such a root anchors nothing
+/// (RC-INTERVAL-ANCHOR-4 adds the containment cases). MUT-EXCLUSIVE-1 now
+/// rejects those calls; this refusal stays as defense in depth.
 fn aliasable(comptime E: type, self: *E, contract: model.CallContract, root_local: usize) bool {
     const ty = self.function.scope.locals[root_local].ty;
     for (contract.parameters, 0..) |mode, index| {
