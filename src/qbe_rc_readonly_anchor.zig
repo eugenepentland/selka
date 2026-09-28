@@ -520,15 +520,59 @@ pub fn operandInterval(comptime E: type, self: *E, pc: usize) bool {
     return false;
 }
 
-/// RC-INTERVAL-ANCHOR-3: two `mut` arguments may name one caller variable
-/// (`f(mut r, mut r)`, VALUE-SEMANTICS-5), so a write through another
-/// caller-storage parameter of the root's type can replace or release a field
-/// of the root. Such a root anchors nothing.
+/// RC-INTERVAL-ANCHOR-3: two `mut` arguments may name one caller value, or
+/// one may sit inside the other (`f(mut r, mut r)`, `f(mut r, mut r.items)`,
+/// `f(mut xs, mut xs[0])`; VALUE-SEMANTICS-5). A write through another
+/// writable parameter whose type equals, holds or is held by the root's can
+/// then replace or release what a read out of the root borrowed, so such a
+/// root anchors nothing (RC-INTERVAL-ANCHOR-4 adds the containment cases).
 fn aliasable(comptime E: type, self: *E, contract: model.CallContract, root_local: usize) bool {
     const ty = self.function.scope.locals[root_local].ty;
     for (contract.parameters, 0..) |mode, index| {
-        if (index == root_local or mode != .caller_storage) continue;
-        if (self.function.scope.locals[index].ty == ty) return true;
+        if (index == root_local or (mode != .caller_storage and mode != .mutable_payload)) continue;
+        const other = self.function.scope.locals[index].ty;
+        if (holds(E, self, other, ty) or holds(E, self, ty, other)) return true;
+    }
+    return false;
+}
+
+// Whether a value of type `outer` can hold one of type `inner`, itself
+// included: through fields, collection elements, fixed arrays, variant
+// payloads or a domain's base. A walk that outgrows its budget answers yes.
+fn holds(comptime E: type, self: *E, outer: typed.Type, inner: typed.Type) bool {
+    var pending: [256]typed.Type = undefined;
+    var seen: [256]typed.Type = undefined;
+    var count: usize = 1;
+    var visited: usize = 0;
+    pending[0] = outer;
+    while (count != 0) {
+        count -= 1;
+        const current = pending[count];
+        if (current == inner) return true;
+        if (for (seen[0..visited]) |previous| {
+            if (previous == current) break true;
+        } else false) continue;
+        if (visited == seen.len) return true;
+        seen[visited] = current;
+        visited += 1;
+        if (!current.isAggregate()) continue;
+        const record = self.program.records[current.recordIndex()];
+        var children: [4]?typed.Type = .{ record.shape.buffer, record.shape.domain, if (record.shape.array) |array| array.element else null, null };
+        for (&children) |*child| if (child.*) |ty| {
+            if (count == pending.len) return true;
+            pending[count] = ty;
+            count += 1;
+        };
+        if (record.shape.variants) |variants| for (variants.cases) |case| if (case.payload) |ty| {
+            if (count == pending.len) return true;
+            pending[count] = ty;
+            count += 1;
+        };
+        for (record.fields) |field| {
+            if (count == pending.len) return true;
+            pending[count] = field.ty;
+            count += 1;
+        }
     }
     return false;
 }
@@ -655,7 +699,10 @@ fn intervalRoot(comptime E: type, self: *E, bindings: []const input.Binding, cat
     if (text(E, self, self.program.records[local.ty.recordIndex()].shape.buffer orelse return false)) return false;
     if (bindings[index].anchor != null or @backingInt(bindings[index].storage) != index) return false;
     if (self.byReference(index) or self.callerStorage(index)) return false;
-    if (index < self.function.signature.parameter_count) return index < contract.parameters.len and contract.parameters[index] == .mutable_payload;
+    // RC-INTERVAL-ANCHOR-4: a `mut` list another writable parameter may name,
+    // or hold, or sit inside, is written by that parameter too.
+    if (index < self.function.signature.parameter_count) return index < contract.parameters.len and
+        contract.parameters[index] == .mutable_payload and !aliasable(E, self, contract, index);
     if (local.usage.temporary or cow.iterationOwner(self.function, index)) return false;
     const plan = self.cow.?.plan;
     if (plan.place(index) != null) return false;

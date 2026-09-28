@@ -518,3 +518,34 @@ test "RC mut record roots another mut parameter of their type may name keep thei
     try t.expect(try operationsIn(aliases, "interval") > try operationsIn(aliases, "distinct_interval"));
     try t.expect(try operationsIn(aliases, "operand") > try operationsIn(aliases, "distinct_operand"));
 }
+
+const list_aliases =
+    \\record Span:
+    \\    source: bytes
+    \\    end: int
+    \\record Pin:
+    \\    part: int
+    \\    net: Span
+    \\def aliased(pins: mut list[Pin], other: mut list[Pin]) -> int:
+    \\    pins.append(Pin(9, Span(b"x", 1)))
+    \\    first = pins[0]
+    \\    other[0] = Pin(1, Span(b"q", 1))
+    \\    return first.part + len(first.net.source)
+    \\def distinct(pins: mut list[Pin], other: mut list[int]) -> int:
+    \\    pins.append(Pin(9, Span(b"x", 1)))
+    \\    first = pins[0]
+    \\    other[0] = 1
+    \\    return first.part + len(first.net.source)
+    \\def main() -> int:
+    \\    a = [Pin(3, Span(b"ab", 2))]
+    \\    b = [Pin(4, Span(b"c", 1))]
+    \\    c = [0]
+    \\    return aliased(mut a, mut a) + distinct(mut b, mut c)
+;
+
+// spec: RC-INTERVAL-ANCHOR-4
+test "RC a mut list another mut parameter of its type may name anchors nothing" {
+    try t.expectEqual(@as(usize, 0), try markersIn(list_aliases, "aliased", "# RC-READONLY-ANCHOR-1 local"));
+    try t.expect(try markersIn(list_aliases, "distinct", "# RC-READONLY-ANCHOR-1 local") > 0);
+    try t.expect(try operationsIn(list_aliases, "aliased") > try operationsIn(list_aliases, "distinct"));
+}
