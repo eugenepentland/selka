@@ -698,6 +698,41 @@ static void plain_elements_copy_as_bytes(void) {
     myl_rc_owner_release(&heap, list);
     finish(&heap);
 }
+// spec-case: RC-LIST-FLAT-RELEASE-1
+static void list_elements_release_flat(void) {
+    myl_native_heap heap;
+    start(&heap);
+    myl_rc_counters before, after;
+    size_t live = heap.objects_live;
+    /* Records of a pointer, a variant arm and a pointer (a five-leaf flat
+     * plan): a list of them releases every live leaf when it dies. */
+    myl_native_list *list = myl_native_list_new(&heap, &outer, 0);
+    assert(list && plan(&heap, &outer)->count == 5);
+    for (uint64_t i = 0; i < 20; ++i) {
+        Outer value = {.left = bytes8(&heap), .middle = {.tag = i % 4}, .right = NULL};
+        if (i % 4 == 0 || i % 4 == 2) value.middle.a = bytes8(&heap);
+        if (i % 4 == 1) value.middle.b = bytes8(&heap), value.middle.a = (void *)(uintptr_t)7;
+        if (i % 4 == 3) value.middle.a = (void *)(uintptr_t)0xdeadbeef;
+        assert(myl_rc_list_append(&heap, list, &value));
+        myl_rc_owner_release(&heap, value.left);
+        if (i % 4 == 0 || i % 4 == 2) myl_rc_owner_release(&heap, value.middle.a);
+        if (i % 4 == 1) myl_rc_owner_release(&heap, value.middle.b);
+    }
+    assert(myl_rc_stats_snapshot(&heap, &before));
+    /* Clearing releases the elements and keeps the list; dying releases the rest. */
+    assert(myl_rc_list_clear(&heap, list) && list->length == 0);
+    assert(myl_rc_stats_snapshot(&heap, &after));
+    assert(after.events[MYL_RC_STAT_RETIRE] == before.events[MYL_RC_STAT_RETIRE] + 35);
+    for (uint64_t i = 0; i < 4; ++i) {
+        Outer value = {.left = bytes8(&heap), .middle = {.tag = 3}, .right = bytes8(&heap)};
+        assert(myl_rc_list_append(&heap, list, &value));
+        myl_rc_owner_release(&heap, value.left);
+        myl_rc_owner_release(&heap, value.right);
+    }
+    myl_rc_owner_release(&heap, list);
+    assert(heap.objects_live == live);
+    finish(&heap);
+}
 int myl_rc_fast_verify(void) {
     variant_plan_layout();
     variant_plan_operations();
@@ -718,12 +753,13 @@ int myl_rc_fast_verify(void) {
     allocation_cache_reuse();
     drain_releases_trees_inline();
     plain_elements_copy_as_bytes();
-    return 19;
+    list_elements_release_flat();
+    return 20;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
-    assert(myl_rc_fast_verify() == 19);
-    puts("native RC fast paths: 19 tests passed");
+    assert(myl_rc_fast_verify() == 20);
+    puts("native RC fast paths: 20 tests passed");
     return 0;
 }
 #endif
