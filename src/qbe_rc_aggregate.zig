@@ -265,7 +265,10 @@ fn dispatchValue(comptime E: type, self: *E, dispatch: @FieldType(Op, "switch_va
             const index = @backingInt(slot);
             const ty = self.function.scope.locals[index].ty;
             const work = try values.workAddress(E, self);
-            try initialize(E, self, .{ .ty = ty, .source = try self.address(pointer, (try self.layout(dispatch.ty)).payload_offset), .destination = work, .region = try region(E, self) });
+            const payload = try self.address(pointer, (try self.layout(dispatch.ty)).payload_offset);
+            if (@import("rc_element_take.zig").find(frame.get(E, self).?.plan.records.takes, self.pc, index)) |take| {
+                try @import("qbe_rc_element_take.zig").bind(E, self, take, .{ .scrutinee = pointer, .payload = payload, .work = work, .ty = ty, .region = try region(E, self) });
+            } else try initialize(E, self, .{ .ty = ty, .source = payload, .destination = work, .region = try region(E, self) });
             try pending(E, self, ty, work);
             try frame.drop(E, self, index);
             try bindLocal(E, self, work, index, ty);

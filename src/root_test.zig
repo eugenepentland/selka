@@ -291,6 +291,8 @@ test {
     _ = @import("qbe_rc_dictionary_loop_test.zig");
     _ = @import("qbe_rc_empty_frame_test.zig");
     _ = @import("qbe_rc_field_transfer_test.zig");
+    _ = @import("qbe_rc_dead_field_move_test.zig");
+    _ = @import("qbe_rc_element_take_test.zig");
     _ = @import("qbe_rc_plain_record_write_test.zig");
     _ = @import("cow_test.zig");
     _ = @import("cow_rebox_roots_test.zig");

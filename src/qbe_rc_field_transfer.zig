@@ -17,6 +17,7 @@ pub fn project(comptime E: type, self: *E) Error!bool {
     const state = frame.get(E, self) orelse return false;
     for (state.plan.records.transfers) |proof| {
         if (proof.projection != self.pc) continue;
+        if (!proof.returns) return dead(E, self, proof);
         const member = try self.field(self.function.scope.locals[proof.source.local].ty, proof.source.field);
         if (try direct(E, self, proof)) {
             try frame.drop(E, self, proof.target);
@@ -61,7 +62,7 @@ pub fn local(comptime E: type, self: *E) Error!bool {
     for (state.plan.records.transfers) |proof| {
         if (!proof.intercepts(self.pc) or self.pc == proof.projection) continue;
         if (!try direct(E, self, proof)) return false;
-        if (self.pc != proof.commit) return true;
+        if (!proof.returns or self.pc != proof.commit) return true;
         const member = try self.field(self.function.scope.locals[proof.source.local].ty, proof.source.field);
         const field = try self.address(try home(E, self, proof.source.local), member.offset);
         const slot = try home(E, self, proof.target);
@@ -78,7 +79,7 @@ pub fn local(comptime E: type, self: *E) Error!bool {
 pub fn committed(comptime E: type, self: *E) Error!void {
     const state = frame.get(E, self) orelse return;
     for (state.plan.records.transfers) |proof| {
-        if (proof.commit == self.pc and !try direct(E, self, proof)) try frame.drop(E, self, proof.target);
+        if (proof.returns and proof.commit == self.pc and !try direct(E, self, proof)) try frame.drop(E, self, proof.target);
     }
 }
 
@@ -88,8 +89,35 @@ pub fn committed(comptime E: type, self: *E) Error!void {
 fn direct(comptime E: type, self: *E, proof: Certificate) Error!bool {
     const state = frame.get(E, self) orelse return false;
     if (@import("qbe_rc_borrow.zig").active(E, self)) return false;
+    // A dead move tests its source's guard and role word, so it needs both.
+    if (!proof.returns and (frame.emptyLocal(E, self, proof.source.local) or try state.plan.journal.slot(proof.source.local) == null)) return false;
     const slot = try state.plan.journal.slot(proof.target);
     return slot != null;
+}
+
+/// RC-DEAD-FIELD-MOVE-1: release the target's previous value, then relocate
+/// the dead source's field into the target's slot when the source holds an
+/// ordinary owner, or retain a copy of it as the ordinary lowering would.
+/// Either way the target ends up holding one ordinary owner, and the copy and
+/// store that follow emit nothing. A target without its own guard, or a
+/// source with no guard to test, keeps the ordinary lowering throughout.
+fn dead(comptime E: type, self: *E, proof: Certificate) Error!bool {
+    if (!try direct(E, self, proof)) return false;
+    const member = try self.field(self.function.scope.locals[proof.source.local].ty, proof.source.field);
+    const owner = try @import("qbe_rc_loans.zig").owner(E, self, proof.source.local);
+    try frame.drop(E, self, proof.target);
+    const field = try self.address(try home(E, self, proof.source.local), member.offset);
+    const slot = try home(E, self, proof.target);
+    const label = self.temp();
+    try self.print(" # RC-DEAD-FIELD-MOVE-1 source {d} field {d} target {d}\n", .{ proof.source.local, proof.source.field, proof.target });
+    try self.print(" jnz %v{d}, @rcdeadmove{d}, @rcdeadcopy{d}\n@rcdeadmove{d}\n", .{ owner, label, label, label });
+    try relocate(E, self, field, slot, try self.layout(member.ty));
+    try self.print(" jmp @rcdeaddone{d}\n@rcdeadcopy{d}\n", .{ label, label });
+    try @import("qbe_rc_slots.zig").Lower(E).transfer(self, .{ .ty = member.ty, .destination = slot, .source = field, .region = try frame.region(E, self), .mode = .retain_empty });
+    try self.print("@rcdeaddone{d}\n", .{label});
+    try frame.entry(E, self, proof.target, member.ty, slot);
+    try frame.initialized(E, self, proof.target, true);
+    return true;
 }
 
 // Caller storage is reached through the parameter's address; a frame-owned
