@@ -12,6 +12,7 @@ const ast = @import("ast.zig");
 const source = @import("source.zig");
 const lexer = @import("lexer.zig");
 const byte_literal = @import("byte_literal.zig");
+const format_strings = @import("format_strings.zig");
 const diagnostic = @import("diagnostic.zig");
 const Blake3 = std.crypto.hash.Blake3;
 
@@ -72,7 +73,11 @@ pub fn codeOf(status: source.EmbedStatus) ?[]const u8 {
 pub fn messageOf(allocator: std.mem.Allocator, status: source.EmbedStatus, path: []const u8) std.mem.Allocator.Error![]const u8 {
     return switch (status) {
         .ok => "the file was read",
-        .unresolved => std.fmt.allocPrint(allocator, "cannot embed \"{s}\": this source was not loaded from a file on disk, so there is no directory to resolve the path against", .{path}),
+        .unresolved => std.fmt.allocPrint(
+            allocator,
+            "cannot embed \"{s}\": the file was not read when this source was loaded; embed calls need a source loaded from a file on disk and the call written as embed_bytes(\"path\") with one plain string literal",
+            .{path},
+        ),
         .invalid_path => std.fmt.allocPrint(allocator, "embed path \"{s}\" is not a usable path; write a non-empty relative path such as \"data/table.txt\", without NUL bytes or backslashes", .{path}),
         .absolute => std.fmt.allocPrint(allocator, "embed path \"{s}\" is absolute; embedded files are named relative to the directory of the source file that embeds them", .{path}),
         .escapes => std.fmt.allocPrint(allocator, "embedded file \"{s}\" is outside the project root (through `..` or a symbolic link); keep embedded data inside the project", .{path}),
@@ -140,14 +145,25 @@ pub fn mayEmbed(bytes: []const u8) bool {
 }
 
 /// Find every `embed_bytes("literal")` and `embed_str("literal")` call in one
-/// tokenized source, in source order, as unresolved embeds. A call whose
-/// argument is anything else is left for the checker to reject.
+/// tokenized source, in source order, as unresolved embeds, including the ones
+/// inside `f"..."` interpolations. A call whose argument is anything else is
+/// left for the checker to reject.
 pub fn sites(allocator: std.mem.Allocator, src: source.Source, tokens: []const lexer.Token) std.mem.Allocator.Error![]source.Embed {
     var found: std.ArrayList(source.Embed) = .empty;
     errdefer found.deinit(allocator);
-    var index: usize = 0;
-    while (index + 3 < tokens.len) : (index += 1) {
-        if (tokens[index].tag != .ident or kindOf(src.text(tokens[index].span)) == null) continue;
+    try collect(allocator, src, tokens, &found);
+    return found.toOwnedSlice(allocator);
+}
+
+/// Append the embed calls of `tokens` to `found`, descending into format strings.
+fn collect(allocator: std.mem.Allocator, src: source.Source, tokens: []const lexer.Token, found: *std.ArrayList(source.Embed)) std.mem.Allocator.Error!void {
+    for (tokens, 0..) |token, index| {
+        if (token.tag == .format) {
+            try collectHoles(allocator, src, token.span, found);
+            continue;
+        }
+        if (token.tag != .ident or index + 3 >= tokens.len) continue;
+        const kind = kindOf(src.text(token.span)) orelse continue;
         if (tokens[index + 1].tag != .lparen or tokens[index + 2].tag != .bytes) continue;
         const closing = tokens[index + 3].tag == .rparen or (tokens[index + 3].tag == .comma and index + 4 < tokens.len and tokens[index + 4].tag == .rparen);
         if (!closing) continue;
@@ -160,9 +176,32 @@ pub fn sites(allocator: std.mem.Allocator, src: source.Source, tokens: []const l
             error.OutOfMemory => return error.OutOfMemory,
             else => continue,
         };
-        try found.append(allocator, .{ .literal = literal, .path = path, .text = kindOf(src.text(tokens[index].span)).? == .str });
+        try found.append(allocator, .{ .literal = literal, .path = path, .text = kind == .str });
     }
-    return found.toOwnedSlice(allocator);
+}
+
+/// Append the embed calls inside the interpolations of one `f"..."` literal.
+fn collectHoles(allocator: std.mem.Allocator, src: source.Source, span: source.Span, found: *std.ArrayList(source.Embed)) std.mem.Allocator.Error!void {
+    if (!mayEmbed(src.text(span))) return;
+    var scratch: diagnostic.Sink = .{ .allocator = allocator };
+    defer scratch.deinit();
+    const pieces = format_strings.split(allocator, src, span, &scratch) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => return,
+    };
+    defer allocator.free(pieces);
+    for (pieces) |piece| {
+        const hole = switch (piece) {
+            .hole => |inner| inner,
+            else => continue,
+        };
+        const tokens = lexer.lexRange(allocator, src.bytes, hole, &scratch) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            else => continue,
+        };
+        defer allocator.free(tokens);
+        try collect(allocator, src, tokens, found);
+    }
 }
 
 /// Lex `src` and find its embed calls, or none without lexing when the source

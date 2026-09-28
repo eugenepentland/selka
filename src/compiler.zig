@@ -285,6 +285,8 @@ pub const reference_tables = struct {
     pub const float_intrinsics = @import("float_intrinsics.zig");
     /// Managed collection families a method spelling is accepted on.
     pub const runtime_values = @import("runtime_values.zig");
+    /// The compile-time file embedding builtins (`EMBED-1`).
+    pub const embed = @import("embed.zig");
 };
 
 /// Opt-in per-command friction record. It reads the compiler's own diagnostic

@@ -81,3 +81,12 @@ public def test_embedded_constants_are_readable_from_another_module() -> bool:
     if embed_support.support_length() != 15:
         return False
     return embed_support.GREETING == MULTI and embed_support.SUPPORT == embed_bytes("embed_fixtures/support.txt")
+
+
+# spec-case: EMBED-1
+public def test_one_file_embeds_as_bytes_and_as_text() -> bool:
+    raw = embed_bytes("embed_fixtures/multi.txt")
+    text = embed_str("embed_fixtures/multi.txt")
+    if len(raw) != 18 or len(text) != 10:
+        return False
+    return text.encode() == raw and embed_support.GREETING == text

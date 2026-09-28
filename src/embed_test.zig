@@ -91,6 +91,19 @@ test "an embedded empty file is an empty value and an edited file changes the pr
     try t.expectEqual(@as(i64, 42), (try native.run(&edited)).value);
 }
 
+// spec-case: EMBED-1
+test "an embed call inside an f-string interpolation is read like any other" {
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(t.io, .{ .sub_path = "data.bin", .data = "abcdefghij" });
+    const root = try rootOf(&temporary);
+    defer t.allocator.free(root);
+    var compilation = try compile(t.allocator, root, "def main() -> int:\n    label = f\"n={len(embed_bytes('data.bin'))}\"\n    return len(label)\n");
+    defer compilation.deinit();
+    try t.expectEqual(@as(usize, 1), compilation.src.embeds.len);
+    try t.expectEqual(@as(i64, 4), (try native.run(&compilation)).value);
+}
+
 // spec: EMBED-2
 test "every embed error is a located diagnostic with its own code" {
     var temporary = t.tmpDir(.{});

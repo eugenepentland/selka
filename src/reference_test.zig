@@ -46,6 +46,8 @@ const language = struct {
         pub const float_intrinsics = @import("float_intrinsics.zig");
         /// Managed collection families a method spelling belongs to.
         pub const runtime_values = @import("runtime_values.zig");
+        /// The compile-time file embedding builtins.
+        pub const embed = @import("embed.zig");
     };
 };
 
@@ -306,6 +308,17 @@ test "builtin and collection-method facts answer from the checker's own tables" 
     try t.expectEqualStrings("split", buffer_operations.spelling(.split_whitespace).?);
     try t.expectEqualStrings("split", buffer_operations.spelling(.split).?);
     try t.expectEqualStrings("string,bytes", stringAt(method, "families"));
+}
+
+// spec-case: EMBED-5
+test "the embed builtins are discoverable through the reference" {
+    const bytes = try json("embed_bytes");
+    defer t.allocator.free(bytes);
+    var parsed = try envelope(t.allocator, bytes);
+    defer parsed.deinit();
+    const builtin = find(section(parsed.value, "builtins"), "name", "embed_bytes") orelse return error.TestUnexpectedResult;
+    try t.expectEqual(@as(i64, 1), integerAt(builtin, "arity").?);
+    try t.expectEqualStrings("embed.kindOf", stringAt(builtin, "source"));
 }
 
 // spec: REFERENCE-6
