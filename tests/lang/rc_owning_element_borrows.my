@@ -177,3 +177,29 @@ public def test_read_only_and_mut_views_of_one_list_stay_distinct() -> bool:
 # spec-case: RC-ELEMENT-BORROW-3
 public def test_local_list_and_iteration_elements_keep_their_copies() -> bool:
     return local_list(8) == 1370 and iterated(sample()) == 12
+
+
+# RC-READONLY-ANCHOR-2: the first argument of an inlined comparison, read out
+# of a read-only element, is bound in place; a local copy as the first
+# argument keeps its own.
+def matching_parts(pins: list[Pin], net: Span) -> list[int]:
+    base = net
+    base.end = net.end - 1
+    out: list[int] = []
+    i = 0
+    while i < len(pins):
+        current = pins[i]
+        if same(current.net, base):
+            out.append(current.part)
+        if same(base, current.display):
+            out.append(current.part + 100)
+        i += 1
+    return out
+
+
+# spec-case: RC-READONLY-ANCHOR-2
+public def test_inlined_arguments_read_out_of_elements_compare_in_place() -> bool:
+    pins = sample()
+    pins.append(pin(7, b"GN", False, 4))
+    found = matching_parts(pins, Span(source=b"GNDX", start=0, end=4))
+    return found == [1, 101, 3, 103]

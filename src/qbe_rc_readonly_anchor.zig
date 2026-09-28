@@ -244,11 +244,25 @@ fn definitions(comptime E: type, self: *E, view: Working, local: usize) bool {
             },
             else => continue,
         }
-        if (pc == 0 or self.isBranchTarget(pc)) return false;
-        if (!pushed(E, self, view, pc - 1, depth_limit)) return false;
+        if (pc == 0) return false;
+        const adjacent = !self.isBranchTarget(pc) and pushed(E, self, view, pc - 1, depth_limit);
+        if (!adjacent and !carriedStore(E, self, view, pc)) return false;
         seen = true;
     }
     return seen;
+}
+
+// RC-READONLY-ANCHOR-2: a store whose operand was read earlier — the first of
+// an inlined call's arguments, stored after the ones pushed above it — takes
+// an anchored value when that read is of an anchored local, carried to the
+// store as `RC-INTERVAL-ANCHOR-2` carries a list read.
+fn carriedStore(comptime E: type, self: *E, view: Working, pc: usize) bool {
+    if (self.function.scope.instructions[pc].op != .store_local) return false;
+    const analysis = self.ownership orelse return false;
+    const stack = self.states[pc] orelse return false;
+    if (stack.len == 0) return false;
+    const lists: Lists = .{ .quiet = &.{}, .members = @constCast(view.anchored), .roots = &.{}, .operands = analysis.operands, .root = cow.none };
+    return readChain(E, self, lists, pc, stack.len - 1);
 }
 
 // Whether the ownership analysis keeps the `value_copy` at `pc` a real copy

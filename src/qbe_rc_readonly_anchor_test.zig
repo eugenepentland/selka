@@ -412,3 +412,44 @@ test "RC a local filled by a borrowed call out of a read-only parameter takes no
 test "RC a borrowed call out of a local list keeps its owner" {
     try t.expectEqual(@as(usize, 0), try markersIn(calls, "local_pick", "# RC-READONLY-ANCHOR-1 local"));
 }
+
+const carried =
+    \\record Span:
+    \\    source: bytes
+    \\    start: int
+    \\    end: int
+    \\record Pin:
+    \\    part: int
+    \\    net: Span
+    \\def equal(a: Span, b: Span) -> bool:
+    \\    if a.end - a.start != b.end - b.start:
+    \\        return False
+    \\    i = 0
+    \\    while i < a.end - a.start:
+    \\        if a.source[a.start + i] != b.source[b.start + i]:
+    \\            return False
+    \\        i += 1
+    \\    return True
+    \\def matches(pins: list[Pin], net: Span) -> list[int]:
+    \\    base = net
+    \\    base.end = net.end - 1
+    \\    out: list[int] = []
+    \\    i = 0
+    \\    while i < len(pins):
+    \\        pin = pins[i]
+    \\        if equal(pin.net, base):
+    \\            out.append(pin.part)
+    \\        i += 1
+    \\    return out
+    \\def main() -> int:
+    \\    pins = [Pin(0, Span(b"a" + b"b", 0, 1)), Pin(1, Span(b"ab", 0, 2))]
+    \\    return len(matches(pins, Span(b"ab", 0, 2)))
+;
+
+// spec: RC-READONLY-ANCHOR-2
+test "RC an inlined call's first argument read out of an anchored local is bound in place" {
+    // `pin` (the element) and the inlined `a` (its field) are bound; `b` is
+    // filled from the owned local `base` and keeps its copy.
+    try t.expectEqual(@as(usize, 1), try markersIn(carried, "matches", "# RC-READONLY-ANCHOR-1 local"));
+    try t.expectEqual(@as(usize, 1), try markersIn(carried, "matches", "# RC-ELEMENT-BORROW-3 local"));
+}
