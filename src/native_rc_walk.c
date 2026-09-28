@@ -216,13 +216,71 @@ typedef struct {
     const myl_rc_flat *flat;
     uintptr_t mask, want;
     unsigned all;
-    /* RC-DRAIN-PAIR-1: a plan of exactly two leaves (a binary node, say)
-     * releases them at these offsets, in the plan's order, without walking
-     * its live set; `pair` says the offsets apply. */
-    uint32_t pair, first, second;
     drain_tally tally;
 } drain_cursor;
+/* RC-DRAIN-PAIR-1: the live set of a plan of exactly two unconditional leaves
+ * (a binary node, say): bit i names offsets[i], so no other plan has it. */
+#define DRAIN_PAIR 3u
 #define DRAIN_NEVER (~(uintptr_t)0)
+/* The fast test of every admitted plan with a leaf: dying, counted, not large
+ * and a single element. */
+#define DRAIN_ONE_MASK (MYL_RC_OBJECT_DYING | MYL_NATIVE_OBJECT_IMMORTAL | MYL_NATIVE_OBJECT_ARENA | \
+    MYL_NATIVE_OBJECT_LARGE | MYL_NATIVE_OBJECT_COUNT_BITS)
+#define DRAIN_ONE_WANT (MYL_RC_OBJECT_DYING | ((uintptr_t)1 << MYL_NATIVE_OBJECT_COUNT_SHIFT))
+/* RC-DRAIN-TYPES-1: the plan of a death's type from the drain's two most
+ * recent types, most recent first, or from one binding probe that makes it
+ * the most recent. */
+static inline __attribute__((always_inline)) const myl_rc_flat *drain_plan(myl_native_heap *heap, const myl_native_type *type) {
+    myl_rc_state *rc = heap->rc;
+    if (rc->dead.types[0] == type) return rc->dead.flats[0];
+    const myl_rc_flat *flat;
+    if (rc->dead.types[1] == type) flat = rc->dead.flats[1];
+    else {
+        const myl_rc_binding *binding = myl_rc_binding_find(heap, type);
+        myl_rc_invariant(binding != NULL);
+        flat = &binding->flat;
+    }
+    rc->dead.types[1] = rc->dead.types[0];
+    rc->dead.flats[1] = rc->dead.flats[0];
+    rc->dead.types[0] = type;
+    rc->dead.flats[0] = flat;
+    return flat;
+}
+/* RC-DRAIN-PAIR-1: one run of consecutive deaths of a two-leaf type, from
+ * `object` (already popped; `head` is the rest of the list). Each death's two
+ * leaves are released at the plan's offsets, in the plan's order, and its slot
+ * goes on its class list: a one-element slab object's class follows from its
+ * type's size alone, so the whole run shares one list, written once, and its
+ * listed bytes are counted once. The run stops at an empty list, a death of
+ * another type or one the constant one-element fast test refuses, which stays
+ * queued; the new head is returned. A call of its own keeps the loop's few
+ * values in registers. */
+static __attribute__((noinline)) myl_rc_object *drain_pairs(myl_native_heap *heap, myl_rc_object *object,
+        myl_rc_object *head, const myl_rc_flat *flat, drain_tally *tally) {
+    const myl_native_type *type = object->common.element;
+    const myl_rc_slab_class *slab = (const myl_rc_slab_class *)((uintptr_t)object & ~(uintptr_t)(MYL_RC_SLAB_BYTES - 1));
+    void **list = &heap->rc_cache.free[slab->index];
+    const size_t first = flat->offsets[0], second = flat->offsets[1];
+    size_t count = 0;
+    void *top = *list;
+    for (;;) {
+        const unsigned char *payload = (const unsigned char *)(object + 1);
+        head = drain_leaf(heap, payload + first, head);
+        head = drain_leaf(heap, payload + second, head);
+        MYL_RC_STAT(heap, MYL_RC_STAT_RETIRE);
+        object->common.mark = MYL_RC_RETIRED_MARK;
+        object->owners = (uintptr_t)top;
+        top = object;
+        ++count;
+        if (!head || head->common.element != type || (head->common.mark & DRAIN_ONE_MASK) != DRAIN_ONE_WANT) break;
+        object = head;
+        head = (myl_rc_object *)object->owners;
+    }
+    *list = top;
+    tally->retired += count;
+    tally->pushed += count * slab->stride;
+    return head;
+}
 /* Run the call-free fast loop until the list is empty (NULL) or the next
  * death needs drain_one (returned, already popped). It admits a dying object
  * of the production allocator that is slab-sized and, unless its plan has no
@@ -235,7 +293,6 @@ static __attribute__((noinline)) myl_rc_object *drain_fast(myl_native_heap *heap
     const myl_rc_flat *flat = cursor->flat;
     uintptr_t mask = cursor->mask, want = cursor->want;
     unsigned all = cursor->all;
-    uint32_t pair = cursor->pair, first = cursor->first, second = cursor->second;
     size_t retired = cursor->tally.retired, pushed = cursor->tally.pushed;
     myl_rc_object *slow = NULL;
     while (head) {
@@ -244,9 +301,7 @@ static __attribute__((noinline)) myl_rc_object *drain_fast(myl_native_heap *heap
         const myl_native_type *element = object->common.element;
         if (element != last) {
             last = element;
-            const myl_rc_binding *binding = myl_rc_binding_find(heap, element);
-            myl_rc_invariant(binding != NULL);
-            flat = &binding->flat;
+            flat = drain_plan(heap, element);
             unsigned leaves = flat->count;
             all = leaves ? flat->all : 0;
             mask = MYL_RC_OBJECT_DYING | MYL_NATIVE_OBJECT_IMMORTAL | MYL_NATIVE_OBJECT_ARENA | MYL_NATIVE_OBJECT_LARGE;
@@ -256,51 +311,35 @@ static __attribute__((noinline)) myl_rc_object *drain_fast(myl_native_heap *heap
                 want |= (uintptr_t)1 << MYL_NATIVE_OBJECT_COUNT_SHIFT;
             }
             if (!cached || leaves > MYL_RC_FLAT_LEAVES || flat->conditional) want = DRAIN_NEVER;
-            pair = leaves == 2 && all == 3u;
-            first = pair ? flat->offsets[0] : 0;
-            second = pair ? flat->offsets[1] : 0;
         }
         if ((object->common.mark & mask) != want) { slow = object; break; }
-        if (pair) {
-            /* RC-DRAIN-PAIR-1: consecutive deaths of this two-leaf type share
-             * its fast test and its slab class (a one-element slab object's
-             * class follows from its type's size alone), so the run keeps them
-             * in registers. It stops, leaving the object queued, at the first
-             * death of another type or one the fast test refuses. */
-            const myl_rc_slab_class *slab = (const myl_rc_slab_class *)((uintptr_t)object & ~(uintptr_t)(MYL_RC_SLAB_BYTES - 1));
-            void **list = &heap->rc_cache.free[slab->index];
-            const size_t stride = slab->stride;
-            /* Nothing reads the class list inside the run; it is written once. */
-            void *top = *list;
-            for (;;) {
-                const unsigned char *payload = (const unsigned char *)(object + 1);
-                head = drain_leaf(heap, payload + first, head);
-                head = drain_leaf(heap, payload + second, head);
-                MYL_RC_STAT(heap, MYL_RC_STAT_RETIRE);
-                object->common.mark = MYL_RC_RETIRED_MARK;
-                object->owners = (uintptr_t)top;
-                top = object;
-                pushed += stride;
-                ++retired;
-                if (!head || head->common.element != last || (head->common.mark & mask) != want) break;
-                object = head;
-                head = (myl_rc_object *)object->owners;
-            }
-            *list = top;
+        /* Consecutive deaths of one type run in an inner loop, which leaves
+         * the object queued at the first death of another type or one the
+         * fast test refuses. */
+        if (all == DRAIN_PAIR) {
+            drain_tally run = {.retired = retired, .pushed = pushed};
+            head = drain_pairs(heap, object, head, flat, &run);
+            retired = run.retired;
+            pushed = run.pushed;
             continue;
         }
-        head = drain_leaves(heap, flat, all, (const unsigned char *)(object + 1), head);
-        MYL_RC_STAT(heap, MYL_RC_STAT_RETIRE);
-        const myl_rc_slab_class *slab = (const myl_rc_slab_class *)((uintptr_t)object & ~(uintptr_t)(MYL_RC_SLAB_BYTES - 1));
-        size_t index = slab->index;
-        object->common.mark = MYL_RC_RETIRED_MARK;
-        object->owners = (uintptr_t)heap->rc_cache.free[index];
-        heap->rc_cache.free[index] = object;
-        pushed += slab->stride;
-        ++retired;
+        for (;;) {
+            head = drain_leaves(heap, flat, all, (const unsigned char *)(object + 1), head);
+            MYL_RC_STAT(heap, MYL_RC_STAT_RETIRE);
+            const myl_rc_slab_class *slab = (const myl_rc_slab_class *)((uintptr_t)object & ~(uintptr_t)(MYL_RC_SLAB_BYTES - 1));
+            size_t index = slab->index;
+            object->common.mark = MYL_RC_RETIRED_MARK;
+            object->owners = (uintptr_t)heap->rc_cache.free[index];
+            heap->rc_cache.free[index] = object;
+            pushed += slab->stride;
+            ++retired;
+            if (!head || head->common.element != last || (head->common.mark & mask) != want) break;
+            object = head;
+            head = (myl_rc_object *)object->owners;
+        }
     }
     *cursor = (drain_cursor){.head = head, .last = last, .flat = flat, .mask = mask, .want = want, .all = all,
-        .pair = pair, .first = first, .second = second, .tally = {.retired = retired, .pushed = pushed}};
+        .tally = {.retired = retired, .pushed = pushed}};
     return slow;
 }
 /* Bindings are immutable batch allocations published through the binding map

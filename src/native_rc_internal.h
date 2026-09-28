@@ -108,7 +108,15 @@ struct myl_rc_state {
         myl_rc_map modules, shapes, bindings;
     } metadata;
     struct { myl_rc_frame *frames; size_t capacity, depth; } walk;
-    struct { myl_rc_object *head; int active; } dead;
+    /* The dead list, and the drain's two most recent death types with their
+     * plans (RC-DRAIN-TYPES-1): bindings are never replaced, so a type that
+     * died in a recent drain needs no probe. */
+    struct {
+        myl_rc_object *head;
+        int active;
+        const myl_native_type *types[2];
+        const myl_rc_flat *flats[2];
+    } dead;
     myl_rc_scope *scopes;
     /* Released scope journal nodes kept for the next capture (RC-SCOPE-SPARE-1). */
     struct { myl_rc_spare *entries; size_t count; } spare;

@@ -716,6 +716,32 @@ static void drain_pairs_keep_counts_exact(void) {
     assert(heap.objects_live == live);
     finish(&heap);
 }
+// spec-case: RC-DRAIN-TYPES-1
+static void drain_types_skip_the_probe(void) {
+    myl_native_heap heap;
+    start(&heap);
+    assert(myl_rc_module_register(&heap, &node_module) == MYL_RC_OK);
+    /* Each drain records its death types, most recent first; a type found in
+     * the second entry moves back to the first. */
+    Node *first = myl_native_heap_alloc(&heap, &node, 1);
+    assert(first);
+    myl_rc_owner_release(&heap, first);
+    assert(heap.rc->dead.types[0] == &node && heap.rc->dead.flats[0] == plan(&heap, &node));
+    Outer *other = myl_native_heap_alloc(&heap, &outer, 1);
+    assert(other);
+    myl_rc_owner_release(&heap, other);
+    assert(heap.rc->dead.types[0] == &outer && heap.rc->dead.types[1] == &node);
+    Node *again = myl_native_heap_alloc(&heap, &node, 1);
+    assert(again);
+    again->left = myl_native_heap_alloc(&heap, &node, 1);
+    assert(again->left);
+    size_t live = heap.objects_live;
+    myl_rc_owner_release(&heap, again);
+    assert(heap.objects_live == live - 2);
+    assert(heap.rc->dead.types[0] == &node && heap.rc->dead.types[1] == &outer);
+    assert(heap.rc->dead.flats[1] == plan(&heap, &outer));
+    finish(&heap);
+}
 // spec-case: RC-LARGE-MAP-1
 static void large_extents_map_and_unmap(void) {
     myl_native_heap heap;
@@ -817,14 +843,15 @@ int myl_rc_fast_verify(void) {
     allocation_cache_reuse();
     drain_releases_trees_inline();
     drain_pairs_keep_counts_exact();
+    drain_types_skip_the_probe();
     large_extents_map_and_unmap();
     plain_elements_copy_as_bytes();
-    return 21;
+    return 22;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
-    assert(myl_rc_fast_verify() == 21);
-    puts("native RC fast paths: 21 tests passed");
+    assert(myl_rc_fast_verify() == 22);
+    puts("native RC fast paths: 22 tests passed");
     return 0;
 }
 #endif
