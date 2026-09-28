@@ -1,4 +1,5 @@
 #include "native_text_methods.h"
+#include "native_regions.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,6 +18,8 @@ void myl_qbe_fail(void *context,const char *code) {
     (void)context; (void)code;
     assert(0 && "unexpected text trap");
 }
+/* A `str` slot as generated descriptors describe it to the escape copier. */
+static const myl_native_type text_slot={.size=sizeof(void *),.alignment=_Alignof(void *),.kind=MYL_NATIVE_POINTER,.collection_kind=2};
 static uint64_t seed=0x9e3779b97f4a7c15ULL;
 static uint32_t next_random(void) {
     seed=seed*6364136223846793005ULL+1442695040888963407ULL;
@@ -197,6 +200,30 @@ static void pieces(myl_native_heap *heap) {
     free(points);
     myl_native_root_pop(heap,&root);
 }
+/* A text and a view of it made inside an arena, and the owned copy of that view
+   `escape` makes, carry their own index: the copy reads every scalar after the
+   arena is gone and its source is collected. */
+static void arenas(myl_native_heap *heap) {
+    const size_t count=3000;
+    uint32_t *points=points_of(count,12);
+    myl_native_root root;
+    myl_native_text *escaped=NULL;
+    assert(myl_native_region_begin(heap));
+    myl_native_text *text=build(heap,points,count);
+    assert(text->flags&MYL_TEXT_INDEXED);
+    myl_native_text *view=myl_native_text_slice(heap,text,200,2900);
+    assert(view && (view->flags&MYL_TEXT_VIEW));
+    orders(view,points+200,2700);
+    orders(text,points,count);
+    assert(myl_native_region_escape(heap,&text_slot,&view,&escaped));
+    assert(escaped && !(escaped->flags&MYL_TEXT_VIEW) && (escaped->flags&MYL_TEXT_INDEXED) && escaped->length==2700);
+    myl_native_root_push(heap,&root,&escaped,&pointer);
+    myl_native_region_end(heap);
+    myl_native_heap_collect(heap);
+    orders(escaped,points+200,2700);
+    myl_native_root_pop(heap,&root);
+    free(points);
+}
 /* A text that is scanned in order fills no table; one probed far from every
    anchor fills it once, and the answers agree either way. */
 static void lazy_table(myl_native_heap *heap) {
@@ -319,6 +346,7 @@ int main(void) {
     pieces(&heap);
     lazy_table(&heap);
     searching(&heap);
+    arenas(&heap);
 #ifdef MYL_TEXT_STEPS
     /* The linear-work checks run without the collection stress that dominates
        a run of this size. */
