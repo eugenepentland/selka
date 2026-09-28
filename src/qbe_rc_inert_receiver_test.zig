@@ -85,7 +85,6 @@ test "RC-INERT-RECEIVER-1 scalar index regions omit pins but callback and public
     try t.expect(!contains(try named(manifest.value, "nested"), "myl_qbe_rc_scope_pin"));
     try t.expect(contains(try named(manifest.value, "nested"), "myl_qbe_rc_unique_field"));
     try t.expect(contains(try named(manifest.value, "callback"), "myl_qbe_rc_scope_pin"));
-    try t.expect(contains(try named(manifest.value, "managed"), "myl_qbe_rc_scope_pin"));
 }
 
 // spec: RC-INERT-PLAIN-UPDATE-1

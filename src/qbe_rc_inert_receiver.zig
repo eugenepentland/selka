@@ -36,7 +36,7 @@ fn fieldProjection(comptime E: type, self: *E, pc: usize) bool {
     if (place.step != .field or place.box != null) return false;
     if (place.base != pc - 1 or place.fill != pc + 1) return false;
     if (place.parent != @backingInt(code[pc - 1].op.load_local)) return false;
-    return proven(E, self, local);
+    return proven(E, self, local) or counted(E, self, local);
 }
 
 /// A single-definition inert receiver whose journal can never gain O or H.
@@ -91,8 +91,86 @@ fn noCloneTarget(plan: cow.Plan, local: usize) bool {
 /// bypassing the capture retain the complete existing held/pinned protocol.
 pub fn proven(comptime E: type, self: *E, local: usize) bool {
     const code = self.function.scope.instructions;
-    if (code.len > 4096 or !self.function.scope.locals[local].usage.temporary) return false;
-    const start = definition(E, self, local) orelse return false;
+    const found = region(E, self, local) orelse return false;
+    const receiver = self.function.scope.locals[found.path.locals[0]].ty;
+    const element = self.program.records[receiver.recordIndex()].shape.buffer orelse return false;
+    if (!plain(E, self, element)) return false;
+    const inputs = self.states[found.stop] orelse return false;
+    for (inputs) |ty| if (!plain(E, self, ty)) return false;
+    if (!plain(E, self, code[found.stop].op.buffer_operation.output)) return false;
+    for (code, 0..) |instruction, pc| {
+        if (externalEntry(instruction.op, pc, found.start, found.stop)) return false;
+        if (pc > found.start and pc < found.stop and !inert(E, self, pc, found.path, local)) return false;
+    }
+    return true;
+}
+
+/// RC-INERT-COUNTED-RECEIVER-1: the same stable-owner interval for a list
+/// whose elements own counted edges, when the interval ends by storing or
+/// appending one element loaded (and copied) just before the write. The
+/// element type is safe (no resource, callable, live view, class or unique
+/// drop) and cannot reach the receiver's list type, so neither publishing the
+/// new element nor releasing the one it replaces can reach, share or release
+/// the receiver, whose root keeps its one owner throughout.
+pub fn counted(comptime E: type, self: *E, local: usize) bool {
+    const code = self.function.scope.instructions;
+    const found = region(E, self, local) orelse return false;
+    const receiver = self.function.scope.locals[found.path.locals[0]].ty;
+    const element = self.program.records[receiver.recordIndex()].shape.buffer orelse return false;
+    if (plain(E, self, element) or !apart(E, self, element, receiver)) return false;
+    const write = code[found.stop].op.buffer_operation;
+    if (write.kind != .write and write.kind != .append) return false;
+    // Field and alias steps only: an element step's receiver lives inside
+    // another counted element the write could replace.
+    const plan = self.cow.?.plan;
+    for (found.path.locals[0..found.path.len]) |step| if (plan.place(step)) |place| {
+        if (place.step != .field) return false;
+    };
+    if (!plain(E, self, write.output)) return false;
+    const inputs = self.states[found.stop] orelse return false;
+    if (inputs.len == 0 or inputs[inputs.len - 1] != element) return false;
+    for (inputs[0 .. inputs.len - 1]) |ty| if (!plain(E, self, ty)) return false;
+    const value = elementValue(E, self, found, element) orelse return false;
+    for (code, 0..) |instruction, pc| {
+        if (externalEntry(instruction.op, pc, found.start, found.stop)) return false;
+        if (pc > found.start and pc < value and !inert(E, self, pc, found.path, local)) return false;
+    }
+    return true;
+}
+
+// The pc of `load_local v`, optionally followed by a `value_copy` of the
+// element type, that pushes the element the write consumes; `v` is outside the
+// receiver path and nothing jumps between the load and the write.
+fn elementValue(comptime E: type, self: *E, found: Region, element: typed.Type) ?usize {
+    const code = self.function.scope.instructions;
+    var at = found.stop - 1;
+    if (code[at].op == .value_copy) {
+        if (code[at].op.value_copy.ty != element or self.isBranchTarget(at)) return null;
+        at -= 1;
+    }
+    if (at <= found.start or code[at].op != .load_local or self.isBranchTarget(at + 1)) return null;
+    const source = @backingInt(code[at].op.load_local);
+    if (contains(found.path, source) or self.function.scope.locals[source].ty != element) return null;
+    const before = self.states[at] orelse return null;
+    for (before) |ty| if (!plain(E, self, ty)) return null;
+    return at;
+}
+
+fn apart(comptime E: type, self: *E, element: typed.Type, receiver: typed.Type) bool {
+    const state = self.cow.?.rc orelse return false;
+    const shape = state.catalog.get(element) catch return false;
+    if (!shape.counted or shape.unique_drop) return false;
+    return @import("rc_field_authority.zig").apart(&state.catalog, element, receiver) catch false;
+}
+
+const Region = struct { start: usize, stop: usize, path: Path };
+
+// The receiver's one definition, the one write through its path at most 256
+// instructions later, and a root that keeps the receiver owned until then.
+fn region(comptime E: type, self: *E, local: usize) ?Region {
+    const code = self.function.scope.instructions;
+    if (code.len > 4096 or !self.function.scope.locals[local].usage.temporary) return null;
+    const start = definition(E, self, local) orelse return null;
     var end: ?usize = null;
     var path: Path = .{};
     for (code, 0..) |instruction, pc| {
@@ -101,29 +179,19 @@ pub fn proven(comptime E: type, self: *E, local: usize) bool {
         if (!operation.kind.writesReceiver()) continue;
         const candidate = ancestors(E, self, @backingInt(operation.owner)) orelse continue;
         if (!contains(candidate, local)) continue;
-        if (end != null) return false;
+        if (end != null) return null;
         end = pc;
         path = candidate;
     }
-    const stop = end orelse return false;
-    if (stop <= start or stop - start > 256) return false;
+    const stop = end orelse return null;
+    if (stop <= start or stop - start > 256) return null;
     const root = path.locals[path.len - 1];
-    if (self.function.scope.locals[root].usage.temporary) return false;
+    if (self.function.scope.locals[root].usage.temporary) return null;
     // A `mut` record root is the caller's storage: no token of this frame can
     // release it, so it stays anchored after its last read here.
     const caller = plainRecord(E, self, root) and self.callerStorage(root);
-    if (!caller and !self.live.?.before(stop, root)) return false;
-    const receiver = self.function.scope.locals[path.locals[0]].ty;
-    const element = self.program.records[receiver.recordIndex()].shape.buffer orelse return false;
-    if (!plain(E, self, element)) return false;
-    const inputs = self.states[stop] orelse return false;
-    for (inputs) |ty| if (!plain(E, self, ty)) return false;
-    if (!plain(E, self, code[stop].op.buffer_operation.output)) return false;
-    for (code, 0..) |instruction, pc| {
-        if (externalEntry(instruction.op, pc, start, stop)) return false;
-        if (pc > start and pc < stop and !inert(E, self, pc, path, local)) return false;
-    }
-    return true;
+    if (!caller and !self.live.?.before(stop, root)) return null;
+    return .{ .start = start, .stop = stop, .path = path };
 }
 
 fn contains(path: Path, local: usize) bool {

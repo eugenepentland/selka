@@ -1263,18 +1263,24 @@ fn finishReceiverImpl(comptime E: type, self: *E, owner: usize) Error!void {
     var remaining = state.plan.places.len;
     while (remaining != 0) : (remaining -= 1) {
         if (state.plan.place(local)) |place| {
-            if (!inert_receiver.proven(E, self, local) and !dictionary_tail.receiver(E, self, local)) try rc_scope.end(E, self, try rc_scope.borrowAddress(E, self, local));
+            if (!inertReceiver(E, self, local) and !dictionary_tail.receiver(E, self, local)) try rc_scope.end(E, self, try rc_scope.borrowAddress(E, self, local));
             if (scopePlace(E, self, place)) try releaseScope(E, self, place);
             local = place.parent;
         } else if (local < state.plan.aliases.len and state.plan.aliases[local] != cow_plan.none) {
-            if (!inert_receiver.proven(E, self, local) and !dictionary_tail.receiver(E, self, local)) try rc_scope.end(E, self, try rc_scope.borrowAddress(E, self, local));
+            if (!inertReceiver(E, self, local) and !dictionary_tail.receiver(E, self, local)) try rc_scope.end(E, self, try rc_scope.borrowAddress(E, self, local));
             local = state.plan.aliases[local];
         } else break;
     }
 }
 
+// A proved stable-owner interval needs no receiver scope (RC-INERT-RECEIVER-1,
+// RC-INERT-COUNTED-RECEIVER-1).
+fn inertReceiver(comptime E: type, self: *E, local: usize) bool {
+    return inert_receiver.proven(E, self, local) or inert_receiver.counted(E, self, local);
+}
+
 fn borrowReceiverImpl(comptime E: type, self: *E, local: usize, payload: usize) Error!void {
-    if (inert_receiver.proven(E, self, local) or dictionary_tail.receiver(E, self, local)) return;
+    if (inertReceiver(E, self, local) or dictionary_tail.receiver(E, self, local)) return;
     const scope = try rc_scope.borrowAddress(E, self, local);
     try rc_scope.begin(E, self, scope);
     const plan = self.cow.?.plan;

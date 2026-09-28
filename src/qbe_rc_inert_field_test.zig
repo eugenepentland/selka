@@ -76,7 +76,11 @@ test "RC field receivers of a named record need no loan or receiver scope" {
 }
 
 // spec-case: RC-INERT-FIELD-RECEIVER-1
-test "RC field receivers keep scopes across callbacks and managed element stores" {
+test "RC field receivers keep scopes across callbacks" {
     try t.expect(try scopes("callback") > 0);
-    try t.expect(try scopes("managed") > 0);
+}
+
+// spec-case: RC-INERT-COUNTED-RECEIVER-1
+test "RC field receivers storing a counted element loaded right before the write need no scope" {
+    try t.expectEqual(@as(usize, 0), try scopes("managed"));
 }
