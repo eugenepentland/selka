@@ -5,6 +5,7 @@ const std = @import("std");
 const t = std.testing;
 const compiler = @import("compiler.zig");
 const LegacySharing = @import("test_support.zig").LegacySharing;
+const File = compiler.embedded_project.File;
 
 const helpers =
     \\record R:
@@ -80,7 +81,8 @@ fn verdictOf(allocator: std.mem.Allocator, bytes: []const u8) !?Verdict {
 }
 
 /// What an accepted program reports in place of a diagnostic.
-const accepted: Verdict = .{ .code = "accepted", .message = "", .span = "", .related = "", .later = false };
+const accepted_code = "accepted";
+const accepted: Verdict = .{ .code = accepted_code, .message = "", .span = "", .related = "", .later = false };
 
 /// `needle` when `message` contains it, otherwise the whole message, so a
 /// failed comparison prints the message it looked in.
@@ -112,7 +114,7 @@ fn accepts(body: []const u8) !void {
     defer arena.deinit();
     const found = (try verdict(arena.allocator(), body)) orelse accepted;
     try t.expectEqualStrings("", found.message);
-    try t.expectEqualStrings("accepted", found.code);
+    try t.expectEqualStrings(accepted_code, found.code);
 }
 
 fn main(comptime statements: []const u8) []const u8 {
@@ -210,4 +212,49 @@ test "the aliasing calls converted guest tests used to make are rejected" {
     try rejectsProgram(lists ++ "def main() -> int:\n    values = [0, 0]\n    use(mut values)\n    return values[0]\n", "mut values", "mut values", "both name `values`");
     const both = "def touch_both(first: mut list[int], second: mut list[int], source: list[int]) -> int:\n    first.append(len(source))\n    second.append(len(source))\n    return len(source)\n\n";
     try rejectsProgram(both ++ "def main() -> int:\n    items = [1, 2]\n    return touch_both(mut items, mut items, items)\n", "mut items", "mut items", "both name `items`");
+}
+
+/// An embedded two-module project: `main` plus the `library.lists` module.
+const Files = struct {
+    entries: []const File,
+    fn read(context: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) compiler.project.ReadError![]u8 {
+        const self: *Files = @ptrCast(@alignCast(context.?));
+        return compiler.embedded_project.read(allocator, self.entries, path, limit);
+    }
+};
+
+const library =
+    \\module library.lists
+    \\
+    \\
+    \\public def two(a: mut list[int], b: mut list[int]) -> None:
+    \\    a.append(1)
+    \\    b.append(2)
+    \\
+;
+
+/// The first diagnostic code of the project whose `main` calls `call`, and the
+/// source text it points at; "accepted" and "" when the project checks clean.
+fn qualified(allocator: std.mem.Allocator, comptime call: []const u8) ![2][]const u8 {
+    const main_source = "module main\nimport library.lists as lists\n\n\ndef main() -> int:\n    v = [1]\n    w = [2]\n    " ++ call ++ "\n    return len(v) + len(w)\n";
+    var files: Files = .{ .entries = &.{ .{ .path = "main.my", .bytes = main_source }, .{ .path = "library/lists.my", .bytes = library } } };
+    var project = compiler.project.Project.init(allocator);
+    defer project.deinit();
+    try project.load(.{ .context = &files, .read = Files.read }, "main", .{});
+    var index = try compiler.interfaces.build(&project);
+    var compilation = try compiler.project_compile.Compilation.init(&index);
+    if (compilation.check()) |_| return .{ accepted_code, "" } else |err| if (err != error.SourceError) return err;
+    const first = compilation.diagnostics.items.items[0];
+    return .{ first.code, try allocator.dupe(u8, compilation.src.text(first.span)) };
+}
+
+// spec-case: MUT-EXCLUSIVE-2
+test "the exclusivity rule covers a module-qualified call" {
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const rejected = try qualified(arena.allocator(), "lists.two(mut v, mut v)");
+    try t.expectEqualStrings("E_MUTATION_OVERLAP", rejected[0]);
+    try t.expectEqualStrings("mut v", rejected[1]);
+    const legal = try qualified(arena.allocator(), "lists.two(mut v, mut w)");
+    try t.expectEqualStrings(accepted_code, legal[0]);
 }

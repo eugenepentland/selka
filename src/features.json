@@ -707,6 +707,11 @@
       "summary": "`name: mut T` declares a written parameter and `mut argument` marks the call site, in both directions: a write through an unmarked parameter and a `mut` the body never writes are `E_MUTATION_MARKER` with the exact replacement, `mut` is accepted only on a type with writable storage, and receivers stay unmarked.",
       "doc": "docs/effects.md#declaration-site-mutation-errors"
     },
+    "exclusive-mut-arguments": {
+      "kind": "language",
+      "summary": "The places two `mut` arguments of one call name must be disjoint: one place passed twice (`f(mut b, mut b)`), a value with one of its parts (`f(mut a, mut a[0])`) or two indices that are not two different constants (`f(mut xs[i], mut xs[j])`) is `E_MUTATION_OVERLAP`, pointing at the later argument with the copy-and-store-back rewrite, while different fields, constant indices and keys stay legal.",
+      "doc": "docs/value-semantics.md#the-rules"
+    },
     "per-function-body-reuse": {
       "kind": "tooling",
       "summary": "Ordinary checked bodies reuse per function with stable declaration identities and dependency digests, so an unrelated generic, alias, constant or callback no longer disables reuse.",
