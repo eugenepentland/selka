@@ -229,10 +229,15 @@ test "RC runtime contract separates manifest cache keys before any emission" {
     var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
     defer context.deinit();
     const input: Identity = .{ .sources = &.{.{ .path = "main.my", .bytes = "source" }} };
+    // RC-DEFAULT-1: an absent carrier is the RC default, keyed as RC itself,
+    // and never as the collector.
+    const default = try keyFor(context, input);
+    try environment.put(runtime.variable, "gc-v1");
     const gc = try keyFor(context, input);
     try environment.put(runtime.variable, "rc-v3");
     const rc = try keyFor(context, input);
     try std.testing.expect(!std.mem.eql(u8, gc, rc));
+    try std.testing.expectEqualStrings(rc, default);
     try environment.put(runtime.variable, "rc-v3-counting");
     try std.testing.expect(!std.mem.eql(u8, rc, try keyFor(context, input)));
     try environment.put(runtime.variable, "future");

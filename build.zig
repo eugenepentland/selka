@@ -362,6 +362,28 @@ fn addParityBench(b: *std.Build) void {
     b.step("bench-parity", "Time mylang against Zig and Rust on the parity suite and check ratio thresholds (opt-in)").dependOn(&bench.step);
 }
 
+/// `zig build test-rc-fuzz [-Dfuzz-seeds=N] [-Dfuzz-start=N]` runs the
+/// differential fuzzer in `experiments/rc-fuzz` with the installed compiler: one
+/// generated program per seed, under the default reference-counting runtime and
+/// its counted and `--release` modes against `--gc-runtime`, failing on any RC
+/// divergence (`--gc-stress` findings are reported only). Opt-in like
+/// `bench-parity`: `zig build test` never runs it (RC-DEFAULT-1). Arguments after
+/// `--` reach the harness (`--jobs N`, `--gen gen2.py`, `--no-stress`).
+fn addRcFuzz(b: *std.Build) void {
+    const seeds = b.option(u32, "fuzz-seeds", "test-rc-fuzz: how many seeds to generate and compare (default 200)") orelse 200;
+    const start = b.option(u32, "fuzz-start", "test-rc-fuzz: the first seed (default 1)") orelse 1;
+    const fuzz = b.addSystemCommand(&.{ "python3", "experiments/rc-fuzz/run.py", "--compiler" });
+    fuzz.setCwd(b.path("."));
+    fuzz.addFileArg(.{ .relative = .{ .base = .install_bin, .sub_path = "mylang" } });
+    fuzz.addArgs(&.{ "--start", b.fmt("{d}", .{start}), "--count", b.fmt("{d}", .{seeds}) });
+    fuzz.addPassthruArgs();
+    fuzz.has_side_effects = true;
+    fuzz.step.max_rss = rss.suite;
+    fuzz.step.dependOn(b.getInstallStep());
+    withTools(fuzz, tool_qbe);
+    b.step("test-rc-fuzz", "Differential-fuzz the default RC runtime against --gc-runtime (opt-in, not part of test)").dependOn(&fuzz.step);
+}
+
 pub fn build(b: *std.Build) void {
     if (!std.mem.eql(u8, builtin.zig_version_string, "0.17.0-dev.1683+5ceec001b"))
         @panic("mylang requires Guardian's Zig 0.17.0-dev.1683+5ceec001b toolchain (see .zigversion)");
@@ -1102,17 +1124,29 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&guest_tests.step);
     guardian.addAllChecks(b, guardian_exe, guest_step, .{});
     boundedChecks(guest_step);
-    const lang_step = b.step("test-lang", "Run the unit root's migrated language-level guest tests");
+    const lang_step = b.step("test-lang", "Run the unit root's migrated language-level guest tests under RC and under stressed GC");
+    // RC-DEFAULT-1: the suite runs once under the default reference-counting
+    // runtime and once under the `--gc-runtime` opt-out, where the collector
+    // stress the Zig root's `native_execute` tests ask for is a run-wide flag,
+    // so every migrated program keeps that coverage too.
     const lang_tests = bounded(b.addRunArtifact(exe), rss.suite);
-    // The collector stress the Zig root's `native_execute` tests ask for is a
-    // run-wide flag here, so every migrated program gets the same coverage.
-    lang_tests.addArgs(&.{ "test", "tests/lang", "--cache-dir", ".mylang-cache/lang-tests", "--gc-stress" });
+    lang_tests.addArgs(&.{ "test", "tests/lang", "--cache-dir", ".mylang-cache/lang-tests" });
     lang_tests.setCwd(b.path("."));
     lang_tests.has_side_effects = true;
     lang_step.dependOn(&lang_tests.step);
     test_step.dependOn(&lang_tests.step);
+    const lang_gc_step = b.step("test-lang-gc", "Run the language-level guest tests under the tracing collector with --gc-stress");
+    const lang_gc_tests = bounded(b.addRunArtifact(exe), rss.suite);
+    lang_gc_tests.addArgs(&.{ "test", "tests/lang", "--gc-runtime", "--cache-dir", ".mylang-cache/lang-tests-gc", "--gc-stress" });
+    lang_gc_tests.setCwd(b.path("."));
+    lang_gc_tests.has_side_effects = true;
+    lang_gc_step.dependOn(&lang_gc_tests.step);
+    lang_step.dependOn(&lang_gc_tests.step);
+    test_step.dependOn(&lang_gc_tests.step);
     guardian.addAllChecks(b, guardian_exe, lang_step, .{});
     boundedChecks(lang_step);
+    guardian.addAllChecks(b, guardian_exe, lang_gc_step, .{});
+    boundedChecks(lang_gc_step);
     const legacy_step = b.step("test-legacy-sharing", "Run migration-window sharing tests under --legacy-sharing");
     const legacy_tests = bounded(b.addRunArtifact(exe), rss.suite);
     legacy_tests.addArgs(&.{ "test", "tests/legacy", "--legacy-sharing", "--cache-dir", ".mylang-cache/legacy-tests", "--gc-stress" });
@@ -1123,14 +1157,21 @@ pub fn build(b: *std.Build) void {
     guardian.addAllChecks(b, guardian_exe, legacy_step, .{});
     boundedChecks(legacy_step);
     // VALUE-SEMANTICS-1: the guest tests that assert value semantics run
-    // with the switch on, under the same collector stress as `test-lang`.
+    // with the switch on, under the default RC runtime and, like `test-lang`,
+    // under the stressed collector (RC-DEFAULT-1).
     const values_step = b.step("test-value-semantics", "Run the value-semantics guest tests under --value-semantics");
     const value_tests = bounded(b.addRunArtifact(exe), rss.suite);
-    value_tests.addArgs(&.{ "test", "tests/value_semantics", "--value-semantics", "--cache-dir", ".mylang-cache/value-semantics-tests", "--gc-stress" });
+    value_tests.addArgs(&.{ "test", "tests/value_semantics", "--value-semantics", "--cache-dir", ".mylang-cache/value-semantics-tests" });
     value_tests.setCwd(b.path("."));
     value_tests.has_side_effects = true;
     values_step.dependOn(&value_tests.step);
     test_step.dependOn(&value_tests.step);
+    const value_gc_tests = bounded(b.addRunArtifact(exe), rss.suite);
+    value_gc_tests.addArgs(&.{ "test", "tests/value_semantics", "--value-semantics", "--gc-runtime", "--cache-dir", ".mylang-cache/value-semantics-tests-gc", "--gc-stress" });
+    value_gc_tests.setCwd(b.path("."));
+    value_gc_tests.has_side_effects = true;
+    values_step.dependOn(&value_gc_tests.step);
+    test_step.dependOn(&value_gc_tests.step);
     guardian.addAllChecks(b, guardian_exe, values_step, .{});
     boundedChecks(values_step);
     const doctest_step = b.step("test-docs", "Execute every fenced documentation example");
@@ -1143,6 +1184,7 @@ pub fn build(b: *std.Build) void {
     guardian.addAllChecks(b, guardian_exe, doctest_step, .{});
     boundedChecks(doctest_step);
     addParityBench(b);
+    addRcFuzz(b);
     const fmt = b.addFmt(.{ .paths = &.{ b.path("build.zig"), b.path("src"), b.path("tests"), b.path("test") }, .check = true });
     b.step("fmt-check", "Check canonical Zig formatting").dependOn(&fmt.step);
     requireLiveEnvironment(b);

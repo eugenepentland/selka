@@ -452,7 +452,8 @@ does. It never reads an option from its own arguments — every one of them is t
 program's — so the runtime options `mylang run` takes travel in the
 `MYLANG_OPTIONS` environment variable instead: `--restrict` and the `--allow-*`
 grants, `--max-steps=N`, `--max-frames=N`, `--timeout=SECONDS`, `--gc-stress`
-and `--print-result`, separated by spaces. Wrap an option that contains a space
+(accepted only by a program built with `--gc-runtime`; a reference-counted build
+refuses it) and `--print-result`, separated by spaces. Wrap an option that contains a space
 in double quotes (a backslash inside the quotes escapes the next character). An
 unknown or repeated option, or an unterminated quote, exits 2 before the program
 runs. `mylang build --run` takes the same options on its own command line,

@@ -410,6 +410,9 @@ test "ARENA-MANAGED-8 the native backend lowers arena scopes, the barrier and es
 
 // spec-case: ARENA-MANAGED-8
 test "ARENA-MANAGED-8 an arena-free program emits neither the barrier nor depth bookkeeping" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     var qbe = try language.Compilation.init(t.allocator, module,
         \\def main() -> int:
         \\    values: list[list[int]] = []

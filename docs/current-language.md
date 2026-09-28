@@ -19,7 +19,7 @@ intend to use; historical counts are not current verification receipts.
 | Values | `int`, binary64 `float`, booleans, managed Unicode strings/dictionaries/lists, byte literals, value records, checked Result/Option, `Cell[T]`, domains/arrays, scalar and literal `str`/`bytes` constants and transparent aliases | [constants](module-constants.md), [aliases](type-aliases.md); [bounded scalar source evaluation](source-evaluation.md) |
 | Control flow | Indented if/elif/else, while, foreach/enumerate/range, break/continue and match/case | [range iteration](range-iteration.md), [matching a variant](match-expressions.md); conservative outer ownership on loop exits |
 | Generics | Functions and nominal records/unions/results/enums; structural field/operation contracts and const length parameters | [structural contracts](../examples/structural-constraints.my); [inferred call type arguments](generic-inference.md) |
-| Managed allocation | Shared growing lists and dictionaries, immutable strings, nonmoving tracing GC and cycle reclamation | [Managed memory](managed-memory.md); managed graph host/native boundaries remain excluded |
+| Managed allocation | Independent growing lists and dictionaries with copy-on-write, immutable strings, reference counting by default and a nonmoving tracing GC (`--gc-runtime`, which also reclaims legacy-sharing cycles) | [Managed memory](managed-memory.md#runtime-selection); managed graph host/native boundaries remain excluded |
 | Managed arenas | `with arena() as name:` region blocks over ordinary managed objects, bulk release, `escape` copy-out, static and runtime escape checks | [Managed arenas](arenas.md); [runnable example](../examples/arena-managed/main.my); QBE native |
 | Managed bytes | Immutable GC byte strings with Python indexing, slicing, membership, split/join and text/hex conversions | [Managed byte strings](bytes.md); byte strings are rejected at JSON and host boundaries like `str` |
 | Ordinary I/O | `print` with Python rendering and an `output` effect; `with open(...)`, handle methods and whole-path file helpers over granted directories | [printing, files and authority](io.md); QBE native |
@@ -43,7 +43,8 @@ Absent features include capturing closures, guest shared-memory threads, arbitra
 stored reference lifetimes and unrestricted source compile-time execution. The [feature audit](audits/feature-completeness-2026-09-07.md) proposes
 extensions; their presence in that backlog does not claim implementation.
 
-Memory safety combines the nonmoving tracing collector with the runtime's checked
+Memory safety combines automatic reclamation (reference counting by default, or
+the nonmoving tracing collector) with the runtime's checked
 handles, generations and leases. The guest runtime is single-threaded and the language
 has no spawn syntax: parallelism is one guest process per task, arranged by the host.
 `noalloc` restricts managed guest allocation, not all compiler/runtime/host allocation.

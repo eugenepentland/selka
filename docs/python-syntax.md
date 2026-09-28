@@ -2,7 +2,8 @@
 
 This is the language guide. There is one syntax: `def`, `record`, indentation and
 `#` comments. The compiler checks types before execution and manages ordinary
-lists, strings and dictionaries with tracing GC. There are no allocator arguments
+lists, strings and dictionaries by reference counting (`--gc-runtime` selects a
+tracing collector instead). There are no allocator arguments
 or ownership annotations in ordinary data code.
 
 A file that opens with `module NAME` is a project entry. `mylang run` loads its

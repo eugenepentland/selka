@@ -19,10 +19,12 @@ Run the whole suite through the build:
 $ zig build test-lang
 ```
 
-or directly, which is what `test-lang` runs:
+or directly, which is what `test-lang` runs — once under the default
+reference-counting runtime and once under the tracing collector with stress:
 
 ```console
-$ zig-out/bin/mylang test tests/lang --cache-dir .mylang-cache/lang-tests --gc-stress
+$ zig-out/bin/mylang test tests/lang --cache-dir .mylang-cache/lang-tests
+$ zig-out/bin/mylang test tests/lang --gc-runtime --cache-dir .mylang-cache/lang-tests-gc --gc-stress
 ```
 
 The directory runner selects every program, fans the programs out across the
@@ -48,7 +50,9 @@ the `passed`/`cached` split is the honest per-test signal.
 `--gc-stress` is the run-wide form of the `--gc-stress` argument the Zig root's
 `native_execute` tests pass to a guest: every collected test runs with the
 runtime's stress collector. Without it the migrated tests would lose that
-coverage, so the build step always passes it.
+coverage, so the build step's collector lane always passes it. Only the tracing
+collector has anything to stress, so `--gc-stress` selects `--gc-runtime` on its
+own; the default lane covers reference counting.
 
 ## The `migrated/` programs
 

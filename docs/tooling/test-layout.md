@@ -10,7 +10,7 @@ gives you, and lists the Zig tests that still belong on the mylang side as of
 
 | What the test checks | Where it lives | How you run one |
 | --- | --- | --- |
-| A guest program's value, output or collector behaviour | `tests/lang/<area>.my`, a `public def test_*() -> bool` | `mylang test tests/lang/<area>.my --filter <name> --gc-stress --cache-dir .mylang-cache/lang-tests` |
+| A guest program's value, output or collector behaviour | `tests/lang/<area>.my`, a `public def test_*() -> bool` | `mylang test tests/lang/<area>.my --filter <name> --cache-dir .mylang-cache/lang-tests` (RC default); add `--gc-runtime --gc-stress --cache-dir .mylang-cache/lang-tests-gc` for the collector lane |
 | A source that must be rejected with a diagnostic code | Zig, `src/<area>_test.zig` | `python3 scripts/focused_test.py units <name>` |
 | A guest that must trap with a runtime code | Zig | same |
 | A guest that needs a `Filesystem`, `Environment`, provider or stdin fixture | Zig | same |
@@ -39,9 +39,9 @@ its floor is the CLI root. The per-edit check does care. Measured on
 | Loop | Command | Cost |
 | --- | --- | --- |
 | One Zig area | `python3 scripts/focused_test.py units arena` | 1.5 s for 34 tests, and every run recompiles the 1113-test root binary |
-| One mylang area, warm | `mylang test tests/lang/python_values.my --cache-dir .mylang-cache/lang-tests --gc-stress` | 0.06 s, every unchanged test replays its receipt |
+| One mylang area, warm | `mylang test tests/lang/python_values.my --cache-dir .mylang-cache/lang-tests` | 0.06 s, every unchanged test replays its receipt |
 | One mylang area, cold | same after editing the file | under 1 s, only the edited tests execute |
-| Whole `tests/lang` after one edit | `mylang test tests/lang --cache-dir .mylang-cache/lang-tests --gc-stress` | about 0.5 s; every unchanged test, output-effect tests included, replays its receipt |
+| Whole `tests/lang` after one edit | `mylang test tests/lang --cache-dir .mylang-cache/lang-tests` | about 0.5 s; every unchanged test, output-effect tests included, replays its receipt |
 
 `--affected --against HEAD` narrows a mylang run further to the tests whose
 dependency closure reaches a changed declaration. A Zig root has no such

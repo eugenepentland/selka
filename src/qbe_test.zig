@@ -479,6 +479,9 @@ const aggregate_projection_program =
 
 // spec: QBE-AGGREGATE-READ-1
 test "aggregate projections load scalars directly while escaping records retain snapshots" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     var parsed = try emitted(std.testing.allocator, aggregate_projection_program);
     defer parsed.deinit();
     for ([_][]const u8{ "projected", "label" }) |name| {
@@ -562,6 +565,9 @@ test "a build without a ceiling stores a position only where a diagnostic reads 
 }
 // spec: QBE-DECODE-RANGE-1
 test "a slice decoded in place lowers to one range decoder" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     var fused = try emitted(std.testing.allocator,
         \\def lexeme(src: bytes, start: i64, end: i64) -> str:
         \\    match src[start:end].decode():
@@ -994,6 +1000,9 @@ test "QBE specializes scalar generic calls" {
 }
 // spec: QBE-PURE-READ-1
 test "QBE-PURE-READ-1 a read-only collection probe pushes no roots" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     var parsed = try emitted(std.testing.allocator,
         \\def probe(counts: dict[str, i64], key: str) -> i64:
         \\    return counts.get(key, 0)
@@ -1020,6 +1029,9 @@ test "QBE-PURE-READ-1 a read-only collection probe pushes no roots" {
 
 // spec: QBE-PURECALL-1
 test "a call to a function that cannot allocate pushes no roots" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     const a = std.testing.allocator;
     var program = try language.Compilation.init(a, "qbe.my",
         \\def pure(x: i64) -> i64:
@@ -1048,6 +1060,9 @@ test "a call to a function that cannot allocate pushes no roots" {
 }
 // spec: QBE-ROOTINLINE-1
 test "roots are linked and restored with inline stores" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     const a = std.testing.allocator;
     var program = try language.Compilation.init(a, "qbe.my",
         \\def grow(n: i64) -> list[i64]:
@@ -1080,6 +1095,9 @@ test "roots are linked and restored with inline stores" {
 }
 // spec: QBE-ROOTS-2
 test "a scalar root is traced through a value copy, not the slot it came from" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     const a = std.testing.allocator;
     var program = try language.Compilation.init(a, "qbe.my",
         \\def grow(n: i64) -> list[i64]:
@@ -1376,6 +1394,9 @@ test "PY-BYTES-5 find_any lowers to one native byte-set search and no guest scan
 
 // spec: QBE-BUFFER-APPEND-1
 test "QBE-BUFFER-APPEND-1 a byte-buffer append lowers its fitting path inline and roots only the grow call" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     var parsed = try emitted(std.testing.allocator,
         \\def build(n: i64) -> i64:
         \\    empty: list[i64] = []
@@ -1468,6 +1489,9 @@ test "QBE-ALIAS-CLASS-1 a function that touches no managed container is marked n
 
 // spec: QBE-APPEND-FAST-1
 test "QBE-APPEND-FAST-1 a list append lowers its fitting path inline and roots only the grow call" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     var parsed = try emitted(std.testing.allocator,
         \\def build(n: i64) -> i64:
         \\    values: list[i64] = []
@@ -1648,6 +1672,9 @@ test "PY-BYTES-SNAPSHOT-1 converting a buffer publishes a snapshot with no copy 
 }
 // spec: QBE-MATCHPROJ-1
 test "QBE-MATCHPROJ a read-only binding names a payload that owns nothing in place" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     var parsed = try emitted(std.testing.allocator,
         \\union Token:
         \\    pair(first: i64, second: i64),
@@ -1675,6 +1702,9 @@ test "QBE-MATCHPROJ a read-only binding names a payload that owns nothing in pla
 
 // spec-case: QBE-MATCHPROJ-1
 test "QBE-MATCHPROJ an aggregate payload field is still read through its own address" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     var parsed = try emitted(std.testing.allocator,
         \\record Span:
         \\    line: i64
@@ -1745,6 +1775,9 @@ test "QBE-MATCHPROJ a scrutinee the arm writes keeps the payload copy" {
 
 // spec: QBE-ELEMENT-ADDRESS-1
 test "an iteration local names its element where it lives" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     var parsed = try emitted(std.testing.allocator,
         \\record Row:
         \\    a: i64
@@ -1839,6 +1872,9 @@ test "QBE-AGGREF-2 a local passed beside another argument is named by its own sl
 
 // spec: QBE-CTORFWD-1
 test "QBE-CTORFWD-1 a constructor assigned to a local writes that local in place" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     var parsed = try emitted(std.testing.allocator,
         \\record Point:
         \\    x: i64
@@ -1862,6 +1898,9 @@ test "QBE-CTORFWD-1 a constructor assigned to a local writes that local in place
 
 // spec-case: QBE-CTORFWD-1
 test "QBE-CTORFWD-1 an operand read from the destination keeps the constructor copy" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     var parsed = try emitted(std.testing.allocator,
         \\record Point:
         \\    x: i64
@@ -1891,6 +1930,9 @@ test "QBE-CTORFWD-1 an operand read from the destination keeps the constructor c
 
 // spec: QBE-ARRAYWRITE-1
 test "QBE-ARRAYWRITE-1 a replace stored back into its own array writes one element in place" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     var parsed = try emitted(std.testing.allocator,
         \\def main() -> i64:
         \\    values: [4]i64 = [1, 2, 3, 4]
@@ -1915,6 +1957,9 @@ test "QBE-ARRAYWRITE-1 a replace stored back into its own array writes one eleme
 
 // spec-case: QBE-ARRAYWRITE-1
 test "QBE-ARRAYWRITE-1 a replace stored into another local keeps the whole-array copy" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     var parsed = try emitted(std.testing.allocator,
         \\def main() -> i64:
         \\    values: [4]i64 = [1, 2, 3, 4]
@@ -2100,6 +2145,9 @@ test "a list element the loop variable copies is read through its own address" {
 
 // spec: QBE-CTORREAD-1
 test "QBE-CTORREAD-1 a constructor field read out of a local names the local" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     var parsed = try emitted(std.testing.allocator,
         \\record Point:
         \\    x: i64
@@ -2179,6 +2227,9 @@ test "QBE-RETFWD-1 a frame that closes an arena scope keeps the element copy" {
 
 // spec: QBE-CALLREF-1
 test "QBE-CALLREF-1 a record result the caller only reads stays in the call's buffer" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     var parsed = try emitted(std.testing.allocator,
         \\record Row:
         \\    a: i64
@@ -2424,6 +2475,9 @@ test "QBE-LISTSET-1 a list element write stores through the element address" {
 
 // spec-case: QBE-LISTSET-1
 test "QBE-LISTSET-1 a record element write over traced elements pushes no root" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     var parsed = try emitted(std.testing.allocator,
         \\record Row:
         \\    name: str
@@ -2541,6 +2595,9 @@ fn rootsPerPush(a: std.mem.Allocator, il: []const u8) ![]usize {
 
 // spec: QBE-ROOTLIVE-1
 test "QBE-ROOTLIVE-1 a safepoint publishes only the locals live across it" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     const a = std.testing.allocator;
     var parsed = try emitted(a,
         \\def make(n: i64) -> list[i64]:
@@ -2564,6 +2621,9 @@ test "QBE-ROOTLIVE-1 a safepoint publishes only the locals live across it" {
 
 // spec-case: QBE-ROOTLIVE-1
 test "QBE-ROOTLIVE-1 a future aggregate reference keeps its payload live" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     const a = std.testing.allocator;
     const previous = value_semantics.enabled();
     defer value_semantics.setEnabled(previous);
@@ -2600,6 +2660,9 @@ test "QBE-ROOTLIVE-1 a future aggregate reference keeps its payload live" {
 
 // spec-case: QBE-ROOTLIVE-1
 test "QBE-ROOTLIVE-1 hidden receiver temporaries die after their read" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     const a = std.testing.allocator;
     var parsed = try emitted(a,
         \\def fresh(n: i64) -> list[i64]:
@@ -2632,6 +2695,9 @@ test "QBE-ROOTLIVE-1 hidden receiver temporaries die after their read" {
 
 // spec-case: QBE-ROOTLIVE-1
 test "QBE-ROOTLIVE-1 an operand held only on the stack stays published" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     const a = std.testing.allocator;
     var parsed = try emitted(a,
         \\def make(n: i64) -> list[i64]:
@@ -2655,6 +2721,9 @@ test "QBE-ROOTLIVE-1 an operand held only on the stack stays published" {
 
 // spec-case: QBE-ROOTLIVE-1
 test "QBE-ROOTLIVE-1 a closing arena scope keeps the locals it scans published" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     const a = std.testing.allocator;
     var parsed = try emitted(a,
         \\def make(n: i64) -> list[i64]:
@@ -2679,6 +2748,9 @@ test "QBE-ROOTLIVE-1 a closing arena scope keeps the locals it scans published" 
 
 // spec-case: QBE-ROOTLIVE-1
 test "QBE-ROOTLIVE-1 a value read after a propagating call stays published" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     const a = std.testing.allocator;
     var parsed = try emitted(a,
         \\def make(n: i64) -> list[i64]:
@@ -2715,6 +2787,9 @@ test "QBE-ROOTLIVE-1 a value read after a propagating call stays published" {
 
 // spec: QBE-INVOKE-SAFEPOINT-1
 test "QBE-INVOKE-SAFEPOINT-1 invoking a function value publishes the live roots" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     const a = std.testing.allocator;
     var parsed = try emitted(a,
         \\def churn(n: int) -> int:
@@ -2744,6 +2819,9 @@ test "QBE-INVOKE-SAFEPOINT-1 invoking a function value publishes the live roots"
 
 // spec: QBE-ELEMREF-3
 test "QBE-ELEMREF-3 a second read with a runtime index keeps the borrow" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     var parsed = try emitted(std.testing.allocator,
         \\record Row:
         \\    a: i64
@@ -2967,6 +3045,9 @@ fn blits(manifest: Manifest, name: []const u8) !usize {
 
 // spec: QBE-MOVE-ELIDE-1
 test "QBE-MOVE-ELIDE-1 a field write through a moved record copies nothing" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     const a = std.testing.allocator;
     var parsed = try emitted(a, move_elision_program);
     defer parsed.deinit();
@@ -2980,6 +3061,9 @@ test "QBE-MOVE-ELIDE-1 a field write through a moved record copies nothing" {
 
 // spec-case: QBE-MOVE-ELIDE-1
 test "QBE-MOVE-ELIDE-1 a record read again after the copy keeps its own copy" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     const a = std.testing.allocator;
     var parsed = try emitted(a, move_elision_program);
     defer parsed.deinit();
@@ -2990,6 +3074,9 @@ test "QBE-MOVE-ELIDE-1 a record read again after the copy keeps its own copy" {
 
 // spec-case: QBE-MOVE-ELIDE-1
 test "QBE-MOVE-ELIDE-1 an update keeps its copy while an argument still names the record" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     const a = std.testing.allocator;
     var parsed = try emitted(a,
         \\record P:
@@ -3013,6 +3100,9 @@ test "QBE-MOVE-ELIDE-1 an update keeps its copy while an argument still names th
 
 // spec-case: QBE-MOVE-ELIDE-1
 test "QBE-MOVE-ELIDE-1 a prior mut call does not prevent a later local field update under value semantics" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     const saved = value_semantics.enabled();
     value_semantics.setEnabled(true);
     defer value_semantics.setEnabled(saved);

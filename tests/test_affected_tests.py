@@ -123,9 +123,13 @@ class Mapping(SyntheticRepo):
         units = next(c for c in builds if "test-units-sharded" in c.argv)
         self.assertIn("-Dtest-filter=foo_test.test.", units.argv)
         self.assertTrue(any("affected-compiler" in c.argv for c in builds))
-        lang = next(c for c in guests if "tests/lang/python_core.my" in c.argv)
-        self.assertIn("--gc-stress", lang.argv)
-        self.assertIn(at.LANG_CACHE, lang.argv)
+        lang = [c for c in guests if "tests/lang/python_core.my" in c.argv]
+        self.assertEqual(len(lang), 2)
+        self.assertNotIn("--gc-stress", lang[0].argv)
+        self.assertIn(at.LANG_CACHE, lang[0].argv)
+        self.assertIn("--gc-runtime", lang[1].argv)
+        self.assertIn("--gc-stress", lang[1].argv)
+        self.assertIn(at.LANG_GC_CACHE, lang[1].argv)
 
 
 class Git(SyntheticRepo):

@@ -63,6 +63,14 @@ pub fn copied(comptime E: type, self: *E, ty: typed.Type, address: usize) Error!
     try slots.Lower(E).transfer(self, .{ .ty = ty, .destination = work, .source = address, .region = region, .mode = if (try loans.eligible(E, self, ty)) .retain_empty else .copy_empty });
     try markWork(E, self, ty);
 }
+/// Move a unique value out of storage the instruction consumes into the
+/// pending result, clearing it there (`RC-UNIQUE-FIELD-TAKE-1`).
+pub fn taken(comptime E: type, self: *E, ty: typed.Type, address: usize) Error!void {
+    const work = try workAddress(E, self);
+    const region = try frame.region(E, self);
+    try slots.Lower(E).transfer(self, .{ .ty = ty, .destination = work, .source = address, .region = region, .mode = .take_empty });
+    try markWork(E, self, ty);
+}
 /// Adopt the one edge returned by a runtime producer without another acquire.
 pub fn adopted(comptime E: type, self: *E, ty: typed.Type, address: usize) Error!void {
     const work = try workAddress(E, self);

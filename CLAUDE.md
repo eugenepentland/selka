@@ -101,7 +101,8 @@ only to time the compiler itself or to hand a compiler to other agents.
 ## Where tests live
 
 Language behaviour is tested in the language: a `public def test_*() -> bool` in
-`tests/lang/<area>.my`, run by `mylang test` (`zig build test-lang`). Diagnostics,
+`tests/lang/<area>.my`, run by `mylang test` (`zig build test-lang`, which runs the
+suite under the default RC runtime and again under `--gc-runtime --gc-stress`). Diagnostics,
 traps, host fixtures, caches, formatting and allocation-failure tests are Zig tests in
 `src/root_test.zig`; CLI behaviour is `test/integration.zig`. Write new guest-behaviour
 tests on the mylang side; the rule, the inner-loop costs and the backlog of Zig tests
@@ -222,6 +223,12 @@ use a ```mylang block; `kind: "tooling"` features may use a ```bash or ```consol
   for graph identity. `class` and builtin `Cell` are rejected under the default
   value model; `--legacy-sharing` temporarily enables the old rules during
   migration. See `docs/value-semantics.md`.
+- **Memory is reference counted by default.** Values are released when their last
+  owner goes away (copy-on-write, no collector). `--gc-runtime` (or
+  `MYLANG_RUNTIME=gc-v1`) opts out to the tracing GC, and `--gc-stress` selects
+  it too; `--gc-stress` next to `--rc-runtime` is a usage error, and an RC-built
+  binary refuses `MYLANG_OPTIONS=--gc-stress`. `--legacy-sharing` always uses GC.
+  See `docs/managed-memory.md#runtime-selection`.
 - **File access needs a capability parameter on the entry point.** Write
   `def main(fs: Filesystem) -> int` and thread `fs` through; there is no ambient
   filesystem. `Network`, `Clock`, `Entropy` and `Environment` work the same way.
@@ -234,8 +241,8 @@ use a ```mylang block; `kind: "tooling"` features may use a ```bash or ```consol
 - **`mylang run` grants every capability** unless you pass `--restrict` — it builds the
   program natively and runs it in a child process. A binary from `mylang build` grants
   every capability too and hands `main` its argv unchanged; runtime options such as
-  `--restrict`, `--allow-*` and `--gc-stress` go in the `MYLANG_OPTIONS` environment
-  variable instead (`MYLANG_OPTIONS=--restrict ./prog`).
+  `--restrict`, `--allow-*` and `--gc-stress` (for a `--gc-runtime` build) go in the
+  `MYLANG_OPTIONS` environment variable instead (`MYLANG_OPTIONS=--restrict ./prog`).
 - Integers have fixed width, conditions must be `bool`, lists are homogeneous, ranges
   take one or two arguments, and slices have no step.
 

@@ -1,10 +1,12 @@
 # D9: Move to value semantics, then to a reference-counted runtime
 
 Status: accepted as the direction on 2026-09-24. Stages 1–3 and prerequisite
-borrow inference have passed their integration gates. Stage 4 is implemented
-behind an explicit experimental runtime selector; complete RC performance
-acceptance remains open, and GC remains the ordinary runtime default.
-Concurrency remains planned. The [integration ledger](../audits/d9-closeout-progress-2026-09-26.md)
+borrow inference have passed their integration gates. Stage 4 met the user's
+performance target (every one of 43 corpus programs at or below 1.3x the GC's
+instructions on both backends, geomean about 1.08x, lower median peak memory;
+[close-out](../audits/rc-perf-closeout-2026-09-27.md)), and on 2026-09-28 the
+user made reference counting the default runtime. Tracing GC remains available
+through `--gc-runtime`. Concurrency remains planned. The [integration ledger](../audits/d9-closeout-progress-2026-09-26.md)
 records exact accepted checkpoints and outstanding work. Each stage ships only
 after its gate passes.
 
@@ -121,7 +123,7 @@ Each stage merges on its own and can be reverted on its own.
 - **Supersedes the 2026-09-17 aliasing decision** (`class` as a shared
   reference) for the default value model. The old rule remains available for
   one migration release through `--legacy-sharing`.
-- **Supersedes D3's tracing-GC clause** once stage 4 lands. The rest of D3
+- **Supersedes D3's tracing-GC clause**, since the RC default landed on 2026-09-28. The rest of D3
   (managed, value-oriented defaults and opt-in systems tools) is unchanged.
 - **Python semantics:** `b = a; b.append(x)` will no longer change `a`. Stage 3's
   diagnostics and documentation must make that visible, because the syntax still

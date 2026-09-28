@@ -128,6 +128,9 @@ fn fastPath(il: []const u8, needle: []const u8) []const u8 {
 
 // spec: DICT-OVERWRITE-1
 test "DICT-OVERWRITE-1 a dictionary write links its roots only on the new-key path" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     const a = std.testing.allocator;
     const source =
         \\def tally(values: list[int]) -> dict[int, int]:

@@ -19,33 +19,50 @@ the IR for inspection rather than for execution.
 
 ## Runtime contracts
 
-Runtime choice is independent of the QBE/LLVM backend. `--gc-runtime` selects
-tracing GC, which is currently the default; `--rc-runtime` selects experimental
-reference counting; `--rc-runtime=stats` adds RC ownership counters, and
-`--rc-runtime=sites` also charges each count to the call site that caused it
-([ownership sites](ownership.md#ownership-sites)). These flags
-apply to program checking, emission, building and execution commands, including
-`run-project` and `test`. An explicit choice overrides the inherited one. Flags
-after the guest-argument separator `--` remain guest arguments.
+Runtime choice is independent of the QBE/LLVM backend. Reference counting
+(`rc-v3`) is the default; `--rc-runtime` names it explicitly,
+`--rc-runtime=stats` adds RC ownership counters, and `--rc-runtime=sites` also
+charges each count to the call site that caused it
+([ownership sites](ownership.md#ownership-sites)). `--gc-runtime` is the
+opt-out to the tracing collector. These flags apply to program checking,
+emission, building and execution commands, including `run-project` and `test`.
+An explicit choice overrides the inherited one. Flags after the guest-argument
+separator `--` remain guest arguments.
+
+```console
+$ mylang build prog.my -o prog                 # reference counting (default)
+$ mylang build prog.my -o prog --gc-runtime    # tracing collector
+$ MYLANG_RUNTIME=gc-v1 mylang test tests/      # collector for a whole session
+```
 
 Compiler children inherit the resolved `MYLANG_RUNTIME` contract. The current
-tags are `gc-v1`, `rc-v3`, `rc-v3-counting` and `rc-v3-sites`; unknown versions are rejected.
-`--legacy-sharing` selects GC when RC was inherited, and refuses an explicit RC
-request. The [managed memory guide](../managed-memory.md#runtime-selection)
-describes the common value and arena behavior.
+tags are `gc-v1`, `rc-v3`, `rc-v3-counting` and `rc-v3-sites`; unknown versions
+are rejected, and an absent carrier means the RC default, in the compiler, the
+native build driver and host applications alike. `--legacy-sharing` selects GC
+when RC was the default or inherited, and refuses an explicit RC request. The
+[managed memory guide](../managed-memory.md#runtime-selection) describes the
+common value and arena behavior.
 
 Native manifests, reusable compiler facts, test results, generated adapters and
-runtime archives distinguish the runtime ABI and instrumentation mode. Reusing
-one cache directory for GC, RC and counted RC builds preserves those boundaries.
+runtime archives distinguish the runtime ABI and instrumentation mode by the
+resolved contract, never by "whatever the default is". Reusing one cache
+directory for GC, RC and counted RC builds preserves those boundaries, and a
+cache filled before the default changed is never reused for the other runtime.
 A manifest or guest library with the wrong contract is refused instead of being
 linked as the requested runtime. Historical native manifests without a runtime
-tag mean GC; they never acquire the process default's meaning.
+tag mean GC; they never acquire the process default's meaning. The prebuilt
+runtime archives `zig build` installs under `lib/mylang-runtime` are the
+default's; a `--gc-runtime` build compiles its runtime from source once and
+caches it.
 
 The runtime is fixed when the artifact is built. `MYLANG_OPTIONS` controls an
 already built guest's execution limits and other launch options; it cannot change
-that guest's memory implementation. `--gc-stress` exercises tracing collection
-when running a GC artifact and does not select tracing GC for an RC artifact.
-Build again with the desired runtime selector when comparing implementations.
+that guest's memory implementation. `--gc-stress` on `run`, `run-project`,
+`test`, `build --run` or `invoke` selects the collector when no runtime flag is
+given and is a usage error next to an `--rc-runtime` flag. An artifact built for
+RC refuses `--gc-stress` in `MYLANG_OPTIONS` (exit status 2) instead of running
+unstressed; build with `--gc-runtime` to stress an executable. Build again with
+the desired runtime selector when comparing implementations.
 
 Counted RC guests report a `MYLANG_RC_COUNTS` JSON line on standard error during
 teardown. It includes owner/hold acquisitions and releases, allocations,

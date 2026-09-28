@@ -1155,7 +1155,7 @@ fn flagsOf(pass: EmitPass, index: usize) fragments.Flags {
         .arenas = pass.arenas,
         .entry = index == @backingInt(pass.program.main),
         .cow = pass.cow,
-        .runtime = runtime_mode.get(),
+        .runtime = runtime_mode.lowered(),
     };
 }
 

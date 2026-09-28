@@ -1,5 +1,6 @@
-//! Experimental native runtime selection, settled after value semantics and
-//! before any compiler, test or native artifact lookup.
+//! Native runtime selection, settled after value semantics and before any
+//! compiler, test or native artifact lookup. Reference counting is the default;
+//! `--gc-runtime`, `--gc-stress` or `MYLANG_RUNTIME=gc-v1` selects the collector.
 const std = @import("std");
 const language = @import("mylang");
 const contract = @import("runtime_contract");
@@ -12,15 +13,19 @@ pub const Error = restart.Error;
 /// Normalized command arguments or an already diagnosed refusal/restart status.
 pub const Settled = union(enum) { run: []const [:0]const u8, status: u8 };
 
-/// Select the ownership ABI, preserving the legacy GC model when RC is inherited.
+/// Select the ownership ABI: an explicit flag, then `--gc-stress` (GC), then the
+/// inherited carrier, then the RC default; legacy sharing keeps GC unless RC is explicit.
 pub fn settle(process: std.process.Init, args: []const [:0]const u8, values: bool) Error!Settled {
     const parsed = options.parse(process.arena.allocator(), args) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         error.InvalidRuntimeOption => return refuse(process, "choose exactly one of --gc-runtime, --rc-runtime, --rc-runtime=stats or --rc-runtime=sites"),
     };
     if (parsed.explicit != null and !accepts(args[1])) return refuse(process, "runtime selection applies to commands that check, emit, build or run programs");
+    // RC-DEFAULT-1: collector stress needs the collector, so it selects GC over
+    // the default and the environment, and an explicit RC request is a conflict.
+    if (parsed.stress and parsed.explicit != null and parsed.explicit.?.enabled()) return refuse(process, "--gc-stress stresses the tracing collector: use it with --gc-runtime or with no runtime flag, not --rc-runtime");
     const environment = process.environ_map.get(contract.variable);
-    const requested = parsed.explicit orelse (contract.parse(environment) catch return refuse(process, "MYLANG_RUNTIME must be gc-v1, rc-v3, rc-v3-counting or rc-v3-sites"));
+    const requested = parsed.explicit orelse if (parsed.stress) contract.Selection.gc else (contract.parse(environment) catch return refuse(process, "MYLANG_RUNTIME must be gc-v1, rc-v3, rc-v3-counting or rc-v3-sites"));
     const selected = contract.resolve(requested, values, parsed.explicit != null) catch return refuse(process, "explicit RC requires value semantics; --legacy-sharing uses GC");
     if (environment == null or !std.mem.eql(u8, environment.?, selected.identity())) {
         return .{ .status = try restart.replace(process, parsed.args, contract.variable, selected.identity()) };

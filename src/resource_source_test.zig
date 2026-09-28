@@ -106,6 +106,55 @@ test "source acquisition delegates authority and failed completion returns owned
     try t.expectEqualStrings("", outcome.trap.code);
     try t.expectEqual(@as(i64, 702), outcome.value);
 }
+/// One completion per attempt: a full grant completes, a read-only one refuses
+/// and hands the handle back inside its failure record.
+const complete_once = declarations ++ helpers ++
+    \\def attempt(fs: Filesystem) -> i64 effects(filesystem):
+    \\    match acquire_resource[Open](fs, request()):
+    \\        case Open.ok(file):
+    \\            match complete_resource[Finish](file):
+    \\                case Finish.ok(done):
+    \\                    if done:
+    \\                        return 7
+    \\                    return 0
+    \\                case Finish.err(failure):
+    \\                    return failure.code
+    \\        case Open.err(e):
+    \\            return e
+    \\
+    \\
+    \\def main(fs: Filesystem) -> i64 noalloc:
+    \\    return attempt(fs) * 100 + attempt(fs.read_only())
+;
+
+// spec: RC-RESOURCE-COMPLETE-1
+test "RC completion takes its handle over whether the provider completes or refuses it" {
+    const saved = language.runtime_mode.get();
+    defer language.runtime_mode.set(saved);
+    language.runtime_mode.set(.rc);
+    var box: Sandbox = undefined;
+    try sandbox(&box);
+    defer box.deinit();
+    const outcome = try box.run(module, complete_once);
+    try t.expectEqualStrings("", outcome.trap.code);
+    try t.expectEqual(@as(i64, 702), outcome.value);
+}
+
+// spec: RC-UNIQUE-FIELD-TAKE-1
+test "RC moves a refused handle out of its failure record into a second completion" {
+    const saved = language.runtime_mode.get();
+    defer language.runtime_mode.set(saved);
+    language.runtime_mode.set(.rc);
+    var box: Sandbox = undefined;
+    try sandbox(&box);
+    defer box.deinit();
+    // `retry` completes `failure.resource` after a refusal: the field moves
+    // out of the consumed record, so the record's cleanup cannot close it.
+    const outcome = try box.run(module, retry);
+    try t.expectEqualStrings("", outcome.trap.code);
+    try t.expectEqual(@as(i64, 702), outcome.value);
+}
+
 test "ownExternal and source acquisition completion retry clean every allocation failure" {
     var no_resize = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(no_resize.allocator(), retryScenario, .{});

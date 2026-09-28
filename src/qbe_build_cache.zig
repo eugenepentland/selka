@@ -675,6 +675,11 @@ test "RC runtime contract reaches generated C and each merged archive source gro
     defer context.deinit();
     const a = context.allocator;
     const cache: Cache = .{ .context = context, .directory = "objects", .temporary = "work", .assets = "/assets", .environment = "env", .zig = "/zig", .mode = "ReleaseFast", .codegen = .{ .tool = "/qbe" } };
+    // RC-DEFAULT-1: an absent carrier compiles for the RC default.
+    const default = try std.mem.join(a, " ", try cache.flags());
+    try std.testing.expect(std.mem.indexOf(u8, default, "-DMYL_NATIVE_RC=1") != null);
+    try std.testing.expect(std.mem.indexOf(u8, default, "MYL_NATIVE_RC_COUNTING") == null);
+    try environment.put(ownership_contract.variable, "gc-v1");
     const gc = try std.mem.join(a, " ", try cache.flags());
     try std.testing.expect(std.mem.indexOf(u8, gc, "MYL_NATIVE_RC") == null);
     try environment.put(ownership_contract.variable, "rc-v3-counting");

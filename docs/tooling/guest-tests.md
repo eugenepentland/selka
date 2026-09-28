@@ -541,6 +541,9 @@ passed main::test_sum
 `mylang test --gc-stress` runs every collected test's copied-value call with the
 runtime's stress collector, the same collector coverage the Zig root's
 `native_execute` tests get from the `--gc-stress` argument they pass to a guest.
+Only the tracing collector has anything to stress, so the flag selects
+`--gc-runtime` when no runtime flag is given (the default is reference counting)
+and is a usage error next to an `--rc-runtime` flag.
 A directory run forwards the flag to every child, so one invocation reports one
 collector condition, and the flag is part of the execution identity a receipt
 binds: a result recorded without stress is not reused as a stressed pass, and a
