@@ -115,6 +115,40 @@ const source =
     \\    return arity(rt, 0) + len(code(rt, 0)) + mutated(mut rt, 0)
 ;
 
+const aliases =
+    \\record Frame:
+    \\    rows: list[list[int]]
+    \\    n: int
+    \\record Other:
+    \\    rows: list[list[int]]
+    \\    n: int
+    \\def reset(other: mut Frame) -> int:
+    \\    other.rows = [[7]]
+    \\    return 0
+    \\def reset_other(other: mut Other) -> int:
+    \\    other.rows = [[7]]
+    \\    return 0
+    \\def count(rows: list[list[int]], k: int) -> int:
+    \\    return len(rows) + k
+    \\def interval(frame: mut Frame, other: mut Frame) -> int:
+    \\    frame.n = frame.n + 1
+    \\    return len(frame.rows[reset(mut other)])
+    \\def distinct_interval(frame: mut Frame, other: mut Other) -> int:
+    \\    frame.n = frame.n + 1
+    \\    return len(frame.rows[reset_other(mut other)])
+    \\def operand(frame: mut Frame, other: mut Frame) -> int:
+    \\    frame.n = frame.n + 1
+    \\    return count(frame.rows, reset(mut other))
+    \\def distinct_operand(frame: mut Frame, other: mut Other) -> int:
+    \\    frame.n = frame.n + 1
+    \\    return count(frame.rows, reset_other(mut other))
+    \\def main() -> int:
+    \\    frame = Frame([[1, 2], [3]], 0)
+    \\    other = Other([[1]], 0)
+    \\    total = interval(mut frame, mut frame) + operand(mut frame, mut frame)
+    \\    return total + distinct_interval(mut frame, mut other) + distinct_operand(mut frame, mut other)
+;
+
 fn operations(name: []const u8) !usize {
     return operationsIn(source, name);
 }
@@ -283,4 +317,10 @@ test "RC range keys sliced from a never-written read-only parameter take no loan
     // The one retain left is the returned dictionary's take-or-copy.
     try t.expectEqual(@as(usize, 1), try operationsIn(range_keys, "frequencies"));
     try t.expect(try operationsIn(range_keys, "rebound") > 1);
+}
+
+// spec: RC-INTERVAL-ANCHOR-3
+test "RC mut record roots another mut parameter of their type may name keep their loans" {
+    try t.expect(try operationsIn(aliases, "interval") > try operationsIn(aliases, "distinct_interval"));
+    try t.expect(try operationsIn(aliases, "operand") > try operationsIn(aliases, "distinct_operand"));
 }
