@@ -356,3 +356,13 @@ test "STREAM-BYTES-2 a buffer write keeps the output effect of the bytes it writ
         "E_EFFECT_BOUND",
     );
 }
+
+// spec-case: VALUE-SEMANTICS-14
+test "VALUE-SEMANTICS-14 print renders a lent operand as it was before a later operand writes it" {
+    const program = "def push(xs: mut list[int]) -> int:\n    xs.append(9)\n    return 1\n\ndef main(out: Stream) -> int:\n    zs = [1, 2, 3]\n    out.print(zs, push(mut zs), zs)\n    out.print(zs, zs.pop())\n    return 0\n";
+    const expected = "[1, 2, 3] 1 [1, 2, 3, 9]\n[1, 2, 3, 9] 9\n";
+    try expectOutput(program, expected);
+    const selected = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(selected);
+    try expectOutput(program, expected);
+}

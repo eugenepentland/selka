@@ -63,15 +63,19 @@ pub fn find(allocator: std.mem.Allocator, facts: *const values.Facts) Error!Snap
 }
 
 /// Per local: a compiler temporary that some write goes through (a writing
-/// collection operation names it, or it is passed `mut`), so it is a path into
-/// the value it was filled from rather than a read-only capture of it.
+/// collection operation names it, it is passed `mut`, or it is assigned after
+/// it is filled), so it is a path into the value it was filled from rather
+/// than a read-only capture of it.
 fn writtenTemporaries(allocator: std.mem.Allocator, facts: *const values.Facts) Error![]bool {
     const written = try allocator.alloc(bool, facts.synthetic.len);
     @memset(written, false);
     var walker = try typed_walk.Walker.init(allocator, facts.program, facts.function.scope.body);
     defer walker.deinit();
     while (try walker.next()) |item| switch (item) {
-        .statement => {},
+        .statement => |id| switch (facts.program.statements[@backingInt(id)].data) {
+            .assign => |store| written[@backingInt(store.slot)] = true,
+            else => {},
+        },
         .expression => |id| switch (facts.program.nodes[@backingInt(id)].data) {
             .buffer_operation => |operation| if (writesReceiver(operation.kind)) {
                 written[@backingInt(operation.owner)] = true;
@@ -137,6 +141,13 @@ const Finder = struct {
                 try list.append(self.allocator, .{ .node = replace.value, .lent = false });
             },
             .file_access => |call| for (call.arguments) |argument| try list.append(self.allocator, .{ .node = argument, .lent = true }),
+            // A list or dictionary read captures its receiver already
+            // (`COW-READ-RECEIVER-1`); a fixed array is read in place.
+            .index => |access| {
+                if (!fixedArray(self.program(), self.program().nodes[@backingInt(access.base)].ty)) return;
+                try list.append(self.allocator, .{ .node = access.base, .lent = true });
+                try list.append(self.allocator, .{ .node = access.index, .lent = true });
+            },
             .buffer_operation => |operation| return self.bufferOperation(id, operation),
             else => return,
         }
@@ -152,10 +163,13 @@ const Finder = struct {
         for (operation.arguments, 0..) |argument, index| try list.append(self.allocator, .{ .node = argument, .lent = stored != index });
         try self.sequence(list.items);
         if (writesReceiver(operation.kind) or operation.arguments.len == 0) return;
+        // A receiver a compiler temporary holds was captured when the
+        // temporary was filled; the ownership analysis already makes that
+        // capture a value of its own where a later write reaches it.
+        if (self.facts.synthetic[@backingInt(operation.owner)]) return;
         const ty = self.facts.function.scope.locals[@backingInt(operation.owner)].ty;
         if (!values.needsCopy(self.program().records, ty)) return;
         const root = resolve(self.facts, operation.owner);
-        if (root == .fresh) return;
         var writes: Writes = .{};
         for (operation.arguments) |argument| try self.collectWrites(argument, &writes);
         if (writes.hits(root)) try self.found.receivers.put(self.allocator, id, {});
@@ -331,6 +345,11 @@ fn resolve(facts: *const values.Facts, slot: typed.LocalId) Root {
 fn storedArgument(facts: *const values.Facts, operation: @FieldType(@FieldType(typed.Node, "data"), "buffer_operation")) ?usize {
     const owner = facts.function.scope.locals[@backingInt(operation.owner)].ty;
     return values.storedArgument(facts.program.records, owner, operation.kind);
+}
+
+/// Whether `ty` is a fixed array, which a read indexes in place.
+fn fixedArray(program: typed.Program, ty: typed.Type) bool {
+    return ty.isAggregate() and ty.recordIndex() < program.records.len and program.records[ty.recordIndex()].shape.array != null;
 }
 
 /// Whether a collection operation changes the collection it is called on.

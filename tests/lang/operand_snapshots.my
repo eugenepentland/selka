@@ -82,6 +82,33 @@ def push_first(rows: mut list[list[int]]) -> int:
     return 1
 
 
+def arr_len(a: [2]list[int], b: int) -> int:
+    return len(a[0]) * 100 + b
+
+
+def arr_push(a: mut [2]list[int]) -> int:
+    a[0].append(9)
+    return 1
+
+
+def bb_len(b: byte_buffer, n: int) -> int:
+    return len(b) * 100 + n
+
+
+def bb_add(b: mut byte_buffer) -> int:
+    _ = b.append_byte(7)
+    return 1
+
+
+def hold3(a: int, b: int, c: Holder) -> int:
+    return a * 10000 + b * 100 + len(c.items)
+
+
+def arr_touch(a: mut [2]list[int]) -> int:
+    a[0].append(9)
+    return 0
+
+
 def via_value(f: def(list[int], int) -> int effects(), xs: mut list[int]) -> int:
     return f(xs, push(mut xs))
 
@@ -380,3 +407,69 @@ public def test_conditional_operand() -> bool:
     flag = len(ys) == 1
     v = lst(xs if flag else ys, push(mut xs))
     return v == 301
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_call_nested_consumer() -> bool:
+    xs = [1, 2, 3]
+    v = lst(xs, lst(xs, push(mut xs)))
+    return v == 601 and len(xs) == 4
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_call_in_comprehension() -> bool:
+    xs = [1, 2, 3]
+    vs = [lst(xs, push(mut xs)) for _ in range(2)]
+    return vs[0] == 301 and vs[1] == 401
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_call_in_loop() -> bool:
+    xs = [1, 2, 3]
+    total = 0
+    for _ in range(3):
+        total += lst(xs, push(mut xs))
+    return total == 1203
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_call_fixed_array_of_lists() -> bool:
+    arr: [2]list[int] = [[1], [2]]
+    v = arr_len(arr, arr_push(mut arr))
+    return v == 101 and len(arr[0]) == 2
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_call_byte_buffer() -> bool:
+    b = byte_buffer([1])
+    v = bb_len(b, bb_add(mut b))
+    return v == 101 and len(b) == 2
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_method_path_receiver() -> bool:
+    h = Holder([1, 2, 3], 0)
+    v = h.items.index(3 * clear0(mut h.items) + 3)
+    return v == 2 and len(h.items) == 0
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_call_keyword_run_list() -> bool:
+    xs = [1, 2, 3]
+    ys = [1]
+    v = lst3(c=xs, a=ys, b=push(mut xs))
+    return v == 10103
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_call_keyword_run_record() -> bool:
+    h = Holder([1, 2, 3], 0)
+    v = hold3(c=h, a=1, b=grow(mut h))
+    return v == 10103 and len(h.items) == 4
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_fixed_array_index_base() -> bool:
+    arr: [2]list[int] = [[1], [2]]
+    v = len(arr[arr_touch(mut arr)])
+    return v == 1 and len(arr[0]) == 2
