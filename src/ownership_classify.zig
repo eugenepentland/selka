@@ -60,10 +60,14 @@ fn readOnlyShare(ctx: *const model.Context, target: u32, local: u32) bool {
     const root = ctx.rootOf(local);
     const root_role = ctx.role(root);
     const stable = root < ctx.locals.params and (root_role == .param or root_role == .mut_param);
-    for (0..ctx.instructions().len) |pc| {
-        if (!ctx.reachable(pc) or !ctx.live.before(pc, target)) continue;
-        if (!stable and !ctx.live.before(pc, root)) return false;
-        if (ctx.writesTree(pc, root, null)) return false;
+    for (ctx.instructions(), 0..) |instruction, pc| {
+        if (!ctx.reachable(pc)) continue;
+        const live = ctx.live.before(pc, target);
+        // A `mut` record argument also ends a share whose value it passes.
+        if (!live and instruction.op != .ref_local) continue;
+        const released = !stable and !ctx.live.before(pc, root);
+        if (live and released) return false;
+        if (ctx.writesTree(pc, root, null) and ctx.observesWrite(pc, target)) return false;
     }
     return true;
 }

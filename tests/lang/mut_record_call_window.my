@@ -1,0 +1,209 @@
+# A `mut` record argument writes the caller's whole tree when the call runs
+# (OWNERSHIP-MUT-RECORD-WRITE-1), not where the reference is pushed
+# (OWNERSHIP-MUT-RECORD-WRITE-2). A borrow read only for a scalar in the
+# call's later arguments may stay a borrow; one whose collection reaches the
+# callee, or is read after the call, is a real copy. Every answer is the value
+# semantics one under the collector and every RC build.
+record Box:
+    tag: int
+    names: list[int]
+
+
+record State:
+    boxes: list[Box]
+    seen: int
+
+
+union Slot:
+    empty,
+    full: Box
+
+
+record Store:
+    slots: list[Slot]
+    total: int
+
+
+# Replaces the first box and churns the heap, so a borrow of the old box
+# that outlived the write would read released or reused storage.
+def replace_first(state: mut State, tag: int):
+    state.boxes[0] = Box(tag * 10, [tag, tag, tag])
+    junk: list[list[int]] = []
+    for i in range(32):
+        junk.append([i, i + 1])
+    state.seen = state.seen + tag + len(junk)
+
+
+def grow_first(state: mut State, tag: int):
+    state.boxes[0].names.append(tag)
+    state.seen = state.seen + tag
+
+
+def keep(state: mut State, names: list[int]) -> int:
+    state.boxes[0].names.append(7)
+    state.boxes[0] = Box(0, [])
+    return len(names) * 100 + names[0]
+
+
+def hold(state: mut State, box: Box) -> int:
+    state.boxes[0].names.append(7)
+    return len(box.names) * 100 + box.tag
+
+
+def first(names: list[int], state: mut State) -> int:
+    state.boxes[0].names.append(7)
+    return len(names)
+
+
+def mixed(state: mut State, tag: int, names: list[int]) -> int:
+    state.boxes[0].names.append(tag)
+    return len(names)
+
+
+def refill(store: mut Store, tag: int):
+    store.slots[0] = Slot.full(Box(tag + 1, [tag]))
+    store.total = store.total + tag
+
+
+def keep_slot(store: mut Store, names: list[int]) -> int:
+    store.slots[0] = Slot.empty
+    store.total = store.total + 1
+    return len(names)
+
+
+def count_boxes(state: mut State) -> int:
+    state.seen = state.seen + 1
+    return len(state.boxes)
+
+
+def pair(state: mut State, other: mut State, tag: int) -> int:
+    state.boxes[0].names.append(tag)
+    other.boxes[0] = Box(tag, [])
+    return len(state.boxes[0].names) * 10 + len(other.boxes[0].names)
+
+
+def outer(state: mut State, counted: int, tag: int) -> int:
+    state.boxes[0].names.append(tag)
+    return counted * 100 + len(state.boxes[0].names)
+
+
+# spec-case: OWNERSHIP-MUT-RECORD-WRITE-2
+public def test_a_scalar_read_after_the_reference_sees_the_value_before_the_call() -> bool:
+    state = State([Box(4, [1, 2])], 0)
+    box = state.boxes[0]
+    replace_first(mut state, box.tag)
+    return state.boxes[0].tag == 40 and state.boxes[0].names == [4, 4, 4] and state.seen == 36
+
+
+# spec-case: OWNERSHIP-MUT-RECORD-WRITE-2
+public def test_a_match_binding_read_for_a_scalar_survives_the_callee_replacing_its_element() -> bool:
+    store = Store([Slot.full(Box(5, [9]))], 0)
+    match store.slots[0]:
+        case Slot.full(box):
+            refill(mut store, box.tag)
+        case Slot.empty:
+            return False
+    match store.slots[0]:
+        case Slot.full(now):
+            return now.tag == 6 and now.names == [5] and store.total == 5
+        case Slot.empty:
+            return False
+
+
+# spec-case: OWNERSHIP-MUT-RECORD-WRITE-2
+public def test_a_borrow_read_after_the_call_keeps_the_value_before_it() -> bool:
+    state = State([Box(3, [1])], 0)
+    box = state.boxes[0]
+    replace_first(mut state, box.tag)
+    return box.tag == 3 and box.names == [1] and state.boxes[0].names == [3, 3, 3]
+
+
+# spec-case: OWNERSHIP-MUT-RECORD-WRITE-2
+public def test_a_collection_argument_read_from_the_borrow_is_a_snapshot() -> bool:
+    state = State([Box(2, [5, 6])], 0)
+    box = state.boxes[0]
+    seen = keep(mut state, box.names)
+    return seen == 205 and state.boxes[0].tag == 0 and len(state.boxes[0].names) == 0
+
+
+# spec-case: OWNERSHIP-MUT-RECORD-WRITE-2
+public def test_the_whole_borrow_as_an_argument_is_a_snapshot() -> bool:
+    state = State([Box(8, [1, 2, 3])], 0)
+    box = state.boxes[0]
+    seen = hold(mut state, box)
+    return seen == 308 and state.boxes[0].names == [1, 2, 3, 7]
+
+
+# spec-case: OWNERSHIP-MUT-RECORD-WRITE-2
+public def test_an_operand_pushed_before_the_reference_is_a_snapshot() -> bool:
+    state = State([Box(1, [4])], 0)
+    box = state.boxes[0]
+    seen = first(box.names, mut state)
+    return seen == 1 and state.boxes[0].names == [4, 7]
+
+
+# spec-case: OWNERSHIP-MUT-RECORD-WRITE-2
+public def test_a_scalar_and_a_collection_from_one_borrow_in_one_call() -> bool:
+    state = State([Box(6, [1, 1])], 0)
+    box = state.boxes[0]
+    seen = mixed(mut state, box.tag, box.names)
+    return seen == 2 and state.boxes[0].names == [1, 1, 6]
+
+
+# spec-case: OWNERSHIP-MUT-RECORD-WRITE-2
+public def test_a_match_binding_collection_argument_is_a_snapshot() -> bool:
+    store = Store([Slot.full(Box(1, [3, 4, 5]))], 0)
+    seen = 0
+    match store.slots[0]:
+        case Slot.full(box):
+            seen = keep_slot(mut store, box.names)
+        case Slot.empty:
+            seen = -1
+    match store.slots[0]:
+        case Slot.full(_):
+            return False
+        case Slot.empty:
+            return seen == 3 and store.total == 1
+
+
+# spec-case: OWNERSHIP-MUT-RECORD-WRITE-2
+public def test_a_nested_writing_call_between_the_reference_and_the_scalar_read() -> bool:
+    state = State([Box(2, [1])], 0)
+    box = state.boxes[0]
+    seen = outer(mut state, count_boxes(mut state), box.tag)
+    return seen == 102 and state.boxes[0].names == [1, 2] and state.seen == 1
+
+
+# spec-case: OWNERSHIP-MUT-RECORD-WRITE-2
+public def test_two_mut_arguments_naming_one_state_with_a_scalar_from_a_borrow() -> bool:
+    state = State([Box(9, [1])], 0)
+    box = state.boxes[0]
+    seen = pair(mut state, mut state, box.tag)
+    return seen == 0 and state.boxes[0].tag == 9 and len(state.boxes[0].names) == 0
+
+
+# spec-case: OWNERSHIP-MUT-RECORD-WRITE-2
+public def test_a_loop_of_scalar_reads_through_a_growing_state() -> bool:
+    state = State([Box(1, [0])], 0)
+    total = 0
+    for i in range(20):
+        box = state.boxes[0]
+        grow_first(mut state, box.tag + i)
+        total = total + state.seen
+    return len(state.boxes[0].names) == 21 and state.seen == 210 and total == 1540
+
+
+# Run the same assertions without test-harness accounting or result wrapping.
+def main(out: Stream) -> int:
+    out.print(test_a_scalar_read_after_the_reference_sees_the_value_before_the_call())
+    out.print(test_a_match_binding_read_for_a_scalar_survives_the_callee_replacing_its_element())
+    out.print(test_a_borrow_read_after_the_call_keeps_the_value_before_it())
+    out.print(test_a_collection_argument_read_from_the_borrow_is_a_snapshot())
+    out.print(test_the_whole_borrow_as_an_argument_is_a_snapshot())
+    out.print(test_an_operand_pushed_before_the_reference_is_a_snapshot())
+    out.print(test_a_scalar_and_a_collection_from_one_borrow_in_one_call())
+    out.print(test_a_match_binding_collection_argument_is_a_snapshot())
+    out.print(test_a_nested_writing_call_between_the_reference_and_the_scalar_read())
+    out.print(test_two_mut_arguments_naming_one_state_with_a_scalar_from_a_borrow())
+    out.print(test_a_loop_of_scalar_reads_through_a_growing_state())
+    return 0

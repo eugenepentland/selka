@@ -438,6 +438,104 @@ test "a mut record argument invalidates a saved borrow of the record or its fiel
     try std.testing.expectEqualStrings("owned", try role(field.value, "before"));
 }
 
+// spec: OWNERSHIP-MUT-RECORD-WRITE-2
+test "a borrow read only for a scalar between a mut record reference and its call stays a borrow" {
+    const source =
+        \\record Box:
+        \\    tag: int
+        \\    names: list[int]
+        \\record State:
+        \\    boxes: list[Box]
+        \\union Slot:
+        \\    empty,
+        \\    full: Box
+        \\record Store:
+        \\    slots: list[Slot]
+        \\def grow(state: mut State, tag: int):
+        \\    state.boxes.append(Box(tag, [tag]))
+        \\def fill(store: mut Store, tag: int):
+        \\    store.slots.append(Slot.full(Box(tag, [tag])))
+        \\def scalar(state: mut State) -> int:
+        \\    box = state.boxes[0]
+        \\    grow(mut state, box.tag)
+        \\    return len(state.boxes)
+        \\def bound(store: mut Store) -> int:
+        \\    match store.slots[0]:
+        \\        case Slot.full(box):
+        \\            fill(mut store, box.tag)
+        \\            return len(store.slots)
+        \\        case Slot.empty:
+        \\            return 0
+        \\def main() -> int:
+        \\    state = State([Box(1, [1])])
+        \\    store = Store([Slot.full(Box(2, [2]))])
+        \\    return scalar(mut state) + bound(mut store)
+    ;
+    var scalar = try explained(std.testing.allocator, source, "scalar");
+    defer scalar.deinit();
+    var bound = try explained(std.testing.allocator, source, "bound");
+    defer bound.deinit();
+    try std.testing.expectEqualStrings("borrow", try classInto(scalar.value, "assign", "box"));
+    try std.testing.expectEqualStrings("borrowed", try role(scalar.value, "box"));
+    try std.testing.expectEqualStrings("borrow", try classInto(bound.value, "binding", "box"));
+}
+
+// spec-case: OWNERSHIP-MUT-RECORD-WRITE-2
+test "a borrow a mut record call may still observe keeps its copy" {
+    const source =
+        \\record Box:
+        \\    tag: int
+        \\    names: list[int]
+        \\record State:
+        \\    boxes: list[Box]
+        \\def grow(state: mut State, tag: int):
+        \\    state.boxes[0].names.append(tag)
+        \\def keep(state: mut State, names: list[int]) -> int:
+        \\    state.boxes[0].names.append(7)
+        \\    return len(names)
+        \\def hold(state: mut State, box: Box) -> int:
+        \\    state.boxes[0].names.append(7)
+        \\    return len(box.names)
+        \\def after(state: mut State) -> int:
+        \\    box = state.boxes[0]
+        \\    grow(mut state, box.tag)
+        \\    return len(box.names)
+        \\def field(state: mut State) -> int:
+        \\    box = state.boxes[0]
+        \\    return keep(mut state, box.names)
+        \\def whole(state: mut State) -> int:
+        \\    box = state.boxes[0]
+        \\    return hold(mut state, box)
+        \\def nested(state: mut State) -> int:
+        \\    box = state.boxes[0]
+        \\    return keep(mut state, [box.tag, len(box.names)])
+        \\def first(names: list[int], state: mut State) -> int:
+        \\    state.boxes[0].names.append(7)
+        \\    return len(names)
+        \\def early(state: mut State) -> int:
+        \\    box = state.boxes[0]
+        \\    return first(box.names, mut state)
+        \\def main() -> int:
+        \\    state = State([Box(1, [1])])
+        \\    return after(mut state) + field(mut state) + whole(mut state) + nested(mut state) + early(mut state)
+    ;
+    var after = try explained(std.testing.allocator, source, "after");
+    defer after.deinit();
+    var field = try explained(std.testing.allocator, source, "field");
+    defer field.deinit();
+    var whole = try explained(std.testing.allocator, source, "whole");
+    defer whole.deinit();
+    var nested = try explained(std.testing.allocator, source, "nested");
+    defer nested.deinit();
+    var early = try explained(std.testing.allocator, source, "early");
+    defer early.deinit();
+    try std.testing.expectEqualStrings("copy", try classInto(after.value, "assign", "box"));
+    try std.testing.expectEqualStrings("copy", try classInto(field.value, "assign", "box"));
+    try std.testing.expectEqualStrings("copy", try classInto(whole.value, "assign", "box"));
+    try std.testing.expectEqualStrings("copy", try classInto(nested.value, "assign", "box"));
+    try std.testing.expectEqualStrings("copy", try classInto(early.value, "assign", "box"));
+}
+
 // spec-case: OWNERSHIP-FIELD-WRITE-1
 test "record field reads and writes to independent named homes preserve borrows" {
     var parsed = try explained(std.testing.allocator,

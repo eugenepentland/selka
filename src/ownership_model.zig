@@ -266,6 +266,95 @@ pub const Context = struct {
         };
     }
 
+    /// Whether borrow `local` can observe the write of its root's tree that
+    /// `writesTree` found at `pc`: `local` is live on entry to `pc`, unless the
+    /// write is a `mut` record argument the callee performs only after every
+    /// read of `local` (OWNERSHIP-MUT-RECORD-WRITE-2); or the write is a `mut`
+    /// record argument and a value sharing `local`'s storage is already on the
+    /// operand stack, where the callee receives it (`hold(box.names, mut
+    /// state)`) or it outlives the call.
+    pub fn observesWrite(self: *const Context, pc: usize, local: u32) bool {
+        if (self.instructions()[pc].op == .ref_local and self.heldOnStack(pc, local)) return true;
+        return self.live.before(pc, local) and !self.deferredRefWrite(pc, local);
+    }
+
+    // Whether a managed value read out of `local` (the local itself, or a
+    // field or element of it) is on the operand stack on entry to `pc`.
+    fn heldOnStack(self: *const Context, pc: usize, local: u32) bool {
+        const stack = self.flow.at[pc] orelse return false;
+        const types = self.code.states[pc] orelse return false;
+        if (stack.len != types.len) return true;
+        for (stack, types) |operand, ty| {
+            if (operand.origin == .local and operand.local == local and self.managedType(ty)) return true;
+        }
+        return false;
+    }
+
+    // OWNERSHIP-MUT-RECORD-WRITE-2: whether the tree write of the `mut`
+    // record argument at `pc` (a `ref_local`) cannot reach borrow `local`,
+    // although `local` is live there. The callee writes only once the direct
+    // call receiving the reference runs, so this holds when `local` is dead on
+    // entry to that call and every read of it in between, over straight-line
+    // code, projects to a plain scalar at once (`f(mut rt, instance.klass)`):
+    // no value sharing `local`'s storage reaches the callee or crosses it.
+    fn deferredRefWrite(self: *const Context, pc: usize, local: u32) bool {
+        const code = self.instructions();
+        if (code[pc].op != .ref_local) return false;
+        const call = self.consumer(pc) orelse return false;
+        if (code[call].op != .call or self.live.before(call, local)) return false;
+        var at = pc + 1;
+        while (at < call) : (at += 1) switch (code[at].op) {
+            .load_local => |slot| if (li(slot) == local) {
+                at = self.scalarRead(at, call) orelse return false;
+            },
+            .move_local, .ref_local, .store_local, .drop_local => |slot| if (li(slot) == local) return false,
+            .buffer_operation => |operation| if (li(operation.owner) == local) return false,
+            .resource_io => |operation| if (li(operation.owner) == local) return false,
+            .file_method => |method| if (li(method.owner) == local) return false,
+            .begin_arena, .end_arena => return false,
+            else => {},
+        };
+        return true;
+    }
+
+    // The instruction that pops the value pushed at `pc`, reached over
+    // straight-line code no branch enters or leaves; null otherwise.
+    fn consumer(self: *const Context, pc: usize) ?usize {
+        const height = (self.code.states[pc] orelse return null).len;
+        const code = self.instructions();
+        var at = pc + 1;
+        while (at < code.len and at - pc <= 512) : (at += 1) {
+            if (self.flow.targets[at]) return null;
+            const before = self.code.states[at] orelse return null;
+            const pops = self.flow.pops[at];
+            if (pops > before.len) return null;
+            if (before.len - pops <= height) return at;
+            var buffer: [2]usize = undefined;
+            if (!sources.fallsThrough(code[at].op) or sources.branchTargets(code[at].op, &buffer).len != 0) return null;
+            if (code[at].op == .switch_variant) return null;
+        }
+        return null;
+    }
+
+    // The last pc of the field and domain projections that turn the value
+    // `load` pushes into a plain scalar before `end`; null when another
+    // instruction consumes it while it is still an aggregate.
+    fn scalarRead(self: *const Context, load: usize, end: usize) ?usize {
+        const code = self.instructions();
+        var at = load;
+        while (true) {
+            const after = self.code.states[at + 1] orelse return null;
+            if (after.len == 0) return null;
+            if (!after[after.len - 1].isAggregate()) return at;
+            at += 1;
+            if (at >= end or self.flow.targets[at]) return null;
+            switch (code[at].op) {
+                .get_field, .unwrap_domain, .wrap_domain, .value_copy => {},
+                else => return null,
+            }
+        }
+    }
+
     const Write = struct { owner: u32, writes: bool };
 
     fn bufferWritesTree(self: *const Context, pc: usize, write: Write, root: u32, through: ?u32) bool {

@@ -188,11 +188,14 @@ fn validBorrow(ctx: *const Context, local: u32, d: u32) bool {
     const stable = root < ctx.locals.params and (root_role == .param or root_role == .mut_param);
     if (!stable and !ctx.live.after(d, root)) return false;
     const through: ?u32 = if (r == .path) local else null;
-    for (ctx.instructions(), 0..) |_, pc| {
+    for (ctx.instructions(), 0..) |instruction, pc| {
         if (!ctx.reachable(pc) or pc == d) continue;
-        if (!ctx.live.before(pc, local)) continue;
-        if (!stable and !ctx.live.before(pc, root)) return false;
-        if (ctx.writesTree(pc, root, through)) return false;
+        const live = ctx.live.before(pc, local);
+        // A `mut` record argument also ends a borrow whose value it passes.
+        if (!live and instruction.op != .ref_local) continue;
+        const released = !stable and !ctx.live.before(pc, root);
+        if (live and released) return false;
+        if (ctx.writesTree(pc, root, through) and ctx.observesWrite(pc, local)) return false;
     }
     return true;
 }
