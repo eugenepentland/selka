@@ -15,7 +15,8 @@ at the user's request; it sits on `codex/d9-rc-integration` `fdf73b30`.
 |---|---:|---:|
 | Geomean, start (`fdf73b30`) | 4.05 | 5.32 |
 | Geomean, round 1 (`d5804e40`, on `main`) | 1.162 | 1.187 |
-| **Geomean, round 2 (`4ca8b8a7`)** | **1.072** | **1.082** |
+| Geomean, round 2 (`4ca8b8a7`) | 1.072 | 1.082 |
+| **Geomean, final: review fixes, lane M, RC default (`50b3c540`)** | **1.072** | **1.082** |
 | Geomean without Lox | 1.060 | 1.064 |
 | Rows at or below 1.3x | **43 / 43** | **43 / 43** |
 | Worst row | sort_records 1.28 | sort_quick 1.28 |
@@ -29,6 +30,25 @@ lower median RSS now hold on this measurement.
 No row is above 1.3x. Only scan_split uses more peak memory than GC (76 vs 66
 MB): RC headers are 32 bytes against GC's 16 and size classes round to 16 bytes
 (about 16 bytes on each of ~660K small strings; a layout change, left alone).
+
+## Adversarial review, recovery and the default flip (2026-09-28)
+
+An adversarial reviewer (differential fuzzing plus targeted repros) found nine
+ownership bugs after round 2; eight were fixed on its branch and one (an
+aliasing hole in RC-INTERVAL-ANCHOR-2) by the orchestrator as
+RC-INTERVAL-ANCHOR-4. Two were RC bugs already on `main` (aliasing `mut`
+parameters; writes lost after a snapshot of a `mut` collection parameter) and
+two were GC value-semantics bugs (OWNERSHIP-MUT-RECORD-WRITE-1, QBE-AGGREF-10).
+The fixes pushed Lox method_call to 1.37/1.59; lane M traced the cost to
+OWNERSHIP-MUT-RECORD-WRITE-1 and narrowed it soundly
+(OWNERSHIP-MUT-RECORD-WRITE-2), restoring every row. Lane N made RC the
+default runtime (RC-DEFAULT-1; `--gc-runtime` opts out, `--gc-stress` selects
+GC) and fixed two resource-handle bugs the flip exposed. The final gate at
+`50b3c540` ran `tests/lang` in nine runtime modes (1,205/1,205 each, 201
+programs), the Lox port under both runtimes, and every Zig suite. Fuzzing
+(900 seeds over three runs) found no RC divergence; every mismatch was a
+`--gc-stress`-only failure that reproduces on the pre-RC compiler. Future work
+is ranked in [rc-future-performance-2026-09-28.md](rc-future-performance-2026-09-28.md).
 
 ## Diagnosis that set the plan
 
