@@ -1,0 +1,529 @@
+module operand_snapshots
+
+# Operands evaluate left to right and each operand's value is fixed when it is
+# evaluated (VALUE-SEMANTICS-14): a lent read-only operand whose root a later
+# operand of the same expression writes in place is copied when it is read.
+# Both runtimes agree.
+
+import operand_snapshot_helpers
+
+
+record Pair:
+    items: list[int]
+    n: int
+
+
+record Holder:
+    items: list[int]
+    tag: int
+
+
+union Slot:
+    empty,
+    pair: Pair
+
+
+def lst(a: list[int], b: int) -> int:
+    return len(a) * 100 + b
+
+
+def lst3(a: list[int], b: int, c: list[int]) -> int:
+    return len(a) * 10000 + b * 100 + len(c)
+
+
+def hold(h: Holder, b: int) -> int:
+    return len(h.items) * 100 + b
+
+
+def dl(d: dict[str, int], b: int) -> int:
+    return len(d) * 100 + b
+
+
+def sl(s: set[int], b: int) -> int:
+    return len(s) * 100 + b
+
+
+def push(xs: mut list[int]) -> int:
+    xs.append(9)
+    return 1
+
+
+def pushed_copy(xs: mut list[int]) -> list[int]:
+    xs.append(9)
+    return xs
+
+
+def clear0(xs: mut list[int]) -> int:
+    xs.clear()
+    return 0
+
+
+def grow(h: mut Holder) -> int:
+    h.items.append(9)
+    return 1
+
+
+def put(d: mut dict[str, int]) -> int:
+    d["z"] = 1
+    return 1
+
+
+def add(s: mut set[int]) -> int:
+    s.add(99)
+    return 1
+
+
+def ident(v: int) -> int:
+    return v
+
+
+def push_first(rows: mut list[list[int]]) -> int:
+    rows[0].append(9)
+    return 1
+
+
+def arr_len(a: [2]list[int], b: int) -> int:
+    return len(a[0]) * 100 + b
+
+
+def arr_push(a: mut [2]list[int]) -> int:
+    a[0].append(9)
+    return 1
+
+
+def bb_len(b: byte_buffer, n: int) -> int:
+    return len(b) * 100 + n
+
+
+def bb_add(b: mut byte_buffer) -> int:
+    _ = b.append_byte(7)
+    return 1
+
+
+def hold3(a: int, b: int, c: Holder) -> int:
+    return a * 10000 + b * 100 + len(c.items)
+
+
+def arr_touch(a: mut [2]list[int]) -> int:
+    a[0].append(9)
+    return 0
+
+
+def via_value(f: def(list[int], int) -> int effects(), xs: mut list[int]) -> int:
+    return f(xs, push(mut xs))
+
+
+def mut_param_root(xs: mut list[int]) -> int:
+    return lst(xs, push(mut xs))
+
+
+# spec: VALUE-SEMANTICS-14
+public def test_call_positional_mut() -> bool:
+    xs = [1, 2, 3]
+    v = lst(xs, push(mut xs))
+    return v == 301 and len(xs) == 4
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_call_positional_pop() -> bool:
+    xs = [1, 2, 3]
+    v = lst(xs, xs.pop())
+    return v == 303 and len(xs) == 2
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_call_positional_clear() -> bool:
+    xs = [1, 2, 3]
+    v = lst(xs, clear0(mut xs))
+    return v == 300 and len(xs) == 0
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_call_nested_later() -> bool:
+    xs = [1, 2, 3]
+    v = lst(xs, 1 + ident(push(mut xs)))
+    return v == 302
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_call_three_operands() -> bool:
+    xs = [1, 2, 3]
+    v = lst3(xs, push(mut xs), xs)
+    return v == 30104
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_call_keyword_source_order() -> bool:
+    xs = [1, 2, 3]
+    v = lst(a=xs, b=push(mut xs))
+    return v == 301
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_call_keyword_reversed() -> bool:
+    xs = [1, 2, 3]
+    v = lst(b=push(mut xs), a=xs)
+    return v == 401
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_call_module_qualified() -> bool:
+    xs = [1, 2, 3]
+    v = operand_snapshot_helpers.weigh(xs, push(mut xs))
+    return v == 301
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_call_function_value() -> bool:
+    xs = [1, 2, 3]
+    f = lst
+    v = f(xs, push(mut xs))
+    return v == 301
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_call_function_value_param() -> bool:
+    xs = [1, 2, 3]
+    v = via_value(lst, mut xs)
+    return v == 301
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_call_mut_param_root() -> bool:
+    xs = [1, 2, 3]
+    v = mut_param_root(mut xs)
+    return v == 301 and len(xs) == 4
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_return_call() -> bool:
+    xs = [1, 2, 3]
+    return mut_param_root(mut xs) == 301
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_call_borrowed_local() -> bool:
+    xs = [1, 2, 3]
+    ys = xs
+    v = lst(ys, push(mut xs))
+    return v == 301
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_call_field_path_mut_record() -> bool:
+    h = Holder([1, 2, 3], 0)
+    v = lst(h.items, grow(mut h))
+    return v == 301
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_call_field_path_mut_field() -> bool:
+    h = Holder([1, 2, 3], 0)
+    v = lst(h.items, push(mut h.items))
+    return v == 301
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_call_field_path_pop() -> bool:
+    h = Holder([1, 2, 3], 0)
+    v = lst(h.items, h.items.pop())
+    return v == 303
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_call_record_whole() -> bool:
+    h = Holder([1, 2, 3], 0)
+    v = hold(h, grow(mut h))
+    return v == 301
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_call_record_whole_field_mut() -> bool:
+    h = Holder([1, 2, 3], 0)
+    v = hold(h, push(mut h.items))
+    return v == 301
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_call_element() -> bool:
+    grid = [[1, 2, 3]]
+    v = lst(grid[0], push(mut grid[0]))
+    return v == 301
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_call_element_parent_mut() -> bool:
+    grid = [[1, 2, 3]]
+    v = lst(grid[0], push_first(mut grid))
+    return v == 301
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_call_dict() -> bool:
+    d = {"a": 1}
+    v = dl(d, put(mut d))
+    return v == 101
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_call_set() -> bool:
+    s = {1, 2}
+    v = sl(s, add(mut s))
+    return v == 201
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_method_index_receiver() -> bool:
+    xs = [1, 2, 3]
+    v = xs.index(3 * clear0(mut xs) + 3)
+    return v == 2
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_dict_get_receiver() -> bool:
+    d = {"a": 1}
+    v = d.get("z", put(mut d) + 40)
+    return v == 41
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_eq_operator() -> bool:
+    xs = [1, 2, 3]
+    return not (xs == pushed_copy(mut xs))
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_ne_operator() -> bool:
+    xs = [1, 2, 3]
+    return xs != pushed_copy(mut xs)
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_in_operator() -> bool:
+    xs = [1, 2, 3]
+    return not (xs in [pushed_copy(mut xs)])
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_record_eq_operator() -> bool:
+    h = Holder([1, 2, 3], 0)
+    return h == Holder([1, 2, 3], grow(mut h) - 1) and len(h.items) == 4
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_fstring() -> bool:
+    xs = [1, 2, 3]
+    text = f"{xs} {push(mut xs)}"
+    return text == "[1, 2, 3] 1"
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_record_constructor() -> bool:
+    xs = [1, 2, 3]
+    p = Pair(xs, push(mut xs))
+    return len(p.items) == 3
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_record_constructor_keyword() -> bool:
+    xs = [1, 2, 3]
+    p = Pair(items=xs, n=push(mut xs))
+    return len(p.items) == 3
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_record_constructor_keyword_reversed() -> bool:
+    xs = [1, 2, 3]
+    p = Pair(n=push(mut xs), items=xs)
+    return len(p.items) == 4
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_union_constructor() -> bool:
+    xs = [1, 2, 3]
+    s = Slot.pair(Pair(xs, push(mut xs)))
+    match s:
+        case Slot.pair(p):
+            return len(p.items) == 3
+        case Slot.empty:
+            return False
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_record_update() -> bool:
+    h = Holder([1, 2, 3], 0)
+    r = replace(h, tag=grow(mut h))
+    return len(r.items) == 3 and r.tag == 1
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_list_literal() -> bool:
+    xs = [1, 2, 3]
+    rows = [xs, pushed_copy(mut xs)]
+    return len(rows[0]) == 3 and len(rows[1]) == 4
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_dict_literal() -> bool:
+    xs = [1, 2, 3]
+    d = {"a": xs, "b": pushed_copy(mut xs)}
+    return len(d["a"]) == 3
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_subscript_receiver() -> bool:
+    xs = [1, 2, 3]
+    v = xs[clear0(mut xs)]
+    return v == 1
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_subscript_field_receiver() -> bool:
+    h = Holder([1, 2, 3], 0)
+    v = h.items[clear0(mut h.items)]
+    return v == 1
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_subscript_lent_into_call() -> bool:
+    grid = [[1, 2, 3]]
+    v = lst(grid[0], clear0(mut grid[0]))
+    return v == 300
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_zip_sources() -> bool:
+    xs = [1, 2, 3]
+    count = 0
+    for a, b in zip(xs, pushed_copy(mut xs)):
+        count += a + b - a - b + 1
+    return count == 3
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_conditional_operand() -> bool:
+    xs = [1, 2, 3]
+    ys = [5]
+    flag = len(ys) == 1
+    v = lst(xs if flag else ys, push(mut xs))
+    return v == 301
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_call_nested_consumer() -> bool:
+    xs = [1, 2, 3]
+    v = lst(xs, lst(xs, push(mut xs)))
+    return v == 601 and len(xs) == 4
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_call_in_comprehension() -> bool:
+    xs = [1, 2, 3]
+    vs = [lst(xs, push(mut xs)) for _ in range(2)]
+    return vs[0] == 301 and vs[1] == 401
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_call_in_loop() -> bool:
+    xs = [1, 2, 3]
+    total = 0
+    for _ in range(3):
+        total += lst(xs, push(mut xs))
+    return total == 1203
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_call_fixed_array_of_lists() -> bool:
+    arr: [2]list[int] = [[1], [2]]
+    v = arr_len(arr, arr_push(mut arr))
+    return v == 101 and len(arr[0]) == 2
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_call_byte_buffer() -> bool:
+    b = byte_buffer([1])
+    v = bb_len(b, bb_add(mut b))
+    return v == 101 and len(b) == 2
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_method_path_receiver() -> bool:
+    h = Holder([1, 2, 3], 0)
+    v = h.items.index(3 * clear0(mut h.items) + 3)
+    return v == 2 and len(h.items) == 0
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_call_keyword_run_list() -> bool:
+    xs = [1, 2, 3]
+    ys = [1]
+    v = lst3(c=xs, a=ys, b=push(mut xs))
+    return v == 10103
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_call_keyword_run_record() -> bool:
+    h = Holder([1, 2, 3], 0)
+    v = hold3(c=h, a=1, b=grow(mut h))
+    return v == 10103 and len(h.items) == 4
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_fixed_array_index_base() -> bool:
+    arr: [2]list[int] = [[1], [2]]
+    v = len(arr[arr_touch(mut arr)])
+    return v == 1 and len(arr[0]) == 2
+
+
+def first[T](a: list[T], b: int) -> int:
+    return len(a) * 100 + b
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_generic_call() -> bool:
+    xs = [1, 2, 3]
+    v = first(xs, push(mut xs))
+    return v == 301
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_builtin_in_later_operand() -> bool:
+    xs = [3, 1, 2]
+    v = lst(xs, len(sorted(pushed_copy(mut xs))))
+    return v == 304
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_call_inside_arena() -> bool:
+    xs = [1, 2, 3]
+    v = 0
+    with arena():
+        v = lst(xs, push(mut xs))
+    return v == 301 and len(xs) == 4
+
+
+# spec: PRELUDE-EXTREME-2
+public def test_max_of_two_evaluates_each_argument_once() -> bool:
+    xs = [1, 2, 3]
+    v = max(len(xs), push(mut xs) + len(xs))
+    return v == 5 and len(xs) == 4
+
+
+# spec-case: PRELUDE-EXTREME-2
+public def test_min_of_two_evaluates_each_argument_once() -> bool:
+    xs = [1, 2, 3]
+    v = min(10, push(mut xs) + len(xs))
+    return v == 5 and len(xs) == 4
+
+
+def bump_first(value: mut dict[str, [1]list[int]]) -> int:
+    value["k"][0].append(7)
+    return 0
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_a_write_through_a_fixed_array_read_keeps_the_pending_place() -> bool:
+    original: dict[str, [1]list[int]] = {"k": [[1]]}
+    changed = original
+    changed["k"][bump_first(mut changed)].append(2)
+    return original["k"][0] == [1] and changed["k"][0] == [1, 7, 2]

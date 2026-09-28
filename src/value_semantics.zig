@@ -4,7 +4,9 @@
 //! independent values: assignment, a store into a field, element, dictionary
 //! value, tuple or payload, a match or loop binding and a return never make two
 //! names reach the same collection. A read-only argument is lent, not copied:
-//! the callee cannot write it.
+//! the callee cannot write it. Where a later operand of the same expression
+//! may write it, lowering copies it when it is evaluated
+//! (`value_semantics_order.zig`, VALUE-SEMANTICS-14).
 //!
 //! This module holds the switch, the type predicates and the lowering facts.
 //! Lowering (`lower.zig`) puts one `value_copy` instruction after every value

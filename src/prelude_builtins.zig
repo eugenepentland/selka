@@ -428,13 +428,17 @@ fn extreme(comptime Checker: type, checker: *Checker, span: source.Span, argumen
     const family = familyOf(Checker, checker, ty) orelse return checker.sink.fail(unsupported, span, "min and max require int, float or str values");
     const b = builder(Checker, checker, span);
     const result = try b.local(ty);
+    // PRELUDE-EXTREME-2: each argument evaluates once, left to right; the
+    // comparison and the replacement both read the second one's temporary.
+    const other = try b.local(ty);
     const replace = comptime if (greatest) less else swapLess;
-    const condition = try replace(Checker, checker, span, family, try b.read(result), right);
+    const condition = try replace(Checker, checker, span, family, try b.read(result), try b.read(other));
     return b.block(&.{
         try b.stmt(.{ .initialize = .{ .slot = result, .value = left } }),
+        try b.stmt(.{ .initialize = .{ .slot = other, .value = right } }),
         try b.stmt(.{ .branch = .{
             .condition = condition,
-            .then_body = try b.stmt(.{ .assign = .{ .slot = result, .value = right } }),
+            .then_body = try b.stmt(.{ .assign = .{ .slot = result, .value = try b.read(other) } }),
             .else_body = null,
         } }),
     }, try b.read(result));

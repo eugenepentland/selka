@@ -1,0 +1,7 @@
+module operand_snapshot_helpers
+
+# A module-qualified callee for operand_snapshots.my (VALUE-SEMANTICS-14).
+
+
+public def weigh(a: list[int], b: int) -> int:
+    return len(a) * 100 + b

@@ -287,7 +287,9 @@ both are read); `mylang check --explain-ownership` lists each copy site with
 marks its held mutable collection payloads shared. Fixed flat records and
 arrays mark up to eight payloads inline; boxed, variant and larger values use
 a rooted runtime transfer, as does a pinned payload that must be cloned. A
-read-only argument is lent without a copy. Before a write, an inline check
+read-only argument is lent without a copy, unless a later operand of the same
+expression may write it: `lst(xs, xs.pop())` and `out.print(xs, push(mut xs))`
+see `xs` as it was when it was evaluated, because lowering copies it then. Before a write, an inline check
 clones a shared payload and redirects the owning slot; nested writes repeat
 that step along their path, including fixed-array elements and alternating
 list and dictionary lookups such as `changed[0]["items"][0].append(2)`.

@@ -22,6 +22,7 @@ sweep slow:
 usage:
   quick.py setup
   quick.py build   --compiler PATH --tag NAME [--only a,b] [--arms qbe,llvm] [--jobs 3] [--stats | --sites]
+                   [--runtime rc|gc]
   quick.py measure --tag NAME [--size full|dev] [--only a,b] [--arms qbe,llvm] [--jobs 8] [--out FILE]
   quick.py counts  --tag NAME [--size full|dev] [--only a,b]      (needs a --stats build)
   quick.py sites   --tag NAME [--size full|dev] [--only a,b] [--top N]  (needs a --sites build; RC-SITES-1)
@@ -29,6 +30,12 @@ usage:
 
 WORK is <tree>/.tmp-rc-quick (override RC_QUICK_WORK). GC baselines come from the
 accepted WP-4pre Debug compiler's private binaries (setup copies them).
+
+`build --runtime gc` builds the corpus with `--gc-runtime` instead, so a
+compiler change that touches collector code can be measured against another
+compiler's collector build: `measure` reports each tag against the same accepted
+GC baseline, and `compare GC-A.json GC-B.json` gives the per-row instruction
+change between the two collector builds.
 """
 import argparse, concurrent.futures, hashlib, json, math, os, shutil, subprocess, sys, tempfile, time
 from pathlib import Path
@@ -138,7 +145,11 @@ def command_build(opts):
     compiler = str(Path(opts.compiler).resolve())
     progs = select(corpus(), opts.only)
     arms = opts.arms.split(',')
-    runtime = '--rc-runtime=sites' if opts.sites else '--rc-runtime=stats' if opts.stats else '--rc-runtime'
+    if opts.runtime == 'gc':
+        assert not (opts.sites or opts.stats), '--stats and --sites are RC builds'
+        runtime = '--gc-runtime'
+    else:
+        runtime = '--rc-runtime=sites' if opts.sites else '--rc-runtime=stats' if opts.stats else '--rc-runtime'
     jobs = {}
     for prog in progs:
         for arm in arms:
@@ -324,7 +335,7 @@ def command_compare(opts):
     for r in b['rows']:
         old = ra.get((r['id'], r['arm']))
         if old:
-            print(f"{r['id']:42} {r['arm']:5} {old['ratio']:8.3f} -> {r['ratio']:8.3f}  ({r['rc'] / old['rc'] - 1:+.1%} RC instr)")
+            print(f"{r['id']:42} {r['arm']:5} {old['ratio']:8.3f} -> {r['ratio']:8.3f}  ({r['rc'] / old['rc'] - 1:+.1%} instr)")
     for arm in b['summary']:
         if arm in a['summary']:
             print(f"{arm}: geomean {a['summary'][arm]['geomean']:.3f} -> {b['summary'][arm]['geomean']:.3f}")
@@ -343,6 +354,8 @@ def main():
     b.add_argument('--jobs', type=int, default=3)
     b.add_argument('--stats', action='store_true')
     b.add_argument('--sites', action='store_true')
+    b.add_argument('--runtime', choices=('rc', 'gc'), default='rc',
+                   help='gc builds the corpus with --gc-runtime (to compare two compilers\' collector code)')
     m = sub.add_parser('measure')
     m.add_argument('--tag', required=True)
     m.add_argument('--size', choices=('full', 'dev', 'smoke'), default='dev')
