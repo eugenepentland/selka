@@ -197,6 +197,22 @@ pub const Compilation = struct {
         self.program = try sema.checkCached(sink.allocator, self.src, self.syntax.?, &sink, null, cache);
     }
 
+    /// Whether the unit declares a free function named `main`, whatever its signature.
+    pub fn declaresMain(self: *const Compilation) bool {
+        return sema.declaresMain(self.src, self.syntax.?);
+    }
+
+    /// Type-check a unit that has no `main` as a library: every declaration and body,
+    /// effects and public type boundaries, with no executable entry. The checked tree is
+    /// discarded, so `program` stays null and no caller can lower or run the result.
+    pub fn checkLibrary(self: *Compilation) diagnostic.Error!void {
+        for (self.diagnostics.items) |item| if (item.severity == .err) return error.SourceError;
+        try self.parse();
+        var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
+        defer self.diagnostics = sink.items;
+        try sema.checkLibrary(sink.allocator, self.src, self.syntax.?, &sink, null);
+    }
+
     /// Lazily lower the checked program into bytecode owned by the compilation.
     pub fn emit(self: *Compilation) EmitError!void {
         return self.emitWithOptions(false);

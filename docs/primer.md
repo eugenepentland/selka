@@ -9,8 +9,7 @@ guides with it: `mylang docs` lists them and `mylang docs syntax` (or `io`,
 ## Commands
 
 ```bash
-mylang check prog.my                  # type-check a program (fast)
-mylang check-module library.my        # check a library and its imports; no main required
+mylang check prog.my                  # type-check a program, or a library that has no main (fast)
 mylang run prog.my -- ARG1 ARG2       # build and run; the program's arguments go after --
 mylang build prog.my -o prog          # native executable (QBE: about a second)
 mylang build prog.my -o prog --release  # optimized: LLVM -O3 + LTO, for shipping or timing
@@ -32,8 +31,11 @@ difference; `fmt FILE` prints the complete corrected source.
 - `import util` loads `util.my` beside the entry; call `util.f(x)`. Only the
   declarations `util` marks `public` are visible. `check`, `run`, `build` and
   `test` follow the imports from a module entry by themselves.
-  Use `check-module name.my` for a library without `main`; it checks bodies,
-  effects and public signatures as well as imports.
+  `check name.my` also accepts a library without `main`: it checks bodies,
+  effects and public signatures as well as imports, and a file that does declare
+  `main` keeps every check on it. `run` and `build` still need a `main`.
+  `check-module name.my` does the same but always checks as a library and
+  requires the `module` header.
 - Tests are `public def test_name() -> bool` (return `True` to pass), in the same
   file as the code or in `name_test.my` that does `import name` (then only
   `name`'s `public` declarations are visible). A test may take `out: Stream`,

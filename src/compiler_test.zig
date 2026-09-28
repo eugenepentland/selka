@@ -70,6 +70,29 @@ test "malformed source and range errors are normal located diagnostics" {
     }
 }
 
+// spec-case: CHECK-LIBRARY-2
+test "a unit without main checks as a library and retains no executable program" {
+    var library = try language.Compilation.init(testing.allocator, "lib.my", "public def add(a: int, b: int) -> int:\n    return a + b\n\ndef mainly() -> int:\n    return 1\n");
+    defer library.deinit();
+    try library.parse();
+    try testing.expect(!library.declaresMain());
+    try library.checkLibrary();
+    try testing.expect(library.program == null and library.diagnostics.items.len == 0);
+
+    var broken = try language.Compilation.init(testing.allocator, "broken.my", "public def value() -> int:\n    return False\n");
+    defer broken.deinit();
+    try broken.parse();
+    try testing.expectError(error.SourceError, broken.checkLibrary());
+    try testing.expectEqualStrings("E_TYPE", broken.diagnostics.items[0].code);
+
+    var entry = try language.Compilation.init(testing.allocator, "entry.my", "def main(count: int) -> int:\n    return count\n");
+    defer entry.deinit();
+    try entry.parse();
+    try testing.expect(entry.declaresMain());
+    try testing.expectError(error.SourceError, entry.check());
+    try testing.expectEqualStrings("E_MAIN", entry.diagnostics.items[0].code);
+}
+
 test "source is owned and CRLF diagnostics locate operators and EOF" {
     const bytes = try testing.allocator.dupe(u8, "# comment\r\ndef main() -> i64:\r\n    return 9223372036854775807 + 1\r\n");
     var compilation = try language.Compilation.init(testing.allocator, "crlf.my", bytes);

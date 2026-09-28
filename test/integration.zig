@@ -3305,12 +3305,15 @@ test "CLI frame budgets count main and reject invalid overrides" {
 test "all commands reject invalid programs before execution and locate runtime traps" {
     for ([_][]const u8{ "check", "run", "dump-bytecode" }) |command| {
         try invoke(command, @embedFile("fixtures/rejected.my"), 1, "", ":2:12: error[E_UNKNOWN_NAME]");
-        try invoke(command, "", 1, "", "error[E_MAIN]");
         try invoke(command,
             \\def main() -> bool:
             \\    return True
         , 1, "", "error[E_TYPE]");
     }
+    // An empty file has no entry point: `run` and `dump-bytecode` reject it, while
+    // `check` accepts it as an empty library (CHECK-LIBRARY-2).
+    try invoke("run", "", 1, "", "error[E_MAIN]");
+    try invoke("dump-bytecode", "", 1, "", "error[E_MAIN]");
     try invoke("check", @embedFile("fixtures/trap.my"), 0, "", "");
     try invoke("run", @embedFile("fixtures/trap.my"), 1, "", ":2:9: error[R_DIVISION_BY_ZERO]");
 }
@@ -3579,6 +3582,112 @@ test "CLI check-module enforces configured warning and interface gates" {
     try expectLibraryCommand(path, "--no-cache", "check-module", 1, "W_UNUSED_BINDING");
     try temp.dir.writeFile(testing.io, .{ .sub_path = "mylang.json", .data = "{\"version\":2,\"interface_files\":true}" });
     try expectLibraryCommand(path, "--no-cache", "check-module", 1, "E_INTERFACE_FILE_STALE");
+}
+
+/// Run `command` on `text` with `options` and require exit 1, the diagnostic `code`
+/// on stderr, and no `E_MAIN`: the failure must be the library's own.
+fn expectFailsAsItself(command: []const u8, text: []const u8, options: []const []const u8, code: []const u8) !void {
+    const outcome = try runFixture(command, text, options);
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, outcome.term);
+    try testing.expectEqualStrings("", outcome.stdout);
+    try testing.expect(std.mem.indexOf(u8, outcome.stderr, code) != null);
+    try testing.expect(std.mem.indexOf(u8, outcome.stderr, "E_MAIN") == null);
+}
+
+// spec: CHECK-LIBRARY-2
+test "CLI check type-checks a file without main as a library" {
+    try invoke("check", "public def add(a: int, b: int) -> int:\n    return a + b\n", 0, "", "");
+    try invoke("check", "public record Pair:\n    value: int\n", 0, "", "");
+    try invoke("check", "public def identity[T](value: T) -> T:\n    return value\n", 0, "", "");
+    try invoke("check", "def helper() -> int:\n    return 1\n", 0, "", "");
+    try invoke("check", "", 0, "", "");
+    try invoke("check", "module input\n\npublic def value() -> int:\n    return 7\n", 0, "", "");
+    try invoke("check", "import strings\n\npublic def shout(text: str) -> str:\n    return strings.upper(text)\n", 0, "", "");
+    const library = "module input\n\npublic def grown(xs: list[int]) -> list[int]:\n    copy = xs\n    copy.append(1)\n    return copy\n";
+    try invoke("check", library, 0, "", "");
+    try invokeOptions("check", library, &.{"--legacy-sharing"}, 1, "", "E_MUTATION_MARKER");
+    try invokeOptions("check", library, &.{"--diagnostics=json"}, 0, "", "");
+    // A body error is the library's own diagnostic, never the missing entry point.
+    try expectFailsAsItself("check", "public def value() -> int:\n    return False\n", &.{}, "error[E_TYPE]");
+    try expectFailsAsItself("check", "module input\n\npublic def value() -> int:\n    return False\n", &.{}, "error[E_TYPE]");
+    try expectFailsAsItself("check", "public def value() -> int:\n    return missing\n", &.{}, "error[E_UNKNOWN_NAME]");
+    try expectFailsAsItself("check", "public def value(out: Stream) -> None noio:\n    out.print(7)\n", &.{}, "error[E_EFFECT_BOUND]");
+    try expectFailsAsItself("check", "module input\n\nrecord Hidden:\n    value: int\n\npublic def value() -> Hidden:\n    return Hidden(7)\n", &.{}, "error[E_PRIVATE_INTERFACE]");
+    try expectFailsAsItself("check", "public def value() -> int:\n    return False\n", &.{"--diagnostics=json"}, "\"code\":\"E_TYPE\"");
+    try expectFailsAsItself("check", "public def value() -> int:\n    return +\n", &.{}, "error[E_EXPRESSION]");
+}
+
+// spec-case: CHECK-LIBRARY-2
+test "CLI commands that need an entry point still report E_MAIN for a library" {
+    const library = "public def add(a: int, b: int) -> int:\n    return a + b\n";
+    try invoke("run", library, 1, "", "error[E_MAIN]");
+    try invoke("dump-bytecode", library, 1, "", "error[E_MAIN]");
+    try invoke("emit-qbe", library, 1, "", "error[E_MAIN]");
+    try invokeOptions("build", library, &.{"--run"}, 1, "", "error[E_MAIN]");
+    try invoke("run", "module input\n\npublic def value() -> int:\n    return 7\n", 1, "", "error[E_MAIN]");
+    try invoke("check-project", "module input\n\npublic def value() -> int:\n    return 7\n", 1, "", "error[E_MAIN]");
+    // The message points at the command that accepts a library.
+    try invoke("run", library, 1, "", "`mylang check FILE` type-checks a library");
+    // `--explain-ownership` analyzes a lowered program, which a library does not have.
+    try invokeOptions("check", library, &.{"--explain-ownership=ownership.jsonl"}, 1, "", "error[E_MAIN]");
+    try invokeOptions("check", "module input\n\npublic def value() -> int:\n    return 7\n", &.{"--explain-ownership=ownership.jsonl"}, 1, "", "error[E_MAIN]");
+}
+
+// spec-case: CHECK-LIBRARY-2
+test "CLI check keeps every entry check when main is declared" {
+    try invoke("check", "def main() -> int:\n    return 0\n", 0, "", "");
+    try invoke("check", "module input\n\ndef main() -> int:\n    return 0\n", 0, "", "");
+    try invoke("check", "def main(args: list[str], out: Stream) -> int:\n    out.print(len(args))\n    return 0\n", 0, "", "");
+    // A wrong signature is an entry error, not a library that happens to define `main`.
+    try invoke("check", "def main(count: int) -> int:\n    return count\n", 1, "", "error[E_MAIN]");
+    try invoke("check", "def main(log: Stream) -> int:\n    return 0\n", 1, "", "error[E_MAIN]");
+    try invoke("check", "def main[T](value: T) -> int:\n    return 0\n", 1, "", "error[E_MAIN]");
+    try invoke("check", "def main() -> bool:\n    return True\n", 1, "", "error[E_TYPE]");
+    try invoke("check", "module input\n\ndef main(count: int) -> int:\n    return count\n", 1, "", "error[E_MAIN]");
+    try invoke("check", "module input\n\ndef main() -> bool:\n    return True\n", 1, "", "error[E_TYPE]");
+    // Bodies are still checked as an executable's are, and the entry is not skipped.
+    try invoke("check", "def main() -> int:\n    return missing\n", 1, "", "error[E_UNKNOWN_NAME]");
+    try invoke("check", "def helper() -> int:\n    return False\n\ndef main() -> int:\n    return 0\n", 1, "", "error[E_TYPE]");
+}
+
+// spec-case: CHECK-LIBRARY-2
+test "CLI check of a module entry follows imports and records no executable verdict" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper\n\npublic def value() -> int:\n    return 7\n" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "library.my", .data = "module library\nimport helper\n\npublic def value() -> int:\n    return helper.value()\n" });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "library.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const cache = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}/cache", .{std.fs.path.dirname(path).?});
+    defer testing.allocator.free(cache);
+    try expectLibraryCommand(path, cache, "check", 0, "");
+    try expectLibraryCommand(path, cache, "check", 0, "");
+    try expectLibraryCommand(path, cache, "check-project", 1, "E_MAIN");
+    try expectLibraryCommand(path, cache, "run", 1, "E_MAIN");
+    try expectLibraryCommand(path, "--no-cache", "check", 0, "");
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper\n\npublic def value() -> int:\n    return False\n" });
+    try expectLibraryCommand(path, cache, "check", 1, "E_TYPE");
+    try expectLibraryCommand(path, "--no-cache", "check-module", 1, "E_TYPE");
+}
+
+// spec-case: CHECK-LIBRARY-2
+test "CLI check of a library enforces configured warning and interface gates" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "headerless.my", .data = "public def value() -> int:\n    unused: int = 1\n    return 7\n" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "library.my", .data = "module library\n\npublic def value() -> int:\n    unused: int = 1\n    return 7\n" });
+    const headerless = try temp.dir.realPathFileAlloc(testing.io, "headerless.my", testing.allocator);
+    defer testing.allocator.free(headerless);
+    const path = try temp.dir.realPathFileAlloc(testing.io, "library.my", testing.allocator);
+    defer testing.allocator.free(path);
+    try expectLibraryCommand(path, "--no-cache", "check", 0, "W_UNUSED_BINDING");
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "mylang.json", .data = "{\"version\":2,\"lint\":{\"warnings\":\"deny\"}}" });
+    try expectLibraryCommand(headerless, "--no-cache", "check", 1, "W_UNUSED_BINDING");
+    try expectLibraryCommand(path, "--no-cache", "check", 1, "W_UNUSED_BINDING");
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "mylang.json", .data = "{\"version\":2,\"interface_files\":true}" });
+    try expectLibraryCommand(path, "--no-cache", "check", 1, "E_INTERFACE_FILE_STALE");
 }
 
 // spec: FMT-CHECK-LOCATION-1

@@ -83,6 +83,10 @@ pub const Compilation = struct {
         var names: Names = .{ .index = self.index, .src = self.src };
         try sema.checkLibrary(self.index.project.arena.allocator(), self.src, self.syntax, &self.diagnostics, &names);
     }
+    /// Whether the entry module (the first input) declares a free function named `main`.
+    pub fn declaresMain(self: *const Compilation) bool {
+        return sema.declaresMain(self.src, self.syntax);
+    }
     /// Reuse supported function queries while checking fresh module/type/effect dependencies.
     pub fn checkWithCache(self: *Compilation, cache: ?*semantic_cache.Cache) CheckError!void {
         if (self.program != null) return;

@@ -1646,6 +1646,23 @@ pub fn checkLibrary(allocator: std.mem.Allocator, src: source.Source, program: a
     _ = try checkCore(allocator, src, program, sink, .{ .names = names, .entry_required = false });
 }
 
+/// Whether the entry unit declares a free function named `main`, the lookup
+/// `checkEntry` makes. In a merged project the entry is input 0; a single
+/// unmapped source is its own entry. `mylang check` uses this to decide between
+/// the executable check (a declared `main`, whatever its signature) and the
+/// library check (none).
+pub fn declaresMain(src: source.Source, program: ast.Program) bool {
+    for (program.functions) |function| {
+        if (function.policy.owner != null or !std.mem.eql(u8, src.text(function.name), "main")) continue;
+        const input = if (src.originalSpan(function.name)) |original| original.input else |err| switch (err) {
+            error.NotMappedSource => 0,
+            else => continue,
+        };
+        if (input == 0) return true;
+    }
+    return false;
+}
+
 const CheckOptions = struct {
     names: ?*Names,
     cache: ?*semantic_cache.Cache = null,
@@ -1804,7 +1821,7 @@ fn checkEntry(checker: *Checker, module_names: ?*Names, failed: bool) Error!type
     const main_name = if (module_names) |names| try std.fmt.allocPrint(allocator, "{s}::main", .{names.index.project.modules.items[0].name}) else "main";
     const main_declaration = checker.functions.get(main_name) orelse {
         if (failed) return error.SourceError;
-        return sink.fail("E_MAIN", .{ .start = 0, .end = 0 }, "the program requires an entry point: def main() -> int; use check-module to check a library");
+        return sink.fail("E_MAIN", .{ .start = 0, .end = 0 }, "the program requires an entry point: def main() -> int; `mylang check FILE` type-checks a library that has no main");
     };
     const entry = program.functions[@backingInt(main_declaration)];
     const main = checker.ordinary_ids[@backingInt(main_declaration)] orelse return sink.fail("E_MAIN", entry.name, "main cannot have type parameters");

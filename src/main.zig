@@ -102,6 +102,7 @@ const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--j
     "declarations|check" ++
     "-project|check-module|run-project|check-policy> <file.my>\n  schema-project: --schema-report (include " ++
     "checked source and compiler identities)\n  " ++
+    "check: type-check a program; a file that declares no main is checked as a library, like check-module\n  " ++
     "check-module: type-check a library module and its imports without an executable main\n  " ++
     "input-module: reads a typed JSON manifest and writes generated " ++
     "module source\n  run: builds the program natively and runs it; it loads the reachable module graph when the entry " ++
@@ -502,11 +503,13 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
     // `run` and `check` accept a project entry: a file that opens with a module
     // header (or a module-only import/export) loads its reachable graph exactly as
     // `run-project`/`check-project` does. A plain single-file program skips this
-    // and keeps the original one-unit path byte-for-byte.
+    // and keeps the original one-unit path byte-for-byte. `check` of an entry
+    // without `main` falls back to the library check (`CHECK-LIBRARY-2`).
     if (parsed.command == .run and module_syntax.usesModuleSyntax(bytes)) return listModules(init, parsed);
     if (parsed.command == .check and module_syntax.usesModuleSyntax(bytes)) {
         var project = parsed;
         project.command = .@"check-project";
+        project.library_fallback = parsed.explain_ownership == null;
         return listModules(init, project);
     }
     // A single-unit program has no import edges, but a configured project still
@@ -582,7 +585,7 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
     };
     const syntax_reused = (if (parsed.frontend) |opened| opened.statistics.syntax.hits else 0) - disk_before;
     setWork(init, .parsed_modules, 1 - @min(syntax_reused, 1), @min(syntax_reused, 1));
-    compilation.checkWithCache(&counting) catch |err| switch (err) {
+    checkUnit(parsed, &compilation, &counting) catch |err| switch (err) {
         error.SourceError => {
             recordCheckWork(init, &counting, null, compilation.program);
             recordSemanticBypass(init, &counting, null);
@@ -594,7 +597,7 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
     recordCheckWork(init, &counting, null, compilation.program);
     recordSemanticBypass(init, &counting, null);
     init.timings.counts.ast_nodes = compilation.syntax.?.nodes.items.len + compilation.syntax.?.statements.items.len;
-    init.timings.counts.typed_nodes = compilation.program.?.nodes.len + compilation.program.?.statements.len;
+    recordUnitTypedNodes(init, &compilation);
     init.timings.end();
     const check_ns = if (parsed.reporting.timings) check_start.durationTo(std.Io.Timestamp.now(init.io, .awake)).nanoseconds else 0;
     if (parsed.command != .@"emit-qbe") try report(init, &compilation);
@@ -685,6 +688,23 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
         .run => return executeRun(init, &compilation, parsed),
     }
     return 0;
+}
+
+/// Record the checked node count of a single unit; a library check retains no program.
+fn recordUnitTypedNodes(init: Context, compilation: *const language.Compilation) void {
+    const program = compilation.program orelse return;
+    init.timings.counts.typed_nodes = program.nodes.len + program.statements.len;
+}
+
+/// Check one parsed single-unit program. `check` of a unit with no `main` is a
+/// library check (`CHECK-LIBRARY-2`): the bodies, effects and boundaries `check-module`
+/// verifies, with no executable program retained. `--explain-ownership` needs a
+/// lowered program, so it keeps the entry-point requirement, and a declared `main`
+/// of any signature is always checked as an entry point.
+fn checkUnit(parsed: Parsed, compilation: *language.Compilation, semantic: *language.semantic_cache.Cache) language.diagnostic.Error!void {
+    const as_library = parsed.command == .check and parsed.explain_ownership == null and !compilation.declaresMain();
+    if (as_library) return compilation.checkLibrary();
+    return compilation.checkWithCache(semantic);
 }
 
 /// Write the ownership analysis of a checked program to `path` as JSON Lines
@@ -943,6 +963,10 @@ const Parsed = struct {
     /// Hidden `check --explain-ownership=PATH`: the JSON Lines report of the
     /// ownership analysis (`OWNERSHIP-EXPLAIN-1`).
     explain_ownership: ?[]const u8 = null,
+    /// Set on the `check-project` a `mylang check` of a module entry becomes: an
+    /// entry that declares no `main` is then checked as a library (`CHECK-LIBRARY-2`)
+    /// instead of failing `E_MAIN`. A plain `check-project` keeps requiring `main`.
+    library_fallback: bool = false,
 
     /// The policy the `emit-qbe`/`emit-project-qbe` switches spell out. Each
     /// `--drop-…` names one thing the emitted units stop carrying, so a command
@@ -2331,6 +2355,7 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
 fn earlyProjectCheck(init: Context, parsed: Parsed, compilation: *language.project_compile.Compilation, functions: ?*language.semantic_cache.Cache, files: *ModuleFiles, configured: *const ConfiguredPolicy) !?u8 {
     return switch (parsed.command) {
         .@"check-module" => try checkLibraryProject(init, parsed, compilation, files, configured),
+        .@"check-project" => if (parsed.library_fallback and !compilation.declaresMain()) try checkLibraryProject(init, parsed, compilation, files, configured) else null,
         .@"index-project" => try indexProject(init, compilation, functions, parsed),
         else => null,
     };
