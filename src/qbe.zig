@@ -1644,6 +1644,8 @@ const Emitter = struct {
         self.branch_targets = try self.collectBranchTargets();
         self.by_reference = try self.addressLocals();
         try self.planOwnership();
+        // RC-ANCHORED-RANGE-KEY-1: the RC plan reads which slices are described.
+        self.range_keys = try self.planRangeKeys();
         if (runtime_mode.enabled()) {
             self.cow.?.rc = try @import("qbe_rc_state.zig").build(Emitter, self, ir.stack_capacity);
             const rc = self.cow.?.rc.?;
@@ -1664,7 +1666,6 @@ const Emitter = struct {
             }
             @import("qbe_rc_readonly_calls.zig").activate(Emitter, self);
         }
-        self.range_keys = try self.planRangeKeys();
         // QBE-LOOP-VERSION-1: only a build whose value guards are on has
         // anything to prove, and step accounting counts every instruction the
         // original executes, so a counted build keeps one copy.

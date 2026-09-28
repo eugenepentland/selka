@@ -138,8 +138,15 @@ fn pushed(comptime E: type, self: *E, view: anytype, pc: usize, remaining: usize
         .load_local => |id| view.local(E, self, @backingInt(id)),
         .get_field => pc != 0 and !self.isBranchTarget(pc) and stack.len != 0 and
             plainRecord(E, self, stack[stack.len - 1]) and pushed(E, self, view, pc - 1, remaining - 1),
-        .buffer_operation => |operation| operation.kind == .read and list(E, self, @backingInt(operation.owner)) and
-            !semantics.isLiveView(self.program.records, operation.output) and view.local(E, self, @backingInt(operation.owner)),
+        .buffer_operation => |operation| switch (operation.kind) {
+            .read => list(E, self, @backingInt(operation.owner)) and
+                !semantics.isLiveView(self.program.records, operation.output) and view.local(E, self, @backingInt(operation.owner)),
+            // RC-ANCHORED-RANGE-KEY-1: a described `str` slice leaves its
+            // receiver text itself in the operand, so it is anchored exactly
+            // when that receiver is.
+            .slice => self.range_keys.role(pc) == .slice and view.local(E, self, @backingInt(operation.owner)),
+            else => false,
+        },
         .value_copy => pc != 0 and !self.isBranchTarget(pc) and !copies(E, self, pc) and
             pushed(E, self, view, pc - 1, remaining - 1),
         .call => |target| @TypeOf(view) == Emitted and borrowedCall(E, self, view, pc, target, remaining - 1),
@@ -243,10 +250,16 @@ fn candidate(comptime E: type, self: *E, bindings: []const input.Binding, catalo
     if (cow.iterationOwner(self.function, index)) return false;
     for (self.function.scope.instructions) |instruction| switch (instruction.op) {
         .ref_local, .move_local => |id| if (@backingInt(id) == index) return false,
-        .buffer_operation => |operation| if (@backingInt(operation.owner) == index and operation.kind != .read and operation.kind != .length) return false,
+        .buffer_operation => |operation| if (@backingInt(operation.owner) == index and !readOnly(operation.kind)) return false,
         else => {},
     };
     return true;
+}
+
+// Operations that only read their receiver: an element read, its length, or a
+// slice (a new value, or a described range over the receiver's own text).
+fn readOnly(kind: @FieldType(@FieldType(Op, "buffer_operation"), "kind")) bool {
+    return kind == .read or kind == .length or kind == .slice;
 }
 
 // Whether the copy-on-write plan can write or detach `index`: a place, a

@@ -259,3 +259,27 @@ test "RC records copied out of a read-only list into a named local take no token
     ;
     try t.expectEqual(@as(usize, 0), try operationsIn(records, "count"));
 }
+
+const range_keys =
+    \\def frequencies(seq: str, k: int) -> dict[str, int]:
+    \\    counts: dict[str, int] = {}
+    \\    for i in range(len(seq) - k + 1):
+    \\        key = seq[i:i + k]
+    \\        counts[key] = counts.get(key, 0) + 1
+    \\    return counts
+    \\def rebound(seq: str, k: int) -> dict[str, int]:
+    \\    counts: dict[str, int] = {}
+    \\    for i in range(len(seq) - k + 1):
+    \\        key = seq[i:i + k]
+    \\        counts[key] = counts.get(key, 0) + 1
+    \\        seq = seq + "A"
+    \\    return counts
+    \\def main() -> int:
+    \\    return len(frequencies("GATTACA", 2)) + len(rebound("GATTACA", 2))
+;
+
+// spec: RC-ANCHORED-RANGE-KEY-1
+test "RC range keys sliced from a never-written read-only parameter take no loan or retain" {
+    try t.expectEqual(@as(usize, 0), try operationsIn(range_keys, "frequencies"));
+    try t.expect(try operationsIn(range_keys, "rebound") > 0);
+}

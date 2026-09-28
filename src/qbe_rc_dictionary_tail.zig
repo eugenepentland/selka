@@ -99,6 +99,7 @@ fn ordinary(comptime E: type, self: *E, index: usize, origin: typed.LocalOrigin)
 // acquires O and clears the input loan. No pattern/iterator/temp store qualifies.
 fn keyOwner(comptime E: type, self: *E, index: usize) bool {
     const local = self.function.scope.locals[index];
+    if (anchoredKey(E, self, index)) return true;
     if (local.origin != .collection_copy) return ordinary(E, self, index, .local);
     if (!textKey(E, self, local.ty) or !ordinary(E, self, index, .collection_copy)) return false;
     const code = self.function.scope.instructions;
@@ -117,6 +118,18 @@ fn keyOwner(comptime E: type, self: *E, index: usize) bool {
         if (record.shape.buffer != local.ty) return false;
     }
     return found;
+}
+
+// RC-ANCHORED-RANGE-KEY-1: a named key borrowed for the whole activation from
+// a never-written read-only parameter holds no token; its load is a borrowed
+// operand like an owned key's, and the write copies the octets it stores.
+fn anchoredKey(comptime E: type, self: *E, index: usize) bool {
+    const local = self.function.scope.locals[index];
+    if (index < self.function.signature.parameter_count or local.usage.temporary or local.origin != .local) return false;
+    if (referenced(E, self, index)) return false;
+    const plan = self.cow.?.plan;
+    if (plan.place(index) != null or plan.aliases[index] != cow.none) return false;
+    return @import("qbe_rc_readonly_anchor.zig").anchoredLocal(E, self, index);
 }
 
 fn referenced(comptime E: type, self: *E, index: usize) bool {

@@ -62,7 +62,8 @@ pub fn after(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "o
 /// RC-READONLY-ANCHOR-1: a field or list element read out of a read-only
 /// parameter's value publishes no token; the caller keeps it alive.
 fn readonlyRead(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "op"), stack: []const typed.Type) Error!bool {
-    const read = op == .get_field or op == .call or (op == .buffer_operation and op.buffer_operation.kind == .read);
+    const read = op == .get_field or op == .call or
+        (op == .buffer_operation and (op.buffer_operation.kind == .read or op.buffer_operation.kind == .slice));
     if (!read) return false;
     const anchor = @import("qbe_rc_readonly_anchor.zig");
     const lent = anchor.value(E, self, self.pc) or anchor.intervalChain(E, self, self.pc) or
