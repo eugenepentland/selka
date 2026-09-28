@@ -265,6 +265,10 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
         // names each text and its metadata by digest (`QBE-FRAGMENT-REUSE-1`,
         // `EMIT-META-1`), and an executable's leaves out library-only facts.
         if (project) try arguments.append(a, leanManifestFlag(parsed));
+        // RC-DEFAULT-1: the frontend inherits the real process environment,
+        // which a host's own environment map need not match, so it is told the
+        // contract this driver validates and links against explicitly.
+        try arguments.append(a, (try contract.parse(context.environ.get(contract.variable))).flag());
         if (std.mem.eql(u8, parsed.cache, options.no_cache)) {
             try arguments.append(a, "--no-cache");
         } else if (!std.mem.eql(u8, parsed.cache, options.default_cache)) {

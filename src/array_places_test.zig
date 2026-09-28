@@ -104,6 +104,9 @@ fn adjustments(body: []const u8) usize {
 
 // spec-case: PY-ARRAY-NEGATIVE-1
 test "an index the checker proves non-negative carries no adjustment" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     var parsed = try emitted(
         \\def counted() -> int:
         \\    values: [8]int = [0, 0, 0, 0, 0, 0, 0, 0]
@@ -272,6 +275,9 @@ test "a mut array parameter names the caller's variable and nothing else" {
 
 // spec: QBE-ARRAYREF-1
 test "a mut array argument is the caller's slot and the callee writes through it" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     var parsed = try emitted(
         \\def set_first(values: mut [4]int, value: int) -> None:
         \\    values[0] = value
@@ -330,6 +336,9 @@ test "a read-only argument of an array already passed mut is a snapshot" {
 
 // spec-case: QBE-ARRAYREF-1
 test "an element write into a local array names no scratch" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     var parsed = try emitted(
         \\def main() -> int:
         \\    values: [8]int = [0, 0, 0, 0, 0, 0, 0, 0]

@@ -57,6 +57,9 @@ written out. An unknown directive name fails the run.
 | `# doc: not-mylang` | Prose block that only looks like guest source; exempt from the mis-tag lint. |
 | `# doc: allow-read <dir>` | Run under `--restrict` with `--allow-read=docs/fixtures/<dir>`, granting only that fixture directory. |
 | `# doc: allow-write <dir>` | The same, with write authority on that directory. |
+| `# doc: value-semantics` | Check and run under `--value-semantics`. |
+| `# doc: legacy-sharing` | Check and run under the one-release `--legacy-sharing` mode (tracing GC). |
+| `# doc: gc-runtime` | Check and run under `--gc-runtime`, the tracing collector, instead of the default reference-counting runtime. |
 
 A block with no directive and a `main` is run and must exit 0.
 

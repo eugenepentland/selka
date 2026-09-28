@@ -50,6 +50,9 @@ LOG_DIR = ROOT / ".mylang-cache" / "affected-tests"
 UNIT_ROOT = "src/root_test.zig"
 CLI_ROOT = "test/integration.zig"
 LANG_CACHE = ".mylang-cache/lang-tests"
+# `test-lang` runs tests/lang twice: under the default RC runtime and under the
+# tracing collector with --gc-stress (RC-DEFAULT-1).
+LANG_GC_CACHE = ".mylang-cache/lang-tests-gc"
 GUEST_CACHE = ".mylang-cache/guest-tests"
 LLVM_CACHE = ".mylang-cache/affected-llvm"
 GATE = (
@@ -500,9 +503,12 @@ def plan(sel: Selection, zig: str, shards: int = 8) -> tuple[list[Command], list
     env["MYLANG_QBE"] = str(ROOT / "zig-out" / "focus" / "qbe")
     guests: list[Command] = []
     for entry in sorted(sel.guest):
-        cache = GUEST_CACHE if entry.startswith("tests/guest") else LANG_CACHE
-        extra = [] if entry.startswith("tests/guest") else ["--gc-stress"]
-        guests.append(Command("mylang test " + entry, [compiler, "test", entry, "--cache-dir", cache, *extra], env))
+        if entry.startswith("tests/guest"):
+            guests.append(Command("mylang test " + entry, [compiler, "test", entry, "--cache-dir", GUEST_CACHE], env))
+            continue
+        guests.append(Command("mylang test " + entry, [compiler, "test", entry, "--cache-dir", LANG_CACHE], env))
+        stressed = [compiler, "test", entry, "--gc-runtime", "--cache-dir", LANG_GC_CACHE, "--gc-stress"]
+        guests.append(Command("mylang test {} (GC stress)".format(entry), stressed, env))
     for entry in sorted(sel.llvm):
         guests.append(Command("mylang test {} (LLVM)".format(entry), [compiler, "test", entry, "--release", "--cache-dir", LLVM_CACHE], env))
     for page in sorted(sel.doctest):

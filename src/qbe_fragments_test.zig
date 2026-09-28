@@ -463,6 +463,9 @@ fn expectStandInMatches(allocator: std.mem.Allocator, root: []const u8, referenc
 
 // spec: EMIT-STANDIN-1
 test "an executable's emission lowers only what an edit changed and emits what a full emission emits" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     var directory = t.tmpDir(.{});
     defer directory.cleanup();
     var arena = std.heap.ArenaAllocator.init(t.allocator);
@@ -525,6 +528,9 @@ const three_body_edit: Files = .{ .main = three_main_source, .helper = body_edit
 
 // spec-case: EMIT-STANDIN-1
 test "a body edit in one module stands in every function of the modules it did not touch" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     var directory = t.tmpDir(.{});
     defer directory.cleanup();
     var arena = std.heap.ArenaAllocator.init(t.allocator);

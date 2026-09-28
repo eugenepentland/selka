@@ -2,7 +2,9 @@
 //! the checks, shares, pins and loop-entry checks the native emitter lowers
 //! under the internal switch, read from the emitted QBE IL, and the programs
 //! that switch changes the meaning of, run natively, under collection stress
-//! too.
+//! too. Every emission and run here selects the collector (`--gc-runtime`),
+//! since reference counting, the default, implements copy on write itself
+//! (RC-DEFAULT-1).
 const std = @import("std");
 const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
@@ -14,6 +16,8 @@ const Manifest = struct { functions: []Unit };
 
 /// The QBE IL of function `name` in `source`, emitted under `policy`.
 fn unitText(a: std.mem.Allocator, source: []const u8, name: []const u8, policy: Policy) ![]const u8 {
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     var c = try language.Compilation.init(a, "cow.my", source);
     defer c.deinit();
     const manifest = try c.emitQbeWithOptions(a, policy);
@@ -39,6 +43,8 @@ const pin_set = " or ";
 
 /// Run `source` natively under copy on write and answer its result.
 fn run(a: std.mem.Allocator, source: []const u8, stress: bool) !i64 {
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     var c = try language.Compilation.init(a, "cow.my", source);
     defer c.deinit();
     const result = try native.runWithPolicy(&c, checks, .{ .gc_stress = stress });
@@ -539,6 +545,8 @@ test "copy on write: a mut argument is pinned for the call, so a callee's copy o
 
 // spec: COW-STATS-1
 test "copy on write: a counting build counts every inline check, mark and pin and reports at exit" {
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     const a = std.testing.allocator;
     const counting: Policy = .{ .step_checks = false, .frame_checks = false, .cow = .counting };
     const il = try unitText(a, pinned, "main", counting);

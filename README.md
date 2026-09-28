@@ -66,12 +66,14 @@ and [full SVG performance fixes](docs/audits/svg-performance-fixes-2026-09-21.md
 The [GC versus arena benchmarks](experiments/svg-arenas-20260921/README.md)
 build both memory policies at LLVM O3, with separate LTO and tool-limit variants.
 Existing [`with arena()` scopes](docs/arenas.md) now use bulk bump allocation;
-ordinary managed allocation continues to use tracing GC.
+ordinary managed allocation is reference counted by default, with the tracing
+collector available through `--gc-runtime`.
 
 The language reads like Python: `def`, `record`, indented blocks, ordinary
-assignments, `list[T]`, strings, dictionaries, and tracing GC — with static types
+assignments, `list[T]`, strings, dictionaries, and automatic memory management
+(reference counting by default, a tracing GC with `--gc-runtime`) — with static types
 and checked results kept explicit. [The language guide](docs/python-syntax.md)
-covers it; see the [GC example](examples/gc-default/main.my) and
+covers it; see the [managed-memory example](examples/gc-default/main.my) and
 [schematic entry](src/schematic/guest/main.my).
 
 Current supported features and restrictions are indexed in the
@@ -135,10 +137,11 @@ execution state. Passed tests with unchanged semantic dependencies can be reused
 [guest test workflow](docs/experiments/guest-tests.md) for fixtures, budgets, and
 result-cache behavior.
 
-## GC-default application preview
+## Managed-memory application preview
 
 Managed lists allocate and grow with no allocator parameters and no ownership
-annotations. The schematic guest uses them throughout its application model. See
+annotations, under the default reference-counting runtime and the tracing
+collector alike. The schematic guest uses them throughout its application model. See
 [managed memory](docs/managed-memory.md) and [the runnable example](examples/gc-default/main.my).
 [Managed arenas](docs/arenas.md) are the one way to control when they are freed.
 

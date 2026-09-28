@@ -50,6 +50,11 @@ pub fn Lower(comptime E: type) type {
                 .complete_resource => |ty| {
                     const shape = typed.completionShape(ty, self.program.records).?;
                     const resource = try self.load("s", h - 1);
+                    // RC-RESOURCE-COMPLETE-1: completion takes the handle over,
+                    // closing it or handing it back inside the result, the way a
+                    // callee owns a consumed argument, so its operand guard is
+                    // disarmed before the provider runs and nothing drops it again.
+                    try consumed(self, h - 1);
                     const status = self.temp();
                     try self.print(" %v{d} =w call $myl_qbe_resource_complete(l %ctx, l %v{d})\n", .{ status, resource });
                     try self.checkFailure("failure");
@@ -74,6 +79,13 @@ pub fn Lower(comptime E: type) type {
                 .resource_io => |io| try ioOperation(self, io, stack),
                 else => return error.InternalError,
             }
+        }
+        /// Disarm the RC guard of an operand this operation takes ownership
+        /// of; the collector has no guards, so this is RC-only.
+        fn consumed(self: *E, index: usize) Error!void {
+            const frame = @import("qbe_rc_frame.zig");
+            if (frame.get(E, self) == null) return;
+            try frame.initialized(E, self, @import("qbe_rc_values.zig").journalIndex(E, self, index), false);
         }
         const Bytes = struct { pointer: usize, length: usize };
         fn byteView(self: *E, base: usize, ty: typed.Type) Error!Bytes {

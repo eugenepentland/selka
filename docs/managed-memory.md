@@ -1,8 +1,8 @@
 # Managed application collections
 
-Ordinary dynamic lists use managed storage. The default runtime currently uses a
-tracing heap; an experimental reference-counted runtime uses the same collection
-API and value semantics. There are no allocator
+Ordinary dynamic lists use managed storage. The default runtime reclaims it by
+reference counting with copy-on-write; the tracing collector (`--gc-runtime`)
+remains available with the same collection API and value semantics. There are no allocator
 parameters, no move operations and no collection borrow scopes: managed memory is
 the only way application code allocates. [Managed arenas](arenas.md) are the one
 escape hatch, and they change *when* managed objects are freed rather than how
@@ -60,21 +60,33 @@ ordinary scalar host calls from managed applications still work.
 
 ## Runtime selection
 
-Reference counting is available explicitly while its full performance gate is
-still open. Choose one runtime on commands that check, build or execute a program:
+Reference counting is the default runtime. A command that names no runtime
+builds and runs with it; choose another on commands that check, build or execute
+a program:
 
 | Option | Runtime |
 | --- | --- |
-| `--gc-runtime` | Tracing collector; the current default |
-| `--rc-runtime` | Experimental reference counting with copy-on-write |
+| (none), `--rc-runtime` | Reference counting with copy-on-write; the default |
 | `--rc-runtime=stats` | The same RC runtime with ownership-operation counters |
 | `--rc-runtime=sites` | The counted RC runtime, with every count charged to the call site that caused it ([ownership sites](tooling/ownership.md#ownership-sites)) |
+| `--gc-runtime` | The tracing collector: the opt-out from reference counting |
 
-For example, `mylang run-project examples/gc-default/main.my --rc-runtime
---print-result` prints `142`. `mylang test tests/lang --rc-runtime=stats` exercises
-the language tests with counted RC. Either backend supports the same selectors;
-add `--release` for LLVM O3 with full LTO. Choose the uninstrumented `--rc-runtime`
-when measuring production performance.
+`MYLANG_RUNTIME=gc-v1` (or `rc-v3`, `rc-v3-counting`, `rc-v3-sites`) selects a
+runtime for a whole shell session or CI job; an explicit flag outranks it.
+
+For example, `mylang run-project examples/gc-default/main.my --print-result`
+prints `142` under RC, and adding `--gc-runtime` prints the same under the
+collector. `mylang test tests/lang --rc-runtime=stats` exercises the language
+tests with counted RC. Either backend supports the same selectors; add
+`--release` for LLVM O3 with full LTO. The uninstrumented default is the one to
+measure for production performance.
+
+`--gc-stress` stresses the tracing collector, so it needs GC: on `run`,
+`run-project`, `test`, `build --run` and `invoke` it selects `--gc-runtime`
+when no runtime flag is given, and naming it together with an `--rc-runtime`
+flag is a usage error. A program built for RC refuses `--gc-stress` in
+`MYLANG_OPTIONS` with exit status 2 and a message naming `--gc-runtime`, rather
+than running without the stress it asked for.
 
 RC keeps managed objects alive while an owner or a compiler-maintained lifetime
 hold still needs them. Releasing the last such reference retires the object and
@@ -89,7 +101,8 @@ RC does not introduce allocator parameters, explicit free operations or new
 ownership syntax. Memory limits and trap cleanup apply to both runtimes.
 
 `--legacy-sharing` uses tracing GC. Combining it with an explicit RC selector is
-a usage error; an inherited RC selection is normalized to GC for legacy code.
+a usage error; the RC default and an inherited RC selection are normalized to GC
+for legacy code.
 Runtime selection is a build property, so changing a running binary's environment
 cannot turn a GC binary into an RC binary. See
 [native runtime contracts](tooling/native-build.md#runtime-contracts) for artifact
@@ -97,7 +110,9 @@ and cache compatibility.
 
 ## Collection and allocation contracts
 
-With the GC runtime, each execution owns a single-threaded, nonmoving tracing
+With the default RC runtime, a managed object is released when its last owner
+goes away, so memory returns as soon as a value is dead rather than at a later
+collection. With the GC runtime, each execution owns a single-threaded, nonmoving tracing
 heap. The compiler registers typed roots for live locals, operands and
 intermediate values. Collection follows these roots and managed edges to keep
 reachable objects; unreachable objects, including cycles in legacy programs,
@@ -118,8 +133,8 @@ Reads and fixed-slot writes are permitted under that bound. Inside a
 its release point moves. Managed mutation is not a promise of purity or exclusive
 access.
 
-`mylang run-project examples/gc-default/main.my --gc-runtime --gc-stress
---print-result` collects at every
+`mylang run-project examples/gc-default/main.my --gc-stress --print-result`
+runs under the collector (`--gc-stress` selects it) and collects at every
 managed construction/append safepoint. It should print `142`. Stress mode is a
 rooting correctness check, not a performance mode. See the
 [schematic instructions](../experiments/schematic/README.md) for the real migrated
@@ -510,15 +525,18 @@ def main() -> int:
 
 ## The tracing collector
 
-With `--gc-runtime`, each execution owns one single-threaded, nonmoving tracing
+With `--gc-runtime`, the opt-out from the default reference counting, each
+execution owns one single-threaded, nonmoving tracing
 heap, so a live managed object's address does not move during collection.
 Collection runs at managed allocation safepoints according to allocation pressure
 and the execution memory budget. Nothing in the surface language frees an object:
 [`with arena() as name:`](arenas.md) changes only *when* a region's objects are
-released, not how they are written. `mylang run --gc-stress` collects at every
-safepoint, which is a rooting correctness check rather than a performance mode.
+released, not how they are written. `mylang run --gc-stress` selects the
+collector and collects at every safepoint, which is a rooting correctness check
+rather than a performance mode.
 
 ```mylang
+# doc: gc-runtime
 # doc: expect 1225
 def batch(size: int) -> int:
     scratch: list[str] = []
@@ -538,7 +556,8 @@ def main() -> int:
 
 Every `scratch` list and every interpolated string in that program is unreachable
 as soon as `batch` returns, and the collector reclaims them during a later
-allocation without the program saying anything.
+allocation without the program saying anything. Under the default RC runtime the
+same program releases each of them at that return instead.
 
 ## Reclaiming cycles
 

@@ -82,6 +82,8 @@ pub fn run(compilation: anytype) Error!Run {
 
 /// Build one checked compilation natively and run it once under explicit options.
 pub fn runWithOptions(compilation: anytype, options: Options) Error!Run {
+    const saved = stressRuntime(options);
+    defer language.runtime_mode.set(saved);
     const session = try wiring.acquire();
     var scratch = std.heap.ArenaAllocator.init(session.allocator());
     defer scratch.deinit();
@@ -94,6 +96,8 @@ pub fn runWithOptions(compilation: anytype, options: Options) Error!Run {
 /// guards on — and run it once. That is the protocol loop versioning
 /// (`QBE-LOOP-VERSION-1`) lowers under, so a test can compare it with `run`.
 pub fn runUnaccounted(compilation: *language.Compilation, options: Options) Error!Run {
+    const saved = stressRuntime(options);
+    defer language.runtime_mode.set(saved);
     const session = try wiring.acquire();
     var scratch = std.heap.ArenaAllocator.init(session.allocator());
     defer scratch.deinit();
@@ -105,11 +109,22 @@ pub fn runUnaccounted(compilation: *language.Compilation, options: Options) Erro
 /// unaccounted protocol `runUnaccounted` uses plus whatever `policy` adds, such
 /// as copy-on-write value semantics (`COW-UNIQUE-1`) — and run it once.
 pub fn runWithPolicy(compilation: *language.Compilation, policy: @import("native_interface.zig").Policy, options: Options) Error!Run {
+    const saved = stressRuntime(options);
+    defer language.runtime_mode.set(saved);
     const session = try wiring.acquire();
     var scratch = std.heap.ArenaAllocator.init(session.allocator());
     defer scratch.deinit();
     const manifest = try compilation.emitQbeWithOptions(scratch.allocator(), policy);
     return spawn(try program(session, manifest), options);
+}
+
+/// Collector stress needs the collector: a stressed run is emitted, built and
+/// linked under GC, the way `--gc-stress` selects it on the command line
+/// (`RC-DEFAULT-1`). Returns the selection to restore afterwards.
+fn stressRuntime(options: Options) language.runtime_mode.Selection {
+    const saved = language.runtime_mode.get();
+    if (options.gc_stress) language.runtime_mode.set(.gc);
+    return saved;
 }
 
 /// Publish one emitted manifest as an executable, reusing an identical earlier build.
@@ -303,6 +318,26 @@ test "a published native executable carries neither debug information nor a symb
     const outcome = try spawn(path, .{});
     try std.testing.expectEqual(@as(i64, 3), outcome.value);
     try std.testing.expect(!outcome.trapped());
+}
+
+// spec-case: RC-DEFAULT-1
+test "an unstressed guest runs under the RC default and a stressed one under GC" {
+    const saved = language.runtime_mode.get();
+    defer language.runtime_mode.set(saved);
+    language.runtime_mode.set(language.runtime_mode.Selection.rc);
+    var compilation = try language.Compilation.init(std.testing.allocator, "stress.my",
+        \\def main() -> i64:
+        \\    xs = [1, 2, 3]
+        \\    ys = xs
+        \\    ys.append(4)
+        \\    return len(xs) * 10 + len(ys)
+    );
+    defer compilation.deinit();
+    const counted = try runWithOptions(&compilation, .{});
+    try std.testing.expectEqual(@as(i64, 34), counted.value);
+    const stressed = try runWithOptions(&compilation, .{ .gc_stress = true });
+    try std.testing.expectEqual(@as(i64, 34), stressed.value);
+    try std.testing.expectEqual(language.runtime_mode.Selection.rc, language.runtime_mode.get());
 }
 
 test "native execution reports entry results, guest output and located traps" {

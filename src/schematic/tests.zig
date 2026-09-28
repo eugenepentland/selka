@@ -79,6 +79,16 @@ const Harness = struct {
         try forwardZigCache(&self.environment, self.arena.allocator());
         return self;
     }
+    /// Build the guest at `root` under the tracing collector and render once
+    /// under `--gc-stress`, which a reference-counted program refuses (`RC-DEFAULT-1`).
+    fn stressed(self: *Harness, root: []const u8, documents: *const [3][]const u8) ![]const u8 {
+        try self.environment.put("MYLANG_RUNTIME", "gc-v1");
+        defer _ = self.environment.swapRemove("MYLANG_RUNTIME");
+        var app: application.App = undefined;
+        try app.initDisk(self.process(), root);
+        defer app.deinit();
+        return app.run(documents, &.{"--gc-stress"});
+    }
     fn close(self: *Harness) void {
         self.directory.cleanup();
         self.environment.deinit();
@@ -375,7 +385,7 @@ test "schematic renders the whole fixture identically, normally and under collec
     defer app.deinit();
     const expected = try std.Io.Dir.cwd().readFileAlloc(t.io, "experiments/schematic/straps-synth-lmx2595.svg", a, .limited(1024 * 1024));
     try t.expectEqualStrings(expected, try app.run(&documents, &.{}));
-    try t.expectEqualStrings(expected, try app.run(&documents, &.{"--gc-stress"}));
+    try t.expectEqualStrings(expected, try harness.stressed("src/schematic/guest", &documents));
 }
 
 test {
@@ -521,7 +531,7 @@ test "schematic bulk buffer boundaries hold normally and under collection stress
     try app.initDisk(harness.process(), harness.root);
     defer app.deinit();
     try t.expectEqualStrings("", try app.run(&empty, &.{}));
-    try t.expectEqualStrings("", try app.run(&empty, &.{"--gc-stress"}));
+    try t.expectEqualStrings("", try harness.stressed(harness.root, &empty));
 }
 
 // spec: SCHEMATIC-PYTHON-1
@@ -534,5 +544,6 @@ test "Python schematic decimal output preserves negative numbers and minimum int
     var app: application.App = undefined;
     try app.initDisk(harness.process(), harness.root);
     defer app.deinit();
-    try t.expectEqualStrings("-12,-9223372036854775808,0", try app.run(&empty, &.{"--gc-stress"}));
+    try t.expectEqualStrings("-12,-9223372036854775808,0", try app.run(&empty, &.{}));
+    try t.expectEqualStrings("-12,-9223372036854775808,0", try harness.stressed(harness.root, &empty));
 }

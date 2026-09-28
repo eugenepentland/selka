@@ -1,7 +1,9 @@
 # Value semantics
 
 This is the default value model of
-[D9](adr/D9-value-semantics-then-rc.md) on the current garbage-collected runtime.
+[D9](adr/D9-value-semantics-then-rc.md). The default runtime implements it with
+reference counting and copy-on-write; the `--gc-runtime` opt-out implements the
+same rules over the tracing collector.
 The one-release compatibility mode restores the previous shared-reference
 behavior for code that has not yet migrated.
 

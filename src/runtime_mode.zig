@@ -3,6 +3,7 @@
 const std = @import("std");
 const contract = @import("runtime_contract");
 const wiring = @import("wiring/runtime_mode.zig");
+const values = @import("wiring/value_semantics.zig");
 
 /// Versioned memory implementation selected before compilation starts.
 pub const Selection = contract.Selection;
@@ -15,30 +16,49 @@ pub fn get() Selection {
     return wiring.selection;
 }
 
+/// The contract lowering and in-process native builds use. Legacy sharing
+/// lowers for the collector whatever was selected, the way a command resolves
+/// `--legacy-sharing` with a default or inherited RC (`RC-DEFAULT-1`): RC
+/// lowering needs the value model's copy-on-write plan.
+pub fn lowered() Selection {
+    if (!values.enabled) return .gc;
+    return wiring.selection;
+}
+
 /// Set the already normalized selection at startup, or inside a restored test.
 pub fn set(selection: Selection) void {
     wiring.selection = selection;
 }
 
+/// Select the tracing collector and return the selection to restore, for a
+/// test that reads the collector's own lowering (roots, safepoints, barriers,
+/// stand-in reuse, copy on write over the collector) rather than a program's
+/// meaning, which the default reference counting must also give (`RC-DEFAULT-1`).
+pub fn pinCollector() Selection {
+    const saved = get();
+    set(.gc);
+    return saved;
+}
+
 /// Whether the selected artifact uses reference counting.
 pub fn enabled() bool {
-    return get().enabled();
+    return lowered().enabled();
 }
 
 /// Whether the selected artifact instruments reference-count operations.
 pub fn counting() bool {
-    return get().counting();
+    return lowered().counting();
 }
 
 /// Whether the selected artifact attributes ownership events to their
 /// emission sites (`RC-SITES-1`).
 pub fn sites() bool {
-    return get().sites();
+    return lowered().sites();
 }
 
 /// Ownership ABI and instrumentation identity for persisted native artifacts.
 pub fn identity() []const u8 {
-    return get().identity();
+    return lowered().identity();
 }
 
 // spec-case: RC-RUNTIME-CONTRACT-1
@@ -61,7 +81,6 @@ test "runtime mode keeps compiler selection separate from its ABI decoding" {
 
 // spec: RC-RUNTIME-CONTRACT-1
 test "runtime contract versions reject unknown ABIs and preserve legacy GC" {
-    try std.testing.expectEqual(Selection.gc, try contract.parse(null));
     try std.testing.expectEqual(Selection.gc, try contract.parse("gc-v1"));
     try std.testing.expectEqual(Selection.rc, try contract.parse("rc-v3"));
     try std.testing.expectEqual(Selection.rc_counting, try contract.parse("rc-v3-counting"));
@@ -81,4 +100,40 @@ test "runtime contract versions reject unknown ABIs and preserve legacy GC" {
     try std.testing.expect(Selection.rc_sites.enabled() and Selection.rc_sites.counting() and Selection.rc_sites.sites());
     try std.testing.expect(!Selection.rc_counting.sites() and !Selection.rc.sites() and !Selection.gc.sites());
     try std.testing.expectError(error.IncompatibleRuntime, contract.resolve(.rc_sites, false, true));
+}
+
+// spec: RC-DEFAULT-1
+test "reference counting is the process default and GC stays a selectable opt-out" {
+    try std.testing.expectEqual(Selection.rc, contract.default);
+    try std.testing.expectEqual(Selection.rc, try contract.parse(null));
+    try std.testing.expectEqual(Selection.gc, try contract.parse("gc-v1"));
+    // The default is not explicit: legacy sharing still normalizes it to GC.
+    try std.testing.expectEqual(Selection.gc, try contract.resolve(contract.default, false, false));
+    try std.testing.expectEqual(Selection.rc, try contract.resolve(contract.default, true, false));
+    try std.testing.expectEqual(Selection.gc, try contract.resolve(.gc, true, true));
+    try std.testing.expectEqualStrings("rc-v3", contract.default.identity());
+    // A build driver names the contract to its frontend child by these flags.
+    try std.testing.expectEqualStrings("--gc-runtime", Selection.gc.flag());
+    try std.testing.expectEqualStrings("--rc-runtime", Selection.rc.flag());
+    try std.testing.expectEqualStrings("--rc-runtime=stats", Selection.rc_counting.flag());
+    try std.testing.expectEqualStrings("--rc-runtime=sites", Selection.rc_sites.flag());
+}
+
+// spec-case: RC-DEFAULT-1
+test "legacy sharing lowers for the collector whatever runtime is selected" {
+    const saved = get();
+    defer set(saved);
+    const mode = values.enabled;
+    defer values.enabled = mode;
+    set(.rc);
+    values.enabled = false;
+    try std.testing.expectEqual(Selection.gc, lowered());
+    try std.testing.expectEqual(Selection.rc, get());
+    try std.testing.expect(!enabled());
+    try std.testing.expectEqualStrings("gc-v1", identity());
+    values.enabled = true;
+    try std.testing.expectEqual(Selection.rc, lowered());
+    const pinned = pinCollector();
+    try std.testing.expectEqual(Selection.rc, pinned);
+    try std.testing.expectEqual(Selection.gc, lowered());
 }

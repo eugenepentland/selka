@@ -84,6 +84,9 @@ const sieve =
 
 // spec-case: QBE-LOOP-FACTS-1
 test "a while loop with a step held in a local proves its index and its update" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     const il = try fastIl(sieve, "mark");
     defer t.allocator.free(il);
     const loop = try parts(il);
@@ -234,6 +237,9 @@ const fills =
 
 // spec-case: QBE-LOOP-FACTS-1
 test "an append the list's spare capacity holds is a store with no capacity test" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     const il = try fastIl(fills, "flags");
     defer t.allocator.free(il);
     const loop = try parts(il);

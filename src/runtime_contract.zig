@@ -28,6 +28,17 @@ pub const Selection = enum {
         };
     }
 
+    /// The command-line flag that selects this contract explicitly, which a
+    /// build driver hands its frontend child (`RC-DEFAULT-1`).
+    pub fn flag(self: Selection) []const u8 {
+        return switch (self) {
+            .gc => "--gc-runtime",
+            .rc => "--rc-runtime",
+            .rc_counting => "--rc-runtime=stats",
+            .rc_sites => "--rc-runtime=sites",
+        };
+    }
+
     /// Native flags shared by loose objects, generated adapters and LTO archives.
     pub fn cFlags(self: Selection) []const []const u8 {
         return switch (self) {
@@ -55,16 +66,22 @@ pub const Selection = enum {
     }
 };
 
-/// Decode only supported ABI tags; absent selection keeps experimental RC off.
+/// The contract a process runs when neither a runtime flag, `--gc-stress` nor
+/// `MYLANG_RUNTIME` names one: reference counting (`RC-DEFAULT-1`). Only the
+/// resolved selection reaches caches, so changing it never reuses artifacts
+/// built under another contract.
+pub const default: Selection = .rc;
+
+/// Decode only supported ABI tags; an absent selection is the process default.
 pub fn parse(text: ?[]const u8) error{InvalidRuntimeContract}!Selection {
-    const value = text orelse return .gc;
+    const value = text orelse return default;
     inline for (std.meta.tags(Selection)) |selection| {
         if (std.mem.eql(u8, value, selection.identity())) return selection;
     }
     return error.InvalidRuntimeContract;
 }
 
-/// Preserve legacy GC for inherited RC while rejecting an explicit conflict.
+/// Preserve legacy GC for inherited or default RC while rejecting an explicit conflict.
 pub fn resolve(selected: Selection, values: bool, explicit: bool) error{IncompatibleRuntime}!Selection {
     if (values or !selected.enabled()) return selected;
     if (explicit) return error.IncompatibleRuntime;

@@ -232,9 +232,14 @@ fn managedConstantModes(temporary: *testing.TmpDir, data: []const u8, expected: 
     try expectConstantProcess(&.{ compiler_path, "build", entry, "--run", "--cache-dir", cache, tools[0], tools[1] }, expected);
     try expectConstantProcess(&.{ compiler_path, "build", entry, "--project", "-o", output, "--cache-dir", cache, tools[0], tools[1] }, "");
     try expectConstantProcess(&.{output}, expected);
+    // RC-DEFAULT-1: collector stress needs a collector, so the stressed
+    // installed run uses a `--gc-runtime` build of the same project.
+    const collected = try std.fs.path.join(testing.allocator, &.{ root, "collected" });
+    defer testing.allocator.free(collected);
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "--project", "-o", collected, "--gc-runtime", "--cache-dir", cache, tools[0], tools[1] }, "");
     var stressed = try runtimeOptions("--gc-stress");
     defer stressed.deinit();
-    try expectConstantRun(&.{output}, &stressed, expected);
+    try expectConstantRun(&.{collected}, &stressed, expected);
 }
 
 // A module-entry `run` prints the check phase's diagnostics exactly once: a
@@ -1131,7 +1136,7 @@ test "a built executable hands main every argument and reads runtime options fro
     try testing.expectEqualStrings("count 7\n[--gc-stress]\n[--print-result]\n[--max-steps=9]\n[--restrict]\n[--allow-list]\n[--]\n[x]\n", verbatim.stdout);
     try testing.expectEqualStrings("", verbatim.stderr);
     // The runtime reads its options from the environment, quoted or bare.
-    const optioned = try runExecutable(&.{ output, "--" }, "--gc-stress \"--print-result\"");
+    const optioned = try runExecutable(&.{ output, "--" }, "--timeout=600 \"--print-result\"");
     defer testing.allocator.free(optioned.stdout);
     defer testing.allocator.free(optioned.stderr);
     try testing.expectEqualStrings("count 1\n[--]\n0\n", optioned.stdout);
@@ -1584,7 +1589,9 @@ test "build --run detects module projects and installed binaries receive the sam
 
     var link_argv: std.ArrayList([]const u8) = .empty;
     defer link_argv.deinit(testing.allocator);
-    try link_argv.appendSlice(testing.allocator, &.{ compiler_path, "build", entry, "--project", "-o", output });
+    // The installed program also runs under collector stress below, which only
+    // a `--gc-runtime` build accepts (RC-DEFAULT-1).
+    try link_argv.appendSlice(testing.allocator, &.{ compiler_path, "build", entry, "--project", "-o", output, "--gc-runtime" });
     try link_argv.appendSlice(testing.allocator, &tools);
     const link = try std.process.run(testing.allocator, testing.io, .{ .argv = link_argv.items });
     defer testing.allocator.free(link.stdout);
@@ -2034,7 +2041,9 @@ test "boundary acceptance CLI runs through run build --run and installed paths" 
 
     var link_argv: std.ArrayList([]const u8) = .empty;
     defer link_argv.deinit(testing.allocator);
-    try link_argv.appendSlice(testing.allocator, &.{ compiler_path, "build", entry, "--project", "-o", output });
+    // The installed program also runs under collector stress below, which only
+    // a `--gc-runtime` build accepts (RC-DEFAULT-1).
+    try link_argv.appendSlice(testing.allocator, &.{ compiler_path, "build", entry, "--project", "-o", output, "--gc-runtime" });
     try link_argv.appendSlice(testing.allocator, &tools);
     const link = try spawnWithEnv(link_argv.items, &plain_env);
     defer testing.allocator.free(link.stdout);
@@ -11985,6 +11994,56 @@ test "CLI RC runtime contract flags reject conflicts and preserve guest argument
     try invokeOptions("check", value_program, &.{ "--rc-runtime", "--legacy-sharing" }, 2, "", "explicit RC requires value semantics");
     try invokeOptions("fmt", value_program, &.{"--rc-runtime"}, 2, "", "runtime selection applies");
     try invokeOptions("run", value_program, &.{ "--gc-runtime", "--", "--rc-runtime" }, 0, "12\n", "");
+}
+
+// spec-case: RC-DEFAULT-1
+test "CLI builds reference counting by default and --gc-stress or --gc-runtime selects the collector" {
+    // `--gc-stress` alone selects the collector; next to an RC flag it is refused.
+    try invokeOptions("run", value_program, &.{"--gc-stress"}, 0, "12\n", "");
+    try invokeOptions("run", value_program, &.{ "--gc-runtime", "--gc-stress" }, 0, "12\n", "");
+    try invokeOptions("run", value_program, &.{ "--rc-runtime", "--gc-stress" }, 2, "", "--gc-stress stresses the tracing collector");
+    try invokeOptions("run", value_program, &.{ "--gc-stress", "--rc-runtime=stats" }, 2, "", "not --rc-runtime");
+    // A guest argument that looks like the switch selects nothing.
+    try invokeOptions("run", value_program, &.{ "--rc-runtime", "--", "--gc-stress" }, 0, "12\n", "");
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    // The default build is reference counted, so it refuses collector stress
+    // instead of running without it.
+    const counted = try buildExecutable(&temp, argv_echo);
+    defer testing.allocator.free(counted);
+    const refused = try runExecutable(&.{counted}, "--gc-stress");
+    defer testing.allocator.free(refused.stdout);
+    defer testing.allocator.free(refused.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, refused.term);
+    try testing.expectEqualStrings("", refused.stdout);
+    try testing.expectEqualStrings("mylang: --gc-stress needs a program built with --gc-runtime; this one uses reference counting\n", refused.stderr);
+    // The opt-out, by flag or by the inherited carrier, builds the collector.
+    const source = try temp.dir.realPathFileAlloc(testing.io, "argv.my", testing.allocator);
+    defer testing.allocator.free(source);
+    const root = try temp.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(root);
+    const flagged = try std.fs.path.join(testing.allocator, &.{ root, "flagged" });
+    defer testing.allocator.free(flagged);
+    try expectConstantProcess(&.{ compiler_path, "build", source, "-o", flagged, "--gc-runtime", tools[0], tools[1] }, "");
+    var carrier = try std.process.Environ.createMap(testing.environ, testing.allocator);
+    defer carrier.deinit();
+    try carrier.put("MYLANG_RUNTIME", "gc-v1");
+    const inherited = try std.fs.path.join(testing.allocator, &.{ root, "inherited" });
+    defer testing.allocator.free(inherited);
+    try expectConstantRun(&.{ compiler_path, "build", source, "-o", inherited, tools[0], tools[1] }, &carrier, "");
+    try expectStressAccepted(flagged);
+    try expectStressAccepted(inherited);
+}
+
+/// A collector build runs under `MYLANG_OPTIONS=--gc-stress` and hands `main`
+/// its one argument unchanged.
+fn expectStressAccepted(executable: []const u8) !void {
+    const stressed = try runExecutable(&.{ executable, "x" }, "--gc-stress");
+    defer testing.allocator.free(stressed.stdout);
+    defer testing.allocator.free(stressed.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, stressed.term);
+    try testing.expectEqualStrings("count 1\n[x]\n", stressed.stdout);
+    try testing.expectEqualStrings("", stressed.stderr);
 }
 
 // spec-case: RC-RUNTIME-CLI-1

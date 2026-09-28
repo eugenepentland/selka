@@ -23,6 +23,9 @@ fn run(init: std.process.Init) !void {
     // The ceilings one render runs under come from the build policy itself, so
     // only collection stress travels from the command line.
     const arguments: []const []const u8 = if (start > 1) &.{"--gc-stress"} else &.{};
+    // RC-DEFAULT-1: stress needs the collector, so a stressed render builds its
+    // guest under the tracing GC instead of the reference-counting default.
+    if (start > 1) try init.environ_map.put("MYLANG_RUNTIME", "gc-v1");
     const selected = try buildOptions(args, &start);
     if (start < args.len and std.mem.eql(u8, args[start], "--dev-session")) {
         if (start + 1 != args.len) return error.InvalidSchematic;

@@ -873,11 +873,21 @@ static int switch_control(MylQbeControls *controls, const char *option, const ch
     *slot = 1;
     return 1;
 }
+/* The control error an RC program reports for `--gc-stress`; compared by
+   address, so it is one object rather than a string literal. */
+static const char stress_needs_gc[] = "GcStressNeedsGcRuntime";
 int myl_qbe_control(MylQbeControls *controls, const char *option) {
     if (budget_control(controls, option, "--max-steps=", &controls->max_steps, &controls->seen_steps)) return 1;
     if (budget_control(controls, option, "--max-frames=", &controls->max_frames, &controls->seen_frames)) return 1;
     if (budget_control(controls, option, "--timeout=", &controls->timeout, &controls->seen_timeout)) return 1;
-    if (switch_control(controls, option, "--gc-stress", &controls->stress)) return 1;
+    if (switch_control(controls, option, "--gc-stress", &controls->stress)) {
+#if defined(MYL_NATIVE_RC) && MYL_NATIVE_RC
+        /* RC-DEFAULT-1: a reference-counted program has no collector to stress,
+           so the switch is refused rather than silently doing nothing. */
+        if (!controls->error) controls->error = stress_needs_gc;
+#endif
+        return 1;
+    }
     return switch_control(controls, option, "--print-result", &controls->print);
 }
 int mylang_qbe_run_options(uint64_t (*entry)(void *), int argc, char **argv) {
@@ -892,6 +902,10 @@ int mylang_qbe_run_options(uint64_t (*entry)(void *), int argc, char **argv) {
 int mylang_qbe_run_process(uint64_t (*entry)(void *), const MylQbeControls *controls, int argc, char **argv, const struct MylangNativeProvidersTag *providers) {
     /* Unbounded by default: the memory ceiling contains a runaway allocation,
        and --timeout=SECONDS is the elapsed-time guard. */
+    if (controls->error == stress_needs_gc) {
+        fputs("mylang: --gc-stress needs a program built with --gc-runtime; this one uses reference counting\n", stderr);
+        return 2;
+    }
     if (controls->error) {
         fprintf(stderr, "%s: QBE runtime failure\n", controls->error);
         return 2;

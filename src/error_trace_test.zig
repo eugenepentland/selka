@@ -136,6 +136,9 @@ test "a runtime operation that answers Err starts the trace at its call" {
 
 // spec-case: ERROR-TRACE-1
 test "the success paths execute no trace store: a returned Ok checks nothing and a ? records only past its error branch" {
+    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     var arena = std.heap.ArenaAllocator.init(t.allocator);
     defer arena.deinit();
     const ok_only = try emitted(arena.allocator(),
