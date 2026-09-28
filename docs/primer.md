@@ -209,7 +209,10 @@ def main(out: Stream) -> int:
 
 A function that writes a list, dict or class parameter declares it `mut`, its
 callers write `mut arg`, and a `mut` that is never written is an error. Mutating
-locals needs nothing. The compiler's message quotes the exact fix.
+locals needs nothing. The compiler's message quotes the exact fix. Two `mut`
+arguments of one call must name disjoint places: `f(mut a, mut a)`,
+`f(mut a, mut a[0])` and `f(mut xs[i], mut xs[j])` are `E_MUTATION_OVERLAP`,
+while `f(mut s.a, mut s.b)` and `f(mut xs[0], mut xs[1])` are fine.
 
 ## Numbers, strings and bytes
 

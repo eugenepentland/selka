@@ -155,6 +155,73 @@ The callee sees `source` as `[1, 2]` even though it appends to `target`, which
 is the same variable. The natural recursive helper
 `walk(adj, node, mut path, mut found)` is accepted.
 
+**Two `mut` arguments must name disjoint places.** A `mut` argument names a
+place: a variable plus a path of fields, indices and dictionary keys. Two `mut`
+arguments of one call may not name the same place, and one may not be part of
+the other, so `f(mut b, mut b)`, `f(mut a, mut a[0])` and `f(mut r, mut r.rows)`
+are `E_MUTATION_OVERLAP`. Two indices or keys count as different places only
+when both are constants that differ. `f(mut xs[i], mut xs[j])` is rejected
+because `i` and `j` may be equal. `f(mut xs[-1], mut xs[2])` is rejected
+because a negative index counts back from the end. Different fields, different
+constant indices of one sign and different constant keys are disjoint:
+
+```mylang
+# doc: value-semantics
+# doc: expect 1 2 1 2 1 2
+record Pair:
+    left: list[int]
+    right: list[int]
+
+def fill(a: mut list[int], b: mut list[int]) -> None:
+    a.append(1)
+    b.append(2)
+
+def main(out: Stream) -> int:
+    p = Pair([], [])
+    fill(mut p.left, mut p.right)
+    rows = [[0], [0], [0]]
+    fill(mut rows[0], mut rows[2])
+    table = {"a": [0], "b": [0]}
+    fill(mut table["a"], mut table["b"])
+    out.print(p.left[0], p.right[0], rows[0][1], rows[2][1], table["a"][1], table["b"][1])
+    return 0
+```
+
+```mylang
+# doc: value-semantics
+# doc: expect-error E_MUTATION_OVERLAP
+def fill(a: mut list[int], b: mut list[list[int]]) -> None:
+    a.append(1)
+    b.append([2])
+
+def main() -> int:
+    rows = [[0]]
+    fill(mut rows[0], mut rows)
+    return len(rows)
+```
+
+The error points at the second of the two arguments and says why they overlap.
+To pass one value twice, copy one into a local, pass `mut` that local and store
+it back after the call. You can also pass the enclosing value once and reach
+both parts through it:
+
+```text
+# doc: not-mylang
+error[E_MUTATION_OVERLAP]: `fill` receives overlapping `mut` arguments
+`mut rows[0]` and `mut rows`: `rows[0]` is part of `rows`, and two `mut`
+arguments of one call must name disjoint places. Copy one into a local, pass
+`mut` that local and store it back (`copy = rows[0]`, pass `mut copy`, then
+`rows[0] = copy`), or pass the enclosing value `mut rows` once
+```
+
+The rule holds for every call that takes `mut` arguments, including keyword
+arguments and calls through function values, and under `--legacy-sharing` too.
+It compares `mut` arguments only: a read-only argument next to a `mut` one
+still gets its snapshot, and a `mut` call nested inside another argument
+(`emit(mut p, make(mut p))`) finishes before the outer call starts. Because two
+`mut` parameters never name the same storage, a callee can read one while it
+writes the other.
+
 **A `mut` parameter changed only through a copy.** When the only change to a
 `mut` parameter went to a local copy of it, the parameter is never written;
 the error says how the change reaches the caller instead of suggesting to drop

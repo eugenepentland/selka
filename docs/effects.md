@@ -258,8 +258,10 @@ def main(out: Stream) -> int effects(managed_allocation, output):
 
 A read-only argument can be the same value as a `mut` argument. The callee reads
 its snapshot from before the call while the writable parameter changes the
-caller's value. `E_MUTATION_OVERLAP` still rejects two overlapping `mut`
-arguments.
+caller's value. Two `mut` arguments are different: `E_MUTATION_OVERLAP` rejects
+two `mut` arguments of one call whose places overlap, such as `f(mut a, mut a)`
+or `f(mut a, mut a[0])` (see
+[value semantics](value-semantics.md#the-rules)).
 
 ```mylang
 # doc: value-semantics

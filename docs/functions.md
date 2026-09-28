@@ -291,6 +291,10 @@ The binder name is only a label: it does not become a keyword argument and it is
 excluded from callable identity. An implementation may write fewer inputs than the
 destination footprint permits, and a call through a stored or returned callback
 uses the destination's footprint just as it uses the destination's effect ceiling.
+A call through a function value follows the same exclusivity rule as a direct
+call: its `mut` arguments must name disjoint places, so `f(mut xs, mut xs)` is
+`E_MUTATION_OVERLAP` there too
+([value semantics](value-semantics.md#the-rules)).
 
 ## Attributes
 

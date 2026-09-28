@@ -623,7 +623,8 @@ fn warnDeprecated(comptime Checker: type, self: *Checker, function: typed.Functi
 /// parameter order and `mut_positions` is the callee's declared `mut` set, so
 /// the marker is required exactly where the callee declares a write, rejected
 /// where it declares none, and rejected on a target that cannot be assigned
-/// through. Each rejection spells the replacement in its own message.
+/// through. Each rejection spells the replacement in its own message. Once
+/// every marker is right, two marked places that may overlap are rejected.
 fn checkMutationMarkers(comptime Checker: type, self: *Checker, call_name: source.Span, arguments: []const ast.NodeId, mut_positions: []const u16) Error!void {
     for (arguments, 0..) |argument, position| {
         const declared = markerPositionDeclared(mut_positions, @intCast(position));
@@ -655,6 +656,8 @@ fn checkMutationMarkers(comptime Checker: type, self: *Checker, call_name: sourc
         );
         try requireArrayMarkerTarget(Checker, self, argument, target);
     }
+    // MUT-EXCLUSIVE-1: with every marker in place, the marked places must be disjoint.
+    try @import("mut_exclusive.zig").check(Checker, self, call_name, arguments);
 }
 /// A `mut` fixed array crosses the call as the caller's own storage, so its
 /// argument must be a variable the caller can write: a local array or a

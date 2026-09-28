@@ -100,11 +100,16 @@ def write_twice(first: mut dict[int, int], second: mut dict[int, int]) -> int:
     return first[1]
 
 
-# spec-case: COW-MUT-ARGUMENT-1
-public def test_repeated_mut_places_keep_one_selected_identity() -> bool:
+# Passing one place as two `mut` arguments is E_MUTATION_OVERLAP
+# (MUT-EXCLUSIVE-1); the diagnostic's rewrite copies one into a local, passes
+# `mut` that local and stores it back.
+# spec-case: MUT-EXCLUSIVE-3
+public def test_a_place_copied_for_a_second_mut_argument_is_stored_back() -> bool:
     original = {0: {1: 7}}
-    seen = write_twice(mut original[0], mut original[0])
-    return seen == 17 and original[0][1] == 17
+    copy = original[0]
+    seen = write_twice(mut original[0], mut copy)
+    original[0] = copy
+    return seen == 13 and copy[1] == 17 and original[0][1] == 17
 
 
 def change_pair(first: mut dict[int, int], second: mut dict[int, int], source: dict[int, dict[int, int]]) -> int:
@@ -136,11 +141,12 @@ public def test_indirect_mut_argument_preserves_place_and_snapshot() -> bool:
 
 
 # spec-case: COW-MUT-ARGUMENT-1
-public def test_indirect_whole_mut_argument_keeps_readonly_snapshot() -> bool:
+public def test_indirect_whole_mut_arguments_write_their_own_places() -> bool:
     original = {1: 7}
+    other = original
     action = write_twice
-    seen = action(mut original, mut original)
-    return seen == 17 and original[1] == 17
+    seen = action(mut original, mut other)
+    return seen == 13 and original[1] == 13 and other[1] == 17
 
 
 # spec-case: COW-MUT-ARGUMENT-1

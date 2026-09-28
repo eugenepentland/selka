@@ -355,14 +355,13 @@ class Gen:
             args = []
             for (pn, pt, pm) in f.params:
                 if pm:
-                    cands = [x for x in mutables if x[1] == pt]
+                    # MUT-EXCLUSIVE-1: two `mut` arguments of one call must name
+                    # disjoint places, so a variable is passed `mut` at most once
+                    # (this generator used to pass one twice on purpose).
+                    cands = [x for x in mutables if x[1] == pt and "mut " + x[0] not in args]
                     if not cands:
                         return self.stmt(env, locals_, ind, depth, loopvars)
-                    same = [a for a in args if a.startswith("mut ") and any(c[0] == a[4:] for c in cands)]
-                    if same and r.random() < 0.6:
-                        args.append(self.pick(same))
-                    else:
-                        args.append("mut " + self.pick(cands)[0])
+                    args.append("mut " + self.pick(cands)[0])
                 else:
                     args.append(self.expr(env, pt))
             out.append(f"{pad}acc = acc + {f.name}({', '.join(args)})")

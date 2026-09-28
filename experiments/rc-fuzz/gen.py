@@ -256,7 +256,9 @@ class Gen:
             args = []
             for (pn, pt, pm) in f.params:
                 if pm:
-                    cands = [x for x in mutables if x[1] == pt]
+                    # MUT-EXCLUSIVE-1: two `mut` arguments of one call must name
+                    # disjoint places, so a variable is passed `mut` at most once.
+                    cands = [x for x in mutables if x[1] == pt and "mut " + x[0] not in args]
                     if not cands:
                         return self.stmt(env, locals_, ind, depth, loopvars)
                     args.append("mut " + self.pick(cands)[0])

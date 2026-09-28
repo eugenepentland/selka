@@ -144,8 +144,9 @@ const aliases =
     \\    return count(frame.rows, reset_other(mut other))
     \\def main() -> int:
     \\    frame = Frame([[1, 2], [3]], 0)
+    \\    second = Frame([[4]], 0)
     \\    other = Other([[1]], 0)
-    \\    total = interval(mut frame, mut frame) + operand(mut frame, mut frame)
+    \\    total = interval(mut frame, mut second) + operand(mut frame, mut second)
     \\    return total + distinct_interval(mut frame, mut other) + distinct_operand(mut frame, mut other)
 ;
 
@@ -513,6 +514,8 @@ test "RC an inlined call's first argument read out of an anchored local is bound
     try t.expectEqual(@as(usize, 1), try markersIn(carried, "matches", "# RC-ELEMENT-BORROW-3 local"));
 }
 
+// MUT-EXCLUSIVE-1 rejects `interval(mut frame, mut frame)`, so these refusals
+// are defense in depth: the callee's parameter types alone decide them.
 // spec: RC-INTERVAL-ANCHOR-3
 test "RC mut record roots another mut parameter of their type may name keep their loans" {
     try t.expect(try operationsIn(aliases, "interval") > try operationsIn(aliases, "distinct_interval"));
@@ -540,7 +543,8 @@ const list_aliases =
     \\    a = [Pin(3, Span(b"ab", 2))]
     \\    b = [Pin(4, Span(b"c", 1))]
     \\    c = [0]
-    \\    return aliased(mut a, mut a) + distinct(mut b, mut c)
+    \\    d = [Pin(5, Span(b"d", 1))]
+    \\    return aliased(mut a, mut d) + distinct(mut b, mut c)
 ;
 
 // spec: RC-INTERVAL-ANCHOR-4

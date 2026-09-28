@@ -174,12 +174,15 @@ public def test_a_nested_writing_call_between_the_reference_and_the_scalar_read(
     return seen == 102 and state.boxes[0].names == [1, 2] and state.seen == 1
 
 
+# `pair(mut state, mut state, box.tag)` is E_MUTATION_OVERLAP (MUT-EXCLUSIVE-1);
+# a second state copied out keeps the scalar read from the borrow.
 # spec-case: OWNERSHIP-MUT-RECORD-WRITE-2
-public def test_two_mut_arguments_naming_one_state_with_a_scalar_from_a_borrow() -> bool:
+public def test_two_mut_states_with_a_scalar_from_a_borrow() -> bool:
     state = State([Box(9, [1])], 0)
     box = state.boxes[0]
-    seen = pair(mut state, mut state, box.tag)
-    return seen == 0 and state.boxes[0].tag == 9 and len(state.boxes[0].names) == 0
+    other = state
+    seen = pair(mut state, mut other, box.tag)
+    return seen == 20 and state.boxes[0].names == [1, 9] and other.boxes[0].tag == 9 and len(other.boxes[0].names) == 0
 
 
 # spec-case: OWNERSHIP-MUT-RECORD-WRITE-2
@@ -204,6 +207,6 @@ def main(out: Stream) -> int:
     out.print(test_a_scalar_and_a_collection_from_one_borrow_in_one_call())
     out.print(test_a_match_binding_collection_argument_is_a_snapshot())
     out.print(test_a_nested_writing_call_between_the_reference_and_the_scalar_read())
-    out.print(test_two_mut_arguments_naming_one_state_with_a_scalar_from_a_borrow())
+    out.print(test_two_mut_states_with_a_scalar_from_a_borrow())
     out.print(test_a_loop_of_scalar_reads_through_a_growing_state())
     return 0

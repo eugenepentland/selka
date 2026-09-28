@@ -30,11 +30,14 @@ public def test_a_mut_argument_before_or_after_its_snapshot() -> bool:
     return seen_first == 2 and seen_second == 2 and first == [1, 2, 2] and second == [1, 2, 2]
 
 
+# `touch_both(mut items, mut items, items)` is E_MUTATION_OVERLAP
+# (MUT-EXCLUSIVE-1); a read-only snapshot of one `mut` operand stays legal.
 # spec-case: VALUE-SEMANTICS-5
-public def test_two_mut_operands_keep_one_caller_value() -> bool:
+public def test_two_mut_operands_and_a_snapshot_of_one_of_them() -> bool:
     items = [1, 2]
-    seen = touch_both(mut items, mut items, items)
-    return seen == 2 and items == [1, 2, 2, 2]
+    others = [7]
+    seen = touch_both(mut items, mut others, items)
+    return seen == 2 and items == [1, 2, 2] and others == [7, 2]
 
 
 # spec-case: VALUE-SEMANTICS-5

@@ -6,7 +6,6 @@ import effects_case_2 as c2
 import effects_case_3 as c3
 import effects_case_4 as c4
 import effects_case_5 as c5
-import effects_case_6 as c6
 
 
 # spec-case: MUTATION-METADATA-1
@@ -27,10 +26,6 @@ public def test_m2_generic_helpers_carry_mutation_permission() -> bool:
 # spec-case: MUTATION-METADATA-1
 public def test_m2_read_only_queries_require_no_mutation_per() -> bool:
     return c5.program() == 0
-
-# spec-case: MUTATION-METADATA-1
-public def test_m2_two_writable_aliases_remain_permitted() -> bool:
-    return c6.program() == -1
 
 def main() -> int:
     return 0

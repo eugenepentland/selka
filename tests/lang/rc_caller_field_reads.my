@@ -90,13 +90,15 @@ public def test_repeated_entry_and_rebinding_keep_anchor_current() -> bool:
     return total == 40 and cursor.index == 0
 
 
+# `cross(mut cursor, mut cursor)` is E_MUTATION_OVERLAP (MUT-EXCLUSIVE-1), so
+# the two inout homes are always distinct; swapping them keeps both readers.
 # spec-case: RC-CALLER-FIELD-READ-1
-public def test_distinct_and_aliased_inout_homes() -> bool:
+public def test_distinct_inout_homes_in_both_orders() -> bool:
     cursor = Cursor([7], 0)
     second = Cursor([11], 0)
     first = cross(mut cursor, mut second)
-    alias = cross(mut cursor, mut cursor)
-    return first == 7 and alias == 7 and second.code == [31] and cursor.code == [31]
+    again = cross(mut second, mut cursor)
+    return first == 7 and again == 31 and second.code == [31] and cursor.code == [31]
 
 
 # spec-case: RC-CALLER-FIELD-READ-1

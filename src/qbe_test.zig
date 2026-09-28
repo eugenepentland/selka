@@ -3149,6 +3149,8 @@ test "QBE-MOVE-ELIDE-1 a mut record parameter updates its scalar field in caller
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, named(parsed.value, "push").?.il, "memset(l %l"));
 }
 
+// `observe(mut p, mut p)` is E_MUTATION_OVERLAP (MUT-EXCLUSIVE-1), so the store
+// back is kept as defense in depth: the callee alone decides it.
 // spec-case: QBE-MOVE-ELIDE-1
 test "QBE-MOVE-ELIDE-1 two mut parameters of one type keep the observable store back" {
     const saved = value_semantics.enabled();
@@ -3167,7 +3169,8 @@ test "QBE-MOVE-ELIDE-1 two mut parameters of one type keep the observable store 
         \\
         \\def main() -> int:
         \\    p = Pair(x=0, y=0)
-        \\    return observe(mut p, mut p) * 10 + p.x
+        \\    q = Pair(x=0, y=0)
+        \\    return observe(mut p, mut q) * 10 + p.x
     );
     defer parsed.deinit();
     try std.testing.expect((try blits(parsed.value, "observe")) >= 2);

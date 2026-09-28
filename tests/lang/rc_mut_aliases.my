@@ -1,7 +1,9 @@
-# Two `mut` arguments may name one caller variable (VALUE-SEMANTICS-5). A
-# write through one of them replaces a field the other is still reading, so
-# RC keeps the reader's loan (RC-INTERVAL-ANCHOR-3). Answers match the
-# collector; RC counting builds balance.
+# Two `mut` record parameters of one type keep their loans (RC-INTERVAL-ANCHOR-3)
+# even though MUT-EXCLUSIVE-1 now rejects a call passing one variable to both
+# (`interval(mut frame, mut frame)` is E_MUTATION_OVERLAP, tested in
+# src/mut_exclusive_test.zig). These calls pass distinct variables: a write
+# through one parameter must leave the other's reads untouched. Answers match
+# the collector; RC counting builds balance.
 record Frame:
     rows: list[list[int]]
     n: int
@@ -33,20 +35,22 @@ def operand(frame: mut Frame, other: mut Frame) -> int:
 
 
 # spec-case: RC-INTERVAL-ANCHOR-3
-public def test_a_receiver_read_survives_a_write_through_an_aliasing_mut_argument() -> bool:
+public def test_a_receiver_read_survives_a_write_through_another_mut_argument() -> bool:
     frame = Frame([[1, 2], [3]], 0)
-    seen = interval(mut frame, mut frame)
-    return seen == 2 and frame.rows == [[7, 7, 7]] and frame.n == 1
+    other = Frame([[4]], 0)
+    seen = interval(mut frame, mut other)
+    return seen == 2 and frame.rows == [[1, 2], [3]] and other.rows == [[7, 7, 7]] and frame.n == 1
 
 
 # spec-case: RC-INTERVAL-ANCHOR-3
-public def test_an_argument_read_survives_a_write_through_an_aliasing_mut_argument() -> bool:
+public def test_an_argument_read_survives_a_write_through_another_mut_argument() -> bool:
     frame = Frame([[1, 2], [3]], 0)
-    seen = operand(mut frame, mut frame)
-    return seen == 210 and frame.rows == [[7, 7, 7]] and frame.n == 1
+    other = Frame([[4]], 0)
+    seen = operand(mut frame, mut other)
+    return seen == 210 and frame.rows == [[1, 2], [3]] and other.rows == [[7, 7, 7]] and frame.n == 1
 
 
 def main(out: Stream) -> int:
-    out.print(test_a_receiver_read_survives_a_write_through_an_aliasing_mut_argument())
-    out.print(test_an_argument_read_survives_a_write_through_an_aliasing_mut_argument())
+    out.print(test_a_receiver_read_survives_a_write_through_another_mut_argument())
+    out.print(test_an_argument_read_survives_a_write_through_another_mut_argument())
     return 0

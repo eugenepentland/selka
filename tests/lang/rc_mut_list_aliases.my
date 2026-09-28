@@ -1,6 +1,9 @@
-# Two `mut` arguments may name one caller value, or one may sit inside the
-# other (VALUE-SEMANTICS-5). A value read out of one `mut` list parameter must
-# survive a write through the other, so RC keeps its token (RC-INTERVAL-ANCHOR-4).
+# A value read out of one `mut` list parameter keeps its token while another
+# `mut` parameter whose type equals, holds or is held by its type is written
+# (RC-INTERVAL-ANCHOR-4). MUT-EXCLUSIVE-1 now rejects a call making the two
+# overlap (`replace_first(mut a, mut a)`, `contained(mut frame, mut
+# frame.rows)` are E_MUTATION_OVERLAP, tested in src/mut_exclusive_test.zig),
+# so these calls pass disjoint places and the reads must survive the writes.
 # Answers match the collector; RC counting builds balance.
 record Span:
     source: bytes
@@ -66,17 +69,19 @@ def contained(frame: mut Frame, rows: mut list[list[int]]) -> int:
 
 
 # spec-case: RC-INTERVAL-ANCHOR-4
-public def test_an_element_read_survives_a_store_through_an_aliasing_mut_list() -> bool:
+public def test_an_element_read_survives_a_store_through_another_mut_list() -> bool:
     a = [pin(3, b"abc" + b"def"), pin(4, b"de")]
-    seen = replace_first(mut a, mut a)
-    return seen == 3157 and len(a) == 3 and a[0].part == 1
+    other = a
+    seen = replace_first(mut a, mut other)
+    return seen == 3157 and len(a) == 3 and a[0].part == 3 and other[0].part == 1 and len(other) == 2
 
 
 # spec-case: RC-INTERVAL-ANCHOR-4
-public def test_an_element_read_survives_a_clear_through_an_aliasing_mut_list() -> bool:
+public def test_an_element_read_survives_a_clear_through_another_mut_list() -> bool:
     b = [pin(3, b"abc" + b"def"), pin(4, b"de")]
-    seen = clear_other(mut b, mut b)
-    return seen == 3157 and len(b) == 0
+    other = b
+    seen = clear_other(mut b, mut other)
+    return seen == 3157 and len(b) == 3 and len(other) == 0
 
 
 # spec-case: RC-INTERVAL-ANCHOR-4
@@ -87,10 +92,17 @@ public def test_distinct_mut_lists_still_answer_the_same() -> bool:
     return seen == 3157 and len(a) == 3 and c[0].part == 1
 
 
-def main(out: Stream) -> int:
-    out.print(test_an_element_read_survives_a_store_through_an_aliasing_mut_list())
-    out.print(test_an_element_read_survives_a_clear_through_an_aliasing_mut_list())
-    out.print(test_distinct_mut_lists_still_answer_the_same())
+# spec-case: RC-INTERVAL-ANCHOR-4
+public def test_a_record_read_survives_a_wipe_through_a_held_mut_list() -> bool:
     frame = Frame([[1, 2], [3]], 0)
-    out.print(contained(mut frame, mut frame.rows))
+    rows = frame.rows
+    seen = contained(mut frame, mut rows)
+    return seen == 20 and frame.rows == [[1, 2], [3]] and frame.n == 1 and len(rows) == 0
+
+
+def main(out: Stream) -> int:
+    out.print(test_an_element_read_survives_a_store_through_another_mut_list())
+    out.print(test_an_element_read_survives_a_clear_through_another_mut_list())
+    out.print(test_distinct_mut_lists_still_answer_the_same())
+    out.print(test_a_record_read_survives_a_wipe_through_a_held_mut_list())
     return 0

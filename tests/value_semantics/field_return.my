@@ -163,11 +163,14 @@ public def test_retained_temporary_and_other_destination_stay_independent() -> b
     return size == 3 and owner.box.items == [1, 2] and owner.other.items == [1, 2, 2]
 
 
+# `observe_alias(mut owner, mut owner)` is E_MUTATION_OVERLAP (MUT-EXCLUSIVE-1);
+# a copy sharing the original field must not see the temporary's write.
 # spec-case: COW-FIELD-RETURN-1
-public def test_two_mut_parameters_can_observe_the_same_original_field() -> bool:
+public def test_a_second_mut_parameter_observes_its_own_original_field() -> bool:
     owner = Owner(Box([1]), Box([]))
-    seen = observe_alias(mut owner, mut owner)
-    return seen == 1 and owner.box.items == [1, 2] and owner.other.items == [9]
+    other = owner
+    seen = observe_alias(mut owner, mut other)
+    return seen == 1 and owner.box.items == [1, 2] and owner.other.items == [] and other.box.items == [1] and other.other.items == [9]
 
 
 # spec-case: COW-FIELD-RETURN-1

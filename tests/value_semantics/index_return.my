@@ -165,10 +165,14 @@ def alias_parameter(items: mut list[Item], other: mut list[Item], index: int) ->
     return seen
 
 
+# `alias_parameter(mut items, mut items, 0)` is E_MUTATION_OVERLAP
+# (MUT-EXCLUSIVE-1); a copy sharing the element must not see the early write.
 # spec-case: COW-INDEX-RETURN-1
 public def test_other_mut_parameter_cannot_observe_early_mutation() -> bool:
     items = [Item.payload(Payload(0, [1]))]
-    return alias_parameter(mut items, mut items, 0) == 1 and contents(items, 0) == [1, 2]
+    other = items
+    seen = alias_parameter(mut items, mut other, 0)
+    return seen == 1 and contents(items, 0) == [1, 2] and len(items) == 1 and contents(other, 0) == [1] and len(other) == 2
 
 
 def grow_parent(items: mut list[Item], index: int):
