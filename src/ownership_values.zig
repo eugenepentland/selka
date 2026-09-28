@@ -46,10 +46,11 @@ pub fn decide(ctx: *const Context) Error![]const bool {
     const copies = try a.alloc(bool, code.len);
     @memset(copies, false);
     const arms = try armSwitches(ctx);
-    const raw = try rawAliases(ctx, arms);
+    const handed = try handovers(ctx);
+    const raw = try rawAliases(ctx, arms, handed);
     const owners = try ctx.allocator.alloc(bool, raw.len);
     for (owners, raw, 0..) |*owner, alias, index| owner.* = index >= ctx.locals.params and ctx.role(@intCast(index)) == .owned and !alias;
-    const step: Step = .{ .ctx = ctx, .owners = owners, .raw = raw, .arms = arms };
+    const step: Step = .{ .ctx = ctx, .owners = owners, .raw = raw, .arms = arms, .handed = handed };
     // Each round can only take locals out of `owners`, so it settles.
     var rounds: usize = 0;
     while (rounds <= ctx.locals.list.len + 1) : (rounds += 1) {
@@ -63,7 +64,7 @@ pub fn decide(ctx: *const Context) Error![]const bool {
 /// Per local, whether some store fills it from a place with no copy site in
 /// between, so it may hold that place itself: a compiler temporary, a spliced
 /// callee's parameter, or a match binding whose arm keeps the payload as it is.
-fn rawAliases(ctx: *const Context, arms: []const u32) Error![]bool {
+fn rawAliases(ctx: *const Context, arms: []const u32, handed: []const u32) Error![]bool {
     const code = ctx.instructions();
     const raw = try ctx.allocator.alloc(bool, ctx.locals.list.len);
     @memset(raw, false);
@@ -74,7 +75,8 @@ fn rawAliases(ctx: *const Context, arms: []const u32) Error![]bool {
         switch (instruction.op) {
             .store_local => |slot| {
                 const copied = pc > 0 and code[pc - 1].op == .value_copy;
-                if (!copied and !fresh) raw[li(slot)] = true;
+                const own = copied or fresh or handed[pc] != none;
+                if (!own) raw[li(slot)] = true;
             },
             .switch_variant => |dispatch| for (dispatch.arms) |arm| if (arm.slot) |slot| {
                 if (!fresh and !payloadCopied(code, arms, arm.target)) raw[li(slot)] = true;
@@ -82,7 +84,48 @@ fn rawAliases(ctx: *const Context, arms: []const u32) Error![]bool {
             else => {},
         }
     }
+    // A temporary that took over a value which is itself a place's still
+    // names that place.
+    var changed = true;
+    while (changed) {
+        changed = false;
+        for (handed, 0..) |source, pc| {
+            if (source == none) continue;
+            const target = li(code[pc].op.store_local);
+            if (raw[source] and !raw[target]) {
+                raw[target] = true;
+                changed = true;
+            }
+        }
+    }
     return raw;
+}
+
+/// VALUE-SEMANTICS-13: per instruction, the owned local whose value the
+/// compiler temporary stored there takes over, else `none`:
+/// `load_local s; store_local t` with `t` a temporary and `s` an owned local
+/// that is never read again, as lowering stages the right-hand side of a field
+/// store. The temporary then holds that value itself, not a place, so its own
+/// last read can move it.
+fn handovers(ctx: *const Context) Error![]u32 {
+    const code = ctx.instructions();
+    const from = try ctx.allocator.alloc(u32, code.len);
+    @memset(from, none);
+    for (code, 0..) |instruction, pc| {
+        if (pc == 0 or !ctx.reachable(pc) or ctx.flow.targets[pc]) continue;
+        const target = switch (instruction.op) {
+            .store_local => |slot| li(slot),
+            else => continue,
+        };
+        const source = switch (code[pc - 1].op) {
+            .load_local => |slot| li(slot),
+            else => continue,
+        };
+        if (source == target or source < ctx.locals.params or !ctx.temporary(target)) continue;
+        if (ctx.role(source) != .owned or ctx.live.after(pc - 1, source)) continue;
+        from[pc] = source;
+    }
+    return from;
 }
 
 /// Whether the arm starting at `target` rebinds its payload through a copy
@@ -115,10 +158,21 @@ const Step = struct {
     owners: []bool,
     raw: []const bool,
     arms: []const u32,
+    /// Per store, the local a temporary took its value over from (`handovers`).
+    handed: []const u32,
 
     /// Classify every copy site once; answer whether a local left `owners`.
     fn round(self: Step, copies: []bool) bool {
         var changed = false;
+        // A temporary that took over a value its source only borrowed does not own it either.
+        for (self.handed, 0..) |source, pc| {
+            if (source == none) continue;
+            const target = li(self.ctx.instructions()[pc].op.store_local);
+            if (!self.owners[source] and self.owners[target]) {
+                self.owners[target] = false;
+                changed = true;
+            }
+        }
         for (self.ctx.instructions(), 0..) |instruction, pc| {
             const copy = switch (instruction.op) {
                 .value_copy => |copy| copy,

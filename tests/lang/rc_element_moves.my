@@ -220,3 +220,39 @@ public def test_near_miss_arms_keep_value_semantics() -> bool:
     early(mut objects, 0, -1)
     early(mut objects, 1, 4)
     return entries_of(objects[0]) == [2, 12, 3] and entries_of(objects[1]) == [2, 12, 4] and klass_of(objects[0]) == 2
+
+
+record Holder:
+    items: list[int]
+    count: int
+
+
+def fill(h: mut Holder):
+    items = [1, 2]
+    items.append(3)
+    h.items = items
+
+
+# spec-case: VALUE-SEMANTICS-13
+public def test_field_store_of_a_dead_local_hands_the_value_over() -> bool:
+    h = Holder([], 0)
+    fill(mut h)
+    h.items.append(4)
+    return h.items == [1, 2, 3, 4]
+
+
+public def test_field_store_then_a_local_read_keeps_a_copy() -> bool:
+    h = Holder([], 0)
+    items = [1]
+    h.items = items
+    items.append(2)
+    return h.items == [1] and items == [1, 2]
+
+
+public def test_field_store_in_a_loop_copies_each_time() -> bool:
+    h = Holder([], 0)
+    items = [0]
+    for i in range(3):
+        h.items = items
+        items.append(i)
+    return h.items == [0, 0, 1] and items == [0, 0, 1, 2]
