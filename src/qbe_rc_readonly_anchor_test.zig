@@ -280,6 +280,7 @@ const range_keys =
 
 // spec: RC-ANCHORED-RANGE-KEY-1
 test "RC range keys sliced from a never-written read-only parameter take no loan or retain" {
-    try t.expectEqual(@as(usize, 0), try operationsIn(range_keys, "frequencies"));
-    try t.expect(try operationsIn(range_keys, "rebound") > 0);
+    // The one retain left is the returned dictionary's take-or-copy.
+    try t.expectEqual(@as(usize, 1), try operationsIn(range_keys, "frequencies"));
+    try t.expect(try operationsIn(range_keys, "rebound") > 1);
 }
