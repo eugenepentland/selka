@@ -1999,6 +1999,14 @@ const Emitter = struct {
             if (self.isBranchTarget(consumer) or writesLocalAt(self.function, consumer, index)) return false;
             const after = if (consumer + 1 < self.states.len) self.states[consumer + 1] else null;
             const height = if (after) |stack| stack.len else 0;
+            // QBE-AGGREF-10: a field or fixed-array element read of an
+            // aggregate member leaves an address into this local's slot in the
+            // same operand, so the borrow lasts until that projection is
+            // consumed: `f(r.p, g(mut r))` must not pass `r.p` after `g` ran.
+            if (height == slot + 1 and after != null and self.projectsAddress(consumer, after.?[slot])) {
+                consumer += 1;
+                continue;
+            }
             if (height <= slot + 1) break;
             consumer += 1;
         }
@@ -2011,6 +2019,15 @@ const Emitter = struct {
         // the scratch copy the other locals use.
         if (op == .switch_variant) for (op.switch_variant.arms) |arm| if (arm.slot) |target| if (@backingInt(target) == index) return false;
         return consumesOperand(op);
+    }
+    /// Whether the instruction at `pc` projects an aggregate member out of
+    /// the operand below it without copying it: the result is an address
+    /// into the operand's own storage.
+    fn projectsAddress(self: *Emitter, pc: usize, result: typed.Type) bool {
+        return switch (self.function.scope.instructions[pc].op) {
+            .get_field, .get_index => !scalar(result, self.program.records),
+            else => false,
+        };
     }
     /// Whether local `index` is a `mut` fixed-array parameter, or under value
     /// semantics a `mut` record parameter (`VALUE-SEMANTICS-3`). Its slot holds
