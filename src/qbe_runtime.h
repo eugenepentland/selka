@@ -394,6 +394,10 @@ int mylang_qbe_run_options(uint64_t (*entry)(void *), int argc, char **argv);
  * first. A host that runs the guest more than once in one process must never
  * call this: it would leave the heap of every run but the last unreclaimed. */
 void myl_qbe_exit_without_sweep(void);
+/* RC-EXIT-SKIP-1: the entry function's return asks whether its frame may keep
+ * its owners instead of releasing them one by one (nonzero: skip). Generated
+ * code tests this once at the entry's return; see `qbe_exit_skip.zig`. */
+int myl_qbe_exit_skip(void *);
 /* ERROR-TRACE-1: where an `Err` came from. One site is the function metadata
  * whose code recorded it and a word holding the recording pc in its low 32 bits
  * and the kind above them. The origin is the `Err(...)` construction (or the

@@ -397,7 +397,53 @@ pub fn elideDeadRcDrops(a: std.mem.Allocator, text: []const u8) GenerateError![]
     while (names.next()) |name| _ = dead.remove(name.*);
     const folded = try foldDeadGuards(a, text, &dead);
     defer a.free(folded);
-    return dropUnreadRoles(a, folded);
+    const unskipped = try dropEmptyExitSkips(a, folded);
+    defer a.free(unskipped);
+    return dropUnreadRoles(a, unskipped);
+}
+/// RC-EXIT-SKIP-1: an entry's return asks `myl_qbe_exit_skip` before its drops.
+/// When every one of those drops was dead, the question guards nothing, so the
+/// call and its two labels go too. The lines are the ones `qbe_rc_frame.zig`
+/// writes: the mark comment, the call, the `jnz`, then the two labels.
+fn dropEmptyExitSkips(a: std.mem.Allocator, text: []const u8) GenerateError![]u8 {
+    var lines: std.ArrayList([]const u8) = .empty;
+    defer lines.deinit(a);
+    var scan = std.mem.splitScalar(u8, text, '\n');
+    while (scan.next()) |line| try lines.append(a, line);
+    var kept: std.ArrayList(u8) = .empty;
+    errdefer kept.deinit(a);
+    var index: usize = 0;
+    while (index < lines.items.len) : (index += 1) {
+        if (std.mem.eql(u8, lines.items[index], " # RC-EXIT-SKIP-1")) {
+            if (emptyExitSkip(lines.items, index)) |end| {
+                index = end;
+                continue;
+            }
+        }
+        try kept.appendSlice(a, lines.items[index]);
+        try kept.append(a, '\n');
+    }
+    if (kept.items.len != 0) _ = kept.pop();
+    return kept.toOwnedSlice(a);
+}
+/// The index of the closing `@rcexitdoneL` when the skip test opened at `index`
+/// brackets nothing but comments, or null.
+fn emptyExitSkip(lines: []const []const u8, index: usize) ?usize {
+    if (index + 4 >= lines.len or !std.mem.containsAtLeast(u8, lines[index + 1], 1, "call $myl_qbe_exit_skip(")) return null;
+    const branch = lines[index + 2];
+    const at = std.mem.indexOf(u8, branch, ", @rcexitdone") orelse return null;
+    const comma = std.mem.indexOfPos(u8, branch, at + 1, ", @rcexitdrop") orelse return null;
+    const label = branch[at + ", @rcexitdone".len .. comma];
+    if (!allDigits(label) or !std.mem.eql(u8, branch[comma + ", @rcexitdrop".len ..], label)) return null;
+    const opened = lines[index + 3];
+    if (!std.mem.startsWith(u8, opened, "@rcexitdrop") or !std.mem.eql(u8, opened["@rcexitdrop".len..], label)) return null;
+    var end = index + 4;
+    while (end < lines.len) : (end += 1) {
+        const line = lines[end];
+        if (std.mem.startsWith(u8, line, "@rcexitdone") and std.mem.eql(u8, line["@rcexitdone".len..], label)) return end;
+        if (!std.mem.startsWith(u8, line, " #")) return null;
+    }
+    return null;
 }
 /// `%rcgN` / `%rcrN` exactly (`kind` 'g' or 'r').
 fn flagSlot(name: []const u8, kind: u8) bool {
@@ -913,6 +959,25 @@ test "RC flag passes report allocation failure without leaking a partial rewrite
     try std.testing.checkAllAllocationFailures(std.testing.allocator, forwardAndFree, .{" %v1 =l copy %rcg0\n storew 1, %v1"});
 }
 const dead_zero: std.StringHashMapUnmanaged(void) = .empty;
+
+// spec-case: RC-EXIT-SKIP-1
+test "RC-EXIT-SKIP-1 the skip test goes when every drop it brackets was dead and stays otherwise" {
+    const a = std.testing.allocator;
+    const empty = " ret 0\n # RC-EXIT-SKIP-1\n %v7 =w call $myl_qbe_exit_skip(l %ctx)\n jnz %v7, @rcexitdone8, @rcexitdrop8\n@rcexitdrop8\n # RC-DICTIONARY-EMPTY-DROPS-1 slot 0\n@rcexitdone8\n ret %v1";
+    const removed = try dropEmptyExitSkips(a, empty);
+    defer a.free(removed);
+    try std.testing.expectEqualStrings(" ret 0\n ret %v1", removed);
+    const live = " # RC-EXIT-SKIP-1\n %v7 =w call $myl_qbe_exit_skip(l %ctx)\n jnz %v7, @rcexitdone8, @rcexitdrop8\n@rcexitdrop8\n call $f(l %ctx)\n@rcexitdone8\n ret %v1";
+    const kept = try dropEmptyExitSkips(a, live);
+    defer a.free(kept);
+    try std.testing.expectEqualStrings(live, kept);
+    var failing = std.testing.FailingAllocator.init(a, .{ .fail_index = 0 });
+    try std.testing.expectError(error.OutOfMemory, dropEmptyExitSkips(failing.allocator(), live));
+    try std.testing.checkAllAllocationFailures(a, skipAndFree, .{empty});
+}
+fn skipAndFree(a: std.mem.Allocator, text: []const u8) !void {
+    a.free(try dropEmptyExitSkips(a, text));
+}
 fn rewriteAndFree(a: std.mem.Allocator, text: []const u8) !void {
     a.free(try elideDeadRcDrops(a, text));
 }
