@@ -52,7 +52,8 @@ const Operand = struct { node: typed.NodeId, lent: bool };
 /// Find `facts.function`'s snapshots. Every allocation comes from `allocator`,
 /// which must be an arena: nothing is freed on its own.
 pub fn find(allocator: std.mem.Allocator, facts: *const values.Facts) Error!Snapshots {
-    var finder: Finder = .{ .allocator = allocator, .facts = facts, .written = try writtenTemporaries(allocator, facts) };
+    const written = try writtenTemporaries(allocator, facts);
+    var finder: Finder = .{ .allocator = allocator, .facts = facts, .written = written, .places = try writePlaces(allocator, facts, written) };
     var walker = try typed_walk.Walker.init(allocator, facts.program, facts.function.scope.body);
     defer walker.deinit();
     while (try walker.next()) |item| switch (item) {
@@ -94,10 +95,63 @@ fn writtenTemporaries(allocator: std.mem.Allocator, facts: *const values.Facts) 
     return written;
 }
 
+/// Every node on the path a write goes through: the value a written compiler
+/// temporary is filled with, its field and index bases, and, through another
+/// temporary on that path, that temporary's own fill. A fixed-array read on
+/// such a path is a pending writing place (`COW-NESTED-1`), not a lent value.
+fn writePlaces(allocator: std.mem.Allocator, facts: *const values.Facts, written: []const bool) Error!std.AutoHashMapUnmanaged(typed.NodeId, void) {
+    const fills = try allocator.alloc(std.ArrayList(typed.NodeId), facts.synthetic.len);
+    for (fills) |*list| list.* = .empty;
+    var walker = try typed_walk.Walker.init(allocator, facts.program, facts.function.scope.body);
+    defer walker.deinit();
+    while (try walker.next()) |item| switch (item) {
+        .expression => {},
+        .statement => |id| switch (facts.program.statements[@backingInt(id)].data) {
+            .initialize, .assign => |store| if (facts.synthetic[@backingInt(store.slot)]) try fills[@backingInt(store.slot)].append(allocator, store.value),
+            else => {},
+        },
+    };
+    var places: std.AutoHashMapUnmanaged(typed.NodeId, void) = .empty;
+    const visited = try allocator.alloc(bool, facts.synthetic.len);
+    @memset(visited, false);
+    var pending: std.ArrayList(usize) = .empty;
+    for (written, 0..) |flag, slot| if (flag) try pending.append(allocator, slot);
+    while (pending.pop()) |slot| {
+        if (visited[slot]) continue;
+        visited[slot] = true;
+        for (fills[slot].items) |value| {
+            const through = try markPath(allocator, facts, value, &places) orelse continue;
+            try pending.append(allocator, through);
+        }
+    }
+    return places;
+}
+
+/// Add `value` and its field and index bases to `places`; answer the compiler
+/// temporary the path starts from, if it starts from one.
+fn markPath(allocator: std.mem.Allocator, facts: *const values.Facts, value: typed.NodeId, places: *std.AutoHashMapUnmanaged(typed.NodeId, void)) Error!?usize {
+    var current = value;
+    var hops: usize = 0;
+    while (hops < 64) : (hops += 1) {
+        try places.put(allocator, current, {});
+        switch (facts.program.nodes[@backingInt(current)].data) {
+            .field => |field| current = field.base,
+            .index => |access| current = access.base,
+            .unwrap, .wrap, .cast => |inner| current = inner,
+            .block_value => |block| current = block.value,
+            .local => |local| return if (facts.synthetic[@backingInt(local)]) @backingInt(local) else null,
+            else => return null,
+        }
+    }
+    return null;
+}
+
 const Finder = struct {
     allocator: std.mem.Allocator,
     facts: *const values.Facts,
     written: []const bool,
+    /// The nodes a write goes through (`writePlaces`), never lent operands.
+    places: std.AutoHashMapUnmanaged(typed.NodeId, void),
     found: Snapshots = .{},
 
     fn program(self: *const Finder) typed.Program {
@@ -145,6 +199,9 @@ const Finder = struct {
             // (`COW-READ-RECEIVER-1`); a fixed array is read in place.
             .index => |access| {
                 if (!fixedArray(self.program(), self.program().nodes[@backingInt(access.base)].ty)) return;
+                // A pending write through the element keeps the receiver's
+                // identity instead (`COW-NESTED-1`).
+                if (self.places.contains(id)) return;
                 try list.append(self.allocator, .{ .node = access.base, .lent = true });
                 try list.append(self.allocator, .{ .node = access.index, .lent = true });
             },

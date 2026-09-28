@@ -514,3 +514,16 @@ public def test_min_of_two_evaluates_each_argument_once() -> bool:
     xs = [1, 2, 3]
     v = min(10, push(mut xs) + len(xs))
     return v == 5 and len(xs) == 4
+
+
+def bump_first(value: mut dict[str, [1]list[int]]) -> int:
+    value["k"][0].append(7)
+    return 0
+
+
+# spec-case: VALUE-SEMANTICS-14
+public def test_a_write_through_a_fixed_array_read_keeps_the_pending_place() -> bool:
+    original: dict[str, [1]list[int]] = {"k": [[1]]}
+    changed = original
+    changed["k"][bump_first(mut changed)].append(2)
+    return original["k"][0] == [1] and changed["k"][0] == [1, 7, 2]
