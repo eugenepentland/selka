@@ -651,6 +651,71 @@ static void drain_releases_trees_inline(void) {
     assert(after.events[MYL_RC_STAT_OWNER_RELEASE] == before.events[MYL_RC_STAT_OWNER_RELEASE] + 200);
     finish(&heap);
 }
+/* A binary node: two unconditional owned edges (RC-DRAIN-PAIR-1). */
+static const myl_native_field node_fields[] = {{.type = &pointer}, {.offset = 8, .type = &pointer}};
+static const myl_native_type node = {.size = 16, .alignment = 8, .kind = MYL_NATIVE_RECORD, .fields = node_fields, .field_count = 2};
+static const myl_rc_field node_edges[] = {{.shape = &owned}, {.offset = 8, .shape = &owned}};
+static const myl_rc_shape node_shape = {.size = 16, .kind = MYL_RC_SHAPE_RECORD, .as.record = {node_edges, 2}};
+static const myl_rc_descriptor node_descriptors[] = {{.type = &node, .shape = &node_shape}};
+static const myl_rc_module node_module = {.abi = MYL_RC_ABI_VERSION, .descriptors = node_descriptors, .descriptor_count = 1};
+typedef struct { void *left, *right; } Node;
+/* A perfect tree of `depth`: each bottom node owns one fresh extent on its
+ * right and shares `leaf` (one more owner each) on its left. */
+static Node *grow(myl_native_heap *heap, unsigned depth, void *leaf) {
+    Node *body = myl_native_heap_alloc(heap, &node, 1);
+    assert(body);
+    if (depth) {
+        body->left = grow(heap, depth - 1, leaf);
+        body->right = grow(heap, depth - 1, leaf);
+        return body;
+    }
+    assert(myl_rc_owner_acquire(heap, leaf) == MYL_RC_OK);
+    body->left = leaf;
+    body->right = bytes8(heap);
+    return body;
+}
+// spec-case: RC-DRAIN-PAIR-1
+static void drain_pairs_keep_counts_exact(void) {
+    myl_native_heap heap;
+    start(&heap);
+    assert(myl_rc_module_register(&heap, &node_module) == MYL_RC_OK);
+    const myl_rc_flat *flat = plan(&heap, &node);
+    assert(flat->count == 2 && flat->all == 3 && !flat->conditional);
+    size_t live = heap.objects_live;
+    void *leaf = bytes8(&heap);
+    Node *root = grow(&heap, 6, leaf);
+    assert(heap.objects_live == live + 192 && header(leaf)->owners == 65);
+    /* An outside owner keeps one depth-4 subtree, and an outside hold keeps
+     * another subtree's root (and so its children) past its last owner. */
+    Node *kept = ((Node *)root->left)->right;
+    Node *held = ((Node *)root->right)->left;
+    assert(myl_rc_owner_acquire(&heap, kept) == MYL_RC_OK);
+    myl_rc_hold hold;
+    assert(myl_rc_hold_acquire(&heap, held, &hold) == MYL_RC_OK);
+    myl_rc_counters before, after;
+    assert(myl_rc_stats_snapshot(&heap, &before));
+    size_t pushed = heap.rc_cache.pushed;
+    /* 65 nodes and the 32 extents of their bottom nodes die, alternating
+     * types within one drain; both classes have a 48-byte stride. */
+    myl_rc_owner_release(&heap, root);
+    assert(!heap.rc->dead.head && !heap.rc->dead.active);
+    assert(heap.objects_live == live + 95 && header(leaf)->owners == 33);
+    assert(header(kept)->owners == 1 && !header(held)->owners && header(held)->holds == 1);
+    assert(myl_rc_stats_snapshot(&heap, &after));
+    assert(after.events[MYL_RC_STAT_RETIRE] == before.events[MYL_RC_STAT_RETIRE] + 97);
+    assert(heap.rc_cache.pushed == pushed + 97 * 48);
+    myl_rc_hold_release(&heap, &hold);
+    assert(heap.objects_live == live + 48 && header(leaf)->owners == 17);
+    myl_rc_owner_release(&heap, kept);
+    assert(heap.objects_live == live + 1 && header(leaf)->owners == 1);
+    /* The listed slots are reused: a second tree allocates from them. */
+    root = grow(&heap, 6, leaf);
+    assert(heap.objects_live == live + 192);
+    myl_rc_owner_release(&heap, root);
+    myl_rc_owner_release(&heap, leaf);
+    assert(heap.objects_live == live);
+    finish(&heap);
+}
 // spec-case: RC-PLAIN-TYPE-1
 static void plain_elements_copy_as_bytes(void) {
     myl_native_heap heap;
@@ -717,13 +782,14 @@ int myl_rc_fast_verify(void) {
     scope_backing_shares_the_pin_entry();
     allocation_cache_reuse();
     drain_releases_trees_inline();
+    drain_pairs_keep_counts_exact();
     plain_elements_copy_as_bytes();
-    return 19;
+    return 20;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
-    assert(myl_rc_fast_verify() == 19);
-    puts("native RC fast paths: 19 tests passed");
+    assert(myl_rc_fast_verify() == 20);
+    puts("native RC fast paths: 20 tests passed");
     return 0;
 }
 #endif

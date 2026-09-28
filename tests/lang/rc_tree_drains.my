@@ -1,0 +1,79 @@
+# Trees of two-edge nodes that die in one drain (RC-DRAIN-PAIR-1). Each answer
+# is the same under the collector and RC; RC counting builds balance.
+
+
+record Node:
+    left: Option[Node]
+    right: Option[Node]
+
+
+def make(depth: int) -> Node:
+    if depth == 0:
+        return Node(left=None, right=None)
+    return Node(left=Some(make(depth - 1)), right=Some(make(depth - 1)))
+
+
+def check(node: Node) -> int:
+    left = node.left
+    right = node.right
+    if left is None or right is None:
+        return 1
+    return 1 + check(left) + check(right)
+
+
+# spec-case: RC-DRAIN-PAIR-1
+public def test_short_lived_trees_die_and_reuse_their_slots() -> bool:
+    total = 0
+    for _ in range(40):
+        total = total + check(make(6))
+    return total == 40 * 127
+
+
+# spec-case: RC-DRAIN-PAIR-1
+public def test_shared_subtrees_outlive_their_first_parent() -> bool:
+    shared = make(3)
+    kept: list[Node] = []
+    for index in range(10):
+        pair = Node(left=Some(shared), right=Some(make(2)))
+        if index % 3 == 0:
+            kept.append(pair)
+    return check(shared) == 15 and len(kept) == 4 and check(kept[3]) == 1 + 15 + 7
+
+
+record Labelled:
+    name: str
+    next: Option[Labelled]
+
+
+def chain(count: int) -> Labelled:
+    head = Labelled(name="end", next=None)
+    for index in range(count):
+        head = Labelled(name="n" + str(index), next=Some(head))
+    return head
+
+
+def length(item: Labelled) -> int:
+    total = 1
+    current = item.next
+    while current is not None:
+        if len(current.name) > 0:
+            total = total + 1
+        current = current.next
+    return total
+
+
+# spec-case: RC-DRAIN-PAIR-1
+public def test_text_and_node_edges_die_together() -> bool:
+    total = 0
+    for count in range(30):
+        total = total + length(chain(count))
+    labelled = chain(5)
+    names = labelled.name
+    return total == 30 * 31 // 2 and names == "n4" and length(labelled) == 6
+
+
+def main() -> int:
+    assert test_short_lived_trees_die_and_reuse_their_slots()
+    assert test_shared_subtrees_outlive_their_first_parent()
+    assert test_text_and_node_edges_die_together()
+    return 0

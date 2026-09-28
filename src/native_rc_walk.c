@@ -142,30 +142,32 @@ static void tally_apply(myl_native_heap *heap, drain_tally *tally) {
  * the dying value's own edge words are not cleared, because its extent is
  * retired right after and never read again. A counted child is live and not
  * dying (checked as one mark test: an immortal or arena child is skipped). */
+static inline __attribute__((always_inline)) myl_rc_object *drain_leaf(myl_native_heap *heap,
+        const unsigned char *leaf, myl_rc_object *head) {
+    (void)heap;
+    void *child;
+    __builtin_memcpy(&child, leaf, sizeof child);
+    if (!child) return head;
+    myl_rc_object *object = (myl_rc_object *)child - 1;
+    uintptr_t mark = object->common.mark;
+    if (mark & (MYL_NATIVE_OBJECT_IMMORTAL | MYL_NATIVE_OBJECT_ARENA | MYL_RC_OBJECT_DYING)) {
+        myl_rc_invariant(!(mark & MYL_RC_OBJECT_DYING));
+        return head;
+    }
+    uintptr_t owners = object->owners;
+    MYL_RC_STAT(heap, MYL_RC_STAT_OWNER_RELEASE);
+    if (owners == 1 && !object->holds) {
+        object->common.mark = mark | MYL_RC_OBJECT_DYING;
+        object->owners = (uintptr_t)head;
+        return object;
+    }
+    myl_rc_invariant(owners != 0);
+    object->owners = owners - 1;
+    return head;
+}
 static inline __attribute__((always_inline)) myl_rc_object *drain_leaves(myl_native_heap *heap,
         const myl_rc_flat *flat, unsigned live, const unsigned char *payload, myl_rc_object *head) {
-    (void)heap;
-    for (; live; live &= live - 1) {
-        void *child;
-        __builtin_memcpy(&child, payload + flat->offsets[__builtin_ctz(live)], sizeof child);
-        if (!child) continue;
-        myl_rc_object *object = (myl_rc_object *)child - 1;
-        uintptr_t mark = object->common.mark;
-        if (mark & (MYL_NATIVE_OBJECT_IMMORTAL | MYL_NATIVE_OBJECT_ARENA | MYL_RC_OBJECT_DYING)) {
-            myl_rc_invariant(!(mark & MYL_RC_OBJECT_DYING));
-            continue;
-        }
-        uintptr_t owners = object->owners;
-        MYL_RC_STAT(heap, MYL_RC_STAT_OWNER_RELEASE);
-        if (owners == 1 && !object->holds) {
-            object->common.mark = mark | MYL_RC_OBJECT_DYING;
-            object->owners = (uintptr_t)head;
-            head = object;
-            continue;
-        }
-        myl_rc_invariant(owners != 0);
-        object->owners = owners - 1;
-    }
+    for (; live; live &= live - 1) head = drain_leaf(heap, payload + flat->offsets[__builtin_ctz(live)], head);
     return head;
 }
 /* One dying object outside the fast loop: any allocator, a large extent, an
@@ -214,6 +216,10 @@ typedef struct {
     const myl_rc_flat *flat;
     uintptr_t mask, want;
     unsigned all;
+    /* RC-DRAIN-PAIR-1: a plan of exactly two leaves (a binary node, say)
+     * releases them at these offsets, in the plan's order, without walking
+     * its live set; `pair` says the offsets apply. */
+    uint32_t pair, first, second;
     drain_tally tally;
 } drain_cursor;
 #define DRAIN_NEVER (~(uintptr_t)0)
@@ -229,6 +235,7 @@ static __attribute__((noinline)) myl_rc_object *drain_fast(myl_native_heap *heap
     const myl_rc_flat *flat = cursor->flat;
     uintptr_t mask = cursor->mask, want = cursor->want;
     unsigned all = cursor->all;
+    uint32_t pair = cursor->pair, first = cursor->first, second = cursor->second;
     size_t retired = cursor->tally.retired, pushed = cursor->tally.pushed;
     myl_rc_object *slow = NULL;
     while (head) {
@@ -249,8 +256,39 @@ static __attribute__((noinline)) myl_rc_object *drain_fast(myl_native_heap *heap
                 want |= (uintptr_t)1 << MYL_NATIVE_OBJECT_COUNT_SHIFT;
             }
             if (!cached || leaves > MYL_RC_FLAT_LEAVES || flat->conditional) want = DRAIN_NEVER;
+            pair = leaves == 2 && all == 3u;
+            first = pair ? flat->offsets[0] : 0;
+            second = pair ? flat->offsets[1] : 0;
         }
         if ((object->common.mark & mask) != want) { slow = object; break; }
+        if (pair) {
+            /* RC-DRAIN-PAIR-1: consecutive deaths of this two-leaf type share
+             * its fast test and its slab class (a one-element slab object's
+             * class follows from its type's size alone), so the run keeps them
+             * in registers. It stops, leaving the object queued, at the first
+             * death of another type or one the fast test refuses. */
+            const myl_rc_slab_class *slab = (const myl_rc_slab_class *)((uintptr_t)object & ~(uintptr_t)(MYL_RC_SLAB_BYTES - 1));
+            void **list = &heap->rc_cache.free[slab->index];
+            const size_t stride = slab->stride;
+            /* Nothing reads the class list inside the run; it is written once. */
+            void *top = *list;
+            for (;;) {
+                const unsigned char *payload = (const unsigned char *)(object + 1);
+                head = drain_leaf(heap, payload + first, head);
+                head = drain_leaf(heap, payload + second, head);
+                MYL_RC_STAT(heap, MYL_RC_STAT_RETIRE);
+                object->common.mark = MYL_RC_RETIRED_MARK;
+                object->owners = (uintptr_t)top;
+                top = object;
+                pushed += stride;
+                ++retired;
+                if (!head || head->common.element != last || (head->common.mark & mask) != want) break;
+                object = head;
+                head = (myl_rc_object *)object->owners;
+            }
+            *list = top;
+            continue;
+        }
         head = drain_leaves(heap, flat, all, (const unsigned char *)(object + 1), head);
         MYL_RC_STAT(heap, MYL_RC_STAT_RETIRE);
         const myl_rc_slab_class *slab = (const myl_rc_slab_class *)((uintptr_t)object & ~(uintptr_t)(MYL_RC_SLAB_BYTES - 1));
@@ -262,7 +300,7 @@ static __attribute__((noinline)) myl_rc_object *drain_fast(myl_native_heap *heap
         ++retired;
     }
     *cursor = (drain_cursor){.head = head, .last = last, .flat = flat, .mask = mask, .want = want, .all = all,
-        .tally = {.retired = retired, .pushed = pushed}};
+        .pair = pair, .first = first, .second = second, .tally = {.retired = retired, .pushed = pushed}};
     return slow;
 }
 /* Bindings are immutable batch allocations published through the binding map
