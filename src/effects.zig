@@ -72,7 +72,7 @@ fn returnContribution(program: typed.Program, function: typed.Function, value: t
         return;
     }
     switch (node.data) {
-        .integer, .boolean, .unit, .function_value, .environment_get, .environment_only, .environment_names, .external_read, .host_resource, .stand_in => {},
+        .integer, .boolean, .unit, .blob, .function_value, .environment_get, .environment_only, .environment_names, .external_read, .host_resource, .stand_in => {},
         .local, .call, .invoke, .complete_resource, .acquire_resource, .acquire_buffer, .array, .record, .variant, .update => {
             if (node.ty.isAggregate()) ctx.unknown.* = true;
         },
@@ -113,7 +113,7 @@ fn isFreshValue(program: typed.Program, value: typed.NodeId, depth: usize) bool 
     if (!isManagedAggregate(program, node.ty)) return false;
     return switch (node.data) {
         .acquire_buffer => true,
-        .array, .record => true,
+        .array, .record, .blob => true,
         .block_value => |block| blockValueFresh(program, block.body, block.value, depth + 1),
         else => false,
     };
@@ -742,6 +742,8 @@ fn directEffect(program: typed.Program, function: typed.Function, node: typed.No
         .integer,
         .boolean,
         .unit,
+        // Embedded file data is static, so it allocates nothing (`EMBED-1`).
+        .blob,
         .local,
         .propagate,
         .wrap,
@@ -1050,7 +1052,8 @@ fn seedInstructionEffects(
         .cast_integer => |ty| if (allocatingSequence(program.records, ty)) {
             graph.direct(index, .managed_allocation, instruction.span);
         },
-        .make_record => |record| if (try managedType(program.records, record.ty) and
+        // An embedded file is static data, so it allocates nothing (`EMBED-1`).
+        .make_record => |record| if (record.blob == null and try managedType(program.records, record.ty) and
             program.records[record.ty.recordIndex()].collection.kind != .string)
         {
             graph.direct(index, .managed_allocation, instruction.span);

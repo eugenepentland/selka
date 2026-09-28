@@ -89,6 +89,9 @@ pub const Node = struct {
         variant: struct { tag: usize, value: ?NodeId },
         unwrap: NodeId,
         array: []const NodeId,
+        /// A file `embed_bytes`/`embed_str` read at load time, as `bytes` or
+        /// `str` static data with no per-byte nodes (`EMBED-1`).
+        blob: Blob,
         /// `from_end` asks a fixed array to count a negative index back from its
         /// end first (`PY-ARRAY-NEGATIVE-1`); it is false where the checker proved
         /// the index non-negative, and managed receivers ignore it.
@@ -103,6 +106,10 @@ pub const Node = struct {
         binary: struct { op: BinaryOp, left: NodeId, right: NodeId, op_span: Span },
     },
 };
+/// An embedded file (`EMBED-1`) as checked code names it: the content digest
+/// that identifies its static object and the payload length. The bytes stay with
+/// the loaded source, so a checked tree carries no per-byte data.
+pub const Blob = struct { digest: [32]u8, length: usize };
 /// Whole-path file helper: its operands begin with the `Filesystem` capability.
 pub const FileAccess = struct { kind: @import("file_operations.zig").Access, mode: u8, text: bool, arguments: []const NodeId, shapes: FileShapes };
 /// Method call on an open `with` binding, addressed by its local slot.

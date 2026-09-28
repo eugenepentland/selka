@@ -1081,6 +1081,7 @@ const Checker = struct {
     pub const lambdaIndex = expression_checks.lambdaIndex;
     const call_checks = @import("sema_calls.zig").Checks(Checker);
     pub const byteConversion = call_checks.byteConversion;
+    pub const embedBuiltin = call_checks.embedBuiltin;
     pub const checkCall = call_checks.checkCall;
     pub const checkField = call_checks.checkField;
     pub const checkName = call_checks.checkName;

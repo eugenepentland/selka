@@ -38,7 +38,9 @@ pub const Instruction = struct {
         unwrap_domain: typed.Type,
         neg_integer: typed.Type,
         binary_integer: struct { ty: typed.Type, op: typed.BinaryOp },
-        make_record: struct { ty: typed.Type, fields: usize, order: []const usize = &.{} },
+        /// `blob` names the embedded file (`EMBED-1`) that is the whole payload of
+        /// a `bytes`/`str` record; such a record pops no operands.
+        make_record: struct { ty: typed.Type, fields: usize, order: []const usize = &.{}, blob: ?*const typed.Blob = null },
         update_record: struct { ty: typed.Type, indices: []const usize },
         get_field: usize,
         get_index: Access,

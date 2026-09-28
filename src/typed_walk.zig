@@ -49,7 +49,7 @@ pub const Walker = struct {
         const item = self.pending.pop() orelse return null;
         switch (item) {
             .expression => |id| switch (self.program.nodes[@backingInt(id)].data) {
-                .function_value, .unit, .integer, .boolean, .local => {},
+                .function_value, .unit, .integer, .boolean, .local, .blob => {},
                 .restrict_resource => |restrict| try self.expr(restrict.value),
                 .dir_resource => |dir| {
                     try self.expr(dir.path);

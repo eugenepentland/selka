@@ -454,6 +454,9 @@ fn queueExpression(comptime Checker: type, self: *Checker, work: *std.ArrayList(
             try work.append(self.allocator, .{ .id = id, .emit = true });
             if (try queueCapabilityCall(Checker, self, work, call)) return true;
             if (self.environmentMethod(call) != null) return true;
+            // `embed_bytes("path")` reads its literal from the syntax tree, so the
+            // literal is not a queued operand (`EMBED-1`).
+            if (try self.embedBuiltin(call) != null) return true;
             if (try self.cellConstructor(call) != null) {
                 if (self.expected_types.get(node.span)) |expected| if (expected.isAggregate() and self.catalog.records[expected.recordIndex()].isCell()) {
                     try self.hint(call.arguments[0], self.catalog.records[expected.recordIndex()].fields[0].ty);
@@ -857,10 +860,11 @@ fn consumedTemporaries(comptime Checker: type, self: *Checker, node: ast.Node, o
     if (node.data == .call and out.data == .environment_get) return 0;
     if (node.data == .call and out.data == .environment_only) return 0;
     if (node.data == .call and out.data == .environment_names) return 0;
+    if (node.data == .call and out.data == .blob) return 0;
     if (node.data == .call and try self.numericConversion(node.data.call) != null) return node.data.call.arguments.len;
     if (node.data == .call and try self.typeConversion(node.data.call) != null) return 1;
     return switch (out.data) {
-        .function_value, .unit, .integer, .boolean, .local, .block_value, .dir_resource, .host_resource => 0,
+        .function_value, .unit, .integer, .boolean, .local, .block_value, .dir_resource, .host_resource, .blob => 0,
         .arena_escape, .cast, .wrap, .unwrap, .length, .field, .unary, .propagate, .external_read, .complete_resource, .restrict_resource, .environment_names => 1,
         .stand_in => |stand| stand.kind.operands(),
         .acquire_buffer => 1,

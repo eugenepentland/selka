@@ -673,6 +673,22 @@ fn inputShaComponents(arena: std.mem.Allocator, root: std.json.Value) std.mem.Al
     return components;
 }
 
+/// One component per embedded file (`EMBED-1`), named by its module and path and
+/// valued by outcome and content digest, so editing or deleting a file that a
+/// module embeds is a `load_source` change.
+fn embedComponents(arena: std.mem.Allocator, root: std.json.Value) std.mem.Allocator.Error![]const Component {
+    const embeds = arrayOf(member(root, "embeds"));
+    const components = try arena.alloc(Component, embeds.len);
+    for (embeds, 0..) |embedded, index| {
+        components[index] = .{
+            .name = try std.fmt.allocPrint(arena, "{s}:{s}", .{ stringOf(member(embedded, "module")) orelse "", stringOf(member(embedded, "path")) orelse "" }),
+            .value = try std.fmt.allocPrint(arena, "{s}\x1f{s}", .{ stringOf(member(embedded, "status")) orelse "", stringOf(member(embedded, "blake3")) orelse "" }),
+        };
+    }
+    sortComponents(components);
+    return components;
+}
+
 fn inputPathComponents(arena: std.mem.Allocator, root: std.json.Value) std.mem.Allocator.Error![]const Component {
     const inputs = arrayOf(member(root, "inputs"));
     const components = try arena.alloc(Component, inputs.len);
@@ -776,6 +792,11 @@ fn loadSourceFingerprint(arena: std.mem.Allocator, root: std.json.Value) std.mem
         builder.field("module", component.name);
         builder.field("sha256", component.value);
     }
+    for (try embedComponents(arena, root)) |component| {
+        builder.markPresent();
+        builder.field("embed", component.name);
+        builder.field("blake3", component.value);
+    }
     return .{ .key = try builder.finish(arena), .present = builder.present };
 }
 
@@ -784,6 +805,10 @@ fn loadSourceFirstChanged(arena: std.mem.Allocator, previous: std.json.Value, cu
     const changed = firstChangedComponent(try inputShaComponents(arena, previous), try inputShaComponents(arena, current));
     if (changed) |name| {
         const rendered = try std.fmt.allocPrint(arena, module_prefix, .{name});
+        return rendered;
+    }
+    if (firstChangedComponent(try embedComponents(arena, previous), try embedComponents(arena, current))) |name| {
+        const rendered = try std.fmt.allocPrint(arena, "embed:{s}", .{name});
         return rendered;
     }
     return compiler_label;

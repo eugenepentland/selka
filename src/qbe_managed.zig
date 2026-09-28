@@ -1,6 +1,7 @@
 //! QBE lowering of precisely rooted native managed collections.
 const std = @import("std");
 const bytecode = @import("bytecode.zig");
+const embeds = @import("qbe_embeds.zig");
 const typed = @import("typed.zig");
 const rc_mode = @import("runtime_mode.zig");
 const rc_append = @import("qbe_rc_append.zig");
@@ -67,7 +68,7 @@ const Frozen = struct {
 };
 /// The element descriptor a frozen text literal's object header stores: a text's
 /// payload is octets and holds no traced pointer, so the collector never walks it.
-const text_leaf = "myl_native_text_leaf";
+const text_leaf = embeds.text_leaf;
 /// List element access normalizes a negative index in the checked frontend; the
 /// runtime helper subtracts the length back to recover the original index.
 const normalized_index_failure = "myl_qbe_fail_normalized_index_bounds";
@@ -409,6 +410,7 @@ fn emitConstruct(comptime E: type, self: *E, record: MakeRecord, stack: []const 
     } else {
         const text = schema.collection.kind == .string;
         const element: typed.Type = if (text) .u32 else schema.shape.buffer.?;
+        if (record.blob) |blob| return emitBlob(E, self, blob, text, base);
         // A `str`/`bytes` literal whose every element is a constant push is
         // immutable for the life of the image, so it lives as one shared data
         // object instead of one allocation per evaluation.
@@ -514,6 +516,15 @@ fn emitFrozen(comptime E: type, self: *E, frozen: Frozen, base: usize) Error!voi
         for (encodeScalar(value, &encoded) orelse return error.InternalError) |byte| try self.print("{x:0>2}", .{byte});
     }
     try self.print("\n", .{});
+    try self.store(base, result);
+}
+/// Lower an embedded file (`EMBED-1`) as a load of the frozen object the
+/// manifest's embed table defines for its content (`qbe_embeds.zig`). The
+/// payload rides in that table once, not in this unit's text, so nothing that
+/// scans or hashes the unit reads the file again.
+fn emitBlob(comptime E: type, self: *E, blob: *const typed.Blob, text: bool, base: usize) Error!void {
+    const result = self.temp();
+    try self.print(" %v{d} =l loadl ${s}\n", .{ result, embeds.symbol(text, blob.digest)[0..] });
     try self.store(base, result);
 }
 /// The constant carried by one already-validated `push_integer`.

@@ -59,6 +59,7 @@ fn metadataUnit(allocator: std.mem.Allocator, manifest: std.json.Value, tables: 
     try w.print("#include \"qbe_runtime.h\"\n{s}\n{s}\n", .{ v.text(v.get(manifest, "runtime_data")), host_source });
     const functions = v.array(v.get(manifest, "functions"));
     try literalDefinitions(w, allocator, functions);
+    try embedDefinitions(w, v.array(v.get(manifest, "embeds")));
     try @import("qbe_build_sites.zig").definitions(w, allocator, functions);
     // Every inline table names another unit's metadata, which may be defined
     // later in this file, so declare them all before the first definition.
@@ -334,6 +335,26 @@ fn literalDefinitions(w: *std.Io.Writer, allocator: std.mem.Allocator, units: []
         }
     }
 }
+/// Emit one static object for every embedded file the manifest's `embeds` table
+/// names (`EMBED-1`), each laid out exactly as a frozen literal of the same
+/// content. The table carries the header facts and the payload once, so the
+/// objects need not be found by scanning unit text.
+fn embedDefinitions(w: *std.Io.Writer, embeds: []const std.json.Value) Error!void {
+    if (embeds.len == 0) return;
+    try w.writeAll("#include \"native_text.h\"\n");
+    for (embeds) |row| {
+        const width = v.number(v.get(row, "width"));
+        try emitLiteral(w, .{
+            .symbol = v.text(v.get(row, "symbol")),
+            .element = v.text(v.get(row, "element")),
+            .width = width,
+            .count = v.number(v.get(row, "count")),
+            .scalars = v.number(v.get(row, "scalars")),
+            .ascii = v.boolean(v.get(row, "ascii")),
+            .hex = v.text(v.get(row, "hex")),
+        });
+    }
+}
 /// Emit one static literal block: the managed header and payload object the
 /// collector expects around the bytes, plus the storage the literal owns. The
 /// block's payload is published as the symbol the IL loads. A text is a header,
@@ -362,17 +383,47 @@ fn emitLiteral(w: *std.Io.Writer, literal: Literal) Error!void {
     if (bytes == 0) {
         try w.writeAll(" .storage = {0},\n");
     } else {
-        try w.writeAll(" .storage = {");
-        var index: usize = 0;
-        while (index + 1 < literal.hex.len) : (index += 2) {
-            const high = std.fmt.charToDigit(literal.hex[index], 16) catch 0;
-            const low = std.fmt.charToDigit(literal.hex[index + 1], 16) catch 0;
-            try w.print("0x{x:0>2},", .{high * 16 + low});
-        }
-        try w.writeAll("},\n");
+        try w.writeAll(" .storage = ");
+        try writeStorage(w, literal.hex);
+        try w.writeAll(",\n");
     }
     try w.writeAll("};\n");
     try w.print("const void *const {s} = &{s}_instance.value;\n", .{ symbol, symbol });
+}
+/// Whether a payload byte may appear as itself inside a C string literal:
+/// printable ASCII except `"`, `\` and `?` (trigraphs).
+fn plainInString(byte: u8) bool {
+    if (byte < 0x20 or byte >= 0x7f) return false;
+    return byte != '"' and byte != '\\' and byte != '?';
+}
+/// Write a literal's payload, given as lowercase hex, as one C string literal
+/// that initializes the `unsigned char` storage array. Printable bytes go out
+/// as themselves and every other byte as a three-digit octal escape, which
+/// cannot swallow the character after it, so a megabyte file costs one pass
+/// and one lexical token instead of a million initializer expressions.
+fn writeStorage(w: *std.Io.Writer, hex: []const u8) Error!void {
+    var chunk: [4096]u8 = undefined;
+    var used: usize = 0;
+    try w.writeAll("\"");
+    var index: usize = 0;
+    while (index + 1 < hex.len) : (index += 2) {
+        if (used + 4 > chunk.len) {
+            try w.writeAll(chunk[0..used]);
+            used = 0;
+        }
+        const high = std.fmt.charToDigit(hex[index], 16) catch 0;
+        const low = std.fmt.charToDigit(hex[index + 1], 16) catch 0;
+        const byte: u8 = high * 16 + low;
+        if (plainInString(byte)) {
+            chunk[used] = byte;
+            used += 1;
+            continue;
+        }
+        chunk[used..][0..4].* = .{ '\\', '0' + (byte >> 6), '0' + ((byte >> 3) & 7), '0' + (byte & 7) };
+        used += 4;
+    }
+    try w.writeAll(chunk[0..used]);
+    try w.writeAll("\"");
 }
 /// Emit an executable entry that initializes host calls and grants capabilities.
 pub fn entry(allocator: std.mem.Allocator, manifest: std.json.Value, provider: bool, final: bool) Error![]const u8 {

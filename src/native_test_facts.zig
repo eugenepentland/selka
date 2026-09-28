@@ -279,6 +279,8 @@ const FunctionFacts = struct {
             switch (node.data) {
                 .call => |call| try deps.add(self.program, call.function, .call),
                 .function_value => |value| try deps.add(self.program, value, .function_value),
+                // EMBED-1: an embedded file is part of the implementation the test result depends on.
+                .blob => |file| part(&hash, &file.digest),
                 .invoke => {
                     try reasons.add("conservative-indirect-target-set");
                     const targets = self.address_taken.* orelse targets: {

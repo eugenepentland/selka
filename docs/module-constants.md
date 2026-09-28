@@ -63,6 +63,12 @@ The initializer must be exactly a text or byte literal: calls, concatenation,
 casts, indexing, interpolation and references to other constants are rejected,
 even for an unused declaration. Scalar constants retain their existing rules.
 
+A constant may instead be initialized from `embed_bytes("path")` or
+`embed_str("path")`, which reads a project file at compile time; see
+[embedding a file](bytes.md#embedding-a-file-at-compile-time). Such a constant is
+static data: reading it allocates nothing and contributes no effect, so it is
+legal under `noalloc`.
+
 These constants use the same export/privacy rules and can be read by generic
 functions. Each getter evaluates its ordinary checked literal, allocating a
 managed value; reads therefore contribute `managed_allocation` and are rejected

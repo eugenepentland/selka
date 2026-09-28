@@ -1,0 +1,381 @@
+//! Compile-time file embedding (`EMBED-*`): what `embed_bytes` and `embed_str`
+//! accept, every diagnostic, the static data the manifest carries, and the keys
+//! an edit to only the embedded file must change.
+const std = @import("std");
+const t = std.testing;
+const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
+const embed = @import("embed.zig");
+const semantic_key = @import("semantic_key.zig");
+
+/// A compilation of `text` whose embed calls were read from `directory`.
+fn compile(allocator: std.mem.Allocator, directory: []const u8, text: []const u8) !language.Compilation {
+    var compilation = try language.Compilation.init(allocator, "main.my", text);
+    errdefer compilation.deinit();
+    const arena = compilation.arena.allocator();
+    const found = try embed.scan(arena, compilation.src);
+    try embed.resolve(arena, .{ .io = t.io, .import_root = directory, .root = directory }, "main.my", found);
+    compilation.src.embeds = found;
+    return compilation;
+}
+
+/// The absolute path of a fresh temporary directory's root.
+fn rootOf(temporary: *t.TmpDir) ![:0]u8 {
+    return temporary.dir.realPathFileAlloc(t.io, ".", t.allocator);
+}
+
+/// The first diagnostic code checking `text` reports, or null when it checks.
+fn rejection(allocator: std.mem.Allocator, directory: []const u8, text: []const u8) !?[]const u8 {
+    var compilation = try compile(allocator, directory, text);
+    defer compilation.deinit();
+    compilation.check() catch |err| switch (err) {
+        error.SourceError => {
+            const code = try allocator.dupe(u8, compilation.diagnostics.items[0].code);
+            return code;
+        },
+        else => return err,
+    };
+    return null;
+}
+
+const Case = struct { text: []const u8, code: []const u8 };
+
+/// Require every case to be rejected with its own code.
+fn expectCodes(directory: []const u8, cases: []const Case) !void {
+    for (cases) |case| {
+        const found = try rejection(t.allocator, directory, case.text);
+        defer if (found) |code| t.allocator.free(code);
+        try t.expectEqualStrings(case.code, found orelse "accepted");
+    }
+}
+
+// spec: EMBED-1
+test "embed_bytes and embed_str read a file as a constant, inline and where allocation is banned" {
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(t.io, .{ .sub_path = "data.bin", .data = "\x01\x02\x00" });
+    try temporary.dir.writeFile(t.io, .{ .sub_path = "text.txt", .data = "h\xc3\xa9" });
+    const root = try rootOf(&temporary);
+    defer t.allocator.free(root);
+    var compilation = try compile(t.allocator, root,
+        \\const DATA: bytes = embed_bytes("data.bin")
+        \\const TEXT: str = embed_str("text.txt")
+        \\
+        \\
+        \\def total() -> int noalloc:
+        \\    return len(DATA) + len(embed_bytes("data.bin"))
+        \\
+        \\
+        \\def main() -> int:
+        \\    return total() + len(TEXT) * 100 + DATA[1]
+    );
+    defer compilation.deinit();
+    try t.expectEqual(@as(i64, 208), (try native.run(&compilation)).value);
+    try t.expectEqual(@as(@import("effect_set.zig").Mask, 0), compilation.program.?.functions[0].policy.effect_bound.?.allowed);
+}
+
+// spec-case: EMBED-1
+test "an embedded empty file is an empty value and an edited file changes the program" {
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(t.io, .{ .sub_path = "data.bin", .data = "" });
+    const root = try rootOf(&temporary);
+    defer t.allocator.free(root);
+    const text = "def main() -> int:\n    return len(embed_bytes(\"data.bin\")) + 40\n";
+    var empty = try compile(t.allocator, root, text);
+    defer empty.deinit();
+    try t.expectEqual(@as(i64, 40), (try native.run(&empty)).value);
+    try temporary.dir.writeFile(t.io, .{ .sub_path = "data.bin", .data = "xy" });
+    var edited = try compile(t.allocator, root, text);
+    defer edited.deinit();
+    try t.expectEqual(@as(i64, 42), (try native.run(&edited)).value);
+}
+
+// spec: EMBED-2
+test "every embed error is a located diagnostic with its own code" {
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(t.io, .{ .sub_path = "outside.bin", .data = "x" });
+    try temporary.dir.createDirPath(t.io, "project");
+    try temporary.dir.writeFile(t.io, .{ .sub_path = "project/inside.bin", .data = "y" });
+    try temporary.dir.symLink(t.io, "../outside.bin", "project/link.bin", .{});
+    try temporary.dir.symLink(t.io, "inside.bin", "project/alias.bin", .{});
+    const base = try rootOf(&temporary);
+    defer t.allocator.free(base);
+    const root = try std.fs.path.join(t.allocator, &.{ base, "project" });
+    defer t.allocator.free(root);
+    try temporary.dir.writeFile(t.io, .{ .sub_path = "project/data.bin", .data = "\xff\xfe" });
+    try temporary.dir.createDirPath(t.io, "project/folder");
+    try expectCodes(root, &.{
+        .{ .text = "def main() -> int:\n    path = \"inside.bin\"\n    return len(embed_bytes(path))\n", .code = "E_EMBED_ARGUMENT" },
+        .{ .text = "def main() -> int:\n    return len(embed_bytes(b\"inside.bin\"))\n", .code = "E_EMBED_ARGUMENT" },
+        .{ .text = "def main() -> int:\n    return len(embed_bytes(\"inside.bin\", \"other\"))\n", .code = "E_EMBED_ARGUMENT" },
+        .{ .text = "def main() -> int:\n    return len(embed_bytes(\"missing.bin\"))\n", .code = "E_EMBED_MISSING" },
+        .{ .text = "def main() -> int:\n    return len(embed_bytes(\"folder\"))\n", .code = "E_EMBED_DIRECTORY" },
+        .{ .text = "def main() -> int:\n    return len(embed_bytes(\"/etc/hostname\"))\n", .code = "E_EMBED_ABSOLUTE" },
+        .{ .text = "def main() -> int:\n    return len(embed_bytes(\"../outside.bin\"))\n", .code = "E_EMBED_ESCAPE" },
+        .{ .text = "def main() -> int:\n    return len(embed_bytes(\"link.bin\"))\n", .code = "E_EMBED_ESCAPE" },
+        .{ .text = "def main() -> int:\n    return len(embed_str(\"data.bin\"))\n", .code = "E_EMBED_UTF8" },
+        .{ .text = "def main() -> int:\n    return len(embed_bytes(\"\"))\n", .code = "E_EMBED_PATH" },
+        .{ .text = "const BAD: bytes = embed_str(\"inside.bin\")\n\ndef main() -> int:\n    return len(BAD)\n", .code = "E_TYPE" },
+        .{ .text = "def main() -> int:\n    return len(embed_bytes(\"alias.bin\")) + len(embed_bytes(\"./inside.bin\")) + len(embed_bytes(\"folder/../inside.bin\")) - 3\n", .code = "accepted" },
+    });
+}
+
+// spec-case: EMBED-2
+test "an invalid embed_str names the byte offset and an oversized file is refused" {
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(t.io, .{ .sub_path = "bad.txt", .data = "ok\xc3" });
+    const oversized = try t.allocator.alloc(u8, embed.size_cap + 1);
+    defer t.allocator.free(oversized);
+    @memset(oversized, 'z');
+    try temporary.dir.writeFile(t.io, .{ .sub_path = "huge.bin", .data = oversized });
+    const root = try rootOf(&temporary);
+    defer t.allocator.free(root);
+    var text = try compile(t.allocator, root, "def main() -> int:\n    return len(embed_str(\"bad.txt\"))\n");
+    defer text.deinit();
+    try t.expectError(error.SourceError, text.check());
+    try t.expect(std.mem.indexOf(u8, text.diagnostics.items[0].message, "offset 2") != null);
+    var huge = try compile(t.allocator, root, "def main() -> int:\n    return len(embed_bytes(\"huge.bin\"))\n");
+    defer huge.deinit();
+    try t.expectError(error.SourceError, huge.check());
+    try t.expectEqualStrings("E_EMBED_TOO_LARGE", huge.diagnostics.items[0].code);
+    try t.expectEqual(@as(usize, 0), huge.src.embeds[0].contents.len);
+}
+
+// spec-case: EMBED-2
+test "a source loaded without a directory reports that embeds need one" {
+    var compilation = try language.Compilation.init(t.allocator, "memory.my", "def main() -> int:\n    return len(embed_bytes(\"data.bin\"))\n");
+    defer compilation.deinit();
+    try t.expectError(error.SourceError, compilation.check());
+    try t.expectEqualStrings("E_EMBED_UNAVAILABLE", compilation.diagnostics.items[0].code);
+}
+
+// spec-case: EMBED-2
+test "a user function named like an embed builtin keeps its own meaning" {
+    var compilation = try language.Compilation.init(t.allocator, "shadow.my", "def embed_bytes(path: str) -> int:\n    return len(path)\n\n\ndef main() -> int:\n    return embed_bytes(\"data.bin\")\n");
+    defer compilation.deinit();
+    try t.expectEqual(@as(i64, 8), (try native.run(&compilation)).value);
+}
+
+// spec-case: EMBED-2
+test "paths are spelled relative to the embedding source's directory" {
+    const nested = try embed.relativeTarget(t.allocator, "lib/deep", "../assets/./x.txt");
+    defer t.allocator.free(nested);
+    try t.expectEqualStrings("lib/assets/x.txt", nested);
+    const above = try embed.relativeTarget(t.allocator, "lib", "../../shared/y.bin");
+    defer t.allocator.free(above);
+    try t.expectEqualStrings("../shared/y.bin", above);
+    try t.expectEqual(embed.spelledStatus("/etc/x").?, .absolute);
+    try t.expectEqual(embed.spelledStatus("a\\b").?, .invalid_path);
+    try t.expectEqual(@as(?language.source.EmbedStatus, null), embed.spelledStatus("a/b"));
+}
+
+// spec: EMBED-3
+test "a declaration keys on the embedded files inside it and on nothing else's" {
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(t.io, .{ .sub_path = "data.bin", .data = "one" });
+    const root = try rootOf(&temporary);
+    defer t.allocator.free(root);
+    const text = "def user() -> int:\n    return len(embed_bytes(\"data.bin\"))\n\n\ndef other() -> int:\n    return 7\n\n\ndef main() -> int:\n    return user() + other()\n";
+    var before = try compile(t.allocator, root, text);
+    defer before.deinit();
+    try before.parse();
+    try temporary.dir.writeFile(t.io, .{ .sub_path = "data.bin", .data = "two" });
+    var after = try compile(t.allocator, root, text);
+    defer after.deinit();
+    try after.parse();
+    const contracts: semantic_key.Contracts = .{ .build = "test", .mutation = "test" };
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const first = try semantic_key.prepare(arena.allocator(), before.src, before.syntax.?, contracts, null, null);
+    const second = try semantic_key.prepare(arena.allocator(), after.src, after.syntax.?, contracts, null, null);
+    try t.expect(!std.mem.eql(u8, &first.contexts[0], &second.contexts[0]));
+    try t.expectEqualSlices(u8, &first.contexts[1], &second.contexts[1]);
+    try t.expectEqualSlices(u8, &first.contexts[2], &second.contexts[2]);
+    try t.expectEqual(@as(usize, 1), before.src.embedsWithin(first.regions[0]).len);
+    try t.expectEqual(@as(usize, 0), before.src.embedsWithin(first.regions[1]).len);
+}
+
+// spec-case: EMBED-3
+test "an embed's identity covers its outcome, its path and its content" {
+    var one: language.source.Embed = .{ .literal = .{ .start = 0, .end = 3 }, .path = "a", .status = .ok };
+    embed.digest("one", &one.digest);
+    var two = one;
+    embed.digest("two", &two.digest);
+    var lost = one;
+    lost.status = .missing;
+    lost.digest = @splat(0);
+    var renamed = one;
+    renamed.path = "b";
+    const identities = [_][32]u8{ mix(one), mix(two), mix(lost), mix(renamed), mix(one) };
+    try t.expectEqualSlices(u8, &identities[0], &identities[4]);
+    try t.expect(!std.mem.eql(u8, &identities[0], &identities[1]));
+    try t.expect(!std.mem.eql(u8, &identities[0], &identities[2]));
+    try t.expect(!std.mem.eql(u8, &identities[0], &identities[3]));
+}
+
+fn mix(file: language.source.Embed) [32]u8 {
+    var hash = std.crypto.hash.sha2.Sha256.init(.{});
+    embed.hashInto(&hash, &.{file});
+    var out: [32]u8 = undefined;
+    hash.final(&out);
+    return out;
+}
+
+/// How many times the units load an embedded object, requiring that none holds a payload.
+fn loadsWithoutPayload(units: []const std.json.Value) !usize {
+    var loads: usize = 0;
+    for (units) |unit| {
+        const il = unit.object.get("il").?.string;
+        try t.expect(il.len < 64 * 1024);
+        loads += std.mem.count(u8, il, "loadl $myl_emb_");
+    }
+    return loads;
+}
+
+// spec: EMBED-4
+test "the manifest carries an embedded file once and its unit only loads it" {
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    const payload = try t.allocator.alloc(u8, 1 << 20);
+    defer t.allocator.free(payload);
+    for (payload, 0..) |*byte, index| byte.* = @truncate(index *% 31);
+    try temporary.dir.writeFile(t.io, .{ .sub_path = "big.bin", .data = payload });
+    try temporary.dir.writeFile(t.io, .{ .sub_path = "note.txt", .data = "h\xc3\xa9" });
+    const root = try rootOf(&temporary);
+    defer t.allocator.free(root);
+    var compilation = try compile(t.allocator, root,
+        \\const BIG: bytes = embed_bytes("big.bin")
+        \\
+        \\
+        \\def again() -> int:
+        \\    return len(embed_bytes("big.bin"))
+        \\
+        \\
+        \\def main() -> int:
+        \\    return again() + len(BIG) + len(embed_str("note.txt"))
+    );
+    defer compilation.deinit();
+    const manifest = try compilation.emitQbe(t.allocator);
+    defer t.allocator.free(manifest);
+    const parsed = try std.json.parseFromSlice(std.json.Value, t.allocator, manifest, .{});
+    defer parsed.deinit();
+    const table = parsed.value.object.get("embeds").?.array.items;
+    try t.expectEqual(@as(usize, 2), table.len);
+    try t.expectEqual(@as(i64, 1 << 20), table[0].object.get("count").?.integer);
+    try t.expectEqual(@as(usize, 2 << 20), table[0].object.get("hex").?.string.len);
+    try t.expectEqual(@as(i64, 2), table[1].object.get("scalars").?.integer);
+    try t.expectEqual(@as(i64, 3), table[1].object.get("count").?.integer);
+    try t.expect(try loadsWithoutPayload(parsed.value.object.get("functions").?.array.items) >= 3);
+}
+
+// spec-case: EMBED-4
+test "a module constant of an embedded file allocates nothing when read" {
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(t.io, .{ .sub_path = "data.bin", .data = "abc" });
+    const root = try rootOf(&temporary);
+    defer t.allocator.free(root);
+    var compilation = try compile(t.allocator, root,
+        \\const DATA: bytes = embed_bytes("data.bin")
+        \\
+        \\
+        \\def read() -> int noalloc:
+        \\    return len(DATA)
+        \\
+        \\
+        \\def main() -> int:
+        \\    return read()
+    );
+    defer compilation.deinit();
+    try t.expectEqual(@as(i64, 3), (try native.run(&compilation)).value);
+    const getter = compilation.program.?.functions[0];
+    try t.expectEqual(@as(@import("effect_set.zig").Mask, 0), getter.policy.effects);
+}
+
+/// Read one module's embed through a provider that serves `main.my` and one file.
+fn embedProvider(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
+    if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
+    return allocator.dupe(u8, "module main\n\nconst DATA: bytes = embed_bytes(\"data.bin\")\n\ndef main() -> int:\n    return len(DATA)\n");
+}
+
+fn embedFile(_: ?*anyopaque, allocator: std.mem.Allocator, module_path: []const u8, path: []const u8) std.mem.Allocator.Error!embed.Read {
+    if (!std.mem.eql(u8, module_path, "main.my") or !std.mem.eql(u8, path, "data.bin")) return .{ .status = .missing };
+    return .{ .status = .ok, .contents = try allocator.dupe(u8, "abcd") };
+}
+
+// spec-case: EMBED-3
+test "the project loader reads the files a module embeds through its provider" {
+    var project = language.project.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(.{ .context = null, .read = embedProvider, .embed = embedFile }, "main", .{});
+    const embeds = project.modules.items[0].src.embeds;
+    try t.expectEqual(@as(usize, 1), embeds.len);
+    try t.expectEqual(language.source.EmbedStatus.ok, embeds[0].status);
+    try t.expectEqualStrings("abcd", embeds[0].contents);
+    try t.expectEqualStrings("data.bin", embeds[0].path);
+    var again = language.project.Project.init(t.allocator);
+    defer again.deinit();
+    try again.load(.{ .context = null, .read = embedProvider }, "main", .{});
+    try t.expectEqual(language.source.EmbedStatus.unresolved, again.modules.items[0].src.embeds[0].status);
+}
+
+/// One payload served for `table.bin` to a two-module project.
+const Served = struct { payload: []const u8 };
+
+fn servedSource(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
+    if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8, "module main\nimport data\n\ndef main() -> int:\n    return len(data.TABLE)\n");
+    if (std.mem.eql(u8, path, "data.my")) return allocator.dupe(u8, "module data\n\npublic const TABLE: bytes = embed_bytes(\"table.bin\")\n");
+    return error.NotFound;
+}
+
+fn servedFile(context: ?*anyopaque, allocator: std.mem.Allocator, module_path: []const u8, path: []const u8) std.mem.Allocator.Error!embed.Read {
+    const served: *const Served = @ptrCast(@alignCast(context.?));
+    if (!std.mem.eql(u8, module_path, "data.my") or !std.mem.eql(u8, path, "table.bin")) return .{ .status = .missing };
+    return .{ .status = .ok, .contents = try allocator.dupe(u8, served.payload) };
+}
+
+/// The interface file text of `data` when `table.bin` holds `payload`.
+fn interfaceOf(allocator: std.mem.Allocator, payload: []const u8) ![]u8 {
+    var served: Served = .{ .payload = payload };
+    var project = language.project.Project.init(allocator);
+    defer project.deinit();
+    try project.load(.{ .context = &served, .read = servedSource, .embed = servedFile }, "main", .{});
+    var index = try @import("interfaces.zig").build(&project);
+    return @import("interface_files.zig").render(allocator, &index, project.names.get("data").?);
+}
+
+// spec: EMBED-5
+test "formatting keeps embed calls, an interface names the file, and a receipt lists it" {
+    const source_text = "const TABLE: bytes = embed_bytes(\"table.bin\")\n\n\ndef main() -> int:\n    return len(embed_str(\"note.txt\"))\n";
+    var compilation = try language.Compilation.init(t.allocator, "format.my", source_text);
+    defer compilation.deinit();
+    const formatted = try compilation.format(t.allocator);
+    defer t.allocator.free(formatted);
+    try t.expectEqualStrings(source_text, formatted);
+    const first = try interfaceOf(t.allocator, "PAYLOAD-MARKER");
+    defer t.allocator.free(first);
+    const second = try interfaceOf(t.allocator, "another payload");
+    defer t.allocator.free(second);
+    try t.expect(std.mem.indexOf(u8, first, "public const TABLE: bytes = embed_bytes(\"table.bin\")\n") != null);
+    try t.expect(std.mem.indexOf(u8, first, "PAYLOAD-MARKER") == null);
+    try t.expectEqualStrings(first, second);
+    var served: Served = .{ .payload = "abcdef" };
+    var project = language.project.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(.{ .context = &served, .read = servedSource, .embed = servedFile }, "main", .{});
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const listed = try language.source_receipt.embeds(arena.allocator(), &project);
+    try t.expectEqual(@as(usize, 1), listed.len);
+    try t.expectEqualStrings("data", listed[0].module);
+    try t.expectEqualStrings("table.bin", listed[0].path);
+    try t.expectEqualStrings("ok", listed[0].status);
+    try t.expectEqual(@as(usize, 6), listed[0].bytes);
+    var digest: [32]u8 = undefined;
+    embed.digest("abcdef", &digest);
+    try t.expectEqualStrings(&std.fmt.bytesToHex(digest, .lower), listed[0].blake3);
+}

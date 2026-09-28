@@ -12185,3 +12185,151 @@ test "CLI RC runtime contract inheritance respects project discovery and explici
     try testing.expectEqual(std.process.Child.Term{ .exited = 22 }, override.term);
     try testing.expectEqualStrings("22\n", override.stdout);
 }
+
+const embed_main =
+    \\module main
+    \\import lib.data
+    \\
+    \\
+    \\def main(out: Stream) -> int effects(output):
+    \\    out.print(data.size())
+    \\    return 0
+    \\
+;
+const embed_data =
+    \\module lib.data
+    \\
+    \\public const WORDS: str = embed_str("assets/words.txt")
+    \\
+    \\
+    \\public def size() -> int:
+    \\    return len(WORDS)
+    \\
+;
+
+/// The `functions` array of one `--report` project build of `entry`.
+fn embedReport(allocator: std.mem.Allocator, entry: []const u8, output: []const u8, cache: []const u8) !std.json.Value {
+    const result = try std.process.run(allocator, testing.io, .{ .argv = &.{ compiler_path, "build", entry, "--project", "-o", output, "--cache-dir", cache, "--mode", "Debug", "--report", tools[0], tools[1] } });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+    return std.json.parseFromSliceLeaky(std.json.Value, allocator, result.stdout, .{});
+}
+
+/// Whether the report says the function named `name` was reused from an earlier build.
+fn reportedReused(report: std.json.Value, name: []const u8) !bool {
+    for (report.object.get("functions").?.array.items) |function| {
+        if (std.mem.eql(u8, function.object.get("name").?.string, name)) return function.object.get("reused").?.bool;
+    }
+    return error.FunctionNotReported;
+}
+
+// spec-case: EMBED-3
+test "an edit to only an embedded file rebuilds the module that embeds it and nothing else" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    try temporary.dir.createDirPath(testing.io, "lib/assets");
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = embed_main });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "lib/data.my", .data = embed_data });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "lib/assets/words.txt", .data = "alpha\nbeta\n" });
+    const entry = try std.fs.path.join(a, &.{ root, "main.my" });
+    const output = try std.fs.path.join(a, &.{ root, "program" });
+    const cache = try std.fs.path.join(a, &.{ root, "cache" });
+    const first = try embedReport(a, entry, output, cache);
+    try testing.expect(!try reportedReused(first, "main::main"));
+    try testing.expectEqualStrings("11\n", try programOutput(a, output));
+    // Nothing changed: every object is reused and the output keeps its bytes.
+    const same = try embedReport(a, entry, output, cache);
+    try testing.expectEqual(@as(i64, 0), same.object.get("compiled_function_objects").?.integer);
+    try testing.expect(try reportedReused(same, "lib.data::WORDS"));
+    // Only the embedded file moves: the module that embeds it is rebuilt with the
+    // new bytes, and the module that merely calls into it is reused.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "lib/assets/words.txt", .data = "alpha\nbeta\ngamma\n" });
+    const edited = try embedReport(a, entry, output, cache);
+    try testing.expect(!try reportedReused(edited, "lib.data::WORDS"));
+    try testing.expect(try reportedReused(edited, "main::main"));
+    try testing.expectEqual(@as(i64, 1), edited.object.get("compiled_function_objects").?.integer);
+    try testing.expectEqualStrings("17\n", try programOutput(a, output));
+    // Putting the old bytes back reuses the objects the first build made.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "lib/assets/words.txt", .data = "alpha\nbeta\n" });
+    const restored = try embedReport(a, entry, output, cache);
+    try testing.expectEqual(@as(i64, 0), restored.object.get("compiled_function_objects").?.integer);
+    try testing.expectEqualStrings("11\n", try programOutput(a, output));
+}
+
+// spec-case: EMBED-3
+test "a whole-program build sees an embedded file's edit and an unchanged build is skipped" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "const DATA: bytes = embed_bytes(\"data.bin\")\n\n\ndef main(out: Stream) -> int effects(output):\n    out.print(len(DATA))\n    return 0\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "data.bin", .data = "abc" });
+    const entry = try std.fs.path.join(a, &.{ root, "main.my" });
+    const output = try std.fs.path.join(a, &.{ root, "program" });
+    const cache = try std.fs.path.join(a, &.{ root, "cache" });
+    const argv = [_][]const u8{ compiler_path, "build", entry, "-o", output, "--cache-dir", cache, "--mode", "Debug", "--timings=json", tools[0], tools[1] };
+    const cold = try std.process.run(a, testing.io, .{ .argv = &argv });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, cold.term);
+    try testing.expectEqualStrings("3\n", try programOutput(a, output));
+    const built = try std.Io.Dir.cwd().statFile(testing.io, output, .{});
+    const noop = try std.process.run(a, testing.io, .{ .argv = &argv });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, noop.term);
+    try testing.expect(std.mem.indexOf(u8, noop.stderr, "\"name\":\"link\",\"duration_ns\":0,") != null);
+    try testing.expectEqual(built.inode, (try std.Io.Dir.cwd().statFile(testing.io, output, .{})).inode);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "data.bin", .data = "abcdef" });
+    const edited = try std.process.run(a, testing.io, .{ .argv = &argv });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, edited.term);
+    try testing.expect(std.mem.indexOf(u8, edited.stderr, "\"name\":\"link\",\"duration_ns\":0,") == null);
+    try testing.expectEqualStrings("6\n", try programOutput(a, output));
+}
+
+// spec-case: EMBED-2
+test "check reports an embed's diagnostic at its literal and exits nonzero" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "def main() -> int:\n    return len(embed_bytes(\"absent.bin\"))\n" });
+    const entry = try std.fs.path.join(a, &.{ root, "main.my" });
+    const result = try std.process.run(a, testing.io, .{ .argv = &.{ compiler_path, "check", entry } });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, result.term);
+    try testing.expect(std.mem.indexOf(u8, result.stderr, "main.my:2:28: error[E_EMBED_MISSING]") != null);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "absent.bin", .data = "x" });
+    const found = try std.process.run(a, testing.io, .{ .argv = &.{ compiler_path, "check", entry } });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, found.term);
+}
+
+// spec-case: EMBED-3
+test "mylang test runs a module that embeds and reruns it when only the fixture changes" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    try temporary.dir.createDirPath(testing.io, "fixtures");
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "fixtures/nul.bin", .data = "a\x00b" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "emb.my", .data = "module emb\n\nconst NUL: bytes = embed_bytes(\"fixtures/nul.bin\")\n\n\npublic def test_nul() -> bool:\n    return len(NUL) == 3 and NUL[1] == 0\n" });
+    const entry = try std.fs.path.join(a, &.{ root, "emb.my" });
+    const cache = try std.fs.path.join(a, &.{ root, "cache" });
+    const argv = [_][]const u8{ compiler_path, "test", entry, "--cache-dir", cache, tools[0], tools[1] };
+    const first = try std.process.run(a, testing.io, .{ .argv = &argv });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, first.term);
+    try testing.expect(std.mem.indexOf(u8, first.stdout, "passed emb::test_nul") != null);
+    const again = try std.process.run(a, testing.io, .{ .argv = &argv });
+    try testing.expect(std.mem.indexOf(u8, again.stdout, "cached emb::test_nul") != null);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "fixtures/nul.bin", .data = "a\x00bc" });
+    const changed = try std.process.run(a, testing.io, .{ .argv = &argv });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, changed.term);
+    try testing.expect(std.mem.indexOf(u8, changed.stdout, "failed emb::test_nul") != null);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "fixtures/nul.bin", .data = "a\x00b" });
+    const restored = try std.process.run(a, testing.io, .{ .argv = &argv });
+    try testing.expect(std.mem.indexOf(u8, restored.stdout, "cached emb::test_nul") != null);
+}
