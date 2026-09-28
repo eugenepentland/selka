@@ -144,7 +144,16 @@ test "RC isolated operands preserve byte metadata guards checked fallback and st
     runtime.set(.rc);
     var output = try emitted(false);
     defer output.deinit();
-    const il = try functionOf(output.value, "scan");
+    // A constant literal is one instruction now, so it leaves no write-only push
+    // slots behind: the emitted function has no spare bank and stays unisolated.
+    // Give that same emitted text eight unused slots, as a wider frame would.
+    const emitted_il = try functionOf(output.value, "scan");
+    try t.expect(std.mem.indexOf(u8, emitted_il, "RC-LOOP-OPERANDS-ISOLATED") == null);
+    const bank = "\n@entry\n %s20 =l alloc8 8\n %s21 =l alloc8 8\n %s22 =l alloc8 8\n %s23 =l alloc8 8\n %s24 =l alloc8 8\n %s25 =l alloc8 8\n %s26 =l alloc8 8\n %s27 =l alloc8 8\n";
+    const banked = try std.mem.replaceOwned(u8, t.allocator, emitted_il, "\n@entry\n", bank);
+    defer t.allocator.free(banked);
+    const il = try text.rewrite(t.allocator, banked);
+    defer t.allocator.free(il);
     try t.expect(std.mem.indexOf(u8, il, "RC-LOOP-OPERANDS-ISOLATED") != null);
     try t.expect(std.mem.indexOf(u8, il, "RC-READ-BYTES-VERSION-1") != null);
     const original = std.mem.indexOf(u8, il, "\n@oi") orelse return error.TestUnexpectedResult;

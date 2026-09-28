@@ -38,7 +38,11 @@ pub const Instruction = struct {
         unwrap_domain: typed.Type,
         neg_integer: typed.Type,
         binary_integer: struct { ty: typed.Type, op: typed.BinaryOp },
-        make_record: struct { ty: typed.Type, fields: usize, order: []const usize = &.{} },
+        /// A `str`/`bytes` literal whose every element is a constant carries its
+        /// whole content as `payload` (UTF-8 octets for `str`, raw octets for
+        /// `bytes`) and has `fields == 0`: it pops nothing, so a literal is one
+        /// instruction and one stack slot however long it is (`LITERAL-PAYLOAD-1`).
+        make_record: struct { ty: typed.Type, fields: usize, order: []const usize = &.{}, payload: []const u8 = &.{} },
         update_record: struct { ty: typed.Type, indices: []const usize },
         get_field: usize,
         get_index: Access,

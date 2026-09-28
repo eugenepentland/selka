@@ -70,3 +70,75 @@ test "a frozen literal keeps its content type and length under collection stress
     defer c.deinit();
     try std.testing.expectEqual(@as(i64, 5), (try native.runWithOptions(&c, .{ .gc_stress = true })).value);
 }
+const constant_literal = @import("constant_literal.zig");
+const typed = @import("typed.zig");
+/// A repeating run of source text with an escape and multi-byte scalars, which decodes to 9 scalars for a `str`.
+/// decodes to 20 octets in 11 scalars for a `str` and to its 12 ASCII-escaped
+const mixed_text = "ab (é→😀)\\n";
+const ascii_run = "(sym 1.5)\\n";
+/// A `main` returning how many scalars or octets a literal of `repeats` runs holds.
+fn longLiteral(a: std.mem.Allocator, prefix: []const u8, run: []const u8, repeats: usize) ![]u8 {
+    var source: std.ArrayList(u8) = .empty;
+    errdefer source.deinit(a);
+    try source.appendSlice(a, "def main() -> i64:\n    data = ");
+    try source.appendSlice(a, prefix);
+    try source.append(a, '"');
+    for (0..repeats) |_| try source.appendSlice(a, run);
+    try source.appendSlice(a, "\"\n    return int(len(data))\n");
+    return source.toOwnedSlice(a);
+}
+// spec: LITERAL-PAYLOAD-1
+test "a long constant literal is one payload instruction and linear IL" {
+    const a = std.testing.allocator;
+    // 5400 runs of 10 decoded octets: 54 000 octets, under the 65 536 literal limit.
+    const source = try longLiteral(a, "b", ascii_run, 5400);
+    defer a.free(source);
+    var parsed = try emitted(a, source);
+    defer parsed.deinit();
+    const il = named(parsed.value, "main").?.il;
+    // One hex marker carries the octets (two digits each); the per-element
+    // form spent about 200 bytes of IL, a step check and a frame slot on each.
+    try std.testing.expect(il.len < 54_000 * 3 + 16_384);
+    try std.testing.expect(std.mem.count(u8, il, "alloc8") < 64);
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, il, "# myl-lit "));
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, il, "loadl $myl_lit_"));
+}
+// spec-case: LITERAL-PAYLOAD-1
+test "a long str and bytes literal reach the program intact" {
+    const a = std.testing.allocator;
+    const text_source = try longLiteral(a, "", mixed_text, 2000);
+    defer a.free(text_source);
+    var text = try language.Compilation.init(a, "d_text.my", text_source);
+    defer text.deinit();
+    // 2000 runs of 9 scalars each (`ab (é→😀)` plus the newline escape).
+    try std.testing.expectEqual(@as(i64, 2000 * 9), (try native.runWithOptions(&text, .{})).value);
+    const bytes_source = try longLiteral(a, "b", "\\x00\\xff\\n", 5000);
+    defer a.free(bytes_source);
+    var bytes = try language.Compilation.init(a, "e_bytes.my", bytes_source);
+    defer bytes.deinit();
+    try std.testing.expectEqual(@as(i64, 5000 * 3), (try native.runWithOptions(&bytes, .{ .gc_stress = true })).value);
+}
+// spec-case: LITERAL-PAYLOAD-1
+test "only a constant literal of valid octets collapses to a payload" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const span: @import("source.zig").Span = .{ .start = 0, .end = 0 };
+    const nodes = [_]typed.Node{
+        .{ .ty = .u32, .span = span, .data = .{ .integer = 'a' } },
+        .{ .ty = .u32, .span = span, .data = .{ .integer = 0x1f600 } },
+        .{ .ty = .u32, .span = span, .data = .{ .integer = 0xd800 } },
+        .{ .ty = .u8, .span = span, .data = .{ .integer = 0xff } },
+        .{ .ty = .u8, .span = span, .data = .{ .integer = 256 } },
+        .{ .ty = .u32, .span = span, .data = .{ .boolean = true } },
+    };
+    const ids = [_]typed.NodeId{ @fromBackingInt(@intCast(0)), @fromBackingInt(@intCast(1)), @fromBackingInt(@intCast(2)), @fromBackingInt(@intCast(3)), @fromBackingInt(@intCast(4)), @fromBackingInt(@intCast(5)) };
+    const text = (try constant_literal.payload(arena.allocator(), &nodes, ids[0..2], true)).?;
+    try std.testing.expectEqualStrings("a\u{1f600}", text);
+    const octets = (try constant_literal.payload(arena.allocator(), &nodes, ids[3..4], false)).?;
+    try std.testing.expectEqualSlices(u8, &.{0xff}, octets);
+    try std.testing.expectEqual(@as(?[]const u8, null), try constant_literal.payload(arena.allocator(), &nodes, ids[0..0], true));
+    try std.testing.expectEqual(@as(?[]const u8, null), try constant_literal.payload(arena.allocator(), &nodes, ids[1..3], true));
+    try std.testing.expectEqual(@as(?[]const u8, null), try constant_literal.payload(arena.allocator(), &nodes, ids[3..5], false));
+    try std.testing.expectEqual(@as(?[]const u8, null), try constant_literal.payload(arena.allocator(), &nodes, ids[5..6], true));
+    try std.testing.expectEqual(@as(?[]const u8, null), try constant_literal.payload(arena.allocator(), &nodes, ids[3..4], true));
+}

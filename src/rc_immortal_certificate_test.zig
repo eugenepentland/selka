@@ -155,9 +155,25 @@ fn literalBound(count: usize) !bool {
 }
 
 // spec-case: RC-IMMORTAL-ENTRY-1
-test "RC immortal exact literal authority stops at bounded instruction input" {
+test "RC immortal exact literal authority does not depend on the literal's length" {
     try t.expect(try literalBound(126));
-    try t.expect(!try literalBound(127));
+    try t.expect(try literalBound(127));
+    try t.expect(try literalBound(4000));
+}
+
+fn assignments(count: usize) !bool {
+    var text: std.ArrayList(u8) = .empty;
+    defer text.deinit(t.allocator);
+    try text.appendSlice(t.allocator, "def empty() -> bytes:\n    current = b\"a\"\n");
+    for (0..count) |_| try text.appendSlice(t.allocator, "    current = b\"a\"\n");
+    try text.appendSlice(t.allocator, "    return current\ndef main() -> int:\n    return 0\n");
+    return (try witness(text.items, "empty")).immortal;
+}
+
+// spec-case: RC-IMMORTAL-ENTRY-1
+test "RC immortal exact literal authority stops at bounded instruction input" {
+    try t.expect(try assignments(20));
+    try t.expect(!try assignments(70));
 }
 
 fn targets(count: usize) !bool {
