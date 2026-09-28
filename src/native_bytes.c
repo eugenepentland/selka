@@ -59,7 +59,7 @@ static const myl_native_type view_header_type = {
     .size=sizeof(myl_native_list), .alignment=_Alignof(myl_native_list),
     .kind=MYL_NATIVE_RECORD, .fields=view_fields, .field_count=1,
     .trace_fields=view_fields, .trace_field_count=1, .trace_mode=MYL_NATIVE_TRACE_FIELDS,
-    .scan=view_scan, .scan_count=1
+    .scan=view_scan, .scan_count=1, .rc_id=MYL_RC_ID_BYTES_VIEW
 };
 static void rc_view_edges(myl_native_heap *heap, void *payload, size_t count) {
     (void)count;

@@ -17,7 +17,7 @@ static const myl_native_scan_entry dict_scan[]={
     {.offset=offsetof(myl_native_dictionary,entries),.tag_offset=MYL_NATIVE_SCAN_ALWAYS},
     {.offset=offsetof(myl_native_dictionary,index)+offsetof(myl_native_dictionary_index,slots),.tag_offset=MYL_NATIVE_SCAN_ALWAYS}};
 static const myl_native_type dict_type={.size=sizeof(myl_native_dictionary),.alignment=_Alignof(myl_native_dictionary),.kind=MYL_NATIVE_RECORD,.fields=dict_fields,.field_count=2,.scan=dict_scan,.scan_count=2};
-static const myl_native_type rc_dict_type={.size=sizeof(myl_native_dictionary),.alignment=_Alignof(myl_native_dictionary),.kind=MYL_NATIVE_PLAIN};
+static const myl_native_type rc_dict_type={.size=sizeof(myl_native_dictionary),.alignment=_Alignof(myl_native_dictionary),.kind=MYL_NATIVE_PLAIN,.rc_id=MYL_RC_ID_DICTIONARY};
 static int rc_dict_prepare(myl_native_heap *, const myl_native_type *, const myl_native_type *);
 static myl_native_dictionary *rc_dict_clone(myl_native_heap *, const myl_native_dictionary *, unsigned);
 static myl_rc_status rc_dict_shell(myl_native_heap *, const void *, unsigned, void **);

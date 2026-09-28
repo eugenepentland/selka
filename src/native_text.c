@@ -193,7 +193,7 @@ const myl_native_type myl_native_text_view_type={
     .size=sizeof(myl_native_text_view), .alignment=_Alignof(myl_native_text_view),
     .kind=MYL_NATIVE_RECORD, .fields=view_fields, .field_count=1,
     .trace_fields=view_fields, .trace_field_count=1, .trace_mode=MYL_NATIVE_TRACE_FIELDS,
-    .scan=view_scan, .scan_count=1
+    .scan=view_scan, .scan_count=1, .rc_id=MYL_RC_ID_TEXT_VIEW
 };
 _Static_assert(sizeof(myl_native_text_view)==32, "a text view is four words");
 static void rc_text_view_edges(myl_native_heap *heap, void *payload, size_t count) {

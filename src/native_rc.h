@@ -4,6 +4,15 @@
 /* The versioned RC artifact/heap ABI is never inferred from an arbitrary
  * pointer. GC, arena and immortal objects keep their 16-byte common header. */
 #define MYL_RC_ABI_VERSION 3u
+/* RC-TYPE-ID-1: the reserved dense type ids (native_heap.h `rc_id`) of the
+ * descriptors the runtime defines itself. A generated descriptor's id is
+ * MYL_RC_ID_FIRST_GENERATED plus its position in the compiler's one program-wide
+ * order, so no two types of one linked program share an id. */
+enum {
+    MYL_RC_ID_NONE = 0, MYL_RC_ID_RAW, MYL_RC_ID_LIST, MYL_RC_ID_LIST_STORAGE,
+    MYL_RC_ID_BYTES_VIEW, MYL_RC_ID_TEXT_VIEW, MYL_RC_ID_DICTIONARY
+};
+_Static_assert(MYL_RC_ID_DICTIONARY < MYL_RC_ID_FIRST_GENERATED, "runtime ids stay below generated ids");
 #define MYL_RC_PREFIX_BYTES ((size_t)32)
 #define MYL_RC_COUNT_MAX UINTPTR_MAX
 #define MYL_RC_COUNT_LIMIT_CODE "R_REFERENCE_COUNT_LIMIT"

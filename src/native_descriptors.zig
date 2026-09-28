@@ -34,8 +34,15 @@ pub fn generate(allocator: std.mem.Allocator, catalog: *native.Catalog) Error![]
         // A box pointer names its body before the body is emitted (RECURSIVE-VALUES-2).
         if (boxed(catalog, item.ty)) writer.print("extern const myl_native_type {s}_body;\n", .{item.name}) catch return error.OutOfMemory;
     }
+    // RC-TYPE-ID-1: a descriptor's id is its position in this one name-sorted
+    // order, a body directly after its type, which rc_descriptors.zig's module
+    // repeats entry for entry. The whole program's catalog is known here, so the
+    // ids are dense and unique however the modules were compiled.
+    var next_id: u32 = 0;
     for (items) |item| {
         const layout = try catalog.layout(item.ty);
+        const id = next_id;
+        next_id += 1;
         if (layout.kind == .niche) {
             // QBE-NICHE-1: a niche optional's word is its payload reference or
             // null, and every descriptor walk — tracing, the region check, the
@@ -43,8 +50,8 @@ pub fn generate(allocator: std.mem.Allocator, catalog: *native.Catalog) Error![]
             // as no reference. So the runtime sees the payload's own pointer
             // descriptor under this name and needs no kind of its own.
             const payload = layout.fields[0].ty;
-            try emit(a, writer, catalog, .{ .name = item.name, .ty = payload }, try catalog.layout(payload));
-        } else try emit(a, writer, catalog, .{ .name = item.name, .ty = item.ty }, layout);
+            try emit(a, writer, catalog, .{ .name = item.name, .ty = payload, .id = id }, try catalog.layout(payload));
+        } else try emit(a, writer, catalog, .{ .name = item.name, .ty = item.ty, .id = id }, layout);
         if (item.ty.isAggregate() and catalog.records[item.ty.recordIndex()].managed) {
             // Collections use their runtime header and typed element descriptors.
             // Nominal managed records can allocate this inline body directly.
@@ -54,7 +61,8 @@ pub fn generate(allocator: std.mem.Allocator, catalog: *native.Catalog) Error![]
                 defer catalog.releaseLayout(body);
                 // QBE-GEN-BARRIER-1: a class body is the one object whose
                 // post-construction stores all run the generational barrier.
-                try emit(a, writer, catalog, .{ .name = try std.fmt.allocPrint(a, "{s}_body", .{item.name}), .ty = item.ty, .cell = true }, body);
+                try emit(a, writer, catalog, .{ .name = try std.fmt.allocPrint(a, "{s}_body", .{item.name}), .ty = item.ty, .cell = true, .id = next_id }, body);
+                next_id += 1;
             }
         }
     }
@@ -64,9 +72,10 @@ pub fn generate(allocator: std.mem.Allocator, catalog: *native.Catalog) Error![]
 fn boxed(catalog: *const native.Catalog, ty: typed.Type) bool {
     return ty.isAggregate() and ty.recordIndex() < catalog.records.len and catalog.records[ty.recordIndex()].collection.box;
 }
-/// One descriptor to emit: its symbol, the semantic type it describes, and
-/// whether it is a class body the store barrier watches.
-const Target = struct { name: []const u8, ty: typed.Type, cell: bool = false };
+/// One descriptor to emit: its symbol, the semantic type it describes, whether
+/// it is a class body the store barrier watches, and its dense runtime id
+/// (RC-TYPE-ID-1) counted from `MYL_RC_ID_FIRST_GENERATED`.
+const Target = struct { name: []const u8, ty: typed.Type, cell: bool = false, id: u32 };
 fn emit(a: std.mem.Allocator, writer: *std.Io.Writer, catalog: *native.Catalog, target: Target, layout: native.Layout) Error!void {
     const name = target.name;
     const ty = target.ty;
@@ -137,8 +146,8 @@ fn emit(a: std.mem.Allocator, writer: *std.Io.Writer, catalog: *native.Catalog, 
     writer.print(
         "const myl_native_type {s} = {{.size={d},.alignment={d},.fields={s},.field_count={d}," ++
             ".count={d},.stride={d},.kind={s},.collection_kind={d},.element={s},.key={s}," ++
-            ".trace_fields={s},.trace_field_count={d},.trace_mode={s},.cell={d}",
-        .{ name, layout.size, layout.alignment, fields, layout.fields.len, layout.count, layout.stride, kind.spelling(), collection_kind, element, key, trace_fields, trace_field_count, trace_mode, @intFromBool(target.cell) },
+            ".trace_fields={s},.trace_field_count={d},.trace_mode={s},.cell={d},.rc_id=MYL_RC_ID_FIRST_GENERATED+{d}",
+        .{ name, layout.size, layout.alignment, fields, layout.fields.len, layout.count, layout.stride, kind.spelling(), collection_kind, element, key, trace_fields, trace_field_count, trace_mode, @intFromBool(target.cell), target.id },
     ) catch return error.OutOfMemory;
     writer.print(",.scan={s},.scan_count={d}}};\n", .{ scan, if (planned) plan.len else 0 }) catch return error.OutOfMemory;
 }
@@ -239,6 +248,12 @@ fn flatten(catalog: *native.Catalog, plan: *ScanPlan, target: Described, base: u
         else => return true,
     }
 }
+/// A copy of a descriptor line with its `.rc_id` initializer cut out, for comparing two descriptors' shapes.
+fn withoutId(allocator: std.mem.Allocator, line: []const u8) ![]u8 {
+    const from = std.mem.indexOf(u8, line, ",.rc_id=") orelse return allocator.dupe(u8, line);
+    const to = std.mem.indexOfPos(u8, line, from, ",.scan=") orelse return allocator.dupe(u8, line);
+    return std.mem.concat(allocator, u8, &.{ line[0..from], line[to..] });
+}
 /// The first field whose type is traced: `trace_fields[0]` of the emitted descriptor.
 fn firstTraced(catalog: *native.Catalog, fields: []const native.Field) Error!?native.Field {
     for (fields) |field| if ((try catalog.layout(field.ty)).trace) return field;
@@ -338,7 +353,13 @@ test "a niche optional is described to the runtime exactly as its payload's poin
     const node_at = std.mem.indexOf(u8, output, node_head).? + node_head.len;
     const maybe_body = output[maybe_at..std.mem.indexOfScalarPos(u8, output, maybe_at, '\n').?];
     const node_body = output[node_at..std.mem.indexOfScalarPos(u8, output, node_at, '\n').?];
-    try std.testing.expectEqualStrings(node_body, maybe_body);
+    // Each has its own descriptor, so its own id (RC-TYPE-ID-1); everything else matches.
+    const node_shape = try withoutId(std.testing.allocator, node_body);
+    defer std.testing.allocator.free(node_shape);
+    const maybe_shape = try withoutId(std.testing.allocator, maybe_body);
+    defer std.testing.allocator.free(maybe_shape);
+    try std.testing.expectEqualStrings(node_shape, maybe_shape);
+    try std.testing.expect(!std.mem.eql(u8, node_body, maybe_body));
     try std.testing.expect(std.mem.indexOf(u8, maybe_body, ".size=8,.alignment=8,.fields=NULL,") != null);
     try std.testing.expect(std.mem.indexOf(u8, maybe_body, ".kind=MYL_NATIVE_POINTER,") != null);
 }

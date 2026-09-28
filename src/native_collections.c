@@ -21,7 +21,7 @@ static const myl_native_scan_entry list_scan[] = {
 static const myl_native_type list_type = {
     .size = sizeof(myl_native_list), .alignment = _Alignof(myl_native_list),
     .kind = MYL_NATIVE_RECORD, .fields = list_fields, .field_count = 1,
-    .scan = list_scan, .scan_count = 1
+    .scan = list_scan, .scan_count = 1, .rc_id = MYL_RC_ID_LIST
 };
 static myl_native_list *rc_list_new(myl_native_heap *, const myl_native_type *, size_t, unsigned, int);
 static myl_native_list *rc_list_clone(myl_native_heap *, const myl_native_list *, const myl_native_type *, unsigned);
@@ -1118,7 +1118,8 @@ static void rc_storage_edges(myl_native_heap *heap, void *payload, size_t count)
     myl_rc_edge_release(heap,((myl_native_list *)payload)->storage);
 }
 static const myl_native_type rc_storage_type={
-    .size=sizeof(myl_native_list),.alignment=_Alignof(myl_native_list),.kind=MYL_NATIVE_PLAIN
+    .size=sizeof(myl_native_list),.alignment=_Alignof(myl_native_list),.kind=MYL_NATIVE_PLAIN,
+    .rc_id=MYL_RC_ID_LIST_STORAGE
 };
 static const myl_rc_shape rc_list_shape={.size=sizeof(myl_native_list),.kind=MYL_RC_SHAPE_NONE};
 static myl_rc_status rc_list_clone_adapter(myl_native_heap *heap, const void *payload, unsigned region, void **out) {

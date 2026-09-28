@@ -172,6 +172,53 @@ test "RC-OWNERSHIP-PLAN-1 ownership metadata names pointer bodies and inline var
     try t.expect(std.mem.indexOf(u8, text, "myl_rc_generated_module = {.abi=MYL_RC_ABI_VERSION") != null);
 }
 
+// spec-case: RC-TYPE-ID-1
+test "RC-TYPE-ID-1 every generated descriptor's id is its position in the RC descriptor table" {
+    var fixture = try ShapeFixture.init(
+        \\record Node:
+        \\    next: Option[Node]
+        \\    label: str
+        \\
+        \\record Holder:
+        \\    values: list[Node]
+        \\    choice: Result[bytes, int]
+        \\
+        \\def main() -> int:
+        \\    return 0
+    );
+    defer fixture.deinit();
+    const native_text = try @import("native_descriptors.zig").generate(t.allocator, &fixture.layouts);
+    defer t.allocator.free(native_text);
+    const rc_text = try @import("rc_descriptors.zig").generate(t.allocator, &fixture.layouts);
+    defer t.allocator.free(rc_text);
+    const count = try expectIdsFollowTable(native_text, rc_text);
+    try t.expect(count > typed.Type.record_base);
+    // The id space is exactly the descriptor table: one past its last position is unused.
+    try t.expect(std.mem.indexOf(u8, native_text, try std.fmt.allocPrint(fixture.arena.allocator(), ".rc_id=MYL_RC_ID_FIRST_GENERATED+{d},", .{count})) == null);
+}
+
+/// Walks `myl_rc_generated_descriptors` in order and checks that the i-th
+/// entry's native descriptor was emitted with id i; returns the entry count.
+fn expectIdsFollowTable(native_text: []const u8, rc_text: []const u8) !usize {
+    const table = std.mem.indexOf(u8, rc_text, "myl_rc_generated_descriptors[] = {\n").?;
+    var lines = std.mem.splitScalar(u8, rc_text[table..], '\n');
+    _ = lines.next();
+    var index: usize = 0;
+    while (lines.next()) |line| : (index += 1) {
+        const prefix = " {.type=&";
+        if (!std.mem.startsWith(u8, line, prefix)) break;
+        const name = line[prefix.len..std.mem.indexOfScalar(u8, line, ',').?];
+        var head_buffer: [128]u8 = undefined;
+        const head = try std.fmt.bufPrint(&head_buffer, "const myl_native_type {s} = ", .{name});
+        const start = std.mem.indexOf(u8, native_text, head).?;
+        const definition = native_text[start..std.mem.indexOfScalarPos(u8, native_text, start, '\n').?];
+        var id_buffer: [96]u8 = undefined;
+        const id = try std.fmt.bufPrint(&id_buffer, ",.rc_id=MYL_RC_ID_FIRST_GENERATED+{d},.scan=", .{index});
+        try t.expect(std.mem.indexOf(u8, definition, id) != null);
+    }
+    return index;
+}
+
 fn ownedValue(storage: u32, token: u32) model.ValueState {
     return .{
         .value = @fromBackingInt(@intCast(storage)),

@@ -197,6 +197,112 @@ static void metadata_maps(void) {
     heap.exhausted = 0;
     finish(&heap);
 }
+/* Types numbered the way separately compiled modules number them: each module
+ * counts from the first generated id, so a second module reuses the first's. */
+static myl_native_type numbered_a[6], numbered_b[6], numbered_c[2];
+static myl_rc_descriptor numbered_a_descriptors[6], numbered_b_descriptors[6], numbered_c_descriptors[2];
+static myl_rc_module numbered_modules[3];
+static void numbered_module(myl_rc_module *module, myl_native_type *types, myl_rc_descriptor *descriptors,
+                            const unsigned *ids, size_t count) {
+    for (size_t i = 0; i < count; ++i) {
+        types[i] = pointer;
+        types[i].rc_id = ids[i];
+        descriptors[i] = (myl_rc_descriptor){.type = &types[i], .shape = &owned};
+    }
+    *module = (myl_rc_module){.abi = MYL_RC_ABI_VERSION, .descriptors = descriptors, .descriptor_count = count};
+}
+static const myl_rc_map_entry *id_slot(const myl_native_heap *heap, unsigned id) {
+    assert(id < heap->rc->metadata.ids.capacity);
+    return &heap->rc->metadata.ids.entries[id];
+}
+// spec: RC-TYPE-ID-1
+static void dense_type_ids(void) {
+    const unsigned first = MYL_RC_ID_FIRST_GENERATED;
+    /* Module A: six types in order. Module B: an id A already took, a free id,
+     * a smaller id after it, an id far past the descriptors registered, and a
+     * type with no id. */
+    const unsigned a_ids[6] = {first, first + 1, first + 2, first + 3, first + 4, first + 5};
+    const unsigned b_ids[5] = {first, first + 20, first + 19, 1u << 30, 0};
+    myl_native_heap heap;
+    start(&heap);
+    const myl_rc_id_table *ids = &heap.rc->metadata.ids;
+    size_t base = ids->count, hashed = heap.rc->metadata.bindings.count;
+    /* The runtime's raw bytes type holds its reserved id. */
+    assert(base >= 1 && ids->capacity > MYL_RC_ID_RAW && id_slot(&heap, MYL_RC_ID_RAW)->value);
+    numbered_module(&numbered_modules[0], numbered_a, numbered_a_descriptors, a_ids, 6);
+    assert(myl_rc_module_register(&heap, &numbered_modules[0]) == MYL_RC_OK);
+    assert(ids->count == base + 6 && heap.rc->metadata.bindings.count == hashed && ids->capacity > first + 5);
+    for (unsigned i = 0; i < 6; ++i) {
+        const myl_rc_binding *binding = myl_rc_binding_find(&heap, &numbered_a[i]);
+        assert(binding && binding == id_slot(&heap, first + i)->value && binding->descriptor.type == &numbered_a[i]);
+        assert(id_slot(&heap, first + i)->key == &numbered_a[i]);
+    }
+    numbered_module(&numbered_modules[1], numbered_b, numbered_b_descriptors, b_ids, 5);
+    assert(myl_rc_module_register(&heap, &numbered_modules[1]) == MYL_RC_OK);
+    /* One B type takes its free id; the other four fall back to the hashed map. */
+    assert(ids->count == base + 7 && heap.rc->metadata.bindings.count == hashed + 4);
+    assert(ids->capacity < 64);
+    for (unsigned i = 0; i < 5; ++i) {
+        const myl_rc_descriptor *found = myl_rc_descriptor_find(&heap, &numbered_b[i]);
+        assert(found && found->type == &numbered_b[i]);
+        assert(myl_rc_binding_find(&heap, &numbered_b[i])->descriptor.type == &numbered_b[i]);
+    }
+    /* B's first type shares A's first id, and neither sees the other's binding. */
+    assert(myl_rc_binding_find(&heap, &numbered_a[0]) != myl_rc_binding_find(&heap, &numbered_b[0]));
+    assert(id_slot(&heap, first)->key == &numbered_a[0] && myl_rc_binding_find(&heap, &numbered_a[0])->descriptor.type == &numbered_a[0]);
+    /* A type nobody registered finds nothing, whatever id it carries. */
+    myl_native_type stray = pointer;
+    stray.rc_id = first + 1;
+    assert(!myl_rc_binding_find(&heap, &stray) && !myl_rc_descriptor_find(&heap, &stray));
+    stray.rc_id = 1u << 20;
+    assert(!myl_rc_binding_find(&heap, &stray));
+    stray.rc_id = 0;
+    assert(!myl_rc_binding_find(&heap, &stray));
+    /* A refused registration leaves the id table and its charge unchanged. */
+    const unsigned c_ids[2] = {first + 30, first + 31};
+    numbered_module(&numbered_modules[2], numbered_c, numbered_c_descriptors, c_ids, 2);
+    myl_rc_map_entry *entries = ids->entries;
+    size_t capacity = ids->capacity, count = ids->count, charged = heap.bytes;
+    heap.limit = heap.bytes;
+    assert(myl_rc_module_register(&heap, &numbered_modules[2]) == MYL_RC_ALLOCATION_REFUSED);
+    assert(heap.bytes == charged && ids->entries == entries && ids->capacity == capacity && ids->count == count);
+    assert(!myl_rc_binding_find(&heap, &numbered_c[0]) && !myl_rc_binding_find(&heap, &numbered_c[1]));
+    heap.limit = 64u << 20;
+    heap.exhausted = 0;
+    assert(myl_rc_module_register(&heap, &numbered_modules[2]) == MYL_RC_OK && ids->count == count + 2);
+    assert(myl_rc_binding_find(&heap, &numbered_c[1])->descriptor.type == &numbered_c[1]);
+    finish(&heap);
+}
+// spec: RC-STARTUP-3
+static void flat_plans_build_on_first_lookup(void) {
+    const unsigned first = MYL_RC_ID_FIRST_GENERATED;
+    const unsigned ids[6] = {first, first + 1, first + 2, first + 3, first + 4, first + 5};
+    myl_native_heap heap;
+    start(&heap);
+    numbered_module(&numbered_modules[0], numbered_a, numbered_a_descriptors, ids, 6);
+    assert(myl_rc_module_register(&heap, &numbered_modules[0]) == MYL_RC_OK);
+    /* Registered types wait with an unbuilt plan: no key, no plan size. */
+    for (unsigned i = 0; i < 6; ++i) {
+        const myl_rc_map_entry *slot = id_slot(&heap, first + i);
+        assert(!slot->key && slot->value && !((const myl_rc_binding *)slot->value)->flat.size);
+    }
+    /* The first lookup builds that type's plan, and no other. */
+    const myl_rc_flat *flat = plan(&heap, &numbered_a[2]);
+    assert(flat->size == 8 && flat->count == 1 && flat->loanable && !flat->conditional);
+    assert(id_slot(&heap, first + 2)->key == &numbered_a[2] && !id_slot(&heap, first + 1)->key && !id_slot(&heap, first + 3)->key);
+    assert(plan(&heap, &numbered_a[2]) == flat && myl_rc_descriptor_of(&heap, &numbered_a[2]) == &myl_rc_binding_find(&heap, &numbered_a[2])->descriptor);
+    /* Allocating and killing an instance walks the plan built on demand. */
+    void *child = bytes8(&heap);
+    size_t live = heap.objects_live;
+    void **body = myl_native_heap_alloc(&heap, &numbered_a[4], 1);
+    assert(body && id_slot(&heap, first + 4)->key == &numbered_a[4]);
+    *body = child;
+    assert(myl_rc_owner_acquire(&heap, child) == MYL_RC_OK && header(child)->owners == 2);
+    myl_rc_owner_release(&heap, child);
+    myl_rc_owner_release(&heap, body);
+    assert(heap.objects_live == live - 1);
+    finish(&heap);
+}
 // spec: RC-LEAF-RETIRE-1
 static void edge_free_objects_retire_at_once(void) {
     myl_native_heap heap;
@@ -625,6 +731,31 @@ static void allocation_cache_reuse(void) {
     myl_rc_owner_release(&heap, fresh);
     finish(&heap);
 }
+// spec: RC-CLASS-TABLE-1
+static void size_classes_follow_the_table(void) {
+    /* The strides by construction: eight steps of 16 bytes, then four per doubling. */
+    size_t strides[MYL_RC_CACHE_CLASSES], count = 0;
+    for (size_t stride = 16; stride <= 128; stride += 16) strides[count++] = stride;
+    for (size_t base = 128; base < 8192; base *= 2)
+        for (size_t quarter = 1; quarter <= 4; ++quarter) strides[count++] = base + quarter * base / 4;
+    assert(count == MYL_RC_CACHE_CLASSES && strides[8] == 160 && strides[31] == 8192);
+    myl_native_heap heap;
+    start(&heap);
+    /* Every payload size a slab holds lands on the least class whose stride
+     * holds the prefix and payload: the freed slot heads that class's list. */
+    size_t checked = 0;
+    for (size_t bytes = 0; bytes <= 8192 - MYL_RC_PREFIX_BYTES; ++bytes) {
+        size_t expected = 0;
+        while (strides[expected] < MYL_RC_PREFIX_BYTES + bytes) ++expected;
+        void *payload = myl_rc_storage_bytes(&heap, bytes, 0);
+        assert(payload);
+        myl_rc_owner_release(&heap, payload);
+        assert(heap.rc_cache.free[expected] == header(payload));
+        ++checked;
+    }
+    assert(checked == 8192 - MYL_RC_PREFIX_BYTES + 1);
+    finish(&heap);
+}
 // spec-case: RC-DRAIN-FLAT-1
 static void drain_releases_trees_inline(void) {
     myl_native_heap heap;
@@ -863,6 +994,8 @@ int myl_rc_fast_verify(void) {
     variant_plan_operations();
     variant_plan_refusals();
     metadata_maps();
+    dense_type_ids();
+    flat_plans_build_on_first_lookup();
     edge_free_objects_retire_at_once();
     storage_visit_and_release_all();
     scope_journal_nodes_recycle();
@@ -876,18 +1009,19 @@ int myl_rc_fast_verify(void) {
     opaque_extension_keeps_prefix();
     scope_backing_shares_the_pin_entry();
     allocation_cache_reuse();
+    size_classes_follow_the_table();
     drain_releases_trees_inline();
     drain_pairs_keep_counts_exact();
     drain_types_skip_the_probe();
     large_extents_map_and_unmap();
     plain_elements_copy_as_bytes();
     list_elements_release_flat();
-    return 23;
+    return 26;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
-    assert(myl_rc_fast_verify() == 23);
-    puts("native RC fast paths: 23 tests passed");
+    assert(myl_rc_fast_verify() == 26);
+    puts("native RC fast paths: 26 tests passed");
     return 0;
 }
 #endif

@@ -80,12 +80,34 @@ typedef struct {
     size_t reserved;
     struct { const myl_native_type *type; size_t index; } single;
     rc_pools pools;
-    unsigned char class_of[RC_CLASS_STEPS];
 } rc_storage;
 static const size_t strides[RC_SLAB_CLASSES] = {
     16,32,48,64,80,96,112,128,160,192,224,256,320,384,448,512,
     640,768,896,1024,1280,1536,1792,2048,2560,3072,3584,4096,
     5120,6144,7168,8192
+};
+/* RC-CLASS-TABLE-1: the size class of every 16-byte step, one byte per step,
+ * as a constant table: entry n is the least class whose stride holds n*16
+ * bytes, exactly class_search(n * 16). Startup builds nothing, and no heap
+ * carries a copy. */
+static const unsigned char class_of[RC_CLASS_STEPS] = {
+    0,0,1,2,3,4,5,6,7,8,8,9,9,10,10,11,11,12,12,12,12,13,13,13,13,14,14,14,14,15,15,15,
+    15,16,16,16,16,16,16,16,16,17,17,17,17,17,17,17,17,18,18,18,18,18,18,18,18,19,19,19,19,19,19,19,
+    19,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,
+    21,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,
+    23,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,
+    24,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,
+    25,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,
+    26,27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,
+    27,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,
+    28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,
+    28,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,
+    29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,
+    29,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,
+    30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,
+    30,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,
+    31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,
+    31
 };
 #define RC_SLAB_OFFSET ((sizeof(rc_slab) + 15) & ~(size_t)15)
 _Static_assert(RC_SLAB_OFFSET == 80, "cached capacity fits the existing aligned slab metadata extent");
@@ -94,7 +116,8 @@ _Static_assert(sizeof(rc_large) % 16 == 0, "large allocator metadata preserves a
 _Static_assert(sizeof(myl_rc_object) == MYL_RC_PREFIX_BYTES, "RC prefix ABI");
 _Static_assert(offsetof(myl_rc_object, common) == 16, "common header ABI");
 static const myl_native_type raw_type = {
-    .size=1, .alignment=1, .kind=MYL_NATIVE_PLAIN, .trace_mode=MYL_NATIVE_TRACE_NONE
+    .size=1, .alignment=1, .kind=MYL_NATIVE_PLAIN, .trace_mode=MYL_NATIVE_TRACE_NONE,
+    .rc_id=MYL_RC_ID_RAW
 };
 static const myl_rc_shape raw_shape = {.size=1,.kind=MYL_RC_SHAPE_NONE};
 static const myl_rc_descriptor raw_descriptor = {.type=&raw_type,.shape=&raw_shape};
@@ -254,7 +277,8 @@ static size_t class_search(size_t extent) {
 }
 /* One table load for every slab-sized extent; larger extents are LARGE. */
 static size_t class_for(const rc_storage *storage, size_t extent) {
-    return extent<=strides[RC_SLAB_CLASSES-1]?storage->class_of[(extent+15)/16]:RC_SLAB_CLASSES;
+    (void)storage;
+    return extent<=strides[RC_SLAB_CLASSES-1]?class_of[(extent+15)/16]:RC_SLAB_CLASSES;
 }
 /* An empty class list takes one slab's slots: its whole free list, or else a
  * run of bump slots threaded in address order, each marked free. */
@@ -576,7 +600,13 @@ myl_rc_status myl_rc_storage_init(myl_native_heap *heap) {
     if (!storage) return MYL_RC_ALLOCATION_REFUSED;
     heap->bytes+=sizeof *storage;
     storage->reserved=sizeof *storage;
-    for (size_t step=0;step<RC_CLASS_STEPS;step++) storage->class_of[step]=(unsigned char)class_search(step*16);
+    if (MYL_RC_CHECKED) {
+        static int verified;
+        if (!verified) {
+            for (size_t step=0;step<RC_CLASS_STEPS;step++) myl_rc_invariant(class_of[step]==class_search(step*16));
+            verified=1;
+        }
+    }
     myl_rc_status status=myl_rc_heap_init(heap,&allocator,storage);
     if (status!=MYL_RC_OK) { heap->bytes-=sizeof *storage; free(storage); return status; }
     status=myl_rc_module_register(heap,&raw_module);
