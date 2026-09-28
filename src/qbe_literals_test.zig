@@ -104,6 +104,23 @@ test "a long constant literal is one payload instruction and linear IL" {
     try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, il, "loadl $myl_lit_"));
 }
 // spec-case: LITERAL-PAYLOAD-1
+test "a long literal lowers to one instruction whose payload is its content" {
+    const a = std.testing.allocator;
+    const source = try longLiteral(a, "", ascii_run, 5400);
+    defer a.free(source);
+    var c = try language.Compilation.init(a, "f_shape.my", source);
+    defer c.deinit();
+    try c.emit();
+    const program = c.code.?;
+    const code = program.functions[@backingInt(program.main)].scope.instructions;
+    // The literal, the store to `data`, the length read and the return: the
+    // per-element form spent one push for each of the 54 000 elements.
+    try std.testing.expect(code.len < 16);
+    try std.testing.expectEqual(@as(usize, 0), code[0].op.make_record.fields);
+    try std.testing.expectEqual(@as(usize, 54_000), code[0].op.make_record.payload.len);
+    try std.testing.expectEqualStrings("(sym 1.5)\n(sym 1.5)\n", code[0].op.make_record.payload[0 .. 2 * 10]);
+}
+// spec-case: LITERAL-PAYLOAD-1
 test "a long str and bytes literal reach the program intact" {
     const a = std.testing.allocator;
     const text_source = try longLiteral(a, "", mixed_text, 2000);
