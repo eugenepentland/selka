@@ -93,7 +93,7 @@ and run the fuzzer plus the adversarial repros before merging any new proof.
 | Item | Evidence | Expected effect |
 |---|---|---|
 | Callee summary "writes only scalar fields" | OWNERSHIP-MUT-RECORD-WRITE-1/2 (the review's GC value-semantics fix, narrowed by lane M) still makes real copies when a callee receiving a `mut` record only writes scalar fields, e.g. `frame.constants[read_byte(mut frame)]` in 29 Lox functions. Free under RC today but real copies under GC | GC-side copies; guards RC against the same regression class (lane M measured 1.18 -> 1.37 on Lox method_call before WRITE-2) |
-| No-alias fact for `mut` parameters | RC-INTERVAL-ANCHOR-3/4 refuse anchors when two `mut` parameters could alias. Lane M measured zero cost on this corpus, but any multi-`mut` API pays; a per-call-site proof that callers pass disjoint roots would recover it soundly | Other programs, not the corpus |
+| No-alias fact for `mut` parameters | MUT-EXCLUSIVE-1 (2026-09-28) now rejects overlapping `mut` arguments, so no accepted program reaches four alias refusals that stay as defense in depth: `aliasable()` in `src/qbe_rc_readonly_anchor.zig` (RC-INTERVAL-ANCHOR-1/2, RC-OPERAND-ANCHOR-1 via -3/-4), the QBE-MOVE-ELIDE-1 refusal in `src/qbe_moves.zig`, `otherMutableParameter` in `src/ownership_field_return.zig` (COW-FIELD-RETURN-1) and the any-other-`mut` refusal in `src/ownership_index_return.zig` (COW-INDEX-RETURN-1). Deleting them is now sound under value semantics; under `--legacy-sharing` two names can still share a `class` object, so check that mode first. Lane M measured zero cost on this corpus | Multi-`mut` APIs in other programs, not the corpus |
 | Receiver scopes whose root is a `mut` list parameter | Lox `heap::set_object_field`'s element write and `set_instance_field`'s call scope keep their pin/scope (lane K) | A few % on Lox rows that set fields |
 | `mut` list argument pins per call | nbody and sort_quick pay scope begin/pin/end for every `mut` list argument (lane F); needs a summary that the callee never shares its `mut` parameter | nbody LLVM 1.26 and sort_quick LLVM 1.28 toward 1.0 |
 | Per-call frame copies in Lox | `frame = load_frame(...)` copies the three-list ExecFrame on every call and return (lanes G, K) | Lox call-heavy rows (method_call, invocation, closures) |
@@ -138,11 +138,20 @@ Found by the adversarial review, fuzzing and the default flip; each needs
 fixing or a proof before more aggressive elision is safe (repros in
 `experiments/rc-review-20260928/repros/`):
 
-- Language-level, both runtimes: collection-typed arguments are lent and see
-  later in-place changes (`lst(xs, xs.pop())`); two `mut` arguments naming one
-  value break copies (`nested(mut a, mut a[0])`); the `mut` collection form of
-  the WRITE-2 case, `hold(box.names, mut state.boxes)`, still diverges (GC 2,
-  RC 1).
+- Language-level, both runtimes: **resolved 2026-09-28.**
+  - A read-only operand that a later operand of the same expression writes is
+    now a snapshot (VALUE-SEMANTICS-14, `src/value_semantics_order.zig`):
+    `lst(xs, xs.pop())` is 303, not 203. The check is static and changed no
+    corpus row by more than 1%.
+  - A borrow read by a lent argument now observes the call's `mut` collection
+    writes (OWNERSHIP-MUT-RECORD-WRITE-3), so `hold(box.names, mut
+    state.boxes)` prints 1 under both runtimes.
+  - Two `mut` arguments naming overlapping places (`nested(mut a, mut a[0])`,
+    `f(mut b, mut b)`) are now `E_MUTATION_OVERLAP` at compile time
+    (MUT-EXCLUSIVE-1, the user's decision, as Swift and Rust do). Disjoint
+    fields and different constant indices stay legal.
+  - Found on the way: `max(a, b)` evaluated its second argument twice
+    (PRELUDE-EXTREME-2).
 - GC only: `--gc-stress` crashes (a `mut`-argument clone case; an arena case)
   and "a descriptor's scan plan disagrees with its fields" under stress, which
   suggest missing roots (every fuzz run finds a few, all reproducing on the
@@ -160,10 +169,11 @@ fixing or a proof before more aggressive elision is safe (repros in
 ## Suggested order
 
 1. Dense type ids and the exit-time teardown skip: cheap, broad, low risk.
-2. The open language-level copy bugs (collection arguments, aliasing `mut`
-   arguments), since they block further elision in both runtimes.
-3. The `mut`-parameter summaries (scalar-only writes, never-shares, no-alias):
-   they remove whole classes of pins, anchor refusals and GC copies.
+2. ~~The open language-level copy bugs~~: done 2026-09-28 (VALUE-SEMANTICS-14,
+   OWNERSHIP-MUT-RECORD-WRITE-3, MUT-EXCLUSIVE-1).
+3. The `mut`-parameter summaries (scalar-only writes, never-shares) and
+   deleting the now-unreachable alias refusals: they remove whole classes of
+   pins, anchor refusals and GC copies.
 4. Header work: 32-bit counts first (mechanical), then decide on collapsing to
    one count once hold traffic is measured near zero with the sites tool.
 5. Compile-time items when dev speed work resumes.
