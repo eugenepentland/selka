@@ -1,0 +1,72 @@
+# A `mut` record callee that writes through a field path keeps the caller's
+# receiver loan (RC-PLAIN-UPDATE-CALL-2). The receiver `frame.rows` is
+# captured before the index call runs, so each read sees the captured list
+# while the call's write reaches the caller. Answers match the collector;
+# RC counting builds balance.
+record Frame:
+    rows: list[list[int]]
+    ip: int
+
+
+def push(values: mut list[int]):
+    values.append(7)
+
+
+def replace_first(rows: mut list[list[int]]):
+    rows[0] = [42]
+
+
+def nested(frame: mut Frame) -> int:
+    frame.rows[0].append(5)
+    frame.ip = frame.ip + 1
+    return 0
+
+
+def field_argument(frame: mut Frame) -> int:
+    replace_first(mut frame.rows)
+    return 0
+
+
+def element_argument(frame: mut Frame) -> int:
+    push(mut frame.rows[0])
+    return 0
+
+
+def read_nested(frame: mut Frame) -> int:
+    return len(frame.rows[nested(mut frame)])
+
+
+def read_field_argument(frame: mut Frame) -> int:
+    return frame.rows[field_argument(mut frame)][1]
+
+
+def read_element_argument(frame: mut Frame) -> int:
+    return len(frame.rows[element_argument(mut frame)])
+
+
+# spec-case: RC-PLAIN-UPDATE-CALL-2
+public def test_a_nested_write_callee_keeps_the_captured_receiver() -> bool:
+    frame = Frame([[1, 2], [3]], 0)
+    seen = read_nested(mut frame)
+    return seen == 2 and frame.rows == [[1, 2, 5], [3]] and frame.ip == 1
+
+
+# spec-case: RC-PLAIN-UPDATE-CALL-2
+public def test_a_mut_field_argument_callee_keeps_the_captured_receiver() -> bool:
+    frame = Frame([[1, 2], [3]], 0)
+    seen = read_field_argument(mut frame)
+    return seen == 2 and frame.rows == [[42], [3]]
+
+
+# spec-case: RC-PLAIN-UPDATE-CALL-2
+public def test_a_mut_element_argument_callee_keeps_the_captured_receiver() -> bool:
+    frame = Frame([[1, 2], [3]], 0)
+    seen = read_element_argument(mut frame)
+    return seen == 2 and frame.rows == [[1, 2, 7], [3]]
+
+
+def main(out: Stream) -> int:
+    out.print(test_a_nested_write_callee_keeps_the_captured_receiver())
+    out.print(test_a_mut_field_argument_callee_keeps_the_captured_receiver())
+    out.print(test_a_mut_element_argument_callee_keeps_the_captured_receiver())
+    return 0

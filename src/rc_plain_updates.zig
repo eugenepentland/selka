@@ -51,7 +51,7 @@ fn check(program: Program, function: bytecode.Function, parameter: usize, depth:
         },
         else => {},
     };
-    return !writesThroughFields(function, parameter);
+    return !writesThroughPaths(program, function, parameter);
 }
 
 // `ref_local r; <plain pushes>; call f` where `f` only updates count-free
@@ -111,29 +111,106 @@ fn copyOf(function: bytecode.Function, copy: usize, local: usize) bool {
     return seen;
 }
 
-// A temporary filled from a field chain of the parameter (or a copy of it)
-// that is then mutated, moved or passed `mut` writes through the parameter.
-fn writesThroughFields(function: bytecode.Function, parameter: usize) bool {
-    const code = function.scope.instructions;
-    for (code, 0..) |instruction, pc| {
-        if (instruction.op != .store_local or pc < 2 or code[pc - 1].op != .get_field) continue;
-        var at = pc - 1;
-        while (at != 0 and code[at].op == .get_field) at -= 1;
-        if (code[at].op != .load_local) continue;
-        const root = @backingInt(code[at].op.load_local);
-        if (root != parameter and !copyOf(function, root, parameter)) continue;
-        if (mutated(function, @backingInt(instruction.op.store_local))) return true;
+// RC-PLAIN-UPDATE-CALL-2: a local projected out of the parameter (a field
+// chain, an element or entry read, an array element, or a copy of the
+// parameter or of such a local) that is then mutated, moved, passed by
+// reference, or loaded where a call or callback may write an argument, writes
+// through the parameter: a nested write `r.items[0].append(x)` or a `mut`
+// field or element argument `push(mut r.items)` changes (and, when the list
+// is pinned or shared, clones and releases) a counted field.
+fn writesThroughPaths(program: Program, function: bytecode.Function, parameter: usize) bool {
+    const writing = writingCalls(program, function);
+    for (0..function.scope.locals.len) |local| {
+        if (local == parameter or !mutated(program, function, local, writing)) continue;
+        if (derived(function, local, parameter, depth_limit)) return true;
     }
     return false;
 }
 
-fn mutated(function: bytecode.Function, local: usize) bool {
+// Whether `local` may hold a projection of `parameter`. An unrecognized
+// producer or an exhausted bound answers yes.
+fn derived(function: bytecode.Function, local: usize, parameter: usize, depth: usize) bool {
+    if (local == parameter) return true;
+    if (depth == 0) return true;
+    const code = function.scope.instructions;
+    for (code, 0..) |instruction, pc| {
+        if (instruction.op != .store_local or @backingInt(instruction.op.store_local) != local) continue;
+        switch (projectionRoot(code, pc)) {
+            .fresh => {},
+            .unknown => return true,
+            .local => |root| if (root != local and derived(function, root, parameter, depth - 1)) return true,
+        }
+    }
+    return false;
+}
+
+const Root = union(enum) { fresh, unknown, local: usize };
+
+// The local the value stored at `pc` was projected out of: the base of a
+// field chain, the receiver of a collection operation, or a copied local.
+// A value that reaches the store along a branch is unrecognized.
+fn projectionRoot(code: []const bytecode.Instruction, pc: usize) Root {
+    if (pc == 0 or branchTarget(code, pc)) return .unknown;
+    var at = pc - 1;
+    while (at != 0 and code[at].op == .value_copy) : (at -= 1) {
+        if (branchTarget(code, at)) return .unknown;
+    }
+    switch (code[at].op) {
+        .get_field => {
+            while (at != 0 and code[at].op == .get_field) : (at -= 1) {
+                if (branchTarget(code, at)) return .unknown;
+            }
+            return if (code[at].op == .load_local) .{ .local = @backingInt(code[at].op.load_local) } else .unknown;
+        },
+        .buffer_operation => |operation| return .{ .local = @backingInt(operation.owner) },
+        .load_local, .move_local => |id| return .{ .local = @backingInt(id) },
+        .get_index => return .unknown,
+        else => return .fresh,
+    }
+}
+
+fn branchTarget(code: []const bytecode.Instruction, pc: usize) bool {
+    for (code) |instruction| switch (instruction.op) {
+        .jump, .jump_if_false => |target| if (target == pc) return true,
+        .try_result => |propagate| if (propagate.error_target == pc) return true,
+        .switch_variant => |dispatch| for (dispatch.arms) |arm| {
+            if (arm.target == pc) return true;
+        },
+        else => {},
+    };
+    return false;
+}
+
+// Whether any direct call or callback in `function` may write an argument.
+fn writingCalls(program: Program, function: bytecode.Function) bool {
+    for (function.scope.instructions) |instruction| switch (instruction.op) {
+        .invoke => return true,
+        .call => |target| {
+            const callee = program.functions[@backingInt(target)];
+            if (callee.signature.mutates.len != 0 or callee.signature.declared_mutates.len != 0) return true;
+        },
+        else => {},
+    };
+    return false;
+}
+
+fn mutated(program: Program, function: bytecode.Function, local: usize, writing: bool) bool {
     for (function.scope.instructions) |instruction| switch (instruction.op) {
         .ref_local, .move_local => |id| if (@backingInt(id) == local) return true,
+        .load_local => |id| if (writing and @backingInt(id) == local and managed(program, function.scope.locals[local].ty)) return true,
         .buffer_operation => |operation| if (@backingInt(operation.owner) == local and operation.kind != .read and operation.kind != .length) return true,
         else => {},
     };
     return false;
+}
+
+// A counted value a `mut` argument hands over by its payload, so a callee can
+// write it in place. A plain record or fixed array crosses `mut` by address
+// (`ref_local`), so loading one only reads it.
+fn managed(program: Program, ty: typed.Type) bool {
+    if (typed.referenceMut(program.catalog.native.records, ty)) return false;
+    const shape = program.catalog.get(ty) catch return true;
+    return shape.counted or shape.unique_drop;
 }
 
 fn plainPush(op: Op) bool {
