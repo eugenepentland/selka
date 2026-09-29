@@ -82,6 +82,8 @@ const pure_callees = [_][]const u8{
     "myl_native_dictionary_length",
     "myl_native_dictionary_key_at",
     "myl_native_dictionary_value_at",
+    "myl_native_text_search_range",
+    "myl_native_bytes_search_range",
     "myl_native_bytes_find",
     "myl_native_bytes_find_any",
     "myl_native_bytes_starts_with",

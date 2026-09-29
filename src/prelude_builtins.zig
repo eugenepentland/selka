@@ -29,7 +29,7 @@ const chr_builtin = "chr";
 
 /// Prelude names answered without an import when no binding or declaration shadows them.
 pub fn reserved(name: []const u8) bool {
-    inline for (.{ "sum", "min", "max", "sorted", "abs", "round", "any", "all", reversed_builtin, "list", "set", "dict", "zip", ord_builtin, chr_builtin }) |builtin| {
+    inline for (.{ "sum", "min", "max", "sorted", "abs", "round", "any", "all", reversed_builtin, "list", "set", "dict", "zip", "repr", ord_builtin, chr_builtin }) |builtin| {
         if (std.mem.eql(u8, name, builtin)) return true;
     }
     return false;
@@ -178,6 +178,7 @@ fn buildCall(comptime Checker: type, checker: *Checker, span: source.Span, name:
         return largest;
     }
     if (std.mem.eql(u8, name, "zip")) return checker.sink.fail(unsupported, span, "zip is only an iteration source: for a, b in zip(xs, ys)");
+    if (std.mem.eql(u8, name, "repr")) return @as(?typed.Node, try reprCall(Checker, checker, span, arguments));
     if (std.mem.eql(u8, name, ord_builtin)) return @as(?typed.Node, try ordCall(Checker, checker, span, arguments));
     if (std.mem.eql(u8, name, chr_builtin)) return @as(?typed.Node, try chrCall(Checker, checker, span, arguments));
     if (std.mem.eql(u8, name, "round") and arguments.len == 2) return @as(?typed.Node, try roundDigits(Checker, checker, span, arguments));
@@ -513,8 +514,8 @@ fn sortedCall(comptime Checker: type, checker: *Checker, call: SortedCall) Error
     const span = call.sort.span;
     const b = builder(Checker, checker, span);
     const element = try listElement(Checker, checker, nodeType(Checker, checker, call.input), span);
-    if (call.sort.key == null and familyOf(Checker, checker, element) == null)
-        return checker.sink.fail(unsupported, span, "sorted requires a list of int, float or str values, or a key=callback that maps each element to one");
+    if (call.sort.key == null and !orderedField(Checker, checker, element))
+        return checker.sink.fail(unsupported, span, "sorted requires a list of int, float, str or bytes values, or a key=callback that maps each element to one");
     const list = try collections.listType(&checker.catalog, element, span);
     const result = try b.local(list);
     var statements: std.ArrayList(typed.StatementId) = .empty;
@@ -554,9 +555,10 @@ pub const KeyedSort = struct {
 };
 
 /// Whether a key field type has an order the native keyed sort compares:
-/// every integer width, `bool`, `float` and `str`.
+/// every integer width, `bool`, `float`, `str` and `bytes`.
 fn orderedField(comptime Checker: type, checker: *Checker, ty: typed.Type) bool {
     if (ty.isInteger() or ty == .bool) return true;
+    if (ty.isAggregate() and typed.isByteString(checker.catalog.records[ty.recordIndex()])) return true;
     return familyOf(Checker, checker, ty) != null;
 }
 
@@ -586,7 +588,7 @@ pub fn keyType(comptime Checker: type, checker: *Checker, span: source.Span, ele
     if (contract.mutates.len != 0) return checker.sink.fail(eSortKey, span, "a sort key reads its element and must not declare it `mut`");
     if (!orderedKey(Checker, checker, contract.return_type)) {
         const found = try typed.surfaceTypeName(checker.allocator, contract.return_type, checker.catalog.records);
-        const message = try std.fmt.allocPrint(checker.allocator, "the key returns `{s}`, which has no order; return an int, float, str or bool, or a tuple of them", .{found});
+        const message = try std.fmt.allocPrint(checker.allocator, "the key returns `{s}`, which has no order; return an int, float, str, bytes or bool, or a tuple of them", .{found});
         return checker.sink.fail(eSortKey, span, message);
     }
     return contract.return_type;
@@ -881,4 +883,26 @@ fn zipStatementsCall(comptime Checker: type, checker: *Checker, step: ZipStep) E
         try b.stmt(.{ .initialize = .{ .slot = zip.left.index, .value = try b.integer(0) } }),
         try b.stmt(.{ .loop = .{ .id = zip.left.loop, .condition = try b.binary(.lt, i, try b.read(zip.limit), .bool), .body = iteration, .step = advance } }),
     });
+}
+
+/// Exact Python scalar repr keeps the ordinary printing and str paths unchanged.
+fn reprCall(comptime Checker: type, checker: *Checker, span: source.Span, arguments: []const typed.NodeId) Error!typed.Node {
+    if (arguments.len != 1) return checker.sink.fail("E_ARITY", span, "repr requires one scalar argument");
+    const input = arguments[0];
+    const ty = nodeType(Checker, checker, input);
+    const text = try collections.preludeType(&checker.catalog, "str", span);
+    const b = builder(Checker, checker, span);
+    if (ty.isInteger() or ty == .bool)
+        return .{ .span = span, .ty = text, .data = .{ .cast = input } };
+    if (numeric_surface.isFloat(ty, checker.catalog.records)) {
+        const word = try b.node(.i64, .{ .integer = @intCast(@import("format_spec.zig").pack(.{ .family = .float })) });
+        const bits = try b.node(.u64, .{ .unwrap = input });
+        const empty = try b.node(text, .{ .array = &.{} });
+        return b.access(empty, .number_format, &.{ bits, word }, false);
+    }
+    if (ty.isAggregate()) {
+        const schema = checker.catalog.records[ty.recordIndex()];
+        if (schema.collection.kind == .string or typed.isByteString(schema)) return b.access(input, .text_repr, &.{}, false);
+    }
+    return checker.sink.fail("E_REPR_TYPE", span, "repr accepts str, bytes, int, float and bool; collections and records have no repr yet");
 }

@@ -144,7 +144,7 @@
     },
     "functional-record-update": {
       "kind": "language",
-      "summary": "`replace(record, field=value, \u2026)` returns a copy with only the named fields changed.",
+      "summary": "`replace(record, field=value, …)` returns a copy with only the named fields changed.",
       "doc": "docs/records-and-unions.md#field-defaults-and-functional-update"
     },
     "collection-membership-and-value-equality": {
@@ -1106,6 +1106,26 @@
       "kind": "tooling",
       "summary": "`mylang test ENTRY` without `--cases` applies the `<stem>.cases.json` beside the entry, so a directory run applies each entry's own cases file to that entry and a single-file run sees the same cases.",
       "doc": "docs/tooling/guest-tests.md#per-entry-cases-files"
+    },
+    "bytes-sorting": {
+      "kind": "language",
+      "summary": "Stable sorted and list.sort accept bytes elements and scalar/tuple bytes keys.",
+      "doc": "docs/python-text-surface.md#python-text-surface"
+    },
+    "text-trim-charsets": {
+      "kind": "language",
+      "summary": "Text and bytes trim explicit character sets with Python defaults.",
+      "doc": "docs/python-text-surface.md#trimming-character-sets"
+    },
+    "text-search-ranges": {
+      "kind": "language",
+      "summary": "Text and bytes accept Python search/count/prefix/suffix ranges and checked index lookup.",
+      "doc": "docs/python-text-surface.md#ranged-search"
+    },
+    "scalar-repr": {
+      "kind": "language",
+      "summary": "Exact CPython scalar repr with Unicode16 printability and shortest float formatting.",
+      "doc": "docs/python-text-surface.md#scalar-repr"
     }
   },
   "unsupported": [
@@ -1160,7 +1180,7 @@
     },
     "legacy-syntax": {
       "date": "2026-09-13",
-      "note": "the brace dialect: fn/let/let mut/struct/new, `T { \u2026 }` record literals, `::` qualification, `::<T>` turbofish, `cast<T>(x)`, `//` comments, `{ }` scope blocks, match expressions, `true`/`false`/`unit`, `else if` and `a..b` ranges. Indentation, `def`/`class`, `T(f=v)`, `alias.name`, `f[T](x)`, `T(x)`, `#` comments, `match`/`case`, `True`/`False`/`None`, `elif` and `range(a, b)` are the surface."
+      "note": "the brace dialect: fn/let/let mut/struct/new, `T { … }` record literals, `::` qualification, `::<T>` turbofish, `cast<T>(x)`, `//` comments, `{ }` scope blocks, match expressions, `true`/`false`/`unit`, `else if` and `a..b` ranges. Indentation, `def`/`class`, `T(f=v)`, `alias.name`, `f[T](x)`, `T(x)`, `#` comments, `match`/`case`, `True`/`False`/`None`, `elif` and `range(a, b)` are the surface."
     },
     "named-executable-laws": {
       "date": "2026-09-24",

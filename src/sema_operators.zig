@@ -177,8 +177,20 @@ fn byteLiteralType(comptime Checker: type, self: *Checker, node: ast.Node) Error
     if (spelling.len == 0 or spelling[0] != 'b') return self.ty(node.span);
     return collections.preludeType(&self.catalog, "bytes", node.span);
 }
+/// Context can select a fixed-octet array, but never convert an explicit byte
+/// literal into Unicode text merely because a method expects a str operand.
+fn contextualByteLiteralType(comptime Checker: type, self: *Checker, node: ast.Node) Error!typed.Type {
+    const inferred = try byteLiteralType(Checker, self, node);
+    const expected = self.expected_types.get(node.span) orelse return inferred;
+    const spelling = self.src.text(node.span);
+    if (spelling.len != 0 and spelling[0] == 'b') {
+        if (expected.isAggregate() and self.catalog.records[expected.recordIndex()].collection.kind == .string)
+            return self.sink.fail("E_TYPE", node.span, "bytes literal cannot be used as str");
+    }
+    return expected;
+}
 fn checkTextLiteral(comptime Checker: type, self: *Checker, node: ast.Node, bytes: []const u8, out: *typed.Node) Error!void {
-    out.ty = if (node.data == .text) try self.ty(node.span) else self.expected_types.get(node.span) orelse try byteLiteralType(Checker, self, node);
+    out.ty = if (node.data == .text) try self.ty(node.span) else try contextualByteLiteralType(Checker, self, node);
     if (out.ty.isAggregate() and self.catalog.records[out.ty.recordIndex()].collection.kind == .bytes) {
         out.data = .{ .array = try byteValues(Checker, self, bytes, node.span) };
         return;

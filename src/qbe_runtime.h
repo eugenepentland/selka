@@ -442,4 +442,6 @@ __attribute__((preserve_most)) void myl_qbe_error_trace_append_preserve_most(con
 size_t myl_qbe_error_trace_render(char *out, size_t size);
 /* Write the rendered trace to `stream`; nothing when no `Err` was recorded. */
 void myl_qbe_error_trace_write(FILE *stream);
+/* Raise the deterministic str/bytes index miss trap. */
+void myl_qbe_fail_substring(void *context);
 #endif

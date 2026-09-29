@@ -101,6 +101,7 @@ test {
     _ = @import("python_assert_test.zig");
     _ = @import("contracts_test.zig");
     _ = @import("python_strings_test.zig");
+    _ = @import("python_text_surface_test.zig");
     _ = @import("python_format_test.zig");
     _ = @import("python_comprehension_test.zig");
     _ = @import("collections_fidelity_test.zig");

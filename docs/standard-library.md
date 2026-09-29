@@ -274,7 +274,7 @@ language has no ordering contract: `copy`, `equality`, `integer`, `codec` and
 `sorted(values, key=key)`, which computes each element's key exactly once, in
 list order, and gathers the elements into the new list with the native keyed sort
 (see [keyed sorting](python-syntax.md#keyed-sorting) for `key=`, `reverse=` and
-the `float`, `str` and tuple keys the method and `sorted` accept). A key
+the `float`, `str`, `bytes` and tuple keys the method and `sorted` accept). A key
 function that traps on several elements reports the first of them in list order;
 before the keyed sort existed, `sort_by_key` asked for keys in the order a
 recursive merge first needed them. Sorting NaNs last is a deliberate
