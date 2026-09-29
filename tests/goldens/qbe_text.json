@@ -32,9 +32,9 @@
     "def main() -> int:\n    return \"abc\".find(\"\")\n",
     []
    ],
-   "returncode": 1,
-   "stderr": "PGNvcnB1cz4vY2FzZS5teToyOjEyOiBlcnJvcltSX0VNUFRZX1NFUEFSQVRPUl06IGNvbGxlY3Rpb24gb3BlcmF0aW9uIGZhaWxlZAogICAgICByZXR1cm4gImFiYyIuZmluZCgiIikKICAgICAgICAgICAgIF4KICBpbiBtYWluIGF0IDxjb3JwdXM+L2Nhc2UubXk6MjoxMgo=",
-   "stdout": ""
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "MAo="
   },
   "511266ceb3dcc2172798afacfb959b96": {
    "case": [
@@ -50,9 +50,9 @@
     "def main() -> int:\n    return \"abc\".count(\"\")\n",
     []
    ],
-   "returncode": 1,
-   "stderr": "PGNvcnB1cz4vY2FzZS5teToyOjEyOiBlcnJvcltSX0VNUFRZX1NFUEFSQVRPUl06IGNvbGxlY3Rpb24gb3BlcmF0aW9uIGZhaWxlZAogICAgICByZXR1cm4gImFiYyIuY291bnQoIiIpCiAgICAgICAgICAgICBeCiAgaW4gbWFpbiBhdCA8Y29ycHVzPi9jYXNlLm15OjI6MTIK",
-   "stdout": ""
+   "returncode": 4,
+   "stderr": "",
+   "stdout": "NAo="
   },
   "74841c051c5ce69477a3d1ed6703aa03": {
    "case": [
