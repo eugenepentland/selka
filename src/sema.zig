@@ -421,6 +421,29 @@ const Checker = struct {
         const name = self.src.text(span);
         return self.functions.contains(name) or self.catalog.names.contains(name) or self.catalog.templates.names.contains(name);
     }
+    /// Whether binding `name` in a new scope would hide an active local or a
+    /// top-level declaration. `_` is the discard name: it may be bound again in a
+    /// nested loop, so it never shadows anything (`DISCARD-NAME-1`).
+    pub fn shadows(self: *Checker, name: source.Span) error{InternalError}!bool {
+        const text = self.src.text(name);
+        if (std.mem.eql(u8, text, "_")) return false;
+        const top_level = try self.topLevel(name);
+        return top_level or self.active.contains(text);
+    }
+    /// Bind `slot` under `text` for the rest of a scope. Only `_` can hide an
+    /// earlier binding (`DISCARD-NAME-1`); that binding is returned so
+    /// `unbindScoped` can hand it back when the scope ends.
+    pub fn bindScoped(self: *Checker, text: []const u8, slot: typed.LocalId) Error!?typed.LocalId {
+        const hidden = self.active.get(text);
+        try self.active.put(self.allocator, text, slot);
+        return hidden;
+    }
+    /// End a `bindScoped` binding, restoring the one it hid, if any.
+    pub fn unbindScoped(self: *Checker, text: []const u8, hidden: ?typed.LocalId) void {
+        if (hidden) |slot| {
+            self.active.getPtr(text).?.* = slot;
+        } else _ = self.active.remove(text);
+    }
     /// Resolve a spelled type in the current function's generic scope, or at top level.
     pub fn ty(self: *Checker, span: source.Span) Error!typed.Type {
         if (self.current_function) |id| return self.functionType(id, span);

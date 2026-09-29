@@ -1,0 +1,154 @@
+module discard_names
+
+# `_` is the discard name: a loop, comprehension or `with` scope may bind it
+# again inside another one without shadowing anything, and `for _, _ in ...`
+# names nothing at all. Every other loop name still may not reuse an active
+# local's name.
+
+
+def nested_ranges() -> int:
+    total = 0
+    for _ in range(2):
+        for _ in range(3):
+            total += 1
+    return total
+
+
+def nested_lists() -> int:
+    total = 0
+    for _ in [10, 20]:
+        for _ in [1, 2, 3]:
+            total += 1
+    return total
+
+
+def nested_pairs() -> int:
+    total = 0
+    counts = {"a": 1, "b": 2}
+    for _, count in counts.items():
+        for _, other in counts.items():
+            total += count * other
+    return total
+
+
+def only_discards() -> int:
+    total = 0
+    counts = {"a": 1, "b": 2}
+    for _, _ in counts.items():
+        for _, _ in enumerate([1, 2, 3]):
+            total += 1
+    return total
+
+
+def nested_walks() -> int:
+    total = 0
+    for _ in range(2):
+        for x in reversed([1, 2]):
+            for _ in reversed([1, 2, 3]):
+                total += x
+    for a, b in zip([1, 2], [3, 4]):
+        for _, _ in zip([1], [2]):
+            total += a + b
+    return total
+
+
+def nested_comprehensions() -> int:
+    xs = [1, 2, 3]
+    grid = [[2 for _ in xs] for _ in xs]
+    counts = [len([1 for _ in range(x)]) for x in xs]
+    return len(grid) * 10 + len(grid[0]) + counts[2]
+
+
+def payload_discard_in_loops() -> int:
+    total = 0
+    for _ in range(2):
+        for _ in range(2):
+            match parsed(1):
+                case Some(_):
+                    total += 1
+                case None:
+                    total += 100
+    return total
+
+
+def parsed(value: int) -> Option[int]:
+    if value > 0:
+        return Some(value)
+    return None
+
+
+def after_the_loops(items: list[int]) -> int:
+    total = 0
+    for _ in items:
+        total += 1
+    for _ in items:
+        total += 10
+    return total
+
+
+def generic_loops[T](value: T, count: int) -> int:
+    total = 0
+    for _ in range(count):
+        for _ in range(count):
+            total += 1
+    squares = [[0 for _ in range(count)] for _ in range(count)]
+    return total + len(squares)
+
+
+def with_scopes() -> int:
+    total = 0
+    with arena() as _:
+        total += 1
+        with arena() as _:
+            total += 1
+    return total
+
+
+# spec: DISCARD-NAME-1
+public def test_nested_range_loops_may_both_bind_the_discard_name() -> bool:
+    return nested_ranges() == 6
+
+
+# spec-case: DISCARD-NAME-1
+public def test_nested_list_loops_may_both_bind_the_discard_name() -> bool:
+    return nested_lists() == 6
+
+
+# spec-case: DISCARD-NAME-1
+public def test_nested_two_name_loops_may_discard_the_first_name_twice() -> bool:
+    return nested_pairs() == 9
+
+
+# spec-case: DISCARD-NAME-1
+public def test_a_loop_may_discard_both_of_its_names() -> bool:
+    return only_discards() == 6
+
+
+# spec-case: DISCARD-NAME-1
+public def test_nested_reversed_and_zip_loops_may_discard_names() -> bool:
+    return nested_walks() == 18 + 10
+
+
+# spec-case: DISCARD-NAME-1
+public def test_nested_comprehensions_may_discard_their_element_names() -> bool:
+    return nested_comprehensions() == 3 * 10 + 3 + 3
+
+
+# spec-case: DISCARD-NAME-1
+public def test_a_discarded_payload_inside_discarding_loops_binds_nothing() -> bool:
+    return payload_discard_in_loops() == 4
+
+
+# spec-case: DISCARD-NAME-1
+public def test_sequential_loops_reuse_the_discard_name() -> bool:
+    return after_the_loops([1, 2, 3]) == 33
+
+
+# spec-case: DISCARD-NAME-1
+public def test_nested_arena_scopes_may_both_bind_the_discard_name() -> bool:
+    return with_scopes() == 2
+
+
+# spec-case: DISCARD-NAME-1
+public def test_generic_bodies_may_nest_discard_names_too() -> bool:
+    return generic_loops[int](5, 3) == 9 + 3

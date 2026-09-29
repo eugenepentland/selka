@@ -285,13 +285,13 @@ fn checkListLiteral(comptime Checker: type, self: *Checker, node: ast.Node, inpu
     return (collections.Builder(Checker){ .checker = self, .span = node.span }).literal(expected.?, values);
 }
 /// Bind a comprehension's element name to a fresh slot for the duration of its body.
-fn bindElement(comptime Checker: type, self: *Checker, name: source.Span, slot: typed.LocalId) Error!void {
+fn bindElement(comptime Checker: type, self: *Checker, name: source.Span, slot: typed.LocalId) Error!?typed.LocalId {
     const text = self.src.text(name);
-    if (try self.topLevel(name) or self.active.contains(text)) return self.sink.fail(eShadowing, name, "comprehension binding shadows an active declaration");
+    if (try self.shadows(name)) return self.sink.fail(eShadowing, name, "comprehension binding shadows an active declaration");
     self.locals.items[@backingInt(slot)].name = text;
     self.locals.items[@backingInt(slot)].declaration = name;
     self.locals.items[@backingInt(slot)].ownership.initialized = true;
-    try self.active.put(self.allocator, text, slot);
+    return self.bindScoped(text, slot);
 }
 /// Build `[value for name in source if condition]` as a checked loop over a fresh list,
 /// drawing elements from a collection or, like a `for` loop, from an integer `range(...)`.
@@ -370,8 +370,8 @@ fn checkSetFromIterable(comptime Checker: type, self: *Checker, span: source.Spa
 /// returning the fresh output list and the retained-append body the loop repeats. Shared
 /// by the collection and range forms so both keep one element-storability contract.
 fn comprehensionBody(comptime Checker: type, self: *Checker, b: collections.Builder(Checker), node: ast.Node, each: ast.Comprehension, slot: typed.LocalId) Error!struct { output: typed.LocalId, body: typed.StatementId } {
-    try bindElement(Checker, self, each.name, slot);
-    defer _ = self.active.remove(self.src.text(each.name));
+    const hidden = try bindElement(Checker, self, each.name, slot);
+    defer self.unbindScoped(self.src.text(each.name), hidden);
     const produced = try self.expression(each.output);
     const produced_type = self.nodes.items[@backingInt(produced)].ty;
     // `{value for ...}` adds each value to a fresh set instead (SET-1).

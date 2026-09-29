@@ -272,6 +272,11 @@
       "summary": "Assignment creates a mutable function-scoped local; records and managed collections are independent values. In legacy-sharing mode, `class` assignments share one managed object.",
       "doc": "docs/statements.md#assignments-and-value-records"
     },
+    "discard-name": {
+      "kind": "language",
+      "summary": "`_` is a discard name that never shadows: nested `for` loops, comprehensions and `with` scopes may each bind it, and `for _, _ in ...` binds nothing.",
+      "doc": "docs/statements.md#the-discard-name"
+    },
     "canonical-prelude-types": {
       "kind": "language",
       "summary": "`list`, `dict`, `str`, `bytes`, `float`, `Option` and `Result` have one identity in every module without source-text scanning.",

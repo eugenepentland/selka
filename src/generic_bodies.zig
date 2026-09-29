@@ -114,6 +114,20 @@ const Checker = struct {
         const text = self.src.text(span);
         return self.functions.contains(text) or self.catalog.names.contains(text) or self.catalog.templates.names.contains(text);
     }
+    /// Whether binding `name` in a new scope would hide an active binding or a
+    /// top-level declaration; `_` is the discard name and never does (`DISCARD-NAME-1`).
+    fn shadows(self: *Checker, name: source.Span) Error!bool {
+        const text = self.src.text(name);
+        if (std.mem.eql(u8, text, "_")) return false;
+        const top_level = try self.topLevel(name);
+        return top_level or self.active.contains(text);
+    }
+    /// End a scoped binding of `text`, restoring the `_` binding it hid, if any.
+    fn unbindScoped(self: *Checker, text: []const u8, hidden: ?usize) void {
+        if (hidden) |slot| {
+            self.active.getPtr(text).?.* = slot;
+        } else _ = self.active.remove(text);
+    }
     fn checkFunction(self: *Checker, function: ast.Function) Error!void {
         const sink = self.sink;
         if (function.policy.conversion) return sink.fail(eUnsupported, function.name, "generic conversions still need abstract checking");
@@ -391,6 +405,14 @@ const Checker = struct {
         self.option_facts.endScope(before);
         for (self.locals.items[before..]) |item| _ = self.active.remove(self.src.text(item.name));
         self.locals.shrinkRetainingCapacity(before);
+        // A nested `_` hid an outer one for its scope; the outer binding is visible again.
+        var outer = self.locals.items.len;
+        while (outer > 0) {
+            outer -= 1;
+            if (!std.mem.eql(u8, self.src.text(self.locals.items[outer].name), "_")) continue;
+            self.active.putAssumeCapacity("_", outer);
+            break;
+        }
     }
     fn returnValue(self: *Checker, value: ast.NodeId, span: source.Span) Error!void {
         try self.compatible(try self.expressionExpected(value, self.result), self.result, span);
@@ -401,9 +423,11 @@ const Checker = struct {
     }
     fn bindMode(self: *Checker, name: source.Span, ty_value: Symbolic, mutable: bool) Error!void {
         const text = self.src.text(name);
-        if (try self.topLevel(name)) return self.sink.fail(eShadowing, name, "binding shadows a top-level declaration or import");
-        if (self.active.contains(text)) return self.sink.fail(eShadowing, name, "binding shadows an active template binding");
-        for (self.parameters) |parameter| if (std.mem.eql(u8, text, self.src.text(parameter.name))) return self.sink.fail(eShadowing, name, "binding shadows a template type parameter");
+        if (!std.mem.eql(u8, text, "_")) {
+            if (try self.topLevel(name)) return self.sink.fail(eShadowing, name, "binding shadows a top-level declaration or import");
+            if (self.active.contains(text)) return self.sink.fail(eShadowing, name, "binding shadows an active template binding");
+            for (self.parameters) |parameter| if (std.mem.eql(u8, text, self.src.text(parameter.name))) return self.sink.fail(eShadowing, name, "binding shadows a template type parameter");
+        }
         try self.active.put(self.allocator, text, self.locals.items.len);
         try self.locals.append(self.allocator, .{ .name = name, .ty = ty_value, .mutable = mutable });
         try self.seedCleanup(ty_value);
@@ -746,9 +770,10 @@ const Checker = struct {
             .range => |bounds| try self.rangeElement(bounds, each.name, span),
         };
         const text = self.src.text(each.name);
-        if (try self.topLevel(each.name) or self.active.contains(text)) return self.sink.fail(eShadowing, each.name, "comprehension binding shadows an active declaration");
+        if (try self.shadows(each.name)) return self.sink.fail(eShadowing, each.name, "comprehension binding shadows an active declaration");
+        const hidden = self.active.get(text);
         try self.bind(each.name, element, false);
-        defer _ = self.active.remove(text);
+        defer self.unbindScoped(text, hidden);
         const produced = try self.expression(each.output);
         if (each.filter) |condition| try self.compatible(try self.expression(condition), .{ .concrete = .bool }, span);
         try self.supports(produced, .copy, span);

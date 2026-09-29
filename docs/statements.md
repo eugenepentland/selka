@@ -51,6 +51,26 @@ def main() -> int:
 `second.seen.append(7)` leaves `first.seen` empty. Both records preserve
 independent values.
 
+## The discard name
+
+`_` is the discard name. `_ = value` drops a value, `a, _ = pair` skips a tuple
+element, and a `for` target or comprehension element that the body never reads is
+written `_`. Because `_` names nothing worth keeping it never shadows: nested loops
+may each bind it, `for _, _ in ...` binds nothing, and the outer `_` is visible
+again once an inner scope that bound it ends. Every other loop variable is still
+block-scoped and may not reuse the name of an active local, which the checker
+reports as `E_SHADOWING`.
+
+```mylang
+# doc: expect 42
+def main() -> int:
+    total = 0
+    for _ in range(2):
+        for _ in range(3):
+            total += 7
+    return total
+```
+
 ## Statement endings
 
 A statement ends at the end of its line. Semicolons are never required and new

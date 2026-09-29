@@ -241,6 +241,7 @@ test {
     _ = @import("loop_exit_test.zig");
     _ = @import("constants_test.zig");
     _ = @import("embed_test.zig");
+    _ = @import("typing_papercuts_test.zig");
     _ = @import("incremental_test.zig");
     _ = @import("timings_test.zig");
     _ = @import("invalidation_test.zig");

@@ -68,12 +68,12 @@ fn statementWithFile(comptime Checker: type, self: *Checker, stmt: ast.Statement
     }
     const declared = scope.name orelse return self.sink.fail(eWithResource, stmt.span, "a file `with` scope requires a binding, as in `with open(fs, path, \"rb\")? as f:`");
     const name = self.src.text(declared);
-    if (try self.topLevel(declared) or self.active.contains(name)) return self.sink.fail(eShadowing, declared, "file name shadows an active name");
-    for (self.arenas.items) |active| if (std.mem.eql(u8, active.name, name)) return self.sink.fail(eShadowing, declared, "file name shadows an enclosing arena scope");
+    if (try self.shadows(declared)) return self.sink.fail(eShadowing, declared, "file name shadows an active name");
+    if (!std.mem.eql(u8, name, "_")) for (self.arenas.items) |active| if (std.mem.eql(u8, active.name, name)) return self.sink.fail(eShadowing, declared, "file name shadows an enclosing arena scope");
     const slot: typed.LocalId = @fromBackingInt(self.locals.items.len);
     try self.locals.append(self.allocator, .{ .name = name, .declaration = declared, .ty = value_type, .mutable = false, .ownership = .{ .initialized = true }, .usage = .{ .reads = 1 } });
-    try self.active.put(self.allocator, name, slot);
-    defer _ = self.active.remove(name);
+    const hidden = try self.bindScoped(name, slot);
+    defer self.unbindScoped(name, hidden);
     const body = try statement(Checker, self, scope.body);
     flow.terminates = body.terminates;
     return .{ .with_scope = .{ .slot = slot, .resource = value, .body = body.id } };
@@ -83,8 +83,8 @@ fn statementWithScope(comptime Checker: type, self: *Checker, stmt: ast.Statemen
     var name: []const u8 = "";
     if (scope.name) |declared| {
         name = self.src.text(declared);
-        if (try self.topLevel(declared) or self.active.contains(name)) return self.sink.fail(eShadowing, declared, "arena name shadows an active name");
-        for (self.arenas.items) |active| if (std.mem.eql(u8, active.name, name)) return self.sink.fail(eShadowing, declared, "arena name shadows an enclosing arena scope");
+        if (try self.shadows(declared)) return self.sink.fail(eShadowing, declared, "arena name shadows an active name");
+        if (!std.mem.eql(u8, name, "_")) for (self.arenas.items) |active| if (std.mem.eql(u8, active.name, name)) return self.sink.fail(eShadowing, declared, "arena name shadows an enclosing arena scope");
     }
     const watermark: typed.LocalId = @fromBackingInt(self.locals.items.len);
     try self.arenas.append(self.allocator, .{ .name = name, .declaration = scope.name orelse stmt.span, .watermark = watermark });
