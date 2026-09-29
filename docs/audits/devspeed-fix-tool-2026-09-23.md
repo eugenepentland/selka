@@ -1,5 +1,14 @@
 # Development-speed lane: `mylang fix` and a stability contract — 23 September 2026
 
+> **Ported to main on 2026-09-29** (branch `claude/devspeed-fidelity`). Main had
+> already taken the fix wire and the `mylang fix` engine (`DIAGNOSTIC-FIX-1`,
+> `FIX-MIGRATION-1`) and its own library check (`CHECK-LIBRARY-2`, which
+> supersedes this lane's `CHECK-LIBRARY-1`). The fix producers
+> (`DIAGNOSTIC-FIX-2`), `MUT-PARAM-8`, `NATIVE-TEST-DIAGNOSTICS-1` and
+> `mylang docs fix` landed; this lane's `FIX-COMMAND-1` text now amends
+> `FIX-MIGRATION-1`, and the migration corpus is `FIX-MIGRATION-2`, rebuilt from
+> the value-semantics Lox port because the original corpus used `class`.
+
 Lane: recommendation 4 of `docs/audits/development-speed-2026-09-23.md` §9, with the
 owner's choice "fix tool, no editions". Branch `devspeed/fix-tool` from
 `base/devspeed-impl-20260923` (`371dbd17`); code-complete and gated at `665f0b2f`,

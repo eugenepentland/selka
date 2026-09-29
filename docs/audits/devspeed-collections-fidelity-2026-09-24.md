@@ -1,5 +1,13 @@
 # Development-speed lane: collections fidelity (recommendation 7, collections half)
 
+> **Ported to main on 2026-09-29** (branch `claude/devspeed-fidelity`). As the
+> merge-devspeed-into-main decision recorded, main's sets (`SET-1`,
+> `SET-OPERATORS-1`) were kept and this lane's set implementation, ascending
+> set printing, `PY-SET-1` and `set` as a free local name were not ported.
+> Dict and multi-clause comprehensions, generator arguments, `dict()`,
+> `PRELUDE-KEYS-1`, iterable set-method operands and the integer bitwise
+> operators landed on top of main's sets.
+
 Branch `devspeed/collections-fidelity`, cut from `450216fe` (`devspeed/integration` with
 `mylang fix`). `devspeed/expression-fidelity` (head `1b48be90`, its gate green) is merged
 in at `7a0269c0`: its stepped `range` (`ast.RangeBounds`) and shared comparison level

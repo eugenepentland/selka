@@ -1,5 +1,12 @@
 # Development-speed lane: expression fidelity (recommendation 7, expression half)
 
+> **Ported to main on 2026-09-29** (branch `claude/devspeed-fidelity`, commit
+> "Port devspeed/expression-fidelity"). Everything below landed except `**`
+> (`PY-POW-1`): main rejects `**` by design with a hint (`PARSER-HINT-10`), so the
+> power operator, its runtime helpers and its tests were left out. The list
+> repetition test now states value semantics, and the comparison level sits
+> below main's separate `|`/`^`/`&` levels.
+
 Branch `devspeed/expression-fidelity`. It was cut from `base/devspeed-impl-20260923`
 (`371dbd17`), then `devspeed/integration` (`243a7b62`) was merged in at `db01ecb7`.
 This lane adds the cheap Python expression idioms the 23 September audit (§7, §9
