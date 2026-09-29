@@ -120,3 +120,22 @@ logs remain as `.tmp/scope-guest-first-rc.*`; corrected receipts are
 These checks do not replace the final frozen B3 gate or performance comparison.
 The scope source currently uses ABI3 counts and will be adapted to the shared
 ABI4 prefix constants after the independent header tranche is committed.
+
+## Owning text dictionary keys
+
+RC-DICTIONARY-TEXT-LOOP-1 extends the late fresh scalar-dictionary proof to
+ordinary owning text keys. Only immutable text and scalar work is admitted;
+those physical types cannot contain the root or run a destructor. The bounded
+scan checks CFG entry, the original tail, COW effects and scheduled releases.
+It preserves key journals and write/growth/refusal behavior and grants neither
+cached-storage nor empty-drop authority. Publication, callbacks, references,
+arena transitions and unknown shapes retain the existing check.
+
+The actual knucleotide frequencies function now has one loop-entry uniqueness
+check. Five named proof tests pass, plus 11 existing import blocks. New guests
+cover owning slice keys, growth, empty loops, non-ASCII text, arenas and snapshots;
+all 3 pass RC, GC, GC stress, stats and LLVM release without cached/skipped
+tests. The first proof assertion expected a hold marker where the owning key
+uses retain instead; the corrected test checks its retain and drop corridor.
+Receipts remain under `.tmp/dictionary-text-*`. Performance acceptance remains
+part of the final frozen B3 comparison.
