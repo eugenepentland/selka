@@ -346,6 +346,36 @@ def main(fs: Filesystem) -> int:
     return 0
 ```
 
+## Capabilities in record fields
+
+A capability stored in a record field takes method syntax through the field
+expression exactly as a bound local does: `ctx.fs.read_text(path)`,
+`ctx.fs.open(path, "rb")`, `ctx.fs.dir("data")`, `ctx.env.get("HOME")` and
+`ctx.net.host("127.0.0.1:8000")` check and lower like `fs = ctx.fs` followed by
+`fs.read_text(path)`, with the same effects, permissions and traps. `Stream`
+does the same for `print` and `write`. `Clock` and `Entropy` have no methods
+whichever way they are held; pass them to `time.now(ctx.clock)` or
+`random.from_entropy(ctx.entropy)`. An unknown method on a capability field is
+`E_COLLECTION_METHOD` and names the methods that receiver does have.
+
+```mylang
+# doc: check
+record Context:
+    fs: Filesystem
+    env: Environment
+
+def read_note(ctx: Context, path: str) -> int:
+    match ctx.fs.read_text(path):
+        case Ok(text):
+            return len(text)
+        case Err(_):
+            return -1
+
+def main(fs: Filesystem, env: Environment) -> int:
+    ctx = Context(fs=fs, env=env)
+    return read_note(ctx, "note.txt") + len(ctx.env.names())
+```
+
 ## Declaration-site mutation errors
 
 The `mut` spelling is checked in both directions, always. A parameter the body

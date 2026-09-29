@@ -841,6 +841,12 @@ fn consumedTemporaries(comptime Checker: type, self: *Checker, node: ast.Node, o
     // `print`/`write` through a `Stream` field checks its receiver and
     // arguments in place, so none of them reached this stack either.
     if (node.data == .method_call and (out.data == .print or out.data == .stream_write)) return 0;
+    // A capability method on an expression receiver checks the receiver and its
+    // arguments in place the same way.
+    if (node.data == .method_call) switch (out.data) {
+        .file_access, .restrict_resource, .dir_resource, .host_resource, .environment_get, .environment_only, .environment_names => return 0,
+        else => {},
+    };
     if (node.data == .index and out.data == .block_value) return 2;
     if (node.data == .length and out.data == .block_value) return 1;
     // `fs.read_only()` is a narrowing method whose receiver is a local, not a

@@ -56,6 +56,9 @@ fn statementWithFile(comptime Checker: type, self: *Checker, stmt: ast.Statement
             if (access == .open) self.trapping_open = head.span;
         }
     }
+    // `with ctx.fs.open(...)`: the receiver is an expression, so the parser hands
+    // the head over as a method call whose name alone identifies `open`.
+    if (head.data == .method_call and std.mem.eql(u8, self.src.text(head.data.method_call.name), "open")) self.trapping_open = head.span;
     defer self.trapping_open = null;
     const value = try self.expression(scope.resource.?);
     const value_type = self.nodes.items[@backingInt(value)].ty;

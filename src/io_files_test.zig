@@ -538,3 +538,95 @@ test "FILE-METHOD-1 with fs.open binds a direct handle and propagates through th
         \\        return len(f.read())
     , "R_FILE");
 }
+
+/// Reject `text` with `code` and require the first message to contain `fragment`.
+fn rejectNaming(text: []const u8, code: []const u8, fragment: []const u8) !void {
+    var compilation = try language.Compilation.init(t.allocator, module, text);
+    defer compilation.deinit();
+    try t.expectError(error.SourceError, compilation.check());
+    try t.expectEqualStrings(code, compilation.diagnostics.items[0].code);
+    try t.expect(std.mem.indexOf(u8, compilation.diagnostics.items[0].message, fragment) != null);
+}
+
+const holder =
+    \\record Ctx:
+    \\    fs: Filesystem
+    \\    clock: Clock
+    \\
+    \\
+;
+
+const fs_holder =
+    \\record Ctx:
+    \\    fs: Filesystem
+    \\
+    \\
+;
+
+// spec-case: CAPABILITY-FIELD-METHOD-1
+test "CAPABILITY-FIELD-METHOD-1 a capability field keeps the effect, grant and trap rules of a local" {
+    // `noio` withholds the filesystem effect from the field spelling as from a local.
+    try reject(holder ++
+        \\def probe(ctx: Ctx) -> bool noio:
+        \\    return ctx.fs.exists("notes.txt")
+        \\
+        \\def main(fs: Filesystem, clock: Clock) -> int:
+        \\    return 0
+    , "E_EFFECT_BOUND");
+    // An unknown method names what the receiver does have; a Clock has none.
+    try rejectNaming(holder ++
+        \\def main(fs: Filesystem, clock: Clock) -> int:
+        \\    ctx = Ctx(fs=fs, clock=clock)
+        \\    _ = ctx.fs.rename("a", "b")
+        \\    return 0
+    , "E_COLLECTION_METHOD", "a Filesystem has the methods open, read_file");
+    try rejectNaming(holder ++
+        \\def main(fs: Filesystem, clock: Clock) -> int:
+        \\    ctx = Ctx(fs=fs, clock=clock)
+        \\    _ = ctx.clock.now()
+        \\    return 0
+    , "E_COLLECTION_METHOD", "a Clock has no methods");
+    // Arity and argument rules are the local spelling's.
+    try reject(holder ++
+        \\def main(fs: Filesystem, clock: Clock) -> int:
+        \\    ctx = Ctx(fs=fs, clock=clock)
+        \\    _ = ctx.fs.read_text()
+        \\    return 0
+    , "E_ARITY");
+    try reject(holder ++
+        \\def main(fs: Filesystem, clock: Clock) -> int:
+        \\    ctx = Ctx(fs=fs, clock=clock)
+        \\    mode = "rb"
+        \\    with ctx.fs.open("notes.txt", mode) as f:
+        \\        return 0
+    , "E_FILE_ARGUMENT");
+    try reject(holder ++
+        \\def main(fs: Filesystem, clock: Clock) -> int:
+        \\    ctx = Ctx(fs=fs, clock=clock)
+        \\    name = "data"
+        \\    _ = ctx.fs.dir(name)
+        \\    return 0
+    , "E_FILESYSTEM_DIR");
+    // A read-only grant still denies writes and a direct open still traps.
+    try expectPrinted(fs_holder ++
+        \\def main(fs: Filesystem, out: Stream) -> int:
+        \\    ctx = Ctx(fs=fs)
+        \\    match ctx.fs.write_text("out.txt", "x"):
+        \\        case Ok(_):
+        \\            out.print("wrote")
+        \\        case Err(message):
+        \\            out.print(message)
+        \\    match ctx.fs.read_text("notes.txt"):
+        \\        case Ok(text):
+        \\            out.print(len(text))
+        \\        case Err(message):
+        \\            out.print(message)
+        \\    return 0
+    , "write 'out.txt': denied: outside the granted directories, or the mode needs a write grant\n11\n");
+    try expectTrap(fs_holder ++
+        \\def main(fs: Filesystem) -> int:
+        \\    ctx = Ctx(fs=fs)
+        \\    with ctx.fs.open("absent.txt", "r") as f:
+        \\        return len(f.read())
+    , "R_FILE");
+}

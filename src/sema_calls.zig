@@ -10,6 +10,7 @@ const collections = @import("collection_lower.zig");
 const option_flow = @import("option_flow.zig");
 const call_arguments = @import("call_arguments.zig");
 const external_resources = @import("external_resources.zig");
+const file_operations = @import("file_operations.zig");
 const callables = @import("callables.zig");
 const eResultOperation = diagnostic.result_operation;
 const eOwnedConsumed = diagnostic.owned_consumed;
@@ -34,6 +35,12 @@ const callback_type_code = "E_CALLBACK_TYPE";
 const eByteConversion = "E_BYTES_CONVERSION";
 const eFilesystemDir = "E_FILESYSTEM_DIR";
 const eNetworkHost = "E_NETWORK_HOST";
+const eCollectionMethod = sema_shared.eCollectionMethod;
+/// The narrowing methods of `Filesystem` and `Network`, spelled once so the
+/// named-local and expression-receiver dispatch cannot drift apart.
+const read_only_method = "read_only";
+const dir_method = "dir";
+const host_method = "host";
 /// Reject a literal `dir()` path that could leave a scoped root, mirroring the
 /// `scopedPath` rule. An empty path names the root itself.
 fn scopedDirectoryPath(bytes: []const u8) bool {
@@ -73,6 +80,12 @@ pub fn Checks(comptime Checker: type) type {
         /// arena binding or a consumed owned value), or a function used as a value.
         pub fn checkName(self: *Checker, node: ast.Node, name: @FieldType(@FieldType(ast.Node, "data"), "name"), out: *typed.Node) Error!void {
             return impl.checkName(Checker, self, node, name, out);
+        }
+        /// Check a method called on a capability reached through an expression, such
+        /// as a record field (`ctx.fs.read_file(path)`), with the receiver already
+        /// checked. It builds the nodes the named-local spelling builds.
+        pub fn checkCapabilityReceiverMethod(self: *Checker, node: ast.Node, receiver: typed.NodeId, temporaries: []const typed.Type) Error!typed.Node {
+            return impl.checkCapabilityReceiverMethod(Checker, self, node, receiver, temporaries);
         }
         /// Recognize `env.get(...)`, `env.only(...)` and `env.names()` on a local
         /// `Environment` binding.
@@ -350,6 +363,27 @@ fn checkTypeConversion(comptime Checker: type, self: *Checker, node: ast.Node, c
     out.ty = ty_value;
     out.data = .{ .cast = value };
 }
+/// The receiver of one capability method: a capability local named at the call
+/// (`fs.read_file(p)`), or an expression already checked as the receiver, such as
+/// a record field (`ctx.fs.read_file(p)`). Both build the same checked nodes.
+const Receiver = union(enum) {
+    local: struct { slot: typed.LocalId, owner: source.Span },
+    checked: typed.NodeId,
+};
+/// The checked node of one capability receiver. A named local is confirmed
+/// readable, counted as read and read back as a `local` node; an expression was
+/// checked, and counted, when the call's receiver was.
+fn receiverNode(comptime Checker: type, self: *Checker, receiver: Receiver, ty: typed.Type) Error!typed.NodeId {
+    const named = switch (receiver) {
+        .checked => |node| return node,
+        .local => |local| local,
+    };
+    try self.requireReadable(named.slot, named.owner);
+    self.locals.items[@backingInt(named.slot)].usage.reads += 1;
+    const node: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+    try self.nodes.append(self.allocator, .{ .span = named.owner, .ty = ty, .data = .{ .local = named.slot } });
+    return node;
+}
 /// The Python `Environment` surface reached through a capability value.
 const EnvironmentMethod = enum { get, only, names };
 /// Recognize `env.get(...)`, `env.only(...)` and `env.names()` on a local
@@ -367,7 +401,7 @@ fn environmentMethod(comptime Checker: type, self: *Checker, call: @FieldType(@F
 /// `env.get("NAME") -> Option[str]`: materialize the literal bytes as a fixed
 /// `[N]u8` request and build the checked `environment_get` node with an Option
 /// result, so the native boundary answers `Some(text)` or `None`.
-fn checkEnvironmentGet(comptime Checker: type, self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), slot: typed.LocalId, owner: source.Span, out: *typed.Node) Error!void {
+fn checkEnvironmentGet(comptime Checker: type, self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), receiver: Receiver, out: *typed.Node) Error!void {
     try call_arguments.positional(call, self.sink);
     if (call.type_arguments.len != 0 or call.arguments.len != 1) return self.sink.fail("E_ARITY", node.span, "env.get takes one literal name");
     const spelling = self.syntax.nodes.items[@backingInt(call.arguments[0])];
@@ -377,10 +411,7 @@ fn checkEnvironmentGet(comptime Checker: type, self: *Checker, node: ast.Node, c
     const values = try self.byteValues(bytes, spelling.span);
     const name: typed.NodeId = @fromBackingInt(self.nodes.items.len);
     try self.nodes.append(self.allocator, .{ .span = spelling.span, .ty = name_type, .data = .{ .array = values } });
-    try self.requireReadable(slot, owner);
-    self.locals.items[@backingInt(slot)].usage.reads += 1;
-    const capability: typed.NodeId = @fromBackingInt(self.nodes.items.len);
-    try self.nodes.append(self.allocator, .{ .span = owner, .ty = .environment_cap, .data = .{ .local = slot } });
+    const capability = try receiverNode(Checker, self, receiver, .environment_cap);
     const element = try collections.preludeType(&self.catalog, "str", node.span);
     out.ty = try collections.optionType(&self.catalog, element, node.span);
     out.data = .{ .environment_get = .{ .capability = capability, .name = name } };
@@ -388,7 +419,7 @@ fn checkEnvironmentGet(comptime Checker: type, self: *Checker, node: ast.Node, c
 /// `env.only("HOME", "PATH") -> Environment`: register the literal names as a
 /// NUL-separated scope blob and return a narrowed capability value. It performs
 /// no I/O and contributes no effect.
-fn checkEnvironmentOnly(comptime Checker: type, self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), slot: typed.LocalId, owner: source.Span, out: *typed.Node) Error!void {
+fn checkEnvironmentOnly(comptime Checker: type, self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), receiver: Receiver, out: *typed.Node) Error!void {
     try call_arguments.positional(call, self.sink);
     if (call.type_arguments.len != 0 or call.arguments.len == 0) return self.sink.fail("E_ARITY", node.span, "env.only takes at least one literal name");
     var blob: std.ArrayList(u8) = .empty;
@@ -405,26 +436,27 @@ fn checkEnvironmentOnly(comptime Checker: type, self: *Checker, node: ast.Node, 
     const values = try self.byteValues(blob.items, node.span);
     const names: typed.NodeId = @fromBackingInt(self.nodes.items.len);
     try self.nodes.append(self.allocator, .{ .span = node.span, .ty = names_type, .data = .{ .array = values } });
-    try self.requireReadable(slot, owner);
-    self.locals.items[@backingInt(slot)].usage.reads += 1;
-    const capability: typed.NodeId = @fromBackingInt(self.nodes.items.len);
-    try self.nodes.append(self.allocator, .{ .span = owner, .ty = .environment_cap, .data = .{ .local = slot } });
+    const capability = try receiverNode(Checker, self, receiver, .environment_cap);
     out.ty = .environment_cap;
     out.data = .{ .environment_only = .{ .capability = capability, .names = names } };
 }
 /// `env.names() -> list[str]`: enumerate the visible environment names as a
 /// fresh managed list. It reads host environment state and contributes the
 /// `environment` effect.
-fn checkEnvironmentNames(comptime Checker: type, self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), slot: typed.LocalId, owner: source.Span, out: *typed.Node) Error!void {
+fn checkEnvironmentNames(comptime Checker: type, self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), receiver: Receiver, out: *typed.Node) Error!void {
     try call_arguments.positional(call, self.sink);
     if (call.type_arguments.len != 0 or call.arguments.len != 0) return self.sink.fail("E_ARITY", node.span, "env.names takes no arguments");
-    try self.requireReadable(slot, owner);
-    self.locals.items[@backingInt(slot)].usage.reads += 1;
-    const capability: typed.NodeId = @fromBackingInt(self.nodes.items.len);
-    try self.nodes.append(self.allocator, .{ .span = owner, .ty = .environment_cap, .data = .{ .local = slot } });
+    const capability = try receiverNode(Checker, self, receiver, .environment_cap);
     const text = try collections.preludeType(&self.catalog, "str", node.span);
     out.ty = try collections.listType(&self.catalog, text, node.span);
     out.data = .{ .environment_names = capability };
+}
+/// Check `fs.read_only()`: the same `Filesystem` with only the read permission.
+fn checkReadOnly(comptime Checker: type, self: *Checker, node: ast.Node, input: @FieldType(@FieldType(ast.Node, "data"), "call"), receiver: Receiver, out: *typed.Node) Error!void {
+    if (input.type_arguments.len != 0 or input.arguments.len != 0) return self.sink.fail("E_ARITY", node.span, "read_only takes no arguments");
+    const value = try receiverNode(Checker, self, receiver, .filesystem_cap);
+    out.ty = .filesystem_cap;
+    out.data = .{ .restrict_resource = .{ .permissions = external_resources.permissionBit(.read), .value = value } };
 }
 /// `fs.read_only()` and `fs.dir(path)` on a local `Filesystem`. Returns false
 /// when the call is not one of them and the ordinary call path should run.
@@ -433,18 +465,13 @@ fn checkCapabilityNarrowing(comptime Checker: type, self: *Checker, node: ast.No
     const slot = self.active.get(self.src.text(owner)) orelse return false;
     if (self.locals.items[@backingInt(slot)].ty != .filesystem_cap) return false;
     const name = self.src.text(input.name);
-    if (std.mem.eql(u8, name, "read_only")) {
-        if (input.type_arguments.len != 0 or input.arguments.len != 0) return self.sink.fail("E_ARITY", node.span, "read_only takes no arguments");
-        try self.requireReadable(slot, owner);
-        self.locals.items[@backingInt(slot)].usage.reads += 1;
-        const value: typed.NodeId = @fromBackingInt(self.nodes.items.len);
-        try self.nodes.append(self.allocator, .{ .span = owner, .ty = .filesystem_cap, .data = .{ .local = slot } });
-        out.ty = .filesystem_cap;
-        out.data = .{ .restrict_resource = .{ .permissions = external_resources.permissionBit(.read), .value = value } };
+    const receiver: Receiver = .{ .local = .{ .slot = slot, .owner = owner } };
+    if (std.mem.eql(u8, name, read_only_method)) {
+        try checkReadOnly(Checker, self, node, input, receiver, out);
         return true;
     }
-    if (std.mem.eql(u8, name, "dir")) {
-        try checkDirCall(Checker, self, node, input, slot, out);
+    if (std.mem.eql(u8, name, dir_method)) {
+        try checkDirCall(Checker, self, node, input, receiver, out);
         return true;
     }
     if (self.fileAccessMethodKind(input)) |kind| {
@@ -459,15 +486,14 @@ fn checkNetworkHost(comptime Checker: type, self: *Checker, node: ast.Node, inpu
     const owner = input.owner orelse return false;
     const slot = self.active.get(self.src.text(owner)) orelse return false;
     if (self.locals.items[@backingInt(slot)].ty != .network_cap) return false;
-    if (!std.mem.eql(u8, self.src.text(input.name), "host")) return false;
-    try checkHostCall(Checker, self, node, input, slot, out);
+    if (!std.mem.eql(u8, self.src.text(input.name), host_method)) return false;
+    try checkHostCall(Checker, self, node, input, .{ .local = .{ .slot = slot, .owner = owner } }, out);
     return true;
 }
 /// Check `net.host(name)`: a `Network` receiver and one literal endpoint that
 /// becomes the sole endpoint every acquisition through the derived value may
 /// request. A dynamic name is `E_NETWORK_HOST`.
-fn checkHostCall(comptime Checker: type, self: *Checker, node: ast.Node, input: @FieldType(@FieldType(ast.Node, "data"), "call"), slot: typed.LocalId, out: *typed.Node) Error!void {
-    const owner = input.owner.?;
+fn checkHostCall(comptime Checker: type, self: *Checker, node: ast.Node, input: @FieldType(@FieldType(ast.Node, "data"), "call"), receiver: Receiver, out: *typed.Node) Error!void {
     if (input.type_arguments.len != 0 or input.arguments.len != 1 or input.argument_names.len != 0) return self.sink.fail("E_ARITY", node.span, "host takes one endpoint argument");
     const argument = self.syntax.nodes.items[@backingInt(input.arguments[0])];
     const bytes = switch (argument.data) {
@@ -475,10 +501,7 @@ fn checkHostCall(comptime Checker: type, self: *Checker, node: ast.Node, input: 
         else => return self.sink.fail(eNetworkHost, argument.span, "host requires a string literal endpoint"),
     };
     if (bytes.len == 0 or std.mem.indexOfScalar(u8, bytes, 0) != null) return self.sink.fail(eNetworkHost, argument.span, "host endpoint must be a nonempty str without NUL");
-    try self.requireReadable(slot, owner);
-    self.locals.items[@backingInt(slot)].usage.reads += 1;
-    const capability: typed.NodeId = @fromBackingInt(self.nodes.items.len);
-    try self.nodes.append(self.allocator, .{ .span = owner, .ty = .network_cap, .data = .{ .local = slot } });
+    const capability = try receiverNode(Checker, self, receiver, .network_cap);
     const name_type = try self.catalog.instantiateArray(self.allocator, .u8, bytes.len, argument.span, self.sink);
     const values = try self.byteValues(bytes, argument.span);
     const name: typed.NodeId = @fromBackingInt(self.nodes.items.len);
@@ -486,17 +509,72 @@ fn checkHostCall(comptime Checker: type, self: *Checker, node: ast.Node, input: 
     out.ty = .network_cap;
     out.data = .{ .host_resource = .{ .capability = capability, .name = name } };
 }
+/// Check one `Environment` method against its receiver.
+fn checkEnvironmentMethod(comptime Checker: type, self: *Checker, node: ast.Node, input: @FieldType(@FieldType(ast.Node, "data"), "call"), method: EnvironmentMethod, receiver: Receiver, out: *typed.Node) Error!void {
+    switch (method) {
+        .get => try checkEnvironmentGet(Checker, self, node, input, receiver, out),
+        .only => try checkEnvironmentOnly(Checker, self, node, input, receiver, out),
+        .names => try checkEnvironmentNames(Checker, self, node, input, receiver, out),
+    }
+}
 /// Dispatch `env.get`, `env.only` and `env.names` on a local `Environment`.
 fn checkEnvironmentDispatch(comptime Checker: type, self: *Checker, node: ast.Node, input: @FieldType(@FieldType(ast.Node, "data"), "call"), out: *typed.Node) Error!bool {
     const method = environmentMethod(Checker, self, input) orelse return false;
     const owner = input.owner.?;
-    const slot = self.active.get(self.src.text(owner)).?;
-    switch (method) {
-        .get => try checkEnvironmentGet(Checker, self, node, input, slot, owner, out),
-        .only => try checkEnvironmentOnly(Checker, self, node, input, slot, owner, out),
-        .names => try checkEnvironmentNames(Checker, self, node, input, slot, owner, out),
-    }
+    const receiver: Receiver = .{ .local = .{ .slot = self.active.get(self.src.text(owner)).?, .owner = owner } };
+    try checkEnvironmentMethod(Checker, self, node, input, method, receiver, out);
     return true;
+}
+/// Methods a capability type answers when reached through an expression,
+/// for the message an unknown one gets.
+fn capabilityMethods(ty: typed.Type) []const u8 {
+    return switch (ty) {
+        .filesystem_cap => "a Filesystem has the methods open, read_file, read_text, write_file, write_text, exists, listdir, mkdir, remove, read_only and dir",
+        .network_cap => "a Network has the method host",
+        .environment_cap => "an Environment has the methods get, only and names",
+        .clock_cap => "a Clock has no methods; read it with time.now(clock)",
+        .random_cap => "an Entropy has no methods; read it with random.from_entropy(entropy)",
+        else => "this capability has no methods",
+    };
+}
+/// The capability methods of `Filesystem`, `Network` and `Environment` on a
+/// receiver reached through an expression (`ctx.fs.read_file(path)`,
+/// `pair.env.get("HOME")`, `make_fs().dir("data")`), which the parser hands over
+/// as a method call. The receiver is already checked, so only the arguments
+/// still need it; each method checks and lowers exactly like its named-local
+/// spelling, so the same effects, grants and capability rules apply. `Clock`,
+/// `Entropy` and `Host` have no methods and an unknown name is
+/// `E_COLLECTION_METHOD` listing the receiver's own.
+fn checkCapabilityReceiverMethod(comptime Checker: type, self: *Checker, node: ast.Node, receiver: typed.NodeId, temporaries: []const typed.Type) Error!typed.Node {
+    const method = node.data.method_call;
+    const name = self.src.text(method.name);
+    const receiver_type = self.nodes.items[@backingInt(receiver)].ty;
+    const call: @FieldType(@FieldType(ast.Node, "data"), "call") = .{ .name = method.name, .arguments = method.arguments, .argument_names = method.argument_names };
+    const known = switch (receiver_type) {
+        .filesystem_cap => std.mem.eql(u8, name, read_only_method) or std.mem.eql(u8, name, dir_method) or file_operations.access(name) != null,
+        .network_cap => std.mem.eql(u8, name, host_method),
+        .environment_cap => std.meta.stringToEnum(EnvironmentMethod, name) != null,
+        else => false,
+    };
+    if (!known) {
+        const message = try std.fmt.allocPrint(self.allocator, "unknown method for a {s} receiver; {s}", .{ prelude.reservedTypeName(receiver_type) orelse "capability", capabilityMethods(receiver_type) });
+        return self.sink.fail(eCollectionMethod, method.name, message);
+    }
+    var out: typed.Node = .{ .span = node.span, .ty = .unit, .data = .unit };
+    const checked: Receiver = .{ .checked = receiver };
+    switch (receiver_type) {
+        .filesystem_cap => if (std.mem.eql(u8, name, read_only_method)) {
+            try checkReadOnly(Checker, self, node, call, checked, &out);
+        } else if (std.mem.eql(u8, name, dir_method)) {
+            try checkDirCall(Checker, self, node, call, checked, &out);
+        } else {
+            for (method.arguments) |argument| _ = try self.expressionWithTemporaries(argument, temporaries);
+            try self.checkFileAccessOn(node, call, file_operations.access(name).?, receiver, &out);
+        },
+        .network_cap => try checkHostCall(Checker, self, node, call, checked, &out),
+        else => try checkEnvironmentMethod(Checker, self, node, call, std.meta.stringToEnum(EnvironmentMethod, name).?, checked, &out),
+    }
+    return out;
 }
 /// Whether an unqualified `replace(value, field=…)` call is the functional
 /// record update rather than the positional three-argument list intrinsic.
@@ -748,8 +826,7 @@ fn mutFootprintRejected(comptime Checker: type, self: *Checker, id: typed.Functi
 }
 /// Check `fs.dir(path)`: the receiver must be a `Filesystem` and the path a
 /// single string literal that stays within the current root.
-fn checkDirCall(comptime Checker: type, self: *Checker, node: ast.Node, input: @FieldType(@FieldType(ast.Node, "data"), "call"), slot: typed.LocalId, out: *typed.Node) Error!void {
-    const owner = input.owner.?;
+fn checkDirCall(comptime Checker: type, self: *Checker, node: ast.Node, input: @FieldType(@FieldType(ast.Node, "data"), "call"), receiver: Receiver, out: *typed.Node) Error!void {
     if (input.type_arguments.len != 0 or input.arguments.len != 1 or input.argument_names.len != 0) return self.sink.fail("E_ARITY", node.span, "dir takes one path argument");
     const argument = self.syntax.nodes.items[@backingInt(input.arguments[0])];
     const bytes = switch (argument.data) {
@@ -757,10 +834,7 @@ fn checkDirCall(comptime Checker: type, self: *Checker, node: ast.Node, input: @
         else => return self.sink.fail(eFilesystemDir, argument.span, "dir requires a string literal path"),
     };
     if (!scopedDirectoryPath(bytes)) return self.sink.fail(eFilesystemDir, argument.span, "dir path must stay within the current root");
-    try self.requireReadable(slot, owner);
-    self.locals.items[@backingInt(slot)].usage.reads += 1;
-    const capability: typed.NodeId = @fromBackingInt(self.nodes.items.len);
-    try self.nodes.append(self.allocator, .{ .span = owner, .ty = .filesystem_cap, .data = .{ .local = slot } });
+    const capability = try receiverNode(Checker, self, receiver, .filesystem_cap);
     const path_type = try self.catalog.instantiateArray(self.allocator, .u8, bytes.len, argument.span, self.sink);
     const values = try self.byteValues(bytes, argument.span);
     const path: typed.NodeId = @fromBackingInt(self.nodes.items.len);
