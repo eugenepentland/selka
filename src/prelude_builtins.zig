@@ -514,7 +514,7 @@ fn sortedCall(comptime Checker: type, checker: *Checker, call: SortedCall) Error
     const span = call.sort.span;
     const b = builder(Checker, checker, span);
     const element = try listElement(Checker, checker, nodeType(Checker, checker, call.input), span);
-    if (call.sort.key == null and !orderedField(Checker, checker, element))
+    if (call.sort.key == null and (element == .bool or !orderedField(Checker, checker, element)))
         return checker.sink.fail(unsupported, span, "sorted requires a list of int, float, str or bytes values, or a key=callback that maps each element to one");
     const list = try collections.listType(&checker.catalog, element, span);
     const result = try b.local(list);

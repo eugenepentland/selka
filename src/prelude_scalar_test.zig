@@ -160,14 +160,14 @@ test "requireArgument attaches the callee signature to a rejected argument" {
     try t.expectEqualStrings("E_TYPE", diag.code);
     const related = diag.related.?;
     try t.expectEqual(diagnostic_role(.alternative), diag.related.?.role);
-    try t.expectEqualStrings("str.find(needle: str) -> int", related.message);
+    try t.expectEqualStrings("str.find(sub: str, start: int = 0, end: int = len(self)) -> int", related.message);
     const json = try diagnostic_output.render(t.allocator, diag, compilation.src, .json);
     defer t.allocator.free(json);
     try t.expect(std.mem.indexOf(u8, json, "\"version\":\"diagnostic-v1\"") != null);
     try t.expect(std.mem.indexOf(u8, json, "\"role\":\"alternative\"") != null);
     const text = try diagnostic_output.render(t.allocator, diag, compilation.src, .text);
     defer t.allocator.free(text);
-    try t.expect(std.mem.indexOf(u8, text, "alternative: str.find(needle: str) -> int") != null);
+    try t.expect(std.mem.indexOf(u8, text, "alternative: str.find(sub: str, start: int = 0, end: int = len(self)) -> int") != null);
 }
 
 test "methodArityFailure prints the signature and the whitespace alternative" {
