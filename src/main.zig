@@ -501,7 +501,7 @@ fn frameBudgetRefused(init: Context, parsed: Parsed) !?u8 {
     if (parsed.command != .run and parsed.command != .@"run-project") return null;
     const frames = requestedFrames(parsed.runtime) orelse return null;
     const memory = budget.resolve(parsed.max_memory, init.environ, budget.variable, budget.run_default) catch return null;
-    const refusal = try budget.frameRefusal(init.gpa, @tagName(parsed.command), "a guest", frames, memory) orelse return null;
+    const refusal = try budget.frameRefusal(init.gpa, init.environ, @tagName(parsed.command), "a guest", frames, memory) orelse return null;
     defer init.gpa.free(refusal);
     try init.text(refusal);
     return input_probe.refused_status;
@@ -1734,10 +1734,10 @@ const ModuleFiles = struct {
     inputs: []const GeneratedInput = &.{},
     /// The directory embedded files must stay inside (`EMBED-1`); the module root when null.
     embed_root: ?[]const u8 = null,
-    fn embed(context: ?*anyopaque, allocator: std.mem.Allocator, module_path: []const u8, path: []const u8) std.mem.Allocator.Error!language.embed.Read {
+    fn embed(context: ?*anyopaque, allocator: std.mem.Allocator, module_path: []const u8, path: []const u8, limit: usize) std.mem.Allocator.Error!language.embed.Read {
         const self: *ModuleFiles = @ptrCast(@alignCast(context.?));
         var files: language.project_files.Files = .{ .io = self.io, .root = self.root, .embed_root = self.embed_root };
-        return language.project_files.Files.readEmbed(&files, allocator, module_path, path);
+        return language.project_files.Files.readEmbed(&files, allocator, module_path, path, limit);
     }
     fn provider(self: *ModuleFiles) language.project.Provider {
         return .{ .context = self, .read = ModuleFiles.read, .embed = ModuleFiles.embed };
@@ -2305,7 +2305,7 @@ fn contextOptions(init: Context, parsed: Parsed, files: ?*ModuleFiles) error{ Ou
             // The provider the project was loaded from, so the answer re-reads the
             // same files before it is published. `null` when the caller had none:
             // the answer is then confirmed only against the bytes it holds.
-            .sources = if (files) |provider| .{ .context = provider, .read = ModuleFiles.read } else null,
+            .sources = if (files) |provider| provider.provider() else null,
         },
     };
     const path = parsed.context.against orelse return request;

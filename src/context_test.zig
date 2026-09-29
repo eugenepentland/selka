@@ -32,15 +32,26 @@ fn read(raw: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit:
     return error.NotFound;
 }
 
+fn readEmbedded(raw: ?*anyopaque, allocator: std.mem.Allocator, module_path: []const u8, path: []const u8, limit: usize) std.mem.Allocator.Error!@import("embed.zig").Read {
+    const self: *Files = @ptrCast(@alignCast(raw.?));
+    if (self.embed_status != .ok) return .{ .status = self.embed_status };
+    const file = self.embedded orelse return .{ .status = .missing };
+    if (!std.mem.eql(u8, module_path, "main.my") or !std.mem.eql(u8, file.path, path)) return .{ .status = .missing };
+    if (file.bytes.len > limit) return .{ .status = .too_large };
+    return .{ .status = .ok, .contents = try allocator.dupe(u8, file.bytes) };
+}
+
 const File = struct { path: []const u8, bytes: []const u8 };
 
 /// An in-memory project source set behind the same provider contract `load`
 /// gives a disk project, so no fixture touches the filesystem.
 const Files = struct {
     entries: []const File,
+    embedded: ?File = null,
+    embed_status: source.EmbedStatus = .ok,
 
     fn provider(self: *Files) graph.Provider {
-        return .{ .context = self, .read = read };
+        return .{ .context = self, .read = read, .embed = readEmbedded };
     }
 };
 
@@ -950,4 +961,91 @@ test "context answers an incomplete project and never reuses checked edges" {
     const lexical_at_parsed = try envelope(lexical_at);
     defer lexical_at_parsed.deinit();
     try t.expectEqualStrings("model::validate", nestedString(lexical_at_parsed.value, &.{ "selector", "resolved" }));
+}
+
+const embedded_entries = [_]File{.{ .path = "main.my", .bytes = "module main\n\nconst DATA: bytes = embed_bytes(\"data.bin\")\n\ndef main() -> int:\n    return len(DATA)\n" }};
+
+// spec: EMBED-CONTEXT-1
+test "context includes embedded identities and rejects same-length edits and missing files" {
+    var files: Files = .{ .entries = &embedded_entries, .embedded = .{ .path = "data.bin", .bytes = "abcd" } };
+    const scene = try Scene.open(t.allocator, &files, "main");
+    defer scene.close();
+    var options = symbolOptions("main::main");
+    options.sources = files.provider();
+    const answer = try scene.render(options);
+    defer t.allocator.free(answer.bytes);
+    try t.expectEqual(context.Status.ok, answer.status);
+    const parsed = try envelope(answer);
+    defer parsed.deinit();
+    const embeds = nested(parsed.value, &.{ "snapshot", "embeds" }).array.items;
+    try t.expectEqual(@as(usize, 1), embeds.len);
+    try t.expectEqualStrings("main", stringAt(embeds[0], "module"));
+    try t.expectEqualStrings("data.bin", stringAt(embeds[0], "path"));
+    try t.expectEqualStrings("ok", stringAt(embeds[0], "status"));
+    try t.expectEqual(@as(i64, 4), field(embeds[0], "bytes").integer);
+    var hash: [32]u8 = undefined;
+    @import("embed.zig").digest("abcd", &hash);
+    try t.expectEqualStrings(&std.fmt.bytesToHex(hash, .lower), stringAt(embeds[0], "blake3"));
+    var no_hook = options;
+    no_hook.sources = .{ .context = &files, .read = read };
+    try t.expectError(error.RecheckUnavailable, scene.render(no_hook));
+    files.embed_status = .unreadable;
+    try t.expectError(error.RecheckUnavailable, scene.render(options));
+    files.embed_status = .ok;
+    files.embedded = .{ .path = "data.bin", .bytes = "dcba" };
+    const edited = try scene.render(options);
+    defer t.allocator.free(edited.bytes);
+    try t.expectEqual(context.Status.stale, edited.status);
+    files.embedded = null;
+    const missing = try scene.render(options);
+    defer t.allocator.free(missing.bytes);
+    try t.expectEqual(context.Status.stale, missing.status);
+}
+
+// spec-case: EMBED-CONTEXT-1
+test "context detects changed held embedded bytes without trusting their stored digest" {
+    var files: Files = .{ .entries = &embedded_entries, .embedded = .{ .path = "data.bin", .bytes = "abcd" } };
+    const scene = try Scene.open(t.allocator, &files, "main");
+    defer scene.close();
+    const main = try moduleNamed(scene, "main");
+    const embeds = @constCast(main.src.embeds);
+    embeds[0].contents = "dcba";
+    const answer = try scene.render(symbolOptions("main::main"));
+    defer t.allocator.free(answer.bytes);
+    try t.expectEqual(context.Status.stale, answer.status);
+}
+
+// spec-case: EMBED-CONTEXT-1
+test "partial context retains embedded identities and empty snapshots keep their old digest" {
+    var files: Files = .{ .entries = &embedded_entries, .embedded = .{ .path = "data.bin", .bytes = "abcd" } };
+    const partial = try PartialScene.open(t.allocator, &files, "main");
+    defer partial.close();
+    const answer = try partial.render(symbolOptions("main::main"));
+    defer t.allocator.free(answer.bytes);
+    const parsed = try envelope(answer);
+    defer parsed.deinit();
+    try t.expectEqual(@as(usize, 1), nested(parsed.value, &.{ "snapshot", "embeds" }).array.items.len);
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const implementation = try receipt.implementation(arena.allocator(), identity);
+    const empty: @import("navigation.zig").Snapshot = .{ .implementation = implementation, .inputs = &.{} };
+    const actual = try receipt.digest(arena.allocator(), empty);
+    const legacy = try receipt.digest(arena.allocator(), .{ .implementation = implementation, .inputs = @as([]const receipt.Input, &.{}) });
+    try t.expectEqualStrings(legacy, actual);
+}
+
+// spec-case: EMBED-CONTEXT-1
+test "context reports embedded row omissions within a small response budget" {
+    var files: Files = .{ .entries = &embedded_entries, .embedded = .{ .path = "data.bin", .bytes = "abcd" } };
+    const scene = try Scene.open(t.allocator, &files, "main");
+    defer scene.close();
+    var options = symbolOptions("main::main");
+    options.context_bytes = 1500;
+    const answer = try scene.render(options);
+    defer t.allocator.free(answer.bytes);
+    try t.expect(answer.bytes.len <= 1500);
+    const parsed = try envelope(answer);
+    defer parsed.deinit();
+    try t.expect(field(nested(parsed.value, &.{"snapshot"}), "embeds") == .null);
+    try t.expect(std.mem.indexOf(u8, answer.bytes, "\"field\":\"embeds\"") != null);
 }

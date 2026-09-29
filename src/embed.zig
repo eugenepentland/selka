@@ -231,6 +231,13 @@ pub const Read = struct { status: source.EmbedStatus, contents: []const u8 = &.{
 /// (itself relative to `roots.import_root`). Every failure is a status; only an
 /// allocation failure is an error.
 pub fn read(allocator: std.mem.Allocator, roots: Roots, module_path: []const u8, path: []const u8) std.mem.Allocator.Error!Read {
+    return readLimited(allocator, roots, module_path, path, size_cap);
+}
+
+/// Read an embedded file without allocating beyond the supplied project budget.
+/// The standalone 16 MiB embed limit still applies when the budget is larger.
+pub fn readLimited(allocator: std.mem.Allocator, roots: Roots, module_path: []const u8, path: []const u8, requested_limit: usize) std.mem.Allocator.Error!Read {
+    const limit = @min(requested_limit, size_cap);
     if (spelledStatus(path)) |status| return .{ .status = status };
     const cwd = std.Io.Dir.cwd();
     const root = cwd.realPathFileAlloc(roots.io, roots.root, allocator) catch |err| return failed(err);
@@ -252,13 +259,13 @@ pub fn read(allocator: std.mem.Allocator, roots: Roots, module_path: []const u8,
     const stat = cwd.statFile(roots.io, real, .{}) catch |err| return failed(err);
     if (stat.kind == .directory) return .{ .status = .directory };
     if (stat.kind != .file) return .{ .status = .directory };
-    if (stat.size > size_cap) return .{ .status = .too_large };
-    const contents = cwd.readFileAlloc(roots.io, real, allocator, .limited(size_cap + 1)) catch |err| return switch (err) {
+    if (stat.size > limit) return .{ .status = .too_large };
+    const contents = cwd.readFileAlloc(roots.io, real, allocator, .limited(limit + 1)) catch |err| return switch (err) {
         error.OutOfMemory => error.OutOfMemory,
         error.StreamTooLong => .{ .status = .too_large },
         else => failed(err),
     };
-    if (contents.len > size_cap) {
+    if (contents.len > limit) {
         allocator.free(contents);
         return .{ .status = .too_large };
     }

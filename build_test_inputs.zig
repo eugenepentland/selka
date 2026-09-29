@@ -29,6 +29,9 @@
 /// legacy `--qbe` spelling of the LLVM backend (the compiler never reads it).
 const llvm_adapter = "experiments/llvm-backend/qbe_llvm.py";
 
+/// The independently gated named byte-ceiling module.
+pub const memory_budget = [_][]const u8{"src/memory_budget.zig"};
+
 /// `src/root_test.zig`, the unit root. Its guest programs also read the
 /// runtime sources the compiler embeds, which `src/` covers.
 pub const unit = [_][]const u8{
@@ -150,3 +153,9 @@ pub const coverage_self = [_][]const u8{"tests/test_inputs_coverage.py"};
 
 /// `tests/input_manifest.py --self-test`.
 pub const manifest_self = [_][]const u8{"tests/input_manifest.py"};
+
+/// Isolated CLI cache, frame-diagnostic and guest-address-space probes.
+pub const tooling_isolation = [_][]const u8{"tests/tooling_cache_isolation.py"};
+
+/// The bootstrap lexer source and live-compiler numeric extent oracle.
+pub const selfhost_numeric = [_][]const u8{"selfhost/"};

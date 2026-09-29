@@ -12120,18 +12120,21 @@ const iterated_write_back =
     \\    rt.objects.append(value)
     \\def main() -> int:
     \\    it = Interp(rt=Runtime(objects=[1, 2]))
+    \\    seen = 0
     \\    for x in it.rt.objects:
+    \\        seen = seen + x
     \\        wb = it.rt
     \\        push(mut wb, x)
     \\        it.rt = wb
-    \\    return len(it.rt.objects)
+    \\    return 0 if seen == 3 and len(it.rt.objects) == 4 else 1
 ;
 
 // spec-case: RC-ITERATION-HOLD-TRANSFER-1
-test "CLI RC growth written back through an iterated field traps like the collector" {
-    try invokeOptions("run", iterated_write_back, &.{}, 1, "", "R_LIST_ITERATION_MUTATION");
-    try invokeOptions("run", iterated_write_back, &.{"--rc-runtime"}, 1, "", "R_LIST_ITERATION_MUTATION");
-    try invokeOptions("run", iterated_write_back, &.{"--rc-runtime=stats"}, 1, "", "R_LIST_ITERATION_MUTATION");
+test "CLI growth written back through a named field preserves the iteration snapshot" {
+    try invokeOptions("run", iterated_write_back, &.{}, 0, "0\n", "");
+    try invokeOptions("run", iterated_write_back, &.{"--rc-runtime"}, 0, "0\n", "");
+    try invokeOptions("run", iterated_write_back, &.{"--rc-runtime=stats"}, 0, "0\n", "MYLANG_RC_COUNTS ");
+    try invokeOptions("run", iterated_write_back, &.{"--gc-stress"}, 0, "0\n", "");
 }
 
 // spec: RC-RUNTIME-CLI-1
@@ -12445,13 +12448,6 @@ test "a call-depth budget the memory ceiling cannot back is refused up front wit
     try expectRunRefused(&.{ "--max-frames", "150000" }, null, "raise --max-memory to at least 5G, or lower --max-frames to at most 137984");
     // The same budget with a ceiling that holds it runs.
     try invokeOptions("run", trivial_run, &.{ "--max-frames", "30000", "--max-memory", "2G" }, 0, "ok\n0\n", "");
-    // Past what the compiler's own address-space ceiling lets a guest inherit, the
-    // cause is named instead of a silent cap at about 269,000 frames.
-    var environment = try std.process.Environ.createMap(testing.environ, testing.allocator);
-    defer environment.deinit();
-    try environment.put("MYLANG_HOST_MEMORY_LIMIT", "8G");
-    try expectRunRefused(&.{ "--max-frames=400000", "--max-memory=64G" }, &environment, "this process inherited an address-space limit below --max-memory");
-    try expectRunRefused(&.{ "--max-frames=400000", "--max-memory=64G" }, &environment, "MYLANG_HOST_MEMORY_LIMIT=0 removes it");
 }
 
 // spec-case: RUN-FRAME-BUDGET-1
@@ -12698,4 +12694,213 @@ test "mylang test runs a module that embeds and reruns it when only the fixture 
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "fixtures/nul.bin", .data = "a\x00b" });
     const restored = try std.process.run(a, testing.io, .{ .argv = &argv });
     try testing.expect(std.mem.indexOf(u8, restored.stdout, "cached emb::test_nul") != null);
+}
+
+/// Exercise a real guest reservation and, optionally, a caller's soft ceiling.
+fn expectGuestFrames(frames: []const u8, external: bool, expected_status: u8) !void {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "prog.my", .data = trivial_run });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "prog.my", a);
+    const root = try temp.dir.realPathFileAlloc(testing.io, ".", a);
+    const cache = try std.fs.path.join(a, &.{ root, "cache" });
+    var environment = try std.process.Environ.createMap(testing.environ, a);
+    try environment.put("MYLANG_HOST_MEMORY_LIMIT", if (external) "4G" else "8G");
+    var argv: std.ArrayList([]const u8) = .empty;
+    if (external) try argv.appendSlice(a, &.{ "sh", "-c", "ulimit -S -v 6291456; exec \"$@\"", "caller-limit" });
+    try argv.appendSlice(a, &.{ compiler_path, "run", path, frames, "--max-memory=12G", "--print-result", try std.fmt.allocPrint(a, "--cache-dir={s}", .{cache}) });
+    try argv.appendSlice(a, &tools);
+    const result = try std.process.run(a, testing.io, .{ .argv = argv.items, .environ_map = &environment });
+    testing.expectEqual(std.process.Child.Term{ .exited = expected_status }, result.term) catch |err| {
+        std.debug.print("guest frame preflight: {s}\n{s}\n", .{ result.stdout, result.stderr });
+        return err;
+    };
+    if (expected_status == 0) {
+        try testing.expectEqualStrings("ok\n0\n", result.stdout);
+        try testing.expectEqualStrings("", result.stderr);
+    } else {
+        try testing.expect(std.mem.indexOf(u8, result.stderr, "this process inherited an address-space limit below --max-memory") != null);
+        try testing.expect(std.mem.indexOf(u8, result.stderr, "raise the caller's RLIMIT_AS") != null);
+    }
+}
+
+// spec-case: MEMORY-HOST-GUEST-1
+test "CLI guest frame preflight permits a restored compiler limit and preserves a caller limit" {
+    try expectGuestFrames("--max-frames=300000", false, 0);
+    try expectGuestFrames("--max-frames=160000", true, 0);
+    try expectGuestFrames("--max-frames=300000", true, 2);
+}
+
+const embed_tooling_source =
+    \\module main
+    \\
+    \\const DATA: bytes = embed_bytes("data.bin")
+    \\
+    \\public def measure[T](value: T) -> int:
+    \\    return len(DATA)
+    \\
+    \\def main() -> int:
+    \\    return measure(1)
+;
+
+/// Invoke a file-backed tooling frontend over the temporary embedded project.
+fn embeddedTool(allocator: std.mem.Allocator, command: []const u8, entry: []const u8, extra: []const []const u8) !std.process.RunResult {
+    var argv: std.ArrayList([]const u8) = .empty;
+    try argv.appendSlice(allocator, &.{ compiler_path, command, entry });
+    try argv.appendSlice(allocator, extra);
+    return std.process.run(allocator, testing.io, .{ .argv = argv.items });
+}
+
+// spec-case: EMBED-CONTEXT-1
+// spec-case: EMBED-3
+// spec-case: EMBED-PROJECT-BUDGET-1
+test "CLI embedded inputs reach context and generic schema and obey project byte budgets" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = embed_tooling_source });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "data.bin", .data = "abcd" });
+    const entry = try temporary.dir.realPathFileAlloc(testing.io, "main.my", a);
+    const answer = try embeddedTool(a, "context", entry, &.{ "--symbol", "main::main" });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, answer.term);
+    const first = try std.json.parseFromSliceLeaky(std.json.Value, a, answer.stdout, .{});
+    const file = first.object.get("snapshot").?.object.get("embeds").?.array.items[0];
+    try testing.expectEqualStrings("data.bin", file.object.get("path").?.string);
+    try testing.expectEqual(@as(i64, 4), file.object.get("bytes").?.integer);
+    const schema = try embeddedTool(a, "schema-project", entry, &.{});
+    testing.expectEqual(std.process.Child.Term{ .exited = 0 }, schema.term) catch |err| {
+        std.debug.print("embedded schema: {s}\n", .{schema.stderr});
+        return err;
+    };
+    try testing.expect(std.mem.indexOf(u8, schema.stdout, "measure") != null);
+    try testing.expect(std.mem.indexOf(u8, schema.stdout, "generic_templates") != null);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "data.bin", .data = "dcba" });
+    const edited = try embeddedTool(a, "context", entry, &.{ "--symbol", "main::main" });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, edited.term);
+    const second = try std.json.parseFromSliceLeaky(std.json.Value, a, edited.stdout, .{});
+    try testing.expect(!std.mem.eql(u8, first.object.get("snapshot_sha256").?.string, second.object.get("snapshot_sha256").?.string));
+    const total = embed_tooling_source.len + 3;
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "mylang.json", .data = try std.fmt.allocPrint(a, "{{\"version\":1,\"budgets\":{{\"max_total_bytes\":{d}}}}}", .{total}) });
+    const refused = try embeddedTool(a, "check-project", entry, &.{"--diagnostics=json"});
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, refused.term);
+    try testing.expect(std.mem.indexOf(u8, refused.stderr, "E_PROJECT_BYTES") != null);
+    try testing.expect(std.mem.indexOf(u8, refused.stderr, "max_total_bytes") != null);
+    try testing.expect(std.mem.indexOf(u8, refused.stderr, "data.bin") != null);
+}
+
+// spec-case: RUN-FRAME-BUDGET-1
+test "CLI rejects an unaddressable native frame reservation without a compiler panic" {
+    try invokeOptions("run", trivial_run, &.{"--max-frames=562949953421312"}, 2, "", "exceeds the addressable native stack size");
+}
+
+// spec-case: MEMORY-HOST-GUEST-1
+test "CLI directory tests forward the installed host receipt when modes are already normalized" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "public def test_ok() -> bool:\n    return True\n" });
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    const cache = try std.fs.path.join(a, &.{ root, "cache" });
+    var environment = try std.process.Environ.createMap(testing.environ, a);
+    try environment.put("MYLANG_VALUE_SEMANTICS", "1");
+    try environment.put("MYLANG_RUNTIME", "rc-v3");
+    try environment.put("MYLANG_HOST_MEMORY_LIMIT", "8G");
+    _ = environment.swapRemove("MYLANG_HOST_LIMIT_CHECKPOINT");
+    _ = environment.swapRemove("MYLANG_HOST_LIMIT_RESTORE");
+    const result = try std.process.run(a, testing.io, .{ .argv = &(.{ compiler_path, "test", root, "--max-memory=12G", "--max-frames=300000", "--jobs=1", "--cache-dir", cache } ++ tools), .environ_map = &environment });
+    testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term) catch |err| {
+        std.debug.print("directory host receipt: {s}\n{s}\n", .{ result.stdout, result.stderr });
+        return err;
+    };
+    try testing.expect(std.mem.indexOf(u8, result.stdout, "1 passed") != null);
+}
+
+const snapshot_embed_main = "module main\nimport data\n\nconst A: bytes = embed_bytes(\"data.bin\")\nconst B: bytes = embed_bytes(\"data.bin\")\n\ndef main() -> int:\n    return 0\n\npublic def test_payload() -> bool:\n    return A == b\"abcd\" and B == A and data.C == A\n";
+const snapshot_embed_data = "module data\n\npublic const C: bytes = embed_bytes(\"data.bin\")\n";
+
+/// Run a real snapshot test and preserve the located budget diagnostic on refusal.
+fn expectSnapshotBudget(allocator: std.mem.Allocator, entry: []const u8, cache: []const u8, expected_status: u8) !void {
+    const result = try std.process.run(allocator, testing.io, .{ .argv = &(.{ compiler_path, "test", entry, "--cache-dir", cache, "--force", "--diagnostics=json" } ++ tools) });
+    testing.expectEqual(std.process.Child.Term{ .exited = expected_status }, result.term) catch |err| {
+        std.debug.print("snapshot embed budget: {s}\n{s}\n", .{ result.stdout, result.stderr });
+        return err;
+    };
+    if (expected_status == 0) {
+        try testing.expect(std.mem.indexOf(u8, result.stdout, "passed main::test_payload") != null);
+    } else {
+        try testing.expect(std.mem.indexOf(u8, result.stderr, "E_PROJECT_BYTES") != null);
+        try testing.expect(std.mem.indexOf(u8, result.stderr, "diagnostic-v1") != null);
+        try testing.expect(std.mem.indexOf(u8, result.stderr, "data.bin") != null);
+    }
+}
+
+// spec-case: EMBED-PROJECT-BUDGET-1
+// spec-case: DIAGNOSTIC-JSON-1
+test "CLI test snapshots retain exact embedded budgets and recapture tightened and widened policy" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = snapshot_embed_main });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "data.my", .data = snapshot_embed_data });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "data.bin", .data = "abcd" });
+    const entry = try temporary.dir.realPathFileAlloc(testing.io, "main.my", a);
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    const cache = try std.fs.path.join(a, &.{ root, "cache" });
+    const total = snapshot_embed_main.len + snapshot_embed_data.len + 8;
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "mylang.json", .data = try std.fmt.allocPrint(a, "{{\"version\":1,\"budgets\":{{\"max_total_bytes\":{d}}}}}", .{total}) });
+    try expectSnapshotBudget(a, entry, cache, 0);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "mylang.json", .data = try std.fmt.allocPrint(a, "{{\"version\":1,\"budgets\":{{\"max_total_bytes\":{d}}}}}", .{total - 1}) });
+    try expectSnapshotBudget(a, entry, cache, 1);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "mylang.json", .data = try std.fmt.allocPrint(a, "{{\"version\":1,\"budgets\":{{\"max_total_bytes\":{d}}}}}", .{total}) });
+    try expectSnapshotBudget(a, entry, cache, 0);
+    const oversized = try temporary.dir.createFile(testing.io, "data.bin", .{});
+    defer oversized.close(testing.io);
+    try oversized.setLength(testing.io, 1024 * 1024);
+    try expectSnapshotBudget(a, entry, cache, 1);
+}
+
+// spec-case: EMBED-PROJECT-BUDGET-1
+// spec-case: NATIVE-TEST-12
+test "CLI provider replacements recapture embedded fixture edits with a warm test cache" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    try writeProjectFile(&temporary, "main.my", "module main\nimport dependency\n\npublic def test_fixture() -> bool:\n    return dependency.value() == 7\n");
+    try writeProjectFile(&temporary, "dependency.my", "module dependency\n\npublic def value() -> int effects():\n    return 7\n");
+    try writeProjectFile(&temporary, "fixture.my", "module fixture\n\npublic const DATA: bytes = embed_bytes(\"fixture.bin\")\n");
+    try writeProjectFile(&temporary, "fixture.bin", "1234567");
+    try r3WriteCases(&temporary, "cases.json", "main::test_fixture", "dependency.my", "module dependency\nimport fixture\n\npublic def value() -> int effects():\n    return len(fixture.DATA)\n");
+    const entry = try temporary.dir.realPathFileAlloc(testing.io, "main.my", a);
+    const cases = try temporary.dir.realPathFileAlloc(testing.io, "cases.json", a);
+    const cache = try std.fs.path.join(a, &.{ std.fs.path.dirname(entry).?, "cache" });
+    const first = try r3TestInvoke(entry, cases, cache);
+    defer testing.allocator.free(first.stdout);
+    defer testing.allocator.free(first.stderr);
+    testing.expectEqual(std.process.Child.Term{ .exited = 0 }, first.term) catch |err| {
+        std.debug.print("provider embedded fixture: {s}\n{s}\n", .{ first.stdout, first.stderr });
+        return err;
+    };
+    try testing.expect(std.mem.indexOf(u8, first.stdout, "\"passed\":1") != null);
+    try writeProjectFile(&temporary, "fixture.bin", "12345678");
+    const changed = try r3TestInvoke(entry, cases, cache);
+    defer testing.allocator.free(changed.stdout);
+    defer testing.allocator.free(changed.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, changed.term);
+    try testing.expect(std.mem.indexOf(u8, changed.stdout, "\"failed\":1") != null);
+}
+
+// spec-case: DIAGNOSTIC-JSON-1
+test "CLI native build forwards diagnostic presentation to its source frontend" {
+    try invokeOptions("build", "def main() -> int:\n    return False\n", &.{ "--run", "--diagnostics=json" }, 1, "", "\"code\":\"E_TYPE\"");
 }

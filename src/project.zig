@@ -34,20 +34,21 @@ const standard_library = @import("standard_library.zig");
 const embed = @import("embed.zig");
 /// The one code every malformed or missing module header reports.
 const eModuleHeader = "E_MODULE_HEADER";
+const eProjectBytes = "E_PROJECT_BYTES";
 /// Header discovery's scratch chunk: the tokens of a module of about 64 KiB.
 const header_scratch_bytes = 1 << 20;
 pub const ReadError = error{ OutOfMemory, NotFound, ReadFailed, TooLarge };
 /// Source reader callback; returned bytes use the supplied allocator and respect the byte limit.
 /// `embed` reads the file one `embed_bytes`/`embed_str` literal names, given the
-/// embedding module's path and the literal's text; a provider without it leaves
+/// embedding module's path, the literal's text and the byte allowance; a provider without it leaves
 /// every embed unresolved (`EMBED-1`).
 pub const Provider = struct {
     context: ?*anyopaque,
     read: *const fn (?*anyopaque, std.mem.Allocator, []const u8, usize) ReadError![]u8,
-    embed: ?*const fn (?*anyopaque, std.mem.Allocator, []const u8, []const u8) std.mem.Allocator.Error!embed.Read = null,
+    embed: ?*const fn (?*anyopaque, std.mem.Allocator, []const u8, []const u8, usize) std.mem.Allocator.Error!embed.Read = null,
 };
 /// Bounds on module count, import edges, individual files, and total source
-/// bytes. A `mylang.json` `budgets` object may override each field. The
+/// and embedded bytes. A `mylang.json` `budgets` object may override each field. The
 /// defaults (PROJ-SCALE-1) admit a project of well over a million lines with no
 /// configuration: 64 MiB of source is about 1.9 million lines of 35-byte lines,
 /// and 16,384 modules averages 64 lines a module over a million lines.
@@ -111,7 +112,7 @@ pub const Project = struct {
     order: std.ArrayList(usize) = .empty,
     names: std.StringHashMapUnmanaged(usize) = .empty,
     problem: ?Problem = null,
-    counts: struct { bytes: usize = 0, imports: usize = 0 } = .{},
+    counts: struct { bytes: usize = 0, embedded_bytes: usize = 0, imports: usize = 0 } = .{},
     progress: struct { started: bool = false, complete: bool = false } = .{},
     /// Create an empty project arena; release all project storage with deinit.
     pub fn init(allocator: std.mem.Allocator) Project {
@@ -138,36 +139,54 @@ pub const Project = struct {
         try self.modules.append(allocator, .{ .name = owned_name, .src = try source.Source.init(allocator, path, "") });
         try self.names.put(allocator, owned_name, id);
         const site = origin orelse Site{ .module = id, .span = .{ .start = 0, .end = 0 } };
-        const limit = @min(options.max_file_bytes, options.max_total_bytes - self.counts.bytes);
+        const limit = @min(options.max_file_bytes, options.max_total_bytes - self.totalBytes());
         const bytes = if (standard_library.source(path)) |library| try allocator.dupe(u8, library) else provider.read(provider.context, allocator, path, limit) catch |err| {
             if (err == error.OutOfMemory) return error.OutOfMemory;
-            if (err == error.TooLarge) return self.fail("E_PROJECT_BYTES", try budgetMessage(allocator, path, options, self.counts.bytes), site, null);
+            if (err == error.TooLarge) return self.fail(eProjectBytes, try budgetMessage(allocator, path, options, self.totalBytes()), site, null);
             return self.fail("E_MODULE_READ", try std.fmt.allocPrint(allocator, "cannot load {s}: {s}", .{ path, @errorName(err) }), site, null);
         };
         defer allocator.free(bytes);
-        if (bytes.len > limit) return self.fail("E_PROJECT_BYTES", try budgetMessage(allocator, path, options, self.counts.bytes), site, null);
+        if (bytes.len > limit) return self.fail(eProjectBytes, try budgetMessage(allocator, path, options, self.totalBytes()), site, null);
         self.counts.bytes += bytes.len;
         const source_path = if (standard_library.source(path) != null) try std.fmt.allocPrint(allocator, "@stdlib/{s}", .{path}) else path;
         self.modules.items[id].src = try source.Source.init(allocator, source_path, bytes);
         std.crypto.hash.sha2.Sha256.hash(bytes, &self.modules.items[id].digest, .{});
         try self.header(id, options, origin == null, scratch);
-        try self.readEmbeds(provider, id, path);
+        try self.readEmbeds(provider, id, path, options);
         return id;
     }
     /// Read the file behind each embed call `header` found in module `id`, whose
     /// file is `path` beneath the import root. Without a provider hook they stay unresolved.
-    fn readEmbeds(self: *Project, provider: Provider, id: usize, path: []const u8) std.mem.Allocator.Error!void {
+    fn readEmbeds(self: *Project, provider: Provider, id: usize, path: []const u8, options: Options) diagnostic.Error!void {
         const read_embed = provider.embed orelse return;
         const embeds: []source.Embed = @constCast(self.modules.items[id].src.embeds);
         const allocator = self.arena.allocator();
-        for (embeds) |*entry| {
-            const outcome = try read_embed(provider.context, allocator, path, entry.path);
+        for (embeds, 0..) |*entry, at| {
+            if (priorEmbed(embeds[0..at], entry.path)) |previous| {
+                entry.status = previous.status;
+                entry.contents = previous.contents;
+                entry.digest = previous.digest;
+                continue;
+            }
+            const limit = @min(embed.size_cap, @min(options.max_file_bytes, options.max_total_bytes - self.totalBytes()));
+            const outcome = try read_embed(provider.context, allocator, path, entry.path, limit);
+            if ((outcome.status == .too_large and limit < embed.size_cap) or outcome.contents.len > limit) {
+                return self.fail(eProjectBytes, try budgetMessage(allocator, entry.path, options, self.totalBytes()), .{ .module = id, .span = entry.literal }, null);
+            }
+            if (outcome.status == .ok) self.counts.embedded_bytes += outcome.contents.len;
             entry.status = outcome.status;
             entry.contents = outcome.contents;
             if (outcome.status == .ok) embed.digest(outcome.contents, &entry.digest);
         }
     }
-    /// Load the reachable import graph iteratively while enforcing source and graph limits.
+    fn priorEmbed(entries: []const source.Embed, path: []const u8) ?source.Embed {
+        for (entries) |entry| if (std.mem.eql(u8, entry.path, path)) return entry;
+        return null;
+    }
+    fn totalBytes(self: *const Project) usize {
+        return self.counts.bytes + self.counts.embedded_bytes;
+    }
+    /// Load the reachable import graph iteratively while enforcing source, embedded-file and graph limits.
     pub fn load(self: *Project, provider: Provider, entry: []const u8, options: Options) LoadError!void {
         if (self.progress.started) return error.ProjectAlreadyLoaded;
         self.progress.started = true;
@@ -470,7 +489,7 @@ const Scanner = struct {
 /// `mylang.json` field that raises it.
 fn budgetMessage(allocator: std.mem.Allocator, path: []const u8, options: Options, loaded: usize) error{OutOfMemory}![]const u8 {
     if (options.max_total_bytes - loaded < options.max_file_bytes) {
-        return std.fmt.allocPrint(allocator, "cannot load {s}: the project's sources exceed the {d}-byte max_total_bytes budget; raise budgets.max_total_bytes in mylang.json", .{ path, options.max_total_bytes });
+        return std.fmt.allocPrint(allocator, "cannot load {s}: the project's source and embedded inputs exceed the {d}-byte max_total_bytes budget; raise budgets.max_total_bytes in mylang.json", .{ path, options.max_total_bytes });
     }
     return std.fmt.allocPrint(allocator, "cannot load {s}: the file exceeds the {d}-byte max_file_bytes budget; raise budgets.max_file_bytes in mylang.json", .{ path, options.max_file_bytes });
 }

@@ -1,0 +1,83 @@
+record P:
+    xs: list[int]
+    k: int
+
+record R:
+    items: list[int]
+    rows: list[list[int]]
+    name: str
+    n: int
+    inner: P
+
+def make(n: int) -> list[int]:
+    out: list[int] = []
+    return out
+
+def total(xs: list[int]) -> int:
+    t = 0
+    return t
+
+def total2(xss: list[list[int]]) -> int:
+    t = 0
+    return t
+
+def rsum(r: R) -> int:
+    return total(r.items) * 7 + total2(r.rows) * 5 + len(r.name) * 3 + r.n + total(r.inner.xs) * 11 + r.inner.k
+
+def dsum(d: dict[str, list[int]]) -> int:
+    t = 0
+    return t
+
+def f1(p0: R, p1: dict[str, list[int]], p2: list[list[int]]) -> int:
+    acc = 0
+    c4 = 0
+    while c4 < 2:
+        c4 = c4 + 1
+        v5 = [[9], [5, 5]]
+        v6 = p0
+        if len(v5) > 0:
+            v5[0].append(v6.n)
+    with arena():
+        tmp7 = p0.items
+    return acc * 7 + rsum(p0) + dsum(p1) + total2(p2)
+
+def f2(p0: str, p1: mut list[list[int]], p2: mut dict[str, list[int]], p3: mut list[int]) -> int:
+    acc = 0
+    p1.append([1])
+    p2["w"] = [1]
+    p3.append(1)
+    if 2 > 0:
+        for x0 in p1:
+            acc = acc + f1(R(make(2), [[1], [2, 3]], "nm4", 1, P([4], 1)), p2, p1)
+    return acc * 7 + len(p0) + total2(p1) + dsum(p2) + total(p3)
+
+# spec: GC-ARENA-LOCAL-LIFETIME-1
+public def test_arena_keeps_named_values_without_retaining_old_receiver_temporaries(out: Stream) -> bool:
+    m0 = make(3)
+    m1 = [[1, 2], [3]]
+    m2 = R(make(2), [[1], [2, 3]], "nm", 1, P([4], 1))
+    m3 = {"a": [1], "b": [2, 2]}
+    m4 = "hello"
+    m5 = make(3)
+    m6 = [[1, 2], [3]]
+    m7 = R(make(2), [[1], [2, 3]], "nm", 1, P([4], 1))
+    m8 = {"a": [1], "b": [2, 2]}
+    m9 = "hello"
+    acc = 0
+    out.print(acc, total(m0), total2(m1), rsum(m2), dsum(m3), len(m4), total(m5), total2(m6), rsum(m7), dsum(m8), len(m9))
+    acc = acc + f2(m4, mut m1, mut m8, mut m5)
+    return acc == 236 and len(m1) == 3 and len(m5) == 1 and m8["w"] == [1]
+
+
+def fresh_iteration_rows() -> list[list[int]]:
+    return [[1], [2]]
+
+# spec-case: GC-ARENA-LOCAL-LIFETIME-1
+public def test_an_iteration_receiver_used_after_arena_close_stays_live() -> bool:
+    observed_sum = 0
+    for row in fresh_iteration_rows():
+        with arena():
+            scratch = [8, 9, 10]
+            observed_sum = observed_sum + len(scratch)
+        observed_sum = observed_sum + row[0]
+    return observed_sum == 9

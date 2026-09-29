@@ -17,7 +17,7 @@
 //!     this analysis does not change;
 //!  3. something reachable from 1 or 2 — traced through the root;
 //!  4. an implicit read the lowering adds: a closing arena scope scans every
-//!     local declared before it (a use of each at `end_arena`), the fused
+//!     source binding declared before it (a use of each at `end_arena`), the fused
 //!     `src[a:b].decode()` hands the slice's receiver straight to the decode
 //!     two instructions later (a use of that receiver at the decode), and the
 //!     epilogue releases every local whose type owns something (such a local
@@ -259,11 +259,12 @@ fn uses(input: Input, pc: usize, row: []usize) void {
         },
         .resource_io => |operation| include(row, @backingInt(operation.owner)),
         .file_method => |method| include(row, @backingInt(method.owner)),
-        // Closing a scope scans every binding declared before it through its
-        // slot, looking for a reference into the region being freed.
+        // Closing a scope checks source bindings for escaped arena values.
+        // Compiler temporaries are not bindings: their receiver snapshots must
+        // not acquire a new lifetime from this check (GC-ARENA-LOCAL-LIFETIME-1).
         .end_arena => |watermark| {
             const scanned = @min(@backingInt(watermark), input.function.scope.locals.len);
-            for (0..scanned) |index| include(row, index);
+            for (0..scanned) |index| if (!input.function.scope.locals[index].usage.temporary) include(row, index);
         },
         else => {},
     }

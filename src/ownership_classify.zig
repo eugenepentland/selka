@@ -27,6 +27,7 @@ pub fn classify(ctx: *const model.Context, question: Question, owners: ?[]const 
         .local => {},
     }
     if (independentHome(ctx, question) and projection(ctx, source, null, false)) return .copy;
+    if (independentHome(ctx, question) and iterationKeeps(ctx, source)) return .copy;
     const local = source.local;
     const moved = movable(ctx, local, owners) and source.read != none and !ctx.live.after(source.read, local);
     if (question.kind == .argument) return if (moved and source.part == .whole) .move else .borrow;
@@ -40,6 +41,24 @@ pub fn classify(ctx: *const model.Context, question: Question, owners: ?[]const 
         else => {},
     }
     return .copy;
+}
+
+/// A named transfer cannot take the sole semantic owner while a hidden loop
+/// still holds the original header (ITERATION-FIELD-SNAPSHOT-1). Its saved
+/// source is checked even if later writes invalidated ordinary alias roles.
+pub fn iterationKeeps(ctx: *const model.Context, source: sources.Source) bool {
+    if (source.origin != .local or source.read == none) return false;
+    for (ctx.instructions()) |instruction| {
+        if (instruction.op != .buffer_operation or instruction.op.buffer_operation.kind != .iteration_check) continue;
+        const local = model.li(instruction.op.buffer_operation.owner);
+        if (!ctx.temporary(local)) continue;
+        if (!ctx.live.after(source.read, local) or ctx.defs.count[local] != 1) continue;
+        const saved = ctx.flow.at[ctx.defs.pc[local]] orelse continue;
+        if (saved.len == 0) continue;
+        const origin = saved[saved.len - 1];
+        if (origin.origin == .local and ctx.rootOf(origin.local) == ctx.rootOf(source.local)) return true;
+    }
+    return false;
 }
 
 // Compiler receiver temporaries are loans, not semantic publications. Their

@@ -152,6 +152,12 @@ pub const Plan = struct {
     /// alone.
     pub fn disturbs(self: Plan, owner: usize, pc: usize, heap: bool) bool {
         const site = self.at(pc);
+        // GC-MUT-ARG-ROOT-1: preparing a writing place may detach a field
+        // before its later fill. A prior snapshot must keep its own root.
+        for (self.places) |maybe| if (maybe) |found| {
+            const start = if (found.step == .entry_field) found.read else found.base;
+            if (start == pc and (found.parent == owner or heap)) return true;
+        };
         for (site.unique) |unique| if (unique.local == owner or unique.alias == owner) return true;
         for (self.entry(pc)) |check| if (check.local == owner or (heap and check.elements)) return true;
         if (!site.fill) return false;

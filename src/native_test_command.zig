@@ -33,6 +33,7 @@ const Graph = struct {
     project: sessions.Project,
     provider_identity: []const u8,
     source_identity: []const u8,
+    captured: ?snapshot.Snapshot = null,
     /// Name and symbol tables over the graph, built on first use.
     tables: ?*Tables = null,
 
@@ -101,6 +102,13 @@ const Graphs = struct {
         }
     }
 
+    fn verifyAssets(self: *Graphs) Error!void {
+        var iterator = self.entries.valueIterator();
+        while (iterator.next()) |entry| {
+            if (entry.*.captured) |captured| try snapshot.verifyAssets(self.session.context, captured);
+        }
+    }
+
     fn get(self: *Graphs, case: cases.Case) Error!*Graph {
         const has_providers = case.providers == .object and case.providers.object.count() != 0;
         const provider_identity = if (has_providers) try contracts.providerIdentity(self.allocator, case.providers) else "";
@@ -120,6 +128,7 @@ const Graphs = struct {
                 .project = try self.prepare(copied.entry_path, copied.identity, provider_identity),
                 .provider_identity = provider_identity,
                 .source_identity = copied.identity,
+                .captured = copied,
             };
         } else {
             graph.* = .{
@@ -327,7 +336,7 @@ fn refusedLimits(context: fs.Context, opts: *options.Options) Error!?u8 {
         try std.Io.File.stderr().writeStreamingAll(context.io, options.usage);
         return 2;
     };
-    const refusal = try budget.frameRefusal(context.allocator, "test", "a test", opts.limits.max_frames, memory) orelse return null;
+    const refusal = try budget.frameRefusal(context.allocator, context.environ, "test", "a test", opts.limits.max_frames, memory) orelse return null;
     try std.Io.File.stderr().writeStreamingAll(context.io, refusal);
     return input_probe.refused_status;
 }
@@ -422,6 +431,7 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     // Reap any retained checked-compilation sessions before the invocation's own
     // work report so their child counters are folded into it.
     graphs.finishSessions();
+    try graphs.verifyAssets();
     try session.verify();
     if (opts.cases) |path| {
         if (!std.mem.eql(u8, config_bytes, try context.read(path))) return error.SourceChanged;
@@ -1005,6 +1015,9 @@ fn failureReason(context: fs.Context, failure: Failure) Error![]const u8 {
         }
     } else {
         reason = try stripRoot(context.allocator, failure.diagnostics, failure.project_source, failure.root);
+        if (std.mem.indexOf(u8, failure.diagnostics, "R_FRAME_LIMIT") != null) {
+            reason = try std.fmt.allocPrint(context.allocator, "{s}\ncall-depth budget exhausted; raise it with --max-frames=N (and enough --max-memory to back the frames)", .{reason});
+        }
     }
     if (failure.output.len == 0) return reason;
     const captured = try stripRoot(context.allocator, failure.output, failure.project_source, failure.root);
@@ -1404,4 +1417,25 @@ fn report(context: fs.Context, printed: Report, json: bool) Error!u8 {
     try std.Io.File.stdout().writeStreamingAll(context.io, try std.fmt.allocPrint(context.allocator, "{s}\n", .{output}));
     if (failed != 0) return 1;
     return if (passed + cached != 0) 0 else 3;
+}
+
+// spec: TEST-FRAME-ADVICE-1
+test "a guest frame-limit failure explains the test command budget controls" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var environ: std.process.Environ.Map = .init(arena.allocator());
+    defer environ.deinit();
+    const context = try fs.Context.init(arena.allocator(), std.testing.io, &environ);
+    const reason = try failureReason(context, .{
+        .status = "trap",
+        .actual = .null,
+        .expected = .null,
+        .diagnostics = "R_FRAME_LIMIT: execution trapped",
+        .output = "",
+        .trace = "",
+        .project_source = "main.my",
+        .root = "scratch",
+    });
+    try std.testing.expect(std.mem.indexOf(u8, reason, "--max-frames=N") != null);
+    try std.testing.expect(std.mem.indexOf(u8, reason, "--max-memory") != null);
 }

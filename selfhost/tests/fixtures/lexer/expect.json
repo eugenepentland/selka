@@ -63,7 +63,8 @@
     "status": "ok"
   },
   "removed_amp.my": {
-    "status": "error"
+    "status": "ok",
+    "note": "Ampersand is tokenized for readonly types; this expression is rejected by the parser"
   },
   "removed_fat_arrow.my": {
     "status": "error"
@@ -91,5 +92,9 @@
   },
   "unterminated_string.my": {
     "status": "error"
+  },
+  "numeric_spellings.my": {
+    "status": "ok",
+    "note": "Python numeric token extents, malformed spellings and adjacent field dots"
   }
 }
