@@ -3282,13 +3282,24 @@ fn checkImportedInputs(init: Context, inputs: []const GeneratedInput, project: *
     return true;
 }
 
+/// The cache directory the invocation names, or null for the per-project
+/// default: `--cache-dir` first, then `MYLANG_FRONTEND_CACHE`. Every persistent
+/// store this command opens (frontend entries, checked bodies, the invalidation
+/// baseline) nests under it, so naming one directory keeps all of them out of
+/// the working directory.
+fn requestedCacheBase(init: Context, parsed: Parsed) ?[]const u8 {
+    if (parsed.cache_dir) |directory| return directory;
+    const variable = init.environ.get("MYLANG_FRONTEND_CACHE") orelse return null;
+    return if (variable.len == 0) null else variable;
+}
+
 /// Resolve the persistent frontend cache directory for this invocation.
 /// Precedence: `--no-cache`, then an explicit `--cache-dir` (nested under
 /// `frontend/`), then `MYLANG_FRONTEND_CACHE` from a parent build driver, then
 /// the per-project default. The compiler identity partitions the directory.
 fn frontendRoot(init: Context, parsed: Parsed) ?[]const u8 {
     if (parsed.no_cache) return null;
-    const base = parsed.cache_dir orelse init.environ.get("MYLANG_FRONTEND_CACHE") orelse language.frontend_cache.default_directory;
+    const base = requestedCacheBase(init, parsed) orelse language.frontend_cache.default_directory;
     if (std.mem.eql(u8, base, language.frontend_cache.default_directory)) return base;
     return std.fs.path.join(init.gpa, &.{ base, frontend_label }) catch null;
 }
@@ -3443,7 +3454,7 @@ fn openFragments(init: Context, parsed: Parsed, storage: *language.qbe_fragments
 /// deliberately independent of the compiler-identity partition so a rebuilt
 /// compiler still explains against the previous build's receipt.
 fn invalidationBaselinePath(init: Context, parsed: Parsed) ![]const u8 {
-    const base = parsed.cache_dir orelse language.frontend_cache.default_directory;
+    const base = requestedCacheBase(init, parsed) orelse language.frontend_cache.default_directory;
     const basename = std.fs.path.basename(parsed.path);
     const stem = if (std.mem.endsWith(u8, basename, ".my")) basename[0 .. basename.len - 3] else basename;
     const file_name = try init.gpa.alloc(u8, stem.len + ".json".len);
@@ -3613,12 +3624,12 @@ fn semanticCacheContract(init: Context) ![]const u8 {
 
 /// Resolve the durable checked-body store root from the same shared cache-root
 /// option as the frontend cache. `--no-cache` returns null, an explicit
-/// `--cache-dir=DIR` nests under `DIR/semantic`, and the default is the
-/// per-project `.mylang-cache/semantic` leaf.
+/// `--cache-dir=DIR` (or `MYLANG_FRONTEND_CACHE`) nests under `DIR/semantic`, and
+/// the default is the per-project `.mylang-cache/semantic` leaf.
 fn semanticRoot(init: Context, parsed: Parsed) ?[]const u8 {
     if (parsed.no_cache) return null;
     const default_directory = language.semantic_cache.default_store_directory;
-    const base = parsed.cache_dir orelse default_directory;
+    const base = requestedCacheBase(init, parsed) orelse return default_directory;
     if (std.mem.eql(u8, base, default_directory)) return default_directory;
     return std.fs.path.join(init.gpa, &.{ base, "semantic" }) catch null;
 }

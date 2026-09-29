@@ -31,8 +31,12 @@ Neither layer stores a symbol index, an interface or a resolved declaration tabl
 
 The cache root is `<cache-dir>/frontend/` when `--cache-dir` is given, otherwise
 `MYLANG_FRONTEND_CACHE`, otherwise the per-project `.mylang-cache/frontend`.
-`mylang build` and `mylang test` pass their own cache directory through to the
-frontend, so frontend entries sit under the same root as the native object cache.
+`mylang build` and `mylang test` pass their own cache directory through to every
+compiler child they run, the declaration check included, so frontend entries sit
+under the same root as the native object cache and naming `--cache-dir` leaves no
+`.mylang-cache` in the working directory. The checked-body store and the
+invalidation baseline below follow the same root, `MYLANG_FRONTEND_CACHE`
+included.
 `--no-cache` disables frontend reuse for `check`, `run`, `build` and the project
 commands; a native `build` still uses its separate object cache. Within the root,
 entries are partitioned by the compiler's
@@ -107,7 +111,8 @@ stream; the frontend counters are available from `check`, `run` and
 previous `project-dependencies-v1` receipt and prints one
 `invalidation-report-v1` line on stderr, naming the hit/miss status and the first
 changed dependency for every stage. The baseline lives at
-`<cache-dir>/invalidation/<entry>.json`, is deliberately not partitioned by
+`<cache-dir>/invalidation/<entry>.json` (`--cache-dir`, else `MYLANG_FRONTEND_CACHE`,
+else `.mylang-cache/frontend`), is deliberately not partitioned by
 compiler identity so a compiler change can be explained, and `--no-cache` reads
 and writes no baseline. A missing baseline is nine misses with `"no-baseline"`;
 a corrupt baseline is nine misses with `"corrupt-baseline"` rather than a
@@ -188,8 +193,8 @@ the native-test session) ignores them. A damaged or foreign slot is a miss.
 Ordinary one-shot single-file `check`, project commands that inspect the
 checked program without summaries (above), and native-test preparation use the
 same checked-body query path. The durable store lives under
-`<cache-dir>/semantic/` when `--cache-dir` is given and
-`.mylang-cache/semantic/` otherwise; it is one contract-namespaced directory of
+`<cache-dir>/semantic/` when `--cache-dir` (or `MYLANG_FRONTEND_CACHE`) is given
+and `.mylang-cache/semantic/` otherwise; it is one contract-namespaced directory of
 versioned `semantic-cache-v2` files. Each file contains one stable declaration
 key, the dependency context, the checked contract digest, the owned relocatable
 `typed.Function`/node/statement tree, referenced stable identities, source

@@ -12264,3 +12264,87 @@ test "invoke reports an unreadable entry as a structured setup failure naming th
     try testing.expect(std.mem.indexOf(u8, outcome.stdout, "\"reason\":\"the entry file cannot be read\"") != null);
     try testing.expect(std.mem.indexOf(u8, outcome.stdout, "\"diagnostics\":\"no such file or directory\"") != null);
 }
+
+/// Run one command from inside `dir` with the fixture tools appended and require
+/// exit status `wanted`; the compiler path is made absolute for the changed cwd.
+fn runToolIn(dir: std.Io.Dir, environ: ?*const std.process.Environ.Map, args: []const []const u8, wanted: u8) !void {
+    const absolute = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, compiler_path, testing.allocator);
+    defer testing.allocator.free(absolute);
+    var argv: std.ArrayList([]const u8) = .empty;
+    defer argv.deinit(testing.allocator);
+    try argv.append(testing.allocator, absolute);
+    try argv.appendSlice(testing.allocator, args);
+    // Only the commands that build take the toolchain; the paths are made
+    // absolute because the child runs in `dir`.
+    var absolute_tools: [tools.len][]u8 = undefined;
+    var resolved: usize = 0;
+    defer for (absolute_tools[0..resolved]) |path| testing.allocator.free(path);
+    const builds = std.mem.eql(u8, args[0], "test") or std.mem.eql(u8, args[0], "build") or std.mem.eql(u8, args[0], "run");
+    if (builds) for (tools) |flag| {
+        const equals = std.mem.indexOfScalar(u8, flag, '=').?;
+        const path = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, flag[equals + 1 ..], testing.allocator);
+        defer testing.allocator.free(path);
+        absolute_tools[resolved] = try std.fmt.allocPrint(testing.allocator, "{s}{s}", .{ flag[0 .. equals + 1], path });
+        try argv.append(testing.allocator, absolute_tools[resolved]);
+        resolved += 1;
+    };
+    const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = argv.items, .cwd = .{ .dir = dir }, .environ_map = environ });
+    defer freeRun(outcome);
+    testing.expectEqual(std.process.Child.Term{ .exited = wanted }, outcome.term) catch |err| {
+        std.debug.print("{s}\n{s}\n", .{ outcome.stdout, outcome.stderr });
+        return err;
+    };
+}
+
+const cache_program =
+    \\module prog
+    \\
+    \\def main(out: Stream) -> int:
+    \\    out.print("hi")
+    \\    return 0
+    \\
+    \\public def test_ok() -> bool:
+    \\    return True
+;
+
+// spec: CLI-CACHE-DIR-1
+test "test, build, run and check write no cache into the working directory under --cache-dir" {
+    var work = testing.tmpDir(.{});
+    defer work.cleanup();
+    var cache = testing.tmpDir(.{});
+    defer cache.cleanup();
+    try work.dir.writeFile(testing.io, .{ .sub_path = "prog.my", .data = cache_program });
+    const cache_path = try cache.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(cache_path);
+    const flag = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache_path});
+    defer testing.allocator.free(flag);
+    try runToolIn(work.dir, null, &.{ "test", "prog.my", "--force", flag }, 0);
+    try runToolIn(work.dir, null, &.{ "test", "prog.my", "--force", flag, "--gc-runtime" }, 0);
+    try runToolIn(work.dir, null, &.{ "build", "prog.my", "-o", "prog.bin", flag }, 0);
+    try runToolIn(work.dir, null, &.{ "run", "prog.my", flag }, 0);
+    try runToolIn(work.dir, null, &.{ "check", "prog.my", flag }, 0);
+    try runToolIn(work.dir, null, &.{ "check-project", "prog.my", "--explain-invalidation", flag }, 0);
+    try testing.expectError(error.FileNotFound, work.dir.statFile(testing.io, ".mylang-cache", .{}));
+    // The named directory took the frontend, checked-body and object caches instead.
+    _ = try cache.dir.statFile(testing.io, "frontend", .{});
+    _ = try cache.dir.statFile(testing.io, "objects", .{});
+}
+
+// spec-case: CLI-CACHE-DIR-1
+test "MYLANG_FRONTEND_CACHE moves the checked-body store and invalidation baseline out of the working directory" {
+    var work = testing.tmpDir(.{});
+    defer work.cleanup();
+    var cache = testing.tmpDir(.{});
+    defer cache.cleanup();
+    try work.dir.writeFile(testing.io, .{ .sub_path = "prog.my", .data = cache_program });
+    const cache_path = try cache.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(cache_path);
+    var environment = try std.process.Environ.createMap(testing.environ, testing.allocator);
+    defer environment.deinit();
+    try environment.put("MYLANG_FRONTEND_CACHE", cache_path);
+    try runToolIn(work.dir, &environment, &.{ "check", "prog.my" }, 0);
+    try runToolIn(work.dir, &environment, &.{ "check-project", "prog.my", "--explain-invalidation" }, 0);
+    try testing.expectError(error.FileNotFound, work.dir.statFile(testing.io, ".mylang-cache", .{}));
+    _ = try cache.dir.statFile(testing.io, "semantic", .{});
+    _ = try cache.dir.statFile(testing.io, "invalidation", .{});
+}
