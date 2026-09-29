@@ -11,6 +11,7 @@ const std = @import("std");
 const project_config = @import("project_config.zig");
 const fs = @import("qbe_build_io.zig");
 const snapshot = @import("native_test_snapshot.zig");
+const input_probe = @import("input_probe.zig");
 
 const usage = "usage: mylang fix [--check] [--diagnostics=text|json] [--cache-dir=DIR] [--no-cache] <entry.my|directory>\n";
 /// Rounds one entry may take before `fix` stops and reports that the fixes did
@@ -95,11 +96,11 @@ fn runCommand(process: std.process.Init, args: []const []const u8) !u8 {
         return 2;
     };
     const cwd = try std.Io.Dir.cwd().realPathFileAlloc(process.io, ".", allocator);
-    const target = std.Io.Dir.cwd().realPathFileAlloc(process.io, options.path, allocator) catch {
-        const message = try std.fmt.allocPrint(allocator, "mylang fix: cannot open {s}\n", .{options.path});
-        try std.Io.File.stderr().writeStreamingAll(process.io, message);
-        return 2;
-    };
+    if (try input_probe.check(allocator, process.io, "fix", options.path, true)) |refusal| {
+        try std.Io.File.stderr().writeStreamingAll(process.io, refusal);
+        return input_probe.refused_status;
+    }
+    const target = try std.Io.Dir.cwd().realPathFileAlloc(process.io, options.path, allocator);
     var session: Session = .{ .allocator = allocator, .io = process.io, .compiler = compiler, .cwd = cwd, .options = options };
     const entries = try entriesOf(process, target) orelse {
         const message = try std.fmt.allocPrint(allocator, "mylang fix: {s} is neither a .my entry nor a directory\n", .{options.path});

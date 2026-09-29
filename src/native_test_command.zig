@@ -1,6 +1,7 @@
 //! Native guest tests with transitive semantic result caching.
 const std = @import("std");
 const fs = @import("qbe_build_io.zig");
+const input_probe = @import("input_probe.zig");
 const v = @import("qbe_build_value.zig");
 const options = @import("native_test_options.zig");
 const cases = @import("native_test_cases.zig");
@@ -256,6 +257,47 @@ fn requested(flag: ?usize, environ: *const std.process.Environ.Map) budget.Error
     const width = try budget.jobs(text);
     return width;
 }
+/// The tests left after `--affected`, or the exit status of a refused reference.
+const Affected = union(enum) { kept: []const cases.Case, exit: u8 };
+/// Narrow the discovered tests to the ones that reach a declaration changed
+/// since `--against`. A reference git cannot resolve, or a malformed entry, ends
+/// the command with the usage status instead.
+fn narrowToAffected(context: fs.Context, opts: options.Options, captured: snapshot.Snapshot, selected: []const cases.Case) Error!Affected {
+    const source_absolute = try context.absolute(opts.source);
+    const git_root = std.fs.path.dirname(source_absolute) orelse ".";
+    const names = try context.allocator.alloc([]const u8, selected.len);
+    for (selected, names) |case, *name| name.* = case.name;
+    const selection = language.affected_tests.select(.{
+        .memory = context.allocator,
+        .io = context.io,
+        .load_root = captured.root,
+        .git_root = git_root,
+        .entry = captured.entry,
+        .reference = opts.against.?,
+        .discovered = names,
+    }) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        error.GitFailed => {
+            try std.Io.File.stderr().writeStreamingAll(context.io, "mylang test: --against names a revision git cannot resolve\n");
+            return .{ .exit = 2 };
+        },
+        error.InvalidEntry => {
+            try std.Io.File.stderr().writeStreamingAll(context.io, options.usage);
+            return .{ .exit = 2 };
+        },
+    };
+    var kept: std.ArrayList(cases.Case) = .empty;
+    for (selected, selection.keep) |case, keep| if (keep) try kept.append(context.allocator, case);
+    try reportAffected(context, selection, opts.against.?);
+    return .{ .kept = kept.items };
+}
+/// Refuse a missing or unreadable test entry by name, as every command does; a
+/// directory is a valid entry here. Null means the entry can be read.
+fn refusedEntry(process: std.process.Init, source: []const u8) Error!?u8 {
+    const refusal = try input_probe.check(process.arena.allocator(), process.io, "test", source, true) orelse return null;
+    try std.Io.File.stderr().writeStreamingAll(process.io, refusal);
+    return input_probe.refused_status;
+}
 /// Discover, check, selectively execute, and report native application tests.
 pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     if (args.len == 1 and std.mem.eql(u8, args[0], "--help")) {
@@ -272,6 +314,7 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
         try std.Io.File.stderr().writeStreamingAll(process.io, options.usage);
         return 2;
     };
+    if (try refusedEntry(process, opts.source)) |status| return status;
     var context = try fs.Context.init(process.arena.allocator(), process.io, process.environ_map);
     defer context.deinit();
     // Resolve the ceiling once, before any child or receipt key observes it:
@@ -320,35 +363,10 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     // declaration changed since its reference. It is a selection, never a
     // verdict: an empty derivation still flows through the ordinary report and
     // exits 3, and a derivation that cannot be made runs the whole set.
-    if (opts.flags.affected) {
-        const source_absolute = try context.absolute(opts.source);
-        const git_root = std.fs.path.dirname(source_absolute) orelse ".";
-        const names = try context.allocator.alloc([]const u8, selected.len);
-        for (selected, names) |case, *name| name.* = case.name;
-        const selection = language.affected_tests.select(.{
-            .memory = context.allocator,
-            .io = context.io,
-            .load_root = captured.root,
-            .git_root = git_root,
-            .entry = captured.entry,
-            .reference = opts.against.?,
-            .discovered = names,
-        }) catch |err| switch (err) {
-            error.OutOfMemory => return error.OutOfMemory,
-            error.GitFailed => {
-                try std.Io.File.stderr().writeStreamingAll(context.io, "mylang test: --against names a revision git cannot resolve\n");
-                return 2;
-            },
-            error.InvalidEntry => {
-                try std.Io.File.stderr().writeStreamingAll(context.io, options.usage);
-                return 2;
-            },
-        };
-        var kept: std.ArrayList(cases.Case) = .empty;
-        for (selected, selection.keep) |case, keep| if (keep) try kept.append(context.allocator, case);
-        selected = kept.items;
-        try reportAffected(context, selection, opts.against.?);
-    }
+    if (opts.flags.affected) switch (try narrowToAffected(context, opts, captured, selected)) {
+        .kept => |kept| selected = kept,
+        .exit => |status| return status,
+    };
     const benches: []const bench.Selection = if (opts.bench.pattern) |pattern| try bench.discover(context.allocator, declared_schema, config, pattern) else &.{};
     const results = try context.allocator.alloc(receipts.Result, selected.len);
     const pure = try context.allocator.alloc(bool, selected.len);

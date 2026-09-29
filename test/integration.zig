@@ -2138,7 +2138,7 @@ test "CLI missing arguments and missing files are host or usage failures" {
     defer testing.allocator.free(absent.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, absent.term);
     try testing.expectEqualStrings("", absent.stdout);
-    try testing.expect(std.mem.indexOf(u8, absent.stderr, "FileNotFound") != null);
+    try testing.expectEqualStrings("mylang run: cannot read 'missing.my': no such file or directory\n", absent.stderr);
 }
 test "CLI binding warnings do not alter status or result output" {
     const text =
@@ -12184,4 +12184,83 @@ test "CLI RC runtime contract inheritance respects project discovery and explici
     defer freeRun(override);
     try testing.expectEqual(std.process.Child.Term{ .exited = 22 }, override.term);
     try testing.expectEqualStrings("22\n", override.stdout);
+}
+
+/// Run `argv` with its program path made absolute, from inside `dir`.
+fn runInDirectory(dir: std.Io.Dir, argv: []const []const u8) !std.process.RunResult {
+    const absolute = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, argv[0], testing.allocator);
+    defer testing.allocator.free(absolute);
+    var resolved = try testing.allocator.dupe([]const u8, argv);
+    defer testing.allocator.free(resolved);
+    resolved[0] = absolute;
+    return std.process.run(testing.allocator, testing.io, .{ .argv = resolved, .cwd = .{ .dir = dir } });
+}
+
+/// Run `argv` inside `dir` and require the input refusal: exit 2, nothing on
+/// standard output, and exactly `sentence` on standard error.
+fn expectRefused(dir: std.Io.Dir, argv: []const []const u8, sentence: []const u8) !void {
+    const outcome = try runInDirectory(dir, argv);
+    defer freeRun(outcome);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, outcome.term);
+    try testing.expectEqualStrings("", outcome.stdout);
+    try testing.expectEqualStrings(sentence, outcome.stderr);
+    try testing.expect(std.mem.indexOf(u8, outcome.stderr, ".zig:") == null);
+}
+
+/// Every command that takes one source entry refuses a missing file and a
+/// directory in the same words.
+fn expectEveryEntryCommandRefused(dir: std.Io.Dir) !void {
+    inline for (.{ "check", "check-module", "fmt", "fmt-module", "run", "lint", "list-modules", "run-project", "list-declarations", "dump-tokens", "emit-qbe" }) |command| {
+        try expectRefused(dir, &.{ compiler_path, command, "nope.my" }, "mylang " ++ command ++ ": cannot read 'nope.my': no such file or directory\n");
+        try expectRefused(dir, &.{ compiler_path, command, "adir" }, "mylang " ++ command ++ ": cannot read 'adir': is a directory, not a file\n");
+    }
+}
+
+/// The refusal a file this process cannot read gets, or nothing when it can read
+/// it anyway (running as root), where there is nothing to refuse.
+fn expectUnreadableRefused(dir: std.Io.Dir, command: []const u8) !void {
+    try dir.writeFile(testing.io, .{ .sub_path = "locked.my", .data = "def main() -> int:\n    return 0\n" });
+    try dir.setFilePermissions(testing.io, "locked.my", std.Io.File.Permissions.fromMode(0), .{});
+    const readable = dir.openFile(testing.io, "locked.my", .{});
+    if (readable) |file| {
+        file.close(testing.io);
+        return;
+    } else |_| {}
+    const sentence = try std.fmt.allocPrint(testing.allocator, "mylang {s}: cannot read 'locked.my': permission denied\n", .{command});
+    defer testing.allocator.free(sentence);
+    try expectRefused(dir, &.{ compiler_path, command, "locked.my" }, sentence);
+}
+
+// spec: CLI-INPUT-REFUSED-1
+test "a missing, unreadable or directory entry is refused by name with the usage status" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.createDir(testing.io, "adir", .default_dir);
+    const missing = "no such file or directory";
+    try expectEveryEntryCommandRefused(temp.dir);
+    try expectRefused(temp.dir, &.{ compiler_path, "build", "nope.my", "-o", "out.bin" }, "mylang build: cannot read 'nope.my': " ++ missing ++ "\n");
+    try expectRefused(temp.dir, &.{ compiler_path, "build", "adir", "-o", "out.bin" }, "mylang build: cannot read 'adir': is a directory, not a file\n");
+    try expectRefused(temp.dir, &.{ compiler_path, "test", "nope.my" }, "mylang test: cannot read 'nope.my': " ++ missing ++ "\n");
+    try expectRefused(temp.dir, &.{ compiler_path, "fix", "nope.my" }, "mylang fix: cannot read 'nope.my': " ++ missing ++ "\n");
+    try expectRefused(temp.dir, &.{ compiler_path, "api", "nope.my", "--check" }, "mylang api: cannot read 'nope.my': " ++ missing ++ "\n");
+    try expectUnreadableRefused(temp.dir, "check");
+    // The refusal is in the structured diagnostic format when one is asked for.
+    const json = try runInDirectory(temp.dir, &.{ compiler_path, "check", "nope.my", "--diagnostics=json" });
+    defer freeRun(json);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, json.term);
+    try testing.expect(std.mem.indexOf(u8, json.stderr, "cannot read 'nope.my'") != null);
+    // A refused input leaves no cache directory behind.
+    try testing.expectError(error.FileNotFound, temp.dir.statFile(testing.io, ".mylang-cache", .{}));
+}
+
+// spec-case: CLI-INPUT-REFUSED-1
+test "invoke reports an unreadable entry as a structured setup failure naming the reason" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const outcome = try runInDirectory(temp.dir, &.{ compiler_path, "invoke", "nope.my", "--function=main::main", "--describe" });
+    defer freeRun(outcome);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, outcome.term);
+    try testing.expect(std.mem.indexOf(u8, outcome.stdout, "\"status\":\"setup-failure\"") != null);
+    try testing.expect(std.mem.indexOf(u8, outcome.stdout, "\"reason\":\"the entry file cannot be read\"") != null);
+    try testing.expect(std.mem.indexOf(u8, outcome.stdout, "\"diagnostics\":\"no such file or directory\"") != null);
 }

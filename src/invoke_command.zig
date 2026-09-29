@@ -11,6 +11,7 @@
 //! or inside that object's fields.
 const std = @import("std");
 const fs = @import("qbe_build_io.zig");
+const input_probe = @import("input_probe.zig");
 const v = @import("qbe_build_value.zig");
 const options = @import("native_test_options.zig");
 const execute = @import("native_test_execute.zig");
@@ -58,6 +59,9 @@ const Bounds = struct {
     max_frames: ?u64 = null,
     max_calls: ?u64 = null,
 };
+
+/// The `failure.kind` every setup failure carries, the same word as its status.
+const setup_failure_kind = "setup-failure";
 
 /// Toolchain and cache paths the request may override.
 const Tools = struct {
@@ -109,6 +113,12 @@ fn dispatch(a: std.mem.Allocator, context: fs.Context, request: Request) !u8 {
         .limits = quotas,
         .flags = .{ .gc_stress = request.behaviour.stress, .output = .{ .report = request.behaviour.report } },
     };
+    const unusable: ?[]const u8 = if (input_probe.probe(context.io, request.entry)) |kind| (if (kind == .directory) input_probe.reason(error.IsDir) else null) else |err| input_probe.reason(err);
+    if (unusable) |why| return emit(context.io, a, .{
+        .status = invoke.statusText(.@"setup-failure"),
+        .target = .{ .function = request.function, .entry = request.entry },
+        .failure = .{ .kind = setup_failure_kind, .reason = "the entry file cannot be read", .diagnostics = why },
+    });
     var check = runner.check(context, opts, if (request.describe) .frontend else .native) catch |err| switch (err) {
         error.InvalidTestArguments => {
             try std.Io.File.stderr().writeStreamingAll(context.io, usage);
@@ -122,7 +132,7 @@ fn dispatch(a: std.mem.Allocator, context: fs.Context, request: Request) !u8 {
             .status = invoke.statusText(.@"setup-failure"),
             .target = .{ .function = request.function, .entry = request.entry },
             .failure = .{
-                .kind = "setup-failure",
+                .kind = setup_failure_kind,
                 .reason = "the project could not be checked or the native toolchain is unavailable",
                 .diagnostics = @errorName(err),
             },
@@ -201,7 +211,7 @@ fn answer(a: std.mem.Allocator, context: fs.Context, request: Request, prepared:
         .status = invoke.statusText(.@"setup-failure"),
         .target = target,
         .failure = .{
-            .kind = "setup-failure",
+            .kind = setup_failure_kind,
             .reason = "the selected export could not be built into a native library",
             .diagnostics = @errorName(err),
         },

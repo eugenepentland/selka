@@ -174,6 +174,7 @@ const module_syntax = @import("module_syntax.zig");
 const native_run = @import("native_run.zig");
 const native_build = @import("qbe_build.zig");
 const native_options = @import("qbe_build_options.zig");
+const input_probe = @import("input_probe.zig");
 /// Per-stage observations collected when an invalidation explanation ran.
 const StageTally = struct { hits: usize = 0, misses: usize = 0, skipped: usize = 0 };
 const RunObservation = struct {
@@ -361,7 +362,6 @@ fn dispatch(process: std.process.Init) !u8 {
         .diagnostics = parsed.reporting.diagnostics orelse .text,
     };
     const status = run(init, parsed) catch |err| status: {
-        if (@errorReturnTrace()) |trace| std.debug.dumpErrorReturnTrace(trace); // DEBUG-RV
         const message = try std.fmt.allocPrint(init.gpa, "mylang: host failure: {s}\n", .{@errorName(err)});
         defer init.gpa.free(message);
         try init.text(message);
@@ -372,6 +372,13 @@ fn dispatch(process: std.process.Init) !u8 {
 }
 fn run(init: Context, parsed: Parsed) !u8 {
     if (parsed.command == .@"check-session") return checkSession(init, parsed);
+    // A missing, unreadable or directory entry is refused by name before any
+    // cache opens, so it leaves no cache directory behind and prints no trace.
+    if (try input_probe.check(init.gpa, init.io, @tagName(parsed.command), parsed.path, false)) |refusal| {
+        defer init.gpa.free(refusal);
+        try init.text(refusal);
+        return input_probe.refused_status;
+    }
     // One optional record per command, built before any work so the wall time it
     // carries covers the whole command. `init` returns null unless the flag or
     // `MYLANG_FRICTION_LOG` asked for a log, so an ordinary run pays one check.

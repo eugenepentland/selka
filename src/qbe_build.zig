@@ -3,6 +3,7 @@ const std = @import("std");
 const builtin = @import("builtin");
 const bundled = @import("qbe_build_assets");
 const fs = @import("qbe_build_io.zig");
+const input_probe = @import("input_probe.zig");
 const contract = @import("runtime_contract");
 const options = @import("qbe_build_options.zig");
 const backend = @import("qbe_build_backend.zig");
@@ -103,6 +104,10 @@ pub fn runMeasured(process: std.process.Init, args: []const []const u8, phases: 
         return 2;
     };
     try checkHost(builtin.os.tag, builtin.cpu.arch);
+    if (try input_probe.check(process.arena.allocator(), process.io, "build", parsed.source, false)) |refusal| {
+        try std.Io.File.stderr().writeStreamingAll(process.io, refusal);
+        return input_probe.refused_status;
+    }
     // Build scratch is freed here, not at process exit: a long-lived host that
     // rebuilds its guest on every reload must reclaim each build, so the context
     // owns a reclaiming arena over `gpa` rather than the process's own arena.
