@@ -21,6 +21,8 @@ static const myl_native_type list_type = {
     .kind = MYL_NATIVE_RECORD, .fields = list_fields, .field_count = 1,
     .scan = list_scan, .scan_count = 1, .rc_id = MYL_RC_ID_LIST
 };
+/* RC-SCOPE-IL-1: exact list-header identity for generated backing capture. */
+const myl_native_type *const myl_native_list_header_type = &list_type;
 static myl_native_list *rc_list_new(myl_native_heap *, const myl_native_type *, size_t, unsigned, int);
 static myl_native_list *rc_list_clone(myl_native_heap *, const myl_native_list *, const myl_native_type *, unsigned);
 myl_native_list *myl_native_list_new(myl_native_heap *heap, const myl_native_type *element, size_t capacity) {

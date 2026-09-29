@@ -285,6 +285,7 @@ test {
     _ = @import("qbe_rc_inert_field_test.zig");
     _ = @import("qbe_rc_unique_test.zig");
     _ = @import("qbe_rc_hoist_test.zig");
+    _ = @import("qbe_rc_scope_inline_test.zig");
     _ = @import("qbe_rc_fresh_root_test.zig");
     _ = @import("qbe_rc_loop_version_test.zig");
     _ = @import("qbe_rc_scalar_version_test.zig");

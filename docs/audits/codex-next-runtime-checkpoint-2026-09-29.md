@@ -96,3 +96,27 @@ the equality compiler. Raw logs and full JSON remain in this owned worktree's
 `.tmp/` and `.tmp-rc-quick/` directories. Guardian passed all 88 checks on the
 equality source commit; subsequent source verification remains part of the
 ongoing lane work.
+
+## Scope journal emission
+
+RC-SCOPE-IL-1 emits the production begin/link operation and the spare-node
+pin/single-entry unwind paths directly in IL. Exact native list descriptor
+identity gates the backed-list path. Missing spares, metadata limits, count
+limits, arenas, multiple entries and possible final releases use the existing
+native helpers. Stats/sites builds retain the native attribution path. Native
+offsetof/sizeof assertions pin every emitted heap/state/journal field.
+
+LLVM marks runtime state accesses in a scope separate from frame, payload,
+elements and prefix accesses. Four new named tests plus the existing marked
+prefix regression pass (16 runner entries including 11 import blocks). Three
+guest tests cover nested pins, backing growth, spare reuse and arenas; all
+pass RC, GC, GC stress, RC stats and LLVM release, with zero cached, skipped
+or failed tests. The initial guest build exposed dropUnusedRoots deleting all
+heap field addresses. It now removes only the root-chain field at offset 16,
+with a regression checking other heap/state addresses survive. Initial failed
+logs remain as `.tmp/scope-guest-first-rc.*`; corrected receipts are
+`.tmp/scope-guest-summary.json` and `.tmp/scope-focused-final.log`.
+
+These checks do not replace the final frozen B3 gate or performance comparison.
+The scope source currently uses ABI3 counts and will be adapted to the shared
+ABI4 prefix constants after the independent header tranche is committed.

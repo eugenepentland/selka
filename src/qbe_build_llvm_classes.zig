@@ -30,6 +30,7 @@ pub const Class = union(enum) {
     object,
     element: []const u8,
     prefix,
+    rc_state,
 
     /// Whether two classes are the same (an element class by its kind).
     pub fn eql(self: Class, other: Class) bool {
@@ -160,6 +161,7 @@ pub const MemoryClasses = struct {
         };
         for (self.function.hints.objects.keys()) |name| _ = try self.note(name, .foreign);
         for (self.function.hints.prefixes.keys()) |name| _ = try self.note(name, .foreign);
+        for (self.function.hints.rc_states.keys()) |name| _ = try self.note(name, .foreign);
         for (0..8) |_| {
             var changed = try self.derive();
             changed = (try self.throughSlots()) or changed;
@@ -280,6 +282,11 @@ pub const MemoryClasses = struct {
             if (!self.single(name) or !self.isForeign(name)) continue;
             try refined.put(self.arena, name, .prefix);
         }
+        for (hints.rc_states.keys()) |name| {
+            if (hints.objects.contains(name) or hints.elements.contains(name) or hints.prefixes.contains(name)) return .empty;
+            if (!self.single(name) or !self.isForeign(name)) continue;
+            try refined.put(self.arena, name, .rc_state);
+        }
         self.refined = refined;
         for (0..8) |_| {
             const changed = (try self.refineRound()) orelse return .empty;
@@ -312,6 +319,7 @@ pub const MemoryClasses = struct {
                 const name = argument.tempName() orelse continue;
                 const class = self.refined.get(name) orelse continue;
                 if (class == .prefix) return null;
+                if (class == .rc_state) continue;
                 if (seen) |existing| {
                     if (!existing.eql(class)) return null;
                 } else seen = class;

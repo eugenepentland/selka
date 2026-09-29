@@ -1,0 +1,48 @@
+module rc_scope_inline
+
+def nested(items: mut list[int], depth: int) -> int:
+    before = items
+    if depth > 0:
+        seen = nested(mut items, depth - 1)
+        items.append(depth)
+        return seen + len(before)
+    items.append(0)
+    return len(before)
+
+
+# spec-case: RC-SCOPE-IL-1
+public def test_nested_pins_restore_the_outer_snapshot_state() -> bool:
+    items = [7]
+    before = items
+    total = nested(mut items, 3)
+    items.append(99)
+    return total == 4 and before == [7] and items == [7, 0, 1, 2, 3, 99]
+
+
+def snapshots(first: mut list[int], second: mut list[int]) -> int:
+    a = first
+    b = second
+    first.append(1)
+    second.append(2)
+    return len(a) + len(b)
+
+
+# spec-case: RC-SCOPE-IL-1
+public def test_reused_multi_pin_journals_preserve_growth_and_snapshots() -> bool:
+    first = [0]
+    second = [9]
+    total = 0
+    for _ in range(40):
+        total = total + snapshots(mut first, mut second)
+    return total == 1640 and len(first) == 41 and len(second) == 41 and first[40] == 1 and second[40] == 2
+
+
+# spec-case: RC-SCOPE-IL-1
+public def test_arena_receiver_uses_the_same_nested_scope_contract() -> bool:
+    with arena() as scratch:
+        items = [7]
+        before = items
+        total = nested(mut items, 2)
+        if total != 3 or before != [7] or items != [7, 0, 1, 2]:
+            return False
+    return True

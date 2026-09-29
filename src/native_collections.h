@@ -47,6 +47,8 @@ myl_native_list *myl_native_list_copy(myl_native_heap *, const myl_native_list *
 /* Whether `payload` is a list header — a `list`, `bytes` or `byte_buffer` whose
  * storage it owns, not a byte-string view — read from its object header. */
 int myl_native_list_header(const void *payload);
+/* The exact descriptor identity, also used by the generated RC scope path. */
+extern const myl_native_type *const myl_native_list_header_type;
 /* A fresh header and private storage holding `input`'s elements, both
  * allocated at arena depth `region` (COW-UNIQUE-1). `element` describes the
  * copy's elements and becomes its storage block's descriptor: `input`'s own

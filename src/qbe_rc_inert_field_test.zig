@@ -63,7 +63,7 @@ fn count(name: []const u8, loans: bool) !usize {
     for (manifest.value.functions) |function| {
         if (!std.mem.eql(u8, function.name, name)) continue;
         const lent = if (loans) std.mem.count(u8, function.il, "# RC-GLUE-1 loan") else 0;
-        return std.mem.count(u8, function.il, "call $myl_qbe_rc_scope_begin") + lent;
+        return (std.mem.count(u8, function.il, "call $myl_qbe_rc_scope_begin") + std.mem.count(u8, function.il, "# RC-SCOPE-IL-1 begin")) + lent;
     }
     return error.TestUnexpectedResult;
 }
@@ -133,7 +133,7 @@ fn bufferOperations(name: []const u8) !usize {
     defer manifest.deinit();
     for (manifest.value.functions) |function| {
         if (!std.mem.eql(u8, function.name, name)) continue;
-        return std.mem.count(u8, function.il, "call $myl_qbe_rc_scope_begin") + std.mem.count(u8, function.il, "# RC-GLUE-1 loan");
+        return (std.mem.count(u8, function.il, "call $myl_qbe_rc_scope_begin") + std.mem.count(u8, function.il, "# RC-SCOPE-IL-1 begin")) + std.mem.count(u8, function.il, "# RC-GLUE-1 loan");
     }
     return error.TestUnexpectedResult;
 }
