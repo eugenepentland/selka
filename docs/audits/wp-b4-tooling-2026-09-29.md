@@ -66,7 +66,8 @@ programs in both default RC and GC. Its two CLI failures were the outdated
 iteration assertion and the documented cold libunwind `ar rcs` stderr flake.
 The warm full CLI run passed 254/255; the remaining new assertion needed to
 accept the counted runtime's expected statistics line. The corrected filtered
-CLI and formatting gate passes 2/2. Full stress and release guest suites pass
+CLI and formatting gate passes 2/2, and the final warm full CLI rerun passes
+255/255 (10/10 build steps). Full stress and release guest suites pass
 1,328 cases; the final counting suite, including the two new arena regressions,
 passes 1,330 cases across 209 programs with no dropped cases. An earlier counting
 run captured a transient name-shadow diagnostic in the new fixture and was
@@ -109,7 +110,16 @@ instruction counts relative to the original accepted GC baseline: QBE geomean
 1.011, non-Lox 1.001, worst 1.08; LLVM geomean 1.014, non-Lox 1.003, worst
 1.13. These explain the collector build and do not replace the accepted
 GC denominator for RC acceptance. Both measured JSON files are preserved in
-`experiments/wp-b4-gc-20260929`.
+`experiments/wp-b4-gc-20260929`. A further collector build with the frozen
+`e356e099` compiler isolates the arena lifetime follow-up: all 86 outputs match,
+its before/after GC geomeans change by +0.000029% QBE and +0.0000068% LLVM, and
+all row movements are below 1%. Largest increases are +0.00461% QBE
+(`lox/vm/string_equality`) and +0.00489% LLVM (`schematic/changed-value`);
+largest decreases are -0.00675% QBE and -0.00905% LLVM (`schematic/fixture`).
+These are measurement noise. The 1.011/1.014 ratios against the older accepted
+GC are already present at the frozen checkpoint, so cannot be attributed to
+the arena correction. `gc-followup-comparison.json` preserves each row's
+absolute counts and both compiler hashes.
 
 Combined-base embed coverage remains outstanding. Other scratch evidence lives
 under the lane's private `.tmp`; final validation will summarize remaining
