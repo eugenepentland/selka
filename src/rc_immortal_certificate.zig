@@ -8,7 +8,7 @@ const model = @import("rc_model.zig");
 const physical = @import("rc_readonly_plan.zig");
 const Hash = std.crypto.hash.Blake3;
 /// Bind the complete constant grammar and common physical preflight policy.
-pub const version = "mylang-rc-immortal-entry-v1";
+pub const version = "mylang-rc-immortal-entry-v2";
 
 /// Only initialized constant bits and frozen bytes may leave this zero-arg body.
 /// Public refusal is optional; allocation failure remains a compiler error.
@@ -29,7 +29,7 @@ pub fn certify(catalog: *shapes.Catalog, functions: []const bytecode.Function, f
     for (function.scope.locals) |local| hash.update(&(try catalog.native.layout(local.ty)).hash);
     for (code, 0..) |instruction, pc| {
         if (!try proof.step(pc)) return null;
-        std.hash.autoHashStrat(&hash, instruction.op, .Deep);
+        try @import("rc_proof_identity.zig").operation(&hash, catalog, functions, instruction.op);
     }
     if (code[code.len - 1].op != .ret or proof.stack.len != 0) return null;
     var budget: physical.Budget = .{};

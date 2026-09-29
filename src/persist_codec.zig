@@ -48,7 +48,11 @@ pub const Writer = struct {
     }
     /// Encode one value; the only failure is allocation.
     pub fn write(self: *Writer, comptime T: type, value: T) std.mem.Allocator.Error!void {
-        try encode(self, T, value);
+        try encode(self, Unmapped, .{}, T, value);
+    }
+    /// Encode with explicit domain-specific reference rules, never inferred fixups.
+    pub fn writeMapped(self: *Writer, comptime T: type, value: T, comptime Mapping: type, mapping: Mapping) std.mem.Allocator.Error!void {
+        try encode(self, Mapping, mapping, T, value);
     }
 };
 
@@ -79,9 +83,13 @@ pub const Reader = struct {
     }
     /// Decode one value; malformed or truncated bytes are `InvalidEncoding`.
     pub fn read(self: *Reader, comptime T: type) DecodeError!T {
-        return decode(self, T) catch |err| return err;
+        return decode(self, Unmapped, .{}, T) catch |err| return err;
     }
-    /// Borrow the next `count` bytes; never allocates and never over-reads.
+    /// Decode with explicit domain-specific reference rules; ordinary cache data
+    /// still refuses pointers and uses the unchanged owned-tree encoding.
+    pub fn readMapped(self: *Reader, comptime T: type, comptime Mapping: type, mapping: Mapping) DecodeError!T {
+        return decode(self, Mapping, mapping, T);
+    }
     /// Borrow the next `count` bytes; never allocates and never over-reads.
     pub fn slice(self: *Reader, count: usize) DecodeError![]const u8 {
         return self.take(count);
@@ -96,7 +104,15 @@ pub const Reader = struct {
     }
 };
 
-fn encode(writer: *Writer, comptime T: type, value: T) std.mem.Allocator.Error!void {
+const Unmapped = struct {
+    /// Ordinary persisted trees have no symbolic reference transformation.
+    pub fn handles(comptime _: type) bool {
+        return false;
+    }
+};
+
+fn encode(writer: *Writer, comptime Mapping: type, mapping: Mapping, comptime T: type, value: T) std.mem.Allocator.Error!void {
+    if (comptime Mapping.handles(T)) return mapping.encode(writer, T, value);
     const info = @typeInfo(T);
     switch (info) {
         .int, .comptime_int => try writer.integer(value),
@@ -110,28 +126,29 @@ fn encode(writer: *Writer, comptime T: type, value: T) std.mem.Allocator.Error!v
         .optional => |optional| {
             if (value) |present| {
                 try writer.raw(&.{1});
-                try encode(writer, optional.child, present);
+                try encode(writer, Mapping, mapping, optional.child, present);
             } else try writer.raw(&.{0});
         },
         .pointer => |pointer| {
             if (pointer.size != .slice) @compileError("persisted data may only own slices, not " ++ @typeName(T));
             try writer.integer(@as(u64, value.len));
-            for (value) |item| try encode(writer, pointer.child, item);
+            for (value) |item| try encode(writer, Mapping, mapping, pointer.child, item);
         },
-        .array => |array| for (value) |item| try encode(writer, array.child, item),
-        .@"struct" => |structure| inline for (structure.field_names, structure.field_types) |name, Field| try encode(writer, Field, @field(value, name)),
+        .array => |array| for (value) |item| try encode(writer, Mapping, mapping, array.child, item),
+        .@"struct" => |structure| inline for (structure.field_names, structure.field_types) |name, Field| try encode(writer, Mapping, mapping, Field, @field(value, name)),
         .@"union" => |united| {
             const tag = std.meta.activeTag(value);
             try writer.integer(@as(std.meta.Tag(T), tag));
             inline for (united.field_names, united.field_types) |name, Field| {
-                if (tag == @field(std.meta.Tag(T), name)) try encode(writer, Field, @field(value, name));
+                if (tag == @field(std.meta.Tag(T), name)) try encode(writer, Mapping, mapping, Field, @field(value, name));
             }
         },
         else => @compileError("persisted field needs an explicit encoding rule: " ++ @typeName(T)),
     }
 }
 
-fn decode(reader: *Reader, comptime T: type) DecodeError!T {
+fn decode(reader: *Reader, comptime Mapping: type, mapping: Mapping, comptime T: type) DecodeError!T {
+    if (comptime Mapping.handles(T)) return mapping.decode(reader, T);
     const info = @typeInfo(T);
     switch (info) {
         .int, .comptime_int => {
@@ -161,7 +178,7 @@ fn decode(reader: *Reader, comptime T: type) DecodeError!T {
         .optional => |optional| {
             const present = (try reader.take(1))[0];
             if (present > 1) return error.InvalidEncoding;
-            return if (present == 1) try decode(reader, optional.child) else null;
+            return if (present == 1) try decode(reader, Mapping, mapping, optional.child) else null;
         },
         .pointer => |pointer| {
             if (pointer.size != .slice) @compileError("persisted data may only own slices, not " ++ @typeName(T));
@@ -169,24 +186,24 @@ fn decode(reader: *Reader, comptime T: type) DecodeError!T {
             if (count > reader.bytes.len) return error.InvalidEncoding;
             const items = try reader.allocate(pointer.child, std.math.cast(usize, count) orelse return error.InvalidEncoding);
             errdefer reader.allocator.free(items);
-            for (items) |*item| item.* = try decode(reader, pointer.child);
+            for (items) |*item| item.* = try decode(reader, Mapping, mapping, pointer.child);
             return items;
         },
         .array => |array| {
             var output: T = undefined;
-            for (&output) |*item| item.* = try decode(reader, array.child);
+            for (&output) |*item| item.* = try decode(reader, Mapping, mapping, array.child);
             return output;
         },
         .@"struct" => |structure| {
             var output: T = undefined;
-            inline for (structure.field_names, structure.field_types) |name, Field| @field(output, name) = try decode(reader, Field);
+            inline for (structure.field_names, structure.field_types) |name, Field| @field(output, name) = try decode(reader, Mapping, mapping, Field);
             return output;
         },
         .@"union" => |united| {
             const Tag = std.meta.Tag(T);
-            const tag = try decode(reader, Tag);
+            const tag = try decode(reader, Mapping, mapping, Tag);
             inline for (united.field_names, united.field_types) |name, Field| {
-                if (tag == @field(Tag, name)) return @unionInit(T, name, try decode(reader, Field));
+                if (tag == @field(Tag, name)) return @unionInit(T, name, try decode(reader, Mapping, mapping, Field));
             }
             return error.InvalidEncoding;
         },

@@ -120,7 +120,25 @@ pub fn runMeasured(process: std.process.Init, args: []const []const u8, phases: 
     var context = try fs.Context.init(process.gpa, process.io, process.environ_map);
     defer context.deinit();
     const controls = try runtimeControls(context.allocator, args);
+    if (moduleObjectsRequested(parsed.link_arguments)) return moduleObjectsBuild(context, parsed);
     return build(context, parsed, controls, phases);
+}
+
+/// MODULE-COMPILE-1: `build --manifest-file=M --module-objects -o LIST`
+/// compiles one module's units into their batch and metadata objects in the
+/// cache and writes the object list to `LIST`; nothing is linked.
+fn moduleObjectsBuild(context: fs.Context, parsed: options.Options) !u8 {
+    const a = context.allocator;
+    const prepared = prepare(context, parsed) catch |err| switch (err) {
+        error.NativeToolFailed => return 2,
+        else => return err,
+    };
+    defer context.remove(prepared.cache.temporary);
+    const path = manifestFile(parsed.link_arguments) orelse return error.InvalidNativeManifest;
+    const units = (try std.json.parseFromSlice(std.json.Value, a, try context.read(path), .{ .allocate = .alloc_always })).value;
+    var state = State{ .context = context, .cache = prepared.cache, .manifest = units };
+    try state.moduleObjects(try context.absolute(parsed.output));
+    return 0;
 }
 /// The four phase durations a build measures for `--report`, in seconds. A
 /// command that asked for `phase-timings-v1` records receives them here instead
@@ -416,6 +434,13 @@ fn functionObjects(allocator: std.mem.Allocator, records: []const Record) !Objec
 fn selectFile(args: []const []const u8) ?[]const u8 {
     for (args) |argument| if (std.mem.startsWith(u8, argument, "--select-file=")) return argument["--select-file=".len..];
     return null;
+}
+
+/// Whether the build was asked only for one module's objects (internal
+/// `--module-objects`, MODULE-COMPILE-1).
+fn moduleObjectsRequested(args: []const []const u8) bool {
+    for (args) |argument| if (std.mem.eql(u8, argument, "--module-objects")) return true;
+    return false;
 }
 
 /// Find an internal `--manifest-file=PATH` in the original build arguments. It
@@ -906,6 +931,12 @@ const State = struct {
     /// compile in the same pool, so none of them waits for the others. Returns
     /// the shared metadata and entry objects, which link after every batch.
     fn compileBatches(self: *State, functions: []const std.json.Value, wrapper: []const u8) ![2]cache_api.Object {
+        return (try self.compileGuest(functions, wrapper)).?;
+    }
+    /// `compileBatches`, and with a null `wrapper` only the guest batches and
+    /// their metadata groups: one module's objects (MODULE-COMPILE-1), which
+    /// have no program-wide metadata or entry of their own.
+    fn compileGuest(self: *State, functions: []const std.json.Value, wrapper: ?[]const u8) !?[2]cache_api.Object {
         const a = self.context.allocator;
         const order = try a.alloc(usize, functions.len);
         for (order, 0..) |*slot, index| slot.* = index;
@@ -917,7 +948,8 @@ const State = struct {
         // here (`QBE-FRAGMENT-REUSE-1`).
         for (order, units, keys) |index, *unit, *key| {
             const function = functions[index];
-            unit.* = .{ .module = batch.moduleOf(v.text(v.get(function, "name"))), .symbol = v.text(v.get(function, "symbol")), .alone = batch.definesData(lean.facts(function)) };
+            const name = v.text(v.get(function, "name"));
+            unit.* = .{ .module = batch.groupOf(name), .symbol = v.text(v.get(function, "symbol")), .alone = batch.definesData(lean.facts(function)) or batch.specialization(name) };
             key.* = try self.cache.digestKey(try lean.digest(a, function));
         }
         const batches = try batch.plan(a, units, batch.policy(self.context.environ));
@@ -925,7 +957,8 @@ const State = struct {
         // code, since assembling it is little work next to starting a tool.
         const groups = try batch.plan(a, units, batch.metadata_policy);
         // Objects: each batch's code, each group's metadata, then the shared metadata and the entry.
-        const objects = try a.alloc(cache_api.Object, batches.len + groups.len + 2);
+        const program_units: usize = if (wrapper != null) 2 else 0;
+        const objects = try a.alloc(cache_api.Object, batches.len + groups.len + program_units);
         var misses: std.ArrayList(batch.Miss) = .empty;
         const owner = try a.alloc(usize, functions.len);
         for (batches, 0..) |group, index| {
@@ -952,8 +985,10 @@ const State = struct {
         const shared = batches.len + groups.len;
         // The C units start first: the shared metadata is the largest single compile.
         var work: std.ArrayList(batch.Miss) = .empty;
-        try self.stageC(&work, "metadata", try outputs.sharedMetadata(a, self.manifest), &objects[shared]);
-        try self.stageC(&work, "entry", wrapper, &objects[shared + 1]);
+        if (wrapper) |entry| {
+            try self.stageC(&work, "metadata", try outputs.sharedMetadata(a, self.manifest), &objects[shared]);
+            try self.stageC(&work, "entry", entry, &objects[shared + 1]);
+        }
         try work.appendSlice(a, misses.items);
         try batch.build(self.cache, work.items, batch.width(self.context.io, work.items.len));
         for (objects[0..shared]) |object| try self.add(object);
@@ -964,7 +999,18 @@ const State = struct {
             self.reused += @intFromBool(object.reused);
             try self.records.append(a, .{ .name = v.text(v.get(function, "name")), .symbol = v.text(v.get(function, "symbol")), .key = key, .object = object.path, .reused = object.reused });
         }
+        if (wrapper == null) return null;
         return .{ objects[shared], objects[shared + 1] };
+    }
+    /// MODULE-COMPILE-1: compile one module's units into their batch and
+    /// metadata objects in the cache, and write the object list to `output`.
+    fn moduleObjects(self: *State, output: []const u8) !void {
+        const a = self.context.allocator;
+        const functions = try a.dupe(std.json.Value, v.array(v.get(self.manifest, manifest_functions)));
+        std.mem.sort(std.json.Value, functions, {}, less);
+        _ = try self.compileGuest(functions, null);
+        const document = try std.json.Stringify.valueAlloc(a, .{ .version = "module-objects-v1", .objects = self.objects.items, .compiled = self.compiled, .functions = self.records.items }, .{});
+        std.Io.Dir.cwd().writeFile(self.context.io, .{ .sub_path = output, .data = document }) catch return error.WriteFailed;
     }
     /// The manifest units at `positions`, in that (plan) order.
     fn planned(allocator: std.mem.Allocator, functions: []const std.json.Value, positions: []const usize) ![]const std.json.Value {
@@ -1287,7 +1333,7 @@ fn less(_: void, left: std.json.Value, right: std.json.Value) bool {
 }
 /// A manifest unit as the batch planner orders it.
 fn planUnit(value: std.json.Value) batch.Unit {
-    return .{ .module = batch.moduleOf(v.text(v.get(value, "name"))), .symbol = v.text(v.get(value, "symbol")) };
+    return .{ .module = batch.groupOf(v.text(v.get(value, "name"))), .symbol = v.text(v.get(value, "symbol")) };
 }
 /// Batch plan order over manifest units, by index: module, then symbol.
 fn planLess(functions: []const std.json.Value, left: usize, right: usize) bool {

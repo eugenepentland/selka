@@ -2643,6 +2643,18 @@ fn resolveTemplate(context: TemplateCheck, function: ast.Function) Error!?Resolv
     };
     return .{ .raw = raw, .parameters = parameters };
 }
+/// An imported interface's declared function has no body here: its
+/// interface's transitive effect mask is its direct mask, and it counts as
+/// already scheduled, so no template's call to it walks a body.
+fn seedDeclared(declared: []const ?effect_set.Mask, effect_masks: []effect_set.Mask, scheduled: []bool) void {
+    for (declared, 0..) |entry, index| {
+        const mask = entry orelse continue;
+        if (index >= effect_masks.len) break;
+        effect_masks[index] = mask;
+        scheduled[index] = true;
+    }
+}
+
 /// Count a rejected abstract check without branching in the hot loop.
 fn noteSymbolicFailure(symbolic_session: ?*generic_cache.Session, index: usize) void {
     if (symbolic_session) |reuse| reuse.noteFailed(index);
@@ -2668,13 +2680,20 @@ pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program:
 }
 /// Check symbolic bodies against the same concrete type catalog used by specialization.
 pub fn checkWithCatalog(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, catalog: Catalog) Error!void {
-    return checkWithCatalogCached(allocator, src, program, sink, catalog, null);
+    return checkWithCatalogCached(allocator, src, program, sink, catalog, .{});
 }
+
+/// What one abstract template check may take instead of checking a body:
+/// retained direct results, and (MODULE-INTERFACE-1) for a module checked
+/// against imported interfaces, the transitive effect mask the interface
+/// declares for a function whose body the program does not have, by function.
+pub const Reuse = struct { symbolic: ?*generic_cache.Session = null, declared: []const ?effect_set.Mask = &.{} };
 /// Check symbolic bodies, reusing unchanged direct results from `symbolic`.
 /// The whole-graph `effects.checkAbstract` pass always runs from the combined
 /// fresh and replayed masks, so a changed callee body is re-derived even when a
 /// caller's own direct result is reusable.
-pub fn checkWithCatalogCached(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, catalog: Catalog, symbolic_session: ?*generic_cache.Session) Error!void {
+pub fn checkWithCatalogCached(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, catalog: Catalog, reuse_with: Reuse) Error!void {
+    const symbolic_session = reuse_with.symbolic;
     const module_names = catalog.module_names;
     var has_work = program.types.constraints.len != 0;
     for (program.functions) |function| if (function.signature.type_parameters.len != 0) {
@@ -2713,6 +2732,7 @@ pub fn checkWithCatalogCached(allocator: std.mem.Allocator, src: source.Source, 
         scheduled[index] = true;
         pending.appendAssumeCapacity(index);
     }
+    seedDeclared(reuse_with.declared, effect_masks, scheduled);
     var failed = false;
     var cursor: usize = 0;
     while (cursor < pending.items.len) : (cursor += 1) {

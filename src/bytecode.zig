@@ -18,6 +18,7 @@ pub const ValueCopy = model.ValueCopy;
 /// An element read or replace and whether it counts a negative index from the end.
 pub const Access = model.Access;
 pub const Function = model.Function;
+pub const Physical = model.Physical;
 pub const FunctionScope = model.FunctionScope;
 pub const Program = model.Program;
 pub const valueParameterCount = model.valueParameterCount;

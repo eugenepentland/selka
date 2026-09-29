@@ -83,6 +83,31 @@ pub const idioms = [_][]const u8{ "tests/idiom_probes.py", "tests/fixtures/idiom
 /// `tests/incremental_diff.py`: the mutation walk and its fixture project.
 pub const incremental = [_][]const u8{ "tests/incremental_diff.py", "tests/fixtures/incremental/" };
 
+/// `tests/interface_diff.py`: the interface-hash mutation walk and its fixture.
+pub const interfaces = [_][]const u8{ "tests/interface_diff.py", "tests/fixtures/interfaces/", "tests/fixtures/interfaces_generic/" };
+
+/// `tests/interface_oracle.py`: the per-module check oracle over `tests/lang`
+/// and the interface fixtures.
+pub const interface_oracle = [_][]const u8{
+    "tests/interface_oracle.py",
+    "tests/lang/",
+    "tests/fixtures/interfaces/",
+    "tests/fixtures/interfaces_generic/",
+    "tests/fixtures/incremental/",
+};
+
+/// `tests/module_compile_oracle.py` and `tests/module_build_diff.py`: per-module
+/// compilation over `tests/lang` and the fixtures, and its build differential.
+pub const module_compile = [_][]const u8{
+    "tests/module_compile_oracle.py",
+    "tests/module_build_diff.py",
+    "tests/lang/",
+    "tests/fixtures/interfaces/",
+    "tests/fixtures/interfaces_generic/",
+    "tests/fixtures/incremental/",
+    "tests/fixtures/module_compile/",
+};
+
 /// `tests/idiom_probes.py --self-test`: the CPython oracle only.
 pub const idioms_self = [_][]const u8{"tests/idiom_probes.py"};
 

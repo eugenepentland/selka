@@ -1,0 +1,325 @@
+//! `mylang compile-module` and `mylang link-modules` (MODULE-COMPILE-1): the
+//! per-module build path behind its own commands. `compile-module` compiles
+//! one module from its source and its imports' interfaces, writes the
+//! module's own interface (with the emission facts its dependents read) and
+//! its units, and with `--objects` compiles its units' objects through the
+//! build's batch cache. `link-modules` merges the units of every module of a
+//! program into one manifest and builds it with the ordinary build driver,
+//! which finds each module's objects in the cache. Nothing else reads these
+//! outputs yet: the default build is still the whole-program one.
+const std = @import("std");
+const language = @import("mylang");
+const interface_command = @import("module_interface_command.zig");
+const iface = language.module_interface;
+const oracle = language.module_interface_oracle;
+const compile_module = language.module_compile;
+const fragments = language.qbe_fragments;
+const project_module = language.project;
+const diagnostic_output = language.diagnostic_output;
+
+/// The commands' usage text.
+pub const usage =
+    \\usage: mylang compile-module <entry.my> --module=NAME --interfaces=DIR --out=DIR --arenas=on|off
+    \\                             [--cache-dir=DIR] [--drop-debug] [--drop-step-checks]
+    \\                             [--drop-frame-checks] [--objects [--qbe=PATH] [--zig=PATH]]
+    \\       mylang link-modules <entry.my> --units=DIR -o OUT [--cache-dir=DIR] [--mode MODE]
+    \\  compile-module  check NAME against the interfaces in DIR, write DIR/NAME.myi with its
+    \\                  emission facts and OUT/NAME.units.json; --objects also compiles its
+    \\                  objects into the build cache. --arenas is the program's arena switch.
+    \\  link-modules    merge every OUT/*.units.json into one manifest and build it into OUT
+    \\
+;
+
+/// Failures reported as a host failure.
+pub const Error = compile_module.Error || error{ReadFailed};
+
+const Options = struct {
+    path: []const u8 = "",
+    module: ?[]const u8 = null,
+    interfaces: ?[]const u8 = null,
+    out: ?[]const u8 = null,
+    cache: []const u8 = ".mylang-cache",
+    config: iface.EmissionConfig = .{ .drop_debug = false, .step_checks = true, .frame_checks = true, .checks = true, .arenas = false },
+    arenas: bool = false,
+    objects: bool = false,
+    /// `--qbe=PATH` and `--zig=PATH`, handed to the build of the objects.
+    tools: [2]?[]const u8 = .{ null, null },
+};
+
+fn parse(args: []const []const u8) ?Options {
+    if (args.len < 1) return null;
+    var options: Options = .{ .path = args[0] };
+    for (args[1..]) |arg| {
+        if (std.mem.startsWith(u8, arg, "--module=")) {
+            options.module = arg["--module=".len..];
+        } else if (std.mem.startsWith(u8, arg, "--interfaces=")) {
+            options.interfaces = arg["--interfaces=".len..];
+        } else if (std.mem.startsWith(u8, arg, "--out=")) {
+            options.out = arg["--out=".len..];
+        } else if (std.mem.startsWith(u8, arg, "--cache-dir=")) {
+            options.cache = arg["--cache-dir=".len..];
+        } else if (std.mem.eql(u8, arg, "--arenas=on") or std.mem.eql(u8, arg, "--arenas=off")) {
+            options.config.arenas = std.mem.eql(u8, arg, "--arenas=on");
+            options.arenas = true;
+        } else if (std.mem.eql(u8, arg, "--drop-debug")) {
+            options.config.drop_debug = true;
+        } else if (std.mem.eql(u8, arg, "--drop-step-checks")) {
+            options.config.step_checks = false;
+        } else if (std.mem.eql(u8, arg, "--drop-frame-checks")) {
+            options.config.frame_checks = false;
+        } else if (std.mem.eql(u8, arg, "--objects")) {
+            options.objects = true;
+        } else if (std.mem.startsWith(u8, arg, "--qbe=")) {
+            options.tools[0] = arg;
+        } else if (std.mem.startsWith(u8, arg, "--zig=")) {
+            options.tools[1] = arg;
+        } else return null;
+    }
+    return options;
+}
+
+/// The allocators and I/O one command runs with.
+const Context = struct { gpa: std.mem.Allocator, io: std.Io, arena: std.mem.Allocator };
+
+fn stdout(io: std.Io, bytes: []const u8) Error!void {
+    std.Io.File.stdout().writeStreamingAll(io, bytes) catch return error.WriteFailed;
+}
+
+fn stderr(io: std.Io, bytes: []const u8) Error!void {
+    std.Io.File.stderr().writeStreamingAll(io, bytes) catch return error.WriteFailed;
+}
+
+/// Run `mylang compile-module ARGS`; returns the process exit status.
+pub fn compileModule(process: std.process.Init, args: []const []const u8, identity: []const u8) Error!u8 {
+    const options = parse(args) orelse return usageError(process.io);
+    const module = options.module orelse return usageError(process.io);
+    const directory = options.interfaces orelse return usageError(process.io);
+    const out = options.out orelse return usageError(process.io);
+    if (!options.arenas) return usageError(process.io);
+    const context: Context = .{ .gpa = process.gpa, .io = process.io, .arena = process.arena.allocator() };
+    const a = context.arena;
+    const entry = (try interface_command.entryOf(context.arena, context.io, options.path)) orelse return usageError(process.io);
+    const is_entry = std.mem.eql(u8, module, entry.name);
+    const relative = project_module.modulePath(a, module) catch return usageError(process.io);
+    const bytes = if (is_entry) entry.bytes else compile_module.standardSource(relative) orelse
+        std.Io.Dir.cwd().readFileAlloc(process.io, try std.fs.path.join(a, &.{ entry.root, relative }), a, .limited(64 * 1024 * 1024)) catch return error.ReadFailed;
+    var library = oracle.Library.stored(.{ .io = process.io, .directory = directory, .arena = a });
+    var store = try openStore(context, options.cache, identity, entry.name);
+    var compiled: compile_module.Compiled = undefined;
+    const request: compile_module.Request = .{
+        .module = .{ .module = module, .bytes = bytes, .is_entry = is_entry, .library = &library, .assets = entry.assets, .limits = entry.limits },
+        .config = options.config,
+        .reuse = .{ .store = &store, .lean = true, .executable = true },
+    };
+    compile_module.compile(process.gpa, a, request, &compiled) catch |err| switch (err) {
+        error.SourceError => {
+            try reportCheck(context, &compiled);
+            compiled.deinit();
+            return 1;
+        },
+        error.MissingEmission => {
+            try stderr(process.io, try std.fmt.allocPrint(a, "mylang compile-module: {s}\n", .{compiled.problem}));
+            compiled.deinit();
+            return 1;
+        },
+        else => return err,
+    };
+    defer compiled.deinit();
+    std.Io.Dir.cwd().createDirPath(process.io, directory) catch return error.WriteFailed;
+    std.Io.Dir.cwd().createDirPath(process.io, out) catch return error.WriteFailed;
+    try writeAtomic(context, try std.fs.path.join(a, &.{ directory, try iface.fileName(a, module) }), try iface.encode(a, compiled.interface));
+    const units_path = try std.fs.path.join(a, &.{ out, try std.fmt.allocPrint(a, "{s}.units.json", .{module}) });
+    try writeAtomic(context, units_path, try unitsDocument(a, module, is_entry, &compiled));
+    const objects: ?[]const u8 = if (options.objects) try moduleObjects(process, .{ .options = options, .entry = options.path, .module = module, .manifest = compiled.units.manifest }) else null;
+    const summary = try std.json.Stringify.valueAlloc(a, .{
+        .version = "module-compile-v1",
+        .module = module,
+        .hashes = compiled.hashes,
+        .counts = compiled.counts,
+        .units = units_path,
+        .objects = objects,
+    }, .{});
+    try stdout(process.io, summary);
+    try stdout(process.io, "\n");
+    return 0;
+}
+
+/// What one module's objects are built from.
+const ObjectRequest = struct { options: Options, entry: []const u8, module: []const u8, manifest: []const u8 };
+
+/// Compile the module's units into their batch objects in the build cache
+/// (`build --module-objects`), in the build mode its configuration implies;
+/// returns the path of the object list.
+fn moduleObjects(process: std.process.Init, request: ObjectRequest) Error![]const u8 {
+    const a = process.arena.allocator();
+    const out = request.options.out.?;
+    const manifest_path = try std.fs.path.join(a, &.{ out, try std.fmt.allocPrint(a, "{s}.manifest.json", .{request.module}) });
+    std.Io.Dir.cwd().writeFile(process.io, .{ .sub_path = manifest_path, .data = request.manifest }) catch return error.WriteFailed;
+    const listed = try std.fs.path.join(a, &.{ out, try std.fmt.allocPrint(a, "{s}.objects.json", .{request.module}) });
+    var args: std.ArrayList([]const u8) = .empty;
+    try args.appendSlice(a, &.{ request.entry, "--project", try std.fmt.allocPrint(a, "--manifest-file={s}", .{manifest_path}), "--module-objects", "-o", listed });
+    try args.append(a, try std.fmt.allocPrint(a, "--cache-dir={s}", .{request.options.cache}));
+    if (request.options.config.drop_debug) try args.appendSlice(a, &.{ "--mode", "ReleaseFast" });
+    for (request.options.tools) |tool| if (tool) |flag| try args.append(a, flag);
+    const status = @import("qbe_build.zig").run(process, args.items) catch return error.WriteFailed;
+    if (status != 0) return error.WriteFailed;
+    return listed;
+}
+
+fn usageError(io: std.Io) Error!u8 {
+    try stderr(io, usage);
+    return 2;
+}
+
+/// The fragment store every module compile of one program shares, under the
+/// cache directory's frontend root, in its own pack per program entry.
+fn openStore(context: Context, cache: []const u8, identity: []const u8, entry: []const u8) Error!fragments.Store {
+    const root = try std.fs.path.join(context.arena, &.{ cache, "frontend", "fragments" });
+    std.Io.Dir.cwd().createDirPath(context.io, root) catch return error.WriteFailed;
+    const absolute = std.Io.Dir.cwd().realPathFileAlloc(context.io, root, context.arena) catch return error.WriteFailed;
+    const label = try std.fmt.allocPrint(context.arena, "{s}\x00module-compile", .{entry});
+    return fragments.Store.open(context.arena, context.io, absolute, identity, label);
+}
+
+/// Report why a module did not check, like `mylang check`.
+fn reportCheck(context: Context, compiled: *compile_module.Compiled) Error!void {
+    const single = compiled.single orelse return;
+    if (single.project.problem != null) {
+        const text = diagnostic_output.renderProject(context.gpa, &single.project, .text) catch return error.OutOfMemory;
+        defer context.gpa.free(text);
+        return stderr(context.io, text);
+    }
+    for (single.compilation.diagnostics.items.items) |item| {
+        const text = try diagnostic_output.render(context.gpa, item, single.compilation.src, .text);
+        defer context.gpa.free(text);
+        try stderr(context.io, text);
+    }
+}
+
+/// Write `bytes` to `path` through a sibling temporary, so a reader never
+/// sees a partial artifact.
+fn writeAtomic(context: Context, path: []const u8, bytes: []const u8) Error!void {
+    const temporary = try std.fmt.allocPrint(context.arena, "{s}.tmp", .{path});
+    std.Io.Dir.cwd().writeFile(context.io, .{ .sub_path = temporary, .data = bytes }) catch return error.WriteFailed;
+    std.Io.Dir.cwd().rename(temporary, std.Io.Dir.cwd(), path, context.io) catch return error.WriteFailed;
+}
+
+/// One emitted unit's facts and keys, as the per-module units file lists them.
+const UnitRow = struct {
+    name: []const u8,
+    allocates: bool,
+    writes: []const bool,
+    unit_key: []const u8,
+    il: []const u8,
+    meta: []const u8,
+};
+
+/// `<module>.units.json`: the module's lean manifest, its runtime blocks, the
+/// hashes of its interface and each emitted unit's facts and keys.
+fn unitsDocument(a: std.mem.Allocator, module: []const u8, is_entry: bool, compiled: *const compile_module.Compiled) Error![]const u8 {
+    var rows: std.ArrayList(UnitRow) = .empty;
+    for (compiled.report.functions) |entry| {
+        if (!entry.emitted) continue;
+        try rows.append(a, .{ .name = entry.name, .allocates = entry.allocates, .writes = entry.writes, .unit_key = entry.keys.unit, .il = entry.keys.il, .meta = entry.keys.meta });
+    }
+    var out: std.Io.Writer.Allocating = .init(a);
+    var json: std.json.Stringify = .{ .writer = &out.writer };
+    writeUnits(&json, .{ .module = module, .is_entry = is_entry, .compiled = compiled, .rows = rows.items }) catch return error.OutOfMemory;
+    return out.toOwnedSlice();
+}
+
+const UnitsFile = struct { module: []const u8, is_entry: bool, compiled: *const compile_module.Compiled, rows: []const UnitRow };
+
+fn writeUnits(json: *std.json.Stringify, file: UnitsFile) std.json.Stringify.Error!void {
+    const compiled = file.compiled;
+    try json.beginObject();
+    try json.objectField("version");
+    try json.write("module-units-v1");
+    try json.objectField("module");
+    try json.write(file.module);
+    try json.objectField("entry");
+    try json.write(file.is_entry);
+    try json.objectField("hashes");
+    try json.write(compiled.hashes);
+    try json.objectField("counts");
+    try json.write(compiled.counts);
+    try json.objectField("config");
+    try json.write(compiled.interface.emission.config);
+    try json.objectField("marks");
+    try json.write(compiled.interface.emission.marks);
+    try json.objectField("values");
+    try json.write(compiled.interface.emission.values);
+    try json.objectField("descriptors");
+    try json.write(compiled.units.parts.descriptors);
+    try json.objectField("renderers");
+    try json.write(compiled.units.parts.renderers);
+    try json.objectField("owners");
+    try json.write(compiled.units.parts.owners);
+    try json.objectField("glue");
+    try json.write(compiled.units.parts.glue);
+    try json.objectField("units");
+    try json.write(file.rows);
+    try json.objectField("manifest");
+    try json.beginWriteRaw();
+    try json.writer.writeAll(compiled.units.manifest);
+    json.endWriteRaw();
+    try json.endObject();
+}
+
+/// Run `mylang link-modules ARGS`: merge every module's units in `--units`
+/// into one executable manifest and build it with the ordinary driver, whose
+/// cache holds the objects each module compile made. Returns the build's status.
+pub fn linkModules(process: std.process.Init, args: []const []const u8) Error!u8 {
+    const a = process.arena.allocator();
+    if (args.len < 1) return usageError(process.io);
+    var units: ?[]const u8 = null;
+    var build_args: std.ArrayList([]const u8) = .empty;
+    try build_args.appendSlice(a, &.{ args[0], "--project" });
+    for (args[1..]) |arg| {
+        if (std.mem.startsWith(u8, arg, "--units=")) units = arg["--units=".len..] else try build_args.append(a, arg);
+    }
+    const directory = units orelse return usageError(process.io);
+    const merged = language.module_link.merge(a, try readUnits(a, process.io, directory)) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        error.Conflict => {
+            try stderr(process.io, "mylang link-modules: two modules emitted one symbol with different units\n");
+            return 1;
+        },
+        error.Incomplete => {
+            try stderr(process.io, "mylang link-modules: the units directory has no entry module, or its modules name different unit stores\n");
+            return 1;
+        },
+    };
+    const manifest_path = try std.fs.path.join(a, &.{ directory, "program.json" });
+    std.Io.Dir.cwd().writeFile(process.io, .{ .sub_path = manifest_path, .data = merged }) catch return error.WriteFailed;
+    try build_args.append(a, try std.fmt.allocPrint(a, "--manifest-file={s}", .{manifest_path}));
+    return @import("qbe_build.zig").run(process, build_args.items) catch |err| switch (err) {
+        error.OutOfMemory => error.OutOfMemory,
+        else => {
+            try stderr(process.io, try std.fmt.allocPrint(a, "mylang link-modules: build failed: {s}\n", .{@errorName(err)}));
+            return 2;
+        },
+    };
+}
+
+/// Every `*.units.json` in `directory`, in name order, parsed into `a`.
+fn readUnits(a: std.mem.Allocator, io: std.Io, directory: []const u8) Error![]const std.json.Value {
+    var dir = std.Io.Dir.cwd().openDir(io, directory, .{ .iterate = true }) catch return error.ReadFailed;
+    defer dir.close(io);
+    var names: std.ArrayList([]const u8) = .empty;
+    var walker = dir.iterate();
+    while (walker.next(io) catch return error.ReadFailed) |item| {
+        if (item.kind == .file and std.mem.endsWith(u8, item.name, ".units.json")) try names.append(a, try a.dupe(u8, item.name));
+    }
+    std.mem.sort([]const u8, names.items, {}, lessText);
+    const files = try a.alloc(std.json.Value, names.items.len);
+    for (names.items, files) |name, *file| {
+        const bytes = dir.readFileAlloc(io, name, a, .limited(1 << 30)) catch return error.ReadFailed;
+        file.* = std.json.parseFromSliceLeaky(std.json.Value, a, bytes, .{}) catch return error.ReadFailed;
+    }
+    return files;
+}
+
+fn lessText(_: void, left: []const u8, right: []const u8) bool {
+    return std.mem.lessThan(u8, left, right);
+}

@@ -10,7 +10,7 @@ const typed = @import("typed.zig");
 const physical = @import("rc_readonly_plan.zig");
 const Hash = std.crypto.hash.Blake3;
 /// Proof identities bind the exact closed grammar, including call restrictions.
-pub const version = "mylang-rc-readonly-calls-v4";
+pub const version = "mylang-rc-readonly-calls-v5";
 /// A checked direct call must use this independently emitted alternate entry.
 pub const Route = struct { pc: usize, target: typed.FunctionId, certificate: model.EntryCertificate };
 /// Complete raw-body proof and its caller-local immutable managed call routes.
@@ -120,7 +120,7 @@ const Proof = struct {
                     hash.update(&dependency);
                 }
             } else if (!body.allowed(self.catalog, function, op)) return null;
-            std.hash.autoHashStrat(&hash, op, .Deep);
+            try @import("rc_proof_identity.zig").operation(&hash, self.catalog, self.functions, op);
         }
         if (!try physical.certify(self.catalog, self.functions, function, &self.memo.physical)) return null;
         var result: [32]u8 = undefined;

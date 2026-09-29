@@ -41,6 +41,21 @@ pub const check_cache = @import("check_cache.zig");
 pub const semantic_cache = @import("semantic_cache.zig");
 /// Per-function check summaries that stand in for unchanged bodies in `check`.
 pub const semantic_summary = @import("semantic_summary.zig");
+/// Per-module interface artifacts and their hashes (MODULE-INTERFACE-1).
+pub const module_interface = @import("module_interface.zig");
+/// Builds every module's interface from one checked whole-program compilation.
+pub const module_interface_build = @import("module_interface_build.zig");
+/// Whole-program check and per-module check against interfaces, compared.
+pub const module_interface_oracle = @import("module_interface_oracle.zig");
+/// One module compiled from its imports' interfaces (MODULE-COMPILE-1).
+pub const module_physical = @import("module_physical.zig");
+pub const module_compile = @import("module_compile.zig");
+/// The per-module units of a program merged into one manifest (MODULE-COMPILE-3).
+pub const module_link = @import("module_link.zig");
+/// Generated C descriptors, split into mergeable blocks for a module link.
+pub const native_descriptors = @import("native_descriptors.zig");
+/// Generated C renderers, split into mergeable blocks for a module link.
+pub const native_render = @import("native_render.zig");
 pub const syntax_cache = @import("syntax_cache.zig");
 /// Persistent content-addressed frontend reuse for ordinary one-shot commands.
 pub const frontend_cache = @import("frontend_cache.zig");

@@ -1041,6 +1041,48 @@ pub fn build(b: *std.Build) void {
     incremental_run.addArtifactArg(exe);
     incremental_step.dependOn(&incremental_run.step);
     test_step.dependOn(incremental_step);
+    // MODULE-INTERFACE-2/3: a seeded mutation walk asserts which edits keep a
+    // module's interface hash and which change it, and every module of
+    // `tests/lang` and the interface fixtures, checked against its imports'
+    // interfaces alone, must equal the whole-program check.
+    const interfaces_step = b.step("test-interfaces", "Module interface hashes over seeded mutations, and the per-module check oracle");
+    const interfaces_run = driver(b, "python3 tests/interface_diff.py", rss.driver, "interfaces");
+    interfaces_run.addArgs(&.{ "python3", "tests/interface_diff.py", "--steps", "120" });
+    interfaces_run.addArtifactArg(exe);
+    interfaces_step.dependOn(&interfaces_run.step);
+    const generic_run = driver(b, "python3 tests/interface_diff.py --project tests/fixtures/interfaces_generic", rss.driver, "interfaces");
+    generic_run.addArgs(&.{ "python3", "tests/interface_diff.py", "--steps", "40", "--project", "tests/fixtures/interfaces_generic" });
+    generic_run.addArtifactArg(exe);
+    interfaces_step.dependOn(&generic_run.step);
+    const oracle_run = driver(b, "python3 tests/interface_oracle.py", rss.driver, "interface_oracle");
+    oracle_run.addArgs(&.{ "python3", "tests/interface_oracle.py" });
+    oracle_run.addArtifactArg(exe);
+    oracle_run.addArgs(&.{ "tests/lang", "tests/fixtures/interfaces/main.my", "tests/fixtures/interfaces_generic/main.my", "tests/fixtures/incremental/main.my" });
+    interfaces_step.dependOn(&oracle_run.step);
+    test_step.dependOn(interfaces_step);
+    // MODULE-COMPILE-1..3: every module of `tests/lang` and the fixtures,
+    // compiled on its own from its imports' interfaces, emits the whole
+    // program's units key for key (Debug, and ReleaseFast switches) and links
+    // into the whole program's executable; and an incremental per-module
+    // build after seeded edits builds what a clean whole-program build builds.
+    const module_compile_step = b.step("test-module-compile", "Per-module compilation against the whole-program build, and its build differential");
+    const module_programs = [_][]const u8{ "tests/fixtures/interfaces/main.my", "tests/fixtures/interfaces_generic/main.my", "tests/fixtures/incremental/main.my", "tests/fixtures/module_compile/main.my" };
+    const module_oracle = driver(b, "python3 tests/module_compile_oracle.py", rss.driver, "module_compile");
+    module_oracle.addArgs(&.{ "python3", "tests/module_compile_oracle.py" });
+    module_oracle.addArtifactArg(exe);
+    module_oracle.addArg("tests/lang");
+    module_oracle.addArgs(&module_programs);
+    module_compile_step.dependOn(&module_oracle.step);
+    const module_release = driver(b, "python3 tests/module_compile_oracle.py --release", rss.driver, "module_compile");
+    module_release.addArgs(&.{ "python3", "tests/module_compile_oracle.py", "--release" });
+    module_release.addArtifactArg(exe);
+    module_release.addArgs(&module_programs);
+    module_compile_step.dependOn(&module_release.step);
+    const module_diff = driver(b, "python3 tests/module_build_diff.py", rss.driver, "module_compile");
+    module_diff.addArgs(&.{ "python3", "tests/module_build_diff.py", "--steps", "20" });
+    module_diff.addArtifactArg(exe);
+    module_compile_step.dependOn(&module_diff.step);
+    test_step.dependOn(module_compile_step);
     // The repair-round packages ship two Python drivers beside their Zig tests:
     // the parser-hint/classifier agreement (static, then end to end against this
     // compiler) and the friction harvest over its replay fixture. Registering

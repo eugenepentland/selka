@@ -1,0 +1,50 @@
+module slots
+
+# Generic records and templates a dependent instantiates from this module's
+# interface alone: the templates call a private helper whose body the
+# interface replaces, take a callback, and carry declared effect bounds.
+
+
+public record Store[T: copy + storable]:
+    values: list[T]
+    generations: list[int]
+
+
+public record Ticket[T: copy + storable]:
+    index: int
+    generation: int
+
+
+def bump(current: int) -> int:
+    if current > 1000000:
+        return bump(current - 1000000)
+    return current + 1
+
+
+public def open[T: copy + storable](values: list[T]) -> Store[T]:
+    generations: list[int] = []
+    for value in values:
+        generations.append(bump(len(generations)))
+    return Store[T](values=values, generations=generations)
+
+
+public def issue[T: copy + storable](store: mut Store[T], value: T) -> Ticket[T]:
+    store.values.append(value)
+    store.generations.append(bump(0))
+    return Ticket[T](index=len(store.values) - 1, generation=1)
+
+
+public def read[T: copy + storable](store: Store[T], ticket: Ticket[T]) -> Option[T] effects():
+    if ticket.index < 0 or ticket.index >= len(store.values):
+        return None
+    return Some(store.values[ticket.index])
+
+
+public def smaller[T: integer](a: T, b: T) -> T noalloc:
+    if a <= b:
+        return a
+    return b
+
+
+public def ordered[T: copy + storable](values: list[T], key: def(T) -> int effects()) -> list[T]:
+    return sorted(values, key=key)

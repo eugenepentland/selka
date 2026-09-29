@@ -927,6 +927,192 @@ test "a cached check sees a field renamed in a record reached only through a lis
     try testing.expectEqualStrings(cold.stderr, cached.stderr);
 }
 
+/// Run the compiler with `argv` after its path; the caller frees both outputs.
+fn runInterfaces(argv: []const []const u8) !std.process.RunResult {
+    var args: std.ArrayList([]const u8) = .empty;
+    defer args.deinit(testing.allocator);
+    try args.append(testing.allocator, compiler_path);
+    try args.appendSlice(testing.allocator, argv);
+    return std.process.run(testing.allocator, testing.io, .{ .argv = args.items });
+}
+
+fn freeRun(result: std.process.RunResult) void {
+    testing.allocator.free(result.stdout);
+    testing.allocator.free(result.stderr);
+}
+
+// spec-case: MODULE-INTERFACE-3
+test "a module checks against emitted interfaces after its imports' sources are gone" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(directory);
+    const entry = try std.fs.path.join(testing.allocator, &.{ directory, "main.my" });
+    defer testing.allocator.free(entry);
+    const out = try std.fmt.allocPrint(testing.allocator, "--out={s}/interfaces", .{directory});
+    defer testing.allocator.free(out);
+    const from = try std.fmt.allocPrint(testing.allocator, "--from={s}/interfaces", .{directory});
+    defer testing.allocator.free(from);
+    const artifact = try std.fs.path.join(testing.allocator, &.{ directory, "interfaces", "lib.myi" });
+    defer testing.allocator.free(artifact);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "shapes.my", .data = "module shapes\npublic record Inner:\n    x: int\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "lib.my", .data = "module lib\nimport shapes\npublic def firsts(items: list[shapes.Inner]) -> int:\n    total = 0\n    for item in items:\n        total += item.x\n    return total\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport shapes\nimport lib\ndef main() -> int:\n    return lib.firsts([shapes.Inner(x=2)])\n" });
+    const emitted = try runInterfaces(&.{ "interfaces", "emit", entry, out });
+    defer freeRun(emitted);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, emitted.term);
+    try testing.expect(std.mem.indexOf(u8, emitted.stdout, "\"version\":\"module-interface-index-v1\"") != null);
+    const shown = try runInterfaces(&.{ "interfaces", "show", artifact });
+    defer freeRun(shown);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, shown.term);
+    try testing.expect(std.mem.indexOf(u8, shown.stdout, "public def firsts(items: list[shapes.Inner]) -> int:\n    pass") != null);
+    const verified = try runInterfaces(&.{ "interfaces", "oracle", entry });
+    defer freeRun(verified);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, verified.term);
+    try testing.expect(std.mem.indexOf(u8, verified.stdout, "\"equal\":true") != null);
+    // Only the interfaces remain for `lib` and `shapes`: the module's check reads them alone.
+    try temporary.dir.deleteFile(testing.io, "lib.my");
+    try temporary.dir.deleteFile(testing.io, "shapes.my");
+    const alone = try runInterfaces(&.{ "interfaces", "check", entry, "--module=main", from });
+    defer freeRun(alone);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, alone.term);
+    try testing.expect(std.mem.indexOf(u8, alone.stdout, "\"stood_in\":1,\"declared_only\":true") != null);
+    // A call the interface's signature rejects is reported against the module's own source.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport shapes\nimport lib\ndef main() -> int:\n    return lib.firsts(3)\n" });
+    const rejected = try runInterfaces(&.{ "interfaces", "check", entry, "--module=main", from });
+    defer freeRun(rejected);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, rejected.term);
+    try testing.expect(std.mem.indexOf(u8, rejected.stdout, "main:") != null);
+}
+
+// spec: MODULE-INTERFACE-4
+test "the interfaces command is listed in help and answers a bad action with its usage" {
+    const help = try runInterfaces(&.{"--help"});
+    defer freeRun(help);
+    try testing.expect(std.mem.indexOf(u8, help.stdout, "mylang interfaces emit|check|oracle <entry.my> | show <module.myi>") != null);
+    const usage = try runInterfaces(&.{ "interfaces", "bogus", "main.my" });
+    defer freeRun(usage);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, usage.term);
+    try testing.expect(std.mem.startsWith(u8, usage.stderr, "usage: mylang interfaces emit <entry.my>"));
+    const missing = try runInterfaces(&.{"interfaces"});
+    defer freeRun(missing);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, missing.term);
+}
+
+/// A module compile of the per-module test project: its argument vector.
+fn compileModuleArgs(allocator: std.mem.Allocator, directory: []const u8, module: []const u8, into: []const u8) ![]const []const u8 {
+    var args: std.ArrayList([]const u8) = .empty;
+    try args.appendSlice(allocator, &.{
+        "compile-module",
+        try std.fs.path.join(allocator, &.{ directory, "main.my" }),
+        try std.fmt.allocPrint(allocator, "--module={s}", .{module}),
+        try std.fmt.allocPrint(allocator, "--interfaces={s}/{s}/if", .{ directory, into }),
+        try std.fmt.allocPrint(allocator, "--out={s}/{s}/out", .{ directory, into }),
+        try std.fmt.allocPrint(allocator, "--cache-dir={s}/{s}/cache", .{ directory, into }),
+        "--arenas=off",
+        "--objects",
+    });
+    try args.appendSlice(allocator, &tools);
+    return args.items;
+}
+
+/// The value of `"key":"…"` in a JSON text, or "".
+fn jsonString(text: []const u8, key: []const u8, from: usize) []const u8 {
+    var pattern: [64]u8 = undefined;
+    const needle = std.fmt.bufPrint(&pattern, "\"{s}\":\"", .{key}) catch return "";
+    const at = std.mem.indexOfPos(u8, text, from, needle) orelse return "";
+    const start = at + needle.len;
+    const end = std.mem.indexOfScalarPos(u8, text, start, '"') orelse return "";
+    return text[start..end];
+}
+
+// spec-case: MODULE-COMPILE-1
+test "modules compiled one by one from their imports' interfaces link into the program the build makes" {
+    var arena_state = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena_state.deinit();
+    const a = arena_state.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    const entry = try std.fs.path.join(a, &.{ directory, "main.my" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = "module util\npublic def largest[T: integer](values: list[T]) -> T:\n    best = values[0]\n    for value in values:\n        if value > best:\n            best = value\n    return best\npublic def grow(values: list[int]) -> list[int]:\n    out: list[int] = []\n    for value in values:\n        out.append(value + largest(values))\n    return out\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport util\ndef main(out: Stream) -> int:\n    values = util.grow([3, 9, 4])\n    ranked = sorted(values, key=lambda v: v % 5)\n    out.print(ranked)\n    return util.largest(values) + values[7]\n" });
+    // The whole-program build, and what its emission computed per function.
+    const report = try std.fmt.allocPrint(a, "{s}/report.json", .{directory});
+    const whole = try runInterfaces(&.{ "emit-project-qbe", entry, "--lean-manifest=executable", try std.fmt.allocPrint(a, "--cache-dir={s}/whole", .{directory}), try std.fmt.allocPrint(a, "--emission-report={s}", .{report}) });
+    defer freeRun(whole);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, whole.term);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "whole.json", .data = whole.stdout });
+    var build_args: std.ArrayList([]const u8) = .empty;
+    try build_args.appendSlice(a, &.{ "build", entry, "--project", try std.fmt.allocPrint(a, "--manifest-file={s}/whole.json", .{directory}), "-o", try std.fmt.allocPrint(a, "{s}/whole-program", .{directory}), try std.fmt.allocPrint(a, "--cache-dir={s}/whole", .{directory}) });
+    try build_args.appendSlice(a, &tools);
+    const built = try runInterfaces(build_args.items);
+    defer freeRun(built);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, built.term);
+    // `main` cannot compile before `util`: it reads `util`'s emission facts,
+    // which an interface emitted from a check alone does not carry.
+    const checked = try runInterfaces(&.{ "interfaces", "emit", entry, try std.fmt.allocPrint(a, "--out={s}/early/if", .{directory}) });
+    defer freeRun(checked);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, checked.term);
+    const early = try runInterfaces(try compileModuleArgs(a, directory, "main", "early"));
+    defer freeRun(early);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, early.term);
+    try testing.expect(std.mem.indexOf(u8, early.stderr, "compile its module first") != null);
+    // In import order, each module from its own source and `util`'s interface.
+    for ([_][]const u8{ "util", "main" }) |module| {
+        const compiled = try runInterfaces(try compileModuleArgs(a, directory, module, "modules"));
+        defer freeRun(compiled);
+        try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, compiled.term);
+        try testing.expect(std.mem.indexOf(u8, compiled.stdout, "\"version\":\"module-compile-v1\"") != null);
+    }
+    // Every unit the modules emitted is the whole program's: the same text
+    // and metadata digests and the same fragment key, function by function.
+    const reference = try std.Io.Dir.cwd().readFileAlloc(testing.io, report, a, .limited(1 << 24));
+    for ([_][]const u8{ "util::grow", "util::largest[i64]", "main::main" }) |name| {
+        const units_file = if (std.mem.startsWith(u8, name, "main")) "main.units.json" else "util.units.json";
+        const units = try std.Io.Dir.cwd().readFileAlloc(testing.io, try std.fs.path.join(a, &.{ directory, "modules", "out", units_file }), a, .limited(1 << 24));
+        const named = try std.fmt.allocPrint(a, "\"name\":\"{s}\"", .{name});
+        const in_module = std.mem.indexOf(u8, units, named).?;
+        const in_whole = std.mem.indexOf(u8, reference, named).?;
+        try testing.expectEqualStrings(jsonString(reference, "unit", in_whole), jsonString(units, "unit_key", in_module));
+        try testing.expectEqualStrings(jsonString(reference, "il", in_whole), jsonString(units, "il", in_module));
+    }
+    // The link builds no guest object: each came from its module's compile.
+    var link_args: std.ArrayList([]const u8) = .empty;
+    try link_args.appendSlice(a, &.{ "link-modules", entry, try std.fmt.allocPrint(a, "--units={s}/modules/out", .{directory}), "-o", try std.fmt.allocPrint(a, "{s}/module-program", .{directory}), try std.fmt.allocPrint(a, "--cache-dir={s}/modules/cache", .{directory}), "--report" });
+    try link_args.appendSlice(a, &tools);
+    const linked = try runInterfaces(link_args.items);
+    defer freeRun(linked);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, linked.term);
+    try testing.expect(std.mem.indexOf(u8, linked.stdout, "\"compiled_function_objects\":0") != null);
+    // The same executable, byte for byte, and so the same run and trap.
+    const one = try temporary.dir.readFileAlloc(testing.io, "whole-program", a, .limited(1 << 30));
+    const two = try temporary.dir.readFileAlloc(testing.io, "module-program", a, .limited(1 << 30));
+    try testing.expectEqualSlices(u8, one, two);
+    const ran = try std.process.run(a, testing.io, .{ .argv = &.{try std.fmt.allocPrint(a, "{s}/module-program", .{directory})} });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, ran.term);
+    try testing.expect(std.mem.indexOf(u8, ran.stdout, "[12, 18, 13]") != null);
+    try testing.expect(std.mem.indexOf(u8, ran.stderr, "R_LIST_BOUNDS") != null);
+}
+
+// spec: MODULE-COMPILE-4
+test "the per-module commands are listed in help and answer a bad invocation with their usage" {
+    const help = try runInterfaces(&.{"--help"});
+    defer freeRun(help);
+    try testing.expect(std.mem.indexOf(u8, help.stdout, "mylang compile-module <entry.my> --module=NAME ... | link-modules <entry.my> --units=DIR -o OUT") != null);
+    const bare = try runInterfaces(&.{"compile-module"});
+    defer freeRun(bare);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, bare.term);
+    try testing.expect(std.mem.startsWith(u8, bare.stderr, "usage: mylang compile-module <entry.my>"));
+    // The program's arena switch is required: no one module can derive it.
+    const unswitched = try runInterfaces(&.{ "compile-module", "main.my", "--module=main", "--interfaces=if", "--out=out" });
+    defer freeRun(unswitched);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, unswitched.term);
+    const unlinked = try runInterfaces(&.{"link-modules"});
+    defer freeRun(unlinked);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, unlinked.term);
+}
+
 const SymbolicCounts = struct { performed: usize, reused: usize };
 
 fn symbolicCounts(stderr: []const u8) !SymbolicCounts {

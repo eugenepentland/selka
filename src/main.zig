@@ -125,6 +125,8 @@ const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--j
     "packages lock CONFIG.json --output LOCK.json | build ENTRY.my --lock LOCK.json [--command C] [--receipt FILE] (offline locked local packages)\n       mylang " ++
     "invoke <entry.my> --function='module::name' (--describe | --input=FILE) (call one exported function natively)\n       mylang " ++
     "dump-tokens <file.my> (stage-0 `tokens-v1` JSON on stdout; lexical failures exit 1)\n       mylang " ++
+    "interfaces emit|check|oracle <entry.my> | show <module.myi> (per-module interface artifacts; `mylang interfaces` prints the options)\n       mylang " ++
+    "compile-module <entry.my> --module=NAME ... | link-modules <entry.my> --units=DIR -o OUT (per-module build; `mylang compile-module` prints the options)\n       mylang " ++
     "<schema-project|input-module|check|run|dump-bytecode|di" ++
     "scover-duplicates|discover-project-duplicates|report-project-quality|report-quality|fmt|fm" ++
     "t-module|fmt-project|emit-qbe|emit-project-qbe|list-modules|list-interfaces|list-" ++
@@ -312,6 +314,23 @@ fn settleModes(process: std.process.Init) !@import("main_runtime_mode.zig").Sett
     build_identity = runtimeIdentity(build_identity);
     return .{ .run = args };
 }
+fn moduleCommand(process: std.process.Init, args: []const [:0]const u8) !?u8 {
+    if (args.len < 2) return null;
+    if (std.mem.eql(u8, args[1], "interfaces")) {
+        const status = try @import("module_interface_command.zig").run(process, args[2..]);
+        return status;
+    }
+    if (std.mem.eql(u8, args[1], "compile-module")) {
+        const status = try @import("module_compile_command.zig").compileModule(process, args[2..], &build_identity);
+        return status;
+    }
+    if (std.mem.eql(u8, args[1], "link-modules")) {
+        const status = try @import("module_compile_command.zig").linkModules(process, args[2..]);
+        return status;
+    }
+    return null;
+}
+
 fn dispatch(process: std.process.Init) !u8 {
     const args = switch (try settleModes(process)) {
         .run => |normalized| normalized,
@@ -347,6 +366,7 @@ fn dispatch(process: std.process.Init) !u8 {
     if (args.len >= 2 and std.mem.eql(u8, args[1], "doctest")) return @import("doctest_command.zig").run(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "reference")) return @import("reference_command.zig").run(@import("mylang"), process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "docs")) return @import("docs_command.zig").run(process, args[2..]);
+    if (try moduleCommand(process, args)) |status| return status;
     if (args.len >= 2 and std.mem.eql(u8, args[1], "packages")) {
         const identity = std.fmt.bytesToHex(build_identity, .lower);
         return @import("packages_command.zig").run(process, args[2..], &identity);
@@ -1041,6 +1061,9 @@ const Parsed = struct {
     max_memory: ?u64,
     /// Internal selective native emission input; one qualified function per line.
     select_file: ?[]const u8,
+    /// Internal `--emission-report=FILE` on `emit-project-qbe`: write every
+    /// function's emission facts and unit keys there (MODULE-COMPILE-1).
+    emission_report: ?[]const u8 = null,
     /// Internal `--drop-debug`: a ReleaseFast build omits `debug` lines.
     drop_debug: bool,
     /// Internal `--drop-step-checks`: this build carries no instruction ceiling.
@@ -1213,6 +1236,7 @@ const ArgumentParser = struct {
     explain_ownership: ?[]const u8 = null,
     cache_dir: ?[]const u8 = null,
     select_file: ?[]const u8 = null,
+    emission_report: ?[]const u8 = null,
     drop_debug: bool = false,
     drop_step_checks: bool = false,
     drop_frame_checks: bool = false,
@@ -1392,11 +1416,21 @@ const ArgumentParser = struct {
     /// manifest leaves out the export, schema, wire, codec and test-dependency
     /// facts only a library build reads (`EMIT-META-1`).
     fn leanManifestOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
+        if (try self.emissionReportOption(arg)) return true;
         const executable = std.mem.eql(u8, arg, "--lean-manifest=executable");
         if (!executable and !std.mem.eql(u8, arg, "--lean-manifest")) return false;
         if (self.command != .@"emit-project-qbe" or self.lean_manifest) return error.Usage;
         self.lean_manifest = true;
         self.executable_manifest = executable;
+        return true;
+    }
+
+    /// Internal `--emission-report=FILE` on `emit-project-qbe`: the whole
+    /// program's per-function emission facts and unit keys (MODULE-COMPILE-1).
+    fn emissionReportOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
+        if (!std.mem.startsWith(u8, arg, "--emission-report=")) return false;
+        if (self.command != .@"emit-project-qbe" or self.emission_report != null) return error.Usage;
+        self.emission_report = arg["--emission-report=".len..];
         return true;
     }
 
@@ -1662,6 +1696,7 @@ const ArgumentParser = struct {
             .no_cache = self.no_cache,
             .cache_dir = self.cache_dir,
             .select_file = self.select_file,
+            .emission_report = self.emission_report,
             .drop_debug = self.drop_debug,
             .drop_step_checks = self.drop_step_checks,
             .drop_frame_checks = self.drop_frame_checks,
@@ -2828,7 +2863,12 @@ fn emitRequestedOutput(init: Context, compilation: *language.project_compile.Com
     return switch (parsed.command) {
         .@"native-test-graph" => try emitNativeTestFacts(init, compilation, .all),
         .@"emit-project-qbe" => blk: {
+            var emitted: language.qbe_fragments.Report = .{ .arena = init.arena.allocator() };
+            if (parsed.emission_report != null) if (compilation.reuse) |*reuse| {
+                reuse.report = &emitted;
+            };
             const manifest = (try emitProjectNative(init, compilation, parsed.select_file, parsed.emissionPolicy())) orelse return error.SourceError;
+            if (parsed.emission_report) |path| try writeEmissionReport(init, compilation, emitted, path);
             try rememberManifest(init, parsed, site, compilation, manifest);
             // FRAGMENT-SWEEP-1: every text this manifest names is in a flushed
             // pack and the replay, so an occasional sweep can go now.
@@ -2852,6 +2892,25 @@ fn emitRequestedOutput(init: Context, compilation: *language.project_compile.Com
         },
         else => null,
     };
+}
+
+/// MODULE-COMPILE-1: `emit-project-qbe --emission-report=FILE` writes what
+/// the whole-program emission computed about every function (the facts a
+/// module interface carries and each unit's keys) and every module's imports,
+/// the reference a per-module build is compared with.
+fn writeEmissionReport(init: Context, compilation: *const language.project_compile.Compilation, emitted: language.qbe_fragments.Report, path: []const u8) !void {
+    const a = init.arena.allocator();
+    const loaded = compilation.index.project.modules.items;
+    const Module = struct { name: []const u8, imports: []const []const u8 };
+    const modules = try a.alloc(Module, loaded.len);
+    for (loaded, modules) |module, *row| {
+        const imports = try a.alloc([]const u8, module.imports.len);
+        for (module.imports, imports) |imported, *name| name.* = loaded[imported.target].name;
+        row.* = .{ .name = module.name, .imports = imports };
+    }
+    const text = try std.json.Stringify.valueAlloc(a, .{ .version = "emission-report-v1", .arenas = emitted.arenas, .modules = modules, .functions = emitted.functions }, .{});
+    defer a.free(text);
+    std.Io.Dir.cwd().writeFile(init.io, .{ .sub_path = path, .data = text }) catch return error.WriteFailed;
 }
 
 fn partialNavigation(init: Context, project: *language.project.Project, parsed: Parsed, files: ?*ModuleFiles) !u8 {
@@ -3545,7 +3604,7 @@ fn replayFrame(hash: *std.crypto.hash.Blake3, part: []const u8) void {
 
 /// Whether this command may replay or remember a whole lean emission.
 fn replaysManifest(parsed: Parsed) bool {
-    return parsed.command == .@"emit-project-qbe" and parsed.lean_manifest and parsed.select_file == null and !parsed.reporting.explain_invalidation;
+    return parsed.command == .@"emit-project-qbe" and parsed.lean_manifest and parsed.select_file == null and !parsed.reporting.explain_invalidation and parsed.emission_report == null;
 }
 
 /// Replay an unchanged project's last lean emission: its warnings to stderr and

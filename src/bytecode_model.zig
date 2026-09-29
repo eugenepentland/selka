@@ -128,7 +128,11 @@ pub const Print = struct { sink: typed.Sink = .stdout, types: []const typed.Type
 /// `stream.write(text)`: a stream value and text operand are on the stack.
 pub const StreamWrite = struct { stream: typed.Type, text: typed.Type };
 /// Checked function signature, locals, and instruction body.
+/// Finalized caller-visible facts of a physical body supplied by another module.
+pub const Physical = struct { stable: []const bool = &.{}, unknown: bool = false };
+/// Checked function signature, locals, instructions and optional imported facts.
 pub const Function = struct {
+    physical: ?*const Physical = null,
     policy: typed.FunctionPolicy = .{},
     signature: typed.FunctionSignature = .{},
     scope: FunctionScope,

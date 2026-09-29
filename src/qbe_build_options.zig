@@ -212,6 +212,9 @@ pub fn parse(args: []const []const u8) Error!Options {
         // `link_arguments`, which the driver already scans, so the frozen
         // Options field set does not grow for a profiling switch.
         if (std.mem.eql(u8, argument, "--keep-symbols")) continue;
+        // Internal `--module-objects` (MODULE-COMPILE-1) compiles one module's
+        // units and links nothing; it rides in `link_arguments` the same way.
+        if (std.mem.eql(u8, argument, "--module-objects")) continue;
         // `--timings=json` is an observation request, not a build control. Like
         // `--keep-symbols` it rides in `link_arguments`, which the driver already
         // scans, so the frozen Options field set does not grow for a switch that

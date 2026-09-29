@@ -305,7 +305,12 @@ const MarkerLines = struct {
 fn literalDefinitions(w: *std.Io.Writer, allocator: std.mem.Allocator, units: []const std.json.Value) Error!void {
     var seen: std.StringHashMapUnmanaged(void) = .empty;
     defer seen.deinit(allocator);
-    var header = false;
+    // QBE-LITERAL-ORDER-1: the pool is written in symbol order, so the shared
+    // unit is a function of the set of literals and not of the order the
+    // units come in: a program linked from per-module manifests gets the
+    // whole-program build's unit, byte for byte.
+    var literals: std.ArrayList(Literal) = .empty;
+    defer literals.deinit(allocator);
     for (units) |unit| {
         // A stored unit's facts hold its marker lines (`QBE-FRAGMENT-REUSE-1`).
         var lines: MarkerLines = .{ .il = lean.facts(unit) };
@@ -327,13 +332,17 @@ fn literalDefinitions(w: *std.Io.Writer, allocator: std.mem.Allocator, units: []
                 literal.ascii = !std.mem.eql(u8, ascii_text, "0");
             }
             literal.hex = tokens.next() orelse "";
-            if (!header) {
-                try w.writeAll("#include \"native_text.h\"\n");
-                header = true;
-            }
-            try emitLiteral(w, literal);
+            try literals.append(allocator, literal);
         }
     }
+    if (literals.items.len == 0) return;
+    std.mem.sort(Literal, literals.items, {}, literalBefore);
+    try w.writeAll("#include \"native_text.h\"\n");
+    for (literals.items) |literal| try emitLiteral(w, literal);
+}
+
+fn literalBefore(_: void, a: Literal, b: Literal) bool {
+    return std.mem.lessThan(u8, a.symbol, b.symbol);
 }
 /// Emit one static object for every embedded file the manifest's `embeds` table
 /// names (`EMBED-1`), each laid out exactly as a frozen literal of the same
@@ -608,6 +617,29 @@ test "a batch's function metadata is assembly holding the C unit's records, and 
     var failing = std.testing.FailingAllocator.init(std.testing.allocator, .{ .fail_index = 0 });
     // The allocating writer reports a failed allocation as a failed write.
     try std.testing.expectError(error.WriteFailed, metadataAssembly(failing.allocator(), functions));
+}
+
+// spec: QBE-LITERAL-ORDER-1
+test "the shared unit's literal pool is the same whatever order the units come in" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const forward = try std.json.parseFromSliceLeaky(std.json.Value, a,
+        \\{"entry":"main_native","entry_parameters":[],"runtime_data":"","functions":[
+        \\{"symbol":"main_native","name":"main","il":"# myl-lit myl_lit_bb myl_t_u8 1 2 6869\n"},
+        \\{"symbol":"myl_f_a","name":"m::a","il":"# myl-lit myl_lit_aa myl_t_u8 1 1 41\n# myl-lit myl_lit_bb myl_t_u8 1 2 6869\n"}]}
+    , .{});
+    const backward = try std.json.parseFromSliceLeaky(std.json.Value, a,
+        \\{"entry":"main_native","entry_parameters":[],"runtime_data":"","functions":[
+        \\{"symbol":"myl_f_a","name":"m::a","il":"# myl-lit myl_lit_aa myl_t_u8 1 1 41\n# myl-lit myl_lit_bb myl_t_u8 1 2 6869\n"},
+        \\{"symbol":"main_native","name":"main","il":"# myl-lit myl_lit_bb myl_t_u8 1 2 6869\n"}]}
+    , .{});
+    const one = try sharedMetadata(a, forward);
+    try std.testing.expectEqualStrings(one, try sharedMetadata(a, backward));
+    // In symbol order, whichever unit named a literal first.
+    const first = std.mem.indexOf(u8, one, "myl_lit_aa").?;
+    const second = std.mem.indexOf(u8, one, "myl_lit_bb").?;
+    try std.testing.expect(first < second);
 }
 
 // spec: QBE-BATCH-4

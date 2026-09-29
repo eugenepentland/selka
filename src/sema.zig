@@ -346,6 +346,18 @@ const Checker = struct {
         try self.enforceInvariants(first_node);
         return self.finishFunction(i, function, body.id);
     }
+    /// LAMBDA-NAME-1: a lambda's function name, `lambda@<module>::<offset>`
+    /// with the offset in its own module's source, so its symbol is the same
+    /// whatever else the program merges around it (a whole program and a
+    /// module compiled on its own) and batches with its module's lambdas. A
+    /// single-file program keeps `lambda@<offset>`.
+    fn lambdaName(self: *Checker, span: source.Span) Error![]const u8 {
+        if (self.catalog.module_names) |names| if (self.src.originalSpan(span)) |at| {
+            const modules = names.index.project.modules.items;
+            if (at.input < modules.len) return std.fmt.allocPrint(self.allocator, "lambda@{s}::{d}", .{ modules[at.input].name, at.span.start });
+        } else |_| {};
+        return std.fmt.allocPrint(self.allocator, "lambda@{d}", .{span.start});
+    }
     /// Whether `span` lies inside the body of a generic function declaration,
     /// where a lambda never receives a callback type (GENERIC-LAMBDA-1).
     fn inGenericBody(self: *Checker, span: source.Span) bool {
@@ -397,7 +409,7 @@ const Checker = struct {
         const body: typed.StatementId = @fromBackingInt(self.statements.items.len);
         try self.statements.append(self.allocator, .{ .span = lambda.span, .terminates = true, .data = .{ .ret = value } });
         try self.enforceInvariants(first_node);
-        const name = try std.fmt.allocPrint(self.allocator, "lambda@{d}", .{lambda.span.start});
+        const name = try self.lambdaName(lambda.span);
         return .{
             .policy = .{ .effect_bound = .{ .span = lambda.span, .allowed = contract.effects } },
             .signature = .{
@@ -1456,9 +1468,24 @@ const presize_threshold = 1 << 14;
 pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink) Error!typed.Program {
     return checkWithNames(allocator, src, program, sink, null);
 }
-fn checkGenericContracts(src: source.Source, program: ast.Program, sink: *diagnostic.Sink, catalog: records.Catalog, symbolic: *?generic_cache.Session) Error!void {
+fn checkGenericContracts(src: source.Source, program: ast.Program, sink: *diagnostic.Sink, catalog: records.Catalog, symbolic: *?generic_cache.Session, declared: []const ?effect_set.Mask) Error!void {
     const session: ?*generic_cache.Session = if (symbolic.*) |*reuse| reuse else null;
-    try @import("generic_bodies.zig").checkWithCatalogCached(sink.allocator, src, program, sink, catalog, session);
+    try @import("generic_bodies.zig").checkWithCatalogCached(sink.allocator, src, program, sink, catalog, .{ .symbolic = session, .declared = declared });
+}
+/// MODULE-INTERFACE-1: per AST function, the transitive effect mask an
+/// imported interface declares for a body this compilation does not have, or
+/// null; empty unless the request stands in imported interfaces.
+fn declaredMasks(allocator: std.mem.Allocator, cache: ?*semantic_cache.Cache, session: *?semantic_cache.Session) Error![]const ?effect_set.Mask {
+    const c = cache orelse return &.{};
+    const request = c.context.summaries orelse return &.{};
+    if (!request.declared) return &.{};
+    const previous = request.previous orelse return &.{};
+    const queries = if (session.*) |*opened| opened else return &.{};
+    const masks = try allocator.alloc(?effect_set.Mask, queries.prepared.keys.len);
+    for (masks, queries.prepared.keys) |*mask, key| {
+        mask.* = if (previous.find(key)) |position| previous.summaries[position].fact.graph_mask else null;
+    }
+    return masks;
 }
 /// Open the C3 symbolic session when this request has both a semantic cache and
 /// a prepared ordinary session. Kept separate so `checkCached` stays readable.
@@ -1790,7 +1817,7 @@ fn checkCore(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
     defer deinitSpecialization(&spec_session);
     var failed = false;
     const symbolic_start = timingStart(timing);
-    checkGenericContracts(src, program, sink, catalog, &symbolic) catch |err| switch (err) {
+    checkGenericContracts(src, program, sink, catalog, &symbolic, try declaredMasks(allocator, cache, &session)) catch |err| switch (err) {
         error.SourceError => failed = true,
         else => return err,
     };
