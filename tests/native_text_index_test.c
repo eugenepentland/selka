@@ -1,9 +1,12 @@
+#define _GNU_SOURCE
 #include "native_text_methods.h"
 #include "native_regions.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/mman.h>
+#include <unistd.h>
 /* spec-case: TEXT-INDEX-1, TEXT-INDEX-2, TEXT-INDEX-3. The position index of a
    long non-ASCII text over the real runtime, under collection stress. Every
    lookup is checked against the scalar array the text was built from, in every
@@ -337,6 +340,46 @@ static void complexity(myl_native_heap *heap) {
     linear(heap,views_at_random,600);
 }
 #endif
+/* spec: TEXT-INDEX-4. The literal index occupies a separately protected page;
+ * all lookup orders, inverse indexes and owner-view lookups must only read it. */
+static void readonly_literal(myl_native_heap *heap) {
+    const size_t page=(size_t)sysconf(_SC_PAGESIZE);
+    unsigned char *block=mmap(NULL,2*page,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS,-1,0);
+    assert(block!=MAP_FAILED);
+    myl_native_object *header=(myl_native_object *)block;
+    header->mark=MYL_NATIVE_OBJECT_LITERAL_MARK; header->element=&myl_rc_octet_leaf;
+    myl_native_text *text=(myl_native_text *)(header+1);
+    size_t bytes=page-sizeof *header-sizeof *text, count=bytes/2;
+    assert(bytes%8==0);
+    text->length=count; text->bytes=bytes; text->hash=0;
+    text->flags=MYL_TEXT_INDEXED|MYL_TEXT_SAMPLED|MYL_TEXT_STATIC_INDEX;
+    unsigned char *payload=(unsigned char *)(text+1);
+    uint32_t *points=malloc(count*sizeof *points); assert(points);
+    for (size_t i=0;i<count;i++) { points[i]=0xe9; payload[2*i]=0xc3; payload[2*i+1]=0xa9; }
+    myl_native_text_positions *table=(myl_native_text_positions *)(block+page);
+    table->scalar=0; table->octet=0;
+    for (size_t i=1;i*MYL_TEXT_SAMPLE_STRIDE<count;i++) table->sample[i-1]=(uint32_t)(2*i*MYL_TEXT_SAMPLE_STRIDE);
+    assert(mprotect(block+page,page,PROT_READ)==0);
+#ifdef MYL_TEXT_STEPS
+    myl_native_text_steps=0;
+#endif
+    orders(text,points,count);
+#ifdef MYL_TEXT_STEPS
+    assert(myl_native_text_steps<1024*count);
+#endif
+    myl_native_text *tail=myl_native_text_tail(heap,text,100,count);
+    assert(tail && (tail->flags&MYL_TEXT_VIEW));
+    myl_native_root root;
+    myl_native_root_push(heap,&root,&tail,&pointer);
+    orders(tail,points+100,count-100);
+    assert(myl_native_text_hash(text)==myl_native_octets_hash(payload,bytes));
+    myl_native_heap_collect(heap);
+    assert(myl_native_text_point_at(tail,900)==0xe9 && table->scalar==0 && table->octet==0);
+    myl_native_root_pop(heap,&root);
+    myl_native_heap_collect(heap);
+    free(points);
+    assert(munmap(block,2*page)==0);
+}
 int main(void) {
     myl_native_heap heap;
     myl_native_heap_init(&heap,1<<24); heap.stress=1;
@@ -347,6 +390,7 @@ int main(void) {
     lazy_table(&heap);
     searching(&heap);
     arenas(&heap);
+    readonly_literal(&heap);
 #ifdef MYL_TEXT_STEPS
     /* The linear-work checks run without the collection stress that dominates
        a run of this size. */

@@ -181,7 +181,7 @@ fn pushed(comptime E: type, self: *E, view: anytype, pc: usize, remaining: usize
             // RC-ANCHORED-RANGE-KEY-1: a described `str` slice leaves its
             // receiver text itself in the operand, so it is anchored exactly
             // when that receiver is.
-            .slice => self.range_keys.role(pc) == .slice and view.local(E, self, @backingInt(operation.owner)),
+            .slice, .text_tail => self.range_keys.role(pc) == .slice and view.local(E, self, @backingInt(operation.owner)),
             else => false,
         },
         .value_copy => pc != 0 and !self.isBranchTarget(pc) and !copies(E, self, pc) and
@@ -310,7 +310,7 @@ fn candidate(comptime E: type, self: *E, bindings: []const input.Binding, catalo
 // Operations that only read their receiver: an element read, its length, or a
 // slice (a new value, or a described range over the receiver's own text).
 fn readOnly(kind: @FieldType(@FieldType(Op, "buffer_operation"), "kind")) bool {
-    return kind == .read or kind == .length or kind == .slice;
+    return kind == .read or kind == .length or kind == .slice or kind == .text_tail;
 }
 
 // Whether the copy-on-write plan can write or detach `index`: a place, a

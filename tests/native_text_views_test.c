@@ -2,6 +2,7 @@
 #include "native_regions.h"
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 /* spec-case: TEXT-VIEW-1, TEXT-VIEW-2, TEXT-VIEW-3. Text views over the real
    runtime, under collection stress: which pieces share their receiver's octets,
@@ -200,6 +201,70 @@ static void split_pieces(myl_native_heap *heap) {
     myl_native_root_pop(heap,&root);
     myl_native_root_pop(heap,&receiver);
 }
+/* spec: TEXT-VIEW-5. Tails below a quarter share one owner down to nine
+ * octets; bounded slices and split's final field retain the quarter policy. */
+static void streaming_tails(myl_native_heap *heap) {
+    char octets[101]; memset(octets,'a',100); octets[90]=','; octets[100]=0;
+    myl_native_text *owner=raw(heap,octets);
+    myl_native_root root, kept;
+    myl_native_root_push(heap,&root,&owner,&pointer);
+    myl_native_text *rest=myl_native_text_tail(heap,owner,80,100);
+    myl_native_root_push(heap,&kept,&rest,&pointer);
+    assert(is_view(rest) && ((myl_native_text_view *)rest)->owner==owner);
+    for (int i=81;i<=91;i++) {
+        rest=myl_native_text_tail(heap,rest,1,(int64_t)rest->length);
+        assert(is_view(rest) && ((myl_native_text_view *)rest)->owner==owner);
+        assert(rest->hash==(uint32_t)i && reads(rest,octets+i,100-(size_t)i));
+    }
+    assert(!is_view(myl_native_text_tail(heap,owner,92,100)));
+    assert(!is_view(myl_native_text_slice(heap,owner,91,100)));
+    assert(!is_view(myl_native_text_tail(heap,owner,91,99)));
+    assert(reads(myl_native_text_tail(heap,owner,200,100),"",0));
+    assert(myl_native_text_tail(heap,owner,-200,100)==owner);
+    myl_native_list *parts=myl_native_text_split(heap,owner,raw(heap,","));
+    assert(parts && parts->length==2 && !is_view(((myl_native_text **)parts->storage)[1]));
+    myl_native_root_pop(heap,&kept);
+    myl_native_root_pop(heap,&root);
+}
+/* spec-case: TEXT-VIEW-5. Scalar endpoints include astral UTF-8 widths, and
+ * escaping an arena tail copies only the tail and survives the arena. */
+static void tail_arenas(myl_native_heap *heap) {
+    myl_native_text *escaped=NULL;
+    assert(myl_native_region_begin(heap));
+    myl_native_text *owner=raw(heap,"abcdefghijklmnopqrstuvwxyz\xf0\x9f\x99\x82\xc3\xa9" "abcdefghi");
+    myl_native_text *tail=myl_native_text_tail(heap,owner,26,owner->length);
+    assert(is_view(tail) && tail->length==11 && tail->bytes==15 && tail->hash==26);
+    tail=myl_native_text_tail(heap,tail,1,tail->length);
+    assert(is_view(tail) && tail->hash==30 && ((myl_native_text_view *)tail)->owner==owner);
+    assert(myl_native_text_point_at(tail,0)==0xe9 && myl_native_text_point_at(tail,9)=='i');
+    assert(myl_native_region_escape(heap,&text_slot,&tail,&escaped));
+    assert(escaped && !is_view(escaped) && myl_native_header_region(escaped)==0);
+    myl_native_root kept;
+    myl_native_root_push(heap,&kept,&escaped,&pointer);
+    myl_native_region_end(heap);
+    myl_native_heap_collect(heap);
+    assert(reads(escaped,"\xc3\xa9" "abcdefghi",11));
+    myl_native_root_pop(heap,&kept);
+}
+/* spec-case: TEXT-VIEW-5. Scanning the original owner's final quarter copies
+ * only the final eight short tails, independently of the owner's length. */
+static void tail_copy_bound(myl_native_heap *heap, size_t count) {
+    unsigned char *octets=malloc(count); assert(octets); memset(octets,'x',count);
+    myl_native_text *owner=myl_native_text_from_utf8(heap,octets,count); assert(owner);
+    myl_native_root root;
+    myl_native_root_push(heap,&root,&owner,&pointer);
+    size_t copied=0, views=0;
+    for (size_t start=3*count/4;start<=count;start++) {
+        myl_native_text *tail=myl_native_text_tail(heap,owner,(int64_t)start,(int64_t)count);
+        assert(tail && tail->length==count-start);
+        if (is_view(tail)) { views++; assert(((myl_native_text_view *)tail)->owner==owner); }
+        else copied+=tail->bytes;
+    }
+    assert(copied==36 && views==count/4-8);
+    printf("streaming tails: owner=%zu views=%zu copied=%zu\n",count,views,copied);
+    myl_native_root_pop(heap,&root);
+    free(octets);
+}
 int main(void) {
     myl_native_heap heap;
     myl_native_heap_init(&heap,1<<22); heap.stress=1;
@@ -210,6 +275,11 @@ int main(void) {
     dictionary_keys(&heap);
     arenas(&heap);
     split_pieces(&heap);
+    streaming_tails(&heap);
+    tail_arenas(&heap);
+    heap.stress=0;
+    tail_copy_bound(&heap,4096);
+    tail_copy_bound(&heap,32768);
     myl_native_heap_collect(&heap);
     assert(heap.objects_live==0);
     myl_native_heap_destroy(&heap);

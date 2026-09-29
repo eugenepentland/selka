@@ -174,6 +174,8 @@ pub const Kind = enum {
     ends_with_range,
     /// Exact Python scalar repr of a str or bytes receiver.
     text_repr,
+    /// A str slice whose upper endpoint was omitted; its long suffix may share.
+    text_tail,
     /// Return the required source argument count for this buffer builtin.
     pub fn arity(self: Kind) usize {
         return switch (self) {
@@ -193,7 +195,7 @@ pub const Kind = enum {
             .number_format, .float_round => 2,
             .set_add, .set_discard, .set_union, .set_intersection, .set_difference, .set_symmetric_difference => 1,
             .set_subset, .set_superset, .set_disjoint => 1,
-            .write, .resize, .reserve, .get, .slice, .find_any, .view => 2,
+            .write, .resize, .reserve, .get, .slice, .text_tail, .find_any, .view => 2,
             .sort_keyed => 3,
             .parse_int_range, .parse_float_range, .scalar_count_range => 2,
             .slice_step => 3,
@@ -471,7 +473,7 @@ fn signatureBody(allocator: std.mem.Allocator, kind: Kind, names: SignatureNames
         .to_list => try allocator.dupe(u8, "() -> list[int]"),
         .scalar_count => try allocator.dupe(u8, "() -> Result[int, str]"),
         .scalar_count_range => try allocator.dupe(u8, "(start: int, end: int) -> Result[int, str]"),
-        .view, .slice => try std.fmt.allocPrint(allocator, span_signature, .{receiver}),
+        .view, .slice, .text_tail => try std.fmt.allocPrint(allocator, span_signature, .{receiver}),
         .find_any => try std.fmt.allocPrint(allocator, "(values: {s}, start: int) -> int", .{receiver}),
         .slice_step => try std.fmt.allocPrint(allocator, "(start: int, end: int, step: int) -> {s}", .{receiver}),
         .length => try allocator.dupe(u8, "() -> int"),
@@ -597,7 +599,7 @@ pub fn byteBuffer(kind: Kind) bool {
 pub fn managedAllocation(kind: Kind, dictionary: bool) bool {
     if (trim(kind) != null or kind == .text_repr) return true;
     return switch (kind) {
-        .append, .split, .join, .keys, .values, .slice, .slice_step => true,
+        .append, .split, .join, .keys, .values, .slice, .text_tail, .slice_step => true,
         .extend, .insert, .items, .copy, .update, .setdefault => true,
         .encode, .decode, .to_list, .hex, .from_hex => true,
         .strip, .lstrip, .rstrip, .upper, .lower, .splitlines, .replace, .zfill => true,

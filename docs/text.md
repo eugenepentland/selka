@@ -96,10 +96,15 @@ choice is the runtime's, made per piece:
 
 - a piece shorter than 9 octets is copied, because its copy is no larger than a
   view;
-- a longer piece is a view when it is at least a quarter of the string that owns
+- a longer bounded piece is a view when it is at least a quarter of the string that owns
   the octets, and a copy otherwise, so a live piece keeps at most four times its
   own octets reachable and a short piece of a large text never keeps the large
   text alive;
+- an omitted upper endpoint, `text[a:]`, shares every suffix of at least 9
+  octets, even below a quarter of its owner. This streaming exception avoids
+  copying the final quarter repeatedly when a parser takes tails of its
+  original input. A retained tail can keep the whole input alive; use an
+  explicit upper endpoint, `text[a:len(text)]`, to request the bounded policy;
 - a piece that is the whole receiver is the receiver itself;
 - a piece of a view reads the first string's octets directly, so views never
   chain.
@@ -139,6 +144,11 @@ offset of every 128th scalar. A lookup walks, a word of eight octets at a time,
 from whichever of the two ends, the last lookup or the table entry is nearest, and
 the table is built by the first lookup that is far from all of them, so text that
 is only scanned in order never builds it.
+
+Long non-ASCII literals use the same sample spacing, precomputed into their
+image data. Their tables are read-only and have no mutable last-lookup cursor;
+lookups walk from the nearest end or sample. ASCII and shorter literals retain
+their original layout.
 
 You do not have to choose between `str` and `bytes` for speed on account of one
 `é`. `for ch in text`, `text[i]` in any order, `text[a:b]`, `enumerate`, `find`,

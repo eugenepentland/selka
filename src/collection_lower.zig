@@ -131,6 +131,7 @@ pub fn operationType(catalog: *Catalog, owner: typed.Type, kind: Kind, span: Spa
         .key_at => if (dictionary) schema.collection.key.? else error.InternalError,
         .value_at => if (dictionary) element else error.InternalError,
         .slice, .join => if (!dictionary) owner else error.InternalError,
+        .text_tail => if (schema.collection.kind == .string) owner else error.InternalError,
         .slice_step => if (dictionary or schema.collection.kind == .bytes) error.InternalError else owner,
         .keys => if (dictionary) listType(catalog, schema.collection.key.?, span) else error.InternalError,
         .values => if (dictionary) listType(catalog, element, span) else error.InternalError,
@@ -312,7 +313,10 @@ pub fn Builder(comptime Checker: type) type {
         /// Root text once, then evaluate each optional slice endpoint in order.
         pub fn textSlice(self: Self, base: typed.NodeId, start: ?typed.NodeId, end: ?typed.NodeId) Error!typed.Node {
             const owner = try self.local(self.checker.nodes.items[@backingInt(base)].ty);
-            return self.block(&.{try self.stmt(.{ .initialize = .{ .slot = owner, .value = base } })}, try self.operation(owner, .slice, &.{ start orelse try self.integer(0), end orelse try self.length(owner) }));
+            const ty = self.checker.nodes.items[@backingInt(base)].ty;
+            const family = self.checker.catalog.records[ty.recordIndex()].collection.kind;
+            const kind: Kind = if (end == null and family == .string) .text_tail else .slice;
+            return self.block(&.{try self.stmt(.{ .initialize = .{ .slot = owner, .value = base } })}, try self.operation(owner, kind, &.{ start orelse try self.integer(0), end orelse try self.length(owner) }));
         }
         /// Copy a stepped slice into fresh storage. An omitted endpoint stays a sentinel
         /// so the runtime can default it for the step's sign, and explicit endpoints are

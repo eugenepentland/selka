@@ -235,7 +235,7 @@ fn keyOperand(input: Input, op: Op, depth: usize) ?usize {
 
 /// Whether a buffer operation is a `str` slice.
 fn isSlice(input: Input, operation: @FieldType(Op, "buffer_operation")) bool {
-    return operation.kind == .slice and isText(input.program, input.function.scope.locals[@backingInt(operation.owner)].ty);
+    return (operation.kind == .slice or operation.kind == .text_tail) and isText(input.program, input.function.scope.locals[@backingInt(operation.owner)].ty);
 }
 
 /// Whether a type is `str`.

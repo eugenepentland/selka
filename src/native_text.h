@@ -36,6 +36,9 @@ typedef struct myl_native_text {
 #define MYL_TEXT_INDEXED 8u
 /* `flags` bit 4: the indexed text's sample table has been filled. */
 #define MYL_TEXT_SAMPLED 16u
+/* `flags` bit 5: image-owned samples are ready and read-only (TEXT-INDEX-4).
+ * Their cursor words stay zero; runtime lookups never modify this index. */
+#define MYL_TEXT_STATIC_INDEX 32u
 /* The shortest payload, in octets, that carries a position index. Below it a
  * walk from an end is at most this many octets, cheaper than the index's 16
  * bytes and its bookkeeping. */
@@ -44,6 +47,12 @@ typedef struct myl_native_text {
  * entry per stride keeps the table at about 3 % of the scalar count, and a
  * lookup that reaches it walks at most half a stride of scalars. */
 #define MYL_TEXT_SAMPLE_STRIDE ((size_t)128)
+/* The indexed payload's eight-aligned tail. Dynamic text updates its cursor
+ * and lazily fills samples; static literal text carries immutable samples. */
+typedef struct myl_native_text_positions {
+    uint64_t scalar, octet;
+    uint32_t sample[];
+} myl_native_text_positions;
 /* A view: a text header whose payload is a range of another text's. `owner` is
  * always an owned text (a view of a view points at the first view's owner), so
  * reading a view's octets is one hop, and the collector keeps the owner alive
@@ -237,6 +246,10 @@ myl_native_text *myl_native_text_clone(myl_native_heap *, const myl_native_text 
 myl_native_text *myl_native_text_concat(myl_native_heap *, myl_native_text *, myl_native_text *);
 myl_native_text *myl_native_text_at(myl_native_heap *, myl_native_text *, int64_t);
 myl_native_text *myl_native_text_slice(myl_native_heap *, myl_native_text *, int64_t, int64_t);
+/* TEXT-VIEW-5: clamp the same endpoints as slice; an omitted upper endpoint
+ * shares a suffix of at least nine octets independently of the owner ratio.
+ * Explicit bounded slices and split pieces retain TEXT-VIEW-3. */
+myl_native_text *myl_native_text_tail(myl_native_heap *, myl_native_text *, int64_t, int64_t);
 myl_native_list *myl_native_text_split(myl_native_heap *, myl_native_text *, myl_native_text *);
 myl_native_text *myl_native_text_join(myl_native_heap *, myl_native_text *, myl_native_list *);
 int myl_native_text_contains(const myl_native_text *, const myl_native_text *);
