@@ -1,0 +1,21 @@
+{
+  "branch": "codex/next-stage1-20260929",
+  "validated_source": "a48b62f5",
+  "compiler_sha256": "5bd4f48956fadcec3f9091c6ae032eca5e64dcbf28717536d2bfa20826c154c3",
+  "checks": {
+    "build": 0,
+    "fuzz_warm": 0,
+    "corpus_build": 0,
+    "corpus_dev": 0,
+    "corpus_smoke": 0,
+    "lox_build_rc": 0,
+    "lox_build_gc": 0,
+    "lox_tests_rc": 0,
+    "lox_tests_gc": 0,
+    "lox_driver_rc": 0,
+    "lox_driver_gc": 0
+  },
+  "corpus_distinct_binaries": 58,
+  "corpus_pairs_per_size": 86,
+  "prior_lane_evidence": "claude-devspeed-fidelity/.tmp/gate2 and .tmp/lang; copied summaries explicitly labeled prior"
+}

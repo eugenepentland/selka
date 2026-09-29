@@ -1,0 +1,6 @@
+lox-build-rc 0 build-slot: build slot 2 after 5s (all 3 build slot(s) busy)
+lox-tests-rc 0 65 passed, 0 cached, 0 failed, 0 skipped, 0 dropped across 10 programs
+lox-driver-rc 0 13 passed, 0 cached, 0 failed, 0 skipped
+lox-build-gc 0
+lox-tests-gc 0 65 passed, 0 cached, 0 failed, 0 skipped, 0 dropped across 10 programs
+lox-driver-gc 0 13 passed, 0 cached, 0 failed, 0 skipped
