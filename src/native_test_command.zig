@@ -23,6 +23,9 @@ const generator = @import("property_generate.zig");
 const wire = @import("native_test_wire.zig");
 const bench = @import("native_bench.zig");
 const builtin = @import("builtin");
+const module_build = @import("module_build.zig");
+const native_build = @import("qbe_build.zig");
+const bundled_identity = @import("qbe_build_assets").compiler_identity;
 /// Setup failures never produce a cached green test run.
 pub const Error = sessions.Error || cases.Error || planner.Error || receipts.Error || fanout.Error || contracts.Error || graph_store.Error || bench.Error;
 
@@ -36,6 +39,9 @@ const Graph = struct {
     captured: ?snapshot.Snapshot = null,
     /// Name and symbol tables over the graph, built on first use.
     tables: ?*Tables = null,
+    /// MODULE-TEST-1: the per-module build the graph's facts came from, which
+    /// links its test library; null for a graph a whole-program session checked.
+    modules: ?*module_build.Tests = null,
 
     /// The graph's lookup tables, built once: planning a selection then costs
     /// each test's closure instead of a scan of the whole graph per test.
@@ -80,12 +86,15 @@ const Graphs = struct {
     directory: []const u8,
     entries: std.StringHashMapUnmanaged(*Graph) = .empty,
     /// The production graph's preparation begun before discovery, if any.
-    early: ?Early = null,
+    prepared: struct { early: ?Early = null, module_tests: ?*module_build.Tests = null } = .{},
 
     fn deinit(self: *Graphs) void {
-        abandon(self.early);
-        self.early = null;
+        abandon(self.prepared.early);
+        self.prepared.early = null;
         self.finishSessions();
+        var iterator = self.entries.valueIterator();
+        while (iterator.next()) |entry| if (entry.*.modules) |built| built.close();
+        if (self.prepared.module_tests) |built| built.close();
         self.entries.deinit(self.allocator);
     }
 
@@ -130,6 +139,13 @@ const Graphs = struct {
                 .source_identity = copied.identity,
                 .captured = copied,
             };
+        } else if (self.moduleBuilt()) |built| {
+            graph.* = .{
+                .project = try self.session.projectFromManifest(self.captured.entry_path, built.graph),
+                .provider_identity = provider_identity,
+                .source_identity = self.captured.identity,
+                .modules = built,
+            };
         } else {
             graph.* = .{
                 .project = try self.prepare(self.captured.entry_path, self.captured.identity, provider_identity),
@@ -146,6 +162,14 @@ const Graphs = struct {
         return graph;
     }
 
+    /// MODULE-TEST-1: the production graph's per-module build, once, when
+    /// this run took that path.
+    fn moduleBuilt(self: *Graphs) ?*module_build.Tests {
+        const built = self.prepared.module_tests orelse return null;
+        self.prepared.module_tests = null;
+        return built;
+    }
+
     /// Admit durable checked facts only after the project passes the shared query
     /// cache; otherwise check once through the retained `native-test-compile`
     /// session, which performs no lowering or QBE emission on the facts request.
@@ -153,8 +177,8 @@ const Graphs = struct {
         const session = self.session;
         const key = try graphKey(session, source_identity, provider_identity);
         // The production graph's preparation may already be under way.
-        if (provider_identity.len == 0) if (self.early) |early| {
-            self.early = null;
+        if (provider_identity.len == 0) if (self.prepared.early) |early| {
+            self.prepared.early = null;
             return switch (early) {
                 .stored => |facts| admit(session, entry_path, facts),
                 .compiling => |compile| self.compiled(entry_path, key, compile),
@@ -219,6 +243,57 @@ fn speculate(session: sessions.Session, captured: snapshot.Snapshot, directory: 
     if (storedFacts(session, directory, key)) |facts| return .{ .stored = facts };
     const compile = sessions.Compile.begin(session, captured.entry_path) catch return null;
     return .{ .compiling = compile };
+}
+/// The production graph's early preparation, if any: none on the
+/// per-module path (MODULE-TEST-1), which checks module by module after the
+/// declaration check, so no whole-program session starts early.
+fn begin(session: sessions.Session, captured: snapshot.Snapshot, directory: []const u8) ?Early {
+    if (modulePath(session)) return null;
+    return speculate(session, captured, directory);
+}
+/// MODULE-TEST-1: the production graph compiled module by module, when this
+/// run can take that path; null sends it to the whole-program session, which
+/// reports whatever the modules could not build.
+fn openModuleTests(session: sessions.Session, captured: snapshot.Snapshot, directory: []const u8) Error!?*module_build.Tests {
+    if (!modulePath(session)) return null;
+    const a = session.context.allocator;
+    const settings: build_options.Options = .{
+        .source = captured.entry_path,
+        .project = true,
+        .cache = try std.fs.path.join(a, &.{ session.directory, "objects", session.environment.hash }),
+        .mode = session.options.mode,
+        .zig = session.tools.zig,
+        .codegen = .{ .qbe = session.tools.qbe },
+    };
+    var library = settings;
+    library.library = true;
+    // Whatever the per-module path cannot do, the whole-program session does
+    // and reports.
+    const outcome = module_build.openTests(session.context, .{ .settings = settings, .switches = native_build.emissionSwitches(library), .identity = bundled_identity }) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => return null,
+    };
+    const built = switch (outcome) {
+        .ready => |ready| ready,
+        .status => return error.NativeToolFailed,
+        .fallback => return null,
+    };
+    // An unchanged module is not compiled again; the trace names each one
+    // that was, the per-module path's unit of work (NATIVE-TEST-SCALE-1).
+    for (built.compiled) |name| session.traceWork(&.{ "compile-module", name });
+    // The durable graph a whole-program run would have stored: the facts of
+    // the tests' closure.
+    if (directory.len != 0 and session.environment.cacheable) {
+        const key = try graphKey(session, captured.identity, "");
+        graph_store.store(session.context, directory, key, built.graph) catch |err| ignoreStoreFailure(err);
+    }
+    return built;
+}
+/// The declaration contracts tests are discovered from: the modules' own
+/// (MODULE-TEST-4), or the whole-program declaration check's.
+fn contractsOf(session: sessions.Session, captured: snapshot.Snapshot, built: ?*module_build.Tests) Error!std.json.Value {
+    if (built) |modules| return modules.contracts;
+    return session.interfaceCheckCached(captured.entry_path, captured.identity);
 }
 /// Whether a case configuration file parses and names no provider fixture.
 /// Anything else answers false, leaving the ordinary ordered preparation to
@@ -376,18 +451,19 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     const graphs_directory = if (opts.flags.no_cache) "" else try std.fs.path.join(context.allocator, &.{ session.directory, "graphs" });
     // When every case selects the production graph, its check starts now and
     // runs beside the declaration check below instead of after it.
-    var early = speculate(session, captured, graphs_directory);
+    var early = begin(session, captured, graphs_directory);
     defer abandon(early);
     // Resolve configuration first. `list-interfaces --contracts` parses every
     // module and validates exported signatures and explicit ceilings without
     // checking any body, so an unfinished replacement target cannot block
     // selection while its public declarations stay valid.
-    const production = session.interfaceCheckCached(captured.entry_path, captured.identity) catch |err| switch (err) {
+    const module_tests = try openModuleTests(session, captured, graphs_directory);
+    const production = contractsOf(session, captured, module_tests) catch |err| switch (err) {
         error.ProjectConfigurationFailed => return 2,
         error.ProjectPolicyRejected => return 3,
         else => return err,
     };
-    var graphs: Graphs = .{ .allocator = context.allocator, .session = session, .captured = captured, .production = production, .directory = graphs_directory, .early = early };
+    var graphs: Graphs = .{ .allocator = context.allocator, .session = session, .captured = captured, .production = production, .directory = graphs_directory, .prepared = .{ .early = early, .module_tests = module_tests } };
     early = null;
     defer graphs.deinit();
     const config_bytes = if (opts.cases) |path| try context.read(path) else "null";
@@ -815,6 +891,7 @@ fn prepareSelectedGraphs(
         for (groups.items) |group| {
             group.symbols.deinit(context.allocator);
             group.names.deinit(context.allocator);
+            group.roots.deinit(context.allocator);
             context.allocator.destroy(group);
         }
         groups.deinit(context.allocator);
@@ -832,6 +909,11 @@ fn prepareSelectedGraphs(
         for (entry.dependencies) |dependency| {
             _ = try group.?.symbols.getOrPut(context.allocator, dependency);
         }
+        const root = v.text(v.get(entry.selected, "name"));
+        const seen = for (group.?.roots.items) |known| {
+            if (std.mem.eql(u8, known, root)) break true;
+        } else false;
+        if (!seen) try group.?.roots.append(context.allocator, root);
     }
     for (groups.items) |group| {
         for (v.array(v.get(group.graph.project.manifest, contracts.functions_key))) |function| {
@@ -847,8 +929,49 @@ fn prepareSelectedGraphs(
         }
         const select_path = try std.fs.path.join(context.allocator, &.{ group.graph.project.directory, "native-test-select.txt" });
         try context.write(select_path, text.items);
+        if (group.graph.modules) |built| {
+            try linkModules(context, session, group, built, select_path);
+            continue;
+        }
         _ = try session.executor(&group.graph.project, select_path);
     }
+}
+
+/// MODULE-TEST-1: link the test library of one per-module graph from its
+/// modules' objects, exporting the tests and benchmarks the pending cases
+/// select, and prepare its executor.
+fn linkModules(context: fs.Context, session: sessions.Session, group: *Group, built: *module_build.Tests, select_path: []const u8) Error!void {
+    const project = &group.graph.project;
+    if (project.executor) |_| if (project.select_file) |old| if (std.mem.eql(u8, old, select_path)) return;
+    var names: std.ArrayList([]const u8) = .empty;
+    for (group.roots.items) |name| try names.append(context.allocator, name);
+    // MODULE-TEST-3: one executable with the harness linked in, so no test
+    // process loads (and relocates) a library of the whole program.
+    const executable = try std.fs.path.join(context.allocator, &.{ project.directory, "tests" });
+    const harness = try session.linkedHarness();
+    session.traceWork(&.{ "module-link", executable });
+    const status = built.link(.{ .names = names.items, .output = executable, .harness = harness }) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => return error.NativeToolFailed,
+    };
+    if (status != 0) return error.NativeToolFailed;
+    if (session.work) |work| work.note(.links, 1, 0);
+    _ = try session.linkedExecutor(project, executable, select_path);
+}
+
+/// Whether a test run can take the per-module path: no `--whole-program`,
+/// `--no-cache`, release build, explicit link input, affected selection,
+/// benchmark or JSON diagnostics asks otherwise.
+fn modulePath(session: sessions.Session) bool {
+    const opts = session.options;
+    if (opts.flags.whole_program or opts.flags.no_cache or opts.flags.affected) return false;
+    if (opts.flags.output.diagnostics_json) return false;
+    // A provider fixture's declarations are validated against the declared
+    // contracts the whole-program declaration check publishes.
+    if (opts.cases) |path| if (!providerFree(session.context, path)) return false;
+    if (opts.bench.pattern != null or opts.bench.only) return false;
+    if (build_options.release(opts.link_arguments) or @import("native_link.zig").hasInputs(opts.link_arguments)) return false;
+    return session.environment.cacheable;
 }
 
 /// How many test processes one invocation keeps running at once: `--jobs` or
@@ -1159,6 +1282,8 @@ const Group = struct {
     graph: *Graph,
     symbols: std.StringHashMapUnmanaged(void) = .empty,
     names: std.ArrayList([]const u8) = .empty,
+    /// The qualified names of the tests and benchmarks the pending cases run.
+    roots: std.ArrayList([]const u8) = .empty,
 };
 
 /// The contract identity of one test module, memoized for the tests that share it.
@@ -1318,7 +1443,7 @@ test "the production check starts beside the declaration check unless a fixture 
     try std.testing.expect(early.compiling.child.stdin != null);
     try std.testing.expect(early.compiling.child.stdout != null);
     const production = try session.interfaceCheck(captured.entry_path);
-    var graphs: Graphs = .{ .allocator = context.allocator, .session = session, .captured = captured, .production = production, .directory = "", .early = early };
+    var graphs: Graphs = .{ .allocator = context.allocator, .session = session, .captured = captured, .production = production, .directory = "", .prepared = .{ .early = early } };
     defer graphs.deinit();
     const ordinary: cases.Case = .{ .name = "main::test_ordinary", .function = .null, .arguments = .null, .expected = .null, .providers = .null, .settings = .null };
     _ = try graphs.get(ordinary);

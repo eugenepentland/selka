@@ -104,6 +104,7 @@ pub const module_compile = [_][]const u8{
     "tests/module_compile_oracle.py",
     "tests/module_build_oracle.py",
     "tests/module_check_oracle.py",
+    "tests/module_test_oracle.py",
     "tests/module_build_diff.py",
     "tests/lang/",
     "tests/fixtures/interfaces/",

@@ -542,6 +542,66 @@ passed main::test_sum
 1 passed, 1 cached, 0 failed, 0 skipped
 ```
 
+## Tests module by module
+
+`mylang test` of a project builds its tests from the same per-module artifacts
+`build` and `check` use (see
+[building a project module by module](module-interfaces.md#building-a-project-module-by-module)).
+`--whole-program` asks for the whole-program session described above.
+
+```console
+$ mylang test app/main.my --cache-dir /tmp/test-cache
+passed main::test_square
+passed util::test_sum
+2 passed, 0 cached, 0 failed, 0 skipped
+$ mylang test app/main.my --cache-dir /tmp/test-cache --whole-program
+passed main::test_square
+passed util::test_sum
+2 passed, 0 cached, 0 failed, 0 skipped
+```
+
+- **Compiles.** Every stale module is compiled as `compile-module --tests`.
+  Besides its objects, the compile writes `NAME.tests.json`, which holds:
+  - its share of the test facts: every function it emits, described as the
+    whole program's facts describe it, but without the two program-wide
+    dependency sets;
+  - its own entry of the declaration contracts;
+  - the schema and export descriptions of its tests and benchmarks;
+  - its wire and codec tables.
+
+  An unchanged module is not compiled again.
+- **Facts.** The run merges the shares into the facts of the tests' closure
+  and adds the program-wide edges: every body that invokes a function value
+  gets an `indirect` edge to every function any module takes as a value, and,
+  when any module declares a domain codec, every body gets its codec edges.
+  Tests are discovered from the merged contracts, so the run starts no
+  declaration check, and results are planned and replayed from receipts as
+  before. The merge is kept, so a run in which no module changed reads one
+  file.
+- **The test executable.** The tests that must run are linked into one
+  executable, with the harness, from the modules' objects and a wrapper that
+  exports those tests. A test process then maps the executable instead of
+  loading and relocating a library of the whole program. The wire and codec
+  tables are sorted by name (MODULE-TEST-2), so the merged tables are the
+  whole-program library's.
+- **Work follows the edit.** An unchanged rerun compiles, links and starts
+  nothing but the tests that are not cacheable. An edit compiles the edited
+  module and the modules that read an interface it changed, never a module
+  below it, and runs exactly the tests whose closure reaches the edit. The
+  trace (`MYLANG_TEST_TRACE`) names each `compile-module` and `module-link`.
+- **Whole-program instead.** `--whole-program` takes the whole-program path, and
+  so do the following:
+  - `--no-cache`, `--release`, explicit link inputs, `--affected`,
+    benchmarks and `--diagnostics=json`;
+  - a case configuration that names provider fixtures;
+  - a project the modules cannot build (the session then reports it).
+
+  Receipts of the two paths are keyed apart (their declaration contracts
+  differ), so switching paths runs every test once more.
+- **Cold.** A first run compiles every module, as a first `build` does, where
+  the whole-program session lowers and compiles only the tests' closure. On a
+  project whose tests reach little of the code, the first run is slower.
+
 ## Collector stress
 
 `mylang test --gc-stress` runs every collected test's copied-value call with the

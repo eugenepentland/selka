@@ -306,13 +306,18 @@ fn checkModules(process: std.process.Init, args: []const []const u8) !?u8 {
     }
     const source = entry orelse return null;
     if (process.environ_map.get("MYLANG_FRICTION_LOG") != null) return null;
+    // MODULE-CHECK-2: the detached seeder builds module records and reports
+    // nothing, whatever the per-module check could not do.
+    const seed = if (process.environ_map.get("MYLANG_CHECK_SEED")) |value| std.mem.eql(u8, value, "1") else false;
     const outcome = try module_build.check(process.gpa, .{
         .io = process.io,
         .environ = process.environ_map,
         .source = source,
         .cache = cache orelse process.environ_map.get("MYLANG_FRONTEND_CACHE") orelse ".mylang-cache",
         .identity = &build_identity,
+        .seed = seed,
     });
+    if (seed) return 0;
     return switch (outcome) {
         .status => |status| status,
         .fallback => null,

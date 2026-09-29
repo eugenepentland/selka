@@ -30,6 +30,8 @@ pub const project_files = @import("project_files.zig");
 /// Compile-time file embedding: `embed_bytes("path")` and `embed_str("path")` (`EMBED-1`).
 pub const embed = @import("embed.zig");
 pub const project_compile = @import("project_compile.zig");
+/// Checked native-test facts and their per-module shares (MODULE-TEST-1).
+pub const native_test_facts = @import("native_test_facts.zig");
 /// Export snapshot and the safety/accounting policy one native emission runs under.
 pub const native_interface = @import("native_interface.zig");
 /// Per-function reuse of emitted QBE units across builds.

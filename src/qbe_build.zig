@@ -405,6 +405,9 @@ pub const ModuleProgram = struct {
     /// A digest of everything above that decides the executable's bytes, the
     /// input of the build receipt (BUILD-NOOP-1).
     identity: []const u8,
+    /// MODULE-TEST-1: a shared library's wrapper C unit, linked in place of
+    /// the entry unit, or null for an executable.
+    library: ?[]const u8 = null,
 };
 
 /// The program-wide metadata unit of a module-built program.
@@ -440,7 +443,9 @@ pub fn linkModules(prepared: Prepared, parsed: options.Options, program: ModuleP
     const shared = try state.sharedUnit(program.shared);
     state.metadata_reused = shared.reused;
     try state.add(shared);
-    try state.add(try cache.object("entry", try outputs.entry(a, program.manifest, parsed.provider != null, std.mem.eql(u8, parsed.mode, release_fast)), .c_text));
+    if (program.library) |wrapper| {
+        try state.add(try cache.object("library", wrapper, .c_text));
+    } else try state.add(try cache.object("entry", try outputs.entry(a, program.manifest, parsed.provider != null, std.mem.eql(u8, parsed.mode, release_fast)), .c_text));
     if (v.boolean(v.get(program.manifest, "text_format"))) try state.add(try state.resolveFormat());
     state.runtime = try state.resolveRuntime();
     const codegen = seconds(context, codegen_start);

@@ -229,6 +229,10 @@ identical
   emission switches, into a variant every program shares
   (`<cache>/modules/standard-<hash>`). Every compile reads those interfaces
   (`--standard-interfaces`).
+- **Priority.** Once a compile has published its interface, it lowers its
+  own priority (nice 10), so its code generation, QBE and assembler runs
+  yield the cores to its dependents' compiles, which carry the build's
+  critical path. On the 200k chain this cut the cold build by 15–20%.
 - **The link** reads one record per module: its objects in link order, the
   digest of its share of the program-wide metadata unit, its entry and its
   warnings. It never reads a unit. Objects are ordered as a whole-program
@@ -247,6 +251,71 @@ identical
 The per-variant state lives in `<cache>/modules/<variant>/state.json`, and a
 build holds the variant's lock, so two builds of one program wait for each
 other rather than interleave.
+
+### Projects with a `mylang.json`
+
+A project with a `mylang.json` builds the same way. The per-module path reads
+the configuration and applies what it asks of a build:
+
+- **Budgets.** The discovered graph must fit the loader's source budgets
+  (`budgets` in `mylang.json`, else the defaults): module count, import
+  count, each file's bytes and all files' bytes.
+- **Import policy.** Every import edge must pass `import_policy`, decided as
+  the whole-program evaluator decides it (first matching rule, else the
+  default action).
+- **Warnings.** A `run` of a project whose `lint.warnings` is `deny` prints
+  its warnings and exits 1 without running the program.
+
+None of these settings changes what a module compiles to, so none of them
+keys a compile: editing `mylang.json` recompiles nothing. A configuration
+that does not load (exit 2), a graph over a budget (exit 1) and an import the
+policy denies (exit 3) go to the whole-program build, which reports them as
+it always has.
+
+## Checking a project module by module
+
+`mylang check` of a project entry that declares `main`, with no option but
+`--cache-dir`, checks it module by module over the same scheduler:
+
+```console
+$ mylang check main.my          # every module, once
+$ # a body edit in one module
+$ mylang check main.my          # that module alone; its warnings and the others' replayed
+```
+
+- Each stale module runs as `compile-module --check-only --ready`: it is
+  checked against its imports' interfaces, reads none of their emission
+  facts, emits nothing and writes its interface with an empty emission
+  section. A body edit re-checks one module; an interface edit re-checks the
+  modules that read it, and stops at any whose own interface held.
+- The warnings each module's check reported are replayed in the order the
+  modules were found, which is the order the whole-program check prints
+  them. `lint.warnings: "deny"` in `mylang.json` makes a check with a
+  warning exit 1.
+- The check's variants live beside the build's, under
+  `<cache-dir>/modules/` (default `.mylang-cache`, or `MYLANG_FRONTEND_CACHE`).
+- **A large first check is one pass.** When a project of at least 64
+  modules (`MYLANG_CHECK_SEED_MODULES`) is checked for the first time, the
+  whole-program check answers, because one pass is cheaper than a chain of
+  module checks. The check then starts a detached seeder (`MYLANG_CHECK_SEED=1`,
+  no standard streams) that builds the module records, and the next check
+  reads them. `MYLANG_CHECK_SEED=off` starts no seeder. While a seeder or
+  another check holds the variant, a check does not wait: the whole-program
+  check answers.
+- **Errors go to the whole-program check.** When a module does not check,
+  the whole-program check runs and prints its diagnostics exactly as before.
+  The modules that did check keep their records, so the check after the fix
+  re-checks only what changed. Any other option (`--diagnostics=json`,
+  `--report`, `--no-cache`, …), a library entry, a configuration, budget or
+  policy failure, and a warning one module's check reported in another's
+  text that the other's own check did not report, also go to the
+  whole-program check.
+
+`tests/module_check_oracle.py` checks every program of `tests/lang` and the
+fixtures both ways (`check --no-cache` is the whole-program check) and
+requires the same exit status and output; `tests/incremental_diff.py` compares
+the cached per-module check with the cold whole-program check over seeded
+mutations, most of which the check rejects.
 
 ## What is still whole-program
 

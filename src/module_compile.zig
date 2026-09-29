@@ -32,6 +32,9 @@ const builder = @import("module_interface_build.zig");
 const oracle = @import("module_interface_oracle.zig");
 const entry_adapter = @import("entry_adapter.zig");
 const project = @import("project.zig");
+const native_types = @import("native_types.zig");
+const project_compile = @import("project_compile.zig");
+const test_facts = @import("native_test_facts.zig");
 
 /// Failures of one module compile. `SourceError` means the module did not
 /// check (its diagnostics are on the returned compilation); `MissingEmission`
@@ -61,6 +64,9 @@ pub const Request = struct {
     /// emission section) without reading its imports' emission facts or
     /// emitting a unit.
     check_only: bool = false,
+    /// MODULE-TEST-1: also describe what a test run reads of the module
+    /// (`Units.tests`).
+    tests: bool = false,
 };
 
 /// A callback for a compile whose interface is final.
@@ -89,7 +95,13 @@ pub const Compiled = struct {
 
 /// The module's units: the lean executable manifest (`qbe-units-v1`) of the
 /// functions it emits, and its share of the program's runtime data.
-pub const Units = struct { manifest: []const u8 = "", parts: native_interface.Parts = .{} };
+pub const Units = struct {
+    manifest: []const u8 = "",
+    parts: native_interface.Parts = .{},
+    /// MODULE-TEST-1: the `module-tests-v1` document of a compile asked for
+    /// tests, else empty.
+    tests: []const u8 = "",
+};
 
 /// The four hashes one compile states for its module, lowercase hex, and the
 /// hashes of every interface the compile read: a later build may reuse this
@@ -192,9 +204,62 @@ pub fn compile(gpa: std.mem.Allocator, arena: std.mem.Allocator, request: Reques
     };
     out.units.parts = parts;
     out.report = report;
+    if (request.tests) out.units.tests = try testDocument(arena, .{ .compilation = compilation, .code = code, .emit = emit, .module = modules[own].name, .compiled = out });
     // An emission that never announced its facts (every unit stood in)
     // publishes the interface once it is done.
     if (!step.done) step.publish(report) catch |err| return step.failure orelse err;
+}
+
+/// What a module's test document is built from: its checked compilation,
+/// its lowered program and the functions it emits.
+const TestSource = struct { compilation: *project_compile.Compilation, code: bytecode.Program, emit: []const bool, module: []const u8, compiled: *Compiled };
+
+/// One test or benchmark the module emits, by symbol, with its export
+/// description.
+const TestRoot = struct { symbol: []const u8, @"export": @import("qbe_exports.zig").Export };
+
+/// MODULE-TEST-1: the `module-tests-v1` document of one module compile: its
+/// share of the test facts (as JSON text), the schema of its tests and
+/// benchmarks and their export descriptions, and the module's wire and codec
+/// tables (MODULE-TEST-2), everything a test run merges and links a test
+/// library from.
+fn testDocument(arena: std.mem.Allocator, from: TestSource) Error![]const u8 {
+    const share = from.compilation.testShare(arena, from.emit[0..from.compilation.program.?.functions.len]) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => return testFailure(arena, from.compiled, "test facts", err),
+    };
+    var roots: std.ArrayList(TestRoot) = .empty;
+    for (share.roots, 0..) |root, index| {
+        if (!root) continue;
+        const described = (@import("qbe_exports.zig").describeMarked(arena, from.code, index, share.roots) catch |err| return testFailure(arena, from.compiled, "test export", err)) orelse continue;
+        try roots.append(arena, .{ .symbol = test_facts.symbol(arena, from.code.functions[index].name) catch return error.OutOfMemory, .@"export" = described });
+    }
+    // MODULE-TEST-4: the module's own entry of the declaration contracts a
+    // test run discovers its tests from.
+    const modules = from.compilation.index.project.modules.items;
+    const own = moduleIndex(modules, from.module) orelse return error.InternalError;
+    const contract = from.compilation.index.contractModule(own) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => return testFailure(arena, from.compiled, "test contracts", err),
+    };
+    var layouts = native_types.Catalog.initRecords(arena, from.code.records) catch |err| return testFailure(arena, from.compiled, "test layouts", err);
+    const wire = (@import("qbe_wire.zig").describe(arena, &layouts) catch |err| return testFailure(arena, from.compiled, "test wire types", err)).types;
+    const codecs = @import("qbe_codecs.zig").describe(arena, from.code, &layouts) catch |err| return testFailure(arena, from.compiled, "test codecs", err);
+    return std.json.Stringify.valueAlloc(arena, .{
+        .version = "module-tests-v1",
+        .contract = contract,
+        .facts = share.facts,
+        .schema = share.schema,
+        .roots = roots.items,
+        .wire_types = wire,
+        .codecs = codecs,
+    }, .{});
+}
+
+fn testFailure(a: std.mem.Allocator, compiled: *Compiled, phase: []const u8, err: anyerror) Error {
+    if (err == error.OutOfMemory) return error.OutOfMemory;
+    compiled.problem = std.fmt.allocPrint(a, "cannot describe {s}: {s}", .{ phase, @errorName(err) }) catch return error.OutOfMemory;
+    return error.InternalError;
 }
 
 /// MODULE-SCHEDULE-5: what the module's interface is built from once the
@@ -317,7 +382,7 @@ fn interfacesOf(a: std.mem.Allocator, request: Request, modules: []const project
 
 /// Which merged-source inputs the positions of the emitted units fall in: the
 /// interface texts whose positions this compile's metadata read.
-fn placedIn(allocator: std.mem.Allocator, compilation: *const @import("project_compile.zig").Compilation, code: bytecode.Program, emit: []const bool) Error![]bool {
+fn placedIn(allocator: std.mem.Allocator, compilation: *const project_compile.Compilation, code: bytecode.Program, emit: []const bool) Error![]bool {
     const out = try allocator.alloc(bool, compilation.index.project.modules.items.len);
     @memset(out, false);
     // A check-only compile emitted nothing.
@@ -465,7 +530,7 @@ fn importHashes(allocator: std.mem.Allocator, inputs: builder.Inputs, read: Read
 
 /// What the emission set is chosen from.
 const Scope = struct {
-    compilation: *const @import("project_compile.zig").Compilation,
+    compilation: *const project_compile.Compilation,
     program: typed.Program,
     code: bytecode.Program,
     own: []const u8,

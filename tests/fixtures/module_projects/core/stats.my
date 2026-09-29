@@ -14,3 +14,7 @@ public def widest(boxes: list[core.shapes.Box]) -> int:
     for box in boxes:
         widths.append(box.width)
     return core.shapes.largest(widths)
+
+
+public def test_widest() -> bool:
+    return widest([core.shapes.Box(width=3, height=4), core.shapes.Box(width=5, height=2)]) == 5

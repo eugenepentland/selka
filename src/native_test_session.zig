@@ -125,6 +125,11 @@ pub const Session = struct {
         if (self.options.flags.no_cache) return;
         try argv.append(self.context.allocator, try std.fmt.allocPrint(self.context.allocator, "--cache-dir={s}", .{try self.objectsDirectory(self.context.allocator)}));
     }
+    /// MODULE-TEST-1: record one piece of per-module work (a module compile,
+    /// a test library link) in the trace, as a compiler child is recorded.
+    pub fn traceWork(self: Session, words: []const []const u8) void {
+        self.trace(words);
+    }
     /// Record one compiler child invocation when the trace variable is set.
     /// This is a test hook: it never changes control flow or receipt identity.
     fn trace(self: Session, argv: []const []const u8) void {
@@ -375,6 +380,34 @@ pub const Session = struct {
         // The native driver linked exactly one library for this graph. Record it
         // at the work site because its own report is a qbe-build-v1 receipt.
         if (self.work) |work| work.note(.links, 1, 0);
+        return self.executorFor(project, library, select_file);
+    }
+    /// MODULE-TEST-3: the executor of a test executable that links the
+    /// harness in: it is its own runner, and names no library.
+    pub fn linkedExecutor(self: Session, project: *Project, executable: []const u8, select_file: []const u8) Error!execute.Executor {
+        const a = self.context.allocator;
+        project.executor = try execute.Executor.init(self.context, project.manifest, executable, project.directory, executable);
+        project.executor.?.stress = self.options.flags.gc_stress;
+        project.select_file = try a.dupe(u8, select_file);
+        return project.executor.?;
+    }
+    /// The harness object a test executable links (MODULE-TEST-3), compiled
+    /// once per cache.
+    pub fn linkedHarness(self: Session) Error![]const u8 {
+        const runner = try execute.linkedRunner(self.context, .{
+            .cache = if (self.options.flags.no_cache) null else self.directory,
+            .temporary = self.temporary,
+            .zig = self.tools.zig,
+            .zig_stamp = self.hashes[1],
+        });
+        if (runner.compiled) self.trace(&.{ "native-test-runner", runner.path });
+        return runner.path;
+    }
+    /// The executor of a test library already linked at `library` for the
+    /// selection `select_file`: the harness (compiled once per cache) and the
+    /// graph's argument codec.
+    pub fn executorFor(self: Session, project: *Project, library: []const u8, select_file: []const u8) Error!execute.Executor {
+        const a = self.context.allocator;
         const runner = try execute.runner(self.context, .{
             .cache = if (self.options.flags.no_cache) null else self.directory,
             .temporary = project.directory,

@@ -87,7 +87,8 @@ const rss = struct {
     /// Observed (ReleaseFast `-Dcompiler-only`, 2026-09-24, after the incremental
     /// build frontend landed): the mylang executable compile peaked at 3.26-3.32G,
     /// over the 3G bound, so the install graph failed after writing the binary.
-    const compile: u64 = 3584 * mib;
+    /// Observed again (ReleaseFast, 2026-09-24, with per-module tests): 4.26G.
+    const compile: u64 = 4608 * mib;
     /// `zig build run`, which executes whatever program the caller names.
     /// Matches the 4 GiB ceiling `mylang run` gives a guest.
     const guest: u64 = 4096 * mib;
@@ -1101,6 +1102,14 @@ pub fn build(b: *std.Build) void {
     module_check.addArg("tests/lang");
     module_check.addArgs(&module_programs);
     module_compile_step.dependOn(&module_check.step);
+    // MODULE-TEST-1: the default `test` (module by module) of the same
+    // programs against `test --whole-program`.
+    const module_tests = driver(b, "python3 tests/module_test_oracle.py", rss.driver, "module_compile");
+    module_tests.addArgs(&.{ "python3", "tests/module_test_oracle.py" });
+    module_tests.addArtifactArg(exe);
+    module_tests.addArg("tests/lang");
+    module_tests.addArgs(&module_programs);
+    module_compile_step.dependOn(&module_tests.step);
     const module_diff = driver(b, "python3 tests/module_build_diff.py", rss.driver, "module_compile");
     module_diff.addArgs(&.{ "python3", "tests/module_build_diff.py", "--steps", "20" });
     module_diff.addArtifactArg(exe);

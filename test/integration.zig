@@ -1407,6 +1407,81 @@ test "check of a project re-checks only the modules whose source or read interfa
     try testing.expectError(error.FileNotFound, temporary.dir.access(testing.io, try std.fmt.allocPrint(a, "{s}/main.result.json", .{out}), .{}));
 }
 
+/// `mylang check main.my --cache-dir=cache` in `directory` with the
+/// environment variables `extra` added; the caller's arena owns the output.
+fn checkWithEnvironment(allocator: std.mem.Allocator, directory: []const u8, extra: []const [2][]const u8) !std.process.RunResult {
+    var environment: std.process.Environ.Map = .init(allocator);
+    try environment.put("HOME", directory);
+    try environment.put("PATH", "/usr/bin:/bin");
+    try forwardZigCache(&environment);
+    for (extra) |pair| try environment.put(pair[0], pair[1]);
+    const argv = [_][]const u8{ compiler_path, "check", try std.fs.path.join(allocator, &.{ directory, "main.my" }), try std.fmt.allocPrint(allocator, "--cache-dir={s}/cache", .{directory}) };
+    return std.process.run(allocator, testing.io, .{ .argv = &argv, .environ_map = &environment });
+}
+
+/// Whether the per-module check's program variant has saved its records.
+fn checkSeeded(allocator: std.mem.Allocator, root: std.Io.Dir) !bool {
+    const out = checkVariant(allocator, root) catch return false;
+    const state = try std.fmt.allocPrint(allocator, "{s}/../state.json", .{out});
+    root.access(testing.io, state, .{}) catch return false;
+    return true;
+}
+
+// spec: MODULE-CHECK-2
+test "a large project's first check is the whole-program check, and module records seeded after it answer the next" {
+    var arena_state = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena_state.deinit();
+    const a = arena_state.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    const warned = try std.mem.replaceOwned(u8, a, schedule_util, "    total = 0\n", "    spare = n\n    total = 0\n");
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "shapes.my", .data = schedule_shapes });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = warned });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport util\ndef main() -> int:\n    return util.score(4)\n" });
+    const whole = try projectCheck(a, directory, null);
+    // Three modules count as large here. The first check is the whole-program
+    // check's (with the seeder disabled, nothing runs behind it).
+    const first = try checkWithEnvironment(a, directory, &.{ .{ "MYLANG_CHECK_SEED_MODULES", "1" }, .{ "MYLANG_CHECK_SEED", "off" } });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, first.term);
+    try testing.expectEqualStrings(whole.stderr, first.stderr);
+    try testing.expect(!try checkSeeded(a, temporary.dir));
+    // The seeder (run here in the foreground) builds the records, printing nothing.
+    const seeded = try checkWithEnvironment(a, directory, &.{.{ "MYLANG_CHECK_SEED", "1" }});
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, seeded.term);
+    try testing.expectEqualStrings("", seeded.stderr);
+    try testing.expect(try checkSeeded(a, temporary.dir));
+    // The next check reads them: a body edit checks `util` alone.
+    const out = try checkVariant(a, temporary.dir);
+    try forgetResults(a, temporary.dir, out, &.{ "shapes", "util", "main" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = try std.mem.replaceOwned(u8, a, warned, "right=2", "right=3") });
+    const edited = try checkWithEnvironment(a, directory, &.{.{ "MYLANG_CHECK_SEED_MODULES", "1" }});
+    try testing.expectEqualStrings(whole.stderr, edited.stderr);
+    try temporary.dir.access(testing.io, try std.fmt.allocPrint(a, "{s}/util.result.json", .{out}), .{});
+    try testing.expectError(error.FileNotFound, temporary.dir.access(testing.io, try std.fmt.allocPrint(a, "{s}/main.result.json", .{out}), .{}));
+}
+
+// spec: MODULE-SCHEDULE-6
+test "a module compile builds its units and objects at a lower priority once its interface is published" {
+    var arena_state = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena_state.deinit();
+    const a = arena_state.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "shapes.my", .data = schedule_shapes });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = schedule_util });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport util\ndef main() -> int:\n    return util.score(4)\n" });
+    try testing.expect(builtModules(try projectBuild(a, directory, "prog", "cache", &.{}), "\"module_build\":{\"modules\":3,\"compiled\":3"));
+    const out = try checkVariant(a, temporary.dir);
+    const result = try temporary.dir.readFileAlloc(testing.io, try std.fmt.allocPrint(a, "{s}/util.result.json", .{out}), a, .limited(1 << 20));
+    const marker = "\"nice\":";
+    const at = (std.mem.indexOf(u8, result, marker) orelse return error.TestUnexpectedResult) + marker.len;
+    var end = at;
+    while (end < result.len and std.ascii.isDigit(result[end])) end += 1;
+    try testing.expect(try std.fmt.parseInt(usize, result[at..end], 10) >= 10);
+}
+
 // spec: MODULE-SCHEDULE-4
 test "a standard module is compiled once per cache and compiler for every program that imports it" {
     var arena_state = std.heap.ArenaAllocator.init(testing.allocator);
@@ -9812,7 +9887,8 @@ fn c4WorkStatus(line: []const u8, stage: []const u8) ![]const u8 {
 fn c4Invoke(entry: []const u8, cases_path: ?[]const u8, cache: []const u8, trace: []const u8, extra: []const []const u8) !std.process.RunResult {
     var args: std.ArrayList([]const u8) = .empty;
     defer args.deinit(testing.allocator);
-    try args.appendSlice(testing.allocator, &.{ compiler_path, "test", entry, "--json", "--report" });
+    // These fixtures count the whole-program session's children and work.
+    try args.appendSlice(testing.allocator, &.{ compiler_path, "test", entry, "--json", "--report", "--whole-program" });
     if (cases_path) |path| try args.appendSlice(testing.allocator, &.{ "--cases", path });
     try args.appendSlice(testing.allocator, extra);
     const cache_arg = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache});
@@ -10025,7 +10101,7 @@ test "C4 expectation argument budget and force invalidate while irrelevant envir
     defer env_args.deinit(testing.allocator);
     const cache_arg = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{project.cache});
     defer testing.allocator.free(cache_arg);
-    try env_args.appendSlice(testing.allocator, &.{ compiler_path, "test", project.entry, "--json", "--cases", project.cases_path, "--report", cache_arg });
+    try env_args.appendSlice(testing.allocator, &.{ compiler_path, "test", project.entry, "--json", "--cases", project.cases_path, "--report", "--whole-program", cache_arg });
     try env_args.appendSlice(testing.allocator, &tools);
     const changed_env = try spawnWithEnv(env_args.items, &environment);
     defer testing.allocator.free(changed_env.stdout);
@@ -10304,6 +10380,122 @@ fn scaleRun(paths: ScalePaths, extra: []const []const u8) !std.process.RunResult
     c4TraceReset(paths.trace);
     return c4Invoke(paths.entry, null, paths.cache, paths.trace, extra);
 }
+/// Run the chain's tests module by module (MODULE-TEST-1) with a fresh
+/// trace; the caller frees the result.
+fn moduleScaleRun(paths: ScalePaths) !std.process.RunResult {
+    c4TraceReset(paths.trace);
+    const cache_arg = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{paths.cache});
+    defer testing.allocator.free(cache_arg);
+    var args: std.ArrayList([]const u8) = .empty;
+    defer args.deinit(testing.allocator);
+    try args.appendSlice(testing.allocator, &.{ compiler_path, "test", paths.entry, "--json", cache_arg });
+    try args.appendSlice(testing.allocator, &tools);
+    var environment: std.process.Environ.Map = .init(testing.allocator);
+    defer environment.deinit();
+    try environment.put("MYLANG_TEST_TRACE", paths.trace);
+    try environment.put("HOME", std.fs.path.dirname(paths.entry) orelse ".");
+    try forwardZigCache(&environment);
+    return spawnWithEnv(args.items, &environment);
+}
+
+// spec: NATIVE-TEST-SCALE-1
+// spec: MODULE-TEST-1
+// spec: MODULE-TEST-4
+test "module by module, a body edit in module k compiles no module below k and re-runs exactly the tests that depend on it" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const paths = try scaleProject(&temp);
+    defer freeScalePaths(paths);
+    // Cold: every module compiled once, one library, every test run.
+    const cold = try moduleScaleRun(paths);
+    defer testing.allocator.free(cold.stdout);
+    defer testing.allocator.free(cold.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, cold.term);
+    try testing.expectEqual(@as(usize, 4), (try c4Counts(cold.stdout)).executed);
+    try testing.expectEqual(@as(usize, 5), try c4TraceCount(paths.trace, "compile-module "));
+    try testing.expectEqual(@as(usize, 1), try c4TraceCount(paths.trace, "module-link "));
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "native-test-compile"));
+    // The tests are discovered from the modules' own contracts: no declaration check.
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "list-interfaces"));
+    // The merged facts cover the tests' closure only: no untested function.
+    try testing.expect(try storedGraphMentions(paths.cache, "m0::f"));
+    try testing.expect(!try storedGraphMentions(paths.cache, "m2::unused"));
+
+    // Unchanged: no module compiled, no library linked, no compiler child.
+    const unchanged = try moduleScaleRun(paths);
+    defer testing.allocator.free(unchanged.stdout);
+    defer testing.allocator.free(unchanged.stderr);
+    const idle = try c4Counts(unchanged.stdout);
+    try testing.expectEqual(@as(usize, 0), idle.executed);
+    try testing.expectEqual(@as(usize, 4), idle.cached);
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "compile-module "));
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "module-link "));
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "list-interfaces"));
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "check-project"));
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "native-test-runner"));
+
+    // A body edit in module 1: module 1 is compiled, and the modules above it
+    // only because `f` is small enough to inline (its body is in the
+    // interface they read); module 0 is not. One library is linked, and the
+    // tests of modules 1, 2 and 3 run.
+    try scaleEdit(&temp, 1, "return m0.f(n) + 2 - 1");
+    const edited = try moduleScaleRun(paths);
+    defer testing.allocator.free(edited.stdout);
+    defer testing.allocator.free(edited.stderr);
+    const rerun = try c4Counts(edited.stdout);
+    try testing.expectEqual(@as(usize, 3), rerun.executed);
+    try testing.expectEqual(@as(usize, 1), rerun.cached);
+    try testing.expectEqual(@as(usize, 0), rerun.failed);
+    try testing.expectEqual(@as(usize, 1), try c4TraceCount(paths.trace, "compile-module m1\n"));
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "compile-module m0\n"));
+    try testing.expectEqual(@as(usize, 1), try c4TraceCount(paths.trace, "module-link "));
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "native-test-runner"));
+
+    // An edit that no test reaches compiles its module and runs nothing.
+    const original = try scaleModule(testing.allocator, 2, "");
+    defer testing.allocator.free(original);
+    const untouched = try std.mem.replaceOwned(u8, testing.allocator, original, "return n * 2", "return n * 3");
+    defer testing.allocator.free(untouched);
+    try writeProjectFile(&temp, "m2.my", untouched);
+    const unreached = try moduleScaleRun(paths);
+    defer testing.allocator.free(unreached.stdout);
+    defer testing.allocator.free(unreached.stderr);
+    const quiet = try c4Counts(unreached.stdout);
+    try testing.expectEqual(@as(usize, 0), quiet.executed);
+    try testing.expectEqual(@as(usize, 4), quiet.cached);
+    try testing.expectEqual(@as(usize, 1), try c4TraceCount(paths.trace, "compile-module m2\n"));
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "compile-module m1\n"));
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "module-link "));
+}
+
+// spec: MODULE-TEST-3
+test "module by module, a trapping and a printing test report what the whole-program run reports" {
+    var arena_state = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena_state.deinit();
+    const a = arena_state.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = "module util\npublic def ratio(n: int, d: int) -> int:\n    return n // d\npublic def test_ratio() -> bool:\n    return ratio(6, 0) == 1\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport util\ndef main() -> int:\n    return 0\npublic def test_said(out: Stream) -> bool effects(output):\n    out.print(\"said\")\n    return util.ratio(4, 2) == 3\n" });
+    const entry = try std.fs.path.join(a, &.{ directory, "main.my" });
+    var module_args: std.ArrayList([]const u8) = .empty;
+    try module_args.appendSlice(a, &.{ "test", entry, "--cache-dir", try std.fs.path.join(a, &.{ directory, "cm" }) });
+    try module_args.appendSlice(a, &tools);
+    var whole_args: std.ArrayList([]const u8) = .empty;
+    try whole_args.appendSlice(a, &.{ "test", entry, "--whole-program", "--cache-dir", try std.fs.path.join(a, &.{ directory, "cw" }) });
+    try whole_args.appendSlice(a, &tools);
+    const module = try runInterfaces(module_args.items);
+    defer freeRun(module);
+    const whole = try runInterfaces(whole_args.items);
+    defer freeRun(whole);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, module.term);
+    try testing.expectEqual(whole.term, module.term);
+    try testing.expect(std.mem.indexOf(u8, module.stdout, "said") != null);
+    try testing.expect(std.mem.indexOf(u8, module.stdout, "R_") != null);
+    try testing.expectEqualStrings(whole.stdout, module.stdout);
+}
+
 /// Whether any stored checked-facts graph under `cache` mentions `needle`.
 fn storedGraphMentions(cache: []const u8, needle: []const u8) !bool {
     const directory_path = try std.fs.path.join(testing.allocator, &.{ cache, "graphs" });
@@ -10320,7 +10512,7 @@ fn storedGraphMentions(cache: []const u8, needle: []const u8) !bool {
     return false;
 }
 
-// spec: NATIVE-TEST-SCALE-1
+// spec-case: NATIVE-TEST-SCALE-1
 // spec: NATIVE-TEST-FACTS-2
 // spec-case: NATIVE-TEST-STABLE-1
 // spec-case: NATIVE-TEST-INTERFACES-1

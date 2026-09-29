@@ -22,7 +22,7 @@ pub const usage =
     \\usage: mylang compile-module <entry.my> --module=NAME --interfaces=DIR --out=DIR --arenas=on|off
     \\                             [--cache-dir=DIR] [--drop-debug] [--drop-step-checks]
     \\                             [--drop-frame-checks] [--objects [--qbe=PATH] [--zig=PATH]]
-    \\                             [--ready] [--standard-interfaces=DIR] [-- BUILD-OPTIONS]
+    \\                             [--ready] [--standard-interfaces=DIR] [--tests] [-- BUILD-OPTIONS]
     \\       mylang compile-module <entry.my> --module=NAME --interfaces=DIR --out=DIR --check-only
     \\                             [--cache-dir=DIR] [--ready] [--standard-interfaces=DIR]
     \\       mylang link-modules <entry.my> --units=DIR -o OUT [--cache-dir=DIR] [--mode MODE]
@@ -32,6 +32,7 @@ pub const usage =
     \\                  --ready (the per-module build's scheduler) signals the interface on stderr
     \\                  as soon as it is written, and writes NAME.result.json and NAME.shared.json
     \\                  in place of NAME.units.json; BUILD-OPTIONS go to the build of the objects.
+    \\                  --tests also writes OUT/NAME.tests.json, what a test run merges.
     \\                  --check-only checks NAME, writes DIR/NAME.myi (no emission facts) and
     \\                  OUT/NAME.result.json with its warnings, and emits nothing.
     \\  link-modules    merge every OUT/*.units.json into one manifest and build it into OUT
@@ -61,6 +62,8 @@ const Options = struct {
     build_args: ?[]const []const u8 = null,
     /// `--check-only` (MODULE-CHECK-1): check and publish the interface only.
     check_only: bool = false,
+    /// `--tests` (MODULE-TEST-1): also write the module's test document.
+    tests: bool = false,
 };
 
 fn parse(args: []const []const u8) ?Options {
@@ -75,6 +78,8 @@ fn parse(args: []const []const u8) ?Options {
             options.ready = true;
         } else if (std.mem.eql(u8, arg, "--check-only")) {
             options.check_only = true;
+        } else if (std.mem.eql(u8, arg, "--tests")) {
+            options.tests = true;
         } else if (std.mem.startsWith(u8, arg, "--standard-interfaces=")) {
             options.standard = arg["--standard-interfaces=".len..];
         } else if (std.mem.startsWith(u8, arg, "--module=")) {
@@ -142,6 +147,7 @@ pub fn compileModule(process: std.process.Init, args: []const []const u8, identi
         .reuse = if (options.check_only) null else .{ .store = &store, .lean = true, .executable = true },
         .ready = if (options.ready) .{ .context = &publish, .run = Publish.run } else null,
         .check_only = options.check_only,
+        .tests = options.tests and !options.check_only,
     };
     compile_module.compile(process.gpa, a, request, &compiled) catch |err| switch (err) {
         error.SourceError => {
@@ -154,12 +160,19 @@ pub fn compileModule(process: std.process.Init, args: []const []const u8, identi
             compiled.deinit();
             return 1;
         },
+        error.InternalError => {
+            if (compiled.problem.len == 0) return error.InternalError;
+            try stderr(process.io, try std.fmt.allocPrint(a, "mylang compile-module: {s}\n", .{compiled.problem}));
+            compiled.deinit();
+            return 1;
+        },
         else => return err,
     };
     defer compiled.deinit();
     std.Io.Dir.cwd().createDirPath(process.io, out) catch return error.WriteFailed;
     if (!options.ready) try publish.write(&compiled);
     if (options.check_only) return checked(context, .{ .out = out, .module = module, .is_entry = is_entry, .compiled = &compiled, .objects = null });
+    if (compiled.units.tests.len != 0) try writeAtomic(context, try std.fs.path.join(a, &.{ out, try std.fmt.allocPrint(a, "{s}.tests.json", .{module}) }), compiled.units.tests);
     const units_path = try std.fs.path.join(a, &.{ out, try std.fmt.allocPrint(a, "{s}.units.json", .{module}) });
     if (!options.ready) try writeAtomic(context, units_path, try unitsDocument(a, module, is_entry, &compiled));
     const objects: ?[]const u8 = if (options.objects) try moduleObjects(process, .{ .options = options, .entry = options.path, .module = module, .manifest = compiled.units.manifest }) else null;
@@ -191,6 +204,11 @@ const Publish = struct {
         try self.write(compiled);
         const hashes = compiled.hashes;
         try stderr(self.context.io, try std.fmt.allocPrint(self.context.arena, "{s} {s} {s} {s}\n", .{ ready_marker, hashes.interface, hashes.emission, hashes.positions }));
+        // MODULE-SCHEDULE-6: what is left (units, QBE, the assembler) is no
+        // longer on the build's critical path, which runs through the
+        // dependents' compiles; yield the cores to them. A process already
+        // nicer than that stays as it is.
+        if (niceness() < background_priority) _ = std.os.linux.syscall3(.setpriority, 0, 0, background_priority);
     }
 
     fn write(self: *Publish, compiled: *const compile_module.Compiled) Error!void {
@@ -246,6 +264,17 @@ fn openStore(context: Context, site: StoreSite) Error!fragments.Store {
     return fragments.Store.open(context.arena, context.io, absolute, site.identity, label);
 }
 
+/// MODULE-SCHEDULE-6: the nice value a `--ready` compile and the tools it
+/// starts run at once its interface is published.
+pub const background_priority: usize = 10;
+
+/// This process's nice value (the kernel's `getpriority` answers 20 minus it).
+fn niceness() usize {
+    const raw = std.os.linux.syscall2(.getpriority, 0, 0);
+    if (raw > 40) return 0;
+    return 20 -| raw;
+}
+
 /// The line a `--ready` compile writes to standard error once its interface
 /// is final, followed by its interface, emission and positions hashes.
 pub const ready_marker = "\x1emylang-module-ready";
@@ -296,6 +325,8 @@ fn writeResult(context: Context, site: ResultSite) Error!void {
         .entry = entry,
         .shared = &std.fmt.bytesToHex(digest, .lower),
         .objects = site.objects,
+        // MODULE-SCHEDULE-6: the nice value the units and objects were built at.
+        .nice = niceness(),
     }, .{});
     try writeAtomic(context, try std.fs.path.join(a, &.{ site.out, try std.fmt.allocPrint(a, "{s}.result.json", .{site.module}) }), result);
 }

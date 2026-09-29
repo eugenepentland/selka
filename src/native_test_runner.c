@@ -129,6 +129,17 @@ static MylangWireNode *read_nodes(FILE *input, uint64_t count) {
     }
     return nodes;
 }
+#ifdef MYLANG_TEST_LINKED
+/* MODULE-TEST-3: the harness linked into one test executable with the guest
+   objects calls the adapter directly; there is no library to load, and so no
+   relocation of the guest's tables in every test process. */
+static Invoke load_invoke(void **library_out, const char *library_path) {
+    (void)library_path;
+    *library_out = NULL;
+    return mylang_native_call_codecs_v1;
+}
+#define dlclose(library) ((void)(library))
+#else
 static Invoke load_invoke(void **library_out, const char *library_path) {
     void *library = dlopen(library_path, RTLD_NOW | RTLD_LOCAL);
     if (!library) fail(dlerror());
@@ -140,6 +151,7 @@ static Invoke load_invoke(void **library_out, const char *library_path) {
     *library_out = library;
     return invoke;
 }
+#endif
 /* Run one copied-value call and normalize its status: a nonzero ABI return
    with no guest status recorded is a host failure, while a guest trap keeps
    its own status. Returns 0 exactly when the call produced a value. */

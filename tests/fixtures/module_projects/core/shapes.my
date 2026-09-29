@@ -20,3 +20,7 @@ public def largest[T: integer](values: list[T]) -> T:
         if value > best:
             best = value
     return best
+
+
+public def test_area() -> bool:
+    return area(Box(width=3, height=4)) == 12
