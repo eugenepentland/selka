@@ -78,7 +78,10 @@ const Merge = struct {
         const glued = if (self.shared.owners.count() != 0) glue.render(a, try sortedBlocks(glue.Block, a, self.shared.glue)) catch return error.OutOfMemory else "";
         try object.put(a, "runtime_data", .{ .string = try std.mem.concat(a, u8, &.{ described, rendered, owned, glued }) });
         try object.put(a, "embeds", try unionValue(a, self.shared.embeds));
-        try object.put(a, "codecs", try unionValue(a, self.shared.codecs));
+        try object.put(a, "codecs", @import("module_codecs.zig").merge(a, self.shared.codecs.items) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            else => return error.Conflict,
+        });
         try object.put(a, "wire_types", try unionValue(a, self.shared.wire));
         try object.put(a, text_format, .{ .bool = self.text });
         try object.put(a, "host", try self.host.value(a));
@@ -92,7 +95,7 @@ const Shared = struct {
     owners: Map(std.json.Value) = .empty,
     glue: Map([]const u8) = .empty,
     embeds: Map(std.json.Value) = .empty,
-    codecs: Map(std.json.Value) = .empty,
+    codecs: std.ArrayList(std.json.Value) = .empty,
     wire: Map(std.json.Value) = .empty,
 
     fn add(self: *Shared, a: std.mem.Allocator, file: std.json.Value, manifest: std.json.Value) Error!void {
@@ -104,7 +107,7 @@ const Shared = struct {
         try unionRows(a, &self.owners, field(file, "owners"), "name");
         try blocks(a, &self.glue, field(file, "glue"));
         try unionRows(a, &self.embeds, field(manifest, "embeds"), "symbol");
-        try unionRows(a, &self.codecs, field(manifest, "codecs"), "name");
+        try self.codecs.append(a, field(manifest, "codecs"));
         try unionRows(a, &self.wire, field(manifest, "wire_types"), "name");
     }
 

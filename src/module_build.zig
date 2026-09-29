@@ -110,9 +110,9 @@ fn mergedSchema(allocator: std.mem.Allocator, entry: []const u8, schemas: []cons
     var types: Map(std.json.Value) = .empty;
     var exported: Map(std.json.Value) = .empty;
     for (schemas) |schema| {
-        for (items(field(schema, native_test_contracts.functions_key))) |item| _ = try putFirst(std.json.Value, allocator, &functions, stringOf(field(item, "name")), item);
-        for (items(field(schema, "types"))) |item| _ = try putFirst(std.json.Value, allocator, &types, stringOf(field(item, "name")), item);
-        for (items(field(schema, "exports"))) |item| _ = try putFirst(std.json.Value, allocator, &exported, stringOf(item), item);
+        for (items(field(schema, native_test_contracts.functions_key))) |item| _ = try language.module_codecs.insert(allocator, &functions, stringOf(field(item, "name")), item);
+        for (items(field(schema, "types"))) |item| _ = try language.module_codecs.insert(allocator, &types, stringOf(field(item, "name")), item);
+        for (items(field(schema, "exports"))) |item| _ = try language.module_codecs.insert(allocator, &exported, stringOf(item), item);
     }
     var document: std.json.ObjectMap = .empty;
     try document.put(allocator, "version", .{ .string = "language-schema-v1" });
@@ -125,79 +125,10 @@ fn mergedSchema(allocator: std.mem.Allocator, entry: []const u8, schemas: []cons
     return std.json.Stringify.valueAlloc(allocator, std.json.Value{ .object = document }, .{});
 }
 
-/// MODULE-TEST-2: the codec metadata of every module merged the way
-/// `qbe_codecs.canonical` orders one program's: types by name with their
-/// descriptors, codecs by domain, callbacks by symbol, and every method
-/// numbered by its callback's position.
-fn mergedCodecs(allocator: std.mem.Allocator, types: Map(std.json.Value), codecs: Map(std.json.Value), callbacks: Map(std.json.Value), validations: Map(std.json.Value)) !std.json.Value {
-    const sorted_types = try sortedValues(allocator, types);
-    var type_items = std.json.Array.init(allocator);
-    var descriptor_items = std.json.Array.init(allocator);
-    for (sorted_types) |pair| {
-        try type_items.append(pair.array.items[0]);
-        try descriptor_items.append(pair.array.items[1]);
-    }
-    const sorted_callbacks = try sortedValues(allocator, callbacks);
-    var callback_items = std.json.Array.init(allocator);
-    var positions: Map(usize) = .empty;
-    for (sorted_callbacks, 0..) |callback, index| {
-        var numbered = callback;
-        numbered.object = try callback.object.clone(allocator);
-        try numbered.object.put(allocator, "index", .{ .integer = @intCast(index) });
-        try callback_items.append(numbered);
-        try positions.put(allocator, stringOf(field(callback, "symbol")), index);
-    }
-    var codec_items = std.json.Array.init(allocator);
-    for (try sortedValues(allocator, codecs)) |codec| {
-        var numbered = codec;
-        numbered.object = try codec.object.clone(allocator);
-        for ([_][]const u8{ "decode", "encode" }) |key| {
-            const at = positions.get(stringOf(field(codec, key))) orelse return error.InvalidNativeManifest;
-            try numbered.object.put(allocator, key, .{ .integer = @intCast(at) });
-        }
-        try codec_items.append(numbered);
-    }
-    var table: std.json.ObjectMap = .empty;
-    try table.put(allocator, "types", .{ .array = type_items });
-    try table.put(allocator, "descriptors", .{ .array = descriptor_items });
-    try table.put(allocator, "codecs", .{ .array = codec_items });
-    try table.put(allocator, "callbacks", .{ .array = callback_items });
-    var validation_items = std.json.Array.init(allocator);
-    for (try sortedValues(allocator, validations), 0..) |validation, index| {
-        var numbered = validation;
-        numbered.object = try validation.object.clone(allocator);
-        try numbered.object.put(allocator, "index", .{ .integer = @intCast(index) });
-        try validation_items.append(numbered);
-    }
-    try table.put(allocator, "validations", .{ .array = validation_items });
-    return .{ .object = table };
-}
-
 fn arrayOf(allocator: std.mem.Allocator, values: []const std.json.Value) !std.json.Array {
     var out = std.json.Array.init(allocator);
     try out.appendSlice(values);
     return out;
-}
-
-fn unnumbered(a: std.mem.Allocator, value: std.json.Value) !std.json.Value {
-    if (value != .object) return error.InvalidNativeManifest;
-    var out = value;
-    out.object = try value.object.clone(a);
-    _ = out.object.orderedRemove("index");
-    return out;
-}
-
-fn putFirst(comptime T: type, a: std.mem.Allocator, map: *Map(T), name: []const u8, value: T) !bool {
-    if (name.len == 0) return error.InvalidNativeManifest;
-    const slot = try map.getOrPut(a, name);
-    if (!slot.found_existing) {
-        slot.value_ptr.* = value;
-        return true;
-    }
-    const previous = try std.json.Stringify.valueAlloc(a, slot.value_ptr.*, .{});
-    const next = try std.json.Stringify.valueAlloc(a, value, .{});
-    if (!std.mem.eql(u8, previous, next)) return error.InvalidNativeManifest;
-    return false;
 }
 
 fn sortedValues(a: std.mem.Allocator, map: Map(std.json.Value)) ![]const std.json.Value {
@@ -1003,44 +934,18 @@ const Build = struct {
         var roots: Map(std.json.Value) = .empty;
         var schemas: std.ArrayList(std.json.Value) = .empty;
         var wire: Map(std.json.Value) = .empty;
-        var codec_types: Map(std.json.Value) = .empty;
-        var codecs: Map(std.json.Value) = .empty;
-        var callbacks: Map(std.json.Value) = .empty;
-        var validations: Map(std.json.Value) = .empty;
+        var codec_tables: std.ArrayList(std.json.Value) = .empty;
         var contracts: Map(std.json.Value) = .empty;
         for (self.nodes.items) |node| {
             const bytes = self.context.read(try self.outFile(node.name, ".tests.json")) catch return null;
             const document = std.json.parseFromSliceLeaky(std.json.Value, a, bytes, .{ .allocate = .alloc_always }) catch return null;
-            _ = try putFirst(std.json.Value, a, &contracts, node.name, field(document, "contract"));
+            _ = try language.module_codecs.insert(a, &contracts, node.name, field(document, "contract"));
             const share = std.json.parseFromSliceLeaky(test_facts.Share, a, stringOf(field(document, "facts")), .{ .ignore_unknown_fields = true, .allocate = .alloc_always }) catch return null;
             try shares.append(a, share);
-            for (items(field(document, "roots"))) |root| _ = try putFirst(std.json.Value, a, &roots, stringOf(field(field(root, "export"), "name")), root);
+            for (items(field(document, "roots"))) |root| _ = try language.module_codecs.insert(a, &roots, stringOf(field(field(root, "export"), "name")), root);
             try schemas.append(a, std.json.parseFromSliceLeaky(std.json.Value, a, stringOf(field(document, "schema")), .{ .allocate = .alloc_always }) catch return null);
-            for (items(field(document, "wire_types"))) |item| _ = try putFirst(std.json.Value, a, &wire, stringOf(field(item, "name")), item);
-            const table = field(document, "codecs");
-            const types = items(field(table, "types"));
-            const descriptors = items(field(table, "descriptors"));
-            if (types.len != descriptors.len) return null;
-            for (types, descriptors) |item, descriptor| {
-                var pair = std.json.Array.init(a);
-                try pair.appendSlice(&.{ item, descriptor });
-                _ = try putFirst(std.json.Value, a, &codec_types, stringOf(field(item, "name")), .{ .array = pair });
-            }
-            // Method numbers are positions in the module's own callbacks;
-            // codecs name their methods by symbol until the merge renumbers.
-            const own = items(field(table, "callbacks"));
-            for (items(field(table, "codecs"))) |codec| {
-                var named = codec;
-                named.object = try codec.object.clone(a);
-                for ([_][]const u8{ "decode", "encode" }) |key| {
-                    const at: usize = @intCast(field(codec, key).integer);
-                    if (at >= own.len) return null;
-                    try named.object.put(a, key, field(own[at], "symbol"));
-                }
-                _ = try putFirst(std.json.Value, a, &codecs, stringOf(field(codec, "domain")), named);
-            }
-            for (own) |callback| _ = try putFirst(std.json.Value, a, &callbacks, stringOf(field(callback, "symbol")), try unnumbered(a, callback));
-            for (items(field(table, "validations"))) |validation| _ = try putFirst(std.json.Value, a, &validations, stringOf(field(validation, "symbol")), try unnumbered(a, validation));
+            for (items(field(document, "wire_types"))) |item| _ = try language.module_codecs.insert(a, &wire, stringOf(field(item, "name")), item);
+            try codec_tables.append(a, field(document, "codecs"));
         }
         const entry = language.native_test_facts.symbol(a, try std.fmt.allocPrint(a, "{s}::main", .{self.entry.name})) catch return error.OutOfMemory;
         const schema = try mergedSchema(a, self.entry.name, schemas.items);
@@ -1052,7 +957,7 @@ const Build = struct {
         try manifest.put(a, "version", .{ .string = "interface-contracts-v2" });
         try manifest.put(a, "modules", .{ .array = try arrayOf(a, try sortedValues(a, contracts)) });
         const table: std.json.Value = .{ .array = try arrayOf(a, try sortedValues(a, wire)) };
-        const parts: LibraryParts = .{ .roots = roots, .schema = schema, .wire = table, .codecs = try mergedCodecs(a, codec_types, codecs, callbacks, validations) };
+        const parts: LibraryParts = .{ .roots = roots, .schema = schema, .wire = table, .codecs = try language.module_codecs.merge(a, codec_tables.items) };
         return .{ .graph = graph, .library = parts, .contracts = .{ .object = manifest } };
     }
 

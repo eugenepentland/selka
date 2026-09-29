@@ -90,6 +90,7 @@ test {
     // so the QBE-TEXT/QBE-LIST checks that pin them existed without running.
     _ = @import("qbe_wire.zig");
     _ = @import("qbe_codecs.zig");
+    _ = @import("module_codecs.zig");
 
     _ = @import("cli_grants.zig");
 
