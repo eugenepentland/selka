@@ -15,6 +15,25 @@ fn exercise() !bool {
         \\record Pair:
         \\    left: list[int]
         \\    right: list[int]
+        \\record Nested:
+        \\    pair: Pair
+        \\    choice: Result[bytes, int]
+        \\    array: [2]bytes
+        \\    wide: [17]bytes
+        \\    plain: [10000]int
+        \\    nested: [1][1]Result[bytes, int]
+        \\record Node:
+        \\    next: Option[Node]
+        \\    label: bytes
+        \\record Raw:
+        \\    file: File
+        \\record Held:
+        \\    values: DictValues[int, int]
+        \\    tail: Option[Held]
+        \\union HeldChoice:
+        \\    none,
+        \\    held: DictValues[int, int],
+        \\    owned: list[int]
         \\def main() -> int:
         \\    pair = Pair([1], [2])
         \\    return len(pair.left)
@@ -61,7 +80,10 @@ fn compileRun(directory: std.Io.Dir) !bool {
     };
     var argv: std.ArrayList([]const u8) = .empty;
     defer argv.deinit(t.allocator);
-    try argv.appendSlice(t.allocator, &.{ @import("native_test_options").zig_path, "cc", "-std=c11", "-Werror", "-O1", "-fsanitize=undefined", "-ffunction-sections", "-fdata-sections", "-Wl,--gc-sections", "-DMYL_NATIVE_RC=1" });
+    try argv.appendSlice(t.allocator, &.{
+        @import("native_test_options").zig_path, "cc",              "-std=c11",          "-Werror",           "-O1",                "-fsanitize=undefined",
+        "-ffunction-sections",                   "-fdata-sections", "-Wl,--gc-sections", "-DMYL_NATIVE_RC=1", "-DMYL_RC_CHECKED=1",
+    });
     try argv.appendSlice(t.allocator, sources);
     try argv.appendSlice(t.allocator, &.{ "harness.c", "-o", "harness" });
     const build = try std.process.run(t.allocator, t.io, .{ .argv = argv.items, .cwd = .{ .dir = directory } });
@@ -80,6 +102,7 @@ fn compileRun(directory: std.Io.Dir) !bool {
 
 // spec-case: RC-COUNTS-1
 // spec-case: RC-LAYOUT-1
+// spec-case: RC-STARTUP-IMAGE-1
 test "generated glue refuses aliased u32 count overflow before publication and rolls back loans" {
     try t.expect(try exercise());
 }

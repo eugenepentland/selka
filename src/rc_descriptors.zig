@@ -9,6 +9,13 @@ const descriptors = @import("native_descriptors.zig");
 pub const Error = native.Error;
 /// The generated C module registered before guest construction begins.
 pub const module_symbol = "myl_rc_generated_module";
+/// Persisted semantic block format required by the image renderer.
+pub const image_block_marker = "/* mylang-rc-image-block-v1 */";
+
+/// Reject pre-image ownership blocks before assembling an executable image.
+pub fn imageBlock(text: []const u8) bool {
+    return std.mem.indexOf(u8, text, image_block_marker) != null;
+}
 
 const Item = struct { ty: typed.Type, name: []const u8, body: bool = false, unique_body: bool = false };
 
@@ -31,12 +38,15 @@ pub const Block = struct { name: []const u8, text: []const u8, unique_body: bool
 /// Independent shape definitions with no per-module registration table.
 pub fn blocks(a: std.mem.Allocator, catalog: *native.Catalog) Error![]Block {
     const items = try collect(a, catalog);
+    var analyzer = try @import("rc_image.zig").Analyzer.init(a, catalog);
+    defer analyzer.deinit(a);
     const out = try a.alloc(Block, items.len);
     for (items, out) |item, *block| {
         var output: std.Io.Writer.Allocating = .init(a);
         const layout = if (item.body) try catalog.heapLayout(item.ty) else try catalog.layout(item.ty);
         defer if (item.body) catalog.releaseLayout(layout);
         try emit(a, &output.writer, catalog, item, layout);
+        try @import("rc_image.zig").emit(a, &output.writer, &analyzer, .{ .ty = item.ty, .name = item.name, .layout = layout, .unique_body = item.unique_body });
         block.* = .{ .name = item.name, .text = try output.toOwnedSlice(), .unique_body = item.unique_body };
     }
     return out;
@@ -45,14 +55,30 @@ pub fn blocks(a: std.mem.Allocator, catalog: *native.Catalog) Error![]Block {
 /// Render one program-wide shape union and exactly one registration table.
 // twin-drift-ok: Ownership shapes require both shape/type declarations and an RC registration table; value renderers have neither.
 pub fn render(allocator: std.mem.Allocator, items: []const Block) Error![]u8 {
+    for (items) |item| if (!imageBlock(item.text)) return error.InvalidType;
     var output: std.Io.Writer.Allocating = .init(allocator);
     defer output.deinit();
     const writer = &output.writer;
-    writer.writeAll("#include \"native_rc.h\"\n") catch return error.OutOfMemory;
-    for (items) |item| writer.print("extern const myl_native_type {s};\nextern const myl_rc_shape {s}_rc;\n", .{ item.name, item.name }) catch return error.OutOfMemory;
+    writer.writeAll("#include \"native_rc_internal.h\"\n") catch return error.OutOfMemory;
+    for (items) |item| writer.print("extern const myl_native_type {s};\nextern const myl_rc_shape {s}_rc;\nextern const myl_rc_shape_entry {s}_rc_image_entry;\n", .{ item.name, item.name, item.name }) catch return error.OutOfMemory;
     for (items) |item| writer.writeAll(item.text) catch return error.OutOfMemory;
     try module(writer, items);
+    try image(writer, items);
     return output.toOwnedSlice();
+}
+
+fn image(writer: *std.Io.Writer, items: []const Block) Error!void {
+    writer.writeAll("static const myl_rc_shape_entry *const myl_rc_generated_image_shapes[] = {\n") catch return error.OutOfMemory;
+    for (items) |item| writer.print(" &{s}_rc_image_entry,\n", .{item.name}) catch return error.OutOfMemory;
+    writer.writeAll("};\nstatic const myl_rc_binding myl_rc_generated_image_bindings[] = {\n") catch return error.OutOfMemory;
+    for (items) |item| writer.print(" {s}_RC_IMAGE_BINDING,\n", .{item.name}) catch return error.OutOfMemory;
+    writer.writeAll("};\nenum {myl_rc_image_depth_0 = 0};\n") catch return error.OutOfMemory;
+    for (items, 0..) |item, index| writer.print("enum {{myl_rc_image_depth_{d} = {s}_RC_IMAGE_DEPTH > myl_rc_image_depth_{d} ? {s}_RC_IMAGE_DEPTH : myl_rc_image_depth_{d}}};\n", .{
+        index + 1, item.name, index, item.name, index,
+    }) catch return error.OutOfMemory;
+    writer.print("const myl_rc_image myl_rc_generated_image = {{.abi=MYL_RC_IMAGE_ABI_VERSION," ++
+        ".shapes=myl_rc_generated_image_shapes,.shape_count={d},.bindings=myl_rc_generated_image_bindings," ++
+        ".descriptor_count={d},.depth=myl_rc_image_depth_{d}}};\n", .{ items.len, items.len, items.len }) catch return error.OutOfMemory;
 }
 
 fn collect(a: std.mem.Allocator, catalog: *native.Catalog) Error![]const Item {

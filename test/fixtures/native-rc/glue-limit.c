@@ -1,5 +1,6 @@
 // spec-case: RC-COUNTS-1
 // spec-case: RC-LAYOUT-1
+// spec-case: RC-STARTUP-IMAGE-1
 #include "glue.c"
 #include <assert.h>
 #include <stdint.h>
@@ -9,7 +10,10 @@ static myl_rc_object *header(void *p) { return (myl_rc_object *)p - 1; }
 int main(void) {
     myl_native_heap heap = {.limit = 64u << 20};
     assert(myl_rc_storage_init(&heap) == MYL_RC_OK);
-    assert(myl_rc_module_register(&heap, &myl_rc_generated_module) == MYL_RC_OK);
+    assert(myl_rc_module_register_image(&heap, &myl_rc_generated_module, &myl_rc_generated_image) == MYL_RC_OK);
+    assert(heap.rc->metadata.batches->image == &myl_rc_generated_image);
+    assert(myl_rc_shape_find(&heap, &PAIR_SYMBOL_rc) == &PAIR_SYMBOL_rc_image_entry.shape);
+    assert(myl_rc_binding_find(&heap, &PAIR_SYMBOL)->flat.count == 2);
     void *leaf = myl_rc_storage_bytes(&heap, 8, 0);
     void *neighbor = myl_rc_storage_bytes(&heap, 8, 0);
     assert(leaf && neighbor && !((uintptr_t)leaf % _Alignof(max_align_t)));

@@ -383,3 +383,15 @@ test "a link keeps one copy of a specialization two modules emitted, and refuses
     );
     try t.expectError(error.Incomplete, language.module_link.merge(a, &.{ entry, elsewhere }));
 }
+
+// spec-case: RC-STARTUP-IMAGE-1
+// spec-case: MODULE-COMPILE-3
+test "module linker refuses a pre-image RC block with the unchanged module ABI" {
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const old = try unitsFile(a,
+        \\{"descriptors":[],"renderers":[],"owners":[{"name":"old","text":"const myl_rc_shape old_rc = {0};","unique_body":false}],"manifest":{"runtime_contract":"rc-v4","store":"/s","entry":"main","host":{},"functions":[]}}
+    );
+    try t.expectError(error.Incomplete, language.module_link.merge(a, &.{old}));
+}

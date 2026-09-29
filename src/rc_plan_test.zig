@@ -863,3 +863,30 @@ test "RC-SEMANTIC-LOWERING-1 borrowed fields loan before semantic publication" {
     try t.expect(std.mem.indexOf(u8, text, "# RC-GLUE-1 publish") != null);
     try t.expect(try at(text, "# RC-GLUE-1 loan") < try at(text, "# RC-GLUE-1 publish"));
 }
+
+// spec-case: RC-STARTUP-IMAGE-1
+test "RC startup image blocks keep graph recipes independent of unrelated catalog declarations" {
+    var first = try ShapeFixture.init("record Data:\n    values: [2]bytes\n    choice: Result[bytes, int]\n\ndef main() -> int:\n    return 0\n");
+    defer first.deinit();
+    var second = try ShapeFixture.init("record Unrelated:\n    value: int\n\nrecord Data:\n    values: [2]bytes\n    choice: Result[bytes, int]\n\ndef main() -> int:\n    return 0\n");
+    defer second.deinit();
+    const a = first.arena.allocator();
+    const one = try @import("rc_descriptors.zig").blocks(a, &first.layouts);
+    const two = try @import("rc_descriptors.zig").blocks(a, &second.layouts);
+    const name = try @import("native_descriptors.zig").symbol(a, &first.layouts, try first.typeNamed("Data"));
+    try t.expectEqualStrings(try imageBlockNamed(one, name), try imageBlockNamed(two, name));
+    const text = try @import("rc_descriptors.zig").render(a, one);
+    try t.expectEqual(@as(usize, 1), std.mem.count(u8, text, "const myl_rc_image myl_rc_generated_image ="));
+    try t.expect(std.mem.indexOf(u8, text, ".conditional=1") != null);
+    try t.expect(std.mem.indexOf(u8, text, ".depth=3,.inline_depth=3") != null);
+}
+
+fn imageBlockNamed(blocks: []const @import("rc_descriptors.zig").Block, name: []const u8) ![]const u8 {
+    for (blocks) |block| if (std.mem.eql(u8, block.name, name)) return block.text;
+    return error.TestUnexpectedResult;
+}
+
+// spec-case: RC-STARTUP-IMAGE-1
+test "RC startup image renderer refuses old ownership blocks before output" {
+    try t.expectError(error.InvalidType, @import("rc_descriptors.zig").render(t.allocator, &.{.{ .name = "old", .text = "const myl_rc_shape old_rc = {0};\n" }}));
+}

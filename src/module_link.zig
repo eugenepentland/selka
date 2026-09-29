@@ -114,7 +114,9 @@ const Shared = struct {
         for (rows, out) |row, *block| {
             const unique = field(row, "unique_body");
             if (unique != .bool) return error.Incomplete;
-            block.* = .{ .name = string(field(row, "name")), .text = string(field(row, "text")), .unique_body = unique.bool };
+            const text = string(field(row, "text"));
+            if (!owners.imageBlock(text)) return error.Incomplete;
+            block.* = .{ .name = string(field(row, "name")), .text = text, .unique_body = unique.bool };
         }
         return out;
     }

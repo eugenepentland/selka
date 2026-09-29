@@ -112,6 +112,34 @@ test "LIST-LITERAL-PAYLOAD-1 thousand immortal text and byte elements emit bound
 }
 
 // spec-case: LIST-LITERAL-PAYLOAD-1
+test "LIST-LITERAL-PAYLOAD-1 indexed immortal children keep samples after parent detachment" {
+    const value = "\"" ++ ("é😀" ** 80) ++ "\"";
+    const source = try literalSource(t.allocator, "def main() -> int:\n    items: list[str] = [", value, 64,
+        \\]
+        \\    saved = items
+        \\    items[0] = "changed"
+        \\    if saved[0][95] != "😀" or saved[63][128] != "é":
+        \\        return 1
+        \\    if saved[0][127:] != saved[63][127:]:
+        \\        return 2
+        \\    return len(saved[0])
+        \\
+    );
+    defer t.allocator.free(source);
+    var c = try compiler.Compilation.init(t.allocator, "list_indexed_child.my", source);
+    defer c.deinit();
+    try c.emit();
+    const manifest = try c.emitQbe(t.allocator);
+    defer t.allocator.free(manifest);
+    var parsed = try std.json.parseFromSlice(std.json.Value, t.allocator, manifest, .{ .allocate = .alloc_always });
+    defer parsed.deinit();
+    const metadata = try outputs.sharedMetadata(t.allocator, parsed.value);
+    defer t.allocator.free(metadata);
+    try t.expect(std.mem.indexOf(u8, metadata, "MYL_TEXT_STATIC_INDEX") != null);
+    try t.expectEqual(@as(i64, 160), (try native.runWithOptions(&c, .{ .gc_stress = true })).value);
+}
+
+// spec-case: LIST-LITERAL-PAYLOAD-1
 test "LIST-LITERAL-PAYLOAD-1 malformed immutable element framing and UTF8 are rejected" {
     const rows = @import("constant_list_text.zig");
     try t.expect(!rows.valid(&.{ 1, 0, 0 }, true));

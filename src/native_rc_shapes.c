@@ -448,6 +448,10 @@ static void flat_build(myl_rc_binding *binding) {
             if (kind == MYL_RC_SHAPE_ARRAY && (type->count != shape->as.array.count || type->stride != shape->as.array.stride)) return;
             if (frame->cursor == type->count) { --depth; continue; }
             child = type->element;
+            /* Generated ARRAY descriptors use the canonical native walker's
+             * single zero-offset field; foreign descriptors may use element. */
+            if (!child && type->field_count == 1 && type->fields && !type->fields[0].offset)
+                child = type->fields[0].type;
             if (!myl_rc_size_mul(frame->cursor++, type->stride, &offset)) return;
             if (kind == MYL_RC_SHAPE_ARRAY) child_shape = shape->as.array.element;
         } else return; /* Owned buffers/pools and raw resources. */
