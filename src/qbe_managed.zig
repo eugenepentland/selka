@@ -1008,13 +1008,7 @@ fn textOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
             try self.require(result, iteration_failure);
             try self.print(store_unit, .{base});
         },
-        .slice => {
-            if (self.range_keys.role(self.pc) == .slice) return range_keys.Lower(E).slice(self, input, base);
-            const start = try self.load("s", base);
-            const end = try self.load("s", base + 1);
-            try self.print(" %v{d} =l call $myl_native_text_slice(l %heap, l %v{d}, l %v{d}, l %v{d})\n", .{ result, input, start, end });
-            try checkedPointer(E, self, result, base);
-        },
+        .slice, .text_tail => try textSlice(E, self, op, input, result, base),
         .slice_step => try textStep(E, self, base, input),
         .split, .join => {
             const argument = try self.load("s", base);
@@ -1035,6 +1029,16 @@ fn textOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
         // The Python string methods and the number grammar lower on their own.
         else => return text_lower.Lower(E).operation(self, op, stack),
     }
+}
+/// Select suffix sharing only for an omitted upper endpoint; borrowed ranges
+/// still fuse before any allocating slice helper is emitted.
+fn textSlice(comptime E: type, self: *E, op: BufferOperation, input: usize, result: usize, base: usize) Error!void {
+    if (self.range_keys.role(self.pc) == .slice) return range_keys.Lower(E).slice(self, input, base);
+    const start = try self.load("s", base);
+    const end = try self.load("s", base + 1);
+    const callee = if (op.kind == .text_tail) "myl_native_text_tail" else "myl_native_text_slice";
+    try self.print(" %v{d} =l call ${s}(l %heap, l %v{d}, l %v{d}, l %v{d})\n", .{ result, callee, input, start, end });
+    try checkedPointer(E, self, result, base);
 }
 /// Leave in operand slot `base` the value a dictionary call that answered
 /// `found` copied out — through `pointer`, or this pc's aggregate scratch when it

@@ -4,6 +4,7 @@ const v = @import("qbe_build_value.zig");
 const host = @import("qbe_build_host.zig");
 const frame_map = @import("qbe_frame_map.zig");
 const lean = @import("qbe_build_units.zig");
+const text_index = @import("text_literal_index.zig");
 /// One packed-argument cleanup shared by every early grant exit.
 const free_arguments = "free(arguments);";
 // The argv owner surrounds capability grants and the borrowed guest call. Its
@@ -377,11 +378,16 @@ fn emitLiteral(w: *std.Io.Writer, literal: Literal) Error!void {
     // literal's payload is its elements at `width` bytes each.
     const bytes = if (literal.width == 0) literal.count else literal.count * literal.width;
     const storage = if (bytes == 0) 1 else bytes;
+    const positions = if (literal.width == 0) text_index.layout(bytes, literal.scalars, literal.flags.ascii) else null;
     if (literal.width == 0) {
-        try w.print("typedef struct {{ myl_native_object header; myl_native_text value; unsigned char storage[{d}]; }} {s}_block;\n", .{ storage, symbol });
+        if (positions) |plan| {
+            try text_index.declaration(w, symbol, plan);
+        } else try w.print("typedef struct {{ myl_native_object header; myl_native_text value; unsigned char storage[{d}]; }} {s}_block;\n", .{ storage, symbol });
         try w.print("static {s}_block {s}_instance = {{\n", .{ symbol, symbol });
         try w.print(" .header = {{.mark = MYL_NATIVE_OBJECT_LITERAL_MARK, .element = &{s}}},\n", .{literal.element});
-        try w.print(" .value = {{.length = {d}, .bytes = {d}, .flags = {d}, .hash = 0}},\n", .{ literal.scalars, literal.count, @as(u32, if (literal.flags.ascii) 1 else 0) });
+        try w.print(" .value = {{.length = {d}, .bytes = {d}, .flags = ", .{ literal.scalars, literal.count });
+        if (positions != null) try w.writeAll("MYL_TEXT_INDEXED|MYL_TEXT_SAMPLED|MYL_TEXT_STATIC_INDEX") else try w.print("{d}", .{@as(u32, if (literal.flags.ascii) 1 else 0)});
+        try w.writeAll(", .hash = 0},\n");
     } else {
         try w.print("typedef struct {{ myl_native_object header; myl_native_list value; myl_native_object storage_header; unsigned char storage[{d}]; }} {s}_block;\n", .{ storage, symbol });
         try w.print("static {s}_block {s}_instance = {{\n", .{ symbol, symbol });
@@ -409,6 +415,7 @@ fn emitLiteral(w: *std.Io.Writer, literal: Literal) Error!void {
         }
         try w.writeAll("},\n");
     }
+    if (positions) |plan| try text_index.initializer(w, literal.hex, plan);
     try w.writeAll("};\n");
     try w.print("const void *const {s} = &{s}_instance.value;\n", .{ symbol, symbol });
 }

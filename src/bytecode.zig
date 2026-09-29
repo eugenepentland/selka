@@ -376,6 +376,7 @@ fn validateManagedTextOperation(program: Program, local: typed.Local, schema: ty
         // A set's `pop` answers a key, as a positional key read does.
         .key_at, .pop => if (dictionary) schema.collection.key.? else return error.InternalError,
         .slice => if (!dictionary) local.ty else return error.InternalError,
+        .text_tail => if (schema.collection.kind == .string) local.ty else return error.InternalError,
         .slice_step => if (!dictionary and !byte_string) local.ty else return error.InternalError,
         .read => if (dictionary or byte_string) element else local.ty,
         .write => if (dictionary) .unit else return error.InternalError,
