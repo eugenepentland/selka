@@ -30,6 +30,15 @@ const Fixture = struct {
         self.arena.deinit();
     }
 
+    /// Parse one single-unit source that must be accepted.
+    fn parses(self: *Fixture, bytes: []const u8) !void {
+        const allocator = self.arena.allocator();
+        self.src = try source.Source.init(allocator, "hint.my", bytes);
+        const tokens = try lexer.lex(allocator, bytes, &self.sink);
+        var p: parser.Parser = .{ .src = self.src, .storage = allocator, .tokens = tokens, .sink = &self.sink };
+        _ = try p.parse();
+    }
+
     /// Parse one single-unit source and answer its first diagnostic, which stays
     /// valid until `deinit` at the earliest.
     fn failure(self: *Fixture, bytes: []const u8) !*const diagnostic.Diagnostic {
@@ -206,15 +215,17 @@ test "a Python statement shape names its accepted spelling where the terminator 
 }
 
 // spec: PARSER-HINT-8
-test "a collection form Python spells differently names the loop it accepts" {
+test "the collection forms the parser once hinted now parse into the program they mean" {
     var fixture = Fixture.init(t.allocator);
     defer fixture.deinit();
-    const dict_comp = try fixture.failure("def main() -> int:\n    d = {x: x * x for x in range(4)}\n    return d[3]\n");
-    try expectHint(&fixture, dict_comp, "a dict comprehension is not provided", "build the dictionary with a loop: `for x in range(4): d[x] = x * x`", 2, 19);
-    const nested = try fixture.failure("def main() -> int:\n    grid = [[1]]\n    flat = [x for row in grid for x in row]\n    return 0\n");
-    try expectHint(&fixture, nested, "a comprehension takes exactly one generator", "write the loops out and append: `for row in grid:` then `for x in row: flat.append(x)`", 3, 31);
-    const generator = try fixture.failure("def main() -> int:\n    xs = [1, 2, 3]\n    if any(x > 2 for x in xs):\n        return 1\n    return 0\n");
-    try expectHint(&fixture, generator, "a generator expression is not provided", "materialize a list instead: `any([x > 2 for x in xs])`", 3, 18);
+    const forms = [_][]const u8{
+        "def main() -> int:\n    seen = {1, 2, 2}\n    return 0\n",
+        "def main() -> int:\n    d = {x: x * x for x in range(4)}\n    return d[3]\n",
+        "def main() -> int:\n    grid = [[1]]\n    flat = [x for row in grid for x in row]\n    return 0\n",
+        "def main() -> int:\n    xs = [1, 2, 3]\n    if any(x > 2 for x in xs):\n        return 1\n    return 0\n",
+    };
+    for (forms) |bytes| try fixture.parses(bytes);
+    try t.expectEqual(@as(usize, 0), fixture.sink.items.items.len);
 }
 
 // spec: PARSER-HINT-9

@@ -29,7 +29,7 @@ const chr_builtin = "chr";
 
 /// Prelude names answered without an import when no binding or declaration shadows them.
 pub fn reserved(name: []const u8) bool {
-    inline for (.{ "sum", "min", "max", "sorted", "abs", "round", "any", "all", reversed_builtin, "list", "set", "zip", ord_builtin, chr_builtin }) |builtin| {
+    inline for (.{ "sum", "min", "max", "sorted", "abs", "round", "any", "all", reversed_builtin, "list", "set", "dict", "zip", ord_builtin, chr_builtin }) |builtin| {
         if (std.mem.eql(u8, name, builtin)) return true;
     }
     return false;

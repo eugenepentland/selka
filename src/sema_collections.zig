@@ -808,6 +808,8 @@ fn checkManagedAccess(comptime Checker: type, self: *Checker, node: ast.Node, op
         else if (operation.kind == .buffer_append_float)
             self.catalog.names.get("float") orelse return error.InternalError
         else if (operation.kind == .join) try collectionListType(Checker, self, owner_type, node.span) else owner_type;
+        // PY-GENERATOR-1: `"".join(x for x in xs)` joins the list the loop builds.
+        if (operation.kind == .join) _ = try self.consumeGenerator(input, .list);
         try self.hint(input, expected);
         argument.* = try self.expressionWithTemporaries(input, temporaries);
         const actual = self.nodes.items[@backingInt(argument.*)].ty;

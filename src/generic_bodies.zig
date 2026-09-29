@@ -76,6 +76,9 @@ const Local = struct {
     transfer_span: ?source.Span = null,
     available: bool = true,
 };
+/// One comprehension a template body is checking: what it builds, the context's
+/// expected result, and the element (and key) its step produced.
+const GatherFrame = struct { shape: ast.GatherShape, expected: ?Symbolic = null, value: ?Symbolic = null, key: ?Symbolic = null };
 const Checker = struct {
     allocator: std.mem.Allocator,
     field_arena: std.heap.ArenaAllocator,
@@ -108,6 +111,8 @@ const Checker = struct {
     expression_depth: usize = 0,
     temporary_results: usize = 0,
     loop_pending: ?[]const Pending = null,
+    /// The comprehensions being checked, innermost last (`PY-GATHER-1`).
+    gather_frames: std.ArrayList(GatherFrame) = .empty,
     fn topLevel(self: *Checker, span: source.Span) Error!bool {
         if (self.module_names) |names| return names.topLevel(span);
         const text = self.src.text(span);
@@ -758,6 +763,37 @@ const Checker = struct {
             return self.shapes().nominal(self.catalog.templates.store.?.index.names.get("set").?, &.{produced});
         }
         return self.shapes().nominal(self.catalog.templates.store.?.index.names.get("List").?, &.{produced});
+    }
+    /// PY-GATHER-1: a comprehension checked through its own loop: the collection
+    /// its step fills. A generator expression needs the concrete checker's
+    /// consuming call, which template bodies do not have.
+    fn gatherValue(self: *Checker, gather: ast.Gather, span: source.Span) Error!Symbolic {
+        if (gather.shape == .generator) return self.sink.fail(@import("sema_gathers.zig").generator_code, span, "a generator expression is not supported inside a generic function body; build a list comprehension");
+        try self.gather_frames.append(self.allocator, .{ .shape = gather.shape, .expected = self.expected_types.get(span) });
+        defer _ = self.gather_frames.pop();
+        _ = try self.statement(gather.loop);
+        const frame = self.gather_frames.items[self.gather_frames.items.len - 1];
+        self.seedEffect(.managed_allocation);
+        if (frame.expected) |expected| return expected;
+        const value = frame.value orelse return error.InternalError;
+        const names = self.catalog.templates.store.?.index.names;
+        return switch (gather.shape) {
+            .list => self.shapes().nominal(names.get("List").?, &.{value}),
+            .set => self.shapes().nominal(names.get("set").?, &.{value}),
+            .dict => self.shapes().nominal(names.get("dict").?, &.{ frame.key.?, value }),
+            .generator => error.InternalError,
+        };
+    }
+    /// The innermost step of the comprehension being checked.
+    fn gatherStep(self: *Checker, step: ast.GatherStep, span: source.Span) Error!void {
+        if (self.gather_frames.items.len == 0) return error.InternalError;
+        const key = if (step.key) |syntax| try self.expression(syntax) else null;
+        const value = try self.expression(step.value);
+        try self.supports(value, .copy, span);
+        try self.supports(value, .storable, span);
+        const frame = &self.gather_frames.items[self.gather_frames.items.len - 1];
+        frame.key = key;
+        frame.value = value;
     }
     /// The element a comprehension over a collection or fixed array binds.
     fn comprehensionElement(self: *Checker, source_type: Symbolic, span: source.Span) Error!Symbolic {
@@ -1721,6 +1757,7 @@ const Checker = struct {
             .set_literal => |inputs| try self.setLiteral(node, inputs),
             .format => |parts| try self.formatValue(parts, node.span),
             .comprehension => |each| try self.comprehensionValue(each, node.span),
+            .gather => |gather| try self.gatherValue(gather, node.span),
             .list_operation => |operation| try self.listOperation(node, operation),
             .method_call => try self.listMethod(node),
             .slice => try self.listSlice(node),
@@ -2185,9 +2222,12 @@ const Checker = struct {
                 else => self.sink.fail("E_FLOAT_OPERATION", operation.op_span, "float supports arithmetic and numeric comparison"),
             };
         }
+        // `|`, `&` and `^` combine two sets (SET-OPERATORS-1) or two integers
+        // bitwise (PY-SET-OPS-1); any other operand is refused.
         const set_left = self.shapes().isSet(left);
-        if (!set_left) if (set_lower.bitwiseSpelling(self.src.text(operation.op_span))) |builtin| {
-            const message = try std.fmt.allocPrint(self.sink.allocator, "`{s}` combines two sets; an integer bitwise operation is spelled `{s}(a, b)`", .{ self.src.text(operation.op_span), builtin });
+        const integer_left = symbolic.supports(left, .integer, self.parameters, self.catalog);
+        if (!set_left and !integer_left) if (set_lower.bitwiseSpelling(self.src.text(operation.op_span))) |builtin| {
+            const message = try std.fmt.allocPrint(self.sink.allocator, "`{s}` combines two sets or two integers (`{s}(a, b)`)", .{ self.src.text(operation.op_span), builtin });
             return self.sink.fail(set_lower.bitwise_code, operation.op_span, message);
         };
         try self.compatible(right, left, operation.op_span);
@@ -2299,6 +2339,10 @@ const Checker = struct {
         try self.enter(statement_value.span);
         defer self.depth -= 1;
         switch (statement_value.data) {
+            .gather_step => |step| {
+                try self.gatherStep(step, statement_value.span);
+                return false;
+            },
             .block => |statements| return self.block(statements),
             .with_scope => return self.sink.fail(eUnsupported, statement_value.span, "`with` resource scopes are not supported inside generic function bodies"),
             .match => |match| return self.matchValue(match, statement_value.span),

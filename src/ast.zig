@@ -72,6 +72,9 @@ pub const Node = struct {
         /// (`PY-FSTRING-SPEC-1`); it appears only as a part of `format`.
         format_field: struct { value: NodeId, spec: Span },
         comprehension: Comprehension,
+        /// A comprehension or generator expression whose clauses lower to
+        /// ordinary loop statements (`PY-GATHER-1`).
+        gather: Gather,
         dictionary_literal: []const NodeId,
         /// `{a, b, ...}`: a set literal's elements in source order (SET-1).
         set_literal: []const NodeId,
@@ -143,6 +146,9 @@ pub const Statement = struct {
         loop: struct { condition: NodeId, body: StatementId },
         binding: struct { name: Span, annotation: ?Span, mutable: bool, value: NodeId },
         assignment: struct { name: Span, value: NodeId, op: AssignmentOp, op_span: Span },
+        /// The innermost statement of a gather loop: hand one produced value
+        /// to the comprehension or generator that owns the loop.
+        gather_step: GatherStep,
     },
 };
 /// Append the statements nested directly inside `statement` — a block's
@@ -162,7 +168,7 @@ pub fn appendNested(allocator: std.mem.Allocator, work: *std.ArrayList(Statement
         .for_each => |each| try work.append(allocator, each.body),
         .for_range => |range| try work.append(allocator, range.body),
         .with_scope => |scope| try work.append(allocator, scope.body),
-        .assertion, .ret, .loop_exit, .discard, .binding, .assignment => {},
+        .assertion, .ret, .loop_exit, .discard, .binding, .assignment, .gather_step => {},
     }
 }
 /// The bounds of one `range(...)` iteration source: a unit `start` is the implicit
@@ -181,6 +187,18 @@ pub const Comprehension = struct {
     /// and a null step the implicit one.
     pub const Source = union(enum) { iterable: NodeId, range: RangeBounds };
 };
+/// What a gathered comprehension builds from the values its loop produces: a
+/// list, a set, a dictionary, or — for a generator expression — whatever its
+/// consuming call folds or collects.
+pub const GatherShape = enum { list, set, dict, generator };
+/// A comprehension or generator expression lowered through its own loop.
+/// `loop` is the first `for` clause as an ordinary `for` statement; every
+/// further `for` clause nests inside it and every `if` clause is a branch
+/// around what follows it, so the innermost statement is the `gather_step`
+/// that hands one value to the result. `open` is the opening bracket.
+pub const Gather = struct { shape: GatherShape, loop: StatementId, open: Span };
+/// One produced value of a gather loop and, for a dict comprehension, its key.
+pub const GatherStep = struct { value: NodeId, key: ?NodeId = null };
 /// Checked condition with the trap message its failure reports. `literal` is the
 /// quoted message's span; `value` is a non-literal message expression, evaluated
 /// only when the condition is false.

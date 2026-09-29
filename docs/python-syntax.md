@@ -110,6 +110,22 @@ evaluated once, left to right, and the rest skipped once a link is false. `str`
 and `bytes` [order lexicographically](text.md#ordering-and-repetition), and `*`
 repeats a `str`, `bytes` or list by an integer.
 
+On integers `|`, `^` and `&` are bitwise or, xor and and, ranked as Python ranks
+them: below the operands of a comparison and above `+` and `-`, with `|` the
+loosest and `&` the tightest, so `1 | 2 ^ 3 & 1` is `1 | (2 ^ (3 & 1))`. On two
+[sets](sets.md#set-operators) of one type the same operators and `-` are union, symmetric
+difference, intersection and difference.
+
+```mylang
+# doc: expect 42
+def main() -> int:
+    flags = 6 | 1
+    mask = 12 & 10
+    if 1 | 2 ^ 3 & 1 != 3 or (5 ^ 3) != 6:
+        return 1
+    return flags * mask - 14
+```
+
 ```mylang
 # doc: expect 42
 def main() -> int:
@@ -178,9 +194,11 @@ optional and the binding confined to the comprehension. The source is a list, st
 dictionary or an integer `range(...)` — `[i for i in range(10)]` and
 `[i for i in range(10, 0, -2)]` work the same as they do in a `for` loop. Without a filter, the result reserves the source length (or
 the exact nonnegative range length) before filling; filtered results grow with the
-values they retain. It takes one generator; nested generators and generator
-expressions are not provided, and neither are dict comprehensions. The set
-comprehension `{value for name in items if condition}` builds a
+values they retain. A comprehension may also take two names, several `for` clauses
+and several `if` filters, which nest left to right as Python reads them: each clause
+accepts exactly what a `for` loop accepts, `enumerate`, `zip` and
+`for k, v in d.items()` included.
+The set comprehension `{value for name in items if condition}` builds a
 [set](sets.md#set-literals-and-construction) the same way.
 
 ```mylang
@@ -188,7 +206,61 @@ comprehension `{value for name in items if condition}` builds a
 def main() -> int:
     source = [1, 2, 3, 4]
     kept = [value * 7 for value in source if value > 2]
-    return kept[0] + kept[1] - 7
+    grid = [[1, 2], [3, 4]]
+    flat = [x for row in grid for x in row if x % 2 == 0]
+    return kept[0] + kept[1] - 7 + flat[1] - flat[0] - 2
+```
+
+### Dict and set comprehensions
+
+`{key: value for name in source if condition}` builds a dictionary and
+`{value for name in source}` a set, through the same clauses a list comprehension
+takes. The key is evaluated before the value, and a repeated key keeps its first
+position and its last value. An annotated destination gives the key, value or
+element type to the literals inside: `small: dict[str, u8] = {k: 0 for k in names}`.
+
+```mylang
+# doc: expect 42
+def main() -> int:
+    prices = {"pear": 3, "fig": 5, "kiwi": 2}
+    doubled = {name: price * 2 for name, price in prices.items() if price > 2}
+    squares = {x: x * x for x in range(5)}
+    paired = {k: v for k, v in zip(["a", "b"], [10, 20])}
+    return doubled["fig"] + squares[4] + paired["a"] + len({c for c in "hello"}) + 2
+```
+
+### Generator expressions
+
+A generator expression is accepted where Python programs pass one: as the only
+argument of `sum`, `any`, `all`, `min`, `max`, `sorted`, `list`, `set`, `dict` or
+`str.join` — `sum(x * x for x in xs)` — or in its own parentheses beside other
+arguments, `sorted((x for x in xs), reverse=True)`. `sum`, `any`, `all`, `min` and
+`max` fold each value as the loop produces it, with no intermediate list; `any` and
+`all` stop at the first value that decides them, exactly as Python stops. `sorted`,
+`list` and `str.join` receive the list the loop builds, `set` its set, and `dict`
+the dictionary of its `(key, value)` tuples. `min` and `max` of no values trap with
+CPython's message, and `sum` starts from zero of the value's type.
+
+```mylang
+# doc: expect 42
+def main() -> int:
+    xs = [4, 1, 3]
+    if not any(x > 3 for x in xs) or all(x > 1 for x in xs):
+        return 1
+    ordered = sorted(x * 10 for x in xs)
+    text = "-".join(str(x) for x in xs)
+    return sum(x * x for x in xs) + max(x for x in xs) + ordered[0] + len(text) - 3
+```
+
+A generator anywhere else — stored in a variable, passed to a function you
+declared, or given to `len` — is `E_GENERATOR`, whose note names the list
+comprehension to write instead; count with `sum(1 for x in xs if p)`.
+
+```mylang
+# doc: expect-error E_GENERATOR
+def main() -> int:
+    squares = (x * x for x in [1, 2, 3])
+    return 0
 ```
 
 `for value in items`, `for index, value in enumerate(items)`, and
@@ -421,10 +493,6 @@ as an `alternative` note on the diagnostic:
 | `try:` / `except` | `Result` and `match`: `case Ok(value)` / `case Err(reason)` |
 | `r"a\nb"` | an ordinary quoted string with the escape written out |
 | `if r is None:` | `r == None`, or `match r:` with `case None` |
-| `{1, 2, 2}` | a dict literal keyed by the value: `{1: True, 2: True}` |
-| `{x: x * x for x in xs}` | a `for` loop that assigns `d[x]` |
-| `[x for row in grid for x in row]` | nested `for` loops with `append` |
-| `any(x > 2 for x in xs)` | `any([x > 2 for x in xs])` |
 | `case 1:` | `if x == 1:` / `elif x == 3:` |
 | `v = parse(s).unwrap()` | `match` on the `Result`, or `?` to propagate it |
 | `if (n := len(xs)) > 2:` | `n = len(xs)` on its own line, then the test |

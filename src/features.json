@@ -267,6 +267,21 @@
       "summary": "`[expression for name in source if condition]` builds a managed list in one expression.",
       "doc": "docs/managed-memory.md#list-comprehensions"
     },
+    "dict-and-set-comprehensions": {
+      "kind": "language",
+      "summary": "`{k: v for ...}` and `{x for ...}` build a dictionary or a set, and every comprehension takes two names, several `for` clauses and several `if` filters, each clause accepting what a `for` loop accepts.",
+      "doc": "docs/python-syntax.md#dict-and-set-comprehensions"
+    },
+    "generator-arguments": {
+      "kind": "language",
+      "summary": "A generator expression passed to `sum`, `any`, `all`, `min` or `max` folds without building a list (`any`/`all` stop early), and one passed to `sorted`, `list`, `set`, `dict` or `str.join` is collected; anywhere else is `E_GENERATOR`.",
+      "doc": "docs/python-syntax.md#generator-expressions"
+    },
+    "bitwise-operators": {
+      "kind": "language",
+      "summary": "`|`, `^` and `&` are bitwise or, xor and and on integers with Python's precedence, and union, symmetric difference and intersection on sets.",
+      "doc": "docs/python-syntax.md#operators-python-has"
+    },
     "wildcard-match-arms": {
       "kind": "language",
       "summary": "A final `case _` covers every variant no earlier arm named.",
@@ -1064,9 +1079,10 @@
     "managed_lists": "independent values by default with copy-on-write payloads; shared aliases only in legacy-sharing mode; automatic growth; no owned/resource elements, borrowed interiors, untraced storage embedding, or host escape",
     "gc": "single-threaded nonmoving tracing; retained guest values root intermediates; collect-on-allocation stress option",
     "python": "static fixed-width types, function-scoped locals with E_UNBOUND definite assignment, value records; indentation is the only block syntax",
-    "dictionaries": "managed insertion order; homogeneous hashable keys (integers, bool, str, bytes, and tuples, records, unions, enums, domains, Option and fixed arrays of those) and copyable values; no dict comprehension",
+    "dictionaries": "managed insertion order; homogeneous hashable keys (integers, bool, str, bytes, and tuples, records, unions, enums, domains, Option and fixed arrays of those) and copyable values",
     "value_semantics": "default model: independent collection and aggregate values with rooted copy-on-write transfers (up to 1,024 descriptor edges), cloning writable payloads in their owning arena region; a copy is not a `managed_allocation` effect. `class` declarations and builtin Cell are rejected by default and retained only by the one-release `--legacy-sharing` or project opt-out. A `mut` collection parameter writes the caller's collection but whole-parameter rebinding does not; a `mut` record parameter is inout and cannot be a function value",
     "sets": "managed insertion order over hashable elements; `set()` needs an expected type; no frozenset, no augmented operators (`|=`); generic bodies key only by integer-bounded parameters, `str` or concrete hashable types; a module that declares its own function named `set` keeps it, and there the type spelling `set[T]` is unavailable while literals still work",
+    "generators": "generator expressions only as the argument of sum, any, all, min, max, sorted, list, set, dict or str.join; no yield and no generator values",
     "native_tests": "fresh QBE processes; exported typed-call-compatible signatures; positive deterministic receipts only; project validity is always checked through the shared query cache; only a fully cached selection skips lowering/emission/linking, while a changed snapshot still pays one whole-project preparation emission and an uncached selection builds the whole selected-provider library; provider snapshots at most 128 sources/16 MiB",
     "standard_library": "ten embedded Python-syntax modules over managed types: math, strings, sort, path, hex, base64, json, pool, random, time"
   },

@@ -247,6 +247,55 @@ public def test_a_set_pop_after_removals_answers_the_newest_live_element() -> bo
     return first == 4 and second == 3 and f"{values}" == "{1}"
 
 
+# spec-case: SET-1
+public def test_set_of_a_str_a_list_and_a_range_collects_its_elements() -> bool:
+    letters = set("banana")
+    numbers = set([4, 1, 4, 2])
+    counted = set(range(3))
+    return len(letters) == 3 and "n" in letters and len(numbers) == 3 and len(counted) == 3 and 2 in counted
+
+
+# spec-case: SET-1
+public def test_set_of_a_dictionary_and_its_views_collects_keys_or_values() -> bool:
+    counts = {"a": 1, "b": 2}
+    keys = set(counts)
+    values = set(counts.values())
+    return "b" in keys and 2 in values and len(keys) == 2 and len(values) == 2
+
+
+# The method forms collect any iterable first, as CPython's do; the operators
+# still take two sets.
+# spec-case: SET-1
+public def test_the_method_forms_accept_any_iterable() -> bool:
+    a = {1, 2, 3}
+    counts = {3: "c", 4: "d"}
+    grown: set[int] = {0}
+    grown.update([5, 6])
+    return a.union([4]) == {1, 2, 3, 4} and a.intersection([2, 3, 9]) == {2, 3} and a.difference([1]) == {2, 3} and a.symmetric_difference([3, 4]) == {1, 2, 4} and a.issubset([1, 2, 3, 4]) and not a.isdisjoint(counts) and a.issuperset([1]) and len(grown) == 3
+
+
+# The integer bitwise operators share the set operators' spelling and rank as
+# Python ranks them: `|` loosest, then `^`, then `&`. Every expected value is
+# what CPython 3 answers.
+# spec: PY-SET-OPS-1
+public def test_bitwise_operators_on_integers_follow_python_precedence() -> bool:
+    x = 10 & 255 | 1
+    y = 6 ^ 3 & 1
+    z = 1 | 2 ^ 3
+    return x == 11 and y == 7 and z == 1 and (5 & 3) == 1 and (5 | 3) == 7 and (5 ^ 3) == 6
+
+
+# `list`, `sorted` and the folds of a dictionary read its keys in insertion
+# order, and of a view that view's snapshot, as CPython does.
+# spec: PRELUDE-KEYS-1
+public def test_list_sorted_and_the_folds_of_a_dictionary_read_its_keys() -> bool:
+    ages = {"cy": 3, "al": 1, "bo": 2}
+    widths = {4: "a", 9: "b", 1: "c"}
+    keys = list(ages)
+    ordered = sorted(ages)
+    return keys == ["cy", "al", "bo"] and ordered == ["al", "bo", "cy"] and sum(widths) == 14 and max(widths) == 9 and min(ages.values()) == 1 and sorted(ages.values()) == [1, 2, 3]
+
+
 # Benchmarks: one operation builds a set of `size` records, probes every one of
 # them and removes half. With expected-constant-time probes the time per
 # element stays flat from the small size to the large one.

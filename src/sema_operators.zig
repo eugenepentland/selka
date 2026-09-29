@@ -234,11 +234,11 @@ fn binaryValue(comptime Checker: type, self: *Checker, b: idioms.CheckedBinary, 
     // so a byte string and an octet buffer compare without a conversion;
     // every other operator still requires one type on both sides.
     const mixed_bytes = (b.op == .eq or b.op == .ne) and isByteKind(self.catalog.records, lt) and isByteKind(self.catalog.records, rt);
-    // `|`, `&` and `^` are the set operators (SET-OPERATORS-1); an integer
-    // keeps its bitwise builtins, so the operator spelling names them.
+    // `|`, `&` and `^` are the set operators (SET-OPERATORS-1) and, on two
+    // integers, the bitwise operators (PY-SET-OPS-1); any other operand is refused.
     const set_left = typed.setRecord(self.catalog.records, lt) != null;
-    if (!set_left) if (set_lower.bitwiseSpelling(self.src.text(b.op_span))) |builtin| {
-        const message = try std.fmt.allocPrint(self.allocator, "`{s}` combines two sets; an integer bitwise operation is spelled `{s}(a, b)`", .{ self.src.text(b.op_span), builtin });
+    if (!set_left and !lt.isInteger()) if (set_lower.bitwiseSpelling(self.src.text(b.op_span))) |builtin| {
+        const message = try std.fmt.allocPrint(self.allocator, "`{s}` combines two sets or two integers (`{s}(a, b)`)", .{ self.src.text(b.op_span), builtin });
         return self.sink.fail(set_lower.bitwise_code, b.op_span, message);
     };
     if (!mixed_bytes) try self.require(rt, lt, b.op_span);

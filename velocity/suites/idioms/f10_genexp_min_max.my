@@ -1,0 +1,4 @@
+# oracle: cpython
+def main() -> int:
+    words = ["pear", "fig", "banana"]
+    return max(len(w) for w in words) * 10 + min(len(w) for w in words)

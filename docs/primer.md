@@ -185,16 +185,33 @@ def main(out: Stream) -> int:
     return 0
 ```
 
+```mylang
+# doc: expect {3, 1, 2} {'a': 1, 'bb': 2} 14 True
+def main(out: Stream) -> int:
+    seen = {3, 1, 2, 3}                  # a set[int]; keeps first-insertion order
+    lengths = {w: len(w) for w in ["a", "bb"]}
+    out.print(seen, lengths, sum(x * x for x in [1, 2, 3]), any(x > 2 for x in seen))
+    return 0
+```
+
 - list: `append`, `pop`, `insert`, `sort(key=...)`, `len`, slices `xs[a:b]`,
-  negative indexes, `x in xs`, comprehensions `[f(x) for x in xs if p(x)]`.
+  negative indexes, `x in xs`, comprehensions `[f(x) for x in xs if p(x)]`
+  (two names and several `for`/`if` clauses work).
 - dict: `d[k]`, `d.get(k, default)`, `k in d`, `for k, v in d.items()`
-  (insertion order).
+  (insertion order), `{k: v for k, v in pairs}`.
+- set: `{1, 2}`, `seen: set[int] = set()`, `add`, `remove`, `discard`, `in`,
+  `|` `&` `-` `^`, `issubset`, `{x for x in xs}`. Iteration and printing are in
+  first-insertion order (`set()` when empty); compare `sorted(s)` when the
+  order matters. See [Sets](sets.md).
+- Generator arguments: `sum(x * x for x in xs)`, `any(...)`, `all(...)`,
+  `min(...)`, `max(...)`, `sorted(...)`, `set(...)`, `"".join(...)`; a generator
+  stored in a variable is rejected, so write a list comprehension there.
 - Sorting: `sorted(xs)`, `xs.sort(key=lambda it: (-it.count, it.name))` (tuple
   keys work; a lambda cannot capture locals, so use a top-level function then).
 - `min(a, b)`, `max(xs)`, `abs(n)`, `sum(xs)`, `round(x, n)`, `range(n)`,
   `range(a, b)` and `range(a, b, step)`;
   `for i, x in enumerate(xs)` and `for a, b in zip(xs, ys)` unpack in `for`
-  loops (a comprehension takes a single name).
+  loops and comprehensions.
 
 ## Mutating a parameter: `mut` on both sides
 
@@ -257,6 +274,7 @@ def main(out: Stream) -> int:
 | Python | mylang |
 | --- | --- |
 | `x ** n` | `math.pow(x, n)` (`import math`, integer exponent) |
+| `gen = (x for x in xs)` kept in a variable | a list comprehension `[x for x in xs]`; generators are call arguments |
 | `try` / `except` | `Result` and `?` |
 | methods on classes, closures | top-level functions that take the object or state |
 | `heapq`, `re`, `collections` | write the small helper (a binary heap over `list[int]`) |

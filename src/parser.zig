@@ -74,9 +74,6 @@ pub const HintForm = enum {
     string_prefix,
     main_guard,
     option_unwrap,
-    nested_comprehension,
-    dict_comprehension,
-    generator_argument,
     walrus,
 };
 /// One hinted declaration form: the idiom the friction classifier files the
@@ -98,9 +95,6 @@ pub const declaration_hints = [_]DeclarationHint{
     .{ .form = .string_prefix, .idiom = "string-prefix", .message = "a string prefix is not part of a literal", .accepted = "drop the prefix and write the escape in an ordinary quoted string" },
     .{ .form = .main_guard, .idiom = "main-guard", .message = "a module has no `__name__` guard", .accepted = "delete the guard: `mylang run` calls `def main()` directly" },
     .{ .form = .option_unwrap, .idiom = "option-unwrap", .message = "`unwrap` is a keyword here, not a method", .accepted = "extract with `match`: `case Ok(value)` or `case Some(value)`; `?` propagates a `Result`" },
-    .{ .form = .nested_comprehension, .idiom = "nested-comprehension", .message = "a comprehension takes exactly one generator", .accepted = "write the loops out and append: `for row in grid:` then `for x in row: flat.append(x)`" },
-    .{ .form = .dict_comprehension, .idiom = "dict-comprehension", .message = "a dict comprehension is not provided", .accepted = "build the dictionary with a loop: `for x in range(4): d[x] = x * x`" },
-    .{ .form = .generator_argument, .idiom = "generator-argument", .message = "a generator expression is not provided", .accepted = "materialize a list instead: `any([x > 2 for x in xs])`" },
     .{ .form = .walrus, .idiom = "walrus", .message = "the walrus operator is not part of the language", .accepted = "assign the name on its own line first, then test it" },
 };
 /// The primary message for a case list whose next case lacks its separating
@@ -127,6 +121,13 @@ const nested_def_message = "a function body declares statements, not another fun
 const match_expression_message = "`match` is a statement, not an expression";
 const power_message = "`**` is not an operator";
 const shift_message = "`<<` and `>>` are not operators";
+/// PY-GENERATOR-2: a generator expression has no length, as in Python.
+const generator_code = diagnostic.generator;
+const generator_length_message = "a generator expression has no length";
+const generator_length_accepted = "count with `sum(1 for x in xs if p)`, or take `len([x for x in xs])`";
+/// PY-GENERATOR-1: an unparenthesized generator argument beside another one.
+const generator_sole_message = "a generator expression passed with other arguments needs its own parentheses";
+const generator_sole_accepted = "parenthesize it: `sorted((x for x in xs), reverse=True)`";
 /// Token cursor and allocator-backed syntax builder with bounded recursive nesting.
 pub const Parser = struct {
     src: @import("source.zig").Source,
@@ -274,12 +275,8 @@ pub const Parser = struct {
     fn blockOpen(self: *Parser) diagnostic.Error!lex.Token {
         return self.expect(.indent);
     }
-    /// The `)` that closes a call's arguments, or the hint that names a generator
-    /// argument standing in its place. A missing `)` is already a failure, and a
-    /// `for` after a call that already closed itself (`[f(x) for x in xs]`) never
-    /// reaches this point.
+    /// The `)` that closes a call's arguments.
     fn callClose(self: *Parser) diagnostic.Error!lex.Token {
-        if (self.current().tag == .kw_for) return self.hintHere(.generator_argument);
         return self.expect(.rparen);
     }
     /// Whether the cursor sits on an identifier in `previous`'s column: the next
@@ -307,6 +304,14 @@ pub const Parser = struct {
     }
     /// Accept a declared name that collides with an intrinsic keyword. `len` and `replace`
     /// are intrinsics in call position only, so both remain ordinary names elsewhere.
+    /// The name after a member `.`: any declared name, or `union`, which is a
+    /// declaration keyword but also Python's set method (SET-1).
+    fn memberName(self: *Parser) diagnostic.Error!Span {
+        const token = self.current();
+        if (token.tag != .kw_union) return self.declaredName();
+        self.cursor.pos += 1;
+        return token.span;
+    }
     fn declaredName(self: *Parser) diagnostic.Error!Span {
         const token = self.current();
         if (token.tag != .kw_len and token.tag != .kw_replace) return (try self.expect(.ident)).span;
@@ -1500,45 +1505,66 @@ pub const Parser = struct {
             .step = if (call.arguments.len == 3) call.arguments[2] else null,
         };
     }
-    fn forStatement(self: *Parser, first: lex.Token) diagnostic.Error!ast.StatementId {
+    /// The names and source of one `for` loop or comprehension clause, and the
+    /// iteration its source spells: a `range(...)`, an `enumerate(...)` whose
+    /// iterable is its one argument, or any other expression.
+    const LoopHeader = struct {
+        first: Span,
+        second: ?Span,
+        input: ast.NodeId,
+        range: ?ast.RangeBounds = null,
+        iterable: ast.NodeId,
+        enumerated: bool = false,
+    };
+    /// Parse `names in source` after a `for` and classify the source. A
+    /// comprehension parses its source above the conditional expression, so the
+    /// `if` after it starts a filter; a statement parses a whole expression.
+    fn loopHeader(self: *Parser, comprehension: bool) diagnostic.Error!LoopHeader {
         const first_name = (try self.expect(.ident)).span;
         const second_name = if (self.take(.comma)) (try self.expect(.ident)).span else null;
         _ = try self.expect(.kw_in);
-        const input = try self.conditionExpression();
-        var range: ?ast.RangeBounds = null;
-        var iterable = input;
-        var enumerated = false;
+        const input = if (comprehension) try self.expression(1) else try self.conditionExpression();
+        var header: LoopHeader = .{ .first = first_name, .second = second_name, .input = input, .iterable = input };
         if (try self.rangeBounds(input)) |bounds| {
-            range = bounds;
-        } else {
-            const node = self.syntax.nodes.items[@backingInt(input)];
-            if (node.data == .call and node.data.call.owner == null and std.mem.eql(u8, self.src.text(node.data.call.name), "enumerate")) {
-                const call = node.data.call;
-                if (call.arguments.len != 1 or second_name == null) return self.sink.fail("E_ARITY", node.span, "enumerate requires one iterable and two iteration names");
-                iterable = call.arguments[0];
-                enumerated = true;
-            } else if (node.data == .call and node.data.call.owner == null and std.mem.eql(u8, self.src.text(node.data.call.name), "zip")) {
-                const call = node.data.call;
-                if (call.arguments.len != 2 or second_name == null) return self.sink.fail("E_ARITY", node.span, "zip requires two iterables and two iteration names");
-            }
+            header.range = bounds;
+            return header;
         }
-        const body = try self.block(null);
-        if (self.current().tag == .kw_else) return self.alternative(expression_code, for_else_message, loop_else_accepted);
-        const span: Span = .join(first.span, self.syntax.statements.items[@backingInt(body)].span);
-        if (range) |bounds| {
-            if (second_name != null) return self.sink.fail(eIteration, span, "range requires one iteration name");
-            return self.addStatement(.{ .span = span, .data = .{ .for_range = .{ .name = first_name, .start = bounds.start, .end = bounds.end, .body = body, .step = bounds.step } } });
+        const node = self.syntax.nodes.items[@backingInt(input)];
+        if (node.data == .call and node.data.call.owner == null and std.mem.eql(u8, self.src.text(node.data.call.name), "enumerate")) {
+            const call = node.data.call;
+            if (call.arguments.len != 1 or second_name == null) return self.sink.fail("E_ARITY", node.span, "enumerate requires one iterable and two iteration names");
+            header.iterable = call.arguments[0];
+            header.enumerated = true;
+        } else if (node.data == .call and node.data.call.owner == null and std.mem.eql(u8, self.src.text(node.data.call.name), "zip")) {
+            const call = node.data.call;
+            if (call.arguments.len != 2 or second_name == null) return self.sink.fail("E_ARITY", node.span, "zip requires two iterables and two iteration names");
+        }
+        return header;
+    }
+    /// The `for` statement one header runs `body` under: a counted range loop or
+    /// a walk over a collection, `enumerate`, `zip` or a dictionary view.
+    fn loopStatement(self: *Parser, header: LoopHeader, body: ast.StatementId, span: Span) diagnostic.Error!ast.StatementId {
+        if (header.range) |bounds| {
+            if (header.second != null) return self.sink.fail(eIteration, span, "range requires one iteration name");
+            return self.addStatement(.{ .span = span, .data = .{ .for_range = .{ .name = header.first, .start = bounds.start, .end = bounds.end, .body = body, .step = bounds.step } } });
         }
         return self.addStatement(.{
             .span = span,
             .data = .{ .for_each = .{
-                .name = second_name orelse first_name,
-                .index_name = if (second_name != null) first_name else null,
-                .iterable = iterable,
+                .name = header.second orelse header.first,
+                .index_name = if (header.second != null) header.first else null,
+                .iterable = header.iterable,
                 .body = body,
-                .enumerated = enumerated,
+                .enumerated = header.enumerated,
             } },
         });
+    }
+    fn forStatement(self: *Parser, first: lex.Token) diagnostic.Error!ast.StatementId {
+        const header = try self.loopHeader(false);
+        const body = try self.block(null);
+        if (self.current().tag == .kw_else) return self.alternative(expression_code, for_else_message, loop_else_accepted);
+        const span: Span = .join(first.span, self.syntax.statements.items[@backingInt(body)].span);
+        return self.loopStatement(header, body, span);
     }
     /// `x, y = value`: a destructuring assignment. Both sides are `.tuple` nodes
     /// in source order and the whole statement keeps the shape a field
@@ -1686,7 +1712,7 @@ pub const Parser = struct {
                 var values: std.ArrayList(ast.NodeId) = .empty;
                 if (self.current().tag != .rbracket) while (true) {
                     try values.append(self.storage, try self.expression(0));
-                    if (values.items.len == 1 and self.current().tag == .kw_for) break :list try self.parseComprehension(token, values.items[0], false);
+                    if (values.items.len == 1 and self.current().tag == .kw_for) break :list try self.parseComprehension(token, values.items[0]);
                     if (!self.take(.comma) or self.current().tag == .rbracket) break;
                 };
                 const close = try self.expect(.rbracket);
@@ -1802,6 +1828,12 @@ pub const Parser = struct {
         const inner = try self.expression(0);
         if (self.current().tag == .colon and self.tokens[self.cursor.pos + 1].tag == .equal) return self.hintHere(.walrus);
         if (self.current().tag == .comma) return self.parenthesizedTuple(token, inner);
+        if (self.current().tag == .kw_for) {
+            const generator = try self.generatorExpression(inner);
+            const end = try self.expect(.rparen);
+            self.syntax.nodes.items[@backingInt(generator)].span = .join(token.span, end.span);
+            return generator;
+        }
         const close = try self.expect(.rparen);
         self.syntax.nodes.items[@backingInt(inner)].span = .join(token.span, close.span);
         return inner;
@@ -1935,30 +1967,74 @@ pub const Parser = struct {
         if (!negate) return test_value;
         return self.append(.{ .span = span, .data = .{ .unary = .{ .op = .not, .operand = test_value, .op_span = operator.span } } });
     }
-    /// Parse the tail of `[value for name in iterable if condition]` after its
-    /// value, or with `set` the tail of `{value for name in iterable if
-    /// condition}`. The source and the filter are parsed above the conditional
-    /// expression, as Python's grammar parses them: the `if` after the iterable
-    /// starts the filter, so `[x for x in xs if p]` never reads as a conditional.
-    fn parseComprehension(self: *Parser, token: lex.Token, output: ast.NodeId, set: bool) diagnostic.Error!ast.NodeId {
-        _ = try self.expect(.kw_for);
-        const name = try self.expect(.ident);
-        _ = try self.expect(.kw_in);
-        const input = try self.expression(1);
-        if (self.current().tag == .kw_for) return self.hintHere(.nested_comprehension);
-        const filter = if (self.take(.kw_if)) try self.expression(1) else null;
-        const close = if (set) try self.expect(.rbrace) else try self.expect(.rbracket);
-        const src: ast.Comprehension.Source = if (try self.rangeBounds(input)) |bounds|
-            .{ .range = bounds }
-        else
-            .{ .iterable = input };
-        return self.append(.{ .span = .join(token.span, close.span), .data = .{ .comprehension = .{
-            .output = output,
-            .name = name.span,
-            .source = src,
-            .filter = filter,
-            .set = set,
-        } } });
+    /// One `for` clause of a comprehension or generator expression and the `if`
+    /// filters that follow it, in source order.
+    const Clause = struct { header: LoopHeader, filters: []const ast.NodeId, span: Span };
+    /// Parse every `for names in source if condition ...` clause at the cursor.
+    /// Each source and filter is parsed above the conditional expression, as
+    /// Python's grammar parses them: the `if` after a source starts a filter, so
+    /// `[x for x in xs if p]` never reads as a conditional.
+    fn comprehensionClauses(self: *Parser) diagnostic.Error![]const Clause {
+        var clauses: std.ArrayList(Clause) = .empty;
+        while (self.current().tag == .kw_for) {
+            const start = self.current().span;
+            self.cursor.pos += 1;
+            const header = try self.loopHeader(true);
+            var filters: std.ArrayList(ast.NodeId) = .empty;
+            while (self.take(.kw_if)) try filters.append(self.storage, try self.expression(1));
+            const end = self.tokens[self.cursor.pos - 1].span;
+            try clauses.append(self.storage, .{ .header = header, .filters = try filters.toOwnedSlice(self.storage), .span = .join(start, end) });
+        }
+        return clauses.toOwnedSlice(self.storage);
+    }
+    /// Parse the clauses of `[value for ...]` after its value. One unfiltered
+    /// clause with one name keeps the dedicated form that reserves the source's
+    /// length; a filter, two names or a second clause lower through ordinary
+    /// loops instead (`PY-GATHER-1`), so a filter narrows the value it guards.
+    fn parseComprehension(self: *Parser, token: lex.Token, output: ast.NodeId) diagnostic.Error!ast.NodeId {
+        const clauses = try self.comprehensionClauses();
+        const close = try self.expect(.rbracket);
+        const span: Span = .join(token.span, close.span);
+        const only = clauses[0];
+        if (clauses.len == 1 and only.header.second == null and only.filters.len == 0) {
+            const src: ast.Comprehension.Source = if (only.header.range) |bounds| .{ .range = bounds } else .{ .iterable = only.header.input };
+            return self.append(.{ .span = span, .data = .{ .comprehension = .{ .output = output, .name = only.header.first, .source = src } } });
+        }
+        return self.gather(.{ .shape = .list, .open = token.span, .span = span }, clauses, .{ .value = output });
+    }
+    /// The result a gather builds and the source it covers.
+    const GatherSite = struct { shape: ast.GatherShape, open: Span, span: Span };
+    /// PY-GATHER-1: build a comprehension or generator expression as its loops.
+    /// The innermost statement hands `step` to the result; each clause's filters
+    /// wrap it as branches, last filter innermost, and each clause's `for`
+    /// statement wraps those, so the clauses nest exactly as Python reads them.
+    fn gather(self: *Parser, site: GatherSite, clauses: []const Clause, step: ast.GatherStep) diagnostic.Error!ast.NodeId {
+        const value_span = self.syntax.nodes.items[@backingInt(step.value)].span;
+        const step_span = if (step.key) |key| Span.join(self.syntax.nodes.items[@backingInt(key)].span, value_span) else value_span;
+        var body = try self.addStatement(.{ .span = step_span, .data = .{ .gather_step = step } });
+        var index = clauses.len;
+        while (index > 0) {
+            index -= 1;
+            const clause = clauses[index];
+            var filter = clause.filters.len;
+            while (filter > 0) {
+                filter -= 1;
+                const condition = clause.filters[filter];
+                const branch_span = self.syntax.nodes.items[@backingInt(condition)].span;
+                body = try self.addStatement(.{ .span = branch_span, .data = .{ .branch = .{ .condition = condition, .then_body = body, .else_body = null } } });
+            }
+            body = try self.loopStatement(clause.header, body, clause.span);
+        }
+        return self.append(.{ .span = site.span, .data = .{ .gather = .{ .shape = site.shape, .loop = body, .open = site.open } } });
+    }
+    /// PY-GENERATOR-1: `value for ...` after a first call argument or inside
+    /// parentheses is a generator expression. Its node spans the value and the
+    /// clauses; the consuming call decides what it builds.
+    fn generatorExpression(self: *Parser, value: ast.NodeId) diagnostic.Error!ast.NodeId {
+        const clauses = try self.comprehensionClauses();
+        const value_span = self.syntax.nodes.items[@backingInt(value)].span;
+        const span: Span = .join(value_span, clauses[clauses.len - 1].span);
+        return self.gather(.{ .shape = .generator, .open = value_span, .span = span }, clauses, .{ .value = value });
     }
 
     /// Build `f"a{x}b"` as its alternating literal and interpolated pieces.
@@ -2017,6 +2093,9 @@ pub const Parser = struct {
         return value;
     }
 
+    /// `{}` and `{k: v, ...}` build a dictionary; `{a, b}` a set (SET-1);
+    /// `{k: v for ...}` a dict comprehension and `{x for ...}` a set
+    /// comprehension (`PY-GATHER-1`). The first entry decides which.
     fn parseDictionary(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
         self.cursor.delimiters += 1;
         defer self.cursor.delimiters -= 1;
@@ -2024,28 +2103,47 @@ pub const Parser = struct {
         self.cursor.pos += 1;
         var entries: std.ArrayList(ast.NodeId) = .empty;
         while (self.current().tag != .rbrace) {
-            try entries.append(self.storage, try self.expression(0));
-            // A first element followed by a comma, the closing brace or `for`
-            // is a set literal or a set comprehension (SET-1); `{}` stays the
-            // empty dict, as in Python.
-            if (entries.items.len == 1 and self.current().tag == .kw_for) return self.parseComprehension(token, entries.items[0], true);
-            if (entries.items.len == 1 and (self.current().tag == .comma or self.current().tag == .rbrace)) return self.parseSetLiteral(token, entries.items[0]);
+            const key = try self.expression(0);
+            if (entries.items.len == 0) {
+                if (self.current().tag == .kw_for) return self.braceComprehension(token, .set, .{ .value = key });
+                if (self.current().tag == .comma or self.current().tag == .rbrace) return self.setLiteral(token, key);
+            }
+            try entries.append(self.storage, key);
             _ = try self.expect(.colon);
-            try entries.append(self.storage, try self.expression(0));
-            if (self.current().tag == .kw_for) return self.hintHere(.dict_comprehension);
+            const value = try self.expression(0);
+            if (entries.items.len == 1 and self.current().tag == .kw_for) return self.braceComprehension(token, .dict, .{ .key = key, .value = value });
+            try entries.append(self.storage, value);
             if (!self.take(.comma)) break;
         }
         const close = try self.expect(.rbrace);
         return self.append(.{ .span = .join(token.span, close.span), .data = .{ .dictionary_literal = try entries.toOwnedSlice(self.storage) } });
     }
-    /// Parse the rest of `{a, b, ...}` after its first element: a set literal.
-    /// The elements stay in source order and a trailing comma is accepted.
-    fn parseSetLiteral(self: *Parser, token: lex.Token, first: ast.NodeId) diagnostic.Error!ast.NodeId {
-        var values: std.ArrayList(ast.NodeId) = .empty;
-        try values.append(self.storage, first);
-        while (self.take(.comma) and self.current().tag != .rbrace) try values.append(self.storage, try self.expression(0));
+    /// The clauses and closing brace of a set or dict comprehension. A set
+    /// comprehension with one unfiltered clause over one name keeps the
+    /// dedicated comprehension form (SET-1), as a list comprehension does; every
+    /// other shape lowers through ordinary loops (`PY-GATHER-1`).
+    fn braceComprehension(self: *Parser, token: lex.Token, shape: ast.GatherShape, step: ast.GatherStep) diagnostic.Error!ast.NodeId {
+        const clauses = try self.comprehensionClauses();
         const close = try self.expect(.rbrace);
-        return self.append(.{ .span = .join(token.span, close.span), .data = .{ .set_literal = try values.toOwnedSlice(self.storage) } });
+        const span: Span = .join(token.span, close.span);
+        const only = clauses[0];
+        if (shape == .set and clauses.len == 1 and only.header.second == null and only.filters.len == 0) {
+            const src: ast.Comprehension.Source = if (only.header.range) |bounds| .{ .range = bounds } else .{ .iterable = only.header.input };
+            return self.append(.{ .span = span, .data = .{ .comprehension = .{ .output = step.value, .name = only.header.first, .source = src, .set = true } } });
+        }
+        return self.gather(.{ .shape = shape, .open = token.span, .span = span }, clauses, step);
+    }
+    /// SET-1: the elements of `{a, b, ...}` after its first, with an optional
+    /// trailing comma.
+    fn setLiteral(self: *Parser, token: lex.Token, first: ast.NodeId) diagnostic.Error!ast.NodeId {
+        var elements: std.ArrayList(ast.NodeId) = .empty;
+        try elements.append(self.storage, first);
+        while (self.take(.comma)) {
+            if (self.current().tag == .rbrace) break;
+            try elements.append(self.storage, try self.expression(0));
+        }
+        const close = try self.expect(.rbrace);
+        return self.append(.{ .span = .join(token.span, close.span), .data = .{ .set_literal = try elements.toOwnedSlice(self.storage) } });
     }
     fn parseRestrict(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
         return self.sink.fail("E_REMOVED_SPELLING", token.span, "`restrict_resource[...]` was removed; use `fs.read_only()`");
@@ -2208,6 +2306,10 @@ pub const Parser = struct {
         self.cursor.pos += 1;
         _ = try self.expect(.lparen);
         const base = try self.expression(0);
+        if (token.tag == .kw_len and self.current().tag == .kw_for) {
+            const at = self.current().span;
+            return self.sink.failRelated(generator_code, at, generator_length_message, .{ .span = at, .message = generator_length_accepted, .role = .alternative });
+        }
         if (token.tag != .kw_replace) {
             const close = try self.expect(.rparen);
             return self.append(.{ .span = .join(token.span, close.span), .data = if (token.tag == .kw_len) .{ .length = base } else .{ .unwrap = base } });
@@ -2224,7 +2326,7 @@ pub const Parser = struct {
         if (self.current().tag != .dot) return false;
         if (self.cursor.pos + 2 >= self.tokens.len) return false;
         const member = self.tokens[self.cursor.pos + 1].tag;
-        if (member != .ident and member != .kw_len and member != .kw_replace) return false;
+        if (member != .ident and member != .kw_len and member != .kw_replace and member != .kw_union) return false;
         return self.tokens[self.cursor.pos + 2].tag == .lparen;
     }
 
@@ -2330,6 +2432,13 @@ pub const Parser = struct {
             keyword_seen = keyword_seen or keyword;
             try names.append(self.storage, name);
             try values.append(self.storage, try self.argumentValue());
+            // PY-GENERATOR-1: `f(x for x in xs)` passes one generator expression,
+            // which must be the only argument unless it is parenthesized.
+            if (self.current().tag == .kw_for and values.items.len == 1 and !keyword) {
+                values.items[0] = try self.generatorExpression(values.items[0]);
+                if (self.current().tag == .comma) return self.sink.failRelated(syntax_code, self.current().span, generator_sole_message, .{ .span = self.current().span, .message = generator_sole_accepted, .role = .alternative });
+                break;
+            }
             if (!self.take(.comma) or self.current().tag == .rparen) break;
         };
         return .{
@@ -2420,7 +2529,7 @@ pub const Parser = struct {
         if (token.tag == .ident and self.sameExpressionLine() and self.methodSuffix()) {
             owner = name;
             self.cursor.pos += 1;
-            name = try self.declaredName();
+            name = try self.memberName();
         }
         const callable_name = token.tag == .ident or token.tag == .kw_len or token.tag == .kw_replace;
         if (callable_name and self.sameExpressionLine() and self.take(.lparen)) {

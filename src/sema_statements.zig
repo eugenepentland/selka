@@ -521,6 +521,7 @@ fn statement(comptime Checker: type, self: *Checker, statement_id: ast.Statement
         .assertion => |claim| try statementAssert(Checker, self, claim),
         .binding => |b| try statementBinding(Checker, self, stmt, b, &flow),
         .assignment => |a| try statementAssignment(Checker, self, stmt, a, &flow),
+        .gather_step => |step| try self.statementGatherStep(stmt, step),
     };
     const result: typed.StatementId = @fromBackingInt(self.statements.items.len);
     try self.statements.append(self.allocator, .{ .span = stmt.span, .terminates = flow.terminates, .owned_cleanup = flow.owned_cleanup, .data = data });

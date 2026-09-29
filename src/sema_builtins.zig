@@ -5,6 +5,7 @@
 //! exposes the ones the rest of the checker calls as `self.name(...)`.
 const buffer_operations = @import("buffer_operations.zig");
 const collections = @import("collection_lower.zig");
+const dictionary_views = @import("dictionary_views.zig");
 const option_flow = @import("option_flow.zig");
 const call_arguments = @import("call_arguments.zig");
 const io_builtins = @import("io_builtins.zig");
@@ -24,6 +25,7 @@ const Error = diagnostic.Error;
 const numeric_surface = @import("numeric_surface.zig");
 const prelude = @import("prelude.zig");
 const prelude_builtins = @import("prelude_builtins.zig");
+const gathers = @import("sema_gathers.zig");
 const sema_shared = @import("sema_shared.zig");
 const call_argument_code = sema_shared.call_argument_code;
 const eCollectionMethod = sema_shared.eCollectionMethod;
@@ -291,6 +293,12 @@ fn hintPreludeArguments(comptime Checker: type, self: *Checker, name: []const u8
 fn queuePreludeCall(comptime Checker: type, self: *Checker, work: *std.ArrayList(Work), call_id: ast.NodeId, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!bool {
     if (!try preludeName(Checker, self, call)) return false;
     const name = self.src.text(call.name);
+    // PY-GENERATOR-1: a generator argument is checked as what its call
+    // consumes; a second positional argument leaves it a plain generator.
+    if (call.arguments.len == 1 or (call.arguments.len != 0 and std.mem.eql(u8, name, "sorted")))
+        if (gathers.Use.consuming(name)) |use| {
+            _ = try self.consumeGenerator(call.arguments[0], use);
+        };
     if (std.mem.eql(u8, name, "sorted")) {
         const keywords = try sortedKeywords(Checker, self, call);
         if (keywords.key != null or keywords.reverse != null) {
@@ -300,7 +308,8 @@ fn queuePreludeCall(comptime Checker: type, self: *Checker, work: *std.ArrayList
         }
     } else try call_arguments.positional(call, self.sink);
     try hintPreludeArguments(Checker, self, name, call);
-    const materialized = if (prelude_builtins.materializes(name) and call.arguments.len == 1) try rangeSource(Checker, self, call.arguments[0]) else null;
+    const ranged = prelude_builtins.materializes(name) or std.mem.eql(u8, name, "set");
+    const materialized = if (ranged and call.arguments.len == 1) try rangeSource(Checker, self, call.arguments[0]) else null;
     const arguments = if (materialized) |range| range.arguments else call.arguments;
     var index = arguments.len;
     while (index > 0) {
@@ -319,6 +328,17 @@ fn checkPreludeCall(comptime Checker: type, self: *Checker, node: ast.Node, call
     }
     try call_arguments.positional(call, self.sink);
     const builtins: prelude_builtins.Prelude(Checker) = .{ .checker = self };
+    // PY-GENERATOR-1: `sum`, `any`, `all`, `min`, `max`, `set`, `dict` and
+    // `list` of a generator are the value its loop already folded or built.
+    if (call.arguments.len == 1 and (self.foldedGenerator(call.arguments[0]) or listGenerator(Checker, self, name, call.arguments[0]))) {
+        out.* = self.nodes.items[@backingInt(self.resolved[@backingInt(call.arguments[0])].?)];
+        out.span = node.span;
+        return true;
+    }
+    if (std.mem.eql(u8, name, "dict")) {
+        out.* = try checkDictConstructor(Checker, self, node, call);
+        return true;
+    }
     const building_set = std.mem.eql(u8, name, "set");
     if (building_set and call.arguments.len == 0) {
         out.* = try self.checkEmptySet(node.span);
@@ -335,33 +355,79 @@ fn checkPreludeCall(comptime Checker: type, self: *Checker, node: ast.Node, call
             return true;
         }
         const input = self.resolved[@backingInt(call.arguments[0])].?;
-        // `set(iterable)` (SET-1); `list(s)` of a set is its snapshot in
-        // insertion order.
+        // `set(iterable)` (SET-1); `list(s)` of a set, and `list(d)` of a
+        // dictionary or a key or value view, is the fresh list of its keys or
+        // values in insertion order (PRELUDE-KEYS-1).
         if (building_set) {
             out.* = try self.checkSetFromIterable(node.span, input);
-        } else if (typed.setRecord(self.catalog.records, self.nodes.items[@backingInt(input)].ty) != null) {
-            out.* = try setElements(Checker, self, node.span, input);
-        } else out.* = try builtins.copyList(node.span, input);
+        } else {
+            const listed = try preludeList(Checker, self, node.span, input);
+            out.* = if (listed != input) self.nodes.items[@backingInt(listed)] else try builtins.copyList(node.span, input);
+        }
         return true;
     }
     const values = try self.allocator.alloc(typed.NodeId, call.arguments.len);
     for (call.arguments, values) |id, *slot| slot.* = self.resolved[@backingInt(id)].?;
-    // A set folds and orders as the list of its elements in insertion order.
-    if (values.len == 1 and typed.setRecord(self.catalog.records, self.nodes.items[@backingInt(values[0])].ty) != null)
-        values[0] = try retainNode(Checker, self, try setElements(Checker, self, node.span, values[0]));
+    // A set folds and orders as the list of its elements in insertion order
+    // (SET-1), and the folds read a dictionary's keys the same way (PRELUDE-KEYS-1).
+    if (values.len == 1 and (folding(name) or typed.setRecord(self.catalog.records, self.nodes.items[@backingInt(values[0])].ty) != null))
+        values[0] = try preludeList(Checker, self, node.span, values[0]);
     out.* = (try builtins.build(node.span, name, values)) orelse return false;
     return true;
 }
-/// The fresh list of a set's elements in insertion order: the key snapshot of
-/// its dictionary representation.
-fn setElements(comptime Checker: type, self: *Checker, span: source.Span, input: typed.NodeId) Error!typed.Node {
-    return (collections.Builder(Checker){ .checker = self, .span = span }).access(input, .keys, &.{}, false);
+/// The list a prelude call reads for `input`: the fresh list of a set's
+/// elements or a dictionary's keys in insertion order (the key snapshot of
+/// its dictionary representation), the snapshot of a key or value view, or
+/// `input` itself for any other value (SET-1, PRELUDE-KEYS-1).
+fn preludeList(comptime Checker: type, self: *Checker, span: source.Span, input: typed.NodeId) Error!typed.NodeId {
+    const ty = self.nodes.items[@backingInt(input)].ty;
+    const b: collections.Builder(Checker) = .{ .checker = self, .span = span };
+    if (dictionary_views.identify(self.catalog, ty)) |view| if (view == .keys or view == .values) {
+        const snapshot = try dictionary_views.snapshot(Checker, self, span, input, view);
+        return b.node(snapshot.ty, snapshot.data);
+    };
+    if (!ty.isAggregate() or !self.catalog.records[ty.recordIndex()].isCollection()) return input;
+    if (self.catalog.records[ty.recordIndex()].collection.kind != .dictionary) return input;
+    const keys = try b.access(input, .keys, &.{}, false);
+    return b.node(keys.ty, keys.data);
 }
 /// Add a built checked expression to the node table.
 fn retainNode(comptime Checker: type, self: *Checker, value: typed.Node) Error!typed.NodeId {
     const id: typed.NodeId = @fromBackingInt(self.nodes.items.len);
     try self.nodes.append(self.allocator, value);
     return id;
+}
+/// Whether a prelude builtin folds its one sequence argument.
+fn folding(name: []const u8) bool {
+    inline for (.{ "sum", "min", "max", "any", "all" }) |builtin| {
+        if (std.mem.eql(u8, name, builtin)) return true;
+    }
+    return false;
+}
+/// Whether `list(...)`'s argument is a generator its own loop built into a list.
+fn listGenerator(comptime Checker: type, self: *Checker, name: []const u8, id: ast.NodeId) bool {
+    if (!std.mem.eql(u8, name, "list")) return false;
+    const node = self.syntax.nodes.items[@backingInt(id)];
+    return node.data == .gather and node.data.gather.shape == .generator;
+}
+const dict_argument_message = "dict() copies a dictionary or collects a generator of (key, value) pairs";
+const dict_argument_alternative = "pair two lists with a dict comprehension: `{k: v for k, v in zip(keys, values)}`";
+/// PY-GENERATOR-1: `dict()` with its type from context and `dict(mapping)`, a
+/// copy; `dict(...)` of a generator is answered by the generator's own loop.
+fn checkDictConstructor(comptime Checker: type, self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!typed.Node {
+    if (call.arguments.len > 1) return self.sink.fail("E_ARITY", node.span, "dict() takes at most one mapping or generator of (key, value) pairs");
+    const b: collections.Builder(Checker) = .{ .checker = self, .span = node.span };
+    if (call.arguments.len == 0) {
+        const expected = self.expected_types.get(node.span) orelse return self.sink.fail("E_DICT_INFERENCE", node.span, "an empty dictionary needs its type from context: `counts: dict[str, int] = dict()`");
+        if (!expected.isAggregate() or self.catalog.records[expected.recordIndex()].collection.kind != .dictionary or typed.isSet(self.catalog.records[expected.recordIndex()]))
+            return self.sink.fail("E_DICT_TYPE", node.span, "dict() builds a dictionary, but this position expects another type");
+        return b.block(&.{}, try b.node(expected, .{ .array = &.{} }));
+    }
+    const input = self.resolved[@backingInt(call.arguments[0])].?;
+    const input_type = self.nodes.items[@backingInt(input)].ty;
+    const mapping = input_type.isAggregate() and self.catalog.records[input_type.recordIndex()].collection.kind == .dictionary and !typed.isSet(self.catalog.records[input_type.recordIndex()]);
+    if (!mapping) return self.sink.failRelated("E_DICT_TYPE", node.span, dict_argument_message, .{ .span = node.span, .message = dict_argument_alternative, .role = .alternative });
+    return b.access(input, .copy, &.{}, false);
 }
 /// Bind the operands of one sort call by name. `site.positional` leading
 /// operands are the list (one for `sorted`, none for `values.sort`); every
@@ -542,7 +608,8 @@ fn hintSortedArguments(comptime Checker: type, self: *Checker, call: @FieldType(
 fn sortedElement(comptime Checker: type, self: *Checker, input_type: typed.Type, span: source.Span) Error!typed.Type {
     if (!input_type.isAggregate()) return self.sink.fail("E_PRELUDE_TYPE", span, "sorted key requires a list input");
     const input_schema = self.catalog.records[input_type.recordIndex()];
-    if (typed.isSet(input_schema)) return input_schema.collection.key.?;
+    // PRELUDE-KEYS-1: a set or dictionary sorts its keys.
+    if (input_schema.isCollection() and input_schema.collection.kind == .dictionary) return input_schema.collection.key.?;
     if (!input_schema.isCollection() or input_schema.collection.kind != .list)
         return self.sink.fail("E_PRELUDE_TYPE", span, "sorted key requires a list input");
     return input_schema.shape.buffer.?;
@@ -569,10 +636,9 @@ fn checkedSort(comptime Checker: type, self: *Checker, span: source.Span, elemen
 fn checkSortedCall(comptime Checker: type, self: *Checker, span: source.Span, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!typed.Node {
     const keywords = try sortedKeywords(Checker, self, call);
     const builtins: prelude_builtins.Prelude(Checker) = .{ .checker = self };
-    var input = self.resolved[@backingInt(call.arguments[0])].?;
-    // `sorted(s)` of a set orders the list of its elements (SET-1).
-    if (typed.setRecord(self.catalog.records, self.nodes.items[@backingInt(input)].ty) != null)
-        input = try retainNode(Checker, self, try setElements(Checker, self, span, input));
+    // `sorted(s)` of a set orders the list of its elements (SET-1), and
+    // `sorted(d)` a dictionary's keys (PRELUDE-KEYS-1).
+    const input = try preludeList(Checker, self, span, self.resolved[@backingInt(call.arguments[0])].?);
     if (keywords.key == null and keywords.reverse == null) return builtins.sorted(.{ .input = input, .sort = .{ .span = span, .owner = undefined } });
     const element = try sortedElement(Checker, self, self.nodes.items[@backingInt(input)].ty, self.syntax.nodes.items[@backingInt(call.arguments[0])].span);
     return builtins.sorted(.{ .input = input, .sort = try checkedSort(Checker, self, span, element, keywords, undefined) });

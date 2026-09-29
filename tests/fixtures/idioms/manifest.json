@@ -862,6 +862,186 @@
     "stderr_contains": "in"
    },
    "must_pass": false
+  },
+  {
+   "name": "set_ops",
+   "group": "collections",
+   "audit": "devspeed-7",
+   "note": "set | & - ^",
+   "baseline": {
+    "status": 1,
+    "code": "E_TOKEN"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "5223"
+   },
+   "must_pass": true
+  },
+  {
+   "name": "set_methods",
+   "group": "collections",
+   "audit": "devspeed-7",
+   "note": "set add/discard/remove/issubset/union",
+   "baseline": {
+    "status": 1,
+    "code": "E_SYNTAX"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "42"
+   },
+   "must_pass": true
+  },
+  {
+   "name": "set_comp",
+   "group": "collections",
+   "audit": "devspeed-7",
+   "note": "set comprehension",
+   "baseline": {
+    "status": 1,
+    "code": "E_SYNTAX"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "60"
+   },
+   "must_pass": true
+  },
+  {
+   "name": "sorted_set",
+   "group": "collections",
+   "audit": "devspeed-7",
+   "note": "sorted(set(xs))",
+   "baseline": {
+    "status": 1,
+    "code": "E_UNKNOWN_FUNCTION"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "135"
+   },
+   "must_pass": true
+  },
+  {
+   "name": "dict_comp_items",
+   "group": "collections",
+   "audit": "devspeed-7",
+   "note": "dict comprehension over items() with a filter",
+   "baseline": {
+    "status": 1,
+    "code": "E_SYNTAX"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "12"
+   },
+   "must_pass": true
+  },
+  {
+   "name": "dict_comp_zip",
+   "group": "collections",
+   "audit": "devspeed-7",
+   "note": "dict comprehension over zip",
+   "baseline": {
+    "status": 1,
+    "code": "E_SYNTAX"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "33"
+   },
+   "must_pass": true
+  },
+  {
+   "name": "nested_comp",
+   "group": "collections",
+   "audit": "devspeed-7",
+   "note": "two for clauses in one comprehension",
+   "baseline": {
+    "status": 1,
+    "code": "E_SYNTAX"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "93"
+   },
+   "must_pass": true
+  },
+  {
+   "name": "genexp_sum",
+   "group": "collections",
+   "audit": "devspeed-7",
+   "note": "sum of a generator",
+   "baseline": {
+    "status": 1,
+    "code": "E_SYNTAX"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "20"
+   },
+   "must_pass": true
+  },
+  {
+   "name": "genexp_any_all",
+   "group": "collections",
+   "audit": "devspeed-7",
+   "note": "any/all of a generator",
+   "baseline": {
+    "status": 1,
+    "code": "E_SYNTAX"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "31"
+   },
+   "must_pass": true
+  },
+  {
+   "name": "genexp_min_max",
+   "group": "collections",
+   "audit": "devspeed-7",
+   "note": "min/max of a generator",
+   "baseline": {
+    "status": 1,
+    "code": "E_SYNTAX"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "63"
+   },
+   "must_pass": true
+  },
+  {
+   "name": "genexp_collect",
+   "group": "collections",
+   "audit": "devspeed-7",
+   "note": "sorted/join/set of a generator",
+   "baseline": {
+    "status": 1,
+    "code": "E_SYNTAX"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "15"
+   },
+   "must_pass": true
+  },
+  {
+   "name": "bitwise_ops",
+   "group": "collections",
+   "audit": "devspeed-7",
+   "note": "integer | & ^",
+   "baseline": {
+    "status": 1,
+    "code": "E_TOKEN"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "90"
+   },
+   "must_pass": true
   }
  ]
 }

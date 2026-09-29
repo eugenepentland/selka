@@ -203,6 +203,9 @@ const Checker = struct {
     trapping_open: ?source.Span = null,
     /// Contract clauses of the function being checked and the invariant index.
     contract: sema_contracts.State = .{},
+    /// The comprehensions and generator expressions being checked, innermost
+    /// last, and the use each consuming call gave its generator argument.
+    gathers: @import("sema_gathers.zig").State = .{},
 
     /// Reset the per-function state and bind one ordinary instance's signature:
     /// its owner, return type and parameter locals.
@@ -1078,6 +1081,7 @@ const Checker = struct {
     pub const checkSetMethod = set_checks.checkSetMethod;
     pub const checkSetMethodSyntax = set_checks.checkSetMethodSyntax;
     pub const requireSetElement = set_checks.requireSetElement;
+    pub const hintSetOperand = set_checks.hintSetOperand;
     const place_checks = @import("sema_places.zig").Checks(Checker);
     pub const arrayKey = place_checks.arrayKey;
     pub const arrayPlace = place_checks.arrayPlace;
@@ -1114,6 +1118,11 @@ const Checker = struct {
     pub const checkUnary = operator_checks.checkUnary;
     pub const checkValueBinary = operator_checks.checkValueBinary;
     pub const binaryValue = operator_checks.binaryValue;
+    const gather_checks = @import("sema_gathers.zig").Checks(Checker);
+    pub const checkGather = gather_checks.checkGather;
+    pub const consumeGenerator = gather_checks.consumeGenerator;
+    pub const foldedGenerator = gather_checks.foldedGenerator;
+    pub const statementGatherStep = gather_checks.statementGatherStep;
     const idiom_checks = @import("sema_idioms.zig").Checks(Checker);
     pub const checkChain = idiom_checks.checkChain;
     pub const idiomBinary = idiom_checks.idiomBinary;

@@ -476,12 +476,14 @@ def main() -> int:
 ## List comprehensions
 
 `[expression for name in source if condition]` builds a fresh managed list in one
-checked pass over a list, string, byte string or dictionary. It takes exactly one
-generator and at most one filter, the filter runs before the expression, and the
-binding exists only inside the comprehension and may not shadow an active name.
+checked pass over a list, string, byte string or dictionary. With one clause and at
+most one filter it reserves the source's length first; the filter runs before the
+expression, and the binding exists only inside the comprehension and may not
+shadow an active name.
 The source collection is unchanged, and the produced value has to be a copyable
-storable list element. Nested generators, generator expressions and dictionary
-comprehensions are not provided; write an ordinary `for` loop for those.
+storable list element. Two iteration names, several `for` clauses, dictionary and
+set comprehensions and generator arguments lower through their own loops; see
+[the language guide](python-syntax.md#dict-and-set-comprehensions).
 
 The set comprehension `{expression for name in source if condition}` follows the
 same rules and builds a [set](sets.md#set-literals-and-construction) instead.

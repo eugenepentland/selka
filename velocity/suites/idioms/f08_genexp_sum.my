@@ -1,0 +1,4 @@
+# oracle: cpython
+def main() -> int:
+    xs = [1, 2, 3, 4]
+    return sum(x * x for x in xs if x % 2 == 0)

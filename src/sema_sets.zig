@@ -58,6 +58,13 @@ pub fn Checks(comptime Checker: type) type {
         pub fn requireSetElement(self: *Checker, element: typed.Type, span: source.Span) Error!void {
             return impl.requireSetElement(Checker, self, element, span);
         }
+        /// Give one unchecked operand of the set method `kind` on a set of type
+        /// `owner` the type it is checked against: the element, the set, or
+        /// for a list literal or list comprehension given where a set may be
+        /// collected from any iterable, the list of the element.
+        pub fn hintSetOperand(self: *Checker, input: ast.NodeId, owner: typed.Type, kind: BufferKind) Error!void {
+            return impl.hintSetOperand(Checker, self, input, owner, kind);
+        }
     };
 }
 
@@ -93,6 +100,52 @@ fn checkEmptySet(comptime Checker: type, self: *Checker, span: source.Span) Erro
     return .{ .span = span, .ty = expected, .data = .{ .array = &.{} } };
 }
 
+/// Whether a set method's operand may be any iterable of the element type,
+/// collected into a set first as Python's methods do (SET-1): every method
+/// that takes another set.
+fn takesIterable(kind: BufferKind) bool {
+    return switch (kind) {
+        .update, .set_union, .set_intersection, .set_difference, .set_symmetric_difference, .set_subset, .set_superset, .set_disjoint => true,
+        else => false,
+    };
+}
+
+fn hintSetOperand(comptime Checker: type, self: *Checker, input: ast.NodeId, owner: typed.Type, kind: BufferKind) Error!void {
+    const schema = self.catalog.records[owner.recordIndex()];
+    if (!takesIterable(kind)) return self.hint(input, operandType(schema, owner, kind));
+    const node = self.syntax.nodes.items[@backingInt(input)];
+    const element = schema.collection.key.?;
+    const hinted = switch (node.data) {
+        .list_literal => try collections.listType(&self.catalog, element, node.span),
+        .comprehension => |each| if (each.set) owner else try collections.listType(&self.catalog, element, node.span),
+        .gather => |gather| switch (gather.shape) {
+            .set => owner,
+            .list => try collections.listType(&self.catalog, element, node.span),
+            .dict, .generator => return,
+        },
+        .dictionary_literal => return,
+        else => owner,
+    };
+    try self.hint(input, hinted);
+}
+
+/// The operands of a set method with any operand that is not a set collected
+/// into one first, so `s.union([4])` reads as `s.union(set([4]))` (SET-1).
+/// An operand that is already a set, of any element type, is left for the
+/// method's type check.
+fn collectOperands(comptime Checker: type, self: *Checker, call: SetCall) Error![]const typed.NodeId {
+    if (!takesIterable(call.kind)) return call.arguments;
+    const arguments = try self.allocator.dupe(typed.NodeId, call.arguments);
+    const b: collections.Builder(Checker) = .{ .checker = self, .span = call.span };
+    for (arguments) |*argument| {
+        const actual = self.nodes.items[@backingInt(argument.*)].ty;
+        if (typed.setRecord(self.catalog.records, actual) != null) continue;
+        const set = try self.checkSetFromIterable(call.span, argument.*);
+        argument.* = try b.node(set.ty, set.data);
+    }
+    return arguments;
+}
+
 /// The operand type one set method takes: its element for `add`, `remove` and
 /// `discard`, and another set of the same type for every other method.
 fn operandType(schema: typed.Record, owner: typed.Type, kind: BufferKind) typed.Type {
@@ -104,10 +157,9 @@ fn operandType(schema: typed.Record, owner: typed.Type, kind: BufferKind) typed.
 
 fn checkSetMethodSyntax(comptime Checker: type, self: *Checker, node: ast.Node, call: SetCall, inputs: []const ast.NodeId, temporaries: []const typed.Type) Error!typed.Node {
     const owner = self.nodes.items[@backingInt(call.base)].ty;
-    const schema = self.catalog.records[owner.recordIndex()];
     const arguments = try self.allocator.alloc(typed.NodeId, inputs.len);
     for (inputs, arguments) |input, *argument| {
-        try self.hint(input, operandType(schema, owner, call.kind));
+        try hintSetOperand(Checker, self, input, owner, call.kind);
         argument.* = try self.expressionWithTemporaries(input, temporaries);
     }
     var checked = call;
@@ -116,13 +168,15 @@ fn checkSetMethodSyntax(comptime Checker: type, self: *Checker, node: ast.Node, 
     return checkSetMethod(Checker, self, checked);
 }
 
-fn checkSetMethod(comptime Checker: type, self: *Checker, call: SetCall) Error!typed.Node {
+fn checkSetMethod(comptime Checker: type, self: *Checker, input_call: SetCall) Error!typed.Node {
+    var call = input_call;
     const owner = self.nodes.items[@backingInt(call.base)].ty;
     const schema = self.catalog.records[owner.recordIndex()];
     if (call.kind == .read or call.kind == .write) return self.sink.fail(eSetIndex, call.span, "a set is not indexable; test membership with `x in s` and add with `s.add(x)`");
     if (!buffer_operations.setMethod(call.kind)) return self.sink.fail(eCollectionMethod, call.span, try self.unknownMethodMessage(schema.collection.kind, owner));
     const names = try self.signatureNames(owner);
     if (call.arguments.len != call.kind.arity()) return self.methodArityFailure(.{ .span = call.span, .name = call.span, .kind = call.kind, .names = names, .arguments = call.arguments.len });
+    call.arguments = try collectOperands(Checker, self, call);
     for (call.arguments) |argument| {
         const actual = self.nodes.items[@backingInt(argument)].ty;
         try self.requireArgument(.{ .actual = actual, .expected = operandType(schema, owner, call.kind), .span = call.span, .kind = call.kind, .names = names });

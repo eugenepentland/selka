@@ -1,0 +1,3 @@
+# oracle: cpython
+def main() -> int:
+    return (6 | 1) + (12 & 10) * 10 + (1 | 2 ^ 3 & 1)

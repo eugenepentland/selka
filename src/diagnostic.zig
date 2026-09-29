@@ -4,6 +4,8 @@ pub const result_discard = "E_RESULT_DISCARD";
 pub const tuple_arity = "E_TUPLE_ARITY";
 /// Shared code for forbidden source binding/type-variable shadowing.
 pub const shadowing = "E_SHADOWING";
+/// A generator expression outside a call that consumes it, or asked for its length.
+pub const generator = "E_GENERATOR";
 /// Shared code for aggregate operations that would erase result obligations.
 pub const result_operation = "E_RESULT_OPERATION";
 /// Shared code for inconsistent obligations across continuing control-flow paths.
