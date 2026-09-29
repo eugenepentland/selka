@@ -273,6 +273,26 @@ static void dense_type_ids(void) {
     assert(myl_rc_binding_find(&heap, &numbered_c[1])->descriptor.type == &numbered_c[1]);
     finish(&heap);
 }
+// spec-case: RC-TYPE-ID-1
+static void runtime_leaf_types_own_their_ids(void) {
+    /* The shared pointer, byte and word leaves keep reserved ids below the
+     * generated range, register on first use into their own slots and never
+     * enter the hashed map. */
+    const myl_native_type *leaves[3] = {&myl_rc_pointer_leaf, &myl_rc_octet_leaf, &myl_rc_word_leaf};
+    const unsigned ids[3] = {MYL_RC_ID_POINTER_LEAF, MYL_RC_ID_OCTET_LEAF, MYL_RC_ID_WORD_LEAF};
+    myl_native_heap heap;
+    start(&heap);
+    size_t hashed = heap.rc->metadata.bindings.count;
+    for (unsigned i = 0; i < 3; ++i) {
+        assert(leaves[i]->rc_id == ids[i] && ids[i] < MYL_RC_ID_FIRST_GENERATED);
+        assert(myl_rc_native_shape(&heap, leaves[i]) != NULL);
+        const myl_rc_binding *binding = myl_rc_binding_find(&heap, leaves[i]);
+        assert(binding && binding->descriptor.type == leaves[i]);
+        assert(binding == id_slot(&heap, ids[i])->value && id_slot(&heap, ids[i])->key == leaves[i]);
+    }
+    assert(heap.rc->metadata.bindings.count == hashed);
+    finish(&heap);
+}
 // spec: RC-STARTUP-3
 static void flat_plans_build_on_first_lookup(void) {
     const unsigned first = MYL_RC_ID_FIRST_GENERATED;
@@ -995,6 +1015,7 @@ int myl_rc_fast_verify(void) {
     variant_plan_refusals();
     metadata_maps();
     dense_type_ids();
+    runtime_leaf_types_own_their_ids();
     flat_plans_build_on_first_lookup();
     edge_free_objects_retire_at_once();
     storage_visit_and_release_all();
@@ -1016,12 +1037,12 @@ int myl_rc_fast_verify(void) {
     large_extents_map_and_unmap();
     plain_elements_copy_as_bytes();
     list_elements_release_flat();
-    return 26;
+    return 27;
 }
 #ifndef MYL_RC_CONTRACT_LIBRARY
 int main(void) {
-    assert(myl_rc_fast_verify() == 26);
-    puts("native RC fast paths: 26 tests passed");
+    assert(myl_rc_fast_verify() == 27);
+    puts("native RC fast paths: 27 tests passed");
     return 0;
 }
 #endif

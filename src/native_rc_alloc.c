@@ -115,6 +115,11 @@ _Static_assert(offsetof(rc_slab, class) == 0, "a slab starts with its class word
 _Static_assert(sizeof(rc_large) % 16 == 0, "large allocator metadata preserves alignment");
 _Static_assert(sizeof(myl_rc_object) == MYL_RC_PREFIX_BYTES, "RC prefix ABI");
 _Static_assert(offsetof(myl_rc_object, common) == 16, "common header ABI");
+const myl_native_type myl_rc_pointer_leaf = {
+    .size = sizeof(void *), .alignment = _Alignof(void *), .kind = MYL_NATIVE_POINTER, .rc_id = MYL_RC_ID_POINTER_LEAF
+};
+const myl_native_type myl_rc_octet_leaf = {.size = 1, .alignment = 1, .kind = MYL_NATIVE_PLAIN, .rc_id = MYL_RC_ID_OCTET_LEAF};
+const myl_native_type myl_rc_word_leaf = {.size = 8, .alignment = 8, .kind = MYL_NATIVE_PLAIN, .rc_id = MYL_RC_ID_WORD_LEAF};
 static const myl_native_type raw_type = {
     .size=1, .alignment=1, .kind=MYL_NATIVE_PLAIN, .trace_mode=MYL_NATIVE_TRACE_NONE,
     .rc_id=MYL_RC_ID_RAW

@@ -8,11 +8,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stddef.h>
-static const myl_native_type pointer_type = {
-    .size = sizeof(void *), .alignment = _Alignof(void *), .kind = MYL_NATIVE_POINTER
-};
 static const myl_native_field list_fields[] = {
-    { .offset = offsetof(myl_native_list, storage), .type = &pointer_type }
+    { .offset = offsetof(myl_native_list, storage), .type = &myl_rc_pointer_leaf }
 };
 /* The header's one reference, as the collector's flat plan (GC-SCAN-PLAN-2). */
 static const myl_native_scan_entry list_scan[] = {
@@ -31,7 +28,7 @@ myl_native_list *myl_native_list_new(myl_native_heap *heap, const myl_native_typ
     myl_native_list *list = myl_native_heap_alloc(heap, &list_type, 1);
     if (!list) return NULL;
     myl_native_root root;
-    myl_native_root_push(heap, &root, &list, &pointer_type);
+    myl_native_root_push(heap, &root, &list, &myl_rc_pointer_leaf);
     list->element = element;
     if (capacity) {
         list->storage = myl_native_heap_alloc(heap, element, capacity);
@@ -81,7 +78,7 @@ int myl_native_list_append(myl_native_heap *heap, myl_native_list *list, const v
         return 1;
     }
     myl_native_root owner_root, value_root;
-    myl_native_root_push(heap, &owner_root, &list, &pointer_type);
+    myl_native_root_push(heap, &owner_root, &list, &myl_rc_pointer_leaf);
     myl_native_root_push(heap, &value_root, (void *)value, list->element);
     size_t capacity = list->capacity < 4 ? 4 : list->capacity;
     if (list->capacity >= 4) {
@@ -191,7 +188,7 @@ int myl_native_list_insert(myl_native_heap *heap, myl_native_list *list, int64_t
         at = (uint64_t)index > list->length ? list->length : (size_t)index;
     }
     myl_native_root owner_root, value_root;
-    myl_native_root_push(heap, &owner_root, &list, &pointer_type);
+    myl_native_root_push(heap, &owner_root, &list, &myl_rc_pointer_leaf);
     myl_native_root_push(heap, &value_root, (void *)value, list->element);
     ptrdiff_t offset = -1;
     if ((const unsigned char *)value >= (const unsigned char *)list->storage &&
@@ -996,7 +993,7 @@ myl_native_list *myl_native_list_copy(myl_native_heap *heap, const myl_native_li
     if (myl_rc_enabled(heap)) return rc_list_clone(heap,input,input->element,heap->region_depth);
     const myl_native_list *rooted = input;
     myl_native_root root;
-    myl_native_root_push(heap, &root, &rooted, &pointer_type);
+    myl_native_root_push(heap, &root, &rooted, &myl_rc_pointer_leaf);
     myl_native_list *result = myl_native_list_new(heap, input->element, input->length);
     if (result) {
         if (input->length) memcpy(result->storage, input->storage, input->length * input->element->size);
@@ -1012,10 +1009,10 @@ myl_native_list *myl_native_list_clone_at(myl_native_heap *heap, const myl_nativ
     if (myl_rc_enabled(heap)) return rc_list_clone(heap,input,element,region);
     const myl_native_list *rooted = input;
     myl_native_root source_root, clone_root;
-    myl_native_root_push(heap, &source_root, &rooted, &pointer_type);
+    myl_native_root_push(heap, &source_root, &rooted, &myl_rc_pointer_leaf);
     myl_native_list *clone = myl_native_heap_alloc_at(heap, &list_type, 1, region);
     if (clone) {
-        myl_native_root_push(heap, &clone_root, &clone, &pointer_type);
+        myl_native_root_push(heap, &clone_root, &clone, &myl_rc_pointer_leaf);
         size_t capacity = rooted->capacity > rooted->length ? rooted->capacity : rooted->length;
         clone->element = element;
         if (capacity) {
@@ -1068,7 +1065,7 @@ myl_native_list *myl_native_list_slice_step(myl_native_heap *heap, myl_native_li
     const int64_t last = myl_native_slice_stop(length, stop, step);
     const uint64_t count = myl_native_slice_count(first, last, step);
     myl_native_root root;
-    myl_native_root_push(heap, &root, &input, &pointer_type);
+    myl_native_root_push(heap, &root, &input, &myl_rc_pointer_leaf);
     myl_native_list *result = myl_native_list_new(heap, input->element, count);
     if (result) {
         int64_t at = first;

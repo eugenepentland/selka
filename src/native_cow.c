@@ -9,9 +9,6 @@ int myl_native_cow_take_depth_failure(void) {
     cow_depth_exceeded = 0;
     return result;
 }
-static const myl_native_type pointer_type = {
-    .size = sizeof(void *), .alignment = _Alignof(void *), .kind = MYL_NATIVE_POINTER
-};
 static myl_native_object *header_of(const void *payload) {
     return (myl_native_object *)payload - 1;
 }
@@ -195,7 +192,7 @@ static int mark_elements(myl_native_heap *heap, myl_native_list *list) {
     if (held < 0) return 0;
     if (!held) return 1;
     myl_native_root root;
-    myl_native_root_push(heap, &root, &list, &pointer_type);
+    myl_native_root_push(heap, &root, &list, &myl_rc_pointer_leaf);
     int done = 1;
     for (size_t i = 0; i < list->length && done; ++i)
         done = share_at(heap, list->element, (unsigned char *)list->storage + i * list->element->size, 0, 1) == 1;
@@ -208,7 +205,7 @@ static int mark_entries(myl_native_heap *heap, myl_native_dictionary *dict) {
     if (keys < 0 || values < 0) return 0;
     if ((!keys && !values) || !dict->entries->storage) return 1;
     myl_native_root root;
-    myl_native_root_push(heap, &root, &dict, &pointer_type);
+    myl_native_root_push(heap, &root, &dict, &myl_rc_pointer_leaf);
     int done = 1;
     for (size_t i = 0; i < dict->entries->length && done; ++i) {
         unsigned char *entry = (unsigned char *)dict->entries->storage + i * dict->entry_type.size;
@@ -297,7 +294,7 @@ void *myl_native_cow_unique(myl_native_heap *heap, void *payload) {
 void *myl_native_cow_unique_in(myl_native_heap *heap, void *payload, void *container) {
     if (!payload || !(header_of(payload)->mark & MYL_NATIVE_OBJECT_SHARED)) return payload;
     myl_native_root root;
-    myl_native_root_push(heap, &root, &container, &pointer_type);
+    myl_native_root_push(heap, &root, &container, &myl_rc_pointer_leaf);
     void *copy = myl_native_cow_copy(heap, payload);
     myl_native_root_pop(heap, &root);
     return copy;
@@ -322,7 +319,7 @@ void *myl_native_cow_clone_box(myl_native_heap *heap, const myl_native_type *typ
     if (!old_box || !type || type->collection_kind != 5 || !type->element) return NULL;
     myl_native_root old_root, container_root, copy_root;
     myl_native_root_push(heap, &old_root, &old_box, type);
-    myl_native_root_push(heap, &container_root, &container, &pointer_type);
+    myl_native_root_push(heap, &container_root, &container, &myl_rc_pointer_leaf);
     void *copy = myl_native_heap_alloc_at(heap, type->element, 1, myl_native_header_region(old_box));
     if (!copy) {
         myl_native_root_pop(heap, &container_root);
@@ -344,7 +341,7 @@ int myl_native_cow_elements(myl_native_heap *heap, myl_native_list *list) {
     if (held < 0) return 0;
     if (!held) return 1;
     myl_native_root root;
-    myl_native_root_push(heap, &root, &list, &pointer_type);
+    myl_native_root_push(heap, &root, &list, &myl_rc_pointer_leaf);
     int done = 1;
     for (size_t i = 0; i < list->length; ++i) {
         void **slot = (void **)((unsigned char *)list->storage + i * sizeof(void *));
@@ -383,7 +380,7 @@ static const myl_native_type scope_link_type = {
 static int scope_pin(myl_native_heap *heap, void **pins, void *payload) {
     if (!payload) return 1;
     myl_native_root root;
-    myl_native_root_push(heap, &root, &payload, &pointer_type);
+    myl_native_root_push(heap, &root, &payload, &myl_rc_pointer_leaf);
     myl_native_cow_scope_link *link = myl_native_heap_alloc(heap, &scope_link_type, 1);
     myl_native_root_pop(heap, &root);
     if (!link) return 0;

@@ -89,7 +89,13 @@ struct myl_native_type {
 };
 /* Ids below this are reserved for descriptors the runtime defines itself
  * (native_rc.h names them); generated descriptors number upward from here. */
-#define MYL_RC_ID_FIRST_GENERATED 8u
+#define MYL_RC_ID_FIRST_GENERATED 16u
+/* The leaf descriptors every runtime source shares (defined in native_rc_alloc.c,
+ * ids in native_rc.h): a pointer, a byte and an eight-byte word. One object
+ * each, so each owns one id, and a lookup of the element type of a list of
+ * strings, a text's bytes or a dictionary's slots is an indexed load instead
+ * of a hashed miss (RC-TYPE-ID-1). */
+extern const myl_native_type myl_rc_pointer_leaf, myl_rc_octet_leaf, myl_rc_word_leaf;
 enum { MYL_NATIVE_TRACE_LEGACY, MYL_NATIVE_TRACE_NONE, MYL_NATIVE_TRACE_FIELDS };
 enum { MYL_NATIVE_PLAIN, MYL_NATIVE_POINTER, MYL_NATIVE_RECORD,
        MYL_NATIVE_ARRAY, MYL_NATIVE_VARIANT, MYL_NATIVE_OWNED_BUFFER, MYL_NATIVE_OWNED_POOL, MYL_NATIVE_FLOAT, MYL_NATIVE_RESOURCE };
