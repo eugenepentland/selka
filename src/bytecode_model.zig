@@ -42,7 +42,9 @@ pub const Instruction = struct {
         /// whole content as `payload` (UTF-8 octets for `str`, raw octets for
         /// `bytes`) and has `fields == 0`: it pops nothing, so a literal is one
         /// instruction and one stack slot however long it is (`LITERAL-PAYLOAD-1`).
-        make_record: struct { ty: typed.Type, fields: usize, order: []const usize = &.{}, payload: []const u8 = &.{} },
+        /// `blob` instead names the embedded file (`EMBED-1`) that is the whole
+        /// payload of a `bytes`/`str` record; such a record also pops no operands.
+        make_record: struct { ty: typed.Type, fields: usize, order: []const usize = &.{}, payload: []const u8 = &.{}, blob: ?*const typed.Blob = null },
         update_record: struct { ty: typed.Type, indices: []const usize },
         get_field: usize,
         get_index: Access,

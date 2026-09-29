@@ -1,6 +1,8 @@
 //! Unit test entry point, separate from the production compiler module.
 /// Canonical project loader exposed to native-test snapshot identity.
 pub const snapshot_project = @import("project.zig");
+/// Compile-time file embedding exposed to native-test snapshot capture.
+pub const snapshot_embed = @import("embed.zig");
 test {
     _ = @import("qbe_rc_plain_aggregate_test.zig");
     _ = @import("qbe_rc_fresh_constructor_test.zig");
@@ -238,6 +240,7 @@ test {
     _ = @import("byte_builder_test.zig");
     _ = @import("loop_exit_test.zig");
     _ = @import("constants_test.zig");
+    _ = @import("embed_test.zig");
     _ = @import("incremental_test.zig");
     _ = @import("timings_test.zig");
     _ = @import("invalidation_test.zig");

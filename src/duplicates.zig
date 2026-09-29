@@ -317,6 +317,7 @@ const CanonicalWriter = struct {
                 try work.append(allocator, .{ .expression = field.base });
             },
             .integer => |value| writer.print("{d}\n", .{value}) catch return error.OutOfMemory,
+            .blob => |file| writer.print("blob {d} {x}\n", .{ file.length, file.digest[0..8] }) catch return error.OutOfMemory,
             .unit => writer.writeAll("unit\n") catch return error.OutOfMemory,
             .boolean => |value| writer.print("{}\n", .{value}) catch return error.OutOfMemory,
             .local => |slot| writer.print("{d}\n", .{@backingInt(slot)}) catch return error.OutOfMemory,

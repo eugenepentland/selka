@@ -320,6 +320,10 @@ def main(env: Environment) -> int effects(environment):
 
 ## Files
 
+Data that never changes between runs needs no capability at all:
+[`embed_bytes("path")` and `embed_str("path")`](bytes.md#embedding-a-file-at-compile-time)
+read a project file when the program is compiled and store it in the executable.
+
 File functions take the capability as their first argument, so authority is
 visible at every call site rather than hidden in a global. Every whole-path
 helper is also a method on the `Filesystem` value: `fs.read_text(path)` is the

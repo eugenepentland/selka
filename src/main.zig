@@ -41,6 +41,8 @@ const std = @import("std");
 const language = @import("mylang");
 /// Canonical project loader exposed to native-test snapshot identity.
 pub const snapshot_project = language.project;
+/// Compile-time file embedding exposed to native-test snapshot capture.
+pub const snapshot_embed = language.embed;
 const invalidation = @import("invalidation.zig");
 const diagnostic_output = language.diagnostic_output;
 const Reporting = struct {
@@ -569,6 +571,7 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
         try std.Io.File.stdout().writeStreamingAll(init.io, listing);
         return 0;
     }
+    try attachEmbeds(init, &compilation, parsed.path);
     const check_start = if (parsed.reporting.timings) std.Io.Timestamp.now(init.io, .awake) else std.Io.Timestamp.zero;
     // Parse through the persistent syntax cache, then check through the same
     // checked-body query path used by project commands. Reuse is recorded at the
@@ -688,6 +691,19 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
         .run => return executeRun(init, &compilation, parsed),
     }
     return 0;
+}
+
+/// Read the files a single-unit program's `embed_bytes`/`embed_str` calls name and
+/// attach them to its source (`EMBED-1`). Paths resolve against the unit's own
+/// directory and may not leave the nearest `mylang.json` directory.
+fn attachEmbeds(init: Context, compilation: *language.Compilation, path: []const u8) !void {
+    const arena = compilation.arena.allocator();
+    const found = try language.embed.scan(arena, compilation.src);
+    if (found.len == 0) return;
+    const import_root = std.fs.path.dirname(path) orelse ".";
+    const roots: language.embed.Roots = .{ .io = init.io, .import_root = import_root, .root = (try embedRoot(init, path)) orelse import_root };
+    try language.embed.resolve(arena, roots, std.fs.path.basename(path), found);
+    compilation.src.embeds = found;
 }
 
 /// Record the checked node count of a single unit; a library check retains no program.
@@ -1601,6 +1617,16 @@ const ModuleFiles = struct {
     io: std.Io,
     root: []const u8,
     inputs: []const GeneratedInput = &.{},
+    /// The directory embedded files must stay inside (`EMBED-1`); the module root when null.
+    embed_root: ?[]const u8 = null,
+    fn embed(context: ?*anyopaque, allocator: std.mem.Allocator, module_path: []const u8, path: []const u8) std.mem.Allocator.Error!language.embed.Read {
+        const self: *ModuleFiles = @ptrCast(@alignCast(context.?));
+        var files: language.project_files.Files = .{ .io = self.io, .root = self.root, .embed_root = self.embed_root };
+        return language.project_files.Files.readEmbed(&files, allocator, module_path, path);
+    }
+    fn provider(self: *ModuleFiles) language.project.Provider {
+        return .{ .context = self, .read = ModuleFiles.read, .embed = ModuleFiles.embed };
+    }
     fn read(context: ?*anyopaque, allocator: std.mem.Allocator, relative: []const u8, limit: usize) language.project.ReadError![]u8 {
         const self: *ModuleFiles = @ptrCast(@alignCast(context.?));
         for (self.inputs) |input| if (std.mem.eql(u8, input.path, relative)) {
@@ -1919,6 +1945,33 @@ fn foldInterfaceFiles(init: Context, configured: *ConfiguredPolicy, project: *co
     try setPolicyIdentity(stores.frontend, stores.verdict, configured.identity.?[0..]);
 }
 
+/// EMBED-1: fold every embedded file the project's modules read into the
+/// configured identity the verdict caches key on, exactly as interface files are
+/// folded, so a replayed success, manifest or program never outlives an edit to,
+/// or the deletion of, a file an `embed_bytes`/`embed_str` call names. A project
+/// that embeds nothing keeps its identity unchanged.
+fn foldEmbeds(configured: *ConfiguredPolicy, project: *const language.project.Project, stores: Replayed) !void {
+    var hash = std.crypto.hash.sha2.Sha256.init(.{});
+    hash.update("embed-identity-v1");
+    if (configured.identity) |*identity| hash.update(identity);
+    var embedding = false;
+    for (project.order.items) |module| {
+        const src = project.modules.items[module].src;
+        if (src.embeds.len == 0) continue;
+        embedding = true;
+        var length: [8]u8 = undefined;
+        std.mem.writeInt(u64, &length, src.path.len, .little);
+        hash.update(&length);
+        hash.update(src.path);
+        language.embed.hashInto(&hash, src.embeds);
+    }
+    if (!embedding) return;
+    var digest: [32]u8 = undefined;
+    hash.final(&digest);
+    configured.identity = std.fmt.bytesToHex(digest, .lower);
+    try setPolicyIdentity(stores.frontend, stores.verdict, configured.identity.?[0..]);
+}
+
 /// Publish the required-policy identity to the caches whose verdict must not
 /// outlive a policy change. Each cache keeps its own copy, so `identity` may
 /// point at a local buffer. Null restores today's behavior for unconfigured projects.
@@ -2195,6 +2248,17 @@ const EntryLocation = struct {
     }
 };
 
+/// The directory no embedded file may leave (`EMBED-1`): the one holding the
+/// nearest `mylang.json` above the entry, or null to use the entry's own
+/// import root. The slice lives in the command arena.
+fn embedRoot(init: Context, entry_path: []const u8) !?[]const u8 {
+    const config = project_config.discover(init.arena.allocator(), init.io, entry_path) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => return null,
+    };
+    return std.fs.path.dirname(config orelse return null);
+}
+
 fn entryLocation(init: Context, path: []const u8) !EntryLocation {
     if (try project_config.testEntryLocation(init.gpa, init.io, path)) |location| {
         return .{ .root = location.root, .name = location.name, .owned = location };
@@ -2239,7 +2303,7 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
     init.timings.begin("source_load_parse", false);
     const location = try entryLocation(init, path);
     defer location.deinit(init.gpa);
-    var files: ModuleFiles = .{ .io = init.io, .root = location.root };
+    var files: ModuleFiles = .{ .io = init.io, .root = location.root, .embed_root = try embedRoot(init, path) };
     files.inputs = (try prepareInputs(init, parsed, location.name)) orelse return 2;
     var project = language.project.Project.init(init.gpa);
     defer if (lifetime == .session or std.debug.runtime_safety) project.deinit();
@@ -2253,6 +2317,7 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
     var configured = loadConfiguredPolicy(init, parsed, &project, frontend, verdict) catch |err| return policyFailureStatus(err);
     defer configured.deinit();
     try foldInterfaceFiles(init, &configured, &project, files.root, .{ .verdict = verdict, .frontend = frontend, .policy = null });
+    try foldEmbeds(&configured, &project, .{ .verdict = verdict, .frontend = frontend, .policy = null });
     const policy_receipt = try configuredPolicyReceipt(init.arena.allocator(), &configured);
     if (try surfaceProject(init, &project, parsed)) |status| return status;
     if (try replayStoredVerdict(init, parsed, &project, .{ .verdict = verdict, .frontend = frontend, .policy = configured.identity })) return 0;
@@ -2760,7 +2825,7 @@ fn projectLimits(init: Context, parsed: Parsed) !language.project.Options {
 }
 
 fn loadModules(init: Context, project: *language.project.Project, files: *ModuleFiles, entry_name: []const u8, options: language.project.Options) !?u8 {
-    project.load(.{ .context = files, .read = ModuleFiles.read }, entry_name, options) catch |err| switch (err) {
+    project.load(files.provider(), entry_name, options) catch |err| switch (err) {
         error.SourceError => {
             const message = try diagnostic_output.renderProject(init.gpa, project, init.diagnostics);
             defer init.gpa.free(message);

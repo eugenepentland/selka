@@ -534,6 +534,14 @@ fn validateOpMakeRecord(allocator: std.mem.Allocator, program: Program, record: 
     if (!record.ty.isAggregate() or !validType(record.ty, program)) return error.InternalError;
     if (program.records[record.ty.recordIndex()].shape.resource != null) return error.InternalError;
     if (record.payload.len != 0) return validateLiteralPayload(program.records[record.ty.recordIndex()], record);
+    // An embedded file is a whole `bytes` or `str` payload with no operands (`EMBED-1`).
+    if (record.blob != null) {
+        const schema = program.records[record.ty.recordIndex()];
+        const text = schema.managed and schema.collection.kind == .string;
+        if (!typed.isByteString(schema) and !text) return error.InternalError;
+        if (record.fields != 0 or record.order.len != 0) return error.InternalError;
+        return;
+    }
     if (program.records[record.ty.recordIndex()].managed and program.records[record.ty.recordIndex()].collection.kind != .list) {
         if (record.order.len != 0) return error.InternalError;
         if (program.records[record.ty.recordIndex()].collection.kind == .dictionary and record.fields % 2 != 0) return error.InternalError;

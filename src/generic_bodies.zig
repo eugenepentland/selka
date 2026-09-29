@@ -1,5 +1,6 @@
 //! Symbolic template checking preserves types, ownership and effects without representative substitution.
 const call_arguments = @import("call_arguments.zig");
+const embed = @import("embed.zig");
 const eResultDiscard = diagnostic.result_discard;
 const std = @import("std");
 const option_flow = @import("option_flow.zig");
@@ -368,7 +369,7 @@ const Checker = struct {
             const constants: @import("constant_values.zig").Context = .{ .src = self.src, .program = self.program, .names = self.module_names, .sink = self.sink, .catalog = self.catalog };
             if (try constants.lookup(span)) |index| {
                 if (try constants.literalType(index)) |ty_value| {
-                    self.seedEffect(.managed_allocation);
+                    if (!constants.isEmbed(index)) self.seedEffect(.managed_allocation);
                     return .{ .concrete = ty_value };
                 }
                 return .{ .concrete = (try constants.evaluate(index)).typeOf() };
@@ -1246,6 +1247,18 @@ const Checker = struct {
         self.seedEffect(.managed_allocation);
         return Symbolic{ .concrete = target };
     }
+    /// `embed_bytes("path")` and `embed_str("path")`: static data of one concrete
+    /// type, checked against the file the loader read (`EMBED-1`).
+    fn embedCall(self: *Checker, call_value: Call, span: source.Span) Error!?Symbolic {
+        if (call_value.owner != null or call_value.type_arguments.len != 0) return null;
+        const name = self.src.text(call_value.name);
+        const kind = embed.kindOf(name) orelse return null;
+        if (self.active.contains(name) or self.functions.contains(name)) return null;
+        if (self.module_names) |names| if (try names.topLevel(call_value.name)) return null;
+        _ = try embed.check(.{ .scratch = self.allocator, .src = self.src, .nodes = self.program.nodes.items, .sink = self.sink }, call_value, kind, span);
+        const target = self.catalog.names.get(if (kind == .bytes) "bytes" else "str") orelse return null;
+        return Symbolic{ .concrete = target };
+    }
     /// `.read_only()`, `.only(...)` and `.names()` on a capability value.
     fn capabilityMethodCall(self: *Checker, input_call: Call, span: source.Span) Error!?Symbolic {
         const owner = input_call.owner orelse return null;
@@ -1328,6 +1341,7 @@ const Checker = struct {
         if (try self.viewSnapshot(input_call, span)) |value| return value;
         if (try self.capabilityMethodCall(input_call, span)) |value| return value;
         if (try self.textConstructor(input_call, span)) |value| return value;
+        if (try self.embedCall(input_call, span)) |value| return value;
         if (std.mem.eql(u8, self.src.text(input_call.name), "todo") and input_call.owner == null) {
             _ = try self.ty(input_call.type_arguments[0]);
             return self.recordHole(input_call.name, input_call.type_arguments[0], span);

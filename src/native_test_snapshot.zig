@@ -4,6 +4,7 @@ const fs = @import("qbe_build_io.zig");
 const v = @import("qbe_build_value.zig");
 const project_config = @import("project_config.zig");
 const project = @import("native_test_root").snapshot_project;
+const embed = @import("native_test_root").snapshot_embed;
 /// Source races and invalid provider contracts discard test results.
 pub const Error = fs.Error || std.Io.Dir.OpenError || std.Io.Dir.SelectiveWalker.Error ||
     std.Io.File.StatError || std.Io.File.ReadPositionalError ||
@@ -15,7 +16,9 @@ pub const File = struct { path: []const u8, data: []const u8, hash: []const u8 }
 /// Captured required-configuration files, their combined policy identity, and
 /// the project budgets the same configuration sets (PROJ-SCALE-1): the snapshot
 /// is bounded by its `max_total_bytes`, and the resolved identity loads under it.
-pub const Support = struct { files: []const File = &.{}, policy_identity: ?[]const u8 = null, budgets: project.Options = .{} };
+/// `assets` are the files the captured sources embed (`EMBED-1`), each named by
+/// the path it has relative to the snapshot root, which may climb above it.
+pub const Support = struct { files: []const File = &.{}, policy_identity: ?[]const u8 = null, budgets: project.Options = .{}, assets: []const File = &.{} };
 /// Paths and bytes belong to the enclosing native build context.
 pub const Snapshot = struct {
     root: []const u8,
@@ -46,10 +49,11 @@ pub fn captureMemoized(context: fs.Context, entry: []const u8, excluded: ?[]cons
     var memo = Imports.open(context, memo_path);
     defer memo.deinit();
     defer memo.save(context);
-    if (try memoIdentity(context.allocator, &memo, captured.entry, captured.files, captured.support.files)) |memoized| {
+    // A project that embeds files resolves them through a real load, which the memo cannot replay.
+    if (captured.support.assets.len == 0) if (try memoIdentity(context.allocator, &memo, captured.entry, captured.files, captured.support.files)) |memoized| {
         captured.identity = memoized;
         return captured;
-    }
+    };
     captured.identity = try identity(context.allocator, captured.entry, captured.files, captured.support, &memo);
     return captured;
 }
@@ -67,7 +71,7 @@ fn inventory(context: fs.Context, entry: []const u8, excluded: ?[]const u8, hash
         root = location.root;
         name = location.relative;
     }
-    const support = try captureSupport(context, absolute);
+    var support = try captureSupport(context, absolute);
     const byte_limit = support.budgets.max_total_bytes;
     var directory = try std.Io.Dir.cwd().openDir(context.io, root, .{ .iterate = true, .follow_symlinks = false });
     defer directory.close(context.io);
@@ -94,6 +98,7 @@ fn inventory(context: fs.Context, entry: []const u8, excluded: ?[]const u8, hash
     }
     std.mem.sort(File, files.items, {}, less);
     if (find(files.items, name) == null) return error.InvalidTestSnapshot;
+    support.assets = try captureAssets(context, .{ .root = root, .entry = absolute }, files.items);
     return .{
         .root = root,
         .entry = name,
@@ -103,6 +108,34 @@ fn inventory(context: fs.Context, entry: []const u8, excluded: ?[]const u8, hash
         .identity = "",
         .excluded = excluded,
     };
+}
+
+/// Where a snapshot's embedded files are read from: the project root its sources
+/// are captured under, and the entry that locates the nearest `mylang.json`.
+const AssetRoots = struct { root: []const u8, entry: []const u8 };
+
+/// EMBED-1: read every file the captured sources' `embed_bytes`/`embed_str` calls
+/// name, by the same rules the compiler applies, so a test child compiled from
+/// the materialized copy finds them. A call whose file cannot be read is left
+/// for the child's own compile to report.
+fn captureAssets(context: fs.Context, roots: AssetRoots, files: []const File) Error![]const File {
+    var assets: std.ArrayList(File) = .empty;
+    const config = project_config.discover(context.allocator, context.io, roots.entry) catch null;
+    const embed_root = if (config) |path| std.fs.path.dirname(path) orelse roots.root else roots.root;
+    for (files) |file| {
+        if (!embed.mayEmbed(file.data)) continue;
+        const found = try embed.scan(context.allocator, .{ .path = file.path, .bytes = file.data, .line_starts = &.{} });
+        for (found) |site| {
+            const read_roots: embed.Roots = .{ .io = context.io, .import_root = roots.root, .root = embed_root };
+            const outcome = try embed.read(context.allocator, read_roots, file.path, site.path);
+            if (outcome.status != .ok) continue;
+            const relative = try embed.relativeTarget(context.allocator, std.fs.path.dirname(file.path) orelse "", site.path);
+            if (find(assets.items, relative) != null) continue;
+            try assets.append(context.allocator, .{ .path = relative, .data = outcome.contents, .hash = try fileHash(context.allocator, outcome.contents) });
+        }
+    }
+    std.mem.sort(File, assets.items, {}, less);
+    return assets.items;
 }
 
 /// Capture the winning `mylang.json` and, when it names a relative policy, the
@@ -193,9 +226,9 @@ fn identity(allocator: std.mem.Allocator, entry: []const u8, files: []const File
     const support = configuration.files;
     var loaded = project.Project.init(allocator);
     defer loaded.deinit();
-    var provider: MemoryProvider = .{ .files = files };
+    var provider: MemoryProvider = .{ .files = files, .assets = configuration.assets };
     const module_name = try entryModule(allocator, entry);
-    loaded.load(.{ .context = &provider, .read = MemoryProvider.read }, module_name, configuration.budgets) catch return broadIdentity(allocator, entry, files, support);
+    loaded.load(provider.provider(), module_name, configuration.budgets) catch return broadIdentity(allocator, entry, files, configuration);
     if (memo) |learning| try rememberStandard(learning, &loaded);
     var pairs: std.ArrayList([2][]const u8) = .empty;
     for (loaded.modules.items) |module| {
@@ -205,6 +238,12 @@ fn identity(allocator: std.mem.Allocator, entry: []const u8, files: []const File
         };
         const index = find(files, path) orelse continue;
         try pairs.append(allocator, .{ files[index].path, files[index].hash });
+        // EMBED-1: each file the module embeds, or why it could not be read.
+        for (module.src.embeds) |embedded| {
+            const name = try std.fmt.allocPrint(allocator, "embed:{s}:{s}", .{ module.src.path, embedded.path });
+            const value = if (embedded.status == .ok) try allocator.dupe(u8, &std.fmt.bytesToHex(embedded.digest, .lower)) else @tagName(embedded.status);
+            try pairs.append(allocator, .{ name, value });
+        }
     }
     return resolvedIdentity(allocator, entry, pairs.items, support);
 }
@@ -441,6 +480,19 @@ const DiskProvider = struct {
 
 const MemoryProvider = struct {
     files: []const File,
+    assets: []const File = &.{},
+    fn provider(self: *MemoryProvider) project.Provider {
+        return .{ .context = self, .read = MemoryProvider.read, .embed = readEmbed };
+    }
+    /// The captured file an embed literal names, found by the path it has relative to the root.
+    fn readEmbed(raw: ?*anyopaque, allocator: std.mem.Allocator, module_path: []const u8, path: []const u8) std.mem.Allocator.Error!embed.Read {
+        const self: *MemoryProvider = @ptrCast(@alignCast(raw.?));
+        if (embed.spelledStatus(path)) |status| return .{ .status = status };
+        const relative = try embed.relativeTarget(allocator, std.fs.path.dirname(module_path) orelse "", path);
+        defer allocator.free(relative);
+        const index = find(self.assets, relative) orelse return .{ .status = .missing };
+        return .{ .status = .ok, .contents = try allocator.dupe(u8, self.assets[index].data) };
+    }
     fn read(raw: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) project.ReadError![]u8 {
         const self: *MemoryProvider = @ptrCast(@alignCast(raw.?));
         const index = find(self.files, path) orelse return error.NotFound;
@@ -458,10 +510,11 @@ fn entryModule(allocator: std.mem.Allocator, entry: []const u8) Error![]const u8
     return name;
 }
 
-fn broadIdentity(allocator: std.mem.Allocator, entry: []const u8, files: []const File, support: []const File) Error![]const u8 {
-    const pairs = try allocator.alloc([2][]const u8, files.len + support.len);
+fn broadIdentity(allocator: std.mem.Allocator, entry: []const u8, files: []const File, support: Support) Error![]const u8 {
+    const pairs = try allocator.alloc([2][]const u8, files.len + support.files.len + support.assets.len);
     for (files, pairs[0..files.len]) |file, *pair| pair.* = .{ file.path, file.hash };
-    for (support, pairs[files.len..]) |file, *pair| pair.* = .{ file.path, file.hash };
+    for (support.files, pairs[files.len..][0..support.files.len]) |file, *pair| pair.* = .{ file.path, file.hash };
+    for (support.assets, pairs[files.len + support.files.len ..]) |file, *pair| pair.* = .{ file.path, file.hash };
     const encoded = try std.json.Stringify.valueAlloc(allocator, .{ .version = "broad-source-v1", .entry = entry, .files = pairs }, .{});
     return fs.hash(allocator, encoded);
 }
@@ -489,6 +542,10 @@ fn sameBytes(before: Snapshot, after: Snapshot) bool {
     for (before.support.files, after.support.files) |old, new| {
         if (!std.mem.eql(u8, old.path, new.path) or !std.mem.eql(u8, old.data, new.data)) return false;
     }
+    if (before.support.assets.len != after.support.assets.len) return false;
+    for (before.support.assets, after.support.assets) |old, new| {
+        if (!std.mem.eql(u8, old.path, new.path) or !std.mem.eql(u8, old.data, new.data)) return false;
+    }
     return true;
 }
 /// Fingerprint of one captured file's bytes, for the resolved identity.
@@ -503,8 +560,8 @@ fn fileHash(allocator: std.mem.Allocator, bytes: []const u8) Error![]const u8 {
 /// require their broad fixture inventory to remain byte-for-byte current.
 fn verifyProviderInventory(context: fs.Context, snapshot: Snapshot) Error!void {
     const current = try captureExcluding(context, snapshot.entry_path, snapshot.excluded);
-    const before = try broadIdentity(context.allocator, snapshot.entry, snapshot.files, snapshot.support.files);
-    const after = try broadIdentity(context.allocator, current.entry, current.files, current.support.files);
+    const before = try broadIdentity(context.allocator, snapshot.entry, snapshot.files, snapshot.support);
+    const after = try broadIdentity(context.allocator, current.entry, current.files, current.support);
     if (!std.mem.eql(u8, before, after)) return error.SourceChanged;
 }
 /// A snapshot root at the same path on every run of one project from one
@@ -582,6 +639,7 @@ pub fn materialize(context: fs.Context, snapshot: Snapshot, directory: []const u
         try context.mkdir(std.fs.path.dirname(path).?);
         try context.write(path, file.data);
     }
+    try writeAssets(context, snapshot.support.assets, root);
     return .{
         .root = root,
         .entry = snapshot.entry,
@@ -590,6 +648,16 @@ pub fn materialize(context: fs.Context, snapshot: Snapshot, directory: []const u
         .support = snapshot.support,
         .identity = snapshot.identity,
     };
+}
+
+/// Write each embedded file where the materialized sources' relative references
+/// find it: its captured path, resolved lexically against the copy's `root`.
+fn writeAssets(context: fs.Context, assets: []const File, root: []const u8) Error!void {
+    for (assets) |asset| {
+        const path = try std.fs.path.resolve(context.allocator, &.{ root, asset.path });
+        try context.mkdir(std.fs.path.dirname(path) orelse return error.InvalidTestSnapshot);
+        try context.write(path, asset.data);
+    }
 }
 
 /// Return a snapshot whose entry file is a project module with a `main`, so a
@@ -686,6 +754,7 @@ pub fn replace(context: fs.Context, snapshot: Snapshot, replacements: std.json.V
         try context.mkdir(std.fs.path.dirname(target).?);
         try context.write(target, file.data);
     }
+    try writeAssets(context, snapshot.support.assets, root);
     return capture(context, try std.fs.path.join(context.allocator, &.{ root, snapshot.entry }));
 }
 /// Require provider snapshots to preserve exported types and the selected test ABI.

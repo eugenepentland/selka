@@ -375,6 +375,8 @@ const ListingFacts = struct { declarations: []const Declaration, modules: usize,
 const prelude_seeds = [_][]const u8{
     "sum", "min", "max", "sorted", "abs", "round", "any", "all", "reversed", "list", "zip",
 };
+/// The compile-time file embedding builtins (`EMBED-1`), each answered by `embed.kindOf`.
+const embed_seeds = [_][]const u8{ "embed_bytes", "embed_str" };
 /// Curated discovery seeds for the checker's float intrinsic table.
 const float_seeds = [_][]const u8{ "sqrt", "floor", "ceil", "trunc", "abs" };
 /// Curated discovery seeds for the checker's builtin type arity table.
@@ -397,6 +399,7 @@ const reference_function_kind = "function";
 const io_builtin_source = "io_builtins.Builtin";
 const prelude_builtin_source = "prelude_builtins.reserved";
 const float_builtin_source = "float_intrinsics.operation";
+const embed_builtin_source = "embed.kindOf";
 const prelude_type_source = "prelude.arity";
 const capability_type_source = "prelude.reservedType";
 const method_source = "buffer_operations.methodArities";
@@ -873,6 +876,10 @@ fn gatherBuiltins(comptime language: type, arena: std.mem.Allocator, query: []co
     for (prelude_seeds) |name| {
         if (!language.reference_tables.prelude_builtins.reserved(name)) continue;
         try all.append(arena, .{ .name = name, .kind = .function, .arity = null, .source = prelude_builtin_source });
+    }
+    for (embed_seeds) |name| {
+        if (language.reference_tables.embed.kindOf(name) == null) continue;
+        try all.append(arena, .{ .name = name, .kind = .function, .arity = 1, .source = embed_builtin_source });
     }
     for (float_seeds) |name| {
         if (language.reference_tables.float_intrinsics.operation(name) == null) continue;

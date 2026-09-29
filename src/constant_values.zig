@@ -9,6 +9,7 @@ const Names = @import("module_names.zig").Names;
 const Error = diagnostic.Error;
 const integers = @import("integers.zig");
 const integer_literal = @import("integer_literal.zig");
+const embed = @import("embed.zig");
 const eLimit = "E_CONSTANT_LIMIT";
 const eType = "E_CONSTANT_TYPE";
 const eEffect = "E_CONSTANT_EFFECT";
@@ -51,6 +52,18 @@ pub const Context = struct {
     pub fn declaredType(self: Context, index: usize) Error!typed.Type {
         return self.resolveType(self.program.functions[index].signature.return_type);
     }
+    /// The embed a constant's initializer is (`EMBED-1`), or null for any other expression.
+    pub fn embedKind(self: Context, node: ast.Node) ?embed.Kind {
+        if (node.data != .call or node.data.call.owner != null) return null;
+        return embed.kindOf(self.src.text(node.data.call.name));
+    }
+    /// Whether constant `index` is initialized from an embedded file, which is static data.
+    pub fn isEmbed(self: Context, index: usize) bool {
+        const function = self.program.functions[index];
+        const body = self.program.statements.items[@backingInt(function.body)].data.block[0];
+        const initializer = self.program.statements.items[@backingInt(body)].data.ret;
+        return self.embedKind(self.program.nodes.items[@backingInt(initializer)]) != null;
+    }
     /// Validate a str/bytes literal getter, leaving scalar declarations to evaluation.
     pub fn literalType(self: Context, index: usize) Error!?typed.Type {
         const function = self.program.functions[index];
@@ -62,8 +75,14 @@ pub const Context = struct {
         const body = self.program.statements.items[@backingInt(function.body)].data.block[0];
         const initializer = self.program.statements.items[@backingInt(body)].data.ret;
         const node = self.program.nodes.items[@backingInt(initializer)];
+        if (self.embedKind(node)) |embedded| {
+            // The checker reads the file itself; here only the declared type must agree.
+            if ((kind == .string) != (embedded == .str))
+                return self.sink.fail("E_TYPE", node.span, "constant embed type differs from its declared str or bytes type");
+            return ty;
+        }
         if (node.data != .text and node.data != .bytes)
-            return self.sink.fail(eExpression, node.span, "str and bytes constants require a literal initializer; calls, operators, casts and dependencies are excluded");
+            return self.sink.fail(eExpression, node.span, "str and bytes constants require a literal or an embed_bytes/embed_str call initializer; other calls, operators, casts and dependencies are excluded");
         if ((kind == .string) != (node.data == .text))
             return self.sink.fail("E_TYPE", node.span, "constant literal type differs from its declared str or bytes type");
         return ty;

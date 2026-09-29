@@ -14,6 +14,7 @@ const std = @import("std");
 const ast = @import("ast.zig");
 const typed = @import("typed.zig");
 const source = @import("source.zig");
+const embed = @import("embed.zig");
 const nominal = @import("nominal_type_syntax.zig");
 const interfaces = @import("interfaces.zig");
 const effect_set = @import("effect_set.zig");
@@ -121,6 +122,7 @@ pub fn prepare(
         std.crypto.hash.Blake3.hash(src.bytes[start..body.end], &recalled.digests[i], .{});
         const known = if (recall) |memory| memory.names(memory.context, keys[i], recalled.digests[i]) else null;
         contexts[i] = try builder.context(function, keys[i], contract_sha256, .{ .known = known, .names = &recalled.names[i] });
+        contexts[i] = withEmbeds(contexts[i], src.embedsWithin(regions[i]));
         if (function.signature.type_parameters.len == 0) try ordinary.append(allocator, i);
     }
     return .{
@@ -132,6 +134,20 @@ pub fn prepare(
         .nominal_syntax = nominal_syntax,
         .recalled = recalled,
     };
+}
+
+/// EMBED-1: a declaration whose region reads embedded files keys on their content
+/// too, so editing only such a file never reuses its checked body, its summary
+/// stand-in or its stored unit. A region that embeds nothing keeps its context.
+fn withEmbeds(context: [32]u8, embeds: []const source.Embed) [32]u8 {
+    if (embeds.len == 0) return context;
+    var hash = Hash.init(.{});
+    frame(&hash, "semantic-embeds-v1");
+    hash.update(&context);
+    embed.hashInto(&hash, embeds);
+    var mixed: [32]u8 = undefined;
+    hash.final(&mixed);
+    return mixed;
 }
 
 /// The names one declaration's context resolves: `known` when an earlier

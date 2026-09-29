@@ -31,13 +31,21 @@ const source = @import("source.zig");
 const lex = @import("lexer.zig");
 const diagnostic = @import("diagnostic.zig");
 const standard_library = @import("standard_library.zig");
+const embed = @import("embed.zig");
 /// The one code every malformed or missing module header reports.
 const eModuleHeader = "E_MODULE_HEADER";
 /// Header discovery's scratch chunk: the tokens of a module of about 64 KiB.
 const header_scratch_bytes = 1 << 20;
 pub const ReadError = error{ OutOfMemory, NotFound, ReadFailed, TooLarge };
 /// Source reader callback; returned bytes use the supplied allocator and respect the byte limit.
-pub const Provider = struct { context: ?*anyopaque, read: *const fn (?*anyopaque, std.mem.Allocator, []const u8, usize) ReadError![]u8 };
+/// `embed` reads the file one `embed_bytes`/`embed_str` literal names, given the
+/// embedding module's path and the literal's text; a provider without it leaves
+/// every embed unresolved (`EMBED-1`).
+pub const Provider = struct {
+    context: ?*anyopaque,
+    read: *const fn (?*anyopaque, std.mem.Allocator, []const u8, usize) ReadError![]u8,
+    embed: ?*const fn (?*anyopaque, std.mem.Allocator, []const u8, []const u8) std.mem.Allocator.Error!embed.Read = null,
+};
 /// Bounds on module count, import edges, individual files, and total source
 /// bytes. A `mylang.json` `budgets` object may override each field. The
 /// defaults (PROJ-SCALE-1) admit a project of well over a million lines with no
@@ -142,7 +150,21 @@ pub const Project = struct {
         self.modules.items[id].src = try source.Source.init(allocator, source_path, bytes);
         std.crypto.hash.sha2.Sha256.hash(bytes, &self.modules.items[id].digest, .{});
         try self.header(id, options, origin == null, scratch);
+        try self.readEmbeds(provider, id, path);
         return id;
+    }
+    /// Read the file behind each embed call `header` found in module `id`, whose
+    /// file is `path` beneath the import root. Without a provider hook they stay unresolved.
+    fn readEmbeds(self: *Project, provider: Provider, id: usize, path: []const u8) std.mem.Allocator.Error!void {
+        const read_embed = provider.embed orelse return;
+        const embeds: []source.Embed = @constCast(self.modules.items[id].src.embeds);
+        const allocator = self.arena.allocator();
+        for (embeds) |*entry| {
+            const outcome = try read_embed(provider.context, allocator, path, entry.path);
+            entry.status = outcome.status;
+            entry.contents = outcome.contents;
+            if (outcome.status == .ok) embed.digest(outcome.contents, &entry.digest);
+        }
     }
     /// Load the reachable import graph iteratively while enforcing source and graph limits.
     pub fn load(self: *Project, provider: Provider, entry: []const u8, options: Options) LoadError!void {
@@ -280,6 +302,8 @@ pub const Project = struct {
         self.modules.items[id].exports = try exports.toOwnedSlice(allocator);
         markQualifiedImports(src.bytes, tokens, self.modules.items[id].header.body_start, self.modules.items[id].imports);
         self.modules.items[id].header.usage_scanned = true;
+        // The tokens are in hand, so find the module's embed calls here rather than lexing again.
+        if (embed.mayEmbed(src.bytes)) self.modules.items[id].src.embeds = try embed.sites(allocator, src, tokens);
     }
     /// Consume the `module NAME;` header, or the headerless opening of an entry
     /// script whose every import names an embedded standard module. Answers the

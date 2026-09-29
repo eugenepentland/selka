@@ -30,12 +30,33 @@ pub const Span = struct {
     }
 };
 
+/// Why an `embed_bytes`/`embed_str` path could or could not be read. Everything but
+/// `ok` names the located diagnostic the checker reports at the literal.
+pub const EmbedStatus = enum { unresolved, ok, invalid_path, absolute, escapes, missing, directory, too_large, unreadable };
+
+/// One compile-time file read on behalf of an `embed_bytes("path")` or
+/// `embed_str("path")` call in this source (`EMBED-1`). `literal` is the string
+/// literal's span in this source's own coordinates, `path` its decoded text, and
+/// `contents`/`digest` the file's bytes and BLAKE3 digest when `status` is `ok`; every
+/// other status leaves both empty. Entries are sorted by `literal.start`.
+pub const Embed = struct {
+    literal: Span,
+    path: []const u8,
+    status: EmbedStatus = .unresolved,
+    digest: [32]u8 = @splat(0),
+    contents: []const u8 = &.{},
+    /// Whether the call was `embed_str` rather than `embed_bytes`.
+    text: bool = false,
+};
+
 /// Source path, owned bytes, line index, and optional origins for merged modules.
 pub const Source = struct {
     path: []const u8,
     bytes: []const u8,
     line_starts: []const usize,
     origins: []const Origin = &.{},
+    /// The files this source's embed calls read, resolved when it was loaded.
+    embeds: []const Embed = &.{},
     /// Mark a compiler-owned test source that may spell reserved internal
     /// intrinsics. Guest and embedder sources never set this; only the parser's
     /// own unit tests reach it, so the public surface stays gated.
@@ -113,6 +134,49 @@ pub const Source = struct {
         const origin = self.origins[index];
         if (global.start > global.end or global.end > origin.start + origin.original.bytes.len) return error.InvalidSourceSpan;
         return .{ .input = index, .span = .{ .start = global.start - origin.start, .end = global.end - origin.start } };
+    }
+
+    /// The embed whose string literal starts at `span`, in this source's own
+    /// coordinates or, for a merged source, in the merged offset space.
+    pub fn embedAt(self: Source, span: Span) ?*const Embed {
+        var embeds = self.embeds;
+        var start = span.start;
+        if (self.origins.len != 0) {
+            const original = self.originalSpan(span) catch return null;
+            embeds = self.origins[original.input].original.embeds;
+            start = original.span.start;
+        }
+        var low: usize = 0;
+        var high = embeds.len;
+        while (low < high) {
+            const mid = low + (high - low) / 2;
+            if (embeds[mid].literal.start < start) low = mid + 1 else high = mid;
+        }
+        if (low < embeds.len and embeds[low].literal.start == start) return &embeds[low];
+        return null;
+    }
+
+    /// The embeds whose string literals lie inside `span`, in source order: a
+    /// declaration region's own files, which its cache keys must cover.
+    pub fn embedsWithin(self: Source, span: Span) []const Embed {
+        var embeds = self.embeds;
+        var start = span.start;
+        var end = span.end;
+        if (self.origins.len != 0) {
+            const original = self.originalSpan(span) catch return &.{};
+            embeds = self.origins[original.input].original.embeds;
+            start = original.span.start;
+            end = original.span.end;
+        }
+        var first: usize = 0;
+        var high = embeds.len;
+        while (first < high) {
+            const mid = first + (high - first) / 2;
+            if (embeds[mid].literal.start < start) first = mid + 1 else high = mid;
+        }
+        var last = first;
+        while (last < embeds.len and embeds[last].literal.end <= end) last += 1;
+        return embeds[first..last];
     }
 
     /// Borrow the bytes covered by a valid source span.

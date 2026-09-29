@@ -442,6 +442,11 @@
       "summary": "`b\"...\"` and `b'...'` write byte strings with escapes and a decoded-size limit.",
       "doc": "docs/bytes.md#byte-literals"
     },
+    "compile-time-embed": {
+      "kind": "language",
+      "summary": "`embed_bytes(\"path\")` and `embed_str(\"path\")` read a project file at compile time as static `bytes` or UTF-8 `str`, with no capability and no effect, usable as a module constant; the path is relative to the embedding file and confined to the project, and editing only the file rebuilds exactly what embeds it.",
+      "doc": "docs/bytes.md#embedding-a-file-at-compile-time"
+    },
     "nominal-records": {
       "kind": "language",
       "summary": "`record` declares a nominal value record of annotated fields; `class` is the managed reference spelling.",

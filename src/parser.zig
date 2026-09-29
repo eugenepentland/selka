@@ -21,6 +21,7 @@ const lex = @import("lexer.zig");
 const Span = @import("source.zig").Span;
 const diagnostic = @import("diagnostic.zig");
 const byte_literal = @import("byte_literal.zig");
+const embed = @import("embed.zig");
 const requirements = @import("generic_requirements.zig");
 const format_strings = @import("format_strings.zig");
 /// Tokens that may stand inside an explicit type-argument list: a name, a constant
@@ -850,8 +851,10 @@ pub const Parser = struct {
                 statements[0] = ret;
                 const body = try self.addStatement(.{ .span = .join(name, end), .data = .{ .block = statements } });
                 const literal = self.syntax.nodes.items[@backingInt(value)].data;
-                // Managed literal getters allocate on read; scalar getters remain pure.
-                const allowed = if (literal == .text or literal == .bytes) effects.bit(.managed_allocation) else 0;
+                // Managed literal getters allocate on read; scalar getters remain pure, and
+                // so does an embedded file, which is static data (`EMBED-1`).
+                const embedded = literal == .call and literal.call.owner == null and embed.kindOf(self.src.text(literal.call.name)) != null;
+                const allowed = if ((literal == .text or literal == .bytes) and !embedded) effects.bit(.managed_allocation) else 0;
                 try self.markPublic(&public_names, declare_public, name);
                 try functions.append(self.storage, .{ .policy = .{ .constant = true, .effect_bound = .{ .allowed = allowed, .span = name } }, .signature = .{ .parameters = &.{}, .return_type = ty }, .name = name, .body = body });
                 continue;
