@@ -1,8 +1,9 @@
 # Runtime follow-up checkpoint, 2026-09-29
 
 This is a partial WP-B3 checkpoint from approved main `80dd5190`, in the isolated
-`codex/next-runtime-20260929` branch. B3 is still open: scope IL, constant lists,
-dictionary hoists, startup images, count layout and text follow-ups remain.
+`codex/next-runtime-20260929` branch. B3 is still open: implemented checkpoints
+below need combined acceptance; startup image emission, count-layout performance
+and text follow-ups remain.
 Nothing from this lane has been merged into main.
 
 ## Equality allocations
@@ -142,3 +143,34 @@ tests. The first proof assertion expected a hold marker where the owning key
 uses retain instead; the corrected test checks its retain and drop corridor.
 Receipts remain under `.tmp/dictionary-text-*`. Performance acceptance remains
 part of the final frozen B3 comparison.
+
+## Primitive list images
+
+LIST-LITERAL-PAYLOAD-1 packs inert literals of at least 64 primitive elements
+before append desugaring. All ten native scalar widths and primitive-backed
+domain chains preserve their exact little-endian bits. One bytecode payload
+becomes one immortal, shared native list image. Its actual list-header
+descriptor forces detachment before mutation, and its storage is immortal.
+The lazy builtin list module is admitted before the first image clone; an
+allocation refusal returns before publishing a copy. Legacy sharing performs
+one fresh regional clone per evaluation. Static images grant no ordinary
+sole-owner proof. Small, managed-element and nonconstant lists retain their
+ordinary constructors.
+
+A 1,000-element integer fixture emits fewer than 20 bytecode instructions and
+30,000 IL bytes and builds/runs natively. The focused runner passes 17 entries
+(5 named tests and 12 anonymous import blocks), including exact scalar bits,
+malformed stride/bool rejection, legacy independent evaluations and physical
+fresh-root conservatism. Four guest cases pass in each of RC, GC, GC stress,
+stats and LLVM release: mutation/growth, snapshot pins, arena escape and
+single ordered evaluation of nonconstant elements. There are no failed,
+cached or skipped guest tests.
+
+The first attempted packing point missed frontend append desugaring; moving
+admission into collection lowering fixed it. Initial guest runs exposed the
+lazy list-module registration requirement before the first image mutation;
+the failed receipt is retained as
+`.tmp/list-image-guest-registration-failure.json`. Two earlier guest syntax
+failures and all focused logs are retained under `.tmp/list-image-*`.
+This is focused correctness evidence. Compile-time measurements, full runtime
+checks and combined corpus acceptance remain pending.

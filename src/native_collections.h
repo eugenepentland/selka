@@ -49,6 +49,9 @@ myl_native_list *myl_native_list_copy(myl_native_heap *, const myl_native_list *
 int myl_native_list_header(const void *payload);
 /* The exact descriptor identity, also used by the generated RC scope path. */
 extern const myl_native_type *const myl_native_list_header_type;
+/* LIST-LITERAL-PAYLOAD-1: static mutable headers use this exact identity. */
+extern const myl_native_type myl_native_list_header_descriptor;
+myl_native_list *myl_native_list_literal_copy(myl_native_heap *, const myl_native_list *);
 /* A fresh header and private storage holding `input`'s elements, both
  * allocated at arena depth `region` (COW-UNIQUE-1). `element` describes the
  * copy's elements and becomes its storage block's descriptor: `input`'s own

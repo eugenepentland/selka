@@ -536,7 +536,7 @@ fn validateOpAcquireBuffer(program: Program, ty: @FieldType(@FieldType(Instructi
 fn validateOpMakeRecord(allocator: std.mem.Allocator, program: Program, record: @FieldType(@FieldType(Instruction, "op"), "make_record")) Error!void {
     if (!record.ty.isAggregate() or !validType(record.ty, program)) return error.InternalError;
     if (program.records[record.ty.recordIndex()].shape.resource != null) return error.InternalError;
-    if (record.payload.len != 0) return validateLiteralPayload(program.records[record.ty.recordIndex()], record);
+    if (record.payload.len != 0) return validateLiteralPayload(program, record);
     // An embedded file is a whole `bytes` or `str` payload with no operands (`EMBED-1`).
     if (record.blob != null) {
         const schema = program.records[record.ty.recordIndex()];
@@ -560,10 +560,19 @@ fn validateOpMakeRecord(allocator: std.mem.Allocator, program: Program, record: 
     }
 }
 
-/// `LITERAL-PAYLOAD-1`: a constructor carrying a payload is a `str` literal of
-/// valid UTF-8 or a `bytes` literal, pops nothing and has no field order.
-fn validateLiteralPayload(schema: typed.Record, record: @FieldType(@FieldType(Instruction, "op"), "make_record")) Error!void {
+/// Packed text, bytes and primitive-list payloads pop no fields. Validate
+/// UTF-8, scalar stride and boolean bits at the bytecode trust boundary.
+fn validateLiteralPayload(program: Program, record: @FieldType(@FieldType(Instruction, "op"), "make_record")) Error!void {
+    const schema = program.records[record.ty.recordIndex()];
     if (record.fields != 0 or record.order.len != 0 or !schema.managed) return error.InternalError;
+    if (schema.collection.kind == .list and !schema.collection.box) {
+        const element = schema.shape.buffer orelse return error.InternalError;
+        const stride = @import("constant_list.zig").width(program.records, element) orelse return error.InternalError;
+        if (record.payload.len % stride != 0) return error.InternalError;
+        if (@import("constant_list.zig").primitive(program.records, element) == .bool)
+            for (record.payload) |boolean| if (boolean > 1) return error.InternalError;
+        return;
+    }
     if (schema.collection.kind == .string) {
         if (!std.unicode.utf8ValidateSlice(record.payload)) return error.InternalError;
     } else if (!typed.isByteString(schema) or schema.shape.buffer != .u8) return error.InternalError;

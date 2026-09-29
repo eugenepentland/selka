@@ -301,6 +301,10 @@ pub fn Builder(comptime Checker: type) type {
         }
         /// Construct a fresh list and append elements in source order.
         pub fn literal(self: Self, ty: typed.Type, values: []const typed.NodeId) Error!typed.Node {
+            const records = self.checker.catalog.records;
+            const element = records[ty.recordIndex()].shape.buffer.?;
+            if (@import("constant_list.zig").canPack(records, self.checker.nodes.items, values, element))
+                return .{ .span = self.span, .ty = ty, .data = .{ .array = values } };
             const capacity = try self.integer(@intCast(values.len));
             const acquire = try self.node(ty, .{ .acquire_buffer = .{ .capacity = capacity } });
             const owner = try self.local(ty);

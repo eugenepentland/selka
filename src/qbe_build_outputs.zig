@@ -279,7 +279,7 @@ const Literal = struct {
     width: usize,
     count: usize,
     scalars: usize,
-    ascii: bool,
+    flags: struct { ascii: bool = false, mutable: bool = false } = .{},
     hex: []const u8,
 };
 /// Emit one C definition for every frozen `str`/`bytes` literal the emitted IL
@@ -319,14 +319,15 @@ fn literalDefinitions(w: *std.Io.Writer, allocator: std.mem.Allocator, units: []
             try seen.put(allocator, symbol, {});
             const width = std.fmt.parseInt(usize, width_text, 10) catch continue;
             const count = std.fmt.parseInt(usize, count_text, 10) catch continue;
-            var literal: Literal = .{ .symbol = symbol, .element = element, .width = width, .count = count, .scalars = count, .ascii = false, .hex = "" };
+            var literal: Literal = .{ .symbol = symbol, .element = element, .width = width, .count = count, .scalars = count, .hex = "" };
             if (width == 0) {
                 const scalars_text = tokens.next() orelse continue;
                 const ascii_text = tokens.next() orelse continue;
                 literal.scalars = std.fmt.parseInt(usize, scalars_text, 10) catch continue;
-                literal.ascii = !std.mem.eql(u8, ascii_text, "0");
+                literal.flags.ascii = !std.mem.eql(u8, ascii_text, "0");
             }
             literal.hex = tokens.next() orelse "";
+            literal.flags.mutable = std.mem.eql(u8, tokens.next() orelse "", "list");
             if (!header) {
                 try w.writeAll("#include \"native_text.h\"\n");
                 header = true;
@@ -350,7 +351,7 @@ fn embedDefinitions(w: *std.Io.Writer, embeds: []const std.json.Value) Error!voi
             .width = width,
             .count = v.number(v.get(row, "count")),
             .scalars = v.number(v.get(row, "scalars")),
-            .ascii = v.boolean(v.get(row, "ascii")),
+            .flags = .{ .ascii = v.boolean(v.get(row, "ascii")) },
             .hex = v.text(v.get(row, "hex")),
         });
     }
@@ -370,11 +371,13 @@ fn emitLiteral(w: *std.Io.Writer, literal: Literal) Error!void {
         try w.print("typedef struct {{ myl_native_object header; myl_native_text value; unsigned char storage[{d}]; }} {s}_block;\n", .{ storage, symbol });
         try w.print("static {s}_block {s}_instance = {{\n", .{ symbol, symbol });
         try w.print(" .header = {{.mark = MYL_NATIVE_OBJECT_LITERAL_MARK, .element = &{s}}},\n", .{literal.element});
-        try w.print(" .value = {{.length = {d}, .bytes = {d}, .flags = {d}, .hash = 0}},\n", .{ literal.scalars, literal.count, @as(u32, if (literal.ascii) 1 else 0) });
+        try w.print(" .value = {{.length = {d}, .bytes = {d}, .flags = {d}, .hash = 0}},\n", .{ literal.scalars, literal.count, @as(u32, if (literal.flags.ascii) 1 else 0) });
     } else {
         try w.print("typedef struct {{ myl_native_object header; myl_native_list value; myl_native_object storage_header; unsigned char storage[{d}]; }} {s}_block;\n", .{ storage, symbol });
         try w.print("static {s}_block {s}_instance = {{\n", .{ symbol, symbol });
-        try w.print(" .header = {{.mark = MYL_NATIVE_OBJECT_LITERAL_MARK, .element = &{s}}},\n", .{literal.element});
+        if (literal.flags.mutable) {
+            try w.writeAll(" .header = {.mark = MYL_NATIVE_OBJECT_LITERAL_MARK | MYL_NATIVE_OBJECT_SHARED, .element = &myl_native_list_header_descriptor},\n");
+        } else try w.print(" .header = {{.mark = MYL_NATIVE_OBJECT_LITERAL_MARK, .element = &{s}}},\n", .{literal.element});
         try w.print(" .value = {{.length = {d}, .capacity = {d}, .generation = 0, .element = &{s}", .{ literal.count, literal.count, literal.element });
         if (bytes == 0) try w.writeAll(", .storage = 0") else try w.print(", .storage = {s}_instance.storage", .{symbol});
         try w.writeAll(", .region = 0},\n");

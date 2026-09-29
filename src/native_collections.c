@@ -16,19 +16,19 @@ static const myl_native_field list_fields[] = {
 static const myl_native_scan_entry list_scan[] = {
     { .offset = offsetof(myl_native_list, storage), .tag_offset = MYL_NATIVE_SCAN_ALWAYS }
 };
-static const myl_native_type list_type = {
+const myl_native_type myl_native_list_header_descriptor = {
     .size = sizeof(myl_native_list), .alignment = _Alignof(myl_native_list),
     .kind = MYL_NATIVE_RECORD, .fields = list_fields, .field_count = 1,
     .scan = list_scan, .scan_count = 1, .rc_id = MYL_RC_ID_LIST
 };
 /* RC-SCOPE-IL-1: exact list-header identity for generated backing capture. */
-const myl_native_type *const myl_native_list_header_type = &list_type;
+const myl_native_type *const myl_native_list_header_type = &myl_native_list_header_descriptor;
 static myl_native_list *rc_list_new(myl_native_heap *, const myl_native_type *, size_t, unsigned, int);
 static myl_native_list *rc_list_clone(myl_native_heap *, const myl_native_list *, const myl_native_type *, unsigned);
 myl_native_list *myl_native_list_new(myl_native_heap *heap, const myl_native_type *element, size_t capacity) {
     if (!element) return NULL;
     if (myl_rc_enabled(heap)) return rc_list_new(heap,element,capacity,heap->region_depth,0);
-    myl_native_list *list = myl_native_heap_alloc(heap, &list_type, 1);
+    myl_native_list *list = myl_native_heap_alloc(heap, &myl_native_list_header_descriptor, 1);
     if (!list) return NULL;
     myl_native_root root;
     myl_native_root_push(heap, &root, &list, &myl_rc_pointer_leaf);
@@ -1029,14 +1029,18 @@ myl_native_list *myl_native_list_copy(myl_native_heap *heap, const myl_native_li
     return result;
 }
 int myl_native_list_header(const void *payload) {
-    return payload && ((const myl_native_object *)payload - 1)->element == &list_type;
+    return payload && ((const myl_native_object *)payload - 1)->element == &myl_native_list_header_descriptor;
+}
+/* LIST-LITERAL-PAYLOAD-1: legacy evaluations keep their own current-region value. */
+myl_native_list *myl_native_list_literal_copy(myl_native_heap *heap, const myl_native_list *image) {
+    return myl_native_list_clone_at(heap, image, image->element, heap->region_depth);
 }
 myl_native_list *myl_native_list_clone_at(myl_native_heap *heap, const myl_native_list *input, const myl_native_type *element, unsigned region) {
     if (myl_rc_enabled(heap)) return rc_list_clone(heap,input,element,region);
     const myl_native_list *rooted = input;
     myl_native_root source_root, clone_root;
     myl_native_root_push(heap, &source_root, &rooted, &myl_rc_pointer_leaf);
-    myl_native_list *clone = myl_native_heap_alloc_at(heap, &list_type, 1, region);
+    myl_native_list *clone = myl_native_heap_alloc_at(heap, &myl_native_list_header_descriptor, 1, region);
     if (clone) {
         myl_native_root_push(heap, &clone_root, &clone, &myl_rc_pointer_leaf);
         size_t capacity = rooted->capacity > rooted->length ? rooted->capacity : rooted->length;
@@ -1183,23 +1187,28 @@ static int rc_list_span(myl_native_heap *heap, const void *payload, void *target
     return 1;
 }
 static const myl_rc_descriptor rc_list_descriptors[]={
-    {.type=&list_type,.shape=&rc_list_shape,.edges=rc_list_edges,.clone=rc_list_clone_adapter,.shell=rc_list_shell,.next=rc_list_next,.span=rc_list_span},
+    {.type=&myl_native_list_header_descriptor,.shape=&rc_list_shape,.edges=rc_list_edges,.clone=rc_list_clone_adapter,.shell=rc_list_shell,.next=rc_list_next,.span=rc_list_span},
     {.type=&rc_storage_type,.shape=&rc_list_shape,.edges=rc_storage_edges}
 };
 static const myl_rc_module rc_list_module={
     .abi=MYL_RC_ABI_VERSION,.descriptors=rc_list_descriptors,.descriptor_count=2
 };
+myl_rc_status myl_rc_list_require(myl_native_heap *heap) {
+    if (heap->rc->lists) return MYL_RC_OK;
+    myl_rc_status status = myl_rc_module_register(heap, &rc_list_module);
+    if (status == MYL_RC_OK) heap->rc->lists = 1;
+    return status;
+}
 /* RC-LIST-HEADER-1: the header module is registered once per heap and a
  * header is allocated through the storage adapter's cached single-type path;
  * an element type already proved plain is known to be registered. */
 static myl_native_list *rc_list_new(myl_native_heap *heap, const myl_native_type *element, size_t capacity, unsigned region, int raw) {
     if (!raw && heap->rc->plain!=element && !myl_rc_native_shape(heap,element)) return NULL;
     if (!heap->rc->lists) {
-        myl_rc_status status=myl_rc_module_register(heap,&rc_list_module);
+        myl_rc_status status=myl_rc_list_require(heap);
         if (status!=MYL_RC_OK) { myl_rc_record_failure(heap,status); return NULL; }
-        heap->rc->lists=1;
     }
-    myl_native_list *list=myl_rc_storage_alloc(heap,raw?&rc_storage_type:&list_type,1,region);
+    myl_native_list *list=myl_rc_storage_alloc(heap,raw?&rc_storage_type:&myl_native_list_header_descriptor,1,region);
     if (!list) return NULL;
     list->element=element;
     if (capacity) list->storage=myl_rc_native_storage(heap,element,capacity,region);

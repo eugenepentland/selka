@@ -421,6 +421,7 @@ fn emitConstruct(comptime E: type, self: *E, record: MakeRecord, stack: []const 
         if (text or schema.collection.kind == .bytes) {
             if (try frozenLiteral(E, self, record, element, text)) |frozen| return emitFrozen(E, self, frozen, base);
         }
+        if (schema.collection.kind == .list and try @import("qbe_list_literal.zig").emit(E, self, record, element, base)) return;
         try self.print(" %v{d} =l call $myl_native_list_new(l %heap, l ${s}, l {d})\n", .{ result, try self.descriptor(element), record.fields });
         try self.require(result, allocation_failure);
         if (rc_mode.enabled()) try rc_values.holdRuntime(E, self, record.ty, result);
