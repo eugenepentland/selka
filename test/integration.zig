@@ -12441,3 +12441,68 @@ test "a built program reports the frame reservation its address space cannot bac
     try testing.expect(std.mem.indexOf(u8, outcome.stderr, "a call-depth budget of 150000 frames (--max-frames) reserves 4.6 GiB of native stack (32 KiB per frame), but this process may map only 1.2 GiB") != null);
     try testing.expect(std.mem.indexOf(u8, outcome.stderr, "OutOfMemory: QBE runtime failure") == null);
 }
+
+/// Write `mylang.json` and the trivial program into `dir`, one project.
+fn writeLimitedProject(dir: std.Io.Dir, limits: []const u8) !void {
+    const config = try std.fmt.allocPrint(testing.allocator, "{{\"version\":1,\"limits\":{s}}}", .{limits});
+    defer testing.allocator.free(config);
+    try dir.writeFile(testing.io, .{ .sub_path = "mylang.json", .data = config });
+    try dir.writeFile(testing.io, .{ .sub_path = "prog.my", .data = cache_program });
+}
+
+/// Run `command prog.my` in `dir` and return its outcome; the caller frees it.
+fn runLimited(dir: std.Io.Dir, args: []const []const u8) !std.process.RunResult {
+    const absolute = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, compiler_path, testing.allocator);
+    defer testing.allocator.free(absolute);
+    var argv: std.ArrayList([]const u8) = .empty;
+    defer argv.deinit(testing.allocator);
+    try argv.append(testing.allocator, absolute);
+    try argv.appendSlice(testing.allocator, args);
+    var absolute_tools: [tools.len][]u8 = undefined;
+    for (tools, &absolute_tools) |flag, *slot| {
+        const equals = std.mem.indexOfScalar(u8, flag, '=').?;
+        const path = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, flag[equals + 1 ..], testing.allocator);
+        defer testing.allocator.free(path);
+        slot.* = try std.fmt.allocPrint(testing.allocator, "{s}{s}", .{ flag[0 .. equals + 1], path });
+        try argv.append(testing.allocator, slot.*);
+    }
+    defer for (absolute_tools) |path| testing.allocator.free(path);
+    return std.process.run(testing.allocator, testing.io, .{ .argv = argv.items, .cwd = .{ .dir = dir } });
+}
+
+// spec: PROJECT-LIMITS-1
+test "mylang.json limits set the run and test defaults and the command line still wins" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    // A configured frame budget the default ceiling cannot back is refused exactly as the flag is.
+    try writeLimitedProject(temp.dir, "{\"run\":{\"max_frames\":150000},\"test\":{\"max_frames\":30000}}");
+    const configured = try runLimited(temp.dir, &.{ "run", "prog.my" });
+    defer freeRun(configured);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, configured.term);
+    try testing.expect(std.mem.indexOf(u8, configured.stderr, "a call-depth budget of 150000 frames (--max-frames) reserves 4.6 GiB") != null);
+    // The flag overrides the file: 5000 frames fit, and the program runs.
+    const overridden = try runLimited(temp.dir, &.{ "run", "prog.my", "--max-frames", "5000" });
+    defer freeRun(overridden);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, overridden.term);
+    try testing.expectEqualStrings("hi\n", overridden.stdout);
+    // Guest arguments after `--` are untouched by configured options.
+    const guest = try runLimited(temp.dir, &.{ "run", "prog.my", "--max-frames=5000", "--", "--max-frames=1" });
+    defer freeRun(guest);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, guest.term);
+    // `mylang test` reads `limits.test` the same way.
+    const tests_refused = try runLimited(temp.dir, &.{ "test", "prog.my", "--force" });
+    defer freeRun(tests_refused);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, tests_refused.term);
+    try testing.expect(std.mem.indexOf(u8, tests_refused.stderr, "mylang test: a call-depth budget of 30000 frames") != null);
+    const tests_overridden = try runLimited(temp.dir, &.{ "test", "prog.my", "--force", "--max-frames=1024" });
+    defer freeRun(tests_overridden);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, tests_overridden.term);
+    // A configured max_memory that holds the configured budget lets both commands run it.
+    try writeLimitedProject(temp.dir, "{\"run\":{\"max_frames\":30000,\"max_memory\":\"2G\"},\"test\":{\"max_frames\":30000,\"max_memory\":\"1G\"}}");
+    const run_ok = try runLimited(temp.dir, &.{ "run", "prog.my" });
+    defer freeRun(run_ok);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, run_ok.term);
+    const test_ok = try runLimited(temp.dir, &.{ "test", "prog.my", "--force" });
+    defer freeRun(test_ok);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, test_ok.term);
+}

@@ -2,6 +2,7 @@
 const std = @import("std");
 const fs = @import("qbe_build_io.zig");
 const input_probe = @import("input_probe.zig");
+const project_config = @import("project_config.zig");
 const v = @import("qbe_build_value.zig");
 const options = @import("native_test_options.zig");
 const cases = @import("native_test_cases.zig");
@@ -298,6 +299,28 @@ fn refusedEntry(process: std.process.Init, source: []const u8) Error!?u8 {
     try std.Io.File.stderr().writeStreamingAll(process.io, refusal);
     return input_probe.refused_status;
 }
+/// Fill in the per-test budgets the project's `mylang.json` sets under
+/// `limits.test` wherever the command line gave none (and `MYLANG_MEMORY_LIMIT`
+/// none, for the byte ceiling). It reads the configuration nearest the entry
+/// file, so a directory run leaves it to each program's own process, and a
+/// missing or unreadable configuration changes nothing: the declaration check
+/// that owns configuration errors reports them.
+fn applyProjectLimits(context: fs.Context, opts: *options.Options) Error!void {
+    if (fanout.selected(context, opts.source)) return;
+    const path = (project_config.discover(context.allocator, context.io, opts.source) catch return) orelse return;
+    var failure: project_config.Failure = .{};
+    const config = project_config.load(context.allocator, context.io, path, &failure) catch return;
+    const configured = config.document.limits.tests;
+    const given = opts.link_arguments;
+    if (configured.max_steps) |steps| if (!options.explicit(given, "--max-steps")) {
+        opts.limits.max_steps = steps;
+    };
+    if (configured.max_frames) |frames| if (!options.explicit(given, "--max-frames")) {
+        opts.limits.max_frames = frames;
+    };
+    const from_environment = if (context.environ.get(budget.variable)) |text| text.len != 0 else false;
+    if (configured.max_memory != null and opts.limits.max_memory == null and !from_environment) opts.limits.max_memory = configured.max_memory;
+}
 /// Resolve the per-test byte ceiling once, before any child or receipt key
 /// observes it (the flag wins, then MYLANG_MEMORY_LIMIT, then the per-test
 /// default) and the fan-out width, and refuse a call-depth budget that ceiling
@@ -337,6 +360,7 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     if (try refusedEntry(process, opts.source)) |status| return status;
     var context = try fs.Context.init(process.arena.allocator(), process.io, process.environ_map);
     defer context.deinit();
+    try applyProjectLimits(context, &opts);
     if (try refusedLimits(context, &opts)) |status| return status;
     // A directory names many independent projects, so each one runs as its own child.
     if (fanout.selected(context, opts.source)) return fanout.run(context, opts);

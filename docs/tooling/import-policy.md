@@ -36,6 +36,16 @@ one-release [legacy sharing mode](../value-semantics.md#selecting-a-mode) for
 commands whose entry the configuration covers; `true` explicitly keeps the
 default. The value must be a JSON boolean.
 
+`"limits"` sets per-project defaults for the execution budgets of `mylang run` and
+`mylang test`, an object with a `run` and a `test` entry, each any of
+`max_steps`, `max_frames` and `max_memory`
+([runtime budgets](runtime-budgets.md#project-defaults-in-mylangjson)):
+
+```json
+{"version": 1, "limits": {"run": {"max_frames": 200000, "max_memory": "8G"},
+                          "test": {"max_steps": 4000000000, "max_frames": 30000, "max_memory": "1G"}}}
+```
+
 `import_policy` is optional. When present it must be a nonempty relative or
 absolute path; the file must exist and parse under the
 [import policy rules](../experiments/import-policy.md). `check-policy` can be

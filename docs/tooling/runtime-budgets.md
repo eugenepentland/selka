@@ -130,6 +130,28 @@ The ceilings a host passes always match the accounting it built the guest with,
 so a guest is never handed a `--max-steps=` it would refuse with
 `R_NO_STEP_ACCOUNTING`.
 
+### Project defaults in `mylang.json`
+
+A project that always needs the same budgets, a parser test that recurses
+20,000 frames deep for example, can say so once instead of on every command
+line. `mylang.json` takes an optional `limits` object with a `run` entry and a
+`test` entry, each any of `max_steps`, `max_frames` (positive integers up to
+4,294,967,295) and `max_memory` (a byte count or a `K`/`M`/`G` size, `0` for no
+ceiling):
+
+```json
+{"version": 1, "limits": {"test": {"max_steps": 4000000000, "max_frames": 30000, "max_memory": "1G"}}}
+```
+
+`mylang run`, `run-project` and `test` read the configuration nearest the entry
+file and use these as defaults for the matching flag. A flag on the command line
+always wins, `MYLANG_MEMORY_LIMIT` outranks the file's `max_memory`, and the
+built-in defaults apply to whatever the file leaves out. A configured budget goes
+through the same checks as the flag, so a `max_frames` the memory cannot back is
+refused with what it needs. A directory run leaves each program to the
+configuration nearest that program. An unknown key, a repeated key or a budget
+that is zero, not an integer or out of range is a configuration failure.
+
 ## Guest memory ceilings
 
 The budgets above bound what one embedded allocator hands out. A *ceiling*

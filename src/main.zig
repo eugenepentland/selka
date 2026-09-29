@@ -31,6 +31,7 @@ const index_kind_flag = "--kind";
 /// Wall-clock ceiling forwarded to the guest runtime, which parses the same flag.
 const timeout_prefix = "--timeout=";
 const frames_prefix = "--max-frames=";
+const steps_prefix = "--max-steps=";
 /// Shared internal session failure name for an over-long request line.
 const request_too_long = "RequestTooLong";
 /// Phase label and default cache-directory leaf, shared so the literal is not
@@ -396,7 +397,8 @@ fn dispatch(process: std.process.Init) !u8 {
     try timings.report(status);
     return status;
 }
-fn run(init: Context, parsed: Parsed) !u8 {
+fn run(init: Context, unconfigured: Parsed) !u8 {
+    const parsed = try withConfiguredRunLimits(init, unconfigured);
     if (parsed.command == .@"check-session") return checkSession(init, parsed);
     // A missing, unreadable or directory entry is refused by name before any
     // cache opens, so it leaves no cache directory behind and prints no trace.
@@ -441,6 +443,43 @@ fn run(init: Context, parsed: Parsed) !u8 {
     if (semantic_store) |*store| store.deinit();
     if (friction) |recorder| recorder.finish(status, frictionElapsedNs(friction_start, init.io));
     return status;
+}
+
+/// Fill in the execution budgets the project's `mylang.json` sets under
+/// `limits.run` wherever the command line and, for the memory ceiling,
+/// `MYLANG_MEMORY_LIMIT` gave none. The configured options join the ones the
+/// command line forwards to the guest, ahead of the `--` delimiter, so both
+/// sources are checked and applied by the same code. A missing or unreadable
+/// configuration changes nothing here: the check that owns configuration errors
+/// reports them.
+fn withConfiguredRunLimits(init: Context, parsed: Parsed) !Parsed {
+    if (parsed.command != .run and parsed.command != .@"run-project") return parsed;
+    const path = (project_config.discover(init.gpa, init.io, parsed.path) catch return parsed) orelse return parsed;
+    defer init.gpa.free(path);
+    var failure: project_config.Failure = .{};
+    var config = project_config.load(init.gpa, init.io, path, &failure) catch return parsed;
+    defer config.deinit();
+    const configured = config.document.limits.run;
+    var effective = parsed;
+    const arena = init.arena.allocator();
+    var runtime: std.ArrayList([]const u8) = .empty;
+    const delimiter = for (parsed.runtime, 0..) |option, index| {
+        if (std.mem.eql(u8, option, "--")) break index;
+    } else parsed.runtime.len;
+    try runtime.appendSlice(arena, parsed.runtime[0..delimiter]);
+    if (configured.max_steps) |steps| if (!forwardedOption(parsed.runtime[0..delimiter], steps_prefix)) try runtime.append(arena, try std.fmt.allocPrint(arena, "{s}{d}", .{ steps_prefix, steps }));
+    if (configured.max_frames) |frames| if (!forwardedOption(parsed.runtime[0..delimiter], frames_prefix)) try runtime.append(arena, try std.fmt.allocPrint(arena, "{s}{d}", .{ frames_prefix, frames }));
+    try runtime.appendSlice(arena, parsed.runtime[delimiter..]);
+    effective.runtime = runtime.items;
+    const from_environment = if (init.environ.get(budget.variable)) |text| text.len != 0 else false;
+    if (parsed.max_memory == null and !from_environment) effective.max_memory = configured.max_memory;
+    return effective;
+}
+
+/// Whether the forwarded options already carry one with this prefix.
+fn forwardedOption(options: []const []const u8, prefix: []const u8) bool {
+    for (options) |option| if (std.mem.startsWith(u8, option, prefix)) return true;
+    return false;
 }
 
 /// The `--max-frames` a run command forwards to its guest, or null without one.
@@ -1289,10 +1328,10 @@ const ArgumentParser = struct {
             if (!self.executes() or self.gc_stress) return error.Usage;
             self.gc_stress = true;
             try self.forward(arg);
-        } else if (std.mem.startsWith(u8, arg, "--max-steps=")) {
+        } else if (std.mem.startsWith(u8, arg, steps_prefix)) {
             if (!self.executes() or self.saw_steps) return error.Usage;
             self.saw_steps = true;
-            _ = try positive(arg["--max-steps=".len..]);
+            _ = try positive(arg[steps_prefix.len..]);
             try self.forward(arg);
         } else if (std.mem.startsWith(u8, arg, frames_prefix)) {
             if (!self.executes() or self.saw_frames) return error.Usage;
