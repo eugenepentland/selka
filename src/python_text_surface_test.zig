@@ -27,6 +27,7 @@ test "Python text surface: text and bytes index misses carry the substring trap"
 // spec-case: PY-TEXT-RANGE-1
 test "Python text surface: ranged search rejects mismatched needles noninteger bounds and excess arguments" {
     try reject(std.testing.allocator, "def main() -> int:\n    return \"abc\".find(b\"a\", 1)\n", "E_TYPE");
+    try reject(std.testing.allocator, "def main() -> int:\n    text = \"abc\"\n    return text.find(b\"a\")\n", "E_TYPE");
     try reject(std.testing.allocator, "def main() -> int:\n    return b\"abc\".find(b\"a\", \"bad\")\n", "E_TYPE");
     try reject(std.testing.allocator, "def main() -> int:\n    return \"abc\".rfind(\"a\", 0, 3, 4)\n", "E_ARITY");
 }
