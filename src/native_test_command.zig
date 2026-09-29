@@ -24,6 +24,7 @@ const wire = @import("native_test_wire.zig");
 const bench = @import("native_bench.zig");
 const builtin = @import("builtin");
 const module_build = @import("module_build.zig");
+const compile_command = @import("module_compile_command.zig");
 const native_build = @import("qbe_build.zig");
 const bundled_identity = @import("qbe_build_assets").compiler_identity;
 /// Setup failures never produce a cached green test run.
@@ -256,6 +257,10 @@ fn begin(session: sessions.Session, captured: snapshot.Snapshot, directory: []co
 /// reports whatever the modules could not build.
 fn openModuleTests(session: sessions.Session, captured: snapshot.Snapshot, place: ModulePlace) Error!?*module_build.Tests {
     if (!modulePath(session)) return null;
+    // MODULE-TEST-6: module records are keyed by the stable path, so a run
+    // staged elsewhere (while a seeder or another run holds the path) is the
+    // whole-program run's, which replays the verdicts; it starts no seeder.
+    if (!place.stable) return null;
     const directory = place.directory;
     const a = session.context.allocator;
     const settings: build_options.Options = .{
@@ -293,9 +298,10 @@ fn openModuleTests(session: sessions.Session, captured: snapshot.Snapshot, place
     }
     return built;
 }
-/// Where a per-module test build keeps its graphs, and from how many modules
-/// a first run leaves the answer to the whole-program session (null: never).
-const ModulePlace = struct { directory: []const u8, cold: ?usize };
+/// Where a per-module test build keeps its graphs, from how many modules a
+/// first run leaves the answer to the whole-program session (null: never),
+/// and whether the run holds the stable snapshot path its records are keyed by.
+const ModulePlace = struct { directory: []const u8, cold: ?usize, stable: bool };
 
 /// MODULE-TEST-5: the module count from which a first run is the whole
 /// program's and seeds in the background (`MYLANG_TEST_SEED_MODULES`), or
@@ -340,15 +346,69 @@ fn spawnSeeder(session: sessions.Session) void {
     }) catch return;
 }
 
+/// MODULE-TEST-6: a detached seeder this run stopped, by its process group,
+/// which `proceed` lets go on.
+const Paused = struct {
+    group: std.os.linux.pid_t,
+    /// Let the seeder's process group go on.
+    fn proceed(self: Paused) void {
+        _ = std.os.linux.kill(-self.group, .CONT);
+    }
+};
+
+/// MODULE-TEST-6: stop the detached seeder holding this project's snapshot
+/// path for the length of this run, so the run beside it has the cores (a
+/// seeder at nice 19 still costs it the shared cores and the power budget).
+/// Only a process that leads its own process group and carries
+/// `MYLANG_TEST_SEED=1` is stopped, so a stale mark whose process is gone
+/// stops nothing. A run killed before it lets the seeder go on leaves it
+/// stopped until the next run beside it ends.
+fn pauseSeeder(context: fs.Context, session: sessions.Session) Error!?Paused {
+    const scratch = try context.absolute(context.scratchRoot());
+    const pid = snapshot.seederProcess(context, scratch, try stableSeed(session)) orelse return null;
+    if (std.os.linux.getpgid(pid) != @as(usize, @intCast(pid))) return null;
+    if (!carriesSeed(try processEnviron(context, pid))) return null;
+    if (std.os.linux.errno(std.os.linux.kill(-pid, .STOP)) != .SUCCESS) return null;
+    session.traceWork(&.{"pause-seeder"});
+    return .{ .group = pid };
+}
+
+/// Process `pid`'s environment (`/proc/PID/environ`), empty when it cannot
+/// be read. The file reports no length, so it is read to its end in pieces.
+fn processEnviron(context: fs.Context, pid: std.os.linux.pid_t) Error![]const u8 {
+    const path = try std.fmt.allocPrint(context.allocator, "/proc/{d}/environ", .{pid});
+    const file = std.Io.Dir.cwd().openFile(context.io, path, .{}) catch return "";
+    defer file.close(context.io);
+    var bytes: std.ArrayList(u8) = .empty;
+    var piece: [4096]u8 = undefined;
+    while (true) {
+        const count = file.readStreaming(context.io, &.{&piece}) catch 0;
+        if (count == 0) return bytes.items;
+        try bytes.appendSlice(context.allocator, piece[0..count]);
+    }
+}
+
+/// Whether a process environment (`/proc/PID/environ`, NUL-separated)
+/// marks a detached seeder (`MYLANG_TEST_SEED=1`).
+fn carriesSeed(environ: []const u8) bool {
+    var entries = std.mem.splitScalar(u8, environ, 0);
+    while (entries.next()) |entry| {
+        if (entry.len == seed_variable.len + 2 and std.mem.startsWith(u8, entry, seed_variable) and std.mem.endsWith(u8, entry, "=1")) return true;
+    }
+    return false;
+}
+
 /// MODULE-TEST-5: the detached seeder's whole run: wait for the stable
 /// snapshot, compile every module into the per-module test variant, and
 /// report nothing.
 fn seedModules(context: fs.Context, session: sessions.Session, prepared: snapshot.Snapshot) Error!u8 {
+    // MODULE-TEST-6: every foreground run beside the seeder keeps the cores.
+    compile_command.lowerPriority(compile_command.seeder_priority);
     const stable = snapshot.claimStableWaiting(context, try context.absolute(context.scratchRoot()), try stableSeed(session)) orelse return 0;
     defer stable.release(context);
     snapshot.markSeeding(context, stable);
     const captured = snapshot.materialize(context, prepared, stable.directory) catch return 0;
-    const built = (openModuleTests(session, captured, .{ .directory = "", .cold = null }) catch return 0) orelse return 0;
+    const built = (openModuleTests(session, captured, .{ .directory = "", .cold = null, .stable = true }) catch return 0) orelse return 0;
     built.close();
     return 0;
 }
@@ -387,25 +447,41 @@ fn stableSeed(session: sessions.Session) error{OutOfMemory}![]const u8 {
     return std.mem.join(session.context.allocator, "\x00", &.{ session.directory, session.source.root, session.source.entry });
 }
 /// A materialized snapshot and, when it sits at the project's stable root,
-/// the claim the run releases on exit.
-const Staged = struct { captured: snapshot.Snapshot, stable: ?snapshot.Stable };
+/// the claim the run releases on exit; otherwise the seeder holding that
+/// root that the run stopped, if any (MODULE-TEST-6).
+const Staged = struct {
+    captured: snapshot.Snapshot,
+    stable: ?snapshot.Stable,
+    paused: ?Paused = null,
+    /// Let a stopped seeder go on and release the claim.
+    fn end(self: Staged, context: fs.Context) void {
+        if (self.paused) |seeder| seeder.proceed();
+        if (self.stable) |claimed| claimed.release(context);
+    }
+};
 /// Materialize the run's snapshot at the project's stable root when this run
 /// can claim it (`snapshot.claimStable`), so the compiler children see the same
 /// source paths on every run and their path-keyed caches answer; otherwise, or
-/// when writing there fails, at a fresh private path under the session.
+/// when writing there fails, at a fresh private path under the session. The
+/// trace names how the run was staged (MODULE-TEST-6): at the stable path
+/// (`stage stable DIR`), apart because another run holds it (`stage
+/// private`), or apart because a detached seeder does (`stage seeding`),
+/// which the run then stops for its length.
 fn stage(context: fs.Context, session: sessions.Session, prepared: snapshot.Snapshot) Error!Staged {
     const seed = try stableSeed(session);
     const scratch = try context.absolute(context.scratchRoot());
-    // MODULE-TEST-5: a seeder's module records answer only at the stable
-    // path, so a run waits for a seeder holding it rather than stage apart.
-    const stable = snapshot.claimStable(context, scratch, seed) orelse
-        if (snapshot.heldBySeeder(context, scratch, seed)) snapshot.claimStableWaiting(context, scratch, seed) else null;
-    if (stable) |claimed| {
+    // MODULE-TEST-6: a run never waits for the path, not even for a seeder
+    // holding it; it stages apart and is the whole-program run's.
+    if (snapshot.claimStable(context, scratch, seed)) |claimed| {
         if (snapshot.materialize(context, prepared, claimed.directory)) |captured| {
+            session.traceWork(&.{ "stage", "stable", claimed.directory });
             return .{ .captured = captured, .stable = claimed };
         } else |_| claimed.release(context);
     }
-    return .{ .captured = try snapshot.materialize(context, prepared, try context.temporary(session.temporary)), .stable = null };
+    const captured = try snapshot.materialize(context, prepared, try context.temporary(session.temporary));
+    const beside_seeder = snapshot.heldBySeeder(context, scratch, seed);
+    session.traceWork(&.{ "stage", if (beside_seeder) "seeding" else "private" });
+    return .{ .captured = captured, .stable = null, .paused = if (beside_seeder) try pauseSeeder(context, session) else null };
 }
 /// The fan-out width asked for: `--jobs` first, then `MYLANG_JOBS`, then none,
 /// which leaves the default derived from cores and free memory.
@@ -528,7 +604,7 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     const prepared = try snapshot.withTestEntry(context, session.source);
     if (seeding(context)) return seedModules(context, session, prepared);
     const staged = try stage(context, session, prepared);
-    defer if (staged.stable) |claimed| claimed.release(context);
+    defer staged.end(context);
     const captured = staged.captured;
     const directory = try std.fs.path.join(context.allocator, &.{ session.directory, "results" });
     const graphs_directory = if (opts.flags.no_cache) "" else try std.fs.path.join(context.allocator, &.{ session.directory, "graphs" });
@@ -540,7 +616,7 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     // module and validates exported signatures and explicit ceilings without
     // checking any body, so an unfinished replacement target cannot block
     // selection while its public declarations stay valid.
-    const module_tests = try openModuleTests(session, captured, .{ .directory = graphs_directory, .cold = coldThreshold(context) });
+    const module_tests = try openModuleTests(session, captured, .{ .directory = graphs_directory, .cold = coldThreshold(context), .stable = staged.stable != null });
     const production = contractsOf(session, captured, module_tests) catch |err| switch (err) {
         error.ProjectConfigurationFailed => return 2,
         error.ProjectPolicyRejected => return 3,

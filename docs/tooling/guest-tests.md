@@ -606,11 +606,16 @@ passed util::test_sum
   it starts a detached seeder (`MYLANG_TEST_SEED=1`, no standard streams, never
   waited for). The seeder waits until the run has released the project's
   snapshot path, compiles every module into the test variant, runs no test and
-  prints nothing. A run started while the seeder works waits for it, since the
-  seeder's records answer only at that path; later runs are module by module
-  and replay the first run's verdicts. `MYLANG_TEST_SEED=off` starts no seeder.
-  While another run of the project holds its modules, a run is the
-  whole-program run's instead of waiting.
+  prints nothing, at nice 19. `MYLANG_TEST_SEED=off` starts no seeder.
+- **Never waiting.** A run started while the seeder works does not wait for
+  it: it stages at a private path and is the whole-program run's, which
+  replays the verdicts of every test the edit did not reach. The same holds
+  while another run of the project holds its snapshot path or its modules.
+  The seeder is stopped while such a run works, so the run has the cores,
+  and goes on when the run ends. Once the seeder is done, runs are module by
+  module again, replaying the earlier runs' verdicts. The trace names how a
+  run was staged: `stage stable`, `stage private` or `stage seeding`, and
+  `pause-seeder` when it stopped the seeder.
 
 ## Collector stress
 

@@ -424,12 +424,10 @@ pub const TestsOutcome = union(enum) { ready: *Tests, status: u8, fallback: Fall
 /// tests' closure; or say why the whole-program test path must run it.
 pub fn openTests(context: fs.Context, request: TestRequest) Error!TestsOutcome {
     const tests = try context.allocator.create(Tests);
-    // A run that may leave a cold build to the whole-program path leaves a
-    // held program variant to it too (`Fallback.busy`): a seeder is filling
-    // it. It still waits for the standard modules' variant, which every
-    // project of a cache shares, so concurrent runs of different projects
-    // stay module by module.
-    const settings: Settings = .{ .parsed = request.settings, .switches = request.switches, .identity = request.identity, .mode = .tests, .wait = if (request.cold == null) .all else .standard };
+    // MODULE-TEST-6: a run waits for nobody: while a seeder or another run
+    // holds its program's variant or the standard modules' shared one, the
+    // whole-program run answers (`Fallback.busy`). Only the seeder waits.
+    const settings: Settings = .{ .parsed = request.settings, .switches = request.switches, .identity = request.identity, .mode = .tests, .wait = request.cold == null };
     switch (try Session.open(&tests.session, context, settings)) {
         .ready => {},
         .status => |status| return .{ .status = status },
@@ -486,7 +484,9 @@ pub fn check(gpa: std.mem.Allocator, request: CheckRequest) Error!Outcome {
     var session: Session = undefined;
     // A check waits for nobody: while a seeder or another check holds the
     // variant, the whole-program check answers.
-    const settings: Settings = .{ .parsed = .{ .source = request.source, .cache = request.cache }, .switches = check_switches, .identity = request.identity, .mode = .check, .wait = if (request.seed) .all else .none };
+    const settings: Settings = .{ .parsed = .{ .source = request.source, .cache = request.cache }, .switches = check_switches, .identity = request.identity, .mode = .check, .wait = request.seed };
+    // MODULE-TEST-6: the seeder yields the cores to every foreground run.
+    if (request.seed) compile_command.lowerPriority(compile_command.seeder_priority);
     switch (try Session.open(&session, context, settings)) {
         .ready => {},
         .status => |status| return .{ .status = status },
@@ -534,13 +534,9 @@ fn Step(comptime T: type) type {
 /// modules' objects and test documents (MODULE-TEST-1).
 const Mode = enum { build, check, tests };
 
-/// Which held variants a session waits for rather than leaving the work to
-/// the whole-program path (`Fallback.busy`): both, only the standard
-/// modules' shared one, or neither.
-const Wait = enum { all, standard, none };
-
-/// What a session is opened with.
-const Settings = struct { parsed: options.Options, switches: native_build.Switches, identity: []const u8, mode: Mode = .build, wait: Wait = .all };
+/// What a session is opened with; `wait` false leaves a held variant to the
+/// whole-program path (`Fallback.busy`) instead of waiting for it.
+const Settings = struct { parsed: options.Options, switches: native_build.Switches, identity: []const u8, mode: Mode = .build, wait: bool = true };
 
 /// How a check session runs: as the detached seeder, and from how many
 /// modules a first check leaves the answer to the whole-program check.
@@ -599,11 +595,11 @@ const Session = struct {
         try context.mkdir(self.state.variant);
         try context.mkdir(self.state.standard);
         // Always the program's variant first: two builds never wait on each other in turn.
-        self.locks[0] = (try lockVariant(context, self.state.variant, settings.wait == .all)) orelse {
+        self.locks[0] = (try lockVariant(context, self.state.variant, settings.wait)) orelse {
             if (prepared) |ready| context.remove(ready.cache.temporary);
             return .{ .fallback = .busy };
         };
-        self.locks[1] = (try lockVariant(context, self.state.standard, settings.wait != .none)) orelse {
+        self.locks[1] = (try lockVariant(context, self.state.standard, settings.wait)) orelse {
             self.locks[0].close(context.io);
             if (prepared) |ready| context.remove(ready.cache.temporary);
             return .{ .fallback = .busy };

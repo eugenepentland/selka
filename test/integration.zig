@@ -1451,8 +1451,19 @@ test "a large project's first check is the whole-program check, and module recor
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, seeded.term);
     try testing.expectEqualStrings("", seeded.stderr);
     try testing.expect(try checkSeeded(a, temporary.dir));
-    // The next check reads them: a body edit checks `util` alone.
+    // While a seeder or another check holds the variant, a check does not
+    // wait for it: the whole-program check answers and records nothing.
     const out = try checkVariant(a, temporary.dir);
+    const held = try temporary.dir.createFile(testing.io, try std.fmt.allocPrint(a, "{s}/../.lock", .{out}), .{ .truncate = false });
+    try held.lock(testing.io, .exclusive);
+    try forgetResults(a, temporary.dir, out, &.{ "shapes", "util", "main" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = try std.mem.replaceOwned(u8, a, warned, "right=2", "right=4") });
+    const busy = try checkWithEnvironment(a, directory, &.{.{ "MYLANG_CHECK_SEED_MODULES", "1" }});
+    held.close(testing.io);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, busy.term);
+    try testing.expectEqualStrings(whole.stderr, busy.stderr);
+    try testing.expectError(error.FileNotFound, temporary.dir.access(testing.io, try std.fmt.allocPrint(a, "{s}/util.result.json", .{out}), .{}));
+    // The next check reads them: a body edit checks `util` alone.
     try forgetResults(a, temporary.dir, out, &.{ "shapes", "util", "main" });
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = try std.mem.replaceOwned(u8, a, warned, "right=2", "right=3") });
     const edited = try checkWithEnvironment(a, directory, &.{.{ "MYLANG_CHECK_SEED_MODULES", "1" }});
@@ -10426,6 +10437,10 @@ test "a large project's first test run is the whole-program run, and a seeder's 
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, seeded.term);
     try testing.expectEqualStrings("", seeded.stdout);
     try testing.expectEqual(@as(usize, 5), try c4TraceCount(paths.trace, "compile-module "));
+    // The seeder and its compiles yield the cores (MODULE-TEST-6).
+    const result = try moduleResult(paths.cache, "m1.result.json");
+    defer testing.allocator.free(result);
+    try testing.expect(std.mem.indexOf(u8, result, "\"nice\":19") != null);
     // The next run is module by module: it compiles nothing, and the
     // whole-program run's verdicts answer every test.
     const next = try moduleScaleRunWith(paths, &.{.{ "MYLANG_TEST_SEED_MODULES", "1" }});
@@ -10437,6 +10452,131 @@ test "a large project's first test run is the whole-program run, and a seeder's 
     try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "compile-module "));
     try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "native-test-compile"));
     try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "module-link "));
+}
+
+/// The stable snapshot directory the last traced run claimed
+/// (`stage stable DIR`); the caller frees it.
+fn stagedDirectory(trace: []const u8) ![]const u8 {
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(testing.io, trace, testing.allocator, .limited(1 << 20));
+    defer testing.allocator.free(bytes);
+    const marker = "stage stable ";
+    const at = (std.mem.lastIndexOf(u8, bytes, marker) orelse return error.TestUnexpectedResult) + marker.len;
+    const end = std.mem.indexOfScalarPos(u8, bytes, at, '\n') orelse bytes.len;
+    return testing.allocator.dupe(u8, bytes[at..end]);
+}
+
+/// The first `NAME.result.json` under a test cache's module variants.
+fn moduleResult(cache: []const u8, name: []const u8) ![]const u8 {
+    var root = try std.Io.Dir.cwd().openDir(testing.io, cache, .{ .iterate = true });
+    defer root.close(testing.io);
+    var walker = try root.walk(testing.allocator);
+    defer walker.deinit();
+    while (try walker.next(testing.io)) |entry| {
+        if (entry.kind == .file and std.mem.eql(u8, entry.basename, name)) return entry.dir.readFileAlloc(testing.io, entry.basename, testing.allocator, .limited(1 << 20));
+    }
+    return error.FileNotFound;
+}
+
+/// A stand-in for a detached seeder: a process that leads its own process
+/// group and carries `MYLANG_TEST_SEED=<seed>` (`1` for a seeder), as `mylang test`
+/// starts one. The caller kills it.
+fn standInSeeder(seed: []const u8) !std.process.Child {
+    var environment: std.process.Environ.Map = .init(testing.allocator);
+    defer environment.deinit();
+    try environment.put("PATH", "/usr/bin:/bin");
+    try environment.put("MYLANG_TEST_SEED", seed);
+    return std.process.spawn(testing.io, .{ .argv = &.{ "sleep", "600" }, .environ_map = &environment, .stdin = .ignore, .stdout = .ignore, .stderr = .ignore, .pgid = 0 });
+}
+
+/// The scheduler state of process `pid` (the field after the name in
+/// `/proc/PID/stat`): `T` while it is stopped. The file reports no length,
+/// so it is read as a stream.
+fn processState(pid: std.process.Child.Id) !u8 {
+    const path = try std.fmt.allocPrint(testing.allocator, "/proc/{d}/stat", .{pid});
+    defer testing.allocator.free(path);
+    const file = try std.Io.Dir.cwd().openFile(testing.io, path, .{});
+    defer file.close(testing.io);
+    var buffer: [4096]u8 = undefined;
+    const count = try file.readStreaming(testing.io, &.{&buffer});
+    const close = std.mem.lastIndexOfScalar(u8, buffer[0..count], ')') orelse return error.TestUnexpectedResult;
+    return buffer[close + 2];
+}
+
+/// Mark the stable snapshot `stable` as held by the seeder `pid`.
+fn markSeeder(stable: []const u8, pid: std.process.Child.Id) !void {
+    const mark = try std.fs.path.join(testing.allocator, &.{ stable, "seeding" });
+    defer testing.allocator.free(mark);
+    const text = try std.fmt.allocPrint(testing.allocator, "{d}", .{pid});
+    defer testing.allocator.free(text);
+    try std.Io.Dir.cwd().writeFile(testing.io, .{ .sub_path = mark, .data = text });
+}
+
+// spec: MODULE-TEST-6
+test "a test run started while a seeder holds the project's snapshot path does not wait for it and reports the verdicts the receipts hold" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const paths = try scaleProject(&temp);
+    defer freeScalePaths(paths);
+    const scratch = try std.fs.path.join(testing.allocator, &.{ std.fs.path.dirname(paths.entry).?, "scratch" });
+    defer testing.allocator.free(scratch);
+    try std.Io.Dir.cwd().createDirPath(testing.io, scratch);
+    const quiet = [_][2][]const u8{ .{ "TMPDIR", scratch }, .{ "MYLANG_TEST_SEED", "off" } };
+    // A first run at the stable path records every verdict.
+    const first = try moduleScaleRunWith(paths, &quiet);
+    defer testing.allocator.free(first.stdout);
+    defer testing.allocator.free(first.stderr);
+    try testing.expectEqual(@as(usize, 4), (try c4Counts(first.stdout)).executed);
+    const stable = try stagedDirectory(paths.trace);
+    defer testing.allocator.free(stable);
+    // A seeder holds the path: its owner marker is locked and the path is
+    // marked as a seeder's, as for the whole of a background compile.
+    try std.Io.Dir.cwd().createDirPath(testing.io, stable);
+    const owner = try std.fs.path.join(testing.allocator, &.{ stable, ".owner" });
+    defer testing.allocator.free(owner);
+    const held = try std.Io.Dir.cwd().createFile(testing.io, owner, .{ .truncate = false });
+    defer held.close(testing.io);
+    try held.lock(testing.io, .exclusive);
+    var seeder = try standInSeeder("1");
+    defer seeder.kill(testing.io);
+    try markSeeder(stable, seeder.id.?);
+    // An unchanged run does not wait: it stages apart, compiles no module,
+    // links nothing, and every verdict is the first run's. It stops the
+    // seeder while it runs and lets it go on when it ends.
+    const unchanged = try moduleScaleRunWith(paths, &quiet);
+    defer testing.allocator.free(unchanged.stdout);
+    defer testing.allocator.free(unchanged.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, unchanged.term);
+    const replayed = try c4Counts(unchanged.stdout);
+    try testing.expectEqual(@as(usize, 0), replayed.executed);
+    try testing.expectEqual(@as(usize, 4), replayed.cached);
+    try testing.expectEqual(@as(usize, 1), try c4TraceCount(paths.trace, "stage seeding"));
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "compile-module "));
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "module-link "));
+    try testing.expectEqual(@as(usize, 1), try c4TraceCount(paths.trace, "pause-seeder"));
+    try testing.expect(try processState(seeder.id.?) != 'T');
+    // After an edit, the whole-program run executes the tests it reaches
+    // and replays the other.
+    try scaleEdit(&temp, 1, "return m0.f(n) + 2 - 1");
+    const edited = try moduleScaleRunWith(paths, &quiet);
+    defer testing.allocator.free(edited.stdout);
+    defer testing.allocator.free(edited.stderr);
+    const rerun = try c4Counts(edited.stdout);
+    try testing.expectEqual(@as(usize, 3), rerun.executed);
+    try testing.expectEqual(@as(usize, 1), rerun.cached);
+    try testing.expectEqual(@as(usize, 0), rerun.failed);
+    try testing.expectEqual(@as(usize, 1), try c4TraceCount(paths.trace, "stage seeding"));
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "compile-module "));
+    try testing.expect(try processState(seeder.id.?) != 'T');
+    // A mark whose process is no seeder (it was reused) stops nothing.
+    var other = try standInSeeder("off");
+    defer other.kill(testing.io);
+    try markSeeder(stable, other.id.?);
+    const stale = try moduleScaleRunWith(paths, &quiet);
+    defer testing.allocator.free(stale.stdout);
+    defer testing.allocator.free(stale.stderr);
+    try testing.expectEqual(@as(usize, 4), (try c4Counts(stale.stdout)).cached);
+    try testing.expectEqual(@as(usize, 1), try c4TraceCount(paths.trace, "stage seeding"));
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "pause-seeder"));
 }
 
 // spec: NATIVE-TEST-SCALE-1

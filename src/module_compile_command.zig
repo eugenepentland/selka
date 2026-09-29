@@ -208,7 +208,7 @@ const Publish = struct {
         // longer on the build's critical path, which runs through the
         // dependents' compiles; yield the cores to them. A process already
         // nicer than that stays as it is.
-        if (niceness() < background_priority) _ = std.os.linux.syscall3(.setpriority, 0, 0, background_priority);
+        lowerPriority(background_priority);
     }
 
     fn write(self: *Publish, compiled: *const compile_module.Compiled) Error!void {
@@ -267,6 +267,17 @@ fn openStore(context: Context, site: StoreSite) Error!fragments.Store {
 /// MODULE-SCHEDULE-6: the nice value a `--ready` compile and the tools it
 /// starts run at once its interface is published.
 pub const background_priority: usize = 10;
+
+/// MODULE-TEST-6: the nice value a detached seeder (MODULE-CHECK-2,
+/// MODULE-TEST-5) and every compile it starts run at, so a foreground run
+/// beside it keeps the cores.
+pub const seeder_priority: usize = 19;
+
+/// Lower this process's priority, and so its future children's, to nice
+/// `value`; a process already that nice or nicer stays as it is.
+pub fn lowerPriority(value: usize) void {
+    if (niceness() < value) _ = std.os.linux.syscall3(.setpriority, 0, 0, value);
+}
 
 /// This process's nice value (the kernel's `getpriority` answers 20 minus it).
 fn niceness() usize {

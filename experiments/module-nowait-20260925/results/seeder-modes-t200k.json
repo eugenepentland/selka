@@ -1,0 +1,152 @@
+{
+ "nice19": [
+  {
+   "seeder": true,
+   "unchanged": {
+    "wall_s": 0.279,
+    "rss_mb": 106.7,
+    "status": 0,
+    "passed": 0,
+    "cached": 480,
+    "failed": 0,
+    "stage": "seeding",
+    "modules_compiled": 0
+   },
+   "edit": {
+    "wall_s": 4.805,
+    "rss_mb": 1112.6,
+    "status": 0,
+    "passed": 240,
+    "cached": 240,
+    "failed": 0,
+    "stage": "seeding",
+    "modules_compiled": 0
+   },
+   "settle_s": 14.443
+  },
+  {
+   "seeder": true,
+   "unchanged": {
+    "wall_s": 0.32,
+    "rss_mb": 106.4,
+    "status": 0,
+    "passed": 0,
+    "cached": 480,
+    "failed": 0,
+    "stage": "seeding",
+    "modules_compiled": 0
+   },
+   "edit": {
+    "wall_s": 5.089,
+    "rss_mb": 1112.6,
+    "status": 0,
+    "passed": 240,
+    "cached": 240,
+    "failed": 0,
+    "stage": "seeding",
+    "modules_compiled": 0
+   },
+   "settle_s": 15.407
+  }
+ ],
+ "idle": [
+  {
+   "seeder": true,
+   "unchanged": {
+    "wall_s": 0.312,
+    "rss_mb": 106.7,
+    "status": 0,
+    "passed": 0,
+    "cached": 480,
+    "failed": 0,
+    "stage": "seeding",
+    "modules_compiled": 0
+   },
+   "edit": {
+    "wall_s": 4.89,
+    "rss_mb": 1112.6,
+    "status": 0,
+    "passed": 240,
+    "cached": 240,
+    "failed": 0,
+    "stage": "seeding",
+    "modules_compiled": 0
+   },
+   "settle_s": 15.249
+  },
+  {
+   "seeder": true,
+   "unchanged": {
+    "wall_s": 0.337,
+    "rss_mb": 106.7,
+    "status": 0,
+    "passed": 0,
+    "cached": 480,
+    "failed": 0,
+    "stage": "seeding",
+    "modules_compiled": 0
+   },
+   "edit": {
+    "wall_s": 5.115,
+    "rss_mb": 1112.6,
+    "status": 0,
+    "passed": 240,
+    "cached": 240,
+    "failed": 0,
+    "stage": "seeding",
+    "modules_compiled": 0
+   },
+   "settle_s": 16.107
+  }
+ ],
+ "stopped": [
+  {
+   "seeder": true,
+   "unchanged": {
+    "wall_s": 0.218,
+    "rss_mb": 106.5,
+    "status": 0,
+    "passed": 0,
+    "cached": 480,
+    "failed": 0,
+    "stage": "seeding",
+    "modules_compiled": 0
+   },
+   "edit": {
+    "wall_s": 2.689,
+    "rss_mb": 1112.4,
+    "status": 0,
+    "passed": 240,
+    "cached": 240,
+    "failed": 0,
+    "stage": "seeding",
+    "modules_compiled": 0
+   },
+   "settle_s": 20.138
+  },
+  {
+   "seeder": true,
+   "unchanged": {
+    "wall_s": 0.218,
+    "rss_mb": 106.4,
+    "status": 0,
+    "passed": 0,
+    "cached": 480,
+    "failed": 0,
+    "stage": "seeding",
+    "modules_compiled": 0
+   },
+   "edit": {
+    "wall_s": 2.736,
+    "rss_mb": 1112.4,
+    "status": 0,
+    "passed": 240,
+    "cached": 240,
+    "failed": 0,
+    "stage": "seeding",
+    "modules_compiled": 0
+   },
+   "settle_s": 20.236
+  }
+ ]
+}

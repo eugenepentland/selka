@@ -13,6 +13,99 @@ the module-projects work). What was asked, and what was done:
 | Cheapest cold-build items toward 200k cold ≤ 10 s | **Partly done.** 200k cold build is 14–15 s, against 22.2 s on `main`. The ≤ 10 s target is not reached; see *Cold build*. |
 | Measure 200k edit → test and cold check/build against `main` | **Done.** See *Result*. |
 
+## Update: runs never wait (MODULE-TEST-6), 25 September
+
+Branch `devspeed/module-nowait`, from `devspeed/integration` at `ba2ccc54`.
+The coordinator's fix before `main`: a run must never wait on the background
+module compile.
+
+**What changed:**
+
+- **No wait for the path.** A test run that cannot claim the project's stable
+  snapshot path stages at a private path. The path is held by a seeder or by
+  another run. Such a run is always the whole-program run, which replays the
+  receipts' verdicts and starts no seeder. Stage 1d made it wait for a
+  seeder, since module records are keyed by the stable path.
+- **No wait for a variant.** A test run takes the whole-program path while
+  anything holds its program's module variant or the standard modules'
+  shared one. Only the seeder waits. A check already behaved this way.
+- **The seeder is paused.** Both seeders now run at nice 19. That is not
+  enough on this machine (6 P-cores with SMT and a shared power budget):
+  - with a seeder at nice 19, the edit run right after a cold run took
+    4.8–5.1 s;
+  - with the seeder under `SCHED_IDLE`, it took 4.9–5.1 s;
+  - with the seeder stopped, it took 2.7 s
+    (`experiments/module-nowait-20260925/results/seeder-modes-t200k.json`).
+
+  So the seeder now writes its pid into its mark, and a run staged beside it
+  stops the seeder's process group (SIGSTOP) for the run's length, then
+  continues it (SIGCONT). It stops only a process that leads its own group
+  and carries `MYLANG_TEST_SEED=1`, so a stale mark whose process is gone
+  stops nothing. A run killed in between leaves the seeder stopped until the
+  next run beside it ends.
+- **Trace.** Each run records how it was staged: `stage stable DIR`,
+  `stage private` or `stage seeding`, plus `pause-seeder` when it stopped
+  the seeder.
+
+**Measured** with ReleaseFast compilers, 3 repeats each, the 1-minute load at
+3–13 from other agents. The rerun starts the moment the previous run returns.
+Tool: `experiments/module-nowait-20260925/measure.py`, with results under
+`results/`.
+
+| 200k, `mylang test` | this branch | stage 1d | main |
+| --- | ---: | ---: | ---: |
+| cold | 5.2–5.6 s | 5.1–5.2 s | 4.8–5.1 s |
+| unchanged, right after cold | **0.24–0.27 s** | 19.1–19.5 s | 0.25–0.26 s |
+| body edit, right after that | **3.0–3.2 s** | 1.15–1.18 s | 2.6–2.8 s |
+| seeder done after | 20 s | 0 s (the first rerun did its work) | — |
+| then: no-op | 0.21–0.23 s | 0.20–0.21 s | 0.23–0.26 s |
+| then: body edit | **0.70–0.73 s** | 0.66–0.67 s | 1.54–1.57 s |
+
+| 50k, `mylang test` | this branch | stage 1d | main |
+| --- | ---: | ---: | ---: |
+| unchanged, right after cold | 0.056 s | 4.9–5.0 s | 0.050–0.057 s |
+| body edit, right after that | 0.87–0.93 s | 0.50–0.51 s | 0.69–0.73 s |
+| then: body edit | 0.20–0.22 s | 0.18–0.19 s | 0.42–0.43 s |
+
+Every run reports the same counts on all three: 480 cached for an
+unchanged run, and 240 run with 240 cached for an edit.
+
+- **During seeding.** The edit rerun costs 3.0–3.2 s, against 2.6–2.8 s on
+  `main`. With an idle fake seeder (`results/private-idle-t200k.json`) the
+  run takes 3.05–3.09 s, so the remaining gap is the private path. The
+  whole-program session's path-keyed caches were filled at the stable path,
+  so parsed modules and fragment packs are rebuilt.
+- **Stage 1d's 1.15 s edit** comes after the 19.5 s wait, which had already
+  compiled every module.
+- **The seeder.** It takes about 5 s longer in total, because it stands still
+  while the two runs work.
+
+**Tests** (MODULE-TEST-6, in `test/integration.zig`). A stand-in seeder is a
+`sleep` process that leads its own group, carries `MYLANG_TEST_SEED=1`, and
+is named in the mark on a stable path whose owner lock the test holds. The
+test checks that:
+
+- an unchanged run and an edit run return;
+- both report the verdicts the receipts hold: 4 cached, then 3 run and 1
+  cached;
+- neither compiles a module;
+- each stops the stand-in once and leaves it running;
+- a mark naming a process without `MYLANG_TEST_SEED=1` stops nothing.
+
+The MODULE-CHECK-2 test now holds the check variant's lock and checks that
+a check returns the whole-program check's output and writes no records. The
+MODULE-TEST-5 test checks that the seeder's compiles run at nice 19.
+
+**Gate** on this code (the report and results were added after it):
+
+- `zig build test --maxrss 8000000000`: 101/101 steps, 2,042 tests, 0
+  failed, with Guardian's 88 checks and the four module oracles at 207/207;
+- `test-qbe`: 47/47 steps, 423 tests;
+- `test-qbe-build`: 29/29 steps;
+- `fmt-check`: clean;
+- `mylang test tests/lang`: 640 passed, and the same with `--gc-stress`;
+- `tests/module_test_oracle.py … --gc-stress`: 207/207.
+
 ## Result
 
 Measurements use ReleaseFast compilers, pinned with `taskset -c 0-11`. Other
@@ -63,9 +156,10 @@ The three compilers are:
 In every body-edit test run, 240 of 480 tests (60 of 120 at 50k) execute and
 the rest replay, on all three compilers. That is the dependent set.
 
-**The one regression** is a test run started while the seeder that a cold run
-left is still working. That run waits for the seeder, up to the seeder's
-length: 19.5 s at 200k and 4.7 s at 50k. See *Cold test*.
+**The one regression** was a test run started while the seeder that a cold
+run left was still working. That run waited for the seeder, up to the
+seeder's length: 19.5 s at 200k and 4.7 s at 50k. It is fixed: see *Update:
+runs never wait*, where the same rerun takes 0.24–0.27 s.
 
 ## `mylang test` module by module (MODULE-TEST-1 to 4)
 
@@ -204,31 +298,13 @@ follows the cold check:
   - exits, running no test and printing nothing.
 
   `MYLANG_TEST_SEED=off` starts none.
-- **A run that finds the path marked waits for the seeder.** The variant is
-  keyed by the entry's absolute path, so the seeder's records answer only at
-  the stable path. A run staged at a private path would take a cold
-  whole-program run instead: 25 s under the seeder's load, with a Debug
-  compiler at 50k.
-- **The next run is module by module**, and replays the cold run's verdicts
-  through the receipts, which now match. At 200k: a no-op is 0.203 s with 480
-  replayed, and a body edit 0.646 s.
-- **A test run never waits for its program's variant.** While another run of
-  the project holds it, the whole-program run answers. It still waits for
-  the standard modules' shared variant, so a directory run's children stay
-  module by module.
-
-**The cost:** a run started before the seeder finishes waits for it. The
-ladder's rerun, started the moment the cold run returns, is the worst case:
-19.5 s at 200k and 4.7 s at 50k. That is no longer than the cold run it
-replaced (19.0 s). An agent that reads the cold run's output before running
-the tests again waits less, or not at all. The seeder takes longer than a
-cold `build` (15 s) because it also writes the test documents and merges them.
-
-A run during seeding could instead take a cold whole-program run at a private
-path, about 4–8 s at 200k. That would be faster right after the cold run but
-slower for every other run in the window. The choice needs a bounded wait
-(wait up to the whole-program estimate, then go private), which this lane
-did not build.
+- **A run beside the seeder does not wait for it** (MODULE-TEST-6, see
+  *Update: runs never wait*). It stages at a private path and is the
+  whole-program run, which replays the verdicts, and it stops the seeder while
+  it runs.
+- **Once the seeder is done, runs are module by module**, and replay the
+  earlier runs' verdicts through the receipts, which now match. At 200k: a
+  no-op is 0.203 s with 480 replayed, and a body edit 0.646 s.
 
 ## Cold build (MODULE-SCHEDULE-6)
 

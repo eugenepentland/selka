@@ -630,23 +630,34 @@ pub fn claimStable(context: fs.Context, scratch: []const u8, seed: []const u8) ?
     return claim(context, scratch, seed, false);
 }
 /// MODULE-TEST-5: `claimStable`, waiting while another run holds the path:
-/// a detached seeder takes the path once the run that started it released it,
-/// and a run takes it once a seeder holding it is done.
+/// a detached seeder takes the path once the run that started it released
+/// it. Only the seeder waits; a run never does (MODULE-TEST-6).
 pub fn claimStableWaiting(context: fs.Context, scratch: []const u8, seed: []const u8) ?Stable {
     return claim(context, scratch, seed, true);
 }
 /// The file a detached seeder leaves in the stable snapshot it holds, so a
-/// run that finds the path held waits for it rather than staging elsewhere
-/// (MODULE-TEST-5).
+/// run that finds the path held can tell a seeder from another run
+/// (MODULE-TEST-6).
 const seeding_name = "seeding";
-/// MODULE-TEST-5: mark a claimed stable snapshot as a detached seeder's.
+/// MODULE-TEST-5: mark a claimed stable snapshot as a detached seeder's,
+/// naming this process, which leads the seeder's process group (MODULE-TEST-6).
 pub fn markSeeding(context: fs.Context, stable: Stable) void {
     const path = std.fs.path.join(context.allocator, &.{ stable.directory, seeding_name }) catch return;
-    context.write(path, "") catch return;
+    const pid = std.fmt.allocPrint(context.allocator, "{d}", .{std.os.linux.getpid()}) catch return;
+    context.write(path, pid) catch return;
 }
-/// MODULE-TEST-5: whether the stable snapshot of `seed` is marked as a
-/// detached seeder's: a run then waits for it (`claimStableWaiting`),
-/// since its module records answer only at that path.
+/// MODULE-TEST-6: the process the seeder mark of `seed`'s stable snapshot
+/// names, or null when there is no mark or it names none.
+pub fn seederProcess(context: fs.Context, scratch: []const u8, seed: []const u8) ?std.os.linux.pid_t {
+    const directory = stableDirectory(context.allocator, scratch, seed) catch return null;
+    const path = std.fs.path.join(context.allocator, &.{ directory, seeding_name }) catch return null;
+    const text = context.read(path) catch return null;
+    const pid = std.fmt.parseInt(std.os.linux.pid_t, std.mem.trim(u8, text, " \n"), 10) catch return null;
+    return if (pid > 1) pid else null;
+}
+/// MODULE-TEST-6: whether the stable snapshot of `seed` is marked as a
+/// detached seeder's. A seeder that was killed leaves its mark until the
+/// next claim clears the path.
 pub fn heldBySeeder(context: fs.Context, scratch: []const u8, seed: []const u8) bool {
     const directory = stableDirectory(context.allocator, scratch, seed) catch return false;
     const path = std.fs.path.join(context.allocator, &.{ directory, seeding_name }) catch return false;
@@ -1273,6 +1284,9 @@ test "a stable snapshot a seeder holds is marked as its, and a waiting claim tak
     try std.testing.expect(!heldBySeeder(context, scratch, "seed-a"));
     markSeeding(context, seeder);
     try std.testing.expect(heldBySeeder(context, scratch, "seed-a"));
+    // The mark names the process that made it.
+    try std.testing.expectEqual(@as(?std.os.linux.pid_t, std.os.linux.getpid()), seederProcess(context, scratch, "seed-a"));
+    try std.testing.expectEqual(@as(?std.os.linux.pid_t, null), seederProcess(context, scratch, "seed-b"));
     try std.testing.expect(!heldBySeeder(context, scratch, "seed-b"));
     const directory = seeder.directory;
     seeder.release(context);

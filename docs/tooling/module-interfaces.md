@@ -298,8 +298,8 @@ $ mylang check main.my          # that module alone; its warnings and the others
   modules (`MYLANG_CHECK_SEED_MODULES`) is checked for the first time, the
   whole-program check answers, because one pass is cheaper than a chain of
   module checks. The check then starts a detached seeder (`MYLANG_CHECK_SEED=1`,
-  no standard streams) that builds the module records, and the next check
-  reads them. `MYLANG_CHECK_SEED=off` starts no seeder. While a seeder or
+  no standard streams, nice 19) that builds the module records, and the next
+  check reads them. `MYLANG_CHECK_SEED=off` starts no seeder. While a seeder or
   another check holds the variant, a check does not wait: the whole-program
   check answers.
 - **Errors go to the whole-program check.** When a module does not check,
