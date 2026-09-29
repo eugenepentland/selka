@@ -1,6 +1,7 @@
-//! Packed constant primitive list payloads with bounded domain unwrapping.
+//! Packed inert list payloads with bounded primitive-domain unwrapping.
 const std = @import("std");
 const typed = @import("typed.zig");
+const text_lists = @import("constant_list_text.zig");
 /// Keep small frequently mutated constructors ordinary; pack large literals.
 pub const minimum_elements = 64;
 
@@ -21,14 +22,21 @@ pub fn width(records: []const typed.Record, element: typed.Type) ?u8 {
 }
 /// Identify a large inert literal before desugaring it into append statements.
 pub fn canPack(records: []const typed.Record, nodes: []const typed.Node, elements: []const typed.NodeId, element: typed.Type) bool {
-    if (elements.len < minimum_elements or width(records, element) == null) return false;
+    if (elements.len < minimum_elements) return false;
+    if (text_lists.family(records, element)) |text|
+        return text_lists.inert(nodes, elements, element, text);
+    if (width(records, element) == null) return false;
     for (elements) |id| if (constant(records, nodes, id, element, 0) == null) return false;
     return true;
 }
 /// Preserve the ordinary constructor unless every element is exactly constant.
-/// Nonempty primitive payloads use native little-endian two's-complement bits.
-pub fn payload(allocator: std.mem.Allocator, records: []const typed.Record, nodes: []const typed.Node, elements: []const typed.NodeId, element: typed.Type) error{OutOfMemory}!?[]const u8 {
+/// Primitive payloads use little-endian bits; immutable elements use framed octets.
+pub fn payload(allocator: std.mem.Allocator, records: []const typed.Record, nodes: []const typed.Node, elements: []const typed.NodeId, element: typed.Type) error{ OutOfMemory, InternalError }!?[]const u8 {
     if (!canPack(records, nodes, elements, element)) return null;
+    if (text_lists.family(records, element)) |text| {
+        const bytes = try text_lists.payload(allocator, nodes, elements, element, text);
+        return bytes;
+    }
     const stride = width(records, element) orelse return null;
     const length = std.math.mul(usize, elements.len, stride) catch return error.OutOfMemory;
     const bytes = try allocator.alloc(u8, length);

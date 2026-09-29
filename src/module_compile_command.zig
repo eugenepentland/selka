@@ -337,7 +337,7 @@ fn sharedUnits(a: std.mem.Allocator, manifest: std.json.Value) Error![]const std
     for (array(field(manifest, "functions"))) |unit| {
         var kept: std.ArrayList([]const u8) = .empty;
         var lines = std.mem.splitScalar(u8, @import("qbe_build_units.zig").facts(unit), '\n');
-        while (lines.next()) |line| if (std.mem.startsWith(u8, line, "# myl-lit ") or std.mem.startsWith(u8, line, "# myl-rcsite ")) try kept.append(a, line);
+        while (lines.next()) |line| if (sharedMarker(line)) try kept.append(a, line);
         if (kept.items.len == 0) continue;
         var row: std.json.ObjectMap = .empty;
         try row.put(a, "symbol", field(unit, "symbol"));
@@ -345,6 +345,12 @@ fn sharedUnits(a: std.mem.Allocator, manifest: std.json.Value) Error![]const std
         try units.append(a, .{ .object = row });
     }
     return units.items;
+}
+
+fn sharedMarker(line: []const u8) bool {
+    return std.mem.startsWith(u8, line, "# myl-lit ") or
+        std.mem.startsWith(u8, line, "# myl-list ") or
+        std.mem.startsWith(u8, line, "# myl-rcsite ");
 }
 
 /// One warning a compile reported in another module's text, rendered.

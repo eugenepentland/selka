@@ -1035,6 +1035,11 @@ int myl_native_list_header(const void *payload) {
 myl_native_list *myl_native_list_literal_copy(myl_native_heap *heap, const myl_native_list *image) {
     return myl_native_list_clone_at(heap, image, image->element, heap->region_depth);
 }
+/* Capture creation region before a later write can observe younger values. */
+myl_native_list *myl_native_list_literal_value(myl_native_heap *heap, const myl_native_list *image) {
+    if (!heap->region_depth) return (myl_native_list *)image;
+    return myl_native_list_literal_copy(heap, image);
+}
 myl_native_list *myl_native_list_clone_at(myl_native_heap *heap, const myl_native_list *input, const myl_native_type *element, unsigned region) {
     if (myl_rc_enabled(heap)) return rc_list_clone(heap,input,element,region);
     const myl_native_list *rooted = input;

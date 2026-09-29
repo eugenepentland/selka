@@ -96,6 +96,89 @@ test "LIST-LITERAL-PAYLOAD-1 legacy literal evaluations allocate distinct mutabl
 }
 
 // spec-case: LIST-LITERAL-PAYLOAD-1
+test "LIST-LITERAL-PAYLOAD-1 thousand immortal text and byte elements emit bounded code" {
+    for ([_][]const u8{ "str", "bytes" }, [_][]const u8{ "\"é😀\"", "b\"\\x00\\xff\"" }) |ty, value| {
+        const source = try listSource(t.allocator, ty, value, 1000);
+        defer t.allocator.free(source);
+        var c = try compiler.Compilation.init(t.allocator, "list_immortal.my", source);
+        defer c.deinit();
+        try c.emit();
+        const code = c.code.?.functions[@backingInt(c.code.?.main)].scope.instructions;
+        try t.expect(code.len < 20);
+        try t.expect(code[0].op == .make_record);
+        try t.expect(code[0].op.make_record.payload.len < 12_000);
+        try t.expectEqual(@as(i64, 1000), (try native.runWithOptions(&c, .{ .gc_stress = true })).value);
+    }
+}
+
+// spec-case: LIST-LITERAL-PAYLOAD-1
+test "LIST-LITERAL-PAYLOAD-1 malformed immutable element framing and UTF8 are rejected" {
+    const rows = @import("constant_list_text.zig");
+    try t.expect(!rows.valid(&.{ 1, 0, 0 }, true));
+    try t.expect(!rows.valid(&.{ 1, 0, 0, 0, 3, 0, 0, 0, 'a' }, true));
+    try t.expect(!rows.valid(&.{ 1, 0, 0, 0, 1, 0, 0, 0, 0xff }, true));
+    try t.expect(rows.valid(&.{ 1, 0, 0, 0, 1, 0, 0, 0, 0xff }, false));
+    try t.expect(!rows.valid(&.{ 1, 0, 0, 0, 0, 0, 0, 0, 1 }, false));
+    try t.expect(!rows.valid(&.{ 0, 0, 0, 0 }, false));
+    var truncated = rows.Rows.init(&.{ 1, 0, 0, 0, 3, 0, 0, 0, 'a' }).?;
+    try t.expectError(error.InvalidPayload, truncated.next());
+}
+
+// spec-case: LIST-LITERAL-PAYLOAD-1
+test "LIST-LITERAL-PAYLOAD-1 shared immutable images are independent of physical unit order" {
+    const first = try literalSource(t.allocator, "def first() -> list[str]:\n    return [", "\"é\"", 64, "]\n");
+    defer t.allocator.free(first);
+    const second = try literalSource(t.allocator, "def second() -> list[str]:\n    return [", "\"😀\"", 64,
+        \\]
+        \\def main() -> int:
+        \\    return len(first()) + len(second())
+        \\
+    );
+    defer t.allocator.free(second);
+    const source = try std.fmt.allocPrint(t.allocator, "{s}{s}", .{ first, second });
+    defer t.allocator.free(source);
+    var c = try compiler.Compilation.init(t.allocator, "list_order.my", source);
+    defer c.deinit();
+    try c.emit();
+    const manifest = try c.emitQbe(t.allocator);
+    defer t.allocator.free(manifest);
+    var parsed = try std.json.parseFromSlice(std.json.Value, t.allocator, manifest, .{ .allocate = .alloc_always });
+    defer parsed.deinit();
+    const before = try outputs.sharedMetadata(t.allocator, parsed.value);
+    defer t.allocator.free(before);
+    std.mem.reverse(std.json.Value, parsed.value.object.getPtr("functions").?.array.items);
+    const after = try outputs.sharedMetadata(t.allocator, parsed.value);
+    defer t.allocator.free(after);
+    try t.expectEqualSlices(u8, before, after);
+    try t.expectEqual(@as(usize, 2), std.mem.count(u8, before, "void *storage[64]"));
+}
+
+// spec-case: LIST-LITERAL-PAYLOAD-1
+test "LIST-LITERAL-PAYLOAD-1 older image evaluations retain younger-store refusal" {
+    const mode = @import("runtime_mode.zig");
+    const previous = mode.get();
+    defer mode.set(previous);
+    mode.set(.rc);
+    const prefix = "def stash(items: mut list[str], value: str):\n    items[0] = value\ndef main() -> int:\n    items: list[str] = [";
+    const source = try literalSource(t.allocator, prefix, "\"base\"", 64,
+        \\]
+        \\    with arena():
+        \\        stash(mut items, "abc"[1:])
+        \\    return 0
+        \\
+    );
+    defer t.allocator.free(source);
+    var c = try compiler.Compilation.init(t.allocator, "list_older.my", source);
+    defer c.deinit();
+    try c.emit();
+    for ([_]bool{ false, true }) |stress| {
+        const outcome = try native.runWithOptions(&c, .{ .gc_stress = stress });
+        try t.expect(outcome.trapped());
+        try t.expectEqualStrings("R_ARENA_ESCAPE", outcome.trap.code);
+    }
+}
+
+// spec-case: LIST-LITERAL-PAYLOAD-1
 test "LIST-LITERAL-PAYLOAD-1 malformed stride and boolean payloads fail the bytecode boundary" {
     for ([_][]const u8{ "bool", "int" }) |ty| {
         const source = try listSource(t.allocator, ty, if (std.mem.eql(u8, ty, "bool")) "True" else "17", 64);

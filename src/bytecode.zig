@@ -561,13 +561,17 @@ fn validateOpMakeRecord(allocator: std.mem.Allocator, program: Program, record: 
     }
 }
 
-/// Packed text, bytes and primitive-list payloads pop no fields. Validate
-/// UTF-8, scalar stride and boolean bits at the bytecode trust boundary.
+/// Packed text, bytes and inert-list payloads pop no fields. Validate UTF-8,
+/// immutable-element framing, scalar stride and boolean bits at the boundary.
 fn validateLiteralPayload(program: Program, record: @FieldType(@FieldType(Instruction, "op"), "make_record")) Error!void {
     const schema = program.records[record.ty.recordIndex()];
     if (record.fields != 0 or record.order.len != 0 or !schema.managed) return error.InternalError;
     if (schema.collection.kind == .list and !schema.collection.box) {
         const element = schema.shape.buffer orelse return error.InternalError;
+        if (@import("constant_list_text.zig").family(program.records, element)) |text| {
+            if (!@import("constant_list_text.zig").valid(record.payload, text)) return error.InternalError;
+            return;
+        }
         const stride = @import("constant_list.zig").width(program.records, element) orelse return error.InternalError;
         if (record.payload.len % stride != 0) return error.InternalError;
         if (@import("constant_list.zig").primitive(program.records, element) == .bool)

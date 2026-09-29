@@ -174,3 +174,28 @@ the failed receipt is retained as
 failures and all focused logs are retained under `.tmp/list-image-*`.
 This is focused correctness evidence. Compile-time measurements, full runtime
 checks and combined corpus acceptance remain pending.
+
+## Immortal list elements and creation regions
+
+The next checkpoint also packs literal str/bytes elements, including empty,
+non-ASCII and arbitrary-octet values. A checked count/length framing carries
+their contents without runtime addresses. IL names canonical child literals
+and symbolic parent relocations; both pools sort independently of physical
+unit order. Module compilation retains the parent markers with the literal
+and RC-site facts. There is no per-element allocation or token glue.
+
+One native image evaluation shares on an ordinary heap and clones into the
+current region inside an arena. This preserves the lifetime of creation even
+when the first write happens later. The first owning-text arena regression
+exposed an older immortal header receiving a younger text; regional evaluation
+corrected it. An older image still refuses a younger value through a mut call,
+under RC and GC stress. A direct store is rejected even earlier by E_ARENA_ESCAPE;
+the runtime refusal fixture therefore uses the actual indirect call boundary.
+
+The focused runner passes 20 entries (8 named, 12 anonymous), including
+1,000-element str/bytes native executions, corrupted framing and UTF-8,
+nonvacuous reversed physical units, and the older-root runtime refusal.
+The failed module marker receipt is `.tmp/list-immortal-missing-marker.*`;
+the failed region receipt is `.tmp/list-immortal-first-mutation-failure.json`.
+All corrected receipts remain under `.tmp/list-immortal-*`. Full native,
+guest-mode and module-oracle acceptance is recorded in the subsequent evidence.
