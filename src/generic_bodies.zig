@@ -2151,15 +2151,41 @@ const Checker = struct {
             if (!present) return self.sink.fail(if (table_key != null) "E_INCOMPLETE_TABLE" else "E_MISSING_FIELD", span, "named construction must initialize every entry");
         };
     }
+    /// Whether `id` is `None`, `Some(...)`, `Ok(...)` or `Err(...)` written with no
+    /// expected type: an operand whose own type comes from the value it meets.
+    fn awaitsPeerType(self: *Checker, id: ast.NodeId) Error!bool {
+        const node = self.program.nodes.items[@backingInt(id)];
+        if (self.expected_types.get(node.span) != null) return false;
+        return switch (node.data) {
+            .unit => true,
+            .call => |invocation| try self.awaitsConstructorType(invocation),
+            else => false,
+        };
+    }
+    fn awaitsConstructorType(self: *Checker, invocation: Call) Error!bool {
+        if (invocation.owner != null or invocation.type_arguments.len != 0) return false;
+        const name = self.src.text(invocation.name);
+        const constructor = std.mem.eql(u8, name, "Some") or std.mem.eql(u8, name, "Ok") or std.mem.eql(u8, name, "Err");
+        if (!constructor) return false;
+        if (self.active.contains(name) or self.functions.contains(name)) return false;
+        if (self.module_names) |names| if (try names.topLevel(invocation.name)) return false;
+        return true;
+    }
     fn binary(self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), "binary")) Error!Symbolic {
-        const left = try self.expression(operation.left);
+        // `f(x) == Some(x)` and `None != f(x)` (`OPTION-EQ-1`): the operand that awaits its
+        // type is checked against the type of the one that does not.
+        const equality = operation.op == .eq or operation.op == .ne;
+        const left_awaits = equality and try self.awaitsPeerType(operation.left);
+        const right_awaits = equality and try self.awaitsPeerType(operation.right);
+        const early_right = if (left_awaits and !right_awaits) try self.expression(operation.right) else null;
+        const left = if (early_right) |peer| try self.expressionExpected(operation.left, peer) else try self.expression(operation.left);
         const short_circuit = operation.op == .logical_and or operation.op == .logical_or;
         const state = if (short_circuit) try self.pendingState(self.locals.items.len) else null;
         defer if (state) |snapshot| self.allocator.free(snapshot);
         const facts = if (short_circuit) try self.option_facts.snapshot(self.field_arena.allocator()) else null;
         defer if (facts) |saved| self.option_facts.restore(saved);
         if (short_circuit) try self.assumeOption(operation.left, operation.op == .logical_and);
-        const right = try self.expression(operation.right);
+        const right = early_right orelse if (right_awaits and !left_awaits) try self.expressionExpected(operation.right, left) else try self.expression(operation.right);
         if (state) |snapshot| try self.samePending(snapshot, operation.op_span, eResultPath);
         if (self.isFloat(left) or self.isFloat(right) or operation.op == .python_div) {
             if (!self.isFloat(left)) try self.supports(left, .integer, operation.op_span);

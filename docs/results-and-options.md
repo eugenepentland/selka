@@ -404,6 +404,35 @@ def main() -> int:
 This returns `9`. A module that declares its own function named `Ok` or `Err` calls that
 function instead; the contextual constructors never shadow a declaration you wrote.
 
+## Comparing with a constructor
+
+The operand beside `==` or `!=` is a place that supplies a type too. `Some(...)`,
+`None`, `Ok(...)` and `Err(...)` take the type of the other operand, in either order,
+whatever that operand is: a local, a field, a call, a method call or an `int(text)`
+conversion. The other operand is checked first, so `lookup(values, 1) == Some(20)` and
+`None != lookup(values, 9)` need no temporary binding. Two operands that both wait for
+a type, such as `Some(1) == Some(1)`, still have nothing to infer from and are rejected
+with `E_OPTION_INFERENCE`. Operands still evaluate left to right.
+
+```mylang
+# doc: expect 3
+def lookup(values: list[int], index: int) -> Option[int]:
+    if index < 0 or index >= len(values):
+        return None
+    return Some(values[index])
+
+def main() -> int:
+    values = [10, 20, 30]
+    score = 0
+    if lookup(values, 1) == Some(20):
+        score += 1
+    if None != lookup(values, 2):
+        score += 1
+    if lookup(values, 9) == None and int("5") == Some(5):
+        score += 1
+    return score
+```
+
 ## Builtin list and result types
 
 `list[T]` and `Result[T, E]` are part of the prelude. They need no `record` declaration

@@ -277,6 +277,11 @@
       "summary": "`_` is a discard name that never shadows: nested `for` loops, comprehensions and `with` scopes may each bind it, and `for _, _ in ...` binds nothing.",
       "doc": "docs/statements.md#the-discard-name"
     },
+    "option-equality-inference": {
+      "kind": "language",
+      "summary": "`Some(...)`, `None`, `Ok(...)` and `Err(...)` beside `==` or `!=` take the type of the other operand, in either order, including a call or method call: `lookup(k) == Some(1)`.",
+      "doc": "docs/results-and-options.md#comparing-with-a-constructor"
+    },
     "canonical-prelude-types": {
       "kind": "language",
       "summary": "`list`, `dict`, `str`, `bytes`, `float`, `Option` and `Result` have one identity in every module without source-text scanning.",

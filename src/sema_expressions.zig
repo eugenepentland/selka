@@ -347,6 +347,30 @@ fn queueCapabilityCall(comptime Checker: type, self: *Checker, work: *std.ArrayL
     }
     return true;
 }
+/// Whether `id` is `None`, `Some(...)`, `Ok(...)` or `Err(...)` written with no
+/// expected type: an operand whose own type comes from the value it meets.
+fn awaitsPeerType(comptime Checker: type, self: *Checker, id: ast.NodeId) Error!bool {
+    const node = self.syntax.nodes.items[@backingInt(id)];
+    if (self.expected_types.get(node.span) != null) return false;
+    return switch (node.data) {
+        .unit => true,
+        .call => |call| (try self.optionConstructor(call)) or (try self.resultConstructor(call)) != null,
+        else => false,
+    };
+}
+/// `f(1) == Some(1)` and `None != f(1)`: an equality whose one operand awaits its
+/// type and whose other operand has no obvious one. The other operand is checked
+/// first and its type becomes the expectation (`OPTION-EQ-1`); the typed node
+/// keeps the source order of its operands. Returns whether it queued the operands.
+fn queuePeerFirst(comptime Checker: type, self: *Checker, work: *std.ArrayList(Work), b: anytype) Error!bool {
+    if (b.op != .eq and b.op != .ne) return false;
+    const left_awaits = try awaitsPeerType(Checker, self, b.left);
+    const right_awaits = try awaitsPeerType(Checker, self, b.right);
+    if (left_awaits == right_awaits) return false;
+    try work.append(self.allocator, .{ .id = if (left_awaits) b.left else b.right, .hint_from = if (left_awaits) b.right else b.left });
+    try work.append(self.allocator, .{ .id = if (left_awaits) b.right else b.left });
+    return true;
+}
 fn queueExpression(comptime Checker: type, self: *Checker, work: *std.ArrayList(Work), id: ast.NodeId) Error!bool {
     const node = try self.collectionSyntax(id);
     switch (node.data) {
@@ -506,6 +530,7 @@ fn queueExpression(comptime Checker: type, self: *Checker, work: *std.ArrayList(
         .binary => |b| {
             try self.hintBinary(node);
             try work.append(self.allocator, .{ .id = id, .emit = true });
+            if (try queuePeerFirst(Checker, self, work, b)) return true;
             try work.append(self.allocator, .{ .id = b.right, .checkpoint = if (b.op == .logical_and or b.op == .logical_or) .{ .condition = b.left, .truth = b.op == .logical_and } else null });
             try work.append(self.allocator, .{ .id = b.left });
             return true;
@@ -911,6 +936,10 @@ fn expressionWithTemporaries(comptime Checker: type, self: *Checker, root: ast.N
                 try work.append(self.allocator, .{ .id = call.arguments[index] });
             }
             continue;
+        }
+        if (task.hint_from) |peer| {
+            const checked = self.resolved[@backingInt(peer)] orelse return error.InternalError;
+            try self.hint(task.id, self.nodes.items[@backingInt(checked)].ty);
         }
         if (task.verify) |state| {
             try self.samePending(state.pending, self.syntax.nodes.items[@backingInt(task.id)].span, eResultPath);

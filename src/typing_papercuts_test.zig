@@ -74,3 +74,39 @@ test "the discard name is not readable after its scope and a discarded assignmen
         \\    return 3
     , 3);
 }
+
+// spec-case: OPTION-EQ-1
+test "an equality with two operands that await a type, or a wrong payload, is still rejected" {
+    try reject(
+        \\def main() -> int:
+        \\    if Some(1) == Some(1):
+        \\        return 1
+        \\    return 0
+    , "E_OPTION_INFERENCE");
+    try reject(
+        \\def half(value: int) -> Option[int]:
+        \\    return Some(value)
+        \\
+        \\
+        \\def main() -> int:
+        \\    if half(4) == Some("a"):
+        \\        return 1
+        \\    return 0
+    , "E_TYPE");
+    try reject(
+        \\def whole(value: int) -> int:
+        \\    return value
+        \\
+        \\
+        \\def main() -> int:
+        \\    if whole(4) == Some(4):
+        \\        return 1
+        \\    return 0
+    , "E_TYPE");
+    try reject(
+        \\def main() -> int:
+        \\    if Ok(1) == Ok(1):
+        \\        return 1
+        \\    return 0
+    , "E_RESULT_INFERENCE");
+}
