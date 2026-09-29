@@ -130,6 +130,79 @@ static void completion_retry(int rc) {
     assert(!ctx->heap.bytes);
     free(ctx);
 }
+/* A provider that takes at most 64 KiB per call, like the scoped filesystem, and
+ * remembers the largest slice it was offered and how many calls it served. */
+typedef struct { size_t total, largest, calls; unsigned live; } Sink;
+static MylangResourceResult sink_acquire(void *context,const uint8_t *bytes,size_t length,unsigned permissions) {
+    Sink *sink=context;
+    (void)bytes;(void)length;(void)permissions;
+    ++sink->live;
+    return (MylangResourceResult){MYLANG_PROVIDER_OK,1};
+}
+static MylangProviderStatus sink_complete(void *context,uint64_t handle) {
+    Sink *sink=context;
+    (void)handle;
+    --sink->live;
+    return MYLANG_PROVIDER_OK;
+}
+static void sink_release(void *context,uint64_t handle) { sink_complete(context,handle); }
+static MylangResourceWrite sink_write(void *context,uint64_t handle,const uint8_t *bytes,size_t length) {
+    Sink *sink=context;
+    (void)handle;
+    if (length>sink->largest) sink->largest=length;
+    size_t taken=length<64u*1024u?length:64u*1024u;
+    for (size_t index=0;index!=taken;++index) assert(bytes[index]==(uint8_t)((sink->total+index)%251));
+    sink->total+=taken;++sink->calls;
+    return (MylangResourceWrite){MYLANG_PROVIDER_OK,taken};
+}
+/* One large write must offer the provider bounded slices, never the whole tail. */
+static void write_slices(int rc,int method) {
+    enum { SIZE = 1024 * 1024 + 123 };
+    MylQbeContext *ctx=calloc(1,sizeof *ctx);assert(ctx);
+    Sink sink={0};
+    MylangNativeProviders providers={.filesystem={.context=&sink,.permissions=7,
+        .acquire=sink_acquire,.complete=sink_complete,.release=sink_release,.write=sink_write}};
+    ctx->providers=&providers;
+    myl_native_heap_init(&ctx->heap,8u<<20);
+    if (rc) assert(myl_rc_storage_init(&ctx->heap)==MYL_RC_OK);
+    unsigned char *pattern=malloc(SIZE);assert(pattern);
+    for (size_t index=0;index!=SIZE;++index) pattern[index]=(unsigned char)(index%251);
+    myl_native_bytes *input=myl_native_bytes_new(&ctx->heap,pattern,SIZE);
+    assert(input);
+    free(pattern);
+    myl_native_root input_root;
+    myl_native_root_push(&ctx->heap,&input_root,&input,&pointer);
+    uint64_t authority=myl_qbe_grant_resource(ctx,0);
+    uint64_t result=0;
+    if (method) {
+        myl_native_resource *owner=NULL;
+        assert(!myl_qbe_resource_new(ctx,authority,0,(const unsigned char *)"w:file",6,&owner));
+        assert(!myl_qbe_file_method(ctx,owner,MYL_FILE_WRITE,-1,input,&result));
+        assert(result==SIZE);
+        assert(!myl_qbe_resource_complete(ctx,owner));
+    } else {
+        myl_native_text *path=myl_native_text_from_utf8(&ctx->heap,(const unsigned char *)"file",4);
+        assert(path);
+        myl_native_root path_root;
+        myl_native_root_push(&ctx->heap,&path_root,&path,&pointer);
+        assert(!myl_qbe_file_access(ctx,authority,MYL_FILE_WRITE_FILE,path,input,&result));
+        myl_native_root_pop(&ctx->heap,&path_root);
+        if (rc) myl_rc_owner_release(&ctx->heap,path);
+    }
+    assert(sink.total==SIZE && sink.live==0);
+    assert(sink.largest<=MYL_FILE_WRITE_SLICE);
+    assert(sink.calls==(SIZE+MYL_FILE_WRITE_SLICE-1)/MYL_FILE_WRITE_SLICE);
+    myl_native_root_pop(&ctx->heap,&input_root);
+    if (rc) myl_rc_owner_release(&ctx->heap,input);
+    if (ctx->cleanup) ctx->cleanup(ctx);
+    myl_native_heap_destroy(&ctx->heap);
+    free(ctx);
+}
+/* Both write entries hand a large payload to the provider in bounded slices. */
+int myl_native_file_write_slices_verify(void) {
+    for (int rc=0;rc!=2;++rc) { write_slices(rc,0); write_slices(rc,1); }
+    return 4;
+}
 int myl_native_file_cleanup_verify(void) {
     for (int rc=0;rc!=2;++rc) {
         for (unsigned mode=0;mode!=8;++mode) { scenario(mode,rc,0); scenario(mode,rc,2); }
@@ -141,5 +214,10 @@ int myl_native_file_cleanup_verify(void) {
     return 40;
 }
 #ifndef MYL_FILE_CLEANUP_LIBRARY
-int main(void) { assert(myl_native_file_cleanup_verify()==40); puts("native file cleanup: 40 passed"); return 0; }
+int main(void) {
+    assert(myl_native_file_cleanup_verify()==40);
+    assert(myl_native_file_write_slices_verify()==4);
+    puts("native file cleanup: 44 passed");
+    return 0;
+}
 #endif

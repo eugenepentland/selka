@@ -142,12 +142,16 @@ static int read_line(void *context, myl_native_resource *owner, Owned *out) {
     }
     return 0;
 }
-/* Write every byte, looping over the provider's reported partial progress. */
+/* Write every byte, looping over the provider's reported partial progress. Each
+   call offers at most one slice, so the copy the resource layer makes per call
+   stays bounded and the whole write is linear in its length. */
 static int write_all(void *context, myl_native_resource *owner, Owned input, size_t *written) {
     *written = 0;
     while (*written < input.length) {
         size_t width = 0;
-        int status = myl_qbe_resource_try_write(context, owner, input.bytes + *written, input.length - *written, &width);
+        size_t remaining = input.length - *written;
+        size_t offered = remaining < MYL_FILE_WRITE_SLICE ? remaining : MYL_FILE_WRITE_SLICE;
+        int status = myl_qbe_resource_try_write(context, owner, input.bytes + *written, offered, &width);
         if (status) return status;
         if (!width) return 3;
         *written += width;
