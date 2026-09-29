@@ -607,6 +607,11 @@
       "summary": "`const NAME: T = expression` folds an immutable scalar at check time.",
       "doc": "docs/module-constants.md#immutable-scalar-constants"
     },
+    "constant-methods": {
+      "kind": "language",
+      "summary": "A `str` or `bytes` module constant takes the same methods as a local bound to it: `TABLE.split(b\"\\n\")`, `NAME.upper()`, including embedded and imported constants.",
+      "doc": "docs/module-constants.md#string-and-byte-literal-constants"
+    },
     "literal-module-constants": {
       "kind": "language",
       "summary": "String and byte constants require matching literals and allocate on read.",

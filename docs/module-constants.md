@@ -72,6 +72,26 @@ time; see
 static data: reading it allocates nothing and contributes no effect, so it is
 legal under `noalloc`.
 
+A `str` or `bytes` constant takes every method a local bound to it takes, so there
+is no need to copy it into a local first: `TABLE.split(b"\n")`, `NAME.upper()` and
+`NAME.startswith("he")` work directly on the constant, on an embedded one
+(`const DATA: bytes = embed_bytes("x.txt")` then `DATA.split(b"\n")`) and on one read
+through an import (`settings.NAME.upper()`). Indexing, `len` and slicing already did.
+The receiver is read once, so the call has the same effect as the same method on a
+local: a constant literal allocates, an embedded constant does not.
+
+```mylang
+# doc: expect 42
+const TABLE: bytes = b"a=1\nb=2\nc=3"
+const LABEL: str = "hello"
+
+def main() -> int effects(managed_allocation):
+    rows = TABLE.split(b"\n")
+    if len(rows) != 3 or not LABEL.startswith("he"):
+        return 1
+    return len(LABEL.upper()) + rows[1][2] - 13
+```
+
 These constants use the same export/privacy rules and can be read by generic
 functions. Each getter evaluates its ordinary checked literal, allocating a
 managed value; reads therefore contribute `managed_allocation` and are rejected

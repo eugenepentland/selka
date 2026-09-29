@@ -475,6 +475,9 @@ fn queueExpression(comptime Checker: type, self: *Checker, work: *std.ArrayList(
             // place, like a narrowed collection method: its receiver and its
             // one argument are the call's own, not queued temporaries.
             if (self.optionReceiverMethod(call)) return false;
+            // `NAME.method(...)` on a `str` or `bytes` constant is checked in
+            // place too: the receiver is the constant, not a queued operand.
+            if (try self.constantReceiver(call) != null) return false;
             try work.append(self.allocator, .{ .id = id, .emit = true });
             if (try queueCapabilityCall(Checker, self, work, call)) return true;
             if (self.environmentMethod(call) != null) return true;
@@ -562,6 +565,27 @@ fn rejectInContract(comptime Checker: type, self: *Checker, node: ast.Node) Erro
         else => return,
     };
     return self.sink.fail(sema_contracts.effect_code, node.span, message);
+}
+/// A call whose receiver is a named local or a constant and whose method is one
+/// the receiver's type owns, checked in place; null when it is an ordinary call.
+fn checkReceiverMethod(comptime Checker: type, self: *Checker, node: ast.Node, temporaries: []const typed.Type) Error!?typed.Node {
+    const call = node.data.call;
+    // An intrinsic `Option` method outranks the narrowed-collection
+    // reading, so a proven-present `Option[list[T]]` receiver still
+    // answers `unwrap_or` while keeping `append` and the rest.
+    if (self.optionReceiverMethod(call)) {
+        const checked = try self.checkOptionReceiverMethod(node, call, temporaries);
+        return checked;
+    }
+    if (self.narrowedCollection(call)) |slot| {
+        const checked = try self.checkNarrowedMethod(node, slot, temporaries);
+        return checked;
+    }
+    if (try self.constantReceiver(call) != null) {
+        const checked = try self.checkConstantMethod(node, temporaries);
+        return checked;
+    }
+    return null;
 }
 fn checkedExpression(comptime Checker: type, self: *Checker, node: ast.Node, minimum_literal: ?Literal, temporaries: []const typed.Type) Error!typed.Node {
     try rejectInContract(Checker, self, node);
@@ -747,11 +771,7 @@ fn checkedExpression(comptime Checker: type, self: *Checker, node: ast.Node, min
         },
         .name => |name| try self.checkName(node, name, &out),
         .call => |call| {
-            // An intrinsic `Option` method outranks the narrowed-collection
-            // reading, so a proven-present `Option[list[T]]` receiver still
-            // answers `unwrap_or` while keeping `append` and the rest.
-            if (self.optionReceiverMethod(call)) return self.checkOptionReceiverMethod(node, call, temporaries);
-            if (self.narrowedCollection(call)) |slot| return self.checkNarrowedMethod(node, slot, temporaries);
+            if (try checkReceiverMethod(Checker, self, node, temporaries)) |checked| return checked;
             try self.checkCall(node, call, &out);
         },
         .unary => |u| return self.checkUnary(node, u),
@@ -866,6 +886,7 @@ fn consumedTemporaries(comptime Checker: type, self: *Checker, node: ast.Node, o
     // neither the tag test nor the two-arm match consumes a temporary.
     if (node.data == .method_call and option_flow.methodNamed(self.src.text(node.data.method_call.name)) != null) return 0;
     if (node.data == .call and self.optionReceiverMethod(node.data.call)) return 0;
+    if (node.data == .call and (try self.constantReceiver(node.data.call)) != null) return 0;
     // `print`/`write` through a `Stream` field checks its receiver and
     // arguments in place, so none of them reached this stack either.
     if (node.data == .method_call and (out.data == .print or out.data == .stream_write)) return 0;

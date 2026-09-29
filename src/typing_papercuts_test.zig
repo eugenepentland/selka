@@ -110,3 +110,42 @@ test "an equality with two operands that await a type, or a wrong payload, is st
         \\    return 0
     , "E_RESULT_INFERENCE");
 }
+
+// spec-case: CONST-METHOD-1
+test "a method on a str or bytes constant keeps the receiver's diagnostics and effects" {
+    try reject(
+        \\const NAME: str = "hello"
+        \\
+        \\
+        \\def main() -> int:
+        \\    return len(NAME.frobnicate())
+    , "E_COLLECTION_METHOD");
+    try reject(
+        \\const NAME: str = "hello"
+        \\
+        \\
+        \\def main() -> int:
+        \\    return len(NAME.upper(1))
+    , "E_ARITY");
+    try reject(
+        \\const DATA: bytes = b"a,b"
+        \\
+        \\
+        \\def main() -> int effects():
+        \\    return DATA.find(b",")
+    , "E_EFFECT_BOUND");
+    try reject(
+        \\const LIMIT: int = 4
+        \\
+        \\
+        \\def main() -> int:
+        \\    return LIMIT.bit_length()
+    , "E_UNKNOWN_TYPE");
+    try evaluates(
+        \\const NAME: str = "hello"
+        \\
+        \\
+        \\def main() -> int:
+        \\    return len(NAME.upper()) + NAME.find("l")
+    , 7);
+}

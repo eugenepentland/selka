@@ -52,6 +52,7 @@ const provider_shapes = @import("symbolic_providers.zig");
 const generic_cache = @import("generic_cache.zig");
 const Symbolic = symbolic.Value;
 const Call = @FieldType(@FieldType(ast.Node, "data"), "call");
+const unknown_method = "unknown collection method";
 /// Whether a call on a named receiver is a list's `sort` with operands, the
 /// Python keyword form whose operands are named rather than positional.
 fn keywordSort(self: anytype, input_call: Call) bool {
@@ -949,7 +950,7 @@ const Checker = struct {
         if (std.mem.eql(u8, name, "sort") and method.arguments.len != 0)
             return self.keyedSort(try self.expression(method.base), .{ .arguments = method.arguments, .names = method.argument_names, .span = node.span, .owner_node = method.base });
         if (method.argument_names.len != 0) return self.sink.fail(eCallArgument, method.name, "collection methods take their arguments by position; only a list's sort takes key= and reverse=");
-        const kind = buffer_operations.method(name) orelse return self.sink.fail(eListMethod, method.name, "unknown collection method");
+        const kind = buffer_operations.method(name) orelse return self.sink.fail(eListMethod, method.name, unknown_method);
         if (method.arguments.len == 0 and (kind == .parse_int or kind == .parse_float))
             if (try self.immediateNumericRange(method.base, kind, node.span)) |output| return output;
         return self.listOperation(node, .{ .base = method.base, .kind = kind, .arguments = method.arguments });
@@ -1075,7 +1076,7 @@ const Checker = struct {
                     const sorted = try self.keyedSort(receiver, .{ .arguments = input_call.arguments, .names = input_call.argument_names, .span = span });
                     return sorted;
                 }
-                const kind = buffer_operations.method(self.src.text(input_call.name)) orelse return self.sink.fail(eListMethod, input_call.name, "unknown collection method");
+                const kind = buffer_operations.method(self.src.text(input_call.name)) orelse return self.sink.fail(eListMethod, input_call.name, unknown_method);
                 if (input_call.type_arguments.len != 0) return self.sink.fail("E_ARITY", span, "collection methods do not take explicit type arguments");
                 if (self.shapes().isSet(receiver)) {
                     const answer = try self.setOperation(receiver, .{ .kind = kind, .inputs = input_call.arguments, .span = span, .input = self.parameterIndexAt(owner) });
@@ -1086,6 +1087,23 @@ const Checker = struct {
             }
         };
         return null;
+    }
+    /// `NAME.method(...)` on a `str` or `bytes` module constant in a generic body: the
+    /// constant is read once, and its type answers the method (`CONST-METHOD-1`).
+    fn constantMethod(self: *Checker, input_call: Call, span: source.Span) Error!?Symbolic {
+        const owner = input_call.owner orelse return null;
+        if (input_call.type_arguments.len != 0 or self.active.contains(self.src.text(owner))) return null;
+        if (self.module_names) |names| {
+            const kind = try names.symbolKind(owner);
+            if (kind == null or kind.? != .function) return null;
+        }
+        const constants: @import("constant_values.zig").Context = .{ .src = self.src, .program = self.program, .names = self.module_names, .sink = self.sink, .catalog = self.catalog };
+        const index = (try constants.lookup(owner)) orelse return null;
+        if ((try constants.literalType(index)) == null) return null;
+        const receiver = try self.namedValue(owner);
+        const kind = buffer_operations.method(self.src.text(input_call.name)) orelse return self.sink.fail(eListMethod, input_call.name, unknown_method);
+        const answer = try self.collectionOperation(receiver, .{ .kind = kind, .inputs = input_call.arguments, .span = span });
+        return answer;
     }
     /// `sorted(values, key=..., reverse=...)` in a generic body, when no
     /// binding or declaration claims the name: a new list of the argument's
@@ -1375,6 +1393,7 @@ const Checker = struct {
         if (try self.variantConstruction(input_call, span)) |value| return value;
         if (try self.optionReceiverCall(input_call, span)) |value| return value;
         if (try self.managedMethod(input_call, span)) |value| return value;
+        if (try self.constantMethod(input_call, span)) |value| return value;
         if (try self.sortedCall(input_call, span)) |value| return value;
         if (try self.cellConstructor(input_call, span)) |value| return value;
         if (try self.contextualResult(input_call, span)) |value| return value;
