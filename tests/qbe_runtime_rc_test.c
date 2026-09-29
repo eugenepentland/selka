@@ -13,6 +13,11 @@
 static const myl_rc_shape pointer = {.size = sizeof(void *), .kind = MYL_RC_SHAPE_POINTER};
 static const myl_rc_shape *const shapes[] = {&pointer};
 const myl_rc_module myl_rc_generated_module = {.abi = MYL_RC_ABI_VERSION, .shapes = shapes, .shape_count = 1};
+static const myl_rc_shape_entry image_entry = {.source=&pointer,
+    .shape={.size=sizeof(void *),.kind=MYL_RC_SHAPE_POINTER},.depth=1,.inline_depth=1};
+static const myl_rc_shape_entry *const image_entries[] = {&image_entry};
+const myl_rc_image myl_rc_generated_image = {.abi=MYL_RC_IMAGE_ABI_VERSION,
+    .shapes=image_entries,.shape_count=1,.depth=1};
 /* Capture the same status delivered to the located native trap entry. These
  * tests exercise initialization before an active guest frame exists. */
 #ifndef MYL_RC_CONTRACT_LIBRARY
@@ -731,6 +736,7 @@ static void held_unique_bridge_test(void) {
     myl_native_heap_destroy(&context.heap);
     assert(!context.heap.bytes);
 }
+// spec-case: RC-STARTUP-IMAGE-1
 int myl_qbe_rc_contract_verify(void) {
     MylQbeContext context = {0};
     context.heap.limit = 65536;
@@ -745,6 +751,7 @@ int myl_qbe_rc_contract_verify(void) {
     context.trap = NULL;
     assert(myl_qbe_rc_initialize(&context));
     assert(!context.trap && myl_rc_shape_resolve(&context.heap, &pointer));
+    assert(myl_rc_shape_resolve(&context.heap, &pointer) == &image_entry.shape);
     size_t bytes = context.heap.bytes;
     assert(myl_qbe_rc_register(&context, &myl_rc_generated_module));
     assert(context.heap.bytes == bytes);
