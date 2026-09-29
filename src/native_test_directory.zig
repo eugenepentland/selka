@@ -199,6 +199,7 @@ fn argv(context: fs.Context, shared: Fanout, source: []const u8) Error![]const [
     try list.appendSlice(a, &.{ "--jobs", try decimal(a, shared.jobs) });
     if (opts.flags.force) try list.append(a, "--force");
     if (opts.flags.no_cache) try list.append(a, "--no-cache");
+    if (opts.flags.output.diagnostics_json) try list.append(a, "--diagnostics=json");
     // Each child derives its own program's affected selection against the same
     // reference, so a directory run narrows every project independently.
     if (opts.flags.affected) {

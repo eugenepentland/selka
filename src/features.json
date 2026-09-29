@@ -27,6 +27,21 @@
       "summary": "`mylang list-interfaces` and `mylang index-project` label every effect, mutation and return-origin fact with its analysis status (`checked`, `template`, `declaration-only`, `declared`, `lexical-only`), publish `unavailable`/`null` instead of the checker's conservative mask when no checked instantiation exists, and keep a declared `ceiling(...)` visible either way.",
       "doc": "docs/tooling/navigation.md#fact-status-in-interface-and-navigation-output"
     },
+    "diagnostic-fixes": {
+      "kind": "tooling",
+      "summary": "A diagnostic whose repair is certain carries a `diagnostic-v1` `fix`: exact edits as file, UTF-8 byte range and replacement text, for call-site and parameter `mut` markers, module names, renamed spellings, `_ = ` discards and unused imports.",
+      "doc": "docs/tooling/fix.md#structured-fixes-in-diagnostics"
+    },
+    "fix-command": {
+      "kind": "tooling",
+      "summary": "`mylang fix ENTRY.my|DIR [--check]` applies every structured fix across a project to a fixed point, prints what changed per file and passes on the diagnostics that need a person; `--check` writes nothing and exits 1 when a fix would apply.",
+      "doc": "docs/tooling/fix.md#mylang-fix"
+    },
+    "test-diagnostics-json": {
+      "kind": "tooling",
+      "summary": "`mylang test --diagnostics=json` reports a test entry that does not compile as `diagnostic-v1` JSON lines, `fix` fields included, exactly as `check --diagnostics=json` does.",
+      "doc": "docs/tooling/fix.md#checking-libraries-and-test-files"
+    },
     "unused-import-warning": {
       "kind": "tooling",
       "summary": "A direct `import` no reference in its module resolves through is reported as the deny-able `W_UNUSED_IMPORT` warning beside `W_UNUSED_BINDING`.",

@@ -58,6 +58,15 @@ pub const Fix = struct {
         return if (index == 0) self.edit else self.more[index - 1];
     }
 };
+/// The fix that deletes a parameter's `mut` marker: the `mut` in front of the
+/// declared type starting at `type_start`, and the blank after it. Null when
+/// the bytes there are not a `mut` marker.
+pub fn removeMut(bytes: []const u8, type_start: usize) ?Fix {
+    var start = type_start;
+    while (start > 0 and (bytes[start - 1] == ' ' or bytes[start - 1] == '\t')) start -= 1;
+    if (start == type_start or start < "mut".len or !std.mem.eql(u8, bytes[start - "mut".len .. start], "mut")) return null;
+    return .{ .edit = .{ .span = .{ .start = start - "mut".len, .end = type_start }, .text = "" } };
+}
 /// Structured source diagnostic with optional related evidence and a bounded guest trace.
 pub const Diagnostic = struct {
     code: []const u8,
@@ -178,6 +187,21 @@ pub const Sink = struct {
     pub fn fail(self: *Sink, code: []const u8, span: source.Span, message: []const u8) Error {
         self.items.append(self.allocator, .{ .code = code, .span = span, .message = message }) catch return error.OutOfMemory;
         return error.SourceError;
+    }
+
+    /// Append a source error carrying the one edit that repairs it, and return
+    /// SourceError. The edit's replacement text must outlive the sink.
+    pub fn failFix(self: *Sink, code: []const u8, span: source.Span, message: []const u8, edit: Edit) Error {
+        try self.appendFix(.{ .code = code, .span = span, .message = message }, edit);
+        return error.SourceError;
+    }
+
+    /// Append one diagnostic with a single-edit fix without failing, for a
+    /// finding the caller reports and then keeps checking past.
+    pub fn appendFix(self: *Sink, item: Diagnostic, edit: Edit) std.mem.Allocator.Error!void {
+        var fixed = item;
+        fixed.provenance.fix = .{ .edit = edit };
+        try self.items.append(self.allocator, fixed);
     }
 
     /// Reject a call site with both halves of the contract: the accepted

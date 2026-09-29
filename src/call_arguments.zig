@@ -69,7 +69,25 @@ fn positionalTarget(allocator: std.mem.Allocator, src: source.Source, binding: B
     const names = try parameterNames(allocator, src, binding.signature.parameters);
     const named = positionalName(src, binding.call, names, boundary, source_index) orelse names[source_index];
     const message = try std.fmt.allocPrint(allocator, "`{s}` is keyword-only; write `{s}`", .{ named, try render(allocator, src, binding.syntax, binding.call, names, boundary) });
-    return sink.fail(eKeywordOnly, binding.call.name, message);
+    const fix = (try keywordFix(allocator, src, binding, names, boundary)) orelse return sink.fail(eKeywordOnly, binding.call.name, message);
+    sink.items.append(sink.allocator, .{ .code = eKeywordOnly, .span = binding.call.name, .message = message, .provenance = .{ .fix = fix } }) catch return error.OutOfMemory;
+    return error.SourceError;
+}
+/// The edits that turn a call into the one `render` prints: `name=` in front of
+/// every positional operand from `named_from` on. Null when some operand has no
+/// parameter left to name, where the message is advice rather than a paste.
+fn keywordFix(allocator: std.mem.Allocator, src: source.Source, binding: Binding, names: []const []const u8, named_from: usize) std.mem.Allocator.Error!?diagnostic.Fix {
+    const call = binding.call;
+    var edits: std.ArrayList(diagnostic.Edit) = .empty;
+    for (call.arguments, 0..) |value, source_index| {
+        if (call.argument_names.len != 0 and call.argument_names[source_index] != null) continue;
+        if (positionalIndex(call, source_index) < named_from) continue;
+        const name = positionalName(src, call, names, named_from, source_index) orelse return null;
+        const at = binding.syntax[@backingInt(value)].span.start;
+        try edits.append(allocator, .{ .span = .{ .start = at, .end = at }, .text = try std.fmt.allocPrint(allocator, "{s}=", .{name}) });
+    }
+    if (edits.items.len == 0) return null;
+    return .{ .edit = edits.items[0], .more = edits.items[1..] };
 }
 /// The declared parameter names in source order, for the shared call renderer.
 pub fn parameterNames(allocator: std.mem.Allocator, src: source.Source, parameters: []const ast.Parameter) std.mem.Allocator.Error![]const []const u8 {

@@ -956,10 +956,14 @@ fn checkMutDeclarations(allocator: std.mem.Allocator, program: typed.Program, re
     var violated = false;
     if (summary.external and positions & ~declared != 0) {
         const message = try unmarkedWriteMessage(allocator, src, declaringFunction(request.syntax, function), function, positions & ~declared);
+        // Only an attributed write names the parameters for certain; a widened
+        // unknown write lists every position, scalars included, as advice.
+        const fix = if (summary.mutates_unknown) null else try markParameters(allocator, request.syntax, function, positions & ~declared);
         try sink.items.append(allocator, .{
             .code = mutation_marker_code,
             .span = summary.witnesses.undeclared orelse summary.witnesses.external orelse function.declaration,
             .message = message,
+            .provenance = .{ .fix = fix },
         });
         violated = true;
     }
@@ -979,10 +983,44 @@ fn checkMutDeclarations(allocator: std.mem.Allocator, program: typed.Program, re
             .code = unused_mut_code,
             .span = function.scope.locals[position].declaration,
             .message = message,
+            .provenance = .{ .fix = unmarkParameter(src, request.syntax, function, position) },
         });
         violated = true;
     }
     return violated;
+}
+
+/// The syntax declaration of one checked function, or null when none has its
+/// exact name span (a lambda body), so a fix never edits another signature.
+fn exactDeclaration(syntax: ast.Program, function: typed.Function) ?ast.Function {
+    for (syntax.functions) |declared| {
+        if (declared.name.start == function.declaration.start and declared.name.end == function.declaration.end) return declared;
+    }
+    return null;
+}
+
+/// The fix for an unmarked written parameter: `mut ` in front of each written
+/// parameter's declared type, in parameter order.
+fn markParameters(allocator: std.mem.Allocator, syntax: ast.Program, function: typed.Function, positions: u16) std.mem.Allocator.Error!?diagnostic.Fix {
+    const declared = exactDeclaration(syntax, function) orelse return null;
+    var edits: std.ArrayList(diagnostic.Edit) = .empty;
+    var position: u5 = 0;
+    while (position < 16) : (position += 1) {
+        if (positions & (@as(u16, 1) << @intCast(position)) == 0) continue;
+        if (position >= declared.signature.parameters.len) return null;
+        const at = declared.signature.parameters[position].ty.start;
+        try edits.append(allocator, .{ .span = .{ .start = at, .end = at }, .text = "mut " });
+    }
+    if (edits.items.len == 0) return null;
+    return .{ .edit = edits.items[0], .more = edits.items[1..] };
+}
+
+/// The fix for a `mut` parameter the body never writes: delete the `mut` and
+/// the blank that separates it from the declared type.
+fn unmarkParameter(src: source.Source, syntax: ast.Program, function: typed.Function, position: u5) ?diagnostic.Fix {
+    const declared = exactDeclaration(syntax, function) orelse return null;
+    if (position >= declared.signature.parameters.len) return null;
+    return diagnostic.removeMut(src.bytes, declared.signature.parameters[position].ty.start);
 }
 
 /// Whether one checked function is a lambda body rather than a declared

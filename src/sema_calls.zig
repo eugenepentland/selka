@@ -625,7 +625,12 @@ fn warnDeprecated(comptime Checker: type, self: *Checker, function: typed.Functi
 /// where it declares none, and rejected on a target that cannot be assigned
 /// through. Each rejection spells the replacement in its own message. Once
 /// every marker is right, two marked places that may overlap are rejected.
+/// A missing or superfluous marker carries its exact edit as a fix and does
+/// not stop the function's check: the call is checked as if the marker were
+/// right, and the check loop fails the function once its body is done, so one
+/// check reports every marker a function needs (MUT-PARAM-8).
 fn checkMutationMarkers(comptime Checker: type, self: *Checker, call_name: source.Span, arguments: []const ast.NodeId, mut_positions: []const u16) Error!void {
+    var misplaced = false;
     for (arguments, 0..) |argument, position| {
         const declared = markerPositionDeclared(mut_positions, @intCast(position));
         const arg_node = self.syntax.nodes.items[@backingInt(argument)];
@@ -637,7 +642,10 @@ fn checkMutationMarkers(comptime Checker: type, self: *Checker, call_name: sourc
                 "`{s}` writes `{s}`; write `{s}`",
                 .{ self.src.text(call_name), self.src.text(arg_node.span), marked },
             );
-            return self.sink.fail(mutation_marker_code, arg_node.span, message);
+            const insert: source.Span = .{ .start = arg_node.span.start, .end = arg_node.span.start };
+            try self.sink.appendFix(.{ .code = mutation_marker_code, .span = arg_node.span, .message = message }, .{ .span = insert, .text = "mut " });
+            misplaced = true;
+            continue;
         }
         const target = self.syntax.nodes.items[@backingInt(arg_node.data.mut_argument)];
         if (!declared) {
@@ -647,7 +655,10 @@ fn checkMutationMarkers(comptime Checker: type, self: *Checker, call_name: sourc
                 "`{s}` does not write `{s}`; remove `mut`: `{s}`",
                 .{ self.src.text(call_name), self.src.text(target.span), plain },
             );
-            return self.sink.fail(mutation_marker_code, arg_node.span, message);
+            const marker: source.Span = .{ .start = arg_node.span.start, .end = target.span.start };
+            try self.sink.appendFix(.{ .code = mutation_marker_code, .span = arg_node.span, .message = message }, .{ .span = marker, .text = "" });
+            misplaced = true;
+            continue;
         }
         if (!markerTarget(Checker, self, target)) return self.sink.fail(
             mutation_marker_code,
@@ -656,7 +667,10 @@ fn checkMutationMarkers(comptime Checker: type, self: *Checker, call_name: sourc
         );
         try requireArrayMarkerTarget(Checker, self, argument, target);
     }
-    // MUT-EXCLUSIVE-1: with every marker in place, the marked places must be disjoint.
+    // MUT-EXCLUSIVE-1: with every marker in place, the marked places must be
+    // disjoint. A call with a misplaced marker already fails its function, and
+    // the check after `mylang fix` places the markers reports any overlap.
+    if (misplaced) return;
     try @import("mut_exclusive.zig").check(Checker, self, call_name, arguments);
 }
 /// A `mut` fixed array crosses the call as the caller's own storage, so its

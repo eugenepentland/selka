@@ -994,7 +994,7 @@ pub const Parser = struct {
         }
         const effect_bound = try self.effectBound();
         if (host) |span| if (effect_bound.?.allowed & effects.bit(.host) == 0) return self.sink.fail("E_HOST_EFFECTS", span, "host declarations must include the host effect");
-        try self.rejectMutatesClause();
+        try self.rejectMutatesClauseOf(parameters.parameters.items);
         if (c_abi and !annotated_return) return self.sink.fail("E_EXTERN_SIGNATURE", name.span, "extern functions require an explicit return type (unit for C void)");
         // A foreign call is the one ambient authority left, so every `extern def`
         // and `host def` takes the `Host` capability as a visible first parameter.
@@ -1259,9 +1259,49 @@ pub const Parser = struct {
     /// `name: mut T`, so the rejection names that replacement at the clause's own
     /// span and never reads the positional names inside it.
     fn rejectMutatesClause(self: *Parser) diagnostic.Error!void {
+        return self.rejectMutatesClauseOf(&.{});
+    }
+    /// Reject a function declaration's retired `mutates(...)` clause. When every
+    /// name in it is one of `parameters`, the diagnostic carries the migration as
+    /// a fix: `mut ` in front of each named parameter's type that lacks it, and
+    /// the clause deleted together with the blank in front of it.
+    fn rejectMutatesClauseOf(self: *Parser, parameters: []const ast.Parameter) diagnostic.Error!void {
         const token = self.current();
         if (token.tag != .ident or !std.mem.eql(u8, self.src.text(token.span), "mutates")) return;
-        return self.sink.fail(removed_spelling_code, token.span, "`mutates(...)` was removed; mark each written parameter `name: mut T`");
+        const message = "`mutates(...)` was removed; mark each written parameter `name: mut T`";
+        const fix = (try self.mutatesMigration(parameters)) orelse return self.sink.fail(removed_spelling_code, token.span, message);
+        self.sink.items.append(self.sink.allocator, .{ .code = removed_spelling_code, .span = token.span, .message = message, .provenance = .{ .fix = fix } }) catch return error.OutOfMemory;
+        return error.SourceError;
+    }
+    /// The edits that replace the `mutates(...)` clause at the cursor with `mut`
+    /// parameters, or null when the clause is malformed or names something that
+    /// is not one of `parameters`.
+    fn mutatesMigration(self: *Parser, parameters: []const ast.Parameter) std.mem.Allocator.Error!?diagnostic.Fix {
+        const at = self.cursor.pos;
+        if (parameters.len == 0 or at == 0 or self.tokens[at + 1].tag != .lparen) return null;
+        var marked: [64]bool = @splat(false);
+        if (parameters.len > marked.len) return null;
+        var cursor = at + 2;
+        while (self.tokens[cursor].tag == .ident) {
+            const wanted = self.src.text(self.tokens[cursor].span);
+            const index = for (parameters, 0..) |parameter, index| {
+                if (std.mem.eql(u8, self.src.text(parameter.name), wanted)) break index;
+            } else return null;
+            marked[index] = true;
+            cursor += 1;
+            if (self.tokens[cursor].tag != .comma) break;
+            cursor += 1;
+        }
+        if (self.tokens[cursor].tag != .rparen) return null;
+        const allocator = self.storage;
+        var edits: std.ArrayList(diagnostic.Edit) = .empty;
+        for (parameters, marked[0..parameters.len]) |parameter, named| {
+            if (!named or parameter.mut) continue;
+            try edits.append(allocator, .{ .span = .{ .start = parameter.ty.start, .end = parameter.ty.start }, .text = "mut " });
+        }
+        const clause: Span = .{ .start = self.tokens[at - 1].span.end, .end = self.tokens[cursor].span.end };
+        try edits.append(allocator, .{ .span = clause, .text = "" });
+        return .{ .edit = edits.items[0], .more = edits.items[1..] };
     }
     /// The `mut` flag list one declared parameter list records, in source order.
     /// Positions come from `ast.mutPositions` so the declaration side and the
@@ -1745,7 +1785,7 @@ pub const Parser = struct {
             // `&` before an operand was the borrow marker `mut` replaced
             // (MUT-PARAM-5); only the binary set intersection spells it now.
             .ampersand => {
-                _ = try removed_names.reject(self.sink, token.span, "&");
+                _ = try removed_names.rejectMarker(self.sink, self.src.bytes, token.span);
                 return self.pythonExpressionFailure(token);
             },
             // A `def` or `match` in expression position, and the second `*` or

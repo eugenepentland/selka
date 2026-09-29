@@ -172,6 +172,16 @@ Guardian runs **inside** `zig build test` and blocks; there are no baselines.
 - **Tests need at least one `expect*` assertion** and **no `if`/`while`/`switch` or extra
   `for` at the top level of a test body**. Write straight-line assertions.
 
+## Breaking changes land with their `mylang fix` migration
+
+A change that turns previously accepted code into a diagnostic must carry the
+repair as a structured `fix` on that diagnostic (`diagnostic.Fix`, rendered as
+`diagnostic-v1` `fix.edits`) wherever the edit is certain, so `mylang fix` moves
+a project across it with no hand edits — no per-change script under `scripts/`.
+Add a pre-change corpus under `test/fixtures/fix-migration/` with a test beside
+`FIX-MIGRATION-1` (`test/fix_cli_test.zig`) proving `mylang fix` migrates it to a
+clean check. See `docs/tooling/fix.md`.
+
 ## Merging `SPEC.md` (run once per clone)
 
 ```

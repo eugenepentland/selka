@@ -48,8 +48,9 @@ pub const Options = struct { max_modules: usize = 16384, max_imports: usize = 26
 pub const Site = struct { module: usize, span: source.Span };
 /// A dotted module path: its joined text, its trailing segment, and its span.
 pub const ModuleName = struct { text: []const u8, last: []const u8, span: source.Span };
-/// Project diagnostic and optional related declaration/import location.
-pub const Problem = struct { code: []const u8, message: []const u8, site: Site, related: ?Site = null };
+/// Project diagnostic, optional related declaration/import location, and the
+/// exact edit that repairs it, indexing the problem module's own bytes.
+pub const Problem = struct { code: []const u8, message: []const u8, site: Site, related: ?Site = null, fix: ?diagnostic.Edit = null };
 /// Declared public name and its source location. A re-export directive
 /// (`export shared.units.Distance`) records `name` as the final member and
 /// `alias` as the imported module qualifier; a plain `export Name` leaves
@@ -227,7 +228,9 @@ pub const Project = struct {
                         "a module's name is its path from the project root without `.my`; write `module {s}`",
                     .{ declared.text, self.modules.items[id].src.path, expected, expected },
                 );
-                return self.fail("E_MODULE_NAME", message, .{ .module = id, .span = declared.span }, null);
+                const failure = self.fail("E_MODULE_NAME", message, .{ .module = id, .span = declared.span }, null);
+                self.problem.?.fix = .{ .span = declared.span, .text = expected };
+                return failure;
             }
         }
         var imports: std.ArrayList(Import) = .empty;

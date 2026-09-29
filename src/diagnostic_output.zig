@@ -203,12 +203,14 @@ fn snapshotText(allocator: std.mem.Allocator, snapshot: u64) std.mem.Allocator.E
 pub fn renderProject(allocator: std.mem.Allocator, loaded: *project.Project, format: Format) project.RenderProblemError![]u8 {
     if (format == .text) return loaded.renderProblem(allocator);
     const problem = loaded.problem orelse return error.NoProblem;
-    var data = payload(.{ .code = problem.code, .message = problem.message, .span = problem.site.span }, loaded.modules.items[problem.site.module].src);
+    const src = loaded.modules.items[problem.site.module].src;
+    var data = payload(.{ .code = problem.code, .message = problem.message, .span = problem.site.span }, src);
     var notes: [1]Note = undefined;
     if (problem.related) |related| {
         notes[0] = .{ .role = .related, .message = "related module/import declaration", .location = location(loaded.modules.items[related.module].src, related.span) };
         data.notes = &notes;
     }
+    if (problem.fix) |edit| return renderFixed(allocator, data, .{ .edit = edit }, src);
     return encode(allocator, .{ .version = version, .kind = diagnostic_kind, .diagnostic = data });
 }
 /// Preserve auxiliary CLI messages as distinct records rather than mixing raw text into JSON.

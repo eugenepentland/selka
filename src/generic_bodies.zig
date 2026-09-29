@@ -966,7 +966,7 @@ const Checker = struct {
             if (try self.concreteValue(value, node.span) != .filesystem_cap) return self.sink.fail("E_TYPE", node.span, "read_only requires a Filesystem capability");
             return value;
         }
-        if (std.mem.eql(u8, name, "push")) return self.sink.fail("E_REMOVED_SPELLING", method.name, "`push` was removed; use `append(value)`");
+        if (std.mem.eql(u8, name, "push")) _ = try @import("removed_names.zig").reject(self.sink, method.name, name);
         if (std.mem.eql(u8, name, "sort") and method.arguments.len != 0)
             return self.keyedSort(try self.expression(method.base), .{ .arguments = method.arguments, .names = method.argument_names, .span = node.span, .owner_node = method.base });
         if (method.argument_names.len != 0) return self.sink.fail(eCallArgument, method.name, "collection methods take their arguments by position; only a list's sort takes key= and reverse=");
@@ -2380,11 +2380,15 @@ const Checker = struct {
             // `_ = expr` evaluates the value and releases it, settling a result obligation.
             .discard => |value| {
                 const ty_value = try self.expression(value);
-                if (statement_value.implicit_discard and !symbolic.same(ty_value, .{ .concrete = .unit }, self.catalog)) return self.sink.fail(
-                    "E_EXPLICIT_DISCARD_REQUIRED",
-                    statement_value.span,
-                    "a standalone non-unit value requires `_ =` or result handling",
-                );
+                if (statement_value.implicit_discard and !symbolic.same(ty_value, .{ .concrete = .unit }, self.catalog)) {
+                    const code = "E_EXPLICIT_DISCARD_REQUIRED";
+                    const message = "a standalone non-unit value requires `_ =` or result handling";
+                    // Only a value known not to be a result gets the `_ = ` fix;
+                    // a type parameter may be one at some specialization.
+                    if (ty_value == .parameter or try self.requiresHandling(ty_value)) return self.sink.fail(code, statement_value.span, message);
+                    const at = statement_value.span.start;
+                    return self.sink.failFix(code, statement_value.span, message, .{ .span = .{ .start = at, .end = at }, .text = "_ = " });
+                }
                 if (ty_value == .parameter) try self.supports(ty_value, .storable, statement_value.span);
             },
             .branch => |branch| return self.branchValue(branch, statement_value.span),

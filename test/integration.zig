@@ -12185,3 +12185,7 @@ test "CLI RC runtime contract inheritance respects project discovery and explici
     try testing.expectEqual(std.process.Child.Term{ .exited = 22 }, override.term);
     try testing.expectEqualStrings("22\n", override.stdout);
 }
+
+test {
+    _ = @import("fix_cli_test.zig");
+}

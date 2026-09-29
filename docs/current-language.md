@@ -109,6 +109,7 @@ Language surface:
 Tooling:
 
 - [Native builds](tooling/native-build.md), [guest tests](tooling/guest-tests.md)
+- [Fixes and migrations](tooling/fix.md): `mylang fix` and the `fix` field of `diagnostic-v1`
 - [Compiler caches](tooling/caches.md), [source navigation](tooling/navigation.md)
 - [Agent-facing inspection](tooling/agent-tools.md), [focused declaration context](tooling/agent-context.md), [calling one export](tooling/invoke.md), [documentation gates](tooling/documentation-gate.md)
 - [Local packages](tooling/packages.md)
