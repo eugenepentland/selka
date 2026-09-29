@@ -1,0 +1,22 @@
+module core.shapes
+
+# A project with a `mylang.json` (MODULE-PROJECT-1): source budgets, an
+# import policy that keeps `core` below `app`, and a lint section. Its build
+# takes the per-module path and makes the whole-program build's executable.
+
+
+public record Box:
+    width: int
+    height: int
+
+
+public def area(box: Box) -> int:
+    return box.width * box.height
+
+
+public def largest[T: integer](values: list[T]) -> T:
+    best = values[0]
+    for value in values:
+        if value > best:
+            best = value
+    return best

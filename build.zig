@@ -1040,6 +1040,12 @@ pub fn build(b: *std.Build) void {
     incremental_run.addArgs(&.{ "python3", "tests/incremental_diff.py", "--steps", "120" });
     incremental_run.addArtifactArg(exe);
     incremental_step.dependOn(&incremental_run.step);
+    // MODULE-CHECK-1: the same walk over a project whose modules sit in
+    // subdirectories under a `mylang.json`, where `check` is per module.
+    const incremental_projects = driver(b, "python3 tests/incremental_diff.py --project tests/fixtures/module_projects", rss.driver, "incremental");
+    incremental_projects.addArgs(&.{ "python3", "tests/incremental_diff.py", "--steps", "60", "--project", "tests/fixtures/module_projects" });
+    incremental_projects.addArtifactArg(exe);
+    incremental_step.dependOn(&incremental_projects.step);
     test_step.dependOn(incremental_step);
     // MODULE-INTERFACE-2/3: a seeded mutation walk asserts which edits keep a
     // module's interface hash and which change it, and every module of
@@ -1069,7 +1075,7 @@ pub fn build(b: *std.Build) void {
     // incremental default build after seeded edits builds what a clean
     // whole-program build builds.
     const module_compile_step = b.step("test-module-compile", "Per-module compilation and the default per-module build against the whole-program build, and its build differential");
-    const module_programs = [_][]const u8{ "tests/fixtures/interfaces/main.my", "tests/fixtures/interfaces_generic/main.my", "tests/fixtures/incremental/main.my", "tests/fixtures/module_compile/main.my" };
+    const module_programs = [_][]const u8{ "tests/fixtures/interfaces/main.my", "tests/fixtures/interfaces_generic/main.my", "tests/fixtures/incremental/main.my", "tests/fixtures/module_compile/main.my", "tests/fixtures/module_projects/main.my" };
     const module_oracle = driver(b, "python3 tests/module_compile_oracle.py", rss.driver, "module_compile");
     module_oracle.addArgs(&.{ "python3", "tests/module_compile_oracle.py" });
     module_oracle.addArtifactArg(exe);
@@ -1087,10 +1093,23 @@ pub fn build(b: *std.Build) void {
     module_build.addArg("tests/lang");
     module_build.addArgs(&module_programs);
     module_compile_step.dependOn(&module_build.step);
+    // MODULE-CHECK-1: the default `check` (module by module) of the same
+    // programs against the whole-program check.
+    const module_check = driver(b, "python3 tests/module_check_oracle.py", rss.driver, "module_compile");
+    module_check.addArgs(&.{ "python3", "tests/module_check_oracle.py" });
+    module_check.addArtifactArg(exe);
+    module_check.addArg("tests/lang");
+    module_check.addArgs(&module_programs);
+    module_compile_step.dependOn(&module_check.step);
     const module_diff = driver(b, "python3 tests/module_build_diff.py", rss.driver, "module_compile");
     module_diff.addArgs(&.{ "python3", "tests/module_build_diff.py", "--steps", "20" });
     module_diff.addArtifactArg(exe);
     module_compile_step.dependOn(&module_diff.step);
+    // MODULE-PROJECT-1: the same differential over a project with a `mylang.json`.
+    const project_diff = driver(b, "python3 tests/module_build_diff.py --project tests/fixtures/module_projects", rss.driver, "module_compile");
+    project_diff.addArgs(&.{ "python3", "tests/module_build_diff.py", "--project", "tests/fixtures/module_projects", "--steps", "12" });
+    project_diff.addArtifactArg(exe);
+    module_compile_step.dependOn(&project_diff.step);
     test_step.dependOn(module_compile_step);
     // The repair-round packages ship two Python drivers beside their Zig tests:
     // the parser-hint/classifier agreement (static, then end to end against this

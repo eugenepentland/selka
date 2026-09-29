@@ -51,11 +51,16 @@ pub const Request = struct {
     module: oracle.ModuleRequest,
     /// The lowering and emission switches, and the program's arena switch.
     config: iface.EmissionConfig,
-    /// The fragment store the module's units are kept in.
-    reuse: fragments.Reuse,
+    /// The fragment store the module's units are kept in; unused by a
+    /// check-only compile.
+    reuse: ?fragments.Reuse,
     /// MODULE-SCHEDULE-5: called as soon as the module's interface and
     /// hashes are final, before its units are emitted.
     ready: ?Ready = null,
+    /// MODULE-CHECK-1: check the module and build its interface (with no
+    /// emission section) without reading its imports' emission facts or
+    /// emitting a unit.
+    check_only: bool = false,
 };
 
 /// A callback for a compile whose interface is final.
@@ -104,8 +109,9 @@ pub const Hashes = struct {
 pub const Input = struct { module: []const u8, interface: []const u8, emission: []const u8, positions: []const u8 };
 
 /// How much one compile did: the program's functions, how many it lowered
-/// with their bodies, how many it stood in from interfaces, and its units.
-pub const Counts = struct { functions: usize = 0, lowered: usize = 0, stood_in: usize = 0, emitted: usize = 0 };
+/// with their bodies, how many it stood in from interfaces, its units, and
+/// how many diagnostics its check reported (before lowering).
+pub const Counts = struct { functions: usize = 0, lowered: usize = 0, stood_in: usize = 0, emitted: usize = 0, diagnostics: usize = 0 };
 
 /// Compile `request.module` into `arena`. On `error.SourceError` the check's
 /// diagnostics are on `out.single`, which the caller still deinitializes.
@@ -125,7 +131,8 @@ pub fn compile(gpa: std.mem.Allocator, arena: std.mem.Allocator, request: Reques
     const modules = compilation.index.project.modules.items;
     const own = moduleIndex(modules, request.module.module) orelse return error.InternalError;
     const stood = try standIns(arena, single, program.functions.len);
-    const facts = importedFacts(arena, request, modules, own) catch |err| switch (err) {
+    // A check-only compile emits nothing, so it reads no emission facts.
+    const facts = if (request.check_only) std.StringHashMapUnmanaged(iface.EmittedFunction).empty else importedFacts(arena, request, modules, own) catch |err| switch (err) {
         error.MissingEmission => {
             out.problem = "an import's interface holds emission facts for another configuration";
             return err;
@@ -133,11 +140,12 @@ pub fn compile(gpa: std.mem.Allocator, arena: std.mem.Allocator, request: Reques
         else => return err,
     };
     const imported = try arena.alloc(?native_interface.Imported, program.functions.len);
-    var counts: Counts = .{ .functions = program.functions.len };
+    var counts: Counts = .{ .functions = program.functions.len, .diagnostics = compilation.diagnostics.items.items.len };
     for (program.functions, stood, imported) |function, skipped, *entry| {
         entry.* = null;
         if (!skipped) continue;
         counts.stood_in += 1;
+        if (request.check_only) continue;
         const stated = facts.get(function.name) orelse {
             out.problem = try std.fmt.allocPrint(arena, "no emission facts for `{s}`: compile its module first, under the same configuration", .{function.name});
             return error.MissingEmission;
@@ -150,6 +158,11 @@ pub fn compile(gpa: std.mem.Allocator, arena: std.mem.Allocator, request: Reques
     var lowered: [2]bytecode.Program = undefined;
     for (&lowered, [_]bool{ false, true }) |*code, drop_debug| code.* = try lowerInlined(.{ .output = arena, .scratch = gpa }, program, selected, drop_debug);
     var code = lowered[@intFromBool(request.config.drop_debug)];
+    if (request.check_only) {
+        out.counts = counts;
+        var checked: InterfaceStep = .{ .arena = arena, .request = request, .out = out, .body = .{ .lowered = &lowered, .code = code, .emit = &.{}, .archive = .{}, .dependencies = &.{} }, .own = own };
+        return checked.publish(.{ .arena = arena });
+    }
     var emit = try emitted(arena, .{ .compilation = compilation, .program = program, .code = code, .own = modules[own].name, .is_entry = request.module.is_entry });
     for (emit) |chosen| counts.emitted += @intFromBool(chosen);
     const physical = try @import("module_physical.zig").archive(arena, code, emit);
@@ -170,7 +183,8 @@ pub fn compile(gpa: std.mem.Allocator, arena: std.mem.Allocator, request: Reques
         .cow = if (@import("value_semantics.zig").counting()) .counting else .off,
     };
     out.counts = counts;
-    out.units.manifest = qbe.generateWithInterface(arena, code, compilation.src, &compilation.diagnostics, .{ .policy = policy, .reuse = request.reuse, .module = &module, .report = &report }) catch |err| switch (err) {
+    const reuse = request.reuse orelse return error.InternalError;
+    out.units.manifest = qbe.generateWithInterface(arena, code, compilation.src, &compilation.diagnostics, .{ .policy = policy, .reuse = reuse, .module = &module, .report = &report }) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         error.SourceError => return error.SourceError,
         error.WriteFailed => return if (step.failure) |failure| failure else error.WriteFailed,
@@ -236,15 +250,22 @@ const InterfaceStep = struct {
         const imports = try importHashes(arena, inputs, .{ .library = library, .foreign = &foreign }, self.own);
         const built = try builder.buildOne(arena, inputs, self.own, .{ .foreign = &foreign, .import_hashes = imports });
         var interface = built.interface;
-        interface.emission = try emissionSection(arena, .{ .interface = interface, .prepared = prepared, .program = program, .report = facts, .emit = self.body.emit, .config = self.request.config });
-        interface.emission.physical = self.body.archive;
+        if (!self.request.check_only) {
+            interface.emission = try emissionSection(arena, .{ .interface = interface, .prepared = prepared, .program = program, .report = facts, .emit = self.body.emit, .config = self.request.config });
+            interface.emission.physical = self.body.archive;
+        }
         self.out.interface = interface;
+        // A diagnostic's rendering may name places in an import's text (a
+        // note, an instantiated body), so a module that reported any reads
+        // every import's positions (MODULE-CHECK-1).
+        const placed = try placedIn(arena, compilation, self.body.code, self.body.emit);
+        if (self.out.counts.diagnostics != 0) @memset(placed, true);
         self.out.hashes = .{
             .interface = try hex(arena, iface.interfaceHash(interface)),
             .implementation = try hex(arena, built.implementation_hash),
             .emission = try hex(arena, iface.emissionHash(interface)),
             .positions = try hex(arena, iface.positionsHash(interface)),
-            .inputs = try inputsOf(arena, .{ .library = library, .modules = modules, .own = self.own, .placed = try placedIn(arena, compilation, self.body.code, self.body.emit), .physical = self.body.dependencies }),
+            .inputs = try inputsOf(arena, .{ .library = library, .modules = modules, .own = self.own, .placed = placed, .physical = self.body.dependencies }),
         };
         self.done = true;
     }
@@ -296,9 +317,11 @@ fn interfacesOf(a: std.mem.Allocator, request: Request, modules: []const project
 
 /// Which merged-source inputs the positions of the emitted units fall in: the
 /// interface texts whose positions this compile's metadata read.
-fn placedIn(allocator: std.mem.Allocator, compilation: *const @import("project_compile.zig").Compilation, code: bytecode.Program, emit: []const bool) Error![]const bool {
+fn placedIn(allocator: std.mem.Allocator, compilation: *const @import("project_compile.zig").Compilation, code: bytecode.Program, emit: []const bool) Error![]bool {
     const out = try allocator.alloc(bool, compilation.index.project.modules.items.len);
     @memset(out, false);
+    // A check-only compile emitted nothing.
+    if (emit.len != code.functions.len) return out;
     for (code.functions, emit) |function, chosen| {
         if (!chosen) continue;
         var last: ?usize = null;

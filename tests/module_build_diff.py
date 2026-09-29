@@ -138,7 +138,7 @@ def main():
     diff = Differential(args, work)
     shutil.copytree(args.project, diff.tree, ignore=shutil.ignore_patterns(".mylang-cache"))
     # Test modules are not part of the program the entry builds.
-    pristine = {p.name: p.read_text() for p in diff.tree.glob("*.my") if not re.search(r"_tests?\.my$", p.name)}
+    pristine = {str(p.relative_to(diff.tree)): p.read_text() for p in sorted(diff.tree.rglob("*.my")) if not re.search(r"_tests?\.my$", p.name)}
     rng = random.Random(args.seed)
     diff.step("pristine")
     for number in range(1, args.steps + 1):

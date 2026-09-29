@@ -936,11 +936,6 @@ fn runInterfaces(argv: []const []const u8) !std.process.RunResult {
     return std.process.run(testing.allocator, testing.io, .{ .argv = args.items });
 }
 
-fn freeRun(result: std.process.RunResult) void {
-    testing.allocator.free(result.stdout);
-    testing.allocator.free(result.stderr);
-}
-
 // spec-case: MODULE-INTERFACE-3
 test "a module checks against emitted interfaces after its imports' sources are gone" {
     var temporary = testing.tmpDir(.{});
@@ -1275,8 +1270,8 @@ test "run builds a project module by module, and a program the modules cannot bu
     try testing.expectEqualStrings(whole.stderr, module.stderr);
 }
 
-// spec-case: MODULE-SCHEDULE-3
-test "a project that declares a copied host function builds on the whole-program path" {
+// spec: MODULE-HOST-1
+test "a project whose modules declare copied host functions builds module by module into the whole-program executable" {
     var arena_state = std.heap.ArenaAllocator.init(testing.allocator);
     defer arena_state.deinit();
     const a = arena_state.allocator();
@@ -1286,11 +1281,130 @@ test "a project that declares a copied host function builds on the whole-program
     // Two modules' host rows: the whole program orders them by its own tables.
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "lib.my", .data = "module lib\npublic record Zed:\n    a: i64\n    b: i64\nhost def zmeasure(host: Host, z: Zed) -> i64 effects(host)\npublic def twice(host: Host, x: i64) -> i64 effects(host):\n    return zmeasure(host, Zed(a=x, b=1)) * 2\n" });
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport lib\nrecord Alpha:\n    q: i64\nhost def ameasure(host: Host, v: Alpha) -> i64 effects(host)\ndef main(host: Host) -> i64:\n    return lib.twice(host, 6) + ameasure(host, Alpha(q=2))\n" });
-    const built = try projectBuild(a, directory, "default", "cache", &.{});
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, built.term);
-    try testing.expect(std.mem.indexOf(u8, built.stdout, "\"module_build\"") == null);
+    try testing.expect(builtModules(try projectBuild(a, directory, "default", "cache", &.{}), "\"module_build\":{\"modules\":2,\"compiled\":2"));
     try testing.expect(builtModules(try projectBuild(a, directory, "whole", "whole-cache", &.{"--whole-program"}), "\"version\":\"qbe-build-v1\""));
     try testing.expectEqualSlices(u8, try temporary.dir.readFileAlloc(testing.io, "whole", a, .limited(1 << 30)), try temporary.dir.readFileAlloc(testing.io, "default", a, .limited(1 << 30)));
+}
+
+/// Build `main.my` in `directory` both ways into their own caches, and
+/// require the same exit status, the same standard error and, when both
+/// built, the same executable; the default build's result.
+fn bothWays(allocator: std.mem.Allocator, directory: []const u8) !std.process.RunResult {
+    const module = try projectBuild(allocator, directory, "module-built", "cache", &.{});
+    const whole = try projectBuild(allocator, directory, "whole-built", "whole-cache", &.{"--whole-program"});
+    try testing.expectEqual(whole.term, module.term);
+    try testing.expectEqualStrings(whole.stderr, module.stderr);
+    return module;
+}
+
+const configured_json = "{\"version\":2,\"import_policy\":\"policy.json\",\"budgets\":{\"max_modules\":8},\"lint\":{\"warnings\":\"deny\"}}";
+
+// spec: MODULE-PROJECT-1
+test "a project with a mylang.json builds module by module, and what its configuration rejects is reported as the whole-program build reports it" {
+    var arena_state = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena_state.deinit();
+    const a = arena_state.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "mylang.json", .data = configured_json });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "policy.json", .data = "{\"version\":1,\"default_action\":\"allow\",\"rules\":[{\"from\":\"core\",\"to\":\"util\",\"action\":\"deny\",\"reason\":\"core stays below util\"}]}" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = "module util\npublic def twice(n: int) -> int:\n    return n * 2\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "core.my", .data = "module core\npublic def area(w: int, h: int) -> int:\n    return w * h\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport core\nimport util\ndef main() -> int:\n    return util.twice(core.area(3, 4))\n" });
+    // Budgets, a passing policy and a lint section: the per-module path.
+    const built = try bothWays(a, directory);
+    try testing.expect(builtModules(built, "\"module_build\":{\"modules\":3,\"compiled\":3"));
+    try testing.expectEqualSlices(u8, try temporary.dir.readFileAlloc(testing.io, "whole-built", a, .limited(1 << 30)), try temporary.dir.readFileAlloc(testing.io, "module-built", a, .limited(1 << 30)));
+    // `lint.warnings: "deny"`: a `run` with a warning prints it and stops.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = "module util\npublic def twice(n: int) -> int:\n    spare = n\n    return n * 2\n" });
+    var run_args: std.ArrayList([]const u8) = .empty;
+    try run_args.appendSlice(a, &.{ "run", try std.fs.path.join(a, &.{ directory, "main.my" }), try std.fmt.allocPrint(a, "--cache-dir={s}/cache", .{directory}) });
+    try run_args.appendSlice(a, &tools);
+    const denied = try runInterfaces(run_args.items);
+    defer freeRun(denied);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, denied.term);
+    try testing.expect(std.mem.indexOf(u8, denied.stderr, "W_UNUSED_BINDING") != null);
+    try testing.expectEqualStrings("", denied.stdout);
+    // An import the policy denies: exit 3 with the policy report.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "core.my", .data = "module core\nimport util\npublic def area(w: int, h: int) -> int:\n    return util.twice(w) * h\n" });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 3 }, (try bothWays(a, directory)).term);
+    // A graph over its module budget: exit 1 with the loader's diagnostic.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "mylang.json", .data = "{\"version\":2,\"budgets\":{\"max_modules\":2}}" });
+    const over = try bothWays(a, directory);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, over.term);
+    try testing.expect(std.mem.indexOf(u8, over.stderr, "E_MODULE_LIMIT") != null);
+    // A configuration that does not load: exit 2.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "mylang.json", .data = "{\"version\":2,\"budgets\":{\"max_modules\":0}}" });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, (try bothWays(a, directory)).term);
+}
+
+/// `mylang check` of `main.my` in `directory`, over the cache `cache` under
+/// it or, when `cache` is null, with `--no-cache` (the whole-program check);
+/// the caller's arena owns the output.
+fn projectCheck(allocator: std.mem.Allocator, directory: []const u8, cache: ?[]const u8) !std.process.RunResult {
+    const flag = if (cache) |name| try std.fmt.allocPrint(allocator, "--cache-dir={s}/{s}", .{ directory, name }) else "--no-cache";
+    const result = try runInterfaces(&.{ "check", try std.fs.path.join(allocator, &.{ directory, "main.my" }), flag });
+    defer freeRun(result);
+    return .{ .term = result.term, .stdout = try allocator.dupe(u8, result.stdout), .stderr = try allocator.dupe(u8, result.stderr) };
+}
+
+/// The per-module check's program variant under `cache/modules`: the one
+/// directory that is not the standard modules' shared variant.
+fn checkVariant(allocator: std.mem.Allocator, root: std.Io.Dir) ![]const u8 {
+    var modules = try root.openDir(testing.io, "cache/modules", .{ .iterate = true });
+    defer modules.close(testing.io);
+    var walk = modules.iterate();
+    while (try walk.next(testing.io)) |entry| {
+        if (!std.mem.startsWith(u8, entry.name, "standard-")) return std.fmt.allocPrint(allocator, "cache/modules/{s}/out", .{entry.name});
+    }
+    return error.FileNotFound;
+}
+
+/// Delete the result file of each of `modules` a per-module check wrote.
+fn forgetResults(allocator: std.mem.Allocator, root: std.Io.Dir, out: []const u8, modules: []const []const u8) !void {
+    for (modules) |module| root.deleteFile(testing.io, try std.fmt.allocPrint(allocator, "{s}/{s}.result.json", .{ out, module })) catch {};
+}
+
+// spec: MODULE-CHECK-1
+test "check of a project re-checks only the modules whose source or read interfaces changed, and prints what the whole-program check prints" {
+    var arena_state = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena_state.deinit();
+    const a = arena_state.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    const warned = try std.mem.replaceOwned(u8, a, schedule_util, "    total = 0\n", "    spare = n\n    total = 0\n");
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "shapes.my", .data = schedule_shapes });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = warned });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport util\ndef main() -> int:\n    return util.score(4)\n" });
+    const first = try projectCheck(a, directory, "cache");
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, first.term);
+    try testing.expect(std.mem.indexOf(u8, first.stderr, "util.my:4:5: warning[W_UNUSED_BINDING]") != null);
+    try testing.expectEqualStrings((try projectCheck(a, directory, null)).stderr, first.stderr);
+    const out = try checkVariant(a, temporary.dir);
+    const all = [_][]const u8{ "shapes", "util", "main" };
+    // A body edit: `util` alone is checked again, and its warning replayed.
+    try forgetResults(a, temporary.dir, out, &all);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = try std.mem.replaceOwned(u8, a, warned, "right=2", "right=3") });
+    const edited = try projectCheck(a, directory, "cache");
+    try testing.expectEqualStrings(first.stderr, edited.stderr);
+    try temporary.dir.access(testing.io, try std.fmt.allocPrint(a, "{s}/util.result.json", .{out}), .{});
+    try testing.expectError(error.FileNotFound, temporary.dir.access(testing.io, try std.fmt.allocPrint(a, "{s}/main.result.json", .{out}), .{}));
+    try testing.expectError(error.FileNotFound, temporary.dir.access(testing.io, try std.fmt.allocPrint(a, "{s}/shapes.result.json", .{out}), .{}));
+    // A module that does not check: the whole-program check reports it.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = try std.mem.replaceOwned(u8, a, warned, "return total", "return missing") });
+    const rejected = try projectCheck(a, directory, "cache");
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, rejected.term);
+    try testing.expect(std.mem.indexOf(u8, rejected.stderr, "E_UNKNOWN_NAME") != null);
+    try testing.expectEqualStrings((try projectCheck(a, directory, null)).stderr, rejected.stderr);
+    // Fixed again: the modules that checked before the failure keep their
+    // records, so only `util` is checked again.
+    try forgetResults(a, temporary.dir, out, &all);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = warned });
+    try testing.expectEqualStrings(first.stderr, (try projectCheck(a, directory, "cache")).stderr);
+    try temporary.dir.access(testing.io, try std.fmt.allocPrint(a, "{s}/util.result.json", .{out}), .{});
+    try testing.expectError(error.FileNotFound, temporary.dir.access(testing.io, try std.fmt.allocPrint(a, "{s}/main.result.json", .{out}), .{}));
 }
 
 // spec: MODULE-SCHEDULE-4

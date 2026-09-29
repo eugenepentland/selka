@@ -81,7 +81,7 @@ pub const native_roots = [_][]const u8{ "src/", "tests/" };
 pub const idioms = [_][]const u8{ "tests/idiom_probes.py", "tests/fixtures/idioms/" };
 
 /// `tests/incremental_diff.py`: the mutation walk and its fixture project.
-pub const incremental = [_][]const u8{ "tests/incremental_diff.py", "tests/fixtures/incremental/" };
+pub const incremental = [_][]const u8{ "tests/incremental_diff.py", "tests/fixtures/incremental/", "tests/fixtures/module_projects/" };
 
 /// `tests/interface_diff.py`: the interface-hash mutation walk and its fixture.
 pub const interfaces = [_][]const u8{ "tests/interface_diff.py", "tests/fixtures/interfaces/", "tests/fixtures/interfaces_generic/" };
@@ -103,12 +103,14 @@ pub const interface_oracle = [_][]const u8{
 pub const module_compile = [_][]const u8{
     "tests/module_compile_oracle.py",
     "tests/module_build_oracle.py",
+    "tests/module_check_oracle.py",
     "tests/module_build_diff.py",
     "tests/lang/",
     "tests/fixtures/interfaces/",
     "tests/fixtures/interfaces_generic/",
     "tests/fixtures/incremental/",
     "tests/fixtures/module_compile/",
+    "tests/fixtures/module_projects/",
 };
 
 /// `tests/idiom_probes.py --self-test`: the CPython oracle only.

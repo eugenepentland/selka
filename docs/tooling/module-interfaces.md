@@ -238,9 +238,9 @@ identical
   for byte.
 - **What still goes whole-program:** a library, a provider, the LLVM backend
   or `--release`, `--no-cache`, a checked manifest, a project with a
-  `mylang.json`, an entry without `main`, an import cycle or header problem,
-  a module with a `host def` (the copied host bridge orders its rows by the
-  whole program's tables), and any program a module compile rejects. The whole-program build then
+  `mylang.json` that does not load, a graph over its budgets or against its
+  import policy, an entry without `main`, an import cycle or header problem,
+  and any program a module compile rejects. The whole-program build then
   reports it exactly as before. `run` also takes that path for `--restrict`,
   `--report`, timings and JSON diagnostics.
 

@@ -23,6 +23,8 @@ pub const usage =
     \\                             [--cache-dir=DIR] [--drop-debug] [--drop-step-checks]
     \\                             [--drop-frame-checks] [--objects [--qbe=PATH] [--zig=PATH]]
     \\                             [--ready] [--standard-interfaces=DIR] [-- BUILD-OPTIONS]
+    \\       mylang compile-module <entry.my> --module=NAME --interfaces=DIR --out=DIR --check-only
+    \\                             [--cache-dir=DIR] [--ready] [--standard-interfaces=DIR]
     \\       mylang link-modules <entry.my> --units=DIR -o OUT [--cache-dir=DIR] [--mode MODE]
     \\  compile-module  check NAME against the interfaces in DIR, write DIR/NAME.myi with its
     \\                  emission facts and OUT/NAME.units.json; --objects also compiles its
@@ -30,6 +32,8 @@ pub const usage =
     \\                  --ready (the per-module build's scheduler) signals the interface on stderr
     \\                  as soon as it is written, and writes NAME.result.json and NAME.shared.json
     \\                  in place of NAME.units.json; BUILD-OPTIONS go to the build of the objects.
+    \\                  --check-only checks NAME, writes DIR/NAME.myi (no emission facts) and
+    \\                  OUT/NAME.result.json with its warnings, and emits nothing.
     \\  link-modules    merge every OUT/*.units.json into one manifest and build it into OUT
     \\
 ;
@@ -55,6 +59,8 @@ const Options = struct {
     standard: ?[]const u8 = null,
     /// Everything after `--`: the build options the objects are built with.
     build_args: ?[]const []const u8 = null,
+    /// `--check-only` (MODULE-CHECK-1): check and publish the interface only.
+    check_only: bool = false,
 };
 
 fn parse(args: []const []const u8) ?Options {
@@ -67,6 +73,8 @@ fn parse(args: []const []const u8) ?Options {
         }
         if (std.mem.eql(u8, arg, "--ready")) {
             options.ready = true;
+        } else if (std.mem.eql(u8, arg, "--check-only")) {
+            options.check_only = true;
         } else if (std.mem.startsWith(u8, arg, "--standard-interfaces=")) {
             options.standard = arg["--standard-interfaces=".len..];
         } else if (std.mem.startsWith(u8, arg, "--module=")) {
@@ -114,7 +122,7 @@ pub fn compileModule(process: std.process.Init, args: []const []const u8, identi
     const module = options.module orelse return usageError(process.io);
     const directory = options.interfaces orelse return usageError(process.io);
     const out = options.out orelse return usageError(process.io);
-    if (!options.arenas) return usageError(process.io);
+    if (!options.arenas and !options.check_only) return usageError(process.io);
     const context: Context = .{ .gpa = process.gpa, .io = process.io, .arena = process.arena.allocator() };
     const a = context.arena;
     const entry = (try interface_command.entryOf(context.arena, context.io, options.path)) orelse return usageError(process.io);
@@ -123,14 +131,17 @@ pub fn compileModule(process: std.process.Init, args: []const []const u8, identi
     const bytes = if (is_entry) entry.bytes else compile_module.standardSource(relative) orelse
         std.Io.Dir.cwd().readFileAlloc(process.io, try std.fs.path.join(a, &.{ entry.root, relative }), a, .limited(64 * 1024 * 1024)) catch return error.ReadFailed;
     var library = oracle.Library.stored(.{ .io = process.io, .directory = directory, .arena = a, .standard = options.standard });
-    var store = try openStore(context, .{ .cache = options.cache, .identity = identity, .entry = entry.name, .module = module });
+    // A check-only compile emits nothing, so it opens no fragment store.
+    var store: fragments.Store = undefined;
+    if (!options.check_only) store = try openStore(context, .{ .cache = options.cache, .identity = identity, .entry = entry.name, .module = module });
     var compiled: compile_module.Compiled = undefined;
     var publish: Publish = .{ .context = context, .directory = directory, .module = module };
     const request: compile_module.Request = .{
         .module = .{ .module = module, .bytes = bytes, .is_entry = is_entry, .library = &library, .assets = entry.assets, .limits = entry.limits },
         .config = options.config,
-        .reuse = .{ .store = &store, .lean = true, .executable = true },
+        .reuse = if (options.check_only) null else .{ .store = &store, .lean = true, .executable = true },
         .ready = if (options.ready) .{ .context = &publish, .run = Publish.run } else null,
+        .check_only = options.check_only,
     };
     compile_module.compile(process.gpa, a, request, &compiled) catch |err| switch (err) {
         error.SourceError => {
@@ -148,6 +159,7 @@ pub fn compileModule(process: std.process.Init, args: []const []const u8, identi
     defer compiled.deinit();
     std.Io.Dir.cwd().createDirPath(process.io, out) catch return error.WriteFailed;
     if (!options.ready) try publish.write(&compiled);
+    if (options.check_only) return checked(context, .{ .out = out, .module = module, .is_entry = is_entry, .compiled = &compiled, .objects = null });
     const units_path = try std.fs.path.join(a, &.{ out, try std.fmt.allocPrint(a, "{s}.units.json", .{module}) });
     if (!options.ready) try writeAtomic(context, units_path, try unitsDocument(a, module, is_entry, &compiled));
     const objects: ?[]const u8 = if (options.objects) try moduleObjects(process, .{ .options = options, .entry = options.path, .module = module, .manifest = compiled.units.manifest }) else null;
@@ -271,12 +283,14 @@ fn writeResult(context: Context, site: ResultSite) Error!void {
         .entry_parameter_names = field(manifest, "entry_parameter_names"),
         .entry_argv_element = field(manifest, "entry_argv_element"),
     }, .{}) else null;
+    const warnings = try warningsOf(context, compiled, site.module, compiled.single.?.compilation.diagnostics.items.items.len);
     const result = try std.json.Stringify.valueAlloc(a, .{
         .version = "module-result-v1",
         .module = site.module,
         .hashes = compiled.hashes,
         .counts = compiled.counts,
-        .warnings = try ownWarnings(context, compiled, site.module),
+        .warnings = warnings.own,
+        .foreign = warnings.foreign,
         .marks = compiled.interface.emission.marks,
         .text_format = field(manifest, "text_format") == .bool and field(manifest, "text_format").bool,
         .entry = entry,
@@ -302,22 +316,61 @@ fn sharedUnits(a: std.mem.Allocator, manifest: std.json.Value) Error![]const std
     return units.items;
 }
 
-/// The warnings of a compile located in the module's own source, rendered as
-/// a whole-program build renders them; the scheduler replays them on every
-/// build, since an unchanged module is not compiled again.
-fn ownWarnings(context: Context, compiled: *const compile_module.Compiled, module: []const u8) Error![]const u8 {
-    const single = compiled.single orelse return "";
+/// One warning a compile reported in another module's text, rendered.
+const Foreign = struct { module: []const u8, text: []const u8 };
+
+/// A compile's warnings: those located in the module's own source, rendered
+/// as a whole-program check renders them (the scheduler replays them on every
+/// build, since an unchanged module is not compiled again), and those located
+/// in another module's text, which the scheduler requires that module's own
+/// compile to have reported too (MODULE-CHECK-1).
+const Warnings = struct { own: []const u8, foreign: []const Foreign };
+
+/// The first `count` diagnostics of a compile, split into its own and
+/// foreign warnings.
+fn warningsOf(context: Context, compiled: *const compile_module.Compiled, module: []const u8, count: usize) Error!Warnings {
+    const single = compiled.single orelse return .{ .own = "", .foreign = &.{} };
     const compilation = &single.compilation;
     const modules = compilation.index.project.modules.items;
     var text: std.ArrayList(u8) = .empty;
-    for (compilation.diagnostics.items.items) |item| {
+    var foreign: std.ArrayList(Foreign) = .empty;
+    const items = compilation.diagnostics.items.items;
+    for (items[0..@min(count, items.len)]) |item| {
         const at = compilation.src.originalSpan(item.span) catch continue;
-        if (at.input >= modules.len or !std.mem.eql(u8, modules[at.input].name, module)) continue;
+        if (at.input >= modules.len) continue;
         const rendered = try diagnostic_output.render(context.gpa, item, compilation.src, .text);
         defer context.gpa.free(rendered);
-        try text.appendSlice(context.arena, rendered);
+        if (std.mem.eql(u8, modules[at.input].name, module)) {
+            try text.appendSlice(context.arena, rendered);
+        } else if (std.mem.eql(u8, modules[at.input].name, oracle.root_module) or std.mem.eql(u8, item.code, "W_UNUSED_IMPORT")) {
+            // The compile's own synthetic root is no module of the program,
+            // and an import an interface's text keeps is used by the body
+            // the interface left out.
+            continue;
+        } else try foreign.append(context.arena, .{ .module = modules[at.input].name, .text = try context.arena.dupe(u8, rendered) });
     }
-    return text.items;
+    return .{ .own = text.items, .foreign = foreign.items };
+}
+
+/// MODULE-CHECK-1: finish a `--check-only` compile: write `NAME.result.json`
+/// (hashes, counts, the warnings its check reported) and print its summary.
+fn checked(context: Context, site: ResultSite) Error!u8 {
+    const a = context.arena;
+    const compiled = site.compiled;
+    const warnings = try warningsOf(context, compiled, site.module, compiled.counts.diagnostics);
+    const result = try std.json.Stringify.valueAlloc(a, .{
+        .version = "module-check-v1",
+        .module = site.module,
+        .hashes = compiled.hashes,
+        .counts = compiled.counts,
+        .warnings = warnings.own,
+        .foreign = warnings.foreign,
+    }, .{});
+    try writeAtomic(context, try std.fs.path.join(a, &.{ site.out, try std.fmt.allocPrint(a, "{s}.result.json", .{site.module}) }), result);
+    const summary = try std.json.Stringify.valueAlloc(a, .{ .version = "module-check-v1", .module = site.module, .hashes = compiled.hashes, .counts = compiled.counts }, .{});
+    try stdout(context.io, summary);
+    try stdout(context.io, "\n");
+    return 0;
 }
 
 fn field(value: std.json.Value, name: []const u8) std.json.Value {

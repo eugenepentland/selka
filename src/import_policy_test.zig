@@ -91,6 +91,19 @@ test "first matching policy rule wins and defaults apply to remaining edges" {
     try t.expectError(error.IncompleteProject, policy.evaluate(t.allocator, &empty, fallback));
 }
 
+// spec-case: MODULE-PROJECT-1
+test "one edge's policy decision is the evaluator's first matching rule or the default" {
+    var config = try policy.Policy.parse(t.allocator,
+        \\{"version":1,"default_action":"allow","rules":[{"from":"core.*","to":"app.*","action":"deny","reason":"layering"},{"from":"core.*","to":"*","action":"allow","reason":"core may use anything else"}]}
+    );
+    defer config.deinit();
+    try t.expect(policy.denies(config, "core.model", "app.view"));
+    try t.expect(!policy.denies(config, "core.model", "core.util"));
+    try t.expect(!policy.denies(config, "app.view", "core.model"));
+    try t.expectEqual(@as(?usize, 1), policy.ruleFor(config, "core.model", "hex"));
+    try t.expectEqual(@as(?usize, null), policy.ruleFor(config, "main", "hex"));
+}
+
 test "policy bounds and duplicate rule validation are explicit" {
     try t.expectError(error.DuplicatePolicyRule, policy.Policy.parse(t.allocator,
         \\{"version":1,"default_action":"allow","rules":[{"from":"a","to":"b","action":"allow","reason":"one"},{"from":"a","to":"b","action":"deny","reason":"two"}]}

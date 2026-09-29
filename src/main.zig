@@ -201,6 +201,7 @@ pub fn main(init: std.process.Init) void {
 
 const grants = @import("cli_grants.zig");
 const project_config = @import("project_config.zig");
+const module_build = @import("module_build.zig");
 const module_syntax = @import("module_syntax.zig");
 const native_run = @import("native_run.zig");
 const native_build = @import("qbe_build.zig");
@@ -281,7 +282,7 @@ fn buildCommand(process: std.process.Init, args: []const []const u8) !u8 {
     var phases: native_build.PhaseTimings = .{};
     // MODULE-SCHEDULE-3: a project executable builds module by module; what
     // that path does not handle goes to the whole-program build.
-    const outcome = try @import("module_build.zig").build(process.gpa, .{ .io = process.io, .environ = process.environ_map, .args = args, .phases = if (asked) &phases else null, .identity = &build_identity });
+    const outcome = try module_build.build(process.gpa, .{ .io = process.io, .environ = process.environ_map, .args = args, .phases = if (asked) &phases else null, .identity = &build_identity });
     const status = switch (outcome) {
         .status => |done| done,
         .fallback => try native_build.runMeasured(process, args, if (asked) &phases else null),
@@ -289,6 +290,38 @@ fn buildCommand(process: std.process.Init, args: []const []const u8) !u8 {
     addBuildPhases(&timings, phases);
     try timings.report(status);
     return status;
+}
+
+/// MODULE-CHECK-1: `mylang check` of a project entry, with no option but
+/// `--cache-dir`, checks it module by module; null hands it to the
+/// whole-program check (any other option, a friction log, or whatever the
+/// per-module check does not handle).
+fn checkModules(process: std.process.Init, args: []const []const u8) !?u8 {
+    var entry: ?[]const u8 = null;
+    var cache: ?[]const u8 = null;
+    for (args) |arg| {
+        if (std.mem.startsWith(u8, arg, cache_directory_prefix) and arg.len > cache_directory_prefix.len and cache == null) {
+            cache = arg[cache_directory_prefix.len..];
+        } else if (std.mem.startsWith(u8, arg, "-") or entry != null) return null else entry = arg;
+    }
+    const source = entry orelse return null;
+    if (process.environ_map.get("MYLANG_FRICTION_LOG") != null) return null;
+    const outcome = try module_build.check(process.gpa, .{
+        .io = process.io,
+        .environ = process.environ_map,
+        .source = source,
+        .cache = cache orelse process.environ_map.get("MYLANG_FRONTEND_CACHE") orelse ".mylang-cache",
+        .identity = &build_identity,
+    });
+    return switch (outcome) {
+        .status => |status| status,
+        .fallback => null,
+    };
+}
+
+fn checkModuleDispatch(process: std.process.Init, args: []const []const u8) !?u8 {
+    if (args.len < 2 or !std.mem.eql(u8, args[1], "check")) return null;
+    return checkModules(process, args[2..]);
 }
 
 /// Record each phase a native build actually measured. A phase that never ran
@@ -354,6 +387,7 @@ fn dispatch(process: std.process.Init) !u8 {
     }
     if (args.len >= 2 and std.mem.eql(u8, args[1], "build")) return buildCommand(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "fix")) return @import("fix_command.zig").run(process, args[2..]);
+    if (try checkModuleDispatch(process, args)) |status| return status;
     if (args.len >= 2 and std.mem.eql(u8, args[1], "emit-runtime")) return @import("qbe_build.zig").emitRuntime(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "test")) return @import("native_test_command.zig").run(process, args[2..]) catch |err| switch (err) {
         // `run` already rendered the child compiler's located diagnostic; exit 1
@@ -878,7 +912,7 @@ fn runModules(init: Context, parsed: Parsed) !?u8 {
     settings.arguments = parsed.runtime;
     settings.max_memory = parsed.max_memory;
     const policy = parsed.runPolicy(true);
-    const outcome = try @import("module_build.zig").buildForRun(init.gpa, .{
+    const outcome = try module_build.buildForRun(init.gpa, .{
         .io = init.io,
         .environ = init.environ,
         .settings = settings,

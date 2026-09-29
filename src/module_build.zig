@@ -48,7 +48,7 @@ const child_ceiling: u64 = 256 << 20;
 pub const Error = native_build.Error || error{ ReadFailed, InternalError, SourceError };
 
 /// Why a project build went to the whole-program path instead.
-pub const Fallback = enum { options, entry, project, config, compile, conflict, host };
+pub const Fallback = enum { options, entry, project, config, compile, conflict };
 
 /// What a per-module build did: finished with an exit status, or handed the
 /// build to the whole-program path for `Fallback`.
@@ -78,7 +78,12 @@ const ModuleState = struct {
     shared: []const u8 = "",
     entry: ?[]const u8 = null,
     objects: ?[]const u8 = null,
+    /// Warnings its compile reported in other modules' text.
+    foreign: []const Foreign = &.{},
 };
+
+/// A warning a compile reported in another module's text, rendered.
+const Foreign = struct { module: []const u8, text: []const u8 };
 
 /// The state file of one build variant.
 const StateFile = struct { version: []const u8 = state_version, arenas: bool = false, modules: []const ModuleState = &.{} };
@@ -92,8 +97,8 @@ const Node = struct {
     imports: []const []const u8,
     /// Whether its source mentions an arena scope (the switch's first guess).
     arena_text: bool,
-    /// Whether its source may declare a copied host function.
-    host_text: bool,
+    /// Its source's length, for the project's byte budgets.
+    bytes: usize,
     /// Indices of the modules it imports.
     deps: []const usize = &.{},
     status: Status = .waiting,
@@ -111,7 +116,11 @@ const Running = struct { node: usize, started: spawn.Started, stderr: std.ArrayL
 
 /// What a build variant is keyed by; the standard modules' shared variant
 /// has no entry.
-const VariantKey = struct { switches: native_build.Switches, prepared: native_build.Prepared, identity: []const u8, source: ?[]const u8 };
+const VariantKey = struct { switches: native_build.Switches, place: VariantPlace, identity: []const u8, source: ?[]const u8 };
+
+/// Where a session's variants live (the cache root) and the build
+/// environment their objects are built in; a check's is a fixed marker.
+const VariantPlace = struct { root: []const u8, environment: []const u8 };
 
 /// The entry of a per-module build: the I/O and environment it
 /// runs with, the build arguments, where its phases go, and the compiler
@@ -143,7 +152,7 @@ pub fn build(gpa: std.mem.Allocator, request: Request) Error!Outcome {
         .status => |status| return .{ .status = status },
         .fallback => |why| return .{ .fallback = why },
     };
-    return .{ .status = try native_build.linkModules(session.prepared, parsed, program, .{
+    return .{ .status = try native_build.linkModules(session.prepared.?, parsed, program, .{
         .frontend = seconds(context, session.start),
         .phases = request.phases,
         .controls = try native_build.runtimeControls(a, request.args),
@@ -184,17 +193,54 @@ pub fn buildForRun(gpa: std.mem.Allocator, request: RunRequest) Error!RunOutcome
         .status => |status| return .{ .status = status },
         .fallback => |why| return .{ .fallback = why },
     };
-    const home = try native_build.generation(context, session.prepared.root, "run", native_build.generation_identity);
+    // MODULE-PROJECT-1: a project whose `mylang.json` denies warnings runs no
+    // program that has one; the warnings are already printed.
+    if (session.state.configured.deny_warnings and session.state.warned()) return .{ .status = 1 };
+    const home = try native_build.generation(context, session.prepared.?.root, "run", native_build.generation_identity);
     const path = try std.fs.path.join(context.allocator, &.{ home, try std.fmt.allocPrint(context.allocator, "modules-{s}", .{program.identity}) });
     if (!context.runnable(path)) {
         var settings = request.settings;
         settings.run = false;
         settings.report = false;
         settings.output = path;
-        const status = try native_build.linkModules(session.prepared, settings, program, .{ .frontend = seconds(context, session.start), .phases = null, .controls = &.{} });
+        const status = try native_build.linkModules(session.prepared.?, settings, program, .{ .frontend = seconds(context, session.start), .phases = null, .controls = &.{} });
         if (status != 0) return .{ .status = status };
     }
     return .{ .executable = try gpa.dupe(u8, path) };
+}
+
+/// The switches a check's variant is keyed by: a check emits nothing, so
+/// one fixed set.
+const check_switches: native_build.Switches = .{ .drop_debug = false, .step_checks = true, .frame_checks = true };
+
+/// What `mylang check` of a project hands the per-module check: the entry,
+/// the cache root its variants live under, and the compiler identity.
+pub const CheckRequest = struct {
+    io: std.Io,
+    environ: *const std.process.Environ.Map,
+    source: []const u8,
+    cache: []const u8,
+    identity: []const u8,
+};
+
+/// MODULE-CHECK-1: check the project `request.source` names module by
+/// module, re-checking only the modules whose source or read interfaces
+/// changed; or say why the whole-program check must.
+pub fn check(gpa: std.mem.Allocator, request: CheckRequest) Error!Outcome {
+    var context = try fs.Context.init(gpa, request.io, request.environ);
+    defer context.deinit();
+    var session: Session = undefined;
+    const settings: Settings = .{ .parsed = .{ .source = request.source, .cache = request.cache }, .switches = check_switches, .identity = request.identity, .mode = .check };
+    switch (try Session.open(&session, context, settings)) {
+        .ready => {},
+        .status => |status| return .{ .status = status },
+        .fallback => |why| return .{ .fallback = why },
+    }
+    defer session.close();
+    return switch (try session.check()) {
+        .ready, .status => |status| .{ .status = status },
+        .fallback => |why| .{ .fallback = why },
+    };
 }
 
 /// What one step of a session did: done (with its value), an exit status to
@@ -203,15 +249,20 @@ fn Step(comptime T: type) type {
     return union(enum) { ready: T, status: u8, fallback: Fallback };
 }
 
+/// What a session works toward: an executable from its modules' objects, or
+/// a check of its modules alone (MODULE-CHECK-1).
+const Mode = enum { build, check };
+
 /// What a session is opened with.
-const Settings = struct { parsed: options.Options, switches: native_build.Switches, identity: []const u8 };
+const Settings = struct { parsed: options.Options, switches: native_build.Switches, identity: []const u8, mode: Mode = .build };
 
 /// One per-module build from its entry to the program it links: the build
 /// state, the prepared toolchain and cache, and the locks it holds on the
 /// program's variant and on the standard modules' shared one.
 const Session = struct {
     state: Build,
-    prepared: native_build.Prepared,
+    /// The toolchain and object cache; a check needs neither.
+    prepared: ?native_build.Prepared,
     locks: [2]std.Io.File,
     start: std.Io.Timestamp,
 
@@ -225,13 +276,16 @@ const Session = struct {
         const raw = context.read(source) catch return .{ .fallback = .entry };
         if (!parsed.project and !module_syntax.usesModuleSyntax(raw)) return .{ .fallback = .entry };
         if (!project_config.declaresMain(raw)) return .{ .fallback = .entry };
-        if (project_config.discover(a, context.io, source) catch return .{ .fallback = .config }) |_| return .{ .fallback = .config };
+        // MODULE-PROJECT-1: a `mylang.json` that does not load, or whose
+        // import policy does not parse, is the whole-program path's to report.
+        const configured = (try configuredProject(context, source)) orelse return .{ .fallback = .config };
         const entry = (try interface_command.entryOf(a, context.io, source)) orelse return .{ .fallback = .entry };
-        const prepared = native_build.prepare(context, parsed) catch |err| switch (err) {
+        const prepared: ?native_build.Prepared = if (settings.mode == .check) null else native_build.prepare(context, parsed) catch |err| switch (err) {
             error.NativeToolFailed => return .{ .status = 2 },
             else => return err,
         };
-        const key: VariantKey = .{ .switches = settings.switches, .prepared = prepared, .identity = settings.identity, .source = source };
+        const place: VariantPlace = if (prepared) |ready| .{ .root = ready.root, .environment = ready.cache.environment } else .{ .root = try native_build.cacheRoot(context, parsed), .environment = "\x00check" };
+        const key: VariantKey = .{ .switches = settings.switches, .place = place, .identity = settings.identity, .source = source };
         self.* = .{
             .prepared = prepared,
             .start = std.Io.Timestamp.now(context.io, .awake),
@@ -241,11 +295,13 @@ const Session = struct {
                 .parsed = parsed,
                 .entry = .{ .root = entry.root, .name = entry.name, .bytes = entry.bytes, .path = source },
                 .variant = try variantDirectory(context, key),
-                .standard = try variantDirectory(context, .{ .switches = key.switches, .prepared = prepared, .identity = key.identity, .source = null }),
+                .standard = try variantDirectory(context, .{ .switches = key.switches, .place = place, .identity = key.identity, .source = null }),
                 .switches = settings.switches,
+                .configured = configured,
+                .mode = settings.mode,
             },
         };
-        errdefer context.remove(prepared.cache.temporary);
+        errdefer if (prepared) |ready| context.remove(ready.cache.temporary);
         try context.mkdir(self.state.variant);
         try context.mkdir(self.state.standard);
         // Always the program's variant first: two builds never wait on each other in turn.
@@ -256,7 +312,26 @@ const Session = struct {
 
     fn close(self: *Session) void {
         for (self.locks) |lock| lock.close(self.state.context.io);
-        self.state.context.remove(self.prepared.cache.temporary);
+        if (self.prepared) |ready| self.state.context.remove(ready.cache.temporary);
+    }
+
+    /// MODULE-CHECK-1: check every stale module against its imports'
+    /// interfaces and replay every module's warnings; the check's exit
+    /// status. A module that does not check, or a warning a module reported
+    /// in another's text that the other's own check did not, is the
+    /// whole-program check's to report.
+    fn check(self: *Session) !Step(u8) {
+        const state = &self.state;
+        try state.loadState();
+        if (!try state.discover()) return .{ .fallback = .project };
+        if (!state.withinBudgets() or state.policyDenies()) return .{ .fallback = .config };
+        const checked = try state.schedule();
+        try state.saveState();
+        if (!checked) return .{ .fallback = .compile };
+        if (!state.foreignReported()) return .{ .fallback = .conflict };
+        try state.printWarnings();
+        // A project whose `mylang.json` denies warnings fails a check that has one.
+        return .{ .ready = if (state.configured.deny_warnings and state.warned()) 1 else 0 };
     }
 
     /// Compile every stale module and assemble the program to link.
@@ -264,33 +339,23 @@ const Session = struct {
         const state = &self.state;
         try state.loadState();
         if (!try state.discover()) return .{ .fallback = .project };
-        // The copied host bridge orders its type and declaration rows by the
-        // whole program's record and function tables, which no module sees.
-        for (state.nodes.items) |node| if (node.host_text) return .{ .fallback = .host };
+        // MODULE-PROJECT-1: a graph over its source budgets, or with an import
+        // the policy denies, is reported by the whole-program path.
+        if (!state.withinBudgets() or state.policyDenies()) return .{ .fallback = .config };
         state.arenas = state.guessArenas();
-        if (!try state.schedule()) {
-            try state.saveState();
-            return .{ .fallback = .compile };
-        }
+        if (!try state.scheduleSaved()) return .{ .fallback = .compile };
         // The arena switch is the program's: when the compiles say it is other
         // than the one they were compiled under, every module compiles again.
         if (state.programArenas() != state.arenas) {
             state.arenas = !state.arenas;
             try state.restart();
-            if (!try state.schedule()) {
-                try state.saveState();
-                return .{ .fallback = .compile };
-            }
+            if (!try state.scheduleSaved()) return .{ .fallback = .compile };
         }
         // An object a sweep removed since its module's last compile is rebuilt
         // with that module.
-        if (try state.markMissingObjects()) {
-            if (!try state.schedule()) {
-                try state.saveState();
-                return .{ .fallback = .compile };
-            }
-        }
+        if (try state.markMissingObjects()) if (!try state.scheduleSaved()) return .{ .fallback = .compile };
         try state.saveState();
+        if (!state.foreignReported()) return .{ .fallback = .conflict };
         try state.printWarnings();
         const program = (try state.program()) orelse return .{ .fallback = .conflict };
         return .{ .ready = program };
@@ -336,11 +401,11 @@ fn variantDirectory(context: fs.Context, key: VariantKey) ![]const u8 {
     hash.update(&.{ @intFromBool(language.value_semantics.enabled()), @intFromBool(language.value_semantics.counting()) });
     const switches = key.switches;
     hash.update(&.{ @intFromBool(switches.drop_debug), @intFromBool(switches.step_checks), @intFromBool(switches.frame_checks) });
-    frame(&hash, key.prepared.cache.environment);
+    frame(&hash, key.place.environment);
     var digest: [32]u8 = undefined;
     hash.final(&digest);
     const name = if (key.source == null) try std.fmt.allocPrint(context.allocator, "standard-{x}", .{digest}) else try std.fmt.allocPrint(context.allocator, "{x}", .{digest});
-    return std.fs.path.join(context.allocator, &.{ key.prepared.root, "modules", name });
+    return std.fs.path.join(context.allocator, &.{ key.place.root, "modules", name });
 }
 
 /// Hold the variant for this build: a concurrent build of the same program
@@ -381,6 +446,10 @@ const Build = struct {
     /// program built with this compiler, switches and toolchain.
     standard: []const u8,
     switches: native_build.Switches,
+    /// MODULE-PROJECT-1: what the project's `mylang.json` asks of the build.
+    configured: Configured = .{},
+    /// Whether the compiles build objects or only check (MODULE-CHECK-1).
+    mode: Mode = .build,
     nodes: std.ArrayList(Node) = .empty,
     names: std.StringHashMapUnmanaged(usize) = .empty,
     /// Modules in dependency order: each after everything it imports.
@@ -430,6 +499,8 @@ const Build = struct {
             } else |_| {}
         } else |_| {}
         for (self.nodes.items) |node| {
+            // A module this build did not reach (an import failed) keeps its
+            // last record, which staleness still tests against its inputs.
             const record = node.record orelse self.previous.get(node.name) orelse continue;
             if (standardModule(record.name)) try standard.put(a, record.name, record) else try own.append(a, record);
         }
@@ -445,8 +516,8 @@ const Build = struct {
     fn capture(self: *Build) !bool {
         var loaded: language.project.Project = .init(self.context.parent);
         defer loaded.deinit();
-        var files: language.project_files.Files = .{ .io = self.context.io, .root = self.entry.root };
-        loaded.load(files.provider(), self.entry.name, .{}) catch |err| switch (err) {
+        var files: language.project_files.Files = .{ .io = self.context.io, .root = self.entry.root, .embed_root = self.configured.embed_root };
+        loaded.load(files.provider(), self.entry.name, self.configured.limits) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             else => return false,
         };
@@ -465,7 +536,7 @@ const Build = struct {
                 .digest = try a.dupe(u8, &std.fmt.bytesToHex(digest, .lower)),
                 .imports = imports,
                 .arena_text = std.mem.indexOf(u8, module.src.bytes, "arena(") != null,
-                .host_text = hostText(module.src.bytes),
+                .bytes = module.src.bytes.len,
             });
             try self.names.put(a, self.nodes.items[id].name, id);
         }
@@ -508,6 +579,62 @@ const Build = struct {
             try work.append(a, .{ .id = target });
         }
         return true;
+    }
+
+    /// Whether the program fits the source budgets the whole-program loader
+    /// enforces (the project's, or the defaults): its module count, its import
+    /// count, each file's bytes and all files' bytes.
+    fn withinBudgets(self: *Build) bool {
+        const limits = self.configured.limits;
+        var imports: usize = 0;
+        var total: usize = 0;
+        for (self.nodes.items) |node| {
+            if (node.bytes > limits.max_file_bytes) return false;
+            imports += node.imports.len;
+            total += node.bytes;
+        }
+        return self.nodes.items.len <= limits.max_modules and imports <= limits.max_imports and total <= limits.max_total_bytes;
+    }
+
+    /// Whether the project's import policy denies any import of the program.
+    fn policyDenies(self: *Build) bool {
+        const policy = self.configured.policy orelse return false;
+        for (self.nodes.items) |node| {
+            for (node.imports) |imported| if (language.import_policy.denies(policy, node.name, imported)) return true;
+        }
+        return false;
+    }
+
+    /// Schedule, and when a compile failed, save what finished first: the
+    /// modules the next build need not compile again.
+    fn scheduleSaved(self: *Build) !bool {
+        if (try self.schedule()) return true;
+        try self.saveState();
+        return false;
+    }
+
+    /// MODULE-CHECK-1: whether every warning a compile reported in another
+    /// module's text is one that module's own compile reported too. A body
+    /// an interface keeps (a template, an inlined function) is checked again
+    /// by each dependent, and the whole program reports its warning once, in
+    /// its own module; a warning only a dependent's use raises is the
+    /// whole-program path's to place.
+    fn foreignReported(self: *Build) bool {
+        for (self.nodes.items) |node| {
+            const record = node.record orelse continue;
+            for (record.foreign) |warning| {
+                const owner = self.names.get(warning.module) orelse return false;
+                const own = self.nodes.items[owner].record orelse return false;
+                if (std.mem.indexOf(u8, own.warnings, warning.text) == null) return false;
+            }
+        }
+        return true;
+    }
+
+    /// Whether any module's check reported a warning.
+    fn warned(self: *Build) bool {
+        for (self.nodes.items) |node| if (node.record.?.warnings.len != 0) return true;
+        return false;
     }
 
     /// The arena switch to compile under first: the last build's, or, with no
@@ -654,8 +781,12 @@ const Build = struct {
             try std.fmt.allocPrint(a, "--standard-interfaces={s}/if", .{self.standard}),
             try std.fmt.allocPrint(a, "--out={s}/out", .{home_directory}),
             try std.fmt.allocPrint(a, "--cache-dir={s}", .{self.parsed.cache}),
-            if (self.arenas) "--arenas=on" else "--arenas=off",
         });
+        if (self.mode == .check) {
+            try argv.appendSlice(a, &.{ "--check-only", "--ready" });
+            return spawn.start(a, .{ .argv = argv.items });
+        }
+        try argv.append(a, if (self.arenas) "--arenas=on" else "--arenas=off");
         try argv.appendSlice(a, try native_build.frontendSwitches(a, self.switches));
         try argv.appendSlice(a, &.{ "--objects", "--ready", "--", "--mode", self.parsed.mode, "--target", self.parsed.target, try std.fmt.allocPrint(a, "--zig={s}", .{self.parsed.zig}) });
         switch (self.parsed.codegen) {
@@ -695,11 +826,13 @@ const Build = struct {
             entry: ?[]const u8 = null,
             shared: []const u8 = "",
             objects: ?[]const u8 = null,
+            foreign: []const Foreign = &.{},
         };
         const result = std.json.parseFromSliceLeaky(Result, a, bytes, .{ .ignore_unknown_fields = true, .allocate = .alloc_always }) catch return false;
-        const listed = result.objects orelse return false;
         const Objects = struct { compiled: bool = false, placed: []const native_build.Placed = &.{} };
-        const objects = std.json.parseFromSliceLeaky(Objects, a, self.context.read(listed) catch return false, .{ .ignore_unknown_fields = true, .allocate = .alloc_always }) catch return false;
+        // A check builds no objects.
+        const listed: ?[]const u8 = if (self.mode == .check) null else result.objects orelse return false;
+        const objects: Objects = if (listed) |path| std.json.parseFromSliceLeaky(Objects, a, self.context.read(path) catch return false, .{ .ignore_unknown_fields = true, .allocate = .alloc_always }) catch return false else .{};
         node.record = .{
             .name = node.name,
             .digest = node.digest,
@@ -714,6 +847,7 @@ const Build = struct {
             .shared = result.shared,
             .entry = result.entry,
             .objects = listed,
+            .foreign = result.foreign,
         };
         node.current = node.record.?.hashes;
         node.status = .done;
@@ -817,18 +951,51 @@ const Build = struct {
     }
 };
 
-/// Whether a source may declare a copied host function: `host` and `def`
-/// separated by blanks anywhere in it (a comment too, which only costs the
-/// per-module path).
-fn hostText(bytes: []const u8) bool {
-    var from: usize = 0;
-    while (std.mem.indexOfPos(u8, bytes, from, "host")) |at| {
-        from = at + 4;
-        var next = from;
-        while (next < bytes.len and (bytes[next] == ' ' or bytes[next] == '\t')) next += 1;
-        if (next > from and std.mem.startsWith(u8, bytes[next..], "def")) return true;
+/// MODULE-PROJECT-1: what a project's `mylang.json` asks of a per-module
+/// build: the source budgets the loader enforces, the import policy every
+/// edge must pass, and whether a warning rejects a `run`. None of it changes
+/// a module's compiled output, so none of it keys a compile.
+const Configured = struct {
+    limits: language.project.Options = .{},
+    policy: ?language.import_policy.Policy = null,
+    deny_warnings: bool = false,
+    embed_root: ?[]const u8 = null,
+};
+
+/// The configuration of the project `entry` belongs to (an empty one without
+/// a `mylang.json`), or null when it or its policy does not load.
+fn configuredProject(context: fs.Context, entry: []const u8) !?Configured {
+    const a = context.allocator;
+    const path = (project_config.discover(a, context.io, entry) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => return null,
+    }) orelse return .{};
+    var failure: project_config.Failure = .{};
+    const config = project_config.load(a, context.io, path, &failure) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => return null,
+    };
+    // Generated API freshness is still enforced by the whole-program path.
+    if (config.document.interface_files) return null;
+    var out: Configured = .{ .embed_root = std.fs.path.dirname(path) orelse "." };
+    const budgets = config.document.budgets;
+    if (budgets.max_modules) |value| out.limits.max_modules = value;
+    if (budgets.max_imports) |value| out.limits.max_imports = value;
+    if (budgets.max_file_bytes) |value| out.limits.max_file_bytes = value;
+    if (budgets.max_total_bytes) |value| out.limits.max_total_bytes = value;
+    if (config.policy) |file| out.policy = language.import_policy.Policy.parse(a, file.bytes) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => return null,
+    };
+    // A malformed `lint` object leaves warnings reported, as the
+    // whole-program path reads it.
+    if (config.document.lint) {
+        var lint_failure: language.lint_config.Failure = .{};
+        if (language.lint_config.parseConfig(a, config.bytes, &lint_failure)) |lint| {
+            out.deny_warnings = lint.warnings == .deny;
+        } else |err| if (err == error.OutOfMemory) return error.OutOfMemory;
     }
-    return false;
+    return out;
 }
 
 /// Whether a module is one of the compiler's standard modules.
