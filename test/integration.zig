@@ -2126,6 +2126,13 @@ test "CLI missing arguments and missing files are host or usage failures" {
     defer testing.allocator.free(no_args.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, no_args.term);
     try testing.expectEqualStrings("", no_args.stdout);
+    // A bare `mylang` prints the general usage; `mylang run` with no file prints run's own.
+    try testing.expect(std.mem.startsWith(u8, no_args.stderr, "usage: mylang test <entry.my>"));
+    const no_file = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "run" } });
+    defer testing.allocator.free(no_file.stdout);
+    defer testing.allocator.free(no_file.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, no_file.term);
+    try testing.expect(std.mem.startsWith(u8, no_file.stderr, "usage: mylang run <file.my>"));
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
     const absolute_compiler = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, compiler_path, testing.allocator);

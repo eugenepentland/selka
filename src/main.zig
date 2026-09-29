@@ -374,7 +374,7 @@ fn dispatch(process: std.process.Init) !u8 {
     }
     const parsed = parseArgs(process.arena.allocator(), args[1..]) catch |err| switch (err) {
         error.Usage => {
-            try std.Io.File.stderr().writeStreamingAll(process.io, usageFor(args[1]));
+            try std.Io.File.stderr().writeStreamingAll(process.io, usageFor(if (args.len >= 2) args[1] else ""));
             return 2;
         },
         error.OutOfMemory => return error.OutOfMemory,
