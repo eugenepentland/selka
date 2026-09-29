@@ -8,7 +8,7 @@
  * ASCII octet is its own scalar and every octet of a non-ASCII scalar is at or
  * above 0x80, so a byte predicate cannot disagree with the scalar one. A method
  * that allocates answers NULL once the allocation budget is exhausted; an empty
- * needle is the caller's trap to raise, never this runtime's. */
+ * split/replace separator is the caller's trap to raise, never this runtime's. */
 /* Which ends `strip`, `lstrip` and `rstrip` trim. */
 enum { MYL_TEXT_BOTH = 0, MYL_TEXT_LEADING = 1, MYL_TEXT_TRAILING = 2 };
 /* Which scalar property `isdigit`, `isalpha` and `isspace` test. */
@@ -21,7 +21,7 @@ myl_native_list *myl_native_text_lines(myl_native_heap *, myl_native_text *);
 myl_native_text *myl_native_text_replace(myl_native_heap *, myl_native_text *, myl_native_text *needle, myl_native_text *insert);
 /* Left-pads with `0` to a scalar width, keeping any leading sign in front. */
 myl_native_text *myl_native_text_zfill(myl_native_heap *, myl_native_text *, int64_t width);
-/* First scalar index of a nonempty needle, or -1 when it is absent. */
+/* First scalar index of a needle, or -1 when absent; empty finds index zero. */
 int64_t myl_native_text_find(const myl_native_text *, const myl_native_text *needle);
 int64_t myl_native_text_count(const myl_native_text *, const myl_native_text *needle);
 /* Whether the text begins (leading) or ends with an affix; an empty affix matches. */

@@ -8,7 +8,8 @@ pub const list_type_error = "E_LIST_TYPE";
 /// Omitted slice endpoints, mirrored by `MYL_NATIVE_SLICE_FIRST`/`_LAST` in the runtime.
 const omitted_first: i128 = std.math.minInt(i64);
 const omitted_last: i128 = std.math.maxInt(i64);
-const Kind = @import("buffer_operations.zig").Kind;
+const operations = @import("buffer_operations.zig");
+const Kind = operations.Kind;
 const nominal = @import("nominal_catalog.zig");
 const Catalog = @import("type_catalog.zig").Catalog;
 
@@ -50,6 +51,9 @@ pub fn optionType(catalog: *Catalog, element: typed.Type, span: Span) Error!type
 
 /// Resolve the output of a Python string method that no other collection shares.
 fn textMethodType(catalog: *Catalog, owner: typed.Type, kind: Kind, span: Span) Error!typed.Type {
+    if (operations.search(kind)) |mode| return if (mode == .prefix or mode == .suffix) .bool else .i64;
+    if (operations.trim(kind) != null) return owner;
+    if (kind == .text_repr) return preludeType(catalog, "str", span);
     return switch (kind) {
         .strip, .lstrip, .rstrip, .upper, .lower, .replace, .zfill => owner,
         .splitlines, .split_whitespace => listType(catalog, owner, span),
@@ -66,6 +70,9 @@ fn textMethodType(catalog: *Catalog, owner: typed.Type, kind: Kind, span: Span) 
 
 /// Resolve the output of a managed byte-string operation.
 fn bytesOperationType(catalog: *Catalog, owner: typed.Type, kind: Kind, span: Span) Error!typed.Type {
+    if (operations.search(kind)) |mode| return if (mode == .prefix or mode == .suffix) .bool else .i64;
+    if (operations.trim(kind) != null) return owner;
+    if (kind == .text_repr) return preludeType(catalog, "str", span);
     const element = catalog.records[owner.recordIndex()].shape.buffer.?;
     return switch (kind) {
         .length, .find, .find_any => .i64,

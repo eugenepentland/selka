@@ -234,10 +234,11 @@ fn collectionSyntax(comptime Checker: type, self: *Checker, id: ast.NodeId) Erro
                 try call_arguments.positional(call, self.sink);
                 const name = self.src.text(call.name);
                 const family = self.catalog.records[value_type.recordIndex()].collection.kind;
-                const kind = buffer_operations.methodFor(name, call.arguments.len) orelse {
+                const raw_kind = buffer_operations.methodFor(name, call.arguments.len) orelse {
                     _ = try removed_names.reject(self.sink, call.name, name);
                     return self.sink.fail("E_LIST_METHOD", call.name, try self.unknownMethodMessage(family, value_type));
                 };
+                const kind = buffer_operations.forFamily(raw_kind, family);
                 // A set answers only the set vocabulary, never the mapping one
                 // its dictionary representation would otherwise admit (SET-1).
                 if (typed.isSet(self.catalog.records[value_type.recordIndex()]) and !buffer_operations.setMethod(kind))
@@ -727,6 +728,7 @@ fn checkCollectionAccess(comptime Checker: type, self: *Checker, node: ast.Node,
     const owner_type = self.nodes.items[@backingInt(base)].ty;
     const managed_owner = owner_type.isAggregate() and self.catalog.records[owner_type.recordIndex()].isCollection();
     const dictionary = managed_owner and self.catalog.records[owner_type.recordIndex()].collection.kind == .dictionary;
+    if (managed_owner) kind = buffer_operations.forFamily(kind, self.catalog.records[owner_type.recordIndex()].collection.kind);
     if (typed.setRecord(self.catalog.records, owner_type) != null)
         return self.checkSetMethodSyntax(node, .{ .span = node.span, .base = base, .receiver = call.receiver, .kind = kind, .arguments = &.{} }, inputs, temporaries);
     // `pop` is one Python name with an optional argument; its arity selects the
@@ -766,11 +768,14 @@ fn checkCollectionAccess(comptime Checker: type, self: *Checker, node: ast.Node,
     try self.requireArenaOperation(call.receiver, kind, arguments);
     return (collections.Builder(Checker){ .checker = self, .span = node.span }).access(base, kind, arguments, call.signed_length);
 }
-/// Require a sort element type with a total order: an integer, float or `str`.
+/// Require a sort element type with a total order: an integer, float, str or bytes.
 fn requireSortable(comptime Checker: type, self: *Checker, element: typed.Type, span: source.Span) Error!void {
     if (element.isInteger() or numeric_surface.isFloat(element, self.catalog.records)) return;
-    if (element.isAggregate() and self.catalog.records[element.recordIndex()].collection.kind == .string) return;
-    return self.sink.fail(eCollectionMethod, span, "sort requires an integer, float or str element type");
+    if (element.isAggregate()) {
+        const schema = self.catalog.records[element.recordIndex()];
+        if (schema.collection.kind == .string or typed.isByteString(schema)) return;
+    }
+    return self.sink.fail(eCollectionMethod, span, "sort requires an integer, float, str or bytes element type");
 }
 /// Check a list's Python-shaped method call, which either mutates or copies its receiver.
 fn checkListMethod(comptime Checker: type, self: *Checker, node: ast.Node, call: ListMethodCall) Error!typed.Node {
@@ -852,7 +857,8 @@ fn checkManagedAccess(comptime Checker: type, self: *Checker, node: ast.Node, op
     for (operation.inputs, arguments, 0..) |input, *argument, index| {
         const integer = !dictionary and (operation.kind == .read or operation.kind == .slice or operation.kind == .view or
             operation.kind == .parse_int_range or operation.kind == .parse_float_range or operation.kind == .scalar_count_range or widthArgument(operation.kind) or
-            (operation.kind == .find_any and index == 1)) or
+            (operation.kind == .find_any and index == 1) or
+            (buffer_operations.search(operation.kind) != null and index > 0)) or
             byteBufferInteger(operation.kind, index);
         const expected = if (integer) typed.Type.i64 else if (dictionary) map_argument: {
             break :map_argument if (index == 0) schema.collection.key.? else schema.shape.buffer.?;
@@ -926,20 +932,16 @@ fn checkTextDictionary(comptime Checker: type, self: *Checker, operation: @Field
     const dictionary = schema.collection.kind == .dictionary;
     const byte_string = schema.collection.kind == .bytes;
     const output_element = if (dictionary or byte_string) element else local.ty;
+    if (try checkPythonText(Checker, self, operation, owner, out, arguments)) return;
     switch (operation.kind) {
         .length => out.ty = .i64,
-        .find, .starts_with, .ends_with => {
-            if (dictionary) return self.sink.fail(eCollectionMethod, operation.owner, "prefix, suffix and search operations require str or bytes");
-            try self.require(self.nodes.items[@backingInt(arguments[0])].ty, local.ty, operation.owner);
-            out.ty = if (operation.kind == .find) .i64 else .bool;
-        },
         .find_any => {
             if (!byte_string) return self.sink.fail(eCollectionMethod, operation.owner, "find_any requires a bytes receiver and a byte set");
             try self.require(self.nodes.items[@backingInt(arguments[0])].ty, local.ty, operation.owner);
             try self.requireInteger(self.nodes.items[@backingInt(arguments[1])].ty, operation.owner);
             out.ty = .i64;
         },
-        .strip, .lstrip, .rstrip, .upper, .lower, .splitlines, .replace, .count, .zfill, .is_digit, .is_alpha, .is_space => {
+        .upper, .lower, .splitlines, .replace, .zfill, .is_digit, .is_alpha, .is_space => {
             if (dictionary or byte_string) return self.sink.fail(eCollectionMethod, operation.owner, "this method requires str");
             for (arguments) |argument| {
                 const actual = self.nodes.items[@backingInt(argument)].ty;
@@ -1223,4 +1225,27 @@ test "a byte-buffer append takes its source span first and scalar operands after
     try std.testing.expect(!byteBufferInteger(.buffer_append_utf8, 0));
     try std.testing.expect(!byteBufferInteger(.buffer_append_float, 0));
     try std.testing.expect(widthArgument(.zfill));
+}
+
+/// Check text/byte needles and charsets separately from integer search bounds.
+fn checkTextOperands(comptime Checker: type, self: *Checker, kind: BufferKind, arguments: []const typed.NodeId, owner: typed.Type, span: source.Span) Error!void {
+    for (arguments, 0..) |argument, index| {
+        const actual = self.nodes.items[@backingInt(argument)].ty;
+        if (buffer_operations.search(kind) != null and index > 0)
+            try self.requireInteger(actual, span)
+        else
+            try self.require(actual, owner, span);
+    }
+}
+
+/// Validate and publish search/trim independently of dictionary method checking.
+fn checkPythonText(comptime Checker: type, self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), bufferOperation), owner: typed.LocalId, out: *typed.Node, arguments: []const typed.NodeId) Error!bool {
+    if (buffer_operations.search(operation.kind) == null and buffer_operations.trim(operation.kind) == null) return false;
+    const local = self.locals.items[@backingInt(owner)];
+    if (self.catalog.records[local.ty.recordIndex()].collection.kind == .dictionary)
+        return self.sink.fail(eCollectionMethod, operation.owner, "search and trim require str or bytes");
+    try checkTextOperands(Checker, self, operation.kind, arguments, local.ty, operation.owner);
+    out.ty = try collections.operationType(&self.catalog, local.ty, operation.kind, operation.owner);
+    out.data = .{ .buffer_operation = .{ .kind = operation.kind, .owner = owner, .arguments = arguments } };
+    return true;
 }

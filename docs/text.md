@@ -171,15 +171,18 @@ def main() -> int:
 ## String methods
 
 `str` answers `strip`, `lstrip`, `rstrip`, `upper`, `lower`, `zfill(width)`,
-`replace(old, new)`, `find(sub)`, `count(sub)`, `startswith`, `endswith`,
+`replace(old, new)`, `find`, `rfind`, `index`, `rindex`, `count`, `startswith`, `endswith`,
 `isdigit`, `isalpha`, `isspace`, `split(separator)` and `splitlines()`. Each one
 returns a fresh
 value and leaves the receiver and every alias untouched. `find` answers `-1`
 rather than raising when the needle is absent, the three classifications answer
 `False` for empty text, case mapping covers ASCII letters and leaves every other
-scalar alone, and `zfill` keeps a leading sign in front of its padding. An empty
-needle traps `R_EMPTY_SEPARATOR`, and these methods are rejected on lists and
-dictionaries. `ljust` and `rjust` are absent; use
+scalar alone, and `zfill` keeps a leading sign in front of its padding.
+Search methods accept positional start/end bounds; trim methods accept a
+character set and default to Unicode whitespace. Empty search needles match
+boundaries; empty split/replace needles trap `R_EMPTY_SEPARATOR`. See the
+[Python text surface](python-text-surface.md) for these exact rules. These text
+methods are rejected on lists and dictionaries. `ljust` and `rjust` are absent; use
 [`strings.pad_left` and `strings.pad_right`](standard-library.md#strings). Every
 one of these methods runs on the QBE native backend, over a single immutable
 text runtime.
@@ -485,3 +488,5 @@ def main() -> int:
             pass
     return port_of("8080") + port_of(" 42 ")
 ```
+
+See [Python text surface](python-text-surface.md) for ranged searches, trim character sets and scalar repr.

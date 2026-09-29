@@ -28,10 +28,12 @@ def main():
 def run_suite(root, command, directory, suite, sources):
     """Compile one C suite against the runtime sources it needs and run it."""
     executable = directory / suite
-    if suite == "native_text_index":
+    if suite in ("native_text_index", "native_python"):
         # The suite counts the octets the position machinery examines, so its
         # complexity bounds need no clock; only this build carries the counter.
         command = command + ["-DMYL_TEXT_STEPS=1"]
+    if suite == "native_python":
+        command = command + ["-DMYL_SEARCH_STEPS=1", "-DMYL_PYTHON_STEPS=1"]
     if suite in ("native_rc_stats", "native_rc_fast", "native_rc_execution", "native_argv"):
         command = command + ["-DMYL_NATIVE_RC_COUNTING=1"]
     if suite in ("native_rc_execution", "native_argv", "native_rc_exit_skip"):
@@ -39,6 +41,7 @@ def run_suite(root, command, directory, suite, sources):
     if "native_heap.c" in sources:
         required = ("native_arena.c", "native_collections.c", "native_text.c",
                     "native_dictionary.c", "native_equal.c", "native_bytes.c",
+                    "native_search.c", "native_trim.c", "native_repr.c",
                     "native_rc.c", "native_rc_stats.c", "native_rc_shapes.c", "native_rc_walk.c",
                     "native_rc_scope.c", "native_rc_transfer.c", "native_rc_alloc.c", "native_rc_values.c")
         at = sources.index("native_heap.c") + 1
@@ -131,6 +134,7 @@ SUITES = (
     ("native_print", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c", "native_print.c"]),
     ("native_text_methods", ["native_heap.c", "native_collections.c", "native_text.c", "native_text_methods.c"]),
     ("native_text_index", ["native_heap.c", "native_collections.c", "native_text.c", "native_text_methods.c", "native_dictionary.c", "native_equal.c", "native_regions.c"]),
+    ("native_python", ["native_heap.c", "native_regions.c"]),
     ("native_text_views", ["native_heap.c", "native_collections.c", "native_text.c", "native_text_methods.c", "native_dictionary.c", "native_equal.c", "native_regions.c"]),
     ("native_scoped", ["native_scoped.c"]),
     ("native_cow", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c", "native_equal.c", "native_bytes.c", "native_regions.c", "native_cow.c"]),

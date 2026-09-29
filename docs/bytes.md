@@ -591,3 +591,5 @@ def main() -> int:
         return 4
     return escapes[0]
 ```
+
+See [Python text surface](python-text-surface.md) for stable bytes sorting, trim sets, ranged search and scalar repr.

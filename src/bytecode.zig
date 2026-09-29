@@ -367,9 +367,9 @@ fn validateManagedTextOperation(program: Program, local: typed.Local, schema: ty
     const element = schema.shape.buffer.?;
     const dictionary = schema.collection.kind == .dictionary;
     const byte_string = schema.collection.kind == .bytes;
+    if (try validatePythonTextOperation(program, local, schema, operation)) return;
     const expected: typed.Type = switch (operation.kind) {
         .length => .i64,
-        .find => if (dictionary) return error.InternalError else .i64,
         .find_any => if (byte_string) .i64 else return error.InternalError,
         .iteration_check => .unit,
         // A set's `pop` answers a key, as a positional key read does.
@@ -380,7 +380,6 @@ fn validateManagedTextOperation(program: Program, local: typed.Local, schema: ty
         .write => if (dictionary) .unit else return error.InternalError,
         .get, .value_at => if (dictionary) element else return error.InternalError,
         .contains => .bool,
-        .starts_with, .ends_with => if (dictionary) return error.InternalError else .bool,
         .to_list, .hex, .decode => if (byte_string) try validateConversion(program, operation) else return error.InternalError,
         .encode, .from_hex => if (schema.collection.kind == .string) try validateConversion(program, operation) else return error.InternalError,
         .buffer_reserve,
@@ -391,9 +390,8 @@ fn validateManagedTextOperation(program: Program, local: typed.Local, schema: ty
         .buffer_append_float,
         => try validateBufferAppend(byte_string),
         .join => if (!dictionary) local.ty else return error.InternalError,
-        .strip, .lstrip, .rstrip, .upper, .lower, .replace, .zfill => if (dictionary or byte_string) return error.InternalError else local.ty,
+        .upper, .lower, .replace, .zfill => if (dictionary or byte_string) return error.InternalError else local.ty,
         .is_digit, .is_alpha, .is_space => if (dictionary or byte_string) return error.InternalError else .bool,
-        .count => if (dictionary or byte_string) return error.InternalError else .i64,
         .splitlines => if (dictionary or byte_string) return error.InternalError else operation.output,
         // Both numeric parses read the receiver in place: a `str` through its
         // scalars and a byte string through its octets, so no decoded or copied
@@ -842,4 +840,23 @@ fn validateFloatUnary(op: typed.UnaryOp) Error!void {
 
 fn validateFloatBinary(ty: typed.Type, op: typed.BinaryOp) Error!void {
     if (std.mem.startsWith(u8, @tagName(op), "f64_") and ty != .u64) return error.InternalError;
+}
+
+/// New Python text operations have one fixed result and no mapping interpretation.
+fn validatePythonTextOperation(program: Program, local: typed.Local, schema: typed.Record, operation: BufferOperation) Error!bool {
+    const vocabulary = @import("buffer_operations.zig");
+    const search = vocabulary.search(operation.kind);
+    if (search == null and vocabulary.trim(operation.kind) == null and operation.kind != .text_repr) return false;
+    if (schema.collection.kind != .string and schema.collection.kind != .bytes) return error.InternalError;
+    if (operation.kind == .text_repr) {
+        if (!operation.output.isAggregate()) return error.InternalError;
+        if (program.records[operation.output.recordIndex()].collection.kind != .string) return error.InternalError;
+        return true;
+    }
+    const expected = if (search) |mode|
+        (if (mode == .prefix or mode == .suffix) typed.Type.bool else typed.Type.i64)
+    else
+        local.ty;
+    if (operation.output != expected) return error.InternalError;
+    return true;
 }

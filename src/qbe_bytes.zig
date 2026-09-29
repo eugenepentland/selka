@@ -125,6 +125,8 @@ fn emitSearch(comptime E: type, self: *E, op: BufferOperation, stack: []const ty
 fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const typed.Type) Error!void {
     const base = stack.len - op.kind.arity();
     const input = try self.load("l", @backingInt(op.owner));
+    if (@import("buffer_operations.zig").pythonOperation(op.kind, true))
+        return @import("qbe_python.zig").operation(E, self, .{ .op = op, .input = input, .base = base, .bytes = true, .stack = stack });
     const result = self.temp();
     switch (op.kind) {
         .contains, .starts_with, .ends_with, .find => return emitSearch(E, self, op, stack, input),
