@@ -125,6 +125,7 @@ SUITES = (
     ("native_collections", ["native_heap.c", "native_collections.c"]),
     ("native_text_dictionary", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c"]),
     ("native_equal", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c", "native_equal.c"]),
+    ("native_equal_allocations", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c", "native_equal.c"]),
     ("native_bytes", ["native_heap.c", "native_collections.c", "native_text.c", "native_bytes.c"]),
     ("native_regions", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c", "native_equal.c", "native_regions.c"]),
     ("native_arena_chunks", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c", "native_equal.c", "native_bytes.c", "native_regions.c"]),
