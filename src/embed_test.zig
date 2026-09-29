@@ -7,6 +7,7 @@ const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
 const embed = @import("embed.zig");
 const semantic_key = @import("semantic_key.zig");
+const outputs = @import("qbe_build_outputs.zig");
 
 /// A compilation of `text` whose embed calls were read from `directory`.
 fn compile(allocator: std.mem.Allocator, directory: []const u8, text: []const u8) !language.Compilation {
@@ -283,6 +284,13 @@ test "the manifest carries an embedded file once and its unit only loads it" {
     try t.expectEqual(@as(i64, 2), table[1].object.get("scalars").?.integer);
     try t.expectEqual(@as(i64, 3), table[1].object.get("count").?.integer);
     try t.expect(try loadsWithoutPayload(parsed.value.object.get("functions").?.array.items) >= 3);
+    // The metadata unit defines each object once: a long payload as one C string
+    // literal, a short one as a brace list.
+    const metadata = try outputs.metadata(t.allocator, parsed.value);
+    defer t.allocator.free(metadata);
+    try t.expectEqual(@as(usize, 2), std.mem.count(u8, metadata, "const void *const myl_emb_"));
+    try t.expect(std.mem.indexOf(u8, metadata, ".storage = \"") != null);
+    try t.expect(std.mem.indexOf(u8, metadata, ".storage = {0x68,0xc3,0xa9,}") != null);
 }
 
 // spec-case: EMBED-4

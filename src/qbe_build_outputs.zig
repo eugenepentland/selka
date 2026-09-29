@@ -382,14 +382,26 @@ fn emitLiteral(w: *std.Io.Writer, literal: Literal) Error!void {
     }
     if (bytes == 0) {
         try w.writeAll(" .storage = {0},\n");
-    } else {
+    } else if (bytes > string_initializer_from) {
         try w.writeAll(" .storage = ");
         try writeStorage(w, literal.hex);
         try w.writeAll(",\n");
+    } else {
+        try w.writeAll(" .storage = {");
+        var index: usize = 0;
+        while (index + 1 < literal.hex.len) : (index += 2) {
+            const high = std.fmt.charToDigit(literal.hex[index], 16) catch 0;
+            const low = std.fmt.charToDigit(literal.hex[index + 1], 16) catch 0;
+            try w.print("0x{x:0>2},", .{high * 16 + low});
+        }
+        try w.writeAll("},\n");
     }
     try w.writeAll("};\n");
     try w.print("const void *const {s} = &{s}_instance.value;\n", .{ symbol, symbol });
 }
+/// A payload of more octets than this initializes its storage array from one C
+/// string literal; a shorter one keeps the byte-by-byte brace list.
+const string_initializer_from = 1024;
 /// Whether a payload byte may appear as itself inside a C string literal:
 /// printable ASCII except `"`, `\` and `?` (trigraphs).
 fn plainInString(byte: u8) bool {
