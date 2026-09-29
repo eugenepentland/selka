@@ -79,6 +79,98 @@ pub fn guardHost(environ: *const std.process.Environ.Map) bool {
     return guard(resolve(null, environ, host_variable, host_default) catch return false);
 }
 
+/// Native stack the runtime maps for each frame a `--max-frames` budget allows.
+/// It mirrors `FRAME_STACK_BYTES` in `qbe_stack.c`; a test keeps them in step.
+pub const frame_stack_bytes: u64 = 32768;
+/// Stack mapped beyond the per-frame share, mirroring `STACK_SLACK` in `qbe_stack.c`.
+pub const stack_slack: u64 = 8 << 20;
+/// Address space a guest needs besides its stack: program text, the C library's
+/// arenas and the harness. Generous on purpose, so a budget refused here is one
+/// the mapping would have refused too.
+pub const frame_reserve: u64 = 32 << 20;
+
+/// Address space the runtime maps for a call-depth budget of `frames`, or null
+/// when the request cannot be expressed in 64 bits.
+pub fn stackReservation(frames: u64) ?u64 {
+    const share = std.math.mul(u64, frames, frame_stack_bytes) catch return null;
+    return std.math.add(u64, share, stack_slack) catch null;
+}
+
+/// How a call-depth budget stands against the address space a guest may map.
+pub const FrameFit = struct {
+    /// Whether the stack reservation fits beside the guest's other mappings.
+    fits: bool,
+    /// Bytes of address space the stack reservation asks for.
+    need: u64,
+    /// The address space the guest may map, or null when nothing bounds it.
+    limit: ?u64,
+    /// True when the process's own limit is what bounds the guest, below what
+    /// `--max-memory` asked for: the compiler's ceiling or `ulimit -v`.
+    inherited: bool,
+};
+
+/// Decide whether a call-depth budget of `frames` fits. `memory` is the guest's
+/// byte ceiling (zero means none) and `address_space` the soft `RLIMIT_AS` the
+/// process runs under (null means unlimited). A ceiling maps `memory + headroom`
+/// bytes, but never more than the process may map.
+pub fn frameFit(frames: u64, memory: u64, address_space: ?u64) FrameFit {
+    const need = stackReservation(frames) orelse std.math.maxInt(u64);
+    const asked: ?u64 = if (memory == 0) null else memory +| headroom;
+    var limit = asked;
+    var inherited = false;
+    if (address_space) |bound| {
+        inherited = asked == null or bound < asked.?;
+        limit = if (asked) |wanted| @min(wanted, bound) else bound;
+    }
+    const fits = if (limit) |bytes| need <= bytes -| frame_reserve else true;
+    return .{ .fits = fits, .need = need, .limit = limit, .inherited = inherited };
+}
+
+/// The soft address-space limit this process runs under, or null when unlimited.
+pub fn addressSpaceLimit() ?u64 {
+    const existing = std.posix.getrlimit(.AS) catch return null;
+    return if (existing.cur == std.math.maxInt(u64)) null else existing.cur;
+}
+
+fn sizeText(buffer: []u8, bytes: u64) []const u8 {
+    const gib: f64 = @floatFromInt(1 << 30);
+    const mib: f64 = @floatFromInt(1 << 20);
+    const value: f64 = @floatFromInt(bytes);
+    return (if (bytes >= 1 << 30) std.fmt.bufPrint(buffer, "{d:.1} GiB", .{value / gib}) else std.fmt.bufPrint(buffer, "{d:.0} MiB", .{value / mib})) catch "?";
+}
+
+/// The refusal for a call-depth budget the memory ceiling cannot back, or null
+/// when it fits, judged against this process's own address-space limit.
+pub fn frameRefusal(allocator: std.mem.Allocator, command: []const u8, who: []const u8, frames: u64, memory: u64) std.mem.Allocator.Error!?[]u8 {
+    return frameRefusalUnder(allocator, .{ .command = command, .who = who }, frames, memory, addressSpaceLimit());
+}
+
+/// Who a frame-budget refusal speaks for: the command that refuses, and what runs the guest.
+pub const Refuser = struct { command: []const u8, who: []const u8 };
+
+/// `frameRefusal` against an explicit address-space limit. The text names the
+/// reservation, what the guest may map, and the two ways out: a larger
+/// `--max-memory` (or the inherited limit lifted) and a smaller `--max-frames`.
+pub fn frameRefusalUnder(allocator: std.mem.Allocator, refuser: Refuser, frames: u64, memory: u64, address_space: ?u64) std.mem.Allocator.Error!?[]u8 {
+    const fit = frameFit(frames, memory, address_space);
+    if (fit.fits) return null;
+    const limit = fit.limit orelse return null;
+    var need_buffer: [32]u8 = undefined;
+    var limit_buffer: [32]u8 = undefined;
+    const largest = (limit -| frame_reserve -| stack_slack) / frame_stack_bytes;
+    const inherited_fix = "this process inherited an address-space limit below --max-memory (the compiler's own ceiling, MYLANG_HOST_MEMORY_LIMIT, " ++
+        "or `ulimit -v`); raise or unset it (MYLANG_HOST_MEMORY_LIMIT=0 removes it), or lower --max-frames to at most {d}";
+    const fix = if (fit.inherited)
+        try std.fmt.allocPrint(allocator, inherited_fix, .{largest})
+    else
+        try std.fmt.allocPrint(allocator, "raise --max-memory to at least {d}G, or lower --max-frames to at most {d}", .{ (fit.need + frame_reserve + (1 << 30) - 1) >> 30, largest });
+    defer allocator.free(fix);
+    const sentence = try std.fmt.allocPrint(allocator, "mylang {s}: a call-depth budget of {d} frames (--max-frames) reserves {s} of native stack ({d} KiB per frame), but {s} may map only {s}: {s}\n", .{
+        refuser.command, frames, sizeText(&need_buffer, fit.need), frame_stack_bytes >> 10, refuser.who, sizeText(&limit_buffer, limit), fix,
+    });
+    return sentence;
+}
+
 /// Bytes the kernel reports as available for a new allocation without swapping,
 /// from `MemAvailable`. Null when the report is unreadable or has no such line.
 pub fn available(io: std.Io) ?u64 {

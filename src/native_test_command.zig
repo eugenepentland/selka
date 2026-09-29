@@ -298,6 +298,26 @@ fn refusedEntry(process: std.process.Init, source: []const u8) Error!?u8 {
     try std.Io.File.stderr().writeStreamingAll(process.io, refusal);
     return input_probe.refused_status;
 }
+/// Resolve the per-test byte ceiling once, before any child or receipt key
+/// observes it (the flag wins, then MYLANG_MEMORY_LIMIT, then the per-test
+/// default) and the fan-out width, and refuse a call-depth budget that ceiling
+/// cannot back: each frame reserves stack inside it, so an oversized
+/// `--max-frames` would fail every test with a bare `OutOfMemory`. Null means
+/// the run may go on.
+fn refusedLimits(context: fs.Context, opts: *options.Options) Error!?u8 {
+    const memory = budget.resolve(opts.limits.max_memory, context.environ, budget.variable, budget.test_default) catch {
+        try std.Io.File.stderr().writeStreamingAll(context.io, options.usage);
+        return 2;
+    };
+    opts.limits.max_memory = memory;
+    opts.jobs = requested(opts.jobs, context.environ) catch {
+        try std.Io.File.stderr().writeStreamingAll(context.io, options.usage);
+        return 2;
+    };
+    const refusal = try budget.frameRefusal(context.allocator, "test", "a test", opts.limits.max_frames, memory) orelse return null;
+    try std.Io.File.stderr().writeStreamingAll(context.io, refusal);
+    return input_probe.refused_status;
+}
 /// Discover, check, selectively execute, and report native application tests.
 pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     if (args.len == 1 and std.mem.eql(u8, args[0], "--help")) {
@@ -317,16 +337,7 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     if (try refusedEntry(process, opts.source)) |status| return status;
     var context = try fs.Context.init(process.arena.allocator(), process.io, process.environ_map);
     defer context.deinit();
-    // Resolve the ceiling once, before any child or receipt key observes it:
-    // the flag wins, then MYLANG_MEMORY_LIMIT, then the per-test default.
-    opts.limits.max_memory = budget.resolve(opts.limits.max_memory, context.environ, budget.variable, budget.test_default) catch {
-        try std.Io.File.stderr().writeStreamingAll(process.io, options.usage);
-        return 2;
-    };
-    opts.jobs = requested(opts.jobs, context.environ) catch {
-        try std.Io.File.stderr().writeStreamingAll(process.io, options.usage);
-        return 2;
-    };
+    if (try refusedLimits(context, &opts)) |status| return status;
     // A directory names many independent projects, so each one runs as its own child.
     if (fanout.selected(context, opts.source)) return fanout.run(context, opts);
     var session = try sessions.Session.init(context, opts);

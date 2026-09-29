@@ -326,6 +326,7 @@ test {
     _ = @import("native_test_options.zig");
     _ = @import("native_test_receipts.zig");
     _ = @import("memory_budget");
+    _ = @import("memory_budget_frames_test.zig");
 }
 
 test {
