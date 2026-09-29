@@ -1,0 +1,12 @@
+var fs = nil;
+class Link { init(f, next) { this.f = f; this.next = next; } }
+for (var i = 0; i < 6; i = i + 1) {
+  var j = i * i;
+  fun g() { return j; }
+  fs = Link(g, fs);
+}
+var junk = "";
+for (var k = 0; k < 40; k = k + 1) { junk = junk + "q"; }
+var out = 0;
+while (fs != nil) { out = out + fs.f(); fs = fs.next; }
+print out;

@@ -1,0 +1,11 @@
+class Box { init(f) { this.f = f; } call() { return this.f(); } }
+fun adder(k) { var total = 0; fun add() { total = total + k; return total; } return add; }
+var boxes = nil;
+class Node { init(v, next) { this.v = v; this.next = next; } }
+for (var i = 1; i <= 5; i = i + 1) { boxes = Node(Box(adder(i)), boxes); }
+var sum = 0;
+for (var round = 0; round < 3; round = round + 1) {
+  var n = boxes;
+  while (n != nil) { sum = sum + n.v.call(); n = n.next; }
+}
+print sum;

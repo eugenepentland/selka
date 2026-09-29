@@ -1,0 +1,10 @@
+{
+ "args": [
+  "--engine=tree",
+  "{dir}/t.lox"
+ ],
+ "stdout": "0\n1\n2\ndone\n",
+ "exit": 0,
+ "stderr_first_line": null,
+ "limit_s": 10
+}

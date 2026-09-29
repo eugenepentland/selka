@@ -1,0 +1,120 @@
+{
+ "run": "T2-python",
+ "task": "calc",
+ "cases": {
+  "arith": {
+   "ok": true,
+   "s": 0.039,
+   "problems": []
+  },
+  "big_ints": {
+   "ok": true,
+   "s": 0.033,
+   "problems": []
+  },
+  "comments_blank": {
+   "ok": true,
+   "s": 0.034,
+   "problems": []
+  },
+  "err_bad_statement": {
+   "ok": true,
+   "s": 0.035,
+   "problems": []
+  },
+  "err_div_zero": {
+   "ok": true,
+   "s": 0.04,
+   "problems": []
+  },
+  "err_expected_expr": {
+   "ok": true,
+   "s": 0.034,
+   "problems": []
+  },
+  "err_expected_expr_mid": {
+   "ok": true,
+   "s": 0.03,
+   "problems": []
+  },
+  "err_expected_paren": {
+   "ok": true,
+   "s": 0.038,
+   "problems": []
+  },
+  "err_expected_paren_token": {
+   "ok": true,
+   "s": 0.034,
+   "problems": []
+  },
+  "err_left_first": {
+   "ok": true,
+   "s": 0.031,
+   "problems": []
+  },
+  "err_let_no_eq": {
+   "ok": true,
+   "s": 0.037,
+   "problems": []
+  },
+  "err_mod_zero": {
+   "ok": true,
+   "s": 0.034,
+   "problems": []
+  },
+  "err_trailing": {
+   "ok": true,
+   "s": 0.037,
+   "problems": []
+  },
+  "err_undefined": {
+   "ok": true,
+   "s": 0.04,
+   "problems": []
+  },
+  "err_unexpected_char": {
+   "ok": true,
+   "s": 0.047,
+   "problems": []
+  },
+  "many_lines": {
+   "ok": true,
+   "s": 0.242,
+   "problems": []
+  },
+  "missing_file": {
+   "ok": true,
+   "s": 0.035,
+   "problems": []
+  },
+  "no_trailing_newline": {
+   "ok": true,
+   "s": 0.034,
+   "problems": []
+  },
+  "trunc_div_mod": {
+   "ok": true,
+   "s": 0.039,
+   "problems": []
+  },
+  "unary": {
+   "ok": true,
+   "s": 0.039,
+   "problems": []
+  },
+  "vars": {
+   "ok": true,
+   "s": 0.038,
+   "problems": []
+  },
+  "whitespace_tabs": {
+   "ok": true,
+   "s": 0.03,
+   "problems": []
+  }
+ },
+ "build_s": 0.01,
+ "build_exit": 0,
+ "passed": 22,
+ "total": 22
+}

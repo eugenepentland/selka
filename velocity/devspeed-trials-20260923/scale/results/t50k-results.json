@@ -1,0 +1,442 @@
+{
+ "tier": "t50k",
+ "modules": 121,
+ "load_start": [
+  13.58544921875,
+  12.6435546875,
+  10.5439453125
+ ],
+ "mylang": {
+  "nonblank_lines": 51043,
+  "cold_build": {
+   "s": 369.459,
+   "rss_kb": 2425800,
+   "ok": true,
+   "tail": ""
+  },
+  "noop_build": {
+   "s": 5.548,
+   "rss_kb": 2302424,
+   "ok": true,
+   "tail": ""
+  },
+  "edit_check": {
+   "min_s": 0.747,
+   "samples": [
+    {
+     "s": 0.887,
+     "rss_kb": 522900,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 0.828,
+     "rss_kb": 522900,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 0.747,
+     "rss_kb": 523060,
+     "ok": true,
+     "tail": ""
+    }
+   ]
+  },
+  "edit_build": {
+   "min_s": 95.298,
+   "samples": [
+    {
+     "s": 117.55,
+     "rss_kb": 2306236,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 99.084,
+     "rss_kb": 2306336,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 95.298,
+     "rss_kb": 2306212,
+     "ok": true,
+     "tail": ""
+    }
+   ]
+  },
+  "edit_test": {
+   "min_s": 2.577,
+   "samples": [
+    {
+     "s": 3.354,
+     "rss_kb": 755960,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 2.653,
+     "rss_kb": 756064,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 2.577,
+     "rss_kb": 755956,
+     "ok": true,
+     "tail": ""
+    }
+   ]
+  },
+  "iface_build": {
+   "min_s": 104.88,
+   "samples": [
+    {
+     "s": 122.259,
+     "rss_kb": 2306404,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 104.88,
+     "rss_kb": 2306296,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 112.389,
+     "rss_kb": 2306568,
+     "ok": true,
+     "tail": ""
+    }
+   ]
+  }
+ },
+ "go": {
+  "nonblank_lines": 70006,
+  "cold_build": {
+   "s": 2.374,
+   "rss_kb": 85224,
+   "ok": true,
+   "tail": ""
+  },
+  "noop_build": {
+   "s": 0.032,
+   "rss_kb": 25148,
+   "ok": true,
+   "tail": ""
+  },
+  "edit_check": {
+   "min_s": 0.133,
+   "samples": [
+    {
+     "s": 0.136,
+     "rss_kb": 31136,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 0.133,
+     "rss_kb": 30864,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 0.153,
+     "rss_kb": 30300,
+     "ok": true,
+     "tail": ""
+    }
+   ]
+  },
+  "edit_build": {
+   "min_s": 0.161,
+   "samples": [
+    {
+     "s": 0.165,
+     "rss_kb": 84668,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 0.161,
+     "rss_kb": 85196,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 0.18,
+     "rss_kb": 84776,
+     "ok": true,
+     "tail": ""
+    }
+   ]
+  },
+  "edit_test": {
+   "min_s": 1.062,
+   "samples": [
+    {
+     "s": 1.062,
+     "rss_kb": 106540,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 1.089,
+     "rss_kb": 108084,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 1.197,
+     "rss_kb": 107812,
+     "ok": true,
+     "tail": ""
+    }
+   ]
+  },
+  "iface_build": {
+   "min_s": 0.18,
+   "samples": [
+    {
+     "s": 0.18,
+     "rss_kb": 84656,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 0.201,
+     "rss_kb": 85268,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 0.195,
+     "rss_kb": 84404,
+     "ok": true,
+     "tail": ""
+    }
+   ]
+  }
+ },
+ "rust": {
+  "nonblank_lines": 70002,
+  "cold_build": {
+   "s": 4.974,
+   "rss_kb": 486984,
+   "ok": true,
+   "tail": ""
+  },
+  "noop_build": {
+   "s": 0.016,
+   "rss_kb": 22828,
+   "ok": true,
+   "tail": ""
+  },
+  "edit_check": {
+   "min_s": 0.526,
+   "samples": [
+    {
+     "s": 0.537,
+     "rss_kb": 267152,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 0.526,
+     "rss_kb": 268888,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 0.545,
+     "rss_kb": 269060,
+     "ok": true,
+     "tail": ""
+    }
+   ]
+  },
+  "edit_build": {
+   "min_s": 0.708,
+   "samples": [
+    {
+     "s": 0.745,
+     "rss_kb": 380640,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 0.708,
+     "rss_kb": 379912,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 0.73,
+     "rss_kb": 379188,
+     "ok": true,
+     "tail": ""
+    }
+   ]
+  },
+  "edit_test": {
+   "min_s": 0.642,
+   "samples": [
+    {
+     "s": 0.642,
+     "rss_kb": 301160,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 0.65,
+     "rss_kb": 302260,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 0.667,
+     "rss_kb": 302796,
+     "ok": true,
+     "tail": ""
+    }
+   ]
+  },
+  "iface_build": {
+   "min_s": 0.771,
+   "samples": [
+    {
+     "s": 0.771,
+     "rss_kb": 381136,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 0.776,
+     "rss_kb": 381344,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 0.774,
+     "rss_kb": 381048,
+     "ok": true,
+     "tail": ""
+    }
+   ]
+  }
+ },
+ "zig": {
+  "nonblank_lines": 78766,
+  "cold_build": {
+   "s": 0.791,
+   "rss_kb": 219720,
+   "ok": true,
+   "tail": ""
+  },
+  "noop_build": {
+   "s": 0.732,
+   "rss_kb": 204104,
+   "ok": true,
+   "tail": ""
+  },
+  "edit_check": {
+   "min_s": 0.408,
+   "samples": [
+    {
+     "s": 0.41,
+     "rss_kb": 125696,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 0.408,
+     "rss_kb": 125860,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 0.469,
+     "rss_kb": 125700,
+     "ok": true,
+     "tail": ""
+    }
+   ]
+  },
+  "edit_build": {
+   "min_s": 0.744,
+   "samples": [
+    {
+     "s": 0.747,
+     "rss_kb": 204140,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 0.744,
+     "rss_kb": 202700,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 1.202,
+     "rss_kb": 205732,
+     "ok": true,
+     "tail": ""
+    }
+   ]
+  },
+  "edit_test": {
+   "min_s": 0.354,
+   "samples": [
+    {
+     "s": 0.354,
+     "rss_kb": 162340,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 0.361,
+     "rss_kb": 163432,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 0.63,
+     "rss_kb": 162512,
+     "ok": true,
+     "tail": ""
+    }
+   ]
+  },
+  "iface_build": {
+   "min_s": 0.751,
+   "samples": [
+    {
+     "s": 0.751,
+     "rss_kb": 205988,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 0.8,
+     "rss_kb": 205012,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 1.28,
+     "rss_kb": 208116,
+     "ok": true,
+     "tail": ""
+    }
+   ]
+  }
+ },
+ "load_end": [
+  7.7216796875,
+  6.4150390625,
+  7.74658203125
+ ]
+}

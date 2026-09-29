@@ -1,0 +1,70 @@
+{
+ "run": "T3-python",
+ "task": "route",
+ "cases": {
+  "bad_edge": {
+   "ok": true,
+   "s": 0.039,
+   "problems": []
+  },
+  "bad_weight": {
+   "ok": true,
+   "s": 0.043,
+   "problems": []
+  },
+  "comments_spacing": {
+   "ok": true,
+   "s": 0.036,
+   "problems": []
+  },
+  "large_200k": {
+   "ok": true,
+   "s": 0.525,
+   "problems": []
+  },
+  "large_200k_b": {
+   "ok": true,
+   "s": 0.419,
+   "problems": []
+  },
+  "reverse_dir": {
+   "ok": true,
+   "s": 0.035,
+   "problems": []
+  },
+  "same_node": {
+   "ok": true,
+   "s": 0.04,
+   "problems": []
+  },
+  "small": {
+   "ok": true,
+   "s": 0.035,
+   "problems": []
+  },
+  "unknown_node": {
+   "ok": true,
+   "s": 0.041,
+   "problems": []
+  },
+  "unreachable": {
+   "ok": true,
+   "s": 0.043,
+   "problems": []
+  },
+  "usage": {
+   "ok": true,
+   "s": 0.04,
+   "problems": []
+  },
+  "zero_weights_multi": {
+   "ok": true,
+   "s": 0.039,
+   "problems": []
+  }
+ },
+ "build_s": 0.01,
+ "build_exit": 0,
+ "passed": 12,
+ "total": 12
+}

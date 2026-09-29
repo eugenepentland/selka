@@ -1,0 +1,70 @@
+{
+ "run": "T5-mylang",
+ "task": "csvstats",
+ "cases": {
+  "bad_number": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "bad_number_exp": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "basic": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "crlf": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "field_count": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "group_by_other": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "large_200k_rows": {
+   "ok": true,
+   "s": 0.088,
+   "problems": []
+  },
+  "no_column": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "no_trailing_newline": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "quoted": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "quoted_header_lookup": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "usage": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  }
+ },
+ "build_s": 0.14,
+ "build_exit": 0,
+ "passed": 12,
+ "total": 12
+}

@@ -1,0 +1,70 @@
+{
+ "run": "T6-python",
+ "task": "logstats",
+ "cases": {
+  "bad_k": {
+   "ok": true,
+   "s": 0.033,
+   "problems": []
+  },
+  "bad_k_word": {
+   "ok": true,
+   "s": 0.037,
+   "problems": []
+  },
+  "basic": {
+   "ok": true,
+   "s": 0.036,
+   "problems": []
+  },
+  "crlf_no_trailing_newline": {
+   "ok": true,
+   "s": 0.036,
+   "problems": []
+  },
+  "empty": {
+   "ok": true,
+   "s": 0.04,
+   "problems": []
+  },
+  "ip_tie_order": {
+   "ok": true,
+   "s": 0.035,
+   "problems": []
+  },
+  "k_larger": {
+   "ok": true,
+   "s": 0.039,
+   "problems": []
+  },
+  "large_500k": {
+   "ok": true,
+   "s": 0.669,
+   "problems": []
+  },
+  "malformed_variants": {
+   "ok": true,
+   "s": 0.046,
+   "problems": []
+  },
+  "missing_file": {
+   "ok": true,
+   "s": 0.035,
+   "problems": []
+  },
+  "percentiles": {
+   "ok": true,
+   "s": 0.041,
+   "problems": []
+  },
+  "usage": {
+   "ok": true,
+   "s": 0.033,
+   "problems": []
+  }
+ },
+ "build_s": 0.01,
+ "build_exit": 0,
+ "passed": 12,
+ "total": 12
+}

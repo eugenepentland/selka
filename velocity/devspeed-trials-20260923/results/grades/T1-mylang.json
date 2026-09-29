@@ -1,0 +1,75 @@
+{
+ "run": "T1-mylang",
+ "task": "wordfreq",
+ "cases": {
+  "bad_count_negative": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "bad_count_word": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "bad_count_zero": {
+   "ok": true,
+   "s": 0.002,
+   "problems": []
+  },
+  "basic": {
+   "ok": true,
+   "s": 0.002,
+   "problems": []
+  },
+  "crlf": {
+   "ok": true,
+   "s": 0.002,
+   "problems": []
+  },
+  "digits_and_apostrophes": {
+   "ok": true,
+   "s": 0.002,
+   "problems": []
+  },
+  "empty_file": {
+   "ok": true,
+   "s": 0.002,
+   "problems": []
+  },
+  "fewer_than_n": {
+   "ok": true,
+   "s": 0.002,
+   "problems": []
+  },
+  "large_10mb": {
+   "ok": true,
+   "s": 0.266,
+   "problems": []
+  },
+  "missing_file": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "non_ascii_separators": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "ties_sorted": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "usage": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  }
+ },
+ "build_s": 0.11,
+ "build_exit": 0,
+ "passed": 13,
+ "total": 13
+}

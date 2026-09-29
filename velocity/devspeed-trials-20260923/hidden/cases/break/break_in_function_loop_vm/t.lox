@@ -1,0 +1,10 @@
+fun first_over(limit) {
+  var n = 1;
+  while (true) {
+    n = n * 2;
+    if (n > limit) break;
+  }
+  return n;
+}
+print first_over(100);
+print first_over(1000);

@@ -1,0 +1,70 @@
+{
+ "run": "T6-mylang",
+ "task": "logstats",
+ "cases": {
+  "bad_k": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "bad_k_word": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "basic": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "crlf_no_trailing_newline": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "empty": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "ip_tie_order": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "k_larger": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "large_500k": {
+   "ok": true,
+   "s": 1.252,
+   "problems": []
+  },
+  "malformed_variants": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "missing_file": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "percentiles": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "usage": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  }
+ },
+ "build_s": 0.11,
+ "build_exit": 0,
+ "passed": 12,
+ "total": 12
+}

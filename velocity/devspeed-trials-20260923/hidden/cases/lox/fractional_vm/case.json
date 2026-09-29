@@ -1,0 +1,10 @@
+{
+ "args": [
+  "--engine=vm",
+  "{dir}/t.lox"
+ ],
+ "stdout": "0.09999999999999998\n12\n0.25\n",
+ "exit": 0,
+ "stderr_first_line": null,
+ "limit_s": 10
+}

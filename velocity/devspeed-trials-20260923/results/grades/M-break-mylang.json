@@ -1,0 +1,120 @@
+{
+ "run": "M-break-mylang",
+ "task": "break",
+ "cases": {
+  "break_in_function_loop_tree": {
+   "ok": true,
+   "s": 0.002,
+   "problems": []
+  },
+  "break_in_function_loop_vm": {
+   "ok": true,
+   "s": 0.002,
+   "problems": []
+  },
+  "closure_captures_tree": {
+   "ok": true,
+   "s": 0.002,
+   "problems": []
+  },
+  "closure_captures_tree_stress": {
+   "ok": true,
+   "s": 0.002,
+   "problems": []
+  },
+  "closure_captures_vm": {
+   "ok": true,
+   "s": 0.002,
+   "problems": []
+  },
+  "closure_captures_vm_stress": {
+   "ok": true,
+   "s": 0.002,
+   "problems": []
+  },
+  "deep_blocks_tree": {
+   "ok": true,
+   "s": 0.002,
+   "problems": []
+  },
+  "deep_blocks_vm": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "err_in_function_in_loop_tree": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "err_in_function_in_loop_vm": {
+   "ok": true,
+   "s": 0.002,
+   "problems": []
+  },
+  "err_top_level_tree": {
+   "ok": true,
+   "s": 0.002,
+   "problems": []
+  },
+  "err_top_level_vm": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "for_basic_tree": {
+   "ok": true,
+   "s": 0.002,
+   "problems": []
+  },
+  "for_basic_vm": {
+   "ok": true,
+   "s": 0.002,
+   "problems": []
+  },
+  "locals_popped_tree": {
+   "ok": true,
+   "s": 0.002,
+   "problems": []
+  },
+  "locals_popped_vm": {
+   "ok": true,
+   "s": 0.002,
+   "problems": []
+  },
+  "nested_tree": {
+   "ok": true,
+   "s": 0.002,
+   "problems": []
+  },
+  "nested_vm": {
+   "ok": true,
+   "s": 0.002,
+   "problems": []
+  },
+  "no_increment_after_break_tree": {
+   "ok": true,
+   "s": 0.002,
+   "problems": []
+  },
+  "no_increment_after_break_vm": {
+   "ok": true,
+   "s": 0.002,
+   "problems": []
+  },
+  "while_true_tree": {
+   "ok": true,
+   "s": 0.002,
+   "problems": []
+  },
+  "while_true_vm": {
+   "ok": true,
+   "s": 0.002,
+   "problems": []
+  }
+ },
+ "build_s": 1.07,
+ "build_exit": 0,
+ "passed": 22,
+ "total": 22
+}

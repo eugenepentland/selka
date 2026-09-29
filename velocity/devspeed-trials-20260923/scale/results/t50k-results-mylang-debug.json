@@ -1,0 +1,121 @@
+{
+ "tier": "t50k",
+ "modules": 121,
+ "load_start": [
+  4.53076171875,
+  5.89111328125,
+  7.43017578125
+ ],
+ "mylang-debug": {
+  "nonblank_lines": 51043,
+  "cold_build": {
+   "s": 509.641,
+   "rss_kb": 3440340,
+   "ok": true,
+   "tail": ""
+  },
+  "noop_build": {
+   "s": 6.275,
+   "rss_kb": 3317248,
+   "ok": true,
+   "tail": ""
+  },
+  "edit_check": {
+   "min_s": 0.765,
+   "samples": [
+    {
+     "s": 0.793,
+     "rss_kb": 522900,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 0.844,
+     "rss_kb": 523060,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 0.765,
+     "rss_kb": 523060,
+     "ok": true,
+     "tail": ""
+    }
+   ]
+  },
+  "edit_build": {
+   "min_s": 6.92,
+   "samples": [
+    {
+     "s": 7.031,
+     "rss_kb": 3320956,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 7.375,
+     "rss_kb": 3321124,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 6.92,
+     "rss_kb": 3321160,
+     "ok": true,
+     "tail": ""
+    }
+   ]
+  },
+  "edit_test": {
+   "min_s": 2.616,
+   "samples": [
+    {
+     "s": 2.862,
+     "rss_kb": 758104,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 2.774,
+     "rss_kb": 758104,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 2.616,
+     "rss_kb": 758132,
+     "ok": true,
+     "tail": ""
+    }
+   ]
+  },
+  "iface_build": {
+   "min_s": 9.81,
+   "samples": [
+    {
+     "s": 10.398,
+     "rss_kb": 3321044,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 10.29,
+     "rss_kb": 3321004,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 9.81,
+     "rss_kb": 3321300,
+     "ok": true,
+     "tail": ""
+    }
+   ]
+  }
+ },
+ "load_end": [
+  4.40869140625,
+  6.15625,
+  6.8642578125
+ ]
+}

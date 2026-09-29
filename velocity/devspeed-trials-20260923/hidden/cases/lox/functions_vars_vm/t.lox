@@ -1,0 +1,7 @@
+fun mod(a, b) { return a % b; }
+print mod(17, 5);
+var x = 100;
+x = x % 7;
+print x;
+class A { m(v) { return v % 3; } }
+print A().m(10);

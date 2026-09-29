@@ -1,0 +1,120 @@
+{
+ "run": "T2-mylang",
+ "task": "calc",
+ "cases": {
+  "arith": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "big_ints": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "comments_blank": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "err_bad_statement": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "err_div_zero": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "err_expected_expr": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "err_expected_expr_mid": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "err_expected_paren": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "err_expected_paren_token": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "err_left_first": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "err_let_no_eq": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "err_mod_zero": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "err_trailing": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "err_undefined": {
+   "ok": true,
+   "s": 0.002,
+   "problems": []
+  },
+  "err_unexpected_char": {
+   "ok": true,
+   "s": 0.002,
+   "problems": []
+  },
+  "many_lines": {
+   "ok": true,
+   "s": 0.127,
+   "problems": []
+  },
+  "missing_file": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "no_trailing_newline": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "trunc_div_mod": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "unary": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "vars": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "whitespace_tabs": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  }
+ },
+ "build_s": 0.12,
+ "build_exit": 0,
+ "passed": 22,
+ "total": 22
+}

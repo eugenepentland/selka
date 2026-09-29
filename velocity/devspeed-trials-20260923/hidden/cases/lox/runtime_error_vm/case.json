@@ -1,0 +1,10 @@
+{
+ "args": [
+  "--engine=vm",
+  "{dir}/t.lox"
+ ],
+ "stdout": "1\n",
+ "exit": 70,
+ "stderr_first_line": "Operands must be numbers.",
+ "limit_s": 10
+}

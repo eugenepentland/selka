@@ -1,0 +1,80 @@
+{
+ "run": "T4-mylang",
+ "task": "lox",
+ "cases": {
+  "basic_tree": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "basic_vm": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "compile_error_tree": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "compile_error_vm": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "fizzbuzz_tree": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "fizzbuzz_vm": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "fractional_tree": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "fractional_vm": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "functions_vars_tree": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "functions_vars_vm": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "precedence_tree": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "precedence_vm": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "runtime_error_tree": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  },
+  "runtime_error_vm": {
+   "ok": true,
+   "s": 0.001,
+   "problems": []
+  }
+ },
+ "build_s": 0.33,
+ "build_exit": 0,
+ "passed": 14,
+ "total": 14
+}
