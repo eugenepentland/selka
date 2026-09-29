@@ -78,7 +78,7 @@ def verify_execution(executable):
                    for line in run.stderr.splitlines() if line.startswith("MYLANG_RC_COUNTS ")]
         assert len(records) == 1 and not run.stdout, (mode, run.stdout, run.stderr)
         counts = records[0]
-        assert counts["version"] == 1 and counts["runtime"] == "rc-v3-counting"
+        assert counts["version"] == 1 and counts["runtime"] == "rc-v4-counting"
         assert not counts["saturated"]
         assert counts["heap_allocate"] == counts["retire"] == 2
         assert counts["arena_allocate"] == 2

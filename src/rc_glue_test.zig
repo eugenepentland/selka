@@ -96,9 +96,9 @@ test "RC-GLUE-1 counted inline types get straight-line glue that compiles in bot
     try t.expect(contains(data, "_rcg_drop(myl_native_heap *heap, void *value)"));
     try t.expect(contains(data, "for (size_t i"));
     try t.expect(contains(data, "switch (myl_rcg_tag("));
-    // The per-type entries look nothing up and check no count limit.
+    // Near-saturated whole values use the exact runtime transaction.
     const entries = data[std.mem.indexOf(u8, data, "_rcg_loan(myl_native_heap").?..];
-    try t.expect(!contains(entries, "COUNT_LIMIT"));
+    try t.expect(contains(entries, "myl_rcg_capacity("));
     try t.expect(!contains(entries, "myl_rc_descriptor_find"));
     try t.expect(contains(data, "if (died) myl_rc_drain(heap);"));
     try t.expect(contains(data, "#define MYL_RCG_INLINE static inline\n"));
@@ -116,8 +116,8 @@ fn fullWidthBranches(il: []const u8) bool {
     var previous: []const u8 = "";
     while (lines.next()) |line| {
         const inline_branch = std.mem.startsWith(u8, line, " jnz ") and std.mem.indexOf(u8, line, ", @rcg") != null;
-        const guarded = std.mem.indexOf(u8, previous, " =w cnel ") != null or std.mem.indexOf(u8, previous, " =w ceql ") != null or
-            std.mem.indexOf(u8, previous, " =w cultl ") != null;
+        const guarded = std.mem.indexOf(u8, previous, " =w cnel ") != null or std.mem.indexOf(u8, previous, " =w ceql ") != null or std.mem.indexOf(u8, previous, " =w ceqw ") != null or
+            std.mem.indexOf(u8, previous, " =w cultl ") != null or std.mem.indexOf(u8, previous, " =w cultw ") != null;
         if (inline_branch and !guarded) return false;
         previous = line;
     }
@@ -180,4 +180,8 @@ test "RC-GLUE-1 uniqueness checks skip their helper only for counted unshared pa
     try t.expect(contains(text, "@rcguniquecount"));
     try t.expect(contains(text, ", 6917529027641081858\\n"));
     try t.expect(contains(text, "myl_qbe_rc_unique_"));
+}
+
+test {
+    _ = @import("rc_glue_limits_test.zig");
 }

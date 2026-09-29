@@ -71,7 +71,7 @@ a program:
 | `--rc-runtime=sites` | The counted RC runtime, with every count charged to the call site that caused it ([ownership sites](tooling/ownership.md#ownership-sites)) |
 | `--gc-runtime` | The tracing collector: the opt-out from reference counting |
 
-`MYLANG_RUNTIME=gc-v1` (or `rc-v3`, `rc-v3-counting`, `rc-v3-sites`) selects a
+`MYLANG_RUNTIME=gc-v1` (or `rc-v4`, `rc-v4-counting`, `rc-v4-sites`) selects a
 runtime for a whole shell session or CI job; an explicit flag outranks it.
 
 For example, `mylang run-project examples/gc-default/main.my --print-result`

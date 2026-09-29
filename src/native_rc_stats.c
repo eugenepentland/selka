@@ -63,9 +63,9 @@ void myl_rc_stats_report(const myl_native_heap *heap) {
     myl_rc_counters stats;
     if (!myl_rc_stats_snapshot(heap,&stats)) return;
 #if defined(MYL_NATIVE_RC_SITES) && MYL_NATIVE_RC_SITES
-#define MYL_RC_STATS_RUNTIME "rc-v3-sites"
+#define MYL_RC_STATS_RUNTIME "rc-v4-sites"
 #else
-#define MYL_RC_STATS_RUNTIME "rc-v3-counting"
+#define MYL_RC_STATS_RUNTIME "rc-v4-counting"
 #endif
     fprintf(stderr,"MYLANG_RC_COUNTS {\"version\":1,\"runtime\":\"" MYL_RC_STATS_RUNTIME "\",\"saturated\":%s",stats.saturated?"true":"false");
     for (size_t i=0;i<MYL_RC_STAT_COUNT;++i) fprintf(stderr,",\"%s\":%" PRIu64,names[i],stats.events[i]);
