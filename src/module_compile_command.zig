@@ -475,13 +475,14 @@ fn unitsDocument(a: std.mem.Allocator, module: []const u8, is_entry: bool, compi
     return out.toOwnedSlice();
 }
 
+const units_version = "module-units-v1";
 const UnitsFile = struct { module: []const u8, is_entry: bool, compiled: *const compile_module.Compiled, rows: []const UnitRow };
 
 fn writeUnits(json: *std.json.Stringify, file: UnitsFile) std.json.Stringify.Error!void {
     const compiled = file.compiled;
     try json.beginObject();
     try json.objectField("version");
-    try json.write("module-units-v1");
+    try json.write(units_version);
     try json.objectField("module");
     try json.write(file.module);
     try json.objectField("entry");
@@ -563,10 +564,33 @@ fn readUnits(a: std.mem.Allocator, io: std.Io, directory: []const u8) Error![]co
     for (names.items, files) |name, *file| {
         const bytes = dir.readFileAlloc(io, name, a, .limited(1 << 30)) catch return error.ReadFailed;
         file.* = std.json.parseFromSliceLeaky(std.json.Value, a, bytes, .{}) catch return error.ReadFailed;
+        if (!unitsEnvelope(file.*)) return error.ReadFailed;
     }
     return files;
 }
 
 fn lessText(_: void, left: []const u8, right: []const u8) bool {
     return std.mem.lessThan(u8, left, right);
+}
+
+fn unitsEnvelope(file: std.json.Value) bool {
+    return std.mem.eql(u8, string(field(file, "version")), units_version) and
+        string(field(file, "module")).len != 0 and
+        field(file, "units") == .array and field(file, "manifest") == .object;
+}
+
+// spec-case: MODULE-COMPILE-3
+test "external module units envelopes require current version and required structural members" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const valid = try std.json.parseFromSliceLeaky(std.json.Value, a, "{\"version\":\"module-units-v1\",\"module\":\"main\",\"units\":[],\"manifest\":{}}", .{});
+    const unknown = try std.json.parseFromSliceLeaky(std.json.Value, a, "{\"version\":\"module-units-v9\",\"module\":\"main\",\"units\":[],\"manifest\":{}}", .{});
+    const absent = try std.json.parseFromSliceLeaky(std.json.Value, a, "{\"module\":\"main\",\"units\":[],\"manifest\":{}}", .{});
+    const malformed = try std.json.parseFromSliceLeaky(std.json.Value, a, "{\"version\":\"module-units-v1\",\"module\":\"main\",\"units\":{},\"manifest\":{}}", .{});
+    try std.testing.expect(unitsEnvelope(valid));
+    try std.testing.expect(!unitsEnvelope(unknown));
+    try std.testing.expect(!unitsEnvelope(absent));
+    try std.testing.expect(!unitsEnvelope(malformed));
+    try std.testing.expect(!unitsEnvelope(.null));
 }

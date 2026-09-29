@@ -39,6 +39,7 @@ test {
     _ = @import("native_test_cases.zig");
     _ = @import("native_test_snapshot.zig");
     _ = @import("module_seeder.zig");
+    _ = @import("module_compile_command.zig");
     _ = @import("native_test_plan.zig");
     _ = @import("native_test_dependencies.zig");
     _ = @import("native_test_execute.zig");

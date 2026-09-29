@@ -6,7 +6,7 @@ usage: measure.py MYLANG TIER_DIR WORK_DIR [--samples N] [--label L] [--json OUT
                   [--steps check,test,build]
 
 TIER_DIR is a gen_scale.py mylang directory (m000.my ... main.my). Each step
-copies it to WORK_DIR/<step>/src and runs, under `taskset -c 0-11` and
+copies it to WORK_DIR/<step>/src and runs, under `taskset -c $MYLANG_MEASURE_CPUS (default 2,3,10,11)` and
 `/usr/bin/time` (whose %M is the largest single process of the tree):
 
 - check: `check main.my --cache-dir=WORK/check/cache`: cold; then, when the
@@ -26,6 +26,7 @@ own edit. The 1-minute load average is recorded at the start and the end.
 import argparse
 import glob
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -35,7 +36,7 @@ from pathlib import Path
 
 def run(cmd, cwd):
     started = time.perf_counter()
-    proc = subprocess.run(["/usr/bin/time", "-f", "__RSS__ %M", "taskset", "-c", "0-11"] + cmd, cwd=cwd, capture_output=True, text=True)
+    proc = subprocess.run(["/usr/bin/time", "-f", "__RSS__ %M", "taskset", "-c", os.environ.get("MYLANG_MEASURE_CPUS", "2,3,10,11")] + cmd, cwd=cwd, capture_output=True, text=True)
     wall = time.perf_counter() - started
     rss = re.search(r"__RSS__ (\d+)", proc.stderr)
     out = {"wall_s": round(wall, 3), "rss_mb": round(int(rss.group(1)) / 1024, 1) if rss else None, "status": proc.returncode}
@@ -43,7 +44,11 @@ def run(cmd, cwd):
     if counts:
         out["passed"], out["cached"], out["failed"] = (int(g) for g in counts.groups())
     if proc.returncode != 0:
-        out["stderr"] = proc.stderr[-400:]
+        raise RuntimeError(f"measurement command failed ({proc.returncode}): {cmd!r}\n{proc.stdout}\n{proc.stderr}")
+    if cmd[1] == "test":
+        expected = int(os.environ["MYLANG_MEASURE_TESTS"])
+        if not counts or out["failed"] != 0 or out["passed"] + out["cached"] != expected:
+            raise RuntimeError(f"incomplete test measurement: expected {expected}, got {out!r}\n{proc.stdout}")
     return out
 
 
@@ -93,22 +98,25 @@ def ladder(tree, command, samples, interface=True, cache=None, after_cold=False)
     out = {"cold": run(command, tree.src)}
     if cache is not None:
         out["seeded_after_s"] = settle(cache)
+        if out["seeded_after_s"] is None:
+            raise RuntimeError("owned check seeder failed to finish before the deadline")
     if after_cold:
         out["after_cold"] = run(command, tree.src)
-    out["noop"] = best([run(command, tree.src) for _ in range(samples)])
+    out["noop_samples"] = [run(command, tree.src) for _ in range(samples)]
+    out["noop"] = best(out["noop_samples"])
     bodies = []
     for _ in range(samples):
         tree.body_edit()
         bodies.append(run(command, tree.src))
     out["body_edit"] = best(bodies)
-    out["body_edit_samples"] = [s["wall_s"] for s in bodies]
+    out["body_edit_samples"] = bodies
     if interface:
         faces = []
         for _ in range(samples):
             tree.interface_edit()
             faces.append(run(command, tree.src))
         out["interface_edit"] = best(faces)
-        out["interface_edit_samples"] = [s["wall_s"] for s in faces]
+        out["interface_edit_samples"] = faces
     return out
 
 
@@ -122,9 +130,15 @@ def main():
     parser.add_argument("--json")
     parser.add_argument("--steps", default="check,test,build")
     args = parser.parse_args()
+    if args.samples < 1:
+        parser.error("samples must be positive")
     mylang = str(Path(args.mylang).resolve())
     work = Path(args.work).resolve()
-    result = {"label": args.label, "tier": args.tier, "load_start": load()}
+    scratch = work / "scratch"
+    scratch.mkdir(parents=True, exist_ok=True)
+    os.environ["TMPDIR"] = str(scratch)
+    os.environ["MYLANG_MEASURE_TESTS"] = str(len(list(Path(args.tier).glob("m[0-9]*.my"))))
+    result = {"label": args.label, "cpus": os.environ.get("MYLANG_MEASURE_CPUS", "2,3,10,11"), "tier": args.tier, "load_start": load()}
     steps = args.steps.split(",")
     if "check" in steps:
         tree = Tree(args.tier, work / "check")
