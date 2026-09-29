@@ -659,3 +659,24 @@ test "live view reachability covers nested and recursive projections" {
     }
     try t.expectEqual(@as(usize, 2), found);
 }
+
+// spec-case: MUT-EXCLUSIVE-PROOFS-1
+test "exclusive mut parameters permit a closed record field return" {
+    const source =
+        \\record Box:
+        \\    items: list[int]
+        \\record Owner:
+        \\    box: Box
+        \\    count: int
+        \\def push(box: mut Box):
+        \\    box.items.append(2)
+        \\def change(owner: mut Owner, other: mut Owner):
+        \\    work = owner.box
+        \\    push(mut work)
+        \\    other.count += 1
+        \\    owner.box = work
+    ;
+    const result = try sites(source ++ entry, true);
+    try t.expect(result.placed >= 2);
+    try t.expectEqual(@as(usize, 0), result.copies);
+}

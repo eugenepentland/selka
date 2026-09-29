@@ -1,0 +1,98 @@
+# Runtime follow-up checkpoint, 2026-09-29
+
+This is a partial WP-B3 checkpoint from approved main `80dd5190`, in the isolated
+`codex/next-runtime-20260929` branch. B3 is still open: scope IL, constant lists,
+dictionary hoists, startup images, count layout and text follow-ups remain.
+Nothing from this lane has been merged into main.
+
+## Equality allocations
+
+Source `bd11421e` removes scratch allocation for scalar, text and bytes leaves.
+Small structural comparisons use 32 pending and 64 visited pairs on the stack;
+large values retain growable, nonrecursive worklists and cycle/DAG memoization.
+Leaves compare immediately, so a large list or array of scalars does not fill
+the worklist. Bytes compare their current storage range, including views.
+Floats keep IEEE equality: a NaN remains unequal inside a box or collection,
+even against itself, and signed zeros compare equal. Growth failure releases
+all earlier scratch allocations. No guest allocation or safepoint is added.
+The rules are EQUALITY-SCRATCH-1 and the existing RECURSIVE-VALUES-3.
+
+A counted native probe compares the same text 6,000 times: the original source
+uses 12,000 scratch allocations (2,304 peak bytes), the candidate uses zero.
+Both return the same results and finish with zero live scratch bytes.
+The dedicated allocation suite covers primitive values, text and byte views,
+small lists, cycles, shared DAGs, a 1,024-node cycle and wide composites. It
+injects failure at every actual growth allocation and checks cleanup.
+
+The original and allocation suites pass ASan/UBSan. The complete native memory
+and heap checks pass 31/31 build steps. The new recursive NaN/signed-zero guest
+regression passes default RC, counting RC, GC stress and LLVM release, each
+with one fresh executed test and no failures, cached results or skips. These
+are focused checks; a final full B3 lane/integration gate is still required.
+
+## Frozen performance evidence
+
+The equality compiler SHA-256 is
+`7a09405dac9d7f11352987331000c9b1f9c29c6cd3319b5136e121cc039bcf19`.
+A later alias-proof install replaced the initial corpus builder's compiler
+while it ran. That first `b3-equality` build is explicitly superseded and has
+no accepted measurement. The original equality artifact was recovered by hash
+and copied to `.tmp/equality-compiler/bin/mylang`; all 58 unique corpus builds
+were then regenerated as `b3-equality-frozen` from that fixed binary.
+
+Control binaries are copied from the final Phase A `m17-codex` gate and every
+copied file is hash-verified. Control and candidate runs use CPUs 2, 3, 10 and 11,
+with four workers and one instruction observation per row. The accepted GC
+binaries and manifest are unchanged, and control/candidate per-row GC counts
+are identical within each size. These are not median-of-three measurements.
+
+| Size | QBE RC/GC geomean | LLVM RC/GC geomean | Output matches | Largest increase vs control |
+|---|---:|---:|---:|---:|
+| Dev | 1.059629 | 1.057831 | 86/86 | 0.134325% |
+| Full | 1.057975 | 1.054226 | 86/86 | 0.148681% |
+| Smoke | 1.098255 | 1.126671 | 86/86 | 0.002870% |
+
+All 43 rows per backend at dev/full remain below 1.3x accepted GC. No row
+regresses more than 1% against the fresh control, A1 or final A5. Smoke retains
+the known short Lox startup cap misses and checks correctness/change limits.
+The strict verifier records every row and movement in
+`evidence/codex-next-runtime-20260929/equality-performance.json`.
+
+Dev Lox `strings` improves 17.379% on QBE and 33.343% on LLVM; `string_equality`
+improves 0.523% and 3.277%. Removing leaf scratch allocations directly explains
+the main string savings, supported by the isolated allocation probe. Smaller
+movements elsewhere can include generic comparison branches, generated binary
+layout and startup/instruction observation variation; that attribution is an
+inference, not a separate profile. The receipt retains all movements rather
+than hiding small increases in the geomean.
+
+## Mutable-argument exclusivity
+
+MUT-EXCLUSIVE-PROOFS-1 removes the four callee-type alias refusals under value
+semantics. RC's aliasability/type-containment scan is removed outright:
+`runtime_mode.lowered` always selects GC for legacy sharing, so those RC
+anchors cannot run in that mode. Plain-record move aliases, record-field
+return and mut-list element-field return retain their conservative guard
+outside value semantics. Root writes, observations, exits, pending references,
+surviving temporaries and argument-overlap diagnostics still govern the proofs.
+RC-INTERVAL-ANCHOR-3/4, QBE-MOVE-ELIDE-1 and COW-INDEX-RETURN-1 are updated to
+state the resulting contract.
+
+Five initial focused regressions pass. Broader checks pass all selected cases:
+21 readonly-anchor, 29 value-semantics, 22 collector COW and 6 move-elision named
+tests (each runner also executes 11 existing anonymous import blocks). Three
+new guest cases start from shared inputs and mutate two disjoint arguments;
+all 3 pass default RC, GC, GC stress, RC stats and LLVM release, with zero
+failed, cached or skipped tests. A first proof test incorrectly expected every
+plain-record copy to disappear under RC; selecting GC explicitly tests the
+GC move pass, while other RC copies remain governed by their separate proofs.
+Legacy RC token assertions were replaced by checking the actual collector
+selection and absence of RC anchors. Both failed and corrected focused logs
+remain under `.tmp/exclusive-*`.
+
+Alias changes still need the final frozen lane gate and corpus comparison.
+The equality performance receipt above predates those changes and claims only
+the equality compiler. Raw logs and full JSON remain in this owned worktree's
+`.tmp/` and `.tmp-rc-quick/` directories. Guardian passed all 88 checks on the
+equality source commit; subsequent source verification remains part of the
+ongoing lane work.

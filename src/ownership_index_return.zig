@@ -64,9 +64,9 @@ fn readArm(ctx: *const Context, pc: usize, payload: u32, start: usize) ?Arm {
     if (!model.uniqueParameter(ctx.code.function, owner)) return null;
     if (!ctx.temporary(parent) or ctx.defs.count[parent] != 1) return null;
     if (ctx.role(owner) != .mut_param or ctx.record(ctx.locals.list[owner].ty).collection.kind != .list) return null;
-    for (0..ctx.locals.params) |other| {
+    if (!values.enabled()) for (0..ctx.locals.params) |other| {
         if (other != owner and ctx.role(@intCast(other)) == .mut_param) return null;
-    }
+    };
     if (start + 2 >= code.len or ctx.flow.targets[pc]) return null;
     if (!onlyArmEntry(ctx, pc, start)) return null;
     if (!localIs(code[start].op, .load_local, payload)) return null;

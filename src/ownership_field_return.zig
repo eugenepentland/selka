@@ -39,8 +39,9 @@ fn extraction(ctx: *const Context, owners: []const bool, pc: usize) ?Transfer {
 }
 
 fn otherMutableParameter(ctx: *const Context, source: u32) bool {
-    // Two `mut` parameters may name the same caller variable. A read through
-    // the second parameter can therefore observe the first one's field.
+    if (@import("value_semantics.zig").enabled()) return false;
+    // Legacy sharing lets two `mut` parameters name the same caller variable.
+    // A read through the second can observe the first one's field.
     for (0..ctx.locals.params) |index| {
         if (index != source and ctx.role(@intCast(index)) == .mut_param) return true;
     }
