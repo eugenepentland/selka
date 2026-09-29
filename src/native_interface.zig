@@ -1,4 +1,6 @@
 //! Shared frontend export snapshot consumed by independent native backends.
+const std = @import("std");
+const fragments = @import("qbe_fragments.zig");
 const typed = @import("typed.zig");
 /// The safety and accounting code one emission is asked to generate. Every
 /// field defaults to the fully checked, fully accounted program, so a caller
@@ -28,5 +30,70 @@ pub const Interface = struct {
     /// The safety and accounting code the backend generates for this program.
     policy: Policy = .{},
     /// Persistent per-function unit reuse, or null to emit every unit fresh.
-    reuse: ?@import("qbe_fragments.zig").Reuse = null,
+    reuse: ?fragments.Reuse = null,
+    /// MODULE-COMPILE-1: emit one module of the program, reading what its
+    /// units need about every function it did not lower from that function's
+    /// module interface. Null emits the whole program.
+    module: ?*const Module = null,
+    /// When set, the emission fills it with what it computed about every
+    /// function: the facts a module interface carries and each unit's keys.
+    report: ?*fragments.Report = null,
 };
+
+/// MODULE-COMPILE-1: one module's emission out of a program checked against
+/// its imports' interfaces. Every function without imported facts is lowered
+/// and analysed exactly as a whole-program emission analyses it; only the
+/// functions `emit` marks become units.
+pub const Module = struct {
+    /// Per program function: whether this emission emits its unit.
+    emit: []const bool,
+    /// Per program function: the emission facts another module's interface
+    /// states for a function this compilation stood in and did not lower.
+    imported: []const ?Imported,
+    /// Per merged-source input: the verbatim stretches of an interface text
+    /// served in place of that module's source, so a position inside it is
+    /// reported at its place in the real source; null for a real source.
+    remap: []const ?[]const Stretch = &.{},
+    /// The program-wide arena switch (whether any function of the program
+    /// opens an arena scope), which every allocating unit's text reads and
+    /// which no one module can derive.
+    arenas: bool = false,
+    /// Filled by the emission: the module's share of the program's runtime
+    /// data, for a link to merge with the other modules' shares.
+    parts: ?*Parts = null,
+    /// MODULE-SCHEDULE-5: called once the allocation analysis is done and
+    /// before any unit is emitted, with every function's facts: what a
+    /// dependent's compile reads is final then.
+    analyzed: ?Analyzed = null,
+};
+
+/// A hook the emission calls with every function's facts (no unit keys yet),
+/// allocated with `arena`.
+pub const Analyzed = struct {
+    arena: std.mem.Allocator,
+    context: *anyopaque,
+    run: *const fn (context: *anyopaque, facts: fragments.Report) anyerror!void,
+};
+
+/// One module's share of the shared runtime C unit: the descriptors of every
+/// type its compilation knows and the renderers its units call, each a
+/// definition group named by its content-derived symbol.
+pub const Parts = struct {
+    descriptors: []const Block = &.{},
+    renderers: []const Block = &.{},
+    owners: []const @import("rc_descriptors.zig").Block = &.{},
+    glue: []const @import("rc_glue.zig").Block = &.{},
+};
+
+/// One generated C definition group and the symbol it is ordered and merged by.
+pub const Block = struct { name: []const u8, text: []const u8 };
+
+/// What a caller's unit reads about a function it does not have the body of:
+/// whether a call to it may allocate (transitively), and which of its
+/// parameters its body writes.
+pub const Imported = struct { allocates: bool, writes: []const bool };
+
+/// One verbatim stretch of an interface text: where it starts in the text,
+/// how many bytes map linearly onto the source (its copy and the blanked gap
+/// after it), and the one-based line and column in the source it starts at.
+pub const Stretch = struct { text: u32, extent: u32, line: u32, column: u32 };

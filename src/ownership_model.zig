@@ -442,6 +442,7 @@ pub fn writesParameter(function: bytecode.Function, position: usize) bool {
 /// names the original mutable payload. Keep its borrowed role after rebinding,
 /// but require ordinary copy-on-write checks for any replacement value.
 pub fn uniqueParameter(function: bytecode.Function, position: usize) bool {
+    if (function.physical) |facts| if (facts.unknown) return false;
     if (position >= function.signature.parameter_count or !writesParameter(function, position)) return false;
     for (function.scope.instructions) |instruction| switch (instruction.op) {
         .store_local, .move_local, .drop_local, .ref_local => |slot| if (li(slot) == position) return false,

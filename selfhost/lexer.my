@@ -43,7 +43,7 @@ def is_alnum(byte: int) -> bool:
 
 
 # std.ascii.isAlphanumeric: letters and digits only, no underscore. Numeric
-# scanning retains trailing alphanumerics but stops before an underscore.
+# scanning retains letters and digits; number_word_end also retains underscores.
 def is_number_alnum(byte: int) -> bool:
     if is_letter(byte):
         return True
@@ -85,25 +85,68 @@ def byte_literal_end(src: source.Source, quote_index: int) -> Result[int, diagno
     return Err(make_diag(src, diagnostic.E_BYTE_LITERAL, quote_index, index, "unterminated byte literal; escape newlines with \\n"))
 
 
-# Stage-0 numeric extent: digits, an optional dotted fraction and exponent, then
-# any trailing alphanumerics retained for a precise later checker diagnostic.
+# Numeric token extent matches number_literal.end in the shipped stage-0.
+# Prefix digits, underscores and malformed suffixes stay in one number token.
+def number_word_end(raw: bytes, start: int) -> int:
+    at = start
+    while at < len(raw) and (is_number_alnum(raw[at]) or raw[at] == 95):
+        at += 1
+    return at
+
+
+def number_digits_end(raw: bytes, start: int) -> int:
+    at = start
+    while at < len(raw) and (is_digit(raw[at]) or raw[at] == 95):
+        at += 1
+    return at
+
+
+def exponent_ahead(raw: bytes, start: int) -> bool:
+    if start >= len(raw) or (raw[start] != 101 and raw[start] != 69):
+        return False
+    at = start + 1
+    if at < len(raw) and (raw[at] == 43 or raw[at] == 45):
+        at += 1
+    return at < len(raw) and is_digit(raw[at])
+
+
+def dot_belongs(raw: bytes, dot: int) -> bool:
+    following = dot + 1
+    if following >= len(raw):
+        return True
+    if is_digit(raw[following]):
+        return True
+    if is_alnum(raw[following]):
+        return exponent_ahead(raw, following)
+    return True
+
+
 def float_end(src: source.Source, start: int) -> int:
     raw = src.raw
     limit = len(raw)
-    at = start
-    while at < limit and is_digit(raw[at]):
-        at += 1
-    if at + 1 < limit and raw[at] == 46 and is_digit(raw[at + 1]):
-        at += 1
-        while at < limit and is_digit(raw[at]):
-            at += 1
+    if raw[start] == 48 and start + 1 < limit:
+        base = raw[start + 1]
+        if base == 120 or base == 88 or base == 111 or base == 79 or base == 98 or base == 66:
+            return number_word_end(raw, start + 2)
+    at = number_digits_end(raw, start)
+    if at < limit and raw[at] == 46 and dot_belongs(raw, at):
+        at = number_digits_end(raw, at + 1)
     if at < limit and (raw[at] == 101 or raw[at] == 69):
         at += 1
         if at < limit and (raw[at] == 43 or raw[at] == 45):
             at += 1
-    while at < limit and is_number_alnum(raw[at]):
-        at += 1
-    return at
+    return number_word_end(raw, at)
+
+
+# A directly adjacent operand keeps its dot as field-access punctuation.
+def follows_operand(tokens: list[token.Token], start: int) -> bool:
+    if len(tokens) == 0:
+        return False
+    previous = tokens[len(tokens) - 1]
+    if previous.end != start:
+        return False
+    kind = previous.kind
+    return kind == token.TokenKind.ident or kind == token.TokenKind.integer or kind == token.TokenKind.bytes or kind == token.TokenKind.format or kind == token.TokenKind.rparen or kind == token.TokenKind.rbracket or kind == token.TokenKind.rbrace or kind == token.TokenKind.kw_true or kind == token.TokenKind.kw_false or kind == token.TokenKind.kw_none
 
 
 # Stage-0 keyword and alias classification, length-bucketed: a word only
@@ -323,10 +366,8 @@ def classify_word(src: source.Source, word: bytes, start: int, end: int) -> Resu
     return Ok(token.TokenKind.ident)
 
 
-# '&' and '=>' were removed with no replacement and fail at tokenization.
+# '=>' was removed with no replacement and fails at tokenization.
 def reject_removed_punctuation(src: source.Source, ch: int, following: int, start: int, end: int) -> Result[int, diagnostic.Diagnostic]:
-    if ch == 38:
-        return Err(make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "`&` was removed and has no replacement"))
     if ch == 61 and following == 62:
         return Err(make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end + 1, "`=>` was removed and has no replacement"))
     return Ok(0)
@@ -371,7 +412,7 @@ def tokenize(src: source.Source) -> Result[list[token.Token], diagnostic.Diagnos
             kind = classify_word(src, word, start, index)?
             tokens.append(token.Token(kind=kind, start=start, end=index))
             continue
-        if ch >= 48 and ch <= 57:
+        if is_digit(ch) or (ch == 46 and index + 1 < limit and is_digit(raw[index + 1]) and not follows_operand(tokens, start)):
             index = float_end(src, start)
             tokens.append(token.Token(kind=token.TokenKind.integer, start=start, end=index))
             continue
@@ -469,6 +510,8 @@ def tokenize(src: source.Source) -> Result[list[token.Token], diagnostic.Diagnos
             kind = token.TokenKind.question
         elif ch == 64:
             kind = token.TokenKind.at
+        elif ch == 38:
+            kind = token.TokenKind.ampersand
         else:
             return Err(make_diag(src, diagnostic.E_TOKEN, start, index, "unexpected character in source"))
         tokens.append(token.Token(kind=kind, start=start, end=index))

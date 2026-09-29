@@ -85,7 +85,7 @@ $ mylang reference --query E_MODULE_NAME   # one feature or error code, from the
   [interface files](tooling/interface-files.md) (`mylang api`),
   [linting](tooling/lint.md), [import policy](tooling/import-policy.md).
 - Compiler behaviour: [caches](tooling/caches.md), [phase timings](tooling/timings.md),
-  [work and reuse reports](tooling/work-report.md).
+  [work and reuse reports](tooling/work-report.md), [module interfaces](tooling/module-interfaces.md).
 - Embedding and hosts: [calling one export](tooling/invoke.md),
   [invocation](tooling/invocation.md), [packed host calls](tooling/packed-host-calls.md),
   [the byte runner](tooling/byte-runner.md).

@@ -1,0 +1,20 @@
+module main
+import util
+import stats
+
+# A program whose modules compile on their own (MODULE-COMPILE-1): it prints
+# from two modules, shares a specialization with `stats`, sorts with its own
+# lambda, reads the facts of another module's functions, and ends in a trap
+# raised inside `stats`, so the trace crosses modules.
+
+
+def main(out: Stream) -> int:
+    values = [3, 9, 4, 1]
+    summary = stats.summarize(values, util.pick(True))
+    top = stats.show(out, summary)
+    ranked = sorted(values, key=lambda v: v % 3)
+    pair = util.Pair(left=ranked[0], right=util.twice(top))
+    step = util.pick(False)
+    out.print(util.largest(values) + util.swapped(pair) + step(top))
+    out.print(pair)
+    return stats.element(values, top)

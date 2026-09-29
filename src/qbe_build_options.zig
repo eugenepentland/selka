@@ -64,6 +64,16 @@ pub const default_mode = "ReleaseFast";
 pub const no_cache = "\x00frontend-no-cache";
 /// The flag that selects an explicit cache directory; repeated in usage and parse.
 const cache_dir_flag = "--cache-dir=";
+/// Whether this build disables frontend reuse, independently of where native
+/// objects are published. An explicit directory can accompany `--no-cache`.
+pub fn noCache(parsed: Options) bool {
+    if (std.mem.eql(u8, parsed.cache, no_cache)) return true;
+    for (parsed.link_arguments) |argument| {
+        if (std.mem.eql(u8, argument, "--")) break;
+        if (std.mem.eql(u8, argument, "--no-cache")) return true;
+    }
+    return false;
+}
 /// The native driver preserves the Python prototype's build controls.
 pub const Options = struct {
     link_arguments: []const []const u8 = &.{},
@@ -163,9 +173,13 @@ pub const usage = "usage: mylang build <file.my> (-o <output> | --run) [--projec
     "  --max-memory BYTES  byte ceiling for --run (K/M/G suffixes; default 4G)\n" ++
     "  --timeout=SECONDS  wall-clock ceiling for --run (no default; a run past it exits 1 with R_TIMEOUT)\n" ++
     "  --run instead of -o: execute temporarily; pass guest arguments after --\n";
+/// The flag that keeps a project build on the whole-program path.
+pub const whole_program_flag = "--whole-program";
+
 /// Parse explicit build flags, rejecting unknown controls.
 pub fn parse(args: []const []const u8) Error!Options {
     var result: Options = .{ .link_arguments = args };
+    var no_cache_seen = false;
     var index: usize = 0;
     while (index < args.len) : (index += 1) {
         const argument = args[index];
@@ -186,8 +200,9 @@ pub fn parse(args: []const []const u8) Error!Options {
         // `--no-cache` is a bare switch with no value; it selects the sentinel
         // `cache` value so no additional field is needed.
         if (std.mem.eql(u8, argument, "--no-cache")) {
-            if (!std.mem.eql(u8, result.cache, default_cache)) return error.InvalidBuildArguments;
-            result.cache = no_cache;
+            if (no_cache_seen) return error.InvalidBuildArguments;
+            no_cache_seen = true;
+            if (std.mem.eql(u8, result.cache, default_cache)) result.cache = no_cache;
             continue;
         }
         // `--step-accounting` is a build-policy request, not a build control: the
@@ -200,11 +215,18 @@ pub fn parse(args: []const []const u8) Error!Options {
         // `link_arguments`, which the driver already scans, so the frozen
         // Options field set does not grow for a profiling switch.
         if (std.mem.eql(u8, argument, "--keep-symbols")) continue;
+        // Internal `--module-objects` (MODULE-COMPILE-1) compiles one module's
+        // units and links nothing; it rides in `link_arguments` the same way.
+        if (std.mem.eql(u8, argument, "--module-objects")) continue;
+        // `--whole-program` (MODULE-SCHEDULE-3) asks for the whole-program
+        // build in place of the per-module one; it rides the same way.
+        if (std.mem.eql(u8, argument, whole_program_flag)) continue;
         // `--timings=json` is an observation request, not a build control. Like
         // `--keep-symbols` it rides in `link_arguments`, which the driver already
         // scans, so the frozen Options field set does not grow for a switch that
         // changes no artifact.
         if (std.mem.eql(u8, argument, "--timings=json")) continue;
+        if (std.mem.eql(u8, argument, "--diagnostics=json") or std.mem.eql(u8, argument, "--diagnostics=text")) continue;
         // `--release` is a bare switch that stands for four controls; `validate`
         // refuses it beside any control it already names.
         if (std.mem.eql(u8, argument, release_flag)) {
@@ -310,9 +332,7 @@ fn assign(result: *Options, flag: Flag, value: []const u8) Error!void {
         .@"--mode" => result.mode = value,
         .@"--target" => result.target = value,
         .@"--cache-dir" => {
-            // `--no-cache` and an explicit directory are contradictory in either
-            // order; the bare switch must never be silently overridden.
-            if (std.mem.eql(u8, result.cache, no_cache)) return error.InvalidBuildArguments;
+            // Reuse policy and native artifact location are independent.
             result.cache = value;
         },
         // The selective frontend input travels in `link_arguments`, which the
@@ -417,11 +437,16 @@ test "temporary native runs accept runtime options and reject persistent output"
     try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "-o", "out", "--", "--gc-stress" }));
 }
 
-test "build options accept --no-cache only without a cache directory" {
+// spec: CLI-CACHE-ISOLATION-1
+test "build options keep no-cache reuse policy independent of the object directory" {
     const parsed = try parse(&.{ "main.my", "-o", "out", "--no-cache" });
     try std.testing.expectEqualStrings(no_cache, parsed.cache);
-    try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "-o", "out", "--no-cache", "--cache-dir=dir" }));
-    try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "-o", "out", "--cache-dir=dir", "--no-cache" }));
+    const first = try parse(&.{ "main.my", "-o", "out", "--no-cache", "--cache-dir=dir" });
+    const second = try parse(&.{ "main.my", "-o", "out", "--cache-dir=dir", "--no-cache" });
+    try std.testing.expectEqualStrings("dir", first.cache);
+    try std.testing.expectEqualStrings("dir", second.cache);
+    try std.testing.expect(noCache(first));
+    try std.testing.expect(noCache(second));
     try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "-o", "out", "--no-cache", "--no-cache" }));
 }
 

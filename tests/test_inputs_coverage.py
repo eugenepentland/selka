@@ -29,6 +29,7 @@ ROOT = Path(__file__).resolve().parents[1]
 INPUTS = ROOT / "build_test_inputs.zig"
 # Cached Zig test roots and the list in build_test_inputs.zig that covers each.
 ROOTS = {
+    "src/memory_budget.zig": "memory_budget",
     "src/root_test.zig": "unit",
     "test/integration.zig": "cli",
     "src/schematic/tests.zig": "schematic",

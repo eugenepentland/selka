@@ -49,6 +49,9 @@ const diagnostic = @import("diagnostic.zig");
 const Names = @import("module_names.zig").Names;
 /// Which functions a native-test facts payload describes.
 pub const FactsScope = native_test_facts.Scope;
+/// MODULE-TEST-1: a module compile's share of the test facts, the schema of
+/// the tests and benchmarks it emits, and which functions those are.
+pub const TestShare = struct { facts: []const u8, schema: []const u8, roots: []const bool };
 const native_test_facts = @import("native_test_facts.zig");
 const semantic_cache = @import("semantic_cache.zig");
 const sema = @import("sema.zig");
@@ -198,6 +201,32 @@ pub const Compilation = struct {
             error.OutOfMemory => return error.OutOfMemory,
             else => return error.InternalError,
         };
+    }
+
+    /// MODULE-TEST-1: the share of the test facts of the functions `emitted`
+    /// marks (`native_test_facts.renderShare`), with the tests and benchmarks
+    /// among them as roots, and those roots' schema.
+    pub fn testShare(self: *Compilation, allocator: @import("std").mem.Allocator, emitted: []const bool) EmitNativeError!TestShare {
+        const program = self.program orelse return error.InternalError;
+        if (emitted.len != program.functions.len) return error.InternalError;
+        const all = try self.testEntryRoots(allocator);
+        defer allocator.free(all);
+        const mask = try allocator.alloc(bool, program.functions.len);
+        @memset(mask, false);
+        var roots: @import("std").ArrayList(typed.FunctionId) = .empty;
+        defer roots.deinit(allocator);
+        for (all) |root| {
+            const index = @backingInt(root);
+            if (!emitted[index]) continue;
+            mask[index] = true;
+            try roots.append(allocator, root);
+        }
+        const schema = try self.renderSchema(allocator, roots.items);
+        const facts = native_test_facts.renderShare(allocator, self.src, program, emitted, mask) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            else => return error.InternalError,
+        };
+        return .{ .facts = facts, .schema = schema, .roots = mask };
     }
 
     /// The functions `mylang test` can select: every discovered test and every

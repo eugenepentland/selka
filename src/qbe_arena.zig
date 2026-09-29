@@ -73,12 +73,15 @@ pub fn Lower(comptime E: type) type {
     };
 }
 
-/// Scan the bindings declared before the block, release the ones declared inside
+/// Scan source bindings declared before the block, release the ones declared inside
 /// it, then free the whole depth without tracing the survivors.
 fn emitEnd(comptime E: type, self: *E, watermark: usize) Error!void {
     const locals = self.function.scope.locals;
     const scanned = @min(watermark, locals.len);
     for (locals[0..scanned], 0..) |local, index| {
+        // GC-ARENA-LOCAL-LIFETIME-1: a receiver temporary may already name
+        // superseded storage; closing a scope adds no source-level use of it.
+        if (local.usage.temporary) continue;
         if (!(try self.layout(local.ty)).trace) continue;
         const retained = self.temp();
         // A parameter read through the caller's address keeps no slot of its

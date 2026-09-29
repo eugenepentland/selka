@@ -64,10 +64,44 @@ size_t myl_native_budget_environment(int *valid) {
     if (valid) *valid = 0;
     return 0;
 }
+/* Restore only the soft ceiling installed by the spawning compiler. External
+ * soft/hard ceilings remain in force. Consume the receipt once, before setting
+ * the guest's own budget, so a subsequent guard can only tighten it. */
+static int receipt_number(const char **text, unsigned long long *out) {
+    const char *start = *text;
+    unsigned long long value = 0;
+    while (**text >= '0' && **text <= '9') {
+        unsigned digit = (unsigned)(**text - '0');
+        if (value > (ULLONG_MAX - digit) / 10) return 0;
+        value = value * 10 + digit;
+        (*text)++;
+    }
+    if (*text == start) return 0;
+    *out = value;
+    return 1;
+}
+static void restore_host_limit(void) {
+    const char *text = getenv("MYLANG_HOST_LIMIT_RESTORE");
+    struct rlimit ceiling;
+    unsigned long long installed, inherited;
+    if (!text) return;
+    int valid = receipt_number(&text, &installed) && *text++ == ':' &&
+                receipt_number(&text, &inherited) && !*text;
+    unsetenv("MYLANG_HOST_LIMIT_RESTORE");
+    unsetenv("MYLANG_HOST_LIMIT_CHECKPOINT");
+    if (!valid || getrlimit(RLIMIT_AS, &ceiling) || ceiling.rlim_cur != (rlim_t)installed) return;
+    rlim_t restored = (rlim_t)inherited;
+    if (ceiling.rlim_max != RLIM_INFINITY && restored > ceiling.rlim_max) restored = ceiling.rlim_max;
+    if (restored <= ceiling.rlim_cur) return;
+    ceiling.rlim_cur = restored;
+    (void)setrlimit(RLIMIT_AS, &ceiling);
+}
 int myl_native_budget_guard(size_t budget) {
     struct rlimit ceiling;
     rlim_t wanted;
-    if (MYL_NATIVE_SANITIZED || !budget) return 0;
+    if (MYL_NATIVE_SANITIZED) return 0;
+    restore_host_limit();
+    if (!budget) return 0;
     if (budget > SIZE_MAX - MYL_NATIVE_BUDGET_HEADROOM) return 0;
     if (getrlimit(RLIMIT_AS, &ceiling)) return 0;
     wanted = (rlim_t)(budget + MYL_NATIVE_BUDGET_HEADROOM);

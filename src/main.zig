@@ -125,6 +125,8 @@ const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--j
     "packages lock CONFIG.json --output LOCK.json | build ENTRY.my --lock LOCK.json [--command C] [--receipt FILE] (offline locked local packages)\n       mylang " ++
     "invoke <entry.my> --function='module::name' (--describe | --input=FILE) (call one exported function natively)\n       mylang " ++
     "dump-tokens <file.my> (stage-0 `tokens-v1` JSON on stdout; lexical failures exit 1)\n       mylang " ++
+    "interfaces emit|check|oracle <entry.my> | show <module.myi> (per-module interface artifacts; `mylang interfaces` prints the options)\n       mylang " ++
+    "compile-module <entry.my> --module=NAME ... | link-modules <entry.my> --units=DIR -o OUT (per-module build; `mylang compile-module` prints the options)\n       mylang " ++
     "<schema-project|input-module|check|run|dump-bytecode|di" ++
     "scover-duplicates|discover-project-duplicates|report-project-quality|report-quality|fmt|fm" ++
     "t-module|fmt-project|emit-qbe|emit-project-qbe|list-modules|list-interfaces|list-" ++
@@ -199,6 +201,7 @@ pub fn main(init: std.process.Init) void {
 
 const grants = @import("cli_grants.zig");
 const project_config = @import("project_config.zig");
+const module_build = @import("module_build.zig");
 const module_syntax = @import("module_syntax.zig");
 const native_run = @import("native_run.zig");
 const native_build = @import("qbe_build.zig");
@@ -277,10 +280,53 @@ fn buildCommand(process: std.process.Init, args: []const []const u8) !u8 {
     const asked = native_options.timingsJson(args);
     var timings = language.timings.Profile.init(process.io, asked, .compiler);
     var phases: native_build.PhaseTimings = .{};
-    const status = try native_build.runMeasured(process, args, if (asked) &phases else null);
+    // MODULE-SCHEDULE-3: a project executable builds module by module; what
+    // that path does not handle goes to the whole-program build.
+    const outcome = try module_build.build(process.gpa, .{ .io = process.io, .environ = process.environ_map, .args = args, .phases = if (asked) &phases else null, .identity = &build_identity });
+    const status = switch (outcome) {
+        .status => |done| done,
+        .fallback => try native_build.runMeasured(process, args, if (asked) &phases else null),
+    };
     addBuildPhases(&timings, phases);
     try timings.report(status);
     return status;
+}
+
+/// MODULE-CHECK-1: `mylang check` of a project entry, with no option but
+/// `--cache-dir`, checks it module by module; null hands it to the
+/// whole-program check (any other option, a friction log, or whatever the
+/// per-module check does not handle).
+fn checkModules(process: std.process.Init, args: []const []const u8) !?u8 {
+    var entry: ?[]const u8 = null;
+    var cache: ?[]const u8 = null;
+    for (args) |arg| {
+        if (std.mem.startsWith(u8, arg, cache_directory_prefix) and arg.len > cache_directory_prefix.len and cache == null) {
+            cache = arg[cache_directory_prefix.len..];
+        } else if (std.mem.startsWith(u8, arg, "-") or entry != null) return null else entry = arg;
+    }
+    const source = entry orelse return null;
+    if (process.environ_map.get("MYLANG_FRICTION_LOG") != null) return null;
+    // MODULE-CHECK-2: the detached seeder builds module records and reports
+    // nothing, whatever the per-module check could not do.
+    const seed = if (process.environ_map.get("MYLANG_CHECK_SEED")) |value| std.mem.eql(u8, value, "1") else false;
+    const outcome = try module_build.check(process.gpa, .{
+        .io = process.io,
+        .environ = process.environ_map,
+        .source = source,
+        .cache = cache orelse process.environ_map.get("MYLANG_FRONTEND_CACHE") orelse ".mylang-cache",
+        .identity = &build_identity,
+        .seed = seed,
+    });
+    if (seed) return 0;
+    return switch (outcome) {
+        .status => |status| status,
+        .fallback => null,
+    };
+}
+
+fn checkModuleDispatch(process: std.process.Init, args: []const []const u8) !?u8 {
+    if (args.len < 2 or !std.mem.eql(u8, args[1], "check")) return null;
+    return checkModules(process, args[2..]);
 }
 
 /// Record each phase a native build actually measured. A phase that never ran
@@ -312,6 +358,23 @@ fn settleModes(process: std.process.Init) !@import("main_runtime_mode.zig").Sett
     build_identity = runtimeIdentity(build_identity);
     return .{ .run = args };
 }
+fn moduleCommand(process: std.process.Init, args: []const [:0]const u8) !?u8 {
+    if (args.len < 2) return null;
+    if (std.mem.eql(u8, args[1], "interfaces")) {
+        const status = try @import("module_interface_command.zig").run(process, args[2..]);
+        return status;
+    }
+    if (std.mem.eql(u8, args[1], "compile-module")) {
+        const status = try @import("module_compile_command.zig").compileModule(process, args[2..], &build_identity);
+        return status;
+    }
+    if (std.mem.eql(u8, args[1], "link-modules")) {
+        const status = try @import("module_compile_command.zig").linkModules(process, args[2..]);
+        return status;
+    }
+    return null;
+}
+
 fn dispatch(process: std.process.Init) !u8 {
     const args = switch (try settleModes(process)) {
         .run => |normalized| normalized,
@@ -329,6 +392,7 @@ fn dispatch(process: std.process.Init) !u8 {
     }
     if (args.len >= 2 and std.mem.eql(u8, args[1], "build")) return buildCommand(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "fix")) return @import("fix_command.zig").run(process, args[2..]);
+    if (try checkModuleDispatch(process, args)) |status| return status;
     if (args.len >= 2 and std.mem.eql(u8, args[1], "emit-runtime")) return @import("qbe_build.zig").emitRuntime(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "test")) return @import("native_test_command.zig").run(process, args[2..]) catch |err| switch (err) {
         // `run` already rendered the child compiler's located diagnostic; exit 1
@@ -347,6 +411,7 @@ fn dispatch(process: std.process.Init) !u8 {
     if (args.len >= 2 and std.mem.eql(u8, args[1], "doctest")) return @import("doctest_command.zig").run(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "reference")) return @import("reference_command.zig").run(@import("mylang"), process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "docs")) return @import("docs_command.zig").run(process, args[2..]);
+    if (try moduleCommand(process, args)) |status| return status;
     if (args.len >= 2 and std.mem.eql(u8, args[1], "packages")) {
         const identity = std.fmt.bytesToHex(build_identity, .lower);
         return @import("packages_command.zig").run(process, args[2..], &identity);
@@ -501,7 +566,7 @@ fn frameBudgetRefused(init: Context, parsed: Parsed) !?u8 {
     if (parsed.command != .run and parsed.command != .@"run-project") return null;
     const frames = requestedFrames(parsed.runtime) orelse return null;
     const memory = budget.resolve(parsed.max_memory, init.environ, budget.variable, budget.run_default) catch return null;
-    const refusal = try budget.frameRefusal(init.gpa, @tagName(parsed.command), "a guest", frames, memory) orelse return null;
+    const refusal = try budget.frameRefusal(init.gpa, init.environ, @tagName(parsed.command), "a guest", frames, memory) orelse return null;
     defer init.gpa.free(refusal);
     try init.text(refusal);
     return input_probe.refused_status;
@@ -601,9 +666,8 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
     // `run` and `check` accept a project entry: a file that opens with a module
     // header (or a module-only import/export) loads its reachable graph exactly as
     // `run-project`/`check-project` does. A plain single-file program skips this
-    // and keeps the original one-unit path byte-for-byte. `check` of an entry
-    // without `main` falls back to the library check (`CHECK-LIBRARY-2`).
-    if (parsed.command == .run and module_syntax.usesModuleSyntax(bytes)) return listModules(init, parsed);
+    // and keeps the original one-unit path byte-for-byte.
+    if (parsed.command == .run and module_syntax.usesModuleSyntax(bytes)) return runProjectModules(init, parsed);
     if (parsed.command == .check and module_syntax.usesModuleSyntax(bytes)) {
         var project = parsed;
         project.command = .@"check-project";
@@ -837,6 +901,45 @@ fn explainOwnership(init: Context, compilation: *language.Compilation, path: ?[]
 
 /// Report the flag that would grant an entry point the authority it asked for.
 /// Only `--restrict` can withhold one, so the message names the active mode.
+/// MODULE-SCHEDULE-3: `run` of a project builds it module by module and
+/// runs the executable; null when the whole-program path must run it: a
+/// restricted grant set, a report, timings, an invalidation explanation,
+/// generated inputs, JSON diagnostics or no cache.
+fn runModules(init: Context, parsed: Parsed) !?u8 {
+    const reporting = parsed.reporting;
+    if (reporting.explain_invalidation or reporting.timings or reporting.timings_json or reporting.report) return null;
+    if (parsed.grants.flags.restricted or parsed.input_count != 0 or parsed.no_cache) return null;
+    if (init.diagnostics != .text or init.friction != null) return null;
+    var settings = parsed.native;
+    settings.source = parsed.path;
+    settings.project = true;
+    settings.run = true;
+    settings.arguments = parsed.runtime;
+    settings.max_memory = parsed.max_memory;
+    const policy = parsed.runPolicy(true);
+    const outcome = try module_build.buildForRun(init.gpa, .{
+        .io = init.io,
+        .environ = init.environ,
+        .settings = settings,
+        .switches = .{ .drop_debug = false, .step_checks = policy.step_checks, .frame_checks = policy.frame_checks },
+        .identity = &build_identity,
+    });
+    const path = switch (outcome) {
+        .executable => |built| built,
+        .status => |status| return status,
+        .fallback => return null,
+    };
+    defer init.gpa.free(path);
+    const status = try native_run.executeBuilt(init.gpa, .{ .io = init.io, .environ = init.environ, .manifest = "", .settings = settings, .diagnostics = .text }, path);
+    return status;
+}
+
+fn runProjectModules(init: Context, parsed: Parsed) !u8 {
+    if (try runModules(init, parsed)) |status| return status;
+    const status = try listModules(init, parsed);
+    return status;
+}
+
 fn reportUngranted(init: Context, flag: []const u8) !u8 {
     const message = try std.fmt.allocPrint(
         init.gpa,
@@ -1041,6 +1144,9 @@ const Parsed = struct {
     max_memory: ?u64,
     /// Internal selective native emission input; one qualified function per line.
     select_file: ?[]const u8,
+    /// Internal `--emission-report=FILE` on `emit-project-qbe`: write every
+    /// function's emission facts and unit keys there (MODULE-COMPILE-1).
+    emission_report: ?[]const u8 = null,
     /// Internal `--drop-debug`: a ReleaseFast build omits `debug` lines.
     drop_debug: bool,
     /// Internal `--drop-step-checks`: this build carries no instruction ceiling.
@@ -1213,6 +1319,7 @@ const ArgumentParser = struct {
     explain_ownership: ?[]const u8 = null,
     cache_dir: ?[]const u8 = null,
     select_file: ?[]const u8 = null,
+    emission_report: ?[]const u8 = null,
     drop_debug: bool = false,
     drop_step_checks: bool = false,
     drop_frame_checks: bool = false,
@@ -1392,11 +1499,21 @@ const ArgumentParser = struct {
     /// manifest leaves out the export, schema, wire, codec and test-dependency
     /// facts only a library build reads (`EMIT-META-1`).
     fn leanManifestOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
+        if (try self.emissionReportOption(arg)) return true;
         const executable = std.mem.eql(u8, arg, "--lean-manifest=executable");
         if (!executable and !std.mem.eql(u8, arg, "--lean-manifest")) return false;
         if (self.command != .@"emit-project-qbe" or self.lean_manifest) return error.Usage;
         self.lean_manifest = true;
         self.executable_manifest = executable;
+        return true;
+    }
+
+    /// Internal `--emission-report=FILE` on `emit-project-qbe`: the whole
+    /// program's per-function emission facts and unit keys (MODULE-COMPILE-1).
+    fn emissionReportOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
+        if (!std.mem.startsWith(u8, arg, "--emission-report=")) return false;
+        if (self.command != .@"emit-project-qbe" or self.emission_report != null) return error.Usage;
+        self.emission_report = arg["--emission-report=".len..];
         return true;
     }
 
@@ -1662,6 +1779,7 @@ const ArgumentParser = struct {
             .no_cache = self.no_cache,
             .cache_dir = self.cache_dir,
             .select_file = self.select_file,
+            .emission_report = self.emission_report,
             .drop_debug = self.drop_debug,
             .drop_step_checks = self.drop_step_checks,
             .drop_frame_checks = self.drop_frame_checks,
@@ -1734,10 +1852,10 @@ const ModuleFiles = struct {
     inputs: []const GeneratedInput = &.{},
     /// The directory embedded files must stay inside (`EMBED-1`); the module root when null.
     embed_root: ?[]const u8 = null,
-    fn embed(context: ?*anyopaque, allocator: std.mem.Allocator, module_path: []const u8, path: []const u8) std.mem.Allocator.Error!language.embed.Read {
+    fn embed(context: ?*anyopaque, allocator: std.mem.Allocator, module_path: []const u8, path: []const u8, limit: usize) std.mem.Allocator.Error!language.embed.Read {
         const self: *ModuleFiles = @ptrCast(@alignCast(context.?));
         var files: language.project_files.Files = .{ .io = self.io, .root = self.root, .embed_root = self.embed_root };
-        return language.project_files.Files.readEmbed(&files, allocator, module_path, path);
+        return language.project_files.Files.readEmbed(&files, allocator, module_path, path, limit);
     }
     fn provider(self: *ModuleFiles) language.project.Provider {
         return .{ .context = self, .read = ModuleFiles.read, .embed = ModuleFiles.embed };
@@ -2305,7 +2423,7 @@ fn contextOptions(init: Context, parsed: Parsed, files: ?*ModuleFiles) error{ Ou
             // The provider the project was loaded from, so the answer re-reads the
             // same files before it is published. `null` when the caller had none:
             // the answer is then confirmed only against the bytes it holds.
-            .sources = if (files) |provider| .{ .context = provider, .read = ModuleFiles.read } else null,
+            .sources = if (files) |provider| provider.provider() else null,
         },
     };
     const path = parsed.context.against orelse return request;
@@ -2828,7 +2946,12 @@ fn emitRequestedOutput(init: Context, compilation: *language.project_compile.Com
     return switch (parsed.command) {
         .@"native-test-graph" => try emitNativeTestFacts(init, compilation, .all),
         .@"emit-project-qbe" => blk: {
+            var emitted: language.qbe_fragments.Report = .{ .arena = init.arena.allocator() };
+            if (parsed.emission_report != null) if (compilation.reuse) |*reuse| {
+                reuse.report = &emitted;
+            };
             const manifest = (try emitProjectNative(init, compilation, parsed.select_file, parsed.emissionPolicy())) orelse return error.SourceError;
+            if (parsed.emission_report) |path| try writeEmissionReport(init, compilation, emitted, path);
             try rememberManifest(init, parsed, site, compilation, manifest);
             // FRAGMENT-SWEEP-1: every text this manifest names is in a flushed
             // pack and the replay, so an occasional sweep can go now.
@@ -2852,6 +2975,25 @@ fn emitRequestedOutput(init: Context, compilation: *language.project_compile.Com
         },
         else => null,
     };
+}
+
+/// MODULE-COMPILE-1: `emit-project-qbe --emission-report=FILE` writes what
+/// the whole-program emission computed about every function (the facts a
+/// module interface carries and each unit's keys) and every module's imports,
+/// the reference a per-module build is compared with.
+fn writeEmissionReport(init: Context, compilation: *const language.project_compile.Compilation, emitted: language.qbe_fragments.Report, path: []const u8) !void {
+    const a = init.arena.allocator();
+    const loaded = compilation.index.project.modules.items;
+    const Module = struct { name: []const u8, imports: []const []const u8 };
+    const modules = try a.alloc(Module, loaded.len);
+    for (loaded, modules) |module, *row| {
+        const imports = try a.alloc([]const u8, module.imports.len);
+        for (module.imports, imports) |imported, *name| name.* = loaded[imported.target].name;
+        row.* = .{ .name = module.name, .imports = imports };
+    }
+    const text = try std.json.Stringify.valueAlloc(a, .{ .version = "emission-report-v1", .arenas = emitted.arenas, .modules = modules, .functions = emitted.functions }, .{});
+    defer a.free(text);
+    std.Io.Dir.cwd().writeFile(init.io, .{ .sub_path = path, .data = text }) catch return error.WriteFailed;
 }
 
 fn partialNavigation(init: Context, project: *language.project.Project, parsed: Parsed, files: ?*ModuleFiles) !u8 {
@@ -3545,7 +3687,7 @@ fn replayFrame(hash: *std.crypto.hash.Blake3, part: []const u8) void {
 
 /// Whether this command may replay or remember a whole lean emission.
 fn replaysManifest(parsed: Parsed) bool {
-    return parsed.command == .@"emit-project-qbe" and parsed.lean_manifest and parsed.select_file == null and !parsed.reporting.explain_invalidation;
+    return parsed.command == .@"emit-project-qbe" and parsed.lean_manifest and parsed.select_file == null and !parsed.reporting.explain_invalidation and parsed.emission_report == null;
 }
 
 /// Replay an unchanged project's last lean emission: its warnings to stderr and

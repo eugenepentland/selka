@@ -398,7 +398,25 @@ const Builder = struct {
 };
 /// The identities an answer is pinned to: the compiler that produced it and the
 /// loaded source it was produced from.
-pub const Snapshot = struct { implementation: receipt.Implementation, inputs: []const receipt.Input };
+pub const Snapshot = struct {
+    implementation: receipt.Implementation,
+    inputs: []const receipt.Input,
+    embeds: []const receipt.Embedded = &.{},
+
+    /// Keep the existing source-only wire identity when no embedded files exist.
+    pub fn jsonStringify(self: Snapshot, writer: anytype) !void {
+        try writer.beginObject();
+        try writer.objectField("implementation");
+        try writer.write(self.implementation);
+        try writer.objectField("inputs");
+        try writer.write(self.inputs);
+        if (self.embeds.len != 0) {
+            try writer.objectField("embeds");
+            try writer.write(self.embeds);
+        }
+        try writer.endObject();
+    }
+};
 
 /// Every declaration and resolved reference one frontend pass produced, owned by
 /// their arena until `deinit`. `render` publishes these as `navigation-v1`;
@@ -473,7 +491,7 @@ pub fn collect(allocator: std.mem.Allocator, compilation: *pc.Compilation, ident
     // exact loaded-source receipt without treating that diagnostic as a missing file.
     var loaded = compilation.index.project.*;
     loaded.problem = null;
-    const snapshot: Snapshot = .{ .implementation = try receipt.implementation(scratch, identity), .inputs = try receipt.inputs(scratch, &loaded) };
+    const snapshot: Snapshot = .{ .implementation = try receipt.implementation(scratch, identity), .inputs = try receipt.inputs(scratch, &loaded), .embeds = try receipt.embeds(scratch, &loaded) };
     const digest = try receipt.digest(scratch, snapshot);
     try builder.declarationsFromSyntax();
     if (compilation.program) |program| {

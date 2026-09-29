@@ -45,7 +45,9 @@ pub fn discoveryArgs(a: std.mem.Allocator, args: []const [:0]const u8) std.mem.A
 }
 
 fn accepts(command: []const u8) bool {
-    for ([_][]const u8{ "check", "check-module", "check-project", "build", "run", "run-project", "test", "emit-qbe", "emit-project-qbe", "dump-bytecode", "fix", "invoke", "emit-runtime" }) |name| {
+    for ([_][]const u8{
+        "interfaces", "compile-module", "link-modules", "check", "check-module", "check-project", "build", "run", "run-project", "test", "emit-qbe", "emit-project-qbe", "dump-bytecode", "fix", "invoke", "emit-runtime",
+    }) |name| {
         if (std.mem.eql(u8, name, command)) return true;
     }
     return false;

@@ -866,34 +866,36 @@ pub const Index = struct {
         // is owned by the caller. This keeps a one-shot listing leak-free.
         const scratch = self.project.arena.allocator();
         var modules: std.ArrayList(ContractModule) = .empty;
-        for (self.project.order.items) |module| {
-            var declarations: std.ArrayList(ContractDeclaration) = .empty;
-            for (self.units[module].symbols.items) |symbol| {
-                // `mylang test` discovers `test_` functions by name and `@test`
-                // declarations by attribute, so the discovery contract publishes
-                // them beside explicit exports.
-                const discovered_test = symbol.kind == .function and (std.mem.startsWith(u8, symbol.name, "test_") or self.isTestDeclaration(module, symbol));
-                if (!symbol.exported and !discovered_test) continue;
-                const declaration = try self.contractDeclaration(module, symbol);
-                // An unexported `test_` name is only discovered when it already
-                // has the defaulting test shape; `@test` names its intent, so it
-                // needs no shape default.
-                if (!symbol.exported) {
-                    if (!testShape(declaration) and declaration.@"test" != true) continue;
-                }
-                try declarations.append(scratch, declaration);
-            }
-            std.mem.sort(ContractDeclaration, declarations.items, {}, declarationLess);
-            try modules.append(scratch, .{
-                .name = self.project.modules.items[module].name,
-                .declarations = try declarations.toOwnedSlice(scratch),
-            });
-        }
+        for (self.project.order.items) |module| try modules.append(scratch, try self.contractModule(module));
         std.mem.sort(ContractModule, modules.items, {}, moduleLess);
         return std.json.Stringify.valueAlloc(allocator, ContractManifest{
             .analysis = if (self.program == null) fact_status.name(.declaration_only) else null,
             .modules = try modules.toOwnedSlice(scratch),
         }, .{ .emit_null_optional_fields = false });
+    }
+    /// MODULE-TEST-4: module `module`'s entry of `renderContracts`: its
+    /// exported declarations and its discovered tests, sorted by name,
+    /// allocated in the project arena.
+    pub fn contractModule(self: *Index, module: usize) ContractError!ContractModule {
+        const scratch = self.project.arena.allocator();
+        var declarations: std.ArrayList(ContractDeclaration) = .empty;
+        for (self.units[module].symbols.items) |symbol| {
+            // `mylang test` discovers `test_` functions by name and `@test`
+            // declarations by attribute, so the discovery contract publishes
+            // them beside explicit exports.
+            const discovered_test = symbol.kind == .function and (std.mem.startsWith(u8, symbol.name, "test_") or self.isTestDeclaration(module, symbol));
+            if (!symbol.exported and !discovered_test) continue;
+            const declaration = try self.contractDeclaration(module, symbol);
+            // An unexported `test_` name is only discovered when it already
+            // has the defaulting test shape; `@test` names its intent, so it
+            // needs no shape default.
+            if (!symbol.exported) {
+                if (!testShape(declaration) and declaration.@"test" != true) continue;
+            }
+            try declarations.append(scratch, declaration);
+        }
+        std.mem.sort(ContractDeclaration, declarations.items, {}, declarationLess);
+        return .{ .name = self.project.modules.items[module].name, .declarations = try declarations.toOwnedSlice(scratch) };
     }
     /// Whether one symbol's declaration carries `@test`.
     fn isTestDeclaration(self: *Index, module: usize, symbol: Symbol) bool {

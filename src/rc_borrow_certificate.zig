@@ -8,7 +8,7 @@ const shapes = @import("rc_shape.zig");
 const model = @import("rc_model.zig");
 const Hash = std.crypto.hash.Blake3;
 /// Changing the accepted physical grammar changes every certificate identity.
-pub const version = "mylang-rc-borrowed-entry-v7";
+pub const version = "mylang-rc-borrowed-entry-v8";
 const cfg = @import("rc_borrow_flow.zig");
 const Value = cfg.Value;
 
@@ -138,7 +138,7 @@ fn flow(input: Input) native.Error!?Answer {
         if (!graph.charge()) return null;
         proof.restore(state, pc);
         number(&proof.hash, pc);
-        std.hash.autoHashStrat(&proof.hash, instruction.op, .Deep);
+        try @import("rc_proof_identity.zig").operation(&proof.hash, input.catalog, input.functions, instruction.op);
         switch (instruction.op) {
             .ret => {
                 if (proof.stack.items.len != 1) return null;

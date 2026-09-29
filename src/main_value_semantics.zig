@@ -12,7 +12,7 @@ const Flag = struct { index: usize, enabled: bool };
 
 /// The commands that accept `--value-semantics`: every command that checks,
 /// builds or runs a program, and the inspection commands that show its IL.
-const commands = [_][]const u8{ "check", "check-module", "check-project", "build", "run", "run-project", "test", "emit-qbe", "emit-project-qbe", "dump-bytecode", "fix", "invoke" };
+const commands = [_][]const u8{ "interfaces", "compile-module", "link-modules", "check", "check-module", "check-project", "build", "run", "run-project", "test", "emit-qbe", "emit-project-qbe", "dump-bytecode", "fix", "invoke" };
 
 /// Failures settling the switch: memory, and writing a refusal to stderr.
 pub const Error = std.mem.Allocator.Error || std.Io.File.Writer.Error;

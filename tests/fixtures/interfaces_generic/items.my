@@ -1,0 +1,10 @@
+module items
+
+
+public record Item:
+    id: int
+    weight: int
+
+
+public def weight_of(item: Item) -> int effects():
+    return item.weight

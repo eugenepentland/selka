@@ -29,6 +29,9 @@
 /// legacy `--qbe` spelling of the LLVM backend (the compiler never reads it).
 const llvm_adapter = "experiments/llvm-backend/qbe_llvm.py";
 
+/// The independently gated named byte-ceiling module.
+pub const memory_budget = [_][]const u8{"src/memory_budget.zig"};
+
 /// `src/root_test.zig`, the unit root. Its guest programs also read the
 /// runtime sources the compiler embeds, which `src/` covers.
 pub const unit = [_][]const u8{
@@ -78,7 +81,38 @@ pub const native_roots = [_][]const u8{ "src/", "tests/" };
 pub const idioms = [_][]const u8{ "tests/idiom_probes.py", "tests/fixtures/idioms/" };
 
 /// `tests/incremental_diff.py`: the mutation walk and its fixture project.
-pub const incremental = [_][]const u8{ "tests/incremental_diff.py", "tests/fixtures/incremental/" };
+pub const incremental = [_][]const u8{ "tests/incremental_diff.py", "tests/fixtures/incremental/", "tests/fixtures/module_projects/" };
+
+/// `tests/interface_diff.py`: the interface-hash mutation walk and its fixture.
+pub const interfaces = [_][]const u8{ "tests/interface_diff.py", "tests/fixtures/interfaces/", "tests/fixtures/interfaces_generic/" };
+
+/// `tests/interface_oracle.py`: the per-module check oracle over `tests/lang`
+/// and the interface fixtures.
+pub const interface_oracle = [_][]const u8{
+    "tests/interface_oracle.py",
+    "tests/lang/",
+    "tests/fixtures/interfaces/",
+    "tests/fixtures/interfaces_generic/",
+    "tests/fixtures/incremental/",
+};
+
+/// `tests/module_compile_oracle.py`, `tests/module_build_oracle.py` and
+/// `tests/module_build_diff.py`: per-module compilation and the default
+/// per-module build over `tests/lang` and the fixtures, and its build
+/// differential.
+pub const module_compile = [_][]const u8{
+    "tests/module_compile_oracle.py",
+    "tests/module_build_oracle.py",
+    "tests/module_check_oracle.py",
+    "tests/module_test_oracle.py",
+    "tests/module_build_diff.py",
+    "tests/lang/",
+    "tests/fixtures/interfaces/",
+    "tests/fixtures/interfaces_generic/",
+    "tests/fixtures/incremental/",
+    "tests/fixtures/module_compile/",
+    "tests/fixtures/module_projects/",
+};
 
 /// `tests/idiom_probes.py --self-test`: the CPython oracle only.
 pub const idioms_self = [_][]const u8{"tests/idiom_probes.py"};
@@ -150,3 +184,9 @@ pub const coverage_self = [_][]const u8{"tests/test_inputs_coverage.py"};
 
 /// `tests/input_manifest.py --self-test`.
 pub const manifest_self = [_][]const u8{"tests/input_manifest.py"};
+
+/// Isolated CLI cache, frame-diagnostic and guest-address-space probes.
+pub const tooling_isolation = [_][]const u8{"tests/tooling_cache_isolation.py"};
+
+/// The bootstrap lexer source and live-compiler numeric extent oracle.
+pub const selfhost_numeric = [_][]const u8{"selfhost/"};

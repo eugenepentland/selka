@@ -1,0 +1,34 @@
+module stats
+import util
+import strings
+
+# Opens an arena (every unit of the program is then emitted for arenas),
+# instantiates `util.largest` as `main` does, sorts with a lambda, invokes a
+# function value another module chose, and prints a record.
+
+
+public record Summary:
+    top: int
+    count: int
+    label: str
+
+
+public def summarize(values: list[int], step: def(int) -> int effects()) -> Summary:
+    total = 0
+    with arena():
+        scratch: list[int] = []
+        for value in values:
+            scratch.append(step(value))
+        for value in scratch:
+            total += value
+    ordered = sorted(values, key=lambda v: 0 - v)
+    return Summary(top=util.largest(ordered), count=total, label=strings.strip("  sum  "))
+
+
+public def show(out: Stream, summary: Summary) -> int effects(output):
+    out.print(summary)
+    return summary.top
+
+
+public def element(values: list[int], index: int) -> int:
+    return values[index]

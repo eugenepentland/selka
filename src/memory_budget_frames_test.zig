@@ -34,7 +34,7 @@ test "the refusal names the reservation, the limit and both ways out" {
     const inherited = (try budget.frameRefusalUnder(std.testing.allocator, refuser, 400000, 64 << 30, 8 << 30)).?;
     defer std.testing.allocator.free(inherited);
     try std.testing.expect(std.mem.indexOf(u8, inherited, "this process inherited an address-space limit below --max-memory") != null);
-    try std.testing.expect(std.mem.indexOf(u8, inherited, "MYLANG_HOST_MEMORY_LIMIT=0 removes it") != null);
+    try std.testing.expect(std.mem.indexOf(u8, inherited, "raise the caller's RLIMIT_AS") != null);
 }
 
 // spec-case: RUN-FRAME-BUDGET-1
@@ -42,4 +42,13 @@ test "the per-frame stack constants match the runtime that maps the stack" {
     const runtime = @embedFile("qbe_stack.c");
     try std.testing.expect(std.mem.indexOf(u8, runtime, "#define FRAME_STACK_BYTES 32768") != null);
     try std.testing.expect(std.mem.indexOf(u8, runtime, "#define STACK_SLACK (8u*1024u*1024u)") != null);
+}
+
+// spec-case: RUN-FRAME-BUDGET-1
+test "an overflowing frame reservation is refused without overflowing its advice" {
+    try std.testing.expect(!budget.frameFit(1 << 49, 0, null).fits);
+    const text = (try budget.frameRefusalUnder(std.testing.allocator, .{ .command = "run", .who = "a guest" }, 1 << 49, budget.run_default, null)).?;
+    defer std.testing.allocator.free(text);
+    try std.testing.expect(std.mem.indexOf(u8, text, "exceeds the addressable native stack size") != null);
+    try std.testing.expect(std.mem.indexOf(u8, text, "lower --max-frames") != null);
 }

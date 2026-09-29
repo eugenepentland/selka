@@ -370,21 +370,46 @@ pub fn plainAggregate(catalog: *native.Catalog, facts: *shapes.Catalog, ty: type
 pub fn generate(allocator: std.mem.Allocator, catalog: *native.Catalog) Error![]u8 {
     var arena = std.heap.ArenaAllocator.init(allocator);
     defer arena.deinit();
-    const a = arena.allocator();
+    return render(allocator, try blocks(arena.allocator(), catalog));
+}
+
+/// Independently mergeable ownership and collection-element definitions.
+pub const Block = struct { name: []const u8, text: []const u8 };
+
+/// Produce glue groups keyed by semantic symbol, independently of catalog order.
+pub fn blocks(a: std.mem.Allocator, catalog: *native.Catalog) Error![]Block {
     var facts = try shapes.Catalog.init(a, catalog);
-    var output: std.Io.Writer.Allocating = .init(allocator);
-    defer output.deinit();
-    var generator: Generator = .{ .allocator = a, .catalog = catalog, .facts = &facts, .writer = &output.writer };
-    try generator.print("{s}", .{prelude});
+    var out: std.ArrayList(Block) = .empty;
     for (0..typed.Type.record_base + catalog.records.len) |index| {
         const ty: typed.Type = @fromBackingInt(index);
-        const element = listElement(catalog, ty);
-        if (try plainAggregate(catalog, &facts, ty)) {
-            if (element) try generator.append(try descriptors.symbol(a, catalog, ty), (try catalog.layout(ty)).size, false);
-            continue;
+        const counted = (try facts.get(ty)).counted and (try catalog.layout(ty)).size != 0;
+        const plain = try plainAggregate(catalog, &facts, ty);
+        if (!counted and !plain) continue;
+        const name = try descriptors.symbol(a, catalog, ty);
+        var output: std.Io.Writer.Allocating = .init(a);
+        var generator: Generator = .{ .allocator = a, .catalog = catalog, .facts = &facts, .writer = &output.writer };
+        if (counted) {
+            try generator.functions(ty, name, false);
+            try out.append(a, .{ .name = name, .text = try output.toOwnedSlice() });
         }
-        if (!(try facts.get(ty)).counted or (try catalog.layout(ty)).size == 0) continue;
-        try generator.functions(ty, try descriptors.symbol(a, catalog, ty), element);
+        if (listElement(catalog, ty)) {
+            if (counted) try generator.lists(name, (try catalog.layout(ty)).size) else try generator.append(name, (try catalog.layout(ty)).size, false);
+            try out.append(a, .{ .name = try std.fmt.allocPrint(a, "{s}_list", .{name}), .text = try output.toOwnedSlice() });
+        }
     }
+    std.mem.sort(Block, out.items, {}, blockBefore);
+    return out.toOwnedSlice(a);
+}
+
+fn blockBefore(_: void, a: Block, b: Block) bool {
+    return std.mem.lessThan(u8, a.name, b.name);
+}
+
+/// Shared glue helpers followed by the program's symbol-sorted definition union.
+pub fn render(a: std.mem.Allocator, items: []const Block) Error![]u8 {
+    var output: std.Io.Writer.Allocating = .init(a);
+    defer output.deinit();
+    output.writer.writeAll(prelude) catch return error.OutOfMemory;
+    for (items) |item| output.writer.writeAll(item.text) catch return error.OutOfMemory;
     return output.toOwnedSlice();
 }

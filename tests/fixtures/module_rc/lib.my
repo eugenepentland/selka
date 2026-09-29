@@ -1,0 +1,49 @@
+module lib
+import leaf
+
+
+public def select(value: str, n: int) -> str effects():
+    for k in range(3):
+        if k == n:
+            return value
+    return value
+
+
+def helper(value: str) -> int effects():
+    total = 0
+    for k in range(3):
+        total = total + leaf.width(value) + k
+    return total
+
+
+public def measure(value: str) -> int effects():
+    total = 0
+    for k in range(3):
+        total = total + helper(value) + k
+    return total
+
+
+public def change(values: mut list[int], n: int) -> int:
+    for k in range(len(values)):
+        values[k] = values[k] + n
+    return len(values)
+
+
+public def frozen() -> bytes:
+    return b"fixed"
+
+def helper_ints(values: list[int]) -> int effects():
+    total = 0
+    index = 0
+    while index < len(values):
+        total = total + leaf.summed(values)
+        index = index + 1
+    return total
+
+public def measure_ints(values: list[int]) -> int effects():
+    total = 0
+    index = 0
+    while index < len(values):
+        total = total + helper_ints(values)
+        index = index + 1
+    return total

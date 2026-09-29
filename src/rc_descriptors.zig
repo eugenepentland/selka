@@ -22,20 +22,35 @@ pub fn symbol(allocator: std.mem.Allocator, catalog: *const native.Catalog, ty: 
 pub fn generate(allocator: std.mem.Allocator, catalog: *native.Catalog) Error![]u8 {
     var arena = std.heap.ArenaAllocator.init(allocator);
     defer arena.deinit();
-    const a = arena.allocator();
+    return render(allocator, try blocks(arena.allocator(), catalog));
+}
+
+/// One shape and its native descriptor registration facts, ordered by symbol.
+pub const Block = struct { name: []const u8, text: []const u8, unique_body: bool = false };
+
+/// Independent shape definitions with no per-module registration table.
+pub fn blocks(a: std.mem.Allocator, catalog: *native.Catalog) Error![]Block {
     const items = try collect(a, catalog);
+    const out = try a.alloc(Block, items.len);
+    for (items, out) |item, *block| {
+        var output: std.Io.Writer.Allocating = .init(a);
+        const layout = if (item.body) try catalog.heapLayout(item.ty) else try catalog.layout(item.ty);
+        defer if (item.body) catalog.releaseLayout(layout);
+        try emit(a, &output.writer, catalog, item, layout);
+        block.* = .{ .name = item.name, .text = try output.toOwnedSlice(), .unique_body = item.unique_body };
+    }
+    return out;
+}
+
+/// Render one program-wide shape union and exactly one registration table.
+// twin-drift-ok: Ownership shapes require both shape/type declarations and an RC registration table; value renderers have neither.
+pub fn render(allocator: std.mem.Allocator, items: []const Block) Error![]u8 {
     var output: std.Io.Writer.Allocating = .init(allocator);
     defer output.deinit();
     const writer = &output.writer;
     writer.writeAll("#include \"native_rc.h\"\n") catch return error.OutOfMemory;
-    for (items) |item| {
-        writer.print("extern const myl_native_type {s};\nextern const myl_rc_shape {s}_rc;\n", .{ item.name, item.name }) catch return error.OutOfMemory;
-    }
-    for (items) |item| {
-        const layout = if (item.body) try catalog.heapLayout(item.ty) else try catalog.layout(item.ty);
-        defer if (item.body) catalog.releaseLayout(layout);
-        try emit(a, writer, catalog, item, layout);
-    }
+    for (items) |item| writer.print("extern const myl_native_type {s};\nextern const myl_rc_shape {s}_rc;\n", .{ item.name, item.name }) catch return error.OutOfMemory;
+    for (items) |item| writer.writeAll(item.text) catch return error.OutOfMemory;
     try module(writer, items);
     return output.toOwnedSlice();
 }
@@ -100,7 +115,7 @@ fn emit(a: std.mem.Allocator, writer: *std.Io.Writer, catalog: *native.Catalog, 
     writer.writeAll("};\n") catch return error.OutOfMemory;
 }
 
-fn module(writer: *std.Io.Writer, items: []const Item) Error!void {
+fn module(writer: *std.Io.Writer, items: []const Block) Error!void {
     writer.writeAll("static const myl_rc_shape *const myl_rc_generated_shapes[] = {\n") catch return error.OutOfMemory;
     for (items) |item| writer.print(" &{s}_rc,\n", .{item.name}) catch return error.OutOfMemory;
     writer.writeAll("};\nstatic const myl_rc_descriptor myl_rc_generated_descriptors[] = {\n") catch return error.OutOfMemory;
