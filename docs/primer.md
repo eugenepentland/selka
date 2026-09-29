@@ -20,6 +20,13 @@ mylang docs primer                    # this page; `mylang --help` lists every c
 
 `run`, `build` and `test` all build with QBE unless you pass `--release`, so the
 edit-build-test loop stays fast; `--release` pays an LTO link on every rebuild.
+A file argument that is missing, unreadable or a directory is refused by every
+command with `mylang COMMAND: cannot read 'PATH': REASON` and exit status 2.
+`run` takes its budgets as `--max-steps N`, `--max-frames N`, `--timeout N` and
+`--max-memory SIZE`, or as `--flag=N`; `test` takes `--max-steps`, `--max-frames` and
+`--max-memory` the same way. Each frame a
+`--max-frames` budget allows reserves 32 KiB of `--max-memory`, and a budget the
+memory cannot hold is refused up front with the memory it needs.
 When `fmt --check` fails, `path:line:column` identifies the first formatting
 difference; `fmt FILE` prints the complete corrected source.
 
@@ -38,9 +45,12 @@ difference; `fmt FILE` prints the complete corrected source.
   requires the `module` header.
 - Tests are `public def test_name() -> bool` (return `True` to pass), in the same
   file as the code or in `name_test.my` that does `import name` (then only
-  `name`'s `public` declarations are visible). A test may take `out: Stream`,
-  but not `Filesystem`, `Clock` and the other capabilities: test the pure
-  functions and keep I/O in `main`.
+  `name`'s `public` declarations are visible). A test may take `out: Stream`
+  and the capabilities `fs: Filesystem`, `clock: Clock`, `entropy: Entropy`,
+  `env: Environment` and `net: Network`; the runner hands each a deterministic
+  stand-in (an empty in-memory filesystem, a simulated clock, ...), never real
+  authority, so I/O code is testable without host files. `mylang docs tests`
+  has the table.
   A `*_test.my` entry may omit its `module` header even when importing the
   sibling module; both `test` and `fmt` accept that form.
   Run `mylang test name_test.my` to select sibling tests directly. If
