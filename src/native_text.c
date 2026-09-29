@@ -7,7 +7,6 @@
 /* A text object's payload is UTF-8 octets, so the collector has nothing to walk;
  * the element descriptor names a plain byte and switches tracing off. */
 const myl_native_type myl_native_text_leaf = { .size=1,.alignment=1,.kind=MYL_NATIVE_PLAIN,.trace_mode=MYL_NATIVE_TRACE_NONE };
-static const myl_native_type pointer_type = { .size=sizeof(void *),.alignment=_Alignof(void *),.kind=MYL_NATIVE_POINTER };
 #ifdef MYL_TEXT_STEPS
 size_t myl_native_text_steps;
 #define STEPS(count) (myl_native_text_steps+=(count))
@@ -245,7 +244,7 @@ myl_native_text *myl_native_text_from_scalars(myl_native_heap *heap, const uint3
 myl_native_text *myl_native_text_from_points(myl_native_heap *heap, const myl_native_list *points) {
     const myl_native_list *list=points;
     myl_native_root root;
-    myl_native_root_push(heap,&root,&list,&pointer_type);
+    myl_native_root_push(heap,&root,&list,&myl_rc_pointer_leaf);
     myl_native_text *text=myl_native_text_from_scalars(heap,list->storage,list->length);
     myl_native_root_pop(heap,&root);
     return text;
@@ -420,7 +419,7 @@ size_t myl_native_text_index(const myl_native_text *text, size_t at) {
  * see an ordinary one-pointer record and nothing else in the runtime has to know
  * a view exists. */
 static const myl_native_field view_fields[]={
-    { .offset=offsetof(myl_native_text_view,owner), .type=&pointer_type }
+    { .offset=offsetof(myl_native_text_view,owner), .type=&myl_rc_pointer_leaf }
 };
 static const myl_native_scan_entry view_scan[]={
     { .offset=offsetof(myl_native_text_view,owner), .tag_offset=MYL_NATIVE_SCAN_ALWAYS }
@@ -429,7 +428,7 @@ const myl_native_type myl_native_text_view_type={
     .size=sizeof(myl_native_text_view), .alignment=_Alignof(myl_native_text_view),
     .kind=MYL_NATIVE_RECORD, .fields=view_fields, .field_count=1,
     .trace_fields=view_fields, .trace_field_count=1, .trace_mode=MYL_NATIVE_TRACE_FIELDS,
-    .scan=view_scan, .scan_count=1
+    .scan=view_scan, .scan_count=1, .rc_id=MYL_RC_ID_TEXT_VIEW
 };
 _Static_assert(sizeof(myl_native_text_view)==32, "a text view is four words");
 static void rc_text_view_edges(myl_native_heap *heap, void *payload, size_t count) {
@@ -472,7 +471,7 @@ static myl_native_text *view(myl_native_heap *heap, myl_native_text *input, size
         if (status!=MYL_RC_OK) { myl_rc_record_failure(heap,status); return NULL; }
     }
     myl_native_root root;
-    myl_native_root_push(heap,&root,&input,&pointer_type);
+    myl_native_root_push(heap,&root,&input,&myl_rc_pointer_leaf);
     myl_native_text_view *result=myl_native_heap_alloc(heap,&myl_native_text_view_type,1);
     myl_native_root_pop(heap,&root);
     if (!result) return NULL;
@@ -553,7 +552,7 @@ uint32_t myl_native_text_point_at(const myl_native_text *text, size_t index) {
 myl_native_text *myl_native_text_copy(myl_native_heap *heap, myl_native_text *input, size_t start, size_t count) {
     size_t from=offset_of(input,start), to=offset_of(input,start+count);
     myl_native_root root;
-    myl_native_root_push(heap,&root,&input,&pointer_type);
+    myl_native_root_push(heap,&root,&input,&myl_rc_pointer_leaf);
     myl_native_text *result=cut(heap,input,from,to,count);
     myl_native_root_pop(heap,&root);
     return result;
@@ -561,13 +560,12 @@ myl_native_text *myl_native_text_copy(myl_native_heap *heap, myl_native_text *in
 /* A text block's payload is raw octets: the same one-octet plain element the
  * heap's own block allocation uses, so an owned copy placed at an explicit depth
  * is charged and traced exactly as one built at the current depth. */
-static const myl_native_type octet_type = { .size=1,.alignment=1,.kind=MYL_NATIVE_PLAIN };
 /* A text of `bytes` octets holding `scalars` scalars at arena depth `region`,
  * given the position index a text of that shape carries (`build_scalars`), for
  * its constructor to fill and publish. */
 static myl_native_text *build_at(myl_native_heap *heap, size_t bytes, size_t scalars, unsigned region) {
     const int indexed=indexable(bytes,scalars);
-    myl_native_text *text=myl_native_heap_alloc_at(heap,&octet_type,sizeof(myl_native_text)+(indexed ? ((bytes+7)&~(size_t)7)+index_octets(scalars) : bytes),region);
+    myl_native_text *text=myl_native_heap_alloc_at(heap,&myl_rc_octet_leaf,sizeof(myl_native_text)+(indexed ? ((bytes+7)&~(size_t)7)+index_octets(scalars) : bytes),region);
     if (!text) return NULL;
     text->length=scalars;
     text->bytes=bytes;
@@ -578,7 +576,7 @@ static myl_native_text *build_at(myl_native_heap *heap, size_t bytes, size_t sca
 myl_native_text *myl_native_text_own_at(myl_native_heap *heap, myl_native_text *input, unsigned region) {
     if (!(input->flags&MYL_TEXT_VIEW)) return rc_text_result(heap,input);
     myl_native_root root;
-    myl_native_root_push(heap,&root,&input,&pointer_type);
+    myl_native_root_push(heap,&root,&input,&myl_rc_pointer_leaf);
     myl_native_text *text=build_at(heap,input->bytes,input->length,region);
     myl_native_root_pop(heap,&root);
     if (!text) return NULL;
@@ -645,7 +643,7 @@ myl_native_text *myl_native_text_slice_step(myl_native_heap *heap, myl_native_te
        the arithmetic above answers for every other endpoint combination. */
     if (first<0 || first>=length) count=0;
     myl_native_root root;
-    myl_native_root_push(heap,&root,&input,&pointer_type);
+    myl_native_root_push(heap,&root,&input,&myl_rc_pointer_leaf);
     myl_native_text *result=NULL;
     if (!count) result=myl_native_text_substring(heap,input,0,0);
     else if (input->flags&MYL_TEXT_ASCII) {
@@ -669,8 +667,8 @@ static inline __attribute__((always_inline)) myl_native_text *concat_body(myl_na
     if (left->bytes>SIZE_MAX-right->bytes) return NULL;
     size_t bytes=left->bytes+right->bytes;
     myl_native_root a,b;
-    myl_native_root_push(heap,&a,&left,&pointer_type);
-    myl_native_root_push(heap,&b,&right,&pointer_type);
+    myl_native_root_push(heap,&a,&left,&myl_rc_pointer_leaf);
+    myl_native_root_push(heap,&b,&right,&myl_rc_pointer_leaf);
     myl_native_text *result=wide ? myl_native_text_build_scalars(heap,bytes,left->length+right->length) : myl_native_text_build(heap,bytes);
     if (result) {
         unsigned char *output=(unsigned char *)myl_native_text_storage(result);
@@ -748,7 +746,7 @@ myl_native_text *myl_native_text_piece_at(myl_native_heap *heap, myl_native_text
     const int plain=(int)(input->flags&MYL_TEXT_ASCII);
     const size_t scalars=plain ? span->bytes : starts_in(bytes,0,span->bytes);
     myl_native_root root;
-    myl_native_root_push(heap,&root,&input,&pointer_type);
+    myl_native_root_push(heap,&root,&input,&myl_rc_pointer_leaf);
     myl_native_text *text=build_at(heap,span->bytes,scalars,region);
     myl_native_root_pop(heap,&root);
     if (!text) return NULL;
@@ -838,10 +836,10 @@ myl_native_list *myl_native_text_split(myl_native_heap *heap, myl_native_text *i
     const size_t width=separator->bytes;
     size_t pieces=myl_native_octets_count(myl_native_text_storage(input),input->bytes,myl_native_text_storage(separator),width)+1;
     myl_native_root a,b,c;
-    myl_native_root_push(heap,&a,&input,&pointer_type);
-    myl_native_root_push(heap,&b,&separator,&pointer_type);
-    myl_native_list *result=myl_native_list_new(heap,&pointer_type,pieces);
-    myl_native_root_push(heap,&c,&result,&pointer_type);
+    myl_native_root_push(heap,&a,&input,&myl_rc_pointer_leaf);
+    myl_native_root_push(heap,&b,&separator,&myl_rc_pointer_leaf);
+    myl_native_list *result=myl_native_list_new(heap,&myl_rc_pointer_leaf,pieces);
+    myl_native_root_push(heap,&c,&result,&myl_rc_pointer_leaf);
     if (result) {
         const unsigned char *haystack=myl_native_text_storage(input);
         const unsigned char *needle=myl_native_text_storage(separator);
@@ -878,7 +876,7 @@ myl_native_text *myl_native_text_join(myl_native_heap *heap, myl_native_text *se
         if (i) { if (separator->bytes>SIZE_MAX-count) return NULL; count+=separator->bytes; scalars+=separator->length; }
     }
     myl_native_root a,b;
-    myl_native_root_push(heap,&a,&separator,&pointer_type); myl_native_root_push(heap,&b,&list,&pointer_type);
+    myl_native_root_push(heap,&a,&separator,&myl_rc_pointer_leaf); myl_native_root_push(heap,&b,&list,&myl_rc_pointer_leaf);
     myl_native_text *result=myl_native_text_build_scalars(heap,count,scalars);
     if (result) {
         unsigned char *output=(unsigned char *)myl_native_text_storage(result);

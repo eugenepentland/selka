@@ -80,6 +80,14 @@ typedef struct myl_rc_batch {
 typedef struct { const void *key, *value; } myl_rc_map_entry;
 typedef struct { const myl_rc_map_entry *entries; size_t mask, count; unsigned shift; } myl_rc_map;
 extern const myl_rc_map_entry myl_rc_map_sentinel[1];
+/* RC-TYPE-ID-1: bindings of types that carry a compiler-assigned dense id sit
+ * at entries[type->rc_id], with no hashing. A slot is empty (key and value
+ * NULL), pending (key NULL, value a binding whose flat plan is not built yet)
+ * or active (key the type, value its binding). The runtime maps a lookup to a
+ * slot by the id alone and confirms it by the key, so two types that share an
+ * id (numbered by separately compiled modules) never see each other's
+ * binding: the later one lives in the hashed map. */
+typedef struct { myl_rc_map_entry *entries; size_t capacity, count; } myl_rc_id_table;
 static inline size_t myl_rc_map_home(const void *key, unsigned shift, size_t mask) {
     return (size_t)(((uintptr_t)key * UINT64_C(0x9e3779b97f4a7c15)) >> shift) & mask;
 }
@@ -106,6 +114,8 @@ struct myl_rc_state {
         /* Modules, shape identities (registered copies and persistent sources)
          * and native_type bindings. All three commit together. */
         myl_rc_map modules, shapes, bindings;
+        /* Bindings placed by type id; `bindings` keeps the rest. */
+        myl_rc_id_table ids;
     } metadata;
     struct { myl_rc_frame *frames; size_t capacity, depth; } walk;
     /* The dead list, and the drain's two most recent death types with their
@@ -141,9 +151,28 @@ static inline __attribute__((always_inline)) void myl_rc_invariant(int valid) {
 }
 /* An invariant whose evaluation needs a lookup or a walk; see MYL_RC_CHECKED. */
 #define myl_rc_checked(valid) do { if (MYL_RC_CHECKED) myl_rc_invariant(valid); } while (0)
-/* The registered binding of a native type, or NULL: one inline probe. */
+/* A call on a cold branch of an inlined hot path. Under clang the callee
+ * preserves every register but r11, so a caller that inlines the path keeps
+ * its values in place and stays frameless; an ordinary call would make each
+ * such caller push and pop the callee-saved registers on every execution. */
+#if defined(__clang__) && defined(__x86_64__)
+#define MYL_RC_COLD_CALL __attribute__((noinline, cold, preserve_most))
+#else
+#define MYL_RC_COLD_CALL __attribute__((noinline, cold))
+#endif
+/* The lookups the indexed probe cannot answer: a pending id slot, whose flat
+ * plan is built now and the slot marked active (RC-STARTUP-3), a type whose id
+ * is 0, over bound or already taken, which lives in the hashed map, and a type
+ * that is not registered (NULL). */
+MYL_RC_COLD_CALL const myl_rc_binding *myl_rc_binding_find_slow(const myl_native_heap *heap, const myl_native_type *type);
+/* The registered binding of a native type, or NULL: an indexed load when the
+ * type's id owns its slot (RC-TYPE-ID-1), else the out-of-line lookup. */
 static inline const myl_rc_binding *myl_rc_binding_find(const myl_native_heap *heap, const myl_native_type *type) {
-    return (const myl_rc_binding *)myl_rc_map_get(&heap->rc->metadata.bindings, type);
+    const myl_rc_id_table *ids = &heap->rc->metadata.ids;
+    size_t id = type->rc_id;
+    if (__builtin_expect(id < ids->capacity, 1) && __builtin_expect(ids->entries[id].key == type, 1))
+        return (const myl_rc_binding *)ids->entries[id].value;
+    return myl_rc_binding_find_slow(heap, type);
 }
 /* RC-PLAIN-TYPE-1: whether a registered type owns nothing — an admitted flat
  * plan with no leaf and no native unique obligation, so its values are copied,

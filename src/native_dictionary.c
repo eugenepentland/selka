@@ -5,19 +5,17 @@
 #include "native_rc_collections.h"
 #include <stdlib.h>
 #include <string.h>
-static const myl_native_type pointer_type={.size=sizeof(void *),.alignment=_Alignof(void *),.kind=MYL_NATIVE_POINTER};
 /* Slots are plain integers, so the collector keeps the block alive through the
  * traced field below and never walks what it holds. */
-static const myl_native_type slot_type={.size=sizeof(uint64_t),.alignment=_Alignof(uint64_t),.kind=MYL_NATIVE_PLAIN};
 static const myl_native_field dict_fields[]={
-    {.offset=offsetof(myl_native_dictionary,entries),.type=&pointer_type},
-    {.offset=offsetof(myl_native_dictionary,index)+offsetof(myl_native_dictionary_index,slots),.type=&pointer_type}};
+    {.offset=offsetof(myl_native_dictionary,entries),.type=&myl_rc_pointer_leaf},
+    {.offset=offsetof(myl_native_dictionary,index)+offsetof(myl_native_dictionary_index,slots),.type=&myl_rc_pointer_leaf}};
 /* The two references of `dict_fields`, as the collector's flat plan (GC-SCAN-PLAN-2). */
 static const myl_native_scan_entry dict_scan[]={
     {.offset=offsetof(myl_native_dictionary,entries),.tag_offset=MYL_NATIVE_SCAN_ALWAYS},
     {.offset=offsetof(myl_native_dictionary,index)+offsetof(myl_native_dictionary_index,slots),.tag_offset=MYL_NATIVE_SCAN_ALWAYS}};
 static const myl_native_type dict_type={.size=sizeof(myl_native_dictionary),.alignment=_Alignof(myl_native_dictionary),.kind=MYL_NATIVE_RECORD,.fields=dict_fields,.field_count=2,.scan=dict_scan,.scan_count=2};
-static const myl_native_type rc_dict_type={.size=sizeof(myl_native_dictionary),.alignment=_Alignof(myl_native_dictionary),.kind=MYL_NATIVE_PLAIN};
+static const myl_native_type rc_dict_type={.size=sizeof(myl_native_dictionary),.alignment=_Alignof(myl_native_dictionary),.kind=MYL_NATIVE_PLAIN,.rc_id=MYL_RC_ID_DICTIONARY};
 static int rc_dict_prepare(myl_native_heap *, const myl_native_type *, const myl_native_type *);
 static myl_native_dictionary *rc_dict_clone(myl_native_heap *, const myl_native_dictionary *, unsigned);
 static myl_rc_status rc_dict_shell(myl_native_heap *, const void *, unsigned, void **);
@@ -74,7 +72,7 @@ myl_native_dictionary *myl_native_dictionary_new(myl_native_heap *heap, const my
     dict->index=(myl_native_dictionary_index){.slots=NULL,.capacity=0};
     dict->last=(myl_native_dictionary_probe){.state=PROBE_NONE};
     myl_native_root root;
-    myl_native_root_push(heap,&root,&dict,&pointer_type);
+    myl_native_root_push(heap,&root,&dict,&myl_rc_pointer_leaf);
     dict->entries=myl_rc_enabled(heap)?myl_rc_list_storage_new(heap,&dict->entry_type,0,heap->region_depth):myl_native_list_new(heap,&dict->entry_type,0);
     myl_native_root_pop(heap,&root);
     if (!dict->entries && myl_rc_enabled(heap)) { myl_rc_native_abort(heap,dict); return NULL; }
@@ -494,8 +492,8 @@ static void index_reserve(myl_native_heap *heap, myl_native_dictionary *dict, si
     myl_rc_status previous=MYL_RC_OK;
     if (myl_rc_enabled(heap)) previous=myl_rc_take_failure(heap);
     myl_native_root root;
-    myl_native_root_push(heap,&root,&dict,&pointer_type);
-    uint64_t *slots=myl_native_heap_alloc_at(heap,&slot_type,capacity,myl_native_object_region(heap,dict));
+    myl_native_root_push(heap,&root,&dict,&myl_rc_pointer_leaf);
+    uint64_t *slots=myl_native_heap_alloc_at(heap,&myl_rc_word_leaf,capacity,myl_native_object_region(heap,dict));
     myl_native_root_pop(heap,&root);
     if (myl_rc_enabled(heap)) {
         (void)myl_rc_take_failure(heap);
@@ -680,7 +678,7 @@ static __attribute__((noinline)) int insert(myl_native_heap *heap, myl_native_di
     /* The staged entry is rooted before anything can allocate, so the key it
      * holds survives a collection even when the caller passed the only reference. */
     myl_native_root owner_root, entry_root;
-    myl_native_root_push(heap,&owner_root,&dict,&pointer_type);
+    myl_native_root_push(heap,&owner_root,&dict,&myl_rc_pointer_leaf);
     myl_native_root_push(heap,&entry_root,entry,&dict->entry_type);
     /* A text key that is a view is stored as an owned copy of its octets, in the
      * dictionary's own region: every stored key then reads its octets from its
@@ -870,7 +868,7 @@ int myl_native_dictionary_overwrite_range(const myl_native_heap *heap, myl_nativ
  * the hash the walk already computed, so the insertion hashes nothing. */
 static __attribute__((noinline)) int insert_span(myl_native_heap *heap, myl_native_dictionary *dict, myl_native_text *text, const myl_native_text_span *span, const void *value, located at) {
     myl_native_root root;
-    myl_native_root_push(heap,&root,&dict,&pointer_type);
+    myl_native_root_push(heap,&root,&dict,&myl_rc_pointer_leaf);
     myl_native_text *owned=myl_native_text_piece_at(heap,text,span,myl_native_object_region(heap,dict));
     myl_native_root_pop(heap,&root);
     if (!owned) return 0;
@@ -922,7 +920,7 @@ int myl_native_dictionary_next(const myl_native_dictionary *dict, size_t *cursor
 }
 myl_native_list *myl_native_dictionary_snapshot(myl_native_heap *heap, myl_native_dictionary *dict, int keys) {
     myl_native_root root;
-    myl_native_root_push(heap,&root,&dict,&pointer_type);
+    myl_native_root_push(heap,&root,&dict,&myl_rc_pointer_leaf);
     const myl_native_type *element=keys?dict->key:dict->value;
     myl_native_list *result=myl_native_list_new(heap,element,myl_native_dictionary_length(dict));
     if (result) {
@@ -1106,10 +1104,10 @@ myl_native_dictionary *myl_native_dictionary_clone_at(myl_native_heap *heap, con
     myl_native_dictionary_settle(input);
     const myl_native_dictionary *rooted=input;
     myl_native_root source_root,clone_root;
-    myl_native_root_push(heap,&source_root,&rooted,&pointer_type);
+    myl_native_root_push(heap,&source_root,&rooted,&myl_rc_pointer_leaf);
     myl_native_dictionary *dict=myl_native_heap_alloc_at(heap,&dict_type,1,region);
     if (dict) {
-        myl_native_root_push(heap,&clone_root,&dict,&pointer_type);
+        myl_native_root_push(heap,&clone_root,&dict,&myl_rc_pointer_leaf);
         dict->key=rooted->key; dict->value=rooted->value; dict->value_offset=rooted->value_offset;
         dict->string_keys=rooted->string_keys; dict->key_kind=rooted->key_kind; dict->dead=0;
         entry_shape(dict,rooted);
@@ -1119,7 +1117,7 @@ myl_native_dictionary *myl_native_dictionary_clone_at(myl_native_heap *heap, con
         size_t capacity=rooted->index.capacity;
         if (dict->entries && capacity) {
             int exhausted=heap->exhausted;
-            uint64_t *slots=myl_native_heap_alloc_at(heap,&slot_type,capacity,region);
+            uint64_t *slots=myl_native_heap_alloc_at(heap,&myl_rc_word_leaf,capacity,region);
             if (slots) {
                 memcpy(slots,rooted->index.slots,capacity*sizeof(uint64_t));
                 dict->index=(myl_native_dictionary_index){.slots=slots,.capacity=capacity};
@@ -1134,7 +1132,7 @@ myl_native_dictionary *myl_native_dictionary_clone_at(myl_native_heap *heap, con
 myl_native_dictionary *myl_native_dictionary_copy(myl_native_heap *heap, const myl_native_dictionary *input) {
     const myl_native_dictionary *rooted=input;
     myl_native_root root;
-    myl_native_root_push(heap,&root,&rooted,&pointer_type);
+    myl_native_root_push(heap,&root,&rooted,&myl_rc_pointer_leaf);
     myl_native_dictionary *result=myl_native_dictionary_new(heap,input->key,input->value,input->string_keys);
     if (result && !myl_native_dictionary_update(heap,result,input)) {
         if (myl_rc_enabled(heap)) myl_rc_native_abort(heap,result);
@@ -1335,7 +1333,7 @@ static myl_rc_status rc_dict_shell(myl_native_heap *heap, const void *payload, u
     if (!myl_rc_list_storage_reserve(heap,copy->entries,source->entries->length)) goto failed;
     uint64_t *slots=NULL;
     if (source->index.capacity) {
-        slots=myl_native_heap_alloc_at(heap,&slot_type,source->index.capacity,region);
+        slots=myl_native_heap_alloc_at(heap,&myl_rc_word_leaf,source->index.capacity,region);
         if (!slots) goto failed;
     }
     const myl_rc_descriptor *key=myl_rc_descriptor_of(heap,source->key);

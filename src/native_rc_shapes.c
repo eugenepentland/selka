@@ -29,8 +29,8 @@ static unsigned map_shift(size_t capacity) {
     while (capacity > 1) { capacity >>= 1; --shift; }
     return shift > 63 ? 63 : shift;
 }
-static size_t map_probe(const myl_rc_map_entry *entries, size_t mask, const void *key) {
-    size_t slot = myl_rc_map_home(key, map_shift(mask + 1), mask);
+static size_t map_probe(const myl_rc_map_entry *entries, size_t mask, unsigned shift, const void *key) {
+    size_t slot = myl_rc_map_home(key, shift, mask);
     while (entries[slot].key && entries[slot].key != key) slot = (slot + 1) & mask;
     return slot;
 }
@@ -51,8 +51,9 @@ static int map_prepare(myl_native_heap *heap, const myl_rc_map *map, size_t addi
     if (!myl_rc_size_mul(capacity, sizeof(myl_rc_map_entry), &bytes)) return 0;
     myl_rc_map_entry *entries = myl_rc_meta_alloc(heap, bytes);
     if (!entries) return 0;
+    unsigned shift = map_shift(capacity);
     for (size_t i = 0; i < map_capacity(map); ++i)
-        if (map->entries[i].key) entries[map_probe(entries, capacity - 1, map->entries[i].key)] = map->entries[i];
+        if (map->entries[i].key) entries[map_probe(entries, capacity - 1, shift, map->entries[i].key)] = map->entries[i];
     *out = (map_growth){entries, capacity - 1};
     return 1;
 }
@@ -77,7 +78,7 @@ static void map_commit(myl_native_heap *heap, myl_rc_map *map, map_growth *growt
 static void map_insert(myl_rc_map *map, const void *key, const void *value) {
     myl_rc_map_entry *entries = (myl_rc_map_entry *)map->entries;
     myl_rc_invariant(key && map_capacity(map) && map->count < map_capacity(map) / 2 + 1);
-    size_t slot = map_probe(entries, map->mask, key);
+    size_t slot = map_probe(entries, map->mask, map->shift, key);
     if (entries[slot].key) return;
     entries[slot] = (myl_rc_map_entry){key, value};
     ++map->count;
@@ -85,39 +86,108 @@ static void map_insert(myl_rc_map *map, const void *key, const void *value) {
 void myl_rc_metadata_init(myl_rc_state *state) {
     state->metadata.modules = state->metadata.shapes = state->metadata.bindings =
         (myl_rc_map){.entries = myl_rc_map_sentinel, .shift = 63};
+    state->metadata.ids = (myl_rc_id_table){0};
 }
 void myl_rc_metadata_release(myl_native_heap *heap) {
     map_release(heap, &heap->rc->metadata.modules);
     map_release(heap, &heap->rc->metadata.shapes);
     map_release(heap, &heap->rc->metadata.bindings);
+    myl_rc_id_table *ids = &heap->rc->metadata.ids;
+    if (ids->entries) myl_rc_meta_free(heap, ids->entries, ids->capacity * sizeof(myl_rc_map_entry));
+    *ids = (myl_rc_id_table){0};
 }
+static void flat_build(myl_rc_binding *binding);
 static const myl_rc_shape_entry *shape_entry(const myl_rc_shape *shape) {
     return (const myl_rc_shape_entry *)((const unsigned char *)shape - offsetof(myl_rc_shape_entry, shape));
 }
-/* Every map a registration may grow, staged before any becomes visible. */
-typedef struct { map_growth modules, shapes, bindings; } index_growth;
-static int index_prepare(myl_native_heap *heap, size_t modules, size_t shapes, size_t bindings, index_growth *out) {
+/* RC-TYPE-ID-1: the id slots a batch of bindings claims. A binding takes the
+ * slot of its type's id when the id is nonzero, above the previous claimed id
+ * of the batch (so no two bindings of one batch share a slot), within a bound
+ * proportional to the descriptors registered (a stray large id cannot inflate
+ * the table) and the slot is free. Every other binding goes to the hashed map.
+ * Prepare and commit call this with identical inputs, so they agree. */
+typedef struct { size_t bound; unsigned last; } id_claim;
+static id_claim id_claim_start(const myl_rc_id_table *table, const myl_rc_batch *batch) {
+    return (id_claim){.bound = MYL_RC_ID_FIRST_GENERATED + 4 * (table->count + batch->count.descriptors)};
+}
+static int id_claims(const myl_rc_id_table *table, id_claim *claim, const myl_native_type *type) {
+    unsigned id = type->rc_id;
+    if (!id || id <= claim->last || id >= claim->bound) return 0;
+    if (id < table->capacity && (table->entries[id].key || table->entries[id].value)) return 0;
+    claim->last = id;
+    return 1;
+}
+/* Every table a registration may grow, staged before any becomes visible. */
+typedef struct { map_growth modules, shapes, bindings; myl_rc_map_entry *ids; size_t id_capacity; } index_growth;
+static void index_discard(myl_native_heap *heap, index_growth *growth) {
+    map_discard(heap, &growth->modules);
+    map_discard(heap, &growth->shapes);
+    map_discard(heap, &growth->bindings);
+    if (growth->ids) myl_rc_meta_free(heap, growth->ids, growth->id_capacity * sizeof(myl_rc_map_entry));
+    *growth = (index_growth){0};
+}
+/* Stage the id table for the ids the batch claims and count the bindings that
+ * spill into the hashed map. */
+static int id_prepare(myl_native_heap *heap, const myl_rc_batch *batch, index_growth *out, size_t *spilled) {
+    const myl_rc_id_table *table = &heap->rc->metadata.ids;
+    id_claim claim = id_claim_start(table, batch);
+    size_t needed = table->capacity;
+    *spilled = 0;
+    for (size_t i = 0; i < batch->count.descriptors; ++i) {
+        const myl_native_type *type = batch->bindings[i].descriptor.type;
+        if (!id_claims(table, &claim, type)) ++*spilled;
+        else if (type->rc_id >= needed) needed = (size_t)type->rc_id + 1;
+    }
+    if (needed == table->capacity) return 1;
+    size_t capacity = needed > table->capacity * 2 ? needed : table->capacity * 2, bytes;
+    if (!myl_rc_size_mul(capacity, sizeof(myl_rc_map_entry), &bytes)) return 0;
+    myl_rc_map_entry *entries = myl_rc_meta_alloc(heap, bytes);
+    if (!entries) return 0;
+    if (table->capacity) memcpy(entries, table->entries, table->capacity * sizeof(myl_rc_map_entry));
+    out->ids = entries;
+    out->id_capacity = capacity;
+    return 1;
+}
+static int index_prepare(myl_native_heap *heap, size_t modules, size_t shapes, const myl_rc_batch *batch, index_growth *out) {
     *out = (index_growth){0};
-    if (map_prepare(heap, &heap->rc->metadata.modules, modules, &out->modules) &&
+    size_t spilled;
+    if (id_prepare(heap, batch, out, &spilled) &&
+        map_prepare(heap, &heap->rc->metadata.modules, modules, &out->modules) &&
         map_prepare(heap, &heap->rc->metadata.shapes, shapes, &out->shapes) &&
-        map_prepare(heap, &heap->rc->metadata.bindings, bindings, &out->bindings)) return 1;
-    map_discard(heap, &out->modules);
-    map_discard(heap, &out->shapes);
-    map_discard(heap, &out->bindings);
+        map_prepare(heap, &heap->rc->metadata.bindings, spilled, &out->bindings)) return 1;
+    index_discard(heap, out);
     return 0;
 }
 static void index_commit(myl_native_heap *heap, myl_rc_batch *batch, index_growth *growth) {
     map_commit(heap, &heap->rc->metadata.modules, &growth->modules);
     map_commit(heap, &heap->rc->metadata.shapes, &growth->shapes);
     map_commit(heap, &heap->rc->metadata.bindings, &growth->bindings);
+    myl_rc_id_table *ids = &heap->rc->metadata.ids;
+    if (growth->ids) {
+        if (ids->entries) myl_rc_meta_free(heap, ids->entries, ids->capacity * sizeof(myl_rc_map_entry));
+        ids->entries = growth->ids;
+        ids->capacity = growth->id_capacity;
+        growth->ids = NULL;
+    }
     if (batch->module) map_insert(&heap->rc->metadata.modules, batch->module, batch);
     for (size_t i = 0; i < batch->count.shapes; ++i) {
         const myl_rc_shape_entry *shape = &batch->shapes[i];
         map_insert(&heap->rc->metadata.shapes, &shape->shape, &shape->shape);
         if (shape->source) map_insert(&heap->rc->metadata.shapes, shape->source, &shape->shape);
     }
-    for (size_t i = 0; i < batch->count.descriptors; ++i)
-        map_insert(&heap->rc->metadata.bindings, batch->bindings[i].descriptor.type, &batch->bindings[i]);
+    id_claim claim = id_claim_start(ids, batch);
+    for (size_t i = 0; i < batch->count.descriptors; ++i) {
+        myl_rc_binding *binding = &batch->bindings[i];
+        const myl_native_type *type = binding->descriptor.type;
+        if (id_claims(ids, &claim, type)) {
+            /* Pending: the flat plan is built by the first lookup (RC-STARTUP-3). */
+            ids->entries[type->rc_id] = (myl_rc_map_entry){NULL, binding};
+            ++ids->count;
+        } else {
+            flat_build(binding);
+            map_insert(&heap->rc->metadata.bindings, type, binding);
+        }
+    }
 }
 static size_t builder_slot(const shape_builder *builder, const myl_rc_shape *shape) {
     size_t slot = pointer_hash(shape) & (builder->capacity * 2 - 1);
@@ -391,6 +461,23 @@ static void flat_build(myl_rc_binding *binding) {
     flat->loanable = loanable;
     flat->conditional = conditional;
 }
+const myl_rc_binding *myl_rc_binding_find_slow(const myl_native_heap *heap, const myl_native_type *type) {
+    const myl_rc_state *rc = heap->rc;
+    size_t id = type->rc_id;
+    if (id < rc->metadata.ids.capacity) {
+        myl_rc_map_entry *entry = &rc->metadata.ids.entries[id];
+        if (entry->key == type) return (const myl_rc_binding *)entry->value;
+        if (!entry->key && entry->value) {
+            myl_rc_binding *binding = (myl_rc_binding *)entry->value;
+            if (binding->descriptor.type == type) {
+                flat_build(binding);
+                entry->key = type;
+                return binding;
+            }
+        }
+    }
+    return (const myl_rc_binding *)myl_rc_map_get(&rc->metadata.bindings, type);
+}
 /* One reservation keeps all copied metadata addresses stable until teardown. */
 static myl_rc_batch *build_batch(shape_builder *builder, const myl_rc_module *module, int persistent) {
     size_t shape_bytes, field_bytes, descriptor_bytes, bytes = sizeof(myl_rc_batch);
@@ -434,7 +521,6 @@ static myl_rc_batch *build_batch(shape_builder *builder, const myl_rc_module *mo
     for (size_t i = 0; i < descriptors; ++i) {
         batch->bindings[i].descriptor = module->descriptors[i];
         batch->bindings[i].descriptor.shape = copied_shape(builder, batch, module->descriptors[i].shape);
-        flat_build(&batch->bindings[i]);
     }
     return batch;
 }
@@ -462,7 +548,7 @@ static myl_rc_status register_shapes(shape_builder *builder, const myl_rc_module
     size_t keys;
     index_growth growth;
     if (!myl_rc_size_mul(batch->count.shapes, persistent ? 2 : 1, &keys) ||
-        !index_prepare(heap, persistent ? 1 : 0, keys, batch->count.descriptors, &growth)) {
+        !index_prepare(heap, persistent ? 1 : 0, keys, batch, &growth)) {
         myl_rc_meta_free(heap, frames, maximum * sizeof(myl_rc_frame));
         myl_rc_meta_free(heap, batch, batch->bytes);
         return MYL_RC_ALLOCATION_REFUSED;
@@ -492,8 +578,11 @@ myl_rc_status myl_rc_module_register(myl_native_heap *heap, const myl_rc_module 
     for (size_t i = 0; i < module->descriptor_count; ++i) {
         const myl_rc_descriptor *descriptor = &module->descriptors[i];
         myl_rc_invariant(descriptor->type && descriptor->shape && descriptor->type->size == descriptor->shape->size);
-        myl_rc_invariant(!myl_rc_descriptor_find(heap, descriptor->type));
-        for (size_t j = 0; j < i; ++j) myl_rc_invariant(module->descriptors[j].type != descriptor->type);
+        /* Both need a lookup or a scan of the earlier descriptors, quadratic in
+         * the module, so only a checked artifact evaluates them (RC-CHECKED-1). */
+        myl_rc_checked(!myl_rc_descriptor_find(heap, descriptor->type));
+        if (MYL_RC_CHECKED)
+            for (size_t j = 0; j < i; ++j) myl_rc_invariant(module->descriptors[j].type != descriptor->type);
         if (!builder_add(&builder, descriptor->shape)) goto done;
     }
     status = register_shapes(&builder, module, NULL, 1);
@@ -546,9 +635,8 @@ myl_rc_status myl_rc_descriptor_register(myl_native_heap *heap, const myl_rc_des
     batch->bindings = (myl_rc_binding *)(batch + 1);
     batch->bindings[0].descriptor = *descriptor;
     batch->bindings[0].descriptor.shape = shape;
-    flat_build(&batch->bindings[0]);
     index_growth growth;
-    if (!index_prepare(heap, 0, 0, 1, &growth)) {
+    if (!index_prepare(heap, 0, 0, batch, &growth)) {
         myl_rc_meta_free(heap, batch, bytes);
         return MYL_RC_ALLOCATION_REFUSED;
     }

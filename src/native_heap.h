@@ -43,11 +43,21 @@ struct myl_native_type {
     size_t field_count;
     size_t count;
     size_t stride;
-    unsigned kind;
+    /* `kind` and `collection_kind` are 16 bits wide so that `rc_id` fits the
+     * word they shared: a descriptor stays 112 bytes, and a dictionary, which
+     * embeds one, stays in its 320-byte size class. */
+    uint16_t kind;
     /* 0 opaque, 1 list, 2 string, 3 dictionary, 4 bytes, 5 box: the pointer to
      * the immutable one-field record a recursive value's boxed field or case
      * lives in, whose body descriptor `element` names (RECURSIVE-VALUES-2). */
-    unsigned collection_kind;
+    uint16_t collection_kind;
+    /* RC-TYPE-ID-1: the dense integer the RC runtime indexes its per-type
+     * metadata by instead of hashing this descriptor's address. Zero means no
+     * id, and the runtime keeps such a type in a hashed table. The compiler
+     * numbers every generated descriptor of a program from
+     * MYL_RC_ID_FIRST_GENERATED in one order, and the runtime's own static
+     * types take the reserved ids below it. */
+    unsigned rc_id;
     const myl_native_type *element, *key;
     /* GC-only field view. Runtime-built descriptors may leave trace_mode zero,
      * which preserves the legacy walk through `fields`. Generated descriptors
@@ -77,6 +87,15 @@ struct myl_native_type {
     const myl_native_scan_entry *scan;
     size_t scan_count;
 };
+/* Ids below this are reserved for descriptors the runtime defines itself
+ * (native_rc.h names them); generated descriptors number upward from here. */
+#define MYL_RC_ID_FIRST_GENERATED 16u
+/* The leaf descriptors every runtime source shares (defined in native_rc_alloc.c,
+ * ids in native_rc.h): a pointer, a byte and an eight-byte word. One object
+ * each, so each owns one id, and a lookup of the element type of a list of
+ * strings, a text's bytes or a dictionary's slots is an indexed load instead
+ * of a hashed miss (RC-TYPE-ID-1). */
+extern const myl_native_type myl_rc_pointer_leaf, myl_rc_octet_leaf, myl_rc_word_leaf;
 enum { MYL_NATIVE_TRACE_LEGACY, MYL_NATIVE_TRACE_NONE, MYL_NATIVE_TRACE_FIELDS };
 enum { MYL_NATIVE_PLAIN, MYL_NATIVE_POINTER, MYL_NATIVE_RECORD,
        MYL_NATIVE_ARRAY, MYL_NATIVE_VARIANT, MYL_NATIVE_OWNED_BUFFER, MYL_NATIVE_OWNED_POOL, MYL_NATIVE_FLOAT, MYL_NATIVE_RESOURCE };

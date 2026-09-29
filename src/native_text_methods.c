@@ -13,7 +13,6 @@ myl_native_list *myl_native_text_split_whitespace(myl_native_heap *, myl_native_
 void myl_qbe_fail(void *, const char *);
 /* Traced pointer slot: it roots a receiver across an allocation and describes the
    element of the list `splitlines` builds. */
-static const myl_native_type pointer_type = { .size=sizeof(void *),.alignment=_Alignof(void *),.kind=MYL_NATIVE_POINTER };
 /* Every ASCII whitespace scalar, tested on one octet: an octet at or above 0x80
    is part of a non-ASCII scalar, which is neither whitespace nor a digit nor a
    letter, so the octet test answers exactly what the scalar test did. */
@@ -77,7 +76,7 @@ myl_native_text *myl_native_text_trim(myl_native_heap *heap, myl_native_text *in
    is copied through untouched. */
 myl_native_text *myl_native_text_case(myl_native_heap *heap, myl_native_text *input, int upper) {
     myl_native_root root;
-    myl_native_root_push(heap,&root,&input,&pointer_type);
+    myl_native_root_push(heap,&root,&input,&myl_rc_pointer_leaf);
     myl_native_text *result=myl_native_text_build_scalars(heap,input->bytes,input->length);
     if (result) {
         unsigned char *bytes=(unsigned char *)myl_native_text_storage(result);
@@ -99,7 +98,7 @@ myl_native_text *myl_native_text_zfill(myl_native_heap *heap, myl_native_text *i
     size_t keep = (input->length && (first[0]=='+' || first[0]=='-')) ? 1 : 0;
     size_t pad = target-input->length;
     myl_native_root root;
-    myl_native_root_push(heap,&root,&input,&pointer_type);
+    myl_native_root_push(heap,&root,&input,&myl_rc_pointer_leaf);
     myl_native_text *result=myl_native_text_build_scalars(heap,pad+input->bytes,target);
     if (result) {
         unsigned char *out=(unsigned char *)myl_native_text_storage(result);
@@ -124,9 +123,9 @@ myl_native_text *myl_native_text_replace(myl_native_heap *heap, myl_native_text 
     if (added>SIZE_MAX-kept) return NULL;
     size_t total=kept+added;
     myl_native_root a,b,c;
-    myl_native_root_push(heap,&a,&input,&pointer_type);
-    myl_native_root_push(heap,&b,&needle,&pointer_type);
-    myl_native_root_push(heap,&c,&insert,&pointer_type);
+    myl_native_root_push(heap,&a,&input,&myl_rc_pointer_leaf);
+    myl_native_root_push(heap,&b,&needle,&myl_rc_pointer_leaf);
+    myl_native_root_push(heap,&c,&insert,&myl_rc_pointer_leaf);
     const size_t scalars=input->length-hits*needle->length+hits*insert->length;
     myl_native_text *result=myl_native_text_build_scalars(heap,total,scalars);
     if (result) {
@@ -153,10 +152,10 @@ myl_native_text *myl_native_text_replace(myl_native_heap *heap, myl_native_text 
 /* One line, rooted so the growing list and the fresh piece both survive the append. */
 static int append_line(myl_native_heap *heap, myl_native_list *result, myl_native_text *input, size_t start, size_t end) {
     myl_native_root a,b;
-    myl_native_root_push(heap,&a,&result,&pointer_type);
+    myl_native_root_push(heap,&a,&result,&myl_rc_pointer_leaf);
     myl_native_text *piece=myl_native_text_substring(heap,input,start,end);
     if (!piece) { myl_native_root_pop(heap,&a); return 0; }
-    myl_native_root_push(heap,&b,&piece,&pointer_type);
+    myl_native_root_push(heap,&b,&piece,&myl_rc_pointer_leaf);
     int appended=myl_native_list_append(heap,result,&piece);
     myl_native_root_pop(heap,&b); myl_native_root_pop(heap,&a);
     if (myl_rc_enabled(heap)) {
@@ -167,9 +166,9 @@ static int append_line(myl_native_heap *heap, myl_native_list *result, myl_nativ
 }
 myl_native_list *myl_native_text_lines(myl_native_heap *heap, myl_native_text *input) {
     myl_native_root a,b;
-    myl_native_root_push(heap,&a,&input,&pointer_type);
-    myl_native_list *result=myl_native_list_new(heap,&pointer_type,0);
-    myl_native_root_push(heap,&b,&result,&pointer_type);
+    myl_native_root_push(heap,&a,&input,&myl_rc_pointer_leaf);
+    myl_native_list *result=myl_native_list_new(heap,&myl_rc_pointer_leaf,0);
+    myl_native_root_push(heap,&b,&result,&myl_rc_pointer_leaf);
     if (result) {
         const unsigned char *bytes=myl_native_text_storage(input);
         size_t start=0, cursor=0;
@@ -234,9 +233,9 @@ void myl_native_fail_text_scalar(void *context) { myl_qbe_fail(context, "R_TEXT_
    which octet separates. */
 myl_native_list *myl_native_text_split_whitespace(myl_native_heap *heap, myl_native_text *input) {
     myl_native_root a,b;
-    myl_native_root_push(heap,&a,&input,&pointer_type);
-    myl_native_list *result=myl_native_list_new(heap,&pointer_type,0);
-    myl_native_root_push(heap,&b,&result,&pointer_type);
+    myl_native_root_push(heap,&a,&input,&myl_rc_pointer_leaf);
+    myl_native_list *result=myl_native_list_new(heap,&myl_rc_pointer_leaf,0);
+    myl_native_root_push(heap,&b,&result,&myl_rc_pointer_leaf);
     if (result) {
         const unsigned char *bytes=myl_native_text_storage(input);
         size_t cursor=0;

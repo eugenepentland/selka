@@ -4,9 +4,6 @@
 #include "native_rc_collections.h"
 #include <stdlib.h>
 #include <string.h>
-static const myl_native_type byte_type = { .size=1,.alignment=1,.kind=MYL_NATIVE_PLAIN };
-static const myl_native_type integer_type = { .size=8,.alignment=8,.kind=MYL_NATIVE_PLAIN };
-static const myl_native_type pointer_type = { .size=sizeof(void *),.alignment=_Alignof(void *),.kind=MYL_NATIVE_POINTER };
 /* Splits on maximal runs of ASCII whitespace, dropping every empty piece. It is
    declared here rather than in the companion header so this file stays the only
    one the whitespace-split addition touches on the byte runtime side; the QBE
@@ -20,8 +17,8 @@ static size_t endpoint(size_t length, int64_t value) {
 }
 static myl_native_bytes *copy_range(myl_native_heap *heap, myl_native_bytes *input, size_t start, size_t count) {
     myl_native_root root;
-    myl_native_root_push(heap,&root,&input,&pointer_type);
-    myl_native_bytes *result=myl_native_list_new(heap,&byte_type,count);
+    myl_native_root_push(heap,&root,&input,&myl_rc_pointer_leaf);
+    myl_native_bytes *result=myl_native_list_new(heap,&myl_rc_octet_leaf,count);
     if (result) {
         if (count) memcpy(result->storage,(const unsigned char *)input->storage+start,count);
         result->length=count;
@@ -30,7 +27,7 @@ static myl_native_bytes *copy_range(myl_native_heap *heap, myl_native_bytes *inp
     return result;
 }
 myl_native_bytes *myl_native_bytes_new(myl_native_heap *heap, const unsigned char *raw, size_t length) {
-    myl_native_bytes *result=myl_native_list_new(heap,&byte_type,length);
+    myl_native_bytes *result=myl_native_list_new(heap,&myl_rc_octet_leaf,length);
     if (!result) return NULL;
     if (length) memcpy(result->storage,raw,length);
     result->length=length;
@@ -50,7 +47,7 @@ myl_native_bytes *myl_native_bytes_copy(myl_native_heap *heap, myl_native_bytes 
    sits immediately before it, which a mid-block content pointer would not have,
    and a frozen literal's block is immortal, so the collector never queues it. */
 static const myl_native_field view_fields[] = {
-    { .offset=offsetof(myl_native_list,work)+offsetof(myl_native_drop_link,owner), .type=&pointer_type }
+    { .offset=offsetof(myl_native_list,work)+offsetof(myl_native_drop_link,owner), .type=&myl_rc_pointer_leaf }
 };
 static const myl_native_scan_entry view_scan[] = {
     { .offset=offsetof(myl_native_list,work)+offsetof(myl_native_drop_link,owner), .tag_offset=MYL_NATIVE_SCAN_ALWAYS }
@@ -59,7 +56,7 @@ static const myl_native_type view_header_type = {
     .size=sizeof(myl_native_list), .alignment=_Alignof(myl_native_list),
     .kind=MYL_NATIVE_RECORD, .fields=view_fields, .field_count=1,
     .trace_fields=view_fields, .trace_field_count=1, .trace_mode=MYL_NATIVE_TRACE_FIELDS,
-    .scan=view_scan, .scan_count=1
+    .scan=view_scan, .scan_count=1, .rc_id=MYL_RC_ID_BYTES_VIEW
 };
 static void rc_view_edges(myl_native_heap *heap, void *payload, size_t count) {
     (void)count;
@@ -103,10 +100,10 @@ myl_native_bytes *myl_native_bytes_view(myl_native_heap *heap, myl_native_bytes 
     size_t first=endpoint(source->length,start), last=endpoint(source->length,end);
     size_t count=last>first ? last-first : 0;
     myl_native_root root;
-    myl_native_root_push(heap,&root,&source,&pointer_type);
+    myl_native_root_push(heap,&root,&source,&myl_rc_pointer_leaf);
     myl_native_bytes *view=myl_native_heap_alloc(heap,&view_header_type,1);
     if (view) {
-        view->element=&byte_type;
+        view->element=&myl_rc_octet_leaf;
         view->length=count;
         view->capacity=count;
         view->storage=count ? (unsigned char *)source->storage+first : source->storage;
@@ -128,11 +125,11 @@ myl_native_bytes *myl_native_bytes_view(myl_native_heap *heap, myl_native_bytes 
 myl_native_bytes *myl_native_bytes_buffer_snapshot(myl_native_heap *heap, myl_native_bytes *buffer) {
     if (!rc_view_prepare(heap)) return NULL;
     myl_native_root root;
-    myl_native_root_push(heap,&root,&buffer,&pointer_type);
+    myl_native_root_push(heap,&root,&buffer,&myl_rc_pointer_leaf);
     myl_native_bytes *snapshot=myl_native_heap_alloc(heap,&view_header_type,1);
     if (snapshot) {
         void *backing=view_backing(heap,buffer);
-        snapshot->element=&byte_type;
+        snapshot->element=&myl_rc_octet_leaf;
         snapshot->length=buffer->length;
         snapshot->capacity=buffer->length;
         snapshot->storage=buffer->storage;
@@ -203,9 +200,9 @@ const unsigned char *myl_native_bytes_range(const myl_native_bytes *input, int64
 myl_native_bytes *myl_native_bytes_concat(myl_native_heap *heap, myl_native_bytes *left, myl_native_bytes *right) {
     if (left->length>SIZE_MAX-right->length) return NULL;
     myl_native_root a,b;
-    myl_native_root_push(heap,&a,&left,&pointer_type);
-    myl_native_root_push(heap,&b,&right,&pointer_type);
-    myl_native_bytes *result=myl_native_list_new(heap,&byte_type,left->length+right->length);
+    myl_native_root_push(heap,&a,&left,&myl_rc_pointer_leaf);
+    myl_native_root_push(heap,&b,&right,&myl_rc_pointer_leaf);
+    myl_native_bytes *result=myl_native_list_new(heap,&myl_rc_octet_leaf,left->length+right->length);
     if (result) {
         if (left->length) memcpy(result->storage,left->storage,left->length);
         if (right->length) memcpy((unsigned char *)result->storage+left->length,right->storage,right->length);
@@ -297,10 +294,10 @@ myl_native_list *myl_native_bytes_split(myl_native_heap *heap, myl_native_bytes 
     const size_t width=separator->length;
     size_t pieces=myl_native_octets_count(input->storage,input->length,separator->storage,width)+1;
     myl_native_root a,b,c;
-    myl_native_root_push(heap,&a,&input,&pointer_type);
-    myl_native_root_push(heap,&b,&separator,&pointer_type);
-    myl_native_list *result=myl_native_list_new(heap,&pointer_type,pieces);
-    myl_native_root_push(heap,&c,&result,&pointer_type);
+    myl_native_root_push(heap,&a,&input,&myl_rc_pointer_leaf);
+    myl_native_root_push(heap,&b,&separator,&myl_rc_pointer_leaf);
+    myl_native_list *result=myl_native_list_new(heap,&myl_rc_pointer_leaf,pieces);
+    myl_native_root_push(heap,&c,&result,&myl_rc_pointer_leaf);
     if (result) {
         size_t start=0;
         for (size_t left=pieces; left; left--) {
@@ -329,9 +326,9 @@ static int byte_space(unsigned char value) {
    doubled whitespace produce no empty byte string. */
 myl_native_list *myl_native_bytes_split_whitespace(myl_native_heap *heap, myl_native_bytes *input) {
     myl_native_root a,b;
-    myl_native_root_push(heap,&a,&input,&pointer_type);
-    myl_native_list *result=myl_native_list_new(heap,&pointer_type,0);
-    myl_native_root_push(heap,&b,&result,&pointer_type);
+    myl_native_root_push(heap,&a,&input,&myl_rc_pointer_leaf);
+    myl_native_list *result=myl_native_list_new(heap,&myl_rc_pointer_leaf,0);
+    myl_native_root_push(heap,&b,&result,&myl_rc_pointer_leaf);
     if (result) {
         const unsigned char *octets=input->storage;
         size_t cursor=0;
@@ -358,8 +355,8 @@ myl_native_bytes *myl_native_bytes_join(myl_native_heap *heap, myl_native_bytes 
         if (i) { if (separator->length>SIZE_MAX-count) return NULL; count+=separator->length; }
     }
     myl_native_root a,b;
-    myl_native_root_push(heap,&a,&separator,&pointer_type); myl_native_root_push(heap,&b,&list,&pointer_type);
-    myl_native_bytes *result=myl_native_list_new(heap,&byte_type,count);
+    myl_native_root_push(heap,&a,&separator,&myl_rc_pointer_leaf); myl_native_root_push(heap,&b,&list,&myl_rc_pointer_leaf);
+    myl_native_bytes *result=myl_native_list_new(heap,&myl_rc_octet_leaf,count);
     if (result) {
         unsigned char *output=result->storage;
         size_t at=0;
@@ -376,8 +373,8 @@ myl_native_bytes *myl_native_bytes_join(myl_native_heap *heap, myl_native_bytes 
 }
 myl_native_list *myl_native_bytes_to_list(myl_native_heap *heap, myl_native_bytes *input) {
     myl_native_root root;
-    myl_native_root_push(heap,&root,&input,&pointer_type);
-    myl_native_list *result=myl_native_list_new(heap,&integer_type,input->length);
+    myl_native_root_push(heap,&root,&input,&myl_rc_pointer_leaf);
+    myl_native_list *result=myl_native_list_new(heap,&myl_rc_word_leaf,input->length);
     if (result) {
         const unsigned char *bytes=input->storage;
         int64_t *output=result->storage;
@@ -392,8 +389,8 @@ myl_native_bytes *myl_native_bytes_from_list(myl_native_heap *heap, myl_native_l
     *status=MYL_BYTES_OK;
     for (size_t i=0;i<list->length;i++) if (values[i]<0 || values[i]>255) { *status=MYL_BYTES_RANGE;return NULL; }
     myl_native_root root;
-    myl_native_root_push(heap,&root,&list,&pointer_type);
-    myl_native_bytes *result=myl_native_list_new(heap,&byte_type,list->length);
+    myl_native_root_push(heap,&root,&list,&myl_rc_pointer_leaf);
+    myl_native_bytes *result=myl_native_list_new(heap,&myl_rc_octet_leaf,list->length);
     if (result) {
         values=list->storage;
         unsigned char *output=result->storage;
@@ -440,7 +437,7 @@ myl_native_bytes *myl_native_bytes_from_hex(myl_native_heap *heap, myl_native_te
     if (!decoded) return NULL;
     for (size_t i=0;i<required;i+=2) decoded[i/2]=(unsigned char)(hex_digit(raw[i])*16+hex_digit(raw[i+1]));
     myl_native_root root;
-    myl_native_root_push(heap,&root,&input,&pointer_type);
+    myl_native_root_push(heap,&root,&input,&myl_rc_pointer_leaf);
     myl_native_bytes *result=myl_native_bytes_new(heap,decoded,required/2);
     myl_native_root_pop(heap,&root);
     free(decoded);
@@ -451,8 +448,8 @@ myl_native_bytes *myl_native_bytes_encode(myl_native_heap *heap, myl_native_text
     size_t required=myl_native_text_utf8(input,NULL,0);
     if (required==SIZE_MAX) return NULL;
     myl_native_root root;
-    myl_native_root_push(heap,&root,&input,&pointer_type);
-    myl_native_bytes *result=myl_native_list_new(heap,&byte_type,required);
+    myl_native_root_push(heap,&root,&input,&myl_rc_pointer_leaf);
+    myl_native_bytes *result=myl_native_list_new(heap,&myl_rc_octet_leaf,required);
     if (result) {
         myl_native_text_utf8(input,result->storage,required);
         result->length=required;
@@ -463,7 +460,7 @@ myl_native_bytes *myl_native_bytes_encode(myl_native_heap *heap, myl_native_text
 myl_native_text *myl_native_bytes_decode(myl_native_heap *heap, myl_native_bytes *input, int *status) {
     int invalid=0;
     myl_native_root root;
-    myl_native_root_push(heap,&root,&input,&pointer_type);
+    myl_native_root_push(heap,&root,&input,&myl_rc_pointer_leaf);
     myl_native_text *result=myl_native_text_from_utf8_checked(heap,input->storage,input->length,&invalid);
     myl_native_root_pop(heap,&root);
     *status=result ? MYL_BYTES_OK:(invalid ? MYL_BYTES_INVALID:MYL_BYTES_MEMORY);
@@ -474,7 +471,7 @@ myl_native_text *myl_native_bytes_decode_range(myl_native_heap *heap, myl_native
     size_t first=endpoint(input->length,start), last=endpoint(input->length,end);
     size_t count=last>first ? last-first : 0;
     myl_native_root root;
-    myl_native_root_push(heap,&root,&input,&pointer_type);
+    myl_native_root_push(heap,&root,&input,&myl_rc_pointer_leaf);
     myl_native_text *result=myl_native_text_from_utf8_checked(heap,(const unsigned char *)input->storage+first,count,&invalid);
     myl_native_root_pop(heap,&root);
     *status=result ? MYL_BYTES_OK:(invalid ? MYL_BYTES_INVALID:MYL_BYTES_MEMORY);
@@ -564,8 +561,8 @@ static int buffer_ready_rooted(myl_native_heap *heap, myl_native_bytes *buffer, 
     if (needed<=buffer->capacity && !buffer->work.owner) return 1;
     if (needed<=buffer->length) return 1;
     myl_native_root buffer_root, companion_root;
-    myl_native_root_push(heap,&buffer_root,&buffer,&pointer_type);
-    if (companion) myl_native_root_push(heap,&companion_root,companion,&pointer_type);
+    myl_native_root_push(heap,&buffer_root,&buffer,&myl_rc_pointer_leaf);
+    if (companion) myl_native_root_push(heap,&companion_root,companion,&myl_rc_pointer_leaf);
     int ready=buffer_ready(heap,buffer,needed);
     if (companion) myl_native_root_pop(heap,&companion_root);
     myl_native_root_pop(heap,&buffer_root);
