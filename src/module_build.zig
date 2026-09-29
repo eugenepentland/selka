@@ -1,7 +1,7 @@
 //! MODULE-SCHEDULE-1..3: `mylang build` of a project, one module at a time.
 //!
-//! The build discovers the project's modules from their headers (a module
-//! whose source digest is unchanged keeps the imports its last build read),
+//! The build reloads the configured project before reuse, enforcing fresh
+//! imports, source and embedded-file budgets, embed contents and import policy,
 //! and compiles each one that is stale with `compile-module --ready` in a
 //! child process, over the import graph, as many at once as the cores and
 //! free memory allow. A module is stale when it has no record, its source or
@@ -19,7 +19,7 @@
 //! shares and rendered only on a miss, and a specialization several modules
 //! emitted is linked once. The executable is the whole-program build's, byte
 //! for byte. Anything this path does not handle — a library, the LLVM
-//! backend, a provider, a `mylang.json`, a header or check error — goes to the
+//! backend, a provider, generated interface files, a header or check error — goes to the
 //! whole-program build, which reports it exactly as before.
 const std = @import("std");
 // The compiler reaches the language through its `mylang` module and a test

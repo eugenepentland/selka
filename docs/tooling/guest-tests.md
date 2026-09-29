@@ -612,7 +612,9 @@ passed util::test_sum
   replays the verdicts of every test the edit did not reach. The same holds
   while another run of the project holds its snapshot path or its modules.
   The seeder is stopped while such a run works, so the run has the cores,
-  and goes on when the run ends. Once the seeder is done, runs are module by
+  and goes on when the run ends. A private watcher also resumes it after
+  foreground death, including SIGKILL, without retaining snapshot/cache locks.
+  Failed watcher setup stops nothing. Once the seeder is done, runs are module by
   module again, replaying the earlier runs' verdicts. The trace names how a
   run was staged: `stage stable`, `stage private` or `stage seeding`, and
   `pause-seeder` when it stopped the seeder.

@@ -346,31 +346,23 @@ fn spawnSeeder(session: sessions.Session) void {
     }) catch return;
 }
 
-/// MODULE-TEST-6: a detached seeder this run stopped, by its process group,
-/// which `proceed` lets go on.
-const Paused = struct {
-    group: std.os.linux.pid_t,
-    /// Let the seeder's process group go on.
-    fn proceed(self: Paused) void {
-        _ = std.os.linux.kill(-self.group, .CONT);
-    }
-};
+const Paused = @import("module_seeder.zig").Paused;
 
 /// MODULE-TEST-6: stop the detached seeder holding this project's snapshot
 /// path for the length of this run, so the run beside it has the cores (a
 /// seeder at nice 19 still costs it the shared cores and the power budget).
 /// Only a process that leads its own process group and carries
 /// `MYLANG_TEST_SEED=1` is stopped, so a stale mark whose process is gone
-/// stops nothing. A run killed before it lets the seeder go on leaves it
-/// stopped until the next run beside it ends.
+/// stops nothing. Its private watcher resumes the verified live group when
+/// the run ends, including a killed foreground; inherited locks stay closed.
 fn pauseSeeder(context: fs.Context, session: sessions.Session) Error!?Paused {
     const scratch = try context.absolute(context.scratchRoot());
     const pid = snapshot.seederProcess(context, scratch, try stableSeed(session)) orelse return null;
     if (std.os.linux.getpgid(pid) != @as(usize, @intCast(pid))) return null;
     if (!carriesSeed(try processEnviron(context, pid))) return null;
-    if (std.os.linux.errno(std.os.linux.kill(-pid, .STOP)) != .SUCCESS) return null;
+    const paused = @import("module_seeder.zig").start(pid) orelse return null;
     session.traceWork(&.{"pause-seeder"});
-    return .{ .group = pid };
+    return paused;
 }
 
 /// Process `pid`'s environment (`/proc/PID/environ`), empty when it cannot

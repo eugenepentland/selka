@@ -41,8 +41,10 @@ module compile.
   stops the seeder's process group (SIGSTOP) for the run's length, then
   continues it (SIGCONT). It stops only a process that leads its own group
   and carries `MYLANG_TEST_SEED=1`, so a stale mark whose process is gone
-  stops nothing. A run killed in between leaves the seeder stopped until the
-  next run beside it ends.
+  stops nothing. The 29 September port adds a private watcher with a kernel
+  process identity: it closes inherited descriptors and resumes the same live
+  group when the foreground closes its socket or dies, including SIGKILL of
+  the foreground group. Failed watcher setup stops nothing.
 - **Trace.** Each run records how it was staged: `stage stable DIR`,
   `stage private` or `stage seeding`, plus `pause-seeder` when it stopped
   the seeder.
