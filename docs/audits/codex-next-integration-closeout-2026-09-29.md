@@ -70,6 +70,18 @@ checks: warm fuzz has 98 ok, two GC-stress-only findings and zero RC divergences
 limit; RC and GC Lox each pass 65 directory tests and 13 driver cases.
 The required Guardian feedback is committed in guardian-zig at `255b142`.
 
+A4 merged at `cc4efab8`. The affected-test conflict keeps the tooling lane's
+small refusal/selection helper but uses stage 1's checked-graph reuse and
+one-diff dependency planner. Configuration and policy refusal statuses remain
+2 and 3. Both appended CLI suites are present, including `fix_cli_test.zig`.
+The new formatter's text allocation helper now roots through the shared
+`myl_rc_pointer_leaf` from rc-typeids; its old private `pointer_type` no longer
+exists. The final merged rebuild passes 19/19 steps; the affected CLI filter
+passes 3/3 tests, and the formatter passes 6/6 under default RC, GC-stress and
+release. The merge commit passed all 88 whole-tree Guardian checks.
+Initial merge-resolution error-set and stale C-descriptor build failures are
+preserved in `.tmp/a4-merge/`, alongside the corrected green results.
+
 A3 is finishing on `codex/next-typing-20260929`. The initial six-case addition
 to the existing float-unary runtime helper regressed QBE float rows. Splitting
 the narrow conversions into a statically selected helper restores the old
