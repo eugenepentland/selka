@@ -6,6 +6,8 @@ module number_literals
 # rules, and an unsuffixed literal that fits the expected type takes it, in a
 # `const` initializer as in a typed local.
 
+import number_literal_helpers
+
 const MASK: u32 = 4278190080
 const TOP: u32 = 0xFF000000
 const LOW: u8 = 0xFF
@@ -153,6 +155,16 @@ public def test_compile_time_functions_type_literals_in_bindings_arguments_retur
     if i64(DOUBLED) != 32 or i64(TWICE_MORE) != 65:
         return False
     return i64(CLAMPED) == 255 and i64(REPEATED) == 64
+
+
+# spec-case: NUM-LITERAL-4
+public def test_a_module_qualified_enum_beside_constants_needs_no_constant_hint() -> bool:
+    # The literal hint looks up plain names as constants; a module name such as
+    # `number_literal_helpers` is not one and must not be reported as a wrong kind.
+    token = number_literal_helpers.second()
+    if token.kind == number_literal_helpers.Kind.A:
+        return False
+    return number_literal_helpers.second().kind == number_literal_helpers.Kind.B and LOW == 0xFF
 
 
 # spec: NUM-LITERAL-7
