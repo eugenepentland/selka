@@ -78,7 +78,7 @@ myl_native_text *myl_native_text_trim(myl_native_heap *heap, myl_native_text *in
 myl_native_text *myl_native_text_case(myl_native_heap *heap, myl_native_text *input, int upper) {
     myl_native_root root;
     myl_native_root_push(heap,&root,&input,&pointer_type);
-    myl_native_text *result=myl_native_text_build(heap,input->bytes);
+    myl_native_text *result=myl_native_text_build_scalars(heap,input->bytes,input->length);
     if (result) {
         unsigned char *bytes=(unsigned char *)myl_native_text_storage(result);
         memcpy(bytes,myl_native_text_storage(input),input->bytes);
@@ -100,7 +100,7 @@ myl_native_text *myl_native_text_zfill(myl_native_heap *heap, myl_native_text *i
     size_t pad = target-input->length;
     myl_native_root root;
     myl_native_root_push(heap,&root,&input,&pointer_type);
-    myl_native_text *result=myl_native_text_build(heap,pad+input->bytes);
+    myl_native_text *result=myl_native_text_build_scalars(heap,pad+input->bytes,target);
     if (result) {
         unsigned char *out=(unsigned char *)myl_native_text_storage(result);
         size_t at=0;
@@ -127,7 +127,8 @@ myl_native_text *myl_native_text_replace(myl_native_heap *heap, myl_native_text 
     myl_native_root_push(heap,&a,&input,&pointer_type);
     myl_native_root_push(heap,&b,&needle,&pointer_type);
     myl_native_root_push(heap,&c,&insert,&pointer_type);
-    myl_native_text *result=myl_native_text_build(heap,total);
+    const size_t scalars=input->length-hits*needle->length+hits*insert->length;
+    myl_native_text *result=myl_native_text_build_scalars(heap,total,scalars);
     if (result) {
         const unsigned char *source=myl_native_text_storage(input);
         const unsigned char *needle_bytes=myl_native_text_storage(needle);
@@ -144,8 +145,7 @@ myl_native_text *myl_native_text_replace(myl_native_heap *heap, myl_native_text 
             cursor+=hit+needle->bytes;
         }
         if (cursor<input->bytes) memcpy(out+at,source+cursor,input->bytes-cursor);
-        myl_native_text_publish(result,input->length-hits*needle->length+hits*insert->length,
-                                input->flags&insert->flags&MYL_TEXT_ASCII);
+        myl_native_text_publish(result,scalars,input->flags&insert->flags&MYL_TEXT_ASCII);
     }
     myl_native_root_pop(heap,&c); myl_native_root_pop(heap,&b); myl_native_root_pop(heap,&a);
     return result;

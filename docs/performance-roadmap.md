@@ -332,6 +332,18 @@ whole-path file helper borrows a payload only for the write helpers that consume
 one. ABI v8 and cache contract `runtime-abi-v3` retire every v7 manifest and
 object.
 
+**Position index, 2026-09-28** (`TEXT-INDEX-1..3`). The "one payload walk"
+above made every `s[i]`, `for ch in s`, `s[a:b]` and slice of the rest of a
+non-ASCII text cost the text's length, so one `é` in a megabyte of source made a
+scan quadratic (26 of 34 real design files hold one, and an iteration of 1 MB
+took 703 s where the ASCII text took 92 ms). A non-ASCII text of at least 256
+octets now carries, behind its payload, the last position a lookup found and a
+lazily filled table of the octet offset of every 128th scalar (four bytes per
+entry, about 3 % of the scalar count); a lookup walks from the nearest of the two
+ends, that position and the table. A slice knows the scalar count it asks for, so
+a view of a non-ASCII text is described in constant time. ASCII text is
+untouched: its flag is still the first test.
+
 Measured with the audit's harness (interleaved arms, byte-identical stdout on
 every arm). Baseline is `dcbcc2fd` measured on this machine with
 `.tmp/verify/measure.py --kernels str_build dict_count list_append_sum
