@@ -308,7 +308,7 @@ const prefix_unit =
     \\ %p =l loadl %a0
     \\ %h =l sub %p, 24
     \\ # myl-rc %h
-    \\ %c =w loadw %h
+    \\ %c =w loaduw %h
     \\ %n =w add %c, 1
     \\ storew %n, %h
     \\ %m =l sub %p, 16

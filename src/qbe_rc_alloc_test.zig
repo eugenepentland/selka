@@ -159,7 +159,7 @@ test "ABI4 generated increments are u32 and refuse saturation before storing a t
         \\    return len(keep([1, 2], True).values)
     , "keep");
     defer t.allocator.free(il);
-    try t.expect(std.mem.indexOf(u8, il, " =w loadw ") != null);
+    try t.expect(std.mem.indexOf(u8, il, " =w loaduw ") != null);
     try t.expect(std.mem.indexOf(u8, il, ", 4294967295\n") != null);
     try t.expect(std.mem.indexOf(u8, il, "@rcglimit") != null);
     try t.expect(std.mem.indexOf(u8, il, "$myl_qbe_rc_status(l %ctx, w 2)") != null);
