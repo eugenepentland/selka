@@ -22,9 +22,9 @@ pub const Selection = enum {
     pub fn identity(self: Selection) []const u8 {
         return switch (self) {
             .gc => "gc-v1",
-            .rc => "rc-v3",
-            .rc_counting => "rc-v3-counting",
-            .rc_sites => "rc-v3-sites",
+            .rc => "rc-v4",
+            .rc_counting => "rc-v4-counting",
+            .rc_sites => "rc-v4-sites",
         };
     }
 

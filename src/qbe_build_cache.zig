@@ -682,13 +682,13 @@ test "RC runtime contract reaches generated C and each merged archive source gro
     try environment.put(ownership_contract.variable, "gc-v1");
     const gc = try std.mem.join(a, " ", try cache.flags());
     try std.testing.expect(std.mem.indexOf(u8, gc, "MYL_NATIVE_RC") == null);
-    try environment.put(ownership_contract.variable, "rc-v3-counting");
+    try environment.put(ownership_contract.variable, "rc-v4-counting");
     const counted = try std.mem.join(a, " ", try cache.generatedFlags());
     try std.testing.expect(std.mem.indexOf(u8, counted, "-DMYL_NATIVE_RC=1") != null);
     try std.testing.expect(std.mem.indexOf(u8, counted, "-DMYL_NATIVE_RC_COUNTING=1") != null);
     const merged = try std.mem.join(a, " ", try cache.mergeCommand(&.{ "qbe_runtime.c", "native_heap.c" }, "out.o"));
     try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, merged, "-DMYL_NATIVE_RC=1"));
-    try environment.put(ownership_contract.variable, "rc-v3");
+    try environment.put(ownership_contract.variable, "rc-v4");
     const plain = try std.mem.join(a, " ", try cache.flags());
     try std.testing.expect(std.mem.indexOf(u8, plain, "-DMYL_NATIVE_RC=1") != null);
     try std.testing.expect(std.mem.indexOf(u8, plain, "MYL_NATIVE_RC_COUNTING") == null);

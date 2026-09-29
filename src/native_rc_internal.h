@@ -290,7 +290,7 @@ static inline void myl_rc_cache_push(myl_native_heap *heap, myl_rc_object *objec
     if (heap->collections != SIZE_MAX) heap->collections++;
     heap->objects_live--;
     object->common.mark = MYL_RC_RETIRED_MARK;
-    object->owners = (uintptr_t)heap->rc_cache.free[slab->index];
+    object->retired_link = (uintptr_t)heap->rc_cache.free[slab->index];
     heap->rc_cache.free[slab->index] = object;
     heap->rc_cache.pushed += slab->stride;
 }
@@ -316,7 +316,7 @@ static inline void myl_rc_dies(myl_native_heap *heap, myl_rc_object *object) {
     myl_rc_invariant(!(object->common.mark & MYL_RC_OBJECT_DYING));
     object->common.mark |= MYL_RC_OBJECT_DYING;
     if (!heap->rc->dead.active) { myl_rc_dead_outside(heap, object); return; }
-    object->owners = (uintptr_t)heap->rc->dead.head;
+    object->retired_link = (uintptr_t)heap->rc->dead.head;
     heap->rc->dead.head = object;
 }
 /* myl_rc_owner_acquire for runtime-internal callers (heap is live). */
