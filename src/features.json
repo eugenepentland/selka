@@ -1066,6 +1066,16 @@
       "kind": "language",
       "summary": "A function's effect ceiling is derived from its parameter list - a capability parameter permits its effect, a `mut` parameter `mutation`, a callback parameter its declared ceiling, and allocation is always permitted - so a body that exceeds it is rejected in that body with the parameter to add; `noalloc`, `noio` and `effects(...)` only narrow it, a clause that restates it warns `W_DERIVED_EFFECTS`, a clause naming an effect no parameter supplies is `E_DERIVED_EFFECTS`, and a capability parameter the body never reads is `E_UNUSED_CAPABILITY`.",
       "doc": "docs/effects.md#the-signature-is-the-ceiling"
+    },
+    "test-file-private-access": {
+      "kind": "tooling",
+      "summary": "A module named `<name>_test` that no other module imports may call the private functions, types and constants of module `<name>`, so a helper need not become `public` to be tested; every other importer still gets `E_PRIVATE_SYMBOL`.",
+      "doc": "docs/tooling/guest-tests.md#private-declarations"
+    },
+    "per-entry-cases-files": {
+      "kind": "tooling",
+      "summary": "`mylang test ENTRY` without `--cases` applies the `<stem>.cases.json` beside the entry, so a directory run applies each entry's own cases file to that entry and a single-file run sees the same cases.",
+      "doc": "docs/tooling/guest-tests.md#per-entry-cases-files"
     }
   },
   "unsupported": [

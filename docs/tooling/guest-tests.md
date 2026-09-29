@@ -395,7 +395,9 @@ program links is built once for the whole suite. Their reports merge into one
 case listing, one count line naming how many programs took part, and the most
 severe exit status: 2 if any program failed to set up, 1 if any case failed, 3
 if the whole selection was empty or skipped, and 0 otherwise. `--cases` is
-rejected for a directory run, because its keys name the tests of one project.
+rejected for a directory run, because its keys name the tests of one project;
+instead each entry's own [cases file](#per-entry-cases-files) beside it applies
+to that entry.
 
 Each child's `--json` report lists the project sources its check loaded as
 `modules`. After merging, the directory run names every test-declaring source
@@ -564,16 +566,24 @@ cached integers::test_width_conversions
 
 `mylang test --affected --against REF` narrows a run to the tests that reach a
 declaration whose own source lines changed since `REF`. It reads the changed
-lines from `git diff` in the entry file's own repository, checks the project, and
-walks the resolved call graph from each discovered test; a test runs only when a
-changed declaration is reachable from it. The derivation is a selection, never a
-verdict: the selected count and every skipped test are printed on stderr, so
-`--json`'s stdout report stays machine-readable, and an empty derivation exits 3
-exactly as a filter that matches nothing does. `--filter` still applies first,
-`lint --gate` and CI run the whole set, `--against` without `--affected` (or the
-reverse) is a usage error, and a `REF` that `git` cannot resolve is a host
-failure. A project that cannot be checked for another reason runs the whole
-discovered set rather than silently skipping tests.
+lines of every `.my` file from one `git diff` in the entry file's own
+repository (plus `git ls-files --others` for files not yet added, which count as
+changed throughout) and maps each changed line onto the top-level declaration
+that owns it, by indentation: a line inside a function or constant changes that
+declaration, and a line anywhere else — the module header, an import, a record,
+a domain — changes every declaration of the module. A test then runs only when
+a changed declaration is in the dependency closure the run already derives to
+key the test's receipt, so the selection costs a `git diff` and a line scan
+rather than a second check of the project: on the 50k-line scale tier it adds
+a few hundredths of a second to a cached run.
+
+The derivation is a selection, never a verdict: the selected count and every
+skipped test are printed on stderr, so `--json`'s stdout report stays
+machine-readable, and an empty derivation exits 3 exactly as a filter that
+matches nothing does. `--filter` still applies first, `lint --gate` and CI run
+the whole set, `--against` without `--affected` (or the reverse) is a usage
+error, and a `REF` that `git` cannot resolve is a host failure. A project that
+cannot be checked fails exactly as it would without `--affected`.
 
 ```console
 $ mylang test app/main.my --affected --against HEAD
@@ -668,6 +678,52 @@ $ cat cases.json
 $ mylang test app/main.my --cases cases.json
 passed main::test_stamp
 1 passed, 0 cached, 0 failed, 0 skipped
+```
+
+## Test files and their modules
+
+### Private declarations
+
+A module's test file may call the module's private declarations: a module named
+`<name>_test` that no other module imports sees every non-`public` function,
+type and constant of module `<name>`, so a helper need not become `public` just
+to be tested. Any other importer, including another module's test file, still
+gets `E_PRIVATE_SYMBOL`.
+
+```console
+$ cat scanner.my
+module scanner
+
+
+def is_digit(c: str) -> bool:
+    return c in "0123456789"
+$ cat scanner_test.my
+module scanner_test
+import scanner
+
+
+public def test_is_digit() -> bool:
+    return scanner.is_digit("7") and not scanner.is_digit("x")
+$ mylang test .
+passed scanner_test::test_is_digit
+1 passed, 0 cached, 0 failed, 0 skipped, 0 dropped across 1 programs
+```
+
+### Per-entry cases files
+
+An entry's cases file sits beside it as `<stem>.cases.json`: `driver_tests.my`
+owns `driver_tests.cases.json`. A run of the entry without `--cases` applies that
+file, so a directory run applies each entry's file to that entry alone and a
+single-file run of the same entry sees the same cases. An explicit `--cases FILE`
+still takes precedence for a single entry.
+
+```console
+$ cat scaled_test.cases.json
+{"scaled_test::test_scaled": {"arguments": {"n": "21"}, "expected": "42"}}
+$ mylang test .
+passed scaled_test::test_scaled
+cached scanner_test::test_is_digit
+1 passed, 1 cached, 0 failed, 0 skipped, 0 dropped across 2 programs
 ```
 
 ## Performance benchmarks

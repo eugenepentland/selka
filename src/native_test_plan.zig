@@ -31,6 +31,10 @@ const Dependency = struct { symbol: []const u8, kind: Kind };
 const Metadata = struct { implementation_hash: []const u8, dependencies: []const Dependency, cacheable: bool, pure: bool = true, reasons: []const []const u8 };
 /// Manifest key for a unit's checked dependency facts.
 const facts_key = "test_dependencies";
+/// Manifest key for one unit's dependency edges inside its facts.
+const dependencies_key = "dependencies";
+/// Manifest key for the list of compiled units.
+const functions_key = @import("native_test_contracts.zig").functions_key;
 /// One unit's facts, read once when its graph is indexed: its symbol and
 /// implementation hash, its dependencies as unit positions, its reasons, and
 /// whether all of that was well formed.
@@ -54,7 +58,7 @@ pub const Index = struct {
     /// unit whose facts are malformed is an invalid manifest only for a plan
     /// that reaches it.
     pub fn init(allocator: std.mem.Allocator, manifest: std.json.Value) Error!Index {
-        const units = json.array(json.get(manifest, "functions"));
+        const units = json.array(json.get(manifest, functions_key));
         const abi = json.text(json.get(manifest, "abi"));
         if (units.len == 0 or abi.len == 0) return error.InvalidManifest;
         var index: Index = .{ .abi = abi };
@@ -153,12 +157,55 @@ pub fn plan(allocator: std.mem.Allocator, manifest: std.json.Value, entry_symbol
     defer index.deinit(allocator);
     return index.plan(allocator, entry_symbol, context_key);
 }
+/// Every function symbol whose dependency closure reaches a changed function,
+/// the changed functions included: one reverse walk over the manifest's
+/// dependency edges from every unit whose qualified name `changes.reaches`.
+/// A test is affected exactly when its own symbol is in the set, which is the
+/// closure its receipt is keyed on, so no second call graph is built.
+pub fn reaching(allocator: std.mem.Allocator, manifest: std.json.Value, changes: anytype) Error!std.StringHashMapUnmanaged(void) {
+    const units = json.array(json.get(manifest, functions_key));
+    var index: std.StringHashMapUnmanaged(usize) = .empty;
+    defer index.deinit(allocator);
+    for (units, 0..) |unit, i| try index.put(allocator, json.text(json.get(unit, "symbol")), i);
+    const callers = try allocator.alloc(std.ArrayList(usize), units.len);
+    @memset(callers, .empty);
+    defer {
+        for (callers) |*list| list.deinit(allocator);
+        allocator.free(callers);
+    }
+    for (units, 0..) |unit, caller| for (json.array(json.get(json.get(unit, facts_key), dependencies_key))) |dependency| {
+        const callee = index.get(json.text(json.get(dependency, "symbol"))) orelse continue;
+        try callers[callee].append(allocator, caller);
+    };
+    const seen = try allocator.alloc(bool, units.len);
+    defer allocator.free(seen);
+    @memset(seen, false);
+    var queue: std.ArrayList(usize) = .empty;
+    defer queue.deinit(allocator);
+    for (units, 0..) |unit, i| if (changes.reaches(json.text(json.get(unit, "name")))) {
+        seen[i] = true;
+        try queue.append(allocator, i);
+    };
+    var reached: std.StringHashMapUnmanaged(void) = .empty;
+    errdefer reached.deinit(allocator);
+    var cursor: usize = 0;
+    while (cursor < queue.items.len) : (cursor += 1) {
+        const unit = queue.items[cursor];
+        try reached.put(allocator, json.text(json.get(units[unit], "symbol")), {});
+        for (callers[unit].items) |caller| {
+            if (seen[caller]) continue;
+            seen[caller] = true;
+            try queue.append(allocator, caller);
+        }
+    }
+    return reached;
+}
 fn validateFacts(facts: std.json.Value) Error!void {
     const digest = json.text(json.get(facts, "implementation_hash"));
     if (digest.len != 64) return error.InvalidManifest;
     for (digest) |byte| if (!std.ascii.isHex(byte)) return error.InvalidManifest;
     if (json.get(facts, "cacheable") != .bool) return error.InvalidManifest;
-    if (json.get(facts, "dependencies") != .array) return error.InvalidManifest;
+    if (json.get(facts, dependencies_key) != .array) return error.InvalidManifest;
     if (json.get(facts, "reasons") != .array) return error.InvalidManifest;
 }
 fn unique(allocator: std.mem.Allocator, values: *std.ArrayList([]const u8), value: []const u8) Error!void {

@@ -4229,6 +4229,40 @@ test "CLI test ignores unexported test_ helpers that cannot default" {
     try testing.expect(std.mem.indexOf(u8, result.stdout, "test_count") == null);
 }
 
+// spec: DIRECTORY-CASES-1
+// spec-case: TEST-PRIVATE-ACCESS-1
+test "CLI directory test applies each entry's own cases file and lets a test file reach its module's privates" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "scanner.my", .data = "module scanner\n\n\ndef helper() -> int:\n    return 7\n\n\npublic def scan() -> int:\n    return helper()\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "scanner_test.my", .data = "module scanner_test\nimport scanner\n\n\npublic def test_helper() -> bool:\n    return scanner.helper() == scanner.scan()\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "scaled_test.my", .data = "module scaled_test\n\n\npublic def test_scaled(n: int) -> int:\n    return n * 2\n" });
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(root);
+    const cache = try std.fs.path.join(testing.allocator, &.{ root, ".mylang-test-cache" });
+    defer testing.allocator.free(cache);
+    // Without its cases file the parameterized test is a property test
+    // (PROPERTY-TEST-1), which an `int` result cannot be.
+    const bare = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "test", root, "--cache-dir", cache } });
+    defer testing.allocator.free(bare.stdout);
+    defer testing.allocator.free(bare.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, bare.term);
+    try testing.expect(std.mem.indexOf(u8, bare.stdout, "passed scanner_test::test_helper") != null);
+    try testing.expect(std.mem.indexOf(u8, bare.stdout, "a property test returns bool or Result[bool, E]") != null);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "scaled_test.cases.json", .data = "{\"scaled_test::test_scaled\": {\"arguments\": {\"n\": \"21\"}, \"expected\": \"42\"}}" });
+    const cased = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "test", root, "--cache-dir", cache } });
+    defer testing.allocator.free(cased.stdout);
+    defer testing.allocator.free(cased.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, cased.term);
+    try testing.expect(std.mem.indexOf(u8, cased.stdout, "scaled_test::test_scaled") != null);
+    try testing.expect(std.mem.indexOf(u8, cased.stdout, "0 failed") != null);
+    // An explicit `--cases` still names one project, so a directory refuses it.
+    const explicit = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "test", root, "--cases", "scaled_test.cases.json", "--cache-dir", cache } });
+    defer testing.allocator.free(explicit.stdout);
+    defer testing.allocator.free(explicit.stderr);
+    try testing.expect(explicit.term.exited != 0);
+}
+
 // spec-case: NATIVE-TEST-1
 test "CLI test reports an exported ill-shaped test as a failed case" {
     var temporary = testing.tmpDir(.{});

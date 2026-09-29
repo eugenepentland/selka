@@ -111,6 +111,16 @@ fn makeCase(allocator: std.mem.Allocator, function: std.json.Value, settings: st
         .declared = .{ .skip = reason, .invalid = invalid, .property = property and invalid == null },
     };
 }
+/// The cases file an entry carries beside itself: `driver_tests.my` owns
+/// `driver_tests.cases.json`. An entry run without `--cases` uses it when it
+/// exists, so a directory run applies each entry's own file to that entry and
+/// a single-file run of the same entry sees the same cases.
+pub fn sibling(allocator: std.mem.Allocator, io: std.Io, entry: []const u8) error{OutOfMemory}!?[]const u8 {
+    if (!std.mem.endsWith(u8, entry, ".my")) return null;
+    const path = try std.fmt.allocPrint(allocator, "{s}.cases.json", .{entry[0 .. entry.len - ".my".len]});
+    const info = std.Io.Dir.cwd().statFile(io, path, .{}) catch return null;
+    return if (info.kind == .file) path else null;
+}
 /// Case-sensitive shell-style wildcard matching, including bracket ranges. A
 /// pattern carrying no wildcard is a plain substring of the qualified name, so
 /// `--filter parse` selects every module's `test_parse*` without a glob.

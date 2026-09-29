@@ -286,6 +286,7 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     };
     // A directory names many independent projects, so each one runs as its own child.
     if (fanout.selected(context, opts.source)) return fanout.run(context, opts);
+    if (opts.cases == null) opts.cases = try cases.sibling(context.allocator, context.io, opts.source);
     var session = try sessions.Session.init(context, opts);
     defer context.remove(session.temporary);
     var work: invalidation.Work = .{ .command = "test" };
@@ -321,20 +322,7 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     // verdict: an empty derivation still flows through the ordinary report and
     // exits 3, and a derivation that cannot be made runs the whole set.
     if (opts.flags.affected) {
-        const source_absolute = try context.absolute(opts.source);
-        const git_root = std.fs.path.dirname(source_absolute) orelse ".";
-        const names = try context.allocator.alloc([]const u8, selected.len);
-        for (selected, names) |case, *name| name.* = case.name;
-        const selection = language.affected_tests.select(.{
-            .memory = context.allocator,
-            .io = context.io,
-            .load_root = captured.root,
-            .git_root = git_root,
-            .entry = captured.entry,
-            .reference = opts.against.?,
-            .discovered = names,
-        }) catch |err| switch (err) {
-            error.OutOfMemory => return error.OutOfMemory,
+        const selection = selectAffected(context, &graphs, selected, opts) catch |err| switch (err) {
             error.GitFailed => {
                 try std.Io.File.stderr().writeStreamingAll(context.io, "mylang test: --against names a revision git cannot resolve\n");
                 return 2;
@@ -343,6 +331,9 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
                 try std.Io.File.stderr().writeStreamingAll(context.io, options.usage);
                 return 2;
             },
+            error.ProjectConfigurationFailed => return 2,
+            error.ProjectPolicyRejected => return 3,
+            else => |other| return other,
         };
         var kept: std.ArrayList(cases.Case) = .empty;
         for (selected, selection.keep) |case, keep| if (keep) try kept.append(context.allocator, case);
@@ -1284,14 +1275,40 @@ test "the production check starts beside the declaration check unless a fixture 
 /// Print the `--affected` selection: how many tests it kept, and every
 /// discovered test it dropped as unchanged since the reference. The text goes
 /// to stderr so `--json`'s stdout report stays machine-readable.
+/// `--affected`: keep each discovered test whose dependency closure — the one
+/// its receipt is keyed on, from the checked graph this run builds anyway —
+/// reaches a declaration changed since `--against`. The derivation itself is
+/// one `git diff` and a line scan of the changed files. A declared skip, an
+/// undefaultable shape or a test the graph cannot name is kept, never dropped.
+fn selectAffected(context: fs.Context, graphs: *Graphs, selected: []const cases.Case, opts: options.Options) (Error || language.affected_tests.Error)!language.affected_tests.Selection {
+    const source_absolute = try context.absolute(opts.source);
+    const changes = try language.affected_tests.changes(.{
+        .memory = context.allocator,
+        .io = context.io,
+        .git_root = std.fs.path.dirname(source_absolute) orelse ".",
+        .entry = opts.source,
+        .reference = opts.against.?,
+    });
+    const keep = try context.allocator.alloc(bool, selected.len);
+    var skipped: std.ArrayList([]const u8) = .empty;
+    var reached: std.AutoHashMapUnmanaged(*Graph, std.StringHashMapUnmanaged(void)) = .empty;
+    for (selected, keep) |case, *kept| {
+        kept.* = true;
+        if (case.declared.skip != null or case.declared.invalid != null) continue;
+        const graph = try graphs.get(case);
+        const entry = try reached.getOrPut(context.allocator, graph);
+        if (!entry.found_existing) entry.value_ptr.* = try planner.reaching(context.allocator, graph.project.manifest, changes);
+        const test_symbol = (try graph.lookup(context.allocator)).symbol(case.name) catch continue;
+        kept.* = entry.value_ptr.contains(test_symbol);
+        if (!kept.*) try skipped.append(context.allocator, case.name);
+    }
+    return .{ .keep = keep, .skipped = skipped.items };
+}
 fn reportAffected(context: fs.Context, selection: language.affected_tests.Selection, reference: []const u8) Error!void {
     const stderr = std.Io.File.stderr();
     var kept: usize = 0;
     for (selection.keep) |keep| kept += @intFromBool(keep);
-    const summary = if (selection.derived)
-        try std.fmt.allocPrint(context.allocator, "affected: {d} selected, {d} skipped against {s}\n", .{ kept, selection.skipped.len, reference })
-    else
-        try std.fmt.allocPrint(context.allocator, "affected: project could not be checked; running all {d} discovered tests\n", .{kept});
+    const summary = try std.fmt.allocPrint(context.allocator, "affected: {d} selected, {d} skipped against {s}\n", .{ kept, selection.skipped.len, reference });
     try stderr.writeStreamingAll(context.io, summary);
     for (selection.skipped) |name| {
         try stderr.writeStreamingAll(context.io, try std.fmt.allocPrint(context.allocator, "skipped {s}: no changed declaration is reachable\n", .{name}));

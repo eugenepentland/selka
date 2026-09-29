@@ -168,13 +168,28 @@ pub const Index = struct {
         };
         const symbol = self.units[target].symbols.items[symbol_id];
         const declaration: graph.Site = .{ .module = target, .span = symbol.span };
-        if (target != from and !symbol.exported) return self.project.fail("E_PRIVATE_SYMBOL", "declaration is private to its module", site, declaration);
+        const visible = target == from or symbol.exported or self.testsModule(from, target);
+        if (!visible) return self.project.fail("E_PRIVATE_SYMBOL", "declaration is private to its module", site, declaration);
         if (symbol.restricted and !sameOwner(target == from, owner, symbol.owner.?)) return self.project.fail("E_PRIVATE_FUNCTION", "private domain function requires the same declaring domain", site, declaration);
         if (symbol.kind != kind) return self.project.fail(eSymbolKind, "declaration has the wrong kind for this reference", site, declaration);
         // A facade re-export resolves to the declaration that defines it, so the
         // caller sees the defining module's identity and the facade is only a name.
         if (symbol.re_export) |identity| return identity;
         return .{ .module = target, .symbol = symbol_id };
+    }
+    /// Whether module `from` is the test file of module `target`: it is named
+    /// `<target>_test` and no module imports it, so it is a test entry and
+    /// cannot hand the private declarations it reaches to anything else.
+    pub fn testsModule(self: *const Index, from: usize, target: usize) bool {
+        const modules = self.project.modules.items;
+        const tester = modules[from].name;
+        const tested = modules[target].name;
+        if (tester.len != tested.len + "_test".len) return false;
+        if (!std.mem.startsWith(u8, tester, tested) or !std.mem.endsWith(u8, tester, "_test")) return false;
+        for (modules) |module| for (module.imports) |imported| {
+            if (imported.target == from) return false;
+        };
+        return true;
     }
     /// Whether a module's direct import at `import_index` was resolved at least
     /// once, which is the exact evidence `W_UNUSED_IMPORT` reports against.
