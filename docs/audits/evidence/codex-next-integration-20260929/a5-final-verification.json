@@ -1,0 +1,194 @@
+{
+  "commit": "d8f66585",
+  "tag": "m17-codex",
+  "statuses": {
+    "build": 0,
+    "corpus-build": 0,
+    "measure-dev": 0,
+    "measure-smoke": 0,
+    "test": 0,
+    "test-qbe": 0,
+    "test-qbe-build": 0,
+    "fmt-check": 0,
+    "test-native-memory": 0,
+    "test-native-heap": 0,
+    "sweep--rc-runtime=stats": 0,
+    "sweep--rc-runtime=stats-release": 0,
+    "sweep--rc-runtime": 0,
+    "sweep--rc-runtime-release": 0,
+    "sweep--gc-runtime": 0,
+    "sweep--gc-runtime-release": 0,
+    "sweep=default": 0,
+    "sweep=default-release": 0,
+    "sweep-gc-stress": 0,
+    "lox-tests": 0,
+    "lox-driver": 0,
+    "lox-tests--gc-runtime": 0,
+    "lox-driver--gc-runtime": 0,
+    "lox-tests--release": 0,
+    "lox-driver--release": 0,
+    "lox-tests--gc-runtime--release": 0,
+    "lox-driver--gc-runtime--release": 0
+  },
+  "guest_modes": {
+    "sweep--gc-runtime": {
+      "version": "native-tests-v1",
+      "passed": 1438,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 1438,
+      "programs": 218,
+      "dropped": 0,
+      "unloaded": 0,
+      "test_names_sha256": "b781caba959cb9305029e443e596a70a20393a800b84ecf251e02e14461d6c53"
+    },
+    "sweep--gc-runtime-release": {
+      "version": "native-tests-v1",
+      "passed": 1438,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 1438,
+      "programs": 218,
+      "dropped": 0,
+      "unloaded": 0,
+      "test_names_sha256": "b781caba959cb9305029e443e596a70a20393a800b84ecf251e02e14461d6c53"
+    },
+    "sweep--rc-runtime": {
+      "version": "native-tests-v1",
+      "passed": 1438,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 1438,
+      "programs": 218,
+      "dropped": 0,
+      "unloaded": 0,
+      "test_names_sha256": "b781caba959cb9305029e443e596a70a20393a800b84ecf251e02e14461d6c53"
+    },
+    "sweep--rc-runtime-release": {
+      "version": "native-tests-v1",
+      "passed": 1438,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 1438,
+      "programs": 218,
+      "dropped": 0,
+      "unloaded": 0,
+      "test_names_sha256": "b781caba959cb9305029e443e596a70a20393a800b84ecf251e02e14461d6c53"
+    },
+    "sweep--rc-runtime=stats": {
+      "version": "native-tests-v1",
+      "passed": 1438,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 1438,
+      "programs": 218,
+      "dropped": 0,
+      "unloaded": 0,
+      "test_names_sha256": "b781caba959cb9305029e443e596a70a20393a800b84ecf251e02e14461d6c53"
+    },
+    "sweep--rc-runtime=stats-release": {
+      "version": "native-tests-v1",
+      "passed": 1438,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 1438,
+      "programs": 218,
+      "dropped": 0,
+      "unloaded": 0,
+      "test_names_sha256": "b781caba959cb9305029e443e596a70a20393a800b84ecf251e02e14461d6c53"
+    },
+    "sweep-gc-stress": {
+      "version": "native-tests-v1",
+      "passed": 1438,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 1438,
+      "programs": 218,
+      "dropped": 0,
+      "unloaded": 0,
+      "test_names_sha256": "b781caba959cb9305029e443e596a70a20393a800b84ecf251e02e14461d6c53"
+    },
+    "sweep=default": {
+      "version": "native-tests-v1",
+      "passed": 1438,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 1438,
+      "programs": 218,
+      "dropped": 0,
+      "unloaded": 0,
+      "test_names_sha256": "b781caba959cb9305029e443e596a70a20393a800b84ecf251e02e14461d6c53"
+    },
+    "sweep=default-release": {
+      "version": "native-tests-v1",
+      "passed": 1438,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 1438,
+      "programs": 218,
+      "dropped": 0,
+      "unloaded": 0,
+      "test_names_sha256": "b781caba959cb9305029e443e596a70a20393a800b84ecf251e02e14461d6c53"
+    }
+  },
+  "zig": {
+    "test": "Build Summary: 96/96 steps succeeded; 2655/29781 tests passed (27126 skipped)",
+    "test-qbe": "Build Summary: 51/51 steps succeeded; 480/480 tests passed",
+    "test-qbe-build": "Build Summary: 29/29 steps succeeded",
+    "fmt-check": "Build Summary: 2/2 steps succeeded",
+    "test-native-memory": "Build Summary: 23/23 steps succeeded",
+    "test-native-heap": "Build Summary: 10/10 steps succeeded"
+  },
+  "perf": {
+    "dev": {
+      "summary": {
+        "llvm": {
+          "geomean": 1.0690907773352403,
+          "geomean_nonlox": 1.0414454578579437,
+          "rows": 43,
+          "within_1_3": 43,
+          "worst": 1.255954916754973
+        },
+        "qbe": {
+          "geomean": 1.0644846095647313,
+          "geomean_nonlox": 1.046145654822888,
+          "rows": 43,
+          "within_1_3": 43,
+          "worst": 1.281418448435237
+        }
+      },
+      "matching_outputs": 86,
+      "moves_over_1_percent": [],
+      "maximum_regression_percent": 0.001819600399843857
+    },
+    "smoke": {
+      "summary": {
+        "llvm": {
+          "geomean": 1.1371253438246616,
+          "geomean_nonlox": 1.0414451562494007,
+          "rows": 43,
+          "within_1_3": 36,
+          "worst": 2.3576263135043125
+        },
+        "qbe": {
+          "geomean": 1.103400759705969,
+          "geomean_nonlox": 1.0461460547614172,
+          "rows": 43,
+          "within_1_3": 38,
+          "worst": 1.5047558344361318
+        }
+      },
+      "matching_outputs": 86
+    }
+  },
+  "compiler_sha256": "4059a85e3d081f8a73b370e03e7d86cba8eb8a47531bfcdd7c09e6cc109d74b1"
+}

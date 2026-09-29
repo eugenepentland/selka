@@ -4,6 +4,26 @@ This plan is written to be handed to AI agents that did not see the conversation
 Each work package (WP) says where it starts, what to do, what "done" means and what has
 already gone wrong in this area. Read sections 1 to 5 before any WP.
 
+## Closeout status, 2026-09-29
+
+A1–A4 are implemented, integrated and verified on the isolated
+`codex/next-closeout-20260929` branch. A5 gate `m17-codex` is green at compiler
+source `d8f66585`: all 27 steps pass, including 1,438 fresh guest tests in each
+of nine modes and all four Lox combinations. Dev/full corpus outputs match all
+86 pairs; every row meets the 1.3x cap and 1% regression limit.
+
+**A5 landing awaits the explicit user approval required below.** `main` remains
+`6d91f95b`. Original checkouts and paused lane worktrees were not edited.
+Details, exact counts, performance rows and Guardian feedback are in
+[codex-next-integration-closeout-2026-09-29.md](codex-next-integration-closeout-2026-09-29.md).
+
+Phase B and Phase C remain open. B1/B2 have implementation maps, pinned oracles
+and fixtures; B3 has a current-source large-list reproduction. B4 has an
+independent tooling/GC checkpoint and a separate combined continuation under
+review; its remaining changes are outside the A5 source. EDA preparation has a
+verified test inventory and guide/checker reconciliation, without starting the
+port. Sections below retain the original handoff state and requirements.
+
 ## 1. Read first
 
 - `CLAUDE.md`: the build, the fast loops, the Guardian rules and the gate. Guardian blocks `zig build` and commits.

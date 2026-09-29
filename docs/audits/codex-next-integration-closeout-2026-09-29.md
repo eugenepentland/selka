@@ -109,10 +109,76 @@ The rebuilt merge passes 19/19 steps and all 88 Guardian checks. Logs and the
 initial complexity failures remain in `.tmp/a3-merge/`; the compact merged
 verification is checked in with the other integration evidence.
 
-## A5 and remaining plan
+## A5 combined verification and approval checkpoint
 
-The combined gate and explicit user approval precede any fast-forward of
-`main`. Phase B remains open (text surface, per-module builds, runtime
-follow-ups and tooling/GC), followed by the four-lane EDA port in Phase C.
-B4 independent fixes and B2 reconnaissance may advance before the checkpoint;
-their implementation is not part of the Phase A gate unless explicitly listed.
+Gate `m17-codex` froze compiler source at
+`d8f66585830733e2771fed0eb032dd1406a24797`. The installed and private gate
+compilers have SHA-256
+`4059a85e3d081f8a73b370e03e7d86cba8eb8a47531bfcdd7c09e6cc109d74b1`.
+The evidence commit after this gate changes documentation and receipts only.
+
+All 27 recorded statuses are zero, HEAD stayed fixed and the strict verifier
+confirms identical qualified test-name sets in all nine modes. Guardian feedback
+is committed in guardian-zig at `8a65ccb`. Raw logs and full guest JSON remain in
+`.tmp-gate/m17-codex/`; compact statuses, hashes and all corpus rows are checked in
+as `a5-final-verification.json` and `a5-supplement-verification.json`.
+
+| Check | Result |
+|---|---|
+| Full Zig test | 96/96 steps; 2,655 selected tests passed (27,126 unselected shard entries) |
+| QBE | 51/51 steps; 480/480 tests passed |
+| QBE build / format | 29/29 and 2/2 steps |
+| Native memory / heap | 23/23 and 10/10 steps |
+| Guest sweep | 1,438/1,438 across 218 programs in each of nine modes |
+| Lox | RC, GC, RC release and GC release each pass 65 directory tests and 13 driver cases |
+
+All guest and Lox results have zero failures, cached results, skipped or dropped
+tests; guest sweeps also have zero unloaded sources.
+
+The supplemental 100-seed fuzz run has 98 ok, zero invalid and zero RC
+mismatches. GC-stress-only seeds 19 and 87 retain the known scan-plan refusal
+(exit 134) and crash (exit 139), respectively. Both generated programs and
+the fuzz summary remain in `.tmp/a5/fuzz/`; their hashes are recorded in the
+supplement evidence. The independent B4 candidate fixes the four historical
+collector repros, but those changes are outside this frozen Phase A source and
+are not claimed by this gate.
+
+All four explicit Lox project builds pass (RC and GC, QBE and LLVM release).
+The complete docs check has 223 runnable examples and 57 checked examples,
+zero mis-tagged or failed examples, and 11 documented intentional skips.
+Feature coverage passes for 221 features, 14 standard modules and 176 exports.
+
+| Corpus size | QBE RC/GC geomean | LLVM RC/GC geomean | Output matches | Maximum increase vs A1 |
+|---|---:|---:|---:|---:|
+| Dev | 1.064485 | 1.069091 | 86/86 | 0.001820% |
+| Full | 1.062698 | 1.065301 | 86/86 | 0.001589% |
+| Smoke | 1.103401 | 1.137125 | 86/86 | 0.001940% |
+
+Dev and full have all 43 rows per backend at or below 1.3x accepted GC;
+no row regresses more than 1% against A1. The GC denominator is unchanged.
+All per-row instruction counts and movements are retained in the supplement
+receipt. The largest dev decrease is LLVM text_ops at 0.1484%; the remaining
+movements are small. Attribution to inherited format/runtime integration and
+startup/layout effects is an inference, not an isolated causal profile.
+Smoke retains the previously recorded short Lox startup cap misses, so it
+checks differential correctness and change limits rather than the dev cap.
+Each `quick.py` execution is CPU-pinned. Dev/smoke use the inherited affinity
+pool; the additional full run uses the reserved timing pool. Full is a single
+measurement, not the historical median-of-three protocol. The additional A1 full
+control measures its unchanged frozen binaries against the same accepted GC.
+All 58 unique accepted GC binary hashes match their original manifest.
+
+`main` remains at `6d91f95b`; it is an ancestor of this integration and is not
+checked out in another worktree. The explicit approval required by WP-A5 is
+pending. No original checkout, paused lane worktree or main ref was changed.
+
+Phase B is still open. B1 has a pinned 86,730-case CPython oracle and a source
+implementation map; B2 has its RC/interface reconciliation matrix, strict
+oracle requirements and 242,445-line nominal-200k fixture. A current-source B3
+experiment reproduces the large-list problem: 250 integers build in 5.89s and
+1,000 generate 225,256 IL lines before QBE's size refusal. These are shared
+machine single observations, not acceptance timings. B4's independent fixes
+and combined continuation are reviewed/tested separately. Phase C remains
+open and waits for compiler updates; its preparation accounts for 279 named
+Zig tests plus the anonymous import-only declaration and records the strict
+counterpart checker's false extras for two approved merged modules.

@@ -1,0 +1,65 @@
+{
+  "source_commit": "d8f66585830733e2771fed0eb032dd1406a24797",
+  "compiler_sha256": "4059a85e3d081f8a73b370e03e7d86cba8eb8a47531bfcdd7c09e6cc109d74b1",
+  "kind": "read-only current-source baseline; no implementation",
+  "protocol": "single shared-machine observations; admission waits excluded; source objects cold; runtime cache shared across cases; not acceptance timings",
+  "rows": [
+    {
+      "elements": 8,
+      "source_sha256": "614033208bbf8e3f857a4f463fdfac26833c489c57ef0fbedd3a0893259a27ce",
+      "il_lines": 3048,
+      "il_bytes": 76059,
+      "emit_status": 0,
+      "build_status": 0,
+      "timings": {
+        "emit": {
+          "elapsed_seconds": 1.18,
+          "max_rss_kib": 28640
+        },
+        "build": {
+          "elapsed_seconds": 0.57,
+          "max_rss_kib": 76244
+        }
+      },
+      "output_verified": true
+    },
+    {
+      "elements": 250,
+      "source_sha256": "7836a3c47917cb175510218994f829520b29034fd439f1c005f1d1a9e12e18e3",
+      "il_lines": 57256,
+      "il_bytes": 1574129,
+      "emit_status": 0,
+      "build_status": 0,
+      "timings": {
+        "emit": {
+          "elapsed_seconds": 3.48,
+          "max_rss_kib": 59952
+        },
+        "build": {
+          "elapsed_seconds": 5.89,
+          "max_rss_kib": 475616
+        }
+      },
+      "output_verified": true
+    },
+    {
+      "elements": 1000,
+      "source_sha256": "7ac9aba38898e82c070c87c4212807be6e838ebc8acf3259bf0e9c7d0d9dd9cd",
+      "il_lines": 225256,
+      "il_bytes": 6361313,
+      "emit_status": 0,
+      "build_status": 2,
+      "timings": {
+        "emit": {
+          "elapsed_seconds": 7.83,
+          "max_rss_kib": 168712
+        },
+        "build": {
+          "elapsed_seconds": 10.74,
+          "max_rss_kib": 173024
+        }
+      },
+      "refusal": "mylang: function `main` is too large for the QBE backend: 39181 blocks x 110471 temporaries need about 6.4 GiB in QBE, over the 8.3 GiB address-space ceiling it inherits (MYLANG_HOST_MEMORY_LIMIT); split the function, or build with `--backend llvm`\nmylang: host failure: NativeToolFailed"
+    }
+  ]
+}
