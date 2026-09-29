@@ -1,0 +1,34 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-stage1-20260929/zig-out/bin/mylang",
+  "start": 1,
+  "count": 100,
+  "tally": {
+    "ok": 98,
+    "invalid": 0,
+    "stress-only": 2,
+    "RC-DIFF": 0
+  },
+  "findings": [
+    {
+      "seed": 19,
+      "status": "stress-only",
+      "rc": [],
+      "stress": [
+        "stress: exit 134 vs 0",
+        "stress: stdout differs",
+        "stress: stderr differs: \"mylang runtime: a descriptor's scan plan disagrees with its fields\" vs ''"
+      ],
+      "program": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-stage1-20260929/experiments/rc-fuzz/out/found/s19.my"
+    },
+    {
+      "seed": 87,
+      "status": "stress-only",
+      "rc": [],
+      "stress": [
+        "stress: exit 139 vs 0",
+        "stress: stdout differs"
+      ],
+      "program": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-stage1-20260929/experiments/rc-fuzz/out/found/s87.my"
+    }
+  ]
+}

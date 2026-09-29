@@ -1,0 +1,10 @@
+{
+ "args": [
+  "--engine=tree",
+  "{dir}/t.lox"
+ ],
+ "stdout": "",
+ "exit": 65,
+ "stderr_first_line": "[line 1] Error at '%': Expect expression.",
+ "limit_s": 10
+}

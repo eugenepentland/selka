@@ -1,0 +1,39 @@
+{
+ "load_before": [
+  1.68896484375,
+  4.5302734375,
+  3.3349609375
+ ],
+ "mylang_small": {
+  "run_cold": 0.828,
+  "run_warm": 0.008,
+  "run_edit": 0.76,
+  "check_warm": 0.003,
+  "check_edit": 0.003,
+  "test_cold": 0.003,
+  "test_warm": 0.002,
+  "test_edit": 0.002,
+  "build_edit": 0.754
+ },
+ "python_small_run": 0.009,
+ "mylang_lox": {
+  "check_warm": 0.008,
+  "check_edit": 0.053,
+  "build_qbe_cold": 12.224,
+  "build_qbe_warm": 0.256,
+  "build_qbe_edit": 0.534,
+  "test_dir_cold": 3.855,
+  "test_dir_warm": 0.107,
+  "test_dir_edit": 0.599
+ },
+ "go_lox": {
+  "build_edit": 0.044,
+  "test_edit": 0.1,
+  "vet_edit": 0.074
+ },
+ "load_after": [
+  2.31396484375,
+  4.15283203125,
+  3.2763671875
+ ]
+}

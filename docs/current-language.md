@@ -17,7 +17,8 @@ intend to use; historical counts are not current verification receipts.
 | Area | Supported surface | Executable example / restriction |
 | --- | --- | --- |
 | Values | `int`, binary64 `float`, booleans, managed Unicode strings/dictionaries/lists, byte literals, value records, checked Result/Option, `Cell[T]`, domains/arrays, scalar and literal `str`/`bytes` constants and transparent aliases | [constants](module-constants.md), [aliases](type-aliases.md); [bounded scalar source evaluation](source-evaluation.md) |
-| Control flow | Indented if/elif/else, while, foreach/enumerate/range, break/continue and match/case | [range iteration](range-iteration.md), [matching a variant](match-expressions.md); conservative outer ownership on loop exits |
+| Control flow | Indented if/elif/else, while, foreach/enumerate/range (with an optional step), break/continue and match/case | [range iteration](range-iteration.md), [stepped ranges](range-iteration.md#stepped-ranges), [matching a variant](match-expressions.md); conservative outer ownership on loop exits |
+| Python expressions | Chained comparisons, `str`/`bytes` ordering, `*` repetition of text and lists, `round(x, n)`, and CPython format specifications in `f"{value:spec}"` | [operators Python has](python-syntax.md#operators-python-has), [ordering and repetition](text.md#ordering-and-repetition), [format specifications](text.md#format-specifications); `round` breaks ties away from zero (a declared divergence); `**` stays rejected |
 | Generics | Functions and nominal records/unions/results/enums; structural field/operation contracts and const length parameters | [structural contracts](../examples/structural-constraints.my); [inferred call type arguments](generic-inference.md) |
 | Managed allocation | Independent growing lists and dictionaries with copy-on-write, immutable strings, reference counting by default and a nonmoving tracing GC (`--gc-runtime`, which also reclaims legacy-sharing cycles) | [Managed memory](managed-memory.md#runtime-selection); managed graph host/native boundaries remain excluded |
 | Managed arenas | `with arena() as name:` region blocks over ordinary managed objects, bulk release, `escape` copy-out, static and runtime escape checks | [Managed arenas](arenas.md); [runnable example](../examples/arena-managed/main.my); QBE native |
@@ -108,6 +109,7 @@ Language surface:
 Tooling:
 
 - [Native builds](tooling/native-build.md), [guest tests](tooling/guest-tests.md)
+- [Fixes and migrations](tooling/fix.md): `mylang fix` and the `fix` field of `diagnostic-v1`
 - [Compiler caches](tooling/caches.md), [source navigation](tooling/navigation.md)
 - [Agent-facing inspection](tooling/agent-tools.md), [focused declaration context](tooling/agent-context.md), [calling one export](tooling/invoke.md), [documentation gates](tooling/documentation-gate.md)
 - [Local packages](tooling/packages.md)

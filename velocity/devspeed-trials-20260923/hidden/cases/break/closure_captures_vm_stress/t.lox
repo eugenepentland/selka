@@ -1,0 +1,13 @@
+fun make() {
+  var f = nil;
+  for (var i = 0; i < 5; i = i + 1) {
+    var j = i * 10;
+    fun g() { return j; }
+    f = g;
+    if (i == 2) break;
+  }
+  return f;
+}
+var h = make();
+var junk = "a" + "b";
+print h();

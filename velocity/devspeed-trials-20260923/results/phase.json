@@ -1,0 +1,62 @@
+{
+ "T1-mylang": {
+  "min_to_first_code_edit": 7.2,
+  "tool_calls_before_first_edit": 31,
+  "ctx_tokens_before_first_edit_K": 3189,
+  "total_min": 11.8
+ },
+ "T1-python": {
+  "min_to_first_code_edit": 1.1,
+  "tool_calls_before_first_edit": 4,
+  "ctx_tokens_before_first_edit_K": 238,
+  "total_min": 3.7
+ },
+ "T2-mylang": {
+  "min_to_first_code_edit": 10.6,
+  "tool_calls_before_first_edit": 26,
+  "ctx_tokens_before_first_edit_K": 2296,
+  "total_min": 14.9
+ },
+ "T2-python": {
+  "min_to_first_code_edit": 3.4,
+  "tool_calls_before_first_edit": 4,
+  "ctx_tokens_before_first_edit_K": 250,
+  "total_min": 6.3
+ },
+ "T3-mylang": {
+  "min_to_first_code_edit": 7.8,
+  "tool_calls_before_first_edit": 28,
+  "ctx_tokens_before_first_edit_K": 2791,
+  "total_min": 13.5
+ },
+ "T3-python": {
+  "min_to_first_code_edit": 2.0,
+  "tool_calls_before_first_edit": 4,
+  "ctx_tokens_before_first_edit_K": 248,
+  "total_min": 4.6
+ },
+ "T4-mylang": {
+  "min_to_first_code_edit": 4.9,
+  "tool_calls_before_first_edit": 42,
+  "ctx_tokens_before_first_edit_K": 2743,
+  "total_min": 16.6
+ },
+ "T4-go": {
+  "min_to_first_code_edit": 3.0,
+  "tool_calls_before_first_edit": 29,
+  "ctx_tokens_before_first_edit_K": 2025,
+  "total_min": 9.8
+ },
+ "T5-mylang": {
+  "min_to_first_code_edit": 9.7,
+  "tool_calls_before_first_edit": 20,
+  "ctx_tokens_before_first_edit_K": 2185,
+  "total_min": 15.7
+ },
+ "T5-python": {
+  "min_to_first_code_edit": 4.0,
+  "tool_calls_before_first_edit": 6,
+  "ctx_tokens_before_first_edit_K": 376,
+  "total_min": 6.5
+ }
+}

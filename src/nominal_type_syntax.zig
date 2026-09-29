@@ -3,7 +3,7 @@ const ast = @import("ast.zig");
 
 fn managedLiteral(node: ast.Node) bool {
     return switch (node.data) {
-        .list_literal, .text, .dictionary_literal, .format, .comprehension => true,
+        .list_literal, .text, .dictionary_literal, .format, .comprehension, .gather, .set_literal => true,
         else => false,
     };
 }

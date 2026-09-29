@@ -1,0 +1,137 @@
+module object
+# Lox heap objects (SPEC §4.2): one union case per kind, stored inline in the
+# Runtime's object table. Every payload is a value record. ObjRef indices
+# carry identity; changes to a payload are stored back into its table slot.
+import chunk
+import table
+import value
+
+
+public record StringObj:
+    chars: bytes
+    hash: u32
+
+
+# Compiled by the VM compiler, which fills in arity, upvalue count and name
+# after allocation. `name` is NO_OBJ for the top-level script.
+public record FunctionObj:
+    arity: int
+    upvalue_count: int
+    code: chunk.Chunk
+    name: value.ObjRef
+
+
+public record NativeObj:
+    id: int
+    arity: int
+
+
+# `upvalues[i]` stays NO_OBJ until OP_CLOSURE captures it.
+public record ClosureObj:
+    function: value.ObjRef
+    upvalues: list[value.ObjRef]
+
+
+# Open while `slot` indexes a live stack slot; closing copies that slot into
+# `closed` and sets `slot` to NO_SLOT.
+public record UpvalueObj:
+    slot: int
+    closed: value.Value
+    next_open: value.ObjRef
+
+
+public const NO_SLOT: int = -1
+
+
+public record ClassObj:
+    name: value.ObjRef
+    methods: table.Table
+
+
+public record InstanceObj:
+    klass: value.ObjRef
+    fields: table.Table
+
+
+public record BoundMethodObj:
+    receiver: value.Value
+    method: value.ObjRef
+
+
+# A tree-engine environment: a fixed row of slots chosen by the resolver.
+public record EnvObj:
+    enclosing: value.ObjRef
+    slots: list[value.Value]
+
+
+# A tree-engine function: its declaration (an index into the program's
+# function table, which is host memory), the declaration's name for
+# printing, and the env it closes over.
+public record TreeFunctionObj:
+    decl: int
+    name: value.ObjRef
+    closure: value.ObjRef
+    is_initializer: bool
+
+
+public union Obj:
+    free,
+    string: StringObj,
+    function: FunctionObj,
+    native: NativeObj,
+    closure: ClosureObj,
+    upvalue: UpvalueObj,
+    klass: ClassObj,
+    instance: InstanceObj,
+    bound_method: BoundMethodObj,
+    env: EnvObj,
+    tree_function: TreeFunctionObj
+
+
+# The abstract byte cost that drives the collector's trigger (SPEC §7.3).
+public def cost(obj: Obj) -> int:
+    match obj:
+        case Obj.free:
+            return 0
+        case Obj.string(payload):
+            return 32 + len(payload.chars)
+        case Obj.function(_):
+            return 64
+        case Obj.native(_):
+            return 32
+        case Obj.closure(payload):
+            return 32 + 8 * len(payload.upvalues)
+        case Obj.upvalue(_):
+            return 32
+        case Obj.klass(_):
+            return 48
+        case Obj.instance(_):
+            return 48
+        case Obj.bound_method(_):
+            return 32
+        case Obj.env(payload):
+            return 32 + 16 * len(payload.slots)
+        case Obj.tree_function(_):
+            return 48
+
+
+public def new_function() -> FunctionObj:
+    return FunctionObj(arity=0, upvalue_count=0, code=chunk.new_chunk(), name=value.NO_OBJ)
+
+
+public def new_closure(function: value.ObjRef, upvalue_count: int) -> ClosureObj:
+    upvalues: list[value.ObjRef] = []
+    i = 0
+    while i < upvalue_count:
+        upvalues.append(value.NO_OBJ)
+        i += 1
+    return ClosureObj(function=function, upvalues=upvalues)
+
+
+public def new_env(enclosing: value.ObjRef, slot_count: int) -> EnvObj:
+    slots: list[value.Value] = []
+    i = 0
+    while i < slot_count:
+        slots.append(value.Value.nil)
+        i += 1
+    return EnvObj(enclosing=enclosing, slots=slots)

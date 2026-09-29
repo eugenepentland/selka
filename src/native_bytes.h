@@ -35,6 +35,8 @@ int64_t myl_native_bytes_find(const myl_native_bytes *, const myl_native_bytes *
  * past the end finds nothing, so a search never traps where a read would. */
 int64_t myl_native_bytes_find_any(const myl_native_bytes *, const myl_native_bytes *values, int64_t start);
 int myl_native_bytes_starts_with(const myl_native_bytes *, const myl_native_bytes *);
+/* Lexicographic octet order of two byte strings: -1, 0 or 1. */
+int myl_native_bytes_compare(const myl_native_bytes *, const myl_native_bytes *);
 int myl_native_bytes_ends_with(const myl_native_bytes *, const myl_native_bytes *);
 /* Membership of one octet; values outside 0..255 are never present. */
 int myl_native_bytes_has_byte(const myl_native_bytes *, int64_t);

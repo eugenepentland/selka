@@ -3,10 +3,10 @@
 `str` is the language's Unicode text type: an immutable, garbage-collected value
 with the same runtime shape as the [managed collections](managed-memory.md) and
 the [`bytes`](bytes.md) byte string. This page covers the text surface itself —
-scalar-value indexing, the Python string methods, `f"..."` interpolation, and the
-two intrinsics that turn text back into numbers. Padding to a width, repetition
-and number formatting live in the [`strings` module](standard-library.md#strings)
-instead, because an intrinsic method takes no defaulted arguments.
+scalar-value indexing, ordering, repetition, the Python string methods, `f"..."`
+interpolation with format specifications, and the two intrinsics that turn text
+back into numbers. The [`strings` module](standard-library.md#strings) keeps
+explicit helpers such as `pad_left` and `format_float` beside them.
 
 ## Managed Unicode strings
 
@@ -52,6 +52,36 @@ def main() -> int:
     if str(True) != "True":
         return 11
     return len(joined) * 4 - len(greeting) + 3
+```
+
+## Ordering and repetition
+
+`<`, `<=`, `>` and `>=` order two `str` values by Unicode code point and two
+`bytes` values by octet, lexicographically, with a proper prefix first — exactly
+Python's order, so `"Zebra" < "apple"` (uppercase letters come first) and
+`"é" > "z"`. It is not a locale collation. `str` and `bytes` never compare with
+each other, and no other collection is ordered (`E_TEXT_OPERATOR`).
+
+`text * count` and `count * text` repeat a `str` or `bytes`, and a list repeats
+the same way. A count of zero or less gives an empty value; a repeated list
+shares its elements, as Python's does. The result is built with one exactly-sized
+allocation, both operands are evaluated once left to right, and `text *= count`
+rebinds the name (a list `*=` repeats the list in place, so aliases see it).
+
+```mylang
+# doc: expect 42
+def main() -> int:
+    if not ("apple" < "banana" <= "banana" and "ab" < "abc" and "Zebra" < "apple"):
+        return 1
+    if b"\xff" < b"a":
+        return 2
+    rule = "-" * 3
+    if rule != "---" or 2 * "ab" != "abab" or "x" * 0 != "":
+        return 3
+    grid = [0] * 4
+    if grid != [0, 0, 0, 0]:
+        return 4
+    return len("ab" * 3) * 7
 ```
 
 ## Slices share their receiver's octets
@@ -283,10 +313,11 @@ dictionary, a record, an enum case, a result, an option or a byte string as well
 as a scalar — and renders it through the very renderer `print` calls, so one
 value has one spelling wherever it is written. `{{` and `}}` write single braces,
 ordinary escapes apply to the literal pieces, and `f""` is empty text. An empty
-hole, an unmatched or unterminated brace, more than one expression in a hole, a
-format specification after `:`, and a value with no rendering — a capability, an
-open file or a callback — are all rejected, so round or pad a number before
-interpolating it. The `f` prefix is Python-surface only.
+hole, an unmatched or unterminated brace, more than one expression in a hole, and
+a value with no rendering — a capability, an open file or a callback — are all
+rejected. A `:` after the expression starts a
+[format specification](#format-specifications). The `f` prefix is Python-surface
+only.
 
 ```mylang
 # doc: expect 42
@@ -326,6 +357,60 @@ def main() -> int:
     if f"{values} {spot}" != "[1, 2, 3] Point(x=1, y=2)":
         return 12
     return len(line) * 3 - 3
+```
+
+## Format specifications
+
+`f"{value:spec}"` formats a `str`, any integer type or a `float` under CPython's
+format-specification mini-language and answers the text CPython answers, byte
+for byte:
+
+```text
+[[fill]align][sign][z][#][0][width][grouping][.precision][type]
+```
+
+- **align** `<` left, `>` right, `^` centre, `=` padding after the sign; **fill**
+  is any one character before it. Width and padding count Unicode scalars.
+- **sign** `+`, `-` or a space; **z** turns a negative zero into `0`; **#** adds
+  `0x`/`0o`/`0b` or keeps a decimal point; **0** pads with zeros after the sign.
+- **grouping** `,` or `_` separates thousands (`_` groups hex, octal and binary
+  digits by four), and zero padding extends the groups: `f"{1:08,}"` is `0,000,001`.
+- **type** `d b o x X n` for integers, `e E f F g G %` for floats (an integer
+  under a float type is converted first, as `float(value)` would), `s` for text.
+  With no type a float prints the shortest round-tripping digits.
+
+A float is rounded from its **exact binary value**, ties to even, as CPython does:
+`f"{2.675:.2f}"` is `2.67` because the binary value of 2.675 lies just below the
+half, `f"{0.125:.2f}"` is `0.12` because 0.125 is an exact tie, and
+`f"{-0.001:.2f}"` keeps its sign as `-0.00`. `round(x, n)` rounds the same exact
+value, but breaks an exact tie away from zero, the language's
+[declared `round` rule](python-syntax.md#prelude-builtins): `round(0.125, 2)` is
+`0.13`. `strings.format_float` also rounds ties away from zero, so it agrees with
+`round(x, n)` and differs from `:.nf` only on an exact tie.
+
+The specification is literal text checked with the program. One the value cannot
+take — a sign on text, a precision on an integer type, `d` on a float, `,` with
+`x` or `n`, a missing precision — is `E_FORMAT_STRING` with CPython's reason, as
+is a `bool` or any value other than a `str`, an integer or a `float`, a width or
+precision above 4095, a nested `{...}` (a computed width) and the `c` type. An
+empty specification, `f"{value:}"`, is the value's ordinary text.
+
+```mylang
+# doc: expect 42
+def main() -> int:
+    price = 3.14159
+    if f"{price:.2f}" != "3.14" or f"{2.675:.2f}" != "2.67" or f"{0.125:.2f}" != "0.12":
+        return 1
+    if f"{42:05d}" != "00042" or f"{42:>6}" != "    42" or f"{price:^10.3f}" != "  3.142   ":
+        return 2
+    if f"{1234567:,}" != "1,234,567" or f"{255:#x}" != "0xff" or f"{255:08b}" != "11111111":
+        return 3
+    if f"{1234.5678:.3e}" != "1.235e+03" or f"{0.25:.0%}" != "25%" or f"{-7:+}" != "-7":
+        return 4
+    name = "héllo"
+    if f"{name:*^9}" != "**héllo**" or f"{name:.3}" != "hél":
+        return 5
+    return len(f"{price:08.3f}") * 6 - 6
 ```
 
 ## Parsing numbers from text

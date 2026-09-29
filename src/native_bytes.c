@@ -280,6 +280,14 @@ int myl_native_bytes_starts_with(const myl_native_bytes *input, const myl_native
 int myl_native_bytes_ends_with(const myl_native_bytes *input, const myl_native_bytes *suffix) {
     return suffix->length<=input->length && matches(input,input->length-suffix->length,suffix);
 }
+/* PY-TEXT-ORDER-1: lexicographic octet order, a shorter prefix first, as
+   Python orders `bytes`: -1, 0 or 1. Reads both operands in place. */
+int myl_native_bytes_compare(const myl_native_bytes *a, const myl_native_bytes *b) {
+    size_t count=a->length<b->length?a->length:b->length;
+    int order=count?memcmp(a->storage,b->storage,count):0;
+    if (order) return order<0?-1:1;
+    return a->length<b->length?-1:a->length>b->length?1:0;
+}
 int myl_native_bytes_has_byte(const myl_native_bytes *input, int64_t value) {
     if (value<0 || value>255) return 0;
     const unsigned char *bytes=input->storage;

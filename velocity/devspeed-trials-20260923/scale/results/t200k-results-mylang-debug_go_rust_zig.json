@@ -1,0 +1,346 @@
+{
+ "tier": "t200k",
+ "modules": 481,
+ "load_start": [
+  4.40869140625,
+  6.15625,
+  6.8642578125
+ ],
+ "mylang-debug": {
+  "nonblank_lines": 204043,
+  "cold_build": {
+   "s": 8.206,
+   "rss_kb": 5752964,
+   "ok": false,
+   "tail": "mylang: host failure: OutOfMemory\nCommand exited with non-zero status 2\n__RSS__ 5752964\n"
+  },
+  "noop_build": {
+   "s": 8.769,
+   "rss_kb": 6466968,
+   "ok": false,
+   "tail": "mylang: host failure: OutOfMemory\nCommand exited with non-zero status 2\n__RSS__ 6466968\n"
+  },
+  "edit_check": {
+   "min_s": 3.331,
+   "samples": [
+    {
+     "s": 3.331,
+     "rss_kb": 2088000,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 4.089,
+     "rss_kb": 2088212,
+     "ok": true,
+     "tail": ""
+    }
+   ]
+  },
+  "edit_build": {
+   "min_s": null,
+   "samples": [
+    {
+     "s": 8.564,
+     "rss_kb": 6475616,
+     "ok": false,
+     "tail": "mylang: host failure: OutOfMemory\nCommand exited with non-zero status 2\n__RSS__ 6475616\n"
+    },
+    {
+     "s": 9.609,
+     "rss_kb": 6474244,
+     "ok": false,
+     "tail": "mylang: host failure: OutOfMemory\nCommand exited with non-zero status 2\n__RSS__ 6474244\n"
+    }
+   ]
+  },
+  "edit_test": {
+   "min_s": 21.347,
+   "samples": [
+    {
+     "s": 21.347,
+     "rss_kb": 2976748,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 23.095,
+     "rss_kb": 2976604,
+     "ok": true,
+     "tail": ""
+    }
+   ]
+  },
+  "iface_build": {
+   "min_s": null,
+   "samples": [
+    {
+     "s": 10.004,
+     "rss_kb": 6474316,
+     "ok": false,
+     "tail": "mylang: host failure: OutOfMemory\nCommand exited with non-zero status 2\n__RSS__ 6474316\n"
+    },
+    {
+     "s": 9.376,
+     "rss_kb": 6473908,
+     "ok": false,
+     "tail": "mylang: host failure: OutOfMemory\nCommand exited with non-zero status 2\n__RSS__ 6473908\n"
+    }
+   ]
+  }
+ },
+ "go": {
+  "nonblank_lines": 279886,
+  "cold_build": {
+   "s": 18.021,
+   "rss_kb": 149404,
+   "ok": true,
+   "tail": ""
+  },
+  "noop_build": {
+   "s": 0.105,
+   "rss_kb": 33720,
+   "ok": true,
+   "tail": ""
+  },
+  "edit_check": {
+   "min_s": 0.471,
+   "samples": [
+    {
+     "s": 0.508,
+     "rss_kb": 46324,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 0.471,
+     "rss_kb": 46264,
+     "ok": true,
+     "tail": ""
+    }
+   ]
+  },
+  "edit_build": {
+   "min_s": 0.427,
+   "samples": [
+    {
+     "s": 0.442,
+     "rss_kb": 148012,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 0.427,
+     "rss_kb": 147096,
+     "ok": true,
+     "tail": ""
+    }
+   ]
+  },
+  "edit_test": {
+   "min_s": 5.449,
+   "samples": [
+    {
+     "s": 5.847,
+     "rss_kb": 150448,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 5.449,
+     "rss_kb": 149512,
+     "ok": true,
+     "tail": ""
+    }
+   ]
+  },
+  "iface_build": {
+   "min_s": 0.427,
+   "samples": [
+    {
+     "s": 0.486,
+     "rss_kb": 151400,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 0.427,
+     "rss_kb": 145176,
+     "ok": true,
+     "tail": ""
+    }
+   ]
+  }
+ },
+ "rust": {
+  "nonblank_lines": 279882,
+  "cold_build": {
+   "s": 22.231,
+   "rss_kb": 1549980,
+   "ok": true,
+   "tail": ""
+  },
+  "noop_build": {
+   "s": 0.02,
+   "rss_kb": 23188,
+   "ok": true,
+   "tail": ""
+  },
+  "edit_check": {
+   "min_s": 2.15,
+   "samples": [
+    {
+     "s": 2.15,
+     "rss_kb": 827520,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 2.454,
+     "rss_kb": 829184,
+     "ok": true,
+     "tail": ""
+    }
+   ]
+  },
+  "edit_build": {
+   "min_s": 2.996,
+   "samples": [
+    {
+     "s": 3.087,
+     "rss_kb": 1201456,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 2.996,
+     "rss_kb": 1199720,
+     "ok": true,
+     "tail": ""
+    }
+   ]
+  },
+  "edit_test": {
+   "min_s": 2.576,
+   "samples": [
+    {
+     "s": 2.576,
+     "rss_kb": 893612,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 2.64,
+     "rss_kb": 892264,
+     "ok": true,
+     "tail": ""
+    }
+   ]
+  },
+  "iface_build": {
+   "min_s": 3.179,
+   "samples": [
+    {
+     "s": 3.179,
+     "rss_kb": 1206236,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 3.263,
+     "rss_kb": 1204460,
+     "ok": true,
+     "tail": ""
+    }
+   ]
+  }
+ },
+ "zig": {
+  "nonblank_lines": 314926,
+  "cold_build": {
+   "s": 2.311,
+   "rss_kb": 450000,
+   "ok": true,
+   "tail": ""
+  },
+  "noop_build": {
+   "s": 2.203,
+   "rss_kb": 387012,
+   "ok": true,
+   "tail": ""
+  },
+  "edit_check": {
+   "min_s": 1.099,
+   "samples": [
+    {
+     "s": 1.099,
+     "rss_kb": 198816,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 1.128,
+     "rss_kb": 197668,
+     "ok": true,
+     "tail": ""
+    }
+   ]
+  },
+  "edit_build": {
+   "min_s": 2.243,
+   "samples": [
+    {
+     "s": 2.267,
+     "rss_kb": 388680,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 2.243,
+     "rss_kb": 382632,
+     "ok": true,
+     "tail": ""
+    }
+   ]
+  },
+  "edit_test": {
+   "min_s": 0.475,
+   "samples": [
+    {
+     "s": 0.475,
+     "rss_kb": 216836,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 0.494,
+     "rss_kb": 216580,
+     "ok": true,
+     "tail": ""
+    }
+   ]
+  },
+  "iface_build": {
+   "min_s": 2.236,
+   "samples": [
+    {
+     "s": 2.294,
+     "rss_kb": 395080,
+     "ok": true,
+     "tail": ""
+    },
+    {
+     "s": 2.236,
+     "rss_kb": 392560,
+     "ok": true,
+     "tail": ""
+    }
+   ]
+  }
+ },
+ "load_end": [
+  7.9189453125,
+  8.67431640625,
+  7.74560546875
+ ]
+}

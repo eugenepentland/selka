@@ -203,6 +203,9 @@ const Checker = struct {
     trapping_open: ?source.Span = null,
     /// Contract clauses of the function being checked and the invariant index.
     contract: sema_contracts.State = .{},
+    /// The comprehensions and generator expressions being checked, innermost
+    /// last, and the use each consuming call gave its generator argument.
+    gathers: @import("sema_gathers.zig").State = .{},
 
     /// Reset the per-function state and bind one ordinary instance's signature:
     /// its owner, return type and parameter locals.
@@ -992,8 +995,12 @@ const Checker = struct {
     }
     /// Give a binary operator's untyped operand the type of its typed side or context.
     pub fn hintBinary(self: *Checker, node: ast.Node) Error!void {
-        const binary = node.data.binary;
-        const expected = self.obviousType(binary.left) orelse self.obviousType(binary.right) orelse self.expected_types.get(node.span) orelse return;
+        return self.hintOperands(node.data.binary, self.expected_types.get(node.span));
+    }
+    /// Give each operand of one binary operator the numeric type the other side
+    /// or the context makes obvious, so a literal adopts its partner's width.
+    pub fn hintOperands(self: *Checker, binary: @FieldType(@FieldType(ast.Node, "data"), "binary"), context: ?typed.Type) Error!void {
+        const expected = self.obviousType(binary.left) orelse self.obviousType(binary.right) orelse context orelse return;
         if (!expected.isInteger() and !numeric_surface.isFloat(expected, self.catalog.records)) {
             // `==`/`!=` operands share one aggregate type, so a typed side gives a
             // contextual constructor on the other side its type (`v == None`,
@@ -1085,6 +1092,7 @@ const Checker = struct {
     pub const checkSetMethod = set_checks.checkSetMethod;
     pub const checkSetMethodSyntax = set_checks.checkSetMethodSyntax;
     pub const requireSetElement = set_checks.requireSetElement;
+    pub const hintSetOperand = set_checks.hintSetOperand;
     const place_checks = @import("sema_places.zig").Checks(Checker);
     pub const arrayKey = place_checks.arrayKey;
     pub const arrayPlace = place_checks.arrayPlace;
@@ -1121,6 +1129,18 @@ const Checker = struct {
     pub const checkTextLiteral = operator_checks.checkTextLiteral;
     pub const checkUnary = operator_checks.checkUnary;
     pub const checkValueBinary = operator_checks.checkValueBinary;
+    pub const binaryValue = operator_checks.binaryValue;
+    const gather_checks = @import("sema_gathers.zig").Checks(Checker);
+    pub const checkGather = gather_checks.checkGather;
+    pub const consumeGenerator = gather_checks.consumeGenerator;
+    pub const foldedGenerator = gather_checks.foldedGenerator;
+    pub const statementGatherStep = gather_checks.statementGatherStep;
+    const idiom_checks = @import("sema_idioms.zig").Checks(Checker);
+    pub const checkChain = idiom_checks.checkChain;
+    pub const idiomBinary = idiom_checks.idiomBinary;
+    pub const rangeStep = idiom_checks.rangeStep;
+    pub const repeatAssignment = idiom_checks.repeatAssignment;
+    pub const formatField = idiom_checks.formatField;
     pub const checkValueIndex = operator_checks.checkValueIndex;
     /// Whether a local of this type needs cleanup when it leaves scope: a file,
     /// a move-only value, or a value holding managed storage.
@@ -1313,18 +1333,16 @@ const Checker = struct {
             const writable = reference or typed.carriesWritableStorage(self.catalog.records, parameter_type);
             if (parameter.mut and !writable) {
                 try markMutRejected(self);
-                return sink.fail(
-                    mutation_marker_code,
-                    parameter.ty,
-                    try std.fmt.allocPrint(
-                        allocator,
-                        "`mut` on `{s}` has nothing to write; {s}",
-                        .{ typed.typeName(parameter_type, self.catalog.records), if (value_semantics.enabled())
-                            "a number, bool, `str` or `bytes` cannot change the caller's value, so return the new value instead"
-                        else
-                            "only a list, dict, class, Cell, array, byte buffer or a record holding one can be `mut`" },
-                    ),
+                const message = try std.fmt.allocPrint(
+                    allocator,
+                    "`mut` on `{s}` has nothing to write; {s}",
+                    .{ typed.typeName(parameter_type, self.catalog.records), if (value_semantics.enabled())
+                        "a number, bool, `str` or `bytes` cannot change the caller's value, so return the new value instead"
+                    else
+                        "only a list, dict, class, Cell, array, byte buffer or a record holding one can be `mut`" },
                 );
+                const fix = diagnostic.removeMut(src.bytes, parameter.ty.start) orelse return sink.fail(mutation_marker_code, parameter.ty, message);
+                return sink.failFix(mutation_marker_code, parameter.ty, message, fix.edit);
             }
             if (parameter.default_value) |value| {
                 const checked = try self.expressionExpected(value, parameter_type);
@@ -1348,6 +1366,35 @@ const Checker = struct {
         }
     }
 };
+/// The whole source line of one import statement, newline included, when the
+/// line holds that statement and nothing else but an optional comment; null
+/// for any other layout, so a fix never deletes a neighbouring statement.
+fn importLine(bytes: []const u8, name: source.Span) ?source.Span {
+    const start = if (std.mem.lastIndexOfScalar(u8, bytes[0..name.start], '\n')) |newline| newline + 1 else 0;
+    const newline = std.mem.indexOfScalarPos(u8, bytes, name.end, '\n');
+    const end = if (newline) |at| at + 1 else bytes.len;
+    const head = std.mem.trimEnd(u8, bytes[start..name.start], " \t");
+    if (!std.mem.eql(u8, head, "import")) return null;
+    const tail = std.mem.trim(u8, bytes[name.end .. newline orelse bytes.len], " \t\r");
+    if (tail.len != 0 and tail[0] != '#' and !validAlias(tail)) return null;
+    return .{ .start = start, .end = end };
+}
+/// Whether an import line's text after its module name is `as ALIAS`,
+/// optionally followed by a comment.
+fn validAlias(tail: []const u8) bool {
+    if (!std.mem.startsWith(u8, tail, "as ")) return false;
+    const rest = std.mem.trimStart(u8, tail["as ".len..], " \t");
+    var end: usize = 0;
+    while (end < rest.len and (std.ascii.isAlphanumeric(rest[end]) or rest[end] == '_')) end += 1;
+    if (end == 0) return false;
+    const after = std.mem.trim(u8, rest[end..], " \t");
+    return after.len == 0 or after[0] == '#';
+}
+/// Whether any of these diagnostics is an error rather than a warning.
+fn reportedError(items: []const diagnostic.Diagnostic) bool {
+    for (items) |item| if (item.severity == .err) return true;
+    return false;
+}
 fn warningLess(_: void, a: diagnostic.Diagnostic, b: diagnostic.Diagnostic) bool {
     if (a.span.start != b.span.start) return a.span.start < b.span.start;
     if (a.span.end != b.span.end) return a.span.end < b.span.end;
@@ -1532,6 +1579,9 @@ fn checkInstance(step: InstanceStep) Error!?typed.Function {
         error.SourceError => return null,
         else => return err,
     };
+    // A finding the checker reports and keeps checking past (a call-site
+    // `mut` marker) still fails its function once the body is done.
+    if (reused == null and reportedError(checker.sink.items.items[start_diagnostics..])) return null;
     try recordBodyRange(.{
         .checker = checker,
         .session = step.session,
@@ -1980,11 +2030,14 @@ fn warnImports(module_names: ?*Names, sink: *diagnostic.Sink) Error!void {
             if (index.importUsed(module, import_index)) continue;
             const span = names.src.mappedSpan(module, imported.span) catch continue;
             const message = try std.fmt.allocPrint(sink.allocator, "import `{s}` is never referenced in this module; remove it or use it", .{imported.name});
+            const line = importLine(index.project.modules.items[module].src.bytes, imported.span);
+            const removal = if (line) |local| names.src.mappedSpan(module, local) catch null else null;
             try sink.items.append(sink.allocator, .{
                 .severity = .warning,
                 .code = "W_UNUSED_IMPORT",
                 .span = span,
                 .message = message,
+                .provenance = .{ .fix = if (removal) |whole| .{ .edit = .{ .span = whole, .text = "" } } else null },
             });
         }
     }

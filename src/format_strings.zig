@@ -1,6 +1,7 @@
 //! Split an `f"..."` literal into its alternating literal chunks and interpolation holes.
 //! Only the byte ranges are computed here; the parser builds the text nodes and parses the
 //! holes with the ordinary expression grammar, so an interpolation is an ordinary expression.
+//! A hole's `:spec` suffix (`PY-FSTRING-SPEC-1`) is its own piece right after the hole.
 const std = @import("std");
 const source = @import("source.zig");
 const diagnostic = @import("diagnostic.zig");
@@ -16,6 +17,9 @@ pub const Piece = union(enum) {
     brace: source.Span,
     /// Source range between the braces of one interpolation.
     hole: source.Span,
+    /// Source range of the format specification after the preceding hole's
+    /// top-level `:`, up to its closing brace; it may be empty.
+    spec: source.Span,
 };
 
 /// Split the content of an `f"..."` literal, rejecting unmatched and empty braces.
@@ -50,6 +54,11 @@ pub fn split(allocator: std.mem.Allocator, src: source.Source, span: source.Span
         if (inner.end == inner.start) return sink.fail(code, inner, "a format string interpolation needs an expression");
         try pieces.append(allocator, .{ .hole = inner });
         at = inner.end + 1;
+        if (bytes[inner.end] == ':') {
+            const format = try specification(bytes, at, stop, sink);
+            try pieces.append(allocator, .{ .spec = format });
+            at = format.end + 1;
+        }
         start = at;
     }
     if (at > start or pieces.items.len == 0) try pieces.append(allocator, .{ .literal = .{ .start = start, .end = stop } });
@@ -70,15 +79,22 @@ fn hole(bytes: []const u8, from: usize, stop: usize, sink: *diagnostic.Sink) dia
                 if (depth == 0) return .{ .start = from, .end = at };
                 depth -= 1;
             },
-            ':' => if (depth == 0) return sink.fail(
-                code,
-                .{ .start = at, .end = at + 1 },
-                "format specifications are not supported; convert the value before interpolating it",
-            ),
+            ':' => if (depth == 0) return .{ .start = from, .end = at },
             else => {},
         }
     }
     return sink.fail(code, .{ .start = from - 1, .end = stop }, "unterminated interpolation in a format string");
+}
+
+/// Locate the closing brace of one format specification. A nested `{...}`
+/// (a computed width or precision) is rejected: a specification is literal.
+fn specification(bytes: []const u8, from: usize, stop: usize, sink: *diagnostic.Sink) diagnostic.Error!source.Span {
+    var at = from;
+    while (at < stop) : (at += 1) {
+        if (bytes[at] == '}') return .{ .start = from, .end = at };
+        if (bytes[at] == '{') return sink.fail(code, .{ .start = at, .end = at + 1 }, "a nested `{...}` inside a format specification is not supported; a specification is literal text such as `{value:>8.2f}`");
+    }
+    return sink.fail(code, .{ .start = from - 1, .end = stop }, "unterminated format specification in a format string");
 }
 
 fn quoted(bytes: []const u8, from: usize, stop: usize) usize {

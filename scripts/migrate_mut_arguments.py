@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 """Add the `mut` call-argument markers the checker asks for, corpus-wide.
 
+Superseded by `mylang fix ENTRY.my|DIR` (docs/tooling/fix.md): the compiler now
+carries every one of these edits as a structured `fix` in `diagnostic-v1`, checks
+library and test files directly, and reports every marker a function needs in
+one check. Use `mylang fix` for new migrations; this script remains only for
+compilers that predate it.
+
 Item 1 makes a call show every position it writes: `f(mut x)` where the callee
 declares `x: mut T`. The compiler knows the exact set, so migration is mechanical
 and this script applies the edits the diagnostics themselves point at, using byte

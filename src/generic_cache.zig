@@ -443,7 +443,9 @@ pub const Session = struct {
 /// silently dropped note: a dropped note would change the replayed diagnostic.
 /// Exposed so the out-of-region rejection has a direct regression test.
 pub fn captureNote(allocator: std.mem.Allocator, region: source.Span, note: diagnostic.Diagnostic) error{ OutOfMemory, Unrepresentable }!owned.SymbolicNote {
-    if (note.stack.len != 0) return error.Unrepresentable;
+    // A retained note has no slot for a structured fix; replaying it without
+    // one would change the diagnostic, so such a note is never retained.
+    if (note.stack.len != 0 or note.provenance.fix != null) return error.Unrepresentable;
     const span = owned.RelativeSpan.fromAbsolute(region, note.span) orelse return error.Unrepresentable;
     const code = try allocator.dupe(u8, note.code);
     errdefer allocator.free(code);

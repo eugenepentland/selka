@@ -315,11 +315,16 @@ fn sequenceType(program: Program, ty: typed.Type) bool {
     return kind == .string or kind == .bytes;
 }
 
+/// PY-TEXT-ORDER-1: the orderings a `str` or `bytes` operand pair lowers.
+fn textOrder(op: typed.BinaryOp) bool {
+    return op == .lt or op == .le or op == .gt or op == .ge;
+}
+
 fn validateCollectionBinary(program: Program, binary: @FieldType(@FieldType(Instruction, "op"), "binary_integer")) Error!void {
     if (validType(binary.ty, program) and binary.ty.isAggregate()) {
         const record = program.records[binary.ty.recordIndex()];
         const concatenate = record.managed and binary.op == .add and sequenceType(program, binary.ty);
-        const text_order = record.collection.kind == .string and binary.op == .lt;
+        const text_order = sequenceType(program, binary.ty) and textOrder(binary.op);
         if (concatenate or text_order) return;
         if (binary.op != .eq and binary.op != .ne) return error.InternalError;
         return;
@@ -400,7 +405,7 @@ fn validateManagedTextOperation(program: Program, local: typed.Local, schema: ty
         .update, .clear => if (dictionary) .unit else return error.InternalError,
         .copy => if (dictionary or byte_string) local.ty else return error.InternalError,
         .split, .split_whitespace, .keys, .values, .items => try validateListResult(program, local, schema, operation),
-        .text_ord, .text_chr => if (dictionary or byte_string) return error.InternalError else operation.output,
+        .text_ord, .text_chr, .text_format, .number_format, .float_round => if (dictionary or byte_string) return error.InternalError else operation.output,
         else => return error.InternalError,
     };
     if (operation.output != expected) return error.InternalError;

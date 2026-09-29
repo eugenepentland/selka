@@ -1,0 +1,6 @@
+fun pair() { var n = 0; fun inc() { n = n + 1; return n; } fun get() { return n; } return inc; }
+fun make() { var n = 10; fun inc() { n = n + 1; return n; } return inc; }
+var a = make(); var b = make();
+var s = "";
+for (var i = 0; i < 20; i = i + 1) { s = s + "."; a(); }
+print a(); print b(); print s;

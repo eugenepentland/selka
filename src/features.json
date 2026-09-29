@@ -27,6 +27,21 @@
       "summary": "`mylang list-interfaces` and `mylang index-project` label every effect, mutation and return-origin fact with its analysis status (`checked`, `template`, `declaration-only`, `declared`, `lexical-only`), publish `unavailable`/`null` instead of the checker's conservative mask when no checked instantiation exists, and keep a declared `ceiling(...)` visible either way.",
       "doc": "docs/tooling/navigation.md#fact-status-in-interface-and-navigation-output"
     },
+    "diagnostic-fixes": {
+      "kind": "tooling",
+      "summary": "A diagnostic whose repair is certain carries a `diagnostic-v1` `fix`: exact edits as file, UTF-8 byte range and replacement text, for call-site and parameter `mut` markers, module names, renamed spellings, `_ = ` discards and unused imports.",
+      "doc": "docs/tooling/fix.md#structured-fixes-in-diagnostics"
+    },
+    "fix-command": {
+      "kind": "tooling",
+      "summary": "`mylang fix ENTRY.my|DIR [--check]` applies every structured fix across a project to a fixed point, prints what changed per file and passes on the diagnostics that need a person; `--check` writes nothing and exits 1 when a fix would apply.",
+      "doc": "docs/tooling/fix.md#mylang-fix"
+    },
+    "test-diagnostics-json": {
+      "kind": "tooling",
+      "summary": "`mylang test --diagnostics=json` reports a test entry that does not compile as `diagnostic-v1` JSON lines, `fix` fields included, exactly as `check --diagnostics=json` does.",
+      "doc": "docs/tooling/fix.md#checking-libraries-and-test-files"
+    },
     "unused-import-warning": {
       "kind": "tooling",
       "summary": "A direct `import` no reference in its module resolves through is reported as the deny-able `W_UNUSED_IMPORT` warning beside `W_UNUSED_BINDING`.",
@@ -237,10 +252,50 @@
       "summary": "`f\"...\"` interpolates any value `print` can render, with `{{` and `}}` for literal braces.",
       "doc": "docs/text.md#format-strings"
     },
+    "python-comparison-chains": {
+      "kind": "language",
+      "summary": "`a < b <= c` chains as in Python: the six comparisons share one precedence level, each operand is evaluated once left to right, and the rest of a chain is skipped once a link is false.",
+      "doc": "docs/python-syntax.md#operators-python-has"
+    },
+    "text-ordering-and-repetition": {
+      "kind": "language",
+      "summary": "`<`, `<=`, `>` and `>=` order `str` by code point and `bytes` by octet; `sequence * count` and `count * sequence` repeat a `str`, `bytes` or list, and `*=` repeats a binding.",
+      "doc": "docs/text.md#ordering-and-repetition"
+    },
+    "format-specifications": {
+      "kind": "language",
+      "summary": "`f\"{value:spec}\"` renders a `str`, integer or `float` under CPython's format-specification mini-language byte for byte, rounding floats from their exact binary value with ties to even; a specification the value cannot take is `E_FORMAT_STRING` with CPython's reason.",
+      "doc": "docs/text.md#format-specifications"
+    },
+    "stepped-range": {
+      "kind": "language",
+      "summary": "`range(start, stop, step)` counts up or down in `for` loops, comprehensions and `list(range(...))` without overflowing on its last step; a literal zero step is `E_RANGE_STEP` and a runtime zero traps before iterating.",
+      "doc": "docs/range-iteration.md#stepped-ranges"
+    },
+    "round-to-digits": {
+      "kind": "language",
+      "summary": "`round(value, ndigits)` answers the float nearest the exact binary value rounded to `ndigits` decimals, halves away from zero like `round(value)`; a negative count rounds left of the point.",
+      "doc": "docs/python-syntax.md#prelude-builtins"
+    },
     "list-comprehensions": {
       "kind": "language",
       "summary": "`[expression for name in source if condition]` builds a managed list in one expression.",
       "doc": "docs/managed-memory.md#list-comprehensions"
+    },
+    "dict-and-set-comprehensions": {
+      "kind": "language",
+      "summary": "`{k: v for ...}` and `{x for ...}` build a dictionary or a set, and every comprehension takes two names, several `for` clauses and several `if` filters, each clause accepting what a `for` loop accepts.",
+      "doc": "docs/python-syntax.md#dict-and-set-comprehensions"
+    },
+    "generator-arguments": {
+      "kind": "language",
+      "summary": "A generator expression passed to `sum`, `any`, `all`, `min` or `max` folds without building a list (`any`/`all` stop early), and one passed to `sorted`, `list`, `set`, `dict` or `str.join` is collected; anywhere else is `E_GENERATOR`.",
+      "doc": "docs/python-syntax.md#generator-expressions"
+    },
+    "bitwise-operators": {
+      "kind": "language",
+      "summary": "`|`, `^` and `&` are bitwise or, xor and and on integers with Python's precedence, and union, symmetric difference and intersection on sets.",
+      "doc": "docs/python-syntax.md#operators-python-has"
     },
     "wildcard-match-arms": {
       "kind": "language",
@@ -1011,6 +1066,16 @@
       "kind": "language",
       "summary": "A function's effect ceiling is derived from its parameter list - a capability parameter permits its effect, a `mut` parameter `mutation`, a callback parameter its declared ceiling, and allocation is always permitted - so a body that exceeds it is rejected in that body with the parameter to add; `noalloc`, `noio` and `effects(...)` only narrow it, a clause that restates it warns `W_DERIVED_EFFECTS`, a clause naming an effect no parameter supplies is `E_DERIVED_EFFECTS`, and a capability parameter the body never reads is `E_UNUSED_CAPABILITY`.",
       "doc": "docs/effects.md#the-signature-is-the-ceiling"
+    },
+    "test-file-private-access": {
+      "kind": "tooling",
+      "summary": "A module named `<name>_test` that no other module imports may call the private functions, types and constants of module `<name>`, so a helper need not become `public` to be tested; every other importer still gets `E_PRIVATE_SYMBOL`.",
+      "doc": "docs/tooling/guest-tests.md#private-declarations"
+    },
+    "per-entry-cases-files": {
+      "kind": "tooling",
+      "summary": "`mylang test ENTRY` without `--cases` applies the `<stem>.cases.json` beside the entry, so a directory run applies each entry's own cases file to that entry and a single-file run sees the same cases.",
+      "doc": "docs/tooling/guest-tests.md#per-entry-cases-files"
     }
   },
   "unsupported": [
@@ -1039,9 +1104,10 @@
     "managed_lists": "independent values by default with copy-on-write payloads; shared aliases only in legacy-sharing mode; automatic growth; no owned/resource elements, borrowed interiors, untraced storage embedding, or host escape",
     "gc": "single-threaded nonmoving tracing; retained guest values root intermediates; collect-on-allocation stress option",
     "python": "static fixed-width types, function-scoped locals with E_UNBOUND definite assignment, value records; indentation is the only block syntax",
-    "dictionaries": "managed insertion order; homogeneous hashable keys (integers, bool, str, bytes, and tuples, records, unions, enums, domains, Option and fixed arrays of those) and copyable values; no dict comprehension",
+    "dictionaries": "managed insertion order; homogeneous hashable keys (integers, bool, str, bytes, and tuples, records, unions, enums, domains, Option and fixed arrays of those) and copyable values",
     "value_semantics": "default model: independent collection and aggregate values with rooted copy-on-write transfers (up to 1,024 descriptor edges), cloning writable payloads in their owning arena region; a copy is not a `managed_allocation` effect. `class` declarations and builtin Cell are rejected by default and retained only by the one-release `--legacy-sharing` or project opt-out. A `mut` collection parameter writes the caller's collection but whole-parameter rebinding does not; a `mut` record parameter is inout and cannot be a function value",
     "sets": "managed insertion order over hashable elements; `set()` needs an expected type; no frozenset, no augmented operators (`|=`); generic bodies key only by integer-bounded parameters, `str` or concrete hashable types; a module that declares its own function named `set` keeps it, and there the type spelling `set[T]` is unavailable while literals still work",
+    "generators": "generator expressions only as the argument of sum, any, all, min, max, sorted, list, set, dict or str.join; no yield and no generator values",
     "native_tests": "fresh QBE processes; exported typed-call-compatible signatures; positive deterministic receipts only; project validity is always checked through the shared query cache; only a fully cached selection skips lowering/emission/linking, while a changed snapshot still pays one whole-project preparation emission and an uncached selection builds the whole selected-provider library; provider snapshots at most 128 sources/16 MiB",
     "standard_library": "ten embedded Python-syntax modules over managed types: math, strings, sort, path, hex, base64, json, pool, random, time"
   },

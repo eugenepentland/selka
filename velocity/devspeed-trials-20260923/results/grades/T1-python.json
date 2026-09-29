@@ -1,0 +1,75 @@
+{
+ "run": "T1-python",
+ "task": "wordfreq",
+ "cases": {
+  "bad_count_negative": {
+   "ok": true,
+   "s": 0.041,
+   "problems": []
+  },
+  "bad_count_word": {
+   "ok": true,
+   "s": 0.043,
+   "problems": []
+  },
+  "bad_count_zero": {
+   "ok": true,
+   "s": 0.036,
+   "problems": []
+  },
+  "basic": {
+   "ok": true,
+   "s": 0.037,
+   "problems": []
+  },
+  "crlf": {
+   "ok": true,
+   "s": 0.043,
+   "problems": []
+  },
+  "digits_and_apostrophes": {
+   "ok": true,
+   "s": 0.038,
+   "problems": []
+  },
+  "empty_file": {
+   "ok": true,
+   "s": 0.042,
+   "problems": []
+  },
+  "fewer_than_n": {
+   "ok": true,
+   "s": 0.038,
+   "problems": []
+  },
+  "large_10mb": {
+   "ok": true,
+   "s": 0.332,
+   "problems": []
+  },
+  "missing_file": {
+   "ok": true,
+   "s": 0.036,
+   "problems": []
+  },
+  "non_ascii_separators": {
+   "ok": true,
+   "s": 0.04,
+   "problems": []
+  },
+  "ties_sorted": {
+   "ok": true,
+   "s": 0.036,
+   "problems": []
+  },
+  "usage": {
+   "ok": true,
+   "s": 0.038,
+   "problems": []
+  }
+ },
+ "build_s": 0.01,
+ "build_exit": 0,
+ "passed": 13,
+ "total": 13
+}

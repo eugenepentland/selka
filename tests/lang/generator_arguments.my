@@ -1,0 +1,76 @@
+module generator_arguments
+
+# Generator expressions passed to the calls that consume them. Every expected
+# value below is the answer CPython 3 gives for the same program.
+
+
+def noted(seen: mut list[int], value: int) -> bool:
+    seen.append(value)
+    return value > 2
+
+
+# spec-case: PY-GENERATOR-1
+public def test_sum_any_all_fold_a_generator() -> bool:
+    xs = [1, 2, 3]
+    if sum(x * x for x in xs) != 14:
+        return False
+    if not any(x > 2 for x in xs) or any(x > 5 for x in xs):
+        return False
+    return all(x > 0 for x in xs) and not all(x > 1 for x in xs)
+
+
+# spec-case: PY-GENERATOR-1
+public def test_any_and_all_stop_at_the_deciding_value() -> bool:
+    seen: list[int] = []
+    found = any(noted(mut seen, x) for x in [1, 3, 4, 5])
+    if not found or seen != [1, 3]:
+        return False
+    checked: list[int] = []
+    every = all(not noted(mut checked, x) for x in [1, 2, 9, 1])
+    return not every and checked == [1, 2, 9]
+
+
+# spec-case: PY-GENERATOR-1
+public def test_any_leaves_every_loop_of_a_nested_generator() -> bool:
+    seen: list[int] = []
+    grid = [[1, 2], [3, 4], [5, 6]]
+    found = any(noted(mut seen, x) for row in grid for x in row)
+    return found and seen == [1, 2, 3]
+
+
+# spec-case: PY-GENERATOR-1
+public def test_min_and_max_fold_ints_floats_and_text() -> bool:
+    xs = [4, -2, 9]
+    words = ["pear", "fig", "kiwi"]
+    return min(x * 2 for x in xs) == -4 and max(x + 1 for x in xs) == 10 and max(w for w in words) == "pear" and min(len(w) for w in words) == 3 and max(x * 0.5 for x in xs) == 4.5
+
+
+# spec-case: PY-GENERATOR-1
+public def test_sum_of_floats_and_of_an_empty_generator() -> bool:
+    halves = sum(x / 2 for x in [1, 2, 3])
+    nothing = sum(x for x in [1, 2, 3] if x > 5)
+    return halves == 3.0 and nothing == 0
+
+
+# spec-case: PY-GENERATOR-1
+public def test_sorted_list_set_and_dict_collect_a_generator() -> bool:
+    xs = [3, 1, 2]
+    ordered = sorted(x * 10 for x in xs)
+    descending = sorted((x for x in xs), reverse=True)
+    copied = list(x for x in xs if x != 1)
+    unique = set(x % 2 for x in xs)
+    table = dict((str(x), x) for x in xs)
+    return ordered == [10, 20, 30] and descending == [3, 2, 1] and copied == [3, 2] and unique == {0, 1} and table["2"] == 2
+
+
+# spec-case: PY-GENERATOR-1
+public def test_join_collects_a_generator_of_text() -> bool:
+    words = ["a", "b", "c"]
+    return "-".join(w.upper() for w in words) == "A-B-C" and "".join(str(n) for n in range(3)) == "012"
+
+
+# spec-case: PY-GENERATOR-1
+public def test_a_parenthesized_generator_and_a_count() -> bool:
+    xs = [1, 5, 7, 2]
+    big = sum((1 for x in xs if x > 4))
+    return big == 2 and sum(1 for x in xs if x > 1) == 3

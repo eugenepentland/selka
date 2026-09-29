@@ -76,6 +76,9 @@ const Local = struct {
     transfer_span: ?source.Span = null,
     available: bool = true,
 };
+/// One comprehension a template body is checking: what it builds, the context's
+/// expected result, and the element (and key) its step produced.
+const GatherFrame = struct { shape: ast.GatherShape, expected: ?Symbolic = null, value: ?Symbolic = null, key: ?Symbolic = null };
 const Checker = struct {
     allocator: std.mem.Allocator,
     field_arena: std.heap.ArenaAllocator,
@@ -108,6 +111,8 @@ const Checker = struct {
     expression_depth: usize = 0,
     temporary_results: usize = 0,
     loop_pending: ?[]const Pending = null,
+    /// The comprehensions being checked, innermost last (`PY-GATHER-1`).
+    gather_frames: std.ArrayList(GatherFrame) = .empty,
     fn topLevel(self: *Checker, span: source.Span) Error!bool {
         if (self.module_names) |names| return names.topLevel(span);
         const text = self.src.text(span);
@@ -759,6 +764,37 @@ const Checker = struct {
         }
         return self.shapes().nominal(self.catalog.templates.store.?.index.names.get("List").?, &.{produced});
     }
+    /// PY-GATHER-1: a comprehension checked through its own loop: the collection
+    /// its step fills. A generator expression needs the concrete checker's
+    /// consuming call, which template bodies do not have.
+    fn gatherValue(self: *Checker, gather: ast.Gather, span: source.Span) Error!Symbolic {
+        if (gather.shape == .generator) return self.sink.fail(@import("sema_gathers.zig").generator_code, span, "a generator expression is not supported inside a generic function body; build a list comprehension");
+        try self.gather_frames.append(self.allocator, .{ .shape = gather.shape, .expected = self.expected_types.get(span) });
+        defer _ = self.gather_frames.pop();
+        _ = try self.statement(gather.loop);
+        const frame = self.gather_frames.items[self.gather_frames.items.len - 1];
+        self.seedEffect(.managed_allocation);
+        if (frame.expected) |expected| return expected;
+        const value = frame.value orelse return error.InternalError;
+        const names = self.catalog.templates.store.?.index.names;
+        return switch (gather.shape) {
+            .list => self.shapes().nominal(names.get("List").?, &.{value}),
+            .set => self.shapes().nominal(names.get("set").?, &.{value}),
+            .dict => self.shapes().nominal(names.get("dict").?, &.{ frame.key.?, value }),
+            .generator => error.InternalError,
+        };
+    }
+    /// The innermost step of the comprehension being checked.
+    fn gatherStep(self: *Checker, step: ast.GatherStep, span: source.Span) Error!void {
+        if (self.gather_frames.items.len == 0) return error.InternalError;
+        const key = if (step.key) |syntax| try self.expression(syntax) else null;
+        const value = try self.expression(step.value);
+        try self.supports(value, .copy, span);
+        try self.supports(value, .storable, span);
+        const frame = &self.gather_frames.items[self.gather_frames.items.len - 1];
+        frame.key = key;
+        frame.value = value;
+    }
     /// The element a comprehension over a collection or fixed array binds.
     fn comprehensionElement(self: *Checker, source_type: Symbolic, span: source.Span) Error!Symbolic {
         if (self.walkableArray(source_type)) |shape| return shape.element;
@@ -776,6 +812,7 @@ const Checker = struct {
         const element: Symbolic = if (self.program.nodes.items[@backingInt(bounds.start)].data == .unit) .{ .concrete = .i64 } else try self.expression(bounds.start);
         try self.supports(element, .integer, name);
         try self.compatible(try self.expression(bounds.end), element, span);
+        if (bounds.step) |step| try self.compatible(try self.expression(step), element, span);
         return element;
     }
 
@@ -785,12 +822,22 @@ const Checker = struct {
         var allocation = parts.len != 1;
         for (parts) |part| {
             const value = try self.expression(part);
+            // PY-FSTRING-SPEC-1: a formatted field always builds fresh text.
+            if (self.program.nodes.items[@backingInt(part)].data == .format_field) allocation = true;
             if (symbolic.same(value, str_type, self.catalog)) continue;
             allocation = true;
             if (self.isFloat(value)) continue;
             try self.supports(value, .integer, span);
         }
         if (allocation) self.seedEffect(.managed_allocation);
+        return str_type;
+    }
+    /// PY-FSTRING-SPEC-1: a specification formats a `str`, a float or an
+    /// integer; the concrete instance checks the specification itself.
+    fn formattedField(self: *Checker, value_id: ast.NodeId, span: source.Span) Error!Symbolic {
+        const str_type: Symbolic = .{ .concrete = self.catalog.names.get("str") orelse return error.InternalError };
+        const value = try self.expression(value_id);
+        if (!symbolic.same(value, str_type, self.catalog) and !self.isFloat(value)) try self.supports(value, .integer, span);
         return str_type;
     }
     fn listLiteral(self: *Checker, node: ast.Node, inputs: []const ast.NodeId) Error!Symbolic {
@@ -919,7 +966,7 @@ const Checker = struct {
             if (try self.concreteValue(value, node.span) != .filesystem_cap) return self.sink.fail("E_TYPE", node.span, "read_only requires a Filesystem capability");
             return value;
         }
-        if (std.mem.eql(u8, name, "push")) return self.sink.fail("E_REMOVED_SPELLING", method.name, "`push` was removed; use `append(value)`");
+        if (std.mem.eql(u8, name, "push")) _ = try @import("removed_names.zig").reject(self.sink, method.name, name);
         if (std.mem.eql(u8, name, "sort") and method.arguments.len != 0)
             return self.keyedSort(try self.expression(method.base), .{ .arguments = method.arguments, .names = method.argument_names, .span = node.span, .owner_node = method.base });
         if (method.argument_names.len != 0) return self.sink.fail(eCallArgument, method.name, "collection methods take their arguments by position; only a list's sort takes key= and reverse=");
@@ -1640,6 +1687,7 @@ const Checker = struct {
         try self.enter(node.span);
         defer self.depth -= 1;
         return switch (node.data) {
+            .format_field => |field| try self.formattedField(field.value, node.span),
             .name => |name| try self.namedValue(name),
             .wrap => |wrap| result: {
                 const operand = try self.expression(wrap.value);
@@ -1709,6 +1757,7 @@ const Checker = struct {
             .set_literal => |inputs| try self.setLiteral(node, inputs),
             .format => |parts| try self.formatValue(parts, node.span),
             .comprehension => |each| try self.comprehensionValue(each, node.span),
+            .gather => |gather| try self.gatherValue(gather, node.span),
             .list_operation => |operation| try self.listOperation(node, operation),
             .method_call => try self.listMethod(node),
             .slice => try self.listSlice(node),
@@ -2112,7 +2161,41 @@ const Checker = struct {
             if (!present) return self.sink.fail(if (table_key != null) "E_INCOMPLETE_TABLE" else "E_MISSING_FIELD", span, "named construction must initialize every entry");
         };
     }
+    /// PY-REPEAT-1: the sequence a `*` repeats when one side is a `str`,
+    /// `bytes` or list and the other an integer, or null for any other `*`.
+    fn repeated(self: *Checker, left: Symbolic, right: Symbolic) ?Symbolic {
+        const integer_left = symbolic.supports(left, .integer, self.parameters, self.catalog);
+        const integer_right = symbolic.supports(right, .integer, self.parameters, self.catalog);
+        if (integer_right and self.repeatable(left)) return left;
+        if (integer_left and self.repeatable(right)) return right;
+        return null;
+    }
+    fn repeatable(self: *Checker, value: Symbolic) bool {
+        const kind = self.shapes().collectionKind(value) orelse return false;
+        return kind == .string or kind == .bytes or kind == .list;
+    }
+    /// PY-CHAIN-1: a comparison chain checks every operand once, in source
+    /// order, and each adjacent pair under its own operator.
+    fn chain(self: *Checker, last: @FieldType(@FieldType(ast.Node, "data"), "binary")) Error!Symbolic {
+        var links: std.ArrayList(@FieldType(@FieldType(ast.Node, "data"), "binary")) = .empty;
+        defer links.deinit(self.allocator);
+        var head = last;
+        while (head.chained) {
+            try links.append(self.allocator, head);
+            head = self.program.nodes.items[@backingInt(head.left)].data.binary;
+        }
+        try links.append(self.allocator, head);
+        std.mem.reverse(@FieldType(@FieldType(ast.Node, "data"), "binary"), links.items);
+        var left = try self.expression(head.left);
+        for (links.items) |link| {
+            const right = try self.expression(link.right);
+            _ = try self.operands(link, left, right);
+            left = right;
+        }
+        return .{ .concrete = .bool };
+    }
     fn binary(self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), "binary")) Error!Symbolic {
+        if (operation.chained) return self.chain(operation);
         const left = try self.expression(operation.left);
         const short_circuit = operation.op == .logical_and or operation.op == .logical_or;
         const state = if (short_circuit) try self.pendingState(self.locals.items.len) else null;
@@ -2122,6 +2205,14 @@ const Checker = struct {
         if (short_circuit) try self.assumeOption(operation.left, operation.op == .logical_and);
         const right = try self.expression(operation.right);
         if (state) |snapshot| try self.samePending(snapshot, operation.op_span, eResultPath);
+        return self.operands(operation, left, right);
+    }
+    /// The type one binary operator answers for two already checked operand types.
+    fn operands(self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), "binary"), left: Symbolic, right: Symbolic) Error!Symbolic {
+        if (operation.op == .mul) if (self.repeated(left, right)) |repeats| {
+            self.seedEffect(.managed_allocation);
+            return repeats;
+        };
         if (self.isFloat(left) or self.isFloat(right) or operation.op == .python_div) {
             if (!self.isFloat(left)) try self.supports(left, .integer, operation.op_span);
             if (!self.isFloat(right)) try self.supports(right, .integer, operation.op_span);
@@ -2131,9 +2222,12 @@ const Checker = struct {
                 else => self.sink.fail("E_FLOAT_OPERATION", operation.op_span, "float supports arithmetic and numeric comparison"),
             };
         }
+        // `|`, `&` and `^` combine two sets (SET-OPERATORS-1) or two integers
+        // bitwise (PY-SET-OPS-1); any other operand is refused.
         const set_left = self.shapes().isSet(left);
-        if (!set_left) if (set_lower.bitwiseSpelling(self.src.text(operation.op_span))) |builtin| {
-            const message = try std.fmt.allocPrint(self.sink.allocator, "`{s}` combines two sets; an integer bitwise operation is spelled `{s}(a, b)`", .{ self.src.text(operation.op_span), builtin });
+        const integer_left = symbolic.supports(left, .integer, self.parameters, self.catalog);
+        if (!set_left and !integer_left) if (set_lower.bitwiseSpelling(self.src.text(operation.op_span))) |builtin| {
+            const message = try std.fmt.allocPrint(self.sink.allocator, "`{s}` combines two sets or two integers (`{s}(a, b)`)", .{ self.src.text(operation.op_span), builtin });
             return self.sink.fail(set_lower.bitwise_code, operation.op_span, message);
         };
         try self.compatible(right, left, operation.op_span);
@@ -2152,7 +2246,10 @@ const Checker = struct {
                 self.seedEffect(.managed_allocation);
                 return left;
             }
-            return self.sink.fail("E_TEXT_OPERATOR", operation.op_span, "collection supports equality and str supports concatenation");
+            const sequence = self.shapes().collectionKind(left) == .string or self.shapes().collectionKind(left) == .bytes;
+            const ordering = operation.op == .lt or operation.op == .le or operation.op == .gt or operation.op == .ge;
+            if (sequence and ordering) return .{ .concrete = .bool };
+            return self.sink.fail("E_TEXT_OPERATOR", operation.op_span, "collection supports equality; str and bytes also support `+` and `<`, `<=`, `>`, `>=`");
         }
         switch (operation.op) {
             .f64_add, .f64_sub, .f64_mul, .f64_div, .f64_eq, .f64_lt, .f64_le => try self.compatible(left, .{ .concrete = .u64 }, operation.op_span),
@@ -2242,6 +2339,10 @@ const Checker = struct {
         try self.enter(statement_value.span);
         defer self.depth -= 1;
         switch (statement_value.data) {
+            .gather_step => |step| {
+                try self.gatherStep(step, statement_value.span);
+                return false;
+            },
             .block => |statements| return self.block(statements),
             .with_scope => return self.sink.fail(eUnsupported, statement_value.span, "`with` resource scopes are not supported inside generic function bodies"),
             .match => |match| return self.matchValue(match, statement_value.span),
@@ -2279,11 +2380,15 @@ const Checker = struct {
             // `_ = expr` evaluates the value and releases it, settling a result obligation.
             .discard => |value| {
                 const ty_value = try self.expression(value);
-                if (statement_value.implicit_discard and !symbolic.same(ty_value, .{ .concrete = .unit }, self.catalog)) return self.sink.fail(
-                    "E_EXPLICIT_DISCARD_REQUIRED",
-                    statement_value.span,
-                    "a standalone non-unit value requires `_ =` or result handling",
-                );
+                if (statement_value.implicit_discard and !symbolic.same(ty_value, .{ .concrete = .unit }, self.catalog)) {
+                    const code = "E_EXPLICIT_DISCARD_REQUIRED";
+                    const message = "a standalone non-unit value requires `_ =` or result handling";
+                    // Only a value known not to be a result gets the `_ = ` fix;
+                    // a type parameter may be one at some specialization.
+                    if (ty_value == .parameter or try self.requiresHandling(ty_value)) return self.sink.fail(code, statement_value.span, message);
+                    const at = statement_value.span.start;
+                    return self.sink.failFix(code, statement_value.span, message, .{ .span = .{ .start = at, .end = at }, .text = "_ = " });
+                }
                 if (ty_value == .parameter) try self.supports(ty_value, .storable, statement_value.span);
             },
             .branch => |branch| return self.branchValue(branch, statement_value.span),
@@ -2330,6 +2435,7 @@ const Checker = struct {
                 const element: Symbolic = if (self.program.nodes.items[@backingInt(range.start)].data == .unit) .{ .concrete = .i64 } else try self.expression(range.start);
                 try self.supports(element, .integer, range.name);
                 try self.compatible(try self.expression(range.end), element, range.name);
+                if (range.step) |step| try self.compatible(try self.expression(step), element, range.name);
                 const first = self.locals.items.len;
                 try self.bind(range.name, element, true);
                 defer self.endScope(first);

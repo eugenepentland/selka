@@ -1,0 +1,1233 @@
+{
+ "T1-mylang": {
+  "run": "T1-mylang",
+  "passed": 13,
+  "total": 13,
+  "build_exit": 0,
+  "failed_cases": {},
+  "large_case_s": {
+   "large_10mb": 0.266
+  },
+  "wall_min": 11.8,
+  "api_calls": 60,
+  "tool_calls": 59,
+  "tools": {
+   "Bash": 40,
+   "Read": 13,
+   "Write": 4,
+   "Edit": 2
+  },
+  "context_tokens": 7750554,
+  "output_tokens": 43454,
+  "doc_bytes_read": 191230,
+  "doc_files_distinct": 12,
+  "doc_files_top": [
+   [
+    "README.md",
+    1
+   ],
+   [
+    "docs/io.md",
+    1
+   ],
+   [
+    "docs/standard-library.md",
+    1
+   ],
+   [
+    "docs/text.md",
+    1
+   ],
+   [
+    "docs/bytes.md",
+    1
+   ],
+   [
+    "docs/python-syntax.md",
+    1
+   ],
+   [
+    "docs/statements.md",
+    1
+   ],
+   [
+    "docs/functions.md",
+    1
+   ],
+   [
+    "docs/lambdas.md",
+    1
+   ],
+   [
+    "docs/tooling/guest-tests.md",
+    1
+   ],
+   [
+    "docs/modules.md",
+    1
+   ],
+   [
+    "docs/tooling/import-policy.md",
+    1
+   ]
+  ],
+  "outside_paths": [],
+  "shim": {
+   "calls": 20,
+   "nonzero": 6,
+   "toolchain_s": 6.3,
+   "subcommands": {
+    "test": 4,
+    "build": 4,
+    "fmt-module": 4,
+    "check": 3,
+    "fmt": 2,
+    "fmt-project": 2,
+    "--help": 1
+   },
+   "error_codes": {
+    "E_SYNTAX": 2,
+    "E_LIST_INFERENCE": 1
+   }
+  }
+ },
+ "T1-python": {
+  "run": "T1-python",
+  "passed": 13,
+  "total": 13,
+  "build_exit": 0,
+  "failed_cases": {},
+  "large_case_s": {
+   "large_10mb": 0.332
+  },
+  "wall_min": 3.7,
+  "api_calls": 18,
+  "tool_calls": 17,
+  "tools": {
+   "Bash": 13,
+   "Write": 4
+  },
+  "context_tokens": 1008494,
+  "output_tokens": 10523,
+  "doc_bytes_read": 0,
+  "doc_files_distinct": 0,
+  "doc_files_top": [],
+  "outside_paths": [],
+  "shim": {
+   "calls": 23,
+   "nonzero": 10,
+   "toolchain_s": 2.7,
+   "subcommands": {
+    "./prog": 10,
+    "/home/epentland/ai/trials/devspeed-20260923/runs/T1-python/wordfreq.py": 8,
+    "-m": 2,
+    "-c": 2,
+    "--version": 1
+   },
+   "error_codes": {}
+  }
+ },
+ "T2-mylang": {
+  "run": "T2-mylang",
+  "passed": 22,
+  "total": 22,
+  "build_exit": 0,
+  "failed_cases": {},
+  "large_case_s": {
+   "many_lines": 0.127
+  },
+  "wall_min": 14.9,
+  "api_calls": 44,
+  "tool_calls": 48,
+  "tools": {
+   "Bash": 28,
+   "Read": 16,
+   "Write": 3,
+   "Edit": 1
+  },
+  "context_tokens": 6919264,
+  "output_tokens": 73969,
+  "doc_bytes_read": 239372,
+  "doc_files_distinct": 15,
+  "doc_files_top": [
+   [
+    "README.md",
+    3
+   ],
+   [
+    "docs/python-syntax.md",
+    1
+   ],
+   [
+    "docs/io.md",
+    1
+   ],
+   [
+    "docs/statements.md",
+    1
+   ],
+   [
+    "docs/text.md",
+    1
+   ],
+   [
+    "docs/experiments/guest-tests.md",
+    1
+   ],
+   [
+    "docs/modules.md",
+    1
+   ],
+   [
+    "docs/functions.md",
+    1
+   ],
+   [
+    "docs/integer-operations.md",
+    1
+   ],
+   [
+    "docs/records-and-unions.md",
+    1
+   ],
+   [
+    "docs/results-and-options.md",
+    1
+   ],
+   [
+    "docs/tuples.md",
+    1
+   ]
+  ],
+  "outside_paths": [],
+  "shim": {
+   "calls": 17,
+   "nonzero": 8,
+   "toolchain_s": 10.4,
+   "subcommands": {
+    "build": 5,
+    "test": 5,
+    "check": 4,
+    "--help": 2,
+    "fmt": 1
+   },
+   "error_codes": {
+    "E_MODULE_NAME": 3,
+    "E_MUTATION_MARKER": 1,
+    "E_MODULE_HEADER": 1,
+    "E_SYNTAX": 1
+   }
+  }
+ },
+ "T2-python": {
+  "run": "T2-python",
+  "passed": 22,
+  "total": 22,
+  "build_exit": 0,
+  "failed_cases": {},
+  "large_case_s": {
+   "many_lines": 0.242
+  },
+  "wall_min": 6.3,
+  "api_calls": 19,
+  "tool_calls": 18,
+  "tools": {
+   "Bash": 13,
+   "Write": 5
+  },
+  "context_tokens": 1300098,
+  "output_tokens": 32359,
+  "doc_bytes_read": 0,
+  "doc_files_distinct": 0,
+  "doc_files_top": [],
+  "outside_paths": [],
+  "shim": {
+   "calls": 31,
+   "nonzero": 19,
+   "toolchain_s": 1.1,
+   "subcommands": {
+    "./prog": 24,
+    "/home/epentland/ai/trials/devspeed-20260923/runs/T2-python/prog": 4,
+    "-m": 2,
+    "--version": 1
+   },
+   "error_codes": {}
+  }
+ },
+ "T3-mylang": {
+  "run": "T3-mylang",
+  "passed": 12,
+  "total": 12,
+  "build_exit": 0,
+  "failed_cases": {},
+  "large_case_s": {
+   "large_200k": 0.142,
+   "large_200k_b": 0.131
+  },
+  "wall_min": 13.5,
+  "api_calls": 60,
+  "tool_calls": 59,
+  "tools": {
+   "Bash": 40,
+   "Read": 13,
+   "Write": 3,
+   "Edit": 3
+  },
+  "context_tokens": 7971884,
+  "output_tokens": 54289,
+  "doc_bytes_read": 162218,
+  "doc_files_distinct": 12,
+  "doc_files_top": [
+   [
+    "docs/standard-library.md",
+    4
+   ],
+   [
+    "docs/python-syntax.md",
+    4
+   ],
+   [
+    "docs/io.md",
+    2
+   ],
+   [
+    "docs/text.md",
+    2
+   ],
+   [
+    "docs/modules.md",
+    2
+   ],
+   [
+    "docs/managed-memory.md",
+    2
+   ],
+   [
+    "docs/functions.md",
+    2
+   ],
+   [
+    "README.md",
+    1
+   ],
+   [
+    "docs/statements.md",
+    1
+   ],
+   [
+    "docs/tooling/guest-tests.md",
+    1
+   ],
+   [
+    "docs/effects.md",
+    1
+   ],
+   [
+    "docs/records-and-unions.md",
+    1
+   ]
+  ],
+  "outside_paths": [],
+  "shim": {
+   "calls": 18,
+   "nonzero": 4,
+   "toolchain_s": 11.2,
+   "subcommands": {
+    "check": 6,
+    "build": 5,
+    "test": 4,
+    "--help": 2,
+    "run": 1
+   },
+   "error_codes": {
+    "E_LIST_INFERENCE": 1,
+    "E_MODULE_HEADER": 1
+   }
+  }
+ },
+ "T3-python": {
+  "run": "T3-python",
+  "passed": 12,
+  "total": 12,
+  "build_exit": 0,
+  "failed_cases": {},
+  "large_case_s": {
+   "large_200k": 0.525,
+   "large_200k_b": 0.419
+  },
+  "wall_min": 4.6,
+  "api_calls": 19,
+  "tool_calls": 18,
+  "tools": {
+   "Bash": 14,
+   "Write": 4
+  },
+  "context_tokens": 1132932,
+  "output_tokens": 19886,
+  "doc_bytes_read": 0,
+  "doc_files_distinct": 0,
+  "doc_files_top": [],
+  "outside_paths": [],
+  "shim": {
+   "calls": 20,
+   "nonzero": 11,
+   "toolchain_s": 0.8,
+   "subcommands": {
+    "/home/epentland/ai/trials/devspeed-20260923/runs/T3-python/route.py": 16,
+    "-m": 2,
+    "--version": 1,
+    "-": 1
+   },
+   "error_codes": {}
+  }
+ },
+ "T4-mylang": {
+  "run": "T4-mylang",
+  "passed": 14,
+  "total": 14,
+  "build_exit": 0,
+  "failed_cases": {},
+  "large_case_s": {},
+  "wall_min": 16.6,
+  "api_calls": 82,
+  "tool_calls": 95,
+  "tools": {
+   "Read": 23,
+   "Bash": 49,
+   "Edit": 15,
+   "mcp__ccd_session__mark_chapter": 1,
+   "Write": 7
+  },
+  "context_tokens": 10415978,
+  "output_tokens": 57146,
+  "doc_bytes_read": 16602,
+  "doc_files_distinct": 2,
+  "doc_files_top": [
+   [
+    "docs/floating-point.md",
+    1
+   ],
+   [
+    "docs/c-ffi.md",
+    1
+   ]
+  ],
+  "outside_paths": [],
+  "shim": {
+   "calls": 14,
+   "nonzero": 2,
+   "toolchain_s": 53.5,
+   "subcommands": {
+    "build": 6,
+    "test": 6,
+    "--help": 1,
+    "run": 1
+   },
+   "error_codes": {
+    "E_EFFECT_BOUND": 1
+   }
+  }
+ },
+ "T4-go": {
+  "run": "T4-go",
+  "passed": 14,
+  "total": 14,
+  "build_exit": 0,
+  "failed_cases": {},
+  "large_case_s": {},
+  "wall_min": 9.8,
+  "api_calls": 66,
+  "tool_calls": 73,
+  "tools": {
+   "Read": 16,
+   "Bash": 35,
+   "Edit": 20,
+   "Write": 2
+  },
+  "context_tokens": 7918548,
+  "output_tokens": 29637,
+  "doc_bytes_read": 0,
+  "doc_files_distinct": 0,
+  "doc_files_top": [],
+  "outside_paths": [],
+  "shim": {
+   "calls": 12,
+   "nonzero": 0,
+   "toolchain_s": 7.4,
+   "subcommands": {
+    "test": 5,
+    "build": 4,
+    "vet": 2,
+    "fmt": 1
+   },
+   "error_codes": {}
+  }
+ },
+ "T5-mylang": {
+  "run": "T5-mylang",
+  "passed": 12,
+  "total": 12,
+  "build_exit": 0,
+  "failed_cases": {},
+  "large_case_s": {
+   "large_200k_rows": 0.088
+  },
+  "wall_min": 15.7,
+  "api_calls": 53,
+  "tool_calls": 52,
+  "tools": {
+   "Bash": 38,
+   "Read": 7,
+   "Write": 3,
+   "Edit": 4
+  },
+  "context_tokens": 8411431,
+  "output_tokens": 67513,
+  "doc_bytes_read": 190142,
+  "doc_files_distinct": 10,
+  "doc_files_top": [
+   [
+    "docs/standard-library.md",
+    2
+   ],
+   [
+    "docs/modules.md",
+    2
+   ],
+   [
+    "README.md",
+    1
+   ],
+   [
+    "docs/python-syntax.md",
+    1
+   ],
+   [
+    "docs/io.md",
+    1
+   ],
+   [
+    "docs/statements.md",
+    1
+   ],
+   [
+    "docs/tooling/guest-tests.md",
+    1
+   ],
+   [
+    "docs/text.md",
+    1
+   ],
+   [
+    "docs/bytes.md",
+    1
+   ],
+   [
+    "docs/tuples.md",
+    1
+   ]
+  ],
+  "outside_paths": [],
+  "shim": {
+   "calls": 17,
+   "nonzero": 2,
+   "toolchain_s": 17.9,
+   "subcommands": {
+    "check": 5,
+    "build": 5,
+    "run": 3,
+    "test": 3,
+    "--help": 1
+   },
+   "error_codes": {
+    "E_MODULE_NAME": 1
+   }
+  }
+ },
+ "T5-python": {
+  "run": "T5-python",
+  "passed": 12,
+  "total": 12,
+  "build_exit": 0,
+  "failed_cases": {},
+  "large_case_s": {
+   "large_200k_rows": 0.199
+  },
+  "wall_min": 6.5,
+  "api_calls": 20,
+  "tool_calls": 19,
+  "tools": {
+   "Read": 1,
+   "Bash": 14,
+   "Write": 4
+  },
+  "context_tokens": 1377566,
+  "output_tokens": 31479,
+  "doc_bytes_read": 0,
+  "doc_files_distinct": 0,
+  "doc_files_top": [],
+  "outside_paths": [],
+  "shim": {
+   "calls": 17,
+   "nonzero": 8,
+   "toolchain_s": 0.5,
+   "subcommands": {
+    "./prog": 14,
+    "-m": 2,
+    "--version": 1
+   },
+   "error_codes": {}
+  }
+ },
+ "T6-python": {
+  "run": "T6-python",
+  "passed": 12,
+  "total": 12,
+  "build_exit": 0,
+  "failed_cases": {},
+  "large_case_s": {
+   "k_larger": 0.039,
+   "large_500k": 0.669
+  },
+  "wall_min": 5.1,
+  "api_calls": 19,
+  "tool_calls": 18,
+  "tools": {
+   "Read": 1,
+   "Bash": 13,
+   "Write": 4
+  },
+  "context_tokens": 1207567,
+  "output_tokens": 24626,
+  "doc_bytes_read": 0,
+  "doc_files_distinct": 0,
+  "doc_files_top": [],
+  "outside_paths": [],
+  "shim": {
+   "calls": 18,
+   "nonzero": 5,
+   "toolchain_s": 2.2,
+   "subcommands": {
+    "./prog": 14,
+    "-m": 2,
+    "--version": 1,
+    "-": 1
+   },
+   "error_codes": {}
+  }
+ },
+ "T6-mylang": {
+  "run": "T6-mylang",
+  "passed": 12,
+  "total": 12,
+  "build_exit": 0,
+  "failed_cases": {},
+  "large_case_s": {
+   "k_larger": 0.001,
+   "large_500k": 1.252
+  },
+  "wall_min": 10.0,
+  "api_calls": 32,
+  "tool_calls": 34,
+  "tools": {
+   "Read": 12,
+   "Bash": 18,
+   "Write": 3,
+   "Edit": 1
+  },
+  "context_tokens": 4604118,
+  "output_tokens": 46950,
+  "doc_bytes_read": 224124,
+  "doc_files_distinct": 10,
+  "doc_files_top": [
+   [
+    "README.md",
+    1
+   ],
+   [
+    "docs/python-syntax.md",
+    1
+   ],
+   [
+    "docs/io.md",
+    1
+   ],
+   [
+    "docs/statements.md",
+    1
+   ],
+   [
+    "docs/text.md",
+    1
+   ],
+   [
+    "docs/standard-library.md",
+    1
+   ],
+   [
+    "docs/results-and-options.md",
+    1
+   ],
+   [
+    "docs/functions.md",
+    1
+   ],
+   [
+    "docs/records-and-unions.md",
+    1
+   ],
+   [
+    "docs/managed-memory.md",
+    1
+   ]
+  ],
+  "outside_paths": [],
+  "shim": {
+   "calls": 19,
+   "nonzero": 2,
+   "toolchain_s": 11.7,
+   "subcommands": {
+    "build": 7,
+    "check": 6,
+    "test": 5,
+    "--help": 1
+   },
+   "error_codes": {
+    "E_MODULE_HEADER": 1
+   }
+  }
+ },
+ "T6-mylangprimer": {
+  "run": "T6-mylangprimer",
+  "passed": 12,
+  "total": 12,
+  "build_exit": 0,
+  "failed_cases": {},
+  "large_case_s": {
+   "k_larger": 0.001,
+   "large_500k": 0.285
+  },
+  "wall_min": 12.8,
+  "api_calls": 36,
+  "tool_calls": 39,
+  "tools": {
+   "Bash": 24,
+   "mcp__ccd_session__mark_chapter": 1,
+   "Read": 11,
+   "Write": 3
+  },
+  "context_tokens": 3816611,
+  "output_tokens": 61989,
+  "doc_bytes_read": 66127,
+  "doc_files_distinct": 7,
+  "doc_files_top": [
+   [
+    "docs/io.md",
+    3
+   ],
+   [
+    "docs/managed-memory.md",
+    2
+   ],
+   [
+    "/PRIMER.md",
+    1
+   ],
+   [
+    "docs/text.md",
+    1
+   ],
+   [
+    "docs/python-syntax.md",
+    1
+   ],
+   [
+    "docs/bytes.md",
+    1
+   ],
+   [
+    "docs/match-expressions.md",
+    1
+   ]
+  ],
+  "outside_paths": [],
+  "shim": {
+   "calls": 8,
+   "nonzero": 1,
+   "toolchain_s": 6.0,
+   "subcommands": {
+    "build": 3,
+    "check": 2,
+    "test": 2,
+    "--help": 1
+   },
+   "error_codes": {}
+  }
+ },
+ "T2-mylangprimer": {
+  "run": "T2-mylangprimer",
+  "passed": 22,
+  "total": 22,
+  "build_exit": 0,
+  "failed_cases": {},
+  "large_case_s": {
+   "many_lines": 0.119
+  },
+  "wall_min": 11.7,
+  "api_calls": 31,
+  "tool_calls": 43,
+  "tools": {
+   "Read": 2,
+   "Bash": 37,
+   "Write": 3,
+   "Edit": 1
+  },
+  "context_tokens": 3307912,
+  "output_tokens": 57314,
+  "doc_bytes_read": 60264,
+  "doc_files_distinct": 10,
+  "doc_files_top": [
+   [
+    "docs/records-and-unions.md",
+    6
+   ],
+   [
+    "docs/python-syntax.md",
+    3
+   ],
+   [
+    "docs/statements.md",
+    3
+   ],
+   [
+    "docs/io.md",
+    2
+   ],
+   [
+    "docs/text.md",
+    2
+   ],
+   [
+    "docs/structured-loop-exits.md",
+    2
+   ],
+   [
+    "/PRIMER.md",
+    1
+   ],
+   [
+    "docs/match-expressions.md",
+    1
+   ],
+   [
+    "docs/results-and-options.md",
+    1
+   ],
+   [
+    "docs/tuples.md",
+    1
+   ]
+  ],
+  "outside_paths": [],
+  "shim": {
+   "calls": 8,
+   "nonzero": 2,
+   "toolchain_s": 4.1,
+   "subcommands": {
+    "check": 3,
+    "build": 2,
+    "test": 2,
+    "--help": 1
+   },
+   "error_codes": {
+    "E_PRIVATE_INTERFACE": 1
+   }
+  }
+ },
+ "T5-mylangprimer": {
+  "run": "T5-mylangprimer",
+  "passed": 12,
+  "total": 12,
+  "build_exit": 0,
+  "failed_cases": {},
+  "large_case_s": {
+   "large_200k_rows": 0.098
+  },
+  "wall_min": 17.3,
+  "api_calls": 55,
+  "tool_calls": 54,
+  "tools": {
+   "Read": 1,
+   "Bash": 48,
+   "Write": 3,
+   "Edit": 2
+  },
+  "context_tokens": 6756090,
+  "output_tokens": 76775,
+  "doc_bytes_read": 91866,
+  "doc_files_distinct": 11,
+  "doc_files_top": [
+   [
+    "docs/bytes.md",
+    6
+   ],
+   [
+    "docs/records-and-unions.md",
+    4
+   ],
+   [
+    "docs/io.md",
+    2
+   ],
+   [
+    "docs/standard-library.md",
+    2
+   ],
+   [
+    "docs/floating-point.md",
+    2
+   ],
+   [
+    "docs/functions.md",
+    2
+   ],
+   [
+    "README.md",
+    1
+   ],
+   [
+    "docs/text.md",
+    1
+   ],
+   [
+    "docs/tuples.md",
+    1
+   ],
+   [
+    "docs/statements.md",
+    1
+   ],
+   [
+    "docs/python-syntax.md",
+    1
+   ]
+  ],
+  "outside_paths": [],
+  "shim": {
+   "calls": 14,
+   "nonzero": 3,
+   "toolchain_s": 9.4,
+   "subcommands": {
+    "test": 4,
+    "check": 3,
+    "build": 3,
+    "fmt-module": 3,
+    "--help": 1
+   },
+   "error_codes": {}
+  }
+ },
+ "M-break-mylang": {
+  "run": "M-break-mylang",
+  "passed": 22,
+  "total": 22,
+  "build_exit": 0,
+  "failed_cases": {},
+  "large_case_s": {},
+  "wall_min": 21.1,
+  "api_calls": 94,
+  "tool_calls": 93,
+  "tools": {
+   "Bash": 44,
+   "Read": 15,
+   "Edit": 30,
+   "Write": 4
+  },
+  "context_tokens": 15028213,
+  "output_tokens": 82488,
+  "doc_bytes_read": 6166,
+  "doc_files_distinct": 2,
+  "doc_files_top": [
+   [
+    "README.md",
+    3
+   ],
+   [
+    "docs/current-language.md",
+    2
+   ]
+  ],
+  "outside_paths": [],
+  "shim": {
+   "calls": 19,
+   "nonzero": 6,
+   "toolchain_s": 137.9,
+   "subcommands": {
+    "test": 8,
+    "build": 5,
+    "run-project": 4,
+    "--help": 1,
+    "run": 1
+   },
+   "error_codes": {
+    "E_MODULE_NAME": 1,
+    "E_EFFECT_BOUND": 1
+   }
+  }
+ },
+ "M-break-go": {
+  "run": "M-break-go",
+  "passed": 22,
+  "total": 22,
+  "build_exit": 0,
+  "failed_cases": {},
+  "large_case_s": {},
+  "wall_min": 13.7,
+  "api_calls": 63,
+  "tool_calls": 78,
+  "tools": {
+   "Read": 21,
+   "Bash": 23,
+   "Edit": 32,
+   "Write": 2
+  },
+  "context_tokens": 10203670,
+  "output_tokens": 59056,
+  "doc_bytes_read": 0,
+  "doc_files_distinct": 0,
+  "doc_files_top": [],
+  "outside_paths": [
+   "/home/epentland/ai/trials/devspeed-20260923/"
+  ],
+  "shim": {
+   "calls": 17,
+   "nonzero": 2,
+   "toolchain_s": 24.4,
+   "subcommands": {
+    "test": 8,
+    "build": 5,
+    "vet": 3,
+    "fmt": 1
+   },
+   "error_codes": {}
+  }
+ },
+ "M-break-rust": {
+  "run": "M-break-rust",
+  "passed": 22,
+  "total": 22,
+  "build_exit": 0,
+  "failed_cases": {},
+  "large_case_s": {},
+  "wall_min": 16.9,
+  "api_calls": 87,
+  "tool_calls": 86,
+  "tools": {
+   "Bash": 42,
+   "Read": 12,
+   "Edit": 30,
+   "Write": 2
+  },
+  "context_tokens": 13563716,
+  "output_tokens": 67454,
+  "doc_bytes_read": 0,
+  "doc_files_distinct": 0,
+  "doc_files_top": [],
+  "outside_paths": [],
+  "shim": {
+   "calls": 24,
+   "nonzero": 1,
+   "toolchain_s": 14.5,
+   "subcommands": {
+    "build": 10,
+    "test": 7,
+    "fmt": 4,
+    "clippy": 2,
+    "--version": 1
+   },
+   "error_codes": {}
+  }
+ },
+ "M-break-zig": {
+  "run": "M-break-zig",
+  "passed": 22,
+  "total": 22,
+  "build_exit": 0,
+  "failed_cases": {},
+  "large_case_s": {},
+  "wall_min": 21.6,
+  "api_calls": 80,
+  "tool_calls": 93,
+  "tools": {
+   "Read": 18,
+   "Bash": 42,
+   "Edit": 31,
+   "Write": 2
+  },
+  "context_tokens": 14531588,
+  "output_tokens": 84760,
+  "doc_bytes_read": 0,
+  "doc_files_distinct": 0,
+  "doc_files_top": [],
+  "outside_paths": [],
+  "shim": {
+   "calls": 15,
+   "nonzero": 2,
+   "toolchain_s": 191.6,
+   "subcommands": {
+    "build": 11,
+    "fmt": 3,
+    "version": 1
+   },
+   "error_codes": {}
+  }
+ },
+ "M-gcbug-mylang": {
+  "run": "M-gcbug-mylang",
+  "passed": 15,
+  "total": 15,
+  "build_exit": 0,
+  "failed_cases": {},
+  "large_case_s": {},
+  "wall_min": 13.0,
+  "api_calls": 58,
+  "tool_calls": 57,
+  "tools": {
+   "Read": 14,
+   "Bash": 36,
+   "Write": 4,
+   "Edit": 3
+  },
+  "context_tokens": 5527587,
+  "output_tokens": 42179,
+  "doc_bytes_read": 23709,
+  "doc_files_distinct": 1,
+  "doc_files_top": [
+   [
+    "docs/tooling/guest-tests.md",
+    3
+   ]
+  ],
+  "outside_paths": [],
+  "shim": {
+   "calls": 18,
+   "nonzero": 5,
+   "toolchain_s": 123.0,
+   "subcommands": {
+    "test": 10,
+    "build": 7,
+    "--help": 1
+   },
+   "error_codes": {
+    "E_EFFECT_BOUND": 2,
+    "R_ASSERT": 1
+   }
+  }
+ },
+ "M-gcbug-go": {
+  "run": "M-gcbug-go",
+  "passed": 15,
+  "total": 15,
+  "build_exit": 0,
+  "failed_cases": {},
+  "large_case_s": {},
+  "wall_min": 8.2,
+  "api_calls": 43,
+  "tool_calls": 42,
+  "tools": {
+   "Read": 9,
+   "Bash": 28,
+   "Edit": 3,
+   "Write": 2
+  },
+  "context_tokens": 3775401,
+  "output_tokens": 28043,
+  "doc_bytes_read": 0,
+  "doc_files_distinct": 0,
+  "doc_files_top": [],
+  "outside_paths": [],
+  "shim": {
+   "calls": 15,
+   "nonzero": 1,
+   "toolchain_s": 23.6,
+   "subcommands": {
+    "test": 5,
+    "build": 5,
+    "vet": 2,
+    "version": 1,
+    "fmt": 1,
+    "env": 1
+   },
+   "error_codes": {}
+  }
+ },
+ "M-gcbug-rust": {
+  "run": "M-gcbug-rust",
+  "passed": 15,
+  "total": 15,
+  "build_exit": 0,
+  "failed_cases": {},
+  "large_case_s": {},
+  "wall_min": 8.9,
+  "api_calls": 49,
+  "tool_calls": 54,
+  "tools": {
+   "Read": 10,
+   "Bash": 33,
+   "Edit": 9,
+   "Write": 2
+  },
+  "context_tokens": 5170568,
+  "output_tokens": 32859,
+  "doc_bytes_read": 0,
+  "doc_files_distinct": 0,
+  "doc_files_top": [],
+  "outside_paths": [],
+  "shim": {
+   "calls": 9,
+   "nonzero": 0,
+   "toolchain_s": 6.8,
+   "subcommands": {
+    "build": 4,
+    "test": 3,
+    "clippy": 1,
+    "fmt": 1
+   },
+   "error_codes": {}
+  }
+ },
+ "M-gcbug-zig": {
+  "run": "M-gcbug-zig",
+  "passed": 15,
+  "total": 15,
+  "build_exit": 0,
+  "failed_cases": {},
+  "large_case_s": {},
+  "wall_min": 13.0,
+  "api_calls": 61,
+  "tool_calls": 60,
+  "tools": {
+   "Bash": 47,
+   "Read": 4,
+   "Edit": 7,
+   "Write": 2
+  },
+  "context_tokens": 6120777,
+  "output_tokens": 30049,
+  "doc_bytes_read": 0,
+  "doc_files_distinct": 0,
+  "doc_files_top": [],
+  "outside_paths": [],
+  "shim": {
+   "calls": 16,
+   "nonzero": 2,
+   "toolchain_s": 254.4,
+   "subcommands": {
+    "build": 14,
+    "version": 1,
+    "fmt": 1
+   },
+   "error_codes": {}
+  }
+ }
+}

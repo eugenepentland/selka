@@ -87,6 +87,14 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     return outcome.status;
 }
 
+// spec-case: FIX-MIGRATION-1
+test "docs fix prints the fix and migration guide wherever the compiler runs" {
+    const guide = try answer(std.testing.allocator, &.{"fix"});
+    try std.testing.expectEqual(@as(u8, 0), guide.status);
+    try std.testing.expect(std.mem.startsWith(u8, guide.stdout, "# Fixes and migrations"));
+    try std.testing.expect(std.mem.indexOf(u8, guide.stdout, "mylang fix --check") != null);
+}
+
 // spec: CLI-DOCS-1
 test "docs lists every topic with the primer first and prints each embedded page" {
     const listed = try answer(std.testing.allocator, &.{});

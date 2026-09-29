@@ -82,11 +82,12 @@ fn hintBufferArguments(comptime Checker: type, self: *Checker, operation: @Field
         }
         if (owner_type.isAggregate() and self.catalog.records[owner_type.recordIndex()].collection.kind != .list) {
             const schema = self.catalog.records[owner_type.recordIndex()];
+            // PY-GENERATOR-1: `sep.join(x for x in xs)` joins the list the loop builds.
+            if (operation.kind == .join and operation.arguments.len == 1) _ = try self.consumeGenerator(operation.arguments[0], .list);
             if (typed.isSet(schema)) {
-                // A set method takes its element (`add`, `remove`, `discard`)
-                // or another set of the same type (SET-1).
-                const element_operand = operation.kind == .set_add or operation.kind == .set_discard or operation.kind == .remove;
-                for (operation.arguments) |argument| try self.hint(argument, if (element_operand) schema.collection.key.? else owner_type);
+                // A set method takes its element (`add`, `remove`, `discard`),
+                // another set of the same type, or an iterable it collects (SET-1).
+                for (operation.arguments) |argument| try self.hintSetOperand(argument, owner_type, operation.kind);
             } else if (schema.collection.kind == .dictionary) {
                 if (operation.kind == .update and operation.arguments.len == 1) {
                     try self.hint(operation.arguments[0], owner_type);
@@ -501,6 +502,8 @@ fn queueExpression(comptime Checker: type, self: *Checker, work: *std.ArrayList(
             return true;
         },
         .binary => |b| {
+            // A comparison chain checks its own operands, in source order.
+            if (b.chained) return false;
             try self.hintBinary(node);
             try work.append(self.allocator, .{ .id = id, .emit = true });
             try work.append(self.allocator, .{ .id = b.right, .checkpoint = if (b.op == .logical_and or b.op == .logical_or) .{ .condition = b.left, .truth = b.op == .logical_and } else null });
@@ -549,7 +552,10 @@ fn checkedExpression(comptime Checker: type, self: *Checker, node: ast.Node, min
         .list_literal => |inputs| return self.checkListLiteral(node, inputs, temporaries),
         .set_literal => |inputs| return self.checkSetLiteral(node, inputs, temporaries),
         .format => |parts| return self.checkFormat(node, parts, temporaries),
+        // Only an f-string's own parts are formatted fields, checked there.
+        .format_field => return error.InternalError,
         .comprehension => |each| return self.checkComprehension(node, each, temporaries),
+        .gather => |gather| return self.checkGather(node, gather),
         .list_operation => |op| {
             if (op.kind == .write and op.arguments.len == 2) if (try self.arrayPlace(op.base, op.arguments[0])) |place|
                 return self.checkArrayPlace(node, place, .{ .op = .set, .value = op.arguments[1] }, temporaries);
@@ -827,9 +833,9 @@ fn consumedTemporaries(comptime Checker: type, self: *Checker, node: ast.Node, o
         .bytes, .text, .integer => return 0,
         // These forms check their contents in place; dictionary literals queue
         // every key and value, whether they construct a dictionary or a table.
-        .list_literal, .set_literal, .format, .comprehension => return 0,
+        .list_literal, .set_literal, .format, .comprehension, .gather => return 0,
         .dictionary_literal => |literal| return literal.len,
-        .binary => return 2,
+        .binary => |binary| return binaryTemporaries(binary),
         else => {},
     }
     if (node.data == .unary and node.data.unary.op == .is_none) return 1;
@@ -956,4 +962,9 @@ test "text methods whose one operand is more text get the receiver type as their
     try std.testing.expect(sequenceArgument(.starts_with));
     try std.testing.expect(sequenceArgument(.replace));
     try std.testing.expect(!sequenceArgument(.zfill));
+}
+/// A binary operator leaves both queued operands to pop, except a comparison
+/// chain (`PY-CHAIN-1`), which checks its own operands and leaves none.
+fn binaryTemporaries(binary: @FieldType(@FieldType(ast.Node, "data"), "binary")) usize {
+    return if (binary.chained) 0 else 2;
 }

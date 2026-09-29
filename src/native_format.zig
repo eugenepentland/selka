@@ -4,6 +4,7 @@
 const std = @import("std");
 const builtin = @import("builtin");
 const number_text = @import("number_text.zig");
+const format_spec = @import("format_spec.zig");
 const Kind = enum { signed, unsigned, boolean, unit, floating };
 const FormatError = error{NoSpaceLeft};
 comptime {
@@ -11,6 +12,62 @@ comptime {
     if (!builtin.is_test) @export(&numberC, .{ .name = "myl_native_number_parse" });
     if (!builtin.is_test) @export(&numberBytesC, .{ .name = "myl_native_bytes_number_parse" });
     if (!builtin.is_test) @export(&bufferFloatC, .{ .name = "myl_native_bytes_buffer_append_float" });
+    if (!builtin.is_test) @export(&formatNumberC, .{ .name = "myl_native_text_format_number" });
+    if (!builtin.is_test) @export(&formatTextC, .{ .name = "myl_native_text_format_text" });
+    if (!builtin.is_test) @export(&roundFloatC, .{ .name = "myl_native_float_round" });
+}
+/// The header of a native text (`native_text.h`): scalar count, then octet count.
+const Text = extern struct { length: usize, bytes: usize, flags: u32, hash: u32 };
+extern fn myl_native_text_payload(text: *const Text) [*]const u8;
+/// A fresh unpublished text of `bytes` octets, with `*keep` rooted across the
+/// allocation so a formatted text's source survives it.
+extern fn myl_native_text_build_keeping(heap: *anyopaque, bytes: usize, keep: *?*const Text) ?*Text;
+extern fn myl_native_text_publish(text: *Text, scalars: usize, plain: c_int) void;
+/// PY-FSTRING-SPEC-1: one number under a packed format specification, as a
+/// fresh text; null for a refused allocation or a word the checker never packed.
+fn formatNumberC(heap: *anyopaque, bits: u64, word: u64) callconv(.c) ?*anyopaque {
+    const spec = format_spec.unpack(word) orelse return null;
+    if (spec.family == .text) return null;
+    return formattedInput(heap, spec, null, bits);
+}
+/// PY-FSTRING-SPEC-1: one text under a packed format specification. The source
+/// text stays rooted while the result is allocated and is read after it.
+fn formatTextC(heap: *anyopaque, text: *const Text, word: u64) callconv(.c) ?*anyopaque {
+    const spec = format_spec.unpack(word) orelse return null;
+    if (spec.family != .text) return null;
+    return formattedInput(heap, spec, text, 0);
+}
+/// The input one render reads: a text's own payload, or a number.
+fn inputOf(spec: format_spec.Spec, source: ?*const Text, bits: u64) format_spec.Input {
+    const text = source orelse return switch (spec.family) {
+        .signed => .{ .signed = @bitCast(bits) },
+        .unsigned => .{ .unsigned = bits },
+        else => .{ .float = @bitCast(bits) },
+    };
+    return .{ .text = .{ .bytes = myl_native_text_payload(text)[0..text.bytes], .scalars = text.length } };
+}
+/// Measure one rendering, build a text of exactly that many octets, render
+/// into its payload and publish it. Nothing is copied through a temporary.
+fn formattedInput(heap: *anyopaque, spec: format_spec.Spec, source: ?*const Text, bits: u64) ?*anyopaque {
+    var measure: format_spec.Out = .{};
+    format_spec.render(&measure, spec, inputOf(spec, source, bits));
+    var keep = source;
+    const built = myl_native_text_build_keeping(heap, measure.len, &keep) orelse return null;
+    const payload = @as([*]u8, @ptrCast(built)) + @sizeOf(Text);
+    var out: format_spec.Out = .{ .buffer = payload[0..measure.len] };
+    format_spec.render(&out, spec, inputOf(spec, keep, bits));
+    const written = payload[0..out.len];
+    const scalars = std.unicode.utf8CountCodepoints(written) catch written.len;
+    const plain = for (written) |octet| {
+        if (octet >= 0x80) break false;
+    } else true;
+    myl_native_text_publish(built, scalars, @intFromBool(plain));
+    return built;
+}
+
+/// PRELUDE-ROUND-2: `round(x, n)` on a binary64's bits, answering bits.
+fn roundFloatC(bits: u64, digits: i64) callconv(.c) u64 {
+    return @bitCast(format_spec.roundFloat(@bitCast(bits), digits));
 }
 /// Append `count` octets of caller-owned raw storage to a byte buffer, answering
 /// the byte runtime's status enum. Defined by the C runtime beside the buffer

@@ -48,9 +48,6 @@ CLASSIFY_CASES = [
     ('string-prefix', 'E_SYNTAX', PROBES / 'a53_multiline_str.my'),
     ('main-guard', 'E_SYNTAX', PROBES / 'a58_main_guard.my'),
     ('option-unwrap', 'E_SYNTAX', PROBES / 'a61_result_unwrap.my'),
-    ('nested-comprehension', 'E_SYNTAX', PROBES / 'a66_nested_comp.my'),
-    ('dict-comprehension', 'E_SYNTAX', PROBES / 'a67_dict_comp.my'),
-    ('generator-argument', 'E_SYNTAX', PROBES / 'a68_genexp.my'),
     ('walrus', 'E_SYNTAX', PROBES / 'a73_while_else_walrus.my'),
 ]
 
@@ -69,9 +66,6 @@ PROBE_CASES = [
     ('string-prefix', 'E_SYNTAX', 'a53_multiline_str.my', 5, 10),
     ('main-guard', 'E_SYNTAX', 'a58_main_guard.my', 5, 1),
     ('option-unwrap', 'E_SYNTAX', 'a61_result_unwrap.my', 10, 21),
-    ('nested-comprehension', 'E_SYNTAX', 'a66_nested_comp.my', 4, 31),
-    ('dict-comprehension', 'E_SYNTAX', 'a67_dict_comp.my', 3, 19),
-    ('generator-argument', 'E_SYNTAX', 'a68_genexp.my', 4, 18),
     ('walrus', 'E_SYNTAX', 'a73_while_else_walrus.my', 4, 11),
 ]
 

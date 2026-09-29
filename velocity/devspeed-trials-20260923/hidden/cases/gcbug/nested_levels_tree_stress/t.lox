@@ -1,0 +1,8 @@
+fun outer() { var x = "x"; fun middle() { var y = "y"; fun inner() { return x + y; } return inner; } return middle; }
+var m = outer();
+var t = "";
+for (var i = 0; i < 30; i = i + 1) { t = t + "z"; }
+var f = m();
+for (var i = 0; i < 30; i = i + 1) { t = t + "w"; }
+print f();
+print t;

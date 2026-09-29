@@ -1,0 +1,46 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-stage1-20260929/zig-out/bin/mylang",
+  "start": 1,
+  "count": 100,
+  "tally": {
+    "ok": 97,
+    "invalid": 0,
+    "stress-only": 2,
+    "RC-DIFF": 1
+  },
+  "findings": [
+    {
+      "seed": 2,
+      "status": "RC-DIFF",
+      "rc": [
+        "rc: stderr differs: '' vs 'ar rcs .zig-global-cache/o/ade5db06abf87ca23466f5867b984f3a/libcompiler_rt.a .zig-global-cache/o/ade5db06abf87ca23466f5867b984f3a/compiler_rt_zcu.o'",
+        "stats: stderr differs: '' vs 'ar rcs .zig-global-cache/o/ade5db06abf87ca23466f5867b984f3a/libcompiler_rt.a .zig-global-cache/o/ade5db06abf87ca23466f5867b984f3a/compiler_rt_zcu.o'"
+      ],
+      "stress": [
+        "stress: stderr differs: '' vs 'ar rcs .zig-global-cache/o/ade5db06abf87ca23466f5867b984f3a/libcompiler_rt.a .zig-global-cache/o/ade5db06abf87ca23466f5867b984f3a/compiler_rt_zcu.o'"
+      ],
+      "program": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-stage1-20260929/experiments/rc-fuzz/out/found/s2.my"
+    },
+    {
+      "seed": 19,
+      "status": "stress-only",
+      "rc": [],
+      "stress": [
+        "stress: exit 134 vs 0",
+        "stress: stdout differs",
+        "stress: stderr differs: \"mylang runtime: a descriptor's scan plan disagrees with its fields\" vs ''"
+      ],
+      "program": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-stage1-20260929/experiments/rc-fuzz/out/found/s19.my"
+    },
+    {
+      "seed": 87,
+      "status": "stress-only",
+      "rc": [],
+      "stress": [
+        "stress: exit 139 vs 0",
+        "stress: stdout differs"
+      ],
+      "program": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-stage1-20260929/experiments/rc-fuzz/out/found/s87.my"
+    }
+  ]
+}

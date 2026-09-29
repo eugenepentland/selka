@@ -1,0 +1,70 @@
+{
+ "run": "T5-python",
+ "task": "csvstats",
+ "cases": {
+  "bad_number": {
+   "ok": true,
+   "s": 0.04,
+   "problems": []
+  },
+  "bad_number_exp": {
+   "ok": true,
+   "s": 0.043,
+   "problems": []
+  },
+  "basic": {
+   "ok": true,
+   "s": 0.041,
+   "problems": []
+  },
+  "crlf": {
+   "ok": true,
+   "s": 0.042,
+   "problems": []
+  },
+  "field_count": {
+   "ok": true,
+   "s": 0.041,
+   "problems": []
+  },
+  "group_by_other": {
+   "ok": true,
+   "s": 0.04,
+   "problems": []
+  },
+  "large_200k_rows": {
+   "ok": true,
+   "s": 0.199,
+   "problems": []
+  },
+  "no_column": {
+   "ok": true,
+   "s": 0.038,
+   "problems": []
+  },
+  "no_trailing_newline": {
+   "ok": true,
+   "s": 0.041,
+   "problems": []
+  },
+  "quoted": {
+   "ok": true,
+   "s": 0.041,
+   "problems": []
+  },
+  "quoted_header_lookup": {
+   "ok": true,
+   "s": 0.041,
+   "problems": []
+  },
+  "usage": {
+   "ok": true,
+   "s": 0.042,
+   "problems": []
+  }
+ },
+ "build_s": 0.01,
+ "build_exit": 0,
+ "passed": 12,
+ "total": 12
+}

@@ -1,14 +1,14 @@
 {
  "version": "divergence-evidence-v1",
- "measured_on": "2026-09-20",
+ "measured_on": "2026-09-24",
  "policy": {
-  "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/divergences.json",
+  "path": "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a33a43c4cd674d3c1/velocity/divergences.json",
   "version": "divergence-policy-v1",
-  "sha256": "097838a14a674abfe8edd9623a2c8d99f5c9c16ae3e374d5df2637c8846c3c4d"
+  "sha256": "09233d4801151606220a647bb077f7f8e0f00a72aa70af6a69cbbf3eb001d4d6"
  },
  "binary": {
-  "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/zig-out/bin/mylang",
-  "sha256": "64e2178d0895fa095ddacb03eefde21dada98cf2e8954e72847968575613a3d4"
+  "path": "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a33a43c4cd674d3c1/zig-out/bin/mylang",
+  "sha256": "b5468fd8de1528def197fde1c4318a7f76ec17dde01a6adee6032199416bf3d9"
  },
  "python": {
   "executable": "/usr/bin/python3",
@@ -126,6 +126,54 @@
     "mylang": true,
     "cpython": true
    }
+  },
+  {
+   "entry": "round-half-away-from-zero",
+   "expression": "round(0.125, 2)",
+   "declared": {
+    "mylang": 0.13,
+    "cpython": 0.12
+   },
+   "observed": {
+    "mylang": "0.13",
+    "cpython": "0.12"
+   },
+   "reproduces": {
+    "mylang": true,
+    "cpython": true
+   }
+  },
+  {
+   "entry": "round-half-away-from-zero",
+   "expression": "round(1250.0, -2)",
+   "declared": {
+    "mylang": 1300.0,
+    "cpython": 1200.0
+   },
+   "observed": {
+    "mylang": "1300.0",
+    "cpython": "1200.0"
+   },
+   "reproduces": {
+    "mylang": true,
+    "cpython": true
+   }
+  },
+  {
+   "entry": "round-half-away-from-zero",
+   "expression": "round(2.675, 2)",
+   "declared": {
+    "mylang": 2.67,
+    "cpython": 2.67
+   },
+   "observed": {
+    "mylang": "2.67",
+    "cpython": "2.67"
+   },
+   "reproduces": {
+    "mylang": true,
+    "cpython": true
+   }
   }
  ],
  "probes": [
@@ -147,7 +195,7 @@
   }
  ],
  "commands": {
-  "record": "python3 velocity/divergence_evidence.py --binary /home/epentland/ai/canopy/mylang/.worktrees/integration/zig-out/bin/mylang",
+  "record": "python3 velocity/divergence_evidence.py --binary /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a33a43c4cd674d3c1/zig-out/bin/mylang",
   "strict_c2": "python3 velocity/score.py --probe 'd05*' --json"
  }
 }

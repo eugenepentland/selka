@@ -1,0 +1,124 @@
+{
+ "tier": "t50k",
+ "modules": 121,
+ "symbol": "m060::f060_00",
+ "check_warm": {
+  "s": 0.117,
+  "exit": 0,
+  "stdout_bytes": 0,
+  "stderr_head": "",
+  "stdout_head": ""
+ },
+ "index_project": {
+  "s": 1.105,
+  "exit": 0,
+  "stdout_bytes": 36231941,
+  "stderr_head": "",
+  "stdout_head": "{\"version\":\"navigation-v1\",\"checked\":true,\"reference_scope\":\"resolved concrete bodies and specializations; generic declarations indexed; static edges are not runtime coverage\",\"snapshot_sha256\":\"c6420"
+ },
+ "list_interfaces": {
+  "s": 0.93,
+  "exit": 0,
+  "stdout_bytes": 504713,
+  "stderr_head": "",
+  "stdout_head": "module interfaces v1; declarations/signature visibility checked; bodies not type checked\nmodule m000\n  export type Acc000\n  export function f000_00 def(n:i64)->i64 effects(managed_allocation) ceiling("
+ },
+ "context_symbol": {
+  "s": 1.075,
+  "exit": 0,
+  "stdout_bytes": 7541,
+  "stderr_head": "",
+  "stdout_head": "{\"version\":\"agent-context-v1\",\"status\":\"ok\",\"entry\":\"main.my\",\"selector\":{\"kind\":\"symbol\",\"symbol\":\"m060::f060_00\",\"resolved\":\"m060::f060_00\"},\"context_bytes\":8192,\"analysis\":{\"status\":\"checked\"},\"sna"
+ },
+ "context_dotted": {
+  "s": 0.867,
+  "exit": 2,
+  "stdout_bytes": 914,
+  "stderr_head": "",
+  "stdout_head": "{\"version\":\"agent-context-v1\",\"status\":\"missing\",\"entry\":\"main.my\",\"selector\":{\"kind\":\"symbol\",\"symbol\":\"m060.f060_00\"},\"context_bytes\":8192,\"analysis\":{\"status\":\"checked\"},\"snapshot\":{\"compiler\":{\"co"
+ },
+ "tests_for": {
+  "s": 0.812,
+  "exit": 0,
+  "stdout_bytes": 1033,
+  "stderr_head": "",
+  "stdout_head": "tests-for m060::f060_00\n  direct (1): m060::test_m060\n  reached-by (60): m119::test_m119 m118::test_m118 m117::test_m117 m116::test_m116 m115::test_m115 m114::test_m114 m113::test_m113 m112::test_m112"
+ },
+ "test_full_cold": {
+  "s": 9.71,
+  "exit": 0,
+  "stdout_bytes": 2802,
+  "stderr_head": "",
+  "stdout_head": "passed m000::test_m000\npassed m001::test_m001\npassed m002::test_m002\npassed m003::test_m003\npassed m004::test_m004\npassed m005::test_m005\npassed m006::test_m006\npassed m007::test_m007\npassed m008::tes"
+ },
+ "test_full_warm": {
+  "s": 1.497,
+  "exit": 0,
+  "stdout_bytes": 2802,
+  "stderr_head": "",
+  "stdout_head": "cached m000::test_m000\ncached m001::test_m001\ncached m002::test_m002\ncached m003::test_m003\ncached m004::test_m004\ncached m005::test_m005\ncached m006::test_m006\ncached m007::test_m007\ncached m008::tes"
+ },
+ "check_after_edit": {
+  "s": 0.842,
+  "exit": 0,
+  "stdout_bytes": 0,
+  "stderr_head": "",
+  "stdout_head": ""
+ },
+ "test_affected_after_edit": {
+  "s": 7.994,
+  "exit": 0,
+  "stdout_bytes": 1421,
+  "stderr_head": "affected: 60 selected, 60 skipped against HEAD\nskipped m000::test_m000: no changed declaration is reachable\nskipped m001::test_m001: no changed declaration is reachable\nskipped m002::test_m002: no changed declaration is reachable\nskipped m003::test_m003: no changed declaration is reachable\nskipped m",
+  "stdout_head": "passed m060::test_m060\npassed m061::test_m061\npassed m062::test_m062\npassed m063::test_m063\npassed m064::test_m064\npassed m065::test_m065\npassed m066::test_m066\npassed m067::test_m067\npassed m068::tes"
+ },
+ "test_full_after_edit": {
+  "s": 1.377,
+  "exit": 0,
+  "stdout_bytes": 2802,
+  "stderr_head": "",
+  "stdout_head": "cached m000::test_m000\ncached m001::test_m001\ncached m002::test_m002\ncached m003::test_m003\ncached m004::test_m004\ncached m005::test_m005\ncached m006::test_m006\ncached m007::test_m007\ncached m008::tes"
+ },
+ "check_session_two_checks": {
+  "s": 1.009,
+  "exit": 0,
+  "stdout_bytes": 4925,
+  "stderr_head": "",
+  "stdout_head": "{\"version\":\"check-session-v1\",\"action\":\"check\",\"status\":0,\"failure\":null,\"reuse\":{\"hits\":0,\"misses\":121},\"cache\":{\"hits\":0,\"misses\":121,\"stored\":121,\"evicted\":74,\"bypassed\":0,\"retained_bytes\":16671096"
+ },
+ "red_check": {
+  "s": 0.528,
+  "exit": 1,
+  "stdout_bytes": 0,
+  "stderr_head": "m001.my:20:25: error[E_TYPE]: expected str, found int\n      return \"not an int\" + m000.f000_00(n - 1)\n                          ^\n",
+  "stdout_head": ""
+ },
+ "red_index_project": {
+  "s": 0.569,
+  "exit": 0,
+  "stdout_bytes": 3472045,
+  "stderr_head": "m001.my:20:25: error[E_TYPE]: expected str, found int\n      return \"not an int\" + m000.f000_00(n - 1)\n                          ^\n",
+  "stdout_head": "{\"version\":\"navigation-v1\",\"checked\":false,\"reference_scope\":\"resolved concrete bodies and specializations; generic declarations indexed; static edges are not runtime coverage\",\"snapshot_sha256\":\"979e"
+ },
+ "red_list_interfaces": {
+  "s": 0.478,
+  "exit": 0,
+  "stdout_bytes": 644981,
+  "stderr_head": "",
+  "stdout_head": "module interfaces v1; declarations/signature visibility checked; bodies not type checked\nmodule m000\n  export type Acc000\n  export function f000_00 def(n:i64)->i64 effects(unavailable) analysis(declar"
+ },
+ "red_context_symbol": {
+  "s": 0.527,
+  "exit": 0,
+  "stdout_bytes": 1849,
+  "stderr_head": "m001.my:20:25: error[E_TYPE]: expected str, found int\n      return \"not an int\" + m000.f000_00(n - 1)\n                          ^\n",
+  "stdout_head": "{\"version\":\"agent-context-v1\",\"status\":\"partial\",\"entry\":\"main.my\",\"selector\":{\"kind\":\"symbol\",\"symbol\":\"m060::f060_00\",\"resolved\":\"m060::f060_00\"},\"context_bytes\":8192,\"analysis\":{\"status\":\"declarati"
+ },
+ "red_tests_for": {
+  "s": 0.541,
+  "exit": 1,
+  "stdout_bytes": 0,
+  "stderr_head": "m001.my:20:25: error[E_TYPE]: expected str, found int\n      return \"not an int\" + m000.f000_00(n - 1)\n                          ^\n",
+  "stdout_head": ""
+ }
+}

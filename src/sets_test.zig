@@ -74,10 +74,12 @@ test "a missing element, an empty pop and a resize during iteration trap like a 
 }
 
 // spec-case: SET-OPERATORS-1
-test "the set operators are refused on integers and a set has no augmented form" {
-    try rejected("def main() -> int:\n    return 6 | 3\n", "E_SET_OPERATOR", "an integer bitwise operation is spelled `bit_or(a, b)`");
-    try rejected("def main() -> int:\n    return 6 & 3\n", "E_SET_OPERATOR", "`bit_and(a, b)`");
-    try rejected("def main() -> int:\n    return 6 ^ 3\n", "E_SET_OPERATOR", "`bit_xor(a, b)`");
+test "the set operators are refused on operands that are neither sets nor integers and a set has no augmented form" {
+    try rejected("def main() -> int:\n    x = 1.5 | 2.5\n    return 0\n", "E_SET_OPERATOR", "two sets or two integers (`bit_or(a, b)`)");
+    try rejected("def main() -> int:\n    x = \"a\" & \"b\"\n    return 0\n", "E_SET_OPERATOR", "`bit_and(a, b)`");
+    try rejected("def main() -> int:\n    x = [1] ^ [2]\n    return 0\n", "E_SET_OPERATOR", "`bit_xor(a, b)`");
+    // On two integers the operators are the bitwise ones (PY-SET-OPS-1).
+    try t.expectEqual(@as(i64, 4), try value("def main() -> int:\n    return (6 | 3) + (6 & 3) - (6 ^ 3)\n"));
     try rejected("def main() -> int:\n    s = {1}\n    t = s + {2}\n    return len(t)\n", "E_SET_OPERATOR", "sets combine with `|`, `&`, `-` and `^`");
     try rejected("def main() -> int:\n    s = {1}\n    s -= {1}\n    return len(s)\n", "E_SET_OPERATOR", "a set has no augmented assignment");
     try rejected("def main() -> int:\n    s = {1}\n    s |= {2}\n    return len(s)\n", "E_EXPRESSION", "a set has no augmented assignment operator");

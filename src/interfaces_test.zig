@@ -349,6 +349,38 @@ test "module privacy rejects direct private access wrong kinds and transitive im
     }
 }
 
+const scanner_module = "module scanner\n\n\ndef helper() -> int:\n    return 7\n\n\npublic def scan() -> int:\n    return helper()\n";
+/// Resolve `scanner.helper` from the entry module `entry` whose source is
+/// `text`, beside `scanner.my`, and answer the privacy problem code or null.
+fn privateHelperProblem(module: []const u8, text: []const u8, extra: ?File) !?[]const u8 {
+    const path = try std.fmt.allocPrint(t.allocator, "{s}.my", .{module});
+    defer t.allocator.free(path);
+    const all = [_]File{ .{ .path = path, .bytes = text }, .{ .path = "scanner.my", .bytes = scanner_module }, extra orelse .{ .path = "unused.my", .bytes = "" } };
+    var files: Files = .{ .entries = if (extra == null) all[0..2] else all[0..3] };
+    var project = graph.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(files.provider(), module, .{});
+    var index = try interfaces.build(&project);
+    const from = project.names.get(if (extra == null) module else "scanner_test").?;
+    _ = index.resolve(.{ .from = from, .alias = "scanner", .name = "helper", .kind = .function, .owner = null, .span = project.modules.items[from].header.declaration }) catch |err| {
+        if (err != error.SourceError) return err;
+        return project.problem.?.code;
+    };
+    return null;
+}
+
+// spec: TEST-PRIVATE-ACCESS-1
+test "a module's test file resolves its private declarations and nothing else does" {
+    const tester = "module scanner_test\nimport scanner\n\n\npublic def test_helper() -> bool:\n    return scanner.helper() == 7\n";
+    try t.expectEqual(@as(?[]const u8, null), try privateHelperProblem("scanner_test", tester, null));
+    const other = "module parser_test\nimport scanner\n\n\npublic def test_helper() -> bool:\n    return scanner.helper() == 7\n";
+    try t.expectEqualStrings("E_PRIVATE_SYMBOL", (try privateHelperProblem("parser_test", other, null)).?);
+    // A `scanner_test` another module imports is a library, not a test file,
+    // so it could hand the private helper on: it sees only the public surface.
+    const importer = "module main\nimport scanner_test\n\n\ndef main() -> int:\n    return 0\n";
+    try t.expectEqualStrings("E_PRIVATE_SYMBOL", (try privateHelperProblem("main", importer, .{ .path = "scanner_test.my", .bytes = tester })).?);
+}
+
 test "module grammar parses qualified variant match constructors and free calls" {
     const text =
         \\module main

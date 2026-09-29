@@ -1,0 +1,11 @@
+{
+ "args": [
+  "--engine=vm",
+  "--gc-stress",
+  "{dir}/t.lox"
+ ],
+ "stdout": "20\n",
+ "exit": 0,
+ "stderr_first_line": null,
+ "limit_s": 10
+}

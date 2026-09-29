@@ -357,7 +357,13 @@ fn statementMatch(comptime Checker: type, self: *Checker, stmt: ast.Statement, m
 }
 fn statementDiscard(comptime Checker: type, self: *Checker, stmt: ast.Statement, expr: @FieldType(@FieldType(ast.Statement, "data"), "discard"), _: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
     const value = try self.expression(expr);
-    if (stmt.implicit_discard and self.nodes.items[@backingInt(value)].ty != .unit) return self.sink.fail("E_EXPLICIT_DISCARD_REQUIRED", stmt.span, "a standalone non-unit value requires `_ =` or result handling");
+    const value_type = self.nodes.items[@backingInt(value)].ty;
+    if (stmt.implicit_discard and value_type != .unit) {
+        const message = "a standalone non-unit value requires `_ =` or result handling";
+        // A result is left to the reader: discarding it would drop an error.
+        if (self.requiresHandling(value_type)) return self.sink.fail("E_EXPLICIT_DISCARD_REQUIRED", stmt.span, message);
+        return self.sink.failFix("E_EXPLICIT_DISCARD_REQUIRED", stmt.span, message, .{ .span = .{ .start = stmt.span.start, .end = stmt.span.start }, .text = "_ = " });
+    }
     return .{ .discard = value };
 }
 fn statementBranch(comptime Checker: type, self: *Checker, stmt: ast.Statement, branch: @FieldType(@FieldType(ast.Statement, "data"), "branch"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
@@ -466,6 +472,8 @@ fn statementAssignment(comptime Checker: type, self: *Checker, stmt: ast.Stateme
     if (!self.locals.items[@backingInt(slot)].mutable)
         return self.sink.fail(eImmutable, a.name, "this binding cannot be assigned");
     try self.requireRebindable(slot, a.name);
+    // PY-REPEAT-1: `text *= count` repeats the binding by an integer count.
+    if (try self.repeatAssignment(slot, a)) |repeated| return repeated;
     var value = try self.expressionExpected(a.value, self.locals.items[@backingInt(slot)].ty);
     if (a.op != .set) {
         try self.requireReadable(slot, a.name);
@@ -522,6 +530,7 @@ fn statement(comptime Checker: type, self: *Checker, statement_id: ast.Statement
         .assertion => |claim| try statementAssert(Checker, self, claim),
         .binding => |b| try statementBinding(Checker, self, stmt, b, &flow),
         .assignment => |a| try statementAssignment(Checker, self, stmt, a, &flow),
+        .gather_step => |step| try self.statementGatherStep(stmt, step),
     };
     const result: typed.StatementId = @fromBackingInt(self.statements.items.len);
     try self.statements.append(self.allocator, .{ .span = stmt.span, .terminates = flow.terminates, .owned_cleanup = flow.owned_cleanup, .data = data });

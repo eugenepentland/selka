@@ -1,0 +1,4 @@
+def main() -> int:
+    a = {1, 2, 3, 4}
+    b = {3, 4, 5}
+    return len(a | b) * 1000 + len(a & b) * 100 + len(a - b) * 10 + len(a ^ b)

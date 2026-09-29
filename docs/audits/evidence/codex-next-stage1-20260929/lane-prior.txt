@@ -1,0 +1,8 @@
+build EXIT 0
+test EXIT 0
+qbe EXIT 0
+qbebuild EXIT 0
+fmt EXIT 0
+nmem EXIT 0
+nheap EXIT 0
+DONE

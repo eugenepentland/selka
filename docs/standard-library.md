@@ -234,6 +234,10 @@ these forms were rejected by the older `strings.to_float` implementation.
 exactly halfway rounds away from zero — `format_float(0.125, 2)` is `"0.13"`
 where Python prints `0.12` — and a result that rounds to zero is printed without a
 sign (`"0.00"` for `-0.001`). Values too large for fixed decimals are rejected.
+`format_float` agrees with `round(x, n)`, which rounds the same way; an
+[f-string format specification](text.md#format-specifications) such as
+`f"{x:.2f}"` rounds an exact tie to even as CPython does (`"0.12"`), and keeps the
+sign of a negative zero (`"-0.00"`).
 
 ## sort
 

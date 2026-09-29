@@ -469,6 +469,8 @@ fn needsTextRuntime(program: bytecode.Program, op: @FieldType(bytecode.Instructi
         .cast_integer => |target| return target.isAggregate() and program.records[target.recordIndex()].collection.kind == .string,
         .buffer_operation => |operation| return switch (operation.kind) {
             .parse_int, .parse_float, .parse_int_range, .parse_float_range, .buffer_append_float => true,
+            // PY-FSTRING-SPEC-1 and PRELUDE-ROUND-2 render and round in the Zig formatter unit.
+            .text_format, .number_format, .float_round => true,
             else => false,
         },
         else => return false,

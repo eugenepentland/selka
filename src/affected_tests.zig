@@ -1,42 +1,55 @@
 //! `mylang test --affected`: select only the tests that reach a declaration
-//! whose own body changed since a reference revision.
+//! whose own source lines changed since a reference revision.
 //!
-//! The selection is derived, never judged: it loads and checks the same project
-//! the runner would, maps each checked declaration's merged source span back to
-//! its module file and original line range through the shared
-//! `declaration_diff` helper, intersects that with the working-tree diff, and
-//! keeps a discovered test only when the changed set is reachable from it over
-//! the resolved call graph. If the project cannot be checked for any reason
-//! other than allocation or a bad git revision, the whole discovered selection
-//! runs unchanged: a selection aid must never turn a runnable test into a
-//! silent skip.
+//! The derivation costs one `git diff` and a line scan of the changed files, no
+//! compilation of its own. The changed lines are mapped onto the top-level
+//! declarations of each changed module by indentation alone — a declaration
+//! runs from its column-0 header to the next column-0 line — and yield
+//! qualified `module::name` changes. A changed line outside every function or
+//! constant (an import, a record, a domain, the module header) conservatively
+//! changes the whole module. The runner then keeps a test only when the
+//! dependency closure it already derived for the test's receipt reaches a
+//! changed name, so the selection reuses the checked facts the run builds
+//! anyway instead of checking the project a second time.
 const std = @import("std");
-const declaration_diff = @import("declaration_diff.zig");
-const interfaces = @import("interfaces.zig");
-const project = @import("project.zig");
-const project_compile = @import("project_compile.zig");
-const project_files = @import("project_files.zig");
-const quality = @import("quality.zig");
 const ref_diff = @import("ref_diff.zig");
-const typed = @import("typed.zig");
 
 /// Failures a derivation reports: allocation, a reference `git` cannot resolve,
-/// or an entry that is not a mylang source. Every other project failure
-/// downgrades to `derived = false`.
+/// or an entry that is not a mylang source.
 pub const Error = error{ OutOfMemory, GitFailed, InvalidEntry };
 
-/// One derivation's inputs. `load_root` carries the checked project (the
-/// materialized test snapshot); `git_root` is the entry's own directory in the
-/// user's repository, because the snapshot is a temp copy `git` cannot see.
-/// `discovered` holds the qualified test names in discovery order.
+/// One derivation's inputs. `git_root` is the entry's own directory in the
+/// user's repository, the root every project module path is relative to.
 pub const Request = struct {
     memory: std.mem.Allocator,
     io: std.Io,
-    load_root: []const u8,
     git_root: []const u8,
     entry: []const u8,
     reference: []const u8,
-    discovered: []const []const u8,
+};
+
+/// The declarations changed since the reference.
+pub const Changes = struct {
+    /// Qualified `module::name` functions and constants whose lines changed.
+    names: []const []const u8,
+    /// Modules whose non-function lines changed: every declaration in them
+    /// counts as changed.
+    modules: []const []const u8,
+
+    /// Whether one checked function's qualified name is a changed declaration:
+    /// the name itself, a generic specialization of it, or any name in a
+    /// wholly changed module.
+    pub fn reaches(self: Changes, name: []const u8) bool {
+        const separator = std.mem.indexOf(u8, name, "::") orelse return false;
+        for (self.modules) |module| {
+            if (std.mem.eql(u8, name[0..separator], module)) return true;
+        }
+        for (self.names) |changed| {
+            if (!std.mem.startsWith(u8, name, changed)) continue;
+            if (name.len == changed.len or name[changed.len] == '[') return true;
+        }
+        return false;
+    }
 };
 
 /// The derivation's verdict over the discovered tests, in discovery order.
@@ -45,148 +58,156 @@ pub const Selection = struct {
     keep: []const bool,
     /// Qualified names of the tests dropped as unaffected.
     skipped: []const []const u8,
-    /// Whether the selection reflects a real derivation; false means the whole
-    /// discovered set runs because the project could not be checked.
-    derived: bool = true,
 };
 
-/// Select the tests that reach a declaration changed since `reference`.
-pub fn select(request: Request) Error!Selection {
+/// The declarations changed since `request.reference`, or `GitFailed` for a
+/// revision `git` cannot diff. A changed file that cannot be read changes its
+/// whole module.
+pub fn changes(request: Request) Error!Changes {
     if (!std.mem.endsWith(u8, request.entry, ".my")) return error.InvalidEntry;
-    // Resolve the reference before deriving anything: a revision `git` cannot
-    // diff is a host failure, not an empty selection.
-    const changed = ref_diff.changedFiles(request.memory, request.io, request.git_root, request.reference) catch |err| switch (err) {
-        error.OutOfMemory => return error.OutOfMemory,
-        error.GitFailed => return error.GitFailed,
-    };
-    for (changed) |path| request.memory.free(path);
-    request.memory.free(changed);
-    return derive(request) catch |err| switch (err) {
-        error.OutOfMemory => error.OutOfMemory,
-        else => Selection{ .keep = try keepAll(request.memory, request.discovered.len), .skipped = &.{}, .derived = false },
-    };
-}
-
-/// One `true` per discovered test, for the run-everything fallback.
-fn keepAll(allocator: std.mem.Allocator, count: usize) std.mem.Allocator.Error![]const bool {
-    const keep = try allocator.alloc(bool, count);
-    @memset(keep, true);
-    return keep;
-}
-
-/// Check the project and keep every discovered test whose reachable set
-/// intersects the changed declarations.
-fn derive(request: Request) !Selection {
     const allocator = request.memory;
-    var files: project_files.Files = .{ .io = request.io, .root = request.load_root };
-    var graph = project.Project.init(allocator);
-    defer graph.deinit();
-    if (!std.mem.endsWith(u8, request.entry, ".my")) return error.InvalidEntry;
-    try graph.load(files.provider(), request.entry[0 .. request.entry.len - ".my".len], .{});
-    var index = try interfaces.build(&graph);
-    var compilation = try project_compile.Compilation.init(&index);
-    try compilation.check();
-    const program = compilation.program orelse return error.InvalidEntry;
-    const src = compilation.src;
-
-    const diff_cache = try allocator.alloc(declaration_diff.ModuleDiff, index.project.modules.items.len);
-    @memset(diff_cache, .{});
-    if (entryModule(index.project.modules.items, request.entry)) |entry_module| diff_cache[entry_module].shift = try entryLineShift(request, index.project.modules.items[entry_module].src.bytes);
-    const diff: declaration_diff.Diff = .{
-        .memory = allocator,
-        .io = request.io,
-        .repo_root = request.git_root,
-        .reference = request.reference,
-        .index = &index,
-        .src = src,
-        .cache = diff_cache,
-    };
-    const changed = try allocator.alloc(bool, program.functions.len);
-    for (program.functions, 0..) |function, position| {
-        // A body edit lives outside the signature span, so the union of the
-        // declaration and its body is what the diff intersects.
-        const body = program.statements[@backingInt(function.scope.body)].span;
-        changed[position] = try diff.changed(.{
-            .start = @min(function.declaration.start, body.start),
-            .end = @max(function.declaration.end, body.end),
-        });
-    }
-
-    var analysis = try quality.analyze(allocator, program, src, .{});
-    defer analysis.deinit();
-    const keep = try allocator.alloc(bool, request.discovered.len);
-    const visited = try allocator.alloc(bool, program.functions.len);
-    defer allocator.free(visited);
-    var pending: std.ArrayList(typed.FunctionId) = .empty;
-    defer pending.deinit(allocator);
-    var skipped: std.ArrayList([]const u8) = .empty;
-    errdefer skipped.deinit(allocator);
-    for (request.discovered, 0..) |name, position| {
-        const id = functionNamed(program, name) orelse {
-            // An unidentifiable declaration runs rather than being dropped.
-            keep[position] = true;
-            continue;
+    const files = try ref_diff.changedModules(allocator, request.io, request.git_root, request.reference);
+    var names: std.ArrayList([]const u8) = .empty;
+    var modules: std.ArrayList([]const u8) = .empty;
+    for (files) |file| {
+        const path = try std.fs.path.join(allocator, &.{ request.git_root, file.path });
+        const text = std.Io.Dir.cwd().readFileAlloc(request.io, path, allocator, .limited(64 * 1024 * 1024)) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            else => {
+                try modules.append(allocator, try pathModule(allocator, file.path));
+                continue;
+            },
         };
-        keep[position] = try reachesChanged(allocator, analysis.functions, changed, id, visited, &pending);
-        if (!keep[position]) try skipped.append(allocator, name);
+        const module = try moduleName(allocator, text, file.path);
+        if (try scanModule(allocator, .{ .text = text, .module = module, .ranges = file.ranges }, &names)) try modules.append(allocator, module);
     }
-    return .{ .keep = keep, .skipped = try skipped.toOwnedSlice(allocator) };
+    return .{ .names = try names.toOwnedSlice(allocator), .modules = try modules.toOwnedSlice(allocator) };
 }
 
-/// The checked module whose source path is the entry basename.
-fn entryModule(modules: []const project.Module, entry: []const u8) ?usize {
-    for (modules, 0..) |module, position| {
-        if (std.mem.eql(u8, module.src.path, entry)) return position;
+/// A module's declared name from its `module` header, or the name its path
+/// implies for a header-less entry (`a/b.my` is `a.b`).
+fn moduleName(allocator: std.mem.Allocator, text: []const u8, path: []const u8) std.mem.Allocator.Error![]const u8 {
+    var lines = std.mem.splitScalar(u8, text, '\n');
+    while (lines.next()) |raw| {
+        const line = std.mem.trim(u8, raw, " \t\r");
+        if (line.len == 0 or line[0] == '#') continue;
+        if (!std.mem.startsWith(u8, line, "module ")) break;
+        return allocator.dupe(u8, std.mem.trim(u8, line["module ".len..], " \t"));
     }
-    return null;
+    return pathModule(allocator, path);
 }
 
-/// Lines the test snapshot prepended to a header-less entry. The snapshot adds
-/// a `module <stem>` header, shifting every declaration down; the original file
-/// in the repository carries the diff, so the checked line numbers must be
-/// corrected back. An unchanged or unrecognizable entry shifts by zero.
-fn entryLineShift(request: Request, materialized: []const u8) !isize {
-    const path = try std.fs.path.join(request.memory, &.{ request.git_root, request.entry });
-    defer request.memory.free(path);
-    const original = std.Io.Dir.cwd().readFileAlloc(request.io, path, request.memory, .limited(16 * 1024 * 1024)) catch return 0;
-    defer request.memory.free(original);
-    if (std.mem.eql(u8, original, materialized)) return 0;
-    const at = std.mem.indexOf(u8, materialized, original) orelse return 0;
-    var lines: isize = 0;
-    for (materialized[0..at]) |byte| lines += @intFromBool(byte == '\n');
-    return -lines;
+fn pathModule(allocator: std.mem.Allocator, path: []const u8) std.mem.Allocator.Error![]const u8 {
+    const stem = if (std.mem.endsWith(u8, path, ".my")) path[0 .. path.len - ".my".len] else path;
+    const name = try allocator.dupe(u8, stem);
+    std.mem.replaceScalar(u8, name, '/', '.');
+    return name;
 }
 
-/// The checked function whose qualified name matches one discovered test.
-fn functionNamed(program: typed.Program, name: []const u8) ?typed.FunctionId {
-    for (program.functions, 0..) |function, position| {
-        if (std.mem.eql(u8, function.name, name)) return @fromBackingInt(@intCast(position));
-    }
-    return null;
-}
+/// One changed module: its source, its name and the one-based lines changed.
+const Scan = struct { text: []const u8, module: []const u8, ranges: []const ref_diff.LineRange };
 
-/// Whether any function reachable from `root` over resolved calls changed.
-fn reachesChanged(
-    allocator: std.mem.Allocator,
-    functions: []const quality.Function,
-    changed: []const bool,
-    root: typed.FunctionId,
-    visited: []bool,
-    pending: *std.ArrayList(typed.FunctionId),
-) !bool {
-    @memset(visited, false);
-    pending.clearRetainingCapacity();
-    visited[@backingInt(root)] = true;
-    try pending.append(allocator, root);
-    var cursor: usize = 0;
-    while (cursor < pending.items.len) : (cursor += 1) {
-        const id = pending.items[cursor];
-        if (changed[@backingInt(id)]) return true;
-        for (functions[@backingInt(id)].calls) |call| {
-            if (visited[@backingInt(call.callee)]) continue;
-            visited[@backingInt(call.callee)] = true;
-            try pending.append(allocator, call.callee);
+/// One top-level block: the zero-based lines it spans and the function or
+/// constant it declares, or null for anything else.
+const Block = struct { first: usize, last: usize, name: ?[]const u8 };
+
+/// Append each changed function or constant of one module as `module::name`
+/// and answer whether a change touched a line no such declaration owns.
+fn scanModule(allocator: std.mem.Allocator, scan: Scan, names: *std.ArrayList([]const u8)) std.mem.Allocator.Error!bool {
+    var blocks: std.ArrayList(Block) = .empty;
+    defer blocks.deinit(allocator);
+    var current: Block = .{ .first = 0, .last = 0, .name = null };
+    var pending_attribute = false;
+    var lines = std.mem.splitScalar(u8, scan.text, '\n');
+    var number: usize = 0;
+    while (lines.next()) |line| : (number += 1) {
+        current.last = number;
+        if (!opensBlock(line)) continue;
+        // An attribute opens the block of the declaration it decorates.
+        if (pending_attribute) {
+            if (line[0] != '@') {
+                current.name = declared(line);
+                pending_attribute = false;
+            }
+            continue;
         }
+        if (number != 0) {
+            current.last = number - 1;
+            try blocks.append(allocator, current);
+        }
+        current = .{ .first = number, .last = number, .name = if (line[0] == '@') null else declared(line) };
+        pending_attribute = line[0] == '@';
     }
-    return false;
+    try blocks.append(allocator, current);
+    var whole = false;
+    for (scan.ranges) |range| {
+        const first = range.start - 1;
+        const last = first + range.len - 1;
+        var owned = false;
+        for (blocks.items) |block| {
+            if (block.last < first or block.first > last) continue;
+            owned = true;
+            const name = block.name orelse {
+                whole = true;
+                continue;
+            };
+            try names.append(allocator, try std.fmt.allocPrint(allocator, "{s}::{s}", .{ scan.module, name }));
+        }
+        if (!owned) whole = true;
+    }
+    return whole;
+}
+
+/// Whether a line starts a top-level block: it has content at column 0 that is
+/// not a comment. Blank, indented and comment lines belong to the open block.
+fn opensBlock(line: []const u8) bool {
+    if (line.len == 0) return false;
+    return std.mem.indexOfScalar(u8, " \t\r#", line[0]) == null;
+}
+
+/// The function or constant a column-0 header declares, or null for any other
+/// declaration.
+fn declared(header: []const u8) ?[]const u8 {
+    var line = std.mem.trimEnd(u8, header, " \t\r");
+    for ([_][]const u8{ "public ", "host ", "extern " }) |prefix| {
+        if (std.mem.startsWith(u8, line, prefix)) line = std.mem.trimStart(u8, line[prefix.len..], " \t");
+    }
+    const rest = if (std.mem.startsWith(u8, line, "def "))
+        line["def ".len..]
+    else if (std.mem.startsWith(u8, line, "const "))
+        line["const ".len..]
+    else
+        return null;
+    const name = std.mem.trimStart(u8, rest, " \t");
+    const end = std.mem.indexOfAny(u8, name, "([: =\t") orelse name.len;
+    return if (end == 0) null else name[0..end];
+}
+
+// spec: AFFECTED-TEST-2
+test "a changed line maps to the top-level declaration that owns it" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
+    const text = "module app\nimport util\n\n\ndef helper(value: int) -> int:\n    return value + 1\n\n\n@test\ndef checks() -> bool:\n    return True\n\n\npublic const LIMIT: int = 3\n\n\nrecord Point:\n    x: int\n";
+    var names: std.ArrayList([]const u8) = .empty;
+    // A body line changes its function, an attribute its declaration, a
+    // constant itself.
+    try std.testing.expect(!try scanModule(allocator, .{ .text = text, .module = "app", .ranges = &.{.{ .start = 6, .len = 1 }} }, &names));
+    try std.testing.expect(!try scanModule(allocator, .{ .text = text, .module = "app", .ranges = &.{.{ .start = 9, .len = 1 }} }, &names));
+    try std.testing.expect(!try scanModule(allocator, .{ .text = text, .module = "app", .ranges = &.{.{ .start = 14, .len = 1 }} }, &names));
+    try std.testing.expectEqual(@as(usize, 3), names.items.len);
+    try std.testing.expectEqualStrings("app::helper", names.items[0]);
+    try std.testing.expectEqualStrings("app::checks", names.items[1]);
+    try std.testing.expectEqualStrings("app::LIMIT", names.items[2]);
+    // An import or a record changes the whole module.
+    try std.testing.expect(try scanModule(allocator, .{ .text = text, .module = "app", .ranges = &.{.{ .start = 2, .len = 1 }} }, &names));
+    try std.testing.expect(try scanModule(allocator, .{ .text = text, .module = "app", .ranges = &.{.{ .start = 18, .len = 1 }} }, &names));
+    const changed: Changes = .{ .names = names.items, .modules = &.{"util"} };
+    try std.testing.expect(changed.reaches("app::helper"));
+    try std.testing.expect(changed.reaches("app::helper[int]"));
+    try std.testing.expect(!changed.reaches("app::helper_two"));
+    try std.testing.expect(changed.reaches("util::anything"));
+    try std.testing.expect(!changed.reaches("other::helper"));
+    try std.testing.expectEqualStrings("a.b", try moduleName(allocator, "def main() -> int:\n    return 0\n", "a/b.my"));
+    try std.testing.expectEqualStrings("app", try moduleName(allocator, text, "renamed.my"));
 }

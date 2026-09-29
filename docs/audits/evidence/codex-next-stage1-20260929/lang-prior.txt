@@ -1,0 +1,6 @@
+mode[] EXIT 0 :: 1372 passed, 0 cached, 0 failed, 0 skipped, 0 dropped across 211 programs
+mode[--release] EXIT 0 :: 1372 passed, 0 cached, 0 failed, 0 skipped, 0 dropped across 211 programs
+mode[--rc-runtime=stats] EXIT 0 :: 1372 passed, 0 cached, 0 failed, 0 skipped, 0 dropped across 211 programs
+mode[--gc-runtime] EXIT 0 :: 1372 passed, 0 cached, 0 failed, 0 skipped, 0 dropped across 211 programs
+mode[--gc-runtime --gc-stress] EXIT 0 :: 1372 passed, 0 cached, 0 failed, 0 skipped, 0 dropped across 211 programs
+DONE

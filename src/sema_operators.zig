@@ -25,6 +25,7 @@ const Error = diagnostic.Error;
 const numeric_surface = @import("numeric_surface.zig");
 const prelude = @import("prelude.zig");
 const arrays = @import("array_literals.zig");
+const idioms = @import("sema_idioms.zig");
 /// Whether a type is either managed byte kind — the immutable byte string or the
 /// mutable octet buffer. The two hold the same one-octet elements and compare
 /// content the same way, so one comparison may name both.
@@ -83,6 +84,11 @@ pub fn Checks(comptime Checker: type) type {
         pub fn checkValueBinary(self: *Checker, b: @FieldType(@FieldType(ast.Node, "data"), "binary"), out: *typed.Node) Error!void {
             return impl.checkValueBinary(Checker, self, b, out);
         }
+        /// Type one binary operator over two already checked operands, promoting
+        /// an integer operand of a float operation and answering the operator's node.
+        pub fn binaryValue(self: *Checker, b: idioms.CheckedBinary, out: *typed.Node) Error!void {
+            return impl.binaryValue(Checker, self, b, out);
+        }
         /// Check `value[index]` on a list, dictionary, text, bytes, tuple or fixed array.
         pub fn checkValueIndex(self: *Checker, node: ast.Node, access: @FieldType(@FieldType(ast.Node, "data"), "index"), out: *typed.Node) Error!void {
             return impl.checkValueIndex(Checker, self, node, access, out);
@@ -99,9 +105,9 @@ fn byteValues(comptime Checker: type, self: *Checker, bytes: []const u8, span: s
     }
     return values;
 }
-fn numericOperands(comptime Checker: type, self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), "binary")) Error!NumericOperands {
-    var left = self.resolved[@backingInt(operation.left)].?;
-    var right = self.resolved[@backingInt(operation.right)].?;
+fn numericOperands(comptime Checker: type, self: *Checker, operation: idioms.CheckedBinary) Error!NumericOperands {
+    var left = operation.left;
+    var right = operation.right;
     const lt = self.nodes.items[@backingInt(left)].ty;
     const rt = self.nodes.items[@backingInt(right)].ty;
     const promote = operation.op == .python_div or numeric_surface.isFloat(lt, self.catalog.records) or numeric_surface.isFloat(rt, self.catalog.records);
@@ -204,7 +210,21 @@ fn checkFloatBinary(comptime Checker: type, self: *Checker, span: source.Span, o
     const result = try self.numericBuilder(span).binary(op, values[0], values[1], self.sink);
     return builder.block(statements.items, try builder.node(result.ty, result.data));
 }
-fn checkValueBinary(comptime Checker: type, self: *Checker, b: @FieldType(@FieldType(ast.Node, "data"), "binary"), out: *typed.Node) Error!void {
+fn checkValueBinary(comptime Checker: type, self: *Checker, syntax: @FieldType(@FieldType(ast.Node, "data"), "binary"), out: *typed.Node) Error!void {
+    // PY-CHAIN-1: a chained comparison checks its own operands in order.
+    if (syntax.chained) {
+        out.* = try self.checkChain(.{ .span = out.span, .data = .{ .binary = syntax } });
+        return;
+    }
+    return binaryValue(Checker, self, .{
+        .op = syntax.op,
+        .op_span = syntax.op_span,
+        .left = self.resolved[@backingInt(syntax.left)].?,
+        .right = self.resolved[@backingInt(syntax.right)].?,
+    }, out);
+}
+fn binaryValue(comptime Checker: type, self: *Checker, b: idioms.CheckedBinary, out: *typed.Node) Error!void {
+    if (try self.idiomBinary(b, out)) return;
     const operands = try numericOperands(Checker, self, b);
     const left = operands.left;
     const right = operands.right;
@@ -214,11 +234,11 @@ fn checkValueBinary(comptime Checker: type, self: *Checker, b: @FieldType(@Field
     // so a byte string and an octet buffer compare without a conversion;
     // every other operator still requires one type on both sides.
     const mixed_bytes = (b.op == .eq or b.op == .ne) and isByteKind(self.catalog.records, lt) and isByteKind(self.catalog.records, rt);
-    // `|`, `&` and `^` are the set operators (SET-OPERATORS-1); an integer
-    // keeps its bitwise builtins, so the operator spelling names them.
+    // `|`, `&` and `^` are the set operators (SET-OPERATORS-1) and, on two
+    // integers, the bitwise operators (PY-SET-OPS-1); any other operand is refused.
     const set_left = typed.setRecord(self.catalog.records, lt) != null;
-    if (!set_left) if (set_lower.bitwiseSpelling(self.src.text(b.op_span))) |builtin| {
-        const message = try std.fmt.allocPrint(self.allocator, "`{s}` combines two sets; an integer bitwise operation is spelled `{s}(a, b)`", .{ self.src.text(b.op_span), builtin });
+    if (!set_left and !lt.isInteger()) if (set_lower.bitwiseSpelling(self.src.text(b.op_span))) |builtin| {
+        const message = try std.fmt.allocPrint(self.allocator, "`{s}` combines two sets or two integers (`{s}(a, b)`)", .{ self.src.text(b.op_span), builtin });
         return self.sink.fail(set_lower.bitwise_code, b.op_span, message);
     };
     if (!mixed_bytes) try self.require(rt, lt, b.op_span);
@@ -236,7 +256,10 @@ fn checkValueBinary(comptime Checker: type, self: *Checker, b: @FieldType(@Field
     if (text_operands) {
         const sequence = self.catalog.records[lt.recordIndex()].collection.kind;
         const concatenation = b.op == .add and (sequence == .string or sequence == .bytes);
-        if (!concatenation and b.op != .eq and b.op != .ne) return self.sink.fail("E_TEXT_OPERATOR", b.op_span, "managed collections support equality and str/bytes support concatenation");
+        // PY-TEXT-ORDER-1: str orders by code point and bytes by octet, as Python does.
+        const ordering = idioms.textOrdering(b.op) and (sequence == .string or sequence == .bytes);
+        const accepted = concatenation or ordering or b.op == .eq or b.op == .ne;
+        if (!accepted) return self.sink.fail("E_TEXT_OPERATOR", b.op_span, "managed collections support equality; str and bytes also support `+` and `<`, `<=`, `>`, `>=`");
         out.ty = if (b.op == .add) lt else .bool;
     } else switch (b.op) {
         .f64_eq, .f64_lt, .f64_le => {

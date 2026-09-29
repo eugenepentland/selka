@@ -28,6 +28,9 @@ pub const Flags = struct {
         /// `--report` emits a work-report-v1 line for this test invocation.
         report: bool = false,
         json: bool = false,
+        /// `--diagnostics=json`: a source that does not compile is reported as
+        /// `diagnostic-v1` JSON lines, the way `check` reports it.
+        diagnostics_json: bool = false,
     };
 };
 /// Sampling and whole-run bounds for one benchmark invocation.
@@ -99,6 +102,7 @@ pub const usage = "usage: mylang test <entry.my|directory> [--filter SUBSTRING|G
     "  --affected --against REF  run only tests reaching a declaration changed since REF\n" ++
     "  --link FILE --link-library NAME --library-path DIR (repeatable)\n" ++
     "  --cache-dir DIR --force --no-cache --report --json --pure-skip --qbe PATH --zig PATH\n" ++
+    "  --diagnostics=text|json  how a source that does not compile is reported\n" ++
     "  a test build uses QBE in either mode; --release builds the LLVM release path\n" ++
     "    (ReleaseFast, --llvm-opt 3 --lto) and refuses --mode and --qbe\n" ++
     "  --gc-stress  run every collected test under the runtime's stress collector\n" ++
@@ -148,6 +152,12 @@ pub fn parse(args: []const []const u8) Error!Options {
         }
         if (std.mem.eql(u8, arg, "--json")) {
             result.flags.output.json = true;
+            continue;
+        }
+        if (std.mem.startsWith(u8, arg, "--diagnostics=")) {
+            const format = arg["--diagnostics=".len..];
+            if (!std.mem.eql(u8, format, "json") and !std.mem.eql(u8, format, "text")) return error.InvalidTestArguments;
+            result.flags.output.diagnostics_json = std.mem.eql(u8, format, "json");
             continue;
         }
         if (std.mem.eql(u8, arg, "--pure-skip")) {

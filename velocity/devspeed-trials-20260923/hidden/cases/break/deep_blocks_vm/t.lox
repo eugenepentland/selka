@@ -1,0 +1,12 @@
+var total = 0;
+while (true) {
+  {
+    var a = 1;
+    {
+      var b = 2;
+      total = total + a + b;
+      if (total >= 9) break;
+    }
+  }
+}
+print total;

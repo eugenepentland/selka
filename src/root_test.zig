@@ -101,6 +101,9 @@ test {
     _ = @import("python_strings_test.zig");
     _ = @import("python_format_test.zig");
     _ = @import("python_comprehension_test.zig");
+    _ = @import("collections_fidelity_test.zig");
+    _ = @import("python_expressions_test.zig");
+    _ = @import("format_spec_test.zig");
     _ = @import("python_surface_test.zig");
     _ = @import("unit_test.zig");
     _ = @import("declarations_test.zig");
@@ -135,6 +138,7 @@ test {
     _ = @import("generic_arrays_test.zig");
     _ = @import("domain_equality_test.zig");
     _ = @import("diagnostic_output_test.zig");
+    _ = @import("diagnostic_fix_test.zig");
     _ = @import("diagnostic_recovery_test.zig");
     _ = @import("generic_inference_test.zig");
     _ = @import("flow_inference_test.zig");
@@ -182,6 +186,7 @@ test {
     _ = @import("near_duplicates_test.zig");
     _ = @import("quality_test.zig");
     _ = @import("affected_tests_test.zig");
+    _ = @import("affected_tests.zig");
     _ = @import("navigation_test.zig");
     _ = @import("navigation_scale_test.zig");
     _ = @import("context_test.zig");

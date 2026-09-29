@@ -49,6 +49,9 @@ const pure_callees = [_][]const u8{
     // collection and needs neither a root protocol nor a safepoint.
     "myl_native_number_parse",
     "myl_native_text_compare",
+    "myl_native_bytes_compare",
+    // `round(x, n)` reads and answers bits; it never allocates.
+    "myl_native_float_round",
     "myl_native_text_payload",
     "myl_native_bytes_number_parse",
     "myl_native_bytes_range",

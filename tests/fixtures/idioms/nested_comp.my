@@ -1,0 +1,4 @@
+def main() -> int:
+    grid = [[1, 2], [3, 4], [5]]
+    flat = [x for row in grid for x in row if x % 2 == 1]
+    return sum(flat) * 10 + len(flat)

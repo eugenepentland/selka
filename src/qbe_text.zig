@@ -40,6 +40,7 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
         .zfill => return emitPad(E, self, input, base),
         .parse_int, .parse_float => return emitParse(E, self, op, input, base),
         .text_ord, .text_chr => return emitScalar(E, self, op, input, base),
+        .text_format, .number_format, .float_round => return emitFormat(E, self, op, input, base),
         else => return self.reject(self.pc),
     }
 }
@@ -136,6 +137,27 @@ fn emitScalar(comptime E: type, self: *E, op: BufferOperation, input: usize, bas
         try self.print(" %v{d} =l call $myl_native_text_chr(l %ctx, l %heap, l %v{d})\n", .{ result, code });
         try self.require(result, allocation_failure);
     }
+    try self.store(base, result);
+}
+
+/// PY-FSTRING-SPEC-1 and PRELUDE-ROUND-2: format a text or a number under a
+/// packed specification word into fresh text, or round a float to a digit count.
+fn emitFormat(comptime E: type, self: *E, op: BufferOperation, input: usize, base: usize) Error!void {
+    const result = self.temp();
+    const first = try self.load("s", base);
+    switch (op.kind) {
+        .text_format => try self.print(" %v{d} =l call $myl_native_text_format_text(l %heap, l %v{d}, l %v{d})\n", .{ result, input, first }),
+        .number_format => {
+            const word = try self.load("s", base + 1);
+            try self.print(" %v{d} =l call $myl_native_text_format_number(l %heap, l %v{d}, l %v{d})\n", .{ result, first, word });
+        },
+        else => {
+            const digits = try self.load("s", base + 1);
+            try self.print(" %v{d} =l call $myl_native_float_round(l %v{d}, l %v{d})\n", .{ result, first, digits });
+            return self.store(base, result);
+        },
+    }
+    try self.require(result, allocation_failure);
     try self.store(base, result);
 }
 

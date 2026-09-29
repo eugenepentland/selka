@@ -181,6 +181,7 @@ const Evaluator = struct {
             .for_range => |range| {
                 if (self.context.program.nodes.items[@backingInt(range.start)].data != .unit) try self.validateExpression(range.start, depth + 1);
                 try self.validateExpression(range.end, depth + 1);
+                if (range.step) |step| try self.validateExpression(step, depth + 1);
                 const before = self.frame.locals.items.len;
                 defer self.frame.locals.shrinkRetainingCapacity(before);
                 try self.bind(range.name, null, true);
@@ -288,15 +289,19 @@ const Evaluator = struct {
         var start: typed.Value = if (self.context.program.nodes.items[@backingInt(range.start)].data == .unit) .{ .i64 = 0 } else try self.expression(range.start, depth + 1);
         const end = try self.expression(range.end, depth + 1);
         if (!start.typeOf().isInteger() or start.typeOf() != end.typeOf()) return self.context.sink.fail("E_TYPE", range.name, "compile-time range requires matching integers");
+        // PY-RANGE-STEP-1: a stepped range counts in its step's direction and
+        // ends where the next value would leave the counter's type.
+        const step: i128 = if (range.step) |syntax| integer(try self.expression(syntax, depth + 1)) else 1;
+        if (step == 0) return self.context.sink.fail(@import("range_step.zig").zero_code, range.name, @import("range_step.zig").zero_message);
         const before = self.frame.locals.items.len;
         defer self.frame.locals.shrinkRetainingCapacity(before);
         try self.bind(range.name, start, true);
-        while (integer(start) < integer(end)) {
+        while (if (step > 0) integer(start) < integer(end) else integer(start) > integer(end)) {
             self.frame.locals.items[before].value = start;
             const flow = try self.statement(range.body, depth + 1);
             if (flow == .returned) return flow;
             if (flow == .break_loop) break;
-            start = integers.cast(start.typeOf(), integer(start) + 1) catch |err| return self.failure(range.name, err);
+            start = integers.cast(start.typeOf(), integer(start) + step) catch break;
         }
         return .next;
     }
@@ -425,6 +430,7 @@ const Evaluator = struct {
                 return self.context.sink.fail("E_TYPE", node.span, "invalid constant unary operand");
             },
             .binary => |binary| {
+                if (binary.chained) return .{ .bool = (try self.chain(id, depth + 1)).holds };
                 const inherited = if (typesResult(binary.op)) expected else null;
                 // A literal operand takes its sibling's type, so the typed side goes first.
                 const literal_first = self.adoptsType(binary.left) and !self.adoptsType(binary.right);
@@ -441,18 +447,47 @@ const Evaluator = struct {
                     }
                     right = try self.expressionAs(binary.right, siblingType(left, inherited), depth + 1);
                 }
-                if (left.typeOf() != right.typeOf()) return self.context.sink.fail("E_TYPE", node.span, "constant binary operands must have the same type");
-                if (left.typeOf() == .bool) return switch (binary.op) {
-                    .logical_and => .{ .bool = left.bool and right.bool },
-                    .logical_or => .{ .bool = left.bool or right.bool },
-                    .eq => .{ .bool = left.bool == right.bool },
-                    .ne => .{ .bool = left.bool != right.bool },
-                    else => self.context.sink.fail("E_TYPE", node.span, "invalid constant boolean operation"),
-                };
-                return integers.binary(left.typeOf(), std.meta.stringToEnum(typed.BinaryOp, @tagName(binary.op)).?, integer(left), integer(right)) catch |err| return self.failure(node.span, err);
+                return self.binaryValues(node, left, right);
             },
             else => return self.context.sink.fail(eExpression, node.span, "constant evaluation permits scalar expressions and source functions; allocation and external effects are excluded"),
         }
+    }
+    /// PY-CHAIN-1: one link of a comparison chain and the operand to its right,
+    /// which the next link compares again without evaluating it twice. A false
+    /// link leaves every later operand unevaluated.
+    fn chain(self: *Evaluator, id: ast.NodeId, depth: usize) Error!struct { holds: bool, last: typed.Value } {
+        const node = self.context.program.nodes.items[@backingInt(id)];
+        const binary = node.data.binary;
+        var left: typed.Value = undefined;
+        var right: typed.Value = undefined;
+        if (binary.chained) {
+            const earlier = try self.chain(binary.left, depth + 1);
+            if (!earlier.holds) return earlier;
+            left = earlier.last;
+            right = try self.expressionAs(binary.right, siblingType(left, null), depth + 1);
+        } else if (self.adoptsType(binary.left) and !self.adoptsType(binary.right)) {
+            // A literal operand takes its sibling's type, as an unchained comparison's does.
+            right = try self.expressionAs(binary.right, null, depth + 1);
+            left = try self.expressionAs(binary.left, siblingType(right, null), depth + 1);
+        } else {
+            left = try self.expression(binary.left, depth + 1);
+            right = try self.expressionAs(binary.right, siblingType(left, null), depth + 1);
+        }
+        const holds = try self.binaryValues(node, left, right);
+        return .{ .holds = holds.bool, .last = right };
+    }
+    /// Apply one binary operator to two evaluated constant operands.
+    fn binaryValues(self: *Evaluator, node: ast.Node, left: typed.Value, right: typed.Value) Error!typed.Value {
+        const binary = node.data.binary;
+        if (left.typeOf() != right.typeOf()) return self.context.sink.fail("E_TYPE", node.span, "constant binary operands must have the same type");
+        if (left.typeOf() == .bool) return switch (binary.op) {
+            .logical_and => .{ .bool = left.bool and right.bool },
+            .logical_or => .{ .bool = left.bool or right.bool },
+            .eq => .{ .bool = left.bool == right.bool },
+            .ne => .{ .bool = left.bool != right.bool },
+            else => self.context.sink.fail("E_TYPE", node.span, "invalid constant boolean operation"),
+        };
+        return integers.binary(left.typeOf(), std.meta.stringToEnum(typed.BinaryOp, @tagName(binary.op)).?, integer(left), integer(right)) catch |err| return self.failure(node.span, err);
     }
 };
 /// Whether a binary operator's result has its operands' type, so the expected type

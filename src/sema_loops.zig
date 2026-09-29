@@ -337,6 +337,7 @@ fn statementForRange(comptime Checker: type, self: *Checker, stmt: ast.Statement
     const element = self.nodes.items[@backingInt(start)].ty;
     try self.requireInteger(element, range.name);
     try self.require(self.nodes.items[@backingInt(end)].ty, element, self.syntax.nodes.items[@backingInt(range.end)].span);
+    const stepped = try self.rangeStep(range.name, range.step, element);
     // PY-FOR-REBIND-1: a body that assigns the name gets its own variable,
     // copied from a hidden counter at the top of every iteration, so the
     // assignment never changes which iteration comes next.
@@ -352,7 +353,7 @@ fn statementForRange(comptime Checker: type, self: *Checker, stmt: ast.Statement
     });
     // PY-ARRAY-NEGATIVE-1: an immutable induction variable counting up
     // from a non-negative start never holds a negative value.
-    if (!rebound and self.nonNegative(start, 0)) try self.counters.put(self.allocator, index, {});
+    if (!rebound and stepped.ascending() and self.nonNegative(start, 0)) try self.counters.put(self.allocator, index, {});
     const limit: typed.LocalId = @fromBackingInt(self.locals.items.len);
     try self.locals.append(self.allocator, .{ .name = "<range-limit>", .declaration = range.name, .ty = element, .mutable = false, .usage = .{ .reads = 1, .temporary = true } });
     const variable: typed.LocalId = if (rebound) try reboundVariable(Checker, self, range.name, element) else index;
@@ -362,8 +363,8 @@ fn statementForRange(comptime Checker: type, self: *Checker, stmt: ast.Statement
     try self.nodes.append(self.allocator, .{ .span = range.name, .ty = element, .data = .{ .local = index } });
     const limit_node: typed.NodeId = @fromBackingInt(self.nodes.items.len);
     try self.nodes.append(self.allocator, .{ .span = range.name, .ty = element, .data = .{ .local = limit } });
-    const condition: typed.NodeId = @fromBackingInt(self.nodes.items.len);
-    try self.nodes.append(self.allocator, .{ .span = stmt.span, .ty = .bool, .data = .{ .binary = .{ .op = .lt, .left = index_node, .right = limit_node, .op_span = stmt.span } } });
+    const condition: typed.NodeId = if (stepped.lower) |lower| try lower.condition(index, limit) else @fromBackingInt(self.nodes.items.len);
+    if (stepped.lower == null) try self.nodes.append(self.allocator, .{ .span = stmt.span, .ty = .bool, .data = .{ .binary = .{ .op = .lt, .left = index_node, .right = limit_node, .op_span = stmt.span } } });
     const one: typed.NodeId = @fromBackingInt(self.nodes.items.len);
     try self.nodes.append(self.allocator, .{ .span = range.name, .ty = element, .data = .{ .integer = 1 } });
     const next: typed.NodeId = @fromBackingInt(self.nodes.items.len);
@@ -378,17 +379,18 @@ fn statementForRange(comptime Checker: type, self: *Checker, stmt: ast.Statement
     self.initRestore(init_before);
     if (!body.terminates) try self.samePending(before, stmt.span, eResultLoop);
     self.restorePending(before);
-    const step: typed.StatementId = @fromBackingInt(self.statements.items.len);
-    try self.statements.append(self.allocator, .{ .span = range.name, .terminates = false, .data = .{ .assign = .{ .slot = index, .value = next } } });
-    const children = try self.allocator.alloc(typed.StatementId, 3);
-    children[0] = @fromBackingInt(self.statements.items.len);
+    const step: typed.StatementId = if (stepped.lower) |lower| try lower.advance(index, limit) else @fromBackingInt(self.statements.items.len);
+    if (stepped.lower == null) try self.statements.append(self.allocator, .{ .span = range.name, .terminates = false, .data = .{ .assign = .{ .slot = index, .value = next } } });
+    var children: std.ArrayList(typed.StatementId) = .empty;
+    try children.append(self.allocator, @fromBackingInt(self.statements.items.len));
     try self.statements.append(self.allocator, .{ .span = range.name, .terminates = false, .data = .{ .initialize = .{ .slot = index, .value = start } } });
-    children[1] = @fromBackingInt(self.statements.items.len);
+    try children.append(self.allocator, @fromBackingInt(self.statements.items.len));
     try self.statements.append(self.allocator, .{ .span = range.name, .terminates = false, .data = .{ .initialize = .{ .slot = limit, .value = end } } });
+    try children.appendSlice(self.allocator, try stepped.setup());
     const iteration = if (rebound) try rebindFirst(Checker, self, range.name, variable, index_node, body.id) else body.id;
-    children[2] = @fromBackingInt(self.statements.items.len);
+    try children.append(self.allocator, @fromBackingInt(self.statements.items.len));
     try self.statements.append(self.allocator, .{ .span = stmt.span, .terminates = false, .data = .{ .loop = .{ .id = loop_id, .condition = condition, .body = iteration, .step = step } } });
-    return .{ .block = children };
+    return .{ .block = try children.toOwnedSlice(self.allocator) };
 }
 /// PY-FOR-REBIND-1: the visible loop variable of a counting loop whose body
 /// assigns it: an ordinary mutable local, bound for the whole body.
