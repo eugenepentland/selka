@@ -1113,6 +1113,246 @@ test "the per-module commands are listed in help and answer a bad invocation wit
     try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, unlinked.term);
 }
 
+/// A build of the project whose entry is `main.my` in `directory`: into
+/// `output`, over the cache `cache` (both under `directory`), with `--report`,
+/// and `extra` after the build options.
+fn projectBuild(allocator: std.mem.Allocator, directory: []const u8, output: []const u8, cache: []const u8, extra: []const []const u8) !std.process.RunResult {
+    var args: std.ArrayList([]const u8) = .empty;
+    try args.appendSlice(allocator, &.{
+        "build",
+        try std.fs.path.join(allocator, &.{ directory, "main.my" }),
+        "-o",
+        try std.fs.path.join(allocator, &.{ directory, output }),
+        try std.fmt.allocPrint(allocator, "--cache-dir={s}/{s}", .{ directory, cache }),
+        "--report",
+    });
+    try args.appendSlice(allocator, &tools);
+    try args.appendSlice(allocator, extra);
+    const result = try runInterfaces(args.items);
+    // The caller's arena owns what the run printed.
+    defer freeRun(result);
+    return .{ .term = result.term, .stdout = try allocator.dupe(u8, result.stdout), .stderr = try allocator.dupe(u8, result.stderr) };
+}
+
+/// Whether a build succeeded and its report states `counts`.
+fn builtModules(result: std.process.RunResult, counts: []const u8) bool {
+    const succeeded = switch (result.term) {
+        .exited => |status| status == 0,
+        else => false,
+    };
+    return succeeded and std.mem.indexOf(u8, result.stdout, counts) != null;
+}
+
+const schedule_shapes =
+    \\module shapes
+    \\public record Pair:
+    \\    left: int
+    \\    right: int
+    \\public def total(pair: Pair) -> int:
+    \\    return pair.left + pair.right
+    \\
+;
+
+const schedule_util =
+    \\module util
+    \\import shapes
+    \\public def score(n: int) -> int:
+    \\    total = 0
+    \\    for k in range(n):
+    \\        total += shapes.total(shapes.Pair(left=k, right=2))
+    \\    return total
+    \\
+;
+
+// spec: MODULE-SCHEDULE-1
+test "a project build compiles a module again only when its source or an interface it read changed" {
+    var arena_state = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena_state.deinit();
+    const a = arena_state.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "shapes.my", .data = schedule_shapes });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = schedule_util });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport util\ndef main() -> int:\n    return util.score(4)\n" });
+    try testing.expect(builtModules(try projectBuild(a, directory, "prog", "cache", &.{}), "\"module_build\":{\"modules\":3,\"compiled\":3,\"reused\":0"));
+    try testing.expect(builtModules(try projectBuild(a, directory, "prog", "cache", &.{}), "\"module_build\":{\"modules\":3,\"compiled\":0,\"reused\":3"));
+    // A body edit: `util`'s interface holds, so `main` is not compiled again.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = try std.mem.replaceOwned(u8, a, schedule_util, "right=2", "right=3") });
+    try testing.expect(builtModules(try projectBuild(a, directory, "prog", "cache", &.{}), "\"module_build\":{\"modules\":3,\"compiled\":1,\"reused\":2"));
+    // An interface edit: `util` read `shapes`'s interface and is compiled
+    // again; its own interface holds, so `main` is not (early cutoff).
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "shapes.my", .data = schedule_shapes ++ "public def unused() -> int:\n    return 1\n" });
+    try testing.expect(builtModules(try projectBuild(a, directory, "prog", "cache", &.{}), "\"module_build\":{\"modules\":3,\"compiled\":2,\"reused\":1"));
+    // The program runs the edited code: (0+3) + (1+3) + (2+3) + (3+3).
+    const ran = try std.process.run(a, testing.io, .{ .argv = &.{try std.fs.path.join(a, &.{ directory, "prog" })} });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 18 }, ran.term);
+}
+
+const schedule_generic =
+    \\module util
+    \\public def largest[T: integer](values: list[T]) -> T:
+    \\    best = values[0]
+    \\    for value in values:
+    \\        if value > best:
+    \\            best = value
+    \\    return best
+    \\public def grow(values: list[int]) -> list[int]:
+    \\    out: list[int] = []
+    \\    for value in values:
+    \\        out.append(value + largest(values))
+    \\    return out
+    \\
+;
+
+const schedule_main =
+    \\module main
+    \\import util
+    \\def main(out: Stream) -> int:
+    \\    values = util.grow([3, 9, 4])
+    \\    ranked = sorted(values, key=lambda v: v % 5)
+    \\    out.print(ranked)
+    \\    return util.largest(values) + values[1]
+    \\
+;
+
+// spec: MODULE-SCHEDULE-2
+test "a module-built program links from its modules' records into the whole-program build's executable" {
+    var arena_state = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena_state.deinit();
+    const a = arena_state.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    // `util` and `main` both emit `util::largest[i64]`; the link keeps one.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = schedule_generic });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = schedule_main });
+    try testing.expect(builtModules(try projectBuild(a, directory, "modules", "cache", &.{}), "\"module_build\":{\"modules\":2,\"compiled\":2"));
+    const whole = try projectBuild(a, directory, "whole", "whole-cache", &.{"--whole-program"});
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, whole.term);
+    try testing.expect(std.mem.indexOf(u8, whole.stdout, "\"module_build\"") == null);
+    try testing.expectEqualSlices(u8, try temporary.dir.readFileAlloc(testing.io, "whole", a, .limited(1 << 30)), try temporary.dir.readFileAlloc(testing.io, "modules", a, .limited(1 << 30)));
+    // After a body edit the program-wide metadata unit is found by its key,
+    // and the executable is still the whole-program build's.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = try std.mem.replaceOwned(u8, a, schedule_main, "values[1]", "values[2]") });
+    const edited = try projectBuild(a, directory, "modules", "cache", &.{});
+    try testing.expect(builtModules(edited, "\"module_build\":{\"modules\":2,\"compiled\":1,\"reused\":1"));
+    try testing.expect(std.mem.indexOf(u8, edited.stdout, "\"metadata_reused\":true") != null);
+    try testing.expect(builtModules(try projectBuild(a, directory, "whole", "whole-cache", &.{"--whole-program"}), "\"version\":\"qbe-build-v1\""));
+    try testing.expectEqualSlices(u8, try temporary.dir.readFileAlloc(testing.io, "whole", a, .limited(1 << 30)), try temporary.dir.readFileAlloc(testing.io, "modules", a, .limited(1 << 30)));
+    const ran = try std.process.run(a, testing.io, .{ .argv = &.{try std.fs.path.join(a, &.{ directory, "modules" })} });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 31 }, ran.term);
+    try testing.expectEqualStrings("[12, 18, 13]\n", ran.stdout);
+}
+
+// spec: MODULE-SCHEDULE-3
+test "run builds a project module by module, and a program the modules cannot build goes to the whole-program path" {
+    var arena_state = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena_state.deinit();
+    const a = arena_state.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "shapes.my", .data = schedule_shapes });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = schedule_util });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport util\ndef main() -> int:\n    return util.score(3)\n" });
+    var run_args: std.ArrayList([]const u8) = .empty;
+    try run_args.appendSlice(a, &.{ "run", try std.fs.path.join(a, &.{ directory, "main.my" }), try std.fmt.allocPrint(a, "--cache-dir={s}/cache", .{directory}) });
+    try run_args.appendSlice(a, &tools);
+    const ran = try runInterfaces(run_args.items);
+    defer freeRun(ran);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 9 }, ran.term);
+    // The run's modules are in the cache's module variants.
+    try temporary.dir.access(testing.io, "cache/modules", .{});
+    // A check error: the per-module build hands the program to the
+    // whole-program build, which reports it exactly as before.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = try std.mem.replaceOwned(u8, a, schedule_util, "return total", "return missing") });
+    const module = try projectBuild(a, directory, "prog", "cache", &.{});
+    const whole = try projectBuild(a, directory, "prog", "whole-cache", &.{"--whole-program"});
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, module.term);
+    try testing.expectEqual(whole.term, module.term);
+    try testing.expect(std.mem.indexOf(u8, module.stderr, "E_UNKNOWN_NAME") != null);
+    try testing.expectEqualStrings(whole.stderr, module.stderr);
+}
+
+// spec-case: MODULE-SCHEDULE-3
+test "a project that declares a copied host function builds on the whole-program path" {
+    var arena_state = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena_state.deinit();
+    const a = arena_state.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    // Two modules' host rows: the whole program orders them by its own tables.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "lib.my", .data = "module lib\npublic record Zed:\n    a: i64\n    b: i64\nhost def zmeasure(host: Host, z: Zed) -> i64 effects(host)\npublic def twice(host: Host, x: i64) -> i64 effects(host):\n    return zmeasure(host, Zed(a=x, b=1)) * 2\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport lib\nrecord Alpha:\n    q: i64\nhost def ameasure(host: Host, v: Alpha) -> i64 effects(host)\ndef main(host: Host) -> i64:\n    return lib.twice(host, 6) + ameasure(host, Alpha(q=2))\n" });
+    const built = try projectBuild(a, directory, "default", "cache", &.{});
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, built.term);
+    try testing.expect(std.mem.indexOf(u8, built.stdout, "\"module_build\"") == null);
+    try testing.expect(builtModules(try projectBuild(a, directory, "whole", "whole-cache", &.{"--whole-program"}), "\"version\":\"qbe-build-v1\""));
+    try testing.expectEqualSlices(u8, try temporary.dir.readFileAlloc(testing.io, "whole", a, .limited(1 << 30)), try temporary.dir.readFileAlloc(testing.io, "default", a, .limited(1 << 30)));
+}
+
+// spec: MODULE-SCHEDULE-4
+test "a standard module is compiled once per cache and compiler for every program that imports it" {
+    var arena_state = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena_state.deinit();
+    const a = arena_state.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    try temporary.dir.createDirPath(testing.io, "one");
+    try temporary.dir.createDirPath(testing.io, "two");
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "one/main.my", .data = "module main\nimport hex\ndef main() -> int:\n    return len(hex.encode(b\"ab\"))\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "two/main.my", .data = "module main\nimport hex\ndef main() -> int:\n    return len(hex.encode(b\"abc\"))\n" });
+    // The first program compiles `hex`, what it imports, and its entry.
+    try testing.expect(builtModules(try projectBuild(a, try std.fs.path.join(a, &.{ directory, "one" }), "prog", "../cache", &.{}), "\"reused\":0,"));
+    // The second, over the same cache, compiles its entry alone.
+    const second = try projectBuild(a, try std.fs.path.join(a, &.{ directory, "two" }), "prog", "../cache", &.{});
+    try testing.expect(builtModules(second, "\"compiled\":1,"));
+    try testing.expect(std.mem.indexOf(u8, second.stdout, "\"compiled\":1,\"reused\":0") == null);
+    const ran = try std.process.run(a, testing.io, .{ .argv = &.{try std.fs.path.join(a, &.{ directory, "two", "prog" })} });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 6 }, ran.term);
+}
+
+// spec-case: MODULE-SCHEDULE-5
+test "a module compile run for the scheduler announces its interface on stderr" {
+    var arena_state = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena_state.deinit();
+    const a = arena_state.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "shapes.my", .data = schedule_shapes });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = schedule_util });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport util\ndef main() -> int:\n    return util.score(4)\n" });
+    const args = try compileModuleArgs(a, directory, "shapes", "ready");
+    const compiled = try runInterfaces(try std.mem.concat(a, []const u8, &.{ args, &.{"--ready"} }));
+    defer freeRun(compiled);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, compiled.term);
+    try testing.expect(std.mem.startsWith(u8, compiled.stderr, "\x1emylang-module-ready "));
+    try temporary.dir.access(testing.io, "ready/if/shapes.myi", .{});
+    const result = try temporary.dir.readFileAlloc(testing.io, "ready/out/shapes.result.json", a, .limited(1 << 20));
+    try testing.expect(std.mem.indexOf(u8, result, "\"version\":\"module-result-v1\"") != null);
+}
+
+// spec: BUILD-REPRODUCIBLE-1
+test "a Debug build's executable does not depend on where its cache is" {
+    var arena_state = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena_state.deinit();
+    const a = arena_state.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = schedule_generic });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = schedule_main });
+    const one = try projectBuild(a, directory, "one", "first", &.{"--whole-program"});
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, one.term);
+    const two = try projectBuild(a, directory, "two", "second/nested", &.{"--whole-program"});
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, two.term);
+    try testing.expectEqualSlices(u8, try temporary.dir.readFileAlloc(testing.io, "one", a, .limited(1 << 30)), try temporary.dir.readFileAlloc(testing.io, "two", a, .limited(1 << 30)));
+}
+
 const SymbolicCounts = struct { performed: usize, reused: usize };
 
 fn symbolicCounts(stderr: []const u8) !SymbolicCounts {

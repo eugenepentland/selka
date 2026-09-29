@@ -173,6 +173,9 @@ pub const usage = "usage: mylang build <file.my> (-o <output> | --run) [--projec
     "  --max-memory BYTES  byte ceiling for --run (K/M/G suffixes; default 4G)\n" ++
     "  --timeout=SECONDS  wall-clock ceiling for --run (no default; a run past it exits 1 with R_TIMEOUT)\n" ++
     "  --run instead of -o: execute temporarily; pass guest arguments after --\n";
+/// The flag that keeps a project build on the whole-program path.
+pub const whole_program_flag = "--whole-program";
+
 /// Parse explicit build flags, rejecting unknown controls.
 pub fn parse(args: []const []const u8) Error!Options {
     var result: Options = .{ .link_arguments = args };
@@ -215,6 +218,9 @@ pub fn parse(args: []const []const u8) Error!Options {
         // Internal `--module-objects` (MODULE-COMPILE-1) compiles one module's
         // units and links nothing; it rides in `link_arguments` the same way.
         if (std.mem.eql(u8, argument, "--module-objects")) continue;
+        // `--whole-program` (MODULE-SCHEDULE-3) asks for the whole-program
+        // build in place of the per-module one; it rides the same way.
+        if (std.mem.eql(u8, argument, whole_program_flag)) continue;
         // `--timings=json` is an observation request, not a build control. Like
         // `--keep-symbols` it rides in `link_arguments`, which the driver already
         // scans, so the frozen Options field set does not grow for a switch that

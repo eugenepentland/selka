@@ -53,7 +53,13 @@ pub const Request = struct {
     config: iface.EmissionConfig,
     /// The fragment store the module's units are kept in.
     reuse: fragments.Reuse,
+    /// MODULE-SCHEDULE-5: called as soon as the module's interface and
+    /// hashes are final, before its units are emitted.
+    ready: ?Ready = null,
 };
+
+/// A callback for a compile whose interface is final.
+pub const Ready = struct { context: *anyopaque, run: *const fn (context: *anyopaque, compiled: *const Compiled) anyerror!void };
 
 /// One compiled module. `single` owns the checked program everything else
 /// points into; `deinit` releases it.
@@ -93,7 +99,8 @@ pub const Hashes = struct {
 };
 
 /// One interface a compile read, by module, with its interface, emission and
-/// positions hashes (lowercase hex).
+/// positions hashes (lowercase hex); the positions hash is empty when no
+/// emitted unit's positions fell in that interface's text.
 pub const Input = struct { module: []const u8, interface: []const u8, emission: []const u8, positions: []const u8 };
 
 /// How much one compile did: the program's functions, how many it lowered
@@ -114,7 +121,7 @@ pub fn compile(gpa: std.mem.Allocator, arena: std.mem.Allocator, request: Reques
     if (!single.declaredOnly()) return error.InternalError;
     const compilation = &single.compilation;
     const program = compilation.program orelse return error.InternalError;
-    const prepared = single.request.prepared orelse return error.InternalError;
+    if (single.request.prepared == null) return error.InternalError;
     const modules = compilation.index.project.modules.items;
     const own = moduleIndex(modules, request.module.module) orelse return error.InternalError;
     const stood = try standIns(arena, single, program.functions.len);
@@ -146,68 +153,194 @@ pub fn compile(gpa: std.mem.Allocator, arena: std.mem.Allocator, request: Reques
     var emit = try emitted(arena, .{ .compilation = compilation, .program = program, .code = code, .own = modules[own].name, .is_entry = request.module.is_entry });
     for (emit) |chosen| counts.emitted += @intFromBool(chosen);
     const physical = try @import("module_physical.zig").archive(arena, code, emit);
-    const imported_interfaces = try interfacesOf(arena, request.module.library, modules, own);
+    const imported_interfaces = try interfacesOf(arena, request, modules, own);
     const restored = try @import("module_physical_inputs.zig").restore(arena, code, emit, imported, imported_interfaces);
     code = restored.code;
     emit = @constCast(restored.emit);
     var parts: native_interface.Parts = .{};
-    const module: native_interface.Module = .{ .emit = emit, .imported = restored.imported, .remap = try remapOf(arena, request.module.library, modules, own), .arenas = request.config.arenas, .parts = &parts };
+    const template: native_interface.Module = .{ .emit = emit, .imported = restored.imported, .remap = try remapOf(arena, request.module.library, modules, own), .arenas = request.config.arenas, .parts = &parts };
+    var step: InterfaceStep = .{ .arena = arena, .request = request, .out = out, .body = .{ .lowered = &lowered, .code = code, .emit = emit, .archive = physical, .dependencies = imported_interfaces }, .own = own };
+    var module = template;
+    module.analyzed = .{ .arena = arena, .context = &step, .run = InterfaceStep.announced };
     var report: fragments.Report = .{ .arena = arena };
-    const policy: native_interface.Policy = .{ .drop_debug = request.config.drop_debug, .step_checks = request.config.step_checks, .frame_checks = request.config.frame_checks };
+    const policy: native_interface.Policy = .{
+        .drop_debug = request.config.drop_debug,
+        .step_checks = request.config.step_checks,
+        .frame_checks = request.config.frame_checks,
+        .cow = if (@import("value_semantics.zig").counting()) .counting else .off,
+    };
+    out.counts = counts;
     out.units.manifest = qbe.generateWithInterface(arena, code, compilation.src, &compilation.diagnostics, .{ .policy = policy, .reuse = request.reuse, .module = &module, .report = &report }) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         error.SourceError => return error.SourceError,
-        error.WriteFailed => return error.WriteFailed,
+        error.WriteFailed => return if (step.failure) |failure| failure else error.WriteFailed,
         else => return error.InternalError,
     };
     out.units.parts = parts;
     out.report = report;
-    const foreign = try foreignRoles(arena, request.module.library, modules, own);
-    const inputs: builder.Inputs = .{
-        .index = &single.index,
-        .src = compilation.src,
-        .syntax = compilation.syntax,
-        .program = program,
-        .prepared = prepared,
-        .facts = single.request.produced orelse return error.InternalError,
-        .lowered = &lowered,
-    };
-    const imports = try importHashes(arena, inputs, .{ .library = request.module.library, .foreign = &foreign }, own);
-    const built = try builder.buildOne(arena, inputs, own, .{ .foreign = &foreign, .import_hashes = imports });
-    var interface = built.interface;
-    interface.emission = try emissionSection(arena, .{ .interface = interface, .prepared = prepared, .program = program, .report = report, .emit = emit, .config = request.config });
-    interface.emission.physical = physical;
-    out.interface = interface;
-    out.hashes = .{
-        .interface = try hex(arena, iface.interfaceHash(interface)),
-        .implementation = try hex(arena, built.implementation_hash),
-        .emission = try hex(arena, iface.emissionHash(interface)),
-        .positions = try hex(arena, iface.positionsHash(interface)),
-        .inputs = try inputsOf(arena, request.module.library, modules, own),
-    };
-    out.counts = counts;
+    // An emission that never announced its facts (every unit stood in)
+    // publishes the interface once it is done.
+    if (!step.done) step.publish(report) catch |err| return step.failure orelse err;
 }
 
-fn interfacesOf(a: std.mem.Allocator, library: *oracle.Library, modules: []const project.Module, own: usize) Error![]const iface.Interface {
+/// MODULE-SCHEDULE-5: what the module's interface is built from once the
+/// emission's facts are known, and whether it was.
+const InterfaceStep = struct {
+    arena: std.mem.Allocator,
+    request: Request,
+    out: *Compiled,
+    body: PhysicalStep,
+    own: usize,
+    done: bool = false,
+    failure: ?Error = null,
+
+    fn announced(context: *anyopaque, facts: fragments.Report) anyerror!void {
+        const self: *InterfaceStep = @ptrCast(@alignCast(context));
+        return self.publish(facts);
+    }
+
+    /// Build the interface and hand it to the request's `ready` callback;
+    /// a failure is kept for the compile to return.
+    fn publish(self: *InterfaceStep, facts: fragments.Report) Error!void {
+        self.finish(facts) catch |err| {
+            self.failure = err;
+            return err;
+        };
+        const ready = self.request.ready orelse return;
+        ready.run(ready.context, self.out) catch |err| {
+            self.failure = if (err == error.OutOfMemory) error.OutOfMemory else error.WriteFailed;
+            return self.failure.?;
+        };
+    }
+
+    /// Build the module's interface, with its emission section from `facts`,
+    /// and its hashes.
+    fn finish(self: *InterfaceStep, facts: fragments.Report) Error!void {
+        const arena = self.arena;
+        const single = self.out.single.?;
+        const compilation = &single.compilation;
+        const program = compilation.program.?;
+        const prepared = single.request.prepared.?;
+        const modules = compilation.index.project.modules.items;
+        const library = self.request.module.library;
+        const foreign = try foreignRoles(arena, library, modules, self.own);
+        const inputs: builder.Inputs = .{
+            .index = &single.index,
+            .src = compilation.src,
+            .syntax = compilation.syntax,
+            .program = program,
+            .prepared = prepared,
+            .facts = single.request.produced orelse return error.InternalError,
+            .lowered = self.body.lowered,
+        };
+        const imports = try importHashes(arena, inputs, .{ .library = library, .foreign = &foreign }, self.own);
+        const built = try builder.buildOne(arena, inputs, self.own, .{ .foreign = &foreign, .import_hashes = imports });
+        var interface = built.interface;
+        interface.emission = try emissionSection(arena, .{ .interface = interface, .prepared = prepared, .program = program, .report = facts, .emit = self.body.emit, .config = self.request.config });
+        interface.emission.physical = self.body.archive;
+        self.out.interface = interface;
+        self.out.hashes = .{
+            .interface = try hex(arena, iface.interfaceHash(interface)),
+            .implementation = try hex(arena, built.implementation_hash),
+            .emission = try hex(arena, iface.emissionHash(interface)),
+            .positions = try hex(arena, iface.positionsHash(interface)),
+            .inputs = try inputsOf(arena, .{ .library = library, .modules = modules, .own = self.own, .placed = try placedIn(arena, compilation, self.body.code, self.body.emit), .physical = self.body.dependencies }),
+        };
+        self.done = true;
+    }
+};
+
+const PhysicalStep = struct {
+    lowered: *const [2]bytecode.Program,
+    code: bytecode.Program,
+    emit: []const bool,
+    archive: @import("module_physical.zig").Archive,
+    dependencies: []const iface.Interface,
+};
+
+fn interfacesOf(a: std.mem.Allocator, request: Request, modules: []const project.Module, own: usize) Error![]const iface.Interface {
+    const library = request.module.library;
     var out: std.ArrayList(iface.Interface) = .empty;
+    var seen: std.StringHashMapUnmanaged(void) = .empty;
+    try seen.put(a, request.module.module, {});
+    try seen.put(a, oracle.root_module, {});
     for (modules, 0..) |module, index| {
         if (index == own) continue;
-        if (library.by_name.get(module.name)) |interface| try out.append(a, interface);
+        if (library.by_name.get(module.name)) |interface| {
+            try seen.put(a, module.name, {});
+            try out.append(a, interface);
+        }
+    }
+    if (!@import("runtime_mode.zig").enabled()) return out.items;
+    const config = try iface.configName(a, request.config);
+    var cursor: usize = 0;
+    while (cursor < out.items.len) : (cursor += 1) {
+        const interface = out.items[cursor];
+        if (!iface.physicalInputs(interface)) continue;
+        for (interface.emission.physical.dependencies) |dependency| {
+            const split = std.mem.indexOf(u8, dependency.name, "::") orelse continue;
+            const name = dependency.name[0..split];
+            if (seen.contains(name)) continue;
+            const path = project.modulePath(a, name) catch return error.InternalError;
+            if (standardSource(path) != null) continue;
+            if (out.items.len >= request.module.limits.max_modules) return error.InternalError;
+            _ = library.text(path) orelse return error.MissingEmission;
+            const next = library.by_name.get(name) orelse return error.MissingEmission;
+            if (!std.mem.eql(u8, next.emission.config, config)) return error.MissingEmission;
+            try seen.put(a, name, {});
+            try out.append(a, next);
+        }
     }
     return out.items;
 }
 
-/// Every interface the compile read, in module order.
-fn inputsOf(allocator: std.mem.Allocator, library: *oracle.Library, modules: []const project.Module, own: usize) Error![]const Input {
+/// Which merged-source inputs the positions of the emitted units fall in: the
+/// interface texts whose positions this compile's metadata read.
+fn placedIn(allocator: std.mem.Allocator, compilation: *const @import("project_compile.zig").Compilation, code: bytecode.Program, emit: []const bool) Error![]const bool {
+    const out = try allocator.alloc(bool, compilation.index.project.modules.items.len);
+    @memset(out, false);
+    for (code.functions, emit) |function, chosen| {
+        if (!chosen) continue;
+        var last: ?usize = null;
+        for (function.scope.instructions) |instruction| {
+            const at = compilation.src.originalSpan(instruction.span) catch continue;
+            if (last == at.input or at.input >= out.len) continue;
+            last = at.input;
+            out[at.input] = true;
+        }
+    }
+    return out;
+}
+
+/// What the interfaces a compile read are listed from.
+const Read = struct { library: *oracle.Library, modules: []const project.Module, own: usize, placed: []const bool, physical: []const iface.Interface };
+
+/// Every interface the compile read, in module order, with its interface and
+/// emission hashes, and its positions hash when an emitted unit's positions
+/// fell in its text (an inlined or instantiated body): only then does a
+/// change of that module's positions change this module's outputs.
+fn inputsOf(allocator: std.mem.Allocator, read: Read) Error![]const Input {
     var out: std.ArrayList(Input) = .empty;
-    for (modules, 0..) |module, index| {
-        if (index == own) continue;
-        const interface = library.by_name.get(module.name) orelse continue;
+    var seen: std.StringHashMapUnmanaged(void) = .empty;
+    for (read.modules, 0..) |module, index| {
+        if (index == read.own) continue;
+        const interface = read.library.by_name.get(module.name) orelse continue;
+        try seen.put(allocator, module.name, {});
         try out.append(allocator, .{
             .module = module.name,
             .interface = try hex(allocator, iface.interfaceHash(interface)),
             .emission = try hex(allocator, iface.emissionHash(interface)),
-            .positions = try hex(allocator, iface.positionsHash(interface)),
+            .positions = if (index < read.placed.len and read.placed[index]) try hex(allocator, iface.positionsHash(interface)) else "",
+        });
+    }
+    for (read.physical) |interface| {
+        if (seen.contains(interface.module)) continue;
+        try seen.put(allocator, interface.module, {});
+        try out.append(allocator, .{
+            .module = interface.module,
+            .interface = try hex(allocator, iface.interfaceHash(interface)),
+            .emission = try hex(allocator, iface.emissionHash(interface)),
+            .positions = "",
         });
     }
     return out.items;
@@ -291,11 +424,11 @@ fn remapOf(allocator: std.mem.Allocator, library: *oracle.Library, modules: []co
 }
 
 /// The interfaces a compile read, and the roles and facts they state.
-const Read = struct { library: *oracle.Library, foreign: *const builder.Foreign };
+const ReadFacts = struct { library: *oracle.Library, foreign: *const builder.Foreign };
 
 /// The interface hash of each direct import: from its interface, or for a
 /// standard module (read from the compiler) from its interface built here.
-fn importHashes(allocator: std.mem.Allocator, inputs: builder.Inputs, read: Read, own: usize) Error![]iface.ImportHash {
+fn importHashes(allocator: std.mem.Allocator, inputs: builder.Inputs, read: ReadFacts, own: usize) Error![]iface.ImportHash {
     const modules = inputs.index.project.modules.items;
     const imports = modules[own].imports;
     const out = try allocator.alloc(iface.ImportHash, imports.len);

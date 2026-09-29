@@ -490,10 +490,23 @@ fn runPasses(pass: *EmitPass, reuse: *Reuse, src: Source, standins: ?*fragments.
         break :plain own;
     };
     pass.stable = try rc_pin_summary.compute(pass.allocator, pass.program, pass.layouts);
+    try announceFacts(pass.*, reuse);
     try secondPass(pass.*, reuse);
     if (lean) try metaPass(pass.*, reuse, src);
     if (reuse.standin != null) try recordStandIns(pass.*, reuse, allocates);
     if (reuse.configured) |configured| configured.store.flush();
+}
+
+/// MODULE-SCHEDULE-5: hand a module emission's facts to its hook before the
+/// second pass, after every caller-visible RC pin and physical input is final.
+fn announceFacts(pass: EmitPass, reuse: *Reuse) GenerateError!void {
+    const one = pass.module orelse return;
+    const hook = one.analyzed orelse return;
+    const facts = try reportOf(hook.arena, pass, reuse);
+    hook.run(hook.context, facts) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => return error.WriteFailed,
+    };
 }
 
 fn selectedUnits(allocator: std.mem.Allocator, units: []const Unit, selected: []const bool) GenerateError![]const Unit {

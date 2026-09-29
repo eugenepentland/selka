@@ -193,7 +193,9 @@ const Parts = struct {
 
     /// Load the module graph through `sources`.
     fn load(self: Parts, sources: *Sources) Error!void {
-        self.project.load(.{ .context = sources, .read = Sources.read, .embed = if (sources.assets != null) Sources.readEmbed else null }, self.entry, self.limits) catch |err| switch (err) {
+        var limits = self.limits;
+        limits.standard_from_provider = if (sources.library) |library| library.standardServed() else false;
+        self.project.load(.{ .context = sources, .read = Sources.read, .embed = if (sources.assets != null) Sources.readEmbed else null }, self.entry, limits) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             else => return error.SourceError,
         };
@@ -229,7 +231,20 @@ pub const Library = struct {
 
     /// A directory of `<module>.myi` artifacts, read one at a time on first
     /// use; `arena` keeps what it reads.
-    pub const Store = struct { io: std.Io, directory: []const u8, arena: std.mem.Allocator };
+    pub const Store = struct {
+        io: std.Io,
+        directory: []const u8,
+        arena: std.mem.Allocator,
+        /// MODULE-SCHEDULE-4: where the standard modules' interfaces are,
+        /// when a check reads them from interfaces rather than the compiler.
+        standard: ?[]const u8 = null,
+    };
+
+    /// Whether this library serves the standard modules' interfaces.
+    pub fn standardServed(self: *const Library) bool {
+        const store = self.store orelse return false;
+        return store.standard != null;
+    }
 
     /// A library that reads each artifact from `store` only when a check
     /// loads that module, so a check reads the interfaces it imports and no
@@ -243,10 +258,11 @@ pub const Library = struct {
     pub fn text(self: *Library, path: []const u8) ?[]const u8 {
         if (self.by_path.get(path)) |known| return known;
         const store = self.store orelse return null;
-        if (!std.mem.endsWith(u8, path, ".my") or standard_library.source(path) != null) return null;
+        if (!std.mem.endsWith(u8, path, ".my")) return null;
+        const directory = if (standard_library.source(path) != null) store.standard orelse return null else store.directory;
         const module = store.arena.dupe(u8, path[0 .. path.len - 3]) catch return null;
         std.mem.replaceScalar(u8, module, '/', '.');
-        const file = std.fmt.allocPrint(store.arena, "{s}/{s}{s}", .{ store.directory, module, iface.extension }) catch return null;
+        const file = std.fmt.allocPrint(store.arena, "{s}/{s}{s}", .{ directory, module, iface.extension }) catch return null;
         const bytes = std.Io.Dir.cwd().readFileAlloc(store.io, file, store.arena, .limited(256 * 1024 * 1024)) catch return null;
         const interface = iface.decode(store.arena, bytes) orelse return null;
         if (!std.mem.eql(u8, interface.module, module)) return null;

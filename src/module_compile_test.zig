@@ -85,7 +85,7 @@ fn read(context: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _:
 
 /// The Debug configuration a plain `build` emits with, with the program's
 /// arena switch.
-const debug: iface.EmissionConfig = .{ .drop_debug = false, .step_checks = true, .frame_checks = true, .checks = true, .arenas = false };
+const debug: iface.EmissionConfig = .{ .drop_debug = false, .step_checks = true, .frame_checks = true, .arenas = false };
 
 /// The whole-program lean executable emission's report, into `arena`.
 fn wholeReport(arena: std.mem.Allocator, root: []const u8, files: *const Files) !fragments.Report {
@@ -257,6 +257,57 @@ test "a compiled module's interface carries its emission facts under their own h
     try t.expectError(error.MissingEmission, compileOne(arena, &store, &.{bare}, .{ .name = "stats", .bytes = stats_source }));
 }
 
+/// What a compile's `ready` callback saw when it ran: how often it ran, how
+/// much of the module's units were emitted then, the interface hash and how
+/// many functions the emission section held.
+const Seen = struct { calls: usize = 0, emitted: usize = 0, interface: []const u8 = "", facts: usize = 0 };
+
+fn sawReady(context: *anyopaque, compiled: *const compile_module.Compiled) anyerror!void {
+    const seen: *Seen = @ptrCast(@alignCast(context));
+    seen.calls += 1;
+    seen.emitted = compiled.units.manifest.len;
+    seen.interface = compiled.hashes.interface;
+    seen.facts = compiled.interface.emission.functions.len;
+}
+
+/// Compile `util` with a `ready` callback recording into `seen`.
+fn compileReady(arena: std.mem.Allocator, store: *fragments.Store, seen: *Seen) !compile_module.Compiled {
+    var library = try oracle.Library.of(arena, &.{});
+    var compiled: compile_module.Compiled = undefined;
+    compile_module.compile(t.allocator, arena, .{
+        .module = .{ .module = "util", .bytes = util_source, .is_entry = false, .library = &library },
+        .config = debug,
+        .reuse = .{ .store = store, .lean = true, .executable = true },
+        .ready = .{ .context = seen, .run = sawReady },
+    }, &compiled) catch |err| {
+        compiled.deinit();
+        return err;
+    };
+    return compiled;
+}
+
+// spec: MODULE-SCHEDULE-5
+test "a module compile hands over its final interface before it emits a unit" {
+    var arena_state = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena_state.deinit();
+    const arena = arena_state.allocator();
+    var directory = t.tmpDir(.{});
+    defer directory.cleanup();
+    const base = try directory.dir.realPathFileAlloc(t.io, ".", arena);
+    var store = try fragments.Store.open(arena, t.io, base, "test-compiler", "modules");
+    defer store.deinit();
+    var seen: Seen = .{};
+    var compiled = try compileReady(arena, &store, &seen);
+    defer compiled.deinit();
+    // Once, with the interface and its emission facts final and no unit yet.
+    try t.expectEqual(@as(usize, 1), seen.calls);
+    try t.expectEqual(@as(usize, 0), seen.emitted);
+    try t.expect(compiled.units.manifest.len > 0);
+    try t.expectEqualStrings(compiled.hashes.interface, seen.interface);
+    try t.expectEqual(compiled.interface.emission.functions.len, seen.facts);
+    try t.expect(seen.facts >= 3);
+}
+
 /// How many of the program's functions carry one of `names`.
 fn named(functions: []const @import("typed.zig").Function, names: []const []const u8) usize {
     var found: usize = 0;
@@ -308,11 +359,11 @@ test "a link keeps one copy of a specialization two modules emitted, and refuses
     defer arena_state.deinit();
     const a = arena_state.allocator();
     const library = try unitsFile(a,
-        \\{"descriptors":[{"name":"myl_t_b","text":"B;\n"}],"renderers":[],"manifest":{"store":"/s","entry":"","text_format":false,
+        \\{"descriptors":[{"name":"myl_t_b","text":"B;\n"}],"renderers":[],"manifest":{"runtime_contract":"rc-v3","store":"/s","entry":"","text_format":false,
         \\ "host":{"types":[],"declarations":[]},"functions":[{"name":"m::f[i64]","symbol":"myl_f_1","il_digest":"aa","meta_digest":"bb"}]}}
     );
     const entry = try unitsFile(a,
-        \\{"descriptors":[{"name":"myl_t_a","text":"A;\n"},{"name":"myl_t_b","text":"B;\n"}],"renderers":[],"manifest":{"store":"/s","entry":"myl_f_0",
+        \\{"descriptors":[{"name":"myl_t_a","text":"A;\n"},{"name":"myl_t_b","text":"B;\n"}],"renderers":[],"manifest":{"runtime_contract":"rc-v3","store":"/s","entry":"myl_f_0",
         \\ "text_format":true,"host":{"types":[],"declarations":[]},"functions":[{"name":"main::main","symbol":"myl_f_0","il_digest":"cc","meta_digest":"dd"},
         \\ {"name":"m::f[i64]","symbol":"myl_f_1","il_digest":"aa","meta_digest":"bb"}]}}
     );
@@ -322,13 +373,13 @@ test "a link keeps one copy of a specialization two modules emitted, and refuses
     try t.expect(std.mem.indexOf(u8, merged, "\"text_format\":true") != null);
     // The same symbol with another text is two different programs.
     const clash = try unitsFile(a,
-        \\{"descriptors":[],"renderers":[],"manifest":{"store":"/s","entry":"","host":{},"functions":[{"name":"m::f[i64]","symbol":"myl_f_1","il_digest":"ee","meta_digest":"bb"}]}}
+        \\{"descriptors":[],"renderers":[],"manifest":{"runtime_contract":"rc-v3","store":"/s","entry":"","host":{},"functions":[{"name":"m::f[i64]","symbol":"myl_f_1","il_digest":"ee","meta_digest":"bb"}]}}
     );
     try t.expectError(error.Conflict, language.module_link.merge(a, &.{ entry, clash }));
     // Without the entry module, or across two unit stores, there is no program.
     try t.expectError(error.Incomplete, language.module_link.merge(a, &.{library}));
     const elsewhere = try unitsFile(a,
-        \\{"descriptors":[],"renderers":[],"manifest":{"store":"/other","entry":"","host":{},"functions":[]}}
+        \\{"descriptors":[],"renderers":[],"manifest":{"runtime_contract":"rc-v3","store":"/other","entry":"","host":{},"functions":[]}}
     );
     try t.expectError(error.Incomplete, language.module_link.merge(a, &.{ entry, elsewhere }));
 }

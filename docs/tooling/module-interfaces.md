@@ -122,10 +122,11 @@ that module's hash too.
 
 `mylang compile-module` compiles one module from its own source and the
 interfaces of the modules it imports; `mylang link-modules` links a program
-from its modules' outputs. This is stage 1b of the per-module build: the
-default `build` is still the whole-program one, and these commands exist so
-that the per-module path can be proved equal to it before a scheduler makes
-it the default (stage 1c).
+from its modules' outputs. `mylang build` of a project runs `compile-module`
+itself, one child per stale module (see
+[building a project module by module](#building-a-project-module-by-module));
+the two commands are what it is built from, and what the harnesses drive
+directly.
 
 ```console
 $ mylang compile-module main.my --module=lib --interfaces=if --out=out --arenas=off --objects
@@ -183,9 +184,69 @@ whole-program build's, byte for byte.
   and positions hashes must equal `interfaces emit`'s. The link must compile
   no guest object, and the two executables must be identical and run
   identically. `--release` compares the ReleaseFast switches too.
-- `tests/module_build_diff.py` applies seeded edits and rebuilds incrementally,
-  per module, compiling only what is stale. It must build what a clean
-  whole-program build builds.
+- `tests/module_build_oracle.py` builds the same programs with the default
+  `mylang build` (module by module) and with `--whole-program`. The two
+  executables must be identical and run identically, and an unchanged rebuild
+  must compile no module.
+- `tests/module_build_diff.py` applies seeded edits and rebuilds with the
+  default build over one cache, which compiles only what is stale. It must
+  build what a clean `--whole-program` build builds, byte for byte.
+
+## Building a project module by module
+
+`mylang build`, `build --run` and `run` of a project entry compile it one
+module at a time. `--whole-program` asks for the whole-program build instead.
+
+```console
+$ mylang build main.my -o app --report | grep -o '"module_build":{[^}]*}'
+"module_build":{"modules":26,"compiled":26,"reused":0,"arenas":false}
+$ # a body edit in one module
+$ mylang build main.my -o app --report | grep -o '"module_build":{[^}]*}'
+"module_build":{"modules":26,"compiled":1,"reused":25,"arenas":false}
+$ mylang build main.my -o app-whole --whole-program
+$ cmp app app-whole && echo identical
+identical
+```
+
+- **Discovery.** Each module's imports come from its header. A module whose
+  source bytes are unchanged keeps the imports its last build read, so an
+  unchanged project reads no source past its digest.
+- **Staleness.** A module is compiled again when its source or the program's
+  arena switch changed, when one of its objects left the cache, or when an
+  interface its last compile read changed its interface or emission hash. The
+  positions hash counts only when that compile emitted an instruction whose
+  span fell in the interface's text. A body edit compiles one module. An
+  interface edit compiles the modules that read the changed interface, and
+  stops at any of them whose own interface and emission facts held (early
+  cutoff).
+- **Parallelism.** Compiles run as child processes (`compile-module
+  --ready`), as many at once as the cores and `MemAvailable` allow
+  (`MYLANG_JOBS` caps it). A module starts once every module it imports has
+  *published* its interface. A compile publishes its interface as soon as its
+  allocation analysis is done, before it emits a unit, so a dependent's check
+  and lowering overlap its imports' code generation.
+- **The standard library** is compiled once per cache, compiler and set of
+  emission switches, into a variant every program shares
+  (`<cache>/modules/standard-<hash>`). Every compile reads those interfaces
+  (`--standard-interfaces`).
+- **The link** reads one record per module: its objects in link order, the
+  digest of its share of the program-wide metadata unit, its entry and its
+  warnings. It never reads a unit. Objects are ordered as a whole-program
+  build orders them, a specialization several modules emitted is linked once,
+  and the metadata unit is keyed by the modules' shares and rendered only when
+  no object has that key. The executable is the whole-program build's, byte
+  for byte.
+- **What still goes whole-program:** a library, a provider, the LLVM backend
+  or `--release`, `--no-cache`, a checked manifest, a project with a
+  `mylang.json`, an entry without `main`, an import cycle or header problem,
+  a module with a `host def` (the copied host bridge orders its rows by the
+  whole program's tables), and any program a module compile rejects. The whole-program build then
+  reports it exactly as before. `run` also takes that path for `--restrict`,
+  `--report`, timings and JSON diagnostics.
+
+The per-variant state lives in `<cache>/modules/<variant>/state.json`, and a
+build holds the variant's lock, so two builds of one program wait for each
+other rather than interleave.
 
 ## What is still whole-program
 
@@ -203,6 +264,7 @@ whole-program build's, byte for byte.
   one C unit per program, merged from per-module blocks at link and keyed by
   its text.
 
-The report for this stage,
-[devspeed-module-compile-2026-09-24](../audits/devspeed-module-compile-2026-09-24.md),
-states what stage 1c needs.
+The reports for stages 1b and 1c,
+[devspeed-module-compile-2026-09-24](../audits/devspeed-module-compile-2026-09-24.md)
+and [devspeed-module-schedule-2026-09-24](../audits/devspeed-module-schedule-2026-09-24.md),
+hold the measurements and what is left.

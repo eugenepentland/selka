@@ -67,7 +67,7 @@ pub fn buildOne(allocator: std.mem.Allocator, inputs: Inputs, module: usize, aro
     const modules = inputs.index.project.modules.items;
     if (module >= modules.len) return error.InternalError;
     const interface = try state.moduleInterface(module);
-    return .{ .interface = interface, .implementation_hash = iface.implementationHash(modules[module].name, modules[module].src.bytes, around.import_hashes) };
+    return .{ .interface = interface, .implementation_hash = iface.implementationHash(modules[module].name, modules[module].src, around.import_hashes) };
 }
 
 /// Every module's interface and its two hashes, indexed by module id.
@@ -104,7 +104,7 @@ pub fn build(allocator: std.mem.Allocator, inputs: Inputs) Error!Set {
     for (modules, 0..) |module, id| {
         const imports = try allocator.alloc(iface.ImportHash, module.imports.len);
         for (module.imports, imports) |imported, *entry| entry.* = .{ .module = modules[imported.target].name, .hash = out.interface_hashes[imported.target] };
-        out.implementation_hashes[id] = iface.implementationHash(module.name, module.src.bytes, imports);
+        out.implementation_hashes[id] = iface.implementationHash(module.name, module.src, imports);
     }
     return out;
 }

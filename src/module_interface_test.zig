@@ -16,7 +16,7 @@ const shapes_source =
     \\    x: int
     \\
     \\
-    \\public class Outer:
+    \\public record Outer:
     \\    items: list[Inner]
     \\
 ;
@@ -132,7 +132,10 @@ fn build(sources: Sources) !Built {
         .{ .path = "shapes.my", .bytes = sources.shapes },
     };
     var whole: *oracle.Whole = undefined;
-    try oracle.Whole.open(t.allocator, t.io, .{ .root = "", .name = "main", .bytes = main_source, .modules = &modules }, &whole);
+    oracle.Whole.open(t.allocator, t.io, .{ .root = "", .name = "main", .bytes = main_source, .modules = &modules }, &whole) catch |err| {
+        if (err != error.OutOfMemory) whole.deinit();
+        return err;
+    };
     errdefer whole.deinit();
     return .{ .whole = whole, .set = try whole.buildInterfaces() };
 }
@@ -195,6 +198,22 @@ fn mismatches(comparison: oracle.Comparison) usize {
     return comparison.mismatches();
 }
 
+// spec-case: MODULE-COMPILE-1
+test "physical helper bodies invalidate RC authority but preserve scalar allocation cutoff" {
+    const private_before = [_]language.module_physical.Data{.{ .name = "lib::private", .bytes = "before" }};
+    const private_after = [_]language.module_physical.Data{.{ .name = "lib::private", .bytes = "after" }};
+    const known = [_]iface.EmittedFunction{.{ .name = "lib::public", .allocates = false, .writes = &.{}, .physical = @splat(1) }};
+    var first: iface.Interface = .{ .module = "lib", .text = "", .emission = .{ .functions = &known, .physical = .{ .functions = &private_before } } };
+    var second = first;
+    second.emission.physical.functions = &private_after;
+    try t.expect(changed(iface.emissionHash(first), iface.emissionHash(second)));
+    try t.expectEqualSlices(u8, &iface.interfaceHash(first), &iface.interfaceHash(second));
+    const scalar = [_]iface.EmittedFunction{.{ .name = "lib::public", .allocates = true, .writes = &.{} }};
+    first.emission.functions = &scalar;
+    second.emission.functions = &scalar;
+    try t.expectEqualSlices(u8, &iface.emissionHash(first), &iface.emissionHash(second));
+}
+
 // spec: MODULE-INTERFACE-1
 test "an interface keeps each exported declaration and what it reaches, and only the bodies a dependent reads" {
     const built = try build(.{});
@@ -254,6 +273,18 @@ test "an interface artifact rejects a foreign version, a truncated payload and a
     try t.expect(iface.decode(arena.allocator(), renamed) == null);
     var failing = t.FailingAllocator.init(t.allocator, .{ .fail_index = 0 });
     try t.expectError(error.OutOfMemory, iface.encode(failing.allocator(), built.module("shapes")));
+}
+
+// spec-case: MODULE-INTERFACE-2
+test "embedded content and outcomes invalidate the source implementation identity" {
+    var inputs = [_]language.source.Embed{.{ .literal = .{ .start = 0, .end = 1 }, .path = "asset", .status = .ok, .digest = @splat(1) }};
+    const src: language.source.Source = .{ .path = "lib.my", .bytes = "unchanged", .line_starts = &.{0}, .embeds = &inputs };
+    const first = iface.implementationHash("lib", src, &.{});
+    inputs[0].digest = @splat(2);
+    try t.expect(changed(first, iface.implementationHash("lib", src, &.{})));
+    inputs[0].digest = @splat(1);
+    inputs[0].status = .missing;
+    try t.expect(changed(first, iface.implementationHash("lib", src, &.{})));
 }
 
 // spec: MODULE-INTERFACE-2

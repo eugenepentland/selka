@@ -96,10 +96,13 @@ pub const interface_oracle = [_][]const u8{
     "tests/fixtures/incremental/",
 };
 
-/// `tests/module_compile_oracle.py` and `tests/module_build_diff.py`: per-module
-/// compilation over `tests/lang` and the fixtures, and its build differential.
+/// `tests/module_compile_oracle.py`, `tests/module_build_oracle.py` and
+/// `tests/module_build_diff.py`: per-module compilation and the default
+/// per-module build over `tests/lang` and the fixtures, and its build
+/// differential.
 pub const module_compile = [_][]const u8{
     "tests/module_compile_oracle.py",
+    "tests/module_build_oracle.py",
     "tests/module_build_diff.py",
     "tests/lang/",
     "tests/fixtures/interfaces/",

@@ -767,6 +767,11 @@
       "summary": "`mylang compile-module` compiles one module from its own source and its imports' interfaces to the units, interface (with the emission facts dependents read) and objects a whole-program build produces for it, key for key; `mylang link-modules` links a program from its modules' outputs into the whole-program build's executable.",
       "doc": "docs/tooling/module-interfaces.md#compiling-a-module-on-its-own"
     },
+    "module-build": {
+      "kind": "tooling",
+      "summary": "`mylang build`, `build --run` and `run` of a project compile it module by module: a scheduler compiles each stale module in a child process over the import graph, in parallel, starting a dependent once its imports have published their interfaces, and stops an edit at any module whose interface and emission facts held; the standard library is compiled once per cache and compiler; the link reads one record per module and makes the `--whole-program` build's executable, byte for byte.",
+      "doc": "docs/tooling/module-interfaces.md#building-a-project-module-by-module"
+    },
     "module-interfaces": {
       "kind": "tooling",
       "summary": "`mylang interfaces emit` writes one `module-interface-v2` artifact per module from the whole-program check (declaration text with only the bodies a dependent reads, the facts that stand in for the rest, interface fingerprints and reached shapes) with an interface hash that a body-only edit keeps and an implementation hash; `interfaces check` checks one module against interfaces alone and `interfaces oracle` proves every module's such check equals the whole-program check.",

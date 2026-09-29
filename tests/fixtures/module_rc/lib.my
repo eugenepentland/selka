@@ -31,3 +31,19 @@ public def change(values: mut list[int], n: int) -> int:
 
 public def frozen() -> bytes:
     return b"fixed"
+
+def helper_ints(values: list[int]) -> int effects():
+    total = 0
+    index = 0
+    while index < len(values):
+        total = total + leaf.summed(values)
+        index = index + 1
+    return total
+
+public def measure_ints(values: list[int]) -> int effects():
+    total = 0
+    index = 0
+    while index < len(values):
+        total = total + helper_ints(values)
+        index = index + 1
+    return total

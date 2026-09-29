@@ -292,7 +292,11 @@ then from executables sitting beside the running `mylang`, then from `PATH`, and
 never from the working directory. `amd64_sysv` is the only supported target, a
 module entry needs `--project`, `--library` produces a shared library, and a
 program using a construct the native backend does not implement fails with
-`E_QBE_UNSUPPORTED` before any output is written. `--report` adds one
+`E_QBE_UNSUPPORTED` before any output is written. A project entry builds
+module by module and relinks only what changed; `--whole-program` asks for the
+single whole-program compile (see
+[building a project module by module](module-interfaces.md#building-a-project-module-by-module)).
+`--report` adds one
 `qbe-build-v1` JSON line naming every compiled function, its own cache key, the
 cached object that holds it, whether that object was reused, how many distinct
 objects hold the guest functions (`function_objects`) and how many of them this

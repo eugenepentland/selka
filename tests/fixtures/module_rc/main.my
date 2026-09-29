@@ -1,11 +1,13 @@
 module main
 import lib
+import bridge
 
 
 def main(out: Stream) -> int:
     value = "anchored"
     out.print(lib.select(value, 1))
     out.print(lib.measure(value))
+    out.print(bridge.width([1, 2, 3]))
     values = [1, 2, 3]
     out.print(lib.change(mut values, 2))
     out.print(values)

@@ -5,3 +5,11 @@ public def width(value: str) -> int effects():
     for k in range(2):
         total = total + len(value) + k
     return total
+
+public def summed(values: list[int]) -> int effects():
+    total = 0
+    index = 0
+    while index < len(values):
+        total = total + values[index]
+        index = index + 1
+    return total

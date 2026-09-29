@@ -1,4 +1,6 @@
 //! Shared frontend export snapshot consumed by independent native backends.
+const std = @import("std");
+const fragments = @import("qbe_fragments.zig");
 const typed = @import("typed.zig");
 /// The safety and accounting code one emission is asked to generate. Every
 /// field defaults to the fully checked, fully accounted program, so a caller
@@ -28,14 +30,14 @@ pub const Interface = struct {
     /// The safety and accounting code the backend generates for this program.
     policy: Policy = .{},
     /// Persistent per-function unit reuse, or null to emit every unit fresh.
-    reuse: ?@import("qbe_fragments.zig").Reuse = null,
+    reuse: ?fragments.Reuse = null,
     /// MODULE-COMPILE-1: emit one module of the program, reading what its
     /// units need about every function it did not lower from that function's
     /// module interface. Null emits the whole program.
     module: ?*const Module = null,
     /// When set, the emission fills it with what it computed about every
     /// function: the facts a module interface carries and each unit's keys.
-    report: ?*@import("qbe_fragments.zig").Report = null,
+    report: ?*fragments.Report = null,
 };
 
 /// MODULE-COMPILE-1: one module's emission out of a program checked against
@@ -59,6 +61,18 @@ pub const Module = struct {
     /// Filled by the emission: the module's share of the program's runtime
     /// data, for a link to merge with the other modules' shares.
     parts: ?*Parts = null,
+    /// MODULE-SCHEDULE-5: called once the allocation analysis is done and
+    /// before any unit is emitted, with every function's facts: what a
+    /// dependent's compile reads is final then.
+    analyzed: ?Analyzed = null,
+};
+
+/// A hook the emission calls with every function's facts (no unit keys yet),
+/// allocated with `arena`.
+pub const Analyzed = struct {
+    arena: std.mem.Allocator,
+    context: *anyopaque,
+    run: *const fn (context: *anyopaque, facts: fragments.Report) anyerror!void,
 };
 
 /// One module's share of the shared runtime C unit: the descriptors of every

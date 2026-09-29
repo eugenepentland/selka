@@ -23,6 +23,8 @@ const std = @import("std");
 const codec = @import("persist_codec.zig");
 const summary = @import("semantic_summary.zig");
 const effect_set = @import("effect_set.zig");
+const source = @import("source.zig");
+const embed = @import("embed.zig");
 
 /// Payload version; bump for any layout or meaning change so old artifacts miss.
 pub const format_version = "module-interface-v3";
@@ -152,11 +154,10 @@ pub const Marks = struct { arena: bool = false, text: bool = false };
 
 /// The spelling of one emission configuration an interface's facts hold for.
 pub fn configName(allocator: std.mem.Allocator, config: EmissionConfig) std.mem.Allocator.Error![]u8 {
-    return std.fmt.allocPrint(allocator, "debug={s} steps={s} frames={s} checks={s} arenas={s} runtime={s} values={s} cow={s}", .{
+    return std.fmt.allocPrint(allocator, "debug={s} steps={s} frames={s} arenas={s} runtime={s} values={s} cow={s}", .{
         if (config.drop_debug) "dropped" else "kept",
         onOff(config.step_checks),
         onOff(config.frame_checks),
-        onOff(config.checks),
         onOff(config.arenas),
         @import("runtime_mode.zig").identity(),
         onOff(@import("value_semantics.zig").enabled()),
@@ -166,7 +167,7 @@ pub fn configName(allocator: std.mem.Allocator, config: EmissionConfig) std.mem.
 
 /// The switches a module's emission facts depend on: the lowering's `debug`
 /// policy, the emission policy and the program-wide arena switch.
-pub const EmissionConfig = struct { drop_debug: bool, step_checks: bool, frame_checks: bool, checks: bool, arenas: bool };
+pub const EmissionConfig = struct { drop_debug: bool, step_checks: bool, frame_checks: bool, arenas: bool };
 
 fn onOff(flag: bool) []const u8 {
     return if (flag) "on" else "off";
@@ -177,7 +178,7 @@ fn onOff(flag: bool) []const u8 {
 /// marks and value targets are link inputs, not a dependent's.
 pub fn emissionHash(interface: Interface) [32]u8 {
     var hash = std.crypto.hash.Blake3.init(.{});
-    hash.update("module-emission-hash-v2");
+    hash.update("module-emission-hash-v3");
     frame(&hash, interface.module);
     frame(&hash, interface.emission.config);
     count(&hash, interface.emission.functions.len);
@@ -190,9 +191,25 @@ pub fn emissionHash(interface: Interface) [32]u8 {
         for (function.stable) |flag| hash.update(&.{@intFromBool(flag)});
         hash.update(&function.physical);
     }
+    if (physicalInputs(interface)) {
+        inline for (.{ interface.emission.physical.records, interface.emission.physical.functions, interface.emission.physical.dependencies }) |rows| {
+            count(&hash, rows.len);
+            for (rows) |row| {
+                frame(&hash, row.name);
+                frame(&hash, row.bytes);
+            }
+        }
+    }
     var out: [32]u8 = undefined;
     hash.final(&out);
     return out;
+}
+
+/// Whether real physical bodies can affect a dependent's RC code generation.
+pub fn physicalInputs(interface: Interface) bool {
+    const zero: [32]u8 = @splat(0);
+    for (interface.emission.functions) |function| if (!std.mem.eql(u8, &function.physical, &zero)) return true;
+    return false;
 }
 
 /// The hash a module's dependents key on: everything but `positions`.
@@ -282,15 +299,15 @@ pub fn positionsHash(interface: Interface) [32]u8 {
 /// One direct import and the interface hash it had when the module was built.
 pub const ImportHash = struct { module: []const u8, hash: [32]u8 };
 
-/// The implementation hash: the module's name and source bytes and the
-/// interface hash of each direct import, sorted by name. A module whose
-/// implementation hash is unchanged compiles to the same objects.
-pub fn implementationHash(module: []const u8, source_bytes: []const u8, imports: []ImportHash) [32]u8 {
+/// Hash the module's source, resolved embedded inputs and direct semantic
+/// imports. Emission and positions dependencies are keyed separately.
+pub fn implementationHash(module: []const u8, src: source.Source, imports: []ImportHash) [32]u8 {
     std.mem.sort(ImportHash, imports, {}, importBefore);
     var hash = std.crypto.hash.Blake3.init(.{});
-    hash.update("module-implementation-hash-v1");
+    hash.update("module-implementation-hash-v2");
     frame(&hash, module);
-    frame(&hash, source_bytes);
+    frame(&hash, src.bytes);
+    embed.hashInto(&hash, src.embeds);
     count(&hash, imports.len);
     for (imports) |imported| {
         frame(&hash, imported.module);

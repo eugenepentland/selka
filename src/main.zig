@@ -279,7 +279,13 @@ fn buildCommand(process: std.process.Init, args: []const []const u8) !u8 {
     const asked = native_options.timingsJson(args);
     var timings = language.timings.Profile.init(process.io, asked, .compiler);
     var phases: native_build.PhaseTimings = .{};
-    const status = try native_build.runMeasured(process, args, if (asked) &phases else null);
+    // MODULE-SCHEDULE-3: a project executable builds module by module; what
+    // that path does not handle goes to the whole-program build.
+    const outcome = try @import("module_build.zig").build(process.gpa, .{ .io = process.io, .environ = process.environ_map, .args = args, .phases = if (asked) &phases else null, .identity = &build_identity });
+    const status = switch (outcome) {
+        .status => |done| done,
+        .fallback => try native_build.runMeasured(process, args, if (asked) &phases else null),
+    };
     addBuildPhases(&timings, phases);
     try timings.report(status);
     return status;
@@ -621,9 +627,8 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
     // `run` and `check` accept a project entry: a file that opens with a module
     // header (or a module-only import/export) loads its reachable graph exactly as
     // `run-project`/`check-project` does. A plain single-file program skips this
-    // and keeps the original one-unit path byte-for-byte. `check` of an entry
-    // without `main` falls back to the library check (`CHECK-LIBRARY-2`).
-    if (parsed.command == .run and module_syntax.usesModuleSyntax(bytes)) return listModules(init, parsed);
+    // and keeps the original one-unit path byte-for-byte.
+    if (parsed.command == .run and module_syntax.usesModuleSyntax(bytes)) return runProjectModules(init, parsed);
     if (parsed.command == .check and module_syntax.usesModuleSyntax(bytes)) {
         var project = parsed;
         project.command = .@"check-project";
@@ -857,6 +862,45 @@ fn explainOwnership(init: Context, compilation: *language.Compilation, path: ?[]
 
 /// Report the flag that would grant an entry point the authority it asked for.
 /// Only `--restrict` can withhold one, so the message names the active mode.
+/// MODULE-SCHEDULE-3: `run` of a project builds it module by module and
+/// runs the executable; null when the whole-program path must run it: a
+/// restricted grant set, a report, timings, an invalidation explanation,
+/// generated inputs, JSON diagnostics or no cache.
+fn runModules(init: Context, parsed: Parsed) !?u8 {
+    const reporting = parsed.reporting;
+    if (reporting.explain_invalidation or reporting.timings or reporting.timings_json or reporting.report) return null;
+    if (parsed.grants.flags.restricted or parsed.input_count != 0 or parsed.no_cache) return null;
+    if (init.diagnostics != .text or init.friction != null) return null;
+    var settings = parsed.native;
+    settings.source = parsed.path;
+    settings.project = true;
+    settings.run = true;
+    settings.arguments = parsed.runtime;
+    settings.max_memory = parsed.max_memory;
+    const policy = parsed.runPolicy(true);
+    const outcome = try @import("module_build.zig").buildForRun(init.gpa, .{
+        .io = init.io,
+        .environ = init.environ,
+        .settings = settings,
+        .switches = .{ .drop_debug = false, .step_checks = policy.step_checks, .frame_checks = policy.frame_checks },
+        .identity = &build_identity,
+    });
+    const path = switch (outcome) {
+        .executable => |built| built,
+        .status => |status| return status,
+        .fallback => return null,
+    };
+    defer init.gpa.free(path);
+    const status = try native_run.executeBuilt(init.gpa, .{ .io = init.io, .environ = init.environ, .manifest = "", .settings = settings, .diagnostics = .text }, path);
+    return status;
+}
+
+fn runProjectModules(init: Context, parsed: Parsed) !u8 {
+    if (try runModules(init, parsed)) |status| return status;
+    const status = try listModules(init, parsed);
+    return status;
+}
+
 fn reportUngranted(init: Context, flag: []const u8) !u8 {
     const message = try std.fmt.allocPrint(
         init.gpa,

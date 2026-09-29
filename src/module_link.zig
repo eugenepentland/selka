@@ -52,7 +52,7 @@ const Merge = struct {
                 entry.value_ptr.* = unit;
                 continue;
             }
-            for ([_][]const u8{ "il_digest", "meta_digest", "il", "locations", "messages", "inlines" }) |key| {
+            for ([_][]const u8{ "il_digest", "meta_digest", "il", "il_facts", "locations", "messages", "inlines" }) |key| {
                 if (!try equal(self.allocator, field(entry.value_ptr.*, key), field(unit, key))) return error.Conflict;
             }
         }

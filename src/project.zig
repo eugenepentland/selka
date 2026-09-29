@@ -52,7 +52,16 @@ pub const Provider = struct {
 /// defaults (PROJ-SCALE-1) admit a project of well over a million lines with no
 /// configuration: 64 MiB of source is about 1.9 million lines of 35-byte lines,
 /// and 16,384 modules averages 64 lines a module over a million lines.
-pub const Options = struct { max_modules: usize = 16384, max_imports: usize = 262144, max_file_bytes: usize = 4 * 1024 * 1024, max_total_bytes: usize = 64 * 1024 * 1024 };
+pub const Options = struct {
+    max_modules: usize = 16384,
+    max_imports: usize = 262144,
+    max_file_bytes: usize = 4 * 1024 * 1024,
+    max_total_bytes: usize = 64 * 1024 * 1024,
+    /// MODULE-SCHEDULE-4: ask the provider for a standard module first (a
+    /// per-module compile serves its precompiled interface), and read the
+    /// compiler's own source only when the provider has none.
+    standard_from_provider: bool = false,
+};
 /// A source span paired with the module whose bytes it indexes.
 pub const Site = struct { module: usize, span: source.Span };
 /// A dotted module path: its joined text, its trailing segment, and its span.
@@ -140,7 +149,12 @@ pub const Project = struct {
         try self.names.put(allocator, owned_name, id);
         const site = origin orelse Site{ .module = id, .span = .{ .start = 0, .end = 0 } };
         const limit = @min(options.max_file_bytes, options.max_total_bytes - self.totalBytes());
-        const bytes = if (standard_library.source(path)) |library| try allocator.dupe(u8, library) else provider.read(provider.context, allocator, path, limit) catch |err| {
+        const standard = standard_library.source(path);
+        const served: ?[]u8 = if (standard != null and options.standard_from_provider) provider.read(provider.context, allocator, path, limit) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            else => null,
+        } else null;
+        const bytes = if (served) |text| text else if (standard) |library| try allocator.dupe(u8, library) else provider.read(provider.context, allocator, path, limit) catch |err| {
             if (err == error.OutOfMemory) return error.OutOfMemory;
             if (err == error.TooLarge) return self.fail(eProjectBytes, try budgetMessage(allocator, path, options, self.totalBytes()), site, null);
             return self.fail("E_MODULE_READ", try std.fmt.allocPrint(allocator, "cannot load {s}: {s}", .{ path, @errorName(err) }), site, null);
@@ -493,6 +507,31 @@ fn budgetMessage(allocator: std.mem.Allocator, path: []const u8, options: Option
     }
     return std.fmt.allocPrint(allocator, "cannot load {s}: the file exceeds the {d}-byte max_file_bytes budget; raise budgets.max_file_bytes in mylang.json", .{ path, options.max_file_bytes });
 }
+/// MODULE-SCHEDULE-1: the modules one source imports, read from its header
+/// exactly as `Project.load` reads it, owned by `allocator`; null when the
+/// header has a problem `load` would report (a per-module build then loads
+/// the project whole, which reports it).
+pub fn headerImports(allocator: std.mem.Allocator, name: []const u8, bytes: []const u8, is_entry: bool) error{OutOfMemory}!?[]const []const u8 {
+    var project = Project.init(allocator);
+    defer project.deinit();
+    const arena = project.arena.allocator();
+    const path = modulePath(arena, name) catch |err| switch (err) {
+        error.InvalidModuleName => return null,
+        error.OutOfMemory => return error.OutOfMemory,
+    };
+    try project.modules.append(arena, .{ .name = name, .src = try source.Source.init(arena, path, bytes) });
+    var scratch = std.heap.ArenaAllocator.init(allocator);
+    defer scratch.deinit();
+    project.header(0, .{}, is_entry, &scratch) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => return null,
+    };
+    const imports = project.modules.items[0].imports;
+    const out = try allocator.alloc([]const u8, imports.len);
+    for (imports, out) |imported, *slot| slot.* = try allocator.dupe(u8, imported.name);
+    return out;
+}
+
 /// Check dotted module names while excluding filesystem traversal syntax.
 pub fn validName(name: []const u8) bool {
     var parts = std.mem.splitScalar(u8, name, '.');

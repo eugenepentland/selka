@@ -1063,9 +1063,12 @@ pub fn build(b: *std.Build) void {
     // MODULE-COMPILE-1..3: every module of `tests/lang` and the fixtures,
     // compiled on its own from its imports' interfaces, emits the whole
     // program's units key for key (Debug, and ReleaseFast switches) and links
-    // into the whole program's executable; and an incremental per-module
-    // build after seeded edits builds what a clean whole-program build builds.
-    const module_compile_step = b.step("test-module-compile", "Per-module compilation against the whole-program build, and its build differential");
+    // into the whole program's executable; the default build of each program
+    // (module by module, MODULE-SCHEDULE-1..4) makes the `--whole-program`
+    // build's executable and an unchanged rebuild compiles nothing; and an
+    // incremental default build after seeded edits builds what a clean
+    // whole-program build builds.
+    const module_compile_step = b.step("test-module-compile", "Per-module compilation and the default per-module build against the whole-program build, and its build differential");
     const module_programs = [_][]const u8{ "tests/fixtures/interfaces/main.my", "tests/fixtures/interfaces_generic/main.my", "tests/fixtures/incremental/main.my", "tests/fixtures/module_compile/main.my" };
     const module_oracle = driver(b, "python3 tests/module_compile_oracle.py", rss.driver, "module_compile");
     module_oracle.addArgs(&.{ "python3", "tests/module_compile_oracle.py" });
@@ -1078,6 +1081,12 @@ pub fn build(b: *std.Build) void {
     module_release.addArtifactArg(exe);
     module_release.addArgs(&module_programs);
     module_compile_step.dependOn(&module_release.step);
+    const module_build = driver(b, "python3 tests/module_build_oracle.py", rss.driver, "module_compile");
+    module_build.addArgs(&.{ "python3", "tests/module_build_oracle.py" });
+    module_build.addArtifactArg(exe);
+    module_build.addArg("tests/lang");
+    module_build.addArgs(&module_programs);
+    module_compile_step.dependOn(&module_build.step);
     const module_diff = driver(b, "python3 tests/module_build_diff.py", rss.driver, "module_compile");
     module_diff.addArgs(&.{ "python3", "tests/module_build_diff.py", "--steps", "20" });
     module_diff.addArtifactArg(exe);

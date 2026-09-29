@@ -22,10 +22,14 @@ pub const usage =
     \\usage: mylang compile-module <entry.my> --module=NAME --interfaces=DIR --out=DIR --arenas=on|off
     \\                             [--cache-dir=DIR] [--drop-debug] [--drop-step-checks]
     \\                             [--drop-frame-checks] [--objects [--qbe=PATH] [--zig=PATH]]
+    \\                             [--ready] [--standard-interfaces=DIR] [-- BUILD-OPTIONS]
     \\       mylang link-modules <entry.my> --units=DIR -o OUT [--cache-dir=DIR] [--mode MODE]
     \\  compile-module  check NAME against the interfaces in DIR, write DIR/NAME.myi with its
     \\                  emission facts and OUT/NAME.units.json; --objects also compiles its
     \\                  objects into the build cache. --arenas is the program's arena switch.
+    \\                  --ready (the per-module build's scheduler) signals the interface on stderr
+    \\                  as soon as it is written, and writes NAME.result.json and NAME.shared.json
+    \\                  in place of NAME.units.json; BUILD-OPTIONS go to the build of the objects.
     \\  link-modules    merge every OUT/*.units.json into one manifest and build it into OUT
     \\
 ;
@@ -39,18 +43,33 @@ const Options = struct {
     interfaces: ?[]const u8 = null,
     out: ?[]const u8 = null,
     cache: []const u8 = ".mylang-cache",
-    config: iface.EmissionConfig = .{ .drop_debug = false, .step_checks = true, .frame_checks = true, .checks = true, .arenas = false },
+    config: iface.EmissionConfig = .{ .drop_debug = false, .step_checks = true, .frame_checks = true, .arenas = false },
     arenas: bool = false,
     objects: bool = false,
     /// `--qbe=PATH` and `--zig=PATH`, handed to the build of the objects.
     tools: [2]?[]const u8 = .{ null, null },
+    /// `--ready`: the scheduler's protocol (MODULE-SCHEDULE-1).
+    ready: bool = false,
+    /// `--standard-interfaces=DIR`: read the standard modules' interfaces from
+    /// DIR instead of checking them from the compiler's source (MODULE-SCHEDULE-4).
+    standard: ?[]const u8 = null,
+    /// Everything after `--`: the build options the objects are built with.
+    build_args: ?[]const []const u8 = null,
 };
 
 fn parse(args: []const []const u8) ?Options {
     if (args.len < 1) return null;
     var options: Options = .{ .path = args[0] };
-    for (args[1..]) |arg| {
-        if (std.mem.startsWith(u8, arg, "--module=")) {
+    for (args[1..], 1..) |arg, at| {
+        if (std.mem.eql(u8, arg, "--")) {
+            options.build_args = args[at + 1 ..];
+            break;
+        }
+        if (std.mem.eql(u8, arg, "--ready")) {
+            options.ready = true;
+        } else if (std.mem.startsWith(u8, arg, "--standard-interfaces=")) {
+            options.standard = arg["--standard-interfaces=".len..];
+        } else if (std.mem.startsWith(u8, arg, "--module=")) {
             options.module = arg["--module=".len..];
         } else if (std.mem.startsWith(u8, arg, "--interfaces=")) {
             options.interfaces = arg["--interfaces=".len..];
@@ -103,13 +122,15 @@ pub fn compileModule(process: std.process.Init, args: []const []const u8, identi
     const relative = project_module.modulePath(a, module) catch return usageError(process.io);
     const bytes = if (is_entry) entry.bytes else compile_module.standardSource(relative) orelse
         std.Io.Dir.cwd().readFileAlloc(process.io, try std.fs.path.join(a, &.{ entry.root, relative }), a, .limited(64 * 1024 * 1024)) catch return error.ReadFailed;
-    var library = oracle.Library.stored(.{ .io = process.io, .directory = directory, .arena = a });
-    var store = try openStore(context, options.cache, identity, entry.name);
+    var library = oracle.Library.stored(.{ .io = process.io, .directory = directory, .arena = a, .standard = options.standard });
+    var store = try openStore(context, .{ .cache = options.cache, .identity = identity, .entry = entry.name, .module = module });
     var compiled: compile_module.Compiled = undefined;
+    var publish: Publish = .{ .context = context, .directory = directory, .module = module };
     const request: compile_module.Request = .{
         .module = .{ .module = module, .bytes = bytes, .is_entry = is_entry, .library = &library, .assets = entry.assets, .limits = entry.limits },
         .config = options.config,
         .reuse = .{ .store = &store, .lean = true, .executable = true },
+        .ready = if (options.ready) .{ .context = &publish, .run = Publish.run } else null,
     };
     compile_module.compile(process.gpa, a, request, &compiled) catch |err| switch (err) {
         error.SourceError => {
@@ -125,12 +146,12 @@ pub fn compileModule(process: std.process.Init, args: []const []const u8, identi
         else => return err,
     };
     defer compiled.deinit();
-    std.Io.Dir.cwd().createDirPath(process.io, directory) catch return error.WriteFailed;
     std.Io.Dir.cwd().createDirPath(process.io, out) catch return error.WriteFailed;
-    try writeAtomic(context, try std.fs.path.join(a, &.{ directory, try iface.fileName(a, module) }), try iface.encode(a, compiled.interface));
+    if (!options.ready) try publish.write(&compiled);
     const units_path = try std.fs.path.join(a, &.{ out, try std.fmt.allocPrint(a, "{s}.units.json", .{module}) });
-    try writeAtomic(context, units_path, try unitsDocument(a, module, is_entry, &compiled));
+    if (!options.ready) try writeAtomic(context, units_path, try unitsDocument(a, module, is_entry, &compiled));
     const objects: ?[]const u8 = if (options.objects) try moduleObjects(process, .{ .options = options, .entry = options.path, .module = module, .manifest = compiled.units.manifest }) else null;
+    if (options.ready) try writeResult(context, .{ .out = out, .module = module, .is_entry = is_entry, .compiled = &compiled, .objects = objects });
     const summary = try std.json.Stringify.valueAlloc(a, .{
         .version = "module-compile-v1",
         .module = module,
@@ -143,6 +164,29 @@ pub fn compileModule(process: std.process.Init, args: []const []const u8, identi
     try stdout(process.io, "\n");
     return 0;
 }
+
+/// Where a compile publishes its interface.
+const Publish = struct {
+    context: Context,
+    directory: []const u8,
+    module: []const u8,
+
+    /// MODULE-SCHEDULE-5: the interface is final; write it and tell the
+    /// scheduler, which may start the module's dependents while its units and
+    /// objects are still being built.
+    fn run(context: *anyopaque, compiled: *const compile_module.Compiled) anyerror!void {
+        const self: *Publish = @ptrCast(@alignCast(context));
+        try self.write(compiled);
+        const hashes = compiled.hashes;
+        try stderr(self.context.io, try std.fmt.allocPrint(self.context.arena, "{s} {s} {s} {s}\n", .{ ready_marker, hashes.interface, hashes.emission, hashes.positions }));
+    }
+
+    fn write(self: *Publish, compiled: *const compile_module.Compiled) Error!void {
+        const a = self.context.arena;
+        std.Io.Dir.cwd().createDirPath(self.context.io, self.directory) catch return error.WriteFailed;
+        try writeAtomic(self.context, try std.fs.path.join(a, &.{ self.directory, try iface.fileName(a, self.module) }), try iface.encode(a, compiled.interface));
+    }
+};
 
 /// What one module's objects are built from.
 const ObjectRequest = struct { options: Options, entry: []const u8, module: []const u8, manifest: []const u8 };
@@ -159,8 +203,12 @@ fn moduleObjects(process: std.process.Init, request: ObjectRequest) Error![]cons
     var args: std.ArrayList([]const u8) = .empty;
     try args.appendSlice(a, &.{ request.entry, "--project", try std.fmt.allocPrint(a, "--manifest-file={s}", .{manifest_path}), "--module-objects", "-o", listed });
     try args.append(a, try std.fmt.allocPrint(a, "--cache-dir={s}", .{request.options.cache}));
-    if (request.options.config.drop_debug) try args.appendSlice(a, &.{ "--mode", "ReleaseFast" });
-    for (request.options.tools) |tool| if (tool) |flag| try args.append(a, flag);
+    if (request.options.build_args) |given| {
+        try args.appendSlice(a, given);
+    } else {
+        if (request.options.config.drop_debug) try args.appendSlice(a, &.{ "--mode", "ReleaseFast" });
+        for (request.options.tools) |tool| if (tool) |flag| try args.append(a, flag);
+    }
     const status = @import("qbe_build.zig").run(process, args.items) catch return error.WriteFailed;
     if (status != 0) return error.WriteFailed;
     return listed;
@@ -171,14 +219,118 @@ fn usageError(io: std.Io) Error!u8 {
     return 2;
 }
 
+/// Which fragment store a module compile opens.
+const StoreSite = struct { cache: []const u8, identity: []const u8, entry: []const u8, module: []const u8 };
+
 /// The fragment store every module compile of one program shares, under the
-/// cache directory's frontend root, in its own pack per program entry.
-fn openStore(context: Context, cache: []const u8, identity: []const u8, entry: []const u8) Error!fragments.Store {
-    const root = try std.fs.path.join(context.arena, &.{ cache, "frontend", "fragments" });
+/// cache directory's frontend root, with a pack per program entry and module:
+/// concurrent compiles of one program never rewrite each other's pack, and a
+/// compile reads and rewrites only its own module's entries.
+fn openStore(context: Context, site: StoreSite) Error!fragments.Store {
+    const root = try std.fs.path.join(context.arena, &.{ site.cache, "frontend", "fragments" });
     std.Io.Dir.cwd().createDirPath(context.io, root) catch return error.WriteFailed;
     const absolute = std.Io.Dir.cwd().realPathFileAlloc(context.io, root, context.arena) catch return error.WriteFailed;
-    const label = try std.fmt.allocPrint(context.arena, "{s}\x00module-compile", .{entry});
-    return fragments.Store.open(context.arena, context.io, absolute, identity, label);
+    const label = try std.fmt.allocPrint(context.arena, "{s}\x00module-compile\x00{s}", .{ site.entry, site.module });
+    return fragments.Store.open(context.arena, context.io, absolute, site.identity, label);
+}
+
+/// The line a `--ready` compile writes to standard error once its interface
+/// is final, followed by its interface, emission and positions hashes.
+pub const ready_marker = "\x1emylang-module-ready";
+
+/// What a `--ready` compile's result file is written from.
+const ResultSite = struct { out: []const u8, module: []const u8, is_entry: bool, compiled: *const compile_module.Compiled, objects: ?[]const u8 };
+
+/// MODULE-SCHEDULE-1: `NAME.shared.json` (the module's share of the program's
+/// metadata unit: descriptor and renderer blocks, frozen literals, host
+/// bridges) and `NAME.result.json` (hashes, counts, the module's own warnings,
+/// marks, the entry's fields, the digest of its shared part, its objects).
+fn writeResult(context: Context, site: ResultSite) Error!void {
+    const a = context.arena;
+    const compiled = site.compiled;
+    const manifest = std.json.parseFromSliceLeaky(std.json.Value, a, compiled.units.manifest, .{}) catch return error.InternalError;
+    const shared = try std.json.Stringify.valueAlloc(a, .{
+        .descriptors = compiled.units.parts.descriptors,
+        .renderers = compiled.units.parts.renderers,
+        .owners = compiled.units.parts.owners,
+        .glue = compiled.units.parts.glue,
+        .manifest = .{
+            .runtime_contract = field(manifest, "runtime_contract"),
+            .functions = try sharedUnits(a, manifest),
+            .embeds = field(manifest, "embeds"),
+            .host = field(manifest, "host"),
+            .entry = if (site.is_entry) field(manifest, "entry") else std.json.Value{ .string = "" },
+        },
+    }, .{});
+    var digest: [32]u8 = undefined;
+    std.crypto.hash.Blake3.hash(shared, &digest, .{});
+    try writeAtomic(context, try std.fs.path.join(a, &.{ site.out, try std.fmt.allocPrint(a, "{s}.shared.json", .{site.module}) }), shared);
+    const entry = if (site.is_entry) try std.json.Stringify.valueAlloc(a, .{
+        .entry = field(manifest, "entry"),
+        .entry_parameters = field(manifest, "entry_parameters"),
+        .entry_parameter_names = field(manifest, "entry_parameter_names"),
+        .entry_argv_element = field(manifest, "entry_argv_element"),
+    }, .{}) else null;
+    const result = try std.json.Stringify.valueAlloc(a, .{
+        .version = "module-result-v1",
+        .module = site.module,
+        .hashes = compiled.hashes,
+        .counts = compiled.counts,
+        .warnings = try ownWarnings(context, compiled, site.module),
+        .marks = compiled.interface.emission.marks,
+        .text_format = field(manifest, "text_format") == .bool and field(manifest, "text_format").bool,
+        .entry = entry,
+        .shared = &std.fmt.bytesToHex(digest, .lower),
+        .objects = site.objects,
+    }, .{});
+    try writeAtomic(context, try std.fs.path.join(a, &.{ site.out, try std.fmt.allocPrint(a, "{s}.result.json", .{site.module}) }), result);
+}
+
+/// Retain every shared literal/site marker with its actual physical unit symbol.
+fn sharedUnits(a: std.mem.Allocator, manifest: std.json.Value) Error![]const std.json.Value {
+    var units: std.ArrayList(std.json.Value) = .empty;
+    for (array(field(manifest, "functions"))) |unit| {
+        var kept: std.ArrayList([]const u8) = .empty;
+        var lines = std.mem.splitScalar(u8, @import("qbe_build_units.zig").facts(unit), '\n');
+        while (lines.next()) |line| if (std.mem.startsWith(u8, line, "# myl-lit ") or std.mem.startsWith(u8, line, "# myl-rcsite ")) try kept.append(a, line);
+        if (kept.items.len == 0) continue;
+        var row: std.json.ObjectMap = .empty;
+        try row.put(a, "symbol", field(unit, "symbol"));
+        try row.put(a, "il_facts", .{ .string = try std.mem.join(a, "\n", kept.items) });
+        try units.append(a, .{ .object = row });
+    }
+    return units.items;
+}
+
+/// The warnings of a compile located in the module's own source, rendered as
+/// a whole-program build renders them; the scheduler replays them on every
+/// build, since an unchanged module is not compiled again.
+fn ownWarnings(context: Context, compiled: *const compile_module.Compiled, module: []const u8) Error![]const u8 {
+    const single = compiled.single orelse return "";
+    const compilation = &single.compilation;
+    const modules = compilation.index.project.modules.items;
+    var text: std.ArrayList(u8) = .empty;
+    for (compilation.diagnostics.items.items) |item| {
+        const at = compilation.src.originalSpan(item.span) catch continue;
+        if (at.input >= modules.len or !std.mem.eql(u8, modules[at.input].name, module)) continue;
+        const rendered = try diagnostic_output.render(context.gpa, item, compilation.src, .text);
+        defer context.gpa.free(rendered);
+        try text.appendSlice(context.arena, rendered);
+    }
+    return text.items;
+}
+
+fn field(value: std.json.Value, name: []const u8) std.json.Value {
+    if (value != .object) return .null;
+    return value.object.get(name) orelse .null;
+}
+
+fn array(value: std.json.Value) []const std.json.Value {
+    return if (value == .array) value.array.items else &.{};
+}
+
+fn string(value: std.json.Value) []const u8 {
+    return if (value == .string) value.string else "";
 }
 
 /// Report why a module did not check, like `mylang check`.
