@@ -13,6 +13,7 @@ const collections = @import("collection_lower.zig");
 const numeric_surface = @import("numeric_surface.zig");
 const callables = @import("callables.zig");
 const record_layouts = @import("record_layouts.zig");
+const range_step = @import("range_step.zig");
 const Error = diagnostic.Error;
 
 /// Value families the prelude folds and orderings understand.
@@ -179,6 +180,7 @@ fn buildCall(comptime Checker: type, checker: *Checker, span: source.Span, name:
     if (std.mem.eql(u8, name, "zip")) return checker.sink.fail(unsupported, span, "zip is only an iteration source: for a, b in zip(xs, ys)");
     if (std.mem.eql(u8, name, ord_builtin)) return @as(?typed.Node, try ordCall(Checker, checker, span, arguments));
     if (std.mem.eql(u8, name, chr_builtin)) return @as(?typed.Node, try chrCall(Checker, checker, span, arguments));
+    if (std.mem.eql(u8, name, "round") and arguments.len == 2) return @as(?typed.Node, try roundDigits(Checker, checker, span, arguments));
     const input = try single(Checker, checker, span, name, arguments);
     const built: ?typed.Node = if (std.mem.eql(u8, name, "sum"))
         try sum(Checker, checker, span, input)
@@ -261,7 +263,7 @@ fn single(comptime Checker: type, checker: *Checker, span: source.Span, name: []
 /// rendered the way a reader spells the call. Names outside this table keep the
 /// bare name in their rejection.
 fn preludeSignature(name: []const u8) ?[]const u8 {
-    if (std.mem.eql(u8, name, "round")) return "round(value: float) -> float";
+    if (std.mem.eql(u8, name, "round")) return "round(value: float) -> float, or round(value: float, ndigits: int) -> float";
     if (std.mem.eql(u8, name, "sum")) return "sum(values: list[int]) -> int, or sum(values: list[float]) -> float";
     if (std.mem.eql(u8, name, "reversed")) return "reversed(values: list[T]) -> list[T], or reversed(text: str) -> str";
     if (std.mem.eql(u8, name, "any")) return "any(conditions: list[bool]) -> bool";
@@ -314,6 +316,23 @@ fn roundFloat(comptime Checker: type, checker: *Checker, span: source.Span, valu
         try b.stmt(.{ .initialize = .{ .slot = result, .value = try b.read(whole) } }),
         try b.stmt(.{ .branch = .{ .condition = at_least_half, .then_body = above, .else_body = try b.stmt(.{ .branch = .{ .condition = at_most_half, .then_body = below, .else_body = null } }) } }),
     }, try b.read(result));
+}
+
+/// PRELUDE-ROUND-2: `round(x, n)`, the float nearest `x`'s exact binary value
+/// rounded to `n` decimal digits with halves away from zero, `n` negative
+/// rounding left of the point. The owner is the empty text naming the runtime
+/// family, as `chr`'s is; the arguments are the float and the digit count.
+fn roundDigits(comptime Checker: type, checker: *Checker, span: source.Span, arguments: []const typed.NodeId) Error!typed.Node {
+    const floating = nodeType(Checker, checker, arguments[0]);
+    if (!numeric_surface.isFloat(floating, checker.catalog.records)) return checker.sink.fail(unsupported, span, "round requires a float argument");
+    const digits_type = nodeType(Checker, checker, arguments[1]);
+    if (!digits_type.isInteger()) return checker.sink.fail(unsupported, span, "round's digit count must be an integer");
+    const b = builder(Checker, checker, span);
+    const digits = if (digits_type == .i64) arguments[1] else try b.node(.i64, .{ .cast = arguments[1] });
+    const text = checker.catalog.names.get("str") orelse return error.InternalError;
+    const owner = try b.local(text);
+    const empty = try b.node(text, .{ .array = &.{} });
+    return b.block(&.{try b.stmt(.{ .initialize = .{ .slot = owner, .value = empty } })}, try b.operation(owner, .float_round, &.{ arguments[0], digits }));
 }
 
 /// `sum(xs)`: every element added in order, starting from zero of the element type.
@@ -682,10 +701,11 @@ fn reversedList(comptime Checker: type, checker: *Checker, span: source.Span, in
 
 /// `list(range(end))` and `list(range(start, end))`: the counted range as a new list.
 fn rangeListCall(comptime Checker: type, checker: *Checker, span: source.Span, arguments: []const typed.NodeId) Error!typed.Node {
-    if (arguments.len == 0 or arguments.len > 2) return checker.sink.failCallSite(eArity, span, "range requires end or start, end", null, buffer_operations.range_signature);
+    if (arguments.len == 0 or arguments.len > 3) return checker.sink.failCallSite(eArity, span, "range requires end; start, end; or start, end, step", null, buffer_operations.range_signature);
     const b = builder(Checker, checker, span);
     for (arguments) |argument| if (!nodeType(Checker, checker, argument).isInteger()) return checker.sink.fail(unsupported, span, "range bounds require integers");
-    if (arguments.len == 2 and nodeType(Checker, checker, arguments[0]) != nodeType(Checker, checker, arguments[1])) return checker.sink.fail(unsupported, span, "range bounds require one integer type");
+    for (arguments[1..]) |argument| if (nodeType(Checker, checker, arguments[0]) != nodeType(Checker, checker, argument)) return checker.sink.fail(unsupported, span, "range bounds require one integer type");
+    if (arguments.len == 3) return steppedRangeList(Checker, checker, span, arguments);
     const element = nodeType(Checker, checker, arguments[arguments.len - 1]);
     const list = try collections.listType(&checker.catalog, element, span);
     const start = try b.local(element);
@@ -707,6 +727,37 @@ fn rangeListCall(comptime Checker: type, checker: *Checker, span: source.Span, a
         try b.stmt(.{ .initialize = .{ .slot = output, .value = try b.node(list, .{ .acquire_buffer = .{ .capacity = capacity } }) } }),
         try b.stmt(.{ .loop = .{ .id = loop, .condition = try b.binary(.lt, i, try b.read(limit), .bool), .body = body, .step = null } }),
     }, try b.read(output));
+}
+
+/// PY-RANGE-STEP-1: `list(range(start, stop, step))`, counting in the step's
+/// direction through the same loop a stepped `for` uses.
+fn steppedRangeList(comptime Checker: type, checker: *Checker, span: source.Span, arguments: []const typed.NodeId) Error!typed.Node {
+    const b = builder(Checker, checker, span);
+    const element = nodeType(Checker, checker, arguments[0]);
+    const list = try collections.listType(&checker.catalog, element, span);
+    const index = try b.local(element);
+    const limit = try b.local(element);
+    const output = try b.local(list);
+    const lower: range_step.Lower(Checker) = .{ .b = b, .element = element, .stride = try range_step.stride(Checker, b, constantInteger(Checker, checker, arguments[2]), element) };
+    const body = try b.stmt(.{ .discard = try b.operation(output, .append, &.{try b.read(index)}) });
+    var statements: std.ArrayList(typed.StatementId) = .empty;
+    try statements.append(checker.allocator, try b.stmt(.{ .initialize = .{ .slot = index, .value = arguments[0] } }));
+    try statements.append(checker.allocator, try b.stmt(.{ .initialize = .{ .slot = limit, .value = arguments[1] } }));
+    try statements.appendSlice(checker.allocator, try lower.setup(arguments[2]));
+    try statements.append(checker.allocator, try b.stmt(.{ .initialize = .{ .slot = output, .value = try b.node(list, .{ .acquire_buffer = .{ .capacity = try b.integer(0) } }) } }));
+    try statements.append(checker.allocator, try b.stmt(.{ .loop = .{ .id = loopId(Checker, checker), .condition = try lower.condition(index, limit), .body = body, .step = try lower.advance(index, limit) } }));
+    return b.block(statements.items, try b.read(output));
+}
+
+/// The value of a checked integer literal, negated or not, or null for any
+/// value the checker does not know.
+fn constantInteger(comptime Checker: type, checker: *Checker, value: typed.NodeId) ?i128 {
+    const node = checker.nodes.items[@backingInt(value)];
+    return switch (node.data) {
+        .integer => |known| known,
+        .unary => |unary| if (unary.op == .neg and checker.nodes.items[@backingInt(unary.operand)].data == .integer) -checker.nodes.items[@backingInt(unary.operand)].data.integer else null,
+        else => null,
+    };
 }
 
 /// `list(xs)`: an independent copy of a list.

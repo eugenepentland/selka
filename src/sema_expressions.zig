@@ -501,6 +501,8 @@ fn queueExpression(comptime Checker: type, self: *Checker, work: *std.ArrayList(
             return true;
         },
         .binary => |b| {
+            // A comparison chain checks its own operands, in source order.
+            if (b.chained) return false;
             try self.hintBinary(node);
             try work.append(self.allocator, .{ .id = id, .emit = true });
             try work.append(self.allocator, .{ .id = b.right, .checkpoint = if (b.op == .logical_and or b.op == .logical_or) .{ .condition = b.left, .truth = b.op == .logical_and } else null });
@@ -549,6 +551,8 @@ fn checkedExpression(comptime Checker: type, self: *Checker, node: ast.Node, min
         .list_literal => |inputs| return self.checkListLiteral(node, inputs, temporaries),
         .set_literal => |inputs| return self.checkSetLiteral(node, inputs, temporaries),
         .format => |parts| return self.checkFormat(node, parts, temporaries),
+        // Only an f-string's own parts are formatted fields, checked there.
+        .format_field => return error.InternalError,
         .comprehension => |each| return self.checkComprehension(node, each, temporaries),
         .list_operation => |op| {
             if (op.kind == .write and op.arguments.len == 2) if (try self.arrayPlace(op.base, op.arguments[0])) |place|
@@ -829,7 +833,7 @@ fn consumedTemporaries(comptime Checker: type, self: *Checker, node: ast.Node, o
         // every key and value, whether they construct a dictionary or a table.
         .list_literal, .set_literal, .format, .comprehension => return 0,
         .dictionary_literal => |literal| return literal.len,
-        .binary => return 2,
+        .binary => |binary| return binaryTemporaries(binary),
         else => {},
     }
     if (node.data == .unary and node.data.unary.op == .is_none) return 1;
@@ -950,4 +954,9 @@ test "text methods whose one operand is more text get the receiver type as their
     try std.testing.expect(sequenceArgument(.starts_with));
     try std.testing.expect(sequenceArgument(.replace));
     try std.testing.expect(!sequenceArgument(.zfill));
+}
+/// A binary operator leaves both queued operands to pop, except a comparison
+/// chain (`PY-CHAIN-1`), which checks its own operands and leaves none.
+fn binaryTemporaries(binary: @FieldType(@FieldType(ast.Node, "data"), "binary")) usize {
+    return if (binary.chained) 0 else 2;
 }

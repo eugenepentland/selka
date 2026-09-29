@@ -982,8 +982,12 @@ const Checker = struct {
     }
     /// Give a binary operator's untyped operand the type of its typed side or context.
     pub fn hintBinary(self: *Checker, node: ast.Node) Error!void {
-        const binary = node.data.binary;
-        const expected = self.obviousType(binary.left) orelse self.obviousType(binary.right) orelse self.expected_types.get(node.span) orelse return;
+        return self.hintOperands(node.data.binary, self.expected_types.get(node.span));
+    }
+    /// Give each operand of one binary operator the numeric type the other side
+    /// or the context makes obvious, so a literal adopts its partner's width.
+    pub fn hintOperands(self: *Checker, binary: @FieldType(@FieldType(ast.Node, "data"), "binary"), context: ?typed.Type) Error!void {
+        const expected = self.obviousType(binary.left) orelse self.obviousType(binary.right) orelse context orelse return;
         if (!expected.isInteger() and !numeric_surface.isFloat(expected, self.catalog.records)) {
             // `==`/`!=` operands share one aggregate type, so a typed side gives a
             // contextual constructor on the other side its type (`v == None`,
@@ -1109,6 +1113,13 @@ const Checker = struct {
     pub const checkTextLiteral = operator_checks.checkTextLiteral;
     pub const checkUnary = operator_checks.checkUnary;
     pub const checkValueBinary = operator_checks.checkValueBinary;
+    pub const binaryValue = operator_checks.binaryValue;
+    const idiom_checks = @import("sema_idioms.zig").Checks(Checker);
+    pub const checkChain = idiom_checks.checkChain;
+    pub const idiomBinary = idiom_checks.idiomBinary;
+    pub const rangeStep = idiom_checks.rangeStep;
+    pub const repeatAssignment = idiom_checks.repeatAssignment;
+    pub const formatField = idiom_checks.formatField;
     pub const checkValueIndex = operator_checks.checkValueIndex;
     /// Whether a local of this type needs cleanup when it leaves scope: a file,
     /// a move-only value, or a value holding managed storage.

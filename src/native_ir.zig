@@ -38,7 +38,8 @@ const Analyzer = struct {
             if (!ty.isAggregate() or ty.recordIndex() >= self.program.records.len) return error.UnsupportedOperation;
             const record = self.program.records[ty.recordIndex()];
             const concatenation = record.managed and op == .add and (record.collection.kind == .string or record.collection.kind == .bytes);
-            const text_order = record.collection.kind == .string and op == .lt;
+            const sequence = record.collection.kind == .string or record.collection.kind == .bytes;
+            const text_order = sequence and (op == .lt or op == .le or op == .gt or op == .ge);
             if (concatenation or text_order) return;
             if (op != .eq and op != .ne) return error.UnsupportedOperation;
         }

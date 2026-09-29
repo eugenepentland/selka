@@ -176,7 +176,7 @@
       "expected_gain": 0.04,
       "cost": "S",
       "prerequisites": [],
-      "status": "todo",
+      "status": "done",
       "source": "velocity audit §3 a01 a02 a70"
     },
     {
@@ -213,7 +213,7 @@
       "expected_gain": 0.03,
       "cost": "M",
       "prerequisites": [],
-      "status": "todo",
+      "status": "done",
       "source": "velocity audit §3.4"
     },
     {

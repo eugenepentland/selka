@@ -463,6 +463,8 @@ fn statementAssignment(comptime Checker: type, self: *Checker, stmt: ast.Stateme
     if (!self.locals.items[@backingInt(slot)].mutable)
         return self.sink.fail(eImmutable, a.name, "this binding cannot be assigned");
     try self.requireRebindable(slot, a.name);
+    // PY-REPEAT-1: `text *= count` repeats the binding by an integer count.
+    if (try self.repeatAssignment(slot, a)) |repeated| return repeated;
     var value = try self.expressionExpected(a.value, self.locals.items[@backingInt(slot)].ty);
     if (a.op != .set) {
         try self.requireReadable(slot, a.name);

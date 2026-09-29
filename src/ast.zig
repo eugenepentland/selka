@@ -68,6 +68,9 @@ pub const Node = struct {
         bytes: []const u8,
         text: []const u8,
         format: []const NodeId,
+        /// One interpolation with a literal format specification, `{value:spec}`
+        /// (`PY-FSTRING-SPEC-1`); it appears only as a part of `format`.
+        format_field: struct { value: NodeId, spec: Span },
         comprehension: Comprehension,
         dictionary_literal: []const NodeId,
         /// `{a, b, ...}`: a set literal's elements in source order (SET-1).
@@ -110,7 +113,10 @@ pub const Node = struct {
         field: struct { base: NodeId, name: Span },
         call: struct { argument_names: []const ?Span = &.{}, evaluation_order: []const usize = &.{}, owner: ?Span = null, type_arguments: []const Span = &.{}, name: Span, arguments: []const NodeId },
         unary: struct { op: UnaryOp, operand: NodeId, op_span: Span },
-        binary: struct { op: BinaryOp, left: NodeId, right: NodeId, op_span: Span },
+        /// A binary operator. `chained` marks the later links of a Python comparison
+        /// chain: `a < b <= c` is `(a < b) <= c` with the outer node chained, which
+        /// reads as `a < b and b <= c` with `b` evaluated once.
+        binary: struct { op: BinaryOp, left: NodeId, right: NodeId, op_span: Span, chained: bool = false },
         /// A parenthesized or bare tuple value; two to eight elements.
         tuple: []const NodeId,
         /// `value_if_true if condition else value_if_false`.
@@ -130,7 +136,7 @@ pub const Statement = struct {
         ret: NodeId,
         loop_exit: bool,
         for_each: struct { name: Span, index_name: ?Span, iterable: NodeId, body: StatementId, enumerated: bool = false },
-        for_range: struct { name: Span, start: NodeId, end: NodeId, body: StatementId },
+        for_range: struct { name: Span, start: NodeId, end: NodeId, body: StatementId, step: ?NodeId = null },
         discard: NodeId,
         branch: struct { condition: NodeId, then_body: StatementId, else_body: ?StatementId },
         match: struct { value: NodeId, arms: []const MatchArm },
@@ -159,6 +165,9 @@ pub fn appendNested(allocator: std.mem.Allocator, work: *std.ArrayList(Statement
         .assertion, .ret, .loop_exit, .discard, .binding, .assignment => {},
     }
 }
+/// The bounds of one `range(...)` iteration source: a unit `start` is the implicit
+/// zero and a null `step` the implicit one (`PY-RANGE-STEP-1`).
+pub const RangeBounds = struct { start: NodeId, end: NodeId, step: ?NodeId = null };
 /// One generator with an optional filter, producing a value per retained element.
 pub const Comprehension = struct {
     output: NodeId,
@@ -168,8 +177,9 @@ pub const Comprehension = struct {
     /// `{value for ...}` builds a `set` instead of a list (SET-1).
     set: bool = false,
     /// A comprehension draws its elements from a collection expression or, like a `for`
-    /// loop, from a half-open integer `range(...)`; a unit start means the implicit zero.
-    pub const Source = union(enum) { iterable: NodeId, range: struct { start: NodeId, end: NodeId } };
+    /// loop, from a half-open integer `range(...)`; a unit start means the implicit zero
+    /// and a null step the implicit one.
+    pub const Source = union(enum) { iterable: NodeId, range: RangeBounds };
 };
 /// Checked condition with the trap message its failure reports. `literal` is the
 /// quoted message's span; `value` is a non-literal message expression, evaluated

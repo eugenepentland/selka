@@ -90,8 +90,8 @@ arithmetic and comparisons, and `float(integer)` / `int(float)` conversion.
 `divtrunc(a, b)` and `remtrunc(a, b)` round toward zero instead, for binary formats and
 C interfaces that need that rounding. Float-to-int conversion truncates toward zero and
 traps outside the signed range. `sqrt`, `floor`, `ceil`, `trunc` and `abs` operate on
-`float` values; `round`, `exp`, `log`, `pow` and the trigonometric functions are not
-provided.
+`float` values, and `round` is a [prelude builtin](#prelude-builtins); `exp`, `log`
+and the trigonometric functions are not provided.
 
 ```mylang
 # doc: expect 42
@@ -101,6 +101,29 @@ def main() -> int:
     toward_zero = divtrunc(spread, 2)
     return (toward_zero - floored) * 42
 ```
+
+### Operators Python has
+
+Comparisons chain: `==`, `!=`, `<`, `<=`, `>` and `>=` share one precedence
+level, and `low <= x < high` means `low <= x and x < high`, with each operand
+evaluated once, left to right, and the rest skipped once a link is false. `str`
+and `bytes` [order lexicographically](text.md#ordering-and-repetition), and `*`
+repeats a `str`, `bytes` or list by an integer.
+
+```mylang
+# doc: expect 42
+def main() -> int:
+    x = 5
+    if not (0 < x < 10 and 1 <= x <= 5 and x == 5 != 6):
+        return 1
+    if not ("abc" < "abd") or "ab" * 2 != "abab":
+        return 3
+    return 42
+```
+
+`**`, `<<` and `>>` are not operators: write a multiplication loop (or
+`math.pow(x, n)` for a `float`) and `shift_left(value, count)` /
+`shift_right(value, count)`. Each rejection names that alternative.
 
 Lists infer a homogeneous element type from nonempty literals. They share mutable
 storage; assignment does not copy their contents. Use `items.append(value)`,
@@ -121,9 +144,10 @@ arguments. `int(text)` and `float(text)` return `Option[int]` and `Option[float]
 language has no exceptions, so a string that is not exactly one number answers `None`.
 
 An `f"..."` literal interpolates `{expression}` holes, converting each one exactly as
-`str(value)` does and concatenating the result. `{{` and `}}` write single braces. Holes take
-any expression but no format specification, so round a float or pad a number before
-interpolating it.
+`str(value)` does and concatenating the result. `{{` and `}}` write single braces. A hole
+may end in a CPython [format specification](text.md#format-specifications) —
+`f"{price:.2f}"`, `f"{n:05d}"`, `f"{name:>8}"`, `f"{total:,}"` — which renders exactly
+as CPython does.
 
 ```mylang
 # doc: expect 42
@@ -151,8 +175,8 @@ puts these operations together.
 
 `[value for name in items if condition]` builds a list in one pass, with the filter
 optional and the binding confined to the comprehension. The source is a list, string,
-dictionary or an integer `range(...)` — `[i for i in range(10)]` works the same as it
-does in a `for` loop. Without a filter, the result reserves the source length (or
+dictionary or an integer `range(...)` — `[i for i in range(10)]` and
+`[i for i in range(10, 0, -2)]` work the same as they do in a `for` loop. Without a filter, the result reserves the source length (or
 the exact nonnegative range length) before filling; filtered results grow with the
 values they retain. It takes one generator; nested generators and generator
 expressions are not provided, and neither are dict comprehensions. The set
@@ -168,7 +192,9 @@ def main() -> int:
 ```
 
 `for value in items`, `for index, value in enumerate(items)`, and
-`for index in range(end)` / `range(start, end)` support `break` and `continue`.
+`for index in range(end)` / `range(start, end)` / `range(start, end, step)` support
+`break` and `continue`. A [stepped range](range-iteration.md#stepped-ranges) counts
+down for a negative step.
 List iteration fixes its initial bound and rejects length changes through aliases.
 
 Classes declare **value records**, with annotated fields and named construction:
@@ -467,8 +493,8 @@ In particular:
   `==`/`!=`; a `class` compares by reference identity.
 - Binary64 arithmetic follows IEEE behavior, including infinities/NaNs on floating
   division by zero. It does not raise Python exceptions.
-- Lists are homogeneous; ranges currently accept one or two arguments and slices
-  have no step. Changing a list's length during iteration traps.
+- Lists are homogeneous; `range` takes one to three arguments and slices have no
+  step. Changing a list's length during iteration traps.
 - GC roots and collection transport across host/JSON boundaries are not
   implemented.
 - Formatting validates source and rewrites it into the one canonical layout;
@@ -490,12 +516,18 @@ floats, NaNs follow ordered values while equal values and signed zeros retain
 their input order. `reversed(xs)` copies a list or string from last to first
 and, like `zip(a, b)`, is also a `for` source; `zip` stops at the shorter list and the
 Boolean folds stop as soon as their answer is known.
-`list(range(end))` and `list(range(start, end))` materialize their range.
+`list(range(end))`, `list(range(start, end))` and `list(range(start, end, step))`
+materialize their range.
 `sorted` and `values.sort()` also take Python's `key=` and `reverse=`; see
 [keyed sorting](#keyed-sorting).
 
 `round(value)` answers the nearest integral `float`, with halves away from zero
-and NaN or infinities unchanged. `abs` is total for `int` except the signed
+and NaN or infinities unchanged. `round(value, ndigits)` answers the `float`
+nearest the exact binary value rounded to `ndigits` decimals (a negative count
+rounds left of the point) with the same rule: `round(3.14159, 2)` is `3.14` and
+`round(2.675, 2)` is `2.67`, because 2.675 is stored below the half, both as in
+CPython; an exact tie differs, `round(0.125, 2)` being `0.13` where CPython says
+`0.12` (declared in `velocity/divergences.json`). `abs` is total for `int` except the signed
 minimum, which traps `R_OVERFLOW`; a `float` argument stays the prelude float
 operation. An empty `min`/`max` has no answer and traps `R_LIST_BOUNDS`.
 
@@ -503,6 +535,8 @@ operation. An empty `min`/`max` has no answer and traps `R_LIST_BOUNDS`.
 # doc: expect 15
 def main() -> int:
     values = [3, 1, 2]
+    if round(3.14159, 2) != 3.14 or round(1234.5, -2) != 1200.0:
+        return 0
     return sum(values) + max(values) + abs(0 - 6)
 ```
 

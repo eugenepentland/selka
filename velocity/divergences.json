@@ -10,10 +10,11 @@
    "title": "round() breaks ties away from zero and answers an integral float",
    "probes": ["d05_round_half.my"],
    "idiom": "python-round-ties-to-even",
-   "mylang": "round(value) takes a float and answers the nearest integral float with halves away from zero, matching math.round and format_float; int(round(2.5)) is 3.",
+   "mylang": "round(value) takes a float and answers the nearest integral float with halves away from zero, matching math.round and format_float; int(round(2.5)) is 3. round(value, ndigits) rounds the exact binary value to ndigits decimals the same way (PRELUDE-ROUND-2): round(0.125, 2) is 0.13, and round(2.675, 2) is 2.67 in both languages because 2.675 is stored below the half.",
    "cpython": "round(value) answers an int for a one-argument call and breaks ties to even; round(2.5) is 2, so int(round(2.5)) is 2.",
    "documented_at": [
     "SPEC.md#PRELUDE-ROUND-1",
+    "SPEC.md#PRELUDE-ROUND-2",
     "docs/python-syntax.md#builtins (round(value) answers the nearest integral float, with halves away from zero)",
     "docs/floating-point.md#rounding-roots-and-powers (math.round rounds halves away from zero)"
    ],
@@ -33,7 +34,10 @@
     {"expression": "int(round(-2.5))", "mylang": -3, "cpython": -2},
     {"expression": "int(round(1.4))", "mylang": 1, "cpython": 1},
     {"expression": "int(round(2.6))", "mylang": 3, "cpython": 3},
-    {"expression": "round(2.5) + 0.5", "mylang": 3.5, "cpython": 2.5}
+    {"expression": "round(2.5) + 0.5", "mylang": 3.5, "cpython": 2.5},
+    {"expression": "round(0.125, 2)", "mylang": 0.13, "cpython": 0.12},
+    {"expression": "round(1250.0, -2)", "mylang": 1300.0, "cpython": 1200.0},
+    {"expression": "round(2.675, 2)", "mylang": 2.67, "cpython": 2.67}
    ]
   },
   {

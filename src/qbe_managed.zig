@@ -944,10 +944,22 @@ fn emitBinary(comptime E: type, self: *E, op: @FieldType(@FieldType(bytecode.Ins
         if (kind != .string) return self.reject(self.pc);
         try self.print(" %v{d} =l call $myl_native_text_concat(l %heap, l %v{d}, l %v{d})\n", .{ result, left, right });
         try checkedPointer(E, self, result, base);
-    } else if (op.op == .lt) {
-        if (self.program.records[op.ty.recordIndex()].collection.kind != .string) return self.reject(self.pc);
+    } else if (op.op == .lt or op.op == .le or op.op == .gt or op.op == .ge) {
+        // PY-TEXT-ORDER-1: both kinds compare their UTF-8 or raw octets
+        // lexicographically, which for `str` is Unicode code point order.
+        const compare = switch (self.program.records[op.ty.recordIndex()].collection.kind) {
+            .string => "myl_native_text_compare",
+            .bytes => "myl_native_bytes_compare",
+            else => return self.reject(self.pc),
+        };
+        const test_instruction = switch (op.op) {
+            .lt => "csltw",
+            .le => "cslew",
+            .gt => "csgtw",
+            else => "csgew",
+        };
         const comparison = self.temp();
-        try self.print(" %v{d} =w call $myl_native_text_compare(l %v{d}, l %v{d})\n %v{d} =w csltw %v{d}, 0\n", .{ comparison, left, right, result, comparison });
+        try self.print(" %v{d} =w call ${s}(l %v{d}, l %v{d})\n %v{d} =w {s} %v{d}, 0\n", .{ comparison, compare, left, right, result, test_instruction, comparison });
         try boolean(E, self, result, base);
     } else if (op.op == .eq or op.op == .ne) {
         const left_pointer = try operandPointer(E, self, op.ty, base);

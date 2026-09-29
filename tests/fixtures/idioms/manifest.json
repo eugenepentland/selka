@@ -225,7 +225,7 @@
     "status": 0,
     "stdout": "3"
    },
-   "must_pass": false
+   "must_pass": true
   },
   {
    "name": "elem_augassign",
@@ -585,7 +585,7 @@
     "status": 0,
     "stdout": "42"
    },
-   "must_pass": false
+   "must_pass": true
   },
   {
    "name": "tuple_swap",

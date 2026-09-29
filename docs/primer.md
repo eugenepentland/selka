@@ -191,7 +191,8 @@ def main(out: Stream) -> int:
   (insertion order).
 - Sorting: `sorted(xs)`, `xs.sort(key=lambda it: (-it.count, it.name))` (tuple
   keys work; a lambda cannot capture locals, so use a top-level function then).
-- `min(a, b)`, `max(xs)`, `abs(n)`, `sum(xs)`, `range(n)` and `range(a, b)`;
+- `min(a, b)`, `max(xs)`, `abs(n)`, `sum(xs)`, `round(x, n)`, `range(n)`,
+  `range(a, b)` and `range(a, b, step)`;
   `for i, x in enumerate(xs)` and `for a, b in zip(xs, ys)` unpack in `for`
   loops (a comprehension takes a single name).
 
@@ -220,15 +221,8 @@ while `f(mut s.a, mut s.b)` and `f(mut xs[0], mut xs[1])` are fine.
 
 ```mylang
 # doc: expect 3.5 -4 2 -3 2.67 b
-import strings
-
 def main(out: Stream) -> int:
-    fixed = "?"
-    match strings.format_float(2.675, 2):  # the stand-in for f"{x:.2f}"
-        case Ok(text):
-            fixed = text
-        case Err(_):
-            fixed = "error"
+    fixed = f"{2.675:.2f}"
     word = "abc"
     out.print(7 / 2, -7 // 2, -7 % 3, divtrunc(-7, 2), fixed, word[1])
     return 0
@@ -243,17 +237,17 @@ def main(out: Stream) -> int:
   so write an octal mode `0o755`; there are no imaginary literals (`1j`).
 - `/` is float division even on ints; `//` and `%` are Python's floor forms;
   `divtrunc` and `remtrunc` truncate like C. There is no `**`: use
-  `math.pow(2.0, 10)` (`import math`, integer exponent).
+  `math.pow(2.0, 10)` (`import math`, integer exponent). Comparisons chain:
+  `0 < x < 10`.
 - `str(n)`; `int(s)` and `float(s)` return an `Option`; `ord("a")`, `chr(98)`.
 - Strings: `split`, `splitlines`, `strip`, `join`, `replace`, `find`, `count`,
   `startswith`, `lower`, `upper`, `isdigit`, `zfill`, `encode`, ... `s[i]` is a
-  one-character `str`. `==` compares strings but `<` does not (`sorted` does
-  sort a list of strings). f-strings interpolate expressions but take no
-  format spec (`{x:.2f}` is rejected).
-- `strings.format_float(x, digits)` rounds the exact binary value, like C and
-  Python (`2.675` → `"2.67"`), except that an exact tie rounds away from zero
-  (`0.125` → `"0.13"`, Python `"0.12"`) and a negative result that rounds to
-  zero prints `"0.00"`.
+  one-character `str`. `<` orders strings by code point, and `"ab" * 3`
+  repeats. f-strings take CPython's format specs (`{x:.2f}`, `{n:>5}`,
+  `{n:,}`, `{n:05d}`, `{x:.1%}`) and print exactly what CPython prints.
+- `round(x, n)` rounds the exact binary value, like C and Python
+  (`round(2.675, 2)` → `2.67`), except that an exact tie rounds away from zero
+  (`round(0.125, 2)` → `0.13`, Python `0.12`; `f"{0.125:.2f}"` is `0.12` in both).
 - Build a large string by collecting pieces in a `list[str]` and
   `"".join(pieces)`. For byte-level scanning read with `fs.read_file`: `data[i]`
   is an `int`, `data[a:b]` a `bytes` slice, `.decode()` a `Result[str, ...]`.
@@ -262,10 +256,7 @@ def main(out: Stream) -> int:
 
 | Python | mylang |
 | --- | --- |
-| dict comprehension, generator expression | a loop, or a list or set comprehension |
-| `range(a, b, step)`, `1 < x < 3` | a `while` loop; `1 < x and x < 3` |
-| `x ** n`, `round(x, n)` | `math.pow(x, n)`; `strings.format_float` for display |
-| `"ab" * 3`, `"a" < "b"` | a loop; compare with `sorted`, `ord`, or char by char |
+| `x ** n` | `math.pow(x, n)` (`import math`, integer exponent) |
 | `try` / `except` | `Result` and `?` |
 | methods on classes, closures | top-level functions that take the object or state |
 | `heapq`, `re`, `collections` | write the small helper (a binary heap over `list[int]`) |

@@ -398,29 +398,33 @@ fn checkRangeComprehension(comptime Checker: type, self: *Checker, b: collection
     const element = self.nodes.items[@backingInt(start)].ty;
     try self.requireInteger(element, each.name);
     try self.require(self.nodes.items[@backingInt(end)].ty, element, self.syntax.nodes.items[@backingInt(bounds.end)].span);
+    const stepped = try self.rangeStep(each.name, bounds.step, element);
     const index = try b.local(element);
     const limit = try b.local(element);
     // PY-ARRAY-NEGATIVE-1: the running index never drops below its start,
     // and an expression cannot assign it.
     self.locals.items[@backingInt(index)].mutable = false;
-    if (self.nonNegative(start, 0)) try self.counters.put(self.allocator, index, {});
+    if (stepped.ascending() and self.nonNegative(start, 0)) try self.counters.put(self.allocator, index, {});
     const parts = try comprehensionBody(Checker, self, b, node, each, index);
     // A trial check of a sort key's lambda discards its locals, so a
     // counter's slot must not outlive its loop.
     _ = self.counters.remove(index);
     const i = try b.read(index);
-    const step = try b.stmt(.{ .assign = .{ .slot = index, .value = try b.binary(.add, i, try b.node(element, .{ .integer = 1 }), element) } });
+    const step = if (stepped.lower) |lower| try lower.advance(index, limit) else try b.stmt(.{ .assign = .{ .slot = index, .value = try b.binary(.add, i, try b.node(element, .{ .integer = 1 }), element) } });
+    const condition = if (stepped.lower) |lower| try lower.condition(index, limit) else try b.binary(.lt, i, try b.read(limit), .bool);
     const loop_id = self.loops.next;
     self.loops.next += 1;
-    const capacity = if (each.filter == null and !each.set) try b.rangeCapacity(try b.read(index), try b.read(limit), element) else try b.integer(0);
+    const counted = each.filter == null and !each.set and stepped.lower == null;
+    const capacity = if (counted) try b.rangeCapacity(try b.read(index), try b.read(limit), element) else try b.integer(0);
     const output_type = self.locals.items[@backingInt(parts.output)].ty;
     const fresh = if (each.set) try b.node(output_type, .{ .array = &.{} }) else try b.node(output_type, .{ .acquire_buffer = .{ .capacity = capacity } });
-    return b.block(&.{
-        try b.stmt(.{ .initialize = .{ .slot = index, .value = start } }),
-        try b.stmt(.{ .initialize = .{ .slot = limit, .value = end } }),
-        try b.stmt(.{ .initialize = .{ .slot = parts.output, .value = fresh } }),
-        try b.stmt(.{ .loop = .{ .id = loop_id, .condition = try b.binary(.lt, i, try b.read(limit), .bool), .body = parts.body, .step = step } }),
-    }, try b.read(parts.output));
+    var statements: std.ArrayList(typed.StatementId) = .empty;
+    try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = index, .value = start } }));
+    try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = limit, .value = end } }));
+    try statements.appendSlice(self.allocator, try stepped.setup());
+    try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = parts.output, .value = fresh } }));
+    try statements.append(self.allocator, try b.stmt(.{ .loop = .{ .id = loop_id, .condition = condition, .body = parts.body, .step = step } }));
+    return b.block(statements.items, try b.read(parts.output));
 }
 /// Assemble the fixed-bound iteration, its mutation check, and the produced list.
 const ComprehensionSlots = struct { owner: typed.LocalId, index: typed.LocalId, limit: typed.LocalId, slot: typed.LocalId };
@@ -494,8 +498,11 @@ fn checkFormat(comptime Checker: type, self: *Checker, node: ast.Node, parts: []
     const builder: collections.Builder(Checker) = .{ .checker = self, .span = node.span };
     const values = try self.allocator.alloc(typed.NodeId, parts.len);
     for (parts, values) |part, *value| {
-        const span = self.syntax.nodes.items[@backingInt(part)].span;
-        value.* = try formatPart(Checker, self, try self.expressionWithTemporaries(part, temporaries), str_type, span);
+        const syntax = self.syntax.nodes.items[@backingInt(part)];
+        value.* = if (syntax.data == .format_field)
+            try self.formatField(try self.expressionWithTemporaries(syntax.data.format_field.value, temporaries), syntax.data.format_field.spec, syntax.span)
+        else
+            try formatPart(Checker, self, try self.expressionWithTemporaries(part, temporaries), str_type, syntax.span);
     }
     if (values.len == 1) return builder.block(&.{}, values[0]);
     const empty = try builder.node(str_type, .{ .array = &.{} });

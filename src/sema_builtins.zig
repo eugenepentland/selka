@@ -265,7 +265,7 @@ fn rangeSource(comptime Checker: type, self: *Checker, id: ast.NodeId) Error!?@F
     if (!std.mem.eql(u8, self.src.text(call.name), "range")) return null;
     if (self.active.contains("range") or self.functions.contains("range")) return null;
     if (self.catalog.module_names) |names| if (try names.topLevel(call.name)) return null;
-    if (call.arguments.len == 0 or call.arguments.len > 2) return null;
+    if (call.arguments.len == 0 or call.arguments.len > 3) return null;
     return call;
 }
 /// An unannotated empty list literal adopts the element type the builtin fixes,

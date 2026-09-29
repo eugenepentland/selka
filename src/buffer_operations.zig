@@ -140,6 +140,16 @@ pub const Kind = enum {
     set_subset,
     set_superset,
     set_disjoint,
+    /// PY-FSTRING-SPEC-1: `f"{text:spec}"`, the receiver text laid out under
+    /// one packed specification word, its only argument.
+    text_format,
+    /// PY-FSTRING-SPEC-1: `f"{number:spec}"`. Like `chr`, the owner is the empty
+    /// text naming the family; the arguments are the number's 64 bits and the
+    /// packed specification word, which also says how to read the bits.
+    number_format,
+    /// PRELUDE-ROUND-2: `round(x, n)`. The owner is the empty text naming the
+    /// runtime family; the arguments are the float and the digit count.
+    float_round,
     /// Return the required source argument count for this buffer builtin.
     pub fn arity(self: Kind) usize {
         return switch (self) {
@@ -155,7 +165,8 @@ pub const Kind = enum {
             .buffer_append_range => 3,
             .replace, .insert, .setdefault, .pop_default => 2,
             .iteration_check, .key_at, .value_at, .read, .append, .take, .truncate, .contains, .split, .join, .starts_with, .ends_with, .find => 1,
-            .text_chr => 1,
+            .text_chr, .text_format => 1,
+            .number_format, .float_round => 2,
             .set_add, .set_discard, .set_union, .set_intersection, .set_difference, .set_symmetric_difference => 1,
             .set_subset, .set_superset, .set_disjoint => 1,
             .write, .resize, .reserve, .get, .slice, .find_any, .view => 2,
@@ -184,7 +195,7 @@ pub const Kind = enum {
             .length, .capacity, .iteration_check, .key_at, .value_at, .read, .get, .contains, .keys, .values, .split, .join => false,
             .encode, .decode, .to_list, .hex, .from_hex, .starts_with, .ends_with, .find, .find_any => false,
             .strip, .lstrip, .rstrip, .upper, .lower, .splitlines, .split_whitespace, .replace, .count, .zfill => false,
-            .text_ord, .text_chr => false,
+            .text_ord, .text_chr, .text_format, .number_format, .float_round => false,
             .is_digit, .is_alpha, .is_space, .parse_int, .parse_float => false,
             .parse_int_range, .parse_float_range => false,
             .view, .scalar_count, .scalar_count_range => false,
@@ -332,7 +343,7 @@ pub const sorted_signature = "sorted(values: list[T], *, key: def(T) -> K = None
 /// A list's `sort` method in its Python keyword form, sorting in place.
 pub const list_sort_signature = "list[T].sort(*, key: def(T) -> K = None, reverse: bool = False) -> None";
 /// The `range` iteration source: one bound or two, never a first-class value.
-pub const range_signature = "range(end: int) -> iterable[int], or range(start: int, end: int) -> iterable[int]";
+pub const range_signature = "range(end: int) -> iterable[int], range(start: int, end: int) -> iterable[int], or range(start: int, end: int, step: int) -> iterable[int]";
 /// `min` and `max`, which fold a list or compare two values.
 pub const extreme_signature = "min(values: list[T]) -> T, or min(left: T, right: T) -> T";
 
@@ -532,7 +543,7 @@ pub fn managedAllocation(kind: Kind, dictionary: bool) bool {
         .extend, .insert, .items, .copy, .update, .setdefault => true,
         .encode, .decode, .to_list, .hex, .from_hex => true,
         .strip, .lstrip, .rstrip, .upper, .lower, .splitlines, .replace, .zfill => true,
-        .split_whitespace, .text_chr => true,
+        .split_whitespace, .text_chr, .text_format, .number_format => true,
         .view => true,
         .scalar_count_range => true,
         .buffer_reserve, .buffer_append_byte, .buffer_append_range => true,

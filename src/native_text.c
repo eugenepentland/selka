@@ -74,6 +74,15 @@ myl_native_text *myl_native_text_build(myl_native_heap *heap, size_t bytes) {
     text->hash=0;
     return text;
 }
+/* PY-FSTRING-SPEC-1: myl_native_text_build with `*keep` rooted across the
+ * allocation, for a formatter that reads its source text after building. */
+myl_native_text *myl_native_text_build_keeping(myl_native_heap *heap, size_t bytes, myl_native_text **keep) {
+    myl_native_root root;
+    myl_native_root_push(heap,&root,keep,&pointer_type);
+    myl_native_text *result=myl_native_text_build(heap,bytes);
+    myl_native_root_pop(heap,&root);
+    return result;
+}
 /* The position index behind an indexed text's payload (TEXT-INDEX-1): the last
  * scalar a lookup found and the octet where it begins, then the sample table,
  * whose entry `k-1` is the octet where scalar `k * MYL_TEXT_SAMPLE_STRIDE`

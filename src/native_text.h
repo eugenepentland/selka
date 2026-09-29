@@ -167,6 +167,8 @@ myl_native_text *myl_native_text_build_scalars(myl_native_heap *, size_t bytes, 
 /* Publish a built text as `scalars` Unicode scalar values whose payload was
  * written, with `plain` set when every one of them is below 0x80. */
 void myl_native_text_publish(myl_native_text *, size_t scalars, int plain);
+/* myl_native_text_build with `*keep` rooted across the allocation. */
+myl_native_text *myl_native_text_build_keeping(myl_native_heap *, size_t bytes, myl_native_text **keep);
 /* Byte offset of scalar `index`, which is `index` itself for ASCII text and the
  * payload's octet count for an index at or past the end. A non-ASCII text
  * answers from the nearest of its ends, its last answer and its sample table

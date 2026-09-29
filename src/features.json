@@ -237,6 +237,31 @@
       "summary": "`f\"...\"` interpolates any value `print` can render, with `{{` and `}}` for literal braces.",
       "doc": "docs/text.md#format-strings"
     },
+    "python-comparison-chains": {
+      "kind": "language",
+      "summary": "`a < b <= c` chains as in Python: the six comparisons share one precedence level, each operand is evaluated once left to right, and the rest of a chain is skipped once a link is false.",
+      "doc": "docs/python-syntax.md#operators-python-has"
+    },
+    "text-ordering-and-repetition": {
+      "kind": "language",
+      "summary": "`<`, `<=`, `>` and `>=` order `str` by code point and `bytes` by octet; `sequence * count` and `count * sequence` repeat a `str`, `bytes` or list, and `*=` repeats a binding.",
+      "doc": "docs/text.md#ordering-and-repetition"
+    },
+    "format-specifications": {
+      "kind": "language",
+      "summary": "`f\"{value:spec}\"` renders a `str`, integer or `float` under CPython's format-specification mini-language byte for byte, rounding floats from their exact binary value with ties to even; a specification the value cannot take is `E_FORMAT_STRING` with CPython's reason.",
+      "doc": "docs/text.md#format-specifications"
+    },
+    "stepped-range": {
+      "kind": "language",
+      "summary": "`range(start, stop, step)` counts up or down in `for` loops, comprehensions and `list(range(...))` without overflowing on its last step; a literal zero step is `E_RANGE_STEP` and a runtime zero traps before iterating.",
+      "doc": "docs/range-iteration.md#stepped-ranges"
+    },
+    "round-to-digits": {
+      "kind": "language",
+      "summary": "`round(value, ndigits)` answers the float nearest the exact binary value rounded to `ndigits` decimals, halves away from zero like `round(value)`; a negative count rounds left of the point.",
+      "doc": "docs/python-syntax.md#prelude-builtins"
+    },
     "list-comprehensions": {
       "kind": "language",
       "summary": "`[expression for name in source if condition]` builds a managed list in one expression.",

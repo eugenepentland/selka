@@ -776,6 +776,7 @@ const Checker = struct {
         const element: Symbolic = if (self.program.nodes.items[@backingInt(bounds.start)].data == .unit) .{ .concrete = .i64 } else try self.expression(bounds.start);
         try self.supports(element, .integer, name);
         try self.compatible(try self.expression(bounds.end), element, span);
+        if (bounds.step) |step| try self.compatible(try self.expression(step), element, span);
         return element;
     }
 
@@ -785,12 +786,22 @@ const Checker = struct {
         var allocation = parts.len != 1;
         for (parts) |part| {
             const value = try self.expression(part);
+            // PY-FSTRING-SPEC-1: a formatted field always builds fresh text.
+            if (self.program.nodes.items[@backingInt(part)].data == .format_field) allocation = true;
             if (symbolic.same(value, str_type, self.catalog)) continue;
             allocation = true;
             if (self.isFloat(value)) continue;
             try self.supports(value, .integer, span);
         }
         if (allocation) self.seedEffect(.managed_allocation);
+        return str_type;
+    }
+    /// PY-FSTRING-SPEC-1: a specification formats a `str`, a float or an
+    /// integer; the concrete instance checks the specification itself.
+    fn formattedField(self: *Checker, value_id: ast.NodeId, span: source.Span) Error!Symbolic {
+        const str_type: Symbolic = .{ .concrete = self.catalog.names.get("str") orelse return error.InternalError };
+        const value = try self.expression(value_id);
+        if (!symbolic.same(value, str_type, self.catalog) and !self.isFloat(value)) try self.supports(value, .integer, span);
         return str_type;
     }
     fn listLiteral(self: *Checker, node: ast.Node, inputs: []const ast.NodeId) Error!Symbolic {
@@ -1640,6 +1651,7 @@ const Checker = struct {
         try self.enter(node.span);
         defer self.depth -= 1;
         return switch (node.data) {
+            .format_field => |field| try self.formattedField(field.value, node.span),
             .name => |name| try self.namedValue(name),
             .wrap => |wrap| result: {
                 const operand = try self.expression(wrap.value);
@@ -2112,7 +2124,41 @@ const Checker = struct {
             if (!present) return self.sink.fail(if (table_key != null) "E_INCOMPLETE_TABLE" else "E_MISSING_FIELD", span, "named construction must initialize every entry");
         };
     }
+    /// PY-REPEAT-1: the sequence a `*` repeats when one side is a `str`,
+    /// `bytes` or list and the other an integer, or null for any other `*`.
+    fn repeated(self: *Checker, left: Symbolic, right: Symbolic) ?Symbolic {
+        const integer_left = symbolic.supports(left, .integer, self.parameters, self.catalog);
+        const integer_right = symbolic.supports(right, .integer, self.parameters, self.catalog);
+        if (integer_right and self.repeatable(left)) return left;
+        if (integer_left and self.repeatable(right)) return right;
+        return null;
+    }
+    fn repeatable(self: *Checker, value: Symbolic) bool {
+        const kind = self.shapes().collectionKind(value) orelse return false;
+        return kind == .string or kind == .bytes or kind == .list;
+    }
+    /// PY-CHAIN-1: a comparison chain checks every operand once, in source
+    /// order, and each adjacent pair under its own operator.
+    fn chain(self: *Checker, last: @FieldType(@FieldType(ast.Node, "data"), "binary")) Error!Symbolic {
+        var links: std.ArrayList(@FieldType(@FieldType(ast.Node, "data"), "binary")) = .empty;
+        defer links.deinit(self.allocator);
+        var head = last;
+        while (head.chained) {
+            try links.append(self.allocator, head);
+            head = self.program.nodes.items[@backingInt(head.left)].data.binary;
+        }
+        try links.append(self.allocator, head);
+        std.mem.reverse(@FieldType(@FieldType(ast.Node, "data"), "binary"), links.items);
+        var left = try self.expression(head.left);
+        for (links.items) |link| {
+            const right = try self.expression(link.right);
+            _ = try self.operands(link, left, right);
+            left = right;
+        }
+        return .{ .concrete = .bool };
+    }
     fn binary(self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), "binary")) Error!Symbolic {
+        if (operation.chained) return self.chain(operation);
         const left = try self.expression(operation.left);
         const short_circuit = operation.op == .logical_and or operation.op == .logical_or;
         const state = if (short_circuit) try self.pendingState(self.locals.items.len) else null;
@@ -2122,6 +2168,14 @@ const Checker = struct {
         if (short_circuit) try self.assumeOption(operation.left, operation.op == .logical_and);
         const right = try self.expression(operation.right);
         if (state) |snapshot| try self.samePending(snapshot, operation.op_span, eResultPath);
+        return self.operands(operation, left, right);
+    }
+    /// The type one binary operator answers for two already checked operand types.
+    fn operands(self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), "binary"), left: Symbolic, right: Symbolic) Error!Symbolic {
+        if (operation.op == .mul) if (self.repeated(left, right)) |repeats| {
+            self.seedEffect(.managed_allocation);
+            return repeats;
+        };
         if (self.isFloat(left) or self.isFloat(right) or operation.op == .python_div) {
             if (!self.isFloat(left)) try self.supports(left, .integer, operation.op_span);
             if (!self.isFloat(right)) try self.supports(right, .integer, operation.op_span);
@@ -2152,7 +2206,10 @@ const Checker = struct {
                 self.seedEffect(.managed_allocation);
                 return left;
             }
-            return self.sink.fail("E_TEXT_OPERATOR", operation.op_span, "collection supports equality and str supports concatenation");
+            const sequence = self.shapes().collectionKind(left) == .string or self.shapes().collectionKind(left) == .bytes;
+            const ordering = operation.op == .lt or operation.op == .le or operation.op == .gt or operation.op == .ge;
+            if (sequence and ordering) return .{ .concrete = .bool };
+            return self.sink.fail("E_TEXT_OPERATOR", operation.op_span, "collection supports equality; str and bytes also support `+` and `<`, `<=`, `>`, `>=`");
         }
         switch (operation.op) {
             .f64_add, .f64_sub, .f64_mul, .f64_div, .f64_eq, .f64_lt, .f64_le => try self.compatible(left, .{ .concrete = .u64 }, operation.op_span),
@@ -2330,6 +2387,7 @@ const Checker = struct {
                 const element: Symbolic = if (self.program.nodes.items[@backingInt(range.start)].data == .unit) .{ .concrete = .i64 } else try self.expression(range.start);
                 try self.supports(element, .integer, range.name);
                 try self.compatible(try self.expression(range.end), element, range.name);
+                if (range.step) |step| try self.compatible(try self.expression(step), element, range.name);
                 const first = self.locals.items.len;
                 try self.bind(range.name, element, true);
                 defer self.endScope(first);

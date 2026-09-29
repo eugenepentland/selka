@@ -29,7 +29,7 @@ test "malformed format strings and unconvertible values are rejected" {
     try reject(capability, "E_TEXT_CONVERSION");
     const cases = [_]struct { body: []const u8, code: []const u8 }{
         .{ .body = "f\"{}\"", .code = "E_FORMAT_STRING" },
-        .{ .body = "f\"{x:.2f}\"", .code = "E_FORMAT_STRING" },
+        .{ .body = "f\"{x:.2d}\"", .code = "E_FORMAT_STRING" },
         .{ .body = "f\"a}b\"", .code = "E_FORMAT_STRING" },
         .{ .body = "f\"{1 2}\"", .code = "E_FORMAT_STRING" },
         .{ .body = "f\"{x\"", .code = "E_FORMAT_STRING" },

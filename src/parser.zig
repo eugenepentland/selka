@@ -117,6 +117,8 @@ const loop_else_accepted = "use a flag: assign it before the loop, set it before
 const nested_def_accepted = "declare the function at the top level and call it from the body";
 const match_expression_accepted = "assign the value in each branch of an if/elif statement";
 const power_accepted = "multiply in a loop: `total = 1` then `for i in range(exponent): total = total * base`";
+/// The accepted `range` arities, shared by the parser and the prelude's `list(range(...))`.
+const range_arity = "range requires end; start, end; or start, end, step";
 const shift_accepted = "use `shift_left(value, count)` or `shift_right(value, count)`";
 const for_else_message = "a loop has no `else` clause";
 const set_augment_message = "a set has no augmented assignment operator";
@@ -1481,19 +1483,21 @@ pub const Parser = struct {
         const end = try self.statementEnd(first);
         return self.addStatement(.{ .span = .join(first.span, end.span), .implicit_discard = implicit_discard, .data = data });
     }
-    /// Recognize `range(end)` or `range(start, end)` as an iteration source and return its
-    /// half-open bounds, using a unit sentinel for the implicit zero start. A `for` loop and
-    /// a list comprehension share this so both accept exactly the same range spellings.
-    fn rangeBounds(self: *Parser, input: ast.NodeId) diagnostic.Error!?struct { start: ast.NodeId, end: ast.NodeId } {
+    /// Recognize `range(end)`, `range(start, end)` or `range(start, end, step)` as an
+    /// iteration source and return its bounds, using a unit sentinel for the implicit zero
+    /// start. A `for` loop and a list comprehension share this so both accept exactly the
+    /// same range spellings.
+    fn rangeBounds(self: *Parser, input: ast.NodeId) diagnostic.Error!?ast.RangeBounds {
         const node = self.syntax.nodes.items[@backingInt(input)];
         if (node.data != .call or node.data.call.owner != null) return null;
         const call = node.data.call;
         if (!std.mem.eql(u8, self.src.text(call.name), "range")) return null;
-        if (call.arguments.len < 1 or call.arguments.len > 2) return self.sink.fail("E_ARITY", node.span, "range requires end or start, end");
+        if (call.arguments.len < 1 or call.arguments.len > 3) return self.sink.fail("E_ARITY", node.span, range_arity);
         // Unit is an internal zero sentinel, avoiding fabricated source text.
         return .{
-            .start = if (call.arguments.len == 2) call.arguments[0] else try self.append(.{ .span = call.name, .data = .unit }),
-            .end = call.arguments[call.arguments.len - 1],
+            .start = if (call.arguments.len >= 2) call.arguments[0] else try self.append(.{ .span = call.name, .data = .unit }),
+            .end = if (call.arguments.len >= 2) call.arguments[1] else call.arguments[0],
+            .step = if (call.arguments.len == 3) call.arguments[2] else null,
         };
     }
     fn forStatement(self: *Parser, first: lex.Token) diagnostic.Error!ast.StatementId {
@@ -1501,13 +1505,11 @@ pub const Parser = struct {
         const second_name = if (self.take(.comma)) (try self.expect(.ident)).span else null;
         _ = try self.expect(.kw_in);
         const input = try self.conditionExpression();
-        var start: ?ast.NodeId = null;
-        var end: ?ast.NodeId = null;
+        var range: ?ast.RangeBounds = null;
         var iterable = input;
         var enumerated = false;
         if (try self.rangeBounds(input)) |bounds| {
-            start = bounds.start;
-            end = bounds.end;
+            range = bounds;
         } else {
             const node = self.syntax.nodes.items[@backingInt(input)];
             if (node.data == .call and node.data.call.owner == null and std.mem.eql(u8, self.src.text(node.data.call.name), "enumerate")) {
@@ -1523,9 +1525,9 @@ pub const Parser = struct {
         const body = try self.block(null);
         if (self.current().tag == .kw_else) return self.alternative(expression_code, for_else_message, loop_else_accepted);
         const span: Span = .join(first.span, self.syntax.statements.items[@backingInt(body)].span);
-        if (start) |range_start| {
+        if (range) |bounds| {
             if (second_name != null) return self.sink.fail(eIteration, span, "range requires one iteration name");
-            return self.addStatement(.{ .span = span, .data = .{ .for_range = .{ .name = first_name, .start = range_start, .end = end.?, .body = body } } });
+            return self.addStatement(.{ .span = span, .data = .{ .for_range = .{ .name = first_name, .start = bounds.start, .end = bounds.end, .body = body, .step = bounds.step } } });
         }
         return self.addStatement(.{
             .span = span,
@@ -1725,8 +1727,12 @@ pub const Parser = struct {
             // token keeps the plain rejection.
             else => return self.pythonExpressionFailure(token),
         };
+        // PY-CHAIN-1: whether `left` is a comparison this loop built, so a
+        // following comparison continues a Python chain instead of comparing a bool.
+        var chain = false;
         while (true) {
             if (self.implicitBoundary()) break;
+            if (!self.continuesChain(chain)) chain = false;
             if (self.take(.question)) {
                 left = try self.append(.{ .span = .join(self.syntax.nodes.items[@backingInt(left)].span, self.tokens[self.cursor.pos - 1].span), .data = .{ .propagate = left } });
                 continue;
@@ -1757,12 +1763,15 @@ pub const Parser = struct {
             if (precedence < min_precedence) break;
             self.cursor.pos += 1;
             const right = try self.expression(precedence + 1);
+            const comparison = comparisonOperator(op.tag);
             left = try self.append(.{ .span = .join(self.syntax.nodes.items[@backingInt(left)].span, self.syntax.nodes.items[@backingInt(right)].span), .data = .{ .binary = .{
                 .op = binaryOperator(op.tag),
                 .left = left,
                 .right = right,
                 .op_span = op.span,
+                .chained = chain and comparison,
             } } });
+            chain = comparison;
         }
         // `a if p else b` is the loosest expression form and nests to the right.
         if (min_precedence == 0 and self.current().tag == .kw_if and !self.implicitBoundary()) return self.conditionalExpression(left);
@@ -1874,6 +1883,11 @@ pub const Parser = struct {
             });
         } else return self.append(.{ .span = .join(self.syntax.nodes.items[@backingInt(left)].span, name.span), .data = .{ .field = .{ .base = left, .name = name.span } } });
     }
+    /// A comparison chain continues only while the next token is another
+    /// comparison; any postfix form or other operator in between ends it.
+    fn continuesChain(self: *Parser, chain: bool) bool {
+        return chain and comparisonOperator(self.current().tag);
+    }
     fn binaryOperator(tag: lex.Tag) ast.BinaryOp {
         return switch (tag) {
             .plus => .add,
@@ -1935,7 +1949,7 @@ pub const Parser = struct {
         const filter = if (self.take(.kw_if)) try self.expression(1) else null;
         const close = if (set) try self.expect(.rbrace) else try self.expect(.rbracket);
         const src: ast.Comprehension.Source = if (try self.rangeBounds(input)) |bounds|
-            .{ .range = .{ .start = bounds.start, .end = bounds.end } }
+            .{ .range = bounds }
         else
             .{ .iterable = input };
         return self.append(.{ .span = .join(token.span, close.span), .data = .{ .comprehension = .{
@@ -1954,10 +1968,21 @@ pub const Parser = struct {
         const allocator = self.storage;
         const pieces = try format_strings.split(allocator, self.src, token.span, self.sink);
         var parts: std.ArrayList(ast.NodeId) = .empty;
-        for (pieces) |piece| switch (piece) {
+        for (pieces, 0..) |piece, index| switch (piece) {
             .literal => |span| try parts.append(allocator, try self.formatLiteral(span)),
             .brace => |span| try parts.append(allocator, try self.append(.{ .span = span, .data = .{ .text = self.src.bytes[span.start .. span.start + 1] } })),
-            .hole => |span| try parts.append(allocator, try self.formatHole(span)),
+            .hole => |span| {
+                const value = try self.formatHole(span);
+                const spec: ?Span = if (index + 1 < pieces.len and pieces[index + 1] == .spec) pieces[index + 1].spec else null;
+                // An empty specification is `format(value, "")`, the value's own text.
+                if (spec == null or spec.?.end == spec.?.start) {
+                    try parts.append(allocator, value);
+                    continue;
+                }
+                const field_span: Span = .{ .start = span.start, .end = spec.?.end };
+                try parts.append(allocator, try self.append(.{ .span = field_span, .data = .{ .format_field = .{ .value = value, .spec = spec.? } } }));
+            },
+            .spec => {},
         };
         return self.append(.{ .span = token.span, .data = .{ .format = try parts.toOwnedSlice(allocator) } });
     }
@@ -2415,12 +2440,21 @@ pub const Parser = struct {
     }
 };
 
+/// PY-CHAIN-1: the six comparison operators share one precedence level, as in
+/// Python, so `a < b == c` is one chain rather than a comparison of a bool.
+/// Whether a binary operator token is one of the six chainable comparisons.
+fn comparisonOperator(tag: lex.Tag) bool {
+    return switch (tag) {
+        .eq_eq, .bang_eq, .lt, .le, .gt, .ge => true,
+        else => false,
+    };
+}
 fn binaryPrecedence(tag: lex.Tag) ?u8 {
     return switch (tag) {
         .or_or => 1,
         .and_and => 2,
-        .eq_eq, .bang_eq => 3,
-        .lt, .le, .gt, .ge => 4,
+        // PY-CHAIN-1: the six comparisons share one level, so they chain.
+        .eq_eq, .bang_eq, .lt, .le, .gt, .ge => 3,
         // Python's bitwise precedence, used by the set operators
         // (SET-OPERATORS-1): `|` below `^` below `&`, all above comparison
         // and below arithmetic.
