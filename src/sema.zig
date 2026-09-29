@@ -1100,6 +1100,7 @@ const Checker = struct {
     pub const checkConstantMethod = collection_checks.checkConstantMethod;
     pub const constantReceiver = collection_checks.constantReceiver;
     pub const checkBufferOperation = collection_checks.checkBufferOperation;
+    pub const hintTextMethodArgument = collection_checks.hintTextMethodArgument;
     pub const checkCollectionMethod = collection_checks.checkCollectionMethod;
     pub const checkCollectionSlice = collection_checks.checkCollectionSlice;
     pub const checkComprehension = collection_checks.checkComprehension;

@@ -107,7 +107,7 @@ fn hintBufferArguments(comptime Checker: type, self: *Checker, operation: @Field
                 try self.hint(operation.arguments[1], .i64);
             } else if (sequenceArgument(operation.kind) and operation.arguments.len == 1) {
                 const byte_needle = schema.collection.kind == .bytes and operation.kind == .contains;
-                if (!byte_needle) try self.hint(operation.arguments[0], owner_type);
+                if (!byte_needle) try self.hintTextMethodArgument(operation.arguments[0], owner_type, operation.kind);
             }
             return;
         }

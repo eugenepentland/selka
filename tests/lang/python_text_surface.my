@@ -134,3 +134,9 @@ public def test_unsigned64_bounds_saturate_positive_instead_of_becoming_negative
 public def test_generic_nominal_bytes_inputs_sort_and_repr() -> bool:
     values = [b"x", b"a", b""]
     return generic_existing(1, values) == [b"", b"a", b"x"] and generic_reprs(1, b"x", -0.0) == "b'x'-0.0"
+
+# spec-case: PY-TEXT-RANGE-1
+public def test_contextual_octet_declarations_keep_legacy_text_compatibility() -> bool:
+    text: str = b"éa"
+    keys: dict[str, int] = {b"é": 1}
+    return text.find("a") == 1 and keys["é"] == 1

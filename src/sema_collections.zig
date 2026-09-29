@@ -87,6 +87,11 @@ const impl = @This();
 /// Bind collection checking to the concrete checker without an import cycle.
 pub fn Checks(comptime Checker: type) type {
     return struct {
+        /// Preserve literal families at Python search/trim call sites while
+        /// retaining the existing contextual octet syntax in declarations.
+        pub fn hintTextMethodArgument(self: *Checker, input: ast.NodeId, expected: typed.Type, kind: BufferKind) Error!void {
+            return impl.hintTextMethodArgument(Checker, self, input, expected, kind);
+        }
         /// Check a resource acquisition: its Result type, capability and fixed-byte request.
         pub fn checkAcquireResource(self: *Checker, unused1: ast.Node, acquire: @FieldType(@FieldType(ast.Node, "data"), "acquire_resource"), out: *typed.Node) Error!void {
             return impl.checkAcquireResource(Checker, self, unused1, acquire, out);
@@ -871,7 +876,7 @@ fn checkManagedAccess(comptime Checker: type, self: *Checker, node: ast.Node, op
         else if (operation.kind == .join) try collectionListType(Checker, self, owner_type, node.span) else owner_type;
         // PY-GENERATOR-1: `"".join(x for x in xs)` joins the list the loop builds.
         if (operation.kind == .join) _ = try self.consumeGenerator(input, .list);
-        try self.hint(input, expected);
+        try self.hintTextMethodArgument(input, expected, operation.kind);
         argument.* = try self.expressionWithTemporaries(input, temporaries);
         const actual = self.nodes.items[@backingInt(argument.*)].ty;
         if (integer) try self.requireInteger(actual, node.span) else try self.requireArgument(.{ .actual = actual, .expected = expected, .span = node.span, .kind = operation.kind, .names = names });
@@ -1225,6 +1230,21 @@ test "a byte-buffer append takes its source span first and scalar operands after
     try std.testing.expect(!byteBufferInteger(.buffer_append_utf8, 0));
     try std.testing.expect(!byteBufferInteger(.buffer_append_float, 0));
     try std.testing.expect(widthArgument(.zfill));
+}
+
+/// Check text/byte needles and charsets separately from integer search bounds.
+fn hintTextMethodArgument(comptime Checker: type, self: *Checker, input: ast.NodeId, expected: typed.Type, kind: BufferKind) Error!void {
+    const node = self.syntax.nodes.items[@backingInt(input)];
+    if (buffer_operations.search(kind) != null or buffer_operations.trim(kind) != null) {
+        if (node.data == .bytes and expected.isAggregate()) {
+            const spelling = self.src.text(node.span);
+            if (spelling.len != 0 and spelling[0] == 'b') {
+                if (self.catalog.records[expected.recordIndex()].collection.kind == .string)
+                    return self.sink.fail("E_TYPE", node.span, "bytes needle or charset cannot be used as str");
+            }
+        }
+    }
+    try self.hint(input, expected);
 }
 
 /// Check text/byte needles and charsets separately from integer search bounds.
