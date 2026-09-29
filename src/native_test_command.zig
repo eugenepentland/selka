@@ -961,6 +961,9 @@ fn failureReason(context: fs.Context, failure: Failure) Error![]const u8 {
         }
     } else {
         reason = try stripRoot(context.allocator, failure.diagnostics, failure.project_source, failure.root);
+        if (std.mem.indexOf(u8, failure.diagnostics, "R_FRAME_LIMIT") != null) {
+            reason = try std.fmt.allocPrint(context.allocator, "{s}\ncall-depth budget exhausted; raise it with --max-frames=N (and enough --max-memory to back the frames)", .{reason});
+        }
     }
     if (failure.output.len == 0) return reason;
     const captured = try stripRoot(context.allocator, failure.output, failure.project_source, failure.root);
@@ -1334,4 +1337,25 @@ fn report(context: fs.Context, printed: Report, json: bool) Error!u8 {
     try std.Io.File.stdout().writeStreamingAll(context.io, try std.fmt.allocPrint(context.allocator, "{s}\n", .{output}));
     if (failed != 0) return 1;
     return if (passed + cached != 0) 0 else 3;
+}
+
+// spec: TEST-FRAME-ADVICE-1
+test "a guest frame-limit failure explains the test command budget controls" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var environ: std.process.Environ.Map = .init(arena.allocator());
+    defer environ.deinit();
+    const context = try fs.Context.init(arena.allocator(), std.testing.io, &environ);
+    const reason = try failureReason(context, .{
+        .status = "trap",
+        .actual = .null,
+        .expected = .null,
+        .diagnostics = "R_FRAME_LIMIT: execution trapped",
+        .output = "",
+        .trace = "",
+        .project_source = "main.my",
+        .root = "scratch",
+    });
+    try std.testing.expect(std.mem.indexOf(u8, reason, "--max-frames=N") != null);
+    try std.testing.expect(std.mem.indexOf(u8, reason, "--max-memory") != null);
 }

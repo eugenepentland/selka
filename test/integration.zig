@@ -12079,18 +12079,21 @@ const iterated_write_back =
     \\    rt.objects.append(value)
     \\def main() -> int:
     \\    it = Interp(rt=Runtime(objects=[1, 2]))
+    \\    seen = 0
     \\    for x in it.rt.objects:
+    \\        seen = seen + x
     \\        wb = it.rt
     \\        push(mut wb, x)
     \\        it.rt = wb
-    \\    return len(it.rt.objects)
+    \\    return 0 if seen == 3 and len(it.rt.objects) == 4 else 1
 ;
 
 // spec-case: RC-ITERATION-HOLD-TRANSFER-1
-test "CLI RC growth written back through an iterated field traps like the collector" {
-    try invokeOptions("run", iterated_write_back, &.{}, 1, "", "R_LIST_ITERATION_MUTATION");
-    try invokeOptions("run", iterated_write_back, &.{"--rc-runtime"}, 1, "", "R_LIST_ITERATION_MUTATION");
-    try invokeOptions("run", iterated_write_back, &.{"--rc-runtime=stats"}, 1, "", "R_LIST_ITERATION_MUTATION");
+test "CLI growth written back through a named field preserves the iteration snapshot" {
+    try invokeOptions("run", iterated_write_back, &.{}, 0, "", "");
+    try invokeOptions("run", iterated_write_back, &.{"--rc-runtime"}, 0, "", "");
+    try invokeOptions("run", iterated_write_back, &.{"--rc-runtime=stats"}, 0, "", "");
+    try invokeOptions("run", iterated_write_back, &.{"--gc-stress"}, 0, "", "");
 }
 
 // spec: RC-RUNTIME-CLI-1

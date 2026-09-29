@@ -348,11 +348,13 @@ pub const Session = struct {
         } else {
             try arguments.appendSlice(self.context.allocator, &.{ "--qbe", self.tools.qbe, "--mode", self.options.mode });
         }
-        // `--no-cache` and an explicit object directory are contradictory in the
-        // build frontend; the sentinel disables durable query reuse instead.
-        if (!self.options.flags.no_cache) {
-            try arguments.appendSlice(self.context.allocator, &.{ "--cache-dir", try self.objectsDirectory(a) });
-        }
+        // A no-cache run stages native objects inside the owned snapshot, so
+        // disabling query reuse never falls back to the caller's cwd cache.
+        const object_directory = if (self.options.flags.no_cache)
+            try std.fs.path.join(a, &.{ project.directory, "objects" })
+        else
+            try self.objectsDirectory(a);
+        try arguments.appendSlice(self.context.allocator, &.{ "--cache-dir", object_directory });
         if (manifest_path) |path| {
             try arguments.append(self.context.allocator, try std.fmt.allocPrint(a, "--manifest-file={s}", .{path}));
         } else if (select_file.len != 0) {

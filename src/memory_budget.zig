@@ -72,11 +72,29 @@ pub fn guard(bytes: u64) bool {
     return true;
 }
 
+/// Host restart checkpoint for the soft ceiling this compiler installed.
+/// Kept in the real environment across value/runtime-mode normalization.
+pub const checkpoint_variable = "MYLANG_HOST_LIMIT_CHECKPOINT";
+/// Guest-only carrier for restoring the original caller's soft ceiling.
+pub const restore_variable = "MYLANG_HOST_LIMIT_RESTORE";
+
+/// Add a guest-only restoration receipt. Build tools keep the host ceiling.
+pub fn guestEnvironment(_: std.mem.Allocator, environ: *std.process.Environ.Map) std.mem.Allocator.Error!void {
+    if (environ.get(checkpoint_variable)) |limit| try environ.put(restore_variable, limit);
+}
+
 /// Install the compiler's own ceiling from `MYLANG_HOST_MEMORY_LIMIT`, falling
 /// back to `host_default`. Malformed text leaves the process unbounded rather
-/// than refusing to start, because argument parsing has not run yet.
-pub fn guardHost(environ: *const std.process.Environ.Map) bool {
-    return guard(resolve(null, environ, host_variable, host_default) catch return false);
+/// than refusing to start, because argument parsing has not run yet. Remember
+/// the original caller limit across compiler mode-normalization restarts.
+pub fn guardHost(environ: *std.process.Environ.Map) bool {
+    const before = std.posix.getrlimit(.AS) catch return false;
+    if (!guard(resolve(null, environ, host_variable, host_default) catch return false)) return false;
+    const after = std.posix.getrlimit(.AS) catch return true;
+    var buffer: [64]u8 = undefined;
+    const text = std.fmt.bufPrint(&buffer, "{d}:{d}", .{ after.cur, before.cur }) catch return true;
+    environ.put(checkpoint_variable, text) catch return true;
+    return true;
 }
 
 /// Bytes the kernel reports as available for a new allocation without swapping,
@@ -192,4 +210,18 @@ test "the machine reports free bytes for the derived fan-out width" {
     const free = available(std.testing.io);
     try std.testing.expect(free == null or free.? > 0);
     try std.testing.expect(workers(.{ .programs = 8, .cores = 8, .free = free }) >= 1);
+}
+
+// spec: MEMORY-HOST-GUEST-1
+test "only guest environments carry the compiler's original address-space ceiling" {
+    const before = try std.posix.getrlimit(.AS);
+    defer std.posix.setrlimit(.AS, before) catch unreachable;
+    var environ: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environ.deinit();
+    try environ.put(host_variable, "1G");
+    try std.testing.expect(guardHost(&environ));
+    try std.testing.expect(environ.get(restore_variable) == null);
+    try guestEnvironment(std.testing.allocator, &environ);
+    try std.testing.expect(environ.get(restore_variable) != null);
+    try std.testing.expectEqual(@as(u64, (1 << 30) + headroom), (try std.posix.getrlimit(.AS)).cur);
 }

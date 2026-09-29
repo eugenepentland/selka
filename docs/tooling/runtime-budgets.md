@@ -261,3 +261,10 @@ verdicts, an unchanged one keeps them.
 A driver's standard output is sent to standard error, because the build runner
 discards a checked step's standard output and would otherwise hide the report
 of a failing driver.
+
+A native guest can use an explicit memory budget larger than the compiler's host
+ceiling. The compiler records the caller's original soft address-space limit;
+the guest restores that limit before applying its own budget. External soft
+and hard limits still apply. The compiler and native build tools keep the host
+ceiling. Guest test failures that exhaust call depth advise raising
+`--max-frames` together with enough `--max-memory` to back the frames.

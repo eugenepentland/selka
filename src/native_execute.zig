@@ -219,6 +219,7 @@ fn bounded(session: *wiring.Session, options: Options) Error!*std.process.Enviro
     map.* = try (options.environment orelse &session.environ).clone(allocator);
     const limit = options.max_memory orelse budget.test_default;
     try map.put(budget.variable, try std.fmt.allocPrint(allocator, "{d}", .{limit}));
+    try budget.guestEnvironment(allocator, map);
     return map;
 }
 

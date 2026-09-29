@@ -265,7 +265,7 @@ fn runCommand(process: std.process.Init, args: []const []const u8) !u8 {
         try writeErr(process.io, usage);
         return 2;
     };
-    const workspace = try makeWorkspace(allocator, process.io, root);
+    const workspace = try makeWorkspace(allocator, process.io, workspaceRoot(process.environ_map));
     defer removeTree(process.io, workspace);
     var output: std.Io.Mutex = .init;
     const session: Session = .{ .allocator = allocator, .io = process.io, .verbose = options.verbose, .compiler = compiler, .fixtures = fixtures, .output = &output };
@@ -824,6 +824,8 @@ fn invoke(allocator: std.mem.Allocator, io: std.Io, compiler: []const u8, subcom
     var argv: std.ArrayList([]const u8) = .empty;
     try argv.appendSlice(allocator, &.{ compiler, subcommand, entry, "--diagnostics=json" });
     try argv.appendSlice(allocator, extra);
+    const cache = try std.fs.path.join(allocator, &.{ std.fs.path.dirname(entry).?, "objects" });
+    try argv.append(allocator, try std.fmt.allocPrint(allocator, "--cache-dir={s}", .{cache}));
     const owned = try argv.toOwnedSlice(allocator);
     const result = try std.process.run(allocator, io, .{
         .argv = owned,
@@ -1093,9 +1095,14 @@ fn formatList(allocator: std.mem.Allocator, items: []const []const u8) ![]const 
     return out.toOwnedSlice(allocator);
 }
 
-/// Build one random-named private directory under `<root>/.mylang-cache`.
-fn makeWorkspace(allocator: std.mem.Allocator, io: std.Io, root: []const u8) ![]const u8 {
-    const parent = try std.fs.path.join(allocator, &.{ root, ".mylang-cache" });
+/// Scratch follows the caller's TMPDIR, including read-only documentation roots.
+fn workspaceRoot(environ: *const std.process.Environ.Map) []const u8 {
+    const root = environ.get("TMPDIR") orelse "";
+    return if (root.len == 0) "/tmp" else root;
+}
+
+/// Build one random-named private directory under the caller's scratch root.
+fn makeWorkspace(allocator: std.mem.Allocator, io: std.Io, parent: []const u8) ![]const u8 {
     try std.Io.Dir.cwd().createDirPath(io, parent);
     var random: [8]u8 = undefined;
     std.Io.random(io, &random);
@@ -1569,4 +1576,15 @@ test "a host-failed child fails its example even when the example expects nothin
     // own output, so it keeps its recorded meaning.
     try testing.expect(!hostFailed(.{ .status = 2, .stdout = "2\n", .stderr = "", .diagnosed = false }));
     try testing.expect(!hostFailed(.{ .status = 2, .stdout = "hello\n", .stderr = "", .diagnosed = false }));
+}
+
+// spec-case: CLI-CACHE-ISOLATION-1
+test "doctest scratch follows TMPDIR independently of its document root" {
+    var environ: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environ.deinit();
+    try std.testing.expectEqualStrings("/tmp", workspaceRoot(&environ));
+    try environ.put("TMPDIR", "scratch");
+    try std.testing.expectEqualStrings("scratch", workspaceRoot(&environ));
+    try environ.put("TMPDIR", "");
+    try std.testing.expectEqualStrings("/tmp", workspaceRoot(&environ));
 }

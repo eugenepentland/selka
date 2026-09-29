@@ -18,6 +18,7 @@ Each fixture is classified in `selfhost/tests/fixtures/lexer/expect.json`:
   error, or a limit a small fixture cannot reach).
 
 The selfhost lexer is built natively once per run with the pinned stage 0
+(or --compiler for the live-compiler gate)
 (``build ... --project``; a module entry is a project entry), and every fixture
 uses that binary.  ``--via-run`` keeps the slower ``mylang run selfhost/lexer.my``
 path for a comparison baseline.  ``--fixture SUBSTRING`` (repeatable) restricts
@@ -45,6 +46,12 @@ import stage0  # noqa: E402 - sibling pin authority, imported after sys.path set
 FIXTURES = ROOT / "selfhost" / "tests" / "fixtures" / "lexer"
 MANIFEST = FIXTURES / "expect.json"
 PROGRAM = "selfhost/lexer.my"
+CURRENT_COMPILER = None
+
+
+def compiler():
+    """Use an explicitly requested live compiler, or the verified bootstrap pin."""
+    return CURRENT_COMPILER or stage0.require()
 
 LEXICAL_CODES = frozenset({
     "E_TOKEN",
@@ -59,7 +66,7 @@ LEXICAL_CODES = frozenset({
 
 def run(args):
     return subprocess.run(
-        [str(stage0.require()), *args],
+        [str(compiler()), *args],
         cwd=str(ROOT),
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -97,7 +104,7 @@ def selfhost_protocol(path: Path, built, via_run: bool):
 
 def check_error_line(path: Path):
     """Return the first `diagnostic-v1` record as an `error ...` protocol line."""
-    result = run(["check", str(path), "--diagnostics=json"])
+    result = run(["check", str(path), "--diagnostics=json", "--no-cache"])
     record = None
     for line in result.stderr.splitlines():
         line = line.strip()
@@ -144,7 +151,7 @@ def build_program(output: Path, program: str = PROGRAM) -> int:
     explicit: a component iteration must not depend on the host's default
     backend or its LLVM toolchain.
     """
-    command = [str(stage0.require()), "build", program, "--project", "--backend", "qbe", "-o", str(output)]
+    command = [str(compiler()), "build", program, "--project", "--backend", "qbe", "-o", str(output), "--cache-dir", str(output.parent / "objects")]
     result = subprocess.run(
         command,
         cwd=str(ROOT),
@@ -219,6 +226,7 @@ def collect(selected, manifest, built, via_run, jobs):
 
 def parse_args(argv):
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--compiler", type=Path, help="compare against this live compiler instead of the bootstrap pin")
     parser.add_argument("--fixture", action="append", metavar="SUBSTRING",
                         help="only compare fixtures whose name contains SUBSTRING (repeatable; default all)")
     parser.add_argument("--jobs", type=int, default=1, metavar="N",
@@ -229,9 +237,12 @@ def parse_args(argv):
 
 
 def main() -> int:
+    global CURRENT_COMPILER
     args = parse_args(sys.argv[1:])
+    if args.compiler is not None:
+        CURRENT_COMPILER = args.compiler.resolve()
     try:
-        stage0.require()
+        compiler()
     except stage0.PinError as error:
         print("lexer diff: {}".format(error))
         return 2
