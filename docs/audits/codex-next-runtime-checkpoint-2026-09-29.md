@@ -118,8 +118,11 @@ logs remain as `.tmp/scope-guest-first-rc.*`; corrected receipts are
 `.tmp/scope-guest-summary.json` and `.tmp/scope-focused-final.log`.
 
 These checks do not replace the final frozen B3 gate or performance comparison.
-The scope source currently uses ABI3 counts and will be adapted to the shared
-ABI4 prefix constants after the independent header tranche is committed.
+The scope source now uses the shared ABI4 prefix offsets and unsigned word
+loads/stores. It refuses capture at UINT32_MAX before changing state and sends
+zero/final holds to native unwind. The first narrowing compile caught a local
+name shadowing its count helper; renaming the helper corrected it. The separate
+header tranche's LLVM load-opcode correction is integrated before guest checks.
 
 ## Owning text dictionary keys
 

@@ -1,7 +1,10 @@
 //! RC-SCOPE-IL-1: production journal operations with the native failure path.
 const runtime = @import("runtime_mode.zig");
+const prefix = @import("qbe_rc_prefix.zig");
 const Error = @import("qbe_rc_unique.zig").Error;
 const store_word = " storel %v{d}, %v{d}\n";
+const load_count = " %v{d} =" ++ prefix.count_type ++ " " ++ prefix.count_load ++ " %v{d}\n";
+const change_count = load_count ++ " %v{d} =w add %v{d}, {d}\n " ++ prefix.count_store ++ " %v{d}, %v{d}\n";
 const arena: u64 = @as(u64, 1) << 62;
 const pinned: u64 = @as(u64, 1) << 60;
 const special: u64 = arena | 2 | 1;
@@ -15,8 +18,6 @@ const deaths = 200;
 const heap_bytes = 24;
 const heap_limit = 88;
 const heap_region = 112;
-const holds_offset = 24;
-const owners_offset = 32;
 
 /// Link the initialized frame record before any fallible capture.
 pub fn begin(comptime E: type, self: *E, scope: usize) Error!bool {
@@ -198,7 +199,15 @@ fn bump(comptime E: type, self: *E, pointer: usize, amount: i64) Error!void {
     try self.print(" %v{d} =l add %v{d}, {d}\n storel %v{d}, %v{d}\n", .{ updated, value, amount, updated, pointer });
 }
 fn increment(comptime E: type, self: *E, payload: usize, amount: i64) Error!void {
-    try bump(E, self, try belowAddress(E, self, payload, holds_offset), amount);
+    const pointer = try belowAddress(E, self, payload, prefix.holds_offset);
+    const value = self.temp();
+    const updated = self.temp();
+    try self.print(change_count, .{ value, pointer, updated, value, amount, updated, pointer });
+}
+fn loadCount(comptime E: type, self: *E, payload: usize, offset: u64) Error!usize {
+    const value = self.temp();
+    try self.print(load_count, .{ value, try belowAddress(E, self, payload, offset) });
+    return value;
 }
 fn guard(comptime E: type, self: *E, condition: usize, label: usize, operation: []const u8) Error!void {
     const next = self.temp();
@@ -216,17 +225,18 @@ fn ordinary(comptime E: type, self: *E, payload: usize, mark: usize, label: usiz
     try zero(E, self, flagged, label, operation);
 }
 fn available(comptime E: type, self: *E, payload: usize, label: usize, operation: []const u8) Error!void {
-    const count = try below(E, self, payload, holds_offset);
+    const holds = try loadCount(E, self, payload, prefix.holds_offset);
     const condition = self.temp();
-    try self.print(" %v{d} =w cnel %v{d}, 18446744073709551615\n", .{ condition, count });
+    try self.print(" %v{d} =w cnew %v{d}, {d}\n", .{ condition, holds, prefix.count_max });
     try guard(E, self, condition, label, operation);
 }
 fn nonfinal(comptime E: type, self: *E, payload: usize, label: usize) Error!void {
-    const count = try below(E, self, payload, holds_offset);
-    const owners = try below(E, self, payload, owners_offset);
+    const holds = try loadCount(E, self, payload, prefix.holds_offset);
+    try guard(E, self, holds, label, "end");
+    const owners = try loadCount(E, self, payload, prefix.owners_offset);
     const retained = self.temp();
     const sharing = self.temp();
     const live = self.temp();
-    try self.print(" %v{d} =w cugtl %v{d}, 1\n %v{d} =w cnel %v{d}, 0\n %v{d} =w or %v{d}, %v{d}\n", .{ retained, count, sharing, owners, live, retained, sharing });
+    try self.print(" %v{d} =w cugtw %v{d}, 1\n %v{d} =w cnew %v{d}, 0\n %v{d} =w or %v{d}, %v{d}\n", .{ retained, holds, sharing, owners, live, retained, sharing });
     try guard(E, self, live, label, "end");
 }
