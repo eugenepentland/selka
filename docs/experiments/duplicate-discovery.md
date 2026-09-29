@@ -115,7 +115,7 @@ names, so inserting built-in types does not conflate unrelated records.
 The array extension advances the comparison version to `exact-v4`. Structural
 array type names encode length and resolved element identity. Canonical nodes
 retain ordered array construction, indexed reads, replacement arguments, and
-length operand evaluation. Array type whitespace/leading zeroes and bound names
+length operand evaluation. Array type whitespace, the spelling of a length (`[2]`, `[0x2]`) and bound names
 remain normalized. `src/arrays_test.zig` verifies these distinctions; historical
 benchmark files retain the version actually measured.
 

@@ -4,6 +4,7 @@ const ast = @import("ast.zig");
 const typed = @import("typed.zig");
 const source = @import("source.zig");
 const diagnostic = @import("diagnostic.zig");
+const number_literal = @import("number_literal.zig");
 const eArrayLength = "E_ARRAY_LENGTH";
 /// Numeric array syntax whose element depends on an enclosing type parameter.
 pub const Template = struct { syntax: ast.ArrayType, length: usize, length_parameter: ?source.Span = null };
@@ -17,11 +18,14 @@ pub fn parameter(src: source.Source, program: ast.Program, span: source.Span) bo
     }
     return false;
 }
-/// Parse the same bounded numeric length for concrete arrays and templates.
+/// Parse the same bounded numeric length for concrete arrays and templates. The spelling
+/// is any unsuffixed integer literal: `16`, `0x10`, `0o20`, `0b1_0000` or `1_024`.
 pub fn length(src: source.Source, span: source.Span, sink: *diagnostic.Sink) diagnostic.Error!usize {
-    const digits = src.text(span);
-    for (digits) |c| if (!std.ascii.isDigit(c)) return sink.fail(eArrayLength, span, "array length must be an unsuffixed decimal integer");
-    const count = std.fmt.parseInt(usize, digits, 10) catch return sink.fail(eArrayLength, span, "array length exceeds the host index range");
+    const value = switch (number_literal.count(src.text(span))) {
+        .ok => |value| value,
+        .bad => |message| return sink.fail(eArrayLength, span, message),
+    };
+    const count = std.math.cast(usize, value) orelse return sink.fail(eArrayLength, span, "array length exceeds the host index range");
     if (count > std.math.maxInt(usize) / @sizeOf(typed.Value)) return sink.fail(eArrayLength, span, "array value storage exceeds the host address range");
     return count;
 }

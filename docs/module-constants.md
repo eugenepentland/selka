@@ -9,7 +9,9 @@ const FACTOR: i64 = 7;
 const MASK: u8 = u8(255);
 ```
 
-Integer widths and `bool` are supported. Initializers may contain scalar
+Integer widths and `bool` are supported. An unsuffixed integer literal in any base takes
+the declared type when its value fits, so `const MASK: u32 = 0xFF00_0000` and
+`const LOW: u8 = 255` need no suffix or cast (`u8(255)` still works). Initializers may contain scalar
 literals, other visible constants, casts, and unary/binary operators. Forward
 references work; dependency cycles reject even in a short-circuited operand.
 Bounded calls to scalar source functions are supported as described in

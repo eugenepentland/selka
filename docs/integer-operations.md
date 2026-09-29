@@ -29,6 +29,51 @@ def main() -> int:
     return int(channel) - 158
 ```
 
+## Integer literal spellings
+
+Integer literals are Python's. Write decimal `255`, hexadecimal `0xFF` (or `0XFF`),
+octal `0o377` and binary `0b1111_1111`; digits take either case, and single
+underscores may separate digits (`1_000_000`, `0xDEAD_BEEF`) or follow the base
+prefix (`0x_FF`). A width suffix goes directly after the last digit and combines
+with every base: `0xFFu8`, `0b1010u16`, `0o17i32`, `1_000u32`. A suffix begins at
+the first byte that is not a digit of the base. The suffix letters `i` and `u` are
+digits of no base, so a hexadecimal literal never swallows its suffix, and no
+underscore may sit between the last digit and the suffix (`1_u8` is an error).
+
+A leading, trailing or doubled underscore (`1__0`, `1_`, `0_x`), a base prefix with
+no digit (`0x`) and a digit outside the base (`0b12`, `0o8`) are `E_INTEGER_LITERAL`
+errors, and a value that does not fit its type is `E_INTEGER_RANGE` in every base.
+As in Python 3, a decimal integer may not start with a zero unless every digit is zero:
+`0`, `00` and `0_0` are fine, but `0755` is an `E_INTEGER_LITERAL` error that says to
+write `0o755` for octal or `755` for decimal, so a C-style octal mode never silently
+means 755. Floats keep leading zeros (`007.5`, `01e2`). Imaginary literals such as `1j`
+are not supported. `**`, `<<` and `>>` are not operators; use `math.pow`,
+`shift_left` and `shift_right`. An array length (`[16]u8`) and a const generic length
+argument take any unsuffixed integer spelling (`[0x10]u8`, `[1_024]u8`,
+`[0b1_0000]u8`) and all spellings of one value are the same type; a suffix (`[2u8]`)
+or a decimal leading zero (`[02]u8`) is rejected.
+
+An unsuffixed literal in any base takes the integer type its context expects when
+its value fits, including in a `const` initializer, so `const MASK: u32 = 4278190080`
+and `const LOW: u8 = 0xFF` need no suffix or cast. Beside a typed operand (`MASK + 1`)
+a literal takes that operand's type. `mylang fmt` keeps the spelling you wrote.
+
+```mylang
+# doc: expect 42
+const MASK: u32 = 0xFF00_0000
+
+def main() -> int:
+    low = 0x2A
+    if i64(MASK) != 4278190080:
+        return 1
+    if 0o52 != low or 0b10_1010 != low or 1_000 != 1000:
+        return 2
+    block: [0x10]u8 = [0u8, 1u8, 2u8, 3u8, 4u8, 5u8, 6u8, 7u8, 8u8, 9u8, 10u8, 11u8, 12u8, 13u8, 14u8, 15u8]
+    if len(block) != 16 or block[15] != 15u8:
+        return 3
+    return int(0x2Au8)
+```
+
 ## Bitwise and shift helpers
 
 These are the named spellings of the operations that have no operator. `bit_and`, `bit_or` and `bit_xor` take two operands of one integer type. `shift_left` and `shift_right` take the count in that same type, so shifting a `u8` counts in `u8`. A count that is negative or at least the operand width traps with `R_INVALID_SHIFT`, or reports `E_CONSTANT_ARITHMETIC` when it is a module constant.

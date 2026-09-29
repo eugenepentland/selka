@@ -412,6 +412,11 @@
       "summary": "`int` is checked signed 64-bit; `i8`-`i64` and `u8`-`u64` are available for binary formats.",
       "doc": "docs/integer-operations.md#fixed-width-integers"
     },
+    "numeric-literal-spellings": {
+      "kind": "language",
+      "summary": "Integer literals take Python's `0x`, `0o` and `0b` spellings and underscores between digits, float literals take `.5`, `5.` and underscores, a width suffix combines with every base (`0xFFu8`), an unsuffixed literal that fits takes the declared type even in a `const` initializer, decimal leading zeros are rejected (`0755` is an error), and array lengths accept any unsuffixed spelling (`[0x10]u8`).",
+      "doc": "docs/integer-operations.md#integer-literal-spellings"
+    },
     "named-integer-bitwise-shifts": {
       "kind": "language",
       "summary": "`bit_and`, `bit_or`, `bit_xor`, `shift_left` and `shift_right` are named operations over one integer type.",

@@ -80,8 +80,11 @@ those with defaults. Intrinsics and callback values require positional arguments
 
 `int` is a checked signed 64-bit integer. Fixed-width `u8` through `u64` and
 `i8` through `i64` remain available for binary formats and host interfaces.
-Representable unsuffixed integer literals adopt an expected integer type.
-`float` is binary64 and accepts literals such as `1.5` and `4.2e1`, ordinary
+Representable unsuffixed integer literals adopt an expected integer type, in a `const`
+initializer as in a typed local. Integer literals take Python's spellings (`0xFF`, `0o17`,
+`0b1010`, `1_000`, and a width suffix as in `0xFFu8`), described in
+[integer literal spellings](integer-operations.md#integer-literal-spellings).
+`float` is binary64 and accepts literals such as `1.5`, `.5`, `5.`, `1_000.5` and `4.2e1`, ordinary
 arithmetic and comparisons, and `float(integer)` / `int(float)` conversion.
 `/` produces a float; `//` rounds the quotient down and `%` follows that quotient.
 `divtrunc(a, b)` and `remtrunc(a, b)` round toward zero instead, for binary formats and

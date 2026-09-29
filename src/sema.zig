@@ -930,11 +930,14 @@ const Checker = struct {
     fn obviousType(self: *Checker, id: ast.NodeId) ?typed.Type {
         const node = self.syntax.nodes.items[@backingInt(id)];
         if (self.expected_types.get(node.span)) |expected| return expected;
-        if (node.data == .name) if (self.active.get(self.src.text(node.data.name))) |slot| {
-            const declared = self.locals.items[@backingInt(slot)].ty;
-            if (self.option_facts.has(@backingInt(slot))) if (prelude.optionShape(declared, self.catalog.records)) |shape| return shape.element;
-            return declared;
-        };
+        if (node.data == .name) {
+            if (self.active.get(self.src.text(node.data.name))) |slot| {
+                const declared = self.locals.items[@backingInt(slot)].ty;
+                if (self.option_facts.has(@backingInt(slot))) if (prelude.optionShape(declared, self.catalog.records)) |shape| return shape.element;
+                return declared;
+            }
+            return self.constantType(node.data.name);
+        }
         // A field access over an obviously typed base is itself obvious, so
         // `node.literal == ...` and `node.kind == Kind.atom("x")` can hint the
         // constructor on the other operand the way a plain binding does.
@@ -942,6 +945,15 @@ const Checker = struct {
         if (node.data == .index) return self.obviousIndexType(node.data.index.base);
         if (node.data == .integer and float_syntax.isLiteral(self.src.text(node.data.integer))) return self.catalog.names.get("float");
         return null;
+    }
+    /// Declared integer type of a visible scalar constant, so `MASK + 1` and `x == MASK`
+    /// give the other operand's literal that type, as a typed local does. A miss stays
+    /// silent here; the name is checked, and diagnosed, when the operand itself is.
+    fn constantType(self: *Checker, name: source.Span) ?typed.Type {
+        const constants: @import("constant_values.zig").Context = .{ .src = self.src, .program = self.syntax, .names = self.catalog.module_names, .sink = self.sink, .catalog = self.catalog };
+        const index = (constants.lookup(name) catch return null) orelse return null;
+        const declared = constants.declaredType(index) catch return null;
+        return if (declared.isInteger()) declared else null;
     }
     /// Field type of `base.name` when both the base type and the field are
     /// already known, without diagnosing a miss: this runs in the hint pass,

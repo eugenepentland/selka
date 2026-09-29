@@ -34,7 +34,7 @@ fn faults(allocator: std.mem.Allocator) !void {
     try t.expectEqual(@as(usize, 2), compilation.diagnostics.items.len);
     for ([_][]const u8{ "missing_first", "missing_second" }) |repair| {
         // Equal-length repairs preserve the unaffected function's byte offsets.
-        const replacement = if (repair.len == 13) "0000000000001" else "00000000000001";
+        const replacement = if (repair.len == 13) "1_000_000_000" else "10_000_000_000";
         const fixed = try std.mem.replaceOwned(u8, allocator, text, repair, replacement);
         defer allocator.free(fixed);
         var partially_fixed = try language.Compilation.init(allocator, "faults.my", fixed);

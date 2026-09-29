@@ -1,0 +1,173 @@
+module number_literals
+
+# Python's numeric literal spellings: hexadecimal, octal and binary integers,
+# underscores between digits, and leading-dot, trailing-dot and underscored
+# floats. Each spelling has the value of its decimal form and the same typing
+# rules, and an unsuffixed literal that fits the expected type takes it, in a
+# `const` initializer as in a typed local.
+
+const MASK: u32 = 4278190080
+const TOP: u32 = 0xFF000000
+const LOW: u8 = 0xFF
+const WIDE: u64 = 0xFFFF_FFFF_FFFF_FFFF
+const FLOOR: i8 = -0x80
+const SUM: u32 = 0xFF + 1
+const NEXT: u32 = TOP + 1
+const AREA: u64 = 0x10 * 0x10
+const ABOVE: bool = 0x10 > 0xF
+const EXTENT: i64 = 0b1000_0000
+
+
+def twice(value: u32) -> u32:
+    return value * 2
+
+
+def clamp_low(value: u32) -> u8:
+    low: u8 = 0xFF
+    total: u32 = 0
+    total += 0x10
+    if value > 0x0F:
+        return low
+    return u8(total)
+
+
+def repeat(value: u32) -> u32:
+    total: u32 = 0
+    for step in range(0x4):
+        total += value
+    return total
+
+
+const DOUBLED: u32 = twice(0x10)
+const TWICE_MORE: u32 = twice(DOUBLED) + 1
+const CLAMPED: u8 = clamp_low(0x20)
+const REPEATED: u32 = repeat(0x10)
+
+
+record Header:
+    magic: u32
+    flags: u8
+
+
+def scale(value: u32, factor: u32 = 0x10) -> u32:
+    return value * factor
+
+
+def low_byte(value: u32) -> u32:
+    return bit_and(value, 0xFF)
+
+
+def magic() -> u32:
+    return 0xCAFE_BABE
+
+
+def half(value: float) -> float:
+    return value * .5
+
+
+# spec: NUM-LITERAL-1
+public def test_hexadecimal_octal_and_binary_literals_have_their_decimal_value() -> bool:
+    if 0xFF != 255 or 0XfF != 255:
+        return False
+    if 0o17 != 15 or 0O17 != 15:
+        return False
+    if 0b1010 != 10 or 0B1010 != 10:
+        return False
+    if 0xDEADBEEF != 3735928559 or 0xdeadBEEF != 3735928559:
+        return False
+    return 0x10 + 0o10 + 0b10 == 26
+
+
+# spec-case: NUM-LITERAL-1
+public def test_underscores_separate_digits_and_may_follow_a_base_prefix() -> bool:
+    if 1_000 != 1000 or 1_0_0_0 != 1000:
+        return False
+    if 0xDEAD_BEEF != 3735928559 or 0x_FF != 255:
+        return False
+    if 0b1010_1010 != 170 or 0b_1 != 1:
+        return False
+    return 0o7_7 == 63 and 0_0 == 0 and 00 == 0 and 0_00_0 == 0 and i64(0u8) == 0 and i64(00i16) == 0
+
+
+# spec: NUM-LITERAL-2
+public def test_integer_suffixes_combine_with_every_base() -> bool:
+    if i64(0xFFu8) != 255 or i64(0x7Fi8) != 127:
+        return False
+    if i64(0b1010u16) != 10 or i64(0o17i32) != 15:
+        return False
+    if i64(1_000u32) != 1000 or i64(0x_FFu8) != 255:
+        return False
+    return 0x8000_0000_0000_0000u64 == 9223372036854775808u64
+
+
+# spec-case: NUM-LITERAL-2
+public def test_a_hexadecimal_suffix_starts_at_the_first_letter_that_is_not_a_digit() -> bool:
+    if i64(0xABCDEFu32) != 11259375 or i64(0xE5u8) != 229:
+        return False
+    if i64(0xEu8) != 14 or i64(0x7Bi8) != 123:
+        return False
+    return i64(0xB1u8) == 177 and i64(0xFi16) == 15
+
+
+# spec-case: NUM-LITERAL-3
+public def test_float_literals_take_leading_dots_trailing_dots_and_underscores() -> bool:
+    if .5 != 0.5 or 5. != 5.0 or -.25 != -0.25:
+        return False
+    if 1_000.5 != 1000.5 or 0.1_5 != 0.15:
+        return False
+    if 1e1_0 != 10000000000.0 or 1.e2 != 100.0:
+        return False
+    if 2.5E-1 != 0.25 or 007.5 != 7.5 or 1_0e-1 != 1.0:
+        return False
+    if 00.5 != 0.5 or 01e2 != 100.0 or 0_7.5 != 7.5:
+        return False
+    return half(9.0) == 4.5 and [.5, 1.5][1] == 1.5
+
+
+# spec: NUM-LITERAL-4
+public def test_unsuffixed_literals_take_the_declared_type_in_constants() -> bool:
+    if i64(MASK) != 4278190080 or i64(TOP) != 4278190080:
+        return False
+    if MASK != TOP or i64(LOW) != 255 or WIDE != 18446744073709551615:
+        return False
+    if i64(FLOOR) != -128 or SUM != 256 or NEXT != 4278190081:
+        return False
+    return AREA == 256 and ABOVE and EXTENT == 128
+
+
+# spec-case: NUM-LITERAL-4
+public def test_unsuffixed_literals_take_the_declared_type_in_locals_fields_arguments_and_returns() -> bool:
+    wide: u32 = 0xFFFF_FFFF
+    header = Header(magic=0xCAFEBABE, flags=0x80)
+    if i64(wide) != 4294967295 or i64(header.magic) != 3405691582:
+        return False
+    if header.magic != 0xCAFEBABE or i64(header.flags) != 128:
+        return False
+    if i64(scale(2)) != 32 or i64(scale(2, 0x100)) != 512:
+        return False
+    return i64(magic()) == 3405691582 and i64(low_byte(0x1234_56AB)) == 171
+
+
+# spec-case: NUM-LITERAL-4
+public def test_compile_time_functions_type_literals_in_bindings_arguments_returns_and_assignments() -> bool:
+    if i64(DOUBLED) != 32 or i64(TWICE_MORE) != 65:
+        return False
+    return i64(CLAMPED) == 255 and i64(REPEATED) == 64
+
+
+# spec: NUM-LITERAL-7
+public def test_array_lengths_take_unsuffixed_integer_spellings() -> bool:
+    by_hex: [0x4]i64 = [1, 2, 3, 4]
+    by_decimal: [4]i64 = by_hex
+    if len(by_decimal) != 4 or by_decimal[3] != 4:
+        return False
+    by_groups: [1_0]u8 = [1u8, 2u8, 3u8, 4u8, 5u8, 6u8, 7u8, 8u8, 9u8, 10u8]
+    if len(by_groups) != 10 or by_groups[9] != 10u8:
+        return False
+    by_binary: [0b11]i64 = [7, 8, 9]
+    by_octal: [0o3]i64 = by_binary
+    return by_octal[2] == 9 and first_of(by_hex) == 1
+
+
+def first_of(items: [0x04]i64) -> i64:
+    return items[0]

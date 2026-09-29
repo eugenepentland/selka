@@ -16,6 +16,7 @@ const ast = @import("ast.zig");
 const source = @import("source.zig");
 const diagnostic = @import("diagnostic.zig");
 const lexer = @import("lexer.zig");
+const number_literal = @import("number_literal.zig");
 const parser = @import("parser.zig");
 const typed = @import("typed.zig");
 const generic_requirements = @import("generic_requirements.zig");
@@ -1212,7 +1213,7 @@ pub const Index = struct {
             var out: std.ArrayList(u8) = .empty;
             try out.appendSlice(allocator, "[");
             switch (array.index) {
-                .length => |length| try out.appendSlice(allocator, src.text(length)),
+                .length => |length| try out.appendSlice(allocator, try canonicalLength(allocator, src.text(length))),
                 .enum_type => |enum_type| try out.appendSlice(allocator, try self.contractTypeTextPath(module, enum_type, parameters, path)),
             }
             try out.appendSlice(allocator, "]");
@@ -1307,6 +1308,14 @@ pub const Index = struct {
         try out.appendSlice(allocator, "]");
     }
 };
+/// The decimal spelling of an array length, so `[0x10]u8` and `[16]u8` share one contract
+/// descriptor; a text that is not a plain count is kept as written.
+fn canonicalLength(allocator: std.mem.Allocator, text: []const u8) std.mem.Allocator.Error![]const u8 {
+    return switch (number_literal.count(text)) {
+        .ok => |value| std.fmt.allocPrint(allocator, "{d}", .{value}),
+        .bad => text,
+    };
+}
 fn sameIdentity(a: Identity, b: Identity) bool {
     return a.module == b.module and a.symbol == b.symbol;
 }

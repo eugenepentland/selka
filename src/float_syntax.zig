@@ -2,26 +2,12 @@
 const std = @import("std");
 const ast = @import("ast.zig");
 const Source = @import("source.zig").Source;
+const number_literal = @import("number_literal.zig");
 
-/// Decimal points or exponent markers distinguish floating tokens from integer suffixes.
+/// Decimal points or exponent markers distinguish floating tokens from integer suffixes;
+/// a `0x`, `0o` or `0b` spelling is always an integer, whatever letters it holds.
 pub fn isLiteral(text: []const u8) bool {
-    return std.mem.indexOfAny(u8, text, ".eE") != null;
-}
-
-/// Scan one numeric token, retaining malformed suffixes for a precise checker diagnostic.
-pub fn end(bytes: []const u8, start: usize) usize {
-    var at = start;
-    while (at < bytes.len and std.ascii.isDigit(bytes[at])) at += 1;
-    if (at + 1 < bytes.len and bytes[at] == '.' and std.ascii.isDigit(bytes[at + 1])) {
-        at += 1;
-        while (at < bytes.len and std.ascii.isDigit(bytes[at])) at += 1;
-    }
-    if (at < bytes.len and (bytes[at] == 'e' or bytes[at] == 'E')) {
-        at += 1;
-        if (at < bytes.len and (bytes[at] == '+' or bytes[at] == '-')) at += 1;
-    }
-    while (at < bytes.len and std.ascii.isAlphanumeric(bytes[at])) at += 1;
-    return at;
+    return number_literal.isFloat(text);
 }
 
 /// Whether the AST contains an operation that needs a concrete float schema.

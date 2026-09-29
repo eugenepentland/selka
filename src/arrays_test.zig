@@ -25,7 +25,7 @@ test "fixed arrays have structural types preserve copies and support every integ
         \\
         \\
         \\def main() -> i64:
-        \\    a: [02]i64 = [3, 4]
+        \\    a: [0x2]i64 = [3, 4]
         \\    b = replace(a, 0, 8)
         \\    return first(a) + b[0] + b[1]
     , 15);
@@ -84,7 +84,7 @@ test "array duplicate identity preserves length element type index replacement a
         \\    return x[0]
         \\
         \\
-        \\def b(y: [02]i64) -> i64:
+        \\def b(y: [0x2]i64) -> i64:
         \\    return y[0]
         \\
         \\
