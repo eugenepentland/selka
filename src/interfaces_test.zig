@@ -2508,3 +2508,25 @@ test "a Filesystem, Clock or Environment parameter reaches the published ceiling
     defer t.allocator.free(listing);
     try t.expect(std.mem.indexOf(u8, listing, "ceiling(filesystem,network,clock,random,environment,managed_allocation)") != null);
 }
+
+// spec-case: NUM-LITERAL-4
+test "constant hints inspect declaration policy without recording project problems" {
+    var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes =
+        \\module main
+        \\public const VALUE: int = 42
+        \\def ordinary() -> int:
+        \\    return 1
+        \\def main() -> int:
+        \\    return VALUE
+    }} };
+    var project = graph.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    var index = try interfaces.build(&project);
+    const merged = try project_syntax.build(&index);
+    const names: module_names.Names = .{ .index = &index, .src = merged.src };
+    try t.expect(try names.isConstant(merged.syntax.functions[0].name));
+    try t.expect(!try names.isConstant(merged.syntax.functions[1].name));
+    try t.expect(!try names.isConstant(merged.syntax.functions[2].name));
+    try t.expect(project.problem == null);
+}

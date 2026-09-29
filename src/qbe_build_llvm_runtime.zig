@@ -74,6 +74,7 @@ const curated = [_]Entry{
     entry("myl_qbe_fail_text_bounds_detail", &.{ P, i64_type, i64_type }, V),
     entry("myl_qbe_file_access", &.{ P, i64_type, i32_type, P, P, P }, i32_type),
     entry("myl_qbe_float_unary", &.{ P, i64_type, i64_type }, i64_type),
+    entry("myl_qbe_float_integer", &.{ P, i64_type, i64_type }, i64_type),
     entry("myl_qbe_frame_allocate", &.{ P, i64_type }, P),
     entry("myl_qbe_frame_try_allocate", &.{ P, i64_type }, P),
     entry("myl_qbe_frame_release", &.{ P, P }, V),

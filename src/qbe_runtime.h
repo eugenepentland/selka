@@ -368,6 +368,7 @@ uint64_t myl_qbe_int_cast(void *context, uint64_t from_signed, uint64_t to_signe
 uint64_t myl_qbe_int_neg(void *context, uint64_t is_signed, uint64_t width, uint64_t value);
 uint64_t myl_qbe_float_binary(void *context, uint64_t op, uint64_t a, uint64_t b);
 uint64_t myl_qbe_float_unary(void *context, uint64_t op, uint64_t value);
+uint64_t myl_qbe_float_integer(void *context, uint64_t op, uint64_t value);
 void myl_qbe_enter(void *context);
 void myl_qbe_leave(void *context);
 void myl_qbe_step(void *context);

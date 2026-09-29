@@ -150,3 +150,32 @@ test "managed constants require matching literal types and keep byte or generic 
     try rejectConstant("const S: str = \"x\"\ndef unused[T]() -> str noalloc:\n    return S\ndef main() -> int:\n    return 0\n", "E_EFFECT_BOUND");
     try rejectConstant("const B: bytes = b\"x\"\ndef unused[T]() -> bytes effects():\n    return B\ndef main() -> int:\n    return 0\n", "E_EFFECT_BOUND");
 }
+
+// spec-case: CONST-FLOAT-1
+test "float constants reject overflowing literals and mismatched declared types" {
+    try rejectConstant("const BAD: float = 1e309\ndef main() -> int:\n    return 0\n", "E_FLOAT_RANGE");
+    try rejectConstant("const BAD: int = 3.14\ndef main() -> int:\n    return 0\n", "E_TYPE");
+    try rejectConstant("const BAD: float = True\ndef main() -> int:\n    return 0\n", "E_TYPE");
+}
+
+// spec-case: CONST-FLOAT-2
+test "float constants reject integer-only operators and float source calls" {
+    try rejectConstant("const BAD: float = 1.0 & 2.0\ndef main() -> int:\n    return 0\n", "E_FLOAT_OPERATION");
+    try rejectConstant("const BAD: float = source()\ndef source() -> float:\n    return 1.0\ndef main() -> int:\n    return 0\n", "E_CONSTANT_TYPE");
+}
+
+// spec-case: CONST-FLOAT-3
+test "constant float integer conversions reject nonfinite and width boundaries" {
+    for ([_][]const u8{
+        "int(0.0 / 0.0)",              "int(1.0 / 0.0)",    "int(-1.0 / 0.0)",
+        "i8(128.0)",                   "i8(-129.0)",        "u8(256.0)",
+        "u8(-1.0)",                    "i16(32768.0)",      "u16(65536.0)",
+        "i32(2147483648.0)",           "u32(4294967296.0)", "i64(9223372036854775808.0)",
+        "u64(18446744073709551616.0)",
+    }) |conversion| {
+        const ty = conversion[0..std.mem.indexOfScalar(u8, conversion, '(').?];
+        const text = try std.fmt.allocPrint(t.allocator, "const BAD: {s} = {s}\ndef main() -> int:\n    return 0\n", .{ ty, conversion });
+        defer t.allocator.free(text);
+        try rejectConstant(text, "E_CONSTANT_ARITHMETIC");
+    }
+}

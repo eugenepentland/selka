@@ -2900,7 +2900,8 @@ const Emitter = struct {
             .unary_float => |unary| {
                 const operand = try self.load("s", h - 1);
                 const v = self.temp();
-                try self.print(" %v{d} =l call $myl_qbe_float_unary(l %ctx, l {d}, l %v{d})\n", .{ v, @backingInt(unary), operand });
+                const helper = if (@backingInt(unary) >= @backingInt(typed.UnaryOp.f64_to_i8)) "myl_qbe_float_integer" else "myl_qbe_float_unary";
+                try self.print(" %v{d} =l call ${s}(l %ctx, l {d}, l %v{d})\n", .{ v, helper, @backingInt(unary), operand });
                 try self.store(h - 1, v);
             },
         }
@@ -2955,6 +2956,10 @@ comptime {
         "f64_le",
     };
     for (binary_names, 0..) |name, i| if (@backingInt(@field(typed.BinaryOp, name)) != i) @compileError("QBE runtime binary ABI changed");
-    const unary_names = .{ "neg", "not", "f64_sqrt", "f64_floor", "f64_ceil", "f64_trunc", "f64_abs", "f64_neg", "f64_from_u64", "f64_to_u64", "f64_from_i64", "f64_to_i64" };
+    const unary_names = .{
+        "neg",          "not",        "f64_sqrt",     "f64_floor",  "f64_ceil",  "f64_trunc",  "f64_abs",    "f64_neg",
+        "f64_from_u64", "f64_to_u64", "f64_from_i64", "f64_to_i64", "f64_to_i8", "f64_to_i16", "f64_to_i32", "f64_to_u8",
+        "f64_to_u16",   "f64_to_u32",
+    };
     for (unary_names, 0..) |name, i| if (@backingInt(@field(typed.UnaryOp, name)) != i) @compileError("QBE runtime unary ABI changed");
 }

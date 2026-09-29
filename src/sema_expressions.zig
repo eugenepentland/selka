@@ -20,6 +20,7 @@ const eResultOperation = diagnostic.result_operation;
 const eResultPath = diagnostic.result_path;
 const eEnvironmentName = sema_shared.eEnvironmentName;
 const std = @import("std");
+const numeric_surface = @import("numeric_surface.zig");
 const dictionary_views = @import("dictionary_views.zig");
 const bufferOperation = sema_shared.bufferOperation;
 const ast = @import("ast.zig");
@@ -761,6 +762,8 @@ fn checkedExpression(comptime Checker: type, self: *Checker, node: ast.Node, min
             const value = self.resolved[@backingInt(cast.value)].?;
             out.ty = try self.ty(cast.ty);
             try self.requireInteger(out.ty, cast.ty);
+            if (numeric_surface.isFloat(self.nodes.items[@backingInt(value)].ty, self.catalog.records))
+                return self.numericBuilder(node.span).toInteger(value, out.ty);
             try self.requireInteger(self.nodes.items[@backingInt(value)].ty, node.span);
             out.data = .{ .cast = value };
         },
@@ -872,7 +875,9 @@ fn consumedTemporaries(comptime Checker: type, self: *Checker, node: ast.Node, o
         // The transparent marker reuses its target's typed data, but that target
         // has already consumed its own operands and left exactly one temporary.
         .mut_argument => return 1,
-        .bytes, .text, .integer => return 0,
+        // A name reads a binding or folds a constant, including a `float` constant's
+        // wrapped bit pattern, and takes no operand from the stack.
+        .bytes, .text, .integer, .name => return 0,
         // These forms check their contents in place; dictionary literals queue
         // every key and value, whether they construct a dictionary or a table.
         .list_literal, .set_literal, .format, .comprehension => return 0,

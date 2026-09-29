@@ -1,0 +1,14 @@
+module number_literal_helpers
+
+# An enum and a record from another module, so a module with constants can
+# compare against a module-qualified enum case (NUM-LITERAL-4).
+
+public enum Kind:
+    A,
+    B
+
+public record Token:
+    kind: Kind
+
+public def second() -> Token:
+    return Token(Kind.B)

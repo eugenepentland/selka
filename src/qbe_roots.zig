@@ -58,6 +58,7 @@ const pure_callees = [_][]const u8{
     "myl_qbe_int_binary",
     "myl_qbe_float_check",
     "myl_qbe_float_unary",
+    "myl_qbe_float_integer",
     // The read-only collection surfaces: a dictionary probe, a byte search and
     // the octet copy the inlined buffer append performs all take a `const`
     // receiver, walk storage the caller already holds, and allocate nothing. The

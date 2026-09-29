@@ -1808,13 +1808,7 @@ const Checker = struct {
                 if (shape.length != 1 and (try self.requiresHandling(shape.element))) return self.sink.fail(eResultOperation, node.span, "indexing would drop other result-bearing elements");
                 break :result shape.element;
             },
-            .cast => |cast| result: {
-                const operand = try self.expression(cast.value);
-                const target = try self.ty(cast.ty);
-                try self.supports(operand, .integer, node.span);
-                try self.supports(target, .integer, cast.ty);
-                break :result target;
-            },
+            .cast => |cast| try self.integerCast(cast, node.span),
             // A tuple value is checked element-wise against its schema, and a
             // conditional with the same condition and arm agreement rules as an
             // ordinary function body.
@@ -1827,6 +1821,14 @@ const Checker = struct {
             // full origin analysis.
             .mut_argument => |inner| try self.expression(inner),
         };
+    }
+    /// A fixed-width cast accepts a concrete float or an integer-constrained operand.
+    fn integerCast(self: *Checker, cast: @FieldType(@FieldType(ast.Node, "data"), "cast"), span: source.Span) Error!Symbolic {
+        const operand = try self.expression(cast.value);
+        const target = try self.ty(cast.ty);
+        if (!self.isFloat(operand)) try self.supports(operand, .integer, span);
+        try self.supports(target, .integer, cast.ty);
+        return target;
     }
     /// `value_if_true if condition else value_if_false` inside a template body:
     /// the condition is bool, both arms agree on one symbolic type, and only the

@@ -765,6 +765,18 @@ uint64_t myl_qbe_float_unary(void *context, uint64_t op, uint64_t input) {
         default: return fail(context, "R_INTERNAL");
     }
 }
+/* Narrow conversions have a separate, statically selected entry point so adding
+   widths does not change the dispatch of existing hot binary64 operations. */
+uint64_t myl_qbe_float_integer(void *context, uint64_t op, uint64_t input) {
+    if (op < 12 || op > 17) return fail(context, "R_INTERNAL");
+    const unsigned bits = 8u << ((op - 12) % 3);
+    const int is_signed = op < 15;
+    const double upper = ldexp(1.0, bits - is_signed);
+    const double lower = is_signed ? -upper : 0.0;
+    const double a = trunc(float_value(input));
+    if (!isfinite(a) || a < lower || a >= upper) return fail(context, "R_FLOAT_CONVERSION");
+    return is_signed ? (uint64_t)(int64_t)a : (uint64_t)a;
+}
 typedef struct NativeFrameAllocation {
     struct NativeFrameAllocation *previous, *next;
     max_align_t alignment;

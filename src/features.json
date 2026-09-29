@@ -372,6 +372,11 @@
       "summary": "`float` is IEEE binary64 with ordinary literals, operators, comparisons and integer conversions.",
       "doc": "docs/floating-point.md#binary64-floating-point"
     },
+    "float-integer-casts": {
+      "kind": "language",
+      "summary": "Fixed-width integer casts and int(float) truncate toward zero and trap R_FLOAT_CONVERSION for nonfinite or out-of-range results.",
+      "doc": "docs/floating-point.md#integer-conversions"
+    },
     "float-nan-when-observed": {
       "kind": "language",
       "summary": "A NaN's payload and sign are never observable: arithmetic propagates NaNs as IEEE does, and text, foreign-call arguments, equality and sorting see the canonical quiet NaN.",
@@ -606,6 +611,11 @@
       "kind": "language",
       "summary": "`const NAME: T = expression` folds an immutable scalar at check time.",
       "doc": "docs/module-constants.md#immutable-scalar-constants"
+    },
+    "float-module-constants": {
+      "kind": "language",
+      "summary": "A module `const` may be a `float`; its initializer folds at check time with the same binary64 operations the running program uses, including arithmetic, comparisons, `float(...)`, `int(...)` and conversion to a fixed-width integer.",
+      "doc": "docs/module-constants.md#float-constants"
     },
     "constant-methods": {
       "kind": "language",

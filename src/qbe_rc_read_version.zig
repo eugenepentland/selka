@@ -211,6 +211,7 @@ pub fn quietCopy(text: []const u8) bool {
         const callee = line[at + "call $".len ..];
         if (std.mem.startsWith(u8, callee, "myl_qbe_fail_")) continue;
         if (std.mem.startsWith(u8, callee, "myl_qbe_float_unary(") or std.mem.startsWith(u8, callee, "myl_qbe_float_check(")) continue;
+        if (std.mem.startsWith(u8, callee, "myl_qbe_float_integer(")) continue;
         if (std.mem.startsWith(u8, callee, "myl_qbe_int_")) continue;
         return false;
     }

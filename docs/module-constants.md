@@ -9,7 +9,7 @@ const FACTOR: i64 = 7;
 const MASK: u8 = u8(255);
 ```
 
-Integer widths and `bool` are supported. An unsuffixed integer literal in any base takes
+Integer widths, `bool` and `float` are supported (see [float constants](#float-constants)). An unsuffixed integer literal in any base takes
 the declared type when its value fits, so `const MASK: u32 = 0xFF00_0000` and
 `const LOW: u8 = 255` need no suffix or cast (`u8(255)` still works). Initializers may contain scalar
 literals, other visible constants, casts, and unary/binary operators. Forward
@@ -45,6 +45,34 @@ Dependency/expression nesting is bounded at 256 and validation/evaluation work
 at 65,536 expression, statement and name-lookup work units per evaluation.
 Scalar constants are cached within one evaluation; no generated results persist
 across compilation snapshots.
+
+## Float constants
+
+A `float` constant folds its initializer at check time with the same binary64
+operations a running program uses, so the constant and the same expression computed
+at run time are the same number, and every read is the literal the constant folded
+to. The initializer may use float and integer literals (an integer literal takes the
+float type from the declaration, so `const HALF: float = 1 / 2` is `0.5`), other
+visible constants, parentheses, unary `-`, `+`, `-`, `*`, `/`, `//`, `%`, comparisons
+(which make a `bool` constant), `float(...)`, `int(...)`, `sqrt`, `floor`, `ceil`,
+`trunc` and `abs`. An integer operand beside a float converts to the nearest binary64
+first. `-0.0` keeps its sign, an overflowing literal is `E_FLOAT_RANGE`, and a value of
+the wrong type for its declaration is `E_TYPE`. Converting a float constant to an
+integer type truncates toward zero and rejects NaN, an infinity or an out-of-range
+value with `E_CONSTANT_ARITHMETIC`. Compile-time calls to source functions still take
+and return integers and `bool`.
+
+```mylang
+# doc: expect 42
+const PI: float = 3.14
+const TWO_PI: float = PI * 2.0
+const SCALE: int = int(TWO_PI * 100.0)
+
+def main() -> int:
+    if TWO_PI != 6.28 or SCALE != 628:
+        return 1
+    return int(PI * 10.0) + 11
+```
 
 ## String and byte literal constants
 

@@ -312,8 +312,9 @@ const Checker = struct {
         // their ordinary checked literal node and its allocation effect.
         var body = try self.statement(function.body);
         if (constant) |value| {
+            const folded = try self.constantNode(value, function.name);
             const node_id: typed.NodeId = @fromBackingInt(self.nodes.items.len);
-            try self.nodes.append(allocator, .{ .span = function.name, .ty = value.typeOf(), .data = if (value == .bool) .{ .boolean = value.bool } else .{ .integer = if (value == .i64) value.i64 else value.integer.value } });
+            try self.nodes.append(allocator, folded);
             const statement_id: typed.StatementId = @fromBackingInt(self.statements.items.len);
             try self.statements.append(allocator, .{ .span = function.name, .terminates = true, .data = .{ .ret = node_id } });
             body = .{ .id = statement_id, .terminates = true };
@@ -443,6 +444,12 @@ const Checker = struct {
         if (hidden) |slot| {
             self.active.getPtr(text).?.* = slot;
         } else _ = self.active.remove(text);
+    }
+    /// The typed literal a folded scalar constant becomes at `span`: an integer or Boolean
+    /// node, or for a `float` the same wrapped bit pattern a float literal checks to.
+    pub fn constantNode(self: *Checker, value: typed.Value, span: source.Span) Error!typed.Node {
+        if (numeric_surface.isFloat(value.typeOf(), self.catalog.records)) return self.numericBuilder(span).constant(@intCast(value.integer.value));
+        return .{ .span = span, .ty = value.typeOf(), .data = if (value == .bool) .{ .boolean = value.bool } else .{ .integer = if (value == .i64) value.i64 else value.integer.value } };
     }
     /// Resolve a spelled type in the current function's generic scope, or at top level.
     pub fn ty(self: *Checker, span: source.Span) Error!typed.Type {
@@ -972,8 +979,17 @@ const Checker = struct {
     /// Declared integer type of a visible scalar constant, so `MASK + 1` and `x == MASK`
     /// give the other operand's literal that type, as a typed local does. A miss stays
     /// silent here; the name is checked, and diagnosed, when the operand itself is.
+    /// A name that is not a constant declaration, such as the module in
+    /// `scanner.Kind.B`, is skipped before any resolution: a failed resolve records a
+    /// problem on the project, which would outlive this hint. The lookup itself
+    /// reports into a scratch sink.
     fn constantType(self: *Checker, name: source.Span) ?typed.Type {
-        const constants: @import("constant_values.zig").Context = .{ .src = self.src, .program = self.syntax, .names = self.catalog.module_names, .sink = self.sink, .catalog = self.catalog };
+        if (self.catalog.module_names) |names| {
+            if (!(names.isConstant(name) catch return null)) return null;
+        }
+        var scratch: diagnostic.Sink = .{ .allocator = self.allocator };
+        defer scratch.deinit();
+        const constants: @import("constant_values.zig").Context = .{ .src = self.src, .program = self.syntax, .names = self.catalog.module_names, .sink = &scratch, .catalog = self.catalog };
         const index = (constants.lookup(name) catch return null) orelse return null;
         const declared = constants.declaredType(index) catch return null;
         return if (declared.isInteger()) declared else null;

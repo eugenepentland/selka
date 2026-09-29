@@ -235,9 +235,7 @@ fn checkName(comptime Checker: type, self: *Checker, node: ast.Node, name: @Fiel
                 out.data = .{ .call = .{ .function = self.ordinary_ids[index] orelse return error.InternalError, .arguments = &.{} } };
                 return;
             }
-            const value = try constants.evaluate(index);
-            out.ty = value.typeOf();
-            out.data = if (value == .bool) .{ .boolean = value.bool } else .{ .integer = if (value == .i64) value.i64 else value.integer.value };
+            out.* = try self.constantNode(try constants.evaluate(index), node.span);
             return;
         }
     }
