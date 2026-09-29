@@ -317,7 +317,7 @@ test "the embed builtins are discoverable through the reference" {
     var parsed = try envelope(t.allocator, bytes);
     defer parsed.deinit();
     const builtin = find(section(parsed.value, "builtins"), "name", "embed_bytes") orelse return error.TestUnexpectedResult;
-    try t.expectEqual(@as(i64, 1), integerAt(builtin, "arity").?);
+    try t.expectEqual(@as(usize, 1), integerAt(builtin, "arity").?);
     try t.expectEqualStrings("embed.kindOf", stringAt(builtin, "source"));
 }
 
