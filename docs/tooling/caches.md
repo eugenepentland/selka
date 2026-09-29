@@ -73,6 +73,13 @@ list owns exactly its items and never advertises capacity it did not allocate.
   every decoded declaration/catalog reference is remapped through C1R or treated
   as a miss. A fresh error is never replaced by a previous pass. Symbol indexes,
   interfaces and resolved declaration tables are still never written.
+- **Embedded files are inputs.** A file a module reads with `embed_bytes` or
+  `embed_str` is read once when the project loads, and its outcome and BLAKE3
+  digest join the configured identity every verdict-level layer keys on and the
+  dependency context of each declaration whose region holds the call, so an edit
+  to only that file misses exactly those bodies, summaries and stored units and
+  nothing else. The syntax layer never sees the file: parsing does not depend on
+  it. See [embedding a file](../bytes.md#embedding-a-file-at-compile-time).
 - **Failed checks are never stored.** A verdict entry is written only after a
   complete, error-free `check-project`; a type, privacy, import or deleted-file
   error can never inherit an earlier success. The verdict key covers all loaded

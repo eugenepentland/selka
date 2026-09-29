@@ -126,9 +126,30 @@ fn checkChain(comptime Checker: type, self: *Checker, node: ast.Node) Error!type
     operands[0] = first.left;
     for (links.items, operands[1..]) |link, *operand| operand.* = link.right;
     for (links.items, operands[0 .. operands.len - 1]) |link, left| try self.hintOperands(.{ .op = link.op, .left = left, .right = link.right, .op_span = link.op_span }, null);
-    const checked = try self.allocator.alloc(typed.NodeId, operands.len);
-    for (operands, checked) |operand, *value| value.* = try self.expression(operand);
+    const checked = try checkChainOperands(Checker, self, links.items, operands);
     return chainBlock(Checker, self, node.span, links.items, checked);
+}
+
+/// Check each shared operand once, giving contextual Option/Result constructors
+/// the actual type of their adjacent equality operand. Node assembly retains source order.
+fn checkChainOperands(comptime Checker: type, self: *Checker, links: []const ChainLink, operands: []const ast.NodeId) Error![]typed.NodeId {
+    const checked = try self.allocator.alloc(typed.NodeId, operands.len);
+    const equality = links[0].op == .eq or links[0].op == .ne;
+    const peer_first = equality and try self.awaitsPeerType(operands[0]) and !try self.awaitsPeerType(operands[1]);
+    if (peer_first) {
+        checked[1] = try self.expression(operands[1]);
+        checked[0] = try self.expressionExpected(operands[0], self.nodes.items[@backingInt(checked[1])].ty);
+    } else checked[0] = try self.expression(operands[0]);
+    const start: usize = if (peer_first) 2 else 1;
+    for (operands[start..], start..) |operand, index| {
+        const previous = self.nodes.items[@backingInt(checked[index - 1])].ty;
+        checked[index] = try checkChainOperand(Checker, self, operand, links[index - 1].op, previous);
+    }
+    return checked;
+}
+fn checkChainOperand(comptime Checker: type, self: *Checker, operand: ast.NodeId, op: ast.BinaryOp, previous: typed.Type) Error!typed.NodeId {
+    if (op == .eq or op == .ne) if (try self.awaitsPeerType(operand)) return self.expressionExpected(operand, previous);
+    return self.expression(operand);
 }
 
 /// Assemble a checked comparison chain from its checked operands.

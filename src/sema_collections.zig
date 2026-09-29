@@ -43,6 +43,7 @@ const eOptionTest = sema_shared.eOptionTest;
 const bufferOperation = sema_shared.bufferOperation;
 const eArenaBinding = sema_shared.eArenaBinding;
 const needs_list = "operation requires a managed list";
+const removed_names = @import("removed_names.zig");
 /// String methods whose only operand is a scalar width rather than more text.
 fn widthArgument(kind: BufferKind) bool {
     return kind == .zfill;
@@ -129,6 +130,15 @@ pub fn Checks(comptime Checker: type) type {
         /// element; a context that demands `[N]T` builds a fixed array instead.
         pub fn checkListLiteral(self: *Checker, node: ast.Node, inputs: []const ast.NodeId, temporaries: []const typed.Type) Error!typed.Node {
             return impl.checkListLiteral(Checker, self, node, inputs, temporaries);
+        }
+        /// The `str` or `bytes` module constant behind `NAME.method(...)`, when no local
+        /// claims `NAME`.
+        pub fn constantReceiver(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!?usize {
+            return impl.constantReceiver(Checker, self, call);
+        }
+        /// Check a method call on a `str` or `bytes` module constant.
+        pub fn checkConstantMethod(self: *Checker, node: ast.Node, temporaries: []const typed.Type) Error!typed.Node {
+            return impl.checkConstantMethod(Checker, self, node, temporaries);
         }
         /// Check a collection method on a local whose Option type a preceding test narrowed.
         pub fn checkNarrowedMethod(self: *Checker, node: ast.Node, slot: typed.LocalId, temporaries: []const typed.Type) Error!typed.Node {
@@ -225,7 +235,7 @@ fn collectionSyntax(comptime Checker: type, self: *Checker, id: ast.NodeId) Erro
                 const name = self.src.text(call.name);
                 const family = self.catalog.records[value_type.recordIndex()].collection.kind;
                 const kind = buffer_operations.methodFor(name, call.arguments.len) orelse {
-                    _ = try @import("removed_names.zig").reject(self.sink, call.name, name);
+                    _ = try removed_names.reject(self.sink, call.name, name);
                     return self.sink.fail("E_LIST_METHOD", call.name, try self.unknownMethodMessage(family, value_type));
                 };
                 // A set answers only the set vocabulary, never the mapping one
@@ -285,13 +295,13 @@ fn checkListLiteral(comptime Checker: type, self: *Checker, node: ast.Node, inpu
     return (collections.Builder(Checker){ .checker = self, .span = node.span }).literal(expected.?, values);
 }
 /// Bind a comprehension's element name to a fresh slot for the duration of its body.
-fn bindElement(comptime Checker: type, self: *Checker, name: source.Span, slot: typed.LocalId) Error!void {
+fn bindElement(comptime Checker: type, self: *Checker, name: source.Span, slot: typed.LocalId) Error!?typed.LocalId {
     const text = self.src.text(name);
-    if (try self.topLevel(name) or self.active.contains(text)) return self.sink.fail(eShadowing, name, "comprehension binding shadows an active declaration");
+    if (try self.shadows(name)) return self.sink.fail(eShadowing, name, "comprehension binding shadows an active declaration");
     self.locals.items[@backingInt(slot)].name = text;
     self.locals.items[@backingInt(slot)].declaration = name;
     self.locals.items[@backingInt(slot)].ownership.initialized = true;
-    try self.active.put(self.allocator, text, slot);
+    return self.bindScoped(text, slot);
 }
 /// Build `[value for name in source if condition]` as a checked loop over a fresh list,
 /// drawing elements from a collection or, like a `for` loop, from an integer `range(...)`.
@@ -370,8 +380,8 @@ fn checkSetFromIterable(comptime Checker: type, self: *Checker, span: source.Spa
 /// returning the fresh output list and the retained-append body the loop repeats. Shared
 /// by the collection and range forms so both keep one element-storability contract.
 fn comprehensionBody(comptime Checker: type, self: *Checker, b: collections.Builder(Checker), node: ast.Node, each: ast.Comprehension, slot: typed.LocalId) Error!struct { output: typed.LocalId, body: typed.StatementId } {
-    try bindElement(Checker, self, each.name, slot);
-    defer _ = self.active.remove(self.src.text(each.name));
+    const hidden = try bindElement(Checker, self, each.name, slot);
+    defer self.unbindScoped(self.src.text(each.name), hidden);
     const produced = try self.expression(each.output);
     const produced_type = self.nodes.items[@backingInt(produced)].ty;
     // `{value for ...}` adds each value to a fresh set instead (SET-1).
@@ -600,7 +610,7 @@ fn checkOptionReceiverMethod(comptime Checker: type, self: *Checker, node: ast.N
 fn checkCollectionMethod(comptime Checker: type, self: *Checker, node: ast.Node, temporaries: []const typed.Type) Error!typed.Node {
     const call = node.data.method_call;
     const name = self.src.text(call.name);
-    _ = try @import("removed_names.zig").reject(self.sink, call.name, name);
+    _ = try removed_names.reject(self.sink, call.name, name);
     // The receiver is checked first so an unknown method can name its type;
     // `checkListAccess` reads the same cached checked node.
     const base = try self.expressionWithTemporaries(call.base, temporaries);
@@ -616,24 +626,65 @@ fn checkCollectionMethod(comptime Checker: type, self: *Checker, node: ast.Node,
     // to it is the Python keyword form.
     if (std.mem.eql(u8, name, "sort") and call.arguments.len != 0) return self.checkMethodListSort(node, base, temporaries);
     if (call.argument_names.len != 0) return self.sink.fail(call_argument_code, call.name, "collection methods take their arguments by position; only a list's sort takes key= and reverse=");
-    const kind = buffer_operations.methodFor(name, call.arguments.len) orelse {
+    const kind = try methodKind(Checker, self, call.name, call.arguments.len, owner_type);
+    if (try fusedByteRange(Checker, self, node, base, kind, call.arguments.len)) |fused| return fused;
+    return checkListAccess(Checker, self, node, .{ .base = call.base, .kind = kind, .inputs = call.arguments }, temporaries);
+}
+/// The buffer operation a method name and argument count select on a receiver of
+/// `owner_type`, or the unknown-method diagnostic listing what that receiver accepts.
+fn methodKind(comptime Checker: type, self: *Checker, call_name: source.Span, count: usize, owner_type: typed.Type) Error!BufferKind {
+    const name = self.src.text(call_name);
+    return buffer_operations.methodFor(name, count) orelse {
         const managed = owner_type.isAggregate() and self.catalog.records[owner_type.recordIndex()].isCollection();
         const family: ?ManagedKind = if (managed) self.catalog.records[owner_type.recordIndex()].collection.kind else null;
         const message = try self.unknownMethodMessage(family, if (managed) owner_type else null);
         if (methodAlternative(name)) |alternative|
-            return self.sink.failRelated(eCollectionMethod, call.name, message, .{ .span = call.name, .message = alternative, .role = .alternative });
-        return self.sink.fail(eCollectionMethod, call.name, message);
+            return self.sink.failRelated(eCollectionMethod, call_name, message, .{ .span = call_name, .message = alternative, .role = .alternative });
+        return self.sink.fail(eCollectionMethod, call_name, message);
     };
-    if (call.arguments.len == 0 and owner_type.isAggregate() and isImmutableBytes(self.catalog.records[owner_type.recordIndex()])) {
-        const range_kind: ?BufferKind = switch (kind) {
-            .parse_int => .parse_int_range,
-            .parse_float => .parse_float_range,
-            else => null,
-        };
-        if (range_kind) |ranged| if (try (collections.Builder(Checker){ .checker = self, .span = node.span }).fuseImmediateByteRange(base, ranged)) |fused|
-            return fused;
+}
+/// A numeric parse of an immutable byte string with no arguments reads the whole
+/// receiver through the fused range form; null when `kind` is not such a parse.
+fn fusedByteRange(comptime Checker: type, self: *Checker, node: ast.Node, base: typed.NodeId, kind: BufferKind, arguments: usize) Error!?typed.Node {
+    const owner_type = self.nodes.items[@backingInt(base)].ty;
+    if (arguments != 0 or !owner_type.isAggregate()) return null;
+    if (!isImmutableBytes(self.catalog.records[owner_type.recordIndex()])) return null;
+    const range_kind: BufferKind = switch (kind) {
+        .parse_int => .parse_int_range,
+        .parse_float => .parse_float_range,
+        else => return null,
+    };
+    return (collections.Builder(Checker){ .checker = self, .span = node.span }).fuseImmediateByteRange(base, range_kind);
+}
+/// The `str` or `bytes` module constant a call's receiver names: `NAME.method(...)`
+/// where no local claims `NAME` and it declares a text or byte string. Returns the
+/// constant's declaration index (`CONST-METHOD-1`).
+fn constantReceiver(comptime Checker: type, self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!?usize {
+    const owner = call.owner orelse return null;
+    if (call.type_arguments.len != 0 or self.active.contains(self.src.text(owner))) return null;
+    if (self.catalog.module_names) |names| {
+        const kind = try names.symbolKind(owner);
+        if (kind == null or kind.? != .function) return null;
     }
-    return checkListAccess(Checker, self, node, .{ .base = call.base, .kind = kind, .inputs = call.arguments }, temporaries);
+    const constants: @import("constant_values.zig").Context = .{ .src = self.src, .program = self.syntax, .names = self.catalog.module_names, .sink = self.sink, .catalog = self.catalog };
+    const index = try constants.lookup(owner) orelse return null;
+    return if (try constants.literalType(index) != null) index else null;
+}
+/// Check `NAME.method(...)` on a `str` or `bytes` module constant exactly as the
+/// same method on a local bound to the constant: the constant is read once and the
+/// method applies to that value (`CONST-METHOD-1`).
+fn checkConstantMethod(comptime Checker: type, self: *Checker, node: ast.Node, temporaries: []const typed.Type) Error!typed.Node {
+    const call = node.data.call;
+    try call_arguments.positional(call, self.sink);
+    _ = try removed_names.reject(self.sink, call.name, self.src.text(call.name));
+    const owner = call.owner.?;
+    var value: typed.Node = .{ .span = owner, .ty = .unit, .data = .unit };
+    try self.checkName(.{ .span = owner, .data = .{ .name = owner } }, owner, &value);
+    const base: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+    try self.nodes.append(self.allocator, value);
+    const kind = try methodKind(Checker, self, call.name, call.arguments.len, value.ty);
+    if (try fusedByteRange(Checker, self, node, base, kind, call.arguments.len)) |fused| return fused;
+    return checkCollectionAccess(Checker, self, node, .{ .base = base, .receiver = null, .kind = kind, .inputs = call.arguments, .temporaries = temporaries });
 }
 fn checkCollectionSlice(comptime Checker: type, self: *Checker, node: ast.Node, temporaries: []const typed.Type) Error!typed.Node {
     const slice = node.data.slice;

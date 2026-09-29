@@ -27,6 +27,8 @@ pub const import_policy = @import("import_policy.zig");
 pub const embedded_project = @import("embedded_project.zig");
 pub const dependency_report = @import("dependency_report.zig");
 pub const project_files = @import("project_files.zig");
+/// Compile-time file embedding: `embed_bytes("path")` and `embed_str("path")` (`EMBED-1`).
+pub const embed = @import("embed.zig");
 pub const project_compile = @import("project_compile.zig");
 /// Export snapshot and the safety/accounting policy one native emission runs under.
 pub const native_interface = @import("native_interface.zig");
@@ -283,6 +285,8 @@ pub const reference_tables = struct {
     pub const float_intrinsics = @import("float_intrinsics.zig");
     /// Managed collection families a method spelling is accepted on.
     pub const runtime_values = @import("runtime_values.zig");
+    /// The compile-time file embedding builtins (`EMBED-1`).
+    pub const embed = @import("embed.zig");
 };
 
 /// Opt-in per-command friction record. It reads the compiler's own diagnostic

@@ -123,22 +123,21 @@ fn statementForEach(comptime Checker: type, self: *Checker, stmt: ast.Statement,
     const first_slot = try b.local(first_type);
     const position = try loopPosition(Checker, self, b, each, index);
     const second_slot = if (unpack) try b.local(self.catalog.records[element.recordIndex()].fields[1].ty) else position.slot;
-    const names = if (unpack) [_]?source.Span{ each.index_name, each.name } else [_]?source.Span{ each.name, each.index_name };
+    const names = discardOnce(self.src, if (unpack) [_]?source.Span{ each.index_name, each.name } else [_]?source.Span{ each.name, each.index_name });
     const slots = [_]typed.LocalId{ first_slot, second_slot };
     for (names) |maybe_name| if (maybe_name) |name| {
-        if (try self.topLevel(name) or self.active.contains(self.src.text(name))) return self.sink.fail(eShadowing, name, eIterationShadow);
+        if (try self.shadows(name)) return self.sink.fail(eShadowing, name, eIterationShadow);
     };
-    if (each.index_name) |name| if (std.mem.eql(u8, self.src.text(name), self.src.text(each.name))) return self.sink.fail(eShadowing, name, "iteration names must differ");
-    for (names, slots) |maybe_name, slot| if (maybe_name) |name| {
+    if (each.index_name) |name| if (!isDiscard(self.src, name) and std.mem.eql(u8, self.src.text(name), self.src.text(each.name))) return self.sink.fail(eShadowing, name, "iteration names must differ");
+    var hidden = [_]?typed.LocalId{ null, null };
+    for (names, slots, &hidden) |maybe_name, slot, *earlier| if (maybe_name) |name| {
         self.locals.items[@backingInt(slot)].name = self.src.text(name);
         self.locals.items[@backingInt(slot)].declaration = name;
         self.locals.items[@backingInt(slot)].ownership.initialized = true;
         self.locals.items[@backingInt(slot)].origin = .iteration;
-        try self.active.put(self.allocator, self.src.text(name), slot);
+        earlier.* = try self.bindScoped(self.src.text(name), slot);
     };
-    defer for (names) |maybe_name| if (maybe_name) |name| {
-        _ = self.active.remove(self.src.text(name));
-    };
+    defer for (names, hidden) |maybe_name, earlier| if (maybe_name) |name| self.unbindScoped(self.src.text(name), earlier);
     const before = try self.pendingState(self.locals.items.len);
     const loop_id = self.loops.next;
     self.loops.next += 1;
@@ -275,10 +274,11 @@ fn preludeIteration(comptime Checker: type, self: *Checker, stmt: ast.Statement,
     const left_type = self.nodes.items[@backingInt(sources[0])].ty;
     const zip = if (paired) try builtins.reserveZip(stmt.span, left_type, self.nodes.items[@backingInt(sources[1])].ty) else null;
     const walk = if (zip) |pair| pair.left else try builtins.reserveWalk(stmt.span, left_type);
-    const names = [_]?source.Span{ each.index_name, each.name };
+    const names = discardOnce(self.src, .{ each.index_name, each.name });
     const slots = [_]typed.LocalId{ walk.slot, if (zip) |pair| pair.right.slot else walk.slot };
-    for (names, slots) |maybe_name, slot| if (maybe_name) |name| {
-        if (try self.topLevel(name) or self.active.contains(self.src.text(name))) return self.sink.fail(eShadowing, name, eIterationShadow);
+    var hidden = [_]?typed.LocalId{ null, null };
+    for (names, slots, &hidden) |maybe_name, slot, *earlier| if (maybe_name) |name| {
+        if (try self.shadows(name)) return self.sink.fail(eShadowing, name, eIterationShadow);
         self.locals.items[@backingInt(slot)].name = self.src.text(name);
         self.locals.items[@backingInt(slot)].declaration = name;
         // `reversed`/`zip` bind their names before the body checks, exactly like
@@ -286,11 +286,9 @@ fn preludeIteration(comptime Checker: type, self: *Checker, stmt: ast.Statement,
         // marked initialized or a body read is refused as use-before-assignment.
         self.locals.items[@backingInt(slot)].ownership.initialized = true;
         self.locals.items[@backingInt(slot)].origin = .iteration;
-        try self.active.put(self.allocator, self.src.text(name), slot);
+        earlier.* = try self.bindScoped(self.src.text(name), slot);
     };
-    defer for (names) |maybe_name| if (maybe_name) |name| {
-        _ = self.active.remove(self.src.text(name));
-    };
+    defer for (names, hidden) |maybe_name, earlier| if (maybe_name) |name| self.unbindScoped(self.src.text(name), earlier);
     const before = try self.pendingState(self.locals.items.len);
     try self.loops.active.append(self.allocator, .{ .id = walk.loop, .before = before, .arenas = self.arenas.items.len });
     defer _ = self.loops.active.pop();
@@ -325,12 +323,23 @@ fn projectedIterationValue(
     if (projection) |view| return dictionary_views.at(Checker, self, b.span, owner, index, view);
     return iterationValue(Checker, self, b, owner, kind, index);
 }
+/// Whether a binding name is `_`, the discard name (`DISCARD-NAME-1`).
+fn isDiscard(src: source.Source, name: source.Span) bool {
+    return std.mem.eql(u8, src.text(name), "_");
+}
+/// The two iteration names of one loop with a second `_` dropped when the first
+/// is `_` too: `for _, _ in ...` names nothing, so there is one discard to bind.
+fn discardOnce(src: source.Source, names: [2]?source.Span) [2]?source.Span {
+    const first = names[0] orelse return names;
+    const second = names[1] orelse return names;
+    return if (isDiscard(src, first) and isDiscard(src, second)) .{ first, null } else names;
+}
 fn statementForRange(comptime Checker: type, self: *Checker, stmt: ast.Statement, range: @FieldType(@FieldType(ast.Statement, "data"), "for_range")) Error!@FieldType(typed.Statement, "data") {
     try self.invalidateOptions(range.body);
     const loop_facts = try self.option_facts.snapshot(self.allocator);
     defer self.option_facts.restore(loop_facts);
     const name = self.src.text(range.name);
-    if (try self.topLevel(range.name) or self.active.contains(name)) return self.sink.fail(eShadowing, range.name, "iteration binding shadows an active declaration");
+    if (try self.shadows(range.name)) return self.sink.fail(eShadowing, range.name, "iteration binding shadows an active declaration");
     const zero_start = self.syntax.nodes.items[@backingInt(range.start)].data == .unit;
     const start = if (zero_start) try (collections.Builder(Checker){ .checker = self, .span = range.name }).integer(0) else try self.expression(range.start);
     const end = try self.expression(range.end);
@@ -357,8 +366,8 @@ fn statementForRange(comptime Checker: type, self: *Checker, stmt: ast.Statement
     const limit: typed.LocalId = @fromBackingInt(self.locals.items.len);
     try self.locals.append(self.allocator, .{ .name = "<range-limit>", .declaration = range.name, .ty = element, .mutable = false, .usage = .{ .reads = 1, .temporary = true } });
     const variable: typed.LocalId = if (rebound) try reboundVariable(Checker, self, range.name, element) else index;
-    try self.active.put(self.allocator, name, variable);
-    defer _ = self.active.remove(name);
+    const hidden = try self.bindScoped(name, variable);
+    defer self.unbindScoped(name, hidden);
     const index_node: typed.NodeId = @fromBackingInt(self.nodes.items.len);
     try self.nodes.append(self.allocator, .{ .span = range.name, .ty = element, .data = .{ .local = index } });
     const limit_node: typed.NodeId = @fromBackingInt(self.nodes.items.len);

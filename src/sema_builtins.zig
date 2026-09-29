@@ -252,7 +252,7 @@ fn checkNumericConversion(comptime Checker: type, self: *Checker, node: ast.Node
     if (floating) {
         out.* = if (input_float) self.nodes.items[@backingInt(value)] else try self.numericBuilder(node.span).fromInteger(value);
     } else if (input_float) {
-        out.* = try self.numericBuilder(node.span).toInteger(value);
+        out.* = try self.numericBuilder(node.span).toInteger(value, .i64);
     } else out.* = .{ .span = node.span, .ty = .i64, .data = .{ .cast = value } };
 }
 /// The bare prelude builtins answer only when no binding, declaration or module name claims them.

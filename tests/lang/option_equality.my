@@ -1,0 +1,112 @@
+module option_equality
+
+# `==` and `!=` give a `Some(...)`, `None`, `Ok(...)` or `Err(...)` operand the
+# type of the operand beside it, in either order, whatever that operand is: a
+# call, a conversion, a field or a local.
+
+
+def half(value: int) -> Option[int]:
+    if value % 2 == 0:
+        return Some(value // 2)
+    return None
+
+
+def checked(value: int) -> Result[int, int]:
+    if value >= 0:
+        return Ok(value)
+    return Err(value)
+
+
+record Box:
+    inner: Option[int]
+
+
+def boxed(value: int) -> Box:
+    return Box(inner=half(value))
+
+
+def generic_comparisons[T](value: T) -> bool:
+    first = half(4) == Some(2) and Some(2) == half(4) and half(3) == None and None == half(3)
+    return first and boxed(6).inner != None and Some(3) == boxed(6).inner
+
+
+# spec: OPTION-EQ-1
+public def test_a_call_compares_with_some_on_either_side() -> bool:
+    return half(4) == Some(2) and Some(2) == half(4) and half(4) != Some(3) and Some(3) != half(4)
+
+
+# spec-case: OPTION-EQ-1
+public def test_a_call_compares_with_none_on_either_side() -> bool:
+    return half(3) == None and None == half(3) and half(4) != None and None != half(4)
+
+
+# spec-case: OPTION-EQ-1
+public def test_a_mismatched_payload_is_unequal() -> bool:
+    return not (half(4) == Some(9)) and not (Some(9) == half(4))
+
+
+# spec-case: OPTION-EQ-1
+public def test_a_conversion_compares_with_some_and_none() -> bool:
+    return int("42") == Some(42) and Some(42) == int("42") and int("x") == None and None == float("y") and float("2.5") == Some(2.5)
+
+
+# spec-case: OPTION-EQ-1
+public def test_a_field_and_a_local_still_compare_with_some() -> bool:
+    local = half(8)
+    return boxed(6).inner == Some(3) and Some(3) == boxed(6).inner and local == Some(4) and Some(4) == local and local != None
+
+
+# spec-case: OPTION-EQ-1
+public def test_a_call_compares_with_ok_and_err_on_either_side() -> bool:
+    return checked(3) == Ok(3) and Ok(3) == checked(3) and checked(-2) == Err(-2) and Err(-2) == checked(-2) and checked(3) != Err(3)
+
+
+# spec-case: OPTION-EQ-1
+public def test_a_generic_body_compares_a_call_with_some() -> bool:
+    return generic_comparisons[int](5) and generic_comparisons[bool](True)
+
+
+# spec-case: OPTION-EQ-1
+public def test_the_operands_evaluate_left_to_right() -> bool:
+    log: list[int] = []
+    first = traced(mut log, 1, 7) == Some(note(mut log, 2, 7))
+    second = Some(note(mut log, 3, 8)) == traced(mut log, 4, 8)
+    return first and second and log == [1, 2, 3, 4]
+
+
+def traced(log: mut list[int], step: int, value: int) -> Option[int]:
+    log.append(step)
+    return Some(value)
+
+
+def note(log: mut list[int], step: int, value: int) -> int:
+    log.append(step)
+    return value
+
+
+# The typing and comparison-chain lanes both infer each constructor from its
+# adjacent checked Option value, including the first operand of a chain.
+def generic_chains[T](marker: T) -> bool:
+    _ = marker
+    return half(4) == Some(2) == half(4) and Some(2) == half(4) == Some(2) and None == half(3) == None
+
+
+# spec-case: OPTION-EQ-1
+# spec-case: PY-CHAIN-1
+public def test_generic_comparison_chains_infer_contextual_options() -> bool:
+    return generic_chains[int](0) and generic_chains[bool](True)
+
+
+# spec-case: OPTION-EQ-1
+# spec-case: PY-CHAIN-1
+public def test_ordinary_comparison_chains_infer_contextual_options() -> bool:
+    return half(4) == Some(2) == half(4) and Some(2) == half(4) == Some(2) and None == half(3) == None
+
+
+# spec-case: OPTION-EQ-1
+# spec-case: PY-CHAIN-1
+public def test_option_chains_keep_source_order_and_skip_the_failed_tail() -> bool:
+    log: list[int] = []
+    held = Some(note(mut log, 1, 7)) == traced(mut log, 2, 7) == Some(note(mut log, 3, 7))
+    broken = Some(note(mut log, 4, 8)) == traced(mut log, 5, 7) == Some(note(mut log, 6, 7))
+    return held and not broken and log == [1, 2, 3, 4, 5]

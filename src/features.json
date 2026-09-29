@@ -327,6 +327,16 @@
       "summary": "Assignment creates a mutable function-scoped local; records and managed collections are independent values. In legacy-sharing mode, `class` assignments share one managed object.",
       "doc": "docs/statements.md#assignments-and-value-records"
     },
+    "discard-name": {
+      "kind": "language",
+      "summary": "`_` is a discard name that never shadows: nested `for` loops, comprehensions and `with` scopes may each bind it, and `for _, _ in ...` binds nothing.",
+      "doc": "docs/statements.md#the-discard-name"
+    },
+    "option-equality-inference": {
+      "kind": "language",
+      "summary": "`Some(...)`, `None`, `Ok(...)` and `Err(...)` beside `==` or `!=` take the type of the other operand, in either order, including a call or method call: `lookup(k) == Some(1)`.",
+      "doc": "docs/results-and-options.md#comparing-with-a-constructor"
+    },
     "canonical-prelude-types": {
       "kind": "language",
       "summary": "`list`, `dict`, `str`, `bytes`, `float`, `Option` and `Result` have one identity in every module without source-text scanning.",
@@ -417,6 +427,11 @@
       "summary": "`float` is IEEE binary64 with ordinary literals, operators, comparisons and integer conversions.",
       "doc": "docs/floating-point.md#binary64-floating-point"
     },
+    "float-integer-casts": {
+      "kind": "language",
+      "summary": "Fixed-width integer casts and int(float) truncate toward zero and trap R_FLOAT_CONVERSION for nonfinite or out-of-range results.",
+      "doc": "docs/floating-point.md#integer-conversions"
+    },
     "float-nan-when-observed": {
       "kind": "language",
       "summary": "A NaN's payload and sign are never observable: arithmetic propagates NaNs as IEEE does, and text, foreign-call arguments, equality and sorting see the canonical quiet NaN.",
@@ -496,6 +511,11 @@
       "kind": "language",
       "summary": "`b\"...\"` and `b'...'` write byte strings with escapes and a decoded-size limit.",
       "doc": "docs/bytes.md#byte-literals"
+    },
+    "compile-time-embed": {
+      "kind": "language",
+      "summary": "`embed_bytes(\"path\")` and `embed_str(\"path\")` read a project file at compile time as static `bytes` or UTF-8 `str`, with no capability and no effect, usable as a module constant; the path is relative to the embedding file and confined to the project, and editing only the file rebuilds exactly what embeds it.",
+      "doc": "docs/bytes.md#embedding-a-file-at-compile-time"
     },
     "nominal-records": {
       "kind": "language",
@@ -646,6 +666,16 @@
       "kind": "language",
       "summary": "`const NAME: T = expression` folds an immutable scalar at check time.",
       "doc": "docs/module-constants.md#immutable-scalar-constants"
+    },
+    "float-module-constants": {
+      "kind": "language",
+      "summary": "A module `const` may be a `float`; its initializer folds at check time with the same binary64 operations the running program uses, including arithmetic, comparisons, `float(...)`, `int(...)` and conversion to a fixed-width integer.",
+      "doc": "docs/module-constants.md#float-constants"
+    },
+    "constant-methods": {
+      "kind": "language",
+      "summary": "A `str` or `bytes` module constant takes the same methods as a local bound to it: `TABLE.split(b\"\\n\")`, `NAME.upper()`, including embedded and imported constants.",
+      "doc": "docs/module-constants.md#string-and-byte-literal-constants"
     },
     "literal-module-constants": {
       "kind": "language",

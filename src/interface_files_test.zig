@@ -402,3 +402,20 @@ test "api --check --json names each stale module's changed declarations" {
 test "api reports a project root it cannot read as a host failure" {
     try t.expectError(error.HostIo, runApi("nonexistent-mylang-api-root/project", .check, false));
 }
+
+// spec-case: CONST-FLOAT-1
+test "float constant interfaces retain arithmetic spellings aliases and negative zero" {
+    const rendered = try renderShapes(t.allocator,
+        \\module pkg.shapes
+        \\public const PI: float = 3.14
+        \\public const TAU: float = PI * 2.0
+        \\public const NEGATIVE_ZERO: float = -0.0
+        \\public type Real = float
+        \\public const ALIASED: Real = 2.718
+    , shapes_module);
+    defer t.allocator.free(rendered);
+    try t.expect(std.mem.indexOf(u8, rendered, "public const PI: float = 3.14") != null);
+    try t.expect(std.mem.indexOf(u8, rendered, "public const TAU: float = PI * 2.0") != null);
+    try t.expect(std.mem.indexOf(u8, rendered, "public const NEGATIVE_ZERO: float = -0.0") != null);
+    try t.expect(std.mem.indexOf(u8, rendered, "public const ALIASED: float = 2.718") != null);
+}

@@ -32,6 +32,7 @@ const markerPositionDeclared = sema_shared.markerPositionDeclared;
 const eEnvironmentName = sema_shared.eEnvironmentName;
 const eWithResource = sema_shared.eWithResource;
 const callback_type_code = "E_CALLBACK_TYPE";
+const embed = @import("embed.zig");
 const eByteConversion = "E_BYTES_CONVERSION";
 const eFilesystemDir = "E_FILESYSTEM_DIR";
 const eNetworkHost = "E_NETWORK_HOST";
@@ -62,6 +63,10 @@ const impl = @This();
 /// Bind name, field and call checking to the concrete checker without an import cycle.
 pub fn Checks(comptime Checker: type) type {
     return struct {
+        /// Recognize an unshadowed `embed_bytes(...)` or `embed_str(...)` call (`EMBED-1`).
+        pub fn embedBuiltin(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!?embed.Kind {
+            return impl.embedBuiltin(Checker, self, call);
+        }
         /// Recognize an unshadowed `bytes(...)` conversion or `bytes.fromhex(...)` call.
         pub fn byteConversion(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) ?ByteConversion {
             return impl.byteConversion(Checker, self, call);
@@ -243,9 +248,7 @@ fn checkName(comptime Checker: type, self: *Checker, node: ast.Node, name: @Fiel
                 out.data = .{ .call = .{ .function = self.ordinary_ids[index] orelse return error.InternalError, .arguments = &.{} } };
                 return;
             }
-            const value = try constants.evaluate(index);
-            out.ty = value.typeOf();
-            out.data = if (value == .bool) .{ .boolean = value.bool } else .{ .integer = if (value == .i64) value.i64 else value.integer.value };
+            out.* = try self.constantNode(try constants.evaluate(index), node.span);
             return;
         }
     }
@@ -279,6 +282,23 @@ fn checkName(comptime Checker: type, self: *Checker, node: ast.Node, name: @Fiel
         try self.nodes.append(self.allocator, out.*);
         out.* = try option_flow.payloadValue(self, value, shape, node.span);
     }
+}
+/// An unshadowed `embed_bytes(...)` or `embed_str(...)` call: the bare builtin
+/// answers only when no binding, declaration or module name claims it.
+fn embedBuiltin(comptime Checker: type, self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!?embed.Kind {
+    if (call.owner != null or call.type_arguments.len != 0) return null;
+    const name = self.src.text(call.name);
+    const kind = embed.kindOf(name) orelse return null;
+    if (self.active.contains(name) or self.functions.contains(name)) return null;
+    if (self.catalog.module_names) |names| if (try names.topLevel(call.name)) return null;
+    return kind;
+}
+/// `embed_bytes("path")` and `embed_str("path")`: static `bytes` or `str` data
+/// the loader read at compile time, so the call has no operands and no effect.
+fn checkEmbed(comptime Checker: type, self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), kind: embed.Kind, out: *typed.Node) Error!void {
+    const file = try embed.check(.{ .scratch = self.allocator, .src = self.src, .nodes = self.syntax.nodes.items, .sink = self.sink }, call, kind, node.span);
+    out.ty = try collections.preludeType(&self.catalog, if (kind == .bytes) "bytes" else "str", node.span);
+    out.data = .{ .blob = .{ .digest = file.digest, .length = file.contents.len } };
 }
 /// Python-spelled byte-string and octet-buffer constructors that are not
 /// ordinary function calls. `bytes(values)` builds from a `list[int]`,
@@ -609,6 +629,7 @@ fn checkCall(comptime Checker: type, self: *Checker, node: ast.Node, input: @Fie
         if (try checkCapabilityNarrowing(Checker, self, node, input, out)) return;
         if (try checkNetworkHost(Checker, self, node, input, out)) return;
         if (try checkEnvironmentDispatch(Checker, self, node, input, out)) return;
+        if (try embedBuiltin(Checker, self, input)) |kind| return checkEmbed(Checker, self, node, input, kind, out);
         if (try self.cellConstructor(input)) |declaration| {
             const value = self.resolved[@backingInt(input.arguments[0])].?;
             const element = self.nodes.items[@backingInt(value)].ty;

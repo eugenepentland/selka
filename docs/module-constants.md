@@ -9,7 +9,7 @@ const FACTOR: i64 = 7;
 const MASK: u8 = u8(255);
 ```
 
-Integer widths and `bool` are supported. An unsuffixed integer literal in any base takes
+Integer widths, `bool` and `float` are supported (see [float constants](#float-constants)). An unsuffixed integer literal in any base takes
 the declared type when its value fits, so `const MASK: u32 = 0xFF00_0000` and
 `const LOW: u8 = 255` need no suffix or cast (`u8(255)` still works). Initializers may contain scalar
 literals, other visible constants, casts, and unary/binary operators. Forward
@@ -46,6 +46,34 @@ at 65,536 expression, statement and name-lookup work units per evaluation.
 Scalar constants are cached within one evaluation; no generated results persist
 across compilation snapshots.
 
+## Float constants
+
+A `float` constant folds its initializer at check time with the same binary64
+operations a running program uses, so the constant and the same expression computed
+at run time are the same number, and every read is the literal the constant folded
+to. The initializer may use float and integer literals (an integer literal takes the
+float type from the declaration, so `const HALF: float = 1 / 2` is `0.5`), other
+visible constants, parentheses, unary `-`, `+`, `-`, `*`, `/`, `//`, `%`, comparisons
+(which make a `bool` constant), `float(...)`, `int(...)`, `sqrt`, `floor`, `ceil`,
+`trunc` and `abs`. An integer operand beside a float converts to the nearest binary64
+first. `-0.0` keeps its sign, an overflowing literal is `E_FLOAT_RANGE`, and a value of
+the wrong type for its declaration is `E_TYPE`. Converting a float constant to an
+integer type truncates toward zero and rejects NaN, an infinity or an out-of-range
+value with `E_CONSTANT_ARITHMETIC`. Compile-time calls to source functions still take
+and return integers and `bool`.
+
+```mylang
+# doc: expect 42
+const PI: float = 3.14
+const TWO_PI: float = PI * 2.0
+const SCALE: int = int(TWO_PI * 100.0)
+
+def main() -> int:
+    if TWO_PI != 6.28 or SCALE != 628:
+        return 1
+    return int(PI * 10.0) + 11
+```
+
 ## String and byte literal constants
 
 `str` and `bytes` constants require a literal of the matching type. Empty literals,
@@ -64,6 +92,33 @@ def main() -> int effects(managed_allocation):
 The initializer must be exactly a text or byte literal: calls, concatenation,
 casts, indexing, interpolation and references to other constants are rejected,
 even for an unused declaration. Scalar constants retain their existing rules.
+
+The one call allowed is `embed_bytes("path")` for a `bytes` constant or
+`embed_str("path")` for a `str` constant, which reads a project file at compile
+time; see
+[embedding a file](bytes.md#embedding-a-file-at-compile-time). Such a constant is
+static data: reading it allocates nothing and contributes no effect, so it is
+legal under `noalloc`.
+
+A `str` or `bytes` constant takes every method a local bound to it takes, so there
+is no need to copy it into a local first: `TABLE.split(b"\n")`, `NAME.upper()` and
+`NAME.startswith("he")` work directly on the constant, on an embedded one
+(`const DATA: bytes = embed_bytes("x.txt")` then `DATA.split(b"\n")`) and on one read
+through an import (`settings.NAME.upper()`). Indexing, `len` and slicing already did.
+The receiver is read once, so the call has the same effect as the same method on a
+local: a constant literal allocates, an embedded constant does not.
+
+```mylang
+# doc: expect 42
+const TABLE: bytes = b"a=1\nb=2\nc=3"
+const LABEL: str = "hello"
+
+def main() -> int effects(managed_allocation):
+    rows = TABLE.split(b"\n")
+    if len(rows) != 3 or not LABEL.startswith("he"):
+        return 1
+    return len(LABEL.upper()) + rows[1][2] - 13
+```
 
 These constants use the same export/privacy rules and can be read by generic
 functions. Each getter evaluates its ordinary checked literal, allocating a

@@ -82,11 +82,32 @@ release. The merge commit passed all 88 whole-tree Guardian checks.
 Initial merge-resolution error-set and stale C-descriptor build failures are
 preserved in `.tmp/a4-merge/`, alongside the corrected green results.
 
-A3 is finishing on `codex/next-typing-20260929`. The initial six-case addition
-to the existing float-unary runtime helper regressed QBE float rows. Splitting
-the narrow conversions into a statically selected helper restores the old
-helper and all three affected rows. Final lane counts, source commit and
-performance evidence are recorded after its frozen-compiler gate completes.
+A3 is complete at `1e3a64d4`, with implementation `aac69d9f`. Its audit
+records 2,600 selected Zig tests, 479 QBE tests, 1,382 guest tests across
+213 programs in each of five modes, eight embed checks under default/GC/release,
+and RC/GC Lox builds plus 65 tests and 13 driver cases. Both corpus sizes
+match all 86 outputs; every dev row meets the cap and regression limit.
+Fuzz has 98 ok, zero invalid, the same report-only stress seeds 19/87 and zero
+RC divergences. Guardian feedback is committed at `8037b10`.
+
+The merge keeps A3's constant-policy hint guard and separate narrow-float
+runtime helper, A4's binary/chain helpers, and both appended CLI suites.
+Float dispatch lives in the shared constant `binaryValues` helper so constant
+chains use strict binary64 operations too. Combining the lanes exposed two
+expression helpers at cognitive complexity 26/25; private binary-queue and
+call-temporary helpers restore the limits with identical behavior.
+
+The reviewer confirmed a cross-feature failure: both ordinary and generic
+`half(4) == Some(2) == half(4)` refused `Some(2)` with `E_OPTION_INFERENCE`,
+although separate equalities passed. Chains now infer contextual constructors
+from each actual adjacent peer type, check shared operands once, and retain
+runtime source order and short-circuiting. Four new guest regressions cover
+ordinary/generic chains, observed evaluation order and skipped tails, and
+folded mixed-float chains. Option equality passes 11/11 and float constants
+14/14 under default RC, GC stress and LLVM release, with zero cache/skip/fail.
+The rebuilt merge passes 19/19 steps and all 88 Guardian checks. Logs and the
+initial complexity failures remain in `.tmp/a3-merge/`; the compact merged
+verification is checked in with the other integration evidence.
 
 ## A5 and remaining plan
 

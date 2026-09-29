@@ -92,3 +92,45 @@ test "the reserved intrinsic spelling is rejected in ordinary source" {
     try t.expectError(error.SourceError, spoof.check());
     try t.expectEqualStrings("E_INTERNAL_NAME", spoof.diagnostics.items[0].code);
 }
+
+// spec-case: FLOAT-INTEGER-CAST-1
+test "checked float conversion truncates before exact half-open range checks" {
+    try t.expectEqual(@as(i128, -128), try floats.toInteger(.i8, @bitCast(@as(f64, -128.5))));
+    try t.expectEqual(@as(i128, 0), try floats.toInteger(.u8, @bitCast(@as(f64, -0.75))));
+    try t.expectEqual(@as(i128, -9223372036854775808), try floats.toInteger(.i64, @bitCast(@as(f64, -9223372036854775808.0))));
+    try t.expectEqual(@as(i128, 18446744073709549568), try floats.toInteger(.u64, @bitCast(@as(f64, 18446744073709549568.0))));
+    try t.expectError(error.FloatConversion, floats.toInteger(.i64, @bitCast(@as(f64, 9223372036854775808.0))));
+    try t.expectError(error.FloatConversion, floats.toInteger(.u64, @bitCast(@as(f64, 18446744073709551616.0))));
+}
+
+fn conversionTrap(target: []const u8, value: []const u8) !void {
+    const text = try std.fmt.allocPrint(t.allocator, "def main() -> int:\n    value = {s}\n    _ = {s}(value)\n    return 0\n", .{ value, target });
+    defer t.allocator.free(text);
+    var compilation = try language.Compilation.init(t.allocator, "float-cast.my", text);
+    defer compilation.deinit();
+    const result = try native.run(&compilation);
+    try t.expect(result.trapped());
+    try t.expectEqualStrings("R_FLOAT_CONVERSION", result.trap.code);
+    try t.expectEqual(@as(u64, 3), result.trap.line);
+}
+
+// spec-case: FLOAT-INTEGER-CAST-1
+test "every fixed-width float conversion traps for NaN infinities and range violations" {
+    for ([_]struct { target: []const u8, lower: []const u8, upper: []const u8 }{
+        .{ .target = "i8", .lower = "-129.0", .upper = "128.0" },
+        .{ .target = "i16", .lower = "-32769.0", .upper = "32768.0" },
+        .{ .target = "i32", .lower = "-2147483649.0", .upper = "2147483648.0" },
+        .{ .target = "i64", .lower = "-9223372036854777856.0", .upper = "9223372036854775808.0" },
+        .{ .target = "u8", .lower = "-1.0", .upper = "256.0" },
+        .{ .target = "u16", .lower = "-1.0", .upper = "65536.0" },
+        .{ .target = "u32", .lower = "-1.0", .upper = "4294967296.0" },
+        .{ .target = "u64", .lower = "-1.0", .upper = "18446744073709551616.0" },
+        .{ .target = "int", .lower = "-9223372036854777856.0", .upper = "9223372036854775808.0" },
+    }) |row| {
+        try conversionTrap(row.target, "0.0 / 0.0");
+        try conversionTrap(row.target, "1.0 / 0.0");
+        try conversionTrap(row.target, "-1.0 / 0.0");
+        try conversionTrap(row.target, row.lower);
+        try conversionTrap(row.target, row.upper);
+    }
+}

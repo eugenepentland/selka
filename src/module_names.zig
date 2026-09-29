@@ -65,6 +65,30 @@ pub const Names = struct {
     /// Inspect declaration kind before selecting a call or constructor resolver.
     /// The selected resolver still enforces import visibility and privacy.
     pub fn symbolKind(self: Names, span: source.Span) diagnostic.Error!?interfaces.Kind {
+        const identity = (try self.symbolIdentity(span)) orelse return null;
+        return self.index.units[identity.module].symbols.items[identity.symbol].kind;
+    }
+    /// Inspect a declaration's constant policy without resolving visibility or recording
+    /// a project problem. Literal hints may resolve only names this identifies as constants.
+    pub fn isConstant(self: Names, span: source.Span) diagnostic.Error!bool {
+        var identity = (try self.symbolIdentity(span)) orelse return false;
+        var remaining = self.index.units.len + 1;
+        while (remaining != 0) : (remaining -= 1) {
+            const unit = self.index.units[identity.module];
+            const symbol = unit.symbols.items[identity.symbol];
+            if (symbol.re_export) |origin| {
+                identity = origin;
+                continue;
+            }
+            if (symbol.kind != .function) return false;
+            for (unit.syntax.functions) |function| {
+                if (std.meta.eql(function.name, symbol.span)) return function.policy.constant;
+            }
+            return false;
+        }
+        return false;
+    }
+    fn symbolIdentity(self: Names, span: source.Span) diagnostic.Error!?interfaces.Identity {
         const original = self.src.originalSpan(span) catch return error.InternalError;
         const text = self.src.text(span);
         const qualified = (try self.qualify(text)) orelse return null;
@@ -80,7 +104,7 @@ pub const Names = struct {
         }
         const unit = self.index.units[module];
         const id = unit.names.get(qualified.name) orelse return null;
-        return unit.symbols.items[id].kind;
+        return .{ .module = module, .symbol = id };
     }
     /// Normalize references, including the two builtin spellings that the
     /// parser admits as declared callable names. Qualifier segments stay names.

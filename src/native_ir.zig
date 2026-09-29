@@ -239,7 +239,16 @@ const Analyzer = struct {
                 },
                 .unary_float => |unary| {
                     pops = 1;
-                    result = if (unary == .f64_to_i64) .i64 else .u64;
+                    result = switch (unary) {
+                        .f64_to_i8 => .i8,
+                        .f64_to_i16 => .i16,
+                        .f64_to_i32 => .i32,
+                        .f64_to_i64 => .i64,
+                        .f64_to_u8 => .u8,
+                        .f64_to_u16 => .u16,
+                        .f64_to_u32 => .u32,
+                        else => .u64,
+                    };
                 },
                 .begin_arena, .end_arena => {},
                 .arena_escape => |ty| {

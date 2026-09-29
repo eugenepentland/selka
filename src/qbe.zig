@@ -34,6 +34,7 @@ const test_dependencies = @import("native_test_dependencies.zig");
 const native_interface = @import("native_interface.zig");
 const prelude = @import("prelude.zig");
 const qbe_wire = @import("qbe_wire.zig");
+const qbe_embeds = @import("qbe_embeds.zig");
 const fragments = @import("qbe_fragments.zig");
 const exports = @import("qbe_exports.zig");
 /// Failures producing independent QBE native units.
@@ -308,6 +309,8 @@ fn generateImpl(allocator: std.mem.Allocator, program_in: bytecode.Program, src:
     const codecs = if (shape.executable) null else @import("qbe_codecs.zig").describe(a, program, &layouts) catch |err| return layoutError(err);
     const text_format = textFormat(program, &reuse);
     const host = @import("qbe_host.zig").describe(a, program, &layouts) catch |err| return layoutError(err);
+    // EMBED-1: the files the program embeds, each defined once beside the units that load them.
+    const embedded = qbe_embeds.table(a, src, &layouts) catch |err| return layoutError(err);
     return std.json.Stringify.valueAlloc(allocator, .{
         .host = host,
         .text_format = text_format,
@@ -323,6 +326,7 @@ fn generateImpl(allocator: std.mem.Allocator, program_in: bytecode.Program, src:
         .runtime_contract = runtime_mode.identity(),
         // Where a lean manifest's stored texts and metadata live, by digest.
         .store = if (shape.lean) try interface.reuse.?.store.textRoot() else null,
+        .embeds = if (embedded.len == 0) null else embedded,
         .functions = emitted,
         .entry = if (requested == null) units[@backingInt(program.main)].symbol else "",
     }, .{});
@@ -2898,7 +2902,8 @@ const Emitter = struct {
             .unary_float => |unary| {
                 const operand = try self.load("s", h - 1);
                 const v = self.temp();
-                try self.print(" %v{d} =l call $myl_qbe_float_unary(l %ctx, l {d}, l %v{d})\n", .{ v, @backingInt(unary), operand });
+                const helper = if (@backingInt(unary) >= @backingInt(typed.UnaryOp.f64_to_i8)) "myl_qbe_float_integer" else "myl_qbe_float_unary";
+                try self.print(" %v{d} =l call ${s}(l %ctx, l {d}, l %v{d})\n", .{ v, helper, @backingInt(unary), operand });
                 try self.store(h - 1, v);
             },
         }
@@ -2953,6 +2958,10 @@ comptime {
         "f64_le",
     };
     for (binary_names, 0..) |name, i| if (@backingInt(@field(typed.BinaryOp, name)) != i) @compileError("QBE runtime binary ABI changed");
-    const unary_names = .{ "neg", "not", "f64_sqrt", "f64_floor", "f64_ceil", "f64_trunc", "f64_abs", "f64_neg", "f64_from_u64", "f64_to_u64", "f64_from_i64", "f64_to_i64" };
+    const unary_names = .{
+        "neg",          "not",        "f64_sqrt",     "f64_floor",  "f64_ceil",  "f64_trunc",  "f64_abs",    "f64_neg",
+        "f64_from_u64", "f64_to_u64", "f64_from_i64", "f64_to_i64", "f64_to_i8", "f64_to_i16", "f64_to_i32", "f64_to_u8",
+        "f64_to_u16",   "f64_to_u32",
+    };
     for (unary_names, 0..) |name, i| if (@backingInt(@field(typed.UnaryOp, name)) != i) @compileError("QBE runtime unary ABI changed");
 }

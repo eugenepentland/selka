@@ -457,8 +457,12 @@ The stricter
 `--pure-skip` signature rule still excludes declared mutation and any capability
 parameter, `Stream` included.
 
-The source identity covers the resolved import closure and required configuration
-and policy files. An edit to an unimported neighboring module neither discards
+The source identity covers the resolved import closure, required configuration
+and policy files, and the files the closure's modules embed with
+[`embed_bytes` and `embed_str`](../bytes.md#embedding-a-file-at-compile-time):
+the runner captures each embedded fixture with the sources and copies it to the
+path its relative reference needs, and a test that reads a fixture keys on the
+fixture's digest, so editing only the fixture reruns exactly the tests that use it. An edit to an unimported neighboring module neither discards
 checked facts nor aborts an ordinary run with `SourceChanged`. Provider replacement
 still verifies the full captured inventory because a fixture can introduce imports.
 The environment fingerprint includes compiler/build controls rather than every

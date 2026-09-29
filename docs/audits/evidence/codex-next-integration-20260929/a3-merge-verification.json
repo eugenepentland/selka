@@ -1,0 +1,90 @@
+{
+  "parents": [
+    "8dae54d3",
+    "1e3a64d4"
+  ],
+  "compiler_sha256": "587bcdf8ee93500718bc21714668488734966e5762bec4df7c50419ff024e1db",
+  "build": "19/19 steps;88 Guardian checks passed",
+  "guests": {
+    "float_constants-default": {
+      "version": "native-tests-v1",
+      "passed": 14,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 14,
+      "modules": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/tests/lang/float_constants.my",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/tests/lang/float_constants_support.my"
+      ],
+      "test_names_sha256": "34a66c278725326d58e0ae5f7d1e84d84106f8833c2b3541f1cb35182b124b5f"
+    },
+    "float_constants-release": {
+      "version": "native-tests-v1",
+      "passed": 14,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 14,
+      "modules": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/tests/lang/float_constants.my",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/tests/lang/float_constants_support.my"
+      ],
+      "test_names_sha256": "34a66c278725326d58e0ae5f7d1e84d84106f8833c2b3541f1cb35182b124b5f"
+    },
+    "float_constants-stress": {
+      "version": "native-tests-v1",
+      "passed": 14,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 14,
+      "modules": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/tests/lang/float_constants.my",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/tests/lang/float_constants_support.my"
+      ],
+      "test_names_sha256": "34a66c278725326d58e0ae5f7d1e84d84106f8833c2b3541f1cb35182b124b5f"
+    },
+    "option-chains-default": {
+      "version": "native-tests-v1",
+      "passed": 11,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 11,
+      "modules": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/tests/lang/option_equality.my"
+      ],
+      "test_names_sha256": "8149b375f8e41f80fd30ac1b7ac529731ffa6167b8834425bbc05bf8478ea5b9"
+    },
+    "option_equality-release": {
+      "version": "native-tests-v1",
+      "passed": 11,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 11,
+      "modules": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/tests/lang/option_equality.my"
+      ],
+      "test_names_sha256": "8149b375f8e41f80fd30ac1b7ac529731ffa6167b8834425bbc05bf8478ea5b9"
+    },
+    "option_equality-stress": {
+      "version": "native-tests-v1",
+      "passed": 11,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 11,
+      "modules": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/tests/lang/option_equality.my"
+      ],
+      "test_names_sha256": "8149b375f8e41f80fd30ac1b7ac529731ffa6167b8834425bbc05bf8478ea5b9"
+    }
+  },
+  "regressions": [
+    "Option peer inference in ordinary and generic chains",
+    "Chain source-order and failed-tail evaluation",
+    "Float constant chains and compile-time short-circuiting"
+  ]
+}

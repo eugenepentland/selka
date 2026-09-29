@@ -31,19 +31,38 @@ pub fn binary(op: typed.BinaryOp, left: u64, right: u64) Error!typed.Value {
     };
     return typed.Value.number(.u64, bits(result));
 }
+/// Truncate a binary64 value toward zero into the integer type `ty`, failing with
+/// `FloatConversion` for NaN, an infinity or a result outside that type's range. The
+/// bounds are powers of two, so they are exact in binary64 and no integer conversion
+/// runs before the range is known to hold.
+pub fn toInteger(ty: typed.Type, input: u64) Error!i128 {
+    @setFloatMode(.strict);
+    const info = ty.integer() orelse return error.InternalError;
+    const truncated = @trunc(@as(f64, @bitCast(input)));
+    const exponent: i32 = info.bits - @intFromBool(info.signed);
+    const upper = std.math.ldexp(@as(f64, 1.0), exponent);
+    const lower = if (info.signed) -upper else 0.0;
+    if (!std.math.isFinite(truncated) or truncated < lower or truncated >= upper) return error.FloatConversion;
+    return @intFromFloat(truncated);
+}
 /// Execute a unary floating operation or a checked unsigned conversion.
 pub fn unary(op: typed.UnaryOp, input: u64) Error!u64 {
     @setFloatMode(.strict);
     const value: f64 = @bitCast(input);
-    if (op == .f64_to_i64) {
-        const truncated = @trunc(value);
-        if (!std.math.isFinite(truncated) or truncated < -9223372036854775808.0 or truncated >= 9223372036854775808.0) return error.FloatConversion;
-        return @bitCast(@as(i64, @intFromFloat(truncated)));
-    }
-    if (op == .f64_to_u64) {
-        const truncated = @trunc(value);
-        if (!std.math.isFinite(truncated) or truncated < 0 or truncated >= 18446744073709551616.0) return error.FloatConversion;
-        return @intFromFloat(truncated);
+    const target: ?typed.Type = switch (op) {
+        .f64_to_i8 => .i8,
+        .f64_to_i16 => .i16,
+        .f64_to_i32 => .i32,
+        .f64_to_i64 => .i64,
+        .f64_to_u8 => .u8,
+        .f64_to_u16 => .u16,
+        .f64_to_u32 => .u32,
+        .f64_to_u64 => .u64,
+        else => null,
+    };
+    if (target) |ty| {
+        const converted = try toInteger(ty, input);
+        return if (ty.integer().?.signed) @bitCast(@as(i64, @intCast(converted))) else @intCast(converted);
     }
     const result: f64 = switch (op) {
         .f64_sqrt => @sqrt(value),

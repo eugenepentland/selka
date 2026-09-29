@@ -46,7 +46,11 @@ pub const Builder = struct {
         };
         const value = if (negative) -magnitude else magnitude;
         if (!std.math.isFinite(value)) return sink.fail("E_FLOAT_RANGE", self.span, "floating-point literal overflows binary64");
-        const encoded: u64 = @bitCast(value);
+        return self.constant(@bitCast(value));
+    }
+    /// A binary64 value given as its bit pattern: what `literal` builds from source text
+    /// and what a folded float constant becomes at each use.
+    pub fn constant(self: Builder, encoded: u64) std.mem.Allocator.Error!typed.Node {
         const input = try self.append(self.node(.u64, .{ .integer = encoded }));
         return self.wrap(input);
     }
@@ -64,10 +68,22 @@ pub const Builder = struct {
         const encoded = try self.append(self.node(.u64, .{ .unary = .{ .op = if (wide == .u64) .f64_from_u64 else .f64_from_i64, .operand = input, .op_span = self.span } }));
         return self.wrap(encoded);
     }
-    /// Truncate towards zero, trapping for nonfinite or out-of-range signed results.
-    pub fn toInteger(self: Builder, value: typed.NodeId) std.mem.Allocator.Error!typed.Node {
+    /// Truncate towards zero into a fixed-width integer, trapping before conversion
+    /// for nonfinite or out-of-range results.
+    pub fn toInteger(self: Builder, value: typed.NodeId, target: typed.Type) std.mem.Allocator.Error!typed.Node {
         const input = try self.bits(value);
-        return self.node(.i64, .{ .unary = .{ .op = .f64_to_i64, .operand = input, .op_span = self.span } });
+        const op: typed.UnaryOp = switch (target) {
+            .i8 => .f64_to_i8,
+            .i16 => .f64_to_i16,
+            .i32 => .f64_to_i32,
+            .i64 => .f64_to_i64,
+            .u8 => .f64_to_u8,
+            .u16 => .f64_to_u16,
+            .u32 => .f64_to_u32,
+            .u64 => .f64_to_u64,
+            else => unreachable,
+        };
+        return self.node(target, .{ .unary = .{ .op = op, .operand = input, .op_span = self.span } });
     }
     /// Apply one binary64 unary operation, keeping the result in the float domain.
     pub fn unary(self: Builder, op: typed.UnaryOp, value: typed.NodeId) std.mem.Allocator.Error!typed.Node {

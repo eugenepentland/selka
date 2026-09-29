@@ -1,5 +1,6 @@
 //! Symbolic template checking preserves types, ownership and effects without representative substitution.
 const call_arguments = @import("call_arguments.zig");
+const embed = @import("embed.zig");
 const eResultDiscard = diagnostic.result_discard;
 const std = @import("std");
 const option_flow = @import("option_flow.zig");
@@ -51,6 +52,7 @@ const provider_shapes = @import("symbolic_providers.zig");
 const generic_cache = @import("generic_cache.zig");
 const Symbolic = symbolic.Value;
 const Call = @FieldType(@FieldType(ast.Node, "data"), "call");
+const unknown_method = "unknown collection method";
 /// Whether a call on a named receiver is a list's `sort` with operands, the
 /// Python keyword form whose operands are named rather than positional.
 fn keywordSort(self: anytype, input_call: Call) bool {
@@ -117,6 +119,20 @@ const Checker = struct {
         if (self.module_names) |names| return names.topLevel(span);
         const text = self.src.text(span);
         return self.functions.contains(text) or self.catalog.names.contains(text) or self.catalog.templates.names.contains(text);
+    }
+    /// Whether binding `name` in a new scope would hide an active binding or a
+    /// top-level declaration; `_` is the discard name and never does (`DISCARD-NAME-1`).
+    fn shadows(self: *Checker, name: source.Span) Error!bool {
+        const text = self.src.text(name);
+        if (std.mem.eql(u8, text, "_")) return false;
+        const top_level = try self.topLevel(name);
+        return top_level or self.active.contains(text);
+    }
+    /// End a scoped binding of `text`, restoring the `_` binding it hid, if any.
+    fn unbindScoped(self: *Checker, text: []const u8, hidden: ?usize) void {
+        if (hidden) |slot| {
+            self.active.getPtr(text).?.* = slot;
+        } else _ = self.active.remove(text);
     }
     fn checkFunction(self: *Checker, function: ast.Function) Error!void {
         const sink = self.sink;
@@ -373,7 +389,7 @@ const Checker = struct {
             const constants: @import("constant_values.zig").Context = .{ .src = self.src, .program = self.program, .names = self.module_names, .sink = self.sink, .catalog = self.catalog };
             if (try constants.lookup(span)) |index| {
                 if (try constants.literalType(index)) |ty_value| {
-                    self.seedEffect(.managed_allocation);
+                    if (!constants.isEmbed(index)) self.seedEffect(.managed_allocation);
                     return .{ .concrete = ty_value };
                 }
                 return .{ .concrete = (try constants.evaluate(index)).typeOf() };
@@ -395,6 +411,14 @@ const Checker = struct {
         self.option_facts.endScope(before);
         for (self.locals.items[before..]) |item| _ = self.active.remove(self.src.text(item.name));
         self.locals.shrinkRetainingCapacity(before);
+        // A nested `_` hid an outer one for its scope; the outer binding is visible again.
+        var outer = self.locals.items.len;
+        while (outer > 0) {
+            outer -= 1;
+            if (!std.mem.eql(u8, self.src.text(self.locals.items[outer].name), "_")) continue;
+            self.active.putAssumeCapacity("_", outer);
+            break;
+        }
     }
     fn returnValue(self: *Checker, value: ast.NodeId, span: source.Span) Error!void {
         try self.compatible(try self.expressionExpected(value, self.result), self.result, span);
@@ -405,9 +429,11 @@ const Checker = struct {
     }
     fn bindMode(self: *Checker, name: source.Span, ty_value: Symbolic, mutable: bool) Error!void {
         const text = self.src.text(name);
-        if (try self.topLevel(name)) return self.sink.fail(eShadowing, name, "binding shadows a top-level declaration or import");
-        if (self.active.contains(text)) return self.sink.fail(eShadowing, name, "binding shadows an active template binding");
-        for (self.parameters) |parameter| if (std.mem.eql(u8, text, self.src.text(parameter.name))) return self.sink.fail(eShadowing, name, "binding shadows a template type parameter");
+        if (!std.mem.eql(u8, text, "_")) {
+            if (try self.topLevel(name)) return self.sink.fail(eShadowing, name, "binding shadows a top-level declaration or import");
+            if (self.active.contains(text)) return self.sink.fail(eShadowing, name, "binding shadows an active template binding");
+            for (self.parameters) |parameter| if (std.mem.eql(u8, text, self.src.text(parameter.name))) return self.sink.fail(eShadowing, name, "binding shadows a template type parameter");
+        }
         try self.active.put(self.allocator, text, self.locals.items.len);
         try self.locals.append(self.allocator, .{ .name = name, .ty = ty_value, .mutable = mutable });
         try self.seedCleanup(ty_value);
@@ -750,9 +776,10 @@ const Checker = struct {
             .range => |bounds| try self.rangeElement(bounds, each.name, span),
         };
         const text = self.src.text(each.name);
-        if (try self.topLevel(each.name) or self.active.contains(text)) return self.sink.fail(eShadowing, each.name, "comprehension binding shadows an active declaration");
+        if (try self.shadows(each.name)) return self.sink.fail(eShadowing, each.name, "comprehension binding shadows an active declaration");
+        const hidden = self.active.get(text);
         try self.bind(each.name, element, false);
-        defer _ = self.active.remove(text);
+        defer self.unbindScoped(text, hidden);
         const produced = try self.expression(each.output);
         if (each.filter) |condition| try self.compatible(try self.expression(condition), .{ .concrete = .bool }, span);
         try self.supports(produced, .copy, span);
@@ -970,7 +997,7 @@ const Checker = struct {
         if (std.mem.eql(u8, name, "sort") and method.arguments.len != 0)
             return self.keyedSort(try self.expression(method.base), .{ .arguments = method.arguments, .names = method.argument_names, .span = node.span, .owner_node = method.base });
         if (method.argument_names.len != 0) return self.sink.fail(eCallArgument, method.name, "collection methods take their arguments by position; only a list's sort takes key= and reverse=");
-        const kind = buffer_operations.method(name) orelse return self.sink.fail(eListMethod, method.name, "unknown collection method");
+        const kind = buffer_operations.method(name) orelse return self.sink.fail(eListMethod, method.name, unknown_method);
         if (method.arguments.len == 0 and (kind == .parse_int or kind == .parse_float))
             if (try self.immediateNumericRange(method.base, kind, node.span)) |output| return output;
         return self.listOperation(node, .{ .base = method.base, .kind = kind, .arguments = method.arguments });
@@ -1096,7 +1123,7 @@ const Checker = struct {
                     const sorted = try self.keyedSort(receiver, .{ .arguments = input_call.arguments, .names = input_call.argument_names, .span = span });
                     return sorted;
                 }
-                const kind = buffer_operations.method(self.src.text(input_call.name)) orelse return self.sink.fail(eListMethod, input_call.name, "unknown collection method");
+                const kind = buffer_operations.method(self.src.text(input_call.name)) orelse return self.sink.fail(eListMethod, input_call.name, unknown_method);
                 if (input_call.type_arguments.len != 0) return self.sink.fail("E_ARITY", span, "collection methods do not take explicit type arguments");
                 if (self.shapes().isSet(receiver)) {
                     const answer = try self.setOperation(receiver, .{ .kind = kind, .inputs = input_call.arguments, .span = span, .input = self.parameterIndexAt(owner) });
@@ -1107,6 +1134,23 @@ const Checker = struct {
             }
         };
         return null;
+    }
+    /// `NAME.method(...)` on a `str` or `bytes` module constant in a generic body: the
+    /// constant is read once, and its type answers the method (`CONST-METHOD-1`).
+    fn constantMethod(self: *Checker, input_call: Call, span: source.Span) Error!?Symbolic {
+        const owner = input_call.owner orelse return null;
+        if (input_call.type_arguments.len != 0 or self.active.contains(self.src.text(owner))) return null;
+        if (self.module_names) |names| {
+            const kind = try names.symbolKind(owner);
+            if (kind == null or kind.? != .function) return null;
+        }
+        const constants: @import("constant_values.zig").Context = .{ .src = self.src, .program = self.program, .names = self.module_names, .sink = self.sink, .catalog = self.catalog };
+        const index = (try constants.lookup(owner)) orelse return null;
+        if ((try constants.literalType(index)) == null) return null;
+        const receiver = try self.namedValue(owner);
+        const kind = buffer_operations.method(self.src.text(input_call.name)) orelse return self.sink.fail(eListMethod, input_call.name, unknown_method);
+        const answer = try self.collectionOperation(receiver, .{ .kind = kind, .inputs = input_call.arguments, .span = span });
+        return answer;
     }
     /// `sorted(values, key=..., reverse=...)` in a generic body, when no
     /// binding or declaration claims the name: a new list of the argument's
@@ -1293,6 +1337,18 @@ const Checker = struct {
         self.seedEffect(.managed_allocation);
         return Symbolic{ .concrete = target };
     }
+    /// `embed_bytes("path")` and `embed_str("path")`: static data of one concrete
+    /// type, checked against the file the loader read (`EMBED-1`).
+    fn embedCall(self: *Checker, call_value: Call, span: source.Span) Error!?Symbolic {
+        if (call_value.owner != null or call_value.type_arguments.len != 0) return null;
+        const name = self.src.text(call_value.name);
+        const kind = embed.kindOf(name) orelse return null;
+        if (self.active.contains(name) or self.functions.contains(name)) return null;
+        if (self.module_names) |names| if (try names.topLevel(call_value.name)) return null;
+        _ = try embed.check(.{ .scratch = self.allocator, .src = self.src, .nodes = self.program.nodes.items, .sink = self.sink }, call_value, kind, span);
+        const target = self.catalog.names.get(if (kind == .bytes) "bytes" else "str") orelse return null;
+        return Symbolic{ .concrete = target };
+    }
     /// `.read_only()`, `.only(...)` and `.names()` on a capability value.
     fn capabilityMethodCall(self: *Checker, input_call: Call, span: source.Span) Error!?Symbolic {
         const owner = input_call.owner orelse return null;
@@ -1375,6 +1431,7 @@ const Checker = struct {
         if (try self.viewSnapshot(input_call, span)) |value| return value;
         if (try self.capabilityMethodCall(input_call, span)) |value| return value;
         if (try self.textConstructor(input_call, span)) |value| return value;
+        if (try self.embedCall(input_call, span)) |value| return value;
         if (std.mem.eql(u8, self.src.text(input_call.name), "todo") and input_call.owner == null) {
             _ = try self.ty(input_call.type_arguments[0]);
             return self.recordHole(input_call.name, input_call.type_arguments[0], span);
@@ -1383,6 +1440,7 @@ const Checker = struct {
         if (try self.variantConstruction(input_call, span)) |value| return value;
         if (try self.optionReceiverCall(input_call, span)) |value| return value;
         if (try self.managedMethod(input_call, span)) |value| return value;
+        if (try self.constantMethod(input_call, span)) |value| return value;
         if (try self.sortedCall(input_call, span)) |value| return value;
         if (try self.cellConstructor(input_call, span)) |value| return value;
         if (try self.contextualResult(input_call, span)) |value| return value;
@@ -1799,13 +1857,7 @@ const Checker = struct {
                 if (shape.length != 1 and (try self.requiresHandling(shape.element))) return self.sink.fail(eResultOperation, node.span, "indexing would drop other result-bearing elements");
                 break :result shape.element;
             },
-            .cast => |cast| result: {
-                const operand = try self.expression(cast.value);
-                const target = try self.ty(cast.ty);
-                try self.supports(operand, .integer, node.span);
-                try self.supports(target, .integer, cast.ty);
-                break :result target;
-            },
+            .cast => |cast| try self.integerCast(cast, node.span),
             // A tuple value is checked element-wise against its schema, and a
             // conditional with the same condition and arm agreement rules as an
             // ordinary function body.
@@ -1818,6 +1870,14 @@ const Checker = struct {
             // full origin analysis.
             .mut_argument => |inner| try self.expression(inner),
         };
+    }
+    /// A fixed-width cast accepts a concrete float or an integer-constrained operand.
+    fn integerCast(self: *Checker, cast: @FieldType(@FieldType(ast.Node, "data"), "cast"), span: source.Span) Error!Symbolic {
+        const operand = try self.expression(cast.value);
+        const target = try self.ty(cast.ty);
+        if (!self.isFloat(operand)) try self.supports(operand, .integer, span);
+        try self.supports(target, .integer, cast.ty);
+        return target;
     }
     /// `value_if_true if condition else value_if_false` inside a template body:
     /// the condition is bool, both arms agree on one symbolic type, and only the
@@ -2186,16 +2246,53 @@ const Checker = struct {
         }
         try links.append(self.allocator, head);
         std.mem.reverse(@FieldType(@FieldType(ast.Node, "data"), "binary"), links.items);
-        var left = try self.expression(head.left);
-        for (links.items) |link| {
-            const right = try self.expression(link.right);
-            _ = try self.operands(link, left, right);
-            left = right;
+        const first = try self.comparisonPeers(links.items[0], null);
+        _ = try self.operands(links.items[0], first.left, first.right);
+        var left = first.right;
+        for (links.items[1..]) |link| {
+            const peers = try self.comparisonPeers(link, left);
+            _ = try self.operands(link, peers.left, peers.right);
+            left = peers.right;
         }
         return .{ .concrete = .bool };
     }
+    /// Whether `id` is `None`, `Some(...)`, `Ok(...)` or `Err(...)` written with no
+    /// expected type: an operand whose own type comes from the value it meets.
+    fn awaitsPeerType(self: *Checker, id: ast.NodeId) Error!bool {
+        const node = self.program.nodes.items[@backingInt(id)];
+        if (self.expected_types.get(node.span) != null) return false;
+        return switch (node.data) {
+            .unit => true,
+            .call => |invocation| try self.awaitsConstructorType(invocation),
+            else => false,
+        };
+    }
+    fn awaitsConstructorType(self: *Checker, invocation: Call) Error!bool {
+        if (invocation.owner != null or invocation.type_arguments.len != 0) return false;
+        const name = self.src.text(invocation.name);
+        const constructor = std.mem.eql(u8, name, "Some") or std.mem.eql(u8, name, "Ok") or std.mem.eql(u8, name, "Err");
+        if (!constructor) return false;
+        if (self.active.contains(name) or self.functions.contains(name)) return false;
+        if (self.module_names) |names| if (try names.topLevel(invocation.name)) return false;
+        return true;
+    }
+    /// Type an equality's contextual constructor from its peer. A chain passes
+    /// its already checked shared operand, so no operand is checked twice.
+    fn comparisonPeers(self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), "binary"), previous: ?Symbolic) Error!struct { left: Symbolic, right: Symbolic } {
+        const equality = operation.op == .eq or operation.op == .ne;
+        const left_awaits = previous == null and equality and try self.awaitsPeerType(operation.left);
+        const right_awaits = equality and try self.awaitsPeerType(operation.right);
+        const early_right = if (left_awaits and !right_awaits) try self.expression(operation.right) else null;
+        const left = previous orelse if (early_right) |peer| try self.expressionExpected(operation.left, peer) else try self.expression(operation.left);
+        const right = early_right orelse if (right_awaits and !left_awaits) try self.expressionExpected(operation.right, left) else try self.expression(operation.right);
+        return .{ .left = left, .right = right };
+    }
     fn binary(self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), "binary")) Error!Symbolic {
         if (operation.chained) return self.chain(operation);
+        if (operation.op == .eq or operation.op == .ne) {
+            const peers = try self.comparisonPeers(operation, null);
+            return self.operands(operation, peers.left, peers.right);
+        }
         const left = try self.expression(operation.left);
         const short_circuit = operation.op == .logical_and or operation.op == .logical_or;
         const state = if (short_circuit) try self.pendingState(self.locals.items.len) else null;

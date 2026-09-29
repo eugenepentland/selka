@@ -405,6 +405,12 @@ const Emitter = struct {
                 try self.push(.{ .expression = propagate.value });
             },
             .variant => try self.emitVariant(node),
+            // An embedded file is one static object, not a record of per-byte constants (`EMBED-1`).
+            .blob => |file| {
+                const blob = try self.allocator.create(typed.Blob);
+                blob.* = file;
+                try self.instruction(node.span, .{ .make_record = .{ .ty = node.ty, .fields = 0, .blob = blob } });
+            },
             .array => |values| {
                 if (try self.literalPayload(node, values)) |octets| {
                     try self.instruction(node.span, .{ .make_record = .{ .ty = node.ty, .fields = 0, .payload = octets } });

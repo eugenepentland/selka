@@ -37,6 +37,7 @@ pub fn render(allocator: std.mem.Allocator, compilation: *project_compile.Compil
         .policy = policy,
         .implementation = try receipt.implementation(scratch, identity),
         .inputs = try receipt.inputs(scratch, graph),
+        .embeds = try receipt.embeds(scratch, graph),
         .manifests = manifests,
         .incremental = identities,
     }, .{});
@@ -57,6 +58,7 @@ pub fn renderPartial(allocator: std.mem.Allocator, compilation: *project_compile
         .policy = policy,
         .implementation = try receipt.implementation(scratch, identity),
         .inputs = try receipt.inputs(scratch, graph),
+        .embeds = try receipt.embeds(scratch, graph),
         .manifests = manifests,
         .incremental = identities,
     }, .{});

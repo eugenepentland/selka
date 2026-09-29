@@ -9,6 +9,12 @@ const Names = @import("module_names.zig").Names;
 const Error = diagnostic.Error;
 const integers = @import("integers.zig");
 const integer_literal = @import("integer_literal.zig");
+const embed = @import("embed.zig");
+const floats = @import("floats.zig");
+const float_intrinsics = @import("float_intrinsics.zig");
+const float_syntax = @import("float_syntax.zig");
+const number_literal = @import("number_literal.zig");
+const numeric_surface = @import("numeric_surface.zig");
 const eLimit = "E_CONSTANT_LIMIT";
 const eType = "E_CONSTANT_TYPE";
 const eEffect = "E_CONSTANT_EFFECT";
@@ -51,6 +57,18 @@ pub const Context = struct {
     pub fn declaredType(self: Context, index: usize) Error!typed.Type {
         return self.resolveType(self.program.functions[index].signature.return_type);
     }
+    /// The embed a constant's initializer is (`EMBED-1`), or null for any other expression.
+    pub fn embedKind(self: Context, node: ast.Node) ?embed.Kind {
+        if (node.data != .call or node.data.call.owner != null) return null;
+        return embed.kindOf(self.src.text(node.data.call.name));
+    }
+    /// Whether constant `index` is initialized from an embedded file, which is static data.
+    pub fn isEmbed(self: Context, index: usize) bool {
+        const function = self.program.functions[index];
+        const body = self.program.statements.items[@backingInt(function.body)].data.block[0];
+        const initializer = self.program.statements.items[@backingInt(body)].data.ret;
+        return self.embedKind(self.program.nodes.items[@backingInt(initializer)]) != null;
+    }
     /// Validate a str/bytes literal getter, leaving scalar declarations to evaluation.
     pub fn literalType(self: Context, index: usize) Error!?typed.Type {
         const function = self.program.functions[index];
@@ -62,8 +80,14 @@ pub const Context = struct {
         const body = self.program.statements.items[@backingInt(function.body)].data.block[0];
         const initializer = self.program.statements.items[@backingInt(body)].data.ret;
         const node = self.program.nodes.items[@backingInt(initializer)];
+        if (self.embedKind(node)) |embedded| {
+            // The checker reads the file itself; here only the declared type must agree.
+            if ((kind == .string) != (embedded == .str))
+                return self.sink.fail("E_TYPE", node.span, "constant embed type differs from its declared str or bytes type");
+            return ty;
+        }
         if (node.data != .text and node.data != .bytes)
-            return self.sink.fail(eExpression, node.span, "str and bytes constants require a literal initializer; calls, operators, casts and dependencies are excluded");
+            return self.sink.fail(eExpression, node.span, "str and bytes constants require a literal or an embed_bytes/embed_str call initializer; other calls, operators, casts and dependencies are excluded");
         if ((kind == .string) != (node.data == .text))
             return self.sink.fail("E_TYPE", node.span, "constant literal type differs from its declared str or bytes type");
         return ty;
@@ -83,6 +107,8 @@ pub const Context = struct {
         return evaluator.declaration(index, 0);
     }
 };
+/// A builtin call a constant initializer may use: a conversion or a float intrinsic.
+const Builtin = union(enum) { float, int, intrinsic: typed.UnaryOp };
 const Evaluator = struct {
     context: Context,
     values: []?typed.Value,
@@ -327,7 +353,9 @@ const Evaluator = struct {
         try self.take(node.span, depth);
         switch (node.data) {
             .unit, .integer, .boolean => {},
-            .call => |invocation| try self.validateCall(invocation, node.span, depth + 1),
+            .call => |invocation| if (try self.builtinName(invocation) != null) {
+                try self.validateBuiltin(invocation, node.span, depth + 1);
+            } else try self.validateCall(invocation, node.span, depth + 1),
             .name => |name| {
                 if (try self.local(name) != null) return;
                 self.work += self.context.program.functions.len;
@@ -359,13 +387,130 @@ const Evaluator = struct {
         self.visiting[index] = true;
         defer self.visiting[index] = false;
         const result_type = try self.context.resolveType(function.signature.return_type);
-        if (!result_type.isInteger() and result_type != .bool) return self.context.sink.fail(eType, function.signature.return_type, "constant types currently require builtin integers or bool");
+        const scalar_type = result_type.isInteger() or result_type == .bool;
+        if (!scalar_type and !self.isFloat(result_type)) return self.context.sink.fail(eType, function.signature.return_type, "constant types currently require builtin integers, bool or float");
         const body = self.context.program.statements.items[@backingInt(function.body)].data.block[0];
         const initializer = self.context.program.statements.items[@backingInt(body)].data.ret;
         const value = try self.expressionAs(initializer, result_type, depth + 1);
         if (value.typeOf() != result_type) return self.context.sink.fail("E_TYPE", function.signature.return_type, "constant initializer type differs from its declared type");
         self.values[index] = value;
         return value;
+    }
+    fn isFloat(self: *Evaluator, ty: typed.Type) bool {
+        const catalog = self.context.catalog orelse return false;
+        return numeric_surface.isFloat(ty, catalog.records);
+    }
+    /// A `float` constant value: the binary64 bit pattern under the float domain's type.
+    fn floatValue(self: *Evaluator, bits: u64) Error!typed.Value {
+        const catalog = self.context.catalog orelse return error.InternalError;
+        return .{ .integer = .{ .ty = catalog.names.get("float") orelse return error.InternalError, .value = bits } };
+    }
+    /// The bit pattern of a `float` constant value.
+    fn bitsOf(value: typed.Value) u64 {
+        return @intCast(integer(value));
+    }
+    /// Whether a numeric literal is a float: spelled as one, or typed by a `float` context.
+    fn floatContext(self: *Evaluator, span: source.Span, expected: ?typed.Type) bool {
+        if (float_syntax.isLiteral(self.context.src.text(span))) return true;
+        return if (expected) |ty| self.isFloat(ty) else false;
+    }
+    /// A float literal rounds to the nearest binary64 exactly as the checked program's literal does.
+    fn floatLiteral(self: *Evaluator, span: source.Span) Error!typed.Value {
+        const magnitude = switch (try number_literal.float(self.context.sink.allocator, self.context.src.text(span))) {
+            .ok => |value| value,
+            .bad => |problem| return self.context.sink.fail(problem.code, span, problem.message),
+        };
+        if (!std.math.isFinite(magnitude)) return self.context.sink.fail("E_FLOAT_RANGE", span, "floating-point literal overflows binary64");
+        return self.floatValue(@bitCast(magnitude));
+    }
+    /// The nearest binary64 value of an integer constant, as `float(n)` and mixed arithmetic convert it.
+    fn floatBits(self: *Evaluator, value: typed.Value, span: source.Span) Error!u64 {
+        const ty = value.typeOf();
+        if (self.isFloat(ty)) return bitsOf(value);
+        if (!ty.isInteger()) return self.context.sink.fail("E_TYPE", span, "a constant float operation requires numbers");
+        const unsigned = ty == .u64;
+        const input: u64 = if (unsigned) @intCast(integer(value)) else @bitCast(@as(i64, @intCast(integer(value))));
+        return floats.unary(if (unsigned) .f64_from_u64 else .f64_from_i64, input) catch |err| return self.failure(span, err);
+    }
+    fn floatArithmetic(self: *Evaluator, op: typed.BinaryOp, operands: [2]u64, span: source.Span) Error!u64 {
+        const result = floats.binary(op, operands[0], operands[1]) catch |err| return self.failure(span, err);
+        return @intCast(result.integer.value);
+    }
+    /// Binary64 arithmetic and comparison over constants, spelled as the checked program spells
+    /// them: an integer beside a float converts first, `/` always divides as floats, and `//` and
+    /// `%` floor the quotient.
+    fn floatBinary(self: *Evaluator, op: ast.BinaryOp, values: [2]typed.Value, span: source.Span) Error!typed.Value {
+        const left = try self.floatBits(values[0], span);
+        const right = try self.floatBits(values[1], span);
+        switch (op) {
+            .add, .sub, .mul, .div, .python_div, .floor_div, .floor_rem => {
+                const arithmetic: typed.BinaryOp = switch (op) {
+                    .add => .f64_add,
+                    .sub => .f64_sub,
+                    .mul => .f64_mul,
+                    else => .f64_div,
+                };
+                var result = try self.floatArithmetic(arithmetic, .{ left, right }, span);
+                if (op == .floor_div or op == .floor_rem) result = floats.unary(.f64_floor, result) catch |err| return self.failure(span, err);
+                if (op == .floor_rem) {
+                    const product = try self.floatArithmetic(.f64_mul, .{ result, right }, span);
+                    result = try self.floatArithmetic(.f64_sub, .{ left, product }, span);
+                }
+                return self.floatValue(result);
+            },
+            .eq, .ne, .lt, .le, .gt, .ge => {
+                const swapped = op == .gt or op == .ge;
+                const ordered: typed.BinaryOp = switch (op) {
+                    .eq, .ne => .f64_eq,
+                    .lt, .gt => .f64_lt,
+                    else => .f64_le,
+                };
+                const answer = floats.binary(ordered, if (swapped) right else left, if (swapped) left else right) catch |err| return self.failure(span, err);
+                return .{ .bool = answer.bool != (op == .ne) };
+            },
+            else => return self.context.sink.fail("E_FLOAT_OPERATION", span, "float supports arithmetic and numeric comparison"),
+        }
+    }
+    /// A float constant truncated toward zero into an integer type; NaN, an infinity and a value
+    /// the type cannot hold are `E_CONSTANT_ARITHMETIC`.
+    fn floatToInteger(self: *Evaluator, ty: typed.Type, value: typed.Value, span: source.Span) Error!typed.Value {
+        if (!ty.isInteger()) return self.context.sink.fail("E_TYPE", span, "a float constant converts only to an integer type");
+        const converted = floats.toInteger(ty, bitsOf(value)) catch |err| return self.failure(span, err);
+        return typed.Value.number(ty, converted);
+    }
+    /// The builtin a call spells when nothing declared claims its name: `float`, `int` or one of
+    /// the float intrinsics `sqrt`, `floor`, `ceil`, `trunc` and `abs`.
+    fn builtinName(self: *Evaluator, call: Call) Error!?Builtin {
+        if (call.owner != null or call.type_arguments.len != 0) return null;
+        const name = self.context.src.text(call.name);
+        const builtin: Builtin = if (std.mem.eql(u8, name, "float")) .float else if (std.mem.eql(u8, name, "int")) .int else if (float_intrinsics.operation(name)) |op| .{ .intrinsic = op } else return null;
+        if (self.context.names) |names| {
+            if (try names.topLevel(call.name)) return null;
+        } else for (self.context.program.functions) |function| {
+            if (std.mem.eql(u8, self.context.src.text(function.name), name)) return null;
+        }
+        return builtin;
+    }
+    fn validateBuiltin(self: *Evaluator, call: Call, span: source.Span, depth: usize) Error!void {
+        if (call.arguments.len != 1 or call.argument_names.len != 0) return self.context.sink.fail(eExpression, span, "float, int, sqrt, floor, ceil, trunc and abs take one positional argument in a constant");
+        try self.validateExpression(call.arguments[0], depth + 1);
+    }
+    fn builtinCall(self: *Evaluator, builtin: Builtin, call: Call, span: source.Span, depth: usize) Error!typed.Value {
+        try self.validateBuiltin(call, span, depth);
+        const argument = try self.expression(call.arguments[0], depth + 1);
+        const is_float = self.isFloat(argument.typeOf());
+        switch (builtin) {
+            .float => return self.floatValue(try self.floatBits(argument, span)),
+            .int => {
+                if (is_float) return self.floatToInteger(.i64, argument, span);
+                if (!argument.typeOf().isInteger()) return self.context.sink.fail("E_TYPE", span, "numeric conversion requires an integer or float");
+                return integers.cast(.i64, integer(argument)) catch |err| return self.failure(span, err);
+            },
+            .intrinsic => |op| {
+                if (!is_float) return self.context.sink.fail("E_TYPE", span, "this prelude operation requires a float argument");
+                return self.floatValue(floats.unary(op, bitsOf(argument)) catch |err| return self.failure(span, err));
+            },
+        }
     }
     fn failure(self: *Evaluator, span: source.Span, err: integers.Error) Error {
         return self.context.sink.fail("E_CONSTANT_ARITHMETIC", span, switch (err) {
@@ -394,11 +539,15 @@ const Evaluator = struct {
         try self.take(node.span, depth);
         switch (node.data) {
             .integer => |span| {
+                if (self.floatContext(span, expected)) return self.floatLiteral(span);
                 const literal = try integer_literal.parseExpected(self.context.src, span, false, expected, self.context.sink);
                 return typed.Value.number(literal.ty, literal.value);
             },
             .boolean => |value| return .{ .bool = value },
-            .call => |invocation| return self.executeCall(invocation, node.span, depth + 1),
+            .call => |invocation| {
+                if (try self.builtinName(invocation)) |builtin| return self.builtinCall(builtin, invocation, node.span, depth + 1);
+                return self.executeCall(invocation, node.span, depth + 1);
+            },
             .name => |name| {
                 if (try self.local(name)) |index| return self.frame.locals.items[index].value orelse error.InternalError;
                 self.work += self.context.program.functions.len;
@@ -409,20 +558,26 @@ const Evaluator = struct {
             .cast => |cast| {
                 const ty = try self.context.resolveType(cast.ty);
                 const value = try self.expression(cast.value, depth + 1);
-                if (!value.typeOf().isInteger()) return self.context.sink.fail("E_TYPE", node.span, "constant cast requires an integer");
+                if (self.isFloat(value.typeOf())) return self.floatToInteger(ty, value, node.span);
+                if (!value.typeOf().isInteger()) return self.context.sink.fail("E_TYPE", node.span, "constant cast requires an integer or float");
                 return integers.cast(ty, integer(value)) catch |err| return self.failure(node.span, err);
             },
             .unary => |unary| {
                 if (unary.op == .is_none) return self.context.sink.fail("E_OPTION_TEST", node.span, "is None requires an Option value");
                 const operand = self.context.program.nodes.items[@backingInt(unary.operand)];
-                if (unary.op == .neg and operand.data == .integer) {
+                if (unary.op == .neg and operand.data == .integer and !self.floatContext(operand.data.integer, expected)) {
                     const literal = try integer_literal.parseExpected(self.context.src, operand.data.integer, true, expected, self.context.sink);
                     return integers.cast(literal.ty, -literal.value) catch |err| return self.failure(node.span, err);
                 }
                 const value = try self.expressionAs(unary.operand, if (unary.op == .neg) expected else null, depth + 1);
+                if (self.isFloat(value.typeOf()) and (unary.op == .neg or float_intrinsics.floatwise(unary.op))) {
+                    const float_op: typed.UnaryOp = if (unary.op == .neg) .f64_neg else std.meta.stringToEnum(typed.UnaryOp, @tagName(unary.op)).?;
+                    const converted = floats.unary(float_op, bitsOf(value)) catch |err| return self.failure(node.span, err);
+                    return self.floatValue(converted);
+                }
                 if (unary.op != .neg and unary.op != .not) {
                     if (value.typeOf() != .u64) return self.context.sink.fail("E_TYPE", node.span, "floating representation requires u64");
-                    const converted = @import("floats.zig").unary(std.meta.stringToEnum(typed.UnaryOp, @tagName(unary.op)).?, @intCast(integer(value))) catch |err| return self.failure(node.span, err);
+                    const converted = floats.unary(std.meta.stringToEnum(typed.UnaryOp, @tagName(unary.op)).?, @intCast(integer(value))) catch |err| return self.failure(node.span, err);
                     return typed.Value.number(.u64, converted);
                 }
                 if (unary.op == .not and value.typeOf() == .bool) return .{ .bool = !value.bool };
@@ -479,6 +634,7 @@ const Evaluator = struct {
     /// Apply one binary operator to two evaluated constant operands.
     fn binaryValues(self: *Evaluator, node: ast.Node, left: typed.Value, right: typed.Value) Error!typed.Value {
         const binary = node.data.binary;
+        if (binary.op == .python_div or self.isFloat(left.typeOf()) or self.isFloat(right.typeOf())) return self.floatBinary(binary.op, .{ left, right }, node.span);
         if (left.typeOf() != right.typeOf()) return self.context.sink.fail("E_TYPE", node.span, "constant binary operands must have the same type");
         if (left.typeOf() == .bool) return switch (binary.op) {
             .logical_and => .{ .bool = left.bool and right.bool },

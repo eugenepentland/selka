@@ -20,6 +20,7 @@ const eResultOperation = diagnostic.result_operation;
 const eResultPath = diagnostic.result_path;
 const eEnvironmentName = sema_shared.eEnvironmentName;
 const std = @import("std");
+const numeric_surface = @import("numeric_surface.zig");
 const dictionary_views = @import("dictionary_views.zig");
 const bufferOperation = sema_shared.bufferOperation;
 const ast = @import("ast.zig");
@@ -54,6 +55,10 @@ pub fn Checks(comptime Checker: type) type {
         /// temporaries an enclosing expression already holds, and return its typed node.
         pub fn expressionWithTemporaries(self: *Checker, root: ast.NodeId, inherited: []const typed.Type) Error!typed.NodeId {
             return impl.expressionWithTemporaries(Checker, self, root, inherited);
+        }
+        /// Recognize a contextual Option or Result constructor whose type comes from an equality peer.
+        pub fn awaitsPeerType(self: *Checker, id: ast.NodeId) Error!bool {
+            return impl.awaitsPeerType(Checker, self, id);
         }
         /// Find the parsed lambda whose span matches `span`, if any.
         pub fn lambdaIndex(self: *Checker, span: source.Span) ?usize {
@@ -348,6 +353,43 @@ fn queueCapabilityCall(comptime Checker: type, self: *Checker, work: *std.ArrayL
     }
     return true;
 }
+/// Whether `id` is `None`, `Some(...)`, `Ok(...)` or `Err(...)` written with no
+/// expected type: an operand whose own type comes from the value it meets.
+fn awaitsPeerType(comptime Checker: type, self: *Checker, id: ast.NodeId) Error!bool {
+    const node = self.syntax.nodes.items[@backingInt(id)];
+    if (self.expected_types.get(node.span) != null) return false;
+    return switch (node.data) {
+        .unit => true,
+        .call => |call| (try self.optionConstructor(call)) or (try self.resultConstructor(call)) != null,
+        else => false,
+    };
+}
+/// `f(1) == Some(1)` and `None != f(1)`: an equality whose one operand awaits its
+/// type and whose other operand has no obvious one. The other operand is checked
+/// first and its type becomes the expectation (`OPTION-EQ-1`); the typed node
+/// keeps the source order of its operands. Returns whether it queued the operands.
+fn queuePeerFirst(comptime Checker: type, self: *Checker, work: *std.ArrayList(Work), b: anytype) Error!bool {
+    if (b.op != .eq and b.op != .ne) return false;
+    const left_awaits = try awaitsPeerType(Checker, self, b.left);
+    const right_awaits = try awaitsPeerType(Checker, self, b.right);
+    if (left_awaits == right_awaits) return false;
+    try work.append(self.allocator, .{ .id = if (left_awaits) b.left else b.right, .hint_from = if (left_awaits) b.right else b.left });
+    try work.append(self.allocator, .{ .id = if (left_awaits) b.right else b.left });
+    return true;
+}
+/// Queue an ordinary binary expression's operands and its Option-peer hint;
+/// comparison chains check their operands in place.
+fn queueBinary(comptime Checker: type, self: *Checker, work: *std.ArrayList(Work), id: ast.NodeId, node: ast.Node) Error!bool {
+    const b = node.data.binary;
+    // A comparison chain checks its own operands, in source order.
+    if (b.chained) return false;
+    try self.hintBinary(node);
+    try work.append(self.allocator, .{ .id = id, .emit = true });
+    if (try queuePeerFirst(Checker, self, work, b)) return true;
+    try work.append(self.allocator, .{ .id = b.right, .checkpoint = if (b.op == .logical_and or b.op == .logical_or) .{ .condition = b.left, .truth = b.op == .logical_and } else null });
+    try work.append(self.allocator, .{ .id = b.left });
+    return true;
+}
 fn queueExpression(comptime Checker: type, self: *Checker, work: *std.ArrayList(Work), id: ast.NodeId) Error!bool {
     const node = try self.collectionSyntax(id);
     switch (node.data) {
@@ -452,9 +494,15 @@ fn queueExpression(comptime Checker: type, self: *Checker, work: *std.ArrayList(
             // place, like a narrowed collection method: its receiver and its
             // one argument are the call's own, not queued temporaries.
             if (self.optionReceiverMethod(call)) return false;
+            // `NAME.method(...)` on a `str` or `bytes` constant is checked in
+            // place too: the receiver is the constant, not a queued operand.
+            if (try self.constantReceiver(call) != null) return false;
             try work.append(self.allocator, .{ .id = id, .emit = true });
             if (try queueCapabilityCall(Checker, self, work, call)) return true;
             if (self.environmentMethod(call) != null) return true;
+            // `embed_bytes("path")` reads its literal from the syntax tree, so the
+            // literal is not a queued operand (`EMBED-1`).
+            if (try self.embedBuiltin(call) != null) return true;
             if (try self.cellConstructor(call) != null) {
                 if (self.expected_types.get(node.span)) |expected| if (expected.isAggregate() and self.catalog.records[expected.recordIndex()].isCell()) {
                     try self.hint(call.arguments[0], self.catalog.records[expected.recordIndex()].fields[0].ty);
@@ -501,15 +549,7 @@ fn queueExpression(comptime Checker: type, self: *Checker, work: *std.ArrayList(
             try work.append(self.allocator, .{ .id = u.operand });
             return true;
         },
-        .binary => |b| {
-            // A comparison chain checks its own operands, in source order.
-            if (b.chained) return false;
-            try self.hintBinary(node);
-            try work.append(self.allocator, .{ .id = id, .emit = true });
-            try work.append(self.allocator, .{ .id = b.right, .checkpoint = if (b.op == .logical_and or b.op == .logical_or) .{ .condition = b.left, .truth = b.op == .logical_and } else null });
-            try work.append(self.allocator, .{ .id = b.left });
-            return true;
-        },
+        .binary => return queueBinary(Checker, self, work, id, node),
         // A `mut` marker is transparent: the value it wraps is checked on its
         // own, and the node itself reuses the resolved target's type and data.
         .mut_argument => |inner| {
@@ -537,6 +577,27 @@ fn rejectInContract(comptime Checker: type, self: *Checker, node: ast.Node) Erro
         else => return,
     };
     return self.sink.fail(sema_contracts.effect_code, node.span, message);
+}
+/// A call whose receiver is a named local or a constant and whose method is one
+/// the receiver's type owns, checked in place; null when it is an ordinary call.
+fn checkReceiverMethod(comptime Checker: type, self: *Checker, node: ast.Node, temporaries: []const typed.Type) Error!?typed.Node {
+    const call = node.data.call;
+    // An intrinsic `Option` method outranks the narrowed-collection
+    // reading, so a proven-present `Option[list[T]]` receiver still
+    // answers `unwrap_or` while keeping `append` and the rest.
+    if (self.optionReceiverMethod(call)) {
+        const checked = try self.checkOptionReceiverMethod(node, call, temporaries);
+        return checked;
+    }
+    if (self.narrowedCollection(call)) |slot| {
+        const checked = try self.checkNarrowedMethod(node, slot, temporaries);
+        return checked;
+    }
+    if (try self.constantReceiver(call) != null) {
+        const checked = try self.checkConstantMethod(node, temporaries);
+        return checked;
+    }
+    return null;
 }
 fn checkedExpression(comptime Checker: type, self: *Checker, node: ast.Node, minimum_literal: ?Literal, temporaries: []const typed.Type) Error!typed.Node {
     try rejectInContract(Checker, self, node);
@@ -715,6 +776,8 @@ fn checkedExpression(comptime Checker: type, self: *Checker, node: ast.Node, min
             const value = self.resolved[@backingInt(cast.value)].?;
             out.ty = try self.ty(cast.ty);
             try self.requireInteger(out.ty, cast.ty);
+            if (numeric_surface.isFloat(self.nodes.items[@backingInt(value)].ty, self.catalog.records))
+                return self.numericBuilder(node.span).toInteger(value, out.ty);
             try self.requireInteger(self.nodes.items[@backingInt(value)].ty, node.span);
             out.data = .{ .cast = value };
         },
@@ -725,11 +788,7 @@ fn checkedExpression(comptime Checker: type, self: *Checker, node: ast.Node, min
         },
         .name => |name| try self.checkName(node, name, &out),
         .call => |call| {
-            // An intrinsic `Option` method outranks the narrowed-collection
-            // reading, so a proven-present `Option[list[T]]` receiver still
-            // answers `unwrap_or` while keeping `append` and the rest.
-            if (self.optionReceiverMethod(call)) return self.checkOptionReceiverMethod(node, call, temporaries);
-            if (self.narrowedCollection(call)) |slot| return self.checkNarrowedMethod(node, slot, temporaries);
+            if (try checkReceiverMethod(Checker, self, node, temporaries)) |checked| return checked;
             try self.checkCall(node, call, &out);
         },
         .unary => |u| return self.checkUnary(node, u),
@@ -825,12 +884,38 @@ fn checkLambdaValue(comptime Checker: type, self: *Checker, index: usize, node: 
     out.ty = expected;
     out.data = .{ .function_value = @fromBackingInt(self.lambda_start + index) };
 }
+/// Call syntax with an in-place receiver or literal consumes only the arguments
+/// its queue actually published; other calls use their typed operand count.
+fn callTemporaries(comptime Checker: type, self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call"), out: typed.Node) Error!?usize {
+    if (self.optionReceiverMethod(call)) return 0;
+    if ((try self.constantReceiver(call)) != null) return 0;
+    // `fs.read_only()` is a narrowing method whose receiver is a local, not a
+    // queued sub-expression, so it leaves no temporary for the caller to pop.
+    if (out.data == .restrict_resource) return 0;
+    if (out.data == .dir_resource) return 0;
+    // A qualified whole-path helper synthesizes its receiver instead of
+    // queueing it, so only the value arguments leave temporaries to pop.
+    if (out.data == .file_access and call.owner != null)
+        return out.data.file_access.arguments.len - 1;
+    if (out.data == .host_resource) return 0;
+    // `env.get` and `env.only` read their literal names straight from the
+    // syntax tree, so their receivers and arguments are not queued temporaries.
+    if (out.data == .environment_get) return 0;
+    if (out.data == .environment_only) return 0;
+    if (out.data == .environment_names) return 0;
+    if (out.data == .blob) return 0;
+    if (try self.numericConversion(call) != null) return call.arguments.len;
+    if (try self.typeConversion(call) != null) return 1;
+    return null;
+}
 fn consumedTemporaries(comptime Checker: type, self: *Checker, node: ast.Node, out: typed.Node) Error!usize {
     switch (node.data) {
         // The transparent marker reuses its target's typed data, but that target
         // has already consumed its own operands and left exactly one temporary.
         .mut_argument => return 1,
-        .bytes, .text, .integer => return 0,
+        // A name reads a binding or folds a constant, including a `float` constant's
+        // wrapped bit pattern, and takes no operand from the stack.
+        .bytes, .text, .integer, .name => return 0,
         // These forms check their contents in place; dictionary literals queue
         // every key and value, whether they construct a dictionary or a table.
         .list_literal, .set_literal, .format, .comprehension, .gather => return 0,
@@ -843,7 +928,6 @@ fn consumedTemporaries(comptime Checker: type, self: *Checker, node: ast.Node, o
     // one argument are the call's own and never reached this stack, so
     // neither the tag test nor the two-arm match consumes a temporary.
     if (node.data == .method_call and option_flow.methodNamed(self.src.text(node.data.method_call.name)) != null) return 0;
-    if (node.data == .call and self.optionReceiverMethod(node.data.call)) return 0;
     // `print`/`write` through a `Stream` field checks its receiver and
     // arguments in place, so none of them reached this stack either.
     if (node.data == .method_call and (out.data == .print or out.data == .stream_write)) return 0;
@@ -855,24 +939,9 @@ fn consumedTemporaries(comptime Checker: type, self: *Checker, node: ast.Node, o
     };
     if (node.data == .index and out.data == .block_value) return 2;
     if (node.data == .length and out.data == .block_value) return 1;
-    // `fs.read_only()` is a narrowing method whose receiver is a local, not a
-    // queued sub-expression, so it leaves no temporary for the caller to pop.
-    if (node.data == .call and out.data == .restrict_resource) return 0;
-    if (node.data == .call and out.data == .dir_resource) return 0;
-    // A qualified whole-path helper synthesizes its receiver instead of
-    // queueing it, so only the value arguments leave temporaries to pop.
-    if (node.data == .call and out.data == .file_access and node.data.call.owner != null)
-        return out.data.file_access.arguments.len - 1;
-    if (node.data == .call and out.data == .host_resource) return 0;
-    // `env.get` and `env.only` read their literal names straight from the
-    // syntax tree, so their receivers and arguments are not queued temporaries.
-    if (node.data == .call and out.data == .environment_get) return 0;
-    if (node.data == .call and out.data == .environment_only) return 0;
-    if (node.data == .call and out.data == .environment_names) return 0;
-    if (node.data == .call and try self.numericConversion(node.data.call) != null) return node.data.call.arguments.len;
-    if (node.data == .call and try self.typeConversion(node.data.call) != null) return 1;
+    if (node.data == .call) if (try callTemporaries(Checker, self, node.data.call, out)) |count| return count;
     return switch (out.data) {
-        .function_value, .unit, .integer, .boolean, .local, .block_value, .dir_resource, .host_resource => 0,
+        .function_value, .unit, .integer, .boolean, .local, .block_value, .dir_resource, .host_resource, .blob => 0,
         .arena_escape, .cast, .wrap, .unwrap, .length, .field, .unary, .propagate, .external_read, .complete_resource, .restrict_resource, .environment_names => 1,
         .stand_in => |stand| stand.kind.operands(),
         .acquire_buffer => 1,
@@ -919,6 +988,10 @@ fn expressionWithTemporaries(comptime Checker: type, self: *Checker, root: ast.N
                 try work.append(self.allocator, .{ .id = call.arguments[index] });
             }
             continue;
+        }
+        if (task.hint_from) |peer| {
+            const checked = self.resolved[@backingInt(peer)] orelse return error.InternalError;
+            try self.hint(task.id, self.nodes.items[@backingInt(checked)].ty);
         }
         if (task.verify) |state| {
             try self.samePending(state.pending, self.syntax.nodes.items[@backingInt(task.id)].span, eResultPath);

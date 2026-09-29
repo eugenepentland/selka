@@ -53,9 +53,25 @@ zero compare equal, and every comparison with a NaN is false, so `value != value
 is the test for NaN and is what `math.is_nan` performs. `//` rounds the quotient
 down and `%` follows that quotient.
 
-`int(value)` truncates toward zero and traps with `R_FLOAT_CONVERSION` outside the
-signed 64-bit range, so range-check a computed magnitude before converting.
 `float(value)` rounds an integer to nearest, ties to even.
+
+## Integer conversions
+
+`i8(value)`, `i16(value)`, `i32(value)`, `i64(value)` and the unsigned
+`u8`/`u16`/`u32`/`u64` casts accept a float. They truncate toward zero, then
+check that the truncated value fits the target. Thus `i8(-128.5)` is -128 and
+`u8(-0.5)` is 0; `i8(-129.0)` and `u8(-1.0)` trap. NaN, either infinity and
+an out-of-range truncated result trap with `R_FLOAT_CONVERSION` at the cast.
+The range check happens before the native integer conversion. `int(value)`
+is the same conversion as `i64(value)`, with signed 64-bit bounds.
+
+```mylang
+# doc: expect 42
+def main() -> int:
+    if i8(-128.5) != -128i8 or u8(-0.5) != 0u8:
+        return 1
+    return int(u64(42.75))
+```
 
 ```mylang
 # doc: expect 42

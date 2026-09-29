@@ -315,8 +315,9 @@ const Checker = struct {
         // their ordinary checked literal node and its allocation effect.
         var body = try self.statement(function.body);
         if (constant) |value| {
+            const folded = try self.constantNode(value, function.name);
             const node_id: typed.NodeId = @fromBackingInt(self.nodes.items.len);
-            try self.nodes.append(allocator, .{ .span = function.name, .ty = value.typeOf(), .data = if (value == .bool) .{ .boolean = value.bool } else .{ .integer = if (value == .i64) value.i64 else value.integer.value } });
+            try self.nodes.append(allocator, folded);
             const statement_id: typed.StatementId = @fromBackingInt(self.statements.items.len);
             try self.statements.append(allocator, .{ .span = function.name, .terminates = true, .data = .{ .ret = node_id } });
             body = .{ .id = statement_id, .terminates = true };
@@ -423,6 +424,35 @@ const Checker = struct {
         if (self.catalog.module_names) |names| return names.topLevel(span);
         const name = self.src.text(span);
         return self.functions.contains(name) or self.catalog.names.contains(name) or self.catalog.templates.names.contains(name);
+    }
+    /// Whether binding `name` in a new scope would hide an active local or a
+    /// top-level declaration. `_` is the discard name: it may be bound again in a
+    /// nested loop, so it never shadows anything (`DISCARD-NAME-1`).
+    pub fn shadows(self: *Checker, name: source.Span) error{InternalError}!bool {
+        const text = self.src.text(name);
+        if (std.mem.eql(u8, text, "_")) return false;
+        const top_level = try self.topLevel(name);
+        return top_level or self.active.contains(text);
+    }
+    /// Bind `slot` under `text` for the rest of a scope. Only `_` can hide an
+    /// earlier binding (`DISCARD-NAME-1`); that binding is returned so
+    /// `unbindScoped` can hand it back when the scope ends.
+    pub fn bindScoped(self: *Checker, text: []const u8, slot: typed.LocalId) Error!?typed.LocalId {
+        const hidden = self.active.get(text);
+        try self.active.put(self.allocator, text, slot);
+        return hidden;
+    }
+    /// End a `bindScoped` binding, restoring the one it hid, if any.
+    pub fn unbindScoped(self: *Checker, text: []const u8, hidden: ?typed.LocalId) void {
+        if (hidden) |slot| {
+            self.active.getPtr(text).?.* = slot;
+        } else _ = self.active.remove(text);
+    }
+    /// The typed literal a folded scalar constant becomes at `span`: an integer or Boolean
+    /// node, or for a `float` the same wrapped bit pattern a float literal checks to.
+    pub fn constantNode(self: *Checker, value: typed.Value, span: source.Span) Error!typed.Node {
+        if (numeric_surface.isFloat(value.typeOf(), self.catalog.records)) return self.numericBuilder(span).constant(@intCast(value.integer.value));
+        return .{ .span = span, .ty = value.typeOf(), .data = if (value == .bool) .{ .boolean = value.bool } else .{ .integer = if (value == .i64) value.i64 else value.integer.value } };
     }
     /// Resolve a spelled type in the current function's generic scope, or at top level.
     pub fn ty(self: *Checker, span: source.Span) Error!typed.Type {
@@ -952,14 +982,13 @@ const Checker = struct {
     /// Declared integer type of a visible scalar constant, so `MASK + 1` and `x == MASK`
     /// give the other operand's literal that type, as a typed local does. A miss stays
     /// silent here; the name is checked, and diagnosed, when the operand itself is.
-    /// A name that is not a function-kind declaration, such as the module in
+    /// A name that is not a constant declaration, such as the module in
     /// `scanner.Kind.B`, is skipped before any resolution: a failed resolve records a
     /// problem on the project, which would outlive this hint. The lookup itself
     /// reports into a scratch sink.
     fn constantType(self: *Checker, name: source.Span) ?typed.Type {
         if (self.catalog.module_names) |names| {
-            const kind = (names.symbolKind(name) catch return null) orelse return null;
-            if (kind != .function) return null;
+            if (!(names.isConstant(name) catch return null)) return null;
         }
         var scratch: diagnostic.Sink = .{ .allocator = self.allocator };
         defer scratch.deinit();
@@ -1068,6 +1097,8 @@ const Checker = struct {
     pub const streamMethod = builtin_checks.streamMethod;
     const collection_checks = @import("sema_collections.zig").Checks(Checker);
     pub const checkAcquireResource = collection_checks.checkAcquireResource;
+    pub const checkConstantMethod = collection_checks.checkConstantMethod;
+    pub const constantReceiver = collection_checks.constantReceiver;
     pub const checkBufferOperation = collection_checks.checkBufferOperation;
     pub const checkCollectionMethod = collection_checks.checkCollectionMethod;
     pub const checkCollectionSlice = collection_checks.checkCollectionSlice;
@@ -1109,9 +1140,12 @@ const Checker = struct {
 
     const expression_checks = @import("sema_expressions.zig").Checks(Checker);
     pub const expressionWithTemporaries = expression_checks.expressionWithTemporaries;
+    /// Recognize a constructor whose equality peer supplies its expected type.
+    pub const awaitsPeerType = expression_checks.awaitsPeerType;
     pub const lambdaIndex = expression_checks.lambdaIndex;
     const call_checks = @import("sema_calls.zig").Checks(Checker);
     pub const byteConversion = call_checks.byteConversion;
+    pub const embedBuiltin = call_checks.embedBuiltin;
     pub const checkCall = call_checks.checkCall;
     pub const checkCapabilityReceiverMethod = call_checks.checkCapabilityReceiverMethod;
     pub const checkField = call_checks.checkField;

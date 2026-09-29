@@ -372,6 +372,7 @@ const Context = struct {
             .integer,
             .boolean,
             .unit,
+            .blob,
             .function_value,
             => Origin{},
         };

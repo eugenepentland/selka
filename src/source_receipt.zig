@@ -15,6 +15,27 @@ pub const Implementation = struct { compiler_sha256: []const u8, zig_version: []
 pub const Import = struct { module: []const u8, alias: []const u8 };
 /// Source identity, digest, byte count, and direct imports recorded in a receipt.
 pub const Input = struct { module: []const u8, path: []const u8, sha256: []const u8, bytes: usize, imports: []const Import };
+/// One file a module's `embed_bytes`/`embed_str` call reads (`EMBED-1`): the
+/// embedding module, the path as written, the read's outcome, and for a file that
+/// read, its BLAKE3 digest and byte count.
+pub const Embedded = struct { module: []const u8, path: []const u8, status: []const u8, blake3: []const u8, bytes: usize };
+/// The embedded files of every module in load order, so a receipt names the
+/// non-source inputs whose content a build depends on. Strings belong to the arena.
+pub fn embeds(arena: std.mem.Allocator, graph: *const project.Project) InputsError![]const Embedded {
+    if (!graph.progress.complete or graph.problem != null or graph.modules.items.len == 0) return error.IncompleteProject;
+    var output: std.ArrayList(Embedded) = .empty;
+    for (graph.order.items) |id| {
+        const module = graph.modules.items[id];
+        for (module.src.embeds) |file| try output.append(arena, .{
+            .module = module.name,
+            .path = file.path,
+            .status = @tagName(file.status),
+            .blake3 = if (file.status == .ok) try std.fmt.allocPrint(arena, "{s}", .{std.fmt.bytesToHex(file.digest, .lower)}) else "",
+            .bytes = file.contents.len,
+        });
+    }
+    return output.toOwnedSlice(arena);
+}
 /// Returned arrays/strings belong to the supplied request arena; names/path views
 /// also borrow the project. Neither may be released while serializing the receipt.
 pub fn inputs(arena: std.mem.Allocator, graph: *const project.Project) InputsError![]const Input {

@@ -306,6 +306,104 @@ def main() -> int:
     return len(name) + len(owned) + len(field.view(16, 18)) + 12
 ```
 
+## Embedding a file at compile time
+
+`embed_bytes("path")` answers a project file's contents as `bytes`, and
+`embed_str("path")` answers them as `str` (the file must be valid UTF-8). The
+compiler reads the file while it loads the program and stores its bytes in the
+executable as static data, so a program that embeds a table, a fixture or a text
+library needs no `Filesystem` capability, performs no read at run time and
+cannot fail to find its data after it is built. Both calls are pure: they have no
+effect, not even `managed_allocation`, so they are legal in `noio`, `noalloc`
+and `effects()` functions and in generic bodies. Every byte is kept, including
+NUL, and an empty file is an empty value.
+
+The argument must be one plain string literal, because the file is read before
+the program runs: a variable, `b"..."`, a second argument or a computed path is
+`E_EMBED_ARGUMENT`. The path is relative to the directory of the source file
+that spells the call and uses `/`. `mylang run`, `build`, `check`, `test` and
+every project command read it the same way.
+
+The most useful place for a call is the whole initializer of a module constant,
+which reads the file once at load and hands out static data on every access: the
+constant's type is `bytes` for `embed_bytes` and `str` for `embed_str`, and
+reading it, from the same module or through an import, allocates nothing.
+
+```mylang
+# doc: project embedding
+# doc: file words.txt
+alpha
+beta
+gamma
+```
+
+```mylang
+# doc: project embedding
+# doc: file main.my
+# doc: expect 3
+module main
+
+const WORDS: str = embed_str("words.txt")
+
+
+def main() -> int:
+    text = WORDS
+    total = 0
+    for line in text.split("\n"):
+        if len(line) != 0 and line[0] != "#":
+            total += 1
+    return total
+```
+
+The example above counts the words the sibling file `words.txt` holds; its first
+lines are the runner's own `# doc:` comments, which the loop skips.
+
+Every failure is reported at the string literal, before the program runs:
+
+| code | when |
+| --- | --- |
+| `E_EMBED_ARGUMENT` | the call is not exactly one string literal |
+| `E_EMBED_PATH` | the path is empty or holds a NUL byte or a backslash |
+| `E_EMBED_ABSOLUTE` | the path starts with `/` |
+| `E_EMBED_ESCAPE` | the path leaves the project root through `..` or a symbolic link |
+| `E_EMBED_MISSING` | there is no such file |
+| `E_EMBED_DIRECTORY` | the path names a directory or another non-regular file |
+| `E_EMBED_UNREADABLE` | the file exists but cannot be read |
+| `E_EMBED_TOO_LARGE` | the file is over 16 MiB |
+| `E_EMBED_UTF8` | `embed_str` was given a file that is not valid UTF-8; the message names the offending byte offset |
+| `E_EMBED_UNAVAILABLE` | the source was not loaded from a directory, so a relative path has nothing to resolve against |
+
+The project root is the directory of the nearest `mylang.json` above the entry
+file, or the entry's own directory when there is none. `..` may climb inside the
+root, so `embed_bytes("../shared/table.bin")` from `lib/data.my` is fine when
+`shared/` is in the project; a path that would leave it, and a symbolic link that
+resolves outside it, are `E_EMBED_ESCAPE`, decided before the target is probed. A
+symbolic link that stays inside the root is followed.
+
+```mylang
+# doc: expect-error E_EMBED_MISSING
+def main() -> int:
+    return len(embed_bytes("no-such-file.bin"))
+```
+
+```mylang
+# doc: expect-error E_EMBED_ARGUMENT
+def main() -> int:
+    name = "table.bin"
+    return len(embed_bytes(name))
+```
+
+The file's content is part of the build's inputs. Editing only an embedded file
+rechecks and rebuilds exactly the declarations that embed it and the module
+objects that hold them; an unchanged file reuses every cached result, and
+deleting or replacing it changes the keys too. `mylang test` captures embedded
+files with the sources, so a test result is reused only while its fixture is
+unchanged. The `project-dependencies` receipt lists each embedded file with its
+BLAKE3 digest, and an interface file prints an embedded constant as
+`embed_bytes("path")`, never as the file's bytes. In the native build each
+distinct file is one static object, however many times it is embedded, and the
+work to build it is linear in its size.
+
 ## Counting characters and parsing numbers
 
 `b.scalar_count()` answers `Result[int, str]`: the number of Unicode scalars in
