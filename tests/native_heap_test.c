@@ -574,6 +574,10 @@ static void host_restore_test(void) {
     limited = before;
     limited.rlim_cur = ((rlim_t)1) << 40;
     if (before.rlim_cur <= limited.rlim_cur || before.rlim_max <= limited.rlim_cur) return;
+    /* Sanitizer builds deliberately decline kernel guards. Probe before
+     * installing the artificial ceiling, so their shadow mapping stays free. */
+    if (!myl_native_budget_guard(((size_t)2) << 40)) return;
+    assert(!setrlimit(RLIMIT_AS, &before));
     assert(!setrlimit(RLIMIT_AS, &limited));
     snprintf(receipt, sizeof receipt, "%llu:%llu", (unsigned long long)limited.rlim_cur, (unsigned long long)before.rlim_cur);
     assert(!setenv("MYLANG_HOST_LIMIT_RESTORE", receipt, 1));

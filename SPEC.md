@@ -1600,3 +1600,5 @@ host failure in one worker leaves the units the other workers hold running.
 
 
 - [ITERATION-FIELD-SNAPSHOT-1] A last-read inline record field transferred into a named value while a loop retains that field's original header must preserve an independent loop snapshot; rebinding the record after mutating the transferred value does not raise R_LIST_ITERATION_MUTATION. This rule applies to both RC and GC.
+
+- [GC-ARENA-LOCAL-LIFETIME-1] Closing a managed arena checks surviving source bindings for escaping arena references; compiler receiver temporaries are not source bindings and acquire no extra lifetime or close-time read from that check. Real uses of a temporary after the scope, including a hidden iteration receiver, remain live and rooted. Named values and their region escape diagnostics retain their existing behavior under both runtimes.

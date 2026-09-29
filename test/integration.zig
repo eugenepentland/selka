@@ -12090,10 +12090,10 @@ const iterated_write_back =
 
 // spec-case: RC-ITERATION-HOLD-TRANSFER-1
 test "CLI growth written back through a named field preserves the iteration snapshot" {
-    try invokeOptions("run", iterated_write_back, &.{}, 0, "", "");
-    try invokeOptions("run", iterated_write_back, &.{"--rc-runtime"}, 0, "", "");
-    try invokeOptions("run", iterated_write_back, &.{"--rc-runtime=stats"}, 0, "", "");
-    try invokeOptions("run", iterated_write_back, &.{"--gc-stress"}, 0, "", "");
+    try invokeOptions("run", iterated_write_back, &.{}, 0, "0\n", "");
+    try invokeOptions("run", iterated_write_back, &.{"--rc-runtime"}, 0, "0\n", "");
+    try invokeOptions("run", iterated_write_back, &.{"--rc-runtime=stats"}, 0, "0\n", "MYLANG_RC_COUNTS ");
+    try invokeOptions("run", iterated_write_back, &.{"--gc-stress"}, 0, "0\n", "");
 }
 
 // spec: RC-RUNTIME-CLI-1

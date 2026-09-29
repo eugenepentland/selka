@@ -1,0 +1,90 @@
+[
+  {
+    "compiler": "before",
+    "seed": 19,
+    "mode": "gc",
+    "status": 0,
+    "stdout": "195644 12 19 152 15 8410 27 82 4 22 59 152 463 8410 27 82 4\n195644 12 19 152 463 8410 27 82 4 22 59 152 463 8410 27 82 4\n5288407 12 37 152 463 8410 27 82 4 22 59 152 463 8410 27 82 4\n15865684 12 37 152 463 8410 27 82 4 22 59 152 463 8410 27 82 4\n47597089 12 37 152 463 8410 27 82 4 22 59 152 463 8410 27 82 4\n47597089 12 37 152 463 8410 27 82 4 22 59 152 463 8410 27 82 4 27\n",
+    "stderr": ".tmp/fuzz-final/found/s19.my:188:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          v17 = m13\n          ^\n.tmp/fuzz-final/found/s19.my:204:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          v19 = m8\n          ^\n",
+    "compiler_sha256": "bebf5f524f1cb1465d89c82350ca2a4b6172c13b1bfe590349cf445a1b77cb15",
+    "program": "fuzz19.my",
+    "program_sha256": "7b4625131d1cece836792c3ef374848bd33f9c8ed1a7a9bd4e7a1d0881214155"
+  },
+  {
+    "compiler": "before",
+    "seed": 19,
+    "mode": "stress",
+    "status": 134,
+    "stdout": "",
+    "stderr": ".tmp/fuzz-final/found/s19.my:188:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          v17 = m13\n          ^\n.tmp/fuzz-final/found/s19.my:204:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          v19 = m8\n          ^\nmylang runtime: a descriptor's scan plan disagrees with its fields\n",
+    "compiler_sha256": "bebf5f524f1cb1465d89c82350ca2a4b6172c13b1bfe590349cf445a1b77cb15",
+    "program": "fuzz19.my",
+    "program_sha256": "7b4625131d1cece836792c3ef374848bd33f9c8ed1a7a9bd4e7a1d0881214155"
+  },
+  {
+    "compiler": "before",
+    "seed": 87,
+    "mode": "gc",
+    "status": 0,
+    "stdout": "0 12 19 152 15 8410 27 82 4 12 19 152 15 8410 27 82 4 152\n0 12 19 152 15 8410 27 82 4 12 19 152 15 8410 27 82 4 152 4\n0 12 19 152 80 8410 27 82 4 12 19 152 15 8410 27 82 4 152 4\n2407 12 2092 152 80 8410 27 82 4 12 19 152 15 8410 27 82 4 152 4\n107634 12 104647 152 80 8410 27 82 4 12 19 152 15 8410 27 82 4 152 4\n107634 12 104647 152 80 8410 27 82 4 12 19 152 15 8410 27 82 4 152 4 12\n107634 12 104647 152 80 8410 27 82 4 12 19 152 15 8410 27 82 4 152 4 12\n107634 12 104647 152 80 8410 27 82 4 12 19 152 15 8410 27 82 4 152 4 12 82\n",
+    "stderr": ".tmp/fuzz-final/found/s87.my:120:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          v1 = \"xyz\"\n          ^\n.tmp/fuzz-final/found/s87.my:121:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          v2 = U.two(P([3, 4], 2))\n          ^\n.tmp/fuzz-final/found/s87.my:144:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n              v6 = v5\n              ^\n.tmp/fuzz-final/found/s87.my:166:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          v2 = U.two(P([3, 4], 2))\n          ^\n.tmp/fuzz-final/found/s87.my:174:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n              v5 = U.two(P([3, 4], 2))\n              ^\n.tmp/fuzz-final/found/s87.my:175:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n              v6 = p1.rows\n              ^\n.tmp/fuzz-final/found/s87.my:176:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n              v7 = p1.name\n              ^\n.tmp/fuzz-final/found/s87.my:200:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          v4 = [P([6], 1), P(make(3), 2)]\n          ^\n.tmp/fuzz-final/found/s87.my:201:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          v5 = v0\n          ^\n.tmp/fuzz-final/found/s87.my:202:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          v6 = {\"a\": [1], \"b\": [2, 2]}\n          ^\n.tmp/fuzz-final/found/s87.my:204:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          v7 = p1\n          ^\n",
+    "compiler_sha256": "bebf5f524f1cb1465d89c82350ca2a4b6172c13b1bfe590349cf445a1b77cb15",
+    "program": "fuzz87.my",
+    "program_sha256": "c1658f510f5c94327f1cc98ec37a1766c7a507737d6b1e24742207e9cfbf9657"
+  },
+  {
+    "compiler": "before",
+    "seed": 87,
+    "mode": "stress",
+    "status": 139,
+    "stdout": "0 12 19 152 15 8410 27 82 4 12 19 152 15 8410 27 82 4 152\n0 12 19 152 15 8410 27 82 4 12 19 152 15 8410 27 82 4 152 4\n0 12 19 152 80 8410 27 82 4 12 19 152 15 8410 27 82 4 152 4\n",
+    "stderr": ".tmp/fuzz-final/found/s87.my:120:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          v1 = \"xyz\"\n          ^\n.tmp/fuzz-final/found/s87.my:121:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          v2 = U.two(P([3, 4], 2))\n          ^\n.tmp/fuzz-final/found/s87.my:144:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n              v6 = v5\n              ^\n.tmp/fuzz-final/found/s87.my:166:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          v2 = U.two(P([3, 4], 2))\n          ^\n.tmp/fuzz-final/found/s87.my:174:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n              v5 = U.two(P([3, 4], 2))\n              ^\n.tmp/fuzz-final/found/s87.my:175:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n              v6 = p1.rows\n              ^\n.tmp/fuzz-final/found/s87.my:176:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n              v7 = p1.name\n              ^\n.tmp/fuzz-final/found/s87.my:200:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          v4 = [P([6], 1), P(make(3), 2)]\n          ^\n.tmp/fuzz-final/found/s87.my:201:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          v5 = v0\n          ^\n.tmp/fuzz-final/found/s87.my:202:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          v6 = {\"a\": [1], \"b\": [2, 2]}\n          ^\n.tmp/fuzz-final/found/s87.my:204:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          v7 = p1\n          ^\n",
+    "compiler_sha256": "bebf5f524f1cb1465d89c82350ca2a4b6172c13b1bfe590349cf445a1b77cb15",
+    "program": "fuzz87.my",
+    "program_sha256": "c1658f510f5c94327f1cc98ec37a1766c7a507737d6b1e24742207e9cfbf9657"
+  },
+  {
+    "compiler": "after",
+    "seed": 19,
+    "mode": "gc",
+    "status": 0,
+    "stdout": "195644 12 19 152 15 8410 27 82 4 22 59 152 463 8410 27 82 4\n195644 12 19 152 463 8410 27 82 4 22 59 152 463 8410 27 82 4\n5288407 12 37 152 463 8410 27 82 4 22 59 152 463 8410 27 82 4\n15865684 12 37 152 463 8410 27 82 4 22 59 152 463 8410 27 82 4\n47597089 12 37 152 463 8410 27 82 4 22 59 152 463 8410 27 82 4\n47597089 12 37 152 463 8410 27 82 4 22 59 152 463 8410 27 82 4 27\n",
+    "stderr": ".tmp/fuzz-final/found/s19.my:188:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          v17 = m13\n          ^\n.tmp/fuzz-final/found/s19.my:204:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          v19 = m8\n          ^\n",
+    "compiler_sha256": "8a2216a8cf470b6ed7833df949d67afae832991e55d3eedfba2a2894d28f23cf",
+    "program": "fuzz19.my",
+    "program_sha256": "7b4625131d1cece836792c3ef374848bd33f9c8ed1a7a9bd4e7a1d0881214155"
+  },
+  {
+    "compiler": "after",
+    "seed": 19,
+    "mode": "stress",
+    "status": 0,
+    "stdout": "195644 12 19 152 15 8410 27 82 4 137760432260705 59 152 463 8410 27 82 4\n195644 12 19 152 463 8410 27 82 4 137760432260705 59 152 463 8410 27 82 4\n5288407 12 37 152 463 8410 27 82 4 137760432260705 59 152 463 8410 27 82 4\n15865684 12 37 152 463 8410 27 82 4 137760432260705 59 152 463 8410 27 82 4\n47597089 12 37 152 463 8410 27 82 4 137760432260705 59 152 463 8410 27 82 4\n47597089 12 37 152 463 8410 27 82 4 137760432260705 59 152 463 8410 27 82 4 27\n",
+    "stderr": ".tmp/fuzz-final/found/s19.my:188:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          v17 = m13\n          ^\n.tmp/fuzz-final/found/s19.my:204:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          v19 = m8\n          ^\n",
+    "compiler_sha256": "8a2216a8cf470b6ed7833df949d67afae832991e55d3eedfba2a2894d28f23cf",
+    "program": "fuzz19.my",
+    "program_sha256": "7b4625131d1cece836792c3ef374848bd33f9c8ed1a7a9bd4e7a1d0881214155"
+  },
+  {
+    "compiler": "after",
+    "seed": 87,
+    "mode": "gc",
+    "status": 0,
+    "stdout": "0 12 19 152 15 8410 27 82 4 12 19 152 15 8410 27 82 4 152\n0 12 19 152 15 8410 27 82 4 12 19 152 15 8410 27 82 4 152 4\n0 12 19 152 80 8410 27 82 4 12 19 152 15 8410 27 82 4 152 4\n2407 12 2092 152 80 8410 27 82 4 12 19 152 15 8410 27 82 4 152 4\n107634 12 104647 152 80 8410 27 82 4 12 19 152 15 8410 27 82 4 152 4\n107634 12 104647 152 80 8410 27 82 4 12 19 152 15 8410 27 82 4 152 4 12\n107634 12 104647 152 80 8410 27 82 4 12 19 152 15 8410 27 82 4 152 4 12\n107634 12 104647 152 80 8410 27 82 4 12 19 152 15 8410 27 82 4 152 4 12 82\n",
+    "stderr": ".tmp/fuzz-final/found/s87.my:120:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          v1 = \"xyz\"\n          ^\n.tmp/fuzz-final/found/s87.my:121:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          v2 = U.two(P([3, 4], 2))\n          ^\n.tmp/fuzz-final/found/s87.my:144:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n              v6 = v5\n              ^\n.tmp/fuzz-final/found/s87.my:166:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          v2 = U.two(P([3, 4], 2))\n          ^\n.tmp/fuzz-final/found/s87.my:174:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n              v5 = U.two(P([3, 4], 2))\n              ^\n.tmp/fuzz-final/found/s87.my:175:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n              v6 = p1.rows\n              ^\n.tmp/fuzz-final/found/s87.my:176:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n              v7 = p1.name\n              ^\n.tmp/fuzz-final/found/s87.my:200:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          v4 = [P([6], 1), P(make(3), 2)]\n          ^\n.tmp/fuzz-final/found/s87.my:201:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          v5 = v0\n          ^\n.tmp/fuzz-final/found/s87.my:202:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          v6 = {\"a\": [1], \"b\": [2, 2]}\n          ^\n.tmp/fuzz-final/found/s87.my:204:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          v7 = p1\n          ^\n",
+    "compiler_sha256": "8a2216a8cf470b6ed7833df949d67afae832991e55d3eedfba2a2894d28f23cf",
+    "program": "fuzz87.my",
+    "program_sha256": "c1658f510f5c94327f1cc98ec37a1766c7a507737d6b1e24742207e9cfbf9657"
+  },
+  {
+    "compiler": "after",
+    "seed": 87,
+    "mode": "stress",
+    "status": 139,
+    "stdout": "0 12 19 152 15 8410 27 82 4 12 19 152 15 8410 27 82 4 152\n0 12 19 152 15 8410 27 82 4 12 19 152 15 8410 27 82 4 152 4\n0 12 19 152 80 8410 27 82 4 12 19 152 15 8410 27 82 4 152 4\n",
+    "stderr": ".tmp/fuzz-final/found/s87.my:120:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          v1 = \"xyz\"\n          ^\n.tmp/fuzz-final/found/s87.my:121:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          v2 = U.two(P([3, 4], 2))\n          ^\n.tmp/fuzz-final/found/s87.my:144:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n              v6 = v5\n              ^\n.tmp/fuzz-final/found/s87.my:166:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          v2 = U.two(P([3, 4], 2))\n          ^\n.tmp/fuzz-final/found/s87.my:174:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n              v5 = U.two(P([3, 4], 2))\n              ^\n.tmp/fuzz-final/found/s87.my:175:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n              v6 = p1.rows\n              ^\n.tmp/fuzz-final/found/s87.my:176:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n              v7 = p1.name\n              ^\n.tmp/fuzz-final/found/s87.my:200:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          v4 = [P([6], 1), P(make(3), 2)]\n          ^\n.tmp/fuzz-final/found/s87.my:201:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          v5 = v0\n          ^\n.tmp/fuzz-final/found/s87.my:202:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          v6 = {\"a\": [1], \"b\": [2, 2]}\n          ^\n.tmp/fuzz-final/found/s87.my:204:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          v7 = p1\n          ^\n",
+    "compiler_sha256": "8a2216a8cf470b6ed7833df949d67afae832991e55d3eedfba2a2894d28f23cf",
+    "program": "fuzz87.my",
+    "program_sha256": "c1658f510f5c94327f1cc98ec37a1766c7a507737d6b1e24742207e9cfbf9657"
+  }
+]

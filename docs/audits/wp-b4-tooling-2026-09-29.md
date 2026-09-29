@@ -41,18 +41,90 @@ acceptance requirements.
 
 ## Remaining work and validation
 
-The arena and scan-plan historical repros still fail under stress (139 and 134
-respectively) and pass regular GC. Removing only their `with arena()` scope
-lines, while retaining the bodies, makes both pass stress. Backtraces place the
-failures in collection during list clones before the arenas open: `f1` through
-`cow_unique_in`, and `f3` through `cow_share`. This narrows the issue to arena
-presence and generated root/lifetime planning. A dictionary metadata lifetime
-experiment and a live scalar root-slot experiment did not fix these failures
-and are excluded from the change.
+GC-ARENA-LOCAL-LIFETIME-1 fixes the remaining arena and scan-plan historical
+repros: both now pass regular GC and stress, where stress previously exited
+139 and 134. Removing only their arena scope lines initially eliminated the
+failures; backtraces placed them in collection during list clones before an
+arena opened. Arena close checks had implicitly extended every earlier compiler
+receiver temporary's lifetime. They now check source bindings, so old receiver
+snapshots acquire no new implicit close-time read. A tagged guest regression
+reproduces the historical arena program and checks named values remain correct.
+Both new regressions pass RC, GC, stress, counting RC, release RC and release
+GC. The second iterates a fresh list without a source-level owner, allocates
+inside an arena, then reads the row and continues after close: the hidden
+iteration receiver remains live through its real uses. Existing QBE-ROOTLIVE-1
+tests pass 17/17 and ARENA-MANAGED tests pass 35/35, including source-binding
+retention and escape coverage.
 
-Focused tooling and native tests pass. The first broad Zig gate found the old
-CLI iteration assertion described above; it requires rerunning after the
-contract update. Broad guest modes, Lox, 100-seed fuzz, both-backend corpus
-measurements and combined-base embed coverage remain outstanding at this
-checkpoint. Scratch evidence lives under the lane's private `.tmp`; it is not
-durable acceptance evidence until the final results are summarized here.
+A dictionary metadata lifetime experiment and a live scalar root-slot
+experiment did not fix the failures and are excluded from the change.
+
+The independent checkpoint's broad Zig gate passed every non-CLI step,
+including `test-qbe`, `test-qbe-build`, `test-native-memory`,
+`test-native-heap`, and formatting. It exercised 1,328 guest cases across 208
+programs in both default RC and GC. Its two CLI failures were the outdated
+iteration assertion and the documented cold libunwind `ar rcs` stderr flake.
+The warm full CLI run passed 254/255; the remaining new assertion needed to
+accept the counted runtime's expected statistics line. The corrected filtered
+CLI and formatting gate passes 2/2. Full stress and release guest suites pass
+1,328 cases; the final counting suite, including the two new arena regressions,
+passes 1,330 cases across 209 programs with no dropped cases. An earlier counting
+run captured a transient name-shadow diagnostic in the new fixture and was
+rerun after the fixture correction.
+
+The RC dev corpus uses the frozen independent checkpoint and the original
+accepted GC denominator. All 86 program/backend output pairs match. Compared
+with A1's `results-m16-codex-dev.json` absolute RC counts:
+
+| Backend | Rows under 1.3x | Geomean RC / accepted GC | Worst ratio | Largest instruction increase |
+| --- | --- | --- | --- | --- |
+| QBE | 43/43 | 1.064 | 1.2814 | 0.0266% (`schematic/changed-value`) |
+| LLVM | 43/43 | 1.069 | 1.2560 | 0.0398% (`schematic/changed-net`) |
+
+All movements are below the 1% allowance. The affected arena repro's `f1`
+emission shrinks from 3,306 to 2,270 IL lines, from 12 to 8 root slots, from 178
+to 80 descriptor-root stores, and from 11 to 5 arena retain checks. The five
+remaining checks still cover its source bindings.
+
+Lox build, tests and driver gates pass in default RC, GC, release RC and release
+GC. The supported `MYLANG_TEST_ASAN=1` native-memory driver passes after its
+host-limit test first probes whether kernel guards are supported; sanitizer
+builds deliberately decline them and keep their large shadow mapping free.
+
+The 100-seed RC fuzz gate reports 98 clean seeds, zero RC divergence and two
+GC-stress findings. The sources and exact before/after stdout, stderr, exit
+codes and compiler hashes are preserved in
+[`experiments/wp-b4-gc-20260929`](../../experiments/wp-b4-gc-20260929/comparison.json).
+Both findings predate the arena lifetime correction: seed 19 aborted with 134
+before it, and seed 87 exited 139. Both regular-GC runs print the expected
+results. After the correction seed 19 exits zero but still prints a stale
+numeric field; seed 87 still exits 139 with the same partial output. These
+remain open GC findings; the four historical B4 repros are fixed. The earlier
+compiler hash is `bebf5f524f1cb1465d89c82350ca2a4b6172c13b1bfe590349cf445a1b77cb15`
+(checkpoint `e356e099`); the corrected compiler hash is
+`8a2216a8cf470b6ed7833df949d67afae832991e55d3eedfba2a2894d28f23cf`.
+
+The separate final GC dev measurement matches every output and records new-GC
+instruction counts relative to the original accepted GC baseline: QBE geomean
+1.011, non-Lox 1.001, worst 1.08; LLVM geomean 1.014, non-Lox 1.003, worst
+1.13. These explain the collector build and do not replace the accepted
+GC denominator for RC acceptance. Both measured JSON files are preserved in
+`experiments/wp-b4-gc-20260929`.
+
+Combined-base embed coverage remains outstanding. Other scratch evidence lives
+under the lane's private `.tmp`; final validation will summarize remaining
+results here.
+
+## Guardian feedback and ROI
+
+The independent checkpoint's whole-tree commit gate passed all 88 checks. Local
+ROI labels record `ban-globals` subject `subj_ba39a80d22592d7c5edec56f` and the
+primary duplicate-spec subject `subj_bc6a023edd15942c395d7b8b` as useful review,
+with one extra gate cycle attributed to each. Duplicate location details
+`subj_23564688439ba1cdc31744ae` and `subj_804bd6acd1808a96122e0085` share that
+classification with cost omitted to avoid counting the same retry twice. Triage
+minutes are unknown. The experimental unverified GC spec finding remains
+pending. Guardian already declares `src/memory_budget.zig` a test root in its
+configuration, so an additional check must compare that declaration with the
+actual runners in `build.zig` to catch the original wiring gap. Parent recorded
+the shared feedback entry in Guardian commit `0d87670`.
