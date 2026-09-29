@@ -601,6 +601,10 @@ fn checkCollectionMethod(comptime Checker: type, self: *Checker, node: ast.Node,
     if (prelude.optionShape(owner_type, self.catalog.records) != null)
         return checkOptionMethod(Checker, self, node, base, call.name, call.arguments, temporaries);
     if (owner_type == .stream_cap) return self.checkStreamReceiverMethod(node, base, temporaries);
+    switch (owner_type) {
+        .filesystem_cap, .network_cap, .environment_cap, .clock_cap, .random_cap, .host_cap => return self.checkCapabilityReceiverMethod(node, base, temporaries),
+        else => {},
+    }
     // Only a list's `sort` takes named operands, and passing any operand
     // to it is the Python keyword form.
     if (std.mem.eql(u8, name, "sort") and call.arguments.len != 0) return self.checkMethodListSort(node, base, temporaries);

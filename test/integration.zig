@@ -2126,6 +2126,13 @@ test "CLI missing arguments and missing files are host or usage failures" {
     defer testing.allocator.free(no_args.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, no_args.term);
     try testing.expectEqualStrings("", no_args.stdout);
+    // A bare `mylang` prints the general usage; `mylang run` with no file prints run's own.
+    try testing.expect(std.mem.startsWith(u8, no_args.stderr, "usage: mylang test <entry.my>"));
+    const no_file = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "run" } });
+    defer testing.allocator.free(no_file.stdout);
+    defer testing.allocator.free(no_file.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, no_file.term);
+    try testing.expect(std.mem.startsWith(u8, no_file.stderr, "usage: mylang run <file.my>"));
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
     const absolute_compiler = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, compiler_path, testing.allocator);
@@ -2138,7 +2145,7 @@ test "CLI missing arguments and missing files are host or usage failures" {
     defer testing.allocator.free(absent.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, absent.term);
     try testing.expectEqualStrings("", absent.stdout);
-    try testing.expect(std.mem.indexOf(u8, absent.stderr, "FileNotFound") != null);
+    try testing.expectEqualStrings("mylang run: cannot read 'missing.my': no such file or directory\n", absent.stderr);
 }
 test "CLI binding warnings do not alter status or result output" {
     const text =
@@ -2207,7 +2214,7 @@ test "CLI budget traps name the flag that raises the budget" {
         \\
         \\def main() -> i64:
         \\    return inner()
-    , &.{ "--max-frames=1", "--max-steps=1000000", "--diagnostics=json" }, 1, "", "\"message\":\"call-depth budget exhausted; raise it with --max-frames=N\"");
+    , &.{ "--max-frames=1", "--max-steps=1000000", "--diagnostics=json" }, 1, "", "\"message\":\"call-depth budget exhausted; raise it with --max-frames=N (each frame reserves 32 KiB of stack, so --max-memory must cover N x 32 KiB)\"");
     const memory =
         \\def main() -> i64:
         \\    values: list[int] = []
@@ -2416,7 +2423,7 @@ test "a frame-map trap names every logical frame an inlined callee, a callback, 
     // The stack-floor guard fails in the prologue of the frame it would have
     // entered, so the trace starts at its caller's call site.
     const recursion_trace =
-        \\{path}:7:16: error[R_FRAME_LIMIT]: call-depth budget exhausted; raise it with --max-frames=N
+        \\{path}:7:16: error[R_FRAME_LIMIT]: call-depth budget exhausted; raise it with --max-frames=N (each frame reserves 32 KiB of stack, so --max-memory must cover N x 32 KiB)
         \\  in descend at {path}:7:16
         \\  in descend at {path}:7:16
         \\  in descend at {path}:7:16
@@ -12184,4 +12191,325 @@ test "CLI RC runtime contract inheritance respects project discovery and explici
     defer freeRun(override);
     try testing.expectEqual(std.process.Child.Term{ .exited = 22 }, override.term);
     try testing.expectEqualStrings("22\n", override.stdout);
+}
+
+/// Run `argv` with its program path made absolute, from inside `dir`.
+fn runInDirectory(dir: std.Io.Dir, argv: []const []const u8) !std.process.RunResult {
+    const absolute = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, argv[0], testing.allocator);
+    defer testing.allocator.free(absolute);
+    var resolved = try testing.allocator.dupe([]const u8, argv);
+    defer testing.allocator.free(resolved);
+    resolved[0] = absolute;
+    return std.process.run(testing.allocator, testing.io, .{ .argv = resolved, .cwd = .{ .dir = dir } });
+}
+
+/// Run `argv` inside `dir` and require the input refusal: exit 2, nothing on
+/// standard output, and exactly `sentence` on standard error.
+fn expectRefused(dir: std.Io.Dir, argv: []const []const u8, sentence: []const u8) !void {
+    const outcome = try runInDirectory(dir, argv);
+    defer freeRun(outcome);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, outcome.term);
+    try testing.expectEqualStrings("", outcome.stdout);
+    try testing.expectEqualStrings(sentence, outcome.stderr);
+    try testing.expect(std.mem.indexOf(u8, outcome.stderr, ".zig:") == null);
+}
+
+/// Every command that takes one source entry refuses a missing file and a
+/// directory in the same words.
+fn expectEveryEntryCommandRefused(dir: std.Io.Dir) !void {
+    inline for (.{ "check", "check-module", "fmt", "fmt-module", "run", "lint", "list-modules", "run-project", "list-declarations", "dump-tokens", "emit-qbe" }) |command| {
+        try expectRefused(dir, &.{ compiler_path, command, "nope.my" }, "mylang " ++ command ++ ": cannot read 'nope.my': no such file or directory\n");
+        try expectRefused(dir, &.{ compiler_path, command, "adir" }, "mylang " ++ command ++ ": cannot read 'adir': is a directory, not a file\n");
+    }
+}
+
+/// The refusal a file this process cannot read gets, or nothing when it can read
+/// it anyway (running as root), where there is nothing to refuse.
+fn expectUnreadableRefused(dir: std.Io.Dir, command: []const u8) !void {
+    try dir.writeFile(testing.io, .{ .sub_path = "locked.my", .data = "def main() -> int:\n    return 0\n" });
+    try dir.setFilePermissions(testing.io, "locked.my", std.Io.File.Permissions.fromMode(0), .{});
+    const readable = dir.openFile(testing.io, "locked.my", .{});
+    if (readable) |file| {
+        file.close(testing.io);
+        return;
+    } else |_| {}
+    const sentence = try std.fmt.allocPrint(testing.allocator, "mylang {s}: cannot read 'locked.my': permission denied\n", .{command});
+    defer testing.allocator.free(sentence);
+    try expectRefused(dir, &.{ compiler_path, command, "locked.my" }, sentence);
+}
+
+// spec: CLI-INPUT-REFUSED-1
+test "a missing, unreadable or directory entry is refused by name with the usage status" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.createDir(testing.io, "adir", .default_dir);
+    const missing = "no such file or directory";
+    try expectEveryEntryCommandRefused(temp.dir);
+    try expectRefused(temp.dir, &.{ compiler_path, "build", "nope.my", "-o", "out.bin" }, "mylang build: cannot read 'nope.my': " ++ missing ++ "\n");
+    try expectRefused(temp.dir, &.{ compiler_path, "build", "adir", "-o", "out.bin" }, "mylang build: cannot read 'adir': is a directory, not a file\n");
+    try expectRefused(temp.dir, &.{ compiler_path, "test", "nope.my" }, "mylang test: cannot read 'nope.my': " ++ missing ++ "\n");
+    try expectRefused(temp.dir, &.{ compiler_path, "fix", "nope.my" }, "mylang fix: cannot read 'nope.my': " ++ missing ++ "\n");
+    try expectRefused(temp.dir, &.{ compiler_path, "api", "nope.my", "--check" }, "mylang api: cannot read 'nope.my': " ++ missing ++ "\n");
+    try expectUnreadableRefused(temp.dir, "check");
+    // The refusal is in the structured diagnostic format when one is asked for.
+    const json = try runInDirectory(temp.dir, &.{ compiler_path, "check", "nope.my", "--diagnostics=json" });
+    defer freeRun(json);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, json.term);
+    try testing.expect(std.mem.indexOf(u8, json.stderr, "cannot read 'nope.my'") != null);
+    // A refused input leaves no cache directory behind.
+    try testing.expectError(error.FileNotFound, temp.dir.statFile(testing.io, ".mylang-cache", .{}));
+}
+
+// spec-case: CLI-INPUT-REFUSED-1
+test "invoke reports an unreadable entry as a structured setup failure naming the reason" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const outcome = try runInDirectory(temp.dir, &.{ compiler_path, "invoke", "nope.my", "--function=main::main", "--describe" });
+    defer freeRun(outcome);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, outcome.term);
+    try testing.expect(std.mem.indexOf(u8, outcome.stdout, "\"status\":\"setup-failure\"") != null);
+    try testing.expect(std.mem.indexOf(u8, outcome.stdout, "\"reason\":\"the entry file cannot be read\"") != null);
+    try testing.expect(std.mem.indexOf(u8, outcome.stdout, "\"diagnostics\":\"no such file or directory\"") != null);
+}
+
+/// Run one command from inside `dir` with the fixture tools appended and require
+/// exit status `wanted`; the compiler path is made absolute for the changed cwd.
+fn runToolIn(dir: std.Io.Dir, environ: ?*const std.process.Environ.Map, args: []const []const u8, wanted: u8) !void {
+    const absolute = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, compiler_path, testing.allocator);
+    defer testing.allocator.free(absolute);
+    var argv: std.ArrayList([]const u8) = .empty;
+    defer argv.deinit(testing.allocator);
+    try argv.append(testing.allocator, absolute);
+    try argv.appendSlice(testing.allocator, args);
+    // Only the commands that build take the toolchain; the paths are made
+    // absolute because the child runs in `dir`.
+    var absolute_tools: [tools.len][]u8 = undefined;
+    var resolved: usize = 0;
+    defer for (absolute_tools[0..resolved]) |path| testing.allocator.free(path);
+    const builds = std.mem.eql(u8, args[0], "test") or std.mem.eql(u8, args[0], "build") or std.mem.eql(u8, args[0], "run");
+    if (builds) for (tools) |flag| {
+        const equals = std.mem.indexOfScalar(u8, flag, '=').?;
+        const path = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, flag[equals + 1 ..], testing.allocator);
+        defer testing.allocator.free(path);
+        absolute_tools[resolved] = try std.fmt.allocPrint(testing.allocator, "{s}{s}", .{ flag[0 .. equals + 1], path });
+        try argv.append(testing.allocator, absolute_tools[resolved]);
+        resolved += 1;
+    };
+    const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = argv.items, .cwd = .{ .dir = dir }, .environ_map = environ });
+    defer freeRun(outcome);
+    testing.expectEqual(std.process.Child.Term{ .exited = wanted }, outcome.term) catch |err| {
+        std.debug.print("{s}\n{s}\n", .{ outcome.stdout, outcome.stderr });
+        return err;
+    };
+}
+
+const cache_program =
+    \\module prog
+    \\
+    \\def main(out: Stream) -> int:
+    \\    out.print("hi")
+    \\    return 0
+    \\
+    \\public def test_ok() -> bool:
+    \\    return True
+;
+
+// spec: CLI-CACHE-DIR-1
+test "test, build, run and check write no cache into the working directory under --cache-dir" {
+    var work = testing.tmpDir(.{});
+    defer work.cleanup();
+    var cache = testing.tmpDir(.{});
+    defer cache.cleanup();
+    try work.dir.writeFile(testing.io, .{ .sub_path = "prog.my", .data = cache_program });
+    const cache_path = try cache.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(cache_path);
+    const flag = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache_path});
+    defer testing.allocator.free(flag);
+    try runToolIn(work.dir, null, &.{ "test", "prog.my", "--force", flag }, 0);
+    try runToolIn(work.dir, null, &.{ "test", "prog.my", "--force", flag, "--gc-runtime" }, 0);
+    try runToolIn(work.dir, null, &.{ "build", "prog.my", "-o", "prog.bin", flag }, 0);
+    try runToolIn(work.dir, null, &.{ "run", "prog.my", flag }, 0);
+    try runToolIn(work.dir, null, &.{ "check", "prog.my", flag }, 0);
+    try runToolIn(work.dir, null, &.{ "check-project", "prog.my", "--explain-invalidation", flag }, 0);
+    try testing.expectError(error.FileNotFound, work.dir.statFile(testing.io, ".mylang-cache", .{}));
+    // The named directory took the frontend, checked-body and object caches instead.
+    _ = try cache.dir.statFile(testing.io, "frontend", .{});
+    _ = try cache.dir.statFile(testing.io, "objects", .{});
+}
+
+// spec-case: CLI-CACHE-DIR-1
+test "MYLANG_FRONTEND_CACHE moves the checked-body store and invalidation baseline out of the working directory" {
+    var work = testing.tmpDir(.{});
+    defer work.cleanup();
+    var cache = testing.tmpDir(.{});
+    defer cache.cleanup();
+    try work.dir.writeFile(testing.io, .{ .sub_path = "prog.my", .data = cache_program });
+    const cache_path = try cache.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(cache_path);
+    var environment = try std.process.Environ.createMap(testing.environ, testing.allocator);
+    defer environment.deinit();
+    try environment.put("MYLANG_FRONTEND_CACHE", cache_path);
+    try runToolIn(work.dir, &environment, &.{ "check", "prog.my" }, 0);
+    try runToolIn(work.dir, &environment, &.{ "check-project", "prog.my", "--explain-invalidation" }, 0);
+    try testing.expectError(error.FileNotFound, work.dir.statFile(testing.io, ".mylang-cache", .{}));
+    _ = try cache.dir.statFile(testing.io, "semantic", .{});
+    _ = try cache.dir.statFile(testing.io, "invalidation", .{});
+}
+
+const trivial_run =
+    \\def main(out: Stream) -> int:
+    \\    out.print("ok")
+    \\    return 0
+;
+
+/// Run `mylang run` on the trivial program with `options` and, when the run is
+/// refused, require exit 2 with `expected` inside the diagnostic on stderr.
+fn expectRunRefused(options: []const []const u8, environ: ?*const std.process.Environ.Map, expected: []const u8) !void {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "prog.my", .data = trivial_run });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "prog.my", testing.allocator);
+    defer testing.allocator.free(path);
+    var argv: std.ArrayList([]const u8) = .empty;
+    defer argv.deinit(testing.allocator);
+    try argv.appendSlice(testing.allocator, &.{ compiler_path, "run", path });
+    try argv.appendSlice(testing.allocator, options);
+    try argv.appendSlice(testing.allocator, &tools);
+    const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = argv.items, .environ_map = environ });
+    defer freeRun(outcome);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, outcome.term);
+    try testing.expectEqualStrings("", outcome.stdout);
+    testing.expect(std.mem.indexOf(u8, outcome.stderr, expected) != null) catch |err| {
+        std.debug.print("expected {s} in:\n{s}\n", .{ expected, outcome.stderr });
+        return err;
+    };
+}
+
+// spec: RUN-FLAGS-1
+test "run takes every budget in both spellings and prints its own usage for a bad flag" {
+    try invokeOptions("run", trivial_run, &.{ "--max-steps", "1000000", "--max-frames", "5000", "--timeout", "60", "--max-memory", "1G" }, 0, "ok\n0\n", "");
+    try invokeOptions("run", trivial_run, &.{ "--max-steps=1000000", "--max-frames=5000", "--timeout=60", "--max-memory=1G" }, 0, "ok\n0\n", "");
+    for ([_][]const []const u8{ &.{"--bogus"}, &.{"--max-frames"}, &.{ "--max-frames", "0" }, &.{ "--max-steps", "many" }, &.{ "--max-memory", "12x" }, &.{ "--timeout", "-3" } }) |bad| {
+        try expectRunRefused(bad, null, "usage: mylang run <file.my> [options] [-- ARGS...]");
+    }
+    try expectRunRefused(&.{"--bogus"}, null, "--max-frames N     call-depth ceiling");
+    // The general text opens with the `test` usage; `run` must not print it.
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "prog.my", .data = trivial_run });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "prog.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "run", path, "--bogus" } });
+    defer freeRun(outcome);
+    try testing.expect(std.mem.indexOf(u8, outcome.stderr, "mylang test <entry.my>") == null);
+}
+
+// spec: RUN-FRAME-BUDGET-1
+test "a call-depth budget the memory ceiling cannot back is refused up front with what it needs" {
+    // 150000 frames reserve 4.6 GiB, more than the default 4G ceiling holds.
+    try expectRunRefused(&.{"--max-frames=150000"}, null, "a call-depth budget of 150000 frames (--max-frames) reserves 4.6 GiB of native stack (32 KiB per frame), but a guest may map only 4.3 GiB");
+    try expectRunRefused(&.{ "--max-frames", "150000" }, null, "raise --max-memory to at least 5G, or lower --max-frames to at most 137984");
+    // The same budget with a ceiling that holds it runs.
+    try invokeOptions("run", trivial_run, &.{ "--max-frames", "30000", "--max-memory", "2G" }, 0, "ok\n0\n", "");
+    // Past what the compiler's own address-space ceiling lets a guest inherit, the
+    // cause is named instead of a silent cap at about 269,000 frames.
+    var environment = try std.process.Environ.createMap(testing.environ, testing.allocator);
+    defer environment.deinit();
+    try environment.put("MYLANG_HOST_MEMORY_LIMIT", "8G");
+    try expectRunRefused(&.{ "--max-frames=400000", "--max-memory=64G" }, &environment, "this process inherited an address-space limit below --max-memory");
+    try expectRunRefused(&.{ "--max-frames=400000", "--max-memory=64G" }, &environment, "MYLANG_HOST_MEMORY_LIMIT=0 removes it");
+}
+
+// spec-case: RUN-FRAME-BUDGET-1
+test "test refuses a frame budget its per-test ceiling cannot back and accepts one it can" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "prog.my", .data = cache_program });
+    const refused = try runInDirectory(temp.dir, &.{ compiler_path, "test", "prog.my", "--max-frames", "30000" });
+    defer freeRun(refused);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, refused.term);
+    try testing.expect(std.mem.indexOf(u8, refused.stderr, "mylang test: a call-depth budget of 30000 frames (--max-frames) reserves 946 MiB of native stack (32 KiB per frame), but a test may map only 768 MiB") != null);
+    try testing.expect(std.mem.indexOf(u8, refused.stderr, "raise --max-memory to at least 1G") != null);
+    try runToolIn(temp.dir, null, &.{ "test", "prog.my", "--force", "--max-frames", "30000", "--max-memory", "1G" }, 0);
+}
+
+// spec-case: RUN-FRAME-BUDGET-1
+test "a built program reports the frame reservation its address space cannot back" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const output = try buildExecutable(&temp, trivial_run);
+    defer testing.allocator.free(output);
+    var environment = try runtimeOptions("--max-frames=150000");
+    defer environment.deinit();
+    try environment.put("MYLANG_MEMORY_LIMIT", "1G");
+    const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{output}, .environ_map = &environment });
+    defer freeRun(outcome);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, outcome.term);
+    try testing.expect(std.mem.indexOf(u8, outcome.stderr, "a call-depth budget of 150000 frames (--max-frames) reserves 4.6 GiB of native stack (32 KiB per frame), but this process may map only 1.2 GiB") != null);
+    try testing.expect(std.mem.indexOf(u8, outcome.stderr, "OutOfMemory: QBE runtime failure") == null);
+}
+
+/// Write `mylang.json` and the trivial program into `dir`, one project.
+fn writeLimitedProject(dir: std.Io.Dir, limits: []const u8) !void {
+    const config = try std.fmt.allocPrint(testing.allocator, "{{\"version\":1,\"limits\":{s}}}", .{limits});
+    defer testing.allocator.free(config);
+    try dir.writeFile(testing.io, .{ .sub_path = "mylang.json", .data = config });
+    try dir.writeFile(testing.io, .{ .sub_path = "prog.my", .data = cache_program });
+}
+
+/// Run `command prog.my` in `dir` and return its outcome; the caller frees it.
+fn runLimited(dir: std.Io.Dir, args: []const []const u8) !std.process.RunResult {
+    const absolute = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, compiler_path, testing.allocator);
+    defer testing.allocator.free(absolute);
+    var argv: std.ArrayList([]const u8) = .empty;
+    defer argv.deinit(testing.allocator);
+    try argv.append(testing.allocator, absolute);
+    try argv.appendSlice(testing.allocator, args);
+    var absolute_tools: [tools.len][]u8 = undefined;
+    for (tools, &absolute_tools) |flag, *slot| {
+        const equals = std.mem.indexOfScalar(u8, flag, '=').?;
+        const path = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, flag[equals + 1 ..], testing.allocator);
+        defer testing.allocator.free(path);
+        slot.* = try std.fmt.allocPrint(testing.allocator, "{s}{s}", .{ flag[0 .. equals + 1], path });
+        try argv.append(testing.allocator, slot.*);
+    }
+    defer for (absolute_tools) |path| testing.allocator.free(path);
+    return std.process.run(testing.allocator, testing.io, .{ .argv = argv.items, .cwd = .{ .dir = dir } });
+}
+
+// spec: PROJECT-LIMITS-1
+test "mylang.json limits set the run and test defaults and the command line still wins" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    // A configured frame budget the default ceiling cannot back is refused exactly as the flag is.
+    try writeLimitedProject(temp.dir, "{\"run\":{\"max_frames\":150000},\"test\":{\"max_frames\":30000}}");
+    const configured = try runLimited(temp.dir, &.{ "run", "prog.my" });
+    defer freeRun(configured);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, configured.term);
+    try testing.expect(std.mem.indexOf(u8, configured.stderr, "a call-depth budget of 150000 frames (--max-frames) reserves 4.6 GiB") != null);
+    // The flag overrides the file: 5000 frames fit, and the program runs.
+    const overridden = try runLimited(temp.dir, &.{ "run", "prog.my", "--max-frames", "5000" });
+    defer freeRun(overridden);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, overridden.term);
+    try testing.expectEqualStrings("hi\n", overridden.stdout);
+    // Guest arguments after `--` are untouched by configured options.
+    const guest = try runLimited(temp.dir, &.{ "run", "prog.my", "--max-frames=5000", "--", "--max-frames=1" });
+    defer freeRun(guest);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, guest.term);
+    // `mylang test` reads `limits.test` the same way.
+    const tests_refused = try runLimited(temp.dir, &.{ "test", "prog.my", "--force" });
+    defer freeRun(tests_refused);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, tests_refused.term);
+    try testing.expect(std.mem.indexOf(u8, tests_refused.stderr, "mylang test: a call-depth budget of 30000 frames") != null);
+    const tests_overridden = try runLimited(temp.dir, &.{ "test", "prog.my", "--force", "--max-frames=1024" });
+    defer freeRun(tests_overridden);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, tests_overridden.term);
+    // A configured max_memory that holds the configured budget lets both commands run it.
+    try writeLimitedProject(temp.dir, "{\"run\":{\"max_frames\":30000,\"max_memory\":\"2G\"},\"test\":{\"max_frames\":30000,\"max_memory\":\"1G\"}}");
+    const run_ok = try runLimited(temp.dir, &.{ "run", "prog.my" });
+    defer freeRun(run_ok);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, run_ok.term);
+    const test_ok = try runLimited(temp.dir, &.{ "test", "prog.my", "--force" });
+    defer freeRun(test_ok);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, test_ok.term);
 }

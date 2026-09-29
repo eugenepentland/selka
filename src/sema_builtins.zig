@@ -62,6 +62,12 @@ pub fn Checks(comptime Checker: type) type {
         pub fn checkFileAccessMethod(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), kind: file_operations.Access, out: *typed.Node) Error!void {
             return impl.checkFileAccessMethod(Checker, self, node, call, kind, out);
         }
+        /// Check the qualified `fs.read_text(path)` spelling on a receiver reached
+        /// through an expression, such as a record field. The receiver is already
+        /// checked; the value arguments must be too.
+        pub fn checkFileAccessOn(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), kind: file_operations.Access, receiver: typed.NodeId, out: *typed.Node) Error!void {
+            return impl.checkFileAccessOn(Checker, self, node, call, kind, receiver, out);
+        }
         /// A file method's result type follows its receiver's text or binary mode.
         pub fn checkFileMethod(self: *Checker, node: ast.Node, operation: @FieldType(@FieldType(ast.Node, "data"), "file_operation"), out: *typed.Node) Error!void {
             return impl.checkFileMethod(Checker, self, node, operation, out);
@@ -700,10 +706,20 @@ fn checkFileAccessCall(comptime Checker: type, self: *Checker, node: ast.Node, c
     if (call.type_arguments.len != 0 or call.arguments.len != kind.arity()) return self.fileAccessArityFailure(node, kind, call.arguments.len, false);
     return checkFileAccess(Checker, self, node, kind, self.resolved[@backingInt(call.arguments[0])].?, call.arguments[1..], out);
 }
-/// Check the qualified `fs.read_text(path)` spelling on a local `Filesystem`.
-fn checkFileAccessMethod(comptime Checker: type, self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), kind: file_operations.Access, out: *typed.Node) Error!void {
+/// Require positional arguments of the count a qualified `fs.name(...)` call takes.
+fn requireMethodShape(comptime Checker: type, self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), kind: file_operations.Access) Error!void {
     try call_arguments.positional(call, self.sink);
     if (call.type_arguments.len != 0 or call.arguments.len != kind.methodArity()) return self.fileAccessArityFailure(node, kind, call.arguments.len, true);
+}
+/// Check the qualified `fs.read_text(path)` spelling on a receiver already checked
+/// as an expression, such as a record field, instead of a named local.
+fn checkFileAccessOn(comptime Checker: type, self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), kind: file_operations.Access, receiver: typed.NodeId, out: *typed.Node) Error!void {
+    try requireMethodShape(Checker, self, node, call, kind);
+    return checkFileAccess(Checker, self, node, kind, receiver, call.arguments, out);
+}
+/// Check the qualified `fs.read_text(path)` spelling on a local `Filesystem`.
+fn checkFileAccessMethod(comptime Checker: type, self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), kind: file_operations.Access, out: *typed.Node) Error!void {
+    try requireMethodShape(Checker, self, node, call, kind);
     const owner = call.owner.?;
     const slot = self.active.get(self.src.text(owner)).?;
     try self.requireReadable(slot, owner);

@@ -24,6 +24,7 @@ test {
     _ = @import("native_rc_hold_test.zig");
     _ = @import("native_rc_fast_test.zig");
     _ = @import("native_file_cleanup_test.zig");
+    _ = @import("input_probe_test.zig");
     _ = @import("native_argv_test.zig");
     _ = @import("view_cycles_test.zig");
     _ = @import("qbe_runtime_rc_test.zig");
@@ -328,6 +329,7 @@ test {
     _ = @import("native_test_options.zig");
     _ = @import("native_test_receipts.zig");
     _ = @import("memory_budget");
+    _ = @import("memory_budget_frames_test.zig");
 }
 
 test {

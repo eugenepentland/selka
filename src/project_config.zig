@@ -9,6 +9,7 @@
 //! exact bytes. Policy parsing and evaluation live in `import_policy.zig` so
 //! the CLI can keep one authoritative evaluator.
 const std = @import("std");
+const budget = @import("memory_budget");
 
 /// Configuration filename frozen by the A1 contract.
 pub const config_name = "mylang.json";
@@ -23,6 +24,7 @@ pub const Error = error{
     InvalidImportPolicy,
     InvalidInterfaceFiles,
     InvalidJson,
+    InvalidLimits,
     InvalidLint,
     InvalidValueSemantics,
     InvalidVersion,
@@ -59,6 +61,25 @@ pub const Budgets = struct {
     max_total_bytes: ?usize = null,
 };
 
+/// Execution defaults one command reads from `mylang.json`'s `limits` object.
+/// A field the file leaves out stays null and the command's own default applies;
+/// a flag on the command line, then `MYLANG_MEMORY_LIMIT` for the memory
+/// ceiling, always outranks it.
+pub const CommandLimits = struct {
+    /// `--max-steps`: the instruction ceiling.
+    max_steps: ?u64 = null,
+    /// `--max-frames`: the call-depth ceiling.
+    max_frames: ?u64 = null,
+    /// `--max-memory`: the guest byte ceiling; zero removes it.
+    max_memory: ?u64 = null,
+};
+
+/// The optional `limits` object: defaults for `mylang run` and `mylang test`.
+pub const Limits = struct {
+    run: CommandLimits = .{},
+    tests: CommandLimits = .{},
+};
+
 /// Strict minimal configuration shape. Unknown fields, duplicate keys and
 /// unsupported versions are rejected before any policy is loaded.
 pub const Document = struct {
@@ -75,6 +96,8 @@ pub const Document = struct {
     /// Value semantics is the default; explicit false selects legacy sharing
     /// for the migration release (VALUE-SEMANTICS-1).
     value_semantics: bool = true,
+    /// Project defaults for the `run` and `test` execution budgets.
+    limits: Limits = .{},
 };
 
 /// One resolved policy file: absolute path, exact bytes and content digest.
@@ -399,6 +422,8 @@ fn parseDocument(allocator: std.mem.Allocator, bytes: []const u8, failure: *Fail
     var lint_seen = false;
     var interface_files: ?bool = null;
     var value_semantics: ?bool = null;
+    var limits: Limits = .{};
+    var limits_seen = false;
 
     while (true) {
         const key_token = try readToken(allocator, &scanner, failure);
@@ -425,6 +450,11 @@ fn parseDocument(allocator: std.mem.Allocator, bytes: []const u8, failure: *Fail
             budgets_seen = true;
             if (!isObjectBegin(value)) return fail(failure, &diagnostics, "budgets must be a JSON object", error.InvalidBudget);
             budgets = try parseBudgets(allocator, &scanner, failure);
+        } else if (std.mem.eql(u8, key, "limits")) {
+            if (limits_seen) return fail(failure, &diagnostics, duplicate_limit_detail, error.DuplicateField);
+            limits_seen = true;
+            if (!isObjectBegin(value)) return fail(failure, &diagnostics, "limits must be a JSON object", error.InvalidLimits);
+            limits = try parseLimits(allocator, &scanner, failure);
         } else if (std.mem.eql(u8, key, "lint")) {
             if (lint_seen) return fail(failure, &diagnostics, "duplicate lint field", error.DuplicateField);
             if (!isObjectBegin(value)) return fail(failure, &diagnostics, "lint must be a JSON object", error.InvalidLint);
@@ -443,7 +473,7 @@ fn parseDocument(allocator: std.mem.Allocator, bytes: []const u8, failure: *Fail
     if (!isEndOfDocument(trailing)) return fail(failure, &diagnostics, "trailing content after the configuration object", error.InvalidJson);
     if (version == null) return fail(failure, &diagnostics, "mylang.json must carry version: 1", error.MissingVersion);
     if (lint_seen and version.? != 2) return fail(failure, &diagnostics, "lint requires mylang.json version 2", error.InvalidLint);
-    return .{ .version = version.?, .import_policy = import_policy, .budgets = budgets, .lint = lint_seen, .interface_files = interface_files orelse false, .value_semantics = value_semantics orelse true };
+    return .{ .version = version.?, .import_policy = import_policy, .budgets = budgets, .lint = lint_seen, .interface_files = interface_files orelse false, .value_semantics = value_semantics orelse true, .limits = limits };
 }
 
 /// Read the body of a `budgets` object after its opening brace. Every key is
@@ -479,6 +509,73 @@ fn parseBudgets(allocator: std.mem.Allocator, scanner: *std.json.Scanner, failur
         if (!matched) return fail(failure, scanner.diagnostics.?, "unknown field in budgets", error.UnknownField);
     }
     return budgets;
+}
+
+const duplicate_limit_detail = "duplicate limits field";
+const invalid_limit_detail = "limits values must be positive integers no larger than 4294967295, and max_memory a byte count or a size such as \"1G\"";
+
+/// Read the body of a `limits` object after its opening brace: an optional `run`
+/// and an optional `test` object, each a set of execution budgets.
+fn parseLimits(allocator: std.mem.Allocator, scanner: *std.json.Scanner, failure: *Failure) Error!Limits {
+    var limits: Limits = .{};
+    var seen: u8 = 0;
+    while (true) {
+        const key_token = try readToken(allocator, scanner, failure);
+        defer freeToken(allocator, key_token);
+        if (isObjectEnd(key_token)) break;
+        const key = stringText(key_token) orelse return fail(failure, scanner.diagnostics.?, "limits keys must be strings", error.InvalidLimits);
+        const value = try readToken(allocator, scanner, failure);
+        defer freeToken(allocator, value);
+        const is_run = std.mem.eql(u8, key, "run");
+        if (!is_run and !std.mem.eql(u8, key, "test")) return fail(failure, scanner.diagnostics.?, "unknown field in limits; expected run or test", error.UnknownField);
+        const bit: u8 = if (is_run) 1 else 2;
+        if (seen & bit != 0) return fail(failure, scanner.diagnostics.?, duplicate_limit_detail, error.DuplicateField);
+        seen |= bit;
+        if (!isObjectBegin(value)) return fail(failure, scanner.diagnostics.?, "each limits entry must be a JSON object", error.InvalidLimits);
+        const parsed = try parseCommandLimits(allocator, scanner, failure);
+        if (is_run) limits.run = parsed else limits.tests = parsed;
+    }
+    return limits;
+}
+
+/// Read one command's budgets after its opening brace. `max_steps` and
+/// `max_frames` are positive 32-bit integers, as `mylang test` takes them;
+/// `max_memory` is a byte count or a suffixed size, and zero removes the ceiling.
+fn parseCommandLimits(allocator: std.mem.Allocator, scanner: *std.json.Scanner, failure: *Failure) Error!CommandLimits {
+    var limits: CommandLimits = .{};
+    while (true) {
+        const key_token = try readToken(allocator, scanner, failure);
+        defer freeToken(allocator, key_token);
+        if (isObjectEnd(key_token)) break;
+        const key = stringText(key_token) orelse return fail(failure, scanner.diagnostics.?, "limits keys must be strings", error.InvalidLimits);
+        const value = try readToken(allocator, scanner, failure);
+        defer freeToken(allocator, value);
+        if (std.mem.eql(u8, key, "max_memory")) {
+            if (limits.max_memory != null) return fail(failure, scanner.diagnostics.?, duplicate_limit_detail, error.DuplicateField);
+            limits.max_memory = memoryBytes(value) orelse return fail(failure, scanner.diagnostics.?, invalid_limit_detail, error.InvalidLimits);
+            continue;
+        }
+        var slot: *?u64 = &limits.max_steps;
+        if (std.mem.eql(u8, key, "max_frames")) {
+            slot = &limits.max_frames;
+        } else if (!std.mem.eql(u8, key, "max_steps")) {
+            return fail(failure, scanner.diagnostics.?, "unknown field in limits", error.UnknownField);
+        }
+        if (slot.* != null) return fail(failure, scanner.diagnostics.?, duplicate_limit_detail, error.DuplicateField);
+        const text = numberText(value) orelse return fail(failure, scanner.diagnostics.?, invalid_limit_detail, error.InvalidLimits);
+        const parsed = std.fmt.parseUnsigned(u32, text, 10) catch return fail(failure, scanner.diagnostics.?, invalid_limit_detail, error.InvalidLimits);
+        if (parsed == 0) return fail(failure, scanner.diagnostics.?, invalid_limit_detail, error.InvalidLimits);
+        slot.* = parsed;
+    }
+    return limits;
+}
+
+/// A `max_memory` value: a non-negative byte count, or the suffixed text
+/// `memory_budget.parse` reads on the command line.
+fn memoryBytes(token: std.json.Scanner.Token) ?u64 {
+    if (numberText(token)) |text| return std.fmt.parseUnsigned(u64, text, 10) catch null;
+    const text = stringText(token) orelse return null;
+    return budget.parse(text) catch null;
 }
 
 /// Consume the rest of a JSON value whose opening object or array token was

@@ -114,6 +114,15 @@ pub const usage = "usage: mylang test <entry.my|directory> [--filter SUBSTRING|G
     "         [--bench-baseline FILE] [--bench-policy FILE] [--bench-profile ID]\n" ++
     "         [--bench-warmup N] [--bench-batches N] [--bench-batch-ms N]\n" ++
     "         [--bench-timeout-ms N]\n";
+/// Whether the command line names `flag`, in either the `--flag N` or the
+/// `--flag=N` spelling.
+pub fn explicit(args: []const []const u8, flag: []const u8) bool {
+    for (args) |arg| {
+        if (std.mem.eql(u8, arg, flag)) return true;
+        if (std.mem.startsWith(u8, arg, flag) and arg.len > flag.len and arg[flag.len] == '=') return true;
+    }
+    return false;
+}
 /// Parse options, rejecting malformed budgets, sampling bounds and unknown flags.
 pub fn parse(args: []const []const u8) Error!Options {
     var result: Options = .{ .link_arguments = args };

@@ -30,6 +30,8 @@ const index_module_flag = "--module";
 const index_kind_flag = "--kind";
 /// Wall-clock ceiling forwarded to the guest runtime, which parses the same flag.
 const timeout_prefix = "--timeout=";
+const frames_prefix = "--max-frames=";
+const steps_prefix = "--max-steps=";
 /// Shared internal session failure name for an over-long request line.
 const request_too_long = "RequestTooLong";
 /// Phase label and default cache-directory leaf, shared so the literal is not
@@ -84,6 +86,31 @@ const everyday_help =
     \\  mylang test ENTRY.my --affected --against REF   only the tests an edit since REF can reach
     \\
 ;
+/// What a rejected `run` or `run-project` command line prints: the options those
+/// two commands take, with each budget in both spellings, instead of the `test`
+/// usage the general text opens with.
+const run_usage =
+    \\usage: mylang run <file.my> [options] [-- ARGS...]
+    \\       mylang run-project <entry.my> [options] [-- ARGS...]
+    \\  builds the program natively and runs it; every value after -- is a guest argument
+    \\  budgets (each takes --flag N or --flag=N; N is a positive integer):
+    \\    --max-steps N      instruction ceiling (default: unbounded)
+    \\    --max-frames N     call-depth ceiling (default: unbounded); each frame reserves 32 KiB of --max-memory
+    \\    --timeout N        elapsed-time cap in seconds
+    \\    --max-memory SIZE  guest byte ceiling, K/M/G suffixes (default 4G; MYLANG_MEMORY_LIMIT names the same)
+    \\  output: --print-result --timings[=json] --report --diagnostics=text|json
+    \\  build: --release --qbe=PATH --zig=PATH --cache-dir=DIR --no-cache --gc-stress
+    \\  authority: --restrict --allow-read=DIR --allow-write=DIR --allow-endpoint=IP:PORT --allow-clock
+    \\             --allow-random[=SEED] --allow-env[=NAME,...] --allow-host --allow-all
+    \\  `mylang --help` lists every command
+    \\
+;
+/// The usage a rejected command line prints: the running commands' own text,
+/// the general text for everything else.
+fn usageFor(command: []const u8) []const u8 {
+    if (std.mem.eql(u8, command, "run") or std.mem.eql(u8, command, "run-project")) return run_usage;
+    return usage;
+}
 const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--json] [--force]\n" ++
     "       mylang test <entry.my|directory> --bench GLOB [--bench-output FILE] [--bench-baseline FILE] [--bench-policy FILE]\n" ++
     "       mylang bench-promote --candidate FILE --approver NAME --reason TEXT [--baseline FILE] [--output FILE] [--revision REV]\n" ++
@@ -174,6 +201,7 @@ const module_syntax = @import("module_syntax.zig");
 const native_run = @import("native_run.zig");
 const native_build = @import("qbe_build.zig");
 const native_options = @import("qbe_build_options.zig");
+const input_probe = @import("input_probe.zig");
 /// Per-stage observations collected when an invalidation explanation ran.
 const StageTally = struct { hits: usize = 0, misses: usize = 0, skipped: usize = 0 };
 const RunObservation = struct {
@@ -346,7 +374,7 @@ fn dispatch(process: std.process.Init) !u8 {
     }
     const parsed = parseArgs(process.arena.allocator(), args[1..]) catch |err| switch (err) {
         error.Usage => {
-            try std.Io.File.stderr().writeStreamingAll(process.io, usage);
+            try std.Io.File.stderr().writeStreamingAll(process.io, usageFor(if (args.len >= 2) args[1] else ""));
             return 2;
         },
         error.OutOfMemory => return error.OutOfMemory,
@@ -361,7 +389,6 @@ fn dispatch(process: std.process.Init) !u8 {
         .diagnostics = parsed.reporting.diagnostics orelse .text,
     };
     const status = run(init, parsed) catch |err| status: {
-        if (@errorReturnTrace()) |trace| std.debug.dumpErrorReturnTrace(trace); // DEBUG-RV
         const message = try std.fmt.allocPrint(init.gpa, "mylang: host failure: {s}\n", .{@errorName(err)});
         defer init.gpa.free(message);
         try init.text(message);
@@ -370,8 +397,17 @@ fn dispatch(process: std.process.Init) !u8 {
     try timings.report(status);
     return status;
 }
-fn run(init: Context, parsed: Parsed) !u8 {
+fn run(init: Context, unconfigured: Parsed) !u8 {
+    const parsed = try withConfiguredRunLimits(init, unconfigured);
     if (parsed.command == .@"check-session") return checkSession(init, parsed);
+    // A missing, unreadable or directory entry is refused by name before any
+    // cache opens, so it leaves no cache directory behind and prints no trace.
+    if (try input_probe.check(init.gpa, init.io, @tagName(parsed.command), parsed.path, false)) |refusal| {
+        defer init.gpa.free(refusal);
+        try init.text(refusal);
+        return input_probe.refused_status;
+    }
+    if (try frameBudgetRefused(init, parsed)) |status| return status;
     // One optional record per command, built before any work so the wall time it
     // carries covers the whole command. `init` returns null unless the flag or
     // `MYLANG_FRICTION_LOG` asked for a log, so an ordinary run pays one check.
@@ -407,6 +443,66 @@ fn run(init: Context, parsed: Parsed) !u8 {
     if (semantic_store) |*store| store.deinit();
     if (friction) |recorder| recorder.finish(status, frictionElapsedNs(friction_start, init.io));
     return status;
+}
+
+/// Fill in the execution budgets the project's `mylang.json` sets under
+/// `limits.run` wherever the command line and, for the memory ceiling,
+/// `MYLANG_MEMORY_LIMIT` gave none. The configured options join the ones the
+/// command line forwards to the guest, ahead of the `--` delimiter, so both
+/// sources are checked and applied by the same code. A missing or unreadable
+/// configuration changes nothing here: the check that owns configuration errors
+/// reports them.
+fn withConfiguredRunLimits(init: Context, parsed: Parsed) !Parsed {
+    if (parsed.command != .run and parsed.command != .@"run-project") return parsed;
+    const path = (project_config.discover(init.gpa, init.io, parsed.path) catch return parsed) orelse return parsed;
+    defer init.gpa.free(path);
+    var failure: project_config.Failure = .{};
+    var config = project_config.load(init.gpa, init.io, path, &failure) catch return parsed;
+    defer config.deinit();
+    const configured = config.document.limits.run;
+    var effective = parsed;
+    const arena = init.arena.allocator();
+    var runtime: std.ArrayList([]const u8) = .empty;
+    const delimiter = for (parsed.runtime, 0..) |option, index| {
+        if (std.mem.eql(u8, option, "--")) break index;
+    } else parsed.runtime.len;
+    try runtime.appendSlice(arena, parsed.runtime[0..delimiter]);
+    if (configured.max_steps) |steps| if (!forwardedOption(parsed.runtime[0..delimiter], steps_prefix)) try runtime.append(arena, try std.fmt.allocPrint(arena, "{s}{d}", .{ steps_prefix, steps }));
+    if (configured.max_frames) |frames| if (!forwardedOption(parsed.runtime[0..delimiter], frames_prefix)) try runtime.append(arena, try std.fmt.allocPrint(arena, "{s}{d}", .{ frames_prefix, frames }));
+    try runtime.appendSlice(arena, parsed.runtime[delimiter..]);
+    effective.runtime = runtime.items;
+    const from_environment = if (init.environ.get(budget.variable)) |text| text.len != 0 else false;
+    if (parsed.max_memory == null and !from_environment) effective.max_memory = configured.max_memory;
+    return effective;
+}
+
+/// Whether the forwarded options already carry one with this prefix.
+fn forwardedOption(options: []const []const u8, prefix: []const u8) bool {
+    for (options) |option| if (std.mem.startsWith(u8, option, prefix)) return true;
+    return false;
+}
+
+/// The `--max-frames` a run command forwards to its guest, or null without one.
+fn requestedFrames(runtime: []const []const u8) ?u64 {
+    for (runtime) |option| {
+        if (std.mem.eql(u8, option, "--")) return null;
+        if (std.mem.startsWith(u8, option, frames_prefix)) return positive(option[frames_prefix.len..]) catch null;
+    }
+    return null;
+}
+
+/// Refuse a `--max-frames` the guest's memory ceiling cannot back, before any
+/// build starts: the runtime maps 32 KiB of stack per frame inside the ceiling,
+/// so an oversized budget would otherwise die with a bare `OutOfMemory`. Null
+/// means the budget fits, or the command runs no guest.
+fn frameBudgetRefused(init: Context, parsed: Parsed) !?u8 {
+    if (parsed.command != .run and parsed.command != .@"run-project") return null;
+    const frames = requestedFrames(parsed.runtime) orelse return null;
+    const memory = budget.resolve(parsed.max_memory, init.environ, budget.variable, budget.run_default) catch return null;
+    const refusal = try budget.frameRefusal(init.gpa, @tagName(parsed.command), "a guest", frames, memory) orelse return null;
+    defer init.gpa.free(refusal);
+    try init.text(refusal);
+    return input_probe.refused_status;
 }
 
 /// Start this command's friction record, or return null when no log was asked
@@ -1232,15 +1328,15 @@ const ArgumentParser = struct {
             if (!self.executes() or self.gc_stress) return error.Usage;
             self.gc_stress = true;
             try self.forward(arg);
-        } else if (std.mem.startsWith(u8, arg, "--max-steps=")) {
+        } else if (std.mem.startsWith(u8, arg, steps_prefix)) {
             if (!self.executes() or self.saw_steps) return error.Usage;
             self.saw_steps = true;
-            _ = try positive(arg["--max-steps=".len..]);
+            _ = try positive(arg[steps_prefix.len..]);
             try self.forward(arg);
-        } else if (std.mem.startsWith(u8, arg, "--max-frames=")) {
+        } else if (std.mem.startsWith(u8, arg, frames_prefix)) {
             if (!self.executes() or self.saw_frames) return error.Usage;
             self.saw_frames = true;
-            _ = try positive(arg["--max-frames=".len..]);
+            _ = try positive(arg[frames_prefix.len..]);
             try self.forward(arg);
         } else if (std.mem.startsWith(u8, arg, timeout_prefix)) {
             if (!self.executes() or self.forwarded(timeout_prefix)) return error.Usage;
@@ -1470,9 +1566,28 @@ const ArgumentParser = struct {
 
     /// A `context` or `index-project` switch written with a space instead of
     /// `=`, which takes the next argument.
-    fn separateValue(self: *ArgumentParser, args: []const []const u8, index: *usize) error{Usage}!bool {
+    fn separateValue(self: *ArgumentParser, args: []const []const u8, index: *usize) ArgError!bool {
+        if (try self.budgetSeparateValue(args, index)) return true;
         if (try self.indexSeparateValue(args, index)) return true;
         return self.contextSeparateValue(args, index);
+    }
+
+    /// The execution budgets written with a space, `--max-frames 2000000`, as
+    /// `mylang test` takes them. The value is joined back into the `=` spelling
+    /// and checked exactly as that spelling is, so both forms accept and reject
+    /// the same values.
+    fn budgetSeparateValue(self: *ArgumentParser, args: []const []const u8, index: *usize) ArgError!bool {
+        if (!self.executes()) return false;
+        inline for (.{ "--max-steps", "--max-frames", "--timeout", "--max-memory" }) |flag| {
+            if (std.mem.eql(u8, args[index.*], flag)) {
+                if (index.* + 1 >= args.len) return error.Usage;
+                index.* += 1;
+                const joined = try std.mem.concat(self.allocator, u8, &.{ flag, "=", args[index.*] });
+                const accepted = try self.executionOption(joined);
+                return accepted;
+            }
+        }
+        return false;
     }
 
     /// The `index-project` filters written with a space instead of `=`, which
@@ -3275,13 +3390,24 @@ fn checkImportedInputs(init: Context, inputs: []const GeneratedInput, project: *
     return true;
 }
 
+/// The cache directory the invocation names, or null for the per-project
+/// default: `--cache-dir` first, then `MYLANG_FRONTEND_CACHE`. Every persistent
+/// store this command opens (frontend entries, checked bodies, the invalidation
+/// baseline) nests under it, so naming one directory keeps all of them out of
+/// the working directory.
+fn requestedCacheBase(init: Context, parsed: Parsed) ?[]const u8 {
+    if (parsed.cache_dir) |directory| return directory;
+    const variable = init.environ.get("MYLANG_FRONTEND_CACHE") orelse return null;
+    return if (variable.len == 0) null else variable;
+}
+
 /// Resolve the persistent frontend cache directory for this invocation.
 /// Precedence: `--no-cache`, then an explicit `--cache-dir` (nested under
 /// `frontend/`), then `MYLANG_FRONTEND_CACHE` from a parent build driver, then
 /// the per-project default. The compiler identity partitions the directory.
 fn frontendRoot(init: Context, parsed: Parsed) ?[]const u8 {
     if (parsed.no_cache) return null;
-    const base = parsed.cache_dir orelse init.environ.get("MYLANG_FRONTEND_CACHE") orelse language.frontend_cache.default_directory;
+    const base = requestedCacheBase(init, parsed) orelse language.frontend_cache.default_directory;
     if (std.mem.eql(u8, base, language.frontend_cache.default_directory)) return base;
     return std.fs.path.join(init.gpa, &.{ base, frontend_label }) catch null;
 }
@@ -3436,7 +3562,7 @@ fn openFragments(init: Context, parsed: Parsed, storage: *language.qbe_fragments
 /// deliberately independent of the compiler-identity partition so a rebuilt
 /// compiler still explains against the previous build's receipt.
 fn invalidationBaselinePath(init: Context, parsed: Parsed) ![]const u8 {
-    const base = parsed.cache_dir orelse language.frontend_cache.default_directory;
+    const base = requestedCacheBase(init, parsed) orelse language.frontend_cache.default_directory;
     const basename = std.fs.path.basename(parsed.path);
     const stem = if (std.mem.endsWith(u8, basename, ".my")) basename[0 .. basename.len - 3] else basename;
     const file_name = try init.gpa.alloc(u8, stem.len + ".json".len);
@@ -3606,12 +3732,12 @@ fn semanticCacheContract(init: Context) ![]const u8 {
 
 /// Resolve the durable checked-body store root from the same shared cache-root
 /// option as the frontend cache. `--no-cache` returns null, an explicit
-/// `--cache-dir=DIR` nests under `DIR/semantic`, and the default is the
-/// per-project `.mylang-cache/semantic` leaf.
+/// `--cache-dir=DIR` (or `MYLANG_FRONTEND_CACHE`) nests under `DIR/semantic`, and
+/// the default is the per-project `.mylang-cache/semantic` leaf.
 fn semanticRoot(init: Context, parsed: Parsed) ?[]const u8 {
     if (parsed.no_cache) return null;
     const default_directory = language.semantic_cache.default_store_directory;
-    const base = parsed.cache_dir orelse default_directory;
+    const base = requestedCacheBase(init, parsed) orelse return default_directory;
     if (std.mem.eql(u8, base, default_directory)) return default_directory;
     return std.fs.path.join(init.gpa, &.{ base, "semantic" }) catch null;
 }

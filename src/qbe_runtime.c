@@ -75,7 +75,7 @@ static const char *describe(const char *code) {
     if (!strcmp(code, "R_STEP_LIMIT")) return "instruction budget exhausted; raise it with --max-steps=N";
     if (!strcmp(code, "R_NO_STEP_ACCOUNTING")) return "this build omits instruction-budget accounting";
     if (!strcmp(code, "R_NO_FRAME_ACCOUNTING")) return "this build omits call-depth accounting";
-    if (!strcmp(code, "R_FRAME_LIMIT")) return "call-depth budget exhausted; raise it with --max-frames=N";
+    if (!strcmp(code, "R_FRAME_LIMIT")) return "call-depth budget exhausted; raise it with --max-frames=N (each frame reserves 32 KiB of stack, so --max-memory must cover N x 32 KiB)";
     if (!strcmp(code, "R_REQUIRES")) return "precondition violated";
     if (!strcmp(code, "R_ENSURES")) return "postcondition violated";
     if (!strcmp(code, "R_INVARIANT")) return "invariant violated";

@@ -182,6 +182,7 @@ pub const Session = struct {
         var argv: std.ArrayList([]const u8) = .empty;
         defer argv.deinit(self.context.allocator);
         try argv.appendSlice(self.context.allocator, &.{ self.compiler, "list-interfaces", "--contracts", source });
+        try self.appendCacheDirectory(&argv);
         try self.appendPolicyFlags(&argv);
         self.trace(argv.items);
         const output = try self.context.capture(argv.items);

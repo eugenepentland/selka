@@ -11,6 +11,11 @@ enum { MYL_FILE_OPEN, MYL_FILE_READ_FILE, MYL_FILE_READ_TEXT, MYL_FILE_WRITE_FIL
 enum { MYL_FILE_READ, MYL_FILE_READLINE, MYL_FILE_READLINES, MYL_FILE_WRITE, MYL_FILE_FLUSH, MYL_FILE_CLOSE };
 /* Largest whole-file transfer, so one path cannot exhaust host memory. */
 #define MYL_FILE_MAX_BYTES (64u * 1024u * 1024u)
+/* Most bytes one provider write is offered. The resource layer copies whatever
+   it is offered before calling the provider, and the scoped provider consumes at
+   most this much per call, so offering the whole remaining tail made a large
+   write copy O(n) bytes per 64 KiB of progress. */
+#define MYL_FILE_WRITE_SLICE (64u * 1024u)
 /* Located trap for a refused file operation or a closed handle. */
 void myl_qbe_fail_file(void *context);
 /* Internal provider calls return fatal statuses until their C caller has freed

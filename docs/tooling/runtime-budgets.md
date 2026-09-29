@@ -49,6 +49,41 @@ $ mylang run loop.my --timeout=30     # wall-clock guard; no default
 loop.my:3:13: error[R_TIMEOUT]: wall-clock budget exhausted; raise it with --timeout=SECONDS
 ```
 
+`mylang run` and `run-project` take every budget, `--max-steps`, `--max-frames`,
+`--timeout` and `--max-memory`, in both spellings, `--max-frames=2000000` and
+`--max-frames 2000000`, exactly as `mylang test` does. A command line they reject
+prints the usage of `run`, not the `test` usage.
+
+### What a frame budget costs
+
+A `--max-frames=N` ceiling is only honest if N frames fit on the native stack, so
+the runtime maps **32 KiB of stack for every frame the budget allows**, plus 8 MiB,
+inside the guest's address space: its `--max-memory` ceiling plus 256 MiB. Nothing
+is touched until the recursion reaches it, but the reservation counts against the
+address-space limit, so a large budget needs a large `--max-memory` beside it:
+150,000 frames reserve 4.6 GiB and do not fit the 4 GiB default. A budget that
+cannot fit is refused before anything is built, with what it needs:
+
+```console
+$ mylang run deep.my --max-frames 150000
+mylang run: a call-depth budget of 150000 frames (--max-frames) reserves 4.6 GiB of native stack (32 KiB per frame), but a guest may map only 4.3 GiB: raise --max-memory to at least 5G, or lower --max-frames to at most 137984
+$ mylang run deep.my --max-frames 150000 --max-memory 5G
+```
+
+`mylang test` refuses the same way for a per-test ceiling (512 MiB by default, so
+`--max-frames 30000` needs `--max-memory 1G`), and a built program run with
+`MYLANG_OPTIONS=--max-frames=N` reports the same facts from the runtime when its
+mapping fails. `R_FRAME_LIMIT` therefore advises `--max-frames=N` together with a
+`--max-memory` that covers N x 32 KiB.
+
+The address space a guest may map is also bounded by the process that starts it.
+The compiler caps itself at 8 GiB (`MYLANG_HOST_MEMORY_LIMIT`, below) and a guest it
+runs inherits that limit, so `--max-memory=64G` cannot lift a guest above about
+8 GiB: a run asking for more, `--max-frames=400000 --max-memory=64G` for example, is
+refused with the inherited limit named as the cause. Export
+`MYLANG_HOST_MEMORY_LIMIT=0`, or a larger size, to lift it. This, not a size
+overflow, was the "hard cap" near 269,000 frames.
+
 A `mylang test` child is different: each test process starts at **1,000,000**
 instructions and **1,024** frames, because a test is the one place a tight guard
 is useful. `--max-steps` and `--max-frames` on `mylang test` bound each test
@@ -56,7 +91,8 @@ process and may be lowered or raised.
 
 Once a ceiling is in force, `R_STEP_LIMIT` answers "instruction budget
 exhausted; raise it with --max-steps=N" and `R_FRAME_LIMIT` answers "call-depth
-budget exhausted; raise it with --max-frames=N". The hints appear in text and in
+budget exhausted; raise it with --max-frames=N (each frame reserves 32 KiB of
+stack, so --max-memory must cover N x 32 KiB)". The hints appear in text and in
 the `message` field of `--diagnostics=json`. A zero, negative, empty or
 non-numeric budget is refused before the run rather than treated as unlimited.
 `--timeout` arms a monotonic timer inside the guest; when it fires the process
@@ -93,6 +129,28 @@ schematic-svg --backend qbe --project src/schematic/guest circuit.sexp pinout.se
 The ceilings a host passes always match the accounting it built the guest with,
 so a guest is never handed a `--max-steps=` it would refuse with
 `R_NO_STEP_ACCOUNTING`.
+
+### Project defaults in `mylang.json`
+
+A project that always needs the same budgets, a parser test that recurses
+20,000 frames deep for example, can say so once instead of on every command
+line. `mylang.json` takes an optional `limits` object with a `run` entry and a
+`test` entry, each any of `max_steps`, `max_frames` (positive integers up to
+4,294,967,295) and `max_memory` (a byte count or a `K`/`M`/`G` size, `0` for no
+ceiling):
+
+```json
+{"version": 1, "limits": {"test": {"max_steps": 4000000000, "max_frames": 30000, "max_memory": "1G"}}}
+```
+
+`mylang run`, `run-project` and `test` read the configuration nearest the entry
+file and use these as defaults for the matching flag. A flag on the command line
+always wins, `MYLANG_MEMORY_LIMIT` outranks the file's `max_memory`, and the
+built-in defaults apply to whatever the file leaves out. A configured budget goes
+through the same checks as the flag, so a `max_frames` the memory cannot back is
+refused with what it needs. A directory run leaves each program to the
+configuration nearest that program. An unknown key, a repeated key or a budget
+that is zero, not an integer or out of range is a configuration failure.
 
 ## Guest memory ceilings
 

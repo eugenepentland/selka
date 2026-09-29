@@ -218,6 +218,44 @@ test "mylang json budgets override the project loading limits" {
     try t.expectError(error.DuplicateField, loadTmp(&temp, "duplicate.json", &failure));
 }
 
+// spec-case: PROJECT-LIMITS-1
+test "mylang json limits carry per-command execution defaults" {
+    var temp = t.tmpDir(.{});
+    defer temp.cleanup();
+    var failure: project_config.Failure = .{};
+    try writeTmp(&temp, "plain.json", "{\"version\":1}");
+    var plain = try loadTmp(&temp, "plain.json", &failure);
+    defer plain.deinit();
+    try t.expectEqual(@as(?u64, null), plain.document.limits.run.max_frames);
+    try t.expectEqual(@as(?u64, null), plain.document.limits.tests.max_memory);
+    try writeTmp(&temp, "limited.json", "{\"version\":1,\"limits\":{\"run\":{\"max_steps\":500,\"max_frames\":2000,\"max_memory\":\"2G\"},\"test\":{\"max_frames\":30000,\"max_memory\":1048576}}}");
+    var limited = try loadTmp(&temp, "limited.json", &failure);
+    defer limited.deinit();
+    try t.expectEqual(@as(?u64, 500), limited.document.limits.run.max_steps);
+    try t.expectEqual(@as(?u64, 2000), limited.document.limits.run.max_frames);
+    try t.expectEqual(@as(?u64, 2 << 30), limited.document.limits.run.max_memory);
+    try t.expectEqual(@as(?u64, null), limited.document.limits.tests.max_steps);
+    try t.expectEqual(@as(?u64, 30000), limited.document.limits.tests.max_frames);
+    try t.expectEqual(@as(?u64, 1048576), limited.document.limits.tests.max_memory);
+    const rejected = [_]struct { body: []const u8, want: anyerror }{
+        .{ .body = "{\"version\":1,\"limits\":[]}", .want = error.InvalidLimits },
+        .{ .body = "{\"version\":1,\"limits\":{\"run\":1}}", .want = error.InvalidLimits },
+        .{ .body = "{\"version\":1,\"limits\":{\"run\":{\"max_frames\":0}}}", .want = error.InvalidLimits },
+        .{ .body = "{\"version\":1,\"limits\":{\"run\":{\"max_steps\":\"many\"}}}", .want = error.InvalidLimits },
+        .{ .body = "{\"version\":1,\"limits\":{\"test\":{\"max_frames\":4294967296}}}", .want = error.InvalidLimits },
+        .{ .body = "{\"version\":1,\"limits\":{\"test\":{\"max_memory\":\"12x\"}}}", .want = error.InvalidLimits },
+        .{ .body = "{\"version\":1,\"limits\":{\"build\":{}}}", .want = error.UnknownField },
+        .{ .body = "{\"version\":1,\"limits\":{\"run\":{\"max_calls\":1}}}", .want = error.UnknownField },
+        .{ .body = "{\"version\":1,\"limits\":{\"run\":{},\"run\":{}}}", .want = error.DuplicateField },
+        .{ .body = "{\"version\":1,\"limits\":{\"run\":{\"max_frames\":1,\"max_frames\":2}}}", .want = error.DuplicateField },
+        .{ .body = "{\"version\":1,\"limits\":{},\"limits\":{}}", .want = error.DuplicateField },
+    };
+    for (rejected) |case| {
+        try writeTmp(&temp, "bad.json", case.body);
+        try t.expectError(case.want, loadTmp(&temp, "bad.json", &failure));
+    }
+}
+
 // spec-case: API-FILE-3
 test "mylang json interface_files is an optional boolean" {
     var temp = t.tmpDir(.{});
