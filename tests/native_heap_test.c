@@ -592,6 +592,17 @@ static void host_restore_test(void) {
     assert(!getrlimit(RLIMIT_AS, &after));
     assert(after.rlim_cur == before.rlim_cur);
     assert(!getenv("MYLANG_HOST_LIMIT_RESTORE"));
+    const char *invalid[] = {"-1", "+18446744073709551615", " 18446744073709551615", "18446744073709551615 ", "2:3", "18446744073709551616", "18_446744073709551615"};
+    for (size_t i = 0; i < sizeof invalid / sizeof invalid[0]; i++) {
+        assert(!setrlimit(RLIMIT_AS, &limited));
+        snprintf(receipt, sizeof receipt, "%llu:%s", (unsigned long long)limited.rlim_cur, invalid[i]);
+        assert(!setenv("MYLANG_HOST_LIMIT_RESTORE", receipt, 1));
+        assert(!myl_native_budget_guard(0));
+        assert(!getrlimit(RLIMIT_AS, &after));
+        assert(after.rlim_cur == limited.rlim_cur);
+        assert(!getenv("MYLANG_HOST_LIMIT_RESTORE"));
+    }
+    assert(!setrlimit(RLIMIT_AS, &before));
 }
 static void guard_test(void) {
     struct rlimit ceiling;

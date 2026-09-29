@@ -14,9 +14,9 @@ pub const Files = struct {
     }
     /// Read the file an `embed_bytes`/`embed_str` literal names, relative to the
     /// directory of module file `module_path` and confined to the embed root.
-    pub fn readEmbed(context: ?*anyopaque, allocator: std.mem.Allocator, module_path: []const u8, path: []const u8) std.mem.Allocator.Error!embed.Read {
+    pub fn readEmbed(context: ?*anyopaque, allocator: std.mem.Allocator, module_path: []const u8, path: []const u8, limit: usize) std.mem.Allocator.Error!embed.Read {
         const self: *Files = @ptrCast(@alignCast(context.?));
-        return embed.read(allocator, .{ .io = self.io, .import_root = self.root, .root = self.embed_root orelse self.root }, module_path, path);
+        return embed.readLimited(allocator, .{ .io = self.io, .import_root = self.root, .root = self.embed_root orelse self.root }, module_path, path, limit);
     }
     /// Return an owned source copy, preserving missing-file and byte-limit errors.
     pub fn read(context: ?*anyopaque, allocator: std.mem.Allocator, relative: []const u8, limit: usize) project.ReadError![]u8 {

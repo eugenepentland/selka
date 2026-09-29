@@ -121,9 +121,58 @@ GC are already present at the frozen checkpoint, so cannot be attributed to
 the arena correction. `gc-followup-comparison.json` preserves each row's
 absolute counts and both compiler hashes.
 
-Combined-base embed coverage remains outstanding. Other scratch evidence lives
-under the lane's private `.tmp`; final validation will summarize remaining
-results here.
+## Combined Phase A continuation
+
+The combined continuation is based on `ac504471` (frozen Phase A `d8f66585`
+plus the independent B4 checkpoints). Its compiler source is the same Phase A
+base that landed on main at `80dd5190`; the continuation stays on its own
+candidate branch. Independent measurements above retain their original source
+and collector baselines and are not the final combined gate.
+
+- EMBED-CONTEXT-1 adds status, byte count and BLAKE3 embed receipts to navigation
+  and context snapshots, including partial answers. Held bytes and file-backed
+  providers are rechecked, with stale and unavailable outcomes distinct. Empty
+  embed envelopes and source-only snapshot digests remain compatible; actual
+  embeds intentionally contribute to the snapshot digest. Byte-limited answers
+  list `source.embeds` in omissions without losing their identity contribution.
+- EMBED-PROJECT-BUDGET-1 bounds providers before allocation by per-file and
+  remaining source-plus-embed totals. Successful module/path identities charge
+  once; repeated references deduplicate before reading, while separate modules
+  using one physical file charge separately. `counts.bytes` remains source-only
+  and `embedded_bytes` records the successful embedded total.
+- Native test snapshots capture the loaded entry closure under the same caps.
+  Physical copies deduplicate before reading. Refused files retain length-only
+  metadata and materialize as sparse refusals, never accepted zero-filled
+  contents. Configuration identity forces recapture after budget changes.
+  Replacement providers recapture their reachable closure from the original
+  asset roots, include its receipts in graph identity and recheck it before
+  publication. Real CLI coverage checks exact/tight/widened budgets, a 1 MiB
+  refused input, cross-module charging and warm-cache replacement fixture edits.
+- The real `host_native.Program.build` path reads file-backed embedded projects;
+  a generic `schema-project` fixture compiles an embedded generic body. The
+  `generic_api` provider performs constraint lookup on the loaded project and
+  `reference.EntryReader` deliberately offers disk-free synthesized/stdlib
+  entry reads, so neither requires a new ambient disk callback. Main context
+  now carries its loader's existing embed callback.
+- MEMORY-HOST-GUEST-1 applies the same receipt equality and hard-ceiling checks
+  to frame preflight and actual restoration. Native host invocation restores
+  only the child; directory compiler children inherit checkpoint metadata even
+  when mode normalization needs no exec. Actual CLI and host tests cover
+  reservations above 8 GiB and genuine tighter caller ceilings. Extreme frame
+  values return status 2 without arithmetic overflow. Native receipt parsing
+  now matches Zig's strict unsigned decimal grammar.
+- The actual snapshot test exposed `qbe-build` rejecting a forwarded
+  `--diagnostics=json` flag. The driver now accepts and forwards presentation to
+  the source frontend, with a direct native-build E_TYPE JSON regression.
+
+Focused combined coverage passes: 239 native-test root tests, 27 embedded
+loader tests, 41 context tests, four host-native tests, and actual CLI snapshot,
+context/schema, guest-budget and replacement tests. The final frozen combined
+lane gate and performance evidence are recorded after the source checkpoint;
+pre-review broad runs are superseded and are not acceptance evidence.
+
+Scratch evidence stays in this worktree's `.tmp`. No unresolved collector fuzz
+finding is claimed fixed by embed or memory-boundary changes.
 
 ## Guardian feedback and ROI
 
@@ -137,4 +186,7 @@ minutes are unknown. The experimental unverified GC spec finding remains
 pending. Guardian already declares `src/memory_budget.zig` a test root in its
 configuration, so an additional check must compare that declaration with the
 actual runners in `build.zig` to catch the original wiring gap. Parent recorded
-the shared feedback entry in Guardian commit `0d87670`.
+the shared feedback entry in Guardian commit `0d87670`; the final independent
+checkpoint/transplant follow-up is Guardian commit `e479723`. It records the
+whole-tree 88-check pass and distinguishes configured roots from executable
+build/gate runners.

@@ -44,6 +44,12 @@ pub const Error = fs.Error || std.json.ParseError(std.json.Scanner) || outputs.E
 /// side alone fails there rather than letting the driver accept a manifest the
 /// core would not emit.
 pub const native_abi = "mylang-qbe-native-v9";
+/// Diagnostic presentation crosses the native driver into the source frontend.
+fn appendDiagnostics(allocator: std.mem.Allocator, arguments: *std.ArrayList([]const u8), given: []const []const u8) std.mem.Allocator.Error!void {
+    for (given) |argument| {
+        if (std.mem.startsWith(u8, argument, "--diagnostics=")) try arguments.append(allocator, argument);
+    }
+}
 const Record = struct { name: []const u8, symbol: []const u8, key: []const u8, object: []const u8, reused: bool };
 /// Fixed runtime translation units archived together once per build environment.
 const runtime_units = [_][]const u8{
@@ -270,6 +276,7 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
         // names each text and its metadata by digest (`QBE-FRAGMENT-REUSE-1`,
         // `EMIT-META-1`), and an executable's leaves out library-only facts.
         if (project) try arguments.append(a, leanManifestFlag(parsed));
+        try appendDiagnostics(a, &arguments, parsed.link_arguments);
         // RC-DEFAULT-1: the frontend inherits the real process environment,
         // which a host's own environment map need not match, so it is told the
         // contract this driver validates and links against explicitly.

@@ -217,6 +217,7 @@ pub fn parse(args: []const []const u8) Error!Options {
         // scans, so the frozen Options field set does not grow for a switch that
         // changes no artifact.
         if (std.mem.eql(u8, argument, "--timings=json")) continue;
+        if (std.mem.eql(u8, argument, "--diagnostics=json") or std.mem.eql(u8, argument, "--diagnostics=text")) continue;
         // `--release` is a bare switch that stands for four controls; `validate`
         // refuses it beside any control it already names.
         if (std.mem.eql(u8, argument, release_flag)) {

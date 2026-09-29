@@ -170,7 +170,7 @@ fn wave(context: fs.Context, shared: Fanout, paths: []const []const u8, outcomes
     for (children, files, reports, paths, 0..) |*child, *file, *report, path, slot| {
         report.* = try std.fmt.allocPrint(a, "{s}/{d}.json", .{ shared.workspace, slot });
         file.* = try std.Io.Dir.cwd().createFile(context.io, report.*, .{});
-        child.* = try std.process.spawn(context.io, .{ .argv = try argv(context, shared, path), .stdout = .{ .file = file.* } });
+        child.* = try std.process.spawn(context.io, .{ .argv = try argv(context, shared, path), .environ_map = context.environ, .stdout = .{ .file = file.* } });
     }
     for (children, files, reports, outcomes[0..paths.len]) |*child, file, report, *outcome| {
         outcome.code = fs.exitCode(try child.wait(context.io));

@@ -123,7 +123,7 @@ pub const FrameFit = struct {
     /// The address space the guest may map, or null when nothing bounds it.
     limit: ?u64,
     /// True when the process's own limit is what bounds the guest, below what
-    /// `--max-memory` asked for: the compiler's ceiling or `ulimit -v`.
+    /// `--max-memory` asked for: the original caller's ceiling or `ulimit -v`.
     inherited: bool,
 };
 
@@ -132,7 +132,8 @@ pub const FrameFit = struct {
 /// process runs under (null means unlimited). A ceiling maps `memory + headroom`
 /// bytes, but never more than the process may map.
 pub fn frameFit(frames: u64, memory: u64, address_space: ?u64) FrameFit {
-    const need = stackReservation(frames) orelse std.math.maxInt(u64);
+    const reserved = stackReservation(frames);
+    const need = reserved orelse std.math.maxInt(u64);
     const asked: ?u64 = if (memory == 0) null else memory +| headroom;
     var limit = asked;
     var inherited = false;
@@ -140,14 +141,36 @@ pub fn frameFit(frames: u64, memory: u64, address_space: ?u64) FrameFit {
         inherited = asked == null or bound < asked.?;
         limit = if (asked) |wanted| @min(wanted, bound) else bound;
     }
-    const fits = if (limit) |bytes| need <= bytes -| frame_reserve else true;
+    const fits = reserved != null and (if (limit) |bytes| need <= bytes -| frame_reserve else true);
     return .{ .fits = fits, .need = need, .limit = limit, .inherited = inherited };
 }
 
 /// The soft address-space limit this process runs under, or null when unlimited.
 pub fn addressSpaceLimit() ?u64 {
     const existing = std.posix.getrlimit(.AS) catch return null;
-    return if (existing.cur == std.math.maxInt(u64)) null else existing.cur;
+    return optionalLimit(existing.cur);
+}
+
+/// The guest's address-space ceiling after a matching compiler receipt is
+/// restored; genuine caller ceilings and the inherited hard limit still apply.
+pub fn guestAddressSpaceLimit(environ: *const std.process.Environ.Map) ?u64 {
+    const text = environ.get(checkpoint_variable) orelse return addressSpaceLimit();
+    const existing = std.posix.getrlimit(.AS) catch return null;
+    return optionalLimit(restoredLimit(text, existing));
+}
+
+fn optionalLimit(limit: u64) ?u64 {
+    return if (limit == std.math.maxInt(u64)) null else limit;
+}
+
+/// Match the runtime's receipt parsing and current-soft-limit equality check.
+fn restoredLimit(text: []const u8, existing: std.posix.rlimit) u64 {
+    for (text) |byte| if (!std.ascii.isDigit(byte) and byte != ':') return existing.cur;
+    var parts = std.mem.splitScalar(u8, text, ':');
+    const installed = std.fmt.parseUnsigned(u64, parts.next() orelse return existing.cur, 10) catch return existing.cur;
+    const inherited = std.fmt.parseUnsigned(u64, parts.next() orelse return existing.cur, 10) catch return existing.cur;
+    if (parts.next() != null or installed != existing.cur) return existing.cur;
+    return @max(existing.cur, @min(inherited, existing.max));
 }
 
 fn sizeText(buffer: []u8, bytes: u64) []const u8 {
@@ -158,9 +181,9 @@ fn sizeText(buffer: []u8, bytes: u64) []const u8 {
 }
 
 /// The refusal for a call-depth budget the memory ceiling cannot back, or null
-/// when it fits, judged against this process's own address-space limit.
-pub fn frameRefusal(allocator: std.mem.Allocator, command: []const u8, who: []const u8, frames: u64, memory: u64) std.mem.Allocator.Error!?[]u8 {
-    return frameRefusalUnder(allocator, .{ .command = command, .who = who }, frames, memory, addressSpaceLimit());
+/// when it fits, judged against the ceiling the guest will actually inherit.
+pub fn frameRefusal(allocator: std.mem.Allocator, environ: *const std.process.Environ.Map, command: []const u8, who: []const u8, frames: u64, memory: u64) std.mem.Allocator.Error!?[]u8 {
+    return frameRefusalUnder(allocator, .{ .command = command, .who = who }, frames, memory, guestAddressSpaceLimit(environ));
 }
 
 /// Who a frame-budget refusal speaks for: the command that refuses, and what runs the guest.
@@ -170,18 +193,22 @@ pub const Refuser = struct { command: []const u8, who: []const u8 };
 /// reservation, what the guest may map, and the two ways out: a larger
 /// `--max-memory` (or the inherited limit lifted) and a smaller `--max-frames`.
 pub fn frameRefusalUnder(allocator: std.mem.Allocator, refuser: Refuser, frames: u64, memory: u64, address_space: ?u64) std.mem.Allocator.Error!?[]u8 {
+    const maximum = (std.math.maxInt(u64) - frame_reserve - stack_slack) / frame_stack_bytes;
+    if (frames > maximum) {
+        const refused = try std.fmt.allocPrint(allocator, "mylang {s}: a call-depth budget of {d} frames (--max-frames) exceeds the addressable native stack size; lower --max-frames to at most {d}\n", .{ refuser.command, frames, maximum });
+        return refused;
+    }
     const fit = frameFit(frames, memory, address_space);
     if (fit.fits) return null;
     const limit = fit.limit orelse return null;
     var need_buffer: [32]u8 = undefined;
     var limit_buffer: [32]u8 = undefined;
     const largest = (limit -| frame_reserve -| stack_slack) / frame_stack_bytes;
-    const inherited_fix = "this process inherited an address-space limit below --max-memory (the compiler's own ceiling, MYLANG_HOST_MEMORY_LIMIT, " ++
-        "or `ulimit -v`); raise or unset it (MYLANG_HOST_MEMORY_LIMIT=0 removes it), or lower --max-frames to at most {d}";
+    const inherited_fix = "this process inherited an address-space limit below --max-memory; raise the caller's RLIMIT_AS (`ulimit -v`), or lower --max-frames to at most {d}";
     const fix = if (fit.inherited)
         try std.fmt.allocPrint(allocator, inherited_fix, .{largest})
     else
-        try std.fmt.allocPrint(allocator, "raise --max-memory to at least {d}G, or lower --max-frames to at most {d}", .{ (fit.need + frame_reserve + (1 << 30) - 1) >> 30, largest });
+        try std.fmt.allocPrint(allocator, "raise --max-memory to at least {d}G, or lower --max-frames to at most {d}", .{ (fit.need + frame_reserve) / (1 << 30) + @intFromBool((fit.need + frame_reserve) % (1 << 30) != 0), largest });
     defer allocator.free(fix);
     const sentence = try std.fmt.allocPrint(allocator, "mylang {s}: a call-depth budget of {d} frames (--max-frames) reserves {s} of native stack ({d} KiB per frame), but {s} may map only {s}: {s}\n", .{
         refuser.command, frames, sizeText(&need_buffer, fit.need), frame_stack_bytes >> 10, refuser.who, sizeText(&limit_buffer, limit), fix,
@@ -316,4 +343,23 @@ test "only guest environments carry the compiler's original address-space ceilin
     try guestEnvironment(std.testing.allocator, &environ);
     try std.testing.expect(environ.get(restore_variable) != null);
     try std.testing.expectEqual(@as(u64, (1 << 30) + headroom), (try std.posix.getrlimit(.AS)).cur);
+}
+
+// spec-case: MEMORY-HOST-GUEST-1
+test "frame preflight uses the restorable caller ceiling without loosening the compiler" {
+    const before = try std.posix.getrlimit(.AS);
+    defer std.posix.setrlimit(.AS, before) catch unreachable;
+    var environ: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environ.deinit();
+    try environ.put(host_variable, "1G");
+    try std.testing.expect(guardHost(&environ));
+    try std.testing.expectEqual(optionalLimit(before.cur), guestAddressSpaceLimit(&environ));
+    try std.testing.expectEqual(@as(u64, (1 << 30) + headroom), (try std.posix.getrlimit(.AS)).cur);
+    const installed = (try std.posix.getrlimit(.AS)).cur;
+    try std.testing.expectEqual(installed, restoredLimit("invalid", .{ .cur = installed, .max = before.max }));
+    try std.testing.expectEqual(@as(u64, 100), restoredLimit("100:+200", .{ .cur = 100, .max = 200 }));
+    try std.testing.expectEqual(@as(u64, 100), restoredLimit("100:2_00", .{ .cur = 100, .max = 200 }));
+    try std.testing.expectEqual(@as(u64, 100), restoredLimit("100:18446744073709551616", .{ .cur = 100, .max = 200 }));
+    try std.testing.expectEqual(@as(u64, 50), restoredLimit("100:200", .{ .cur = 50, .max = 200 }));
+    try std.testing.expectEqual(@as(u64, 150), restoredLimit("100:200", .{ .cur = 100, .max = 150 }));
 }

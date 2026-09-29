@@ -76,13 +76,14 @@ $ mylang run deep.my --max-frames 150000 --max-memory 5G
 mapping fails. `R_FRAME_LIMIT` therefore advises `--max-frames=N` together with a
 `--max-memory` that covers N x 32 KiB.
 
-The address space a guest may map is also bounded by the process that starts it.
-The compiler caps itself at 8 GiB (`MYLANG_HOST_MEMORY_LIMIT`, below) and a guest it
-runs inherits that limit, so `--max-memory=64G` cannot lift a guest above about
-8 GiB: a run asking for more, `--max-frames=400000 --max-memory=64G` for example, is
-refused with the inherited limit named as the cause. Export
-`MYLANG_HOST_MEMORY_LIMIT=0`, or a larger size, to lift it. This, not a size
-overflow, was the "hard cap" near 269,000 frames.
+The address space a guest may map is also bounded by the original caller's
+soft and hard limits. The compiler's own 8 GiB ceiling
+(`MYLANG_HOST_MEMORY_LIMIT`, below) is restored to the caller's allowance only
+inside a native guest, so `--max-frames=400000 --max-memory=64G` can run when the
+caller allows that reservation. Frame preflight uses that restored allowance;
+a tighter caller `ulimit -v` is still refused and must be raised by the caller.
+An unaddressable frame reservation is refused with advice to lower the frame
+count, without overflowing the suggested memory size.
 
 A `mylang test` child is different: each test process starts at **1,000,000**
 instructions and **1,024** frames, because a test is the one place a tight guard

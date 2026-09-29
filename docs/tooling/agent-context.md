@@ -71,8 +71,10 @@ When the answer does not fit, the command drops whole records from the
 lowest-priority section first: `changes` before `tests`, `tests` before
 `dependencies`, and so on. Every drop is counted per section in `omissions`, and
 the envelope carries a `continuation` query that asks for a larger budget, so a
-caller can trade bytes for the sections it did not receive on the first try. A
-record is never cut in half: a declaration's contract is never truncated into a
+caller can trade bytes for the sections it did not receive on the first try.
+Embedded-file rows are descriptive snapshot detail and can be omitted with the
+source rows; `omissions` names `source.embeds` when that happens. Their contribution
+to `snapshot_sha256` remains. A record is never cut in half: a declaration's contract is never truncated into a
 misleading fragment.
 
 ## Incomplete projects
@@ -96,6 +98,15 @@ it names or it is rejected: a file that changed while the answer was being
 assembled — an edit between the load and the response — is reported as a `stale`
 snapshot instead of mixing two versions, and a file that can no longer be read at
 all is reported as a failure to confirm rather than as a changed source.
+
+`embed_bytes` and `embed_str` files are inputs too. `snapshot.embeds` records their
+module, path, read status, byte count and BLAKE3 digest, and `snapshot.embedded_files`
+reports the count. The command compares the actual held bytes and re-reads through
+the loader's embed callback, so a same-length edit or a missing file is stale.
+An unavailable callback or unreadable file is a failure to confirm. Partial
+answers retain these identities. The `agent-context-v1` envelope is unchanged:
+projects without embeds keep their existing fields and snapshot digest; projects
+with embeds gain these rows and their digest includes them.
 
 ## Exit statuses
 

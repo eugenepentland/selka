@@ -11,6 +11,7 @@
 //! lowest-priority section first, and the envelope names what it left out and
 //! how to ask for the rest.
 const std = @import("std");
+const embed = @import("embed.zig");
 const typed = @import("typed.zig");
 const project = @import("project.zig");
 const pc = @import("project_compile.zig");
@@ -313,6 +314,7 @@ fn runPartial(allocator: std.mem.Allocator, loaded: *const project.Project, iden
     const snapshot: navigation.Snapshot = .{
         .implementation = try receipt.implementation(session.arena, identity),
         .inputs = receipt.inputs(session.arena, &snapshot_project) catch return error.IncompleteProject,
+        .embeds = receipt.embeds(session.arena, &snapshot_project) catch return error.IncompleteProject,
     };
     session.source = .{
         .snapshot = snapshot,
@@ -569,21 +571,49 @@ fn sourcesChanged(session: *const Session, arena: std.mem.Allocator, loaded: *co
     current.problem = null;
     _ = receipt.inputs(arena, &current) catch return true;
     if (current.order.items.len != before.inputs.len) return true;
+    var embedded_index: usize = 0;
     for (current.order.items, before.inputs) |id, then| {
         const module = current.modules.items[id];
         if (!std.mem.eql(u8, module.name, then.module)) return true;
         if (!hashesTo(module.src.bytes, then.sha256)) return true;
+        for (module.src.embeds) |file| {
+            if (embedded_index >= before.embeds.len) return true;
+            const recorded = before.embeds[embedded_index];
+            embedded_index += 1;
+            if (!std.mem.eql(u8, recorded.module, module.name) or !std.mem.eql(u8, recorded.path, file.path)) return true;
+            if (!matchesEmbed(recorded, .{ .status = file.status, .contents = file.contents })) return true;
+        }
     }
+    if (embedded_index != before.embeds.len) return true;
     const sources = session.options.sources orelse return false;
-    for (before.inputs) |input| {
-        if (std.mem.startsWith(u8, input.path, embedded_source_prefix)) continue;
-        const bytes = sources.read(sources.context, arena, input.path, recheck_source_limit) catch |err| switch (err) {
-            error.OutOfMemory => return error.OutOfMemory,
-            else => return error.RecheckUnavailable,
-        };
-        if (!hashesTo(bytes, input.sha256)) return true;
+    embedded_index = 0;
+    for (current.order.items, before.inputs) |id, input| {
+        if (!std.mem.startsWith(u8, input.path, embedded_source_prefix)) {
+            const bytes = sources.read(sources.context, arena, input.path, recheck_source_limit) catch |err| switch (err) {
+                error.OutOfMemory => return error.OutOfMemory,
+                else => return error.RecheckUnavailable,
+            };
+            if (!hashesTo(bytes, input.sha256)) return true;
+        }
+        for (current.modules.items[id].src.embeds) |_| {
+            const recorded = before.embeds[embedded_index];
+            embedded_index += 1;
+            const read_embed = sources.embed orelse return error.RecheckUnavailable;
+            const outcome = try read_embed(sources.context, arena, input.path, recorded.path, embed.size_cap);
+            if (outcome.status == .unresolved or outcome.status == .unreadable) return error.RecheckUnavailable;
+            if (!matchesEmbed(recorded, outcome)) return true;
+        }
     }
     return false;
+}
+
+/// Compare a read's outcome and actual bytes with the frozen embedded-file receipt.
+fn matchesEmbed(recorded: receipt.Embedded, outcome: embed.Read) bool {
+    if (!std.mem.eql(u8, recorded.status, @tagName(outcome.status)) or recorded.bytes != outcome.contents.len) return false;
+    if (outcome.status != .ok) return true;
+    var digest: [32]u8 = undefined;
+    embed.digest(outcome.contents, &digest);
+    return std.mem.eql(u8, &std.fmt.bytesToHex(digest, .lower), recorded.blake3);
 }
 
 /// Whether one source still hashes to the identity a snapshot published.
@@ -786,6 +816,7 @@ fn snapshotValue(session: *Session, snapshot: navigation.Snapshot, with_inputs: 
     try compiler.put("optimize", .{ .string = snapshot.implementation.optimize });
     try object.put("compiler", compiler.json());
     try object.put("modules", .{ .integer = @intCast(snapshot.inputs.len) });
+    if (snapshot.embeds.len != 0) try object.put("embedded_files", .{ .integer = @intCast(snapshot.embeds.len) });
     if (!with_inputs) return object.json();
     var inputs = Array.init(session.arena);
     for (snapshot.inputs) |input| {
@@ -796,6 +827,19 @@ fn snapshotValue(session: *Session, snapshot: navigation.Snapshot, with_inputs: 
         inputs.append(row.json()) catch return error.OutOfMemory;
     }
     try object.put("inputs", .{ .array = inputs });
+    if (snapshot.embeds.len != 0) {
+        var embeds = Array.init(session.arena);
+        for (snapshot.embeds) |file| {
+            var row = Doc.init(session.arena);
+            try row.put("module", .{ .string = file.module });
+            try row.put("path", .{ .string = file.path });
+            try row.put("status", .{ .string = file.status });
+            try row.put("blake3", .{ .string = file.blake3 });
+            try row.put("bytes", .{ .integer = @intCast(file.bytes) });
+            embeds.append(row.json()) catch return error.OutOfMemory;
+        }
+        try object.put("embeds", .{ .array = embeds });
+    }
     return object.json();
 }
 
@@ -826,10 +870,18 @@ fn omissionsValue(session: *Session, caps: Caps) Error!Array {
     var omissions = Array.init(session.arena);
     if (caps.detail == .bare) return omissions;
     if (caps.detail == .identity) {
+        if (session.source.snapshot) |snapshot| {
+            if (snapshot.embeds.len != 0) try appendOmission(session, &omissions, "source", "embeds", null);
+        }
         try appendIdentityOmissions(session, &omissions);
         return omissions;
     }
-    if (!caps.inputs) try appendOmission(session, &omissions, "source", "inputs", null);
+    if (!caps.inputs) {
+        try appendOmission(session, &omissions, "source", "inputs", null);
+        if (session.source.snapshot) |snapshot| {
+            if (snapshot.embeds.len != 0) try appendOmission(session, &omissions, "source", "embeds", null);
+        }
+    }
     if (!caps.snippet) try appendOmission(session, &omissions, key_declaration, "snippet", null);
     for (priority_order) |section| {
         if (section == .changes and session.options.baseline == null) continue;
