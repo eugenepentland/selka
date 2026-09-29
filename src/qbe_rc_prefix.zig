@@ -15,7 +15,7 @@ pub const count_max: u32 = 0xffffffff;
 /// QBE type used for active count arithmetic and comparisons.
 pub const count_type = "w";
 /// QBE load opcode used for either active count.
-pub const count_load = "loadw";
+pub const count_load = "loaduw";
 /// QBE store opcode used for either active count.
 pub const count_store = "storew";
 /// Load a marked prefix address and its active unsigned count.
