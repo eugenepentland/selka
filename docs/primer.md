@@ -239,8 +239,8 @@ def main(out: Stream) -> int:
 - Number literals are Python's: `0xFF`, `0o17`, `0b1010`, `1_000`, `.5`, `5.`,
   `1e-3`, plus an optional width suffix (`0xFFu8`). An unsuffixed integer that
   fits the declared type needs no suffix, even in `const MASK: u32 = 0xFF00_0000`.
-  Decimal `007` is 7 (Python rejects it), so write an octal mode `0o755`; there
-  are no imaginary literals (`1j`).
+  A decimal integer takes no leading zero (`0755` is an error, as in Python 3),
+  so write an octal mode `0o755`; there are no imaginary literals (`1j`).
 - `/` is float division even on ints; `//` and `%` are Python's floor forms;
   `divtrunc` and `remtrunc` truncate like C. There is no `**`: use
   `math.pow(2.0, 10)` (`import math`, integer exponent).

@@ -251,6 +251,21 @@ test "signature, contract, field, ceiling and deprecation edits change the inter
     try t.expect(std.mem.indexOf(u8, docstring, "module pkg.shapes\n\"\"\"Shapes, areas and perimeters.\"\"\"\n") != null);
 }
 
+// spec-case: NUM-LITERAL-7
+test "an interface file prints an array length in decimal whichever spelling the source used" {
+    const rendered = try renderShapes(t.allocator,
+        \\module pkg.shapes
+        \\
+        \\
+        \\public def block(data: [0x10]u8) -> [1_0]u8 effects():
+        \\    return [0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8]
+        \\
+    , shapes_module);
+    defer t.allocator.free(rendered);
+    try t.expect(std.mem.indexOf(u8, rendered, "public def block(data: [16]u8) -> [10]u8") != null);
+    try t.expect(std.mem.indexOf(u8, rendered, "0x10") == null);
+}
+
 // spec-case: API-FILE-2
 test "declaration comparison names added, removed and changed declarations and domain members" {
     var arena_state = std.heap.ArenaAllocator.init(t.allocator);

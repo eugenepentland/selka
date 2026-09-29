@@ -43,11 +43,15 @@ underscore may sit between the last digit and the suffix (`1_u8` is an error).
 A leading, trailing or doubled underscore (`1__0`, `1_`, `0_x`), a base prefix with
 no digit (`0x`) and a digit outside the base (`0b12`, `0o8`) are `E_INTEGER_LITERAL`
 errors, and a value that does not fit its type is `E_INTEGER_RANGE` in every base.
-Unlike Python, decimal leading zeros are accepted and mean the decimal value (`007`
-is 7), so write an octal mode as `0o755`. Imaginary literals such as `1j` are not
-supported. `**`, `<<` and `>>` are not operators; use `math.pow`, `shift_left` and
-`shift_right`. Array lengths (`[16]u8`) stay plain decimal without an underscore or
-prefix.
+As in Python 3, a decimal integer may not start with a zero unless every digit is zero:
+`0`, `00` and `0_0` are fine, but `0755` is an `E_INTEGER_LITERAL` error that says to
+write `0o755` for octal or `755` for decimal, so a C-style octal mode never silently
+means 755. Floats keep leading zeros (`007.5`, `01e2`). Imaginary literals such as `1j`
+are not supported. `**`, `<<` and `>>` are not operators; use `math.pow`,
+`shift_left` and `shift_right`. An array length (`[16]u8`) and a const generic length
+argument take any unsuffixed integer spelling (`[0x10]u8`, `[1_024]u8`,
+`[0b1_0000]u8`) and all spellings of one value are the same type; a suffix (`[2u8]`)
+or a decimal leading zero (`[02]u8`) is rejected.
 
 An unsuffixed literal in any base takes the integer type its context expects when
 its value fits, including in a `const` initializer, so `const MASK: u32 = 4278190080`
@@ -64,6 +68,9 @@ def main() -> int:
         return 1
     if 0o52 != low or 0b10_1010 != low or 1_000 != 1000:
         return 2
+    block: [0x10]u8 = [0u8, 1u8, 2u8, 3u8, 4u8, 5u8, 6u8, 7u8, 8u8, 9u8, 10u8, 11u8, 12u8, 13u8, 14u8, 15u8]
+    if len(block) != 16 or block[15] != 15u8:
+        return 3
     return int(0x2Au8)
 ```
 

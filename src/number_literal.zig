@@ -20,6 +20,7 @@ pub const suffix_code = "E_INTEGER_SUFFIX";
 const doubled_underscore = "doubled underscore in a number; a single underscore may separate digits";
 const trailing_underscore = "an underscore in a number must be followed by a digit; a width suffix goes directly after the last digit (1_000u32)";
 const leading_underscore = "an underscore in a number must sit between two digits";
+const leading_zero = "leading zeros are not allowed in decimal integers; write `0o755` for octal or `755` for decimal";
 /// Message for an imaginary literal such as `1j`, shared by the integer and float paths.
 pub const imaginary_message = "imaginary literals such as 1j are not supported; mylang has no complex numbers";
 
@@ -110,7 +111,9 @@ fn validDigit(byte: u8, base: u8) bool {
 
 /// Split an integer token into radix, digits and suffix, applying Python's rules:
 /// underscores only between digits (one may follow the base prefix), at least one
-/// digit, and digits valid for the radix. Decimal leading zeros stay accepted (`007` is 7).
+/// digit, and digits valid for the radix. A decimal integer may not start with a zero
+/// unless every digit is zero (`0`, `00`, `0_0`), so `0755` is rejected rather than
+/// read as 755 or as octal.
 /// A suffix begins at the first byte that is not a digit of the radix. Suffix letters
 /// `i` and `u` are never digits of any radix, so `0xFFu8` is unambiguous.
 pub fn integer(text: []const u8) IntegerResult {
@@ -127,13 +130,22 @@ pub fn integer(text: []const u8) IntegerResult {
     if (digits.len != 0 and digits[digits.len - 1] == '_') return .{ .bad = .{ .code = integer_code, .message = trailing_underscore } };
     if (at == digit_begin) return .{ .bad = .{ .code = integer_code, .message = missingDigits(base) } };
     if (rest.len != 0 and std.ascii.isDigit(rest[0])) return .{ .bad = .{ .code = integer_code, .message = invalidDigit(base) } };
+    if (prefix == null and leadingZero(digits)) return .{ .bad = .{ .code = integer_code, .message = leading_zero } };
     return .{ .ok = .{ .base = base, .digits = digits, .suffix = rest } };
+}
+
+/// Whether a decimal digit run starts with `0` and holds a nonzero digit, as `0755` does.
+fn leadingZero(digits: []const u8) bool {
+    if (digits.len < 2 or digits[0] != '0') return false;
+    for (digits) |byte| if (byte != '0' and byte != '_') return true;
+    return false;
 }
 
 fn missingDigits(base: u8) []const u8 {
     return switch (base) {
         16 => "a 0x literal needs at least one hexadecimal digit",
         8 => "a 0o literal needs at least one octal digit (0 through 7)",
+        10 => "expected an integer literal",
         else => "a 0b literal needs at least one binary digit (0 or 1)",
     };
 }
@@ -155,6 +167,22 @@ pub fn magnitude(parts: Integer) ?u128 {
         value = std.math.add(u128, value, digit) catch return null;
     }
     return value;
+}
+
+/// Result of reading a plain count: its value, or the message saying why the text is not one.
+pub const CountResult = union(enum) { ok: u128, bad: []const u8 };
+
+/// Read an unsuffixed integer spelling (`16`, `0x10`, `0b1_0000`, `1_024`) used where only
+/// a plain count fits, such as an array length or a const generic length argument. A
+/// width suffix is refused because a count has no integer type of its own.
+pub fn count(text: []const u8) CountResult {
+    const parts = switch (integer(text)) {
+        .ok => |parts| parts,
+        .bad => |problem| return .{ .bad = problem.message },
+    };
+    if (parts.suffix.len != 0) return .{ .bad = "a length takes no width suffix; write it as 16, 0x10 or 1_024" };
+    const value = magnitude(parts) orelse return .{ .bad = "integer literal magnitude is too large" };
+    return .{ .ok = value };
 }
 
 /// Result of parsing a float spelling: its binary64 value, or the located problem.

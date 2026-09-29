@@ -52,6 +52,28 @@ test "malformed integer spellings are E_INTEGER_LITERAL errors that say what is 
     });
 }
 
+// spec-case: NUM-LITERAL-1
+test "decimal integers reject leading zeros and say how to write octal" {
+    try expectRejected(&.{
+        .{ .body = "_ = 0755", .code = "E_INTEGER_LITERAL", .fragment = "write `0o755` for octal" },
+        .{ .body = "_ = 01", .code = "E_INTEGER_LITERAL", .fragment = "leading zeros are not allowed" },
+        .{ .body = "_ = 0_1", .code = "E_INTEGER_LITERAL", .fragment = "leading zeros are not allowed" },
+        .{ .body = "_ = 00_7", .code = "E_INTEGER_LITERAL", .fragment = "leading zeros are not allowed" },
+        .{ .body = "_ = 007u8", .code = "E_INTEGER_LITERAL", .fragment = "leading zeros are not allowed" },
+        .{ .body = "_ = -0009223372036854775808", .code = "E_INTEGER_LITERAL", .fragment = "or `755` for decimal" },
+    });
+    try expectConstantRejected("const MODE: u32 = 0644\n\n\ndef main() -> i64:\n    return 0\n", "E_INTEGER_LITERAL");
+}
+
+// spec-case: NUM-LITERAL-1
+test "a decimal run of zeros and a float with leading zeros stay legal" {
+    try t.expectEqual(number_literal.CountResult{ .ok = 0 }, number_literal.count("0_0"));
+    try t.expectEqual(number_literal.CountResult{ .ok = 0 }, number_literal.count("00"));
+    try t.expectEqual(number_literal.CountResult{ .ok = 0 }, number_literal.count("0"));
+    try t.expect(number_literal.isFloat("007.5"));
+    try t.expect(number_literal.isFloat("01e2"));
+}
+
 // spec-case: NUM-LITERAL-5
 test "malformed float spellings and imaginary literals are rejected with a message" {
     try expectRejected(&.{
@@ -185,4 +207,97 @@ test "the formatter reproduces every numeric spelling byte for byte" {
     var compilation = try language.Compilation.init(arena_state.allocator(), "spelling.my", text);
     const formatted = try compilation.format(arena_state.allocator());
     try t.expectEqualStrings(text, formatted);
+}
+
+fn expectLengthRejected(length: []const u8, code: []const u8, fragment: []const u8) !void {
+    var arena_state = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena_state.deinit();
+    const arena = arena_state.allocator();
+    const text = try std.fmt.allocPrint(arena, "def main() -> i64:\n    a: [{s}]i64 = [1]\n    return a[0]\n", .{length});
+    var compilation = try language.Compilation.init(arena, "length.my", text);
+    try t.expectError(error.SourceError, compilation.check());
+    const first = compilation.diagnostics.items[0];
+    // Comparing labelled lines names the failing length in the test output.
+    const wanted = try std.fmt.allocPrint(arena, "`[{s}]` => {s}", .{ length, code });
+    const actual = try std.fmt.allocPrint(arena, "`[{s}]` => {s}", .{ length, first.code });
+    try t.expectEqualStrings(wanted, actual);
+    const found = if (std.mem.indexOf(u8, first.message, fragment) != null) fragment else first.message;
+    try t.expectEqualStrings(fragment, found);
+    try t.expectEqualStrings(length, compilation.src.text(first.span));
+}
+
+// spec-case: NUM-LITERAL-7
+test "array lengths reject a width suffix and every malformed integer spelling" {
+    try expectLengthRejected("2u8", "E_ARRAY_LENGTH", "no width suffix");
+    try expectLengthRejected("0x10u8", "E_ARRAY_LENGTH", "no width suffix");
+    try expectLengthRejected("010", "E_ARRAY_LENGTH", "leading zeros are not allowed");
+    try expectLengthRejected("1__0", "E_ARRAY_LENGTH", "doubled underscore");
+    try expectLengthRejected("1_", "E_ARRAY_LENGTH", "must be followed by a digit");
+    try expectLengthRejected("0x", "E_ARRAY_LENGTH", "hexadecimal digit");
+    try expectLengthRejected("0b12", "E_ARRAY_LENGTH", "binary digits are 0 and 1");
+    try expectLengthRejected("0x1_0000_0000_0000_0000_0", "E_ARRAY_LENGTH", "exceeds the host index range");
+}
+
+fn expectChecks(text: []const u8) !void {
+    var arena_state = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena_state.deinit();
+    var compilation = try language.Compilation.init(arena_state.allocator(), "spelling.my", text);
+    try compilation.check();
+}
+
+// spec-case: NUM-LITERAL-7
+test "one array type has one identity whichever integer spelling writes its length" {
+    try expectChecks(
+        \\def take(a: [16]u8) -> u8:
+        \\    return a[0]
+        \\
+        \\
+        \\def main() -> i64:
+        \\    hex: [0x10]u8 = [0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8]
+        \\    return i64(take(hex))
+        \\
+    );
+    try expectChecks(
+        \\def make[T, const N: u64](items: [N]T) -> T:
+        \\    return items[0]
+        \\
+        \\
+        \\def main() -> i64:
+        \\    values: [2]i64 = [40, 2]
+        \\    return make[i64, 0x2](values) + make[i64, 0b10](values) + make[i64, 0o2](values) + make[i64, 2](values)
+        \\
+    );
+    try expectChecks(
+        \\record Chunk[T, const N: u64]:
+        \\    items: [N]T
+        \\
+        \\
+        \\def main() -> i64:
+        \\    chunk = Chunk[i64, 0x2](items=[4, 5])
+        \\    return chunk.items[1]
+        \\
+    );
+}
+
+// spec-case: NUM-LITERAL-7
+test "const generic length arguments share the array length spellings and bound" {
+    try expectLengthArgumentRejected("0x2u8", "no width suffix");
+    try expectLengthArgumentRejected("02", "leading zeros are not allowed");
+    try expectLengthArgumentRejected("0x100001", "exceeds 1048576");
+    try expectLengthArgumentRejected("1__0", "doubled underscore");
+}
+
+fn expectLengthArgumentRejected(length: []const u8, fragment: []const u8) !void {
+    var arena_state = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena_state.deinit();
+    const arena = arena_state.allocator();
+    const text = try std.fmt.allocPrint(arena, "def pick[T, const N: u64](items: [N]T) -> T:\n    return items[0]\n\n\ndef main() -> i64:\n    values: [2]i64 = [40, 2]\n    return pick[i64, {s}](values)\n", .{length});
+    var compilation = try language.Compilation.init(arena, "argument.my", text);
+    try t.expectError(error.SourceError, compilation.check());
+    const first = compilation.diagnostics.items[0];
+    const wanted = try std.fmt.allocPrint(arena, "`{s}` => E_GENERIC_LENGTH", .{length});
+    const actual = try std.fmt.allocPrint(arena, "`{s}` => {s}", .{ length, first.code });
+    try t.expectEqualStrings(wanted, actual);
+    const found = if (std.mem.indexOf(u8, first.message, fragment) != null) fragment else first.message;
+    try t.expectEqualStrings(fragment, found);
 }

@@ -3,14 +3,15 @@ const std = @import("std");
 const ast = @import("ast.zig");
 const source = @import("source.zig");
 const diagnostic = @import("diagnostic.zig");
+const number_literal = @import("number_literal.zig");
 /// Portable specialization-length bound independent of host pointer width.
 pub const max_length: usize = 1048576;
-/// Parse an unsuffixed decimal length within the specialization bound.
+/// Parse an unsuffixed integer length (`16`, `0x10`, `1_024`) within the specialization bound.
 pub fn literal(src: source.Source, span: source.Span, sink: *diagnostic.Sink) diagnostic.Error!usize {
-    const text = src.text(span);
-    if (text.len == 0) return sink.fail(diagnostic.generic_length, span, "const length requires an unsuffixed decimal integer");
-    for (text) |digit| if (!std.ascii.isDigit(digit)) return sink.fail(diagnostic.generic_length, span, "const length requires an unsuffixed decimal integer");
-    const value = std.fmt.parseInt(u64, text, 10) catch return sink.fail(diagnostic.generic_length, span, "const length is outside the supported range");
+    const value = switch (number_literal.count(src.text(span))) {
+        .ok => |value| value,
+        .bad => |message| return sink.fail(diagnostic.generic_length, span, message),
+    };
     if (value > max_length) return sink.fail(diagnostic.generic_length, span, "const length exceeds 1048576 elements");
     return @intCast(value);
 }

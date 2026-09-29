@@ -24,9 +24,10 @@ def main() -> i64:
 ```
 
 `[N]T` is a fixed array type wherever a type annotation is accepted. `N` is an
-unsuffixed, nonnegative decimal literal; expressions and integer suffixes are
-not allowed. Whitespace and leading zeroes do not affect identity. Types are
-interned by resolved element type and length: `[2]i64` equals `[02] i64`, but
+unsuffixed, nonnegative integer literal in any base (`16`, `0x10`, `1_024`);
+expressions, integer suffixes and decimal leading zeros are not allowed.
+Whitespace and the spelling of the length do not affect identity. Types are
+interned by resolved element type and length: `[2]i64` equals `[0x2] i64`, but
 neither equals `[3]i64` or `[2]u64`. Arrays of different nominal record types
 remain distinct. Nested arrays, arrays of records, and record fields containing
 arrays are supported, including forward record declarations.

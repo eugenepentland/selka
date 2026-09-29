@@ -172,7 +172,7 @@ test "unary arithmetic and directly negated minimum literal" {
     try result("--8", 8);
     try result("-9223372036854775808", std.math.minInt(i64));
     try result("-((9223372036854775808))", std.math.minInt(i64));
-    try result("-0009223372036854775808", std.math.minInt(i64));
+    try result("-9_223_372_036_854_775_808", std.math.minInt(i64));
     var compilation = try language.Compilation.init(testing.allocator, "neg.my",
         \\def main() -> i64:
         \\    return --9223372036854775808

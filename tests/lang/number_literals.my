@@ -86,7 +86,7 @@ public def test_underscores_separate_digits_and_may_follow_a_base_prefix() -> bo
         return False
     if 0b1010_1010 != 170 or 0b_1 != 1:
         return False
-    return 0o7_7 == 63 and 0_0 == 0 and 00 == 0 and 007 == 7
+    return 0o7_7 == 63 and 0_0 == 0 and 00 == 0 and 0_00_0 == 0 and i64(0u8) == 0 and i64(00i16) == 0
 
 
 # spec: NUM-LITERAL-2
@@ -118,6 +118,8 @@ public def test_float_literals_take_leading_dots_trailing_dots_and_underscores()
     if 1e1_0 != 10000000000.0 or 1.e2 != 100.0:
         return False
     if 2.5E-1 != 0.25 or 007.5 != 7.5 or 1_0e-1 != 1.0:
+        return False
+    if 00.5 != 0.5 or 01e2 != 100.0 or 0_7.5 != 7.5:
         return False
     return half(9.0) == 4.5 and [.5, 1.5][1] == 1.5
 
@@ -151,3 +153,21 @@ public def test_compile_time_functions_type_literals_in_bindings_arguments_retur
     if i64(DOUBLED) != 32 or i64(TWICE_MORE) != 65:
         return False
     return i64(CLAMPED) == 255 and i64(REPEATED) == 64
+
+
+# spec: NUM-LITERAL-7
+public def test_array_lengths_take_unsuffixed_integer_spellings() -> bool:
+    by_hex: [0x4]i64 = [1, 2, 3, 4]
+    by_decimal: [4]i64 = by_hex
+    if len(by_decimal) != 4 or by_decimal[3] != 4:
+        return False
+    by_groups: [1_0]u8 = [1u8, 2u8, 3u8, 4u8, 5u8, 6u8, 7u8, 8u8, 9u8, 10u8]
+    if len(by_groups) != 10 or by_groups[9] != 10u8:
+        return False
+    by_binary: [0b11]i64 = [7, 8, 9]
+    by_octal: [0o3]i64 = by_binary
+    return by_octal[2] == 9 and first_of(by_hex) == 1
+
+
+def first_of(items: [0x04]i64) -> i64:
+    return items[0]
