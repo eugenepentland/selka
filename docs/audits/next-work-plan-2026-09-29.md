@@ -12,15 +12,18 @@ source `d8f66585`: all 27 steps pass, including 1,438 fresh guest tests in each
 of nine modes and all four Lox combinations. Dev/full corpus outputs match all
 86 pairs; every row meets the 1.3x cap and 1% regression limit.
 
-**A5 landing awaits the explicit user approval required below.** `main` remains
-`6d91f95b`. Original checkouts and paused lane worktrees were not edited.
+**A5 landed with explicit user approval** ("Yeah fast forward main") on
+2026-09-29. `main` fast-forwarded from `6d91f95b` to `80dd5190`; its compiler
+source is the gated `d8f66585`. Original checkouts and paused lane worktrees
+were not edited. The completed Codex A3/A4 worktrees were removed after
+archiving their logs and Guardian ROI receipts; their branches remain.
 Details, exact counts, performance rows and Guardian feedback are in
 [codex-next-integration-closeout-2026-09-29.md](codex-next-integration-closeout-2026-09-29.md).
 
-Phase B and Phase C remain open. B1/B2 have implementation maps, pinned oracles
-and fixtures; B3 has a current-source large-list reproduction. B4 has an
-independent tooling/GC checkpoint and a separate combined continuation under
-review; its remaining changes are outside the A5 source. EDA preparation has a
+Phase B and Phase C remain open. B1 text support and B2 per-module builds are
+under implementation in fresh worktrees from the approved main. B3 starts with
+allocation-free equality and has a current-source large-list reproduction.
+B4 is frozen at `b5c04602` for its final gate; its changes remain outside main. EDA preparation has a
 verified test inventory and guide/checker reconciliation, without starting the
 port. Sections below retain the original handoff state and requirements.
 
@@ -34,9 +37,12 @@ port. Sections below retain the original handoff state and requirements.
 - For WP-B2 only: `git show merge/devspeed-into-main:docs/audits/merge-devspeed-into-main-2026-09-24.md`.
 - For WP-C1 only: in `/home/epentland/ai/canopy/eda-bench`, read `PORTING.md`, `mylang/PORTING-MYLANG.md`, `mylang/PLAN.md` and `mylang/GAPS.md`.
 
-## 2. Where things stand
+## 2. Original handoff state (historical)
 
-### `main` = `6d91f95b`
+The status above records the current closeout. The following snapshots describe
+the starting state, so original branch names and gate failures remain auditable.
+
+### Starting `main` = `6d91f95b`
 
 - Reference counting (RC) is the default runtime. On the 43-program corpus it runs at a geomean of 1.07x the tracing GC's instruction count, and every program is at or under 1.3x. `--gc-runtime` selects the GC.
 - The language-level copy bugs are fixed:
