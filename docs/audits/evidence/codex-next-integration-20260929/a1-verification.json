@@ -1,0 +1,128 @@
+{
+  "commit": "1a098368842dc1c454ac093c9e5f995ea85d3ee7",
+  "tag": "m16-codex",
+  "compiler": {
+    "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp-rc-quick/compilers/m16-codex/bin/mylang",
+    "runtime": "--rc-runtime",
+    "sha256": "39f5eb1ba7afa97ad493838476c6f2e15d0a7a1d3618df823bf3da60098e3e7b"
+  },
+  "zig": {
+    "test": "Build Summary: 96/96 steps succeeded; 2567/28845 tests passed (26278 skipped)",
+    "test-qbe": "Build Summary: 51/51 steps succeeded; 472/472 tests passed",
+    "test-qbe-build": "Build Summary: 29/29 steps succeeded",
+    "fmt-check": "Build Summary: 2/2 steps succeeded",
+    "test-native-memory": "Build Summary: 23/23 steps succeeded",
+    "test-native-heap": "Build Summary: 10/10 steps succeeded"
+  },
+  "guest_modes": {
+    "sweep--gc-runtime-release": {
+      "version": "native-tests-v1",
+      "passed": 1326,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 1326,
+      "programs": 207,
+      "dropped": 0,
+      "unloaded": 0,
+      "test_names_sha256": "4ff227a01400452f0d1d3b539b737a44bfd677abe6f178be9500650a460e3cae"
+    },
+    "sweep--gc-runtime": {
+      "version": "native-tests-v1",
+      "passed": 1326,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 1326,
+      "programs": 207,
+      "dropped": 0,
+      "unloaded": 0,
+      "test_names_sha256": "4ff227a01400452f0d1d3b539b737a44bfd677abe6f178be9500650a460e3cae"
+    },
+    "sweep--rc-runtime-release": {
+      "version": "native-tests-v1",
+      "passed": 1326,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 1326,
+      "programs": 207,
+      "dropped": 0,
+      "unloaded": 0,
+      "test_names_sha256": "4ff227a01400452f0d1d3b539b737a44bfd677abe6f178be9500650a460e3cae"
+    },
+    "sweep--rc-runtime": {
+      "version": "native-tests-v1",
+      "passed": 1326,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 1326,
+      "programs": 207,
+      "dropped": 0,
+      "unloaded": 0,
+      "test_names_sha256": "4ff227a01400452f0d1d3b539b737a44bfd677abe6f178be9500650a460e3cae"
+    },
+    "sweep--rc-runtime=stats-release": {
+      "version": "native-tests-v1",
+      "passed": 1326,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 1326,
+      "programs": 207,
+      "dropped": 0,
+      "unloaded": 0,
+      "test_names_sha256": "4ff227a01400452f0d1d3b539b737a44bfd677abe6f178be9500650a460e3cae"
+    },
+    "sweep--rc-runtime=stats": {
+      "version": "native-tests-v1",
+      "passed": 1326,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 1326,
+      "programs": 207,
+      "dropped": 0,
+      "unloaded": 0,
+      "test_names_sha256": "4ff227a01400452f0d1d3b539b737a44bfd677abe6f178be9500650a460e3cae"
+    },
+    "sweep-gc-stress": {
+      "version": "native-tests-v1",
+      "passed": 1326,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 1326,
+      "programs": 207,
+      "dropped": 0,
+      "unloaded": 0,
+      "test_names_sha256": "4ff227a01400452f0d1d3b539b737a44bfd677abe6f178be9500650a460e3cae"
+    },
+    "sweep=default-release": {
+      "version": "native-tests-v1",
+      "passed": 1326,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 1326,
+      "programs": 207,
+      "dropped": 0,
+      "unloaded": 0,
+      "test_names_sha256": "4ff227a01400452f0d1d3b539b737a44bfd677abe6f178be9500650a460e3cae"
+    },
+    "sweep=default": {
+      "version": "native-tests-v1",
+      "passed": 1326,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 1326,
+      "programs": 207,
+      "dropped": 0,
+      "unloaded": 0,
+      "test_names_sha256": "4ff227a01400452f0d1d3b539b737a44bfd677abe6f178be9500650a460e3cae"
+    }
+  },
+  "summary_steps": 27
+}

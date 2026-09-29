@@ -1,0 +1,21 @@
+{
+  "commit": "e2e028ad",
+  "compiler_sha256": "a7c59eb66a8f94814d6f547ceaf9a3e0947433e94c751e9d2cfb679b753f49b9",
+  "test-cli": "Build Summary: 10/10 steps succeeded; 264/264 tests passed",
+  "lox": {
+    "lox-build-gc.log": [],
+    "lox-build-rc.log": [],
+    "lox-driver-gc.log": [
+      "13 passed, 0 cached, 0 failed, 0 skipped"
+    ],
+    "lox-driver-rc.log": [
+      "13 passed, 0 cached, 0 failed, 0 skipped"
+    ],
+    "lox-tests-gc.log": [
+      "65 passed, 0 cached, 0 failed, 0 skipped, 0 dropped across 10 programs"
+    ],
+    "lox-tests-rc.log": [
+      "65 passed, 0 cached, 0 failed, 0 skipped, 0 dropped across 10 programs"
+    ]
+  }
+}
