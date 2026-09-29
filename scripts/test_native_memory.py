@@ -32,10 +32,12 @@ def run_suite(root, command, directory, suite, sources):
         # The suite counts the octets the position machinery examines, so its
         # complexity bounds need no clock; only this build carries the counter.
         command = command + ["-DMYL_TEXT_STEPS=1"]
-    if suite in ("native_rc_stats", "native_rc_fast", "native_rc_execution", "native_argv"):
+    if suite in ("native_rc_stats", "native_rc_fast", "native_rc_image", "native_rc_execution", "native_argv"):
         command = command + ["-DMYL_NATIVE_RC_COUNTING=1"]
     if suite in ("native_rc_execution", "native_argv", "native_rc_exit_skip"):
         command = command + ["-DMYL_NATIVE_RC=1"]
+    if suite == "native_rc_image":
+        command = command + ["-DMYL_RC_IMAGE_FAIL_TEST=1", "-Wl,--wrap=calloc"]
     if "native_heap.c" in sources:
         required = ("native_arena.c", "native_collections.c", "native_text.c",
                     "native_dictionary.c", "native_equal.c", "native_bytes.c",
@@ -112,6 +114,7 @@ SUITES = (
     ("native_rc_history", ["native_heap.c", "native_regions.c"]),
     ("native_rc_hold", ["native_heap.c", "native_regions.c"]),
     ("native_rc_fast", ["native_heap.c", "native_regions.c"]),
+    ("native_rc_image", ["native_heap.c", "native_regions.c"]),
     ("native_file_cleanup", ["native_heap.c", "qbe_runtime.c", "qbe_files.c", "qbe_resources.c", "qbe_stand_ins.c"]),
     ("native_rc_execution", ["native_heap.c", "qbe_runtime.c", "qbe_runtime_rc.c", "qbe_stack.c"]),
     ("native_rc_exit_skip", ["native_heap.c", "qbe_runtime.c", "qbe_runtime_rc.c", "qbe_stack.c"]),

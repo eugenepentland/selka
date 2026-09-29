@@ -33,7 +33,7 @@ typedef struct {
  * variant arm; unconditional leaves use MYL_RC_FLAT_ALWAYS. */
 typedef struct { uint32_t offset, tag_offset, tag; } myl_rc_leaf;
 #define MYL_RC_FLAT_ARMS 32
-/* Private plan, never part of emitted metadata. count > the bound means the
+/* Private runtime/image plan. count > the bound means the
  * authoritative shape/native-kind pair requires generic traversal. Leaves are
  * in the generic walker's order; simultaneously live leaves never overlap one
  * another or any tag word. Hot fields come first: an operation reads the
@@ -57,6 +57,17 @@ _Static_assert(MYL_RC_FLAT_LEAVES <= 16, "live-leaf sets are 16 bits");
  * element (class + 1; 0 unknown or not slab-sized). */
 typedef struct { myl_rc_descriptor descriptor; myl_rc_flat flat; unsigned alloc_class; } myl_rc_binding;
 _Static_assert(offsetof(myl_rc_binding, descriptor) == 0, "indexed descriptor is its private binding prefix");
+/* Compiler-authored image ABI is separate from foreign/public module ABI4.
+ * Semantic-symbol entries form a complete immutable inline graph. The final
+ * program union supplies the only image/descriptor ordering authority. */
+#define MYL_RC_IMAGE_ABI_VERSION 1u
+struct myl_rc_image {
+    unsigned abi;
+    const myl_rc_shape_entry *const *shapes;
+    size_t shape_count;
+    const myl_rc_binding *bindings;
+    size_t descriptor_count, depth;
+};
 /* The leaves live in the value at base, read before any edge is changed. */
 static inline unsigned myl_rc_flat_live(const myl_rc_flat *flat, const unsigned char *base) {
     if (!flat->conditional) return flat->all;
@@ -71,6 +82,7 @@ typedef struct myl_rc_batch {
     myl_rc_binding *bindings;
     struct { size_t shapes, descriptors; } count;
     size_t bytes;
+    const myl_rc_image *image;
 } myl_rc_batch;
 /* Open-addressed pointer map with a power-of-two capacity kept at most half
  * full. An empty map points at a shared one-slot sentinel, so a lookup is a

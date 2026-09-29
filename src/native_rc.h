@@ -117,6 +117,12 @@ typedef struct {
  * even if no allocation ever uses that shape. Repeated module registration is
  * idempotent. Failure preserves all old registrations and release capacity. */
 myl_rc_status myl_rc_module_register(myl_native_heap *, const myl_rc_module *);
+/* Independently versioned compiler image, opaque outside the matching runtime
+ * bundle. The five-field module ABI remains unchanged. Immutable graph/plan
+ * data lives through teardown; only bindings, indices and frames are charged
+ * private state. Admission publishes all of them together or nothing. */
+typedef struct myl_rc_image myl_rc_image;
+myl_rc_status myl_rc_module_register_image(myl_native_heap *, const myl_rc_module *, const myl_rc_image *);
 /* Runtime/foreign metadata with shorter lifetime uses import, which copies the
  * complete inline graph and returns a stable heap-lifetime shape. Source
  * metadata may be discarded immediately; its addresses are never identities. */
