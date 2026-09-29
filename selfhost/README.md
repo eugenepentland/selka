@@ -34,3 +34,8 @@ workaround and measured cost. Amend the bootstrap contract and its ADR only afte
 the feature lands independently and the trust chain can still be rebuilt. Do not
 hide the dependency in generated source, a host callback, or an unversioned Zig
 helper.
+
+The frozen bootstrap lexer is kept in parity with shipped numeric token spellings.
+`zig build test-selfhost-numeric` compares prefixed integers, underscores, leading
+and trailing decimal points, malformed spellings and adjacent field dots against
+the live compiler. This focused fixture check runs in `zig build test`.

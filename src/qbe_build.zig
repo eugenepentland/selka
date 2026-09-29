@@ -274,7 +274,7 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
         // which a host's own environment map need not match, so it is told the
         // contract this driver validates and links against explicitly.
         try arguments.append(a, (try contract.parse(context.environ.get(contract.variable))).flag());
-        if (std.mem.eql(u8, parsed.cache, options.no_cache)) {
+        if (options.noCache(parsed)) {
             try arguments.append(a, "--no-cache");
         } else if (!std.mem.eql(u8, parsed.cache, options.default_cache)) {
             try arguments.append(a, try std.fmt.allocPrint(a, "--cache-dir={s}", .{parsed.cache}));

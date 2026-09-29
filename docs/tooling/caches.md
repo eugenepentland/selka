@@ -392,3 +392,8 @@ cache of native artifacts. It has three parts with different scopes and lifetime
 The precedence a cold build follows for the runtime: link the installed archive if
 its hash matches; otherwise compile it from the runtime tree (shared or hermetic)
 into the object cache. `--cache-dir` never reads or writes the shared location.
+
+A no-cache guest test builds native objects in its owned scratch snapshot and
+removes them at completion. `build --no-cache --cache-dir DIR` disables frontend
+reuse while selecting DIR for native artifacts. Doctests stage both examples
+and their child caches beneath TMPDIR and remove that workspace after reporting.

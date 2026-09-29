@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/resource.h>
+#include <stdlib.h>
 typedef struct Node { struct Node *next; int64_t value; } Node;
 static const myl_native_type pointer_type = {
     .size = sizeof(void *), .alignment = _Alignof(void *), .kind = MYL_NATIVE_POINTER
@@ -563,6 +564,35 @@ static void budget_test(void) {
 /* The kernel backstop is installed at the budget plus headroom and never
    loosens a tighter ceiling. A sanitizer build declines it, because its shadow
    mapping reserves more address space than any budget would allow. */
+/* spec-case: MEMORY-HOST-GUEST-1
+ * Guests can exceed the compiler ceiling, while caller ceilings and subsequent
+ * tighter guards remain intact. This reserves no physical memory. */
+static void host_restore_test(void) {
+    struct rlimit before, limited, after;
+    char receipt[96];
+    assert(!getrlimit(RLIMIT_AS, &before));
+    limited = before;
+    limited.rlim_cur = ((rlim_t)1) << 40;
+    if (before.rlim_cur <= limited.rlim_cur || before.rlim_max <= limited.rlim_cur) return;
+    /* Sanitizer builds deliberately decline kernel guards. Probe before
+     * installing the artificial ceiling, so their shadow mapping stays free. */
+    if (!myl_native_budget_guard(((size_t)2) << 40)) return;
+    assert(!setrlimit(RLIMIT_AS, &before));
+    assert(!setrlimit(RLIMIT_AS, &limited));
+    snprintf(receipt, sizeof receipt, "%llu:%llu", (unsigned long long)limited.rlim_cur, (unsigned long long)before.rlim_cur);
+    assert(!setenv("MYLANG_HOST_LIMIT_RESTORE", receipt, 1));
+    assert(myl_native_budget_guard(((size_t)2) << 40));
+    assert(!getrlimit(RLIMIT_AS, &after));
+    assert(after.rlim_cur == (((rlim_t)2) << 40) + MYL_NATIVE_BUDGET_HEADROOM);
+    assert(!getenv("MYLANG_HOST_LIMIT_RESTORE"));
+    assert(!myl_native_budget_guard(((size_t)3) << 40));
+    assert(!setrlimit(RLIMIT_AS, &before));
+    assert(!setenv("MYLANG_HOST_LIMIT_RESTORE", "1:18446744073709551615", 1));
+    assert(!myl_native_budget_guard(0));
+    assert(!getrlimit(RLIMIT_AS, &after));
+    assert(after.rlim_cur == before.rlim_cur);
+    assert(!getenv("MYLANG_HOST_LIMIT_RESTORE"));
+}
 static void guard_test(void) {
     struct rlimit ceiling;
     size_t budget = ((size_t)1) << 40;
@@ -783,6 +813,7 @@ static void flatten_plan_test(void) {
 }
 int main(void) {
     budget_test();
+    host_restore_test();
     guard_test();
     automatic_collection_test();
     byte_view_test();

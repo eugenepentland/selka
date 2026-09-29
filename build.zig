@@ -670,6 +670,20 @@ pub fn build(b: *std.Build) void {
     b.step("test-interpreter", "Run the default interpreter acceptance suite").dependOn(test_step);
     guardian.addAllChecks(b, guardian_exe, test_step, .{});
     boundedChecks(test_step);
+    // Named modules' inline tests are excluded from importing roots by Zig.
+    // Give the byte ceilings their own runner so MEMORY-CEILING-* is gated.
+    const budget_unit = b.addTest(.{
+        .max_rss = rss.compile,
+        .test_runner = guardian.testRunner(guardian_dep),
+        .root_module = budget,
+    });
+    guardian.enableTestDiagnostics(budget_unit.root_module);
+    const run_budget_unit = bounded(b.addRunArtifact(budget_unit), rss.driver);
+    cached(run_budget_unit, "memory_budget");
+    const budget_step = b.step("test-memory-budget", "Verify guest byte ceilings, kernel guards and fan-out bounds");
+    budget_step.dependOn(&run_budget_unit.step);
+    test_step.dependOn(&run_budget_unit.step);
+    compile_tests.dependOn(&budget_unit.step);
     const run_unit = focused(b.addRunArtifact(unit), rss.suite);
     forwardFilters(b, run_unit, test_filters);
     // The gate runs each slow root as several concurrent shards; `test-units`
@@ -1042,6 +1056,18 @@ pub fn build(b: *std.Build) void {
     harvest_run.addArgs(&.{ "python3", "tests/test_friction_harvest.py" });
     usefulness_step.dependOn(&harvest_run.step);
     test_step.dependOn(usefulness_step);
+    const isolation_step = b.step("test-cache-isolation", "Verify no-cache and doctest scratch isolation, frame advice and guest ceilings");
+    const isolation_run = driver(b, "python3 tests/tooling_cache_isolation.py --compiler", rss.driver, "tooling_isolation");
+    isolation_run.addArgs(&.{ "python3", "tests/tooling_cache_isolation.py", "--compiler" });
+    isolation_run.addArtifactArg(exe);
+    isolation_step.dependOn(&isolation_run.step);
+    test_step.dependOn(isolation_step);
+    const selfhost_numeric_step = b.step("test-selfhost-numeric", "Compare bootstrap and live numeric token extents");
+    const selfhost_numeric_run = driver(b, "python3 selfhost/tests/run_lexer_diff.py --compiler", rss.driver, "selfhost_numeric");
+    selfhost_numeric_run.addArgs(&.{ "python3", "selfhost/tests/run_lexer_diff.py", "--compiler" });
+    selfhost_numeric_run.addArtifactArg(exe);
+    selfhost_numeric_step.dependOn(&selfhost_numeric_run.step);
+    test_step.dependOn(selfhost_numeric_step);
     // The SPEC.md merge driver (`scripts/merge_spec.py`): synthetic three-way
     // cases, a throwaway repository end to end, and a replay of real merges.
     const spec_merge_step = b.step("test-spec-merge", "Verify the SPEC.md merge driver, including replayed history");
