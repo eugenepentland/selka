@@ -952,8 +952,18 @@ const Checker = struct {
     /// Declared integer type of a visible scalar constant, so `MASK + 1` and `x == MASK`
     /// give the other operand's literal that type, as a typed local does. A miss stays
     /// silent here; the name is checked, and diagnosed, when the operand itself is.
+    /// A name that is not a function-kind declaration, such as the module in
+    /// `scanner.Kind.B`, is skipped before any resolution: a failed resolve records a
+    /// problem on the project, which would outlive this hint. The lookup itself
+    /// reports into a scratch sink.
     fn constantType(self: *Checker, name: source.Span) ?typed.Type {
-        const constants: @import("constant_values.zig").Context = .{ .src = self.src, .program = self.syntax, .names = self.catalog.module_names, .sink = self.sink, .catalog = self.catalog };
+        if (self.catalog.module_names) |names| {
+            const kind = (names.symbolKind(name) catch return null) orelse return null;
+            if (kind != .function) return null;
+        }
+        var scratch: diagnostic.Sink = .{ .allocator = self.allocator };
+        defer scratch.deinit();
+        const constants: @import("constant_values.zig").Context = .{ .src = self.src, .program = self.syntax, .names = self.catalog.module_names, .sink = &scratch, .catalog = self.catalog };
         const index = (constants.lookup(name) catch return null) orelse return null;
         const declared = constants.declaredType(index) catch return null;
         return if (declared.isInteger()) declared else null;
