@@ -168,8 +168,7 @@ and collector baselines and are not the final combined gate.
 Focused combined coverage passes: 239 native-test root tests, 27 embedded
 loader tests, 41 context tests, four host-native tests, and actual CLI snapshot,
 context/schema, guest-budget and replacement tests. The final frozen combined
-lane gate and performance evidence are recorded after the source checkpoint;
-pre-review broad runs are superseded and are not acceptance evidence.
+lane gate below supersedes the pre-review broad runs.
 
 Scratch evidence stays in this worktree's `.tmp`. No unresolved collector fuzz
 finding is claimed fixed by embed or memory-boundary changes.
@@ -190,3 +189,80 @@ the shared feedback entry in Guardian commit `0d87670`; the final independent
 checkpoint/transplant follow-up is Guardian commit `e479723`. It records the
 whole-tree 88-check pass and distinguishes configured roots from executable
 build/gate runners.
+
+
+## Final combined acceptance
+
+The source freeze is `b5c04602`, with Debug compiler SHA256
+`18106e5f38ae4544082cfbe56672f6cf7a4d7ee259b8fe11b151a825ff7e4de2`.
+The installed and prefixed compilers are byte-identical. The final
+`gate.sh b4-final` completed with HEAD unchanged and all 27 recorded statuses
+zero. Its strict verifier checks that one source/compiler, every status, all
+case names and counts, corpus outputs and supplemental results. No frozen gate
+retry or source edit was needed. Evidence is preserved in
+[`experiments/wp-b4-combined-20260929`](../../experiments/wp-b4-combined-20260929/verification.json).
+
+| Check | Frozen result |
+| --- | --- |
+| Install; full Zig gate | Pass; 102/102 steps, 2,681 selected Zig tests |
+| QBE; native build driver; formatting | Pass; 484/484 QBE tests, 29/29 native-build steps |
+| Native memory; native heap | Pass; 23/23 and 10/10 steps |
+| ASAN native memory | Pass; 23/23 steps |
+| Language suite in all nine modes | Identical 1,442 fresh cases across 220 programs, zero cached/failed/skipped/dropped/unloaded |
+| Lox build, RC/GC and release RC/GC | Four project builds pass |
+| Lox tests and driver, same four modes | 65 cases across 10 programs plus 13 driver cases per mode, zero failures/skips/drops |
+| Historical collector repros | All four pass GC and stress, eight successful runs |
+| Selfhost numeric differential | 31 fixtures, 450 token lines, zero mismatches, three documented skips |
+| RC fuzz, 100 seeds | 98 clean, zero invalid, zero RC divergences, two known stress-only findings |
+| Source-freeze Guardian hook | All 88 whole-tree checks pass |
+
+Sharded Zig runners report tests belonging to other partitions as skipped;
+their selected union is the count above. Every language mode has the same case
+name digest `a7bf31abd49868b94f9aa5445f8e7c5402acfc369e4dc882c271e777e51f7e3a`.
+Compared with final A5, four cases are added. The existing
+`iteration_identity::test_write_back_through_a_field_keeps_the_iterated_list`
+is renamed to `test_write_back_through_a_field_preserves_iteration_snapshot`
+and retains coverage of the approved copy/write-back behavior. No unrelated
+case is removed.
+
+The final RC dev and smoke corpus both match all 86 accepted GC output pairs.
+The original accepted archived GC binaries remain the denominator; their
+manifest is archived separately. Absolute RC counts are compared with A1 and
+final A5 controls, with every row within 1% on both backends:
+
+| Backend | Rows <= 1.3x | Geomean RC / accepted GC | Worst ratio | Largest increase vs A1 | Largest increase vs final A5 |
+| --- | --- | --- | --- | --- | --- |
+| QBE | 43/43 | 1.064491 | 1.281419 | 0.015454% | 0.014089% |
+| LLVM | 43/43 | 1.069105 | 1.255957 | 0.025790% | 0.030738% |
+
+All maxima are `schematic/changed-value`. The full per-row absolute counts and
+changes are in `rc-comparison.json`, so the A1-to-A5 inherited changes are
+separate from B4. The largest reduction vs A1 is LLVM `parity/suite/text_ops`
+(-0.1483%); its change vs final A5 is below 0.001%, so it is inherited. Other
+movements are small startup/ownership traffic and layout noise, below the
+allowance. The earlier generated-arena reduction remains the direct emission
+proof for the liveness correction; the new combined changes mostly affect
+frontend/provider reads and startup receipt decoding.
+
+A separate frozen GC dev corpus also matches all 86 outputs. Relative to the
+accepted archived GC its geomeans are 1.011305 QBE and 1.014061 LLVM. It does
+not replace the RC acceptance denominator. Comparing absolute counts against
+both independent frozen checkpoint GC and its post-arena follow-up establishes
+that these ratios are inherited: every row moves below 0.02%. Against the
+post-arena follow-up, largest increases are 0.000151% QBE (`lox/vm/binary_trees`)
+and 0.001986% LLVM (`lox/vm/string_equality`); largest decreases are -0.009190%
+and -0.018937% (`schematic/changed-net`). `gc-comparison.json` retains all rows.
+
+The residual fuzz source hashes match the independent checkpoint's preserved
+sources. On frozen combined B4, seed 19 exits zero under stress but still
+prints a stale numeric field; seed 87 still exits 139 with partial stdout.
+Their regular GC and RC outputs match. `fuzz-comparison.json` preserves exact
+exits, stdout/stderr and the new compiler hash, while the independent comparison
+above preserves the earlier hashes and symptoms. Final A5's compiler
+`4059a85e3d081f8a73b370e03e7d86cba8eb8a47531bfcdd7c09e6cc109d74b1`
+had seed 19's scan-plan abort (134) and seed 87's crash (139). Both findings
+remain open; only the four historical B4 repros are claimed fixed.
+
+Final Guardian feedback is appended and committed in `guardian-zig` at
+`e59b878`, recording the exact frozen checks/counts and retained collector
+findings. The candidate does not update main; the integrator owns that merge.
