@@ -596,11 +596,21 @@ passed util::test_sum
   - a case configuration that names provider fixtures;
   - a project the modules cannot build (the session then reports it).
 
-  Receipts of the two paths are keyed apart (their declaration contracts
-  differ), so switching paths runs every test once more.
-- **Cold.** A first run compiles every module, as a first `build` does, where
-  the whole-program session lowers and compiles only the tests' closure. On a
-  project whose tests reach little of the code, the first run is slower.
+  The two paths key receipts alike (a module's contract entry is rendered as
+  `list-interfaces --contracts` renders it), so a verdict recorded on one
+  replays on the other.
+- **Cold.** A first run module by module compiles every module, as a first
+  `build` does, where the whole-program session lowers and compiles only the
+  tests' closure. So the first run of a project of at least 64 modules
+  (`MYLANG_TEST_SEED_MODULES` sets the count) is the whole-program run's, and
+  it starts a detached seeder (`MYLANG_TEST_SEED=1`, no standard streams, never
+  waited for). The seeder waits until the run has released the project's
+  snapshot path, compiles every module into the test variant, runs no test and
+  prints nothing. A run started while the seeder works waits for it, since the
+  seeder's records answer only at that path; later runs are module by module
+  and replay the first run's verdicts. `MYLANG_TEST_SEED=off` starts no seeder.
+  While another run of the project holds its modules, a run is the
+  whole-program run's instead of waiting.
 
 ## Collector stress
 

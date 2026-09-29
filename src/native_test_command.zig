@@ -254,8 +254,9 @@ fn begin(session: sessions.Session, captured: snapshot.Snapshot, directory: []co
 /// MODULE-TEST-1: the production graph compiled module by module, when this
 /// run can take that path; null sends it to the whole-program session, which
 /// reports whatever the modules could not build.
-fn openModuleTests(session: sessions.Session, captured: snapshot.Snapshot, directory: []const u8) Error!?*module_build.Tests {
+fn openModuleTests(session: sessions.Session, captured: snapshot.Snapshot, place: ModulePlace) Error!?*module_build.Tests {
     if (!modulePath(session)) return null;
+    const directory = place.directory;
     const a = session.context.allocator;
     const settings: build_options.Options = .{
         .source = captured.entry_path,
@@ -269,14 +270,17 @@ fn openModuleTests(session: sessions.Session, captured: snapshot.Snapshot, direc
     library.library = true;
     // Whatever the per-module path cannot do, the whole-program session does
     // and reports.
-    const outcome = module_build.openTests(session.context, .{ .settings = settings, .switches = native_build.emissionSwitches(library), .identity = bundled_identity }) catch |err| switch (err) {
+    const outcome = module_build.openTests(session.context, .{ .settings = settings, .switches = native_build.emissionSwitches(library), .identity = bundled_identity, .cold = place.cold }) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         else => return null,
     };
     const built = switch (outcome) {
         .ready => |ready| ready,
         .status => return error.NativeToolFailed,
-        .fallback => return null,
+        .fallback => |why| {
+            if (why == .cold) spawnSeeder(session);
+            return null;
+        },
     };
     // An unchanged module is not compiled again; the trace names each one
     // that was, the per-module path's unit of work (NATIVE-TEST-SCALE-1).
@@ -289,6 +293,66 @@ fn openModuleTests(session: sessions.Session, captured: snapshot.Snapshot, direc
     }
     return built;
 }
+/// Where a per-module test build keeps its graphs, and from how many modules
+/// a first run leaves the answer to the whole-program session (null: never).
+const ModulePlace = struct { directory: []const u8, cold: ?usize };
+
+/// MODULE-TEST-5: the module count from which a first run is the whole
+/// program's and seeds in the background (`MYLANG_TEST_SEED_MODULES`), or
+/// null for the seeder itself.
+fn coldThreshold(context: fs.Context) ?usize {
+    if (seeding(context)) return null;
+    const text = context.environ.get("MYLANG_TEST_SEED_MODULES") orelse return module_build.seed_threshold;
+    return std.fmt.parseInt(usize, text, 10) catch module_build.seed_threshold;
+}
+
+/// MODULE-TEST-5: the variable that marks a detached seeder (`1`) or turns
+/// seeding off (`off`).
+const seed_variable = "MYLANG_TEST_SEED";
+
+/// Whether this process is a detached seeder (`MYLANG_TEST_SEED=1`).
+fn seeding(context: fs.Context) bool {
+    const value = context.environ.get(seed_variable) orelse return false;
+    return std.mem.eql(u8, value, "1");
+}
+
+/// MODULE-TEST-5: start this run again as a detached seeder (the same
+/// arguments, `MYLANG_TEST_SEED=1`, no standard streams, never waited for)
+/// unless `MYLANG_TEST_SEED` is `off`. It compiles every module once this run
+/// has released its snapshot, and the next run reads its records.
+fn spawnSeeder(session: sessions.Session) void {
+    const context = session.context;
+    if (context.environ.get(seed_variable)) |value| if (std.mem.eql(u8, value, "off")) return;
+    const a = context.allocator;
+    var environ = context.environ.clone(a) catch return;
+    environ.put(seed_variable, "1") catch return;
+    const self_exe = std.Io.Dir.cwd().realPathFileAlloc(context.io, "/proc/self/exe", a) catch return;
+    var argv: std.ArrayList([]const u8) = .empty;
+    argv.appendSlice(a, &.{ self_exe, "test" }) catch return;
+    argv.appendSlice(a, session.options.link_arguments) catch return;
+    _ = std.process.spawn(context.io, .{
+        .argv = argv.items,
+        .environ_map = &environ,
+        .stdin = .ignore,
+        .stdout = .ignore,
+        .stderr = .ignore,
+        .pgid = 0,
+    }) catch return;
+}
+
+/// MODULE-TEST-5: the detached seeder's whole run: wait for the stable
+/// snapshot, compile every module into the per-module test variant, and
+/// report nothing.
+fn seedModules(context: fs.Context, session: sessions.Session, prepared: snapshot.Snapshot) Error!u8 {
+    const stable = snapshot.claimStableWaiting(context, try context.absolute(context.scratchRoot()), try stableSeed(session)) orelse return 0;
+    defer stable.release(context);
+    snapshot.markSeeding(context, stable);
+    const captured = snapshot.materialize(context, prepared, stable.directory) catch return 0;
+    const built = (openModuleTests(session, captured, .{ .directory = "", .cold = null }) catch return 0) orelse return 0;
+    built.close();
+    return 0;
+}
+
 /// The declaration contracts tests are discovered from: the modules' own
 /// (MODULE-TEST-4), or the whole-program declaration check's.
 fn contractsOf(session: sessions.Session, captured: snapshot.Snapshot, built: ?*module_build.Tests) Error!std.json.Value {
@@ -317,6 +381,11 @@ fn abandon(early: ?Early) void {
         .compiling => |compile| compile.discard(),
     }
 }
+/// What names a project's stable snapshot root: its cache directory, root
+/// and entry.
+fn stableSeed(session: sessions.Session) error{OutOfMemory}![]const u8 {
+    return std.mem.join(session.context.allocator, "\x00", &.{ session.directory, session.source.root, session.source.entry });
+}
 /// A materialized snapshot and, when it sits at the project's stable root,
 /// the claim the run releases on exit.
 const Staged = struct { captured: snapshot.Snapshot, stable: ?snapshot.Stable };
@@ -325,8 +394,13 @@ const Staged = struct { captured: snapshot.Snapshot, stable: ?snapshot.Stable };
 /// source paths on every run and their path-keyed caches answer; otherwise, or
 /// when writing there fails, at a fresh private path under the session.
 fn stage(context: fs.Context, session: sessions.Session, prepared: snapshot.Snapshot) Error!Staged {
-    const seed = try std.mem.join(context.allocator, "\x00", &.{ session.directory, session.source.root, session.source.entry });
-    if (snapshot.claimStable(context, try context.absolute(context.scratchRoot()), seed)) |claimed| {
+    const seed = try stableSeed(session);
+    const scratch = try context.absolute(context.scratchRoot());
+    // MODULE-TEST-5: a seeder's module records answer only at the stable
+    // path, so a run waits for a seeder holding it rather than stage apart.
+    const stable = snapshot.claimStable(context, scratch, seed) orelse
+        if (snapshot.heldBySeeder(context, scratch, seed)) snapshot.claimStableWaiting(context, scratch, seed) else null;
+    if (stable) |claimed| {
         if (snapshot.materialize(context, prepared, claimed.directory)) |captured| {
             return .{ .captured = captured, .stable = claimed };
         } else |_| claimed.release(context);
@@ -415,6 +489,17 @@ fn refusedLimits(context: fs.Context, opts: *options.Options) Error!?u8 {
     try std.Io.File.stderr().writeStreamingAll(context.io, refusal);
     return input_probe.refused_status;
 }
+/// Refuse the removed unchecked mode with the shared build diagnostic.
+fn refusedUnchecked(process: std.process.Init, args: []const []const u8) Error!bool {
+    if (!build_options.uncheckedRequested(args)) return false;
+    try std.Io.File.stderr().writeStreamingAll(process.io, "mylang test: " ++ build_options.unchecked_removed);
+    return true;
+}
+/// Check the held cases file before publishing any verdict from this run.
+fn verifyCases(context: fs.Context, path: ?[]const u8, held: []const u8) Error!void {
+    const file = path orelse return;
+    if (!std.mem.eql(u8, held, try context.read(file))) return error.SourceChanged;
+}
 /// Discover, check, selectively execute, and report native application tests.
 pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     if (args.len == 1 and std.mem.eql(u8, args[0], "--help")) {
@@ -423,10 +508,7 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     }
     // RELEASE-CHECKED-1: `--unchecked` is refused by name rather than as an
     // unknown flag, with the same reason every build gives.
-    if (build_options.uncheckedRequested(args)) {
-        try std.Io.File.stderr().writeStreamingAll(process.io, "mylang test: " ++ build_options.unchecked_removed);
-        return 2;
-    }
+    if (try refusedUnchecked(process, args)) return 2;
     var opts = options.parse(args) catch {
         try std.Io.File.stderr().writeStreamingAll(process.io, options.usage);
         return 2;
@@ -444,6 +526,7 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     var work: invalidation.Work = .{ .command = "test" };
     if (opts.flags.output.report) session.work = &work;
     const prepared = try snapshot.withTestEntry(context, session.source);
+    if (seeding(context)) return seedModules(context, session, prepared);
     const staged = try stage(context, session, prepared);
     defer if (staged.stable) |claimed| claimed.release(context);
     const captured = staged.captured;
@@ -457,7 +540,7 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     // module and validates exported signatures and explicit ceilings without
     // checking any body, so an unfinished replacement target cannot block
     // selection while its public declarations stay valid.
-    const module_tests = try openModuleTests(session, captured, graphs_directory);
+    const module_tests = try openModuleTests(session, captured, .{ .directory = graphs_directory, .cold = coldThreshold(context) });
     const production = contractsOf(session, captured, module_tests) catch |err| switch (err) {
         error.ProjectConfigurationFailed => return 2,
         error.ProjectPolicyRejected => return 3,
@@ -509,9 +592,7 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     graphs.finishSessions();
     try graphs.verifyAssets();
     try session.verify();
-    if (opts.cases) |path| {
-        if (!std.mem.eql(u8, config_bytes, try context.read(path))) return error.SourceChanged;
-    }
+    try verifyCases(context, opts.cases, config_bytes);
     if (!opts.flags.no_cache) for (results, pure) |result, is_pure| {
         try receipts.write(context, directory, result);
         if (opts.flags.pure_skip and is_pure) try receipts.writeOutcome(context, directory, result);

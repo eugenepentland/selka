@@ -1,0 +1,45 @@
+{
+ "label": "base",
+ "tier": "t200k/mylang",
+ "load_start": 10.94,
+ "test": {
+  "cold": {
+   "wall_s": 4.286,
+   "rss_mb": 1230.0,
+   "status": 0,
+   "passed": 480,
+   "cached": 0,
+   "failed": 0
+  },
+  "after_cold": {
+   "wall_s": 0.233,
+   "rss_mb": 93.8,
+   "status": 0,
+   "passed": 0,
+   "cached": 480,
+   "failed": 0
+  },
+  "noop": {
+   "wall_s": 0.202,
+   "rss_mb": 93.8,
+   "status": 0,
+   "passed": 0,
+   "cached": 480,
+   "failed": 0
+  },
+  "body_edit": {
+   "wall_s": 1.309,
+   "rss_mb": 1111.4,
+   "status": 0,
+   "passed": 240,
+   "cached": 240,
+   "failed": 0
+  },
+  "body_edit_samples": [
+   2.244,
+   1.309,
+   1.342
+  ]
+ },
+ "load_end": 9.56
+}

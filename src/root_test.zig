@@ -3,6 +3,8 @@
 pub const snapshot_project = @import("project.zig");
 /// Compile-time file embedding exposed to native-test snapshot capture.
 pub const snapshot_embed = @import("embed.zig");
+/// The compiler's language module, for the per-module build `mylang test` runs through.
+pub const compiler_language = @import("compiler.zig");
 test {
     _ = @import("qbe_rc_plain_aggregate_test.zig");
     _ = @import("qbe_rc_fresh_constructor_test.zig");

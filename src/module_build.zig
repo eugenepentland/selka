@@ -22,7 +22,10 @@
 //! backend, a provider, a `mylang.json`, a header or check error — goes to the
 //! whole-program build, which reports it exactly as before.
 const std = @import("std");
-const language = @import("mylang");
+// The compiler reaches the language through its `mylang` module and a test
+// root holds every source file in one module, so the application or test root
+// hands it over, as it hands `native_test_snapshot` its project loader.
+const language = @import("native_test_root").compiler_language;
 const native_build = @import("qbe_build.zig");
 const options = @import("qbe_build_options.zig");
 const fs = @import("qbe_build_io.zig");
@@ -339,7 +342,14 @@ pub fn buildForRun(gpa: std.mem.Allocator, request: RunRequest) Error!RunOutcome
 /// MODULE-TEST-1: what a test run hands the per-module build: the settings
 /// of its test library (entry, object cache, mode, tools), the emission
 /// switches a library in that mode is built with, and the compiler identity.
-pub const TestRequest = struct { settings: options.Options, switches: native_build.Switches, identity: []const u8 };
+pub const TestRequest = struct {
+    settings: options.Options,
+    switches: native_build.Switches,
+    identity: []const u8,
+    /// MODULE-TEST-5: from how many modules a first run leaves the answer to
+    /// the whole-program path (`Fallback.cold`); null always compiles.
+    cold: ?usize = null,
+};
 
 /// MODULE-TEST-1: a project a test run compiled module by module, its merged
 /// test facts, and what a test library of its tests links from.
@@ -414,7 +424,13 @@ pub const TestsOutcome = union(enum) { ready: *Tests, status: u8, fallback: Fall
 /// tests' closure; or say why the whole-program test path must run it.
 pub fn openTests(context: fs.Context, request: TestRequest) Error!TestsOutcome {
     const tests = try context.allocator.create(Tests);
-    switch (try Session.open(&tests.session, context, .{ .parsed = request.settings, .switches = request.switches, .identity = request.identity, .mode = .tests })) {
+    // A run that may leave a cold build to the whole-program path leaves a
+    // held program variant to it too (`Fallback.busy`): a seeder is filling
+    // it. It still waits for the standard modules' variant, which every
+    // project of a cache shares, so concurrent runs of different projects
+    // stay module by module.
+    const settings: Settings = .{ .parsed = request.settings, .switches = request.switches, .identity = request.identity, .mode = .tests, .wait = if (request.cold == null) .all else .standard };
+    switch (try Session.open(&tests.session, context, settings)) {
         .ready => {},
         .status => |status| return .{ .status = status },
         .fallback => |why| return .{ .fallback = why },
@@ -422,7 +438,7 @@ pub fn openTests(context: fs.Context, request: TestRequest) Error!TestsOutcome {
     // The session stays open only for a caller handed the tests.
     var kept = false;
     defer if (!kept) tests.session.close();
-    tests.program = switch (try tests.session.compile()) {
+    tests.program = switch (try tests.session.compileWithin(request.cold)) {
         .ready => |ready| ready,
         .status => |status| return .{ .status = status },
         .fallback => |why| return .{ .fallback = why },
@@ -456,10 +472,10 @@ pub const CheckRequest = struct {
     seed: bool = false,
 };
 
-/// MODULE-CHECK-2: how many modules make a first check take the
-/// whole-program check and seed the module records in the background:
-/// `MYLANG_CHECK_SEED_MODULES`, else this.
-const seed_threshold: usize = 64;
+/// MODULE-CHECK-2, MODULE-TEST-5: how many modules make a first check or
+/// test run take the whole-program path and seed the module records in the
+/// background, unless an environment variable says otherwise.
+pub const seed_threshold: usize = 64;
 
 /// MODULE-CHECK-1: check the project `request.source` names module by
 /// module, re-checking only the modules whose source or read interfaces
@@ -470,7 +486,7 @@ pub fn check(gpa: std.mem.Allocator, request: CheckRequest) Error!Outcome {
     var session: Session = undefined;
     // A check waits for nobody: while a seeder or another check holds the
     // variant, the whole-program check answers.
-    const settings: Settings = .{ .parsed = .{ .source = request.source, .cache = request.cache }, .switches = check_switches, .identity = request.identity, .mode = .check, .wait = request.seed };
+    const settings: Settings = .{ .parsed = .{ .source = request.source, .cache = request.cache }, .switches = check_switches, .identity = request.identity, .mode = .check, .wait = if (request.seed) .all else .none };
     switch (try Session.open(&session, context, settings)) {
         .ready => {},
         .status => |status| return .{ .status = status },
@@ -518,8 +534,13 @@ fn Step(comptime T: type) type {
 /// modules' objects and test documents (MODULE-TEST-1).
 const Mode = enum { build, check, tests };
 
+/// Which held variants a session waits for rather than leaving the work to
+/// the whole-program path (`Fallback.busy`): both, only the standard
+/// modules' shared one, or neither.
+const Wait = enum { all, standard, none };
+
 /// What a session is opened with.
-const Settings = struct { parsed: options.Options, switches: native_build.Switches, identity: []const u8, mode: Mode = .build, wait: bool = true };
+const Settings = struct { parsed: options.Options, switches: native_build.Switches, identity: []const u8, mode: Mode = .build, wait: Wait = .all };
 
 /// How a check session runs: as the detached seeder, and from how many
 /// modules a first check leaves the answer to the whole-program check.
@@ -578,11 +599,11 @@ const Session = struct {
         try context.mkdir(self.state.variant);
         try context.mkdir(self.state.standard);
         // Always the program's variant first: two builds never wait on each other in turn.
-        self.locks[0] = (try lockVariant(context, self.state.variant, settings.wait)) orelse {
+        self.locks[0] = (try lockVariant(context, self.state.variant, settings.wait == .all)) orelse {
             if (prepared) |ready| context.remove(ready.cache.temporary);
             return .{ .fallback = .busy };
         };
-        self.locks[1] = (try lockVariant(context, self.state.standard, settings.wait)) orelse {
+        self.locks[1] = (try lockVariant(context, self.state.standard, settings.wait != .none)) orelse {
             self.locks[0].close(context.io);
             if (prepared) |ready| context.remove(ready.cache.temporary);
             return .{ .fallback = .busy };
@@ -621,9 +642,16 @@ const Session = struct {
 
     /// Compile every stale module and assemble the program to link.
     fn compile(self: *Session) !Step(native_build.ModuleProgram) {
+        return self.compileWithin(null);
+    }
+
+    /// `compile`, leaving a first build of at least `cold` modules to the
+    /// whole-program path (MODULE-TEST-5).
+    fn compileWithin(self: *Session, cold: ?usize) !Step(native_build.ModuleProgram) {
         const state = &self.state;
         try state.loadState();
         if (!try state.discover()) return .{ .fallback = .project };
+        if (cold) |threshold| if (state.firstLarge(threshold)) return .{ .fallback = .cold };
         // MODULE-PROJECT-1: a graph over its source budgets, or with an import
         // the policy denies, is reported by the whole-program path.
         if (!state.withinBudgets() or state.policyDenies()) return .{ .fallback = .config };

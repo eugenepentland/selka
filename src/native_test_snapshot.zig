@@ -622,25 +622,77 @@ pub const Stable = struct {
     }
 };
 /// Claim the stable snapshot root for `seed` (the cache directory, project
-/// root and entry). Null when another live run holds it, a concurrent sweep is
-/// removing it, or the scratch root cannot hold it; the caller then stages at
-/// a fresh private path exactly as before. Whatever a killed run left inside
-/// is cleared first, keeping only the marker.
+/// root and entry). Null when another live run holds it or the scratch root
+/// cannot hold it; the caller then stages at a fresh private path exactly as
+/// before. An attempt a concurrent sweep wins is made again. Whatever a killed
+/// run left inside is cleared first, keeping only the marker.
 pub fn claimStable(context: fs.Context, scratch: []const u8, seed: []const u8) ?Stable {
+    return claim(context, scratch, seed, false);
+}
+/// MODULE-TEST-5: `claimStable`, waiting while another run holds the path:
+/// a detached seeder takes the path once the run that started it released it,
+/// and a run takes it once a seeder holding it is done.
+pub fn claimStableWaiting(context: fs.Context, scratch: []const u8, seed: []const u8) ?Stable {
+    return claim(context, scratch, seed, true);
+}
+/// The file a detached seeder leaves in the stable snapshot it holds, so a
+/// run that finds the path held waits for it rather than staging elsewhere
+/// (MODULE-TEST-5).
+const seeding_name = "seeding";
+/// MODULE-TEST-5: mark a claimed stable snapshot as a detached seeder's.
+pub fn markSeeding(context: fs.Context, stable: Stable) void {
+    const path = std.fs.path.join(context.allocator, &.{ stable.directory, seeding_name }) catch return;
+    context.write(path, "") catch return;
+}
+/// MODULE-TEST-5: whether the stable snapshot of `seed` is marked as a
+/// detached seeder's: a run then waits for it (`claimStableWaiting`),
+/// since its module records answer only at that path.
+pub fn heldBySeeder(context: fs.Context, scratch: []const u8, seed: []const u8) bool {
+    const directory = stableDirectory(context.allocator, scratch, seed) catch return false;
+    const path = std.fs.path.join(context.allocator, &.{ directory, seeding_name }) catch return false;
+    return context.exists(path);
+}
+/// The stable snapshot directory of `seed` under `scratch`.
+fn stableDirectory(allocator: std.mem.Allocator, scratch: []const u8, seed: []const u8) error{OutOfMemory}![]const u8 {
     var digest: [16]u8 = undefined;
     std.crypto.hash.Blake3.hash(seed, &digest, .{});
-    const name = std.fmt.allocPrint(context.allocator, "snapshot-{s}", .{std.fmt.bytesToHex(digest, .lower)}) catch return null;
-    const directory = std.fs.path.join(context.allocator, &.{ scratch, ".pending", name }) catch return null;
-    const marker_path = std.fs.path.join(context.allocator, &.{ directory, fs.owner_name }) catch return null;
-    std.Io.Dir.cwd().createDirPath(context.io, directory) catch return null;
-    const marker = std.Io.Dir.cwd().createFile(context.io, marker_path, .{ .truncate = false, .permissions = .fromMode(0o600) }) catch return null;
-    const locked = marker.tryLock(context.io, .exclusive) catch false;
-    const claimed = locked and stillLinked(context, marker, marker_path);
-    if (!claimed or !clearExcept(context, directory, fs.owner_name)) {
+    const name = try std.fmt.allocPrint(allocator, "snapshot-{s}", .{std.fmt.bytesToHex(digest, .lower)});
+    return std.fs.path.join(allocator, &.{ scratch, ".pending", name });
+}
+/// How one attempt at the stable path ended: claimed, held by a live run
+/// (or not claimable at all), or lost to a sweep that removed the tree
+/// under it, or to the release of the run that held it.
+const Attempt = union(enum) { claimed: Stable, held, lost };
+fn claim(context: fs.Context, scratch: []const u8, seed: []const u8, wait: bool) ?Stable {
+    // NATIVE-TEST-STABLE-1: a sweep (`fs.Context.reclaim`, run by any
+    // process staging owned scratch) can take a fresh marker between its
+    // creation and this run's lock and delete the tree; a run that released
+    // the path unlinks the marker a waiting claim then holds. Either is a lost
+    // race, not a live holder, so the claim is made again.
+    for (0..3) |_| switch (attempt(context, scratch, seed, wait)) {
+        .claimed => |stable| return stable,
+        .held => return null,
+        .lost => {},
+    };
+    return null;
+}
+fn attempt(context: fs.Context, scratch: []const u8, seed: []const u8, wait: bool) Attempt {
+    const directory = stableDirectory(context.allocator, scratch, seed) catch return .held;
+    const marker_path = std.fs.path.join(context.allocator, &.{ directory, fs.owner_name }) catch return .held;
+    std.Io.Dir.cwd().createDirPath(context.io, directory) catch return .lost;
+    const marker = std.Io.Dir.cwd().createFile(context.io, marker_path, .{ .truncate = false, .permissions = .fromMode(0o600) }) catch return .lost;
+    const locked = if (wait) lockWaiting(context, marker) else marker.tryLock(context.io, .exclusive) catch false;
+    if (locked and stillLinked(context, marker, marker_path)) {
+        if (clearExcept(context, directory, fs.owner_name)) return .{ .claimed = .{ .directory = directory, .marker = marker } };
         marker.close(context.io);
-        return null;
+        return .held;
     }
-    return .{ .directory = directory, .marker = marker };
+    marker.close(context.io);
+    return if (locked) .lost else .held;
+}
+fn lockWaiting(context: fs.Context, marker: std.Io.File) bool {
+    marker.lock(context.io, .exclusive) catch return false;
+    return true;
 }
 /// Whether the locked marker is still the file at its path: a sweep that won
 /// the marker and deleted the tree before this lock leaves it unlinked.
@@ -1207,6 +1259,29 @@ test "the stable snapshot root is one path per seed, held by one run at a time a
     again.release(context);
     // The last release leaves the scratch root as it found it.
     try std.testing.expect(!context.exists(try std.fs.path.join(context.allocator, &.{ scratch, ".pending" })));
+}
+// spec-case: MODULE-TEST-5
+test "a stable snapshot a seeder holds is marked as its, and a waiting claim takes the path once it is released" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    var temporary_dir = std.testing.tmpDir(.{});
+    defer temporary_dir.cleanup();
+    const scratch = try temporary_dir.dir.realPathFileAlloc(context.io, ".", context.allocator);
+    const seeder = claimStable(context, scratch, "seed-a") orelse return error.TestUnexpectedResult;
+    try std.testing.expect(!heldBySeeder(context, scratch, "seed-a"));
+    markSeeding(context, seeder);
+    try std.testing.expect(heldBySeeder(context, scratch, "seed-a"));
+    try std.testing.expect(!heldBySeeder(context, scratch, "seed-b"));
+    const directory = seeder.directory;
+    seeder.release(context);
+    try std.testing.expect(!heldBySeeder(context, scratch, "seed-a"));
+    // The next claim, waiting or not, gets the very same path, unmarked.
+    const next = claimStableWaiting(context, scratch, "seed-a") orelse return error.TestUnexpectedResult;
+    try std.testing.expectEqualStrings(directory, next.directory);
+    try std.testing.expect(!heldBySeeder(context, scratch, "seed-a"));
+    next.release(context);
 }
 /// Create `path` and return it.
 fn makeDirectory(context: fs.Context, path: []const u8) ![]const u8 {

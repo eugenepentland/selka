@@ -10383,6 +10383,10 @@ fn scaleRun(paths: ScalePaths, extra: []const []const u8) !std.process.RunResult
 /// Run the chain's tests module by module (MODULE-TEST-1) with a fresh
 /// trace; the caller frees the result.
 fn moduleScaleRun(paths: ScalePaths) !std.process.RunResult {
+    return moduleScaleRunWith(paths, &.{});
+}
+/// `moduleScaleRun` with extra environment variables.
+fn moduleScaleRunWith(paths: ScalePaths, extra: []const [2][]const u8) !std.process.RunResult {
     c4TraceReset(paths.trace);
     const cache_arg = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{paths.cache});
     defer testing.allocator.free(cache_arg);
@@ -10394,8 +10398,45 @@ fn moduleScaleRun(paths: ScalePaths) !std.process.RunResult {
     defer environment.deinit();
     try environment.put("MYLANG_TEST_TRACE", paths.trace);
     try environment.put("HOME", std.fs.path.dirname(paths.entry) orelse ".");
+    for (extra) |pair| try environment.put(pair[0], pair[1]);
     try forwardZigCache(&environment);
     return spawnWithEnv(args.items, &environment);
+}
+
+// spec: MODULE-TEST-5
+test "a large project's first test run is the whole-program run, and a seeder's module records and that run's verdicts answer the next" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const paths = try scaleProject(&temp);
+    defer freeScalePaths(paths);
+    // One module counts as large here. The first run is the whole-program
+    // run's (with the seeder disabled, nothing runs behind it).
+    const cold = try moduleScaleRunWith(paths, &.{ .{ "MYLANG_TEST_SEED_MODULES", "1" }, .{ "MYLANG_TEST_SEED", "off" } });
+    defer testing.allocator.free(cold.stdout);
+    defer testing.allocator.free(cold.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, cold.term);
+    try testing.expectEqual(@as(usize, 4), (try c4Counts(cold.stdout)).executed);
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "compile-module "));
+    try testing.expect(try c4TraceCount(paths.trace, "native-test-compile") != 0);
+    // The seeder (run here in the foreground) compiles every module and
+    // prints nothing.
+    const seeded = try moduleScaleRunWith(paths, &.{.{ "MYLANG_TEST_SEED", "1" }});
+    defer testing.allocator.free(seeded.stdout);
+    defer testing.allocator.free(seeded.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, seeded.term);
+    try testing.expectEqualStrings("", seeded.stdout);
+    try testing.expectEqual(@as(usize, 5), try c4TraceCount(paths.trace, "compile-module "));
+    // The next run is module by module: it compiles nothing, and the
+    // whole-program run's verdicts answer every test.
+    const next = try moduleScaleRunWith(paths, &.{.{ "MYLANG_TEST_SEED_MODULES", "1" }});
+    defer testing.allocator.free(next.stdout);
+    defer testing.allocator.free(next.stderr);
+    const replayed = try c4Counts(next.stdout);
+    try testing.expectEqual(@as(usize, 0), replayed.executed);
+    try testing.expectEqual(@as(usize, 4), replayed.cached);
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "compile-module "));
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "native-test-compile"));
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "module-link "));
 }
 
 // spec: NATIVE-TEST-SCALE-1
