@@ -1,0 +1,255 @@
+{
+  "source_tip": "b5c04602",
+  "baseline_tip": "d8f66585",
+  "acceptance_rc_baseline": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp-rc-quick/results-m16-codex-dev.json",
+  "accepted_gc_policy": "original quick.py setup copied accepted GC; new GC evidence does not replace denominator",
+  "phase_a_rc_baseline": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp-rc-quick/results-m17-codex-dev.json",
+  "compiler_sha256": "18106e5f38ae4544082cfbe56672f6cf7a4d7ee259b8fe11b151a825ff7e4de2",
+  "fuzz": {
+    "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-b4-combined-20260929/zig-out/bin/mylang",
+    "start": 1,
+    "count": 100,
+    "tally": {
+      "ok": 98,
+      "invalid": 0,
+      "stress-only": 2,
+      "RC-DIFF": 0
+    },
+    "findings": [
+      {
+        "seed": 19,
+        "status": "stress-only",
+        "rc": [],
+        "stress": [
+          "stress: stdout differs"
+        ],
+        "program": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-b4-combined-20260929/.tmp/fuzz-final/found/s19.my",
+        "program_sha256": "7b4625131d1cece836792c3ef374848bd33f9c8ed1a7a9bd4e7a1d0881214155"
+      },
+      {
+        "seed": 87,
+        "status": "stress-only",
+        "rc": [],
+        "stress": [
+          "stress: exit 139 vs 0",
+          "stress: stdout differs"
+        ],
+        "program": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-b4-combined-20260929/.tmp/fuzz-final/found/s87.my",
+        "program_sha256": "c1658f510f5c94327f1cc98ec37a1766c7a507737d6b1e24742207e9cfbf9657"
+      }
+    ]
+  },
+  "supplement_statuses": {
+    "fuzz100": 0,
+    "gc_repros": 0,
+    "asan_memory": 0
+  },
+  "source_commit": "b5c04602459c3b405791ba31b488a15ceb001c8b",
+  "gate_statuses": {
+    "build": 0,
+    "corpus-build": 0,
+    "measure-dev": 0,
+    "measure-smoke": 0,
+    "test": 0,
+    "test-qbe": 0,
+    "test-qbe-build": 0,
+    "fmt-check": 0,
+    "test-native-memory": 0,
+    "test-native-heap": 0,
+    "sweep--rc-runtime=stats": 0,
+    "sweep--rc-runtime=stats-release": 0,
+    "sweep--rc-runtime": 0,
+    "sweep--rc-runtime-release": 0,
+    "sweep--gc-runtime": 0,
+    "sweep--gc-runtime-release": 0,
+    "sweep=default": 0,
+    "sweep=default-release": 0,
+    "sweep-gc-stress": 0,
+    "lox-tests": 0,
+    "lox-driver": 0,
+    "lox-tests--gc-runtime": 0,
+    "lox-driver--gc-runtime": 0,
+    "lox-tests--release": 0,
+    "lox-driver--release": 0,
+    "lox-tests--gc-runtime--release": 0,
+    "lox-driver--gc-runtime--release": 0
+  },
+  "sweeps": {
+    "sweep--rc-runtime=stats": {
+      "version": "native-tests-v1",
+      "passed": 1442,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 1442,
+      "programs": 220,
+      "dropped": 0,
+      "unloaded": 0
+    },
+    "sweep--rc-runtime=stats-release": {
+      "version": "native-tests-v1",
+      "passed": 1442,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 1442,
+      "programs": 220,
+      "dropped": 0,
+      "unloaded": 0
+    },
+    "sweep--rc-runtime": {
+      "version": "native-tests-v1",
+      "passed": 1442,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 1442,
+      "programs": 220,
+      "dropped": 0,
+      "unloaded": 0
+    },
+    "sweep--rc-runtime-release": {
+      "version": "native-tests-v1",
+      "passed": 1442,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 1442,
+      "programs": 220,
+      "dropped": 0,
+      "unloaded": 0
+    },
+    "sweep--gc-runtime": {
+      "version": "native-tests-v1",
+      "passed": 1442,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 1442,
+      "programs": 220,
+      "dropped": 0,
+      "unloaded": 0
+    },
+    "sweep--gc-runtime-release": {
+      "version": "native-tests-v1",
+      "passed": 1442,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 1442,
+      "programs": 220,
+      "dropped": 0,
+      "unloaded": 0
+    },
+    "sweep=default": {
+      "version": "native-tests-v1",
+      "passed": 1442,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 1442,
+      "programs": 220,
+      "dropped": 0,
+      "unloaded": 0
+    },
+    "sweep=default-release": {
+      "version": "native-tests-v1",
+      "passed": 1442,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 1442,
+      "programs": 220,
+      "dropped": 0,
+      "unloaded": 0
+    },
+    "sweep-gc-stress": {
+      "version": "native-tests-v1",
+      "passed": 1442,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 1442,
+      "programs": 220,
+      "dropped": 0,
+      "unloaded": 0
+    }
+  },
+  "case_names_sha256": "a7bf31abd49868b94f9aa5445f8e7c5402acfc369e4dc882c271e777e51f7e3a",
+  "added_cases": [
+    "gc_arena_root_lifetimes::test_an_iteration_receiver_used_after_arena_close_stays_live",
+    "gc_arena_root_lifetimes::test_arena_keeps_named_values_without_retaining_old_receiver_temporaries",
+    "gc_mut_argument_roots::test_snapshot_survives_mut_argument_clone",
+    "iteration_identity::test_last_field_transfer_preserves_live_iteration",
+    "iteration_identity::test_write_back_through_a_field_preserves_iteration_snapshot"
+  ],
+  "renamed_from": [
+    "iteration_identity::test_write_back_through_a_field_keeps_the_iterated_list"
+  ],
+  "corpus": {
+    "dev": {
+      "llvm": {
+        "geomean": 1.0691049254760372,
+        "geomean_nonlox": 1.041458951069729,
+        "rows": 43,
+        "within_1_3": 43,
+        "worst": 1.2559566258454264
+      },
+      "qbe": {
+        "geomean": 1.0644906062107087,
+        "geomean_nonlox": 1.0461546151108136,
+        "rows": 43,
+        "within_1_3": 43,
+        "worst": 1.2814192266930355
+      }
+    },
+    "smoke": {
+      "llvm": {
+        "geomean": 1.1371759632965805,
+        "geomean_nonlox": 1.0414584087063403,
+        "rows": 43,
+        "within_1_3": 36,
+        "worst": 2.3583173637447903
+      },
+      "qbe": {
+        "geomean": 1.1034220638543948,
+        "geomean_nonlox": 1.0461545595142818,
+        "rows": 43,
+        "within_1_3": 38,
+        "worst": 1.5048103580087246
+      }
+    }
+  },
+  "source_guardian_checks": 88,
+  "lox_project_builds": [
+    "rc-qbe",
+    "rc-release",
+    "gc-qbe",
+    "gc-release"
+  ],
+  "strict_verification": "27/27 zero statuses; nine identical 1442/220 sweeps",
+  "guardian_feedback_commit": "e59b878",
+  "lox_tests": {
+    "modes": 4,
+    "passed": 65,
+    "programs": 10,
+    "failed": 0,
+    "skipped": 0,
+    "dropped": 0
+  },
+  "lox_driver": {
+    "modes": 4,
+    "passed": 13,
+    "failed": 0,
+    "skipped": 0
+  },
+  "zig_gate": {
+    "steps": 102,
+    "selected_tests": 2681,
+    "qbe_steps": 51,
+    "qbe_tests": 484,
+    "qbe_build_steps": 29,
+    "native_memory_steps": 23,
+    "native_heap_steps": 10
+  }
+}
