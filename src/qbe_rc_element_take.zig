@@ -62,7 +62,7 @@ fn movable(comptime E: type, self: *E, take: Take, scrutinee: usize) Error!usize
     const counter = self.temp();
     const owners = self.temp();
     try self.print(prefix.load_count, .{ counter, list, owners_offset, counter, owners, counter });
-    try self.print(" %v{d} =w cultw %v{d}, 2\n@rctakedone{d}\n", .{ result, owners, label });
+    try self.print(" %v{d} =w cult" ++ prefix.count_type ++ " %v{d}, 2\n@rctakedone{d}\n", .{ result, owners, label });
     return result;
 }
 

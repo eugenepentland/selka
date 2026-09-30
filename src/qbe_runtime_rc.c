@@ -387,7 +387,7 @@ static void site_pc(FILE *out, uint64_t pc, int quoted) {
     else fprintf(out, quoted ? "\"%s\"" : "%s", name);
 }
 static void site_json(FILE *out, myl_rc_site *const *sites, size_t count, uint64_t events, uint64_t calls) {
-    fprintf(out, "{\"version\":1,\"runtime\":\"rc-v4-sites\",\"events\":%" PRIu64 ",\"calls\":%" PRIu64 ",\"sites\":[", events, calls);
+    fprintf(out, "{\"version\":1,\"runtime\":\"rc-v5-sites\",\"events\":%" PRIu64 ",\"calls\":%" PRIu64 ",\"sites\":[", events, calls);
     for (size_t i = 0; i < count; ++i) {
         const myl_rc_site *site = sites[i];
         site_place place = site_place_of(site);
@@ -453,7 +453,7 @@ void myl_qbe_rc_sites_report(void) {
     const char *limit = getenv("MYLANG_RC_SITES_TOP");
     size_t top = limit && *limit ? (size_t)strtoull(limit, NULL, 10) : 20;
     if (top > used) top = used;
-    fprintf(stderr, "MYLANG_RC_SITES {\"version\":1,\"runtime\":\"rc-v4-sites\",\"sites\":%zu,\"events\":%" PRIu64 ",\"calls\":%" PRIu64 ",\"shown\":%zu,\"report\":", used, events, calls, top);
+    fprintf(stderr, "MYLANG_RC_SITES {\"version\":1,\"runtime\":\"rc-v5-sites\",\"sites\":%zu,\"events\":%" PRIu64 ",\"calls\":%" PRIu64 ",\"shown\":%zu,\"report\":", used, events, calls, top);
     if (written) site_json_string(stderr, path);
     else fputs(path && *path ? "\"unwritable\"" : "null", stderr);
     fputs("}\n", stderr);

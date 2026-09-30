@@ -13125,7 +13125,7 @@ test "CLI RC runtime contract inheritance respects project discovery and explici
     var environment = try std.process.Environ.createMap(testing.environ, testing.allocator);
     defer environment.deinit();
     _ = environment.swapRemove("MYLANG_VALUE_SEMANTICS");
-    try environment.put("MYLANG_RUNTIME", "rc-v4");
+    try environment.put("MYLANG_RUNTIME", "rc-v5");
     const inherited = try semanticModeRun(project.path, &environment, &.{});
     defer freeRun(inherited);
     try testing.expectEqual(std.process.Child.Term{ .exited = 22 }, inherited.term);

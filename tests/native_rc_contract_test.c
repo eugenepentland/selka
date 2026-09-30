@@ -14,11 +14,11 @@
 typedef struct { size_t live, retired, allocations; unsigned finalizing, max_finalizing; void *expect_unpinned; } TestAllocator;
 static myl_rc_status allocate(myl_native_heap *heap, const myl_rc_alloc_request *request, void **out) {
     assert(!request->region);
-    size_t bytes = 8 + MYL_RC_PREFIX_BYTES + request->element->size * request->count;
+    size_t bytes = MYL_RC_PREFIX_BYTES + request->element->size * request->count;
     if (heap->limit && bytes > heap->limit - heap->bytes) return MYL_RC_ALLOCATION_REFUSED;
     unsigned char *reservation = calloc(1, bytes);
     if (!reservation) return MYL_RC_ALLOCATION_REFUSED;
-    myl_rc_object *object = (myl_rc_object *)(reservation + 8);
+    myl_rc_object *object = (myl_rc_object *)reservation;
     object->owners = 1;
     object->common.mark = request->count << MYL_NATIVE_OBJECT_COUNT_SHIFT;
     object->common.element = request->element;
@@ -33,11 +33,11 @@ static void retire(myl_native_heap *heap, void *payload) {
     myl_rc_object *object = (myl_rc_object *)payload - 1;
     assert(object->common.mark & MYL_RC_OBJECT_DYING);
     size_t count = (object->common.mark & MYL_NATIVE_OBJECT_COUNT_BITS) >> MYL_NATIVE_OBJECT_COUNT_SHIFT;
-    heap->bytes -= 8 + MYL_RC_PREFIX_BYTES + count * object->common.element->size;
+    heap->bytes -= MYL_RC_PREFIX_BYTES + count * object->common.element->size;
     TestAllocator *state = myl_rc_allocator_context(heap);
     --state->live;
     ++state->retired;
-    free((unsigned char *)object - 8);
+    free(object);
 }
 static void destroy(myl_native_heap *heap) {
     TestAllocator *state = myl_rc_allocator_context(heap);
@@ -89,10 +89,10 @@ static void invariant_paths_test(void) {
 }
 // spec: RC-LAYOUT-1
 static void layout_test(void) {
-    assert(sizeof(myl_rc_object) == 24);
+    assert(MYL_RC_ABI_VERSION == 5u && sizeof(myl_rc_object) == 32);
     assert(sizeof(myl_native_object) == 16);
-    assert(offsetof(myl_rc_object, common.mark) == 8);
-    assert(offsetof(myl_rc_object, common.element) == 16);
+    assert(offsetof(myl_rc_object, common.mark) == 16);
+    assert(offsetof(myl_rc_object, common.element) == 24);
     assert(offsetof(myl_native_heap, inline_windows) == MYL_NATIVE_HEAP_INLINE_OFFSET);
     assert(offsetof(myl_native_heap, arena_window) == MYL_NATIVE_HEAP_ARENA_OFFSET);
     myl_native_heap heap;
@@ -100,7 +100,7 @@ static void layout_test(void) {
     start(&heap, &state);
     void *value = new_value(&heap, &scalar_type, 1);
     assert((uintptr_t)value % 16 == 0);
-    assert(*((uint32_t *)value - 6) == 1 && *((uint32_t *)value - 5) == 0);
+    assert(*((uint64_t *)value - 4) == 1 && *((uint64_t *)value - 3) == 0);
     assert(*((uintptr_t *)value - 2) == 4);
     assert(((const myl_native_type **)value)[-1] == &scalar_type);
     myl_rc_owner_release(&heap, value);

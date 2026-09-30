@@ -159,8 +159,8 @@ static void native_allocation_budget(void) {
         if (!value) break;
         values[count++]=value;
     }
-    /* The 88-byte shifted slab metadata leaves exactly 2045 32-byte slots. */
-    assert(count==2045 && heap.bytes==heap.limit && heap.objects_live==count);
+    /* The 80-byte slab metadata leaves exactly 1363 48-byte slots. */
+    assert(count==1363 && heap.bytes==heap.limit && heap.objects_live==count);
     assert(myl_rc_take_failure(&heap)==MYL_RC_ALLOCATION_REFUSED);
     for (size_t i=0;i<count;i++) myl_rc_owner_release(&heap,values[i]);
     /* A generic large request trims the empty cached type's slab. The cache

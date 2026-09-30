@@ -31,8 +31,8 @@ fn witness(text: []const u8, change: Change) !Witness {
     var catalog = try shapes.Catalog.init(t.allocator, &layouts);
     defer catalog.deinit();
     for (program.functions) |function| if (std.mem.eql(u8, function.name, "pick")) {
-        const certificate = try @import("rc_calls.zig").borrowedIn(t.allocator, &catalog, program.functions, function, "rc-v4");
-        var result: Witness = .{ .public = certificate != null, .ordinary = (try calls.identity(&catalog, program.functions, function, "rc-v4")) != null, .raw = false };
+        const certificate = try @import("rc_calls.zig").borrowedIn(t.allocator, &catalog, program.functions, function, "rc-v5");
+        var result: Witness = .{ .public = certificate != null, .ordinary = (try calls.identity(&catalog, program.functions, function, "rc-v5")) != null, .raw = false };
         var supplied = certificate orelse return result;
         switch (change) {
             .none => {},
@@ -40,7 +40,7 @@ fn witness(text: []const u8, change: Change) !Witness {
             .shape => supplied.shape_identity[0] ^= 1,
             .dependency => supplied.dependency_identity[0] ^= 1,
         }
-        if (try calls.borrowedEntry(&catalog, program.functions, function, "rc-v4", supplied)) |raw| {
+        if (try calls.borrowedEntry(&catalog, program.functions, function, "rc-v5", supplied)) |raw| {
             defer t.allocator.free(raw.calls);
             result.raw = true;
             try t.expect(raw.entry != null);

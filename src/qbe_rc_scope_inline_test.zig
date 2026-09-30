@@ -27,6 +27,29 @@ fn named(manifest: Manifest, name: []const u8) ![]const u8 {
     for (manifest.functions) |function| if (std.mem.eql(u8, function.name, name)) return function.il;
     return error.TestUnexpectedResult;
 }
+// Every scope branch must consume a w boolean; raw l pointers/counts lose
+// their high bits at QBE jnz even when their LLVM translation appears sound.
+fn scopeBranchesUseBooleans(il: []const u8) !bool {
+    var widths: std.StringHashMapUnmanaged(u8) = .empty;
+    defer widths.deinit(t.allocator);
+    var lines = std.mem.splitScalar(u8, il, '\n');
+    var scope = false;
+    while (lines.next()) |raw| {
+        const line = std.mem.trim(u8, raw, " ");
+        if (std.mem.indexOf(u8, line, " =")) |equal| {
+            if (equal + 2 < line.len) try widths.put(t.allocator, line[0..equal], line[equal + 2]);
+        }
+        if (std.mem.startsWith(u8, line, "# RC-SCOPE-IL-1 pin") or
+            std.mem.startsWith(u8, line, "# RC-SCOPE-IL-1 end")) scope = true;
+        if (std.mem.startsWith(u8, line, "@rcspindone") or
+            std.mem.startsWith(u8, line, "@rcsenddone")) scope = false;
+        if (scope and std.mem.startsWith(u8, line, "jnz ")) {
+            const comma = std.mem.indexOfScalar(u8, line, ',') orelse return false;
+            if ((widths.get(line[4..comma]) orelse 0) != 'w') return false;
+        }
+    }
+    return true;
+}
 // spec: RC-SCOPE-IL-1
 test "RC-SCOPE-IL-1 production pin journal links before guarded capture and keeps native refusals" {
     const saved = runtime.get();
@@ -44,11 +67,13 @@ test "RC-SCOPE-IL-1 production pin journal links before guarded capture and keep
     try t.expect(std.mem.indexOf(u8, il, "call $myl_qbe_rc_scope_end") != null);
     try t.expect(std.mem.indexOf(u8, il, "$myl_native_list_header_type") != null);
     try t.expect(std.mem.indexOf(u8, il, "# myl-rc-state") != null);
+    try t.expect(try scopeBranchesUseBooleans(il));
     const journal = il[pin..];
-    try t.expect(std.mem.indexOf(u8, journal, "=w loaduw") != null);
-    try t.expect(std.mem.indexOf(u8, journal, "=w cnew") != null);
-    try t.expect(std.mem.indexOf(u8, journal, "4294967295") != null);
-    try t.expect(std.mem.indexOf(u8, journal, "18446744073709551615") == null);
+    try t.expect(std.mem.indexOf(u8, journal, "=l loadl") != null);
+    try t.expect(std.mem.indexOf(u8, journal, "=w cnel") != null);
+    try t.expect(std.mem.indexOf(u8, journal, "18446744073709551615") != null);
+    try t.expect(std.mem.indexOf(u8, journal, "=l add") != null);
+    try t.expect(std.mem.indexOf(u8, journal, "=w cugtl") != null);
 }
 // spec-case: RC-SCOPE-IL-1
 test "RC-SCOPE-IL-1 stats and sites keep native journal event attribution" {

@@ -107,7 +107,7 @@ test "RC-OWNERSHIP-PLAN-1 mixed fresh provenance keeps canonical owned result" {
     var facts = try shapes.Catalog.init(t.allocator, &fixture.layouts);
     defer facts.deinit();
     const function = try namedFunction(fixture.compilation.code.?, "choose");
-    const contract = try calls.guest(fixture.arena.allocator(), &facts, function, "rc-v4");
+    const contract = try calls.guest(fixture.arena.allocator(), &facts, function, "rc-v5");
     try t.expect(function.signature.inferred.borrow_origin == .params);
     try t.expectEqualSlices(u16, &.{0}, function.signature.inferred.borrow_origin.params);
     try t.expect(contract.result == .owned);
@@ -138,7 +138,7 @@ test "RC-OWNERSHIP-PLAN-1 mut aggregates and mutable payloads keep distinct call
     var facts = try shapes.Catalog.init(t.allocator, &fixture.layouts);
     defer facts.deinit();
     const function = try namedFunction(fixture.compilation.code.?, "change");
-    const contract = try calls.guest(fixture.arena.allocator(), &facts, function, "rc-v4");
+    const contract = try calls.guest(fixture.arena.allocator(), &facts, function, "rc-v5");
     try t.expect(contract.result == .plain);
     try t.expectEqualSlices(model.Parameter, &.{ .caller_storage, .mutable_payload, .caller_storage }, contract.parameters);
 }
@@ -370,7 +370,7 @@ test "RC-OWNERSHIP-PLAN-1 move-only guest parameters preserve callee drop owners
     var facts = try shapes.Catalog.init(t.allocator, &fixture.layouts);
     defer facts.deinit();
     const function = try namedFunction(fixture.compilation.code.?, "consume");
-    const contract = try calls.guest(fixture.arena.allocator(), &facts, function, "rc-v4");
+    const contract = try calls.guest(fixture.arena.allocator(), &facts, function, "rc-v5");
     try t.expectEqualSlices(model.Parameter, &.{.consume_on_entry}, contract.parameters);
     try t.expect(contract.failure == .parameter_contracts);
 }
@@ -391,8 +391,8 @@ fn planInput(fixture: *ShapeFixture, facts: *shapes.Catalog, name: []const u8) !
         .code = .{ .program = program, .function = function, .states = ir.states },
         .flow = .{ .live = live, .ownership = analysis },
         .physical = .{ .catalog = facts, .locals = bindings },
-        .contracts = .{ .current = try calls.guest(a, facts, function, "rc-v4") },
-        .policy = .{ .abi = "rc-v4" },
+        .contracts = .{ .current = try calls.guest(a, facts, function, "rc-v5") },
+        .policy = .{ .abi = "rc-v5" },
     };
 }
 

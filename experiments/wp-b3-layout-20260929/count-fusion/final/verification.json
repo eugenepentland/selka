@@ -1,0 +1,1411 @@
+{
+  "source_tip": "c435008b",
+  "compiler_sha256": "56ecbff8438498f7e47835bb64e2f703928d12da934a2431caffc5c446209c6f",
+  "acceptance": false,
+  "reason": "A5 per-row instruction increases exceed one percent",
+  "cpu_pool": [
+    2,
+    3,
+    10,
+    11
+  ],
+  "rows": {
+    "dev": {
+      "image-control": {
+        "rows": [
+          {
+            "arm": "qbe",
+            "gc": 1346933341,
+            "id": "lox/vm/binary_trees",
+            "ratio": 1.156730157739855,
+            "rc": 1558038416,
+            "control_rc": 1571162455,
+            "control_gc": 1346933341,
+            "increase_percent": -0.8353075748618211
+          },
+          {
+            "arm": "llvm",
+            "gc": 636876532,
+            "id": "lox/vm/binary_trees",
+            "ratio": 1.1552047453995369,
+            "rc": 735722792,
+            "control_rc": 742037643,
+            "control_gc": 636876532,
+            "increase_percent": -0.8510149127299749
+          },
+          {
+            "arm": "qbe",
+            "gc": 2080041793,
+            "id": "lox/vm/closures",
+            "ratio": 1.1801083580439387,
+            "rc": 2454674705,
+            "control_rc": 2471366968,
+            "control_gc": 2080041793,
+            "increase_percent": -0.6754263213895939
+          },
+          {
+            "arm": "llvm",
+            "gc": 893619270,
+            "id": "lox/vm/closures",
+            "ratio": 1.1925784210092067,
+            "rc": 1065711058,
+            "control_rc": 1068663305,
+            "control_gc": 893619270,
+            "increase_percent": -0.27625604680044935
+          },
+          {
+            "arm": "qbe",
+            "gc": 2092506843,
+            "id": "lox/vm/equality",
+            "ratio": 0.8767858294645491,
+            "rc": 1834680348,
+            "control_rc": 1834722852,
+            "control_gc": 2092506843,
+            "increase_percent": -0.0023166441707300756
+          },
+          {
+            "arm": "llvm",
+            "gc": 755710916,
+            "id": "lox/vm/equality",
+            "ratio": 0.9934789998454912,
+            "rc": 750782925,
+            "control_rc": 729455221,
+            "control_gc": 755710916,
+            "increase_percent": 2.9237852284835553
+          },
+          {
+            "arm": "qbe",
+            "gc": 1291425095,
+            "id": "lox/vm/fib",
+            "ratio": 1.1080302586190645,
+            "rc": 1430938082,
+            "control_rc": 1433375144,
+            "control_gc": 1291425095,
+            "increase_percent": -0.17002262179592886
+          },
+          {
+            "arm": "llvm",
+            "gc": 504034883,
+            "id": "lox/vm/fib",
+            "ratio": 1.0998370781412763,
+            "rc": 554356253,
+            "control_rc": 547808102,
+            "control_gc": 504034883,
+            "increase_percent": 1.1953366472845728
+          },
+          {
+            "arm": "qbe",
+            "gc": 1478122349,
+            "id": "lox/vm/instantiation",
+            "ratio": 1.2896999874805357,
+            "rc": 1906334375,
+            "control_rc": 1927794585,
+            "control_gc": 1478122349,
+            "increase_percent": -1.113200035262052
+          },
+          {
+            "arm": "llvm",
+            "gc": 769157460,
+            "id": "lox/vm/instantiation",
+            "ratio": 1.2452567072547147,
+            "rc": 957798486,
+            "control_rc": 969366150,
+            "control_gc": 769157460,
+            "increase_percent": -1.1933224612804993
+          },
+          {
+            "arm": "qbe",
+            "gc": 3015242690,
+            "id": "lox/vm/invocation",
+            "ratio": 1.2193228091367996,
+            "rc": 3676554187,
+            "control_rc": 3695534138,
+            "control_gc": 3015242690,
+            "increase_percent": -0.513591548372816
+          },
+          {
+            "arm": "llvm",
+            "gc": 1271922336,
+            "id": "lox/vm/invocation",
+            "ratio": 1.2161091319965625,
+            "rc": 1546796368,
+            "control_rc": 1546466099,
+            "control_gc": 1271922336,
+            "increase_percent": 0.021356368575653484
+          },
+          {
+            "arm": "qbe",
+            "gc": 2927365605,
+            "id": "lox/vm/method_call",
+            "ratio": 1.1953652495688183,
+            "rc": 3499271117,
+            "control_rc": 3527463379,
+            "control_gc": 2927365605,
+            "increase_percent": -0.7992219612494522
+          },
+          {
+            "arm": "llvm",
+            "gc": 1197323580,
+            "id": "lox/vm/method_call",
+            "ratio": 1.2658968747612904,
+            "rc": 1515688178,
+            "control_rc": 1527963294,
+            "control_gc": 1197323580,
+            "increase_percent": -0.8033645865841099
+          },
+          {
+            "arm": "qbe",
+            "gc": 2629728583,
+            "id": "lox/vm/properties",
+            "ratio": 1.2137006007513134,
+            "rc": 3191703161,
+            "control_rc": 3217059263,
+            "control_gc": 2629728583,
+            "increase_percent": -0.7881764035753136
+          },
+          {
+            "arm": "llvm",
+            "gc": 1131581117,
+            "id": "lox/vm/properties",
+            "ratio": 1.2340984000354258,
+            "rc": 1396482446,
+            "control_rc": 1405336579,
+            "control_gc": 1131581117,
+            "increase_percent": -0.6300364718536233
+          },
+          {
+            "arm": "qbe",
+            "gc": 2047084640,
+            "id": "lox/vm/string_equality",
+            "ratio": 0.981628468962573,
+            "rc": 2009476561,
+            "control_rc": 2010674596,
+            "control_gc": 2047084640,
+            "increase_percent": -0.059583733856460874
+          },
+          {
+            "arm": "llvm",
+            "gc": 654173833,
+            "id": "lox/vm/string_equality",
+            "ratio": 1.2440823859733932,
+            "rc": 813846143,
+            "control_rc": 801855701,
+            "control_gc": 654173833,
+            "increase_percent": 1.4953366279053304
+          },
+          {
+            "arm": "qbe",
+            "gc": 1630729928,
+            "id": "lox/vm/strings",
+            "ratio": 0.8411636810286099,
+            "rc": 1371710789,
+            "control_rc": 1372462917,
+            "control_gc": 1630729928,
+            "increase_percent": -0.054801334934717616
+          },
+          {
+            "arm": "llvm",
+            "gc": 810164070,
+            "id": "lox/vm/strings",
+            "ratio": 0.7205246648373335,
+            "rc": 583743195,
+            "control_rc": 574850209,
+            "control_gc": 810164070,
+            "increase_percent": 1.5470092661999946
+          },
+          {
+            "arm": "qbe",
+            "gc": 4330048823,
+            "id": "lox/vm/trees",
+            "ratio": 1.1262649730635612,
+            "rc": 4876782321,
+            "control_rc": 4914896563,
+            "control_gc": 4330048823,
+            "increase_percent": -0.7754841126653478
+          },
+          {
+            "arm": "llvm",
+            "gc": 1991351408,
+            "id": "lox/vm/trees",
+            "ratio": 1.0953470694510388,
+            "rc": 2181220929,
+            "control_rc": 2197546635,
+            "control_gc": 1991351408,
+            "increase_percent": -0.7429060089093387
+          },
+          {
+            "arm": "qbe",
+            "gc": 3317568768,
+            "id": "lox/vm/zoo",
+            "ratio": 1.153460559705872,
+            "rc": 3826684728,
+            "control_rc": 3851923682,
+            "control_gc": 3317568768,
+            "increase_percent": -0.6552298561350312
+          },
+          {
+            "arm": "llvm",
+            "gc": 1418239189,
+            "id": "lox/vm/zoo",
+            "ratio": 1.150836577256645,
+            "rc": 1632161534,
+            "control_rc": 1637390485,
+            "control_gc": 1418239189,
+            "increase_percent": -0.3193466096146236
+          },
+          {
+            "arm": "qbe",
+            "gc": 2755789475,
+            "id": "lox/vm/zoo_batch",
+            "ratio": 1.1545801353349026,
+            "rc": 3181779785,
+            "control_rc": 3201986513,
+            "control_gc": 2755789475,
+            "increase_percent": -0.6310684919490162
+          },
+          {
+            "arm": "llvm",
+            "gc": 1159114440,
+            "id": "lox/vm/zoo_batch",
+            "ratio": 1.1617715805524775,
+            "rc": 1346626215,
+            "control_rc": 1350660686,
+            "control_gc": 1159114440,
+            "increase_percent": -0.2987035190865073
+          }
+        ],
+        "above_one_percent": 4,
+        "gc_instruction_rows_identical": true
+      },
+      "acquire": {
+        "rows": [
+          {
+            "arm": "qbe",
+            "gc": 1346933341,
+            "id": "lox/vm/binary_trees",
+            "ratio": 1.156730157739855,
+            "rc": 1558038416,
+            "control_rc": 1562744500,
+            "control_gc": 1346933341,
+            "increase_percent": -0.3011422532602115
+          },
+          {
+            "arm": "llvm",
+            "gc": 636876532,
+            "id": "lox/vm/binary_trees",
+            "ratio": 1.1552047453995369,
+            "rc": 735722792,
+            "control_rc": 737359755,
+            "control_gc": 636876532,
+            "increase_percent": -0.2220033014956213
+          },
+          {
+            "arm": "qbe",
+            "gc": 2080041793,
+            "id": "lox/vm/closures",
+            "ratio": 1.1801083580439387,
+            "rc": 2454674705,
+            "control_rc": 2466171736,
+            "control_gc": 2080041793,
+            "increase_percent": -0.46618939111870983
+          },
+          {
+            "arm": "llvm",
+            "gc": 893619270,
+            "id": "lox/vm/closures",
+            "ratio": 1.1925784210092067,
+            "rc": 1065711058,
+            "control_rc": 1069172903,
+            "control_gc": 893619270,
+            "increase_percent": -0.323787199459169
+          },
+          {
+            "arm": "qbe",
+            "gc": 2092506843,
+            "id": "lox/vm/equality",
+            "ratio": 0.8767858294645491,
+            "rc": 1834680348,
+            "control_rc": 1834692874,
+            "control_gc": 2092506843,
+            "increase_percent": -0.0006827300731093722
+          },
+          {
+            "arm": "llvm",
+            "gc": 755710916,
+            "id": "lox/vm/equality",
+            "ratio": 0.9934789998454912,
+            "rc": 750782925,
+            "control_rc": 751695382,
+            "control_gc": 755710916,
+            "increase_percent": -0.12138653793140053
+          },
+          {
+            "arm": "qbe",
+            "gc": 1291425095,
+            "id": "lox/vm/fib",
+            "ratio": 1.1080302586190645,
+            "rc": 1430938082,
+            "control_rc": 1431669653,
+            "control_gc": 1291425095,
+            "increase_percent": -0.051099148359190494
+          },
+          {
+            "arm": "llvm",
+            "gc": 504034883,
+            "id": "lox/vm/fib",
+            "ratio": 1.0998370781412763,
+            "rc": 554356253,
+            "control_rc": 551810023,
+            "control_gc": 504034883,
+            "increase_percent": 0.4614323578533419
+          },
+          {
+            "arm": "qbe",
+            "gc": 1478122349,
+            "id": "lox/vm/instantiation",
+            "ratio": 1.2896999874805357,
+            "rc": 1906334375,
+            "control_rc": 1921696769,
+            "control_gc": 1478122349,
+            "increase_percent": -0.7994182145601547
+          },
+          {
+            "arm": "llvm",
+            "gc": 769157460,
+            "id": "lox/vm/instantiation",
+            "ratio": 1.2452567072547147,
+            "rc": 957798486,
+            "control_rc": 963781739,
+            "control_gc": 769157460,
+            "increase_percent": -0.6208099570560566
+          },
+          {
+            "arm": "qbe",
+            "gc": 3015242690,
+            "id": "lox/vm/invocation",
+            "ratio": 1.2193228091367996,
+            "rc": 3676554187,
+            "control_rc": 3675678569,
+            "control_gc": 3015242690,
+            "increase_percent": 0.023821941542578884
+          },
+          {
+            "arm": "llvm",
+            "gc": 1271922336,
+            "id": "lox/vm/invocation",
+            "ratio": 1.2161091319965625,
+            "rc": 1546796368,
+            "control_rc": 1534159387,
+            "control_gc": 1271922336,
+            "increase_percent": 0.823707178477151
+          },
+          {
+            "arm": "qbe",
+            "gc": 2927365605,
+            "id": "lox/vm/method_call",
+            "ratio": 1.1953652495688183,
+            "rc": 3499271117,
+            "control_rc": 3501995629,
+            "control_gc": 2927365605,
+            "increase_percent": -0.07779884067925513
+          },
+          {
+            "arm": "llvm",
+            "gc": 1197323580,
+            "id": "lox/vm/method_call",
+            "ratio": 1.2658968747612904,
+            "rc": 1515688178,
+            "control_rc": 1509578306,
+            "control_gc": 1197323580,
+            "increase_percent": 0.4047403156044016
+          },
+          {
+            "arm": "qbe",
+            "gc": 2629728583,
+            "id": "lox/vm/properties",
+            "ratio": 1.2137006007513134,
+            "rc": 3191703161,
+            "control_rc": 3190544082,
+            "control_gc": 2629728583,
+            "increase_percent": 0.036328568739696365
+          },
+          {
+            "arm": "llvm",
+            "gc": 1131581117,
+            "id": "lox/vm/properties",
+            "ratio": 1.2340984000354258,
+            "rc": 1396482446,
+            "control_rc": 1384479906,
+            "control_gc": 1131581117,
+            "increase_percent": 0.8669349369379686
+          },
+          {
+            "arm": "qbe",
+            "gc": 2047084640,
+            "id": "lox/vm/string_equality",
+            "ratio": 0.981628468962573,
+            "rc": 2009476561,
+            "control_rc": 2009760833,
+            "control_gc": 2047084640,
+            "increase_percent": -0.014144568613949637
+          },
+          {
+            "arm": "llvm",
+            "gc": 654173833,
+            "id": "lox/vm/string_equality",
+            "ratio": 1.2440823859733932,
+            "rc": 813846143,
+            "control_rc": 815386673,
+            "control_gc": 654173833,
+            "increase_percent": -0.18893244775904927
+          },
+          {
+            "arm": "qbe",
+            "gc": 1630729928,
+            "id": "lox/vm/strings",
+            "ratio": 0.8411636810286099,
+            "rc": 1371710789,
+            "control_rc": 1371239602,
+            "control_gc": 1630729928,
+            "increase_percent": 0.034362120180375655
+          },
+          {
+            "arm": "llvm",
+            "gc": 810164070,
+            "id": "lox/vm/strings",
+            "ratio": 0.7205246648373335,
+            "rc": 583743195,
+            "control_rc": 583324132,
+            "control_gc": 810164070,
+            "increase_percent": 0.07184050462016867
+          },
+          {
+            "arm": "qbe",
+            "gc": 4330048823,
+            "id": "lox/vm/trees",
+            "ratio": 1.1262649730635612,
+            "rc": 4876782321,
+            "control_rc": 4879401179,
+            "control_gc": 4330048823,
+            "increase_percent": -0.053671708964431186
+          },
+          {
+            "arm": "llvm",
+            "gc": 1991351408,
+            "id": "lox/vm/trees",
+            "ratio": 1.0953470694510388,
+            "rc": 2181220929,
+            "control_rc": 2173045643,
+            "control_gc": 1991351408,
+            "increase_percent": 0.3762132666810247
+          },
+          {
+            "arm": "qbe",
+            "gc": 3317568768,
+            "id": "lox/vm/zoo",
+            "ratio": 1.153460559705872,
+            "rc": 3826684728,
+            "control_rc": 3825495222,
+            "control_gc": 3317568768,
+            "increase_percent": 0.031094170322298886
+          },
+          {
+            "arm": "llvm",
+            "gc": 1418239189,
+            "id": "lox/vm/zoo",
+            "ratio": 1.150836577256645,
+            "rc": 1632161534,
+            "control_rc": 1619471493,
+            "control_gc": 1418239189,
+            "increase_percent": 0.7835915022185613
+          },
+          {
+            "arm": "qbe",
+            "gc": 2755789475,
+            "id": "lox/vm/zoo_batch",
+            "ratio": 1.1545801353349026,
+            "rc": 3181779785,
+            "control_rc": 3180832579,
+            "control_gc": 2755789475,
+            "increase_percent": 0.02977855566035359
+          },
+          {
+            "arm": "llvm",
+            "gc": 1159114440,
+            "id": "lox/vm/zoo_batch",
+            "ratio": 1.1617715805524775,
+            "rc": 1346626215,
+            "control_rc": 1336558405,
+            "control_gc": 1159114440,
+            "increase_percent": 0.7532637528099739
+          }
+        ],
+        "above_one_percent": 0,
+        "gc_instruction_rows_identical": true
+      },
+      "a5": {
+        "rows": [
+          {
+            "arm": "qbe",
+            "gc": 1346933341,
+            "id": "lox/vm/binary_trees",
+            "ratio": 1.156730157739855,
+            "rc": 1558038416,
+            "control_rc": 1570515524,
+            "control_gc": 1346930807,
+            "increase_percent": -0.794459386700086
+          },
+          {
+            "arm": "llvm",
+            "gc": 636876532,
+            "id": "lox/vm/binary_trees",
+            "ratio": 1.1552047453995369,
+            "rc": 735722792,
+            "control_rc": 744869520,
+            "control_gc": 636873958,
+            "increase_percent": -1.227963791564457
+          },
+          {
+            "arm": "qbe",
+            "gc": 2080041793,
+            "id": "lox/vm/closures",
+            "ratio": 1.1801083580439387,
+            "rc": 2454674705,
+            "control_rc": 2411957745,
+            "control_gc": 2080040084,
+            "increase_percent": 1.771049268526892
+          },
+          {
+            "arm": "llvm",
+            "gc": 893619270,
+            "id": "lox/vm/closures",
+            "ratio": 1.1925784210092067,
+            "rc": 1065711058,
+            "control_rc": 1037669721,
+            "control_gc": 893617757,
+            "increase_percent": 2.7023374039454984
+          },
+          {
+            "arm": "qbe",
+            "gc": 2092506843,
+            "id": "lox/vm/equality",
+            "ratio": 0.8767858294645491,
+            "rc": 1834680348,
+            "control_rc": 1833079895,
+            "control_gc": 2092505322,
+            "increase_percent": 0.08730950595037257
+          },
+          {
+            "arm": "llvm",
+            "gc": 755710916,
+            "id": "lox/vm/equality",
+            "ratio": 0.9934789998454912,
+            "rc": 750782925,
+            "control_rc": 734894489,
+            "control_gc": 755709492,
+            "increase_percent": 2.162002333371693
+          },
+          {
+            "arm": "qbe",
+            "gc": 1291425095,
+            "id": "lox/vm/fib",
+            "ratio": 1.1080302586190645,
+            "rc": 1430938082,
+            "control_rc": 1403823699,
+            "control_gc": 1291424436,
+            "increase_percent": 1.931466395624648
+          },
+          {
+            "arm": "llvm",
+            "gc": 504034883,
+            "id": "lox/vm/fib",
+            "ratio": 1.0998370781412763,
+            "rc": 554356253,
+            "control_rc": 539642310,
+            "control_gc": 504034321,
+            "increase_percent": 2.726610335649915
+          },
+          {
+            "arm": "qbe",
+            "gc": 1478122349,
+            "id": "lox/vm/instantiation",
+            "ratio": 1.2896999874805357,
+            "rc": 1906334375,
+            "control_rc": 1864273716,
+            "control_gc": 1478121666,
+            "increase_percent": 2.256141822899571
+          },
+          {
+            "arm": "llvm",
+            "gc": 769157460,
+            "id": "lox/vm/instantiation",
+            "ratio": 1.2452567072547147,
+            "rc": 957798486,
+            "control_rc": 923094744,
+            "control_gc": 769156862,
+            "increase_percent": 3.7594994691032557
+          },
+          {
+            "arm": "qbe",
+            "gc": 3015242690,
+            "id": "lox/vm/invocation",
+            "ratio": 1.2193228091367996,
+            "rc": 3676554187,
+            "control_rc": 3589241154,
+            "control_gc": 3015241060,
+            "increase_percent": 2.4326321150835772
+          },
+          {
+            "arm": "llvm",
+            "gc": 1271922336,
+            "id": "lox/vm/invocation",
+            "ratio": 1.2161091319965625,
+            "rc": 1546796368,
+            "control_rc": 1483023798,
+            "control_gc": 1271920966,
+            "increase_percent": 4.300171722530921
+          },
+          {
+            "arm": "qbe",
+            "gc": 2927365605,
+            "id": "lox/vm/method_call",
+            "ratio": 1.1953652495688183,
+            "rc": 3499271117,
+            "control_rc": 3480344602,
+            "control_gc": 2927363972,
+            "increase_percent": 0.5438115234084551
+          },
+          {
+            "arm": "llvm",
+            "gc": 1197323580,
+            "id": "lox/vm/method_call",
+            "ratio": 1.2658968747612904,
+            "rc": 1515688178,
+            "control_rc": 1503782645,
+            "control_gc": 1197322153,
+            "increase_percent": 0.7917057055808696
+          },
+          {
+            "arm": "qbe",
+            "gc": 2629728583,
+            "id": "lox/vm/properties",
+            "ratio": 1.2137006007513134,
+            "rc": 3191703161,
+            "control_rc": 3115449534,
+            "control_gc": 2629726981,
+            "increase_percent": 2.4475962832271048
+          },
+          {
+            "arm": "llvm",
+            "gc": 1131581117,
+            "id": "lox/vm/properties",
+            "ratio": 1.2340984000354258,
+            "rc": 1396482446,
+            "control_rc": 1341852157,
+            "control_gc": 1131579684,
+            "increase_percent": 4.071259916005787
+          },
+          {
+            "arm": "qbe",
+            "gc": 2047084640,
+            "id": "lox/vm/string_equality",
+            "ratio": 0.981628468962573,
+            "rc": 2009476561,
+            "control_rc": 1980133255,
+            "control_gc": 2047084080,
+            "increase_percent": 1.4818854198779707
+          },
+          {
+            "arm": "llvm",
+            "gc": 654173833,
+            "id": "lox/vm/string_equality",
+            "ratio": 1.2440823859733932,
+            "rc": 813846143,
+            "control_rc": 816821302,
+            "control_gc": 654259906,
+            "increase_percent": -0.36423621576902043
+          },
+          {
+            "arm": "qbe",
+            "gc": 1630729928,
+            "id": "lox/vm/strings",
+            "ratio": 0.8411636810286099,
+            "rc": 1371710789,
+            "control_rc": 1641904642,
+            "control_gc": 1630729139,
+            "increase_percent": -16.45612333922618
+          },
+          {
+            "arm": "llvm",
+            "gc": 810164070,
+            "id": "lox/vm/strings",
+            "ratio": 0.7205246648373335,
+            "rc": 583743195,
+            "control_rc": 848685496,
+            "control_gc": 810163435,
+            "increase_percent": -31.217960274886092
+          },
+          {
+            "arm": "qbe",
+            "gc": 4330048823,
+            "id": "lox/vm/trees",
+            "ratio": 1.1262649730635612,
+            "rc": 4876782321,
+            "control_rc": 4843947444,
+            "control_gc": 4330048516,
+            "increase_percent": 0.677853700511788
+          },
+          {
+            "arm": "llvm",
+            "gc": 1991351408,
+            "id": "lox/vm/trees",
+            "ratio": 1.0953470694510388,
+            "rc": 2181220929,
+            "control_rc": 2163348816,
+            "control_gc": 1991351003,
+            "increase_percent": 0.8261318224698222
+          },
+          {
+            "arm": "qbe",
+            "gc": 3317568768,
+            "id": "lox/vm/zoo",
+            "ratio": 1.153460559705872,
+            "rc": 3826684728,
+            "control_rc": 3748274144,
+            "control_gc": 3317568067,
+            "increase_percent": 2.091911663545609
+          },
+          {
+            "arm": "llvm",
+            "gc": 1418239189,
+            "id": "lox/vm/zoo",
+            "ratio": 1.150836577256645,
+            "rc": 1632161534,
+            "control_rc": 1573647058,
+            "control_gc": 1418238623,
+            "increase_percent": 3.718398970247372
+          },
+          {
+            "arm": "qbe",
+            "gc": 2755789475,
+            "id": "lox/vm/zoo_batch",
+            "ratio": 1.1545801353349026,
+            "rc": 3181779785,
+            "control_rc": 3120634691,
+            "control_gc": 2755789092,
+            "increase_percent": 1.9593800638166403
+          },
+          {
+            "arm": "llvm",
+            "gc": 1159114440,
+            "id": "lox/vm/zoo_batch",
+            "ratio": 1.1617715805524775,
+            "rc": 1346626215,
+            "control_rc": 1304988281,
+            "control_gc": 1159113833,
+            "increase_percent": 3.1906749360303355
+          }
+        ],
+        "above_one_percent": 16,
+        "gc_instruction_rows_identical": false
+      }
+    },
+    "smoke": {
+      "image-control": {
+        "rows": [
+          {
+            "arm": "qbe",
+            "gc": 218920118,
+            "id": "lox/vm/binary_trees",
+            "ratio": 1.2075406518828937,
+            "rc": 264354942,
+            "control_rc": 266277081,
+            "control_gc": 218920118,
+            "increase_percent": -0.7218567188664649
+          },
+          {
+            "arm": "llvm",
+            "gc": 100267959,
+            "id": "lox/vm/binary_trees",
+            "ratio": 1.2607968014986721,
+            "rc": 126417522,
+            "control_rc": 127240922,
+            "control_gc": 100267959,
+            "increase_percent": -0.6471188569350361
+          },
+          {
+            "arm": "qbe",
+            "gc": 52799312,
+            "id": "lox/vm/closures",
+            "ratio": 1.2745293158365396,
+            "rc": 67294271,
+            "control_rc": 67591826,
+            "control_gc": 52799312,
+            "increase_percent": -0.44022334890020387
+          },
+          {
+            "arm": "llvm",
+            "gc": 22993151,
+            "id": "lox/vm/closures",
+            "ratio": 1.3743652620730409,
+            "rc": 31600988,
+            "control_rc": 31573880,
+            "control_gc": 22993151,
+            "increase_percent": 0.08585577699034008
+          },
+          {
+            "arm": "qbe",
+            "gc": 36887470,
+            "id": "lox/vm/equality",
+            "ratio": 1.0336738735402564,
+            "rc": 38129614,
+            "control_rc": 38172086,
+            "control_gc": 36887470,
+            "increase_percent": -0.11126455075051167
+          },
+          {
+            "arm": "llvm",
+            "gc": 13962779,
+            "id": "lox/vm/equality",
+            "ratio": 1.3189098674411448,
+            "rc": 18415647,
+            "control_rc": 18091976,
+            "control_gc": 13962779,
+            "increase_percent": 1.789030673045322
+          },
+          {
+            "arm": "qbe",
+            "gc": 11509149,
+            "id": "lox/vm/fib",
+            "ratio": 1.2373554291459776,
+            "rc": 14240908,
+            "control_rc": 14269824,
+            "control_gc": 11509149,
+            "increase_percent": -0.20263739763013433
+          },
+          {
+            "arm": "llvm",
+            "gc": 4831582,
+            "id": "lox/vm/fib",
+            "ratio": 1.322235450003746,
+            "rc": 6388489,
+            "control_rc": 6342247,
+            "control_gc": 4831582,
+            "increase_percent": 0.7291106763896105
+          },
+          {
+            "arm": "qbe",
+            "gc": 142991720,
+            "id": "lox/vm/instantiation",
+            "ratio": 1.341722996268595,
+            "rc": 191855279,
+            "control_rc": 193715718,
+            "control_gc": 142991720,
+            "increase_percent": -0.9603965125844827
+          },
+          {
+            "arm": "llvm",
+            "gc": 73399698,
+            "id": "lox/vm/instantiation",
+            "ratio": 1.3185620055275977,
+            "rc": 96782053,
+            "control_rc": 97705592,
+            "control_gc": 73399698,
+            "increase_percent": -0.9452263489688528
+          },
+          {
+            "arm": "qbe",
+            "gc": 103961077,
+            "id": "lox/vm/invocation",
+            "ratio": 1.3581247816430375,
+            "rc": 141192115,
+            "control_rc": 141901943,
+            "control_gc": 103961077,
+            "increase_percent": -0.5002242992543149
+          },
+          {
+            "arm": "llvm",
+            "gc": 44671054,
+            "id": "lox/vm/invocation",
+            "ratio": 1.5014402167452776,
+            "rc": 67070917,
+            "control_rc": 67117681,
+            "control_gc": 44671054,
+            "increase_percent": -0.0696746361066869
+          },
+          {
+            "arm": "qbe",
+            "gc": 296149020,
+            "id": "lox/vm/method_call",
+            "ratio": 1.2261935798403114,
+            "rc": 363136027,
+            "control_rc": 366038271,
+            "control_gc": 296149020,
+            "increase_percent": -0.7928799335848669
+          },
+          {
+            "arm": "llvm",
+            "gc": 121973332,
+            "id": "lox/vm/method_call",
+            "ratio": 1.3268615552783292,
+            "rc": 161841725,
+            "control_rc": 163130868,
+            "control_gc": 121973332,
+            "increase_percent": -0.7902508064874691
+          },
+          {
+            "arm": "qbe",
+            "gc": 136985051,
+            "id": "lox/vm/properties",
+            "ratio": 1.3930208851767336,
+            "rc": 190823037,
+            "control_rc": 192239159,
+            "control_gc": 136985051,
+            "increase_percent": -0.736645960878346
+          },
+          {
+            "arm": "llvm",
+            "gc": 60113850,
+            "id": "lox/vm/properties",
+            "ratio": 1.5929932120468078,
+            "rc": 95760955,
+            "control_rc": 96312124,
+            "control_gc": 60113850,
+            "increase_percent": -0.57227374613813
+          },
+          {
+            "arm": "qbe",
+            "gc": 238595356,
+            "id": "lox/vm/string_equality",
+            "ratio": 1.4022713250127132,
+            "rc": 334575426,
+            "control_rc": 335755590,
+            "control_gc": 238595356,
+            "increase_percent": -0.3514949669192413
+          },
+          {
+            "arm": "llvm",
+            "gc": 84396048,
+            "id": "lox/vm/string_equality",
+            "ratio": 2.440006942031219,
+            "rc": 205926943,
+            "control_rc": 206171186,
+            "control_gc": 84396048,
+            "increase_percent": -0.1184661177629387
+          },
+          {
+            "arm": "qbe",
+            "gc": 28790942,
+            "id": "lox/vm/strings",
+            "ratio": 0.978064732998316,
+            "rc": 28159405,
+            "control_rc": 28203464,
+            "control_gc": 28790942,
+            "increase_percent": -0.15621839927180137
+          },
+          {
+            "arm": "llvm",
+            "gc": 14615274,
+            "id": "lox/vm/strings",
+            "ratio": 0.9369351542776413,
+            "rc": 13693564,
+            "control_rc": 13569354,
+            "control_gc": 14615274,
+            "increase_percent": 0.9153715055263412
+          },
+          {
+            "arm": "qbe",
+            "gc": 17843901,
+            "id": "lox/vm/trees",
+            "ratio": 1.540846533501839,
+            "rc": 27494713,
+            "control_rc": 27675502,
+            "control_gc": 17843901,
+            "increase_percent": -0.6532456032775857
+          },
+          {
+            "arm": "llvm",
+            "gc": 8803666,
+            "id": "lox/vm/trees",
+            "ratio": 1.7878573539704936,
+            "rc": 15739699,
+            "control_rc": 15827109,
+            "control_gc": 8803666,
+            "increase_percent": -0.5522802679883032
+          },
+          {
+            "arm": "qbe",
+            "gc": 35124055,
+            "id": "lox/vm/zoo",
+            "ratio": 1.2834815057657778,
+            "rc": 45081075,
+            "control_rc": 45371954,
+            "control_gc": 35124055,
+            "increase_percent": -0.6410986840020172
+          },
+          {
+            "arm": "llvm",
+            "gc": 15507837,
+            "id": "lox/vm/zoo",
+            "ratio": 1.3883222399100532,
+            "rc": 21529875,
+            "control_rc": 21610828,
+            "control_gc": 15507837,
+            "increase_percent": -0.37459462450952774
+          },
+          {
+            "arm": "qbe",
+            "gc": 690665810,
+            "id": "lox/vm/zoo_batch",
+            "ratio": 1.1603590787272358,
+            "rc": 801420343,
+            "control_rc": 806506930,
+            "control_gc": 690665810,
+            "increase_percent": -0.6306935267127889
+          },
+          {
+            "arm": "llvm",
+            "gc": 290957158,
+            "id": "lox/vm/zoo_batch",
+            "ratio": 1.1728543519798884,
+            "rc": 341250369,
+            "control_rc": 342285199,
+            "control_gc": 290957158,
+            "increase_percent": -0.3023297539663683
+          }
+        ],
+        "above_one_percent": 1,
+        "gc_instruction_rows_identical": true
+      },
+      "acquire": {
+        "rows": [
+          {
+            "arm": "qbe",
+            "gc": 218920118,
+            "id": "lox/vm/binary_trees",
+            "ratio": 1.2075406518828937,
+            "rc": 264354942,
+            "control_rc": 264917740,
+            "control_gc": 218920118,
+            "increase_percent": -0.21244254914751792
+          },
+          {
+            "arm": "llvm",
+            "gc": 100267959,
+            "id": "lox/vm/binary_trees",
+            "ratio": 1.2607968014986721,
+            "rc": 126417522,
+            "control_rc": 126571854,
+            "control_gc": 100267959,
+            "increase_percent": -0.12193232154125155
+          },
+          {
+            "arm": "qbe",
+            "gc": 52799312,
+            "id": "lox/vm/closures",
+            "ratio": 1.2745293158365396,
+            "rc": 67294271,
+            "control_rc": 67482705,
+            "control_gc": 52799312,
+            "increase_percent": -0.2792330271882304
+          },
+          {
+            "arm": "llvm",
+            "gc": 22993151,
+            "id": "lox/vm/closures",
+            "ratio": 1.3743652620730409,
+            "rc": 31600988,
+            "control_rc": 31620359,
+            "control_gc": 22993151,
+            "increase_percent": -0.06126116404939763
+          },
+          {
+            "arm": "qbe",
+            "gc": 36887470,
+            "id": "lox/vm/equality",
+            "ratio": 1.0336738735402564,
+            "rc": 38129614,
+            "control_rc": 38142062,
+            "control_gc": 36887470,
+            "increase_percent": -0.03263588633461989
+          },
+          {
+            "arm": "llvm",
+            "gc": 13962779,
+            "id": "lox/vm/equality",
+            "ratio": 1.3189098674411448,
+            "rc": 18415647,
+            "control_rc": 18443088,
+            "control_gc": 13962779,
+            "increase_percent": -0.14878744817570233
+          },
+          {
+            "arm": "qbe",
+            "gc": 11509149,
+            "id": "lox/vm/fib",
+            "ratio": 1.2373554291459776,
+            "rc": 14240908,
+            "control_rc": 14249942,
+            "control_gc": 11509149,
+            "increase_percent": -0.06339674926396643
+          },
+          {
+            "arm": "llvm",
+            "gc": 4831582,
+            "id": "lox/vm/fib",
+            "ratio": 1.322235450003746,
+            "rc": 6388489,
+            "control_rc": 6370797,
+            "control_gc": 4831582,
+            "increase_percent": 0.2777046576746933
+          },
+          {
+            "arm": "qbe",
+            "gc": 142991720,
+            "id": "lox/vm/instantiation",
+            "ratio": 1.341722996268595,
+            "rc": 191855279,
+            "control_rc": 193177658,
+            "control_gc": 142991720,
+            "increase_percent": -0.6845403416165241
+          },
+          {
+            "arm": "llvm",
+            "gc": 73399698,
+            "id": "lox/vm/instantiation",
+            "ratio": 1.3185620055275977,
+            "rc": 96782053,
+            "control_rc": 97264656,
+            "control_gc": 73399698,
+            "increase_percent": -0.4961750957099942
+          },
+          {
+            "arm": "qbe",
+            "gc": 103961077,
+            "id": "lox/vm/invocation",
+            "ratio": 1.3581247816430375,
+            "rc": 141192115,
+            "control_rc": 141186315,
+            "control_gc": 103961077,
+            "increase_percent": 0.004108046874096161
+          },
+          {
+            "arm": "llvm",
+            "gc": 44671054,
+            "id": "lox/vm/invocation",
+            "ratio": 1.5014402167452776,
+            "rc": 67070917,
+            "control_rc": 66671854,
+            "control_gc": 44671054,
+            "increase_percent": 0.598547926985793
+          },
+          {
+            "arm": "qbe",
+            "gc": 296149020,
+            "id": "lox/vm/method_call",
+            "ratio": 1.2261935798403114,
+            "rc": 363136027,
+            "control_rc": 363430441,
+            "control_gc": 296149020,
+            "increase_percent": -0.08100972477426138
+          },
+          {
+            "arm": "llvm",
+            "gc": 121973332,
+            "id": "lox/vm/method_call",
+            "ratio": 1.3268615552783292,
+            "rc": 161841725,
+            "control_rc": 161251858,
+            "control_gc": 121973332,
+            "increase_percent": 0.36580477726959604
+          },
+          {
+            "arm": "qbe",
+            "gc": 136985051,
+            "id": "lox/vm/properties",
+            "ratio": 1.3930208851767336,
+            "rc": 190823037,
+            "control_rc": 190803931,
+            "control_gc": 136985051,
+            "increase_percent": 0.010013420530619044
+          },
+          {
+            "arm": "llvm",
+            "gc": 60113850,
+            "id": "lox/vm/properties",
+            "ratio": 1.5929932120468078,
+            "rc": 95760955,
+            "control_rc": 95196456,
+            "control_gc": 60113850,
+            "increase_percent": 0.592983209374931
+          },
+          {
+            "arm": "qbe",
+            "gc": 238595356,
+            "id": "lox/vm/string_equality",
+            "ratio": 1.4022713250127132,
+            "rc": 334575426,
+            "control_rc": 334841813,
+            "control_gc": 238595356,
+            "increase_percent": -0.07955607384075858
+          },
+          {
+            "arm": "llvm",
+            "gc": 84396048,
+            "id": "lox/vm/string_equality",
+            "ratio": 2.440006942031219,
+            "rc": 205926943,
+            "control_rc": 206246377,
+            "control_gc": 84396048,
+            "increase_percent": -0.15487981153724517
+          },
+          {
+            "arm": "qbe",
+            "gc": 28790942,
+            "id": "lox/vm/strings",
+            "ratio": 0.978064732998316,
+            "rc": 28159405,
+            "control_rc": 28160236,
+            "control_gc": 28790942,
+            "increase_percent": -0.002950969587045549
+          },
+          {
+            "arm": "llvm",
+            "gc": 14615274,
+            "id": "lox/vm/strings",
+            "ratio": 0.9369351542776413,
+            "rc": 13693564,
+            "control_rc": 13694824,
+            "control_gc": 14615274,
+            "increase_percent": -0.009200556356181444
+          },
+          {
+            "arm": "qbe",
+            "gc": 17843901,
+            "id": "lox/vm/trees",
+            "ratio": 1.540846533501839,
+            "rc": 27494713,
+            "control_rc": 27541749,
+            "control_gc": 17843901,
+            "increase_percent": -0.1707807300110109
+          },
+          {
+            "arm": "llvm",
+            "gc": 8803666,
+            "id": "lox/vm/trees",
+            "ratio": 1.7878573539704936,
+            "rc": 15739699,
+            "control_rc": 15756484,
+            "control_gc": 8803666,
+            "increase_percent": -0.10652757302961335
+          },
+          {
+            "arm": "qbe",
+            "gc": 35124055,
+            "id": "lox/vm/zoo",
+            "ratio": 1.2834815057657778,
+            "rc": 45081075,
+            "control_rc": 45079613,
+            "control_gc": 35124055,
+            "increase_percent": 0.0032431511779007494
+          },
+          {
+            "arm": "llvm",
+            "gc": 15507837,
+            "id": "lox/vm/zoo",
+            "ratio": 1.3883222399100532,
+            "rc": 21529875,
+            "control_rc": 21412823,
+            "control_gc": 15507837,
+            "increase_percent": 0.54664441022092
+          },
+          {
+            "arm": "qbe",
+            "gc": 690665810,
+            "id": "lox/vm/zoo_batch",
+            "ratio": 1.1603590787272358,
+            "rc": 801420343,
+            "control_rc": 801193036,
+            "control_gc": 690665810,
+            "increase_percent": 0.028371065372057025
+          },
+          {
+            "arm": "llvm",
+            "gc": 290957158,
+            "id": "lox/vm/zoo_batch",
+            "ratio": 1.1728543519798884,
+            "rc": 341250369,
+            "control_rc": 338742559,
+            "control_gc": 290957158,
+            "increase_percent": 0.7403291772380971
+          }
+        ],
+        "above_one_percent": 0,
+        "gc_instruction_rows_identical": true
+      }
+    }
+  },
+  "guests": [
+    {
+      "file": "fusion-sites-rc_glue_values.json",
+      "executed": 7,
+      "passed": 7
+    },
+    {
+      "file": "fusion-rc-rc_dictionary_views.json",
+      "executed": 6,
+      "passed": 6
+    },
+    {
+      "file": "fusion-llvm-rc_dictionary_views.json",
+      "executed": 6,
+      "passed": 6
+    },
+    {
+      "file": "fusion-stress-rc_glue_values.json",
+      "executed": 7,
+      "passed": 7
+    },
+    {
+      "file": "fusion-gc-rc_glue_values.json",
+      "executed": 7,
+      "passed": 7
+    },
+    {
+      "file": "fusion-rc-rc_glue_values.json",
+      "executed": 7,
+      "passed": 7
+    },
+    {
+      "file": "fusion-llvm-rc_glue_values.json",
+      "executed": 7,
+      "passed": 7
+    },
+    {
+      "file": "fusion-sites-rc_dictionary_views.json",
+      "executed": 6,
+      "passed": 6
+    },
+    {
+      "file": "fusion-stats-rc_dictionary_views.json",
+      "executed": 6,
+      "passed": 6
+    },
+    {
+      "file": "fusion-gc-rc_dictionary_views.json",
+      "executed": 6,
+      "passed": 6
+    },
+    {
+      "file": "fusion-stress-rc_dictionary_views.json",
+      "executed": 6,
+      "passed": 6
+    },
+    {
+      "file": "fusion-stats-rc_glue_values.json",
+      "executed": 7,
+      "passed": 7
+    }
+  ],
+  "a5_denominator_note": "Same archived GC binary hashes/output; instruction cache differs from independently sampled frozen A5 m17 counts. Absolute RC deltas compare m17; current cap ratios retain the isolated image-control GC cache. Wide continuation uses m17 counts explicitly."
+}
