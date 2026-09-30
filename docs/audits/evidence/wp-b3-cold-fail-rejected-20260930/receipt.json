@@ -1,0 +1,11 @@
+{
+  "base": "cfee00704911a482bd09db880f0e20631f8b6cf1",
+  "status": "rejected",
+  "archive_sha256": "f5716e2f1c2dfeb66ef34ec4acdb44d8232eff739003274b47c017b79ca52c70",
+  "archive_bytes": 4156129,
+  "raw_files": 67,
+  "reason": "LLVM located trap frames lost with unsupported saved FP CFI in pinned Linux libunwind",
+  "no_timing_claim": true,
+  "docs_only_full_guardian": "88/88",
+  "docs_guardian_sha256": "b06b860a517bb89b4c31b2f6ddea5f452d42fb18d9c5e90a6b598cba35d396a1"
+}
