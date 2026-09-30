@@ -482,6 +482,10 @@ void myl_rc_hold_edge_release(myl_native_heap *, void *);
 /* Admitted ordinary leaves only, in the authoritative walker's order. Clears
  * and enqueues each edge without callbacks or allocation; caller drains. */
 void myl_rc_flat_edges_release(myl_native_heap *, const myl_rc_binding *, void *, size_t count);
+/* RC-REGISTERED-RELEASE-1: release through a binding's canonical registered
+ * shape, retained by this heap's metadata batch or immutable registration image.
+ * Raw/source shapes must use myl_rc_edges_release to resolve their identity. */
+void myl_rc_registered_edges_release(myl_native_heap *, const myl_rc_shape *, void *, size_t count);
 /* Internal native bridge: shape is an already registered ordinary pointer. */
 myl_rc_status myl_rc_pointer_transfer(myl_native_heap *, const myl_rc_shape *, void *, void *, unsigned, myl_rc_transfer);
 /* Physical loan primitives: ordinary and held leaves both contribute H.

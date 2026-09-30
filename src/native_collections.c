@@ -1134,7 +1134,7 @@ static void rc_elements_release(myl_native_heap *heap, const myl_native_type *ty
     if (!flat->count && !flat->native_unique) return;
     /* A binding's shape is its registered copy, so its depth needs no probe. */
     if (flat->count<=MYL_RC_FLAT_LEAVES && !myl_rc_shallow_admits(binding->descriptor.shape)) myl_rc_flat_edges_release(heap,binding,storage,length);
-    else myl_rc_edges_release(heap,binding->descriptor.shape,storage,length);
+    else myl_rc_registered_edges_release(heap,binding->descriptor.shape,storage,length);
 }
 static void rc_list_edges(myl_native_heap *heap, void *payload, size_t count) {
     (void)count;

@@ -88,6 +88,10 @@ unsigned myl_rc_value_region(myl_native_heap *heap, const myl_rc_shape *source, 
 void myl_rc_edges_release(myl_native_heap *heap, const myl_rc_shape *source, void *address, size_t count) {
     myl_rc_invariant(heap && heap->rc && !heap->rc->walk.depth);
     const myl_rc_shape *shape = myl_rc_shape_find(heap, source);
+    myl_rc_registered_edges_release(heap, shape, address, count);
+}
+void myl_rc_registered_edges_release(myl_native_heap *heap, const myl_rc_shape *shape, void *address, size_t count) {
+    myl_rc_invariant(heap && heap->rc && !heap->rc->walk.depth);
     myl_rc_invariant(shape != NULL);
     size_t bytes;
     myl_rc_invariant(myl_rc_size_mul(shape->size, count, &bytes));

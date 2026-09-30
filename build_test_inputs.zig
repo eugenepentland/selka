@@ -44,6 +44,7 @@ pub const unit = [_][]const u8{
     "tests/invoke/",
     "tests/native/",
     "tests/qbe_phi_width.c",
+    "tests/native_rc_registered_release_test.c",
     "tests/qbe_phi_width.ssa",
     "tests/fixtures/qbe-zero-branch/",
     "tests/fixtures/qbe-sub-address/",
