@@ -1,0 +1,20 @@
+[
+  {
+    "mode": "none",
+    "status": 0,
+    "actual_native_collection_cases": 47,
+    "callable_query_symbol_retained": true
+  },
+  {
+    "mode": "full",
+    "status": 0,
+    "actual_native_collection_cases": 47,
+    "callable_query_symbol_retained": false
+  },
+  {
+    "mode": "thin",
+    "status": 0,
+    "actual_native_collection_cases": 47,
+    "callable_query_symbol_retained": true
+  }
+]

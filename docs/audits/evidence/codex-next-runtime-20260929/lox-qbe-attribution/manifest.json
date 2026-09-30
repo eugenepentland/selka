@@ -1,0 +1,185 @@
+{
+  "scope": "Read-only QBE attribution; no acceptance/source-change claim",
+  "members": {
+    "candidate-name-source-manifest.json": {
+      "bytes": 191798,
+      "sha256": "1886a9dbb4cd5d846c102d16da01b80edb3ff2ac510cfe61b77846d9d5cabdd4"
+    },
+    "candidate/assembly": {
+      "bytes": 14434099,
+      "sha256": "cf6e1de03cabfffd7928ca4afb641402a79861dee8d20405c4b2b5287fe2fae6"
+    },
+    "candidate/build.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "candidate/build.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "candidate/compiler.json": {
+      "bytes": 246,
+      "sha256": "3cabd2c893c5f8974cadbc782506585ed80a59f98541a1ba7bee35abdeb85aef"
+    },
+    "candidate/lox.qbe": {
+      "bytes": 2690712,
+      "sha256": "04349ea6822da9bb057fda1360e01fe98e42f98bc13bcdf9923a8fe6c59c4358"
+    },
+    "candidate/lox.qbe.qbe-manifest.json": {
+      "bytes": 521,
+      "sha256": "bc57e14746f63696e30ae53f8a37ba72508cbca16ed551689b6905afc49c59c3"
+    },
+    "candidate/lox.symbols": {
+      "bytes": 3815720,
+      "sha256": "94b948a6be396b7de251e1c63f5307ab2cfa15ce434afd9cdaa9c5f4d9e4c984"
+    },
+    "candidate/lox.symbols.qbe-manifest.json": {
+      "bytes": 521,
+      "sha256": "f695790c7724a0c02f08596ffcae3afd3b0866841d5233222feb2c7560dce0cc"
+    },
+    "candidate/symbols": {
+      "bytes": 273893,
+      "sha256": "d2bf897fd95a7d701412de2da9ae65d49b031cf1068f830f4bc2aeef7aca863a"
+    },
+    "control-name-source-manifest.json": {
+      "bytes": 186465,
+      "sha256": "9c8f9f244fb5107a5033c50eb8ca03fd0fae0fea35cc373709e756d2d463fad0"
+    },
+    "control/assembly": {
+      "bytes": 12923707,
+      "sha256": "2c14a96c53be40e2183129b3efa071478be70f7e4c800e9fdb08a1e079abc35f"
+    },
+    "control/build.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "control/build.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "control/compiler.json": {
+      "bytes": 243,
+      "sha256": "0a3638302889add17464fe8cc4e79281faa05a792a4010e84a173ec0a7547279"
+    },
+    "control/lox.qbe": {
+      "bytes": 2484664,
+      "sha256": "1ac42945bc38c49b526145b269c179441fb6cd85e8ab6607552ebe4c54741a40"
+    },
+    "control/lox.qbe.qbe-manifest.json": {
+      "bytes": 186471,
+      "sha256": "0b636fb532360a419babae9c127fbbebcf00b09c5e06451118d108e7cfdefe91"
+    },
+    "control/lox.symbols": {
+      "bytes": 3582104,
+      "sha256": "a2f5ee7676eed6ce13a5a2e50e3615b6ec7431a5320ad6740395aea26794fd3f"
+    },
+    "control/lox.symbols.qbe-manifest.json": {
+      "bytes": 190161,
+      "sha256": "223994ebcf87d59b3bb5655447b9459e668781d4da9b99905da5a5f76ff4cd39"
+    },
+    "control/symbols": {
+      "bytes": 243410,
+      "sha256": "fbdbf14b0763bf66375eb5a1e0e4fa36d2ff944ab353a1acf22015b2c8f67db1"
+    },
+    "inputs-selection.json": {
+      "bytes": 94,
+      "sha256": "1300899079115747e11eafb3ca4a67cd9f7cd824c5ac586ea3b3bc65f37b2305"
+    },
+    "inputs.json": {
+      "bytes": 14644,
+      "sha256": "224a88e42184f001ce663a726fc364ebd94b639e2173f432a96f1d31fedde1c0"
+    },
+    "prepare.log": {
+      "bytes": 98,
+      "sha256": "7807e91aeca7782d3158e2e7984e3fec1e7cfed85e807a629dc97ba7a54eb8c8"
+    },
+    "prepare.py": {
+      "bytes": 3502,
+      "sha256": "68220d8b875420578da9bacf26bde72dd4f8e8d30414fcdd9416c21186c89910"
+    },
+    "profile-receipt.json": {
+      "bytes": 5059,
+      "sha256": "c071f354ffe932904c4dfa44fc7b02c281d197801dae45dc6262cae72521fd27"
+    },
+    "profile.log": {
+      "bytes": 1826,
+      "sha256": "0f9a1c00ab9847b6b48f599351d5403904e04f1f64a8b6ed0df0b46c3c2f538b"
+    },
+    "profile.py": {
+      "bytes": 4633,
+      "sha256": "21562a326d97687237222ea2ec275f46817e693cd2e8dd088ecaec02fb8582a8"
+    },
+    "properties.n20000.lox": {
+      "bytes": 2473,
+      "sha256": "8d182fa3fcb88d74350113c3b75298bc517a9d4dfb0959b97ce551bddd700121"
+    },
+    "properties/candidate/callgrind.out": {
+      "bytes": 1489537,
+      "sha256": "a2580b7606a661fb1322241fcf78e58a1ccf3cdcf6add7a8129a095f586ae37e"
+    },
+    "properties/candidate/stderr": {
+      "bytes": 700,
+      "sha256": "db084299e7b9714a6e0c0984885ac1b0b7aaa776547266ea8c56f2ae43541fe3"
+    },
+    "properties/candidate/stdout": {
+      "bytes": 6,
+      "sha256": "0be508172e87a2af98f344d18610bbaaa0e6bbfcef0c7804b24457f839e129c9"
+    },
+    "properties/control/callgrind.out": {
+      "bytes": 1427714,
+      "sha256": "7a4942ab12dc6abd06343197e4434f3718bcec150257bb4a5ad880f88446429a"
+    },
+    "properties/control/stderr": {
+      "bytes": 698,
+      "sha256": "3663495adeec60c29d3b882933ec1028389801bb476236fcf544e1db57419ad1"
+    },
+    "properties/control/stdout": {
+      "bytes": 6,
+      "sha256": "0be508172e87a2af98f344d18610bbaaa0e6bbfcef0c7804b24457f839e129c9"
+    },
+    "properties/exact-counts.json": {
+      "bytes": 4356736,
+      "sha256": "d853371b946886095ca8d791146641f5f16b4b8300c52251c5b5609f4cd5e2b8"
+    },
+    "report.md": {
+      "bytes": 2340,
+      "sha256": "3bdb29be6d8bd6f6f67b1e755cf9a436a6c5cdb19aaad442a89cc040a2905d67"
+    },
+    "semantic-name-map.json": {
+      "bytes": 40407,
+      "sha256": "a2777b73f292b76a1035799b5b93e9c84760f344e8754ebf6435c9dad877b4b5"
+    },
+    "string_equality.n2000.lox": {
+      "bytes": 13328,
+      "sha256": "0ec2611f89af2bcdba47a1587f05e0f804a3f8368f72bbbd2bebf6cf745dad6e"
+    },
+    "string_equality/candidate/callgrind.out": {
+      "bytes": 1491129,
+      "sha256": "67eca12808acf36c47ad2528ddc8f28f02cb654f024047cfc5587fec50f2041d"
+    },
+    "string_equality/candidate/stderr": {
+      "bytes": 704,
+      "sha256": "ec0003f8a70acc9914d7d728da629ee3753e0ef8b8750b7498a5f86d46b0880c"
+    },
+    "string_equality/candidate/stdout": {
+      "bytes": 5,
+      "sha256": "1d8fa3c8ab49d50b30fccbbd901735d5896a5d7959a5ad7ccecb79c1c849cc66"
+    },
+    "string_equality/control/callgrind.out": {
+      "bytes": 1419220,
+      "sha256": "ca5d2789975c536fa5fa9854e1e91f6151b6e0a38513fb874d954798876c00a0"
+    },
+    "string_equality/control/stderr": {
+      "bytes": 702,
+      "sha256": "5ae2c0515318f640a632beb3097004bcd00cf90334d36acfc6cbe978116635b5"
+    },
+    "string_equality/control/stdout": {
+      "bytes": 5,
+      "sha256": "1d8fa3c8ab49d50b30fccbbd901735d5896a5d7959a5ad7ccecb79c1c849cc66"
+    },
+    "string_equality/exact-counts.json": {
+      "bytes": 4332320,
+      "sha256": "cad28199a9f30be80f3e650962168177511dde5d55e5393e50c171eb797eb6af"
+    }
+  }
+}
