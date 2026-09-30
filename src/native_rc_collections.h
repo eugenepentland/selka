@@ -7,6 +7,8 @@
 /* Nonmutating, nonallocating admission for one immediate scalar room append.
  * False preserves the original registration/drain/publication path. */
 int myl_rc_list_plain_ready(myl_native_heap *, const myl_native_list *);
+/* Identical admission with an LTO inline hint for certified nested loops. */
+int myl_rc_list_plain_ready_hot(myl_native_heap *, const myl_native_list *);
 /* Static list images can need their first clone before any list allocation. */
 myl_rc_status myl_rc_list_require(myl_native_heap *);
 int myl_rc_list_append(myl_native_heap *, myl_native_list *, const void *);

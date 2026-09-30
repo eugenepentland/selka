@@ -38,7 +38,7 @@ pub fn emit(comptime E: type, self: *E, append: Append) Error!bool {
         try self.print(" %v{d} =w loaduw %rcappend{d}\n jnz %v{d}, @rcappend_fast{d}, @rcappend_query{d}\n@rcappend_query{d}\n", .{ known, slot, known, label, label, label });
     }
     const admitted = self.temp();
-    try self.print(" %v{d} =w call $myl_rc_list_plain_ready(l %heap, l %v{d})\n", .{ admitted, append.list });
+    try self.print(" %v{d} =w call ${s}(l %heap, l %v{d})\n", .{ admitted, loops.query(E, self, cached), append.list });
     if (cached) |slot| try self.print(" storew %v{d}, %rcappend{d}\n", .{ admitted, slot });
     try self.print(" jnz %v{d}, @rcappend_fast{d}, @rcappend_slow{d}\n@rcappend_slow{d}\n", .{ admitted, label, label, label });
     // Never carry admission across allocation, cleanup or a reentrant callback.
