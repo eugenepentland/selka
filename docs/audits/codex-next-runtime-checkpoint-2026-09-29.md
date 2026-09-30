@@ -277,9 +277,16 @@ payload controls followed by rejected blob additions. Module checkpoint
 `96b05480`, integrated at `0801373b`, binds decoded IDs to semantic names and
 compares normalized signatures against both duplicate and original declarations.
 The independent reviewer confirms the original four regressions are corrected,
-but has reproduced one additional conflict: normalization discards an explicit
-`declared_mutates` qualifier. The module lane owns that follow-up; imported
-artifact acceptance remains open until it passes the corrected review.
+but reproduced one additional conflict: normalization discarded an explicit
+`declared_mutates` qualifier. Module follow-up `9789436d`, integrated at
+`18c173dc`, retains that declaration while projecting out inferred/body-local
+facts. The final independent review passes 8/8 cases with no skipped or cached
+verdicts. It verifies both conflicting declarations and matching declarations
+with differing local/inferred facts, preserving caller write authority.
+Original failures, the intermediate 6-pass/1-fail result and the corrected
+fixture/report/pass receipt remain separate. A subsequent targeted inspection
+of explicit host/callback effect policy is still pending; the final combined
+gate and runtime-dependent module comparisons also remain open.
 
 At `0801373b`, frozen Debug compiler
 `e692c195934c7831937a0d3c95fc756324c0454f25cdab78355309f70c3e8375`

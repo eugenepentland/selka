@@ -1,0 +1,43 @@
+{
+  "base": "3fe434c988123753f915bdcc801304f547e6c4d2",
+  "applied_module_checkpoints": [
+    "96b054808c6e9d0889d8ad23a1432d46d3943ff5",
+    "9789436dd14f1a515f0454961b70311c280bafdc"
+  ],
+  "payload_blob_fix": "4fce2270df8b20a9b641da04b75e9318215ab8a2",
+  "review_index_tree": "107ba73179fb5af734401351639a72997dbd9819",
+  "selected": 8,
+  "passed": 8,
+  "skipped": 0,
+  "failed": 0,
+  "process_exit": 0,
+  "cached_verdict": false,
+  "original_fixture_sha256": "163bbc43a7f175282a72ba561795439d4d53d7076353222f16b7f443ef5852f7",
+  "intermediate_result": {
+    "selected": 7,
+    "passed": 6,
+    "skipped": 0,
+    "failed": 1
+  },
+  "normalized_source_matches_checkpoint": true,
+  "actionable_remaining_findings": 0,
+  "guardian_exercised": false,
+  "timing_exercised": false,
+  "shared_source_edits": false,
+  "claim_scope": "Eight module-admission and readonly-proof regression cases only; no combined gate acceptance.",
+  "files": {
+    ".tmp/review/original/contracts-with-proof.log": "22fbe38ef2524a18c4efbc776ca148e835301ff5b14c4b991f63f6cac137ee6d",
+    ".tmp/review/original/contracts.log": "0bd72338571dd19794f7621be11e81521d9947143369e7de6640320250350dd1",
+    ".tmp/review/original/findings.md": "819c8330221890d987c90fcaaa7cf590cb13b143067b1e1e7ff3c276bb5cb947",
+    ".tmp/review/original/review_runtime_contracts.zig": "163bbc43a7f175282a72ba561795439d4d53d7076353222f16b7f443ef5852f7",
+    ".tmp/review/fixes-96b-4fce-failing/fixes-96b-4fce-corrected.log": "ef93b516c4904f7dc9cdc1a031e4e06a1534aef0896133c6cd1af8443ea34ffc",
+    ".tmp/review/fixes-96b-4fce-failing/minimal_declared_mutates.zig": "241a2024664d347bad8b8905c722af0173a0dcc7c65113499676079b04263b86",
+    ".tmp/review/fixes-96b-4fce-failing/module_physical_inputs.zig": "7c8c2798c84e0e32c78bde0260a03ae379ed230f4c773d126c1827ea4e56d3c5",
+    ".tmp/review/fixes-96b-4fce-failing/review_runtime_contracts.zig": "0f2ec2f5370c096c5225bee490bace3b8a7b6ddc65e17a2821fd9b81b4ee9ccb",
+    ".tmp/review/fixes-978-final/fixes-978-final.log": "567aaa8a60f83fa2542db63276d97af843bc75c23299555211dfe7521c0465ca",
+    ".tmp/review/fixes-978-final/module_physical.zig": "f4ff5e8da1bee733f905f1b4fdaeb96383e444e241da22387b5b021f172e227f",
+    ".tmp/review/fixes-978-final/module_physical_inputs.zig": "165c83aea29555593a76ffff361be178657f09f2a474573fe9d03ed90226df3a",
+    ".tmp/review/fixes-978-final/report.md": "8ad6ae326775c49598ef98cee430c470fa39cabcbd655b7bebb2284c6da20d4e",
+    ".tmp/review/fixes-978-final/review_runtime_contracts.zig": "623b2d14d278d6f7a3a8f594434779ed371b75bf9393ab7dbc818bca84082698"
+  }
+}

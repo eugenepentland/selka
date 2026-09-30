@@ -7,7 +7,7 @@
   "module_fix_checkpoint": "96b054808c6e9d0889d8ad23a1432d46d3943ff5",
   "fixed_combined_source": "0801373b",
   "root_focused_result": "22/22 (10 named and 12 imported blocks), including valid int/str/bytes payloads followed by rejected simultaneous blob authority.",
-  "final_independent_corrected_result": "pending",
+  "final_independent_corrected_result": "8 passed,0 skipped,0 failed on3fe434c9 with96b05480 and9789436d applied. Scoped artifact/readonly/declaration review has no remaining actionable finding; full combined acceptance pending.",
   "files": {
     "docs/audits/evidence/codex-next-runtime-20260929/artifact-admission-review/review_runtime_contracts.zig": "163bbc43a7f175282a72ba561795439d4d53d7076353222f16b7f443ef5852f7",
     "docs/audits/evidence/codex-next-runtime-20260929/artifact-admission-review/contracts.log.gz": "30a96e6a879927d554c2a106fd7a774f7aeeec4fce6c3a2098d079e885556f31",
@@ -15,7 +15,15 @@
     "docs/audits/evidence/codex-next-runtime-20260929/artifact-admission-review/findings.md": "819c8330221890d987c90fcaaa7cf590cb13b143067b1e1e7ff3c276bb5cb947",
     "docs/audits/evidence/codex-next-runtime-20260929/artifact-admission-review/list-blob-authority-focused.log.gz": "f6d96cdd317708d624b9bbe939236c9f51650158004bb1e7dd0bba69f1c2e4bb",
     "docs/audits/evidence/codex-next-runtime-20260929/artifact-admission-review/fixes-96b-4fce-corrected.log.gz": "b920f52c16b2efd3501faa566a35690c9632a76f8903d046de1f1501c9f32e88",
-    "docs/audits/evidence/codex-next-runtime-20260929/artifact-admission-review/corrected-contracts-with-qualifier-repro.zig": "0f2ec2f5370c096c5225bee490bace3b8a7b6ddc65e17a2821fd9b81b4ee9ccb"
+    "docs/audits/evidence/codex-next-runtime-20260929/artifact-admission-review/corrected-contracts-with-qualifier-repro.zig": "0f2ec2f5370c096c5225bee490bace3b8a7b6ddc65e17a2821fd9b81b4ee9ccb",
+    "docs/audits/evidence/codex-next-runtime-20260929/artifact-admission-review/fixes-978-final/report.md": "8ad6ae326775c49598ef98cee430c470fa39cabcbd655b7bebb2284c6da20d4e",
+    "docs/audits/evidence/codex-next-runtime-20260929/artifact-admission-review/fixes-978-final/module_physical.zig": "f4ff5e8da1bee733f905f1b4fdaeb96383e444e241da22387b5b021f172e227f",
+    "docs/audits/evidence/codex-next-runtime-20260929/artifact-admission-review/fixes-978-final/module_physical_inputs.zig": "165c83aea29555593a76ffff361be178657f09f2a474573fe9d03ed90226df3a",
+    "docs/audits/evidence/codex-next-runtime-20260929/artifact-admission-review/fixes-978-final/receipt.json": "3775a53589c9c32a3b02fd107a1f69a45a755050bdb037695a4390f547ceb513",
+    "docs/audits/evidence/codex-next-runtime-20260929/artifact-admission-review/fixes-978-final/review_runtime_contracts.zig": "623b2d14d278d6f7a3a8f594434779ed371b75bf9393ab7dbc818bca84082698",
+    "docs/audits/evidence/codex-next-runtime-20260929/artifact-admission-review/fixes-978-final/fixes-978-final.log.gz": "aca491b82ec338ff5651fe8265ec4ddfdbcdda5d893aa3fd4949d5a6af076973"
   },
-  "independent_corrected_result": "Original four regressions pass; valid duplicate and ABI conflict controls pass. One additional declared_mutates conflict reproduced:6 passed,1 failed,0 skipped. Follow-up pending."
+  "independent_corrected_result": "Original four regressions pass; valid duplicate and ABI conflict controls pass. One additional declared_mutates conflict reproduced:6 passed,1 failed,0 skipped. Follow-up pending.",
+  "module_followup_checkpoint": "9789436dd14f1a515f0454961b70311c280bafdc",
+  "root_integrated_followup": "18c173dc"
 }
