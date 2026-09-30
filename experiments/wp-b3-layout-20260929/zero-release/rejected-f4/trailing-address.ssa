@@ -1,0 +1,17 @@
+export function w $trailing_address(l %x, l %y, l %out) {
+@start
+ %addr =l add extern $review_global, 8
+ %sum =l add %x, %y
+ %cond =w cnel %sum, 0
+ %loaded =l loadl %addr
+ storel %loaded, %out
+ jnz %cond, @yes, @no
+@yes
+ %yesptr =l add %out, 8
+ storel 17, %yesptr
+ ret 0
+@no
+ %noptr =l add %out, 8
+ storel 23, %noptr
+ ret 0
+}

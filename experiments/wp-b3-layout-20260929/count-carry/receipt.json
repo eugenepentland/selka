@@ -1,0 +1,21 @@
+{
+  "source_base": "790cdfb1",
+  "compiler_sha256": "0780c13366fddd0b96b54bcc93bb84f1e47763fb27c516905af34805cff64f4d",
+  "carry_units": 13,
+  "glue_units": 17,
+  "install_steps": 12,
+  "guardian_full_checks": 88,
+  "actual_production_qbe_count_cases": 10,
+  "actual_production_llvm_count_cases": 10,
+  "zero_formula_scratch_cases": {
+    "qbe_executed": 0,
+    "llvm_executed": 10
+  },
+  "status": "functional carry prototype; no quantitative samples; QBE retains compare and preserved-old move; LLVM carry lowers back to MAX comparison",
+  "no_acceptance_claim": true,
+  "excluded_experiment_logs": [
+    "translate.log.gz",
+    "count-llvm-build.log.gz"
+  ],
+  "next": "zero-result predicate and separately approved QBE ZF branch prototype"
+}

@@ -1,0 +1,31 @@
+{
+  "source_base": "e66b8035",
+  "source_sha256": {
+    "src/qbe_rc_glue.zig": "e4b8406f504684397bef9f16912fd482b9a949155d825c8a91d5bad3268aa71b",
+    "vendor/qbe/amd64/isel.c": "3a6bb4a9a98886b599549d710988e2ec576a459f6750a71f57263ac2ee49b350",
+    "src/qbe_zero_branch_test.zig": "1e0552fa6ec2395f6e736564800665907c9b4accf9c8fcb9627916bcc025aa0a",
+    "tests/fixtures/qbe-zero-branch/probe.ssa": "66d03ad028db55f3cb770bd25333a8d005d0b3b790a3780a66d6db46f7dfef31",
+    "tests/fixtures/qbe-zero-branch/probe.c": "bfd4f944ca5b99e29da2b5cf3b66e926f7b0caaea036bbfeac2dec447447e44b"
+  },
+  "compiler_sha256": "67a130ed40e87eea7b139793d83fcc8dc6fb3683add460b1be95dc0a36c0732a",
+  "qbe_sha256": "2f7ed7dfad3b4e8a8febd05cf201bfd2dc128ed8b0518fdd299705578a31ab3c",
+  "install_steps": 12,
+  "count_units": 13,
+  "qbe_build_tests": 139,
+  "direct_zero_fixture_tests": 1,
+  "generic_native_ubsan_cases": 130,
+  "actual_production_qbe_count_cases": 10,
+  "actual_production_llvm_count_cases": 10,
+  "guardian_full_checks": 88,
+  "status": "functional checkpoint; independent review, full backend gate and quantitative acceptance pending",
+  "no_acceptance_claim": true,
+  "excluded_logs": [
+    "zero-install.log.gz",
+    "zero-qbe-build-final.log.gz",
+    "zero-branch-units-final.log.gz"
+  ],
+  "superseded_logs": [
+    "zero-qbe-build-focus-2.log.gz"
+  ],
+  "excluded_detail": "First install failed fixture embed/package and custom error-path coverage; helper now reads declared fixtures and uses standard test error. First expanded spill assertion saw GVN hoist duplicated branch sums, retaining a safe comparison. Revised distinct branch calls and shared independent return sum prove actual folded ZF under spills without a boolean long phi; current 139 tests and direct helper pass."
+}
