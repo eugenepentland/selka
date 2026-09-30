@@ -1,0 +1,12 @@
+{
+  "reviewed_source": "573ce9a4e97d4deb3e874dcaa35beb0eaacbfbb0",
+  "root_integrated_source": "aa454bc264bfa7a8cd48dbe9a01669176983d614",
+  "files": {
+    "docs/audits/evidence/codex-next-runtime-20260929/module-state-review/report.md": "a19287c1ad0ab2fb5cb93d26c83cd2c1f70909670763f9910c80432216a444d9",
+    "docs/audits/evidence/codex-next-runtime-20260929/module-state-review/module_build.zig": "3742c88d5c78ceea03d8543d017ebfbb0b58deb4e80aa1ede084cc45503d0f3d",
+    "docs/audits/evidence/codex-next-runtime-20260929/module-state-review/module_check_oracle.py": "cb818a3fac6c92ecec036b74e40bb6321a2b58405f5ad08e0fc4f28ecb9cfe99",
+    "docs/audits/evidence/codex-next-runtime-20260929/module-state-review/receipt.json": "06d49ae50738a71f7e8c09678a080b163d97c44cf9249490eb71d449311558ee",
+    "docs/audits/evidence/codex-next-runtime-20260929/module-state-review/frozen-573-receipt.json": "a5cc15120ddeef4aeb5e3f9bcd81f876ba2ff214c0326156ced5d35464a38746"
+  },
+  "scope": "Independent source inspection of no-op state guard only; no independent test, timing, key construction or broad acceptance claim."
+}
