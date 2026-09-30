@@ -1,0 +1,104 @@
+{
+  "source_candidate": "255cf730604cb6023ad5701165a100358d9c0cfe",
+  "cpu": 6,
+  "tool": "valgrind-3.26.0",
+  "scope": "Exact simulated attribution only; no timing acceptance, Guardian or source edits.",
+  "cases": {
+    "properties": {
+      "control": {
+        "admission_command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/scripts/build-slot.sh",
+          "build",
+          "taskset",
+          "-c",
+          "6",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/lox-qbe-attribution/valgrind-local/usr/bin/valgrind",
+          "--tool=callgrind",
+          "--dump-instr=yes",
+          "--collect-jumps=yes",
+          "--compress-pos=no",
+          "--compress-strings=no",
+          "--callgrind-out-file=/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/lox-qbe-attribution/properties/control/callgrind.out",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/lox-qbe-attribution/control/lox.symbols",
+          "--engine=vm",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/lox-qbe-attribution/properties.n20000.lox"
+        ],
+        "status": 0,
+        "elapsed_seconds": 10.890331567032263,
+        "stdout": "20000\n",
+        "binary_sha256": "a2f5ee7676eed6ce13a5a2e50e3615b6ec7431a5320ad6740395aea26794fd3f"
+      },
+      "candidate": {
+        "admission_command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/scripts/build-slot.sh",
+          "build",
+          "taskset",
+          "-c",
+          "6",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/lox-qbe-attribution/valgrind-local/usr/bin/valgrind",
+          "--tool=callgrind",
+          "--dump-instr=yes",
+          "--collect-jumps=yes",
+          "--compress-pos=no",
+          "--compress-strings=no",
+          "--callgrind-out-file=/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/lox-qbe-attribution/properties/candidate/callgrind.out",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/lox-qbe-attribution/candidate/lox.symbols",
+          "--engine=vm",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/lox-qbe-attribution/properties.n20000.lox"
+        ],
+        "status": 0,
+        "elapsed_seconds": 10.94099474803079,
+        "stdout": "20000\n",
+        "binary_sha256": "94b948a6be396b7de251e1c63f5307ab2cfa15ce434afd9cdaa9c5f4d9e4c984"
+      }
+    },
+    "string_equality": {
+      "control": {
+        "admission_command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/scripts/build-slot.sh",
+          "build",
+          "taskset",
+          "-c",
+          "6",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/lox-qbe-attribution/valgrind-local/usr/bin/valgrind",
+          "--tool=callgrind",
+          "--dump-instr=yes",
+          "--collect-jumps=yes",
+          "--compress-pos=no",
+          "--compress-strings=no",
+          "--callgrind-out-file=/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/lox-qbe-attribution/string_equality/control/callgrind.out",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/lox-qbe-attribution/control/lox.symbols",
+          "--engine=vm",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/lox-qbe-attribution/string_equality.n2000.lox"
+        ],
+        "status": 0,
+        "elapsed_seconds": 15.474360127933323,
+        "stdout": "2000\n",
+        "binary_sha256": "a2f5ee7676eed6ce13a5a2e50e3615b6ec7431a5320ad6740395aea26794fd3f"
+      },
+      "candidate": {
+        "admission_command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/scripts/build-slot.sh",
+          "build",
+          "taskset",
+          "-c",
+          "6",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/lox-qbe-attribution/valgrind-local/usr/bin/valgrind",
+          "--tool=callgrind",
+          "--dump-instr=yes",
+          "--collect-jumps=yes",
+          "--compress-pos=no",
+          "--compress-strings=no",
+          "--callgrind-out-file=/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/lox-qbe-attribution/string_equality/candidate/callgrind.out",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/lox-qbe-attribution/candidate/lox.symbols",
+          "--engine=vm",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/lox-qbe-attribution/string_equality.n2000.lox"
+        ],
+        "status": 0,
+        "elapsed_seconds": 16.042798849986866,
+        "stdout": "2000\n",
+        "binary_sha256": "94b948a6be396b7de251e1c63f5307ab2cfa15ce434afd9cdaa9c5f4d9e4c984"
+      }
+    }
+  }
+}

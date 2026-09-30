@@ -1,0 +1,73 @@
+{
+  "tool": "valgrind-3.26.0",
+  "cpu": 4,
+  "measurement": "Exact simulated retired instruction/basic-block attribution on allocated-section-identical symbol counterparts; no timing or quantitative acceptance claim.",
+  "sides": {
+    "a5": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-fannkuch-review-20260930/scripts/build-slot.sh",
+        "build",
+        "taskset",
+        "-c",
+        "4",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-fannkuch-review-20260930/.tmp/fannkuch-profile/valgrind-local/usr/bin/valgrind",
+        "--tool=callgrind",
+        "--dump-instr=yes",
+        "--collect-jumps=yes",
+        "--compress-pos=no",
+        "--compress-strings=no",
+        "--callgrind-out-file=/home/epentland/ai/canopy/mylang-worktrees/codex-next-fannkuch-review-20260930/.tmp/fannkuch-profile/a5/callgrind.out",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-fannkuch-review-20260930/.tmp/fannkuch-profile/a5/fannkuch.symbols"
+      ],
+      "status": 0,
+      "stdout": "73196\nPfannkuchen(10) = 38\n",
+      "stderr": "==2108025== Callgrind, a call-graph generating cache profiler\n==2108025== Copyright (C) 2002-2017, and GNU GPL'd, by Josef Weidendorfer et al.\n==2108025== Using Valgrind-3.26.0 and LibVEX; rerun with -h for copyright info\n==2108025== Command: /home/epentland/ai/canopy/mylang-worktrees/codex-next-fannkuch-review-20260930/.tmp/fannkuch-profile/a5/fannkuch.symbols\n==2108025== \n==2108025== For interactive control, run 'callgrind_control -h'.\n==2108025== \n==2108025== Events    : Ir\n==2108025== Collected : 1978701964\n==2108025== \n==2108025== I   refs:      1,978,701,964\n",
+      "original_sha256": "d9aefc57a1a1fa38be6205cf2a7d6f80f3e2c9eb1afe1ea9fa6a341b9c3d6d80",
+      "symbol_binary_sha256": "456fb9fd2030156820f74097485251fb44d48700c12625a682ec6a69d914daf1"
+    },
+    "publish": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-fannkuch-review-20260930/scripts/build-slot.sh",
+        "build",
+        "taskset",
+        "-c",
+        "4",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-fannkuch-review-20260930/.tmp/fannkuch-profile/valgrind-local/usr/bin/valgrind",
+        "--tool=callgrind",
+        "--dump-instr=yes",
+        "--collect-jumps=yes",
+        "--compress-pos=no",
+        "--compress-strings=no",
+        "--callgrind-out-file=/home/epentland/ai/canopy/mylang-worktrees/codex-next-fannkuch-review-20260930/.tmp/fannkuch-profile/publish/callgrind.out",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-fannkuch-review-20260930/.tmp/fannkuch-profile/publish/fannkuch.symbols"
+      ],
+      "status": 0,
+      "stdout": "73196\nPfannkuchen(10) = 38\n",
+      "stderr": "==2108085== Callgrind, a call-graph generating cache profiler\n==2108085== Copyright (C) 2002-2017, and GNU GPL'd, by Josef Weidendorfer et al.\n==2108085== Using Valgrind-3.26.0 and LibVEX; rerun with -h for copyright info\n==2108085== Command: /home/epentland/ai/canopy/mylang-worktrees/codex-next-fannkuch-review-20260930/.tmp/fannkuch-profile/publish/fannkuch.symbols\n==2108085== \n==2108085== For interactive control, run 'callgrind_control -h'.\n==2108085== \n==2108085== Events    : Ir\n==2108085== Collected : 1978697982\n==2108085== \n==2108085== I   refs:      1,978,697,982\n",
+      "original_sha256": "65b080ee63090c9b6f42e9ffcc25f73ed833f4d315a9d07e422cebe6932acefe",
+      "symbol_binary_sha256": "524eadeabebb3785e0f3f5b6d981122b0cc148f1f07025dd295022c210e2bc7b"
+    },
+    "plain": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-fannkuch-review-20260930/scripts/build-slot.sh",
+        "build",
+        "taskset",
+        "-c",
+        "4",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-fannkuch-review-20260930/.tmp/fannkuch-profile/valgrind-local/usr/bin/valgrind",
+        "--tool=callgrind",
+        "--dump-instr=yes",
+        "--collect-jumps=yes",
+        "--compress-pos=no",
+        "--compress-strings=no",
+        "--callgrind-out-file=/home/epentland/ai/canopy/mylang-worktrees/codex-next-fannkuch-review-20260930/.tmp/fannkuch-profile/plain/callgrind.out",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-fannkuch-review-20260930/.tmp/fannkuch-profile/plain/fannkuch.symbols"
+      ],
+      "status": 0,
+      "stdout": "73196\nPfannkuchen(10) = 38\n",
+      "stderr": "==2108231== Callgrind, a call-graph generating cache profiler\n==2108231== Copyright (C) 2002-2017, and GNU GPL'd, by Josef Weidendorfer et al.\n==2108231== Using Valgrind-3.26.0 and LibVEX; rerun with -h for copyright info\n==2108231== Command: /home/epentland/ai/canopy/mylang-worktrees/codex-next-fannkuch-review-20260930/.tmp/fannkuch-profile/plain/fannkuch.symbols\n==2108231== \n==2108231== For interactive control, run 'callgrind_control -h'.\n==2108231== \n==2108231== Events    : Ir\n==2108231== Collected : 2052430133\n==2108231== \n==2108231== I   refs:      2,052,430,133\n",
+      "original_sha256": "deacc85a76009bde486eaacae9b6d7982566a059d00b33f399a0efe3aab8fdea",
+      "symbol_binary_sha256": "9acf9b48485cda63b7230e8709c37a6a4beca5da29c6acc04bd62969b187a4d5"
+    }
+  }
+}

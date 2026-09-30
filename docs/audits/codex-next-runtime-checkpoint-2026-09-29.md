@@ -524,3 +524,37 @@ probes. The precise inlining and alias-analysis triggers remain unproved;
 all MAX guards and transaction ordering must remain. The isolated view-inlining
 continuation is being tested separately; these profiles do not waive any row
 or replace the final integration gate.
+
+
+## Exact fannkuch and QBE Lox attribution
+
+The 61-member `evidence/codex-next-runtime-20260929/fannkuch-attribution/`
+archive independently verifies all 47 raw artifacts, twelve frozen binaries and
+the source receipt. All 26 allocated ELF sections match the original A5,
+publication and globally inlined checkpoints. The publication-to-global-inline
+Callgrind increase of 73,732,151 instructions reconciles exactly: ten header
+reloads per permutation add 36,288,000; two flip-loop register moves add
+44,338,868; removed padding and an outer reload subtract 3,265,920 and 3,628,799.
+Other entry instructions add 81, the removed query subtracts 93 and other
+functions add 14. The inliner's precise register-allocation trigger is not
+proved. The three executed queries are cached append queries during setup;
+they are not the presized emitter's query.
+
+The selective `c28530b0` continuation preserves the exact shared runtime query
+and limits the forced-inline alias to an already certified append loop strictly
+inside another physical loop. First-level and refused proofs use ordinary
+admission. Native 47-by-three checks, both callable aliases in four ABI modes,
+and six actual guest outputs pass. Candidate fannkuch restores all 26 allocated
+ELF sections exactly to the publication checkpoint. Independent source review
+finds no actionable gap; final composed measurements remain required.
+Guardian feedback is committed as `7dc405f` in the Guardian repository.
+
+The 46-member `lox-qbe-attribution/` archive verifies code-identical symbol
+counterparts and all four output-matched Callgrind runs for the frozen
+`255cf730` source. Properties adds 32,935,503 simulated instructions, primarily
+frame loading and loan glue. String equality adds 28,751,741, primarily VM,
+string loan and retain work. MIN/MAX constant loads are unchanged across each
+pair. The original hardware measurements remain authoritative; the simulated
+string result differs because emulation and allocation behavior differ.
+This read-only attribution neither establishes a source correction nor waives
+any performance row. The final gate remains open.
