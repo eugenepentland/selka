@@ -391,7 +391,7 @@ static int trace_visit(Context *ctx, const MylQbeFunction *function, uint64_t po
     trace_frame(ctx, function, position, 0, state);
     return 1;
 }
-static __attribute__((noinline)) uint64_t fail(void *context, const char *code) {
+static __attribute__((noinline, cold)) uint64_t fail(void *context, const char *code) {
     Context *ctx = context;
     if (!ctx->trap) {
         ctx->trap = code;

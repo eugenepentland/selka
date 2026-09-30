@@ -2,6 +2,12 @@
 const std = @import("std");
 extern fn myl_qbe_rc_contract_verify() c_int;
 extern fn myl_qbe_rc_frame_verify() c_int;
+extern fn myl_qbe_fail_return_verify() c_int;
+
+// spec: RC-FAIL-COLD-1
+test "cold runtime failures return with the first trap and operation detail" {
+    try std.testing.expectEqual(@as(c_int, 3), myl_qbe_fail_return_verify());
+}
 
 // spec: RC-STARTUP-1
 test "RC startup registers metadata and preserves count region and budget failures" {
@@ -11,6 +17,7 @@ test "RC startup registers metadata and preserves count region and budget failur
 // spec: RC-FRAME-1
 // spec: RC-UNIQUE-IN-PLACE-1
 // spec-case: RC-SCOPE-SPARE-1
+// spec-case: RC-FAIL-COLD-1
 test "RC frame exits restore scopes before guarded releases and traps tear the heap down" {
     try std.testing.expectEqual(@as(c_int, 20), myl_qbe_rc_frame_verify());
 }
