@@ -721,12 +721,12 @@ static void scope_backing_shares_the_pin_entry(void) {
 static void allocation_cache_reuse(void) {
     myl_native_heap heap;
     start(&heap);
-    /* An 8-byte payload behind the 24-byte prefix is the 32-byte class 1. */
+    /* An 8-byte payload behind the 32-byte prefix is the 48-byte class 2. */
     void *first = bytes8(&heap);
     size_t live = heap.objects_live;
     myl_rc_edge_release(&heap, first);
     assert(heap.objects_live == live - 1 && header(first)->common.mark == MYL_RC_RETIRED_MARK);
-    assert(heap.rc_cache.free[1] == header(first) && heap.rc_cache.pushed >= 32);
+    assert(heap.rc_cache.free[2] == header(first) && heap.rc_cache.pushed >= 48);
     /* The next allocation of the class pops the same slot, zeroed. */
     void *again = bytes8(&heap);
     assert(again == first && header(again)->owners == 1 && !header(again)->holds && heap.objects_live == live);
@@ -847,14 +847,14 @@ static void drain_pairs_keep_counts_exact(void) {
     assert(myl_rc_stats_snapshot(&heap, &before));
     size_t pushed = heap.rc_cache.pushed;
     /* 65 nodes and the 32 extents of their bottom nodes die, alternating
-     * types within one drain; node slots are 48 bytes and leaf slots 32. */
+     * types within one drain; node slots are 64 bytes and leaf slots 48. */
     myl_rc_owner_release(&heap, root);
     assert(!heap.rc->dead.head && !heap.rc->dead.active);
     assert(heap.objects_live == live + 95 && header(leaf)->owners == 33);
     assert(header(kept)->owners == 1 && !header(held)->owners && header(held)->holds == 1);
     assert(myl_rc_stats_snapshot(&heap, &after));
     assert(after.events[MYL_RC_STAT_RETIRE] == before.events[MYL_RC_STAT_RETIRE] + 97);
-    assert(heap.rc_cache.pushed == pushed + 65 * 48 + 32 * 32);
+    assert(heap.rc_cache.pushed == pushed + 65 * 64 + 32 * 48);
     myl_rc_hold_release(&heap, &hold);
     assert(heap.objects_live == live + 48 && header(leaf)->owners == 17);
     myl_rc_owner_release(&heap, kept);
@@ -899,10 +899,10 @@ static void large_extents_map_and_unmap(void) {
     start(&heap);
     size_t idle = heap.bytes, size = (size_t)256 << 10;
     /* An extent from 128 KiB up is its own page-aligned zeroed mapping (its
-     * 56-byte record precedes the prefix), charged and discharged exactly. */
+     * 48-byte record precedes the prefix), charged and discharged exactly. */
     unsigned char *block = myl_rc_storage_bytes(&heap, size, 0);
     assert(block && (header(block)->common.mark & MYL_NATIVE_OBJECT_LARGE));
-    assert(!(((uintptr_t)block - MYL_RC_PREFIX_BYTES - 56) & 4095));
+    assert(!(((uintptr_t)block - MYL_RC_PREFIX_BYTES - 48) & 4095));
     for (size_t i = 0; i < size; i += 4096) assert(!block[i]);
     block[0] = 1;
     block[size - 1] = 2;

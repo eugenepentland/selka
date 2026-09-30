@@ -66,7 +66,7 @@ const prelude =
     \\#include "native_rc_values.h"
     \\#include "native_rc_collections.h"
     \\#include <string.h>
-    \\/* RC-GLUE-1: active counts are unsigned 32-bit words. Generated glue
+    \\/* RC-GLUE-1: active counts are unsigned 64-bit words. Generated glue
     \\ * preflights its whole value before changing bytes or marks: a count
     \\ * near saturation uses the runtime's exact alias-aware transaction.
     \\ * Remaining paths can acquire every leaf without wrapping. */

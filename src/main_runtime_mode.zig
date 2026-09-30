@@ -25,7 +25,7 @@ pub fn settle(process: std.process.Init, args: []const [:0]const u8, values: boo
     // the default and the environment, and an explicit RC request is a conflict.
     if (parsed.stress and parsed.explicit != null and parsed.explicit.?.enabled()) return refuse(process, "--gc-stress stresses the tracing collector: use it with --gc-runtime or with no runtime flag, not --rc-runtime");
     const environment = process.environ_map.get(contract.variable);
-    const requested = parsed.explicit orelse if (parsed.stress) contract.Selection.gc else (contract.parse(environment) catch return refuse(process, "MYLANG_RUNTIME must be gc-v1, rc-v4, rc-v4-counting or rc-v4-sites"));
+    const requested = parsed.explicit orelse if (parsed.stress) contract.Selection.gc else (contract.parse(environment) catch return refuse(process, "MYLANG_RUNTIME must be gc-v1, rc-v5, rc-v5-counting or rc-v5-sites"));
     const selected = contract.resolve(requested, values, parsed.explicit != null) catch return refuse(process, "explicit RC requires value semantics; --legacy-sharing uses GC");
     if (environment == null or !std.mem.eql(u8, environment.?, selected.identity())) {
         return .{ .status = try restart.replace(process, parsed.args, contract.variable, selected.identity()) };

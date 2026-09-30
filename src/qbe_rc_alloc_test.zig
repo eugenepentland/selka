@@ -74,14 +74,14 @@ test "RC-ALLOC-CACHE-1 a counted class body pops its size class's free slot inli
     defer t.allocator.free(il);
 
     // Each boxed `Some(...)` pops the 48-byte class's list inline (a 16-byte
-    // payload behind the 24-byte prefix: list 2 at 5648 + 16) and keeps one
+    // payload behind the 32-byte prefix: list 2 at 5648 + 16) and keeps one
     // runtime fallback; a fresh constructor span may emit the pair twice.
     const pops = std.mem.count(u8, il, "\n@rccell_fast");
     try t.expect(pops >= 2);
     try t.expectEqual(pops, std.mem.count(u8, il, ", 5664\n"));
     try t.expectEqual(pops, std.mem.count(u8, il, "call $myl_native_heap_alloc(l %heap, "));
     // The counted prefix: one owner, no hold, a one-element mark.
-    try t.expect(std.mem.indexOf(u8, il, " storew 1, %v") != null);
+    try t.expect(std.mem.indexOf(u8, il, " storel 1, %v") != null);
     try t.expect(std.mem.indexOf(u8, il, " storel 4, %v") != null);
     // The program opens no arena, so no region test is emitted.
     try t.expectEqual(@as(usize, 0), std.mem.count(u8, il, ", 112\n"));
@@ -149,7 +149,7 @@ test "RC-RANGE-KEY-1 a counted dictionary key slice borrows its text instead of 
 
 // spec-case: RC-LAYOUT-1
 // spec-case: RC-COUNTS-1
-test "ABI4 generated increments are u32 and refuse saturation before storing a token" {
+test "ABI5 generated increments are u64 and refuse saturation before storing a token" {
     const il = try countedIl(
         \\record Pair:
         \\    values: list[int]
@@ -159,9 +159,9 @@ test "ABI4 generated increments are u32 and refuse saturation before storing a t
         \\    return len(keep([1, 2], True).values)
     , "keep");
     defer t.allocator.free(il);
-    try t.expect(std.mem.indexOf(u8, il, " =w loaduw ") != null);
-    try t.expect(std.mem.indexOf(u8, il, ", 4294967295\n") != null);
+    try t.expect(std.mem.indexOf(u8, il, " =l loadl ") != null);
+    try t.expect(std.mem.indexOf(u8, il, ", 18446744073709551615\n") != null);
     try t.expect(std.mem.indexOf(u8, il, "@rcglimit") != null);
     try t.expect(std.mem.indexOf(u8, il, "$myl_qbe_rc_status(l %ctx, w 2)") != null);
-    try t.expect(std.mem.indexOf(u8, il, " storew ") != null);
+    try t.expect(std.mem.indexOf(u8, il, " storel ") != null);
 }

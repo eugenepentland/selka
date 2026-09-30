@@ -45,10 +45,11 @@ test "RC-SCOPE-IL-1 production pin journal links before guarded capture and keep
     try t.expect(std.mem.indexOf(u8, il, "$myl_native_list_header_type") != null);
     try t.expect(std.mem.indexOf(u8, il, "# myl-rc-state") != null);
     const journal = il[pin..];
-    try t.expect(std.mem.indexOf(u8, journal, "=w loaduw") != null);
-    try t.expect(std.mem.indexOf(u8, journal, "=w cnew") != null);
-    try t.expect(std.mem.indexOf(u8, journal, "4294967295") != null);
-    try t.expect(std.mem.indexOf(u8, journal, "18446744073709551615") == null);
+    try t.expect(std.mem.indexOf(u8, journal, "=l loadl") != null);
+    try t.expect(std.mem.indexOf(u8, journal, "=w cnel") != null);
+    try t.expect(std.mem.indexOf(u8, journal, "18446744073709551615") != null);
+    try t.expect(std.mem.indexOf(u8, journal, "=l add") != null);
+    try t.expect(std.mem.indexOf(u8, journal, "=w cugtl") != null);
 }
 // spec-case: RC-SCOPE-IL-1
 test "RC-SCOPE-IL-1 stats and sites keep native journal event attribution" {

@@ -4,7 +4,7 @@ const prefix = @import("qbe_rc_prefix.zig");
 const Error = @import("qbe_rc_unique.zig").Error;
 const store_word = " storel %v{d}, %v{d}\n";
 const load_count = " %v{d} =" ++ prefix.count_type ++ " " ++ prefix.count_load ++ " %v{d}\n";
-const change_count = load_count ++ " %v{d} =w add %v{d}, {d}\n " ++ prefix.count_store ++ " %v{d}, %v{d}\n";
+const change_count = load_count ++ " %v{d} =" ++ prefix.count_type ++ " add %v{d}, {d}\n " ++ prefix.count_store ++ " %v{d}, %v{d}\n";
 const arena: u64 = @as(u64, 1) << 62;
 const pinned: u64 = @as(u64, 1) << 60;
 const special: u64 = arena | 2 | 1;
@@ -227,7 +227,7 @@ fn ordinary(comptime E: type, self: *E, payload: usize, mark: usize, label: usiz
 fn available(comptime E: type, self: *E, payload: usize, label: usize, operation: []const u8) Error!void {
     const holds = try loadCount(E, self, payload, prefix.holds_offset);
     const condition = self.temp();
-    try self.print(" %v{d} =w cnew %v{d}, {d}\n", .{ condition, holds, prefix.count_max });
+    try self.print(" %v{d} =w cne" ++ prefix.count_type ++ " %v{d}, {d}\n", .{ condition, holds, prefix.count_max });
     try guard(E, self, condition, label, operation);
 }
 fn nonfinal(comptime E: type, self: *E, payload: usize, label: usize) Error!void {
@@ -237,6 +237,6 @@ fn nonfinal(comptime E: type, self: *E, payload: usize, label: usize) Error!void
     const retained = self.temp();
     const sharing = self.temp();
     const live = self.temp();
-    try self.print(" %v{d} =w cugtw %v{d}, 1\n %v{d} =w cnew %v{d}, 0\n %v{d} =w or %v{d}, %v{d}\n", .{ retained, holds, sharing, owners, live, retained, sharing });
+    try self.print(" %v{d} =w cugt" ++ prefix.count_type ++ " %v{d}, 1\n %v{d} =w cne" ++ prefix.count_type ++ " %v{d}, 0\n %v{d} =w or %v{d}, %v{d}\n", .{ retained, holds, sharing, owners, live, retained, sharing });
     try guard(E, self, live, label, "end");
 }
