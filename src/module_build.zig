@@ -47,7 +47,7 @@ const json_value = @import("qbe_build_value.zig");
 const field = json_value.get;
 const items = json_value.array;
 const stringOf = json_value.text;
-const state_version = "module-build-state-v3";
+const state_version = "module-build-state-v4";
 /// The file in a variant's directory that holds its modules' records.
 const state_file = "state.json";
 /// Resident memory one module compile (and the tools it starts) is budgeted
@@ -68,19 +68,27 @@ pub const Outcome = union(enum) { status: u8, fallback: Fallback };
 /// A module's interface, emission and positions hashes.
 const Hashes = struct { interface: []const u8, emission: []const u8, positions: []const u8 };
 
-/// One interface a compile read, its hashes then, the digest of what the
-/// compile consumed of its emission section (MODULE-SYMBOL-CUTOFF-1; empty
-/// when the compile recorded no reach), and the stretches its positions came
-/// through with the digest of what they read (MODULE-SYMBOL-CUTOFF-5; empty
-/// when a rendered diagnostic may have read any).
+/// One interface a compile read, its hashes then, and what the compile
+/// consumed of it: of its emission section (MODULE-SYMBOL-CUTOFF-1), its
+/// positions (MODULE-SYMBOL-CUTOFF-5) and its declarations
+/// (MODULE-INTERFACE-CUTOFF-1), each empty when the compile cannot say.
 const Input = struct {
     module: []const u8,
     interface: []const u8,
     emission: []const u8,
     positions: []const u8,
+    cutoff: Cutoff = .{},
+};
+
+/// What a compile consumed of one interface, finer than its hashes
+/// (`module_compile.Cutoff`).
+const Cutoff = struct {
     symbols: []const u8 = "",
     stretches: []const u32 = &.{},
     lines: []const u8 = "",
+    used: []const []const u8 = &.{},
+    uses: []const u8 = "",
+    outline: []const u8 = "",
 };
 
 /// Whether a module's units open an arena scope or need the text runtime.
@@ -106,7 +114,7 @@ const ModuleState = struct {
     /// MODULE-SYMBOL-CUTOFF-1: every function its compile's output can
     /// depend on, sorted; null when the compile consumed every row of every
     /// import.
-    reach: ?[]const []const u8 = null,
+    reach: ?language.module_symbols.Reach = null,
 };
 
 /// A test run's merged test documents.
@@ -1092,7 +1100,8 @@ const Build = struct {
         for (known.inputs, 0..) |input, index| {
             const at = self.names.get(input.module) orelse return null;
             const now = self.nodes.items[at].current orelse return null;
-            if (!std.mem.eql(u8, now.interface, input.interface)) return null;
+            const redeclared = !std.mem.eql(u8, now.interface, input.interface);
+            if (redeclared and !try self.declarationsHold(input, at)) return null;
             // Positions matter only to a compile whose units spliced or
             // instantiated a body of that interface's text, and then only
             // those of the stretches its positions came through.
@@ -1100,8 +1109,10 @@ const Build = struct {
             if (moved and !try self.linesHold(input, at)) return null;
             const changed = !std.mem.eql(u8, now.emission, input.emission);
             if (changed and !try self.symbolsHold(known, input, at)) return null;
-            if (!moved and !changed) continue;
+            const held = !(redeclared or moved or changed);
+            if (held) continue;
             const inputs = updated orelse try self.context.allocator.dupe(Input, known.inputs);
+            if (redeclared) inputs[index].interface = now.interface;
             if (moved) inputs[index].positions = now.positions;
             if (changed) inputs[index].emission = now.emission;
             updated = inputs;
@@ -1118,20 +1129,37 @@ const Build = struct {
     /// module's hashes name all answer no.
     fn symbolsHold(self: *Build, known: ModuleState, input: Input, at: usize) !bool {
         const reached = known.reach orelse return false;
-        if (input.symbols.len == 0) return false;
+        if (input.cutoff.symbols.len == 0) return false;
         const table = (try self.tableOf(at)) orelse return false;
         const digest = try table.digest(self.context.allocator, reached);
-        return std.mem.eql(u8, &std.fmt.bytesToHex(digest, .lower), input.symbols);
+        return std.mem.eql(u8, &std.fmt.bytesToHex(digest, .lower), input.cutoff.symbols);
     }
 
     /// MODULE-SYMBOL-CUTOFF-5: whether the stretches of module `at`'s
     /// interface text that `input`'s compile took positions through read
     /// what they read then. An input with no such digest answers no.
     fn linesHold(self: *Build, input: Input, at: usize) !bool {
-        if (input.lines.len == 0) return false;
+        if (input.cutoff.lines.len == 0) return false;
         const table = (try self.tableOf(at)) orelse return false;
-        const digest = language.module_symbols.stretchDigest(table.interface, input.stretches);
-        return std.mem.eql(u8, &std.fmt.bytesToHex(digest, .lower), input.lines);
+        const digest = language.module_symbols.stretchDigest(table.interface, input.cutoff.stretches);
+        return std.mem.eql(u8, &std.fmt.bytesToHex(digest, .lower), input.cutoff.lines);
+    }
+
+    /// MODULE-INTERFACE-CUTOFF-2: whether everything `input`'s compile read
+    /// of module `at`'s declarations holds in its interface now: the outline
+    /// every lookup into it sees, and the fingerprint of every declaration it
+    /// used. An interface whose declarations it never read holds; a test run,
+    /// which discovers tests through every declaration, and an input with no
+    /// such record never do.
+    fn declarationsHold(self: *Build, input: Input, at: usize) !bool {
+        const outline = input.cutoff.outline;
+        if (std.mem.eql(u8, outline, "unread")) return true;
+        if (self.mode == .tests or outline.len == 0 or input.cutoff.uses.len == 0) return false;
+        const table = (try self.tableOf(at)) orelse return false;
+        const now = language.module_symbols.outlineDigest(table.interface);
+        if (!std.mem.eql(u8, &std.fmt.bytesToHex(now, .lower), outline)) return false;
+        const used = language.module_symbols.usesDigest(table.interface, input.cutoff.used);
+        return std.mem.eql(u8, &std.fmt.bytesToHex(used, .lower), input.cutoff.uses);
     }
 
     /// The rows of module `at`'s current interface, read once; null when
@@ -1268,7 +1296,7 @@ const Build = struct {
         const node = &self.nodes.items[id];
         const bytes = self.context.read(try self.outFile(node.name, ".result.json")) catch return false;
         const Result = struct {
-            hashes: struct { interface: []const u8, emission: []const u8, positions: []const u8, inputs: []const Input = &.{}, reach: ?[]const []const u8 = null },
+            hashes: struct { interface: []const u8, emission: []const u8, positions: []const u8, inputs: []const Input = &.{}, reach: ?language.module_symbols.Reach = null },
             warnings: []const u8 = "",
             marks: Marks = .{},
             text_format: bool = false,
@@ -1547,6 +1575,7 @@ test "unchanged state proves graph rows and shared headers before skipping publi
 }
 
 // spec: MODULE-SYMBOL-CUTOFF-2
+// spec: MODULE-INTERFACE-CUTOFF-2
 test "a module outlives an import's emission change only through a symbol record" {
     const t = std.testing;
     var arena = std.heap.ArenaAllocator.init(t.allocator);
@@ -1574,13 +1603,21 @@ test "a module outlives an import's emission change only through a symbol record
     try state.previous.put(a, "main", row);
     state.nodes.items[1].current.?.emission = "e2";
     // A reach without a digest for that input still compiles.
-    row.reach = &.{"leaf::api"};
+    row.reach = .{ .functions = &.{"leaf::api"}, .catalog = &.{} };
     try state.previous.put(a, "main", row);
     try t.expect((try state.reusable(0)) == null);
-    // An interface change is never cut off by symbols.
+    // An interface change without a declaration record compiles.
     state.nodes.items[1].current.?.emission = "e";
     state.nodes.items[1].current.?.interface = "i2";
     try t.expect((try state.reusable(0)) == null);
+    // A test run never cuts an interface change off, whatever it recorded.
+    var declared = row;
+    declared.inputs = &.{.{ .module = "leaf", .interface = "i", .emission = "e", .positions = "", .cutoff = .{ .outline = "o", .uses = "u" } }};
+    try state.previous.put(a, "main", declared);
+    state.mode = .tests;
+    try t.expect((try state.reusable(0)) == null);
+    state.mode = .build;
+    try state.previous.put(a, "main", row);
     // Nor is a new source.
     state.nodes.items[1].current.?.interface = "i";
     state.nodes.items[0].digest = "d2";
