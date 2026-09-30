@@ -163,8 +163,8 @@ fn mutablePointer(comptime E: type, self: *E, ty: typed.Type) Error!bool {
 /// RC-PUBLISH-FAST-1: the direct publication of one list or dictionary
 /// pointer runs inline exactly as its glue does: a null copies through; a
 /// payload neither pinned nor in an arena is marked shared unless it already
-/// is (or is immortal), its pointer is stored, and then either the source is
-/// cleared (a take) or one owner is acquired (immortal payloads count none).
+/// is (or is immortal), and its pointer is stored. A copy acquires its owner
+/// before marking or storing; a take clears the source after publication.
 /// Child-history modes, pinned and arena payloads fall through to the glue.
 fn publishFast(comptime E: type, self: *E, operation: Publish, label: usize) Error!void {
     const move = operation.move;
@@ -176,9 +176,6 @@ fn publishFast(comptime E: type, self: *E, operation: Publish, label: usize) Err
     const already = self.temp();
     const marked = self.temp();
     const taken = self.temp();
-    const immortal = self.temp();
-    const counter = self.temp();
-    const old = self.temp();
     const new = self.temp();
     // Every emitted publication targets private work or aggregate scratch,
     // never its own source, so the glue's overlap test cannot fire here.
@@ -197,22 +194,16 @@ fn publishFast(comptime E: type, self: *E, operation: Publish, label: usize) Err
     try self.print(" jnz %v{d}, @rcgpublishmarkcheck{d}, @rcgpublishordinary{d}\n@rcgpublishordinary{d}\n", .{ copy_mode, label, label, label });
     try self.print(" jnz %v{d}, @rcgpublishmarkcheck{d}, @rcgpublishcapacity{d}\n@rcgpublishcapacity{d}\n", .{ try nonzero(E, self, ordinary), label, label, label });
     try self.print(prefix.load_count, .{ capacity_at, payload, owners_offset, capacity_at, capacity, capacity_at });
-    try self.print(count_equal ++ "{d}\n jnz %v{d}, @rcgpublishslow{d}, @rcgpublishmarkcheck{d}\n@rcgpublishmarkcheck{d}\n", .{ saturated, capacity, prefix.count_max, saturated, label, label, label });
+    // RC-PUBLISH-ACQUIRE-1: only this counted COPY block owns capacity.
+    // Every admission is complete; no call/refusal occurs before publication.
+    try self.print(count_result ++ " add %v{d}, 1\n" ++ count_equal ++ "0\n", .{ new, capacity, saturated, new });
+    try self.print(" jnz %v{d}, @rcgpublishslow{d}, @rcgpublishacquire{d}\n@rcgpublishacquire{d}\n " ++ prefix.count_store ++ " %v{d}, %v{d}\n@rcgpublishmarkcheck{d}\n", .{ saturated, label, label, label, new, capacity_at, label });
     try self.print(mask, .{ already, mark, shared_or_immortal });
     try self.print(" jnz %v{d}, @rcgpublishstore{d}, @rcgpublishmark{d}\n@rcgpublishmark{d}\n", .{ try nonzero(E, self, already), label, label, label });
     try self.print(" %v{d} =l or %v{d}, {d}\n storel %v{d}, %v{d}\n", .{ marked, mark, shared_mark, marked, header });
     try self.print("@rcgpublishstore{d}\n storel %v{d}, %v{d}\n %v{d} =w and %v{d}, 4\n", .{ label, payload, move.destination, taken, operation.mode });
     const moves = taken;
-    try self.print(" jnz %v{d}, @rcgpublishtake{d}, @rcgpublishnull{d}\n@rcgpublishtake{d}\n storel 0, %v{d}\n jmp @rcgpublished{d}\n", .{ moves, label, label, label, move.source, label });
-    // A null payload acquires nothing; an immortal one counts no owners.
-    try self.print("@rcgpublishnull{d}\n", .{label});
-    const present = try nonzero(E, self, payload);
-    try self.print(" jnz %v{d}, @rcgpublishcount{d}, @rcgpublished{d}\n@rcgpublishcount{d}\n", .{ present, label, label, label });
-    try self.print(" %v{d} =l and %v{d}, 2\n", .{ immortal, mark });
-    const uncounted = try nonzero(E, self, immortal);
-    try self.print(" jnz %v{d}, @rcgpublished{d}, @rcgpublishinc{d}\n@rcgpublishinc{d}\n", .{ uncounted, label, label, label });
-    try self.print(prefix.load_count, .{ counter, payload, owners_offset, counter, old, counter });
-    try self.print(count_result ++ " add %v{d}, 1\n " ++ prefix.count_store ++ " %v{d}, %v{d}\n jmp @rcgpublished{d}\n@rcgpublishslow{d}\n", .{ new, old, new, counter, label, label });
+    try self.print(" jnz %v{d}, @rcgpublishtake{d}, @rcgpublished{d}\n@rcgpublishtake{d}\n storel 0, %v{d}\n jmp @rcgpublished{d}\n@rcgpublishslow{d}\n", .{ moves, label, label, label, move.source, label, label });
 }
 
 /// One list element write: the list payload, the element index (set only)

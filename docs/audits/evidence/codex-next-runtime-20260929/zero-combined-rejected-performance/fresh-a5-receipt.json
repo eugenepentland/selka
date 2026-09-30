@@ -1,0 +1,68 @@
+{
+  "identity_sha256": "d0c2dd7f35250311c67e627aef4491338ba12a4836971c42190ace355b07598c",
+  "sizes": {
+    "dev": {
+      "matching_output_pairs": 86,
+      "gc_denominators_unchanged": true,
+      "summary": {
+        "llvm": {
+          "geomean": 1.0691303476205152,
+          "geomean_nonlox": 1.0414972526183772,
+          "rows": 43,
+          "within_1_3": 43,
+          "worst": 1.2559558196030471
+        },
+        "qbe": {
+          "geomean": 1.0644841011998563,
+          "geomean_nonlox": 1.0461455681971725,
+          "rows": 43,
+          "within_1_3": 43,
+          "worst": 1.2814185251987962
+        }
+      },
+      "results_sha256": "f0fbe60d76c8ccceb7113f7518991f5abebdca6c0603ecc476ee020dc10c5fa2"
+    },
+    "smoke": {
+      "matching_output_pairs": 86,
+      "gc_denominators_unchanged": true,
+      "summary": {
+        "llvm": {
+          "geomean": 1.1371341920358067,
+          "geomean_nonlox": 1.0414458586056417,
+          "rows": 43,
+          "within_1_3": 36,
+          "worst": 2.3576264556799362
+        },
+        "qbe": {
+          "geomean": 1.1034034110895015,
+          "geomean_nonlox": 1.0461455996198927,
+          "rows": 43,
+          "within_1_3": 38,
+          "worst": 1.5048011176893257
+        }
+      },
+      "results_sha256": "8810ceae36383b6b760063eb72a966b0af42c9a86943de24c6686b73d583989c"
+    },
+    "full": {
+      "matching_output_pairs": 86,
+      "gc_denominators_unchanged": true,
+      "summary": {
+        "llvm": {
+          "geomean": 1.065303439518579,
+          "geomean_nonlox": 1.0414459432162053,
+          "rows": 43,
+          "within_1_3": 43,
+          "worst": 1.2511385412249403
+        },
+        "qbe": {
+          "geomean": 1.0626991427033934,
+          "geomean_nonlox": 1.0461455240264752,
+          "rows": 43,
+          "within_1_3": 43,
+          "worst": 1.281418342885343
+        }
+      },
+      "results_sha256": "f6fed7011caa4e690a0ab2865e891b194b7a6a82c735b901204c6d54142de1ff"
+    }
+  }
+}

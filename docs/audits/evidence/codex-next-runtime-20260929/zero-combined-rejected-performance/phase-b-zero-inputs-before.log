@@ -1,0 +1,77 @@
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 1b6c13222675)
+guardian: diff-scoped vs 80dd51906c97ae76bf208474ac48c9baac3a11cd: 158/718 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 19 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 13 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 3752 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 80dd51906c97ae76bf208474ac48c9baac3a11cd, 158 file(s) in scope
+test-inputs-coverage
++- python3 tests/input_manifest.py --self-test w
+input manifest self-test: passed
+failed command: cd . && sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/zig-out/bin/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig sh -c "exec \"\$@\" 1>&2" driver python3 tests/input_manifest.py --self-test
+
+test-inputs-coverage
++- python3 tests/test_inputs_coverage.py --self-test w
+inputs coverage self-test: passed
+failed command: cd . && sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/zig-out/bin/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig sh -c "exec \"\$@\" 1>&2" driver python3 tests/test_inputs_coverage.py --self-test
+
+test-inputs-coverage
++- python3 tests/test_inputs_coverage.py failure
+src/qbe_zero_branch_test.zig:27: names tests/fixtures/qbe-zero-branch/probe.ssa but `unit` in build_test_inputs.zig does not cover it
+src/qbe_zero_branch_test.zig:28: names tests/fixtures/qbe-zero-branch/probe.c but `unit` in build_test_inputs.zig does not cover it
+declare each path in build_test_inputs.zig (or run with -Dtest-rerun=true to bypass the cache once)
+error: process exited with code 1 (expected exited with code 0)
+failed command: cd . && sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/zig-out/bin/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig sh -c "exec \"\$@\" 1>&2" driver python3 tests/test_inputs_coverage.py
+
+Build Summary: 23/25 steps succeeded (1 failed)
+test-inputs-coverage transitive failure
++- python3 tests/test_inputs_coverage.py --self-test success 48ms
+|  +- install success
+|  |  +- install mylang success
+|  |  |  +- compile exe mylang debug native cached 9ms MaxRSS:40M
+|  |  |  |  +- run exe qbe-build-assets (qbe_build_assets) cached
+|  |  |  |     +- compile exe qbe-build-assets debug native cached 5ms MaxRSS:41M
+|  |  |  +- run ../guardian-zig/zig-out/bin/guardian-check success 1s
+|  |  |     +- guardian-selfcheck success
+|  |  |        +- run ../guardian-zig/zig-out/bin/guardian-check success 4ms
+|  |  +- install qbe success
+|  |  |  +- compile exe qbe fast native cached 13ms MaxRSS:40M
+|  |  |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|  |  +- install generated/ success
+|  |  |  +- run exe mylang (mylang-runtime) success 15s
+|  |  |     +- compile exe mylang debug native (+1 more reused dependencies)
+|  |  |     +- install mylang (+2 more reused dependencies)
+|  |  |     +- compile exe qbe fast native (reused)
+|  |  +- install board-trial success
+|  |  |  +- compile exe board-trial debug native success 3s MaxRSS:425M
+|  |  |  |  +- options success
+|  |  |  |  |  +- compile exe qbe fast native (reused)
+|  |  |  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  |  |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|  |  +- install schematic-svg success
+|  |  |  +- compile exe schematic-svg debug native success 3s MaxRSS:427M
+|  |  |  |  +- options (+1 more reused dependencies)
+|  |  |  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  |  |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|  |  +- install mylang-io success
+|  |  |  +- compile exe mylang-io debug native success 3s MaxRSS:424M
+|  |  |  |  +- options (+1 more reused dependencies)
+|  |  |  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  |  |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|  |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|  +- hash declared test inputs success 366ms
+|  +- record the test environment success 3ms
+|  +- compile exe qbe fast native (reused)
+|  +- compile exe mylang debug native (+1 more reused dependencies)
++- python3 tests/input_manifest.py --self-test success 39ms
+|  +- install (+7 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe qbe fast native (reused)
+|  +- compile exe mylang debug native (+1 more reused dependencies)
++- python3 tests/test_inputs_coverage.py failure
+   +- install (+7 more reused dependencies)
+   +- hash declared test inputs (reused)
+   +- record the test environment (reused)
+   +- compile exe qbe fast native (reused)
+   +- compile exe mylang debug native (+1 more reused dependencies)
+

@@ -1,0 +1,114 @@
+{
+  "source": "279501d17e6eb84b13fa311b7042434a70c2cc5d",
+  "baseline_emitter_source": "f4b6647de06e556823bc960a27fdfcd58193b3d0",
+  "compiler_sha256": "a7c9e2648fd472bf04f82c84c137e5f0bd35679b41b37a5c0b633a3534b73aac",
+  "qbe_sha256": "df60056d2cdbef23eb6c5dada5249fdaf232bb6e75d4b4799c1626fc67b30819",
+  "control_compiler_sha256": "67a130ed40e87eea7b139793d83fcc8dc6fb3683add460b1be95dc0a36c0732a",
+  "runtime_archive": {
+    "path": ".tmp/release-review/lib/mylang-runtime/0bc58e7c9916ca9661c26bedd7d43ea220503ca49c66311cc33d7e9e170c7ff0.a",
+    "sha256": "55bc8e2af31272302d4b18e9f4754e0c3a9eafd752f6a3509142fbfacb0731c7"
+  },
+  "source_files_verified_unchanged": 890,
+  "compiler_runtime_binaries_verified_unchanged": 2,
+  "results": {
+    "candidate_boundary": {
+      "release": 126,
+      "publication": 216,
+      "failed": 0,
+      "exit": 0
+    },
+    "baseline_boundary_same_corrected_qbe": {
+      "release": 126,
+      "publication": 216,
+      "failed": 0,
+      "exit": 0
+    },
+    "generated_native_checked": {
+      "cases": 11,
+      "failed": 0,
+      "exit": 0,
+      "expected_sigabrt_children": 2
+    },
+    "generated_native_unchecked": {
+      "cases": 11,
+      "failed": 0,
+      "exit": 0,
+      "zero_wrap_children": 2
+    },
+    "duplicate_alias_checked": {
+      "cases": 3,
+      "failed": 0,
+      "exit": 0
+    },
+    "fragment_branches_word": {
+      "checked": 19,
+      "failed": 0
+    },
+    "counting_emission_native_release_calls": {
+      "sites": 28,
+      "failed": 0
+    }
+  },
+  "interpretation": {
+    "old_zero": "Invalid-token compatibility only: unchecked inline and generated glue wrap to UINT64_MAX; checked generated glue aborts. No accepted guest ownership-underflow contract.",
+    "old_one": "Linker-wrapped actual generated owner/hold helpers observe original count1,other0 and original slot before native final retirement.",
+    "high_only": "Old2^32+1/2^48+1/2^63+1 produce high-only reduced values; full-width other-count truth also checked with2^32/2^63/MAX.",
+    "publication": "216 synthetic dispatch/refusal cases; unknown/reserved w mode bits are compatibility-only. Realnative cases separately prove MAX refusal, pin snapshot, pin budget rollback, older-root arena refusal and repeated alias capacity.",
+    "same_backend_control": "Both original-f4 and candidate279 extracted emission translated with corrected frozendf600 QBE, isolating release/mode lowering from the independently reviewed selector repair."
+  },
+  "excluded_pre_execution": {
+    "probes/run-boundary.log": "Independent oracle Cprototype conflict, corrected before native execution.",
+    "probes/run-native.log": "Pinned zigcc rejects --wrap linker option; actual generated-C cases rerun with systemcc/GNUld wrapper, preserving actual frozen runtime archive."
+  },
+  "scope": "Independent release/count/known-w review only. Generic isel repair belongs to B2. No timing, broad acceptance or own LLVM execution claim; tooling LLVM54 receipt remains separate. No compiler/source edits or Guardian invocation.",
+  "manifest": {
+    ".tmp/release-review/frozen-after.json": "346deecec873e734b75d8c6cdb0afae3720cfeb4f2d14ba6143f319d351c2af3",
+    ".tmp/release-review/frozen-before.json": "346deecec873e734b75d8c6cdb0afae3720cfeb4f2d14ba6143f319d351c2af3",
+    ".tmp/release-review/probes/alias-generated.c": "9f90fed9ed1a87a0d3553af1106fd07b15f6509e8d32140797c5af04461fd2c3",
+    ".tmp/release-review/probes/alias-symbol.h": "9903196cc763cfb8a417c42ae78bffd8e0705356d79bcbf7cea33458deae6738",
+    ".tmp/release-review/probes/alias.json": "405abe1cc575fa7b44432fe390cd46daae6db3648944d226c8dbebb397591bc3",
+    ".tmp/release-review/probes/alias.my": "020878ffc9a7ccd2d822492180ee6fb0cc732eee1b693b716bd066f966df8b8a",
+    ".tmp/release-review/probes/alias_oracle.c": "7c5e46a3a96c21004530612cc0035c27c656bcce910d859a76fc45c22d4cc32b",
+    ".tmp/release-review/probes/branch-types.json": "c661be72b7ead9f92597317ba3385a16b66b63ffdc9abac3ce4e7e32f730fe40",
+    ".tmp/release-review/probes/build-guest.log": "e4e5ef28d9b9ec8cdf1a73cc4455056e8a9054a98f6f78454f453e1bb27637ac",
+    ".tmp/release-review/probes/control-fragments.s": "4b883fc6b851cbfa280646a471772647fa6d9b21d53edc68a1a4c94b5b7efc85",
+    ".tmp/release-review/probes/control-fragments.ssa": "70ff266f8b2c709cd661dd0fb380d7aad3ceeea2428da11099381a733eb64885",
+    ".tmp/release-review/probes/control.json": "eb00623a25b2e1b18b4d2349433c077b0c646d0d0d08ab2c50f60cd1de7aa618",
+    ".tmp/release-review/probes/emit-alias.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".tmp/release-review/probes/emit-control.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".tmp/release-review/probes/emit-rc.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".tmp/release-review/probes/emit-stats.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".tmp/release-review/probes/extraction.json": "db1cf56f029ae8db0f8c1570b1ac40e62a1f23e6a421a8c7ec31d9465f36eff1",
+    ".tmp/release-review/probes/fragments.s": "94cb507c1c5ea3da0dc04c5cf3be5216c1202c8f3a48ef5f5ed1b7e9df2f2a35",
+    ".tmp/release-review/probes/fragments.ssa": "49ab5cd3063b060fc3e86e1b08de102557822b5de408d358de7658e6fe3f9b4e",
+    ".tmp/release-review/probes/generated.c": "2d11870b3d75a78efe10033e21fe3459f4b0e78f78340ec1d7c85e28e1ea3c4f",
+    ".tmp/release-review/probes/guest.qbe-manifest.json": "94bb21e3ef3eaa7781403a17ffef1c2f4521f496efec7fd8c4817dfc25d7d56c",
+    ".tmp/release-review/probes/initial-312/native_oracle.c": "de65b699b0a85c6d2ed65c6b6a3a08f6a15e6d17e589401e1b5d18cdd7d63911",
+    ".tmp/release-review/probes/initial-312/oracle.c": "0f8e9476272d0f428058ee7cc9a639bbb65eb95ed0e24a45a0f580b04aaa45ab",
+    ".tmp/release-review/probes/initial-312/run-boundary-final.log": "179cd4ca1e00ca1709a10af9973ec346f823932281300c3b347ac74ddc02f4f4",
+    ".tmp/release-review/probes/initial-312/run-control.log": "77e6dc8442e002c0adc8e3b5bec18eae8d5b7f63d234bd9581ef92520a49c273",
+    ".tmp/release-review/probes/initial-312/run-native-final.log": "6bfadaa4cd3e148c764ef06c4172a5a6d6864a3c636cc06bad2ba07d8cb5ed44",
+    ".tmp/release-review/probes/keep.ssa": "814732a659b490dd75be1d41ab51b20cf91316bf1ba8ee972abf4d19ff48ca5e",
+    ".tmp/release-review/probes/native_oracle.c": "dee7509878ce5053fdaad0daa983ac672ebe17a409db8a5780ea244b040699f9",
+    ".tmp/release-review/probes/oracle.c": "db59467dec71b6ff40cec1840b5c418a9a72b2145401283d214674e9f5b71122",
+    ".tmp/release-review/probes/rc.json": "ca00aa9d12c427d67737146d1cfda5fd74fb29385270424c2c628e04d4fdf460",
+    ".tmp/release-review/probes/run-alias.log": "c032f3c739b6107bdc214de933ed6c73640aabb43cd39cddda3afd0514fc6f84",
+    ".tmp/release-review/probes/run-boundary-final.log": "179cd4ca1e00ca1709a10af9973ec346f823932281300c3b347ac74ddc02f4f4",
+    ".tmp/release-review/probes/run-boundary.log": "792ab612af7bea223b92202a673ef0682edf4a5c1ff5591bffcc39988cd3ec23",
+    ".tmp/release-review/probes/run-control.log": "77e6dc8442e002c0adc8e3b5bec18eae8d5b7f63d234bd9581ef92520a49c273",
+    ".tmp/release-review/probes/run-high-results-final.log": "3cdd09bd45f7123bd146a2e458287755965b94f8f51080513a7787e35637b632",
+    ".tmp/release-review/probes/run-native-final.log": "6bfadaa4cd3e148c764ef06c4172a5a6d6864a3c636cc06bad2ba07d8cb5ed44",
+    ".tmp/release-review/probes/run-native.log": "bb70272dd22b5619a4a52193d7e20a7bbdee557df4b9e7ce6e3ab9d2fc66f62c",
+    ".tmp/release-review/probes/source.my": "2df7f001423c341802e523ee3fc28c277cece1c5aa1808d5e727ca2b62a015e9",
+    ".tmp/release-review/probes/stats.json": "69972369bf29e9ba2a2b93c6996107017861ed0c653f04a12159e4548b36b19f",
+    ".tmp/release-review/probes/symbols.h": "d95c1f1dd3941707d9ba00d66dff10d026886c0e67d7c8ffddf75af747ecf2db",
+    ".tmp/release-review/report.md": "72223c75f7428aa66d29dec9de0053a777338242ab3c52ae9bd915b2e685a0dd"
+  },
+  "probe_binaries_sha256": {
+    ".tmp/release-review/probes/oracle-final": "a26e3a3f3a12b55657b0dbdf5ed51b34c15a7bfbc8cbda746359a99d60256d30",
+    ".tmp/release-review/probes/control-oracle-final": "142ca10c7856ddff5f6b56f0192b2d64b5317717e19d106444ef21fe5df92a26",
+    ".tmp/release-review/probes/native-unchecked-final": "0af476508fa88a0c2ad4062796efdfe48613d2f84c9ad497d99598d4c9ae50cd",
+    ".tmp/release-review/probes/native-checked-final": "f8fb0a59f59f847a05124f738c860431fdab11bbbaa6180106df266ffc5a49e8",
+    ".tmp/release-review/probes/alias-oracle": "e51c269616bf522d631c3c716c794268ee72beb28cf2d70241ae97ef6de680de"
+  }
+}

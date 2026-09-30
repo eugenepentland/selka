@@ -121,3 +121,23 @@ test "RC flat drops inline only a local's replaced value" {
     try t.expect(!contains(il[exit..], "# RC-FLAT-DROP-1"));
     try t.expect(contains(il[exit..], "_rcg_drop("));
 }
+
+// spec: RC-PUBLISH-ACQUIRE-1
+test "RC-PUBLISH-ACQUIRE-1 ordinary publication admits and acquires before history or destination stores" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    var manifest = try emitted();
+    defer manifest.deinit();
+    const il = try named(manifest.value, "load");
+    const capacity = std.mem.indexOf(u8, il, "\n@rcgpublishcapacity") orelse return error.TestUnexpectedResult;
+    const acquire = capacity + (std.mem.indexOf(u8, il[capacity..], "\n@rcgpublishacquire") orelse return error.TestUnexpectedResult);
+    const store = acquire + (std.mem.indexOf(u8, il[acquire..], " storel ") orelse return error.TestUnexpectedResult);
+    const mark = store + (std.mem.indexOf(u8, il[store..], "\n@rcgpublishmarkcheck") orelse return error.TestUnexpectedResult);
+    const publish_at = mark + (std.mem.indexOf(u8, il[mark..], "\n@rcgpublishstore") orelse return error.TestUnexpectedResult);
+    const slow = publish_at + (std.mem.indexOf(u8, il[publish_at..], "\n@rcgpublishslow") orelse return error.TestUnexpectedResult);
+    try t.expect(capacity < acquire and acquire < store and store < mark and mark < publish_at and publish_at < slow);
+    try t.expect(!contains(il[capacity..store], " storel "));
+    try t.expect(!contains(il[store..slow], " call $"));
+    try t.expect(!contains(il[publish_at..slow], " =l loadl "));
+}
