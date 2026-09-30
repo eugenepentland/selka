@@ -51,7 +51,7 @@ pub const Around = struct { foreign: *const Foreign, import_hashes: []iface.Impo
 
 /// MODULE-COMPILE-1: build one module's interface from a compilation that
 /// checked it against its imports' interfaces, and its implementation hash.
-pub fn buildOne(allocator: std.mem.Allocator, inputs: Inputs, module: usize, around: Around) Error!struct { interface: iface.Interface, implementation_hash: [32]u8 } {
+pub fn buildOne(allocator: std.mem.Allocator, inputs: Inputs, module: usize, around: Around) Error!Built {
     var state: State = .{
         .allocator = allocator,
         .inputs = inputs,
@@ -67,7 +67,25 @@ pub fn buildOne(allocator: std.mem.Allocator, inputs: Inputs, module: usize, aro
     const modules = inputs.index.project.modules.items;
     if (module >= modules.len) return error.InternalError;
     const interface = try state.moduleInterface(module);
-    return .{ .interface = interface, .implementation_hash = iface.implementationHash(modules[module].name, modules[module].src, around.import_hashes) };
+    return .{
+        .interface = interface,
+        .implementation_hash = iface.implementationHash(modules[module].name, modules[module].src, around.import_hashes),
+        .uses = try state.foreignUses(module),
+    };
+}
+
+/// One module's interface built from its compilation, its implementation
+/// hash, and the other modules' declarations its own declarations name.
+pub const Built = struct { interface: iface.Interface, implementation_hash: [32]u8, uses: []const Use };
+
+/// MODULE-INTERFACE-CUTOFF-1: one declaration of another module that a
+/// module's own declarations name, by module and identity: `f` and the
+/// function's stable key, or `t` and the type's module-local name.
+pub const Use = struct { module: usize, identity: []const u8 };
+
+/// The identity a use of declaration `key` is recorded under.
+pub fn useIdentity(allocator: std.mem.Allocator, kind: enum { function, type }, name: []const u8) Error![]const u8 {
+    return std.fmt.allocPrint(allocator, "{s}\x1f{s}", .{ if (kind == .function) "f" else "t", name });
 }
 
 /// Every module's interface and its two hashes, indexed by module id.
@@ -430,6 +448,42 @@ const State = struct {
         return out;
     }
 
+    /// MODULE-INTERFACE-CUTOFF-1: every declaration of another module that
+    /// module `module`'s own declarations name, in their declarations or
+    /// bodies, or that its facade re-exports, sorted and unique.
+    fn foreignUses(self: *State, module: usize) Error![]const Use {
+        var seen: std.AutoHashMapUnmanaged(u64, void) = .empty;
+        var out: std.ArrayList(Use) = .empty;
+        for (self.by_module[module]) |key| {
+            for ((try self.surface.own(key)).edges) |edge| try self.addUse(module, edge, &seen, &out);
+            const decl = semantic_key.Surface.declaration(key);
+            if (decl.kind != .function) continue;
+            for (try self.surface.bodyReferences(self.allocator, decl.index)) |edge| try self.addUse(module, edge, &seen, &out);
+        }
+        for (self.inputs.index.units[module].symbols.items) |symbol| {
+            const target = symbol.re_export orelse continue;
+            const target_name = self.inputs.index.units[target.module].symbols.items[target.symbol].name;
+            for (self.surface.named(target.module, target_name)) |key| try self.addUse(module, key, &seen, &out);
+        }
+        std.mem.sort(Use, out.items, {}, useBefore);
+        return out.items;
+    }
+
+    fn addUse(self: *State, module: usize, key: u64, seen: *std.AutoHashMapUnmanaged(u64, void), out: *std.ArrayList(Use)) Error!void {
+        const owner = self.surface.moduleOfKey(key);
+        if (owner == module) return;
+        const entry = try seen.getOrPut(self.allocator, key);
+        if (entry.found_existing) return;
+        const decl = semantic_key.Surface.declaration(key);
+        const identity = if (decl.kind == .function)
+            try useIdentity(self.allocator, .function, self.inputs.prepared.keys[decl.index])
+        else blk: {
+            const name = try self.typeName(key);
+            break :blk try useIdentity(self.allocator, .type, self.moduleText(owner)[name.start..name.end]);
+        };
+        try out.append(self.allocator, .{ .module = owner, .identity = identity });
+    }
+
     /// One module's interface.
     fn moduleInterface(self: *State, module: usize) Error!iface.Interface {
         const kept = try self.closure(module);
@@ -718,6 +772,11 @@ fn lessDigest(_: void, a: [32]u8, b: [32]u8) bool {
 
 fn lessText(_: void, a: []const u8, b: []const u8) bool {
     return std.mem.lessThan(u8, a, b);
+}
+
+fn useBefore(_: void, a: Use, b: Use) bool {
+    if (a.module != b.module) return a.module < b.module;
+    return std.mem.lessThan(u8, a.identity, b.identity);
 }
 
 fn functionBefore(_: void, a: iface.Function, b: iface.Function) bool {

@@ -33,7 +33,7 @@ const physical = @import("module_physical.zig");
 const invariant_callbacks = @import("invariant_callbacks.zig");
 
 /// Version of the reach and digest rules; part of every digest.
-pub const version = "module-symbols-v1";
+pub const version = "module-symbols-v2";
 
 /// The sorted, unique names of every function the output of a compile over
 /// the restored program `code`, emitting `emit`, can depend on; null when one
@@ -80,6 +80,20 @@ fn visit(a: std.mem.Allocator, index: *const std.StringHashMapUnmanaged(usize), 
     return true;
 }
 
+/// MODULE-SYMBOL-CUTOFF-1: what a compile's output can depend on of its
+/// imports' physical rows: the functions it reaches (`reach`) and, since a
+/// record row whose name its own catalog already holds adds nothing, the
+/// sorted names of every record its check's catalog holds.
+pub const Reach = struct { functions: []const []const u8, catalog: []const []const u8 };
+
+/// The sorted, unique names of every record of a catalog.
+pub fn catalogNames(a: std.mem.Allocator, records: []const @import("typed.zig").Record) std.mem.Allocator.Error![]const []const u8 {
+    const names = try a.alloc([]const u8, records.len);
+    for (records, names) |record, *name| name.* = record.name;
+    std.mem.sort([]const u8, names, {}, lessText);
+    return unique(names);
+}
+
 /// The rows of one interface's emission section, by function name.
 pub const Table = struct {
     interface: iface.Interface,
@@ -109,9 +123,10 @@ pub const Table = struct {
         return out;
     }
 
-    /// The digest of everything a compile that reached `reached` (sorted,
-    /// unique) consumed of this interface's emission section.
-    pub fn digest(self: *const Table, a: std.mem.Allocator, reached: []const []const u8) std.mem.Allocator.Error![32]u8 {
+    /// The digest of everything a compile with reach `consumed` consumed of this
+    /// interface's emission section.
+    pub fn digest(self: *const Table, a: std.mem.Allocator, consumed: Reach) std.mem.Allocator.Error![32]u8 {
+        const reached = consumed.functions;
         const interface = self.interface;
         var hash = std.crypto.hash.Blake3.init(.{});
         frame(&hash, version);
@@ -119,11 +134,13 @@ pub const Table = struct {
         frame(&hash, interface.emission.config);
         hash.update(&.{@intFromBool(iface.physicalInputs(interface))});
         const archive = interface.emission.physical;
-        count(&hash, archive.records.len);
+        // Only a record the compile's catalog lacks is restored into it.
         for (archive.records) |row| {
+            if (contains(consumed.catalog, row.name)) continue;
             frame(&hash, row.name);
             frame(&hash, row.bytes);
         }
+        hash.update("records-end");
         var modules: std.ArrayList([]const u8) = .empty;
         for (archive.dependencies) |row| {
             const split = std.mem.indexOf(u8, row.name, "::") orelse continue;
@@ -200,6 +217,131 @@ pub fn stretchDigest(interface: iface.Interface, indices: []const u32) [32]u8 {
     var out: [32]u8 = undefined;
     hash.final(&out);
     return out;
+}
+
+/// MODULE-INTERFACE-CUTOFF-1: the digest of everything a reader's lookups
+/// into `interface` can find or miss, and of the types it knows from it: the
+/// imports its text names, every domain member and every function whose body
+/// the text keeps by stable key with whether it is exported, and the
+/// fingerprint of each kept body (every reader checks that body, and its
+/// record catalog takes in the types it instantiates), every re-exported name
+/// with its target's fingerprint, every type declaration with its
+/// fingerprint, and every record shape its declarations reach. A member or
+/// kept function added, removed, renamed or made public or private, a
+/// re-export changed, a kept body edited, or a type changed in any way
+/// changes it; a free function whose body is `pass` changes it only through
+/// the record shapes its signature reaches.
+// twin-drift-ok: an outline is what lookups see (names, kept bodies, types), not the whole interface hash
+pub fn outlineDigest(interface: iface.Interface) [32]u8 {
+    var hash = std.crypto.hash.Blake3.init(.{});
+    frame(&hash, "module-outline-v1");
+    frame(&hash, interface.module);
+    count(&hash, interface.imports.len);
+    for (interface.imports) |name| frame(&hash, name);
+    const declarations = interface.declarations;
+    for (declarations.functions) |function| {
+        // A body the text keeps is checked, and lowered, by every reader,
+        // whose record catalog takes in whatever types it instantiates.
+        const kept = function.role.keepsBody() and function.role != .foreign;
+        // A free function whose body is `pass` is found only by a lookup
+        // that spells it qualified (there is no `from` import): a reader that
+        // never used it could not have looked it up and succeeded, and its
+        // signature's records are among the shapes below.
+        if (!kept and ownerOf(function.key).len == 0) continue;
+        frame(&hash, function.key);
+        hash.update(&.{ @intFromBool(function.exported), @intFromBool(kept) });
+        if (kept) hash.update(&function.fingerprint);
+    }
+    hash.update("functions-end");
+    inline for (.{ declarations.reexports, declarations.types }) |list| {
+        count(&hash, list.len);
+        for (list) |entry| {
+            frame(&hash, entry.name);
+            hash.update(&entry.fingerprint);
+        }
+    }
+    count(&hash, declarations.shapes.len);
+    for (declarations.shapes) |shape| {
+        frame(&hash, shape.name);
+        hash.update(&shape.digest);
+    }
+    var out: [32]u8 = undefined;
+    hash.final(&out);
+    return out;
+}
+
+/// MODULE-INTERFACE-CUTOFF-1: the stable key (`fn\x1f<module>\x1f<owner>\x1f<name>`) of the declaration
+/// a checked function name (`module::name`, `module::Owner.name`, either with
+/// a specialization's `[...]`) comes from.
+pub fn stableKey(allocator: std.mem.Allocator, name: []const u8) error{ OutOfMemory, Unnamed }![]const u8 {
+    const split = std.mem.indexOf(u8, name, "::") orelse return error.Unnamed;
+    const module = name[0..split];
+    var rest = name[split + 2 ..];
+    if (std.mem.indexOfScalar(u8, rest, '[')) |open| rest = rest[0..open];
+    if (module.len == 0 or rest.len == 0) return error.Unnamed;
+    if (std.mem.indexOfAny(u8, module, ":@ ") != null or std.mem.indexOfAny(u8, rest, ":@ ") != null) return error.Unnamed;
+    const dot = std.mem.indexOfScalar(u8, rest, '.');
+    const owner = if (dot) |at| rest[0..at] else "";
+    const local = if (dot) |at| rest[at + 1 ..] else rest;
+    if (local.len == 0 or std.mem.indexOfScalar(u8, local, '.') != null) return error.Unnamed;
+    return std.fmt.allocPrint(allocator, "fn\x1f{s}\x1f{s}\x1f{s}", .{ module, owner, local });
+}
+
+/// MODULE-INTERFACE-CUTOFF-1: the fingerprint `interface` states for the
+/// declaration a use identity names (`f` and a function's stable key, `t`
+/// and a type's name), or null when it declares none such.
+pub fn usedFingerprint(interface: iface.Interface, identity: []const u8) ?[32]u8 {
+    if (identity.len < 2 or identity[1] != 0x1f) return null;
+    const name = identity[2..];
+    switch (identity[0]) {
+        'f' => for (interface.declarations.functions) |function| if (std.mem.eql(u8, function.key, name)) return function.fingerprint,
+        't' => for (interface.declarations.types) |ty| if (std.mem.eql(u8, ty.name, name)) return ty.fingerprint,
+        else => {},
+    }
+    return null;
+}
+
+/// MODULE-INTERFACE-CUTOFF-1: the digest of the fingerprints `interface`
+/// states for the declarations `used` names (sorted), each or its absence.
+pub fn usesDigest(interface: iface.Interface, used: []const []const u8) [32]u8 {
+    var hash = std.crypto.hash.Blake3.init(.{});
+    frame(&hash, "module-uses-v1");
+    count(&hash, used.len);
+    for (used) |identity| {
+        frame(&hash, identity);
+        if (usedFingerprint(interface, identity)) |fingerprint| hash.update(&fingerprint) else hash.update("missing");
+    }
+    var out: [32]u8 = undefined;
+    hash.final(&out);
+    return out;
+}
+
+/// The domain owner a stable function key names, empty for a free function.
+fn ownerOf(key: []const u8) []const u8 {
+    var parts = std.mem.splitScalar(u8, key, 0x1f);
+    _ = parts.next();
+    _ = parts.next();
+    return parts.next() orelse "";
+}
+
+/// Whether sorted `names` holds `name`.
+fn contains(names: []const []const u8, name: []const u8) bool {
+    var low: usize = 0;
+    var high = names.len;
+    while (low < high) {
+        const mid = low + (high - low) / 2;
+        switch (std.mem.order(u8, names[mid], name)) {
+            .eq => return true,
+            .lt => low = mid + 1,
+            .gt => high = mid,
+        }
+    }
+    return false;
+}
+
+/// Drop adjacent repeats from a sorted list of names, in place.
+pub fn uniqueNames(sorted: [][]const u8) []const []const u8 {
+    return unique(sorted);
 }
 
 /// Drop adjacent repeats from a sorted list, in place.

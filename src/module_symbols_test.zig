@@ -37,7 +37,7 @@ fn library(a: std.mem.Allocator, functions: []const bytecode.Function) !Interfac
 
 fn digestOf(a: std.mem.Allocator, interface: Interface, reached: []const []const u8) ![32]u8 {
     const table = try symbols.Table.of(a, interface);
-    return table.digest(a, reached);
+    return table.digest(a, .{ .functions = reached, .catalog = &.{} });
 }
 
 // spec: MODULE-SYMBOL-CUTOFF-1
@@ -97,6 +97,11 @@ test "records, invariant callbacks and the modules dependency rows name are cons
     var recorded = base;
     recorded.emission.physical.records = &.{.{ .name = "lib.Hidden", .bytes = "x" }};
     try t.expect(!std.mem.eql(u8, &before, &(try digestOf(a, recorded, reached))));
+    // A record row the reader's own catalog already holds adds nothing.
+    const known: []const []const u8 = &.{"lib.Hidden"};
+    const table = try symbols.Table.of(a, recorded);
+    const plain = try symbols.Table.of(a, base);
+    try t.expectEqual(try plain.digest(a, .{ .functions = reached, .catalog = known }), try table.digest(a, .{ .functions = reached, .catalog = known }));
     var callback = base;
     const rows = base.emission.physical.functions;
     callback.emission.physical.functions = &.{ rows[0], rows[1], rows[2], .{ .name = "@invariant:lib.Hidden", .bytes = "y" } };
@@ -137,4 +142,62 @@ test "positions read through some stretches ignore the others and every source o
     tail[1].gap = 3;
     later.positions.origins = &tail;
     try t.expectEqual(before, symbols.stretchDigest(later, &.{0}));
+}
+
+// spec: MODULE-INTERFACE-CUTOFF-1
+test "a reader's outline and used declarations ignore every other declaration's content" {
+    const one: [32]u8 = @splat(1);
+    const two: [32]u8 = @splat(2);
+    const functions = [_]language.module_interface.Function{
+        .{ .key = "fn\x1flib\x1f\x1fused", .role = .declared, .exported = true, .fact = .{}, .fingerprint = one },
+        .{ .key = "fn\x1flib\x1f\x1fother", .role = .declared, .exported = true, .fact = .{}, .fingerprint = one },
+    };
+    const interface: Interface = .{ .module = "lib", .text = "", .declarations = .{ .functions = &functions } };
+    const used: []const []const u8 = &.{"f\x1ffn\x1flib\x1f\x1fused"};
+    const outline = symbols.outlineDigest(interface);
+    const uses = symbols.usesDigest(interface, used);
+    // `other` changed (its signature, say): its fingerprint only.
+    var changed = functions;
+    changed[1].fingerprint = two;
+    var later = interface;
+    later.declarations.functions = &changed;
+    try t.expectEqual(outline, symbols.outlineDigest(later));
+    try t.expectEqual(uses, symbols.usesDigest(later, used));
+    // The used function changed.
+    changed = functions;
+    changed[0].fingerprint = two;
+    try t.expect(!std.mem.eql(u8, &uses, &symbols.usesDigest(later, used)));
+    // `other`, a free function stood in by `pass`, removed or made private:
+    // only a reader that spelled it, and so used it, could see that.
+    later.declarations.functions = functions[0..1];
+    try t.expectEqual(outline, symbols.outlineDigest(later));
+    // A domain member added: a method lookup on the type may find it.
+    const members = [_]language.module_interface.Function{ functions[0], functions[1], .{ .key = "fn\x1flib\x1fRow\x1fsize", .role = .declared, .exported = true, .fact = .{}, .fingerprint = one } };
+    later.declarations.functions = &members;
+    try t.expect(!std.mem.eql(u8, &outline, &symbols.outlineDigest(later)));
+    // A type declaration changed in any way.
+    var typed_later = interface;
+    typed_later.declarations.types = &.{.{ .name = "Row", .fingerprint = one }};
+    try t.expect(!std.mem.eql(u8, &outline, &symbols.outlineDigest(typed_later)));
+    try t.expect(symbols.usedFingerprint(interface, "f\x1ffn\x1flib\x1f\x1fmissing") == null);
+    // A kept body (here `other` inlined) is checked by every reader.
+    var inlined = functions;
+    inlined[1].role = .inlined;
+    later.declarations.functions = &inlined;
+    const kept = symbols.outlineDigest(later);
+    inlined[1].fingerprint = two;
+    try t.expect(!std.mem.eql(u8, &kept, &symbols.outlineDigest(later)));
+}
+
+// spec-case: MODULE-INTERFACE-CUTOFF-1
+test "a checked function name maps to its declaration's stable key, a lambda to none" {
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    try t.expectEqualStrings("fn\x1fvalue\x1f\x1fformat_number", try symbols.stableKey(a, "value::format_number"));
+    try t.expectEqualStrings("fn\x1fmodel\x1fBox\x1fvalue", try symbols.stableKey(a, "model::Box.value"));
+    try t.expectEqualStrings("fn\x1fa.b\x1f\x1flargest", try symbols.stableKey(a, "a.b::largest[i64]"));
+    try t.expectError(error.Unnamed, symbols.stableKey(a, "@invariant:lib::Row"));
+    try t.expectError(error.Unnamed, symbols.stableKey(a, "main::lambda@120"));
+    try t.expectError(error.Unnamed, symbols.stableKey(a, "main"));
 }

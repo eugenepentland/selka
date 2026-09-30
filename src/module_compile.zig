@@ -116,30 +116,38 @@ pub const Hashes = struct {
     positions: []const u8,
     inputs: []const Input = &.{},
     /// MODULE-SYMBOL-CUTOFF-1: the sorted names of every function the
-    /// compile's output can depend on (`module_symbols.reach`); null when it
-    /// consumed every row of every import (a check, or a reached body that
-    /// invokes a function value).
-    reach: ?[]const []const u8 = null,
+    /// compile's output can depend on (`module_symbols.reach`) and of every
+    /// record its check's catalog holds; null when it consumed every row of
+    /// every import (a check, or a reached body that invokes a function value).
+    reach: ?symbols.Reach = null,
 };
 
 /// One interface a compile read, by module, with its interface, emission and
 /// positions hashes (lowercase hex); the positions hash is empty when no
-/// emitted unit's positions fell in that interface's text. `symbols` is the
-/// digest of what the compile's `reach` consumed of its emission section
-/// (`module_symbols.Table.digest`), empty with no reach.
-pub const Input = struct {
-    module: []const u8,
-    interface: []const u8,
-    emission: []const u8,
-    positions: []const u8,
+/// emitted unit's positions fell in that interface's text. `cutoff` is what
+/// the compile consumed of it, finer than its hashes.
+pub const Input = struct { module: []const u8, interface: []const u8, emission: []const u8, positions: []const u8, cutoff: Cutoff = .{} };
+
+/// What a compile consumed of one interface it read, each digest lowercase
+/// hex and empty when the compile cannot say.
+pub const Cutoff = struct {
+    /// MODULE-SYMBOL-CUTOFF-1: the digest of what the compile's `reach`
+    /// consumed of its emission section (`module_symbols.Table.digest`).
     symbols: []const u8 = "",
     /// MODULE-SYMBOL-CUTOFF-5: with a positions hash, the sorted indices of
     /// the interface's stretches the emitted units' positions came through,
     /// and the digest of what those positions read of the stretches
-    /// (`module_symbols.stretchDigest`); empty when a rendered diagnostic may
-    /// have read any position.
+    /// (`module_symbols.stretchDigest`).
     stretches: []const u32 = &.{},
     lines: []const u8 = "",
+    /// MODULE-INTERFACE-CUTOFF-1: the declarations of this interface the
+    /// compile used (`module_symbols.usedFingerprint` identities, sorted), the
+    /// digest of their fingerprints, and the digest of everything a lookup
+    /// into it can find (`module_symbols.outlineDigest`); `outline` is
+    /// `unread` for an interface the compile read only physical rows of.
+    used: []const []const u8 = &.{},
+    uses: []const u8 = "",
+    outline: []const u8 = "",
 };
 
 /// How much one compile did: the program's functions, how many it lowered
@@ -364,13 +372,22 @@ const InterfaceStep = struct {
         var placed = try placedIn(arena, compilation, .{ .code = self.body.code, .emit = self.body.emit, .remap = remap });
         placed.whole = rendersAny(compilation, self.request.module.module, self.out.counts.diagnostics);
         if (placed.whole) @memset(placed.read, true);
-        const reached = if (self.request.check_only) null else try symbols.reach(arena, self.body.code, self.body.emit);
+        const functions = if (self.request.check_only) null else try symbols.reach(arena, self.body.code, self.body.emit);
+        const reached: ?symbols.Reach = if (functions) |names| .{ .functions = names, .catalog = try symbols.catalogNames(arena, self.body.lowered[@intFromBool(self.request.config.drop_debug)].records) } else null;
         self.out.hashes = .{
             .interface = try hex(arena, iface.interfaceHash(interface)),
             .implementation = try hex(arena, built.implementation_hash),
             .emission = try hex(arena, iface.emissionHash(interface)),
             .positions = try hex(arena, iface.positionsHash(interface)),
-            .inputs = try inputsOf(arena, .{ .library = library, .modules = modules, .own = self.own, .placed = placed, .physical = self.body.dependencies, .reach = reached }),
+            .inputs = try inputsOf(arena, .{
+                .library = library,
+                .modules = modules,
+                .own = self.own,
+                .placed = placed,
+                .physical = self.body.dependencies,
+                .reach = reached,
+                .uses = try usesOf(arena, compilation, .{ .code = self.body.code, .emit = self.body.emit, .remap = remap, .own = self.own }, built.uses),
+            }),
             .reach = reached,
         };
         self.done = true;
@@ -445,7 +462,7 @@ fn rendersAny(compilation: *const project_compile.Compilation, module: []const u
 
 /// The emitted units a placement is computed from, and each input's
 /// interface stretches (null for an input served from its source).
-const Emitted = struct { code: bytecode.Program, emit: []const bool, remap: []const ?[]const native_interface.Stretch };
+const Emitted = struct { code: bytecode.Program, emit: []const bool, remap: []const ?[]const native_interface.Stretch, own: usize = std.math.maxInt(usize) };
 
 /// Which merged-source inputs the positions of the emitted units fall in (the
 /// interface texts whose positions this compile's metadata read), and in each
@@ -496,7 +513,58 @@ fn placedIn(allocator: std.mem.Allocator, compilation: *const project_compile.Co
 }
 
 /// What the interfaces a compile read are listed from.
-const Read = struct { library: *oracle.Library, modules: []const project.Module, own: usize, placed: Placement, physical: []const iface.Interface, reach: ?[]const []const u8 };
+const Read = struct { library: *oracle.Library, modules: []const project.Module, own: usize, placed: Placement, physical: []const iface.Interface, reach: ?symbols.Reach, uses: Uses };
+
+/// MODULE-INTERFACE-CUTOFF-1: per module of the compilation, the sorted,
+/// unique identities of the declarations the compile used, and whether it
+/// used one it cannot name.
+const Uses = struct { identities: [][]const []const u8, unmapped: []bool };
+
+/// The declarations of other modules a compile used: those its own
+/// declarations name (`found`, from the interface builder) and every function
+/// its emitted units call, take as a value or splice, by the identity of its
+/// declaration (a specialization by its template's).
+fn usesOf(allocator: std.mem.Allocator, compilation: *const project_compile.Compilation, units: Emitted, found: []const builder.Use) Error!Uses {
+    const modules = compilation.index.project.modules.items;
+    const program = compilation.program.?;
+    const lists = try allocator.alloc(std.ArrayList([]const u8), modules.len);
+    for (lists) |*list| list.* = .empty;
+    const out: Uses = .{ .identities = try allocator.alloc([]const []const u8, modules.len), .unmapped = try allocator.alloc(bool, modules.len) };
+    @memset(out.unmapped, false);
+    for (found) |use| if (use.module < modules.len) try lists[use.module].append(allocator, use.identity);
+    const code = units.code;
+    const count = @min(units.emit.len, @min(code.functions.len, program.functions.len));
+    for (code.functions[0..count], units.emit[0..count]) |function, chosen| {
+        if (!chosen) continue;
+        for (function.scope.instructions) |instruction| {
+            const target: ?typed.FunctionId = switch (instruction.op) {
+                .call => |id| id,
+                .function_value => |value| value.function,
+                else => null,
+            };
+            for ([_]?typed.FunctionId{ target, if (instruction.inline_origin) |origin| origin.callee else null }) |candidate| {
+                const id = @backingInt(candidate orelse continue);
+                if (id >= program.functions.len) continue;
+                const callee = program.functions[id];
+                const at = compilation.src.originalSpan(callee.declaration) catch continue;
+                if (at.input >= modules.len or at.input == units.own) continue;
+                const key = symbols.stableKey(allocator, callee.name) catch |err| switch (err) {
+                    error.OutOfMemory => return error.OutOfMemory,
+                    error.Unnamed => {
+                        out.unmapped[at.input] = true;
+                        continue;
+                    },
+                };
+                try lists[at.input].append(allocator, try builder.useIdentity(allocator, .function, key));
+            }
+        }
+    }
+    for (lists, out.identities) |*list, *identities| {
+        std.mem.sort([]const u8, list.items, {}, lessText);
+        identities.* = symbols.uniqueNames(list.items);
+    }
+    return out;
+}
 
 /// Every interface the compile read, in module order, with its interface and
 /// emission hashes, and its positions hash when an emitted unit's positions
@@ -513,14 +581,31 @@ fn inputsOf(allocator: std.mem.Allocator, read: Read) Error![]const Input {
         // MODULE-SYMBOL-CUTOFF-5: the stretches the units' positions came
         // through, unless a rendered diagnostic may have read any place.
         const stretches: []const u32 = if (placed and !read.placed.whole) read.placed.stretches[index] else &.{};
+        var cutoff: Cutoff = .{
+            .symbols = try symbolsOf(allocator, interface, read.reach),
+            .stretches = stretches,
+            .lines = if (placed and !read.placed.whole) try hex(allocator, symbols.stretchDigest(interface, stretches)) else "",
+        };
+        // MODULE-INTERFACE-CUTOFF-1: no declaration-level record when a
+        // rendered diagnostic may name any place, or a use of this module
+        // has no identity its interface states.
+        if (!read.placed.whole and !read.uses.unmapped[index]) {
+            const used = read.uses.identities[index];
+            const accounted = for (used) |identity| {
+                if (symbols.usedFingerprint(interface, identity) == null) break false;
+            } else true;
+            if (accounted) {
+                cutoff.used = used;
+                cutoff.uses = try hex(allocator, symbols.usesDigest(interface, used));
+                cutoff.outline = try hex(allocator, symbols.outlineDigest(interface));
+            }
+        }
         try out.append(allocator, .{
             .module = module.name,
             .interface = try hex(allocator, iface.interfaceHash(interface)),
             .emission = try hex(allocator, iface.emissionHash(interface)),
             .positions = if (placed) try hex(allocator, iface.positionsHash(interface)) else "",
-            .symbols = try symbolsOf(allocator, interface, read.reach),
-            .stretches = stretches,
-            .lines = if (placed and !read.placed.whole) try hex(allocator, symbols.stretchDigest(interface, stretches)) else "",
+            .cutoff = cutoff,
         });
     }
     for (read.physical) |interface| {
@@ -531,7 +616,8 @@ fn inputsOf(allocator: std.mem.Allocator, read: Read) Error![]const Input {
             .interface = try hex(allocator, iface.interfaceHash(interface)),
             .emission = try hex(allocator, iface.emissionHash(interface)),
             .positions = "",
-            .symbols = try symbolsOf(allocator, interface, read.reach),
+            // Its declarations were never read: only its physical rows.
+            .cutoff = .{ .symbols = try symbolsOf(allocator, interface, read.reach), .outline = "unread" },
         });
     }
     return out.items;
@@ -540,7 +626,7 @@ fn inputsOf(allocator: std.mem.Allocator, read: Read) Error![]const Input {
 /// MODULE-SYMBOL-CUTOFF-1: the digest of what a compile that reached
 /// `reached` consumed of `interface`'s emission section, or empty without a
 /// reach.
-fn symbolsOf(allocator: std.mem.Allocator, interface: iface.Interface, reached: ?[]const []const u8) Error![]const u8 {
+fn symbolsOf(allocator: std.mem.Allocator, interface: iface.Interface, reached: ?symbols.Reach) Error![]const u8 {
     const names = reached orelse return "";
     const table = try symbols.Table.of(allocator, interface);
     return hex(allocator, try table.digest(allocator, names));
