@@ -828,11 +828,35 @@ static uchar *matcher[] = {
 
 /* end of generated code */
 
+/* Address numbering alone may view a long subtraction as an addition.
+ * Keep the actual instruction, its other uses, and flag selection intact.
+ */
+static Ref
+suboffset(Ins *i, Fn *fn)
+{
+	int64_t offset;
+	Ref base, imm;
+
+	base = i->arg[0];
+	imm = i->arg[1];
+	if (i->op != Osub || i->cls != Kl || fn->tmp[i->to.val].cls != Kl
+	|| rtype(base) != RTmp || fn->tmp[base.val].cls != Kl
+	|| rtype(imm) != RCon || fn->con[imm.val].type != CBits
+	|| fn->con[imm.val].flt)
+		return R;
+	offset = fn->con[imm.val].bits.i;
+	if (offset < 0 || offset > (int64_t)INT32_MAX + 1)
+		return R;
+	return getcon(-offset, fn);
+}
+
 static void
-anumber(Num *tn, Blk *b, Con *con)
+anumber(Num *tn, Blk *b, Fn *fn)
 {
 	Ins *i;
 	Num *n;
+	Ref offset;
+	int op;
 
 	for (i=b->ins; i<&b->ins[b->nins]; i++) {
 		if (rtype(i->to) != RTmp)
@@ -840,10 +864,36 @@ anumber(Num *tn, Blk *b, Con *con)
 		n = &tn[i->to.val];
 		n->l = i->arg[0];
 		n->r = i->arg[1];
-		n->nl = refn(n->l, tn, con);
-		n->nr = refn(n->r, tn, con);
-		n->n = opn(i->op, n->nl, n->nr);
+		op = i->op;
+		offset = suboffset(i, fn);
+		if (!req(offset, R)) {
+			n->r = offset;
+			op = Oadd;
+		}
+		n->nl = refn(n->l, tn, fn->con);
+		n->nr = refn(n->r, tn, fn->con);
+		n->n = opn(op, n->nl, n->nr);
 	}
+}
+
+/* Reject an unencodable intermediate displacement before addcon can
+ * overflow; leaving its original temporary preserves ordinary arithmetic.
+ */
+static int
+addradd(Con *a, Con *b, int scale)
+{
+	int64_t left, right;
+
+	left = a->type == CUndef ? 0 : a->bits.i;
+	right = b->bits.i;
+	if (left < INT32_MIN || left > INT32_MAX
+	|| right < INT32_MIN || right > INT32_MAX
+	|| (scale != 1 && scale != 2 && scale != 4 && scale != 8))
+		return 0;
+	right *= scale;
+	if (left + right < INT32_MIN || left + right > INT32_MAX)
+		return 0;
+	return addcon(a, b, scale);
 }
 
 static Ref
@@ -859,7 +909,8 @@ adisp(Con *c, Num *tn, Ref r, Fn *fn, int s)
 			break;
 		runmatch(matcher[Pob], tn, r, v);
 		assert(rtype(v[0]) == RCon);
-		addcon(c, &fn->con[v[0].val], s);
+		if (!addradd(c, &fn->con[v[0].val], s))
+			break;
 		r = v[1];
 	}
 	return r;
@@ -895,11 +946,11 @@ amatch(Addr *a, Num *tn, Ref r, Fn *fn)
 
 	if (*p < 0 && co.type != CUndef)
 	if (amatch(a, tn, rb, fn))
-		return addcon(&a->offset, &co, 1);
+		return addradd(&a->offset, &co, 1);
 	if (!req(ro, R)) {
 		assert(rtype(ro) == RCon);
 		c = &fn->con[ro.val];
-		if (!addcon(&co, c, 1))
+		if (!addradd(&co, c, 1))
 			return 0;
 	}
 	if (!req(rs, R)) {
@@ -975,7 +1026,7 @@ amd64_isel(Fn *fn)
 				fixarg(&p->arg[a], p->cls, 0, fn);
 			}
 		memset(num, 0, n * sizeof num[0]);
-		anumber(num, b, fn->con);
+		anumber(num, b, fn);
 		seljmp(b, fn);
 		for (i=&b->ins[b->nins]; i!=b->ins;) {
 			--i;
