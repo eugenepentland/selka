@@ -77,8 +77,10 @@ explicitly pinned A5 controls and all dev/full caps pass. Full LLVM text
 operations is now +0.572385%, down from the rejected +1.167106%; smoke has six
 reported diagnostic increases and no new cap miss. Source/native provenance and
 an independent 60-execution UBSan review are green. The original fourteen full
-Zig assertion failures are repaired; stronger SSA/journal oracles and the final
-complete gate remain pending. Details are in
+Zig assertion failures are repaired; strengthened SSA/journal oracles pass their
+focused lane checks. The independently reviewed final verifier binds source,
+compiler, tag, size and pre-measurement binary hashes; the complete integration
+gate remains pending. Details are in
 [wp-b3-registered-release-combined-2026-09-30.md](wp-b3-registered-release-combined-2026-09-30.md).
 All Phase B changes remain outside main;
 its approved tip is `80dd5190`.
