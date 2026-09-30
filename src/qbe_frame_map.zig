@@ -219,7 +219,10 @@ const Scan = struct {
                 if (descriptor) continue;
             }
             if (descriptor) {
-                try self.descriptorLine(word, line, &guid);
+                // LLVM places global symbol linkage after the last probe
+                // descriptor, without changing sections. Those directives
+                // belong to the object, rather than the discarded payload.
+                if (linkageDirective(word)) try self.kept.append(self.allocator, line) else try self.descriptorLine(word, line, &guid);
                 continue;
             }
             if (std.mem.eql(u8, word, ".file")) {
@@ -304,6 +307,13 @@ const Scan = struct {
         try out.append(self.allocator, .{ .unit = unit, .word = if (at.column == guard_column) pc | guard_flag else pc });
     }
 };
+
+fn linkageDirective(word: []const u8) bool {
+    inline for (.{ ".weak", ".globl", ".global", ".local", ".hidden", ".protected", ".internal" }) |name| {
+        if (std.mem.eql(u8, word, name)) return true;
+    }
+    return false;
+}
 
 /// Rewrite one assembly file for the frame map. Text with no position
 /// directive at all is returned unchanged (as a copy), so a unit lowered under
@@ -399,6 +409,23 @@ test "an inlined call names every frame it was inlined through, innermost first"
     try std.testing.expect(std.mem.indexOf(u8, output, "\t.long\t.Lmyl_fm_1-.\n\t.long\t2147483648\n\t.long\tmyl_f_b_meta-.\n\t.long\t.Lmyl_fm_1-.\n\t.long\t1073741832\n") != null);
     // A descriptor GUID printed signed names the same function as its unsigned probe.
     try std.testing.expect(std.mem.indexOf(u8, output, "\t.long\t.Lmyl_fm_2-.\n\t.long\t4\n\t.long\tmyl_f_c_meta-.\n") != null);
+}
+
+// spec-case: QBE-FRAMEMAP-ASM-1
+test "linker symbol directives following a probe descriptor survive assembly rewriting" {
+    const a = std.testing.allocator;
+    const linkage = "\t.weak\tmyl_rc_generated_image\n\t.weak\t_Unwind_Backtrace\n" ++
+        "\t.globl\tkept_global\n\t.hidden\tkept_global\n";
+    const input = "main:\n\t.pseudoprobe\t100 3 2 0 main\n\tcallq\tfail\n" ++
+        "\t.section\t.pseudo_probe_desc,\"G\",@progbits,.pseudo_probe_desc_f,comdat\n" ++
+        "\t.quad\t100\n\t.quad\t0\n\t.byte\t7\n\t.ascii\t\"myl_f_a\"\n" ++ linkage ++
+        "\t.section\t\".note.GNU-stack\",\"\",@progbits\n";
+    const output = try annotate(a, input);
+    defer a.free(output);
+    try std.testing.expect(std.mem.indexOf(u8, output, linkage) != null);
+    try std.testing.expect(std.mem.indexOf(u8, output, "pseudo_probe_desc") == null);
+    try std.testing.expect(std.mem.indexOf(u8, output, ".ascii") == null);
+    try std.testing.expect(std.mem.indexOf(u8, output, "\t.long\tmyl_f_a_meta-.\n") != null);
 }
 
 // spec-case: LLVM-THINLTO-1
