@@ -1,0 +1,74 @@
+{
+  "qbe": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/phase-b-targeted-combined/compiler/bin/qbe",
+  "qbe_sha256": "6ccecf27cda0378f59d7dc60cee74a6558a7d25a0c88fb877b5755136f0500de",
+  "rows": [
+    {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/phase-b-targeted-combined/compiler/bin/qbe",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-qbe-sub-address-20260930/.tmp/sub-address/control/qbe-sub-address.s",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-qbe-sub-address-20260930/tests/fixtures/qbe-sub-address/probe.ssa"
+      ],
+      "status": 0
+    },
+    {
+      "command": [
+        "zig",
+        "cc",
+        "-std=c11",
+        "-O2",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-Wno-unused-command-line-argument",
+        "-UNDEBUG",
+        "-fsanitize=undefined",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-qbe-sub-address-20260930/tests/fixtures/qbe-sub-address/probe.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-qbe-sub-address-20260930/.tmp/sub-address/control/qbe-sub-address.s",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-qbe-sub-address-20260930/.tmp/sub-address/control/qbe-sub-address.probe"
+      ],
+      "status": 0
+    },
+    {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-qbe-sub-address-20260930/.tmp/sub-address/control/qbe-sub-address.probe"
+      ],
+      "status": 0
+    },
+    {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/phase-b-targeted-combined/compiler/bin/qbe",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-qbe-sub-address-20260930/.tmp/sub-address/control/qbe-zero-branch.s",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-qbe-sub-address-20260930/tests/fixtures/qbe-zero-branch/probe.ssa"
+      ],
+      "status": 0
+    },
+    {
+      "command": [
+        "zig",
+        "cc",
+        "-std=c11",
+        "-O2",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-Wno-unused-command-line-argument",
+        "-UNDEBUG",
+        "-fsanitize=undefined",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-qbe-sub-address-20260930/tests/fixtures/qbe-zero-branch/probe.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-qbe-sub-address-20260930/.tmp/sub-address/control/qbe-zero-branch.s",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-qbe-sub-address-20260930/.tmp/sub-address/control/qbe-zero-branch.probe"
+      ],
+      "status": 0
+    },
+    {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-qbe-sub-address-20260930/.tmp/sub-address/control/qbe-zero-branch.probe"
+      ],
+      "status": 0
+    }
+  ]
+}
