@@ -763,6 +763,8 @@ uint64_t myl_qbe_float_unary(void *context, uint64_t op, uint64_t input) {
             a = trunc(a);
             if (!isfinite(a) || a < -9223372036854775808.0 || a >= 9223372036854775808.0) return fail(context, "R_FLOAT_CONVERSION");
             return (uint64_t)(int64_t)a;
+        case 18: return float_bits(sin(a));
+        case 19: return float_bits(cos(a));
         default: return fail(context, "R_INTERNAL");
     }
 }

@@ -1747,6 +1747,10 @@ pub const Parser = struct {
                 try self.parseFloatUnary(token)
             else
                 return self.sink.fail(eInternalName, token.span, "`__float_sqrt` is reserved for compiler-internal standard-library sources; use the public `sqrt` operation"),
+            .kw_f64_sin, .kw_f64_cos => if (self.trustedStdlib())
+                try self.parseFloatUnary(token)
+            else
+                return self.sink.fail(eInternalName, token.span, "this binary64 intrinsic is reserved for compiler-internal standard-library sources; use `math.sin` or `math.cos`"),
             .kw_f64_floor, .kw_f64_ceil, .kw_f64_trunc, .kw_f64_abs, .kw_f64_neg, .kw_f64_from_u64, .kw_f64_to_u64 => try self.parseFloatUnary(token),
             .kw_wrap => try self.parseWrap(token),
             .kw_i8, .kw_i16, .kw_i32, .kw_i64, .kw_u8, .kw_u16, .kw_u32, .kw_u64 => try self.parseWidthConversion(token),

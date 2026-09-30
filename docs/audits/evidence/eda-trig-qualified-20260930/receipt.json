@@ -1,0 +1,318 @@
+{
+  "schema": 1,
+  "source": "e88fcf3c98d6f0e0090e0719472e1081fb81f119",
+  "capture_head": "c7d66ee01630d47b14e339c5e8035aed37d0e702",
+  "compiler_path": "/home/epentland/ai/canopy/eda-bench-wt/mylang-e88fcf3c/bin/mylang",
+  "compiler_sha256": "6259edca26ea90f93b85037a17b5fc2692505a4e6f4cdd05cca23554b1bb0bcc",
+  "scope": "four standard broad compiler targets, not complete common lane/integration/performance gate",
+  "targets": [
+    {
+      "target": "test",
+      "command": [
+        "zig",
+        "build",
+        "test",
+        "--summary",
+        "all"
+      ],
+      "exit": 0,
+      "wall_s": 1235.33367175702,
+      "log_sha256": "8375ed90a017a03bd2cb9cb96103674a322fce04d2ba96f70ed3695511b3f9f7",
+      "build_summary": [
+        "Build Summary: 115/115 steps succeeded; 2806/31348 tests passed (28542 skipped)"
+      ],
+      "observed_runner_results": {
+        "processes": 22,
+        "passed": 2806,
+        "failed": 0,
+        "skipped": 0
+      },
+      "guardian_scope": "diff",
+      "guardian_check_count": 88
+    },
+    {
+      "target": "test-qbe",
+      "command": [
+        "zig",
+        "build",
+        "test-qbe",
+        "--summary",
+        "all"
+      ],
+      "exit": 0,
+      "wall_s": 119.28713555797003,
+      "log_sha256": "8b0370fa4e7ce56b7665f7cc5c8d1a6d47857691d90506b88980c963354f72ae",
+      "build_summary": [
+        "Build Summary: 51/51 steps succeeded; 505/505 tests passed"
+      ],
+      "observed_runner_results": {
+        "processes": 5,
+        "passed": 505,
+        "failed": 0,
+        "skipped": 0
+      },
+      "guardian_scope": "diff",
+      "guardian_check_count": 88
+    },
+    {
+      "target": "test-qbe-build",
+      "command": [
+        "zig",
+        "build",
+        "test-qbe-build",
+        "--summary",
+        "all"
+      ],
+      "exit": 0,
+      "wall_s": 3.116968321031891,
+      "log_sha256": "4c93435d7d947d67f06ba442216823becca9f1bf4985e5179cb9d30571137c5a",
+      "build_summary": [
+        "Build Summary: 29/29 steps succeeded"
+      ],
+      "observed_runner_results": {
+        "processes": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "guardian_scope": "diff",
+      "guardian_check_count": 88
+    },
+    {
+      "target": "fmt-check",
+      "command": [
+        "zig",
+        "build",
+        "fmt-check",
+        "--summary",
+        "all"
+      ],
+      "exit": 0,
+      "wall_s": 0.2670410490827635,
+      "log_sha256": "727fe2e22c982638ef4d6d75a47d5f97e1bb81c8b5f3ec3c0c55f158df48d93f",
+      "build_summary": [
+        "Build Summary: 2/2 steps succeeded"
+      ],
+      "observed_runner_results": {
+        "processes": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "guardian_scope": "not invoked",
+      "guardian_check_count": null
+    }
+  ],
+  "coverage": {
+    "default_lang": {
+      "fresh": 1490,
+      "cached": 0,
+      "failed": 0,
+      "skipped": 0,
+      "dropped": 0,
+      "programs": 228
+    },
+    "gc_stress_lang": {
+      "fresh": 1490,
+      "cached": 0,
+      "failed": 0,
+      "skipped": 0,
+      "dropped": 0,
+      "programs": 228
+    },
+    "native_memory": "fresh success, about one minute",
+    "native_heap": "cow/heap/arena executables cached success in broad target; explicit target scheduled separately",
+    "missing_from_these_four_targets": [
+      "Lox project build/test/driver under default and GC",
+      "100-seed differential RC fuzz",
+      "full tests/lang release and stats modes"
+    ],
+    "integration_27_executed": false,
+    "performance_matrix_executed": false
+  },
+  "archive": {
+    "path": "raw.tar.gz",
+    "bytes": 662717,
+    "sha256": "0d6d81989cdb67f0324053f59a628ce514727b1ac1c567387a4701af0eb52f76",
+    "members": [
+      {
+        "path": "qualification.json",
+        "bytes": 4674,
+        "sha256": "a59a5b9a393d0a21604d83a12f426234097934262c71ea5e70c138670ec7353a"
+      },
+      {
+        "path": "raw/fmt-check.log",
+        "bytes": 81,
+        "sha256": "727fe2e22c982638ef4d6d75a47d5f97e1bb81c8b5f3ec3c0c55f158df48d93f"
+      },
+      {
+        "path": "raw/guardian-roi-summary.json",
+        "bytes": 375155,
+        "sha256": "1f31754e1528114fa8a55ebca27c3fe91c458e20811a78d02b14eb47e405d400"
+      },
+      {
+        "path": "raw/install.log",
+        "bytes": 1638,
+        "sha256": "09ee65541daedf366eebfa7a64db490009bdf4437da10d73b60cb89e1cce72ad"
+      },
+      {
+        "path": "raw/merge-preview.json",
+        "bytes": 504,
+        "sha256": "bca6570184e025b5751facaeb1607eb57d33cae66102d5b9ddb64f2637c2c813"
+      },
+      {
+        "path": "raw/merge-preview.stderr",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "raw/merge-preview.txt",
+        "bytes": 24078,
+        "sha256": "4b6d45e5684b92869772a083f1a760c85c0026fb58484c8003476fbe4864412b"
+      },
+      {
+        "path": "raw/receipt.json",
+        "bytes": 1086,
+        "sha256": "0c9b7781cb8fcda6c7a5eb39ffd8d48933e52ab5629dfc405c775f9a57058eea"
+      },
+      {
+        "path": "raw/run-gates.py",
+        "bytes": 738,
+        "sha256": "c8913ff292b7846504e46852829d22ad7309c55a8eb69be889a0fe56f9870a5c"
+      },
+      {
+        "path": "raw/test-qbe-build.log",
+        "bytes": 4445,
+        "sha256": "4c93435d7d947d67f06ba442216823becca9f1bf4985e5179cb9d30571137c5a"
+      },
+      {
+        "path": "raw/test-qbe.log",
+        "bytes": 16672,
+        "sha256": "8b0370fa4e7ce56b7665f7cc5c8d1a6d47857691d90506b88980c963354f72ae"
+      },
+      {
+        "path": "raw/test.log",
+        "bytes": 400807,
+        "sha256": "8375ed90a017a03bd2cb9cb96103674a322fce04d2ba96f70ed3695511b3f9f7"
+      },
+      {
+        "path": "source-binding.json",
+        "bytes": 3343,
+        "sha256": "038128f65223962c2ec77acfe74d40ab5da4b489af4c0007b0e1b8e3321f42f1"
+      },
+      {
+        "path": "source/.zigversion",
+        "bytes": 26,
+        "sha256": "55514671f203f691ba0fae90c7b7d8740256222cfa6f7512b71b04cd1316eb2d"
+      },
+      {
+        "path": "source/SPEC.md",
+        "bytes": 737614,
+        "sha256": "3d87717876f27416f88041a80579424c3d41c6cde7a3b0d1fe9b630ec199ea90"
+      },
+      {
+        "path": "source/build.zig",
+        "bytes": 81016,
+        "sha256": "e606d8ebb4db9e3d6798b4a93d6cf6d03abdea2d7451ce6a374e035030dcde5b"
+      },
+      {
+        "path": "source/build_test_inputs.zig",
+        "bytes": 7869,
+        "sha256": "b947d2f1b8851262315bad96c913ecfdf0562409069c0d075bedbfad40ca27e3"
+      },
+      {
+        "path": "source/docs/floating-point.md",
+        "bytes": 8182,
+        "sha256": "453642569ff82331f4339e51a2ca5936007be99bba65d8d878d3ceb66eeec1b9"
+      },
+      {
+        "path": "source/docs/standard-library.md",
+        "bytes": 37031,
+        "sha256": "046f7865f42e6d42e929bc213dce1177c09dff72950e71b5bcb68b2a505332aa"
+      },
+      {
+        "path": "source/src/ast.zig",
+        "bytes": 22112,
+        "sha256": "604be085aabf12d2fe71737b3adc205d3c4343f6c919786b88cec05a4446f5b2"
+      },
+      {
+        "path": "source/src/float_intrinsics.zig",
+        "bytes": 1043,
+        "sha256": "e013713a1b93ea82e4fcc3baa379b6662248c901b46a1af34d0e039be3b73273"
+      },
+      {
+        "path": "source/src/float_operations_test.zig",
+        "bytes": 8292,
+        "sha256": "4d610b195d6276be8326fc06a4f7396fe9f4615e591e9e869dbb72f20bb28716"
+      },
+      {
+        "path": "source/src/floats.zig",
+        "bytes": 3467,
+        "sha256": "ec1d0b73eaf84611b9ca8288178a1fabc19a2a7a303eae070c91ead5f414d1d6"
+      },
+      {
+        "path": "source/src/generic_bodies.zig",
+        "bytes": 194735,
+        "sha256": "46515b1f0e2165f1e08e46430bce00b41b26888dbd0cd0075f874b5040f0b93c"
+      },
+      {
+        "path": "source/src/lexer.zig",
+        "bytes": 19970,
+        "sha256": "cd4c154ca6298fc5affdc5f81843a5d67aeb7da058cf43191dabd9d477d45b3c"
+      },
+      {
+        "path": "source/src/parser.zig",
+        "bytes": 154259,
+        "sha256": "db496a251a7986e582f712a8410e471183a9949314134935c4718945116e40ae"
+      },
+      {
+        "path": "source/src/qbe.zig",
+        "bytes": 176135,
+        "sha256": "0ac98c11d059e74624a0cdb60448ffb0df9a8d0113c69b1bbc05596c649b917b"
+      },
+      {
+        "path": "source/src/qbe_runtime.c",
+        "bytes": 65913,
+        "sha256": "dd5004aef1eff1119a27697b855bfc9e7261dbf782a71064853a6605807b6b13"
+      },
+      {
+        "path": "source/src/stdlib/math.my",
+        "bytes": 7041,
+        "sha256": "baf89b1dae41a0c242b1f87dc892025655c3d39f68d545dc53d7412c95a6b07d"
+      },
+      {
+        "path": "source/src/typed.zig",
+        "bytes": 37799,
+        "sha256": "1801f5884c3cfa5e523de27acbc1e1cfb6af288ed44bf0fb4bcdf3dc8391f6a2"
+      },
+      {
+        "path": "source/test/integration.zig",
+        "bytes": 726663,
+        "sha256": "1a9ec620f96e92ad74936634f496d9b4f2b9f55140c3d4151759e03f067e4101"
+      },
+      {
+        "path": "source/tests/lang/math_trig.my",
+        "bytes": 1958,
+        "sha256": "95b51718498661dd060d385aa6f2308a998ddef738ba31258d7713f59a03bce1"
+      }
+    ],
+    "member_count": 32,
+    "payload_bytes": 3124346,
+    "verified": true
+  },
+  "merge_preview": {
+    "method": "git merge-tree BASE MAIN SOURCE (three-argument read-only preview; no merge/index/ref updates)",
+    "base": "2c05c41edfdb2e4bf9fbf93908ee091367b9bc15",
+    "main": "5041d690693587825015ca0a37e6a533ac605343",
+    "source": "e88fcf3c98d6f0e0090e0719472e1081fb81f119",
+    "status": 0,
+    "overlap": [
+      "SPEC.md",
+      "test/integration.zig"
+    ],
+    "conflict_markers": [],
+    "stdout_sha256": "4b6d45e5684b92869772a083f1a760c85c0026fb58484c8003476fbe4864412b",
+    "combined_source_executed": false
+  },
+  "feedback_commit": "9faf6b82a07bf61615161bae27dd794363408c25"
+}

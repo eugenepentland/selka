@@ -42,7 +42,24 @@ performance rows, known findings and Guardian feedback are in
 **Phase B landed with explicit user approval** ("Yeah merge it in") on
 2026-09-30. Main fast-forwarded from `80dd5190` to `b6aed6cf`; its tested compiler
 source is `a3e451d7`. The original dirty checkout was verified unchanged.
-Phase C is now authorized to start on the completed compiler work.
+Phase C was authorized to start on the completed compiler work.
+
+**Phase C / WP-C1 is complete on owned review branches.** The complete handwritten
+EDA application preserves all 279 named original tests and passes 319 fresh
+native tests on final compiler `e88fcf3c`; all 34 reference cases are byte-identical.
+Map, all 122 module checks, formatting, 20 guide examples, counts and all 12
+Debug development-loop metrics are complete. Native trig and the cache/generic
+repairs discovered during porting have separate compiler regressions and pass
+the four broad targets plus the remaining common-lane checks, including Lox,
+release/stats and 100 valid fuzz seeds with zero RC divergences. Two unchanged
+Phase B GC-stress-only findings remain disclosed.
+
+The source and evidence are committed on `codex/next-eda-integration-20260930`
+(EDA) and `codex/next-eda-compiler-20260930` (compiler). This phase has not changed
+main refs or the original dirty compiler checkout. Current compiler-main changes
+are concurrent work and the combined source is not qualified by this lane.
+[codex-next-eda-closeout-2026-09-30.md](codex-next-eda-closeout-2026-09-30.md)
+links the final application acceptance, scope, timing and practical friction.
 
 Lane receipts are in [python-text-closeout-2026-09-29.md](python-text-closeout-2026-09-29.md),
 [wp-b4-tooling-2026-09-29.md](wp-b4-tooling-2026-09-29.md),
@@ -51,9 +68,17 @@ and [text-runtime-closeout-2026-09-29.md](text-runtime-closeout-2026-09-29.md).
 The final module-lane receipts are in
 [codex-next-modules-closeout-2026-09-30.md](codex-next-modules-closeout-2026-09-30.md);
 the QBE phi fix is in [wp-b3-qbe-phi-2026-09-30.md](wp-b3-qbe-phi-2026-09-30.md).
-EDA preparation has a verified test inventory and guide/checker reconciliation.
-Phase C begins after the approved Phase B landing. Sections below retain the
-original handoff state and requirements.
+EDA completion has verified original-test inventory, actual fresh native
+execution, guide/checker reconciliation and complete development-loop evidence.
+Sections below retain the original handoff state and requirements.
+
+## Compiler build preference — 2026-09-30
+
+The user requests ReleaseFast for future mylang compiler builds: pass
+`-Doptimize=ReleaseFast` to `zig build` / compiler installation. This supersedes
+the original WP-C1 Debug-build advice below. Existing qualified Debug binaries
+and in-flight homogeneous timing runs retain their recorded mode; no result
+is relabeled as ReleaseFast. Guest release/backend flags are separate.
 
 ## 1. Read first
 
@@ -372,9 +397,10 @@ Phase C (after A, B1 and ideally B2 are on main)
 - **Prepare:**
   - Install a pinned compiler from the new `main`:
     ```
-    zig build --prefix /home/epentland/ai/canopy/eda-bench-wt/mylang-<commit>
+    zig build -Doptimize=ReleaseFast --prefix /home/epentland/ai/canopy/eda-bench-wt/mylang-<commit>
     ```
-    Use the Debug compiler; guest binaries are identical.
+    Use ReleaseFast for future compiler installations (updated user preference);
+    retain the recorded mode of existing qualification and timing evidence.
   - Point `harness/langs.toml` `[mylang]` at it.
   - Update `mylang/PORTING-MYLANG.md` and `PLAN.md` for what the compiler now has:
     - `embed_bytes`/`embed_str` for `stdlib/embed` and the fixtures (deviation D5);

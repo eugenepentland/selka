@@ -88,6 +88,8 @@ pub const Tag = enum {
     kw_f64_neg,
     kw_f64_from_u64,
     kw_f64_to_u64,
+    kw_f64_sin,
+    kw_f64_cos,
     kw_bool,
     kw_if,
     kw_else,
@@ -270,6 +272,8 @@ const keyword_aliases = .{
     // declares `sqrt`, which shadows the prelude helper, so it reaches the
     // intrinsic under a spelling ordinary programs are not taught.
     .{ "__float_sqrt", Tag.kw_f64_sqrt },
+    .{ "__float_sin", Tag.kw_f64_sin },
+    .{ "__float_cos", Tag.kw_f64_cos },
     // Deterministic stand-in capabilities for `src/stdlib/{time,random,
     // filesystem,environment,network}.my`, under spellings ordinary programs
     // are not taught; the parser also rejects them outside the standard library.
