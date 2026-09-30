@@ -93,11 +93,17 @@ def compare(args, number, entry, root):
             out["modules"] = len(results)
             for result in results:
                 result.unlink()
+            states = {str(p.relative_to(cache)): (p.read_bytes(), p.stat().st_mtime_ns, p.stat().st_ino)
+                      for p in cache.glob("modules/*/state.json")}
             again = run([mylang, "check", *RUNTIMES[args.runtime], str(target), f"--cache-dir={cache}"], cwd=target.parent)
             if again != module:
                 out["problems"].append("an unchanged re-check printed something else")
             if list(found[0].glob("out/*.result.json")):
                 out["problems"].append("an unchanged re-check checked a module again")
+            after = {str(p.relative_to(cache)): (p.read_bytes(), p.stat().st_mtime_ns, p.stat().st_ino)
+                     for p in cache.glob("modules/*/state.json")}
+            if after != states:
+                out["problems"].append("an unchanged re-check rewrote its locked state files")
     if out["problems"]:
         out["status"] = "different"
     elif not args.keep:

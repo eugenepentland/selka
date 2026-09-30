@@ -6,6 +6,7 @@ pub const snapshot_embed = @import("embed.zig");
 /// The compiler's language module, for the per-module build `mylang test` runs through.
 pub const compiler_language = @import("compiler.zig");
 test {
+    _ = @import("module_build.zig");
     _ = @import("native_test_environment.zig");
     _ = @import("native_test_cases.zig");
     _ = @import("native_test_snapshot.zig");
