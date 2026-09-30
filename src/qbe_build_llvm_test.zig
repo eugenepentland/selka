@@ -360,14 +360,17 @@ fn constantOverflowIr(arena: std.mem.Allocator, body: []const u8) ![]const u8 {
     return llvm.translate(arena, source, .{ .signatures = &signatures, .runtime = &table, .sticky = false }, &diagnostic);
 }
 
+const overflow_extract = "extractvalue { i64, i1 }";
+const unit_overflow_cases = [_][4][]const u8{
+    .{ "sub", "1", "csltl", "-9223372036854775807" },
+    .{ "add", "-1", "csltl", "-9223372036854775807" },
+    .{ "add", "1", "csgtl", "9223372036854775806" },
+    .{ "sub", "-1", "csgtl", "9223372036854775806" },
+};
+
 /// The four +/-1 arithmetic forms have exactly one signed overflow bound.
 fn constantOverflowPositive(arena: std.mem.Allocator) !usize {
-    const cases = [_][4][]const u8{
-        .{ "sub", "1", "csltl", "-9223372036854775807" },
-        .{ "add", "-1", "csltl", "-9223372036854775807" },
-        .{ "add", "1", "csgtl", "9223372036854775806" },
-        .{ "sub", "-1", "csgtl", "9223372036854775806" },
-    };
+    const cases = unit_overflow_cases;
     var accepted: usize = 0;
     for (cases) |case| {
         const body = try std.fmt.allocPrint(arena, " %slot =l alloc8 8\n storel {s}, %slot\n %rhs =l loadl %slot\n %result =l {s} %a, %rhs\n %flag =l {s} %a, {s}", .{ case[1], case[0], case[2], case[3] });
@@ -376,7 +379,7 @@ fn constantOverflowPositive(arena: std.mem.Allocator) !usize {
         const intrinsic = try std.fmt.allocPrint(arena, "call {{ i64, i1 }} @llvm.{s}.with.overflow.i64", .{stem});
         try std.testing.expect(std.mem.indexOf(u8, ir, intrinsic) != null);
         try std.testing.expect(std.mem.indexOf(u8, ir, "load i64") != null);
-        try std.testing.expect(std.mem.indexOf(u8, ir, "extractvalue { i64, i1 }") != null);
+        try std.testing.expect(std.mem.indexOf(u8, ir, overflow_extract) != null);
         accepted += 1;
     }
     return accepted;
@@ -456,4 +459,50 @@ test "constant overflow intrinsics refuse escaping alias wrong width reset and c
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     try std.testing.expectEqual(@as(usize, 24), try constantOverflowNegative(arena.allocator()));
+}
+
+fn affineOverflowCases(arena: std.mem.Allocator) !usize {
+    const cases = unit_overflow_cases;
+    for (cases) |case| {
+        const body = try std.fmt.allocPrint(arena, " %slot =l alloc8 8\n storel {s}, %slot\n %rhs =l loadl %slot\n # myl-affine %result\n %result =l {s} %a, %rhs\n %flag =l {s} %a, {s}", .{ case[1], case[0], case[2], case[3] });
+        const hinted = try constantOverflowIr(arena, body);
+        const ordinary = try std.fmt.allocPrint(arena, " = {s} i64 ", .{case[0]});
+        try std.testing.expect(std.mem.indexOf(u8, hinted, ordinary) != null);
+        try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, hinted, overflow_extract));
+        try std.testing.expect(std.mem.indexOf(u8, hinted, "load i64") != null);
+        const unmarked = try std.mem.replaceOwned(u8, arena, body, "# myl-affine %result", "# no hint");
+        const original = try constantOverflowIr(arena, unmarked);
+        try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, original, overflow_extract));
+    }
+    return cases.len;
+}
+
+// spec: LLVM-INDUCTION-RESULT-1
+test "induction result manual hints keep wrapped operations and exact overflow flags for all unit forms" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expectEqual(@as(usize, 4), try affineOverflowCases(arena.allocator()));
+}
+
+fn affineRefusals(arena: std.mem.Allocator) !usize {
+    const cases = [_][]const u8{
+        " # myl-affine %result\n %result =l sub %a, %other\n %flag =l csltl %a, -9223372036854775807",
+        " # myl-affine %result\n %result =w sub %a, 1\n %flag =l csltl %a, -9223372036854775807",
+        " # myl-affine %result\n %result =l sub %a, 1\n %flag =l csltl %a, -9223372036854775808",
+        " # myl-affine %result\n # myl-obj %a\n %result =l sub %a, 1\n %flag =l csltl %a, -9223372036854775807",
+        " # myl-affine %result\n # myl-rc %a\n %result =l sub %a, 1\n %flag =l csltl %a, -9223372036854775807",
+    };
+    for (cases) |body| {
+        const refused = try constantOverflowIr(arena, body);
+        try std.testing.expect(std.mem.indexOf(u8, refused, ".with.overflow") == null);
+        try std.testing.expect(std.mem.indexOf(u8, refused, "icmp slt") != null);
+    }
+    return cases.len;
+}
+
+// spec-case: LLVM-INDUCTION-RESULT-1
+test "induction result hints grant no literal width pointer or range authority" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expectEqual(@as(usize, 5), try affineRefusals(arena.allocator()));
 }

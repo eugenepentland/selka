@@ -176,6 +176,8 @@ fn overflowBound(op: typed.BinaryOp, fixed: i64) Bound {
 /// collapses to one comparison; the cold path is the shared `overflowTrap`, so
 /// the sticky trap and its operand detail are unchanged.
 fn constantAddSub(comptime E: type, self: *E, op: typed.BinaryOp, literal: i64, values: Operands) Error!void {
+    if (@import("qbe_loop_facts.zig").inductionAt(self.function.scope.instructions, self.pc))
+        try self.print(" # myl-affine %v{d}\n", .{values.result});
     const bound = overflowBound(op, literal);
     const flag = self.temp();
     try self.print(immediate_instruction, .{ flag, if (bound.upward) "csgtl" else "csltl", values.left, bound.limit });

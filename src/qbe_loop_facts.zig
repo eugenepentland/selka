@@ -222,6 +222,51 @@ pub const min_span = 16;
 const widest_bits = 60;
 const narrowest_bits = 20;
 
+/// Whether `pc` is the +/-1 update at a structural counted-loop latch.
+/// This is a performance hint only: it grants no range or unchecked authority.
+pub fn inductionAt(code: []const bytecode.Instruction, pc: usize) bool {
+    if (pc < 2 or pc >= code.len or code.len - pc <= 3) return false;
+    const slot = switch (code[pc - 2].op) {
+        .load_local => |local| local,
+        else => return false,
+    };
+    const step = unitStep(code[pc - 1].op) orelse return false;
+    const add = switch (code[pc].op) {
+        .add_i64_checked => true,
+        .sub_i64_checked => false,
+        .binary_integer => |operation| if (operation.ty == .i64 and (operation.op == .add or operation.op == .sub)) operation.op == .add else return false,
+        else => return false,
+    };
+    const upward = add == (step == 1);
+    if (code[pc + 1].op != .store_local or code[pc + 1].op.store_local != slot) return false;
+    const head = switch (code[pc + 2].op) {
+        .jump => |target| target,
+        else => return false,
+    };
+    if (head >= pc - 2 or pc - 2 - head <= 3) return false;
+    if (code[head].op != .load_local or code[head].op.load_local != slot) return false;
+    switch (code[head + 1].op) {
+        .load_local, .push_i64, .push_integer => {},
+        else => return false,
+    }
+    const predicate = switch (code[head + 2].op) {
+        .cmp_i64 => |comparison| comparison,
+        else => return false,
+    };
+    if (upward and predicate != .lt and predicate != .le) return false;
+    if (!upward and predicate != .gt and predicate != .ge) return false;
+    return code[head + 3].op == .jump_if_false and code[head + 3].op.jump_if_false == pc + 3;
+}
+
+fn unitStep(op: @FieldType(bytecode.Instruction, "op")) ?i64 {
+    const value = switch (op) {
+        .push_i64 => |literal| literal,
+        .push_integer => |number| if (number.ty == .i64) std.math.cast(i64, number.value) orelse return null else return null,
+        else => return null,
+    };
+    return if (value == 1 or value == -1) value else null;
+}
+
 /// Find and plan every versionable loop of one function.
 pub fn plan(allocator: std.mem.Allocator, input: Input) Error!Plan {
     const code = input.function.scope.instructions;

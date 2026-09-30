@@ -452,7 +452,7 @@ const Nodes = struct {
 pub const Stem = enum { sadd, uadd, ssub, usub, umul, smul };
 /// A flag that is exactly one arithmetic instruction's overflow bit.
 pub const Flag = struct { producer: *const Instruction, stem: Stem };
-const Expected = struct { instruction: *const Instruction, stem: Stem };
+const Expected = struct { instruction: *const Instruction, stem: Stem, literal_bound: bool = false };
 
 /// The checked 64-bit operations of one unit, found by value: which
 /// arithmetic instructions must also compute which intrinsics, and which
@@ -460,6 +460,8 @@ const Expected = struct { instruction: *const Instruction, stem: Stem };
 pub const OverflowChecks = struct {
     producers: std.AutoHashMapUnmanaged(*const Instruction, std.ArrayList(Stem)) = .empty,
     flags: std.AutoHashMapUnmanaged(*const Instruction, Flag) = .empty,
+    /// A proved literal-bound producer carrying a performance-only affine hint.
+    ordinary_results: std.AutoHashMapUnmanaged(*const Instruction, void) = .empty,
 
     /// Scan every block of `function`; `excluded` names the temporaries that
     /// hold object addresses, whose `add` is lowered as a `getelementptr`.
@@ -472,11 +474,11 @@ pub const OverflowChecks = struct {
         for (function.hints.objects.keys()) |name| try marked.put(arena, name, {});
         for (function.hints.prefixes.keys()) |name| try marked.put(arena, name, {});
         for (function.hints.rc_states.keys()) |name| try marked.put(arena, name, {});
-        for (function.blocks.items) |block| try self.scan(arena, &nodes, block, .{ .excluded = excluded, .slots = &slots, .marked = &marked });
+        for (function.blocks.items) |block| try self.scan(arena, &nodes, block, .{ .excluded = excluded, .slots = &slots, .marked = &marked, .affine = &function.hints.affine });
         return self;
     }
 
-    const Inputs = struct { excluded: *const Names, slots: *const Names, marked: *const Names };
+    const Inputs = struct { excluded: *const Names, slots: *const Names, marked: *const Names, affine: *const std.array_hash_map.String(void) };
 
     fn scan(self: *OverflowChecks, arena: Allocator, nodes: *Nodes, block: *const il.Block, inputs: Inputs) Error!void {
         var values: std.StringHashMapUnmanaged(NodeId) = .empty;
@@ -507,6 +509,8 @@ pub const OverflowChecks = struct {
             else
                 try evaluate(nodes, &values, instruction);
             if (expected.get(node.value)) |match| {
+                if (match.literal_bound and inputs.affine.contains(match.instruction.dest.?))
+                    try self.ordinary_results.put(arena, match.instruction, {});
                 try self.flags.put(arena, instruction, .{ .producer = match.instruction, .stem = match.stem });
                 const entry = try self.producers.getOrPut(arena, match.instruction);
                 if (!entry.found_existing) entry.value_ptr.* = .empty;
@@ -521,7 +525,7 @@ pub const OverflowChecks = struct {
                 const address = hasPointerOperand(instruction, inputs.excluded) or hasPointerOperand(instruction, inputs.marked);
                 if (!address) {
                     if (try constantOverflow(nodes, opcode, node)) |formula|
-                        try expected.put(arena, formula.flag, .{ .instruction = instruction, .stem = formula.stem });
+                        try expected.put(arena, formula.flag, .{ .instruction = instruction, .stem = formula.stem, .literal_bound = true });
                 }
             }
         }
