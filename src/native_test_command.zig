@@ -591,6 +591,8 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     if (opts.cases == null) opts.cases = try cases.sibling(context.allocator, context.io, opts.source);
     var session = try sessions.Session.init(context, opts);
     defer context.remove(session.temporary);
+    // FRAGMENT-EVICT-2: bound the fragment stores this cache's environments keep.
+    if (!opts.flags.no_cache) @import("mylang").qbe_fragments.boundEnvironments(context.allocator, context.io, try std.fs.path.join(context.allocator, &.{ session.directory, "objects" }));
     var work: invalidation.Work = .{ .command = "test" };
     if (opts.flags.output.report) session.work = &work;
     const prepared = try snapshot.withTestEntry(context, session.source);

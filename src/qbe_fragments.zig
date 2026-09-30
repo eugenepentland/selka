@@ -691,6 +691,106 @@ fn lease(allocator: std.mem.Allocator, io: std.Io, directory: []const u8) error{
     return null;
 }
 
+/// Stores one fragment root keeps: the one being opened and the most recently
+/// used others. Each compiler build, and each runtime mode of it (RC, GC,
+/// value semantics), opens its own store, so four keep both runtime modes of
+/// this compiler and of the build before it (`FRAGMENT-EVICT-1`).
+pub const kept_stores = 4;
+/// The prefix a store being evicted is renamed under before it is deleted.
+const evicting_prefix = ".evict-";
+
+/// FRAGMENT-EVICT-1: every compiler build opens a new store under `root`, and
+/// nothing removed the old ones, so a developer's cache gained a full set of
+/// unit texts per rebuild. Mark the store named `keep` used (its lease file's
+/// modification time), then delete every sibling store beyond the
+/// `kept_stores` most recently used that no process holds a lease on, and any
+/// store a crashed eviction left half deleted. Best effort: nothing here fails
+/// a build.
+fn evictStale(allocator: std.mem.Allocator, io: std.Io, root: []const u8, keep: []const u8, held: ?std.Io.File) void {
+    if (held) |file| touch(io, file);
+    const current = std.fs.path.join(allocator, &.{ root, keep }) catch return;
+    bound(allocator, io, &.{root}, current) catch return;
+}
+/// FRAGMENT-EVICT-2: `mylang test` keeps one cache folder per test environment
+/// (runtime mode and the other compiler inputs its children inherit), each
+/// with its own fragment root, so an environment no run uses any more kept
+/// every store it ever made. Bound the stores of every
+/// `<objects>/<environment>/frontend/fragments` root together: keep the
+/// `kept_stores` most recently used across all of them and evict the rest
+/// that no process holds. Best effort: nothing here fails a run.
+pub fn boundEnvironments(allocator: std.mem.Allocator, io: std.Io, objects: []const u8) void {
+    boundEnvironmentsAt(allocator, io, objects) catch return;
+}
+fn boundEnvironmentsAt(allocator: std.mem.Allocator, io: std.Io, objects: []const u8) !void {
+    var directory = std.Io.Dir.cwd().openDir(io, objects, .{ .iterate = true }) catch return;
+    defer directory.close(io);
+    var roots: std.ArrayList([]const u8) = .empty;
+    var iterator = directory.iterate();
+    while (try iterator.next(io)) |entry| {
+        if (entry.kind != .directory) continue;
+        try roots.append(allocator, try std.fs.path.join(allocator, &.{ objects, entry.name, "frontend", "fragments" }));
+    }
+    try bound(allocator, io, roots.items, null);
+}
+/// Set a lease file's modification time to now; a store that cannot be
+/// marked just looks older than it is.
+fn touch(io: std.Io, file: std.Io.File) void {
+    file.setTimestampsNow(io) catch return;
+}
+/// One store and when it was last opened.
+const Candidate = struct { path: []const u8, used: i96 };
+/// Keep the `kept_stores` most recently used stores under `roots`, counting
+/// `current` (already marked used) among them, and evict the others.
+fn bound(allocator: std.mem.Allocator, io: std.Io, roots: []const []const u8, current: ?[]const u8) !void {
+    var candidates: std.ArrayList(Candidate) = .empty;
+    for (roots) |root| try collect(allocator, io, root, current, &candidates);
+    const room: usize = if (current != null) kept_stores - 1 else kept_stores;
+    if (candidates.items.len <= room) return;
+    std.mem.sort(Candidate, candidates.items, {}, newerFirst);
+    for (candidates.items[room..]) |candidate| try evictOne(allocator, io, candidate.path);
+}
+/// Add every store under `root` other than `current` to `candidates`, and
+/// delete any store a crashed eviction left half deleted.
+fn collect(allocator: std.mem.Allocator, io: std.Io, root: []const u8, current: ?[]const u8, candidates: *std.ArrayList(Candidate)) !void {
+    var directory = std.Io.Dir.cwd().openDir(io, root, .{ .iterate = true }) catch return;
+    defer directory.close(io);
+    var abandoned: std.ArrayList([]const u8) = .empty;
+    var iterator = directory.iterate();
+    while (try iterator.next(io)) |entry| {
+        if (entry.kind != .directory) continue;
+        const path = try std.fs.path.join(allocator, &.{ root, entry.name });
+        if (std.mem.startsWith(u8, entry.name, evicting_prefix)) {
+            try abandoned.append(allocator, path);
+            continue;
+        }
+        if (entry.name.len != 2 * @sizeOf(Digest)) continue;
+        if (current != null and std.mem.eql(u8, path, current.?)) continue;
+        const marker = try std.fs.path.join(allocator, &.{ path, lease_name });
+        const stat = std.Io.Dir.cwd().statFile(io, marker, .{}) catch std.Io.Dir.cwd().statFile(io, path, .{}) catch continue;
+        try candidates.append(allocator, .{ .path = path, .used = stat.mtime.nanoseconds });
+    }
+    for (abandoned.items) |path| std.Io.Dir.cwd().deleteTree(io, path) catch continue;
+}
+fn newerFirst(_: void, left: Candidate, right: Candidate) bool {
+    return left.used > right.used;
+}
+/// Delete one store unless a process holds its lease. It is renamed aside
+/// under its exclusive lease first, so a compiler that opens it again
+/// meanwhile starts a fresh store rather than writing into a half-deleted one.
+fn evictOne(allocator: std.mem.Allocator, io: std.Io, path: []const u8) !void {
+    const marker = try std.fs.path.join(allocator, &.{ path, lease_name });
+    // A store with no lease file is one no process can hold; it goes anyway.
+    const file: ?std.Io.File = std.Io.Dir.cwd().openFile(io, marker, .{ .mode = .read_write }) catch null;
+    defer if (file) |opened| opened.close(io);
+    if (file) |opened| {
+        if (!(opened.tryLock(io, .exclusive) catch false)) return;
+    }
+    const name = try std.mem.concat(allocator, u8, &.{ evicting_prefix, std.fs.path.basename(path) });
+    const aside = try std.fs.path.join(allocator, &.{ std.fs.path.dirname(path) orelse ".", name });
+    std.Io.Dir.rename(.cwd(), path, .cwd(), aside, io) catch return;
+    std.Io.Dir.cwd().deleteTree(io, aside) catch return;
+}
+
 /// The store's text directory, created and opened once, so each presence
 /// check names one entry of it rather than walking a whole path; null when it
 /// cannot be opened (checks then use the full path).
@@ -849,6 +949,7 @@ pub const Store = struct {
             .directory = directory,
             .pack = .{ .name = try allocator.dupe(u8, &pack), .lease = try lease(allocator, io, directory), .texts = try textDirectory(allocator, io, directory) },
         };
+        evictStale(allocator, io, root, std.fs.path.basename(directory), store.pack.lease);
         store.load() catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             else => store.entries.clearRetainingCapacity(),

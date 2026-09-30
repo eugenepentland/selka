@@ -859,3 +859,118 @@ test "a caller's key reads each callee parameter's name and type, not the callee
     const moved = try localKey(t.allocator, &reassigning, "main::main");
     try t.expectEqualSlices(u8, &plain, &moved);
 }
+
+/// Make a store directory `name` under `root` whose lease was last touched
+/// `seconds` after the epoch, the way an older compiler's store looks.
+fn staleStore(root: std.Io.Dir, name: []const u8, seconds: i96) !void {
+    try root.createDirPath(t.io, name);
+    var store = try root.openDir(t.io, name, .{});
+    defer store.close(t.io);
+    const file = try store.createFile(t.io, ".lease", .{ .read = true });
+    defer file.close(t.io);
+    try file.setTimestamps(t.io, .{ .modify_timestamp = .{ .new = .{ .nanoseconds = seconds * std.time.ns_per_s } } });
+}
+
+/// Whether `root` still holds an entry called `name`.
+fn present(root: std.Io.Dir, name: []const u8) bool {
+    root.access(t.io, name, .{}) catch return false;
+    return true;
+}
+
+/// The stale stores the eviction tests start from, oldest first: sixty-four
+/// hex digits each, like a store's identity tag.
+const stale_names = [_][]const u8{ &tag('1'), &tag('2'), &tag('3'), &tag('4'), &tag('5') };
+/// A store directory left by a crashed eviction.
+const abandoned_store = ".evict-" ++ tag('6');
+
+/// Sixty-four copies of `digit`: the shape of a store's identity tag.
+fn tag(comptime digit: u8) [64]u8 {
+    return @splat(digit);
+}
+
+/// Create every stale store, each touched one second after the one before.
+fn staleStores(root: std.Io.Dir) !void {
+    for (stale_names, 1..) |name, seconds| try staleStore(root, name, @intCast(seconds));
+}
+
+// spec: FRAGMENT-EVICT-1
+test "opening a store keeps the most recently used stores and deletes the older ones" {
+    var directory = t.tmpDir(.{});
+    defer directory.cleanup();
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    try staleStores(directory.dir);
+    // A store a crashed eviction left half deleted goes on the next open.
+    try directory.dir.createDirPath(t.io, abandoned_store ++ "/il");
+    const root = try directory.dir.realPathFileAlloc(t.io, ".", a);
+    var store = try fragments.Store.open(a, t.io, root, "test-compiler", "main.my");
+    defer store.deinit();
+    // The store just opened plus the three most recently used others remain.
+    try t.expect(present(directory.dir, std.fs.path.basename(store.directory)));
+    try t.expect(!present(directory.dir, stale_names[0]));
+    try t.expect(!present(directory.dir, stale_names[1]));
+    try t.expect(present(directory.dir, stale_names[2]));
+    try t.expect(present(directory.dir, stale_names[3]));
+    try t.expect(present(directory.dir, stale_names[4]));
+    try t.expect(!present(directory.dir, abandoned_store));
+    try t.expectEqual(@as(usize, 4), fragments.kept_stores);
+}
+
+// spec-case: FRAGMENT-EVICT-1
+test "a store another process holds is never evicted, however old" {
+    var directory = t.tmpDir(.{});
+    defer directory.cleanup();
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    try staleStores(directory.dir);
+    // Another process holds the oldest store's shared lease.
+    const held = try directory.dir.openFile(t.io, stale_names[0] ++ "/.lease", .{ .mode = .read_write });
+    defer held.close(t.io);
+    try t.expect(try held.tryLock(t.io, .shared));
+    const root = try directory.dir.realPathFileAlloc(t.io, ".", a);
+    var store = try fragments.Store.open(a, t.io, root, "test-compiler", "main.my");
+    defer store.deinit();
+    try t.expect(present(directory.dir, stale_names[0]));
+    try t.expect(!present(directory.dir, stale_names[1]));
+    try t.expect(present(directory.dir, stale_names[4]));
+}
+
+/// Make stale stores `digits` under `<objects>/<environment>/frontend/fragments`,
+/// each touched as many seconds after the epoch as its digit says.
+fn environmentStores(objects: std.Io.Dir, environment: []const u8, comptime digits: []const u8) !void {
+    const path = try std.fs.path.join(t.allocator, &.{ environment, "frontend", "fragments" });
+    defer t.allocator.free(path);
+    try objects.createDirPath(t.io, path);
+    var root = try objects.openDir(t.io, path, .{});
+    defer root.close(t.io);
+    inline for (digits) |digit| try staleStore(root, &tag(digit), digit - '0');
+}
+
+/// Whether `<environment>/frontend/fragments` under `objects` still holds the
+/// store tagged with `digit`.
+fn environmentHas(objects: std.Io.Dir, environment: []const u8, comptime digit: u8) bool {
+    const path = std.fs.path.join(t.allocator, &.{ environment, "frontend", "fragments", &tag(digit) }) catch return false;
+    defer t.allocator.free(path);
+    return present(objects, path);
+}
+
+// spec: FRAGMENT-EVICT-2
+test "a test run keeps the most recently used stores across every environment of its cache" {
+    var directory = t.tmpDir(.{});
+    defer directory.cleanup();
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    // Two environments (say RC and GC), their stores used in turn.
+    try environmentStores(directory.dir, "rc", "135");
+    try environmentStores(directory.dir, "gc", "246");
+    fragments.boundEnvironments(a, t.io, try directory.dir.realPathFileAlloc(t.io, ".", a));
+    try t.expect(!environmentHas(directory.dir, "rc", '1'));
+    try t.expect(!environmentHas(directory.dir, "gc", '2'));
+    try t.expect(environmentHas(directory.dir, "rc", '3'));
+    try t.expect(environmentHas(directory.dir, "gc", '4'));
+    try t.expect(environmentHas(directory.dir, "rc", '5'));
+    try t.expect(environmentHas(directory.dir, "gc", '6'));
+}
