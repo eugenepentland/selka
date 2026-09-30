@@ -23,16 +23,19 @@ Details, exact counts, performance rows and Guardian feedback are in
 Phase B and Phase C remain open. B1 and B4 pass their lane gates and are integrated
 on the isolated closeout branch. B2 has corrected the positive-path CLI/interface
 and declaration-authority failures. Its independent artifact review passes 14/14,
-all twelve unit shards pass, and whole/module binaries match for all 29 distinct
-corpus programs (43 benchmark rows). Six schematic cache-key differences and final
-paired large-project timings are still being investigated. B3 implements equality,
+all twelve unit shards pass, and whole/module binaries, IL, metadata and cache
+keys match for all 29 distinct corpus programs (43 benchmark rows). The six
+schematic key-only differences are fixed, and identical warm state no longer
+rewrites its files. Final paired 200k checks show about 9% faster no-op and 80%
+faster edited checks; shared-machine load limits remain recorded. B3 implements equality,
 scope, list-image, exclusivity, dictionary, startup-image and text follow-ups.
 Its narrowed-count layout remains rejected for performance. The replacement
 ABI5 checkpoint preserves two 64-bit counts and full-width scope conditions;
 all 30 native families, 16 focused scope checks and the independent 4-condition/
 12-scope-case probe pass. Preliminary wide-count
 Lox measurements meet the dev 1.3x cap but still have sixteen rows above the
-1% regression limit. B3 performance corrections and the final combined gate remain
+1% regression limit. B3 performance corrections, a newly reproduced QBE
+long-phi spill-width defect and the final combined ABI5 corpus/oracle/gate remain
 open. All Phase B changes remain outside main; its approved tip is `80dd5190`.
 
 Lane receipts are in [python-text-closeout-2026-09-29.md](python-text-closeout-2026-09-29.md),
