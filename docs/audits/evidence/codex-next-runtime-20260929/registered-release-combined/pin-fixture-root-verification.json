@@ -1,0 +1,9 @@
+{
+  "archive_sha256": "8df822b24b119e2baaddabb27509763dabe366139a9ada04192751075b6ed10e",
+  "verified_payloads": 40,
+  "source": "06706119a7d6f563c45f5e0a6d00dd50e4ac7423",
+  "archive_payloads_verified": 40,
+  "exact_pin_fixture_runs": 39,
+  "fresh_nested_guests": 12,
+  "rejected_driver_runs_excluded": true
+}
