@@ -256,8 +256,11 @@ const Generator = struct {
         try self.print("int {s}_rcg_loan(myl_native_heap *heap, void *dst, const void *src) {{\n", .{name});
         try self.capacity(ty, size, .loan_capacity);
         try self.print("if (!capacity) return myl_rc_native_loan(heap, &{s}, dst, src);\n", .{name});
-        try self.print("MYL_RCG_CHECK(!myl_rcg_overlap(dst, src, {d}));\nmemcpy(dst, src, {d});\n", .{ size, size });
-        try self.edges(ty, "dst", .loan);
+        try self.print("MYL_RCG_CHECK(!myl_rcg_overlap(dst, src, {d}));\n", .{size});
+        // Every refusal precedes acquisition. Reading the admitted source
+        // before copying keeps its tag and edge reads together for C codegen.
+        try self.edges(ty, "src", .loan);
+        try self.print("memcpy(dst, src, {d});\n", .{size});
         try self.print(success_return, .{});
         inline for (.{ Action.unloan, Action.drop }) |action| {
             try self.print("void {s}_rcg_{s}(myl_native_heap *heap, void *value) {{\nint died = 0;\n", .{ name, @tagName(action) });
@@ -270,8 +273,9 @@ const Generator = struct {
         try self.edges(ty, "src", .scan);
         try self.capacity(ty, size, .retain_capacity);
         try self.print("if (!capacity || (any & MYL_NATIVE_OBJECT_ARENA)) return myl_rc_native_retain(heap, &{s}, dst, src, region);\n", .{name});
-        try self.print("MYL_RCG_CHECK(dst != src && region <= heap->region_depth);\nmemmove(dst, src, {d});\n", .{size});
-        try self.edges(ty, "dst", .retain);
+        try self.print("MYL_RCG_CHECK(dst != src && region <= heap->region_depth);\n", .{});
+        try self.edges(ty, "src", .retain);
+        try self.print("memmove(dst, src, {d});\n", .{size});
         try self.print(success_return, .{});
         // A pinned source needs the snapshot, an arena source the region
         // check and an overlapping move the staged copy: all runtime work.

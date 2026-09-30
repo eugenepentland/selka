@@ -15,6 +15,12 @@ fn exercise() !bool {
         \\record Pair:
         \\    left: list[int]
         \\    right: list[int]
+        \\record Tokens:
+        \\    owner: list[int]
+        \\    held: DictValues[int, int]
+        \\union Choice:
+        \\    none,
+        \\    pair: Pair
         \\record Nested:
         \\    pair: Pair
         \\    choice: Result[bytes, int]
@@ -45,12 +51,20 @@ fn exercise() !bool {
     defer manifest.deinit();
     var catalog = try native.Catalog.initRecords(t.allocator, compilation.program.?.records);
     defer catalog.deinit();
-    const name = try pairSymbol(&catalog);
-    defer t.allocator.free(name);
     const fixture = try std.Io.Dir.cwd().readFileAlloc(t.io, fixture_path, t.allocator, .unlimited);
     defer t.allocator.free(fixture);
-    const harness = try std.mem.replaceOwned(u8, t.allocator, fixture, "PAIR_SYMBOL", name);
-    defer t.allocator.free(harness);
+    var harness: []const u8 = fixture;
+    var replacements: std.ArrayList([]const u8) = .empty;
+    defer {
+        for (replacements.items) |replacement| t.allocator.free(replacement);
+        replacements.deinit(t.allocator);
+    }
+    inline for (.{ "Pair", "Tokens", "Choice" }, .{ "PAIR_SYMBOL", "TOKENS_SYMBOL", "CHOICE_SYMBOL" }) |record, marker| {
+        const symbol = try recordSymbol(&catalog, record);
+        defer t.allocator.free(symbol);
+        harness = try std.mem.replaceOwned(u8, t.allocator, harness, marker, symbol);
+        try replacements.append(t.allocator, harness);
+    }
     var temporary = t.tmpDir(.{});
     defer temporary.cleanup();
     try temporary.dir.writeFile(t.io, .{ .sub_path = "glue.c", .data = manifest.value.runtime_data });
@@ -59,8 +73,8 @@ fn exercise() !bool {
     return compileRun(temporary.dir);
 }
 
-fn pairSymbol(catalog: *native.Catalog) ![]const u8 {
-    for (catalog.records) |record| if (std.mem.eql(u8, record.name, "Pair")) return descriptors.symbol(t.allocator, catalog, record.id);
+fn recordSymbol(catalog: *native.Catalog, name: []const u8) ![]const u8 {
+    for (catalog.records) |record| if (std.mem.eql(u8, record.name, name)) return descriptors.symbol(t.allocator, catalog, record.id);
     return error.TestUnexpectedResult;
 }
 
@@ -82,7 +96,7 @@ fn compileRun(directory: std.Io.Dir) !bool {
     defer argv.deinit(t.allocator);
     try argv.appendSlice(t.allocator, &.{
         @import("native_test_options").zig_path, "cc",              "-std=c11",          "-Werror",           "-O1",                "-fsanitize=undefined",
-        "-ffunction-sections",                   "-fdata-sections", "-Wl,--gc-sections", "-DMYL_NATIVE_RC=1", "-DMYL_RC_CHECKED=1",
+        "-ffunction-sections",                   "-fdata-sections", "-Wl,--gc-sections", "-DMYL_NATIVE_RC=1", "-DMYL_RC_CHECKED=1", "-DMYL_RC_GLUE_CHECKED=1",
     });
     try argv.appendSlice(t.allocator, sources);
     try argv.appendSlice(t.allocator, &.{ "harness.c", "-o", "harness" });
@@ -103,6 +117,7 @@ fn compileRun(directory: std.Io.Dir) !bool {
 // spec-case: RC-COUNTS-1
 // spec-case: RC-LAYOUT-1
 // spec-case: RC-STARTUP-IMAGE-1
-test "generated glue refuses aliased u32 count overflow before publication and rolls back loans" {
+// spec: RC-ACQUIRE-COPY-1
+test "generated acquisition admission preserves aliased O and H counts, inactive arms, arenas and staged moves" {
     try t.expect(try exercise());
 }
