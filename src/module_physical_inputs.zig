@@ -24,6 +24,7 @@ pub fn restore(a: std.mem.Allocator, code: bytecode.Program, emit: []const bool,
     for (interfaces) |interface| try state.recordsFrom(interface.emission.physical);
     for (interfaces) |interface| try state.dependenciesFrom(interface.emission.physical);
     for (interfaces) |interface| try state.functionsFrom(interface, emit);
+    try state.markStandins(emit);
     const chosen = try a.alloc(bool, state.functions.items.len);
     @memset(chosen, false);
     @memcpy(chosen[0..emit.len], emit);
@@ -39,6 +40,7 @@ pub fn restore(a: std.mem.Allocator, code: bytecode.Program, emit: []const bool,
     }
     for (interfaces) |interface| for (interface.emission.functions) |function| {
         const id = state.ids.functions.get(function.name) orelse continue;
+        if (state.functions.items[@backingInt(id)].physical) |supplied| if (supplied.unknown) continue;
         facts[@backingInt(id)] = .{ .allocates = function.allocates, .writes = function.writes };
     };
     return .{ .code = .{ .functions = state.functions.items, .records = state.records.items, .main = code.main }, .emit = chosen, .imported = facts };
@@ -60,6 +62,16 @@ const State = struct {
         for (code.functions, 0..) |function, index| try out.ids.functions.put(a, function.name, @fromBackingInt(index));
         for (code.records, 0..) |record, index| try out.ids.records.put(a, record.name, @fromBackingInt(typed.Type.record_base + index));
         return out;
+    }
+
+    fn markStandins(self: *State, emit: []const bool) Error!void {
+        for (self.functions.items, 0..) |*function, index| {
+            if (index < emit.len and emit[index]) continue;
+            if (function.scope.instructions.len != 0) continue;
+            const unknown = try self.a.create(bytecode.Physical);
+            unknown.* = .{ .unknown = true };
+            function.physical = unknown;
+        }
     }
 
     fn reserve(self: *State, archive: physical.Archive) Error!void {

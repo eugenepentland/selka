@@ -1,0 +1,92 @@
+{
+ "label": "1d",
+ "tier": "t50k/mylang",
+ "load_start": 4.42,
+ "check": {
+  "cold": {
+   "wall_s": 0.449,
+   "rss_mb": 230.5,
+   "status": 0
+  },
+  "seeded_after_s": 0.252,
+  "noop": {
+   "wall_s": 0.006,
+   "rss_mb": 4.9,
+   "status": 0
+  },
+  "body_edit": {
+   "wall_s": 0.012,
+   "rss_mb": 9.7,
+   "status": 0
+  },
+  "body_edit_samples": [
+   0.018,
+   0.012,
+   0.012
+  ],
+  "interface_edit": {
+   "wall_s": 0.018,
+   "rss_mb": 9.8,
+   "status": 0
+  },
+  "interface_edit_samples": [
+   0.018,
+   0.018,
+   0.018
+  ]
+ },
+ "test": {
+  "cold": {
+   "wall_s": 5.136,
+   "rss_mb": 141.0,
+   "status": 0,
+   "passed": 120,
+   "cached": 0,
+   "failed": 0
+  },
+  "noop": {
+   "wall_s": 0.044,
+   "rss_mb": 36.3,
+   "status": 0,
+   "passed": 0,
+   "cached": 120,
+   "failed": 0
+  },
+  "body_edit": {
+   "wall_s": 0.176,
+   "rss_mb": 118.4,
+   "status": 0,
+   "passed": 60,
+   "cached": 60,
+   "failed": 0
+  },
+  "body_edit_samples": [
+   0.287,
+   0.176,
+   0.182
+  ]
+ },
+ "build": {
+  "cold": {
+   "wall_s": 3.679,
+   "rss_mb": 177.6,
+   "status": 0
+  },
+  "noop": {
+   "wall_s": 0.014,
+   "rss_mb": 36.3,
+   "status": 0
+  },
+  "body_edit": {
+   "wall_s": 0.131,
+   "rss_mb": 177.1,
+   "status": 0
+  },
+  "body_edit_samples": [
+   0.134,
+   0.131,
+   0.132
+  ]
+ },
+ "load_end": 5.56
+}

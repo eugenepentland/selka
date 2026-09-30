@@ -3,6 +3,8 @@
 pub const snapshot_project = @import("project.zig");
 /// Compile-time file embedding exposed to native-test snapshot capture.
 pub const snapshot_embed = @import("embed.zig");
+/// The compiler's language module, for the per-module build `mylang test` runs through.
+pub const compiler_language = @import("compiler.zig");
 test {
     _ = @import("qbe_rc_plain_aggregate_test.zig");
     _ = @import("qbe_rc_fresh_constructor_test.zig");
@@ -37,6 +39,8 @@ test {
     _ = @import("native_test_cli_test.zig");
     _ = @import("native_test_cases.zig");
     _ = @import("native_test_snapshot.zig");
+    _ = @import("module_seeder.zig");
+    _ = @import("module_compile_command.zig");
     _ = @import("native_test_plan.zig");
     _ = @import("native_test_dependencies.zig");
     _ = @import("native_test_execute.zig");
@@ -89,6 +93,7 @@ test {
     // so the QBE-TEXT/QBE-LIST checks that pin them existed without running.
     _ = @import("qbe_wire.zig");
     _ = @import("qbe_codecs.zig");
+    _ = @import("module_codecs.zig");
 
     _ = @import("cli_grants.zig");
 

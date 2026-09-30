@@ -54,6 +54,8 @@ pub const module_physical = @import("module_physical.zig");
 pub const module_compile = @import("module_compile.zig");
 /// The per-module units of a program merged into one manifest (MODULE-COMPILE-3).
 pub const module_link = @import("module_link.zig");
+/// Canonical codec tables merged by explicit module links and linked tests.
+pub const module_codecs = @import("module_codecs.zig");
 /// Generated C descriptors, split into mergeable blocks for a module link.
 pub const native_descriptors = @import("native_descriptors.zig");
 /// Generated C renderers, split into mergeable blocks for a module link.

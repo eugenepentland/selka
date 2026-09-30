@@ -83,11 +83,19 @@ class Program:
         """The entry the build runs: the file itself when it declares `main`,
         else a driver module beside a copy of its directory that imports it."""
         source = self.entry.read_text()
-        if MAIN.search(source):
+        named = bool(re.search(r"^module\s", source, re.M))
+        if MAIN.search(source) and named:
             return self.entry
         mirror = self.work / "src"
         shutil.copytree(self.entry.parent, mirror, ignore=shutil.ignore_patterns(".mylang-cache"))
         name = self.entry.stem
+        # Standalone corpus entries have no header. Give the module-path
+        # comparison one deterministic projection, retaining line numbers.
+        projected = mirror / self.entry.name
+        if not named:
+            projected.write_text(f"module {name}; " + source)
+        if MAIN.search(source):
+            return projected
         driver = mirror / f"mcdrv_{name}.my"
         driver.write_text(f"module mcdrv_{name}\nimport {name}\n\n\ndef main() -> int:\n    return 0\n")
         return driver

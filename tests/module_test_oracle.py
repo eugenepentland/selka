@@ -81,6 +81,7 @@ def compare(args, number, entry, root):
         whole_again = run([mylang, "test", target, "--cache-dir", str(work / "cw"), "--whole-program"] + extra, entry.parent)
         if module_again != whole_again:
             out["problems"].append("unchanged reruns report differently")
+            out["warm_reports"] = {"module": None if module_again is None else [module_again[0], module_again[1].decode(errors="replace"), module_again[2].decode(errors="replace")], "whole": None if whole_again is None else [whole_again[0], whole_again[1].decode(errors="replace"), whole_again[2].decode(errors="replace")]}
         warm = lines(trace)
         if any(line.startswith("compile-module ") for line in warm):
             out["problems"].append("an unchanged rerun compiled a module")

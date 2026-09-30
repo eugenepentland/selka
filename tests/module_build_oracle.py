@@ -60,11 +60,16 @@ def compare(args, number, entry, root):
     out = {"entry": str(entry), "status": "equal", "problems": []}
     source = entry.read_text()
     target = entry.resolve()
-    if not MAIN.search(source):
+    named = bool(re.search(r"^module\s", source, re.M))
+    if not MAIN.search(source) or not named:
         mirror = work / "src"
         shutil.copytree(entry.parent, mirror, ignore=shutil.ignore_patterns(".mylang-cache"))
-        target = mirror / f"mbdrv_{entry.stem}.my"
-        target.write_text(f"module mbdrv_{entry.stem}\nimport {entry.stem}\n\n\ndef main() -> int:\n    return 0\n")
+        target = mirror / entry.name
+        if not named:
+            target.write_text(f"module {entry.stem}; " + source)
+        if not MAIN.search(source):
+            target = mirror / f"mbdrv_{entry.stem}.my"
+            target.write_text(f"module mbdrv_{entry.stem}\nimport {entry.stem}\n\n\ndef main() -> int:\n    return 0\n")
     mylang = str(Path(args.mylang).resolve())
     mode = ["--mode", args.mode] if args.mode else []
     runtime = ["--gc-runtime" if args.runtime == "gc" else "--rc-runtime" if args.runtime == "rc" else f"--rc-runtime={args.runtime}"]

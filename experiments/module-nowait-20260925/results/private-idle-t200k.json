@@ -1,0 +1,46 @@
+{
+ "rep0": {
+  "edit_private_idle": {
+   "wall_s": 3.093,
+   "rss_mb": 1112.2,
+   "status": 0,
+   "passed": 240,
+   "cached": 240,
+   "failed": 0,
+   "stage": "seeding",
+   "modules_compiled": 0
+  },
+  "unchanged_private_idle": {
+   "wall_s": 0.245,
+   "rss_mb": 106.5,
+   "status": 0,
+   "passed": 0,
+   "cached": 480,
+   "failed": 0,
+   "stage": "seeding",
+   "modules_compiled": 0
+  }
+ },
+ "rep1": {
+  "edit_private_idle": {
+   "wall_s": 3.054,
+   "rss_mb": 1112.6,
+   "status": 0,
+   "passed": 240,
+   "cached": 240,
+   "failed": 0,
+   "stage": "seeding",
+   "modules_compiled": 0
+  },
+  "unchanged_private_idle": {
+   "wall_s": 0.232,
+   "rss_mb": 106.9,
+   "status": 0,
+   "passed": 0,
+   "cached": 480,
+   "failed": 0,
+   "stage": "seeding",
+   "modules_compiled": 0
+  }
+ }
+}

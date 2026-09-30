@@ -291,10 +291,16 @@ pub const Session = struct {
         try self.appendCacheDirectory(&argv);
         try self.appendPolicyFlags(&argv);
         self.trace(argv.items);
-        const output = try self.context.capture(argv.items);
+        // A retained test compilation reports body warnings only when it
+        // rejects the source. Re-admission must preserve that diagnostic
+        // policy instead of adding warnings solely on a cached rerun.
+        const output = try self.context.captureQuiet(argv.items);
         self.observe(output.stderr);
         const code = fs.exitCode(output.term);
-        if (code != 0) return mapExit(code);
+        if (code != 0) {
+            try std.Io.File.stderr().writeStreamingAll(self.context.io, output.stderr);
+            return mapExit(code);
+        }
     }
     /// Parse a compiler manifest and expose its checked schema.
     pub fn projectFromManifest(self: Session, source: []const u8, stdout: []const u8) Error!Project {

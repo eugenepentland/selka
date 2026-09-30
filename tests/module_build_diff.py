@@ -16,11 +16,11 @@ with the whole-program build. Both must reject the same edited programs; for a
 program that builds, the executables must be identical byte for byte and
 running them (with no arguments, and with each argument list in
 `--arg-sets`, a JSON list of lists) must give the same stdout, stderr and exit
-status (a run past --run-timeout, default 20 s, counts as "timeout" on both
-sides). The summary counts steps, builds, rejections, modules compiled and
+status (a run past --run-timeout, default 20 s, fails the comparison). The summary counts steps, builds, rejections, modules compiled and
 reused by the incremental builds, and mismatches; exit status 1 on any mismatch.
 """
 import argparse
+import hashlib
 import json
 import random
 import re
@@ -29,6 +29,8 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+
+RUNTIMES = {"rc": ["--rc-runtime"], "gc": ["--gc-runtime"], "stats": ["--rc-runtime", "--rc-stats"], "sites": ["--rc-runtime", "--rc-sites"]}
 
 
 def run(cmd, cwd=None, timeout=900):
@@ -75,10 +77,12 @@ class Differential:
         self.tree = work / "tree"
         self.arg_sets = [[]] + (json.loads(Path(args.arg_sets).read_text()) if args.arg_sets else [])
         self.run_timeout = args.run_timeout
+        self.runtime = RUNTIMES[args.runtime]
+        self.rows = []
         self.stats = {"steps": 0, "built": 0, "rejected": 0, "compiled": 0, "reused": 0, "mismatches": 0, "runs": 0}
 
     def build(self, output, cache, *extra):
-        return run([self.mylang, "build", "main.my", "-o", str(self.work / output), f"--cache-dir={self.work / cache}"] + list(extra), cwd=self.tree)
+        return run([self.mylang, "build", "main.my", "-o", str(self.work / output), f"--cache-dir={self.work / cache}"] + self.runtime + list(extra), cwd=self.tree)
 
     def behaviour(self, program):
         results = []
@@ -89,19 +93,25 @@ class Differential:
 
     def mismatch(self, what, problem):
         self.stats["mismatches"] += 1
+        if self.rows:
+            self.rows[-1]["problem"] = problem
         print(f"MISMATCH ({what}): {problem}", flush=True)
         shutil.copytree(self.tree, self.work / f"mismatch-{self.stats['steps']}", dirs_exist_ok=True)
 
     def step(self, what):
+        self.rows.append({"case": what})
         inc = self.build("inc", "cache", "--report")
         shutil.rmtree(self.work / "fresh", ignore_errors=True)
         cold = self.build("cold", "fresh", "--whole-program")
         if inc is None or cold is None:
             return self.mismatch(what, "a build timed out")
-        if (inc.returncode == 0) != (cold.returncode == 0):
+        self.rows[-1].update(module_status=inc.returncode, whole_status=cold.returncode)
+        if inc.returncode != cold.returncode:
             return self.mismatch(what, f"incremental rc={inc.returncode} clean rc={cold.returncode}: {inc.stderr[-300:]} / {cold.stderr[-300:]}")
         if cold.returncode != 0:
             self.stats["rejected"] += 1
+            if what == "pristine":
+                return self.mismatch(what, "the pristine reference project did not build")
             if inc.stderr != cold.stderr:
                 return self.mismatch(what, "the two builds report different diagnostics")
             print(f"ok ({what}): both rejected", flush=True)
@@ -111,13 +121,18 @@ class Differential:
         counts = report.get("module_build") or {}
         if not counts:
             return self.mismatch(what, "the incremental build did not take the per-module path")
+        self.rows[-1]["module_build"] = counts
         self.stats["compiled"] += counts["compiled"]
         self.stats["reused"] += counts["reused"]
         if (self.work / "inc").read_bytes() != (self.work / "cold").read_bytes():
             return self.mismatch(what, "executables differ")
+        self.rows[-1]["executable_sha256"] = hashlib.sha256((self.work / "inc").read_bytes()).hexdigest()
         runs = self.behaviour(self.work / "inc")
+        whole_runs = self.behaviour(self.work / "cold")
         self.stats["runs"] += len(runs)
-        if runs != self.behaviour(self.work / "cold"):
+        if "timeout" in runs or "timeout" in whole_runs:
+            return self.mismatch(what, "an executable timed out")
+        if runs != whole_runs:
             return self.mismatch(what, "runs differ")
         print(f"ok ({what}): {counts['compiled']} module(s) compiled", flush=True)
 
@@ -131,8 +146,12 @@ def main():
     parser.add_argument("--arg-sets")
     parser.add_argument("--run-timeout", type=float, default=20)
     parser.add_argument("--keep")
+    parser.add_argument("--runtime", choices=RUNTIMES, default="rc")
+    parser.add_argument("--json")
     args = parser.parse_args()
-    work = Path(args.keep or tempfile.mkdtemp(prefix="module-build-diff-"))
+    if args.steps < 1 or args.run_timeout <= 0:
+        parser.error("steps and run-timeout must be positive")
+    work = Path(args.keep or tempfile.mkdtemp(prefix="module-build-diff-")).resolve()
     shutil.rmtree(work, ignore_errors=True)
     work.mkdir(parents=True)
     diff = Differential(args, work)
@@ -141,6 +160,8 @@ def main():
     pristine = {str(p.relative_to(diff.tree)): p.read_text() for p in sorted(diff.tree.rglob("*.my")) if not re.search(r"_tests?\.my$", p.name)}
     rng = random.Random(args.seed)
     diff.step("pristine")
+    if diff.stats["mismatches"]:
+        return 1
     for number in range(1, args.steps + 1):
         diff.stats["steps"] = number
         for name, text in pristine.items():
@@ -153,6 +174,10 @@ def main():
             path.write_text(text)
             edits.append(f"{name}: {label}")
         diff.step(f"step {number}: " + "; ".join(edits))
+    if not diff.stats["built"] or not diff.stats["runs"]:
+        diff.mismatch("coverage", "no successful executable comparison")
+    if args.json:
+        Path(args.json).write_text(json.dumps({"runtime": args.runtime, "seed": args.seed, "compiler_sha256": hashlib.sha256(Path(diff.mylang).read_bytes()).hexdigest(), "totals": diff.stats, "results": diff.rows}, indent=1))
     print(json.dumps(diff.stats))
     if not args.keep and diff.stats["mismatches"] == 0:
         shutil.rmtree(work, ignore_errors=True)

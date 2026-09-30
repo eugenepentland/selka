@@ -242,12 +242,17 @@ fn testDocument(arena: std.mem.Allocator, from: TestSource) Error![]const u8 {
         error.OutOfMemory => return error.OutOfMemory,
         else => return testFailure(arena, from.compiled, "test contracts", err),
     };
+    // MODULE-TEST-5: rendered as `list-interfaces --contracts` renders it
+    // (no null field), so a receipt's contract identity is the same on both
+    // paths and a verdict recorded by one replays on the other.
+    const contract_text = try std.json.Stringify.valueAlloc(arena, contract, .{ .emit_null_optional_fields = false });
+    const contract_value = std.json.parseFromSliceLeaky(std.json.Value, arena, contract_text, .{}) catch return error.InternalError;
     var layouts = native_types.Catalog.initRecords(arena, from.code.records) catch |err| return testFailure(arena, from.compiled, "test layouts", err);
     const wire = (@import("qbe_wire.zig").describe(arena, &layouts) catch |err| return testFailure(arena, from.compiled, "test wire types", err)).types;
     const codecs = @import("qbe_codecs.zig").describe(arena, from.code, &layouts) catch |err| return testFailure(arena, from.compiled, "test codecs", err);
     return std.json.Stringify.valueAlloc(arena, .{
         .version = "module-tests-v1",
-        .contract = contract,
+        .contract = contract_value,
         .facts = share.facts,
         .schema = share.schema,
         .roots = roots.items,

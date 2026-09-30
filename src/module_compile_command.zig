@@ -208,7 +208,7 @@ const Publish = struct {
         // longer on the build's critical path, which runs through the
         // dependents' compiles; yield the cores to them. A process already
         // nicer than that stays as it is.
-        if (niceness() < background_priority) _ = std.os.linux.syscall3(.setpriority, 0, 0, background_priority);
+        lowerPriority(background_priority);
     }
 
     fn write(self: *Publish, compiled: *const compile_module.Compiled) Error!void {
@@ -267,6 +267,17 @@ fn openStore(context: Context, site: StoreSite) Error!fragments.Store {
 /// MODULE-SCHEDULE-6: the nice value a `--ready` compile and the tools it
 /// starts run at once its interface is published.
 pub const background_priority: usize = 10;
+
+/// MODULE-TEST-6: the nice value a detached seeder (MODULE-CHECK-2,
+/// MODULE-TEST-5) and every compile it starts run at, so a foreground run
+/// beside it keeps the cores.
+pub const seeder_priority: usize = 19;
+
+/// Lower this process's priority, and so its future children's, to nice
+/// `value`; a process already that nice or nicer stays as it is.
+pub fn lowerPriority(value: usize) void {
+    if (niceness() < value) _ = std.os.linux.syscall3(.setpriority, 0, 0, value);
+}
 
 /// This process's nice value (the kernel's `getpriority` answers 20 minus it).
 fn niceness() usize {
@@ -470,13 +481,14 @@ fn unitsDocument(a: std.mem.Allocator, module: []const u8, is_entry: bool, compi
     return out.toOwnedSlice();
 }
 
+const units_version = "module-units-v1";
 const UnitsFile = struct { module: []const u8, is_entry: bool, compiled: *const compile_module.Compiled, rows: []const UnitRow };
 
 fn writeUnits(json: *std.json.Stringify, file: UnitsFile) std.json.Stringify.Error!void {
     const compiled = file.compiled;
     try json.beginObject();
     try json.objectField("version");
-    try json.write("module-units-v1");
+    try json.write(units_version);
     try json.objectField("module");
     try json.write(file.module);
     try json.objectField("entry");
@@ -558,10 +570,33 @@ fn readUnits(a: std.mem.Allocator, io: std.Io, directory: []const u8) Error![]co
     for (names.items, files) |name, *file| {
         const bytes = dir.readFileAlloc(io, name, a, .limited(1 << 30)) catch return error.ReadFailed;
         file.* = std.json.parseFromSliceLeaky(std.json.Value, a, bytes, .{}) catch return error.ReadFailed;
+        if (!unitsEnvelope(file.*)) return error.ReadFailed;
     }
     return files;
 }
 
 fn lessText(_: void, left: []const u8, right: []const u8) bool {
     return std.mem.lessThan(u8, left, right);
+}
+
+fn unitsEnvelope(file: std.json.Value) bool {
+    return std.mem.eql(u8, string(field(file, "version")), units_version) and
+        string(field(file, "module")).len != 0 and
+        field(file, "units") == .array and field(file, "manifest") == .object;
+}
+
+// spec-case: MODULE-COMPILE-3
+test "external module units envelopes require current version and required structural members" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const valid = try std.json.parseFromSliceLeaky(std.json.Value, a, "{\"version\":\"module-units-v1\",\"module\":\"main\",\"units\":[],\"manifest\":{}}", .{});
+    const unknown = try std.json.parseFromSliceLeaky(std.json.Value, a, "{\"version\":\"module-units-v9\",\"module\":\"main\",\"units\":[],\"manifest\":{}}", .{});
+    const absent = try std.json.parseFromSliceLeaky(std.json.Value, a, "{\"module\":\"main\",\"units\":[],\"manifest\":{}}", .{});
+    const malformed = try std.json.parseFromSliceLeaky(std.json.Value, a, "{\"version\":\"module-units-v1\",\"module\":\"main\",\"units\":{},\"manifest\":{}}", .{});
+    try std.testing.expect(unitsEnvelope(valid));
+    try std.testing.expect(!unitsEnvelope(unknown));
+    try std.testing.expect(!unitsEnvelope(absent));
+    try std.testing.expect(!unitsEnvelope(malformed));
+    try std.testing.expect(!unitsEnvelope(.null));
 }

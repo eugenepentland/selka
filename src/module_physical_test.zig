@@ -56,3 +56,24 @@ test "physical imports refuse conflicting record shapes and real bodies" {
     try t.expectError(error.InternalError, restore(a, .{ .functions = &.{} }, &.{}, &.{}, &.{ first, .{ .module = "lib", .text = "", .emission = .{ .physical = different_body } } }));
     try t.expectError(error.InternalError, restore(a, code, &.{false}, &.{null}, &.{.{ .module = "lib", .text = "", .emission = .{ .physical = different_shape } }}));
 }
+
+// spec-case: MODULE-COMPILE-1
+test "signature-only original imports cannot prove unique mutable parameters" {
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const signature: bytecode.Function = .{ .name = "lib.mutate", .id = @fromBackingInt(0), .signature = .{ .parameter_count = 1, .declared_mutates = &.{0} }, .scope = .{ .instructions = &.{} } };
+    const restored = try @import("module_physical_inputs.zig").restore(a, .{ .functions = &.{signature} }, &.{false}, &.{null}, &.{});
+    try t.expect(!@import("ownership_model.zig").uniqueParameter(restored.code.functions[0], 0));
+    try t.expect(restored.code.functions[0].physical.?.unknown);
+    try t.expect(restored.imported[0].?.allocates);
+    try t.expect(restored.imported[0].?.writes[0]);
+    var actual = signature;
+    actual.scope.instructions = &.{.{ .span = .{ .start = 0, .end = 0 }, .op = .{ .push_i64 = 1 } }};
+    const archive = try physical.archive(a, .{ .functions = &.{actual} }, &.{true});
+    const supplied: language.module_interface.Interface = .{ .module = "lib", .text = "", .emission = .{ .physical = archive, .functions = &.{.{ .name = "lib.mutate", .allocates = false, .writes = &.{true} }} } };
+    const known = try @import("module_physical_inputs.zig").restore(a, .{ .functions = &.{signature} }, &.{false}, &.{null}, &.{supplied});
+    try t.expect(@import("ownership_model.zig").uniqueParameter(known.code.functions[0], 0));
+    try t.expect(!known.code.functions[0].physical.?.unknown);
+    try t.expect(!known.imported[0].?.allocates);
+}

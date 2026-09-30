@@ -45,6 +45,8 @@ const language = @import("mylang");
 pub const snapshot_project = language.project;
 /// Compile-time file embedding exposed to native-test snapshot capture.
 pub const snapshot_embed = language.embed;
+/// The compiler's language module, for the per-module build `mylang test` runs through.
+pub const compiler_language = language;
 const invalidation = @import("invalidation.zig");
 const diagnostic_output = language.diagnostic_output;
 const Reporting = struct {
