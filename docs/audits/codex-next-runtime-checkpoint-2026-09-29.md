@@ -500,3 +500,27 @@ passes. Exact rows and frozen identities are under
 `plain-combined-rejected-performance/`. The agents are profiling the remaining
 costs; final combined performance, module matrix and integration gate remain
 required before the explicit approval to land Phase B.
+
+
+## Frozen raytrace and text attribution
+
+The read-only `7f5068a5` versus approved A5 study verifies identical allocated
+ELF code/data for all four symbol-preserving binaries. Hardware and Callgrind
+agree on the instruction deltas: about 13.47 million for LLVM raytrace and
+17.90 million for QBE text operations. The complete 143-member archive,
+source/command receipts, exact instruction histograms and scope limits are in
+`evidence/codex-next-runtime-20260929/raytrace-text-attribution/`.
+
+Raytrace's two hold-acquisition sites perform 3,368,136 acquisitions. Their
+required overflow checks add three instructions each; an additional floating
+zero initialization executes on every normal continuation. Eliminating only
+that extra initialization would arithmetically reduce the observed increase
+from about 1.068% to 0.801%, but no implementation gain is claimed.
+
+Text's unchanged native view helper now runs out of line 190,000 times. The
+combined view/long-piece cost rises by exactly 3,230,000 instructions. Other
+costs include checked owner admission, retirement reloads and extra hash
+probes. The precise inlining and alias-analysis triggers remain unproved;
+all MAX guards and transaction ordering must remain. The isolated view-inlining
+continuation is being tested separately; these profiles do not waive any row
+or replace the final integration gate.

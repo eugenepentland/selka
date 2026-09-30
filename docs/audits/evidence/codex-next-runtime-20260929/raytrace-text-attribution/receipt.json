@@ -1,0 +1,1035 @@
+{
+  "owned_source": "27b170076d1a21286857f7fc00583bded555497d",
+  "candidate_source": "7f5068a54946bcbe0cf1f7e20abf844f120046cd",
+  "cpu": 0,
+  "purpose": "Separate read-only instruction attribution; no Guardian, source mutation, timing-pool claim or performance acceptance.",
+  "tool": "valgrind-3.26.0",
+  "cases": {
+    "raytrace": {
+      "backend": "llvm",
+      "source_sha256": "2e208f13a75b24bd74da85b4056a7736b9015ae56fb0ca8d70d62f45c7acdca9",
+      "sides": {
+        "control": {
+          "original": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp-rc-quick/bin/m17-codex/parity-suite-raytrace.llvm",
+          "frozen_sha256": "7fdf3900032b68ac9642d186ff7400d922823739111fd068093e83001bbc46b0",
+          "compiler": {
+            "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp-rc-quick/compilers/m17-codex/bin/mylang",
+            "runtime": "--rc-runtime",
+            "sha256": "4059a85e3d081f8a73b370e03e7d86cba8eb8a47531bfcdd7c09e6cc109d74b1"
+          },
+          "build": {
+            "admission_command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/scripts/build-slot.sh",
+              "build",
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp-rc-quick/compilers/m17-codex/bin/mylang",
+              "build",
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/bench/parity/suite/raytrace.my",
+              "-o",
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/raytrace-text-attribution/raytrace/control/parity-suite-raytrace.llvm.symbols",
+              "--backend",
+              "llvm",
+              "--llvm-opt",
+              "3",
+              "--lto",
+              "--rc-runtime",
+              "--keep-symbols",
+              "--cache-dir",
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/raytrace-text-attribution/raytrace/control/cache"
+            ],
+            "status": 0,
+            "elapsed_seconds": 11.115242840955034
+          },
+          "allocated_sections_equal": true,
+          "allocated_sections": {
+            ".interp": [
+              1,
+              2,
+              16777952,
+              28,
+              "9097c98ea70f6f3b01d50145eb72bf55ad1f4e9713bccf27bd6405d6254eed00"
+            ],
+            ".note.ABI-tag": [
+              7,
+              2,
+              16777980,
+              32,
+              "6e48317ad93a8ac2dc04321465ede06d1274543fc8ab172e68171a9d684bb313"
+            ],
+            ".dynsym": [
+              11,
+              2,
+              16778016,
+              1872,
+              "ee1e89fddb5df94decfc508a8621d483754f463e224d23be6a2a7555016abddf"
+            ],
+            ".gnu.version": [
+              1879048191,
+              2,
+              16779888,
+              156,
+              "e269f304383fead214a86230752e20d6c4418f8572de951b45fee5a94925dc02"
+            ],
+            ".gnu.version_r": [
+              1879048190,
+              2,
+              16780044,
+              144,
+              "a6a8aa9f2a255fb5294563f68a75e400176bb6edecfab114a923bae5828d5d52"
+            ],
+            ".gnu.hash": [
+              1879048182,
+              2,
+              16780192,
+              28,
+              "262d8798f53a0681f386496e550b2c36ff1984dc473b3217e9a94aa9a1e1a859"
+            ],
+            ".hash": [
+              5,
+              2,
+              16780220,
+              632,
+              "ebddcdac7d201dca624a08e7ad024675df539374eab005efd6a5392d0e38d3d2"
+            ],
+            ".dynstr": [
+              3,
+              2,
+              16780852,
+              775,
+              "b03b33efdfc8f5dd28f4de2cd0d9286c62d7bac699e31379c7d866310d73a0d2"
+            ],
+            ".rela.dyn": [
+              4,
+              2,
+              16781632,
+              96,
+              "7b12b0868c88a2f6b0ecb892f3c9271f9a81d80602851a9cfd5f0fd8fb8470e7"
+            ],
+            ".rela.plt": [
+              4,
+              66,
+              16781728,
+              1752,
+              "1572b2d3be330382a3eb453da039e4b7809256abaae58604c92b023df23457f7"
+            ],
+            ".rodata": [
+              1,
+              50,
+              16783488,
+              36596,
+              "468f0de25ff3172214b276d6854000a26825451d5a15d04d84fc72e201b16981"
+            ],
+            "mylang_frame_map": [
+              1,
+              2097154,
+              16820084,
+              1344,
+              "180606f95989b6f8c6f028d86102fb631d72735550cd636f50b0a0fadc0187ad"
+            ],
+            ".eh_frame_hdr": [
+              1,
+              2,
+              16821428,
+              1212,
+              "f5f185c8844cf8983458f527e01c21680d56bf2ad6ff028dbd071aeb7c947c97"
+            ],
+            ".eh_frame": [
+              1,
+              2,
+              16822640,
+              6308,
+              "177ec106ea1734dacd401ed1b75f8774d87fa4cf5041eec57a5a90fa5b403be7"
+            ],
+            ".text": [
+              1,
+              6,
+              16833056,
+              94914,
+              "2914db7c23c169c243b4bc3ee148745c972754b29d3c70fac949bd68bbb43a7d"
+            ],
+            ".init": [
+              1,
+              6,
+              16927972,
+              27,
+              "664edf75ca593b1687db7b61afe5266c324af540d8c5d10fb2970dca79cccbd9"
+            ],
+            ".fini": [
+              1,
+              6,
+              16928000,
+              13,
+              "6a4f3e5efc7c1f7ee7d6f21afd9ed040ba1d7f0b97bb12b016f5b176cc558bd8"
+            ],
+            ".plt": [
+              1,
+              6,
+              16928016,
+              1184,
+              "6d2c97713615b59b4ee82fcc39885c966bc904e9ebb2928604e9e982e09e743b"
+            ],
+            ".tbss": [
+              8,
+              1027,
+              16929200,
+              4,
+              "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            ],
+            ".data.rel.ro": [
+              1,
+              3,
+              16933296,
+              136,
+              "b373193267d40870c962b9557efd43304b2be923e460d6354f10a81a736f8a4e"
+            ],
+            ".dynamic": [
+              6,
+              3,
+              16933432,
+              384,
+              "d1d94b72c5dab60fdfb0029ce3f89a150f18c3a065734917d31a4a8c0df36394"
+            ],
+            ".got": [
+              1,
+              3,
+              16933816,
+              56,
+              "fca36d37e025297ddc27bfc3a002e0c9f0f6a6ee6c4eeb0862047eff2d90969c"
+            ],
+            ".got.plt": [
+              1,
+              3,
+              16933872,
+              608,
+              "7c2957bb5cb2e46323452e90bb6926b874eb299a7bd8104c47dc98aa67ea52e2"
+            ],
+            ".relro_padding": [
+              8,
+              3,
+              16934480,
+              2480,
+              "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            ],
+            ".data": [
+              1,
+              3,
+              16938576,
+              6536,
+              "73449d79b8a00e7b2b2f122162fae2f1a12d068e74db9c04f4a50f454bba3f56"
+            ],
+            ".bss": [
+              8,
+              3,
+              16945120,
+              2176,
+              "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            ]
+          },
+          "symbols_sha256": "b915d9b02f50adcba6ef8d0f1e1b1af082487f7cdabd1b212e5a95d2de528637",
+          "perf_stat": {
+            "admission_command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/scripts/build-slot.sh",
+              "build",
+              "taskset",
+              "-c",
+              "0",
+              "perf",
+              "stat",
+              "-x,",
+              "-e",
+              "cpu_core/instructions/u",
+              "-o",
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/raytrace-text-attribution/raytrace/control/stat.csv",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/raytrace-text-attribution/raytrace/control/parity-suite-raytrace.llvm"
+            ],
+            "status": 0,
+            "elapsed_seconds": 8.921212916029617
+          },
+          "callgrind": {
+            "admission_command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/scripts/build-slot.sh",
+              "build",
+              "taskset",
+              "-c",
+              "0",
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/alloc-churn-attribution/valgrind-local/usr/bin/valgrind",
+              "--tool=callgrind",
+              "--dump-instr=yes",
+              "--collect-jumps=yes",
+              "--compress-pos=no",
+              "--compress-strings=no",
+              "--callgrind-out-file=/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/raytrace-text-attribution/raytrace/control/callgrind.out",
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/raytrace-text-attribution/raytrace/control/parity-suite-raytrace.llvm.symbols"
+            ],
+            "status": 0,
+            "elapsed_seconds": 15.025255522923544
+          }
+        },
+        "candidate": {
+          "original": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp-rc-quick/bin/phase-b-zero-combined/parity-suite-raytrace.llvm",
+          "frozen_sha256": "92477e8b0df7542b09dd21fe03cd0894b81a0795b04a7c578e8678e69eaa867a",
+          "compiler": {
+            "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/phase-b-zero-combined/compiler/bin/mylang",
+            "runtime": "--rc-runtime",
+            "sha256": "62147872cb192d103106bdf37616071a287b6e6fe19395461fe152e0d1fb1a42"
+          },
+          "build": {
+            "admission_command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/scripts/build-slot.sh",
+              "build",
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/phase-b-zero-combined/compiler/bin/mylang",
+              "build",
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/bench/parity/suite/raytrace.my",
+              "-o",
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/raytrace-text-attribution/raytrace/candidate/parity-suite-raytrace.llvm.symbols",
+              "--backend",
+              "llvm",
+              "--llvm-opt",
+              "3",
+              "--lto",
+              "--rc-runtime",
+              "--keep-symbols",
+              "--cache-dir",
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/raytrace-text-attribution/raytrace/candidate/cache"
+            ],
+            "status": 0,
+            "elapsed_seconds": 24.409841828979552
+          },
+          "allocated_sections_equal": true,
+          "allocated_sections": {
+            ".interp": [
+              1,
+              2,
+              16777952,
+              28,
+              "9097c98ea70f6f3b01d50145eb72bf55ad1f4e9713bccf27bd6405d6254eed00"
+            ],
+            ".note.ABI-tag": [
+              7,
+              2,
+              16777980,
+              32,
+              "6e48317ad93a8ac2dc04321465ede06d1274543fc8ab172e68171a9d684bb313"
+            ],
+            ".dynsym": [
+              11,
+              2,
+              16778016,
+              1896,
+              "9ee1959b46eb31f6bb876e02a75e150daedbdaab24785353b842a78b9586422b"
+            ],
+            ".gnu.version": [
+              1879048191,
+              2,
+              16779912,
+              158,
+              "cdbe52dd39229f28281e9718ad442ae9c4e750001444ca9027db00c5e0aa5e0d"
+            ],
+            ".gnu.version_r": [
+              1879048190,
+              2,
+              16780072,
+              144,
+              "bb3282efcd85f15141d48f00f810119ee4798750feda2e6ab6e4ed8409256ebc"
+            ],
+            ".gnu.hash": [
+              1879048182,
+              2,
+              16780216,
+              28,
+              "f58fb8f8f430f4b0572d547b3408ec66047519794f0738352200af84dc3a3e88"
+            ],
+            ".hash": [
+              5,
+              2,
+              16780244,
+              640,
+              "58e058a926ecda71ef30877b7972df1909259751f74da10c5ddb582bf2922426"
+            ],
+            ".dynstr": [
+              3,
+              2,
+              16780884,
+              784,
+              "51f6ab6ba9c73482aa31d0f74ad8be6de7e66608cb8c4ab276029b807fefbea5"
+            ],
+            ".rela.dyn": [
+              4,
+              2,
+              16781672,
+              96,
+              "c0c3afdd01d2d0c10d409b7a72cc4d911ded268b7674d4f1c482dd8c7c41164d"
+            ],
+            ".rela.plt": [
+              4,
+              66,
+              16781768,
+              1776,
+              "149663f5c9092f817e58758300b1d166b136f5f45a05b309f9542e29942216e1"
+            ],
+            ".rodata": [
+              1,
+              50,
+              16783552,
+              43700,
+              "d2e286e50dd2b8fda7ce98a54914554b34e87ea1df77a5cc57a4d7e2ee541bbf"
+            ],
+            "mylang_frame_map": [
+              1,
+              2097154,
+              16827252,
+              1368,
+              "4fcfe3862dd9fc51a666f926a36fa71589cd284487b2dacaa388a43f7d6927a0"
+            ],
+            ".eh_frame_hdr": [
+              1,
+              2,
+              16828620,
+              1212,
+              "957c2e5cb37c15a08af23514e54e8098e5645b0d4ae086871eac6549cbbd3faa"
+            ],
+            ".eh_frame": [
+              1,
+              2,
+              16829832,
+              6308,
+              "344eef43cf16cd23df928598536dcc9a763bf9ba3ee42112e6dc0daca24baeb5"
+            ],
+            ".text": [
+              1,
+              6,
+              16840240,
+              97634,
+              "936f8621379412d20829ad8c719ab217450cad9fcb5b217bef99ae89780fd0c8"
+            ],
+            ".init": [
+              1,
+              6,
+              16937876,
+              27,
+              "f83c9a2c343ed29ef2a6122bca7f3b73e8d4bb8f53feb16d600bae3f2abab31f"
+            ],
+            ".fini": [
+              1,
+              6,
+              16937904,
+              13,
+              "6a4f3e5efc7c1f7ee7d6f21afd9ed040ba1d7f0b97bb12b016f5b176cc558bd8"
+            ],
+            ".plt": [
+              1,
+              6,
+              16937920,
+              1200,
+              "654cce9fe73c69f4bfe8bc18c9b41e984bb24142ed8134bfb44544e9bf8bc7cc"
+            ],
+            ".tbss": [
+              8,
+              1027,
+              16939120,
+              4,
+              "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            ],
+            ".data.rel.ro": [
+              1,
+              3,
+              16943216,
+              136,
+              "3ee4814a93de3db153bd6ace28d616f4d3864c413e58014e772d259ed07cc935"
+            ],
+            ".dynamic": [
+              6,
+              3,
+              16943352,
+              384,
+              "2b3dbd8ebc5ef4bf484c371fd5e666b6ce7af22e43521bcad426ecf71f148f12"
+            ],
+            ".got": [
+              1,
+              3,
+              16943736,
+              56,
+              "329733c5f2d9e8c69311cfab9b7f89a8841b54ecebe5b703c3214cba18a7a4a0"
+            ],
+            ".got.plt": [
+              1,
+              3,
+              16943792,
+              616,
+              "1d406934c9307feea4949f999f80b53d652cd4ab8c7706a89b7d9d0dd8a70cf6"
+            ],
+            ".relro_padding": [
+              8,
+              3,
+              16944408,
+              744,
+              "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            ],
+            ".data": [
+              1,
+              3,
+              16948512,
+              6536,
+              "bafde2f5f9bc088e91a255ada05a74cf767392723201daed34382ec6eeeffe85"
+            ],
+            ".bss": [
+              8,
+              3,
+              16955056,
+              2176,
+              "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            ]
+          },
+          "symbols_sha256": "495ceb0427deaf6fda6acc283b08da6a7614c3b6a2f022304d252cd836674b20",
+          "perf_stat": {
+            "admission_command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/scripts/build-slot.sh",
+              "build",
+              "taskset",
+              "-c",
+              "0",
+              "perf",
+              "stat",
+              "-x,",
+              "-e",
+              "cpu_core/instructions/u",
+              "-o",
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/raytrace-text-attribution/raytrace/candidate/stat.csv",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/raytrace-text-attribution/raytrace/candidate/parity-suite-raytrace.llvm"
+            ],
+            "status": 0,
+            "elapsed_seconds": 175.23948209907394
+          },
+          "callgrind": {
+            "admission_command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/scripts/build-slot.sh",
+              "build",
+              "taskset",
+              "-c",
+              "0",
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/alloc-churn-attribution/valgrind-local/usr/bin/valgrind",
+              "--tool=callgrind",
+              "--dump-instr=yes",
+              "--collect-jumps=yes",
+              "--compress-pos=no",
+              "--compress-strings=no",
+              "--callgrind-out-file=/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/raytrace-text-attribution/raytrace/candidate/callgrind.out",
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/raytrace-text-attribution/raytrace/candidate/parity-suite-raytrace.llvm.symbols"
+            ],
+            "status": 0,
+            "elapsed_seconds": 10.019174749031663
+          }
+        }
+      }
+    },
+    "text_ops": {
+      "backend": "qbe",
+      "source_sha256": "bf608ad3843a7763953d8874107dc470d946f459415ef046d0a7a32967f7bcdb",
+      "sides": {
+        "control": {
+          "original": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp-rc-quick/bin/m17-codex/parity-suite-text_ops.qbe",
+          "frozen_sha256": "8b4f347daaf2c11ddd32204a0ca02796c2420f8c86704519e002ffab2c1724af",
+          "compiler": {
+            "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp-rc-quick/compilers/m17-codex/bin/mylang",
+            "runtime": "--rc-runtime",
+            "sha256": "4059a85e3d081f8a73b370e03e7d86cba8eb8a47531bfcdd7c09e6cc109d74b1"
+          },
+          "build": {
+            "admission_command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/scripts/build-slot.sh",
+              "build",
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp-rc-quick/compilers/m17-codex/bin/mylang",
+              "build",
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/bench/parity/suite/text_ops.my",
+              "-o",
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/raytrace-text-attribution/text_ops/control/parity-suite-text_ops.qbe.symbols",
+              "--rc-runtime",
+              "--keep-symbols",
+              "--cache-dir",
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/raytrace-text-attribution/text_ops/control/cache"
+            ],
+            "status": 0,
+            "elapsed_seconds": 16.67171968705952
+          },
+          "allocated_sections_equal": true,
+          "allocated_sections": {
+            ".interp": [
+              1,
+              2,
+              16777952,
+              28,
+              "9097c98ea70f6f3b01d50145eb72bf55ad1f4e9713bccf27bd6405d6254eed00"
+            ],
+            ".note.ABI-tag": [
+              7,
+              2,
+              16777980,
+              32,
+              "6e48317ad93a8ac2dc04321465ede06d1274543fc8ab172e68171a9d684bb313"
+            ],
+            ".dynsym": [
+              11,
+              2,
+              16778016,
+              1680,
+              "a33782985c7e959e2861b37a4016cb6f6046745542f2fab178e43e3231bbefb9"
+            ],
+            ".gnu.version": [
+              1879048191,
+              2,
+              16779696,
+              140,
+              "6684a0491a693f30ac341c5a06c44fb58e2c93d06bfd4484b4389b2cdb1bdb01"
+            ],
+            ".gnu.version_r": [
+              1879048190,
+              2,
+              16779836,
+              160,
+              "cf72776958abaf401f425eec911280feb3e8bc6183ade3fa078b972ae2c91ada"
+            ],
+            ".gnu.hash": [
+              1879048182,
+              2,
+              16780000,
+              28,
+              "0802acb345f2bd86e5706cb8317e2ab75ba419310cbeccb883fd329e7c97a574"
+            ],
+            ".hash": [
+              5,
+              2,
+              16780028,
+              568,
+              "ed7589920c9c5754de42788120a291c00b0292d0ce64539e82c06abfe2269f92"
+            ],
+            ".dynstr": [
+              3,
+              2,
+              16780596,
+              715,
+              "0dc4e993e1e64b91fa0404524492ec2ceb96e6ad08e4c44ba3ec9e8f0d55b091"
+            ],
+            ".rela.dyn": [
+              4,
+              2,
+              16781312,
+              144,
+              "fb71408ffa3e055aa824bcf62c12bd46b3be91fcded5e1a823ea1232bf78970b"
+            ],
+            ".rela.plt": [
+              4,
+              66,
+              16781456,
+              1536,
+              "f2fb9f14d8d6f406d34cc4d03a57664fc8834e86a6b73e422ec09edf0d3c561a"
+            ],
+            ".rodata": [
+              1,
+              50,
+              16783008,
+              38992,
+              "3b48d675329649245bd826d900de7613396f257a40aa2ec1d9483c9fdf68023c"
+            ],
+            "mylang_frame_map": [
+              1,
+              2097154,
+              16822000,
+              16788,
+              "294b66db9f6ac4867c21f022609f9cd68c125c0dbe841dca3b637b5c24eb99f9"
+            ],
+            ".eh_frame_hdr": [
+              1,
+              2,
+              16838788,
+              2852,
+              "1a8b9518b0f256d3fcd0f169e5c9cebbe0cd521a26da588778b540b41958721d"
+            ],
+            ".eh_frame": [
+              1,
+              2,
+              16841640,
+              14424,
+              "530c0dff9ba6078f32044b705a8f4f3589be5e503eb24136163ba3d138672215"
+            ],
+            ".text": [
+              1,
+              6,
+              16860160,
+              288762,
+              "923f57605529e11e1a711c2906d71056b78e7415a79601d7e353ef91c6751333"
+            ],
+            ".init": [
+              1,
+              6,
+              17148924,
+              27,
+              "fed7d5949a80a6e9a201fa8bf8a50d54e16ab895b31d21acd9262c88b864f30d"
+            ],
+            ".fini": [
+              1,
+              6,
+              17148952,
+              13,
+              "6a4f3e5efc7c1f7ee7d6f21afd9ed040ba1d7f0b97bb12b016f5b176cc558bd8"
+            ],
+            ".plt": [
+              1,
+              6,
+              17148976,
+              1040,
+              "0cf417b22f7fb318991ee6954475120e645fd0b645a7b5d69a679967010a6882"
+            ],
+            ".tbss": [
+              8,
+              1027,
+              17150016,
+              4,
+              "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            ],
+            ".data.rel.ro": [
+              1,
+              3,
+              17154112,
+              77464,
+              "811e0772bd0b334ca4f5321c0ed3eb58aa42d40d58f9d662a92bf97400eb801f"
+            ],
+            ".dynamic": [
+              6,
+              3,
+              17231576,
+              400,
+              "b650bdb09ac3a9de42cd1e7a85eeed45c3a7273b9ecc5bf37bcfb8ba6b4a0115"
+            ],
+            ".got": [
+              1,
+              3,
+              17231976,
+              64,
+              "5e28ead4c2cac767b17f9b6aa08f8f0f711df33644459d4ec1a1bb85b86f44b8"
+            ],
+            ".got.plt": [
+              1,
+              3,
+              17232040,
+              536,
+              "a38f0d51d3e018853e15325824b18a940d9378a208d796e0343b0a5da131c496"
+            ],
+            ".relro_padding": [
+              8,
+              3,
+              17232576,
+              3392,
+              "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            ],
+            ".data": [
+              1,
+              3,
+              17236672,
+              2240,
+              "ab8df8ea0bd3823ecbcad112163482c40e20ccff2941be0b92aae34df3e95dd3"
+            ],
+            ".bss": [
+              8,
+              3,
+              17238912,
+              580,
+              "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            ]
+          },
+          "symbols_sha256": "549544f79d9129cdf4a6006cbde771f29b3f1d99754e4cefde6fb83509dd9035",
+          "perf_stat": {
+            "admission_command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/scripts/build-slot.sh",
+              "build",
+              "taskset",
+              "-c",
+              "0",
+              "perf",
+              "stat",
+              "-x,",
+              "-e",
+              "cpu_core/instructions/u",
+              "-o",
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/raytrace-text-attribution/text_ops/control/stat.csv",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/raytrace-text-attribution/text_ops/control/parity-suite-text_ops.qbe"
+            ],
+            "status": 0,
+            "elapsed_seconds": 95.23933496698737
+          },
+          "callgrind": {
+            "admission_command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/scripts/build-slot.sh",
+              "build",
+              "taskset",
+              "-c",
+              "0",
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/alloc-churn-attribution/valgrind-local/usr/bin/valgrind",
+              "--tool=callgrind",
+              "--dump-instr=yes",
+              "--collect-jumps=yes",
+              "--compress-pos=no",
+              "--compress-strings=no",
+              "--callgrind-out-file=/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/raytrace-text-attribution/text_ops/control/callgrind.out",
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/raytrace-text-attribution/text_ops/control/parity-suite-text_ops.qbe.symbols"
+            ],
+            "status": 0,
+            "elapsed_seconds": 9.525358273065649
+          }
+        },
+        "candidate": {
+          "original": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp-rc-quick/bin/phase-b-zero-combined/parity-suite-text_ops.qbe",
+          "frozen_sha256": "c336fbe262435f2a6010d89db66cb296eee31d72b6bb2864c72a6f3e9ea38b2c",
+          "compiler": {
+            "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/phase-b-zero-combined/compiler/bin/mylang",
+            "runtime": "--rc-runtime",
+            "sha256": "62147872cb192d103106bdf37616071a287b6e6fe19395461fe152e0d1fb1a42"
+          },
+          "build": {
+            "admission_command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/scripts/build-slot.sh",
+              "build",
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/phase-b-zero-combined/compiler/bin/mylang",
+              "build",
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/bench/parity/suite/text_ops.my",
+              "-o",
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/raytrace-text-attribution/text_ops/candidate/parity-suite-text_ops.qbe.symbols",
+              "--rc-runtime",
+              "--keep-symbols",
+              "--cache-dir",
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/raytrace-text-attribution/text_ops/candidate/cache"
+            ],
+            "status": 0,
+            "elapsed_seconds": 5.036847123992629
+          },
+          "allocated_sections_equal": true,
+          "allocated_sections": {
+            ".interp": [
+              1,
+              2,
+              16777952,
+              28,
+              "9097c98ea70f6f3b01d50145eb72bf55ad1f4e9713bccf27bd6405d6254eed00"
+            ],
+            ".note.ABI-tag": [
+              7,
+              2,
+              16777980,
+              32,
+              "6e48317ad93a8ac2dc04321465ede06d1274543fc8ab172e68171a9d684bb313"
+            ],
+            ".dynsym": [
+              11,
+              2,
+              16778016,
+              1704,
+              "970152947d6a9b1cd607f48e051589a9d5fe6650ce3d7c9b012a7f535d17f358"
+            ],
+            ".gnu.version": [
+              1879048191,
+              2,
+              16779720,
+              142,
+              "4f7695742bceb9d55ecb14ff7efd3372ff26c28b428518750e05e5cc3ae75823"
+            ],
+            ".gnu.version_r": [
+              1879048190,
+              2,
+              16779864,
+              160,
+              "011705bf7ed053d708171e07f1d72345bfaaae2c367d63e9a5c323449e307d92"
+            ],
+            ".gnu.hash": [
+              1879048182,
+              2,
+              16780024,
+              28,
+              "ed539a7c23e0dac57dc7e299dbea0a5f430ab39cb7661e5df81bf7ae7c623209"
+            ],
+            ".hash": [
+              5,
+              2,
+              16780052,
+              576,
+              "42ef6b411fd0b7c5aa24c255d1803511781af328afdfb24a967597e4632639f7"
+            ],
+            ".dynstr": [
+              3,
+              2,
+              16780628,
+              724,
+              "386d13c9eca0d1b014f31081e21ae96887687174559680081954fa9bf18dc852"
+            ],
+            ".rela.dyn": [
+              4,
+              2,
+              16781352,
+              144,
+              "9c0ff477231730a6a2af3c312993a63e435ee8c6873527a55df0e46b56222402"
+            ],
+            ".rela.plt": [
+              4,
+              66,
+              16781496,
+              1560,
+              "b3d4d12f877e3079635041bd309f065bd73d1a6797da855b855b12026e1e0a68"
+            ],
+            ".rodata": [
+              1,
+              50,
+              16783072,
+              38992,
+              "0de2c072f7e8b945c651651793791f1178a0d33a138c326f73ec4d27ec5629aa"
+            ],
+            "mylang_frame_map": [
+              1,
+              2097154,
+              16822064,
+              17568,
+              "9a9b2722380b5d3bb3cfde8768255fe7fae84b44e1e95bbf915cd93a4ef21985"
+            ],
+            ".eh_frame_hdr": [
+              1,
+              2,
+              16839632,
+              2908,
+              "d66b80944fc497d1d0043ff06c574cd14658299b6fdbdf0681ee564c0ff1659b"
+            ],
+            ".eh_frame": [
+              1,
+              2,
+              16842544,
+              14716,
+              "e2fe69457fcc12fd4811890e2a014435d3b893f60e84d71052db2d3260faaf8e"
+            ],
+            ".text": [
+              1,
+              6,
+              16861360,
+              293946,
+              "58b677cb93f162eaf6328ed0102fcb2326a9fff7c239c5bab38a26ad73c72729"
+            ],
+            ".init": [
+              1,
+              6,
+              17155308,
+              27,
+              "cf932bbd8e74146208777d28e400302b69c8f604895e523add2a88dca98aeb2c"
+            ],
+            ".fini": [
+              1,
+              6,
+              17155336,
+              13,
+              "6a4f3e5efc7c1f7ee7d6f21afd9ed040ba1d7f0b97bb12b016f5b176cc558bd8"
+            ],
+            ".plt": [
+              1,
+              6,
+              17155360,
+              1056,
+              "0fbe721dcdbebc500f67ec7413f9c8a795005355f2bc452ae8a9af61d0afe2c4"
+            ],
+            ".tbss": [
+              8,
+              1027,
+              17156416,
+              4,
+              "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            ],
+            ".data.rel.ro": [
+              1,
+              3,
+              17160512,
+              86296,
+              "875759c82d53ecbc48fc47568b4198bbeb223f8f6e908dcffbced594e3bcaed5"
+            ],
+            ".dynamic": [
+              6,
+              3,
+              17246808,
+              400,
+              "9f00c76cb8b32e9eccd412741a812f55360e81a2c23c17c3fb7a07f2b10bd7b2"
+            ],
+            ".got": [
+              1,
+              3,
+              17247208,
+              72,
+              "c3267b63b642e4c0087852c8c507740f7898d84ffce62ccd6fcd996a5eb8a0d3"
+            ],
+            ".got.plt": [
+              1,
+              3,
+              17247280,
+              544,
+              "f5287ee6ef20568bff77c7c6be1e95a086a2cfe840c5ea3f407f481975ed338c"
+            ],
+            ".relro_padding": [
+              8,
+              3,
+              17247824,
+              432,
+              "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            ],
+            ".data": [
+              1,
+              3,
+              17251920,
+              2240,
+              "5938c5db0d76b65a303840e401d48718268f2207d0ca223c3ea65bbe31438d6b"
+            ],
+            ".bss": [
+              8,
+              3,
+              17254160,
+              580,
+              "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            ]
+          },
+          "symbols_sha256": "8a394e4999e0cf7a170df328f8fe692e3dae0046765d9aa32f93bc8f3a9fb94b",
+          "perf_stat": {
+            "admission_command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/scripts/build-slot.sh",
+              "build",
+              "taskset",
+              "-c",
+              "0",
+              "perf",
+              "stat",
+              "-x,",
+              "-e",
+              "cpu_core/instructions/u",
+              "-o",
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/raytrace-text-attribution/text_ops/candidate/stat.csv",
+              "--",
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/raytrace-text-attribution/text_ops/candidate/parity-suite-text_ops.qbe"
+            ],
+            "status": 0,
+            "elapsed_seconds": 5.038834964972921
+          },
+          "callgrind": {
+            "admission_command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/scripts/build-slot.sh",
+              "build",
+              "taskset",
+              "-c",
+              "0",
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/alloc-churn-attribution/valgrind-local/usr/bin/valgrind",
+              "--tool=callgrind",
+              "--dump-instr=yes",
+              "--collect-jumps=yes",
+              "--compress-pos=no",
+              "--compress-strings=no",
+              "--callgrind-out-file=/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/raytrace-text-attribution/text_ops/candidate/callgrind.out",
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/raytrace-text-attribution/text_ops/candidate/parity-suite-text_ops.qbe.symbols"
+            ],
+            "status": 0,
+            "elapsed_seconds": 8.826132914982736
+          }
+        }
+      }
+    }
+  }
+}

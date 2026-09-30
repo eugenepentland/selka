@@ -1,0 +1,98 @@
+{
+  "raytrace": {
+    "control_callgrind": 1261313498,
+    "candidate_callgrind": 1274779914,
+    "callgrind_delta": 13466416,
+    "entry_delta": 13472548,
+    "checked_increment_delta": 10104408,
+    "zero_rematerialization_delta": 3368136,
+    "startup_other_delta": -6132
+  },
+  "text_ops": {
+    "control_callgrind": 1756083191,
+    "candidate_callgrind": 1773984340,
+    "callgrind_delta": 17901149,
+    "lost_view_inlining_delta": 3230000,
+    "list_append_delta": 4371458,
+    "edges_rc_reload_delta": 942852,
+    "edges_hash_probe_delta": 1999990,
+    "view_source_identical": true,
+    "guest_path_histograms": {
+      "main": {
+        "instruction_execution_histogram_difference": [
+          {
+            "executions": 200000,
+            "control_instruction_sites": 1326,
+            "candidate_instruction_sites": 1345,
+            "delta": 3800000
+          },
+          {
+            "executions": 199999,
+            "control_instruction_sites": 142,
+            "candidate_instruction_sites": 143,
+            "delta": 199999
+          },
+          {
+            "executions": 142856,
+            "control_instruction_sites": 10,
+            "candidate_instruction_sites": 7,
+            "delta": -428568
+          },
+          {
+            "executions": 57144,
+            "control_instruction_sites": 1,
+            "candidate_instruction_sites": 0,
+            "delta": -57144
+          },
+          {
+            "executions": 1,
+            "control_instruction_sites": 1764,
+            "candidate_instruction_sites": 1714,
+            "delta": -50
+          }
+        ],
+        "delta": 3514237
+      },
+      "repeat": {
+        "instruction_execution_histogram_difference": [
+          {
+            "executions": 171428,
+            "control_instruction_sites": 154,
+            "candidate_instruction_sites": 155,
+            "delta": 171428
+          },
+          {
+            "executions": 142856,
+            "control_instruction_sites": 15,
+            "candidate_instruction_sites": 17,
+            "delta": 285712
+          },
+          {
+            "executions": 85715,
+            "control_instruction_sites": 10,
+            "candidate_instruction_sites": 11,
+            "delta": 85715
+          },
+          {
+            "executions": 85713,
+            "control_instruction_sites": 263,
+            "candidate_instruction_sites": 268,
+            "delta": 428565
+          }
+        ],
+        "delta": 971420
+      },
+      "pad": {
+        "instruction_execution_histogram_difference": [
+          {
+            "executions": 142856,
+            "control_instruction_sites": 6,
+            "candidate_instruction_sites": 9,
+            "delta": 428568
+          }
+        ],
+        "delta": 428568
+      }
+    }
+  }
+}
