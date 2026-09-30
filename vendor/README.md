@@ -18,13 +18,18 @@ is written here rather than generated, pinning the default target to `amd64_sysv
 
 ### Local changes
 
-One change departs from the 1.3 release, marked `mylang local change` in the
-source; reapply it when updating:
+These changes depart from the 1.3 release, marked `mylang local change` in the
+source; reapply them when updating:
 
 - `rega.c`: the parallel-move table `pm` grows on demand instead of dying with
   `no more pm slots` past 64 copies. A block edge moves one value per phi of
   its successor plus one per temporary live into it, which valid IL can push
   past any fixed bound (a loop header carrying 65 phis is enough).
+- `copy.c`: phi reuse preserves the result class. Phis with identical incoming
+  values reuse a previous phi only when their classes match, and a dominating
+  word boolean branch argument replaces only a word phi. Replacing a long phi
+  with a word result otherwise leaves half of a spill undefined or narrows a
+  64-bit value; executable regressions cover both rules in `tests/qbe_phi_width.*`.
 
 ### Updating
 
