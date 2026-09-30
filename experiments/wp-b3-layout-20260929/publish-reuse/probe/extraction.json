@@ -1,0 +1,32 @@
+{
+  "owner": {
+    "source_range": [
+      5291,
+      6086
+    ],
+    "raw_body": " # RC-GLUE-1 drop\n %v99 =l copy %heap\n %v100 =l loadl %v80\n %v111 =w cnel %v100, 0\n jnz %v111, @rcgnn110, @rcgdone110\n@rcgnn110\n %v101 =l sub %v100, 16\n # myl-rc %v101\n %v102 =l loadl %v101\n %v103 =l and %v102, 4611686018427387906\n %v112 =w cnel %v103, 0\n jnz %v112, @rcgclear110, @rcgcounted110\n@rcgcounted110\n %v104 =l sub %v100, 32\n # myl-rc %v104\n %v105 =l loadl %v104\n %v109 =l sub %v105, 1\n %v106 =w ceql %v109, 0\n jnz %v106, @rcglast110, @rcgdec110\n@rcglast110\n %v107 =l sub %v100, 24\n # myl-rc %v107\n %v108 =l loadl %v107\n %v113 =w cnel %v108, 0\n jnz %v113, @rcgdec110, @rcgslow110\n@rcgslow110\n call $myl_t_1535267fc5a418ed8053a9a6290354ebfcee0a92538bece7aa6b84967f8fb527_rcg_drop(l %v99, l %v80)\n jmp @rcgdone110\n@rcgdec110\n storel %v109, %v104\n@rcgclear110\n storel 0, %v80\n@rcgdone110\n",
+    "symbol": "myl_t_1535267fc5a418ed8053a9a6290354ebfcee0a92538bece7aa6b84967f8fb527_rcg_drop",
+    "slot": "%v80"
+  },
+  "hold": {
+    "source_range": [
+      4508,
+      5257
+    ],
+    "raw_body": " # RC-GLUE-1 unloan\n %v84 =l copy %heap\n %v85 =l loadl %v80\n %v96 =w cnel %v85, 0\n jnz %v96, @rcgnn95, @rcgdone95\n@rcgnn95\n %v86 =l sub %v85, 16\n # myl-rc %v86\n %v87 =l loadl %v86\n %v88 =l and %v87, 4611686018427387906\n %v97 =w cnel %v88, 0\n jnz %v97, @rcgclear95, @rcgcounted95\n@rcgcounted95\n %v89 =l sub %v85, 24\n # myl-rc %v89\n %v90 =l loadl %v89\n %v94 =l sub %v90, 1\n %v91 =w ceql %v94, 0\n jnz %v91, @rcglast95, @rcgdec95\n@rcglast95\n %v92 =l sub %v85, 32\n # myl-rc %v92\n %v93 =l loadl %v92\n %v98 =w cnel %v93, 0\n jnz %v98, @rcgdec95, @rcgslow95\n@rcgslow95\n call $myl_t_1535267fc5a418ed8053a9a6290354ebfcee0a92538bece7aa6b84967f8fb527_rcg_unloan(l %v84, l %v80)\n jmp @rcgdone95\n@rcgdec95\n storel %v94, %v89\n@rcgclear95\n storel 0, %v80\n@rcgdone95\n",
+    "symbol": "myl_t_1535267fc5a418ed8053a9a6290354ebfcee0a92538bece7aa6b84967f8fb527_rcg_unloan",
+    "slot": "%v80"
+  },
+  "publish": {
+    "source_range": [
+      2722,
+      4246
+    ],
+    "raw_body": " # RC-GLUE-1 publish\n %v54 =w and %v49, 3\n jnz %v54, @rcgpublishslow53, @rcgpublishmode53\n@rcgpublishmode53\n %v55 =l loadl %v40\n %v63 =w cnel %v55, 0\n jnz %v63, @rcgpublishnn53, @rcgpublishstore53\n@rcgpublishnn53\n %v56 =l sub %v55, 16\n # myl-rc %v56\n %v57 =l loadl %v56\n %v58 =l and %v57, 5764607523034234880\n %v64 =w cnel %v58, 0\n jnz %v64, @rcgpublishslow53, @rcgpublishshare53\n@rcgpublishshare53\n %v65 =w and %v49, 4\n %v66 =l and %v57, 2\n jnz %v65, @rcgpublishmarkcheck53, @rcgpublishordinary53\n@rcgpublishordinary53\n %v70 =w cnel %v66, 0\n jnz %v70, @rcgpublishmarkcheck53, @rcgpublishcapacity53\n@rcgpublishcapacity53\n %v68 =l sub %v55, 32\n # myl-rc %v68\n %v67 =l loadl %v68\n %v62 =l add %v67, 1\n %v69 =w ceql %v62, 0\n jnz %v69, @rcgpublishslow53, @rcgpublishacquire53\n@rcgpublishacquire53\n storel %v62, %v68\n@rcgpublishmarkcheck53\n %v59 =l and %v57, 2305843009213693954\n %v71 =w cnel %v59, 0\n jnz %v71, @rcgpublishstore53, @rcgpublishmark53\n@rcgpublishmark53\n %v60 =l or %v57, 2305843009213693952\n storel %v60, %v56\n@rcgpublishstore53\n storel %v55, %v52\n %v61 =w and %v49, 4\n jnz %v61, @rcgpublishtake53, @rcgpublished53\n@rcgpublishtake53\n storel 0, %v40\n jmp @rcgpublished53\n@rcgpublishslow53\n %v72 =w call $myl_t_1535267fc5a418ed8053a9a6290354ebfcee0a92538bece7aa6b84967f8fb527_rcg_publish(l %heap, l %v52, l %v40, w %v51, w %v49)\n jnz %v72, @rcsuccess73, @rcfailure73\n@rcfailure73\n %v74 =w call $myl_rc_take_failure(l %heap)\n %v75 =w call $myl_qbe_rc_status(l %ctx, w %v74)\n jmp @failure\n@rcsuccess73\n@rcgpublished53\n",
+    "symbol": "myl_t_1535267fc5a418ed8053a9a6290354ebfcee0a92538bece7aa6b84967f8fb527_rcg_publish",
+    "dst": "%v52",
+    "src": "%v40",
+    "region": "%v51",
+    "mode": "%v49"
+  }
+}
