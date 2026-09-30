@@ -1,0 +1,42 @@
+[
+  {
+    "mode": "none-o0",
+    "cases_per_alias": 15,
+    "status": 0,
+    "stdout": "independent callable plain query: 15 cases passed\n",
+    "hot_stdout": "independent callable plain query: 15 cases passed\n",
+    "callable_symbol_defined": true,
+    "external_T_symbol": true,
+    "binary_sha256": "03295d61758b7e0edcb8534b4b9bc839e4e6e797fa05e9c5a68130625e0e9dea"
+  },
+  {
+    "mode": "none-o3",
+    "cases_per_alias": 15,
+    "status": 0,
+    "stdout": "independent callable plain query: 15 cases passed\n",
+    "hot_stdout": "independent callable plain query: 15 cases passed\n",
+    "callable_symbol_defined": true,
+    "external_T_symbol": true,
+    "binary_sha256": "6faeaf68f5b3c1cb1ede5922acef0570efdd3b5ccb90ba38c0e9b758aa8807f9"
+  },
+  {
+    "mode": "full",
+    "cases_per_alias": 15,
+    "status": 0,
+    "stdout": "independent callable plain query: 15 cases passed\n",
+    "hot_stdout": "independent callable plain query: 15 cases passed\n",
+    "callable_symbol_defined": true,
+    "external_T_symbol": false,
+    "binary_sha256": "cc8b5619ca458a7721ea2b4cb4aed7e4af8ecb110610285544d78ad7c5b37749"
+  },
+  {
+    "mode": "thin",
+    "cases_per_alias": 15,
+    "status": 0,
+    "stdout": "independent callable plain query: 15 cases passed\n",
+    "hot_stdout": "independent callable plain query: 15 cases passed\n",
+    "callable_symbol_defined": true,
+    "external_T_symbol": true,
+    "binary_sha256": "12d630facef534b49de6fe57812ca56645e9d32be60b7f6b8555f4fa453276ce"
+  }
+]
