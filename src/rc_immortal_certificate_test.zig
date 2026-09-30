@@ -34,15 +34,15 @@ fn witness(text: []const u8, name: []const u8) !Witness {
     var catalog = try shapes.Catalog.init(t.allocator, &layouts);
     defer catalog.deinit();
     for (program.functions) |function| if (std.mem.eql(u8, function.name, name)) {
-        const immortal = try calls.immortalIn(&catalog, program.functions, function, "rc-v4");
-        const borrowed = try calls.borrowedIn(t.allocator, &catalog, program.functions, function, "rc-v4");
+        const immortal = try calls.immortalIn(&catalog, program.functions, function, "rc-v5");
+        const borrowed = try calls.borrowedIn(t.allocator, &catalog, program.functions, function, "rc-v5");
         var result: Witness = .{ .immortal = immortal != null, .borrowed = borrowed != null, .raw = false };
         const raw = if (immortal) |proof|
-            try readonly.immortalEntry(&catalog, program.functions, function, "rc-v4", proof)
+            try readonly.immortalEntry(&catalog, program.functions, function, "rc-v5", proof)
         else if (borrowed) |proof|
-            try readonly.borrowedEntry(&catalog, program.functions, function, "rc-v4", proof)
+            try readonly.borrowedEntry(&catalog, program.functions, function, "rc-v5", proof)
         else
-            try readonly.certify(&catalog, program.functions, function, "rc-v4");
+            try readonly.certify(&catalog, program.functions, function, "rc-v5");
         if (raw) |proof| {
             defer t.allocator.free(proof.calls);
             result.raw = true;
@@ -120,12 +120,12 @@ fn changed(change: Change) !bool {
     var catalog = try shapes.Catalog.init(t.allocator, &layouts);
     defer catalog.deinit();
     var function = program.functions[0];
-    const original = try calls.immortalIn(&catalog, program.functions, function, "rc-v4");
+    const original = try calls.immortalIn(&catalog, program.functions, function, "rc-v5");
     if (change == .none) return original != null;
     if (change == .shape or change == .dependency) {
         var supplied = original orelse return error.TestUnexpectedResult;
         if (change == .shape) supplied.shape_identity[0] ^= 1 else supplied.dependency_identity[0] ^= 1;
-        const raw = try readonly.immortalEntry(&catalog, program.functions, function, "rc-v4", supplied);
+        const raw = try readonly.immortalEntry(&catalog, program.functions, function, "rc-v5", supplied);
         if (raw) |proof| t.allocator.free(proof.calls);
         return raw != null;
     }
@@ -133,7 +133,7 @@ fn changed(change: Change) !bool {
     defer t.allocator.free(code);
     function.scope.instructions = code;
     if (change == .unavailable) code[0].op = .{ .load_local = @fromBackingInt(0) } else code[0].op = .{ .call = function.id };
-    return (try calls.immortalIn(&catalog, program.functions, function, "rc-v4")) != null;
+    return (try calls.immortalIn(&catalog, program.functions, function, "rc-v5")) != null;
 }
 
 // spec-case: RC-IMMORTAL-ENTRY-1

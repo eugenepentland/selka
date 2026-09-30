@@ -34,6 +34,8 @@ const prefix = @import("qbe_rc_prefix.zig");
 const owners_offset = prefix.owners_offset;
 const holds_offset = prefix.holds_offset;
 const mark_offset = prefix.mark_offset;
+const count_result = " %v{d} =" ++ prefix.count_type;
+const count_equal = " %v{d} =w ceq" ++ prefix.count_type ++ " %v{d}, ";
 
 // A fallible glue entry returning its w status; a word loaded below a payload.
 const status_call = " %v{d} =w call ${s}{s}(l %heap, l %v{d}, l %v{d}, w %v{d})\n";
@@ -195,7 +197,7 @@ fn publishFast(comptime E: type, self: *E, operation: Publish, label: usize) Err
     try self.print(" jnz %v{d}, @rcgpublishmarkcheck{d}, @rcgpublishordinary{d}\n@rcgpublishordinary{d}\n", .{ try wordFlag(E, self, copy_mode), label, label, label });
     try self.print(" jnz %v{d}, @rcgpublishmarkcheck{d}, @rcgpublishcapacity{d}\n@rcgpublishcapacity{d}\n", .{ try nonzero(E, self, ordinary), label, label, label });
     try self.print(prefix.load_count, .{ capacity_at, payload, owners_offset, capacity_at, capacity, capacity_at });
-    try self.print(" %v{d} =w ceqw %v{d}, {d}\n jnz %v{d}, @rcgpublishslow{d}, @rcgpublishmarkcheck{d}\n@rcgpublishmarkcheck{d}\n", .{ saturated, capacity, prefix.count_max, saturated, label, label, label });
+    try self.print(count_equal ++ "{d}\n jnz %v{d}, @rcgpublishslow{d}, @rcgpublishmarkcheck{d}\n@rcgpublishmarkcheck{d}\n", .{ saturated, capacity, prefix.count_max, saturated, label, label, label });
     try self.print(mask, .{ already, mark, shared_or_immortal });
     try self.print(" jnz %v{d}, @rcgpublishstore{d}, @rcgpublishmark{d}\n@rcgpublishmark{d}\n", .{ try nonzero(E, self, already), label, label, label });
     try self.print(" %v{d} =l or %v{d}, {d}\n storel %v{d}, %v{d}\n", .{ marked, mark, shared_mark, marked, header });
@@ -210,7 +212,7 @@ fn publishFast(comptime E: type, self: *E, operation: Publish, label: usize) Err
     const uncounted = try nonzero(E, self, immortal);
     try self.print(" jnz %v{d}, @rcgpublished{d}, @rcgpublishinc{d}\n@rcgpublishinc{d}\n", .{ uncounted, label, label, label });
     try self.print(prefix.load_count, .{ counter, payload, owners_offset, counter, old, counter });
-    try self.print(" %v{d} =w add %v{d}, 1\n " ++ prefix.count_store ++ " %v{d}, %v{d}\n jmp @rcgpublished{d}\n@rcgpublishslow{d}\n", .{ new, old, new, counter, label, label });
+    try self.print(count_result ++ " add %v{d}, 1\n " ++ prefix.count_store ++ " %v{d}, %v{d}\n jmp @rcgpublished{d}\n@rcgpublishslow{d}\n", .{ new, old, new, counter, label, label });
 }
 
 /// One list element write: the list payload, the element index (set only)
@@ -339,7 +341,7 @@ pub fn uniqueFast(comptime E: type, self: *E, address: usize, label: usize) Erro
     try self.print(" jnz %v{d}, @rcguniquenn{d}, @rcgunique{d}\n@rcguniquenn{d}\n", .{ try nonzero(E, self, payload), label, label, label });
     try self.print(load_below ++ mask, .{ header, payload, mark_offset, header, mark, header, shared, mark, shared_marks });
     try self.print(" jnz %v{d}, @rcguniqueslow{d}, @rcguniquecount{d}\n@rcguniquecount{d}\n", .{ try nonzero(E, self, shared), label, label, label });
-    try self.print(prefix.load_count ++ " %v{d} =w cultw %v{d}, 2\n", .{ counter, payload, owners_offset, counter, owners, counter, single, owners });
+    try self.print(prefix.load_count ++ " %v{d} =w cult" ++ prefix.count_type ++ " %v{d}, 2\n", .{ counter, payload, owners_offset, counter, owners, counter, single, owners });
     try self.print(" jnz %v{d}, @rcgunique{d}, @rcguniqueslow{d}\n@rcguniqueslow{d}\n", .{ single, label, label, label });
 }
 
@@ -394,9 +396,9 @@ fn increment(comptime E: type, self: *E, step: Increment) Error!usize {
     try self.print(prefix.load_count, .{ counter, step.payload, offset(step.count), counter, old, counter });
     const limit = self.temp();
     const status = self.temp();
-    try self.print(" %v{d} =w ceqw %v{d}, {d}\n jnz %v{d}, @rcglimit{d}, @rcgcapacity{d}\n@rcglimit{d}\n", .{ limit, old, prefix.count_max, limit, step.label, step.label, step.label });
+    try self.print(count_equal ++ "{d}\n jnz %v{d}, @rcglimit{d}, @rcgcapacity{d}\n@rcglimit{d}\n", .{ limit, old, prefix.count_max, limit, step.label, step.label, step.label });
     try self.print(" %v{d} =w call $myl_qbe_rc_status(l %ctx, w 2)\n jmp @failure\n@rcgcapacity{d}\n", .{ status, step.label });
-    try self.print(" %v{d} =w add %v{d}, 1\n " ++ prefix.count_store ++ " %v{d}, %v{d}\n", .{ new, old, new, counter });
+    try self.print(count_result ++ " add %v{d}, 1\n " ++ prefix.count_store ++ " %v{d}, %v{d}\n", .{ new, old, new, counter });
     return mark;
 }
 
@@ -432,14 +434,14 @@ fn release(comptime E: type, self: *E, operation: Release, operation_kind: glue.
     try self.print(" jnz %v{d}, @rcgnn{d}, @rcgdone{d}\n@rcgnn{d}\n", .{ try nonzero(E, self, payload), label, label, label });
     try self.print(load_below ++ mask, .{ header, payload, mark_offset, header, mark, header, special, mark, uncounted_marks });
     try self.print(" jnz %v{d}, @rcgclear{d}, @rcgcounted{d}\n@rcgcounted{d}\n", .{ try nonzero(E, self, special), label, label, label });
-    try self.print(prefix.load_count ++ " %v{d} =w ceqw %v{d}, 1\n", .{ counter, payload, offset(count), counter, value, counter, last, value });
+    try self.print(prefix.load_count ++ count_equal ++ "1\n", .{ counter, payload, offset(count), counter, value, counter, last, value });
     try self.print(" jnz %v{d}, @rcglast{d}, @rcgdec{d}\n@rcglast{d}\n", .{ last, label, label, label });
     try self.print(prefix.load_count, .{ other_counter, payload, offset(other), other_counter, other_value, other_counter });
     // The last token of an otherwise unheld object dies: the glue clears the
     // slot, queues the death and drains.
-    try self.print(" jnz %v{d}, @rcgdec{d}, @rcgslow{d}\n@rcgslow{d}\n", .{ try wordFlag(E, self, other_value), label, label, label });
+    try self.print(" jnz %v{d}, @rcgdec{d}, @rcgslow{d}\n@rcgslow{d}\n", .{ try nonzero(E, self, other_value), label, label, label });
     try self.print(" call ${s}{s}(l %v{d}, l %v{d})\n jmp @rcgdone{d}\n@rcgdec{d}\n", .{ symbol, suffix, heap, operation.address, label, label });
-    try self.print(" %v{d} =w sub %v{d}, 1\n " ++ prefix.count_store ++ " %v{d}, %v{d}\n@rcgclear{d}\n storel 0, %v{d}\n@rcgdone{d}\n", .{ reduced, value, reduced, counter, label, operation.address, label });
+    try self.print(count_result ++ " sub %v{d}, 1\n " ++ prefix.count_store ++ " %v{d}, %v{d}\n@rcgclear{d}\n storel 0, %v{d}\n@rcgdone{d}\n", .{ reduced, value, reduced, counter, label, operation.address, label });
 }
 
 /// A word flag for a w value, compared at full width like every inline

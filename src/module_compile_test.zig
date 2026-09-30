@@ -391,7 +391,7 @@ test "module linker refuses a pre-image RC block with the unchanged module ABI" 
     defer arena.deinit();
     const a = arena.allocator();
     const old = try unitsFile(a,
-        \\{"descriptors":[],"renderers":[],"owners":[{"name":"old","text":"const myl_rc_shape old_rc = {0};","unique_body":false}],"manifest":{"runtime_contract":"rc-v4","store":"/s","entry":"main","host":{},"functions":[]}}
+        \\{"descriptors":[],"renderers":[],"owners":[{"name":"old","text":"const myl_rc_shape old_rc = {0};","unique_body":false}],"manifest":{"runtime_contract":"rc-v5","store":"/s","entry":"main","host":{},"functions":[]}}
     );
     try t.expectError(error.Incomplete, language.module_link.merge(a, &.{old}));
 }

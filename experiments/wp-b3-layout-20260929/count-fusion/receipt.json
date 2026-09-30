@@ -1,0 +1,14 @@
+{
+  "source_base": "cb4336cfe6cc0f16f29894eefd1c3327a2af070d",
+  "compiler_sha256": "56ecbff8438498f7e47835bb64e2f703928d12da934a2431caffc5c446209c6f",
+  "actual_generated_c_selected": 13,
+  "glue_units_selected": 17,
+  "guardian_whole_tree_checks": 88,
+  "build_steps": 12,
+  "status": "prototype focused proof; quantitative and guest matrix pending",
+  "source_sha256": {
+    "src/rc_glue.zig": "3f86872f84ab87abfc6daf7ec80c9205a241dda8e5b7de7619f8b00f20c2b194",
+    "src/rc_glue_acquisition.zig": "bc9fe2cda9a561dc33558ad37c8775476afddf0d253047648f720e7e0a23815d",
+    "SPEC.md": "3fbaf947a1b453d840fcb4c108abcb3bc7501787b61d302f7350eac3fac4f9a9"
+  }
+}

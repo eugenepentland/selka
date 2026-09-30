@@ -882,7 +882,7 @@ fn sitesRun(context: fs.Context, command: []const []const u8, environment: *std.
     const start = std.mem.indexOf(u8, result.stderr, marker).? + marker.len;
     const end = std.mem.indexOfScalarPos(u8, result.stderr, start, '\n').?;
     const counts = try std.json.parseFromSlice(std.json.Value, context.allocator, result.stderr[start..end], .{});
-    try std.testing.expectEqualStrings("rc-v4-sites", v.text(v.get(counts.value, "runtime")));
+    try std.testing.expectEqualStrings("rc-v5-sites", v.text(v.get(counts.value, "runtime")));
     try std.testing.expect(std.mem.indexOf(u8, result.stderr, "\nMYLANG_RC_SITES {\"version\":1,") != null);
     const parsed = try std.json.parseFromSlice(std.json.Value, context.allocator, try context.read(report), .{});
     const sites = v.array(v.get(parsed.value, "sites"));

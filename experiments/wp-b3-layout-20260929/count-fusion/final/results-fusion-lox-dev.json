@@ -1,0 +1,210 @@
+{
+ "compiler": {
+  "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-count-fusion-20260930/.tmp/fusion/bin/mylang",
+  "runtime": "--rc-runtime",
+  "sha256": "56ecbff8438498f7e47835bb64e2f703928d12da934a2431caffc5c446209c6f"
+ },
+ "failures": [],
+ "rows": [
+  {
+   "arm": "qbe",
+   "gc": 1346933341,
+   "id": "lox/vm/binary_trees",
+   "ratio": 1.156730157739855,
+   "rc": 1558038416
+  },
+  {
+   "arm": "llvm",
+   "gc": 636876532,
+   "id": "lox/vm/binary_trees",
+   "ratio": 1.1552047453995369,
+   "rc": 735722792
+  },
+  {
+   "arm": "qbe",
+   "gc": 2080041793,
+   "id": "lox/vm/closures",
+   "ratio": 1.1801083580439387,
+   "rc": 2454674705
+  },
+  {
+   "arm": "llvm",
+   "gc": 893619270,
+   "id": "lox/vm/closures",
+   "ratio": 1.1925784210092067,
+   "rc": 1065711058
+  },
+  {
+   "arm": "qbe",
+   "gc": 2092506843,
+   "id": "lox/vm/equality",
+   "ratio": 0.8767858294645491,
+   "rc": 1834680348
+  },
+  {
+   "arm": "llvm",
+   "gc": 755710916,
+   "id": "lox/vm/equality",
+   "ratio": 0.9934789998454912,
+   "rc": 750782925
+  },
+  {
+   "arm": "qbe",
+   "gc": 1291425095,
+   "id": "lox/vm/fib",
+   "ratio": 1.1080302586190645,
+   "rc": 1430938082
+  },
+  {
+   "arm": "llvm",
+   "gc": 504034883,
+   "id": "lox/vm/fib",
+   "ratio": 1.0998370781412763,
+   "rc": 554356253
+  },
+  {
+   "arm": "qbe",
+   "gc": 1478122349,
+   "id": "lox/vm/instantiation",
+   "ratio": 1.2896999874805357,
+   "rc": 1906334375
+  },
+  {
+   "arm": "llvm",
+   "gc": 769157460,
+   "id": "lox/vm/instantiation",
+   "ratio": 1.2452567072547147,
+   "rc": 957798486
+  },
+  {
+   "arm": "qbe",
+   "gc": 3015242690,
+   "id": "lox/vm/invocation",
+   "ratio": 1.2193228091367996,
+   "rc": 3676554187
+  },
+  {
+   "arm": "llvm",
+   "gc": 1271922336,
+   "id": "lox/vm/invocation",
+   "ratio": 1.2161091319965625,
+   "rc": 1546796368
+  },
+  {
+   "arm": "qbe",
+   "gc": 2927365605,
+   "id": "lox/vm/method_call",
+   "ratio": 1.1953652495688183,
+   "rc": 3499271117
+  },
+  {
+   "arm": "llvm",
+   "gc": 1197323580,
+   "id": "lox/vm/method_call",
+   "ratio": 1.2658968747612904,
+   "rc": 1515688178
+  },
+  {
+   "arm": "qbe",
+   "gc": 2629728583,
+   "id": "lox/vm/properties",
+   "ratio": 1.2137006007513134,
+   "rc": 3191703161
+  },
+  {
+   "arm": "llvm",
+   "gc": 1131581117,
+   "id": "lox/vm/properties",
+   "ratio": 1.2340984000354258,
+   "rc": 1396482446
+  },
+  {
+   "arm": "qbe",
+   "gc": 2047084640,
+   "id": "lox/vm/string_equality",
+   "ratio": 0.981628468962573,
+   "rc": 2009476561
+  },
+  {
+   "arm": "llvm",
+   "gc": 654173833,
+   "id": "lox/vm/string_equality",
+   "ratio": 1.2440823859733932,
+   "rc": 813846143
+  },
+  {
+   "arm": "qbe",
+   "gc": 1630729928,
+   "id": "lox/vm/strings",
+   "ratio": 0.8411636810286099,
+   "rc": 1371710789
+  },
+  {
+   "arm": "llvm",
+   "gc": 810164070,
+   "id": "lox/vm/strings",
+   "ratio": 0.7205246648373335,
+   "rc": 583743195
+  },
+  {
+   "arm": "qbe",
+   "gc": 4330048823,
+   "id": "lox/vm/trees",
+   "ratio": 1.1262649730635612,
+   "rc": 4876782321
+  },
+  {
+   "arm": "llvm",
+   "gc": 1991351408,
+   "id": "lox/vm/trees",
+   "ratio": 1.0953470694510388,
+   "rc": 2181220929
+  },
+  {
+   "arm": "qbe",
+   "gc": 3317568768,
+   "id": "lox/vm/zoo",
+   "ratio": 1.153460559705872,
+   "rc": 3826684728
+  },
+  {
+   "arm": "llvm",
+   "gc": 1418239189,
+   "id": "lox/vm/zoo",
+   "ratio": 1.150836577256645,
+   "rc": 1632161534
+  },
+  {
+   "arm": "qbe",
+   "gc": 2755789475,
+   "id": "lox/vm/zoo_batch",
+   "ratio": 1.1545801353349026,
+   "rc": 3181779785
+  },
+  {
+   "arm": "llvm",
+   "gc": 1159114440,
+   "id": "lox/vm/zoo_batch",
+   "ratio": 1.1617715805524775,
+   "rc": 1346626215
+  }
+ ],
+ "size": "dev",
+ "summary": {
+  "llvm": {
+   "geomean": 1.1259596317993465,
+   "geomean_nonlox": NaN,
+   "rows": 13,
+   "within_1_3": 13,
+   "worst": 1.2658968747612904
+  },
+  "qbe": {
+   "geomean": 1.1069597406550566,
+   "geomean_nonlox": NaN,
+   "rows": 13,
+   "within_1_3": 13,
+   "worst": 1.2896999874805357
+  }
+ },
+ "tag": "fusion"
+}

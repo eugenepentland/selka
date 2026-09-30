@@ -4,7 +4,7 @@ const prefix = @import("qbe_rc_prefix.zig");
 const Error = @import("qbe_rc_unique.zig").Error;
 const store_word = " storel %v{d}, %v{d}\n";
 const load_count = " %v{d} =" ++ prefix.count_type ++ " " ++ prefix.count_load ++ " %v{d}\n";
-const change_count = load_count ++ " %v{d} =w add %v{d}, {d}\n " ++ prefix.count_store ++ " %v{d}, %v{d}\n";
+const change_count = load_count ++ " %v{d} =" ++ prefix.count_type ++ " add %v{d}, {d}\n " ++ prefix.count_store ++ " %v{d}, %v{d}\n";
 const arena: u64 = @as(u64, 1) << 62;
 const pinned: u64 = @as(u64, 1) << 60;
 const special: u64 = arena | 2 | 1;
@@ -38,10 +38,11 @@ const Capture = struct { scope: usize, payload: usize, label: usize, rc: usize, 
 pub fn pin(comptime E: type, self: *E, scope: usize, payload: usize) Error!bool {
     if (runtime.counting()) return false;
     const label = self.temp();
-    try self.print(" # RC-SCOPE-IL-1 pin\n jnz %v{d}, @rcspinmark{d}, @rcspindone{d}\n@rcspinmark{d}\n", .{ payload, label, label, label });
+    try self.print(" # RC-SCOPE-IL-1 pin\n jnz %v{d}, @rcspinmark{d}, @rcspindone{d}\n@rcspinmark{d}\n", .{ try truth64(E, self, payload), label, label, label });
     const mark = try below(E, self, payload, 16);
     const immortal = self.temp();
-    try self.print(" %v{d} =l and %v{d}, 2\n jnz %v{d}, @rcspindone{d}, @rcspintype{d}\n@rcspintype{d}\n", .{ immortal, mark, immortal, label, label, label });
+    try self.print(" %v{d} =l and %v{d}, 2\n", .{ immortal, mark });
+    try self.print(" jnz %v{d}, @rcspindone{d}, @rcspintype{d}\n@rcspintype{d}\n", .{ try truth64(E, self, immortal), label, label, label });
     try ordinary(E, self, payload, mark, label, "pin");
     const descriptor = try load(E, self, try belowAddress(E, self, payload, 8));
     const list_type = self.temp();
@@ -50,7 +51,7 @@ pub fn pin(comptime E: type, self: *E, scope: usize, payload: usize) Error!bool 
     try guard(E, self, is_list, label, "pin");
     const rc = try state(E, self);
     const node = try load(E, self, try address(E, self, rc, spare));
-    try guard(E, self, node, label, "pin");
+    try guard(E, self, try truth64(E, self, node), label, "pin");
     const bytes = try load(E, self, try addressHeap(E, self, heap_bytes));
     const total = self.temp();
     const fits = self.temp();
@@ -64,7 +65,7 @@ pub fn pin(comptime E: type, self: *E, scope: usize, payload: usize) Error!bool 
     try guard(E, self, admitted, label, "pin");
     try available(E, self, payload, label, "pin");
     const backing = try load(E, self, try self.address(payload, 32));
-    try self.print(" jnz %v{d}, @rcspinbacking{d}, @rcspincommit{d}\n@rcspinbacking{d}\n", .{ backing, label, label, label });
+    try self.print(" jnz %v{d}, @rcspinbacking{d}, @rcspincommit{d}\n@rcspinbacking{d}\n", .{ try truth64(E, self, backing), label, label, label });
     try ordinary(E, self, backing, try below(E, self, backing, 16), label, "pin");
     try available(E, self, backing, label, "pin");
     try self.print("@rcspincommit{d}\n", .{label});
@@ -84,7 +85,7 @@ fn capture(comptime E: type, self: *E, value: Capture) Error!void {
     try bump(E, self, try addressHeap(E, self, heap_bytes), entry_bytes);
     try bump(E, self, try address(E, self, value.rc, metadata_bytes), entry_bytes);
     try increment(E, self, value.payload, 1);
-    try self.print(" jnz %v{d}, @rcspinhold{d}, @rcspinjournal{d}\n@rcspinhold{d}\n", .{ value.backing, value.label, value.label, value.label });
+    try self.print(" jnz %v{d}, @rcspinhold{d}, @rcspinjournal{d}\n@rcspinhold{d}\n", .{ try truth64(E, self, value.backing), value.label, value.label, value.label });
     try increment(E, self, value.backing, 1);
     try self.print("@rcspinjournal{d}\n", .{value.label});
     const old_pin = self.temp();
@@ -113,19 +114,19 @@ pub fn end(comptime E: type, self: *E, scope: usize) Error!bool {
     try guard(E, self, nested, label, "end");
     try zero(E, self, try load(E, self, try address(E, self, rc, deaths)), label, "end");
     const node = try load(E, self, try self.address(scope, 16));
-    try self.print(" jnz %v{d}, @rcsendnode{d}, @rcsendunlink{d}\n@rcsendnode{d}\n", .{ node, label, label, label });
+    try self.print(" jnz %v{d}, @rcsendnode{d}, @rcsendunlink{d}\n@rcsendnode{d}\n", .{ try truth64(E, self, node), label, label, label });
     try zero(E, self, try load(E, self, try address(E, self, node, 0)), label, "end");
     const count = try load(E, self, try address(E, self, rc, spare_count));
     const room = self.temp();
     try self.print(" %v{d} =w cultl %v{d}, 32\n", .{ room, count });
     try guard(E, self, room, label, "end");
     const payload = try load(E, self, try address(E, self, node, 8));
-    try guard(E, self, payload, label, "end");
+    try guard(E, self, try truth64(E, self, payload), label, "end");
     const mark = try below(E, self, payload, 16);
     try ordinary(E, self, payload, mark, label, "end");
     try nonfinal(E, self, payload, label);
     const backing = try load(E, self, try address(E, self, node, 32));
-    try self.print(" jnz %v{d}, @rcsendbacking{d}, @rcsendcommit{d}\n@rcsendbacking{d}\n", .{ backing, label, label, label });
+    try self.print(" jnz %v{d}, @rcsendbacking{d}, @rcsendcommit{d}\n@rcsendbacking{d}\n", .{ try truth64(E, self, backing), label, label, label });
     try ordinary(E, self, backing, try below(E, self, backing, 16), label, "end");
     try nonfinal(E, self, backing, label);
     try self.print("@rcsendcommit{d}\n", .{label});
@@ -152,7 +153,7 @@ fn release(comptime E: type, self: *E, value: Release) Error!void {
     try bump(E, self, try address(E, self, value.rc, spare_count), 1);
     try bump(E, self, try addressHeap(E, self, heap_bytes), -entry_bytes);
     try bump(E, self, try address(E, self, value.rc, metadata_bytes), -entry_bytes);
-    try self.print(" jnz %v{d}, @rcsenddropbacking{d}, @rcsenddroppayload{d}\n@rcsenddropbacking{d}\n", .{ value.backing, value.label, value.label, value.label });
+    try self.print(" jnz %v{d}, @rcsenddropbacking{d}, @rcsenddroppayload{d}\n@rcsenddropbacking{d}\n", .{ try truth64(E, self, value.backing), value.label, value.label, value.label });
     try increment(E, self, value.backing, -1);
     try self.print("@rcsenddroppayload{d}\n", .{value.label});
     try increment(E, self, value.payload, -1);
@@ -209,6 +210,12 @@ fn loadCount(comptime E: type, self: *E, payload: usize, offset: u64) Error!usiz
     try self.print(load_count, .{ value, try belowAddress(E, self, payload, offset) });
     return value;
 }
+// QBE jnz inspects one word, so pointers and u64 counts first need a boolean.
+fn truth64(comptime E: type, self: *E, value: usize) Error!usize {
+    const condition = self.temp();
+    try self.print(" %v{d} =w cnel %v{d}, 0\n", .{ condition, value });
+    return condition;
+}
 fn guard(comptime E: type, self: *E, condition: usize, label: usize, operation: []const u8) Error!void {
     const next = self.temp();
     try self.print(" jnz %v{d}, @rcs{d}, @rcs{s}slow{d}\n@rcs{d}\n", .{ condition, next, operation, label, next });
@@ -227,16 +234,16 @@ fn ordinary(comptime E: type, self: *E, payload: usize, mark: usize, label: usiz
 fn available(comptime E: type, self: *E, payload: usize, label: usize, operation: []const u8) Error!void {
     const holds = try loadCount(E, self, payload, prefix.holds_offset);
     const condition = self.temp();
-    try self.print(" %v{d} =w cnew %v{d}, {d}\n", .{ condition, holds, prefix.count_max });
+    try self.print(" %v{d} =w cne" ++ prefix.count_type ++ " %v{d}, {d}\n", .{ condition, holds, prefix.count_max });
     try guard(E, self, condition, label, operation);
 }
 fn nonfinal(comptime E: type, self: *E, payload: usize, label: usize) Error!void {
     const holds = try loadCount(E, self, payload, prefix.holds_offset);
-    try guard(E, self, holds, label, "end");
+    try guard(E, self, try truth64(E, self, holds), label, "end");
     const owners = try loadCount(E, self, payload, prefix.owners_offset);
     const retained = self.temp();
     const sharing = self.temp();
     const live = self.temp();
-    try self.print(" %v{d} =w cugtw %v{d}, 1\n %v{d} =w cnew %v{d}, 0\n %v{d} =w or %v{d}, %v{d}\n", .{ retained, holds, sharing, owners, live, retained, sharing });
+    try self.print(" %v{d} =w cugt" ++ prefix.count_type ++ " %v{d}, 1\n %v{d} =w cne" ++ prefix.count_type ++ " %v{d}, 0\n %v{d} =w or %v{d}, %v{d}\n", .{ retained, holds, sharing, owners, live, retained, sharing });
     try guard(E, self, live, label, "end");
 }

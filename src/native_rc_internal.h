@@ -57,7 +57,7 @@ _Static_assert(MYL_RC_FLAT_LEAVES <= 16, "live-leaf sets are 16 bits");
  * element (class + 1; 0 unknown or not slab-sized). */
 typedef struct { myl_rc_descriptor descriptor; myl_rc_flat flat; unsigned alloc_class; } myl_rc_binding;
 _Static_assert(offsetof(myl_rc_binding, descriptor) == 0, "indexed descriptor is its private binding prefix");
-/* Compiler-authored image ABI is separate from foreign/public module ABI4.
+/* Compiler-authored image ABI is separate from foreign/public module ABI5.
  * Semantic-symbol entries form a complete immutable inline graph. The final
  * program union supplies the only image/descriptor ordering authority. */
 #define MYL_RC_IMAGE_ABI_VERSION 1u

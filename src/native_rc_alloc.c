@@ -11,7 +11,7 @@
 #include <sys/mman.h>
 
 /* Slab addresses recover their metadata with one mask. Large reservations put
- * their metadata before (not inside) the frozen 24-byte RC object prefix.
+ * their metadata before (not inside) the frozen 32-byte RC object prefix.
  *
  * RC-ALLOC-CACHE-1: free slots live on per-class lists in the heap
  * (`heap->rc_cache.free`), which retirement pushes and every allocation,
@@ -49,7 +49,6 @@ struct rc_large {
     rc_large *previous, *next;
     size_t charge, extent;
     size_t mapped, spare;
-    uintptr_t payload_alignment;
 };
 typedef struct {
     rc_slab *all, *available;
@@ -110,12 +109,12 @@ static const unsigned char class_of[RC_CLASS_STEPS] = {
     31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,
     31
 };
-#define RC_SLAB_OFFSET (((sizeof(rc_slab) + 15) & ~(size_t)15) + 8)
-_Static_assert(RC_SLAB_OFFSET == 88, "cached capacity fits the existing aligned slab metadata extent");
+#define RC_SLAB_OFFSET ((sizeof(rc_slab) + 15) & ~(size_t)15)
+_Static_assert(RC_SLAB_OFFSET == 80, "cached capacity fits the existing aligned slab metadata extent");
 _Static_assert(offsetof(rc_slab, class) == 0, "a slab starts with its class words");
 _Static_assert((sizeof(rc_large) + MYL_RC_PREFIX_BYTES) % _Alignof(max_align_t) == 0, "large allocator metadata preserves alignment");
 _Static_assert(sizeof(myl_rc_object) == MYL_RC_PREFIX_BYTES, "RC prefix ABI");
-_Static_assert(offsetof(myl_rc_object, common) == 8, "common header ABI");
+_Static_assert(offsetof(myl_rc_object, common) == 16, "common header ABI");
 const myl_native_type myl_rc_pointer_leaf = {
     .size = sizeof(void *), .alignment = _Alignof(void *), .kind = MYL_NATIVE_POINTER, .rc_id = MYL_RC_ID_POINTER_LEAF
 };
@@ -375,15 +374,13 @@ static myl_rc_object *large_take(myl_native_heap *heap, size_t extent) {
     charge(heap,bytes);
     return (myl_rc_object *)(large+1);
 }
-/* A payload is aligned while its 24-byte prefix starts eight bytes into a
- * 16-byte slot. Only complete payload units can use aligned vector stores:
- * rounding a short tail to 16 would overwrite the next slot's count pair. */
+/* The 32-byte prefix and slot stride preserve 16-byte payload alignment.
+ * A short payload may clear its padding up to the next complete vector. */
 typedef unsigned char rc_zero_unit __attribute__((vector_size(16), aligned(16), may_alias));
 static inline void zero_payload(unsigned char *payload, size_t bytes) {
     rc_zero_unit *unit=(rc_zero_unit *)payload;
     const rc_zero_unit zero={0};
-    size_t units=bytes/16;
-    switch (units) {
+    switch ((bytes+15)/16) {
         case 8: unit[7]=zero; /* fall through */
         case 7: unit[6]=zero; /* fall through */
         case 6: unit[5]=zero; /* fall through */
@@ -392,10 +389,9 @@ static inline void zero_payload(unsigned char *payload, size_t bytes) {
         case 3: unit[2]=zero; /* fall through */
         case 2: unit[1]=zero; /* fall through */
         case 1: unit[0]=zero; /* fall through */
-        case 0: break;
+        case 0: return;
         default: memset(payload,0,bytes); return;
     }
-    if (bytes%16) memset(payload+units*16,0,bytes%16);
 }
 /* Write the prefix of a fresh allocation. Only the payload needs zero bytes
  * (large extents arrive zeroed; slab callers zero first), and bytes past the
