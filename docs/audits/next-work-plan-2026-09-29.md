@@ -42,7 +42,24 @@ performance rows, known findings and Guardian feedback are in
 **Phase B landed with explicit user approval** ("Yeah merge it in") on
 2026-09-30. Main fast-forwarded from `80dd5190` to `b6aed6cf`; its tested compiler
 source is `a3e451d7`. The original dirty checkout was verified unchanged.
-Phase C is now authorized to start on the completed compiler work.
+Phase C was authorized to start on the completed compiler work.
+
+**Phase C / WP-C1 is complete on owned review branches.** The complete handwritten
+EDA application preserves all 279 named original tests and passes 319 fresh
+native tests on final compiler `e88fcf3c`; all 34 reference cases are byte-identical.
+Map, all 122 module checks, formatting, 20 guide examples, counts and all 12
+Debug development-loop metrics are complete. Native trig and the cache/generic
+repairs discovered during porting have separate compiler regressions and pass
+the four broad targets plus the remaining common-lane checks, including Lox,
+release/stats and 100 valid fuzz seeds with zero RC divergences. Two unchanged
+Phase B GC-stress-only findings remain disclosed.
+
+The source and evidence are committed on `codex/next-eda-integration-20260930`
+(EDA) and `codex/next-eda-compiler-20260930` (compiler). This phase has not changed
+main refs or the original dirty compiler checkout. Current compiler-main changes
+are concurrent work and the combined source is not qualified by this lane.
+[codex-next-eda-closeout-2026-09-30.md](codex-next-eda-closeout-2026-09-30.md)
+links the final application acceptance, scope, timing and practical friction.
 
 Lane receipts are in [python-text-closeout-2026-09-29.md](python-text-closeout-2026-09-29.md),
 [wp-b4-tooling-2026-09-29.md](wp-b4-tooling-2026-09-29.md),
@@ -51,9 +68,9 @@ and [text-runtime-closeout-2026-09-29.md](text-runtime-closeout-2026-09-29.md).
 The final module-lane receipts are in
 [codex-next-modules-closeout-2026-09-30.md](codex-next-modules-closeout-2026-09-30.md);
 the QBE phi fix is in [wp-b3-qbe-phi-2026-09-30.md](wp-b3-qbe-phi-2026-09-30.md).
-EDA preparation has a verified test inventory and guide/checker reconciliation.
-Phase C begins after the approved Phase B landing. Sections below retain the
-original handoff state and requirements.
+EDA completion has verified original-test inventory, actual fresh native
+execution, guide/checker reconciliation and complete development-loop evidence.
+Sections below retain the original handoff state and requirements.
 
 ## Compiler build preference — 2026-09-30
 
