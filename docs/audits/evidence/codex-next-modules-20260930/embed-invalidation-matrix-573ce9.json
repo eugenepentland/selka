@@ -1,0 +1,565 @@
+{
+  "source": "573ce9a4e97d4deb3e874dcaa35beb0eaacbfbb0",
+  "compiler_sha256": "27efa44b7107a77e0bc562949645f644392b5a6fcf57b5ae2a5bafcc2491893e",
+  "totals": {
+    "steps": 0,
+    "built": 21,
+    "rejected": 4,
+    "compiled": 24,
+    "reused": 30,
+    "mismatches": 0,
+    "runs": 21
+  },
+  "project_variants": 5,
+  "rows": [
+    {
+      "case": "exact source plus eight embed bytes",
+      "module_status": 0,
+      "whole_status": 0,
+      "module_build": {
+        "modules": 2,
+        "compiled": 2,
+        "reused": 0,
+        "arenas": false
+      },
+      "executable_sha256": "4fcff68555583174c8d92b997793deb914742199016d035616718427883d439b",
+      "asset_status": "025724f1c9f0e5cca4daa8a6ea2fd6c9a2a905c5a453f815fcccafc7bda6453d",
+      "policy": {
+        "version": 1,
+        "budgets": {
+          "max_file_bytes": 65536,
+          "max_total_bytes": 225
+        }
+      },
+      "runtime_flags": [
+        "--rc-runtime"
+      ]
+    },
+    {
+      "case": "warm initial",
+      "module_status": 0,
+      "whole_status": 0,
+      "module_build": {
+        "modules": 2,
+        "compiled": 0,
+        "reused": 2,
+        "arenas": false
+      },
+      "executable_sha256": "4fcff68555583174c8d92b997793deb914742199016d035616718427883d439b",
+      "asset_status": "025724f1c9f0e5cca4daa8a6ea2fd6c9a2a905c5a453f815fcccafc7bda6453d",
+      "policy": {
+        "version": 1,
+        "budgets": {
+          "max_file_bytes": 65536,
+          "max_total_bytes": 225
+        }
+      },
+      "runtime_flags": [
+        "--rc-runtime"
+      ]
+    },
+    {
+      "case": "embed-only content edit",
+      "module_status": 0,
+      "whole_status": 0,
+      "module_build": {
+        "modules": 2,
+        "compiled": 2,
+        "reused": 0,
+        "arenas": false
+      },
+      "executable_sha256": "d0e2d820b1f7b68d7a27cb7c61713dae6320e132d4086f4f5a9b4edd5c2b724f",
+      "asset_status": "dbe22b22a701ce4796a81735c536a7d9de60e647bfb65f9cecbbdfda469f7d3e",
+      "policy": {
+        "version": 1,
+        "budgets": {
+          "max_file_bytes": 65536,
+          "max_total_bytes": 225
+        }
+      },
+      "runtime_flags": [
+        "--rc-runtime"
+      ]
+    },
+    {
+      "case": "warm edited embed",
+      "module_status": 0,
+      "whole_status": 0,
+      "module_build": {
+        "modules": 2,
+        "compiled": 0,
+        "reused": 2,
+        "arenas": false
+      },
+      "executable_sha256": "d0e2d820b1f7b68d7a27cb7c61713dae6320e132d4086f4f5a9b4edd5c2b724f",
+      "asset_status": "dbe22b22a701ce4796a81735c536a7d9de60e647bfb65f9cecbbdfda469f7d3e",
+      "policy": {
+        "version": 1,
+        "budgets": {
+          "max_file_bytes": 65536,
+          "max_total_bytes": 225
+        }
+      },
+      "runtime_flags": [
+        "--rc-runtime"
+      ]
+    },
+    {
+      "case": "empty embed",
+      "module_status": 0,
+      "whole_status": 0,
+      "module_build": {
+        "modules": 2,
+        "compiled": 2,
+        "reused": 0,
+        "arenas": false
+      },
+      "executable_sha256": "c1be57c1d7321ac1dd13f9ad9be9b4808ae4aacb313b7e5fa01908fc3fb052b3",
+      "asset_status": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "policy": {
+        "version": 1,
+        "budgets": {
+          "max_file_bytes": 65536,
+          "max_total_bytes": 225
+        }
+      },
+      "runtime_flags": [
+        "--rc-runtime"
+      ]
+    },
+    {
+      "case": "missing embed",
+      "module_status": 1,
+      "whole_status": 1,
+      "asset_status": "missing",
+      "policy": {
+        "version": 1,
+        "budgets": {
+          "max_file_bytes": 65536,
+          "max_total_bytes": 225
+        }
+      },
+      "runtime_flags": [
+        "--rc-runtime"
+      ]
+    },
+    {
+      "case": "restore asset after missing refusal",
+      "module_status": 0,
+      "whole_status": 0,
+      "module_build": {
+        "modules": 2,
+        "compiled": 2,
+        "reused": 0,
+        "arenas": false
+      },
+      "executable_sha256": "4fcff68555583174c8d92b997793deb914742199016d035616718427883d439b",
+      "asset_status": "025724f1c9f0e5cca4daa8a6ea2fd6c9a2a905c5a453f815fcccafc7bda6453d",
+      "policy": {
+        "version": 1,
+        "budgets": {
+          "max_file_bytes": 65536,
+          "max_total_bytes": 225
+        }
+      },
+      "runtime_flags": [
+        "--rc-runtime"
+      ]
+    },
+    {
+      "case": "tightened total refuses cached accepted payload",
+      "module_status": 1,
+      "whole_status": 1,
+      "asset_status": "025724f1c9f0e5cca4daa8a6ea2fd6c9a2a905c5a453f815fcccafc7bda6453d",
+      "policy": {
+        "version": 1,
+        "budgets": {
+          "max_file_bytes": 65536,
+          "max_total_bytes": 224
+        }
+      },
+      "runtime_flags": [
+        "--rc-runtime"
+      ]
+    },
+    {
+      "case": "widen total recovers",
+      "module_status": 0,
+      "whole_status": 0,
+      "module_build": {
+        "modules": 2,
+        "compiled": 0,
+        "reused": 2,
+        "arenas": false
+      },
+      "executable_sha256": "4fcff68555583174c8d92b997793deb914742199016d035616718427883d439b",
+      "asset_status": "025724f1c9f0e5cca4daa8a6ea2fd6c9a2a905c5a453f815fcccafc7bda6453d",
+      "policy": {
+        "version": 1,
+        "budgets": {
+          "max_file_bytes": 65536,
+          "max_total_bytes": 225
+        }
+      },
+      "runtime_flags": [
+        "--rc-runtime"
+      ]
+    },
+    {
+      "case": "warm recovered total",
+      "module_status": 0,
+      "whole_status": 0,
+      "module_build": {
+        "modules": 2,
+        "compiled": 0,
+        "reused": 2,
+        "arenas": false
+      },
+      "executable_sha256": "4fcff68555583174c8d92b997793deb914742199016d035616718427883d439b",
+      "asset_status": "025724f1c9f0e5cca4daa8a6ea2fd6c9a2a905c5a453f815fcccafc7bda6453d",
+      "policy": {
+        "version": 1,
+        "budgets": {
+          "max_file_bytes": 65536,
+          "max_total_bytes": 225
+        }
+      },
+      "runtime_flags": [
+        "--rc-runtime"
+      ]
+    },
+    {
+      "case": "same module literal deduplicates at exact cap",
+      "module_status": 0,
+      "whole_status": 0,
+      "module_build": {
+        "modules": 2,
+        "compiled": 2,
+        "reused": 0,
+        "arenas": false
+      },
+      "executable_sha256": "0a59b1b5e6427d0963410c54b837802b6dbbddc5c74338385c2b12a03f721d4e",
+      "asset_status": "025724f1c9f0e5cca4daa8a6ea2fd6c9a2a905c5a453f815fcccafc7bda6453d",
+      "policy": {
+        "version": 1,
+        "budgets": {
+          "max_file_bytes": 65536,
+          "max_total_bytes": 278
+        }
+      },
+      "runtime_flags": [
+        "--rc-runtime"
+      ]
+    },
+    {
+      "case": "two semantic module identities cannot share one charge",
+      "module_status": 1,
+      "whole_status": 1,
+      "asset_status": "025724f1c9f0e5cca4daa8a6ea2fd6c9a2a905c5a453f815fcccafc7bda6453d",
+      "policy": {
+        "version": 1,
+        "budgets": {
+          "max_file_bytes": 65536,
+          "max_total_bytes": 382
+        }
+      },
+      "runtime_flags": [
+        "--rc-runtime"
+      ]
+    },
+    {
+      "case": "two semantic identities accepted at source plus sixteen",
+      "module_status": 0,
+      "whole_status": 0,
+      "module_build": {
+        "modules": 3,
+        "compiled": 2,
+        "reused": 1,
+        "arenas": false
+      },
+      "executable_sha256": "a0b4e48430a930d033bc67cb002e3cd5769b225ecc45838522a60ad1816f12f6",
+      "asset_status": "025724f1c9f0e5cca4daa8a6ea2fd6c9a2a905c5a453f815fcccafc7bda6453d",
+      "policy": {
+        "version": 1,
+        "budgets": {
+          "max_file_bytes": 65536,
+          "max_total_bytes": 390
+        }
+      },
+      "runtime_flags": [
+        "--rc-runtime"
+      ]
+    },
+    {
+      "case": "embed individual cap refuses before allocation",
+      "module_status": 1,
+      "whole_status": 1,
+      "asset_status": "775f7603623dbfc29515570454f4fb48d0cba918caba7e1411cb7b53b0107034",
+      "policy": {
+        "version": 1,
+        "budgets": {
+          "max_file_bytes": 2048,
+          "max_total_bytes": 4472
+        }
+      },
+      "runtime_flags": [
+        "--rc-runtime"
+      ]
+    },
+    {
+      "case": "restore after individual cap refusal",
+      "module_status": 0,
+      "whole_status": 0,
+      "module_build": {
+        "modules": 3,
+        "compiled": 0,
+        "reused": 3,
+        "arenas": false
+      },
+      "executable_sha256": "a0b4e48430a930d033bc67cb002e3cd5769b225ecc45838522a60ad1816f12f6",
+      "asset_status": "025724f1c9f0e5cca4daa8a6ea2fd6c9a2a905c5a453f815fcccafc7bda6453d",
+      "policy": {
+        "version": 1,
+        "budgets": {
+          "max_file_bytes": 65536,
+          "max_total_bytes": 390
+        }
+      },
+      "runtime_flags": [
+        "--rc-runtime"
+      ]
+    },
+    {
+      "case": "partition gc",
+      "module_status": 0,
+      "whole_status": 0,
+      "module_build": {
+        "modules": 3,
+        "compiled": 3,
+        "reused": 0,
+        "arenas": false
+      },
+      "executable_sha256": "7cd4338e408c9f85d151a69bb68b3746c88ae803a9e675fc5d3218d547cc0db6",
+      "asset_status": "025724f1c9f0e5cca4daa8a6ea2fd6c9a2a905c5a453f815fcccafc7bda6453d",
+      "policy": {
+        "version": 1,
+        "budgets": {
+          "max_file_bytes": 65536,
+          "max_total_bytes": 390
+        }
+      },
+      "runtime_flags": [
+        "--gc-runtime"
+      ]
+    },
+    {
+      "case": "warm partition gc",
+      "module_status": 0,
+      "whole_status": 0,
+      "module_build": {
+        "modules": 3,
+        "compiled": 0,
+        "reused": 3,
+        "arenas": false
+      },
+      "executable_sha256": "7cd4338e408c9f85d151a69bb68b3746c88ae803a9e675fc5d3218d547cc0db6",
+      "asset_status": "025724f1c9f0e5cca4daa8a6ea2fd6c9a2a905c5a453f815fcccafc7bda6453d",
+      "policy": {
+        "version": 1,
+        "budgets": {
+          "max_file_bytes": 65536,
+          "max_total_bytes": 390
+        }
+      },
+      "runtime_flags": [
+        "--gc-runtime"
+      ]
+    },
+    {
+      "case": "partition stats",
+      "module_status": 0,
+      "whole_status": 0,
+      "module_build": {
+        "modules": 3,
+        "compiled": 3,
+        "reused": 0,
+        "arenas": false
+      },
+      "executable_sha256": "fa60a584814294f9b328c3f2b1946bcd1eba2ebbd107dd389bd07f7bf301414a",
+      "asset_status": "025724f1c9f0e5cca4daa8a6ea2fd6c9a2a905c5a453f815fcccafc7bda6453d",
+      "policy": {
+        "version": 1,
+        "budgets": {
+          "max_file_bytes": 65536,
+          "max_total_bytes": 390
+        }
+      },
+      "runtime_flags": [
+        "--rc-runtime=stats"
+      ]
+    },
+    {
+      "case": "warm partition stats",
+      "module_status": 0,
+      "whole_status": 0,
+      "module_build": {
+        "modules": 3,
+        "compiled": 0,
+        "reused": 3,
+        "arenas": false
+      },
+      "executable_sha256": "fa60a584814294f9b328c3f2b1946bcd1eba2ebbd107dd389bd07f7bf301414a",
+      "asset_status": "025724f1c9f0e5cca4daa8a6ea2fd6c9a2a905c5a453f815fcccafc7bda6453d",
+      "policy": {
+        "version": 1,
+        "budgets": {
+          "max_file_bytes": 65536,
+          "max_total_bytes": 390
+        }
+      },
+      "runtime_flags": [
+        "--rc-runtime=stats"
+      ]
+    },
+    {
+      "case": "partition sites",
+      "module_status": 0,
+      "whole_status": 0,
+      "module_build": {
+        "modules": 3,
+        "compiled": 3,
+        "reused": 0,
+        "arenas": false
+      },
+      "executable_sha256": "c26b2e7e6420afd7bad8c7d74cbf3f6cb077a9b52f4699ace426f3fc25be3884",
+      "asset_status": "025724f1c9f0e5cca4daa8a6ea2fd6c9a2a905c5a453f815fcccafc7bda6453d",
+      "policy": {
+        "version": 1,
+        "budgets": {
+          "max_file_bytes": 65536,
+          "max_total_bytes": 390
+        }
+      },
+      "runtime_flags": [
+        "--rc-runtime=sites"
+      ]
+    },
+    {
+      "case": "warm partition sites",
+      "module_status": 0,
+      "whole_status": 0,
+      "module_build": {
+        "modules": 3,
+        "compiled": 0,
+        "reused": 3,
+        "arenas": false
+      },
+      "executable_sha256": "c26b2e7e6420afd7bad8c7d74cbf3f6cb077a9b52f4699ace426f3fc25be3884",
+      "asset_status": "025724f1c9f0e5cca4daa8a6ea2fd6c9a2a905c5a453f815fcccafc7bda6453d",
+      "policy": {
+        "version": 1,
+        "budgets": {
+          "max_file_bytes": 65536,
+          "max_total_bytes": 390
+        }
+      },
+      "runtime_flags": [
+        "--rc-runtime=sites"
+      ]
+    },
+    {
+      "case": "partition legacy-sharing",
+      "module_status": 0,
+      "whole_status": 0,
+      "module_build": {
+        "modules": 3,
+        "compiled": 3,
+        "reused": 0,
+        "arenas": false
+      },
+      "executable_sha256": "7cd4338e408c9f85d151a69bb68b3746c88ae803a9e675fc5d3218d547cc0db6",
+      "asset_status": "025724f1c9f0e5cca4daa8a6ea2fd6c9a2a905c5a453f815fcccafc7bda6453d",
+      "policy": {
+        "version": 1,
+        "budgets": {
+          "max_file_bytes": 65536,
+          "max_total_bytes": 390
+        }
+      },
+      "runtime_flags": [
+        "--legacy-sharing"
+      ]
+    },
+    {
+      "case": "warm partition legacy-sharing",
+      "module_status": 0,
+      "whole_status": 0,
+      "module_build": {
+        "modules": 3,
+        "compiled": 0,
+        "reused": 3,
+        "arenas": false
+      },
+      "executable_sha256": "7cd4338e408c9f85d151a69bb68b3746c88ae803a9e675fc5d3218d547cc0db6",
+      "asset_status": "025724f1c9f0e5cca4daa8a6ea2fd6c9a2a905c5a453f815fcccafc7bda6453d",
+      "policy": {
+        "version": 1,
+        "budgets": {
+          "max_file_bytes": 65536,
+          "max_total_bytes": 390
+        }
+      },
+      "runtime_flags": [
+        "--legacy-sharing"
+      ]
+    },
+    {
+      "case": "partition rc",
+      "module_status": 0,
+      "whole_status": 0,
+      "module_build": {
+        "modules": 3,
+        "compiled": 0,
+        "reused": 3,
+        "arenas": false
+      },
+      "executable_sha256": "a0b4e48430a930d033bc67cb002e3cd5769b225ecc45838522a60ad1816f12f6",
+      "asset_status": "025724f1c9f0e5cca4daa8a6ea2fd6c9a2a905c5a453f815fcccafc7bda6453d",
+      "policy": {
+        "version": 1,
+        "budgets": {
+          "max_file_bytes": 65536,
+          "max_total_bytes": 390
+        }
+      },
+      "runtime_flags": [
+        "--rc-runtime"
+      ]
+    },
+    {
+      "case": "warm partition rc",
+      "module_status": 0,
+      "whole_status": 0,
+      "module_build": {
+        "modules": 3,
+        "compiled": 0,
+        "reused": 3,
+        "arenas": false
+      },
+      "executable_sha256": "a0b4e48430a930d033bc67cb002e3cd5769b225ecc45838522a60ad1816f12f6",
+      "asset_status": "025724f1c9f0e5cca4daa8a6ea2fd6c9a2a905c5a453f815fcccafc7bda6453d",
+      "policy": {
+        "version": 1,
+        "budgets": {
+          "max_file_bytes": 65536,
+          "max_total_bytes": 390
+        }
+      },
+      "runtime_flags": [
+        "--rc-runtime"
+      ]
+    }
+  ],
+  "source_original": "573ce9a4d14f1a515f0454961b70311c280bafdc",
+  "source_binding": "Original source label accidentally retained the suffix of an earlier hash when its short prefix was replaced. Actual compiler SHA matches frozen 573 corpus/RC/state receipts. Raw original is preserved in raw-receipts.tar.gz."
+}

@@ -1,0 +1,655 @@
+{
+  "fixture": {
+    "sha256": "fe3dcb39ca633c8688b38ab7d0439ec44c906542578f3598f9377fce03dfcdbb",
+    "files": 481,
+    "lines": 242445,
+    "bytes": 6945618
+  },
+  "cpus": "2,3,10,11",
+  "protocol": "admission and edits outside clock; successful-only samples; independent caches; alternating first side; seeder settled before warm samples",
+  "samples": 7,
+  "load_start": "12.83 14.03 13.37 11/1958 1264592\n",
+  "sides": {
+    "control": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-modules-20260929/.tmp/b2/control-80dd-rf/bin/mylang",
+        "check",
+        "main.my",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/codex-next-modules-20260929/.tmp/b2/scale-interleaved-a3fb19/control/cache"
+      ],
+      "compiler_sha256": "747e9584d0eb15afeaf75c6c3d63bce5d1775edbefaa43ad5c7a5753590e9d0c",
+      "revision": "80dd51906c97ae76bf208474ac48c9baac3a11cd"
+    },
+    "candidate": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-modules-20260929/.tmp/b2/frozen-a3fb19-rf/bin/mylang",
+        "check",
+        "main.my",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/codex-next-modules-20260929/.tmp/b2/scale-interleaved-a3fb19/candidate/cache"
+      ],
+      "compiler_sha256": "4416bd5991ad771a74d559db8723ce0ba0e7fbda4ff97223e688d7e5c9582e9d",
+      "revision": "a3fb19fcf8bbe59ee72266a7fce96093b52d8b84"
+    }
+  },
+  "cold": {
+    "control": {
+      "seconds": 2.667733,
+      "status": 0,
+      "max_rss_kib": 926312,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_records": 0,
+      "project_states": 0
+    },
+    "candidate": {
+      "seconds": 3.06153,
+      "status": 0,
+      "max_rss_kib": 926228,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_records": 254,
+      "project_states": 0
+    }
+  },
+  "phases": {
+    "noop": {
+      "pairs": [
+        {
+          "order": [
+            "control",
+            "candidate"
+          ],
+          "load": "13.01 14.03 13.37 13/1972 1271104\n",
+          "control": {
+            "seconds": 0.111032,
+            "status": 0,
+            "max_rss_kib": 20968,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 0,
+            "project_states": 0
+          },
+          "candidate": {
+            "seconds": 0.117835,
+            "status": 0,
+            "max_rss_kib": 21836,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 0,
+            "project_states": 1
+          }
+        },
+        {
+          "order": [
+            "candidate",
+            "control"
+          ],
+          "load": "13.01 14.03 13.37 12/1965 1271347\n",
+          "candidate": {
+            "seconds": 0.132136,
+            "status": 0,
+            "max_rss_kib": 21844,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 0,
+            "project_states": 1
+          },
+          "control": {
+            "seconds": 0.112316,
+            "status": 0,
+            "max_rss_kib": 20968,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 0,
+            "project_states": 0
+          }
+        },
+        {
+          "order": [
+            "control",
+            "candidate"
+          ],
+          "load": "13.01 14.03 13.37 13/1968 1271591\n",
+          "control": {
+            "seconds": 0.109704,
+            "status": 0,
+            "max_rss_kib": 20968,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 0,
+            "project_states": 0
+          },
+          "candidate": {
+            "seconds": 0.122617,
+            "status": 0,
+            "max_rss_kib": 21840,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 0,
+            "project_states": 1
+          }
+        },
+        {
+          "order": [
+            "candidate",
+            "control"
+          ],
+          "load": "13.01 14.03 13.37 13/1979 1271743\n",
+          "candidate": {
+            "seconds": 0.123591,
+            "status": 0,
+            "max_rss_kib": 21840,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 0,
+            "project_states": 1
+          },
+          "control": {
+            "seconds": 0.10989,
+            "status": 0,
+            "max_rss_kib": 20968,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 0,
+            "project_states": 0
+          }
+        },
+        {
+          "order": [
+            "control",
+            "candidate"
+          ],
+          "load": "13.01 14.03 13.37 13/1965 1271870\n",
+          "control": {
+            "seconds": 0.111533,
+            "status": 0,
+            "max_rss_kib": 20968,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 0,
+            "project_states": 0
+          },
+          "candidate": {
+            "seconds": 0.124025,
+            "status": 0,
+            "max_rss_kib": 21836,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 0,
+            "project_states": 1
+          }
+        },
+        {
+          "order": [
+            "candidate",
+            "control"
+          ],
+          "load": "13.01 14.03 13.37 11/1946 1272033\n",
+          "candidate": {
+            "seconds": 0.12212,
+            "status": 0,
+            "max_rss_kib": 21840,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 0,
+            "project_states": 1
+          },
+          "control": {
+            "seconds": 0.110438,
+            "status": 0,
+            "max_rss_kib": 20968,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 0,
+            "project_states": 0
+          }
+        },
+        {
+          "order": [
+            "control",
+            "candidate"
+          ],
+          "load": "13.01 14.03 13.37 12/1944 1272055\n",
+          "control": {
+            "seconds": 0.109588,
+            "status": 0,
+            "max_rss_kib": 20968,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 0,
+            "project_states": 0
+          },
+          "candidate": {
+            "seconds": 0.138586,
+            "status": 0,
+            "max_rss_kib": 21840,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 0,
+            "project_states": 1
+          }
+        }
+      ],
+      "control": {
+        "minimum_seconds": 0.109588,
+        "median_seconds": 0.110438,
+        "seconds": [
+          0.111032,
+          0.112316,
+          0.109704,
+          0.10989,
+          0.111533,
+          0.110438,
+          0.109588
+        ]
+      },
+      "candidate": {
+        "minimum_seconds": 0.117835,
+        "median_seconds": 0.123591,
+        "seconds": [
+          0.117835,
+          0.132136,
+          0.122617,
+          0.123591,
+          0.124025,
+          0.12212,
+          0.138586
+        ]
+      }
+    },
+    "body": {
+      "pairs": [
+        {
+          "order": [
+            "control",
+            "candidate"
+          ],
+          "load": "13.01 14.03 13.37 45/1992 1272227\n",
+          "control": {
+            "seconds": 0.771586,
+            "status": 0,
+            "max_rss_kib": 458476,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 0,
+            "project_states": 0
+          },
+          "candidate": {
+            "seconds": 0.164084,
+            "status": 0,
+            "max_rss_kib": 21844,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 2,
+            "project_states": 1
+          }
+        },
+        {
+          "order": [
+            "candidate",
+            "control"
+          ],
+          "load": "13.01 14.03 13.37 15/1947 1272837\n",
+          "candidate": {
+            "seconds": 0.148395,
+            "status": 0,
+            "max_rss_kib": 21844,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 1,
+            "project_states": 1
+          },
+          "control": {
+            "seconds": 0.709119,
+            "status": 0,
+            "max_rss_kib": 458508,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 0,
+            "project_states": 0
+          }
+        },
+        {
+          "order": [
+            "control",
+            "candidate"
+          ],
+          "load": "13.09 14.03 13.38 12/1966 1273206\n",
+          "control": {
+            "seconds": 0.755806,
+            "status": 0,
+            "max_rss_kib": 458504,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 0,
+            "project_states": 0
+          },
+          "candidate": {
+            "seconds": 0.130231,
+            "status": 0,
+            "max_rss_kib": 21708,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 1,
+            "project_states": 1
+          }
+        },
+        {
+          "order": [
+            "candidate",
+            "control"
+          ],
+          "load": "13.09 14.03 13.38 9/1966 1273626\n",
+          "candidate": {
+            "seconds": 0.138051,
+            "status": 0,
+            "max_rss_kib": 21708,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 1,
+            "project_states": 1
+          },
+          "control": {
+            "seconds": 0.742301,
+            "status": 0,
+            "max_rss_kib": 458508,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 0,
+            "project_states": 0
+          }
+        },
+        {
+          "order": [
+            "control",
+            "candidate"
+          ],
+          "load": "13.09 14.03 13.38 12/1971 1274125\n",
+          "control": {
+            "seconds": 0.762439,
+            "status": 0,
+            "max_rss_kib": 458504,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 0,
+            "project_states": 0
+          },
+          "candidate": {
+            "seconds": 0.134826,
+            "status": 0,
+            "max_rss_kib": 21704,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 1,
+            "project_states": 1
+          }
+        },
+        {
+          "order": [
+            "candidate",
+            "control"
+          ],
+          "load": "13.09 14.03 13.38 15/1968 1274864\n",
+          "candidate": {
+            "seconds": 0.147173,
+            "status": 0,
+            "max_rss_kib": 21708,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 1,
+            "project_states": 1
+          },
+          "control": {
+            "seconds": 0.716999,
+            "status": 0,
+            "max_rss_kib": 458180,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 0,
+            "project_states": 0
+          }
+        },
+        {
+          "order": [
+            "control",
+            "candidate"
+          ],
+          "load": "13.09 14.03 13.38 11/1976 1275149\n",
+          "control": {
+            "seconds": 0.707442,
+            "status": 0,
+            "max_rss_kib": 458176,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 0,
+            "project_states": 0
+          },
+          "candidate": {
+            "seconds": 0.141902,
+            "status": 0,
+            "max_rss_kib": 21708,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 1,
+            "project_states": 1
+          }
+        }
+      ],
+      "control": {
+        "minimum_seconds": 0.707442,
+        "median_seconds": 0.742301,
+        "seconds": [
+          0.771586,
+          0.709119,
+          0.755806,
+          0.742301,
+          0.762439,
+          0.716999,
+          0.707442
+        ]
+      },
+      "candidate": {
+        "minimum_seconds": 0.130231,
+        "median_seconds": 0.141902,
+        "seconds": [
+          0.164084,
+          0.148395,
+          0.130231,
+          0.138051,
+          0.134826,
+          0.147173,
+          0.141902
+        ]
+      }
+    },
+    "interface": {
+      "pairs": [
+        {
+          "order": [
+            "control",
+            "candidate"
+          ],
+          "load": "13.09 14.03 13.38 22/1990 1275498\n",
+          "control": {
+            "seconds": 0.709768,
+            "status": 0,
+            "max_rss_kib": 457952,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 0,
+            "project_states": 0
+          },
+          "candidate": {
+            "seconds": 0.142362,
+            "status": 0,
+            "max_rss_kib": 21704,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 2,
+            "project_states": 1
+          }
+        },
+        {
+          "order": [
+            "candidate",
+            "control"
+          ],
+          "load": "13.00 13.99 13.37 12/1962 1275807\n",
+          "candidate": {
+            "seconds": 0.14207,
+            "status": 0,
+            "max_rss_kib": 21704,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 2,
+            "project_states": 1
+          },
+          "control": {
+            "seconds": 0.697323,
+            "status": 0,
+            "max_rss_kib": 457940,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 0,
+            "project_states": 0
+          }
+        },
+        {
+          "order": [
+            "control",
+            "candidate"
+          ],
+          "load": "13.00 13.99 13.37 17/1974 1275997\n",
+          "control": {
+            "seconds": 0.809814,
+            "status": 0,
+            "max_rss_kib": 457960,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 0,
+            "project_states": 0
+          },
+          "candidate": {
+            "seconds": 0.234288,
+            "status": 0,
+            "max_rss_kib": 21648,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 2,
+            "project_states": 1
+          }
+        },
+        {
+          "order": [
+            "candidate",
+            "control"
+          ],
+          "load": "13.00 13.99 13.37 13/1978 1276548\n",
+          "candidate": {
+            "seconds": 0.139487,
+            "status": 0,
+            "max_rss_kib": 21652,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 2,
+            "project_states": 1
+          },
+          "control": {
+            "seconds": 0.678033,
+            "status": 0,
+            "max_rss_kib": 458076,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 0,
+            "project_states": 0
+          }
+        },
+        {
+          "order": [
+            "control",
+            "candidate"
+          ],
+          "load": "13.00 13.99 13.37 13/1954 1276780\n",
+          "control": {
+            "seconds": 0.794746,
+            "status": 0,
+            "max_rss_kib": 457968,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 0,
+            "project_states": 0
+          },
+          "candidate": {
+            "seconds": 0.149686,
+            "status": 0,
+            "max_rss_kib": 21584,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 2,
+            "project_states": 1
+          }
+        },
+        {
+          "order": [
+            "candidate",
+            "control"
+          ],
+          "load": "13.00 13.99 13.37 13/1955 1277043\n",
+          "candidate": {
+            "seconds": 0.146014,
+            "status": 0,
+            "max_rss_kib": 21584,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 2,
+            "project_states": 1
+          },
+          "control": {
+            "seconds": 0.667853,
+            "status": 0,
+            "max_rss_kib": 457856,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 0,
+            "project_states": 0
+          }
+        },
+        {
+          "order": [
+            "control",
+            "candidate"
+          ],
+          "load": "12.92 13.96 13.36 12/1952 1277261\n",
+          "control": {
+            "seconds": 0.698939,
+            "status": 0,
+            "max_rss_kib": 457856,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 0,
+            "project_states": 0
+          },
+          "candidate": {
+            "seconds": 0.157049,
+            "status": 0,
+            "max_rss_kib": 21584,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compiled_records": 2,
+            "project_states": 1
+          }
+        }
+      ],
+      "control": {
+        "minimum_seconds": 0.667853,
+        "median_seconds": 0.698939,
+        "seconds": [
+          0.709768,
+          0.697323,
+          0.809814,
+          0.678033,
+          0.794746,
+          0.667853,
+          0.698939
+        ]
+      },
+      "candidate": {
+        "minimum_seconds": 0.139487,
+        "median_seconds": 0.146014,
+        "seconds": [
+          0.142362,
+          0.14207,
+          0.234288,
+          0.139487,
+          0.149686,
+          0.146014,
+          0.157049
+        ]
+      }
+    }
+  },
+  "candidate_seed_seconds": 2.213248,
+  "final_fixture_identity": {
+    "control": {
+      "sha256": "5ee3285ef68650f9f9a378c0792773260a251b2a4c105de61daeb4d41975314a",
+      "files": 481,
+      "lines": 242473,
+      "bytes": 6946018
+    },
+    "candidate": {
+      "sha256": "5ee3285ef68650f9f9a378c0792773260a251b2a4c105de61daeb4d41975314a",
+      "files": 481,
+      "lines": 242473,
+      "bytes": 6946018
+    }
+  },
+  "profiles": {
+    "control": {
+      "status": 0,
+      "strace": "% time     seconds  usecs/call     calls    errors syscall\n------ ----------- ----------- --------- --------- ------------------\n 51.66    0.000699           1       483           preadv\n 17.66    0.000239           0       491           openat\n 13.82    0.000187           0       533        48 statx\n 12.34    0.000167           0       491           close\n  3.25    0.000044           0        61           munmap\n  0.96    0.000013           1         7           readlink\n  0.15    0.000002           2         1           utimensat\n  0.07    0.000001           0        77           mmap\n  0.07    0.000001           0         8           rt_sigaction\n  0.00    0.000000           0         3           execve\n  0.00    0.000000           0         3           sigaltstack\n  0.00    0.000000           0         3           arch_prctl\n  0.00    0.000000           0         6           sched_getaffinity\n  0.00    0.000000           0         8           prlimit64\n------ ----------- ----------- --------- --------- ------------------\n100.00    0.001353           0      2175        48 total\n",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "candidate": {
+      "status": 0,
+      "strace": "% time     seconds  usecs/call     calls    errors syscall\n------ ----------- ----------- --------- --------- ------------------\n 23.04    0.000996          12        79           munmap\n 20.93    0.000905         452         2           renameat\n 19.71    0.000852           1       492           preadv\n  8.21    0.000355           0       499           openat\n  6.73    0.000291          97         3           execve\n  6.13    0.000265           0       527        36 statx\n  5.07    0.000219           0       499           close\n  3.26    0.000141           1        81           mmap\n  2.75    0.000119          59         2           writev\n  1.27    0.000055           9         6         2 unlinkat\n  1.06    0.000046           5         8         4 mkdirat\n  0.39    0.000017           2         6           readlink\n  0.30    0.000013           1         8           rt_sigaction\n  0.30    0.000013           3         4           getdents64\n  0.28    0.000012           1        12           prlimit64\n  0.23    0.000010           1         7           sched_getaffinity\n  0.14    0.000006           3         2           flock\n  0.09    0.000004           1         3           sigaltstack\n  0.09    0.000004           1         3           arch_prctl\n  0.00    0.000000           0         1           getrandom\n------ ----------- ----------- --------- --------- ------------------\n100.00    0.004323           1      2244        42 total\n",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "load_end": "12.92 13.96 13.36 22/1967 1277600\n"
+}
