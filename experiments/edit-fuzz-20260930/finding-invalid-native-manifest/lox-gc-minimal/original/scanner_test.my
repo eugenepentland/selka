@@ -1,0 +1,126 @@
+module scanner_test
+# SPEC §11.2 tests 1-11.
+import scanner
+
+
+def scan_all(source: bytes) -> list[scanner.Token]:
+    lexer = scanner.new_scanner(source)
+    tokens: list[scanner.Token] = []
+    while True:
+        token = scanner.scan_token(mut lexer)
+        tokens.append(token)
+        if token.kind == scanner.TokenKind.EOF:
+            return tokens
+
+
+def kinds(source: bytes) -> list[scanner.TokenKind]:
+    return [token.kind for token in scan_all(source)]
+
+
+def lexemes(source: bytes) -> list[bytes]:
+    return [scanner.lexeme(source, token).copy() for token in scan_all(source)]
+
+
+public def test_scan_empty_source() -> bool:
+    tokens = scan_all(b"")
+    return len(tokens) == 1 and tokens[0].kind == scanner.TokenKind.EOF and tokens[0].line == 1
+
+
+public def test_scan_single_char_tokens() -> bool:
+    expected = [
+        scanner.TokenKind.LEFT_PAREN,
+        scanner.TokenKind.RIGHT_PAREN,
+        scanner.TokenKind.LEFT_BRACE,
+        scanner.TokenKind.RIGHT_BRACE,
+        scanner.TokenKind.SEMICOLON,
+        scanner.TokenKind.COMMA,
+        scanner.TokenKind.PLUS,
+        scanner.TokenKind.MINUS,
+        scanner.TokenKind.STAR,
+        scanner.TokenKind.SLASH,
+        scanner.TokenKind.DOT,
+        scanner.TokenKind.BANG,
+        scanner.TokenKind.EOF
+    ]
+    return kinds(b"(){};,+-*/.!") == expected
+
+
+public def test_scan_two_char_tokens() -> bool:
+    expected = [
+        scanner.TokenKind.BANG_EQUAL,
+        scanner.TokenKind.EQUAL_EQUAL,
+        scanner.TokenKind.LESS_EQUAL,
+        scanner.TokenKind.GREATER_EQUAL,
+        scanner.TokenKind.LESS,
+        scanner.TokenKind.GREATER,
+        scanner.TokenKind.EQUAL,
+        scanner.TokenKind.BANG,
+        scanner.TokenKind.EOF
+    ]
+    return kinds(b"!= == <= >= < > = !") == expected
+
+
+public def test_scan_keywords() -> bool:
+    expected = [
+        scanner.TokenKind.AND,
+        scanner.TokenKind.CLASS,
+        scanner.TokenKind.ELSE,
+        scanner.TokenKind.FALSE,
+        scanner.TokenKind.FOR,
+        scanner.TokenKind.FUN,
+        scanner.TokenKind.IF,
+        scanner.TokenKind.NIL,
+        scanner.TokenKind.OR,
+        scanner.TokenKind.PRINT,
+        scanner.TokenKind.RETURN,
+        scanner.TokenKind.SUPER,
+        scanner.TokenKind.THIS,
+        scanner.TokenKind.TRUE,
+        scanner.TokenKind.VAR,
+        scanner.TokenKind.WHILE,
+        scanner.TokenKind.EOF
+    ]
+    return kinds(b"and class else false for fun if nil or print return super this true var while") == expected
+
+
+public def test_scan_identifiers() -> bool:
+    source = b"andy _x x1 classy"
+    identifier = scanner.TokenKind.IDENTIFIER
+    expected_kinds = [identifier, identifier, identifier, identifier, scanner.TokenKind.EOF]
+    expected_lexemes: list[bytes] = [b"andy", b"_x", b"x1", b"classy", b""]
+    return kinds(source) == expected_kinds and lexemes(source) == expected_lexemes
+
+
+public def test_scan_numbers() -> bool:
+    source = b"123 45.67 8."
+    number = scanner.TokenKind.NUMBER
+    expected_kinds = [number, number, number, scanner.TokenKind.DOT, scanner.TokenKind.EOF]
+    expected_lexemes: list[bytes] = [b"123", b"45.67", b"8", b".", b""]
+    return kinds(source) == expected_kinds and lexemes(source) == expected_lexemes
+
+
+public def test_scan_string() -> bool:
+    source = b"\"hi there\""
+    tokens = scan_all(source)
+    return tokens[0].kind == scanner.TokenKind.STRING and scanner.lexeme(source, tokens[0]) == b"\"hi there\"" and tokens[1].kind == scanner.TokenKind.EOF
+
+
+public def test_scan_multiline_string_line() -> bool:
+    tokens = scan_all(b"\"a\nb\" x")
+    return tokens[0].kind == scanner.TokenKind.STRING and tokens[0].line == 2 and tokens[1].kind == scanner.TokenKind.IDENTIFIER and tokens[1].line == 2
+
+
+public def test_scan_unterminated_string() -> bool:
+    tokens = scan_all(b"\"abc")
+    return len(tokens) == 2 and tokens[0].kind == scanner.TokenKind.ERROR and tokens[0].message == b"Unterminated string." and tokens[1].kind == scanner.TokenKind.EOF
+
+
+public def test_scan_unexpected_character() -> bool:
+    tokens = scan_all(b"@")
+    return tokens[0].kind == scanner.TokenKind.ERROR and tokens[0].message == b"Unexpected character."
+
+
+public def test_scan_comments_and_lines() -> bool:
+    source = b"// c\nx // d\n\ny"
+    tokens = scan_all(source)
+    return len(tokens) == 3 and scanner.lexeme(source, tokens[0]) == b"x" and tokens[0].line == 2 and scanner.lexeme(source, tokens[1]) == b"y" and tokens[1].line == 4 and tokens[2].kind == scanner.TokenKind.EOF and tokens[2].line == 4

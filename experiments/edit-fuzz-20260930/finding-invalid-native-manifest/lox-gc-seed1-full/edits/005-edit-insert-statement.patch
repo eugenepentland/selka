@@ -1,0 +1,11 @@
+--- a/interpreter.my
++++ b/interpreter.my
+@@ -41,6 +41,8 @@
+ 
+ 
+ def fail(message: bytes, line: int) -> RuntimeError:
++    fz_v3 = 3
++    _ = fz_v3 + 1
+     return RuntimeError(message=message, line=line)
+ 
+ 

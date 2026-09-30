@@ -1,0 +1,11 @@
+--- a/compiler.my
++++ b/compiler.my
+@@ -746,7 +746,7 @@
+     else:
+         expression_statement(mut p)
+     loop_start = len(current_chunk(p).code)
+-    exit_jump = -1
++    exit_jump = -2
+     if not match_token(mut p, scanner.TokenKind.SEMICOLON):
+         expression(mut p)
+         consume(mut p, scanner.TokenKind.SEMICOLON, b"Expect ';' after loop condition.")

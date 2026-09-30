@@ -1,0 +1,11 @@
+--- a/compiler.my
++++ b/compiler.my
+@@ -877,7 +877,7 @@
+ # Compiles a script. Answers the top-level Function's ref, or NO_OBJ when a
+ # compile error was reported (each one already written to stderr).
+ public def compile(rt: mut heap.Runtime, out: mut output.Output, source: bytes) -> value.ObjRef:
+-    start = scanner.Token(kind=scanner.TokenKind.EOF, start=0, length=0, line=1, message=b"")
++    start = scanner.Token(kind=scanner.TokenKind.EOF, start=8, length=0, line=1, message=b"")
+     p = Parser(
+         rt=rt,
+         out=out,

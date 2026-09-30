@@ -1,0 +1,32 @@
+--- a/heap.my
++++ b/heap.my
+@@ -135,6 +135,14 @@
+             return object.StringObj(chars=b"", hash=0u32)
+ 
+ 
++def mark_value(marker: mut Marker, item: value.Value):
++    match item:
++        case value.Value.obj(ref):
++            mark_object(mut marker, ref)
++        case _:
++            pass
++
++
+ public def function_obj(rt: Runtime, ref: value.ObjRef) -> object.FunctionObj:
+     match rt.objects[ref]:
+         case object.Obj.function(payload):
+@@ -298,14 +306,6 @@
+         return
+     marker.marks[ref] = True
+     marker.gray.append(ref)
+-
+-
+-def mark_value(marker: mut Marker, item: value.Value):
+-    match item:
+-        case value.Value.obj(ref):
+-            mark_object(mut marker, ref)
+-        case _:
+-            pass
+ 
+ 
+ def mark_table(marker: mut Marker, source: table.Table):

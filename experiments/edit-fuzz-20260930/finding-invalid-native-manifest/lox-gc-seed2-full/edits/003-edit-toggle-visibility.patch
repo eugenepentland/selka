@@ -1,0 +1,11 @@
+--- a/parser.my
++++ b/parser.my
+@@ -502,7 +502,7 @@
+     return Some(p.program)
+ 
+ 
+-def fz_fn_2(n: int) -> int:
++public def fz_fn_2(n: int) -> int:
+     if n > 27:
+         return n - 27
+     return n

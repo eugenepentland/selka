@@ -1,0 +1,12 @@
+--- a/scanner.my
++++ b/scanner.my
+@@ -126,6 +126,9 @@
+ 
+ def error_token(s: Scanner, message: bytes) -> Token:
+     return Token(kind=TokenKind.ERROR, start=s.start, length=0, line=s.line, message=message)
++
++
++const FZ_C_7: int = 11
+ 
+ 
+ def skip_whitespace(s: mut Scanner):

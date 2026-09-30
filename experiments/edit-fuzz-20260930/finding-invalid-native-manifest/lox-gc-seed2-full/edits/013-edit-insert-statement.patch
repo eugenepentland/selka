@@ -1,0 +1,11 @@
+--- a/compiler.my
++++ b/compiler.my
+@@ -626,6 +626,8 @@
+     while precedence <= precedence_of(p.current.kind):
+         advance(mut p)
+         infix_rule(mut p, p.previous.kind, can_assign)
++    fz_v5 = 9
++    _ = fz_v5 + 1
+     if can_assign and match_token(mut p, scanner.TokenKind.EQUAL):
+         error(mut p, b"Invalid assignment target.")
+ 

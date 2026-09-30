@@ -1,0 +1,12 @@
+--- a/compiler.my
++++ b/compiler.my
+@@ -543,7 +543,8 @@
+         case scanner.TokenKind.DOT:
+             return PREC_CALL
+         case scanner.TokenKind.MINUS:
+-            return PREC_TERM
++            fz_r1 = PREC_TERM
++            return fz_r1
+         case scanner.TokenKind.PLUS:
+             return PREC_TERM
+         case scanner.TokenKind.SLASH:

@@ -1,0 +1,118 @@
+{
+ "header": {
+  "seed": 3,
+  "project_kind": "lox",
+  "gc_runtime": true,
+  "compiler": "/home/epentland/ai/canopy/mylang-worktrees/claude-py-text/.tmp/rf-symbol/bin/mylang"
+ },
+ "timeline": [
+  {
+   "label": "edit",
+   "kind": "int-literal",
+   "desc": "compile: 0 -> 8",
+   "step": 1
+  },
+  {
+   "label": "edit",
+   "kind": "wrap-return",
+   "desc": "compile: wrap return",
+   "step": 2
+  },
+  {
+   "label": "edit",
+   "kind": "int-literal",
+   "desc": "patch_jump: 1 -> 2",
+   "step": 3
+  },
+  {
+   "label": "edit",
+   "kind": "drop-record-field",
+   "desc": "record ThisExpr: drop `keyword: scanner.Token`",
+   "step": 4
+  },
+  {
+   "label": "revert",
+   "kind": "drop-record-field",
+   "desc": "revert record ThisExpr: drop `keyword: scanner.Token`",
+   "step": 4
+  },
+  {
+   "label": "edit",
+   "kind": "add-public-fn",
+   "desc": "add public fz_fn_2",
+   "step": 5
+  },
+  {
+   "label": "edit",
+   "kind": "add-required-param",
+   "desc": "string_hash: add required fz_rq3",
+   "step": 6
+  },
+  {
+   "label": "revert",
+   "kind": "add-required-param",
+   "desc": "revert string_hash: add required fz_rq3",
+   "step": 6
+  },
+  {
+   "label": "edit",
+   "kind": "remove-added",
+   "desc": "remove fz_fn_2 and 0 use(s)",
+   "step": 7
+  },
+  {
+   "label": "edit",
+   "kind": "move-function",
+   "desc": "move mark_value",
+   "step": 8
+  },
+  {
+   "label": "edit",
+   "kind": "int-literal",
+   "desc": "instantiate: 1 -> 2",
+   "step": 9
+  },
+  {
+   "label": "edit",
+   "kind": "int-literal",
+   "desc": "class_declaration: 1 -> 69",
+   "step": 10
+  },
+  {
+   "label": "edit",
+   "kind": "add-private-fn",
+   "desc": "add private fz_fn_3",
+   "step": 11
+  },
+  {
+   "label": "edit",
+   "kind": "drop-record-field",
+   "desc": "record Entry: drop `value: value.Value`",
+   "step": 12
+  },
+  {
+   "label": "revert",
+   "kind": "drop-record-field",
+   "desc": "revert record Entry: drop `value: value.Value`",
+   "step": 12
+  },
+  {
+   "label": "edit",
+   "kind": "toggle-visibility",
+   "desc": "fz_fn_3: now public",
+   "step": 13
+  },
+  {
+   "label": "edit",
+   "kind": "int-literal",
+   "desc": "env_at: 0 -> 38",
+   "step": 14
+  },
+  {
+   "label": "edit",
+   "kind": "record-field-add",
+   "desc": "record ThisExpr: add fz_f4: bool = False",
+   "step": 15
+  }
+ ]
+}

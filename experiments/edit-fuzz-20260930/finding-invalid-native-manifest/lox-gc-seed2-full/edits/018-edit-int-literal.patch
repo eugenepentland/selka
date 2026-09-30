@@ -1,0 +1,11 @@
+--- a/heap.my
++++ b/heap.my
+@@ -64,7 +64,7 @@
+     frames: list[CallFrame] = []
+     i = 0
+     while i < FRAMES_MAX:
+-        frames.append(CallFrame(closure=value.NO_OBJ, ip=0, base=0))
++        frames.append(CallFrame(closure=value.NO_OBJ, ip=1, base=0))
+         i += 1
+     return Runtime(
+         objects=[],

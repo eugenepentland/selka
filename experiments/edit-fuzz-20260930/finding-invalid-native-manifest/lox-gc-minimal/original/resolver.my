@@ -1,0 +1,312 @@
+module resolver
+# jlox's Resolver plus slot assignment (SPEC §9.3): each scope maps a name
+# to (defined, slot), and every local reference is annotated with its
+# (hops, slot) address. Names are the parser's interned refs, so a scope
+# compares ints; `this` and `super` use reserved names of their own.
+import ast
+import output
+
+
+const THIS_NAME: int = -2
+const SUPER_NAME: int = -3
+
+
+enum FunctionType:
+    NONE,
+    FUNCTION,
+    INITIALIZER,
+    METHOD
+
+
+enum ClassType:
+    NONE,
+    CLASS,
+    SUBCLASS
+
+
+record ScopeEntry:
+    name: int
+    defined: bool
+    slot: int
+
+
+record Scope:
+    entries: list[ScopeEntry]
+
+
+record Resolver:
+    program: ast.Program
+    source: bytes
+    out: output.Output
+    scopes: list[Scope]
+    current_function: FunctionType
+    current_class: ClassType
+    had_error: bool
+
+
+# A resolved reference: `hops` scopes out, or ast.GLOBAL.
+record Address:
+    hops: int
+    slot: int
+
+
+def error(r: mut Resolver, line: int, start: int, length: int, message: bytes):
+    empty: list[int] = []
+    text = byte_buffer(empty)
+    _ = text.append_utf8("[line ")
+    _ = text.append_int(line)
+    _ = text.append_utf8("] Error at '")
+    _ = text.append_range(r.source, start, start + length)
+    _ = text.append_utf8("': ")
+    _ = text.append_range(message, 0, len(message))
+    __wb_62 = r.out
+    output.error_line(mut __wb_62, bytes(text))
+    r.out = __wb_62
+    r.had_error = True
+
+
+def begin_scope(r: mut Resolver):
+    r.scopes.append(Scope(entries=[]))
+
+
+# Closes the innermost scope and answers its size, the slot count of the
+# block or function it belonged to.
+def end_scope(r: mut Resolver) -> int:
+    scope = r.scopes.pop()
+    return len(scope.entries)
+
+
+def find(scope: Scope, name: int) -> int:
+    i = 0
+    while i < len(scope.entries):
+        if scope.entries[i].name == name:
+            return i
+        i += 1
+    return -1
+
+
+# Declares `name` in the innermost scope and answers its slot, or GLOBAL at
+# the top level.
+def declare(r: mut Resolver, name: int, line: int, start: int, length: int) -> int:
+    if len(r.scopes) == 0:
+        return ast.GLOBAL
+    scope = r.scopes[len(r.scopes) - 1]
+    index = find(scope, name)
+    if index != -1:
+        error(mut r, line, start, length, b"Already a variable with this name in this scope.")
+        scope.entries[index].defined = False
+        r.scopes[len(r.scopes) - 1] = scope
+        return scope.entries[index].slot
+    slot = len(scope.entries)
+    scope.entries.append(ScopeEntry(name=name, defined=False, slot=slot))
+    r.scopes[len(r.scopes) - 1] = scope
+    return slot
+
+
+def define(r: mut Resolver, name: int):
+    if len(r.scopes) == 0:
+        return
+    scope = r.scopes[len(r.scopes) - 1]
+    scope.entries[find(scope, name)].defined = True
+    r.scopes[len(r.scopes) - 1] = scope
+
+
+# Adds a name that is defined on arrival (`this`, `super`).
+def put_defined(r: mut Resolver, name: int):
+    scope = r.scopes[len(r.scopes) - 1]
+    scope.entries.append(ScopeEntry(name=name, defined=True, slot=len(scope.entries)))
+    r.scopes[len(r.scopes) - 1] = scope
+
+
+def resolve_local(r: Resolver, name: int) -> Address:
+    i = len(r.scopes) - 1
+    while i >= 0:
+        index = find(r.scopes[i], name)
+        if index != -1:
+            return Address(hops=len(r.scopes) - 1 - i, slot=r.scopes[i].entries[index].slot)
+        i -= 1
+    return Address(hops=ast.GLOBAL, slot=0)
+
+
+def check_initialized(r: mut Resolver, id: int):
+    match r.program.exprs[id]:
+        case ast.Expr.variable(node):
+            if len(r.scopes) > 0:
+                scope = r.scopes[len(r.scopes) - 1]
+                index = find(scope, node.name_ref)
+                if index != -1 and not scope.entries[index].defined:
+                    error(mut r, node.name.line, node.name.start, node.name.length, b"Can't read local variable in its own initializer.")
+        case _:
+            pass
+
+
+def resolve_expr(r: mut Resolver, id: int):
+    match r.program.exprs[id]:
+        case ast.Expr.assign(node):
+            resolve_expr(mut r, node.assigned)
+            address = resolve_local(r, node.name_ref)
+            r.program.exprs[id] = ast.Expr.assign(replace(node, hops=address.hops, slot=address.slot))
+        case ast.Expr.binary(node):
+            resolve_expr(mut r, node.left)
+            resolve_expr(mut r, node.right)
+        case ast.Expr.call(node):
+            resolve_expr(mut r, node.callee)
+            for argument in node.arguments:
+                resolve_expr(mut r, argument)
+        case ast.Expr.get(node):
+            resolve_expr(mut r, node.target)
+        case ast.Expr.grouping(node):
+            resolve_expr(mut r, node.inner)
+        case ast.Expr.literal(_):
+            pass
+        case ast.Expr.logical(node):
+            resolve_expr(mut r, node.left)
+            resolve_expr(mut r, node.right)
+        case ast.Expr.set(node):
+            resolve_expr(mut r, node.assigned)
+            resolve_expr(mut r, node.target)
+        case ast.Expr.super_access(node):
+            if r.current_class == ClassType.NONE:
+                error(mut r, node.keyword.line, node.keyword.start, node.keyword.length, b"Can't use 'super' outside of a class.")
+            elif r.current_class != ClassType.SUBCLASS:
+                error(mut r, node.keyword.line, node.keyword.start, node.keyword.length, b"Can't use 'super' in a class with no superclass.")
+            address = resolve_local(r, SUPER_NAME)
+            r.program.exprs[id] = ast.Expr.super_access(replace(node, hops=address.hops, slot=address.slot))
+        case ast.Expr.this(node):
+            if r.current_class == ClassType.NONE:
+                error(mut r, node.keyword.line, node.keyword.start, node.keyword.length, b"Can't use 'this' outside of a class.")
+                return
+            address = resolve_local(r, THIS_NAME)
+            r.program.exprs[id] = ast.Expr.this(replace(node, hops=address.hops, slot=address.slot))
+        case ast.Expr.unary(node):
+            resolve_expr(mut r, node.right)
+        case ast.Expr.variable(node):
+            check_initialized(mut r, id)
+            address = resolve_local(r, node.name_ref)
+            r.program.exprs[id] = ast.Expr.variable(replace(node, hops=address.hops, slot=address.slot))
+
+
+# Resolves function `index`'s body in the scope of its parameters and
+# records the scope's size as its slot count.
+def resolve_function(r: mut Resolver, index: int, kind: FunctionType):
+    enclosing = r.current_function
+    r.current_function = kind
+    begin_scope(mut r)
+    function = r.program.functions[index]
+    for param in function.params:
+        _ = declare(mut r, param.name_ref, param.name.line, param.name.start, param.name.length)
+        define(mut r, param.name_ref)
+    for statement in function.body:
+        resolve_statement(mut r, statement)
+    r.program.functions[index].slot_count = end_scope(mut r)
+    r.current_function = enclosing
+
+
+def resolve_class(r: mut Resolver, id: int):
+    node = class_stmt(r, id)
+    enclosing = r.current_class
+    r.current_class = ClassType.CLASS
+    slot = declare(mut r, node.name_ref, node.name.line, node.name.start, node.name.length)
+    r.program.stmts[id] = ast.Stmt.class_decl(replace(node, slot=slot))
+    define(mut r, node.name_ref)
+    has_superclass = False
+    match node.superclass:
+        case Some(superclass):
+            has_superclass = True
+            match r.program.exprs[superclass]:
+                case ast.Expr.variable(parent):
+                    if parent.name_ref == node.name_ref:
+                        error(mut r, parent.name.line, parent.name.start, parent.name.length, b"A class can't inherit from itself.")
+                case _:
+                    pass
+            r.current_class = ClassType.SUBCLASS
+            resolve_expr(mut r, superclass)
+            begin_scope(mut r)
+            put_defined(mut r, SUPER_NAME)
+        case None:
+            pass
+    begin_scope(mut r)
+    put_defined(mut r, THIS_NAME)
+    for method in node.methods:
+        kind = FunctionType.METHOD
+        name = r.program.functions[method].name
+        if name.length == 4 and r.source.view(name.start, name.start + 4) == b"init":
+            kind = FunctionType.INITIALIZER
+        resolve_function(mut r, method, kind)
+    _ = end_scope(mut r)
+    if has_superclass:
+        _ = end_scope(mut r)
+    r.current_class = enclosing
+
+
+def class_stmt(r: Resolver, id: int) -> ast.ClassStmt:
+    match r.program.stmts[id]:
+        case ast.Stmt.class_decl(node):
+            return node
+        case _:
+            assert False, "statement is not a class"
+            return class_stmt(r, id)
+
+
+def resolve_statement(r: mut Resolver, id: int):
+    match r.program.stmts[id]:
+        case ast.Stmt.block(node):
+            begin_scope(mut r)
+            for statement in node.statements:
+                resolve_statement(mut r, statement)
+            r.program.stmts[id] = ast.Stmt.block(replace(node, slot_count=end_scope(mut r)))
+        case ast.Stmt.class_decl(_):
+            resolve_class(mut r, id)
+        case ast.Stmt.expression(expr):
+            resolve_expr(mut r, expr)
+        case ast.Stmt.function(index):
+            name = r.program.functions[index].name
+            name_ref = r.program.functions[index].name_ref
+            r.program.functions[index].slot = declare(mut r, name_ref, name.line, name.start, name.length)
+            define(mut r, name_ref)
+            resolve_function(mut r, index, FunctionType.FUNCTION)
+        case ast.Stmt.if_stmt(node):
+            resolve_expr(mut r, node.condition)
+            resolve_statement(mut r, node.then_branch)
+            match node.else_branch:
+                case Some(branch):
+                    resolve_statement(mut r, branch)
+                case None:
+                    pass
+        case ast.Stmt.print(expr):
+            resolve_expr(mut r, expr)
+        case ast.Stmt.return_stmt(node):
+            if r.current_function == FunctionType.NONE:
+                error(mut r, node.keyword.line, node.keyword.start, node.keyword.length, b"Can't return from top-level code.")
+            match node.result:
+                case Some(result):
+                    if r.current_function == FunctionType.INITIALIZER:
+                        error(mut r, node.keyword.line, node.keyword.start, node.keyword.length, b"Can't return a value from an initializer.")
+                    resolve_expr(mut r, result)
+                case None:
+                    pass
+        case ast.Stmt.var_decl(node):
+            slot = declare(mut r, node.name_ref, node.name.line, node.name.start, node.name.length)
+            r.program.stmts[id] = ast.Stmt.var_decl(replace(node, slot=slot))
+            match node.initializer:
+                case Some(initializer):
+                    resolve_expr(mut r, initializer)
+                case None:
+                    pass
+            define(mut r, node.name_ref)
+        case ast.Stmt.while_stmt(node):
+            resolve_expr(mut r, node.condition)
+            resolve_statement(mut r, node.body)
+
+
+# Resolves a parsed script, annotating its nodes. Answers False when a
+# static error was reported.
+public def resolve(program: mut ast.Program, source: bytes, out: mut output.Output) -> bool:
+    r = Resolver(program=program, source=source, out=out, scopes=[], current_function=FunctionType.NONE, current_class=ClassType.NONE, had_error=False)
+    i = 0
+    while i < len(r.program.statements):
+        resolve_statement(mut r, r.program.statements[i])
+        i += 1
+    program = r.program
+    out = r.out
+    return not r.had_error

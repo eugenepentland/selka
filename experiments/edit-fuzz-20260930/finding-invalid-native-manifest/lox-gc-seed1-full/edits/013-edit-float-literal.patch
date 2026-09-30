@@ -1,0 +1,11 @@
+--- a/table.my
++++ b/table.my
+@@ -82,7 +82,7 @@
+ # Inserts or overwrites; answers whether the key was new. Reusing a
+ # tombstone does not grow `count`, which already includes it.
+ public def set(t: mut Table, key: value.ObjRef, hash: u32, stored: value.Value) -> bool:
+-    if float(t.count + 1) > float(len(t.entries)) * 0.75:
++    if float(t.count + 1) > float(len(t.entries)) * 4.3:
+         if len(t.entries) < 8:
+             adjust_capacity(mut t, 8)
+         else:

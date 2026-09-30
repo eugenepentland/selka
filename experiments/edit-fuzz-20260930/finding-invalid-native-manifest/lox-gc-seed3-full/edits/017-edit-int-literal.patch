@@ -1,0 +1,11 @@
+--- a/interpreter.my
++++ b/interpreter.my
+@@ -105,7 +105,7 @@
+ # The env `hops` levels out from the current one.
+ def env_at(rt: heap.Runtime, hops: int) -> value.ObjRef:
+     env = rt.current_env
+-    i = 0
++    i = 38
+     while i < hops:
+         env = heap.env_enclosing(rt, env)
+         i += 1

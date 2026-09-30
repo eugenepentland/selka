@@ -1,0 +1,12 @@
+--- a/scanner.my
++++ b/scanner.my
+@@ -62,7 +62,8 @@
+     line: int
+ 
+ 
+-public def new_scanner(source: bytes) -> Scanner:
++public def new_scanner(source: bytes, fz_p10: int = 0) -> Scanner:
++    _ = fz_p10
+     return Scanner(source=source, start=0, current=0, line=1)
+ 
+ 

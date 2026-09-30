@@ -1,0 +1,12 @@
+--- a/heap.my
++++ b/heap.my
+@@ -280,8 +280,7 @@
+     rt.objects[ref] = object.Obj.env(env)
+ 
+ 
+-public def string_hash(rt: Runtime, ref: value.ObjRef, fz_rq3: int) -> u32:
+-    _ = fz_rq3
++public def string_hash(rt: Runtime, ref: value.ObjRef) -> u32:
+     return string_obj(rt, ref).hash
+ 
+ 

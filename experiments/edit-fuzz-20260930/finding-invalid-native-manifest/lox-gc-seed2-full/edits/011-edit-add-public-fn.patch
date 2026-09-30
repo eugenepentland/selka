@@ -1,0 +1,13 @@
+--- a/object.my
++++ b/object.my
+@@ -38,6 +38,10 @@
+     slot: int
+     closed: value.Value
+     next_open: value.ObjRef
++
++
++public def fz_fn_4(n: int) -> int:
++    return n * 13 + 1
+ 
+ 
+ public const NO_SLOT: int = -1

@@ -1,0 +1,13 @@
+--- a/compiler.my
++++ b/compiler.my
+@@ -524,6 +524,10 @@
+         error(mut p, b"Can't use 'this' outside of a class.")
+         return
+     variable(mut p, False)
++
++
++public def fz_fn_1(n: int) -> int:
++    return n + 9
+ 
+ 
+ def unary(p: mut Parser):

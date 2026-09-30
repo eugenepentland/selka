@@ -1,0 +1,60 @@
+module resolver_test
+# SPEC §11.2 tests 48-52. `out` is the authority the captured Output stands
+# in for; nothing is written to it.
+import ast
+import heap
+import output
+import parser
+import resolver
+
+
+# The resolver's diagnostics for a script that parses cleanly.
+def errors(source: bytes, out: Stream) -> bytes:
+    rt = heap.new_runtime(False, None)
+    o = output.capture(out)
+    match parser.parse(mut rt, mut o, source):
+        case Some(parsed):
+            program = parsed
+            _ = resolver.resolve(mut program, source, mut o)
+            return bytes(o.stderr)
+        case None:
+            return b"parse failed"
+
+
+public def test_resolve_own_initializer(out: Stream) -> bool:
+    return errors(b"{ var a = a; }", out) == b"[line 1] Error at 'a': Can't read local variable in its own initializer.\n"
+
+
+public def test_resolve_duplicate_local(out: Stream) -> bool:
+    return errors(b"{ var a; var a; }", out) == b"[line 1] Error at 'a': Already a variable with this name in this scope.\n"
+
+
+public def test_resolve_top_level_return(out: Stream) -> bool:
+    return errors(b"return 1;", out) == b"[line 1] Error at 'return': Can't return from top-level code.\n"
+
+
+public def test_resolve_this_outside_class(out: Stream) -> bool:
+    return errors(b"print this;", out) == b"[line 1] Error at 'this': Can't use 'this' outside of a class.\n"
+
+
+public def test_resolve_slot_counts(out: Stream) -> bool:
+    source = b"fun f(a, b) { var c; { var d; var e; } }"
+    rt = heap.new_runtime(False, None)
+    o = output.capture(out)
+    match parser.parse(mut rt, mut o, source):
+        case Some(parsed):
+            program = parsed
+            if not resolver.resolve(mut program, source, mut o):
+                return False
+            f = program.functions[0]
+            match program.stmts[f.body[1]]:
+                case ast.Stmt.block(inner):
+                    match program.stmts[inner.statements[1]]:
+                        case ast.Stmt.var_decl(e):
+                            return f.slot_count == 3 and inner.slot_count == 2 and e.slot == 1
+                        case _:
+                            return False
+                case _:
+                    return False
+        case None:
+            return False

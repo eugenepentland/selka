@@ -1,0 +1,24 @@
+--- a/interpreter.my
++++ b/interpreter.my
+@@ -407,10 +407,6 @@
+ def switch_env(rt: mut heap.Runtime, env: value.ObjRef):
+     rt.saved_envs.append(rt.current_env)
+     rt.current_env = env
+-
+-
+-def restore_env(rt: mut heap.Runtime):
+-    rt.current_env = rt.saved_envs.pop()
+ 
+ 
+ # Runs a function body in its env and answers the call's value: the
+@@ -618,6 +614,10 @@
+     return outcome
+ 
+ 
++def restore_env(rt: mut heap.Runtime):
++    rt.current_env = rt.saved_envs.pop()
++
++
+ def execute_expression(it: mut Interpreter, expr: int) -> Result[Flow, RuntimeError]:
+     evaluate(mut it, expr)?
+     __wb_521 = it.rt

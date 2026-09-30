@@ -1,0 +1,48 @@
+module value_test
+# SPEC §11.2 tests 23-30.
+import value
+
+
+public def test_format_integer() -> bool:
+    return value.format_number(123.0) == b"123" and value.format_number(-45.0) == b"-45"
+
+
+public def test_format_zeros() -> bool:
+    return value.format_number(0.0) == b"0" and value.format_number(-0.0) == b"-0"
+
+
+public def test_format_fraction() -> bool:
+    return value.format_number(12.34 * 0.3) == b"3.702" and value.format_number(0.1 + 0.2) == b"0.30000000000000004"
+
+
+public def test_format_large() -> bool:
+    return value.format_number(1e23) == b"100000000000000000000000" and value.format_number(123456789012345678.0) == b"123456789012345680"
+
+
+public def test_format_small() -> bool:
+    return value.format_number(0.000001234) == b"0.000001234"
+
+
+public def test_format_special() -> bool:
+    zero = 0.0
+    return value.format_number(zero / zero) == b"nan" and value.format_number(1.0 / zero) == b"inf" and value.format_number(-1.0 / zero) == b"-inf"
+
+
+public def test_values_equal_rules() -> bool:
+    zero = 0.0
+    nan = value.Value.number(zero / zero)
+    nil_equal = value.values_equal(value.Value.nil, value.Value.nil)
+    bools_differ = not value.values_equal(value.Value.boolean(True), value.Value.boolean(False))
+    ones_equal = value.values_equal(value.Value.number(1.0), value.Value.number(1.0))
+    tags_differ = not value.values_equal(value.Value.number(1.0), value.Value.nil)
+    nan_unequal = not value.values_equal(nan, nan)
+    zeros_equal = value.values_equal(value.Value.number(-0.0), value.Value.number(0.0))
+    same_ref = value.values_equal(value.Value.obj(3), value.Value.obj(3))
+    other_ref = not value.values_equal(value.Value.obj(3), value.Value.obj(4))
+    return nil_equal and bools_differ and ones_equal and tags_differ and nan_unequal and zeros_equal and same_ref and other_ref
+
+
+public def test_is_falsey_rules() -> bool:
+    falsey = value.is_falsey(value.Value.nil) and value.is_falsey(value.Value.boolean(False))
+    truthy = not value.is_falsey(value.Value.number(0.0)) and not value.is_falsey(value.Value.boolean(True)) and not value.is_falsey(value.Value.obj(0))
+    return falsey and truthy

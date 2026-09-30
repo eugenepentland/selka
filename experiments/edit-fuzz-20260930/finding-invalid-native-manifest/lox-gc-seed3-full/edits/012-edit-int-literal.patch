@@ -1,0 +1,11 @@
+--- a/interpreter.my
++++ b/interpreter.my
+@@ -575,7 +575,7 @@
+         heap.set_class_methods(mut __wb_methods, klass_ref, methods)
+         it.rt = __wb_methods
+         __wb_490 = it.rt
+-        env = new_env(mut __wb_490, __wb_490.current_env, 1)
++        env = new_env(mut __wb_490, __wb_490.current_env, 69)
+         it.rt = __wb_490
+         __wb_491 = it.rt
+         heap.set_env_slot(mut __wb_491, env, 0, value.Value.obj(superclass))

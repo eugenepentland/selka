@@ -1,0 +1,11 @@
+--- a/value.my
++++ b/value.my
+@@ -20,7 +20,7 @@
+ 
+ 
+ # True exactly for nil and false.
+-public def is_falsey(value: Value) -> bool:
++public def is_falsey_r5(value: Value) -> bool:
+     match value:
+         case Value.nil:
+             return True

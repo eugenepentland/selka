@@ -1,0 +1,11 @@
+--- a/vm.my
++++ b/vm.my
+@@ -425,7 +425,7 @@
+     upvalue_count = heap.function_upvalue_count(rt, function_ref)
+     closure = object.new_closure(function_ref, upvalue_count)
+     captured = closure.upvalues
+-    i = 0
++    i = 1
+     while i < upvalue_count:
+         is_local = read_byte(mut frame)
+         index = read_byte(mut frame)

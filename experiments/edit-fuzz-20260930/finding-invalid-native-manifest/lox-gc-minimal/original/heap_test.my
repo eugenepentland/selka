@@ -1,0 +1,79 @@
+module heap_test
+# SPEC §11.2 tests 31-36, on a runtime with nothing allocated at startup.
+import heap
+import lox_strings
+import object
+import table
+import value
+
+
+def root(rt: mut heap.Runtime, ref: value.ObjRef):
+    heap.push(mut rt, value.Value.obj(ref))
+
+
+public def test_gc_frees_unreachable() -> bool:
+    rt = heap.new_runtime(False, None)
+    _ = lox_strings.copy_string(mut rt, b"one")
+    kept = lox_strings.copy_string(mut rt, b"two")
+    _ = lox_strings.copy_string(mut rt, b"three")
+    root(mut rt, kept)
+    heap.collect(mut rt)
+    return rt.freed == 2 and rt.allocations - rt.freed == 1
+
+
+public def test_gc_traces_instance_fields() -> bool:
+    rt = heap.new_runtime(False, None)
+    name = lox_strings.copy_string(mut rt, b"Point")
+    root(mut rt, name)
+    klass = heap.allocate(mut rt, object.Obj.klass(object.ClassObj(name=name, methods=table.new_table())))
+    root(mut rt, klass)
+    fields = table.new_table()
+    instance = heap.allocate(mut rt, object.Obj.instance(object.InstanceObj(klass=klass, fields=fields)))
+    field_name = lox_strings.copy_string(mut rt, b"x")
+    field_value = lox_strings.copy_string(mut rt, b"unrooted")
+    _ = table.set(mut fields, field_name, heap.string_hash(rt, field_name), value.Value.obj(field_value))
+    rt.objects[instance] = object.Obj.instance(object.InstanceObj(klass=klass, fields=fields))
+    rt.stack_top = 0
+    root(mut rt, instance)
+    heap.collect(mut rt)
+    return rt.freed == 0 and heap.string_obj(rt, field_value).chars == b"unrooted"
+
+
+public def test_gc_intern_table_is_weak() -> bool:
+    rt = heap.new_runtime(False, None)
+    _ = lox_strings.copy_string(mut rt, b"gone")
+    heap.collect(mut rt)
+    missing = lox_strings.find_string(rt, b"gone", lox_strings.fnv1a(b"gone")) == value.NO_OBJ
+    before = rt.allocations
+    _ = lox_strings.copy_string(mut rt, b"gone")
+    return rt.freed == 1 and missing and rt.allocations == before + 1
+
+
+public def test_gc_reuses_free_slot() -> bool:
+    rt = heap.new_runtime(False, None)
+    freed = lox_strings.copy_string(mut rt, b"freed")
+    kept = lox_strings.copy_string(mut rt, b"kept")
+    root(mut rt, kept)
+    heap.collect(mut rt)
+    size = len(rt.objects)
+    reused = lox_strings.copy_string(mut rt, b"reused")
+    return reused == freed and len(rt.objects) == size
+
+
+public def test_gc_threshold_accounting() -> bool:
+    rt = heap.new_runtime(False, None)
+    small = lox_strings.copy_string(mut rt, b"abcd")
+    charged = rt.bytes_allocated == 36
+    root(mut rt, small)
+    heap.collect(mut rt)
+    return charged and rt.bytes_allocated == 36 and rt.next_gc == max(2 * 36, 1048576)
+
+
+public def test_gc_stress_collects_each_allocation() -> bool:
+    rt = heap.new_runtime(True, None)
+    count = 0
+    while count < 25:
+        ref = lox_strings.copy_string(mut rt, str(count).encode())
+        root(mut rt, ref)
+        count += 1
+    return rt.allocations == 25 and rt.collections == 25

@@ -1,0 +1,12 @@
+--- a/ast.my
++++ b/ast.my
+@@ -286,6 +286,9 @@
+ 
+ # The parenthesized prefix form of expression `id` (SPEC §9.1).
+ public def print_expr(program: Program, source: bytes, id: int) -> bytes:
++    fz_a2: list[int] = []
++    fz_a2.append(0)
++    _ = len(fz_a2)
+     empty: list[int] = []
+     buffer = byte_buffer(empty)
+     write_expr(mut buffer, program, source, id)

@@ -1,0 +1,41 @@
+module main
+# The `lox` command line (SPEC §1).
+import driver
+
+
+const USAGE: bytes = b"Usage: lox [--engine=vm|tree] [--gc-stress] [--stats] <script>\n"
+
+
+def usage(err: Stream) -> int:
+    _ = err.write(USAGE)
+    return 64
+
+
+def main(args: list[str], fs: Filesystem, clock: Clock, out: Stream, err: Stream) -> int:
+    engine = driver.Engine.VM
+    gc_stress = False
+    stats = False
+    paths: list[str] = []
+    for arg in args:
+        if len(paths) > 0:
+            return usage(err)
+        if arg == "--engine=vm":
+            engine = driver.Engine.VM
+        elif arg == "--engine=tree":
+            engine = driver.Engine.TREE
+        elif arg == "--gc-stress":
+            gc_stress = True
+        elif arg == "--stats":
+            stats = True
+        elif arg.startswith("--"):
+            return usage(err)
+        else:
+            paths.append(arg)
+    if len(paths) != 1:
+        return usage(err)
+    match fs.read_file(paths[0]):
+        case Ok(source):
+            return driver.run_file(source, engine, gc_stress, stats, out, err, clock)
+        case Err(_):
+            _ = err.write(b"Could not open file \"" + paths[0].encode() + b"\".\n")
+            return 74

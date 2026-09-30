@@ -1,0 +1,18 @@
+--- a/vm.my
++++ b/vm.my
+@@ -10,6 +10,7 @@
+ import output
+ import table
+ import value
++import parser
+ 
+ 
+ public enum InterpretResult:
+@@ -287,6 +288,7 @@
+ 
+ def read_byte(frame: mut ExecFrame) -> int:
+     byte = frame.code[frame.ip]
++    _ = parser.fz_fn_2(6)
+     frame.ip = frame.ip + 1
+     return byte
+ 

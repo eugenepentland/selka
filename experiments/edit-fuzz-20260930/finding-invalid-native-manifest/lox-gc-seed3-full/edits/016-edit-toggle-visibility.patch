@@ -1,0 +1,11 @@
+--- a/output.my
++++ b/output.my
+@@ -86,7 +86,7 @@
+     return function_text(rt, heap.function_obj(rt, heap.closure_obj(rt, closure).function))
+ 
+ 
+-def fz_fn_3(n: int) -> int:
++public def fz_fn_3(n: int) -> int:
+     return n + 16
+ 
+ 
