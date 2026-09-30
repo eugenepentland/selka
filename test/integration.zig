@@ -3363,6 +3363,78 @@ test "checked arithmetic at every width reports the same result and trap from th
     defer a.free(wanted);
     try testing.expectEqualStrings(wanted, trapped);
 }
+/// Literal +/-1 operands retain their exact overflow details and cleanup.
+const literal_overflow_program =
+    \\def number(text: str) -> int:
+    \\    match int(text):
+    \\        case Some(value):
+    \\            return value
+    \\        case None:
+    \\            return 0
+    \\
+    \\
+    \\def calculate(form: str, value: int) -> int:
+    \\    if form == "add_one":
+    \\        return value + 1
+    \\    if form == "sub_one":
+    \\        return value - 1
+    \\    if form == "add_negative":
+    \\        return value + -1
+    \\    return value - -1
+    \\
+    \\
+    \\def main(args: list[str], out: Stream) -> int:
+    \\    out.print(calculate(args[0], number(args[1])))
+    \\    return 0
+;
+
+/// Exercise all four literal bounds, then their opposite safe extreme.
+fn expectLiteralBoundaries(binaries: [2][]const u8) !void {
+    const rows = [_][5][]const u8{
+        .{ "add_one", "9223372036854775806", "9223372036854775807", "-9223372036854775808", "-9223372036854775807" },
+        .{ "sub_one", "-9223372036854775807", "-9223372036854775808", "9223372036854775807", "9223372036854775806" },
+        .{ "add_negative", "-9223372036854775807", "-9223372036854775808", "9223372036854775807", "9223372036854775806" },
+        .{ "sub_negative", "9223372036854775806", "9223372036854775807", "-9223372036854775808", "-9223372036854775807" },
+    };
+    const a = testing.allocator;
+    for (rows) |row| {
+        const output = try std.fmt.allocPrint(a, "{s}\n", .{row[2]});
+        defer a.free(output);
+        const quiet = try expectSameBoundary(binaries, .{ row[0], row[1], "", "" }, 0, output);
+        defer a.free(quiet);
+        try testing.expectEqualStrings("", quiet);
+        const trapped = try expectSameBoundary(binaries, .{ row[0], row[2], "", "" }, 1, "");
+        defer a.free(trapped);
+        try testing.expect(std.mem.indexOf(u8, trapped, "error[R_OVERFLOW]") != null);
+        try testing.expect(std.mem.indexOf(u8, trapped, "MYLANG-TRAP ") != null);
+        const opposite = try std.fmt.allocPrint(a, "{s}\n", .{row[4]});
+        defer a.free(opposite);
+        const quiet_opposite = try expectSameBoundary(binaries, .{ row[0], row[3], "", "" }, 0, opposite);
+        defer a.free(quiet_opposite);
+        try testing.expectEqualStrings("", quiet_opposite);
+    }
+}
+
+// spec-case: LLVM-CONSTANT-OVERFLOW-1
+test "literal signed overflow preserves exact QBE output trap details traces and records" {
+    const a = testing.allocator;
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "literal.my", .data = literal_overflow_program });
+    const entry = try temporary.dir.realPathFileAlloc(testing.io, "literal.my", a);
+    defer a.free(entry);
+    const directory = std.fs.path.dirname(entry).?;
+    const cache = try std.fmt.allocPrint(a, "--cache-dir={s}/cache", .{directory});
+    defer a.free(cache);
+    const llvm = try std.fmt.allocPrint(a, "{s}/literal-llvm", .{directory});
+    defer a.free(llvm);
+    const qbe = try std.fmt.allocPrint(a, "{s}/literal-qbe", .{directory});
+    defer a.free(qbe);
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", llvm, "--release", cache, tools[1] }, "");
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", qbe, cache, tools[0], tools[1] }, "");
+    try expectLiteralBoundaries(.{ llvm, qbe });
+}
+
 const sticky_reduction_program =
     \\# checked reductions in loops, operands from the command line
     \\
