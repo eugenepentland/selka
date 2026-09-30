@@ -1,0 +1,15 @@
+{
+  "old_main": "80dd51906c97ae76bf208474ac48c9baac3a11cd",
+  "new_main": "b6aed6cf9f344cceed037dbf85d90d250afdac6b",
+  "gated_source": "a3e451d76ebfa875a989151f995ffc4e84687db0",
+  "verification_sha256": "43bc18a6b7228a728bb283e59b1cbe96cf1474045bcea0d1b1aeba887d6c1800",
+  "explicit_user_approval": "Yeah merge it in, so what have you done so far?",
+  "original_checkout_preserved": {
+    "head": "acbee6032758a0cb031619c270ae3c401c1d8e7f",
+    "branch": "local-reasoning/integration",
+    "status_sha256": "7987e9e00103d6e6cc085319ab2e454b6cbcf50068725b19a75848ac0245e5ef",
+    "work_diff_sha256": "8eded1317e73e8cd6734e1765377ce39628cc5f2596b7656a72e6983ea6ad72f",
+    "index_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "method": "atomic compare-and-swap fast-forward; main was not checked out"
+}

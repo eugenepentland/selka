@@ -4,8 +4,10 @@ WP-B1, B2a/B2b, B3 and B4 are implemented and integrated on
 `codex/next-closeout-20260929`. The complete final gate passes on frozen source
 `a3e451d76ebfa875a989151f995ffc4e84687db0` (tree `bcdd90bbf7d95f5f92914086d140c1507a1034f6`).
 The documentation/evidence commit following that source changes no compiler,
-runtime or tests. Main remains at approved `80dd5190`; Phase B is ready for the
-user's explicit landing approval. Phase C has not started.
+runtime or tests. With explicit user approval ("Yeah merge it in") on
+2026-09-30, main fast-forwarded from `80dd5190` to `b6aed6cf`. The original dirty
+checkout was verified unchanged; the [landing receipt](evidence/codex-next-phase-b-final-20260930/landing.json)
+records the atomic update and before/after checks. Phase C can now start.
 
 ## Source and completed work
 
@@ -150,6 +152,6 @@ skips and smoke diagnostics are reported above. No required integration step,
 guest test, module program or Lox case was omitted. Original checkouts and other
 agents' worktrees were not edited.
 
-The next authorized implementation is WP-C1 after Phase B lands. The plan's
-explicit-main-approval rule still applies: this green closeout prepares a concrete
-fast-forward from `80dd5190`, and does not itself perform or authorize that update.
+The next authorized implementation is WP-C1. Phase B has now landed with the
+user's explicit approval; no further approval is needed to begin the EDA port.
+Future production updates to main still follow the plan's explicit approval rule.
